@@ -297,13 +297,13 @@ for ($i = 0; $i < $n; $i++) {
     $value[8] = (m/^(.*)accent(.*)$/);
     $value[9] = (m/^(.*)fence(.*)$/);
     $value[10] = (m/^(.*)symmetric(.*)$/);
+    $value[15] = (m/^(.*)mirrorable(.*)$/);
     $value[11] = $entry->getAttribute("priority");
     $value[12] = $entry->getAttribute("linebreakstyle");
 
     # not stored in the WG dictionary
     $value[13] = ""; # direction
     $value[14] = ""; # integral
-    $value[15] = ""; # mirrorable
 
     # 3.3) save the key and value
     push(@wg_keys, $key);
@@ -430,6 +430,7 @@ sub generateCommon {
     if ($v[8]) { $entry = "$entry accent"; }
     if ($v[9]) { $entry = "$entry fence"; }
     if ($v[10]) { $entry = "$entry symmetric"; }
+    if ($v[15]) { $entry = "$entry mirrorable"; }
     return $entry;
 }
 

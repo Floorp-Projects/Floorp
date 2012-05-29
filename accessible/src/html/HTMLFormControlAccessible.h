@@ -32,7 +32,7 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
@@ -53,7 +53,7 @@ class HTMLRadioButtonAccessible : public RadioButtonAccessible
 public:
   HTMLRadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual PRUint64 NativeState();
   virtual void GetPositionAndSizeInternal(PRInt32 *aPosInSet,
                                           PRInt32 *aSetSize);
@@ -76,7 +76,7 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
-  // nsAccessible
+  // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 State();
@@ -110,7 +110,7 @@ public:
   // nsHyperTextAccessible
   virtual already_AddRefed<nsIEditor> GetEditor() const;
 
-  // nsAccessible
+  // Accessible
   virtual void Value(nsString& aValue);
   virtual void ApplyARIAState(PRUint64* aState) const;
   virtual nsresult GetNameInternal(nsAString& aName);
@@ -123,7 +123,7 @@ public:
 
   // Widgets
   virtual bool IsWidget() const;
-  virtual nsAccessible* ContainerWidget() const;
+  virtual Accessible* ContainerWidget() const;
 };
 
 
@@ -135,7 +135,7 @@ class HTMLFileInputAccessible : public nsHyperTextAccessibleWrap
 public:
   HTMLFileInputAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual nsresult HandleAccEvent(AccEvent* aAccEvent);
 };
@@ -148,7 +148,7 @@ class HTMLGroupboxAccessible : public nsHyperTextAccessibleWrap
 public:
   HTMLGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual Relation RelationByType(PRUint32 aType);
@@ -166,7 +166,7 @@ class HTMLLegendAccessible : public nsHyperTextAccessibleWrap
 public:
   HTMLLegendAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual Relation RelationByType(PRUint32 aType);
 };
@@ -179,7 +179,7 @@ class HTMLFigureAccessible : public nsHyperTextAccessibleWrap
 public:
   HTMLFigureAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
@@ -198,7 +198,7 @@ class HTMLFigcaptionAccessible : public nsHyperTextAccessibleWrap
 public:
   HTMLFigcaptionAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual Relation RelationByType(PRUint32 aType);
 };

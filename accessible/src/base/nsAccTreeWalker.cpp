@@ -5,7 +5,7 @@
 
 #include "nsAccTreeWalker.h"
 
-#include "nsAccessible.h"
+#include "Accessible.h"
 #include "nsAccessibilityService.h"
 #include "DocAccessible.h"
 
@@ -60,7 +60,7 @@ nsAccTreeWalker::~nsAccTreeWalker()
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccTreeWalker: private
 
-nsAccessible*
+Accessible*
 nsAccTreeWalker::NextChildInternal(bool aNoWalkUp)
 {
   if (!mState || !mState->content)
@@ -78,7 +78,7 @@ nsAccTreeWalker::NextChildInternal(bool aNoWalkUp)
     mState->childIdx++;
 
     bool isSubtreeHidden = false;
-    nsAccessible* accessible = mWalkCache ? mDoc->GetAccessible(childNode) :
+    Accessible* accessible = mWalkCache ? mDoc->GetAccessible(childNode) :
       GetAccService()->GetOrCreateAccessible(childNode, mDoc, &isSubtreeHidden);
 
     if (accessible)

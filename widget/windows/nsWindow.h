@@ -34,7 +34,7 @@
 
 #ifdef ACCESSIBILITY
 #include "OLEACC.H"
-#include "nsAccessible.h"
+#include "mozilla/a11y/Accessible.h"
 #endif
 
 #include "nsUXThemeData.h"
@@ -202,8 +202,8 @@ public:
   void                    SuppressBlurEvents(bool aSuppress); // Called from nsFilePicker
   bool                    BlurEventsSuppressed();
 #ifdef ACCESSIBILITY
-  nsAccessible* DispatchAccessibleEvent(PRUint32 aEventType);
-  nsAccessible* GetRootAccessible();
+  Accessible* DispatchAccessibleEvent(PRUint32 aEventType);
+  Accessible* GetRootAccessible();
 #endif // ACCESSIBILITY
 
   /**

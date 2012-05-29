@@ -131,20 +131,14 @@ public:
      */
     void removeAllShapes();
 
-    // overrides
-    virtual Factory getFactory();
-    virtual void flatten(SkFlattenableWriteBuffer&);
-
-    // public for Registrar
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer&);
-
-    SK_DECLARE_FLATTENABLE_REGISTRAR()
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkGroupShape)
 
 protected:
     // overrides
     virtual void onDraw(SkCanvas*);
 
     SkGroupShape(SkFlattenableReadBuffer&);
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
 
 private:
     struct Rec {

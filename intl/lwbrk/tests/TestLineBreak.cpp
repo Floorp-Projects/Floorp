@@ -12,6 +12,7 @@
 #include "nsLWBrkCIID.h"
 #include "nsStringAPI.h"
 #include "nsEmbedString.h"
+#include "TestHarness.h"
 
 #define WORK_AROUND_SERVICE_MANAGER_ASSERT
 
@@ -25,8 +26,7 @@ static char teng1[] =
  "This is a test to test(reasonable) line    break. This 0.01123 = 45 x 48.";
 
 static PRUint32 exp1[] = {
-  4,5,7,8,9,10,14,15,17,18,22,34,35,39,40,41,42,43,49,50,54,55,62,63,64,65,
-  67,68,69,70
+  4,7,9,14,17,34,39,40,41,42,49,54,62,64,67,69,73
 };
 
 static PRUint32 wexp1[] = {
@@ -40,7 +40,7 @@ static char teng2[] =
  "()((reasonab(l)e) line  break. .01123=45x48.";
 
 static PRUint32 lexp2[] = {
-  2,12,15,17,18,22,23,24,30,31,37,38,
+  17,22,23,30,44
 };
 static PRUint32 wexp2[] = {
   4,12,13,14,15,16,17,18,22,24,29,30,31,32,37,38,43
@@ -51,10 +51,10 @@ static PRUint32 wexp2[] = {
 static char teng3[] = 
  "It's a test to test(ronae ) line break....";
 static PRUint32 exp3[] = {
-  4, 5, 6,7,11,12,14,15,19,25,27,28,32,33
+  4,6,11,14,25,27,32,42
 };
 static PRUint32 wexp3[] = {
-  4,5,6,7,11,12,14,15,19,20,25,26,27,28,32,33,38
+  2,3,4,5,6,7,11,12,14,15,19,20,25,26,27,28,32,33,38
 };
 
 static char ruler1[] =
@@ -452,7 +452,10 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
 
 int main(int argc, char** argv) {
 
-   NS_InitXPCOM2(nsnull, nsnull, nsnull);
+   int rv = 0;
+   ScopedXPCOM xpcom("TestLineBreak");
+   if (xpcom.failed())
+       return -1;
    
    // --------------------------------------------
    printf("Test Line Break\n");
@@ -461,15 +464,19 @@ int main(int argc, char** argv) {
    bool wbok ; 
    lbok =TestWordBreaker();
    if(lbok)
-      printf("Line Break Test\nOK\n");
-   else
-      printf("Line Break Test\nFailed\n");
+      passed("Line Break Test");
+   else {
+      fail("Line Break Test");
+      rv = -1;
+   }
 
    wbok = TestLineBreaker();
    if(wbok)
-      printf("Word Break Test\nOK\n");
-   else
-      printf("Word Break Test\nFailed\n");
+      passed("Word Break Test");
+   else {
+      fail("Word Break Test");
+      rv = -1;
+   }
 
    SampleWordBreakUsage();
    
@@ -478,8 +485,10 @@ int main(int argc, char** argv) {
    printf("Finish All The Test Cases\n");
 
    if(lbok && wbok)
-      printf("Line/Word Break Test\nOK\n");
-   else
-      printf("Line/Word Break Test\nFailed\n");
-   return 0;
+      passed("Line/Word Break Test");
+   else {
+      fail("Line/Word Break Test");
+      rv = -1;
+   }
+   return rv;
 }

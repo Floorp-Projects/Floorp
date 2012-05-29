@@ -201,7 +201,7 @@ DocAccessibleWrap::get_accValue(
   // For backwards-compat, we still support old MSAA hack to provide URL in accValue
   *pszValue = NULL;
   // Check for real value first
-  HRESULT hr = nsAccessibleWrap::get_accValue(varChild, pszValue);
+  HRESULT hr = AccessibleWrap::get_accValue(varChild, pszValue);
   if (FAILED(hr) || *pszValue || varChild.lVal != CHILDID_SELF)
     return hr;
   // If document is being used to create a widget, don't use the URL hack

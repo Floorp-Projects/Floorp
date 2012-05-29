@@ -40,8 +40,11 @@ class SK_API SkImageFilter : public SkFlattenable {
 public:
     class Proxy {
     public:
+        virtual ~Proxy() {};
+
         virtual SkDevice* createDevice(int width, int height) = 0;
-        
+        // returns true if the proxy can handle this filter natively
+        virtual bool canHandleImageFilter(SkImageFilter*) = 0;
         // returns true if the proxy handled the filter itself. if this returns
         // false then the filter's code will be called.
         virtual bool filterImage(SkImageFilter*, const SkBitmap& src,
@@ -78,6 +81,22 @@ public:
      *  set the sigma to the values for horizontal and vertical.
      */
     virtual bool asABlur(SkSize* sigma) const;
+
+    /**
+     *  Experimental.
+     *
+     *  If the filter can be expressed as an erode, return true and
+     *  set the radius in X and Y.
+     */
+    virtual bool asAnErode(SkISize* radius) const;
+
+    /**
+     *  Experimental.
+     *
+     *  If the filter can be expressed as a dilation, return true and
+     *  set the radius in X and Y.
+     */
+    virtual bool asADilate(SkISize* radius) const;
 
 protected:
     SkImageFilter() {}

@@ -23,7 +23,7 @@
 using namespace mozilla::a11y;
 
 ApplicationAccessible::ApplicationAccessible() :
-  nsAccessibleWrap(nsnull, nsnull)
+  AccessibleWrap(nsnull, nsnull)
 {
   mFlags |= eApplicationAccessible;
 }
@@ -31,7 +31,7 @@ ApplicationAccessible::ApplicationAccessible() :
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED1(ApplicationAccessible, nsAccessible,
+NS_IMPL_ISUPPORTS_INHERITED1(ApplicationAccessible, Accessible,
                              nsIAccessibleApplication)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,17 +131,17 @@ ApplicationAccessible::GroupPosition(PRInt32* aGroupLevel,
   return NS_OK;
 }
 
-nsAccessible*
+Accessible*
 ApplicationAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                     EWhichChildAtPoint aWhichChild)
 {
   return nsnull;
 }
 
-nsAccessible*
+Accessible*
 ApplicationAccessible::FocusedChild()
 {
-  nsAccessible* focus = FocusMgr()->FocusedAccessible();
+  Accessible* focus = FocusMgr()->FocusedAccessible();
   if (focus && focus->Parent() == this)
     return focus;
 
@@ -295,7 +295,7 @@ ApplicationAccessible::IsPrimaryForNode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible public methods
+// Accessible public methods
 
 void
 ApplicationAccessible::ApplyARIAState(PRUint64* aState) const
@@ -328,7 +328,7 @@ ApplicationAccessible::AccessKey() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible protected methods
+// Accessible protected methods
 
 void
 ApplicationAccessible::CacheChildren()
@@ -370,7 +370,7 @@ ApplicationAccessible::CacheChildren()
   }
 }
 
-nsAccessible*
+Accessible*
 ApplicationAccessible::GetSiblingAtOffset(PRInt32 aOffset,
                                           nsresult* aError) const
 {

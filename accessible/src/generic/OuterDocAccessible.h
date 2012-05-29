@@ -6,7 +6,7 @@
 #ifndef MOZILLA_A11Y_OUTERDOCACCESSIBLE_H_
 #define MOZILLA_A11Y_OUTERDOCACCESSIBLE_H_
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
@@ -20,7 +20,7 @@ namespace a11y {
  * the inner document root.
  */
 
-class OuterDocAccessible : public nsAccessibleWrap
+class OuterDocAccessible : public AccessibleWrap
 {
 public:
   OuterDocAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -36,21 +36,21 @@ public:
   // nsAccessNode
   virtual void Shutdown();
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
-  virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                     EWhichChildAtPoint aWhichChild);
+  virtual Accessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                   EWhichChildAtPoint aWhichChild);
 
   virtual void InvalidateChildren();
-  virtual bool AppendChild(nsAccessible *aAccessible);
-  virtual bool RemoveChild(nsAccessible *aAccessible);
+  virtual bool AppendChild(Accessible* aAccessible);
+  virtual bool RemoveChild(Accessible* aAccessible);
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
 
 protected:
-  // nsAccessible
+  // Accessible
   virtual void CacheChildren();
 };
 

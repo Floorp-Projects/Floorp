@@ -43,29 +43,35 @@ SkDashPathEffect::SkDashPathEffect(const SkScalar intervals[], int count,
     }
     fIntervalLength = len;
 
-    if (len > 0) {  // we don't handle 0 length dash arrays
+    // watch out for values that might make us go out of bounds
+    if ((len > 0) && SkScalarIsFinite(phase) && SkScalarIsFinite(len)) {
+
+        // Adjust phase to be between 0 and len, "flipping" phase if negative.
+        // e.g., if len is 100, then phase of -20 (or -120) is equivalent to 80
         if (phase < 0) {
             phase = -phase;
             if (phase > len) {
                 phase = SkScalarMod(phase, len);
             }
             phase = len - phase;
+
+            // Due to finite precision, it's possible that phase == len,
+            // even after the subtract (if len >>> phase), so fix that here.
+            // This fixes http://crbug.com/124652 .
+            SkASSERT(phase <= len);
+            if (phase == len) {
+                phase = 0;
+            }
         } else if (phase >= len) {
             phase = SkScalarMod(phase, len);
         }
-
-        // got to watch out for values that might make us go out of bounds
-        if (!SkScalarIsFinite(phase) || !SkScalarIsFinite(len)) {
-            goto BAD_DASH;
-        }
-
         SkASSERT(phase >= 0 && phase < len);
+
         fInitialDashLength = FindFirstInterval(intervals, phase, &fInitialDashIndex);
 
         SkASSERT(fInitialDashLength >= 0);
         SkASSERT(fInitialDashIndex >= 0 && fInitialDashIndex < fCount);
     } else {
-        BAD_DASH:
         fInitialDashLength = -1;    // signal bad dash intervals
     }
 }
@@ -140,9 +146,10 @@ SkFlattenable::Factory SkDashPathEffect::getFactory() {
     return fInitialDashLength < 0 ? NULL : CreateProc;
 }
 
-void SkDashPathEffect::flatten(SkFlattenableWriteBuffer& buffer) {
+void SkDashPathEffect::flatten(SkFlattenableWriteBuffer& buffer) const {
     SkASSERT(fInitialDashLength >= 0);
 
+    this->INHERITED::flatten(buffer);
     buffer.write32(fCount);
     buffer.write32(fInitialDashIndex);
     buffer.writeScalar(fInitialDashLength);

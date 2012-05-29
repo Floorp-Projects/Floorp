@@ -15,7 +15,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableAccessibleWrap,
                              nsHTMLTableAccessible)
 
 IMPL_IUNKNOWN_INHERITED1(nsHTMLTableAccessibleWrap,
-                         nsAccessibleWrap,
+                         AccessibleWrap,
                          CAccessibleTable)
 
 

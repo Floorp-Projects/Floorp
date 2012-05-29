@@ -27,7 +27,7 @@ using namespace mozilla::a11y;
 
 ARIAGridAccessible::
   ARIAGridAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc), xpcAccessibleTable(this)
+  AccessibleWrap(aContent, aDoc), xpcAccessibleTable(this)
 {
 }
 
@@ -35,7 +35,7 @@ ARIAGridAccessible::
 // nsISupports
 
 NS_IMPL_ISUPPORTS_INHERITED1(ARIAGridAccessible,
-                             nsAccessible,
+                             Accessible,
                              nsIAccessibleTable)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ void
 ARIAGridAccessible::Shutdown()
 {
   mTable = nsnull;
-  nsAccessibleWrap::Shutdown();
+  AccessibleWrap::Shutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,12 +55,12 @@ PRUint32
 ARIAGridAccessible::ColCount()
 {
   AccIterator rowIter(this, filters::GetRow);
-  nsAccessible* row = rowIter.Next();
+  Accessible* row = rowIter.Next();
   if (!row)
     return 0;
 
   AccIterator cellIter(row, filters::GetCell);
-  nsAccessible* cell = nsnull;
+  Accessible* cell = nsnull;
 
   PRUint32 colCount = 0;
   while ((cell = cellIter.Next()))
@@ -80,10 +80,10 @@ ARIAGridAccessible::RowCount()
   return rowCount;
 }
 
-nsAccessible*
+Accessible*
 ARIAGridAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
 { 
-  nsAccessible* row = GetRowAt(aRowIndex);
+  Accessible* row = GetRowAt(aRowIndex);
   if (!row)
     return nsnull;
 
@@ -238,13 +238,13 @@ ARIAGridAccessible::IsColumnSelected(PRInt32 aColumn, bool* aIsSelected)
   NS_ENSURE_ARG(IsValidColumn(aColumn));
 
   AccIterator rowIter(this, filters::GetRow);
-  nsAccessible *row = rowIter.Next();
+  Accessible* row = rowIter.Next();
   if (!row)
     return NS_OK;
 
   do {
     if (!nsAccUtils::IsARIASelected(row)) {
-      nsAccessible *cell = GetCellInRowAt(row, aColumn);
+      Accessible* cell = GetCellInRowAt(row, aColumn);
       if (!cell) // Do not fail due to wrong markup
         return NS_OK;
       
@@ -266,12 +266,12 @@ ARIAGridAccessible::IsRowSelected(PRInt32 aRow, bool* aIsSelected)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible *row = GetRowAt(aRow);
+  Accessible* row = GetRowAt(aRow);
   NS_ENSURE_ARG(row);
 
   if (!nsAccUtils::IsARIASelected(row)) {
     AccIterator cellIter(row, filters::GetCell);
-    nsAccessible *cell = nsnull;
+    Accessible* cell = nsnull;
     while ((cell = cellIter.Next())) {
       if (!nsAccUtils::IsARIASelected(cell))
         return NS_OK;
@@ -292,11 +292,11 @@ ARIAGridAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible *row = GetRowAt(aRow);
+  Accessible* row = GetRowAt(aRow);
   NS_ENSURE_ARG(row);
 
   if (!nsAccUtils::IsARIASelected(row)) {
-    nsAccessible *cell = GetCellInRowAt(row, aColumn);
+    Accessible* cell = GetCellInRowAt(row, aColumn);
     NS_ENSURE_ARG(cell);
 
     if (!nsAccUtils::IsARIASelected(cell))
@@ -321,7 +321,7 @@ ARIAGridAccessible::GetSelectedCellCount(PRUint32* aCount)
 
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = nsnull;
+  Accessible* row = nsnull;
   while ((row = rowIter.Next())) {
     if (nsAccUtils::IsARIASelected(row)) {
       (*aCount) += colCount;
@@ -329,7 +329,7 @@ ARIAGridAccessible::GetSelectedCellCount(PRUint32* aCount)
     }
 
     AccIterator cellIter(row, filters::GetCell);
-    nsAccessible *cell = nsnull;
+    Accessible* cell = nsnull;
 
     while ((cell = cellIter.Next())) {
       if (nsAccUtils::IsARIASelected(cell))
@@ -357,7 +357,7 @@ ARIAGridAccessible::GetSelectedRowCount(PRUint32* aCount)
 
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = nsnull;
+  Accessible* row = nsnull;
   while ((row = rowIter.Next())) {
     if (nsAccUtils::IsARIASelected(row)) {
       (*aCount)++;
@@ -365,7 +365,7 @@ ARIAGridAccessible::GetSelectedRowCount(PRUint32* aCount)
     }
 
     AccIterator cellIter(row, filters::GetCell);
-    nsAccessible *cell = cellIter.Next();
+    Accessible* cell = cellIter.Next();
     if (!cell)
       continue;
 
@@ -400,10 +400,10 @@ ARIAGridAccessible::GetSelectedCells(nsIArray** aCells)
 
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = nsnull;
+  Accessible* row = nsnull;
   while ((row = rowIter.Next())) {
     AccIterator cellIter(row, filters::GetCell);
-    nsAccessible *cell = nsnull;
+    Accessible* cell = nsnull;
 
     if (nsAccUtils::IsARIASelected(row)) {
       while ((cell = cellIter.Next()))
@@ -444,7 +444,7 @@ ARIAGridAccessible::GetSelectedCellIndices(PRUint32* aCellsCount,
 
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = nsnull;
+  Accessible* row = nsnull;
   for (PRInt32 rowIdx = 0; (row = rowIter.Next()); rowIdx++) {
     if (nsAccUtils::IsARIASelected(row)) {
       for (PRInt32 colIdx = 0; colIdx < colCount; colIdx++)
@@ -454,7 +454,7 @@ ARIAGridAccessible::GetSelectedCellIndices(PRUint32* aCellsCount,
     }
 
     AccIterator cellIter(row, filters::GetCell);
-    nsAccessible *cell = nsnull;
+    Accessible* cell = nsnull;
 
     for (PRInt32 colIdx = 0; (cell = cellIter.Next()); colIdx++) {
       if (nsAccUtils::IsARIASelected(cell))
@@ -504,7 +504,7 @@ ARIAGridAccessible::GetSelectedRowIndices(PRUint32* aRowCount,
 
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = nsnull;
+  Accessible* row = nsnull;
   for (PRInt32 rowIdx = 0; (row = rowIter.Next()); rowIdx++) {
     if (nsAccUtils::IsARIASelected(row)) {
       selRows.AppendElement(rowIdx);
@@ -512,7 +512,7 @@ ARIAGridAccessible::GetSelectedRowIndices(PRUint32* aRowCount,
     }
 
     AccIterator cellIter(row, filters::GetCell);
-    nsAccessible *cell = cellIter.Next();
+    Accessible* cell = cellIter.Next();
     if (!cell)
       continue;
 
@@ -550,7 +550,7 @@ ARIAGridAccessible::SelectRow(PRInt32 aRow)
 
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = nsnull;
+  Accessible* row = nsnull;
   for (PRInt32 rowIdx = 0; (row = rowIter.Next()); rowIdx++) {
     nsresult rv = SetARIASelected(row, rowIdx == aRow);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -569,14 +569,14 @@ ARIAGridAccessible::SelectColumn(PRInt32 aColumn)
 
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = nsnull;
+  Accessible* row = nsnull;
   while ((row = rowIter.Next())) {
     // Unselect all cells in the row.
     nsresult rv = SetARIASelected(row, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Select cell at the column index.
-    nsAccessible *cell = GetCellInRowAt(row, aColumn);
+    Accessible* cell = GetCellInRowAt(row, aColumn);
     if (cell) {
       rv = SetARIASelected(cell, true);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -589,7 +589,7 @@ ARIAGridAccessible::SelectColumn(PRInt32 aColumn)
 void
 ARIAGridAccessible::UnselectRow(PRUint32 aRowIdx)
 {
-  nsAccessible* row = GetRowAt(aRowIdx);
+  Accessible* row = GetRowAt(aRowIdx);
 
   if (row)
     SetARIASelected(row, false);
@@ -600,9 +600,9 @@ ARIAGridAccessible::UnselectCol(PRUint32 aColIdx)
 {
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible* row = nsnull;
+  Accessible* row = nsnull;
   while ((row = rowIter.Next())) {
-    nsAccessible* cell = GetCellInRowAt(row, aColIdx);
+    Accessible* cell = GetCellInRowAt(row, aColIdx);
     if (cell)
       SetARIASelected(cell, false);
   }
@@ -649,27 +649,27 @@ ARIAGridAccessible::IsValidRowNColumn(PRInt32 aRow, PRInt32 aColumn)
   return aColumn < colCount;
 }
 
-nsAccessible*
+Accessible*
 ARIAGridAccessible::GetRowAt(PRInt32 aRow)
 {
   PRInt32 rowIdx = aRow;
 
   AccIterator rowIter(this, filters::GetRow);
 
-  nsAccessible *row = rowIter.Next();
+  Accessible* row = rowIter.Next();
   while (rowIdx != 0 && (row = rowIter.Next()))
     rowIdx--;
 
   return row;
 }
 
-nsAccessible*
-ARIAGridAccessible::GetCellInRowAt(nsAccessible* aRow, PRInt32 aColumn)
+Accessible*
+ARIAGridAccessible::GetCellInRowAt(Accessible* aRow, PRInt32 aColumn)
 {
   PRInt32 colIdx = aColumn;
 
   AccIterator cellIter(aRow, filters::GetCell);
-  nsAccessible *cell = cellIter.Next();
+  Accessible* cell = cellIter.Next();
   while (colIdx != 0 && (cell = cellIter.Next()))
     colIdx--;
 
@@ -677,7 +677,7 @@ ARIAGridAccessible::GetCellInRowAt(nsAccessible* aRow, PRInt32 aColumn)
 }
 
 nsresult
-ARIAGridAccessible::SetARIASelected(nsAccessible* aAccessible,
+ARIAGridAccessible::SetARIASelected(Accessible* aAccessible,
                                     bool aIsSelected, bool aNotify)
 {
   nsIContent *content = aAccessible->GetContent();
@@ -709,7 +709,7 @@ ARIAGridAccessible::SetARIASelected(nsAccessible* aAccessible,
   // aria-selected from cell accessible.
   if (role == roles::ROW) {
     AccIterator cellIter(aAccessible, filters::GetCell);
-    nsAccessible *cell = nsnull;
+    Accessible* cell = nsnull;
 
     while ((cell = cellIter.Next())) {
       rv = SetARIASelected(cell, false, false);
@@ -723,7 +723,7 @@ ARIAGridAccessible::SetARIASelected(nsAccessible* aAccessible,
   // siblings cells.
   if (role == roles::GRID_CELL || role == roles::ROWHEADER ||
       role == roles::COLUMNHEADER) {
-    nsAccessible* row = aAccessible->Parent();
+    Accessible* row = aAccessible->Parent();
 
     if (row && row->Role() == roles::ROW &&
         nsAccUtils::IsARIASelected(row)) {
@@ -731,7 +731,7 @@ ARIAGridAccessible::SetARIASelected(nsAccessible* aAccessible,
       NS_ENSURE_SUCCESS(rv, rv);
 
       AccIterator cellIter(row, filters::GetCell);
-      nsAccessible *cell = nsnull;
+      Accessible* cell = nsnull;
       while ((cell = cellIter.Next())) {
         if (cell != aAccessible) {
           rv = SetARIASelected(cell, true, false);
@@ -757,7 +757,7 @@ ARIAGridAccessible::GetSelectedColumnsArray(PRUint32* aColumnCount,
     return NS_ERROR_FAILURE;
 
   AccIterator rowIter(this, filters::GetRow);
-  nsAccessible *row = rowIter.Next();
+  Accessible* row = rowIter.Next();
   if (!row)
     return NS_OK;
 
@@ -780,7 +780,7 @@ ARIAGridAccessible::GetSelectedColumnsArray(PRUint32* aColumnCount,
     PRInt32 colIdx = 0;
 
     AccIterator cellIter(row, filters::GetCell);
-    nsAccessible *cell = nsnull;
+    Accessible* cell = nsnull;
     for (colIdx = 0; (cell = cellIter.Next()); colIdx++) {
       if (isColSelArray.SafeElementAt(colIdx, false) &&
           !nsAccUtils::IsARIASelected(cell)) {
@@ -842,11 +842,11 @@ ARIAGridCellAccessible::GetTable(nsIAccessibleTable** aTable)
   NS_ENSURE_ARG_POINTER(aTable);
   *aTable = nsnull;
 
-  nsAccessible* thisRow = Parent();
+  Accessible* thisRow = Parent();
   if (!thisRow || thisRow->Role() != roles::ROW)
     return NS_OK;
 
-  nsAccessible* table = thisRow->Parent();
+  Accessible* table = thisRow->Parent();
   if (!table)
     return NS_OK;
 
@@ -867,7 +867,7 @@ ARIAGridCellAccessible::GetColumnIndex(PRInt32* aColumnIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* row = Parent();
+  Accessible* row = Parent();
   if (!row)
     return NS_OK;
 
@@ -875,7 +875,7 @@ ARIAGridCellAccessible::GetColumnIndex(PRInt32* aColumnIndex)
 
   PRInt32 indexInRow = IndexInParent();
   for (PRInt32 idx = 0; idx < indexInRow; idx++) {
-    nsAccessible* cell = row->GetChildAt(idx);
+    Accessible* cell = row->GetChildAt(idx);
     roles::Role role = cell->Role();
     if (role == roles::GRID_CELL || role == roles::ROWHEADER ||
         role == roles::COLUMNHEADER)
@@ -894,11 +894,11 @@ ARIAGridCellAccessible::GetRowIndex(PRInt32* aRowIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* row = Parent();
+  Accessible* row = Parent();
   if (!row)
     return NS_OK;
 
-  nsAccessible* table = row->Parent();
+  Accessible* table = row->Parent();
   if (!table)
     return NS_OK;
 
@@ -987,7 +987,7 @@ ARIAGridCellAccessible::IsSelected(bool* aIsSelected)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* row = Parent();
+  Accessible* row = Parent();
   if (!row || row->Role() != roles::ROW)
     return NS_OK;
 
@@ -999,7 +999,7 @@ ARIAGridCellAccessible::IsSelected(bool* aIsSelected)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible
+// Accessible
 
 void
 ARIAGridCellAccessible::ApplyARIAState(PRUint64* aState) const
@@ -1011,7 +1011,7 @@ ARIAGridCellAccessible::ApplyARIAState(PRUint64* aState) const
     return;
 
   // Check aria-selected="true" on the row.
-  nsAccessible* row = Parent();
+  Accessible* row = Parent();
   if (!row || row->Role() != roles::ROW)
     return;
 
@@ -1035,14 +1035,14 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
 
   // Expose "table-cell-index" attribute.
 
-  nsAccessible* thisRow = Parent();
+  Accessible* thisRow = Parent();
   if (!thisRow || thisRow->Role() != roles::ROW)
     return NS_OK;
 
   PRInt32 colIdx = 0, colCount = 0;
   PRUint32 childCount = thisRow->ChildCount();
   for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible* child = thisRow->GetChildAt(childIdx);
+    Accessible* child = thisRow->GetChildAt(childIdx);
     if (child == this)
       colIdx = colCount;
 
@@ -1052,7 +1052,7 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
       colCount++;
   }
 
-  nsAccessible* table = thisRow->Parent();
+  Accessible* table = thisRow->Parent();
   if (!table)
     return NS_OK;
 
@@ -1063,7 +1063,7 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
   PRInt32 rowIdx = 0;
   childCount = table->ChildCount();
   for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible* child = table->GetChildAt(childIdx);
+    Accessible* child = table->GetChildAt(childIdx);
     if (child == thisRow)
       break;
 

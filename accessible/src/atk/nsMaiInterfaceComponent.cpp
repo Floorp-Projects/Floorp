@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 #include "nsMai.h"
@@ -32,7 +32,7 @@ getExtentsCB(AtkComponent* aComponent, gint* aX, gint* aY,
 static gboolean
 grabFocusCB(AtkComponent* aComponent)
 {
-  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aComponent));
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aComponent));
   if (!accWrap)
     return FALSE;
 
@@ -42,13 +42,13 @@ grabFocusCB(AtkComponent* aComponent)
 }
 
 AtkObject*
-refAccessibleAtPointHelper(nsAccessibleWrap* aAccWrap, gint aX, gint aY,
+refAccessibleAtPointHelper(AccessibleWrap* aAccWrap, gint aX, gint aY,
                            AtkCoordType aCoordType)
 {
   if (!aAccWrap || aAccWrap->IsDefunct() || nsAccUtils::MustPrune(aAccWrap))
     return nsnull;
 
-  // nsAccessible::ChildAtPoint(x,y) is in screen pixels.
+  // Accessible::ChildAtPoint(x,y) is in screen pixels.
   if (aCoordType == ATK_XY_WINDOW) {
     nsIntPoint winCoords =
       nsCoreUtils::GetScreenCoordsForWindow(aAccWrap->GetNode());
@@ -56,19 +56,19 @@ refAccessibleAtPointHelper(nsAccessibleWrap* aAccWrap, gint aX, gint aY,
     aY += winCoords.y;
   }
 
-  nsAccessible* accAtPoint = aAccWrap->ChildAtPoint(aX, aY,
-                                                    nsAccessible::eDirectChild);
+  Accessible* accAtPoint = aAccWrap->ChildAtPoint(aX, aY,
+                                                  Accessible::eDirectChild);
   if (!accAtPoint)
     return nsnull;
 
-  AtkObject* atkObj = nsAccessibleWrap::GetAtkObject(accAtPoint);
+  AtkObject* atkObj = AccessibleWrap::GetAtkObject(accAtPoint);
   if (atkObj)
     g_object_ref(atkObj);
   return atkObj;
 }
 
 void
-getExtentsHelper(nsAccessibleWrap* aAccWrap,
+getExtentsHelper(AccessibleWrap* aAccWrap,
                  gint* aX, gint* aY, gint* aWidth, gint* aHeight,
                  AtkCoordType aCoordType)
 {

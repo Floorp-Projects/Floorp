@@ -11,8 +11,9 @@
 #ifndef GrClipIterator_DEFINED
 #define GrClipIterator_DEFINED
 
-#include "GrPath.h"
 #include "GrRect.h"
+#include "SkPath.h"
+#include "SkRegion.h"
 
 /**
  * A clip is a list of paths and/or rects with set operations to combine them.
@@ -40,7 +41,7 @@ public:
      * Return the current path. It is an error to call this when isDone() is
      * true or when getType() is kRect_Type.
      */
-    virtual const GrPath* getPath() = 0;
+    virtual const SkPath* getPath() = 0;
 
     /**
      * Return the fill rule for the path. It is an error to call this when
@@ -58,7 +59,12 @@ public:
      * Gets the operation used to apply the current item to previously iterated
      * items. Iterators should not produce a Replace op.
      */
-    virtual GrSetOp getOp() const = 0;
+    virtual SkRegion::Op getOp() const = 0;
+
+    /**
+     * Gets anti-aliasing setting desired for the current clip
+     */
+    virtual bool getDoAA() const = 0;
 
     /**
      *  Call to move to the next element in the list, previous path iter can be

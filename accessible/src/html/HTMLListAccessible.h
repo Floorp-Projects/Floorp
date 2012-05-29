@@ -28,7 +28,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsAccessible
+  // Accessible
   virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
 };
@@ -53,7 +53,7 @@ public:
   NS_IMETHOD GetBounds(PRInt32* aX, PRInt32* aY,
                        PRInt32* aWidth, PRInt32* aHeight);
 
-  // nsAccessible
+  // Accessible
   virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
@@ -61,7 +61,7 @@ public:
   void UpdateBullet(bool aHasBullet);
 
 protected:
-  // nsAccessible
+  // Accessible
   virtual void CacheChildren();
 
 private:
@@ -83,7 +83,7 @@ public:
   virtual nsIFrame* GetFrame() const;
   virtual bool IsPrimaryForNode() const;
 
-  // nsAccessible
+  // Accessible
   virtual ENameValueFlag Name(nsString& aName);
   virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
@@ -103,7 +103,7 @@ public:
 
 
 inline mozilla::a11y::HTMLLIAccessible*
-nsAccessible::AsHTMLListItem()
+Accessible::AsHTMLListItem()
 {
   return mFlags & eHTMLListItemAccessible ?
     static_cast<mozilla::a11y::HTMLLIAccessible*>(this) : nsnull;

@@ -23,7 +23,7 @@ using namespace mozilla::a11y;
 
 OuterDocAccessible::
   OuterDocAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -35,10 +35,10 @@ OuterDocAccessible::~OuterDocAccessible()
 // nsISupports
 
 NS_IMPL_ISUPPORTS_INHERITED0(OuterDocAccessible,
-                             nsAccessible)
+                             Accessible)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible public (DON'T add methods here)
+// Accessible public (DON'T add methods here)
 
 role
 OuterDocAccessible::NativeRole()
@@ -46,7 +46,7 @@ OuterDocAccessible::NativeRole()
   return roles::INTERNAL_FRAME;
 }
 
-nsAccessible*
+Accessible*
 OuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                  EWhichChildAtPoint aWhichChild)
 {
@@ -59,7 +59,7 @@ OuterDocAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
 
   // Always return the inner doc as direct child accessible unless bounds
   // outside of it.
-  nsAccessible* child = GetChildAt(0);
+  Accessible* child = GetChildAt(0);
   NS_ENSURE_TRUE(child, nsnull);
 
   if (aWhichChild == eDeepestChild)
@@ -77,7 +77,7 @@ OuterDocAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
     // override the other attributes
     return NS_OK;
   }
-  return nsAccessible::GetAttributesInternal(aAttributes);
+  return Accessible::GetAttributesInternal(aAttributes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +130,7 @@ OuterDocAccessible::Shutdown()
   }
 #endif
 
-  nsAccessible* childAcc = mChildren.SafeElementAt(0, nsnull);
+  Accessible* childAcc = mChildren.SafeElementAt(0, nsnull);
   if (childAcc) {
 #ifdef DEBUG
     if (logging::IsEnabled(logging::eDocDestroy)) {
@@ -141,11 +141,11 @@ OuterDocAccessible::Shutdown()
     childAcc->Shutdown();
   }
 
-  nsAccessibleWrap::Shutdown();
+  AccessibleWrap::Shutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible public
+// Accessible public
 
 void
 OuterDocAccessible::InvalidateChildren()
@@ -163,7 +163,7 @@ OuterDocAccessible::InvalidateChildren()
 }
 
 bool
-OuterDocAccessible::AppendChild(nsAccessible* aAccessible)
+OuterDocAccessible::AppendChild(Accessible* aAccessible)
 {
   // We keep showing the old document for a bit after creating the new one,
   // and while building the new DOM and frame tree. That's done on purpose
@@ -173,7 +173,7 @@ OuterDocAccessible::AppendChild(nsAccessible* aAccessible)
   if (mChildren.Length())
     mChildren[0]->Shutdown();
 
-  if (!nsAccessibleWrap::AppendChild(aAccessible))
+  if (!AccessibleWrap::AppendChild(aAccessible))
     return false;
 
 #ifdef DEBUG
@@ -188,9 +188,9 @@ OuterDocAccessible::AppendChild(nsAccessible* aAccessible)
 }
 
 bool
-OuterDocAccessible::RemoveChild(nsAccessible* aAccessible)
+OuterDocAccessible::RemoveChild(Accessible* aAccessible)
 {
-  nsAccessible* child = mChildren.SafeElementAt(0, nsnull);
+  Accessible* child = mChildren.SafeElementAt(0, nsnull);
   if (child != aAccessible) {
     NS_ERROR("Wrong child to remove!");
     return false;
@@ -204,7 +204,7 @@ OuterDocAccessible::RemoveChild(nsAccessible* aAccessible)
   }
 #endif
 
-  bool wasRemoved = nsAccessibleWrap::RemoveChild(child);
+  bool wasRemoved = AccessibleWrap::RemoveChild(child);
 
   NS_ASSERTION(!mChildren.Length(),
                "This child document of outerdoc accessible wasn't removed!");
@@ -214,7 +214,7 @@ OuterDocAccessible::RemoveChild(nsAccessible* aAccessible)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible protected
+// Accessible protected
 
 void
 OuterDocAccessible::CacheChildren()

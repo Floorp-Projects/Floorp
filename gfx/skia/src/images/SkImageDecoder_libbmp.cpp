@@ -27,7 +27,11 @@ protected:
     virtual bool onDecode(SkStream* stream, SkBitmap* bm, Mode mode);
 };
 
-static SkImageDecoder* Factory(SkStream* stream) {
+///////////////////////////////////////////////////////////////////////////////
+DEFINE_DECODER_CREATOR(BMPImageDecoder);
+///////////////////////////////////////////////////////////////////////////////
+
+SkImageDecoder* sk_libbmp_dfactory(SkStream* stream) {
     static const char kBmpMagic[] = { 'B', 'M' };
     
     size_t len = stream->getLength();
@@ -41,7 +45,7 @@ static SkImageDecoder* Factory(SkStream* stream) {
     return NULL;
 }
 
-static SkTRegistry<SkImageDecoder*, SkStream*> gReg(Factory);
+static SkTRegistry<SkImageDecoder*, SkStream*> gReg(sk_libbmp_dfactory);
 
 ///////////////////////////////////////////////////////////////////////////////
 

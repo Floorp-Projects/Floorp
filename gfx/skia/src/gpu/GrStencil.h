@@ -11,6 +11,8 @@
 #define GrStencil_DEFINED
 
 #include "GrTypes.h"
+#include "SkRegion.h"
+
 /**
  * Gr uses the stencil buffer to implement complex clipping inside the
  * GrDrawTarget class. The GrDrawTarget makes a subset of the stencil buffer
@@ -84,6 +86,13 @@ enum GrStencilOp {
     kStencilOpCount
 };
 
+enum GrStencilFlags {
+    kIsDisabled_StencilFlag      = 0x1,
+    kNotDisabled_StencilFlag     = 0x2,
+    kDoesWrite_StencilFlag       = 0x4,
+    kDoesNotWrite_StencilFlag    = 0x8,
+};
+
 /**
  * GrStencilState needs to be a class with accessors and setters so that it
  * can maintain flags related to its current state. However, we also want to
@@ -120,6 +129,45 @@ GR_STATIC_ASSERT(sizeof(GrStencilSettingsStruct) ==
                  2*sizeof(unsigned short) + // ref values
                  2*sizeof(unsigned short) + // write masks
                  sizeof(uint32_t)); // flags
+
+// This macro is used to compute the GrStencilSettingsStructs flags
+// associated to disabling. It is used both to define constant structure
+// initializers and inside GrStencilSettings::isDisabled()
+//
+#define GR_STENCIL_SETTINGS_IS_DISABLED(                                     \
+    FRONT_PASS_OP,    BACK_PASS_OP,                                          \
+    FRONT_FAIL_OP,    BACK_FAIL_OP,                                          \
+    FRONT_FUNC,       BACK_FUNC)                                             \
+    ((FRONT_PASS_OP) == kKeep_StencilOp &&                                   \
+     (BACK_PASS_OP)  == kKeep_StencilOp &&                                   \
+     (FRONT_FAIL_OP) == kKeep_StencilOp &&                                   \
+     (BACK_FAIL_OP)  == kKeep_StencilOp &&                                   \
+     (FRONT_FUNC)    == kAlways_StencilFunc &&                               \
+     (BACK_FUNC)     == kAlways_StencilFunc)
+
+#define GR_STENCIL_SETTINGS_DOES_WRITE(                                      \
+    FRONT_PASS_OP,    BACK_PASS_OP,                                          \
+    FRONT_FAIL_OP,    BACK_FAIL_OP,                                          \
+    FRONT_FUNC,       BACK_FUNC)                                             \
+    (!(((FRONT_FUNC) == kNever_StencilFunc  ||                               \
+        (FRONT_PASS_OP) == kKeep_StencilOp)  &&                              \
+       ((BACK_FUNC) == kNever_StencilFunc  ||                                \
+        (BACK_PASS_OP)  == kKeep_StencilOp) &&                               \
+       ((FRONT_FUNC) == kAlways_StencilFunc ||                               \
+        (FRONT_FAIL_OP) == kKeep_StencilOp) &&                               \
+       ((BACK_FUNC)  == kAlways_StencilFunc ||                               \
+        (BACK_FAIL_OP)  == kKeep_StencilOp)))
+
+#define GR_STENCIL_SETTINGS_DEFAULT_FLAGS(                                   \
+    FRONT_PASS_OP,    BACK_PASS_OP,                                          \
+    FRONT_FAIL_OP,    BACK_FAIL_OP,                                          \
+    FRONT_FUNC,       BACK_FUNC)                                             \
+  ((GR_STENCIL_SETTINGS_IS_DISABLED(FRONT_PASS_OP,BACK_PASS_OP,              \
+      FRONT_FAIL_OP,BACK_FAIL_OP,FRONT_FUNC,BACK_FUNC) ?                     \
+      kIsDisabled_StencilFlag : kNotDisabled_StencilFlag) |                  \
+   (GR_STENCIL_SETTINGS_DOES_WRITE(FRONT_PASS_OP,BACK_PASS_OP,               \
+      FRONT_FAIL_OP,BACK_FAIL_OP,FRONT_FUNC,BACK_FUNC) ?                     \
+      kDoesWrite_StencilFlag : kDoesNotWrite_StencilFlag))
 
 /**
  * Class representing stencil state.
@@ -183,42 +231,36 @@ public:
         memset(this, 0, sizeof(*this));
         GR_STATIC_ASSERT(0 == kKeep_StencilOp);
         GR_STATIC_ASSERT(0 == kAlways_StencilFunc);
-        fFlags = kIsDisabled_Flag | kDoesNotWrite_Flag;
+        fFlags = kIsDisabled_StencilFlag | kDoesNotWrite_StencilFlag;
     }
 
     bool isDisabled() const {
-        if (fFlags & kIsDisabled_Flag) {
+        if (fFlags & kIsDisabled_StencilFlag) {
             return true;
         }
-        if (fFlags & kNotDisabled_Flag) {
+        if (fFlags & kNotDisabled_StencilFlag) {
             return false;
         }
-        bool disabled = kKeep_StencilOp == fFrontPassOp   &&
-                        kKeep_StencilOp == fBackPassOp    &&
-                        kKeep_StencilOp == fFrontFailOp   &&
-                        kKeep_StencilOp == fBackFailOp   &&
-                        kAlways_StencilFunc == fFrontFunc &&
-                        kAlways_StencilFunc == fBackFunc;
-        fFlags |= disabled ? kIsDisabled_Flag : kNotDisabled_Flag;
+        bool disabled = GR_STENCIL_SETTINGS_IS_DISABLED(
+                            fFrontPassOp, fBackPassOp,
+                            fFrontFailOp, fBackFailOp,
+                            fFrontFunc ,fBackFunc);
+        fFlags |= disabled ? kIsDisabled_StencilFlag : kNotDisabled_StencilFlag;
         return disabled;
     }
 
     bool doesWrite() const {
-        if (fFlags & kDoesWrite_Flag) {
+        if (fFlags & kDoesWrite_StencilFlag) {
             return true;
         }
-        if (fFlags & kDoesNotWrite_Flag) {
+        if (fFlags & kDoesNotWrite_StencilFlag) {
             return false;
         }
-        bool writes = !((kNever_StencilFunc == fFrontFunc ||
-                         kKeep_StencilOp == fFrontPassOp)  &&
-                        (kNever_StencilFunc == fBackFunc ||
-                         kKeep_StencilOp == fBackPassOp)    &&
-                        (kAlways_StencilFunc == fFrontFunc ||
-                         kKeep_StencilOp == fFrontFailOp)  &&
-                        (kAlways_StencilFunc == fBackFunc ||
-                         kKeep_StencilOp == fBackFailOp));
-        fFlags |= writes ? kDoesWrite_Flag : kDoesNotWrite_Flag;
+        bool writes = GR_STENCIL_SETTINGS_DOES_WRITE(
+                        fFrontPassOp, fBackPassOp,
+                        fFrontFailOp, fBackFailOp,
+                        fFrontFunc, fBackFunc);
+        fFlags |= writes ? kDoesWrite_StencilFlag : kDoesNotWrite_StencilFlag;
         return writes;
     }
     
@@ -249,13 +291,7 @@ public:
     }
 
 private:
-    friend class GrGpu;
-    enum {
-        kIsDisabled_Flag      = 0x1,
-        kNotDisabled_Flag     = 0x2,
-        kDoesWrite_Flag       = 0x4,
-        kDoesNotWrite_Flag    = 0x8,
-    };
+    friend class GrClipMaskManager;
 
     enum {
         kMaxStencilClipPasses = 2  // maximum number of passes to add a clip 
@@ -285,7 +321,7 @@ private:
      *         stencil clip bit. Will only be true if canBeDirect is true.
      *         numPasses will be 1 if return value is true.
      */
-    static bool GetClipPasses(GrSetOp op, 
+    static bool GetClipPasses(SkRegion::Op op, 
                               bool canBeDirect,
                               unsigned int stencilClipMask,
                               bool invertedFill,
@@ -295,14 +331,14 @@ private:
 
 GR_STATIC_ASSERT(sizeof(GrStencilSettingsStruct) == sizeof(GrStencilSettings));
 
-#define GR_STATIC_CONST_STENCIL(NAME,                                        \
+#define GR_STATIC_CONST_STENCIL_STRUCT(STRUCT_NAME,                          \
     FRONT_PASS_OP,    BACK_PASS_OP,                                          \
     FRONT_FAIL_OP,    BACK_FAIL_OP,                                          \
     FRONT_FUNC,       BACK_FUNC,                                             \
     FRONT_MASK,       BACK_MASK,                                             \
     FRONT_REF,        BACK_REF,                                              \
     FRONT_WRITE_MASK, BACK_WRITE_MASK)                                       \
-    static const GrStencilSettingsStruct NAME ## _STRUCT = {                 \
+    static const GrStencilSettingsStruct STRUCT_NAME = {                     \
         (FRONT_PASS_OP),    (BACK_PASS_OP),                                  \
         (FRONT_FAIL_OP),    (BACK_FAIL_OP),                                  \
         (FRONT_FUNC),       (BACK_FUNC),                                     \
@@ -310,14 +346,39 @@ GR_STATIC_ASSERT(sizeof(GrStencilSettingsStruct) == sizeof(GrStencilSettings));
         (FRONT_MASK),       (BACK_MASK),                                     \
         (FRONT_REF),        (BACK_REF),                                      \
         (FRONT_WRITE_MASK), (BACK_WRITE_MASK),                               \
-        0                                                                    \
-    };                                                                       \
+        GR_STENCIL_SETTINGS_DEFAULT_FLAGS(                                   \
+            FRONT_PASS_OP, BACK_PASS_OP, FRONT_FAIL_OP, BACK_FAIL_OP,        \
+            FRONT_FUNC, BACK_FUNC)                                           \
+    };
+
+#define GR_CONST_STENCIL_SETTINGS_PTR_FROM_STRUCT_PTR(STRUCT_PTR)            \
+    reinterpret_cast<const GrStencilSettings*>(STRUCT_PTR)
+
+#define GR_STATIC_CONST_SAME_STENCIL_STRUCT(STRUCT_NAME,                     \
+    PASS_OP, FAIL_OP, FUNC, MASK, REF, WRITE_MASK)                           \
+    GR_STATIC_CONST_STENCIL_STRUCT(STRUCT_NAME, (PASS_OP), (PASS_OP),        \
+    (FAIL_OP),(FAIL_OP), (FUNC), (FUNC), (MASK), (MASK), (REF), (REF),       \
+    (WRITE_MASK),(WRITE_MASK))
+
+#define GR_STATIC_CONST_STENCIL(NAME,                                        \
+    FRONT_PASS_OP,    BACK_PASS_OP,                                          \
+    FRONT_FAIL_OP,    BACK_FAIL_OP,                                          \
+    FRONT_FUNC,       BACK_FUNC,                                             \
+    FRONT_MASK,       BACK_MASK,                                             \
+    FRONT_REF,        BACK_REF,                                              \
+    FRONT_WRITE_MASK, BACK_WRITE_MASK)                                       \
+    GR_STATIC_CONST_STENCIL_STRUCT(NAME ## _STRUCT,                          \
+    (FRONT_PASS_OP),(BACK_PASS_OP),(FRONT_FAIL_OP),(BACK_FAIL_OP),           \
+    (FRONT_FUNC),(BACK_FUNC),(FRONT_MASK),(BACK_MASK),                       \
+    (FRONT_REF),(BACK_REF),(FRONT_WRITE_MASK),(BACK_WRITE_MASK))             \
     static const GrStencilSettings& NAME =                                   \
-        *reinterpret_cast<const GrStencilSettings*>(&(NAME ## _STRUCT))
-#endif
+        *GR_CONST_STENCIL_SETTINGS_PTR_FROM_STRUCT_PTR(&(NAME ## _STRUCT));
+
 
 #define GR_STATIC_CONST_SAME_STENCIL(NAME,                                   \
     PASS_OP, FAIL_OP, FUNC, MASK, REF, WRITE_MASK)                           \
     GR_STATIC_CONST_STENCIL(NAME, (PASS_OP), (PASS_OP), (FAIL_OP),           \
     (FAIL_OP), (FUNC), (FUNC), (MASK), (MASK), (REF), (REF), (WRITE_MASK),   \
     (WRITE_MASK))
+
+#endif

@@ -33,6 +33,7 @@ function runTest() {
   browserFrameHelpers.setEnabledPref(true);
   browserFrameHelpers.addToWhitelist();
 
+  var mm;
   var numEvents = 0;
   var iframe1 = document.createElement('iframe');
   iframe1.mozbrowser = true;
@@ -51,6 +52,7 @@ function runTest() {
       ok(msg.json.hidden === false, 'mozHidden attribute correctly set');
       // Allow some time in case we generate too many events
       setTimeout(function() {
+        mm.removeMessageListener('test:visibilitychange', recvVisibilityChanged);
         SimpleTest.finish();
       }, 100);
     } else {
@@ -59,7 +61,7 @@ function runTest() {
   }
 
   function iframeLoaded() {
-    var mm = SpecialPowers.getBrowserFrameMessageManager(iframe1);
+    mm = SpecialPowers.getBrowserFrameMessageManager(iframe1);
     mm.addMessageListener('test:visibilitychange', recvVisibilityChanged);
     mm.loadFrameScript('data:,(' + iframeScript.toString() + ')();', false);
     iframe1.setVisible(false);

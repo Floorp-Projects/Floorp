@@ -29,8 +29,9 @@ static void S32A_D565_Opaque_neon(uint16_t* SK_RESTRICT dst,
                       "vmov.u8    d31, #1<<7                  \n\t"
                       "vld1.16    {q12}, [%[dst]]             \n\t"
                       "vld4.8     {d0-d3}, [%[src]]           \n\t"
-                      // Thumb does not support the standard ARM conditional instructions but
-                      // instead requires the 'it' instruction to signal conditional execution.
+                      // Thumb does not support the standard ARM conditional
+                      // instructions but instead requires the 'it' instruction
+                      // to signal conditional execution
                       "it eq                                  \n\t"
                       "moveq      ip, #8                      \n\t"
                       "mov        %[keep_dst], %[dst]         \n\t"
@@ -1000,7 +1001,7 @@ static void S32A_D565_Opaque_Dither_neon (uint16_t * SK_RESTRICT dst,
 
 	    /* calculate 'd', which will be 0..7 */
 	    /* dbase[] is 0..7; alpha is 0..256; 16 bits suffice */
-#if SK_BUILD_FOR_ANDROID
+#if defined(SK_BUILD_FOR_ANDROID)
 	    /* SkAlpha255To256() semantic a+1 vs a+a>>7 */
 	    alpha8 = vaddw_u8(vmovl_u8(sa), vdup_n_u8(1));
 #else
@@ -1322,6 +1323,10 @@ SkBlitRow::ColorProc SkBlitRow::PlatformColorProc() {
 SkBlitMask::ColorProc SkBlitMask::PlatformColorProcs(SkBitmap::Config dstConfig,
                                                      SkMask::Format maskFormat,
                                                      SkColor color) {
+    return NULL;
+}
+
+SkBlitMask::BlitLCD16RowProc SkBlitMask::PlatformBlitRowProcs16(bool isOpaque) {
     return NULL;
 }
 

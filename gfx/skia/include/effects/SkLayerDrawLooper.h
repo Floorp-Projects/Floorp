@@ -101,19 +101,11 @@ public:
     virtual void init(SkCanvas*);
     virtual bool next(SkCanvas*, SkPaint* paint);
 
-    // must be public for Registrar :(
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer) {
-        return SkNEW_ARGS(SkLayerDrawLooper, (buffer));
-    }
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkLayerDrawLooper)
     
-    SK_DECLARE_FLATTENABLE_REGISTRAR()
-
 protected:
     SkLayerDrawLooper(SkFlattenableReadBuffer&);
-
-    // overrides from SkFlattenable
-    virtual void flatten(SkFlattenableWriteBuffer& );
-    virtual Factory getFactory() { return CreateProc; }
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
     
 private:
     struct Rec {

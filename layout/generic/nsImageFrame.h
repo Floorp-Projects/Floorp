@@ -109,7 +109,7 @@ public:
                               PRInt32 aModType);
 
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<nsAccessible> CreateAccessible();
+  virtual already_AddRefed<Accessible> CreateAccessible();
 #endif
 
   virtual nsIAtom* GetType() const;

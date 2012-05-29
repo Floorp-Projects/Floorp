@@ -12,7 +12,7 @@ extern "C" {
 static AtkHyperlink*
 getHyperlinkCB(AtkHyperlinkImpl* aImpl)
 {
-  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImpl));
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImpl));
   if (!accWrap)
     return nsnull;
 

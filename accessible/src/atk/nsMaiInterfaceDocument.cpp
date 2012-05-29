@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 #include "DocAccessible.h"
 #include "nsMai.h"
 
@@ -42,13 +42,13 @@ documentInterfaceInitCB(AtkDocumentIface *aIface)
 const gchar *
 getDocumentLocaleCB(AtkDocument *aDocument)
 {
-  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
   if (!accWrap)
     return nsnull;
 
   nsAutoString locale;
   accWrap->Language(locale);
-  return locale.IsEmpty() ? nsnull : nsAccessibleWrap::ReturnString(locale);
+  return locale.IsEmpty() ? nsnull : AccessibleWrap::ReturnString(locale);
 }
 
 static inline GSList *
@@ -67,7 +67,7 @@ prependToList(GSList *aList, const char *const aName, const nsAutoString &aValue
 AtkAttributeSet *
 getDocumentAttributesCB(AtkDocument *aDocument)
 {
-  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
   if (!accWrap || !accWrap->IsDoc())
     return nsnull;
 
@@ -96,7 +96,7 @@ const gchar *
 getDocumentAttributeValueCB(AtkDocument *aDocument,
                             const gchar *aAttrName)
 {
-  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
   if (!accWrap || !accWrap->IsDoc())
     return nsnull;
 
@@ -113,6 +113,6 @@ getDocumentAttributeValueCB(AtkDocument *aDocument,
     return nsnull;
 
   NS_ENSURE_SUCCESS(rv, nsnull);
-  return attrValue.IsEmpty() ? nsnull : nsAccessibleWrap::ReturnString(attrValue);
+  return attrValue.IsEmpty() ? nsnull : AccessibleWrap::ReturnString(attrValue);
 }
 }

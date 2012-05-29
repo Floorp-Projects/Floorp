@@ -51,7 +51,7 @@ public class ScrollbarLayer extends TileLayer {
         "uniform sampler2D sTexture;\n" +
         "uniform float uOpacity;\n" +
         "void main() {\n" +
-        "    gl_FragColor = texture2D(sTexture, vec2(vTexCoord.x, 1.0 - vTexCoord.y));\n" +
+        "    gl_FragColor = texture2D(sTexture, vTexCoord);\n" +
         "    gl_FragColor.a *= uOpacity;\n" +
         "}\n";
 

@@ -1,9 +1,20 @@
-/* NEON optimized code (C) COPYRIGHT 2009 Motorola */
+/* NEON optimized code (C) COPYRIGHT 2009 Motorola 
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #include "SkBitmapProcState.h"
 #include "SkPerspIter.h"
 #include "SkShader.h"
 #include "SkUtils.h"
+
+// Helper to ensure that when we shift down, we do it w/o sign-extension
+// so the caller doesn't have to manually mask off the top 16 bits
+//
+static unsigned SK_USHIFT16(unsigned x) {
+    return x >> 16;
+}
 
 /*  returns 0...(n-1) given any x (positive or negative).
     
@@ -40,8 +51,8 @@ void decal_filter_scale(uint32_t dst[], SkFixed fx, SkFixed dx, int count);
 #endif
 
 #define MAKENAME(suffix)        RepeatX_RepeatY ## suffix
-#define TILEX_PROCF(fx, max)    (((fx) & 0xFFFF) * ((max) + 1) >> 16)
-#define TILEY_PROCF(fy, max)    (((fy) & 0xFFFF) * ((max) + 1) >> 16)
+#define TILEX_PROCF(fx, max)    SK_USHIFT16(((fx) & 0xFFFF) * ((max) + 1))
+#define TILEY_PROCF(fy, max)    SK_USHIFT16(((fy) & 0xFFFF) * ((max) + 1))
 #define TILEX_LOW_BITS(fx, max) ((((fx) & 0xFFFF) * ((max) + 1) >> 12) & 0xF)
 #define TILEY_LOW_BITS(fy, max) ((((fy) & 0xFFFF) * ((max) + 1) >> 12) & 0xF)
 #if	defined(__ARM_HAVE_NEON)
@@ -52,15 +63,17 @@ void decal_filter_scale(uint32_t dst[], SkFixed fx, SkFixed dx, int count);
 
 #define MAKENAME(suffix)        GeneralXY ## suffix
 #define PREAMBLE(state)         SkBitmapProcState::FixedTileProc tileProcX = (state).fTileProcX; \
-                                SkBitmapProcState::FixedTileProc tileProcY = (state).fTileProcY
-#define PREAMBLE_PARAM_X        , SkBitmapProcState::FixedTileProc tileProcX
-#define PREAMBLE_PARAM_Y        , SkBitmapProcState::FixedTileProc tileProcY
-#define PREAMBLE_ARG_X          , tileProcX
-#define PREAMBLE_ARG_Y          , tileProcY
-#define TILEX_PROCF(fx, max)    (tileProcX(fx) * ((max) + 1) >> 16)
-#define TILEY_PROCF(fy, max)    (tileProcY(fy) * ((max) + 1) >> 16)
-#define TILEX_LOW_BITS(fx, max) ((tileProcX(fx) * ((max) + 1) >> 12) & 0xF)
-#define TILEY_LOW_BITS(fy, max) ((tileProcY(fy) * ((max) + 1) >> 12) & 0xF)
+                                SkBitmapProcState::FixedTileProc tileProcY = (state).fTileProcY; \
+                                SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcX = (state).fTileLowBitsProcX; \
+                                SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcY = (state).fTileLowBitsProcY
+#define PREAMBLE_PARAM_X        , SkBitmapProcState::FixedTileProc tileProcX, SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcX
+#define PREAMBLE_PARAM_Y        , SkBitmapProcState::FixedTileProc tileProcY, SkBitmapProcState::FixedTileLowBitsProc tileLowBitsProcY
+#define PREAMBLE_ARG_X          , tileProcX, tileLowBitsProcX
+#define PREAMBLE_ARG_Y          , tileProcY, tileLowBitsProcY
+#define TILEX_PROCF(fx, max)    SK_USHIFT16(tileProcX(fx) * ((max) + 1))
+#define TILEY_PROCF(fy, max)    SK_USHIFT16(tileProcY(fy) * ((max) + 1))
+#define TILEX_LOW_BITS(fx, max) tileLowBitsProcX(fx, (max) + 1)
+#define TILEY_LOW_BITS(fy, max) tileLowBitsProcY(fy, (max) + 1)
 #include "SkBitmapProcState_matrix.h"
 
 static inline U16CPU fixed_clamp(SkFixed x)
@@ -87,12 +100,22 @@ static inline U16CPU fixed_repeat(SkFixed x)
     return x & 0xFFFF;
 }
 
+// Visual Studio 2010 (MSC_VER=1600) optimizes bit-shift code incorrectly.
+// See http://code.google.com/p/skia/issues/detail?id=472
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+#pragma optimize("", off)
+#endif
+
 static inline U16CPU fixed_mirror(SkFixed x)
 {
     SkFixed s = x << 15 >> 31;
     // s is FFFFFFFF if we're on an odd interval, or 0 if an even interval
     return (x ^ s) & 0xFFFF;
 }
+
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+#pragma optimize("", on)
+#endif
 
 static SkBitmapProcState::FixedTileProc choose_tile_proc(unsigned m)
 {
@@ -102,6 +125,25 @@ static SkBitmapProcState::FixedTileProc choose_tile_proc(unsigned m)
         return fixed_repeat;
     SkASSERT(SkShader::kMirror_TileMode == m);
     return fixed_mirror;
+}
+
+static inline U16CPU fixed_clamp_lowbits(SkFixed x, int) {
+    return (x >> 12) & 0xF;
+}
+
+static inline U16CPU fixed_repeat_or_mirrow_lowbits(SkFixed x, int scale) {
+    return ((x * scale) >> 12) & 0xF;
+}
+
+static SkBitmapProcState::FixedTileLowBitsProc choose_tile_lowbits_proc(unsigned m) {
+    if (SkShader::kClamp_TileMode == m) {
+        return fixed_clamp_lowbits;
+    } else {
+        SkASSERT(SkShader::kMirror_TileMode == m ||
+                 SkShader::kRepeat_TileMode == m);
+        // mirror and repeat have the same behavior for the low bits.
+        return fixed_repeat_or_mirrow_lowbits;
+    }
 }
 
 static inline U16CPU int_clamp(int x, int n) {
@@ -518,6 +560,8 @@ SkBitmapProcState::chooseMatrixProc(bool trivial_matrix) {
     
     fTileProcX = choose_tile_proc(fTileModeX);
     fTileProcY = choose_tile_proc(fTileModeY);
+    fTileLowBitsProcX = choose_tile_lowbits_proc(fTileModeX);
+    fTileLowBitsProcY = choose_tile_lowbits_proc(fTileModeY);
     return GeneralXY_Procs[index];
 }
 
