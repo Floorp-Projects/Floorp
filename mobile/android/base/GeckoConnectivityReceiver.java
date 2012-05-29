@@ -22,6 +22,8 @@ public class GeckoConnectivityReceiver extends BroadcastReceiver {
     private static final String LINK_DATA_DOWN = "down";
     private static final String LINK_DATA_UNKNOWN = "unknown";
 
+    private static final String LOGTAG = "GeckoConnectivityReciever";
+
     private IntentFilter mFilter;
 
     private static boolean isRegistered = false;
@@ -50,8 +52,10 @@ public class GeckoConnectivityReceiver extends BroadcastReceiver {
 
     public void registerFor(Activity activity) {
         if (!isRegistered) {
-            activity.registerReceiver(this, mFilter);
-            isRegistered = true;
+            // registerReciever will return null if registering throws a RemoteException
+            isRegistered = activity.registerReceiver(this, mFilter) != null;
+            if (!isRegistered)
+                Log.e(LOGTAG, "Registering receiver failed");
         }
     }
 
