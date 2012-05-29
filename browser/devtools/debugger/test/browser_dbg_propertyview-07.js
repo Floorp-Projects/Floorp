@@ -37,7 +37,7 @@ function testFrameParameters()
 
       var frames = gDebugger.DebuggerView.StackFrames._frames,
           childNodes = frames.childNodes,
-          localScope = gDebugger.DebuggerView.Properties.localScope,
+          localScope = gDebugger.DebuggerView.Properties._vars.firstChild,
           localNodes = localScope.querySelector(".details").childNodes;
 
       dump("Got our variables:\n");
@@ -79,14 +79,14 @@ function testFrameParameters()
       is(localNodes[7].querySelector(".value").getAttribute("value"), "1",
        "Should have the right property value for 'a'.");
 
-      is(localNodes[8].querySelector(".value").getAttribute("value"), "[object Object]",
-       "Should have the right property value for 'b'.");
+      is(localNodes[8].querySelector(".value").getAttribute("value"), "[object Arguments]",
+        "Should have the right property value for 'arguments'.");
 
       is(localNodes[9].querySelector(".value").getAttribute("value"), "[object Object]",
-       "Should have the right property value for 'c'.");
+       "Should have the right property value for 'b'.");
 
-      is(localNodes[10].querySelector(".value").getAttribute("value"), "[object Arguments]",
-        "Should have the right property value for 'arguments'.");
+      is(localNodes[10].querySelector(".value").getAttribute("value"), "[object Object]",
+       "Should have the right property value for 'c'.");
 
       resumeAndFinish();
     }}, 0);

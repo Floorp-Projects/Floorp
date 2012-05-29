@@ -30,6 +30,8 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_propertyview-06.js \
 	browser_dbg_propertyview-07.js \
 	browser_dbg_propertyview-08.js \
+	browser_dbg_propertyview-09.js \
+	browser_dbg_propertyview-10.js \
 	browser_dbg_propertyview-edit.js \
 	browser_dbg_panesize.js \
 	browser_dbg_stack-01.js \
@@ -66,6 +68,7 @@ _BROWSER_TEST_PAGES = \
 	test-editor-mode \
 	browser_dbg_displayName.html \
 	browser_dbg_iframes.html \
+	browser_dbg_with-frame.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
