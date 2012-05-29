@@ -43,8 +43,7 @@ bool
 frontend::GenerateBlockId(SharedContext *sc, uint32_t &blockid)
 {
     if (sc->blockidGen == JS_BIT(20)) {
-        JS_ReportErrorNumber(sc->context, js_GetErrorMessage, NULL,
-                             JSMSG_NEED_DIET, "program");
+        JS_ReportErrorNumber(sc->context, js_GetErrorMessage, NULL, JSMSG_NEED_DIET, "program");
         return false;
     }
     blockid = sc->blockidGen++;
