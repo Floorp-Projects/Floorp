@@ -45,10 +45,12 @@ WebGLContext::GenerateWarning(const char *fmt, ...)
 void
 WebGLContext::GenerateWarning(const char *fmt, va_list ap)
 {
-    if (!ShouldGenerateWarnings())
+    const int MaxReportedMessages = 32;
+
+    if (mAlreadyReportedMessages >= MaxReportedMessages)
         return;
 
-    mAlreadyGeneratedWarnings++;
+    mAlreadyReportedMessages++;
 
     char buf[1024];
     PR_vsnprintf(buf, 1024, fmt, ap);
@@ -59,10 +61,10 @@ WebGLContext::GenerateWarning(const char *fmt, va_list ap)
     JSContext* ccx = nsnull;
     if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
         JS_ReportWarning(ccx, "WebGL: %s", buf);
-        if (!ShouldGenerateWarnings()) {
+        if (mAlreadyReportedMessages == MaxReportedMessages) {
             JS_ReportWarning(ccx,
-                "WebGL: No further warnings will be reported for this WebGL context "
-                "(already reported %d warnings)", mAlreadyGeneratedWarnings);
+                "WebGL: no further warnings will be reported for this WebGL context "
+                "(already reported %d warnings)", mAlreadyReportedMessages);
         }
     }
 }
