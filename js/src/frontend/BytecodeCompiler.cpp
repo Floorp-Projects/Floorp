@@ -199,7 +199,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
         if (!AnalyzeFunctions(bce.parser))
             return NULL;
-        sc.functionList = NULL;
+        tc.functionList = NULL;
 
         if (!EmitTree(cx, &bce, pn))
             return NULL;
