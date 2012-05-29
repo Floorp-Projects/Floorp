@@ -358,13 +358,14 @@ class DenseElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
-    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
+    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, unsigned resolveFlags,
+                       PropDesc *desc);
 
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
-                       bool shouldThrow, bool *succeeded);
+                       bool shouldThrow, unsigned resolveFlags, bool *succeeded);
 
     bool setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
-                    const Value &v, bool *succeeded);
+                    const Value &v, unsigned resolveFlags, bool *succeeded);
 
   private:
     inline bool isDenseElements() const MOZ_DELETE;
@@ -387,13 +388,14 @@ class SparseElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
-    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
+    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, unsigned resolveFlags,
+                       PropDesc *desc);
 
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
-                       bool shouldThrow, bool *succeeded);
+                       bool shouldThrow, unsigned resolveFlags, bool *succeeded);
 
     bool setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
-                    const Value &v, bool *succeeded);
+                    const Value &v, unsigned resolveFlags, bool *succeeded);
 
   private:
     inline bool isSparseElements() const MOZ_DELETE;
@@ -511,13 +513,14 @@ class TypedElementsHeader : public ElementsHeader
         return ElementsHeader::length;
     }
 
-    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
+    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, unsigned resolveFlags,
+                       PropDesc *desc);
 
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
-                       bool shouldThrow, bool *succeeded);
+                       bool shouldThrow, unsigned resolveFlags, bool *succeeded);
 
     bool setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
-                    const Value &v, bool *succeeded);
+                    const Value &v, unsigned resolveFlags, bool *succeeded);
 
   private:
     TypedElementsHeader(const TypedElementsHeader &other) MOZ_DELETE;
@@ -670,13 +673,14 @@ class Uint8ClampedElementsHeader : public TypedElementsHeader<uint8_clamped>
 class ArrayBufferElementsHeader : public ElementsHeader
 {
   public:
-    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
+    bool getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, unsigned resolveFlags,
+                       PropDesc *desc);
 
     bool defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
-                       bool shouldThrow, bool *succeeded);
+                       bool shouldThrow, unsigned resolveFlags, bool *succeeded);
 
     bool setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
-                    const Value &v, bool *succeeded);
+                    const Value &v, unsigned resolveFlags, bool *succeeded);
 
   private:
     inline bool isArrayBufferElements() const MOZ_DELETE;
@@ -1249,23 +1253,25 @@ ObjectValue(ObjectImpl &obj)
 }
 
 bool
-GetOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc);
+GetOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, unsigned resolveFlags,
+              PropDesc *desc);
 
 /* Proposed default [[GetP]](Receiver, P) method. */
 extern bool
-GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index, Value *vp);
+GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
+           unsigned resolveFlags, Value *vp);
 
 extern bool
 DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
-              bool shouldThrow, bool *succeeded);
+              bool shouldThrow, unsigned resolveFlags, bool *succeeded);
 
 /* Proposed default [[SetP]](Receiver, P, V) method. */
 extern bool
 SetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index, const Value &v,
-           bool *succeeded);
+           unsigned resolveFlags, bool *succeeded);
 
 extern bool
-HasElement(JSContext *cx, ObjectImpl *obj, uint32_t index, bool *found);
+HasElement(JSContext *cx, ObjectImpl *obj, uint32_t index, unsigned resolveFlags, bool *found);
 
 } /* namespace js */
 

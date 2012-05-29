@@ -291,7 +291,8 @@ js::ObjectImpl::markChildren(JSTracer *trc)
 }
 
 bool
-DenseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc)
+DenseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
+                                   unsigned resolveFlags, PropDesc *desc)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
@@ -312,7 +313,8 @@ DenseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t inde
 }
 
 bool
-SparseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc)
+SparseElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
+                                    unsigned resolveFlags, PropDesc *desc)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
@@ -337,7 +339,7 @@ ElementToValue(const uint8_clamped &u)
 template<typename T>
 bool
 TypedElementsHeader<T>::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
-                                      PropDesc *desc)
+                                      unsigned resolveFlags, PropDesc *desc)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
@@ -353,7 +355,7 @@ TypedElementsHeader<T>::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t i
 
 bool
 ArrayBufferElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
-                                         PropDesc *desc)
+                                         unsigned resolveFlags, PropDesc *desc)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
@@ -363,7 +365,8 @@ ArrayBufferElementsHeader::getOwnElement(JSContext *cx, ObjectImpl *obj, uint32_
 
 bool
 SparseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
-                                    const PropDesc &desc, bool shouldThrow, bool *succeeded)
+                                    const PropDesc &desc, bool shouldThrow, unsigned resolveFlags,
+                                    bool *succeeded)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
@@ -373,7 +376,8 @@ SparseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj, uint32_t ind
 
 bool
 DenseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj, uint32_t index,
-                                   const PropDesc &desc, bool shouldThrow, bool *succeeded)
+                                   const PropDesc &desc, bool shouldThrow, unsigned resolveFlags,
+                                   bool *succeeded)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
@@ -392,7 +396,7 @@ DenseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj, uint32_t inde
         if (!obj->makeElementsSparse(cx))
             return false;
         SparseElementsHeader &elts = obj->elementsHeader().asSparseElements();
-        return elts.defineElement(cx, obj, index, desc, shouldThrow, succeeded);
+        return elts.defineElement(cx, obj, index, desc, shouldThrow, resolveFlags, succeeded);
     }
 
     /* Does the element exist?  All behavior depends upon this. */
@@ -435,7 +439,7 @@ DenseElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj, uint32_t inde
         if (!obj->makeElementsSparse(cx))
             return false;
         SparseElementsHeader &elts = obj->elementsHeader().asSparseElements();
-        return elts.defineElement(cx, obj, index, desc, shouldThrow, succeeded);
+        return elts.defineElement(cx, obj, index, desc, shouldThrow, resolveFlags, succeeded);
     }
 
     /* But if we were able to ensure the element's existence, we're good. */
@@ -460,7 +464,7 @@ template <typename T>
 bool
 TypedElementsHeader<T>::defineElement(JSContext *cx, ObjectImpl *obj,
                                       uint32_t index, const PropDesc &desc, bool shouldThrow,
-                                      bool *succeeded)
+                                      unsigned resolveFlags, bool *succeeded)
 {
     /* XXX jwalden This probably isn't how typed arrays should behave... */
     *succeeded = false;
@@ -474,45 +478,46 @@ TypedElementsHeader<T>::defineElement(JSContext *cx, ObjectImpl *obj,
 bool
 ArrayBufferElementsHeader::defineElement(JSContext *cx, ObjectImpl *obj,
                                          uint32_t index, const PropDesc &desc, bool shouldThrow,
-                                         bool *succeeded)
+                                         unsigned resolveFlags, bool *succeeded)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
     JSObject *delegate = ArrayBufferDelegate(cx, obj);
     if (!delegate)
         return false;
-    return DefineElement(cx, delegate, index, desc, shouldThrow, succeeded);
+    return DefineElement(cx, delegate, index, desc, shouldThrow, resolveFlags, succeeded);
 }
 
 bool
-js::GetOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc)
+js::GetOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, unsigned resolveFlags,
+                  PropDesc *desc)
 {
     ElementsHeader &header = obj->elementsHeader();
     switch (header.kind()) {
       case DenseElements:
-        return header.asDenseElements().getOwnElement(cx, obj, index, desc);
+        return header.asDenseElements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case SparseElements:
-        return header.asSparseElements().getOwnElement(cx, obj, index, desc);
+        return header.asSparseElements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case Uint8Elements:
-        return header.asUint8Elements().getOwnElement(cx, obj, index, desc);
+        return header.asUint8Elements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case Int8Elements:
-        return header.asInt8Elements().getOwnElement(cx, obj, index, desc);
+        return header.asInt8Elements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case Uint16Elements:
-        return header.asUint16Elements().getOwnElement(cx, obj, index, desc);
+        return header.asUint16Elements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case Int16Elements:
-        return header.asInt16Elements().getOwnElement(cx, obj, index, desc);
+        return header.asInt16Elements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case Uint32Elements:
-        return header.asUint32Elements().getOwnElement(cx, obj, index, desc);
+        return header.asUint32Elements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case Int32Elements:
-        return header.asInt32Elements().getOwnElement(cx, obj, index, desc);
+        return header.asInt32Elements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case Uint8ClampedElements:
-        return header.asUint8ClampedElements().getOwnElement(cx, obj, index, desc);
+        return header.asUint8ClampedElements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case Float32Elements:
-        return header.asFloat32Elements().getOwnElement(cx, obj, index, desc);
+        return header.asFloat32Elements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case Float64Elements:
-        return header.asFloat64Elements().getOwnElement(cx, obj, index, desc);
+        return header.asFloat64Elements().getOwnElement(cx, obj, index, resolveFlags, desc);
       case ArrayBufferElements:
-        return header.asArrayBufferElements().getOwnElement(cx, obj, index, desc);
+        return header.asArrayBufferElements().getOwnElement(cx, obj, index, resolveFlags, desc);
     }
 
     MOZ_NOT_REACHED("bad elements kind!");
@@ -521,7 +526,7 @@ js::GetOwnElement(JSContext *cx, ObjectImpl *obj, uint32_t index, PropDesc *desc
 
 bool
 js::GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
-               Value *vp)
+               unsigned resolveFlags, Value *vp)
 {
     NEW_OBJECT_REPRESENTATION_ONLY();
 
@@ -534,7 +539,7 @@ js::GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t in
         }
 
         PropDesc desc;
-        if (!GetOwnElement(cx, obj, index, &desc))
+        if (!GetOwnElement(cx, obj, index, resolveFlags, &desc))
             return false;
 
         /* No property?  Recur or bottom out. */
@@ -584,7 +589,7 @@ js::GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t in
 }
 
 bool
-js::HasElement(JSContext *cx, ObjectImpl *obj, uint32_t index, bool *found)
+js::HasElement(JSContext *cx, ObjectImpl *obj, uint32_t index, unsigned resolveFlags, bool *found)
 {
     NEW_OBJECT_REPRESENTATION_ONLY();
 
@@ -597,7 +602,7 @@ js::HasElement(JSContext *cx, ObjectImpl *obj, uint32_t index, bool *found)
         }
 
         PropDesc prop;
-        if (!GetOwnElement(cx, obj, index, &prop))
+        if (!GetOwnElement(cx, obj, index, resolveFlags, &prop))
             return false;
 
         if (!prop.isUndefined()) {
@@ -619,7 +624,7 @@ js::HasElement(JSContext *cx, ObjectImpl *obj, uint32_t index, bool *found)
 
 bool
 js::DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc &desc,
-                  bool shouldThrow, bool *succeeded)
+                  bool shouldThrow, unsigned resolveFlags, bool *succeeded)
 {
     NEW_OBJECT_REPRESENTATION_ONLY();
 
@@ -628,40 +633,40 @@ js::DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc
     switch (header.kind()) {
       case DenseElements:
         return header.asDenseElements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                      succeeded);
+                                                      resolveFlags, succeeded);
       case SparseElements:
         return header.asSparseElements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                       succeeded);
+                                                       resolveFlags, succeeded);
       case Uint8Elements:
         return header.asUint8Elements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                      succeeded);
+                                                      resolveFlags, succeeded);
       case Int8Elements:
         return header.asInt8Elements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                     succeeded);
+                                                     resolveFlags, succeeded);
       case Uint16Elements:
         return header.asUint16Elements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                       succeeded);
+                                                       resolveFlags, succeeded);
       case Int16Elements:
         return header.asInt16Elements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                      succeeded);
+                                                      resolveFlags, succeeded);
       case Uint32Elements:
         return header.asUint32Elements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                       succeeded);
+                                                       resolveFlags, succeeded);
       case Int32Elements:
         return header.asInt32Elements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                      succeeded);
+                                                      resolveFlags, succeeded);
       case Uint8ClampedElements:
         return header.asUint8ClampedElements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                             succeeded);
+                                                             resolveFlags, succeeded);
       case Float32Elements:
         return header.asFloat32Elements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                        succeeded);
+                                                        resolveFlags, succeeded);
       case Float64Elements:
         return header.asFloat64Elements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                        succeeded);
+                                                        resolveFlags, succeeded);
       case ArrayBufferElements:
         return header.asArrayBufferElements().defineElement(cx, obj, index, desc, shouldThrow,
-                                                            succeeded);
+                                                            resolveFlags, succeeded);
     }
 
     MOZ_NOT_REACHED("bad elements kind!");
@@ -670,7 +675,8 @@ js::DefineElement(JSContext *cx, ObjectImpl *obj, uint32_t index, const PropDesc
 
 bool
 SparseElementsHeader::setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver,
-                                 uint32_t index, const Value &v, bool *succeeded)
+                                 uint32_t index, const Value &v, unsigned resolveFlags,
+                                 bool *succeeded)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
@@ -680,7 +686,8 @@ SparseElementsHeader::setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *rec
 
 bool
 DenseElementsHeader::setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver,
-                                uint32_t index, const Value &v, bool *succeeded)
+                                uint32_t index, const Value &v, unsigned resolveFlags,
+                                bool *succeeded)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
@@ -691,7 +698,8 @@ DenseElementsHeader::setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *rece
 template <typename T>
 bool
 TypedElementsHeader<T>::setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver,
-                                   uint32_t index, const Value &v, bool *succeeded)
+                                   uint32_t index, const Value &v, unsigned resolveFlags,
+                                   bool *succeeded)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
@@ -732,19 +740,20 @@ TypedElementsHeader<T>::setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *r
 
 bool
 ArrayBufferElementsHeader::setElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver,
-                                      uint32_t index, const Value &v, bool *succeeded)
+                                      uint32_t index, const Value &v, unsigned resolveFlags,
+                                      bool *succeeded)
 {
     MOZ_ASSERT(this == &obj->elementsHeader());
 
     JSObject *delegate = ArrayBufferDelegate(cx, obj);
     if (!delegate)
         return false;
-    return SetElement(cx, obj, receiver, index, v, succeeded);
+    return SetElement(cx, obj, receiver, index, v, resolveFlags, succeeded);
 }
 
 bool
 js::SetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t index,
-               const Value &v, bool *succeeded)
+               const Value &v, unsigned resolveFlags, bool *succeeded)
 {
     NEW_OBJECT_REPRESENTATION_ONLY();
 
@@ -757,7 +766,7 @@ js::SetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t in
         }
 
         PropDesc ownDesc;
-        if (!GetOwnElement(cx, obj, index, &ownDesc))
+        if (!GetOwnElement(cx, obj, index, resolveFlags, &ownDesc))
             return false;
 
         if (!ownDesc.isUndefined()) {
@@ -769,11 +778,12 @@ js::SetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t in
 
                 if (receiver == obj) {
                     PropDesc updateDesc = PropDesc::valueOnly(v);
-                    return DefineElement(cx, receiver, index, updateDesc, false, succeeded);
+                    return DefineElement(cx, receiver, index, updateDesc, false, resolveFlags,
+                                         succeeded);
                 }
 
                 PropDesc newDesc;
-                return DefineElement(cx, receiver, index, newDesc, false, succeeded);
+                return DefineElement(cx, receiver, index, newDesc, false, resolveFlags, succeeded);
             }
 
             if (ownDesc.isAccessorDescriptor()) {
@@ -805,7 +815,7 @@ js::SetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t in
             continue;
 
         PropDesc newDesc(v, PropDesc::Writable, PropDesc::Enumerable, PropDesc::Configurable);
-        return DefineElement(cx, receiver, index, newDesc, false, succeeded);
+        return DefineElement(cx, receiver, index, newDesc, false, resolveFlags, succeeded);
     } while (false);
 
     MOZ_NOT_REACHED("buggy control flow");
