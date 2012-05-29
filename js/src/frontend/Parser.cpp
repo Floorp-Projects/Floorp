@@ -3151,7 +3151,7 @@ Parser::forStatement()
              * expressions involving an 'in' operator are illegal in the init
              * clause of an ordinary for loop.
              */
-            tc->sc->inForInit = true;
+            tc->inForInit = true;
             if (tt == TOK_VAR || tt == TOK_CONST) {
                 forDecl = true;
                 tokenStream.consumeKnownToken(tt);
@@ -3174,7 +3174,7 @@ Parser::forStatement()
             else {
                 pn1 = expr();
             }
-            tc->sc->inForInit = false;
+            tc->inForInit = false;
             if (!pn1)
                 return NULL;
         }
@@ -3192,7 +3192,7 @@ Parser::forStatement()
      * We can be sure that it's a for/in loop if there's still an 'in'
      * keyword here, even if JavaScript recognizes 'in' as an operator,
      * as we've excluded 'in' from being parsed in RelExpr by setting
-     * tc->sc->inForInit.
+     * tc->inForInit.
      */
     ParseNode *forHead;        /* initialized by both branches. */
     StmtInfo letStmt(context); /* used if blockObj != NULL. */
@@ -4255,7 +4255,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
             if (!CheckDestructuring(context, &data, pn2, this))
                 return NULL;
             bool ignored;
-            if (tc->sc->inForInit && matchInOrOf(&ignored)) {
+            if (tc->inForInit && matchInOrOf(&ignored)) {
                 tokenStream.ungetToken();
                 pn->append(pn2);
                 continue;
@@ -4462,8 +4462,8 @@ BEGIN_EXPR_PARSER(relExpr1)
      * Uses of the in operator in shiftExprs are always unambiguous,
      * so unset the flag that prohibits recognizing it.
      */
-    bool oldInForInit = tc->sc->inForInit;
-    tc->sc->inForInit = false;
+    bool oldInForInit = tc->inForInit;
+    tc->inForInit = false;
 
     ParseNode *pn = shiftExpr1i();
     while (pn &&
@@ -4479,7 +4479,7 @@ BEGIN_EXPR_PARSER(relExpr1)
         pn = ParseNode::newBinaryOrAppend(kind, op, pn, shiftExpr1n(), this);
     }
     /* Restore previous state of inForInit flag. */
-    tc->sc->inForInit |= oldInForInit;
+    tc->inForInit |= oldInForInit;
 
     return pn;
 }
@@ -4573,10 +4573,10 @@ Parser::condExpr1()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    bool oldInForInit = tc->sc->inForInit;
-    tc->sc->inForInit = false;
+    bool oldInForInit = tc->inForInit;
+    tc->inForInit = false;
     ParseNode *thenExpr = assignExpr();
-    tc->sc->inForInit = oldInForInit;
+    tc->inForInit = oldInForInit;
     if (!thenExpr)
         return NULL;
 
@@ -5874,10 +5874,10 @@ Parser::bracketedExpr()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    bool oldInForInit = tc->sc->inForInit;
-    tc->sc->inForInit = false;
+    bool oldInForInit = tc->inForInit;
+    tc->inForInit = false;
     ParseNode *pn = expr();
-    tc->sc->inForInit = oldInForInit;
+    tc->inForInit = oldInForInit;
     return pn;
 }
 

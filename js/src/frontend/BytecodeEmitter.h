@@ -127,6 +127,8 @@ struct BytecodeEmitter
 
     bool            hasSingletons:1;    /* script contains singleton initializer JSOP_OBJECT */
 
+    bool            inForInit:1;        /* emitting init expr of for; exclude 'in' */
+
     BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lineno,
                     bool noScriptRval, bool needScriptGlobal);
     bool init();
