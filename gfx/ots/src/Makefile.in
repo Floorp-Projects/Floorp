@@ -88,6 +88,7 @@ include $(topsrcdir)/config/rules.mk
 DEFINES += -DPACKAGE_VERSION="\"moz\""
 DEFINES += -DPACKAGE_BUGREPORT="\"http://bugzilla.mozilla.org/\""
 DEFINES += -DNOMINMAX
+DEFINES += -DMOZ_OTS_REPORT_ERRORS
 
 ifeq (WINNT,$(OS_TARGET))
 DEFINES += -DOTS_DLL -DOTS_DLL_EXPORTS
