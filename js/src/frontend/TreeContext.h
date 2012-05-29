@@ -156,8 +156,6 @@ struct SharedContext {
                                        arguments if we're compiling a function */
     Bindings::AutoRooter bindingsRoot; /* root for stack allocated bindings. */
 
-    bool            inForInit:1;    /* parsing/emitting init expr of for; exclude 'in' */
-
     ContextFlags    cxFlags;
 
     // If it's function code, fun must be non-NULL and scopeChain must be NULL.
@@ -255,6 +253,8 @@ struct TreeContext {                /* tree context for semantic checks */
      */
     bool            hasReturnExpr:1; /* function has 'return <expr>;' */
     bool            hasReturnVoid:1; /* function has 'return;' */
+
+    bool            inForInit:1;    /* parsing init expr of for; exclude 'in' */
 
     // Set when parsing a declaration-like destructuring pattern.  This flag
     // causes PrimaryExpr to create PN_NAME parse nodes for variable references
