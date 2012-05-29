@@ -153,7 +153,7 @@ WebGLContext::WebGLContext()
     mContextStatus = ContextStable;
     mContextLostErrorSet = false;
 
-    mAlreadyReportedMessages = 0;
+    mAlreadyGeneratedWarnings = 0;
 }
 
 WebGLContext::~WebGLContext()
