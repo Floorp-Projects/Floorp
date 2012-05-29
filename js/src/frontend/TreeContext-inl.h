@@ -30,7 +30,6 @@ SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fu
     staticLevel(0),
     bindings(cx),
     bindingsRoot(cx, &bindings),
-    inForInit(false),
     cxFlags(cx)
 {
     JS_ASSERT((fun && !scopeChain_) || (!fun && !funbox));
@@ -78,6 +77,7 @@ TreeContext::TreeContext(Parser *prs, SharedContext *sc)
     funcStmts(NULL),
     hasReturnExpr(false),
     hasReturnVoid(false),
+    inForInit(false),
     inDeclDestructuring(false)
 {
     prs->tc = this;
