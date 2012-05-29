@@ -7,11 +7,11 @@
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
-#ifndef _nsAccessibleWrap_H_
-#define _nsAccessibleWrap_H_
+#ifndef _AccessibleWrap_H_
+#define _AccessibleWrap_H_
 
 #include "nsCOMPtr.h"
-#include "nsAccessible.h"
+#include "Accessible.h"
 #include "Accessible2.h"
 #include "ia2AccessibleComponent.h"
 #include "CAccessibleHyperlink.h"
@@ -63,16 +63,16 @@ Class::QueryInterface(REFIID iid, void** ppv)                                 \
   IMPL_IUNKNOWN_QUERY_TAIL                                                    \
 
 
-class nsAccessibleWrap : public nsAccessible,
-                         public ia2AccessibleComponent,
-                         public CAccessibleHyperlink,
-                         public CAccessibleValue,
-                         public IAccessible2
+class AccessibleWrap : public Accessible,
+                       public ia2AccessibleComponent,
+                       public CAccessibleHyperlink,
+                       public CAccessibleValue,
+                       public IAccessible2
 {
 public: // construction, destruction
-  nsAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    nsAccessible(aContent, aDoc) { }
-  virtual ~nsAccessibleWrap() { }
+  AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
+    Accessible(aContent, aDoc) { }
+  virtual ~AccessibleWrap() { }
 
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
@@ -254,12 +254,12 @@ public: // construction, destruction
                                            EXCEPINFO *pExcepInfo,
                                            UINT *puArgErr);
 
-  // nsAccessible
+  // Accessible
   virtual nsresult HandleAccEvent(AccEvent* aEvent);
 
   // Helper methods
-  static PRInt32 GetChildIDFor(nsAccessible* aAccessible);
-  static HWND GetHWNDFor(nsAccessible *aAccessible);
+  static PRInt32 GetChildIDFor(Accessible* aAccessible);
+  static HWND GetHWNDFor(Accessible* aAccessible);
   static HRESULT ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
                                         BSTR *aIA2Attributes);
 
@@ -275,7 +275,7 @@ public: // construction, destruction
   /**
    * Find an accessible by the given child ID in cached documents.
    */
-  nsAccessible* GetXPAccessibleFor(const VARIANT& aVarChild);
+  Accessible* GetXPAccessibleFor(const VARIANT& aVarChild);
 
   NS_IMETHOD GetNativeInterface(void **aOutAccessible);
 

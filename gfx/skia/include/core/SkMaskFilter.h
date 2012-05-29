@@ -12,6 +12,7 @@
 
 #include "SkFlattenable.h"
 #include "SkMask.h"
+#include "SkPaint.h"
 
 class SkBlitter;
 class SkBounder;
@@ -55,8 +56,6 @@ public:
     virtual bool filterMask(SkMask* dst, const SkMask& src, const SkMatrix&,
                             SkIPoint* margin);
 
-    virtual void flatten(SkFlattenableWriteBuffer& ) {}
-
     enum BlurType {
         kNone_BlurType,    //!< this maskfilter is not a blur
         kNormal_BlurType,  //!< fuzzy inside and outside
@@ -79,9 +78,22 @@ public:
      */
     virtual BlurType asABlur(BlurInfo*) const;
 
+    /**
+     * The fast bounds function is used to enable the paint to be culled early
+     * in the drawing pipeline. This function accepts the current bounds of the
+     * paint as its src param and the filter adjust those bounds using its
+     * current mask and returns the result using the dest param. Callers are
+     * allowed to provide the same struct for both src and dest so each
+     * implementation must accomodate that behavior.
+     *
+     *  The default impl calls filterMask with the src mask having no image,
+     *  but subclasses may override this if they can compute the rect faster.
+     */
+    virtual void computeFastBounds(const SkRect& src, SkRect* dest);
+
 protected:
     // empty for now, but lets get our subclass to remember to init us for the future
-    SkMaskFilter(SkFlattenableReadBuffer&) {}
+    SkMaskFilter(SkFlattenableReadBuffer& buffer) : INHERITED(buffer) {}
 
 private:
     friend class SkDraw;
@@ -92,7 +104,10 @@ private:
      This method is not exported to java.
      */
     bool filterPath(const SkPath& devPath, const SkMatrix& devMatrix,
-                    const SkRasterClip&, SkBounder*, SkBlitter* blitter);
+                    const SkRasterClip&, SkBounder*, SkBlitter* blitter,
+                    SkPaint::Style style);
+
+    typedef SkFlattenable INHERITED;
 };
 
 #endif

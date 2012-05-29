@@ -70,7 +70,7 @@ public:
   virtual bool IsLeaf() const;
   
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<nsAccessible> CreateAccessible();
+  virtual already_AddRefed<Accessible> CreateAccessible();
 #endif
 
 #ifdef NS_DEBUG

@@ -30,16 +30,16 @@
         #define SK_BUILD_FOR_WIN32
     #elif defined(__SYMBIAN32__)
         #define SK_BUILD_FOR_WIN32
+    #elif defined(ANDROID_NDK)
+        #define SK_BUILD_FOR_ANDROID_NDK
+    #elif defined(ANDROID)
+        #define SK_BUILD_FOR_ANDROID
     #elif defined(linux) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
           defined(__sun) || defined(__NetBSD__) || defined(__DragonFly__) || \
           defined(__GLIBC__) || defined(__GNU__)
         #define SK_BUILD_FOR_UNIX
     #elif TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
         #define SK_BUILD_FOR_IOS
-    #elif defined(ANDROID_NDK)
-        #define SK_BUILD_FOR_ANDROID_NDK
-    #elif defined(ANDROID)
-        #define SK_BUILD_FOR_ANDROID
     #else
         #define SK_BUILD_FOR_MAC
     #endif
@@ -69,6 +69,9 @@
     #if !defined(SK_RESTRICT)
         #define SK_RESTRICT __restrict
     #endif
+    #if !defined(SK_WARN_UNUSED_RESULT)
+        #define SK_WARN_UNUSED_RESULT
+    #endif
     #include "sk_stdint.h"
 #endif
 
@@ -76,6 +79,10 @@
 
 #if !defined(SK_RESTRICT)
     #define SK_RESTRICT __restrict__
+#endif
+
+#if !defined(SK_WARN_UNUSED_RESULT)
+    #define SK_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 #endif
 
 //////////////////////////////////////////////////////////////////////

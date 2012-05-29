@@ -10,6 +10,7 @@
 
 #include "SkChunkAlloc.h"
 #include "SkBitmap.h"
+#include "SkOrderedReadBuffer.h"
 #include "SkPicture.h"
 #include "SkMatrix.h"
 #include "SkPaint.h"
@@ -33,6 +34,7 @@ enum DrawType {
     DRAW_PICTURE,
     DRAW_POINTS,
     DRAW_POS_TEXT,
+    DRAW_POS_TEXT_TOP_BOTTOM, // fast variant of DRAW_POS_TEXT
     DRAW_POS_TEXT_H,
     DRAW_POS_TEXT_H_TOP_BOTTOM, // fast variant of DRAW_POS_TEXT_H
     DRAW_RECT,
@@ -150,7 +152,7 @@ public:
                                  SkRefCntSet*);
 
     void unflatten(SkBitmap* bitmap, SkRefCntPlayback* rcp) const {
-        SkFlattenableReadBuffer buffer(fBitmapData);
+        SkOrderedReadBuffer buffer(fBitmapData, 1024*1024);
         if (rcp) {
             rcp->setupBuffer(buffer);
         }

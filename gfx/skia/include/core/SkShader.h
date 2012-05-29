@@ -20,10 +20,13 @@ class SkPath;
 
 /** \class SkShader
  *
- *  SkShader is the based class for objects that return horizontal spans of
- *  colors during drawing. A subclass of SkShader is installed in a SkPaint
- *  calling paint.setShader(shader). After that any object (other than a bitmap)
- *  that is drawn with that paint will get its color(s) from the shader.
+ *  Shaders specify the source color(s) for what is being drawn. If a paint
+ *  has no shader, then the paint's color is used. If the paint has a
+ *  shader, then the shader's color(s) are use instead, but they are
+ *  modulated by the paint's alpha. This makes it easy to create a shader
+ *  once (e.g. bitmap tiling or gradient) and then change its transparency
+ *  w/o having to modify the original shader... only the paint's alpha needs
+ *  to be modified.
  */
 class SK_API SkShader : public SkFlattenable {
 public:
@@ -49,9 +52,23 @@ public:
     void resetLocalMatrix();
 
     enum TileMode {
-        kClamp_TileMode,    //!< replicate the edge color if the shader draws outside of its original bounds
-        kRepeat_TileMode,   //!< repeat the shader's image horizontally and vertically
-        kMirror_TileMode,   //!< repeat the shader's image horizontally and vertically, alternating mirror images so that adjacent images always seam
+        /** replicate the edge color if the shader draws outside of its
+         *  original bounds
+         */
+        kClamp_TileMode,
+
+        /** repeat the shader's image horizontally and vertically */
+        kRepeat_TileMode,
+
+        /** repeat the shader's image horizontally and vertically, alternating
+         *  mirror images so that adjacent images always seam
+         */
+        kMirror_TileMode,
+
+#if 0
+        /** only draw within the original domain, return 0 everywhere else */
+        kDecal_TileMode,
+#endif
 
         kTileModeCount
     };
@@ -271,15 +288,19 @@ public:
     //  Factory methods for stock shaders
 
     /** Call this to create a new shader that will draw with the specified bitmap.
-        @param src  The bitmap to use inside the shader
-        @param tmx  The tiling mode to use when sampling the bitmap in the x-direction.
-        @param tmy  The tiling mode to use when sampling the bitmap in the y-direction.
-        @return     Returns a new shader object. Note: this function never returns null.
+     *
+     *  If the bitmap cannot be used (e.g. has no pixels, or its dimensions
+     *  exceed implementation limits (currently at 64K - 1)) then SkEmptyShader
+     *  may be returned.
+     *
+     *  @param src  The bitmap to use inside the shader
+     *  @param tmx  The tiling mode to use when sampling the bitmap in the x-direction.
+     *  @param tmy  The tiling mode to use when sampling the bitmap in the y-direction.
+     *  @return     Returns a new shader object. Note: this function never returns null.
     */
     static SkShader* CreateBitmapShader(const SkBitmap& src,
                                         TileMode tmx, TileMode tmy);
 
-    virtual void flatten(SkFlattenableWriteBuffer& ) SK_OVERRIDE;
 protected:
     enum MatrixClass {
         kLinear_MatrixClass,            // no perspective
@@ -295,6 +316,7 @@ protected:
     MatrixClass         getInverseClass() const { return (MatrixClass)fTotalInverseClass; }
 
     SkShader(SkFlattenableReadBuffer& );
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
 private:
     SkMatrix*           fLocalMatrix;
     SkMatrix            fTotalInverse;

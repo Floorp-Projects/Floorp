@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 #include "nsHTMLImageAccessible.h"
 #include "nsMai.h"
 
@@ -17,7 +17,7 @@ static void
 getImagePositionCB(AtkImage* aImage, gint* aAccX, gint* aAccY,
                    AtkCoordType aCoordType)
 {
-  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
   if (!accWrap || !accWrap->IsImage())
     return;
 
@@ -38,7 +38,7 @@ getImageDescriptionCB(AtkImage* aImage)
 static void
 getImageSizeCB(AtkImage* aImage, gint* aAccWidth, gint* aAccHeight)
 {
-  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aImage));
   if (!accWrap || !accWrap->IsImage())
     return;
 

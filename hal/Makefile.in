@@ -87,6 +87,18 @@ CMMSRCS += \
   CocoaSensor.mm \
   smslib.mm \
   $(NULL)
+else ifneq (,$(filter OpenBSD NetBSD FreeBSD DragonFlyBSD,$(OS_TARGET)))
+CPPSRCS += \
+  FallbackSensor.cpp \
+  FallbackVibration.cpp \
+  FallbackPower.cpp \
+  FallbackScreenConfiguration.cpp \
+  $(NULL)
+ifdef MOZ_ENABLE_DBUS
+CPPSRCS += UPowerClient.cpp
+else
+CPPSRCS += FallbackBattery.cpp
+endif
 else
 CPPSRCS += \
   FallbackBattery.cpp \

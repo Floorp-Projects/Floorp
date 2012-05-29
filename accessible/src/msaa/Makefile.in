@@ -16,11 +16,11 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS = \
+  AccessibleWrap.cpp \
   ApplicationAccessibleWrap.cpp \
   ARIAGridAccessibleWrap.cpp \
   DocAccessibleWrap.cpp \
   nsAccessNodeWrap.cpp \
-  nsAccessibleWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
   nsXULMenuAccessibleWrap.cpp \
   nsXULListboxAccessibleWrap.cpp \

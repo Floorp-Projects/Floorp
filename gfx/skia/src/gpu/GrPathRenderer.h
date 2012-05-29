@@ -21,14 +21,10 @@ struct GrPoint;
 
 /**
  *  Base class for drawing paths into a GrDrawTarget.
- *  Paths may be drawn multiple times as when tiling for supersampling. The 
- *  calls on GrPathRenderer to draw a path will look like this:
- *  
- *  pr->setPath(target, path, fill, aa, translate); // sets the path to draw
- *      pr->drawPath(...);  // draw the path
- *      pr->drawPath(...);
- *      ...
- *  pr->clearPath();  // finished with the path
+ *
+ *  Derived classes can use stages GrPaint::kTotalStages through 
+ *  GrDrawState::kNumStages-1. The stages before GrPaint::kTotalStages
+ *  are reserved for setting up the draw (i.e., textures and filter masks).
  */
 class GR_API GrPathRenderer : public GrRefCnt {
 public:
@@ -49,25 +45,7 @@ public:
                                  GrPathRendererChain* prChain);
 
 
-    GrPathRenderer(void);
-    /**
-     * Returns true if this path renderer is able to render the path.
-     * Returning false allows the caller to fallback to another path renderer.
-     * When searching for a path renderer capable of rendering a path this
-     * function is called.
-     *
-     * @param targetCaps The caps of the draw target that will be used to draw
-     *                   the path.
-     * @param path       The path to draw
-     * @param fill       The fill rule to use
-     * @param antiAlias  True if anti-aliasing is required.
-     *
-     * @return  true if the path can be drawn by this object, false otherwise.
-     */
-    virtual bool canDrawPath(const GrDrawTarget::Caps& targetCaps,
-                             const SkPath& path,
-                             GrPathFill fill,
-                             bool antiAlias) const = 0;
+    GrPathRenderer();
 
     /**
      * For complex clips Gr uses the stencil buffer. The path renderer must be
@@ -77,8 +55,6 @@ public:
      * pass. If this returns false then drawPath() should not modify the
      * the target's stencil settings but use those already set on target. The
      * target is passed as a param in case the answer depends upon draw state.
-     * The view matrix and render target set on the draw target may change 
-     * before setPath/drawPath is called and so shouldn't be considered.
      *
      * @param target target that the path will be rendered to
      * @param path   the path that will be drawn
@@ -90,54 +66,56 @@ public:
      *         returns true the drawPathToStencil will be used when rendering
      *         clips.
      */
-    virtual bool requiresStencilPass(const GrDrawTarget* target,
-                                     const SkPath& path,
-                                     GrPathFill fill) const { return false; }
+    virtual bool requiresStencilPass(const SkPath& path,
+                                     GrPathFill fill,
+                                     const GrDrawTarget* target) const {
+        return false;
+    }
 
     /**
-     * Sets the path to render and target to render into. All calls to drawPath
-     * and drawPathToStencil must occur between setPath and clearPath. The
-     * path cannot be modified externally between setPath and clearPath. The
-     * path may be drawn several times (e.g. tiled supersampler). The target's
-     * state may change between setPath and drawPath* calls. However, if the
-     * path renderer specified vertices/indices during setPath or drawPath*
-     * they will still be set at subsequent drawPath* calls until the next
-     * clearPath. The target's draw state may change between drawPath* calls
-     * so if the subclass does any caching of tesselation, etc. then it must
-     * validate that target parameters that guided the decisions still hold.
+     * Returns true if this path renderer is able to render the path.
+     * Returning false allows the caller to fallback to another path renderer 
+     * This function is called when searching for a path renderer capable of
+     * rendering a path.
      *
-     * @param target                the target to draw into.
-     * @param path                  the path to draw.
-     * @param fill                  the fill rule to apply.
-     * @param antiAlias             perform antiAliasing when drawing the path.
-     * @param translate             optional additional translation to apply to
-     *                              the path. NULL means (0,0).
+     * @param path       The path to draw
+     * @param fill       The fill rule to use
+     * @param target     The target that the path will be rendered to
+     * @param antiAlias  True if anti-aliasing is required.
+     *
+     * @return  true if the path can be drawn by this object, false otherwise.
      */
-    void setPath(GrDrawTarget* target,
-                 const SkPath* path,
-                 GrPathFill fill,
-                 bool antiAlias,
-                 const GrPoint* translate);
-
-    /**
-     * Notifies path renderer that path set in setPath is no longer in use.
-     */
-    void clearPath();
-
+    virtual bool canDrawPath(const SkPath& path,
+                             GrPathFill fill,
+                             const GrDrawTarget* target,
+                             bool antiAlias) const = 0;
     /**
      * Draws the path into the draw target. If requiresStencilBuffer returned
      * false then the target may be setup for stencil rendering (since the 
      * path renderer didn't claim that it needs to use the stencil internally).
      *
-     * Only called between setPath / clearPath.
-     *
-     * @param stages                bitfield that indicates which stages are
+     * @param path                  the path to draw.
+     * @param fill                  the path filling rule to use.
+     * @param translate             optional additional translation applied to
+     *                              the path (can be NULL)
+     * @param target                target that the path will be rendered to
+     * @param stageMask             bitfield that indicates which stages are
      *                              in use. All enabled stages expect positions
      *                              as texture coordinates. The path renderer
-     *                              use the remaining stages for its path
+     *                              can use the remaining stages for its path
      *                              filling algorithm.
+     * @param antiAlias             true if anti-aliasing is required.
      */
-    virtual void drawPath(GrDrawState::StageMask stageMask) = 0;
+    virtual bool drawPath(const SkPath& path,
+                          GrPathFill fill,
+                          const GrVec* translate,
+                          GrDrawTarget* target,
+                          GrDrawState::StageMask stageMask,
+                          bool antiAlias) {
+        GrAssert(this->canDrawPath(path, fill, target, antiAlias));
+        return this->onDrawPath(path, fill, translate,
+                                target, stageMask, antiAlias);
+    }
 
     /**
      * Draws the path to the stencil buffer. Assume the writable stencil bits
@@ -150,64 +128,35 @@ public:
      * The default implementation assumes the path filling algorithm doesn't
      * require a separate stencil pass and so crashes.
      *
-     * Only called between setPath / clearPath.
      */
-    virtual void drawPathToStencil() {
+    virtual void drawPathToStencil(const SkPath& path,
+                                   GrPathFill fill,
+                                   GrDrawTarget* target) {
         GrCrash("Unexpected call to drawPathToStencil.");
     }
 
-    /**
-     * Helper that sets a path and automatically remove it in destructor.
-     */
-    class AutoClearPath {
-    public:
-        AutoClearPath() {
-            fPathRenderer = NULL;
-        }
-        AutoClearPath(GrPathRenderer* pr,
-                      GrDrawTarget* target,
-                      const SkPath* path,
-                      GrPathFill fill,
-                      bool antiAlias,
-                      const GrPoint* translate) {
-            GrAssert(NULL != pr);
-            pr->setPath(target, path, fill, antiAlias, translate);
-            fPathRenderer = pr;
-        }
-        void set(GrPathRenderer* pr,
-                 GrDrawTarget* target,
-                 const SkPath* path,
-                 GrPathFill fill,
-                 bool antiAlias,
-                 const GrPoint* translate) {
-            if (NULL != fPathRenderer) {
-                fPathRenderer->clearPath();
-            }
-            GrAssert(NULL != pr);
-            pr->setPath(target, path, fill, antiAlias, translate);
-            fPathRenderer = pr;
-        }
-        ~AutoClearPath() {
-            if (NULL != fPathRenderer) {
-                fPathRenderer->clearPath();
-            }
-        }
-    private:
-        GrPathRenderer* fPathRenderer;
-    };
-
 protected:
-
-    // subclass can override these to be notified just after a path is set
-    // and just before the path is cleared.
-    virtual void pathWasSet() {}
-    virtual void pathWillClear() {}
-
-    const SkPath*               fPath;
-    GrDrawTarget*               fTarget;
-    GrPathFill                  fFill;
-    GrPoint                     fTranslate;
-    bool                        fAntiAlias;
+    /**
+     * Draws the path into the draw target.
+     *
+     * @param path                  the path to draw.
+     * @param fill                  the path filling rule to use.
+     * @param translate             optional additional translation applied to
+     *                              the path
+     * @param target                target that the path will be rendered to
+     * @param stageMask             bitfield that indicates which stages are
+     *                              in use. All enabled stages expect positions
+     *                              as texture coordinates. The path renderer
+     *                              use the remaining stages for its path
+     *                              filling algorithm.
+     * @param antiAlias             whether antialiasing is enabled or not.
+     */
+    virtual bool onDrawPath(const SkPath& path,
+                            GrPathFill fill,
+                            const GrVec* translate,
+                            GrDrawTarget* target,
+                            GrDrawState::StageMask stageMask,
+                            bool antiAlias) = 0;
 
 private:
 

@@ -109,7 +109,7 @@ public:
 
   // accessibility support
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<nsAccessible> CreateAccessible();
+  virtual already_AddRefed<Accessible> CreateAccessible();
 #ifdef XP_WIN
   NS_IMETHOD GetPluginPort(HWND *aPort);
 #endif

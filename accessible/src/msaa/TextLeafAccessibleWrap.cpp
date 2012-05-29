@@ -51,7 +51,7 @@ TextLeafAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     statistics::ISimpleDOMUsed();
     *ppv = static_cast<ISimpleDOMText*>(this);
   } else {
-    return nsAccessibleWrap::QueryInterface(iid, ppv);
+    return AccessibleWrap::QueryInterface(iid, ppv);
   }
    
   (reinterpret_cast<IUnknown*>(*ppv))->AddRef(); 

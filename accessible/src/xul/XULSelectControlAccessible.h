@@ -7,13 +7,13 @@
 #ifndef _XULSelectControlAccessible_H_
 #define _XULSelectControlAccessible_H_
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 
 /**
  * The basic implementation of accessible selection for XUL select controls.
  */
-class XULSelectControlAccessible : public nsAccessibleWrap
+class XULSelectControlAccessible : public AccessibleWrap
 {
 public:
   XULSelectControlAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -26,7 +26,7 @@ public:
   virtual bool IsSelect();
   virtual already_AddRefed<nsIArray> SelectedItems();
   virtual PRUint32 SelectedItemCount();
-  virtual nsAccessible* GetSelectedItem(PRUint32 aIndex);
+  virtual Accessible* GetSelectedItem(PRUint32 aIndex);
   virtual bool IsItemSelected(PRUint32 aIndex);
   virtual bool AddItemToSelection(PRUint32 aIndex);
   virtual bool RemoveItemFromSelection(PRUint32 aIndex);
@@ -34,8 +34,8 @@ public:
   virtual bool UnselectAll();
 
   // Widgets
-  virtual nsAccessible* CurrentItem();
-  virtual void SetCurrentItem(nsAccessible* aItem);
+  virtual Accessible* CurrentItem();
+  virtual void SetCurrentItem(Accessible* aItem);
 
 protected:
   // nsIDOMXULMultiSelectControlElement inherits from this, so we'll always have

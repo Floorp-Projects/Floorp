@@ -88,6 +88,7 @@ BrowserGlue.prototype = {
   _isPlacesLockedObserver: false,
   _isPlacesShutdownObserver: false,
   _isPlacesDatabaseLocked: false,
+  _migrationImportsDefaultBookmarks: false,
 
   _setPrefToSaveSession: function BG__setPrefToSaveSession(aForce) {
     if (!this._saveSession && !aForce)
@@ -185,7 +186,9 @@ BrowserGlue.prototype = {
         subject.data = true;
         break;
       case "places-init-complete":
-        this._initPlaces();
+        if (!this._migrationImportsDefaultBookmarks)
+          this._initPlaces(false);
+
         Services.obs.removeObserver(this, "places-init-complete");
         this._isPlacesInitObserver = false;
         // no longer needed, since history was initialized completely.
@@ -230,11 +233,14 @@ BrowserGlue.prototype = {
           // To apply distribution bookmarks use "places-init-complete".
         }
         else if (data == "force-places-init") {
-          this._initPlaces();
+          this._initPlaces(false);
         }
         break;
-      case "initial-migration":
-        this._initialMigrationPerformed = true;
+      case "initial-migration-will-import-default-bookmarks":
+        this._migrationImportsDefaultBookmarks = true;
+        break;
+      case "initial-migration-did-import-default-bookmarks":
+        this._initPlaces(true);
         break;
     }
   }, 
@@ -932,14 +938,14 @@ BrowserGlue.prototype = {
    *   Set to true by safe-mode dialog to indicate we must restore default
    *   bookmarks.
    */
-  _initPlaces: function BG__initPlaces() {
+  _initPlaces: function BG__initPlaces(aInitialMigrationPerformed) {
     // We must instantiate the history service since it will tell us if we
     // need to import or restore bookmarks due to first-run, corruption or
     // forced migration (due to a major schema change).
     // If the database is corrupt or has been newly created we should
     // import bookmarks.
     var dbStatus = PlacesUtils.history.databaseStatus;
-    var importBookmarks = !this._initialMigrationPerformed &&
+    var importBookmarks = !aInitialMigrationPerformed &&
                           (dbStatus == PlacesUtils.history.DATABASE_STATUS_CREATE ||
                            dbStatus == PlacesUtils.history.DATABASE_STATUS_CORRUPT);
 

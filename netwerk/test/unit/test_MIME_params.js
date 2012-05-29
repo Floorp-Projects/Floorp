@@ -385,6 +385,17 @@ var tests = [
   ["attachment", 
    "attachment", Cr.NS_ERROR_INVALID_ARG], 
 
+  // Bug 730574: quoted-string in RFC2231-continuations not handled
+
+  ['attachment; filename=basic; filename*0="foo"; filename*1="\\b\\a\\r.html"', 
+   "attachment", "foobar.html",
+   "attachment", "basic"],
+
+  // unmatched escape char
+  ['attachment; filename=basic; filename*0="foo"; filename*1="\\b\\a\\', 
+   "attachment", "fooba\\",
+   "attachment", "basic"],
+
   // Bug 732369: Content-Disposition parser does not require presence of ";" between params
 
   ["attachment; extension=bla filename=foo", 

@@ -27,16 +27,16 @@ using namespace mozilla::a11y;
 
 nsLeafAccessible::
   nsLeafAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsLeafAccessible, nsAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsLeafAccessible, Accessible)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsLeafAccessible: nsAccessible public
+// nsLeafAccessible: Accessible public
 
-nsAccessible*
+Accessible*
 nsLeafAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                EWhichChildAtPoint aWhichChild)
 {
@@ -45,7 +45,7 @@ nsLeafAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsLeafAccessible: nsAccessible private
+// nsLeafAccessible: Accessible private
 
 void
 nsLeafAccessible::CacheChildren()
@@ -60,14 +60,14 @@ nsLeafAccessible::CacheChildren()
 
 nsLinkableAccessible::
   nsLinkableAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc),
+  AccessibleWrap(aContent, aDoc),
   mActionAcc(nsnull),
   mIsLink(false),
   mIsOnclick(false)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessibleWrap)
+NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, AccessibleWrap)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsLinkableAccessible. nsIAccessible
@@ -75,7 +75,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessibleWrap)
 NS_IMETHODIMP
 nsLinkableAccessible::TakeFocus()
 {
-  return mActionAcc ? mActionAcc->TakeFocus() : nsAccessibleWrap::TakeFocus();
+  return mActionAcc ? mActionAcc->TakeFocus() : AccessibleWrap::TakeFocus();
 }
 
 PRUint64
@@ -92,7 +92,7 @@ nsLinkableAccessible::Value(nsString& aValue)
 {
   aValue.Truncate();
 
-  nsAccessible::Value(aValue);
+  Accessible::Value(aValue);
   if (!aValue.IsEmpty())
     return;
 
@@ -134,14 +134,14 @@ nsLinkableAccessible::DoAction(PRUint8 aIndex)
     return NS_ERROR_INVALID_ARG;
 
   return mActionAcc ? mActionAcc->DoAction(aIndex) :
-    nsAccessibleWrap::DoAction(aIndex);
+    AccessibleWrap::DoAction(aIndex);
 }
 
 KeyBinding
 nsLinkableAccessible::AccessKey() const
 {
   return mActionAcc ?
-    mActionAcc->AccessKey() : nsAccessible::AccessKey();
+    mActionAcc->AccessKey() : Accessible::AccessKey();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,7 +153,7 @@ nsLinkableAccessible::Shutdown()
   mIsLink = false;
   mIsOnclick = false;
   mActionAcc = nsnull;
-  nsAccessibleWrap::Shutdown();
+  AccessibleWrap::Shutdown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,13 +174,13 @@ nsLinkableAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsLinkableAccessible: nsAccessible protected
+// nsLinkableAccessible: Accessible protected
 
 void
-nsLinkableAccessible::BindToParent(nsAccessible* aParent,
+nsLinkableAccessible::BindToParent(Accessible* aParent,
                                    PRUint32 aIndexInParent)
 {
-  nsAccessibleWrap::BindToParent(aParent, aIndexInParent);
+  AccessibleWrap::BindToParent(aParent, aIndexInParent);
 
   // Cache action content.
   mActionAcc = nsnull;
@@ -195,7 +195,7 @@ nsLinkableAccessible::BindToParent(nsAccessible* aParent,
   // XXX: The logic looks broken since the click listener may be registered
   // on non accessible node in parent chain but this node is skipped when tree
   // is traversed.
-  nsAccessible* walkUpAcc = this;
+  Accessible* walkUpAcc = this;
   while ((walkUpAcc = walkUpAcc->Parent()) && !walkUpAcc->IsDoc()) {
     if (walkUpAcc->LinkState() & states::LINKED) {
       mIsLink = true;
@@ -218,7 +218,7 @@ nsLinkableAccessible::UnbindFromParent()
   mIsLink = false;
   mIsOnclick = false;
 
-  nsAccessibleWrap::UnbindFromParent();
+  AccessibleWrap::UnbindFromParent();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -228,11 +228,11 @@ nsLinkableAccessible::UnbindFromParent()
 nsEnumRoleAccessible::
   nsEnumRoleAccessible(nsIContent* aNode, DocAccessible* aDoc,
                        roles::Role aRole) :
-  nsAccessibleWrap(aNode, aDoc), mRole(aRole)
+  AccessibleWrap(aNode, aDoc), mRole(aRole)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsEnumRoleAccessible, nsAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsEnumRoleAccessible, Accessible)
 
 role
 nsEnumRoleAccessible::NativeRole()
