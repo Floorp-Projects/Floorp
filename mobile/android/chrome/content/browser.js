@@ -2015,18 +2015,36 @@ Tab.prototype = {
             list.push("[" + rel + "]");
         }
 
+        // We want to get the largest icon size possible for our UI.
+        let maxSize = 0;
+
+        // We use the sizes attribute if available
+        // see http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#rel-icon
+        if (target.hasAttribute("sizes")) {
+          let sizes = target.getAttribute("sizes").toLowerCase();
+
+          if (sizes == "any") {
+            // Since Java expects an integer, use -1 to represent icons with sizes="any"
+            maxSize = -1; 
+          } else {
+            let tokens = sizes.split(" ");
+            tokens.forEach(function(token) {
+              // TODO: check for invalid tokens
+              let [w, h] = token.split("x");
+              maxSize = Math.max(maxSize, Math.max(w, h));
+            });
+          }
+        }
+
         let json = {
           type: "DOMLinkAdded",
           tabID: this.id,
           href: resolveGeckoURI(target.href),
           charset: target.ownerDocument.characterSet,
           title: target.title,
-          rel: list.join(" ")
+          rel: list.join(" "),
+          size: maxSize
         };
-
-        // rel=icon can also have a sizes attribute
-        if (target.hasAttribute("sizes"))
-          json.sizes = target.getAttribute("sizes");
 
         sendMessageToJava({ gecko: json });
         break;

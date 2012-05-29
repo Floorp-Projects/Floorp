@@ -41,6 +41,7 @@ public final class Tab {
     private String mTitle;
     private Drawable mFavicon;
     private String mFaviconUrl;
+    private int mFaviconSize;
     private JSONObject mIdentityData;
     private Drawable mThumbnail;
     private int mHistoryIndex;
@@ -77,6 +78,7 @@ public final class Tab {
         mTitle = title;
         mFavicon = null;
         mFaviconUrl = null;
+        mFaviconSize = 0;
         mIdentityData = null;
         mThumbnail = null;
         mHistoryIndex = -1;
@@ -306,9 +308,24 @@ public final class Tab {
         Log.i(LOGTAG, "Updated favicon for tab with id: " + mId);
     }
 
-    public void updateFaviconURL(String faviconUrl) {
-        mFaviconUrl = faviconUrl;
-        Log.i(LOGTAG, "Updated favicon URL for tab with id: " + mId);
+    public void updateFaviconURL(String faviconUrl, int size) {
+        // If we already have an "any" sized icon, don't update the icon.
+        if (mFaviconSize == -1)
+            return;
+
+        // Only update the favicon if it's bigger than the current favicon.
+        // We use -1 to represent icons with sizes="any".
+        if (size == -1 || size > mFaviconSize) {
+            mFaviconUrl = faviconUrl;
+            mFaviconSize = size;
+            Log.i(LOGTAG, "Updated favicon URL for tab with id: " + mId);
+        }
+    }
+
+    public void clearFavicon() {
+        mFavicon = null;
+        mFaviconUrl = null;
+        mFaviconSize = 0;
     }
 
 
