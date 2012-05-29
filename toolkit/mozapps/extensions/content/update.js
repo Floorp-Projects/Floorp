@@ -347,8 +347,8 @@ var gFoundPage = {
     var oneChecked = false;
     var foundUpdates = document.getElementById("found.updates");
     var updates = foundUpdates.getElementsByTagName("listitem");
-    for (var i = 0; i < updates.length; ++i) {
-      if (!updates[i].checked)
+    for (let update of updates) {
+      if (!update.checked)
         continue;
       oneChecked = true;
       break;
@@ -378,10 +378,10 @@ var gInstallingPage = {
 
     var foundUpdates = document.getElementById("found.updates");
     var updates = foundUpdates.getElementsByTagName("listitem");
-    for (var i = 0; i < updates.length; ++i) {
-      if (!updates[i].checked)
+    for (let update of updates) {
+      if (!update.checked)
         continue;
-      this._installs.push(updates[i].install);
+      this._installs.push(update.install);
     }
 
     this._strings = document.getElementById("updateStrings");

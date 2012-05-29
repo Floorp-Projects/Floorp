@@ -1077,8 +1077,7 @@
               // so try to detect that and return early
               if (!("onNewInstall" in self))
                 return;
-              for (let i = 0; i < aInstallsList.length; i++) {
-                let install = aInstallsList[i];
+              for (let install of aInstallsList) {
                 if (install.existingAddon &&
                     install.existingAddon.id == self.mAddon.id &&
                     install.state == AddonManager.STATE_AVAILABLE) {
