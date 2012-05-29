@@ -1093,10 +1093,11 @@ nsTypedSelection::ToString(PRUnichar **aReturn)
     return NS_ERROR_NULL_POINTER;
   }
   // We need Flush_Style here to make sure frames have been created for
-  // the selected content.
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_FAILED(rv) || !shell) {
+  // the selected content.  Use mFrameSelection->GetShell() which returns
+  // null if the Selection has been disconnected (the shell is Destroyed).
+  nsCOMPtr<nsIPresShell> shell =
+    mFrameSelection ? mFrameSelection->GetShell() : nsnull;
+  if (!shell) {
     *aReturn = ToNewUnicode(EmptyString());
     return NS_OK;
   }
