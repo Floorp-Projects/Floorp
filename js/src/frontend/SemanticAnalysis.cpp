@@ -168,7 +168,7 @@ frontend::AnalyzeFunctions(Parser *parser)
         return false;
     bool isDirectEval = !!parser->callerFrame;
     bool isHeavyweight = false;
-    SetFunctionKinds(tc->functionList, &isHeavyweight, sc->inFunction, isDirectEval);
+    SetFunctionKinds(tc->functionList, &isHeavyweight, sc->inFunction(), isDirectEval);
     if (isHeavyweight)
         sc->setFunIsHeavyweight();
     return true;

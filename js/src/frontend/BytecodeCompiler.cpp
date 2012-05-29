@@ -99,7 +99,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!parser.init())
         return NULL;
 
-    SharedContext sc(cx, /* inFunction = */ false);
+    SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL);
 
     TreeContext tc(&parser, &sc);
     if (!tc.init())
@@ -118,7 +118,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(globalObj, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalObj->getClass()));
 
     GlobalScope globalScope(cx, globalObj);
-    sc.setScopeChain(scopeChain);
     bce.globalScope = &globalScope;
     if (!SetStaticLevel(&sc, staticLevel))
         return NULL;
@@ -264,7 +263,8 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!parser.init())
         return false;
 
-    SharedContext funsc(cx, /* inFunction = */ true);
+    JS_ASSERT(fun);
+    SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL);
 
     TreeContext funtc(&parser, &funsc);
     if (!funtc.init())
@@ -275,7 +275,6 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!funbce.init())
         return false;
 
-    funsc.setFunction(fun);
     funsc.bindings.transfer(cx, bindings);
     fun->setArgCount(funsc.bindings.numArgs());
     if (!GenerateBlockId(&funsc, funsc.bodyid))
