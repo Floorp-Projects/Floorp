@@ -184,17 +184,13 @@ LaunchWinPostProcess(const WCHAR *installationDir,
  * Starts the upgrade process for update of the service if it is
  * already installed.
  *
- * @param  argc The argc value normally sent to updater.exe
- * @param  argv The argv value normally sent to updater.exe
+ * @param  installDir the installation directory where
+ *         maintenanceservice_installer.exe is located.
  * @return TRUE if successful
  */
 BOOL
-StartServiceUpdate(int argc, LPWSTR *argv)
+StartServiceUpdate(LPCWSTR installDir)
 {
-  if (argc < 2) {
-    return FALSE;
-  }
-
   // Get a handle to the local computer SCM database
   SC_HANDLE manager = OpenSCManager(NULL, NULL, 
                                     SC_MANAGER_ALL_ACCESS);
@@ -222,7 +218,7 @@ StartServiceUpdate(int argc, LPWSTR *argv)
   PROCESS_INFORMATION pi = {0};
 
   WCHAR maintserviceInstallerPath[MAX_PATH + 1];
-  wcscpy(maintserviceInstallerPath, argv[2]);
+  wcscpy(maintserviceInstallerPath, installDir);
   PathAppendSafe(maintserviceInstallerPath, 
                  L"maintenanceservice_installer.exe");
   WCHAR cmdLine[64];
@@ -231,7 +227,7 @@ StartServiceUpdate(int argc, LPWSTR *argv)
                                                 cmdLine, 
                                                 NULL, NULL, FALSE, 
                                                 0, 
-                                                NULL, argv[2], &si, &pi);
+                                                NULL, installDir, &si, &pi);
   if (svcUpdateProcessStarted) {
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
