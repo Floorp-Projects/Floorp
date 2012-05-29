@@ -144,6 +144,7 @@ private:
   nsIntSize mEGLSurfaceSize;
 
   mozilla::Monitor mPauseCompositionMonitor;
+  mozilla::Monitor mResumeCompositionMonitor;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
