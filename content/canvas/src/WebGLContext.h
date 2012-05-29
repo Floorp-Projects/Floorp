@@ -32,6 +32,7 @@
 
 #include "nsDataHashtable.h"
 
+#include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/ImageData.h"
 
@@ -385,76 +386,6 @@ private:
 
 protected:
     T *mRawPtr;
-};
-
-typedef uint64_t WebGLMonotonicHandle;
-
-/* WebGLFastArray offers a fast array for the use case where all what one needs is to append
- * and remove elements. Removal is fast because the array is always kept sorted with respect
- * to "monotonic handles". Appending an element returns such a "monotonic handle" which the
- * user needs to keep for future use for when it will want to remove the element.
- */
-template<typename ElementType>
-class WebGLFastArray
-{
-    struct Entry {
-        ElementType mElement;
-        WebGLMonotonicHandle mMonotonicHandle;
-
-        Entry(ElementType elem, WebGLMonotonicHandle monotonicHandle)
-            : mElement(elem), mMonotonicHandle(monotonicHandle)
-        {}
-
-        struct Comparator {
-            bool Equals(const Entry& a, const Entry& b) const {
-                return a.mMonotonicHandle == b.mMonotonicHandle;
-            }
-            bool LessThan(const Entry& a, const Entry& b) const {
-                return a.mMonotonicHandle < b.mMonotonicHandle;
-            }
-        };
-    };
-
-public:
-    WebGLFastArray()
-        : mCurrentMonotonicHandle(0) // CheckedInt already does it, this is just defensive coding
-    {}
-
-    ElementType operator[](size_t index) const {
-        return mArray[index].mElement;
-    }
-
-    size_t Length() const {
-        return mArray.Length();
-    }
-
-    ElementType Last() const {
-        return operator[](Length() - 1);
-    }
-
-    WebGLMonotonicHandle AppendElement(ElementType elem)
-    {
-        WebGLMonotonicHandle monotonicHandle = NextMonotonicHandle();
-        mArray.AppendElement(Entry(elem, monotonicHandle));
-        return monotonicHandle;
-    }
-
-    void RemoveElement(WebGLMonotonicHandle monotonicHandle)
-    {
-        mArray.RemoveElementSorted(Entry(ElementType(), monotonicHandle),
-                                   typename Entry::Comparator());
-    }
-
-private:
-    WebGLMonotonicHandle NextMonotonicHandle() {
-        ++mCurrentMonotonicHandle;
-        if (!mCurrentMonotonicHandle.isValid())
-            NS_RUNTIMEABORT("ran out of monotonic ids!");
-        return mCurrentMonotonicHandle.value();
-    }
-
-    nsTArray<Entry> mArray;
-    CheckedInt<WebGLMonotonicHandle> mCurrentMonotonicHandle;
 };
 
 // this class is a mixin for GL objects that have dimensions
@@ -1322,12 +1253,12 @@ protected:
     WebGLRefPtr<WebGLFramebuffer> mBoundFramebuffer;
     WebGLRefPtr<WebGLRenderbuffer> mBoundRenderbuffer;
 
-    WebGLFastArray<WebGLTexture*> mTextures;
-    WebGLFastArray<WebGLBuffer*> mBuffers;
-    WebGLFastArray<WebGLProgram*> mPrograms;
-    WebGLFastArray<WebGLShader*> mShaders;
-    WebGLFastArray<WebGLRenderbuffer*> mRenderbuffers;
-    WebGLFastArray<WebGLFramebuffer*> mFramebuffers;
+    LinkedList<WebGLTexture> mTextures;
+    LinkedList<WebGLBuffer> mBuffers;
+    LinkedList<WebGLProgram> mPrograms;
+    LinkedList<WebGLShader> mShaders;
+    LinkedList<WebGLRenderbuffer> mRenderbuffers;
+    LinkedList<WebGLFramebuffer> mFramebuffers;
 
     // PixelStore parameters
     uint32_t mPixelStorePackAlignment, mPixelStoreUnpackAlignment, mPixelStoreColorspaceConversion;
@@ -1468,6 +1399,7 @@ struct WebGLVertexAttribData {
 class WebGLBuffer MOZ_FINAL
     : public nsIWebGLBuffer
     , public WebGLRefCountedObject<WebGLBuffer>
+    , public LinkedListElement<WebGLBuffer>
     , public WebGLContextBoundObject
 {
 public:
@@ -1480,7 +1412,7 @@ public:
     {
         mContext->MakeContextCurrent();
         mContext->gl->fGenBuffers(1, &mGLName);
-        mMonotonicHandle = mContext->mBuffers.AppendElement(this);
+        mContext->mBuffers.insertBack(this);
     }
 
     ~WebGLBuffer() {
@@ -1493,13 +1425,13 @@ public:
         free(mData);
         mData = nsnull;
         mByteLength = 0;
-        mContext->mBuffers.RemoveElement(mMonotonicHandle);
+        LinkedListElement<WebGLBuffer>::remove(); // remove from mContext->mBuffers
     }
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
         return aMallocSizeOf(this) + aMallocSizeOf(mData);
     }
-   
+
     bool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
     GLuint GLName() const { return mGLName; }
@@ -1593,7 +1525,6 @@ protected:
     bool mHasEverBeenBound;
     GLuint mByteLength;
     GLenum mTarget;
-    WebGLMonotonicHandle mMonotonicHandle;
 
     uint8_t mCachedMaxUbyteElement;
     bool mHasCachedMaxUbyteElement;
@@ -1608,6 +1539,7 @@ protected:
 class WebGLTexture MOZ_FINAL
     : public nsIWebGLTexture
     , public WebGLRefCountedObject<WebGLTexture>
+    , public LinkedListElement<WebGLTexture>
     , public WebGLContextBoundObject
 {
 public:
@@ -1626,7 +1558,7 @@ public:
     {
         mContext->MakeContextCurrent();
         mContext->gl->fGenTextures(1, &mGLName);
-        mMonotonicHandle = mContext->mTextures.AppendElement(this);
+        mContext->mTextures.insertBack(this);
     }
 
     ~WebGLTexture() {
@@ -1637,7 +1569,7 @@ public:
         mImageInfos.Clear();
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteTextures(1, &mGLName);
-        mContext->mTextures.RemoveElement(mMonotonicHandle);
+        LinkedListElement<WebGLTexture>::remove(); // remove from mContext->mTextures
     }
 
     bool HasEverBeenBound() { return mHasEverBeenBound; }
@@ -1764,8 +1696,6 @@ protected:
 
     bool mHaveGeneratedMipmap;
     FakeBlackStatus mFakeBlackStatus;
-
-    WebGLMonotonicHandle mMonotonicHandle;
 
     void EnsureMaxLevelWithCustomImagesAtLeast(size_t aMaxLevelWithCustomImages) {
         mMaxLevelWithCustomImages = NS_MAX(mMaxLevelWithCustomImages, aMaxLevelWithCustomImages);
@@ -2115,6 +2045,7 @@ struct WebGLUniformInfo {
 class WebGLShader MOZ_FINAL
     : public nsIWebGLShader
     , public WebGLRefCountedObject<WebGLShader>
+    , public LinkedListElement<WebGLShader>
     , public WebGLContextBoundObject
 {
     friend class WebGLContext;
@@ -2129,14 +2060,14 @@ public:
     {
         mContext->MakeContextCurrent();
         mGLName = mContext->gl->fCreateShader(mType);
-        mMonotonicHandle = mContext->mShaders.AppendElement(this);
+        mContext->mShaders.insertBack(this);
     }
 
     ~WebGLShader() {
         DeleteOnce();
     }
     
-    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) {
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const {
         return aMallocSizeOf(this) +
                mSource.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
                mTranslationLog.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
@@ -2147,7 +2078,7 @@ public:
         mTranslationLog.Truncate();
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteShader(mGLName);
-        mContext->mShaders.RemoveElement(mMonotonicHandle);
+        LinkedListElement<WebGLShader>::remove(); // remove from mContext->mShaders
     }
 
     WebGLuint GLName() { return mGLName; }
@@ -2184,7 +2115,6 @@ protected:
     nsString mSource;
     nsCString mTranslationLog; // The translation log should contain only ASCII characters
     bool mNeedsTranslation;
-    WebGLMonotonicHandle mMonotonicHandle;
     nsTArray<WebGLMappedIdentifier> mAttributes;
     nsTArray<WebGLMappedIdentifier> mUniforms;
     nsTArray<WebGLUniformInfo> mUniformInfos;
@@ -2228,6 +2158,7 @@ typedef nsDataHashtable<nsCStringHashKey, WebGLUniformInfo> CStringToUniformInfo
 class WebGLProgram MOZ_FINAL
     : public nsIWebGLProgram
     , public WebGLRefCountedObject<WebGLProgram>
+    , public LinkedListElement<WebGLProgram>
     , public WebGLContextBoundObject
 {
 public:
@@ -2239,7 +2170,7 @@ public:
     {
         mContext->MakeContextCurrent();
         mGLName = mContext->gl->fCreateProgram();
-        mMonotonicHandle = mContext->mPrograms.AppendElement(this);
+        mContext->mPrograms.insertBack(this);
     }
 
     ~WebGLProgram() {
@@ -2250,7 +2181,7 @@ public:
         DetachShaders();
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteProgram(mGLName);
-        mContext->mPrograms.RemoveElement(mMonotonicHandle);
+        LinkedListElement<WebGLProgram>::remove(); // remove from mContext->mPrograms
     }
 
     void DetachShaders() {
@@ -2466,7 +2397,6 @@ protected:
 
     // post-link data
     std::vector<bool> mAttribsInUse;
-    WebGLMonotonicHandle mMonotonicHandle;
     nsAutoPtr<CStringMap> mIdentifierMap, mIdentifierReverseMap;
     nsAutoPtr<CStringToUniformInfoMap> mUniformInfoMap;
     int mAttribMaxNameLength;
@@ -2477,6 +2407,7 @@ protected:
 class WebGLRenderbuffer MOZ_FINAL
     : public nsIWebGLRenderbuffer
     , public WebGLRefCountedObject<WebGLRenderbuffer>
+    , public LinkedListElement<WebGLRenderbuffer>
     , public WebGLRectangleObject
     , public WebGLContextBoundObject
 {
@@ -2491,7 +2422,7 @@ public:
 
         mContext->MakeContextCurrent();
         mContext->gl->fGenRenderbuffers(1, &mGLName);
-        mMonotonicHandle = mContext->mRenderbuffers.AppendElement(this);
+        mContext->mRenderbuffers.insertBack(this);
     }
 
     ~WebGLRenderbuffer() {
@@ -2501,7 +2432,7 @@ public:
     void Delete() {
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteRenderbuffers(1, &mGLName);
-        mContext->mRenderbuffers.RemoveElement(mMonotonicHandle);
+        LinkedListElement<WebGLRenderbuffer>::remove(); // remove from mContext->mRenderbuffers
     }
 
     bool HasEverBeenBound() { return mHasEverBeenBound; }
@@ -2548,7 +2479,6 @@ protected:
     WebGLuint mGLName;
     WebGLenum mInternalFormat;
     WebGLenum mInternalFormatForGL;
-    WebGLMonotonicHandle mMonotonicHandle;
     bool mHasEverBeenBound;
     bool mInitialized;
 
@@ -2685,6 +2615,7 @@ public:
 class WebGLFramebuffer MOZ_FINAL
     : public nsIWebGLFramebuffer
     , public WebGLRefCountedObject<WebGLFramebuffer>
+    , public LinkedListElement<WebGLFramebuffer>
     , public WebGLContextBoundObject
 {
 public:
@@ -2698,7 +2629,7 @@ public:
     {
         mContext->MakeContextCurrent();
         mContext->gl->fGenFramebuffers(1, &mGLName);
-        mMonotonicHandle = mContext->mFramebuffers.AppendElement(this);
+        mContext->mFramebuffers.insertBack(this);
     }
 
     ~WebGLFramebuffer() {
@@ -2712,7 +2643,7 @@ public:
         mDepthStencilAttachment.Reset();
         mContext->MakeContextCurrent();
         mContext->gl->fDeleteFramebuffers(1, &mGLName);
-        mContext->mFramebuffers.RemoveElement(mMonotonicHandle);
+        LinkedListElement<WebGLFramebuffer>::remove(); // remove from mContext->mFramebuffers
     }
 
     bool HasEverBeenBound() { return mHasEverBeenBound; }
@@ -2964,8 +2895,6 @@ public:
                                mDepthAttachment,
                                mStencilAttachment,
                                mDepthStencilAttachment;
-
-    WebGLMonotonicHandle mMonotonicHandle;
 };
 
 class WebGLUniformLocation MOZ_FINAL
@@ -3179,26 +3108,42 @@ class WebGLMemoryMultiReporterWrapper
     static int64_t GetTextureMemoryUsed() {
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i)
-            for (size_t j = 0; j < contexts[i]->mTextures.Length(); ++j)
-              result += contexts[i]->mTextures[j]->MemoryUsage();
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            for (const WebGLTexture *texture = contexts[i]->mTextures.getFirst();
+                 texture;
+                 texture = texture->getNext())
+            {
+                result += texture->MemoryUsage();
+            }
+        }
         return result;
     }
 
     static int64_t GetTextureCount() {
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i)
-            result += contexts[i]->mTextures.Length();
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            for (const WebGLTexture *texture = contexts[i]->mTextures.getFirst();
+                 texture;
+                 texture = texture->getNext())
+            {
+                result++;
+            }
+        }
         return result;
     }
 
     static int64_t GetBufferMemoryUsed() {
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i)
-            for (size_t j = 0; j < contexts[i]->mBuffers.Length(); ++j)
-                result += contexts[i]->mBuffers[j]->ByteLength();
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            for (const WebGLBuffer *buffer = contexts[i]->mBuffers.getFirst();
+                 buffer;
+                 buffer = buffer->getNext())
+            {
+                result += buffer->ByteLength();
+            }
+        }
         return result;
     }
 
@@ -3207,25 +3152,42 @@ class WebGLMemoryMultiReporterWrapper
     static int64_t GetBufferCount() {
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i)
-            result += contexts[i]->mBuffers.Length();
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            for (const WebGLBuffer *buffer = contexts[i]->mBuffers.getFirst();
+                 buffer;
+                 buffer = buffer->getNext())
+            {
+                result++;
+            }
+        }
         return result;
     }
 
     static int64_t GetRenderbufferMemoryUsed() {
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i)
-            for (size_t j = 0; j < contexts[i]->mRenderbuffers.Length(); ++j)
-              result += contexts[i]->mRenderbuffers[j]->MemoryUsage();
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            for (const WebGLRenderbuffer *rb = contexts[i]->mRenderbuffers.getFirst();
+                 rb;
+                 rb = rb->getNext())
+            {
+                result += rb->MemoryUsage();
+            }
+        }
         return result;
     }
 
     static int64_t GetRenderbufferCount() {
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i)
-            result += contexts[i]->mRenderbuffers.Length();
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            for (const WebGLRenderbuffer *rb = contexts[i]->mRenderbuffers.getFirst();
+                 rb;
+                 rb = rb->getNext())
+            {
+                result++;
+            }
+        }
         return result;
     }
 
@@ -3234,8 +3196,14 @@ class WebGLMemoryMultiReporterWrapper
     static int64_t GetShaderCount() {
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
-        for(size_t i = 0; i < contexts.Length(); ++i)
-            result += contexts[i]->mShaders.Length();
+        for(size_t i = 0; i < contexts.Length(); ++i) {
+            for (const WebGLShader *shader = contexts[i]->mShaders.getFirst();
+                 shader;
+                 shader = shader->getNext())
+            {
+                result++;
+            }
+        }
         return result;
     }
 

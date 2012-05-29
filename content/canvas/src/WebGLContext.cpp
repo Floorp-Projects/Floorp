@@ -192,18 +192,18 @@ WebGLContext::DestroyResourcesAndContext()
 
     mAttribBuffers.Clear();
 
-    while (mTextures.Length())
-        mTextures.Last()->DeleteOnce();
-    while (mBuffers.Length())
-        mBuffers.Last()->DeleteOnce();
-    while (mRenderbuffers.Length())
-        mRenderbuffers.Last()->DeleteOnce();
-    while (mFramebuffers.Length())
-        mFramebuffers.Last()->DeleteOnce();
-    while (mShaders.Length())
-        mShaders.Last()->DeleteOnce();
-    while (mPrograms.Length())
-        mPrograms.Last()->DeleteOnce();
+    while (!mTextures.isEmpty())
+        mTextures.getLast()->DeleteOnce();
+    while (!mBuffers.isEmpty())
+        mBuffers.getLast()->DeleteOnce();
+    while (!mRenderbuffers.isEmpty())
+        mRenderbuffers.getLast()->DeleteOnce();
+    while (!mFramebuffers.isEmpty())
+        mFramebuffers.getLast()->DeleteOnce();
+    while (!mShaders.isEmpty())
+        mShaders.getLast()->DeleteOnce();
+    while (!mPrograms.isEmpty())
+        mPrograms.getLast()->DeleteOnce();
 
     if (mBlackTexturesAreInitialized) {
         gl->fDeleteTextures(1, &mBlackTexture2D);
