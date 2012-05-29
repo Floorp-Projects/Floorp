@@ -940,8 +940,32 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(dom::Element* aElement,
   }
 }
 
-// Add to aNode the CSS inline style equivalent to HTMLProperty/aAttribute/aValue for the node,
-// and return in aCount the number of CSS properties set by the call
+// Add to aNode the CSS inline style equivalent to HTMLProperty/aAttribute/
+// aValue for the node, and return in aCount the number of CSS properties set
+// by the call.  The dom::Element version returns aCount instead.
+PRInt32
+nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(dom::Element* aElement,
+                                            nsIAtom* aProperty,
+                                            const nsAString* aAttribute,
+                                            const nsAString* aValue,
+                                            bool aSuppressTransaction)
+{
+  MOZ_ASSERT(aElement && aProperty);
+  MOZ_ASSERT_IF(aAttribute, aValue);
+  PRInt32 count;
+  // This can only fail if SetCSSProperty fails, which should only happen if
+  // something is pretty badly wrong.  In this case we assert so that hopefully
+  // someone will notice, but there's nothing more sensible to do than just
+  // return the count and carry on.
+  nsresult res = SetCSSEquivalentToHTMLStyle(aElement->AsDOMNode(),
+                                             aProperty, aAttribute,
+                                             aValue, &count,
+                                             aSuppressTransaction);
+  NS_ASSERTION(NS_SUCCEEDED(res), "SetCSSEquivalentToHTMLStyle failed");
+  NS_ENSURE_SUCCESS(res, count);
+  return count;
+}
+
 nsresult
 nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                             nsIAtom *aHTMLProperty,
@@ -1271,6 +1295,14 @@ nsHTMLCSSUtils::IsCSSPrefChecked()
 // ElementsSameStyle compares two elements and checks if they have the same
 // specified CSS declarations in the STYLE attribute 
 // The answer is always negative if at least one of them carries an ID or a class
+bool
+nsHTMLCSSUtils::ElementsSameStyle(dom::Element* aFirstNode,
+                                  dom::Element* aSecondNode)
+{
+  MOZ_ASSERT(aFirstNode && aSecondNode);
+  return ElementsSameStyle(aFirstNode->AsDOMNode(), aSecondNode->AsDOMNode());
+}
+
 bool
 nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNode)
 {

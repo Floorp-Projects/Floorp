@@ -212,7 +212,15 @@ public:
     * @param aCount         [OUT] the number of CSS properties set by the call
     * @param aSuppressTransaction [IN] a boolean indicating, when true,
     *                                  that no transaction should be recorded
+    *
+    * aCount is returned by the dom::Element variant instead of being an out
+    * parameter.
     */
+  PRInt32     SetCSSEquivalentToHTMLStyle(mozilla::dom::Element* aElement,
+                                          nsIAtom* aProperty,
+                                          const nsAString* aAttribute,
+                                          const nsAString* aValue,
+                                          bool aSuppressTransaction);
   nsresult    SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                           nsIAtom * aHTMLProperty,
                                           const nsAString * aAttribute,
@@ -267,6 +275,8 @@ public:
     * @param aFirstNode           [IN] a DOM node
     * @param aSecondNode          [IN] a DOM node
     */
+  bool ElementsSameStyle(mozilla::dom::Element* aFirstNode,
+                         mozilla::dom::Element* aSecondNode);
   bool ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNode);
 
   /** get the specified inline styles (style attribute) for an element

@@ -671,8 +671,6 @@ protected:
 
   bool NodeIsProperty(nsIDOMNode *aNode);
   bool HasAttr(nsIDOMNode *aNode, const nsAString *aAttribute);
-  bool HasAttrVal(const nsIContent* aNode, const nsAString* aAttribute,
-                  const nsAString& aValue);
   bool IsAtFrontOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
   bool IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset);
   bool IsOnlyAttribute(nsIDOMNode *aElement, const nsAString *aAttribute);
@@ -935,7 +933,11 @@ friend class nsWSRunObject;
 friend class nsHTMLEditorEventListener;
 
 private:
-  // Helper
+  // Helpers
+  bool IsSimpleModifiableNode(nsIContent* aContent,
+                              nsIAtom* aProperty,
+                              const nsAString* aAttribute,
+                              const nsAString* aValue);
   nsresult SetInlinePropertyOnNodeImpl(nsIContent* aNode,
                                        nsIAtom* aProperty,
                                        const nsAString* aAttribute,
