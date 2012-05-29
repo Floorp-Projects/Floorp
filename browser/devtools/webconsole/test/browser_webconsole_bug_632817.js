@@ -18,38 +18,36 @@ function test()
 {
   addTab("data:text/html;charset=utf-8,Web Console network logging tests");
 
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
 
-    openConsole();
+    openConsole(null, function(aHud) {
+      hud = aHud;
 
-    hud = HUDService.getHudByWindow(content);
-    ok(hud, "Web Console is now open");
+      HUDService.lastFinishedRequestCallback = function(aRequest) {
+        lastRequest = aRequest.log.entries[0];
+        if (requestCallback) {
+          requestCallback();
+        }
+      };
 
-    HUDService.lastFinishedRequestCallback = function(aRequest) {
-      lastRequest = aRequest;
-      if (requestCallback) {
-        requestCallback();
-      }
-    };
-
-    executeSoon(testPageLoad);
+      executeSoon(testPageLoad);
+    });
   }, true);
 }
 
 function testPageLoad()
 {
-  browser.addEventListener("load", function(aEvent) {
-    browser.removeEventListener(aEvent.type, arguments.callee, true);
-
+  requestCallback = function() {
     // Check if page load was logged correctly.
     ok(lastRequest, "Page load was logged");
-    is(lastRequest.url, TEST_NETWORK_REQUEST_URI,
+    is(lastRequest.request.url, TEST_NETWORK_REQUEST_URI,
       "Logged network entry is page load");
-    is(lastRequest.method, "GET", "Method is correct");
+    is(lastRequest.request.method, "GET", "Method is correct");
     lastRequest = null;
+    requestCallback = null;
     executeSoon(testPageLoadBody);
-  }, true);
+  };
 
   content.location = TEST_NETWORK_REQUEST_URI;
 }
@@ -57,12 +55,12 @@ function testPageLoad()
 function testPageLoadBody()
 {
   // Turn off logging of request bodies and check again.
-  browser.addEventListener("load", function(aEvent) {
-    browser.removeEventListener(aEvent.type, arguments.callee, true);
+  requestCallback = function() {
     ok(lastRequest, "Page load was logged again");
     lastRequest = null;
+    requestCallback = null;
     executeSoon(testXhrGet);
-  }, true);
+  };
 
   content.location.reload();
 }
@@ -71,7 +69,7 @@ function testXhrGet()
 {
   requestCallback = function() {
     ok(lastRequest, "testXhrGet() was logged");
-    is(lastRequest.method, "GET", "Method is correct");
+    is(lastRequest.request.method, "GET", "Method is correct");
     lastRequest = null;
     requestCallback = null;
     executeSoon(testXhrPost);
@@ -85,7 +83,7 @@ function testXhrPost()
 {
   requestCallback = function() {
     ok(lastRequest, "testXhrPost() was logged");
-    is(lastRequest.method, "POST", "Method is correct");
+    is(lastRequest.request.method, "POST", "Method is correct");
     lastRequest = null;
     requestCallback = null;
     executeSoon(testFormSubmission);
@@ -99,12 +97,11 @@ function testFormSubmission()
 {
   // Start the form submission test. As the form is submitted, the page is
   // loaded again. Bind to the load event to catch when this is done.
-  browser.addEventListener("load", function(aEvent) {
-    browser.removeEventListener(aEvent.type, arguments.callee, true);
+  requestCallback = function() {
     ok(lastRequest, "testFormSubmission() was logged");
-    is(lastRequest.method, "POST", "Method is correct");
+    is(lastRequest.request.method, "POST", "Method is correct");
     executeSoon(testLiveFilteringOnSearchStrings);
-  }, true);
+  };
 
   let form = content.document.querySelector("form");
   ok(form, "we have the HTML form");
@@ -112,9 +109,6 @@ function testFormSubmission()
 }
 
 function testLiveFilteringOnSearchStrings() {
-  browser.removeEventListener("DOMContentLoaded",
-                              testLiveFilteringOnSearchStrings, false);
-
   setStringFilter("http");
   isnot(countMessageNodes(), 0, "the log nodes are not hidden when the " +
     "search string is set to \"http\"");
@@ -146,6 +140,9 @@ function testLiveFilteringOnSearchStrings() {
   is(countMessageNodes(), 0, "the log nodes are hidden when searching for " +
     "the string \"foo\"bar'baz\"boo'\"");
 
+  HUDService.lastFinishedRequestCallback = null;
+  lastRequest = null;
+  requestCallback = null;
   finishTest();
 }
 
