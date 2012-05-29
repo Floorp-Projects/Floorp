@@ -346,6 +346,7 @@ nsHttpChannel::SpeculativeConnect()
         return;
 
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
+    mConnectionInfo->SetPrivate(UsingPrivateBrowsing());
     gHttpHandler->SpeculativeConnect(mConnectionInfo,
                                      callbacks, NS_GetCurrentThread());
 }
