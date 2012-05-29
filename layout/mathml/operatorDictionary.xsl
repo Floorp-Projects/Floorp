@@ -47,6 +47,9 @@
                 <xsl:value-of select="name()"/>
                 <xsl:text> </xsl:text>
               </xsl:for-each>
+              <xsl:if test="../unicodedata/@mirror = 'Y'">
+                <xsl:text>mirrorable </xsl:text>
+              </xsl:if>
             </xsl:attribute> 
           </xsl:if>
           <xsl:if test="@priority">
