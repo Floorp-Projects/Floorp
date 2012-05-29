@@ -399,10 +399,12 @@ CompositorParent::TransformShadowTree()
 
   // Alter the scroll offset so that fixed position layers remain within
   // the page area.
-  int offsetX = NS_MAX(0, NS_MIN(mScrollOffset.x, mContentRect.width - mWidgetSize.width));
-  int offsetY = NS_MAX(0, NS_MIN(mScrollOffset.y, mContentRect.height - mWidgetSize.height));
-  gfxPoint reverseViewTranslation(offsetX / tempScaleDiffX - metricsScrollOffset.x,
-                                  offsetY / tempScaleDiffY - metricsScrollOffset.y);
+  float offsetX = mScrollOffset.x / tempScaleDiffX;
+  float offsetY = mScrollOffset.y / tempScaleDiffY;
+  offsetX = NS_MAX((float)mContentRect.x, NS_MIN(offsetX, (float)(mContentRect.XMost() - mWidgetSize.width)));
+  offsetY = NS_MAX((float)mContentRect.y, NS_MIN(offsetY, (float)(mContentRect.YMost() - mWidgetSize.height)));
+  gfxPoint reverseViewTranslation(offsetX - metricsScrollOffset.x,
+                                  offsetY - metricsScrollOffset.y);
 
   TranslateFixedLayers(layer, reverseViewTranslation);
 }
