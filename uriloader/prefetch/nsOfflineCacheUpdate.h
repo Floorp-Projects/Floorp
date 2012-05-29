@@ -71,6 +71,10 @@ public:
     nsresult Cancel();
     nsresult GetRequestSucceeded(bool * succeeded);
 
+    bool IsInProgress();
+    bool IsScheduled();
+    bool IsCompleted();
+
 private:
     nsOfflineCacheUpdate*          mUpdate;
     nsCOMPtr<nsIChannel>           mChannel;
@@ -179,12 +183,14 @@ public:
 
 class nsOfflineCacheUpdate : public nsIOfflineCacheUpdate
                            , public nsIOfflineCacheUpdateObserver
+                           , public nsIRunnable
                            , public nsOfflineCacheUpdateOwner
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOFFLINECACHEUPDATE
     NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
+    NS_DECL_NSIRUNNABLE
 
     nsOfflineCacheUpdate();
     ~nsOfflineCacheUpdate();
@@ -196,7 +202,7 @@ public:
     nsresult Begin();
     nsresult Cancel();
 
-    void LoadCompleted();
+    void LoadCompleted(nsOfflineCacheUpdateItem *aItem);
     void ManifestCheckCompleted(nsresult aStatus,
                                 const nsCString &aManifestHash);
     void StickDocument(nsIURI *aDocumentURI);
@@ -260,7 +266,7 @@ private:
     nsRefPtr<nsOfflineManifestItem> mManifestItem;
 
     /* Items being updated */
-    PRInt32 mCurrentItem;
+    PRUint32 mItemsInProgress;
     nsTArray<nsRefPtr<nsOfflineCacheUpdateItem> > mItems;
 
     /* Clients watching this update for changes */
