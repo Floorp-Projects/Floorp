@@ -1602,6 +1602,12 @@ var gDownloadingPage = {
    */
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "update-staged") {
+      if (aData == STATE_DOWNLOADING) {
+        // We've fallen back to downloding the full update because the
+        // partial update failed to get staged in the background.
+        this._setStatus("downloading");
+        return;
+      }
       this.cleanUp();
       if (aData == STATE_APPLIED ||
           aData == STATE_APPLIED_SVC ||
