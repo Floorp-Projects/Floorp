@@ -15,6 +15,8 @@
 // GDEF - The Glyph Definition Table
 // http://www.microsoft.com/typography/otspec/gdef.htm
 
+#define TABLE_NAME "GDEF"
+
 namespace {
 
 // The maximum class value in class definition tables.
@@ -242,7 +244,11 @@ bool ParseMarkGlyphSetsDefTable(ots::OpenTypeFile *file, const uint8_t *data,
 }  // namespace
 
 #define DROP_THIS_TABLE \
-  do { file->gdef->data = 0; file->gdef->length = 0; } while (0)
+  do { \
+    file->gdef->data = 0; \
+    file->gdef->length = 0; \
+    OTS_FAILURE_MSG("OpenType layout data discarded"); \
+  } while (0)
 
 namespace ots {
 
