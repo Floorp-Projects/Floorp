@@ -15,6 +15,8 @@
 // GPOS - The Glyph Positioning Table
 // http://www.microsoft.com/typography/otspec/gpos.htm
 
+#define TABLE_NAME "GPOS"
+
 namespace {
 
 enum GPOS_TYPE {
@@ -669,7 +671,11 @@ bool ParseExtensionPositioning(const ots::OpenTypeFile *file,
 }  // namespace
 
 #define DROP_THIS_TABLE \
-  do { file->gpos->data = 0; file->gpos->length = 0; } while (0)
+  do { \
+    file->gpos->data = 0; \
+    file->gpos->length = 0; \
+    OTS_FAILURE_MSG("OpenType layout data discarded"); \
+  } while (0)
 
 namespace ots {
 
