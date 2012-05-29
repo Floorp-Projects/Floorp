@@ -38,6 +38,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget, MessageLoop* aMsgLoop,
   , mRenderToEGLSurface(aRenderToEGLSurface)
   , mEGLSurfaceSize(aSurfaceWidth, aSurfaceHeight)
   , mPauseCompositionMonitor("PauseCompositionMonitor")
+  , mResumeCompositionMonitor("ResumeCompositionMonitor")
 {
   MOZ_COUNT_CTOR(CompositorParent);
 }
@@ -133,11 +134,17 @@ CompositorParent::ResumeComposition()
 {
   NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "ResumeComposition() can only be called on the compositor thread");
+
+  mozilla::MonitorAutoLock lock(mResumeCompositionMonitor);
+
   mPaused = false;
 
 #ifdef MOZ_WIDGET_ANDROID
   static_cast<LayerManagerOGL*>(mLayerManager.get())->gl()->RenewSurface();
 #endif
+
+  // if anyone's waiting to make sure that composition really got resumed, tell them
+  lock.NotifyAll();
 }
 
 void
@@ -179,9 +186,14 @@ CompositorParent::SchedulePauseOnCompositorThread()
 void
 CompositorParent::ScheduleResumeOnCompositorThread(int width, int height)
 {
+  mozilla::MonitorAutoLock lock(mResumeCompositionMonitor);
+
   CancelableTask *resumeTask =
     NewRunnableMethod(this, &CompositorParent::ResumeCompositionAndResize, width, height);
   CompositorLoop()->PostTask(FROM_HERE, resumeTask);
+
+  // Wait until the resume has actually been processed by the compositor thread
+  lock.Wait();
 }
 
 void
