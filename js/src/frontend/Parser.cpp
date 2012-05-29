@@ -173,7 +173,7 @@ Parser::newObjectBox(JSObject *obj)
 FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, TreeContext *tc)
   : ObjectBox(traceListHead, obj),
     node(fn),
-    siblings(tc->sc->functionList),
+    siblings(tc->functionList),
     kids(NULL),
     parent(tc->sc->funbox),
     bindings(tc->sc->context),
@@ -221,7 +221,7 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
         return NULL;
     }
 
-    traceListHead = tc->sc->functionList = funbox;
+    traceListHead = tc->functionList = funbox;
 
     return funbox;
 }
@@ -1757,7 +1757,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         }
     }
 
-    funbox->kids = funsc.functionList;
+    funbox->kids = funtc.functionList;
 
     pn->pn_funbox = funbox;
     pn->setOp(op);
@@ -5114,7 +5114,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
         if (++funcLevel == 1 && genexp) {
             FunctionBox *parent = tc->sc->funbox;
 
-            FunctionBox **funboxp = &tc->parent->sc->functionList;
+            FunctionBox **funboxp = &tc->parent->functionList;
             while (*funboxp != funbox)
                 funboxp = &(*funboxp)->siblings;
             *funboxp = funbox->siblings;

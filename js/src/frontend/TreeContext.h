@@ -155,7 +155,6 @@ struct SharedContext {
     FunctionBox     *funbox;        /* null or box for function we're compiling
                                        if inFunction is set and not in
                                        js::frontend::CompileFunctionBody */
-    FunctionBox     *functionList;
 
     Bindings        bindings;       /* bindings in this code, including
                                        arguments if we're compiling a function */
@@ -239,6 +238,7 @@ struct TreeContext {                /* tree context for semantic checks */
     ParseNode       *yieldNode;     /* parse node for a yield expression that might
                                        be an error if we turn out to be inside a
                                        generator expression */
+    FunctionBox     *functionList;
 
   private:
     TreeContext     **parserTC;     /* this points to the Parser's active tc
