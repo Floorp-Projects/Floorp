@@ -3905,7 +3905,7 @@ bool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
 
 // Deal with accessibile event
 #ifdef ACCESSIBILITY
-nsAccessible*
+Accessible*
 nsWindow::DispatchAccessibleEvent(PRUint32 aEventType)
 {
   if (nsnull == mEventCallback) {
@@ -5080,7 +5080,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       // for details).
       DWORD objId = static_cast<DWORD>(lParam);
       if (objId == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
-        nsAccessible *rootAccessible = GetRootAccessible(); // Held by a11y cache
+        Accessible* rootAccessible = GetRootAccessible(); // Held by a11y cache
         if (rootAccessible) {
           IAccessible *msaaAccessible = NULL;
           rootAccessible->GetNativeInterface((void**)&msaaAccessible); // does an addref
@@ -7225,7 +7225,7 @@ bool nsWindow::AssociateDefaultIMC(bool aAssociate)
 
 #ifdef DEBUG_WMGETOBJECT
 #define NS_LOG_WMGETOBJECT_WNDACC(aWnd)                                        \
-  nsAccessible* acc = aWnd ?                                                   \
+  Accessible* acc = aWnd ?                                                   \
     aWnd->DispatchAccessibleEvent(NS_GETACCESSIBLE) : nsnull;                  \
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("     acc: %p", acc));                   \
   if (acc) {                                                                   \
@@ -7264,7 +7264,7 @@ bool nsWindow::AssociateDefaultIMC(bool aAssociate)
 #define NS_LOG_WMGETOBJECT_WND(aMsg, aHwnd)
 #endif // DEBUG_WMGETOBJECT
 
-nsAccessible*
+Accessible*
 nsWindow::GetRootAccessible()
 {
   // We want the ability to forcibly disable a11y on windows, because

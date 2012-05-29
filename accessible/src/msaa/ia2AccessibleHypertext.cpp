@@ -60,7 +60,7 @@ __try {
   if (hyperText->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsAccessible* hyperLink = hyperText->GetLinkAt(aLinkIndex);
+  Accessible* hyperLink = hyperText->GetLinkAt(aLinkIndex);
   nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryObject(hyperLink));
   if (!winAccessNode)
     return E_FAIL;

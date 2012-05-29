@@ -81,7 +81,7 @@ nsXFormsDropmarkerWidgetAccessible::DoAction(PRUint8 aIndex)
 
 nsXFormsCalendarWidgetAccessible::
   nsXFormsCalendarWidgetAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  AccessibleWrap(aContent, aDoc)
 {
 }
 

@@ -19,7 +19,7 @@ class AccIterable
 {
 public:
   virtual ~AccIterable() { }
-  virtual nsAccessible* Next() = 0;
+  virtual Accessible* Next() = 0;
 
 private:
   friend class Relation;
@@ -49,7 +49,7 @@ public:
     eTreeNav
   };
 
-  AccIterator(nsAccessible* aRoot, filters::FilterFuncPtr aFilterFunc,
+  AccIterator(Accessible* aRoot, filters::FilterFuncPtr aFilterFunc,
               IterationType aIterationType = eFlatNav);
   virtual ~AccIterator();
 
@@ -57,7 +57,7 @@ public:
    * Return next accessible complying with filter function. Return the first
    * accessible for the first time.
    */
-  virtual nsAccessible *Next();
+  virtual Accessible* Next();
 
 private:
   AccIterator();
@@ -66,9 +66,9 @@ private:
 
   struct IteratorState
   {
-    IteratorState(nsAccessible *aParent, IteratorState *mParentState = nsnull);
+    IteratorState(Accessible* aParent, IteratorState* mParentState = nsnull);
 
-    nsAccessible *mParent;
+    Accessible* mParent;
     PRInt32 mIndex;
     IteratorState *mParentState;
   };
@@ -104,7 +104,7 @@ public:
   /**
    * Return next related accessible for the given dependent accessible.
    */
-  virtual nsAccessible* Next();
+  virtual Accessible* Next();
 
 private:
   RelatedAccIterator();
@@ -130,7 +130,7 @@ public:
     eSkipAncestorLabel
   };
 
-  HTMLLabelIterator(DocAccessible* aDocument, const nsAccessible* aAccessible,
+  HTMLLabelIterator(DocAccessible* aDocument, const Accessible* aAccessible,
                     LabelFilter aFilter = eAllLabels);
 
   virtual ~HTMLLabelIterator() { }
@@ -138,7 +138,7 @@ public:
   /**
    * Return next label accessible associated with the given element.
    */
-  virtual nsAccessible* Next();
+  virtual Accessible* Next();
 
 private:
   HTMLLabelIterator();
@@ -148,7 +148,7 @@ private:
   RelatedAccIterator mRelIter;
   // XXX: replace it on weak reference (bug 678429), it's safe to use raw
   // pointer now because iterators life cycle is short.
-  const nsAccessible* mAcc;
+  const Accessible* mAcc;
   LabelFilter mLabelFilter;
 };
 
@@ -165,7 +165,7 @@ public:
   /**
    * Return next output accessible associated with the given element.
    */
-  virtual nsAccessible* Next();
+  virtual Accessible* Next();
 
 private:
   HTMLOutputIterator();
@@ -188,7 +188,7 @@ public:
   /**
    * Return next label accessible associated with the given element.
    */
-  virtual nsAccessible* Next();
+  virtual Accessible* Next();
 
 private:
   XULLabelIterator();
@@ -211,7 +211,7 @@ public:
   /**
    * Return next description accessible associated with the given element.
    */
-  virtual nsAccessible* Next();
+  virtual Accessible* Next();
 
 private:
   XULDescriptionIterator();
@@ -249,7 +249,7 @@ public:
   nsIContent* GetElem(const nsDependentSubstring& aID);
 
   // AccIterable
-  virtual nsAccessible* Next();
+  virtual Accessible* Next();
 
 private:
   IDRefsIterator();
@@ -269,17 +269,17 @@ private:
 class SingleAccIterator : public AccIterable
 {
 public:
-  SingleAccIterator(nsAccessible* aTarget): mAcc(aTarget) { }
+  SingleAccIterator(Accessible* aTarget): mAcc(aTarget) { }
   virtual ~SingleAccIterator() { }
 
-  virtual nsAccessible* Next();
+  virtual Accessible* Next();
 
 private:
   SingleAccIterator();
   SingleAccIterator(const SingleAccIterator&);
   SingleAccIterator& operator = (const SingleAccIterator&);
 
-  nsRefPtr<nsAccessible> mAcc;
+  nsRefPtr<Accessible> mAcc;
 };
 
 #endif

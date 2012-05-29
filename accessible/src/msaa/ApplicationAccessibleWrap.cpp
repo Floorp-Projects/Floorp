@@ -60,7 +60,7 @@ ApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     return S_OK;
   }
 
-  return nsAccessibleWrap::QueryInterface(iid, ppv);
+  return AccessibleWrap::QueryInterface(iid, ppv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

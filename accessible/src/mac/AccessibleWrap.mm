@@ -16,19 +16,19 @@
 
 using namespace mozilla::a11y;
 
-nsAccessibleWrap::
-  nsAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-  nsAccessible(aContent, aDoc), mNativeObject(nil),  
+AccessibleWrap::
+  AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
+  Accessible(aContent, aDoc), mNativeObject(nil),  
   mNativeInited(false)
 {
 }
 
-nsAccessibleWrap::~nsAccessibleWrap()
+AccessibleWrap::~AccessibleWrap()
 {
 }
 
 mozAccessible* 
-nsAccessibleWrap::GetNativeObject()
+AccessibleWrap::GetNativeObject()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
   
@@ -43,7 +43,7 @@ nsAccessibleWrap::GetNativeObject()
 }
 
 NS_IMETHODIMP
-nsAccessibleWrap::GetNativeInterface (void **aOutInterface) 
+AccessibleWrap::GetNativeInterface (void **aOutInterface) 
 {
   NS_ENSURE_ARG_POINTER(aOutInterface);
 
@@ -55,7 +55,7 @@ nsAccessibleWrap::GetNativeInterface (void **aOutInterface)
 // overridden in subclasses to create the right kind of object. by default we create a generic
 // 'mozAccessible' node.
 Class
-nsAccessibleWrap::GetNativeType () 
+AccessibleWrap::GetNativeType () 
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -110,7 +110,7 @@ nsAccessibleWrap::GetNativeType ()
 // the object might still be around (because some 3rd party still has a ref to it), but it is
 // in fact 'dead'.
 void
-nsAccessibleWrap::Shutdown ()
+AccessibleWrap::Shutdown ()
 {
   // this ensure we will not try to re-create the native object.
   mNativeInited = true;
@@ -122,15 +122,15 @@ nsAccessibleWrap::Shutdown ()
     mNativeObject = nil;
   }
 
-  nsAccessible::Shutdown();
+  Accessible::Shutdown();
 }
 
 nsresult
-nsAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
+AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsresult rv = nsAccessible::HandleAccEvent(aEvent);
+  nsresult rv = Accessible::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return FirePlatformEvent(aEvent);
@@ -139,7 +139,7 @@ nsAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 }
 
 nsresult
-nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
+AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -153,7 +153,7 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
       eventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED)
     return NS_OK;
 
-  nsAccessible *accessible = aEvent->GetAccessible();
+  Accessible* accessible = aEvent->GetAccessible();
   NS_ENSURE_STATE(accessible);
 
   mozAccessible *nativeAcc = nil;
@@ -180,21 +180,21 @@ nsAccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
 }
 
 void
-nsAccessibleWrap::InvalidateChildren()
+AccessibleWrap::InvalidateChildren()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [GetNativeObject() invalidateChildren];
 
-  nsAccessible::InvalidateChildren();
+  Accessible::InvalidateChildren();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 bool
-nsAccessibleWrap::AppendChild(nsAccessible *aAccessible)
+AccessibleWrap::AppendChild(Accessible* aAccessible)
 {
-  bool appended = nsAccessible::AppendChild(aAccessible);
+  bool appended = Accessible::AppendChild(aAccessible);
   
   if (appended && mNativeObject)
     [mNativeObject appendChild:aAccessible];
@@ -203,9 +203,9 @@ nsAccessibleWrap::AppendChild(nsAccessible *aAccessible)
 }
 
 bool
-nsAccessibleWrap::RemoveChild(nsAccessible *aAccessible)
+AccessibleWrap::RemoveChild(Accessible* aAccessible)
 {
-  bool removed = nsAccessible::RemoveChild(aAccessible);
+  bool removed = Accessible::RemoveChild(aAccessible);
 
   if (removed && mNativeObject)
     [mNativeObject invalidateChildren];
@@ -216,7 +216,7 @@ nsAccessibleWrap::RemoveChild(nsAccessible *aAccessible)
 // if we for some reason have no native accessible, we should be skipped over (and traversed)
 // when fetching all unignored children, etc.  when counting unignored children, we will not be counted.
 bool 
-nsAccessibleWrap::IsIgnored() 
+AccessibleWrap::IsIgnored() 
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
   
@@ -227,7 +227,7 @@ nsAccessibleWrap::IsIgnored()
 }
 
 void
-nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsAccessible*>* aChildrenArray)
+AccessibleWrap::GetUnignoredChildren(nsTArray<Accessible*>* aChildrenArray)
 {
   // we're flat; there are no children.
   if (nsAccUtils::MustPrune(this))
@@ -235,8 +235,8 @@ nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsAccessible*>* aChildrenArray)
 
   PRUint32 childCount = ChildCount();
   for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessibleWrap *childAcc =
-      static_cast<nsAccessibleWrap*>(GetChildAt(childIdx));
+    AccessibleWrap* childAcc =
+      static_cast<AccessibleWrap*>(GetChildAt(childIdx));
 
     // If element is ignored, then add its children as substitutes.
     if (childAcc->IsIgnored()) {
@@ -248,22 +248,22 @@ nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsAccessible*>* aChildrenArray)
   }
 }
 
-nsAccessible*
-nsAccessibleWrap::GetUnignoredParent() const
+Accessible*
+AccessibleWrap::GetUnignoredParent() const
 {
   // Go up the chain to find a parent that is not ignored.
-  nsAccessibleWrap* parentWrap = static_cast<nsAccessibleWrap*>(Parent());
+  AccessibleWrap* parentWrap = static_cast<AccessibleWrap*>(Parent());
   while (parentWrap && parentWrap->IsIgnored()) 
-    parentWrap = static_cast<nsAccessibleWrap*>(parentWrap->Parent());
+    parentWrap = static_cast<AccessibleWrap*>(parentWrap->Parent());
     
   return parentWrap;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessibleWrap protected
+// AccessibleWrap protected
 
 bool
-nsAccessibleWrap::AncestorIsFlat()
+AccessibleWrap::AncestorIsFlat()
 {
   // We don't create a native object if we're child of a "flat" accessible;
   // for example, on OS X buttons shouldn't have any children, because that
@@ -273,7 +273,7 @@ nsAccessibleWrap::AncestorIsFlat()
   // look the same on all platforms, we still let the C++ objects be created
   // though.
 
-  nsAccessible* parent = Parent();
+  Accessible* parent = Parent();
   while (parent) {
     if (nsAccUtils::MustPrune(parent))
       return true;
