@@ -42,7 +42,8 @@ EnableLogging(const char* aModulesStr)
     { "docload", logging::eDocLoad },
     { "doccreate", logging::eDocCreate },
     { "docdestroy", logging::eDocDestroy },
-    { "doclifecycle", logging::eDocLifeCycle }
+    { "doclifecycle", logging::eDocLifeCycle },
+    { "platforms", logging::ePlatforms }
   };
 
   const char* token = aModulesStr;
