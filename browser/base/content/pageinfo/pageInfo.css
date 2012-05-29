@@ -19,7 +19,8 @@ groupbox[closed="true"] > .groupbox-body {
   visibility: collapse;
 }
 
-/* This following entry can be removed when Bug 522850 is fixed. */
 #thepreviewimage {
+  display: block;
+/* This following entry can be removed when Bug 522850 is fixed. */
   min-width: 1px;
 }
