@@ -1699,9 +1699,13 @@ PropertiesView.prototype = {
       let currScope = this._currHierarchy[i];
       let prevScope = this._prevHierarchy[i];
 
+      if (!prevScope) {
+        continue;
+      }
+
       for (let v in currScope.children) {
         let currVar = currScope.children[v];
-        let prevVar = prevScope && prevScope.children[v];
+        let prevVar = prevScope.children[v];
 
         let action = "";
 
