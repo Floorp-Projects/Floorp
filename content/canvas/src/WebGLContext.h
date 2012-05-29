@@ -809,11 +809,13 @@ public:
                                                 WebGLenum pname,
                                                 ErrorResult& rv);
     JS::Value GetProgramParameter(WebGLProgram *prog, WebGLenum pname);
+    void GetProgramInfoLog(WebGLProgram *prog, nsACString& retval, ErrorResult& rv);
     void GetProgramInfoLog(WebGLProgram *prog, nsAString& retval, ErrorResult& rv);
     JS::Value GetRenderbufferParameter(WebGLenum target, WebGLenum pname);
     JS::Value GetShaderParameter(WebGLShader *shader, WebGLenum pname);
     already_AddRefed<WebGLShaderPrecisionFormat>
       GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype);
+    void GetShaderInfoLog(WebGLShader *shader, nsACString& retval, ErrorResult& rv);
     void GetShaderInfoLog(WebGLShader *shader, nsAString& retval, ErrorResult& rv);
     void GetShaderSource(WebGLShader *shader, nsAString& retval);
     JS::Value GetTexParameter(WebGLenum target, WebGLenum pname);
@@ -1362,7 +1364,11 @@ protected:
     ContextStatus mContextStatus;
     bool mContextLostErrorSet;
 
-    int mAlreadyReportedMessages;
+    int mAlreadyGeneratedWarnings;
+
+    bool ShouldGenerateWarnings() const {
+        return mAlreadyGeneratedWarnings < 32;
+    }
 
 #ifdef XP_MACOSX
     // see bug 713305. This RAII helper guarantees that we're on the discrete GPU, during its lifetime
