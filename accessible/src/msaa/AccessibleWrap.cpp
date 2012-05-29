@@ -24,6 +24,10 @@
 #include "AccessibleStates.h"
 #include "RootAccessible.h"
 
+#ifdef DEBUG
+#include "Logging.h"
+#endif
+
 #include "nsIMutableArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIFrame.h"
@@ -1554,9 +1558,11 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
   }
 
 #ifdef DEBUG
-  printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
-         eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
-         childID, hWnd);
+  if (logging::IsEnabled(logging::ePlatforms)) {
+    printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
+           eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
+           childID, hWnd);
+  }
 #endif
 
   // Fire MSAA event for client area window.
