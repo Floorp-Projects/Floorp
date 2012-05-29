@@ -4807,13 +4807,13 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
 
         FunctionBox *funbox = pn->pn_funbox;
-        bce2.sc->cxFlags = funbox->cxFlags;
+        sc.cxFlags = funbox->cxFlags;
         if (bce->sc->funMightAliasLocals())
-            bce2.sc->setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
+            sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
 
-        bce2.sc->bindings.transfer(cx, &funbox->bindings);
-        bce2.sc->setFunction(fun);
-        bce2.sc->funbox = funbox;
+        sc.bindings.transfer(cx, &funbox->bindings);
+        sc.setFunction(fun);
+        sc.funbox = funbox;
         bce2.parent = bce;
         bce2.globalScope = bce->globalScope;
 
@@ -4824,7 +4824,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * below.
          */
         JS_ASSERT(bce->sc->staticLevel < JS_BITMASK(16) - 1);
-        bce2.sc->staticLevel = bce->sc->staticLevel + 1;
+        sc.staticLevel = bce->sc->staticLevel + 1;
 
         /* We measured the max scope depth when we parsed the function. */
         if (!EmitFunctionScript(cx, &bce2, pn->pn_body))
