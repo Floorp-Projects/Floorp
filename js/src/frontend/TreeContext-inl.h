@@ -16,23 +16,24 @@
 namespace js {
 
 inline
-SharedContext::SharedContext(JSContext *cx, bool inFunction)
+SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun,
+                             FunctionBox *funbox)
   : context(cx),
     bodyid(0),
     blockidGen(0),
     topStmt(NULL),
     topScopeStmt(NULL),
     blockChain(cx),
-    fun_(cx),
-    scopeChain_(cx),
+    fun_(cx, fun),
+    funbox_(funbox),
+    scopeChain_(cx, scopeChain),
     staticLevel(0),
-    funbox(NULL),
     bindings(cx),
     bindingsRoot(cx, &bindings),
-    inFunction(inFunction),
     inForInit(false),
     cxFlags(cx)
 {
+    JS_ASSERT((fun && !scopeChain_) || (!fun && !funbox));
 }
 
 inline unsigned
