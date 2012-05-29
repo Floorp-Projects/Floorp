@@ -653,8 +653,7 @@ abstract public class GeckoApp
         }
 
         tab.setContentType(contentType);
-        tab.updateFavicon(null);
-        tab.updateFaviconURL(null);
+        tab.clearFavicon();
         tab.updateIdentityData(null);
         tab.removeTransientDoorHangers();
         tab.setAllowZoom(true);
@@ -850,8 +849,9 @@ abstract public class GeckoApp
                 final int tabId = message.getInt("tabID");
                 final String rel = message.getString("rel");
                 final String href = message.getString("href");
-                Log.i(LOGTAG, "link rel - " + rel + ", href - " + href);
-                handleLinkAdded(tabId, rel, href);
+                final int size = message.getInt("size");
+                Log.i(LOGTAG, "link rel - " + rel + ", href - " + href + ", size - " + size);
+                handleLinkAdded(tabId, rel, href, size);
             } else if (event.equals("DOMWindowClose")) {
                 final int tabId = message.getInt("tabID");
                 handleWindowClose(tabId);
@@ -1321,24 +1321,26 @@ abstract public class GeckoApp
         });
     }
 
-    void handleLinkAdded(final int tabId, String rel, final String href) {
-        if (rel.indexOf("[icon]") != -1) {
-            final Tab tab = Tabs.getInstance().getTab(tabId);
-            if (tab != null) {
-                tab.updateFaviconURL(href);
+    void handleLinkAdded(final int tabId, String rel, final String href, int size) {
+        if (rel.indexOf("[icon]") == -1)
+            return; 
 
-                // If tab is not loading and the favicon is updated, we
-                // want to load the image straight away. If tab is still
-                // loading, we only load the favicon once the page's content
-                // is fully loaded (see handleContentLoaded()).
-                if (tab.getState() != Tab.STATE_LOADING) {
-                    mMainHandler.post(new Runnable() {
-                        public void run() {
-                            loadFavicon(tab);
-                        }
-                    });
+        final Tab tab = Tabs.getInstance().getTab(tabId);
+        if (tab == null)
+            return;
+
+        tab.updateFaviconURL(href, size);
+
+        // If tab is not loading and the favicon is updated, we
+        // want to load the image straight away. If tab is still
+        // loading, we only load the favicon once the page's content
+        // is fully loaded (see handleContentLoaded()).
+        if (tab.getState() != Tab.STATE_LOADING) {
+            mMainHandler.post(new Runnable() {
+                public void run() {
+                    loadFavicon(tab);
                 }
-            }
+            });
         }
     }
 
