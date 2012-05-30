@@ -167,7 +167,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAp
   CFURLRef pathAsCFURL;
   CFStringRef pathAsCFString = ::CFStringCreateWithCharacters(NULL,
                                                               aPlatformAppPath,
-                                                              nsCRT::strlen(aPlatformAppPath));
+                                                              NS_strlen(aPlatformAppPath));
   if (!pathAsCFString)
     return NS_ERROR_OUT_OF_MEMORY;
 

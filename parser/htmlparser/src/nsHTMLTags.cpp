@@ -392,7 +392,7 @@ nsHTMLTags::AddRefTable(void)
       // let's verify that NS_HTMLTAG_NAME_MAX_LENGTH is correct
       PRUint32 maxTagNameLength = 0;
       for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
-        PRUint32 len = nsCRT::strlen(sTagUnicodeTable[i]);
+        PRUint32 len = NS_strlen(sTagUnicodeTable[i]);
         maxTagNameLength = NS_MAX(len, maxTagNameLength);        
       }
       NS_ASSERTION(maxTagNameLength == NS_HTMLTAG_NAME_MAX_LENGTH,

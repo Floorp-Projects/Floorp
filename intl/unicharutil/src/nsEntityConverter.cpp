@@ -199,7 +199,7 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, PRUint32 entityV
   nsString outString;
 
   // per character look for the entity
-  PRUint32 len = nsCRT::strlen(inString);
+  PRUint32 len = NS_strlen(inString);
   for (PRUint32 i = 0; i < len; i++) {
     nsAutoString key(NS_LITERAL_STRING("entity."));
     if (NS_IS_HIGH_SURROGATE(inString[i]) &&
