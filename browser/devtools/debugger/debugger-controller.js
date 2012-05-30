@@ -661,15 +661,6 @@ StackFrames.prototype = {
 
     let objClient = this.activeThread.pauseGrip(aObject);
     objClient.getPrototypeAndProperties(function SF_onProtoAndProps(aResponse) {
-      // Add __proto__.
-      if (aResponse.prototype.type !== "null") {
-        let properties = { "__proto__ ": { value: aResponse.prototype } };
-        aVar.addProperties(properties);
-
-        // Expansion handlers must be set after the properties are added.
-        this._addExpander(aVar["__proto__ "], aResponse.prototype);
-      }
-
       // Sort all of the properties before adding them, for better UX.
       let properties = {};
       for each (let prop in Object.keys(aResponse.ownProperties).sort()) {
@@ -682,6 +673,14 @@ StackFrames.prototype = {
         this._addExpander(aVar[prop], aResponse.ownProperties[prop].value);
       }
 
+      // Add __proto__.
+      if (aResponse.prototype.type !== "null") {
+        let properties = { "__proto__ ": { value: aResponse.prototype } };
+        aVar.addProperties(properties);
+
+        // Expansion handlers must be set after the properties are added.
+        this._addExpander(aVar["__proto__ "], aResponse.prototype);
+      }
       aVar.fetched = true;
     }.bind(this));
   },
