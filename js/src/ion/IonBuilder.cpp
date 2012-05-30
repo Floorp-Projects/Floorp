@@ -3499,12 +3499,12 @@ TestSingletonProperty(JSContext *cx, JSObject *obj, HandleId id, bool *isKnownCo
         return true;
 
     Shape *shape = (Shape *)prop;
-    if (shape->hasDefaultGetter()) {
-        if (!shape->hasSlot())
-            return true;
-        if (holder->getSlot(shape->slot()).isUndefined())
-            return true;
-    }
+    if (!shape->hasDefaultGetter())
+        return true;
+    if (!shape->hasSlot())
+        return true;
+    if (holder->getSlot(shape->slot()).isUndefined())
+        return true;
 
     *isKnownConstant = true;
     return true;
