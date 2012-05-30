@@ -143,6 +143,14 @@ static bool init() {
   gSurfaceFunctions.lock = (int (*)(void*, SurfaceInfo*, void*))dlsym(handle, "_ZN7android7Surface4lockEPNS0_11SurfaceInfoEPNS_6RegionEb");
   gSurfaceFunctions.unlockAndPost = (int (*)(void*))dlsym(handle, "_ZN7android7Surface13unlockAndPostEv");
 
+
+  if (!gSurfaceFunctions.lock) {
+    // Stuff changed in 3.0/4.0
+    handle = dlopen("libgui.so", RTLD_LAZY);
+    gSurfaceFunctions.lock = (int (*)(void*, SurfaceInfo*, void*))dlsym(handle, "_ZN7android7Surface4lockEPNS0_11SurfaceInfoEPNS_6RegionE");
+    gSurfaceFunctions.unlockAndPost = (int (*)(void*))dlsym(handle, "_ZN7android7Surface13unlockAndPostEv");
+  }
+
   handle = dlopen("libui.so", RTLD_LAZY);
   if (!handle) {
     LOG("Failed to open libui.so");
@@ -158,6 +166,7 @@ static bool init() {
   return gSurfaceFunctions.initialized;
 }
 
+// FIXME: All of this should be changed to use the equivalent things in AndroidBridge, bug 758612
 static bool anp_surface_lock(JNIEnv* env, jobject surfaceView, ANPBitmap* bitmap, ANPRectI* dirtyRect) {
   if (!bitmap || !surfaceView) {
     return false;
