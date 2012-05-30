@@ -369,27 +369,6 @@ nsXULTreeGridAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
 }
 
 NS_IMETHODIMP
-nsXULTreeGridAccessible::GetColumnExtentAt(PRInt32 aRowIndex,
-                                           PRInt32 aColumnIndex,
-                                           PRInt32 *aExtentCount)
-{
-  NS_ENSURE_ARG_POINTER(aExtentCount);
-  *aExtentCount = 1;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULTreeGridAccessible::GetRowExtentAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
-                                        PRInt32 *aExtentCount)
-{
-  NS_ENSURE_ARG_POINTER(aExtentCount);
-  *aExtentCount = 1;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULTreeGridAccessible::GetColumnDescription(PRInt32 aColumnIndex,
                                               nsAString& aDescription)
 {
@@ -430,7 +409,7 @@ nsXULTreeGridAccessible::IsColumnSelected(PRInt32 aColumnIndex,
 
   // If all the row has been selected, then all the columns are selected.
   // Because we can't select a column alone.
-  
+
   PRInt32 rowCount = 0;
   nsresult rv = GetRowCount(&rowCount);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -458,7 +437,7 @@ nsXULTreeGridAccessible::IsRowSelected(PRInt32 aRowIndex, bool *aIsSelected)
   nsCOMPtr<nsITreeSelection> selection;
   nsresult rv = mTreeView->GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   return selection->IsSelected(aRowIndex, aIsSelected);
 }
 
@@ -496,7 +475,7 @@ nsXULTreeGridAccessible::UnselectRow(PRUint32 aRowIdx)
 
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
-  
+
   if (selection)
     selection->ClearRange(aRowIdx, aRowIdx);
 }
@@ -886,7 +865,7 @@ nsXULTreeGridCellAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
       aName.AssignLiteral("uncheck");
     else
       aName.AssignLiteral("check");
-    
+
     return NS_OK;
   }
 
@@ -1090,7 +1069,7 @@ nsXULTreeGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAtt
   // XXX - temp fix for crash bug 516047
   if (!tableAccessible)
     return NS_ERROR_FAILURE;
-    
+
   PRInt32 colIdx = GetColumnIndex();
 
   PRInt32 cellIdx = -1;

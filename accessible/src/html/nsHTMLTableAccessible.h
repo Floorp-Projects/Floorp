@@ -39,7 +39,7 @@ protected:
    * Return host table accessible.
    */
   already_AddRefed<nsIAccessibleTable> GetTableAccessible();
-  
+
   /**
    * Return nsITableCellLayout of the table cell frame.
    */
@@ -49,7 +49,7 @@ protected:
    * Return row and column indices of the cell.
    */
   nsresult GetCellIndexes(PRInt32& aRowIdx, PRInt32& aColIdx);
-  
+
   /**
    * Return an array of row or column header cells.
    */
@@ -101,6 +101,8 @@ public:
   virtual PRUint32 RowCount();
   virtual Accessible* CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex);
   virtual PRInt32 CellIndexAt(PRUint32 aRowIdx, PRUint32 aColIdx);
+  virtual PRUint32 ColExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
+  virtual PRUint32 RowExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
   virtual void UnselectCol(PRUint32 aColIdx);
   virtual void UnselectRow(PRUint32 aRowIdx);
   virtual bool IsProbablyLayoutTable();
