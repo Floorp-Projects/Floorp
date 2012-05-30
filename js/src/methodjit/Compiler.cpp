@@ -904,7 +904,7 @@ MakeJITScript(JSContext *cx, JSScript *script)
 }
 
 static inline bool
-IonGetsFirstChance(JSContext *cx, JSScript *script, bool osr)
+IonGetsFirstChance(JSContext *cx, JSScript *script)
 {
 #ifdef JS_ION
     if (!ion::IsEnabled(cx))
@@ -914,8 +914,8 @@ IonGetsFirstChance(JSContext *cx, JSScript *script, bool osr)
     if (!script->canIonCompile())
         return false;
 
-    // If we're going to OSR, but IM has forbidden OSR on this script, let JM take over.
-    if (osr && script->hasIonScript() && script->ion->isOsrForbidden())
+    // If we cannot enter Ion because bailouts are expected, let JM take over.
+    if (script->hasIonScript() && script->ion->bailoutExpected())
         return false;
 
     return true;
@@ -935,7 +935,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (jith->isUnjittable())
         return Compile_Abort;
 
-    if (IonGetsFirstChance(cx, script, pc > script->code))
+    if (IonGetsFirstChance(cx, script))
         return Compile_Skipped;
 
     if (request == CompileRequest_Interpreter &&
