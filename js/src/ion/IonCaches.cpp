@@ -306,8 +306,13 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
     }
 
     RootedVarId id(cx, NameToId(name));
-    if (!obj->getGeneric(cx, obj, id, vp))
-        return false;
+    if (obj->getOps()->getProperty) {
+        if (!GetPropertyGenericMaybeCallXML(cx, JSOp(*pc), objRoot, id, vp))
+            return false;
+    } else {
+        if (!GetPropertyHelper(cx, objRoot, id, 0, vp))
+            return false;
+    }
 
 #if JS_HAS_NO_SUCH_METHOD
     // Handle objects with __noSuchMethod__.
