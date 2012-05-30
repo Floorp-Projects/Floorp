@@ -75,5 +75,5 @@ function END()
 
 if (typeof options == 'function')
 {
-  options('xml');
+  options('moar_xml');
 }

@@ -689,7 +689,7 @@ Parser::functionBody(FunctionBodyType type)
 
         /* 'arguments' is now bound, so fall through. */
       case VARIABLE:
-      case CONSTANT:        
+      case CONSTANT:
         if (hasRest) {
             reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARGUMENTS_AND_REST);
             return NULL;
@@ -3886,7 +3886,7 @@ Parser::statement()
       case TOK_FUNCTION:
       {
 #if JS_HAS_XML_SUPPORT
-        if (!tc->sc->inStrictMode()) {
+        if (allowsXML()) {
             TokenKind tt = tokenStream.peekToken(TSF_KEYWORD_IS_NAME);
             if (tt == TOK_DBLCOLON)
                 return expressionStatement();
@@ -4175,7 +4175,7 @@ Parser::statement()
 #if JS_HAS_XML_SUPPORT
       case TOK_DEFAULT:
       {
-        if (tc->sc->inStrictMode())
+        if (!allowsXML())
             return expressionStatement();
 
         pn = UnaryNode::create(PNK_DEFXMLNS, this);
@@ -5680,7 +5680,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 return NULL;
             if (tt == TOK_NAME) {
 #if JS_HAS_XML_SUPPORT
-                if (!tc->sc->inStrictMode() && tokenStream.peekToken() == TOK_DBLCOLON) {
+                if (allowsXML() && tokenStream.peekToken() == TOK_DBLCOLON) {
                     ParseNode *propertyId = propertyQualifiedIdentifier();
                     if (!propertyId)
                         return NULL;
@@ -5702,7 +5702,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 }
             }
 #if JS_HAS_XML_SUPPORT
-            else if (!tc->sc->inStrictMode()) {
+            else if (allowsXML()) {
                 TokenPtr begin = lhs->pn_pos.begin;
                 if (tt == TOK_LP) {
                     /* Filters are effectively 'with', so deoptimize names. */
@@ -5749,7 +5749,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
         }
 #if JS_HAS_XML_SUPPORT
         else if (tt == TOK_DBLDOT) {
-            if (tc->sc->inStrictMode()) {
+            if (!allowsXML()) {
                 reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
                 return NULL;
             }
@@ -5886,7 +5886,7 @@ Parser::bracketedExpr()
 ParseNode *
 Parser::endBracketedExpr()
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     ParseNode *pn = bracketedExpr();
     if (!pn)
@@ -5950,7 +5950,7 @@ Parser::endBracketedExpr()
 ParseNode *
 Parser::propertySelector()
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     ParseNode *selector;
     if (tokenStream.isCurrentTokenType(TOK_STAR)) {
@@ -5975,7 +5975,7 @@ Parser::propertySelector()
 ParseNode *
 Parser::qualifiedSuffix(ParseNode *pn)
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     JS_ASSERT(tokenStream.currentToken().type == TOK_DBLCOLON);
     ParseNode *pn2 = NameNode::create(PNK_DBLCOLON, NULL, this, this->tc->sc);
@@ -6022,7 +6022,7 @@ Parser::qualifiedSuffix(ParseNode *pn)
 ParseNode *
 Parser::qualifiedIdentifier()
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     ParseNode *pn = propertySelector();
     if (!pn)
@@ -6039,7 +6039,7 @@ Parser::qualifiedIdentifier()
 ParseNode *
 Parser::attributeIdentifier()
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     JS_ASSERT(tokenStream.currentToken().type == TOK_AT);
     ParseNode *pn = UnaryNode::create(PNK_AT, this);
@@ -6069,7 +6069,7 @@ Parser::attributeIdentifier()
 ParseNode *
 Parser::xmlExpr(JSBool inTag)
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     JS_ASSERT(tokenStream.currentToken().type == TOK_LC);
     ParseNode *pn = UnaryNode::create(PNK_XMLCURLYEXPR, this);
@@ -6110,7 +6110,7 @@ Parser::xmlExpr(JSBool inTag)
 ParseNode *
 Parser::xmlNameExpr()
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     ParseNode *pn, *pn2, *list;
     TokenKind tt;
@@ -6179,7 +6179,7 @@ Parser::xmlNameExpr()
 ParseNode *
 Parser::xmlTagContent(ParseNodeKind tagkind, JSAtom **namep)
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     ParseNode *pn, *pn2, *list;
     TokenKind tt;
@@ -6253,7 +6253,7 @@ Parser::xmlTagContent(ParseNodeKind tagkind, JSAtom **namep)
 JSBool
 Parser::xmlElementContent(ParseNode *pn)
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     tokenStream.setXMLTagMode(false);
     for (;;) {
@@ -6317,7 +6317,7 @@ Parser::xmlElementContent(ParseNode *pn)
 ParseNode *
 Parser::xmlElementOrList(JSBool allowList)
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     ParseNode *pn, *pn2, *list;
     TokenKind tt;
@@ -6454,18 +6454,18 @@ Parser::xmlElementOrList(JSBool allowList)
 ParseNode *
 Parser::xmlElementOrListRoot(JSBool allowList)
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
 
     /*
-     * Force XML support to be enabled so that comments and CDATA literals
-     * are recognized, instead of <! followed by -- starting an HTML comment
-     * to end of line (used in script tags to hide content from old browsers
-     * that don't recognize <script>).
+     * Turn on "moar XML" so that comments and CDATA literals are recognized,
+     * instead of <! followed by -- starting an HTML comment to end of line
+     * (used in script tags to hide content from old browsers that don't
+     * recognize <script>).
      */
-    bool hadXML = tokenStream.hasXML();
-    tokenStream.setXML(true);
+    bool hadMoarXML = tokenStream.hasMoarXML();
+    tokenStream.setMoarXML(true);
     ParseNode *pn = xmlElementOrList(allowList);
-    tokenStream.setXML(hadXML);
+    tokenStream.setMoarXML(hadMoarXML);
     return pn;
 }
 
@@ -6528,7 +6528,7 @@ Parser::checkForFunctionNode(PropertyName *name, ParseNode *node)
 ParseNode *
 Parser::propertyQualifiedIdentifier()
 {
-    JS_ASSERT(!tc->sc->inStrictMode());
+    JS_ASSERT(allowsXML());
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_NAME));
     JS_ASSERT(tokenStream.currentToken().t_op == JSOP_NAME);
     JS_ASSERT(tokenStream.peekToken() == TOK_DBLCOLON);
@@ -6566,7 +6566,7 @@ Parser::identifierName(bool afterDoubleDot)
 
     if ((!afterDoubleDot
 #if JS_HAS_XML_SUPPORT
-                || (!tc->sc->inStrictMode() && tokenStream.peekToken() == TOK_DBLCOLON)
+                || (allowsXML() && tokenStream.peekToken() == TOK_DBLCOLON)
 #endif
                ) && !tc->inDeclDestructuring)
     {
@@ -6575,7 +6575,7 @@ Parser::identifierName(bool afterDoubleDot)
     }
 
 #if JS_HAS_XML_SUPPORT
-    if (!tc->sc->inStrictMode() && tokenStream.matchToken(TOK_DBLCOLON)) {
+    if (allowsXML() && tokenStream.matchToken(TOK_DBLCOLON)) {
         if (afterDoubleDot) {
             if (!checkForFunctionNode(name, node))
                 return NULL;
@@ -6594,11 +6594,10 @@ ParseNode *
 Parser::starOrAtPropertyIdentifier(TokenKind tt)
 {
     JS_ASSERT(tt == TOK_AT || tt == TOK_STAR);
-    if (tc->sc->inStrictMode()) {
-        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
-        return NULL;
-    }
-    return (tt == TOK_AT) ? attributeIdentifier() : qualifiedIdentifier();
+    if (allowsXML())
+        return (tt == TOK_AT) ? attributeIdentifier() : qualifiedIdentifier();
+    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
+    return NULL;
 }
 #endif
 
@@ -6627,7 +6626,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
     switch (tt) {
       case TOK_FUNCTION:
 #if JS_HAS_XML_SUPPORT
-        if (!tc->sc->inStrictMode() && tokenStream.matchToken(TOK_DBLCOLON, TSF_KEYWORD_IS_NAME)) {
+        if (allowsXML() && tokenStream.matchToken(TOK_DBLCOLON, TSF_KEYWORD_IS_NAME)) {
             pn2 = NullaryNode::create(PNK_FUNCTION, this);
             if (!pn2)
                 return NULL;
@@ -7039,21 +7038,21 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
         break;
 
       case TOK_XMLCDATA:
-        JS_ASSERT(!tc->sc->inStrictMode());
+        JS_ASSERT(allowsXML());
         pn = atomNode(PNK_XMLCDATA, JSOP_XMLCDATA);
         if (!pn)
             return NULL;
         break;
 
       case TOK_XMLCOMMENT:
-        JS_ASSERT(!tc->sc->inStrictMode());
+        JS_ASSERT(allowsXML());
         pn = atomNode(PNK_XMLCOMMENT, JSOP_XMLCOMMENT);
         if (!pn)
             return NULL;
         break;
 
       case TOK_XMLPI: {
-        JS_ASSERT(!tc->sc->inStrictMode());
+        JS_ASSERT(allowsXML());
         const Token &tok = tokenStream.currentToken();
         pn = new_<XMLProcessingInstruction>(tok.xmlPITarget(), tok.xmlPIData(), tok.pos);
         if (!pn)
