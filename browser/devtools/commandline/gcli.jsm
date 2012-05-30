@@ -2941,6 +2941,56 @@ exports.createUrlLookup = function(callingModule) {
   };
 };
 
+/**
+ * Helper to find the 'data-command' attribute and call some action on it.
+ * @see |updateCommand()| and |executeCommand()|
+ */
+function withCommand(element, action) {
+  var command = element.getAttribute('data-command');
+  if (!command) {
+    command = element.querySelector('*[data-command]')
+            .getAttribute('data-command');
+  }
+
+  if (command) {
+    action(command);
+  }
+  else {
+    console.warn('Missing data-command for ' + util.findCssSelector(element));
+  }
+}
+
+/**
+ * Update the requisition to contain the text of the clicked element
+ * @param element The clicked element, containing either a data-command
+ * attribute directly or in a nested element, from which we get the command
+ * to be executed.
+ * @param context Either a Requisition or an ExecutionContext or another object
+ * that contains an |update()| function that follows a similar contract.
+ */
+exports.updateCommand = function(element, context) {
+  withCommand(element, function(command) {
+    context.update(command);
+  });
+};
+
+/**
+ * Execute the text contained in the element that was clicked
+ * @param element The clicked element, containing either a data-command
+ * attribute directly or in a nested element, from which we get the command
+ * to be executed.
+ * @param context Either a Requisition or an ExecutionContext or another object
+ * that contains an |update()| function that follows a similar contract.
+ */
+exports.executeCommand = function(element, context) {
+  withCommand(element, function(command) {
+    context.exec({
+      visible: true,
+      typed: command
+    });
+  });
+};
+
 
 //------------------------------------------------------------------------------
 
@@ -4388,10 +4438,11 @@ exports.removeSetting = function(nameOrSpec) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gcli/ui/intro', ['require', 'exports', 'module' , 'gcli/settings', 'gcli/l10n', 'gcli/ui/view', 'gcli/cli', 'text!gcli/ui/intro.html'], function(require, exports, module) {
+define('gcli/ui/intro', ['require', 'exports', 'module' , 'gcli/settings', 'gcli/l10n', 'gcli/util', 'gcli/ui/view', 'gcli/cli', 'text!gcli/ui/intro.html'], function(require, exports, module) {
 
   var settings = require('gcli/settings');
   var l10n = require('gcli/l10n');
+  var util = require('gcli/util');
   var view = require('gcli/ui/view');
   var Output = require('gcli/cli').Output;
 
@@ -4421,7 +4472,7 @@ define('gcli/ui/intro', ['require', 'exports', 'module' , 'gcli/settings', 'gcli
   /**
    * Called when the UI is ready to add a welcome message to the output
    */
-  exports.maybeShowIntro = function(commandOutputManager) {
+  exports.maybeShowIntro = function(commandOutputManager, context) {
     if (hideIntro.value) {
       return;
     }
@@ -4429,18 +4480,33 @@ define('gcli/ui/intro', ['require', 'exports', 'module' , 'gcli/settings', 'gcli
     var output = new Output();
     commandOutputManager.onOutput({ output: output });
 
-    var viewData = view.createView({
+    var viewData = this.createView(context, output);
+
+    output.complete(viewData);
+  };
+
+  /**
+   * Called when the UI is ready to add a welcome message to the output
+   */
+  exports.createView = function(context, output) {
+    return view.createView({
       html: require('text!gcli/ui/intro.html'),
+      options: { stack: 'intro.html' },
       data: {
-        showHideButton: true,
+        l10n: l10n.propertyLookup,
+        onclick: function(ev) {
+          util.updateCommand(ev.currentTarget, context);
+        },
+        ondblclick: function(ev) {
+          util.executeCommand(ev.currentTarget, context);
+        },
+        showHideButton: (output != null),
         onGotIt: function(ev) {
           hideIntro.value = true;
           output.onClose();
         }
       }
     });
-
-    output.complete(viewData);
   };
 });
 /*
@@ -6161,17 +6227,16 @@ define('gcli/promise', ['require', 'exports', 'module' ], function(require, expo
 });
 define("text!gcli/ui/intro.html", [], "\n" +
   "<div>\n" +
+  "  <p>${l10n.introTextOpening}</p>\n" +
+  "\n" +
   "  <p>\n" +
-  "  GCLI is an experiment to create a highly usable <strong>graphical command\n" +
-  "  line</strong> for developers. It's not a JavaScript\n" +
-  "  <a href=\"https://en.wikipedia.org/wiki/Read�eval�print_loop\">REPL</a>, so\n" +
-  "  it focuses on speed of input over JavaScript syntax and a rich display over\n" +
-  "  monospace output.</p>\n" +
+  "    ${l10n.introTextCommands}\n" +
+  "    <span class=\"gcli-out-shortcut\" onclick=\"${onclick}\"\n" +
+  "        ondblclick=\"${ondblclick}\" data-command=\"help\">help</span>,\n" +
+  "    ${l10n.introTextKeys} <code>${l10n.introTextF1Escape}</code>.\n" +
+  "  </p>\n" +
   "\n" +
-  "  <p>Type <span class=\"gcli-out-shortcut\">help</span> for a list of commands,\n" +
-  "  or press <code>F1/Escape</code> to show/hide command hints.</p>\n" +
-  "\n" +
-  "  <button onclick=\"${onGotIt}\" if=\"${showHideButton}\">Got it!</button>\n" +
+  "  <button onclick=\"${onGotIt}\" if=\"${showHideButton}\">${l10n.introTextGo}</button>\n" +
   "</div>\n" +
   "");
 
@@ -7735,12 +7800,13 @@ SelectionTooltipField.DEFAULT_VALUE = '__SelectionTooltipField.DEFAULT_VALUE';
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gcli/commands/help', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/l10n', 'gcli/ui/view', 'text!gcli/commands/help_man.html', 'text!gcli/commands/help_list.html', 'text!gcli/commands/help.css'], function(require, exports, module) {
+define('gcli/commands/help', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/l10n', 'gcli/util', 'gcli/ui/view', 'text!gcli/commands/help_man.html', 'text!gcli/commands/help_list.html', 'text!gcli/commands/help.css'], function(require, exports, module) {
 var help = exports;
 
 
 var canon = require('gcli/canon');
 var l10n = require('gcli/l10n');
+var util = require('gcli/util');
 var view = require('gcli/ui/view');
 
 // Storing the HTML on exports allows other builds to alter the help template
@@ -7801,26 +7867,6 @@ help.shutdown = function() {
 };
 
 /**
- * Find an element within the passed element with the class gcli-help-command
- * and update the requisition to contain this text.
- */
-function updateCommand(element, context) {
-  var typed = element.querySelector('.gcli-help-command').textContent;
-  context.update(typed);
-}
-
-/**
- * Find an element within the passed element with the class gcli-help-command
- * and execute this text.
- */
-function executeCommand(element, context) {
-  context.exec({
-    visible: true,
-    typed: element.querySelector('.gcli-help-command').textContent
-  });
-}
-
-/**
  * Create a block of data suitable to be passed to the help_list.html template
  */
 function getListTemplateData(args, context) {
@@ -7829,11 +7875,11 @@ function getListTemplateData(args, context) {
     includeIntro: args.search == null,
 
     onclick: function(ev) {
-      updateCommand(ev.currentTarget, context);
+      util.updateCommand(ev.currentTarget, context);
     },
 
     ondblclick: function(ev) {
-      executeCommand(ev.currentTarget, context);
+      util.executeCommand(ev.currentTarget, context);
     },
 
     getHeading: function() {
@@ -7873,11 +7919,18 @@ function getManTemplateData(command, context) {
     command: command,
 
     onclick: function(ev) {
-      updateCommand(ev.currentTarget, context);
+      util.updateCommand(ev.currentTarget, context);
     },
 
     ondblclick: function(ev) {
-      executeCommand(ev.currentTarget, context);
+      util.executeCommand(ev.currentTarget, context);
+    },
+
+    describe: function(item, element) {
+      var text = item.manual || item.description;
+      var parent = element.ownerDocument.createElement('div');
+      util.setContents(parent, text);
+      return parent.childNodes;
     },
 
     getTypeDescription: function(param) {
@@ -7917,8 +7970,8 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "\n" +
   "  <h4 class=\"gcli-help-header\">\n" +
   "    ${l10n.helpManSynopsis}:\n" +
-  "    <span class=\"gcli-help-synopsis\" onclick=\"${onclick}\">\n" +
-  "      <span class=\"gcli-help-command\">${command.name}</span>\n" +
+  "    <span class=\"gcli-out-shortcut\" onclick=\"${onclick}\" data-command=\"${command.name}\">\n" +
+  "      ${command.name}\n" +
   "      <span foreach=\"param in ${command.params}\">\n" +
   "        ${param.defaultValue !== undefined ? '[' + param.name + ']' : param.name}\n" +
   "      </span>\n" +
@@ -7927,9 +7980,7 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "\n" +
   "  <h4 class=\"gcli-help-header\">${l10n.helpManDescription}:</h4>\n" +
   "\n" +
-  "  <p class=\"gcli-help-description\">\n" +
-  "    ${command.manual || command.description}\n" +
-  "  </p>\n" +
+  "  <p class=\"gcli-help-description\">${describe(command, __element)}</p>\n" +
   "\n" +
   "  <div if=\"${command.exec}\">\n" +
   "    <h4 class=\"gcli-help-header\">${l10n.helpManParameters}:</h4>\n" +
@@ -7937,9 +7988,9 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "    <ul class=\"gcli-help-parameter\">\n" +
   "      <li if=\"${command.params.length === 0}\">${l10n.helpManNone}</li>\n" +
   "      <li foreach=\"param in ${command.params}\">\n" +
-  "        <tt>${param.name}</tt> ${getTypeDescription(param)}\n" +
+  "        ${param.name} <em>${getTypeDescription(param)}</em>\n" +
   "        <br/>\n" +
-  "        ${param.manual || param.description}\n" +
+  "        ${describe(param, __element)}\n" +
   "      </li>\n" +
   "    </ul>\n" +
   "  </div>\n" +
@@ -7952,8 +8003,9 @@ define("text!gcli/commands/help_man.html", [], "\n" +
   "      <li foreach=\"subcommand in ${subcommands}\">\n" +
   "        <strong>${subcommand.name}</strong>:\n" +
   "        ${subcommand.description}\n" +
-  "        <span class=\"gcli-help-synopsis\" onclick=\"${onclick}\" ondblclick=\"${ondblclick}\">\n" +
-  "          <span class=\"gcli-help-command\">help ${subcommand.name}</span>\n" +
+  "        <span class=\"gcli-out-shortcut\" data-command=\"help ${subcommand.name}\"\n" +
+  "            onclick=\"${onclick}\" ondblclick=\"${ondblclick}\">\n" +
+  "          help ${subcommand.name}\n" +
   "        </span>\n" +
   "      </li>\n" +
   "    </ul>\n" +
@@ -7973,7 +8025,7 @@ define("text!gcli/commands/help_list.html", [], "\n" +
   "      <td class=\"gcli-help-arrow\">&#x2192;</td>\n" +
   "      <td>\n" +
   "        ${command.description}\n" +
-  "        <span class=\"gcli-out-shortcut gcli-help-command\">help ${command.name}</span>\n" +
+  "        <span class=\"gcli-out-shortcut\" data-command=\"help ${command.name}\">help ${command.name}</span>\n" +
   "      </td>\n" +
   "    </tr>\n" +
   "  </table>\n" +
