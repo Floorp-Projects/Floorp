@@ -4,6 +4,11 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+interface TestExternalInterface;
+
+interface TestNonCastableInterface {
+};
+
 interface TestInterface {
   // Integer types
   // XXXbz add tests for infallible versions of all the integer stuff
@@ -60,6 +65,32 @@ interface TestInterface {
   void passNullableSelf(TestInterface? arg);
   attribute TestInterface nonNullSelf;
   attribute TestInterface? nullableSelf;
+
+  // Non-castable interface types
+  TestNonCastableInterface receiveOther();
+  TestNonCastableInterface? receiveNullableOther();
+  TestNonCastableInterface receiveWeakOther();
+  TestNonCastableInterface? receiveWeakNullableOther();
+  // A verstion to test for casting to TestNonCastableInterface&
+  void passOther(TestNonCastableInterface arg);
+  // A version we can use to test for the exact type passed in
+  void passOther2(TestNonCastableInterface arg);
+  void passNullableOther(TestNonCastableInterface? arg);
+  attribute TestNonCastableInterface nonNullOther;
+  attribute TestNonCastableInterface? nullableOther;
+
+  // External interface types
+  TestExternalInterface receiveExternal();
+  TestExternalInterface? receiveNullableExternal();
+  TestExternalInterface receiveWeakExternal();
+  TestExternalInterface? receiveWeakNullableExternal();
+  // A verstion to test for casting to TestExternalInterface&
+  void passExternal(TestExternalInterface arg);
+  // A version we can use to test for the exact type passed in
+  void passExternal2(TestExternalInterface arg);
+  void passNullableExternal(TestExternalInterface? arg);
+  attribute TestExternalInterface nonNullExternal;
+  attribute TestExternalInterface? nullableExternal;
 
   // Sequence types
   sequence<long> receiveSequence();
