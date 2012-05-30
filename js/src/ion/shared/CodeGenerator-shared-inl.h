@@ -189,7 +189,7 @@ CodeGeneratorShared::saveLive(LInstruction *ins)
 {
     JS_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
-    masm.PushRegsInMask(safepoint->spillRegs());
+    masm.PushRegsInMask(safepoint->liveRegs());
 }
 
 void
@@ -197,7 +197,7 @@ CodeGeneratorShared::restoreLive(LInstruction *ins)
 {
     JS_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
-    masm.PopRegsInMask(safepoint->spillRegs());
+    masm.PopRegsInMask(safepoint->liveRegs());
 }
 
 } // ion
