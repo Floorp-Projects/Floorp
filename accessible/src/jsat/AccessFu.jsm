@@ -217,6 +217,11 @@ var AccessFu = {
           let position = pivot.position;
           let doc = aEvent.DOMNode;
 
+          let presenterContext =
+            new PresenterContext(position, event.oldAccessible);
+          this.presenters.forEach(
+            function(p) { p.pivotChanged(presenterContext); });
+
           if (position && position.DOMNode &&
               doc instanceof Ci.nsIDOMDocument) {
             // Set the caret to the start of the pivot position, and move
@@ -230,11 +235,6 @@ var AccessFu = {
               .getService(Ci.nsIFocusManager).moveFocus(
                 doc.defaultView, null, Ci.nsIFocusManager.MOVEFOCUS_CARET, 0);
           }
-
-          let presenterContext = new PresenterContext(pivot.position,
-                                                      event.oldAccessible);
-          this.presenters.forEach(
-            function(p) { p.pivotChanged(presenterContext); });
           break;
         }
       case Ci.nsIAccessibleEvent.EVENT_STATE_CHANGE:
