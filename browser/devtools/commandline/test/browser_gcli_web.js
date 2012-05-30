@@ -2230,8 +2230,7 @@ define('gclitest/testIntro', ['require', 'exports', 'module' , 'gclitest/helpers
       typed: 'intro',
       args: { },
       outputMatch: [
-        /graphical\s*command\s*line/,
-        /GCLI/,
+        /command\s*line/,
         /help/,
         /F1/,
         /Escape/
