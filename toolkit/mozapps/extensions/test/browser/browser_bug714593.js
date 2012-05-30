@@ -102,8 +102,7 @@ function get_addon_item(aName) {
   var id = aName + "@tests.mozilla.org";
   var list = gManagerWindow.document.getElementById("search-list");
   var rows = list.getElementsByTagName("richlistitem");
-  for (var i = 0; i < rows.length; i++) {
-    var row = rows[i];
+  for (let row of rows) {
     if (row.mAddon && row.mAddon.id == id)
       return row;
   }
