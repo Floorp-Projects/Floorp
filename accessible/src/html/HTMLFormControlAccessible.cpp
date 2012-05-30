@@ -13,6 +13,7 @@
 #include "Role.h"
 #include "States.h"
 
+#include "nsContentList.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -22,6 +23,7 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIEditor.h"
+#include "nsIFormControl.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
@@ -138,9 +140,8 @@ HTMLRadioButtonAccessible::NativeState()
   PRUint64 state = AccessibleWrap::NativeState();
 
   state |= states::CHECKABLE;
-  
-  bool checked = false;   // Radio buttons and check boxes can be checked
 
+  bool checked = false;   // Radio buttons and check boxes can be checked
   nsCOMPtr<nsIDOMHTMLInputElement> htmlRadioElement =
     do_QueryInterface(mContent);
   if (htmlRadioElement)
@@ -156,8 +157,7 @@ void
 HTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32* aPosInSet,
                                                       PRInt32* aSetSize)
 {
-  nsAutoString nsURI;
-  mContent->NodeInfo()->GetNamespaceURI(nsURI);
+  PRInt32 namespaceId = mContent->NodeInfo()->NamespaceID();
   nsAutoString tagName;
   mContent->NodeInfo()->GetName(tagName);
 
@@ -166,43 +166,30 @@ HTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32* aPosInSet,
   nsAutoString name;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
 
-  nsCOMPtr<nsIDOMNodeList> inputs;
+  nsRefPtr<nsContentList> inputElms;
 
-  nsCOMPtr<nsIDOMHTMLInputElement> radio(do_QueryInterface(mContent));
-  nsCOMPtr<nsIDOMHTMLFormElement> form;
-  radio->GetForm(getter_AddRefs(form));
-  if (form) {
-    form->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
-  } else {
-    nsIDocument* doc = mContent->OwnerDoc();
-    nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(doc));
-    if (document)
-      document->GetElementsByTagNameNS(nsURI, tagName, getter_AddRefs(inputs));
-  }
+  nsCOMPtr<nsIFormControl> formControlNode(do_QueryInterface(mContent));
+  dom::Element* formElm = formControlNode->GetFormElement();
+  if (formElm)
+    inputElms = NS_GetContentList(formElm, namespaceId, tagName);
+  else
+    inputElms = NS_GetContentList(mContent->OwnerDoc(), namespaceId, tagName);
+  NS_ENSURE_TRUE(inputElms, );
 
-  NS_ENSURE_TRUE(inputs, );
-
-  PRUint32 inputsCount = 0;
-  inputs->GetLength(&inputsCount);
+  PRUint32 inputCount = inputElms->Length(false);
 
   // Compute posinset and setsize.
   PRInt32 indexOf = 0;
   PRInt32 count = 0;
 
-  for (PRUint32 index = 0; index < inputsCount; index++) {
-    nsCOMPtr<nsIDOMNode> itemNode;
-    inputs->Item(index, getter_AddRefs(itemNode));
-
-    nsCOMPtr<nsIContent> item(do_QueryInterface(itemNode));
-    if (item &&
-        item->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                          type, eCaseMatters) &&
-        item->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                          name, eCaseMatters)) {
-
+  for (PRUint32 index = 0; index < inputCount; index++) {
+    nsIContent* inputElm = inputElms->Item(index, false);
+    if (inputElm->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                              type, eCaseMatters) &&
+        inputElm->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                              name, eCaseMatters)) {
       count++;
-
-      if (item == mContent)
+      if (inputElm == mContent)
         indexOf = count;
     }
   }
