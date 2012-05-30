@@ -25,7 +25,7 @@ static nsresult GetOwner(NPP instance, nsPluginInstanceOwner** owner) {
   return pinst->GetOwner((nsIPluginInstanceOwner**)owner);
 }
 
-static ANPNativeWindow anp_native_window_acquireNativeWindow(NPP instance) {
+static ANPNativeWindow anp_native_window_acquireNativeWindow(NPP instance) {  
   nsRefPtr<nsPluginInstanceOwner> owner;
   if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner))))
     return NULL;

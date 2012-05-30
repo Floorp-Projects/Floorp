@@ -109,6 +109,8 @@ abstract public class GeckoApp
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
 
+    private View mFullScreenPluginView;
+
     private int mRestoreMode = GeckoAppShell.RESTORE_NONE;
     private boolean mInitialized = false;
 
@@ -1350,11 +1352,37 @@ abstract public class GeckoApp
         tabs.closeTab(tab);
     }
 
-    void addPluginView(final View view, final Rect rect) {
+    private void addFullScreenPluginView(View view, int orientation) {
+        if (mFullScreenPluginView != null) {
+            Log.w(LOGTAG, "Already have a fullscreen plugin view");
+            return;
+        }
+
+        setFullScreen(true);
+        mBrowserToolbar.hide();
+
+        if (orientation != GeckoScreenOrientationListener.eScreenOrientation_None)
+            GeckoScreenOrientationListener.getInstance().lockScreenOrientation(orientation);
+
+        view.setWillNotDraw(false);
+        if (view instanceof SurfaceView) {
+            ((SurfaceView) view).setZOrderOnTop(true);
+        }
+
+        mPluginContainer.addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        mFullScreenPluginView = view;
+    }
+
+    void addPluginView(final View view, final Rect rect, final boolean isFullScreen, final int orientation) {
         mMainHandler.post(new Runnable() { 
             public void run() {
                 Tabs tabs = Tabs.getInstance();
                 Tab tab = tabs.getSelectedTab();
+
+                if (isFullScreen) {
+                    addFullScreenPluginView(view, orientation);
+                    return;
+                }
 
                 PluginLayer layer = (PluginLayer) tab.getPluginLayer(view);
                 if (layer == null) {
@@ -1370,11 +1398,38 @@ abstract public class GeckoApp
         });
     }
 
-    void removePluginView(final View view) {
+    private void removeFullScreenPluginView(View view) {
+        if (mFullScreenPluginView == null) {
+            Log.w(LOGTAG, "Don't have a fullscreen plugin view");
+            return;
+        }
+
+        if (mFullScreenPluginView != view) {
+            Log.w(LOGTAG, "Passed view is not the current full screen view");
+            return;
+        }
+
+        GeckoAppShell.onFullScreenPluginHidden(view);
+
+        GeckoScreenOrientationListener.getInstance().unlockScreenOrientation();
+
+        setFullScreen(false);
+        mBrowserToolbar.show();
+        
+        mPluginContainer.removeView(view);
+        mFullScreenPluginView = null;
+    }
+
+    void removePluginView(final View view, final boolean isFullScreen) {
         mMainHandler.post(new Runnable() { 
             public void run() {
                 Tabs tabs = Tabs.getInstance();
                 Tab tab = tabs.getSelectedTab();
+
+                if (isFullScreen) {
+                    removeFullScreenPluginView(view);
+                    return;
+                }
 
                 PluginLayer layer = (PluginLayer) tab.removePluginLayer(view);
                 if (layer != null) {
@@ -2598,6 +2653,11 @@ abstract public class GeckoApp
     public void onBackPressed() {
         if (mDoorHangerPopup.isShowing()) {
             mDoorHangerPopup.dismiss();
+            return;
+        }
+
+        if (mFullScreenPluginView != null) {
+            removePluginView(mFullScreenPluginView, true);
             return;
         }
 
