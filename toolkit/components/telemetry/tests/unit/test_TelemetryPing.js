@@ -12,9 +12,7 @@ do_load_httpd_js();
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
-const gTestUUID = "3512c938-d9d2-4722-a575-a7f67086d3b2";
 const PATH = "/submit/telemetry/test-ping";
-const SAVED_PATH = "/submit/telemetry/" + gTestUUID;
 const SERVER = "http://localhost:4444";
 const IGNORE_HISTOGRAM = "test::ignore_me";
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
@@ -65,7 +63,7 @@ function telemetryObserver(aSubject, aTopic, aData) {
   }
   do_register_cleanup(function () histogramsFile.remove(true));
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
-  TelemetryPing.observe(histogramsFile, "test-save-histograms", gTestUUID);
+  TelemetryPing.observe(histogramsFile, "test-save-histograms", null);
   TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
 
   Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM, 1, 5, 6,
