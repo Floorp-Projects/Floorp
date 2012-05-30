@@ -53,6 +53,18 @@ enum ENameValueFlag {
  eNameFromTooltip // Tooltip was used as a name
 };
 
+/**
+ * Group position (level, position in set and set size).
+ */
+struct GroupPos
+{
+  GroupPos() : level(0), posInSet(0), setSize(0) { }
+
+  PRInt32 level;
+  PRInt32 posInSet;
+  PRInt32 setSize;
+};
+
 } // namespace a11y
 } // namespace mozilla
 
@@ -227,6 +239,12 @@ public:
    */
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
+  /**
+   * Return group position (level, position in set and set size).
+   */
+  virtual mozilla::a11y::GroupPos GroupPosition();
+
+  /**
   /**
    * Used by ChildAtPoint() method to get direct or deepest child at point.
    */
