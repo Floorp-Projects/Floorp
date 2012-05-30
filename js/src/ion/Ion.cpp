@@ -390,7 +390,7 @@ IonScript::IonScript()
     osrEntryOffset_(0),
     invalidateEpilogueOffset_(0),
     invalidateEpilogueDataOffset_(0),
-    forbidOsr_(false),
+    bailoutExpected_(false),
     snapshots_(0),
     snapshotsSize_(0),
     bailoutTable_(0),
@@ -908,8 +908,8 @@ ion::CanEnterAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecod
     if (script->ion == ION_DISABLED_SCRIPT)
         return Method_Skipped;
 
-    // Ignore OSR if the code is expected to result in a bailout.
-    if (script->ion && script->ion->isOsrForbidden())
+    // Skip if the code is expected to result in a bailout.
+    if (script->ion && script->ion->bailoutExpected())
         return Method_Skipped;
 
     // Optionally ignore on user request.
@@ -944,6 +944,10 @@ ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
 
     // Skip if the script has been disabled.
     if (script->ion == ION_DISABLED_SCRIPT)
+        return Method_Skipped;
+
+    // Skip if the code is expected to result in a bailout.
+    if (script->ion && script->ion->bailoutExpected())
         return Method_Skipped;
 
     // If constructing, allocate a new |this| object before building Ion.
@@ -981,6 +985,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     JS_CHECK_RECURSION(cx, return IonExec_Error);
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT(CheckFrame(fp));
+    JS_ASSERT(!fp->script()->ion->bailoutExpected());
 
     EnterIonCode enter = cx->compartment->ionCompartment()->enterJITInfallible();
 

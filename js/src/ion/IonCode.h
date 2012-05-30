@@ -188,9 +188,8 @@ struct IonScript
     // per-platform if we want.
     uint32 invalidateEpilogueDataOffset_;
 
-    // Forbid entering into Ion code from a branch.
-    // Useful when a bailout is expected.
-    bool forbidOsr_;
+    // Flag set when we bailout, to avoid frequent bailouts.
+    bool bailoutExpected_;
 
     // Offset from the start of the code buffer to its snapshot buffer.
     uint32 snapshots_;
@@ -320,11 +319,11 @@ struct IonScript
         JS_ASSERT(invalidateEpilogueDataOffset_);
         return invalidateEpilogueDataOffset_;
     }
-    void forbidOsr() {
-        forbidOsr_ = true;
+    void setBailoutExpected() {
+        bailoutExpected_ = true;
     }
-    bool isOsrForbidden() const {
-        return forbidOsr_;
+    bool bailoutExpected() const {
+        return bailoutExpected_;
     }
     const uint8 *snapshots() const {
         return reinterpret_cast<const uint8 *>(this) + snapshots_;
