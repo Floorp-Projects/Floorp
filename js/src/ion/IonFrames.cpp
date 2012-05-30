@@ -493,9 +493,13 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         switch (f->argRootType(explicitArg)) {
           case VMFunction::RootNone:
             break;
-          case VMFunction::RootObject:
-            gc::MarkObjectRoot(trc, reinterpret_cast<JSObject**>(argBase), "ion-vm-args");
+          case VMFunction::RootObject: {
+            // Sometimes we can bake in HandleObjects to NULL.
+            JSObject **pobj = reinterpret_cast<JSObject **>(argBase);
+            if (*pobj)
+                gc::MarkObjectRoot(trc, pobj, "ion-vm-args");
             break;
+          }
           case VMFunction::RootString:
           case VMFunction::RootPropertyName:
             gc::MarkStringRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-vm-args");
