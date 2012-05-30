@@ -482,7 +482,8 @@ nsFrame::Init(nsIContent*      aContent,
     // Make bits that are currently off (see constructor) the same:
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
                        NS_FRAME_IS_SPECIAL |
-                       NS_FRAME_MAY_BE_TRANSFORMED);
+                       NS_FRAME_MAY_BE_TRANSFORMED |
+                       NS_FRAME_MAY_HAVE_GENERATED_CONTENT);
   }
   if (mParent) {
     nsFrameState state = mParent->GetStateBits();

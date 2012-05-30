@@ -285,6 +285,9 @@ typedef PRUint64 nsFrameState;
 // this does not include nsSVGOuterSVGFrame since it takes part is CSS layout.
 #define NS_FRAME_SVG_LAYOUT                         NS_FRAME_STATE_BIT(43)
 
+// Is this frame allowed to have generated (::before/::after) content?
+#define NS_FRAME_MAY_HAVE_GENERATED_CONTENT         NS_FRAME_STATE_BIT(44)
+
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
