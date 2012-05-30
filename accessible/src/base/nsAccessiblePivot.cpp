@@ -185,8 +185,7 @@ nsAccessiblePivot::MoveNext(nsIAccessibleTraversalRule* aRule, bool* aResult)
   NS_ENSURE_ARG(aResult);
   NS_ENSURE_ARG(aRule);
 
-  if (mPosition && (mPosition->IsDefunct() ||
-                    !mPosition->Document()->IsInDocument(mPosition)))
+  if (mPosition && (mPosition->IsDefunct() || !IsRootDescendant(mPosition)))
     return NS_ERROR_NOT_IN_TREE;
 
   nsresult rv = NS_OK;
@@ -206,8 +205,7 @@ nsAccessiblePivot::MovePrevious(nsIAccessibleTraversalRule* aRule, bool* aResult
   NS_ENSURE_ARG(aResult);
   NS_ENSURE_ARG(aRule);
 
-  if (mPosition && (mPosition->IsDefunct() ||
-                    !mPosition->Document()->IsInDocument(mPosition)))
+  if (mPosition && (mPosition->IsDefunct() || !IsRootDescendant(mPosition)))
     return NS_ERROR_NOT_IN_TREE;
 
   nsresult rv = NS_OK;
@@ -320,6 +318,7 @@ nsAccessiblePivot::IsRootDescendant(Accessible* aAccessible)
   if (!mRoot || mRoot->IsDefunct())
     return false;
 
+  // XXX Optimize with IsInDocument() when appropriate. Blocked by bug 759875.
   Accessible* accessible = aAccessible;
   do {
     if (accessible == mRoot)
