@@ -432,15 +432,15 @@ XPCOMUtils.defineLazyGetter(this, "gCanStageUpdates", function aus_gCanStageUpda
 #endif
 
   try {
-    var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
+    var updateTestFile = getInstallDirRoot();
+    updateTestFile.append(FILE_PERMS_TEST);
     LOG("gCanStageUpdates - testing write access " + updateTestFile.path);
     testWriteAccess(updateTestFile, true);
 #ifndef XP_MACOSX
     // On all platforms except Mac, we need to test the parent directory as well,
     // as we need to be able to move files in that directory during the replacing
     // step.
-    updateTestFile = getUpdateDirCreate([]);
-    updateTestFile = updateTestFile.parent;
+    updateTestFile = getInstallDirRoot().parent;
     updateTestFile.append(FILE_PERMS_TEST);
     LOG("gCanStageUpdates - testing write access " + updateTestFile.path);
     updateTestFile.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE,
@@ -550,6 +550,22 @@ function getUpdateDirCreate(pathArray) {
   }
 #endif
   return FileUtils.getDir(KEY_APPDIR, pathArray, true);
+}
+
+/**
+ * Gets the root of the installation directory which is the application
+ * bundle directory on Mac OS X and the location of the application binary
+ * on all other platforms.
+ *
+ * @return nsIFile object for the directory
+ */
+function getInstallDirRoot() {
+  var dir = FileUtils.getDir(KEY_APPDIR, [], false);
+#ifdef XP_MACOSX
+  // On Mac, we store the Updated.app directory inside the bundle directory.
+  dir = dir.parent.parent;
+#endif
+  return dir;
 }
 
 /**
