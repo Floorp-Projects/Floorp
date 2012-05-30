@@ -283,7 +283,7 @@ case "$target" in
         fi
 
         # Minimum Android SDK API Level we require.
-        android_min_api_level=14
+        android_min_api_level=13
 
         # Get the api level from "$android_sdk"/source.properties.
         android_api_level=`$AWK -F = '$1 == "AndroidVersion.ApiLevel" {print $2}' "$android_sdk"/source.properties`
