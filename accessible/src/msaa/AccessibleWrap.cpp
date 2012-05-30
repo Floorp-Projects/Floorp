@@ -1180,24 +1180,17 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  PRInt32 groupLevel = 0;
-  PRInt32 similarItemsInGroup = 0;
-  PRInt32 positionInGroup = 0;
-
-  nsresult rv = GroupPosition(&groupLevel, &similarItemsInGroup,
-                              &positionInGroup);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  GroupPos groupPos = GroupPosition();
 
   // Group information for accessibles having level only (like html headings
   // elements) isn't exposed by this method. AT should look for 'level' object
   // attribute.
-  if (!similarItemsInGroup && !positionInGroup)
+  if (!groupPos.setSize && !groupPos.posInSet)
     return S_FALSE;
 
-  *aGroupLevel = groupLevel;
-  *aSimilarItemsInGroup = similarItemsInGroup;
-  *aPositionInGroup = positionInGroup;
+  *aGroupLevel = groupPos.level;
+  *aSimilarItemsInGroup = groupPos.setSize;
+  *aPositionInGroup = groupPos.posInSet;
 
   return S_OK;
 

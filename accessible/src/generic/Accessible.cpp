@@ -1268,10 +1268,9 @@ Accessible::GetAttributes(nsIPersistentProperties **aAttributes)
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::checkable, NS_LITERAL_STRING("true"));
 
   // Group attributes (level/setsize/posinset)
-  PRInt32 level = 0, posInSet = 0, setSize = 0;
-  rv = GroupPosition(&level, &setSize, &posInSet);
-  if (NS_SUCCEEDED(rv))
-    nsAccUtils::SetAccGroupAttrs(attributes, level, setSize, posInSet);
+  GroupPos groupPos = GroupPosition();
+  nsAccUtils::SetAccGroupAttrs(attributes, groupPos.level,
+                               groupPos.setSize, groupPos.posInSet);
 
   // Expose object attributes from ARIA attributes.
   PRUint32 numAttrs = mContent->GetAttrCount();
@@ -1422,6 +1421,44 @@ Accessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
   return NS_OK;
 }
 
+GroupPos
+Accessible::GroupPosition()
+{
+  GroupPos groupPos;
+
+  // Get group position from ARIA attributes.
+  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_level, &groupPos.level);
+  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_setsize, &groupPos.setSize);
+  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_posinset, &groupPos.posInSet);
+
+  // If ARIA is missed and the accessible is visible then calculate group
+  // position from hierarchy.
+  if (State() & states::INVISIBLE)
+    return groupPos;
+
+  // Calculate group level if ARIA is missed.
+  if (groupPos.level == 0) {
+    PRInt32 level = GetLevelInternal();
+    if (level != 0)
+      groupPos.level = level;
+  }
+
+  // Calculate position in group and group size if ARIA is missed.
+  if (groupPos.posInSet == 0 || groupPos.setSize == 0) {
+    PRInt32 posInSet = 0, setSize = 0;
+    GetPositionAndSizeInternal(&posInSet, &setSize);
+    if (posInSet != 0 && setSize != 0) {
+      if (groupPos.posInSet == 0)
+        groupPos.posInSet = posInSet;
+
+      if (groupPos.setSize == 0)
+        groupPos.setSize = setSize;
+    }
+  }
+
+  return groupPos;
+}
+
 NS_IMETHODIMP
 Accessible::GroupPosition(PRInt32* aGroupLevel,
                           PRInt32* aSimilarItemsInGroup,
@@ -1439,38 +1476,11 @@ Accessible::GroupPosition(PRInt32* aGroupLevel,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  // Get group position from ARIA attributes.
-  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_level,
-                           aGroupLevel);
-  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_posinset,
-                           aPositionInGroup);
-  nsCoreUtils::GetUIntAttr(mContent, nsGkAtoms::aria_setsize,
-                           aSimilarItemsInGroup);
+  GroupPos groupPos = GroupPosition();
 
-  // If ARIA is missed and the accessible is visible then calculate group
-  // position from hierarchy.
-  if (State() & states::INVISIBLE)
-    return NS_OK;
-
-  // Calculate group level if ARIA is missed.
-  if (*aGroupLevel == 0) {
-    PRInt32 level = GetLevelInternal();
-    if (level != 0)
-      *aGroupLevel = level;
-  }
-
-  // Calculate position in group and group size if ARIA is missed.
-  if (*aSimilarItemsInGroup == 0 || *aPositionInGroup == 0) {
-    PRInt32 posInSet = 0, setSize = 0;
-    GetPositionAndSizeInternal(&posInSet, &setSize);
-    if (posInSet != 0 && setSize != 0) {
-      if (*aPositionInGroup == 0)
-        *aPositionInGroup = posInSet;
-
-      if (*aSimilarItemsInGroup == 0)
-        *aSimilarItemsInGroup = setSize;
-    }
-  }
+  *aGroupLevel = groupPos.level;
+  *aSimilarItemsInGroup = groupPos.setSize;
+  *aPositionInGroup = groupPos.posInSet;
 
   return NS_OK;
 }
