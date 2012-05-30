@@ -36,41 +36,53 @@ function telemetry_ping () {
   TelemetryPing.observe(null, "test-ping", SERVER);
 }
 
+// Mostly useful so that you can dump payloads from decodeRequestPayload.
+function dummyHandler(request, response) {
+  let p = decodeRequestPayload(request);
+  return p;
+}
+
 function nonexistentServerObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(nonexistentServerObserver, aTopic);
 
   httpserver.start(4444);
 
   // Provide a dummy function so it returns 200 instead of 404 to telemetry.
-  httpserver.registerPathHandler(PATH, function () {});
+  httpserver.registerPathHandler(PATH, dummyHandler);
   Services.obs.addObserver(telemetryObserver, "telemetry-test-xhr-complete", false);
   telemetry_ping();
+}
+
+function setupTestData() {
+  Telemetry.newHistogram(IGNORE_HISTOGRAM, 1, 2, 3, Telemetry.HISTOGRAM_BOOLEAN);
+  Telemetry.histogramFrom(IGNORE_CLONED_HISTOGRAM, IGNORE_HISTOGRAM_TO_CLONE);
+  Services.startup.interrupted = true;
+  Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM, 1, 5, 6,
+                                   Telemetry.HISTOGRAM_LINEAR);
+  h1 = Telemetry.getAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM);
+  h1.add(1);
+}
+
+function getSavedHistogramsFile(basename) {
+  let tmpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  let histogramsFile = tmpDir.clone();
+  histogramsFile.append(basename);
+  if (histogramsFile.exists()) {
+    histogramsFile.remove(true);
+  }
+  do_register_cleanup(function () histogramsFile.remove(true));
+  return histogramsFile;
 }
 
 function telemetryObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(telemetryObserver, aTopic);
   httpserver.registerPathHandler(PATH, checkPersistedHistograms);
-  Telemetry.newHistogram(IGNORE_HISTOGRAM, 1, 2, 3, Telemetry.HISTOGRAM_BOOLEAN);
-  Telemetry.histogramFrom(IGNORE_CLONED_HISTOGRAM, IGNORE_HISTOGRAM_TO_CLONE);
-  Services.startup.interrupted = true;
-  let dirService = Cc["@mozilla.org/file/directory_service;1"]
-                    .getService(Ci.nsIProperties);
-  let tmpDir = dirService.get("TmpD", Ci.nsILocalFile);
-  let histogramsFile = tmpDir.clone();
-  histogramsFile.append("saved-histograms.dat");
-  if (histogramsFile.exists()) {
-    histogramsFile.remove(true);
-  }
-  do_register_cleanup(function () histogramsFile.remove(true));
+  let histogramsFile = getSavedHistogramsFile("saved-histograms.dat");
+  setupTestData();
+
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
   TelemetryPing.observe(histogramsFile, "test-save-histograms", null);
   TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
-
-  Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM, 1, 5, 6,
-                                   Telemetry.HISTOGRAM_LINEAR);
-  h1 = Telemetry.getAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM);
-  h1.add(1);
-
   telemetry_ping();
 }
 
