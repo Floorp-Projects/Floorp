@@ -79,35 +79,50 @@ function testFrameParameters()
         }
         window.clearInterval(intervalID);
         is(localNodes[0].querySelector(".property > .title > .key")
-                        .getAttribute("value"), "__proto__",
-          "Should have the right property name for __proto__.");
-
+                        .getAttribute("value"), "Array",
+          "Should have the right property name for Array.");
         ok(localNodes[0].querySelector(".property > .title > .value")
+                        .getAttribute("value").search(/object/) != -1,
+          "Array should be an object.");
+
+        is(localNodes[8].querySelector(".value")
+                        .getAttribute("value"), "[object Arguments]",
+         "Should have the right property value for 'arguments'.");
+        ok(localNodes[8].querySelector(".property > .title > .value")
+                        .getAttribute("value").search(/object/) != -1,
+          "Arguments should be an object.");
+
+        is(localNodes[8].querySelectorAll(".property > .title > .key")[7]
+                        .getAttribute("value"), "__proto__",
+         "Should have the right property name for '__proto__'.");
+        ok(localNodes[8].querySelectorAll(".property > .title > .value")[7]
                         .getAttribute("value").search(/object/) != -1,
           "__proto__ should be an object.");
 
-        is(localNodes[8].querySelector(".value").getAttribute("value"),
-         "[object Arguments]",
-         "Should have the right property value for 'arguments'.");
-
-        is(localNodes[8].querySelectorAll(".property > .title > .key")[7]
-                       .getAttribute("value"), "length",
-         "Should have the right property name for 'length'.");
-
-        is(localNodes[8].querySelectorAll(".property > .title > .value")[7]
-                       .getAttribute("value"), 5,
-         "Should have the right argument length.");
-
-        is(localNodes[10].querySelector(".value").getAttribute("value"), "[object Object]",
+        is(localNodes[10].querySelector(".value")
+                         .getAttribute("value"), "[object Object]",
           "Should have the right property value for 'c'.");
 
-        is(localNodes[10].querySelectorAll(".property > .title > .key")[1]
-                        .getAttribute("value"), "a",
-          "Should have the right property name for 'a'.");
-
-        is(localNodes[10].querySelectorAll(".property > .title > .value")[1]
-                        .getAttribute("value"), 1,
+        is(localNodes[10].querySelectorAll(".property > .title > .key")[0]
+                         .getAttribute("value"), "a",
+          "Should have the right property name for 'c.a'.");
+        is(localNodes[10].querySelectorAll(".property > .title > .value")[0]
+                         .getAttribute("value"), "1",
           "Should have the right value for 'c.a'.");
+
+        is(localNodes[10].querySelectorAll(".property > .title > .key")[1]
+                         .getAttribute("value"), "b",
+          "Should have the right property name for 'c.b'.");
+        is(localNodes[10].querySelectorAll(".property > .title > .value")[1]
+                         .getAttribute("value"), "\"beta\"",
+          "Should have the right value for 'c.b'.");
+
+        is(localNodes[10].querySelectorAll(".property > .title > .key")[2]
+                         .getAttribute("value"), "c",
+          "Should have the right property name for 'c.c'.");
+        is(localNodes[10].querySelectorAll(".property > .title > .value")[2]
+                         .getAttribute("value"), "true",
+          "Should have the right value for 'c.c'.");
 
         resumeAndFinish();
       }, 100);
