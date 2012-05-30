@@ -18,6 +18,8 @@ interface nsIProfiler : nsISupports
   boolean IsActive();
   void GetResponsivenessTimes(out PRUint32 aCount, [retval, array, size_is(aCount)] out double aResult);
   void GetFeatures(out PRUint32 aCount, [retval, array, size_is(aCount)] out string aFeatures);
+  void EnterProfileLabel(in string aLabel);
+  void ExitProfileLabel();
 
   /**
    * Returns a JSON string of an array of shared library objects.

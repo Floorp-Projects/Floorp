@@ -169,3 +169,21 @@ nsProfiler::GetFeatures(PRUint32 *aCount, char ***aFeatures)
   *aCount = len;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsProfiler::EnterProfileLabel(const char *aLabel)
+{
+  if (!aLebel)
+    return NS_ERROR_FAILURE;
+
+  mozilla_sampler_call_enter(aLabel);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProfiler::ExitProfileLabel()
+{
+  mozilla_sampler_call_exit_no_handle();
+  return NS_OK;
+}
+
