@@ -182,6 +182,7 @@ TelemetryPing.prototype = {
   // Bug 756152
   _disablePersistentTelemetrySending: true,
   _pendingPings: [],
+  _doLoadSaveNotifications: false,
 
   /**
    * When reflecting a histogram into JS, Telemetry hands us an object
@@ -633,6 +634,9 @@ TelemetryPing.prototype = {
       stream.close();
       let data = JSON.parse(string);
       this._pendingPings = this._pendingPings.concat(data);
+      if (this._doLoadSaveNotifications) {
+        Services.obs.notifyObservers(null, "telemetry-test-load-complete", null);
+      }
     } catch (e) {
       // An error reading the file, or an error parsing the contents.
     }
@@ -662,9 +666,12 @@ TelemetryPing.prototype = {
     }
   },
 
-  finishTelemetrySave: function finishTelemetrySave(stream) {
+  finishTelemetrySave: function finishTelemetrySave(ok, stream) {
     stream.QueryInterface(Ci.nsISafeOutputStream).finish();
     stream.close();
+    if (this._doLoadSaveNotifications && ok) {
+      Services.obs.notifyObservers(null, "telemetry-test-save-complete", null);
+    }
   },
 
   saveHistograms: function saveHistograms(file, sync) {
@@ -684,13 +691,14 @@ TelemetryPing.prototype = {
       let utf8String = converter.ConvertToUnicode(pingString);
       utf8String += converter.Finish();
       let amount = ostream.write(utf8String, utf8String.length);
-      this.finishTelemetrySave(ostream);
+      this.finishTelemetrySave(amount == utf8String.length, ostream);
     } else {
       let istream = converter.convertToInputStream(pingString)
       let self = this;
       NetUtil.asyncCopy(istream, ostream,
                         function(result) {
-                          self.finishTelemetrySave(ostream);
+                          self.finishTelemetrySave(Components.isSuccessCode(result),
+                                                   ostream);
                         });
     }
   },
@@ -772,6 +780,9 @@ TelemetryPing.prototype = {
       break;
     case "test-load-histograms":
       this.loadHistograms(aSubject.QueryInterface(Ci.nsIFile), true);
+      break;
+    case "test-enable-load-save-notifications":
+      this._doLoadSaveNotifications = true;
       break;
     case "test-enable-persistent-telemetry-send":
       this._disablePersistentTelemetrySending = false;
