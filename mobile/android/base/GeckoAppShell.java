@@ -207,8 +207,6 @@ public class GeckoAppShell
 
     public static native SurfaceBits getSurfaceBits(Surface surface);
 
-    public static native void onFullScreenPluginHidden(View view);
-
     private static class GeckoMediaScannerClient implements MediaScannerConnectionClient {
         private String mFile = "";
         private String mMimeType = "";
@@ -1516,19 +1514,18 @@ public class GeckoAppShell
 
     public static void addPluginView(View view,
                                      int x, int y,
-                                     int w, int h,
-                                     boolean isFullScreen, int orientation)
+                                     int w, int h)
 {
         ImmutableViewportMetrics pluginViewport;
 
-        Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h + "fullscreen: " + isFullScreen + " orientation: " + orientation);
+        Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h);
         
-        GeckoApp.mAppContext.addPluginView(view, new Rect(x, y, x + w, y + h), isFullScreen, orientation);
+        GeckoApp.mAppContext.addPluginView(view, new Rect(x, y, x + w, y + h));
     }
 
-    public static void removePluginView(View view, boolean isFullScreen) {
-        Log.i(LOGTAG, "removePluginView:" + view + " fullscreen: " + isFullScreen);
-        GeckoApp.mAppContext.removePluginView(view, isFullScreen);
+    public static void removePluginView(View view) {
+        Log.i(LOGTAG, "removePluginView:" + view);
+        GeckoApp.mAppContext.removePluginView(view);
     }
 
     public static Surface createSurface() {

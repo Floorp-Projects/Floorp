@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
 #include "assert.h"
 #include "ANPBase.h"
 #include <android/log.h>
@@ -12,20 +11,12 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsWindow.h"
-#include "mozilla/dom/ScreenOrientation.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_window_##name
 
 using namespace mozilla;
 using namespace mozilla::widget;
-using namespace mozilla::dom;
-
-static nsresult GetOwner(NPP instance, nsPluginInstanceOwner** owner) {
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
-
-  return pinst->GetOwner((nsIPluginInstanceOwner**)owner);
-}
 
 void
 anp_window_setVisibleRects(NPP instance, const ANPRectI rects[], int32_t count)
@@ -63,33 +54,25 @@ anp_window_showKeyboard(NPP instance, bool value)
 void
 anp_window_requestFullScreen(NPP instance)
 {
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
-
-  nsRefPtr<nsPluginInstanceOwner> owner;
-  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner)))) {
-    return;
-  }
-
-  owner->RequestFullScreen();
+  NOT_IMPLEMENTED();
 }
 
 void
 anp_window_exitFullScreen(NPP instance)
 {
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
-
-  nsRefPtr<nsPluginInstanceOwner> owner;
-  if (NS_FAILED(GetOwner(instance, getter_AddRefs(owner)))) {
-    return;
-  }
-
-  owner->ExitFullScreen();
+  NOT_IMPLEMENTED();
 }
 
 void
 anp_window_requestCenterFitZoom(NPP instance)
 {
   NOT_IMPLEMENTED();
+}
+
+static nsresult GetOwner(NPP instance, nsPluginInstanceOwner** owner) {
+  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
+
+  return pinst->GetOwner((nsIPluginInstanceOwner**)owner);
 }
 
 ANPRectI
@@ -115,29 +98,7 @@ anp_window_visibleRect(NPP instance)
 
 void anp_window_requestFullScreenOrientation(NPP instance, ANPScreenOrientation orientation)
 {
-  short newOrientation;
-
-  // Convert to the ActivityInfo equivalent
-  switch (orientation) {
-    case kFixedLandscape_ANPScreenOrientation:
-      newOrientation = eScreenOrientation_LandscapePrimary;
-      break;
-    case kFixedPortrait_ANPScreenOrientation:
-      newOrientation = eScreenOrientation_PortraitPrimary;
-      break;
-    case kLandscape_ANPScreenOrientation:
-      newOrientation = eScreenOrientation_Landscape;
-      break;
-    case kPortrait_ANPScreenOrientation:
-      newOrientation = eScreenOrientation_Portrait;
-      break;
-    default:
-      newOrientation = eScreenOrientation_None;
-      break;
-  }
-
-  nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
-  pinst->SetFullScreenOrientation(newOrientation);
+  NOT_IMPLEMENTED();
 }
 
 void InitWindowInterface(ANPWindowInterfaceV0 *i) {
