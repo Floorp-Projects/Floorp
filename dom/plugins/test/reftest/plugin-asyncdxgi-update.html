@@ -1,0 +1,24 @@
+<!doctype html>
+<html class="reftest-wait"><head>
+<title>Plugin boxes</title>
+</head>
+<body>
+<embed type="application/x-test" width="400" height="400" drawmode="solid" color="FFFF0000" id="plugin" asyncmodel="dxgi"></embed> <!-- red -->
+<script>
+  var prevPaintCount = 0;
+  function doTestWait() {
+    if (window.mozPaintCount != prevPaintCount) {
+      document.documentElement.removeAttribute('class');
+    } else {
+      setTimeout(doTestWait, 0);
+    }
+  }
+
+  function doTest() {
+    prevPaintCount = window.mozPaintCount;
+    document.getElementById("plugin").setColor("FF00FF00");
+    setTimeout(doTestWait, 0);
+  }
+  window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body></html>

@@ -43,6 +43,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "Haptic",
 XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
+XPCOMUtils.defineLazyServiceGetter(window, "URIFixup",
+  "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
+
 const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
@@ -2012,18 +2015,36 @@ Tab.prototype = {
             list.push("[" + rel + "]");
         }
 
+        // We want to get the largest icon size possible for our UI.
+        let maxSize = 0;
+
+        // We use the sizes attribute if available
+        // see http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#rel-icon
+        if (target.hasAttribute("sizes")) {
+          let sizes = target.getAttribute("sizes").toLowerCase();
+
+          if (sizes == "any") {
+            // Since Java expects an integer, use -1 to represent icons with sizes="any"
+            maxSize = -1; 
+          } else {
+            let tokens = sizes.split(" ");
+            tokens.forEach(function(token) {
+              // TODO: check for invalid tokens
+              let [w, h] = token.split("x");
+              maxSize = Math.max(maxSize, Math.max(w, h));
+            });
+          }
+        }
+
         let json = {
           type: "DOMLinkAdded",
           tabID: this.id,
           href: resolveGeckoURI(target.href),
           charset: target.ownerDocument.characterSet,
           title: target.title,
-          rel: list.join(" ")
+          rel: list.join(" "),
+          size: maxSize
         };
-
-        // rel=icon can also have a sizes attribute
-        if (target.hasAttribute("sizes"))
-          json.sizes = target.getAttribute("sizes");
 
         sendMessageToJava({ gecko: json });
         break;
@@ -2214,10 +2235,19 @@ Tab.prototype = {
 
     this._hostChanged = true;
 
-    let uri = aLocationURI.spec;
+    let fixedURI = aLocationURI;
+    try {
+      fixedURI = URIFixup.createExposableURI(aLocationURI);
+    } catch (ex) { }
+
     let documentURI = contentWin.document.documentURIObject.spec;
     let contentType = contentWin.document.contentType;
-    let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0;
+    
+    // XXX If fixedURI matches browser.lastURI, we assume this isn't a real location
+    // change but rather a spurious addition like a wyciwyg URI prefix. See Bug 747883.
+    let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0 ||
+                       ((this.browser.lastURI != null) && fixedURI.equals(this.browser.lastURI));
+    this.browser.lastURI = fixedURI;
 
     // Reset state of click-to-play plugin notifications.
     clearTimeout(this.pluginDoorhangerTimeout);
@@ -2229,7 +2259,7 @@ Tab.prototype = {
       gecko: {
         type: "Content:LocationChange",
         tabID: this.id,
-        uri: uri,
+        uri: fixedURI.spec,
         documentURI: documentURI,
         contentType: contentType,
         sameDocument: sameDocument

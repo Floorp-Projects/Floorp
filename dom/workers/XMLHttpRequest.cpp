@@ -1028,10 +1028,12 @@ public:
 
 class OpenRunnable : public WorkerThreadProxySyncRunnable
 {
-  nsCString mMethod;
-  nsCString mURL;
-  nsString mUser;
-  nsString mPassword;
+  nsString mMethod;
+  nsString mURL;
+  Optional<nsAString> mUser;
+  nsString mUserStr;
+  Optional<nsAString> mPassword;
+  nsString mPasswordStr;
   bool mMultipart;
   bool mBackgroundRequest;
   bool mWithCredentials;
@@ -1039,15 +1041,25 @@ class OpenRunnable : public WorkerThreadProxySyncRunnable
 
 public:
   OpenRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-               const nsACString& aMethod, const nsACString& aURL,
-               const nsAString& aUser, const nsAString& aPassword,
+               const nsAString& aMethod, const nsAString& aURL,
+               const Optional<nsAString>& aUser,
+               const Optional<nsAString>& aPassword,
                bool aMultipart, bool aBackgroundRequest, bool aWithCredentials,
                PRUint32 aTimeout)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy), mMethod(aMethod),
-    mURL(aURL), mUser(aUser), mPassword(aPassword), mMultipart(aMultipart),
+    mURL(aURL), mMultipart(aMultipart),
     mBackgroundRequest(aBackgroundRequest), mWithCredentials(aWithCredentials),
     mTimeout(aTimeout)
-  { }
+  {
+    if (aUser.WasPassed()) {
+      mUserStr = aUser.Value();
+      mUser = &mUserStr;
+    }
+    if (aPassword.WasPassed()) {
+      mPasswordStr = aPassword.Value();
+      mPassword = &mPasswordStr;
+    }
+  }
 
   nsresult
   MainThreadRun()
@@ -1093,14 +1105,17 @@ public:
     NS_ASSERTION(!mProxy->mInOpen, "Reentrancy is bad!");
     mProxy->mInOpen = true;
 
-    rv = mProxy->mXHR->Open(mMethod, mURL, true, mUser, mPassword, 1);
+    ErrorResult rv2;
+    mProxy->mXHR->Open(mMethod, mURL, true, mUser, mPassword, rv2);
 
     NS_ASSERTION(mProxy->mInOpen, "Reentrancy is bad!");
     mProxy->mInOpen = false;
 
-    if (NS_SUCCEEDED(rv)) {
-      rv = mProxy->mXHR->SetResponseType(NS_LITERAL_STRING("text"));
+    if (rv2.Failed()) {
+      return rv2.ErrorCode();
     }
+
+    rv = mProxy->mXHR->SetResponseType(NS_LITERAL_STRING("text"));
 
     return rv;
   }
@@ -1702,8 +1717,8 @@ XMLHttpRequest::Notify(JSContext* aCx, Status aStatus)
 
 void
 XMLHttpRequest::Open(const nsAString& aMethod, const nsAString& aUrl,
-                     bool aAsync, const nsAString& aUser,
-                     const nsAString& aPassword, ErrorResult& aRv)
+                     bool aAsync, const Optional<nsAString>& aUser,
+                     const Optional<nsAString>& aPassword, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1725,9 +1740,9 @@ XMLHttpRequest::Open(const nsAString& aMethod, const nsAString& aUrl,
   mProxy->mOuterEventStreamId++;
 
   nsRefPtr<OpenRunnable> runnable =
-    new OpenRunnable(mWorkerPrivate, mProxy, NS_ConvertUTF16toUTF8(aMethod),
-                     NS_ConvertUTF16toUTF8(aUrl), aUser, aPassword, mMultipart,
-                     mBackgroundRequest, mWithCredentials, mTimeout);
+    new OpenRunnable(mWorkerPrivate, mProxy, aMethod, aUrl, aUser, aPassword,
+                     mMultipart, mBackgroundRequest, mWithCredentials,
+                     mTimeout);
 
   if (!runnable->Dispatch(GetJSContext())) {
     ReleaseProxy();

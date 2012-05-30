@@ -631,6 +631,12 @@ public:
     return *ptr;
   }
 
+  operator const T&() const {
+    MOZ_ASSERT(inited);
+    MOZ_ASSERT(ptr, "NonNull<T> was set to null");
+    return *ptr;
+  }
+
   void operator=(T* t) {
     ptr = t;
     MOZ_ASSERT(ptr);
@@ -745,6 +751,71 @@ ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
   return true;
 }
 
+// Class for representing optional arguments.
+template<typename T>
+class Optional {
+public:
+  Optional() {}
+
+  bool WasPassed() const {
+    return !mImpl.empty();
+  }
+
+  void Construct() {
+    mImpl.construct();
+  }
+
+  template <class T1, class T2>
+  void Construct(const T1 &t1, const T2 &t2) {
+    mImpl.construct(t1, t2);
+  }
+
+  const T& Value() const {
+    return mImpl.ref();
+  }
+
+  T& Value() {
+    return mImpl.ref();
+  }
+
+private:
+  // Forbid copy-construction and assignment
+  Optional(const Optional& other) MOZ_DELETE;
+  const Optional &operator=(const Optional &other) MOZ_DELETE;
+  
+  Maybe<T> mImpl;
+};
+
+// Specialization for strings.
+template<>
+class Optional<nsAString> {
+public:
+  Optional() : mPassed(false) {}
+
+  bool WasPassed() const {
+    return mPassed;
+  }
+
+  void operator=(const nsAString* str) {
+    MOZ_ASSERT(str);
+    mStr = str;
+    mPassed = true;
+  }
+
+  const nsAString& Value() const {
+    MOZ_ASSERT(WasPassed());
+    return *mStr;
+  }
+
+private:
+  // Forbid copy-construction and assignment
+  Optional(const Optional& other) MOZ_DELETE;
+  const Optional &operator=(const Optional &other) MOZ_DELETE;
+  
+  bool mPassed;
+  const nsAString* mStr;
+};
+
 // Class for representing sequences in arguments.  We use an auto array that can
 // hold 16 elements, to avoid having to allocate in common cases.  This needs to
 // be fallible because web content controls the length of the array, and can
@@ -752,6 +823,8 @@ ConvertJSValueToString(JSContext* cx, const JS::Value& v, JS::Value* pval,
 template<typename T>
 class Sequence : public AutoFallibleTArray<T, 16>
 {
+public:
+  Sequence() : AutoFallibleTArray<T, 16>() {}
 };
 
 } // namespace dom

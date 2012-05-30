@@ -586,7 +586,7 @@ pref("plugins.use_layers", true);
 pref("plugins.hide_infobar_for_carbon_failure_plugin", false);
 #endif
 
-pref("plugins.update.url", "https://www.mozilla.com/%LOCALE%/plugincheck/");
+pref("plugins.update.url", "https://www.mozilla.org/%LOCALE%/plugincheck/");
 pref("plugins.update.notifyUser", false);
 
 pref("plugins.click_to_play", false);
@@ -894,6 +894,7 @@ pref("dom.ipc.plugins.enabled.i386", false);
 pref("dom.ipc.plugins.enabled.i386.flash player.plugin", true);
 pref("dom.ipc.plugins.enabled.i386.javaplugin2_npapi.plugin", true);
 pref("dom.ipc.plugins.enabled.i386.javaappletplugin.plugin", true);
+pref("dom.ipc.plugins.enabled.i386.silverlight.plugin", true);
 // x86_64 ipc preferences
 pref("dom.ipc.plugins.enabled.x86_64", true);
 #else

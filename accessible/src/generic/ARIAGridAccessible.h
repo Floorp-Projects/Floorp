@@ -57,11 +57,6 @@ protected:
   bool IsValidColumn(PRInt32 aColumn);
 
   /**
-   * Retrun true if given row and column indexes are valid.
-   */
-  bool IsValidRowNColumn(PRInt32 aRow, PRInt32 aColumn);
-
-  /**
    * Return row accessible at the given row index.
    */
   Accessible* GetRowAt(PRInt32 aRow);

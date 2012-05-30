@@ -19,10 +19,6 @@ CPPSRCS = \
 
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
 
-LIBS += \
-  ../../../mozapps/update/common/$(LIB_PREFIX)updatecommon.$(LIB_SUFFIX) \
-  $(NULL)
-
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LOCAL_INCLUDES += \

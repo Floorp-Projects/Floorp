@@ -4,7 +4,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "ApplicationAccessible.h"
 
 #include "nsAccessibilityService.h"
@@ -117,18 +117,10 @@ ApplicationAccessible::GetAttributes(nsIPersistentProperties** aAttributes)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ApplicationAccessible::GroupPosition(PRInt32* aGroupLevel,
-                                     PRInt32* aSimilarItemsInGroup,
-                                     PRInt32* aPositionInGroup)
+GroupPos
+ApplicationAccessible::GroupPosition()
 {
-  NS_ENSURE_ARG_POINTER(aGroupLevel);
-  *aGroupLevel = 0;
-  NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
-  *aSimilarItemsInGroup = 0;
-  NS_ENSURE_ARG_POINTER(aPositionInGroup);
-  *aPositionInGroup = 0;
-  return NS_OK;
+  return GroupPos();
 }
 
 Accessible*

@@ -9,6 +9,9 @@
 [App]
 ID=webapprt@mozilla.org
 Vendor=Mozilla
+; Note: the Windows stub executable sets nsXREAppData::name to the webapp
+; origin, overriding the value below, to make the app runner treat webapps
+; as distinct products, per bug 747409.
 Name=Webapp Runtime
 Version=@GRE_MILESTONE@
 BuildID=@GRE_BUILDID@
@@ -17,3 +20,9 @@ UAName=@MOZ_APP_BASENAME@
 [Gecko]
 MinVersion=@GRE_MILESTONE@
 MaxVersion=@GRE_MILESTONE@
+
+[Crash Reporter]
+#if MOZILLA_OFFICIAL
+Enabled=1
+#endif
+ServerURL=https://crash-reports.mozilla.com/submit?id=webapprt@mozilla.org&version=@GRE_MILESTONE@&buildid=@GRE_BUILDID@

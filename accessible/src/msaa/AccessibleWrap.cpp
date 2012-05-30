@@ -6,6 +6,7 @@
 #include "AccessibleWrap.h"
 
 #include "Compatibility.h"
+#include "DocAccessible-inl.h"
 #include "EnumVariant.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
@@ -23,6 +24,10 @@
 #include "AccessibleRole.h"
 #include "AccessibleStates.h"
 #include "RootAccessible.h"
+
+#ifdef DEBUG
+#include "Logging.h"
+#endif
 
 #include "nsIMutableArray.h"
 #include "nsIDOMDocument.h"
@@ -1176,24 +1181,17 @@ __try {
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  PRInt32 groupLevel = 0;
-  PRInt32 similarItemsInGroup = 0;
-  PRInt32 positionInGroup = 0;
-
-  nsresult rv = GroupPosition(&groupLevel, &similarItemsInGroup,
-                              &positionInGroup);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  GroupPos groupPos = GroupPosition();
 
   // Group information for accessibles having level only (like html headings
   // elements) isn't exposed by this method. AT should look for 'level' object
   // attribute.
-  if (!similarItemsInGroup && !positionInGroup)
+  if (!groupPos.setSize && !groupPos.posInSet)
     return S_FALSE;
 
-  *aGroupLevel = groupLevel;
-  *aSimilarItemsInGroup = similarItemsInGroup;
-  *aPositionInGroup = positionInGroup;
+  *aGroupLevel = groupPos.level;
+  *aSimilarItemsInGroup = groupPos.setSize;
+  *aPositionInGroup = groupPos.posInSet;
 
   return S_OK;
 
@@ -1554,9 +1552,11 @@ AccessibleWrap::FirePlatformEvent(AccEvent* aEvent)
   }
 
 #ifdef DEBUG
-  printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
-         eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
-         childID, hWnd);
+  if (logging::IsEnabled(logging::ePlatforms)) {
+    printf("\n\nMSAA event: event: %d, target: %s@id='%s', childid: %d, hwnd: %d\n\n",
+           eventType, NS_ConvertUTF16toUTF8(tag).get(), id.get(),
+           childID, hWnd);
+  }
 #endif
 
   // Fire MSAA event for client area window.
