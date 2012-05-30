@@ -590,6 +590,12 @@ JSContext::propertyTree()
     return compartment->propertyTree;
 }
 
+#ifdef JS_ION
+# ifdef DEBUG
+bool js_InIonFrame(JSContext *cx);
+# endif
+#endif
+
 /* Get the current frame, first lazily instantiating stack frames if needed. */
 static inline js::StackFrame *
 js_GetTopStackFrame(JSContext *cx, FrameExpandKind expand)
@@ -597,6 +603,12 @@ js_GetTopStackFrame(JSContext *cx, FrameExpandKind expand)
 #ifdef JS_METHODJIT
     if (expand)
         js::mjit::ExpandInlineFrames(cx->compartment);
+#endif
+
+#ifdef JS_ION
+# ifdef DEBUG
+    JS_ASSERT(!js_InIonFrame(cx));
+# endif
 #endif
 
     return cx->maybefp();
