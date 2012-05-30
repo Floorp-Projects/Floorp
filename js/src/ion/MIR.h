@@ -2341,11 +2341,13 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     uint32 slot_;
     bool triedToSpecialize_;
     bool hasBytecodeUses_;
+    bool isIterator_;
 
     MPhi(uint32 slot)
       : slot_(slot),
         triedToSpecialize_(false),
-        hasBytecodeUses_(false)
+        hasBytecodeUses_(false),
+        isIterator_(false)
     {
         setResultType(MIRType_Value);
     }
@@ -2386,6 +2388,12 @@ class MPhi : public MDefinition, public InlineForwardListNode<MPhi>
     }
     void setHasBytecodeUses() {
         hasBytecodeUses_ = true;
+    }
+    bool isIterator() const {
+        return isIterator_;
+    }
+    void setIterator() {
+        isIterator_ = true;
     }
 
     AliasSet getAliasSet() const {
