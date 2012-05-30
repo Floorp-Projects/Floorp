@@ -6,6 +6,7 @@
 #include "AccessibleWrap.h"
 
 #include "Compatibility.h"
+#include "DocAccessible-inl.h"
 #include "EnumVariant.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"

@@ -149,8 +149,7 @@ public:
   /**
    * Return the parent document.
    */
-  DocAccessible* ParentDocument() const
-    { return mParent ? mParent->Document() : nsnull; }
+  DocAccessible* ParentDocument() const;
 
   /**
    * Return the child document count.
@@ -513,20 +512,13 @@ protected:
   void ShutdownChildrenInSubtree(Accessible* aAccessible);
 
   /**
-   * Return true if accessibility events accompanying document accessible
-   * loading should be fired.
+   * Return true if the document is a target of document loading events
+   * (for example, state busy change or document reload events).
    *
-   * The rules are: do not fire events for root chrome document accessibles and
-   * for sub document accessibles (like HTML frame of iframe) of the loading
-   * document accessible.
-   *
-   * XXX: in general AT expect events for document accessible loading into
-   * tabbrowser, events from other document accessibles may break AT. We need to
-   * figure out what AT wants to know about loading page (for example, some of
-   * them have separate processing of iframe documents on the page and therefore
-   * they need a way to distinguish sub documents from page document). Ideally
-   * we should make events firing for any loaded document and provide additional
-   * info AT are needing.
+   * Rules: The root chrome document accessible is never an event target
+   * (for example, Firefox UI window). If the sub document is loaded within its
+   * parent document then the parent document is a target only (aka events
+   * coalescence).
    */
   bool IsLoadEventTarget() const;
 
