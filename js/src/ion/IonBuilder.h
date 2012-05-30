@@ -204,6 +204,7 @@ class IonBuilder : public MIRGenerator
     bool traverseBytecode();
     ControlStatus snoopControlFlow(JSOp op);
     void markPhiBytecodeUses(jsbytecode *pc);
+    bool processIterators();
     bool inspectOpcode(JSOp op);
     uint32 readIndex(jsbytecode *pc);
     JSAtom *readAtom(jsbytecode *pc);
@@ -391,6 +392,7 @@ class IonBuilder : public MIRGenerator
     Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
     Vector<ControlFlowInfo, 4, IonAllocPolicy> loops_;
     Vector<ControlFlowInfo, 0, IonAllocPolicy> switches_;
+    Vector<MInstruction *, 2, IonAllocPolicy> iterators_;
     TypeOracle *oracle;
     size_t inliningDepth;
 };
