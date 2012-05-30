@@ -170,7 +170,7 @@ nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
     PRUint32 length, byteCount;
     nsresult rv;
 
-    length = nsCRT::strlen(aString);
+    length = NS_strlen(aString);
     rv = Write32(length);
     if (NS_FAILED(rv)) return rv;
 

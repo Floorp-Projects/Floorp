@@ -151,7 +151,7 @@ const char* nsCRT::memmem(const char* haystack, PRUint32 haystackLen,
 
 PRUnichar* nsCRT::strdup(const PRUnichar* str)
 {
-  PRUint32 len = nsCRT::strlen(str);
+  PRUint32 len = NS_strlen(str);
   return strndup(str, len);
 }
 

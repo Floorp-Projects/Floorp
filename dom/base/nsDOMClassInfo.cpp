@@ -5054,7 +5054,7 @@ nsDOMClassInfo::PostCreatePrototype(JSContext * cx, JSObject * proto)
   // Don't overwrite a property set by content.
   JSBool found;
   if (!::JS_AlreadyHasOwnUCProperty(cx, global, reinterpret_cast<const jschar*>(mData->mNameUTF16),
-                                    nsCRT::strlen(mData->mNameUTF16), &found)) {
+                                    NS_strlen(mData->mNameUTF16), &found)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -5930,7 +5930,7 @@ public:
     JSBool ok = JS_WrapValue(cx, &thisAsVal) &&
       ::JS_DefineUCProperty(cx, target,
                             reinterpret_cast<const jschar *>(mClassName),
-                            nsCRT::strlen(mClassName), thisAsVal, nsnull,
+                            NS_strlen(mClassName), thisAsVal, nsnull,
                             nsnull, 0);
 
     return ok ? NS_OK : NS_ERROR_UNEXPECTED;

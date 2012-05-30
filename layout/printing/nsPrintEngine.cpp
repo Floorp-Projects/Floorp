@@ -2379,9 +2379,9 @@ void
 nsPrintEngine::ElipseLongString(PRUnichar *& aStr, const PRUint32 aLen, bool aDoFront)
 {
   // Make sure the URLS don't get too long for the progress dialog
-  if (aStr && nsCRT::strlen(aStr) > aLen) {
+  if (aStr && NS_strlen(aStr) > aLen) {
     if (aDoFront) {
-      PRUnichar * ptr = &aStr[nsCRT::strlen(aStr)-aLen+3];
+      PRUnichar * ptr = &aStr[NS_strlen(aStr) - aLen + 3];
       nsAutoString newStr;
       newStr.AppendLiteral("...");
       newStr += ptr;
