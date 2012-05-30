@@ -28,6 +28,7 @@
 
 #if defined(OS_WIN)
 #include <windowsx.h>
+#include "gfxWindowsPlatform.h"
 #include "mozilla/plugins/PluginSurfaceParent.h"
 
 // Plugin focus event for widget.
@@ -71,6 +72,9 @@ PluginInstanceParent::PluginInstanceParent(PluginModuleParent* parent,
     , mShColorSpace(nsnull)
 #endif
 {
+#ifdef OS_WIN
+    mTextureMap.Init();
+#endif
 }
 
 PluginInstanceParent::~PluginInstanceParent()
@@ -294,6 +298,24 @@ PluginInstanceParent::AnswerNPN_GetValue_NPNVprivateModeBool(bool* value,
 }
 
 bool
+PluginInstanceParent::AnswerNPN_GetValue_DrawingModelSupport(const NPNVariable& model, bool* value)
+{
+    *value = false;
+
+#ifdef XP_WIN
+    switch (model) {
+        case NPNVsupportsAsyncWindowsDXGISurfaceBool: {
+            if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() == gfxWindowsPlatform::RENDER_DIRECT2D) {
+                *value = true;
+            }
+        }
+    }
+#endif
+
+    return true;
+}
+
+bool
 PluginInstanceParent::AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value,
                                                             NPError* result)
 {
@@ -349,6 +371,8 @@ bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
     const int& drawingModel, OptionalShmem *shmem, CrossProcessMutexHandle *mutex, NPError* result)
 {
+    *shmem = null_t();
+
 #ifdef XP_MACOSX
     if (drawingModel == NPDrawingModelCoreAnimation ||
         drawingModel == NPDrawingModelInvalidatingCoreAnimation) {
@@ -358,15 +382,26 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
                                   (void*)NPDrawingModelCoreGraphics);
-        *shmem = null_t();
     } else
 #endif
-    if (drawingModel == NPDrawingModelAsyncBitmapSurface) {
+    if (drawingModel == NPDrawingModelAsyncBitmapSurface
+#ifdef XP_WIN
+        || drawingModel == NPDrawingModelAsyncWindowsDXGISurface
+#endif
+        ) {
         ImageContainer *container = GetImageContainer();
         if (!container) {
             *result = NPERR_GENERIC_ERROR;
             return true;
         }
+
+#ifdef XP_WIN
+        if (drawingModel == NPDrawingModelAsyncWindowsDXGISurface &&
+            gfxWindowsPlatform::GetPlatform()->GetRenderMode() != gfxWindowsPlatform::RENDER_DIRECT2D) {
+            *result = NPERR_GENERIC_ERROR;
+            return true;
+        }
+#endif
 
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
@@ -1692,7 +1727,43 @@ PluginInstanceParent::AnswerNPN_InitAsyncSurface(const gfxIntSize& size,
             surfData->format() = format;
             surfData->data() = sharedMem;
             *result = true;
+            return true;
         }
+#ifdef XP_WIN
+    case NPDrawingModelAsyncWindowsDXGISurface: {
+            ID3D10Device1 *device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+
+            nsRefPtr<ID3D10Texture2D> texture;
+            
+            CD3D10_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, size.width, size.height, 1, 1);
+            desc.MiscFlags = D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+            desc.BindFlags = D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE;
+            if (FAILED(device->CreateTexture2D(&desc, NULL, getter_AddRefs(texture)))) {
+                *result = false;
+                return true;
+            }
+
+            nsRefPtr<IDXGIResource> resource;
+            if (FAILED(texture->QueryInterface(IID_IDXGIResource, getter_AddRefs(resource)))) {
+                *result = false;
+                return true;
+            }
+
+            HANDLE sharedHandle;
+
+            if (FAILED(resource->GetSharedHandle(&sharedHandle))) {
+                *result = false;
+                return true;
+            }
+            
+            surfData->size() = size;
+            surfData->data() = sharedHandle;
+            surfData->format() = format;
+
+            mTextureMap.Put(sharedHandle, texture);
+            *result = true;
+        }
+#endif
     }
 
     return true;
@@ -1718,6 +1789,15 @@ PluginInstanceParent::RecvNegotiatedCarbon()
         return false;
     }
     inst->CarbonNPAPIFailure();
+    return true;
+}
+
+bool
+PluginInstanceParent::RecvReleaseDXGISharedSurface(const DXGISharedSurfaceHandle &aHandle)
+{
+#ifdef XP_WIN
+    mTextureMap.Remove(aHandle);
+#endif
     return true;
 }
 

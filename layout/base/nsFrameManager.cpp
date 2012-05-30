@@ -1418,10 +1418,10 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     // or if we're not forcing restyles on kids.
     if (!(aMinChange & nsChangeHint_ReconstructFrame) &&
         childRestyleHint) {
-      // Make sure not to do this for pseudo-frames -- those can't have :before
-      // or :after content.  Neither can non-elements or leaf frames.
-      if (!pseudoTag && localContent && localContent->IsElement() &&
-          !aFrame->IsLeaf()) {
+      // Make sure not to do this for pseudo-frames or frames that
+      // can't have generated content.
+      if (!pseudoTag &&
+          (aFrame->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT)) {
         // Check for a new :before pseudo and an existing :before
         // frame, but only if the frame is the first continuation.
         nsIFrame* prevContinuation = aFrame->GetPrevContinuation();
@@ -1446,10 +1446,10 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     // or if we're not forcing restyles on kids.
     if (!(aMinChange & nsChangeHint_ReconstructFrame) &&
         childRestyleHint) {
-      // Make sure not to do this for pseudo-frames -- those can't have :before
-      // or :after content.  Neither can non-elements or leaf frames.
-      if (!pseudoTag && localContent && localContent->IsElement() &&
-          !aFrame->IsLeaf()) {
+      // Make sure not to do this for pseudo-frames or frames that
+      // can't have generated content.
+      if (!pseudoTag &&
+          (aFrame->GetStateBits() & NS_FRAME_MAY_HAVE_GENERATED_CONTENT)) {
         // Check for new :after content, but only if the frame is the
         // last continuation.
         nsIFrame* nextContinuation = aFrame->GetNextContinuation();

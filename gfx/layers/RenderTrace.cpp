@@ -16,7 +16,8 @@ namespace layers {
 static int colorId = 0;
 
 static gfx3DMatrix GetRootTransform(Layer *aLayer) {
-  gfx3DMatrix layerTrans = aLayer->GetTransform().ProjectTo2D();
+  gfx3DMatrix layerTrans = aLayer->GetTransform();
+  layerTrans.ProjectTo2D();
   if (aLayer->GetParent() != NULL) {
     return GetRootTransform(aLayer->GetParent()) * layerTrans;
   }
@@ -27,7 +28,8 @@ void RenderTraceLayers(Layer *aLayer, const char *aColor, const gfx3DMatrix aRoo
   if (!aLayer)
     return;
 
-  gfx3DMatrix trans = aRootTransform * aLayer->GetTransform().ProjectTo2D();
+  gfx3DMatrix trans = aRootTransform * aLayer->GetTransform();
+  trans.ProjectTo2D();
   nsIntRect clipRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
   gfxRect rect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
   trans.TransformBounds(rect);

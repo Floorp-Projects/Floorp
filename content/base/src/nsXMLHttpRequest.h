@@ -252,7 +252,9 @@ public:
 
   // request
   void Open(const nsAString& aMethod, const nsAString& aUrl, bool aAsync,
-            const nsAString& aUser, const nsAString& aPassword, ErrorResult& aRv)
+            const mozilla::dom::Optional<nsAString>& aUser,
+            const mozilla::dom::Optional<nsAString>& aPassword,
+            ErrorResult& aRv)
   {
     aRv = Open(NS_ConvertUTF16toUTF8(aMethod), NS_ConvertUTF16toUTF8(aUrl),
                aAsync, aUser, aPassword);
@@ -536,7 +538,8 @@ protected:
   void OnRedirectVerifyCallback(nsresult result);
 
   nsresult Open(const nsACString& method, const nsACString& url, bool async,
-                const nsAString& user, const nsAString& password);
+                const mozilla::dom::Optional<nsAString>& user,
+                const mozilla::dom::Optional<nsAString>& password);
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIPrincipal> mPrincipal;

@@ -65,6 +65,7 @@ _TEST_FILES = \
   test_bug597333.html \
   test_bug666225.html \
   test_image_selection.html \
+  test_image_selection_2.html \
   test_invalidate_during_plugin_paint.html \
   test_movement_by_characters.html \
   test_movement_by_words.html \

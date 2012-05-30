@@ -317,26 +317,6 @@ nsXULListboxAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
 }
 
 NS_IMETHODIMP
-nsXULListboxAccessible::GetColumnExtentAt(PRInt32 aRow, PRInt32 aColumn,
-                                          PRInt32 *aCellSpans)
-{
-  NS_ENSURE_ARG_POINTER(aCellSpans);
-  *aCellSpans = 1;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULListboxAccessible::GetRowExtentAt(PRInt32 aRow, PRInt32 aColumn,
-                                       PRInt32 *aCellSpans)
-{
-  NS_ENSURE_ARG_POINTER(aCellSpans);
-  *aCellSpans = 1;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULListboxAccessible::GetColumnDescription(PRInt32 aColumn,
                                              nsAString& aDescription)
 {
@@ -390,7 +370,7 @@ nsXULListboxAccessible::IsRowSelected(PRInt32 aRow, bool *aIsSelected)
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULSelectControlElement.");
-  
+
   nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
   control->GetItemAtIndex(aRow, getter_AddRefs(item));
   NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
@@ -650,12 +630,12 @@ nsXULListboxAccessible::GetSelectedRowIndices(PRUint32 *aNumRows,
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
-  
+
   nsCOMPtr<nsIDOMNodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
     return NS_OK;
-  
+
   PRUint32 selectedItemsCount = 0;
   nsresult rv = selectedItems->GetLength(&selectedItemsCount);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -673,7 +653,7 @@ nsXULListboxAccessible::GetSelectedRowIndices(PRUint32 *aNumRows,
     selectedItems->Item(index, getter_AddRefs(itemNode));
     nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
       do_QueryInterface(itemNode);
-    
+
     if (item) {
       PRInt32 itemIdx = -1;
       control->GetIndexOfItem(item, &itemIdx);
@@ -693,7 +673,7 @@ nsXULListboxAccessible::SelectRow(PRInt32 aRow)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
-  
+
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
