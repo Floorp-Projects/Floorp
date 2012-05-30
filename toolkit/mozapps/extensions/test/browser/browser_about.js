@@ -45,8 +45,7 @@ function test() {
 
 function test_about_window(aAddonItemName, aExpectedAboutUri, aCallback) {
   var addonList = gManagerWindow.document.getElementById("addon-list");
-  for (var i = 0; i < addonList.childNodes.length; i++) {
-    var addonItem = addonList.childNodes[i];
+  for (var addonItem of addonList.childNodes) {
     if (addonItem.hasAttribute("name") &&
         addonItem.getAttribute("name") === aAddonItemName)
       break;

@@ -25,12 +25,12 @@ function init() {
   var richlist = document.getElementById("addonList");
   var list = gArgs.list;
   list.sort(function(a, b) { return String.localeCompare(a.name, b.name); });
-  for (let i = 0; i < list.length; i++) {
+  for (let listItem of list) {
     let item = document.createElement("richlistitem");
-    item.setAttribute("name", list[i].name);
-    item.setAttribute("version", list[i].version);
-    item.setAttribute("icon", list[i].icon);
-    if (list[i].blocked) {
+    item.setAttribute("name", listItem.name);
+    item.setAttribute("version", listItem.version);
+    item.setAttribute("icon", listItem.icon);
+    if (listItem.blocked) {
       item.setAttribute("class", "hardBlockedAddon");
       hasHardBlocks = true;
     }

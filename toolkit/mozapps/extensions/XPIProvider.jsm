@@ -7120,17 +7120,17 @@ UpdateChecker.prototype = {
                                                compatOverrides);
 
     if (update && Services.vc.compare(this.addon.version, update.version) < 0) {
-      for (let i = 0; i < XPIProvider.installs.length; i++) {
+      for (let currentInstall of XPIProvider.installs) {
         // Skip installs that don't match the available update
-        if (XPIProvider.installs[i].existingAddon != this.addon ||
-            XPIProvider.installs[i].version != update.version)
+        if (currentInstall.existingAddon != this.addon ||
+            currentInstall.version != update.version)
           continue;
 
         // If the existing install has not yet started downloading then send an
         // available update notification. If it is already downloading then
         // don't send any available update notification
-        if (XPIProvider.installs[i].state == AddonManager.STATE_AVAILABLE)
-          sendUpdateAvailableMessages(this, XPIProvider.installs[i]);
+        if (currentInstall.state == AddonManager.STATE_AVAILABLE)
+          sendUpdateAvailableMessages(this, currentInstall);
         else
           sendUpdateAvailableMessages(this, null);
         return;
@@ -7219,8 +7219,7 @@ AddonInternal.prototype = {
     }
     catch (e) { }
 
-    for (let i = 0; i < this.targetPlatforms.length; i++) {
-      let platform = this.targetPlatforms[i];
+    for (let platform of this.targetPlatforms) {
       if (platform.os == Services.appinfo.OS) {
         if (platform.abi) {
           needsABI = true;
@@ -7288,11 +7287,11 @@ AddonInternal.prototype = {
 
   get matchingTargetApplication() {
     let app = null;
-    for (let i = 0; i < this.targetApplications.length; i++) {
-      if (this.targetApplications[i].id == Services.appinfo.ID)
-        return this.targetApplications[i];
-      if (this.targetApplications[i].id == TOOLKIT_ID)
-        app = this.targetApplications[i];
+    for (let targetApp of this.targetApplications) {
+      if (targetApp.id == Services.appinfo.ID)
+        return targetApp;
+      if (targetApp.id == TOOLKIT_ID)
+        app = targetApp;
     }
     return app;
   },
@@ -7413,8 +7412,7 @@ function DBAddonInternal() {
 
   this.__defineGetter__("pendingUpgrade", function() {
     delete this.pendingUpgrade;
-    for (let i = 0; i < XPIProvider.installs.length; i++) {
-      let install = XPIProvider.installs[i];
+    for (let install of XPIProvider.installs) {
       if (install.state == AddonManager.STATE_INSTALLED &&
           !(install.addon instanceof DBAddonInternal) &&
           install.addon.id == this.id &&

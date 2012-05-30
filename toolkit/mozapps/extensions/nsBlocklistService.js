@@ -379,9 +379,9 @@ Blocklist.prototype = {
     if (!blItem)
       return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
 
-    for (var i = 0; i < blItem.length; ++i) {
-      if (blItem[i].includesItem(version, appVersion, toolkitVersion))
-        return blItem[i].severity >= gBlocklistLevel ? Ci.nsIBlocklistService.STATE_BLOCKED :
+    for (let currentblItem of blItem) {
+      if (currentblItem.includesItem(version, appVersion, toolkitVersion))
+        return currentblItem.severity >= gBlocklistLevel ? Ci.nsIBlocklistService.STATE_BLOCKED :
                                                        Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
     }
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
@@ -675,8 +675,7 @@ Blocklist.prototype = {
       }
 
       var childNodes = doc.documentElement.childNodes;
-      for (var i = 0; i < childNodes.length; ++i) {
-        var element = childNodes[i];
+      for (let element of childNodes) {
         if (!(element instanceof Ci.nsIDOMElement))
           continue;
         switch (element.localName) {
@@ -827,12 +826,12 @@ Blocklist.prototype = {
       if (matchFailed)
         continue;
 
-      for (var i = 0; i < blockEntry.versions.length; i++) {
-        if (blockEntry.versions[i].includesItem(plugin.version, appVersion,
+      for (let blockEntryVersion of blockEntry.versions) {
+        if (blockEntryVersion.includesItem(plugin.version, appVersion,
                                                 toolkitVersion)) {
-          if (blockEntry.versions[i].severity >= gBlocklistLevel)
+          if (blockEntryVersion.severity >= gBlocklistLevel)
             return Ci.nsIBlocklistService.STATE_BLOCKED;
-          if (blockEntry.versions[i].severity == SEVERITY_OUTDATED)
+          if (blockEntryVersion.severity == SEVERITY_OUTDATED)
             return Ci.nsIBlocklistService.STATE_OUTDATED;
           return Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
         }
@@ -876,14 +875,14 @@ Blocklist.prototype = {
     var self = this;
     AddonManager.getAddonsByTypes(["extension", "theme", "locale", "dictionary"], function(addons) {
 
-      for (let i = 0; i < addons.length; i++) {
+      for (let addon of addons) {
         let oldState = Ci.nsIBlocklistService.STATE_NOTBLOCKED;
         if (oldAddonEntries)
-          oldState = self._getAddonBlocklistState(addons[i].id, addons[i].version,
+          oldState = self._getAddonBlocklistState(addon.id, addon.version,
                                                   oldAddonEntries);
-        let state = self.getAddonBlocklistState(addons[i].id, addons[i].version);
+        let state = self.getAddonBlocklistState(addon.id, addon.version);
 
-        LOG("Blocklist state for " + addons[i].id + " changed from " +
+        LOG("Blocklist state for " + addon.id + " changed from " +
             oldState + " to " + state);
 
         // We don't want to re-warn about add-ons
@@ -892,7 +891,7 @@ Blocklist.prototype = {
 
         // Ensure that softDisabled is false if the add-on is not soft blocked
         if (state != Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
-          addons[i].softDisabled = false;
+          addon.softDisabled = false;
 
         // Don't warn about add-ons becoming unblocked.
         if (state == Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
@@ -902,23 +901,23 @@ Blocklist.prototype = {
         // soft disabled and don't warn about it.
         if (state == Ci.nsIBlocklistService.STATE_SOFTBLOCKED &&
             oldState == Ci.nsIBlocklistService.STATE_BLOCKED) {
-          addons[i].softDisabled = true;
+          addon.softDisabled = true;
           continue;
         }
 
         // If the add-on is already disabled for some reason then don't warn
         // about it
-        if (!addons[i].isActive)
+        if (!addon.isActive)
           continue;
 
         addonList.push({
-          name: addons[i].name,
-          version: addons[i].version,
-          icon: addons[i].iconURL,
+          name: addon.name,
+          version: addon.version,
+          icon: addon.iconURL,
           disable: false,
           blocked: state == Ci.nsIBlocklistService.STATE_BLOCKED,
-          item: addons[i],
-          url: self.getAddonBlocklistURL(addons[i].id),
+          item: addon,
+          url: self.getAddonBlocklistURL(addon.id),
         });
       }
 
@@ -928,38 +927,38 @@ Blocklist.prototype = {
                 getService(Ci.nsIPluginHost);
       var plugins = phs.getPluginTags();
 
-      for (let i = 0; i < plugins.length; i++) {
+      for (let plugin of plugins) {
         let oldState = -1;
         if (oldPluginEntries)
-          oldState = self._getPluginBlocklistState(plugins[i], oldPluginEntries);
-        let state = self.getPluginBlocklistState(plugins[i]);
-        LOG("Blocklist state for " + plugins[i].name + " changed from " +
+          oldState = self._getPluginBlocklistState(plugin, oldPluginEntries);
+        let state = self.getPluginBlocklistState(plugin);
+        LOG("Blocklist state for " + plugin.name + " changed from " +
             oldState + " to " + state);
         // We don't want to re-warn about items
         if (state == oldState)
           continue;
 
-        if (plugins[i].blocklisted) {
+        if (plugin.blocklisted) {
           if (state == Ci.nsIBlocklistService.STATE_SOFTBLOCKED)
-            plugins[i].disabled = true;
+            plugin.disabled = true;
         }
-        else if (!plugins[i].disabled && state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
+        else if (!plugin.disabled && state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
           if (state == Ci.nsIBlocklistService.STATE_OUTDATED) {
             gPref.setBoolPref(PREF_PLUGINS_NOTIFYUSER, true);
           }
           else {
             addonList.push({
-              name: plugins[i].name,
-              version: plugins[i].version,
+              name: plugin.name,
+              version: plugin.version,
               icon: "chrome://mozapps/skin/plugins/pluginGeneric.png",
               disable: false,
               blocked: state == Ci.nsIBlocklistService.STATE_BLOCKED,
-              item: plugins[i],
-              url: self.getPluginBlocklistURL(plugins[i]),
+              item: plugin,
+              url: self.getPluginBlocklistURL(plugin),
             });
           }
         }
-        plugins[i].blocklisted = state == Ci.nsIBlocklistService.STATE_BLOCKED;
+        plugin.blocklisted = state == Ci.nsIBlocklistService.STATE_BLOCKED;
       }
 
       if (addonList.length == 0) {
@@ -991,14 +990,14 @@ Blocklist.prototype = {
         that can be sent programatically
       */
       let applyBlocklistChanges = function() {
-        for (let i = 0; i < addonList.length; i++) {
-          if (!addonList[i].disable)
+        for (let addon of addonList) {
+          if (!addon.disable)
             continue;
 
-          if (addonList[i].item instanceof Ci.nsIPluginTag)
-            addonList[i].item.disabled = true;
+          if (addon.item instanceof Ci.nsIPluginTag)
+            addon.item.disabled = true;
           else
-            addonList[i].item.softDisabled = true;
+            addon.item.softDisabled = true;
         }
 
         if (args.restart)
@@ -1127,8 +1126,8 @@ BlocklistItemData.prototype = {
     if (!blTargetApp)
       return false;
 
-    for (var x = 0; x < blTargetApp.length; ++x) {
-      if (this.matchesRange(appVersion, blTargetApp[x].minVersion, blTargetApp[x].maxVersion))
+    for (let app of blTargetApp) {
+      if (this.matchesRange(appVersion, app.minVersion, app.maxVersion))
         return true;
     }
 

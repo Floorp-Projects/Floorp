@@ -97,8 +97,7 @@ function test() {
     let instantApply = Services.prefs.getBoolPref("browser.preferences.instantApply");
 
     function getAddonByName(aName) {
-      for (let i = 0; i < addonList.childNodes.length; i++) {
-        let addonItem = addonList.childNodes[i];
+      for (let addonItem of addonList.childNodes) {
         if (addonItem.hasAttribute("name") &&
             addonItem.getAttribute("name") == aName)
           return addonItem;
