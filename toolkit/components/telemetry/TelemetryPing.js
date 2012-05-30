@@ -527,7 +527,7 @@ TelemetryPing.prototype = {
       if (success && file.exists()) {
         file.remove(true);
       }
-      if (slug == "test-ping")
+      if (slug == "test-ping" && recordSuccess)
         Services.obs.notifyObservers(null, "telemetry-test-xhr-complete", null);
     }
     request.addEventListener("error", function(aEvent) finishRequest(request.channel), false);
@@ -776,10 +776,10 @@ TelemetryPing.prototype = {
       aSubject.QueryInterface(Ci.nsISupportsString).data = data.payload;
       break;
     case "test-save-histograms":
-      this.saveHistograms(aSubject.QueryInterface(Ci.nsIFile), true);
+      this.saveHistograms(aSubject.QueryInterface(Ci.nsIFile), aData != "async");
       break;
     case "test-load-histograms":
-      this.loadHistograms(aSubject.QueryInterface(Ci.nsIFile), true);
+      this.loadHistograms(aSubject.QueryInterface(Ci.nsIFile), aData != "async");
       break;
     case "test-enable-load-save-notifications":
       this._doLoadSaveNotifications = true;
