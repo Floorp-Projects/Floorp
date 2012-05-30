@@ -97,7 +97,8 @@ if (IS_MAC) {
     "Hebrew":0x40d,
     "Japanese":0x411,
     "Norwegian":0x414,
-    "Lithuanian":0x10427
+    "Lithuanian":0x10427,
+    "Thai": 0x2041e
   };
 }
 
@@ -2087,6 +2088,18 @@ function runXULKeyTests()
             "unshiftedPlus", false);
     testKey({layout:"Japanese", keyCode:187, ctrl:1, shift:1, chars:""},
             "unshiftedPlus", true);
+  }
+
+  // bug 759346
+  if (IS_WIN) {
+    testKey({layout:"Thai", keyCode:49, ctrl:1, chars:""},
+            "unshiftedPlus", false);
+    testKey({layout:"Thai", keyCode:49, ctrl:1, shift:1, chars:""},
+            "unshiftedPlus", true);
+    testKey({layout:"Thai", keyCode:187, ctrl:1, chars:""},
+            "unshiftedPlus", true);
+    testKey({layout:"Thai", keyCode:187, ctrl:1, shift:1, chars:""},
+            "unshiftedPlus", false);
   }
 }
 
