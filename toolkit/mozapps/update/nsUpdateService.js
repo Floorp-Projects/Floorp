@@ -437,7 +437,9 @@ XPCOMUtils.defineLazyGetter(this, "gCanStageUpdates", function aus_gCanStageUpda
     // On all platforms except Mac, we need to test the parent directory as well,
     // as we need to be able to move files in that directory during the replacing
     // step.
-    updateTestFile = getUpdateFile(['..', FILE_PERMS_TEST]);
+    updateTestFile = getUpdateDirCreate([]);
+    updateTestFile = updateTestFile.parent;
+    updateTestFile.append(FILE_PERMS_TEST);
     LOG("gCanStageUpdates - testing write access " + updateTestFile.path);
     updateTestFile.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE,
                                 FileUtils.PERMS_DIRECTORY);
