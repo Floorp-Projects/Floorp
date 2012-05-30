@@ -36,6 +36,7 @@ struct VersionFixture : public JSAPITest
     virtual bool init() {
         if (!JSAPITest::init())
             return false;
+        JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ALLOW_XML);
         callbackData = this;
         captured = JSVERSION_UNKNOWN;
         return JS_DefineFunction(cx, global, "checkVersionHasMoarXML", CheckVersionHasMoarXML, 0, 0) &&
@@ -187,7 +188,7 @@ CheckOverride(JSContext *cx, unsigned argc, jsval *vp)
  * JSAPI call is propagated to newly compiled scripts, instead of inheriting
  * the XML setting from a script on the stack.
  */
-BEGIN_FIXTURE_TEST(VersionFixture, testOptionsAreUsedForVersionFlags)
+BEGIN_FIXTURE_TEST(VersionFixture, testVersion_OptionsAreUsedForVersionFlags)
 {
     callbackData = this;
 
@@ -209,7 +210,7 @@ BEGIN_FIXTURE_TEST(VersionFixture, testOptionsAreUsedForVersionFlags)
     CHECK(JS_ExecuteScript(cx, global, toActivate, &dummy));
     return true;
 }
-END_FIXTURE_TEST(VersionFixture, testOptionsAreUsedForVersionFlags)
+END_FIXTURE_TEST(VersionFixture, testVersion_OptionsAreUsedForVersionFlags)
 
 /*
  * When re-entering the virtual machine through a *Version API the version
@@ -217,7 +218,7 @@ END_FIXTURE_TEST(VersionFixture, testOptionsAreUsedForVersionFlags)
  * version progression.  This is maintained by the |AutoVersionAPI| class in
  * jsapi.cpp.
  */
-BEGIN_FIXTURE_TEST(VersionFixture, testEntryLosesOverride)
+BEGIN_FIXTURE_TEST(VersionFixture, testVersion_EntryLosesOverride)
 {
     EXEC("overrideVersion15(); evalScriptVersion16('checkOverride(false); captureVersion()');");
     CHECK_EQUAL(captured, JSVERSION_1_6);
@@ -230,7 +231,7 @@ BEGIN_FIXTURE_TEST(VersionFixture, testEntryLosesOverride)
     CHECK(!cx->isVersionOverridden());
     return true;
 }
-END_FIXTURE_TEST(VersionFixture, testEntryLosesOverride)
+END_FIXTURE_TEST(VersionFixture, testVersion_EntryLosesOverride)
 
 /*
  * EvalScriptVersion does not propagate overrides to its caller, it
@@ -238,7 +239,7 @@ END_FIXTURE_TEST(VersionFixture, testEntryLosesOverride)
  * the normal (no Version suffix) API which propagates overrides
  * to the caller.
  */
-BEGIN_FIXTURE_TEST(VersionFixture, testReturnLosesOverride)
+BEGIN_FIXTURE_TEST(VersionFixture, testVersion_ReturnLosesOverride)
 {
     CHECK_EQUAL(JS_GetVersion(cx), JSVERSION_ECMA_5);
     EXEC(
@@ -250,9 +251,9 @@ BEGIN_FIXTURE_TEST(VersionFixture, testReturnLosesOverride)
     CHECK_EQUAL(captured, JSVERSION_ECMA_5);
     return true;
 }
-END_FIXTURE_TEST(VersionFixture, testReturnLosesOverride)
+END_FIXTURE_TEST(VersionFixture, testVersion_ReturnLosesOverride)
 
-BEGIN_FIXTURE_TEST(VersionFixture, testEvalPropagatesOverride)
+BEGIN_FIXTURE_TEST(VersionFixture, testVersion_EvalPropagatesOverride)
 {
     CHECK_EQUAL(JS_GetVersion(cx), JSVERSION_ECMA_5);
     EXEC(
@@ -264,4 +265,22 @@ BEGIN_FIXTURE_TEST(VersionFixture, testEvalPropagatesOverride)
     CHECK_EQUAL(captured, JSVERSION_1_5);
     return true;
 }
-END_FIXTURE_TEST(VersionFixture, testEvalPropagatesOverride)
+END_FIXTURE_TEST(VersionFixture, testVersion_EvalPropagatesOverride)
+
+BEGIN_TEST(testVersion_AllowXML)
+{
+    JSBool ok;
+
+    static const char code[] = "var m = <x/>;";
+    ok = JS_EvaluateScriptForPrincipalsVersion(cx, global, NULL, code, strlen(code),
+                                               __FILE__, __LINE__, NULL, JSVERSION_ECMA_5);
+    CHECK_EQUAL(ok, JS_FALSE);
+    JS_ClearPendingException(cx);
+
+    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ALLOW_XML);
+    ok = JS_EvaluateScriptForPrincipalsVersion(cx, global, NULL, code, strlen(code),
+                                               __FILE__, __LINE__, NULL, JSVERSION_ECMA_5);
+    CHECK_EQUAL(ok, JS_TRUE);
+    return true;
+}
+END_TEST(testVersion_AllowXML)

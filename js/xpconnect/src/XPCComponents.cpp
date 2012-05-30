@@ -3496,7 +3496,8 @@ ContextHolder::ContextHolder(JSContext *aOuterCx, JSObject *aSandbox)
         JS_SetOptions(mJSContext,
                       JS_GetOptions(mJSContext) |
                       JSOPTION_DONT_REPORT_UNCAUGHT |
-                      JSOPTION_PRIVATE_IS_NSISUPPORTS);
+                      JSOPTION_PRIVATE_IS_NSISUPPORTS |
+                      JSOPTION_ALLOW_XML);
         JS_SetGlobalObject(mJSContext, aSandbox);
         JS_SetContextPrivate(mJSContext, this);
         JS_SetOperationCallback(mJSContext, ContextHolderOperationCallback);
