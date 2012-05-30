@@ -177,7 +177,7 @@ static const uint32 PART_KIND_MASK = (1 << PART_KIND_BITS) - 1;
 static const uint32 PART_INFO_BITS = 5;
 static const uint32 PART_INFO_MASK = (1 << PART_INFO_BITS) - 1;
 
-static const uint32 MAX_INFO_VALUE = 1; //(1 << PART_INFO_BITS) - 1;
+static const uint32 MAX_INFO_VALUE = (1 << PART_INFO_BITS) - 1;
 static const uint32 TYPE_KIND_SHIFT = 16 - PART_KIND_BITS;
 static const uint32 PAYLOAD_KIND_SHIFT = TYPE_KIND_SHIFT - PART_KIND_BITS;
 static const uint32 TYPE_INFO_SHIFT = PAYLOAD_KIND_SHIFT - PART_INFO_BITS;
