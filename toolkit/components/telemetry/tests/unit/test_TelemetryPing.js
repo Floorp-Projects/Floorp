@@ -152,19 +152,10 @@ function checkPayloadInfo(payload, reason) {
   }
 }
 
-function checkPersistedHistograms(request, response) {
+function checkPayload(request, reason) {
   let payload = decodeRequestPayload(request);
 
-  httpserver.registerPathHandler(PATH, checkHistograms);
-  checkPayloadInfo(payload, "saved-session");
-}
-
-function checkHistograms(request, response) {
-  // do not need the http server anymore
-  httpserver.stop(do_test_finished);
-  let payload = decodeRequestPayload(request);
-
-  checkPayloadInfo(payload, "test-ping");
+  checkPayloadInfo(payload, reason);
   do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
   do_check_true(payload.simpleMeasurements.uptime >= 0);
   do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
@@ -202,8 +193,7 @@ function checkHistograms(request, response) {
     sum: 1
   };
   let tc = payload.histograms[TELEMETRY_SUCCESS];
-  do_check_eq(uneval(tc), 
-              uneval(expected_tc));
+  do_check_eq(uneval(tc), uneval(expected_tc));
 
   // The ping should include data from memory reporters.  We can't check that
   // this data is correct, because we can't control the values returned by the
@@ -225,6 +215,18 @@ function checkHistograms(request, response) {
 
   do_check_true(("mainThread" in payload.slowSQL) &&
                 ("otherThreads" in payload.slowSQL));
+}
+
+function checkPersistedHistograms(request, response) {
+  httpserver.registerPathHandler(PATH, checkHistograms);
+  checkPayload(request, "saved-session");
+}
+
+function checkHistograms(request, response) {
+  // do not need the http server anymore
+  httpserver.stop(do_test_finished);
+  checkPayload(request, "test-ping");
+
   gFinished = true;
 }
 
