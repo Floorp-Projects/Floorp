@@ -25,6 +25,9 @@
           android:icon="@drawable/ic_menu_save_as_pdf"
           android:title="@string/save_as_pdf" />
 
+    <item android:id="@+id/find_in_page"
+          android:title="@string/find_in_page" />
+
     <item android:id="@+id/site_settings"
           android:title="@string/site_settings_title" />
 

@@ -191,6 +191,7 @@ var BrowserApp = {
 
     NativeWindow.init();
     Downloads.init();
+    FindHelper.init();
     FormAssistant.init();
     OfflineApps.init();
     IndexedDB.init();
@@ -392,6 +393,7 @@ var BrowserApp = {
   shutdown: function shutdown() {
     NativeWindow.uninit();
     FormAssistant.uninit();
+    FindHelper.uninit();
     OfflineApps.uninit();
     IndexedDB.uninit();
     ViewportHandler.uninit();
@@ -3172,6 +3174,97 @@ var ErrorPageEventHandler = {
         }
         break;
       }
+    }
+  }
+};
+
+var FindHelper = {
+  _find: null,
+  _findInProgress: false,
+  _targetTab: null,
+  _initialViewport: null,
+  _viewportChanged: false,
+
+  init: function() {
+    Services.obs.addObserver(this, "FindInPage:Find", false);
+    Services.obs.addObserver(this, "FindInPage:Prev", false);
+    Services.obs.addObserver(this, "FindInPage:Next", false);
+    Services.obs.addObserver(this, "FindInPage:Closed", false);
+  },
+
+  uninit: function() {
+    Services.obs.removeObserver(this, "FindInPage:Find", false);
+    Services.obs.removeObserver(this, "FindInPage:Prev", false);
+    Services.obs.removeObserver(this, "FindInPage:Next", false);
+    Services.obs.removeObserver(this, "FindInPage:Closed", false);
+  },
+
+  observe: function(aMessage, aTopic, aData) {
+    switch(aTopic) {
+      case "FindInPage:Find":
+        this.doFind(aData);
+        break;
+
+      case "FindInPage:Prev":
+        this.findAgain(aData, true);
+        break;
+
+      case "FindInPage:Next":
+        this.findAgain(aData, false);
+        break;
+
+      case "FindInPage:Closed":
+        this.findClosed();
+        break;
+    }
+  },
+
+  doFind: function(aSearchString) {
+    if (!this._findInProgress) {
+      this._findInProgress = true;
+      this._targetTab = BrowserApp.selectedTab;
+      this._find = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
+      this._find.init(this._targetTab.browser.docShell);
+      this._initialViewport = JSON.stringify(this._targetTab.viewport);
+      this._viewportChanged = false;
+    }
+
+    let result = this._find.find(aSearchString, false);
+    this.handleResult(result);
+  },
+
+  findAgain: function(aString, aFindBackwards) {
+    let result = this._find.findAgain(aFindBackwards, false);
+    this.handleResult(result);
+  },
+
+  findClosed: function() {
+    if (!this._findInProgress) {
+      // this should never happen
+      Cu.reportError("Warning: findClosed() called while _findInProgress is false!");
+      // fall through and clean up anyway
+    }
+
+    this._find = null;
+    this._findInProgress = false;
+    this._targetTab = null;
+    this._initialViewport = null;
+    this._viewportChanged = false;
+  },
+
+  handleResult: function(aResult) {
+    if (aResult == Ci.nsITypeAheadFind.FIND_NOTFOUND) {
+      if (this._viewportChanged) {
+        if (this._targetTab != BrowserApp.selectedTab) {
+          // this should never happen
+          Cu.reportError("Warning: selected tab changed during find!");
+          // fall through and restore viewport on the initial tab anyway
+        }
+        this._targetTab.viewport = JSON.parse(this._initialViewport);
+        this._targetTab.sendViewportUpdate();
+      }
+    } else {
+      this._viewportChanged = true;
     }
   }
 };
