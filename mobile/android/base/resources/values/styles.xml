@@ -97,4 +97,27 @@
         <item name="android:background">@drawable/tabs_tray_bg_repeat</item>
     </style>
 
+    <!-- Find bar -->
+    <style name="FindBar">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:background">#000000</item>
+        <item name="android:paddingLeft">3dip</item>
+        <item name="android:paddingRight">3dip</item>
+        <item name="android:paddingTop">6dip</item>
+        <item name="android:paddingBottom">6dip</item>
+    </style>
+
+    <!-- Find bar - Image Button -->
+    <style name="FindBar.ImageButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">5dip</item>
+        <item name="android:layout_marginRight">5dip</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:layout_centerVertical">true</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
 </resources>

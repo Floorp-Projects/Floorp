@@ -108,6 +108,7 @@ abstract public class GeckoApp
     private static GeckoLayerClient mLayerClient;
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
+    private static FindInPageBar mFindInPageBar;
 
     private View mFullScreenPluginView;
 
@@ -407,15 +408,17 @@ abstract public class GeckoApp
         MenuItem share = aMenu.findItem(R.id.share);
         MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
         MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
+        MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
 
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
             forward.setEnabled(false);
             share.setEnabled(false);
             saveAsPDF.setEnabled(false);
+            findInPage.setEnabled(false);
             return true;
         }
-        
+
         bookmark.setEnabled(true);
         bookmark.setCheckable(true);
         
@@ -437,6 +440,10 @@ abstract public class GeckoApp
         // Disable save as PDF for about:home and xul pages
         saveAsPDF.setEnabled(!(tab.getURL().equals("about:home") ||
                                tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
+
+        // Disable find in page for about:home, since it won't work on Java content
+        if (!tab.getURL().equals("about:home"))
+            findInPage.setEnabled(true);
 
         charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
 
@@ -511,6 +518,9 @@ abstract public class GeckoApp
                 return true;
             case R.id.char_encoding:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
+                return true;
+            case R.id.find_in_page:
+                mFindInPageBar.show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -1782,6 +1792,7 @@ abstract public class GeckoApp
         }
 
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
+        mFindInPageBar = (FindInPageBar) findViewById(R.id.find_in_page);
 
         mDoorHangerPopup = new DoorHangerPopup(this);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
