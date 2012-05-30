@@ -1853,20 +1853,10 @@ Tab.prototype = {
   },
 
   getPageSize: function(aDocument, aDefaultWidth, aDefaultHeight) {
-    if (aDocument instanceof SVGDocument) {
-      let rect = aDocument.rootElement.getBoundingClientRect();
-      // we need to add rect.left and rect.top twice so that the SVG is drawn
-      // centered on the page; if we add it only once then the SVG will be
-      // on the bottom-right of the page and if we don't add it at all then
-      // we end up with a cropped SVG (see bug 712065)
-      return [Math.ceil(rect.left + rect.width + rect.left),
-              Math.ceil(rect.top + rect.height + rect.top)];
-    } else {
-      let body = aDocument.body || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
-      let html = aDocument.documentElement || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
-      return [Math.max(body.scrollWidth, html.scrollWidth),
-              Math.max(body.scrollHeight, html.scrollHeight)];
-    }
+    let body = aDocument.body || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
+    let html = aDocument.documentElement || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
+    return [Math.max(body.scrollWidth, html.scrollWidth),
+      Math.max(body.scrollHeight, html.scrollHeight)];
   },
 
   getViewport: function() {
@@ -2543,7 +2533,7 @@ Tab.prototype = {
           // call above does so at the end of the updateViewportSize function. As long
           // as that is happening, we don't need to do it again here.
 
-          if (contentDocument instanceof ImageDocument) {
+          if (contentDocument.mozSyntheticDocument) {
             // for images, scale to fit width. this needs to happen *after* the call
             // to updateMetadata above, because that call sets the CSS viewport which
             // will affect the page size (i.e. contentDocument.body.scroll*) that we
