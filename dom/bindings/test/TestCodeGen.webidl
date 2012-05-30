@@ -132,8 +132,13 @@ interface TestInterface {
   // Sequence types
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
+  sequence<long?> receiveSequenceOfNullableInts();
+  sequence<long?>? receiveNullableSequenceOfNullableInts();
   void passSequence(sequence<long> arg);
   void passNullableSequence(sequence<long>? arg);
+  void passSequenceOfNullableInts(sequence<long?> arg);
+  void passOptionalSequenceOfNullableInts(optional sequence<long?> arg);
+  void passOptionalNullableSequenceOfNullableInts(optional sequence<long?>? arg);
   sequence<TestInterface> receiveCastableObjectSequence();
   sequence<TestInterface?> receiveNullableCastableObjectSequence();
   sequence<TestInterface>? receiveCastableObjectNullableSequence();
@@ -157,6 +162,16 @@ interface TestInterface {
   void passOptionalArrayBuffer(optional ArrayBuffer arg);
   void passOptionalNullableArrayBuffer(optional ArrayBuffer? arg);
   void passOptionalNullableArrayBufferWithDefaultValue(optional ArrayBuffer? arg= null);
+  void passArrayBufferView(ArrayBufferView arg);
+  void passInt8Array(Int8Array arg);
+  void passInt16Array(Int16Array arg);
+  void passInt32Array(Int32Array arg);
+  void passUint8Array(Uint8Array arg);
+  void passUint16Array(Uint16Array arg);
+  void passUint32Array(Uint32Array arg);
+  void passUint8ClampedArray(Uint8ClampedArray arg);
+  void passFloat32Array(Float32Array arg);
+  void passFloat64Array(Float64Array arg);
 
   // String types
   void passString(DOMString arg);
