@@ -1816,10 +1816,14 @@ def _generateCxxStruct(sd):
         return ExprCall(assignvar,
                         args=[ f.initExpr(oexpr) for f in sd.fields ])
 
-    # Struct()
-    defctor = ConstructorDefn(ConstructorDecl(sd.name))
-    defctor.addstmt(StmtExpr(callinit))
-    struct.addstmts([ defctor, Whitespace.NL ])
+    # If this is an empty struct (no fields), then the default ctor
+    # and "create-with-fields" ctors are equivalent.  So don't bother
+    # with the default ctor.
+    if len(sd.fields):
+        # Struct()
+        defctor = ConstructorDefn(ConstructorDecl(sd.name))
+        defctor.addstmt(StmtExpr(callinit))
+        struct.addstmts([ defctor, Whitespace.NL ])
 
     # Struct(const field1& _f1, ...)
     valctor = ConstructorDefn(ConstructorDecl(sd.name,
