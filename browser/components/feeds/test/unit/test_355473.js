@@ -1,5 +1,3 @@
-const NS_ERROR_MALFORMED_URI = 0x804B000A;
-
 function run_test() {
   var feedFeedURI = ios.newURI("feed://example.com/feed.xml", null, null);
   var httpFeedURI = ios.newURI("feed:http://example.com/feed.xml", null, null);
@@ -23,7 +21,7 @@ function run_test() {
   do_check_true(httpURI.equals(httpChannel.URI));
   do_check_true(httpsURI.equals(httpsChannel.URI));
 
-  var dataFeedURI = ios.newURI("feed:data:text/xml,<rss/>", null, null);
+  // check that we don't throw creating feed: URIs from file and ftp
   var ftpFeedURI = ios.newURI("feed:ftp://example.com/feed.xml", null, null);
   var fileFeedURI = ios.newURI("feed:file:///var/feed.xml", null, null);
 }

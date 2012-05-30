@@ -525,14 +525,19 @@ GenericProtocolHandler.prototype = {
 
     var scheme = this._scheme + ":";
     if (spec.substr(0, scheme.length) != scheme)
-      throw Components.results.NS_ERROR_MALFORMED_URI;
+      throw Cr.NS_ERROR_MALFORMED_URI;
 
     var prefix = spec.substr(scheme.length, 2) == "//" ? "http:" : "";
     var inner = Cc["@mozilla.org/network/io-service;1"].
                 getService(Ci.nsIIOService).newURI(spec.replace(scheme, prefix),
                                                    originalCharset, baseURI);
-    var uri = Cc["@mozilla.org/network/util;1"].
-              getService(Ci.nsINetUtil).newSimpleNestedURI(inner);
+    var netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
+    const URI_INHERITS_SECURITY_CONTEXT = Ci.nsIProtocolHandler
+                                            .URI_INHERITS_SECURITY_CONTEXT;
+    if (netutil.URIChainHasFlags(inner, URI_INHERITS_SECURITY_CONTEXT))
+      throw Cr.NS_ERROR_MALFORMED_URI;
+
+    var uri = netutil.newSimpleNestedURI(inner);
     uri.spec = inner.spec.replace(prefix, scheme);
     return uri;
   },
