@@ -156,10 +156,11 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('test/examiner', ['require', 'exports', 'module' , 'test/assert'], function(require, exports, module) {
+define('test/examiner', ['require', 'exports', 'module' , 'test/assert', 'test/status'], function(require, exports, module) {
 var examiner = exports;
 
 var assert = require('test/assert');
+var stati = require('test/status').stati;
 
 /**
  * Test harness data
@@ -170,14 +171,6 @@ examiner.suites = {};
  * The gap between tests when running async
  */
 var delay = 10;
-
-var stati = {
-  notrun: { index: 0, name: 'Skipped' },
-  executing: { index: 1, name: 'Executing' },
-  asynchronous: { index: 2, name: 'Waiting' },
-  pass: { index: 3, name: 'Pass' },
-  fail: { index: 4, name: 'Fail' }
-};
 
 /**
  * Add a test suite. Generally used like:
@@ -572,6 +565,28 @@ define('test/assert', ['require', 'exports', 'module' ], function(require, expor
   exports.ok = ok;
   exports.is = is;
   exports.log = info;
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('test/status', ['require', 'exports', 'module' ], function(require, exports, module) {
+
+  /**
+   * This should really be inside assert.js, however that is over-ridden by
+   * a custom assert.js for mozilla, so we keep it separate to avoid
+   * duplicating it in 2 places.
+   */
+  exports.stati = {
+    notrun: { index: 0, name: 'Skipped' },
+    executing: { index: 1, name: 'Executing' },
+    asynchronous: { index: 2, name: 'Waiting' },
+    pass: { index: 3, name: 'Pass' },
+    fail: { index: 4, name: 'Fail' }
+  };
 
 });
 /*
@@ -4109,6 +4124,7 @@ let testModuleNames = [
   'gclitest/suite',
   'test/examiner',
   'test/assert',
+  'test/status',
   'gclitest/testCanon',
   'gclitest/helpers',
   'gclitest/testCli',
