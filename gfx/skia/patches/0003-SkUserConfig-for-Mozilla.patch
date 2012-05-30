@@ -1,0 +1,39 @@
+From ef53776c06cffc7607c3777702f93e04c0852981 Mon Sep 17 00:00:00 2001
+From: George Wright <gwright@mozilla.com>
+Date: Fri, 18 May 2012 14:13:49 -0400
+Subject: [PATCH 03/10]     Bug 755869 - [6] Re-apply SkUserConfig (no
+ original bug) r=mattwoodrow
+
+---
+ gfx/skia/include/config/SkUserConfig.h |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/gfx/skia/include/config/SkUserConfig.h b/gfx/skia/include/config/SkUserConfig.h
+index 9fdbd0a..f98ba85 100644
+--- a/gfx/skia/include/config/SkUserConfig.h
++++ b/gfx/skia/include/config/SkUserConfig.h
+@@ -156,6 +156,10 @@
+ //#define SK_SUPPORT_UNITTEST
+ #endif
+ 
++/*  Don't dither 32bit gradients, to match what the canvas test suite expects.
++ */
++#define SK_DISABLE_DITHER_32BIT_GRADIENT
++
+ /* If your system embeds skia and has complex event logging, define this
+    symbol to name a file that maps the following macros to your system's
+    equivalents:
+@@ -177,4 +181,10 @@
+         #define SK_A32_SHIFT    24
+ #endif
+ 
++/*  Don't include stdint.h on windows as it conflicts with our build system.
++ */
++#ifdef SK_BUILD_FOR_WIN32 
++    #define SK_IGNORE_STDINT_DOT_H 
++#endif 
++
+ #endif
+-- 
+1.7.5.4
+

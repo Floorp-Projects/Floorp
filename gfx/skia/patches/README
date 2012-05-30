@@ -1,0 +1,16 @@
+This directory contains the patches currently applied against upstream Skia.
+The original patches are archived in archive/
+
+See the relevant bugs in bugzilla for information on these patches:
+
+0001-Bug-687189-Implement-SkPaint-getPosTextPath.patch
+0002-Bug-688366-Dont-invalidate-all-radial-gradients.patch
+0003-SkUserConfig-for-Mozilla.patch
+0004-Bug-722011-Fix-trailing-commas-in-enums.patch
+0005-Bug-731384-Fix-clang-SK_OVERRIDE.patch
+0006-Bug-751814-ARM-EDSP-ARMv6-Skia-fixes.patch
+0007-Bug-719872-Old-Android-FontHost.patch
+0008-Bug-687188-Skia-radial-gradients.patch
+0009-Bug-755869-FreeBSD-Hurd.patch
+0010-Bug-689069-ARM-Opts.patch
+0011-Bug-719575-Fix-clang-build.patch
