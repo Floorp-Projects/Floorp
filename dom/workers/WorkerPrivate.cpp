@@ -123,6 +123,8 @@ SwapToISupportsArray(SmartPtr<T>& aSrc,
   dest->swap(rawSupports);
 }
 
+} /* anonymous namespace */
+
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsWorkerMallocSizeOf, "js-worker")
 
 struct WorkerJSRuntimeStats : public JS::RuntimeStats
@@ -163,6 +165,8 @@ private:
   nsCString mRtPath;
 };
   
+BEGIN_WORKERS_NAMESPACE
+
 class WorkerMemoryReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
   WorkerPrivate* mWorkerPrivate;
@@ -208,36 +212,31 @@ public:
   {
     AssertIsOnMainThread();
 
-    if (mWorkerPrivate) {
-      bool disabled;
-      if (!mWorkerPrivate->BlockAndCollectRuntimeStats(aIsQuick, aData, &disabled)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // Don't ever try to talk to the worker again.
-      if (disabled) {
+    if (!mWorkerPrivate) {
 #ifdef DEBUG
-        {
-          nsCAutoString message("Unable to report memory for ");
-          if (mWorkerPrivate->IsChromeWorker()) {
-            message.AppendLiteral("Chrome");
-          }
-          message += NS_LITERAL_CSTRING("Worker (") + mAddressString +
-                     NS_LITERAL_CSTRING(")! It is either using ctypes or is in "
-                                        "the process of being destroyed");
-          NS_WARNING(message.get());
-        }
-#endif
-        mWorkerPrivate = nsnull;
+      nsCAutoString message("Unable to report memory for ");
+      if (mWorkerPrivate->IsChromeWorker()) {
+        message.AppendLiteral("Chrome");
       }
+      message += NS_LITERAL_CSTRING("Worker (") + mAddressString +
+                 NS_LITERAL_CSTRING(")! It is either using ctypes or is in "
+                                    "the process of being destroyed");
+      NS_WARNING(message.get());
+#endif
+      return NS_OK;
     }
+    
+    if (!mWorkerPrivate->BlockAndCollectRuntimeStats(aIsQuick, aData)) {
+      return NS_ERROR_FAILURE;
+    }
+
     return NS_OK;
   }
 
   NS_IMETHOD GetName(nsACString &aName)
   {
-      aName.AssignLiteral("workers");
-      return NS_OK;
+    aName.AssignLiteral("workers");
+    return NS_OK;
   }
 
   NS_IMETHOD
@@ -265,9 +264,29 @@ public:
 
     return CollectForRuntime(/* isQuick = */true, aAmount);
   }
+
+  void Disable()
+  {
+#ifdef DEBUG
+    // Setting mWorkerPrivate to nsnull is safe only because we've locked the
+    // worker's mutex on the worker's thread, in the caller.  So we check that.
+    //
+    // Also, we may have already disabled the reporter (and thus set
+    // mWorkerPrivate to nsnull) due to the use of CTypes (see
+    // ChromeWorkerScope.cpp).  That's why the NULL check is necessary.
+    if (mWorkerPrivate) {
+        mWorkerPrivate->mMutex.AssertCurrentThreadOwns();
+    }
+#endif
+    mWorkerPrivate = nsnull;
+  }
 };
 
+END_WORKERS_NAMESPACE
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(WorkerMemoryReporter, nsIMemoryMultiReporter)
+
+namespace {
 
 struct WorkerStructuredCloneCallbacks
 {
@@ -2451,8 +2470,7 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx, JSObject* aObject,
   mJSContext(nsnull), mErrorHandlerRecursionCount(0), mNextTimeoutId(1),
   mStatus(Pending), mSuspended(false), mTimerRunning(false),
   mRunningExpiredTimeouts(false), mCloseHandlerStarted(false),
-  mCloseHandlerFinished(false), mMemoryReporterRunning(false),
-  mMemoryReporterDisabled(false)
+  mCloseHandlerFinished(false), mMemoryReporterRunning(false)
 {
   MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerPrivate);
 }
@@ -2899,20 +2917,13 @@ WorkerPrivate::ScheduleDeletion(bool aWasPending)
 }
 
 bool
-WorkerPrivate::BlockAndCollectRuntimeStats(bool aIsQuick, void* aData, bool* aDisabled)
+WorkerPrivate::BlockAndCollectRuntimeStats(bool aIsQuick, void* aData)
 {
   AssertIsOnMainThread();
   NS_ASSERTION(aData, "Null data!");
 
   {
     MutexAutoLock lock(mMutex);
-
-    if (mMemoryReporterDisabled) {
-      *aDisabled = true;
-      return true;
-    }
-
-    *aDisabled = false;
     mMemoryReporterRunning = true;
   }
 
@@ -2943,11 +2954,13 @@ WorkerPrivate::DisableMemoryReporter()
   {
     MutexAutoLock lock(mMutex);
 
-    mMemoryReporterDisabled = true;
-
     while (mMemoryReporterRunning) {
       MutexAutoUnlock unlock(mMutex);
       result = ProcessAllControlRunnables() && result;
+    }
+
+    if (mMemoryReporter) {
+      mMemoryReporter->Disable();
     }
   }
 
