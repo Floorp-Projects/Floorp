@@ -322,38 +322,11 @@ private:
     off_t        mOff;
 };
 
-#ifdef MOZ_OTS_REPORT_ERRORS
-struct OTSCallbackUserData {
-    gfxUserFontSet    *mFontSet;
-    gfxProxyFontEntry *mProxy;
-};
-
-/* static */ bool
-gfxUserFontSet::OTSMessage(void *aUserData, const char *format, ...)
-{
-    va_list va;
-    va_start(va, format);
-
-    // buf should be more than adequate for any message OTS generates,
-    // so we don't worry about checking the result of vsnprintf()
-    char buf[512];
-    (void)vsnprintf(buf, sizeof(buf), format, va);
-
-    va_end(va);
-
-    OTSCallbackUserData *d = static_cast<OTSCallbackUserData*>(aUserData);
-    d->mFontSet->LogMessage(d->mProxy, buf);
-
-    return false;
-}
-#endif
-
 // Call the OTS library to sanitize an sfnt before attempting to use it.
 // Returns a newly-allocated block, or NULL in case of fatal errors.
-const PRUint8*
-gfxUserFontSet::SanitizeOpenTypeData(gfxProxyFontEntry *aProxy,
-                                     const PRUint8* aData, PRUint32 aLength,
-                                     PRUint32& aSaneLength, bool aIsCompressed)
+static const PRUint8*
+SanitizeOpenTypeData(const PRUint8* aData, PRUint32 aLength,
+                     PRUint32& aSaneLength, bool aIsCompressed)
 {
     // limit output/expansion to 256MB
     ExpandingMemoryStream output(aIsCompressed ? aLength * 2 : aLength,
@@ -363,19 +336,7 @@ gfxUserFontSet::SanitizeOpenTypeData(gfxProxyFontEntry *aProxy,
 #else
 #define PRESERVE_GRAPHITE false
 #endif
-
-#ifdef MOZ_OTS_REPORT_ERRORS
-    OTSCallbackUserData userData;
-    userData.mFontSet = this;
-    userData.mProxy = aProxy;
-#define ERROR_REPORTING_ARGS &gfxUserFontSet::OTSMessage, &userData,
-#else
-#define ERROR_REPORTING_ARGS
-#endif
-
-    if (ots::Process(&output, aData, aLength,
-                     ERROR_REPORTING_ARGS
-                     PRESERVE_GRAPHITE)) {
+    if (ots::Process(&output, aData, aLength, PRESERVE_GRAPHITE)) {
         aSaneLength = output.Tell();
         return static_cast<PRUint8*>(output.forget());
     } else {
@@ -671,7 +632,7 @@ gfxUserFontSet::LoadFont(gfxProxyFontEntry *aProxy,
         // if necessary. The original data in aFontData is left unchanged.
         PRUint32 saneLen;
         const PRUint8* saneData =
-            SanitizeOpenTypeData(aProxy, aFontData, aLength, saneLen,
+            SanitizeOpenTypeData(aFontData, aLength, saneLen,
                                  fontType == GFX_USERFONT_WOFF);
         if (!saneData) {
             LogMessage(aProxy, "rejected by sanitizer");
