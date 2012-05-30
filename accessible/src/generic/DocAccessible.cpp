@@ -5,6 +5,7 @@
 
 #include "Accessible-inl.h"
 #include "AccIterator.h"
+#include "DocAccessible-inl.h"
 #include "nsAccCache.h"
 #include "nsAccessibilityService.h"
 #include "nsAccessiblePivot.h"
@@ -2026,16 +2027,12 @@ DocAccessible::IsLoadEventTarget() const
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
   docShellTreeItem->GetParent(getter_AddRefs(parentTreeItem));
 
-  // It's not a root document.
-  if (parentTreeItem) {
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+  // Return true if it's not a root document (either tab document or
+  // frame/iframe document) and its parent document is not in loading state.
+  if (parentTreeItem)
+    return ParentDocument()->HasLoadState(eCompletelyLoaded);
 
-    // It's not a sub document, i.e. a frame or iframe.
-    return (sameTypeRoot == docShellTreeItem);
-  }
-
-  // It's not chrome root document.
+  // It's content (not chrome) root document.
   PRInt32 contentType;
   docShellTreeItem->GetItemType(&contentType);
   return (contentType == nsIDocShellTreeItem::typeContent);

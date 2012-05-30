@@ -25,7 +25,8 @@ enum EModules {
   eDocLoad = 1 << 0,
   eDocCreate = 1 << 1,
   eDocDestroy = 1 << 2,
-  eDocLifeCycle = eDocLoad | eDocCreate | eDocDestroy
+  eDocLifeCycle = eDocLoad | eDocCreate | eDocDestroy,
+  ePlatforms = 1 << 3
 };
 
 /**

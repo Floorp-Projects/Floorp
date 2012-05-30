@@ -1,0 +1,28 @@
+<html class="reftest-wait">
+<head>
+<script>
+
+// document.write() doesn't play well with reftest-wait, so we need to use an
+// iframe.
+//
+// This test is designed to trigger an assertion, but that assertion depends on
+// non-deterministic hashtable iteration ordering. The assertion seems to happen
+// around 80% of the time, so we just run the operation 10 times.
+
+var i = 0;
+function iterate() {
+  ++i;
+  if (i < 10) {
+    document.getElementById("f").src = "752038-iframe.html";
+  } else {
+    document.documentElement.removeAttribute("class");
+  }
+}
+window.addEventListener('message', iterate, false);
+
+</script>
+</head>
+<body>
+<iframe id="f" src="752038-iframe.html"></iframe>
+</body>
+</html>

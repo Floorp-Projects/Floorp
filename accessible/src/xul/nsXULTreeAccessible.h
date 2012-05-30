@@ -146,10 +146,6 @@ public:
   NS_IMETHOD SetSelected(bool aSelect); 
   NS_IMETHOD TakeFocus();
 
-  NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel,
-                           PRInt32 *aSimilarItemsInGroup,
-                           PRInt32 *aPositionInGroup);
-
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 aIndex);
 
@@ -158,6 +154,7 @@ public:
   virtual bool IsPrimaryForNode() const;
 
   // Accessible
+  virtual mozilla::a11y::GroupPos GroupPosition();
   virtual PRUint64 NativeState();
   virtual PRInt32 IndexInParent() const;
   virtual Relation RelationByType(PRUint32 aType);

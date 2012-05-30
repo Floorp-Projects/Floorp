@@ -357,7 +357,7 @@ nsHTMLTableHeaderCellAccessible::NativeRole()
   // Check value of @scope attribute.
   static nsIContent::AttrValuesArray scopeValues[] =
     {&nsGkAtoms::col, &nsGkAtoms::row, nsnull};
-  PRInt32 valueIdx = 
+  PRInt32 valueIdx =
     mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::scope,
                               scopeValues, eCaseMatters);
 
@@ -379,7 +379,7 @@ nsHTMLTableHeaderCellAccessible::NativeRole()
   for (nsIContent* siblingContent = mContent->GetPreviousSibling(); siblingContent;
        siblingContent = siblingContent->GetPreviousSibling()) {
     if (siblingContent->IsElement()) {
-      return nsCoreUtils::IsHTMLTableHeader(siblingContent) ? 
+      return nsCoreUtils::IsHTMLTableHeader(siblingContent) ?
 	     roles::COLUMNHEADER : roles::ROWHEADER;
     }
   }
@@ -387,7 +387,7 @@ nsHTMLTableHeaderCellAccessible::NativeRole()
   for (nsIContent* siblingContent = mContent->GetNextSibling(); siblingContent;
        siblingContent = siblingContent->GetNextSibling()) {
     if (siblingContent->IsElement()) {
-      return nsCoreUtils::IsHTMLTableHeader(siblingContent) ? 
+      return nsCoreUtils::IsHTMLTableHeader(siblingContent) ?
 	     roles::COLUMNHEADER : roles::ROWHEADER;
     }
   }
@@ -493,7 +493,7 @@ nsHTMLTableAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
     aAttributes->SetStringProperty(NS_LITERAL_CSTRING("layout-guess"),
                                    NS_LITERAL_STRING("true"), oldValueUnused);
   }
-  
+
   return NS_OK;
 }
 
@@ -524,7 +524,7 @@ void
 nsHTMLTableAccessible::Summary(nsString& aSummary)
 {
   nsCOMPtr<nsIDOMHTMLTableElement> table(do_QueryInterface(mContent));
-  
+
   if (table)
     table->GetSummary(aSummary);
 }
@@ -931,43 +931,44 @@ nsHTMLTableAccessible::GetRowAndColumnIndicesAt(PRInt32 aIndex,
   return (*aRowIdx == -1 || *aColumnIdx == -1) ? NS_ERROR_INVALID_ARG : NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::GetColumnExtentAt(PRInt32 aRowIndex,
-                                         PRInt32 aColumnIndex,
-                                         PRInt32 *aExtentCount)
+PRUint32
+nsHTMLTableAccessible::ColExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx)
 {
-  nsITableLayout *tableLayout = GetTableLayout();
-  NS_ENSURE_STATE(tableLayout);
+  nsITableLayout* tableLayout = GetTableLayout();
+  if (!tableLayout)
+    return 0;
 
   nsCOMPtr<nsIDOMElement> domElement;
   PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualRowSpan;
   bool isSelected;
+  PRInt32 columnExtent = 0;
 
   nsresult rv = tableLayout->
-    GetCellDataAt(aRowIndex, aColumnIndex, *getter_AddRefs(domElement),
+    GetCellDataAt(aRowIdx, aColIdx, *getter_AddRefs(domElement),
                   startRowIndex, startColIndex, rowSpan, colSpan,
-                  actualRowSpan, *aExtentCount, isSelected);
+                  actualRowSpan, columnExtent, isSelected);
 
-  return (rv == NS_TABLELAYOUT_CELL_NOT_FOUND) ? NS_ERROR_INVALID_ARG : NS_OK;
+  return columnExtent;
 }
 
-NS_IMETHODIMP
-nsHTMLTableAccessible::GetRowExtentAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
-                                      PRInt32 *aExtentCount)
+PRUint32
+nsHTMLTableAccessible::RowExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx)
 {
-  nsITableLayout *tableLayout = GetTableLayout();
-  NS_ENSURE_STATE(tableLayout);
+  nsITableLayout* tableLayout = GetTableLayout();
+  if (!tableLayout)
+    return 0;
 
   nsCOMPtr<nsIDOMElement> domElement;
   PRInt32 startRowIndex, startColIndex, rowSpan, colSpan, actualColSpan;
   bool isSelected;
+  PRInt32 rowExtent = 0;
 
   nsresult rv = tableLayout->
-    GetCellDataAt(aRowIndex, aColumnIndex, *getter_AddRefs(domElement),
+    GetCellDataAt(aRowIdx, aColIdx, *getter_AddRefs(domElement),
                   startRowIndex, startColIndex, rowSpan, colSpan,
-                  *aExtentCount, actualColSpan, isSelected);
+                  rowExtent, actualColSpan, isSelected);
 
-  return (rv == NS_TABLELAYOUT_CELL_NOT_FOUND) ? NS_ERROR_INVALID_ARG : NS_OK;
+  return rowExtent;
 }
 
 NS_IMETHODIMP
@@ -1149,7 +1150,7 @@ nsHTMLTableAccessible::AddRowOrColumnToSelection(PRInt32 aIndex,
                                     startRowIdx, startColIdx,
                                     rowSpan, colSpan,
                                     actualRowSpan, actualColSpan,
-                                    isSelected);      
+                                    isSelected);
 
     if (NS_SUCCEEDED(rv) && !isSelected) {
       nsCOMPtr<nsIContent> cellContent(do_QueryInterface(cellElm));
@@ -1185,11 +1186,11 @@ nsHTMLTableAccessible::RemoveRowsOrColumnsFromSelection(PRInt32 aIndex,
 
   if (aIsOuter)
     return tableSelection->RestrictCellsToSelection(mContent,
-                                                    startRowIdx, startColIdx, 
+                                                    startRowIdx, startColIdx,
                                                     endRowIdx, endColIdx);
 
   return tableSelection->RemoveCellsFromSelection(mContent,
-                                                  startRowIdx, startColIdx, 
+                                                  startRowIdx, startColIdx,
                                                   endRowIdx, endColIdx);
 }
 
@@ -1333,7 +1334,7 @@ nsHTMLTableAccessible::IsProbablyLayoutTable()
 
   // Check to see if an ARIA role overrides the role from native markup,
   // but for which we still expose table semantics (treegrid, for example).
-  if (Role() != roles::TABLE) 
+  if (Role() != roles::TABLE)
     RETURN_LAYOUT_ANSWER(false, "Has role attribute");
 
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::role)) {
@@ -1383,7 +1384,7 @@ nsHTMLTableAccessible::IsProbablyLayoutTable()
           for (nsIContent* cellElm = rowElm->GetFirstChild(); cellElm;
                cellElm = cellElm->GetNextSibling()) {
             if (cellElm->IsHTML()) {
-              
+
               if (cellElm->NodeInfo()->Equals(nsGkAtoms::th)) {
                 RETURN_LAYOUT_ANSWER(false,
                                      "Has th -- legitimate table structures");

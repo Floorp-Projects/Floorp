@@ -16,6 +16,7 @@
 #include "XPCMaps.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
+#include "mozilla/Likely.h"
 
 using namespace js;
 
@@ -169,6 +170,11 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
         if (NATIVE_HAS_FLAG(&ccx, WantPreCreate)) {
             // We have a precreate hook. This object might enforce that we only
             // ever create JS object for it.
+
+            // Note: this penalizes objects that only have one wrapper, but are
+            // being accessed across compartments. We would really prefer to
+            // replace the above code with a test that says "do you only have one
+            // wrapper?"
             JSObject *originalScope = scope;
             nsresult rv = wn->GetScriptableInfo()->GetCallback()->
                 PreCreate(wn->Native(), cx, scope, &scope);
@@ -181,10 +187,40 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, JSObject *scope, JSObject *obj
             if (js::GetObjectCompartment(originalScope) != js::GetObjectCompartment(scope))
                 return DoubleWrap(cx, obj, flags);
 
-            // Note: this penalizes objects that only have one wrapper, but are
-            // being accessed across compartments. We would really prefer to
-            // replace the above code with a test that says "do you only have one
-            // wrapper?"
+            JSObject *currentScope = JS_GetGlobalForObject(cx, obj);
+            if (MOZ_UNLIKELY(scope != currentScope)) {
+                // The wrapper claims it wants to be in the new scope, but
+                // currently has a reflection that lives in the old scope. This
+                // can mean one of two things, both of which are rare:
+                //
+                // 1 - The object has a PreCreate hook (we checked for it above),
+                // but is deciding to request one-wrapper-per-scope (rather than
+                // one-wrapper-per-native) for some reason. Usually, a PreCreate
+                // hook indicates one-wrapper-per-native. In this case we want to
+                // make a new wrapper in the new scope.
+                //
+                // 2 - We're midway through wrapper reparenting. The document has
+                // moved to a new scope, but |wn| hasn't been moved yet, and
+                // we ended up calling JS_WrapObject() on its JS object. In this
+                // case, we want to return the existing wrapper.
+                //
+                // So we do a trick: call PreCreate _again_, but say that we're
+                // wrapping for the old scope, rather than the new one. If (1) is
+                // the case, then PreCreate will return the scope we pass to it
+                // (the old scope). If (2) is the case, PreCreate will return the
+                // scope of the document (the new scope).
+                JSObject *probe;
+                rv = wn->GetScriptableInfo()->GetCallback()->
+                    PreCreate(wn->Native(), cx, currentScope, &probe);
+
+                // Check for case (2).
+                if (probe != currentScope) {
+                    MOZ_ASSERT(probe == scope);
+                    return DoubleWrap(cx, obj, flags);
+                }
+
+                // Ok, must be case (1). Fall through and create a new wrapper.
+            }
         }
     }
 
