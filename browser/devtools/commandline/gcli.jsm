@@ -65,7 +65,7 @@ var mozl10n = {};
 
 })(mozl10n);
 
-define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli/types/command', 'gcli/types/javascript', 'gcli/types/node', 'gcli/types/resource', 'gcli/types/setting', 'gcli/types/selection', 'gcli/settings', 'gcli/ui/intro', 'gcli/ui/focus', 'gcli/ui/fields/basic', 'gcli/ui/fields/javascript', 'gcli/ui/fields/selection', 'gcli/commands/help', 'gcli/canon', 'gcli/ui/ffdisplay'], function(require, exports, module) {
+define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli/types/command', 'gcli/types/javascript', 'gcli/types/node', 'gcli/types/resource', 'gcli/types/setting', 'gcli/types/selection', 'gcli/settings', 'gcli/ui/intro', 'gcli/ui/focus', 'gcli/ui/fields/basic', 'gcli/ui/fields/javascript', 'gcli/ui/fields/selection', 'gcli/commands/help', 'gcli/commands/pref', 'gcli/canon', 'gcli/ui/ffdisplay'], function(require, exports, module) {
 
   // Internal startup process. Not exported
   require('gcli/types/basic').startup();
@@ -84,6 +84,7 @@ define('gcli/index', ['require', 'exports', 'module' , 'gcli/types/basic', 'gcli
   require('gcli/ui/fields/selection').startup();
 
   require('gcli/commands/help').startup();
+  require('gcli/commands/pref').startup();
 
   // The API for use by command authors
   exports.addCommand = require('gcli/canon').addCommand;
@@ -1674,7 +1675,7 @@ exports.Speller = Speller;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('gcli/types/selection', ['require', 'exports', 'module' , 'gcli/l10n', 'gcli/types', 'gcli/types/spell', 'gcli/argument'], function(require, exports, module) {
+define('gcli/types/selection', ['require', 'exports', 'module' , 'gcli/l10n', 'gcli/types', 'gcli/types/spell'], function(require, exports, module) {
 
 
 var l10n = require('gcli/l10n');
@@ -1683,7 +1684,6 @@ var Type = require('gcli/types').Type;
 var Status = require('gcli/types').Status;
 var Conversion = require('gcli/types').Conversion;
 var Speller = require('gcli/types/spell').Speller;
-var Argument = require('gcli/argument').Argument;
 
 
 /**
@@ -1714,6 +1714,9 @@ exports.shutdown = function() {
  *   the associated name. However the name maybe available directly from the
  *   value using a property lookup. Setting 'stringifyProperty' allows
  *   SelectionType to take this shortcut.
+ * - cacheable : If lookup is a function, then we normally assume that
+ *   the values fetched can change. Setting 'cacheable' enables internal
+ *   caching.
  */
 function SelectionType(typeSpec) {
   if (typeSpec) {
@@ -1744,13 +1747,29 @@ SelectionType.prototype.stringify = function(value) {
 };
 
 /**
+ * If typeSpec contained cacheable:true then calls to parse() work on cached
+ * data. clearCache() enables the cache to be cleared.
+ */
+SelectionType.prototype.clearCache = function() {
+  delete this._cachedLookup;
+};
+
+/**
  * There are several ways to get selection data. This unifies them into one
  * single function.
  * @return An array of objects with name and value properties.
  */
 SelectionType.prototype.getLookup = function() {
+  if (this._cachedLookup) {
+    return this._cachedLookup;
+  }
+
   if (this.lookup) {
     if (typeof this.lookup === 'function') {
+      if (this.cacheable) {
+        this._cachedLookup = this.lookup();
+        return this._cachedLookup;
+      }
       return this.lookup();
     }
     return this.lookup;
@@ -2257,8 +2276,6 @@ Parameter.prototype.isKnownAs = function(name) {
  * parseString on an empty string
  */
 Parameter.prototype.getBlank = function() {
-  var conversion;
-
   if (this.type.getBlank) {
     return this.type.getBlank();
   }
@@ -2357,12 +2374,18 @@ canon.addCommand = function addCommand(commandSpec) {
 
 /**
  * Remove an individual command. The opposite of #addCommand().
+ * Removing a non-existent command is a no-op.
  * @param commandOrName Either a command name or the command itself.
+ * @return true if a command was removed, false otherwise.
  */
 canon.removeCommand = function removeCommand(commandOrName) {
   var name = typeof commandOrName === 'string' ?
           commandOrName :
           commandOrName.name;
+
+  if (!commands[name]) {
+    return false;
+  }
 
   // See start of canon.addCommand if changing this code
   delete commands[name];
@@ -2372,6 +2395,7 @@ canon.removeCommand = function removeCommand(commandOrName) {
   });
 
   canon.onCanonChange();
+  return true;
 };
 
 /**
@@ -4186,9 +4210,13 @@ function SettingType(typeSpec) {
   if (Object.keys(typeSpec).length > 0) {
     throw new Error('SettingType can not be customized');
   }
+
+  settings.onChange.add(function(ev) {
+    this.clearCache();
+  }, this);
 }
 
-SettingType.prototype = Object.create(SelectionType.prototype);
+SettingType.prototype = new SelectionType({ cacheable: true });
 
 SettingType.prototype.lookup = function() {
   return settings.getAll().map(function(setting) {
@@ -4269,8 +4297,7 @@ var types = require('gcli/types');
 var allSettings = [];
 
 /**
- * No setup required because settings are pre-loaded with Mozilla,
- * but match API with main settings.js
+ * Cache existing settings on startup
  */
 exports.startup = function() {
   imports.prefBranch.getChildList('').forEach(function(name) {
@@ -4354,9 +4381,8 @@ Object.defineProperty(Setting.prototype, 'value', {
       case imports.prefBranch.PREF_STRING:
         var value = imports.prefBranch.getComplexValue(this.name,
                 Components.interfaces.nsISupportsString).data;
-        // Try in case it's a localized string (will throw an exception if not)
-        var isL10n = /^chrome:\/\/.+\/locale\/.+\.properties/.test(value);
-        if (!this.changed && isL10n) {
+        // In case of a localized string
+        if (/^chrome:\/\/.+\/locale\/.+\.properties/.test(value)) {
           value = imports.prefBranch.getComplexValue(this.name,
                   Components.interfaces.nsIPrefLocalizedString).data;
         }
@@ -4398,6 +4424,13 @@ Object.defineProperty(Setting.prototype, 'value', {
   enumerable: true
 });
 
+/**
+ * Reset this setting to it's initial default value
+ */
+Setting.prototype.setDefault = function() {
+  imports.prefBranch.clearUserPref(this.name);
+  Services.prefs.savePrefFile(null);
+};
 
 /**
  * 'static' function to get an array containing all known Settings
@@ -4421,8 +4454,35 @@ exports.addSetting = function(prefSpec) {
       allSettings[i] = setting;
     }
   }
+  exports.onChange({ added: setting.name });
   return setting;
 };
+
+/**
+ * Getter for an existing setting. Generally use of this function should be
+ * avoided. Systems that define a setting should export it if they wish it to
+ * be available to the outside, or not otherwise. Use of this function breaks
+ * that boundary and also hides dependencies. Acceptable uses include testing
+ * and embedded uses of GCLI that pre-define all settings (e.g. Firefox)
+ * @param name The name of the setting to fetch
+ * @return The found Setting object, or undefined if the setting was not found
+ */
+exports.getSetting = function(name) {
+  var found = undefined;
+  allSettings.some(function(setting) {
+    if (setting.name === name) {
+      found = setting;
+      return true;
+    }
+    return false;
+  });
+  return found;
+};
+
+/**
+ * Event for use to detect when the list of settings changes
+ */
+exports.onChange = util.createEvent('Settings.onChange');
 
 /**
  * Remove a setting. A no-op in this case
@@ -8033,6 +8093,151 @@ define("text!gcli/commands/help_list.html", [], "\n" +
   "");
 
 define("text!gcli/commands/help.css", [], "");
+
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
+define('gcli/commands/pref', ['require', 'exports', 'module' , 'gcli/canon', 'gcli/l10n', 'gcli/settings', 'text!gcli/commands/pref_set_check.html'], function(require, exports, module) {
+
+
+var canon = require('gcli/canon');
+var l10n = require('gcli/l10n');
+var settings = require('gcli/settings');
+
+/**
+ * Record if the user has clicked on 'Got It!'
+ */
+var allowSetSettingSpec = {
+  name: 'allowSet',
+  type: 'boolean',
+  description: l10n.lookup('allowSetDesc'),
+  defaultValue: false
+};
+exports.allowSet = undefined;
+
+/**
+ * 'pref' command
+ */
+var prefCmdSpec = {
+  name: 'pref',
+  description: l10n.lookup('prefDesc'),
+  manual: l10n.lookup('prefManual')
+};
+
+/**
+ * 'pref show' command
+ */
+var prefShowCmdSpec = {
+  name: 'pref show',
+  description: l10n.lookup('prefShowDesc'),
+  manual: l10n.lookup('prefShowManual'),
+  params: [
+    {
+      name: 'setting',
+      type: 'setting',
+      description: l10n.lookup('prefShowSettingDesc'),
+      manual: l10n.lookup('prefShowSettingManual')
+    }
+  ],
+  exec: function Command_prefShow(args, context) {
+    return args.setting.value;
+  }
+};
+
+/**
+ * 'pref set' command
+ */
+var prefSetCmdSpec = {
+  name: 'pref set',
+  description: l10n.lookup('prefSetDesc'),
+  manual: l10n.lookup('prefSetManual'),
+  params: [
+    {
+      name: 'setting',
+      type: 'setting',
+      description: l10n.lookup('prefSetSettingDesc'),
+      manual: l10n.lookup('prefSetSettingManual')
+    },
+    {
+      name: 'value',
+      type: 'settingValue',
+      description: l10n.lookup('prefSetValueDesc'),
+      manual: l10n.lookup('prefSetValueManual')
+    }
+  ],
+  exec: function Command_prefSet(args, context) {
+    if (!exports.allowSet.value &&
+            args.setting.name !== exports.allowSet.name) {
+      return context.createView({
+        html: require('text!gcli/commands/pref_set_check.html'),
+        options: { allowEval: true, stack: 'pref_set_check.html' },
+        data: {
+          l10n: l10n.propertyLookup,
+          activate: function() {
+            context.exec('pref set ' + exports.allowSet.name + ' true');
+          }
+        },
+      });
+    }
+    args.setting.value = args.value;
+    return null;
+  }
+};
+
+/**
+ * 'pref reset' command
+ */
+var prefResetCmdSpec = {
+  name: 'pref reset',
+  description: l10n.lookup('prefResetDesc'),
+  manual: l10n.lookup('prefResetManual'),
+  params: [
+    {
+      name: 'setting',
+      type: 'setting',
+      description: l10n.lookup('prefResetSettingDesc'),
+      manual: l10n.lookup('prefResetSettingManual')
+    }
+  ],
+  exec: function Command_prefReset(args, context) {
+    args.setting.setDefault();
+    return null;
+  }
+};
+
+/**
+ * Registration and de-registration.
+ */
+exports.startup = function() {
+  exports.allowSet = settings.addSetting(allowSetSettingSpec);
+
+  canon.addCommand(prefCmdSpec);
+  canon.addCommand(prefShowCmdSpec);
+  canon.addCommand(prefSetCmdSpec);
+  canon.addCommand(prefResetCmdSpec);
+};
+
+exports.shutdown = function() {
+  canon.removeCommand(prefCmdSpec);
+  canon.removeCommand(prefShowCmdSpec);
+  canon.removeCommand(prefSetCmdSpec);
+  canon.removeCommand(prefResetCmdSpec);
+
+  settings.removeSetting(allowSetSettingSpec);
+  exports.allowSet = undefined;
+};
+
+
+});
+define("text!gcli/commands/pref_set_check.html", [], "<div>\n" +
+  "  <p><strong>${l10n.prefSetCheckHeading}</strong></p>\n" +
+  "  <p>${l10n.prefSetCheckBody}</p>\n" +
+  "  <button onclick=\"${activate}\">${l10n.prefSetCheckGo}</button>\n" +
+  "</div>\n" +
+  "");
 
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
