@@ -302,7 +302,44 @@ IonBuilder::build()
     if (!traverseBytecode())
         return false;
 
+    if (!processIterators())
+        return false;
+
     JS_ASSERT(loopDepth_ == 0);
+    return true;
+}
+
+bool
+IonBuilder::processIterators()
+{
+    // Find phis that must directly hold an iterator live.
+    Vector<MPhi *, 0, SystemAllocPolicy> worklist;
+    for (size_t i = 0; i < iterators_.length(); i++) {
+        MInstruction *ins = iterators_[i];
+        for (MUseDefIterator iter(ins); iter; iter++) {
+            if (iter.def()->isPhi()) {
+                if (!worklist.append(iter.def()->toPhi()))
+                    return false;
+            }
+        }
+    }
+
+    // Propagate the iterator and live status of phis to all other connected
+    // phis.
+    while (!worklist.empty()) {
+        MPhi *phi = worklist.popCopy();
+        phi->setIterator();
+        phi->setHasBytecodeUses();
+
+        for (MUseDefIterator iter(phi); iter; iter++) {
+            if (iter.def()->isPhi()) {
+                MPhi *other = iter.def()->toPhi();
+                if (!other->isIterator() && !worklist.append(other))
+                    return false;
+            }
+        }
+    }
+
     return true;
 }
 
@@ -4557,6 +4594,9 @@ IonBuilder::jsop_iter(uint8 flags)
 {
     MDefinition *obj = current->pop();
     MInstruction *ins = MIteratorStart::New(obj, flags);
+
+    if (!iterators_.append(ins))
+        return false;
 
     current->add(ins);
     current->push(ins);
