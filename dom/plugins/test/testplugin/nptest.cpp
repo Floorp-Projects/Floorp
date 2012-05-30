@@ -824,6 +824,11 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
           instanceData->asyncDrawing = AD_BITMAP;
         }
       }
+      if (strcmp(argv[i], "dxgi") == 0) {
+        if (pluginSupportsAsyncDXGIDrawing()) {
+          instanceData->asyncDrawing = AD_DXGI;
+        }
+      }
     }
     if (strcmp(argn[i], "streammode") == 0) {
       if (strcmp(argv[i], "normal") == 0) {
@@ -936,6 +941,17 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
       instanceData->asyncDrawing = AD_NONE;
     }
   }
+#ifdef XP_WIN
+  else if (instanceData->asyncDrawing == AD_DXGI) {
+    NPBool supportsAsyncDXGI = false;
+    if ((NPN_GetValue(instance, NPNVsupportsAsyncWindowsDXGISurfaceBool, &supportsAsyncDXGI) == NPERR_NO_ERROR) &&
+        supportsAsyncDXGI) {
+      NPN_SetValue(instance, NPPVpluginDrawingModel, (void*)NPDrawingModelAsyncWindowsDXGISurface);
+    } else {
+      instanceData->asyncDrawing = AD_NONE;
+    }
+  }
+#endif
 
   instanceData->lastReportedPrivateModeState = false;
   instanceData->lastMouseX = instanceData->lastMouseY = -1;
@@ -2737,6 +2753,11 @@ setColor(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* r
   } else if (id->asyncDrawing == AD_BITMAP) {
     drawAsyncBitmapColor(id);
   }
+#ifdef XP_WIN
+  else if (id->asyncDrawing == AD_DXGI) {
+    pluginDrawAsyncDxgiColor(id);
+  }
+#endif
 
   VOID_TO_NPVARIANT(*result);
   return true;

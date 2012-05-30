@@ -38,6 +38,23 @@
 #include <windowsx.h>
 #include <stdio.h>
 
+#include <d3d10_1.h>
+
+typedef HRESULT (WINAPI*D3D10CreateDevice1Func)(
+  IDXGIAdapter *pAdapter,
+  D3D10_DRIVER_TYPE DriverType,
+  HMODULE Software,
+  UINT Flags,
+  D3D10_FEATURE_LEVEL1 HardwareLevel,
+  UINT SDKVersion,
+  ID3D10Device1 **ppDevice
+);
+
+typedef HRESULT(WINAPI*CreateDXGIFactory1Func)(
+  REFIID riid,
+  void **ppFactory
+);
+
  using namespace std;
 
 void SetSubclass(HWND hWnd, InstanceData* instanceData);
@@ -46,6 +63,9 @@ LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 struct _PlatformData {
   HWND childWindow;
+  ID3D10Device1 *device;
+  ID3D10Texture2D *frontBuffer;
+  ID3D10Texture2D *backBuffer;
 };
 
 bool
@@ -77,14 +97,84 @@ pluginInstanceInit(InstanceData* instanceData)
     return NPERR_OUT_OF_MEMORY_ERROR;
   
   instanceData->platformData->childWindow = NULL;
+  instanceData->platformData->device = NULL;
+  instanceData->platformData->frontBuffer = NULL;
+  instanceData->platformData->backBuffer = NULL;
   return NPERR_NO_ERROR;
 }
 
 void
 pluginInstanceShutdown(InstanceData* instanceData)
 {
+  PlatformData *pd = instanceData->platformData;
+  if (pd->frontBuffer) {
+    pd->frontBuffer->Release();
+  }
+  if (pd->backBuffer) {
+    pd->backBuffer->Release();
+  }
+  if (pd->device) {
+    pd->device->Release();
+  }
   NPN_MemFree(instanceData->platformData);
   instanceData->platformData = 0;
+}
+
+static ID3D10Device1*
+getD3D10Device()
+{
+  ID3D10Device1 *device;
+    
+  HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
+  D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
+      GetProcAddress(d3d10module, "D3D10CreateDevice1");
+
+  if (createD3DDevice) {
+    HMODULE dxgiModule = LoadLibraryA("dxgi.dll");
+    CreateDXGIFactory1Func createDXGIFactory1 = (CreateDXGIFactory1Func)
+        GetProcAddress(dxgiModule, "CreateDXGIFactory1");
+
+    HRESULT hr;
+
+    // Try to use a DXGI 1.1 adapter in order to share resources
+    // across processes.
+    IDXGIAdapter1 *adapter1;
+    if (createDXGIFactory1) {
+      IDXGIFactory1 *factory1;
+      hr = createDXGIFactory1(__uuidof(IDXGIFactory1),
+                              (void**)&factory1);
+
+      if (FAILED(hr) || !factory1) {
+        // Uh-oh
+        return NULL;
+      }
+
+      hr = factory1->EnumAdapters1(0, &adapter1);
+
+      if (SUCCEEDED(hr) && adapter1) {
+        hr = adapter1->CheckInterfaceSupport(__uuidof(ID3D10Device),
+                                             NULL);
+        if (FAILED(hr)) {
+            adapter1 = NULL;
+        }
+      }
+      factory1->Release();
+    }
+
+    hr = createD3DDevice(
+          adapter1, 
+          D3D10_DRIVER_TYPE_HARDWARE,
+          NULL,
+          D3D10_CREATE_DEVICE_BGRA_SUPPORT |
+          D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+          D3D10_FEATURE_LEVEL_10_0,
+          D3D10_1_SDK_VERSION,
+          &device);
+
+    adapter1->Release();
+  }
+
+  return device;
 }
 
 void
@@ -92,6 +182,54 @@ pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
 {
   instanceData->window = *newWindow;
   NPP npp = instanceData->npp;
+
+  if (instanceData->asyncDrawing == AD_DXGI) {
+    if (instanceData->frontBuffer &&
+        instanceData->frontBuffer->size.width == newWindow->width &&
+        instanceData->frontBuffer->size.height == newWindow->height) {
+          return;
+    }
+    if (instanceData->frontBuffer) {
+      instanceData->platformData->frontBuffer->Release();
+      instanceData->platformData->frontBuffer = NULL;
+      NPN_FinalizeAsyncSurface(npp, instanceData->frontBuffer);
+      NPN_MemFree(instanceData->frontBuffer);
+    }
+    if (instanceData->backBuffer) {
+      instanceData->platformData->backBuffer->Release();
+      instanceData->platformData->backBuffer = NULL;
+      NPN_FinalizeAsyncSurface(npp, instanceData->backBuffer);
+      NPN_MemFree(instanceData->backBuffer);
+    }
+
+    if (!instanceData->platformData->device) {
+      instanceData->platformData->device = getD3D10Device();
+    }
+
+    ID3D10Device1 *dev = instanceData->platformData->device;
+
+    if (!dev) {
+      return;
+    }
+
+    instanceData->frontBuffer = (NPAsyncSurface*)NPN_MemAlloc(sizeof(NPAsyncSurface));
+    instanceData->backBuffer = (NPAsyncSurface*)NPN_MemAlloc(sizeof(NPAsyncSurface));
+
+    NPSize size;
+    size.width = newWindow->width;
+    size.height = newWindow->height;
+
+    memset(instanceData->frontBuffer, 0, sizeof(NPAsyncSurface));
+    memset(instanceData->backBuffer, 0, sizeof(NPAsyncSurface));
+
+    NPN_InitAsyncSurface(npp, &size, NPImageFormatBGRA32, NULL, instanceData->frontBuffer);
+    NPN_InitAsyncSurface(npp, &size, NPImageFormatBGRA32, NULL, instanceData->backBuffer);
+
+    dev->OpenSharedResource(instanceData->frontBuffer->sharedHandle, __uuidof(ID3D10Texture2D), (void**)&instanceData->platformData->frontBuffer);
+    dev->OpenSharedResource(instanceData->backBuffer->sharedHandle, __uuidof(ID3D10Texture2D), (void**)&instanceData->platformData->backBuffer);
+
+    pluginDrawAsyncDxgiColor(instanceData);
+  }
 }
 
 #define CHILD_WIDGET_SIZE 10
@@ -574,4 +712,46 @@ void pluginDoInternalConsistencyCheck(InstanceData* instanceData, string& error)
     checkEquals(childRect.right, childRect.left + CHILD_WIDGET_SIZE, "Child widget width", error);
     checkEquals(childRect.bottom, childRect.top + CHILD_WIDGET_SIZE, "Child widget height", error);
   }
+}
+
+void
+pluginDrawAsyncDxgiColor(InstanceData* id)
+{
+  PlatformData *pd = id->platformData;
+
+  ID3D10Device1 *dev = pd->device;
+
+  IDXGIKeyedMutex *mutex;
+  pd->backBuffer->QueryInterface(&mutex);
+
+  mutex->AcquireSync(0, INFINITE);
+  ID3D10RenderTargetView *rtView;
+  dev->CreateRenderTargetView(pd->backBuffer, NULL, &rtView);
+
+  PRUint32 rgba = id->scriptableObject->drawColor;
+
+  unsigned char subpixels[4];
+  subpixels[0] = rgba & 0xFF;
+  subpixels[1] = (rgba & 0xFF00) >> 8;
+  subpixels[2] = (rgba & 0xFF0000) >> 16;
+  subpixels[3] = (rgba & 0xFF000000) >> 24;
+
+  float color[4];
+  color[2] = float(subpixels[3] * subpixels[0]) / 0xFE01;
+  color[1] = float(subpixels[3] * subpixels[1]) / 0xFE01;
+  color[0] = float(subpixels[3] * subpixels[2]) / 0xFE01;
+  color[3] = float(subpixels[3]) / 0xFF;
+  dev->ClearRenderTargetView(rtView, color);
+  rtView->Release();
+
+  mutex->ReleaseSync(0);
+  mutex->Release();
+
+  NPN_SetCurrentAsyncSurface(id->npp, id->backBuffer, NULL);
+  NPAsyncSurface *oldFront = id->frontBuffer;
+  id->frontBuffer = id->backBuffer;
+  id->backBuffer = oldFront;
+  ID3D10Texture2D *oldFrontT = pd->frontBuffer;
+  pd->frontBuffer = pd->backBuffer;
+  pd->backBuffer = oldFrontT;
 }
