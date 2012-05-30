@@ -277,6 +277,12 @@ public:
   }
 
   void Invalidate();
+
+  void RequestFullScreen();
+  void ExitFullScreen();
+
+  // Called from AndroidJNI when we removed the fullscreen view.
+  static void ExitFullScreen(jobject view);
 #endif
   
 private:
@@ -293,10 +299,13 @@ private:
 #ifdef MOZ_WIDGET_ANDROID
   void SendSize(int width, int height);
 
-  bool AddPluginView(const gfxRect& aRect);
+  bool AddPluginView(const gfxRect& aRect = gfxRect(0, 0, 0, 0));
   void RemovePluginView();
 
   bool mInverted;
+  bool mFullScreen;
+
+  void* mJavaView;
 
   // For kOpenGL_ANPDrawingModel
   nsRefPtr<mozilla::AndroidMediaLayer> mLayer;
