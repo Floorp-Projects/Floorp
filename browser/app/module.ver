@@ -1,5 +1,5 @@
 WIN32_MODULE_COMPANYNAME=Mozilla Corporation
-WIN32_MODULE_COPYRIGHT=©Firefox and Mozilla Developers, according to the MPL 1.1/GPL 2.0/LGPL 2.1 licenses, as applicable.
+WIN32_MODULE_COPYRIGHT=©Firefox and Mozilla Developers; available under the MPL 2 license.
 WIN32_MODULE_PRODUCTVERSION=@MOZ_APP_WINVERSION@
 WIN32_MODULE_PRODUCTVERSION_STRING=@MOZ_APP_VERSION@
 WIN32_MODULE_TRADEMARKS=Firefox is a Trademark of The Mozilla Foundation.
