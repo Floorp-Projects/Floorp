@@ -45,8 +45,6 @@ using namespace mozilla;
 static const PRUint32 kRescheduleLimit = 3;
 // Max number of retries for every entry of pinned app.
 static const PRUint32 kPinnedEntryRetriesLimit = 3;
-// Maximum number of parallel items loads
-static const PRUint32 kParallelLoadLimit = 15;
 
 #if defined(PR_LOGGING)
 //
@@ -417,6 +415,8 @@ nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
 {
     LOG(("done fetching offline item [status=%x]\n", aStatus));
 
+    mState = nsIDOMLoadStatus::LOADED;
+
     if (mBytesRead == 0 && aStatus == NS_OK) {
         // we didn't need to read (because LOAD_ONLY_IF_MODIFIED was
         // specified), but the object should report loadedSize as if it
@@ -439,15 +439,7 @@ nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
 NS_IMETHODIMP
 nsOfflineCacheUpdateItem::Run()
 {
-    // Set mState to LOADED here rather than in OnStopRequest to prevent
-    // race condition when checking state of all mItems in ProcessNextURI().
-    // If state would have been set in OnStopRequest we could mistakenly
-    // take this item as already finished and finish the update process too
-    // early when ProcessNextURI() would get called between OnStopRequest()
-    // and Run() of this item.  Finish() would then have been called twice.
-    mState = nsIDOMLoadStatus::LOADED;
-
-    mUpdate->LoadCompleted(this);
+    mUpdate->LoadCompleted();
 
     return NS_OK;
 }
@@ -607,25 +599,6 @@ nsOfflineCacheUpdateItem::GetRequestSucceeded(bool * succeeded)
     return NS_OK;
 }
 
-bool
-nsOfflineCacheUpdateItem::IsScheduled()
-{
-    return mState == nsIDOMLoadStatus::UNINITIALIZED;
-}
-
-bool
-nsOfflineCacheUpdateItem::IsInProgress()
-{
-    return mState == nsIDOMLoadStatus::REQUESTED ||
-           mState == nsIDOMLoadStatus::RECEIVING;
-}
-
-bool
-nsOfflineCacheUpdateItem::IsCompleted()
-{
-    return mState == nsIDOMLoadStatus::LOADED;
-}
-
 NS_IMETHODIMP
 nsOfflineCacheUpdateItem::GetStatus(PRUint16 *aStatus)
 {
@@ -736,7 +709,6 @@ nsOfflineManifestItem::ReadManifest(nsIInputStream *aInputStream,
 
             if (NS_FAILED(rv)) {
                 LOG(("HandleManifestLine failed with 0x%08x", rv));
-                *aBytesConsumed = 0; // Avoid assertion failure in stream tee
                 return NS_ERROR_ABORT;
             }
 
@@ -1124,10 +1096,9 @@ nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest,
 // nsOfflineCacheUpdate::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS3(nsOfflineCacheUpdate,
+NS_IMPL_ISUPPORTS2(nsOfflineCacheUpdate,
                    nsIOfflineCacheUpdateObserver,
-                   nsIOfflineCacheUpdate,
-                   nsIRunnable)
+                   nsIOfflineCacheUpdate)
 
 //-----------------------------------------------------------------------------
 // nsOfflineCacheUpdate <public>
@@ -1140,7 +1111,7 @@ nsOfflineCacheUpdate::nsOfflineCacheUpdate()
     , mPartialUpdate(false)
     , mSucceeded(true)
     , mObsolete(false)
-    , mItemsInProgress(0)
+    , mCurrentItem(-1)
     , mRescheduleCount(0)
     , mPinnedEntryRetriesCount(0)
     , mPinned(false)
@@ -1346,7 +1317,7 @@ nsOfflineCacheUpdate::HandleManifest(bool *aDoUpdate)
 }
 
 void
-nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
+nsOfflineCacheUpdate::LoadCompleted()
 {
     nsresult rv;
 
@@ -1365,8 +1336,6 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
 
         NS_ASSERTION(mManifestItem,
                      "Must have a manifest item in STATE_CHECKING.");
-        NS_ASSERTION(mManifestItem == aItem,
-                     "Unexpected aItem in nsOfflineCacheUpdate::LoadCompleted");
 
         // A 404 or 410 is interpreted as an intentional removal of
         // the manifest file, rather than a transient server error.
@@ -1434,21 +1403,21 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
     }
 
     // Normal load finished.
-    if (mItemsInProgress) // Just to be safe here!
-      --mItemsInProgress;
+
+    nsRefPtr<nsOfflineCacheUpdateItem> item = mItems[mCurrentItem];
 
     bool succeeded;
-    rv = aItem->GetRequestSucceeded(&succeeded);
+    rv = item->GetRequestSucceeded(&succeeded);
 
-    if (mPinned && NS_SUCCEEDED(rv) && succeeded) {
+    if (mPinned) {
         PRUint32 dummy_cache_type;
-        rv = mApplicationCache->GetTypes(aItem->mCacheKey, &dummy_cache_type);
+        rv = mApplicationCache->GetTypes(item->mCacheKey, &dummy_cache_type);
         bool item_doomed = NS_FAILED(rv); // can not find it? -> doomed
 
         if (item_doomed &&
             mPinnedEntryRetriesCount < kPinnedEntryRetriesLimit &&
-            (aItem->mItemType & (nsIApplicationCache::ITEM_EXPLICIT |
-                                 nsIApplicationCache::ITEM_FALLBACK))) {
+            (item->mItemType & (nsIApplicationCache::ITEM_EXPLICIT |
+                                nsIApplicationCache::ITEM_FALLBACK))) {
             rv = EvictOneNonPinned();
             if (NS_FAILED(rv)) {
                 mSucceeded = false;
@@ -1457,9 +1426,7 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
                 return;
             }
 
-            // This reverts the item state to UNINITIALIZED that makes it to
-            // be scheduled for download again.
-            rv = aItem->Cancel();
+            rv = item->Cancel();
             if (NS_FAILED(rv)) {
                 mSucceeded = false;
                 NotifyState(nsIOfflineCacheUpdateObserver::STATE_ERROR);
@@ -1468,29 +1435,26 @@ nsOfflineCacheUpdate::LoadCompleted(nsOfflineCacheUpdateItem *aItem)
             }
 
             mPinnedEntryRetriesCount++;
-
-            // Retry this item.
+            // Retry current item, so mCurrentItem is not advanced.
             ProcessNextURI();
             return;
         }
     }
 
-    // According to parallelism this may imply more pinned retries count,
-    // but that is not critical, since at one moment the algoritm will
-    // stop anyway.  Also, this code may soon be completely removed
-    // after we have a separate storage for pinned apps.
+    // Advance to next item.
+    mCurrentItem++;
     mPinnedEntryRetriesCount = 0;
 
     // Check for failures.  3XX, 4XX and 5XX errors on items explicitly
     // listed in the manifest will cause the update to fail.
     if (NS_FAILED(rv) || !succeeded) {
-        if (aItem->mItemType &
+        if (item->mItemType &
             (nsIApplicationCache::ITEM_EXPLICIT |
              nsIApplicationCache::ITEM_FALLBACK)) {
             mSucceeded = false;
         }
     } else {
-        rv = mApplicationCache->MarkEntry(aItem->mCacheKey, aItem->mItemType);
+        rv = mApplicationCache->MarkEntry(item->mCacheKey, item->mItemType);
         if (NS_FAILED(rv)) {
             mSucceeded = false;
         }
@@ -1567,7 +1531,7 @@ nsOfflineCacheUpdate::Begin()
     // Keep the object alive through a ProcessNextURI()/Finish() call.
     nsCOMPtr<nsIOfflineCacheUpdate> kungFuDeathGrip(this);
 
-    mItemsInProgress = 0;
+    mCurrentItem = 0;
 
     if (mPartialUpdate) {
         mState = STATE_DOWNLOADING;
@@ -1593,7 +1557,7 @@ nsOfflineCacheUpdate::Begin()
 
     nsresult rv = mManifestItem->OpenChannel();
     if (NS_FAILED(rv)) {
-        LoadCompleted(mManifestItem);
+        LoadCompleted();
     }
 
     return NS_OK;
@@ -1607,12 +1571,10 @@ nsOfflineCacheUpdate::Cancel()
     mState = STATE_CANCELLED;
     mSucceeded = false;
 
-    // Cancel all running downloads
-    for (PRUint32 i = 0; i < mItems.Length(); ++i) {
-        nsOfflineCacheUpdateItem * item = mItems[i];
-
-        if (item->IsInProgress())
-            item->Cancel();
+    if (mCurrentItem >= 0 &&
+        mCurrentItem < static_cast<PRInt32>(mItems.Length())) {
+        // Load might be running
+        mItems[mCurrentItem]->Cancel();
     }
 
     return NS_OK;
@@ -1672,29 +1634,13 @@ nsOfflineCacheUpdate::ProcessNextURI()
     // Keep the object alive through a Finish() call.
     nsCOMPtr<nsIOfflineCacheUpdate> kungFuDeathGrip(this);
 
-    LOG(("nsOfflineCacheUpdate::ProcessNextURI [%p, inprogress=%d, numItems=%d]",
-         this, mItemsInProgress, mItems.Length()));
+    LOG(("nsOfflineCacheUpdate::ProcessNextURI [%p, current=%d, numItems=%d]",
+         this, mCurrentItem, mItems.Length()));
 
     NS_ASSERTION(mState == STATE_DOWNLOADING,
                  "ProcessNextURI should only be called from the DOWNLOADING state");
 
-    nsOfflineCacheUpdateItem * runItem = nsnull;
-    PRUint32 completedItems = 0;
-    for (PRUint32 i = 0; i < mItems.Length(); ++i) {
-        nsOfflineCacheUpdateItem * item = mItems[i];
-
-        if (item->IsScheduled()) {
-            runItem = item;
-            break;
-        }
-
-        if (item->IsCompleted())
-            ++completedItems;
-    }
-
-    if (completedItems == mItems.Length()) {
-        LOG(("nsOfflineCacheUpdate::ProcessNextURI [%p]: all items loaded", this));
-
+    if (mCurrentItem >= static_cast<PRInt32>(mItems.Length())) {
         if (mPartialUpdate) {
             return Finish();
         } else {
@@ -1714,38 +1660,23 @@ nsOfflineCacheUpdate::ProcessNextURI()
         }
     }
 
-    if (!runItem) {
-        LOG(("nsOfflineCacheUpdate::ProcessNextURI [%p]:"
-             " No more items to include in parallel load", this));
-        return NS_OK;
-    }
-
 #if defined(PR_LOGGING)
     if (LOG_ENABLED()) {
         nsCAutoString spec;
-        runItem->mURI->GetSpec(spec);
+        mItems[mCurrentItem]->mURI->GetSpec(spec);
         LOG(("%p: Opening channel for %s", this, spec.get()));
     }
 #endif
 
-    ++mItemsInProgress;
     NotifyState(nsIOfflineCacheUpdateObserver::STATE_ITEMSTARTED);
 
-    nsresult rv = runItem->OpenChannel();
+    nsresult rv = mItems[mCurrentItem]->OpenChannel();
     if (NS_FAILED(rv)) {
-        LoadCompleted(runItem);
+        LoadCompleted();
         return rv;
     }
 
-    if (mItemsInProgress >= kParallelLoadLimit) {
-        LOG(("nsOfflineCacheUpdate::ProcessNextURI [%p]:"
-             " At parallel load limit", this));
-        return NS_OK;
-    }
-
-    // This calls this method again via a post triggering
-    // a parallel item load
-    return NS_DispatchToCurrentThread(this);
+    return NS_OK;
 }
 
 nsresult
@@ -2214,15 +2145,4 @@ NS_IMETHODIMP
 nsOfflineCacheUpdate::ApplicationCacheAvailable(nsIApplicationCache *applicationCache)
 {
     return AssociateDocuments(applicationCache);
-}
-
-//-----------------------------------------------------------------------------
-// nsOfflineCacheUpdate::nsIRunable
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsOfflineCacheUpdate::Run()
-{
-    ProcessNextURI();
-    return NS_OK;
 }
