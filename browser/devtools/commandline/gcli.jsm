@@ -6097,6 +6097,12 @@ Output.prototype.toDom = function(element) {
     util.setContents(node, output.toString());
   }
 
+  // Make sure that links open in a new window.
+  var links = node.querySelectorAll('*[href]');
+  for (var i = 0; i < links.length; i++) {
+    links[i].setAttribute('target', '_blank');
+  }
+
   element.appendChild(node);
 };
 
