@@ -128,7 +128,8 @@ ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
 
 BEGIN_TEST(testDebugger_throwHook)
 {
-    uint32_t newopts = JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS;
+    uint32_t newopts =
+        JS_GetOptions(cx) | JSOPTION_METHODJIT | JSOPTION_METHODJIT_ALWAYS | JSOPTION_ALLOW_XML;
     uint32_t oldopts = JS_SetOptions(cx, newopts);
 
     CHECK(JS_SetThrowHook(rt, ThrowHook, NULL));

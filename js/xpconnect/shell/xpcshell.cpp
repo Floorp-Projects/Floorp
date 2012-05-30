@@ -683,6 +683,7 @@ static const struct JSOption {
     {"relimit",         JSOPTION_RELIMIT},
     {"strict",          JSOPTION_STRICT},
     {"werror",          JSOPTION_WERROR},
+    {"allow_xml",       JSOPTION_ALLOW_XML},
     {"moar_xml",        JSOPTION_MOAR_XML},
     {"strict_mode",     JSOPTION_STRICT_MODE},
 };
@@ -1811,6 +1812,7 @@ main(int argc, char **argv, char **envp)
             return 1;
         }
 
+        JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_ALLOW_XML);
         xpc_LocalizeContext(cx);
 
         nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());

@@ -467,7 +467,7 @@ class TokenStream
     /* Note that the version and hasMoarXML can get out of sync via setMoarXML. */
     JSVersion versionNumber() const { return VersionNumber(version); }
     JSVersion versionWithFlags() const { return version; }
-    bool allowsXML() const { return !isStrictMode(); }
+    bool allowsXML() const { return allowXML && !isStrictMode(); }
     bool hasMoarXML() const { return moarXML || VersionShouldParseXML(versionNumber()); }
     void setMoarXML(bool enabled) { moarXML = enabled; }
 
@@ -797,6 +797,7 @@ class TokenStream
     bool                maybeEOL[256];       /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
+    bool                allowXML;       /* see JSOPTION_ALLOW_XML */
     bool                moarXML;        /* see JSOPTION_MOAR_XML */
     JSContext           *const cx;
     JSPrincipals        *const originPrincipals;

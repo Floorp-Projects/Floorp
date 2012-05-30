@@ -139,6 +139,7 @@ TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *origin
     listenerTSData(),
     tokenbuf(cx),
     version(v),
+    allowXML(VersionHasAllowXML(v)),
     moarXML(VersionHasMoarXML(v)),
     cx(cx),
     originPrincipals(JSScript::normalizeOriginPrincipals(prin, originPrin)),
