@@ -149,15 +149,15 @@ nsMenuBarFrame::ToggleMenuActiveState()
     // if the menu bar is already selected (eg. mouseover), deselect it
     if (mCurrentMenu)
       mCurrentMenu->SelectMenu(false);
-    
-    // Activate the menu bar
-    SetActive(true);
 
     // Set the active menu to be the top left item (e.g., the File menu).
     // We use an attribute called "menuactive" to track the current 
     // active menu.
     nsMenuFrame* firstFrame = nsXULPopupManager::GetNextMenuItem(this, nsnull, false);
     if (firstFrame) {
+      // Activate the menu bar
+      SetActive(true);
+
 #ifdef MOZ_WIDGET_GTK2
       firstFrame->OpenMenu(true);
 #else

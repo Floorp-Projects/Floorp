@@ -11,10 +11,10 @@ const checkListener = {
   pendingCount: 0,
 
   onUpdateAvailable: function onUpdateAvailable(aAddon, aInstall) {
-    for (var i = 0; i < ADDONS.length; i++) {
-      if (ADDONS[i].id == aAddon.id) {
-        ADDONS[i].newInstall = aInstall;
-        return;
+    for (let currentAddon of ADDONS) {
+      if (currentAddon.id == aAddon.id) {
+       currentAddon.newInstall = aInstall;
+       return;
       }
     }
   },

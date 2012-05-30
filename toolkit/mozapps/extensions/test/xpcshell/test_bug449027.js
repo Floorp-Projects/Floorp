@@ -400,8 +400,8 @@ var WindowWatcher = {
 
     gNewBlocks = [];
     var list = args.list;
-    for (var i = 0; i < list.length; i++)
-      gNewBlocks.push(list[i].name + " " + list[i].version);
+    for (let listItem of list)
+      gNewBlocks.push(listItem.name + " " + listItem.version);
 
     // Call the callback after the blocklist has finished up
     do_timeout(0, gCallback);
@@ -515,8 +515,8 @@ function run_test() {
   dump("Setting up tests\n");
   // Rather than keeping lots of identical add-ons in version control, just
   // write them into the profile.
-  for (var i = 0; i < ADDONS.length; i++)
-    create_addon(ADDONS[i]);
+  for (let addon of ADDONS)
+    create_addon(addon);
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
   startupManager();

@@ -1298,8 +1298,7 @@ var AddonRepository = {
 
     function findMatchingAppRange(aNodes) {
       let toolkitAppRange = null;
-      for (let i = 0; i < aNodes.length; i++) {
-        let node = aNodes[i];
+      for (let node of aNodes) {
         let appID = this._getDescendantTextContent(node, "appID");
         if (appID != Services.appinfo.ID && appID != TOOLKIT_ID)
           continue;
@@ -1470,8 +1469,7 @@ var AddonRepository = {
                                                                      aCompatOverrides,
                                                                      aAppVersion,
                                                                      aPlatformVersion) {
-    for (let i = 0; i < aCompatOverrides.length; i++) {
-      let override = aCompatOverrides[i];
+    for (let override of aCompatOverrides) {
 
       let appVersion = null;
       if (override.appID == TOOLKIT_ID)

@@ -1195,9 +1195,9 @@ var AddonManagerInternal = {
     if (!aUrl || !aMimetype || !aCallback)
       throw new TypeError("Invalid arguments");
 
-    for (let i = 0; i < this.providers.length; i++) {
-      if (callProvider(this.providers[i], "supportsMimetype", false, aMimetype)) {
-        callProvider(this.providers[i], "getInstallForURL", null,
+    for (let provider of this.providers) {
+      if (callProvider(provider, "supportsMimetype", false, aMimetype)) {
+        callProvider(provider, "getInstallForURL", null,
                      aUrl, aHash, aName, aIconURL, aVersion, aLoadGroup,
                      function(aInstall) {
           safeCall(aCallback, aInstall);
@@ -1289,9 +1289,9 @@ var AddonManagerInternal = {
    * @return true if installation is enabled for the mimetype
    */
   isInstallEnabled: function AMI_isInstallEnabled(aMimetype) {
-    for (let i = 0; i < this.providers.length; i++) {
-      if (callProvider(this.providers[i], "supportsMimetype", false, aMimetype) &&
-          callProvider(this.providers[i], "isInstallEnabled"))
+    for (let provider of this.providers) {
+      if (callProvider(provider, "supportsMimetype", false, aMimetype) &&
+          callProvider(provider, "isInstallEnabled"))
         return true;
     }
     return false;
@@ -1308,9 +1308,9 @@ var AddonManagerInternal = {
    * @return true if the source is allowed to install this mimetype
    */
   isInstallAllowed: function AMI_isInstallAllowed(aMimetype, aURI) {
-    for (let i = 0; i < this.providers.length; i++) {
-      if (callProvider(this.providers[i], "supportsMimetype", false, aMimetype) &&
-          callProvider(this.providers[i], "isInstallAllowed", null, aURI))
+    for (let provider of this.providers) {
+      if (callProvider(provider, "supportsMimetype", false, aMimetype) &&
+          callProvider(provider, "isInstallAllowed", null, aURI))
         return true;
     }
     return false;

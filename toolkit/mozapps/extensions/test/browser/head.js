@@ -218,17 +218,17 @@ function check_all_in_list(aManager, aIds, aIgnoreExtras) {
     node = node.nextSibling;
   }
 
-  for (var i = 0; i < aIds.length; i++) {
-    if (inlist.indexOf(aIds[i]) == -1)
-      ok(false, "Should find " + aIds[i] + " in the list");
+  for (let id of aIds) {
+    if (inlist.indexOf(id) == -1)
+      ok(false, "Should find " + id + " in the list");
   }
 
   if (aIgnoreExtras)
     return;
 
-  for (i = 0; i < inlist.length; i++) {
-    if (aIds.indexOf(inlist[i]) == -1)
-      ok(false, "Shouldn't have seen " + inlist[i] + " in the list");
+  for (let inlistItem of inlist) {
+    if (aIds.indexOf(inlistItem) == -1)
+      ok(false, "Shouldn't have seen " + inlistItem + " in the list");
   }
 }
 
@@ -756,9 +756,9 @@ MockProvider.prototype = {
    *         A callback to pass the Addon to
    */
   getAddonByID: function MP_getAddon(aId, aCallback) {
-    for (let i = 0; i < this.addons.length; i++) {
-      if (this.addons[i].id == aId) {
-        this._delayCallback(aCallback, this.addons[i]);
+    for (let addon of this.addons) {
+      if (addon.id == aId) {
+        this._delayCallback(aCallback, addon);
         return;
       }
     }
