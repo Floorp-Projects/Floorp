@@ -644,9 +644,9 @@ private:
                                    Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
     bool inlineCallHelper(uint32_t argc, bool callingNew, FrameSize &callFrameSize);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
-    void jsop_getgname(uint32_t index);
+    bool jsop_getgname(uint32_t index);
     void jsop_getgname_slow(uint32_t index);
-    void jsop_setgname(PropertyName *name, bool popGuaranteed);
+    bool jsop_setgname(PropertyName *name, bool popGuaranteed);
     void jsop_setgname_slow(PropertyName *name);
     void jsop_bindgname();
     void jsop_setelem_slow();
