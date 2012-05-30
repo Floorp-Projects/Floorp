@@ -221,7 +221,7 @@ bool ParseAlternateSetTable(const uint8_t *data, const size_t length,
       return OTS_FAILURE();
     }
     if (alternate >= num_glyphs) {
-      OTS_WARNING("too large alternate: %u", alternate);
+      OTS_WARNING("too arge alternate: %u", alternate);
       return OTS_FAILURE();
     }
   }
@@ -608,9 +608,7 @@ bool ots_gsub_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       !table.ReadU16(&offset_script_list) ||
       !table.ReadU16(&offset_feature_list) ||
       !table.ReadU16(&offset_lookup_list)) {
-    OTS_WARNING("incomplete GSUB table");
-    DROP_THIS_TABLE;
-    return true;
+    return OTS_FAILURE();
   }
 
   if (version != 0x00010000) {
@@ -633,7 +631,7 @@ bool ots_gsub_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
                             length - offset_lookup_list,
                             &kGsubLookupSubtableParser,
                             &gsub->num_lookups)) {
-    OTS_WARNING("failed to parse lookup list table");
+    OTS_WARNING("faild to parse lookup list table");
     DROP_THIS_TABLE;
     return true;
   }
@@ -642,14 +640,14 @@ bool ots_gsub_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   if (!ParseFeatureListTable(data + offset_feature_list,
                              length - offset_feature_list, gsub->num_lookups,
                              &num_features)) {
-    OTS_WARNING("failed to parse feature list table");
+    OTS_WARNING("faild to parse feature list table");
     DROP_THIS_TABLE;
     return true;
   }
 
   if (!ParseScriptListTable(data + offset_script_list,
                             length - offset_script_list, num_features)) {
-    OTS_WARNING("failed to parse script list table");
+    OTS_WARNING("faild to parse script list table");
     DROP_THIS_TABLE;
     return true;
   }
