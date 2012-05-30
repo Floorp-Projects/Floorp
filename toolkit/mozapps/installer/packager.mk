@@ -487,9 +487,12 @@ OMNIJAR_FILES	= \
   update.locale \
   $(NULL)
 
+# defaults/pref/channel-prefs.js is handled separate from other prefs due to
+# bug 756325
 NON_OMNIJAR_FILES += \
   chrome/icons/\* \
   $(PREF_DIR)/channel-prefs.js \
+  defaults/pref/channel-prefs.js \
   res/cursors/\* \
   res/MainMenu.nib/\* \
   $(NULL)
