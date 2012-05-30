@@ -15,8 +15,35 @@
 namespace mozilla {
 namespace dom {
 
+// IID for the TestNonCastableInterface
+#define NS_TEST_NONCASTABLE_INTERFACE_IID \
+{ 0x7c9f8ee2, 0xc9bf, 0x46ca, \
+ { 0xa0, 0xa9, 0x03, 0xa8, 0xd6, 0x30, 0x0e, 0xde } }
+
+class TestNonCastableInterface : public nsISupports,
+                                 public nsWrapperCache
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEST_NONCASTABLE_INTERFACE_IID)
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+};
+
+// IID for the TestExternalInterface
+#define NS_TEST_EXTERNAL_INTERFACE_IID \
+{ 0xd5ba0c99, 0x9b1d, 0x4e71, \
+ { 0x8a, 0x94, 0x56, 0x38, 0x6c, 0xa3, 0xda, 0x3d } }
+class TestExternalInterface : public nsISupports
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEST_EXTERNAL_INTERFACE_IID)
+  NS_DECL_ISUPPORTS
+};
+
 class TestInterface : public nsISupports,
-		      public nsWrapperCache
+                      public nsWrapperCache
 {
 public:
   NS_DECL_ISUPPORTS
@@ -84,6 +111,30 @@ public:
   void SetNonNullSelf(TestInterface&, ErrorResult&);
   already_AddRefed<TestInterface> GetNullableSelf(ErrorResult&);
   void SetNullableSelf(TestInterface*, ErrorResult&);
+
+  already_AddRefed<TestNonCastableInterface> ReceiveOther(ErrorResult&);
+  already_AddRefed<TestNonCastableInterface> ReceiveNullableOther(ErrorResult&);
+  TestNonCastableInterface* ReceiveWeakOther(ErrorResult&);
+  TestNonCastableInterface* ReceiveWeakNullableOther(ErrorResult&);
+  void PassOther(TestNonCastableInterface&, ErrorResult&);
+  void PassOther2(NonNull<TestNonCastableInterface>&, ErrorResult&);
+  void PassNullableOther(TestNonCastableInterface*, ErrorResult&);
+  already_AddRefed<TestNonCastableInterface> GetNonNullOther(ErrorResult&);
+  void SetNonNullOther(TestNonCastableInterface&, ErrorResult&);
+  already_AddRefed<TestNonCastableInterface> GetNullableOther(ErrorResult&);
+  void SetNullableOther(TestNonCastableInterface*, ErrorResult&);
+
+  already_AddRefed<TestExternalInterface> ReceiveExternal(ErrorResult&);
+  already_AddRefed<TestExternalInterface> ReceiveNullableExternal(ErrorResult&);
+  TestExternalInterface* ReceiveWeakExternal(ErrorResult&);
+  TestExternalInterface* ReceiveWeakNullableExternal(ErrorResult&);
+  void PassExternal(TestExternalInterface*, ErrorResult&);
+  void PassExternal2(TestExternalInterface*, ErrorResult&);
+  void PassNullableExternal(TestExternalInterface*, ErrorResult&);
+  already_AddRefed<TestExternalInterface> GetNonNullExternal(ErrorResult&);
+  void SetNonNullExternal(TestExternalInterface*, ErrorResult&);
+  already_AddRefed<TestExternalInterface> GetNullableExternal(ErrorResult&);
+  void SetNullableExternal(TestExternalInterface*, ErrorResult&);
 
   void ReceiveSequence(nsTArray<int32_t>&, ErrorResult&);
   void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&, ErrorResult&);
