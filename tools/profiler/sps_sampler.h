@@ -277,6 +277,25 @@ inline void mozilla_sampler_call_exit(void *aHandle)
   stack->pop();
 }
 
+inline void mozilla_sampler_call_exit_no_handle()
+{
+  // check if we've been initialized to avoid calling pthread_getspecific
+  // with a null tlsStack which will return undefined results.
+  if (!stack_key_initialized)
+    return;
+
+  ProfileStack *stack = tlsStack.get();
+  // we can't infer whether 'stack' has been initialized
+  // based on the value of stack_key_intiailized because
+  // 'stack' is only intialized when a thread is being
+  // profiled.
+  if (!stack) {
+    return;
+  }
+
+  stack->pop();
+}
+
 inline void mozilla_sampler_add_marker(const char *aMarker)
 {
   ProfileStack *stack = tlsStack.get();
