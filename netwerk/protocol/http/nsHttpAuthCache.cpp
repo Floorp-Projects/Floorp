@@ -243,9 +243,9 @@ nsHttpAuthIdentity::Set(const PRUnichar *domain,
 {
     PRUnichar *newUser, *newPass, *newDomain;
 
-    int domainLen = domain ? nsCRT::strlen(domain) : 0;
-    int userLen   = user   ? nsCRT::strlen(user)   : 0;
-    int passLen   = pass   ? nsCRT::strlen(pass)   : 0; 
+    int domainLen = domain ? NS_strlen(domain) : 0;
+    int userLen   = user   ? NS_strlen(user)   : 0;
+    int passLen   = pass   ? NS_strlen(pass)   : 0; 
 
     int len = userLen + 1 + passLen + 1 + domainLen + 1;
     newUser = (PRUnichar *) malloc(len * sizeof(PRUnichar));

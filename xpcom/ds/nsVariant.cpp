@@ -410,7 +410,7 @@ static nsresult CloneArray(PRUint16 inType, const nsIID* inIID,
                 {
                     if(nsnull == (*(outp++) = (PRUnichar*)
                        nsMemory::Clone(str,
-                        (nsCRT::strlen(str)+1)*sizeof(PRUnichar))))
+                        (NS_strlen(str) + 1) * sizeof(PRUnichar))))
                         goto bad;
                 }
                 else
@@ -1483,7 +1483,7 @@ nsVariant::SetFromWString(nsDiscriminatedUnion* data, const PRUnichar *aValue)
     DATA_SETTER_PROLOGUE(data);
     if(!aValue)
         return NS_ERROR_NULL_POINTER;
-    return SetFromWStringWithSize(data, nsCRT::strlen(aValue), aValue);
+    return SetFromWStringWithSize(data, NS_strlen(aValue), aValue);
 }
 /* static */ nsresult
 nsVariant::SetFromISupports(nsDiscriminatedUnion* data, nsISupports *aValue)
