@@ -166,38 +166,6 @@ ARIAGridAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
 }
 
 NS_IMETHODIMP
-ARIAGridAccessible::GetRowExtentAt(PRInt32 aRow, PRInt32 aColumn,
-                                   PRInt32* aExtentCount)
-{
-  NS_ENSURE_ARG_POINTER(aExtentCount);
-  *aExtentCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG(IsValidRowNColumn(aRow, aColumn));
-
-  *aExtentCount = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ARIAGridAccessible::GetColumnExtentAt(PRInt32 aRow, PRInt32 aColumn,
-                                      PRInt32* aExtentCount)
-{
-  NS_ENSURE_ARG_POINTER(aExtentCount);
-  *aExtentCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG(IsValidRowNColumn(aRow, aColumn));
-
-  *aExtentCount = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ARIAGridAccessible::GetColumnDescription(PRInt32 aColumn,
                                          nsAString& aDescription)
 {
@@ -626,22 +594,6 @@ bool
 ARIAGridAccessible::IsValidColumn(PRInt32 aColumn)
 {
   if (aColumn < 0)
-    return false;
-
-  PRInt32 colCount = 0;
-  GetColumnCount(&colCount);
-  return aColumn < colCount;
-}
-
-bool
-ARIAGridAccessible::IsValidRowNColumn(PRInt32 aRow, PRInt32 aColumn)
-{
-  if (aRow < 0 || aColumn < 0)
-    return false;
-  
-  PRInt32 rowCount = 0;
-  GetRowCount(&rowCount);
-  if (aRow >= rowCount)
     return false;
 
   PRInt32 colCount = 0;
