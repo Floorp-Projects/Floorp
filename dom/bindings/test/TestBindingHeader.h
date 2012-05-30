@@ -172,10 +172,15 @@ public:
   // Sequence types
   void ReceiveSequence(nsTArray<int32_t>&, ErrorResult&);
   void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&, ErrorResult&);
+  void ReceiveSequenceOfNullableInts(nsTArray< Nullable<int32_t> >&, ErrorResult&);
+  void ReceiveNullableSequenceOfNullableInts(Nullable< nsTArray< Nullable<int32_t> > >&, ErrorResult&);
   void PassSequence(const Sequence<int32_t> &, ErrorResult&);
   void PassNullableSequence(const Nullable< Sequence<int32_t> >&, ErrorResult&);
-  // XXXbz is this the right signature????  For all the sequence
-  // "receive" methods here!  Shouldn't we take strong refs?
+  void PassSequenceOfNullableInts(const Sequence<Nullable<int32_t> >&, ErrorResult&);
+  void PassOptionalSequenceOfNullableInts(const Optional<Sequence<Nullable<int32_t> > > &,
+                                          ErrorResult&);
+  void PassOptionalNullableSequenceOfNullableInts(const Optional<Nullable<Sequence<Nullable<int32_t> > > > &,
+                                                  ErrorResult&);
   void ReceiveCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &,
                                      ErrorResult&);
   void ReceiveNullableCastableObjectSequence(nsTArray< nsRefPtr<TestInterface> > &,
@@ -217,6 +222,16 @@ public:
   void PassOptionalArrayBuffer(const Optional<ArrayBuffer>&, ErrorResult&);
   void PassOptionalNullableArrayBuffer(const Optional<ArrayBuffer*>&, ErrorResult&);
   void PassOptionalNullableArrayBufferWithDefaultValue(ArrayBuffer*, ErrorResult&);
+  void PassArrayBufferView(ArrayBufferView&, ErrorResult&);
+  void PassInt8Array(Int8Array&, ErrorResult&);
+  void PassInt16Array(Int16Array&, ErrorResult&);
+  void PassInt32Array(Int32Array&, ErrorResult&);
+  void PassUint8Array(Uint8Array&, ErrorResult&);
+  void PassUint16Array(Uint16Array&, ErrorResult&);
+  void PassUint32Array(Uint32Array&, ErrorResult&);
+  void PassUint8ClampedArray(Uint8ClampedArray&, ErrorResult&);
+  void PassFloat32Array(Float32Array&, ErrorResult&);
+  void PassFloat64Array(Float64Array&, ErrorResult&);
 
   // String types
   void PassString(const nsAString&, ErrorResult&);
