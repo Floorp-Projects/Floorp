@@ -1826,16 +1826,14 @@ class CGArgumentConverter(CGThing):
         replacer = {
             "index" : index,
             "argc" : argc,
-            "argv" : argv,
-            "defaultValue" : "JSVAL_VOID"
+            "argv" : argv
             }
         self.replacementVariables = {
             "declName" : "arg%d" % index,
             "holderName" : ("arg%d" % index) + "_holder"
             }
-        if argument.optional:
-            if argument.defaultValue:
-                replacer["defaultValue"] = convertIDLDefaultValueToJSVal(argument.defaultValue)
+        if argument.optional and argument.defaultValue:
+            replacer["defaultValue"] = convertIDLDefaultValueToJSVal(argument.defaultValue)
             self.replacementVariables["val"] = string.Template(
                 "(${index} < ${argc} ? ${argv}[${index}] : ${defaultValue})"
                 ).substitute(replacer)
