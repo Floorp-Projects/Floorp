@@ -282,7 +282,7 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
            js_InitStringClass(cx, global) &&
            js_InitTypedArrayClasses(cx, global) &&
 #if JS_HAS_XML_SUPPORT
-           js_InitXMLClasses(cx, global) &&
+           (!VersionHasAllowXML(cx->findVersion()) || js_InitXMLClasses(cx, global)) &&
 #endif
 #if JS_HAS_GENERATORS
            js_InitIteratorClasses(cx, global) &&

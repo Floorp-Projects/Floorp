@@ -2730,7 +2730,10 @@ JS_StringToVersion(const char *string);
                                                    option supported for the
                                                    XUL preprocessor and kindred
                                                    beasts. */
-#define JSOPTION_ALLOW_XML      JS_BIT(6)       /* enable E4X syntax (deprecated) */
+#define JSOPTION_ALLOW_XML      JS_BIT(6)       /* enable E4X syntax (deprecated)
+                                                   and define the E4X-related
+                                                   globals: XML, XMLList,
+                                                   Namespace, etc. */
 #define JSOPTION_MOAR_XML       JS_BIT(7)       /* enable E4X even in versions
                                                    that don't normally get it;
                                                    parse <!-- --> as a token,
