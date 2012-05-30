@@ -98,6 +98,11 @@ class CompactBufferReader
         uint32 b3 = readByte();
         return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24);
     }
+    uint16 readFixedUint16() {
+        uint32 b0 = readByte();
+        uint32 b1 = readByte();
+        return b0 | (b1 << 8);
+    }
     uint32 readUnsigned() {
         return readVariableLength();
     }
@@ -159,6 +164,10 @@ class CompactBufferWriter
         writeByte((value >> 8) & 0xFF);
         writeByte((value >> 16) & 0xFF);
         writeByte((value >> 24) & 0xFF);
+    }
+    void writeFixedUint16(uint16 value) {
+        writeByte(value & 0xFF);
+        writeByte(value >> 8);
     }
     size_t length() const {
         return buffer_.length();

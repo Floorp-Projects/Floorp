@@ -978,18 +978,6 @@ class LSafepoint : public TempObject
         return gcSlots_;
     }
 
-    // spillRegs stand for all live registers which are spilled by saveLive.  It
-    // includes gc registers and all live registers not restored by the wrapper.
-    RegisterSet spillRegs() const {
-        RegisterSet wrapper =
-            RegisterSet(GeneralRegisterSet(Registers::WrapperMask),
-                        FloatRegisterSet(FloatRegisters::WrapperMask));
-        RegisterSet spills =
-            RegisterSet::Union(RegisterSet::Intersect(wrapper, liveRegs()),
-                               RegisterSet(gcRegs(), FloatRegisterSet()));
-        return spills;
-    }
-
 #ifdef JS_NUNBOX32
     bool addValueSlot(uint32 slot) {
         return valueSlots_.append(slot);

@@ -291,7 +291,7 @@ CodeGeneratorShared::encodeSafepoint(LSafepoint *safepoint)
     JS_ASSERT(safepoint->osiCallPointOffset());
 
     safepoints_.writeOsiCallPointOffset(safepoint->osiCallPointOffset());
-    safepoints_.writeGcRegs(safepoint->gcRegs(), safepoint->spillRegs().gprs());
+    safepoints_.writeGcRegs(safepoint->gcRegs(), safepoint->liveRegs().gprs());
     safepoints_.writeGcSlots(safepoint->gcSlots().length(), safepoint->gcSlots().begin());
 #ifdef JS_NUNBOX32
     safepoints_.writeValueSlots(safepoint->valueSlots().length(), safepoint->valueSlots().begin());

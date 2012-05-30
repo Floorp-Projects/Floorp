@@ -52,6 +52,7 @@ namespace js {
 namespace ion {
 
 struct SafepointNunboxEntry;
+class LAllocation;
 
 static const uint32 INVALID_SAFEPOINT_OFFSET = uint32(-1);
 
@@ -89,6 +90,7 @@ class SafepointReader
     uint32 osiCallPointOffset_;
     GeneralRegisterSet gcSpills_;
     GeneralRegisterSet allSpills_;
+    uint32 nunboxSlotsRemaining_;
 
   private:
     void advanceFromGcRegs();
@@ -115,8 +117,12 @@ class SafepointReader
     // Returns true if a slot was read, false if there are no more slots.
     bool getGcSlot(uint32 *slot);
 
-    // Returns true if a slot was read, false if there are no more slots.
+    // Returns true if a slot was read, false if there are no more value slots.
     bool getValueSlot(uint32 *slot);
+
+    // Returns true if a nunbox slot was read, false if there are no more
+    // nunbox slots.
+    bool getNunboxSlot(LAllocation *type, LAllocation *payload);
 };
 
 } // namespace ion
