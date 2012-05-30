@@ -1180,6 +1180,8 @@ js_CopyErrorObject(JSContext *cx, HandleObject errobj, HandleObject scope)
     if (!proto)
         return NULL;
     JSObject *copyobj = NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL);
+    if (!copyobj)
+        return NULL;
     SetExnPrivate(cx, copyobj, copy);
     autoFree.p = NULL;
     return copyobj;
