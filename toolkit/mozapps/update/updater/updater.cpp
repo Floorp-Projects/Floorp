@@ -2428,7 +2428,10 @@ int NS_main(int argc, NS_tchar **argv)
       // we need to manually start the PostUpdate process from the
       // current user's session of this unelevated updater.exe the
       // current process is running as.
-      if (useService) {
+      // Note that we don't need to do this if we're just staging the
+      // update in the background, as the PostUpdate step runs when
+      // performing the replacing in that case.
+      if (useService && !sBackgroundUpdate) {
         bool updateStatusSucceeded = false;
         if (IsUpdateStatusSucceeded(updateStatusSucceeded) && 
             updateStatusSucceeded) {
@@ -2751,12 +2754,12 @@ int NS_main(int argc, NS_tchar **argv)
       // the service to a newer version in that case. If we are not running
       // through the service, then MOZ_USING_SERVICE will not exist.
       if (!usingService) {
-        if (!LaunchWinPostProcess(argv[callbackIndex], gSourcePath, false, NULL)) {
-          LOG(("NS_main: The post update process could not be launched.\n"));
-        }
-
         NS_tchar installDir[MAXPATHLEN];
         if (GetInstallationDir(installDir)) {
+          if (!LaunchWinPostProcess(installDir, gSourcePath, false, NULL)) {
+            LOG(("NS_main: The post update process could not be launched.\n"));
+          }
+
           StartServiceUpdate(installDir);
         }
       }
