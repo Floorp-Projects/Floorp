@@ -1,0 +1,3 @@
+struct empty { };
+
+protocol emptyStruct { child:  __delete__(); };
