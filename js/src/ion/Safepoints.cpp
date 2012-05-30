@@ -149,6 +149,69 @@ DumpNunboxPart(const LAllocation &a)
 }
 #endif // DEBUG
 
+// Nunbox part encoding:
+//
+// Reg = 000
+// Stack = 001
+// Arg = 010
+//
+// [vwu] nentries:
+//    uint16:  tttp ppXX XXXY YYYY
+//
+//     If ttt = Reg, type is reg XXXXX
+//     If ppp = Reg, payload is reg YYYYY
+//
+//     If ttt != Reg, type is:
+//          XXXXX if not 11111, otherwise followed by [vwu]
+//     If ppp != Reg, payload is:
+//          YYYYY if not 11111, otherwise followed by [vwu]
+//
+enum NunboxPartKind {
+    Part_Reg,
+    Part_Stack,
+    Part_Arg
+};
+
+static const uint32 PART_KIND_BITS = 3;
+static const uint32 PART_KIND_MASK = (1 << PART_KIND_BITS) - 1;
+static const uint32 PART_INFO_BITS = 5;
+static const uint32 PART_INFO_MASK = (1 << PART_INFO_BITS) - 1;
+
+static const uint32 MAX_INFO_VALUE = 1; //(1 << PART_INFO_BITS) - 1;
+static const uint32 TYPE_KIND_SHIFT = 16 - PART_KIND_BITS;
+static const uint32 PAYLOAD_KIND_SHIFT = TYPE_KIND_SHIFT - PART_KIND_BITS;
+static const uint32 TYPE_INFO_SHIFT = PAYLOAD_KIND_SHIFT - PART_INFO_BITS;
+static const uint32 PAYLOAD_INFO_SHIFT = TYPE_INFO_SHIFT - PART_INFO_BITS;
+
+JS_STATIC_ASSERT(PAYLOAD_INFO_SHIFT == 0);
+
+static inline NunboxPartKind
+AllocationToPartKind(const LAllocation &a)
+{
+    if (a.isRegister())
+        return Part_Reg;
+    if (a.isStackSlot())
+        return Part_Stack;
+    JS_ASSERT(a.isArgument());
+    return Part_Arg;
+}
+
+static inline bool
+CanEncodeInfoInHeader(const LAllocation &a, uint32 *out)
+{
+    if (a.isGeneralReg()) {
+        *out = a.toGeneralReg()->reg().code();
+        return true;
+    }
+
+    if (a.isStackSlot())
+        *out = a.toStackSlot()->slot();
+    else
+        *out = a.toArgument()->index();
+
+    return *out < MAX_INFO_VALUE;
+}
+
 void
 SafepointWriter::writeNunboxParts(uint32 nentries, SafepointNunboxEntry *entries)
 {
@@ -165,9 +228,35 @@ SafepointWriter::writeNunboxParts(uint32 nentries, SafepointNunboxEntry *entries
     }
 #endif
 
-    if (nentries) {
-        // JS_NOT_REACHED("NYI - encode these once we support out-of-line calls");
-        return;
+    stream_.writeUnsigned(nentries);
+
+    for (size_t i = 0; i < nentries; i++) {
+        SafepointNunboxEntry &entry = entries[i];
+
+        uint16 header = 0;
+
+        header |= (AllocationToPartKind(entry.type) << TYPE_KIND_SHIFT);
+        header |= (AllocationToPartKind(entry.payload) << PAYLOAD_KIND_SHIFT);
+
+        uint32 typeVal;
+        bool typeExtra = !CanEncodeInfoInHeader(entry.type, &typeVal);
+        if (!typeExtra)
+            header |= (typeVal << TYPE_INFO_SHIFT);
+        else
+            header |= (MAX_INFO_VALUE << TYPE_INFO_SHIFT);
+
+        uint32 payloadVal;
+        bool payloadExtra = !CanEncodeInfoInHeader(entry.payload, &payloadVal);
+        if (!payloadExtra)
+            header |= (payloadVal << PAYLOAD_INFO_SHIFT);
+        else
+            header |= (MAX_INFO_VALUE << PAYLOAD_INFO_SHIFT);
+
+        stream_.writeFixedUint16(header);
+        if (typeExtra)
+            stream_.writeUnsigned(typeVal);
+        if (payloadExtra)
+            stream_.writeUnsigned(payloadVal);
     }
 }
 
@@ -276,5 +365,43 @@ SafepointReader::getValueSlot(uint32 *slot)
 void
 SafepointReader::advanceFromValueSlots()
 {
+#ifdef JS_NUNBOX32
+    nunboxSlotsRemaining_ = stream_.readUnsigned();
+#else
+    nunboxSlotsRemaining_ = 0;
+#endif
+}
+
+static inline LAllocation
+PartFromStream(CompactBufferReader &stream, NunboxPartKind kind, uint32 info)
+{
+    if (kind == Part_Reg)
+        return LGeneralReg(Register::FromCode(info));
+
+    if (info == MAX_INFO_VALUE)
+        info = stream.readUnsigned();
+
+    if (kind == Part_Stack)
+        return LStackSlot(info);
+
+    JS_ASSERT(kind == Part_Arg);
+    return LArgument(info);
+}
+
+bool
+SafepointReader::getNunboxSlot(LAllocation *type, LAllocation *payload)
+{
+    if (!nunboxSlotsRemaining_--)
+        return false;
+
+    uint16_t header = stream_.readFixedUint16();
+    NunboxPartKind typeKind = (NunboxPartKind)((header >> TYPE_KIND_SHIFT) & PART_KIND_MASK);
+    NunboxPartKind payloadKind = (NunboxPartKind)((header >> PAYLOAD_KIND_SHIFT) & PART_KIND_MASK);
+    uint32 typeInfo = (header >> TYPE_INFO_SHIFT) & PART_INFO_MASK;
+    uint32 payloadInfo = (header >> PAYLOAD_INFO_SHIFT) & PART_INFO_MASK;
+
+    *type = PartFromStream(stream_, typeKind, typeInfo);
+    *payload = PartFromStream(stream_, payloadKind, payloadInfo);
+    return true;
 }
 
