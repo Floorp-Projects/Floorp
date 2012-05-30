@@ -11,6 +11,8 @@
 #include "mozilla/plugins/PluginScriptableObjectParent.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
+#include <d3d10_1.h>
+#include "nsRefPtrHashtable.h"
 #elif defined(MOZ_WIDGET_COCOA)
 #include "nsCoreAnimationSupport.h"
 #endif
@@ -98,6 +100,9 @@ public:
                                        NPError* result);
     virtual bool
     AnswerNPN_GetValue_NPNVprivateModeBool(bool* value, NPError* result);
+
+    virtual bool
+    AnswerNPN_GetValue_DrawingModelSupport(const NPNVariable& model, bool* value);
   
     virtual bool
     AnswerNPN_GetValue_NPNVdocumentOrigin(nsCString* value, NPError* result);
@@ -210,6 +215,8 @@ public:
 
     NS_OVERRIDE virtual bool
     RecvNegotiatedCarbon();
+
+    virtual bool RecvReleaseDXGISharedSurface(const DXGISharedSurfaceHandle &aHandle);
 
     NPError NPP_SetWindow(const NPWindow* aWindow);
 
@@ -331,6 +338,9 @@ private:
     HWND               mPluginHWND;
     WNDPROC            mPluginWndProc;
     bool               mNestedEventState;
+
+    // This will automatically release the textures when this object goes away.
+    nsRefPtrHashtable<nsPtrHashKey<void>, ID3D10Texture2D> mTextureMap;
 #endif // defined(XP_WIN)
 #if defined(MOZ_WIDGET_COCOA)
 private:
