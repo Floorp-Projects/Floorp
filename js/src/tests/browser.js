@@ -158,7 +158,10 @@ function options(aOptionName)
     value = value.substring(0, value.length-1);
   }
 
-  if (aOptionName) {
+  if (aOptionName === 'moar_xml')
+    aOptionName = 'xml';
+
+  if (aOptionName && aOptionName !== 'allow_xml') {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     if (!(aOptionName in Components.utils))
     {
@@ -189,7 +192,7 @@ function optionsInit() {
     strict:     true,
     werror:     true,
     atline:     true,
-    xml:        true,
+    moar_xml:   true,
     relimit:    true,
     methodjit:  true,
     methodjit_always: true,
@@ -207,11 +210,15 @@ function optionsInit() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   for (var optionName in options.currvalues)
   {
-    if (!(optionName in Components.utils))
+    var propName = optionName;
+    if (optionName === "moar_xml")
+      propName = "xml";
+
+    if (!(propName in Components.utils))
     {
       throw "options.currvalues is out of sync with Components.utils";
     }
-    if (!Components.utils[optionName])
+    if (!Components.utils[propName])
     {
       delete options.currvalues[optionName];
     }

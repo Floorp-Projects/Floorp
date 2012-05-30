@@ -21,7 +21,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  options('xml');
+  options('moar_xml');
 
   x = <x/>;
   for each(x.t in x) { }
