@@ -6,17 +6,19 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="shell"
-        width="480" height="800"
         windowtype="navigator:browser"
 #ifdef ANDROID
         sizemode="fullscreen"
 #endif
-        style="background: black; overflow: hidden;"
+        style="background: black; overflow: hidden; width:480px; height:800px"
         onload="shell.start();"
         onunload="shell.stop();">
 
   <script type="application/javascript" src="chrome://browser/content/shell.js"/>
-
+#ifndef ANDROID
+  <!-- this script handles the screen argument for desktop builds -->
+  <script type="application/javascript" src="chrome://browser/content/screen.js"/>
+#endif
   <browser id="homescreen"
            type="content-primary"
            flex="1"
