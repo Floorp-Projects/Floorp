@@ -232,7 +232,7 @@ struct Parser : private AutoGCRooter
 
 #if JS_HAS_XML_SUPPORT
     // True if E4X syntax is allowed in the current syntactic context.
-    bool allowsXML() const { return !tc->sc->inStrictMode(); }
+    bool allowsXML() const { return !tc->sc->inStrictMode() && tokenStream.allowsXML(); }
 
     ParseNode *endBracketedExpr();
 

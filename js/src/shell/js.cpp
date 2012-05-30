@@ -584,6 +584,7 @@ static const struct JSOption {
     {"strict",          JSOPTION_STRICT},
     {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
+    {"allow_xml",       JSOPTION_ALLOW_XML},
     {"moar_xml",        JSOPTION_MOAR_XML},
     {"strict_mode",     JSOPTION_STRICT_MODE},
 };

@@ -831,7 +831,9 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope)
 
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
-  JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_PRIVATE_IS_NSISUPPORTS);
+  JS_SetOptions(cx, JS_GetOptions(cx) |
+                    JSOPTION_PRIVATE_IS_NSISUPPORTS |
+                    JSOPTION_ALLOW_XML);
   JS_SetVersion(cx, JSVERSION_LATEST);
   JS_SetErrorReporter(cx, ContentScriptErrorReporter);
 

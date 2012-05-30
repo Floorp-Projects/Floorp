@@ -88,7 +88,7 @@ using namespace js::gc;
 using namespace js::types;
 
 /*
- * This class is a version-establising barrier at the head of a VM entry or
+ * This class is a version-establishing barrier at the head of a VM entry or
  * re-entry. It ensures that:
  *
  * - |newVersion| is the starting (default) version used for the context.
@@ -107,7 +107,7 @@ class AutoVersionAPI
     JSVersion   newVersion;
 
   public:
-    explicit AutoVersionAPI(JSContext *cx, JSVersion newVersion)
+    AutoVersionAPI(JSContext *cx, JSVersion newVersion)
       : cx(cx),
         oldDefaultVersion(cx->getDefaultVersion()),
         oldHasVersionOverride(cx->isVersionOverridden()),
@@ -116,6 +116,11 @@ class AutoVersionAPI
         , oldCompileOptions(cx->getCompileOptions())
 #endif
     {
+#if JS_HAS_XML_SUPPORT
+        // For backward compatibility, AutoVersionAPI clobbers the
+        // JSOPTION_MOAR_XML bit in cx, but not the JSOPTION_ALLOW_XML bit.
+        newVersion = JSVersion(newVersion | (oldDefaultVersion & VersionFlags::ALLOW_XML));
+#endif
         this->newVersion = newVersion;
         cx->clearVersionOverride();
         cx->setDefaultVersion(newVersion);
