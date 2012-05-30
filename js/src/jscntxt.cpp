@@ -43,6 +43,7 @@
 #include "jsscript.h"
 #include "jsstr.h"
 #include "ion/IonFrames.h"
+#include "vm/Stack.h"
 
 #ifdef JS_METHODJIT
 # include "assembler/assembler/MacroAssembler.h"
@@ -940,6 +941,17 @@ js_GetCurrentBytecodePC(JSContext* cx)
 {
     return cx->hasfp() ? cx->regs().pc : NULL;
 }
+
+#ifdef JS_ION
+# ifdef DEBUG
+bool
+js_InIonFrame(JSContext *cx)
+{
+    StackIter stackIter(cx);
+    return !stackIter.done() && stackIter.isIon();
+}
+# endif
+#endif
 
 void
 DSTOffsetCache::purge()
