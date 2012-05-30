@@ -16,7 +16,7 @@
 
 namespace mozilla {
 namespace a11y {
- 
+
 /**
  * ApplicationAccessible is for the whole application of Mozilla.
  * Only one instance of ApplicationAccessible exists for one Mozilla instance.
@@ -48,8 +48,6 @@ public:
   NS_IMETHOD GetNextSibling(nsIAccessible **aNextSibling);
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
-  NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel, PRInt32 *aSimilarItemsInGroup,
-                           PRInt32 *aPositionInGroup);
   NS_IMETHOD GetBounds(PRInt32 *aX, PRInt32 *aY,
                        PRInt32 *aWidth, PRInt32 *aHeight);
   NS_IMETHOD SetSelected(bool aIsSelected);
@@ -68,7 +66,8 @@ public:
   virtual bool IsPrimaryForNode() const;
 
   // Accessible
-  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
+  virtual GroupPos GroupPosition();
+  virtual ENameValueFlag Name(nsString& aName);
   virtual void ApplyARIAState(PRUint64* aState) const;
   virtual void Description(nsString& aDescription);
   virtual void Value(nsString& aValue);

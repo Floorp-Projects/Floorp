@@ -897,26 +897,14 @@ nsXULTreeItemAccessibleBase::IsPrimaryForNode() const
 // nsXULTreeItemAccessibleBase: Accessible public methods
 
 // nsIAccessible::groupPosition
-nsresult
-nsXULTreeItemAccessibleBase::GroupPosition(PRInt32 *aGroupLevel,
-                                           PRInt32 *aSimilarItemsInGroup,
-                                           PRInt32 *aPositionInGroup)
+GroupPos
+nsXULTreeItemAccessibleBase::GroupPosition()
 {
-  NS_ENSURE_ARG_POINTER(aGroupLevel);
-  *aGroupLevel = 0;
-
-  NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
-  *aSimilarItemsInGroup = 0;
-
-  NS_ENSURE_ARG_POINTER(aPositionInGroup);
-  *aPositionInGroup = 0;
-
-  if (IsDefunct() || !mTreeView)
-    return NS_ERROR_FAILURE;
+  GroupPos groupPos;
 
   PRInt32 level;
   nsresult rv = mTreeView->GetLevel(mRow, &level);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, groupPos);
 
   PRInt32 topCount = 1;
   for (PRInt32 index = mRow - 1; index >= 0; index--) {
@@ -932,7 +920,7 @@ nsXULTreeItemAccessibleBase::GroupPosition(PRInt32 *aGroupLevel,
 
   PRInt32 rowCount = 0;
   rv = mTreeView->GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, groupPos);
 
   PRInt32 bottomCount = 0;
   for (PRInt32 index = mRow + 1; index < rowCount; index++) {
@@ -946,14 +934,11 @@ nsXULTreeItemAccessibleBase::GroupPosition(PRInt32 *aGroupLevel,
     }
   }
 
-  PRInt32 setSize = topCount + bottomCount;
-  PRInt32 posInSet = topCount;
+  groupPos.level = level + 1;
+  groupPos.setSize = topCount + bottomCount;
+  groupPos.posInSet = topCount;
 
-  *aGroupLevel = level + 1;
-  *aSimilarItemsInGroup = setSize;
-  *aPositionInGroup = posInSet;
-
-  return NS_OK;
+  return groupPos;
 }
 
 PRUint64
