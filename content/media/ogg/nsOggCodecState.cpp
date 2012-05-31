@@ -46,6 +46,12 @@ static PRUint16 LEUint16(const unsigned char* p)
   return p[0] + (p[1] << 8);
 }
 
+// Reads a little-endian encoded signed 16bit integer at p.
+static PRInt16 LEInt16(const unsigned char* p)
+{
+  return static_cast<PRInt16>(LEUint16(p));
+}
+
 /** Decoder base class for Ogg-encapsulated streams. */
 nsOggCodecState*
 nsOggCodecState::Create(ogg_page* aPage)
@@ -757,7 +763,11 @@ nsOpusState::nsOpusState(ogg_page* aBosPage) :
   mNominalRate(0),
   mChannels(0),
   mPreSkip(0),
-  mGain(0.0),
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+  mGain(1.0f),
+#else
+  mGain_Q16(65536),
+#endif
   mChannelMapping(0),
   mStreams(0),
   mDecoder(NULL),
@@ -848,7 +858,13 @@ bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
       mChannels= aPacket->packet[9];
       mPreSkip = LEUint16(aPacket->packet + 10);
       mNominalRate = LEUint32(aPacket->packet + 12);
-      mGain = (float)LEUint16(aPacket->packet + 16) / 256.0;
+      double gain_dB = LEInt16(aPacket->packet + 16) / 256.0;
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+      mGain = static_cast<float>(pow(10,0.05*gain_dB));
+#else
+      mGain_Q16 = static_cast<PRInt32>(NS_MIN(65536*pow(10,0.05*gain_dB)+0.5,
+                                              static_cast<double>(PR_INT32_MAX)));
+#endif
       mChannelMapping = aPacket->packet[18];
 
       if (mChannelMapping == 0) {
@@ -866,7 +882,7 @@ bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
       LOG(PR_LOG_DEBUG, (" channels: %d", mChannels));
       LOG(PR_LOG_DEBUG, ("  preskip: %d", mPreSkip));
       LOG(PR_LOG_DEBUG, (" original: %d Hz", mNominalRate));
-      LOG(PR_LOG_DEBUG, ("     gain: %.2f dB", mGain));
+      LOG(PR_LOG_DEBUG, ("     gain: %.2f dB", gain_dB));
       LOG(PR_LOG_DEBUG, ("Channel Mapping:"));
       LOG(PR_LOG_DEBUG, ("   family: %d", mChannelMapping));
       LOG(PR_LOG_DEBUG, ("  streams: %d", mStreams));
