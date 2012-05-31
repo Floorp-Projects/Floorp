@@ -956,7 +956,8 @@ LinearScanAllocator::resolveControlFlow()
         for (size_t j = 0; j < successor->numPhis(); j++) {
             LPhi *phi = successor->getPhi(j);
             JS_ASSERT(phi->numDefs() == 1);
-            LiveInterval *to = vregs[phi->getDef(0)].intervalFor(inputOf(successor->firstId()));
+            VirtualRegister *vreg = &vregs[phi->getDef(0)];
+            LiveInterval *to = vreg->intervalFor(inputOf(successor->firstId()));
             JS_ASSERT(to);
 
             for (size_t k = 0; k < mSuccessor->numPredecessors(); k++) {
@@ -972,7 +973,7 @@ LinearScanAllocator::resolveControlFlow()
                     return false;
             }
 
-            if (vregs[phi->getDef(0)].mustSpillAtDefinition() && !to->isSpill()) {
+            if (vreg->mustSpillAtDefinition() && !to->isSpill()) {
                 // Make sure this phi is spilled at the loop header.
                 LMoveGroup *moves = successor->getEntryMoveGroup();
                 if (!moves->add(to->getAllocation(), to->reg()->canonicalSpill()))
@@ -1193,12 +1194,18 @@ LinearScanAllocator::findFirstNonCallSafepoint(CodePosition from)
 }
 
 static inline bool
-IsSpilledAt(VirtualRegister *reg, CodePosition pos)
+IsSpilledAt(LiveInterval *interval, CodePosition pos)
 {
+    VirtualRegister *reg = interval->reg();
     if (!reg->canonicalSpill() || !reg->canonicalSpill()->isStackSlot())
         return false;
 
-    return reg->spillPosition() <= pos;
+    if (reg->mustSpillAtDefinition()) {
+        JS_ASSERT(reg->spillPosition() <= pos);
+        return true;
+    }
+
+    return interval->getAllocation() == reg->canonicalSpill();
 }
 
 bool
@@ -1251,7 +1258,7 @@ LinearScanAllocator::populateSafepoints()
                 if (a->isGeneralReg() && !ins->isCall())
                     safepoint->addGcRegister(a->toGeneralReg()->reg());
 
-                if (IsSpilledAt(reg, inputOf(ins))) {
+                if (IsSpilledAt(interval, inputOf(ins))) {
                     if (!safepoint->addGcSlot(reg->canonicalSpillSlot()))
                         return false;
                 }
@@ -1275,7 +1282,9 @@ LinearScanAllocator::populateSafepoints()
                 if (payloadAlloc->isArgument())
                     continue;
 
-                if (IsSpilledAt(type, inputOf(ins)) && IsSpilledAt(payload, inputOf(ins))) {
+                if (IsSpilledAt(typeInterval, inputOf(ins)) &&
+                    IsSpilledAt(payloadInterval, inputOf(ins)))
+                {
                     // These two components of the Value are spilled
                     // contiguously, so simply keep track of the base slot.
                     uint32 payloadSlot = payload->canonicalSpillSlot();
@@ -1285,7 +1294,7 @@ LinearScanAllocator::populateSafepoints()
                 }
 
                 if (!ins->isCall() &&
-                    (!IsSpilledAt(type, inputOf(ins)) || payloadAlloc->isGeneralReg()))
+                    (!IsSpilledAt(typeInterval, inputOf(ins)) || payloadAlloc->isGeneralReg()))
                 {
                     // Either the payload is on the stack but the type is
                     // in a register, or the payload is in a register. In
