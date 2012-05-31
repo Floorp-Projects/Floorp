@@ -602,6 +602,11 @@ let RIL = {
   dataRegistrationState: {},
 
   /**
+   * The cell location on a phone, such as LAC, CID.
+   */
+  cellLocation: {},
+
+  /**
    * List of strings identifying the network operator.
    */
   operator: null,
@@ -1967,6 +1972,26 @@ let RIL = {
           regState == NETWORK_CREG_STATE_REGISTERED_ROAMING) {
         RIL.getSMSCAddress();
       }
+    }
+
+    let cell = this.cellLocation;
+    let cellChanged = false;
+
+    // From TS 23.003, 0000 and 0xfffe are indicated that no valid LAI exists
+    // in MS. So we still need to report the '0000' as well.
+    if (cell.lac !== state[1]) {
+      cell.lac = state[1];
+      cellChanged = true;
+    }
+
+    if (cell.cid !== state[2]) {
+      cell.cid = state[2];
+      cellChanged = true;
+    }
+
+    if (cellChanged) {
+      cell.type = "celllocationchanged";
+      this.sendDOMMessage(cell);
     }
 
     let radioTech = RIL.parseInt(state[3], NETWORK_CREG_TECH_UNKNOWN);
