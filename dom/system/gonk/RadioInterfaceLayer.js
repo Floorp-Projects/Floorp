@@ -141,6 +141,7 @@ function RadioInterfaceLayer() {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
     icc:            null,
+    cell:           null,
 
     // These objects implement the nsIDOMMozMobileConnectionInfo interface,
     // although the actual implementation lives in the content process.
@@ -355,6 +356,9 @@ RadioInterfaceLayer.prototype = {
           delete this._contactsCallbacks[message.requestId];
           callback.receiveContactsList(message.contactType, message.contacts);
         }
+        break;
+      case "celllocationchanged":
+        this.radioState.cell = message;
         break;
       default:
         throw new Error("Don't know about this message type: " + message.type);
