@@ -41,32 +41,31 @@ function testScriptLabelShortening() {
       "Trimming the url query isn't done properly.");
 
     let urls = [
-      { href: "ici://some.address.com/random/", leaf: "subrandom/" },
+      { href: "ichi://some.address.com/random/", leaf: "subrandom/" },
       { href: "ni://another.address.org/random/subrandom/", leaf: "page.html" },
       { href: "san://interesting.address.gro/random/", leaf: "script.js" },
-      { href: "si://interesting.address.moc/random/", leaf: "script.js" },
-      { href: "si://interesting.address.moc/random/", leaf: "x/script.js" },
-      { href: "si://interesting.address.moc/random/", leaf: "x/y/script.js?a=1" },
-      { href: "si://interesting.address.moc/random/x/", leaf: "y/script.js?a=1&b=2" },
-      { href: "si://interesting.address.moc/random/x/y/", leaf: "script.js?a=1&b=2&c=3" }
+      { href: "shi://interesting.address.moc/random/", leaf: "script.js" },
+      { href: "shi://interesting.address.moc/random/", leaf: "x/script.js" },
+      { href: "shi://interesting.address.moc/random/", leaf: "x/y/script.js?a=1" },
+      { href: "shi://interesting.address.moc/random/x/", leaf: "y/script.js?a=1&b=2", dupe: true },
+      { href: "shi://interesting.address.moc/random/x/y/", leaf: "script.js?a=1&b=2&c=3", dupe: true },
+      { href: "go://random/", leaf: "script_t1.js&a=1&b=2&c=3" },
+      { href: "roku://random/", leaf: "script_t2.js#id" },
+      { href: "nana://random/", leaf: "script_t3.js#id?a=1&b=2" }
     ];
 
     urls.forEach(function(url) {
       executeSoon(function() {
         let loc = url.href + url.leaf;
-        vs.addScript(ss._getScriptLabel(loc, url.href), { url: loc });
-        vs.commitScripts();
+        vs.addScript(ss._getScriptLabel(loc, url.href), { url: loc }, true);
       });
     });
 
     executeSoon(function() {
-      for (let i = 0; i < vs._scripts.itemCount; i++) {
-        let lab = vs._scripts.getItemAtIndex(i).getAttribute("label");
-        let loc = urls[i].href + urls[i].leaf;
-
-        info("label: " + i + " " + lab);
-        ok(vs.contains(loc), "Script url is incorrect: " + loc);
-      }
+      urls.forEach(function(url) {
+        let loc = url.href + url.leaf;
+        ok(url.dupe || vs.contains(loc), "Script url is incorrect: " + loc);
+      });
 
       ok(gDebugger.DebuggerView.Scripts.containsLabel("subrandom/"),
         "Script (0) label is incorrect.");
@@ -74,15 +73,21 @@ function testScriptLabelShortening() {
         "Script (1) label is incorrect.");
       ok(gDebugger.DebuggerView.Scripts.containsLabel("script.js"),
         "Script (2) label is incorrect.");
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("si://interesting.address.moc/random/script.js"),
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("shi://interesting.address.moc/random/script.js"),
         "Script (3) label is incorrect.");
       ok(gDebugger.DebuggerView.Scripts.containsLabel("x/script.js"),
         "Script (4) label is incorrect.");
       ok(gDebugger.DebuggerView.Scripts.containsLabel("x/y/script.js"),
         "Script (5) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t1.js"),
+        "Script (6) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t2.js"),
+        "Script (7) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t3.js"),
+        "Script (8) label is incorrect.");
 
-      is(vs._scripts.itemCount, 6,
-        "Got too many script items in the list!");
+      is(vs._scripts.itemCount, 9,
+        "Didn't get the correct number of scripts in the list.");
 
       closeDebuggerAndFinish(gTab);
     });
