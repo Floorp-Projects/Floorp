@@ -36,6 +36,8 @@ _TEST_FILES = \
 		test_dataTypes.html \
 		test_dataTypesModEvents.html \
 		dataTypes-helper.svg \
+		test_fragments.html \
+		fragments-helper.svg \
 		getCTM-helper.svg \
 		test_getCTM.html \
 		test_getElementById.xhtml \
