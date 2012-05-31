@@ -158,36 +158,73 @@ TypeInferenceOracle::thisTypeSet(JSScript *script)
     return thisTypes;
 }
 
-void
-TypeInferenceOracle::getNewTypesAtJoinPoint(JSScript *script, jsbytecode *pc, Vector<MIRType> &slotTypes)
+bool
+TypeInferenceOracle::getOsrTypes(jsbytecode *osrPc, Vector<MIRType> &slotTypes)
 {
+    JS_ASSERT(JSOp(*osrPc) == JSOP_LOOPENTRY);
+    JS_ASSERT(script->code < osrPc);
+    JS_ASSERT(osrPc < script->code + script->length);
+
+    Vector<types::TypeSet *> slotTypeSets(cx);
+    if (!slotTypeSets.resize(TotalSlots(script)))
+        return false;
+
+    for (uint32_t slot = ThisSlot(); slot < TotalSlots(script); slot++)
+        slotTypeSets[slot] = TypeScript::SlotTypes(script, slot);
+
+    jsbytecode *pc = script->code;
     ScriptAnalysis *analysis = script->analysis();
 
-    // In some cases, TI has already determined that a position is not a jump
-    // target, for example here |do| only has one incoming edge:
-    //    do { 
-    //       throw
-    //    } while
-    //
-    // In this case, IM won't know this until reaching the end of the entire
-    // structure, so we check first to see if this is actually a jump target.
-    if (!analysis->jumpTarget(pc))
-        return;
-
-    if (const SlotValue *newv = analysis->newValues(pc)) {
-        while (newv->slot) {
-            if (newv->value.kind() != SSAValue::PHI ||
-                newv->value.phiOffset() != uint32_t(pc - script->code) ||
-                !analysis->trackSlot(newv->slot)) {
-                newv++;
-                continue;
+    // To determine the slot types at the OSR pc, we have to do a forward walk
+    // over the bytecode to reconstruct the types.
+    while (pc < osrPc) {
+        Bytecode *opinfo = analysis->maybeCode(pc);
+        if (opinfo) {
+            if (opinfo->jumpTarget) {
+                // Update variable types for all new values at this bytecode.
+                if (const SlotValue *newv = analysis->newValues(pc)) {
+                    while (newv->slot) {
+                        if (newv->slot < TotalSlots(script))
+                            slotTypeSets[newv->slot] = analysis->getValueTypes(newv->value);
+                        newv++;
+                    }
+                }
             }
 
-            types::TypeSet *types = analysis->getValueTypes(newv->value);
-            slotTypes[newv->slot] = getMIRType(types);
-            newv++;
+            if (BytecodeUpdatesSlot(JSOp(*pc))) {
+                uint32_t slot = GetBytecodeSlot(script, pc);
+                if (analysis->trackSlot(slot))
+                    slotTypeSets[slot] = analysis->pushedTypes(pc, 0);
+            }
         }
+
+        pc += GetBytecodeLength(pc);
     }
+
+    JS_ASSERT(pc == osrPc);
+
+    // TI always includes the |this| slot, but Ion only does so for function
+    // scripts. This means we have to subtract 1 for global/eval scripts.
+    JS_ASSERT(ThisSlot() == 1);
+    JS_ASSERT(ArgSlot(0) == 2);
+
+#ifdef DEBUG
+    uint32_t stackDepth = analysis->getCode(osrPc).stackDepth;
+#endif
+
+    if (script->function()) {
+        JS_ASSERT(slotTypes.length() == TotalSlots(script) + stackDepth);
+
+        for (size_t i = ThisSlot(); i < TotalSlots(script); i++)
+            slotTypes[i] = getMIRType(slotTypeSets[i]);
+    } else {
+        JS_ASSERT(slotTypes.length() == TotalSlots(script) + stackDepth - 1);
+
+        for (size_t i = ArgSlot(0); i < TotalSlots(script); i++)
+            slotTypes[i - 1] = getMIRType(slotTypeSets[i]);
+    }
+
+    return true;
 }
 
 TypeSet *
