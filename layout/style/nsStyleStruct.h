@@ -792,7 +792,7 @@ struct nsStyleBorder {
   // this is zero if and only if there is no border to be painted for this
   // side.  That is, this value takes into account the border style and the
   // value is rounded to the nearest device pixel by NS_ROUND_BORDER_TO_PIXELS.
-  nscoord GetActualBorderWidth(mozilla::css::Side aSide) const
+  nscoord GetComputedBorderWidth(mozilla::css::Side aSide) const
   {
     return GetComputedBorder().Side(aSide);
   }

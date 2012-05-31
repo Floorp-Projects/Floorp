@@ -4528,7 +4528,7 @@ GetColorAndStyle(const nsIFrame*  aFrame,
       aSide = NS_SIDE_RIGHT;
     }
   }
-  width = styleData->GetActualBorderWidth(aSide);
+  width = styleData->GetComputedBorderWidth(aSide);
   aWidth = nsPresContext::AppUnitsToIntCSSPixels(width);
 }
 

@@ -94,7 +94,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
       if (xmost > aDesiredSize.width) {
         mPD->mPageContentXMost =
           xmost +
-          kidReflowState.mStyleBorder->GetActualBorderWidth(NS_SIDE_RIGHT) +
+          kidReflowState.mStyleBorder->GetComputedBorderWidth(NS_SIDE_RIGHT) +
           padding.right;
       }
     }
