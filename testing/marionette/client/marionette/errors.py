@@ -20,6 +20,9 @@ class MarionetteException(Exception):
 class TimeoutException(MarionetteException):
     pass
 
+class NoSuchAttributeException(MarionetteException):
+    pass
+
 class JavascriptException(MarionetteException):
     pass
 
@@ -44,3 +47,46 @@ class ElementNotVisibleException(MarionetteException):
 class NoSuchFrameException(MarionetteException):
     pass
 
+class InvalidElementStateException(MarionetteException):
+    pass
+
+class NoAlertPresentException(MarionetteException):
+    pass
+
+class InvalidCookieDomainException(MarionetteException):
+    pass
+
+class UnableToSetCookieException(MarionetteException):
+    pass
+
+class InvalidSelectorException(MarionetteException):
+    pass
+
+class MoveTargetOutOfBoundsException(MarionetteException):
+    pass
+
+class ErrorCodes(object):
+    
+    SUCCESS = 0
+    NO_SUCH_ELEMENT = 7
+    NO_SUCH_FRAME = 8
+    UNKNOWN_COMMAND = 9
+    STALE_ELEMENT_REFERENCE = 10
+    ELEMENT_NOT_VISIBLE = 11
+    INVALID_ELEMENT_STATE = 12
+    UNKNOWN_ERROR = 13
+    ELEMENT_IS_NOT_SELECTABLE = 15
+    JAVASCRIPT_ERROR = 17
+    XPATH_LOOKUP_ERROR = 19
+    TIMEOUT = 21
+    NO_SUCH_WINDOW = 23
+    INVALID_COOKIE_DOMAIN = 24
+    UNABLE_TO_SET_COOKIE = 25
+    UNEXPECTED_ALERT_OPEN = 26
+    NO_ALERT_OPEN = 27
+    SCRIPT_TIMEOUT = 28
+    INVALID_ELEMENT_COORDINATES = 29
+    INVALID_SELECTOR = 32
+    MOVE_TARGET_OUT_OF_BOUNDS = 34
+    INVALID_XPATH_SELECTOR = 51
+    INVALID_XPATH_SELECTOR_RETURN_TYPER = 52
