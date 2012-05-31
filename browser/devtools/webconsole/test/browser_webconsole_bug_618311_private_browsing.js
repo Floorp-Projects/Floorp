@@ -118,8 +118,8 @@ function tabLoaded() {
     successFn: function()
     {
       let jstermMessage = HUD.outputNode.querySelector(".webconsole-msg-output");
-      EventUtils.synthesizeMouse(networkLink, 2, 2, {});
       EventUtils.synthesizeMouse(jstermMessage, 2, 2, {});
+      EventUtils.synthesizeMouse(networkLink, 2, 2, {});
     },
     failureFn: finishTest,
   });

@@ -351,7 +351,7 @@ HISTOGRAM(FX_THUMBNAILS_HIT_OR_MISS, 0, 1, 2, BOOLEAN, "THUMBNAILS: Thumbnail fo
 /*
  * Widget telemetry.
  */
-HISTOGRAM(EVENTLOOP_UI_LAG, 50, 30000, 200, LINEAR, "Widget: Time (ms) it takes for the message before a UI message")
+HISTOGRAM(EVENTLOOP_UI_LAG_EXP_MS, 50, 60000, 20, EXPONENTIAL, "Widget: Time it takes for the message before a UI message (ms)")
 
 /**
  * Session restore telemetry

@@ -17,6 +17,8 @@ _BROWSER_TEST_FILES = \
   browser_gcli_commands.js \
   browser_gcli_inspect.js \
   browser_gcli_integrate.js \
+  browser_gcli_pref.js \
+  browser_gcli_settings.js \
   browser_gcli_web.js \
   head.js \
   $(NULL)
