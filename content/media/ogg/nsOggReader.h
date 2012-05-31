@@ -58,6 +58,10 @@ public:
 
 private:
 
+  // Specialized Reset() method to signal if the seek is
+  // to the start of the stream.
+  nsresult ResetDecode(bool start);
+
   bool HasSkeleton() {
     return mSkeletonState != 0 && mSkeletonState->mActive;
   }
