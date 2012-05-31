@@ -6,8 +6,6 @@ package org.mozilla.gecko.sync.repositories.delegates;
 
 import java.util.concurrent.ExecutorService;
 
-import org.mozilla.gecko.sync.repositories.domain.Record;
-
 /**
  * These methods *must* be invoked asynchronously. Use deferredStoreDelegate if you
  * need help doing this.
@@ -16,11 +14,10 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
  *
  */
 public interface RepositorySessionStoreDelegate {
-  public void onRecordStoreFailed(Exception ex);
+  public void onRecordStoreFailed(Exception ex, String recordGuid);
 
-  // Optionally called with an equivalent (but not necessarily identical) record
-  // when a store has succeeded.
-  public void onRecordStoreSucceeded(Record record);
+  // Called with a GUID when store has succeeded.
+  public void onRecordStoreSucceeded(String guid);
   public void onStoreCompleted(long storeEnd);
   public RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor);
 }
