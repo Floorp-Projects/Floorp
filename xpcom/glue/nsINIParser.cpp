@@ -158,7 +158,7 @@ nsINIParser::InitFromFILE(FILE *fd)
             return NS_ERROR_FAILURE;
         }
 
-        nsAutoArrayPtr<char> utf8Buffer = new char[flen];
+        nsAutoArrayPtr<char> utf8Buffer(new char[flen]);
         if (0 == WideCharToMultiByte(CP_UTF8,
                                      0,
                                      reinterpret_cast<LPWSTR>(buffer),
