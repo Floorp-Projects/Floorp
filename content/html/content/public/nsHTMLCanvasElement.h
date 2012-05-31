@@ -178,10 +178,4 @@ public:
   bool                     mWriteOnly;
 };
 
-inline nsISupports*
-GetISupports(nsHTMLCanvasElement* p)
-{
-  return static_cast<nsGenericElement*>(p);
-}
-
 #endif /* nsHTMLCanvasElement_h__ */
