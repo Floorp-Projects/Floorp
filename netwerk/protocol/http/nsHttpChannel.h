@@ -220,7 +220,7 @@ private:
     nsresult GenerateCacheKey(PRUint32 postID, nsACString &key);
     nsresult UpdateExpirationTime();
     nsresult CheckCache();
-    nsresult ShouldUpdateOfflineCacheEntry(bool *shouldCacheForOfflineUse);
+    bool ShouldUpdateOfflineCacheEntry();
     nsresult ReadFromCache();
     void     CloseCacheEntry(bool doomOnFailure);
     void     CloseOfflineCacheEntry();
