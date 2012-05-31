@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _NSHYPERTEXTACCESSIBLEWRAP_H
-#define _NSHYPERTEXTACCESSIBLEWRAP_H
+#ifndef mozilla_a11y_HyperTextAccessibleWrap_h__
+#define mozilla_a11y_HyperTextAccessibleWrap_h__
 
-#include "nsHyperTextAccessible.h"
+#include "HyperTextAccessible.h"
 
-typedef class nsHyperTextAccessible nsHyperTextAccessibleWrap;
+typedef class HyperTextAccessible HyperTextAccessibleWrap;
 
 #endif
 

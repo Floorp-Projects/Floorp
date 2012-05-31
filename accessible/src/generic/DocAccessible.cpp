@@ -78,7 +78,7 @@ static const PRUint32 kRelationAttrsLen = NS_ARRAY_LENGTH(kRelationAttrs);
 DocAccessible::
   DocAccessible(nsIDocument* aDocument, nsIContent* aRootContent,
                   nsIPresShell* aPresShell) :
-  nsHyperTextAccessibleWrap(aRootContent, this),
+  HyperTextAccessibleWrap(aRootContent, this),
   mDocument(aDocument), mScrollPositionChangedTicks(0),
   mLoadState(eTreeConstructionPending), mLoadEventType(0),
   mVirtualCursor(nsnull),
@@ -162,14 +162,13 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DocAccessible)
 
   nsresult status;
   if (!foundInterface) {
-    // HTML document accessible must inherit from nsHyperTextAccessible to get
+    // HTML document accessible must inherit from HyperTextAccessible to get
     // support text interfaces. XUL document accessible doesn't need this.
     // However at some point we may push <body> to implement the interfaces and
     // return DocAccessible to inherit from AccessibleWrap.
 
     status = IsHyperText() ? 
-      nsHyperTextAccessible::QueryInterface(aIID,
-                                            (void**)&foundInterface) :
+      HyperTextAccessible::QueryInterface(aIID, (void**)&foundInterface) :
       Accessible::QueryInterface(aIID, (void**)&foundInterface);
   } else {
     NS_ADDREF(foundInterface);
@@ -180,8 +179,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DocAccessible)
   return status;
 }
 
-NS_IMPL_ADDREF_INHERITED(DocAccessible, nsHyperTextAccessible)
-NS_IMPL_RELEASE_INHERITED(DocAccessible, nsHyperTextAccessible)
+NS_IMPL_ADDREF_INHERITED(DocAccessible, HyperTextAccessible)
+NS_IMPL_RELEASE_INHERITED(DocAccessible, HyperTextAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
@@ -531,7 +530,7 @@ DocAccessible::GetVirtualCursor(nsIAccessiblePivot** aVirtualCursor)
   return NS_OK;
 }
 
-// nsHyperTextAccessible method
+// HyperTextAccessible method
 already_AddRefed<nsIEditor>
 DocAccessible::GetEditor() const
 {
@@ -663,7 +662,7 @@ DocAccessible::Shutdown()
   mNodeToAccessibleMap.Clear();
   ClearCache(mAccessibleCache);
 
-  nsHyperTextAccessibleWrap::Shutdown();
+  HyperTextAccessibleWrap::Shutdown();
 
   GetAccService()->NotifyOfDocumentShutdown(kungFuDeathGripDoc);
 }
@@ -1305,7 +1304,7 @@ DocAccessible::HandleAccEvent(AccEvent* aEvent)
   if (logging::IsEnabled(logging::eDocLoad))
     logging::DocLoadEventHandled(aEvent);
 
-  return nsHyperTextAccessible::HandleAccEvent(aEvent);
+  return HyperTextAccessible::HandleAccEvent(aEvent);
 }
 #endif
 
@@ -1762,7 +1761,7 @@ DocAccessible::ProcessPendingEvent(AccEvent* aEvent)
 {
   PRUint32 eventType = aEvent->GetEventType();
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
-    nsHyperTextAccessible* hyperText = aEvent->GetAccessible()->AsHyperText();
+    HyperTextAccessible* hyperText = aEvent->GetAccessible()->AsHyperText();
     PRInt32 caretOffset;
     if (hyperText &&
         NS_SUCCEEDED(hyperText->GetCaretOffset(&caretOffset))) {

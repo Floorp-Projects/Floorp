@@ -6,9 +6,9 @@
 #ifndef _nsHTMLLinkAccessible_H_
 #define _nsHTMLLinkAccessible_H_
 
-#include "nsHyperTextAccessibleWrap.h"
+#include "HyperTextAccessibleWrap.h"
 
-class nsHTMLLinkAccessible : public nsHyperTextAccessibleWrap
+class nsHTMLLinkAccessible : public HyperTextAccessibleWrap
 {
 public:
   nsHTMLLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
