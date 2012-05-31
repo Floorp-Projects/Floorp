@@ -4278,9 +4278,13 @@ DebuggerEnv_getObject(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    JSObject *obj = IsWith(env)
-                    ? &env->asDebugScope().scope().asWith().object()
-                    : env;
+    JSObject *obj;
+    if (IsWith(env)) {
+        obj = &env->asDebugScope().scope().asWith().object();
+    } else {
+        obj = env;
+        JS_ASSERT(!obj->isDebugScope());
+    }
 
     Value rval = ObjectValue(*obj);
     if (!dbg->wrapDebuggeeValue(cx, &rval))
