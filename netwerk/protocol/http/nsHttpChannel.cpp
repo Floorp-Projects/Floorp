@@ -27,7 +27,6 @@
 #include "nsChannelClassifier.h"
 #include "nsIRedirectResultListener.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Telemetry.h"
 #include "nsDOMError.h"
 #include "nsAlgorithm.h"
 #include "sampler.h"
@@ -52,6 +51,19 @@ const char kOfflineDeviceID[] = "offline";
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 static NS_DEFINE_CID(kStreamTransportServiceCID,
                      NS_STREAMTRANSPORTSERVICE_CID);
+
+const mozilla::Telemetry::ID UNKNOWN_DEVICE
+    = static_cast<mozilla::Telemetry::ID>(0);
+void
+AccumulateCacheHitTelemetry(mozilla::Telemetry::ID deviceHistogram,
+                            PRUint32 hitOrMiss)
+{
+    mozilla::Telemetry::Accumulate(
+            mozilla::Telemetry::HTTP_CACHE_DISPOSITION, hitOrMiss);
+    if (deviceHistogram != UNKNOWN_DEVICE) {
+        mozilla::Telemetry::Accumulate(deviceHistogram, hitOrMiss);
+    }
+}
 
 const char *
 GetCacheSessionNameForStoragePolicy(nsCacheStoragePolicy storagePolicy,
@@ -197,6 +209,7 @@ public:
         , mCachedContentIsPartial(false)
         , mCustomConditionalRequest(false)
         , mDidReval(false)
+        , mCacheEntryDeviceTelemetryID(UNKNOWN_DEVICE)
     {
         MOZ_ASSERT(NS_IsMainThread());
     }
@@ -257,6 +270,7 @@ private:
     /*out*/ bool mCachedContentIsPartial;
     /*out*/ bool mCustomConditionalRequest;
     /*out*/ bool mDidReval;
+    /*out*/ mozilla::Telemetry::ID mCacheEntryDeviceTelemetryID;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(HttpCacheQuery, nsRunnable, nsICacheListener)
@@ -269,6 +283,7 @@ nsHttpChannel::nsHttpChannel()
     : ALLOW_THIS_IN_INITIALIZER_LIST(HttpAsyncAborter<nsHttpChannel>(this))
     , mLogicalOffset(0)
     , mCacheAccess(0)
+    , mCacheEntryDeviceTelemetryID(UNKNOWN_DEVICE)
     , mPostID(0)
     , mRequestTime(0)
     , mOnCacheEntryAvailableCallback(nsnull)
@@ -444,25 +459,10 @@ nsHttpChannel::ContinueConnect()
             if (NS_FAILED(rv) && event) {
                 event->Revoke();
             }
-            mozilla::Telemetry::Accumulate(
-                    mozilla::Telemetry::HTTP_CACHE_DISPOSITION, kCacheHit);
 
-            char* cacheDeviceID = nsnull;
-            mCacheEntry->GetDeviceID(&cacheDeviceID);
-            if (cacheDeviceID) {
-                if (!strcmp(cacheDeviceID, kDiskDeviceID))
-                    mozilla::Telemetry::Accumulate(
-                            mozilla::Telemetry::HTTP_DISK_CACHE_DISPOSITION,
-                            kCacheHit);
-                else if (!strcmp(cacheDeviceID, kMemoryDeviceID))
-                    mozilla::Telemetry::Accumulate(
-                            mozilla::Telemetry::HTTP_MEMORY_CACHE_DISPOSITION,
-                            kCacheHit);
-                else if (!strcmp(cacheDeviceID, kOfflineDeviceID))
-                    mozilla::Telemetry::Accumulate(
-                            mozilla::Telemetry::HTTP_OFFLINE_CACHE_DISPOSITION,
-                            kCacheHit);
-            }
+            AccumulateCacheHitTelemetry(mCacheEntryDeviceTelemetryID,
+                                        kCacheHit);
+
             return rv;
         }
         else if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
@@ -1289,7 +1289,7 @@ nsHttpChannel::ProcessResponse()
         break;
     }
 
-    int cacheDisposition;
+    PRUint32 cacheDisposition;
     if (!mDidReval)
         cacheDisposition = kCacheMissed;
     else if (successfulReval)
@@ -1297,26 +1297,9 @@ nsHttpChannel::ProcessResponse()
     else
         cacheDisposition = kCacheMissedViaReval;
 
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::HTTP_CACHE_DISPOSITION,
-            cacheDisposition);
-    if (mCacheEntry) {
-        char* cacheDeviceID = nsnull;
-        mCacheEntry->GetDeviceID(&cacheDeviceID);
-        if (cacheDeviceID) {
-            if (!strcmp(cacheDeviceID, kDiskDeviceID))
-                mozilla::Telemetry::Accumulate(
-                        mozilla::Telemetry::HTTP_DISK_CACHE_DISPOSITION,
-                        cacheDisposition);
-            else if (!strcmp(cacheDeviceID, kMemoryDeviceID))
-                mozilla::Telemetry::Accumulate(
-                        mozilla::Telemetry::HTTP_MEMORY_CACHE_DISPOSITION,
-                        cacheDisposition);
-            else if (!strcmp(cacheDeviceID, kOfflineDeviceID))
-                mozilla::Telemetry::Accumulate(
-                        mozilla::Telemetry::HTTP_OFFLINE_CACHE_DISPOSITION,
-                        cacheDisposition);
-        }
-    }
+    AccumulateCacheHitTelemetry(mCacheEntry ? mCacheEntryDeviceTelemetryID
+                                            : UNKNOWN_DEVICE,
+                                cacheDisposition);
 
     return rv;
 }
@@ -2860,6 +2843,27 @@ HttpCacheQuery::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
     nsresult rv = CheckCache();
     if (NS_FAILED(rv))
         NS_WARNING("cache check failed");
+
+    if (mCachedContentIsValid) {
+        char* cacheDeviceID = nsnull;
+        mCacheEntry->GetDeviceID(&cacheDeviceID);
+        if (cacheDeviceID) {
+            if (!strcmp(cacheDeviceID, kDiskDeviceID)) {
+                mCacheEntryDeviceTelemetryID
+                    = mozilla::Telemetry::HTTP_DISK_CACHE_DISPOSITION;
+            } else if (!strcmp(cacheDeviceID, kMemoryDeviceID)) {
+                mCacheEntryDeviceTelemetryID
+                    = mozilla::Telemetry::HTTP_MEMORY_CACHE_DISPOSITION;
+            } else if (!strcmp(cacheDeviceID, kOfflineDeviceID)) {
+                mCacheEntryDeviceTelemetryID
+                    = mozilla::Telemetry::HTTP_OFFLINE_CACHE_DISPOSITION;
+            } else {
+                MOZ_NOT_REACHED("unknown cache device ID");
+            }
+
+            delete cacheDeviceID;
+        }
+    }
 
     rv = NS_DispatchToMainThread(this);
     return rv;
@@ -5395,6 +5399,7 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
         mCachedContentIsPartial = mCacheQuery->mCachedContentIsPartial;
         mCustomConditionalRequest = mCacheQuery->mCustomConditionalRequest;
         mDidReval = mCacheQuery->mDidReval;
+        mCacheEntryDeviceTelemetryID = mCacheQuery->mCacheEntryDeviceTelemetryID;
         mCacheQuery = nsnull;
     }
 
