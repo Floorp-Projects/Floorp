@@ -788,6 +788,7 @@ void mozilla_sampler_stop()
   }
 
   t->Stop();
+  delete t;
   tlsTicker.set(NULL);
 }
 
