@@ -9,12 +9,5 @@ public interface SynchronizerSessionDelegate {
 
   public void onSynchronized(SynchronizerSession session);
   public void onSynchronizeFailed(SynchronizerSession session, Exception lastException, String reason);
-  public void onSynchronizeAborted(SynchronizerSession synchronizerSession);
   public void onSynchronizeSkipped(SynchronizerSession synchronizerSession);
-
-  // TODO: return value?
-  public void onFetchError(Exception e);
-  public void onStoreError(Exception e);
-  public void onSessionError(Exception e);
-
 }
