@@ -28,10 +28,10 @@ function consoleOpened(hudRef) {
 
     ok(hudRef.consolePanel, "console is in a panel");
 
-    document.addEventListener("popuphidden", function popupHidden() {
-      document.removeEventListener("popuphidden", popupHidden, false);
+    Services.obs.addObserver(function onWebConsoleClose() {
+      Services.obs.removeObserver(onWebConsoleClose, "web-console-destroyed");
       executeSoon(finishTest);
-    }, false);
+    }, "web-console-destroyed", false);
 
     // Close the window console via the menu item
     let menu = document.getElementById("webConsole");
