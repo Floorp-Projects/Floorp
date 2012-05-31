@@ -11,7 +11,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.res.Resources;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -81,7 +80,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
 
         mGoButton = (ImageButton) findViewById(R.id.awesomebar_button);
         mText = (AwesomeBarEditText) findViewById(R.id.awesomebar_text);
-        mText.setHighlightColor(GeckoApp.mBrowserToolbar.getHighlightColor());
 
         TabWidget tabWidget = (TabWidget) findViewById(android.R.id.tabs);
         tabWidget.setDividerDrawable(null);
@@ -102,26 +100,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 openUserEnteredAndFinish(mText.getText().toString());
             }
         });
-
-        Resources resources = getResources();
-        
-        int padding[] = { mText.getPaddingLeft(),
-                          mText.getPaddingTop(),
-                          mText.getPaddingRight(),
-                          mText.getPaddingBottom() };
-
-        if (!GeckoApp.mAppContext.isTablet()) {
-            GeckoStateListDrawable states = new GeckoStateListDrawable();
-            states.initializeFilter(GeckoApp.mBrowserToolbar.getHighlightColor());
-            states.addState(new int[] { android.R.attr.state_focused }, resources.getDrawable(R.drawable.address_bar_url_pressed));
-            states.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.address_bar_url_pressed));
-            states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
-            mText.setBackgroundDrawable(states);
-        } else {
-            mText.setBackgroundResource(R.drawable.address_bar_url);
-        }
-
-        mText.setPadding(padding[0], padding[1], padding[2], padding[3]);
 
         Intent intent = getIntent();
         String currentUrl = intent.getStringExtra(CURRENT_URL_KEY);
