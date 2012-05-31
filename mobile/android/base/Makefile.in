@@ -399,7 +399,6 @@ RES_DRAWABLE_BASE = \
   res/drawable/find_close.png \
   res/drawable/find_next.png \
   res/drawable/find_prev.png \
-  res/drawable/larry_green.png \
   res/drawable/larry_blue.png \
   res/drawable/larry_green.png \
   res/drawable/site_security_identified.png \
