@@ -34,7 +34,9 @@
 #include "base/compiler_specific.h"
 #include "NullHttpTransaction.h"
 
-using namespace mozilla;
+namespace mozilla { namespace net {
+ 
+namespace {
 
 // Device IDs for various cache types
 const char kDiskDeviceID[] = "disk";
@@ -47,6 +49,43 @@ const char kOfflineDeviceID[] = "offline";
                       nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE))
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
+
+bool IsRedirectStatus(PRUint32 status)
+{
+    // 305 disabled as a security measure (see bug 187996).
+    return status == 300 || status == 301 || status == 302 || status == 303 ||
+           status == 307 || status == 308;
+}
+
+// We only treat 3xx responses as redirects if they have a Location header and
+// the status code is in a whitelist.
+bool
+WillRedirect(const nsHttpResponseHead * response)
+{
+    return IsRedirectStatus(response->Status()) &&
+           response->PeekHeader(nsHttp::Location);
+}
+
+void
+MaybeMarkCacheEntryValid(const void * channel,
+                         nsICacheEntryDescriptor * cacheEntry,
+                         nsCacheAccessMode cacheAccess)
+{
+    // Mark the cache entry as valid in order to allow others access to it.
+    // XXX: Is it really necessary to check for write acccess to the entry?
+    if (cacheAccess & nsICache::ACCESS_WRITE) {
+        nsresult rv = cacheEntry->MarkValid();
+        LOG(("Marking cache entry valid "
+             "[channel=%p, entry=%p, access=%d, result=%d]",
+             channel, cacheEntry, PRIntn(cacheAccess), PRIntn(rv)));
+    } else {
+        LOG(("Not marking read-only cache entry valid "
+             "[channel=%p, entry=%p, access=%d]", 
+             channel, cacheEntry, PRIntn(cacheAccess)));
+    }
+}
+
+} // unnamed namespace
 
 class AutoRedirectVetoNotifier
 {
@@ -260,7 +299,7 @@ nsHttpChannel::ContinueConnect()
             if (!mCachedContentIsPartial) {
                 AsyncCall(&nsHttpChannel::AsyncOnExamineCachedResponse, &event);
             }
-            rv = ReadFromCache();
+            rv = ReadFromCache(true);
             if (NS_FAILED(rv) && event) {
                 event->Revoke();
             }
@@ -990,6 +1029,11 @@ nsHttpChannel::ProcessResponse()
         NS_ASSERTION(NS_SUCCEEDED(rv), "ProcessSTSHeader failed, continuing load.");
     }
 
+    MOZ_ASSERT(!mCachedContentIsValid);
+    if (httpStatus != 304 && httpStatus != 206) {
+        mCacheAsyncInputStream.CloseAndRelease();
+    }
+
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
 
@@ -1035,8 +1079,10 @@ nsHttpChannel::ProcessResponse()
     case 206:
         if (mCachedContentIsPartial) // an internal byte range request...
             rv = ProcessPartialContent();
-        else
+        else {
+            mCacheAsyncInputStream.CloseAndRelease();
             rv = ProcessNormal();
+        }
         break;
     case 300:
     case 301:
@@ -1061,6 +1107,7 @@ nsHttpChannel::ProcessResponse()
         rv = ProcessNotModified();
         if (NS_FAILED(rv)) {
             LOG(("ProcessNotModified failed [rv=%x]\n", rv));
+            mCacheAsyncInputStream.CloseAndRelease();
             rv = ProcessNormal();
         }
         else {
@@ -1914,7 +1961,7 @@ nsHttpChannel::ProcessPartialContent()
 
     // the cached content is valid, although incomplete.
     mCachedContentIsValid = true;
-    return ReadFromCache();
+    return ReadFromCache(false);
 }
 
 nsresult
@@ -2030,7 +2077,7 @@ nsHttpChannel::ProcessNotModified()
     gHttpHandler->OnExamineMergedResponse(this);
 
     mCachedContentIsValid = true;
-    rv = ReadFromCache();
+    rv = ReadFromCache(false);
     if (NS_FAILED(rv)) return rv;
 
     mTransactionReplaced = true;
@@ -2609,6 +2656,10 @@ nsHttpChannel::CheckCache()
 {
     nsresult rv = NS_OK;
 
+    bool usingSSL = false;
+    rv = mURI->SchemeIs("https", &usingSSL);
+    NS_ENSURE_SUCCESS(rv,rv);
+
     LOG(("nsHTTPChannel::CheckCache enter [this=%p entry=%p access=%d]",
         this, mCacheEntry.get(), mCacheAccess));
     
@@ -2650,11 +2701,16 @@ nsHttpChannel::CheckCache()
 
     // Parse the cached HTTP response headers
     mCachedResponseHead = new nsHttpResponseHead();
-    if (!mCachedResponseHead)
-        return NS_ERROR_OUT_OF_MEMORY;
     rv = mCachedResponseHead->Parse((char *) buf.get());
     NS_ENSURE_SUCCESS(rv, rv);
     buf.Adopt(0);
+
+    bool isCachedRedirect = WillRedirect(mCachedResponseHead);
+
+    // Do not return 304 responses from the cache, and also do not return
+    // any other non-redirect 3xx responses from the cache (see bug 759043).
+    NS_ENSURE_TRUE((mCachedResponseHead->Status() / 100 != 3) ||
+                   isCachedRedirect, NS_ERROR_ABORT);
 
     // Don't bother to validate items that are read-only,
     // unless they are read-only because of INHIBIT_CACHING or because
@@ -2665,11 +2721,14 @@ nsHttpChannel::CheckCache()
          (mCacheAccess == nsICache::ACCESS_READ &&
           !(mLoadFlags & INHIBIT_CACHING)) ||
          mFallbackChannel)) {
-        mCachedContentIsValid = true;
-        return NS_OK;
+        rv = StartBufferingCachedEntity(usingSSL);
+        if (NS_SUCCEEDED(rv)) {
+            mCachedContentIsValid = true;
+            // XXX: Isn't the cache entry already valid?
+            MaybeMarkCacheEntryValid(this, mCacheEntry, mCacheAccess);
+        }
+        return rv;
     }
-
-    PRUint16 isCachedRedirect = mCachedResponseHead->Status()/100 == 3;
 
     mCustomConditionalRequest =
         mRequestHead.PeekHeader(nsHttp::If_Modified_Since) ||
@@ -2683,6 +2742,10 @@ nsHttpChannel::CheckCache()
         // size of the cached content, then the cached response is partial...
         // either we need to issue a byte range request or we need to refetch
         // the entire document.
+        //
+        // We exclude redirects from this check because we (usually) strip the
+        // entity when we store the cache entry, and even if we didn't, we
+        // always ignore a cached redirect's entity anyway. See bug 759043.
         PRInt64 contentLength = mCachedResponseHead->ContentLength();
         if (contentLength != PRInt64(-1)) {
             PRUint32 size;
@@ -2702,12 +2765,19 @@ nsHttpChannel::CheckCache()
                      mCachedResponseHead->IsResumable() &&
                      !mCustomConditionalRequest &&
                      !mCachedResponseHead->NoStore()) {
-                    // looks like a partial entry we can reuse
+                    // looks like a partial entry we can reuse; add If-Range
+                    // and Range headers.
                     rv = SetupByteRangeRequest(size);
-                    NS_ENSURE_SUCCESS(rv, rv);
-                    mCachedContentIsPartial = true;
+                    mCachedContentIsPartial = NS_SUCCEEDED(rv);
+                    if (mCachedContentIsPartial) {
+                        rv = StartBufferingCachedEntity(usingSSL);
+                    } else {
+                        // Make the request unconditional again.
+                        mRequestHead.ClearHeader(nsHttp::Range);
+                        mRequestHead.ClearHeader(nsHttp::If_Range);
+                    }
                 }
-                return NS_OK;
+                return rv;
             }
         }
     }
@@ -2881,8 +2951,34 @@ nsHttpChannel::CheckCache()
         }
     }
 
-    LOG(("nsHTTPChannel::CheckCache exit [this=%p doValidation=%d]\n", this, doValidation));
-    return NS_OK;
+    // If there's any possibility that we may use the cached response's entity
+    // then start reading it into memory now. If we have to revalidate the
+    // entry and the revalidation fails, this will be a wasted effort, but
+    // it is much more likely that either we don't need to revalidate the entry
+    // or the entry will successfully revalidate.
+    if (mCachedContentIsValid || mDidReval) {
+        rv = StartBufferingCachedEntity(usingSSL);
+        if (NS_FAILED(rv)) {
+            // If we can't get the entity then we have to act as though we
+            // don't have the cache entry.
+            if (mDidReval) {
+                // Make the request unconditional again.
+                mRequestHead.ClearHeader(nsHttp::If_Modified_Since);
+                mRequestHead.ClearHeader(nsHttp::ETag);
+                mDidReval = false;
+            }
+            mCachedContentIsValid = false;
+        }
+    }
+
+    if (mCachedContentIsValid) {
+        // XXX: Isn't the cache entry already valid?
+        MaybeMarkCacheEntryValid(this, mCacheEntry, mCacheAccess);
+    }
+
+    LOG(("nsHTTPChannel::CheckCache exit [this=%p doValidation=%d]\n",
+         this, doValidation));
+    return rv;
 }
 
 bool
@@ -2949,15 +3045,108 @@ nsHttpChannel::ShouldUpdateOfflineCacheEntry()
     return false;
 }
 
-// If the data in the cache hasn't expired, then there's no need to
-// talk with the server, not even to do an if-modified-since.  This
-// method creates a stream from the cache, synthesizing all the various
-// channel-related events.
 nsresult
-nsHttpChannel::ReadFromCache()
+nsHttpChannel::StartBufferingCachedEntity(bool usingSSL)
 {
-    nsresult rv;
+    if (usingSSL) {
+        nsresult rv = mCacheEntry->GetSecurityInfo(
+                                      getter_AddRefs(mCachedSecurityInfo));
+        if (NS_FAILED(rv)) {
+            LOG(("failed to parse security-info [channel=%p, entry=%p]",
+                 this, mCacheEntry.get()));
+            NS_WARNING("failed to parse security-info");
+            return rv;
+        }
+        MOZ_ASSERT(mCachedSecurityInfo);
+        if (!mCachedSecurityInfo) {
+            LOG(("mCacheEntry->GetSecurityInfo returned success but did not "
+                 "return the security info [channel=%p, entry=%p]",
+                 this, mCacheEntry.get()));
+            return NS_ERROR_UNEXPECTED; // XXX error code
+        }
+    }
 
+    nsresult rv = NS_OK;
+
+    // Keep the conditions below in sync with the conditions in ReadFromCache.
+
+    if (WillRedirect(mCachedResponseHead)) {
+        // Do not even try to read the entity for a redirect because we do not
+        // return an entity to the application when we process redirects.
+        LOG(("Will skip read of cached redirect entity\n"));
+        return NS_OK;
+    }
+
+    if ((mLoadFlags & LOAD_ONLY_IF_MODIFIED) && !mCachedContentIsPartial) {
+        // For LOAD_ONLY_IF_MODIFIED, we usually don't have to deal with the
+        // cached entity. 
+        if (!mCacheForOfflineUse) {
+            LOG(("Will skip read from cache based on LOAD_ONLY_IF_MODIFIED "
+                 "load flag\n"));
+            return NS_OK;
+        }
+
+        // If offline caching has been requested and the offline cache needs
+        // updating, we must complete the call even if the main cache entry
+        // is up to date. We don't know yet for sure whether the offline
+        // cache needs updating because at this point we haven't opened it
+        // for writing yet, so we have to start reading the cached entity now
+        // just in case.
+        LOG(("May skip read from cache based on LOAD_ONLY_IF_MODIFIED "
+              "load flag\n"));
+    }
+
+    // Open an input stream for the entity, but DO NOT create/connect
+    // mCachePump; that is done only when we decide to actually read the
+    // cached entity. By opening the input stream here, we allow the stream
+    // transport service to start reading the entity on one of its
+    // background threads while we do validation (if any).
+
+    nsCOMPtr<nsIInputStream> wrapper;
+
+    nsCOMPtr<nsIInputStream> stream;
+    nsCOMPtr<nsITransport> transport;
+
+    static NS_DEFINE_CID(kStreamTransportServiceCID,
+                          NS_STREAMTRANSPORTSERVICE_CID);
+    nsCOMPtr<nsIStreamTransportService> sts =
+        do_GetService(kStreamTransportServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(stream));
+    if (NS_SUCCEEDED(rv)) {
+        rv = sts->CreateInputTransport(stream, PRInt64(-1), PRInt64(-1),
+                                        true, getter_AddRefs(transport));
+    }
+    if (NS_SUCCEEDED(rv)) {
+        rv = transport->OpenInputStream(0, 0, 0, getter_AddRefs(wrapper));
+    }
+    if (NS_SUCCEEDED(rv)) {
+        mCacheAsyncInputStream = do_QueryInterface(wrapper, &rv);
+    }
+    if (NS_SUCCEEDED(rv)) {
+        LOG(("Opened cache input stream [channel=%p, wrapper=%p, "
+              "transport=%p, stream=%p]", this, wrapper.get(),
+              transport.get(), stream.get()));
+    } else {
+        LOG(("Failed to open cache input stream [channel=%p, "
+              "wrapper=%p, transport=%p, stream=%p]", this,
+              wrapper.get(), transport.get(), stream.get()));
+
+        if (wrapper)
+            wrapper->Close();
+        if (stream)
+            stream->Close();
+    }
+
+    return rv;
+}
+
+// Actually process the cached response that we started to handle in CheckCache
+// and/or StartBufferingCachedEntity.
+nsresult
+nsHttpChannel::ReadFromCache(bool alreadyMarkedValid)
+{
     NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(mCachedContentIsValid, NS_ERROR_FAILURE);
 
@@ -2974,42 +3163,67 @@ nsHttpChannel::ReadFromCache()
     // from the cache, or 2) this may be due to a 304 not modified response,
     // in which case we could have security info from a socket transport.
     if (!mSecurityInfo)
-        mCacheEntry->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+        mSecurityInfo = mCachedSecurityInfo;
 
-    if ((mCacheAccess & nsICache::ACCESS_WRITE) && !mCachedContentIsPartial) {
-        // We have write access to the cache, but we don't need to go to the
-        // server to validate at this time, so just mark the cache entry as
-        // valid in order to allow others access to this cache entry.
-        mCacheEntry->MarkValid();
+    if (!alreadyMarkedValid && !mCachedContentIsPartial) {
+        // We validated the entry, and we have write access to the cache, so
+        // mark the cache entry as valid in order to allow others access to
+        // this cache entry.
+        //
+        // TODO: This should be done asynchronously so we don't take the cache
+        // service lock on the main thread.
+        MaybeMarkCacheEntryValid(this, mCacheEntry, mCacheAccess);
     }
 
-    // if this is a cached redirect, we must process the redirect asynchronously
-    // since AsyncOpen may not have returned yet.  Make sure there is a Location
-    // header, otherwise we'll have to treat this like a normal 200 response.
-    if (mResponseHead && (mResponseHead->Status() / 100 == 3) 
-                      && (mResponseHead->PeekHeader(nsHttp::Location)))
+    nsresult rv;
+
+    // Keep the conditions below in sync with the conditions in
+    // StartBufferingCachedEntity.
+
+    if (WillRedirect(mResponseHead)) {
+        // TODO: Bug 759040 - We should call HandleAsyncRedirect directly here,
+        // to avoid event dispatching latency.
+        MOZ_ASSERT(!mCacheAsyncInputStream);
+        LOG(("Skipping skip read of cached redirect entity\n"));
         return AsyncCall(&nsHttpChannel::HandleAsyncRedirect);
-
-    // have we been configured to skip reading from the cache?
-    if ((mLoadFlags & LOAD_ONLY_IF_MODIFIED) && !mCachedContentIsPartial &&
-        !ShouldUpdateOfflineCacheEntry()) {
-        // if offline caching has been requested and the offline cache needs
-        // updating, complete the call even if the main cache entry is
-        // up-to-date
-        LOG(("skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
-              "load flag\n"));
-        return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
+    }
+    
+    if ((mLoadFlags & LOAD_ONLY_IF_MODIFIED) && !mCachedContentIsPartial) {
+        if (!mCacheForOfflineUse) {
+            LOG(("Skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
+                 "load flag\n"));
+            MOZ_ASSERT(!mCacheAsyncInputStream);
+            // TODO: Bug 759040 - We should call HandleAsyncNotModified directly
+            // here, to avoid event dispatching latency.
+            return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
+        }
+        
+        if (!ShouldUpdateOfflineCacheEntry()) {
+            LOG(("Skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
+                 "load flag (mCacheForOfflineUse case)\n"));
+            mCacheAsyncInputStream.CloseAndRelease();
+            // TODO: Bug 759040 - We should call HandleAsyncNotModified directly
+            // here, to avoid event dispatching latency.
+            return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
+        }
     }
 
-    // open input stream for reading...
-    nsCOMPtr<nsIInputStream> stream;
-    rv = mCacheEntry->OpenInputStream(0, getter_AddRefs(stream));
-    if (NS_FAILED(rv)) return rv;
+    MOZ_ASSERT(mCacheAsyncInputStream);
+    if (!mCacheAsyncInputStream) {
+        NS_ERROR("mCacheAsyncInputStream is null but we're expecting to "
+                        "be able to read from it.");
+        return NS_ERROR_UNEXPECTED;
+    }
 
-    rv = nsInputStreamPump::Create(getter_AddRefs(mCachePump),
-                                   stream, PRInt64(-1), PRInt64(-1), 0, 0,
-                                   true);
-    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIAsyncInputStream> inputStream = mCacheAsyncInputStream.forget();
+ 
+    rv = nsInputStreamPump::Create(getter_AddRefs(mCachePump), inputStream,
+                                   PRInt64(-1), PRInt64(-1), 0, 0, true);
+    if (NS_FAILED(rv)) {
+        inputStream->Close();
+        return rv;
+    }
 
     rv = mCachePump->AsyncRead(this, mListenerContext);
     if (NS_FAILED(rv)) return rv;
@@ -3027,6 +3241,8 @@ nsHttpChannel::ReadFromCache()
 void
 nsHttpChannel::CloseCacheEntry(bool doomOnFailure)
 {
+    mCacheAsyncInputStream.CloseAndRelease();
+
     if (!mCacheEntry)
         return;
 
@@ -3775,6 +3991,7 @@ nsHttpChannel::Cancel(nsresult status)
         gHttpHandler->CancelTransaction(mTransaction, status);
     if (mTransactionPump)
         mTransactionPump->Cancel(status);
+    mCacheAsyncInputStream.CloseAndRelease();
     if (mCachePump)
         mCachePump->Cancel(status);
     if (mAuthProvider)
@@ -5397,3 +5614,5 @@ nsHttpChannel::AsyncOnExamineCachedResponse()
     gHttpHandler->OnExamineCachedResponse(this);
 
 }
+
+} } // namespace mozilla::net
