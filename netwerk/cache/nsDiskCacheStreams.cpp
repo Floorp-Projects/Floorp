@@ -703,6 +703,8 @@ nsDiskCacheStreamIO::OpenCacheFile(PRIntn flags, PRFileDesc ** fd)
 {
     NS_ENSURE_ARG_POINTER(fd);
     
+    CACHE_LOG_DEBUG(("nsDiskCacheStreamIO::OpenCacheFile"));
+
     nsresult         rv;
     nsDiskCacheMap * cacheMap = mDevice->CacheMap();
     
