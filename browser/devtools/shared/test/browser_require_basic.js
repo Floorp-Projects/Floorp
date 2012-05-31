@@ -21,13 +21,14 @@ function test() {
     testMultiImport();
     testRecursive();
     testUncompilable();
+    testFirebug();
 
     shutdown();
   });
 }
 
 function setup() {
-  define('gclitest/requirable', [], function(require, exports, module) {
+  define('gclitest/requirable', [ 'require', 'exports', 'module' ], function(require, exports, module) {
     exports.thing1 = 'thing1';
     exports.thing2 = 2;
 
@@ -36,12 +37,16 @@ function setup() {
     exports.getStatus = function() { return status; };
   });
 
-  define('gclitest/unrequirable', [], function(require, exports, module) {
+  define('gclitest/unrequirable', [ 'require', 'exports', 'module' ], function(require, exports, module) {
     null.throwNPE();
   });
 
-  define('gclitest/recurse', [], function(require, exports, module) {
+  define('gclitest/recurse', [ 'require', 'exports', 'module', 'gclitest/recurse' ], function(require, exports, module) {
     require('gclitest/recurse');
+  });
+
+  define('gclitest/firebug', [ 'gclitest/requirable' ], function(requirable) {
+    return { requirable: requirable, fb: true };
   });
 }
 
@@ -52,6 +57,8 @@ function shutdown() {
   delete define.globalDomain.modules['gclitest/unrequirable'];
   delete define.modules['gclitest/recurse'];
   delete define.globalDomain.modules['gclitest/recurse'];
+  delete define.modules['gclitest/firebug'];
+  delete define.globalDomain.modules['gclitest/firebug'];
 
   define = undefined;
   require = undefined;
@@ -123,4 +130,11 @@ function testRecursive() {
   // See Bug 658583
   // require('gclitest/recurse');
   // Also see the comments in the testRecursive() function
+}
+
+function testFirebug() {
+  let requirable = require('gclitest/requirable');
+  let firebug = require('gclitest/firebug');
+  ok(firebug.fb, 'firebug.fb is true');
+  is(requirable, firebug.requirable, 'requirable pass-through');
 }

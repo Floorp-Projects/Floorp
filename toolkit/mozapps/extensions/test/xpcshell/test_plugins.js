@@ -61,7 +61,7 @@ function run_test_1() {
   var testPlugin = get_test_plugin();
   do_check_neq(testPlugin, null);
 
-  AddonManager.getAddonsByTypes("plugin", function(addons) {
+  AddonManager.getAddonsByTypes(["plugin"], function(addons) {
     do_check_true(addons.length > 0);
 
     addons.forEach(function(p) {
