@@ -582,10 +582,10 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         /* Note: version is packed into the 32b space with another 16b value. */
         JSVersion version_ = JSVersion(version & JS_BITMASK(16));
         JS_ASSERT((version_ & VersionFlags::FULL_MASK) == unsigned(version_));
-        script = JSScript::Create(cx, !!(scriptBits & (1 << NoScriptRval)));
+        script = JSScript::Create(cx, !!(scriptBits & (1 << NoScriptRval)), version_);
         if (!script || !script->partiallyInit(cx, length, nsrcnotes, natoms, nobjects,
                                               nregexps, ntrynotes, nconsts, nClosedArgs,
-                                              nClosedVars, nTypeSets, version_))
+                                              nClosedVars, nTypeSets))
             return JS_FALSE;
 
         script->bindings.transfer(cx, &bindings);
@@ -1091,7 +1091,7 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 }
 
 JSScript *
-JSScript::Create(JSContext *cx, bool noScriptRval)
+JSScript::Create(JSContext *cx, bool noScriptRval, JSVersion version)
 {
     JSScript *script = js_NewGCScript(cx);
     if (!script)
@@ -1101,6 +1101,9 @@ JSScript::Create(JSContext *cx, bool noScriptRval)
 
     script->noScriptRval = noScriptRval;
  
+    script->version = version;
+    JS_ASSERT(script->getVersion() == version);     // assert that no overflow occurred
+
     return script;
 }
 
@@ -1118,8 +1121,7 @@ AllocScriptData(JSContext *cx, size_t size)
 bool
 JSScript::partiallyInit(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
                         uint32_t nobjects, uint32_t nregexps, uint32_t ntrynotes, uint32_t nconsts,
-                        uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets,
-                        JSVersion version)
+                        uint16_t nClosedArgs, uint16_t nClosedVars, uint32_t nTypeSets)
 {
     JSScript *script = this;
 
@@ -1130,9 +1132,6 @@ JSScript::partiallyInit(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint
         return false;
 
     script->length = length;
-
-    script->version = version;
-    JS_ASSERT(script->getVersion() == version);
 
     new (&script->bindings) Bindings(cx);
 
@@ -1219,12 +1218,11 @@ JSScript::partiallyInit(JSContext *cx, uint32_t length, uint32_t nsrcnotes, uint
 }
 
 bool
-JSScript::fullyInitTrivial(JSContext *cx, JSVersion version)
+JSScript::fullyInitTrivial(JSContext *cx)
 {
     JSScript *script = this;
 
-    if (!script->partiallyInit(cx, /* length = */ 1, /* nsrcnotes = */ 1, 0, 0, 0, 0, 0, 0, 0, 0,
-                               version))
+    if (!script->partiallyInit(cx, /* length = */ 1, /* nsrcnotes = */ 1, 0, 0, 0, 0, 0, 0, 0, 0))
         return false;
 
     script->code[0] = JSOP_STOP;
@@ -1257,7 +1255,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     if (!script->partiallyInit(cx, prologLength + mainLength, nsrcnotes, bce->atomIndices->count(),
                                bce->objectList.length, bce->regexpList.length, bce->ntrynotes,
                                bce->constList.length(), nClosedArgs, nClosedVars,
-                               bce->typesetCount, bce->version()))
+                               bce->typesetCount))
         return false;
 
     bce->sc->bindings.makeImmutable();
@@ -1791,7 +1789,7 @@ js::CloneScript(JSContext *cx, HandleScript src)
 
     /* Now that all fallible allocation is complete, create the GC thing. */
 
-    JSScript *dst = JSScript::Create(cx, src->noScriptRval);
+    JSScript *dst = JSScript::Create(cx, src->noScriptRval, src->getVersion());
     if (!dst) {
         Foreground::free_(data);
         return NULL;
@@ -1828,7 +1826,6 @@ js::CloneScript(JSContext *cx, HandleScript src)
     dst->lineno = src->lineno;
     dst->mainOffset = src->mainOffset;
     dst->natoms = src->natoms;
-    dst->setVersion(src->getVersion());
     dst->nfixed = src->nfixed;
     dst->nTypeSets = src->nTypeSets;
     dst->nslots = src->nslots;

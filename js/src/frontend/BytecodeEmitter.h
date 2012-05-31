@@ -143,8 +143,6 @@ struct BytecodeEmitter
      */
     ~BytecodeEmitter();
 
-    JSVersion version() const { return parser->versionWithFlags(); }
-
     bool isAliasedName(ParseNode *pn);
     bool shouldNoteClosedName(ParseNode *pn);
     bool noteClosedVar(ParseNode *pn);
