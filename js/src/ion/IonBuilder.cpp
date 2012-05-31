@@ -1817,7 +1817,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote *sn)
 
     jsbytecode *loopEntry = GetNextPc(loopHead);
     if (info().hasOsrAt(loopEntry)) {
-        MBasicBlock *preheader = newOsrPreheader(current, loopHead, loopEntry);
+        MBasicBlock *preheader = newOsrPreheader(current, loopEntry);
         if (!preheader)
             return ControlStatus_Error;
         current->end(MGoto::New(preheader));
@@ -1865,13 +1865,12 @@ IonBuilder::whileOrForInLoop(JSOp op, jssrcnote *sn)
     JS_ASSERT(ifne > pc);
 
     // Verify that the IFNE goes back to a loophead op.
-    jsbytecode *loopHead = GetNextPc(pc);
-    JS_ASSERT(JSOp(*loopHead) == JSOP_LOOPHEAD);
-    JS_ASSERT(loopHead == ifne + GetJumpOffset(ifne));
+    JS_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_LOOPHEAD);
+    JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
 
     jsbytecode *loopEntry = pc + GetJumpOffset(pc);
     if (info().hasOsrAt(loopEntry)) {
-        MBasicBlock *preheader = newOsrPreheader(current, loopHead, loopEntry);
+        MBasicBlock *preheader = newOsrPreheader(current, loopEntry);
         if (!preheader)
             return ControlStatus_Error;
         current->end(MGoto::New(preheader));
@@ -1948,7 +1947,7 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     bodyStart = GetNextPc(bodyStart);
 
     if (info().hasOsrAt(loopEntry)) {
-        MBasicBlock *preheader = newOsrPreheader(current, loopHead, loopEntry);
+        MBasicBlock *preheader = newOsrPreheader(current, loopEntry);
         if (!preheader)
             return ControlStatus_Error;
         current->end(MGoto::New(preheader));
@@ -3302,9 +3301,8 @@ IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32 loopDepth)
 }
 
 MBasicBlock *
-IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopHead, jsbytecode *loopEntry)
+IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 {
-    JS_ASSERT((JSOp)*loopHead == JSOP_LOOPHEAD);
     JS_ASSERT((JSOp)*loopEntry == JSOP_LOOPENTRY);
     JS_ASSERT(loopEntry == info().osrPc());
 
@@ -3397,10 +3395,11 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopHead, jsby
 
     // Fill slotTypes with the types of the predecessor block.
     for (uint32 i = 0; i < osrBlock->stackDepth(); i++)
-        slotTypes[i] = predecessor->getSlot(i)->type();
+        slotTypes[i] = MIRType_Value;
 
     // Update slotTypes for slots that may have a different type at this join point.
-    oracle->getNewTypesAtJoinPoint(script, loopHead, slotTypes);
+    if (!oracle->getOsrTypes(loopEntry, slotTypes))
+        return NULL;
 
     for (uint32 i = 1; i < osrBlock->stackDepth(); i++) {
         MIRType type = slotTypes[i];
@@ -3408,7 +3407,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopHead, jsby
         if (type != MIRType_Value && type != MIRType_Undefined && type != MIRType_Null) {
             MDefinition *def = osrBlock->getSlot(i);
             JS_ASSERT(def->type() == MIRType_Value);
-            MInstruction *actual = MUnbox::New(def, slotTypes[i], MUnbox::Fallible);
+            MInstruction *actual = MUnbox::New(def, slotTypes[i], MUnbox::Infallible);
             osrBlock->add(actual);
             osrBlock->rewriteSlot(i, actual);
         }
