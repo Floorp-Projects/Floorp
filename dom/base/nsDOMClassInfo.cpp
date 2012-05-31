@@ -5259,10 +5259,6 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSHandleObject obj,
     return JS_FALSE;
   }
 
-  // Print a warning on the console so developers have a chance to
-  // catch and fix these mistakes.
-  PrintWarningOnConsole(cx, "GlobalScopeElementReference");
-
   return JS_TRUE;
 }
 
