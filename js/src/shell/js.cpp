@@ -164,6 +164,7 @@ static JSRuntime *gRuntime = NULL;
 
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
+bool gGotError = false;
 FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
 #ifdef JS_THREADSAFE
@@ -438,9 +439,11 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
 
         int64_t t1 = PRMJ_Now();
         oldopts = JS_GetOptions(cx);
+        gGotError = false;
         JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO | JSOPTION_NO_SCRIPT_RVAL);
         script = JS_CompileUTF8FileHandle(cx, obj, filename, file);
         JS_SetOptions(cx, oldopts);
+        JS_ASSERT_IF(!script, gGotError);
         if (script && !compileOnly) {
             if (!JS_ExecuteScript(cx, obj, script, NULL)) {
                 if (!gQuitting && !gCanceled)
@@ -538,11 +541,14 @@ Process(JSContext *cx, JSObject *obj_, const char *filename, bool forceTTY)
 
         /* Even though we're interactive, we have a compile-n-go opportunity. */
         oldopts = JS_GetOptions(cx);
+        gGotError = false;
         if (!compileOnly)
             JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
         script = JS_CompileUCScript(cx, obj, uc_buffer, uc_len, "typein", startline);
         if (!compileOnly)
             JS_SetOptions(cx, oldopts);
+
+        JS_ASSERT_IF(!script, gGotError);
 
         if (script && !compileOnly) {
             ok = JS_ExecuteScript(cx, obj, script, &result);
@@ -4216,6 +4222,8 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     /* Conditionally ignore reported warnings. */
     if (JSREPORT_IS_WARNING(report->flags) && !reportWarnings)
         return;
+
+    gGotError = true;
 
     prefix = NULL;
     if (report->filename)
