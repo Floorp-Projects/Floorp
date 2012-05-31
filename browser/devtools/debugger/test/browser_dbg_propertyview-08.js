@@ -36,7 +36,7 @@ function testFrameParameters()
       dump("After currentThread.dispatch!\n");
 
       var frames = gDebugger.DebuggerView.StackFrames._frames,
-          localScope = gDebugger.DebuggerView.Properties.localScope,
+          localScope = gDebugger.DebuggerView.Properties._vars.firstChild,
           localNodes = localScope.querySelector(".details").childNodes;
 
       dump("Got our variables:\n");
@@ -59,7 +59,7 @@ function testFrameParameters()
       // Expand the 'this', 'arguments' and 'c' tree nodes. This causes
       // their properties to be retrieved and displayed.
       localNodes[0].expand();
-      localNodes[9].expand();
+      localNodes[8].expand();
       localNodes[10].expand();
 
       // Poll every few milliseconds until the properties are retrieved.
@@ -73,7 +73,7 @@ function testFrameParameters()
           resumeAndFinish();
         }
         if (!localNodes[0].fetched ||
-            !localNodes[9].fetched ||
+            !localNodes[8].fetched ||
             !localNodes[10].fetched) {
           return;
         }
@@ -86,28 +86,28 @@ function testFrameParameters()
                         .getAttribute("value").search(/object/) != -1,
           "__proto__ should be an object.");
 
-        is(localNodes[9].querySelector(".value").getAttribute("value"), "[object Object]",
-          "Should have the right property value for 'c'.");
-
-        is(localNodes[9].querySelectorAll(".property > .title > .key")[1]
-                        .getAttribute("value"), "a",
-          "Should have the right property name for 'a'.");
-
-        is(localNodes[9].querySelectorAll(".property > .title > .value")[1]
-                        .getAttribute("value"), 1,
-          "Should have the right value for 'c.a'.");
-
-        is(localNodes[10].querySelector(".value").getAttribute("value"),
+        is(localNodes[8].querySelector(".value").getAttribute("value"),
          "[object Arguments]",
          "Should have the right property value for 'arguments'.");
 
-        is(localNodes[10].querySelectorAll(".property > .title > .key")[7]
+        is(localNodes[8].querySelectorAll(".property > .title > .key")[7]
                        .getAttribute("value"), "length",
          "Should have the right property name for 'length'.");
 
-        is(localNodes[10].querySelectorAll(".property > .title > .value")[7]
+        is(localNodes[8].querySelectorAll(".property > .title > .value")[7]
                        .getAttribute("value"), 5,
          "Should have the right argument length.");
+
+        is(localNodes[10].querySelector(".value").getAttribute("value"), "[object Object]",
+          "Should have the right property value for 'c'.");
+
+        is(localNodes[10].querySelectorAll(".property > .title > .key")[1]
+                        .getAttribute("value"), "a",
+          "Should have the right property name for 'a'.");
+
+        is(localNodes[10].querySelectorAll(".property > .title > .value")[1]
+                        .getAttribute("value"), 1,
+          "Should have the right value for 'c.a'.");
 
         resumeAndFinish();
       }, 100);

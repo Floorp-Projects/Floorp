@@ -57,10 +57,10 @@ function onpopupshown2(aEvent)
   isnot(menuitems[1].getAttribute("checked"), "true",
         "menuitems[1] is not checked");
 
-  ok(!HUDService.saveRequestAndResponseBodies, "bodies are not logged");
+  ok(!huds[1].saveRequestAndResponseBodies, "bodies are not logged");
 
   // Enable body logging.
-  HUDService.saveRequestAndResponseBodies = true;
+  huds[1].saveRequestAndResponseBodies = true;
 
   menupopups[1].addEventListener("popuphidden", function _onhidden(aEvent) {
     menupopups[1].removeEventListener(aEvent.type, _onhidden, false);
@@ -103,11 +103,12 @@ function onpopupshown1(aEvent)
 {
   menupopups[0].removeEventListener(aEvent.type, onpopupshown1, false);
 
-  // The menuitem checkbox must be in sync with the other tabs.
-  is(menuitems[0].getAttribute("checked"), "true", "menuitems[0] is checked");
+  // The menuitem checkbox must not be in sync with the other tabs.
+  isnot(menuitems[0].getAttribute("checked"), "true",
+        "menuitems[0] is not checked");
 
-  // Disable body logging.
-  HUDService.saveRequestAndResponseBodies = false;
+  // Enable body logging for tab 1 as well.
+  huds[0].saveRequestAndResponseBodies = true;
 
   // Close the menu, and switch back to tab 2.
   menupopups[0].addEventListener("popuphidden", function _onhidden(aEvent) {
@@ -127,8 +128,7 @@ function onpopupshown2c(aEvent)
 {
   menupopups[1].removeEventListener(aEvent.type, onpopupshown2c, false);
 
-  isnot(menuitems[1].getAttribute("checked"), "true",
-        "menuitems[1] is not checked");
+  is(menuitems[1].getAttribute("checked"), "true", "menuitems[1] is checked");
 
   menupopups[1].addEventListener("popuphidden", function _onhidden(aEvent) {
     menupopups[1].removeEventListener(aEvent.type, _onhidden, false);

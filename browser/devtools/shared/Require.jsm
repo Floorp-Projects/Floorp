@@ -31,9 +31,7 @@ const console = (function() {
  */
 function define(moduleName, deps, payload) {
   if (typeof moduleName != "string") {
-    console.error(this.depth + " Error: Module name is not a string.");
-    console.trace();
-    return;
+    throw new Error("Error: Module name is not a string");
   }
 
   if (arguments.length == 2) {
@@ -49,8 +47,11 @@ function define(moduleName, deps, payload) {
   }
 
   if (moduleName in define.modules) {
-    console.error(this.depth + " Error: Redefining module: " + moduleName);
+    throw new Error("Error: Redefining module: " + moduleName);
   }
+
+  // Mark the payload so we know we need to call it to get the real module
+  payload.__uncompiled = true;
   define.modules[moduleName] = payload;
 }
 
@@ -66,14 +67,6 @@ define.debugDependencies = false;
 
 
 /**
- * Self executing function in which Domain is defined, and attached to define
- */
-var Syntax = {
-  COMMON_JS: 'commonjs',
-  AMD: 'amd'
-};
-
-/**
  * We invoke require() in the context of a Domain so we can have multiple
  * sets of modules running separate from each other.
  * This contrasts with JSMs which are singletons, Domains allows us to
@@ -83,7 +76,6 @@ var Syntax = {
  */
 function Domain() {
   this.modules = {};
-  this.syntax = Syntax.COMMON_JS;
 
   if (define.debugDependencies) {
     this.depth = "";
@@ -111,7 +103,6 @@ Domain.prototype.require = function(config, deps, callback) {
   }
 
   if (Array.isArray(deps)) {
-    this.syntax = Syntax.AMD;
     var params = deps.map(function(dep) {
       return this.lookup(dep);
     }, this);
@@ -141,8 +132,7 @@ Domain.prototype.lookup = function(moduleName) {
   }
 
   if (!(moduleName in define.modules)) {
-    console.error(this.depth + " Missing module: " + moduleName);
-    return null;
+    throw new Error("Missing module: " + moduleName);
   }
 
   var module = define.modules[moduleName];
@@ -151,29 +141,33 @@ Domain.prototype.lookup = function(moduleName) {
     console.log(this.depth + " Compiling module: " + moduleName);
   }
 
-  if (typeof module == "function") {
+  if (module.__uncompiled) {
     if (define.debugDependencies) {
       this.depth += ".";
     }
 
-    var exports;
+    var exports = {};
     try {
-      if (this.syntax === Syntax.COMMON_JS) {
-        exports = {};
-        module(this.require.bind(this), exports, { id: moduleName, uri: "" });
-      }
-      else {
-        var modules = module.deps.map(function(dep) {
-          return this.lookup(dep);
-        }.bind(this));
-        exports = module.apply(null, modules);
-      }
+      var params = module.deps.map(function(dep) {
+        if (dep === "require") {
+          return this.require.bind(this);
+        }
+        if (dep === "exports") {
+          return exports;
+        }
+        if (dep === "module") {
+          return { id: moduleName, uri: "" };
+        }
+        return this.lookup(dep);
+      }.bind(this));
+
+      var reply = module.apply(null, params);
+      module = (reply !== undefined) ? reply : exports;
     }
     catch (ex) {
-      console.error("Error using module: " + moduleName, ex);
+      dump("Error using module '" + moduleName + "' - " + ex + "\n");
       throw ex;
     }
-    module = exports;
 
     if (define.debugDependencies) {
       this.depth = this.depth.slice(0, -1);
