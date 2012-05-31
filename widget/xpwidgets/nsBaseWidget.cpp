@@ -98,6 +98,7 @@ nsBaseWidget::nsBaseWidget()
 , mZIndex(0)
 , mSizeMode(nsSizeMode_Normal)
 , mPopupLevel(ePopupLevelTop)
+, mPopupType(ePopupTypeAny)
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
@@ -209,6 +210,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     mWindowType = aInitData->mWindowType;
     mBorderStyle = aInitData->mBorderStyle;
     mPopupLevel = aInitData->mPopupLevel;
+    mPopupType = aInitData->mPopupHint;
   }
 
   if (aParent) {
@@ -806,8 +808,12 @@ nsBaseWidget::GetShouldAccelerate()
   bool accelerateByDefault = false;
 #endif
 
+  // We don't want to accelerate small popup windows like menu, but we still 
+  // want to accelerate xul panels that may contain arbitrarily complex content.
+  bool isSmallPopup = ((mWindowType == eWindowType_popup) && 
+                      (mPopupType != ePopupTypePanel));
   // we should use AddBoolPrefVarCache
-  bool disableAcceleration = (mWindowType == eWindowType_popup) || 
+  bool disableAcceleration = isSmallPopup || 
     Preferences::GetBool("layers.acceleration.disabled", false);
   mForceLayersAcceleration =
     Preferences::GetBool("layers.acceleration.force-enabled", false);

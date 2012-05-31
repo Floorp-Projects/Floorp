@@ -265,6 +265,8 @@ protected:
 
   BasicLayerManager* CreateBasicLayerManager();
 
+  nsPopupType PopupType() const { return mPopupType; }
+
 protected:
   /**
    * Starts the OMTC compositor destruction sequence.
@@ -304,6 +306,7 @@ protected:
   PRInt32           mZIndex;
   nsSizeMode        mSizeMode;
   nsPopupLevel      mPopupLevel;
+  nsPopupType       mPopupType;
 
   // the last rolled up popup. Only set this when an nsAutoRollup is in scope,
   // so it can be cleared automatically.

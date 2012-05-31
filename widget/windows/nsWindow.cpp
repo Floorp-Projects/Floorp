@@ -326,7 +326,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mPickerDisplayCount   = 0;
   mWindowType           = eWindowType_child;
   mBorderStyle          = eBorderStyle_default;
-  mPopupType            = ePopupTypeAny;
   mOldSizeMode          = nsSizeMode_Normal;
   mLastSizeMode         = nsSizeMode_Normal;
   mLastPoint.x          = 0;
@@ -466,7 +465,6 @@ nsWindow::Create(nsIWidget *aParent,
       WinUtils::GetNSWindowPtr((HWND)aNativeParent) : nsnull;
   }
 
-  mPopupType = aInitData->mPopupHint;
   mIsRTL = aInitData->mRTL;
 
   DWORD style = WindowStyle();
