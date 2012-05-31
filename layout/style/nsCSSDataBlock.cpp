@@ -225,6 +225,41 @@ nsCSSCompressedDataBlock::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) c
     return n;
 }
 
+bool
+nsCSSCompressedDataBlock::HasDefaultBorderImageSlice() const
+{
+  const nsCSSValueList *slice =
+    ValueFor(eCSSProperty_border_image_slice)->GetListValue();
+  return !slice->mNext &&
+         slice->mValue.GetRectValue().AllSidesEqualTo(
+           nsCSSValue(1.0f, eCSSUnit_Percent));
+}
+
+bool
+nsCSSCompressedDataBlock::HasDefaultBorderImageWidth() const
+{
+  const nsCSSRect &width =
+    ValueFor(eCSSProperty_border_image_width)->GetRectValue();
+  return width.AllSidesEqualTo(nsCSSValue(1.0f, eCSSUnit_Number));
+}
+
+bool
+nsCSSCompressedDataBlock::HasDefaultBorderImageOutset() const
+{
+  const nsCSSRect &outset =
+    ValueFor(eCSSProperty_border_image_outset)->GetRectValue();
+  return outset.AllSidesEqualTo(nsCSSValue(0.0f, eCSSUnit_Number));
+}
+
+bool
+nsCSSCompressedDataBlock::HasDefaultBorderImageRepeat() const
+{
+  const nsCSSValuePair &repeat =
+    ValueFor(eCSSProperty_border_image_repeat)->GetPairValue();
+  return repeat.BothValuesEqualTo(
+    nsCSSValue(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH, eCSSUnit_Enumerated));
+}
+
 /*****************************************************************************/
 
 nsCSSExpandedDataBlock::nsCSSExpandedDataBlock()
