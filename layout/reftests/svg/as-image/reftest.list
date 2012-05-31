@@ -21,7 +21,7 @@ include zoom/reftest.list
 == background-image-rect-1png.html  lime100x100-ref.html
 == background-image-rect-2.html     lime100x100-ref.html
 
-# Test for -moz-border-image
+# Test for border-image
 == border-image-simple-1.html       lime100x100-ref.html
 == border-image-simple-2.html       lime100x100-ref.html
 
