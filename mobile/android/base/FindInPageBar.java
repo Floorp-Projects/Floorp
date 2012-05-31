@@ -5,7 +5,6 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -40,28 +39,6 @@ public class FindInPageBar extends RelativeLayout implements TextWatcher, View.O
 
         mFindText = (EditText) content.findViewById(R.id.find_text);
         mFindText.addTextChangedListener(this);
-        mFindText.setHighlightColor(GeckoApp.mBrowserToolbar.getHighlightColor());
-
-        if (!GeckoApp.mAppContext.isTablet()) {
-            // EditText styling modeled after AwesomeBar styling
-
-            int padding[] = { mFindText.getPaddingLeft(),
-                              mFindText.getPaddingTop(),
-                              mFindText.getPaddingRight(),
-                              mFindText.getPaddingBottom() };
-
-            Resources resources = getContext().getResources();
-            GeckoStateListDrawable states = new GeckoStateListDrawable();
-            states.initializeFilter(GeckoApp.mBrowserToolbar.getHighlightColor());
-            states.addState(new int[] { android.R.attr.state_focused }, resources.getDrawable(R.drawable.address_bar_url_pressed));
-            states.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.address_bar_url_pressed));
-            states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
-            mFindText.setBackgroundDrawable(states);
-
-            mFindText.setPadding(padding[0], padding[1], padding[2], padding[3]);
-        } else {
-            mFindText.setBackgroundResource(R.drawable.address_bar_url);
-        }
 
         mInflated = true;
     }
