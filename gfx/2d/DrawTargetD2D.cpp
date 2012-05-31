@@ -129,7 +129,8 @@ public:
     RefPtr<ID2D1GeometrySink> sink;
     invClippedArea->Open(byRef(sink));
 
-    rectGeom->CombineWithGeometry(mClippedArea, D2D1_COMBINE_MODE_EXCLUDE, NULL, sink);
+    HRESULT hr = rectGeom->CombineWithGeometry(mClippedArea, D2D1_COMBINE_MODE_EXCLUDE,
+                                               NULL, sink);
     sink->Close();
 
     RefPtr<ID2D1BitmapBrush> brush;
@@ -291,8 +292,6 @@ DrawTargetD2D::DrawSurface(SourceSurface *aSurface,
       srcRect.x -= (uint32_t)aSource.x;
       srcRect.y -= (uint32_t)aSource.y;
     }
-    break;
-  default:
     break;
   }
 
@@ -700,8 +699,6 @@ DrawTargetD2D::CopySurface(SourceSurface *aSurface,
       AddDependencyOnSource(srcSurf);
     }
     break;
-  default:
-    return;
   }
 
   if (!bitmap) {
@@ -2012,8 +2009,6 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
         }
       }
       break;
-    default:
-      break;
     }
     
     mRT->CreateBitmapBrush(bitmap,
@@ -2275,6 +2270,8 @@ DrawTargetD2D::CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix
 
   if (uploadRect.width <= mRT->GetMaximumBitmapSize() &&
       uploadRect.height <= mRT->GetMaximumBitmapSize()) {
+            
+    int Bpp = BytesPerPixel(aSurface->GetFormat());
 
     // A partial upload will suffice.
     mRT->CreateBitmap(D2D1::SizeU(uint32_t(uploadRect.width), uint32_t(uploadRect.height)),
@@ -2308,13 +2305,13 @@ DrawTargetD2D::CreatePartialBitmapForSurface(DataSourceSurface *aSurface, Matrix
     scaleSize.width = max(Distance(topRight, topLeft), Distance(bottomRight, bottomLeft));
     scaleSize.height = max(Distance(topRight, bottomRight), Distance(topLeft, bottomLeft));
 
-    if (unsigned(scaleSize.width) > mRT->GetMaximumBitmapSize()) {
+    if (scaleSize.width > mRT->GetMaximumBitmapSize()) {
       // Ok, in this case we'd really want a downscale of a part of the bitmap,
       // perhaps we can do this later but for simplicity let's do something
       // different here and assume it's good enough, this should be rare!
       scaleSize.width = 4095;
     }
-    if (unsigned(scaleSize.height) > mRT->GetMaximumBitmapSize()) {
+    if (scaleSize.height > mRT->GetMaximumBitmapSize()) {
       scaleSize.height = 4095;
     }
 

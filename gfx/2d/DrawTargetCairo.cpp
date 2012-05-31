@@ -212,7 +212,6 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
     {
       // We should support all pattern types!
       MOZ_ASSERT(false);
-      MOZ_NOT_REACHED_MARKER();
     }
   }
 
