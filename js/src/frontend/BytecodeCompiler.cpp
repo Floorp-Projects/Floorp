@@ -112,7 +112,12 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!tc.init())
         return NULL;
 
-    BytecodeEmitter bce(&parser, &sc, lineno, noScriptRval, needScriptGlobal);
+    Rooted<JSScript*> script(cx);
+    script = JSScript::Create(cx);
+    if (!script)
+        return NULL;
+
+    BytecodeEmitter bce(&parser, &sc, script, lineno, noScriptRval, needScriptGlobal);
     if (!bce.init())
         return NULL;
 
@@ -240,9 +245,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     JS_ASSERT(bce.version() == version);
 
-    Rooted<JSScript*> script(cx);
-    script = JSScript::NewScriptFromEmitter(cx, &bce);
-    if (!script)
+    if (!script->fullyInitFromEmitter(cx, &bce))
         return NULL;
 
     JS_ASSERT(script->savedCallerFun == savedCallerFun);
@@ -276,7 +279,12 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!funtc.init())
         return false;
 
-    BytecodeEmitter funbce(&parser, &funsc, lineno,
+    Rooted<JSScript*> script(cx);
+    script = JSScript::Create(cx);
+    if (!script)
+        return false;
+
+    BytecodeEmitter funbce(&parser, &funsc, script, lineno,
                            /* noScriptRval = */ false, /* needsScriptGlobal = */ false);
     if (!funbce.init())
         return false;
