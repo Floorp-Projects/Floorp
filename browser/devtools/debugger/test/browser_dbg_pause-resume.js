@@ -61,7 +61,7 @@ function testResume() {
       is(button.getAttribute("tooltiptext"), gDebugger.L10N.getStr("pauseTooltip"),
         "Button tooltip should be pause when running.");
 
-      closeDebuggerAndFinish(gTab);
+      closeDebuggerAndFinish();
     }}, 0);
   });
 

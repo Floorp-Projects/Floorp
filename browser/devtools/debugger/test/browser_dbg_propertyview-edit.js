@@ -97,7 +97,7 @@ function testModification(aVar, aCallback, aNewValue, aNewResult) {
 
 function resumeAndFinish() {
   gDebugger.DebuggerController.activeThread.resume(function() {
-    closeDebuggerAndFinish(gTab);
+    closeDebuggerAndFinish();
   });
 }
 

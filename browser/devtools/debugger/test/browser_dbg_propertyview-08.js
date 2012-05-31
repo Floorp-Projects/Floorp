@@ -127,7 +127,7 @@ function resumeAndFinish() {
     is(frames.querySelectorAll(".dbg-stackframe").length, 0,
       "Should have no frames.");
 
-    closeDebuggerAndFinish(gTab);
+    closeDebuggerAndFinish();
   }, true);
 
   gDebugger.DebuggerController.activeThread.resume();
