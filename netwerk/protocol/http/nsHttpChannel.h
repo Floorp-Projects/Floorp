@@ -156,7 +156,8 @@ private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
     bool     RequestIsConditional();
-    nsresult Connect(bool firstTime = true);
+    nsresult Connect();
+    nsresult ContinueConnect();
     void     SpeculativeConnect();
     nsresult SetupTransaction();
     nsresult CallOnStartRequest();
