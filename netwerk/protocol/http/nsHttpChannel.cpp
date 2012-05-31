@@ -785,24 +785,16 @@ nsHttpChannel::CallOnStartRequest()
 
     if (!mCanceled) {
         // create offline cache entry if offline caching was requested
-        if (mCacheForOfflineUse) {
-            bool shouldCacheForOfflineUse;
-            rv = ShouldUpdateOfflineCacheEntry(&shouldCacheForOfflineUse);
+        if (ShouldUpdateOfflineCacheEntry()) {
+            LOG(("writing to the offline cache"));
+            rv = InitOfflineCacheEntry();
             if (NS_FAILED(rv)) return rv;
-            
-            if (shouldCacheForOfflineUse) {
-                LOG(("writing to the offline cache"));
-                rv = InitOfflineCacheEntry();
-                if (NS_FAILED(rv)) return rv;
                 
-                if (mOfflineCacheEntry) {
-                  rv = InstallOfflineCacheListener();
-                  if (NS_FAILED(rv)) return rv;
-                }
-            } else {
-                LOG(("offline cache is up to date, not updating"));
-                CloseOfflineCacheEntry();
-            }
+            rv = InstallOfflineCacheListener();
+            if (NS_FAILED(rv)) return rv;
+        } else if (mCacheForOfflineUse) {
+            LOG(("offline cache is up to date, not updating"));
+            CloseOfflineCacheEntry();
         }
     }
 
@@ -2920,45 +2912,41 @@ nsHttpChannel::MustValidateBasedOnQueryUrl()
 }
 
 
-nsresult
-nsHttpChannel::ShouldUpdateOfflineCacheEntry(bool *shouldCacheForOfflineUse)
+bool
+nsHttpChannel::ShouldUpdateOfflineCacheEntry()
 {
-    *shouldCacheForOfflineUse = false;
-
-    if (!mOfflineCacheEntry) {
-        return NS_OK;
+    if (!mCacheForOfflineUse || !mOfflineCacheEntry) {
+        return false;
     }
 
     // if we're updating the cache entry, update the offline cache entry too
     if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE)) {
-        *shouldCacheForOfflineUse = true;
-        return NS_OK;
+        return true;
     }
 
     // if there's nothing in the offline cache, add it
     if (mOfflineCacheEntry && (mOfflineCacheAccess == nsICache::ACCESS_WRITE)) {
-        *shouldCacheForOfflineUse = true;
-        return NS_OK;
+        return true;
     }
 
     // if the document is newer than the offline entry, update it
     PRUint32 docLastModifiedTime;
     nsresult rv = mResponseHead->GetLastModifiedValue(&docLastModifiedTime);
     if (NS_FAILED(rv)) {
-        *shouldCacheForOfflineUse = true;
-        return NS_OK;
+        return true;
     }
 
     PRUint32 offlineLastModifiedTime;
     rv = mOfflineCacheEntry->GetLastModified(&offlineLastModifiedTime);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (docLastModifiedTime > offlineLastModifiedTime) {
-        *shouldCacheForOfflineUse = true;
-        return NS_OK;
+    if (NS_FAILED(rv)) {
+        return false;
     }
 
-    return NS_OK;
+    if (docLastModifiedTime > offlineLastModifiedTime) {
+        return true;
+    }
+
+    return false;
 }
 
 // If the data in the cache hasn't expired, then there's no need to
@@ -3003,19 +2991,14 @@ nsHttpChannel::ReadFromCache()
         return AsyncCall(&nsHttpChannel::HandleAsyncRedirect);
 
     // have we been configured to skip reading from the cache?
-    if ((mLoadFlags & LOAD_ONLY_IF_MODIFIED) && !mCachedContentIsPartial) {
+    if ((mLoadFlags & LOAD_ONLY_IF_MODIFIED) && !mCachedContentIsPartial &&
+        !ShouldUpdateOfflineCacheEntry()) {
         // if offline caching has been requested and the offline cache needs
         // updating, complete the call even if the main cache entry is
         // up-to-date
-        bool shouldUpdateOffline;
-        if (!mCacheForOfflineUse ||
-            NS_FAILED(ShouldUpdateOfflineCacheEntry(&shouldUpdateOffline)) ||
-            !shouldUpdateOffline) {
-
-            LOG(("skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
-                 "load flag\n"));
-            return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
-        }
+        LOG(("skipping read from cache based on LOAD_ONLY_IF_MODIFIED "
+              "load flag\n"));
+        return AsyncCall(&nsHttpChannel::HandleAsyncNotModified);
     }
 
     // open input stream for reading...
