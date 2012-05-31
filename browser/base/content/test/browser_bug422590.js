@@ -1,7 +1,5 @@
 function test() {
   waitForExplicitFinish();
-  ignoreAllUncaughtExceptions();
-  
   // test the main (normal) browser window
   testCustomize(window, testChromeless);
 }
