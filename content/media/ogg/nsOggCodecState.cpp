@@ -873,14 +873,22 @@ bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
 }
 
 /* Return the timestamp (in microseconds) equivalent to a granulepos. */
-PRInt64 nsOpusState::Time(PRInt64 granulepos)
+PRInt64 nsOpusState::Time(PRInt64 aGranulepos)
 {
-  if (!mActive || granulepos < 0)
+  if (!mActive)
+    return -1;
+
+  return Time(mPreSkip, aGranulepos);
+}
+
+PRInt64 nsOpusState::Time(int aPreSkip, PRInt64 aGranulepos)
+{
+  if (aGranulepos < 0)
     return -1;
 
   // Ogg Opus always runs at a granule rate of 48 kHz.
-  CheckedInt64 t = CheckedInt64(granulepos - mPreSkip) * USECS_PER_S;
-  return t.isValid() ? t.value() / mRate : -1;
+  CheckedInt64 t = CheckedInt64(aGranulepos - aPreSkip) * USECS_PER_S;
+  return t.isValid() ? t.value() / 48000 : -1;
 }
 
 bool nsOpusState::IsHeader(ogg_packet* aPacket)
