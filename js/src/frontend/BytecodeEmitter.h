@@ -77,6 +77,8 @@ struct BytecodeEmitter
 
     BytecodeEmitter *parent;        /* enclosing function or global context */
 
+    Rooted<JSScript*> script;       /* the JSScript we're ultimately producing */
+
     struct {
         jsbytecode  *base;          /* base of JS bytecode vector */
         jsbytecode  *limit;         /* one byte beyond end of bytecode */
@@ -91,7 +93,7 @@ struct BytecodeEmitter
     Parser          *parser;        /* the parser */
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
-    unsigned        firstLine;      /* first line, for JSScript::NewScriptFromEmitter */
+    unsigned        firstLine;      /* first line, for JSScript::initFromEmitter */
 
     int             stackDepth;     /* current stack depth in script frame */
     unsigned        maxStackDepth;  /* maximum stack depth so far */
@@ -130,7 +132,7 @@ struct BytecodeEmitter
 
     bool            inForInit:1;        /* emitting init expr of for; exclude 'in' */
 
-    BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lineno,
+    BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script, unsigned lineno,
                     bool noScriptRval, bool needScriptGlobal);
     bool init();
 

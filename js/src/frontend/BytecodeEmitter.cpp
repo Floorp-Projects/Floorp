@@ -65,10 +65,11 @@ NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned sta
 static JSBool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
-BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, unsigned lineno,
-                                 bool noScriptRval, bool needScriptGlobal)
+BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script,
+                                 unsigned lineno, bool noScriptRval, bool needScriptGlobal)
   : sc(sc),
     parent(NULL),
+    script(sc->context, script),
     parser(parser),
     atomIndices(sc->context),
     stackDepth(0), maxStackDepth(0),
@@ -2656,9 +2657,16 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToMain();
     }
 
-    return EmitTree(cx, bce, body) &&
-           Emit1(cx, bce, JSOP_STOP) >= 0 &&
-           JSScript::NewScriptFromEmitter(cx, bce);
+    if (!EmitTree(cx, bce, body))
+        return false;
+        
+    if (Emit1(cx, bce, JSOP_STOP) < 0)
+        return false;
+
+    if (!bce->script->fullyInitFromEmitter(cx, bce))
+        return false;
+
+    return true;
 }
 
 static bool
@@ -4854,7 +4862,12 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
         sc.bindings.transfer(cx, &funbox->bindings);
 
-        BytecodeEmitter bce2(bce->parser, &sc, pn->pn_pos.begin.lineno,
+        Rooted<JSScript*> script(cx);
+        script = JSScript::Create(cx);
+        if (!script)
+            return false;
+
+        BytecodeEmitter bce2(bce->parser, &sc, script, pn->pn_pos.begin.lineno,
                              /* noScriptRval = */ false, /* needsScriptGlobal = */ false);
         if (!bce2.init())
             return false;
