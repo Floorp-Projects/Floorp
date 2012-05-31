@@ -22,20 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753595
 
 SimpleTest.waitForExplicitFinish();
 
-var iframeScript = function() {
-  const Ci = Components.interfaces;
-  function painted() {
-    sendAsyncMessage('test:mozpainted');
-  }
-  var utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils);
-  if (!utils.isMozAfterPaintPending) {
-    sendAsyncMessage('test:mozpainted');
-  } else {
-    content.addEventListener("MozAfterPaint", painted, false);
-  }
-}
-
 function runTest() {
 
   browserFrameHelpers.setEnabledPref(true);
@@ -44,35 +30,57 @@ function runTest() {
   var iframe1 = document.createElement('iframe');
   iframe1.mozbrowser = true;
   document.body.appendChild(iframe1);
+  iframe1.src = 'data:text/html,<html>' +
+    '<body style="background:green">hello</body></html>';
 
   var screenshots = [];
   var numLoaded = 0;
 
-  function screenshotLoaded(e) {
-    screenshots.push(e.target.result);
+  function screenshotTaken(screenshot) {
+    screenshots.push(screenshot);
     if (screenshots.length === 1) {
+      ok(true, 'Got initial non blank screenshot');
       iframe1.src = 'data:text/html,<html>' +
         '<body style="background:blue">hello</body></html>';
+      waitForScreenshot(function(screenshot) {
+        return screenshot !== screenshots[0];
+      });
     }
     else if (screenshots.length === 2) {
-      ok(screenshots[0] !== screenshots[1], 'Screenshots differ');
+      ok(true, 'Got updated screenshot after source page changed');
       SimpleTest.finish();
     }
   }
 
-  function recvMozPainted() {
+  // We continually take screenshots until we get one that we are
+  // happy with
+  function waitForScreenshot(filter) {
+
+    function screenshotLoaded(e) {
+      if (filter(e.target.result)) {
+        screenshotTaken(e.target.result);
+        return;
+      }
+      if (--attempts === 0) {
+        ok(false, 'Timed out waiting for correct screenshot');
+        SimpleTest.finish();
+      } else {
+        content.document.defaultView.setTimeout(function() {
+          iframe1.getScreenshot().onsuccess = screenshotLoaded;
+        }, 200);
+      }
+    }
+
+    var attempts = 10;
     iframe1.getScreenshot().onsuccess = screenshotLoaded;
   }
 
   function iframeLoadedHandler() {
     numLoaded++;
-    if (numLoaded === 1) {
-      iframe1.src = 'data:text/html,<html>' +
-        '<body style="background:green">hello</body></html>';
-    } else if (numLoaded === 2 || numLoaded === 3) {
-      var mm = SpecialPowers.getBrowserFrameMessageManager(iframe1);
-      mm.addMessageListener('test:mozpainted', recvMozPainted);
-      mm.loadFrameScript('data:,(' + iframeScript.toString() + ')();', false);
+    if (numLoaded === 2) {
+      waitForScreenshot(function(screenshot) {
+        return screenshot !== 'data:,';
+      });
     }
   }
 
