@@ -3961,6 +3961,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 NS_IMETHODIMP
 nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
 {
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+
     LOG(("nsHttpChannel::SetupFallbackChannel [this=%x, key=%s]",
          this, aFallbackKey));
     mFallbackChannel = true;
@@ -4839,8 +4841,7 @@ nsHttpChannel::SetCacheKey(nsISupports *key)
 
     LOG(("nsHttpChannel::SetCacheKey [this=%p key=%p]\n", this, key));
 
-    // can only set the cache key if a load is not in progress
-    NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
     if (!key)
         mPostID = 0;
@@ -4892,6 +4893,8 @@ nsHttpChannel::GetCacheForOfflineUse(bool *value)
 NS_IMETHODIMP
 nsHttpChannel::SetCacheForOfflineUse(bool value)
 {
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+
     mCacheForOfflineUse = value;
 
     return NS_OK;
@@ -4908,6 +4911,8 @@ nsHttpChannel::GetOfflineCacheClientID(nsACString &value)
 NS_IMETHODIMP
 nsHttpChannel::SetOfflineCacheClientID(const nsACString &value)
 {
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+
     mOfflineCacheClientID = value;
 
     return NS_OK;
@@ -5097,7 +5102,7 @@ nsHttpChannel::GetApplicationCache(nsIApplicationCache **out)
 NS_IMETHODIMP
 nsHttpChannel::SetApplicationCache(nsIApplicationCache *appCache)
 {
-    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
     mApplicationCache = appCache;
     return NS_OK;
@@ -5120,7 +5125,7 @@ nsHttpChannel::GetInheritApplicationCache(bool *aInherit)
 NS_IMETHODIMP
 nsHttpChannel::SetInheritApplicationCache(bool aInherit)
 {
-    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
     mInheritApplicationCache = aInherit;
     return NS_OK;
@@ -5136,7 +5141,7 @@ nsHttpChannel::GetChooseApplicationCache(bool *aChoose)
 NS_IMETHODIMP
 nsHttpChannel::SetChooseApplicationCache(bool aChoose)
 {
-    NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_ALREADY_OPENED);
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
     mChooseApplicationCache = aChoose;
     return NS_OK;
