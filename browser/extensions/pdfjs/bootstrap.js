@@ -1,8 +1,4 @@
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 
 'use strict';
@@ -14,13 +10,26 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cm = Components.manager;
 let Cu = Components.utils;
-let application = Cc['@mozilla.org/fuel/application;1']
-                    .getService(Ci.fuelIApplication);
 
 Cu.import('resource://gre/modules/Services.jsm');
 
+function getBoolPref(pref, def) {
+  try {
+    return Services.prefs.getBoolPref(pref);
+  } catch (ex) {
+    return def;
+  }
+}
+
+function setStringPref(pref, value) {
+  let str = Cc['@mozilla.org/supports-string;1']
+              .createInstance(Ci.nsISupportsString);
+  str.data = value;
+  Services.prefs.setComplexValue(pref, Ci.nsISupportsString, str);
+}
+
 function log(str) {
-  if (!application.prefs.getValue(EXT_PREFIX + '.pdfBugEnabled', false))
+  if (!getBoolPref(EXT_PREFIX + '.pdfBugEnabled', false))
     return;
   dump(str + '\n');
 }
@@ -97,6 +106,6 @@ function install(aData, aReason) {
 }
 
 function uninstall(aData, aReason) {
-  application.prefs.setValue(EXT_PREFIX + '.database', '{}');
+  setStringPref(EXT_PREFIX + '.database', '{}');
 }
 
