@@ -733,8 +733,8 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
     const nsStyleBorder* oldBorder = aOldStyleContext->PeekStyleBorder();
     if (oldBorder) {
-      oldValue = oldBorder->GetActualBorder();
-      newValue = GetStyleBorder()->GetActualBorder();
+      oldValue = oldBorder->GetComputedBorder();
+      newValue = GetStyleBorder()->GetComputedBorder();
       if (oldValue != newValue &&
           !props.Get(UsedBorderProperty())) {
         props.Set(UsedBorderProperty(), new nsMargin(oldValue));
@@ -745,9 +745,10 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   imgIRequest *oldBorderImage = aOldStyleContext
     ? aOldStyleContext->GetStyleBorder()->GetBorderImage()
     : nsnull;
+  // FIXME (Bug 759996): The following is no longer true.
   // For border-images, we can't be as conservative (we need to set the
   // new loaders if there has been any change) since the CalcDifference
-  // call depended on the result of GetActualBorder() and that result
+  // call depended on the result of GetComputedBorder() and that result
   // depends on whether the image has loaded, start the image load now
   // so that we'll get notified when it completes loading and can do a
   // restyle.  Otherwise, the image might finish loading from the
@@ -846,7 +847,7 @@ nsIFrame::GetUsedBorder() const
   if (b) {
     border = *b;
   } else {
-    border = GetStyleBorder()->GetActualBorder();
+    border = GetStyleBorder()->GetComputedBorder();
   }
   return border;
 }
