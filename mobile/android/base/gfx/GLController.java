@@ -112,7 +112,7 @@ public class GLController {
         mWidth = newWidth;
         mHeight = newHeight;
         if (mGL != null) {
-          mView.getRenderer().onSurfaceChanged((GL10)mGL, mWidth, mHeight);
+            mView.getRenderer().onSurfaceChanged((GL10)mGL, mWidth, mHeight);
         }
         mSurfaceValid = true;
         notifyAll();
@@ -139,8 +139,7 @@ public class GLController {
         mGL = mEGLContext.getGL();
 
         if (mView.getRenderer() != null) {
-            mView.getRenderer().onSurfaceCreated((GL10)mGL, mEGLConfig);
-            mView.getRenderer().onSurfaceChanged((GL10)mGL, mWidth, mHeight);
+            mView.getRenderer().resizeView(mWidth, mHeight);
         }
     }
 
