@@ -3,13 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <item android:right="34dp">
-        <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-            android:src="@drawable/address_bar_texture_land"
-            android:tileMode="repeat"
-            android:dither="false"/>
-     </item>
-
-</layer-list>
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+        android:src="@drawable/address_bar_texture_land"
+        android:tileMode="repeat"
+        android:dither="false"/>
