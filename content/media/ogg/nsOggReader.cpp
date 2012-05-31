@@ -79,7 +79,9 @@ nsOggReader::nsOggReader(nsBuiltinDecoder* aDecoder)
     mOpusEnabled(nsHTMLMediaElement::IsOpusEnabled()),
     mSkeletonState(nsnull),
     mVorbisSerial(0),
+    mOpusSerial(0),
     mTheoraSerial(0),
+    mOpusPreSkip(0),
     mPageOffset(0)
 {
   MOZ_COUNT_CTOR(nsOggReader);
@@ -149,6 +151,20 @@ bool nsOggReader::ReadHeaders(nsOggCodecState* aState)
     }
   }
   return aState->Init();
+}
+
+void nsOggReader::BuildSerialList(nsTArray<PRUint32>& aTracks)
+{
+  if (HasVideo()) {
+    aTracks.AppendElement(mTheoraState->mSerial);
+  }
+  if (HasAudio()) {
+    if (mVorbisState) {
+      aTracks.AppendElement(mVorbisState->mSerial);
+    } else if(mOpusState) {
+      aTracks.AppendElement(mOpusState->mSerial);
+    }
+  }
 }
 
 nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
@@ -291,6 +307,8 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
     mInfo.mHasAudio = true;
     mInfo.mAudioRate = mOpusState->mRate;
     mInfo.mAudioChannels = mOpusState->mChannels;
+    mOpusSerial = mOpusState->mSerial;
+    mOpusPreSkip = mOpusState->mPreSkip;
   }
 #endif
   if (mSkeletonState) {
@@ -302,12 +320,7 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
       // Extract the duration info out of the index, so we don't need to seek to
       // the end of resource to get it.
       nsAutoTArray<PRUint32, 2> tracks;
-      if (HasVideo()) {
-        tracks.AppendElement(mTheoraState->mSerial);
-      }
-      if (HasAudio()) {
-        tracks.AppendElement(mVorbisState->mSerial);
-      }
+      BuildSerialList(tracks);
       PRInt64 duration = 0;
       if (NS_SUCCEEDED(mSkeletonState->GetDuration(tracks, duration))) {
         ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
@@ -939,12 +952,7 @@ nsOggReader::IndexedSeekResult nsOggReader::SeekToKeyframeUsingIndex(PRInt64 aTa
   }
   // We have an index from the Skeleton track, try to use it to seek.
   nsAutoTArray<PRUint32, 2> tracks;
-  if (HasVideo()) {
-    tracks.AppendElement(mTheoraState->mSerial);
-  }
-  if (HasAudio()) {
-    tracks.AppendElement(mVorbisState->mSerial);
-  }
+  BuildSerialList(tracks);
   nsSkeletonState::nsSeekTarget keyframe;
   if (NS_FAILED(mSkeletonState->IndexedSeekTarget(aTarget,
                                                   tracks,
@@ -1404,8 +1412,8 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
           break;
         }
         
-      } while ((mVorbisState && audioTime == -1) ||
-               (mTheoraState && videoTime == -1));
+      } while ((HasAudio() && audioTime == -1) ||
+               (HasVideo() && videoTime == -1));
 
       NS_ASSERTION(mPageOffset <= endOffset, "Page read cursor should be inside range");
 
@@ -1551,6 +1559,10 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       PRUint32 serial = ogg_page_serialno(&page);
       if (mVorbisState && serial == mVorbisSerial) {
         startTime = nsVorbisState::Time(&mVorbisInfo, granulepos);
+        NS_ASSERTION(startTime > 0, "Must have positive start time");
+      }
+      else if (mOpusState && serial == mOpusSerial) {
+        startTime = nsOpusState::Time(mOpusPreSkip, granulepos);
         NS_ASSERTION(startTime > 0, "Must have positive start time");
       }
       else if (mTheoraState && serial == mTheoraSerial) {

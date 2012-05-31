@@ -298,11 +298,14 @@ public:
 
   CodecType GetType() { return TYPE_OPUS; }
   bool DecodeHeader(ogg_packet* aPacket);
-  PRInt64 Time(PRInt64 granulepos);
+  PRInt64 Time(PRInt64 aGranulepos);
   bool Init();
   nsresult Reset();
   bool IsHeader(ogg_packet* aPacket);
   nsresult PageIn(ogg_page* aPage);
+
+  // Returns the end time that a granulepos represents.
+  static PRInt64 Time(int aPreSkip, PRInt64 aGranulepos);
 
   // Various fields from the Ogg Opus header.
   int mRate;        // Sample rate the decoder uses (always 48 kHz).
