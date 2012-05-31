@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-let EXPORTED_SYMBOLS = [ "GcliCommands" ];
+let EXPORTED_SYMBOLS = [ ];
 
 Components.utils.import("resource:///modules/devtools/gcli.jsm");
 Components.utils.import("resource:///modules/HUDService.jsm");
