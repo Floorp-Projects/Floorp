@@ -141,7 +141,7 @@ function testGen() {
 
   // Ugly but it does the job.
   with (content) {
-    eval("HUD.console.log(" + consoleTest + ")");
+    eval("content.console.log(" + consoleTest + ")");
   }
 
   waitForSuccess({
