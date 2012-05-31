@@ -10,8 +10,6 @@ import java.util.ArrayList;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.content.res.Resources;
-import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.ColorDrawable;
@@ -24,7 +22,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.animation.TranslateAnimation;
 import android.view.Gravity;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,7 +59,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     final private Context mContext;
     private LayoutInflater mInflater;
     private Handler mHandler;
-    private int mColor;
     private int[] mPadding;
     private boolean mTitleCanExpand;
     private boolean mHasSoftMenuButton;
@@ -88,23 +84,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mLayout = layout;
         mTitleCanExpand = true;
 
-        if (!GeckoApp.mAppContext.isTablet()) {
-            // Get the device's highlight color
-            TypedArray typedArray;
-
-            if (Build.VERSION.SDK_INT >= 11) {            
-                typedArray = mContext.obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
-            } else {
-                ContextThemeWrapper wrapper  = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
-                typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
-            }
-
-            mColor = typedArray.getColor(typedArray.getIndex(0), 0);
-            typedArray.recycle();
-        } else {
-            mColor = 0xFFFF9500;
-        }
-
         mAwesomeBar = (Button) mLayout.findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -112,22 +91,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             }
         });
 
-        Resources resources = mContext.getResources();
-        
         mPadding = new int[] { mAwesomeBar.getPaddingLeft(),
                                mAwesomeBar.getPaddingTop(),
                                mAwesomeBar.getPaddingRight(),
                                mAwesomeBar.getPaddingBottom() };
-
-        if (!GeckoApp.mAppContext.isTablet()) {
-            GeckoStateListDrawable states = new GeckoStateListDrawable();
-            states.initializeFilter(mColor);
-            states.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.address_bar_url_pressed));
-            states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
-            mAwesomeBar.setBackgroundDrawable(states);
-
-            mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[2], mPadding[3]);
-        }
 
         mTabs = (ImageButton) mLayout.findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
@@ -174,7 +141,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             }
         });
 
-        mProgressSpinner = (AnimationDrawable) resources.getDrawable(R.drawable.progress_spinner);
+        mProgressSpinner = (AnimationDrawable) mContext.getResources().getDrawable(R.drawable.progress_spinner);
         
         mStop = (ImageButton) mLayout.findViewById(R.id.stop);
         mStop.setOnClickListener(new Button.OnClickListener() {
@@ -263,10 +230,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         GeckoApp.mAppContext.showTabs();
     }
 
-    public int getHighlightColor() {
-        return mColor;
-    }
-
     public void updateTabCountAndAnimate(int count) {
         if (mCount > count) {
             mTabsCount.setInAnimation(mSlideDownIn);
@@ -291,7 +254,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
         mHandler.postDelayed(new Runnable() {
             public void run() {
-                ((TextView) mTabsCount.getCurrentView()).setTextColor(mColor);
+                ((TextView) mTabsCount.getCurrentView()).setTextColor(mContext.getResources().getColor(R.color.url_bar_text_highlight));
             }
         }, mDuration);
 
