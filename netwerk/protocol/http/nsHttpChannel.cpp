@@ -140,7 +140,7 @@ nsHttpChannel::Init(nsIURI *uri,
 //-----------------------------------------------------------------------------
 
 nsresult
-nsHttpChannel::Connect(bool firstTime)
+nsHttpChannel::Connect()
 {
     nsresult rv;
 
@@ -189,66 +189,68 @@ nsHttpChannel::Connect(bool firstTime)
     if (!net_IsValidHostName(nsDependentCString(mConnectionInfo->Host())))
         return NS_ERROR_UNKNOWN_HOST;
 
-    // true when called from AsyncOpen
-    if (firstTime) {
+    // Consider opening a TCP connection right away
+    SpeculativeConnect();
 
-        // Consider opening a TCP connection right away
-        SpeculativeConnect();
+    // are we offline?
+    bool offline = gIOService->IsOffline();
+    if (offline)
+        mLoadFlags |= LOAD_ONLY_FROM_CACHE;
+    else if (PL_strcmp(mConnectionInfo->ProxyType(), "unknown") == 0)
+        return ResolveProxy();  // Lazily resolve proxy info
 
-        // are we offline?
-        bool offline = gIOService->IsOffline();
-        if (offline)
-            mLoadFlags |= LOAD_ONLY_FROM_CACHE;
-        else if (PL_strcmp(mConnectionInfo->ProxyType(), "unknown") == 0)
-            return ResolveProxy();  // Lazily resolve proxy info
-
-        // Don't allow resuming when cache must be used
-        if (mResuming && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
-            LOG(("Resuming from cache is not supported yet"));
-            return NS_ERROR_DOCUMENT_NOT_CACHED;
-        }
-
-        // open a cache entry for this channel...
-        rv = OpenCacheEntry();
-
-        // do not continue if asyncOpenCacheEntry is in progress
-        if (mOnCacheEntryAvailableCallback) {
-            NS_ASSERTION(NS_SUCCEEDED(rv), "Unexpected state");
-            return NS_OK;
-        }
-
-        if (NS_FAILED(rv)) {
-            LOG(("OpenCacheEntry failed [rv=%x]\n", rv));
-            // if this channel is only allowed to pull from the cache, then
-            // we must fail if we were unable to open a cache entry.
-            if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
-                // If we have a fallback URI (and we're not already
-                // falling back), process the fallback asynchronously.
-                if (!mFallbackChannel && !mFallbackKey.IsEmpty()) {
-                    return AsyncCall(&nsHttpChannel::HandleAsyncFallback);
-                }
-                return NS_ERROR_DOCUMENT_NOT_CACHED;
-            }
-            // otherwise, let's just proceed without using the cache.
-        }
-
-        // if cacheForOfflineUse has been set, open up an offline cache
-        // entry to update
-        if (mCacheForOfflineUse) {
-            rv = OpenOfflineCacheEntryForWriting();
-            if (NS_FAILED(rv)) return rv;
-
-            if (mOnCacheEntryAvailableCallback)
-                return NS_OK;
-        }
+    // Don't allow resuming when cache must be used
+    if (mResuming && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
+        LOG(("Resuming from cache is not supported yet"));
+        return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
 
+    // open a cache entry for this channel...
+    rv = OpenCacheEntry();
+
+    // do not continue if asyncOpenCacheEntry is in progress
+    if (mOnCacheEntryAvailableCallback) {
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Unexpected state");
+        return NS_OK;
+    }
+
+    if (NS_FAILED(rv)) {
+        LOG(("OpenCacheEntry failed [rv=%x]\n", rv));
+        // if this channel is only allowed to pull from the cache, then
+        // we must fail if we were unable to open a cache entry.
+        if (mLoadFlags & LOAD_ONLY_FROM_CACHE) {
+            // If we have a fallback URI (and we're not already
+            // falling back), process the fallback asynchronously.
+            if (!mFallbackChannel && !mFallbackKey.IsEmpty()) {
+                return AsyncCall(&nsHttpChannel::HandleAsyncFallback);
+            }
+            return NS_ERROR_DOCUMENT_NOT_CACHED;
+        }
+        // otherwise, let's just proceed without using the cache.
+    }
+
+    // if cacheForOfflineUse has been set, open up an offline cache
+    // entry to update
+    if (mCacheForOfflineUse) {
+        rv = OpenOfflineCacheEntryForWriting();
+        if (NS_FAILED(rv)) return rv;
+
+        if (mOnCacheEntryAvailableCallback)
+            return NS_OK;
+    }
+
+    return ContinueConnect();
+}
+
+nsresult
+nsHttpChannel::ContinueConnect()
+{
     // we may or may not have a cache entry at this point
     if (mCacheEntry) {
         // inspect the cache entry to determine whether or not we need to go
         // out to net to validate it.  this call sets mCachedContentIsValid
         // and may set request headers as required for cache validation.
-        rv = CheckCache();
+        nsresult rv = CheckCache();
         if (NS_FAILED(rv))
             NS_WARNING("cache check failed");
 
@@ -305,7 +307,7 @@ nsHttpChannel::Connect(bool firstTime)
     }
 
     // hit the net...
-    rv = SetupTransaction();
+    nsresult rv = SetupTransaction();
     if (NS_FAILED(rv)) return rv;
 
     rv = gHttpHandler->InitiateTransaction(mTransaction, mPriority);
@@ -5022,7 +5024,7 @@ nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntryDescriptor *entry,
             return rv;
     }
 
-    return Connect(false);
+    return ContinueConnect();
 }
 
 NS_IMETHODIMP
