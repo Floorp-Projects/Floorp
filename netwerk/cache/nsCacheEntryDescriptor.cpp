@@ -540,6 +540,11 @@ nsInputStreamWrapper::LazyInit()
     rv = nsCacheService::OpenInputStreamForEntry(cacheEntry, mode,
                                                  mStartOffset,
                                                  getter_AddRefs(mInput));
+
+    CACHE_LOG_DEBUG(("nsInputStreamWrapper::LazyInit "
+                      "[entry=%p, wrapper=%p, mInput=%p, rv=%d",
+                      mDescriptor, this, mInput.get(), PRIntn(rv)));
+
     if (NS_FAILED(rv)) return rv;
 
     mInitialized = true;
