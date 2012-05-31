@@ -29,13 +29,13 @@ public:
 
 #define IMPL_GETTER_AND_SETTER(_type)                                          \
   JSObject*                                                                    \
-  GetOn##_type(ErrorResult& aRv)                                               \
+  GetOn##_type(JSContext* /* unused */, ErrorResult& aRv)                      \
   {                                                                            \
     return GetEventListener(NS_LITERAL_STRING(#_type), aRv);                   \
   }                                                                            \
                                                                                \
   void                                                                         \
-  SetOn##_type(JSObject* aListener, ErrorResult& aRv)                          \
+  SetOn##_type(JSContext* /* unused */, JSObject* aListener, ErrorResult& aRv) \
   {                                                                            \
     SetEventListener(NS_LITERAL_STRING(#_type), aListener, aRv);               \
   }
