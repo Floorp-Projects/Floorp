@@ -54,7 +54,7 @@ WebGLProgram::UpdateInfo()
             if (loc < mContext->mGLMaxVertexAttribs) {
                 mAttribsInUse[loc] = true;
             } else {
-                mContext->ErrorInvalidOperation("program exceeds MAX_VERTEX_ATTRIBS");
+                mContext->GenerateWarning("program exceeds MAX_VERTEX_ATTRIBS");
                 return false;
             }
         }

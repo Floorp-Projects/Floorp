@@ -468,11 +468,11 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
           return false;
       } else {
         if (value.Length() == 1 && value[0] == '1')
-          // This means that we need to set JSOPTION_XML in the JS options.
-          // We re-use our knowledge of the implementation to reuse
-          // JSVERSION_HAS_XML as a safe version flag.
-          // If version has JSVERSION_UNKNOWN (-1), then this is still OK.
-          version = js::VersionSetXML(JSVersion(version), true);
+          // This happens in about 2 web pages. Enable E4X no matter what JS
+          // version number was selected.  We do this by turning on the "moar
+          // XML" version bit.  This is OK even if version has
+          // JSVERSION_UNKNOWN (-1).
+          version = js::VersionSetMoarXML(JSVersion(version), true);
       }
     }
   } else {

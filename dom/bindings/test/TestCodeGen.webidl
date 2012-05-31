@@ -211,4 +211,10 @@ interface TestInterface {
   void passOptionalNullableObjectWithDefaultValue(optional object? arg = null);
   object receiveObject();
   object? receiveNullableObject();
+
+  // binaryNames tests
+  void methodRenamedFrom();
+  void methodRenamedFrom(byte argument);
+  readonly attribute byte attributeGetterRenamedFrom;
+  attribute byte attributeRenamedFrom;
 };

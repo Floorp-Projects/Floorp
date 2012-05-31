@@ -27,6 +27,10 @@
                                             android:layout_height="fill_parent"
                                             android:background="@drawable/abouthome_bg_repeat"/>
 
-   </RelativeLayout>
+    </RelativeLayout>
+
+    <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
+                                     style="@style/FindBar"
+                                     visibility="gone"/>
 
 </LinearLayout>

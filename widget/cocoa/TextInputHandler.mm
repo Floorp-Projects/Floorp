@@ -770,7 +770,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
      this, aKeyEvent.keyCode, aKeyEvent.charCode));
 
   if (!aKeyEvent.IsControl() && !aKeyEvent.IsMeta() && !aKeyEvent.IsAlt()) {
-    NS_ASSERTION(!computeCharCode || initialCharCode == aKeyEvent.charCode,
+    NS_ASSERTION(computeCharCode || initialCharCode == aKeyEvent.charCode,
                  "aKeyEvent.charCode is modified unexpectedly");
     return;
   }
@@ -932,7 +932,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
      "hasCmdShiftOnlyChar=%s, originalCmdedShiftChar=U+%X",
      this, TrueOrFalse(hasCmdShiftOnlyChar), originalCmdedShiftChar));
 
-  NS_ASSERTION(!computeCharCode || initialCharCode == aKeyEvent.charCode,
+  NS_ASSERTION(computeCharCode || initialCharCode == aKeyEvent.charCode,
                "aKeyEvent.charCode is modified unexpectedly");
 
   NS_OBJC_END_TRY_ABORT_BLOCK
