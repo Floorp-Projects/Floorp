@@ -1008,7 +1008,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
 nsMargin*
 nsTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const
 {
-  aBorder = GetStyleBorder()->GetActualBorder();
+  aBorder = GetStyleBorder()->GetComputedBorder();
   return &aBorder;
 }
 

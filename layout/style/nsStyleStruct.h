@@ -775,12 +775,6 @@ struct nsStyleBorder {
       mComputedBorder.Side(aSide) = roundedWidth;
   }
 
-  // Returns the computed border.
-  inline const nsMargin& GetActualBorder() const
-  {
-    return mComputedBorder;
-  }
-
   // Get the computed border (plus rounding).  This does consider the
   // effects of 'border-style: none', but does not consider
   // 'border-image'.
@@ -800,7 +794,7 @@ struct nsStyleBorder {
   // value is rounded to the nearest device pixel by NS_ROUND_BORDER_TO_PIXELS.
   nscoord GetActualBorderWidth(mozilla::css::Side aSide) const
   {
-    return GetActualBorder().Side(aSide);
+    return GetComputedBorder().Side(aSide);
   }
 
   PRUint8 GetBorderStyle(mozilla::css::Side aSide) const
