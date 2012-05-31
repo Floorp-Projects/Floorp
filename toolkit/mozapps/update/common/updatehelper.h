@@ -6,7 +6,7 @@ BOOL LaunchWinPostProcess(const WCHAR *installationDir,
                           const WCHAR *updateInfoDir, 
                           bool forceSync,
                           HANDLE userToken);
-BOOL StartServiceUpdate(int argc, LPWSTR *argv);
+BOOL StartServiceUpdate(LPCWSTR installDir);
 BOOL GetUpdateDirectoryPath(LPWSTR path);
 DWORD LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR *argv);
 BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode);

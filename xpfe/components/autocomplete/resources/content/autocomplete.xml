@@ -151,6 +151,10 @@
                 onget="return this.getAttribute('autocompletesearchparam') || '';"
                 onset="this.setAttribute('autocompletesearchparam', val); return val;"/>
 
+      <property name="textValue"
+                onget="return this.value;"
+                onset="this.setTextValue(val); return val;"/>
+
       <method name="onSearchBegin">
         <body><![CDATA[
           this._fireEvent("searchbegin");
@@ -1288,9 +1292,10 @@
       <method name="setTextValue">
         <parameter name="aValue"/>
         <body><![CDATA[
+          this.value = aValue;
+
           // Completing a result should simulate the user typing the result,
           // so fire an input event.
-          this.value = aValue;
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("input", true, false, window, 0);
           var oldIgnoreInput = this.ignoreInputEvent;

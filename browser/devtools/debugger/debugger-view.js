@@ -760,12 +760,17 @@ StackFramesView.prototype = {
  * Functions handling the properties view.
  */
 function PropertiesView() {
-  this._addScope = this._addScope.bind(this);
+  this.addScope = this._addScope.bind(this);
   this._addVar = this._addVar.bind(this);
   this._addProperties = this._addProperties.bind(this);
 }
 
 PropertiesView.prototype = {
+  /**
+   * A monotonically-increasing counter, that guarantees the uniqueness of scope
+   * IDs.
+   */
+  _idCount: 1,
 
   /**
    * Adds a scope to contain any inspected variables.
@@ -786,8 +791,8 @@ PropertiesView.prototype = {
       return null;
     }
 
-    // Compute the id of the element if not specified.
-    aId = aId || (aName.toLowerCase().trim().replace(" ", "-") + "-scope");
+    // Generate a unique id for the element, if not specified.
+    aId = aId || aName.toLowerCase().trim().replace(/\s+/g, "-") + this._idCount++;
 
     // Contains generic nodes and functionality.
     let element = this._createPropertyElement(aName, aId, "scope", this._vars);
@@ -796,14 +801,46 @@ PropertiesView.prototype = {
     if (!element) {
       return null;
     }
+    element._identifier = aName;
 
     /**
      * @see DebuggerView.Properties._addVar
      */
     element.addVar = this._addVar.bind(this, element);
 
+    /**
+     * @see DebuggerView.Properties.addScopeToHierarchy
+     */
+    element.addToHierarchy = this.addScopeToHierarchy.bind(this, element);
+
     // Return the element for later use if necessary.
     return element;
+  },
+
+  /**
+   * Removes all added scopes in the property container tree.
+   */
+  empty: function DVP_empty() {
+    while (this._vars.firstChild) {
+      this._vars.removeChild(this._vars.firstChild);
+    }
+  },
+
+  /**
+   * Removes all elements from the variables container, and adds a child node
+   * with an empty text note attached.
+   */
+  emptyText: function DVP_emptyText() {
+    // Make sure the container is empty first.
+    this.empty();
+
+    let item = document.createElement("label");
+
+    // The empty node should look grayed out to avoid confusion.
+    item.className = "list-item empty";
+    item.setAttribute("value", L10N.getStr("emptyVariablesText"));
+
+    this._vars.appendChild(item);
   },
 
   /**
@@ -837,6 +874,7 @@ PropertiesView.prototype = {
     if (!element) {
       return null;
     }
+    element._identifier = aName;
 
     /**
      * @see DebuggerView.Properties._setGrip
@@ -1050,6 +1088,7 @@ PropertiesView.prototype = {
     if (!element) {
       return null;
     }
+    element._identifier = aName;
 
     /**
      * @see DebuggerView.Properties._setGrip
@@ -1382,16 +1421,22 @@ PropertiesView.prototype = {
 
     /**
      * Expands the element, showing all the added details.
+     *
+     * @param boolean aSkipAnimationFlag
+     *        Pass true to not show an opening animation.
      * @return object
      *         The same element.
      */
-    element.expand = function DVP_element_expand() {
+    element.expand = function DVP_element_expand(aSkipAnimationFlag) {
       if (element._preventExpand) {
         return;
       }
       arrow.setAttribute("open", "");
       details.setAttribute("open", "");
 
+      if (!aSkipAnimationFlag) {
+        details.setAttribute("animated", "");
+      }
       if ("function" === typeof element.onexpand) {
         element.onexpand(element);
       }
@@ -1409,6 +1454,7 @@ PropertiesView.prototype = {
       }
       arrow.removeAttribute("open");
       details.removeAttribute("open");
+      details.removeAttribute("animated");
 
       if ("function" === typeof element.oncollapse) {
         element.oncollapse(element);
@@ -1621,7 +1667,7 @@ PropertiesView.prototype = {
       children: {}
     };
 
-    store[element.id] = relation;
+    store[element._identifier] = relation;
     element._root = relation.root;
     element._children = relation.children;
   },
@@ -1633,11 +1679,16 @@ PropertiesView.prototype = {
   createHierarchyStore: function DVP_createHierarchyStore() {
     this._prevHierarchy = this._currHierarchy;
     this._currHierarchy = {};
+  },
 
-    this._saveHierarchy({ element: this._globalScope, store: this._currHierarchy });
-    this._saveHierarchy({ element: this._localScope, store: this._currHierarchy });
-    this._saveHierarchy({ element: this._withScope, store: this._currHierarchy });
-    this._saveHierarchy({ element: this._closureScope, store: this._currHierarchy });
+  /**
+   * Creates a hierarchy holder for a scope.
+   *
+   * @param object aScope
+   *        The designated scope to track.
+   */
+  addScopeToHierarchy: function DVP_addScopeToHierarchy(aScope) {
+    this._saveHierarchy({ element: aScope, store: this._currHierarchy });
   },
 
   /**
@@ -1647,6 +1698,10 @@ PropertiesView.prototype = {
     for (let i in this._currHierarchy) {
       let currScope = this._currHierarchy[i];
       let prevScope = this._prevHierarchy[i];
+
+      if (!prevScope) {
+        continue;
+      }
 
       for (let v in currScope.children) {
         let currVar = currScope.children[v];
@@ -1672,7 +1727,7 @@ PropertiesView.prototype = {
 
           window.setTimeout(function() {
            currVar.element.removeAttribute(action);
-         }, PROPERTY_VIEW_FLASH_DURATION);
+          }, PROPERTY_VIEW_FLASH_DURATION);
         }
       }
     }
@@ -1686,101 +1741,9 @@ PropertiesView.prototype = {
   _prevHierarchy: null,
 
   /**
-   * Returns the global scope container.
-   */
-  get globalScope() {
-    return this._globalScope;
-  },
-
-  /**
-   * Sets the display mode for the global scope container.
-   *
-   * @param boolean aFlag
-   *        False to hide the container, true to show.
-   */
-  set globalScope(aFlag) {
-    if (aFlag) {
-      this._globalScope.show();
-    } else {
-      this._globalScope.hide();
-    }
-  },
-
-  /**
-   * Returns the local scope container.
-   */
-  get localScope() {
-    return this._localScope;
-  },
-
-  /**
-   * Sets the display mode for the local scope container.
-   *
-   * @param boolean aFlag
-   *        False to hide the container, true to show.
-   */
-  set localScope(aFlag) {
-    if (aFlag) {
-      this._localScope.show();
-    } else {
-      this._localScope.hide();
-    }
-  },
-
-  /**
-   * Returns the with block scope container.
-   */
-  get withScope() {
-    return this._withScope;
-  },
-
-  /**
-   * Sets the display mode for the with block scope container.
-   *
-   * @param boolean aFlag
-   *        False to hide the container, true to show.
-   */
-  set withScope(aFlag) {
-    if (aFlag) {
-      this._withScope.show();
-    } else {
-      this._withScope.hide();
-    }
-  },
-
-  /**
-   * Returns the closure scope container.
-   */
-  get closureScope() {
-    return this._closureScope;
-  },
-
-  /**
-   * Sets the display mode for the with block scope container.
-   *
-   * @param boolean aFlag
-   *        False to hide the container, true to show.
-   */
-  set closureScope(aFlag) {
-    if (aFlag) {
-      this._closureScope.show();
-    } else {
-      this._closureScope.hide();
-    }
-  },
-
-  /**
    * The cached variable properties container.
    */
   _vars: null,
-
-  /**
-   * Auto-created global, local, with block and closure scopes containing vars.
-   */
-  _globalScope: null,
-  _localScope: null,
-  _withScope: null,
-  _closureScope: null,
 
   /**
    * Initialization function, called when the debugger is initialized.
@@ -1789,10 +1752,6 @@ PropertiesView.prototype = {
     this.createHierarchyStore();
 
     this._vars = document.getElementById("variables");
-    this._localScope = this._addScope(L10N.getStr("localScope")).expand();
-    this._withScope = this._addScope(L10N.getStr("withScope")).hide();
-    this._closureScope = this._addScope(L10N.getStr("closureScope")).hide();
-    this._globalScope = this._addScope(L10N.getStr("globalScope"));
   },
 
   /**
@@ -1802,10 +1761,6 @@ PropertiesView.prototype = {
     this._currHierarchy = null;
     this._prevHierarchy = null;
     this._vars = null;
-    this._globalScope = null;
-    this._localScope = null;
-    this._withScope = null;
-    this._closureScope = null;
   }
 };
 

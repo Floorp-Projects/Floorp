@@ -156,10 +156,11 @@ define('gclitest/suite', ['require', 'exports', 'module' , 'gcli/index', 'test/e
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-define('test/examiner', ['require', 'exports', 'module' , 'test/assert'], function(require, exports, module) {
+define('test/examiner', ['require', 'exports', 'module' , 'test/assert', 'test/status'], function(require, exports, module) {
 var examiner = exports;
 
 var assert = require('test/assert');
+var stati = require('test/status').stati;
 
 /**
  * Test harness data
@@ -170,14 +171,6 @@ examiner.suites = {};
  * The gap between tests when running async
  */
 var delay = 10;
-
-var stati = {
-  notrun: { index: 0, name: 'Skipped' },
-  executing: { index: 1, name: 'Executing' },
-  asynchronous: { index: 2, name: 'Waiting' },
-  pass: { index: 3, name: 'Pass' },
-  fail: { index: 4, name: 'Fail' }
-};
 
 /**
  * Add a test suite. Generally used like:
@@ -580,6 +573,28 @@ define('test/assert', ['require', 'exports', 'module' ], function(require, expor
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
+define('test/status', ['require', 'exports', 'module' ], function(require, exports, module) {
+
+  /**
+   * This should really be inside assert.js, however that is over-ridden by
+   * a custom assert.js for mozilla, so we keep it separate to avoid
+   * duplicating it in 2 places.
+   */
+  exports.stati = {
+    notrun: { index: 0, name: 'Skipped' },
+    executing: { index: 1, name: 'Executing' },
+    asynchronous: { index: 2, name: 'Waiting' },
+    pass: { index: 3, name: 'Pass' },
+    fail: { index: 4, name: 'Fail' }
+  };
+
+});
+/*
+ * Copyright 2009-2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE.txt or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+
 define('gclitest/testCanon', ['require', 'exports', 'module' , 'gclitest/helpers', 'gcli/canon', 'test/assert'], function(require, exports, module) {
 
   var helpers = require('gclitest/helpers');
@@ -656,6 +671,14 @@ define('gclitest/testCanon', ['require', 'exports', 'module' , 'gclitest/helpers
       typed: 'testadd',
       status: 'ERROR'
     });
+
+    canon.removeCommand({ name: 'nonexistant' });
+    test.is(canon.getCommands().length, startCount, 'nonexistant1 command success');
+    test.is(events, 5, 'nonexistant1 event');
+
+    canon.removeCommand('nonexistant');
+    test.is(canon.getCommands().length, startCount, 'nonexistant2 command success');
+    test.is(events, 5, 'nonexistant2 event');
 
     canon.onCanonChange.remove(canonChange);
   };
@@ -2215,8 +2238,7 @@ define('gclitest/testIntro', ['require', 'exports', 'module' , 'gclitest/helpers
       typed: 'intro',
       args: { },
       outputMatch: [
-        /graphical\s*command\s*line/,
-        /GCLI/,
+        /command\s*line/,
         /help/,
         /F1/,
         /Escape/
@@ -2610,9 +2632,69 @@ exports.shutdown = function(options) {
   }
 };
 
+exports.testPrefShowStatus = function(options) {
+  if (options.isFirefox) {
+    test.log('Skipping testPrefShowStatus in Firefox.');
+    return;
+  }
+
+  helpers.status(options, {
+    typed:  'pref s',
+    markup: 'IIIIVI',
+    status: 'ERROR',
+    directTabText: 'et'
+  });
+
+  helpers.status(options, {
+    typed:  'pref show',
+    markup: 'VVVVVVVVV',
+    status: 'ERROR',
+    emptyParameters: [ ' <setting>' ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref show ',
+    markup: 'VVVVVVVVVV',
+    status: 'ERROR',
+    emptyParameters: [ ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref show tempTBo',
+    markup: 'VVVVVVVVVVIIIIIII',
+    directTabText: 'ol',
+    status: 'ERROR',
+    emptyParameters: [ ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref show tempTBool',
+    markup: 'VVVVVVVVVVVVVVVVVVV',
+    directTabText: '',
+    status: 'VALID',
+    emptyParameters: [ ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref show tempTBool 4',
+    markup: 'VVVVVVVVVVVVVVVVVVVVE',
+    directTabText: '',
+    status: 'ERROR',
+    emptyParameters: [ ]
+  });
+
+  helpers.status(options, {
+    typed:  'pref show tempNumber 4',
+    markup: 'VVVVVVVVVVVVVVVVVVVVVE',
+    directTabText: '',
+    status: 'ERROR',
+    emptyParameters: [ ]
+  });
+};
+
 exports.testPrefSetStatus = function(options) {
   if (options.isFirefox) {
-    test.log('Skipping testPref in Firefox.');
+    test.log('Skipping testPrefSetStatus in Firefox.');
     return;
   }
 
@@ -2634,13 +2716,6 @@ exports.testPrefSetStatus = function(options) {
     typed:  'pref xxx',
     markup: 'EEEEVEEE',
     status: 'ERROR'
-  });
-
-  helpers.status(options, {
-    typed:  'pref set ',
-    markup: 'VVVVVVVVV',
-    status: 'ERROR',
-    emptyParameters: [ ' <value>' ]
   });
 
   helpers.status(options, {
@@ -2677,7 +2752,7 @@ exports.testPrefSetStatus = function(options) {
 
 exports.testPrefExec = function(options) {
   if (options.isFirefox) {
-    test.log('Skipping testPref in Firefox.');
+    test.log('Skipping testPrefExec in Firefox.');
     return;
   }
 
@@ -2732,313 +2807,6 @@ exports.testPrefExec = function(options) {
 
 
 });
-/*
- * Copyright 2009-2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE.txt or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-
-define('gcli/commands/pref', ['require', 'exports', 'module' , 'gcli/index', 'gcli/l10n', 'gcli/util', 'gcli/settings', 'gcli/promise', 'text!gcli/commands/pref_list_outer.html', 'text!gcli/commands/pref_list.css', 'text!gcli/commands/pref_set_check.html', 'text!gcli/commands/pref_list_inner.html'], function(require, exports, module) {
-
-
-var gcli = require('gcli/index');
-var l10n = require('gcli/l10n');
-var util = require('gcli/util');
-var settings = require('gcli/settings');
-var Promise = require('gcli/promise').Promise;
-
-/**
- * Record if the user has clicked on 'Got It!'
- */
-var allowSetSettingSpec = {
-  name: 'allowSet',
-  type: 'boolean',
-  description: l10n.lookup('allowSetDesc'),
-  defaultValue: false
-};
-exports.allowSet = undefined;
-
-/**
- * 'pref' command
- */
-var prefCmdSpec = {
-  name: 'pref',
-  description: l10n.lookup('prefDesc'),
-  manual: l10n.lookup('prefManual')
-};
-
-/**
- * 'pref list' command
- */
-var prefListCmdSpec = {
-  name: 'pref list',
-  description: l10n.lookup('prefListDesc'),
-  manual: l10n.lookup('prefListManual'),
-  params: [
-    {
-      name: 'search',
-      type: 'string',
-      defaultValue: null,
-      description: l10n.lookup('prefListSearchDesc'),
-      manual: l10n.lookup('prefListSearchManual')
-    }
-  ],
-  exec: function Command_prefList(args, context) {
-    return context.createView({
-      html: require('text!gcli/commands/pref_list_outer.html'),
-      data: new PrefList(args, context),
-      options: {
-        blankNullUndefined: true,
-        allowEval: true,
-        stack: 'pref_list_outer.html'
-      },
-      css: require('text!gcli/commands/pref_list.css'),
-      cssId: 'gcli-pref-list'
-    });
-  }
-};
-
-/**
- * 'pref set' command
- */
-var prefSetCmdSpec = {
-  name: 'pref set',
-  description: l10n.lookup('prefSetDesc'),
-  manual: l10n.lookup('prefSetManual'),
-  params: [
-    {
-      name: 'setting',
-      type: 'setting',
-      description: l10n.lookup('prefSetSettingDesc'),
-      manual: l10n.lookup('prefSetSettingManual')
-    },
-    {
-      name: 'value',
-      type: 'settingValue',
-      description: l10n.lookup('prefSetValueDesc'),
-      manual: l10n.lookup('prefSetValueManual')
-    }
-  ],
-  exec: function Command_prefSet(args, context) {
-    if (!exports.allowSet.value &&
-            args.setting.name !== exports.allowSet.name) {
-      return context.createView({
-        html: require('text!gcli/commands/pref_set_check.html'),
-        options: { allowEval: true, stack: 'pref_set_check.html' },
-        data: {
-          l10n: l10n.propertyLookup,
-          activate: function() {
-            context.exec('pref set allowSet true');
-          }
-        },
-      });
-    }
-    args.setting.value = args.value;
-    return null;
-  }
-};
-
-/**
- * 'pref reset' command
- */
-var prefResetCmdSpec = {
-  name: 'pref reset',
-  description: l10n.lookup('prefResetDesc'),
-  manual: l10n.lookup('prefResetManual'),
-  params: [
-    {
-      name: 'setting',
-      type: 'setting',
-      description: l10n.lookup('prefResetSettingDesc'),
-      manual: l10n.lookup('prefResetSettingManual')
-    }
-  ],
-  exec: function Command_prefReset(args, context) {
-    args.setting.setDefault();
-    return null;
-  }
-};
-
-/**
- * Registration and de-registration.
- */
-exports.startup = function() {
-  exports.allowSet = settings.addSetting(allowSetSettingSpec);
-
-  gcli.addCommand(prefCmdSpec);
-  gcli.addCommand(prefListCmdSpec);
-  gcli.addCommand(prefSetCmdSpec);
-  gcli.addCommand(prefResetCmdSpec);
-};
-
-exports.shutdown = function() {
-  gcli.removeCommand(prefCmdSpec);
-  gcli.removeCommand(prefListCmdSpec);
-  gcli.removeCommand(prefSetCmdSpec);
-  gcli.removeCommand(prefResetCmdSpec);
-
-  settings.removeSetting(allowSetSettingSpec);
-  exports.allowSet = undefined;
-};
-
-
-/**
- * A manager for our version of about:config
- */
-function PrefList(args, context) {
-  this.search = args.search;
-  this.context = context;
-  this.url = util.createUrlLookup(module);
-  this.edit = this.url('pref_list_edit.png');
-}
-
-/**
- *
- */
-PrefList.prototype.onLoad = function(element) {
-  var table = element.querySelector('.gcli-pref-list-table');
-  this.updateTable(table);
-  return '';
-};
-
-/**
- * Forward localization lookups
- */
-PrefList.prototype.l10n = l10n.propertyLookup;
-
-/**
- * Called from the template onkeyup for the filter element
- */
-PrefList.prototype.updateTable = function(table) {
-  util.clearElement(table);
-  var view = this.context.createView({
-    html: require('text!gcli/commands/pref_list_inner.html'),
-    options: { blankNullUndefined: true, stack: 'pref_list_inner.html' },
-    data: this
-  });
-  var child = view.toDom(table.ownerDocument);
-  util.setContents(table, child);
-};
-
-/**
- * Which preferences match the filter?
- */
-Object.defineProperty(PrefList.prototype, 'preferences', {
-  get: function() {
-    return settings.getAll(this.search);
-  },
-  enumerable: true
-});
-
-/**
- * Which preferences match the filter?
- */
-Object.defineProperty(PrefList.prototype, 'promisePreferences', {
-  get: function() {
-    var promise = new Promise();
-    setTimeout(function() {
-      promise.resolve(settings.getAll(this.search));
-    }.bind(this), 10);
-    return promise;
-  },
-  enumerable: true
-});
-
-PrefList.prototype.onFilterChange = function(ev) {
-  if (ev.target.value !== this.search) {
-    this.search = ev.target.value;
-
-    var root = ev.target.parentNode.parentNode;
-    var table = root.querySelector('.gcli-pref-list-table');
-    this.updateTable(table);
-  }
-};
-
-PrefList.prototype.onSetClick = function(ev) {
-  var typed = ev.currentTarget.getAttribute('data-command');
-  this.context.update(typed);
-};
-
-});
-define("text!gcli/commands/pref_list_outer.html", [], "<div ignore=\"${onLoad(__element)}\">\n" +
-  "  <div class=\"gcli-pref-list-filter\">\n" +
-  "    ${l10n.prefOutputFilter}:\n" +
-  "    <input onKeyUp=\"${onFilterChange}\" value=\"${search}\"/>\n" +
-  "  </div>\n" +
-  "  <table class=\"gcli-pref-list-table\">\n" +
-  "    <colgroup>\n" +
-  "      <col class=\"gcli-pref-list-name\"/>\n" +
-  "      <col class=\"gcli-pref-list-value\"/>\n" +
-  "    </colgroup>\n" +
-  "    <tr>\n" +
-  "      <th>${l10n.prefOutputName}</th>\n" +
-  "      <th>${l10n.prefOutputValue}</th>\n" +
-  "    </tr>\n" +
-  "  </table>\n" +
-  "  <div class=\"gcli-pref-list-scroller\">\n" +
-  "    <table class=\"gcli-pref-list-table\" save=\"${table}\">\n" +
-  "    </table>\n" +
-  "  </div>\n" +
-  "</div>\n" +
-  "");
-
-define("text!gcli/commands/pref_list.css", [], "\n" +
-  ".gcli-pref-list-scroller {\n" +
-  "  max-height: 200px;\n" +
-  "  overflow-y: auto;\n" +
-  "  overflow-x: hidden;\n" +
-  "  display: inline-block;\n" +
-  "}\n" +
-  "\n" +
-  ".gcli-pref-list-table {\n" +
-  "  width: 500px;\n" +
-  "  table-layout: fixed;\n" +
-  "}\n" +
-  "\n" +
-  ".gcli-pref-list-table tr > th {\n" +
-  "  text-align: left;\n" +
-  "}\n" +
-  "\n" +
-  ".gcli-pref-list-table tr > td {\n" +
-  "  text-overflow: elipsis;\n" +
-  "  word-wrap: break-word;\n" +
-  "}\n" +
-  "\n" +
-  ".gcli-pref-list-name {\n" +
-  "  width: 70%;\n" +
-  "}\n" +
-  "\n" +
-  ".gcli-pref-list-command {\n" +
-  "  display: none;\n" +
-  "}\n" +
-  "\n" +
-  ".gcli-pref-list-row:hover .gcli-pref-list-command {\n" +
-  "  display: inline-block;\n" +
-  "}\n" +
-  "");
-
-define("text!gcli/commands/pref_set_check.html", [], "<div>\n" +
-  "  <p><strong>${l10n.prefSetCheckHeading}</strong></p>\n" +
-  "  <p>${l10n.prefSetCheckBody}</p>\n" +
-  "  <button onclick=\"${activate}\">${l10n.prefSetCheckGo}</button>\n" +
-  "</div>\n" +
-  "");
-
-define("text!gcli/commands/pref_list_inner.html", [], "<table>\n" +
-  "  <colgroup>\n" +
-  "    <col class=\"gcli-pref-list-name\"/>\n" +
-  "    <col class=\"gcli-pref-list-value\"/>\n" +
-  "  </colgroup>\n" +
-  "  <tr class=\"gcli-pref-list-row\" foreach=\"preference in ${promisePreferences}\">\n" +
-  "    <td>${preference.name}</td>\n" +
-  "    <td onclick=\"${onSetClick}\" data-command=\"pref set ${preference.name} \">\n" +
-  "      ${preference.value}\n" +
-  "      <img class=\"gcli-pref-list-command\" _src=\"${edit}\"/>\n" +
-  "    </td>\n" +
-  "  </tr>\n" +
-  "</table>\n" +
-  "");
-
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -4109,6 +3877,7 @@ let testModuleNames = [
   'gclitest/suite',
   'test/examiner',
   'test/assert',
+  'test/status',
   'gclitest/testCanon',
   'gclitest/helpers',
   'gclitest/testCli',
@@ -4122,11 +3891,6 @@ let testModuleNames = [
   'gclitest/testJs',
   'gclitest/testKeyboard',
   'gclitest/testPref',
-  'gcli/commands/pref',
-  'text!gcli/commands/pref_list_outer.html',
-  'text!gcli/commands/pref_list.css',
-  'text!gcli/commands/pref_set_check.html',
-  'text!gcli/commands/pref_list_inner.html',
   'gclitest/mockSettings',
   'gclitest/testRequire',
   'gclitest/requirable',
