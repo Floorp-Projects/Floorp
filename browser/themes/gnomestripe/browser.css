@@ -1558,28 +1558,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 .tab-throbber {
   list-style-image: url("chrome://browser/skin/tabbrowser/connecting.png");
-  -moz-animation-duration: 960ms;
-  -moz-animation-iteration-count: infinite;
-  -moz-animation-name: rotate-counterclockwise;
-  -moz-animation-timing-function: linear;
 }
 
 .tab-throbber[progress] {
   list-style-image: url("chrome://browser/skin/tabbrowser/loading.png");
-  -moz-animation-duration: 800ms;
-  -moz-animation-name: rotate-clockwise;
-}
-
-@-moz-keyframes rotate-clockwise {
-  to {
-    -moz-transform: rotate(360deg);
-  }
-}
-
-@-moz-keyframes rotate-counterclockwise {
-  to {
-    -moz-transform: rotate(-360deg);
-  }
 }
 
 .tab-throbber[pinned],
