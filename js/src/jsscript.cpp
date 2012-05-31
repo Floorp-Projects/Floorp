@@ -582,7 +582,10 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         /* Note: version is packed into the 32b space with another 16b value. */
         JSVersion version_ = JSVersion(version & JS_BITMASK(16));
         JS_ASSERT((version_ & VersionFlags::FULL_MASK) == unsigned(version_));
-        script = JSScript::Create(cx, !!(scriptBits & (1 << NoScriptRval)), version_);
+
+        // principals and originPrincipals are set with xdr->initScriptPrincipals(script) below.
+        script = JSScript::Create(cx, /* principals = */ NULL, /* originPrincipals = */ NULL,
+                                  !!(scriptBits & (1 << NoScriptRval)), version_);
         if (!script || !script->partiallyInit(cx, length, nsrcnotes, natoms, nobjects,
                                               nregexps, ntrynotes, nconsts, nClosedArgs,
                                               nClosedVars, nTypeSets))
@@ -1091,13 +1094,25 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 }
 
 JSScript *
-JSScript::Create(JSContext *cx, bool noScriptRval, JSVersion version)
+JSScript::Create(JSContext *cx, JSPrincipals *principals, JSPrincipals *originPrincipals,
+                 bool noScriptRval, JSVersion version)
 {
     JSScript *script = js_NewGCScript(cx);
     if (!script)
         return NULL;
 
     PodZero(script);
+
+    /* Establish invariant: principals implies originPrincipals. */
+    if (principals) {
+        script->principals = principals;
+        script->originPrincipals = originPrincipals ? originPrincipals : principals;
+        JS_HoldPrincipals(script->principals);
+        JS_HoldPrincipals(script->originPrincipals);
+    } else if (originPrincipals) {
+        script->originPrincipals = originPrincipals;
+        JS_HoldPrincipals(script->originPrincipals);
+    }
 
     script->noScriptRval = noScriptRval;
  
@@ -1292,18 +1307,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         return false;
     }
     script->staticLevel = uint16_t(bce->sc->staticLevel);
-
-    script->principals = bce->parser->principals;
-
-    if (script->principals)
-        JS_HoldPrincipals(script->principals);
-
-    /* Establish invariant: principals implies originPrincipals. */
-    script->originPrincipals = bce->parser->originPrincipals;
-    if (!script->originPrincipals)
-        script->originPrincipals = script->principals;
-    if (script->originPrincipals)
-        JS_HoldPrincipals(script->originPrincipals);
 
     jschar *sourceMap = (jschar *) bce->parser->tokenStream.releaseSourceMap();
     if (sourceMap) {
@@ -1789,7 +1792,8 @@ js::CloneScript(JSContext *cx, HandleScript src)
 
     /* Now that all fallible allocation is complete, create the GC thing. */
 
-    JSScript *dst = JSScript::Create(cx, src->noScriptRval, src->getVersion());
+    JSScript *dst = JSScript::Create(cx, cx->compartment->principals, src->originPrincipals,
+                                     src->noScriptRval, src->getVersion());
     if (!dst) {
         Foreground::free_(data);
         return NULL;
@@ -1810,17 +1814,6 @@ js::CloneScript(JSContext *cx, HandleScript src)
     /* Atoms are runtime-wide. */
     if (src->natoms != 0)
         dst->atoms = Rebase<HeapPtrAtom>(dst, src, src->atoms);
-
-    dst->principals = cx->compartment->principals;
-    if (dst->principals)
-        JS_HoldPrincipals(dst->principals);
-
-    /* Establish invariant: principals implies originPrincipals. */
-    dst->originPrincipals = src->originPrincipals;
-    if (!dst->originPrincipals)
-        dst->originPrincipals = dst->principals;
-    if (dst->originPrincipals)
-        JS_HoldPrincipals(dst->originPrincipals);
 
     dst->length = src->length;
     dst->lineno = src->lineno;
