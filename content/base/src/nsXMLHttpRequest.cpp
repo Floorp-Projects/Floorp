@@ -2616,7 +2616,7 @@ GetRequestBody(nsIXHRSendable* aSendable, nsIInputStream** aResult,
 }
 
 static nsresult
-GetRequestBody(ArrayBuffer* aArrayBuffer, JSContext *aCx, nsIInputStream** aResult,
+GetRequestBody(ArrayBuffer* aArrayBuffer, nsIInputStream** aResult,
                nsACString& aContentType, nsACString& aCharset)
 {
   aContentType.SetIsVoid(true);
@@ -2689,7 +2689,7 @@ GetRequestBody(nsIVariant* aBody, JSContext *aCx, nsIInputStream** aResult,
         (obj = JSVAL_TO_OBJECT(realVal)) &&
         (JS_IsArrayBufferObject(obj, aCx))) {
       ArrayBuffer buf(aCx, obj);
-      return GetRequestBody(&buf, aCx, aResult, aContentType, aCharset);
+      return GetRequestBody(&buf, aResult, aContentType, aCharset);
     }
   }
   else if (dataType == nsIDataType::VTYPE_VOID ||
@@ -2728,7 +2728,7 @@ nsXMLHttpRequest::GetRequestBody(nsIVariant* aVariant, JSContext *aCx,
   switch (body.GetType()) {
     case nsXMLHttpRequest::RequestBody::ArrayBuffer:
     {
-      return ::GetRequestBody(value.mArrayBuffer, aCx, aResult, aContentType, aCharset);
+      return ::GetRequestBody(value.mArrayBuffer, aResult, aContentType, aCharset);
     }
     case nsXMLHttpRequest::RequestBody::Blob:
     {
