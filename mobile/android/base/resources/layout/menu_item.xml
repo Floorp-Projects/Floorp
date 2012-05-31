@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+     <View android:layout_width="14dp"
+           android:layout_height="fill_parent"
+           android:layout_gravity="center_vertical"/>
+
+     <ImageView android:id="@+id/icon"
+                android:layout_width="24dp"
+                android:layout_height="18dp"
+                android:paddingRight="6dp"
+                android:layout_gravity="center_vertical"
+                android:visibility="gone"/>
+
+     <TextView android:id="@+id/title"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_weight="1.0"
+               android:textSize="16sp"
+               android:textColor="@color/menu_item_title"
+               android:singleLine="true"
+               android:ellipsize="middle"
+               android:layout_gravity="center_vertical"/>
+
+     <ImageView android:id="@+id/check"
+                android:layout_width="20dp"
+                android:layout_height="14dp"
+                android:paddingLeft="6dp"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/menu_item_check"
+                android:visibility="gone"/>
+
+     <View android:layout_width="14dp"
+           android:layout_height="fill_parent"
+           android:layout_gravity="center_vertical"/>
+
+</merge>
