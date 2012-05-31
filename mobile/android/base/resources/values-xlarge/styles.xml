@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+    
+    <!--
+        Only overriden styles for tablets are specified here.
+    -->
+
+    <!-- GeckoApp ActionBar -->
+    <style name="ActionBar.GeckoApp">
+         <item name="android:background">@drawable/address_bar_bg</item>
+         <item name="android:displayOptions">showCustom</item>
+         <item name="android:customNavigationLayout">@layout/browser_toolbar</item>
+    </style>
+
+    <!-- GeckoApp ActionBar ActionButton -->
+    <style name="ActionBar.GeckoApp.ActionButton" parent="@android:style/Widget.Holo.ActionButton">
+        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:padding">14dip</item>
+        <item name="android:minWidth">56dip</item>
+        <item name="android:minHeight">56dip</item>
+    </style>
+
+    <!-- GeckoApp ActionBar OverflowButton -->
+    <style name="ActionBar.GeckoApp.OverflowButton" parent="ActionBar.GeckoApp.ActionButton">
+        <item name="android:src">@drawable/menu</item>
+    </style>
+
+</resources>

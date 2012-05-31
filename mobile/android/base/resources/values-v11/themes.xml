@@ -35,7 +35,6 @@
     <style name="Gecko.App">
         <item name="android:windowBackground">@drawable/abouthome_bg_repeat</item>
         <item name="android:actionBarStyle">@style/ActionBar.GeckoApp</item>
-        <item name="android:panelBackground">@drawable/menu_panel_bg</item>
     </style>
 
     <style name="Gecko.Light.AwesomeBar">
