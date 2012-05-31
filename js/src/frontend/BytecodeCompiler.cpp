@@ -113,7 +113,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         return NULL;
 
     Rooted<JSScript*> script(cx);
-    script = JSScript::Create(cx, noScriptRval);
+    script = JSScript::Create(cx, noScriptRval, version);
     if (!script)
         return NULL;
 
@@ -243,8 +243,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (Emit1(cx, &bce, JSOP_STOP) < 0)
         return NULL;
 
-    JS_ASSERT(bce.version() == version);
-
     if (!script->fullyInitFromEmitter(cx, &bce))
         return NULL;
 
@@ -280,7 +278,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         return false;
 
     Rooted<JSScript*> script(cx);
-    script = JSScript::Create(cx, /* noScriptRval = */ false);
+    script = JSScript::Create(cx, /* noScriptRval = */ false, version);
     if (!script)
         return false;
 
