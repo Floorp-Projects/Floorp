@@ -3734,8 +3734,8 @@ nsFrame::IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext)
            &result.hPadding, &result.hPctPadding, true);
 
   const nsStyleBorder *styleBorder = GetStyleBorder();
-  result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_LEFT);
-  result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_RIGHT);
+  result.hBorder += styleBorder->GetComputedBorderWidth(NS_SIDE_LEFT);
+  result.hBorder += styleBorder->GetComputedBorderWidth(NS_SIDE_RIGHT);
 
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (IsThemed(disp)) {
@@ -5091,7 +5091,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   // borders may be moving.
   const nsStyleBorder* border = GetStyleBorder();
   NS_FOR_CSS_SIDES(side) {
-    if (border->GetActualBorderWidth(side) != 0) {
+    if (border->GetComputedBorderWidth(side) != 0) {
       if ((side == NS_SIDE_LEFT || side == NS_SIDE_TOP) &&
           !nsLayoutUtils::HasNonZeroCornerOnSide(border->mBorderRadius, side) &&
           !border->GetBorderImage() &&

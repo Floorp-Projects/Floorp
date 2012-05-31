@@ -3523,7 +3523,7 @@ nsComputedDOMStyle::GetBorderWidthFor(mozilla::css::Side aSide)
     AssertFlushedPendingReflows();
     width = mInnerFrame->GetUsedBorder().Side(aSide);
   } else {
-    width = GetStyleBorder()->GetActualBorderWidth(aSide);
+    width = GetStyleBorder()->GetComputedBorderWidth(aSide);
   }
   val->SetAppUnits(width);
 
