@@ -90,8 +90,6 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
     strictModeGetter(this),
     tokenStream(cx, prin, originPrin, chars, length, fn, ln, v, &strictModeGetter),
     tempPoolMark(NULL),
-    principals(NULL),
-    originPrincipals(NULL),
     callerFrame(cfp),
     allocator(cx),
     traceListHead(NULL),
@@ -101,7 +99,6 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
     compileAndGo(compileAndGo)
 {
     cx->activeCompilations++;
-    setPrincipals(prin, originPrin);
     JS_ASSERT_IF(cfp, cfp->isScriptFrame());
 }
 
@@ -118,24 +115,8 @@ Parser::init()
 Parser::~Parser()
 {
     JSContext *cx = context;
-    if (principals)
-        JS_DropPrincipals(cx->runtime, principals);
-    if (originPrincipals)
-        JS_DropPrincipals(cx->runtime, originPrincipals);
     cx->tempLifoAlloc().release(tempPoolMark);
     cx->activeCompilations--;
-}
-
-void
-Parser::setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin)
-{
-    JS_ASSERT(!principals && !originPrincipals);
-    principals = prin;
-    if (principals)
-        JS_HoldPrincipals(principals);
-    originPrincipals = originPrin;
-    if (originPrincipals)
-        JS_HoldPrincipals(originPrincipals);
 }
 
 ObjectBox::ObjectBox(ObjectBox* traceLink, JSObject *obj)

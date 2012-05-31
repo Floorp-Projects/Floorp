@@ -38,8 +38,6 @@ struct Parser : private AutoGCRooter
     StrictModeGetter    strictModeGetter; /* used by tokenStream to test for strict mode */
     TokenStream         tokenStream;
     void                *tempPoolMark;  /* initial JSContext.tempLifoAlloc mark */
-    JSPrincipals        *principals;    /* principals associated with source */
-    JSPrincipals        *originPrincipals;   /* see jsapi.h 'originPrincipals' comment */
     StackFrame          *const callerFrame;  /* scripted caller frame for eval and dbgapi */
     ParseNodeAllocator  allocator;
     ObjectBox           *traceListHead; /* list of parsed object for GC tracing */
@@ -69,8 +67,6 @@ struct Parser : private AutoGCRooter
      * Parser destructor invocation.
      */
     bool init();
-
-    void setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin);
 
     const char *getFilename() const { return tokenStream.getFilename(); }
     JSVersion versionNumber() const { return tokenStream.versionNumber(); }
