@@ -19,7 +19,7 @@ interface nsIAccessiblePivotObserver;
  * provides traversal methods to move the pivot to next/prev state that complies 
  * to a given rule.
  */
-[scriptable, uuid(689058ae-e301-444f-acb0-b5c2b189f350)]
+[scriptable, uuid(15ff23de-879e-47ea-b536-6532466108c5)]
 interface nsIAccessiblePivot : nsISupports
 {
   const TextBoundaryType CHAR_BOUNDARY = 0;
@@ -61,20 +61,32 @@ interface nsIAccessiblePivot : nsISupports
                     in long aStartOffset, in long aEndOffset);
 
   /**
-   * Move pivot to next object complying to given traversal rule.
+   * Move pivot to next object, from current position or given anchor,
+   * complying to given traversal rule.
    *
-   * @param aRule [in] traversal rule to use.
+   * @param aRule         [in] traversal rule to use.
+   * @param aAnchor       [in] accessible to start search from, if not provided,
+   *                           current position will be used.
+   * @param aIncludeStart [in] include anchor accessible in search.
    * @return true on success, false if there are no new nodes to traverse to.
    */
-  boolean moveNext(in nsIAccessibleTraversalRule aRule);
+  [optional_argc] boolean moveNext(in nsIAccessibleTraversalRule aRule,
+                                   [optional] in nsIAccessible aAnchor,
+                                   [optional] in boolean aIncludeStart);
 
   /**
-   * Move pivot to previous object complying to given traversal rule.
+   * Move pivot to previous object, from current position or given anchor,
+   * complying to given traversal rule.
    *
-   * @param aRule [in] traversal rule to use.
+   * @param aRule         [in] traversal rule to use.
+   * @param aAnchor       [in] accessible to start search from, if not provided,
+   *                           current position will be used.
+   * @param aIncludeStart [in] include anchor accessible in search.
    * @return true on success, false if there are no new nodes to traverse to.
    */
-  boolean movePrevious(in nsIAccessibleTraversalRule aRule);
+  [optional_argc] boolean movePrevious(in nsIAccessibleTraversalRule aRule,
+                                       [optional] in nsIAccessible aAnchor,
+                                       [optional] in boolean aIncludeStart);
 
   /**
    * Move pivot to first object in subtree complying to given traversal rule.

@@ -714,15 +714,15 @@ CSS_PROP_BORDER(
     eStyleAnimType_None)
 #endif
 CSS_PROP_SHORTHAND(
-    -moz-border-image,
+    border-image,
     border_image,
-    CSS_PROP_DOMPROP_PREFIXED(BorderImage),
+    BorderImage,
     CSS_PROPERTY_PARSE_FUNCTION,
     "")
 CSS_PROP_BORDER(
-    -moz-border-image-source,
+    border-image-source,
     border_image_source,
-    CSS_PROP_DOMPROP_PREFIXED(BorderImageSource),
+    BorderImageSource,
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_START_IMAGE_LOADS,
@@ -732,9 +732,9 @@ CSS_PROP_BORDER(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
-    -moz-border-image-slice,
+    border-image-slice,
     border_image_slice,
-    CSS_PROP_DOMPROP_PREFIXED(BorderImageSlice),
+    BorderImageSlice,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
@@ -743,9 +743,9 @@ CSS_PROP_BORDER(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
-    -moz-border-image-width,
+    border-image-width,
     border_image_width,
-    CSS_PROP_DOMPROP_PREFIXED(BorderImageWidth),
+    BorderImageWidth,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
@@ -754,9 +754,9 @@ CSS_PROP_BORDER(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
-    -moz-border-image-outset,
+    border-image-outset,
     border_image_outset,
-    CSS_PROP_DOMPROP_PREFIXED(BorderImageOutset),
+    BorderImageOutset,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",
@@ -765,9 +765,9 @@ CSS_PROP_BORDER(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_BORDER(
-    -moz-border-image-repeat,
+    border-image-repeat,
     border_image_repeat,
-    CSS_PROP_DOMPROP_PREFIXED(BorderImageRepeat),
+    BorderImageRepeat,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER,
     "",

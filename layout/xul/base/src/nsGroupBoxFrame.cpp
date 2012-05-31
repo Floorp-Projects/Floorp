@@ -128,7 +128,7 @@ nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect) {
   PRIntn skipSides = 0;
   const nsStyleBorder* borderStyleData = GetStyleBorder();
-  const nsMargin& border = borderStyleData->GetActualBorder();
+  const nsMargin& border = borderStyleData->GetComputedBorder();
   nscoord yoff = 0;
   nsPresContext* presContext = PresContext();
 

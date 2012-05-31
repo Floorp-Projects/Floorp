@@ -698,6 +698,28 @@ struct ANPWindowInterfaceV1 : ANPWindowInterfaceV0 {
     ANPRectI (*visibleRect)(NPP instance);
 };
 
+enum ANPScreenOrientations {
+    /** No preference specified: let the system decide the best orientation.
+     */
+    kDefault_ANPScreenOrientation        = 0,
+    /** Would like to have the screen in a landscape orientation, but it will
+        not allow for 180 degree rotations.
+     */
+    kFixedLandscape_ANPScreenOrientation = 1,
+    /** Would like to have the screen in a portrait orientation, but it will
+        not allow for 180 degree rotations.
+     */
+    kFixedPortrait_ANPScreenOrientation  = 2,
+    /** Would like to have the screen in landscape orientation, but can use the
+        sensor to change which direction the screen is facing.
+     */
+    kLandscape_ANPScreenOrientation      = 3,
+    /** Would like to have the screen in portrait orientation, but can use the
+        sensor to change which direction the screen is facing.
+     */
+    kPortrait_ANPScreenOrientation       = 4
+};
+
 typedef int32_t ANPScreenOrientation;
 
 struct ANPWindowInterfaceV2 : ANPWindowInterfaceV1 {

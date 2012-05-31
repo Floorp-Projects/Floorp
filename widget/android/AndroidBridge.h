@@ -340,8 +340,8 @@ public:
     void ShowSurface(jobject surface, const gfxRect& aRect, bool aInverted, bool aBlend);
     void HideSurface(jobject surface);
 
-    void AddPluginView(jobject view, const gfxRect& rect);
-    void RemovePluginView(jobject view);
+    void AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen, int orientation);
+    void RemovePluginView(jobject view, bool isFullScreen);
 
     // These methods don't use a ScreenOrientation because it's an
     // enum and that would require including the header which requires

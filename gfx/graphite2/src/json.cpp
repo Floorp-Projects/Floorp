@@ -57,10 +57,10 @@ void json::context(const char current) throw()
 
 void json::indent(const int d) throw()
 {
-	if (*_context == member)
+	if (*_context == member || (_flatten  && _flatten < _context))
 		fputc(' ', _stream);
 	else
-		fprintf(_stream, _flatten  && _flatten < _context ? " " : "\n%*s",  4*int(_context - _contexts + d), "");
+		fprintf(_stream,  "\n%*s",  4*int(_context - _contexts + d), "");
 }
 
 

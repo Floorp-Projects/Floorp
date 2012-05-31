@@ -498,7 +498,7 @@ nsresult mozHunspell::ConvertCharset(const PRUnichar* aStr, char ** aDst)
   NS_ENSURE_TRUE(mEncoder, NS_ERROR_NULL_POINTER);
 
   PRInt32 outLength;
-  PRInt32 inLength = nsCRT::strlen(aStr);
+  PRInt32 inLength = NS_strlen(aStr);
   nsresult rv = mEncoder->GetMaxLength(aStr, inLength, &outLength);
   NS_ENSURE_SUCCESS(rv, rv);
 

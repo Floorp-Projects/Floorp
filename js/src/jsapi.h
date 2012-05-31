@@ -2730,12 +2730,17 @@ JS_StringToVersion(const char *string);
                                                    option supported for the
                                                    XUL preprocessor and kindred
                                                    beasts. */
-#define JSOPTION_XML            JS_BIT(6)       /* EMCAScript for XML support:
+#define JSOPTION_ALLOW_XML      JS_BIT(6)       /* enable E4X syntax (deprecated)
+                                                   and define the E4X-related
+                                                   globals: XML, XMLList,
+                                                   Namespace, etc. */
+#define JSOPTION_MOAR_XML       JS_BIT(7)       /* enable E4X even in versions
+                                                   that don't normally get it;
                                                    parse <!-- --> as a token,
                                                    not backward compatible with
                                                    the comment-hiding hack used
                                                    in HTML script tags. */
-#define JSOPTION_DONT_REPORT_UNCAUGHT \
+#define JSOPTION_DONT_REPORT_UNCAUGHT                                   \
                                 JS_BIT(8)       /* When returning from the
                                                    outermost API call, prevent
                                                    uncaught exceptions from
@@ -2777,7 +2782,7 @@ JS_StringToVersion(const char *string);
                                                    "use strict" annotations. */
 
 /* Options which reflect compile-time properties of scripts. */
-#define JSCOMPILEOPTION_MASK    (JSOPTION_XML)
+#define JSCOMPILEOPTION_MASK    (JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML)
 
 #define JSRUNOPTION_MASK        (JS_BITMASK(20) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
