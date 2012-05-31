@@ -88,18 +88,23 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mLayout = layout;
         mTitleCanExpand = true;
 
-        // Get the device's highlight color
-        TypedArray typedArray;
+        if (!GeckoApp.mAppContext.isTablet()) {
+            // Get the device's highlight color
+            TypedArray typedArray;
 
-        if (Build.VERSION.SDK_INT >= 11) {            
-            typedArray = mContext.obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
+            if (Build.VERSION.SDK_INT >= 11) {            
+                typedArray = mContext.obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
+            } else {
+                ContextThemeWrapper wrapper  = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
+                typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
+            }
+
+            mColor = typedArray.getColor(typedArray.getIndex(0), 0);
+            typedArray.recycle();
         } else {
-            ContextThemeWrapper wrapper  = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
-            typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
+            mColor = 0xFFFF9500;
         }
 
-        mColor = typedArray.getColor(typedArray.getIndex(0), 0);
-        typedArray.recycle();
         mAwesomeBar = (Button) mLayout.findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -114,13 +119,15 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                                mAwesomeBar.getPaddingRight(),
                                mAwesomeBar.getPaddingBottom() };
 
-        GeckoStateListDrawable states = new GeckoStateListDrawable();
-        states.initializeFilter(mColor);
-        states.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.address_bar_url_pressed));
-        states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
-        mAwesomeBar.setBackgroundDrawable(states);
+        if (!GeckoApp.mAppContext.isTablet()) {
+            GeckoStateListDrawable states = new GeckoStateListDrawable();
+            states.initializeFilter(mColor);
+            states.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.address_bar_url_pressed));
+            states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
+            mAwesomeBar.setBackgroundDrawable(states);
 
-        mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[2], mPadding[3]);
+            mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[2], mPadding[3]);
+        }
 
         mTabs = (ImageButton) mLayout.findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
