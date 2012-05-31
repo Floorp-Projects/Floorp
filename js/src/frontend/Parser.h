@@ -35,6 +35,7 @@ enum VarContext { HoistVars, DontHoistVars };
 struct Parser : private AutoGCRooter
 {
     JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
+    StrictModeGetter    strictModeGetter; /* used by tokenStream to test for strict mode */
     TokenStream         tokenStream;
     void                *tempPoolMark;  /* initial JSContext.tempLifoAlloc mark */
     JSPrincipals        *principals;    /* principals associated with source */
@@ -75,7 +76,6 @@ struct Parser : private AutoGCRooter
     const char *getFilename() const { return tokenStream.getFilename(); }
     JSVersion versionWithFlags() const { return tokenStream.versionWithFlags(); }
     JSVersion versionNumber() const { return tokenStream.versionNumber(); }
-    bool hasXML() const { return tokenStream.hasXML(); }
 
     /*
      * Parse a top-level JS script.
@@ -231,6 +231,9 @@ struct Parser : private AutoGCRooter
     ParseNode *identifierName(bool afterDoubleDot);
 
 #if JS_HAS_XML_SUPPORT
+    // True if E4X syntax is allowed in the current syntactic context.
+    bool allowsXML() const { return !tc->sc->inStrictMode() && tokenStream.allowsXML(); }
+
     ParseNode *endBracketedExpr();
 
     ParseNode *propertySelector();

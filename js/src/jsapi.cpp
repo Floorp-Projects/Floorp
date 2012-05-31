@@ -88,7 +88,7 @@ using namespace js::gc;
 using namespace js::types;
 
 /*
- * This class is a version-establising barrier at the head of a VM entry or
+ * This class is a version-establishing barrier at the head of a VM entry or
  * re-entry. It ensures that:
  *
  * - |newVersion| is the starting (default) version used for the context.
@@ -107,7 +107,7 @@ class AutoVersionAPI
     JSVersion   newVersion;
 
   public:
-    explicit AutoVersionAPI(JSContext *cx, JSVersion newVersion)
+    AutoVersionAPI(JSContext *cx, JSVersion newVersion)
       : cx(cx),
         oldDefaultVersion(cx->getDefaultVersion()),
         oldHasVersionOverride(cx->isVersionOverridden()),
@@ -116,6 +116,11 @@ class AutoVersionAPI
         , oldCompileOptions(cx->getCompileOptions())
 #endif
     {
+#if JS_HAS_XML_SUPPORT
+        // For backward compatibility, AutoVersionAPI clobbers the
+        // JSOPTION_MOAR_XML bit in cx, but not the JSOPTION_ALLOW_XML bit.
+        newVersion = JSVersion(newVersion | (oldDefaultVersion & VersionFlags::ALLOW_XML));
+#endif
         this->newVersion = newVersion;
         cx->clearVersionOverride();
         cx->setDefaultVersion(newVersion);
@@ -1924,18 +1929,18 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj_, jsid id, JSBool *resolved
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    *resolved = JS_FALSE;
+    *resolved = false;
 
     rt = cx->runtime;
     if (!rt->hasContexts() || !JSID_IS_ATOM(id))
-        return JS_TRUE;
+        return true;
 
     idstr = JSID_TO_STRING(id);
 
     /* Check whether we're resolving 'undefined', and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (idstr == atom) {
-        *resolved = JS_TRUE;
+        *resolved = true;
         return obj->defineProperty(cx, atom->asPropertyName(), UndefinedValue(),
                                    JS_PropertyStub, JS_StrictPropertyStub,
                                    JSPROP_PERMANENT | JSPROP_READONLY);
@@ -1958,7 +1963,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj_, jsid id, JSBool *resolved
             JS_ASSERT(standard_class_names[i].clasp);
             atom = StdNameToPropertyName(cx, &standard_class_names[i]);
             if (!atom)
-                return JS_FALSE;
+                return false;
             if (idstr == atom) {
                 stdnm = &standard_class_names[i];
                 break;
@@ -1975,7 +1980,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj_, jsid id, JSBool *resolved
                 JS_ASSERT(object_prototype_names[i].clasp);
                 atom = StdNameToPropertyName(cx, &object_prototype_names[i]);
                 if (!atom)
-                    return JS_FALSE;
+                    return false;
                 if (idstr == atom) {
                     stdnm = &object_prototype_names[i];
                     break;
@@ -1991,28 +1996,34 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj_, jsid id, JSBool *resolved
          */
         JS_ASSERT(obj->isGlobal());
         if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
-            return JS_TRUE;
+            return true;
 
         if (IsStandardClassResolved(obj, stdnm->clasp))
-            return JS_TRUE;
+            return true;
+
+#if JS_HAS_XML_SUPPORT
+        if ((stdnm->init == js_InitXMLClass ||
+             stdnm->init == js_InitNamespaceClass ||
+             stdnm->init == js_InitQNameClass) &&
+            !VersionHasAllowXML(cx->findVersion()))
+        {
+            return true;
+        }
+#endif
 
         if (!stdnm->init(cx, obj))
-            return JS_FALSE;
-        *resolved = JS_TRUE;
+            return false;
+        *resolved = true;
     }
-    return JS_TRUE;
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj_)
 {
-    JSRuntime *rt;
-    unsigned i;
-
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj_);
-    rt = cx->runtime;
 
     RootedObject obj(cx, obj_);
 
@@ -2020,24 +2031,32 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj_)
      * Check whether we need to bind 'undefined' and define it if so.
      * Since ES5 15.1.1.3 undefined can't be deleted.
      */
-    PropertyName *name = rt->atomState.typeAtoms[JSTYPE_VOID];
+    PropertyName *name = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     if (!obj->nativeContains(cx, NameToId(name)) &&
         !obj->defineProperty(cx, name, UndefinedValue(),
                              JS_PropertyStub, JS_StrictPropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
-        return JS_FALSE;
+        return false;
     }
 
     /* Initialize any classes that have not been initialized yet. */
-    for (i = 0; standard_class_atoms[i].init; i++) {
-        if (!js::IsStandardClassResolved(obj, standard_class_atoms[i].clasp) &&
-            !standard_class_atoms[i].init(cx, obj))
+    for (unsigned i = 0; standard_class_atoms[i].init; i++) {
+        const JSStdName &stdnm = standard_class_atoms[i];
+        if (!js::IsStandardClassResolved(obj, stdnm.clasp) &&
+#if JS_HAS_XML_SUPPORT
+            ((stdnm.init != js_InitXMLClass &&
+              stdnm.init != js_InitNamespaceClass &&
+              stdnm.init != js_InitQNameClass) ||
+             VersionHasAllowXML(cx->findVersion()))
+#endif
+            )
         {
-                return JS_FALSE;
+            if (!stdnm.init(cx, obj))
+                return false;
         }
     }
 
-    return JS_TRUE;
+    return true;
 }
 
 static JSIdArray *

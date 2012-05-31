@@ -98,7 +98,7 @@ public class GeckoAppShell
     private static Boolean sNSSLibsLoaded = false;
     private static Boolean sLibsSetup = false;
     private static File sGREDir = null;
-    private static float sCheckerboardPageWidth, sCheckerboardPageHeight;
+    private static RectF sCheckerboardPageRect;
     private static float sLastCheckerboardWidthRatio, sLastCheckerboardHeightRatio;
     private static RepaintRunnable sRepaintRunnable = new RepaintRunnable();
     static private int sMaxTextureSize = 0;
@@ -206,6 +206,8 @@ public class GeckoAppShell
     public static native void scheduleResumeComposition(int width, int height);
 
     public static native SurfaceBits getSurfaceBits(Surface surface);
+
+    public static native void onFullScreenPluginHidden(View view);
 
     private static class GeckoMediaScannerClient implements MediaScannerConnectionClient {
         private String mFile = "";
@@ -548,8 +550,7 @@ public class GeckoAppShell
                     case SCREENSHOT_WHOLE_PAGE:
                         GeckoApp.mAppContext.getLayerController()
                             .getView().getRenderer()
-                            .setCheckerboardBitmap(b, sCheckerboardPageWidth,
-                                                   sCheckerboardPageHeight);
+                            .setCheckerboardBitmap(b, sCheckerboardPageRect);
                         break;
                     case SCREENSHOT_UPDATE:
                         GeckoApp.mAppContext.getLayerController().getView().getRenderer().
@@ -558,8 +559,7 @@ public class GeckoAppShell
                                 sLastCheckerboardHeightRatio * y,
                                 sLastCheckerboardWidthRatio * width,
                                 sLastCheckerboardHeightRatio * height,
-                                sCheckerboardPageWidth,
-                                sCheckerboardPageHeight);
+                                sCheckerboardPageRect);
                         break;
                     case SCREENSHOT_THUMBNAIL:
                         GeckoApp.mAppContext.processThumbnail(tab, b, null);
@@ -1516,18 +1516,19 @@ public class GeckoAppShell
 
     public static void addPluginView(View view,
                                      int x, int y,
-                                     int w, int h)
+                                     int w, int h,
+                                     boolean isFullScreen, int orientation)
 {
         ImmutableViewportMetrics pluginViewport;
 
-        Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h);
+        Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h + "fullscreen: " + isFullScreen + " orientation: " + orientation);
         
-        GeckoApp.mAppContext.addPluginView(view, new Rect(x, y, x + w, y + h));
+        GeckoApp.mAppContext.addPluginView(view, new Rect(x, y, x + w, y + h), isFullScreen, orientation);
     }
 
-    public static void removePluginView(View view) {
-        Log.i(LOGTAG, "removePluginView:" + view);
-        GeckoApp.mAppContext.removePluginView(view);
+    public static void removePluginView(View view, boolean isFullScreen) {
+        Log.i(LOGTAG, "removePluginView:" + view + " fullscreen: " + isFullScreen);
+        GeckoApp.mAppContext.removePluginView(view, isFullScreen);
     }
 
     public static Surface createSurface() {
@@ -2215,8 +2216,10 @@ public class GeckoAppShell
         ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
         Log.i(LOGTAG, "Taking whole-screen screenshot, viewport: " + viewport);
         // source width and height to screenshot
-        float sw = viewport.getPageWidth() / viewport.zoomFactor;
-        float sh = viewport.getPageHeight() / viewport.zoomFactor;
+        float sx = viewport.cssPageRectLeft;
+        float sy = viewport.cssPageRectTop;
+        float sw = viewport.cssPageRectRight - viewport.cssPageRectLeft;
+        float sh = viewport.cssPageRectBottom - viewport.cssPageRectTop;
         int maxPixels = Math.min(ScreenshotLayer.getMaxNumPixels(), sMaxTextureSize * sMaxTextureSize);
         // 2Mb of 16bit image data
         // may be bumped by up to 4x for power of 2 alignment
@@ -2226,17 +2229,18 @@ public class GeckoAppShell
         int idealDstWidth = IntSize.nextPowerOfTwo(sw / idealZoomFactor);
         // min texture size such that the other dimention doesn't excede the max
         int minTextureSize = maxPixels / sMaxTextureSize;
+        int dx = 0;
+        int dy = 0;
         int dw = clamp(minTextureSize, idealDstWidth, sMaxTextureSize);
         int dh = maxPixels / dw;
 
         sLastCheckerboardWidthRatio = dw / sw;
         sLastCheckerboardHeightRatio = dh / sh;
-        sCheckerboardPageWidth = sw;
-        sCheckerboardPageHeight = sh;
+        sCheckerboardPageRect = viewport.getCssPageRect();
 
         GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(),
-                (int)FloatMath.ceil(viewport.pageRectLeft), (int)FloatMath.ceil(viewport.pageRectTop),
-                (int)FloatMath.floor(viewport.getPageWidth()), (int)FloatMath.floor(viewport.getPageHeight()),
-                0, 0,  dw, dh, GeckoAppShell.SCREENSHOT_WHOLE_PAGE));
+                (int)FloatMath.ceil(sx), (int)FloatMath.ceil(sy),
+                (int)FloatMath.floor(sw), (int)FloatMath.floor(sh),
+                dx, dy, dw, dh, GeckoAppShell.SCREENSHOT_WHOLE_PAGE));
     }
 }

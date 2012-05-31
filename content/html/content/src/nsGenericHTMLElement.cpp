@@ -549,8 +549,8 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   if (parent &&
       parent->GetStylePosition()->mBoxSizing != NS_STYLE_BOX_SIZING_BORDER) {
     const nsStyleBorder* border = parent->GetStyleBorder();
-    origin.x -= border->GetActualBorderWidth(NS_SIDE_LEFT);
-    origin.y -= border->GetActualBorderWidth(NS_SIDE_TOP);
+    origin.x -= border->GetComputedBorderWidth(NS_SIDE_LEFT);
+    origin.y -= border->GetComputedBorderWidth(NS_SIDE_TOP);
   }
 
   // XXX We should really consider subtracting out padding for

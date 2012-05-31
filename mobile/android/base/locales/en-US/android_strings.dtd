@@ -94,6 +94,14 @@
 <!ENTITY share "Share">
 <!ENTITY share_title "Share via">
 <!ENTITY save_as_pdf "Save as PDF">
+<!ENTITY find_in_page "Find in Page">
+
+<!-- Localization note (find_text, find_prev, find_next, find_close) : These strings are used
+     as alternate text for accessibility. They are not visible in the UI. -->
+<!ENTITY find_text "Find in Page">
+<!ENTITY find_prev "Previous">
+<!ENTITY find_next "Next">
+<!ENTITY find_close "Close">
 
 <!ENTITY contextmenu_open_new_tab "Open in New Tab">
 <!ENTITY contextmenu_remove_history "Remove">

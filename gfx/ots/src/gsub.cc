@@ -15,6 +15,8 @@
 // GSUB - The Glyph Substitution Table
 // http://www.microsoft.com/typography/otspec/gsub.htm
 
+#define TABLE_NAME "GSUB"
+
 namespace {
 
 // The GSUB header size
@@ -219,7 +221,7 @@ bool ParseAlternateSetTable(const uint8_t *data, const size_t length,
       return OTS_FAILURE();
     }
     if (alternate >= num_glyphs) {
-      OTS_WARNING("too arge alternate: %u", alternate);
+      OTS_WARNING("too large alternate: %u", alternate);
       return OTS_FAILURE();
     }
   }
@@ -529,7 +531,11 @@ bool ParseReverseChainingContextSingleSubstitution(
 }  // namespace
 
 #define DROP_THIS_TABLE \
-  do { file->gsub->data = 0; file->gsub->length = 0; } while (0)
+  do { \
+    file->gsub->data = 0; \
+    file->gsub->length = 0; \
+    OTS_FAILURE_MSG("OpenType layout data discarded"); \
+  } while (0)
 
 namespace ots {
 
@@ -602,7 +608,9 @@ bool ots_gsub_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
       !table.ReadU16(&offset_script_list) ||
       !table.ReadU16(&offset_feature_list) ||
       !table.ReadU16(&offset_lookup_list)) {
-    return OTS_FAILURE();
+    OTS_WARNING("incomplete GSUB table");
+    DROP_THIS_TABLE;
+    return true;
   }
 
   if (version != 0x00010000) {
@@ -625,7 +633,7 @@ bool ots_gsub_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
                             length - offset_lookup_list,
                             &kGsubLookupSubtableParser,
                             &gsub->num_lookups)) {
-    OTS_WARNING("faild to parse lookup list table");
+    OTS_WARNING("failed to parse lookup list table");
     DROP_THIS_TABLE;
     return true;
   }
@@ -634,14 +642,14 @@ bool ots_gsub_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   if (!ParseFeatureListTable(data + offset_feature_list,
                              length - offset_feature_list, gsub->num_lookups,
                              &num_features)) {
-    OTS_WARNING("faild to parse feature list table");
+    OTS_WARNING("failed to parse feature list table");
     DROP_THIS_TABLE;
     return true;
   }
 
   if (!ParseScriptListTable(data + offset_script_list,
                             length - offset_script_list, num_features)) {
-    OTS_WARNING("faild to parse script list table");
+    OTS_WARNING("failed to parse script list table");
     DROP_THIS_TABLE;
     return true;
   }

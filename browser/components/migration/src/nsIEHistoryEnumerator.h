@@ -30,7 +30,7 @@ private:
   nsRefPtr<IUrlHistoryStg2> mIEHistory;
   nsRefPtr<IEnumSTATURL> mURLEnumerator;
 
-  nsRefPtr<nsIWritablePropertyBag2> mCachedNextEntry;
+  nsCOMPtr<nsIWritablePropertyBag2> mCachedNextEntry;
 };
 
 #endif

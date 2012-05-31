@@ -733,8 +733,8 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
     const nsStyleBorder* oldBorder = aOldStyleContext->PeekStyleBorder();
     if (oldBorder) {
-      oldValue = oldBorder->GetActualBorder();
-      newValue = GetStyleBorder()->GetActualBorder();
+      oldValue = oldBorder->GetComputedBorder();
+      newValue = GetStyleBorder()->GetComputedBorder();
       if (oldValue != newValue &&
           !props.Get(UsedBorderProperty())) {
         props.Set(UsedBorderProperty(), new nsMargin(oldValue));
@@ -745,9 +745,10 @@ nsFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   imgIRequest *oldBorderImage = aOldStyleContext
     ? aOldStyleContext->GetStyleBorder()->GetBorderImage()
     : nsnull;
+  // FIXME (Bug 759996): The following is no longer true.
   // For border-images, we can't be as conservative (we need to set the
   // new loaders if there has been any change) since the CalcDifference
-  // call depended on the result of GetActualBorder() and that result
+  // call depended on the result of GetComputedBorder() and that result
   // depends on whether the image has loaded, start the image load now
   // so that we'll get notified when it completes loading and can do a
   // restyle.  Otherwise, the image might finish loading from the
@@ -846,7 +847,7 @@ nsIFrame::GetUsedBorder() const
   if (b) {
     border = *b;
   } else {
-    border = GetStyleBorder()->GetActualBorder();
+    border = GetStyleBorder()->GetComputedBorder();
   }
   return border;
 }
@@ -3733,8 +3734,8 @@ nsFrame::IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext)
            &result.hPadding, &result.hPctPadding, true);
 
   const nsStyleBorder *styleBorder = GetStyleBorder();
-  result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_LEFT);
-  result.hBorder += styleBorder->GetActualBorderWidth(NS_SIDE_RIGHT);
+  result.hBorder += styleBorder->GetComputedBorderWidth(NS_SIDE_LEFT);
+  result.hBorder += styleBorder->GetComputedBorderWidth(NS_SIDE_RIGHT);
 
   const nsStyleDisplay *disp = GetStyleDisplay();
   if (IsThemed(disp)) {
@@ -5090,7 +5091,7 @@ nsIFrame::CheckInvalidateSizeChange(const nsRect& aOldRect,
   // borders may be moving.
   const nsStyleBorder* border = GetStyleBorder();
   NS_FOR_CSS_SIDES(side) {
-    if (border->GetActualBorderWidth(side) != 0) {
+    if (border->GetComputedBorderWidth(side) != 0) {
       if ((side == NS_SIDE_LEFT || side == NS_SIDE_TOP) &&
           !nsLayoutUtils::HasNonZeroCornerOnSide(border->mBorderRadius, side) &&
           !border->GetBorderImage() &&

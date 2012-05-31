@@ -57,6 +57,7 @@ FENNEC_JAVA_FILES = \
   DoorHanger.java \
   DoorHangerPopup.java \
   Favicons.java \
+  FindInPageBar.java \
   FloatUtils.java \
   FormAssistPopup.java \
   GeckoActionBar.java \
@@ -254,6 +255,7 @@ RES_LAYOUT = \
   res/layout/browser_toolbar.xml \
   res/layout/doorhangerpopup.xml \
   res/layout/doorhanger.xml \
+  res/layout/find_in_page_content.xml \
   res/layout/gecko_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
@@ -394,6 +396,10 @@ RES_DRAWABLE_BASE = \
   res/drawable/doorhanger_bg.9.png \
   res/drawable/doorhanger_shadow_bg.9.png \
   res/drawable/doorhanger_popup_bg.9.png \
+  res/drawable/find_close.png \
+  res/drawable/find_next.png \
+  res/drawable/find_prev.png \
+  res/drawable/larry_green.png \
   res/drawable/larry_blue.png \
   res/drawable/larry_green.png \
   res/drawable/site_security_identified.png \
@@ -457,6 +463,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/doorhanger_bg.9.png \
   res/drawable-hdpi/doorhanger_shadow_bg.9.png \
   res/drawable-hdpi/doorhanger_popup_bg.9.png \
+  res/drawable-hdpi/find_close.png \
+  res/drawable-hdpi/find_next.png \
+  res/drawable-hdpi/find_prev.png \
   res/drawable-hdpi/larry_blue.png \
   res/drawable-hdpi/larry_green.png \
   res/drawable-hdpi/site_security_identified.png \
@@ -543,6 +552,9 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/doorhanger_bg.9.png \
   res/drawable-xhdpi-v11/doorhanger_shadow_bg.9.png \
   res/drawable-xhdpi-v11/doorhanger_popup_bg.9.png \
+  res/drawable-xhdpi-v11/find_close.png \
+  res/drawable-xhdpi-v11/find_next.png \
+  res/drawable-xhdpi-v11/find_prev.png \
   res/drawable-xhdpi-v11/urlbar_stop.png \
   res/drawable-xhdpi-v11/larry_blue.png \
   res/drawable-xhdpi-v11/larry_green.png \
