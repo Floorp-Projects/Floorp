@@ -151,7 +151,6 @@ public class PanZoomController
     }
 
     public void handleMessage(String event, JSONObject message) {
-        Log.i(LOGTAG, "Got message: " + event);
         try {
             if (MESSAGE_ZOOM_RECT.equals(event)) {
                 float x = (float)message.getDouble("x");
@@ -757,7 +756,6 @@ public class PanZoomController
     private void finishAnimation() {
         checkMainThread();
 
-        Log.d(LOGTAG, "Finishing animation at " + mController.getViewportMetrics());
         stopAnimationTimer();
 
         // Force a viewport synchronisation
@@ -771,8 +769,6 @@ public class PanZoomController
     }
 
     private ViewportMetrics getValidViewportMetrics(ViewportMetrics viewportMetrics) {
-        Log.d(LOGTAG, "generating valid viewport using " + viewportMetrics);
-
         /* First, we adjust the zoom factor so that we can make no overscrolled area visible. */
         float zoomFactor = viewportMetrics.getZoomFactor();
         RectF pageRect = viewportMetrics.getPageRect();
@@ -825,7 +821,6 @@ public class PanZoomController
 
         /* Now we pan to the right origin. */
         viewportMetrics.setViewport(viewportMetrics.getClampedViewport());
-        Log.d(LOGTAG, "generated valid viewport as " + viewportMetrics);
 
         return viewportMetrics;
     }
@@ -859,8 +854,6 @@ public class PanZoomController
      */
     @Override
     public boolean onScaleBegin(SimpleScaleGestureDetector detector) {
-        Log.d(LOGTAG, "onScaleBegin in " + mState);
-
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return false;
 
@@ -876,8 +869,6 @@ public class PanZoomController
 
     @Override
     public boolean onScale(SimpleScaleGestureDetector detector) {
-        Log.d(LOGTAG, "onScale in state " + mState);
-
         if (GeckoApp.mDOMFullScreen)
             return false;
 
@@ -944,8 +935,6 @@ public class PanZoomController
 
     @Override
     public void onScaleEnd(SimpleScaleGestureDetector detector) {
-        Log.d(LOGTAG, "onScaleEnd in " + mState);
-
         if (mState == PanZoomState.ANIMATED_ZOOM)
             return;
 
