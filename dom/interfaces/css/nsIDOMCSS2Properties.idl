@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[builtinclass, scriptable, uuid(81085b2d-eea9-4aca-ac93-0b1eea6587d3)]
+[builtinclass, scriptable, uuid(08fd9493-9276-4861-9b16-add2653e2f53)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -608,7 +608,7 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozStackSizing;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBorderImage;
+           attribute DOMString        borderImage;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozColumns;
@@ -725,18 +725,21 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        MozTextSizeAdjust;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBorderImageSource;
+           attribute DOMString        borderImageSource;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBorderImageSlice;
+           attribute DOMString        borderImageSlice;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBorderImageWidth;
+           attribute DOMString        borderImageWidth;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBorderImageOutset;
+           attribute DOMString        borderImageOutset;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        MozBorderImageRepeat;
+           attribute DOMString        borderImageRepeat;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozBorderImage;
                                         // raises(DOMException) on setting
 };

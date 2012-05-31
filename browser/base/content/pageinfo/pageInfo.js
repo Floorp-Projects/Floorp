@@ -653,8 +653,7 @@ function grabAll(elem)
     };
 
     addImgFunc(gStrings.mediaBGImg, computedStyle.getPropertyCSSValue("background-image"));
-    addImgFunc(gStrings.mediaBorderImg, computedStyle.getPropertyCSSValue("-moz-border-image-source"));
-    // TODO: support unprefixed "border-image" once bug 713643 is fixed.
+    addImgFunc(gStrings.mediaBorderImg, computedStyle.getPropertyCSSValue("border-image-source"));
     addImgFunc(gStrings.mediaListImg, computedStyle.getPropertyCSSValue("list-style-image"));
     addImgFunc(gStrings.mediaCursor, computedStyle.getPropertyCSSValue("cursor"));
   }

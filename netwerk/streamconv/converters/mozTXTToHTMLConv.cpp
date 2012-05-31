@@ -1027,7 +1027,7 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
 				    PRUint32& logLineStart)
 {
   PRInt32 result = 0;
-  PRInt32 lineLength = nsCRT::strlen(line);
+  PRInt32 lineLength = NS_strlen(line);
 
   bool moreCites = true;
   while (moreCites)
@@ -1066,7 +1066,7 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
       // Placed here for performance increase
       const PRUnichar * indexString = &line[logLineStart];
            // here, |logLineStart < lineLength| is always true
-      PRUint32 minlength = MinInt(6,nsCRT::strlen(indexString));
+      PRUint32 minlength = MinInt(6, NS_strlen(indexString));
       if (Substring(indexString,
                     indexString+minlength).Equals(Substring(NS_LITERAL_STRING(">From "), 0, minlength),
                                                   nsCaseInsensitiveStringComparator()))
@@ -1341,7 +1341,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar *text, PRUint32 whattodo,
 
   // FIX ME!!!
   nsString outString;
-  PRInt32 inLength = nsCRT::strlen(text);
+  PRInt32 inLength = NS_strlen(text);
   // by setting a large capacity up front, we save time
   // when appending characters to the output string because we don't
   // need to reallocate and re-copy the characters already in the out String.

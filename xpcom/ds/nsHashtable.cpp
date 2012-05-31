@@ -615,7 +615,7 @@ nsStringKey::nsStringKey(const PRUnichar* str, PRInt32 strLen, Ownership own)
 {
     NS_ASSERTION(mStr, "null string key");
     if (mStrLen == PRUint32(-1))
-        mStrLen = nsCRT::strlen(str);
+        mStrLen = NS_strlen(str);
 #ifdef DEBUG
     mKeyType = StringKey;
 #endif

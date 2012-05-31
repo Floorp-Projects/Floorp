@@ -280,7 +280,10 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
                 frame.funName = fp->fun()->atom ? fp->fun()->atom : cx->runtime->emptyString;
             else
                 frame.funName = NULL;
-            frame.filename = SaveScriptFilename(cx, i.script()->filename);
+            const char *cfilename = i.script()->filename;
+            if (!cfilename)
+                cfilename = "";
+            frame.filename = SaveScriptFilename(cx, cfilename);
             if (!frame.filename)
                 return false;
             frame.ulineno = PCToLineNumber(i.script(), i.pc());
@@ -563,12 +566,13 @@ Exception(JSContext *cx, unsigned argc, Value *vp)
             return false;
         args[1].setString(filename);
     } else {
+        filename = cx->runtime->emptyString;
         if (!iter.done()) {
-            filename = FilenameToString(cx, iter.script()->filename);
-            if (!filename)
-                return false;
-        } else {
-            filename = cx->runtime->emptyString;
+            if (const char *cfilename = iter.script()->filename) {
+                filename = FilenameToString(cx, cfilename);
+                if (!filename)
+                    return false;
+            }
         }
     }
 
@@ -1180,6 +1184,8 @@ js_CopyErrorObject(JSContext *cx, HandleObject errobj, HandleObject scope)
     if (!proto)
         return NULL;
     JSObject *copyobj = NewObjectWithGivenProto(cx, &ErrorClass, proto, NULL);
+    if (!copyobj)
+        return NULL;
     SetExnPrivate(cx, copyobj, copy);
     autoFree.p = NULL;
     return copyobj;

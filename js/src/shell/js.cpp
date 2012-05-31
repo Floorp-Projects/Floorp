@@ -584,7 +584,8 @@ static const struct JSOption {
     {"strict",          JSOPTION_STRICT},
     {"typeinfer",       JSOPTION_TYPE_INFERENCE},
     {"werror",          JSOPTION_WERROR},
-    {"xml",             JSOPTION_XML},
+    {"allow_xml",       JSOPTION_ALLOW_XML},
+    {"moar_xml",        JSOPTION_MOAR_XML},
     {"strict_mode",     JSOPTION_STRICT_MODE},
 };
 
@@ -796,12 +797,12 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    bool newContext;
-    RootedObject global(cx, NULL);
+    bool newContext = false;
     bool compileAndGo = true;
     const char *fileName = "@evaluate";
     JSAutoByteString fileNameBytes;
     unsigned lineNumber = 1;
+    RootedObject global(cx, NULL);
 
     global = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
     if (!global)
