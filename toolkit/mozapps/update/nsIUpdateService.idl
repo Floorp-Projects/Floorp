@@ -12,13 +12,14 @@ interface nsIRequest;
 interface nsIRequestObserver;
 interface nsISimpleEnumerator;
 interface nsIXMLHttpRequest;
+interface nsIFile;
 
 /**
  * An interface that describes an object representing a patch file that can
  * be downloaded and applied to a version of this application so that it
  * can be updated.
  */
-[scriptable, uuid(60523512-bb69-417c-9b2c-87a0664b0bbe)]
+[scriptable, uuid(1134957d-9449-481b-a515-4d88b9998278)]
 interface nsIUpdatePatch : nsISupports
 {
   /**
@@ -398,6 +399,12 @@ interface nsIApplicationUpdateService : nsISupports
    * Apply an update in the background.
    */
   void applyUpdateInBackground(in nsIUpdate update);
+
+  /**
+   * Get the Active Updates directory
+   * @returns The active updates directory.
+   */
+  nsIFile getUpdatesDirectory();
 
   /**
    * Pauses the active update download process
