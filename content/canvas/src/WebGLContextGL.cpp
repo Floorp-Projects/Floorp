@@ -3708,6 +3708,15 @@ WebGLContext::LinkProgram(WebGLProgram *program, ErrorResult& rv)
     if (ok) {
         bool updateInfoSucceeded = program->UpdateInfo();
         program->SetLinkStatus(updateInfoSucceeded);
+
+        // Bug 750527
+        if (gl->WorkAroundDriverBugs() &&
+            updateInfoSucceeded &&
+            gl->Vendor() == gl::GLContext::VendorNVIDIA)
+        {
+            if (program == mCurrentProgram)
+                gl->fUseProgram(progname);
+        }
     } else {
         program->SetLinkStatus(false);
 
