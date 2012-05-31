@@ -27,7 +27,7 @@ function testCleanExit() {
       is(gDebugger.DebuggerController.activeThread.paused, true,
         "Should be paused after the debugger statement.");
 
-      closeDebuggerAndFinish(gTab);
+      closeDebuggerAndFinish();
     }}, 0);
   });
 

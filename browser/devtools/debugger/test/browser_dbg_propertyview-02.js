@@ -117,7 +117,7 @@ function testSimpleCall() {
         "Clicking again the testScope tilte should collapse it.");
 
       gDebugger.DebuggerController.activeThread.resume(function() {
-        closeDebuggerAndFinish(gTab);
+        closeDebuggerAndFinish();
       });
     }}, 0);
   });

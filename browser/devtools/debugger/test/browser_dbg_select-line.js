@@ -68,7 +68,7 @@ function testSelectLine() {
                "The correct line is selected.");
 
             gDebugger.DebuggerController.activeThread.resume(function() {
-              closeDebuggerAndFinish(gTab);
+              closeDebuggerAndFinish();
             });
           });
         });

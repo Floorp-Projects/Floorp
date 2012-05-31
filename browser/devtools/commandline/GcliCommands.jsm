@@ -160,7 +160,7 @@ gcli.addCommand({
   returnType: "html",
   exec: function(args, context) {
     let win = HUDService.currentContext();
-    let dbg = win.DebuggerUI.getDebugger(win.gBrowser.selectedTab);
+    let dbg = win.DebuggerUI.getDebugger();
     if (!dbg) {
       return gcli.lookup("breakaddDebuggerStopped");
     }
@@ -206,7 +206,7 @@ gcli.addCommand({
         name: "selection",
         data: function() {
           let win = HUDService.currentContext();
-          let dbg = win.DebuggerUI.getDebugger(win.gBrowser.selectedTab);
+          let dbg = win.DebuggerUI.getDebugger();
           let files = [];
           if (dbg) {
             let scriptsView = dbg.contentWindow.DebuggerView.Scripts;
@@ -229,7 +229,7 @@ gcli.addCommand({
   exec: function(args, context) {
     args.type = "line";
     let win = HUDService.currentContext();
-    let dbg = win.DebuggerUI.getDebugger(win.gBrowser.selectedTab);
+    let dbg = win.DebuggerUI.getDebugger();
     if (!dbg) {
       return gcli.lookup("breakaddDebuggerStopped");
     }
@@ -261,7 +261,7 @@ gcli.addCommand({
         min: 0,
         max: function() {
           let win = HUDService.currentContext();
-          let dbg = win.DebuggerUI.getDebugger(win.gBrowser.selectedTab);
+          let dbg = win.DebuggerUI.getDebugger();
           if (!dbg) {
             return gcli.lookup("breakaddDebuggerStopped");
           }
@@ -274,7 +274,7 @@ gcli.addCommand({
   returnType: "html",
   exec: function(args, context) {
     let win = HUDService.currentContext();
-    let dbg = win.DebuggerUI.getDebugger(win.gBrowser.selectedTab);
+    let dbg = win.DebuggerUI.getDebugger();
     if (!dbg) {
       return gcli.lookup("breakaddDebuggerStopped");
     }
