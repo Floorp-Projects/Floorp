@@ -451,6 +451,26 @@ nsresult nsOggReader::DecodeOpus(ogg_packet* aPacket) {
   // trimming on the next packet.
   mOpusState->mPrevPacketGranulepos = endFrame;
 
+  // Apply the header gain if one was specified.
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+  if (mOpusState->mGain != 1.0f) {
+    float gain = mOpusState->mGain;
+    int samples = frames * channels;
+    for (int i = 0; i < samples; i++) {
+      buffer[i] *= gain;
+    }
+  }
+#else
+  if (mOpusState->mGain_Q16 != 65536) {
+    PRInt64 gain_Q16 = mOpusState->mGain_Q16;
+    int samples = frames * channels;
+    for (int i = 0; i < samples; i++) {
+      PRInt32 val = static_cast<PRInt32>((gain_Q16*buffer[i] + 32768)>>16);
+      buffer[i] = static_cast<AudioDataValue>(MOZ_CLIP_TO_15(val));
+    }
+  }
+#endif
+
   LOG(PR_LOG_DEBUG, ("Opus decoder pushing %d frames", frames));
   PRInt64 startTime = mOpusState->Time(startFrame);
   PRInt64 endTime = mOpusState->Time(endFrame);

@@ -15,6 +15,9 @@
 #endif
 #ifdef MOZ_OPUS
 #include <opus/opus.h>
+// For MOZ_SAMPLE_TYPE_*
+#include "nsBuiltinDecoderStateMachine.h"
+#include "nsBuiltinDecoderReader.h"
 #endif
 #include <nsAutoRef.h>
 #include <nsDeque.h>
@@ -316,7 +319,11 @@ public:
   PRUint32 mNominalRate; // Original sample rate of the data (informational).
   int mChannels;    // Number of channels the stream encodes.
   PRUint16 mPreSkip; // Number of samples to strip after decoder reset.
-  float mGain;      // Gain (dB) to apply to decoder output.
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+  float mGain;      // Gain to apply to decoder output.
+#else
+  PRInt32 mGain_Q16; // Gain to apply to the decoder output.
+#endif
   int mChannelMapping; // Channel mapping family.
   int mStreams;     // Number of packed streams in each packet.
 
