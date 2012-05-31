@@ -19,6 +19,17 @@ let DebuggerView = {
   editor: null,
 
   /**
+   * Initializes UI properties for all the displayed panes.
+   */
+  initializePanes: function DV_initializePanes() {
+    let stackframes = document.getElementById("stackframes");
+    stackframes.setAttribute("width", Prefs.stackframesWidth);
+
+    let variables = document.getElementById("variables");
+    variables.setAttribute("width", Prefs.variablesWidth);
+  },
+
+  /**
    * Initializes the SourceEditor instance.
    */
   initializeEditor: function DV_initializeEditor() {
@@ -34,6 +45,17 @@ let DebuggerView = {
 
     this.editor = new SourceEditor();
     this.editor.init(placeholder, config, this._onEditorLoad.bind(this));
+  },
+
+  /**
+   * Removes the displayed panes and saves any necessary state.
+   */
+  destroyPanes: function DV_destroyPanes() {
+    let stackframes = document.getElementById("stackframes");
+    Prefs.stackframesWidth = stackframes.getAttribute("width");
+
+    let variables = document.getElementById("variables");
+    Prefs.variablesWidth = variables.getAttribute("width");
   },
 
   /**
