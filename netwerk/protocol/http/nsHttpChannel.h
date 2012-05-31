@@ -35,6 +35,8 @@ class nsAHttpConnection;
 
 namespace mozilla { namespace net {
 
+class HttpCacheQuery;
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel
 //-----------------------------------------------------------------------------
@@ -172,7 +174,6 @@ private:
     nsresult ProcessFailedSSLConnect(PRUint32 httpStatus);
     nsresult ProcessFallback(bool *waitingForRedirectCallback);
     nsresult ContinueProcessFallback(nsresult);
-    bool     ResponseWouldVary();
     void     HandleAsyncAbort();
     nsresult EnsureAssocReq();
 
@@ -200,11 +201,11 @@ private:
     nsresult ResolveProxy();
 
     // cache specific methods
-    nsresult OpenCacheEntry();
+    nsresult OpenCacheEntry(bool usingSSL);
     nsresult OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
                                           nsCacheAccessMode aAccess,
                                           nsresult aResult);
-    nsresult OpenNormalCacheEntry();
+    nsresult OpenNormalCacheEntry(bool usingSSL);
     nsresult OnNormalCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
                                          nsCacheAccessMode aAccess,
                                          nsresult aResult);
@@ -241,12 +242,10 @@ private:
     void ClearBogusContentEncodingIfNeeded();
 
     // byte range request specific methods
-    nsresult SetupByteRangeRequest(PRUint32 partialLen);
     nsresult ProcessPartialContent();
     nsresult OnDoneReadingPartialCacheEntry(bool *streamDone);
 
     nsresult DoAuthRetry(nsAHttpConnection *);
-    bool     MustValidateBasedOnQueryUrl();
 
     void     HandleAsyncRedirectChannelToHttps();
     nsresult AsyncRedirectChannelToHttps();
@@ -284,6 +283,7 @@ private:
     PRUint64                          mLogicalOffset;
 
     // cache specific data
+    nsRefPtr<HttpCacheQuery>          mCacheQuery;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
     // We must close mCacheAsyncInputStream explicitly to avoid leaks.
     AutoClose<nsIAsyncInputStream>    mCacheAsyncInputStream;
@@ -315,6 +315,8 @@ private:
 
     friend class AutoRedirectVetoNotifier;
     friend class HttpAsyncAborter<nsHttpChannel>;
+    friend class HttpCacheQuery;
+
     nsCOMPtr<nsIURI>                  mRedirectURI;
     nsCOMPtr<nsIChannel>              mRedirectChannel;
     PRUint32                          mRedirectType;
