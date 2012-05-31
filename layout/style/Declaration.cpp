@@ -299,6 +299,26 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       break;
     }
     case eCSSProperty_border: {
+      // If we have a non-default value for any of the properties that
+      // this shorthand sets but cannot specify, we have to return the
+      // empty string.
+      if (data->ValueFor(eCSSProperty_border_image_source)->GetUnit() !=
+            eCSSUnit_None ||
+          !data->HasDefaultBorderImageSlice() ||
+          !data->HasDefaultBorderImageWidth() ||
+          !data->HasDefaultBorderImageOutset() ||
+          !data->HasDefaultBorderImageRepeat() ||
+          data->ValueFor(eCSSProperty_border_top_colors)->GetUnit() !=
+            eCSSUnit_None ||
+          data->ValueFor(eCSSProperty_border_right_colors)->GetUnit() !=
+            eCSSUnit_None ||
+          data->ValueFor(eCSSProperty_border_bottom_colors)->GetUnit() !=
+            eCSSUnit_None ||
+          data->ValueFor(eCSSProperty_border_left_colors)->GetUnit() !=
+            eCSSUnit_None) {
+        break;
+      }
+
       const nsCSSProperty* subproptables[3] = {
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color),
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_style),
