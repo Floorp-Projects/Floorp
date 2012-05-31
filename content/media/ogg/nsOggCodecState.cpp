@@ -260,6 +260,7 @@ bool nsTheoraState::Init() {
 bool
 nsTheoraState::DecodeHeader(ogg_packet* aPacket)
 {
+  nsAutoRef<ogg_packet> autoRelease(aPacket);
   mPacketCount++;
   int ret = th_decode_headerin(&mInfo,
                                &mComment,
@@ -283,14 +284,14 @@ nsTheoraState::DecodeHeader(ogg_packet* aPacket)
   bool isSetupHeader = aPacket->bytes > 0 && aPacket->packet[0] == 0x82;
   if (ret < 0 || mPacketCount > 3) {
     // We've received an error, or the first three packets weren't valid
-    // header packets, assume bad input, and don't activate the bitstream.
-    mDoneReadingHeaders = true;
+    // header packets. Assume bad input.
+    // Our caller will deactivate the bitstream.
+    return false;
   } else if (ret > 0 && isSetupHeader && mPacketCount == 3) {
     // Successfully read the three header packets.
     mDoneReadingHeaders = true;
-    mActive = true;
   }
-  return mDoneReadingHeaders;
+  return true;
 }
 
 PRInt64
@@ -521,6 +522,7 @@ nsVorbisState::~nsVorbisState() {
 }
 
 bool nsVorbisState::DecodeHeader(ogg_packet* aPacket) {
+  nsAutoRef<ogg_packet> autoRelease(aPacket);
   mPacketCount++;
   int ret = vorbis_synthesis_headerin(&mInfo,
                                       &mComment,
@@ -545,15 +547,15 @@ bool nsVorbisState::DecodeHeader(ogg_packet* aPacket) {
 
   if (ret < 0 || mPacketCount > 3) {
     // We've received an error, or the first three packets weren't valid
-    // header packets, assume bad input, and deactivate the bitstream.
-    mDoneReadingHeaders = true;
-    mActive = false;
+    // header packets. Assume bad input. Our caller will deactivate the
+    // bitstream.
+    return false;
   } else if (ret == 0 && isSetupHeader && mPacketCount == 3) {
     // Successfully read the three header packets.
     // The bitstream remains active.
     mDoneReadingHeaders = true;
   }
-  return mDoneReadingHeaders;
+  return true;
 }
 
 bool nsVorbisState::Init()
@@ -759,7 +761,9 @@ nsOpusState::nsOpusState(ogg_page* aBosPage) :
   mChannelMapping(0),
   mStreams(0),
   mDecoder(NULL),
-  mSkip(0)
+  mSkip(0),
+  mPrevPacketGranulepos(0),
+  mPrevPageGranulepos(0)
 {
   MOZ_COUNT_CTOR(nsOpusState);
 }
@@ -776,12 +780,22 @@ nsOpusState::~nsOpusState() {
 
 nsresult nsOpusState::Reset()
 {
+  return Reset(false);
+}
+
+nsresult nsOpusState::Reset(bool aStart)
+{
   nsresult res = NS_OK;
 
   if (mActive && mDecoder) {
     // Reset the decoder.
     opus_decoder_ctl(mDecoder, OPUS_RESET_STATE);
-    mSkip = 0; // Let the seek logic handle this.
+    // Let the seek logic handle pre-roll if we're not seeking to the start.
+    mSkip = aStart ? mPreSkip : 0;
+    // This lets us distinguish the first page being the last page vs. just
+    // not having processed the previous page when we encounter the last page.
+    mPrevPageGranulepos = aStart ? 0 : -1;
+    mPrevPacketGranulepos = aStart ? 0 : -1;
   }
 
   // Clear queued data.
@@ -796,6 +810,9 @@ nsresult nsOpusState::Reset()
 
 bool nsOpusState::Init(void)
 {
+  if (!mActive)
+    return false;
+
   int error;
 
   NS_ASSERTION(mDecoder == NULL, "leaking OpusDecoder");
@@ -810,65 +827,109 @@ bool nsOpusState::Init(void)
 
 bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
 {
-  // Minimum length of any header is 16 bytes.
-  if (aPacket->bytes < 16) {
-    LOG(PR_LOG_DEBUG, ("Invalid Opus file: header too short"));
-    mActive = false;
-    return true;
-  }
+  nsAutoRef<ogg_packet> autoRelease(aPacket);
+  switch(mPacketCount++) {
+    // Parse the id header.
+    case 0: {
+      if (aPacket->bytes < 19 || memcmp(aPacket->packet, "OpusHead", 8)) {
+        LOG(PR_LOG_DEBUG, ("Invalid Opus file: unrecognized header"));
+        return false;
+      }
 
-  // Try parsing as the metadata header.
-  if (!memcmp(aPacket->packet, "OpusTags", 8)) {
-    mDoneReadingHeaders = true; // This is the last Opus header.
-    mActive = true;
-    return true;
-  }
+      mRate = 48000; // The Opus decoder runs at 48 kHz regardless.
 
-  // Otherwise, parse as the id header.
-  if (aPacket->bytes < 19 || memcmp(aPacket->packet, "OpusHead", 8)) {
-    LOG(PR_LOG_DEBUG, ("Invalid Opus file: unrecognized header"));
-    mActive = false;
-    return true;
-  }
+      int version = aPacket->packet[8];
+      // Accept file format versions 0.x.
+      if ((version & 0xf0) != 0) {
+        LOG(PR_LOG_DEBUG, ("Rejecting unknown Opus file version %d", version));
+        return false;
+      }
 
-  mRate = 48000; // The Opus decoder runs at 48 kHz regardless.
+      mChannels= aPacket->packet[9];
+      mPreSkip = LEUint16(aPacket->packet + 10);
+      mNominalRate = LEUint32(aPacket->packet + 12);
+      mGain = (float)LEUint16(aPacket->packet + 16) / 256.0;
+      mChannelMapping = aPacket->packet[18];
 
-  int version = aPacket->packet[8];
-  // Accept file format versions 0.x.
-  if ((version & 0xf0) != 0) {
-    LOG(PR_LOG_DEBUG, ("Rejecting unknown Opus file version %d", version));
-    mActive = false;
-    return true;
-  }
-
-  mChannels= aPacket->packet[9];
-  mPreSkip = LEUint16(aPacket->packet + 10);
-  mNominalRate = LEUint32(aPacket->packet + 12);
-  mGain = (float)LEUint16(aPacket->packet + 16) / 256.0;
-  mChannelMapping = aPacket->packet[18];
-
-  if (mChannelMapping == 0) {
-    mStreams = 1;
-  } else if (aPacket->bytes > 19) {
-    mStreams = aPacket->packet[19];
-  } else {
-    LOG(PR_LOG_DEBUG, ("Invalid Opus file: channel mapping %d,"
-                       " but no channel mapping table", mChannelMapping));
-    mActive = false;
-    return true;
-  }
+      if (mChannelMapping == 0) {
+        mStreams = 1;
+      } else if (aPacket->bytes > 19) {
+        mStreams = aPacket->packet[19];
+      } else {
+        LOG(PR_LOG_DEBUG, ("Invalid Opus file: channel mapping %d,"
+                           " but no channel mapping table", mChannelMapping));
+        return false;
+      }
 
 #ifdef DEBUG
-  LOG(PR_LOG_DEBUG, ("Opus stream header:"));
-  LOG(PR_LOG_DEBUG, (" channels: %d", mChannels));
-  LOG(PR_LOG_DEBUG, ("  preskip: %d", mPreSkip));
-  LOG(PR_LOG_DEBUG, (" original: %d Hz", mNominalRate));
-  LOG(PR_LOG_DEBUG, ("     gain: %.2f dB", mGain));
-  LOG(PR_LOG_DEBUG, ("Channel Mapping:"));
-  LOG(PR_LOG_DEBUG, ("   family: %d", mChannelMapping));
-  LOG(PR_LOG_DEBUG, ("  streams: %d", mStreams));
+      LOG(PR_LOG_DEBUG, ("Opus stream header:"));
+      LOG(PR_LOG_DEBUG, (" channels: %d", mChannels));
+      LOG(PR_LOG_DEBUG, ("  preskip: %d", mPreSkip));
+      LOG(PR_LOG_DEBUG, (" original: %d Hz", mNominalRate));
+      LOG(PR_LOG_DEBUG, ("     gain: %.2f dB", mGain));
+      LOG(PR_LOG_DEBUG, ("Channel Mapping:"));
+      LOG(PR_LOG_DEBUG, ("   family: %d", mChannelMapping));
+      LOG(PR_LOG_DEBUG, ("  streams: %d", mStreams));
 #endif
+    }
+    break;
 
+    // Parse the metadata header.
+    case 1: {
+      if (aPacket->bytes < 16 || memcmp(aPacket->packet, "OpusTags", 8))
+        return false;
+
+      // We don't actually need any of the data here, but validating the
+      // contents helps reduce the propagation of broken files.
+      // This only checks for actual malicious content: too little data, too
+      // many comments, or comments that are too long.
+      // It does not ensure they are valid UTF-8, nor does it validate the
+      // required ASCII_TAG=value format of the user comments.
+      const unsigned char *buf = aPacket->packet + 8;
+      PRUint32 bytes = aPacket->bytes - 8;
+      PRUint32 len;
+      // Skip the vendor string.
+      len = LEUint32(buf);
+      buf += 4;
+      bytes -= 4;
+      if (len > bytes)
+        return false;
+      buf += len;
+      bytes -= len;
+      // Skip the user comments.
+      if (bytes < 4)
+        return false;
+      PRUint32 ncomments = LEUint32(buf);
+      buf += 4;
+      bytes -= 4;
+      // If there are so many comments even their length fields won't fit in
+      // the packet, stop reading now.
+      if (ncomments > (bytes>>2))
+        return false;
+      PRUint32 i;
+      for (i = 0; i < ncomments; i++) {
+        if (bytes < 4)
+          return false;
+        len = LEUint32(buf);
+        buf += 4;
+        bytes -= 4;
+        if (len > bytes)
+          return false;
+        buf += len;
+        bytes -= len;
+      }
+    }
+    break;
+
+    // We made it to the first data packet (which includes reconstructing
+    // timestamps for it in PageIn). Success!
+    default: {
+      mDoneReadingHeaders = true;
+      // Put it back on the queue so we can decode it.
+      mPackets.PushFront(autoRelease.disown());
+    }
+    break;
+  }
   return true;
 }
 
@@ -909,9 +970,10 @@ nsresult nsOpusState::PageIn(ogg_page* aPage)
 
   bool haveGranulepos;
   nsresult rv = PacketOutUntilGranulepos(haveGranulepos);
-  if (NS_FAILED(rv) || !haveGranulepos || !mDoneReadingHeaders)
+  if (NS_FAILED(rv) || !haveGranulepos || mPacketCount < 2)
     return rv;
-  ReconstructGranulepos();
+  if(!ReconstructOpusGranulepos())
+    return NS_ERROR_FAILURE;
   for (PRUint32 i = 0; i < mUnstamped.Length(); i++) {
     ogg_packet* packet = mUnstamped[i];
     NS_ASSERTION(!IsHeader(packet), "Don't try to play a header packet");
@@ -922,30 +984,108 @@ nsresult nsOpusState::PageIn(ogg_page* aPage)
   return NS_OK;
 }
 
-void nsOpusState::ReconstructGranulepos(void)
+// Helper method to return the change in granule position due to an Opus packet
+// (as distinct from the number of samples in the packet, which depends on the
+// decoder rate). It should work with a multistream Opus file, and continue to
+// work should we ever allow the decoder to decode at a rate other than 48 kHz.
+// It even works before we've created the actual Opus decoder.
+static int GetOpusDeltaGP(ogg_packet* packet)
+{
+  int nframes;
+  nframes = opus_packet_get_nb_frames(packet->packet, packet->bytes);
+  if (nframes > 0) {
+    return nframes*opus_packet_get_samples_per_frame(packet->packet, 48000);
+  }
+  NS_WARNING("Invalid Opus packet.");
+  return nframes;
+}
+
+bool nsOpusState::ReconstructOpusGranulepos(void)
 {
   NS_ASSERTION(mUnstamped.Length() > 0, "Must have unstamped packets");
-  DebugOnly<ogg_packet*> last = mUnstamped[mUnstamped.Length()-1];
+  ogg_packet* last = mUnstamped[mUnstamped.Length()-1];
   NS_ASSERTION(last->e_o_s || last->granulepos > 0,
       "Must know last granulepos!");
+  PRInt64 gp;
+  // If this is the last page, and we've seen at least one previous page (or
+  // this is the first page)...
+  if (last->e_o_s) {
+    if (mPrevPageGranulepos != -1) {
+      // If this file only has one page and the final granule position is
+      // smaller than the pre-skip amount, we MUST reject the stream.
+      if (!mDoneReadingHeaders && last->granulepos < mPreSkip)
+        return false;
+      PRInt64 last_gp = last->granulepos;
+      gp = mPrevPageGranulepos;
+      // Loop through the packets forwards, adding the current packet's
+      // duration to the previous granulepos to get the value for the
+      // current packet.
+      for (PRUint32 i = 0; i < mUnstamped.Length() - 1; ++i) {
+        ogg_packet* packet = mUnstamped[i];
+        int offset = GetOpusDeltaGP(packet);
+        // Check for error (negative offset) and overflow.
+        if (offset >= 0 && gp <= PR_INT64_MAX - offset) {
+          gp += offset;
+          if (gp >= last_gp) {
+            NS_WARNING("Opus end trimming removed more than a full packet.");
+            // We were asked to remove a full packet's worth of data or more.
+            // Encoders SHOULD NOT produce streams like this, but we'll handle
+            // it for them anyway.
+            gp = last_gp;
+            for (PRUint32 j = i+1; j < mUnstamped.Length(); ++j) {
+              nsOggCodecState::ReleasePacket(mUnstamped[j]);
+            }
+            mUnstamped.RemoveElementsAt(i+1, mUnstamped.Length() - (i+1));
+            last = packet;
+            last->e_o_s = 1;
+          }
+        }
+        packet->granulepos = gp;
+      }
+      mPrevPageGranulepos = last_gp;
+      return true;
+    } else {
+      NS_WARNING("No previous granule position to use for Opus end trimming.");
+      // If we don't have a previous granule position, fall through.
+      // We simply won't trim any samples from the end.
+      // TODO: Are we guaranteed to have seen a previous page if there is one?
+    }
+  }
 
+  gp = last->granulepos;
   // Loop through the packets backwards, subtracting the next
   // packet's duration from its granulepos to get the value
   // for the current packet.
   for (PRUint32 i = mUnstamped.Length() - 1; i > 0; i--) {
-    ogg_packet* next = mUnstamped[i];
-    int offset = opus_decoder_get_nb_samples(mDecoder,
-                                             next->packet,
-                                             next->bytes);
+    int offset = GetOpusDeltaGP(mUnstamped[i]);
     // Check for error (negative offset) and overflow.
-    if (offset >= 0 && offset <= next->granulepos) {
-      mUnstamped[i - 1]->granulepos = next->granulepos - offset;
-    } else {
-      if (offset > next->granulepos)
+    if (offset >= 0) {
+      if (offset <= gp) {
+        gp -= offset;
+      } else {
+        // If the granule position of the first data page is smaller than the
+        // number of decodable audio samples on that page, then we MUST reject
+        // the stream.
+        if (!mDoneReadingHeaders)
+          return false;
+        // It's too late to reject the stream.
+        // If we get here, this almost certainly means the file has screwed-up
+        // timestamps somewhere after the first page.
         NS_WARNING("Clamping negative Opus granulepos to zero.");
-      mUnstamped[i - 1]->granulepos = 0;
+        gp = 0;
+      }
     }
+    mUnstamped[i - 1]->granulepos = gp;
   }
+
+  // Check to make sure the first granule position is at least as large as the
+  // total number of samples decodable from the first page with completed
+  // packets. This requires looking at the duration of the first packet, too.
+  // We MUST reject such streams.
+  if (!mDoneReadingHeaders && GetOpusDeltaGP(mUnstamped[0]) > gp)
+    return false;
+  mPrevPageGranulepos = last->granulepos;
+  return true;
 }
 #endif /* MOZ_OPUS */
 
@@ -1238,6 +1378,7 @@ nsresult nsSkeletonState::GetDuration(const nsTArray<PRUint32>& aTracks,
 
 bool nsSkeletonState::DecodeHeader(ogg_packet* aPacket)
 {
+  nsAutoRef<ogg_packet> autoRelease(aPacket);
   if (IsSkeletonBOS(aPacket)) {
     PRUint16 verMajor = LEUint16(aPacket->packet + SKELETON_VERSION_MAJOR_OFFSET);
     PRUint16 verMinor = LEUint16(aPacket->packet + SKELETON_VERSION_MINOR_OFFSET);
@@ -1249,32 +1390,25 @@ bool nsSkeletonState::DecodeHeader(ogg_packet* aPacket)
     mPresentationTime = d == 0 ? 0 : (static_cast<float>(n) / static_cast<float>(d)) * USECS_PER_S;
 
     mVersion = SKELETON_VERSION(verMajor, verMinor);
+    // We can only care to parse Skeleton version 4.0+.
     if (mVersion < SKELETON_VERSION(4,0) ||
         mVersion >= SKELETON_VERSION(5,0) ||
         aPacket->bytes < SKELETON_4_0_MIN_HEADER_LEN)
-    {
-      // We can only care to parse Skeleton version 4.0+.
-      mActive = false;
-      return mDoneReadingHeaders = true;
-    }
+      return false;
 
     // Extract the segment length.
     mLength = LEInt64(aPacket->packet + SKELETON_FILE_LENGTH_OFFSET);
 
     LOG(PR_LOG_DEBUG, ("Skeleton segment length: %lld", mLength));
 
-    // Initialize the serianlno-to-index map.
+    // Initialize the serialno-to-index map.
     mIndex.Init();
-    mActive = true;
+    return true;
   } else if (IsSkeletonIndex(aPacket) && mVersion >= SKELETON_VERSION(4,0)) {
-    if (!DecodeIndex(aPacket)) {
-      // Failed to parse index, or invalid/hostile index. DecodeIndex() will
-      // have deactivated the track.
-      return mDoneReadingHeaders = true;
-    }
-
+    return DecodeIndex(aPacket);
   } else if (aPacket->e_o_s) {
     mDoneReadingHeaders = true;
+    return true;
   }
-  return mDoneReadingHeaders;
+  return false;
 }

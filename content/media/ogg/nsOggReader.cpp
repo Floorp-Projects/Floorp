@@ -65,16 +65,6 @@ PageSync(MediaResource* aResource,
 // is about 4300 bytes, so we read the file in chunks larger than that.
 static const int PAGE_STEP = 8192;
 
-class nsAutoReleasePacket {
-public:
-  nsAutoReleasePacket(ogg_packet* aPacket) : mPacket(aPacket) { }
-  ~nsAutoReleasePacket() {
-    nsOggCodecState::ReleasePacket(mPacket);
-  }
-private:
-  ogg_packet* mPacket;
-};
-
 nsOggReader::nsOggReader(nsBuiltinDecoder* aDecoder)
   : nsBuiltinDecoderReader(aDecoder),
     mTheoraState(nsnull),
@@ -124,17 +114,8 @@ nsresult nsOggReader::ResetDecode(bool start)
   if (mVorbisState && NS_FAILED(mVorbisState->Reset())) {
     res = NS_ERROR_FAILURE;
   }
-  if (mOpusState) {
-    if (NS_FAILED(mOpusState->Reset())) {
-      res = NS_ERROR_FAILURE;
-    }
-    else if (start) {
-      // Reset the skip frame counter as if
-      // we're starting playback fresh.
-      mOpusState->mSkip = mOpusState->mPreSkip;
-      LOG(PR_LOG_DEBUG, ("Seek to start: asking opus decoder to skip %d",
-                         mOpusState->mSkip));
-    }
+  if (mOpusState && NS_FAILED(mOpusState->Reset(start))) {
+    res = NS_ERROR_FAILURE;
   }
   if (mTheoraState && NS_FAILED(mTheoraState->Reset())) {
     res = NS_ERROR_FAILURE;
@@ -147,11 +128,10 @@ bool nsOggReader::ReadHeaders(nsOggCodecState* aState)
 {
   while (!aState->DoneReadingHeaders()) {
     ogg_packet* packet = NextOggPacket(aState);
-    nsAutoReleasePacket autoRelease(packet);
-    if (!packet || !aState->IsHeader(packet)) {
+    // DecodeHeader is responsible for releasing packet.
+    if (!packet || !aState->DecodeHeader(packet)) {
       aState->Deactivate();
-    } else {
-      aState->DecodeHeader(packet);
+      return false;
     }
   }
   return aState->Init();
@@ -433,9 +413,16 @@ nsresult nsOggReader::DecodeOpus(ogg_packet* aPacket) {
   NS_ASSERTION(ret == frames, "Opus decoded too few audio samples");
 
   PRInt64 endFrame = aPacket->granulepos;
-  PRInt64 endTime = mOpusState->Time(endFrame);
-  PRInt64 startTime = mOpusState->Time(endFrame - frames);
-  PRInt64 duration = endTime - startTime;
+  PRInt64 startFrame;
+  // If this is the last packet, perform end trimming.
+  if (aPacket->e_o_s && mOpusState->mPrevPacketGranulepos != -1) {
+    startFrame = mOpusState->mPrevPacketGranulepos;
+    frames = static_cast<PRInt32>(NS_MAX(static_cast<PRInt64>(0),
+                                         NS_MIN(endFrame - startFrame,
+                                                static_cast<PRInt64>(frames))));
+  } else {
+    startFrame = endFrame - frames;
+  }
 
   // Trim the initial frames while the decoder is settling.
   if (mOpusState->mSkip > 0) {
@@ -453,19 +440,23 @@ nsresult nsOggReader::DecodeOpus(ogg_packet* aPacket) {
     for (int i = 0; i < samples; i++)
       trimBuffer[i] = buffer[skipFrames*channels + i];
 
-    startTime = mOpusState->Time(endFrame - keepFrames);
-    duration = endTime - startTime;
+    startFrame = endFrame - keepFrames;
     frames = keepFrames;
     buffer = trimBuffer;
 
     mOpusState->mSkip -= skipFrames;
     LOG(PR_LOG_DEBUG, ("Opus decoder skipping %d frames", skipFrames));
   }
+  // Save this packet's granule position in case we need to perform end
+  // trimming on the next packet.
+  mOpusState->mPrevPacketGranulepos = endFrame;
 
   LOG(PR_LOG_DEBUG, ("Opus decoder pushing %d frames", frames));
+  PRInt64 startTime = mOpusState->Time(startFrame);
+  PRInt64 endTime = mOpusState->Time(endFrame);
   mAudioQueue.Push(new AudioData(mPageOffset,
                                  startTime,
-                                 duration,
+                                 endTime - startTime,
                                  frames,
                                  buffer.forget(),
                                  channels));
@@ -500,7 +491,7 @@ bool nsOggReader::DecodeAudioData()
 
   NS_ASSERTION(packet && packet->granulepos != -1,
     "Must have packet with known granulepos");
-  nsAutoReleasePacket autoRelease(packet);
+  nsAutoRef<ogg_packet> autoRelease(packet);
   if (mVorbisState) {
     DecodeVorbis(packet);
 #ifdef MOZ_OPUS
@@ -607,7 +598,7 @@ bool nsOggReader::DecodeVideoFrame(bool &aKeyframeSkip,
     mVideoQueue.Finish();
     return false;
   }
-  nsAutoReleasePacket autoRelease(packet);
+  nsAutoRef<ogg_packet> autoRelease(packet);
 
   parsed++;
   NS_ASSERTION(packet && packet->granulepos != -1,
