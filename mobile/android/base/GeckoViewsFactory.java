@@ -4,8 +4,6 @@
 
 package org.mozilla.gecko;
 
-import java.util.HashMap;
-
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -18,12 +16,6 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
 
     private static final String GECKO_VIEW_IDENTIFIER = "org.mozilla.gecko.";
     private static final int GECKO_VIEW_IDENTIFIER_LENGTH = GECKO_VIEW_IDENTIFIER.length();
-
-    // List of custom views used
-    private static final int ABOUT_HOME_SECTION = 1;
-    private static final int AWESOME_BAR_TABS = 2;
-    private static final int FORM_ASSIST_POPUP = 3;
-    private static final int LINK_TEXT_VIEW = 4;
 
     private GeckoViewsFactory() { }
 
@@ -52,6 +44,8 @@ public final class GeckoViewsFactory implements LayoutInflater.Factory {
                 return new FormAssistPopup(context, attrs);
             else if (TextUtils.equals(viewName, "LinkTextView"))
                 return new LinkTextView(context, attrs);
+            else if (TextUtils.equals(viewName, "FindInPageBar"))
+                return new FindInPageBar(context, attrs);
         }
 
         return null;

@@ -57,6 +57,12 @@
   <string name="share">&share;</string>
   <string name="share_title">&share_title;</string>
   <string name="save_as_pdf">&save_as_pdf;</string>
+  <string name="find_in_page">&find_in_page;</string>
+
+  <string name="find_text">&find_text;</string>
+  <string name="find_prev">&find_prev;</string>
+  <string name="find_next">&find_next;</string>
+  <string name="find_close">&find_close;</string>
 
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>

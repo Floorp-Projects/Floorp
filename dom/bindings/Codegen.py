@@ -578,8 +578,8 @@ class CGClassConstructHook(CGAbstractStaticMethod):
 """
             preArgs = ["global"]
 
-        name = MakeNativeName(self._ctor.identifier.name)
-        nativeName = self.descriptor.binaryNames.get(name, name)
+        name = self._ctor.identifier.name
+        nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
         callGenerator = CGMethodCall(preArgs, nativeName, True,
                                      self.descriptor, self._ctor)
         return preamble + callGenerator.define();
@@ -1512,18 +1512,18 @@ for (uint32_t i = 0; i < length; ++i) {
             # Either external, or new-binding non-castable.  We always have a
             # holder for these, because we don't actually know whether we have
             # to addref when unwrapping or not.  So we just pass an
-            # getter_AddRefs(nsCOMPtr) to XPConnect and if we'll need a release
+            # getter_AddRefs(nsRefPtr) to XPConnect and if we'll need a release
             # it'll put a non-null pointer in there.
             if forceOwningType:
                 # Don't return a holderType in this case; our declName
                 # will just own stuff.
-                templateBody += "nsCOMPtr<" + typeName + "> ${holderName};"
+                templateBody += "nsRefPtr<" + typeName + "> ${holderName};"
             else:
-                holderType = "nsCOMPtr<" + typeName + ">"
+                holderType = "nsRefPtr<" + typeName + ">"
             templateBody += (
                 "jsval tmpVal = ${val};\n" +
                 typePtr + " tmp;\n"
-                "if (NS_FAILED(xpc_qsUnwrapArg<" + typeName + ">(cx, ${val}, &tmp, getter_AddRefs(${holderName}), &tmpVal))) {\n")
+                "if (NS_FAILED(xpc_qsUnwrapArg<" + typeName + ">(cx, ${val}, &tmp, static_cast<" + typeName + "**>(getter_AddRefs(${holderName})), &tmpVal))) {\n")
             templateBody += CGIndenter(onFailure(failureCode,
                                                  descriptor.workers)).define()
             templateBody += ("}\n"
@@ -2703,7 +2703,7 @@ class CGNativeMethod(CGAbstractBindingMethod):
         CGAbstractBindingMethod.__init__(self, descriptor, baseName, args)
     def generate_code(self):
         name = self.method.identifier.name
-        nativeName = self.descriptor.binaryNames.get(name, MakeNativeName(name))
+        nativeName = MakeNativeName(self.descriptor.binaryNames.get(name, name))
         return CGMethodCall([], nativeName, self.method.isStatic(),
                             self.descriptor, self.method)
 
@@ -2729,9 +2729,9 @@ class CGNativeGetter(CGAbstractBindingMethod):
             CGGeneric("%s* self;" % self.descriptor.nativeType))
 
     def generate_code(self):
-
-        nativeMethodName = "Get" + MakeNativeName(self.attr.identifier.name)
-        return CGIndenter(CGGetterCall(self.attr.type, nativeMethodName, self.descriptor,
+        name = self.attr.identifier.name
+        nativeName = "Get" + MakeNativeName(self.descriptor.binaryNames.get(name, name))
+        return CGIndenter(CGGetterCall(self.attr.type, nativeName, self.descriptor,
                                        self.attr))
 
 class CGNativeSetter(CGAbstractBindingMethod):
@@ -2758,8 +2758,9 @@ class CGNativeSetter(CGAbstractBindingMethod):
             CGGeneric("%s* self;" % self.descriptor.nativeType))
 
     def generate_code(self):
-        nativeMethodName = "Set" + MakeNativeName(self.attr.identifier.name)
-        return CGIndenter(CGSetterCall(self.attr.type, nativeMethodName, self.descriptor,
+        name = self.attr.identifier.name
+        nativeName = "Set" + MakeNativeName(self.descriptor.binaryNames.get(name, name))
+        return CGIndenter(CGSetterCall(self.attr.type, nativeName, self.descriptor,
                                        self.attr))
 
 def getEnumValueName(value):
@@ -3459,6 +3460,7 @@ class CGBindingRoot(CGThing):
                          ['mozilla/dom/Nullable.h',
                           'mozilla/dom/PrimitiveConversions.h',
                           'XPCQuickStubs.h',
+                          'nsDOMQS.h',
                           'AccessCheck.h',
                           'WorkerPrivate.h',
                           'nsContentUtils.h',

@@ -797,7 +797,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
     aData->currentLine +=
       // clamp negative calc() to 0
       NS_MAX(GetCoord(stylePadding->mPadding.Get(startSide), 0), 0) +
-      styleBorder->GetActualBorderWidth(startSide) +
+      styleBorder->GetComputedBorderWidth(startSide) +
       GetCoord(styleMargin->mMargin.Get(startSide), 0);
   }
 
@@ -839,7 +839,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
     aData->currentLine +=
       // clamp negative calc() to 0
       NS_MAX(GetCoord(stylePadding->mPadding.Get(endSide), 0), 0) +
-      styleBorder->GetActualBorderWidth(endSide) +
+      styleBorder->GetComputedBorderWidth(endSide) +
       GetCoord(styleMargin->mMargin.Get(endSide), 0);
   }
 }

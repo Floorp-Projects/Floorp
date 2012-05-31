@@ -37,6 +37,7 @@
 #include "mozilla/dom/sms/SmsParent.h"
 #include "nsISmsRequestManager.h"
 #include "nsISmsDatabaseService.h"
+#include "nsPluginInstanceOwner.h"
 
 using namespace mozilla;
 using namespace mozilla::dom::sms;
@@ -974,6 +975,32 @@ cleanup:
     return surfaceBits;
 }
 
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_onFullScreenPluginHidden(JNIEnv* jenv, jclass, jobject view)
+{
+  class ExitFullScreenRunnable : public nsRunnable {
+    public:
+      ExitFullScreenRunnable(jobject view) : mView(view) {}
+
+      NS_IMETHODIMP Run() {
+        JNIEnv* env = AndroidBridge::GetJNIEnv();
+        if (!env) {
+          NS_WARNING("Failed to acquire JNI env, can't exit plugin fullscreen mode");
+          return NS_OK;
+        }
+
+        nsPluginInstanceOwner::ExitFullScreen(mView);
+        env->DeleteGlobalRef(mView);
+        return NS_OK;
+      }
+
+    private:
+      jobject mView;
+  };
+
+  nsCOMPtr<nsIRunnable> runnable = new ExitFullScreenRunnable(jenv->NewGlobalRef(view));
+  NS_DispatchToMainThread(runnable);
+}
 
 #endif
 }

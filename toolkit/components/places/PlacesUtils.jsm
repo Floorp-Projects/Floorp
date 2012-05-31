@@ -556,18 +556,21 @@ var PlacesUtils = {
 
     function gatherLivemarkUrl(aNode) {
       try {
-        return PlacesUtils.annotations.getItemAnnotation(aNode.itemId,
-                                                         this.LMANNO_SITEURI);
+        return PlacesUtils.annotations
+                          .getItemAnnotation(aNode.itemId,
+                                             PlacesUtils.LMANNO_SITEURI);
       } catch (ex) {
-        return PlacesUtils.annotations.getItemAnnotation(aNode.itemId,
-                                                         this.LMANNO_FEEDURI);
+        return PlacesUtils.annotations
+                          .getItemAnnotation(aNode.itemId,
+                                             PlacesUtils.LMANNO_FEEDURI);
       }
     }
 
     function isLivemark(aNode) {
       return PlacesUtils.nodeIsFolder(aNode) &&
-             PlacesUtils.annotations.itemHasAnnotation(aNode.itemId,
-                                                       this.LMANNO_FEEDURI);
+             PlacesUtils.annotations
+                        .itemHasAnnotation(aNode.itemId,
+                                           PlacesUtils.LMANNO_FEEDURI);
     }
 
     switch (aType) {

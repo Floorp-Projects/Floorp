@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=376075
 
 var e = document.getElementById("display");
 
-var borderExtras = ";-moz-border-top-colors: none; -moz-border-right-colors: none; -moz-border-bottom-colors: none; -moz-border-left-colors: none; -moz-border-image: none";
+var borderExtras = ";-moz-border-top-colors: none; -moz-border-right-colors: none; -moz-border-bottom-colors: none; -moz-border-left-colors: none; border-image: none";
 
 // Test that we only serialize the 'border' shorthand when appropriate.
 e.setAttribute("style", "border-left: medium solid blue; border-right: medium solid blue; border-top: medium blue solid; border-bottom: blue medium solid" + borderExtras);
@@ -169,14 +169,14 @@ is(e.style.MozTransition, "", "should not have -moz-transition shorthand (lists 
 // Check that the 'border' shorthand resets 'border-image' and
 // '-moz-border-*-colors', but that other 'border-*' shorthands don't
 // (bug 482692).
-e.setAttribute("style", '-moz-border-image: url("foo.png") 5 5 5 5 / 5 5 5 5 / 5 5 5 5 repeat repeat; border-left: medium solid green');
+e.setAttribute("style", 'border-image: url("foo.png") 5 5 5 5 / 5 5 5 5 / 5 5 5 5 repeat repeat; border-left: medium solid green');
 is(e.style.cssText,
-   '-moz-border-image: url("foo.png") 5 5 5 5 / 5 5 5 5 / 5 5 5 5 repeat repeat; border-left: medium solid green;',
-   "border-left does NOT reset -moz-border-image");
-e.setAttribute("style", '-moz-border-image: url("foo.png") 5 5 5 5; border: medium solid green');
+   'border-image: url("foo.png") 5 5 5 5 / 5 5 5 5 / 5 5 5 5 repeat repeat; border-left: medium solid green;',
+   "border-left does NOT reset border-image");
+e.setAttribute("style", 'border-image: url("foo.png") 5 5 5 5; border: medium solid green');
 is(e.style.cssText,
    'border: medium solid green;',
-   "border DOES reset -moz-border-image");
+   "border DOES reset border-image");
 e.setAttribute("style", '-moz-border-left-colors: fuchsia blue; border-left: medium solid green');
 is(e.style.cssText,
    '-moz-border-left-colors: fuchsia blue; border-left: medium solid green;',
