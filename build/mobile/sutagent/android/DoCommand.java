@@ -85,6 +85,7 @@ import android.os.StatFs;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Surface;
 import android.view.WindowManager;
 
 public class DoCommand {
@@ -121,6 +122,7 @@ public class DoCommand {
         SETTIME ("settime"),
         SYSTIME ("systime"),
         SCREEN ("screen"),
+        ROTATION ("rotation"),
         MEMORY ("memory"),
         POWER ("power"),
         PROCESS ("process"),
@@ -413,6 +415,8 @@ public class DoCommand {
                     strReturn += "\n";
                     strReturn += GetScreenInfo();
                     strReturn += "\n";
+                    strReturn += GetRotationInfo();
+                    strReturn += "\n";
                     strReturn += GetMemoryInfo();
                     strReturn += "\n";
                     strReturn += GetPowerInfo();
@@ -430,6 +434,10 @@ public class DoCommand {
 
                         case SCREEN:
                             strReturn = GetScreenInfo();
+                            break;
+
+                        case ROTATION:
+                            strReturn = GetRotationInfo();
                             break;
 
                         case PROCESS:
@@ -2292,6 +2300,25 @@ private void CancelNotification()
             nRetXY[0] = metrics.widthPixels;
             nRetXY[1] = metrics.heightPixels;
             return(nRetXY);
+        }
+
+    public String GetRotationInfo()
+        {
+            WindowManager wMgr = (WindowManager) contextWrapper.getSystemService(Context.WINDOW_SERVICE);
+            int nRotationDegrees = 0; // default
+            switch(wMgr.getDefaultDisplay().getRotation())
+                {
+                case Surface.ROTATION_90:
+                    nRotationDegrees = 90;
+                    break;
+                case Surface.ROTATION_180:
+                    nRotationDegrees = 180;
+                    break;
+                case Surface.ROTATION_270:
+                    nRotationDegrees = 270;
+                    break;
+                }
+            return "ROTATION:" + nRotationDegrees;
         }
 
     public String SetADB(String sWhat) {
