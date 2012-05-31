@@ -234,7 +234,7 @@ private:
     nsresult InstallCacheListener(PRUint32 offset = 0);
     nsresult InstallOfflineCacheListener();
     void     MaybeInvalidateCacheEntryForSubsequentGet();
-    nsCacheStoragePolicy DetermineStoragePolicy();
+    nsCacheStoragePolicy DetermineStoragePolicy(bool isPrivate);
     nsresult DetermineCacheAccess(nsCacheAccessMode *_retval);
     void     AsyncOnExamineCachedResponse();
 
@@ -262,7 +262,7 @@ private:
     void InvalidateCacheEntryForLocation(const char *location);
     void AssembleCacheKey(const char *spec, PRUint32 postID, nsACString &key);
     nsresult CreateNewURI(const char *loc, nsIURI **newURI);
-    void DoInvalidateCacheEntry(nsACString &key);
+    void DoInvalidateCacheEntry(const nsCString &key);
 
     // Ref RFC2616 13.10: "invalidation... MUST only be performed if
     // the host part is the same as in the Request-URI"
