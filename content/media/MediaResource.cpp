@@ -451,6 +451,8 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
 
     nsresult rv = mChannel->AsyncOpen(listener, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
+    // Tell the media element that we are fetching data from a channel.
+    element->DownloadResumed(true);
   }
 
   return NS_OK;
