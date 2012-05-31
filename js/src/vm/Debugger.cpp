@@ -4294,6 +4294,30 @@ DebuggerEnv_getObject(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
+DebuggerEnv_getCallee(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGENV_OWNER(cx, argc, vp, "get callee", args, envobj, env, dbg);
+
+    args.rval().setNull();
+
+    if (!env->isDebugScope())
+        return true;
+
+    JSObject &scope = env->asDebugScope().scope();
+    if (!scope.isCall())
+        return true;
+
+    JSObject *callee = scope.asCall().getCallee();
+    if (!callee)
+        return true;
+
+    args.rval() = ObjectValue(*callee);
+    if (!dbg->wrapDebuggeeValue(cx, &args.rval()))
+        return false;
+    return true;
+}
+
+static JSBool
 DebuggerEnv_names(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGENV_OWNER(cx, argc, vp, "names", args, envobj, env, dbg);
@@ -4431,6 +4455,7 @@ static JSPropertySpec DebuggerEnv_properties[] = {
     JS_PSG("type", DebuggerEnv_getType, 0),
     JS_PSG("object", DebuggerEnv_getObject, 0),
     JS_PSG("parent", DebuggerEnv_getParent, 0),
+    JS_PSG("callee", DebuggerEnv_getCallee, 0),
     JS_PS_END
 };
 
