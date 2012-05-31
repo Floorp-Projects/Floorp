@@ -12,17 +12,8 @@ const CONSOLEAPI_CLASS_ID = "{b49c18f8-3379-4fc0-8c90-d7772c1a9ff3}";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/NetworkHelper.jsm");
 
 var EXPORTED_SYMBOLS = ["HUDService", "ConsoleUtils"];
-
-XPCOMUtils.defineLazyServiceGetter(this, "activityDistributor",
-                                   "@mozilla.org/network/http-activity-distributor;1",
-                                   "nsIHttpActivityDistributor");
-
-XPCOMUtils.defineLazyServiceGetter(this, "mimeService",
-                                   "@mozilla.org/mime;1",
-                                   "nsIMIMEService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "@mozilla.org/widget/clipboardhelper;1",
@@ -34,46 +25,20 @@ XPCOMUtils.defineLazyGetter(this, "gcli", function () {
   return obj.gcli;
 });
 
-XPCOMUtils.defineLazyGetter(this, "CssRuleView", function() {
-  let tmp = {};
-  Cu.import("resource:///modules/devtools/CssRuleView.jsm", tmp);
-  return tmp.CssRuleView;
-});
-
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function () {
-  var obj = {};
-  Cu.import("resource://gre/modules/NetUtil.jsm", obj);
-  return obj.NetUtil;
-});
-
 XPCOMUtils.defineLazyGetter(this, "template", function () {
   var obj = {};
   Cu.import("resource:///modules/devtools/Templater.jsm", obj);
   return obj.template;
 });
 
-XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
-  let obj = {};
-  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
-  return obj.PropertyPanel;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "PropertyPanel",
+                                  "resource:///modules/PropertyPanel.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "PropertyTreeView", function () {
-  let obj = {};
-  Cu.import("resource:///modules/PropertyPanel.jsm", obj);
-  return obj.PropertyTreeView;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "PropertyTreeView",
+                                  "resource:///modules/PropertyPanel.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "AutocompletePopup", function () {
-  var obj = {};
-  try {
-    Cu.import("resource:///modules/AutocompletePopup.jsm", obj);
-  }
-  catch (err) {
-    Cu.reportError(err);
-  }
-  return obj.AutocompletePopup;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "AutocompletePopup",
+                                  "resource:///modules/AutocompletePopup.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "ScratchpadManager", function () {
   var obj = {};
@@ -86,11 +51,11 @@ XPCOMUtils.defineLazyGetter(this, "ScratchpadManager", function () {
   return obj.ScratchpadManager;
 });
 
-XPCOMUtils.defineLazyGetter(this, "WebConsoleUtils", function () {
-  let obj = {};
-  Cu.import("resource:///modules/WebConsoleUtils.jsm", obj);
-  return obj.WebConsoleUtils;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "NetworkPanel",
+                                  "resource:///modules/NetworkPanel.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "WebConsoleUtils",
+                                  "resource:///modules/WebConsoleUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "l10n", function() {
   return WebConsoleUtils.l10n;
@@ -161,14 +126,8 @@ const LEVELS = {
 
 // The lowest HTTP response code (inclusive) that is considered an error.
 const MIN_HTTP_ERROR_CODE = 400;
-// The highest HTTP response code (exclusive) that is considered an error.
-const MAX_HTTP_ERROR_CODE = 600;
-
-// HTTP status codes.
-const HTTP_MOVED_PERMANENTLY = 301;
-const HTTP_FOUND = 302;
-const HTTP_SEE_OTHER = 303;
-const HTTP_TEMPORARY_REDIRECT = 307;
+// The highest HTTP response code (inclusive) that is considered an error.
+const MAX_HTTP_ERROR_CODE = 599;
 
 // The HTML namespace.
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -217,12 +176,6 @@ const ANIMATE_IN = 1;
 const HISTORY_BACK = -1;
 const HISTORY_FORWARD = 1;
 
-// The maximum number of bytes a Network ResponseListener can hold.
-const RESPONSE_BODY_LIMIT = 1024*1024; // 1 MB
-
-// The maximum uint32 value.
-const PR_UINT32_MAX = 4294967295;
-
 // Minimum console height, in pixels.
 const MINIMUM_CONSOLE_HEIGHT = 150;
 
@@ -232,9 +185,6 @@ const MINIMUM_PAGE_HEIGHT = 50;
 
 // The default console height, as a ratio from the content window inner height.
 const DEFAULT_CONSOLE_HEIGHT = 0.33;
-
-// Constant used when checking the typeof objects.
-const TYPEOF_FUNCTION = "function";
 
 // This script is inserted into the content process.
 const CONTENT_SCRIPT_URL = "chrome://browser/content/devtools/HUDService-content.js";
@@ -251,278 +201,6 @@ const GROUP_INDENT = 12;
 
 // The pref prefix for webconsole filters
 const PREFS_PREFIX = "devtools.webconsole.filter.";
-
-/**
- * Implements the nsIStreamListener and nsIRequestObserver interface. Used
- * within the HS_httpObserverFactory function to get the response body of
- * requests.
- *
- * The code is mostly based on code listings from:
- *
- *   http://www.softwareishard.com/blog/firebug/
- *      nsitraceablechannel-intercept-http-traffic/
- *
- * @param object aHttpActivity
- *        HttpActivity object associated with this request (see
- *        HS_httpObserverFactory). As the response is done, the response header,
- *        body and status is stored on aHttpActivity.
- */
-function ResponseListener(aHttpActivity) {
-  this.receivedData = "";
-  this.httpActivity = aHttpActivity;
-}
-
-ResponseListener.prototype =
-{
-  /**
-   * The response will be written into the outputStream of this nsIPipe.
-   * Both ends of the pipe must be blocking.
-   */
-  sink: null,
-
-  /**
-   * The HttpActivity object associated with this response.
-   */
-  httpActivity: null,
-
-  /**
-   * Stores the received data as a string.
-   */
-  receivedData: null,
-
-  /**
-   * The nsIRequest we are started for.
-   */
-  request: null,
-
-  /**
-   * Sets the httpActivity object's response header if it isn't set already.
-   *
-   * @param nsIRequest aRequest
-   */
-  setResponseHeader: function RL_setResponseHeader(aRequest)
-  {
-    let httpActivity = this.httpActivity;
-    // Check if the header isn't set yet.
-    if (!httpActivity.response.header) {
-      if (aRequest instanceof Ci.nsIHttpChannel) {
-      httpActivity.response.header = {};
-        try {
-        aRequest.visitResponseHeaders({
-          visitHeader: function(aName, aValue) {
-            httpActivity.response.header[aName] = aValue;
-          }
-        });
-      }
-        // Accessing the response header can throw an NS_ERROR_NOT_AVAILABLE
-        // exception. Catch it and stop it to make it not show up in the.
-        // This can happen if the response is not finished yet and the user
-        // reloades the page.
-        catch (ex) {
-          delete httpActivity.response.header;
-        }
-      }
-    }
-  },
-
-  /**
-   * Set the async listener for the given nsIAsyncInputStream. This allows us to
-   * wait asynchronously for any data coming from the stream.
-   *
-   * @param nsIAsyncInputStream aStream
-   *        The input stream from where we are waiting for data to come in.
-   *
-   * @param nsIInputStreamCallback aListener
-   *        The input stream callback you want. This is an object that must have
-   *        the onInputStreamReady() method. If the argument is null, then the
-   *        current callback is removed.
-   *
-   * @returns void
-   */
-  setAsyncListener: function RL_setAsyncListener(aStream, aListener)
-  {
-    // Asynchronously wait for the stream to be readable or closed.
-    aStream.asyncWait(aListener, 0, 0, Services.tm.mainThread);
-  },
-
-  /**
-   * Stores the received data, if request/response body logging is enabled. It
-   * also does limit the number of stored bytes, based on the
-   * RESPONSE_BODY_LIMIT constant.
-   *
-   * Learn more about nsIStreamListener at:
-   * https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIStreamListener
-   *
-   * @param nsIRequest aRequest
-   * @param nsISupports aContext
-   * @param nsIInputStream aInputStream
-   * @param unsigned long aOffset
-   * @param unsigned long aCount
-   */
-  onDataAvailable: function RL_onDataAvailable(aRequest, aContext, aInputStream,
-                                               aOffset, aCount)
-  {
-    this.setResponseHeader(aRequest);
-
-    let data = NetUtil.readInputStreamToString(aInputStream, aCount);
-
-    if (!this.httpActivity.response.bodyDiscarded &&
-        this.receivedData.length < RESPONSE_BODY_LIMIT) {
-      this.receivedData += NetworkHelper.
-                           convertToUnicode(data, aRequest.contentCharset);
-    }
-  },
-
-  /**
-   * See documentation at
-   * https://developer.mozilla.org/En/NsIRequestObserver
-   *
-   * @param nsIRequest aRequest
-   * @param nsISupports aContext
-   */
-  onStartRequest: function RL_onStartRequest(aRequest, aContext)
-  {
-    this.request = aRequest;
-
-    // Always discard the response body if logging is not enabled in the Web
-    // Console.
-    this.httpActivity.response.bodyDiscarded =
-      !HUDService.saveRequestAndResponseBodies;
-
-    // Check response status and discard the body for redirects.
-    if (!this.httpActivity.response.bodyDiscarded &&
-        this.httpActivity.channel instanceof Ci.nsIHttpChannel) {
-      switch (this.httpActivity.channel.responseStatus) {
-        case HTTP_MOVED_PERMANENTLY:
-        case HTTP_FOUND:
-        case HTTP_SEE_OTHER:
-        case HTTP_TEMPORARY_REDIRECT:
-          this.httpActivity.response.bodyDiscarded = true;
-          break;
-      }
-    }
-
-    // Asynchronously wait for the data coming from the request.
-    this.setAsyncListener(this.sink.inputStream, this);
-  },
-
-  /**
-   * Handle the onStopRequest by storing the response header is stored on the
-   * httpActivity object. The sink output stream is also closed.
-   *
-   * For more documentation about nsIRequestObserver go to:
-   * https://developer.mozilla.org/En/NsIRequestObserver
-   *
-   * @param nsIRequest aRequest
-   *        The request we are observing.
-   * @param nsISupports aContext
-   * @param nsresult aStatusCode
-   */
-  onStopRequest: function RL_onStopRequest(aRequest, aContext, aStatusCode)
-  {
-    // Retrieve the response headers, as they are, from the server.
-    let response = null;
-    for each (let item in HUDService.openResponseHeaders) {
-      if (item.channel === this.httpActivity.channel) {
-        response = item;
-        break;
-      }
-    }
-
-    if (response) {
-      this.httpActivity.response.header = response.headers;
-      delete HUDService.openResponseHeaders[response.id];
-    }
-    else {
-      this.setResponseHeader(aRequest);
-    }
-
-    this.sink.outputStream.close();
-  },
-
-  /**
-   * Clean up the response listener once the response input stream is closed.
-   * This is called from onStopRequest() or from onInputStreamReady() when the
-   * stream is closed.
-   *
-   * @returns void
-   */
-  onStreamClose: function RL_onStreamClose()
-  {
-    if (!this.httpActivity) {
-      return;
-    }
-
-    // Remove our listener from the request input stream.
-    this.setAsyncListener(this.sink.inputStream, null);
-
-    if (!this.httpActivity.response.bodyDiscarded &&
-        HUDService.saveRequestAndResponseBodies) {
-      this.httpActivity.response.body = this.receivedData;
-    }
-
-    if (HUDService.lastFinishedRequestCallback) {
-      HUDService.lastFinishedRequestCallback(this.httpActivity);
-    }
-
-    // Call update on all panels.
-    this.httpActivity.panels.forEach(function(weakRef) {
-      let panel = weakRef.get();
-      if (panel) {
-        panel.update();
-      }
-    });
-    this.httpActivity.response.isDone = true;
-    this.httpActivity = null;
-    this.receivedData = "";
-    this.request = null;
-    this.sink = null;
-    this.inputStream = null;
-  },
-
-  /**
-   * The nsIInputStreamCallback for when the request input stream is ready -
-   * either it has more data or it is closed.
-   *
-   * @param nsIAsyncInputStream aStream
-   *        The sink input stream from which data is coming.
-   *
-   * @returns void
-   */
-  onInputStreamReady: function RL_onInputStreamReady(aStream)
-  {
-    if (!(aStream instanceof Ci.nsIAsyncInputStream) || !this.httpActivity) {
-      return;
-    }
-
-    let available = -1;
-    try {
-      // This may throw if the stream is closed normally or due to an error.
-      available = aStream.available();
-    }
-    catch (ex) { }
-
-    if (available != -1) {
-      if (available != 0) {
-        // Note that passing 0 as the offset here is wrong, but the
-        // onDataAvailable() method does not use the offset, so it does not
-        // matter.
-        this.onDataAvailable(this.request, null, aStream, 0, available);
-      }
-      this.setAsyncListener(aStream, this);
-    }
-    else {
-      this.onStreamClose();
-    }
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIStreamListener,
-    Ci.nsIInputStreamCallback,
-    Ci.nsIRequestObserver,
-    Ci.nsISupports,
-  ])
-}
 
 ///////////////////////////////////////////////////////////////////////////
 //// Helper for creating the network panel.
@@ -549,637 +227,6 @@ function createElement(aDocument, aTag, aAttributes)
     }
   }
   return node;
-}
-
-/**
- * Creates a new DOMNode and appends it to aParent.
- *
- * @param nsIDOMNode aParent
- *        A parent node to append the created element.
- * @param string aTag
- *        Name of the tag for the DOMNode.
- * @param object aAttributes
- *        Attributes set on the created DOMNode.
- *
- * @returns nsIDOMNode
- */
-function createAndAppendElement(aParent, aTag, aAttributes)
-{
-  let node = createElement(aParent.ownerDocument, aTag, aAttributes);
-  aParent.appendChild(node);
-  return node;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//// NetworkPanel
-
-/**
- * Creates a new NetworkPanel.
- *
- * @param nsIDOMNode aParent
- *        Parent node to append the created panel to.
- * @param object aHttpActivity
- *        HttpActivity to display in the panel.
- */
-function NetworkPanel(aParent, aHttpActivity)
-{
-  let doc = aParent.ownerDocument;
-  this.httpActivity = aHttpActivity;
-
-  // Create the underlaying panel
-  this.panel = createElement(doc, "panel", {
-    label: l10n.getStr("NetworkPanel.label"),
-    titlebar: "normal",
-    noautofocus: "true",
-    noautohide: "true",
-    close: "true"
-  });
-
-  // Create the iframe that displays the NetworkPanel XHTML.
-  this.iframe = createAndAppendElement(this.panel, "iframe", {
-    src: "chrome://browser/content/NetworkPanel.xhtml",
-    type: "content",
-    flex: "1"
-  });
-
-  let self = this;
-
-  // Destroy the panel when it's closed.
-  this.panel.addEventListener("popuphidden", function onPopupHide() {
-    self.panel.removeEventListener("popuphidden", onPopupHide, false);
-    self.panel.parentNode.removeChild(self.panel);
-    self.panel = null;
-    self.iframe = null;
-    self.document = null;
-    self.httpActivity = null;
-
-    if (self.linkNode) {
-      self.linkNode._panelOpen = false;
-      self.linkNode = null;
-    }
-  }, false);
-
-  // Set the document object and update the content once the panel is loaded.
-  this.panel.addEventListener("load", function onLoad() {
-    self.panel.removeEventListener("load", onLoad, true);
-    self.document = self.iframe.contentWindow.document;
-    self.update();
-  }, true);
-
-  // Create the footer.
-  let footer = createElement(doc, "hbox", { align: "end" });
-  createAndAppendElement(footer, "spacer", { flex: 1 });
-
-  createAndAppendElement(footer, "resizer", { dir: "bottomend" });
-  this.panel.appendChild(footer);
-
-  aParent.appendChild(this.panel);
-}
-
-NetworkPanel.prototype =
-{
-  /**
-   * Callback is called once the NetworkPanel is processed completly. Used by
-   * unit tests.
-   */
-  isDoneCallback: null,
-
-  /**
-   * The current state of the output.
-   */
-  _state: 0,
-
-  /**
-   * State variables.
-   */
-  _INIT: 0,
-  _DISPLAYED_REQUEST_HEADER: 1,
-  _DISPLAYED_REQUEST_BODY: 2,
-  _DISPLAYED_RESPONSE_HEADER: 3,
-  _TRANSITION_CLOSED: 4,
-
-  _fromDataRegExp: /Content-Type\:\s*application\/x-www-form-urlencoded/,
-
-  /**
-   * Small helper function that is nearly equal to  HUDService.getFormatStr
-   * except that it prefixes aName with "NetworkPanel.".
-   *
-   * @param string aName
-   *        The name of an i10n string to format. This string is prefixed with
-   *        "NetworkPanel." before calling the HUDService.getFormatStr function.
-   * @param array aArray
-   *        Values used as placeholder for the i10n string.
-   * @returns string
-   *          The i10n formated string.
-   */
-  _format: function NP_format(aName, aArray)
-  {
-    return l10n.getFormatStr("NetworkPanel." + aName, aArray);
-  },
-
-  /**
-   * Returns the content type of the response body. This is based on the
-   * response.header["Content-Type"] info. If this value is not available, then
-   * the content type is tried to be estimated by the url file ending.
-   *
-   * @returns string or null
-   *          Content type or null if no content type could be figured out.
-   */
-  get _contentType()
-  {
-    let response = this.httpActivity.response;
-    let contentTypeValue = null;
-
-    if (response.header && response.header["Content-Type"]) {
-      let types = response.header["Content-Type"].split(/,|;/);
-      for (let i = 0; i < types.length; i++) {
-        let type = NetworkHelper.mimeCategoryMap[types[i]];
-        if (type) {
-          return types[i];
-        }
-      }
-    }
-
-    // Try to get the content type from the request file extension.
-    let uri = NetUtil.newURI(this.httpActivity.url);
-    let mimeType = null;
-    if ((uri instanceof Ci.nsIURL) && uri.fileExtension) {
-      try {
-        mimeType = mimeService.getTypeFromExtension(uri.fileExtension);
-      } catch(e) {
-        // Added to prevent failures on OS X 64. No Flash?
-        Cu.reportError(e);
-        // Return empty string to pass unittests.
-        return "";
-      }
-    }
-    return mimeType;
-  },
-
-  /**
-   *
-   * @returns boolean
-   *          True if the response is an image, false otherwise.
-   */
-  get _responseIsImage()
-  {
-    return NetworkHelper.mimeCategoryMap[this._contentType] == "image";
-  },
-
-  /**
-   *
-   * @returns boolean
-   *          True if the response body contains text, false otherwise.
-   */
-  get _isResponseBodyTextData()
-  {
-    let contentType = this._contentType;
-
-    if (!contentType)
-      return false;
-
-    if (contentType.indexOf("text/") == 0) {
-      return true;
-    }
-
-    switch (NetworkHelper.mimeCategoryMap[contentType]) {
-      case "txt":
-      case "js":
-      case "json":
-      case "css":
-      case "html":
-      case "svg":
-      case "xml":
-        return true;
-
-      default:
-        return false;
-    }
-  },
-
-  /**
-   *
-   * @returns boolean
-   *          Returns true if the server responded that the request is already
-   *          in the browser's cache, false otherwise.
-   */
-  get _isResponseCached()
-  {
-    return this.httpActivity.response.status.indexOf("304") != -1;
-  },
-
-  /**
-   *
-   * @returns boolean
-   *          Returns true if the posted body contains form data.
-   */
-  get _isRequestBodyFormData()
-  {
-    let requestBody = this.httpActivity.request.body;
-    return this._fromDataRegExp.test(requestBody);
-  },
-
-  /**
-   * Appends the node with id=aId by the text aValue.
-   *
-   * @param string aId
-   * @param string aValue
-   * @returns void
-   */
-  _appendTextNode: function NP_appendTextNode(aId, aValue)
-  {
-    let textNode = this.document.createTextNode(aValue);
-    this.document.getElementById(aId).appendChild(textNode);
-  },
-
-  /**
-   * Generates some HTML to display the key-value pair of the aList data. The
-   * generated HTML is added to node with id=aParentId.
-   *
-   * @param string aParentId
-   *        Id of the parent node to append the list to.
-   * @oaram object aList
-   *        Object that holds the key-value information to display in aParentId.
-   * @param boolean aIgnoreCookie
-   *        If true, the key-value named "Cookie" is not added to the list.
-   * @returns void
-   */
-  _appendList: function NP_appendList(aParentId, aList, aIgnoreCookie)
-  {
-    let parent = this.document.getElementById(aParentId);
-    let doc = this.document;
-
-    let sortedList = {};
-    Object.keys(aList).sort().forEach(function(aKey) {
-      sortedList[aKey] = aList[aKey];
-    });
-
-    for (let key in sortedList) {
-      if (aIgnoreCookie && key == "Cookie") {
-        continue;
-      }
-
-      /**
-       * The following code creates the HTML:
-       * <tr>
-       * <th scope="row" class="property-name">${line}:</th>
-       * <td class="property-value">${aList[line]}</td>
-       * </tr>
-       * and adds it to parent.
-       */
-      let row = doc.createElement("tr");
-      let textNode = doc.createTextNode(key + ":");
-      let th = doc.createElement("th");
-      th.setAttribute("scope", "row");
-      th.setAttribute("class", "property-name");
-      th.appendChild(textNode);
-      row.appendChild(th);
-
-      textNode = doc.createTextNode(sortedList[key]);
-      let td = doc.createElement("td");
-      td.setAttribute("class", "property-value");
-      td.appendChild(textNode);
-      row.appendChild(td);
-
-      parent.appendChild(row);
-    }
-  },
-
-  /**
-   * Displays the node with id=aId.
-   *
-   * @param string aId
-   * @returns void
-   */
-  _displayNode: function NP_displayNode(aId)
-  {
-    this.document.getElementById(aId).style.display = "block";
-  },
-
-  /**
-   * Sets the request URL, request method, the timing information when the
-   * request started and the request header content on the NetworkPanel.
-   * If the request header contains cookie data, a list of sent cookies is
-   * generated and a special sent cookie section is displayed + the cookie list
-   * added to it.
-   *
-   * @returns void
-   */
-  _displayRequestHeader: function NP_displayRequestHeader()
-  {
-    let timing = this.httpActivity.timing;
-    let request = this.httpActivity.request;
-
-    this._appendTextNode("headUrl", this.httpActivity.url);
-    this._appendTextNode("headMethod", this.httpActivity.method);
-
-    this._appendTextNode("requestHeadersInfo",
-      l10n.timestampString(timing.REQUEST_HEADER/1000));
-
-    this._appendList("requestHeadersContent", request.header, true);
-
-    if ("Cookie" in request.header) {
-      this._displayNode("requestCookie");
-
-      let cookies = request.header.Cookie.split(";");
-      let cookieList = {};
-      let cookieListSorted = {};
-      cookies.forEach(function(cookie) {
-        let name, value;
-        [name, value] = cookie.trim().split("=");
-        cookieList[name] = value;
-      });
-      this._appendList("requestCookieContent", cookieList);
-    }
-  },
-
-  /**
-   * Displays the request body section of the NetworkPanel and set the request
-   * body content on the NetworkPanel.
-   *
-   * @returns void
-   */
-  _displayRequestBody: function NP_displayRequestBody() {
-    this._displayNode("requestBody");
-    this._appendTextNode("requestBodyContent", this.httpActivity.request.body);
-  },
-
-  /*
-   * Displays the `sent form data` section. Parses the request header for the
-   * submitted form data displays it inside of the `sent form data` section.
-   *
-   * @returns void
-   */
-  _displayRequestForm: function NP_processRequestForm() {
-    let requestBodyLines = this.httpActivity.request.body.split("\n");
-    let formData = requestBodyLines[requestBodyLines.length - 1].
-                      replace(/\+/g, " ").split("&");
-
-    function unescapeText(aText)
-    {
-      try {
-        return decodeURIComponent(aText);
-      }
-      catch (ex) {
-        return decodeURIComponent(unescape(aText));
-      }
-    }
-
-    let formDataObj = {};
-    for (let i = 0; i < formData.length; i++) {
-      let data = formData[i];
-      let idx = data.indexOf("=");
-      let key = data.substring(0, idx);
-      let value = data.substring(idx + 1);
-      formDataObj[unescapeText(key)] = unescapeText(value);
-    }
-
-    this._appendList("requestFormDataContent", formDataObj);
-    this._displayNode("requestFormData");
-  },
-
-  /**
-   * Displays the response section of the NetworkPanel, sets the response status,
-   * the duration between the start of the request and the receiving of the
-   * response header as well as the response header content on the the NetworkPanel.
-   *
-   * @returns void
-   */
-  _displayResponseHeader: function NP_displayResponseHeader()
-  {
-    let timing = this.httpActivity.timing;
-    let response = this.httpActivity.response;
-
-    this._appendTextNode("headStatus", response.status);
-
-    let deltaDuration =
-      Math.round((timing.RESPONSE_HEADER - timing.REQUEST_HEADER) / 1000);
-    this._appendTextNode("responseHeadersInfo",
-      this._format("durationMS", [deltaDuration]));
-
-    this._displayNode("responseContainer");
-    this._appendList("responseHeadersContent", response.header);
-  },
-
-  /**
-   * Displays the respones image section, sets the source of the image displayed
-   * in the image response section to the request URL and the duration between
-   * the receiving of the response header and the end of the request. Once the
-   * image is loaded, the size of the requested image is set.
-   *
-   * @returns void
-   */
-  _displayResponseImage: function NP_displayResponseImage()
-  {
-    let self = this;
-    let timing = this.httpActivity.timing;
-    let response = this.httpActivity.response;
-    let cached = "";
-
-    if (this._isResponseCached) {
-      cached = "Cached";
-    }
-
-    let imageNode = this.document.getElementById("responseImage" + cached +"Node");
-    imageNode.setAttribute("src", this.httpActivity.url);
-
-    // This function is called to set the imageInfo.
-    function setImageInfo() {
-      let deltaDuration =
-        Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
-      self._appendTextNode("responseImage" + cached + "Info",
-        self._format("imageSizeDeltaDurationMS", [
-          imageNode.width, imageNode.height, deltaDuration
-        ]
-      ));
-    }
-
-    // Check if the image is already loaded.
-    if (imageNode.width != 0) {
-      setImageInfo();
-    }
-    else {
-      // Image is not loaded yet therefore add a load event.
-      imageNode.addEventListener("load", function imageNodeLoad() {
-        imageNode.removeEventListener("load", imageNodeLoad, false);
-        setImageInfo();
-      }, false);
-    }
-
-    this._displayNode("responseImage" + cached);
-  },
-
-  /**
-   * Displays the response body section, sets the the duration between
-   * the receiving of the response header and the end of the request as well as
-   * the content of the response body on the NetworkPanel.
-   *
-   * @param [optional] string aCachedContent
-   *        Cached content for this request. If this argument is set, the
-   *        responseBodyCached section is displayed.
-   * @returns void
-   */
-  _displayResponseBody: function NP_displayResponseBody(aCachedContent)
-  {
-    let timing = this.httpActivity.timing;
-    let response = this.httpActivity.response;
-    let cached =  "";
-    if (aCachedContent) {
-      cached = "Cached";
-    }
-
-    let deltaDuration =
-      Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
-    this._appendTextNode("responseBody" + cached + "Info",
-      this._format("durationMS", [deltaDuration]));
-
-    this._displayNode("responseBody" + cached);
-    this._appendTextNode("responseBody" + cached + "Content",
-                            aCachedContent || response.body);
-  },
-
-  /**
-   * Displays the `Unknown Content-Type hint` and sets the duration between the
-   * receiving of the response header on the NetworkPanel.
-   *
-   * @returns void
-   */
-  _displayResponseBodyUnknownType: function NP_displayResponseBodyUnknownType()
-  {
-    let timing = this.httpActivity.timing;
-
-    this._displayNode("responseBodyUnknownType");
-    let deltaDuration =
-      Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
-    this._appendTextNode("responseBodyUnknownTypeInfo",
-      this._format("durationMS", [deltaDuration]));
-
-    this._appendTextNode("responseBodyUnknownTypeContent",
-      this._format("responseBodyUnableToDisplay.content", [this._contentType]));
-  },
-
-  /**
-   * Displays the `no response body` section and sets the the duration between
-   * the receiving of the response header and the end of the request.
-   *
-   * @returns void
-   */
-  _displayNoResponseBody: function NP_displayNoResponseBody()
-  {
-    let timing = this.httpActivity.timing;
-
-    this._displayNode("responseNoBody");
-    let deltaDuration =
-      Math.round((timing.RESPONSE_COMPLETE - timing.RESPONSE_HEADER) / 1000);
-    this._appendTextNode("responseNoBodyInfo",
-      this._format("durationMS", [deltaDuration]));
-  },
-
-  /*
-   * Calls the isDoneCallback function if one is specified.
-   */
-  _callIsDone: function() {
-    if (this.isDoneCallback) {
-      this.isDoneCallback();
-    }
-  },
-
-  /**
-   * Updates the content of the NetworkPanel's iframe.
-   *
-   * @returns void
-   */
-  update: function NP_update()
-  {
-    /**
-     * After the iframe's contentWindow is ready, the document object is set.
-     * If the document object isn't set yet, then the page is loaded and nothing
-     * can be updated.
-     */
-    if (!this.document) {
-      return;
-    }
-
-    let timing = this.httpActivity.timing;
-    let request = this.httpActivity.request;
-    let response = this.httpActivity.response;
-
-    switch (this._state) {
-      case this._INIT:
-        this._displayRequestHeader();
-        this._state = this._DISPLAYED_REQUEST_HEADER;
-        // FALL THROUGH
-
-      case this._DISPLAYED_REQUEST_HEADER:
-        // Process the request body if there is one.
-        if (!request.bodyDiscarded && request.body) {
-          // Check if we send some form data. If so, display the form data special.
-          if (this._isRequestBodyFormData) {
-            this._displayRequestForm();
-          }
-          else {
-            this._displayRequestBody();
-          }
-          this._state = this._DISPLAYED_REQUEST_BODY;
-        }
-        // FALL THROUGH
-
-      case this._DISPLAYED_REQUEST_BODY:
-        // There is always a response header. Therefore we can skip here if
-        // we don't have a response header yet and don't have to try updating
-        // anything else in the NetworkPanel.
-        if (!response.header) {
-          break
-        }
-        this._displayResponseHeader();
-        this._state = this._DISPLAYED_RESPONSE_HEADER;
-        // FALL THROUGH
-
-      case this._DISPLAYED_RESPONSE_HEADER:
-        // Check if the transition is done.
-        if (timing.TRANSACTION_CLOSE && response.isDone) {
-          if (response.bodyDiscarded) {
-            this._callIsDone();
-          }
-          else if (this._responseIsImage) {
-            this._displayResponseImage();
-            this._callIsDone();
-          }
-          else if (!this._isResponseBodyTextData) {
-            this._displayResponseBodyUnknownType();
-            this._callIsDone();
-          }
-          else if (response.body) {
-            this._displayResponseBody();
-            this._callIsDone();
-          }
-          else if (this._isResponseCached) {
-            let self = this;
-            NetworkHelper.loadFromCache(this.httpActivity.url,
-                                        this.httpActivity.charset,
-                                        function(aContent) {
-              // If some content could be loaded from the cache, then display
-              // the body.
-              if (aContent) {
-                self._displayResponseBody(aContent);
-                self._callIsDone();
-              }
-              // Otherwise, show the "There is no response body" hint.
-              else {
-                self._displayNoResponseBody();
-                self._callIsDone();
-              }
-            });
-          }
-          else {
-            this._displayNoResponseBody();
-            this._callIsDone();
-          }
-          this._state = this._TRANSITION_CLOSED;
-        }
-        break;
-    }
-  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1271,11 +318,6 @@ function HUD_SERVICE()
   // Remembers the last console height, in pixels.
   this.lastConsoleHeight = Services.prefs.getIntPref("devtools.hud.height");
 
-  // Network response bodies are piped through a buffer of the given size (in
-  // bytes).
-  this.responsePipeSegmentSize =
-    Services.prefs.getIntPref("network.buffer.cache.size");
-
   /**
    * Collection of HUDIds that map to the tabs/windows/contexts
    * that a HeadsUpDisplay can be activated for.
@@ -1296,16 +338,6 @@ function HUD_SERVICE()
    * Keeps a reference for each HeadsUpDisplay that is created
    */
   this.hudReferences = {};
-
-  /**
-   * Requests that haven't finished yet.
-   */
-  this.openRequests = {};
-
-  /**
-   * Response headers for requests that haven't finished yet.
-   */
-  this.openResponseHeaders = {};
 };
 
 HUD_SERVICE.prototype =
@@ -1324,12 +356,6 @@ HUD_SERVICE.prototype =
    * integers
    */
   sequencer: null,
-
-  /**
-   * Whether to save the bodies of network requests and responses. Disabled by
-   * default to save memory.
-   */
-  saveRequestAndResponseBodies: false,
 
   /**
    * Tell the HUDService that a HeadsUpDisplay can be activated
@@ -1449,10 +475,6 @@ HUD_SERVICE.prototype =
       if (!aAnimated) {
         this.storeHeight(hudId);
       }
-
-      let hud = this.hudReferences[hudId];
-      browser.webProgress.removeProgressListener(hud.progressListener);
-      delete hud.progressListener;
 
       this.unregisterDisplay(hudId);
 
@@ -1727,6 +749,8 @@ HUD_SERVICE.prototype =
       hud.gcliterm.clearOutput();
     }
 
+    let document = hud.chromeDocument;
+
     hud.destroy();
 
     // Make sure that the console panel does not try to call
@@ -1758,14 +782,14 @@ HUD_SERVICE.prototype =
 
     this.unregisterActiveContext(aHUDId);
 
-    let popupset = hud.chromeDocument.getElementById("mainPopupSet");
+    let popupset = document.getElementById("mainPopupSet");
     let panels = popupset.querySelectorAll("panel[hudId=" + aHUDId + "]");
     for (let i = 0; i < panels.length; i++) {
       panels[i].hidePopup();
     }
 
     if (Object.keys(this.hudReferences).length == 0) {
-      let autocompletePopup = hud.chromeDocument.
+      let autocompletePopup = document.
                               getElementById("webConsole_autocompletePopup");
       if (autocompletePopup) {
         autocompletePopup.parentNode.removeChild(autocompletePopup);
@@ -1787,9 +811,6 @@ HUD_SERVICE.prototype =
       return;
     }
 
-    // begin observing HTTP traffic
-    this.startHTTPObservation();
-
     WebConsoleObserver.init();
   },
 
@@ -1801,17 +822,7 @@ HUD_SERVICE.prototype =
    */
   suspend: function HS_suspend()
   {
-    activityDistributor.removeObserver(this.httpObserver);
-    delete this.httpObserver;
-
-    Services.obs.removeObserver(this.httpResponseExaminer,
-                                "http-on-examine-response");
-
-    this.openRequests = {};
-    this.openResponseHeaders = {};
-
     delete this.defaultFilterPrefs;
-
     delete this.lastFinishedRequestCallback;
 
     WebConsoleObserver.uninit();
@@ -1945,8 +956,11 @@ HUD_SERVICE.prototype =
   applicationHooks: null,
 
   /**
-   * Assign a function to this property to listen for finished httpRequests.
-   * Used by unit tests.
+   * Assign a function to this property to listen for every request that
+   * completes. Used by unit tests. The callback takes one argument: the HTTP
+   * activity object as received from the remote Web Console.
+   *
+   * @type function
    */
   lastFinishedRequestCallback: null,
 
@@ -1954,11 +968,12 @@ HUD_SERVICE.prototype =
    * Opens a NetworkPanel.
    *
    * @param nsIDOMNode aNode
-   *        DOMNode to display the panel next to.
+   *        The message node you want the panel to be anchored to.
    * @param object aHttpActivity
-   *        httpActivity object. The data of this object is displayed in the
-   *        NetworkPanel.
-   * @returns NetworkPanel
+   *        The HTTP activity object that holds network request and response
+   *        information. This object is given to the NetworkPanel constructor.
+   * @return object
+   *         The new NetworkPanel instance.
    */
   openNetworkPanel: function HS_openNetworkPanel(aNode, aHttpActivity)
   {
@@ -1966,419 +981,23 @@ HUD_SERVICE.prototype =
     let parent = doc.getElementById("mainPopupSet");
     let netPanel = new NetworkPanel(parent, aHttpActivity);
     netPanel.linkNode = aNode;
+    aNode._netPanel = netPanel;
 
     let panel = netPanel.panel;
     panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
     panel.sizeTo(450, 500);
     panel.setAttribute("hudId", aHttpActivity.hudId);
-    aHttpActivity.panels.push(Cu.getWeakReference(netPanel));
+
+    panel.addEventListener("popuphiding", function HS_netPanel_onHide() {
+      panel.removeEventListener("popuphiding", HS_netPanel_onHide);
+
+      aNode._panelOpen = false;
+      aNode._netPanel = null;
+    });
+
+    aNode._panelOpen = true;
+
     return netPanel;
-  },
-
-  /**
-   * Begin observing HTTP traffic that we care about,
-   * namely traffic that originates inside any context that a Heads Up Display
-   * is active for.
-   */
-  startHTTPObservation: function HS_httpObserverFactory()
-  {
-    // creates an observer for http traffic
-    var self = this;
-    var httpObserver = {
-      observeActivity :
-      function HS_SHO_observeActivity(aChannel,
-                                      aActivityType,
-                                      aActivitySubtype,
-                                      aTimestamp,
-                                      aExtraSizeData,
-                                      aExtraStringData)
-      {
-        if (aActivityType ==
-              activityDistributor.ACTIVITY_TYPE_HTTP_TRANSACTION ||
-            aActivityType ==
-              activityDistributor.ACTIVITY_TYPE_SOCKET_TRANSPORT) {
-
-          aChannel = aChannel.QueryInterface(Ci.nsIHttpChannel);
-
-          let transCodes = this.httpTransactionCodes;
-          let hudId;
-
-          if (aActivitySubtype ==
-              activityDistributor.ACTIVITY_SUBTYPE_REQUEST_HEADER ) {
-            // Try to get the source window of the request.
-            let win = NetworkHelper.getWindowForRequest(aChannel);
-            if (!win) {
-              return;
-            }
-
-            // Try to get the hudId that is associated to the window.
-            hudId = self.getHudIdByWindow(win.top);
-            if (!hudId) {
-              return;
-            }
-
-            // The httpActivity object will hold all information concerning
-            // this request and later response.
-
-            let httpActivity = {
-              id: self.sequenceId(),
-              hudId: hudId,
-              url: aChannel.URI.spec,
-              method: aChannel.requestMethod,
-              channel: aChannel,
-              charset: win.document.characterSet,
-
-              panels: [],
-              request: {
-                header: { }
-              },
-              response: {
-                header: null
-              },
-              timing: {
-                "REQUEST_HEADER": aTimestamp
-              }
-            };
-
-            // Add a new output entry.
-            let loggedNode = self.logNetActivity(httpActivity);
-
-            // In some cases loggedNode can be undefined (e.g. if an image was
-            // requested). Don't continue in such a case.
-            if (!loggedNode) {
-              return;
-            }
-
-            aChannel.QueryInterface(Ci.nsITraceableChannel);
-
-            // The response will be written into the outputStream of this pipe.
-            // This allows us to buffer the data we are receiving and read it
-            // asynchronously.
-            // Both ends of the pipe must be blocking.
-            let sink = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
-
-            // The streams need to be blocking because this is required by the
-            // stream tee.
-            sink.init(false, false, HUDService.responsePipeSegmentSize,
-                      PR_UINT32_MAX, null);
-
-            // Add listener for the response body.
-            let newListener = new ResponseListener(httpActivity);
-
-            // Remember the input stream, so it isn't released by GC.
-            newListener.inputStream = sink.inputStream;
-            newListener.sink = sink;
-
-            let tee = Cc["@mozilla.org/network/stream-listener-tee;1"].
-                      createInstance(Ci.nsIStreamListenerTee);
-
-            let originalListener = aChannel.setNewListener(tee);
-
-            tee.init(originalListener, sink.outputStream, newListener);
-
-            // Copy the request header data.
-            aChannel.visitRequestHeaders({
-              visitHeader: function(aName, aValue) {
-                httpActivity.request.header[aName] = aValue;
-              }
-            });
-
-            // Store the loggedNode and the httpActivity object for later reuse.
-            let linkNode = loggedNode.querySelector(".webconsole-msg-link");
-
-            httpActivity.messageObject = {
-              messageNode: loggedNode,
-              linkNode:    linkNode
-            };
-            self.openRequests[httpActivity.id] = httpActivity;
-
-            // Make the network span clickable.
-            linkNode.setAttribute("aria-haspopup", "true");
-            linkNode.addEventListener("mousedown", function(aEvent) {
-              this._startX = aEvent.clientX;
-              this._startY = aEvent.clientY;
-            }, false);
-
-            linkNode.addEventListener("click", function(aEvent) {
-              if (aEvent.detail != 1 || aEvent.button != 0 ||
-                  (this._startX != aEvent.clientX &&
-                   this._startY != aEvent.clientY)) {
-                return;
-              }
-
-              if (!this._panelOpen) {
-                self.openNetworkPanel(this, httpActivity);
-                this._panelOpen = true;
-              }
-            }, false);
-          }
-          else {
-            // Iterate over all currently ongoing requests. If aChannel can't
-            // be found within them, then exit this function.
-            let httpActivity = null;
-            for each (let item in self.openRequests) {
-              if (item.channel !== aChannel) {
-                continue;
-              }
-              httpActivity = item;
-              break;
-            }
-
-            if (!httpActivity) {
-              return;
-            }
-
-            hudId = httpActivity.hudId;
-            let msgObject = httpActivity.messageObject;
-
-            let updatePanel = false;
-            let data;
-            // Store the time information for this activity subtype.
-            httpActivity.timing[transCodes[aActivitySubtype]] = aTimestamp;
-
-            switch (aActivitySubtype) {
-              case activityDistributor.ACTIVITY_SUBTYPE_REQUEST_BODY_SENT: {
-                if (!self.saveRequestAndResponseBodies) {
-                  httpActivity.request.bodyDiscarded = true;
-                  break;
-                }
-
-                let gBrowser = msgObject.messageNode.ownerDocument.
-                               defaultView.gBrowser;
-                let HUD = HUDService.hudReferences[hudId];
-                let browser = gBrowser.
-                              getBrowserForDocument(HUD.contentDocument);
-
-                let sentBody = NetworkHelper.
-                               readPostTextFromRequest(aChannel, browser);
-                if (!sentBody) {
-                  // If the request URL is the same as the current page url, then
-                  // we can try to get the posted text from the page directly.
-                  // This check is necessary as otherwise the
-                  //   NetworkHelper.readPostTextFromPage
-                  // function is called for image requests as well but these
-                  // are not web pages and as such don't store the posted text
-                  // in the cache of the webpage.
-                  if (httpActivity.url == browser.contentWindow.location.href) {
-                    sentBody = NetworkHelper.readPostTextFromPage(browser);
-                  }
-                  if (!sentBody) {
-                    sentBody = "";
-                  }
-                }
-                httpActivity.request.body = sentBody;
-                break;
-              }
-
-              case activityDistributor.ACTIVITY_SUBTYPE_RESPONSE_HEADER: {
-                // aExtraStringData contains the response header. The first line
-                // contains the response status (e.g. HTTP/1.1 200 OK).
-                //
-                // Note: The response header is not saved here. Calling the
-                //       aChannel.visitResponseHeaders at this point sometimes
-                //       causes an NS_ERROR_NOT_AVAILABLE exception. Therefore,
-                //       the response header and response body is stored on the
-                //       httpActivity object within the RL_onStopRequest function.
-                httpActivity.response.status =
-                  aExtraStringData.split(/\r\n|\n|\r/)[0];
-
-                // Add the response status.
-                let linkNode = msgObject.linkNode;
-                let statusNode = linkNode.
-                  querySelector(".webconsole-msg-status");
-                let statusText = "[" + httpActivity.response.status + "]";
-                statusNode.setAttribute("value", statusText);
-
-                let clipboardTextPieces =
-                  [ httpActivity.method, httpActivity.url, statusText ];
-                msgObject.messageNode.clipboardText =
-                  clipboardTextPieces.join(" ");
-
-                let status = parseInt(httpActivity.response.status.
-                  replace(/^HTTP\/\d\.\d (\d+).+$/, "$1"));
-
-                if (status >= MIN_HTTP_ERROR_CODE &&
-                    status < MAX_HTTP_ERROR_CODE) {
-                  ConsoleUtils.setMessageType(msgObject.messageNode,
-                                              CATEGORY_NETWORK,
-                                              SEVERITY_ERROR);
-                }
-
-                break;
-              }
-
-              case activityDistributor.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE: {
-                let timing = httpActivity.timing;
-                let requestDuration =
-                  Math.round((timing.RESPONSE_COMPLETE -
-                                timing.REQUEST_HEADER) / 1000);
-
-                // Add the request duration.
-                let linkNode = msgObject.linkNode;
-                let statusNode = linkNode.
-                  querySelector(".webconsole-msg-status");
-
-                let statusText = httpActivity.response.status;
-                let timeText = l10n.getFormatStr("NetworkPanel.durationMS",
-                                                 [ requestDuration ]);
-                let fullStatusText = "[" + statusText + " " + timeText + "]";
-                statusNode.setAttribute("value", fullStatusText);
-
-                let clipboardTextPieces =
-                  [ httpActivity.method, httpActivity.url, fullStatusText ];
-                msgObject.messageNode.clipboardText =
-                  clipboardTextPieces.join(" ");
-
-                delete httpActivity.messageObject;
-                delete self.openRequests[httpActivity.id];
-                updatePanel = true;
-                break;
-              }
-            }
-
-            if (updatePanel) {
-              httpActivity.panels.forEach(function(weakRef) {
-                let panel = weakRef.get();
-                if (panel) {
-                  panel.update();
-                }
-              });
-            }
-          }
-        }
-      },
-
-      httpTransactionCodes: {
-        0x5001: "REQUEST_HEADER",
-        0x5002: "REQUEST_BODY_SENT",
-        0x5003: "RESPONSE_START",
-        0x5004: "RESPONSE_HEADER",
-        0x5005: "RESPONSE_COMPLETE",
-        0x5006: "TRANSACTION_CLOSE",
-
-        0x804b0003: "STATUS_RESOLVING",
-        0x804b000b: "STATUS_RESOLVED",
-        0x804b0007: "STATUS_CONNECTING_TO",
-        0x804b0004: "STATUS_CONNECTED_TO",
-        0x804b0005: "STATUS_SENDING_TO",
-        0x804b000a: "STATUS_WAITING_FOR",
-        0x804b0006: "STATUS_RECEIVING_FROM"
-      }
-    };
-
-    this.httpObserver = httpObserver;
-
-    activityDistributor.addObserver(httpObserver);
-
-    // This is used to find the correct HTTP response headers.
-    Services.obs.addObserver(this.httpResponseExaminer,
-                             "http-on-examine-response", false);
-  },
-
-  /**
-   * Observe notifications for the http-on-examine-response topic, coming from
-   * the nsIObserver service.
-   *
-   * @param string aTopic
-   * @param nsIHttpChannel aSubject
-   * @returns void
-   */
-  httpResponseExaminer: function HS_httpResponseExaminer(aSubject, aTopic)
-  {
-    if (aTopic != "http-on-examine-response" ||
-        !(aSubject instanceof Ci.nsIHttpChannel)) {
-      return;
-    }
-
-    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
-    let win = NetworkHelper.getWindowForRequest(channel);
-    if (!win) {
-      return;
-    }
-    let hudId = HUDService.getHudIdByWindow(win);
-    if (!hudId) {
-      return;
-    }
-
-    let response = {
-      id: HUDService.sequenceId(),
-      hudId: hudId,
-      channel: channel,
-      headers: {},
-    };
-
-    try {
-      channel.visitResponseHeaders({
-        visitHeader: function(aName, aValue) {
-          response.headers[aName] = aValue;
-        }
-      });
-    }
-    catch (ex) {
-      delete response.headers;
-    }
-
-    if (response.headers) {
-      HUDService.openResponseHeaders[response.id] = response;
-    }
-  },
-
-  /**
-   * Logs network activity.
-   *
-   * @param object aActivityObject
-   *        The activity to log.
-   * @returns void
-   */
-  logNetActivity: function HS_logNetActivity(aActivityObject)
-  {
-    let hudId = aActivityObject.hudId;
-    let outputNode = this.hudReferences[hudId].outputNode;
-
-    let chromeDocument = outputNode.ownerDocument;
-    let msgNode = chromeDocument.createElementNS(XUL_NS, "hbox");
-
-    let methodNode = chromeDocument.createElementNS(XUL_NS, "label");
-    methodNode.setAttribute("value", aActivityObject.method);
-    methodNode.classList.add("webconsole-msg-body-piece");
-    msgNode.appendChild(methodNode);
-
-    let linkNode = chromeDocument.createElementNS(XUL_NS, "hbox");
-    linkNode.setAttribute("flex", "1");
-    linkNode.classList.add("webconsole-msg-body-piece");
-    linkNode.classList.add("webconsole-msg-link");
-    msgNode.appendChild(linkNode);
-
-    let urlNode = chromeDocument.createElementNS(XUL_NS, "label");
-    urlNode.setAttribute("crop", "center");
-    urlNode.setAttribute("flex", "1");
-    urlNode.setAttribute("title", aActivityObject.url);
-    urlNode.setAttribute("value", aActivityObject.url);
-    urlNode.classList.add("hud-clickable");
-    urlNode.classList.add("webconsole-msg-body-piece");
-    urlNode.classList.add("webconsole-msg-url");
-    linkNode.appendChild(urlNode);
-
-    let statusNode = chromeDocument.createElementNS(XUL_NS, "label");
-    statusNode.setAttribute("value", "");
-    statusNode.classList.add("hud-clickable");
-    statusNode.classList.add("webconsole-msg-body-piece");
-    statusNode.classList.add("webconsole-msg-status");
-    linkNode.appendChild(statusNode);
-
-    let clipboardText = aActivityObject.method + " " + aActivityObject.url;
-
-    let messageNode = ConsoleUtils.createMessageNode(chromeDocument,
-                                                     CATEGORY_NETWORK,
-                                                     SEVERITY_LOG,
-                                                     msgNode,
-                                                     hudId,
-                                                     null,
-                                                     null,
-                                                     clipboardText);
-
-    ConsoleUtils.outputMessageNode(messageNode, aActivityObject.hudId);
-    return messageNode;
   },
 
   /**
@@ -2521,11 +1140,6 @@ HUD_SERVICE.prototype =
       HUDService.registerHUDReference(hud);
       let windowId = WebConsoleUtils.getOuterWindowId(aContentWindow.top);
       this.windowIds[windowId] = hudId;
-
-      hud.progressListener = new ConsoleProgressListener(hudId);
-
-      _browser.webProgress.addProgressListener(hud.progressListener,
-        Ci.nsIWebProgress.NOTIFY_STATE_ALL);
     }
     else {
       hud = this.hudReferences[hudId];
@@ -2845,7 +1459,8 @@ HeadsUpDisplay.prototype = {
   _messageListeners: ["JSTerm:EvalObject", "WebConsole:ConsoleAPI",
     "WebConsole:CachedMessages", "WebConsole:PageError", "JSTerm:EvalResult",
     "JSTerm:AutocompleteProperties", "JSTerm:ClearOutput",
-    "JSTerm:InspectObject"],
+    "JSTerm:InspectObject", "WebConsole:NetworkActivity",
+    "WebConsole:FileActivity"],
 
   consolePanel: null,
 
@@ -2853,6 +1468,34 @@ HeadsUpDisplay.prototype = {
    * The nesting depth of the currently active console group.
    */
   groupDepth: 0,
+
+  _saveRequestAndResponseBodies: false,
+
+  /**
+   * Tells whether to save the bodies of network requests and responses.
+   * Disabled by default to save memory.
+   * @type boolean
+   */
+  get saveRequestAndResponseBodies() this._saveRequestAndResponseBodies,
+
+  /**
+   * Setter for saving of network request and response bodies.
+   *
+   * @param boolean aValue
+   *        The new value you want to set.
+   */
+  set saveRequestAndResponseBodies(aValue) {
+    this._saveRequestAndResponseBodies = aValue;
+
+    let message = {
+      preferences: {
+        "NetworkMonitor.saveRequestAndResponseBodies":
+          this._saveRequestAndResponseBodies,
+      },
+    };
+
+    this.sendMessageToContent("WebConsole:SetPreferences", message);
+  },
 
   get mainPopupSet()
   {
@@ -3524,9 +2167,8 @@ HeadsUpDisplay.prototype = {
     let id = this.hudId + "-output-contextmenu";
     menuPopup.setAttribute("id", id);
     menuPopup.addEventListener("popupshowing", function() {
-      saveBodiesItem.setAttribute("checked",
-        HUDService.saveRequestAndResponseBodies);
-    }, true);
+      saveBodiesItem.setAttribute("checked", this.saveRequestAndResponseBodies);
+    }.bind(this), true);
 
     let saveBodiesItem = this.makeXULNode("menuitem");
     saveBodiesItem.setAttribute("label", l10n.getStr("saveBodies.label"));
@@ -3535,6 +2177,7 @@ HeadsUpDisplay.prototype = {
     saveBodiesItem.setAttribute("type", "checkbox");
     saveBodiesItem.setAttribute("buttonType", "saveBodies");
     saveBodiesItem.setAttribute("oncommand", "HUDConsoleUI.command(this);");
+    saveBodiesItem.setAttribute("hudId", this.hudId);
     menuPopup.appendChild(saveBodiesItem);
 
     menuPopup.appendChild(this.makeXULNode("menuseparator"));
@@ -3927,6 +2570,106 @@ HeadsUpDisplay.prototype = {
     ConsoleUtils.outputMessageNode(node, this.hudId);
   },
 
+  /**
+   * Log network activity.
+   *
+   * @param object aHttpActivity
+   *        The HTTP activity to log.
+   */
+  logNetActivity: function HUD_logNetActivity(aHttpActivity)
+  {
+    let entry = aHttpActivity.log.entries[0];
+    let request = entry.request;
+
+    let msgNode = this.chromeDocument.createElementNS(XUL_NS, "hbox");
+
+    let methodNode = this.chromeDocument.createElementNS(XUL_NS, "label");
+    methodNode.setAttribute("value", request.method);
+    methodNode.classList.add("webconsole-msg-body-piece");
+    msgNode.appendChild(methodNode);
+
+    let linkNode = this.chromeDocument.createElementNS(XUL_NS, "hbox");
+    linkNode.setAttribute("flex", "1");
+    linkNode.classList.add("webconsole-msg-body-piece");
+    linkNode.classList.add("webconsole-msg-link");
+    msgNode.appendChild(linkNode);
+
+    let urlNode = this.chromeDocument.createElementNS(XUL_NS, "label");
+    urlNode.setAttribute("crop", "center");
+    urlNode.setAttribute("flex", "1");
+    urlNode.setAttribute("title", request.url);
+    urlNode.setAttribute("value", request.url);
+    urlNode.classList.add("hud-clickable");
+    urlNode.classList.add("webconsole-msg-body-piece");
+    urlNode.classList.add("webconsole-msg-url");
+    linkNode.appendChild(urlNode);
+
+    let statusNode = this.chromeDocument.createElementNS(XUL_NS, "label");
+    statusNode.setAttribute("value", "");
+    statusNode.classList.add("hud-clickable");
+    statusNode.classList.add("webconsole-msg-body-piece");
+    statusNode.classList.add("webconsole-msg-status");
+    linkNode.appendChild(statusNode);
+
+    let clipboardText = request.method + " " + request.url;
+
+    let messageNode = ConsoleUtils.createMessageNode(this.chromeDocument,
+                                                     CATEGORY_NETWORK,
+                                                     SEVERITY_LOG,
+                                                     msgNode,
+                                                     this.hudId,
+                                                     null,
+                                                     null,
+                                                     clipboardText);
+
+    messageNode.setAttribute("connectionId", entry.connection);
+
+    messageNode._httpActivity = aHttpActivity;
+
+    this.makeOutputMessageLink(messageNode, function HUD_net_message_link() {
+      if (!messageNode._panelOpen) {
+        HUDService.openNetworkPanel(messageNode, messageNode._httpActivity);
+      }
+    }.bind(this));
+
+    ConsoleUtils.outputMessageNode(messageNode, this.hudId);
+  },
+
+  /**
+   * Log file activity.
+   *
+   * @param string aFileURI
+   *        The file URI that was loaded.
+   */
+  logFileActivity: function HUD_logFileActivity(aFileURI)
+  {
+    let chromeDocument = this.chromeDocument;
+
+    let urlNode = chromeDocument.createElementNS(XUL_NS, "label");
+    urlNode.setAttribute("crop", "center");
+    urlNode.setAttribute("flex", "1");
+    urlNode.setAttribute("title", aFileURI);
+    urlNode.setAttribute("value", aFileURI);
+    urlNode.classList.add("hud-clickable");
+    urlNode.classList.add("webconsole-msg-url");
+
+    let outputNode = ConsoleUtils.createMessageNode(chromeDocument,
+                                                    CATEGORY_NETWORK,
+                                                    SEVERITY_LOG,
+                                                    urlNode,
+                                                    this.hudId,
+                                                    null,
+                                                    null,
+                                                    aFileURI);
+
+    this.makeOutputMessageLink(outputNode, function HUD__onFileClick() {
+      let viewSourceUtils = chromeDocument.defaultView.gViewSourceUtils;
+      viewSourceUtils.viewSource(aFileURI, null, chromeDocument);
+    });
+
+    ConsoleUtils.outputMessageNode(outputNode, this.hudId);
+  },
+
   ERRORS: {
     HUD_BOX_DOES_NOT_EXIST: "Heads Up Display does not exist",
     TAB_ID_REQUIRED: "Tab DOM ID is required",
@@ -3949,9 +2692,13 @@ HeadsUpDisplay.prototype = {
     }, this);
 
     let message = {
-      hudId: this.hudId,
-      features: ["ConsoleAPI", "JSTerm", "PageError"],
+      features: ["ConsoleAPI", "JSTerm", "PageError", "NetworkMonitor"],
       cachedMessages: ["ConsoleAPI", "PageError"],
+      NetworkMonitor: { monitorFileActivity: true },
+      preferences: {
+        "NetworkMonitor.saveRequestAndResponseBodies":
+          this.saveRequestAndResponseBodies,
+      },
     };
     this.sendMessageToContent("WebConsole:Init", message);
   },
@@ -3992,6 +2739,12 @@ HeadsUpDisplay.prototype = {
       case "WebConsole:CachedMessages":
         this._displayCachedConsoleMessages(aMessage.json.messages);
         this._onInitComplete();
+        break;
+      case "WebConsole:NetworkActivity":
+        this.handleNetworkActivity(aMessage.json);
+        break;
+      case "WebConsole:FileActivity":
+        this.logFileActivity(aMessage.json.uri);
         break;
     }
   },
@@ -4070,6 +2823,75 @@ HeadsUpDisplay.prototype = {
   },
 
   /**
+   * Handle the "WebConsole:NetworkActivity" message coming from the remote Web
+   * Console.
+   *
+   * @param object aMessage
+   *        The HTTP activity object. This object needs to hold two properties:
+   *        - meta - some metadata about the request log:
+   *          - stages - the stages the network request went through.
+   *          - discardRequestBody and discardResponseBody - booleans that tell
+   *          if the network request/response body was discarded or not.
+   *        - log - the request and response information. This is a HAR-like
+   *        object. See HUDService-content.js
+   *        NetworkMonitor.createActivityObject().
+   */
+  handleNetworkActivity: function HUD_handleNetworkActivity(aMessage)
+  {
+    let stage = aMessage.meta.stages[aMessage.meta.stages.length - 1];
+
+    if (stage == "REQUEST_HEADER") {
+      this.logNetActivity(aMessage);
+      return;
+    }
+
+    let entry = aMessage.log.entries[0];
+    let request = entry.request;
+    let response = entry.response;
+
+    let messageNode = this.outputNode.
+      querySelector("richlistitem[connectionId=" + entry.connection + "]");
+    if (!messageNode) {
+      return;
+    }
+    messageNode._httpActivity = aMessage;
+
+    if (stage == "TRANSACTION_CLOSE" || stage == "RESPONSE_HEADER") {
+      let status = [response.httpVersion, response.status, response.statusText];
+      if (stage == "TRANSACTION_CLOSE") {
+        status.push(l10n.getFormatStr("NetworkPanel.durationMS", [entry.time]));
+      }
+      let statusText = "[" + status.join(" ") + "]";
+
+      let linkNode = messageNode.querySelector(".webconsole-msg-link");
+      let statusNode = linkNode.querySelector(".webconsole-msg-status");
+      statusNode.setAttribute("value", statusText);
+
+      messageNode.clipboardText = [request.method, request.url, statusText]
+                                  .join(" ");
+
+      if (stage == "RESPONSE_HEADER" &&
+          response.status >= MIN_HTTP_ERROR_CODE &&
+          response.status <= MAX_HTTP_ERROR_CODE) {
+        ConsoleUtils.setMessageType(messageNode, CATEGORY_NETWORK,
+                                    SEVERITY_ERROR);
+      }
+    }
+
+    if (messageNode._netPanel) {
+      messageNode._netPanel.update();
+    }
+
+    // For unit tests we pass the HTTP activity object to the test callback,
+    // once requests complete.
+    if (HUDService.lastFinishedRequestCallback &&
+        aMessage.meta.stages.indexOf("REQUEST_STOP") > -1 &&
+        aMessage.meta.stages.indexOf("TRANSACTION_CLOSE") > -1) {
+      HUDService.lastFinishedRequestCallback(aMessage);
+    }
+  },
+
+  /**
    * Make a link given an output element.
    *
    * @param nsIDOMNode aNode
@@ -4082,7 +2904,7 @@ HeadsUpDisplay.prototype = {
   {
     let linkNode;
     if (aNode.category === CATEGORY_NETWORK) {
-      linkNode = aNode.querySelector(".webconsole-msg-link");
+      linkNode = aNode.querySelector(".webconsole-msg-link, .webconsole-msg-url");
     }
     else {
       linkNode = aNode.querySelector(".webconsole-msg-body");
@@ -4129,6 +2951,7 @@ HeadsUpDisplay.prototype = {
     delete this.asyncRequests;
     delete this.messageManager;
     delete this.browser;
+    delete this.chromeDocument;
 
     this.positionMenuitems.above.removeEventListener("command",
       this._positionConsoleAbove, false);
@@ -5919,7 +4742,7 @@ HeadsUpDisplayUICommands = {
       }
       case "saveBodies": {
         let checked = aButton.getAttribute("checked") === "true";
-        HUDService.saveRequestAndResponseBodies = checked;
+        HUDService.hudReferences[hudId].saveRequestAndResponseBodies = checked;
         break;
       }
     }
@@ -6044,88 +4867,6 @@ CommandController.prototype = {
         break;
     }
   }
-};
-
-/**
- * A WebProgressListener that listens for location changes, to update HUDService
- * state information on page navigation.
- *
- * @constructor
- * @param string aHudId
- *        The HeadsUpDisplay ID.
- */
-function ConsoleProgressListener(aHudId)
-{
-  this.hudId = aHudId;
-}
-
-ConsoleProgressListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference]),
-
-  onStateChange: function CPL_onStateChange(aProgress, aRequest, aState,
-                                            aStatus)
-  {
-    if (!(aState & Ci.nsIWebProgressListener.STATE_START)) {
-      return;
-    }
-
-    let uri = null;
-    if (aRequest instanceof Ci.imgIRequest) {
-      let imgIRequest = aRequest.QueryInterface(Ci.imgIRequest);
-      uri = imgIRequest.URI;
-    }
-    else if (aRequest instanceof Ci.nsIChannel) {
-      let nsIChannel = aRequest.QueryInterface(Ci.nsIChannel);
-      uri = nsIChannel.URI;
-    }
-
-    if (!uri || !uri.schemeIs("file") && !uri.schemeIs("ftp")) {
-      return;
-    }
-
-    let outputNode = HUDService.hudReferences[this.hudId].outputNode;
-
-    let chromeDocument = outputNode.ownerDocument;
-    let msgNode = chromeDocument.createElementNS(HTML_NS, "html:span");
-
-    // Create the clickable URL part of the message.
-    let linkNode = chromeDocument.createElementNS(HTML_NS, "html:span");
-    linkNode.appendChild(chromeDocument.createTextNode(uri.spec));
-    linkNode.classList.add("hud-clickable");
-    linkNode.classList.add("webconsole-msg-url");
-
-    linkNode.addEventListener("mousedown", function(aEvent) {
-      this._startX = aEvent.clientX;
-      this._startY = aEvent.clientY;
-    }, false);
-
-    linkNode.addEventListener("click", function(aEvent) {
-      if (aEvent.detail == 1 && aEvent.button == 0 &&
-          this._startX == aEvent.clientX && this._startY == aEvent.clientY) {
-        let viewSourceUtils = chromeDocument.defaultView.gViewSourceUtils;
-        viewSourceUtils.viewSource(uri.spec, null, chromeDocument);
-      }
-    }, false);
-
-    msgNode.appendChild(linkNode);
-
-    let messageNode = ConsoleUtils.createMessageNode(chromeDocument,
-                                                     CATEGORY_NETWORK,
-                                                     SEVERITY_LOG,
-                                                     msgNode,
-                                                     this.hudId,
-                                                     null,
-                                                     null,
-                                                     uri.spec);
-
-    ConsoleUtils.outputMessageNode(messageNode, this.hudId);
-  },
-
-  onLocationChange: function() {},
-  onStatusChange: function() {},
-  onProgressChange: function() {},
-  onSecurityChange: function() {},
 };
 
 ///////////////////////////////////////////////////////////////////////////
