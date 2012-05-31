@@ -1048,10 +1048,12 @@ pref("devtools.debugger.remote-autoconnect", false);
 pref("devtools.debugger.remote-connection-retries", 3);
 pref("devtools.debugger.remote-timeout", 3000);
 
-// The default Debugger UI height
+// The default Debugger UI settings
 pref("devtools.debugger.ui.height", 250);
 pref("devtools.debugger.ui.remote-win.width", 900);
 pref("devtools.debugger.ui.remote-win.height", 400);
+pref("devtools.debugger.ui.stackframes-width", 200);
+pref("devtools.debugger.ui.variables-width", 300);
 
 // Enable the style inspector
 pref("devtools.styleinspector.enabled", true);
