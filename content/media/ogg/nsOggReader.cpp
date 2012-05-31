@@ -41,6 +41,10 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 // small range, which would open a new HTTP connetion.
 static const PRUint32 SEEK_FUZZ_USECS = 500000;
 
+// The number of microseconds of "pre-roll" we use for Opus streams.
+// The specification recommends 80 ms.
+static const PRInt64 SEEK_OPUS_PREROLL = 80 * USECS_PER_MS;
+
 enum PageSyncResult {
   PAGE_SYNC_ERROR = 1,
   PAGE_SYNC_END_OF_RANGE= 2,
@@ -1021,51 +1025,57 @@ nsOggReader::IndexedSeekResult nsOggReader::SeekToKeyframeUsingIndex(PRInt64 aTa
 }
 
 nsresult nsOggReader::SeekInBufferedRange(PRInt64 aTarget,
+                                          PRInt64 aAdjustedTarget,
                                           PRInt64 aStartTime,
                                           PRInt64 aEndTime,
                                           const nsTArray<SeekRange>& aRanges,
                                           const SeekRange& aRange)
 {
   LOG(PR_LOG_DEBUG, ("%p Seeking in buffered data to %lld using bisection search", mDecoder, aTarget));
-
-  // We know the exact byte range in which the target must lie. It must
-  // be buffered in the media cache. Seek there.
-  nsresult res = SeekBisection(aTarget, aRange, 0);
-  if (NS_FAILED(res) || !HasVideo()) {
-    return res;
-  }
-
-  // We have an active Theora bitstream. Decode the next Theora frame, and
-  // extract its keyframe's time.
-  bool eof;
-  do {
-    bool skip = false;
-    eof = !DecodeVideoFrame(skip, 0);
-    {
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
-        return NS_ERROR_FAILURE;
-      }
+  nsresult res = NS_OK;
+  if (HasVideo() || aAdjustedTarget >= aTarget) {
+    // We know the exact byte range in which the target must lie. It must
+    // be buffered in the media cache. Seek there.
+    nsresult res = SeekBisection(aTarget, aRange, 0);
+    if (NS_FAILED(res) || !HasVideo()) {
+      return res;
     }
-  } while (!eof &&
-           mVideoQueue.GetSize() == 0);
 
-  VideoData* video = mVideoQueue.PeekFront();
-  if (video && !video->mKeyframe) {
-    // First decoded frame isn't a keyframe, seek back to previous keyframe,
-    // otherwise we'll get visual artifacts.
-    NS_ASSERTION(video->mTimecode != -1, "Must have a granulepos");
-    int shift = mTheoraState->mInfo.keyframe_granule_shift;
-    PRInt64 keyframeGranulepos = (video->mTimecode >> shift) << shift;
-    PRInt64 keyframeTime = mTheoraState->StartTime(keyframeGranulepos);
-    SEEK_LOG(PR_LOG_DEBUG, ("Keyframe for %lld is at %lld, seeking back to it",
-                            video->mTime, keyframeTime));
+    // We have an active Theora bitstream. Decode the next Theora frame, and
+    // extract its keyframe's time.
+    bool eof;
+    do {
+      bool skip = false;
+      eof = !DecodeVideoFrame(skip, 0);
+      {
+        ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+        if (mDecoder->GetDecodeState() == nsBuiltinDecoderStateMachine::DECODER_STATE_SHUTDOWN) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+    } while (!eof &&
+             mVideoQueue.GetSize() == 0);
+
+    VideoData* video = mVideoQueue.PeekFront();
+    if (video && !video->mKeyframe) {
+      // First decoded frame isn't a keyframe, seek back to previous keyframe,
+      // otherwise we'll get visual artifacts.
+      NS_ASSERTION(video->mTimecode != -1, "Must have a granulepos");
+      int shift = mTheoraState->mInfo.keyframe_granule_shift;
+      PRInt64 keyframeGranulepos = (video->mTimecode >> shift) << shift;
+      PRInt64 keyframeTime = mTheoraState->StartTime(keyframeGranulepos);
+      SEEK_LOG(PR_LOG_DEBUG, ("Keyframe for %lld is at %lld, seeking back to it",
+                              video->mTime, keyframeTime));
+      aAdjustedTarget = NS_MIN(aAdjustedTarget, keyframeTime);
+    }
+  }
+  if (aAdjustedTarget < aTarget) {
     SeekRange k = SelectSeekRange(aRanges,
-                                  keyframeTime,
+                                  aAdjustedTarget,
                                   aStartTime,
                                   aEndTime,
                                   false);
-    res = SeekBisection(keyframeTime, k, SEEK_FUZZ_USECS);
+    res = SeekBisection(aAdjustedTarget, k, SEEK_FUZZ_USECS);
   }
   return res;
 }
@@ -1093,6 +1103,10 @@ nsresult nsOggReader::SeekInUnbuffered(PRInt64 aTarget,
   if (HasVideo() && mTheoraState) {
     keyframeOffsetMs = mTheoraState->MaxKeyframeOffset();
   }
+  // Add in the Opus pre-roll if necessary, as well.
+  if (HasAudio() && mOpusState) {
+    keyframeOffsetMs = NS_MAX(keyframeOffsetMs, SEEK_OPUS_PREROLL);
+  }
   PRInt64 seekTarget = NS_MAX(aStartTime, aTarget - keyframeOffsetMs);
   // Minimize the bisection search space using the known timestamps from the
   // buffered ranges.
@@ -1110,8 +1124,12 @@ nsresult nsOggReader::Seek(PRInt64 aTarget,
   nsresult res;
   MediaResource* resource = mDecoder->GetResource();
   NS_ENSURE_TRUE(resource != nsnull, NS_ERROR_FAILURE);
+  PRInt64 adjustedTarget = aTarget;
+  if (HasAudio() && mOpusState){
+    adjustedTarget = NS_MAX(aStartTime, aTarget - SEEK_OPUS_PREROLL);
+  }
 
-  if (aTarget == aStartTime) {
+  if (adjustedTarget == aStartTime) {
     // We've seeked to the media start. Just seek to the offset of the first
     // content page.
     res = resource->Seek(nsISeekableStream::NS_SEEK_SET, 0);
@@ -1127,7 +1145,10 @@ nsresult nsOggReader::Seek(PRInt64 aTarget,
       mDecoder->UpdatePlaybackPosition(aStartTime);
     }
   } else {
-    IndexedSeekResult sres = SeekToKeyframeUsingIndex(aTarget);
+    // TODO: This may seek back unnecessarily far in the video, but we don't
+    // have a way of asking Skeleton to seek to a different target for each
+    // stream yet. Using adjustedTarget here is at least correct, if slow.
+    IndexedSeekResult sres = SeekToKeyframeUsingIndex(adjustedTarget);
     NS_ENSURE_TRUE(sres != SEEK_FATAL_ERROR, NS_ERROR_FAILURE);
     if (sres == SEEK_INDEX_FAIL) {
       // No index or other non-fatal index-related failure. Try to seek
@@ -1143,7 +1164,7 @@ nsresult nsOggReader::Seek(PRInt64 aTarget,
       if (!r.IsNull()) {
         // We know the buffered range in which the seek target lies, do a
         // bisection search in that buffered range.
-        res = SeekInBufferedRange(aTarget, aStartTime, aEndTime, ranges, r);
+        res = SeekInBufferedRange(aTarget, adjustedTarget, aStartTime, aEndTime, ranges, r);
         NS_ENSURE_SUCCESS(res,res);
       } else {
         // The target doesn't lie in a buffered range. Perform a bisection

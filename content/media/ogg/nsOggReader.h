@@ -113,11 +113,13 @@ private:
   };
 
   // Seeks to aTarget usecs in the buffered range aRange using bisection search,
-  // or to the keyframe prior to aTarget if we have video. aStartTime must be
-  // the presentation time at the start of media, and aEndTime the time at
-  // end of media. aRanges must be the time/byte ranges buffered in the media
-  // cache as per GetSeekRanges().
+  // or to the keyframe prior to aTarget if we have video. aAdjustedTarget is
+  // an adjusted version of the target used to account for Opus pre-roll, if
+  // necessary. aStartTime must be the presentation time at the start of media,
+  // and aEndTime the time at end of media. aRanges must be the time/byte ranges
+  // buffered in the media cache as per GetSeekRanges().
   nsresult SeekInBufferedRange(PRInt64 aTarget,
+                               PRInt64 aAdjustedTarget,
                                PRInt64 aStartTime,
                                PRInt64 aEndTime,
                                const nsTArray<SeekRange>& aRanges,
