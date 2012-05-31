@@ -32,7 +32,7 @@ static inline D2D1_RECT_F D2DRect(const Rect &aRect)
 
 static inline D2D1_EXTEND_MODE D2DExtend(ExtendMode aExtendMode)
 {
-  D2D1_EXTEND_MODE extend = D2D1_EXTEND_MODE_CLAMP;
+  D2D1_EXTEND_MODE extend;
   switch (aExtendMode) {
   case EXTEND_REPEAT:
     extend = D2D1_EXTEND_MODE_WRAP;
@@ -40,6 +40,8 @@ static inline D2D1_EXTEND_MODE D2DExtend(ExtendMode aExtendMode)
   case EXTEND_REFLECT:
     extend = D2D1_EXTEND_MODE_MIRROR;
     break;
+  default:
+    extend = D2D1_EXTEND_MODE_CLAMP;
   }
 
   return extend;
@@ -50,9 +52,9 @@ static inline D2D1_BITMAP_INTERPOLATION_MODE D2DFilter(const Filter &aFilter)
   switch (aFilter) {
   case FILTER_POINT:
     return D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
+  default:
+    return D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
   }
-
-  return D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
 }
 
 static inline D2D1_ANTIALIAS_MODE D2DAAMode(AntialiasMode aMode)
@@ -60,9 +62,9 @@ static inline D2D1_ANTIALIAS_MODE D2DAAMode(AntialiasMode aMode)
   switch (aMode) {
   case AA_NONE:
     return D2D1_ANTIALIAS_MODE_ALIASED;
+  default:
+    return D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
   }
-
-  return D2D1_ANTIALIAS_MODE_PER_PRIMITIVE;
 }
 
 static inline D2D1_MATRIX_3X2_F D2DMatrix(const Matrix &aTransform)
@@ -93,9 +95,9 @@ static inline SurfaceFormat ToPixelFormat(const D2D1_PIXEL_FORMAT &aFormat)
     } else {
       return FORMAT_B8G8R8A8;
     }
+  default:
+    return FORMAT_B8G8R8A8;
   }
-
-  return FORMAT_B8G8R8A8;
 }
 
 static inline Rect ToRect(const D2D1_RECT_F &aRect)
@@ -112,9 +114,9 @@ static inline DXGI_FORMAT DXGIFormat(SurfaceFormat aFormat)
     return DXGI_FORMAT_B8G8R8A8_UNORM;
   case FORMAT_A8:
     return DXGI_FORMAT_A8_UNORM;
+  default:
+    return DXGI_FORMAT_UNKNOWN;
   }
-
-  return DXGI_FORMAT_UNKNOWN;
 }
 
 static inline D2D1_ALPHA_MODE AlphaMode(SurfaceFormat aFormat)
@@ -122,9 +124,9 @@ static inline D2D1_ALPHA_MODE AlphaMode(SurfaceFormat aFormat)
   switch (aFormat) {
   case FORMAT_B8G8R8X8:
     return D2D1_ALPHA_MODE_IGNORE;
+  default:
+    return D2D1_ALPHA_MODE_PREMULTIPLIED;
   }
-
-  return D2D1_ALPHA_MODE_PREMULTIPLIED;
 }
 
 static inline D2D1_PIXEL_FORMAT D2DPixelFormat(SurfaceFormat aFormat)
@@ -132,7 +134,7 @@ static inline D2D1_PIXEL_FORMAT D2DPixelFormat(SurfaceFormat aFormat)
   return D2D1::PixelFormat(DXGIFormat(aFormat), AlphaMode(aFormat));
 }
 
-static bool IsPatternSupportedByD2D(const Pattern &aPattern)
+static inline bool IsPatternSupportedByD2D(const Pattern &aPattern)
 {
   if (aPattern.GetType() != PATTERN_RADIAL_GRADIENT) {
     return false;
@@ -173,7 +175,7 @@ struct ShaderConstantRectD3D10
   operator float* () { return &mX; }
 };
 
-static DWRITE_MATRIX
+static inline DWRITE_MATRIX
 DWriteMatrixFromMatrix(Matrix &aMatrix)
 {
   DWRITE_MATRIX mat;
@@ -188,7 +190,7 @@ DWriteMatrixFromMatrix(Matrix &aMatrix)
 
 class AutoDWriteGlyphRun : public DWRITE_GLYPH_RUN
 {
-    static const int kNumAutoGlyphs = 256;
+    static const unsigned kNumAutoGlyphs = 256;
 
 public:
     AutoDWriteGlyphRun() {
@@ -203,7 +205,7 @@ public:
         }
     }
 
-    void allocate(int aNumGlyphs) {
+    void allocate(unsigned aNumGlyphs) {
         glyphCount = aNumGlyphs;
         if (aNumGlyphs <= kNumAutoGlyphs) {
             glyphIndices = &mAutoIndices[0];
@@ -222,7 +224,7 @@ private:
     UINT16              mAutoIndices[kNumAutoGlyphs];
 };
 
-static void
+static inline void
 DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs, ScaledFontDWrite *aFont, AutoDWriteGlyphRun *run)
 {
   run->allocate(aGlyphs.mNumGlyphs);

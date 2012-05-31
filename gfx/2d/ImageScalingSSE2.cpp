@@ -89,8 +89,6 @@ MOZ_ALWAYS_INLINE __m128i avg_sse2_8x2(__m128i *a, __m128i *b, __m128i *c, __m12
 
   __m128i carry = _mm_or_si128(_mm_and_si128(*a, *b), _mm_or_si128(_mm_and_si128(*a, *c), _mm_and_si128(*b, *c)));
 
-  __m128i minusone = _mm_set1_epi32(0xffffffff);
-
   sum = _mm_avg_epu8(_mm_not_si128(sum), _mm_not_si128(*d));
 
   return _mm_not_si128(_mm_avg_epu8(sum, _mm_not_si128(carry)));
@@ -98,8 +96,6 @@ MOZ_ALWAYS_INLINE __m128i avg_sse2_8x2(__m128i *a, __m128i *b, __m128i *c, __m12
 
 MOZ_ALWAYS_INLINE __m128i avg_sse2_4x2_4x1(__m128i a, __m128i b)
 {
-  __m128i minusone = _mm_set1_epi32(0xffffffff);
-
   return _mm_not_si128(_mm_avg_epu8(_mm_not_si128(a), _mm_not_si128(b)));
 }
 
@@ -108,8 +104,6 @@ MOZ_ALWAYS_INLINE __m128i avg_sse2_8x1_4x1(__m128i a, __m128i b)
   __m128i t = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(b), _mm_castsi128_ps(a), _MM_SHUFFLE(3, 1, 3, 1)));
   b = _mm_castps_si128(_mm_shuffle_ps(_mm_castsi128_ps(b), _mm_castsi128_ps(a), _MM_SHUFFLE(2, 0, 2, 0)));
   a = t;
-
-  __m128i minusone = _mm_set1_epi32(0xffffffff);
 
   return _mm_not_si128(_mm_avg_epu8(_mm_not_si128(a), _mm_not_si128(b)));
 }

@@ -484,7 +484,7 @@ RemoteDXGITextureImage::GetD3D10TextureBackendData(ID3D10Device *aDevice)
     return nsnull;
   }
 
-  nsAutoPtr<TextureD3D10BackendData> data = new TextureD3D10BackendData();
+  nsAutoPtr<TextureD3D10BackendData> data(new TextureD3D10BackendData());
 
   data->mTexture = texture;
 
