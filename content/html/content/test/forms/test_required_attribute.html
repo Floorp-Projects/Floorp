@@ -7,11 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345822
   <title>Test for Bug 345822</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <style>
-    input, textarea { background-color: rgb(0,0,0) !important; }
-    :valid   { background-color: rgb(0,255,0) !important; }
-    :invalid { background-color: rgb(255,0,0) !important; }
-  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=345822">Mozilla Bug 345822</a>
@@ -34,14 +29,20 @@ function checkNotSufferingFromBeingMissing(element, doNotApply)
   is(element.validationMessage, "",
     "Validation message should be the empty string");
 
-  if (element.type != 'radio' && element.type != 'checkbox') {
-    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-       doNotApply ? "rgb(0, 0, 0)" : "rgb(0, 255, 0)",
-       "The pseudo-class is not correctly applied to " + element.localName);
+  if (doNotApply) {
+    ok(!element.mozMatchesSelector(':valid'), ":valid should not apply");
+    ok(!element.mozMatchesSelector(':invalid'), ":invalid should not apply");
+    ok(!element.mozMatchesSelector(':-moz-ui-valid'), ":-moz-ui-valid should not apply");
+    ok(!element.mozMatchesSelector(':-moz-ui-invalid'), ":-moz-ui-invalid should not apply");
+  } else {
+    ok(element.mozMatchesSelector(':valid'), ":valid should apply");
+    ok(!element.mozMatchesSelector(':invalid'), ":invalid should not apply");
+    ok(element.mozMatchesSelector(':-moz-ui-valid'), ":-moz-ui-valid should apply");
+    ok(!element.mozMatchesSelector(':-moz-ui-invalid'), ":-moz-ui-invalid should not apply");
   }
 }
 
-function checkSufferingFromBeingMissing(element)
+function checkSufferingFromBeingMissing(element, hasMozUIInvalid)
 {
   ok(element.validity.valueMissing, "Element should suffer from value missing");
   ok(!element.validity.valid, "Element should not be valid");
@@ -72,10 +73,10 @@ function checkSufferingFromBeingMissing(element)
       "Validation message is wrong");
   }
 
-  if (element.type != 'radio' && element.type != 'checkbox') {
-    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
-       "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
-  }
+  ok(!element.mozMatchesSelector(':valid'), ":valid should apply");
+  ok(element.mozMatchesSelector(':invalid'), ":invalid should not apply");
+  ok(!element.mozMatchesSelector(':-moz-ui-valid'), ":-moz-ui-valid should not apply");
+  is(element.mozMatchesSelector(':-moz-ui-invalid'), hasMozUIInvalid, ":-moz-ui-invalid expected state is " + hasMozUIInvalid);
 }
 
 function checkTextareaRequiredValidity()
@@ -88,24 +89,35 @@ function checkTextareaRequiredValidity()
   checkNotSufferingFromBeingMissing(element);
 
   element.required = true;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   element.readOnly = true;
   checkNotSufferingFromBeingMissing(element, true);
 
   element.readOnly = false;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   element.value = 'foo';
   checkNotSufferingFromBeingMissing(element);
 
   element.value = '';
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   element.required = false;
   checkNotSufferingFromBeingMissing(element);
 
+  element.focus();
+  element.required = true;
+  element.value = 'foobar';
+  element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  // TODO: for the moment, a textarea outside of a document is mutable.
+  element.value = ''; // To make -moz-ui-valid apply.
+  element.required = false;
   document.forms[0].removeChild(element);
+  checkNotSufferingFromBeingMissing(element);
 }
 
 function checkInputRequiredNotApply(type, isBarred)
@@ -124,6 +136,7 @@ function checkInputRequiredNotApply(type, isBarred)
   element.required = false;
 
   document.forms[0].removeChild(element);
+  checkNotSufferingFromBeingMissing(element, isBarred);
 }
 
 function checkInputRequiredValidity(type)
@@ -137,13 +150,13 @@ function checkInputRequiredValidity(type)
   checkNotSufferingFromBeingMissing(element);
 
   element.required = true;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   element.readOnly = true;
   checkNotSufferingFromBeingMissing(element, true);
 
   element.readOnly = false;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   if (element.type == 'email') {
     element.value = 'foo@bar.com';
@@ -155,8 +168,17 @@ function checkInputRequiredValidity(type)
   checkNotSufferingFromBeingMissing(element);
 
   element.value = '';
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
+  element.focus();
+  element.required = true;
+  element.value = 'foobar';
+  element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  element.value = ''; // To make :-moz-ui-valid apply.
   document.forms[0].removeChild(element);
   checkNotSufferingFromBeingMissing(element);
 }
@@ -172,18 +194,28 @@ function checkInputRequiredValidityForCheckbox()
   checkNotSufferingFromBeingMissing(element);
 
   element.required = true;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   element.checked = true;
   checkNotSufferingFromBeingMissing(element);
 
   element.checked = false;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   element.required = false;
   checkNotSufferingFromBeingMissing(element);
 
+  element.focus();
+  element.required = true;
+  element.checked = true;
+  element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  element.checked = false;
   document.forms[0].removeChild(element);
+  checkNotSufferingFromBeingMissing(element);
 }
 
 function checkInputRequiredValidityForRadio()
@@ -198,13 +230,13 @@ function checkInputRequiredValidityForRadio()
   checkNotSufferingFromBeingMissing(element);
 
   element.required = true;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   element.checked = true;
   checkNotSufferingFromBeingMissing(element);
 
   element.checked = false;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   // A required radio button should not suffer from value missing if another
   // radio button from the same group is checked.
@@ -222,7 +254,7 @@ function checkInputRequiredValidityForRadio()
 
   element.checked = false;
   element2.checked = false;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   // The other radio button should not be disabled.
   // A disabled checked radio button in the radio group
@@ -238,17 +270,28 @@ function checkInputRequiredValidityForRadio()
   element2.checked = false;
   element.required = false;
   element2.required = true;
-  checkSufferingFromBeingMissing(element);
-  checkSufferingFromBeingMissing(element2);
+  checkSufferingFromBeingMissing(element, true);
+  checkSufferingFromBeingMissing(element2, true);
 
   element.checked = true;
   checkNotSufferingFromBeingMissing(element2);
 
   // The checked radio is not in the group anymore, element2 should be invalid.
-  document.forms[0].removeChild(element);
-  checkSufferingFromBeingMissing(element2);
+  element.form.removeChild(element);
+  checkNotSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element2, true);
 
+  element2.focus();
+  element2.required = true;
+  element2.checked = true;
+  element2.blur();
+  element2.form.reset();
+  checkSufferingFromBeingMissing(element2, false);
+
+  element2.required = true;
+  element2.checked = false;
   document.forms[0].removeChild(element2);
+  checkNotSufferingFromBeingMissing(element2);
 }
 
 function checkInputRequiredValidityForFile()
@@ -283,19 +326,29 @@ function checkInputRequiredValidityForFile()
   checkNotSufferingFromBeingMissing(element);
 
   element.required = true;
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   element.value = file.path;
   checkNotSufferingFromBeingMissing(element);
 
   element.value = "";
-  checkSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 
   element.required = false;
   checkNotSufferingFromBeingMissing(element);
 
+  element.focus();
+  element.value = file.path;
+  element.required = true;
+  element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  element.value = '';
   file.remove(false);
   document.forms[0].removeChild(element);
+  checkNotSufferingFromBeingMissing(element);
 }
 
 checkTextareaRequiredValidity();
