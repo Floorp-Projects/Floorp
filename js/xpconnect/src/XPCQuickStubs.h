@@ -491,13 +491,17 @@ xpc_qsUnwrapArgImpl(JSContext *cx, jsval v, const nsIID &iid, void **ppArg,
                     nsISupports **ppArgRef, jsval *vp);
 
 /** Convert a jsval to an XPCOM pointer. */
-template <class T>
+template <class Interface, class StrongRefType>
 inline nsresult
-xpc_qsUnwrapArg(JSContext *cx, jsval v, T **ppArg, nsISupports **ppArgRef,
-                jsval *vp)
+xpc_qsUnwrapArg(JSContext *cx, jsval v, Interface **ppArg,
+                StrongRefType **ppArgRef, jsval *vp)
 {
-    return xpc_qsUnwrapArgImpl(cx, v, NS_GET_TEMPLATE_IID(T),
-                               reinterpret_cast<void **>(ppArg), ppArgRef, vp);
+    nsISupports* argRef;
+    nsresult rv = xpc_qsUnwrapArgImpl(cx, v, NS_GET_TEMPLATE_IID(Interface),
+                                      reinterpret_cast<void **>(ppArg), &argRef,
+                                      vp);
+    *ppArgRef = static_cast<StrongRefType*>(argRef);
+    return rv;
 }
 
 inline nsISupports*

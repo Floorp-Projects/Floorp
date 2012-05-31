@@ -758,7 +758,8 @@ nsOpusState::nsOpusState(ogg_page* aBosPage) :
   mGain(0.0),
   mChannelMapping(0),
   mStreams(0),
-  mDecoder(NULL)
+  mDecoder(NULL),
+  mSkip(0)
 {
   MOZ_COUNT_CTOR(nsOpusState);
 }
@@ -780,12 +781,15 @@ nsresult nsOpusState::Reset()
   if (mActive && mDecoder) {
     // Reset the decoder.
     opus_decoder_ctl(mDecoder, OPUS_RESET_STATE);
+    mSkip = 0; // Let the seek logic handle this.
   }
 
   // Clear queued data.
   if (NS_FAILED(nsOggCodecState::Reset())) {
     return NS_ERROR_FAILURE;
   }
+
+  LOG(PR_LOG_DEBUG, ("Opus decoder reset, to skip %d", mSkip));
 
   return res;
 }
@@ -797,6 +801,9 @@ bool nsOpusState::Init(void)
   NS_ASSERTION(mDecoder == NULL, "leaking OpusDecoder");
 
   mDecoder = opus_decoder_create(mRate, mChannels, &error);
+  mSkip = mPreSkip;
+
+  LOG(PR_LOG_DEBUG, ("Opus decoder init, to skip %d", mSkip));
 
   return error == OPUS_OK;
 }
@@ -850,6 +857,17 @@ bool nsOpusState::DecodeHeader(ogg_packet* aPacket)
     mActive = false;
     return true;
   }
+
+#ifdef DEBUG
+  LOG(PR_LOG_DEBUG, ("Opus stream header:"));
+  LOG(PR_LOG_DEBUG, (" channels: %d", mChannels));
+  LOG(PR_LOG_DEBUG, ("  preskip: %d", mPreSkip));
+  LOG(PR_LOG_DEBUG, (" original: %d Hz", mNominalRate));
+  LOG(PR_LOG_DEBUG, ("     gain: %.2f dB", mGain));
+  LOG(PR_LOG_DEBUG, ("Channel Mapping:"));
+  LOG(PR_LOG_DEBUG, ("   family: %d", mChannelMapping));
+  LOG(PR_LOG_DEBUG, ("  streams: %d", mStreams));
+#endif
 
   return true;
 }

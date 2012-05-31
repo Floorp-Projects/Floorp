@@ -671,7 +671,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
 
     if (styleContext->GetStylePadding()->GetPadding(margin))
       width += margin.LeftRight();
-    width += styleContext->GetStyleBorder()->GetActualBorder().LeftRight();
+    width += styleContext->GetStyleBorder()->GetComputedBorder().LeftRight();
     if (styleContext->GetStyleMargin()->GetMargin(margin))
       width += margin.LeftRight();
 

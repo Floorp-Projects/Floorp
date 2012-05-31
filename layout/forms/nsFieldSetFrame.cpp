@@ -248,7 +248,7 @@ nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
   PRIntn skipSides = GetSkipSides();
   const nsStyleBorder* borderStyle = GetStyleBorder();
        
-  nscoord topBorder = borderStyle->GetActualBorderWidth(NS_SIDE_TOP);
+  nscoord topBorder = borderStyle->GetComputedBorderWidth(NS_SIDE_TOP);
   nscoord yoff = 0;
   nsPresContext* presContext = PresContext();
      

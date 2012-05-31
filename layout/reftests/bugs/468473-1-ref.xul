@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<window title="Missing repaint when using -moz-border-image on a XUL button"
+<window title="Missing repaint when using border-image on a XUL button"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <hbox>

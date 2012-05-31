@@ -1425,9 +1425,16 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 #page-proxy-favicon {
   width: 16px;
   height: 16px;
-  margin: 1px 3px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  -moz-margin-start: 3px;
+  -moz-margin-end: 2px;
   list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
   -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+@conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar > #identity-box > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+  -moz-margin-end: 1px;
 }
 
 .verifiedDomain > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon[pageproxystate="valid"] {

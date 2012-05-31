@@ -1109,10 +1109,13 @@ let PlacesToolbarHelper = {
       return;
 
     // If the bookmarks toolbar item is hidden because the parent toolbar is
-    // collapsed or hidden (i.e. in a popup), spare the initialization.
+    // collapsed or hidden (i.e. in a popup), spare the initialization.  Also,
+    // there is no need to initialize the toolbar if customizing because
+    // init() will be called when the customization is done.
     let toolbar = viewElt.parentNode.parentNode;
     if (toolbar.collapsed ||
-        getComputedStyle(toolbar, "").display == "none")
+        getComputedStyle(toolbar, "").display == "none" ||
+        this._isCustomizing)
       return;
 
     new PlacesToolbar(this._place);
@@ -1122,9 +1125,12 @@ let PlacesToolbarHelper = {
     let viewElt = this._viewElt;
     if (viewElt && viewElt._placesView)
       viewElt._placesView.uninit();
+
+    this._isCustomizing = true;
   },
 
   customizeDone: function PTH_customizeDone() {
+    this._isCustomizing = false;
     this.init();
   }
 };
