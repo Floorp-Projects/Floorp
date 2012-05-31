@@ -116,7 +116,7 @@ function finalCheck() {
   is(gScripts.visibleItemsCount, 2,
     "Not all the scripts are shown after the search. (3)");
 
-  closeDebuggerAndFinish(gTab);
+  closeDebuggerAndFinish();
 }
 
 function clear() {
