@@ -113,7 +113,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         return NULL;
 
     Rooted<JSScript*> script(cx);
-    script = JSScript::Create(cx, noScriptRval, version);
+    script = JSScript::Create(cx, principals, originPrincipals, noScriptRval, version);
     if (!script)
         return NULL;
 
@@ -278,7 +278,8 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         return false;
 
     Rooted<JSScript*> script(cx);
-    script = JSScript::Create(cx, /* noScriptRval = */ false, version);
+    script = JSScript::Create(cx, principals, originPrincipals, /* noScriptRval = */ false,
+                              version);
     if (!script)
         return false;
 
