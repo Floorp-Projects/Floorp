@@ -582,7 +582,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         /* Note: version is packed into the 32b space with another 16b value. */
         JSVersion version_ = JSVersion(version & JS_BITMASK(16));
         JS_ASSERT((version_ & VersionFlags::FULL_MASK) == unsigned(version_));
-        script = JSScript::Create(cx);
+        script = JSScript::Create(cx, !!(scriptBits & (1 << NoScriptRval)));
         if (!script || !script->partiallyInit(cx, length, nsrcnotes, natoms, nobjects,
                                               nregexps, ntrynotes, nconsts, nClosedArgs,
                                               nClosedVars, nTypeSets, version_))
@@ -597,8 +597,6 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         notes = script->notes();
         *scriptp = script;
 
-        if (scriptBits & (1 << NoScriptRval))
-            script->noScriptRval = true;
         if (scriptBits & (1 << SavedCallerFun))
             script->savedCallerFun = true;
         if (scriptBits & (1 << StrictModeCode))
@@ -1093,13 +1091,16 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 }
 
 JSScript *
-JSScript::Create(JSContext *cx)
+JSScript::Create(JSContext *cx, bool noScriptRval)
 {
     JSScript *script = js_NewGCScript(cx);
     if (!script)
         return NULL;
 
     PodZero(script);
+
+    script->noScriptRval = noScriptRval;
+ 
     return script;
 }
 
@@ -1225,8 +1226,6 @@ JSScript::fullyInitTrivial(JSContext *cx, JSVersion version)
     if (!script->partiallyInit(cx, /* length = */ 1, /* nsrcnotes = */ 1, 0, 0, 0, 0, 0, 0, 0, 0,
                                version))
         return false;
-
-    script->noScriptRval = true;
 
     script->code[0] = JSOP_STOP;
     script->notes()[0] = SRC_NULL;
@@ -1361,7 +1360,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 
     JSFunction *fun = NULL;
     if (bce->sc->inFunction()) {
-        JS_ASSERT(!bce->noScriptRval);
+        JS_ASSERT(!bce->script->noScriptRval);
         JS_ASSERT(!bce->needScriptGlobal);
 
         script->isGenerator = bce->sc->funIsGenerator();
@@ -1397,8 +1396,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
          */
         if (bce->needScriptGlobal)
             script->globalObject = GetCurrentGlobal(cx);
-
-        script->noScriptRval = bce->noScriptRval;
     }
 
     /* Tell the debugger about this compiled script. */
@@ -1794,7 +1791,7 @@ js::CloneScript(JSContext *cx, HandleScript src)
 
     /* Now that all fallible allocation is complete, create the GC thing. */
 
-    JSScript *dst = JSScript::Create(cx);
+    JSScript *dst = JSScript::Create(cx, src->noScriptRval);
     if (!dst) {
         Foreground::free_(data);
         return NULL;
@@ -1842,7 +1839,6 @@ js::CloneScript(JSContext *cx, HandleScript src)
             dst->setNeedsArgsObj(src->needsArgsObj());
     }
     dst->cloneHasArray(src);
-    dst->noScriptRval = src->noScriptRval;
     dst->savedCallerFun = src->savedCallerFun;
     dst->strictModeCode = src->strictModeCode;
     dst->compileAndGo = src->compileAndGo;

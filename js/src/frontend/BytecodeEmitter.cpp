@@ -66,7 +66,7 @@ static JSBool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
 BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script,
-                                 unsigned lineno, bool noScriptRval, bool needScriptGlobal)
+                                 unsigned lineno, bool needScriptGlobal)
   : sc(sc),
     parent(NULL),
     script(sc->context, script),
@@ -82,7 +82,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScr
     closedArgs(sc->context),
     closedVars(sc->context),
     typesetCount(0),
-    noScriptRval(noScriptRval),
     needScriptGlobal(needScriptGlobal),
     hasSingletons(false),
     inForInit(false)
@@ -4863,12 +4862,12 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         sc.bindings.transfer(cx, &funbox->bindings);
 
         Rooted<JSScript*> script(cx);
-        script = JSScript::Create(cx);
+        script = JSScript::Create(cx, /* noScriptRval = */ false);
         if (!script)
             return false;
 
         BytecodeEmitter bce2(bce->parser, &sc, script, pn->pn_pos.begin.lineno,
-                             /* noScriptRval = */ false, /* needsScriptGlobal = */ false);
+                             /* needsScriptGlobal = */ false);
         if (!bce2.init())
             return false;
         bce2.parent = bce;
@@ -5186,9 +5185,9 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     bool wantval = false;
     JSBool useful = JS_FALSE;
     if (bce->sc->inFunction()) {
-        JS_ASSERT(!bce->noScriptRval);
+        JS_ASSERT(!bce->script->noScriptRval);
     } else {
-        useful = wantval = !bce->noScriptRval;
+        useful = wantval = !bce->script->noScriptRval;
     }
 
     /* Don't eliminate expressions with side effects. */
