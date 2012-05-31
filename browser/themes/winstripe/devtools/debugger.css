@@ -222,12 +222,12 @@
  */
 
 #resume {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-play.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
 #resume[checked=true] {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
-  list-style-image: url("chrome://browser/skin/devtools/debugger-pause.png");
 }
 
 #step-over {
