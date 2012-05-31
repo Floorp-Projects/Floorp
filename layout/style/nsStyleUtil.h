@@ -11,35 +11,16 @@
 #include "nsTArray.h"
 #include "nsCSSValue.h"
 
-class nsPresContext;
 struct nsStyleBackground;
 class nsString;
 class nsStringComparator;
 class nsIContent;
 
-enum nsFontSizeType {
-  eFontSize_HTML = 1,
-  eFontSize_CSS = 2
-};
 
 
 // Style utility functions
 class nsStyleUtil {
 public:
-  
-  static nscoord CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize, 
-                                   nsPresContext* aPresContext,
-                                   nsFontSizeType aFontSizeType = eFontSize_HTML);
-
-  static nscoord FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                         nsPresContext* aPresContext,
-                                         nsFontSizeType aFontSizeType = eFontSize_HTML);
-
-  static nscoord FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                        nsPresContext* aPresContext,
-                                        nsFontSizeType aFontSizeType = eFontSize_HTML);
-
-  static PRInt32 ConstrainFontWeight(PRInt32 aWeight);
 
  static bool DashMatchCompare(const nsAString& aAttributeValue,
                                 const nsAString& aSelectorValue,
