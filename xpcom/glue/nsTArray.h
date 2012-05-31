@@ -851,7 +851,7 @@ public:
     return InsertElementAt(index, item);
   }
 
-  // A variation on the InsertElementSorted metod defined above.
+  // A variation on the InsertElementSorted method defined above.
   template<class Item>
   elem_type *InsertElementSorted(const Item& item) {
     return InsertElementSorted(item, nsDefaultComparator<elem_type, Item>());
