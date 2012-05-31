@@ -80,13 +80,13 @@ public:
 
 #define IMPL_GETTER_AND_SETTER(_type)                                          \
   JSObject*                                                                    \
-  GetOn##_type(JSContext* /* unused */, ErrorResult& aRv)                      \
+  GetOn##_type(ErrorResult& aRv)                                               \
   {                                                                            \
     return GetEventListener(NS_LITERAL_STRING(#_type), aRv);                   \
   }                                                                            \
                                                                                \
   void                                                                         \
-  SetOn##_type(JSContext* /* unused */, JSObject* aListener, ErrorResult& aRv) \
+  SetOn##_type(JSObject* aListener, ErrorResult& aRv)                          \
   {                                                                            \
     SetEventListener(NS_LITERAL_STRING(#_type), aListener, aRv);               \
   }
@@ -202,7 +202,7 @@ public:
   SetResponseType(XMLHttpRequestResponseType aResponseType, ErrorResult& aRv);
 
   jsval
-  GetResponse(JSContext* /* unused */, ErrorResult& aRv);
+  GetResponse(ErrorResult& aRv);
 
   void
   GetResponseText(nsAString& aResponseText, ErrorResult& aRv);
@@ -220,7 +220,7 @@ public:
   }
 
   JS::Value
-  GetInterface(JSContext* cx, JSObject* aIID, ErrorResult& aRv)
+  GetInterface(JSObject* aIID, ErrorResult& aRv)
   {
     aRv.Throw(NS_ERROR_FAILURE);
     return JSVAL_NULL;

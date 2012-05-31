@@ -49,7 +49,7 @@ class nsIUnicodeDecoder;
 class nsIDOMFormData;
 
 #define IMPL_EVENT_HANDLER(_lowercase, _capitalized)                    \
-  JSObject* GetOn##_lowercase(JSContext* /* unused */ )                 \
+  JSObject* GetOn##_lowercase()                                         \
   {                                                                     \
     return GetListenerAsJSObject(mOn##_capitalized##Listener);          \
   }                                                                     \
@@ -347,8 +347,6 @@ private:
                                  nsACString& aContentType,
                                  nsACString& aCharset);
 
-  // XXXbz once the nsIVariant bits here go away, we can remove the
-  // implicitJSContext bits in Bindings.conf.
   nsresult Send(JSContext *aCx, nsIVariant* aVariant, const Nullable<RequestBody>& aBody);
   nsresult Send(JSContext *aCx, const Nullable<RequestBody>& aBody)
   {
