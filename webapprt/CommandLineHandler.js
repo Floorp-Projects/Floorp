@@ -9,14 +9,6 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-// Initialize DOMApplicationRegistry so it can receive and respond to messages.
-// We catch an exception here on the off chance the registry throws one, as we
-// don't need it for most apps, and exceptions it throws shouldn't prevent apps
-// from loading.
-try {
-  Cu.import("resource://gre/modules/Webapps.jsm");
-} catch(ex) {}
-
 function CommandLineHandler() {}
 
 CommandLineHandler.prototype = {
@@ -38,3 +30,36 @@ CommandLineHandler.prototype = {
 
 let components = [CommandLineHandler];
 let NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+
+/* There's some work we need to do on startup, before we load the webapp,
+ * and this seems as good a place as any to do it, although it's possible
+ * that in the future we will find a lazier place to do it.
+ *
+ * NOTE: it's very important that the stuff we do here doesn't prevent
+ * the command-line handler from being registered/accessible, since otherwise
+ * the app won't start, which is catastrophic failure.  That's why it's all
+ * wrapped in a try/catch block. */
+
+try {
+  // Initialize DOMApplicationRegistry so it can receive/respond to messages.
+  Cu.import("resource://gre/modules/Webapps.jsm");
+
+  // On firstrun, set permissions to their default values.
+  if (!Services.prefs.getBoolPref("webapprt.firstrun")) {
+    Cu.import("resource://webapprt/modules/WebappRT.jsm");
+    let uri = Services.io.newURI(WebappRT.config.app.origin, null, null);
+
+    // Set AppCache-related permissions.
+    Services.perms.add(uri, "pin-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+    Services.perms.add(uri, "offline-app",
+                       Ci.nsIPermissionManager.ALLOW_ACTION);
+
+    // Now that we've set the appropriate permissions, twiddle the firstrun flag
+    // so we don't try to do so again.
+    Services.prefs.setBoolPref("webapprt.firstrun", true);
+  }
+} catch(ex) {
+#ifdef MOZ_DEBUG
+  dump(ex + "\n");
+#endif
+}
