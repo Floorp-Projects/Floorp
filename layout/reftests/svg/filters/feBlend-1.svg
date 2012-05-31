@@ -10,7 +10,7 @@
 <filter id="f2" filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox" 
          x="0%" y="0%" width="100%" height="100%">
   <feFlood flood-color="#ff0000" result="flood"/>
-  <feBlend mode="mutiply" in="SourceGraphic" in2="flood" x="10%" y="10%" width="80%" height="80%"/>
+  <feBlend mode="multiply" in="SourceGraphic" in2="flood" x="10%" y="10%" width="80%" height="80%"/>
 </filter>
 <rect x="100" y="0" width="100" height="100" fill="#00ff00" filter="url(#f2)"/>
 
