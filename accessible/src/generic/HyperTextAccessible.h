@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsHyperTextAccessible_H_
-#define _nsHyperTextAccessible_H_
+#ifndef mozilla_a11y_HyperTextAccessible_h__
+#define mozilla_a11y_HyperTextAccessible_h__
 
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleHyperText.h"
@@ -35,14 +35,14 @@ const PRUnichar kForcedNewLineChar = '\n';
 /**
   * Special Accessible that knows how contain both text and embedded objects
   */
-class nsHyperTextAccessible : public AccessibleWrap,
-                              public nsIAccessibleText,
-                              public nsIAccessibleHyperText,
-                              public nsIAccessibleEditableText
+class HyperTextAccessible : public AccessibleWrap,
+                            public nsIAccessibleText,
+                            public nsIAccessibleHyperText,
+                            public nsIAccessibleEditableText
 {
 public:
-  nsHyperTextAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsHyperTextAccessible() { }
+  HyperTextAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~HyperTextAccessible() { }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLETEXT
@@ -60,7 +60,7 @@ public:
   virtual void InvalidateChildren();
   virtual bool RemoveChild(Accessible* aAccessible);
 
-  // nsHyperTextAccessible (static helper method)
+  // HyperTextAccessible (static helper method)
 
   // Convert content offset to rendered text offset  
   static nsresult ContentToRenderedOffset(nsIFrame *aFrame, PRInt32 aContentOffset,
@@ -107,7 +107,7 @@ public:
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  // nsHyperTextAccessible: DOM point to text offset conversions.
+  // HyperTextAccessible: DOM point to text offset conversions.
 
   /**
     * Turn a DOM Node and offset into a character offset into this hypertext.
@@ -121,7 +121,7 @@ public:
     *                      if >=0 and aNode is text, this represents a char offset
     *                      if >=0 and aNode is not text, this represents a child node offset
     * @param aResultOffset - the character offset into the current
-    *                        nsHyperTextAccessible
+    *                        HyperTextAccessible
     * @param aIsEndOffset - if true, then then this offset is not inclusive. The character
     *                       indicated by the offset returned is at [offset - 1]. This means
     *                       if the passed-in offset is really in a descendant, then the offset returned
@@ -131,7 +131,7 @@ public:
     *                       descendant, then the returned offset will be on the relevant embedded object char.
     *
     * @return               the accessible child which contained the offset, if
-    *                       it is within the current nsHyperTextAccessible,
+    *                       it is within the current HyperTextAccessible,
     *                       otherwise nsnull
     */
   Accessible* DOMPointToHypertextOffset(nsINode *aNode,
@@ -261,7 +261,7 @@ public:
   virtual already_AddRefed<nsIEditor> GetEditor() const;
 
 protected:
-  // nsHyperTextAccessible
+  // HyperTextAccessible
 
   /**
    * Transform magic offset into text offset.
@@ -410,19 +410,19 @@ private:
   nsTArray<PRUint32> mOffsets;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsHyperTextAccessible,
+NS_DEFINE_STATIC_IID_ACCESSOR(HyperTextAccessible,
                               NS_HYPERTEXTACCESSIBLE_IMPL_CID)
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible downcasting method
 
-inline nsHyperTextAccessible*
+inline HyperTextAccessible*
 Accessible::AsHyperText()
 {
   return mFlags & eHyperTextAccessible ?
-    static_cast<nsHyperTextAccessible*>(this) : nsnull;
+    static_cast<HyperTextAccessible*>(this) : nsnull;
 }
 
-#endif  // _nsHyperTextAccessible_H_
+#endif
 

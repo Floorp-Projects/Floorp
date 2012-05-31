@@ -6,10 +6,10 @@
 #include "nsBaseWidgetAccessible.h"
 
 #include "Accessible-inl.h"
+#include "HyperTextAccessibleWrap.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
-#include "nsHyperTextAccessibleWrap.h"
 #include "Role.h"
 #include "States.h"
 

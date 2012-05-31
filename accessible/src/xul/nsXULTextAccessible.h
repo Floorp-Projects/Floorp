@@ -6,13 +6,13 @@
 #ifndef _nsXULTextAccessible_H_
 #define _nsXULTextAccessible_H_
 
+#include "HyperTextAccessibleWrap.h"
 #include "nsBaseWidgetAccessible.h"
-#include "nsHyperTextAccessibleWrap.h"
 
 /**
  * Used for XUL description and label elements.
  */
-class nsXULTextAccessible : public nsHyperTextAccessibleWrap
+class nsXULTextAccessible : public HyperTextAccessibleWrap
 {
 public:
   nsXULTextAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -38,7 +38,7 @@ public:
   virtual PRUint64 NativeState();
 };
 
-class nsXULLinkAccessible : public nsHyperTextAccessibleWrap
+class nsXULLinkAccessible : public HyperTextAccessibleWrap
 {
 
 public:

@@ -30,6 +30,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(ARIAGridCellAccessibleWrap,
                              ARIAGridCellAccessible)
 
 IMPL_IUNKNOWN_INHERITED1(ARIAGridCellAccessibleWrap,
-                         nsHyperTextAccessibleWrap,
+                         HyperTextAccessibleWrap,
                          CAccessibleTableCell)
 

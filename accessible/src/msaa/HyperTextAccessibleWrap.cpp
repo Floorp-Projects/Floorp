@@ -5,20 +5,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHyperTextAccessibleWrap.h"
+#include "HyperTextAccessibleWrap.h"
 
 #include "nsEventShell.h"
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHyperTextAccessibleWrap,
-                             nsHyperTextAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(HyperTextAccessibleWrap,
+                             HyperTextAccessible)
 
-IMPL_IUNKNOWN_INHERITED2(nsHyperTextAccessibleWrap,
+IMPL_IUNKNOWN_INHERITED2(HyperTextAccessibleWrap,
                          AccessibleWrap,
                          ia2AccessibleHypertext,
                          CAccessibleEditableText);
 
 nsresult
-nsHyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
+HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 {
   PRUint32 eventType = aEvent->GetEventType();
 
@@ -41,14 +41,14 @@ nsHyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
     }
   }
 
-  return nsHyperTextAccessible::HandleAccEvent(aEvent);
+  return HyperTextAccessible::HandleAccEvent(aEvent);
 }
 
 nsresult
-nsHyperTextAccessibleWrap::GetModifiedText(bool aGetInsertedText,
-                                           nsAString& aText,
-                                           PRUint32 *aStartOffset,
-                                           PRUint32 *aEndOffset)
+HyperTextAccessibleWrap::GetModifiedText(bool aGetInsertedText,
+                                         nsAString& aText,
+                                         PRUint32* aStartOffset,
+                                         PRUint32* aEndOffset)
 {
   aText.Truncate();
   *aStartOffset = 0;

@@ -5,21 +5,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _NSHYPERTEXTACCESSIBLEWRAP_H
-#define _NSHYPERTEXTACCESSIBLEWRAP_H
+#ifndef mozilla_a11y_HyperTextAccessibleWrap_h__
+#define mozilla_a11y_HyperTextAccessibleWrap_h__
 
-#include "nsHyperTextAccessible.h"
+#include "HyperTextAccessible.h"
 #include "CAccessibleText.h"
 #include "CAccessibleEditableText.h"
 #include "ia2AccessibleHyperText.h"
 
-class nsHyperTextAccessibleWrap : public nsHyperTextAccessible,
-                                  public ia2AccessibleHypertext,
-                                  public CAccessibleEditableText
+class HyperTextAccessibleWrap : public HyperTextAccessible,
+                                public ia2AccessibleHypertext,
+                                public CAccessibleEditableText
 {
 public:
-  nsHyperTextAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-    nsHyperTextAccessible(aContent, aDoc) {}
+  HyperTextAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
+    HyperTextAccessible(aContent, aDoc) {}
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED

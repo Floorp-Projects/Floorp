@@ -67,11 +67,11 @@ nsHTMLBRAccessible::GetNameInternal(nsAString& aName)
 
 nsHTMLLabelAccessible::
   nsHTMLLabelAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLabelAccessible, nsHyperTextAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLabelAccessible, HyperTextAccessible)
 
 nsresult
 nsHTMLLabelAccessible::GetNameInternal(nsAString& aName)
@@ -91,11 +91,11 @@ nsHTMLLabelAccessible::NativeRole()
 
 nsHTMLOutputAccessible::
   nsHTMLOutputAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLOutputAccessible, nsHyperTextAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLOutputAccessible, HyperTextAccessible)
 
 Relation
 nsHTMLOutputAccessible::RelationByType(PRUint32 aType)

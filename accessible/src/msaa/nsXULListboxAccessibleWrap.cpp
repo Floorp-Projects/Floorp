@@ -38,5 +38,5 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULListCellAccessibleWrap,
                              nsXULListCellAccessible)
 
 IMPL_IUNKNOWN_INHERITED1(nsXULListCellAccessibleWrap,
-                         nsHyperTextAccessibleWrap,
+                         HyperTextAccessibleWrap,
                          CAccessibleTableCell)
