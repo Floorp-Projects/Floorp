@@ -486,6 +486,9 @@ public:
         return HTMLCanvasElement();
     }
 
+    virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
+                                 bool *triedToWrap);
+
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
     NS_DECL_NSITIMERCALLBACK
@@ -732,6 +735,10 @@ public:
                             dom::Nullable< nsTArray<WebGLShader*> > &retval);
     WebGLint GetAttribLocation(WebGLProgram* prog, const nsAString& name);
     JS::Value GetBufferParameter(WebGLenum target, WebGLenum pname);
+    JS::Value GetBufferParameter(JSContext* /* unused */, WebGLenum target,
+                                 WebGLenum pname) {
+        return GetBufferParameter(target, pname);
+    }
     JS::Value GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv);
     WebGLenum GetError();
     JS::Value GetFramebufferAttachmentParameter(JSContext* cx,
@@ -740,16 +747,32 @@ public:
                                                 WebGLenum pname,
                                                 ErrorResult& rv);
     JS::Value GetProgramParameter(WebGLProgram *prog, WebGLenum pname);
+    JS::Value GetProgramParameter(JSContext* /* unused */, WebGLProgram *prog,
+                                  WebGLenum pname) {
+        return GetProgramParameter(prog, pname);
+    }
     void GetProgramInfoLog(WebGLProgram *prog, nsACString& retval, ErrorResult& rv);
     void GetProgramInfoLog(WebGLProgram *prog, nsAString& retval, ErrorResult& rv);
     JS::Value GetRenderbufferParameter(WebGLenum target, WebGLenum pname);
+    JS::Value GetRenderbufferParameter(JSContext* /* unused */,
+                                       WebGLenum target, WebGLenum pname) {
+        return GetRenderbufferParameter(target, pname);
+    }
     JS::Value GetShaderParameter(WebGLShader *shader, WebGLenum pname);
+    JS::Value GetShaderParameter(JSContext* /* unused */, WebGLShader *shader,
+                                 WebGLenum pname) {
+        return GetShaderParameter(shader, pname);
+    }
     already_AddRefed<WebGLShaderPrecisionFormat>
       GetShaderPrecisionFormat(WebGLenum shadertype, WebGLenum precisiontype);
     void GetShaderInfoLog(WebGLShader *shader, nsACString& retval, ErrorResult& rv);
     void GetShaderInfoLog(WebGLShader *shader, nsAString& retval, ErrorResult& rv);
     void GetShaderSource(WebGLShader *shader, nsAString& retval);
     JS::Value GetTexParameter(WebGLenum target, WebGLenum pname);
+    JS::Value GetTexParameter(JSContext * /* unused */, WebGLenum target,
+                              WebGLenum pname) {
+        return GetTexParameter(target, pname);
+    }
     JS::Value GetUniform(JSContext* cx, WebGLProgram *prog,
                          WebGLUniformLocation *location, ErrorResult& rv);
     already_AddRefed<WebGLUniformLocation>
@@ -808,9 +831,28 @@ public:
     void TexImage2D(JSContext* cx, WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
                     dom::ImageData* pixels, ErrorResult& rv);
+    // Allow whatever element types the bindings are willing to pass
+    // us in TexImage2D
+    template<class ElementType>
     void TexImage2D(JSContext* /* unused */, WebGLenum target, WebGLint level,
                     WebGLenum internalformat, WebGLenum format, WebGLenum type,
-                    dom::Element* elt, ErrorResult& rv);
+                    ElementType* elt, ErrorResult& rv) {
+        if (!IsContextStable())
+            return;
+        nsRefPtr<gfxImageSurface> isurf;
+        WebGLTexelFormat srcFormat;
+        nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
+        rv = SurfaceFromElementResultToImageSurface(res, getter_AddRefs(isurf),
+                                                    &srcFormat);
+        if (rv.Failed())
+            return;
+
+        uint32_t byteLength = isurf->Stride() * isurf->Height();
+        return TexImage2D_base(target, level, internalformat,
+                               isurf->Width(), isurf->Height(), isurf->Stride(),
+                               0, format, type, isurf->Data(), byteLength,
+                               -1, srcFormat, mPixelStorePremultiplyAlpha);
+    }
     void TexParameterf(WebGLenum target, WebGLenum pname, WebGLfloat param) {
         TexParameter_base(target, pname, nsnull, &param);
     }
@@ -826,9 +868,30 @@ public:
     void TexSubImage2D(JSContext* cx, WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
                        WebGLenum type, dom::ImageData* pixels, ErrorResult& rv);
+    // Allow whatever element types the bindings are willing to pass
+    // us in TexSubImage2D
+    template<class ElementType>
     void TexSubImage2D(JSContext* /* unused */, WebGLenum target, WebGLint level,
                        WebGLint xoffset, WebGLint yoffset, WebGLenum format,
-                       WebGLenum type, dom::Element* elt, ErrorResult& rv);
+                       WebGLenum type, ElementType* elt, ErrorResult& rv) {
+        if (!IsContextStable())
+            return;
+        nsRefPtr<gfxImageSurface> isurf;
+        WebGLTexelFormat srcFormat;
+        nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
+        rv = SurfaceFromElementResultToImageSurface(res, getter_AddRefs(isurf),
+                                                    &srcFormat);
+        if (rv.Failed())
+            return;
+
+        uint32_t byteLength = isurf->Stride() * isurf->Height();
+        return TexSubImage2D_base(target, level, xoffset, yoffset,
+                                  isurf->Width(), isurf->Height(),
+                                  isurf->Stride(), format, type,
+                                  isurf->Data(), byteLength,
+                                  -1, srcFormat, mPixelStorePremultiplyAlpha);
+        
+    }
 
     void Uniform1i(WebGLUniformLocation* location, WebGLint x);
     void Uniform2i(WebGLUniformLocation* location, WebGLint x, WebGLint y);
@@ -1172,9 +1235,23 @@ protected:
                       WebGLTexelFormat dstFormat, bool dstPremultiplied,
                       size_t dstTexelSize);
 
-    nsresult DOMElementToImageSurface(dom::Element* imageOrCanvas,
-                                      gfxImageSurface **imageOut,
-                                      WebGLTexelFormat *format);
+    template<class ElementType>
+    nsLayoutUtils::SurfaceFromElementResult SurfaceFromElement(ElementType* aElement) {
+        MOZ_ASSERT(aElement);
+        uint32_t flags =
+            nsLayoutUtils::SFE_WANT_NEW_SURFACE |
+            nsLayoutUtils::SFE_WANT_IMAGE_SURFACE;
+
+        if (mPixelStoreColorspaceConversion == LOCAL_GL_NONE)
+            flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
+        if (!mPixelStorePremultiplyAlpha)
+            flags |= nsLayoutUtils::SFE_NO_PREMULTIPLY_ALPHA;
+        return nsLayoutUtils::SurfaceFromElement(aElement, flags);
+    }
+
+    nsresult SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
+                                                    gfxImageSurface **imageOut,
+                                                    WebGLTexelFormat *format);
 
     void CopyTexSubImage2D_base(WebGLenum target,
                                 WebGLint level,
