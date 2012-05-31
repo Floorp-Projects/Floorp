@@ -905,7 +905,7 @@ static const char js_pccounts_chrome_str[]    = JS_OPTIONS_DOT_STR "pccounts.chr
 static const char js_jit_hardening_str[]      = JS_OPTIONS_DOT_STR "jit_hardening";
 static const char js_memlog_option_str[] = JS_OPTIONS_DOT_STR "mem.log";
 static const char js_disable_explicit_compartment_gc[] =
-  JS_OPTIONS_DOT_STR "disable_explicit_compartment_gc";
+  JS_OPTIONS_DOT_STR "mem.disable_explicit_compartment_gc";
 
 int
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
