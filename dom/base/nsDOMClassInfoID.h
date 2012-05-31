@@ -59,13 +59,24 @@ DOMCI_CASTABLE_INTERFACE(nsIDOMWebGLRenderingContext,                         \
                          nsIDOMWebGLRenderingContext, 10, _extra)             \
 DOMCI_CASTABLE_INTERFACE(nsIWebGLUniformLocation,                             \
                          nsIWebGLUniformLocation, 11, _extra)                 \
-DOMCI_CASTABLE_INTERFACE(nsIDOMImageData, nsIDOMImageData, 12, _extra)
+DOMCI_CASTABLE_INTERFACE(nsIDOMImageData, nsIDOMImageData, 12, _extra)        \
+DOMCI_CASTABLE_NAMESPACED_INTERFACE(mozilla, WebGLUniformLocation,            \
+                                    nsIWebGLUniformLocation, 13, _extra)
  
 // Make sure all classes mentioned in DOMCI_CASTABLE_INTERFACES
 // have been declared.
+#undef DOMCI_CASTABLE_NAMESPACED_INTERFACE
 #define DOMCI_CASTABLE_INTERFACE(_interface, _u1, _u2, _u3) class _interface;
+#define DOMCI_CASTABLE_NAMESPACED_INTERFACE(ns, className, interface, bit, _extra) \
+  namespace ns {                                                        \
+  class className;                                                      \
+  }
 DOMCI_CASTABLE_INTERFACES(unused)
 #undef DOMCI_CASTABLE_INTERFACE
+#undef DOMCI_CASTABLE_NAMESPACED_INTERFACE
+
+#define DOMCI_CASTABLE_NAMESPACED_INTERFACE(ns, className, interface, bit, _extra) \
+  DOMCI_CASTABLE_INTERFACE(ns::className, interface, bit, _extra)
 
 #ifdef _IMPL_NS_LAYOUT
 
