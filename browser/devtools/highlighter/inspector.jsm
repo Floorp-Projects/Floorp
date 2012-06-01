@@ -1477,6 +1477,9 @@ InspectorStyleSidebar.prototype = {
     // wire up button to show the iframe
     let onClick = function() {
       this.activatePanel(aRegObj.id);
+      // Cheat a little bit and trigger a refresh
+      // when switching panels.
+      this._inspector.change("activatepanel-" + aRegObj.id);
     }.bind(this);
     btn.addEventListener("click", onClick, true);
 
