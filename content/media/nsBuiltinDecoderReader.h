@@ -141,6 +141,8 @@ public:
       PRUint32 mWidth;
       PRUint32 mHeight;
       PRUint32 mStride;
+      PRUint32 mOffset;
+      PRUint32 mSkip;
     };
 
     Plane mPlanes[3];
@@ -267,17 +269,17 @@ template <class T> class MediaQueue : private nsDeque {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return nsDeque::GetSize();
   }
-  
+
   inline void Push(T* aItem) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     nsDeque::Push(aItem);
   }
-  
+
   inline void PushFront(T* aItem) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     nsDeque::PushFront(aItem);
   }
-  
+
   inline T* Pop() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return static_cast<T*>(nsDeque::Pop());

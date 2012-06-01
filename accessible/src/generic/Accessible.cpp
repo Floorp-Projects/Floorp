@@ -2736,7 +2736,7 @@ Accessible::StartOffset()
 {
   NS_PRECONDITION(IsLink(), "StartOffset is called not on hyper link!");
 
-  nsHyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
+  HyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
   return hyperText ? hyperText->GetChildOffset(this) : 0;
 }
 
@@ -2745,7 +2745,7 @@ Accessible::EndOffset()
 {
   NS_PRECONDITION(IsLink(), "EndOffset is called on not hyper link!");
 
-  nsHyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
+  HyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nsnull;
   return hyperText ? (hyperText->GetChildOffset(this) + 1) : 0;
 }
 

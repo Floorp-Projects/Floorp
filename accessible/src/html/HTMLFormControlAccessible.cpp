@@ -204,7 +204,7 @@ HTMLRadioButtonAccessible::GetPositionAndSizeInternal(PRInt32* aPosInSet,
 
 HTMLButtonAccessible::
   HTMLButtonAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -237,7 +237,7 @@ HTMLButtonAccessible::DoAction(PRUint8 aIndex)
 PRUint64
 HTMLButtonAccessible::State()
 {
-  PRUint64 state = nsHyperTextAccessibleWrap::State();
+  PRUint64 state = HyperTextAccessibleWrap::State();
   if (state == states::DEFUNCT)
     return state;
 
@@ -256,7 +256,7 @@ HTMLButtonAccessible::State()
 PRUint64
 HTMLButtonAccessible::NativeState()
 {
-  PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
+  PRUint64 state = HyperTextAccessibleWrap::NativeState();
 
   nsEventStates elmState = mContent->AsElement()->State();
   if (elmState.HasState(NS_EVENT_STATE_DEFAULT))
@@ -320,13 +320,13 @@ HTMLButtonAccessible::IsWidget() const
 
 HTMLTextFieldAccessible::
   HTMLTextFieldAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
 NS_IMPL_ISUPPORTS_INHERITED3(HTMLTextFieldAccessible,
                              Accessible,
-                             nsHyperTextAccessible,
+                             HyperTextAccessible,
                              nsIAccessibleText,
                              nsIAccessibleEditableText)
 
@@ -393,7 +393,7 @@ HTMLTextFieldAccessible::Value(nsString& aValue)
 void
 HTMLTextFieldAccessible::ApplyARIAState(PRUint64* aState) const
 {
-  nsHyperTextAccessibleWrap::ApplyARIAState(aState);
+  HyperTextAccessibleWrap::ApplyARIAState(aState);
 
   aria::MapToState(aria::eARIAAutoComplete, mContent->AsElement(), aState);
 }
@@ -401,7 +401,7 @@ HTMLTextFieldAccessible::ApplyARIAState(PRUint64* aState) const
 PRUint64
 HTMLTextFieldAccessible::State()
 {
-  PRUint64 state = nsHyperTextAccessibleWrap::State();
+  PRUint64 state = HyperTextAccessibleWrap::State();
   if (state & states::DEFUNCT)
     return state;
 
@@ -420,7 +420,7 @@ HTMLTextFieldAccessible::State()
 PRUint64
 HTMLTextFieldAccessible::NativeState()
 {
-  PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
+  PRUint64 state = HyperTextAccessibleWrap::NativeState();
 
   // can be focusable, focused, protected. readonly, unavailable, selected
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
@@ -557,7 +557,7 @@ HTMLTextFieldAccessible::ContainerWidget() const
 
 HTMLFileInputAccessible::
 HTMLFileInputAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
   mFlags |= eHTMLFileInputAccessible;
 }
@@ -573,7 +573,7 @@ HTMLFileInputAccessible::NativeRole()
 nsresult
 HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::HandleAccEvent(aEvent);
+  nsresult rv = HyperTextAccessibleWrap::HandleAccEvent(aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Redirect state change events for inherited states to child controls. Note,
@@ -612,7 +612,7 @@ HTMLFileInputAccessible::HandleAccEvent(AccEvent* aEvent)
 
 HTMLGroupboxAccessible::
   HTMLGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -658,7 +658,7 @@ HTMLGroupboxAccessible::GetNameInternal(nsAString& aName)
 Relation
 HTMLGroupboxAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
+  Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
     // No override for label, so use <legend> for this <fieldset>
   if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
     rel.AppendTarget(mDoc, GetLegend());
@@ -672,14 +672,14 @@ HTMLGroupboxAccessible::RelationByType(PRUint32 aType)
 
 HTMLLegendAccessible::
   HTMLLegendAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
 Relation
 HTMLLegendAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
+  Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
     return rel;
 
@@ -702,14 +702,14 @@ HTMLLegendAccessible::NativeRole()
 
 HTMLFigureAccessible::
   HTMLFigureAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
 nsresult
 HTMLFigureAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
+  nsresult rv = HyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Expose figure xml-role.
@@ -727,7 +727,7 @@ HTMLFigureAccessible::NativeRole()
 nsresult
 HTMLFigureAccessible::GetNameInternal(nsAString& aName)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::GetNameInternal(aName);
+  nsresult rv = HyperTextAccessibleWrap::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aName.IsEmpty())
@@ -745,7 +745,7 @@ HTMLFigureAccessible::GetNameInternal(nsAString& aName)
 Relation
 HTMLFigureAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
+  Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_LABELLED_BY)
     rel.AppendTarget(mDoc, Caption());
 
@@ -772,7 +772,7 @@ HTMLFigureAccessible::Caption() const
 
 HTMLFigcaptionAccessible::
   HTMLFigcaptionAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -785,7 +785,7 @@ HTMLFigcaptionAccessible::NativeRole()
 Relation
 HTMLFigcaptionAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsHyperTextAccessibleWrap::RelationByType(aType);
+  Relation rel = HyperTextAccessibleWrap::RelationByType(aType);
   if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
     return rel;
 

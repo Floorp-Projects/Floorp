@@ -20,7 +20,7 @@ using namespace mozilla::a11y;
 // HTMLListAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLListAccessible, nsHyperTextAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLListAccessible, HyperTextAccessible)
 
 role
 HTMLListAccessible::NativeRole()
@@ -34,7 +34,7 @@ HTMLListAccessible::NativeRole()
 PRUint64
 HTMLListAccessible::NativeState()
 {
-  return nsHyperTextAccessibleWrap::NativeState() | states::READONLY;
+  return HyperTextAccessibleWrap::NativeState() | states::READONLY;
 }
 
 
@@ -44,7 +44,7 @@ HTMLListAccessible::NativeState()
 
 HTMLLIAccessible::
   HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc), mBullet(nsnull)
+  HyperTextAccessibleWrap(aContent, aDoc), mBullet(nsnull)
 {
   mFlags |= eHTMLListItemAccessible;
 
@@ -56,14 +56,14 @@ HTMLLIAccessible::
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(HTMLLIAccessible, nsHyperTextAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLLIAccessible, HyperTextAccessible)
 
 void
 HTMLLIAccessible::Shutdown()
 {
   mBullet = nsnull;
 
-  nsHyperTextAccessibleWrap::Shutdown();
+  HyperTextAccessibleWrap::Shutdown();
 }
 
 role
@@ -78,7 +78,7 @@ HTMLLIAccessible::NativeRole()
 PRUint64
 HTMLLIAccessible::NativeState()
 {
-  return nsHyperTextAccessibleWrap::NativeState() | states::READONLY;
+  return HyperTextAccessibleWrap::NativeState() | states::READONLY;
 }
 
 NS_IMETHODIMP

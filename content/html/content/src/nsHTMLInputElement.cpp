@@ -1350,7 +1350,7 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
         SetValueChanged(true);
       }
 
-      mInputData.mState->SetValue(value, aUserInput);
+      mInputData.mState->SetValue(value, aUserInput, aSetValueChanged);
 
       // This call might be useless in some situations because if the element is
       // a single line text control, nsTextEditorState::SetValue will call

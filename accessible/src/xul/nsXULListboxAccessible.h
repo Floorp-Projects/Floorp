@@ -135,7 +135,7 @@ private:
 /**
  * Class represents xul:listcell.
  */
-class nsXULListCellAccessible : public nsHyperTextAccessibleWrap,
+class nsXULListCellAccessible : public HyperTextAccessibleWrap,
                                 public nsIAccessibleTableCell
 {
 public:

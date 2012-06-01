@@ -8211,14 +8211,17 @@ static const char* kWarnings[] = {
 #undef DEPRECATED_OPERATION
 
 void
-nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation)
+nsIDocument::WarnOnceAbout(DeprecatedOperations aOperation,
+                           bool asError /* = false */)
 {
   PR_STATIC_ASSERT(eDeprecatedOperationCount <= 64);
   if (mWarnedAbout & (1ull << aOperation)) {
     return;
   }
   mWarnedAbout |= (1ull << aOperation);
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+  uint32_t flags = asError ? nsIScriptError::errorFlag
+                           : nsIScriptError::warningFlag;
+  nsContentUtils::ReportToConsole(flags,
                                   "DOM Core", this,
                                   nsContentUtils::eDOM_PROPERTIES,
                                   kWarnings[aOperation]);

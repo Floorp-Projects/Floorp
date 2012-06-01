@@ -119,7 +119,11 @@ nsXFormsInputAccessible::
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputAccessible, Accessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputAccessible,
+                             Accessible,
+                             HyperTextAccessible,
+                             nsIAccessibleText,
+                             nsIAccessibleEditableText)
 
 role
 nsXFormsInputAccessible::NativeRole()

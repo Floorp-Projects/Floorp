@@ -113,11 +113,13 @@ private:
   };
 
   // Seeks to aTarget usecs in the buffered range aRange using bisection search,
-  // or to the keyframe prior to aTarget if we have video. aStartTime must be
-  // the presentation time at the start of media, and aEndTime the time at
-  // end of media. aRanges must be the time/byte ranges buffered in the media
-  // cache as per GetSeekRanges().
+  // or to the keyframe prior to aTarget if we have video. aAdjustedTarget is
+  // an adjusted version of the target used to account for Opus pre-roll, if
+  // necessary. aStartTime must be the presentation time at the start of media,
+  // and aEndTime the time at end of media. aRanges must be the time/byte ranges
+  // buffered in the media cache as per GetSeekRanges().
   nsresult SeekInBufferedRange(PRInt64 aTarget,
+                               PRInt64 aAdjustedTarget,
                                PRInt64 aStartTime,
                                PRInt64 aEndTime,
                                const nsTArray<SeekRange>& aRanges,
@@ -219,6 +221,10 @@ private:
   // The caller is responsible for deleting the packet and its |packet| field.
   ogg_packet* NextOggPacket(nsOggCodecState* aCodecState);
 
+  // Fills aTracks with the serial numbers of each active stream, for use by
+  // various nsSkeletonState functions.
+  void BuildSerialList(nsTArray<PRUint32>& aTracks);
+
   // Maps Ogg serialnos to nsOggStreams.
   nsClassHashtable<nsUint32HashKey, nsOggCodecState> mCodecStates;
 
@@ -248,15 +254,17 @@ private:
   // Ogg decoding state.
   ogg_sync_state mOggState;
 
-  // Vorbis/Theora data used to compute timestamps. This is written on the
+  // Vorbis/Opus/Theora data used to compute timestamps. This is written on the
   // decoder thread and read on the main thread. All reading on the main
   // thread must be done after metadataloaded. We can't use the existing
   // data in the codec states due to threading issues. You must check the
   // associated mTheoraState or mVorbisState pointer is non-null before
   // using this codec data.
   PRUint32 mVorbisSerial;
+  PRUint32 mOpusSerial;
   PRUint32 mTheoraSerial;
   vorbis_info mVorbisInfo;
+  int mOpusPreSkip;
   th_info mTheoraInfo;
 
   // The offset of the end of the last page we've read, or the start of

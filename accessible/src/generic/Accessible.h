@@ -26,7 +26,7 @@ class AccGroupInfo;
 class EmbeddedObjCollector;
 class KeyBinding;
 class Accessible;
-class nsHyperTextAccessible;
+class HyperTextAccessible;
 class nsHTMLImageAccessible;
 class nsHTMLImageMapAccessible;
 struct nsRoleMapEntry;
@@ -244,7 +244,6 @@ public:
    */
   virtual mozilla::a11y::GroupPos GroupPosition();
 
-  /**
   /**
    * Used by ChildAtPoint() method to get direct or deepest child at point.
    */
@@ -473,7 +472,7 @@ public:
   DocAccessible* AsDoc();
 
   inline bool IsHyperText() const { return mFlags & eHyperTextAccessible; }
-  nsHyperTextAccessible* AsHyperText();
+  HyperTextAccessible* AsHyperText();
 
   inline bool IsHTMLFileInput() const { return mFlags & eHTMLFileInputAccessible; }
 
