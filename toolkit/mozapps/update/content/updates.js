@@ -15,7 +15,6 @@ const CoR = Components.results;
 
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_APP_UPDATE_BACKGROUND         = "app.update.stage.enabled";
 const PREF_APP_UPDATE_BACKGROUNDERRORS   = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BILLBOARD_TEST_URL = "app.update.billboard.test_url";
 const PREF_APP_UPDATE_CERT_ERRORS        = "app.update.cert.errors";
@@ -1581,7 +1580,9 @@ var gDownloadingPage = {
       LOG("gDownloadingPage", "onStopRequest - patch verification succeeded");
       // If the background update pref is set, we should wait until the update
       // is actually staged in the background.
-      if (getPref("getBoolPref", PREF_APP_UPDATE_BACKGROUND, false)) {
+      var aus = CoC["@mozilla.org/updates/update-service;1"].
+                getService(CoI.nsIApplicationUpdateService);
+      if (aus.canStageUpdates) {
         this._setUpdateApplying();
       } else {
         this.cleanUp();
