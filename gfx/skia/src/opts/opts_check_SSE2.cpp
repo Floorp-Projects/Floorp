@@ -96,7 +96,7 @@ static bool cachedHasSSSE3() {
 
 void SkBitmapProcState::platformProcs() {
     if (cachedHasSSSE3()) {
-#if !defined(SK_BUILD_FOR_ANDROID)
+#if defined(SK_BUILD_SSSE3)
         // Disable SSSE3 optimization for Android x86
         if (fSampleProc32 == S32_opaque_D32_filter_DX) {
             fSampleProc32 = S32_opaque_D32_filter_DX_SSSE3;
