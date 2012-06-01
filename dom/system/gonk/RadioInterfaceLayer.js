@@ -44,6 +44,7 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:RejectCall",
   "RIL:HoldCall",
   "RIL:ResumeCall",
+  "RIL:GetAvailableNetworks",
   "RIL:GetCardLock",
   "RIL:UnlockCardLock",
   "RIL:SetCardLock"
@@ -235,6 +236,9 @@ RadioInterfaceLayer.prototype = {
       case "RIL:ResumeCall":
         this.resumeCall(msg.json);
         break;
+      case "RIL:GetAvailableNetworks":
+        this.getAvailableNetworks(msg.json);
+        break;
       case "RIL:GetCardLock":
         this.getCardLock(msg.json);
         break;
@@ -278,6 +282,9 @@ RadioInterfaceLayer.prototype = {
         break;
       case "callError":
         this.handleCallError(message);
+        break;
+      case "getAvailableNetworks":
+        this.handleGetAvailableNetworks(message);
         break;
       case "voiceregistrationstatechange":
         this.updateVoiceConnection(message);
@@ -561,6 +568,15 @@ RadioInterfaceLayer.prototype = {
   },
 
   /**
+   * Handle available networks returned by the 'getAvailableNetworks' request.
+   */
+  handleGetAvailableNetworks: function handleGetAvailableNetworks(message) {
+    debug("handleGetAvailableNetworks: " + JSON.stringify(message));
+
+    ppmm.sendAsyncMessage("RIL:GetAvailableNetworks", message);
+  },
+
+  /**
    * Handle call error.
    */
   handleCallError: function handleCallError(message) {
@@ -832,6 +848,10 @@ RadioInterfaceLayer.prototype = {
 
   resumeCall: function resumeCall(callIndex) {
     this.worker.postMessage({type: "resumeCall", callIndex: callIndex});
+  },
+
+  getAvailableNetworks: function getAvailableNetworks(requestId) {
+    this.worker.postMessage({type: "getAvailableNetworks", requestId: requestId});
   },
 
   get microphoneMuted() {
