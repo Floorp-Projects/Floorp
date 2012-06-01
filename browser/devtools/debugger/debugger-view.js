@@ -19,6 +19,17 @@ let DebuggerView = {
   editor: null,
 
   /**
+   * Initializes UI properties for all the displayed panes.
+   */
+  initializePanes: function DV_initializePanes() {
+    let stackframes = document.getElementById("stackframes");
+    stackframes.setAttribute("width", Prefs.stackframesWidth);
+
+    let variables = document.getElementById("variables");
+    variables.setAttribute("width", Prefs.variablesWidth);
+  },
+
+  /**
    * Initializes the SourceEditor instance.
    */
   initializeEditor: function DV_initializeEditor() {
@@ -34,6 +45,17 @@ let DebuggerView = {
 
     this.editor = new SourceEditor();
     this.editor.init(placeholder, config, this._onEditorLoad.bind(this));
+  },
+
+  /**
+   * Removes the displayed panes and saves any necessary state.
+   */
+  destroyPanes: function DV_destroyPanes() {
+    let stackframes = document.getElementById("stackframes");
+    Prefs.stackframesWidth = stackframes.getAttribute("width");
+
+    let variables = document.getElementById("variables");
+    Prefs.variablesWidth = variables.getAttribute("width");
   },
 
   /**
@@ -813,6 +835,12 @@ PropertiesView.prototype = {
      */
     element.addToHierarchy = this.addScopeToHierarchy.bind(this, element);
 
+    // Setup the additional elements specific for a scope node.
+    element.refresh(function() {
+      let title = element.getElementsByClassName("title")[0];
+      title.classList.add("devtools-toolbar");
+    }.bind(this));
+
     // Return the element for later use if necessary.
     return element;
   },
@@ -1035,12 +1063,12 @@ PropertiesView.prototype = {
 
         // Handle data property and accessor property descriptors.
         if (value !== undefined) {
-          this._addProperty(aVar, [i, value]);
+          this._addProperty(aVar, [i, value], desc);
         }
         if (getter !== undefined || setter !== undefined) {
           let prop = this._addProperty(aVar, [i]).expand();
-          prop.getter = this._addProperty(prop, ["get", getter]);
-          prop.setter = this._addProperty(prop, ["set", setter]);
+          prop.getter = this._addProperty(prop, ["get", getter], desc);
+          prop.setter = this._addProperty(prop, ["set", setter], desc);
         }
       }
     }
@@ -1054,7 +1082,7 @@ PropertiesView.prototype = {
    *
    * @param object aVar
    *        The parent variable element.
-   * @param {Array} aProperty
+   * @param array aProperty
    *        An array containing the key and grip properties, specifying
    *        the value and/or type & class of the variable (if the type
    *        is not specified, it will be inferred from the value).
@@ -1064,6 +1092,8 @@ PropertiesView.prototype = {
    *             ["someProp3", { type: "undefined" }]
    *             ["someProp4", { type: "null" }]
    *             ["someProp5", { type: "object", class: "Object" }]
+   * @param object aFlags
+   *        Contans configurable, enumberable or writable flags.
    * @param string aName
    *        Optional, the property name.
    * @paarm string aId
@@ -1071,7 +1101,7 @@ PropertiesView.prototype = {
    * @return object
    *         The newly created html node representing the added prop.
    */
-  _addProperty: function DVP__addProperty(aVar, aProperty, aName, aId) {
+  _addProperty: function DVP__addProperty(aVar, aProperty, aFlags, aName, aId) {
     // Make sure the variable container exists.
     if (!aVar) {
       return null;
@@ -1109,7 +1139,15 @@ PropertiesView.prototype = {
 
       if ("undefined" !== typeof pKey) {
         // Use a key element to specify the property name.
-        nameLabel.className = "key plain";
+        let className = "";
+        if (aFlags) {
+          if (aFlags.configurable === false) { className += "non-configurable "; }
+          if (aFlags.enumerable === false) { className += "non-enumerable "; }
+          if (aFlags.writable === false) { className += "non-writable "; }
+        }
+        if (pKey === "__proto__ ") { className += "proto "; }
+
+        nameLabel.className = className + "key plain";
         nameLabel.setAttribute("value", pKey.trim());
         title.appendChild(nameLabel);
       }
