@@ -590,6 +590,14 @@ function todo_check_false(condition, stack) {
   todo_check_eq(condition, false, stack);
 }
 
+function do_check_null(condition, stack=Components.stack.caller) {
+  do_check_eq(condition, null, stack);
+}
+
+function todo_check_null(condition, stack=Components.stack.caller) {
+  todo_check_eq(condition, null, stack);
+}
+
 function do_test_pending() {
   ++_tests_pending;
 
