@@ -9575,7 +9575,8 @@ nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wra
   }
 
   // If it's not safe to run script we'll only return the instance if it exists.
-  if (!nsContentUtils::IsSafeToRunScript()) {
+  // Ditto if the document is inactive.
+  if (!nsContentUtils::IsSafeToRunScript() || !content->OwnerDoc()->IsActive()) {
     return rv;
   }
 
