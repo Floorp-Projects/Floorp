@@ -536,50 +536,39 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
 
 bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
 {
-  do {
-    ReleaseAudioBuffer();
+  ReleaseAudioBuffer();
 
-    status_t err;
+  status_t err;
 
-    if (aSeekTimeUs != -1) {
-      MediaSource::ReadOptions options;
-      options.setSeekTo(aSeekTimeUs);
-      err = mAudioSource->read(&mAudioBuffer, &options);
-    } else {
-      err = mAudioSource->read(&mAudioBuffer);
-    }
+  if (aSeekTimeUs != -1) {
+    MediaSource::ReadOptions options;
+    options.setSeekTo(aSeekTimeUs);
+    err = mAudioSource->read(&mAudioBuffer, &options);
+  } else {
+    err = mAudioSource->read(&mAudioBuffer);
+  }
 
-    aSeekTimeUs = -1;
+  aSeekTimeUs = -1;
 
-    if (err == OK) {
-      if (mAudioBuffer->range_length() == 0) // If we get a spurious empty buffer, keep going
-        continue;
+  if (err == OK && mAudioBuffer->range_length() != 0) {
+    int64_t timeUs;
+    if (!mAudioBuffer->meta_data()->findInt64(kKeyTime, &timeUs))
+      return false;
 
-      int64_t timeUs;
-      if (!mAudioBuffer->meta_data()->findInt64(kKeyTime, &timeUs))
-        return false;
-      return ToAudioFrame(aFrame, timeUs,
-                          mAudioBuffer->data(),
-                          mAudioBuffer->range_offset(),
-                          mAudioBuffer->range_length(),
-                          mAudioChannels, mAudioSampleRate);
-    }
+    return ToAudioFrame(aFrame, timeUs,
+                        mAudioBuffer->data(),
+                        mAudioBuffer->range_offset(),
+                        mAudioBuffer->range_length(),
+                        mAudioChannels, mAudioSampleRate);
+  }
+  else if (err == INFO_FORMAT_CHANGED && !SetAudioFormat()) {
+    // If the format changed, update our cached info.
+    return false;
+  }
+  else if (err == ERROR_END_OF_STREAM)
+    return false;
 
-    if (err == INFO_FORMAT_CHANGED) {
-      // If the format changed, update our cached info.
-      if (!SetAudioFormat()) {
-        return false;
-      }
-
-      // Ok, try to read a buffer again.
-      continue;
-    }
-
-    /* err == ERROR_END_OF_STREAM */
-    break;
-  } while (0);
-
-  return false;
+  return true;
 }
 
 static OmxDecoder *cast(Decoder *decoder) {
