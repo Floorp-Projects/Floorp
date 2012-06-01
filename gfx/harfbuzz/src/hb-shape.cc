@@ -121,6 +121,8 @@ hb_shape_full (hb_font_t          *font,
 	       unsigned int        num_features,
 	       const char * const *shaper_list)
 {
+  hb_font_make_immutable (font); /* So we can safely cache stuff on it */
+
   if (likely (!shaper_list)) {
     for (unsigned int i = 0; i < ARRAY_LENGTH (shapers); i++)
       if (likely (shapers[i].func (font, buffer, features, num_features)))

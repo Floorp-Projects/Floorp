@@ -85,7 +85,6 @@ hb_unicode_compose_nil (hb_unicode_funcs_t *ufuncs    HB_UNUSED,
 			hb_codepoint_t     *ab        HB_UNUSED,
 			void               *user_data HB_UNUSED)
 {
-  /* TODO handle Hangul jamo here? */
   return FALSE;
 }
 
@@ -96,7 +95,6 @@ hb_unicode_decompose_nil (hb_unicode_funcs_t *ufuncs    HB_UNUSED,
 			  hb_codepoint_t     *b         HB_UNUSED,
 			  void               *user_data HB_UNUSED)
 {
-  /* TODO handle Hangul jamo here? */
   return FALSE;
 }
 

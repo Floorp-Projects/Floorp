@@ -114,5 +114,43 @@ _hb_unicode_is_variation_selector (hb_codepoint_t unicode)
 		   (unicode >= 0xE0100 && unicode <= 0xE01EF));  /* VARIATION SELECTOR-17..256 */
 }
 
+/* Zero-Width invisible characters:
+ *
+ *  00AD  SOFT HYPHEN
+ *  034F  COMBINING GRAPHEME JOINER
+ *
+ *  200B  ZERO WIDTH SPACE
+ *  200C  ZERO WIDTH NON-JOINER
+ *  200D  ZERO WIDTH JOINER
+ *  200E  LEFT-TO-RIGHT MARK
+ *  200F  RIGHT-TO-LEFT MARK
+ *
+ *  2028  LINE SEPARATOR
+ *
+ *  202A  LEFT-TO-RIGHT EMBEDDING
+ *  202B  RIGHT-TO-LEFT EMBEDDING
+ *  202C  POP DIRECTIONAL FORMATTING
+ *  202D  LEFT-TO-RIGHT OVERRIDE
+ *  202E  RIGHT-TO-LEFT OVERRIDE
+ *
+ *  2060  WORD JOINER
+ *  2061  FUNCTION APPLICATION
+ *  2062  INVISIBLE TIMES
+ *  2063  INVISIBLE SEPARATOR
+ *
+ *  FEFF  ZERO WIDTH NO-BREAK SPACE
+ */
+static inline hb_bool_t
+_hb_unicode_is_zero_width (hb_codepoint_t ch)
+{
+  return ((ch & ~0x007F) == 0x2000 && (
+	  (ch >= 0x200B && ch <= 0x200F) ||
+	  (ch >= 0x202A && ch <= 0x202E) ||
+	  (ch >= 0x2060 && ch <= 0x2063) ||
+	  (ch == 0x2028)
+	 )) || unlikely (ch == 0x00AD
+		      || ch == 0x034F
+		      || ch == 0xFEFF);
+}
 
 #endif /* HB_UNICODE_PRIVATE_HH */

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2011,2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -47,9 +47,8 @@ struct maxp
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return c->check_struct (this) &&
-	   likely (version.major == 1 ||
-		   (version.major == 0 && version.minor == 0x5000));
+    return TRACE_RETURN (c->check_struct (this) &&
+			 likely (version.major == 1 || (version.major == 0 && version.minor == 0x5000)));
   }
 
   /* We only implement version 0.5 as none of the extra fields in version 1.0 are useful. */
