@@ -777,7 +777,7 @@ public class AwesomeBarTabs extends TabHost {
         View indicatorView = mInflater.inflate(R.layout.awesomebar_tab_indicator, null);
         Drawable background = indicatorView.getBackground();
         try {
-            background.setColorFilter(new LightingColorFilter(Color.WHITE, GeckoApp.mBrowserToolbar.getHighlightColor()));
+            background.setColorFilter(new LightingColorFilter(Color.WHITE, 0xFFFF9500));
         } catch (Exception e) {
             Log.d(LOGTAG, "background.setColorFilter failed " + e);            
         }

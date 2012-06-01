@@ -7,7 +7,7 @@
 #define MOZILLA_A11Y_HTMLFormControlAccessible_H_
 
 #include "FormControlAccessible.h"
-#include "nsHyperTextAccessibleWrap.h"
+#include "HyperTextAccessibleWrap.h"
 
 namespace mozilla {
 namespace a11y {
@@ -64,7 +64,7 @@ public:
  * Accessible for HTML input@type="button", @type="submit", @type="image"
  * and HTML button elements.
  */
-class HTMLButtonAccessible : public nsHyperTextAccessibleWrap
+class HTMLButtonAccessible : public HyperTextAccessibleWrap
 {
 
 public:
@@ -93,7 +93,7 @@ public:
 /**
  * Accessible for HTML input@type="text" element.
  */
-class HTMLTextFieldAccessible : public nsHyperTextAccessibleWrap
+class HTMLTextFieldAccessible : public HyperTextAccessibleWrap
 {
 
 public:
@@ -107,7 +107,7 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
-  // nsHyperTextAccessible
+  // HyperTextAccessible
   virtual already_AddRefed<nsIEditor> GetEditor() const;
 
   // Accessible
@@ -130,7 +130,7 @@ public:
 /**
  * Accessible for input@type="file" element.
  */
-class HTMLFileInputAccessible : public nsHyperTextAccessibleWrap
+class HTMLFileInputAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLFileInputAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -143,7 +143,7 @@ public:
 /**
  * Accessible for HTML fieldset element.
  */
-class HTMLGroupboxAccessible : public nsHyperTextAccessibleWrap
+class HTMLGroupboxAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -161,7 +161,7 @@ protected:
 /**
  * Accessible for HTML legend element.
  */
-class HTMLLegendAccessible : public nsHyperTextAccessibleWrap
+class HTMLLegendAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLLegendAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -174,7 +174,7 @@ public:
 /**
  * Accessible for HTML5 figure element.
  */
-class HTMLFigureAccessible : public nsHyperTextAccessibleWrap
+class HTMLFigureAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLFigureAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -193,7 +193,7 @@ protected:
 /**
  * Accessible for HTML5 figcaption element.
  */
-class HTMLFigcaptionAccessible : public nsHyperTextAccessibleWrap
+class HTMLFigcaptionAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLFigcaptionAccessible(nsIContent* aContent, DocAccessible* aDoc);

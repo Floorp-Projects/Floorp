@@ -2042,12 +2042,12 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj_)
     /* Initialize any classes that have not been initialized yet. */
     for (unsigned i = 0; standard_class_atoms[i].init; i++) {
         const JSStdName &stdnm = standard_class_atoms[i];
-        if (!js::IsStandardClassResolved(obj, stdnm.clasp) &&
+        if (!js::IsStandardClassResolved(obj, stdnm.clasp)
 #if JS_HAS_XML_SUPPORT
-            ((stdnm.init != js_InitXMLClass &&
-              stdnm.init != js_InitNamespaceClass &&
-              stdnm.init != js_InitQNameClass) ||
-             VersionHasAllowXML(cx->findVersion()))
+            && ((stdnm.init != js_InitXMLClass &&
+                 stdnm.init != js_InitNamespaceClass &&
+                 stdnm.init != js_InitQNameClass) ||
+                VersionHasAllowXML(cx->findVersion()))
 #endif
             )
         {

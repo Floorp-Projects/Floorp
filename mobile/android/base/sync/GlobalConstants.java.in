@@ -14,4 +14,6 @@ public class GlobalConstants {
 
   public static final String USER_AGENT = "Firefox AndroidSync " + SYNC_VERSION_STRING +
                                           " (" + PRODUCT_NAME + ")";
+  public static final String BROWSER_INTENT_PACKAGE = "@ANDROID_PACKAGE_NAME@";
+  public static final String BROWSER_INTENT_CLASS = BROWSER_INTENT_PACKAGE + ".App";
 }

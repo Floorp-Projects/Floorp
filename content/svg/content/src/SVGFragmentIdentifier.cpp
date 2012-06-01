@@ -70,8 +70,8 @@ SVGFragmentIdentifier::RestoreOldViewBox(nsSVGSVGElement *root)
 void 
 SVGFragmentIdentifier::SaveOldZoomAndPan(nsSVGSVGElement *root)
 {
-  const PRUint16 *oldZoomAndPanPtr = root->GetZoomAndPanProperty();
-  if (!oldZoomAndPanPtr) {
+  PRUint16 oldZoomAndPan = root->GetZoomAndPanProperty();
+  if (oldZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_UNKNOWN) {
     root->SetZoomAndPanProperty(root->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].GetBaseValue());
   }
 }
@@ -79,9 +79,9 @@ SVGFragmentIdentifier::SaveOldZoomAndPan(nsSVGSVGElement *root)
 void 
 SVGFragmentIdentifier::RestoreOldZoomAndPan(nsSVGSVGElement *root)
 {
-  const PRUint16 *oldZoomAndPanPtr = root->GetZoomAndPanProperty();
-  if (oldZoomAndPanPtr) {
-    root->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].SetBaseValue(*oldZoomAndPanPtr, root);
+  PRUint16 oldZoomAndPan = root->GetZoomAndPanProperty();
+  if (oldZoomAndPan != nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_UNKNOWN) {
+    root->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].SetBaseValue(oldZoomAndPan, root);
     root->ClearZoomAndPanProperty();
   }
 }
@@ -108,7 +108,10 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString &aViewSpec,
   CharTokenizer<';'>tokenizer(
     Substring(aViewSpec, bracketPos + 1, aViewSpec.Length() - bracketPos - 2));
 
-  while (tokenizer.hasMoreTokens()) {
+  if (!tokenizer.hasMoreTokens()) {
+    return false;
+  }
+  do {
 
     nsAutoString token(tokenizer.nextToken());
 
@@ -140,7 +143,7 @@ SVGFragmentIdentifier::ProcessSVGViewSpec(const nsAString &aViewSpec,
       // We don't support transform or viewTarget currently
       return false;
     }
-  }
+  } while (tokenizer.hasMoreTokens());
 
   if (viewBoxParams) {
     SaveOldViewBox(root);
@@ -208,10 +211,12 @@ SVGFragmentIdentifier::ProcessFragmentIdentifier(nsIDocument *aDocument,
     } else {
       RestoreOldZoomAndPan(rootElement);
     }
+    rootElement->mUseCurrentView = true;
     return true;
   }
 
-  if (ProcessSVGViewSpec(aAnchorName, rootElement)) {
+  rootElement->mUseCurrentView = ProcessSVGViewSpec(aAnchorName, rootElement);
+  if (rootElement->mUseCurrentView) {
     return true;
   }
   RestoreOldViewBox(rootElement);
