@@ -105,7 +105,9 @@ let DebuggerController = {
     if (!Prefs.remoteAutoConnect) {
       let prompt = new RemoteDebuggerPrompt();
       let result = prompt.show(!!this._remoteConnectionTimeout);
-      if (!result) {
+      // If the connection was not established before the user canceled the
+      // prompt, close the remote debugger.
+      if (!result && !DebuggerController.activeThread) {
         this.dispatchEvent("Debugger:Close");
         return false;
       }

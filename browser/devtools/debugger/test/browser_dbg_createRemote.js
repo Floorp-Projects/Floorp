@@ -55,7 +55,7 @@ function test() {
   },
   function beforeTabAdded() {
     if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
+      DebuggerServer.init(function() { return true; });
       DebuggerServer.addBrowserActors();
     }
     DebuggerServer.closeListener();

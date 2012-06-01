@@ -59,25 +59,34 @@ var DebuggerServer = {
   _listener: null,
   _transportInitialized: false,
   xpcInspector: null,
+  _allowConnection: null,
 
   /**
    * Initialize the debugger server.
+   *
+   * @param function aAllowConnectionCallback
+   *        The embedder-provider callback, that decides whether an incoming
+   *        remote protocol conection should be allowed or refused.
    */
-  init: function DH_init() {
+  init: function DH_init(aAllowConnectionCallback) {
     if (this.initialized) {
       return;
     }
 
     this.xpcInspector = Cc["@mozilla.org/jsinspector;1"].getService(Ci.nsIJSInspector);
-    this.initTransport();
+    this.initTransport(aAllowConnectionCallback);
     this.addActors("chrome://global/content/devtools/dbg-script-actors.js");
   },
 
   /**
    * Initialize the debugger server's transport variables.  This can be
    * in place of init() for cases where the jsdebugger isn't needed.
+   *
+   * @param function aAllowConnectionCallback
+   *        The embedder-provider callback, that decides whether an incoming
+   *        remote protocol conection should be allowed or refused.
    */
-  initTransport: function DH_initTransport() {
+  initTransport: function DH_initTransport(aAllowConnectionCallback) {
     if (this._transportInitialized) {
       return;
     }
@@ -85,6 +94,7 @@ var DebuggerServer = {
     this._connections = {};
     this._nextConnID = 0;
     this._transportInitialized = true;
+    this._allowConnection = aAllowConnectionCallback;
   },
 
   get initialized() { return !!this.xpcInspector; },
@@ -117,6 +127,9 @@ var DebuggerServer = {
    *        If true, server will listen on the loopback device.
    */
   openListener: function DH_openListener(aPort, aLocalOnly) {
+    if (!Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
+      return false;
+    }
     this._checkInit();
 
     if (this._listener) {
@@ -209,6 +222,9 @@ var DebuggerServer = {
    * after connectPipe() or after an incoming socket connection.
    */
   _onConnection: function DH_onConnection(aTransport) {
+    if (!this._allowConnection()) {
+      return;
+    }
     let connID = "conn" + this._nextConnID++ + '.';
     let conn = new DebuggerServerConnection(connID, aTransport);
     this._connections[connID] = conn;
