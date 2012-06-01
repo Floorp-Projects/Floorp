@@ -1,7 +1,7 @@
 diff --git a/mfbt/double-conversion/utils.h b/mfbt/double-conversion/utils.h
 --- a/mfbt/double-conversion/utils.h
 +++ b/mfbt/double-conversion/utils.h
-@@ -48,17 +48,21 @@
+@@ -48,20 +48,24 @@
  // An easy way to test if the floating-point operations are correct is to
  // evaluate: 89255.0/1e22. If the floating-point stack is 64 bits wide then
  // the result is equal to 89255e-22.
@@ -14,13 +14,17 @@ diff --git a/mfbt/double-conversion/utils.h b/mfbt/double-conversion/utils.h
 +    defined(__ARMEL__) || defined(__avr32__) || \
 +    defined(__hppa__) || defined(__ia64__) || \
 +    defined(__mips__) || defined(__powerpc__) || \
-+    defined(__sparc__) || defined(__s390__) || \
++    defined(__sparc__) || defined(__sparc) || defined(__s390__) || \
 +    defined(__SH4__) || defined(__alpha__) || \
      defined(_MIPS_ARCH_MIPS32R2)
  #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
- #elif defined(_M_IX86) || defined(__i386__)
+-#elif defined(_M_IX86) || defined(__i386__)
++#elif defined(_M_IX86) || defined(__i386__) || defined(__i386)
  #if defined(_WIN32)
  // Windows uses a 64bit wide floating point stack.
  #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
  #else
  #undef DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS
+ #endif  // _WIN32
+ #else
+ #error Target architecture was not detected as supported by Double-Conversion.
