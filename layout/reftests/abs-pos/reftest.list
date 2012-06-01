@@ -8,7 +8,7 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated) == au
 == continuation-positioned-inline-1.html continuation-positioned-inline-ref.html
 == continuation-positioned-inline-2.html continuation-positioned-inline-ref.html
 == scrollframe-1.html scrollframe-1-ref.html
-== scrollframe-2.html scrollframe-2-ref.html
+fuzzy-if(Android,9,39) == scrollframe-2.html scrollframe-2-ref.html #bug 756530
 == select-1.html select-1-ref.html
 == select-1-dynamic.html select-1-ref.html
 == select-2.html select-2-ref.html
