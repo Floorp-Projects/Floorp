@@ -667,8 +667,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       nsWSRunObject wsRunObj(this, selNode, selOffset);
       PRInt32 outVisOffset=0;
       PRInt16 visType=0;
-      rv = wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode), &outVisOffset, &visType);
-      NS_ENSURE_SUCCESS(rv, rv);
+      wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
+                                &outVisOffset, &visType);
       if (visType == nsWSRunObject::eBreak)
       {
         // we are after a break.  Is it visible?  Despite the name, 
@@ -682,8 +682,8 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
           rv = GetNodeLocation(wsRunObj.mStartReasonNode, address_of(selNode), &selOffset);
           // we want to be inside any inline style prior to break
           nsWSRunObject wsRunObj(this, selNode, selOffset);
-          rv = wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode), &outVisOffset, &visType);
-          NS_ENSURE_SUCCESS(rv, rv);
+          wsRunObj.PriorVisibleNode(selNode, selOffset, address_of(visNode),
+                                    &outVisOffset, &visType);
           if (visType == nsWSRunObject::eText ||
               visType == nsWSRunObject::eNormalWS)
           {

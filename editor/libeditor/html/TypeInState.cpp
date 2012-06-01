@@ -211,16 +211,18 @@ TypeInState::TakeRelativeFontSize()
   return relSize;
 }
 
-nsresult TypeInState::GetTypingState(bool &isSet, bool &theSetting, nsIAtom *aProp)
+void
+TypeInState::GetTypingState(bool &isSet, bool &theSetting, nsIAtom *aProp)
 {
-  return GetTypingState(isSet, theSetting, aProp, EmptyString(), nsnull);
+  GetTypingState(isSet, theSetting, aProp, EmptyString(), nsnull);
 }
 
-nsresult TypeInState::GetTypingState(bool &isSet, 
-                                     bool &theSetting, 
-                                     nsIAtom *aProp,
-                                     const nsString &aAttr, 
-                                     nsString *aValue)
+void
+TypeInState::GetTypingState(bool &isSet,
+                            bool &theSetting,
+                            nsIAtom *aProp,
+                            const nsString &aAttr,
+                            nsString *aValue)
 {
   if (IsPropSet(aProp, aAttr, aValue))
   {
@@ -236,7 +238,6 @@ nsresult TypeInState::GetTypingState(bool &isSet,
   {
     isSet = false;
   }
-  return NS_OK;
 }
 
 
@@ -245,8 +246,8 @@ nsresult TypeInState::GetTypingState(bool &isSet,
  *                   protected methods
  *******************************************************************/
  
-nsresult TypeInState::RemovePropFromSetList(nsIAtom* aProp,
-                                            const nsAString& aAttr)
+void
+TypeInState::RemovePropFromSetList(nsIAtom* aProp, const nsAString& aAttr)
 {
   PRInt32 index;
   if (!aProp)
@@ -263,12 +264,11 @@ nsresult TypeInState::RemovePropFromSetList(nsIAtom* aProp,
     delete mSetArray[index];
     mSetArray.RemoveElementAt(index);
   }
-  return NS_OK;
 }
 
 
-nsresult TypeInState::RemovePropFromClearedList(nsIAtom* aProp,
-                                                const nsAString& aAttr)
+void
+TypeInState::RemovePropFromClearedList(nsIAtom* aProp, const nsAString& aAttr)
 {
   PRInt32 index;
   if (FindPropInList(aProp, aAttr, nsnull, mClearedArray, index))
@@ -276,7 +276,6 @@ nsresult TypeInState::RemovePropFromClearedList(nsIAtom* aProp,
     delete mClearedArray[index];
     mClearedArray.RemoveElementAt(index);
   }
-  return NS_OK;
 }
 
 

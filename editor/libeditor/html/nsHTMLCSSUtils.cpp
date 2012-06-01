@@ -1279,11 +1279,10 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
   return NS_OK;
 }
 
-nsresult
+void
 nsHTMLCSSUtils::SetCSSEnabled(bool aIsCSSPrefChecked)
 {
   mIsCSSPrefChecked = aIsCSSPrefChecked;
-  return NS_OK;
 }
 
 bool
