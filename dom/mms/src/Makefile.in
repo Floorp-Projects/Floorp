@@ -13,6 +13,8 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_B2G_RIL
 EXTRA_JS_MODULES = \
+  ril/mms_consts.js \
+  ril/MmsPduHelper.jsm \
   ril/wap_consts.js \
   ril/WapPushManager.js \
   ril/WspPduHelper.jsm \
