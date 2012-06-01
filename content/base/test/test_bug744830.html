@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=744830
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=166235">Mozilla Bug 166235</a>
+<div id="testnodes"><span>hi</span> there <!-- mon ami --></div>
+<pre id="test">
+<script type="application/javascript">
+  var t = document.getElementById('testnodes');
+  is(t.innerHTML, 
+     "<span>hi</span> there <!-- mon ami -->",
+     "comment nodes should be included");
+
+  var PI = document.createProcessingInstruction('foo', 'bar="1.0"');
+  t.appendChild(PI);
+  is(t.innerHTML, '<span>hi</span> there <!-- mon ami --><?foo bar="1.0">',
+    "pi nodes should be included");
+
+  t.innerHTML = null;
+  t.appendChild(document.createElement("textarea"));
+  t.firstChild.appendChild(document.createTextNode("\nhello"));
+  // This is the old behavior. Spec requires something else.
+  is(t.innerHTML, "<textarea>\nhello</textarea>",
+     "No extra newlines should be inserted to the textarea!");
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "svg:svg"));
+  t.firstChild.textContent = "<foo>";
+  is(t.innerHTML, "<svg>&lt;foo&gt;</svg>");
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "math:math"));
+  t.firstChild.textContent = "<foo>";
+  is(t.innerHTML, "<math>&lt;foo&gt;</math>");
+
+  // Prefix is serialized if element isn't HTML/SVG/MathML  
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.example.org", "ex:example"));
+  t.firstChild.textContent = "<foo>";
+  is(t.innerHTML, "<ex:example>&lt;foo&gt;</ex:example>");
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.example.org", "example"));
+  t.firstChild.textContent = "<foo>";
+  is(t.innerHTML, "<example>&lt;foo&gt;</example>");
+
+  t.firstChild.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:lang", "us-en");
+  is(t.innerHTML, '<example xml:lang="us-en">&lt;foo&gt;</example>');
+
+  t.firstChild.setAttributeNS("http://www.w3.org/1999/xlink", "href", "foo");
+  is(t.innerHTML, '<example xlink:href="foo" xml:lang="us-en">&lt;foo&gt;</example>');
+
+  t.firstChild.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://foo");
+  is(t.innerHTML, '<example xmlns="http://foo" xlink:href="foo" xml:lang="us-en">&lt;foo&gt;</example>');
+
+  t.firstChild.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:bar", "http://bar");
+  is(t.innerHTML, '<example xmlns:bar="http://bar" xmlns="http://foo" xlink:href="foo" xml:lang="us-en">&lt;foo&gt;</example>');
+  
+  t.firstChild.setAttributeNS("http://www.helloworldns.org", "hello:world", "!");
+  is(t.innerHTML, '<example hello:world="!" xmlns:bar="http://bar" xmlns="http://foo" xlink:href="foo" xml:lang="us-en">&lt;foo&gt;</example>');
+
+  t.firstChild.setAttribute("foo", '-"&\xA0-');
+  is(t.innerHTML, '<example foo="-&quot;&amp;&nbsp;-" hello:world="!" xmlns:bar="http://bar" xmlns="http://foo" xlink:href="foo" xml:lang="us-en">&lt;foo&gt;</example>');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElement("div"));
+  t.firstChild.appendChild(document.implementation
+                                   .createDocument(null, null, null)
+                                   .createCDATASection("foo"));
+  is(t.innerHTML, '<div>foo</div>');
+
+  t.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<div>1&amp;2&lt;3&gt;4&nbsp;</div>');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElement("script"));
+  t.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<script>1&2<3>4\xA0\u003C/script>');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElement("style"));
+  t.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<style>1&2<3>4\xA0\u003C/style>');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  is(t.firstChild.namespaceURI, "http://www.w3.org/2000/svg");
+  t.firstChild.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "script"));
+  is(t.firstChild.firstChild.namespaceURI, "http://www.w3.org/2000/svg");
+  t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<svg><script>1&amp;2&lt;3&gt;4&nbsp;\u003C/script></svg>');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+  is(t.firstChild.namespaceURI, "http://www.w3.org/2000/svg");
+  t.firstChild.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "style"));
+  is(t.firstChild.firstChild.namespaceURI, "http://www.w3.org/2000/svg");
+  t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<svg><style>1&amp;2&lt;3&gt;4&nbsp;\u003C/style></svg>');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "math"));
+  is(t.firstChild.namespaceURI, "http://www.w3.org/1998/Math/MathML");
+  t.firstChild.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "script"));
+  is(t.firstChild.firstChild.namespaceURI, "http://www.w3.org/1998/Math/MathML");
+  t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<math><script>1&amp;2&lt;3&gt;4&nbsp;\u003C/script></math>');
+
+  t.innerHTML = null;
+  t.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "math"));
+  is(t.firstChild.namespaceURI, "http://www.w3.org/1998/Math/MathML");
+  t.firstChild.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "style"));
+  is(t.firstChild.firstChild.namespaceURI, "http://www.w3.org/1998/Math/MathML");
+  t.firstChild.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<math><style>1&amp;2&lt;3&gt;4&nbsp;\u003C/style></math>');
+</script>
+</pre>
+</body>
+</html>
+
