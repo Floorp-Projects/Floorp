@@ -327,6 +327,10 @@ OutputPanel.prototype._onload = function OP_onload()
   this._div.classList.add('gcli-row-out');
   this._div.setAttribute('aria-live', 'assertive');
 
+  let styles = this._toolbar.ownerDocument.defaultView
+                  .getComputedStyle(this._toolbar);
+  this._div.setAttribute("dir", styles.direction);
+
   this.loaded = true;
   if (this._loadCallback) {
     this._loadCallback();
@@ -500,6 +504,10 @@ TooltipPanel.prototype._onload = function TP_onload()
   this.document = this._frame.contentDocument;
   this.hintElement = this.document.getElementById("gcli-tooltip-root");
   this._connector = this.document.getElementById("gcli-tooltip-connector");
+
+  let styles = this._toolbar.ownerDocument.defaultView
+                  .getComputedStyle(this._toolbar);
+  this.hintElement.setAttribute("dir", styles.direction);
 
   this.loaded = true;
 
