@@ -231,7 +231,7 @@ bool OmxDecoder::Init() {
   sp<MediaSource> videoTrack;
   sp<MediaSource> audioTrack;
   const char *audioMime = NULL;
-  int32_t audioChannels = 0, audioSampleRate = 0;
+  bool audioMetaFound = false;
 
   for (size_t i = 0; i < extractor->countTracks(); ++i) {
     sp<MetaData> meta = extractor->getTrackMetaData(i);
@@ -250,10 +250,13 @@ bool OmxDecoder::Init() {
     } else if (audioTrack == NULL && !strncasecmp(mime, "audio/", 6)) {
       audioTrack = extractor->getTrack(i);
       audioMime = mime;
-      if (!meta->findInt32(kKeyChannelCount, &audioChannels) ||
-          !meta->findInt32(kKeySampleRate, &audioSampleRate)) {
+      if (!meta->findInt32(kKeyChannelCount, &mAudioChannels) ||
+          !meta->findInt32(kKeySampleRate, &mAudioSampleRate)) {
         return false;
       }
+      audioMetaFound = true;
+      LOG("channelCount: %d sampleRate: %d",
+           mAudioChannels, mAudioSampleRate);
     }
   }
 
@@ -322,7 +325,7 @@ bool OmxDecoder::Init() {
   if (mVideoSource.get() && !SetVideoFormat())
     return false;
 
-  if (mAudioSource.get() && !SetAudioFormat())
+  if (!audioMetaFound && mAudioSource.get() && !SetAudioFormat())
     return false;
 
   return true;
