@@ -206,6 +206,11 @@ public:
    */
   void ChooseActionTime();
   /**
+   * Update the consumption state of aStream to reflect whether its data
+   * is needed or not.
+   */
+  void UpdateConsumptionState(SourceMediaStream* aStream);
+  /**
    * Extract any state updates pending in aStream, and apply them.
    */
   void ExtractPendingInput(SourceMediaStream* aStream);
@@ -610,6 +615,22 @@ void
 MediaStreamGraphImpl::ChooseActionTime()
 {
   mLastActionTime = GetEarliestActionTime();
+}
+
+void
+MediaStreamGraphImpl::UpdateConsumptionState(SourceMediaStream* aStream)
+{
+  bool isConsumed = !aStream->mAudioOutputs.IsEmpty() ||
+    !aStream->mVideoOutputs.IsEmpty();
+  MediaStreamListener::Consumption state = isConsumed ? MediaStreamListener::CONSUMED
+    : MediaStreamListener::NOT_CONSUMED;
+  if (state != aStream->mLastConsumptionState) {
+    aStream->mLastConsumptionState = state;
+    for (PRUint32 j = 0; j < aStream->mListeners.Length(); ++j) {
+      MediaStreamListener* l = aStream->mListeners[j];
+      l->NotifyConsumptionChanged(this, state);
+    }
+  }
 }
 
 void
@@ -1267,6 +1288,7 @@ MediaStreamGraphImpl::RunThread()
     for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
       SourceMediaStream* is = mStreams[i]->AsSourceStream();
       if (is) {
+        UpdateConsumptionState(is);
         ExtractPendingInput(is);
       }
     }
