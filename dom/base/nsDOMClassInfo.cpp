@@ -518,6 +518,8 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #undef None // something included above defines this preprocessor symbol, maybe Xlib headers
 #include "WebGLContext.h"
 
+#include "nsIDOMGlobalObjectConstructor.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -5634,7 +5636,8 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
   }
 
   nsCOMPtr<nsIJSNativeInitializer> initializer(do_QueryInterface(native));
-  if (initializer) {
+  nsCOMPtr<nsIDOMGlobalObjectConstructor> constructor(do_QueryInterface(native));
+  if (initializer || constructor) {
     // Initialize object using the current inner window, but only if
     // the caller can access it.
     nsCOMPtr<nsPIDOMWindow> owner = do_QueryReferent(aWeakOwner);
@@ -5647,9 +5650,61 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    rv = initializer->Initialize(currentInner, cx, obj, argc, argv);
-    if (NS_FAILED(rv)) {
-      return rv;
+    if (initializer) {
+      rv = initializer->Initialize(currentInner, cx, obj, argc, argv);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    } else {
+      nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(native);
+
+      JSObject* object = nsnull;
+      wrappedJS->GetJSObject(&object);
+      if (!object) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      nsCxPusher pusher;
+      NS_ENSURE_STATE(pusher.Push(cx, false));
+
+      JSAutoRequest ar(cx);
+
+      JSAutoEnterCompartment ac;
+      if (!ac.enter(cx, object)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      JS::Value thisValue = JSVAL_VOID;
+      JS::Value funval;
+      if (!JS_GetProperty(cx, object, "constructor", &funval) || !funval.isObject()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      // Check if the object is even callable.
+      NS_ENSURE_STATE(JS_ObjectIsCallable(cx, &funval.toObject()));
+      thisValue.setObject(*object);
+
+      {
+        JSObject* thisObject = &thisValue.toObject();
+
+        // wrap parameters in the target compartment
+        nsAutoArrayPtr<JS::Value> args(new JS::Value[argc]);
+        JS::AutoArrayRooter rooter(cx, 0, args);
+
+        for (size_t i = 0; i < argc; ++i) {
+          args[i] = argv[i];
+          if (!JS_WrapValue(cx, &args[i]))
+            return NS_ERROR_FAILURE;
+          rooter.changeLength(i + 1);
+        }
+
+        JS::Value frval;
+        bool ret = JS_CallFunctionValue(cx, thisObject, funval, argc, args, &frval);
+
+        if (!ret) {
+        	return NS_ERROR_FAILURE;
+        }
+      }
     }
   }
 
