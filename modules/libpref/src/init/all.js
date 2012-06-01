@@ -3450,14 +3450,6 @@ pref("layers.acceleration.force-enabled", false);
 
 pref("layers.acceleration.draw-fps", false);
 
-// An environment variable (MOZ_USE_OMTC)is used instead of a pref on X11 
-// platforms because we start having access to prefs long after the first 
-// call to XOpenDisplay which is hard to change due to interdependencies 
-// in the initialization (see bug 722012 for more details).
-#ifndef MOZ_X11
-pref("layers.offmainthreadcomposition.enabled", false);
-#endif
-
 #ifdef MOZ_X11
 #ifdef MOZ_WIDGET_GTK2
 pref("gfx.xrender.enabled",true);
