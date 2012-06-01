@@ -1839,7 +1839,9 @@ Tab.prototype = {
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
     this.setResolution(aViewport.zoom, false);
-    this.setDisplayPort(aViewport.displayPort);
+
+    if (aViewport.displayPort)
+      this.setDisplayPort(aViewport.displayPort);
   },
 
   setResolution: function(aZoom, aForce) {
@@ -3225,7 +3227,7 @@ var FindHelper = {
       this._targetTab = BrowserApp.selectedTab;
       this._find = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
       this._find.init(this._targetTab.browser.docShell);
-      this._initialViewport = JSON.stringify(this._targetTab.viewport);
+      this._initialViewport = JSON.stringify(this._targetTab.getViewport());
       this._viewportChanged = false;
     }
 
@@ -3260,7 +3262,7 @@ var FindHelper = {
           Cu.reportError("Warning: selected tab changed during find!");
           // fall through and restore viewport on the initial tab anyway
         }
-        this._targetTab.viewport = JSON.parse(this._initialViewport);
+        this._targetTab.setViewport(JSON.parse(this._initialViewport));
         this._targetTab.sendViewportUpdate();
       }
     } else {
