@@ -94,12 +94,24 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStreamListener)
 
+  enum Consumption {
+    CONSUMED,
+    NOT_CONSUMED
+  };
+  /**
+   * Notify that the stream is hooked up and we'd like to start or stop receiving
+   * data on it. Only fires on SourceMediaStreams.
+   * The initial state is assumed to be NOT_CONSUMED.
+   */
+  virtual void NotifyConsumptionChanged(MediaStreamGraph* aGraph, Consumption aConsuming) {}
+
   enum Blocking {
     BLOCKED,
     UNBLOCKED
   };
   /**
-   * Notify that the blocking status of the stream changed.
+   * Notify that the blocking status of the stream changed. The initial state
+   * is assumed to be BLOCKED.
    */
   virtual void NotifyBlockingChanged(MediaStreamGraph* aGraph, Blocking aBlocked) {}
 
@@ -371,8 +383,11 @@ protected:
 class SourceMediaStream : public MediaStream {
 public:
   SourceMediaStream(nsDOMMediaStream* aWrapper) :
-    MediaStream(aWrapper), mMutex("mozilla::media::SourceMediaStream"),
-    mUpdateKnownTracksTime(0), mUpdateFinished(false), mDestroyed(false)
+    MediaStream(aWrapper),
+    mLastConsumptionState(MediaStreamListener::NOT_CONSUMED),
+    mMutex("mozilla::media::SourceMediaStream"),
+    mUpdateKnownTracksTime(0),
+    mUpdateFinished(false), mDestroyed(false)
   {}
 
   virtual SourceMediaStream* AsSourceStream() { return this; }
@@ -470,6 +485,9 @@ protected:
     NS_ERROR("Bad track ID!");
     return nsnull;
   }
+
+  // Media stream graph thread only
+  MediaStreamListener::Consumption mLastConsumptionState;
 
   // This must be acquired *before* MediaStreamGraphImpl's lock, if they are
   // held together.
