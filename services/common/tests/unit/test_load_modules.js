@@ -12,6 +12,7 @@ const modules = [
 ];
 
 const test_modules = [
+  "aitcserver.js",
   "storageserver.js",
 ];
 
