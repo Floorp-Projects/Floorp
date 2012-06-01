@@ -2,10 +2,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#gclichrome-body {
+.gcli-body {
   margin: 0;
-  padding: 0;
   font: message-box;
+  color: hsl(210,30%,85%);
+}
+
+#gcli-output-root,
+#gcli-tooltip-root {
+  border: 1px solid hsl(210,11%,10%);
+  box-shadow: 0 1px 0 hsla(209,29%,72%,.25) inset;
+  background-image: -moz-linear-gradient(top, hsla(209,11%,18%,0.9), hsl(210,11%,16%));
+  border-radius: 3px;
+}
+
+#gcli-output-root {
+  padding: 5px 10px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 0;
+}
+
+#gcli-tooltip-root {
+  padding: 5px 0px;
+}
+
+#gcli-tooltip-connector {
+  margin-top: -1px;
+  margin-left: 8px;
+  width: 20px;
+  height: 0;
+  border-left: 1px solid hsl(210,11%,10%);
+  border-right: 1px solid hsl(210,11%,10%);
+  background-color: hsl(210,11%,16%);
+}
+
+.gcli-tt-description,
+.gcli-tt-error {
+  padding: 0 10px;
 }
 
 .gcli-row-out {
@@ -13,6 +47,7 @@
   line-height: 1.2em;
   border-top: none;
   border-bottom: none;
+  color: hsl(210,30%,85%);
 }
 
 .gcli-row-out p,
@@ -22,43 +57,35 @@
   margin: 5px 0;
 }
 
-.gcli-out-shortcut {
-  border: 1px solid #999;
-  border-radius: 3px;
-  padding: 1px 4px 0;
+.gcli-row-out h1,
+.gcli-row-out h2,
+.gcli-row-out h3,
+.gcli-row-out h4,
+.gcli-row-out h5,
+.gcli-row-out th,
+.gcli-row-out strong {
+  color: hsl(210,30%,95%);
+}
+
+.gcli-out-shortcut,
+.gcli-help-synopsis {
+  padding: 0 3px;
   margin: 0 4px;
-  font-size: 80%;
-  font-family: monospace;
-  cursor: pointer;
-  vertical-align: bottom;
-  white-space: pre;
-  background-color: #fff;
+  font-weight: normal;
+  font-size: 90%;
+  border-radius: 3px;
+  background-color: hsl(210,11%,16%);
+  border: 1px solid hsl(210,11%,10%);
 }
 
-.gcli-out-shortcut:before {
-  color: #66F;
-  content: '\bb';
+.gcli-out-shortcut:before,
+.gcli-help-synopsis:before {
+  color: hsl(210,30%,85%);
+  -moz-padding-end: 2px;
 }
-
-
-/* From: $GCLI/lib/gcli/commands/help.css */
 
 .gcli-help-arrow {
-  font-size: 70%;
-  color: #AAA;
-}
-
-.gcli-help-synopsis {
-  font-family: monospace;
-  font-weight: normal;
-  padding: 0 3px;
-  margin: 0 10px;
-  border: 1px solid #999;
-  border-radius: 3px;
-}
-
-.gcli-help-synopsis:before {
-  color: #66F;
+  color: #666;
 }
 
 .gcli-help-description {
@@ -75,31 +102,22 @@
   margin: 10px 0 6px;
 }
 
-
-/* From: $GCLI/lib/gcli/ui/fields/menu.css */
-
 .gcli-menu-name {
   -moz-padding-start: 8px;
 }
 
 .gcli-menu-desc {
   -moz-padding-end: 8px;
-  color: #999;
+  color: hsl(210,30%,75%);
 }
 
 .gcli-menu-option:hover {
-  background-color: #EEE;
+  background-color: hsla(0,100%,100%,.1);
 }
 
 .gcli-menu-highlight,
 .gcli-menu-highlight.gcli-menu-option:hover {
-  background-color: #DDD;
-}
-
-.gcli-menu-error {
-  padding: 8px 10px 2px;
-  font-size: 80%;
-  color: red;
+  background-color: hsla(0,0%,0%,.3);
 }
 
 .gcli-menu-typed {

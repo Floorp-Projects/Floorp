@@ -552,3 +552,16 @@ statuspanel[inactive][previoustype=overLink] {
 
 /* highlighter */
 %include highlighter.css
+
+html|*#gcli-tooltip-frame,
+html|*#gcli-output-frame,
+#gcli-output,
+#gcli-tooltip {
+  overflow-x: hidden;
+}
+
+.gclitoolbar-input-node,
+.gclitoolbar-complete-node,
+.gclitoolbar-prompt {
+  direction: ltr;
+}
