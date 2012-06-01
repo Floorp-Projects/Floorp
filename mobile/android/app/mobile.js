@@ -27,7 +27,7 @@ pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
 pref("browser.chromeURL", "chrome://browser/content/");
 
 pref("browser.tabs.warnOnClose", true);
-pref("browser.tabs.remote", true);
+pref("browser.tabs.remote", false);
 
 pref("toolkit.screen.lock", false);
 
