@@ -3137,16 +3137,10 @@ DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
      */
     JS_ASSERT(i >= 0);
     Value arg;
-    if (unsigned(i) < fp->numActualArgs()) {
-        if (unsigned(i) < fp->numFormalArgs() && fp->script()->formalLivesInCallObject(i))
-            arg = fp->callObj().arg(i);
-        else if (fp->script()->argsObjAliasesFormals())
-            arg = fp->argsObj().arg(i);
-        else
-            arg = fp->unaliasedActual(i);
-    } else {
+    if (unsigned(i) < fp->numActualArgs())
+        arg = fp->canonicalActualArg(i);
+    else
         arg.setUndefined();
-    }
 
     if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &arg))
         return false;
@@ -3376,7 +3370,6 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar 
     if (!script)
         return false;
 
-    script->isActiveEval = true;
     return ExecuteKernel(cx, script, *env, fp->thisValue(), EXECUTE_DEBUG, fp, rval);
 }
 

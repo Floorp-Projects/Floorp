@@ -1242,12 +1242,29 @@ struct JSContext : js::ContextFriendFields
     JSObject *enumerators;
 
   private:
-    /* Innermost-executing generator or null if no generator are executing. */
-    JSGenerator *innermostGenerator_;
+    /*
+     * To go from a live generator frame (on the stack) to its generator object
+     * (see comment js_FloatingFrameIfGenerator), we maintain a stack of active
+     * generators, pushing and popping when entering and leaving generator
+     * frames, respectively.
+     */
+    js::Vector<JSGenerator *, 2, js::SystemAllocPolicy> genStack;
+
   public:
-    JSGenerator *innermostGenerator() const { return innermostGenerator_; }
-    void enterGenerator(JSGenerator *gen);
-    void leaveGenerator(JSGenerator *gen);
+    /* Return the generator object for the given generator frame. */
+    JSGenerator *generatorFor(js::StackFrame *fp) const;
+
+    /* Early OOM-check. */
+    inline bool ensureGeneratorStackSpace();
+
+    bool enterGenerator(JSGenerator *gen) {
+        return genStack.append(gen);
+    }
+
+    void leaveGenerator(JSGenerator *gen) {
+        JS_ASSERT(genStack.back() == gen);
+        genStack.popBack();
+    }
 
     inline void* malloc_(size_t bytes) {
         return runtime->malloc_(bytes, this);
@@ -1279,6 +1296,9 @@ struct JSContext : js::ContextFriendFields
 
     void purge();
 
+    /* For DEBUG. */
+    inline void assertValidStackDepth(unsigned depth);
+
     bool isExceptionPending() {
         return throwing;
     }
@@ -1301,6 +1321,12 @@ struct JSContext : js::ContextFriendFields
      * stack iteration; defaults to true.
      */
     bool stackIterAssertionEnabled;
+
+    /*
+     * When greather than zero, it is ok to accessed non-aliased fields of
+     * ScopeObjects because the accesses are coming from the DebugScopeProxy.
+     */
+    unsigned okToAccessUnaliasedBindings;
 #endif
 
     /*
@@ -1336,6 +1362,23 @@ struct JSContext : js::ContextFriendFields
 }; /* struct JSContext */
 
 namespace js {
+
+class AutoAllowUnaliasedVarAccess
+{
+    JSContext *cx;
+  public:
+    AutoAllowUnaliasedVarAccess(JSContext *cx) : cx(cx) {
+#ifdef DEBUG
+        cx->okToAccessUnaliasedBindings++;
+#endif
+    }
+    ~AutoAllowUnaliasedVarAccess() {
+#ifdef DEBUG
+        JS_ASSERT(cx->okToAccessUnaliasedBindings);
+        cx->okToAccessUnaliasedBindings--;
+#endif
+    }
+};
 
 struct AutoResolving {
   public:

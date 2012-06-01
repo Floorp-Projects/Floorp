@@ -338,7 +338,6 @@ class EncapsulatedValue
     bool isDouble() const { return value.isDouble(); }
     bool isString() const { return value.isString(); }
     bool isObject() const { return value.isObject(); }
-    bool isMagic() const { return value.isMagic(); }
     bool isMagic(JSWhyMagic why) const { return value.isMagic(why); }
     bool isGCThing() const { return value.isGCThing(); }
     bool isMarkable() const { return value.isMarkable(); }
@@ -462,14 +461,6 @@ Valueify(const EncapsulatedValue *array)
     JS_STATIC_ASSERT(sizeof(HeapValue) == sizeof(Value));
     JS_STATIC_ASSERT(sizeof(HeapSlot) == sizeof(Value));
     return (const Value *)array;
-}
-
-static inline HeapValue *
-HeapValueify(Value *v)
-{
-    JS_STATIC_ASSERT(sizeof(HeapValue) == sizeof(Value));
-    JS_STATIC_ASSERT(sizeof(HeapSlot) == sizeof(Value));
-    return (HeapValue *)v;
 }
 
 class HeapSlotArray

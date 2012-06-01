@@ -67,7 +67,7 @@ Bindings::lookup(JSContext *cx, JSAtom *name, unsigned *indexp) const
     if (indexp)
         *indexp = shape->shortid();
 
-    if (shape->setter() == CallObject::setArgOp)
+    if (shape->getter() == CallObject::getArgOp)
         return ARGUMENT;
 
     return shape->writable() ? VARIABLE : CONSTANT;
@@ -102,14 +102,14 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
     if (kind == ARGUMENT) {
         JS_ASSERT(nvars == 0);
         indexp = &nargs;
-        getter = NULL;
+        getter = CallObject::getArgOp;
         setter = CallObject::setArgOp;
         slot += nargs;
     } else {
         JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
 
         indexp = &nvars;
-        getter = NULL;
+        getter = CallObject::getVarOp;
         setter = CallObject::setVarOp;
         if (kind == CONSTANT)
             attrs |= JSPROP_READONLY;
@@ -208,7 +208,7 @@ Bindings::getLocalNameArray(JSContext *cx, BindingNames *namesp)
         const Shape &shape = r.front();
         unsigned index = uint16_t(shape.shortid());
 
-        if (shape.setter() == CallObject::setArgOp) {
+        if (shape.getter() == CallObject::getArgOp) {
             JS_ASSERT(index < nargs);
             names[index].kind = ARGUMENT;
         } else {
@@ -221,7 +221,7 @@ Bindings::getLocalNameArray(JSContext *cx, BindingNames *namesp)
             names[index].maybeAtom = JSID_TO_ATOM(shape.propid());
         } else {
             JS_ASSERT(JSID_IS_INT(shape.propid()));
-            JS_ASSERT(shape.setter() == CallObject::setArgOp);
+            JS_ASSERT(shape.getter() == CallObject::getArgOp);
             names[index].maybeAtom = NULL;
         }
     }
@@ -241,7 +241,7 @@ Bindings::lastArgument() const
 
     const js::Shape *shape = lastVariable();
     if (nvars > 0) {
-        while (shape->previous() && shape->setter() != CallObject::setArgOp)
+        while (shape->previous() && shape->getter() != CallObject::getArgOp)
             shape = shape->previous();
     }
     return shape;
@@ -604,10 +604,10 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
             script->bindingsAccessedDynamically = true;
         if (scriptBits & (1 << ArgumentsHasLocalBinding)) {
             PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
-            unsigned local;
-            DebugOnly<BindingKind> kind = script->bindings.lookup(cx, arguments, &local);
+            unsigned slot;
+            DebugOnly<BindingKind> kind = script->bindings.lookup(cx, arguments, &slot);
             JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
-            script->setArgumentsHasLocalBinding(local);
+            script->setArgumentsHasLocalBinding(slot);
         }
         if (scriptBits & (1 << NeedsArgsObj))
             script->setNeedsArgsObj(true);
@@ -1309,12 +1309,17 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         script->debugMode = true;
 #endif
 
-    if (bce->sc->funArgumentsHasLocalBinding()) {
-        // This must precede the script->bindings.transfer() call below
-        script->setArgumentsHasLocalBinding(bce->sc->argumentsLocal());
-        if (bce->sc->funDefinitelyNeedsArgsObj())        
-            script->setNeedsArgsObj(true);
+    if (bce->sc->inFunction) {
+        if (bce->sc->funArgumentsHasLocalBinding()) {
+            // This must precede the script->bindings.transfer() call below.
+            script->setArgumentsHasLocalBinding(bce->sc->argumentsLocalSlot());
+            if (bce->sc->funDefinitelyNeedsArgsObj())
+                script->setNeedsArgsObj(true);
+        } else {
+            JS_ASSERT(!bce->sc->funDefinitelyNeedsArgsObj());
+        }
     } else {
+        JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
         JS_ASSERT(!bce->sc->funDefinitelyNeedsArgsObj());
     }
 
@@ -1801,7 +1806,7 @@ js::CloneScript(JSContext *cx, JSScript *src)
     dst->nslots = src->nslots;
     dst->staticLevel = src->staticLevel;
     if (src->argumentsHasLocalBinding()) {
-        dst->setArgumentsHasLocalBinding(src->argumentsLocal());
+        dst->setArgumentsHasLocalBinding(src->argumentsLocalSlot());
         if (src->analyzedArgsUsage())
             dst->setNeedsArgsObj(src->needsArgsObj());
     }
@@ -2129,10 +2134,10 @@ JSScript::markChildren(JSTracer *trc)
 }
 
 void
-JSScript::setArgumentsHasLocalBinding(uint16_t local)
+JSScript::setArgumentsHasLocalBinding(uint16_t slot)
 {
     argsHasLocalBinding_ = true;
-    argsLocal_ = local;
+    argsSlot_ = slot;
     needsArgsAnalysis_ = true;
 }
 
@@ -2164,7 +2169,7 @@ JSScript::applySpeculationFailed(JSContext *cx, JSScript *script_)
 
     script->needsArgsObj_ = true;
 
-    const unsigned local = script->argumentsLocal();
+    const unsigned slot = script->argumentsLocalSlot();
 
     /*
      * By design, the apply-arguments optimization is only made when there
@@ -2181,20 +2186,22 @@ JSScript::applySpeculationFailed(JSContext *cx, JSScript *script_)
     for (AllFramesIter i(cx->stack.space()); !i.done(); ++i) {
         StackFrame *fp = i.fp();
         if (fp->isFunctionFrame() && fp->script() == script) {
-            ArgumentsObject *argsobj = ArgumentsObject::createExpected(cx, fp);
-            if (!argsobj) {
-                /*
-                 * We can't leave stack frames with script->needsArgsObj but no
-                 * arguments object. It is, however, safe to leave frames with
-                 * an arguments object but !script->needsArgsObj.
-                 */
-                script->needsArgsObj_ = false;
-                return false;
-            }
+            if (!fp->hasArgsObj()) {
+                ArgumentsObject *obj = ArgumentsObject::create(cx, fp);
+                if (!obj) {
+                    /*
+                     * We can't leave stack frames where script->needsArgsObj
+                     * and !fp->hasArgsObj. It is, however, safe to leave frames
+                     * where fp->hasArgsObj and !fp->script->needsArgsObj.
+                     */
+                    script->needsArgsObj_ = false;
+                    return false;
+                }
 
-            /* Note: 'arguments' may have already been overwritten. */
-            if (fp->unaliasedLocal(local).isMagic(JS_OPTIMIZED_ARGUMENTS))
-                fp->unaliasedLocal(local) = ObjectValue(*argsobj);
+                /* Note: 'arguments' may have already been overwritten. */
+                if (fp->localSlot(slot).isMagic(JS_OPTIMIZED_ARGUMENTS))
+                    fp->localSlot(slot) = ObjectValue(*obj);
+            }
         }
     }
 
@@ -2213,6 +2220,7 @@ JSScript::applySpeculationFailed(JSContext *cx, JSScript *script_)
     return true;
 }
 
+#ifdef DEBUG
 bool
 JSScript::varIsAliased(unsigned varSlot)
 {
@@ -2256,3 +2264,4 @@ JSScript::formalLivesInCallObject(unsigned argSlot)
 
     return false;
 }
+#endif
