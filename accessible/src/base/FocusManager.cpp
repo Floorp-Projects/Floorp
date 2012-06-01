@@ -5,6 +5,7 @@
 #include "FocusManager.h"
 
 #include "Accessible-inl.h"
+#include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "Role.h"

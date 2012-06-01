@@ -11,6 +11,7 @@
 #include "nsIDOMDocument.h"
 
 #include "Accessible-inl.h"
+#include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
