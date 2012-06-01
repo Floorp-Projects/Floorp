@@ -1,0 +1,11 @@
+
+<script>
+function boom()
+{
+  document.location.hash = "#1";
+  document.open();
+  window.parent.postMessage({}, '*');
+}
+</script>
+
+<body onload="boom();"></body>

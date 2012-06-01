@@ -27,6 +27,7 @@
       <preference id="browser.tabs.loadInBackground"   name="browser.tabs.loadInBackground"   type="bool" inverted="true"/>
       <preference id="browser.tabs.warnOnClose"        name="browser.tabs.warnOnClose"        type="bool"/>
       <preference id="browser.tabs.warnOnOpen"         name="browser.tabs.warnOnOpen"         type="bool"/>
+      <preference id="browser.sessionstore.restore_on_demand" name="browser.sessionstore.restore_on_demand" type="bool"/>
 #ifdef XP_WIN
       <preference id="browser.taskbar.previews.enable" name="browser.taskbar.previews.enable" type="bool"/>
 #endif
@@ -51,6 +52,9 @@
       <checkbox id="showTabBar" label="&showTabBar.label;"
                 accesskey="&showTabBar.accesskey;"
                 preference="browser.tabs.autoHide"/>
+      <checkbox id="restoreOnDemand" label="&restoreTabsOnDemand.label;"
+                accesskey="&restoreTabsOnDemand.accesskey;"
+                preference="browser.sessionstore.restore_on_demand"/>
       <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
                 accesskey="&switchToNewTabs.accesskey;"
                 preference="browser.tabs.loadInBackground"/>

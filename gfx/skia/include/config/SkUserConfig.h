@@ -86,6 +86,15 @@
 //#define SK_CPU_BENDIAN
 //#define SK_CPU_LENDIAN
 
+/*  Most compilers use the same bit endianness for bit flags in a byte as the
+    system byte endianness, and this is the default. If for some reason this
+    needs to be overridden, specify which of the mutually exclusive flags to
+    use. For example, some atom processors in certain configurations have big
+    endian byte order but little endian bit orders.
+*/
+//#define SK_UINT8_BITFIELD_BENDIAN
+//#define SK_UINT8_BITFIELD_LENDIAN
+
 
 /*  Some compilers don't support long long for 64bit integers. If yours does
     not, define this to the appropriate type.
@@ -112,9 +121,11 @@
 
 /*  If zlib is available and you want to support the flate compression
     algorithm (used in PDF generation), define SK_ZLIB_INCLUDE to be the
-    include path.
+    include path. Alternatively, define SK_SYSTEM_ZLIB to use the system zlib
+    library specified as "#include <zlib.h>".
  */
 //#define SK_ZLIB_INCLUDE <zlib.h>
+//#define SK_SYSTEM_ZLIB
 
 /*  Define this to allow PDF scalars above 32k.  The PDF/A spec doesn't allow
     them, but modern PDF interpreters should handle them just fine.

@@ -18,7 +18,7 @@ interface nsIAccessiblePivot;
  * nsIAccessible for a given DOM node.  More documentation at:
  *   http://www.mozilla.org/projects/ui/accessibility
  */
-[scriptable, uuid(310ce77d-c92b-4761-82e8-77e1a728e8d4)]
+[scriptable, uuid(aed712cb-708b-4caa-981d-767be0fba984)]
 interface nsIAccessibleRetrieval : nsISupports
 {
   /**
@@ -84,6 +84,16 @@ interface nsIAccessibleRetrieval : nsISupports
    * @return a new pivot
    */
   nsIAccessiblePivot createAccessiblePivot(in nsIAccessible aRoot);
+
+  /**
+   * Enable logging for the given modules, all other modules aren't logged.
+   *
+   * @param aModules [in] list of modules, format is comma separated list
+   *                      like 'docload,doccreate'.
+   * @note Works on debug build only.
+   * @see Logging.cpp for list of possible values.
+   */
+  void setLogging(in ACString aModules);
 };
 
 

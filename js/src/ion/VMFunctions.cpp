@@ -102,7 +102,7 @@ bool
 DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain)
 {
     // Given the ScopeChain, extract the VarObj.
-    RootedVarObject obj(cx, scopeChain);
+    RootedObject obj(cx, scopeChain);
     while (!obj->isVarObj())
         obj = obj->enclosingScope();
 
@@ -114,7 +114,7 @@ InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value &
 {
     // Copy the incoming value. This may be overwritten; the return value is discarded.
     Value rval = value;
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
 
     if (name == cx->runtime->atomState.protoAtom)
         return baseops::SetPropertyHelper(cx, obj, id, 0, &rval, false);
@@ -229,7 +229,7 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *type)
 JSObject*
 NewInitObject(JSContext *cx, HandleObject baseObj, types::TypeObject *type)
 {
-    RootedVarObject obj(cx);
+    RootedObject obj(cx);
     if (baseObj.value()) {
         // JSOP_NEWOBJECT
         obj = CopyInitializerObject(cx, baseObj);
@@ -306,7 +306,7 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
             bool strict, bool isSetName)
 {
     Value v = value;
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
 
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
         unsigned defineHow = isSetName ? DNP_UNQUALIFIED : 0;

@@ -5,11 +5,6 @@
 #include "nsISupports.idl"
 #include "nsIDOMWindow.idl"
 
-[scriptable, uuid(56fd8e18-a5cf-4e7a-92ba-4f68b4ad50ac)]
-interface nsIAndroidDrawMetadataProvider : nsISupports {
-  AString getDrawMetadata();
-};
-
 [scriptable, uuid(0843f3c1-043e-4c64-9d8c-091370548c05)]
 interface nsIBrowserTab : nsISupports {
   readonly attribute nsIDOMWindow window;
@@ -21,10 +16,9 @@ interface nsIAndroidBrowserApp : nsISupports {
   nsIBrowserTab getBrowserTab(in PRInt32 tabId);
 };
 
-[scriptable, uuid(7dd8441a-4f38-49b2-bd90-da69d02a96cf)]
+[scriptable, uuid(bbb8e0d7-5cca-4ad0-88be-538ce6d04f63)]
 interface nsIAndroidBridge : nsISupports
 {
   AString handleGeckoMessage(in AString message);
-  void setDrawMetadataProvider(in nsIAndroidDrawMetadataProvider provider);
   attribute nsIAndroidBrowserApp browserApp;
 };

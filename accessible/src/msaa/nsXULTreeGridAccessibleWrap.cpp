@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTreeGridAccessibleWrap::
-  nsXULTreeGridAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULTreeGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULTreeGridAccessible(aContent, aDoc)
 {
 }
@@ -19,7 +19,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeGridAccessibleWrap,
                              nsXULTreeGridAccessible)
 
 IMPL_IUNKNOWN_INHERITED1(nsXULTreeGridAccessibleWrap,
-                         nsAccessibleWrap,
+                         AccessibleWrap,
                          CAccessibleTable)
 
 
@@ -29,7 +29,7 @@ IMPL_IUNKNOWN_INHERITED1(nsXULTreeGridAccessibleWrap,
 
 nsXULTreeGridCellAccessibleWrap::
   nsXULTreeGridCellAccessibleWrap(nsIContent* aContent,
-                                  nsDocAccessible* aDoc,
+                                  DocAccessible* aDoc,
                                   nsXULTreeGridRowAccessible* aRowAcc,
                                   nsITreeBoxObject* aTree,
                                   nsITreeView* aTreeView,
@@ -43,5 +43,5 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeGridCellAccessibleWrap,
                              nsXULTreeGridCellAccessible)
 
 IMPL_IUNKNOWN_INHERITED1(nsXULTreeGridCellAccessibleWrap,
-                         nsAccessibleWrap,
+                         AccessibleWrap,
                          CAccessibleTableCell)

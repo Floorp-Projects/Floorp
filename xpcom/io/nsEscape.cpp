@@ -258,7 +258,7 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
 {
   // Calculate the length, if the caller didn't.
   if (aSourceBufferLen < 0) {
-    aSourceBufferLen = nsCRT::strlen(aSourceBuffer);
+    aSourceBufferLen = NS_strlen(aSourceBuffer);
   }
 
   /* XXX Hardcoded max entity len. */

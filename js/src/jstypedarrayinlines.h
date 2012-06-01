@@ -101,7 +101,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     JS_ASSERT(byteOffset <= INT32_MAX);
     JS_ASSERT(byteLength <= INT32_MAX);
 
-    RootedVarObject obj(cx, NewBuiltinClassInstance(cx, &DataViewClass));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &DataViewClass));
     if (!obj)
         return NULL;
 

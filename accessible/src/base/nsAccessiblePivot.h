@@ -13,7 +13,7 @@
 #include "nsTObserverArray.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsAccessible;
+class Accessible;
 class nsIAccessibleTraversalRule;
 
 // raised when current pivot's position is needed but it is not in the tree.
@@ -26,7 +26,7 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 0x26)
 class nsAccessiblePivot: public nsIAccessiblePivot
 {
 public:
-  nsAccessiblePivot(nsAccessible* aRoot);
+  nsAccessiblePivot(Accessible* aRoot);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsAccessiblePivot, nsIAccessiblePivot)
@@ -36,7 +36,7 @@ public:
   /*
    * A simple getter for the pivot's position.
    */
-  nsAccessible* Position() { return mPosition; }
+  Accessible* Position() { return mPosition; }
 
 private:
   nsAccessiblePivot() MOZ_DELETE;
@@ -46,45 +46,45 @@ private:
   /*
    * Notify all observers on a pivot change.
    */
-  void NotifyPivotChanged(nsAccessible* aOldAccessible,
+  void NotifyPivotChanged(Accessible* aOldAccessible,
                           PRInt32 aOldStart, PRInt32 aOldEnd);
 
   /*
    * Check to see that the given accessible is in the pivot's subtree.
    */
-  bool IsRootDescendant(nsAccessible* aAccessible);
+  bool IsRootDescendant(Accessible* aAccessible);
 
 
   /*
    * Search in preorder for the first accessible to match the rule.
    */
-  nsAccessible* SearchForward(nsAccessible* aAccessible,
-                              nsIAccessibleTraversalRule* aRule,
-                              bool searchCurrent,
-                              nsresult* rv);
+  Accessible* SearchForward(Accessible* aAccessible,
+                            nsIAccessibleTraversalRule* aRule,
+                            bool aSearchCurrent,
+                            nsresult* aResult);
 
   /*
    * Reverse search in preorder for the first accessible to match the rule.
    */
-  nsAccessible* SearchBackward(nsAccessible* aAccessible,
-                               nsIAccessibleTraversalRule* aRule,
-                               bool searchCurrent,
-                               nsresult* rv);
+  Accessible* SearchBackward(Accessible* aAccessible,
+                             nsIAccessibleTraversalRule* aRule,
+                             bool aSearchCurrent,
+                             nsresult* aResult);
 
   /*
    * Update the pivot, and notify observers.
    */
-  void MovePivotInternal(nsAccessible* aPosition);
+  void MovePivotInternal(Accessible* aPosition);
 
   /*
    * The root accessible.
    */
-  nsRefPtr<nsAccessible> mRoot;
+  nsRefPtr<Accessible> mRoot;
 
   /*
    * The current pivot position.
    */
-  nsRefPtr<nsAccessible> mPosition;
+  nsRefPtr<Accessible> mPosition;
 
   /*
    * The text start offset ofthe pivot.

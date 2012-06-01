@@ -1,3 +1,7 @@
+/* The test text as octets for reference
+ * %83%86%83%6a%83%52%81%5b%83%68%82%cd%81%41%82%b7%82%d7%82%c4%82%cc%95%b6%8e%9a%82%c9%8c%c5%97%4c%82%cc%94%d4%8d%86%82%f0%95%74%97%5e%82%b5%82%dc%82%b7
+ */
+
 /* The test text decoded correctly as Shift_JIS */
 const rightText="\u30E6\u30CB\u30B3\u30FC\u30C9\u306F\u3001\u3059\u3079\u3066\u306E\u6587\u5B57\u306B\u56FA\u6709\u306E\u756A\u53F7\u3092\u4ED8\u4E0E\u3057\u307E\u3059";
 
@@ -37,7 +41,15 @@ function afterChangeCharset() {
 function test() {
   waitForExplicitFinish();
 
-  var rootDir = getRootDirectory(gTestPath);
+  // Get the local directory. This needs to be a file: URI because chrome: URIs
+  // are always UTF-8 (bug 617339) and we are testing decoding from other
+  // charsets.
+  var jar = getJar(getRootDirectory(gTestPath));
+  var dir = jar ?
+              extractJarToTmp(jar) :
+              getChromeDir(getResolvedURI(gTestPath));
+  var rootDir = Services.io.newFileURI(dir).spec;
+
   gBrowser.selectedTab = gBrowser.addTab(rootDir + "test-form_sjis.html");
   gBrowser.selectedBrowser.addEventListener("load", afterOpen, true);
 }

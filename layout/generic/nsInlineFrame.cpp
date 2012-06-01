@@ -97,11 +97,11 @@ nsInlineFrame::IsSelfEmpty()
   // doesn't really match with nsLineLayout.cpp's setting of
   // ZeroEffectiveSpanBox, anymore, so what should this really be?
   bool haveRight =
-    border->GetActualBorderWidth(NS_SIDE_RIGHT) != 0 ||
+    border->GetComputedBorderWidth(NS_SIDE_RIGHT) != 0 ||
     !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetRight()) ||
     !IsMarginZero(margin->mMargin.GetRight());
   bool haveLeft =
-    border->GetActualBorderWidth(NS_SIDE_LEFT) != 0 ||
+    border->GetComputedBorderWidth(NS_SIDE_LEFT) != 0 ||
     !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
     !IsMarginZero(margin->mMargin.GetLeft());
   if (haveLeft || haveRight) {
@@ -910,7 +910,7 @@ nsInlineFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 #ifdef ACCESSIBILITY
-already_AddRefed<nsAccessible>
+already_AddRefed<Accessible>
 nsInlineFrame::CreateAccessible()
 {
   // Broken image accessibles are created here, because layout

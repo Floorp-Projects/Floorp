@@ -11,9 +11,9 @@ function test() {
 }
 
 function get_item(items, name) {
-  for (let i = 0; i < items.length; i++) {
-    if (items[i].name == name)
-      return items[i];
+  for (let item of items) {
+    if (item.name == name)
+      return item;
   }
   ok(false, "Item for " + name + " was not listed");
   return null;

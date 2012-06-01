@@ -514,20 +514,17 @@ nsHTMLEditRules::AfterEditInner(nsEditor::OperationID action,
 }
 
 
-NS_IMETHODIMP 
-nsHTMLEditRules::WillDoAction(nsISelection *aSelection, 
-                              nsRulesInfo *aInfo, 
-                              bool *aCancel, 
-                              bool *aHandled)
+NS_IMETHODIMP
+nsHTMLEditRules::WillDoAction(nsTypedSelection* aSelection,
+                              nsRulesInfo* aInfo,
+                              bool* aCancel,
+                              bool* aHandled)
 {
-  NS_ENSURE_TRUE(aInfo && aCancel && aHandled, NS_ERROR_NULL_POINTER);
-#if defined(DEBUG_ftang)
-  printf("nsHTMLEditRules::WillDoAction action = %d\n", aInfo->action);
-#endif
+  MOZ_ASSERT(aInfo && aCancel && aHandled);
 
   *aCancel = false;
   *aHandled = false;
-    
+
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
 
@@ -539,56 +536,33 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
     return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel, aHandled);
   }
 
-  nsCOMPtr<nsIDOMRange> domRange;
-  nsresult rv = aSelection->GetRangeAt(0, getter_AddRefs(domRange));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<nsRange> range = aSelection->GetRangeAt(0);
+  nsCOMPtr<nsINode> selStartNode = range->GetStartParent();
 
-  nsCOMPtr<nsIDOMNode> selStartNode;
-  rv = domRange->GetStartContainer(getter_AddRefs(selStartNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mHTMLEditor->IsModifiableNode(selStartNode))
-  {
+  if (!mHTMLEditor->IsModifiableNode(selStartNode)) {
     *aCancel = true;
-
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> selEndNode;
-  rv = domRange->GetEndContainer(getter_AddRefs(selEndNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> selEndNode = range->GetEndParent();
 
-  if (selStartNode != selEndNode)
-  {
-    if (!mHTMLEditor->IsModifiableNode(selEndNode))
-    {
+  if (selStartNode != selEndNode) {
+    if (!mHTMLEditor->IsModifiableNode(selEndNode)) {
       *aCancel = true;
-
       return NS_OK;
     }
 
-    nsRange* range = static_cast<nsRange*>(domRange.get());
-    nsCOMPtr<nsIDOMNode> ancestor =
-      do_QueryInterface(range->GetCommonAncestor());
-    if (!mHTMLEditor->IsModifiableNode(ancestor))
-    {
+    if (!mHTMLEditor->IsModifiableNode(range->GetCommonAncestor())) {
       *aCancel = true;
-
       return NS_OK;
     }
   }
 
-  switch (info->action)
-  {
+  switch (info->action) {
     case nsEditor::kOpInsertText:
     case nsEditor::kOpInsertIMEText:
-      return WillInsertText(info->action,
-                            aSelection, 
-                            aCancel, 
-                            aHandled,
-                            info->inString,
-                            info->outString,
-                            info->maxLength);
+      return WillInsertText(info->action, aSelection, aCancel, aHandled,
+                            info->inString, info->outString, info->maxLength);
     case nsEditor::kOpLoadHTML:
       return WillLoadHTML(aSelection, aCancel);
     case nsEditor::kOpInsertBreak:
@@ -597,7 +571,8 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
       return WillDeleteSelection(aSelection, info->collapsedAction,
                                  info->stripWrappers, aCancel, aHandled);
     case nsEditor::kOpMakeList:
-      return WillMakeList(aSelection, info->blockType, info->entireList, info->bulletType, aCancel, aHandled);
+      return WillMakeList(aSelection, info->blockType, info->entireList,
+                          info->bulletType, aCancel, aHandled);
     case nsEditor::kOpIndent:
       return WillIndent(aSelection, aCancel, aHandled);
     case nsEditor::kOpOutdent:
@@ -613,7 +588,8 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
     case nsEditor::kOpRemoveList:
       return WillRemoveList(aSelection, info->bOrdered, aCancel, aHandled);
     case nsEditor::kOpMakeDefListItem:
-      return WillMakeDefListItem(aSelection, info->blockType, info->entireList, aCancel, aHandled);
+      return WillMakeDefListItem(aSelection, info->blockType, info->entireList,
+                                 aCancel, aHandled);
     case nsEditor::kOpInsertElement:
       return WillInsert(aSelection, aCancel);
     case nsEditor::kOpDecreaseZIndex:
@@ -621,11 +597,12 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
     case nsEditor::kOpIncreaseZIndex:
       return WillRelativeChangeZIndex(aSelection, 1, aCancel, aHandled);
     default:
-      return nsTextEditRules::WillDoAction(aSelection, aInfo, aCancel, aHandled);
+      return nsTextEditRules::WillDoAction(aSelection, aInfo,
+                                           aCancel, aHandled);
   }
 }
-  
-  
+
+
 NS_IMETHODIMP 
 nsHTMLEditRules::DidDoAction(nsISelection *aSelection,
                              nsRulesInfo *aInfo, nsresult aResult)

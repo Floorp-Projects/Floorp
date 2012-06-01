@@ -7,7 +7,7 @@ import socket
 from client import MarionetteClient
 from errors import *
 from emulator import Emulator
-from b2ginstance import B2GInstance
+from geckoinstance import GeckoInstance
 
 class HTMLElement(object):
 
@@ -70,12 +70,13 @@ class Marionette(object):
     CONTEXT_CHROME = 'chrome'
     CONTEXT_CONTENT = 'content'
 
-    def __init__(self, host='localhost', port=2828, b2gbin=False,
+    def __init__(self, host='localhost', port=2828, bin=None, profile=None,
                  emulator=None, emulatorBinary=None, connectToRunningEmulator=False,
                  homedir=None, baseurl=None, noWindow=False, logcat_dir=None):
         self.host = host
         self.port = self.local_port = port
-        self.b2gbin = b2gbin
+        self.bin = bin
+        self.profile = profile
         self.session = None
         self.window = None
         self.emulator = None
@@ -85,10 +86,11 @@ class Marionette(object):
         self.noWindow = noWindow
         self.logcat_dir = logcat_dir
 
-        if b2gbin:
-            self.b2ginstance = B2GInstance(host=self.host, port=self.port, b2gbin=self.b2gbin)
-            self.b2ginstance.start()
-            assert(self.b2ginstance.wait_for_port())
+        if bin:
+            self.instance = GeckoInstance(host=self.host, port=self.port,
+                                          bin=self.bin, profile=self.profile)
+            self.instance.start()
+            assert(self.instance.wait_for_port())
         if emulator:
             self.emulator = Emulator(homedir=homedir,
                                      noWindow=self.noWindow,
@@ -110,8 +112,8 @@ class Marionette(object):
     def __del__(self):
         if self.emulator:
             self.emulator.close()
-        if self.b2gbin:
-            self.b2ginstance.close()
+        if self.bin:
+            self.instance.close()
         for qemu in self.extra_emulators:
             qemu.emulator.close()
 
@@ -135,7 +137,7 @@ class Marionette(object):
                 port = self.emulator.restart(self.local_port)
                 if port is not None:
                     self.port = self.client.port = port
-            raise TimeoutException(message='socket.timeout', status=21, stacktrace=None)
+            raise TimeoutException(message='socket.timeout', status=ErrorCodes.TIMEOUT, stacktrace=None)
 
         # Process any emulator commands that are sent from a script
         # while it's executing.
@@ -165,24 +167,42 @@ class Marionette(object):
             stacktrace = response['error'].get('stacktrace')
             # status numbers come from 
             # http://code.google.com/p/selenium/wiki/JsonWireProtocol#Response_Status_Codes
-            if status == 7:
+            if status == ErrorCodes.NO_SUCH_ELEMENT:
                 raise NoSuchElementException(message=message, status=status, stacktrace=stacktrace)
-            elif status == 8:
+            elif status == ErrorCodes.NO_SUCH_FRAME:
                 raise NoSuchFrameException(message=message, status=status, stacktrace=stacktrace)
-            elif status == 10:
+            elif status == ErrorCodes.STALE_ELEMENT_REFERENCE:
                 raise StaleElementException(message=message, status=status, stacktrace=stacktrace)
-            elif status == 11:
+            elif status == ErrorCodes.ELEMENT_NOT_VISIBLE:
                 raise ElementNotVisibleException(message=message, status=status, stacktrace=stacktrace)
-            elif status == 17:
+            elif status == ErrorCodes.INVALID_ELEMENT_STATE:
+                raise InvalidElementStateException(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.UNKNOWN_ERROR:
+                raise MarionetteException(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.ELEMENT_IS_NOT_SELECTABLE:
+                raise ElementNotSelectableException(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.JAVASCRIPT_ERROR:
                 raise JavascriptException(message=message, status=status, stacktrace=stacktrace)
-            elif status == 19:
+            elif status == ErrorCodes.XPATH_LOOKUP_ERROR:
                 raise XPathLookupException(message=message, status=status, stacktrace=stacktrace)
-            elif status == 21:
+            elif status == ErrorCodes.TIMEOUT:
                 raise TimeoutException(message=message, status=status, stacktrace=stacktrace)
-            elif status == 23:
+            elif status == ErrorCodes.NO_SUCH_WINDOW:
                 raise NoSuchWindowException(message=message, status=status, stacktrace=stacktrace)
-            elif status == 28:
+            elif status == ErrorCodes.INVALID_COOKIE_DOMAIN:
+                raise InvalidCookieDomainException(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.UNABLE_TO_SET_COOKIE:
+                raise UnableToSetCookieException(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.NO_ALERT_OPEN:
+                raise NoAlertPresentException(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.SCRIPT_TIMEOUT:
                 raise ScriptTimeoutException(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.INVALID_SELECTOR \
+                 or status == ErrorCodes.INVALID_XPATH_SELECTOR \
+                 or status == ErrorCodes.INVALID_XPATH_SELECTOR_RETURN_TYPER:
+                raise InvalidSelectorException(message=message, status=status, stacktrace=stacktrace)
+            elif status == ErrorCodes.MOVE_TARGET_OUT_OF_BOUNDS:
+                MoveTargetOutOfBoundsException(message=message, status=status, stacktrace=stacktrace)
             else:
                 raise MarionetteException(message=message, status=status, stacktrace=stacktrace)
         raise MarionetteException(message=response, status=500)

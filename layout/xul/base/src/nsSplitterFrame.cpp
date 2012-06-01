@@ -28,7 +28,6 @@
 #include "nsHTMLParts.h"
 #include "nsStyleContext.h"
 #include "nsBoxLayoutState.h"
-#include "nsIXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
 #include "nsGUIEvent.h"

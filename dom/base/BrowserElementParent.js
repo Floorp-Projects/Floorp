@@ -106,11 +106,15 @@ BrowserElementParent.prototype = {
     addMessageListener("titlechange", this._fireEventFromMsg);
     addMessageListener("iconchange", this._fireEventFromMsg);
     addMessageListener("get-mozapp-manifest-url", this._sendMozAppManifestURL);
+    addMessageListener("keyevent", this._fireKeyEvent);
     mm.addMessageListener('browser-element-api:got-screenshot',
                           this._recvGotScreenshot.bind(this));
 
     XPCNativeWrapper.unwrap(frameElement).getScreenshot =
       this._getScreenshot.bind(this, mm, frameElement);
+
+    XPCNativeWrapper.unwrap(frameElement).setVisible =
+      this._setVisible.bind(this, mm, frameElement);
 
     mm.loadFrameScript("chrome://global/content/BrowserElementChild.js",
                        /* allowDelayedLoad = */ true);
@@ -162,6 +166,22 @@ BrowserElementParent.prototype = {
     this._screenshotListeners[id] = req;
     mm.sendAsyncMessage('browser-element-api:get-screenshot', {id: id});
     return req;
+  },
+
+   _setVisible: function(mm, frameElement, visible) {
+     mm.sendAsyncMessage('browser-element-api:set-visible', {visible: visible});
+   },
+
+  _fireKeyEvent: function(frameElement, data) {
+    let win = frameElement.ownerDocument.defaultView;
+    let evt = frameElement.ownerDocument.createEvent("KeyboardEvent");
+
+    evt.initKeyEvent(data.json.type, true, true, win,
+                     false, false, false, false, // modifiers
+                     data.json.keyCode,
+                     data.json.charCode);
+
+    frameElement.dispatchEvent(evt);
   },
 
   observe: function(subject, topic, data) {

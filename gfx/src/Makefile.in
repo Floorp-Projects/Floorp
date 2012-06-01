@@ -73,7 +73,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(TK_CFLAGS) $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS) $(TK_CFLAGS)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 DEFINES += -DMOZ_ENABLE_GTK2

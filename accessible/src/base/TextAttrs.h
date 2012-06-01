@@ -47,7 +47,7 @@ public:
    */
   TextAttrsMgr(nsHyperTextAccessible* aHyperTextAcc,
                bool aIncludeDefAttrs,
-               nsAccessible* aOffsetAcc,
+               Accessible* aOffsetAcc,
                PRInt32 aOffsetAccIdx) :
     mOffsetAcc(aOffsetAcc), mHyperTextAcc(aHyperTextAcc),
     mOffsetAccIdx(aOffsetAccIdx), mIncludeDefAttrs(aIncludeDefAttrs) { }
@@ -83,7 +83,7 @@ protected:
                 PRInt32* aStartHTOffset, PRInt32* aEndHTOffset);
 
 private:
-  nsAccessible* mOffsetAcc;
+  Accessible* mOffsetAcc;
   nsHyperTextAccessible* mHyperTextAcc;
   PRInt32 mOffsetAccIdx;
   bool mIncludeDefAttrs;

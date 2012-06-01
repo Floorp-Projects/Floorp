@@ -27,7 +27,8 @@
       this.DOMNode = getNode(aIdentifier);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, getAccessible(this.DOMNode))
+        new invokerChecker(EVENT_REORDER, getAccessible(this.DOMNode)),
+        new asyncInvokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getIframeDoc)
       ];
 
       this.invoke = function changeIframeSrc_invoke()
@@ -53,6 +54,11 @@
       this.getID = function changeIframeSrc_getID()
       {
         return "change iframe src on " + aURL;
+      }
+
+      function getIframeDoc()
+      {
+        return getAccessible(getNode(aIdentifier).contentDocument);
       }
     }
 
@@ -307,6 +313,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=658185"
      title="The DOM document loaded before it's shown shouldn't have busy state">
     Mozilla Bug 658185
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=754165"
+     title="Fire document load events on iframes too">
+    Mozilla Bug 754165
   </a>
 
   <p id="display"></p>

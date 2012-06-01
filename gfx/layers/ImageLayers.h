@@ -20,6 +20,13 @@
 #ifdef XP_MACOSX
 #include "nsIOSurface.h"
 #endif
+#ifdef XP_WIN
+struct ID3D10Texture2D;
+struct ID3D10Device;
+struct ID3D10ShaderResourceView;
+
+typedef void* HANDLE;
+#endif
 
 namespace mozilla {
 
@@ -99,7 +106,12 @@ public:
     /**
      * An bitmap image that can be shared with a remote process.
      */
-    REMOTE_IMAGE_BITMAP
+    REMOTE_IMAGE_BITMAP,
+
+    /**
+     * An DXGI shared surface handle that can be shared with a remote process.
+     */
+    REMOTE_IMAGE_DXGI_TEXTURE
   };
 
   Format GetFormat() { return mFormat; }
@@ -223,7 +235,17 @@ struct RemoteImageData {
     /**
      * This is a format that uses raw bitmap data.
      */
-    RAW_BITMAP
+    RAW_BITMAP,
+
+    /**
+     * This is a format that uses a pointer to a texture do draw directly
+     * from a shared texture. Any process may have created this texture handle,
+     * the process creating the texture handle is responsible for managing it's
+     * lifetime by managing the lifetime of the first D3D texture object this
+     * handle was created for. It must also ensure the handle is not set
+     * current anywhere when the last reference to this object is released.
+     */
+    DXGI_TEXTURE_HANDLE
   };
   /* These formats describe the format in the memory byte-order */
   enum Format {
@@ -248,6 +270,9 @@ struct RemoteImageData {
       unsigned char *mData;
       int mStride;
     } mBitmap;
+#ifdef XP_WIN
+    HANDLE mTextureHandle;
+#endif
   };
 };
 

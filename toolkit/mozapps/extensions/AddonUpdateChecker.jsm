@@ -1,42 +1,6 @@
-/*
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is the Extension Manager.
-#
-# The Initial Developer of the Original Code is
-# the Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2009
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#   Dave Townsend <dtownsend@oxymoronical.com>
-#   Blair McBride <bmcbride@mozilla.com>
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
-*/
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
  * The AddonUpdateChecker is responsible for retrieving the update information
@@ -625,8 +589,7 @@ function matchesVersions(aUpdate, aAppVersion, aPlatformVersion,
     aIgnoreMaxVersion = false;
 
   let result = false;
-  for (let i = 0; i < aUpdate.targetApplications.length; i++) {
-    let app = aUpdate.targetApplications[i];
+  for (let app of aUpdate.targetApplications) {
     if (app.id == Services.appinfo.ID) {
       return (Services.vc.compare(aAppVersion, app.minVersion) >= 0) &&
              (aIgnoreMaxVersion || (Services.vc.compare(aAppVersion, app.maxVersion) <= 0));
@@ -684,18 +647,18 @@ var AddonUpdateChecker = {
     if (!aPlatformVersion)
       aPlatformVersion = Services.appinfo.platformVersion;
 
-    for (let i = 0; i < aUpdates.length; i++) {
-      if (Services.vc.compare(aUpdates[i].version, aVersion) == 0) {
+    for (let update of aUpdates) {
+      if (Services.vc.compare(update.version, aVersion) == 0) {
         if (aIgnoreCompatibility) {
-          for (let j = 0; j < aUpdates[i].targetApplications.length; j++) {
-            let id = aUpdates[i].targetApplications[j].id;
+          for (let targetApp of update.targetApplications) {
+            let id = targetApp.id;
             if (id == Services.appinfo.ID || id == TOOLKIT_ID)
-              return aUpdates[i];
+              return update;
           }
         }
-        else if (matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion,
+        else if (matchesVersions(update, aAppVersion, aPlatformVersion,
                                  aIgnoreMaxVersion, aIgnoreStrictCompat)) {
-          return aUpdates[i];
+          return update;
         }
       }
     }
@@ -734,18 +697,18 @@ var AddonUpdateChecker = {
                     getService(Ci.nsIBlocklistService);
 
     let newest = null;
-    for (let i = 0; i < aUpdates.length; i++) {
-      if (!aUpdates[i].updateURL)
+    for (let update of aUpdates) {
+      if (!update.updateURL)
         continue;
-      let state = blocklist.getAddonBlocklistState(aUpdates[i].id, aUpdates[i].version,
+      let state = blocklist.getAddonBlocklistState(update.id, update.version,
                                                    aAppVersion, aPlatformVersion);
       if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
         continue;
-      if ((newest == null || (Services.vc.compare(newest.version, aUpdates[i].version) < 0)) &&
-          matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion,
+      if ((newest == null || (Services.vc.compare(newest.version, update.version) < 0)) &&
+          matchesVersions(update, aAppVersion, aPlatformVersion,
                           aIgnoreMaxVersion, aIgnoreStrictCompat,
                           aCompatOverrides)) {
-        newest = aUpdates[i];
+        newest = update;
       }
     }
     return newest;

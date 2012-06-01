@@ -124,6 +124,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../dom/plugins/base \
 		-I$(srcdir)/../svg/base/src \
 		$(MOZ_CAIRO_CFLAGS) \
+		$(MOZ_PIXMAN_CFLAGS) \
 		$(NULL)
 
 ifdef MOZ_ENABLE_GTK2

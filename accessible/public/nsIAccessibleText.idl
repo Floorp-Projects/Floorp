@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-typedef long nsAccessibleTextBoundary;
+typedef long AccessibleTextBoundary;
 
 interface nsIAccessible;
 interface nsIPersistentProperties;
@@ -20,14 +20,14 @@ interface nsIAccessibleText : nsISupports
   const PRInt32 TEXT_OFFSET_END_OF_TEXT = -1;
   const PRInt32 TEXT_OFFSET_CARET       = -2;
 
-  const nsAccessibleTextBoundary BOUNDARY_CHAR = 0;
-  const nsAccessibleTextBoundary BOUNDARY_WORD_START = 1;
-  const nsAccessibleTextBoundary BOUNDARY_WORD_END = 2;
-  const nsAccessibleTextBoundary BOUNDARY_SENTENCE_START = 3; // don't use, deprecated
-  const nsAccessibleTextBoundary BOUNDARY_SENTENCE_END = 4;  // don't use, deprecated
-  const nsAccessibleTextBoundary BOUNDARY_LINE_START = 5;
-  const nsAccessibleTextBoundary BOUNDARY_LINE_END = 6;
-  const nsAccessibleTextBoundary BOUNDARY_ATTRIBUTE_RANGE = 7;
+  const AccessibleTextBoundary BOUNDARY_CHAR = 0;
+  const AccessibleTextBoundary BOUNDARY_WORD_START = 1;
+  const AccessibleTextBoundary BOUNDARY_WORD_END = 2;
+  const AccessibleTextBoundary BOUNDARY_SENTENCE_START = 3; // don't use, deprecated
+  const AccessibleTextBoundary BOUNDARY_SENTENCE_END = 4;  // don't use, deprecated
+  const AccessibleTextBoundary BOUNDARY_LINE_START = 5;
+  const AccessibleTextBoundary BOUNDARY_LINE_END = 6;
+  const AccessibleTextBoundary BOUNDARY_ATTRIBUTE_RANGE = 7;
 
   /**
    * The current current caret offset.
@@ -47,17 +47,17 @@ interface nsIAccessibleText : nsISupports
   AString getText (in long startOffset, in long endOffset);
 
   AString getTextAfterOffset (in long offset,
-                              in nsAccessibleTextBoundary boundaryType,
+                              in AccessibleTextBoundary boundaryType,
                               out long startOffset,
                               out long endOffset);
 
   AString getTextAtOffset (in long offset,
-                           in nsAccessibleTextBoundary boundaryType,
+                           in AccessibleTextBoundary boundaryType,
                            out long startOffset,
                            out long endOffset);
 
   AString getTextBeforeOffset (in long offset,
-                               in nsAccessibleTextBoundary boundaryType,
+                               in AccessibleTextBoundary boundaryType,
                                out long startOffset,
                                out long endOffset);
 

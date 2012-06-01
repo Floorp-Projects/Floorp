@@ -40,6 +40,7 @@ toolkit.jar:
    content/global/resetProfile.css            (resetProfile.css)
 *  content/global/resetProfile.js             (resetProfile.js)
 *  content/global/resetProfile.xul            (resetProfile.xul)
+*  content/global/resetProfileProgress.xul    (resetProfileProgress.xul)
 *  content/global/treeUtils.js                (treeUtils.js)
 *+ content/global/viewZoomOverlay.js          (viewZoomOverlay.js)
 *+ content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)

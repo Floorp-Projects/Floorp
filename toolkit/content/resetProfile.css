@@ -9,3 +9,7 @@
 #resetProfileFooter {
   font-weight: bold;
 }
+
+#resetProfileProgressDialog {
+  padding: 10px;
+}

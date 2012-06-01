@@ -274,8 +274,12 @@ def p_NamespaceThing(p):
         p[0] = p[4]
 
 def p_StructDecl(p):
-    """StructDecl : STRUCT ID '{' StructFields  '}' ';'"""
-    p[0] = StructDecl(locFromTok(p, 1), p[2], p[4])
+    """StructDecl : STRUCT ID '{' StructFields '}' ';'
+                  | STRUCT ID '{' '}' ';'"""
+    if 7 == len(p):
+        p[0] = StructDecl(locFromTok(p, 1), p[2], p[4])
+    else:
+        p[0] = StructDecl(locFromTok(p, 1), p[2], [ ])
 
 def p_StructFields(p):
     """StructFields : StructFields StructField ';'

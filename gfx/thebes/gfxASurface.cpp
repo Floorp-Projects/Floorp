@@ -417,24 +417,6 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
     }
 }
 
-gfxASurface::gfxImageFormat
-gfxASurface::FormatFromContent(gfxASurface::gfxContentType type)
-{
-    switch (type) {
-        case CONTENT_COLOR_ALPHA:
-            return ImageFormatARGB32;
-        case CONTENT_ALPHA:
-            return ImageFormatA8;
-        case CONTENT_COLOR:
-        default:
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-            return ImageFormatRGB16_565;
-#else
-            return ImageFormatRGB24;
-#endif
-    }
-}
-
 void
 gfxASurface::SetSubpixelAntialiasingEnabled(bool aEnabled)
 {

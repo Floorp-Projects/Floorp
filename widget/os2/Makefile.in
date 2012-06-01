@@ -47,7 +47,7 @@ SHARED_LIBRARY_LIBS = \
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)
 
 DEFINES		+= -D_IMPL_NS_WIDGET
 

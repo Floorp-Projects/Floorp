@@ -15,12 +15,12 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULAlertAccessible::
-  nsXULAlertAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsXULAlertAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULAlertAccessible, nsAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsXULAlertAccessible, Accessible)
 
 role
 nsXULAlertAccessible::NativeRole()
@@ -31,7 +31,7 @@ nsXULAlertAccessible::NativeRole()
 PRUint64
 nsXULAlertAccessible::NativeState()
 {
-  return nsAccessible::NativeState() | states::ALERT;
+  return Accessible::NativeState() | states::ALERT;
 }
 
 ENameValueFlag
@@ -52,7 +52,7 @@ nsXULAlertAccessible::IsWidget() const
   return true;
 }
 
-nsAccessible*
+Accessible*
 nsXULAlertAccessible::ContainerWidget() const
 {
   // If a part of colorpicker widget.

@@ -136,7 +136,7 @@ class IonCompartment
         return argumentsRectifier_;
     }
     IonCode **getArgumentsRectifierAddr() {
-        return argumentsRectifier_.unsafeGetAddress();
+        return argumentsRectifier_.unsafeGet();
     }
 
     IonCode *getOrCreateInvalidationThunk(JSContext *cx) {
@@ -148,7 +148,7 @@ class IonCompartment
         return invalidator_;
     }
     IonCode **getInvalidationThunkAddr() {
-        return invalidator_.unsafeGetAddress();
+        return invalidator_.unsafeGet();
     }
 
     EnterIonCode enterJITInfallible() {
@@ -222,6 +222,10 @@ class IonActivation
         return compartment_;
     }
 };
+
+// Called from JSCompartment::discardJitCode().
+void InvalidateAll(FreeOp *fop, JSCompartment *comp);
+void FinishInvalidation(FreeOp *fop, JSScript *script);
 
 } // namespace ion
 } // namespace js

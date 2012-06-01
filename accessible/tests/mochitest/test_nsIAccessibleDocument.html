@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         testStates(docAcc, (STATE_READONLY | STATE_FOCUSABLE));
 
         // No actions wanted on doc
-        is(docAcc.numActions, 0, "Wrong number of actions for document!");
+        is(docAcc.actionCount, 0, "Wrong number of actions for document!");
 
         // attributes should contain tag:body
         attributes = docAcc.attributes;
@@ -51,7 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         is(docAcc.mimeType, "text/html",
            "Wrong mime type for document!");
 
-        // nsDocAccessible::getDocType currently returns NS_ERROR_FAILURE.
+        // DocAccessible::getDocType currently returns NS_ERROR_FAILURE.
         // See bug 442005. After fixing, please remove this comment and
         // uncomment the below two lines to enable the test.
 //        is(docAcc.docType, "HTML",

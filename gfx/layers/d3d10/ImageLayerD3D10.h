@@ -34,7 +34,7 @@ public:
   virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfxIntSize* aSize);
 
 private:
- ID3D10ShaderResourceView* GetImageSRView(Image* aImage, bool& aHasAlpha);
+ ID3D10ShaderResourceView* GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex **aMutex = nsnull);
 };
 
 struct PlanarYCbCrD3D10BackendData : public ImageBackendData
@@ -51,6 +51,21 @@ struct TextureD3D10BackendData : public ImageBackendData
 {
   nsRefPtr<ID3D10Texture2D> mTexture;
   nsRefPtr<ID3D10ShaderResourceView> mSRView;
+};
+
+class RemoteDXGITextureImage : public Image {
+public:
+  RemoteDXGITextureImage() : Image(NULL, REMOTE_IMAGE_DXGI_TEXTURE) {}
+
+  already_AddRefed<gfxASurface> GetAsSurface();
+
+  gfxIntSize GetSize() { return mSize; }
+
+  TextureD3D10BackendData *GetD3D10TextureBackendData(ID3D10Device *aDevice);
+
+  gfxIntSize mSize;
+  RemoteImageData::Format mFormat;
+  HANDLE mHandle;
 };
 
 } /* layers */

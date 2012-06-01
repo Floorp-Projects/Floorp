@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import android.util.Log;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -21,6 +23,8 @@ public class GeckoConnectivityReceiver extends BroadcastReceiver {
     private static final String LINK_DATA_UP = "up";
     private static final String LINK_DATA_DOWN = "down";
     private static final String LINK_DATA_UNKNOWN = "unknown";
+
+    private static final String LOGTAG = "GeckoConnectivityReciever";
 
     private IntentFilter mFilter;
 
@@ -50,8 +54,10 @@ public class GeckoConnectivityReceiver extends BroadcastReceiver {
 
     public void registerFor(Activity activity) {
         if (!isRegistered) {
-            activity.registerReceiver(this, mFilter);
-            isRegistered = true;
+            // registerReciever will return null if registering throws a RemoteException
+            isRegistered = activity.registerReceiver(this, mFilter) != null;
+            if (!isRegistered)
+                Log.e(LOGTAG, "Registering receiver failed");
         }
     }
 

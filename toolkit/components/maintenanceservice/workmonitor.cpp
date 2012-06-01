@@ -24,6 +24,7 @@
 #include "uachelper.h"
 #include "updatehelper.h"
 #include "errors.h"
+#include "prefetch.h"
 
 // Wait 15 minutes for an update operation to run at most.
 // Updates usually take less than a minute so this seems like a 
@@ -408,7 +409,7 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
 
       // We might not execute code after StartServiceUpdate because
       // the service installer will stop the service if it is running.
-      StartServiceUpdate(argc, argv);
+      StartServiceUpdate(installDir);
     } else {
       result = FALSE;
       LOG(("Error running update process. Updating update.status"
@@ -482,6 +483,8 @@ ExecuteServiceCommand(int argc, LPWSTR *argv)
     // because the service self updates itself and the service
     // installer will stop the service.
     LOG(("Service command %ls complete.\n", argv[2]));
+  } else if (!lstrcmpi(argv[2], L"clear-prefetch")) {
+    result = ClearKnownPrefetch();
   } else {
     LOG(("Service command not recognized: %ls.\n", argv[2]));
     // result is already set to FALSE

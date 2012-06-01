@@ -145,22 +145,22 @@ function run_test() {
       AddonManager.getAddonsByTypes(["extension"], function(installedItems) {
         var items = [];
 
-        for (let k = 0; k < ADDONS.length; k++) {
-          for (let i = 0; i < installedItems.length; i++) {
-            if (ADDONS[k].id != installedItems[i].id)
+        for (let addon of ADDONS) {
+          for (let installedItem of installedItems) {
+            if (addon.id != installedItem.id)
               continue;
-            if (installedItems[i].userDisabled)
+            if (installedItem.userDisabled)
               continue;
 
-            if (ADDONS[k].shouldCheck == installedItems[i].isCompatibleWith("3", "3")) {
-              do_throw(installedItems[i].id + " had the wrong compatibility: " +
-                installedItems[i].isCompatibleWith("3", "3"));
+            if (addon.shouldCheck == installedItem.isCompatibleWith("3", "3")) {
+              do_throw(installedItem.id + " had the wrong compatibility: " +
+                installedItem.isCompatibleWith("3", "3"));
             }
 
-            if (ADDONS[k].shouldCheck) {
-              gItemsNotChecked.push(ADDONS[k].id);
+            if (addon.shouldCheck) {
+              gItemsNotChecked.push(addon.id);
               updateListener.pendingCount++;
-              installedItems[i].findUpdates(updateListener,
+              installedItem.findUpdates(updateListener,
                                             AddonManager.UPDATE_WHEN_USER_REQUESTED,
                                             "3", "3");
             }

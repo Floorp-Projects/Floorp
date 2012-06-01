@@ -11,7 +11,7 @@
 class nsXULMenuitemAccessibleWrap : public nsXULMenuitemAccessible
 {
 public:
-  nsXULMenuitemAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULMenuitemAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~nsXULMenuitemAccessibleWrap() {}
 
   // nsIAccessible

@@ -37,8 +37,9 @@ interface nsIDOMBlob;
 interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
+interface nsIDOMClientRect;
 
-[scriptable, uuid(2e5a1f37-786b-4a52-b0e3-f711ee2268a8)]
+[scriptable, uuid(2b3ac53c-2a88-421f-af09-f10665c88acf)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -593,6 +594,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see nsIDOMWindow::scrollX/Y
    */
   void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
+
+  /**
+   * Returns the bounds of the window's currently loaded document. This will
+   * generally be (0, 0, pageWidth, pageHeight) but in some cases (e.g. RTL
+   * documents) may have a negative left value.
+   */
+  nsIDOMClientRect getRootBounds();
 
   /**
    * Get IME open state. TRUE means 'Open', otherwise, 'Close'.

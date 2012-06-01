@@ -27,7 +27,7 @@ const Ci = Components.interfaces;
 
 function openContextMenuFor(element, shiftkey, shouldWaitForFocus) {
     // Context menu should be closed before we open it again.
-    is(contextMenu.state, "closed", "checking if popup is closed");
+    is(SpecialPowers.wrap(contextMenu).state, "closed", "checking if popup is closed");
 
     if (lastElement)
       lastElement.blur();
@@ -671,10 +671,51 @@ function runTest(testNum) {
 
         invokeItemAction("0");
         closeContextMenu();
-        openContextMenuFor(pagemenu, true); // Invoke context menu for next test.
+
+        // run mozRequestFullScreen on the element we're testing
+        var full_screen_element = subwindow.document.getElementById("test-dom-full-screen");
+        var openDomFullScreen = function() {
+            subwindow.removeEventListener("mozfullscreenchange", openDomFullScreen, false);
+            SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
+            openContextMenuFor(dom_full_screen, true); // Invoke context menu for next test.
+        }
+        subwindow.addEventListener("mozfullscreenchange", openDomFullScreen, false);
+        SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
+        full_screen_element.mozRequestFullScreen();
         break;
 
-    case 22:
+        case 22:
+        // Context menu for DOM Fullscreen mode (NOTE: this is *NOT* on an img)
+        checkContextMenu(["context-leave-dom-fullscreen", true,
+                          "---",                          null,
+                          "context-back",                 false,
+                          "context-forward",              false,
+                          "context-reload",               true,
+                          "context-stop",                 false,
+                          "---",                          null,
+                          "context-bookmarkpage",         true,
+                          "context-savepage",             true,
+                          "context-sendpage",             true,
+                          "---",                          null,
+                          "context-viewbgimage",          false,
+                          "context-selectall",            true,
+                          "---",                          null,
+                          "context-viewsource",           true,
+                          "context-viewinfo",             true
+                         ].concat(inspectItems));
+        closeContextMenu();
+        var full_screen_element = subwindow.document.getElementById("test-dom-full-screen");
+        var openPagemenu = function() {
+            subwindow.removeEventListener("mozfullscreenchange", openPagemenu, false);
+            SpecialPowers.clearUserPref("full-screen-api.allow-trusted-requests-only");
+            openContextMenuFor(pagemenu, true); // Invoke context menu for next test.
+        }
+        subwindow.addEventListener("mozfullscreenchange", openPagemenu, false);
+        SpecialPowers.setBoolPref("full-screen-api.allow-trusted-requests-only", false);
+        subwindow.document.mozCancelFullScreen();
+        break;
+
+    case 23:
         // Context menu for element with assigned content context menu
         // The shift key should bypass content context menu processing
         checkContextMenu(["context-back",         false,
@@ -697,7 +738,7 @@ function runTest(testNum) {
         openContextMenuFor(selecttext); // Invoke context menu for next test.
         return;
 
-    case 23:
+    case 24:
         // Context menu for selected text
         if (Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -713,7 +754,7 @@ function runTest(testNum) {
         openContextMenuFor(selecttextlink); // Invoke context menu for next test.
         return;
 
-    case 24:
+    case 25:
         // Context menu for selected text which matches valid URL pattern
         if (Services.appinfo.OS == "Darwin") {
           // This test is only enabled on Mac due to bug 736399.
@@ -758,7 +799,7 @@ var testNum = 1;
 var subwindow, chromeWin, contextMenu, lastElement;
 var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
-    inputspell, pagemenu, plainTextItems, audio_in_video;
+    inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video;
 
 function startTest() {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -779,6 +820,7 @@ function startTest() {
       return;
     }
 
+    subwindow.mozAllowFullScreen = true;
     lastElement = null;
 
     text   = subwindow.document.getElementById("test-text");
@@ -800,6 +842,7 @@ function startTest() {
     contenteditable.focus(); // content editable needs to be focused to enable spellcheck
     inputspell = subwindow.document.getElementById("test-input-spellcheck");
     pagemenu = subwindow.document.getElementById("test-pagemenu");
+    dom_full_screen = subwindow.document.getElementById("test-dom-full-screen");
     selecttext = subwindow.document.getElementById("test-select-text");
     selecttextlink = subwindow.document.getElementById("test-select-text-link");
 

@@ -804,7 +804,7 @@ IonBuilder::inspectOpcode(JSOp op)
       {
         if (GET_UINT8(pc) == JSProto_Array)
             return jsop_newarray(0);
-        RootedVarObject baseObj(cx, NULL);
+        RootedObject baseObj(cx, NULL);
         return jsop_newobject(baseObj);
       }
 
@@ -813,7 +813,7 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_NEWOBJECT:
       {
-        RootedVarObject baseObj(cx, info().getObject(pc));
+        RootedObject baseObj(cx, info().getObject(pc));
         return jsop_newobject(baseObj);
       }
 
@@ -822,7 +822,7 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_INITPROP:
       {
-        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
         return jsop_initprop(name);
       }
 
@@ -846,7 +846,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_GETGNAME:
       case JSOP_CALLGNAME:
       {
-        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
         return jsop_getgname(name);
       }
 
@@ -855,14 +855,14 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_SETGNAME:
       {
-        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
         return jsop_setgname(name);
       }
 
       case JSOP_NAME:
       case JSOP_CALLNAME:
       {
-        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
         return jsop_getname(name);
       }
 
@@ -914,14 +914,14 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_GETPROP:
       case JSOP_CALLPROP:
       {
-        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
         return jsop_getprop(name);
       }
 
       case JSOP_SETPROP:
       case JSOP_SETNAME:
       {
-        RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+        RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
         return jsop_setprop(name);
       }
 
@@ -2826,7 +2826,7 @@ IonBuilder::inlineScriptedCall(JSFunction *target, uint32 argc)
     if (!oracle.init(cx, target->script()))
         return false;
 
-    RootedVarObject scopeChain(NULL);
+    RootedObject scopeChain(NULL);
 
     IonBuilder inlineBuilder(cx, scopeChain, temp(), graph(), &oracle,
                              *info, inliningDepth + 1, loopDepth_);
@@ -2849,7 +2849,7 @@ IonBuilder::createThisScripted(MDefinition *callee)
     // This instruction MUST be idempotent: since it does not correspond to an
     // explicit operation in the bytecode, we cannot use resumeAfter(). But
     // calling GetProperty can trigger a GC, and thus invalidation.
-    RootedVarPropertyName name(cx, cx->runtime->atomState.classPrototypeAtom);
+    RootedPropertyName name(cx, cx->runtime->atomState.classPrototypeAtom);
     MCallGetProperty *getProto = MCallGetProperty::New(callee, name);
 
     // Getters may not override |prototype| fetching, so this is repeatable.
@@ -2889,7 +2889,7 @@ IonBuilder::createThisScriptedSingleton(HandleFunction target, HandleObject prot
     if (!types::TypeScript::ThisTypes(target->script())->hasType(types::Type::ObjectType(type)))
         return NULL;
 
-    RootedVarObject templateObject(cx, js_CreateThisForFunctionWithProto(cx, target, proto));
+    RootedObject templateObject(cx, js_CreateThisForFunctionWithProto(cx, target, proto));
     if (!templateObject)
         return NULL;
 
@@ -2916,7 +2916,7 @@ IonBuilder::createThis(HandleFunction target, MDefinition *callee)
     }
 
     MDefinition *createThis = NULL;
-    RootedVarObject proto(cx, getSingletonPrototype(target));
+    RootedObject proto(cx, getSingletonPrototype(target));
 
     // Try baking in the prototype.
     if (proto)
@@ -2940,14 +2940,14 @@ IonBuilder::jsop_funcall(uint32 argc)
     // argc+2: The native 'call' function.
 
     // If |Function.prototype.call| may be overridden, don't optimize callsite.
-    RootedVarFunction native(cx, getSingleCallTarget(argc, pc));
+    RootedFunction native(cx, getSingleCallTarget(argc, pc));
     if (!native || !native->isNative() || native->native() != &js_fun_call)
         return makeCall(native, argc, false);
 
     // Extract call target.
     types::TypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
-    RootedVarObject funobj(cx, (funTypes) ? funTypes->getSingleton(cx, false) : NULL);
-    RootedVarFunction target(cx, (funobj && funobj->isFunction()) ? funobj->toFunction() : NULL);
+    RootedObject funobj(cx, (funTypes) ? funTypes->getSingleton(cx, false) : NULL);
+    RootedFunction target(cx, (funobj && funobj->isFunction()) ? funobj->toFunction() : NULL);
 
     // Unwrap the (JSFunction *) parameter.
     int funcDepth = -((int)argc + 1);
@@ -2982,7 +2982,7 @@ bool
 IonBuilder::jsop_call(uint32 argc, bool constructing)
 {
     // Acquire known call target if existent.
-    RootedVarFunction target(cx, getSingleCallTarget(argc, pc));
+    RootedFunction target(cx, getSingleCallTarget(argc, pc));
 
     // Attempt to inline native and scripted functions.
     if (inliningEnabled() && target) {
@@ -3229,7 +3229,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
     MDefinition *value = current->pop();
     MDefinition *obj = current->peek(-1);
 
-    RootedVarObject baseObj(cx, obj->toNewObject()->baseObj());
+    RootedObject baseObj(cx, obj->toNewObject()->baseObj());
 
     if (!oracle->propertyWriteCanSpecialize(script, pc)) {
         // This should only happen for a few names like __proto__.
@@ -3245,7 +3245,7 @@ IonBuilder::jsop_initprop(HandlePropertyName name)
 
     JSObject *holder;
     JSProperty *prop = NULL;
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
     DebugOnly<bool> res = LookupPropertyWithFlags(cx, baseObj, id,
                                                   JSRESOLVE_QUALIFIED, &holder, &prop);
     JS_ASSERT(res && prop && holder == baseObj);
@@ -3732,7 +3732,7 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
     JSObject *globalObj = script->global();
     JS_ASSERT(globalObj->isNative());
 
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
 
     // For the fastest path, the property must be found, and it must be found
     // as a normal data property on exactly the global object.
@@ -3800,8 +3800,8 @@ IonBuilder::jsop_getgname(HandlePropertyName name)
 bool
 IonBuilder::jsop_setgname(HandlePropertyName name)
 {
-    RootedVarObject globalObj(cx, script->global());
-    RootedVarId id(cx, NameToId(name));
+    RootedObject globalObj(cx, script->global());
+    RootedId id(cx, NameToId(name));
 
     JS_ASSERT(globalObj->isNative());
 
@@ -4246,7 +4246,7 @@ IonBuilder::jsop_length()
     if (jsop_length_fastPath())
         return true;
 
-    RootedVarPropertyName name(cx, info().getAtom(pc)->asPropertyName());
+    RootedPropertyName name(cx, info().getAtom(pc)->asPropertyName());
     return jsop_getprop(name);
 }
 
@@ -4352,8 +4352,8 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
     JSObject *singleton = types ? types->getSingleton(cx) : NULL;
     if (singleton && !barrier) {
         bool isKnownConstant, testObject;
-        RootedVarId id(cx, NameToId(name));
-        RootedVarObject global(cx, script->global());
+        RootedId id(cx, NameToId(name));
+        RootedObject global(cx, script->global());
         if (!TestSingletonPropertyTypes(cx, unaryTypes.inTypes,
                                         global, id,
                                         &isKnownConstant, &testObject))
@@ -4434,7 +4434,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
     } else {
         ins = MSetPropertyCache::New(obj, value, name, script->strictModeCode);
 
-        RootedVarId id(cx, NameToId(name));
+        RootedId id(cx, NameToId(name));
         if (cx->compartment->needsBarrier() &&
             (!binaryTypes.lhsTypes || binaryTypes.lhsTypes->propertyNeedsBarrier(cx, id))) {
             ins->setNeedsBarrier();

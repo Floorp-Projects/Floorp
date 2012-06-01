@@ -8,7 +8,7 @@
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 #include "XULFormControlAccessible.h"
@@ -39,15 +39,15 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenuitemAccessible::
-  nsXULMenuitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsXULMenuitemAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
 PRUint64
 nsXULMenuitemAccessible::NativeState()
 {
-  PRUint64 state = nsAccessible::NativeState();
+  PRUint64 state = Accessible::NativeState();
 
   // Has Popup?
   if (mContent->NodeInfo()->Equals(nsGkAtoms::menu, kNameSpaceID_XUL)) {
@@ -86,7 +86,7 @@ nsXULMenuitemAccessible::NativeState()
 
     // Is collapsed?
     bool isCollapsed = false;
-    nsAccessible* parent = Parent();
+    Accessible* parent = Parent();
     if (parent && parent->State() & states::INVISIBLE)
       isCollapsed = true;
 
@@ -96,7 +96,7 @@ nsXULMenuitemAccessible::NativeState()
       // Selected and collapsed?
       if (isCollapsed) {
         // Set selected option offscreen/invisible according to combobox state
-        nsAccessible* grandParent = parent->Parent();
+        Accessible* grandParent = parent->Parent();
         if (!grandParent)
           return state;
         NS_ASSERTION(grandParent->Role() == roles::COMBOBOX,
@@ -160,7 +160,7 @@ nsXULMenuitemAccessible::AccessKey() const
 
   PRUint32 modifierKey = 0;
 
-  nsAccessible* parentAcc = Parent();
+  Accessible* parentAcc = Parent();
   if (parentAcc) {
     if (parentAcc->NativeRole() == roles::MENUBAR) {
       // If top level menu item, add Alt+ or whatever modifier text to string
@@ -341,7 +341,7 @@ nsXULMenuitemAccessible::AreItemsOperable() const
   return false;
 }
 
-nsAccessible*
+Accessible*
 nsXULMenuitemAccessible::ContainerWidget() const
 {
   nsMenuFrame* menuFrame = do_QueryFrame(GetFrame());
@@ -368,7 +368,7 @@ nsXULMenuitemAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenuSeparatorAccessible::
-  nsXULMenuSeparatorAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenuSeparatorAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULMenuitemAccessible(aContent, aDoc)
 {
 }
@@ -414,7 +414,7 @@ nsXULMenuSeparatorAccessible::ActionCount()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenupopupAccessible::
-  nsXULMenupopupAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenupopupAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   XULSelectControlAccessible(aContent, aDoc)
 {
   nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetFrame());
@@ -428,13 +428,13 @@ nsXULMenupopupAccessible::
 PRUint64
 nsXULMenupopupAccessible::NativeState()
 {
-  PRUint64 state = nsAccessible::NativeState();
+  PRUint64 state = Accessible::NativeState();
 
 #ifdef DEBUG
   // We are onscreen if our parent is active
   bool isActive = mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::menuactive);
   if (!isActive) {
-    nsAccessible* parent = Parent();
+    Accessible* parent = Parent();
     if (parent) {
       nsIContent* parentContent = parent->GetContent();
       if (parentContent)
@@ -476,7 +476,7 @@ nsXULMenupopupAccessible::NativeRole()
 
     if (role == roles::PUSHBUTTON) {
       // Some widgets like the search bar have several popups, owned by buttons.
-      nsAccessible* grandParent = mParent->Parent();
+      Accessible* grandParent = mParent->Parent();
       if (grandParent && grandParent->Role() == roles::AUTOCOMPLETE)
         return roles::COMBOBOX_LIST;
     }
@@ -509,14 +509,14 @@ nsXULMenupopupAccessible::AreItemsOperable() const
   return menuPopupFrame && menuPopupFrame->IsOpen();
 }
 
-nsAccessible*
+Accessible*
 nsXULMenupopupAccessible::ContainerWidget() const
 {
-  nsDocAccessible* document = Document();
+  DocAccessible* document = Document();
 
   nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetFrame());
   while (menuPopupFrame) {
-    nsAccessible* menuPopup =
+    Accessible* menuPopup =
       document->GetAccessible(menuPopupFrame->GetContent());
     if (!menuPopup) // shouldn't be a real case
       return nsnull;
@@ -550,15 +550,15 @@ nsXULMenupopupAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenubarAccessible::
-  nsXULMenubarAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsXULMenubarAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
 PRUint64
 nsXULMenubarAccessible::NativeState()
 {
-  PRUint64 state = nsAccessible::NativeState();
+  PRUint64 state = Accessible::NativeState();
 
   // Menu bar itself is not actually focusable
   state &= ~states::FOCUSABLE;
@@ -595,7 +595,7 @@ nsXULMenubarAccessible::AreItemsOperable() const
   return true;
 }
 
-nsAccessible*
+Accessible*
 nsXULMenubarAccessible::CurrentItem()
 {
   nsMenuBarFrame* menuBarFrame = do_QueryFrame(GetFrame());
@@ -610,7 +610,7 @@ nsXULMenubarAccessible::CurrentItem()
 }
 
 void
-nsXULMenubarAccessible::SetCurrentItem(nsAccessible* aItem)
+nsXULMenubarAccessible::SetCurrentItem(Accessible* aItem)
 {
   NS_ERROR("nsXULMenubarAccessible::SetCurrentItem not implemented");
 }

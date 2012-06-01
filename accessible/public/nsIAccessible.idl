@@ -23,7 +23,7 @@ interface nsIAccessibleRelation;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(46d422d1-c92f-4536-bdef-f77bc8350ec7)]
+[scriptable, uuid(45ce2c92-4d92-49d2-bff1-855934443261)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -254,7 +254,7 @@ interface nsIAccessible : nsISupports
   /**
    * The number of accessible actions associated with this accessible
    */
-  readonly attribute PRUint8 numActions;
+  readonly attribute PRUint8 actionCount;
 
   /**
    * The name of the accessible action at the given zero-based index

@@ -27,21 +27,21 @@
   -  launches the debugger UI. Do not translate this one! -->
 <!ENTITY debuggerMenu.commandkey     "S">
 
-<!-- LOCALIZATION NOTE (debuggerUI.closeButton): This is the label for the
-  -  button that closes the debugger UI. -->
-<!ENTITY debuggerUI.closeButton      "Close">
+<!-- LOCALIZATION NOTE (debuggerUI.closeButton.tooltip): This is the tooltip for
+  -  the button that closes the debugger UI. -->
+<!ENTITY debuggerUI.closeButton.tooltip        "Close">
 
-<!-- LOCALIZATION NOTE (debuggerUI.stepOverButton): This is the label for the
-  -  button that steps over a function call. -->
-<!ENTITY debuggerUI.stepOverButton   "Step Over">
+<!-- LOCALIZATION NOTE (debuggerUI.stepOverButton.tooltip): This is the tooltip for
+  -  the button that steps over a function call. -->
+<!ENTITY debuggerUI.stepOverButton.tooltip   "Step Over">
 
-<!-- LOCALIZATION NOTE (debuggerUI.stepInButton): This is the label for the
+<!-- LOCALIZATION NOTE (debuggerUI.stepInButton): This is the tooltip for the
   -  button that steps into a function call. -->
-<!ENTITY debuggerUI.stepInButton     "Step In">
+<!ENTITY debuggerUI.stepInButton.tooltip     "Step In">
 
-<!-- LOCALIZATION NOTE (debuggerUI.stepOutButton): This is the label for the
+<!-- LOCALIZATION NOTE (debuggerUI.stepOutButton): This is the tooltip for the
   -  button that steps out of a function call. -->
-<!ENTITY debuggerUI.stepOutButton    "Step Out">
+<!ENTITY debuggerUI.stepOutButton.tooltip    "Step Out">
 
 <!-- LOCALIZATION NOTE (debuggerUI.stackTitle): This is the label for the
   -  widget that displays the call stack frames in the debugger. -->

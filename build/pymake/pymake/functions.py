@@ -1,7 +1,3 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 """
 Makefile functions.
 """
@@ -51,6 +47,12 @@ class Function(object):
     def __len__(self):
         return len(self._arguments)
 
+    def __repr__(self):
+        return "%s<%s>(%r)" % (
+            self.__class__.__name__, self.loc,
+            ','.join([repr(a) for a in self._arguments]),
+            )
+
 class VariableRef(Function):
     __slots__ = ('vname', 'loc')
 
@@ -73,6 +75,9 @@ class VariableRef(Function):
             return
 
         value.resolve(makefile, variables, fd, setting + [vname])
+
+    def __repr__(self):
+        return "VariableRef<%s>(%r)" % (self.loc, self.vname)
 
 class SubstitutionRef(Function):
     """$(VARNAME:.c=.o) and $(VARNAME:%.c=%.o)"""
@@ -108,6 +113,10 @@ class SubstitutionRef(Function):
 
         fd.write(' '.join([f.subst(substto, word, False)
                            for word in value.resolvesplit(makefile, variables, setting + [vname])]))
+
+    def __repr__(self):
+        return "SubstitutionRef<%s>(%r:%r=%r)" % (
+            self.loc, self.vname, self.substfrom, selfsubstto,)
 
 class SubstFunction(Function):
     name = 'subst'

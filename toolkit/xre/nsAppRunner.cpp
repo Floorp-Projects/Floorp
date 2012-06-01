@@ -27,6 +27,7 @@
 
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
+#include "ProfileReset.h"
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
 #include "EventTracer.h"
@@ -1740,6 +1741,7 @@ ProfileLockedDialog(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
   }
 }
 
+
 static nsresult
 ProfileMissingDialog(nsINativeAppSupport* aNative)
 {
@@ -1784,6 +1786,28 @@ ProfileMissingDialog(nsINativeAppSupport* aNative)
 
     return NS_ERROR_ABORT;
   }
+}
+
+static nsresult
+ProfileLockedDialog(nsIToolkitProfile* aProfile, nsIProfileUnlocker* aUnlocker,
+                    nsINativeAppSupport* aNative, nsIProfileLock* *aResult)
+{
+  nsCOMPtr<nsILocalFile> profileDir;
+  nsresult rv = aProfile->GetRootDir(getter_AddRefs(profileDir));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsILocalFile> profileLocalDir;
+  rv = aProfile->GetLocalDir(getter_AddRefs(profileLocalDir));
+  if (NS_FAILED(rv)) return rv;
+
+  bool exists;
+  profileLocalDir->Exists(&exists);
+  if (!exists) {
+    return ProfileMissingDialog(aNative);
+  }
+
+  return ProfileLockedDialog(profileDir, profileLocalDir, aUnlocker, aNative,
+                             aResult);
 }
 
 static const char kProfileManagerURL[] =
@@ -1881,42 +1905,26 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   return LaunchChild(aNative);
 }
 
-// Pick a profile. We need to end up with a profile lock.
-//
-// 1) check for -profile <path>
-// 2) check for -P <name>
-// 3) check for -ProfileManager
-// 4) use the default profile, if there is one
-// 5) if there are *no* profiles, set up profile-migration
-// 6) display the profile-manager UI
-
-static bool gDoMigration = false;
-static bool gDoProfileReset = false;
-
-/**
- * Creates a new profile with a timestamp in the name to use for profile reset.
- */
 static nsresult
-ResetProfile(nsIToolkitProfileService* aProfileSvc, nsIToolkitProfile* *aNewProfile)
+GetCurrentProfileIsDefault(nsIToolkitProfileService* aProfileSvc,
+                           nsILocalFile* aCurrentProfileRoot, bool *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aProfileSvc);
-
-  nsCOMPtr<nsIToolkitProfile> newProfile;
-  // Make the new profile "default-" + the time in seconds since epoch for uniqueness.
-  nsCAutoString newProfileName("default-");
-  newProfileName.Append(nsPrintfCString("%lld", PR_Now() / 1000));
-  nsresult rv = aProfileSvc->CreateProfile(nsnull, // choose a default dir for us
-                                           nsnull, // choose a default dir for us
-                                           newProfileName,
-                                           getter_AddRefs(newProfile));
+  nsresult rv;
+  // Check that the profile to reset is the default since reset and the associated migration are
+  // only supported in that case.
+  nsCOMPtr<nsIToolkitProfile> selectedProfile;
+  nsCOMPtr<nsILocalFile> selectedProfileRoot;
+  rv = aProfileSvc->GetSelectedProfile(getter_AddRefs(selectedProfile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aProfileSvc->Flush();
+  rv = selectedProfile->GetRootDir(getter_AddRefs(selectedProfileRoot));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_IF_ADDREF(*aNewProfile = newProfile);
+  bool currentIsSelected;
+  rv = aCurrentProfileRoot->Equals(selectedProfileRoot, &currentIsSelected);
 
-  return NS_OK;
+  *aResult = currentIsSelected;
+  return rv;
 }
 
 /**
@@ -1955,6 +1963,17 @@ SetCurrentProfileAsDefault(nsIToolkitProfileService* aProfileSvc,
   return rv;
 }
 
+static bool gDoMigration = false;
+static bool gDoProfileReset = false;
+
+// Pick a profile. We need to end up with a profile lock.
+//
+// 1) check for -profile <path>
+// 2) check for -P <name>
+// 3) check for -ProfileManager
+// 4) use the default profile, if there is one
+// 5) if there are *no* profiles, set up profile-migration
+// 6) display the profile-manager UI
 static nsresult
 SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, nsINativeAppSupport* aNative,
               bool* aStartOffline, nsACString* aProfileName)
@@ -2016,9 +2035,18 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     CheckArg("profilemanager");
 
     if (gDoProfileReset) {
+      // Check that the profile to reset is the default since reset and migration are only
+      // supported in that case.
+      bool currentIsSelected;
+      GetCurrentProfileIsDefault(aProfileSvc, lf, &currentIsSelected);
+      if (!currentIsSelected) {
+        NS_WARNING("Profile reset is only supported for the default profile.");
+        gDoProfileReset = gDoMigration = false;
+      }
+
       // If we're resetting a profile, create a new one and use it to startup.
       nsCOMPtr<nsIToolkitProfile> newProfile;
-      rv = ResetProfile(aProfileSvc, getter_AddRefs(newProfile));
+      rv = CreateResetProfile(aProfileSvc, getter_AddRefs(newProfile));
       if (NS_SUCCEEDED(rv)) {
         rv = newProfile->GetRootDir(getter_AddRefs(lf));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -2149,7 +2177,6 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     rv = aProfileSvc->GetProfileByName(nsDependentCString(arg),
                                       getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
-      // If we're resetting a profile, create a new one and use it to startup.
       if (gDoProfileReset) {
         NS_WARNING("Profile reset is only supported for the default profile.");
         gDoProfileReset = false;
@@ -2163,22 +2190,7 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
         return NS_OK;
       }
 
-      nsCOMPtr<nsILocalFile> profileDir;
-      rv = profile->GetRootDir(getter_AddRefs(profileDir));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsILocalFile> profileLocalDir;
-      rv = profile->GetLocalDir(getter_AddRefs(profileLocalDir));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      bool exists;
-      profileLocalDir->Exists(&exists);
-      if (!exists) {
-        return ProfileMissingDialog(aNative);
-      }
-
-      return ProfileLockedDialog(profileDir, profileLocalDir, unlocker,
-                                 aNative, aResult);
+      return ProfileLockedDialog(profile, unlocker, aNative, aResult);
     }
 
     return ShowProfileManager(aProfileSvc, aNative);
@@ -2224,8 +2236,17 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     if (profile) {
       // If we're resetting a profile, create a new one and use it to startup.
       if (gDoProfileReset) {
+        {
+          // Check that the source profile is not in use by temporarily acquiring its lock.
+          nsIProfileLock* tempProfileLock;
+          nsCOMPtr<nsIProfileUnlocker> unlocker;
+          rv = profile->Lock(getter_AddRefs(unlocker), &tempProfileLock);
+          if (NS_FAILED(rv))
+            return ProfileLockedDialog(profile, unlocker, aNative, &tempProfileLock);
+        }
+
         nsCOMPtr<nsIToolkitProfile> newProfile;
-        rv = ResetProfile(aProfileSvc, getter_AddRefs(newProfile));
+        rv = CreateResetProfile(aProfileSvc, getter_AddRefs(newProfile));
         if (NS_SUCCEEDED(rv))
           profile = newProfile;
         else
@@ -2243,22 +2264,7 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
         return NS_OK;
       }
 
-      nsCOMPtr<nsILocalFile> profileDir;
-      rv = profile->GetRootDir(getter_AddRefs(profileDir));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsILocalFile> profileLocalDir;
-      rv = profile->GetRootDir(getter_AddRefs(profileLocalDir));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      bool exists;
-      profileLocalDir->Exists(&exists);
-      if (!exists) {
-        return ProfileMissingDialog(aNative);
-      }
-
-      return ProfileLockedDialog(profileDir, profileLocalDir, unlocker,
-                                 aNative, aResult);
+      return ProfileLockedDialog(profile, unlocker, aNative, aResult);
     }
   }
 
@@ -3617,24 +3623,39 @@ XREMain::XRE_mainRun()
     }
   }
 
-  // Profile Migration
-  if (mAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
-    gDoMigration = false;
-    nsCOMPtr<nsIProfileMigrator> pm
-      (do_CreateInstance(NS_PROFILEMIGRATOR_CONTRACTID));
-    if (pm) {
-      nsCAutoString aKey;
-      if (gDoProfileReset) {
-        // Automatically migrate from the current application if we just
-        // reset the profile.
-        aKey = MOZ_APP_NAME;
-        pm->Migrate(&mDirProvider, aKey);
-        // Set the new profile as the default after migration.
-        rv = SetCurrentProfileAsDefault(mProfileSvc, mProfD);
-        if (NS_FAILED(rv)) NS_WARNING("Could not set current profile as the default");
-      } else {
+  {
+    nsCOMPtr<nsIToolkitProfile> selectedProfile;
+    if (gDoProfileReset) {
+      // At this point we can be sure that profile reset is happening on the default profile.
+      rv = mProfileSvc->GetSelectedProfile(getter_AddRefs(selectedProfile));
+      if (NS_FAILED(rv)) {
+        gDoProfileReset = false;
+        return 1;
+      }
+    }
+
+    // Profile Migration
+    if (mAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
+      gDoMigration = false;
+      nsCOMPtr<nsIProfileMigrator> pm(do_CreateInstance(NS_PROFILEMIGRATOR_CONTRACTID));
+      if (pm) {
+        nsCAutoString aKey;
+        if (gDoProfileReset) {
+          // Automatically migrate from the current application if we just
+          // reset the profile.
+          aKey = MOZ_APP_NAME;
+        }
         pm->Migrate(&mDirProvider, aKey);
       }
+    }
+
+    if (gDoProfileReset) {
+      nsresult backupCreated = ProfileResetCleanup(selectedProfile);
+      if (NS_FAILED(backupCreated)) NS_WARNING("Could not cleanup the profile that was reset");
+
+      // Set the new profile as the default after we're done cleaning up the old default.
+      rv = SetCurrentProfileAsDefault(mProfileSvc, mProfD);
+      if (NS_FAILED(rv)) NS_WARNING("Could not set current profile as the default");
     }
   }
 
@@ -3912,7 +3933,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 }
 
 int
-XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
+XRE_main(int argc, char* argv[], const nsXREAppData* aAppData, PRUint32 aFlags)
 {
   XREMain main;
   return main.XRE_main(argc, argv, aAppData);

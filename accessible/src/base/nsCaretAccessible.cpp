@@ -39,7 +39,7 @@ nsCaretAccessible::~nsCaretAccessible()
 void nsCaretAccessible::Shutdown()
 {
   // The caret accessible isn't shut down until the RootAccessible owning it is shut down
-  // Each nsDocAccessible, including the RootAccessible, is responsible for clearing the
+  // Each DocAccessible, including the RootAccessible, is responsible for clearing the
   // doc selection listeners they registered in this nsCaretAccessible
 
   ClearControlSelectionListener(); // Clear the selection listener for the currently focused control
@@ -178,7 +178,7 @@ nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
   NS_ENSURE_STATE(mRootAccessible);
 
   nsCOMPtr<nsIDocument> documentNode(do_QueryInterface(aDOMDocument));
-  nsDocAccessible* document = GetAccService()->GetDocAccessible(documentNode);
+  DocAccessible* document = GetAccService()->GetDocAccessible(documentNode);
 
 #ifdef DEBUG_NOTIFICATIONS
   nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));

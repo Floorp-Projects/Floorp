@@ -10,7 +10,7 @@
     }, 0);
   }, false);
 </script>
-<iframe id="content" src="data:application/xhtml+xml;charset=utf-8,%3Chtml%20xmlns%3D%22http%3A//www.w3.org/1999/xhtml%22%3E%0A%3Cframeset%20contenteditable%3D%22true%22/%3E%0A%3Cscript%3E%0Afunction%20doExecCommand%28%29%7B%0Adocument.execCommand%28%27insertParagraph%27%2C%20false%2C%20%27%27%29%3B%0A%7D%0AsetTimeout%28doExecCommand%2C100%29%3B%0Awindow.addEventListener%28%27DOMNodeRemoved%27%2C%20function%28%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%7D%2C%20true%29%3B%0A%3C/script%3E%0A%3C/html%3E" style="width:1000px;height: 200px;"></iframe>
+<iframe id="content" src="data:application/xhtml+xml;charset=utf-8,%3Chtml%20xmlns%3D%22http%3A//www.w3.org/1999/xhtml%22%3E%0A%3Cframeset%20contenteditable%3D%22true%22/%3E%0A%3Cscript%3E%0Afunction%20doExecCommand%28%29%7B%0Adocument.execCommand%28%27formatBlock%27%2C%20false%2C%20%27p%27%29%3B%0A%7D%0AsetTimeout%28doExecCommand%2C100%29%3B%0Awindow.addEventListener%28%27DOMNodeRemoved%27%2C%20function%28%29%20%7Bwindow.frameElement.parentNode.removeChild%28window.frameElement%29%3B%7D%2C%20true%29%3B%0A%3C/script%3E%0A%3C/html%3E" style="width:1000px;height: 200px;"></iframe>
 
 </body>
 </html>

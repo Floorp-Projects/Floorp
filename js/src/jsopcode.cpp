@@ -323,7 +323,7 @@ js_DumpPCCounts(JSContext *cx, JSScript *script, js::Sprinter *sp)
 JS_FRIEND_API(JSBool)
 js_DisassembleAtPC(JSContext *cx, JSScript *script_, JSBool lines, jsbytecode *pc, Sprinter *sp)
 {
-    RootedVar<JSScript*> script(cx, script_);
+    Rooted<JSScript*> script(cx, script_);
 
     jsbytecode *next, *end;
     unsigned len;
@@ -420,10 +420,10 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
                 return false;
 
             Shape::Range r = obj->lastProperty()->all();
-            Shape::Range::Root root(cx, &r);
+            Shape::Range::AutoRooter root(cx, &r);
 
             while (!r.empty()) {
-                RootedVar<const Shape*> shape(cx, &r.front());
+                Rooted<const Shape*> shape(cx, &r.front());
                 JSAtom *atom = JSID_IS_INT(shape->propid())
                                ? cx->runtime->atomState.emptyAtom
                                : JSID_TO_ATOM(shape->propid());
@@ -5507,7 +5507,7 @@ js_DecompileFunction(JSPrinter *jp)
 {
     JSContext *cx = jp->sprinter.context;
 
-    RootedVarFunction fun(cx, jp->fun);
+    RootedFunction fun(cx, jp->fun);
     JS_ASSERT(fun);
     JS_ASSERT(!jp->script);
 
@@ -5549,11 +5549,20 @@ js_DecompileFunction(JSPrinter *jp)
         ss.printer = NULL;
         jp->script = script;
 #endif
+        
+        jsbytecode *deftable = NULL;
+        jsbytecode *defbegin = NULL;
+        int32_t deflen = 0;
+        uint16_t defstart = 0;
+        unsigned nformal = fun->nargs - fun->hasRest();
 
         for (unsigned i = 0; i < fun->nargs; i++) {
             if (i > 0)
                 js_puts(jp, ", ");
 
+            bool isRest = fun->hasRest() && i == unsigned(fun->nargs) - 1;
+            if (isRest)
+                js_puts(jp, "...");
             JSAtom *param = GetArgOrVarAtom(jp, i);
 
 #if JS_HAS_DESTRUCTURING
@@ -5563,6 +5572,7 @@ js_DecompileFunction(JSPrinter *jp)
                 ptrdiff_t todo;
                 const char *lval;
 
+                JS_ASSERT(deflen == 0);
                 LOCAL_ASSERT(*pc == JSOP_GETARG || *pc == JSOP_GETALIASEDVAR);
                 pc += js_CodeSpec[*pc].length;
                 LOCAL_ASSERT(*pc == JSOP_DUP);
@@ -5587,10 +5597,49 @@ js_DecompileFunction(JSPrinter *jp)
                 continue;
             }
 
-#undef LOCAL_ASSERT
 #endif
 
-            if (!QuoteString(&jp->sprinter, param, 0)) {
+            // Compute default parameters.
+            if ((*pc == JSOP_REST && pc[1] == JSOP_UNDEFINED) ||
+                *pc == JSOP_ACTUALSFILLED) {
+#define SKIP(pc, op) LOCAL_ASSERT(*pc == op); pc += js_CodeSpec[op].length;
+                JS_ASSERT(fun->hasDefaults());
+                JS_ASSERT(deflen == 0);
+                if (fun->hasRest()) {
+                    SKIP(pc, JSOP_REST);
+                    SKIP(pc, JSOP_UNDEFINED);
+                    JS_ASSERT(*pc == JSOP_SETARG || *pc == JSOP_SETALIASEDVAR);
+                    pc += js_CodeSpec[*pc].length;
+                    SKIP(pc, JSOP_POP);
+                }
+                SKIP(pc, JSOP_ACTUALSFILLED);
+                JS_ASSERT(*pc == JSOP_TABLESWITCH);
+                defbegin = pc;
+                deflen = GET_JUMP_OFFSET(pc);
+                pc += JUMP_OFFSET_LEN;
+                defstart = GET_JUMP_OFFSET(pc);
+                pc += JUMP_OFFSET_LEN;
+                pc += JUMP_OFFSET_LEN; // Skip high
+                deftable = pc;
+                pc = defbegin + deflen;
+                if (fun->hasRest()) {
+                    SKIP(pc, JSOP_SETARG);
+                    SKIP(pc, JSOP_POP);
+                }
+#undef SKIP
+            }
+
+#undef LOCAL_ASSERT
+
+            if (fun->hasDefaults() && deflen && i >= defstart && !isRest) {
+#define TABLE_OFF(off) GET_JUMP_OFFSET(&deftable[(off)*JUMP_OFFSET_LEN])
+                jsbytecode *casestart = defbegin + TABLE_OFF(i - defstart);
+                jsbytecode *caseend = defbegin + ((i < nformal - 1) ? TABLE_OFF(i - defstart + 1) : deflen);
+#undef TABLE_OFF
+                unsigned exprlength = caseend - casestart - js_CodeSpec[JSOP_POP].length;
+                if (!DecompileCode(jp, script, casestart, exprlength, 0))
+                    return JS_FALSE;
+            } else if (!QuoteString(&jp->sprinter, param, 0)) {
                 ok = JS_FALSE;
                 break;
             }

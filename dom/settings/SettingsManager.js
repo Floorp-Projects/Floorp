@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict"
+"use strict";
 
 /* static functions */
-let DEBUG = 0;
+let DEBUG = false;
 if (DEBUG)
-  debug = function (s) { dump("-*- SettingsManager: " + s + "\n"); }
+  debug = function (s) { dump("-*- SettingsManager: " + s + "\n"); };
 else
-  debug = function (s) {}
+  debug = function (s) {};
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -84,7 +84,8 @@ SettingsLock.prototype = {
             req = store.getAll(info.name);
           }
           req.onsuccess = function(event) {
-            debug("Request successful. Record count:" + event.target.result.length);
+            debug("Request for '" + info.name + "' successful. " + 
+                  "Record count: " + event.target.result.length);
             debug("result: " + JSON.stringify(event.target.result));
             var result = {};
             for (var i in event.target.result)

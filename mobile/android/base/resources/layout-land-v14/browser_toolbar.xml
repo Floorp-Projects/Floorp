@@ -10,6 +10,12 @@
     <RelativeLayout android:id="@+id/address_bar"
                     style="@style/AddressBar"
                     android:background="@drawable/address_bar_bg">
+
+        <ImageButton android:id="@+id/back"
+                     style="@style/AddressBar.ImageButton.Unused"/>
+
+        <ImageButton android:id="@+id/forward"
+                     style="@style/AddressBar.ImageButton.Unused"/>
         
         <Button android:id="@+id/awesome_bar"
                 style="@style/AddressBar.Button"

@@ -1,0 +1,181 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
+
+/* video controls */
+.controlsOverlay {
+  -moz-box-pack: center;
+  -moz-box-align: end;
+  padding: 20px;
+  -moz-box-flex: 1;
+  -moz-box-orient: horizontal;
+}
+
+.controlBar {
+  -moz-box-flex: 1;
+  font-size: 16pt;
+  padding: 10px;
+  background-color: rgba(50,50,50,0.8);
+  border-radius: 8px;
+  width: 100%;
+}
+
+.controlsSpacer {
+  display: none;
+  -moz-box-flex: 0;
+}
+
+.playButton,
+.muteButton {
+  -moz-appearance: none;
+  min-height: 42px;
+  min-width: 42px;
+  border: none !important;
+}
+
+.playButton {
+  -moz-transform: translateX(21px);
+  background: url("chrome://browser/content/images/pause-hdpi.png") no-repeat center;
+}
+
+.playButton[paused="true"] {
+  background: url("chrome://browser/content/images/play-hdpi.png") no-repeat center;
+}
+
+.muteButton {
+  background: url("chrome://browser/content/images/mute-hdpi.png") no-repeat center;
+}
+
+.muteButton[muted="true"] {
+  background: url("chrome://browser/content/images/unmute-hdpi.png") no-repeat center;
+}
+
+/* This button is hidden until bug 704229 is fixed. */
+.fullscreenButton {
+  display: none;
+}
+
+/* bars */
+.scrubberStack {
+  width: 100%;
+  min-height: 32px;
+  max-height: 32px;
+  padding: 0px 8px;
+  margin: 0px;
+}
+
+.bufferBar,
+.bufferBar .progress-bar,
+.progressBar,
+.progressBar .progress-bar,
+.scrubber,
+.scrubber .scale-slider,
+.scrubber .scale-thumb {
+  -moz-appearance: none;
+  border: none;
+  padding: 0px;
+  margin: 0px;
+  background-color: transparent;
+}
+
+.bufferBar {
+  border: 1px solid #5e6166;
+}
+
+.bufferBar,
+.progressBar {
+  margin: 11px 0px 9px 0px;
+  height: 8px
+}
+
+.bufferBar .progress-bar {
+  background-color: #5e6166;
+}
+
+.progressBar .progress-bar {
+  background-color: white;
+}
+
+.scrubber {
+  margin-left: -16px;
+  margin-right: -16px;
+}
+
+.scrubber .scale-thumb {
+  display: -moz-box;
+  margin: 0px !important;
+  padding: 0px !important;
+  background: url("chrome://browser/content/images/scrubber-hdpi.png") no-repeat;
+  background-size: 32px 32px;
+  height: 32px;
+  width: 32px;
+}
+
+.durationBox {
+  -moz-box-orient: horizontal;
+  -moz-box-pack: start;
+  -moz-box-align: center;
+  color: white;
+  font-weight: bold;
+  padding: 0px 8px;
+  margin-top: -6px;
+}
+
+.positionLabel {
+  -moz-box-flex: 1;
+}
+
+.statusOverlay {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  background-color: rgb(50,50,50);
+}
+
+.statusIcon {
+  margin-bottom: 28px;
+  width: 36px;
+  height: 36px;
+}
+
+.statusIcon[type="throbber"] {
+  background: url(chrome:///content/images/throbber.png) no-repeat center;
+}
+
+.statusIcon[type="error"] {
+  background: url(chrome://global/content/images/error.png) no-repeat center;
+}
+
+/* CSS Transitions */
+.controlBar:not([immediate]) {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 200ms;
+}
+
+.controlBar[fadeout] {
+  opacity: 0;
+}
+
+.statusOverlay:not([immediate]) {
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 300ms;
+  -moz-transition-delay: 750ms;
+}
+
+.statusOverlay[fadeout] {
+  opacity: 0;
+}
+
+.volumeStack,
+.controlBar[firstshow="true"] .muteButton,
+.controlBar[firstshow="true"] .scrubberStack,
+.controlBar[firstshow="true"] .durationBox,
+.timeLabel {
+  display: none;
+}
+
+.controlBar[firstshow="true"] .playButton {
+  -moz-transform: none;
+}
+

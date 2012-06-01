@@ -760,13 +760,13 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
       (line, didTimeout) = self.readWithTimeout(logsource, timeout)
       while line != "" and not didTimeout:
+        if stackFixerFunction:
+          line = stackFixerFunction(line)
         self.log.info(line.rstrip().decode("UTF-8", "ignore"))
         if logger:
           logger.log(line)
         if "TEST-START" in line and "|" in line:
           self.lastTestSeen = line.split("|")[1].strip()
-        if stackFixerFunction:
-          line = stackFixerFunction(line)
         if not debuggerInfo and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
           if self.haveDumpedScreen:
             self.log.info("Not taking screenshot here: see the one that was previously logged")

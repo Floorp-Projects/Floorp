@@ -7,8 +7,14 @@
 
 /* This code is for MIPS using the O32 ABI. */
 
+#ifdef ANDROID
+#include <asm/regdef.h>
+#include <asm/asm.h>
+#include <machine/asm.h>
+#else
 #include <sys/regdef.h>
 #include <sys/asm.h>
+#endif
 
 # NARGSAVE is the argument space in the callers frame, including extra
 # 'shadowed' space for the argument registers. The minimum of 4

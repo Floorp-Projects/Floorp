@@ -51,12 +51,20 @@ gfxAndroidPlatform::CreateOffscreenSurface(const gfxIntSize& size,
                                       gfxASurface::gfxContentType contentType)
 {
     nsRefPtr<gfxASurface> newSurface;
-    if (contentType == gfxImageSurface::CONTENT_COLOR)
-        newSurface = new gfxImageSurface (size, GetOffscreenFormat());
-    else
-        newSurface = new gfxImageSurface (size, gfxASurface::FormatFromContent(contentType));
+    newSurface = new gfxImageSurface(size, OptimalFormatForContent(contentType));
 
     return newSurface.forget();
+}
+
+mozilla::gfx::SurfaceFormat
+gfxAndroidPlatform::Optimal2DFormatForContent(gfxASurface::gfxContentType aContent)
+{
+    // On Android we always use RGB565 for now.
+    if (aContent == gfxASurface::CONTENT_COLOR) {
+        return mozilla::gfx::FORMAT_R5G6B5;
+    } else {
+        return gfxPlatform::Optimal2DFormatForContent(aContent);
+    }
 }
 
 nsresult
@@ -166,7 +174,7 @@ gfxAndroidPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 RefPtr<ScaledFont>
 gfxAndroidPlatform::GetScaledFontForFont(gfxFont *aFont)
 {
-    NS_ASSERTION(aFont->GetType() == gfxFont::FontType::FONT_TYPE_FT2, "Expecting Freetype font");
+    NS_ASSERTION(aFont->GetType() == gfxFont::FONT_TYPE_FT2, "Expecting Freetype font");
     NativeFont nativeFont;
     nativeFont.mType = NATIVE_FONT_SKIA_FONT_FACE;
     nativeFont.mFont = static_cast<gfxFT2FontBase*>(aFont)->GetFontOptions();

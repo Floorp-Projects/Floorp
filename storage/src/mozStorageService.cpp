@@ -844,6 +844,14 @@ Service::Observe(nsISupports *, const char *aTopic, const PRUnichar *)
         NS_ProcessNextEvent(thread);
       }
     } while (anyOpen);
+
+#ifdef DEBUG
+    nsTArray<nsRefPtr<Connection> > connections;
+    getConnections(connections);
+    for (PRUint32 i = 0, n = connections.Length(); i < n; i++) {
+      MOZ_ASSERT(!connections[i]->ConnectionReady());
+    }
+#endif
   }
 
   return NS_OK;

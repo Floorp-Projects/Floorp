@@ -204,7 +204,6 @@
                 type="checkbox"
                 label="&viewTabsOnTop.label;"
                 accesskey="&viewTabsOnTop.accesskey;"/>
-      <menuseparator/>
       <menuitem command="cmd_CustomizeToolbars"
                 label="&viewCustomizeToolbar.label;"
                 accesskey="&viewCustomizeToolbar.accesskey;"/>

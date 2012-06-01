@@ -15,7 +15,7 @@ class nsHTMLImageAccessibleWrap : public nsHTMLImageAccessible,
                                   public ia2AccessibleImage
 {
 public:
-  nsHTMLImageAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHTMLImageAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
     nsHTMLImageAccessible(aContent, aDoc) {}
 
   // IUnknown

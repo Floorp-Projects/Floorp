@@ -3,12 +3,12 @@ function testValue(aID, aAcc, aValue, aRole)
   is(aAcc.value, aValue, "Wrong value for " + aID + "!");
 }
 
-function testAction(aID, aAcc, aNumActions, aActionName, aActionDescription)
+function testAction(aID, aAcc, aActionCount, aActionName, aActionDescription)
 {
-  var numActions = aAcc.numActions;
-  is(numActions, aNumActions, "Wrong number of actions for " + aID + "!");
+  var actionCount = aAcc.actionCount;
+  is(actionCount, aActionCount, "Wrong number of actions for " + aID + "!");
 
-  if (numActions != 0) {
+  if (actionCount != 0) {
     // Test first action. Normally only 1 should be present.
     is(aAcc.getActionName(0), aActionName,
        "Wrong name of action for " + aID + "!");
@@ -18,7 +18,7 @@ function testAction(aID, aAcc, aNumActions, aActionName, aActionDescription)
 }
 
 function testThis(aID, aName, aValue, aDescription, aRole,
-                  aNumActions, aActionName, aActionDescription)
+                  aActionCount, aActionName, aActionDescription)
 {
   var acc = getAccessible(aID);
   if (!acc)
@@ -29,5 +29,5 @@ function testThis(aID, aName, aValue, aDescription, aRole,
   is(acc.description, aDescription, "Wrong description for " + aID + "!");
   testRole(aID, aRole);
 
-  testAction(aID, acc, aNumActions, aActionName, aActionDescription);
+  testAction(aID, acc, aActionCount, aActionName, aActionDescription);
 }

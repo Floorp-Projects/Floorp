@@ -1604,7 +1604,11 @@ var gDownloadingPage = {
     if (aTopic == "update-staged") {
       this.cleanUp();
       if (aData == STATE_APPLIED ||
-          aData == STATE_APPLIED_SVC) {
+          aData == STATE_APPLIED_SVC ||
+          aData == STATE_PENDING ||
+          aData == STATE_PENDING_SVC) {
+        // If the update is successfully applied, or if the updater has
+        // fallen back to non-staged updates, go to the finish page.
         gUpdates.wiz.goTo("finished");
       } else {
         gUpdates.wiz.goTo("errors");

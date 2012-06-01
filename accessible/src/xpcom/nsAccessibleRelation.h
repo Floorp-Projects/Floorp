@@ -16,7 +16,7 @@ class Relation;
 /**
  * Class represents an accessible relation.
  */
-class nsAccessibleRelation: public nsIAccessibleRelation
+class nsAccessibleRelation : public nsIAccessibleRelation
 {
 public:
   nsAccessibleRelation(PRUint32 aType, Relation* aRel);

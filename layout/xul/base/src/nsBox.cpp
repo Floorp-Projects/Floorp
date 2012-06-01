@@ -324,7 +324,7 @@ nsBox::GetBorder(nsMargin& aMargin)
     }
   }
 
-  aMargin = GetStyleBorder()->GetActualBorder();
+  aMargin = GetStyleBorder()->GetComputedBorder();
 
   return NS_OK;
 }

@@ -1,42 +1,6 @@
-/*
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is the Extension Manager.
-#
-# The Initial Developer of the Original Code is
-# the Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2009
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#   Dave Townsend <dtownsend@oxymoronical.com>
-#   Blair McBride <bmcbride@mozilla.com>
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
-*/
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -7120,17 +7084,17 @@ UpdateChecker.prototype = {
                                                compatOverrides);
 
     if (update && Services.vc.compare(this.addon.version, update.version) < 0) {
-      for (let i = 0; i < XPIProvider.installs.length; i++) {
+      for (let currentInstall of XPIProvider.installs) {
         // Skip installs that don't match the available update
-        if (XPIProvider.installs[i].existingAddon != this.addon ||
-            XPIProvider.installs[i].version != update.version)
+        if (currentInstall.existingAddon != this.addon ||
+            currentInstall.version != update.version)
           continue;
 
         // If the existing install has not yet started downloading then send an
         // available update notification. If it is already downloading then
         // don't send any available update notification
-        if (XPIProvider.installs[i].state == AddonManager.STATE_AVAILABLE)
-          sendUpdateAvailableMessages(this, XPIProvider.installs[i]);
+        if (currentInstall.state == AddonManager.STATE_AVAILABLE)
+          sendUpdateAvailableMessages(this, currentInstall);
         else
           sendUpdateAvailableMessages(this, null);
         return;
@@ -7219,8 +7183,7 @@ AddonInternal.prototype = {
     }
     catch (e) { }
 
-    for (let i = 0; i < this.targetPlatforms.length; i++) {
-      let platform = this.targetPlatforms[i];
+    for (let platform of this.targetPlatforms) {
       if (platform.os == Services.appinfo.OS) {
         if (platform.abi) {
           needsABI = true;
@@ -7288,11 +7251,11 @@ AddonInternal.prototype = {
 
   get matchingTargetApplication() {
     let app = null;
-    for (let i = 0; i < this.targetApplications.length; i++) {
-      if (this.targetApplications[i].id == Services.appinfo.ID)
-        return this.targetApplications[i];
-      if (this.targetApplications[i].id == TOOLKIT_ID)
-        app = this.targetApplications[i];
+    for (let targetApp of this.targetApplications) {
+      if (targetApp.id == Services.appinfo.ID)
+        return targetApp;
+      if (targetApp.id == TOOLKIT_ID)
+        app = targetApp;
     }
     return app;
   },
@@ -7413,8 +7376,7 @@ function DBAddonInternal() {
 
   this.__defineGetter__("pendingUpgrade", function() {
     delete this.pendingUpgrade;
-    for (let i = 0; i < XPIProvider.installs.length; i++) {
-      let install = XPIProvider.installs[i];
+    for (let install of XPIProvider.installs) {
       if (install.state == AddonManager.STATE_INSTALLED &&
           !(install.addon instanceof DBAddonInternal) &&
           install.addon.id == this.id &&

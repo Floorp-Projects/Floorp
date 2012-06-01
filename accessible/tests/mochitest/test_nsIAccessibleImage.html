@@ -77,7 +77,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
     }
 
     function testThis(aID, aSRC, aWidth, aHeight,
-                      aNumActions, aActionNames)
+                      aActionCount, aActionNames)
     {
       var acc = getAccessible(aID, [nsIAccessibleImage]);
       if (!acc)
@@ -93,8 +93,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       var attributes = {"src": aSRC};
       testAttrs(acc, attributes, true);
 
-      if (aNumActions) {
-        is(acc.numActions, aNumActions,
+      if (aActionCount) {
+        is(acc.actionCount, aActionCount,
            "Wrong number of actions for " + aID + "!");
 
         for (index = 0; index < aActionNames.length; index++)

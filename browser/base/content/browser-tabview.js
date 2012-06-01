@@ -292,7 +292,7 @@ let TabView = {
         // if group has title, it's not hidden and there is no active group or
         // the active group id doesn't match the group id, a group menu item
         // would be added.
-        if (groupItem.getTitle().length > 0 && !groupItem.hidden &&
+        if (!groupItem.hidden && groupItem.getChildren().length &&
             (!activeGroup || activeGroup.id != groupItem.id)) {
           let menuItem = self._createGroupMenuItem(groupItem);
           popup.insertBefore(menuItem, separator);
@@ -305,10 +305,27 @@ let TabView = {
 
   // ----------
   _createGroupMenuItem: function TabView__createGroupMenuItem(groupItem) {
-    let menuItem = document.createElement("menuitem")
-    menuItem.setAttribute("label", groupItem.getTitle());
+    let menuItem = document.createElement("menuitem");
+    let title = groupItem.getTitle();
+
+    if (!title.trim()) {
+      let topChildLabel = groupItem.getTopChild().tab.label;
+
+      if (groupItem.getChildren().length > 1) {
+        title =
+          gNavigatorBundle.getFormattedString("tabview2.moveToUnnamedGroup.label",
+            [topChildLabel, groupItem.getChildren().length - 1]);
+      } else {
+        title = topChildLabel;
+      }
+    }
+
+    menuItem.setAttribute("label", title);
+    menuItem.setAttribute("tooltiptext", title);
+    menuItem.setAttribute("crop", "center");
+    menuItem.setAttribute("class", "tabview-menuitem");
     menuItem.setAttribute(
-      "oncommand", 
+      "oncommand",
       "TabView.moveTabTo(TabContextMenu.contextTab,'" + groupItem.id + "')");
 
     return menuItem;

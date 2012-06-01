@@ -178,7 +178,7 @@ public:
   }
   
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<nsAccessible> CreateAccessible();
+  virtual already_AddRefed<Accessible> CreateAccessible();
 #endif
 
   float GetFontSizeInflation() const;
@@ -385,7 +385,9 @@ public:
 
   void ClearTextRuns() {
     ClearTextRun(nsnull, nsTextFrame::eInflated);
-    ClearTextRun(nsnull, nsTextFrame::eNotInflated);
+    if (HasFontSizeInflation()) {
+      ClearTextRun(nsnull, nsTextFrame::eNotInflated);
+    }
   }
 
   // Get the DOM content range mapped by this frame after excluding

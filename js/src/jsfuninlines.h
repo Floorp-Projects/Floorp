@@ -119,7 +119,7 @@ ClassMethodIsNative(JSContext *cx, HandleObject obj, Class *clasp, HandleId meth
 
     Value v;
     if (!HasDataProperty(cx, obj, methodid, &v)) {
-        RootedVarObject proto(cx, obj->getProto());
+        RootedObject proto(cx, obj->getProto());
         if (!proto || proto->getClass() != clasp || !HasDataProperty(cx, proto, methodid, &v))
             return false;
     }
@@ -188,7 +188,7 @@ CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
                     gc::AllocKind kind = JSFunction::FinalizeKind)
 {
     JS_ASSERT(parent);
-    RootedVarObject proto(cx, parent->global().getOrCreateFunctionPrototype(cx));
+    RootedObject proto(cx, parent->global().getOrCreateFunctionPrototype(cx));
     if (!proto)
         return NULL;
 
@@ -206,7 +206,7 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObjec
      * with its type in existence.
      */
     if (fun->hasSingletonType()) {
-        if (!JSObject::setParent(cx, fun, RootedVarObject(cx, SkipScopeParent(parent))))
+        if (!JSObject::setParent(cx, fun, RootedObject(cx, SkipScopeParent(parent))))
             return NULL;
         fun->setEnvironment(parent);
         return fun;
@@ -231,8 +231,8 @@ CloneFunctionObject(JSContext *cx, HandleFunction fun)
         return fun;
 
     return js_CloneFunctionObject(cx, fun,
-                                  RootedVarObject(cx, fun->environment()),
-                                  RootedVarObject(cx, fun->getProto()),
+                                  RootedObject(cx, fun->environment()),
+                                  RootedObject(cx, fun->getProto()),
                                   JSFunction::ExtendedFinalizeKind);
 }
 

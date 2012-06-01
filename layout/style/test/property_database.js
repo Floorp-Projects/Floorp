@@ -197,11 +197,11 @@ var gCSSProperties = {
 		],
 		invalid_values: [ "5%" ]
 	},
-	"-moz-border-image": {
-		domProp: "MozBorderImage",
+	"border-image": {
+		domProp: "borderImage",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "-moz-border-image-source", "-moz-border-image-slice", "-moz-border-image-width", "-moz-border-image-outset", "-moz-border-image-repeat" ],
+		subproperties: [ "border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat" ],
 		initial_values: [ "none" ],
 		other_values: [ "url('border.png') 27 27 27 27",
 						"url('border.png') 27",
@@ -233,40 +233,40 @@ var gCSSProperties = {
 						  "url('border.png') / 1",
 						  "url('border.png') / / 1"]
 	},
-	"-moz-border-image-source": {
-		domProp: "MozBorderImageSource",
+	"border-image-source": {
+		domProp: "borderImageSource",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "url('border.png')" ],
 		invalid_values: [ "url('border.png') url('border.png')" ]
 	},
-	"-moz-border-image-slice": {
-		domProp: "MozBorderImageSlice",
+	"border-image-slice": {
+		domProp: "borderImageSlice",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "100%", "100% 100% 100% 100%" ],
 		other_values: [ "0%", "10", "10 100% 0 2", "0 0 0 0", "fill 10 10", "10 10 fill" ],
 		invalid_values: [ "-10%", "-10", "10 10 10 10 10", "10 10 10 10 -10", "10px", "-10px", "fill", "fill fill 10px", "10px fill fill" ]
 	},
-	"-moz-border-image-width": {
-		domProp: "MozBorderImageWidth",
+	"border-image-width": {
+		domProp: "borderImageWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1", "1 1 1 1" ],
 		other_values: [ "0", "0%", "0px", "auto auto auto auto", "10 10% auto 15px", "10px 10px 10px 10px", "10", "10 10", "10 10 10" ],
 		invalid_values: [ "-10", "-10px", "-10%", "10 10 10 10 10", "10 10 10 10 auto", "auto auto auto auto auto" ]
 	},
-	"-moz-border-image-outset": {
-		domProp: "MozBorderImageOutset",
+	"border-image-outset": {
+		domProp: "borderImageOutset",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "0", "0 0 0 0" ],
 		other_values: [ "10px", "10", "10 10", "10 10 10", "10 10 10 10", "10px 10 10 10px" ],
 		invalid_values: [ "-10", "-10px", "-10%", "10%", "10 10 10 10 10" ]
 	},
-	"-moz-border-image-repeat": {
-		domProp: "MozBorderImageRepeat",
+	"border-image-repeat": {
+		domProp: "borderImageRepeat",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "stretch", "stretch stretch" ],
@@ -1621,7 +1621,7 @@ var gCSSProperties = {
 		domProp: "border",
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width", "border-left-color", "border-left-style", "border-left-width", "border-right-color", "border-right-style", "border-right-width", "border-top-color", "border-top-style", "border-top-width", "-moz-border-top-colors", "-moz-border-right-colors", "-moz-border-bottom-colors", "-moz-border-left-colors", "-moz-border-image-source", "-moz-border-image-slice", "-moz-border-image-width", "-moz-border-image-outset", "-moz-border-image-repeat" ],
+		subproperties: [ "border-bottom-color", "border-bottom-style", "border-bottom-width", "border-left-color", "border-left-style", "border-left-width", "border-right-color", "border-right-style", "border-right-width", "border-top-color", "border-top-style", "border-top-width", "-moz-border-top-colors", "-moz-border-right-colors", "-moz-border-bottom-colors", "-moz-border-left-colors", "border-image-source", "border-image-slice", "border-image-width", "border-image-outset", "border-image-repeat" ],
 		initial_values: [ "none", "medium", "currentColor", "thin", "none medium currentcolor", "-moz-calc(4px - 1px) none" ],
 		other_values: [ "solid", "medium solid", "green solid", "10px solid", "thick solid", "-moz-calc(2px) solid blue" ],
 		invalid_values: [ "5%" ]

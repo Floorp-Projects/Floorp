@@ -23,11 +23,9 @@ public:
     virtual SkMask::Format getFormat();
     virtual bool filterMask(SkMask*, const SkMask&, const SkMatrix&, SkIPoint*);
 
-    // overrides from SkFlattenable
-    virtual void flatten(SkFlattenableWriteBuffer& wb);
-
 protected:
     SkKernel33ProcMaskFilter(SkFlattenableReadBuffer& rb);
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
 
 private:
     int fPercent256;
@@ -48,16 +46,14 @@ public:
     // override from SkKernel33ProcMaskFilter
     virtual uint8_t computeValue(uint8_t* const* srcRows);
     
-    // overrides from SkFlattenable
-    virtual void flatten(SkFlattenableWriteBuffer& wb);
-    virtual Factory getFactory();
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkKernel33MaskFilter)
     
 private:
     int fKernel[3][3];
     int fShift;
 
     SkKernel33MaskFilter(SkFlattenableReadBuffer& rb);
-    static SkFlattenable* Create(SkFlattenableReadBuffer& rb);
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
     
     typedef SkKernel33ProcMaskFilter INHERITED;
 };

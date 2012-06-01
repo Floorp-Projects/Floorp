@@ -73,6 +73,14 @@ public:
     */
     unsigned getGlyphCount();
 
+#ifdef SK_BUILD_FOR_ANDROID
+    /** Returns the base glyph count for this strike.
+    */
+    unsigned getBaseGlyphCount(SkUnichar charCode) const {
+        return fScalerContext->getBaseGlyphCount(charCode);
+    }
+#endif
+
     /** Return the image associated with the glyph. If it has not been generated
         this will trigger that.
     */
@@ -147,18 +155,6 @@ public:
     static SkGlyphCache* DetachCache(const SkDescriptor* desc) {
         return VisitCache(desc, DetachProc, NULL);
     }
-
-    /** Return the approximate number of bytes used by the font cache
-    */
-    static size_t GetCacheUsed();
-
-    /** This can be called to purge old font data, in an attempt to free
-        enough bytes such that the font cache is not using more than the
-        specified number of bytes. It is thread-safe, and may be called at
-        any time.
-        Return true if some amount of the cache was purged.
-    */
-    static bool SetCacheUsed(size_t bytesUsed);
 
 #ifdef SK_DEBUG
     void validate() const;
@@ -268,7 +264,6 @@ private:
     static size_t InternalFreeCache(SkGlyphCache_Globals*, size_t bytesNeeded);
 
     inline static SkGlyphCache* FindTail(SkGlyphCache* head);
-    static size_t ComputeMemoryUsed(const SkGlyphCache* head);
 
     friend class SkGlyphCache_Globals;
 };

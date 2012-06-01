@@ -37,7 +37,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(ProgressMeterAccessible<Max>,
                                    nsIAccessibleValue)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible
+// Accessible
 
 template<int Max>
 role
@@ -180,7 +180,7 @@ ProgressMeterAccessible<Max>::SetCurrentValue(double aValue)
 ////////////////////////////////////////////////////////////////////////////////
 
 RadioButtonAccessible::
-  RadioButtonAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  RadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }

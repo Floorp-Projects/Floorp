@@ -28,7 +28,7 @@
  * The caret accessible is owned by the RootAccessible for the top level window that it's in.
  * The RootAccessible needs to tell the nsCaretAccessible about focus changes via
  * setControlSelectionListener().
- * Each nsDocAccessible needs to tell the nsCaretAccessible owned by the root to
+ * Each DocAccessible needs to tell the nsCaretAccessible owned by the root to
  * listen for selection events via addDocSelectionListener() and then needs to remove the 
  * selection listener when the doc goes away via removeDocSelectionListener().
  */

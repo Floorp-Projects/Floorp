@@ -624,6 +624,13 @@ nsWindow::Destroy(void)
     }
     mLayerManager = nsnull;
 
+    // It is safe to call DestroyeCompositor several times (here and 
+    // in the parent class) since it will take effect only once.
+    // The reason we call it here is because on gtk platforms we need 
+    // to destroy the compositor before we destroy the gdk window (which
+    // destroys the the gl context attached to it).
+    DestroyCompositor();
+
     ClearCachedResources();
 
     g_signal_handlers_disconnect_by_func(gtk_settings_get_default(),
@@ -1495,9 +1502,10 @@ nsWindow::GetClientOffset()
     int format_returned;
     int length_returned;
     long *frame_extents;
+    GdkWindow* window;
 
-    if (!mShell || !mShell->window ||
-        !gdk_property_get(mShell->window,
+    if (!mShell || !(window = gtk_widget_get_window(mShell)) ||
+        !gdk_property_get(window,
                           gdk_atom_intern ("_NET_FRAME_EXTENTS", FALSE),
                           cardinal_atom,
                           0, // offset
@@ -2110,9 +2118,25 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 #endif
         return TRUE;
     }
+    // If this widget uses OMTC...
+    if (GetLayerManager()->AsShadowForwarder() && GetLayerManager()->AsShadowForwarder()->HasShadowManager()) {
+        nsEventStatus status;
+#if defined(MOZ_WIDGET_GTK2)
+        nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface());
+#else
+        nsRefPtr<gfxContext> ctx = new gfxContext(GetThebesSurface(cr));
+#endif
+        nsBaseWidget::AutoLayerManagerSetup
+          setupLayerManager(this, ctx, BasicLayerManager::BUFFER_NONE);
+        DispatchEvent(&event, status);
 
-    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL)
-    {
+        g_free(rects);
+
+        DispatchDidPaint(this);
+
+        return TRUE;
+    
+    } else if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL) {
         LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(event.region);
 
@@ -5794,7 +5818,7 @@ nsWindow::CreateRootAccessible()
 {
     if (mIsTopLevel && !mRootAccessible) {
         LOG(("nsWindow:: Create Toplevel Accessibility\n"));
-        nsAccessible *acc = DispatchAccessibleEvent();
+        Accessible* acc = DispatchAccessibleEvent();
 
         if (acc) {
             mRootAccessible = acc;
@@ -5802,7 +5826,7 @@ nsWindow::CreateRootAccessible()
     }
 }
 
-nsAccessible*
+Accessible*
 nsWindow::DispatchAccessibleEvent()
 {
     nsAccessibleEvent event(true, NS_GETACCESSIBLE, this);
@@ -5827,7 +5851,7 @@ nsWindow::DispatchEventToRootAccessible(PRUint32 aEventType)
     }
 
     // Get the root document accessible and fire event to it.
-    nsAccessible *acc = DispatchAccessibleEvent();
+    Accessible* acc = DispatchAccessibleEvent();
     if (acc) {
         accService->FireAccessibleEvent(aEventType, acc);
     }

@@ -403,7 +403,7 @@ mozJSComponentLoader::ReallyInit()
         return NS_ERROR_OUT_OF_MEMORY;
 
     uint32_t options = JS_GetOptions(mContext);
-    JS_SetOptions(mContext, options | JSOPTION_XML);
+    JS_SetOptions(mContext, options | JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML);
 
     // Always use the latest js version
     JS_SetVersion(mContext, JSVERSION_LATEST);

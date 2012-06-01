@@ -282,7 +282,7 @@ RILContentHelper.prototype = {
       case "RIL:GetCardLock:Return:OK":
       case "RIL:SetCardLock:Return:OK":
       case "RIL:UnlockCardLock:Return:OK":
-        request = this.getRequest(msg.json.requestId);
+        request = this.takeRequest(msg.json.requestId);
         if (request) {
           Services.DOMRequest.fireSuccess(request, msg.json);
         }
@@ -290,7 +290,7 @@ RILContentHelper.prototype = {
       case "RIL:GetCardLock:Return:KO":
       case "RIL:SetCardLock:Return:KO":
       case "RIL:UnlockCardLock:Return:KO":
-        request = this.getRequest(msg.json.requestId);
+        request = this.takeRequest(msg.json.requestId);
         if (request) {
           Services.DOMRequest.fireError(request, msg.json.errorMsg);
         }

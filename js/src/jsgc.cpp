@@ -73,11 +73,13 @@
 #include "jsxml.h"
 #endif
 
+#include "builtin/MapObject.h"
 #include "frontend/Parser.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "methodjit/MethodJIT.h"
 #include "vm/Debugger.h"
+#include "vm/String.h"
 #include "ion/IonCode.h"
 #ifdef JS_ION
 # include "ion/IonMacroAssembler.h"
@@ -832,22 +834,6 @@ PickChunk(JSCompartment *comp)
     return chunk;
 }
 
-JS_FRIEND_API(bool)
-IsAboutToBeFinalized(const Cell *thing)
-{
-    JSCompartment *thingCompartment = reinterpret_cast<const Cell *>(thing)->compartment();
-    if (!thingCompartment->isCollecting())
-        return false;
-    return !reinterpret_cast<const Cell *>(thing)->isMarked();
-}
-
-bool
-IsAboutToBeFinalized(const Value &v)
-{
-    JS_ASSERT(v.isMarkable());
-    return IsAboutToBeFinalized((Cell *)v.toGCThing());
-}
-
 /* Lifetime for type sets attached to scripts containing observed types. */
 static const int64_t JIT_SCRIPT_RELEASE_TYPES_INTERVAL = 60 * 1000 * 1000;
 
@@ -1068,7 +1054,6 @@ static void
 MarkRangeConservatively(JSTracer *trc, const uintptr_t *begin, const uintptr_t *end)
 {
     JS_ASSERT(begin <= end);
-
     for (const uintptr_t *i = begin; i < end; ++i)
         MarkWordConservatively(trc, *i);
 }
@@ -2242,6 +2227,75 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
       }
 
+      case PROPDESC: {
+        PropDesc::AutoRooter *rooter = static_cast<PropDesc::AutoRooter *>(this);
+        MarkValueRoot(trc, &rooter->pd->pd_, "PropDesc::AutoRooter pd");
+        MarkValueRoot(trc, &rooter->pd->value_, "PropDesc::AutoRooter value");
+        MarkValueRoot(trc, &rooter->pd->get_, "PropDesc::AutoRooter get");
+        MarkValueRoot(trc, &rooter->pd->set_, "PropDesc::AutoRooter set");
+        return;
+      }
+
+      case SHAPERANGE: {
+        Shape::Range::AutoRooter *rooter = static_cast<Shape::Range::AutoRooter *>(this);
+        rooter->trace(trc);
+        return;
+      }
+
+      case STACKSHAPE: {
+        StackShape::AutoRooter *rooter = static_cast<StackShape::AutoRooter *>(this);
+        if (rooter->shape->base)
+            MarkBaseShapeRoot(trc, (BaseShape**) &rooter->shape->base, "StackShape::AutoRooter base");
+        MarkIdRoot(trc, (jsid*) &rooter->shape->propid, "StackShape::AutoRooter id");
+        return;
+      }
+
+      case STACKBASESHAPE: {
+        StackBaseShape::AutoRooter *rooter = static_cast<StackBaseShape::AutoRooter *>(this);
+        if (rooter->base->parent)
+            MarkObjectRoot(trc, (JSObject**) &rooter->base->parent, "StackBaseShape::AutoRooter parent");
+        if ((rooter->base->flags & BaseShape::HAS_GETTER_OBJECT) && rooter->base->rawGetter) {
+            MarkObjectRoot(trc, (JSObject**) &rooter->base->rawGetter,
+                           "StackBaseShape::AutoRooter getter");
+        }
+        if ((rooter->base->flags & BaseShape::HAS_SETTER_OBJECT) && rooter->base->rawSetter) {
+            MarkObjectRoot(trc, (JSObject**) &rooter->base->rawSetter,
+                           "StackBaseShape::AutoRooter setter");
+        }
+        return;
+      }
+
+      case BINDINGS: {
+        Bindings::AutoRooter *rooter = static_cast<Bindings::AutoRooter *>(this);
+        rooter->trace(trc);
+        return;
+      }
+
+      case GETTERSETTER: {
+        AutoRooterGetterSetter::Inner *rooter = static_cast<AutoRooterGetterSetter::Inner *>(this);
+        if ((rooter->attrs & JSPROP_GETTER) && *rooter->pgetter)
+            MarkObjectRoot(trc, (JSObject**) rooter->pgetter, "AutoRooterGetterSetter getter");
+        if ((rooter->attrs & JSPROP_SETTER) && *rooter->psetter)
+            MarkObjectRoot(trc, (JSObject**) rooter->psetter, "AutoRooterGetterSetter setter");
+        return;
+      }
+
+      case REGEXPSTATICS: {
+          /*
+        RegExpStatics::AutoRooter *rooter = static_cast<RegExpStatics::AutoRooter *>(this);
+        rooter->trace(trc);
+          */
+        return;
+      }
+
+      case HASHABLEVALUE: {
+          /*
+        HashableValue::AutoRooter *rooter = static_cast<HashableValue::AutoRooter *>(this);
+        rooter->trace(trc);
+          */
+        return;
+      }
+
       case IONMASM: {
 #ifdef JS_ION
         static_cast<js::ion::MacroAssembler::AutoRooter *>(this)->masm()->trace(trc);
@@ -2260,6 +2314,38 @@ AutoGCRooter::traceAll(JSTracer *trc)
 {
     for (js::AutoGCRooter *gcr = trc->runtime->autoGCRooters; gcr; gcr = gcr->down)
         gcr->trace(trc);
+}
+
+void
+Shape::Range::AutoRooter::trace(JSTracer *trc)
+{
+    if (r->cursor)
+        MarkShapeRoot(trc, const_cast<Shape**>(&r->cursor), "Shape::Range::AutoRooter");
+}
+
+void
+Bindings::AutoRooter::trace(JSTracer *trc)
+{
+    if (bindings->lastBinding)
+        MarkShapeRoot(trc, reinterpret_cast<Shape**>(&bindings->lastBinding),
+                      "Bindings::AutoRooter lastBinding");
+}
+
+void
+RegExpStatics::AutoRooter::trace(JSTracer *trc)
+{
+    if (statics->matchPairsInput)
+        MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->matchPairsInput),
+                       "RegExpStatics::AutoRooter matchPairsInput");
+    if (statics->pendingInput)
+        MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics->pendingInput),
+                       "RegExpStatics::AutoRooter pendingInput");
+}
+
+void
+HashableValue::AutoRooter::trace(JSTracer *trc)
+{
+    MarkValueRoot(trc, reinterpret_cast<Value*>(&v->value), "HashableValue::AutoRooter");
 }
 
 namespace js {
@@ -2954,8 +3040,8 @@ BeginMarkPhase(JSRuntime *rt)
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
         if (!c->isCollecting())
             rt->gcIsFull = false;
-        if (ShouldPreserveJITCode(c, currentTime))
-            c->setPreservingCode(true);
+
+        c->setPreservingCode(ShouldPreserveJITCode(c, currentTime));
     }
 
     rt->gcMarker.start(rt);
@@ -3185,6 +3271,16 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
      */
     gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP);
 
+    /*
+     * Although there is a runtime-wide gcIsFull flag, it is set in
+     * BeginMarkPhase. More compartments may have been created since then.
+     */
+    bool isFull = true;
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (!c->isCollecting())
+            isFull = false;
+    }
+
 #ifdef JS_THREADSAFE
     *startBackgroundSweep = (rt->hasContexts() && rt->gcHelperThread.prepareForBackgroundSweep());
 #else
@@ -3199,7 +3295,7 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_START);
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(&fop, JSFINALIZE_START);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_START, !isFull);
     }
 
     /* Finalize unreachable (key,value) pairs in all weak maps. */
@@ -3218,8 +3314,12 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_COMPARTMENTS);
 
         bool releaseTypes = ReleaseObservedTypes(rt);
-        for (GCCompartmentsIter c(rt); !c.done(); c.next())
-            c->sweep(&fop, releaseTypes);
+        for (CompartmentsIter c(rt); !c.done(); c.next()) {
+            if (c->isCollecting())
+                c->sweep(&fop, releaseTypes);
+            else
+                c->sweepCrossCompartmentWrappers();
+        }
     }
 
     {
@@ -3292,7 +3392,7 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_FINALIZE_END);
         if (rt->gcFinalizeCallback)
-            rt->gcFinalizeCallback(&fop, JSFINALIZE_END);
+            rt->gcFinalizeCallback(&fop, JSFINALIZE_END, !isFull);
     }
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
@@ -3371,10 +3471,8 @@ AutoGCSession::AutoGCSession(JSRuntime *rt)
 
 AutoGCSession::~AutoGCSession()
 {
-    for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
+    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
         c->setCollecting(false);
-        c->setPreservingCode(false);
-    }
 
     runtime->gcNextFullGCTime = PRMJ_Now() + GC_IDLE_FULL_SPAN;
     runtime->gcChunkAllocationSinceLastGC = false;
@@ -3585,7 +3683,7 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
 
     bool reset = false;
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        if (c->gcBytes > c->gcTriggerBytes) {
+        if (c->gcBytes >= c->gcTriggerBytes) {
             *budget = SliceBudget::Unlimited;
             rt->gcStats.nonincremental("allocation trigger");
         }
@@ -4042,7 +4140,7 @@ CheckStackRoot(JSTracer *trc, uintptr_t *w)
         JSRuntime *rt = trc->runtime;
         for (ContextIter cx(rt); !cx.done(); cx.next()) {
             for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-                Root<void*> *rooter = cx->thingGCRooters[i];
+                Rooted<void*> *rooter = cx->thingGCRooters[i];
                 while (rooter) {
                     if (rooter->address() == static_cast<void*>(w))
                         matched = true;
@@ -4398,6 +4496,19 @@ CheckEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 }
 
 static void
+AssertMarkedOrAllocated(const EdgeValue &edge)
+{
+    if (!edge.thing || IsMarkedOrAllocated(static_cast<Cell *>(edge.thing)))
+        return;
+
+    char msgbuf[1024];
+    const char *label = edge.label ? edge.label : "<unknown>";
+
+    JS_snprintf(msgbuf, sizeof(msgbuf), "[barrier verifier] Unmarked edge: %s", label);
+    MOZ_Assert(msgbuf, __FILE__, __LINE__);
+}
+
+static void
 EndVerifyBarriers(JSRuntime *rt)
 {
     AutoLockGC lock(rt);
@@ -4447,10 +4558,8 @@ EndVerifyBarriers(JSRuntime *rt)
             JS_TraceChildren(trc, node->thing, node->kind);
 
             if (node->count <= MAX_VERIFIER_EDGES) {
-                for (uint32_t i = 0; i < node->count; i++) {
-                    void *thing = node->edges[i].thing;
-                    JS_ASSERT_IF(thing, IsMarkedOrAllocated(static_cast<Cell *>(thing)));
-                }
+                for (uint32_t i = 0; i < node->count; i++)
+                    AssertMarkedOrAllocated(node->edges[i]);
             }
 
             node = NextNode(node);
@@ -4508,46 +4617,24 @@ MaybeVerifyBarriers(JSContext *cx, bool always)
 
 } /* namespace gc */
 
-// The onlyIon flag is a temporary workaround until bug 746691 lands.
-void
-ReleaseAllJITCode(FreeOp *fop, JSCompartment *c, bool resetUseCounts, bool onlyIon)
+static void ReleaseAllJITCode(FreeOp *fop)
 {
 #ifdef JS_METHODJIT
-    mjit::ClearAllFrames(c);
-
+    for (CompartmentsIter c(fop->runtime()); !c.done(); c.next()) {
+        mjit::ClearAllFrames(c);
 # ifdef JS_ION
-    ion::InvalidateAll(fop, c);
+        ion::InvalidateAll(fop, c);
 # endif
 
-    for (CellIter i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
-        if (!onlyIon)
+        for (CellIter i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
+            JSScript *script = i.get<JSScript>();
             mjit::ReleaseScriptCode(fop, script);
-
-        /*
-         * Use counts for scripts are reset on GC. After discarding code we
-         * need to let it warm back up to get information like which opcodes
-         * are setting array holes or accessing getter properties.
-         */
-        if (resetUseCounts)
-            script->resetUseCount();
-
 # ifdef JS_ION
-        ion::FinishInvalidation(fop, script);
+            ion::FinishInvalidation(fop, script);
 # endif
+        }
     }
 #endif
-}
-
-void
-ReleaseAllJITCode(FreeOp *fop, bool resetUseCounts)
-{
-    /*
-     * Kick all frames on the stack into the interpreter, and release all JIT
-     * code in the compartment.
-     */
-    for (CompartmentsIter c(fop->runtime()); !c.done(); c.next())
-        ReleaseAllJITCode(fop, c, resetUseCounts);
 }
 
 /*
@@ -4600,7 +4687,7 @@ StartPCCountProfiling(JSContext *cx)
     if (rt->scriptAndCountsVector)
         ReleaseScriptCounts(rt->defaultFreeOp());
 
-    ReleaseAllJITCode(rt->defaultFreeOp(), false);
+    ReleaseAllJITCode(rt->defaultFreeOp());
 
     rt->profilingScripts = true;
 }
@@ -4614,7 +4701,7 @@ StopPCCountProfiling(JSContext *cx)
         return;
     JS_ASSERT(!rt->scriptAndCountsVector);
 
-    ReleaseAllJITCode(rt->defaultFreeOp(), false);
+    ReleaseAllJITCode(rt->defaultFreeOp());
 
     ScriptAndCountsVector *vec = cx->new_<ScriptAndCountsVector>(SystemAllocPolicy());
     if (!vec)

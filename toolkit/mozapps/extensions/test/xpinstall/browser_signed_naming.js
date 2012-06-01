@@ -21,9 +21,9 @@ function test() {
 }
 
 function get_item(items, url) {
-  for (let i = 0; i < items.length; i++) {
-    if (items[i].url == url)
-      return items[i];
+  for (let item of items) {
+    if (item.url == url)
+      return item;
   }
   ok(false, "Item for " + url + " was not listed");
   return null;

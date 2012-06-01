@@ -20,31 +20,31 @@
 struct SK_API SkIRect {
     int32_t fLeft, fTop, fRight, fBottom;
 
-    static SkIRect MakeEmpty() {
+    static SkIRect SK_WARN_UNUSED_RESULT MakeEmpty() {
         SkIRect r;
         r.setEmpty();
         return r;
     }
     
-    static SkIRect MakeWH(int32_t w, int32_t h) {
+    static SkIRect SK_WARN_UNUSED_RESULT MakeWH(int32_t w, int32_t h) {
         SkIRect r;
         r.set(0, 0, w, h);
         return r;
     }
     
-    static SkIRect MakeSize(const SkISize& size) {
+    static SkIRect SK_WARN_UNUSED_RESULT MakeSize(const SkISize& size) {
         SkIRect r;
         r.set(0, 0, size.width(), size.height());
         return r;
     }
     
-    static SkIRect MakeLTRB(int32_t l, int32_t t, int32_t r, int32_t b) {
+    static SkIRect SK_WARN_UNUSED_RESULT MakeLTRB(int32_t l, int32_t t, int32_t r, int32_t b) {
         SkIRect rect;
         rect.set(l, t, r, b);
         return rect;
     }
     
-    static SkIRect MakeXYWH(int32_t x, int32_t y, int32_t w, int32_t h) {
+    static SkIRect SK_WARN_UNUSED_RESULT MakeXYWH(int32_t x, int32_t y, int32_t w, int32_t h) {
         SkIRect r;
         r.set(x, y, x + w, y + h);
         return r;
@@ -75,7 +75,7 @@ struct SK_API SkIRect {
      *  Return true if the rectangle's width or height are <= 0
      */
     bool isEmpty() const { return fLeft >= fRight || fTop >= fBottom; }
-
+    
     friend bool operator==(const SkIRect& a, const SkIRect& b) {
         return !memcmp(&a, &b, sizeof(a));
     }
@@ -144,7 +144,7 @@ struct SK_API SkIRect {
 
     /** Inset the rectangle by (dx,dy). If dx is positive, then the sides are moved inwards,
         making the rectangle narrower. If dx is negative, then the sides are moved outwards,
-        making the rectangle wider. The same hods true for dy and the top and bottom.
+        making the rectangle wider. The same holds true for dy and the top and bottom.
     */
     void inset(int32_t dx, int32_t dy) {
         fLeft   += dx;
@@ -152,6 +152,13 @@ struct SK_API SkIRect {
         fRight  -= dx;
         fBottom -= dy;
     }
+
+   /** Outset the rectangle by (dx,dy). If dx is positive, then the sides are
+       moved outwards, making the rectangle wider. If dx is negative, then the
+       sides are moved inwards, making the rectangle narrower. The same holds
+       true for dy and the top and bottom.
+    */
+    void outset(int32_t dx, int32_t dy)  { this->inset(-dx, -dy); }
 
     bool quickReject(int l, int t, int r, int b) const {
         return l >= fRight || fLeft >= r || t >= fBottom || fTop >= b;
@@ -185,18 +192,18 @@ struct SK_API SkIRect {
     }
 
     /** Return true if this rectangle contains the specified rectangle.
-		For speed, this method does not check if either this or the specified
-		rectangles are empty, and if either is, its return value is undefined.
-		In the debugging build however, we assert that both this and the
-		specified rectangles are non-empty.
+        For speed, this method does not check if either this or the specified
+        rectangles are empty, and if either is, its return value is undefined.
+        In the debugging build however, we assert that both this and the
+        specified rectangles are non-empty.
     */
     bool containsNoEmptyCheck(int32_t left, int32_t top,
-							  int32_t right, int32_t bottom) const {
-		SkASSERT(fLeft < fRight && fTop < fBottom);
+                              int32_t right, int32_t bottom) const {
+        SkASSERT(fLeft < fRight && fTop < fBottom);
         SkASSERT(left < right && top < bottom);
 
         return fLeft <= left && fTop <= top &&
-			   fRight >= right && fBottom >= bottom;
+               fRight >= right && fBottom >= bottom;
     }
     
     /** If r intersects this rectangle, return true and set this rectangle to that
@@ -294,7 +301,7 @@ struct SK_API SkIRect {
     */
     void sort();
 
-    static const SkIRect& EmptyIRect() {
+    static const SkIRect& SK_WARN_UNUSED_RESULT EmptyIRect() {
         static const SkIRect gEmpty = { 0, 0, 0, 0 };
         return gEmpty;
     }
@@ -305,31 +312,31 @@ struct SK_API SkIRect {
 struct SK_API SkRect {
     SkScalar    fLeft, fTop, fRight, fBottom;
 
-    static SkRect MakeEmpty() {
+    static SkRect SK_WARN_UNUSED_RESULT MakeEmpty() {
         SkRect r;
         r.setEmpty();
         return r;
     }
 
-    static SkRect MakeWH(SkScalar w, SkScalar h) {
+    static SkRect SK_WARN_UNUSED_RESULT MakeWH(SkScalar w, SkScalar h) {
         SkRect r;
         r.set(0, 0, w, h);
         return r;
     }
 
-    static SkRect MakeSize(const SkSize& size) {
+    static SkRect SK_WARN_UNUSED_RESULT MakeSize(const SkSize& size) {
         SkRect r;
         r.set(0, 0, size.width(), size.height());
         return r;
     }
 
-    static SkRect MakeLTRB(SkScalar l, SkScalar t, SkScalar r, SkScalar b) {
+    static SkRect SK_WARN_UNUSED_RESULT MakeLTRB(SkScalar l, SkScalar t, SkScalar r, SkScalar b) {
         SkRect rect;
         rect.set(l, t, r, b);
         return rect;
     }
 
-    static SkRect MakeXYWH(SkScalar x, SkScalar y, SkScalar w, SkScalar h) {
+    static SkRect SK_WARN_UNUSED_RESULT MakeXYWH(SkScalar x, SkScalar y, SkScalar w, SkScalar h) {
         SkRect r;
         r.set(x, y, x + w, y + h);
         return r;
@@ -347,13 +354,18 @@ struct SK_API SkRect {
      */
     bool isFinite() const {
 #ifdef SK_SCALAR_IS_FLOAT
-        // x * 0 will be NaN iff x is infinity or NaN.
-        // a + b will be NaN iff either a or b is NaN.
-        float value = fLeft * 0 + fTop * 0 + fRight * 0 + fBottom * 0;
+        float accum = 0;
+        accum *= fLeft;
+        accum *= fTop;
+        accum *= fRight;
+        accum *= fBottom;
         
-        // value is either NaN or it is finite (zero).
+        // accum is either NaN or it is finite (zero).
+        SkASSERT(0 == accum || !(accum == accum));
+
         // value==value will be true iff value is not NaN
-        return value == value;
+        // TODO: is it faster to say !accum or accum==accum?
+        return accum == accum;
 #else
         // use bit-or for speed, since we don't care about short-circuting the
         // tests, and we expect the common case will be that we need to check all.
@@ -363,6 +375,8 @@ struct SK_API SkRect {
 #endif
     }
 
+    SkScalar    x() const { return fLeft; }
+    SkScalar    y() const { return fTop; }
     SkScalar    left() const { return fLeft; }
     SkScalar    top() const { return fTop; }
     SkScalar    right() const { return fRight; }
@@ -427,6 +441,13 @@ struct SK_API SkRect {
         this->set(pts, count);
     }
 
+    void set(const SkPoint& p0, const SkPoint& p1) {
+        fLeft =   SkMinScalar(p0.fX, p1.fX);
+        fRight =  SkMaxScalar(p0.fX, p1.fX);
+        fTop =    SkMinScalar(p0.fY, p1.fY);
+        fBottom = SkMaxScalar(p0.fY, p1.fY);
+    }
+
     void setXYWH(SkScalar x, SkScalar y, SkScalar width, SkScalar height) {
         fLeft = x;
         fTop = y;
@@ -479,7 +500,7 @@ struct SK_API SkRect {
 
    /** Outset the rectangle by (dx,dy). If dx is positive, then the sides are
        moved outwards, making the rectangle wider. If dx is negative, then the
-       sides are moved inwards, making the rectangle narrower. The same hods
+       sides are moved inwards, making the rectangle narrower. The same holds
        true for dy and the top and bottom.
     */
     void outset(SkScalar dx, SkScalar dy)  { this->inset(-dx, -dy); }

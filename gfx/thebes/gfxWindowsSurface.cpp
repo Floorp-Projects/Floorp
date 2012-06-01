@@ -127,7 +127,7 @@ gfxWindowsSurface::CreateSimilarSurface(gfxContentType aContent,
         // (e.g. a backbuffer for the window) --- that new surface *would*
         // have a DIB.
         surface =
-          cairo_win32_surface_create_with_dib(cairo_format_t(gfxASurface::FormatFromContent(aContent)),
+          cairo_win32_surface_create_with_dib(cairo_format_t(gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent)),
                                               aSize.width, aSize.height);
     } else {
         surface =

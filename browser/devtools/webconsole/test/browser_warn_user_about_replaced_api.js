@@ -10,29 +10,39 @@ function test() {
 
   // First test that the warning does not appear on a normal page (about:blank)
   addTab("about:blank");
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
     testOpenWebConsole(false);
-    executeSoon(testWarningPresent);
   }, true);
 }
 
 function testWarningPresent() {
   // Then test that the warning does appear on a page that replaces the API
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
     testOpenWebConsole(true);
-    finishTest();
   }, true);
   browser.contentWindow.location = TEST_REPLACED_API_URI;
 }
 
 function testOpenWebConsole(shouldWarn) {
-  openConsole();
-
-  hud = HUDService.getHudByWindow(content);
-  ok(hud, "WebConsole was opened");
-
-  let msg = (shouldWarn ? "found" : "didn't find") + " API replacement warning";
-  testLogEntry(hud.outputNode, "disabled", msg, false, !shouldWarn);
+  openConsole(null, function(hud) {
+    waitForSuccess({
+      name: (shouldWarn ? "no " : "") + "API replacement warning",
+      validatorFn: function()
+      {
+        let pos = hud.outputNode.textContent.indexOf("disabled by");
+        return shouldWarn ? pos > -1 : pos == -1;
+      },
+      successFn: function() {
+        if (shouldWarn) {
+          finishTest();
+        }
+        else {
+          closeConsole(null, testWarningPresent);
+        }
+      },
+      failureFn: finishTest,
+    });
+  });
 }

@@ -12,7 +12,6 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
@@ -42,6 +41,7 @@ public final class Tab {
     private String mTitle;
     private Drawable mFavicon;
     private String mFaviconUrl;
+    private int mFaviconSize;
     private JSONObject mIdentityData;
     private Drawable mThumbnail;
     private int mHistoryIndex;
@@ -78,6 +78,7 @@ public final class Tab {
         mTitle = title;
         mFavicon = null;
         mFaviconUrl = null;
+        mFaviconSize = 0;
         mIdentityData = null;
         mThumbnail = null;
         mHistoryIndex = -1;
@@ -139,9 +140,7 @@ public final class Tab {
 
     float getDensity() {
         if (sDensity == 0.0f) {
-            DisplayMetrics metrics = new DisplayMetrics();
-            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-            sDensity = metrics.density;
+            sDensity = GeckoApp.mAppContext.getDisplayMetrics().density;
         }
         return sDensity;
     }
@@ -309,9 +308,24 @@ public final class Tab {
         Log.i(LOGTAG, "Updated favicon for tab with id: " + mId);
     }
 
-    public void updateFaviconURL(String faviconUrl) {
-        mFaviconUrl = faviconUrl;
-        Log.i(LOGTAG, "Updated favicon URL for tab with id: " + mId);
+    public void updateFaviconURL(String faviconUrl, int size) {
+        // If we already have an "any" sized icon, don't update the icon.
+        if (mFaviconSize == -1)
+            return;
+
+        // Only update the favicon if it's bigger than the current favicon.
+        // We use -1 to represent icons with sizes="any".
+        if (size == -1 || size > mFaviconSize) {
+            mFaviconUrl = faviconUrl;
+            mFaviconSize = size;
+            Log.i(LOGTAG, "Updated favicon URL for tab with id: " + mId);
+        }
+    }
+
+    public void clearFavicon() {
+        mFavicon = null;
+        mFaviconUrl = null;
+        mFaviconSize = 0;
     }
 
 
@@ -362,6 +376,10 @@ public final class Tab {
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", "");
         GeckoAppShell.sendEventToGecko(e);
         return true;
+    }
+
+    public boolean canDoBack() {
+        return (mHistoryIndex < 1 ? false : true);
     }
 
     public boolean doBack() {

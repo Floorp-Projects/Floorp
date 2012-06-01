@@ -373,6 +373,13 @@ public:
     void ApplyRoundedRectsTo(gfxContext* aContext, PRInt32 A2DPRInt32,
                              PRUint32 aBegin, PRUint32 aEnd) const;
 
+    // Draw (fill) the rounded rects in this clip to aContext
+    void DrawRoundedRectsTo(gfxContext* aContext, PRInt32 A2D,
+                            PRUint32 aBegin, PRUint32 aEnd) const;
+    // 'Draw' (create as a path, does not stroke or fill) aRoundRect to aContext
+    void AddRoundedRectPathTo(gfxContext* aContext, PRInt32 A2D,
+                              const RoundedRect &aRoundRect) const;
+
     // Return a rectangle contained in the intersection of aRect with this
     // clip region. Tries to return the largest possible rectangle, but may
     // not succeed.

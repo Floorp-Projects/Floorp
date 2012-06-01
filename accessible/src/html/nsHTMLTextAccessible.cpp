@@ -5,7 +5,7 @@
 
 #include "nsHTMLTextAccessible.h"
 
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "nsAccUtils.h"
 #include "nsIAccessibleRelation.h"
 #include "nsTextEquivUtils.h"
@@ -16,72 +16,11 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTextAccessible
-////////////////////////////////////////////////////////////////////////////////
-
-nsHTMLTextAccessible::
-  nsHTMLTextAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsTextAccessibleWrap(aContent, aDoc)
-{
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTextAccessible, nsTextAccessible)
-
-ENameValueFlag
-nsHTMLTextAccessible::Name(nsString& aName)
-{
-  // Text node, ARIA can't be used.
-  aName = mText;
-  return eNameOK;
-}
-
-role
-nsHTMLTextAccessible::NativeRole()
-{
-  nsIFrame *frame = GetFrame();
-  // Don't return on null frame -- we still return a role
-  // after accessible is shutdown/DEFUNCT
-  if (frame && frame->IsGeneratedContentFrame()) 
-    return roles::STATICTEXT;
-
-  return nsTextAccessible::NativeRole();
-}
-
-PRUint64
-nsHTMLTextAccessible::NativeState()
-{
-  PRUint64 state = nsTextAccessible::NativeState();
-
-  nsDocAccessible* docAccessible = Document();
-  if (docAccessible) {
-     PRUint64 docState = docAccessible->State();
-     if (0 == (docState & states::EDITABLE)) {
-       state |= states::READONLY; // Links not focusable in editor
-     }
-  }
-
-  return state;
-}
-
-nsresult
-nsHTMLTextAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
-{
-  if (NativeRole() == roles::STATICTEXT) {
-    nsAutoString oldValueUnused;
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("auto-generated"),
-                                  NS_LITERAL_STRING("true"), oldValueUnused);
-  }
-
-  return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 // nsHTMLHRAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLHRAccessible::
-  nsHTMLHRAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHTMLHRAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }
@@ -98,7 +37,7 @@ nsHTMLHRAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLBRAccessible::
-  nsHTMLBRAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHTMLBRAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }
@@ -127,7 +66,7 @@ nsHTMLBRAccessible::GetNameInternal(nsAString& aName)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLLabelAccessible::
-  nsHTMLLabelAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHTMLLabelAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
@@ -151,7 +90,7 @@ nsHTMLLabelAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLOutputAccessible::
-  nsHTMLOutputAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHTMLOutputAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
@@ -161,7 +100,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLOutputAccessible, nsHyperTextAccessible)
 Relation
 nsHTMLOutputAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsAccessibleWrap::RelationByType(aType);
+  Relation rel = AccessibleWrap::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_CONTROLLED_BY)
     rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::_for));
 
@@ -177,7 +116,7 @@ nsHTMLOutputAccessible::NativeRole()
 nsresult
 nsHTMLOutputAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
 {
-  nsresult rv = nsAccessibleWrap::GetAttributesInternal(aAttributes);
+  nsresult rv = AccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::live,

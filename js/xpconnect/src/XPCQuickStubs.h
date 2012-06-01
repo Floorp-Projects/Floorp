@@ -491,13 +491,17 @@ xpc_qsUnwrapArgImpl(JSContext *cx, jsval v, const nsIID &iid, void **ppArg,
                     nsISupports **ppArgRef, jsval *vp);
 
 /** Convert a jsval to an XPCOM pointer. */
-template <class T>
+template <class Interface, class StrongRefType>
 inline nsresult
-xpc_qsUnwrapArg(JSContext *cx, jsval v, T **ppArg, nsISupports **ppArgRef,
-                jsval *vp)
+xpc_qsUnwrapArg(JSContext *cx, jsval v, Interface **ppArg,
+                StrongRefType **ppArgRef, jsval *vp)
 {
-    return xpc_qsUnwrapArgImpl(cx, v, NS_GET_TEMPLATE_IID(T),
-                               reinterpret_cast<void **>(ppArg), ppArgRef, vp);
+    nsISupports* argRef;
+    nsresult rv = xpc_qsUnwrapArgImpl(cx, v, NS_GET_TEMPLATE_IID(Interface),
+                                      reinterpret_cast<void **>(ppArg), &argRef,
+                                      vp);
+    *ppArgRef = static_cast<StrongRefType*>(argRef);
+    return rv;
 }
 
 inline nsISupports*
@@ -608,7 +612,7 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
     //   name of the property = callee reserved slot 1
 
     JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    JS::RootedVarObject obj(cx, JS_THIS_OBJECT(cx, vp));
+    JS::RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj)
         return false;
 
@@ -620,7 +624,7 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
     v = js::GetFunctionNativeReserved(callee, 1);
 
     jsval argval = (argc > 0) ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
-    JS::RootedVarId id(cx);
+    JS::RootedId id(cx);
     if (!JS_ValueToId(cx, v, id.address()))
         return false;
     JS_SET_RVAL(cx, vp, argval);

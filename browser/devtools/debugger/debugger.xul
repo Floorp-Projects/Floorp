@@ -41,24 +41,29 @@
   <vbox id="body" flex="1">
     <toolbar id="dbg-toolbar" class="devtools-toolbar">
 #ifdef XP_MACOSX
-      <toolbarbutton id="close" class="devtools-closebutton"/>
+      <toolbarbutton id="close"
+                     tooltiptext="&debuggerUI.closeButton.tooltip;"
+                     class="devtools-closebutton"/>
 #endif
-      <toolbarbutton id="resume"
-              class="devtools-toolbarbutton"
-              type="checkbox"
-              tabindex="0"/>
-      <toolbarbutton id="step-over"
-              class="devtools-toolbarbutton"
-              label="&debuggerUI.stepOverButton;"
-              tabindex="0"/>
-      <toolbarbutton id="step-in"
-              class="devtools-toolbarbutton"
-              label="&debuggerUI.stepInButton;"
-              tabindex="0"/>
-      <toolbarbutton id="step-out"
-              class="devtools-toolbarbutton"
-              label="&debuggerUI.stepOutButton;"
-              tabindex="0"/>
+
+      <hbox id="debugger-controls">
+        <toolbarbutton id="resume"
+                       class="devtools-toolbarbutton"
+                       type="checkbox"
+                       tabindex="0"/>
+        <toolbarbutton id="step-over"
+                       class="devtools-toolbarbutton"
+                       tooltiptext="&debuggerUI.stepOverButton.tooltip;"
+                       tabindex="0"/>
+        <toolbarbutton id="step-in"
+                       class="devtools-toolbarbutton"
+                       tooltiptext="&debuggerUI.stepInButton.tooltip;"
+                       tabindex="0"/>
+        <toolbarbutton id="step-out"
+                       class="devtools-toolbarbutton"
+                       tooltiptext="&debuggerUI.stepOutButton.tooltip;"
+                       tabindex="0"/>
+      </hbox>
       <menulist id="scripts" class="devtools-menulist"
                 label="&debuggerUI.emptyScriptText;"/>
       <textbox id="scripts-search" type="search"
@@ -66,7 +71,9 @@
                emptytext="&debuggerUI.emptyFilterText;"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX
-      <toolbarbutton id="close" class="devtools-closebutton"/>
+      <toolbarbutton id="close"
+                     tooltiptext="&debuggerUI.closeButton.tooltip;"
+                     class="devtools-closebutton"/>
 #endif
     </toolbar>
     <hbox id="dbg-content" flex="1">

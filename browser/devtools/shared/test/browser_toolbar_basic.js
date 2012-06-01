@@ -25,6 +25,10 @@ function runTest() {
   document.getElementById("Tools:DevToolbar").doCommand();
 }
 
+function isChecked(b) {
+  return b.getAttribute("checked") == "true";
+}
+
 function checkOpen() {
   ok(DeveloperToolbar.visible, "DeveloperToolbar is visible in checkOpen");
 
@@ -35,21 +39,21 @@ function checkOpen() {
 
   ok(close, "Close button exists");
 
-  ok(!webconsole.checked, "web console button state 1");
-  ok(!inspector.checked, "inspector button state 1");
-  ok(!debuggr.checked, "debugger button state 1");
+  ok(!isChecked(webconsole), "web console button state 1");
+  ok(!isChecked(inspector), "inspector button state 1");
+  ok(!isChecked(debuggr), "debugger button state 1");
 
   document.getElementById("Tools:WebConsole").doCommand();
 
-  ok(webconsole.checked, "web console button state 2");
-  ok(!inspector.checked, "inspector button state 2");
-  ok(!debuggr.checked, "debugger button state 2");
+  ok(isChecked(webconsole), "web console button state 2");
+  ok(!isChecked(inspector), "inspector button state 2");
+  ok(!isChecked(debuggr), "debugger button state 2");
 
   document.getElementById("Tools:Inspect").doCommand();
 
-  ok(webconsole.checked, "web console button state 3");
-  ok(inspector.checked, "inspector button state 3");
-  ok(!debuggr.checked, "debugger button state 3");
+  ok(isChecked(webconsole), "web console button state 3");
+  ok(isChecked(inspector), "inspector button state 3");
+  ok(!isChecked(debuggr), "debugger button state 3");
 
   // Christmas tree!
 
@@ -59,24 +63,24 @@ function checkOpen() {
 
   document.getElementById("Tools:WebConsole").doCommand();
 
-  ok(!webconsole.checked, "web console button state 6");
-  ok(inspector.checked, "inspector button state 6");
-  ok(!debuggr.checked, "debugger button state 6");
+  ok(!isChecked(webconsole), "web console button state 6");
+  ok(isChecked(inspector), "inspector button state 6");
+  ok(!isChecked(debuggr), "debugger button state 6");
 
   document.getElementById("Tools:Inspect").doCommand();
 
-  ok(!webconsole.checked, "web console button state 7");
-  ok(!inspector.checked, "inspector button state 7");
-  ok(!debuggr.checked, "debugger button state 7");
+  ok(!isChecked(webconsole), "web console button state 7");
+  ok(!isChecked(inspector), "inspector button state 7");
+  ok(!isChecked(debuggr), "debugger button state 7");
 
   // All closed
 
   // Check we can open and close and retain button state
   document.getElementById("Tools:Inspect").doCommand();
 
-  ok(!webconsole.checked, "web console button state 8");
-  ok(inspector.checked, "inspector button state 8");
-  ok(!debuggr.checked, "debugger button state 8");
+  ok(!isChecked(webconsole), "web console button state 8");
+  ok(isChecked(inspector), "inspector button state 8");
+  ok(!isChecked(debuggr), "debugger button state 8");
 
   oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE, catchFail(checkClosed));
   document.getElementById("Tools:DevToolbar").doCommand();
@@ -99,9 +103,9 @@ function checkReOpen() {
   let inspector = document.getElementById("developer-toolbar-inspector");
   let debuggr = document.getElementById("developer-toolbar-debugger");
 
-  ok(webconsole.checked, "web console button state 9");
-  ok(inspector.checked, "inspector button state 9");
-  ok(!debuggr.checked, "debugger button state 9");
+  ok(isChecked(webconsole), "web console button state 9");
+  ok(isChecked(inspector), "inspector button state 9");
+  ok(!isChecked(debuggr), "debugger button state 9");
 
   oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE, catchFail(checkReClosed));
   document.getElementById("developer-toolbar-closebutton").doCommand();

@@ -1116,17 +1116,6 @@ Engine.prototype = {
   _iconUpdateURL: null,
   // A reference to the timer used for lazily serializing the engine to file
   _serializeTimer: null,
-  // Whether this engine has been used since the cache was last recreated.
-  __used: null,
-  get _used() {
-    if (!this.__used)
-      this.__used = !!engineMetadataService.getAttr(this, "used");
-    return this.__used;
-  },
-  set _used(aValue) {
-    this.__used = aValue
-    engineMetadataService.setAttr(this, "used", aValue);
-  },
 
   /**
    * Retrieves the data from the engine's file. If the engine's dataType is
@@ -1652,6 +1641,10 @@ Engine.prototype = {
     if (aElement.getAttribute("width")  == "16" &&
         aElement.getAttribute("height") == "16") {
       this._setIcon(aElement.textContent, true);
+    }
+    else {
+      LOG("OpenSearch image must have explicit width=16 height=16: " +
+          aElement.textContent);
     }
   },
 
@@ -2251,7 +2244,9 @@ Engine.prototype = {
   },
 
   get iconURI() {
-    return this._iconURI;
+    if (this._iconURI)
+      return this._iconURI;
+    return null;
   },
 
   get _iconURL() {
@@ -2407,12 +2402,6 @@ Engine.prototype = {
   getSubmission: function SRCH_ENG_getSubmission(aData, aResponseType) {
     if (!aResponseType)
       aResponseType = URLTYPE_SEARCH_HTML;
-
-    // Check for updates on the first use of an app-shipped engine
-    if (this._isInAppDir && aResponseType == URLTYPE_SEARCH_HTML && !this._used) {
-      this._used = true;
-      engineUpdateService.update(this);
-    }
 
     var url = this._getURLOfType(aResponseType);
 
@@ -2622,7 +2611,7 @@ SearchService.prototype = {
     let toLoad = chromeFiles.concat(loadDirs);
 
     function modifiedDir(aDir) {
-      return (!cache.directories[aDir.path] ||
+      return (!cache.directories || !cache.directories[aDir.path] ||
               cache.directories[aDir.path].lastModifiedTime != aDir.lastModifiedTime);
     }
 
@@ -2819,8 +2808,6 @@ SearchService.prototype = {
       try {
         addedEngine = new Engine(file, dataType, !isWritable);
         addedEngine._initFromFile();
-        if (addedEngine._used)
-          addedEngine._used = false;
       } catch (ex) {
         LOG("_loadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
         continue;
@@ -3579,7 +3566,10 @@ var engineMetadataService = {
     }
 
     // attr names must be lower case
-    return record[name.toLowerCase()];
+    let aName = name.toLowerCase();
+    if (!record[aName])
+      return null;
+    return record[aName];
   },
 
   _setAttr: function epsSetAttr(engine, name, value) {
@@ -3590,7 +3580,7 @@ var engineMetadataService = {
     if (!record) {
       record = db[engine._id] = {};
     }
-    if (record[name] != value) {
+    if (!record[name] || (record[name] != value)) {
       record[name] = value;
       return true;
     }

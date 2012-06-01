@@ -1,17 +1,18 @@
-/* -*- Mode: asm; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * Version: MPL 1.1
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: asm; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- *
- * This Source Code Form is "Incompatible With Secondary Licenses", as
- * defined by the Mozilla Public License, v. 2.0. */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* This code is for MIPS using the O32 ABI. */
 
+#ifdef ANDROID
+#include <asm/regdef.h>
+#include <asm/asm.h>
+#include <machine/asm.h>
+#else
 #include <sys/regdef.h>
 #include <sys/asm.h>
+#endif
 
 # NARGSAVE is the argument space in the callers frame, including extra
 # 'shadowed' space for the argument registers. The minimum of 4
