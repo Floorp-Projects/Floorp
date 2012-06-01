@@ -3477,9 +3477,6 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
             return JS::BooleanValue(bool(i));
         }
 
-        case LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER:
-            return JS::NumberValue(uint32_t(mAttribBuffers[index].byteOffset));
-
         default:
             ErrorInvalidEnumInfo("getVertexAttrib: parameter", pname);
     }
