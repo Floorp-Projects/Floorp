@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://services-common/utils.js");
 
 let btoa = Cu.import("resource://services-common/log4moz.js").btoa;
 let atob = Cu.import("resource://services-common/log4moz.js").atob;
@@ -89,7 +90,7 @@ function httpd_setup (handlers, port) {
   } catch (ex) {
     _("==========================================");
     _("Got exception starting HTTP server on port " + port);
-    _("Error: " + Utils.exceptionStr(ex));
+    _("Error: " + CommonUtils.exceptionStr(ex));
     _("Is there a process already listening on port " + port + "?");
     _("==========================================");
     do_throw(ex);
@@ -117,14 +118,7 @@ function httpd_handler(statusCode, status, body) {
  * all available input is read.
  */
 function readBytesFromInputStream(inputStream, count) {
-  var BinaryInputStream = Components.Constructor(
-      "@mozilla.org/binaryinputstream;1",
-      "nsIBinaryInputStream",
-      "setInputStream");
-  if (!count) {
-    count = inputStream.available();
-  }
-  return new BinaryInputStream(inputStream).readBytes(count);
+  return CommonUtils.readBytesFromInputStream(inputStream, count);
 }
 
 /*
