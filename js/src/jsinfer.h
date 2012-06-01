@@ -23,9 +23,6 @@ struct TypeInferenceSizes;
 }
 
 namespace js {
-
-class CallObject;
-
 namespace types {
 
 /* Type set entry for either a JSObject with singleton type or a non-singleton TypeObject. */
@@ -964,7 +961,7 @@ struct TypeScriptNesting
     JSScript *next;
 
     /* If this is an outer function, the most recent activation. */
-    CallObject *activeCall;
+    JSObject *activeCall;
 
     /*
      * If this is an outer function, pointers to the most recent activation's

@@ -805,7 +805,7 @@ static bool
 EmitObjectOp(JSContext *cx, ObjectBox *objbox, JSOp op, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
-    return EmitIndex32(cx, op, bce->objectList.add(objbox), bce);
+    return EmitIndex32(cx, op, bce->objectList.index(objbox), bce);
 }
 
 static bool
@@ -833,81 +833,43 @@ EmitUnaliasedVarOp(JSContext *cx, JSOp op, uint16_t slot, BytecodeEmitter *bce)
 }
 
 static bool
-EmitAliasedVarOp(JSContext *cx, JSOp op, ScopeCoordinate sc, BytecodeEmitter *bce)
+EmitAliasedVarOp(JSContext *cx, JSOp op, uint16_t binding, JSAtom *atom, BytecodeEmitter *bce)
 {
     JS_ASSERT(JOF_OPTYPE(op) == JOF_SCOPECOORD);
 
-    uint32_t maybeBlockIndex = UINT32_MAX;
-    if (bce->sc->blockChain)
-        maybeBlockIndex = bce->objectList.indexOf(bce->sc->blockChain);
+    /*
+     * XXX This is temporary: bug 659577 will need to compute the number of
+     * cloned block objects to hop over.
+     */
+    uint16_t hops = 0;
+
+    jsatomid atomIndex;
+    if (!bce->makeAtomIndex(atom, &atomIndex))
+        return false;
 
     bool decomposed = js_CodeSpec[op].format & JOF_DECOMPOSE;
     unsigned n = 2 * sizeof(uint16_t) + sizeof(uint32_t) + (decomposed ? 1 : 0);
-    JS_ASSERT(int(n) + 1 /* op */ == js_CodeSpec[op].length);
 
     ptrdiff_t off = EmitN(cx, bce, op, n);
     if (off < 0)
         return false;
 
     jsbytecode *pc = bce->code(off);
-    SET_UINT16(pc, sc.hops);
+    SET_UINT16(pc, hops);
     pc += sizeof(uint16_t);
-    SET_UINT16(pc, sc.slot);
+    SET_UINT16(pc, binding);
     pc += sizeof(uint16_t);
-    SET_UINT32_INDEX(pc, maybeBlockIndex);
+    SET_UINT32_INDEX(pc, atomIndex);
     return true;
-}
-
-static unsigned
-ClonedBlockDepth(BytecodeEmitter *bce)
-{
-    unsigned clonedBlockDepth = 0;
-    for (StaticBlockObject *b = bce->sc->blockChain; b; b = b->enclosingBlock()) {
-        if (b->needsClone())
-            ++clonedBlockDepth;
-    }
-
-    return clonedBlockDepth;
 }
 
 static bool
 EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
 {
-    /*
-     * The contents of the dynamic scope chain (fp->scopeChain) exactly reflect
-     * the needsClone-subset of the block chain. Use this to determine the
-     * number of ClonedBlockObjects on fp->scopeChain to skip to find the scope
-     * object containing the var to which pn is bound. ALIASEDVAR ops cannot
-     * reach across with scopes so ClonedBlockObjects is the only NestedScope
-     * on the scope chain.
-     */
-    ScopeCoordinate sc;
-    if (JOF_OPTYPE(pn->getOp()) == JOF_QARG) {
-        JS_ASSERT(bce->sc->funIsHeavyweight());
-        sc.hops = ClonedBlockDepth(bce);
-        sc.slot = bce->sc->bindings.argToSlot(pn->pn_cookie.slot());
-    } else {
-        JS_ASSERT(JOF_OPTYPE(pn->getOp()) == JOF_LOCAL || pn->isKind(PNK_FUNCTION));
-        unsigned local = pn->pn_cookie.slot();
-        if (local < bce->sc->bindings.numVars()) {
-            JS_ASSERT(bce->sc->funIsHeavyweight());
-            sc.hops = ClonedBlockDepth(bce);
-            sc.slot = bce->sc->bindings.localToSlot(local);
-        } else {
-            unsigned depth = local - bce->sc->bindings.numVars();
-            unsigned hops = 0;
-            StaticBlockObject *b = bce->sc->blockChain;
-            while (!b->containsVarAtDepth(depth)) {
-                if (b->needsClone())
-                    hops++;
-                b = b->enclosingBlock();
-            }
-            sc.hops = hops;
-            sc.slot = depth - b->stackDepth();
-        }
-    }
-
-    return EmitAliasedVarOp(cx, op, sc, bce);
+    uint16_t binding = JOF_OPTYPE(pn->getOp()) == JOF_QARG
+                       ? bce->sc->bindings.argToBinding(pn->pn_cookie.slot())
+                       : bce->sc->bindings.localToBinding(pn->pn_cookie.slot());
+    return EmitAliasedVarOp(cx, op, binding, pn->atom(), bce);
 }
 
 static bool
@@ -1070,6 +1032,7 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
 
         /* Beware the empty destructuring dummy. */
         if (!dn) {
+            JS_ASSERT(i + 1 <= blockObj->slotCount());
             blockObj->setAliased(i, bce->sc->bindingsAccessedDynamically());
             continue;
         }
@@ -2628,13 +2591,12 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0)
             return false;
         if (bce->sc->bindingsAccessedDynamically()) {
-            ScopeCoordinate sc;
-            sc.hops = 0;
-            sc.slot = bce->sc->bindings.localToSlot(bce->sc->argumentsLocal());
-            if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
+            JSAtom *atom = cx->runtime->atomState.argumentsAtom;
+            uint16_t binding = bce->sc->bindings.localToBinding(bce->sc->argumentsLocalSlot());
+            if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, binding, atom, bce))
                 return false;
         } else {
-            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bce->sc->argumentsLocal(), bce))
+            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bce->sc->argumentsLocalSlot(), bce))
                 return false;
         }
         if (Emit1(cx, bce, JSOP_POP) < 0)
@@ -4870,7 +4832,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     /* Make the function object a literal in the outer script's pool. */
-    unsigned index = bce->objectList.add(pn->pn_funbox);
+    unsigned index = bce->objectList.index(pn->pn_funbox);
 
     /* Emit a bytecode pointing to the closure object in its immediate. */
     if (pn->getOp() != JSOP_NOP) {
@@ -5803,7 +5765,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ObjectBox *objbox = bce->parser->newObjectBox(obj);
         if (!objbox)
             return false;
-        unsigned index = bce->objectList.add(objbox);
+        unsigned index = bce->objectList.index(objbox);
         MOZ_STATIC_ASSERT(JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
                           "newinit and newobject must have equal length to edit in-place");
         EMIT_UINT32_IN_PLACE(offset, JSOP_NEWOBJECT, uint32_t(index));
@@ -6435,7 +6397,7 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
       case PNK_REGEXP:
         JS_ASSERT(pn->isOp(JSOP_REGEXP));
-        ok = EmitRegExp(cx, bce->regexpList.add(pn->pn_objbox), bce);
+        ok = EmitRegExp(cx, bce->regexpList.index(pn->pn_objbox), bce);
         break;
 
 #if JS_HAS_XML_SUPPORT
@@ -6935,22 +6897,12 @@ frontend::FinishTakingTryNotes(BytecodeEmitter *bce, TryNoteArray *array)
  * the pre-compilation prototype, a pigeon-hole problem for instanceof tests.
  */
 unsigned
-CGObjectList::add(ObjectBox *objbox)
+CGObjectList::index(ObjectBox *objbox)
 {
     JS_ASSERT(!objbox->emitLink);
     objbox->emitLink = lastbox;
     lastbox = objbox;
     return length++;
-}
-
-unsigned
-CGObjectList::indexOf(JSObject *obj)
-{
-    JS_ASSERT(length > 0);
-    unsigned index = length - 1;
-    for (ObjectBox *box = lastbox; box->object != obj; box = box->emitLink)
-        index--;
-    return index;
 }
 
 void

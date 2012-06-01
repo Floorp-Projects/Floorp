@@ -244,6 +244,9 @@ js_ValueToCallableObject(JSContext *cx, js::Value *vp, unsigned flags);
 extern void
 js_ReportIsNotFunction(JSContext *cx, const js::Value *vp, unsigned flags);
 
+extern void
+js_PutCallObject(js::StackFrame *fp, js::CallObject &callobj);
+
 namespace js {
 
 /*
@@ -274,6 +277,9 @@ JSFunction::toExtended() const
     JS_ASSERT(isExtended());
     return static_cast<const js::FunctionExtended *>(this);
 }
+
+extern void
+js_PutArgsObject(js::StackFrame *fp);
 
 inline bool
 js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->atom; }

@@ -289,7 +289,7 @@ Shape::getChildBinding(JSContext *cx, const StackShape &child)
          * the fixed slot count here, which will feed into call objects created
          * off of the bindings.
          */
-        uint32_t slots = child.slotSpan();
+        uint32_t slots = child.slotSpan() + 1;  /* Add one for private data. */
         gc::AllocKind kind = gc::GetGCObjectKind(slots);
 
         /*
@@ -300,11 +300,11 @@ Shape::getChildBinding(JSContext *cx, const StackShape &child)
          */
         uint32_t nfixed = gc::GetGCKindSlots(kind);
         if (nfixed < slots) {
-            nfixed = CallObject::RESERVED_SLOTS;
-            JS_ASSERT(gc::GetGCKindSlots(gc::GetGCObjectKind(nfixed)) == CallObject::RESERVED_SLOTS);
+            nfixed = CallObject::RESERVED_SLOTS + 1;
+            JS_ASSERT(gc::GetGCKindSlots(gc::GetGCObjectKind(nfixed)) == CallObject::RESERVED_SLOTS + 1);
         }
 
-        shape->setNumFixedSlots(nfixed);
+        shape->setNumFixedSlots(nfixed - 1);
     }
     return shape;
 }

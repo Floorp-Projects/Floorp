@@ -2215,13 +2215,17 @@ LambdaIsGetElem(JSObject &lambda, JSContext *cx)
      * real name lookup since this can trigger observable effects.
      */
     Value b;
-    RootedObject scope(cx);
-    scope = cx->stack.currentScriptedScopeChain();
+    JSObject *scope = cx->stack.currentScriptedScopeChain();
     while (true) {
-        if (!scope->isCall() && !scope->isBlock())
+        if (scope->isCall()) {
+            if (scope->asCall().containsVarOrArg(bname, &b, cx))
+                break;
+        } else if (scope->isBlock()) {
+            if (scope->asClonedBlock().containsVar(bname, &b, cx))
+                break;
+        } else {
             return NULL;
-        if (HasDataProperty(cx, scope, bname, &b))
-            break;
+        }
         scope = &scope->asScope().enclosingScope();
     }
 

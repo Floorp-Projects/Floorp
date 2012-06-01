@@ -140,7 +140,9 @@ struct SharedContext {
     StmtInfo        *topStmt;       /* top of statement info stack */
     StmtInfo        *topScopeStmt;  /* top lexical scope statement */
     Rooted<StaticBlockObject *> blockChain;
-                                    /* compile time block scope chain */
+                                    /* compile time block scope chain (NB: one
+                                       deeper than the topScopeStmt/downScope
+                                       chain when in head of let block/expr) */
 
   private:
     RootedFunction  fun_;           /* function to store argument and variable
@@ -186,7 +188,7 @@ struct SharedContext {
     void setFunDefinitelyNeedsArgsObj()     { JS_ASSERT(cxFlags.funArgumentsHasLocalBinding);
                                               cxFlags.funDefinitelyNeedsArgsObj   = true; }
 
-    unsigned argumentsLocal() const;
+    unsigned argumentsLocalSlot() const;
 
     JSFunction *fun() const {
         JS_ASSERT(inFunction);
