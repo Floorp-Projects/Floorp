@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "nsHyperTextAccessible.h"
+#include "HyperTextAccessible.h"
 #include "nsMai.h"
 
 #include "nsString.h"

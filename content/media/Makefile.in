@@ -85,6 +85,10 @@ ifdef MOZ_GSTREAMER
 PARALLEL_DIRS += gstreamer
 endif
 
+ifdef MOZ_MEDIA_PLUGINS
+PARALLEL_DIRS += plugins
+endif
+
 ifdef ENABLE_TESTS
 PARALLEL_DIRS += test
 endif

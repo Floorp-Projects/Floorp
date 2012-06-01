@@ -1,8 +1,4 @@
 <?xml version="1.0"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
 
 #filter substitution
 
@@ -11,8 +7,9 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>uriloader@pdf.js</em:id>
+    <!-- PDFJS_LOCALIZED_METADATA -->
     <em:name>PDF Viewer</em:name>
-    <em:version>0.2.536</em:version>
+    <em:version>0.3.266</em:version>
     <em:targetApplication>
       <Description>
        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>

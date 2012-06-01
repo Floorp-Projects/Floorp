@@ -470,7 +470,7 @@ prefableClassTemplate = (
 "    XPCWrappedNativeScope *scope =\n"
 "        XPCWrappedNativeScope::FindInJSObjectScope(cx, receiver);\n"
 "    if (!scope)\n"
-"        return false;\n"
+"        return NULL;\n"
 "\n"
 "    if (!scope->NewDOMBindingsEnabled()) {\n"
 "        *enabled = false;\n"

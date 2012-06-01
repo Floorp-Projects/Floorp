@@ -926,7 +926,7 @@ nsXULListitemAccessible::ContainerWidget() const
 
 nsXULListCellAccessible::
   nsXULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -934,7 +934,7 @@ nsXULListCellAccessible::
 // nsISupports
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXULListCellAccessible,
-                             nsHyperTextAccessible,
+                             HyperTextAccessible,
                              nsIAccessibleTableCell)
 
 ////////////////////////////////////////////////////////////////////////////////

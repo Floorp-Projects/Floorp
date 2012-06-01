@@ -24,10 +24,15 @@
 	android:text="@string/sync_subtitle_success" />
 
   <LinearLayout
-    style="@style/SyncBottom" >
+    style="@style/SyncBottom"
+    android:orientation="horizontal" >
     <Button
       style="@style/SyncButton"
       android:onClick="settingsClickHandler"
       android:text="@string/sync_settings" />
+    <Button
+      style="@style/SyncButton"
+      android:onClick="launchBrowser"
+      android:text="@string/brand_short_name" />
   </LinearLayout>
 </RelativeLayout>
