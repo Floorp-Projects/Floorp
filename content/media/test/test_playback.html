@@ -37,6 +37,7 @@ function startTest(test, token) {
     ok(v.ended, test.name + " checking playback has ended");
     if (v.ended && v.seenSuspend && !v.finished) {
       v.finished = true;
+      v.removeEventListener("timeupdate", timeUpdate, false);
       v.parentNode.removeChild(v);
       manager.finished(v.token);
     }
@@ -50,6 +51,7 @@ function startTest(test, token) {
     ok(true, test.name + " got suspend");
     if (v.ended && !v.finished) {
       v.finished = true;
+      v.removeEventListener("timeupdate", timeUpdate, false);
       v.parentNode.removeChild(v);
       manager.finished(v.token);
     }
