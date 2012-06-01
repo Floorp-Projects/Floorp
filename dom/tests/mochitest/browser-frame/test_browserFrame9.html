@@ -30,38 +30,61 @@ function runTest() {
   var iframe1 = document.createElement('iframe');
   iframe1.mozbrowser = true;
   document.body.appendChild(iframe1);
+  iframe1.src = 'data:text/html,<html>' +
+    '<body style="background:green">hello</body></html>';
 
   var screenshots = [];
   var numLoaded = 0;
 
-  function screenshotLoaded(e) {
-    screenshots.push(e.target.result);
+  function screenshotTaken(screenshot) {
+    screenshots.push(screenshot);
     if (screenshots.length === 1) {
+      ok(true, 'Got initial non blank screenshot');
       iframe1.src = 'data:text/html,<html>' +
         '<body style="background:blue">hello</body></html>';
+      waitForScreenshot(function(screenshot) {
+        return screenshot !== screenshots[0];
+      });
     }
     else if (screenshots.length === 2) {
-      ok(screenshots[0] !== 'data:,', 'First Screenshot is not blank');
-      ok(screenshots[0] !== screenshots[1], 'Screenshots differ');
+      ok(true, 'Got updated screenshot after source page changed');
       SimpleTest.finish();
     }
   }
 
+  // We continually take screenshots until we get one that we are
+  // happy with
+  function waitForScreenshot(filter) {
+
+    function screenshotLoaded(e) {
+      if (filter(e.target.result)) {
+        screenshotTaken(e.target.result);
+        return;
+      }
+      if (--attempts === 0) {
+        ok(false, 'Timed out waiting for correct screenshot');
+        SimpleTest.finish();
+      } else {
+        content.document.defaultView.setTimeout(function() {
+          iframe1.getScreenshot().onsuccess = screenshotLoaded;
+        }, 200);
+      }
+    }
+
+    var attempts = 10;
+    iframe1.getScreenshot().onsuccess = screenshotLoaded;
+  }
+
   function iframeLoadedHandler() {
     numLoaded++;
-    // Ignore the first loaded event, that is fired on creation of
-    // the iframe
     if (numLoaded === 2) {
-      iframe1.getScreenshot().onsuccess = screenshotLoaded;
-    } else if (numLoaded === 3) {
-      iframe1.getScreenshot().onsuccess = screenshotLoaded;
+      waitForScreenshot(function(screenshot) {
+        return screenshot !== 'data:,';
+      });
     }
   }
 
   iframe1.addEventListener('mozbrowserloadend', iframeLoadedHandler);
-
-  iframe1.src = 'data:text/html,<html>' +
-      '<body style="background:green">hello</body></html>';
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });

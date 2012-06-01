@@ -13,7 +13,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULMenuitemAccessibleWrap::
-  nsXULMenuitemAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULMenuitemAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULMenuitemAccessible(aContent, aDoc)
 {
 }

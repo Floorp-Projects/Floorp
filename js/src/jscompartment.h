@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -9,19 +8,14 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jsclist.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsobj.h"
 #include "jsscope.h"
+
 #include "vm/GlobalObject.h"
 #include "vm/RegExpObject.h"
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4251) /* Silence warning about JS_FRIEND_API and data members. */
-#endif
 
 namespace js {
 
@@ -273,6 +267,7 @@ struct JSCompartment
     void markTypes(JSTracer *trc);
     void discardJitCode(js::FreeOp *fop);
     void sweep(js::FreeOp *fop, bool releaseTypes);
+    void sweepCrossCompartmentWrappers();
     void purge();
 
     void setGCLastBytes(size_t lastBytes, size_t lastMallocBytes, js::JSGCInvocationKind gckind);
@@ -396,10 +391,6 @@ JSContext::setCompartment(JSCompartment *compartment)
     this->inferenceEnabled = compartment ? compartment->types.inferenceEnabled : false;
 }
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 namespace js {
 
 class PreserveCompartment {
@@ -490,7 +481,7 @@ class AutoCompartment
 class ErrorCopier
 {
     AutoCompartment &ac;
-    RootedVarObject scope;
+    RootedObject scope;
 
   public:
     ErrorCopier(AutoCompartment &ac, JSObject *scope) : ac(ac), scope(ac.context, scope) {

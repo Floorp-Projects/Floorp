@@ -2632,7 +2632,7 @@ mjit::Compiler::jsop_initprop()
     FrameEntry *fe = frame.peek(-1);
     PropertyName *name = script->getName(GET_UINT32_INDEX(PC));
 
-    RootedVarObject baseobj(cx, frame.extra(obj).initObject);
+    RootedObject baseobj(cx, frame.extra(obj).initObject);
 
     if (!baseobj || monitored(PC)) {
         prepareStubCall(Uses(2));
@@ -2646,7 +2646,7 @@ mjit::Compiler::jsop_initprop()
 #ifdef DEBUG
     bool res =
 #endif
-    LookupPropertyWithFlags(cx, baseobj, RootedVarId(cx, NameToId(name)),
+    LookupPropertyWithFlags(cx, baseobj, RootedId(cx, NameToId(name)),
                             JSRESOLVE_QUALIFIED, &holder, &prop);
     JS_ASSERT(res && prop && holder == baseobj);
 

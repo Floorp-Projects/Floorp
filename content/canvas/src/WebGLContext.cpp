@@ -80,7 +80,6 @@ WebGLContext::WebGLContext()
     mGeneration = 0;
     mInvalidated = false;
     mResetLayer = true;
-    mVerbose = false;
     mOptionsFrozen = false;
 
     mActiveTexture = 0;
@@ -153,6 +152,8 @@ WebGLContext::WebGLContext()
     mContextRestorer = do_CreateInstance("@mozilla.org/timer;1");
     mContextStatus = ContextStable;
     mContextLostErrorSet = false;
+
+    mAlreadyGeneratedWarnings = 0;
 }
 
 WebGLContext::~WebGLContext()
@@ -191,20 +192,18 @@ WebGLContext::DestroyResourcesAndContext()
 
     mAttribBuffers.Clear();
 
-    while (mTextures.Length())
-        mTextures.Last()->DeleteOnce();
-    while (mBuffers.Length())
-        mBuffers.Last()->DeleteOnce();
-    while (mRenderbuffers.Length())
-        mRenderbuffers.Last()->DeleteOnce();
-    while (mFramebuffers.Length())
-        mFramebuffers.Last()->DeleteOnce();
-    while (mShaders.Length())
-        mShaders.Last()->DeleteOnce();
-    while (mPrograms.Length())
-        mPrograms.Last()->DeleteOnce();
-    while (mUniformLocations.Length())
-        mUniformLocations.Last()->DeleteOnce();
+    while (!mTextures.isEmpty())
+        mTextures.getLast()->DeleteOnce();
+    while (!mBuffers.isEmpty())
+        mBuffers.getLast()->DeleteOnce();
+    while (!mRenderbuffers.isEmpty())
+        mRenderbuffers.getLast()->DeleteOnce();
+    while (!mFramebuffers.isEmpty())
+        mFramebuffers.getLast()->DeleteOnce();
+    while (!mShaders.isEmpty())
+        mShaders.getLast()->DeleteOnce();
+    while (!mPrograms.isEmpty())
+        mPrograms.getLast()->DeleteOnce();
 
     if (mBlackTexturesAreInitialized) {
         gl->fDeleteTextures(1, &mBlackTexture2D);
@@ -298,7 +297,7 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
     newOpts.depth |= newOpts.stencil;
 
 #if 0
-    LogMessage("aaHint: %d stencil: %d depth: %d alpha: %d premult: %d preserve: %d\n",
+    GenerateWarning("aaHint: %d stencil: %d depth: %d alpha: %d premult: %d preserve: %d\n",
                newOpts.antialias ? 1 : 0,
                newOpts.stencil ? 1 : 0,
                newOpts.depth ? 1 : 0,
@@ -373,15 +372,11 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         Preferences::GetBool("webgl.force-enabled", false);
     bool disabled =
         Preferences::GetBool("webgl.disabled", false);
-    bool verbose =
-        Preferences::GetBool("webgl.verbose", false);
 
     ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
 
     if (disabled)
         return NS_ERROR_FAILURE;
-
-    mVerbose = verbose;
 
     // We're going to create an entirely new context.  If our
     // generation is not 0 right now (that is, if this isn't the first
@@ -496,7 +491,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         if (renderer == gl::GLContext::RendererAdreno200 ||
             renderer == gl::GLContext::RendererAdreno205)
         {
-            LogMessage("WebGL blocked on this Adreno driver!");
+            GenerateWarning("WebGL blocked on this Adreno driver!");
             return NS_ERROR_FAILURE;
         }
     }
@@ -506,10 +501,10 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (forceOSMesa) {
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
         if (!gl || !InitAndValidateGL()) {
-            LogMessage("OSMesa forced, but creating context failed -- aborting!");
+            GenerateWarning("OSMesa forced, but creating context failed -- aborting!");
             return NS_ERROR_FAILURE;
         }
-        LogMessage("Using software rendering via OSMesa (THIS WILL BE SLOW)");
+        GenerateWarning("Using software rendering via OSMesa (THIS WILL BE SLOW)");
     }
 
 #ifdef XP_WIN
@@ -517,7 +512,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (!gl && (preferEGL || useANGLE) && !preferOpenGL) {
         gl = gl::GLContextProviderEGL::CreateOffscreen(gfxIntSize(width, height), format);
         if (!gl || !InitAndValidateGL()) {
-            LogMessage("Error during ANGLE OpenGL ES initialization");
+            GenerateWarning("Error during ANGLE OpenGL ES initialization");
             return NS_ERROR_FAILURE;
         }
     }
@@ -527,7 +522,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (!gl && useOpenGL) {
         gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
         if (gl && !InitAndValidateGL()) {
-            LogMessage("Error during OpenGL initialization");
+            GenerateWarning("Error during OpenGL initialization");
             return NS_ERROR_FAILURE;
         }
     }
@@ -537,16 +532,16 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         gl = gl::GLContextProviderOSMesa::CreateOffscreen(gfxIntSize(width, height), format);
         if (gl) {
             if (!InitAndValidateGL()) {
-                LogMessage("Error during OSMesa initialization");
+                GenerateWarning("Error during OSMesa initialization");
                 return NS_ERROR_FAILURE;
             } else {
-                LogMessage("Using software rendering via OSMesa (THIS WILL BE SLOW)");
+                GenerateWarning("Using software rendering via OSMesa (THIS WILL BE SLOW)");
             }
         }
     }
 
     if (!gl) {
-        LogMessage("Can't get a usable WebGL context");
+        GenerateWarning("Can't get a usable WebGL context");
         return NS_ERROR_FAILURE;
     }
 
@@ -916,25 +911,27 @@ WebGLContext::GetExtension(const nsAString& aName)
         return nsnull;
     }
 
-    // handle simple extensions that don't need custom objects first
+    nsString lowerCaseName(aName);
+    ToLowerCase(lowerCaseName);
+
     WebGLExtensionID ei = WebGLExtensionID_Max;
-    if (aName.EqualsLiteral("OES_texture_float")) {
+    if (lowerCaseName.EqualsLiteral("oes_texture_float")) {
         if (IsExtensionSupported(WebGL_OES_texture_float))
             ei = WebGL_OES_texture_float;
     }
-    else if (aName.EqualsLiteral("OES_standard_derivatives")) {
+    else if (lowerCaseName.EqualsLiteral("oes_standard_derivatives")) {
         if (IsExtensionSupported(WebGL_OES_standard_derivatives))
             ei = WebGL_OES_standard_derivatives;
     }
-    else if (aName.EqualsLiteral("MOZ_EXT_texture_filter_anisotropic")) {
+    else if (lowerCaseName.EqualsLiteral("moz_ext_texture_filter_anisotropic")) {
         if (IsExtensionSupported(WebGL_EXT_texture_filter_anisotropic))
             ei = WebGL_EXT_texture_filter_anisotropic;
     }
-    else if (aName.EqualsLiteral("MOZ_WEBGL_lose_context")) {
+    else if (lowerCaseName.EqualsLiteral("moz_webgl_lose_context")) {
         if (IsExtensionSupported(WebGL_WEBGL_lose_context))
             ei = WebGL_WEBGL_lose_context;
     }
-    else if (aName.EqualsLiteral("MOZ_WEBGL_compressed_texture_s3tc")) {
+    else if (lowerCaseName.EqualsLiteral("moz_webgl_compressed_texture_s3tc")) {
         if (IsExtensionSupported(WebGL_WEBGL_compressed_texture_s3tc))
             ei = WebGL_WEBGL_compressed_texture_s3tc;
     }

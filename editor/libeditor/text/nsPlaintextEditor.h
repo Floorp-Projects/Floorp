@@ -39,7 +39,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsPlaintextEditor, nsEditor)
 
   /* below used by TypedText() */
-  enum {
+  enum ETypingAction {
     eTypedText,  /* user typed text */
     eTypedBR,    /* user typed shift-enter to get a br */
     eTypedBreak  /* user typed enter */
@@ -119,7 +119,7 @@ public:
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent();
 
   /* ------------ Utility Routines, not part of public API -------------- */
-  NS_IMETHOD TypedText(const nsAString& aString, PRInt32 aAction);
+  NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction);
 
   /** Returns the absolute position of the end points of aSelection
    * in the document as a text stream.

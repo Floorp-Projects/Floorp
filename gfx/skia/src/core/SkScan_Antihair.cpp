@@ -209,10 +209,47 @@ static inline SkFixed fastfixdiv(SkFDot6 a, SkFDot6 b) {
     return (a << 16) / b;
 }
 
+#define SkBITCOUNT(x)   (sizeof(x) << 3)
+
+#if 1
+// returns high-bit set iff x==0x8000...
+static inline int bad_int(int x) {
+    return x & -x;
+}
+
+static int any_bad_ints(int a, int b, int c, int d) {
+    return (bad_int(a) | bad_int(b) | bad_int(c) | bad_int(d)) >> (SkBITCOUNT(int) - 1);
+}
+#else
+static inline int good_int(int x) {
+    return x ^ (1 << (SkBITCOUNT(x) - 1));
+}
+
+static int any_bad_ints(int a, int b, int c, int d) {
+    return !(good_int(a) & good_int(b) & good_int(c) & good_int(d));
+}
+#endif
+
+static bool canConvertFDot6ToFixed(SkFDot6 x) {
+    const int maxDot6 = SK_MaxS32 >> (16 - 6);
+    return SkAbs32(x) <= maxDot6;
+}
+
 static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
                              const SkIRect* clip, SkBlitter* blitter) {
-    // check that we're no larger than 511 pixels (so we can do a faster div).
-    // if we are, subdivide and call again
+    // check for integer NaN (0x80000000) which we can't handle (can't negate it)
+    // It appears typically from a huge float (inf or nan) being converted to int.
+    // If we see it, just don't draw.
+    if (any_bad_ints(x0, y0, x1, y1)) {
+        return;
+    }
+
+    // The caller must clip the line to [-32767.0 ... 32767.0] ahead of time
+    // (in dot6 format)
+    SkASSERT(canConvertFDot6ToFixed(x0));
+    SkASSERT(canConvertFDot6ToFixed(y0));
+    SkASSERT(canConvertFDot6ToFixed(x1));
+    SkASSERT(canConvertFDot6ToFixed(y1));
 
     if (SkAbs32(x1 - x0) > SkIntToFDot6(511) || SkAbs32(y1 - y0) > SkIntToFDot6(511)) {
         /*  instead of (x0 + x1) >> 1, we shift each separately. This is less
@@ -273,8 +310,9 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
             }
             if (istop > clip->fRight) {
                 istop = clip->fRight;
-                scaleStop = 64;
+                scaleStop = 0;  // so we don't draw this last column
             }
+
             SkASSERT(istart <= istop);
             if (istart == istop) {
                 return;
@@ -342,8 +380,9 @@ static void do_anti_hairline(SkFDot6 x0, SkFDot6 y0, SkFDot6 x1, SkFDot6 y1,
             }
             if (istop > clip->fBottom) {
                 istop = clip->fBottom;
-                scaleStop = 64;
+                scaleStop = 0;  // so we don't draw this last row
             }
+
             SkASSERT(istart <= istop);
             if (istart == istop)
                 return;
@@ -400,6 +439,19 @@ void SkScan::AntiHairLineRgn(const SkPoint& pt0, const SkPoint& pt1,
 #endif
 
     SkPoint pts[2] = { pt0, pt1 };
+
+#ifdef SK_SCALAR_IS_FLOAT
+    // We have to pre-clip the line to fit in a SkFixed, so we just chop
+    // the line. TODO find a way to actually draw beyond that range.
+    {
+        SkRect fixedBounds;
+        const SkScalar max = SkIntToScalar(32767);
+        fixedBounds.set(-max, -max, max, max);
+        if (!SkLineClipper::IntersectLine(pts, fixedBounds, pts)) {
+            return;
+        }
+    }
+#endif
 
     if (clip) {
         SkRect clipBounds;
@@ -742,7 +794,11 @@ static void innerstrokedot8(FDot8 L, FDot8 T, FDot8 R, FDot8 B,
 
     int top = T >> 8;
     if (top == ((B - 1) >> 8)) {   // just one scanline high
-        inner_scanline(L, top, R, B - T, blitter);
+        // We want the inverse of B-T, since we're the inner-stroke
+        int alpha = 256 - (B - T);
+        if (alpha) {
+            inner_scanline(L, top, R, alpha, blitter);
+        }
         return;
     }
     

@@ -6,7 +6,7 @@
 #ifndef _nsBaseWidgetAccessible_H_
 #define _nsBaseWidgetAccessible_H_
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 #include "nsHyperTextAccessibleWrap.h"
 #include "nsIContent.h"
 
@@ -19,22 +19,22 @@
 /** 
   * Leaf version of DOM Accessible -- has no children
   */
-class nsLeafAccessible : public nsAccessibleWrap
+class nsLeafAccessible : public AccessibleWrap
 {
 public:
 
-  nsLeafAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsLeafAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsAccessible
-  virtual nsAccessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                     EWhichChildAtPoint aWhichChild);
+  // Accessible
+  virtual Accessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                   EWhichChildAtPoint aWhichChild);
 
 protected:
 
-  // nsAccessible
+  // Accessible
   virtual void CacheChildren();
 };
 
@@ -44,12 +44,12 @@ protected:
  * report the state of the host link (traveled or not) and can activate (click)
  * the host accessible programmatically.
  */
-class nsLinkableAccessible : public nsAccessibleWrap
+class nsLinkableAccessible : public AccessibleWrap
 {
 public:
   enum { eAction_Jump = 0 };
 
-  nsLinkableAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsLinkableAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -61,7 +61,7 @@ public:
   // nsAccessNode
   virtual void Shutdown();
 
-  // nsAccessible
+  // Accessible
   virtual void Value(nsString& aValue);
   virtual PRUint64 NativeLinkState() const;
 
@@ -73,14 +73,14 @@ public:
   virtual already_AddRefed<nsIURI> AnchorURIAt(PRUint32 aAnchorIndex);
 
 protected:
-  // nsAccessible
-  virtual void BindToParent(nsAccessible* aParent, PRUint32 aIndexInParent);
+  // Accessible
+  virtual void BindToParent(Accessible* aParent, PRUint32 aIndexInParent);
   virtual void UnbindFromParent();
 
   /**
    * Parent accessible that provides an action for this linkable accessible.
    */
-  nsAccessible* mActionAcc;
+  Accessible* mActionAcc;
   bool mIsLink;
   bool mIsOnclick;
 };
@@ -88,16 +88,16 @@ protected:
 /**
  * A simple accessible that gets its enumerated role passed into constructor.
  */ 
-class nsEnumRoleAccessible : public nsAccessibleWrap
+class nsEnumRoleAccessible : public AccessibleWrap
 {
 public:
-  nsEnumRoleAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+  nsEnumRoleAccessible(nsIContent* aContent, DocAccessible* aDoc,
                        mozilla::a11y::role aRole);
   virtual ~nsEnumRoleAccessible() { }
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::role NativeRole();
 
 protected:

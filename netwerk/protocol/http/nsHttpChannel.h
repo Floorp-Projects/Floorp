@@ -142,6 +142,16 @@ public: /* internal necko use only */
 
     OfflineCacheEntryAsForeignMarker* GetOfflineCacheEntryAsForeignMarker();
 
+    /**
+     * Returns true if this channel is operating in private browsing mode,
+     * false otherwise.
+     */
+    bool UsingPrivateBrowsing() {
+        bool usingPB;
+        GetUsingPrivateBrowsing(&usingPB);
+        return usingPB;
+    }
+
 private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 

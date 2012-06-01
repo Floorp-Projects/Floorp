@@ -353,6 +353,7 @@ const ICC_COMMAND_UPDATE_RECORD = 0xdc;
 // ICC constants, GSM SIM file ids from TS 51.011
 const ICC_EF_ICCID  = 0x2fe2;
 const ICC_EF_IMG    = 0x4f20;
+const ICC_EF_PBR    = 0x4f30;
 const ICC_EF_SST    = 0x6f38;
 const ICC_EF_UST    = 0x6f38; // For USIM
 const ICC_EF_ADN    = 0x6f3a;
@@ -439,6 +440,22 @@ const ICC_SERVICE_CLASS_DATA_ASYNC = (1 << 5);
 const ICC_SERVICE_CLASS_PACKET = (1 << 6);
 const ICC_SERVICE_CLASS_PAD = (1 << 7);
 const ICC_SERVICE_CLASS_MAX = (1 << 7); // Max ICC_SERVICE_CLASS value
+
+const ICC_USIM_TYPE1_TAG   = 0xa8;
+const ICC_USIM_TYPE2_TAG   = 0xa9;
+const ICC_USIM_TYPE3_TAG   = 0xaa;
+const ICC_USIM_EFADN_TAG   = 0xc0;
+const ICC_USIM_EFIAP_TAG   = 0xc1;
+const ICC_USIM_EFEXT1_TAG  = 0xc2;
+const ICC_USIM_EFSNE_TAG   = 0xc3;
+const ICC_USIM_EFANR_TAG   = 0xc4;
+const ICC_USIM_EFPBC_TAG   = 0xc5;
+const ICC_USIM_EFGRP_TAG   = 0xc6;
+const ICC_USIM_EFAAS_TAG   = 0xc7;
+const ICC_USIM_EFGSD_TAG   = 0xc8;
+const ICC_USIM_EFUID_TAG   = 0xc9;
+const ICC_USIM_EFEMAIL_TAG = 0xca;
+const ICC_USIM_EFCCP1_TAG  = 0xcb;
 
 /**
  * GSM PDU constants

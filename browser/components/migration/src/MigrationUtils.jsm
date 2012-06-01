@@ -1,6 +1,6 @@
-/* This Source Code is subject to the terms of the Mozilla Public License
- * version 2.0 (the "License"). You can obtain a copy of the License at
- * http://mozilla.org/MPL/2.0/. */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
@@ -10,6 +10,9 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 
+const TOPIC_WILL_IMPORT_BOOKMARKS = "initial-migration-will-import-default-bookmarks";
+const TOPIC_DID_IMPORT_BOOKMARKS = "initial-migration-did-import-default-bookmarks";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -17,6 +20,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Dict",
                                   "resource://gre/modules/Dict.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
+                                  "resource://gre/modules/BookmarkHTMLUtils.jsm");
 
 let gMigrators = null;
 let gProfileStartup = null;
@@ -28,6 +35,39 @@ function getMigrationBundle() {
      "chrome://browser/locale/migration/migration.properties"); 
   }
   return gMigrationBundle;
+}
+
+/**
+ * Figure out what is the default browser, and if there is a migraotr
+ * for it, return that migrator's internal name.
+ * For the time being, the "internal name" of a migraotr is its contract-id
+ * trailer (e.g. ie for @mozilla.org/profile/migrator;1?app=browser&type=ie),
+ * but it will soon be exposed properly.
+ */
+function getMigratorKeyForDefaultBrowser() {
+  // Don't map Firefox to the Firefox migrator, because we don't
+  // expect it to ever show up as an option in the wizard.
+  // We may want to revise this if/when we use separate profiles
+  // for each Firefox-update channel.
+  const APP_DESC_TO_KEY = {
+    "Internet Explorer": "ie",
+    "Safari":            "safari",
+    "Google Chrome":     "chrome",  // Windows, Linux
+    "Chrome":            "chrome",  // OS X
+  };
+
+  let browserDesc = "";
+  try {
+    let browserDesc =
+      Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+      getService(Ci.nsIExternalProtocolService).
+      getApplicationDescription("http");
+    return APP_DESC_TO_KEY[browserDesc] || "";
+  }
+  catch(ex) {
+    Cu.reportError("Could not detect default browser: " + ex);
+  }
+  return "";
 }
 
 /**
@@ -147,16 +187,6 @@ let MigratorPrototype = {
    * @see nsIBrowserProfileMigrator
    */
   migrate: function MP_migrate(aItems, aStartup, aProfile) {
-    // Not using aStartup because it's going away soon.
-    if (MigrationUtils.isStartupMigration && !this.startupOnlyMigrator) {
-      MigrationUtils.profileStartup.doStartup();
-
-      // Notify glue we are about to do initial migration, otherwise it may try
-      // to restore default bookmarks overwriting the imported ones.
-      Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver)
-        .observe(null, "initial-migration", null);
-    }
-
     let resources = this._getMaybeCachedResources(aProfile);
     if (resources.length == 0)
       throw new Error("migrate called for a non-existent source");
@@ -164,60 +194,92 @@ let MigratorPrototype = {
     if (aItems != Ci.nsIBrowserProfileMigrator.ALL)
       resources = [r for each (r in resources) if (aItems & r.type)];
 
-    // TODO: use Map (for the items) and Set (for the resources)
-    // once they are iterable.
-    let resourcesGroupedByItems = new Dict();
-    resources.forEach(function(resource) {
-      if (resourcesGroupedByItems.has(resource.type))
-        resourcesGroupedByItems.get(resource.type).push(resource);
-      else
-        resourcesGroupedByItems.set(resource.type, [resource]);
-    });
+    // Called either directly or through the bookmarks import callback.
+    function doMigrate() {
+      // TODO: use Map (for the items) and Set (for the resources)
+      // once they are iterable.
+      let resourcesGroupedByItems = new Dict();
+      resources.forEach(function(resource) {
+        if (resourcesGroupedByItems.has(resource.type))
+          resourcesGroupedByItems.get(resource.type).push(resource);
+        else
+          resourcesGroupedByItems.set(resource.type, [resource]);
+      });
 
-    if (resourcesGroupedByItems.count == 0)
-      throw new Error("No items to import");
+      if (resourcesGroupedByItems.count == 0)
+        throw new Error("No items to import");
 
-    let notify = function(aMsg, aItemType) {
-      Services.obs.notifyObservers(null, aMsg, aItemType);
+      let notify = function(aMsg, aItemType) {
+        Services.obs.notifyObservers(null, aMsg, aItemType);
+      }
+
+      notify("Migration:Started");
+      resourcesGroupedByItems.listkeys().forEach(function(migrationType) {
+        let migrationTypeA = migrationType;
+        let itemResources = resourcesGroupedByItems.get(migrationType);
+        notify("Migration:ItemBeforeMigrate", migrationType);
+
+        let itemSuccess = false;
+        itemResources.forEach(function(resource) {
+          let resourceDone = function(aSuccess) {
+            let resourceIndex = itemResources.indexOf(resource);
+            if (resourceIndex != -1) {
+              itemResources.splice(resourceIndex, 1);
+              itemSuccess |= aSuccess;
+              if (itemResources.length == 0) {
+                resourcesGroupedByItems.del(migrationType);
+                notify(itemSuccess ?
+                       "Migration:ItemAfterMigrate" : "Migration:ItemError",
+                       migrationType);
+                if (resourcesGroupedByItems.count == 0)
+                  notify("Migration:Ended");
+              }
+            }
+          };
+
+          Services.tm.mainThread.dispatch(function() {
+            // If migrate throws, an error occurred, and the callback
+            // (itemMayBeDone) might haven't been called.
+            try {
+              resource.migrate(resourceDone);
+            }
+            catch(ex) {
+              Cu.reportError(ex);
+              resourceDone(false);
+            }
+          }, Ci.nsIThread.DISPATCH_NORMAL);
+        });
+      });
     }
 
-    notify("Migration:Started");
-    resourcesGroupedByItems.listkeys().forEach(function(migrationType) {
-      let migrationTypeA = migrationType;
-      let itemResources = resourcesGroupedByItems.get(migrationType);
-      notify("Migration:ItemBeforeMigrate", migrationType);
+    if (MigrationUtils.isStartupMigration && !this.startupOnlyMigrator) {
+      MigrationUtils.profileStartup.doStartup();
 
-      let itemSuccess = false;
-      itemResources.forEach(function(resource) {
-        let resourceDone = function(aSuccess) {
-          let resourceIndex = itemResources.indexOf(resource);
-          if (resourceIndex != -1) {
-            itemResources.splice(resourceIndex, 1);
-            itemSuccess |= aSuccess;
-            if (itemResources.length == 0) {
-              resourcesGroupedByItems.del(migrationType);
-              notify(itemSuccess ?
-                     "Migration:ItemAfterMigrate" : "Migration:ItemError",
-                     migrationType);
-              if (resourcesGroupedByItems.count == 0)
-                notify("Migration:Ended");
-            }
-          }
-        };
+      // If we're about to migrate bookmarks, first import the default bookmarks.
+      // Note We do not need to do so for the Firefox migrator
+      // (=startupOnlyMigrator), as it just copies over the places database
+      // from another profile.
+      const BOOKMARKS = MigrationUtils.resourceTypes.BOOKMARKS;
+      let migratingBookmarks = resources.some(function(r) r.type == BOOKMARKS);
+      if (migratingBookmarks) {
+        let browserGlue = Cc["@mozilla.org/browser/browserglue;1"].
+                          getService(Ci.nsIObserver);
+        browserGlue.observe(null, TOPIC_WILL_IMPORT_BOOKMARKS, "");
 
-        Services.tm.mainThread.dispatch(function() {
-          // If migrate throws, an error occurred, and the callback
-          // (itemMayBeDone) might haven't been called.
-          try {
-            resource.migrate(resourceDone);
-          }
-          catch(ex) {
-            Cu.reportError(ex);
-            resourceDone(false);
-          }
-        }, Ci.nsIThread.DISPATCH_NORMAL);
-      });
-    });
+        let bookmarksHTMLFile = Services.dirsvc.get("BMarks", Ci.nsIFile);
+        if (bookmarksHTMLFile.exists()) {
+          // Note doMigrate doesn't care about the success value of the
+          // callback.
+          BookmarkHTMLUtils.importFromURL(
+            NetUtil.newURI(bookmarksHTMLFile).spec, true, function(a) {
+              browserGlue.observe(null, TOPIC_DID_IMPORT_BOOKMARKS, "");
+              doMigrate();
+            });
+          return;
+        }
+      }
+    }
+    doMigrate();
   },
 
   /**
@@ -406,7 +468,7 @@ let MigrationUtils = Object.freeze({
         migrator = Cc["@mozilla.org/profile/migrator;1?app=browser&type=" +
                       aKey].createInstance(Ci.nsIBrowserProfileMigrator);
       }
-      catch(ex) { }
+      catch(ex) { Cu.reportError(ex); }
       this._migrators.set(aKey, migrator);
     }
 
@@ -425,83 +487,100 @@ let MigrationUtils = Object.freeze({
   get profileStartup() gProfileStartup,
 
   /**
-   * Start the migration wizard.
-   *
-   * Supplying a migrator will result in automatic migration. You should
-   * make sure that the migrator for this key exists before passing
-   * it (use getMigrator).
+   * Show the migration wizard.  On mac, this may just focus the wizard if it's
+   * already running, in which case aOpener and aParams are ignored.
    *
    * @param [optional] aOpener
-   *        the window to which the wizard window is associated.
-   * @param [optional] aProfileStartup
-   *        @see nsIProfileMigrator and nsIProfileStartup.  This is used
-   *        for initializing the profile during migration and for indicating
-   *        startup-migration
-   * @param [optional] aKey
-   *        A migration-source internal name (@see getMigrator) for an existent
-   *        source.  This is ignored if aProfileStartup is not set, and required
-   *        if it is.
-   * @param [optional] aSkipImportSourcePage
-   *        Whether or not to skip the migration-source selection page in the
-   *        wizard (ignored if aProfileStartup is not set).  Default: false.
-   *
-   * @throws if aKey is set to an invalid or non-existent migration source.
-   * @note aParentWindow is ignored on OS X, because wizards are not modal
-   *       on this platform.
+   *        the window that asks to open the wizard.
+   * @param [optioanl] aParams
+   *        arguments for the migration wizard, in the form of an nsIArray.
+   *        This is passed as-is for the params argument of
+   *        nsIWindowWatcher.openWindow.
    */
   showMigrationWizard:
-  function MU_showMigrationWizard(aOpener, aProfileStartup, aMigratorKey,
-                                  aSkipImportSourcePage) {
-    let features = "chrome,dialog,modal,centerscreen,titlebar";
-    let params = null;
-    if (!aProfileStartup) {
+  function MU_showMigrationWizard(aOpener, aParams) {
+    let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
 #ifdef XP_MACOSX
+    if (!this.isStartupMigration) {
       let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
       if (win) {
         win.focus();
         return;
       }
+      // On mac, the migration wiazrd should only be modal in the case of
+      // startup-migration.
       features = "centerscreen,chrome,resizable=no";
+    }
 #endif
-    }
-    else {
-      if (!aMigratorKey)
-        throw new Error("aMigratorKey must be set for startup migration");
 
-      let migrator = this.getMigrator(aMigratorKey);
-      if (!migrator) {
-        throw new Error("startMigration was asked to open auto-migrate from a non-existent source: " +
-                        aMigratorKey);
-      }
-      else {
-        gProfileStartup = aProfileStartup;
-      }
-      
-      // By opening the wizard with a supplied migrator, it will
-      // automatically migrate from it.
-      params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-      let keyCSTR = Cc["@mozilla.org/supports-cstring;1"].
-                    createInstance(Ci.nsISupportsCString);
-      keyCSTR.data = aMigratorKey;
-      let skipImportSourcePageBool = Cc["@mozilla.org/supports-PRBool;1"].
-                                     createInstance(Ci.nsISupportsPRBool);
-      params.appendElement(keyCSTR, false);
-      params.appendElement(migrator, false);
-      params.appendElement(aProfileStartup, false);
-
-      if (aSkipImportSourcePage === true) {
-        let wrappedBool = Cc["@mozilla.org/supports-PRBool;1"].
-                          createInstance(Ci.nsISupportsPRBool);
-        wrappedBool.data = true;
-        params.appendElement(wrappedBool);
-      }
-    }
-
-    Services.ww.openWindow(null,
+    Services.ww.openWindow(aOpener,
                            "chrome://browser/content/migration/migration.xul",
                            "_blank",
                            features,
-                           params);
+                           aParams);
+  },
+
+  /**
+   * Show the migration wizard for startup-migration.  This should only be
+   * called by ProfileMigrator (see ProfileMigrator.js), which implements
+   * nsIProfileMigrator.
+   *
+   * @param aProfileStartup
+   *        the nsIProfileStartup instance provided to ProfileMigrator.migrate.
+   * @param [optional] aMigratorKey
+   *        If set, the migration wizard will import from the corresponding
+   *        migrator, bypassing the source-selection page.  Otherwise, the
+   *        source-selection page will be displayed, either with the default
+   *        browser selected, if it could be detected and if there is a
+   *        migrator for it, or with the first option selected as a fallback
+   *        (The first option is hardcoded to be the most common browser for
+   *         the OS we run on.  See migration.xul).
+   *          
+   * @throws if aMigratorKey is invalid or if it points to a non-existent
+   *         source.
+   */
+  startupMigration:
+  function MU_startupMigrator(aProfileStartup, aMigratorKey) {
+    if (!aProfileStartup) {
+      throw new Error("an profile-startup instance is required for startup-migration");
+    }
+    gProfileStartup = aProfileStartup;
+
+    let skipSourcePage = false, migrator = null, migratorKey = "";
+    if (aMigratorKey) {
+      migrator = this.getMigrator(aMigratorKey);
+      if (!migrator) {
+        // aMigratorKey must point to a valid source, so, if it doesn't
+        // cleanup and throw.
+        this.finishMigration();
+        throw new Error("startMigration was asked to open auto-migrate from " +
+                        "a non-existent source: " + aMigratorKey);
+      }
+      migratorKey = aMigratorKey;
+      skipSourcePage = true;
+    }
+    else {
+      let defaultBrowserKey = getMigratorKeyForDefaultBrowser();
+      if (defaultBrowserKey) {
+        migrator = this.getMigrator(defaultBrowserKey);
+        if (migrator)
+          migratorKey = defaultBrowserKey;
+      }
+    }
+
+    let params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    let keyCSTR = Cc["@mozilla.org/supports-cstring;1"].
+                  createInstance(Ci.nsISupportsCString);
+    keyCSTR.data = migratorKey;
+    let skipImportSourcePageBool = Cc["@mozilla.org/supports-PRBool;1"].
+                                   createInstance(Ci.nsISupportsPRBool);
+    skipImportSourcePageBool.data = skipSourcePage;
+    params.appendElement(keyCSTR, false);
+    params.appendElement(migrator, false);
+    params.appendElement(aProfileStartup, false);
+    params.appendElement(skipImportSourcePageBool, false);
+
+    this.showMigrationWizard(null, params);
   },
 
   /**

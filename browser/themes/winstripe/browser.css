@@ -1363,7 +1363,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   padding-right: 5.01px;
 }
 
-#identity-box.verifiedIdentity {
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
   color: hsl(92,100%,30%);
   -moz-margin-end: 4px;
   background-image: -moz-linear-gradient(hsla(92,81%,16%,0),
@@ -1425,20 +1425,27 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 #page-proxy-favicon {
   width: 16px;
   height: 16px;
-  margin: 1px 3px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  -moz-margin-start: 3px;
+  -moz-margin-end: 2px;
   list-style-image: url(chrome://browser/skin/identity-icons-generic.png);
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
-.verifiedDomain > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+@conditionalForwardWithUrlbar@ + #urlbar-container > #urlbar > #identity-box > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+  -moz-margin-end: 1px;
+}
+
+.verifiedDomain > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-icons-https.png);
 }
 
-.verifiedIdentity > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+.verifiedIdentity > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-icons-https-ev.png);
 }
 
-.mixedContent > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon {
+.mixedContent > #identity-box-inner > #page-proxy-stack > #page-proxy-favicon[pageproxystate="valid"] {
   list-style-image: url(chrome://browser/skin/identity-icons-https-mixed.png);
 }
 
@@ -1452,7 +1459,7 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 }
 
 #page-proxy-favicon[pageproxystate="invalid"] {
-  opacity: 0.5;
+  opacity: 0.3;
 }
 
 /* autocomplete */
@@ -2631,7 +2638,7 @@ panel[dimmed="true"] {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-#inspector-inspect-toolbutton[checked] {
+#inspector-inspect-toolbutton[checked=true] {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
@@ -2702,6 +2709,7 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   padding: 0;
   width: 26px;
   min-height: 26px;
+  background-color: transparent;
 }
 
 #highlighter-nodeinfobar-inspectbutton {

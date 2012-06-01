@@ -13,9 +13,9 @@
 
 #include "GrClipIterator.h"
 #include "GrRect.h"
-#include "GrPath.h"
 #include "GrTemplates.h"
 
+#include "SkPath.h"
 #include "SkTArray.h"
 
 class GrClip {
@@ -39,11 +39,13 @@ public:
 
     const GrRect& getConservativeBounds() const { return fConservativeBounds; }
 
+    bool requiresAA() const { return fRequiresAA; }
+
     int getElementCount() const { return fList.count(); }
 
     GrClipType getElementType(int i) const { return fList[i].fType; }
 
-    const GrPath& getPath(int i) const {
+    const SkPath& getPath(int i) const {
         GrAssert(kPath_ClipType == fList[i].fType);
         return fList[i].fPath;
     }
@@ -58,12 +60,14 @@ public:
         return fList[i].fRect;
     }
 
-    GrSetOp getOp(int i) const { return fList[i].fOp; }
+    SkRegion::Op getOp(int i) const { return fList[i].fOp; }
+
+    bool getDoAA(int i) const   { return fList[i].fDoAA; }
 
     bool isRect() const {
         if (1 == fList.count() && kRect_ClipType == fList[0].fType && 
-            (kIntersect_SetOp == fList[0].fOp ||
-             kReplace_SetOp == fList[0].fOp)) {
+            (SkRegion::kIntersect_Op == fList[0].fOp ||
+             SkRegion::kReplace_Op == fList[0].fOp)) {
             // if we determined that the clip is a single rect
             // we ought to have also used that rect as the bounds.
             GrAssert(fConservativeBoundsValid);
@@ -107,13 +111,14 @@ public:
 
 private:
     struct Element {
-        GrClipType  fType;
-        GrRect      fRect;
-        GrPath      fPath;
-        GrPathFill  fPathFill;
-        GrSetOp     fOp;
+        GrClipType   fType;
+        GrRect       fRect;
+        SkPath       fPath;
+        GrPathFill   fPathFill;
+        SkRegion::Op fOp;
+        bool         fDoAA;
         bool operator ==(const Element& e) const {
-            if (e.fType != fType || e.fOp != fOp) {
+            if (e.fType != fType || e.fOp != fOp || e.fDoAA != fDoAA) {
                 return false;
             }
             switch (fType) {
@@ -131,6 +136,8 @@ private:
 
     GrRect              fConservativeBounds;
     bool                fConservativeBoundsValid;
+
+    bool                fRequiresAA;
 
     enum {
         kPreAllocElements = 4,

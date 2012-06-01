@@ -25,8 +25,8 @@ class SkStream;
  *  Create an imageref from the specified bitmap using the specified colorspace.
  *  If space is NULL, then CGColorSpaceCreateDeviceRGB() is used.
  */
-CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
-                                            CGColorSpaceRef space);
+SK_API CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
+                                                   CGColorSpaceRef space);
 
 /**
  *  Create an imageref from the specified bitmap using the colorspace returned
@@ -45,5 +45,20 @@ static inline CGImageRef SkCreateCGImageRef(const SkBitmap& bm) {
 void SkCGDrawBitmap(CGContextRef, const SkBitmap&, float x, float y);
 
 bool SkPDFDocumentToBitmap(SkStream* stream, SkBitmap* output);
+
+/**
+ *  Return a provider that wraps the specified stream. It will become an
+ *  owner of the stream, so the caller must still manage its ownership.
+ *
+ *  To hand-off ownership of the stream to the provider, the caller must do
+ *  something like the following:
+ *
+ *  SkStream* stream = new ...;
+ *  CGDataProviderRef provider = SkStreamToDataProvider(stream);
+ *  stream->unref();
+ *
+ *  Now when the provider is finally deleted, it will delete the stream.
+ */
+CGDataProviderRef SkCreateDataProviderFromStream(SkStream*);
 
 #endif

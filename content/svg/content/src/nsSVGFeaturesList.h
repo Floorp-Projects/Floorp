@@ -37,7 +37,7 @@ SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#BasicClip")
 SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#BasicFilter")
 
 // Animation feature
-SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Animation")
+SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#Animation")
 
 // Dynamic features
 SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#DocumentEventsAttribute")
@@ -58,7 +58,7 @@ SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#SVGDOM")
 SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#SVG-static")
 SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#SVGDOM-static")
 SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#SVG-animation")
-SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#SVGDOM-animation")
+SVG_SUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#SVGDOM-animation")
 SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#SVG-dynamic")
 SVG_UNSUPPORTED_FEATURE("http://www.w3.org/TR/SVG11/feature#SVGDOM-dynamic")
 
@@ -71,5 +71,5 @@ SVG_UNSUPPORTED_FEATURE("org.w3c.svg.dynamic")
 SVG_UNSUPPORTED_FEATURE("org.w3c.dom.svg")
 SVG_UNSUPPORTED_FEATURE("org.w3c.dom.svg.all")
 SVG_UNSUPPORTED_FEATURE("org.w3c.dom.svg.static")
-SVG_UNSUPPORTED_FEATURE("org.w3c.dom.svg.animation")
+SVG_SUPPORTED_FEATURE("org.w3c.dom.svg.animation")
 SVG_UNSUPPORTED_FEATURE("org.w3c.dom.svg.dynamic")

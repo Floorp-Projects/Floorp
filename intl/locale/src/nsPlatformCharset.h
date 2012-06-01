@@ -26,7 +26,6 @@ private:
 
   nsresult MapToCharset(nsAString& inANSICodePage, nsACString& outCharset);
   nsresult InitGetCharset(nsACString& oString);
-  nsresult ConvertLocaleToCharsetUsingDeprecatedConfig(nsACString& locale, nsACString& oResult);
   nsresult VerifyCharset(nsCString &aCharset);
 };
 

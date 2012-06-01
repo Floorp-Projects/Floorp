@@ -12,8 +12,8 @@ include $(DEPTH)/config/autoconf.mk
 
 EXTRA_JS_MODULES = \
 		PropertyPanel.jsm \
-		PropertyPanelAsync.jsm \
 		NetworkHelper.jsm \
+		NetworkPanel.jsm \
 		AutocompletePopup.jsm \
 		WebConsoleUtils.jsm \
 		$(NULL)

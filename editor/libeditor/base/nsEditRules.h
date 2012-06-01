@@ -46,7 +46,8 @@ public:
                         nsIEditor::EDirection aDirection) = 0;
   NS_IMETHOD AfterEdit(nsEditor::OperationID action,
                        nsIEditor::EDirection aDirection) = 0;
-  NS_IMETHOD WillDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, bool *aCancel, bool *aHandled)=0;
+  NS_IMETHOD WillDoAction(nsTypedSelection* aSelection, nsRulesInfo* aInfo,
+                          bool* aCancel, bool* aHandled) = 0;
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
   NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty)=0;
   NS_IMETHOD DocumentModified()=0;

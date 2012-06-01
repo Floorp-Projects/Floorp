@@ -2391,6 +2391,24 @@ nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
       // states passed in are relevant here.
       if ((possibleChange & ~hint) &&
           states.HasAtLeastOneOfStates(aData->mStateMask) &&
+          // We can optimize away testing selectors that only involve :hover, a
+          // namespace, and a tag name against nodes that don't have the
+          // NODE_HAS_RELEVANT_HOVER_RULES flag: such a selector didn't match
+          // the tag name or namespace the first time around (since the :hover
+          // didn't set the NODE_HAS_RELEVANT_HOVER_RULES flag), so it won't
+          // match it now.  Check for our selector only having :hover states, or
+          // the element having the hover rules flag, or the selector having
+          // some sort of non-namespace, non-tagname data in it.
+          (states != NS_EVENT_STATE_HOVER ||
+           aData->mElement->HasFlag(NODE_HAS_RELEVANT_HOVER_RULES) ||
+           selector->mIDList || selector->mClassList ||
+           // We generally expect an mPseudoClassList, since we have a :hover.
+           // The question is whether we have anything else in there.
+           (selector->mPseudoClassList &&
+            (selector->mPseudoClassList->mNext ||
+             selector->mPseudoClassList->mType !=
+               nsCSSPseudoClasses::ePseudoClass_hover)) ||
+           selector->mAttrList || selector->mNegations) &&
           SelectorMatches(aData->mElement, selector, nodeContext,
                           aData->mTreeMatchContext) &&
           SelectorMatchesTree(aData->mElement, selector->mNext,

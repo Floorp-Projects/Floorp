@@ -1153,3 +1153,12 @@ PluginModuleParent::RecvNPN_SetException(PPluginScriptableObjectParent* aActor,
     mozilla::plugins::parent::_setexception(aNPObj, NullableStringGet(aMessage));
     return true;
 }
+
+bool
+PluginModuleParent::RecvNPN_ReloadPlugins(const bool& aReloadPages)
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+
+    mozilla::plugins::parent::_reloadplugins(aReloadPages);
+    return true;
+}

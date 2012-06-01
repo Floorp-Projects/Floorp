@@ -706,6 +706,13 @@ struct nsCSSRect {
 
   void SetAllSidesTo(const nsCSSValue& aValue);
 
+  bool AllSidesEqualTo(const nsCSSValue& aValue) const {
+    return mTop == aValue &&
+           mRight == aValue &&
+           mBottom == aValue &&
+           mLeft == aValue;
+  }
+
   void Reset() {
     mTop.Reset();
     mRight.Reset();
@@ -790,6 +797,11 @@ struct nsCSSValuePair {
            mYValue != aOther.mYValue;
   }
 
+  bool BothValuesEqualTo(const nsCSSValue& aValue) const {
+    return mXValue == aValue &&
+           mYValue == aValue;
+  }
+
   void SetBothValuesTo(const nsCSSValue& aValue) {
     mXValue = aValue;
     mYValue = aValue;
@@ -864,6 +876,12 @@ struct nsCSSValueTriplet {
         return mXValue != aOther.mXValue ||
                mYValue != aOther.mYValue ||
                mZValue != aOther.mZValue;
+    }
+
+    bool AllValuesEqualTo(const nsCSSValue& aValue) const {
+        return mXValue == aValue &&
+               mYValue == aValue &&
+               mZValue == aValue;
     }
 
     void SetAllValuesTo(const nsCSSValue& aValue) {

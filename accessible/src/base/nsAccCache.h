@@ -33,9 +33,9 @@ ClearCacheEntry(const void* aKey, nsRefPtr<T>& aAccessible, void* aUserArg)
  */
 
 static void
-ClearCache(nsAccessibleHashtable & aCache)
+ClearCache(AccessibleHashtable& aCache)
 {
-  aCache.Enumerate(ClearCacheEntry<nsAccessible>, nsnull);
+  aCache.Enumerate(ClearCacheEntry<Accessible>, nsnull);
 }
 
 /**
@@ -61,10 +61,10 @@ CycleCollectorTraverseCacheEntry(const void *aKey, T *aAccessible,
  */
 
 static void
-CycleCollectorTraverseCache(nsAccessibleHashtable & aCache,
+CycleCollectorTraverseCache(AccessibleHashtable& aCache,
                             nsCycleCollectionTraversalCallback *aCallback)
 {
-  aCache.EnumerateRead(CycleCollectorTraverseCacheEntry<nsAccessible>, aCallback);
+  aCache.EnumerateRead(CycleCollectorTraverseCacheEntry<Accessible>, aCallback);
 }
 
 #endif

@@ -2,8 +2,10 @@ from marionette import Marionette, Emulator
 from optparse import OptionParser
 
 
-def runemulator(homedir=None, url=None, pidfile=None, arch='x86'):
-    qemu = Emulator(homedir=homedir, arch=arch)
+def runemulator(homedir=None, url=None, pidfile=None, arch='x86', noWindow=False,
+                userdata=None):
+    qemu = Emulator(homedir=homedir, arch=arch, noWindow=noWindow,
+                    userdata=userdata)
     qemu.start()
     port = qemu.setup_port_forwarding(2828)
     assert(qemu.wait_for_port())
@@ -30,6 +32,10 @@ if __name__ == '__main__':
                       help='url to navigate to after launching emulator')
     parser.add_option('--pidfile', dest='pidfile', action='store',
                       help='file in which to store emulator pid')
+    parser.add_option('--no-window', dest='noWindow', action='store_true',
+                      help='pass -no-window to the emulator')
+    parser.add_option('--userdata', dest='userdata', action='store',
+                      help='path to userdata.img file to use')
 
     options, args = parser.parse_args()
     if not options.repo_path:
@@ -38,5 +44,7 @@ if __name__ == '__main__':
     runemulator(homedir=options.repo_path,
                 url=options.url,
                 pidfile=options.pidfile,
-                arch=options.arch)
+                arch=options.arch,
+                noWindow=options.noWindow,
+                userdata=options.userdata)
 

@@ -3194,8 +3194,20 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
     }
 
     // Fall back to software if we couldn't use any hardware backends.
-    if (!mLayerManager)
-      mLayerManager = CreateBasicLayerManager();
+    if (!mLayerManager) {
+      // Try to use an async compositor first, if possible
+      bool useCompositor =
+        Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
+      if (useCompositor) {
+        // e10s uses the parameter to pass in the shadow manager from the TabChild
+        // so we don't expect to see it there since this doesn't support e10s.
+        NS_ASSERTION(aShadowManager == nsnull, "Async Compositor not supported with e10s");
+        CreateCompositor();
+      }
+
+      if (!mLayerManager)
+        mLayerManager = CreateBasicLayerManager();
+    }
   }
 
   NS_ASSERTION(mLayerManager, "Couldn't provide a valid layer manager.");
@@ -3902,7 +3914,7 @@ bool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam,
 
 // Deal with accessibile event
 #ifdef ACCESSIBILITY
-nsAccessible*
+Accessible*
 nsWindow::DispatchAccessibleEvent(PRUint32 aEventType)
 {
   if (nsnull == mEventCallback) {
@@ -5077,7 +5089,7 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       // for details).
       DWORD objId = static_cast<DWORD>(lParam);
       if (objId == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
-        nsAccessible *rootAccessible = GetRootAccessible(); // Held by a11y cache
+        Accessible* rootAccessible = GetRootAccessible(); // Held by a11y cache
         if (rootAccessible) {
           IAccessible *msaaAccessible = NULL;
           rootAccessible->GetNativeInterface((void**)&msaaAccessible); // does an addref
@@ -6523,9 +6535,33 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
         nsAlternativeCharCode chars(unshiftedChar, shiftedChar);
         altArray.AppendElement(chars);
       }
-      if (cnt == num - 1 && (unshiftedLatinChar || shiftedLatinChar)) {
-        nsAlternativeCharCode chars(unshiftedLatinChar, shiftedLatinChar);
-        altArray.AppendElement(chars);
+      if (cnt == num - 1) {
+        if (unshiftedLatinChar || shiftedLatinChar) {
+          nsAlternativeCharCode chars(unshiftedLatinChar, shiftedLatinChar);
+          altArray.AppendElement(chars);
+        }
+
+        // Typically, following virtual keycodes are used for a key which can
+        // input the character.  However, these keycodes are also used for
+        // other keys on some keyboard layout.  E.g., in spite of Shift+'1'
+        // inputs '+' on Thai keyboard layout, a key which is at '=/+'
+        // key on ANSI keyboard layout is VK_OEM_PLUS.  Native applications
+        // handle it as '+' key if Ctrl key is pressed.
+        PRUnichar charForOEMKeyCode = 0;
+        switch (virtualKeyCode) {
+          case VK_OEM_PLUS:   charForOEMKeyCode = '+'; break;
+          case VK_OEM_COMMA:  charForOEMKeyCode = ','; break;
+          case VK_OEM_MINUS:  charForOEMKeyCode = '-'; break;
+          case VK_OEM_PERIOD: charForOEMKeyCode = '.'; break;
+        }
+        if (charForOEMKeyCode &&
+            charForOEMKeyCode != unshiftedChars[0] &&
+            charForOEMKeyCode != shiftedChars[0] &&
+            charForOEMKeyCode != unshiftedLatinChar &&
+            charForOEMKeyCode != shiftedLatinChar) {
+          nsAlternativeCharCode OEMChars(charForOEMKeyCode, charForOEMKeyCode);
+          altArray.AppendElement(OEMChars);
+        }
       }
 
       nsKeyEvent keypressEvent(true, NS_KEY_PRESS, this);
@@ -7222,7 +7258,7 @@ bool nsWindow::AssociateDefaultIMC(bool aAssociate)
 
 #ifdef DEBUG_WMGETOBJECT
 #define NS_LOG_WMGETOBJECT_WNDACC(aWnd)                                        \
-  nsAccessible* acc = aWnd ?                                                   \
+  Accessible* acc = aWnd ?                                                   \
     aWnd->DispatchAccessibleEvent(NS_GETACCESSIBLE) : nsnull;                  \
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, ("     acc: %p", acc));                   \
   if (acc) {                                                                   \
@@ -7261,7 +7297,7 @@ bool nsWindow::AssociateDefaultIMC(bool aAssociate)
 #define NS_LOG_WMGETOBJECT_WND(aMsg, aHwnd)
 #endif // DEBUG_WMGETOBJECT
 
-nsAccessible*
+Accessible*
 nsWindow::GetRootAccessible()
 {
   // We want the ability to forcibly disable a11y on windows, because

@@ -9,11 +9,11 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "nsEventShell.h"
-#include "nsTextAccessible.h"
 #include "FocusManager.h"
 #include "Role.h"
+#include "TextLeafAccessible.h"
 #include "TextUpdater.h"
 
 #include "mozilla/dom/Element.h"
@@ -28,7 +28,7 @@ const unsigned int kSelChangeCountToPack = 5;
 // NotificationCollector
 ////////////////////////////////////////////////////////////////////////////////
 
-NotificationController::NotificationController(nsDocAccessible* aDocument,
+NotificationController::NotificationController(DocAccessible* aDocument,
                                                nsIPresShell* aPresShell) :
   mObservingState(eNotObservingRefresh), mDocument(aDocument),
   mPresShell(aPresShell)
@@ -63,7 +63,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(NotificationController)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mDocument");
   cb.NoteXPCOMChild(static_cast<nsIAccessible*>(tmp->mDocument.get()));
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(mHangingChildDocuments,
-                                                    nsDocAccessible)
+                                                    DocAccessible)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(mContentInsertions,
                                                     ContentInsertion)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(mEvents, AccEvent)
@@ -120,7 +120,7 @@ NotificationController::QueueEvent(AccEvent* aEvent)
 }
 
 void
-NotificationController::ScheduleChildDocBinding(nsDocAccessible* aDocument)
+NotificationController::ScheduleChildDocBinding(DocAccessible* aDocument)
 {
   // Schedule child document binding to the tree.
   mHangingChildDocuments.AppendElement(aDocument);
@@ -128,7 +128,7 @@ NotificationController::ScheduleChildDocBinding(nsDocAccessible* aDocument)
 }
 
 void
-NotificationController::ScheduleContentInsertion(nsAccessible* aContainer,
+NotificationController::ScheduleContentInsertion(Accessible* aContainer,
                                                  nsIContent* aStartChildNode,
                                                  nsIContent* aEndChildNode)
 {
@@ -161,7 +161,7 @@ NotificationController::IsUpdatePending()
     mObservingState == eRefreshProcessingForUpdate ||
     mContentInsertions.Length() != 0 || mNotifications.Length() != 0 ||
     mTextHash.Count() != 0 ||
-    !mDocument->HasLoadState(nsDocAccessible::eTreeConstructed);
+    !mDocument->HasLoadState(DocAccessible::eTreeConstructed);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +182,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   mObservingState = eRefreshProcessingForUpdate;
 
   // Initial accessible tree construction.
-  if (!mDocument->HasLoadState(nsDocAccessible::eTreeConstructed)) {
+  if (!mDocument->HasLoadState(DocAccessible::eTreeConstructed)) {
     // If document is not bound to parent at this point then the document is not
     // ready yet (process notifications later).
     if (!mDocument->IsBoundToParent()) {
@@ -228,14 +228,14 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   // Bind hanging child documents.
   PRUint32 hangingDocCnt = mHangingChildDocuments.Length();
   for (PRUint32 idx = 0; idx < hangingDocCnt; idx++) {
-    nsDocAccessible* childDoc = mHangingChildDocuments[idx];
+    DocAccessible* childDoc = mHangingChildDocuments[idx];
     if (childDoc->IsDefunct())
       continue;
 
     nsIContent* ownerContent = mDocument->GetDocumentNode()->
       FindContentForSubDocument(childDoc->GetDocumentNode());
     if (ownerContent) {
-      nsAccessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
+      Accessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
       if (outerDocAcc && outerDocAcc->AppendChild(childDoc)) {
         if (mDocument->AppendChildDocument(childDoc))
           continue;
@@ -251,13 +251,13 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 
   // If the document is ready and all its subdocuments are completely loaded
   // then process the document load.
-  if (mDocument->HasLoadState(nsDocAccessible::eReady) &&
-      !mDocument->HasLoadState(nsDocAccessible::eCompletelyLoaded) &&
+  if (mDocument->HasLoadState(DocAccessible::eReady) &&
+      !mDocument->HasLoadState(DocAccessible::eCompletelyLoaded) &&
       hangingDocCnt == 0) {
     PRUint32 childDocCnt = mDocument->ChildDocumentCount(), childDocIdx = 0;
     for (; childDocIdx < childDocCnt; childDocIdx++) {
-      nsDocAccessible* childDoc = mDocument->GetChildDocumentAt(childDocIdx);
-      if (!childDoc->HasLoadState(nsDocAccessible::eCompletelyLoaded))
+      DocAccessible* childDoc = mDocument->GetChildDocumentAt(childDocIdx);
+      if (!childDoc->HasLoadState(DocAccessible::eCompletelyLoaded))
         break;
     }
 
@@ -295,7 +295,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   for (PRUint32 idx = 0; idx < eventCount; idx++) {
     AccEvent* accEvent = events[idx];
     if (accEvent->mEventRule != AccEvent::eDoNotEmit) {
-      nsAccessible* target = accEvent->GetAccessible();
+      Accessible* target = accEvent->GetAccessible();
       if (!target || target->IsDefunct())
         continue;
 
@@ -323,7 +323,7 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   if (mContentInsertions.Length() == 0 && mNotifications.Length() == 0 &&
       mEvents.Length() == 0 && mTextHash.Count() == 0 &&
       mHangingChildDocuments.Length() == 0 &&
-      mDocument->HasLoadState(nsDocAccessible::eCompletelyLoaded) &&
+      mDocument->HasLoadState(DocAccessible::eCompletelyLoaded) &&
       mPresShell->RemoveRefreshObserver(this, Flush_Display)) {
     mObservingState = eNotObservingRefresh;
   }
@@ -641,8 +641,8 @@ NotificationController::CoalesceTextChangeEventsFor(AccShowEvent* aTailEvent,
 void
 NotificationController::CreateTextChangeEventFor(AccMutationEvent* aEvent)
 {
-  nsDocAccessible* document = aEvent->GetDocAccessible();
-  nsAccessible* container = document->GetContainerAccessible(aEvent->mNode);
+  DocAccessible* document = aEvent->GetDocAccessible();
+  Accessible* container = document->GetContainerAccessible(aEvent->mNode);
   if (!container)
     return;
 
@@ -680,9 +680,9 @@ PLDHashOperator
 NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
                                        void* aUserArg)
 {
-  nsDocAccessible* document = static_cast<nsDocAccessible*>(aUserArg);
+  DocAccessible* document = static_cast<DocAccessible*>(aUserArg);
   nsIContent* textNode = aEntry->GetKey();
-  nsAccessible* textAcc = document->GetAccessible(textNode);
+  Accessible* textAcc = document->GetAccessible(textNode);
 
   // If the text node is not in tree or doesn't have frame then this case should
   // have been handled already by content removal notifications.
@@ -771,7 +771,7 @@ NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
 #endif
 
     // Make sure the text node is in accessible document still.
-    nsAccessible* container = document->GetAccessibleOrContainer(containerNode);
+    Accessible* container = document->GetAccessibleOrContainer(containerNode);
     NS_ASSERTION(container,
                  "Text node having rendered text hasn't accessible document!");
     if (container) {
@@ -789,7 +789,7 @@ NotificationController::TextEnumerator(nsCOMPtrHashKey<nsIContent>* aEntry,
 // NotificationController: content inserted notification
 
 NotificationController::ContentInsertion::
-  ContentInsertion(nsDocAccessible* aDocument, nsAccessible* aContainer) :
+  ContentInsertion(DocAccessible* aDocument, Accessible* aContainer) :
   mDocument(aDocument), mContainer(aContainer)
 {
 }

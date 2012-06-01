@@ -480,7 +480,7 @@ main(int argc, char **argv)
 #endif
     }
 
-    retval = XRE_main(argc, argv, appData);
+    retval = XRE_main(argc, argv, appData, 0);
   }
 
   NS_LogTerm();

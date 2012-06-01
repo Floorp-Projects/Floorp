@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
 import java.lang.Long;
+import java.lang.NoSuchMethodException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.ArrayList;
 
@@ -178,6 +179,20 @@ public class FennecNativeActions implements Actions {
             FennecNativeDriver.log(LogLevel.ERROR, e);
         }
         return null;
+    }
+
+    public void sendGeckoEvent(String geckoEvent, String data) {
+        try {
+            Method cbe = mGe.getMethod("createBroadcastEvent", String.class, String.class);
+            Object event = cbe.invoke(null, geckoEvent, data);
+            mSendGE.invoke(null, event);
+        } catch (NoSuchMethodException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (IllegalAccessException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        } catch (InvocationTargetException e) {
+            FennecNativeDriver.log(LogLevel.ERROR, e);
+        }
     }
 
     class DrawListenerProxy implements InvocationHandler {

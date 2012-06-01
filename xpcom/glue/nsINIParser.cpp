@@ -3,13 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsINIParser.h"
+// Moz headers (alphabetical)
+#include "nsCRTGlue.h"
 #include "nsError.h"
 #include "nsILocalFile.h"
-#include "nsCRTGlue.h"
+#include "nsINIParser.h"
+#include "mozilla/FileUtils.h" // AutoFILE
 
-#include <stdlib.h>
+// System headers (alphabetical)
 #include <stdio.h>
+#include <stdlib.h>
 #ifdef XP_WIN
 #include <windows.h>
 #endif
@@ -109,7 +112,7 @@ nsINIParser::InitFromFILE(FILE *fd)
         return NS_ERROR_FAILURE;
 
     /* malloc an internal buf the size of the file */
-    mFileContents = new char[flen + 1];
+    mFileContents = new char[flen + 2];
     if (!mFileContents)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -121,9 +124,56 @@ nsINIParser::InitFromFILE(FILE *fd)
     if (rd != flen)
         return NS_BASE_STREAM_OSERROR;
 
-    mFileContents[flen] = '\0';
+    // We write a UTF16 null so that the file is easier to convert to UTF8
+    mFileContents[flen] = mFileContents[flen + 1] = '\0';
 
-    char *buffer = mFileContents;
+    char *buffer = &mFileContents[0];
+
+    if (flen >= 3
+    && mFileContents[0] == static_cast<char>(0xEF)
+    && mFileContents[1] == static_cast<char>(0xBB)
+    && mFileContents[2] == static_cast<char>(0xBF)) {
+      // Someone set us up the Utf-8 BOM
+      // This case is easy, since we assume that BOM-less
+      // files are Utf-8 anyway.  Just skip the BOM and process as usual.
+      buffer = &mFileContents[3];
+    }
+
+#ifdef XP_WIN
+    if (flen >= 2
+     && mFileContents[0] == static_cast<char>(0xFF)
+     && mFileContents[1] == static_cast<char>(0xFE)) {
+        // Someone set us up the Utf-16LE BOM
+        buffer = &mFileContents[2];
+        // Get the size required for our Utf8 buffer
+        flen = WideCharToMultiByte(CP_UTF8,
+                                   0,
+                                   reinterpret_cast<LPWSTR>(buffer),
+                                   -1,
+                                   NULL,
+                                   0,
+                                   NULL,
+                                   NULL);
+        if (0 == flen) {
+            return NS_ERROR_FAILURE;
+        }
+
+        nsAutoArrayPtr<char> utf8Buffer = new char[flen];
+        if (0 == WideCharToMultiByte(CP_UTF8,
+                                     0,
+                                     reinterpret_cast<LPWSTR>(buffer),
+                                     -1,
+                                     utf8Buffer,
+                                     flen,
+                                     NULL,
+                                     NULL)) {
+            return NS_ERROR_FAILURE;
+        }
+        mFileContents = utf8Buffer.forget();
+        buffer = mFileContents;
+    }
+#endif
+
     char *currSection = nsnull;
 
     // outer loop tokenizes into lines

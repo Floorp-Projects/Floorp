@@ -129,16 +129,12 @@ nsSVGTextPathFrame::GetStartOffset()
 {
   nsSVGTextPathElement *tp = static_cast<nsSVGTextPathElement*>(mContent);
   nsSVGLength2 *length = &tp->mLengthAttributes[nsSVGTextPathElement::STARTOFFSET];
-  float val = length->GetAnimValInSpecifiedUnits();
-
-  if (val == 0.0f)
-    return 0.0;
 
   if (length->IsPercentage()) {
     nsRefPtr<gfxFlattenedPath> data = GetFlattenedPath();
-    return data ? (val * data->GetLength() / 100.0) : 0.0;
+    return data ? (length->GetAnimValInSpecifiedUnits() * data->GetLength() / 100.0) : 0.0;
   }
-  return val * GetOffsetScale();
+  return length->GetAnimValue(tp) * GetOffsetScale();
 }
 
 gfxFloat

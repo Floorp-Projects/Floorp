@@ -40,14 +40,14 @@ window.onload = function() {
   sessionData.dispatchEvent(event);
 
   initTreeView();
-  
+
   document.getElementById("errorTryAgain").focus();
 };
 
 function initTreeView() {
   var tabList = document.getElementById("tabList");
   var winLabel = tabList.getAttribute("_window_label");
-  
+
   gTreeData = [];
   gStateObject.windows.forEach(function(aWinData, aIx) {
     var winState = {
@@ -73,7 +73,7 @@ function initTreeView() {
     for each (var tab in winState.tabs)
       gTreeData.push(tab);
   }, this);
-  
+
   tabList.view = treeView;
   tabList.view.selection.select(0);
 }
@@ -82,7 +82,7 @@ function initTreeView() {
 
 function restoreSession() {
   document.getElementById("errorTryAgain").disabled = true;
-  
+
   // remove all unselected tabs from the state before restoring it
   var ix = gStateObject.windows.length - 1;
   for (var t = gTreeData.length - 1; t >= 0; t--) {
@@ -99,10 +99,10 @@ function restoreSession() {
     }
   }
   var stateString = JSON.stringify(gStateObject);
-  
+
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   var top = getBrowserWindow();
-  
+
   // if there's only this page open, reuse the window for restoring the session
   if (top.gBrowser.tabs.length == 1) {
     ss.setWindowState(top, stateString, true);
@@ -114,7 +114,7 @@ function restoreSession() {
   newWindow.addEventListener("load", function() {
     newWindow.removeEventListener("load", arguments.callee, true);
     ss.setWindowState(newWindow, stateString, true);
-    
+
     var tabbrowser = top.gBrowser;
     var tabIndex = tabbrowser.getBrowserIndexForDocument(document);
     tabbrowser.removeTab(tabbrowser.tabs[tabIndex]);
@@ -133,7 +133,7 @@ function onListClick(aEvent) {
   // don't react to right-clicks
   if (aEvent.button == 2)
     return;
-  
+
   var row = {}, col = {};
   treeView.treeBox.getCellAt(aEvent.clientX, aEvent.clientY, row, col, {});
   if (col.value) {
@@ -189,9 +189,9 @@ function toggleRowChecked(aIx) {
   var item = gTreeData[aIx];
   item.checked = !item.checked;
   treeView.treeBox.invalidateRow(aIx);
-  
+
   function isChecked(aItem) aItem.checked;
-  
+
   if (treeView.isContainer(aIx)) {
     // (un)check all tabs of this window as well
     for each (var tab in item.tabs) {
@@ -205,7 +205,7 @@ function toggleRowChecked(aIx) {
                           item.parent.tabs.some(isChecked) ? 0 : false;
     treeView.treeBox.invalidateRow(gTreeData.indexOf(item.parent));
   }
-  
+
   document.getElementById("errorTryAgain").disabled = !gTreeData.some(isChecked);
 }
 
@@ -213,14 +213,14 @@ function restoreSingleTab(aIx, aShifted) {
   var tabbrowser = getBrowserWindow().gBrowser;
   var newTab = tabbrowser.addTab();
   var item = gTreeData[aIx];
-  
+
   var ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
   var tabState = gStateObject.windows[item.parent.ix]
                              .tabs[aIx - gTreeData.indexOf(item.parent) - 1];
   // ensure tab would be visible on the tabstrip.
   tabState.hidden = false;
   ss.setTabState(newTab, JSON.stringify(tabState));
-  
+
   // respect the preference as to whether to select the tab (the Shift key inverses)
   var prefBranch = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   if (prefBranch.getBoolPref("browser.tabs.loadInBackground") != !aShifted)

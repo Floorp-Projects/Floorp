@@ -66,12 +66,12 @@ public:
    * This automatically grabs the window's ID and appends it to the
    * array.
    */
-  WindowIdentifier(const nsTArray<uint64>& id, nsIDOMWindow* window);
+  WindowIdentifier(const nsTArray<uint64_t>& id, nsIDOMWindow* window);
 
   /**
    * Get the list of window and process IDs we contain.
    */
-  typedef InfallibleTArray<uint64> IDArrayType;
+  typedef InfallibleTArray<uint64_t> IDArrayType;
   const IDArrayType& AsArray() const;
 
   /**
@@ -96,9 +96,9 @@ private:
   /**
    * Get the ID of the window object we wrap.
    */
-  uint64 GetWindowID() const;
+  uint64_t GetWindowID() const;
 
-  AutoInfallibleTArray<uint64, 3> mID;
+  AutoInfallibleTArray<uint64_t, 3> mID;
   nsCOMPtr<nsIDOMWindow> mWindow;
   bool mIsEmpty;
 };

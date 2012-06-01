@@ -199,10 +199,8 @@ class PollSensor {
 
 nsCOMPtr<nsIRunnable> PollSensor::mRunnable = NULL;
 
-class SwitchSensor {
+class SwitchSensor : public RefCounted<SwitchSensor> {
   public:
-    NS_INLINE_DECL_REFCOUNTING(SwitchSensor)
-    
     SwitchSensor(bool aActivate, sensor_t aSensor, pthread_t aThreadId) :
       mActivate(aActivate), mSensor(aSensor), mThreadId(aThreadId) { }
 

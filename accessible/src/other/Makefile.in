@@ -17,7 +17,7 @@ LIBXUL_LIBRARY = 1
 
 CPPSRCS = \
   nsAccessNodeWrap.cpp \
-  nsAccessibleWrap.cpp \
+  AccessibleWrap.cpp \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -28,6 +28,7 @@ include $(topsrcdir)/config/rules.mk
 LOCAL_INCLUDES += \
   -I$(srcdir) \
   -I$(srcdir)/../base \
+  -I$(srcdir)/../generic \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xul \
   $(NULL)

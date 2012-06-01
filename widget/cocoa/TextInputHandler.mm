@@ -636,12 +636,9 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
 
   NS_ENSURE_TRUE(aNativeKeyEvent, );
 
-  aKeyEvent.time = PR_IntervalNow();
-
   nsCocoaUtils::InitInputEvent(aKeyEvent, aNativeKeyEvent);
 
   aKeyEvent.refPoint = nsIntPoint(0, 0);
-  aKeyEvent.isChar = false; // XXX not used in XP level
 
   // If a keyboard layout override is set, we also need to force the keyboard
   // type to something ANSI to avoid test failures on machines with JIS
@@ -707,6 +704,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
   }
 
   aKeyEvent.charCode = 0;
+  aKeyEvent.isChar = false; // XXX not used in XP level
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TISInputSourceWrapper::InitKeyEvent, keyCode=0x%X charCode=0x0",
@@ -720,29 +718,46 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
                                          nsKeyEvent& aKeyEvent,
                                          UInt32 aKbType)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  
   NS_ASSERTION(aKeyEvent.message == NS_KEY_PRESS,
                "aKeyEvent must be NS_KEY_PRESS event");
 
-  PR_LOG(gLog, PR_LOG_ALWAYS,
-    ("%p TISInputSourceWrapper::InitKeyPressEvent, aNativeKeyEvent=%p"
-     "aKeyEvent.message=%s, aKbType=0x%X, IsOpenedIMEMode()=%s",
-     this, aNativeKeyEvent, GetGeckoKeyEventType(aKeyEvent), aKbType,
-     TrueOrFalse(IsOpenedIMEMode())));
+#ifdef PR_LOGGING
+  if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+    nsAutoString chars;
+    nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], chars);
+    NS_ConvertUTF16toUTF8 utf8Chars(chars);
+    PRUnichar expectedChar = static_cast<PRUnichar>(aKeyEvent.charCode);
+    NS_ConvertUTF16toUTF8 utf8ExpectedChar(&expectedChar, 1);
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+      ("%p TISInputSourceWrapper::InitKeyPressEvent, aNativeKeyEvent=%p, "
+       "[aNativeKeyEvent characters]=\"%s\", aKeyEvent.charCode=0x%X(%s), "
+       "aKeyEvent.message=%s, aKbType=0x%X, IsOpenedIMEMode()=%s",
+       this, aNativeKeyEvent, utf8Chars.get(), aKeyEvent.charCode,
+       utf8ExpectedChar.get(), GetGeckoKeyEventType(aKeyEvent), aKbType,
+       TrueOrFalse(IsOpenedIMEMode())));
+  }
+#endif // #ifdef PR_LOGGING
 
   aKeyEvent.isChar = true; // this is not a special key  XXX not used in XP
 
-  aKeyEvent.charCode = 0;
-  NSString* chars = [aNativeKeyEvent characters];
-  if ([chars length] > 0) {
-    // XXX This is wrong at Hiragana or Katakana with Kana-Nyuryoku mode or
-    //     Chinese or Koran IME modes.  We should use ASCII characters for the
-    //     charCode.
-    aKeyEvent.charCode = [chars characterAtIndex:0];
-  }
+  DebugOnly<PRUint32> initialCharCode = aKeyEvent.charCode;
+  bool computeCharCode = !aKeyEvent.charCode;
 
-  // convert control-modified charCode to raw charCode (with appropriate case)
-  if (aKeyEvent.IsControl() && aKeyEvent.charCode <= 26) {
-    aKeyEvent.charCode += (aKeyEvent.IsShift()) ? ('A' - 1) : ('a' - 1);
+  if (computeCharCode) {
+    NSString* chars = [aNativeKeyEvent characters];
+    if ([chars length] > 0) {
+      // XXX This is wrong at Hiragana or Katakana with Kana-Nyuryoku mode or
+      //     Chinese or Koran IME modes.  We should use ASCII characters for the
+      //     charCode.
+      aKeyEvent.charCode = [chars characterAtIndex:0];
+    }
+
+    // convert control-modified charCode to raw charCode (with appropriate case)
+    if (aKeyEvent.IsControl() && aKeyEvent.charCode <= 26) {
+      aKeyEvent.charCode += (aKeyEvent.IsShift()) ? ('A' - 1) : ('a' - 1);
+    }
   }
 
   if (aKeyEvent.charCode != 0) {
@@ -755,6 +770,8 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
      this, aKeyEvent.keyCode, aKeyEvent.charCode));
 
   if (!aKeyEvent.IsControl() && !aKeyEvent.IsMeta() && !aKeyEvent.IsAlt()) {
+    NS_ASSERTION(computeCharCode || initialCharCode == aKeyEvent.charCode,
+                 "aKeyEvent.charCode is modified unexpectedly");
     return;
   }
 
@@ -872,7 +889,8 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   // keys are expected to be Latin characters.
   //
   // XXX We should do something similar when Control is down (bug 429510).
-  if (aKeyEvent.IsMeta() && !(aKeyEvent.IsControl() || aKeyEvent.IsAlt())) {
+  if (computeCharCode &&
+      aKeyEvent.IsMeta() && !(aKeyEvent.IsControl() || aKeyEvent.IsAlt())) {
     // The character to use for charCode.
     PRUint32 preferredCharCode = 0;
     preferredCharCode = aKeyEvent.IsShift() ? cmdedShiftChar : cmdedChar;
@@ -913,6 +931,11 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
     ("%p TISInputSourceWrapper::InitKeyPressEvent, "
      "hasCmdShiftOnlyChar=%s, originalCmdedShiftChar=U+%X",
      this, TrueOrFalse(hasCmdShiftOnlyChar), originalCmdedShiftChar));
+
+  NS_ASSERTION(computeCharCode || initialCharCode == aKeyEvent.charCode,
+               "aKeyEvent.charCode is modified unexpectedly");
+
+  NS_OBJC_END_TRY_ABORT_BLOCK
 }
 
 PRUint32
@@ -1502,6 +1525,15 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
   // Dispatch keypress event with char instead of textEvent
   nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
 
+  // If the text to be inserted is a single printable character, we expect that
+  // the keypress event will cause it to be input in an editor.  To ensure this
+  // happens, set charCode before calling InitKeyEvent().
+  PRUnichar insertedChar = str.CharAt(0);
+  if (IsPrintableChar(insertedChar)) {
+    keypressEvent.charCode = insertedChar;
+    keypressEvent.isChar = true;
+  }
+  
   // Don't set other modifiers from the current event, because here in
   // -insertText: they've already been taken into account in creating
   // the input string.
@@ -1531,14 +1563,10 @@ TextInputHandler::InsertText(NSAttributedString *aAttrString)
     }
   } else {
     nsCocoaUtils::InitInputEvent(keypressEvent, static_cast<NSEvent*>(nsnull));
-    keypressEvent.charCode = str.CharAt(0);
-    keypressEvent.keyCode = 0;
-    keypressEvent.isChar = true;
     // Note that insertText is not called only at key pressing.
-    if (!IsPrintableChar(keypressEvent.charCode)) {
+    if (!keypressEvent.charCode) {
       keypressEvent.keyCode =
         WidgetUtils::ComputeKeyCodeFromChar(keypressEvent.charCode);
-      keypressEvent.charCode = 0;
     }
   }
 

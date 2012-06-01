@@ -859,11 +859,17 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsDisplayItem* aItem,
 }
 
 bool
-nsLayoutUtils::ScrolledByViewportScrolling(nsIFrame* aActiveScrolledRoot,
-                                           nsDisplayListBuilder* aBuilder)
+nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(nsIFrame* aActiveScrolledRoot,
+                                                                   nsDisplayListBuilder* aBuilder)
 {
-  nsIFrame* rootScrollFrame =
-    aBuilder->ReferenceFrame()->PresContext()->GetPresShell()->GetRootScrollFrame();
+  nsPresContext* presContext = aActiveScrolledRoot->PresContext()->
+          GetToplevelContentDocumentPresContext();
+  if (!presContext)
+    return false;
+
+  nsIFrame* rootScrollFrame = presContext->GetPresShell()->GetRootScrollFrame();
+  if (!rootScrollFrame || !nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), nsnull))
+    return false;
   return nsLayoutUtils::IsAncestorFrameCrossDoc(rootScrollFrame, aActiveScrolledRoot);
 }
 

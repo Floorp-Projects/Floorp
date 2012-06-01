@@ -46,5 +46,5 @@ window.onerror = function (msg, page, line)
   optionsReset();
 };
 
-options('xml');
+options('moar_xml');
 

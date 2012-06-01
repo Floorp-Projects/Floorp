@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.syncadapter;
 
@@ -242,6 +242,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
         return;
       }
     }
+
+    // Pick up log level changes. Do this here so that we don't do extra work
+    // if we're not going to be syncing.
+    Logger.refreshLogLevels();
 
     // TODO: don't clear the auth token unless we have a sync error.
     Log.i(LOG_TAG, "Got onPerformSync. Extras bundle is " + extras);

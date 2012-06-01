@@ -142,6 +142,48 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
 #endif
   }
 
+  // Video directory
+  if (aType.Equals(NS_LITERAL_STRING("videos"))) {
+#ifdef MOZ_WIDGET_GONK
+    if (aIndex == 0) {
+      NS_NewLocalFile(NS_LITERAL_STRING("/data/videos"), false, getter_AddRefs(f));
+    }
+    else if (aIndex == 1) {
+      NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/videos"), false, getter_AddRefs(f));
+      typeResult = DEVICE_STORAGE_TYPE_EXTERNAL;
+    }
+#elif defined (MOZ_WIDGET_COCOA)
+    if (aIndex == 0) {
+      dirService->Get(NS_OSX_MOVIE_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+    }
+#elif defined (XP_UNIX)
+    if (aIndex == 0) {
+      dirService->Get(NS_UNIX_XDG_VIDEOS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+    }
+#endif
+  }
+
+  // Music directory
+  if (aType.Equals(NS_LITERAL_STRING("music"))) {
+#ifdef MOZ_WIDGET_GONK
+    if (aIndex == 0) {
+      NS_NewLocalFile(NS_LITERAL_STRING("/data/music"), false, getter_AddRefs(f));
+    }
+    else if (aIndex == 1) {
+      NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/music"), false, getter_AddRefs(f));
+      typeResult = DEVICE_STORAGE_TYPE_EXTERNAL;
+    }
+#elif defined (MOZ_WIDGET_COCOA)
+    if (aIndex == 0) {
+      dirService->Get(NS_OSX_MUSIC_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+    }
+#elif defined (XP_UNIX)
+    if (aIndex == 0) {
+      dirService->Get(NS_UNIX_XDG_MUSIC_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+    }
+#endif
+  }
+
   // in testing, we have access to a few more directory locations
   if (mozilla::Preferences::GetBool("device.storage.testing", false)) {
 
@@ -266,6 +308,41 @@ protected:
   friend class InitCursorEvent;
   friend class ContinueCursorEvent;
 };
+
+class DeviceStorageCursorRequest : public nsIContentPermissionRequest
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(DeviceStorageCursorRequest, nsIContentPermissionRequest)
+
+  NS_FORWARD_NSICONTENTPERMISSIONREQUEST(mCursor->);
+
+  DeviceStorageCursorRequest(nsDOMDeviceStorageCursor* aCursor)
+    : mCursor(aCursor) { }
+
+  ~DeviceStorageCursorRequest() {}
+
+private:
+  nsRefPtr<nsDOMDeviceStorageCursor> mCursor;
+};
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeviceStorageCursorRequest)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentPermissionRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DeviceStorageCursorRequest)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DeviceStorageCursorRequest)
+NS_IMPL_CYCLE_COLLECTION_CLASS(DeviceStorageCursorRequest)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DeviceStorageCursorRequest)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCursor)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DeviceStorageCursorRequest)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mCursor, nsIDOMDeviceStorageCursor)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 
 #define POST_ERROR_EVENT_FILE_DOES_NOT_EXIST         "File location doesn't exists"
 #define POST_ERROR_EVENT_FILE_NOT_ENUMERABLE         "File location is not enumerable"
@@ -453,10 +530,10 @@ private:
 DOMCI_DATA(DeviceStorageCursor, nsDOMDeviceStorageCursor)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDeviceStorageCursor)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDeviceStorageCursor)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceStorageCursor)
   NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMRequest)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDeviceStorageCursor)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceStorageCursor)
 NS_INTERFACE_MAP_END_INHERITING(DOMRequest)
 
@@ -473,15 +550,6 @@ nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
   , mURI(aURI)
   , mEditable(aEditable)
 {
-  if (mozilla::Preferences::GetBool("device.storage.prompt.testing", false)) {
-    Allow();
-    return;
-  }
-
-  nsCOMPtr<nsIContentPermissionPrompt> prompt = do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
-  if (prompt) {
-    prompt->Prompt(this);
-  }
 }
 
 nsDOMDeviceStorageCursor::~nsDOMDeviceStorageCursor()
@@ -498,7 +566,7 @@ nsDOMDeviceStorageCursor::GetType(nsACString & aType)
 NS_IMETHODIMP
 nsDOMDeviceStorageCursor::GetUri(nsIURI * *aRequestingURI)
 {
-  mURI.forget(aRequestingURI);
+  NS_IF_ADDREF(*aRequestingURI = mURI);
   return NS_OK;
 }
 
@@ -1179,8 +1247,20 @@ nsDOMDeviceStorage::EnumerateInternal(const nsAString & aPath,
 
   nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mFile, aPath);
 
-  nsDOMDeviceStorageCursor* cursor = new nsDOMDeviceStorageCursor(win, mURI, dsf, aEditable);
+  nsRefPtr<nsDOMDeviceStorageCursor> cursor = new nsDOMDeviceStorageCursor(win, mURI, dsf, aEditable);
   NS_ADDREF(*_retval = cursor);
+
+  nsRefPtr<DeviceStorageCursorRequest> r = new DeviceStorageCursorRequest(cursor);
+
+  if (mozilla::Preferences::GetBool("device.storage.prompt.testing", false)) {
+    r->Allow();
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContentPermissionPrompt> prompt = do_GetService(NS_CONTENT_PERMISSION_PROMPT_CONTRACTID);
+  if (prompt) {
+    prompt->Prompt(r);
+  }
 
   return NS_OK;
 }

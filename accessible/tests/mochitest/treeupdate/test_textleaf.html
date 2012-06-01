@@ -33,7 +33,7 @@
       this.finalCheck = function textLeafUpdate_finalCheck()
       {
         var textLeaf = getAccessible(this.node).firstChild;
-        is(textLeaf.numActions, (aIsTextLeafLinkable ? 1 : 0),
+        is(textLeaf.actionCount, (aIsTextLeafLinkable ? 1 : 0),
            "Wrong action numbers!");
       }
     }

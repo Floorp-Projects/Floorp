@@ -36,6 +36,7 @@ CPPSRCS = \
   nsAppData.cpp \
   nsSigHandlers.cpp \
   nsEmbedFunctions.cpp \
+  ProfileReset.cpp \
   $(NULL)
 
 ifeq ($(MOZ_GL_DEFAULT_PROVIDER),GLX)
@@ -50,7 +51,6 @@ endif
 
 DEFINES += -DIMPL_XREAPI \
   -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"' \
-  -DMOZ_MACBUNDLE_NAME='"$(MOZ_MACBUNDLE_NAME)"' \
   -DMOZ_APP_VERSION='"$(MOZ_APP_VERSION)"'
 
 ifdef MOZ_UPDATER
@@ -228,7 +228,10 @@ ifdef MOZ_SOURCE_STAMP
   SOURCE_REPO := $(strip $(SOURCE_REPO))
   SOURCE_REPO := $(patsubst ssh://%,http://%,$(SOURCE_REPO))
   SOURCE_REPO := $(patsubst %/,%,$(SOURCE_REPO))
-  $(call errorIfEmpty,SOURCE_REPO)
+
+  # command set should change based on revision control use.
+  # warn for now in case (git, bzr, ...) is in use.
+  $(call warnIfEmpty,SOURCE_REPO) 
 
   # extra sanity check for old versions of hg, no showconfig support
   ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))

@@ -33,7 +33,7 @@
 #include "nsIComponentManager.h"
 #include "nsIRollupListener.h"
 #include "nsIDOMElement.h"
-#include "nsIXBLService.h"
+#include "nsBindingManager.h"
 #include "nsIServiceManager.h"
 
 #include "jsapi.h"
@@ -672,16 +672,10 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
     return;
   *aResult = nsnull;
   
-  nsresult rv;
-  nsCOMPtr<nsIXBLService> xblService = do_GetService("@mozilla.org/xbl;1", &rv);
-  if (!xblService)
-    return;
-
   // Check to see if we are a "menupopup" node (if we are a native menu).
   {
     PRInt32 dummy;
-    nsCOMPtr<nsIAtom> tag;
-    xblService->ResolveTag(mContent, &dummy, getter_AddRefs(tag));
+    nsCOMPtr<nsIAtom> tag = mContent->OwnerDoc()->BindingManager()->ResolveTag(mContent, &dummy);
     if (tag == nsGkAtoms::menupopup) {
       *aResult = mContent;
       NS_ADDREF(*aResult);
@@ -696,8 +690,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
   for (PRUint32 i = 0; i < count; i++) {
     PRInt32 dummy;
     nsIContent *child = mContent->GetChildAt(i);
-    nsCOMPtr<nsIAtom> tag;
-    xblService->ResolveTag(child, &dummy, getter_AddRefs(tag));
+    nsCOMPtr<nsIAtom> tag = child->OwnerDoc()->BindingManager()->ResolveTag(child, &dummy);
     if (tag == nsGkAtoms::menupopup) {
       *aResult = child;
       NS_ADDREF(*aResult);

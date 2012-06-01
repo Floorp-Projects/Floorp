@@ -19,51 +19,51 @@ extern "C" {
 static gboolean
 doActionCB(AtkAction *aAction, gint aActionIndex)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-    if (!accWrap)
-        return FALSE;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (!accWrap)
+    return FALSE;
  
-    nsresult rv = accWrap->DoAction(aActionIndex);
-    return (NS_FAILED(rv)) ? FALSE : TRUE;
+  nsresult rv = accWrap->DoAction(aActionIndex);
+  return (NS_FAILED(rv)) ? FALSE : TRUE;
 }
 
 static gint
 getActionCountCB(AtkAction *aAction)
 {
-  nsAccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
   return accWrap ? accWrap->ActionCount() : 0;
 }
 
 static const gchar*
 getActionDescriptionCB(AtkAction *aAction, gint aActionIndex)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-    if (!accWrap)
-        return nsnull;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (!accWrap)
+    return nsnull;
 
-    nsAutoString description;
-    nsresult rv = accWrap->GetActionDescription(aActionIndex, description);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-    return nsAccessibleWrap::ReturnString(description);
+  nsAutoString description;
+  nsresult rv = accWrap->GetActionDescription(aActionIndex, description);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  return AccessibleWrap::ReturnString(description);
 }
 
 static const gchar*
 getActionNameCB(AtkAction *aAction, gint aActionIndex)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+    AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
     if (!accWrap)
         return nsnull;
 
     nsAutoString autoStr;
     nsresult rv = accWrap->GetActionName(aActionIndex, autoStr);
     NS_ENSURE_SUCCESS(rv, nsnull);
-    return nsAccessibleWrap::ReturnString(autoStr);
+    return AccessibleWrap::ReturnString(autoStr);
 }
 
 static const gchar*
 getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
 {
-  nsAccessibleWrap* acc = GetAccessibleWrap(ATK_OBJECT(aAction));
+  AccessibleWrap* acc = GetAccessibleWrap(ATK_OBJECT(aAction));
   if (!acc)
     return nsnull;
 
@@ -75,7 +75,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
   if (!keyBinding.IsEmpty()) {
     keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
 
-    nsAccessible* parent = acc->Parent();
+    Accessible* parent = acc->Parent();
     roles::Role role = parent ? parent->Role() : roles::NOTHING;
     if (role == roles::PARENT_MENUITEM || role == roles::MENUITEM ||
         role == roles::RADIO_MENU_ITEM || role == roles::CHECK_MENU_ITEM) {
@@ -108,7 +108,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
     keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
   }
 
-  return nsAccessibleWrap::ReturnString(keyBindingsStr);
+  return AccessibleWrap::ReturnString(keyBindingsStr);
 }
 }
 

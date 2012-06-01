@@ -22,8 +22,8 @@
     #define SK_FONT_FILE_PREFIX      "/usr/share/fonts/truetype/msttcorefonts/"
 #endif
 
-SkTypeface::Style find_name_and_attributes(SkStream* stream, SkString* name,
-                                           bool* isFixedWidth);
+bool find_name_and_attributes(SkStream* stream, SkString* name,
+                              SkTypeface::Style* style, bool* isFixedWidth);
 
 static void GetFullPathForSysFonts(SkString* full, const char name[])
 {
@@ -60,7 +60,7 @@ struct NameFamilyPair {
 static int32_t gUniqueFontID;
 
 // this is the mutex that protects these globals
-static SkMutex gFamilyMutex;
+SK_DECLARE_STATIC_MUTEX(gFamilyMutex);
 static FamilyRec* gFamilyHead;
 static SkTDArray<NameFamilyPair> gNameList;
 
@@ -358,14 +358,12 @@ static bool get_name_and_style(const char path[], SkString* name,
                                SkTypeface::Style* style, bool* isFixedWidth) {    
     SkMMAPStream stream(path);
     if (stream.getLength() > 0) {
-        *style = find_name_and_attributes(&stream, name, isFixedWidth);
-        return true;
+        return find_name_and_attributes(&stream, name, style, isFixedWidth);
     }
     else {
         SkFILEStream stream(path);
         if (stream.getLength() > 0) {
-            *style = find_name_and_attributes(&stream, name, isFixedWidth);
-            return true;
+            return find_name_and_attributes(&stream, name, style, isFixedWidth);
         }
     }
     
@@ -502,14 +500,14 @@ SkTypeface* SkFontHost::Deserialize(SkStream* stream) {
                 // backup until we hit the fNames
                 for (int j = i; j >= 0; --j) {
                     if (rec[j].fNames != NULL) {
-                        return SkFontHost::CreateTypeface(NULL, rec[j].fNames[0], NULL, 0,
+                        return SkFontHost::CreateTypeface(NULL, rec[j].fNames[0],
                                                           (SkTypeface::Style)style);
                     }
                 }
             }
         }
     }
-    return SkFontHost::CreateTypeface(NULL, NULL, NULL, 0, (SkTypeface::Style)style);
+    return SkFontHost::CreateTypeface(NULL, NULL, (SkTypeface::Style)style);
 #endif
     sk_throw();
     return NULL;
@@ -519,7 +517,6 @@ SkTypeface* SkFontHost::Deserialize(SkStream* stream) {
 
 SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
                                        const char familyName[],
-                                       const void* data, size_t bytelength,
                                        SkTypeface::Style style) {
     load_system_fonts();
     
@@ -543,12 +540,6 @@ SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
    
     SkSafeRef(tf); 
     return tf;
-}
-
-bool SkFontHost::ValidFontID(uint32_t fontID) {
-    SkAutoMutexAcquire  ac(gFamilyMutex);
-    
-    return valid_uniqueID(fontID);
 }
 
 SkStream* SkFontHost::OpenStream(uint32_t fontID) {
@@ -581,10 +572,12 @@ SkTypeface* SkFontHost::CreateTypefaceFromStream(SkStream* stream) {
     }
 
     bool isFixedWidth;
-    SkString name;
-    SkTypeface::Style style = find_name_and_attributes(stream, &name, &isFixedWidth);
-    
-    return SkNEW_ARGS(StreamTypeface, (style, false, NULL, stream, isFixedWidth));
+    SkTypeface::Style style;
+    if (find_name_and_attributes(stream, NULL, &style, &isFixedWidth)) {
+        return SkNEW_ARGS(StreamTypeface, (style, false, NULL, stream, isFixedWidth));
+    } else {
+        return NULL;
+    }
 }
 
 SkTypeface* SkFontHost::CreateTypefaceFromFile(const char path[]) {

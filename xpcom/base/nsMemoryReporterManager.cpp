@@ -572,6 +572,7 @@ nsMemoryReporterManager::Init()
 
 #if defined(HAVE_JEMALLOC_STATS)
     REGISTER(HeapCommitted);
+    REGISTER(HeapCommittedUnused);
     REGISTER(HeapCommittedUnusedRatio);
     REGISTER(HeapDirty);
 #elif defined(HAVE_HEAP_ZONE0_REPORTERS)

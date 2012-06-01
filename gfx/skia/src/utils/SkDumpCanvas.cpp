@@ -33,7 +33,7 @@ static void dumpVerbs(const SkPath& path, SkString* str) {
     SkPath::Iter iter(path, false);
     SkPoint pts[4];
     for (;;) {
-        switch (iter.next(pts)) {
+        switch (iter.next(pts, false)) {
             case SkPath::kMove_Verb:
                 str->appendf(" M%g,%g", pts[0].fX, pts[0].fY);
                 break;
@@ -49,7 +49,7 @@ static void dumpVerbs(const SkPath& path, SkString* str) {
                              pts[2].fX, pts[2].fY, pts[3].fX, pts[3].fY);
                 break;
             case SkPath::kClose_Verb:
-                str->appendf("X");
+                str->append("X");
                 break;
             case SkPath::kDone_Verb:
                 return;
@@ -138,8 +138,16 @@ static void toString(const void* text, size_t len, SkPaint::TextEncoding enc,
             str->printf("\"%.*S\"%s", SkMax32(len, 32), text,
                         len > 64 ? "..." : "");
             break;
+        case SkPaint::kUTF32_TextEncoding:
+            str->printf("\"%.*S\"%s", SkMax32(len, 32), text,
+                        len > 128 ? "..." : "");
+            break;
         case SkPaint::kGlyphID_TextEncoding:
             str->set("<glyphs>");
+            break;
+
+        default:
+            SkASSERT(false);
             break;
     }
 }
@@ -407,12 +415,7 @@ static void appendPtr(SkString* str, const void* ptr, const char name[]) {
 static void appendFlattenable(SkString* str, const SkFlattenable* ptr,
                               const char name[]) {
     if (ptr) {
-        SkString info;
-        if (ptr->toDumpString(&info)) {
-            str->appendf(" %s", info.c_str());
-        } else {
-            str->appendf(" %s:%p", name, ptr);
-        }
+        str->appendf(" %s:%p", name, ptr);
     }
 }
 

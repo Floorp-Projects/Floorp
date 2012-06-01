@@ -10,28 +10,19 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-bug-600183-charset.html";
 
-let lastFinishedRequest = null;
-
-function requestDoneCallback(aHttpRequest)
-{
-  lastFinishedRequest = aHttpRequest;
-}
-
-function performTest()
+function performTest(lastFinishedRequest)
 {
   ok(lastFinishedRequest, "charset test page was loaded and logged");
 
-  let body = lastFinishedRequest.response.body;
+  let body = lastFinishedRequest.log.entries[0].response.content.text;
   ok(body, "we have the response body");
 
   let chars = "\u7684\u95ee\u5019!"; // 的问候!
   isnot(body.indexOf("<p>" + chars + "</p>"), -1,
     "found the chinese simplified string");
 
-  lastFinishedRequest = null;
-  HUDService.saveRequestAndResponseBodies = false;
   HUDService.lastFinishedRequestCallback = null;
-  finishTest();
+  executeSoon(finishTest);
 }
 
 function test()
@@ -40,20 +31,18 @@ function test()
 
   let initialLoad = true;
 
-  browser.addEventListener("load", function () {
+  browser.addEventListener("load", function onLoad() {
     if (initialLoad) {
-      waitForFocus(function() {
-        openConsole();
+      openConsole(null, function(hud) {
 
-        HUDService.saveRequestAndResponseBodies = true;
-        HUDService.lastFinishedRequestCallback = requestDoneCallback;
+        hud.saveRequestAndResponseBodies = true;
+        HUDService.lastFinishedRequestCallback = performTest;
 
         content.location = TEST_URI;
-      }, content);
+      });
       initialLoad = false;
     } else {
-      browser.removeEventListener("load", arguments.callee, true);
-      performTest();
+      browser.removeEventListener("load", onLoad, true);
     }
   }, true);
 }

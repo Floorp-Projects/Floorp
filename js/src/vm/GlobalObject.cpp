@@ -58,7 +58,7 @@ namespace js {
 JSObject *
 GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 {
-    RootedVar<GlobalObject*> self(cx, this);
+    Rooted<GlobalObject*> self(cx, this);
 
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     JS_ASSERT(isNative());
@@ -74,7 +74,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     if (!cx->globalObject)
         JS_SetGlobalObject(cx, self);
 
-    RootedVarObject objectProto(cx);
+    RootedObject objectProto(cx);
 
     /*
      * Create |Object.prototype| first, mirroring CreateBlankProto but for the
@@ -93,7 +93,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         return NULL;
 
     /* Create |Function.prototype| next so we can create other functions. */
-    RootedVarFunction functionProto(cx);
+    RootedFunction functionProto(cx);
     {
         JSObject *functionProto_ = NewObjectWithGivenProto(cx, &FunctionClass, objectProto, self);
         if (!functionProto_)
@@ -135,7 +135,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     }
 
     /* Create the Object function now that we have a [[Prototype]] for it. */
-    RootedVarFunction objectCtor(cx);
+    RootedFunction objectCtor(cx);
     {
         JSObject *ctor = NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self);
         if (!ctor)
@@ -153,7 +153,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     self->setObjectClassDetails(objectCtor, objectProto);
 
     /* Create |Function| so it and |Function.prototype| can be installed. */
-    RootedVarFunction functionCtor(cx);
+    RootedFunction functionCtor(cx);
     {
         JSObject *ctor =
             NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self);
@@ -197,14 +197,14 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     /* Heavy lifting done, but lingering tasks remain. */
 
     /* ES5 15.1.2.1. */
-    RootedVarId id(cx, NameToId(cx->runtime->atomState.evalAtom));
+    RootedId id(cx, NameToId(cx->runtime->atomState.evalAtom));
     JSObject *evalobj = js_DefineFunction(cx, self, id, eval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;
     self->setOriginalEval(evalobj);
 
     /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
-    RootedVarFunction throwTypeError(cx);
+    RootedFunction throwTypeError(cx);
     throwTypeError = js_NewFunction(cx, NULL, ThrowTypeError, 0, 0, self, NULL);
     if (!throwTypeError)
         return NULL;
@@ -236,7 +236,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
 {
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
-    RootedVar<GlobalObject*> obj(cx);
+    Rooted<GlobalObject*> obj(cx);
 
     JSObject *obj_ = NewObjectWithGivenProto(cx, clasp, NULL, NULL);
     if (!obj_)
@@ -282,7 +282,7 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
            js_InitStringClass(cx, global) &&
            js_InitTypedArrayClasses(cx, global) &&
 #if JS_HAS_XML_SUPPORT
-           js_InitXMLClasses(cx, global) &&
+           (!VersionHasAllowXML(cx->findVersion()) || js_InitXMLClasses(cx, global)) &&
 #endif
 #if JS_HAS_GENERATORS
            js_InitIteratorClasses(cx, global) &&
@@ -336,7 +336,7 @@ GlobalObject::clear(JSContext *cx)
      */
     for (gc::CellIter i(cx->compartment, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
-        if (script->compileAndGo && script->hasJITCode() && script->hasClearedGlobal()) {
+        if (script->compileAndGo && script->hasJITInfo() && script->hasClearedGlobal()) {
             mjit::Recompiler::clearStackReferences(cx->runtime->defaultFreeOp(), script);
             mjit::ReleaseScriptCode(cx->runtime->defaultFreeOp(), script);
         }
@@ -363,7 +363,7 @@ JSFunction *
 GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *name, unsigned length,
                                 gc::AllocKind kind)
 {
-    RootedVarObject self(cx, this);
+    RootedObject self(cx, this);
     return js_NewFunction(cx, NULL, ctor, length, JSFUN_CONSTRUCTOR, self, name, kind);
 }
 
@@ -397,10 +397,9 @@ GlobalObject::createBlankPrototypeInheriting(JSContext *cx, Class *clasp, JSObje
 }
 
 bool
-LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
+LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_)
 {
-    RootObject ctorRoot(cx, &ctor);
-    RootObject protoRoot(cx, &proto);
+    RootedObject ctor(cx, ctor_), proto(cx, proto_);
 
     return ctor->defineProperty(cx, cx->runtime->atomState.classPrototypeAtom,
                                 ObjectValue(*proto), JS_PropertyStub, JS_StrictPropertyStub,
@@ -410,9 +409,9 @@ LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto)
 }
 
 bool
-DefinePropertiesAndBrand(JSContext *cx, JSObject *obj, JSPropertySpec *ps, JSFunctionSpec *fs)
+DefinePropertiesAndBrand(JSContext *cx, JSObject *obj_, JSPropertySpec *ps, JSFunctionSpec *fs)
 {
-    RootObject root(cx, &obj);
+    RootedObject obj(cx, obj_);
 
     if ((ps && !JS_DefineProperties(cx, obj, ps)) || (fs && !JS_DefineFunctions(cx, obj, fs)))
         return false;

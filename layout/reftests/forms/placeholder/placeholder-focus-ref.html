@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
+  <link rel='stylesheet' type='text/css' href='placeholder-style.css'>
   <script type="text/javascript">
     function focusInput()
     {
@@ -11,6 +12,6 @@
     }
   </script>
   <body onload="focusInput();">
-    <input id='t1' type="text" onfocus="disableReftestWait();">
+    <input id='t1' type="text" class="placeholder" value="my placeholder" onfocus="disableReftestWait();">
   </body>
 </html>

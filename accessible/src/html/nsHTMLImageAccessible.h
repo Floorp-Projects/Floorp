@@ -20,7 +20,7 @@ class nsHTMLImageAccessible : public nsLinkableAccessible,
                               public nsIAccessibleImage
 {
 public:
-  nsHTMLImageAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsHTMLImageAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -32,7 +32,7 @@ public:
   // nsIAccessibleImage
   NS_DECL_NSIACCESSIBLEIMAGE
 
-  // nsAccessible
+  // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
@@ -72,10 +72,10 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible downcasting method
+// Accessible downcasting method
 
 inline nsHTMLImageAccessible*
-nsAccessible::AsImage()
+Accessible::AsImage()
 {
   return IsImage() ?
     static_cast<nsHTMLImageAccessible*>(this) : nsnull;

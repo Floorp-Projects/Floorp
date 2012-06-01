@@ -57,60 +57,60 @@ public:
   NS_DECL_NSIOBSERVER
 
   // nsIAccessibilityService
-  virtual nsAccessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
-                                                  bool aCanCreate);
-  already_AddRefed<nsAccessible>
+  virtual Accessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
+                                                bool aCanCreate);
+  already_AddRefed<Accessible>
     CreateHTMLButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLBRAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLCanvasAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLCaptionAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLCheckboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLComboboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLFileInputAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLGroupboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLHRAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLImageAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLImageMapAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLLabelAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLLIAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLListboxAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLMediaAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame, nsIContent* aContent,
                                     nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLRadioButtonAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLTableAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLTableCellAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLTableRowAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
-    CreateHTMLTextAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
+    CreateTextLeafAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
+  already_AddRefed<Accessible>
     CreateHTMLTextFieldAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHyperTextAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateOuterDocAccessible(nsIContent* aContent, nsIPresShell* aPresShell);
 
-  virtual nsAccessible* AddNativeRootAccessible(void* aAtkAccessible);
-  virtual void RemoveNativeRootAccessible(nsAccessible* aRootAccessible);
+  virtual Accessible* AddNativeRootAccessible(void* aAtkAccessible);
+  virtual void RemoveNativeRootAccessible(Accessible* aRootAccessible);
 
   virtual void ContentRangeInserted(nsIPresShell* aPresShell,
                                     nsIContent* aContainer,
@@ -154,7 +154,7 @@ public:
    */
   void RecreateAccessible(nsIPresShell* aPresShell, nsIContent* aContent);
 
-  virtual void FireAccessibleEvent(PRUint32 aEvent, nsAccessible* aTarget);
+  virtual void FireAccessibleEvent(PRUint32 aEvent, Accessible* aTarget);
 
   // nsAccessibiltiyService
 
@@ -172,14 +172,14 @@ public:
    * @param  aIsSubtreeHidden  [out, optional] indicates whether the node's
    *                             frame and its subtree is hidden
    */
-  nsAccessible* GetOrCreateAccessible(nsINode* aNode, nsDocAccessible* aDoc,
-                                      bool* aIsSubtreeHidden = nsnull);
+  Accessible* GetOrCreateAccessible(nsINode* aNode, DocAccessible* aDoc,
+                                    bool* aIsSubtreeHidden = nsnull);
 
   /**
    * Return an accessible for the given DOM node and eventually a presentation
    * shell.
    */
-  nsAccessible* GetAccessible(nsINode* aNode, nsIPresShell* aPresShell);
+  Accessible* GetAccessible(nsINode* aNode, nsIPresShell* aPresShell);
 
 private:
   // nsAccessibilityService creation is controlled by friend
@@ -203,29 +203,29 @@ private:
    * Create accessible for the element implementing nsIAccessibleProvider
    * interface.
    */
-  already_AddRefed<nsAccessible>
-    CreateAccessibleByType(nsIContent* aContent, nsDocAccessible* aDoc);
+  already_AddRefed<Accessible>
+    CreateAccessibleByType(nsIContent* aContent, DocAccessible* aDoc);
 
   /**
    * Create accessible for HTML node by tag name.
    */
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateHTMLAccessibleByMarkup(nsIFrame* aFrame, nsIContent* aContent,
-                                 nsDocAccessible* aDoc);
+                                 DocAccessible* aDoc);
 
   /**
    * Create accessible if parent is a deck frame.
    */
-  already_AddRefed<nsAccessible>
+  already_AddRefed<Accessible>
     CreateAccessibleForDeckChild(nsIFrame* aFrame, nsIContent* aContent,
-                                 nsDocAccessible* aDoc);
+                                 DocAccessible* aDoc);
 
 #ifdef MOZ_XUL
   /**
    * Create accessible for XUL tree element.
    */
-  already_AddRefed<nsAccessible>
-    CreateAccessibleForXULTree(nsIContent* aContent, nsDocAccessible* aDoc);
+  already_AddRefed<Accessible>
+    CreateAccessibleForXULTree(nsIContent* aContent, DocAccessible* aDoc);
 #endif
 
   /**

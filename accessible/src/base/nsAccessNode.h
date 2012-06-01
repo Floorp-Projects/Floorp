@@ -21,7 +21,7 @@
 #include "nsWeakReference.h"
 
 class nsAccessNode;
-class nsDocAccessible;
+class DocAccessible;
 class nsIAccessibleDocument;
 
 namespace mozilla {
@@ -40,7 +40,7 @@ class nsAccessNode: public nsISupports
 {
 public:
 
-  nsAccessNode(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsAccessNode(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~nsAccessNode();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -56,7 +56,7 @@ public:
   /**
    * Return the document accessible for this access node.
    */
-  nsDocAccessible* Document() const { return mDoc; }
+  DocAccessible* Document() const { return mDoc; }
 
   /**
    * Return the root document accessible for this accessnode.
@@ -125,7 +125,7 @@ protected:
   void LastRelease();
 
   nsCOMPtr<nsIContent> mContent;
-  nsDocAccessible* mDoc;
+  DocAccessible* mDoc;
 
 private:
   nsAccessNode() MOZ_DELETE;

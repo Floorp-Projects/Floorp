@@ -27,7 +27,7 @@
 
   <description>&resetProfile.dialog.description;</description>
 
-  <label value="&resetProfile.dialog.items.label;"/>
+  <label value="&resetProfile.dialog.items2.label;"/>
   <vbox id="migratedItems">
   </vbox>
 

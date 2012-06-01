@@ -100,6 +100,20 @@ interface nsIRILDataCallback : nsISupports
                            in unsigned long length);
 };
 
+[scriptable, function, uuid(2bc2f51a-78be-4c0e-95dd-55a3ce2ded40)]
+interface nsIRILContactCallback : nsISupports
+{
+  /**
+   * Called when nsIRadioInterfaceLayer is asked to provide ICC contacts.
+   *
+   * @param type
+   *        Type of the dialling number, i.e. ADN, FDN.
+   * @param contacts
+   *        Array of the ICC contacts of the specified type.
+   */
+  void receiveContactsList(in DOMString type, in jsval contacts);
+};
+
 /**
  * Helper that runs in the content process and exposes information
  * to the DOM.
@@ -134,7 +148,7 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
   attribute bool speakerEnabled;
 };
 
-[scriptable, uuid(d976f4c2-af5b-4fe1-97c2-c9c5d0d1af5c)]
+[scriptable, uuid(fa923335-4cbd-40d7-8d4a-5689a6db2b6d)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -156,6 +170,11 @@ interface nsIRadioInterfaceLayer : nsISupports
   const unsigned short DATACALL_STATE_CONNECTED = 2;
   const unsigned short DATACALL_STATE_DISCONNECTING = 3;
   const unsigned short DATACALL_STATE_DISCONNECTED = 4;
+
+  /**
+   * Activates or deactivates radio power.
+   */
+  void setRadioEnabled(in bool value);
 
   readonly attribute jsval radioState;
 
@@ -183,4 +202,9 @@ interface nsIRadioInterfaceLayer : nsISupports
                in DOMString message,
                in long requestId,
                in unsigned long long processId);
+
+  /**
+   * ICC-related functionality.
+   */
+  void getICCContacts(in DOMString type, in nsIRILContactCallback callback);
 };

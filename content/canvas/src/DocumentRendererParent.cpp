@@ -28,7 +28,7 @@ void DocumentRendererParent::DrawToCanvas(const nsIntSize& aSize,
         return;
 
     nsRefPtr<gfxImageSurface> surf =
-        new gfxImageSurface(reinterpret_cast<uint8*>(const_cast<nsCString&>(aData).BeginWriting()),
+        new gfxImageSurface(reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aData).BeginWriting()),
                             gfxIntSize(aSize.width, aSize.height),
                             aSize.width * 4,
                             gfxASurface::ImageFormatARGB32);

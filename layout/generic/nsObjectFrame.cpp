@@ -263,7 +263,7 @@ NS_QUERYFRAME_HEAD(nsObjectFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsObjectFrameSuper)
 
 #ifdef ACCESSIBILITY
-already_AddRefed<nsAccessible>
+already_AddRefed<Accessible>
 nsObjectFrame::CreateAccessible()
 {
   nsAccessibilityService* accService = nsIPresShell::AccService();
@@ -1516,10 +1516,13 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   }
 
   gfxIntSize size;
-  
-  if (mInstanceOwner->UseAsyncRendering()) {
+
+#ifdef XP_MACOSX
+  if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation) {
     size = container->GetCurrentSize();
-  } else {
+  } else
+#endif
+  {
     size = gfxIntSize(window->width, window->height);
   }
 
@@ -1544,9 +1547,9 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
     ImageLayer* imglayer = static_cast<ImageLayer*>(layer.get());
     UpdateImageLayer(r);
 
-    if (!mInstanceOwner->UseAsyncRendering()) {
-      imglayer->SetScaleToSize(size, ImageLayer::SCALE_STRETCH);
-    }
+#ifdef XP_WIN
+    imglayer->SetScaleToSize(size, ImageLayer::SCALE_STRETCH);
+#endif
     imglayer->SetContainer(container);
     gfxPattern::GraphicsFilter filter =
       nsLayoutUtils::GetGraphicsFilterForFrame(this);

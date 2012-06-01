@@ -10,7 +10,8 @@
 
 #include "GrClip.h"
 
-GrClip::GrClip() {
+GrClip::GrClip() 
+    : fRequiresAA(false) {
     fConservativeBounds.setEmpty();
     fConservativeBoundsValid = true;
 }
@@ -38,6 +39,7 @@ GrClip& GrClip::operator=(const GrClip& src) {
     fList = src.fList;
     fConservativeBounds = src.fConservativeBounds;
     fConservativeBoundsValid = src.fConservativeBoundsValid;
+    fRequiresAA = src.fRequiresAA;
     return *this;
 }
 
@@ -45,6 +47,7 @@ void GrClip::setEmpty() {
     fList.reset();
     fConservativeBounds.setEmpty();
     fConservativeBoundsValid = true;
+    fRequiresAA = false;
 }
 
 void GrClip::setFromRect(const GrRect& r) {
@@ -56,7 +59,8 @@ void GrClip::setFromRect(const GrRect& r) {
         fList.push_back();
         fList.back().fRect = r;
         fList.back().fType = kRect_ClipType;
-        fList.back().fOp = kReplace_SetOp;
+        fList.back().fOp = SkRegion::kReplace_Op;
+        fList.back().fDoAA = false;
         fConservativeBounds = r;
         fConservativeBoundsValid = true;
     }
@@ -71,7 +75,8 @@ void GrClip::setFromIRect(const GrIRect& r) {
         fList.push_back();
         fList.back().fRect.set(r);
         fList.back().fType = kRect_ClipType;
-        fList.back().fOp = kReplace_SetOp;
+        fList.back().fOp = SkRegion::kReplace_Op;
+        fList.back().fDoAA = false;
         fConservativeBounds.set(r);
         fConservativeBoundsValid = true;
     }
@@ -86,6 +91,7 @@ static void intersectWith(SkRect* dst, const SkRect& src) {
 void GrClip::setFromIterator(GrClipIterator* iter, GrScalar tx, GrScalar ty,
                              const GrRect* conservativeBounds) {
     fList.reset();
+    fRequiresAA = false;
 
     int rectCount = 0;
 
@@ -97,8 +103,12 @@ void GrClip::setFromIterator(GrClipIterator* iter, GrScalar tx, GrScalar ty,
             Element& e = fList.push_back();
             e.fType = iter->getType();
             e.fOp = iter->getOp();
+            e.fDoAA = iter->getDoAA();
+            if (e.fDoAA) {
+                fRequiresAA = true;
+            }
             // iterators should not emit replace
-            GrAssert(kReplace_SetOp != e.fOp);
+            GrAssert(SkRegion::kReplace_Op != e.fOp);
             switch (e.fType) {
                 case kRect_ClipType:
                     iter->getRect(&e.fRect);
@@ -107,7 +117,7 @@ void GrClip::setFromIterator(GrClipIterator* iter, GrScalar tx, GrScalar ty,
                     }
                     ++rectCount;
                     if (isectRectValid) {
-                        if (kIntersect_SetOp == e.fOp) {
+                        if (SkRegion::kIntersect_Op == e.fOp) {
                             GrAssert(fList.count() <= 2);
                             if (fList.count() > 1) {
                                 GrAssert(2 == rectCount);

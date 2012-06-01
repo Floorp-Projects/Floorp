@@ -7,7 +7,7 @@
 
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "nsCoreUtils.h"
 #include "Role.h"
 #include "States.h"
@@ -23,8 +23,8 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULComboboxAccessible::
-  nsXULComboboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+  nsXULComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+  AccessibleWrap(aContent, aDoc)
 {
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
                             nsGkAtoms::autocomplete, eIgnoreCase))
@@ -50,7 +50,7 @@ nsXULComboboxAccessible::NativeState()
   //     STATE_COLLAPSED
 
   // Get focus status from base class
-  PRUint64 states = nsAccessible::NativeState();
+  PRUint64 states = Accessible::NativeState();
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (menuList) {
@@ -83,7 +83,7 @@ nsXULComboboxAccessible::Description(nsString& aDescription)
   nsCOMPtr<nsIContent> focusedOptionContent =
     do_QueryInterface(focusedOptionItem);
   if (focusedOptionContent && mDoc) {
-    nsAccessible* focusedOptionAcc = mDoc->GetAccessible(focusedOptionContent);
+    Accessible* focusedOptionAcc = mDoc->GetAccessible(focusedOptionContent);
     if (focusedOptionAcc)
       focusedOptionAcc->Description(aDescription);
   }
@@ -183,7 +183,7 @@ nsXULComboboxAccessible::IsActiveWidget() const
                            nsGkAtoms::_true, eIgnoreCase)) {
     PRInt32 childCount = mChildren.Length();
     for (PRInt32 idx = 0; idx < childCount; idx++) {
-      nsAccessible* child = mChildren[idx];
+      Accessible* child = mChildren[idx];
       if (child->Role() == roles::ENTRY)
         return FocusMgr()->HasDOMFocus(child->GetContent());
     }

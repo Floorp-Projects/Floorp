@@ -213,6 +213,24 @@ JSScript::clearNesting()
     }
 }
 
+#ifdef JS_METHODJIT
+inline bool
+JSScript::ensureHasJITInfo(JSContext *cx)
+{
+    if (jitInfo)
+        return true;
+    jitInfo = cx->new_<JITScriptSet>();
+    return jitInfo != NULL;
+}
+
+inline void
+JSScript::destroyJITInfo(js::FreeOp *fop)
+{
+    fop->delete_(jitInfo);
+    jitInfo = NULL;
+}
+#endif /* JS_METHODJIT */
+
 inline void
 JSScript::writeBarrierPre(JSScript *script)
 {

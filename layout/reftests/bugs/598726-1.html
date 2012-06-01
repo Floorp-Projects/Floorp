@@ -3,9 +3,9 @@
   <head>
     <style type="text/css">
       input {
-          -webkit-transition: all 0.5s ease-in-out;
-          -moz-transition: all 0.5s ease-in-out;
-          transition: all 0.5s ease-in-out;
+          -webkit-transition: all 200ms ease-in-out;
+          -moz-transition: all 200ms ease-in-out;
+          transition: all 200ms ease-in-out;
       }
       input:focus {
           -webkit-transform: scale(1.05);
@@ -18,32 +18,24 @@
         var i = document.querySelector("input");
         i.addEventListener("transitionend", function() {
           i.removeEventListener("transitionend", arguments.callee, true);
-          setTimeout(function() {
-            i.value = "test";
+          i.value = "test";
+          i.getClientRects();
+          i.value = "";
+          i.getClientRects();
+          i.addEventListener("transitionend", function() {
+            i.removeEventListener("transitionend", arguments.callee, true);
             i.getClientRects();
-            setTimeout(function() {
-              i.value = "";
-              i.getClientRects();
-              setTimeout(function() {
-                i.addEventListener("transitionend", function() {
-                  i.removeEventListener("transisionend", arguments.callee, true);
-                  setTimeout(function() {
-                    i.getClientRects();
-                    document.documentElement.removeAttribute("class");
-                  }, 0);
-                }, true);
-                i.blur();
-                i.getClientRects();
-              }, 0);
-            }, 0);
-          }, 0);
+            document.documentElement.removeAttribute("class");
+          }, true);
+          i.blur();
+          i.getClientRects();
         }, true);
         i.focus();
         i.getClientRects();
       }
     </script>
   </head>
-  <body onload="document.querySelector('input').getClientRects(); setTimeout(boom,0)">
+  <body onload="boom()">
     <input type="text" placeholder="foo">
   </body>
 </html>

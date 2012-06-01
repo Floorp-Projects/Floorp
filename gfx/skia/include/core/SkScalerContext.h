@@ -16,6 +16,8 @@
 #include "SkPath.h"
 #include "SkPoint.h"
 
+//#define SK_USE_COLOR_LUMINANCE
+
 class SkDescriptor;
 class SkMaskFilter;
 class SkPathEffect;
@@ -175,16 +177,28 @@ public:
         kLCD_Vertical_Flag        = 0x0200,    // else Horizontal
         kLCD_BGROrder_Flag        = 0x0400,    // else RGB order
 
+        // Generate A8 from LCD source (for GDI), only meaningful if fMaskFormat is kA8
+        // Perhaps we can store this (instead) in fMaskFormat, in hight bit?
+        kGenA8FromLCD_Flag        = 0x0800,
+
+#ifdef SK_USE_COLOR_LUMINANCE
+        kLuminance_Bits           = 3
+#else
         // luminance : 0 for black text, kLuminance_Max for white text
-        kLuminance_Shift          = 11, // to shift into the other flags above
-        kLuminance_Bits           = 3  // ensure Flags doesn't exceed 16bits
+        kLuminance_Shift          = 13, // shift to land in the high 3-bits of Flags
+        kLuminance_Bits           = 3   // ensure Flags doesn't exceed 16bits
+#endif
     };
     
     // computed values
     enum {
+#ifdef SK_USE_COLOR_LUMINANCE
+        kHinting_Mask   = kHintingBit1_Flag | kHintingBit2_Flag
+#else
         kHinting_Mask   = kHintingBit1_Flag | kHintingBit2_Flag,
         kLuminance_Max  = (1 << kLuminance_Bits) - 1,
         kLuminance_Mask = kLuminance_Max << kLuminance_Shift
+#endif
     };
 
     struct Rec {
@@ -193,6 +207,9 @@ public:
         SkScalar    fTextSize, fPreScaleX, fPreSkewX;
         SkScalar    fPost2x2[2][2];
         SkScalar    fFrameWidth, fMiterLimit;
+#ifdef SK_USE_COLOR_LUMINANCE
+        uint32_t    fLumBits;
+#endif
         uint8_t     fMaskFormat;
         uint8_t     fStrokeJoin;
         uint16_t    fFlags;
@@ -213,7 +230,20 @@ public:
         void setHinting(SkPaint::Hinting hinting) {
             fFlags = (fFlags & ~kHinting_Mask) | (hinting << kHinting_Shift);
         }
-
+        
+        SkMask::Format getFormat() const {
+            return static_cast<SkMask::Format>(fMaskFormat);
+        }
+        
+#ifdef SK_USE_COLOR_LUMINANCE
+        SkColor getLuminanceColor() const {
+            return fLumBits;
+        }
+        
+        void setLuminanceColor(SkColor c) {
+            fLumBits = c;
+        }
+#else
         unsigned getLuminanceBits() const {
             return (fFlags & kLuminance_Mask) >> kLuminance_Shift;
         }
@@ -230,10 +260,7 @@ public:
             lum |= (lum << kLuminance_Bits*2);
             return lum >> (4*kLuminance_Bits - 8);
         }
-
-        SkMask::Format getFormat() const {
-            return static_cast<SkMask::Format>(fMaskFormat);
-        }
+#endif
     };
 
     SkScalerContext(const SkDescriptor* desc);
@@ -272,7 +299,13 @@ public:
     void        getFontMetrics(SkPaint::FontMetrics* mX,
                                SkPaint::FontMetrics* mY);
 
+#ifdef SK_BUILD_FOR_ANDROID
+    unsigned getBaseGlyphCount(SkUnichar charCode);
+#endif
+
     static inline void MakeRec(const SkPaint&, const SkMatrix*, Rec* rec);
+    static inline void PostMakeRec(Rec*);
+
     static SkScalerContext* Create(const SkDescriptor*);
 
 protected:
@@ -296,7 +329,6 @@ private:
     SkPathEffect*   fPathEffect;
     SkMaskFilter*   fMaskFilter;
     SkRasterizer*   fRasterizer;
-    SkScalar        fDevFrameWidth;
 
     // if this is set, we draw the image from a path, rather than
     // calling generateImage.

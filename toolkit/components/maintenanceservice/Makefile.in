@@ -16,6 +16,7 @@ CPPSRCS = \
   certificatecheck.cpp \
   servicebase.cpp \
   registrycertificates.cpp \
+  prefetch.cpp \
   $(NULL)
 
 # For debugging purposes only

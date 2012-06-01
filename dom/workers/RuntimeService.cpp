@@ -219,6 +219,7 @@ PrefCallback(const char* aPrefName, void* aClosure)
     if (Preferences::GetBool(gPrefsToWatch[PREF_ion])) {
       newOptions |= JSOPTION_ION;
     }
+    newOptions |= JSOPTION_ALLOW_XML;
 
     RuntimeService::SetDefaultJSContextOptions(newOptions);
     rts->UpdateAllWorkerJSContextOptions();

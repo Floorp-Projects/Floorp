@@ -21,14 +21,14 @@ class HTMLListBulletAccessible;
 class HTMLListAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  HTMLListAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  HTMLListAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     nsHyperTextAccessibleWrap(aContent, aDoc) { }
   virtual ~HTMLListAccessible() { }
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsAccessible
+  // Accessible
   virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
 };
@@ -40,7 +40,7 @@ public:
 class HTMLLIAccessible : public nsHyperTextAccessibleWrap
 {
 public:
-  HTMLLIAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HTMLLIAccessible() { }
 
   // nsISupports
@@ -53,7 +53,7 @@ public:
   NS_IMETHOD GetBounds(PRInt32* aX, PRInt32* aY,
                        PRInt32* aWidth, PRInt32* aHeight);
 
-  // nsAccessible
+  // Accessible
   virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
@@ -61,7 +61,7 @@ public:
   void UpdateBullet(bool aHasBullet);
 
 protected:
-  // nsAccessible
+  // Accessible
   virtual void CacheChildren();
 
 private:
@@ -75,7 +75,7 @@ private:
 class HTMLListBulletAccessible : public nsLeafAccessible
 {
 public:
-  HTMLListBulletAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  HTMLListBulletAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     nsLeafAccessible(aContent, aDoc) { }
   virtual ~HTMLListBulletAccessible() { }
 
@@ -83,7 +83,7 @@ public:
   virtual nsIFrame* GetFrame() const;
   virtual bool IsPrimaryForNode() const;
 
-  // nsAccessible
+  // Accessible
   virtual ENameValueFlag Name(nsString& aName);
   virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
@@ -103,7 +103,7 @@ public:
 
 
 inline mozilla::a11y::HTMLLIAccessible*
-nsAccessible::AsHTMLListItem()
+Accessible::AsHTMLListItem()
 {
   return mFlags & eHTMLListItemAccessible ?
     static_cast<mozilla::a11y::HTMLLIAccessible*>(this) : nsnull;

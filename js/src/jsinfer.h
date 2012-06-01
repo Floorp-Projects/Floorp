@@ -451,14 +451,14 @@ class TypeSet
     /* Get whether this type set is non-empty. */
     bool knownNonEmpty(JSContext *cx);
 
-    /* Get whether this type set is known to be a subset of other. */
-    bool knownSubset(JSContext *cx, TypeSet *other);
-
-    /* 
-     * Get wether this type only contains non string primitives.
-     * I.e. null/undefined/int/double or combination of those.
+    /*
+     * Get whether this type only contains non-string primitives:
+     * null/undefined/int/double, or some combination of those.
      */
     bool knownNonStringPrimitive(JSContext *cx);
+
+    /* Get whether this type set is known to be a subset of other. */
+    bool knownSubset(JSContext *cx, TypeSet *other);
 
     /*
      * Get the typed array type of all objects in this set. Returns

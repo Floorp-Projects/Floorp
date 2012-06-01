@@ -261,6 +261,16 @@ protected:
                                 PRUint32 aFlags = nsIScriptError::errorFlag,
                                 nsresult aStatus = 0) = 0;
 
+    const PRUint8* SanitizeOpenTypeData(gfxProxyFontEntry *aProxy,
+                                        const PRUint8* aData,
+                                        PRUint32 aLength,
+                                        PRUint32& aSaneLength,
+                                        bool aIsCompressed);
+
+#ifdef MOZ_OTS_REPORT_ERRORS
+    static bool OTSMessage(void *aUserData, const char *format, ...);
+#endif
+
     // font families defined by @font-face rules
     nsRefPtrHashtable<nsStringHashKey, gfxMixedFontFamily> mFontFamilies;
 

@@ -796,6 +796,10 @@ public:
                                                    nsIDOMNodeList** aResult);
   virtual NS_HIDDEN_(nsresult) GetContentListFor(nsIContent* aContent,
                                                  nsIDOMNodeList** aResult);
+  virtual NS_HIDDEN_(nsIContent*)
+    GetAnonymousElementByAttribute(nsIContent* aElement,
+                                   nsIAtom* aAttrName,
+                                   const nsAString& aAttrValue) const;
 
   virtual NS_HIDDEN_(nsresult) ElementFromPointHelper(float aX, float aY,
                                                       bool aIgnoreRootScrollFrame,

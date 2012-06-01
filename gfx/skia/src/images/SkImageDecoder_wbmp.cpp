@@ -148,10 +148,12 @@ bool SkWBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* decodedBitmap,
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+DEFINE_DECODER_CREATOR(WBMPImageDecoder);
+///////////////////////////////////////////////////////////////////////////////
 
 #include "SkTRegistry.h"
 
-static SkImageDecoder* Factory(SkStream* stream) {
+SkImageDecoder* sk_wbmp_dfactory(SkStream* stream) {
     wbmp_head   head;
 
     if (head.init(stream)) {
@@ -160,5 +162,5 @@ static SkImageDecoder* Factory(SkStream* stream) {
     return NULL;
 }
 
-static SkTRegistry<SkImageDecoder*, SkStream*> gReg(Factory);
+static SkTRegistry<SkImageDecoder*, SkStream*> gReg(sk_wbmp_dfactory);
 

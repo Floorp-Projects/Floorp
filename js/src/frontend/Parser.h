@@ -35,6 +35,7 @@ enum VarContext { HoistVars, DontHoistVars };
 struct Parser : private AutoGCRooter
 {
     JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
+    StrictModeGetter    strictModeGetter; /* used by tokenStream to test for strict mode */
     TokenStream         tokenStream;
     void                *tempPoolMark;  /* initial JSContext.tempLifoAlloc mark */
     JSPrincipals        *principals;    /* principals associated with source */
@@ -54,29 +55,27 @@ struct Parser : private AutoGCRooter
     /* Script can optimize name references based on scope chain. */
     const bool          compileAndGo:1;
 
-    Parser(JSContext *cx, JSPrincipals *prin = NULL, JSPrincipals *originPrin = NULL,
-           StackFrame *cfp = NULL, bool fold = true, bool compileAndGo = false);
+    Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
+           const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion version,
+           StackFrame *cfp, bool foldConstants, bool compileAndGo);
     ~Parser();
 
     friend void AutoGCRooter::trace(JSTracer *trc);
     friend struct TreeContext;
 
     /*
-     * Initialize a parser. Parameters are passed on to init tokenStream. The
-     * compiler owns the arena pool "tops-of-stack" space above the current
-     * JSContext.tempLifoAlloc mark. This means you cannot allocate from
-     * tempLifoAlloc and save the pointer beyond the next Parser destructor
-     * invocation.
+     * Initialize a parser. The compiler owns the arena pool "tops-of-stack"
+     * space above the current JSContext.tempLifoAlloc mark. This means you
+     * cannot allocate from tempLifoAlloc and save the pointer beyond the next
+     * Parser destructor invocation.
      */
-    bool init(const jschar *base, size_t length, const char *filename, unsigned lineno,
-              JSVersion version);
+    bool init();
 
     void setPrincipals(JSPrincipals *prin, JSPrincipals *originPrin);
 
     const char *getFilename() const { return tokenStream.getFilename(); }
     JSVersion versionWithFlags() const { return tokenStream.versionWithFlags(); }
     JSVersion versionNumber() const { return tokenStream.versionNumber(); }
-    bool hasXML() const { return tokenStream.hasXML(); }
 
     /*
      * Parse a top-level JS script.
@@ -146,6 +145,8 @@ struct Parser : private AutoGCRooter
     enum FunctionBodyType { StatementListBody, ExpressionBody };
     ParseNode *functionBody(FunctionBodyType type);
 
+    bool checkForArgumentsAndRest();
+
   private:
     /*
      * JS parsers, from lowest to highest precedence.
@@ -179,6 +180,7 @@ struct Parser : private AutoGCRooter
                          VarContext varContext = HoistVars);
     ParseNode *expr();
     ParseNode *assignExpr();
+    ParseNode *assignExprWithoutYield(unsigned err);
     ParseNode *condExpr1();
     ParseNode *orExpr1();
     ParseNode *andExpr1i();
@@ -208,7 +210,7 @@ struct Parser : private AutoGCRooter
      * Additional JS parsers.
      */
     enum FunctionType { Getter, Setter, Normal };
-    bool functionArguments(ParseNode **list);
+    bool functionArguments(ParseNode **list, bool &hasDefaults, bool &hasRest);
 
     ParseNode *functionDef(HandlePropertyName name, FunctionType type, FunctionSyntaxKind kind);
 
@@ -229,6 +231,9 @@ struct Parser : private AutoGCRooter
     ParseNode *identifierName(bool afterDoubleDot);
 
 #if JS_HAS_XML_SUPPORT
+    // True if E4X syntax is allowed in the current syntactic context.
+    bool allowsXML() const { return !tc->sc->inStrictMode() && tokenStream.allowsXML(); }
+
     ParseNode *endBracketedExpr();
 
     ParseNode *propertySelector();

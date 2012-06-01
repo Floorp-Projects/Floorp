@@ -6,7 +6,7 @@
 
 void xxxNeverCalledXUL()
 {
-  XRE_main(0, nsnull, nsnull);
+  XRE_main(0, nsnull, nsnull, nsnull);
   XRE_GetFileFromPath(nsnull, nsnull);
   XRE_LockProfileDirectory(nsnull, nsnull);
   XRE_InitEmbedding2(nsnull, nsnull, nsnull);

@@ -50,7 +50,7 @@ bool gShutdown;
 
 // The timestamp of the last event notification, or PR_INTERVAL_NO_WAIT if
 // we're currently not processing events.
-volatile PRIntervalTime gTimestamp;
+volatile PRIntervalTime gTimestamp = PR_INTERVAL_NO_WAIT;
 
 #ifdef REPORT_CHROME_HANGS
 // Main thread ID used in reporting chrome hangs under Windows
@@ -307,15 +307,70 @@ Shutdown()
   gMonitor = NULL;
 }
 
-void
-NotifyActivity()
+static bool
+IsUIMessageWaiting()
 {
-  NS_ASSERTION(NS_IsMainThread(), "HangMonitor::Notify called from off the main thread.");
+#ifndef XP_WIN
+  return false;
+#else
+  #define NS_WM_IMEFIRST WM_IME_SETCONTEXT
+  #define NS_WM_IMELAST  WM_IME_KEYUP
+  BOOL haveUIMessageWaiting = FALSE;
+  MSG msg;
+  haveUIMessageWaiting |= ::PeekMessageW(&msg, NULL, WM_KEYFIRST, 
+                                         WM_IME_KEYLAST, PM_NOREMOVE);
+  haveUIMessageWaiting |= ::PeekMessageW(&msg, NULL, NS_WM_IMEFIRST,
+                                         NS_WM_IMELAST, PM_NOREMOVE);
+  haveUIMessageWaiting |= ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST,
+                                         WM_MOUSELAST, PM_NOREMOVE);
+  return haveUIMessageWaiting;
+#endif
+}
+
+void
+NotifyActivity(ActivityType activityType)
+{
+  NS_ASSERTION(NS_IsMainThread(),
+    "HangMonitor::Notify called from off the main thread.");
+
+  // Determine the activity type more specifically
+  if (activityType == kGeneralActivity) {
+    activityType = IsUIMessageWaiting() ? kActivityUIAVail : 
+                                          kActivityNoUIAVail;
+  }
+
+  // Calculate the cumulative amount of lag time since the last UI message
+  static PRUint32 cumulativeUILagMS = 0;
+  switch(activityType) {
+  case kActivityNoUIAVail:
+    cumulativeUILagMS = 0;
+    break;
+  case kActivityUIAVail:
+  case kUIActivity:
+    if (gTimestamp != PR_INTERVAL_NO_WAIT) {
+      cumulativeUILagMS += PR_IntervalToMilliseconds(PR_IntervalNow() -
+                                                     gTimestamp);
+    }
+    break;
+  }
 
   // This is not a locked activity because PRTimeStamp is a 32-bit quantity
   // which can be read/written atomically, and we don't want to pay locking
   // penalties here.
   gTimestamp = PR_IntervalNow();
+
+  // If we have UI activity we should reset the timer and report it if it is
+  // significant enough.
+  if (activityType == kUIActivity) {
+    // The minimum amount of lag time that we should report for telemetry data.
+    // Mozilla's UI responsiveness goal is 50ms
+    static const PRUint32 kUIResponsivenessThresholdMS = 50;
+    if (cumulativeUILagMS > kUIResponsivenessThresholdMS) {
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::EVENTLOOP_UI_LAG_EXP_MS,
+                                     cumulativeUILagMS);
+    }
+    cumulativeUILagMS = 0;
+  }
 }
 
 void

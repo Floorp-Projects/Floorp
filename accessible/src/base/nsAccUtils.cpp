@@ -9,12 +9,12 @@
 #include "nsAccessibilityService.h"
 #include "nsARIAMap.h"
 #include "nsCoreUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "nsHyperTextAccessible.h"
 #include "nsIAccessibleTypes.h"
-#include "nsTextAccessible.h"
 #include "Role.h"
 #include "States.h"
+#include "TextLeafAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
 #include "nsIDOMXULSelectCntrlEl.h"
@@ -68,7 +68,7 @@ nsAccUtils::SetAccGroupAttrs(nsIPersistentProperties *aAttributes,
 }
 
 PRInt32
-nsAccUtils::GetDefaultLevel(nsAccessible *aAccessible)
+nsAccUtils::GetDefaultLevel(Accessible* aAccessible)
 {
   roles::Role role = aAccessible->Role();
 
@@ -76,7 +76,7 @@ nsAccUtils::GetDefaultLevel(nsAccessible *aAccessible)
     return 1;
 
   if (role == roles::ROW) {
-    nsAccessible* parent = aAccessible->Parent();
+    Accessible* parent = aAccessible->Parent();
     // It is a row inside flatten treegrid. Group level is always 1 until it
     // is overriden by aria-level attribute.
     if (parent && parent->Role() == roles::TREE_TABLE) 
@@ -87,7 +87,7 @@ nsAccUtils::GetDefaultLevel(nsAccessible *aAccessible)
 }
 
 PRInt32
-nsAccUtils::GetARIAOrDefaultLevel(nsAccessible *aAccessible)
+nsAccUtils::GetARIAOrDefaultLevel(Accessible* aAccessible)
 {
   PRInt32 level = 0;
   nsCoreUtils::GetUIntAttr(aAccessible->GetContent(),
@@ -213,11 +213,11 @@ nsAccUtils::GetARIAToken(dom::Element* aElement, nsIAtom* aAttr)
   return nsnull;
 }
 
-nsAccessible*
-nsAccUtils::GetAncestorWithRole(nsAccessible *aDescendant, PRUint32 aRole)
+Accessible*
+nsAccUtils::GetAncestorWithRole(Accessible* aDescendant, PRUint32 aRole)
 {
-  nsAccessible* document = aDescendant->Document();
-  nsAccessible* parent = aDescendant;
+  Accessible* document = aDescendant->Document();
+  Accessible* parent = aDescendant;
   while ((parent = parent->Parent())) {
     PRUint32 testRole = parent->Role();
     if (testRole == aRole)
@@ -229,8 +229,8 @@ nsAccUtils::GetAncestorWithRole(nsAccessible *aDescendant, PRUint32 aRole)
   return nsnull;
 }
 
-nsAccessible*
-nsAccUtils::GetSelectableContainer(nsAccessible* aAccessible, PRUint64 aState)
+Accessible*
+nsAccUtils::GetSelectableContainer(Accessible* aAccessible, PRUint64 aState)
 {
   if (!aAccessible)
     return nsnull;
@@ -238,7 +238,7 @@ nsAccUtils::GetSelectableContainer(nsAccessible* aAccessible, PRUint64 aState)
   if (!(aState & states::SELECTABLE))
     return nsnull;
 
-  nsAccessible* parent = aAccessible;
+  Accessible* parent = aAccessible;
   while ((parent = parent->Parent()) && !parent->IsSelect()) {
     if (Role(parent) == nsIAccessibleRole::ROLE_PANE)
       return nsnull;
@@ -247,7 +247,7 @@ nsAccUtils::GetSelectableContainer(nsAccessible* aAccessible, PRUint64 aState)
 }
 
 bool
-nsAccUtils::IsARIASelected(nsAccessible *aAccessible)
+nsAccUtils::IsARIASelected(Accessible* aAccessible)
 {
   return aAccessible->GetContent()->
     AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_selected,
@@ -273,9 +273,9 @@ nsAccUtils::GetTextAccessibleFromSelection(nsISelection* aSelection)
     nsCoreUtils::GetDOMNodeFromDOMPoint(focusNode, focusOffset);
 
   // Get text accessible containing the result node.
-  nsDocAccessible* doc = 
+  DocAccessible* doc = 
     GetAccService()->GetDocAccessible(resultNode->OwnerDoc());
-  nsAccessible* accessible = doc ? 
+  Accessible* accessible = doc ? 
     doc->GetAccessibleOrContainer(resultNode) : nsnull;
   if (!accessible) {
     NS_NOTREACHED("No nsIAccessibleText for selection change event!");
@@ -372,8 +372,8 @@ nsAccUtils::GetScreenCoordsForWindow(nsAccessNode *aAccessNode)
 nsIntPoint
 nsAccUtils::GetScreenCoordsForParent(nsAccessNode *aAccessNode)
 {
-  nsDocAccessible* document = aAccessNode->Document();
-  nsAccessible* parent = document->GetContainerAccessible(aAccessNode->GetNode());
+  DocAccessible* document = aAccessNode->Document();
+  Accessible* parent = document->GetContainerAccessible(aAccessNode->GetNode());
   if (!parent)
     return nsIntPoint(0, 0);
 
@@ -413,7 +413,7 @@ nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
 #ifdef DEBUG
 
 bool
-nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible* aAccessible)
+nsAccUtils::IsTextInterfaceSupportCorrect(Accessible* aAccessible)
 {
   // Don't test for accessible docs, it makes us create accessibles too
   // early and fire mutation events before we need to
@@ -421,9 +421,9 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible* aAccessible)
     return true;
 
   bool foundText = false;
-  PRInt32 childCount = aAccessible->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible* child = aAccessible->GetChildAt(childIdx);
+  PRUint32 childCount = aAccessible->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < childCount; childIdx++) {
+    Accessible* child = aAccessible->GetChildAt(childIdx);
     if (IsText(child)) {
       foundText = true;
       break;
@@ -442,12 +442,12 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible* aAccessible)
 #endif
 
 PRUint32
-nsAccUtils::TextLength(nsAccessible *aAccessible)
+nsAccUtils::TextLength(Accessible* aAccessible)
 {
   if (!IsText(aAccessible))
     return 1;
 
-  nsTextAccessible* textLeaf = aAccessible->AsTextLeaf();
+  TextLeafAccessible* textLeaf = aAccessible->AsTextLeaf();
   if (textLeaf)
     return textLeaf->Text().Length();
 
@@ -461,7 +461,7 @@ nsAccUtils::TextLength(nsAccessible *aAccessible)
 }
 
 bool
-nsAccUtils::MustPrune(nsAccessible* aAccessible)
+nsAccUtils::MustPrune(Accessible* aAccessible)
 { 
   roles::Role role = aAccessible->Role();
 

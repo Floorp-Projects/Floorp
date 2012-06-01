@@ -893,10 +893,10 @@ public:
         SkASSERT(count > 0);
         SkASSERT(fBounds.contains(x, y));
         SkASSERT(fBounds.contains(x + count - 1, y));
-
+        
         x -= fBounds.left();
         y -= fBounds.top();
-
+                             
         Row* row = fCurrRow;
         if (y != fPrevY) {
             SkASSERT(y > fPrevY);
@@ -1142,12 +1142,33 @@ private:
 };
 
 class SkAAClip::BuilderBlitter : public SkBlitter {
+    int fLastY;
+
+    /*
+        If we see a gap of 1 or more empty scanlines while building in Y-order,
+        we inject an explicit empty scanline (alpha==0)
+     
+        See AAClipTest.cpp : test_path_with_hole()
+     */
+    void checkForYGap(int y) {
+        SkASSERT(y >= fLastY);
+        if (fLastY > -SK_MaxS32) {
+            int gap = y - fLastY;
+            if (gap > 1) {
+                fBuilder->addRun(fLeft, y - 1, 0, fRight - fLeft);
+            }
+        }
+        fLastY = y;
+    }
+
 public:
+
     BuilderBlitter(Builder* builder) {
         fBuilder = builder;
         fLeft = builder->getBounds().fLeft;
         fRight = builder->getBounds().fRight;
         fMinY = SK_MaxS32;
+        fLastY = -SK_MaxS32;    // sentinel
     }
 
     void finish() {
@@ -1166,17 +1187,22 @@ public:
     virtual void blitV(int x, int y, int height, SkAlpha alpha) SK_OVERRIDE {
         this->recordMinY(y);
         fBuilder->addColumn(x, y, alpha, height);
+        fLastY = y + height - 1;
     }
 
     virtual void blitRect(int x, int y, int width, int height) SK_OVERRIDE {
         this->recordMinY(y);
+        this->checkForYGap(y);
         fBuilder->addRectRun(x, y, width, height);
+        fLastY = y + height - 1;
     }
 
     virtual void blitAntiRect(int x, int y, int width, int height,
                      SkAlpha leftAlpha, SkAlpha rightAlpha) SK_OVERRIDE {
         this->recordMinY(y);
+        this->checkForYGap(y);
         fBuilder->addAntiRectRun(x, y, width, height, leftAlpha, rightAlpha);
+        fLastY = y + height - 1;
     }
 
     virtual void blitMask(const SkMask&, const SkIRect& clip) SK_OVERRIDE
@@ -1188,12 +1214,14 @@ public:
 
     virtual void blitH(int x, int y, int width) SK_OVERRIDE {
         this->recordMinY(y);
+        this->checkForYGap(y);
         fBuilder->addRun(x, y, 0xFF, width);
     }
 
     virtual void blitAntiH(int x, int y, const SkAlpha alpha[],
                            const int16_t runs[]) SK_OVERRIDE {
         this->recordMinY(y);
+        this->checkForYGap(y);
         for (;;) {
             int count = *runs;
             if (count <= 0) {
@@ -1707,6 +1735,7 @@ bool SkAAClip::translate(int dx, int dy, SkAAClip* dst) const {
     
     if (this != dst) {
         sk_atomic_inc(&fRunHead->fRefCnt);
+        dst->freeRuns();
         dst->fRunHead = fRunHead;
         dst->fBounds = fBounds;
     }

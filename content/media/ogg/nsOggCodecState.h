@@ -314,6 +314,7 @@ public:
   int mStreams;     // Number of packed streams in each packet.
 
   OpusDecoder *mDecoder;
+  int mSkip;        // Number of samples left to trim before playback.
 
 private:
 

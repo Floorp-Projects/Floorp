@@ -5,132 +5,37 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Debugger content
- */
-
-.dbg-default {
-  cursor: default;
-}
-
-/**
  * Stack frames
  */
 
-#stack {
-  width: 200px;
-}
-
 #stackframes {
   overflow: auto;
-}
-
-.dbg-stackframe {
-  display: block;
-}
-
-.dbg-stackframe-name {
-  float: left;
-}
-
-.dbg-stackframe-details {
-  float: right;
-}
-
-.dbg-stackframe-name:-moz-locale-dir(rtl) {
-  float: right;
-}
-
-.dbg-stackframe-details:-moz-locale-dir(rtl) {
-  float: left;
 }
 
 /**
  * Properties elements
  */
 
-#properties {
-  width: 250px;
-}
-
 #variables {
   overflow: auto;
 }
 
 /**
- * Scope element
+ * Scope, variable and property elements
  */
 
-.scope {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-}
-
-.scope > .details {
+.details {
   display: none;
 }
 
-.scope > .details[open] {
+.details[open] {
   display: -moz-box;
-  -moz-box-orient: vertical;
 }
 
 /**
- * Variable element
+ * Toolbar
  */
 
-.variable {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-}
-
-.variable > .title {
-  white-space: nowrap;
-}
-
-.variable > .details {
+.devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
   display: none;
-}
-
-.variable > .details[open] {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-}
-
-/**
- * Property element
- */
-
-.property {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-}
-
-.property > .title {
-  white-space: nowrap;
-}
-
-.property > .title > .key {
-  display: inline-block;
-}
-
-.property > .title > .value {
-  display: inline-block;
-}
-
-.property > .details {
-  display: none;
-}
-
-.property > .details[open] {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-}
-
-/**
- * Display helpers
- */
-
-.unselectable {
-  -moz-user-select: -moz-none;
-  cursor: default;
 }

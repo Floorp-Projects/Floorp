@@ -4,7 +4,7 @@
 
 function test() {
   /** Test for Bug 495495 **/
-  
+
   waitForExplicitFinish();
 
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no,toolbar=yes");

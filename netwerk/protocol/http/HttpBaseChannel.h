@@ -28,6 +28,7 @@
 #include "nsIResumableChannel.h"
 #include "nsITraceableChannel.h"
 #include "mozilla/net/NeckoCommon.h"
+#include "PrivateBrowsingConsumer.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -49,6 +50,7 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public nsISupportsPriority
                       , public nsIResumableChannel
                       , public nsITraceableChannel
+                      , public PrivateBrowsingConsumer
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

@@ -15,7 +15,9 @@ NS_IMPL_CYCLE_COLLECTION_1(StorageChild, mStorage)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StorageChild)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StorageChild)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivacyTransitionObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPrivacyTransitionObserver)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP_(nsrefcnt) StorageChild::Release(void)
@@ -79,21 +81,21 @@ StorageChild::InitRemote()
   ContentChild* child = ContentChild::GetSingleton();
   AddIPDLReference();
   child->SendPStorageConstructor(this, null_t());
-  SendInit(mUseDB, mCanUseChromePersist, mSessionOnly, mDomain, mScopeDBKey,
+  SendInit(mUseDB, mCanUseChromePersist, mSessionOnly, mInPrivateBrowsing, mDomain, mScopeDBKey,
            mQuotaDomainDBKey, mQuotaETLDplus1DomainDBKey, mStorageType);
 }
 
 void
-StorageChild::InitAsSessionStorage(nsIURI* aDomainURI)
+StorageChild::InitAsSessionStorage(nsIURI* aDomainURI, bool aPrivate)
 {
-  DOMStorageBase::InitAsSessionStorage(aDomainURI);
+  DOMStorageBase::InitAsSessionStorage(aDomainURI, aPrivate);
   InitRemote();
 }
 
 void
-StorageChild::InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist)
+StorageChild::InitAsLocalStorage(nsIURI* aDomainURI, bool aCanUseChromePersist, bool aPrivate)
 {
-  DOMStorageBase::InitAsLocalStorage(aDomainURI, aCanUseChromePersist);
+  DOMStorageBase::InitAsLocalStorage(aDomainURI, aCanUseChromePersist, aPrivate);
   InitRemote();
 }
 
@@ -234,8 +236,16 @@ StorageChild::CloneFrom(bool aCallerSecure, DOMStorageBase* aThat)
   StorageClone clone(nsnull, other, aCallerSecure);
   AddIPDLReference();
   child->SendPStorageConstructor(this, clone);
-  SendInit(mUseDB, mCanUseChromePersist, mSessionOnly, mDomain, mScopeDBKey,
-           mQuotaDomainDBKey, mQuotaETLDplus1DomainDBKey, mStorageType);
+  SendInit(mUseDB, mCanUseChromePersist, mSessionOnly, mInPrivateBrowsing, mDomain,
+           mScopeDBKey, mQuotaDomainDBKey, mQuotaETLDplus1DomainDBKey, mStorageType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StorageChild::PrivateModeChanged(bool enabled)
+{
+  mInPrivateBrowsing = enabled;
+  SendUpdatePrivateState(enabled);
   return NS_OK;
 }
 

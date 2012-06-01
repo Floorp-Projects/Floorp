@@ -1428,7 +1428,7 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
                           false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText), false);
+  rv = HandleCharacterData(aErrorText, NS_strlen(aErrorText), false);
   NS_ENSURE_SUCCESS(rv, rv);  
   
   nsAutoString sourcetext(errorNs);
@@ -1439,7 +1439,7 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
                           false);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText), false);
+  rv = HandleCharacterData(aSourceText, NS_strlen(aSourceText), false);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = HandleEndElement(sourcetext.get(), false);

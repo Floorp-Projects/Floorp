@@ -17,17 +17,16 @@
 #include "SkXfermode.h"
 
 void SkFlattenable::InitializeFlattenables() {
-    SkBitmapProcShader::Init();
-    SkBlurImageFilter::Init();
-    SkBlurMaskFilter::Init();
-    SkColorFilter::Init();
-    SkCornerPathEffect::Init();
-    SkDashPathEffect::Init();
-    SkGradientShader::Init();
-    SkLayerDrawLooper::Init();
-    SkXfermode::Init();
-}
 
-void SkPixelRef::InitializeFlattenables() {
-    SkMallocPixelRef::Init();
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkBitmapProcShader)
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkBlurImageFilter)
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkCornerPathEffect)
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkDashPathEffect)
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkLayerDrawLooper)
+    SK_DEFINE_FLATTENABLE_REGISTRAR_ENTRY(SkMallocPixelRef)
+
+    SkBlurMaskFilter::InitializeFlattenables();
+    SkColorFilter::InitializeFlattenables();
+    SkGradientShader::InitializeFlattenables();
+    SkXfermode::InitializeFlattenables();
 }

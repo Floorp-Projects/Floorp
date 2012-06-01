@@ -13,6 +13,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsContentUtils.h"
+#include "nsJSUtils.h"
 
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
@@ -119,14 +120,6 @@ IsPermitted(const char *name, JSFlatString *prop, bool set)
     if (!propLength)
         return false;
     switch (name[0]) {
-        NAME('D', "DOMException",
-             PROP('c', RW("code"))
-             PROP('m', RW("message"))
-             PROP('n', RW("name"))
-             PROP('r', RW("result"))
-             PROP('t', R("toString")))
-        NAME('E', "Error",
-             PROP('m', R("message")))
         NAME('H', "History",
              PROP('b', R("back"))
              PROP('f', R("forward"))
@@ -489,6 +482,21 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
     if (!found) {
         // For now, only do this on functions.
         if (!JS_ObjectIsFunction(cx, wrappedObject)) {
+
+            // This little loop hole will go away soon! See bug 553102.
+            JSAutoEnterCompartment innerAc;
+            if (!innerAc.enter(cx, wrapper))
+                return false;
+            nsCOMPtr<nsPIDOMWindow> win =
+                do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, wrapper));
+            if (win) {
+                nsCOMPtr<nsIDocument> doc =
+                    do_QueryInterface(win->GetExtantDocument());
+                if (doc) {
+                    doc->WarnOnceAbout(nsIDocument::eNoExposedProps);
+                }
+            }
+
             perm = PermitPropertyAccess;
             return true;
         }

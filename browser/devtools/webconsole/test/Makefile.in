@@ -25,12 +25,10 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_597136_network_requests_from_chrome.js \
 	browser_webconsole_completion.js \
 	browser_webconsole_console_logging_api.js \
-	browser_webconsole_consoleonpage.js \
 	browser_webconsole_chrome.js \
 	browser_webconsole_execution_scope.js \
 	browser_webconsole_for_of.js \
 	browser_webconsole_history.js \
-	browser_webconsole_hud_getters.js \
 	browser_webconsole_js_input_and_output_styling.js \
 	browser_webconsole_js_input_expansion.js \
 	browser_webconsole_live_filtering_of_message_types.js \
@@ -46,7 +44,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_output_order.js \
 	browser_webconsole_property_panel.js \
 	browser_webconsole_property_provider.js \
-	browser_webconsole_registries.js \
 	browser_webconsole_bug_587617_output_copy.js \
 	browser_webconsole_bug_585237_line_limit.js \
 	browser_webconsole_bug_581231_close_button.js \
@@ -105,7 +102,6 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_651501_document_body_autocomplete.js \
 	browser_webconsole_bug_653531_highlighter_console_helper.js \
 	browser_webconsole_bug_659907_console_dir.js \
-	browser_webconsole_bug_678816.js \
 	browser_webconsole_bug_664131_console_group.js \
 	browser_webconsole_bug_704295.js \
 	browser_webconsole_bug_658368_time_methods.js \
@@ -180,7 +176,6 @@ _BROWSER_TEST_PAGES = \
 	test-bug-644419-log-limits.html \
 	test-bug-632275-getters.html \
 	test-bug-646025-console-file-location.html \
-	test-bug-678816-content.js \
 	test-file-location.js \
 	test-bug-658368-time-methods.html \
 	test-webconsole-error-observer.html \

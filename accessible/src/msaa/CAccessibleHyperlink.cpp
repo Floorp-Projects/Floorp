@@ -11,7 +11,7 @@
 #include "AccessibleHyperlink.h"
 #include "AccessibleHyperlink_i.c"
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 #include "nsIWinAccessNode.h"
 
 // IUnknown
@@ -22,7 +22,7 @@ CAccessibleHyperlink::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_IAccessibleHyperlink == iid) {
-    nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+    nsRefPtr<Accessible> thisObj = do_QueryObject(this);
     if (!thisObj->IsLink())
       return E_NOINTERFACE;
 
@@ -42,7 +42,7 @@ CAccessibleHyperlink::get_anchor(long aIndex, VARIANT *aAnchor)
 __try {
   VariantInit(aAnchor);
 
-  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  nsRefPtr<Accessible> thisObj = do_QueryObject(this);
   if (thisObj->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -52,8 +52,8 @@ __try {
   if (!thisObj->IsLink())
     return S_FALSE;
 
-  nsAccessibleWrap* anchor =
-    static_cast<nsAccessibleWrap*>(thisObj->AnchorAt(aIndex));
+  AccessibleWrap* anchor =
+    static_cast<AccessibleWrap*>(thisObj->AnchorAt(aIndex));
   if (!anchor)
     return S_FALSE;
 
@@ -77,7 +77,7 @@ CAccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT *aAnchorTarget)
 __try {
   VariantInit(aAnchorTarget);
 
-  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  nsRefPtr<Accessible> thisObj = do_QueryObject(this);
   if (thisObj->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -120,7 +120,7 @@ CAccessibleHyperlink::get_startIndex(long *aIndex)
 __try {
   *aIndex = 0;
 
-  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  nsRefPtr<Accessible> thisObj = do_QueryObject(this);
   if (thisObj->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -140,7 +140,7 @@ CAccessibleHyperlink::get_endIndex(long *aIndex)
 __try {
   *aIndex = 0;
 
-  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  nsRefPtr<Accessible> thisObj = do_QueryObject(this);
   if (thisObj->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -160,7 +160,7 @@ CAccessibleHyperlink::get_valid(boolean *aValid)
 __try {
   *aValid = false;
 
-  nsRefPtr<nsAccessible> thisObj = do_QueryObject(this);
+  nsRefPtr<Accessible> thisObj = do_QueryObject(this);
   if (thisObj->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 

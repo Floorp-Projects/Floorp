@@ -11,13 +11,26 @@ chrome.jar:
   content/dbg-browser-actors.js         (content/dbg-browser-actors.js)
 * content/shell.xul                     (content/shell.xul)
 * content/shell.js                      (content/shell.js)
+#ifndef ANDROID
+  content/screen.js                     (content/screen.js)
+#endif
   content/webapi.js                     (content/webapi.js)
   content/content.css                   (content/content.css)
+  content/touchcontrols.css             (content/touchcontrols.css)
 
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
 % override chrome://global/skin/netError.css chrome://browser/content/netError.css
+% override chrome://global/skin/media/videocontrols.css chrome://browser/content/touchcontrols.css
+
   content/netError.xhtml                (content/netError.xhtml)
   content/netError.css                  (content/netError.css)
   content/images/errorpage-larry-black.png (content/images/errorpage-larry-black.png)
   content/images/errorpage-larry-white.png (content/images/errorpage-larry-white.png)
   content/images/errorpage-warning.png (content/images/errorpage-warning.png)
+  content/images/scrubber-hdpi.png     (content/images/scrubber-hdpi.png)
+  content/images/unmute-hdpi.png       (content/images/unmute-hdpi.png)
+  content/images/pause-hdpi.png        (content/images/pause-hdpi.png)
+  content/images/play-hdpi.png         (content/images/play-hdpi.png)
+  content/images/mute-hdpi.png         (content/images/mute-hdpi.png)
+  content/images/throbber.png          (content/images/error.png)
+  content/images/error.png             (content/images/throbber.png)

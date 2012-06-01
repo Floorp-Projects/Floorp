@@ -23,17 +23,40 @@ function testNullAndUndefinedOutput(hud) {
   jsterm.clearOutput();
   jsterm.execute("null;");
 
-  let nodes = outputNode.querySelectorAll(".hud-msg-node");
-  is(nodes.length, 2, "2 nodes in output");
-  ok(nodes[1].textContent.indexOf("null") > -1, "'null' printed to output");
+  waitForSuccess({
+    name: "null displayed",
+    validatorFn: function()
+    {
+      return outputNode.querySelectorAll(".hud-msg-node").length == 2;
+    },
+    successFn: function()
+    {
+      let nodes = outputNode.querySelectorAll(".hud-msg-node");
+      isnot(nodes[1].textContent.indexOf("null"), -1,
+            "'null' printed to output");
 
-  jsterm.clearOutput();
-  jsterm.execute("undefined;");
+      jsterm.clearOutput();
+      jsterm.execute("undefined;");
+      waitForSuccess(waitForUndefined);
+    },
+    failureFn: finishTest,
+  });
 
-  nodes = outputNode.querySelectorAll(".hud-msg-node");
-  is(nodes.length, 2, "2 nodes in output");
-  ok(nodes[1].textContent.indexOf("undefined") > -1, "'undefined' printed to output");
+  let waitForUndefined = {
+    name: "undefined displayed",
+    validatorFn: function()
+    {
+      return outputNode.querySelectorAll(".hud-msg-node").length == 2;
+    },
+    successFn: function()
+    {
+      let nodes = outputNode.querySelectorAll(".hud-msg-node");
+      isnot(nodes[1].textContent.indexOf("undefined"), -1,
+            "'undefined' printed to output");
 
-  executeSoon(finishTest);
+      finishTest();
+    },
+    failureFn: finishTest,
+  };
 }
 

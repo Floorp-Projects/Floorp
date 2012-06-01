@@ -119,33 +119,34 @@ js::IsIdentifier(JSLinearString *str)
 #endif
 
 /* Initialize members that aren't initialized in |init|. */
-TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin)
-  : tokens(), tokensRoot(cx, &tokens),
-    cursor(), lookahead(), flags(),
-    linebaseRoot(cx, &linebase), prevLinebaseRoot(cx, &prevLinebase), userbufRoot(cx, &userbuf),
-    listenerTSData(), tokenbuf(cx),
-    cx(cx), originPrincipals(JSScript::normalizeOriginPrincipals(prin, originPrin))
+TokenStream::TokenStream(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
+                         const jschar *base, size_t length, const char *fn, unsigned ln,
+                         JSVersion v, StrictModeGetter *smg)
+  : tokens(),
+    tokensRoot(cx, &tokens),
+    cursor(),
+    lookahead(),
+    lineno(ln),
+    flags(),
+    linebase(base),
+    prevLinebase(NULL),
+    linebaseRoot(cx, &linebase),
+    prevLinebaseRoot(cx, &prevLinebase),
+    userbuf(base, length),
+    userbufRoot(cx, &userbuf),
+    filename(fn),
+    sourceMap(NULL),
+    listenerTSData(),
+    tokenbuf(cx),
+    version(v),
+    allowXML(VersionHasAllowXML(v)),
+    moarXML(VersionHasMoarXML(v)),
+    cx(cx),
+    originPrincipals(JSScript::normalizeOriginPrincipals(prin, originPrin)),
+    strictModeGetter(smg)
 {
     if (originPrincipals)
         JS_HoldPrincipals(originPrincipals);
-}
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
-bool
-TokenStream::init(const jschar *base, size_t length, const char *fn, unsigned ln, JSVersion v)
-{
-    filename = fn;
-    lineno = ln;
-    version = v;
-    xml = VersionHasXML(v);
-
-    userbuf.init(base, length);
-    linebase = base;
-    prevLinebase = NULL;
-    sourceMap = NULL;
 
     JSSourceHandler listener = cx->runtime->debugHooks.sourceHandler;
     void *listenerData = cx->runtime->debugHooks.sourceHandlerData;
@@ -207,8 +208,11 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, unsigned ln
      * way to address the dependency from statements on the current token.
      */
     tokens[0].pos.begin.lineno = tokens[0].pos.end.lineno = ln;
-    return true;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 TokenStream::~TokenStream()
 {
@@ -264,8 +268,8 @@ TokenStream::getChar()
          * are by the far the most common) this gives false positives for '('
          * (0x0028) and ')' (0x0029).  We could avoid those by incorporating
          * the 13th bit of d into the lookup, but that requires extra shifting
-         * and masking and isn't worthwhile.  See TokenStream::init() for the
-         * initialization of the relevant entries in the table.
+         * and masking and isn't worthwhile.  See TokenStream::TokenStream()
+         * for the initialization of the relevant entries in the table.
          */
         if (JS_UNLIKELY(maybeEOL[c & 0xff])) {
             if (c == '\n')
@@ -521,21 +525,18 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
 }
 
 bool
-js::ReportStrictModeError(JSContext *cx, TokenStream *ts, SharedContext *sc, ParseNode *pn,
-                          unsigned errorNumber, ...)
+js::ReportStrictModeError(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned errorNumber, ...)
 {
-    JS_ASSERT(ts || sc);
     JS_ASSERT(cx == ts->getContext());
 
     /* In strict mode code, this is an error, not merely a warning. */
     unsigned flags;
-    if ((ts && ts->isStrictMode()) || (sc && sc->inStrictMode())) {
+    if (ts->isStrictMode())
         flags = JSREPORT_ERROR;
-    } else {
-        if (!cx->hasStrictOption())
-            return true;
+    else if (cx->hasStrictOption())
         flags = JSREPORT_WARNING;
-    }
+    else
+        return true;
 
     va_list ap;
     va_start(ap, errorNumber);
@@ -549,17 +550,16 @@ bool
 js::ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned flags,
                              unsigned errorNumber, ...)
 {
-    va_list ap;
-
     /*
-     * We don't accept a TreeContext argument, so we can't implement
-     * JSREPORT_STRICT_MODE_ERROR here.  Use ReportStrictModeError instead,
-     * or do the checks in the caller and pass plain old JSREPORT_ERROR.
+     * We don't handle JSREPORT_STRICT_MODE_ERROR here.  Use
+     * ReportStrictModeError instead, or do the checks in the caller and pass
+     * plain old JSREPORT_ERROR.
      */
     JS_ASSERT(!(flags & JSREPORT_STRICT_MODE_ERROR));
-
-    va_start(ap, errorNumber);
     JS_ASSERT(cx == ts->getContext());
+
+    va_list ap;
+    va_start(ap, errorNumber);
     bool result = ts->reportCompileErrorNumberVA(pn, flags, errorNumber, ap);
     va_end(ap);
 
@@ -883,8 +883,8 @@ TokenStream::getXMLTextOrTag(TokenKind *ttp, Token **tpp)
  * - https://bugzilla.mozilla.org/show_bug.cgi?id=309712
  * - https://bugzilla.mozilla.org/show_bug.cgi?id=310993
  *
- * So without JSOPTION_XML, we changed around Firefox 1.5 never to scan an XML
- * comment or CDATA literal.  Instead, we always scan <! as the start of an
+ * So without JSOPTION_MOAR_XML, we changed around Firefox 1.5 never to scan an
+ * XML comment or CDATA literal.  Instead, we always scan <! as the start of an
  * HTML comment hack to end of line, used since Netscape 2 to hide script tag
  * content from script-unaware browsers.
  *
@@ -1302,7 +1302,7 @@ TokenStream::checkForKeyword(const jschar *s, size_t length, TokenKind *ttp, JSO
 
     /* Strict reserved word. */
     if (isStrictMode())
-        return ReportStrictModeError(cx, this, NULL, NULL, JSMSG_RESERVED_ID, kw->chars);
+        return ReportStrictModeError(cx, this, NULL, JSMSG_RESERVED_ID, kw->chars);
     return ReportCompileErrorNumber(cx, this, NULL, JSREPORT_STRICT | JSREPORT_WARNING,
                                     JSMSG_RESERVED_ID, kw->chars);
 }
@@ -1520,12 +1520,18 @@ TokenStream::getTokenInternal()
             numStart = userbuf.addressOfNextRawChar() - 2;
             goto decimal_dot;
         }
-#if JS_HAS_XML_SUPPORT
         if (c == '.') {
+            qc = getCharIgnoreEOL();
+            if (qc == '.') {
+                tt = TOK_TRIPLEDOT;
+                goto out;
+            }
+            ungetCharIgnoreEOL(qc);
+#if JS_HAS_XML_SUPPORT
             tt = TOK_DBLDOT;
             goto out;
-        }
 #endif
+        }
         ungetCharIgnoreEOL(c);
         tt = TOK_DOT;
         goto out;
@@ -1581,7 +1587,7 @@ TokenStream::getTokenInternal()
                             c = peekChar();
                             /* Strict mode code allows only \0, then a non-digit. */
                             if (val != 0 || JS7_ISDEC(c)) {
-                                if (!ReportStrictModeError(cx, this, NULL, NULL,
+                                if (!ReportStrictModeError(cx, this, NULL,
                                                            JSMSG_DEPRECATED_OCTAL)) {
                                     goto error;
                                 }
@@ -1762,7 +1768,7 @@ TokenStream::getTokenInternal()
             numStart = userbuf.addressOfNextRawChar() - 1;  /* one past the '0' */
             while (JS7_ISDEC(c)) {
                 /* Octal integer literals are not permitted in strict mode code. */
-                if (!ReportStrictModeError(cx, this, NULL, NULL, JSMSG_DEPRECATED_OCTAL))
+                if (!ReportStrictModeError(cx, this, NULL, JSMSG_DEPRECATED_OCTAL))
                     goto error;
 
                 /*
@@ -1868,7 +1874,7 @@ TokenStream::getTokenInternal()
 
       case '<':
 #if JS_HAS_XML_SUPPORT
-        if ((flags & TSF_OPERAND) && !isStrictMode() && (hasXML() || peekChar() != '!')) {
+        if ((flags & TSF_OPERAND) && allowsXML() && (hasMoarXML() || peekChar() != '!')) {
             if (!getXMLMarkup(&tt, &tp))
                 goto error;
             goto out;
@@ -2158,6 +2164,7 @@ TokenKindToString(TokenKind tt)
       case TOK_INC:             return "TOK_INC";
       case TOK_DEC:             return "TOK_DEC";
       case TOK_DOT:             return "TOK_DOT";
+      case TOK_TRIPLEDOT:       return "TOK_TRIPLEDOT";
       case TOK_LB:              return "TOK_LB";
       case TOK_RB:              return "TOK_RB";
       case TOK_LC:              return "TOK_LC";

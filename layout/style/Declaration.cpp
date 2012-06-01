@@ -264,18 +264,61 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       }
       break;
     }
-    case eCSSProperty_border_image:
+    case eCSSProperty_border_image: {
+      // Even though there are some cases where we could omit
+      // 'border-image-source' (when it's none), it's probably not a
+      // good idea since it's likely to be confusing.  It would also
+      // require adding the extra check that we serialize *something*.
       AppendValueToString(eCSSProperty_border_image_source, aValue);
-      aValue.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_border_image_slice, aValue);
-      aValue.Append(NS_LITERAL_STRING(" / "));
-      AppendValueToString(eCSSProperty_border_image_width, aValue);
-      aValue.Append(NS_LITERAL_STRING(" / "));
-      AppendValueToString(eCSSProperty_border_image_outset, aValue);
-      aValue.Append(PRUnichar(' '));
-      AppendValueToString(eCSSProperty_border_image_repeat, aValue);
+
+      bool sliceDefault = data->HasDefaultBorderImageSlice();
+      bool widthDefault = data->HasDefaultBorderImageWidth();
+      bool outsetDefault = data->HasDefaultBorderImageOutset();
+
+      if (!sliceDefault || !widthDefault || !outsetDefault) {
+        aValue.Append(PRUnichar(' '));
+        AppendValueToString(eCSSProperty_border_image_slice, aValue);
+        if (!widthDefault || !outsetDefault) {
+          aValue.Append(NS_LITERAL_STRING(" /"));
+          if (!widthDefault) {
+            aValue.Append(PRUnichar(' '));
+            AppendValueToString(eCSSProperty_border_image_width, aValue);
+          }
+          if (!outsetDefault) {
+            aValue.Append(NS_LITERAL_STRING(" / "));
+            AppendValueToString(eCSSProperty_border_image_outset, aValue);
+          }
+        }
+      }
+
+      bool repeatDefault = data->HasDefaultBorderImageRepeat();
+      if (!repeatDefault) {
+        aValue.Append(PRUnichar(' '));
+        AppendValueToString(eCSSProperty_border_image_repeat, aValue);
+      }
       break;
+    }
     case eCSSProperty_border: {
+      // If we have a non-default value for any of the properties that
+      // this shorthand sets but cannot specify, we have to return the
+      // empty string.
+      if (data->ValueFor(eCSSProperty_border_image_source)->GetUnit() !=
+            eCSSUnit_None ||
+          !data->HasDefaultBorderImageSlice() ||
+          !data->HasDefaultBorderImageWidth() ||
+          !data->HasDefaultBorderImageOutset() ||
+          !data->HasDefaultBorderImageRepeat() ||
+          data->ValueFor(eCSSProperty_border_top_colors)->GetUnit() !=
+            eCSSUnit_None ||
+          data->ValueFor(eCSSProperty_border_right_colors)->GetUnit() !=
+            eCSSUnit_None ||
+          data->ValueFor(eCSSProperty_border_bottom_colors)->GetUnit() !=
+            eCSSUnit_None ||
+          data->ValueFor(eCSSProperty_border_left_colors)->GetUnit() !=
+            eCSSUnit_None) {
+        break;
+      }
+
       const nsCSSProperty* subproptables[3] = {
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color),
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_style),

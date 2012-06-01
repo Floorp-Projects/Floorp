@@ -193,7 +193,7 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
     // These must be available if we could be running JIT code; they are not
     // traced as normal through IonCode or IonScript objects
     if (mustMarkEnterJIT)
-        MarkIonCodeRoot(trc, enterJIT_.unsafeGetAddress(), "enterJIT");
+        MarkIonCodeRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
 
     // functionWrappers_ are not marked because this is a WeakCache of VM
     // function implementations.
@@ -202,19 +202,19 @@ IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 void
 IonCompartment::sweep(FreeOp *fop)
 {
-    if (enterJIT_ && IsAboutToBeFinalized(enterJIT_))
+    if (enterJIT_ && !IsIonCodeMarked(enterJIT_.unsafeGet()))
         enterJIT_ = NULL;
-    if (bailoutHandler_ && IsAboutToBeFinalized(bailoutHandler_))
+    if (bailoutHandler_ && !IsIonCodeMarked(bailoutHandler_.unsafeGet()))
         bailoutHandler_ = NULL;
-    if (argumentsRectifier_ && IsAboutToBeFinalized(argumentsRectifier_))
+    if (argumentsRectifier_ && !IsIonCodeMarked(argumentsRectifier_.unsafeGet()))
         argumentsRectifier_ = NULL;
-    if (invalidator_ && IsAboutToBeFinalized(invalidator_))
+    if (invalidator_ && !IsIonCodeMarked(invalidator_.unsafeGet()))
         invalidator_ = NULL;
-    if (preBarrier_ && IsAboutToBeFinalized(preBarrier_))
+    if (preBarrier_ && !IsIonCodeMarked(preBarrier_.unsafeGet()))
         preBarrier_ = NULL;
 
     for (size_t i = 0; i < bailoutTables_.length(); i++) {
-        if (bailoutTables_[i] && IsAboutToBeFinalized(bailoutTables_[i]))
+        if (bailoutTables_[i] && !IsIonCodeMarked(bailoutTables_[i].unsafeGet()))
             bailoutTables_[i] = NULL;
     }
 
@@ -954,8 +954,8 @@ ion::CanEnter(JSContext *cx, JSScript *script, StackFrame *fp, bool newType)
     // Creating |this| is done before building Ion because it may change the
     // type information and invalidate compilation results.
     if (fp->isConstructing() && fp->functionThis().isPrimitive()) {
-        RootedVarObject callee(cx, &fp->callee());
-        RootedVarObject obj(cx, js_CreateThisForFunction(cx, callee, newType));
+        RootedObject callee(cx, &fp->callee());
+        RootedObject obj(cx, js_CreateThisForFunction(cx, callee, newType));
         if (!obj)
             return Method_Skipped;
         fp->functionThis().setObject(*obj);

@@ -8,7 +8,7 @@
 #include "Accessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
@@ -24,23 +24,23 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULColumnsAccessible
+// nsXULColumAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsXULColumnsAccessible::
-  nsXULColumnsAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
-  nsAccessibleWrap(aContent, aDoc)
+nsXULColumAccessible::
+  nsXULColumAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+  AccessibleWrap(aContent, aDoc)
 {
 }
 
 role
-nsXULColumnsAccessible::NativeRole()
+nsXULColumAccessible::NativeRole()
 {
   return roles::LIST;
 }
 
 PRUint64
-nsXULColumnsAccessible::NativeState()
+nsXULColumAccessible::NativeState()
 {
   return states::READONLY;
 }
@@ -51,7 +51,7 @@ nsXULColumnsAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULColumnItemAccessible::
-  nsXULColumnItemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULColumnItemAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }
@@ -99,7 +99,7 @@ nsXULColumnItemAccessible::DoAction(PRUint8 aIndex)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListboxAccessible::
-  nsXULListboxAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULListboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   XULSelectControlAccessible(aContent, aDoc), xpcAccessibleTable(this)
 {
   nsIContent* parentContent = mContent->GetParent();
@@ -161,7 +161,7 @@ nsXULListboxAccessible::NativeState()
   //   FOCUSED, READONLY, FOCUSABLE
 
   // Get focus status from base class
-  PRUint64 states = nsAccessible::NativeState();
+  PRUint64 states = Accessible::NativeState();
 
   // see if we are multiple select if so set ourselves as such
 
@@ -244,7 +244,7 @@ nsXULListboxAccessible::RowCount()
   return itemCount;
 }
 
-nsAccessible*
+Accessible*
 nsXULListboxAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
 { 
   nsCOMPtr<nsIDOMXULSelectControlElement> control =
@@ -260,7 +260,7 @@ nsXULListboxAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
   if (!itemContent)
     return nsnull;
 
-  nsAccessible* row = mDoc->GetAccessible(itemContent);
+  Accessible* row = mDoc->GetAccessible(itemContent);
   NS_ENSURE_TRUE(row, nsnull);
 
   return row->GetChildAt(aColumnIndex);
@@ -313,26 +313,6 @@ nsXULListboxAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
 
   *aColumnIndex = aCellIndex % columnCount;
   *aRowIndex = aCellIndex / columnCount;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULListboxAccessible::GetColumnExtentAt(PRInt32 aRow, PRInt32 aColumn,
-                                          PRInt32 *aCellSpans)
-{
-  NS_ENSURE_ARG_POINTER(aCellSpans);
-  *aCellSpans = 1;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULListboxAccessible::GetRowExtentAt(PRInt32 aRow, PRInt32 aColumn,
-                                       PRInt32 *aCellSpans)
-{
-  NS_ENSURE_ARG_POINTER(aCellSpans);
-  *aCellSpans = 1;
-
   return NS_OK;
 }
 
@@ -390,7 +370,7 @@ nsXULListboxAccessible::IsRowSelected(PRInt32 aRow, bool *aIsSelected)
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULSelectControlElement.");
-  
+
   nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
   control->GetItemAtIndex(aRow, getter_AddRefs(item));
   NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
@@ -525,12 +505,12 @@ nsXULListboxAccessible::GetSelectedCells(nsIArray **aCells)
     nsCOMPtr<nsIDOMNode> itemNode;
     selectedItems->Item(index, getter_AddRefs(itemNode));
     nsCOMPtr<nsIContent> itemContent(do_QueryInterface(itemNode));
-    nsAccessible *item = mDoc->GetAccessible(itemContent);
+    Accessible* item = mDoc->GetAccessible(itemContent);
 
     if (item) {
-      PRInt32 cellCount = item->GetChildCount();
-      for (PRInt32 cellIdx = 0; cellIdx < cellCount; cellIdx++) {
-        nsAccessible *cell = mChildren[cellIdx];
+      PRUint32 cellCount = item->ChildCount();
+      for (PRUint32 cellIdx = 0; cellIdx < cellCount; cellIdx++) {
+        Accessible* cell = mChildren[cellIdx];
         if (cell->Role() == roles::CELL)
           selCells->AppendElement(static_cast<nsIAccessible*>(cell), false);
       }
@@ -650,12 +630,12 @@ nsXULListboxAccessible::GetSelectedRowIndices(PRUint32 *aNumRows,
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
-  
+
   nsCOMPtr<nsIDOMNodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
     return NS_OK;
-  
+
   PRUint32 selectedItemsCount = 0;
   nsresult rv = selectedItems->GetLength(&selectedItemsCount);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -673,7 +653,7 @@ nsXULListboxAccessible::GetSelectedRowIndices(PRUint32 *aNumRows,
     selectedItems->Item(index, getter_AddRefs(itemNode));
     nsCOMPtr<nsIDOMXULSelectControlItemElement> item =
       do_QueryInterface(itemNode);
-    
+
     if (item) {
       PRInt32 itemIdx = -1;
       control->GetIndexOfItem(item, &itemIdx);
@@ -693,7 +673,7 @@ nsXULListboxAccessible::SelectRow(PRInt32 aRow)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
-  
+
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
@@ -769,7 +749,7 @@ nsXULListboxAccessible::AreItemsOperable() const
   return true;
 }
 
-nsAccessible*
+Accessible*
 nsXULListboxAccessible::ContainerWidget() const
 {
   if (IsAutoCompletePopup()) {
@@ -785,7 +765,7 @@ nsXULListboxAccessible::ContainerWidget() const
       if (inputElm) {
         nsCOMPtr<nsINode> inputNode = do_QueryInterface(inputElm);
         if (inputNode) {
-          nsAccessible* input = 
+          Accessible* input = 
             mDoc->GetAccessible(inputNode);
           return input ? input->ContainerWidget() : nsnull;
         }
@@ -800,7 +780,7 @@ nsXULListboxAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListitemAccessible::
-  nsXULListitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULListitemAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULMenuitemAccessible(aContent, aDoc)
 {
   mIsCheckbox = mContent->AttrValueIs(kNameSpaceID_None,
@@ -809,9 +789,9 @@ nsXULListitemAccessible::
                                       eCaseMatters);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULListitemAccessible, nsAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsXULListitemAccessible, Accessible)
 
-nsAccessible *
+Accessible* 
 nsXULListitemAccessible::GetListAccessible()
 {
   if (IsDefunct())
@@ -833,12 +813,12 @@ nsXULListitemAccessible::GetListAccessible()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULListitemAccessible nsAccessible
+// nsXULListitemAccessible Accessible
 
 void
 nsXULListitemAccessible::Description(nsString& aDesc)
 {
-  nsAccessibleWrap::Description(aDesc);
+  AccessibleWrap::Description(aDesc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -865,7 +845,7 @@ nsXULListitemAccessible::GetNameInternal(nsAString& aName)
 role
 nsXULListitemAccessible::NativeRole()
 {
-  nsAccessible *list = GetListAccessible();
+  Accessible* list = GetListAccessible();
   if (!list) {
     NS_ERROR("No list accessible for listitem accessible!");
     return roles::NOTHING;
@@ -933,7 +913,7 @@ nsXULListitemAccessible::CanHaveAnonChildren()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULListitemAccessible: Widgets
 
-nsAccessible*
+Accessible*
 nsXULListitemAccessible::ContainerWidget() const
 {
   return Parent();
@@ -945,7 +925,7 @@ nsXULListitemAccessible::ContainerWidget() const
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListCellAccessible::
-  nsXULListCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULListCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
@@ -969,11 +949,11 @@ nsXULListCellAccessible::GetTable(nsIAccessibleTable **aTable)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* thisRow = Parent();
+  Accessible* thisRow = Parent();
   if (!thisRow || thisRow->Role() != roles::ROW)
     return NS_OK;
 
-  nsAccessible* table = thisRow->Parent();
+  Accessible* table = thisRow->Parent();
   if (!table || table->Role() != roles::TABLE)
     return NS_OK;
 
@@ -990,7 +970,7 @@ nsXULListCellAccessible::GetColumnIndex(PRInt32 *aColumnIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* row = Parent();
+  Accessible* row = Parent();
   if (!row)
     return NS_OK;
 
@@ -998,7 +978,7 @@ nsXULListCellAccessible::GetColumnIndex(PRInt32 *aColumnIndex)
 
   PRInt32 indexInRow = IndexInParent();
   for (PRInt32 idx = 0; idx < indexInRow; idx++) {
-    nsAccessible* cell = row->GetChildAt(idx);
+    Accessible* cell = row->GetChildAt(idx);
     roles::Role role = cell->Role();
     if (role == roles::CELL || role == roles::GRID_CELL ||
         role == roles::ROWHEADER || role == roles::COLUMNHEADER)
@@ -1017,11 +997,11 @@ nsXULListCellAccessible::GetRowIndex(PRInt32 *aRowIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAccessible* row = Parent();
+  Accessible* row = Parent();
   if (!row)
     return NS_OK;
 
-  nsAccessible* table = row->Parent();
+  Accessible* table = row->Parent();
   if (!table)
     return NS_OK;
 
@@ -1077,12 +1057,12 @@ nsXULListCellAccessible::GetColumnHeaderCells(nsIArray **aHeaderCells)
   NS_ENSURE_STATE(table); // we expect to be in a listbox (table)
 
   // Get column header cell from XUL listhead.
-  nsAccessible *list = nsnull;
+  Accessible* list = nsnull;
 
-  nsRefPtr<nsAccessible> tableAcc(do_QueryObject(table));
-  PRInt32 tableChildCount = tableAcc->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < tableChildCount; childIdx++) {
-    nsAccessible *child = tableAcc->GetChildAt(childIdx);
+  nsRefPtr<Accessible> tableAcc(do_QueryObject(table));
+  PRUint32 tableChildCount = tableAcc->ChildCount();
+  for (PRUint32 childIdx = 0; childIdx < tableChildCount; childIdx++) {
+    Accessible* child = tableAcc->GetChildAt(childIdx);
     if (child->Role() == roles::LIST) {
       list = child;
       break;
@@ -1151,7 +1131,7 @@ nsXULListCellAccessible::IsSelected(bool *aIsSelected)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULListCellAccessible. nsAccessible implementation
+// nsXULListCellAccessible. Accessible implementation
 
 role
 nsXULListCellAccessible::NativeRole()

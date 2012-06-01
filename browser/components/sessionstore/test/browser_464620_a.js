@@ -4,12 +4,12 @@
 
 function test() {
   /** Test for Bug 464620 (injection on input) **/
-  
+
   waitForExplicitFinish();
-  
+
   let testURL = "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser_464620_a.html";
-  
+
   var frameCount = 0;
   let tab = gBrowser.addTab(testURL);
   tab.linkedBrowser.addEventListener("load", function(aEvent) {
@@ -17,14 +17,14 @@ function test() {
     if (frameCount++ < 4)
       return;
     this.removeEventListener("load", arguments.callee, true);
-    
+
     executeSoon(function() {
       frameCount = 0;
       let tab2 = gBrowser.duplicateTab(tab);
       tab2.linkedBrowser.addEventListener("464620_a", function(aEvent) {
         tab2.linkedBrowser.removeEventListener("464620_a", arguments.callee, true);
         is(aEvent.data, "done", "XSS injection was attempted");
-        
+
         // let form restoration complete and take into account the
         // setTimeout(..., 0) in sss_restoreDocument_proxy
         executeSoon(function() {
@@ -34,11 +34,11 @@ function test() {
                   "cross domain document was loaded");
             ok(!/XXX/.test(win.frames[0].document.body.innerHTML),
                "no content was injected");
-            
+
             // clean up
             gBrowser.removeTab(tab2);
             gBrowser.removeTab(tab);
-            
+
             finish();
           }, 0);
         });

@@ -12,7 +12,7 @@
 
 #include "SkTypes.h"
 
-class SkGraphics {
+class SK_API SkGraphics {
 public:
     /**
      *  Call this at process initialization time if your environment does not
@@ -64,6 +64,26 @@ public:
      *  This format is subject to change.
      */
     static void SetFlags(const char* flags);
+    
+    /**
+     *  Return the max number of bytes that should be used by the thread-local
+     *  font cache.
+     *  If the cache needs to allocate more, it will purge previous entries.
+     *  This max can be changed by calling SetFontCacheLimit().
+     *
+     *  If this thread has never called SetTLSFontCacheLimit, or has called it
+     *  with 0, then this thread is using the shared font cache. In that case,
+     *  this function will always return 0, and the caller may want to call
+     *  GetFontCacheLimit.
+     */
+    static size_t GetTLSFontCacheLimit();
+    
+    /**
+     *  Specify the max number of bytes that should be used by the thread-local
+     *  font cache. If this value is 0, then this thread will use the shared
+     *  global font cache.
+     */
+    static void SetTLSFontCacheLimit(size_t bytes);
     
 private:
     /** This is automatically called by SkGraphics::Init(), and must be

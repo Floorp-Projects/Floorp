@@ -28,7 +28,7 @@ struct StringWrapper
 } sw;
 
 void
-FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status)
+FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool isCompartmentGC)
 {
     if (status == JSFINALIZE_START)
         sw.strOk = !JS_IsAboutToBeFinalized(sw.str);

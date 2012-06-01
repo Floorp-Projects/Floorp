@@ -63,6 +63,9 @@ public class Tabs implements GeckoEventListener {
             GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
                 public void run() {
                     GeckoApp.mBrowserToolbar.updateTabCountAndAnimate(getCount());
+                    GeckoApp.mBrowserToolbar.updateBackButton(false);
+                    GeckoApp.mBrowserToolbar.updateForwardButton(false);
+                    GeckoApp.mAppContext.invalidateOptionsMenu();
                 }
             });
         }
@@ -101,12 +104,9 @@ public class Tabs implements GeckoEventListener {
                 GeckoApp.mFormAssistPopup.hide();
                 if (isSelectedTab(tab)) {
                     String url = tab.getURL();
-                    GeckoApp.mBrowserToolbar.setTitle(tab.getDisplayTitle());
-                    GeckoApp.mBrowserToolbar.setFavicon(tab.getFavicon());
-                    GeckoApp.mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
-                    GeckoApp.mBrowserToolbar.setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
+                    GeckoApp.mBrowserToolbar.refresh();
+                    GeckoApp.mAppContext.invalidateOptionsMenu();
                     GeckoApp.mDoorHangerPopup.updatePopup();
-                    GeckoApp.mBrowserToolbar.setShadowVisibility((url == null) || !url.startsWith("about:"));
                     notifyListeners(tab, TabEvents.SELECTED);
 
                     if (oldTab != null)
@@ -263,7 +263,7 @@ public class Tabs implements GeckoEventListener {
                 mRestoringSession = false;
                 GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
                     public void run() {
-                        GeckoApp.mBrowserToolbar.updateTabCount(getCount());
+                        GeckoApp.mBrowserToolbar.refresh();
                     }
                 });
             }

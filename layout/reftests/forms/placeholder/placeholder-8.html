@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-  <!-- Test: when focused, placeholder update shouldn't show placeholder. -->
+  <link rel='stylesheet' type='text/css' href='placeholder-style.css'>
+  <!-- Test: when focused, if value='', newest placeholder should be shown. -->
   <script type="text/javascript">
     function focusPlaceholder()
     {
@@ -8,7 +9,7 @@
     }
     function setPlaceholder()
     {
-      document.getElementById('p1').placeholder = 'new placeholder';
+      document.getElementById('p1').placeholder = 'my placeholder';
     }
     function disableReftestWait()
     {
@@ -17,6 +18,6 @@
   </script>
 
   <body onload="focusPlaceholder();">
-    <input type="text" id="p1" value="" placeholder="my placeholder" onfocus="setPlaceholder(); disableReftestWait();">
+    <input type="text" id="p1" value="" placeholder="old placeholder" onfocus="setPlaceholder(); disableReftestWait();">
   </body>
 </html>

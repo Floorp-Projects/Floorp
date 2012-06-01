@@ -148,7 +148,7 @@ class NodeBuilder
     }
 
     bool init(JSObject *userobj_ = NULL) {
-        RootedVarObject userobj(cx, userobj_);
+        RootedObject userobj(cx, userobj_);
 
         if (src) {
             if (!atomValue(src, &srcval))
@@ -174,7 +174,7 @@ class NodeBuilder
             JSAtom *atom = js_Atomize(cx, name, strlen(name));
             if (!atom)
                 return false;
-            RootedVarId id(cx, AtomToId(atom));
+            RootedId id(cx, AtomToId(atom));
             if (!baseops::GetPropertyDefault(cx, userobj, id, NullValue(), &funv))
                 return false;
 
@@ -3098,12 +3098,12 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
             return JS_FALSE;
         }
 
-        RootedVarObject config(cx, &arg.toObject());
+        RootedObject config(cx, &arg.toObject());
 
         Value prop;
 
         /* config.loc */
-        RootedVarId locId(cx, NameToId(cx->runtime->atomState.locAtom));
+        RootedId locId(cx, NameToId(cx->runtime->atomState.locAtom));
         if (!baseops::GetPropertyDefault(cx, config, locId, BooleanValue(true), &prop))
             return JS_FALSE;
 
@@ -3111,7 +3111,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
 
         if (loc) {
             /* config.source */
-            RootedVarId sourceId(cx, NameToId(cx->runtime->atomState.sourceAtom));
+            RootedId sourceId(cx, NameToId(cx->runtime->atomState.sourceAtom));
             if (!baseops::GetPropertyDefault(cx, config, sourceId, NullValue(), &prop))
                 return JS_FALSE;
 
@@ -3132,7 +3132,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
             }
 
             /* config.line */
-            RootedVarId lineId(cx, NameToId(cx->runtime->atomState.lineAtom));
+            RootedId lineId(cx, NameToId(cx->runtime->atomState.lineAtom));
             if (!baseops::GetPropertyDefault(cx, config, lineId, Int32Value(1), &prop) ||
                 !ToUint32(cx, prop, &lineno)) {
                 return JS_FALSE;
@@ -3140,7 +3140,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         }
 
         /* config.builder */
-        RootedVarId builderId(cx, NameToId(cx->runtime->atomState.builderAtom));
+        RootedId builderId(cx, NameToId(cx->runtime->atomState.builderAtom));
         if (!baseops::GetPropertyDefault(cx, config, builderId, NullValue(), &prop))
             return JS_FALSE;
 
@@ -3164,9 +3164,10 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     if (!chars)
         return JS_FALSE;
 
-    Parser parser(cx, NULL, NULL, NULL, false);
-
-    if (!parser.init(chars, length, filename, lineno, cx->findVersion()))
+    Parser parser(cx, /* prin = */ NULL, /* originPrin = */ NULL,
+                  chars, length, filename, lineno, cx->findVersion(), 
+                  /* cfp = */ NULL, /* foldConstants = */ false, /* compileAndGo = */ false);
+    if (!parser.init())
         return JS_FALSE;
 
     serialize.setParser(&parser);
@@ -3194,10 +3195,9 @@ static JSFunctionSpec static_methods[] = {
 JS_BEGIN_EXTERN_C
 
 JS_PUBLIC_API(JSObject *)
-JS_InitReflect(JSContext *cx, JSObject *obj)
+JS_InitReflect(JSContext *cx, JSObject *obj_)
 {
-    RootObject root(cx, &obj);
-    RootedVarObject Reflect(cx);
+    RootedObject obj(cx, obj_), Reflect(cx);
 
     Reflect = NewObjectWithClassProto(cx, &ObjectClass, NULL, obj);
     if (!Reflect || !Reflect->setSingletonType(cx))

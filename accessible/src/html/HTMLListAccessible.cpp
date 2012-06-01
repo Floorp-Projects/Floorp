@@ -6,7 +6,7 @@
 
 #include "HTMLListAccessible.h"
 
-#include "nsDocAccessible.h"
+#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
@@ -43,7 +43,7 @@ HTMLListAccessible::NativeState()
 ////////////////////////////////////////////////////////////////////////////////
 
 HTMLLIAccessible::
-  HTMLLIAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc), mBullet(nsnull)
 {
   mFlags |= eHTMLListItemAccessible;
@@ -85,7 +85,7 @@ NS_IMETHODIMP
 HTMLLIAccessible::GetBounds(PRInt32* aX, PRInt32* aY,
                             PRInt32* aWidth, PRInt32* aHeight)
 {
-  nsresult rv = nsAccessibleWrap::GetBounds(aX, aY, aWidth, aHeight);
+  nsresult rv = AccessibleWrap::GetBounds(aX, aY, aWidth, aHeight);
   if (NS_FAILED(rv) || !mBullet || mBullet->IsInside())
     return rv;
 
@@ -109,7 +109,7 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
     return;
   }
 
-  nsDocAccessible* document = Document();
+  DocAccessible* document = Document();
   if (aHasBullet) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
     if (document->BindToDocument(mBullet, nsnull)) {
@@ -126,7 +126,7 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// HTMLLIAccessible: nsAccessible protected
+// HTMLLIAccessible: Accessible protected
 
 void
 HTMLLIAccessible::CacheChildren()
@@ -135,7 +135,7 @@ HTMLLIAccessible::CacheChildren()
     AppendChild(mBullet);
 
   // Cache children from subtree.
-  nsAccessibleWrap::CacheChildren();
+  AccessibleWrap::CacheChildren();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +159,7 @@ HTMLListBulletAccessible::IsPrimaryForNode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// HTMLListBulletAccessible: nsAccessible
+// HTMLListBulletAccessible: Accessible
 
 ENameValueFlag
 HTMLListBulletAccessible::Name(nsString &aName)

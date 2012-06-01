@@ -1,0 +1,131 @@
+diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-sanitiser.h
+--- a/gfx/ots/include/opentype-sanitiser.h
++++ b/gfx/ots/include/opentype-sanitiser.h
+@@ -176,18 +176,20 @@ class OTSStream {
+ 
+ // -----------------------------------------------------------------------------
+ // Process a given OpenType file and write out a sanitised version
+ //   output: a pointer to an object implementing the OTSStream interface. The
+ //     sanitisied output will be written to this. In the even of a failure,
+ //     partial output may have been written.
+ //   input: the OpenType file
+ //   length: the size, in bytes, of |input|
++//   preserve_graphite_tables: whether to preserve Graphite Layout tables
+ // -----------------------------------------------------------------------------
+-bool Process(OTSStream *output, const uint8_t *input, size_t length);
++bool Process(OTSStream *output, const uint8_t *input, size_t length,
++             bool preserve_graphite_tables = false);
+ 
+ // Force to disable debug output even when the library is compiled with
+ // -DOTS_DEBUG.
+ void DisableDebugOutput();
+ 
+ }  // namespace ots
+ 
+ #endif  // OPENTYPE_SANITISER_H_
+diff --git a/gfx/ots/src/ots.cc b/gfx/ots/src/ots.cc
+--- a/gfx/ots/src/ots.cc
++++ b/gfx/ots/src/ots.cc
+@@ -138,16 +138,27 @@ const struct {
+   { "GPOS", ots::ots_gpos_parse, ots::ots_gpos_serialise,
+     ots::ots_gpos_should_serialise, ots::ots_gpos_free, false },
+   { "GSUB", ots::ots_gsub_parse, ots::ots_gsub_serialise,
+     ots::ots_gsub_should_serialise, ots::ots_gsub_free, false },
+   { "vhea", ots::ots_vhea_parse, ots::ots_vhea_serialise,
+     ots::ots_vhea_should_serialise, ots::ots_vhea_free, false },
+   { "vmtx", ots::ots_vmtx_parse, ots::ots_vmtx_serialise,
+     ots::ots_vmtx_should_serialise, ots::ots_vmtx_free, false },
++  // SILGraphite layout tables - not actually parsed, just copied
++  { "Silf", ots::ots_silf_parse, ots::ots_silf_serialise,
++    ots::ots_silf_should_serialise, ots::ots_silf_free, false },
++  { "Sill", ots::ots_sill_parse, ots::ots_sill_serialise,
++    ots::ots_sill_should_serialise, ots::ots_sill_free, false },
++  { "Gloc", ots::ots_gloc_parse, ots::ots_gloc_serialise,
++    ots::ots_gloc_should_serialise, ots::ots_gloc_free, false },
++  { "Glat", ots::ots_glat_parse, ots::ots_glat_serialise,
++    ots::ots_glat_should_serialise, ots::ots_glat_free, false },
++  { "Feat", ots::ots_feat_parse, ots::ots_feat_serialise,
++    ots::ots_feat_should_serialise, ots::ots_feat_free, false },
+   // TODO(bashi): Support mort, base, and jstf tables.
+   { 0, NULL, NULL, NULL, NULL, false },
+ };
+ 
+ bool IsValidVersionTag(uint32_t tag) {
+   return tag == Tag("\x00\x01\x00\x00") ||
+          // OpenType fonts with CFF data have 'OTTO' tag.
+          tag == Tag("OTTO") ||
+@@ -581,22 +592,25 @@ bool ProcessGeneric(ots::OpenTypeFile *h
+ }  // namespace
+ 
+ namespace ots {
+ 
+ void DisableDebugOutput() {
+   g_debug_output = false;
+ }
+ 
+-bool Process(OTSStream *output, const uint8_t *data, size_t length) {
++bool Process(OTSStream *output, const uint8_t *data, size_t length,
++             bool preserveGraphite) {
+   OpenTypeFile header;
+   if (length < 4) {
+     return OTS_FAILURE();
+   }
+ 
++  header.preserve_graphite = preserveGraphite;
++
+   bool result;
+   if (data[0] == 'w' && data[1] == 'O' && data[2] == 'F' && data[3] == 'F') {
+     result = ProcessWOFF(&header, output, data, length);
+   } else {
+     result = ProcessTTF(&header, output, data, length);
+   }
+ 
+   for (unsigned i = 0; ; ++i) {
+diff --git a/gfx/ots/src/ots.h b/gfx/ots/src/ots.h
+--- a/gfx/ots/src/ots.h
++++ b/gfx/ots/src/ots.h
+@@ -178,17 +178,22 @@ class Buffer {
+   F(maxp, MAXP) \
+   F(name, NAME) \
+   F(os2, OS2) \
+   F(post, POST) \
+   F(prep, PREP) \
+   F(vdmx, VDMX) \
+   F(vorg, VORG) \
+   F(vhea, VHEA) \
+-  F(vmtx, VMTX)
++  F(vmtx, VMTX) \
++  F(silf, SILF) \
++  F(sill, SILL) \
++  F(glat, GLAT) \
++  F(gloc, GLOC) \
++  F(feat, FEAT)
+ 
+ #define F(name, capname) struct OpenType##capname;
+ FOR_EACH_TABLE_TYPE
+ #undef F
+ 
+ struct OpenTypeFile {
+   OpenTypeFile() {
+ #define F(name, capname) name = NULL;
+@@ -197,16 +202,20 @@ struct OpenTypeFile {
+   }
+ 
+   uint32_t version;
+   uint16_t num_tables;
+   uint16_t search_range;
+   uint16_t entry_selector;
+   uint16_t range_shift;
+ 
++  // This is used to tell the relevant parsers whether to preserve the
++  // Graphite layout tables (currently _without_ any checking)
++  bool preserve_graphite;
++
+ #define F(name, capname) OpenType##capname *name;
+ FOR_EACH_TABLE_TYPE
+ #undef F
+ };
+ 
+ #define F(name, capname) \
+ bool ots_##name##_parse(OpenTypeFile *f, const uint8_t *d, size_t l); \
+ bool ots_##name##_should_serialise(OpenTypeFile *f); \

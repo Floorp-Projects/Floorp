@@ -171,7 +171,7 @@ nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString
   *outString = NULL;
 
   nsresult rv;
-  PRInt32 inStringLength = nsCRT::strlen(inString);   // original input string length
+  PRInt32 inStringLength = NS_strlen(inString);       // original input string length
   PRInt32 bufferLength;                               // allocated buffer length
   PRInt32 srcLength = inStringLength;
   PRInt32 dstLength;

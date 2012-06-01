@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(5deb421c-592b-4375-b425-9ac11532aa30)]
+interface nsIPrivateBrowsingConsumer : nsISupports
+{
+  readonly attribute boolean usingPrivateBrowsing;
+
+%{C++
+  /**
+   * De-XPCOMed getter to make call-sites cleaner.
+   */
+  bool UsePrivateBrowsing() {
+    bool usingPB;
+    GetUsingPrivateBrowsing(&usingPB);
+    return usingPB;
+  }
+%}
+};

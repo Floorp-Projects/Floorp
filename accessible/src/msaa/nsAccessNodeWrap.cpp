@@ -37,7 +37,7 @@ AccTextChangeEvent* nsAccessNodeWrap::gTextEvent = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsAccessNodeWrap::
-  nsAccessNodeWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessNodeWrap(nsIContent* aContent, DocAccessible* aDoc) :
   nsAccessNode(aContent, aDoc)
 {
 }
@@ -129,7 +129,7 @@ nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
       return E_NOINTERFACE;
 
     // Make sure this is a document.
-    nsDocAccessible* docAcc = nsAccUtils::GetDocAccessibleFor(root);
+    DocAccessible* docAcc = nsAccUtils::GetDocAccessibleFor(root);
     if (!docAcc)
       return E_UNEXPECTED;
 
@@ -380,7 +380,7 @@ nsAccessNodeWrap::MakeAccessNode(nsINode *aNode)
   nsAccessNodeWrap *newNode = NULL;
 
   ISimpleDOMNode *iNode = NULL;
-  nsAccessible* acc = mDoc->GetAccessible(aNode);
+  Accessible* acc = mDoc->GetAccessible(aNode);
   if (acc) {
     IAccessible *msaaAccessible = nsnull;
     acc->GetNativeInterface((void**)&msaaAccessible); // addrefs
@@ -608,7 +608,7 @@ GetHRESULT(nsresult aResult)
   }
 }
 
-nsRefPtrHashtable<nsPtrHashKey<void>, nsDocAccessible> nsAccessNodeWrap::sHWNDCache;
+nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible> nsAccessNodeWrap::sHWNDCache;
 
 LRESULT CALLBACK
 nsAccessNodeWrap::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -621,7 +621,7 @@ nsAccessNodeWrap::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_GETOBJECT:
     {
       if (lParam == OBJID_CLIENT) {
-        nsDocAccessible* document = sHWNDCache.GetWeak(static_cast<void*>(hWnd));
+        DocAccessible* document = sHWNDCache.GetWeak(static_cast<void*>(hWnd));
         if (document) {
           IAccessible* msaaAccessible = NULL;
           document->GetNativeInterface((void**)&msaaAccessible); // does an addref

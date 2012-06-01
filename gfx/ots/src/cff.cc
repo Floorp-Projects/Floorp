@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -11,8 +11,8 @@
 #include "cff_type2_charstring.h"
 
 // CFF - PostScript font program (Compact Font Format) table
-// http://www.microsoft.com/opentype/otspec/cff.htm
-// http://www.microsoft.com/opentype/otspec/5176.CFF.pdf
+// http://www.microsoft.com/typography/otspec/cff.htm
+// http://www.microsoft.com/typography/otspec/cffspec.htm
 
 namespace {
 
@@ -25,6 +25,12 @@ enum DICT_OPERAND_TYPE {
 enum DICT_DATA_TYPE {
   DICT_DATA_TOPLEVEL,
   DICT_DATA_FDARRAY,
+};
+
+enum FONT_FORMAT {
+  FORMAT_UNKNOWN,
+  FORMAT_CID_KEYED,
+  FORMAT_OTHER,  // Including synthetic fonts
 };
 
 // see Appendix. A
@@ -417,7 +423,7 @@ bool ParsePrivateDictData(
             return OTS_FAILURE();  // not reached.
           }
           local_subrs_index = out_cff->local_subrs_per_font.back();
-        } else if (type == DICT_DATA_TOPLEVEL) {
+        } else { // type == DICT_DATA_TOPLEVEL
           if (out_cff->local_subrs) {
             return OTS_FAILURE();  // two or more local_subrs?
           }
@@ -464,6 +470,7 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
 
     std::vector<std::pair<uint32_t, DICT_OPERAND_TYPE> > operands;
 
+    FONT_FORMAT font_format = FORMAT_UNKNOWN;
     bool have_ros = false;
     size_t glyphs = 0;
     size_t charset_offset = 0;
@@ -522,12 +529,19 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
         case (12U << 8) + 5:   // PaintType
         case (12U << 8) + 8:   // StrokeWidth
         case (12U << 8) + 20:  // SyntheticBase
+          if (operands.size() != 1) {
+            return OTS_FAILURE();
+          }
+          break;
         case (12U << 8) + 31:  // CIDFontVersion
         case (12U << 8) + 32:  // CIDFontRevision
         case (12U << 8) + 33:  // CIDFontType
         case (12U << 8) + 34:  // CIDCount
         case (12U << 8) + 35:  // UIDBase
           if (operands.size() != 1) {
+            return OTS_FAILURE();
+          }
+          if (font_format != FORMAT_CID_KEYED) {
             return OTS_FAILURE();
           }
           break;
@@ -780,9 +794,10 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
 
         // ROS
         case (12U << 8) + 30:
-          if (type != DICT_DATA_TOPLEVEL) {
+          if (font_format != FORMAT_UNKNOWN) {
             return OTS_FAILURE();
           }
+          font_format = FORMAT_CID_KEYED;
           if (operands.size() != 3) {
             return OTS_FAILURE();
           }
@@ -805,6 +820,10 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
           return OTS_FAILURE();
       }
       operands.clear();
+
+      if (font_format == FORMAT_UNKNOWN) {
+        font_format = FORMAT_OTHER;
+      }
     }
 
     // parse "13. Charsets"
