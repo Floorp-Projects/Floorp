@@ -168,6 +168,7 @@ public:
    * @note This method might destroy |this|.
    */
   virtual nsIContent* Rollup(PRUint32 aCount, bool aGetLastRolledUp = false);
+  virtual void NotifyGeometryChange();
 
   /**
    * A combobox should roll up if a mousewheel event happens outside of
