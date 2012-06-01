@@ -534,6 +534,10 @@ protected:
       mTableLayoutStrategy;
   }
 
+  // Helper for InsertFrames.
+  void HomogenousInsertFrames(ChildListID     aListID,
+                              nsIFrame*       aPrevFrame,
+                              nsFrameList&    aFrameList);
 private:
   /* Handle a row that got inserted during reflow.  aNewHeight is the
      new height of the table after reflow. */
