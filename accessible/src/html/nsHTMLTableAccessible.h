@@ -6,7 +6,7 @@
 #ifndef _nsHTMLTableAccessible_H_
 #define _nsHTMLTableAccessible_H_
 
-#include "nsHyperTextAccessibleWrap.h"
+#include "HyperTextAccessibleWrap.h"
 #include "nsIAccessibleTable.h"
 #include "TableAccessible.h"
 #include "xpcAccessibleTable.h"
@@ -17,7 +17,7 @@ class nsITableCellLayout;
 /**
  * HTML table cell accessible (html:td).
  */
-class nsHTMLTableCellAccessible : public nsHyperTextAccessibleWrap,
+class nsHTMLTableCellAccessible : public HyperTextAccessibleWrap,
                                   public nsIAccessibleTableCell
 {
 public:
@@ -178,11 +178,11 @@ protected:
 /**
  * HTML caption accessible (html:caption).
  */
-class nsHTMLCaptionAccessible : public nsHyperTextAccessibleWrap
+class nsHTMLCaptionAccessible : public HyperTextAccessibleWrap
 {
 public:
   nsHTMLCaptionAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    nsHyperTextAccessibleWrap(aContent, aDoc) { }
+    HyperTextAccessibleWrap(aContent, aDoc) { }
   virtual ~nsHTMLCaptionAccessible() { }
 
   // nsIAccessible

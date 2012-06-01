@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=759124
+-->
+<head>
+  <title>Test for Bug 759124</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=759124">Mozilla Bug 759124</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+
+<iframe id="svg" src="fragments-helper.svg"></iframe>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+function Test(svgFragmentIdentifier, valid) {
+    this.svgFragmentIdentifier = svgFragmentIdentifier;
+    this.valid = valid;
+}
+
+function runTests()
+{
+  var svg = $("svg");
+  var doc = svg.contentWindow.document;
+  
+  var tests = [
+      new Test("view", true),
+      new Test("unknown", false),
+      new Test("svgView(viewBox(0,0,200,200)))", true),
+      new Test("svgView(preserveAspectRatio(xMaxYMin slice))", true),
+      new Test("svgView(viewBox(1,2,3,4);preserveAspectRatio(xMaxYMin))", true),
+      new Test("svgView(zoomAndPan(disable))", true),
+      new Test("svgView", false),
+      new Test("svgView(", false),
+      new Test("svgView()", false)
+  ];
+
+ var src = svg.getAttribute("src");
+ for (var i = 0; i < tests.length; i++) {
+   var test = tests[i];
+   svg.setAttribute("src", src + "#" + test.svgFragmentIdentifier);
+   is(doc.rootElement.useCurrentView, test.valid,
+      "Expected " + test.svgFragmentIdentifier + " to be " +
+      (test.valid ? "valid" : "invalid"));
+ }
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", runTests, false);
+</script>
+</pre>
+</body>
+</html>

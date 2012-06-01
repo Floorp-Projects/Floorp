@@ -20,12 +20,12 @@ CPPSRCS = \
   ApplicationAccessibleWrap.cpp \
   ARIAGridAccessibleWrap.cpp \
   DocAccessibleWrap.cpp \
+  HyperTextAccessibleWrap.cpp \
   nsAccessNodeWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
   nsXULMenuAccessibleWrap.cpp \
   nsXULListboxAccessibleWrap.cpp \
   nsXULTreeGridAccessibleWrap.cpp \
-  nsHyperTextAccessibleWrap.cpp \
   nsHTMLImageAccessibleWrap.cpp \
   nsHTMLTableAccessibleWrap.cpp \
   nsWinUtils.cpp \

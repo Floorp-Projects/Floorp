@@ -5,9 +5,9 @@
 
 #include "TextAttrs.h"
 
+#include "HyperTextAccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
-#include "nsHyperTextAccessibleWrap.h"
 #include "StyleInfo.h"
 
 #include "gfxFont.h"
@@ -199,7 +199,7 @@ TextAttrsMgr::GetRange(TextAttr* aAttrArray[], PRUint32 aAttrArrayLen,
 ////////////////////////////////////////////////////////////////////////////////
 
 TextAttrsMgr::LangTextAttr::
-  LangTextAttr(nsHyperTextAccessible* aRoot,
+  LangTextAttr(HyperTextAccessible* aRoot,
                nsIContent* aRootElm, nsIContent* aElm) :
   TTextAttr<nsString>(!aElm), mRootContent(aRootElm)
 {

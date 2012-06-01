@@ -158,6 +158,12 @@ SHARED_LIBRARY_LIBS 	+= \
 	$(NULL)
 endif
 
+ifdef MOZ_MEDIA_PLUGINS
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/content/media/plugins/$(LIB_PREFIX)gkconmediaplugins_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 ifdef NS_PRINTING
 SHARED_LIBRARY_LIBS += \
 		../printing/$(LIB_PREFIX)gkprinting_s.$(LIB_SUFFIX) \

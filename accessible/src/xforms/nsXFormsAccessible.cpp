@@ -48,7 +48,7 @@ nsXFormsAccessibleBase::nsXFormsAccessibleBase()
 
 nsXFormsAccessible::
   nsXFormsAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -135,7 +135,7 @@ nsXFormsAccessible::NativeState()
   rv = sXFormsService->IsValid(DOMNode, &isValid);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  PRUint64 states = nsHyperTextAccessibleWrap::NativeState();
+  PRUint64 states = HyperTextAccessibleWrap::NativeState();
 
   if (!isRelevant)
     states |= states::UNAVAILABLE;

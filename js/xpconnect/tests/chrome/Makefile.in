@@ -48,6 +48,7 @@ _CHROME_FILES = \
 		test_weakref.xul \
 		test_bug726949.xul \
 		test_bug758563.xul \
+		test_bug760076.xul \
 		$(NULL)
 
 # Disabled until this test gets updated to test the new proxy based

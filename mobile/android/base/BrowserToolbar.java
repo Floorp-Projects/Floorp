@@ -5,33 +5,41 @@
 
 package org.mozilla.gecko;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.content.res.Configuration;
-import android.content.res.Resources;
-import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.animation.TranslateAnimation;
 import android.view.Gravity;
-import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewConfiguration;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.TextSwitcher;
 import android.widget.ViewSwitcher;
 
-public class BrowserToolbar implements ViewSwitcher.ViewFactory {
+public class BrowserToolbar implements ViewSwitcher.ViewFactory,
+                                       GeckoMenu.ActionItemBarPresenter {
     private static final String LOGTAG = "GeckoToolbar";
     private LinearLayout mLayout;
     private Button mAwesomeBar;
@@ -44,13 +52,18 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory {
     private AnimationDrawable mProgressSpinner;
     private TextSwitcher mTabsCount;
     private ImageView mShadow;
-    private LayoutInflater mInflater;
+    private ImageButton mMenu;
+    private LinearLayout mActionItemBar;
+    private MenuPopup mMenuPopup;
 
     final private Context mContext;
+    private LayoutInflater mInflater;
     private Handler mHandler;
-    private int mColor;
     private int[] mPadding;
     private boolean mTitleCanExpand;
+    private boolean mHasSoftMenuButton;
+
+    private static List<View> sActionItems;
 
     private int mDuration;
     private TranslateAnimation mSlideUpIn;
@@ -63,24 +76,14 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory {
     public BrowserToolbar(Context context) {
         mContext = context;
         mInflater = LayoutInflater.from(context);
+
+        sActionItems = new ArrayList<View>();
     }
 
     public void from(LinearLayout layout) {
         mLayout = layout;
         mTitleCanExpand = true;
 
-        // Get the device's highlight color
-        TypedArray typedArray;
-
-        if (Build.VERSION.SDK_INT >= 11) {            
-            typedArray = mContext.obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
-        } else {
-            ContextThemeWrapper wrapper  = new ContextThemeWrapper(mContext, android.R.style.TextAppearance);
-            typedArray = wrapper.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorHighlight });
-        }
-
-        mColor = typedArray.getColor(typedArray.getIndex(0), 0);
-        typedArray.recycle();
         mAwesomeBar = (Button) mLayout.findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
@@ -88,20 +91,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory {
             }
         });
 
-        Resources resources = mContext.getResources();
-        
         mPadding = new int[] { mAwesomeBar.getPaddingLeft(),
                                mAwesomeBar.getPaddingTop(),
                                mAwesomeBar.getPaddingRight(),
                                mAwesomeBar.getPaddingBottom() };
-
-        GeckoStateListDrawable states = new GeckoStateListDrawable();
-        states.initializeFilter(mColor);
-        states.addState(new int[] { android.R.attr.state_pressed }, resources.getDrawable(R.drawable.address_bar_url_pressed));
-        states.addState(new int[] { }, resources.getDrawable(R.drawable.address_bar_url_default));
-        mAwesomeBar.setBackgroundDrawable(states);
-
-        mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[2], mPadding[3]);
 
         mTabs = (ImageButton) mLayout.findViewById(R.id.tabs);
         mTabs.setOnClickListener(new Button.OnClickListener() {
@@ -148,7 +141,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory {
             }
         });
 
-        mProgressSpinner = (AnimationDrawable) resources.getDrawable(R.drawable.progress_spinner);
+        mProgressSpinner = (AnimationDrawable) mContext.getResources().getDrawable(R.drawable.progress_spinner);
         
         mStop = (ImageButton) mLayout.findViewById(R.id.stop);
         mStop.setOnClickListener(new Button.OnClickListener() {
@@ -172,6 +165,51 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory {
         mSlideUpOut.setDuration(mDuration);
         mSlideDownIn.setDuration(mDuration);
         mSlideDownOut.setDuration(mDuration);
+
+        mMenu = (ImageButton) mLayout.findViewById(R.id.menu);
+        mActionItemBar = (LinearLayout) mLayout.findViewById(R.id.menu_items);
+        mHasSoftMenuButton = false;
+
+        if (Build.VERSION.SDK_INT >= 11)
+            mHasSoftMenuButton = true;
+
+        if (Build.VERSION.SDK_INT >= 14) {
+            if(!ViewConfiguration.get(GeckoApp.mAppContext).hasPermanentMenuKey())
+               mHasSoftMenuButton = true;
+            else
+               mHasSoftMenuButton = false;
+        }
+
+        if (mHasSoftMenuButton) {
+            mMenu.setVisibility(View.VISIBLE);
+            mMenu.setOnClickListener(new Button.OnClickListener() {
+                public void onClick(View view) {
+                    GeckoApp.mAppContext.openOptionsMenu();
+                }
+            });
+        }
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            View panel = GeckoApp.mAppContext.getMenuPanel();
+
+            // If panel is null, the app is starting up for the first time;
+            //    add this to the popup only if we have a soft menu button.
+            // else, browser-toolbar is initialized on rotation,
+            //    and we need to re-attach action-bar items.
+
+            if (panel == null) {
+                GeckoApp.mAppContext.onCreatePanelMenu(Window.FEATURE_OPTIONS_PANEL, null);
+                panel = GeckoApp.mAppContext.getMenuPanel();
+
+                if (mHasSoftMenuButton) {
+                    mMenuPopup = new MenuPopup(mContext);
+                    mMenuPopup.setPanelView(panel);
+                }
+            } else if (sActionItems.size() > 0) {
+                for (View view : sActionItems)
+                    addActionItem(view);
+            }
+        }
     }
 
     @Override
@@ -190,10 +228,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory {
 
     private void showTabs() {
         GeckoApp.mAppContext.showTabs();
-    }
-
-    public int getHighlightColor() {
-        return mColor;
     }
 
     public void updateTabCountAndAnimate(int count) {
@@ -220,7 +254,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory {
 
         mHandler.postDelayed(new Runnable() {
             public void run() {
-                ((TextView) mTabsCount.getCurrentView()).setTextColor(mColor);
+                ((TextView) mTabsCount.getCurrentView()).setTextColor(mContext.getResources().getColor(R.color.url_bar_text_highlight));
             }
         }, mDuration);
 
@@ -338,6 +372,31 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory {
          mForward.setEnabled(enabled);
     }
 
+    public boolean hasSoftMenuButton() {
+        return mHasSoftMenuButton;
+    }
+
+    @Override
+    public void addActionItem(View actionItem) {
+        mActionItemBar.addView(actionItem);
+
+        if (!sActionItems.contains(actionItem))
+            sActionItems.add(actionItem);
+    }
+
+    @Override
+    public void removeActionItem(View actionItem) {
+        mActionItemBar.removeView(actionItem);
+
+        if (sActionItems.contains(actionItem))
+            sActionItems.remove(actionItem);
+    }
+
+    @Override
+    public int getActionItemsCount() {
+        return sActionItems.size();
+    }
+
     public void show() {
         if (Build.VERSION.SDK_INT >= 11)
             GeckoActionBar.show(GeckoApp.mAppContext);
@@ -364,6 +423,77 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory {
             updateTabCount(Tabs.getInstance().getCount());
             updateBackButton(tab.canDoBack());
             updateForwardButton(tab.canDoForward());
+        }
+    }
+
+    public void destroy() {
+        // The action-items views are reused on rotation.
+        // Remove them from their parent, so they can be re-attached to new parent.
+        mActionItemBar.removeAllViews();
+    }
+
+    public void openOptionsMenu() {
+        if (mMenuPopup != null && !mMenuPopup.isShowing())
+            mMenuPopup.show(mMenu);
+    }
+
+    public void closeOptionsMenu() {
+        if (mMenuPopup != null && mMenuPopup.isShowing())
+            mMenuPopup.dismiss();
+    }
+
+    // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
+    public class MenuPopup extends PopupWindow {
+        private ImageView mArrow;
+        private RelativeLayout mPanel;
+
+        public MenuPopup(Context context) {
+            super(context);
+            setFocusable(true);
+
+            // Setting a null background makes the popup to not close on touching outside.
+            setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            setWindowLayoutMode(ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT);
+
+            LayoutInflater inflater = LayoutInflater.from(context);
+            RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.menu_popup, null);
+            setContentView(layout);
+
+            mArrow = (ImageView) layout.findViewById(R.id.menu_arrow);
+            mPanel = (RelativeLayout) layout.findViewById(R.id.menu_panel);
+        }
+
+        public void setPanelView(View view) {
+            mPanel.removeAllViews();
+            mPanel.addView(view);
+        }
+
+        public void show(View anchor) {
+            showAsDropDown(anchor);
+
+            int location[] = new int[2];
+            anchor.getLocationOnScreen(location);
+
+            int menuButtonWidth = anchor.getWidth();
+            int arrowWidth = mArrow.getWidth();
+
+            int rightMostEdge = location[0] + menuButtonWidth;
+
+            DisplayMetrics metrics = new DisplayMetrics();
+            GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+            int leftMargin = (int)(240 * metrics.density) - (metrics.widthPixels - location[0] - menuButtonWidth/2);
+
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mArrow.getLayoutParams();
+            RelativeLayout.LayoutParams newParams = new RelativeLayout.LayoutParams(params);
+            newParams.setMargins(leftMargin,
+                                 params.topMargin,
+                                 0,
+                                 params.bottomMargin);
+
+            // From the left of popup, the arrow should move half of (menuButtonWidth - arrowWidth)
+            mArrow.setLayoutParams(newParams);
         }
     }
 }

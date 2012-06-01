@@ -29,6 +29,7 @@ endif # windows
 EXTRA_PP_COMPONENTS = \
   components.manifest \
   CommandLineHandler.js \
+  ContentPermission.js \
   ContentPolicy.js \
   DirectoryProvider.js \
   $(NULL)
@@ -38,6 +39,10 @@ EXTRA_JS_MODULES = \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_DEBUG
+DEFINES += -DMOZ_DEBUG=1
+endif
 
 libs::
 	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "resource webapprt ./"

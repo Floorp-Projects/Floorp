@@ -1,0 +1,53 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH   = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH   = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = omxplugin
+MODULE_NAME = omxplugin
+LIBRARY_NAME = omxplugin
+FORCE_SHARED_LIB = 1
+
+# Don't use STL wrappers; this isn't Gecko code
+STL_FLAGS =
+
+# must link statically with the CRT; this isn't Gecko code
+USE_STATIC_LIBS = 1
+
+# Need to custom install OMX media plugin
+NO_DIST_INSTALL = 1
+NO_INSTALL = 1
+
+CPPSRCS = \
+    OmxPlugin.cpp \
+    $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+INCLUDES        += \
+                -I$(srcdir)/../../content/media/plugins \
+                -I$(ANDROID_SOURCE)/dalvik/libnativehelper/include/nativehelper \
+                -I$(ANDROID_SOURCE)/frameworks/base/include/ \
+                -I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
+                -I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \
+                -I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
+                -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright \
+                -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
+                -I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
+                $(NULL)
+
+EXTRA_DSO_LDOPTS += \
+		-lutils -lstagefright -lmedia -lstagefright_omx -lbinder -lui \
+		-lsurfaceflinger_client -lhardware -lcutils \
+		$(NULL)
+
+libs::	$(DLL_PREFIX)$(LIBRARY_NAME)$(DLL_SUFFIX)
+	$(INSTALL) $< $(DEPTH)/dist/bin
+
+libs:: $(PROGRAMS)

@@ -6,7 +6,7 @@
 #ifndef _nsXFormsAccessible_H_
 #define _nsXFormsAccessible_H_
 
-#include "nsHyperTextAccessibleWrap.h"
+#include "HyperTextAccessibleWrap.h"
 #include "nsIXFormsUtilityService.h"
 
 #define NS_NAMESPACE_XFORMS "http://www.w3.org/2002/xforms"
@@ -33,7 +33,7 @@ protected:
  * XForms hint and XForms label elements should have accessible object. This
  * class is base class for accessible objects for these XForms elements.
  */
-class nsXFormsAccessible : public nsHyperTextAccessibleWrap,
+class nsXFormsAccessible : public HyperTextAccessibleWrap,
                            public nsXFormsAccessibleBase
 {
 public:
@@ -109,7 +109,7 @@ class nsXFormsEditableAccessible : public nsXFormsAccessible
 public:
   nsXFormsEditableAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsHyperTextAccessible
+  // HyperTextAccessible
   virtual already_AddRefed<nsIEditor> GetEditor() const;
 
   // Accessible
