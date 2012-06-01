@@ -17,11 +17,6 @@ class nsIContent;
 // Uncomment to log notifications processing.
 //#define DEBUG_NOTIFICATIONS
 
-#ifdef DEBUG_NOTIFICATIONS
-#define DEBUG_CONTENTMUTATION
-#define DEBUG_TEXTCHANGE
-#endif
-
 /**
  * Notification interface.
  */

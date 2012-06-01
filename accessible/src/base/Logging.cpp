@@ -45,7 +45,9 @@ EnableLogging(const char* aModulesStr)
     { "docdestroy", logging::eDocDestroy },
     { "doclifecycle", logging::eDocLifeCycle },
     { "platforms", logging::ePlatforms },
-    { "stack", logging::eStack }
+    { "stack", logging::eStack },
+    { "text", logging::eText },
+    { "tree", logging::eTree }
   };
 
   const char* token = aModulesStr;
@@ -452,21 +454,6 @@ logging::OuterDocDestroy(OuterDocAccessible* aOuterDoc)
 }
 
 void
-logging::Address(const char* aDescr, Accessible* aAcc)
-{
-  nsINode* node = aAcc->GetNode();
-  nsIDocument* docNode = aAcc->GetDocumentNode();
-  DocAccessible* doc = GetAccService()->GetDocAccessibleFromCache(docNode);
-  printf("    %s accessible: %p, node: %p\n", aDescr,
-         static_cast<void*>(aAcc), static_cast<void*>(node));
-  printf("    docacc for %s accessible: %p, node: %p\n", aDescr,
-         static_cast<void*>(doc), static_cast<void*>(docNode));
-  printf("    ");
-  LogDocURI(docNode);
-  printf("\n");
-}
-
-void
 logging::MsgBegin(const char* aTitle, const char* aMsgText, ...)
 {
   printf("\nA11Y %s: ", aTitle);
@@ -486,9 +473,81 @@ logging::MsgEnd()
 }
 
 void
+logging::MsgEntry(const char* aEntryText, ...)
+{
+  printf("    ");
+
+  va_list argptr;
+  va_start(argptr, aEntryText);
+  vprintf(aEntryText, argptr);
+  va_end(argptr);
+
+  printf("\n");
+}
+
+void
 logging::Text(const char* aText)
 {
   printf("  %s\n", aText);
+}
+
+void
+logging::Address(const char* aDescr, Accessible* aAcc)
+{
+  nsINode* node = aAcc->GetNode();
+  nsIDocument* docNode = aAcc->GetDocumentNode();
+  DocAccessible* doc = GetAccService()->GetDocAccessibleFromCache(docNode);
+  printf("    %s accessible: %p, node: %p\n", aDescr,
+         static_cast<void*>(aAcc), static_cast<void*>(node));
+  printf("    docacc for %s accessible: %p, node: %p\n", aDescr,
+         static_cast<void*>(doc), static_cast<void*>(docNode));
+  printf("    ");
+  LogDocURI(docNode);
+  printf("\n");
+}
+
+void
+logging::Node(const char* aDescr, nsINode* aNode)
+{
+  printf("    ");
+
+  if (!aNode) {
+    printf("%s: null\n", aDescr);
+    return;
+  }
+
+  if (aNode->IsNodeOfType(nsINode::eDOCUMENT)) {
+    printf("%s: %p, document\n", aDescr, static_cast<void*>(aNode));
+    return;
+  }
+
+  nsINode* parentNode = aNode->GetNodeParent();
+  PRInt32 idxInParent = parentNode ? parentNode->IndexOf(aNode) : - 1;
+
+  if (aNode->IsNodeOfType(nsINode::eTEXT)) {
+    printf("%s: %p, text node, idx in parent: %d\n",
+           aDescr, static_cast<void*>(aNode), idxInParent);
+    return;
+  }
+
+  if (!aNode->IsElement()) {
+    printf("%s: %p, not accessible node type, idx in parent: %d\n",
+           aDescr, static_cast<void*>(aNode), idxInParent);
+    return;
+  }
+
+  dom::Element* elm = aNode->AsElement();
+
+  nsCAutoString tag;
+  elm->Tag()->ToUTF8String(tag);
+
+  nsIAtom* idAtom = elm->GetID();
+  nsCAutoString id;
+  if (idAtom)
+    idAtom->ToUTF8String(id);
+
+  printf("%s: %p, %s@id='%s', idx in parent: %d\n",
+         aDescr, static_cast<void*>(elm), tag.get(), id.get(), idxInParent);
 }
 
 void
