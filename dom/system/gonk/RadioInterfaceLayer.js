@@ -69,6 +69,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
+XPCOMUtils.defineLazyGetter(this, "WAP", function () {
+  let WAP = {};
+  Cu.import("resource://gre/modules/WapPushManager.js", WAP);
+  return WAP;
+});
+
 function convertRILCallState(state) {
   switch (state) {
     case RIL.CALL_STATE_ACTIVE:
@@ -171,7 +177,9 @@ function RadioInterfaceLayer() {
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
 
   this._sentSmsEnvelopes = {};
+
   this.portAddressedSmsApps = {};
+  this.portAddressedSmsApps[WAP.WDP_PORT_PUSH] = this.handleSmsWdpPortPush.bind(this);
 }
 RadioInterfaceLayer.prototype = {
 
@@ -557,9 +565,38 @@ RadioInterfaceLayer.prototype = {
     ppmm.sendAsyncMessage("RIL:CallError", message);   
   },
 
+  /**
+   * Handle WDP port push PDU. Constructor WDP bearer information and deliver
+   * to WapPushManager.
+   *
+   * @param message
+   *        A SMS message.
+   */
+  handleSmsWdpPortPush: function handleSmsWdpPortPush(message) {
+    if (message.encoding != RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      debug("Got port addressed SMS but not encoded in 8-bit alphabet. Drop!");
+      return;
+    }
+
+    let options = {
+      bearer: WAP.WDP_BEARER_GSM_SMS_GSM_MSISDN,
+      sourceAddress: message.sender,
+      sourcePort: message.header.originatorPort,
+      destinationAddress: this.radioState.icc.MSISDN,
+      destinationPort: message.header.destinationPort,
+    };
+    WAP.WapPushManager.receiveWdpPDU(message.fullData, message.fullData.length,
+                                     0, options);
+  },
+
   portAddressedSmsApps: null,
   handleSmsReceived: function handleSmsReceived(message) {
     debug("handleSmsReceived: " + JSON.stringify(message));
+
+    // FIXME: Bug 737202 - Typed arrays become normal arrays when sent to/from workers
+    if (message.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      message.fullData = new Uint8Array(message.fullData);
+    }
 
     // Dispatch to registered handler if application port addressing is
     // available. Note that the destination port can possibly be zero when
