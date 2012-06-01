@@ -492,6 +492,7 @@ void nsTableFrame::InsertColGroups(PRInt32                   aStartColIndex,
   PRInt32 colIndex = aStartColIndex;
   nsFrameList::Enumerator colGroups(aColGroups);
   for (; !colGroups.AtEnd(); colGroups.Next()) {
+    MOZ_ASSERT(colGroups.get()->GetType() == nsGkAtoms::tableColGroupFrame);
     nsTableColGroupFrame* cgFrame =
       static_cast<nsTableColGroupFrame*>(colGroups.get());
     cgFrame->SetStartColumnIndex(colIndex);
@@ -1341,12 +1342,13 @@ nsTableFrame::SetColumnDimensions(nscoord         aHeight,
   PRInt32 tableColIncr = tableIsLTR ? 1 : -1;
   nsPoint colGroupOrigin(aBorderPadding.left + cellSpacingX,
                          aBorderPadding.top + cellSpacingY);
-  while (nsnull != colGroupFrame) {
+  while (colGroupFrame) {
+    MOZ_ASSERT(colGroupFrame->GetType() == nsGkAtoms::tableColGroupFrame);
     nscoord colGroupWidth = 0;
     nsTableIterator iterCol(*colGroupFrame);
     nsIFrame* colFrame = iterCol.First();
     nsPoint colOrigin(0,0);
-    while (nsnull != colFrame) {
+    while (colFrame) {
       if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
           colFrame->GetStyleDisplay()->mDisplay) {
         NS_ASSERTION(colX < GetColCount(), "invalid number of columns");
