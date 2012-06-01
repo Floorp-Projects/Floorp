@@ -7,9 +7,10 @@
 #include "Logging.h"
 
 #include "AccEvent.h"
+#include "DocAccessible.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
-#include "DocAccessible.h"
+#include "OuterDocAccessible.h"
 
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
@@ -43,7 +44,8 @@ EnableLogging(const char* aModulesStr)
     { "doccreate", logging::eDocCreate },
     { "docdestroy", logging::eDocDestroy },
     { "doclifecycle", logging::eDocLifeCycle },
-    { "platforms", logging::ePlatforms }
+    { "platforms", logging::ePlatforms },
+    { "stack", logging::eStack }
   };
 
   const char* token = aModulesStr;
@@ -182,8 +184,6 @@ LogDocParent(nsIDocument* aDocumentNode)
 static void
 LogDocInfo(nsIDocument* aDocumentNode, DocAccessible* aDocument)
 {
-  printf("  {\n");
-
   printf("    DOM id: %p, acc id: %p\n    ",
          static_cast<void*>(aDocumentNode), static_cast<void*>(aDocument));
 
@@ -206,8 +206,6 @@ LogDocInfo(nsIDocument* aDocumentNode, DocAccessible* aDocument)
     LogDocParent(aDocumentNode);
     printf("\n");
   }
-
-  printf("  }\n");
 }
 
 static void
@@ -334,21 +332,30 @@ GetDocLoadEventType(AccEvent* aEvent, nsACString& aEventType)
 ////////////////////////////////////////////////////////////////////////////////
 // namespace logging:: document life cycle logging methods
 
+static const char* sDocLoadTitle = "DOCLOAD";
+static const char* sDocCreateTitle = "DOCCREATE";
+static const char* sDocDestroyTitle = "DOCDESTROY";
+static const char* sDocEventTitle = "DOCEVENT";
+
 void
 logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
                  nsIRequest* aRequest, PRUint32 aStateFlags)
 {
-  printf("\nA11Y DOCLOAD: %s\n", aMsg);
+  MsgBegin(sDocLoadTitle, aMsg);
 
   nsCOMPtr<nsIDOMWindow> DOMWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(DOMWindow));
-  if (!DOMWindow)
+  if (!DOMWindow) {
+    MsgEnd();
     return;
+  }
 
   nsCOMPtr<nsIDOMDocument> DOMDocument;
   DOMWindow->GetDocument(getter_AddRefs(DOMDocument));
-  if (!DOMDocument)
+  if (!DOMDocument) {
+    MsgEnd();
     return;
+  }
 
   nsCOMPtr<nsIDocument> documentNode(do_QueryInterface(DOMDocument));
   DocAccessible* document =
@@ -356,10 +363,9 @@ logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
 
   LogDocInfo(documentNode, document);
 
-  printf("  {\n");
   nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(DOMWindow));
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(webNav));
-  printf("    ");
+  printf("\n    ");
   LogShellLoadType(docShell);
   printf("\n");
   LogRequest(aRequest);
@@ -368,17 +374,20 @@ logging::DocLoad(const char* aMsg, nsIWebProgress* aWebProgress,
   bool isDocLoading;
   aWebProgress->GetIsLoadingDocument(&isDocLoading);
   printf(", document is %sloading\n", (isDocLoading ? "" : "not "));
-  printf("  }\n");
+
+  MsgEnd();
 }
 
 void
 logging::DocLoad(const char* aMsg, nsIDocument* aDocumentNode)
 {
-  printf("\nA11Y DOCLOAD: %s\n", aMsg);
+  MsgBegin(sDocLoadTitle, aMsg);
 
   DocAccessible* document =
     GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
   LogDocInfo(aDocumentNode, document);
+
+  MsgEnd();
 }
 
 void
@@ -395,18 +404,19 @@ logging::DocLoadEventHandled(AccEvent* aEvent)
 {
   nsCAutoString strEventType;
   GetDocLoadEventType(aEvent, strEventType);
-  if (!strEventType.IsEmpty()) {
-    printf("\nA11Y DOCEVENT: handled '%s' event ", strEventType.get());
+  if (strEventType.IsEmpty())
+    return;
 
-    nsINode* node = aEvent->GetNode();
-    if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
-      nsIDocument* documentNode = static_cast<nsIDocument*>(node);
-      DocAccessible* document = aEvent->GetDocAccessible();
-      LogDocInfo(documentNode, document);
-    }
+  MsgBegin(sDocEventTitle, "handled '%s' event", strEventType.get());
 
-    printf("\n");
+  nsINode* node = aEvent->GetNode();
+  if (node->IsNodeOfType(nsINode::eDOCUMENT)) {
+    nsIDocument* documentNode = static_cast<nsIDocument*>(node);
+    DocAccessible* document = aEvent->GetDocAccessible();
+    LogDocInfo(documentNode, document);
   }
+
+  MsgEnd();
 }
 
 void
@@ -416,8 +426,9 @@ logging::DocCreate(const char* aMsg, nsIDocument* aDocumentNode,
   DocAccessible* document = aDocument ?
     aDocument : GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
 
-  printf("\nA11Y DOCCREATE: %s\n", aMsg);
+  MsgBegin(sDocCreateTitle, aMsg);
   LogDocInfo(aDocumentNode, document);
+  MsgEnd();
 }
 
 void
@@ -427,8 +438,17 @@ logging::DocDestroy(const char* aMsg, nsIDocument* aDocumentNode,
   DocAccessible* document = aDocument ?
     aDocument : GetAccService()->GetDocAccessibleFromCache(aDocumentNode);
 
-  printf("\nA11Y DOCDESTROY: %s\n", aMsg);
+  MsgBegin(sDocDestroyTitle, aMsg);
   LogDocInfo(aDocumentNode, document);
+  MsgEnd();
+}
+
+void
+logging::OuterDocDestroy(OuterDocAccessible* aOuterDoc)
+{
+  MsgBegin(sDocDestroyTitle, "outerdoc shutdown");
+  logging::Address("outerdoc", aOuterDoc);
+  MsgEnd();
 }
 
 void
@@ -437,19 +457,32 @@ logging::Address(const char* aDescr, Accessible* aAcc)
   nsINode* node = aAcc->GetNode();
   nsIDocument* docNode = aAcc->GetDocumentNode();
   DocAccessible* doc = GetAccService()->GetDocAccessibleFromCache(docNode);
-  printf("  %s accessible: %p, node: %p\n", aDescr,
+  printf("    %s accessible: %p, node: %p\n", aDescr,
          static_cast<void*>(aAcc), static_cast<void*>(node));
-  printf("  docacc for %s accessible: %p, node: %p\n", aDescr,
+  printf("    docacc for %s accessible: %p, node: %p\n", aDescr,
          static_cast<void*>(doc), static_cast<void*>(docNode));
-  printf("  ");
+  printf("    ");
   LogDocURI(docNode);
   printf("\n");
 }
 
 void
-logging::Msg(const char* aMsg)
+logging::MsgBegin(const char* aTitle, const char* aMsgText, ...)
 {
-  printf("\n%s\n", aMsg);
+  printf("\nA11Y %s: ", aTitle);
+
+  va_list argptr;
+  va_start(argptr, aMsgText);
+  vprintf(aMsgText, argptr);
+  va_end(argptr);
+
+  printf("\n  {\n");
+}
+
+void
+logging::MsgEnd()
+{
+  printf("  }\n");
 }
 
 void
@@ -461,8 +494,10 @@ logging::Text(const char* aText)
 void
 logging::Stack()
 {
-  printf("  stack: \n");
-  nsTraceRefcntImpl::WalkTheStack(stdout);
+  if (IsEnabled(eStack)) {
+    printf("  stack: \n");
+    nsTraceRefcntImpl::WalkTheStack(stdout);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
