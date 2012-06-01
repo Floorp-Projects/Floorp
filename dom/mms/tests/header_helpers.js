@@ -96,6 +96,52 @@ function wsp_decode_test(target, input, expect, exception) {
 }
 
 /**
+ * Test customized WSP PDU encoding.
+ *
+ * @param func
+ *        Encoding func under test. It should return an encoded octet array if
+ *        invoked.
+ * @param input
+ *        An object to be encoded.
+ * @param expect
+ *        Expected encoded octet array, use null if expecting errors instead.
+ * @param exception
+ *        Expected class name of thrown exception. Use null for no throws.
+ */
+function wsp_encode_test_ex(func, input, expect, exception) {
+  let data = {array: [], offset: 0};
+  do_check_throws(wsp_test_func.bind(null, func.bind(null, data), input,
+                                     expect), exception);
+}
+
+/**
+ * Test default WSP PDU encoding.
+ *
+ * @param target
+ *        Target decoding object, ie. TextValue.
+ * @param input
+ *        An object to be encoded.
+ * @param expect
+ *        Expected encoded octet array, use null if expecting errors instead.
+ * @param exception
+ *        Expected class name of thrown exception. Use null for no throws.
+ */
+function wsp_encode_test(target, input, expect, exception) {
+  let func = function encode_func(data, input) {
+    target.encode(data, input);
+
+    // Remove extra space consumed during encoding.
+    while (data.array.length > data.offset) {
+      data.array.pop();
+    }
+
+    return data.array;
+  }
+
+  wsp_encode_test_ex(func, input, expect, exception);
+}
+
+/**
  * @param str
  *        A string.
  * @param noAppendNull

@@ -50,6 +50,16 @@ let BooleanValue = {
 
     return value == 128;
   },
+
+  /**
+   * @param data
+   *        A wrapped object to store encoded raw data.
+   * @param value
+   *        A boolean value to be encoded.
+   */
+  encode: function encode(data, value) {
+    WSP.Octet.encode(data, value ? 128 : 129);
+  },
 };
 
 /**
@@ -105,6 +115,19 @@ let HeaderField = {
     return WSP.decodeAlternatives(data, options,
                                   MmsHeader, WSP.ApplicationHeader);
   },
+
+  /**
+   * @param data
+   *        A wrapped object to store encoded raw data.
+   * @param octet
+   *        Octet value to be encoded.
+   * @param options
+   *        Extra context for encoding.
+   */
+  encode: function encode(data, value, options) {
+    WSP.encodeAlternatives(data, value, options,
+                           MmsHeader, WSP.ApplicationHeader);
+  },
 };
 
 /**
@@ -154,6 +177,32 @@ let MmsHeader = {
       name: entry.name,
       value: value,
     };
+  },
+
+  /**
+   * @param data
+   *        A wrapped object to store encoded raw data.
+   * @param header
+   *        An object containing two attributes: a string-typed `name` and a
+   *        `value` of arbitrary type.
+   *
+   * @throws CodeError if got an empty header name.
+   * @throws NotWellKnownEncodingError if the well-known header field number is
+   *         not registered or supported.
+   */
+  encode: function encode(data, header) {
+    if (!header.name) {
+      throw new WSP.CodeError("MMS-header: empty header name");
+    }
+
+    let entry = MMS_HEADER_FIELDS[header.name.toLowerCase()];
+    if (!entry) {
+      throw new WSP.NotWellKnownEncodingError(
+        "MMS-header: not well known header " + header.name);
+    }
+
+    WSP.ShortInteger.encode(data, entry.number);
+    entry.coder.encode(data, header.value);
   },
 };
 
@@ -639,6 +688,22 @@ let MessageTypeValue = {
 
     throw new WSP.CodeError("Message-type-value: invalid type " + type);
   },
+
+  /**
+   * @param data
+   *        A wrapped object to store encoded raw data.
+   * @param type
+   *        A numeric message type value to be encoded.
+   *
+   * @throws CodeError if the value is not in the range 128..151.
+   */
+  encode: function encode(data, type) {
+    if ((type < 128) || (type > 151)) {
+      throw new WSP.CodeError("Message-type-value: invalid type " + type);
+    }
+
+    WSP.Octet.encode(data, type);
+  },
 };
 
 /**
@@ -866,6 +931,22 @@ let StatusValue = {
 
     throw new WSP.CodeError("Status-value: invalid status " + status);
   },
+
+  /**
+   * @param data
+   *        A wrapped object to store encoded raw data.
+   * @param value
+   *        A numeric status value to be encoded.
+   *
+   * @throws CodeError if the value is not in the range 128..135.
+   */
+  encode: function encode(data, value) {
+    if ((value < 128) || (value > 135)) {
+      throw new WSP.CodeError("Status-value: invalid status " + value);
+    }
+
+    WSP.Octet.encode(data, value);
+  },
 };
 
 let PduHelper = {
@@ -984,6 +1065,107 @@ let PduHelper = {
     }
 
     return msg;
+  },
+
+  /**
+   * Convert javascript Array to an nsIInputStream.
+   */
+  convertArrayToInputStream: function convertDataToInputStream(array) {
+    let storageStream = Cc["@mozilla.org/storagestream;1"]
+                        .createInstance(Ci.nsIStorageStream);
+    storageStream.init(4096, array.length, null);
+
+    let boStream = Cc["@mozilla.org/binaryoutputstream;1"]
+                   .createInstance(Ci.nsIBinaryOutputStream);
+    boStream.setOutputStream(storageStream.getOutputStream(0));
+    boStream.writeByteArray(array, array.length)
+    boStream.close();
+
+    return storageStream.newInputStream(0);
+  },
+
+  /**
+   * @param data [optional]
+   *        A wrapped object to store encoded raw data. Created if undefined.
+   * @param headers
+   *        A dictionary object containing multiple name/value mapping.
+   *
+   * @return the passed data parameter or a created one.
+   */
+  encodeHeaders: function encodeHeaders(data, headers) {
+    if (!data) {
+      data = {array: [], offset: 0};
+    }
+
+    function encodeHeader(name) {
+      HeaderField.encode(data, {name: name, value: headers[name]});
+    }
+
+    function encodeHeaderIfExists(name) {
+      // Header value could be zero or null.
+      if (headers[name] !== undefined) {
+        encodeHeader(name);
+      }
+    }
+
+    // `In the encoding of the header fields, the order of the fields is not
+    // significant, except that X-Mms-Message-Type, X-Mms-Transaction-ID (when
+    // present) and X-Mms-MMS-Version MUST be at the beginning of the message
+    // headers, in that order, and if the PDU contains a message body the
+    // Content Type MUST be the last header field, followed by message body.`
+    // ~ OMA-TS-MMS_ENC-V1_3-20110913-A section 7
+    encodeHeader("x-mms-message-type");
+    encodeHeaderIfExists("x-mms-transaction-id");
+    encodeHeaderIfExists("x-mms-mms-version");
+
+    for (let key in headers) {
+      if ((key == "x-mms-message-type")
+          || (key == "x-mms-transaction-id")
+          || (key == "x-mms-mms-version")
+          || (key == "content-type")) {
+        continue;
+      }
+      encodeHeader(key);
+    }
+
+    encodeHeaderIfExists("content-type");
+
+    // Remove extra space consumed during encoding.
+    while (data.array.length > data.offset) {
+      data.array.pop();
+    }
+
+    return data;
+  },
+
+  /**
+   * @param multiStream
+   *        An exsiting nsIMultiplexInputStream.
+   * @param msg
+   *        A MMS message object.
+   *
+   * @return An instance of nsIMultiplexInputStream or null in case of errors.
+   */
+  compose: function compose(multiStream, msg) {
+    if (!multiStream) {
+      multiStream = Cc["@mozilla.org/io/multiplex-input-stream;1"]
+                    .createInstance(Ci.nsIMultiplexInputStream);
+    }
+
+    try {
+      // Validity checks
+      this.checkMandatoryFields(msg);
+
+      let data = this.encodeHeaders(null, msg.headers);
+      debug("Composed PDU Header: " + JSON.stringify(data.array));
+      let headerStream = this.convertArrayToInputStream(data.array);
+      multiStream.appendStream(headerStream);
+
+      return multiStream;
+    } catch (e) {
+      debug("Failed to compose MMS message, error message: " + e.message);
+      return null;
+    }
   },
 };
 
