@@ -29,14 +29,6 @@ EXTRA_PP_COMPONENTS = \
 EXTRA_JS_MODULES = ConsoleAPIStorage.jsm \
   $(NULL)
 
-EXTRA_COMPONENTS = \
-  Webapps.js \
-  Webapps.manifest \
-  $(NULL)
-
-EXTRA_PP_JS_MODULES += Webapps.jsm \
-  $(NULL)
-
 EXTRA_JS_MODULES += \
   DOMRequestHelper.jsm \
   IndexedDBHelper.jsm \
