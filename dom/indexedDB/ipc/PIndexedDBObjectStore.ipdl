@@ -1,0 +1,155 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PIndexedDBCursor;
+include protocol PIndexedDBIndex;
+include protocol PIndexedDBRequest;
+include protocol PIndexedDBTransaction;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using mozilla::dom::indexedDB::Key;
+using mozilla::dom::indexedDB::IDBCursor::Direction;
+using mozilla::dom::indexedDB::IndexInfo;
+using mozilla::dom::indexedDB::IndexUpdateInfo;
+using mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo;
+using mozilla::dom::indexedDB::SerializedStructuredCloneWriteInfo;
+
+using mozilla::void_t;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+namespace ipc {
+
+namespace FIXME_Bug_521898_objectstore {
+
+struct KeyRange
+{
+  Key lower;
+  Key upper;
+  bool lowerOpen;
+  bool upperOpen;
+  bool isOnly;
+};
+
+union OptionalKeyRange
+{
+  KeyRange;
+  void_t;
+};
+
+struct GetParams
+{
+  KeyRange keyRange;
+};
+
+struct GetAllParams
+{
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct CountParams
+{
+  OptionalKeyRange optionalKeyRange;
+};
+
+struct OpenCursorParams
+{
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+} // namespace FIXME_Bug_521898_objectstore
+
+struct AddPutParams
+{
+  SerializedStructuredCloneWriteInfo cloneInfo;
+  Key key;
+  IndexUpdateInfo[] indexUpdateInfos;
+};
+
+struct AddParams
+{
+  AddPutParams commonParams;
+};
+
+struct PutParams
+{
+  AddPutParams commonParams;
+};
+
+struct DeleteParams
+{
+  KeyRange keyRange;
+};
+
+struct ClearParams
+{
+  void_t FIXME_Bug_753159;
+};
+
+union ObjectStoreRequestParams
+{
+  GetParams;
+  GetAllParams;
+  AddParams;
+  PutParams;
+  DeleteParams;
+  ClearParams;
+  CountParams;
+  OpenCursorParams;
+};
+
+struct CreateIndexParams
+{
+  IndexInfo info;
+};
+
+struct GetIndexParams
+{
+  nsString name;
+};
+
+union IndexConstructorParams
+{
+  CreateIndexParams;
+  GetIndexParams;
+};
+
+struct ObjectStoreCursorConstructorParams
+{
+  PIndexedDBRequest request;
+  Direction direction;
+  Key key;
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+} // namespace ipc
+
+protocol PIndexedDBObjectStore
+{
+  manager PIndexedDBTransaction;
+
+  manages PIndexedDBCursor;
+  manages PIndexedDBIndex;
+  manages PIndexedDBRequest;
+
+parent:
+  __delete__();
+
+  PIndexedDBIndex(IndexConstructorParams params);
+  PIndexedDBRequest(ObjectStoreRequestParams params);
+
+  DeleteIndex(nsString name);
+
+child:
+  PIndexedDBCursor(ObjectStoreCursorConstructorParams params);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

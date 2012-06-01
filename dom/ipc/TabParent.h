@@ -158,6 +158,16 @@ protected:
 
     void ActorDestroy(ActorDestroyReason why);
 
+    virtual PIndexedDBParent* AllocPIndexedDB(const nsCString& aASCIIOrigin,
+                                              bool* /* aAllowed */);
+
+    virtual bool DeallocPIndexedDB(PIndexedDBParent* aActor);
+
+    virtual bool
+    RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
+                              const nsCString& aASCIIOrigin,
+                              bool* aAllowed);
+
     nsIDOMElement* mFrameElement;
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 

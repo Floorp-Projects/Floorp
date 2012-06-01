@@ -50,7 +50,12 @@ function testSteps()
   request.onerror = errorHandler;
   request.onsuccess = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  request.onblocked = errorHandler;
+  if (SpecialPowers.isMainProcess()) {
+    request.onblocked = errorHandler;
+  }
+  else {
+    todo(false, "Need to fix blocked events in child processes!");
+  }
   event = yield;
 
   // Test the upgradeneeded event.
@@ -82,7 +87,12 @@ function testSteps()
   request = mozIndexedDB.open(name, 2, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  request.onblocked = errorHandler;
+  if (SpecialPowers.isMainProcess()) {
+    request.onblocked = errorHandler;
+  }
+  else {
+    todo(false, "Need to fix blocked events in child processes!");
+  }
   event = yield;
 
   db3 = event.target.result;
@@ -121,7 +131,12 @@ function testSteps()
   request.onerror = errorHandler;
   request.onsuccess = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  request.onblocked = errorHandler;
+  if (SpecialPowers.isMainProcess()) {
+    request.onblocked = errorHandler;
+  }
+  else {
+    todo(false, "Need to fix blocked events in child processes!");
+  }
 
   event = yield;
 

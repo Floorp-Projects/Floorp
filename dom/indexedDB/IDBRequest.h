@@ -21,6 +21,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class HelperBase;
 class IDBTransaction;
+class IndexedDBRequestParentBase;
 
 class IDBRequest : public IDBWrapperCache,
                    public nsIIDBRequest
@@ -47,8 +48,35 @@ public:
   void Reset();
 
   nsresult NotifyHelperCompleted(HelperBase* aHelper);
+  void NotifyHelperSentResultsToChildProcess(nsresult aRv);
 
-  void SetError(nsresult rv);
+  void SetError(nsresult aRv);
+
+  nsresult
+  GetErrorCode() const
+#ifdef DEBUG
+  ;
+#else
+  {
+    return mErrorCode;
+  }
+#endif
+
+  JSContext* GetJSContext();
+
+  void
+  SetActor(IndexedDBRequestParentBase* aActorParent)
+  {
+    NS_ASSERTION(!aActorParent || !mActorParent,
+                 "Shouldn't have more than one!");
+    mActorParent = aActorParent;
+  }
+
+  IndexedDBRequestParentBase*
+  GetActorParent() const
+  {
+    return mActorParent;
+  }
 
 protected:
   IDBRequest();
@@ -82,6 +110,10 @@ protected:
   jsval mResultVal;
 
   nsCOMPtr<nsIDOMDOMError> mError;
+
+  IndexedDBRequestParentBase* mActorParent;
+
+  nsresult mErrorCode;
   bool mHaveResultOrErrorCode;
   bool mRooted;
 };
@@ -109,6 +141,9 @@ public:
   }
 
   void SetTransaction(IDBTransaction* aTransaction);
+
+  // nsIDOMEventTarget
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
 protected:
   ~IDBOpenDBRequest();

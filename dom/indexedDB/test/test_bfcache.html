@@ -18,27 +18,36 @@
         return;
       }
 
+      if (!SpecialPowers.isMainProcess()) {
+        todo(false, "Test disabled in child processes, for now");
+        finishTest();
+        return;
+      }
+
       runTest();
     }
   </script>
   <script type="text/javascript;version=1.7">
     var gOrigMaxTotalViewers = undefined;
     function setCachePref(enabled) {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-      var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
-                                 .getService(Components.interfaces.nsIPrefBranch);
       if (enabled) {
-        is(typeof gOrigMaxTotalViewers, "undefined", "don't double-enable bfcache");
-        prefBranch.setBoolPref("browser.sessionhistory.cache_subframes", true);
-        gOrigMaxTotalViewers = prefBranch.getIntPref("browser.sessionhistory.max_total_viewers");
-        prefBranch.setIntPref("browser.sessionhistory.max_total_viewers", 10);
+        is(typeof gOrigMaxTotalViewers, "undefined",
+           "don't double-enable bfcache");
+        SpecialPowers.setBoolPref("browser.sessionhistory.cache_subframes",
+                                  true);
+        gOrigMaxTotalViewers =
+          SpecialPowers.getIntPref("browser.sessionhistory.max_total_viewers");
+        SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers",
+                                 10);
       }
       else {
-        is(typeof gOrigMaxTotalViewers, "number", "don't double-disable bfcache");
-        prefBranch.setIntPref("browser.sessionhistory.max_total_viewers", gOrigMaxTotalViewers);
+        is(typeof gOrigMaxTotalViewers, "number",
+           "don't double-disable bfcache");
+        SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers",
+                                 gOrigMaxTotalViewers);
         gOrigMaxTotalViewers = undefined;
         try {
-          prefBranch.clearUserPref("browser.sessionhistory.cache_subframes");
+          SpecialPowers.clearUserPref("browser.sessionhistory.cache_subframes");
         } catch (e) { /* Pref didn't exist, meh */ }
       }
     }

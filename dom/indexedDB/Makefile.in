@@ -41,6 +41,7 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
+  DatabaseInfo.h \
   IDBCursor.h \
   IDBDatabase.h \
   IDBEvents.h \
@@ -86,6 +87,7 @@ XPIDLSRCS = \
   nsIIndexedDatabaseManager.idl \
   $(NULL)
 
+DIRS += ipc
 TEST_DIRS += test
 
 include $(topsrcdir)/config/config.mk

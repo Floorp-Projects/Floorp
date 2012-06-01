@@ -92,6 +92,12 @@ SpecialPowersObserverAPI.prototype = {
     return crashDumpFiles.concat();
   },
 
+  _getURI: function (url) {
+    return Components.classes["@mozilla.org/network/io-service;1"]
+                     .getService(Components.interfaces.nsIIOService)
+                     .newURI(url, null, null);
+  },
+
   /**
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
@@ -162,6 +168,25 @@ SpecialPowersObserverAPI.prototype = {
             return this._findCrashDumpFiles(aMessage.json.crashDumpFilesToIgnore);
           default:
             throw new SpecialPowersException("Invalid operation for SPProcessCrashService");
+        }
+        break;
+
+      case "SPPermissionManager":
+        let perms =
+          Components.classes["@mozilla.org/permissionmanager;1"]
+                    .getService(Components.interfaces.nsIPermissionManager);
+        let uri = this._getURI(aMessage.json.url);
+
+        switch (aMessage.json.op) {
+          case "add":
+            perms.add(uri, aMessage.json.type, aMessage.json.permission);
+            break;
+          case "remove":
+            perms.remove(uri.host, aMessage.json.type);
+            break;
+          default:
+            throw new SpecialPowersException("Invalid operation for " +
+                                             "SPPermissionManager");
         }
         break;
 

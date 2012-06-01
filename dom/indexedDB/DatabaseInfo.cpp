@@ -56,13 +56,12 @@ DatabaseInfo::~DatabaseInfo()
 }
 
 ObjectStoreInfo::ObjectStoreInfo(ObjectStoreInfo& aOther)
-: name(aOther.name),
-  id(aOther.id),
-  keyPath(aOther.keyPath),
-  indexes(aOther.indexes),
-  nextAutoIncrementId(aOther.nextAutoIncrementId),
+: nextAutoIncrementId(aOther.nextAutoIncrementId),
   comittedAutoIncrementId(aOther.comittedAutoIncrementId)
 {
+  *static_cast<ObjectStoreInfoGuts*>(this) =
+    static_cast<ObjectStoreInfoGuts&>(aOther);
+
   // Doesn't copy the refcount
   MOZ_COUNT_CTOR(ObjectStoreInfo);
 }
@@ -78,8 +77,8 @@ IndexInfo::IndexInfo()
 }
 
 IndexInfo::IndexInfo(const IndexInfo& aOther)
-: id(aOther.id),
-  name(aOther.name),
+: name(aOther.name),
+  id(aOther.id),
   keyPath(aOther.keyPath),
   keyPathArray(aOther.keyPathArray),
   unique(aOther.unique),
@@ -94,8 +93,7 @@ IndexInfo::~IndexInfo()
 }
 
 ObjectStoreInfo::ObjectStoreInfo()
-: id(0),
-  nextAutoIncrementId(0),
+: nextAutoIncrementId(0),
   comittedAutoIncrementId(0)
 {
   MOZ_COUNT_CTOR(ObjectStoreInfo);
@@ -270,6 +268,7 @@ DatabaseInfo::Clone()
 
   dbInfo->cloned = true;
   dbInfo->name = name;
+  dbInfo->origin = origin;
   dbInfo->version = version;
   dbInfo->id = id;
   dbInfo->filePath = filePath;

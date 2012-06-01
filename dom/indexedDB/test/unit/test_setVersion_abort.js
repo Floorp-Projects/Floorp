@@ -33,6 +33,7 @@ function testSteps()
   event = yield;
   is(event.type, "abort", "Got transaction abort event");
   is(event.target, transaction, "Right target");
+  is(event.target.transaction, null, "No transaction");
 
   is(db.version, 1, "Correct version");
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
@@ -40,6 +41,9 @@ function testSteps()
   event = yield;
   is(event.type, "error", "Got request error event");
   is(event.target, request, "Right target");
+  is(event.target.transaction, null, "No transaction");
+
+  event.preventDefault();
 
   request = mozIndexedDB.open(name, 1, description);
   request.onerror = grabEventAndContinueHandler;

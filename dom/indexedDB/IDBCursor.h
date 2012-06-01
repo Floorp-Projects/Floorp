@@ -21,14 +21,15 @@ class nsPIDOMWindow;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBIndex;
-class IDBRequest;
-class IDBTransaction;
-
 class ContinueHelper;
 class ContinueObjectStoreHelper;
 class ContinueIndexHelper;
 class ContinueIndexObjectHelper;
+class IDBIndex;
+class IDBRequest;
+class IDBTransaction;
+class IndexedDBCursorChild;
+class IndexedDBCursorParent;
 
 class IDBCursor MOZ_FINAL : public nsIIDBCursorWithValue
 {
@@ -56,7 +57,10 @@ public:
     NEXT = 0,
     NEXT_UNIQUE,
     PREV,
-    PREV_UNIQUE
+    PREV_UNIQUE,
+
+    // Only needed for IPC serialization helper, should never be used in code.
+    DIRECTION_INVALID
   };
 
   // For OBJECTSTORE cursors.
@@ -99,13 +103,43 @@ public:
          const Key& aObjectKey,
          StructuredCloneReadInfo& aCloneReadInfo);
 
-  IDBTransaction* Transaction()
+  IDBTransaction* Transaction() const
   {
     return mTransaction;
   }
 
+  IDBRequest* Request() const
+  {
+    return mRequest;
+  }
+
   static nsresult ParseDirection(const nsAString& aDirection,
                                  Direction* aResult);
+
+  void
+  SetActor(IndexedDBCursorChild* aActorChild)
+  {
+    NS_ASSERTION(!aActorChild || !mActorChild, "Shouldn't have more than one!");
+    mActorChild = aActorChild;
+  }
+
+  void
+  SetActor(IndexedDBCursorParent* aActorParent)
+  {
+    NS_ASSERTION(!aActorParent || !mActorParent,
+                 "Shouldn't have more than one!");
+    mActorParent = aActorParent;
+  }
+
+  IndexedDBCursorChild*
+  GetActorChild() const
+  {
+    return mActorChild;
+  }
+
+  nsresult
+  ContinueInternal(const Key& aKey,
+                   PRInt32 aCount);
 
 protected:
   IDBCursor();
@@ -120,10 +154,6 @@ protected:
                const Key& aRangeKey,
                const nsACString& aContinueQuery,
                const nsACString& aContinueToQuery);
-
-  nsresult
-  ContinueInternal(const Key& aKey,
-                   PRInt32 aCount);
 
   nsRefPtr<IDBRequest> mRequest;
   nsRefPtr<IDBTransaction> mTransaction;
@@ -148,6 +178,9 @@ protected:
   Key mObjectKey;
   StructuredCloneReadInfo mCloneReadInfo;
   Key mContinueToKey;
+
+  IndexedDBCursorChild* mActorChild;
+  IndexedDBCursorParent* mActorParent;
 
   bool mHaveCachedKey;
   bool mHaveCachedPrimaryKey;

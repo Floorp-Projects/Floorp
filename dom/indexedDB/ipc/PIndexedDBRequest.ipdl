@@ -1,0 +1,108 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PIndexedDBCursor;
+include protocol PIndexedDBIndex;
+include protocol PIndexedDBObjectStore;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using mozilla::dom::indexedDB::Key;
+using mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo;
+
+using mozilla::void_t;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+namespace ipc {
+
+struct GetResponse
+{
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+struct GetKeyResponse
+{
+  Key key;
+};
+
+struct GetAllResponse
+{
+  SerializedStructuredCloneReadInfo[] cloneInfos;
+};
+
+struct GetAllKeysResponse
+{
+  Key[] keys;
+};
+
+struct AddResponse
+{
+  Key key;
+};
+
+struct PutResponse
+{
+  Key key;
+};
+
+struct DeleteResponse
+{
+  void_t FIXME_Bug_753159;
+};
+
+struct ClearResponse
+{
+  void_t FIXME_Bug_753159;
+};
+
+struct CountResponse
+{
+  uint64_t count;
+};
+
+union OpenCursorResponse
+{
+  PIndexedDBCursor;
+  void_t;
+};
+
+struct ContinueResponse
+{
+  Key key;
+  Key objectKey;
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+union ResponseValue
+{
+  nsresult;
+  GetResponse;
+  GetKeyResponse;
+  GetAllResponse;
+  GetAllKeysResponse;
+  AddResponse;
+  PutResponse;
+  DeleteResponse;
+  ClearResponse;
+  CountResponse;
+  OpenCursorResponse;
+  ContinueResponse;
+};
+
+} // namespace ipc
+
+protocol PIndexedDBRequest
+{
+  manager PIndexedDBObjectStore or PIndexedDBIndex or PIndexedDBCursor;
+
+child:
+  __delete__(ResponseValue response);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla
