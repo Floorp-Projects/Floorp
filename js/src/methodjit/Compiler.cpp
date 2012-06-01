@@ -906,10 +906,14 @@ MakeJITScript(JSContext *cx, JSScript *script)
 }
 
 static inline bool
-IonGetsFirstChance(JSContext *cx, JSScript *script)
+IonGetsFirstChance(JSContext *cx, JSScript *script, CompileRequest request)
 {
 #ifdef JS_ION
     if (!ion::IsEnabled(cx))
+        return false;
+
+    // If we're called from JM, use JM to avoid slow JM -> Ion calls.
+    if (request == CompileRequest_JIT)
         return false;
 
     // If there's no way this script is going to be Ion compiled, let JM take over.
@@ -933,7 +937,7 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (!cx->methodJitEnabled)
         return Compile_Abort;
 
-    if (IonGetsFirstChance(cx, script))
+    if (IonGetsFirstChance(cx, script, request))
         return Compile_Skipped;
 
     if (script->hasJITInfo()) {
