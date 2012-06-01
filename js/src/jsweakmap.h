@@ -187,7 +187,6 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
                     markedAny = true;
                 e.rekeyFront(k);
             }
-            JS_ASSERT_IF(keyIsMarked, gc::IsMarked(&e.front().value));
         }
         return markedAny;
     }
