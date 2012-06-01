@@ -1287,7 +1287,7 @@ urlInlineComplete.prototype = {
       // want to complete up to and including a URL separator.
       this.__syncQuery = this._db.createStatement(
           "/* do not warn (bug no): could index on (typed,frecency) but not worth it */ "
-        + "SELECT host || '/' "
+        + "SELECT host || '/', prefix || host || '/' "
         + "FROM moz_hosts "
         + "WHERE host BETWEEN :search_string AND :search_string || X'FFFF' "
         + "AND frecency <> 0 "
@@ -1378,11 +1378,12 @@ urlInlineComplete.prototype = {
     let lastSlashIndex = this._currentSearchString.lastIndexOf("/");
     if (lastSlashIndex == -1) {
       var hasDomainResult = false;
-      var domain;
+      var domain, untrimmedDomain;
       try {
         hasDomainResult = query.executeStep();
         if (hasDomainResult) {
           domain = query.getString(0);
+          untrimmedDomain = query.getString(1);
         }
       } finally {
         query.reset();
@@ -1390,7 +1391,9 @@ urlInlineComplete.prototype = {
 
       if (hasDomainResult) {
         // We got a match for a domain, we can add it immediately.
-        result.appendMatch(this._strippedPrefix + domain, "");
+        // TODO (bug 754265): this is a temporary solution introduced while
+        // waiting for a propert dedicated API.
+        result.appendMatch(this._strippedPrefix + domain, untrimmedDomain);
 
         this._finishSearch();
         return;
@@ -1481,7 +1484,10 @@ urlInlineComplete.prototype = {
   handleResult: function UIC_handleResult(aResultSet)
   {
     let row = aResultSet.getNextRow();
-    let url = fixupSearchText(row.getResultByIndex(0));
+    let value = row.getResultByIndex(0);
+    let url = fixupSearchText(value);
+
+    let prefix = value.slice(0, value.length - url.length);
 
     // We must complete the URL up to the next separator (which is /, ? or #).
     let separatorIndex = url.slice(this._currentSearchString.length)
@@ -1494,8 +1500,10 @@ urlInlineComplete.prototype = {
       url = url.slice(0, separatorIndex);
     }
 
-    // Add the result
-    this._result.appendMatch(this._strippedPrefix + url, "");
+    // Add the result.
+    // TODO (bug 754265): this is a temporary solution introduced while
+    // waiting for a propert dedicated API.
+    this._result.appendMatch(this._strippedPrefix + url, prefix + url);
 
     // handleCompletion() will cause the result listener to be called, and
     // will display the result in the UI.
