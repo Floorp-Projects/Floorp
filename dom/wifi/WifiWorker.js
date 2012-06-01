@@ -1092,7 +1092,8 @@ function ScanResult(ssid, bssid, flags, signal) {
   this.ssid = ssid;
   this.bssid = bssid;
   this.capabilities = getKeyManagement(flags);
-  this.signal = calculateSignal(Number(signal));
+  this.signalStrength = signal;
+  this.relSignalStrength = calculateSignal(Number(signal));
 }
 
 function quote(s) {
@@ -1201,7 +1202,8 @@ function WifiWorker() {
 
     // Things that are useful for the UI but not to us.
     delete net.bssid;
-    delete net.signal;
+    delete net.signalStrength;
+    delete net.relSignalStrength;
     delete net.capabilities;
 
     if (!configured)
@@ -1421,8 +1423,8 @@ function WifiWorker() {
             network.connected = true;
 
           let signal = calculateSignal(Number(match[3]));
-          if (signal > network.signal)
-            network.signal = signal;
+          if (signal > network.relSignalStrength)
+            network.relSignalStrength = signal;
         } else if (!match) {
           debug("Match didn't find anything for: " + lines[i]);
         }
