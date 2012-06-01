@@ -1430,10 +1430,12 @@ JSScript::ReleaseCode(FreeOp *fop, JITScriptHandle *jith)
     // will get called again when the script is destroyed, so we
     // must protect against calling ReleaseScriptCode twice.
 
-    JITScript *jit = jith->getValid();
-    jit->destroy(fop);
-    fop->free_(jit);
-    jith->setEmpty();
+    if (jith->isValid()) {
+        JITScript *jit = jith->getValid();
+        jit->destroy(fop);
+        fop->free_(jit);
+        jith->setEmpty();
+    }
 }
 
 #ifdef JS_METHODJIT_PROFILE_STUBS
