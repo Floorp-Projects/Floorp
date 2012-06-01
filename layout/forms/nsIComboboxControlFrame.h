@@ -61,11 +61,6 @@ public:
   virtual PRInt32 UpdateRecentIndex(PRInt32 aIndex) = 0;
 
   /**
-   *
-   */
-  virtual void AbsolutelyPositionDropDown() = 0;
-
-  /**
    * Notification that the content has been reset
    */
   virtual void OnContentReset() = 0;

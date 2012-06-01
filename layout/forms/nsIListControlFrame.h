@@ -62,11 +62,6 @@ public:
   virtual PRInt32 GetNumberOfOptions() = 0; 
 
   /**
-   * 
-   */
-  virtual void SyncViewWithFrame() = 0;
-
-  /**
    * Called by combobox when it's about to drop down
    */
   virtual void AboutToDropDown() = 0;
