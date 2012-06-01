@@ -228,15 +228,16 @@ function checkCopySelection()
 {
   let contentDoc = ruleViewFrame().contentDocument;
   let props = contentDoc.querySelectorAll(".ruleview-property");
+  let values = contentDoc.querySelectorAll(".ruleview-propertycontainer");
 
   let range = document.createRange();
   range.setStart(props[0], 0);
-  range.setEnd(props[4], 8);
+  range.setEnd(values[4], 2);
 
   let selection = ruleViewFrame().contentWindow.getSelection();
   selection.addRange(range);
 
-  info("Checking that _boundCopy()  returns the correct" +
+  info("Checking that _boundCopy() returns the correct " +
     "clipboard value");
   let expectedPattern = "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +
