@@ -58,13 +58,15 @@ function initTestLogging(level) {
   };
   LogStats.prototype.__proto__ = new Log4Moz.Formatter();
 
-  var log = Log4Moz.repository.rootLogger;
-  var logStats = new LogStats();
-  var appender = new Log4Moz.DumpAppender(logStats);
+  let log = Log4Moz.repository.rootLogger;
+  let logStats = new LogStats();
+  let appender = new Log4Moz.DumpAppender(logStats);
 
-  if (typeof(level) == "undefined")
+  if (typeof(level) == "undefined") {
     level = "Debug";
+  }
   getTestLogger().level = Log4Moz.Level[level];
+  Log4Moz.repository.getLogger("Services").level = Log4Moz.Level[level];
 
   log.level = Log4Moz.Level.Trace;
   appender.level = Log4Moz.Level.Trace;
@@ -77,6 +79,16 @@ function initTestLogging(level) {
 
 function getTestLogger(component) {
   return Log4Moz.repository.getLogger("Testing");
+}
+
+/**
+ * Obtain a port number to run a server on.
+ *
+ * In the ideal world, this would be dynamic so multiple servers could be run
+ * in parallel.
+ */
+function get_server_port() {
+  return 8080;
 }
 
 function httpd_setup (handlers, port) {
