@@ -49,7 +49,7 @@ public:
   NS_IMETHOD DocumentModified();
 
 public:
-  nsresult ResetIMETextPWBuf();
+  void ResetIMETextPWBuf();
 
   /**
    * Handles the newline characters either according to aNewLineHandling
@@ -85,7 +85,7 @@ public:
    * @param aLength the number of password characters that aOutString should
    *        contain.
    */
-  static nsresult FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength);
+  static void FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength);
 
 protected:
 
@@ -163,7 +163,7 @@ protected:
                                      bool                     *aTruncated);
 
   /** Remove IME composition text from password buffer */
-  nsresult RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);
+  void RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);
 
   nsresult CreateMozBR(nsIDOMNode* inParent, PRInt32 inOffset,
                        nsIDOMNode** outBRNode = nsnull);
