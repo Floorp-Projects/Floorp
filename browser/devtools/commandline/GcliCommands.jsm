@@ -135,9 +135,8 @@ gcli.addCommand({
      }
    ],
    exec: function(args, context) {
-     let hud = HUDService.getHudReferenceById(context.environment.hudId);
-     let StyleEditor = hud.gcliterm.document.defaultView.StyleEditor;
-     StyleEditor.openChrome(args.resource.element, args.line);
+     let win = HUDService.currentContext();
+     win.StyleEditor.openChrome(args.resource.element, args.line);
    }
 });
 
