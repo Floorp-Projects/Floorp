@@ -45,11 +45,14 @@ ExecutableAllocator::sizeOfCode(size_t *method, size_t *regexp, size_t *unused) 
     *method = 0;
     *regexp = 0;
     *unused = 0;
-    for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
-        ExecutablePool* pool = r.front();
-        *method += pool->m_mjitCodeMethod;
-        *regexp += pool->m_mjitCodeRegexp;
-        *unused += pool->m_allocation.size - pool->m_mjitCodeMethod - pool->m_mjitCodeRegexp;
+
+    if (m_pools.initialized()) {
+        for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
+            ExecutablePool* pool = r.front();
+            *method += pool->m_mjitCodeMethod;
+            *regexp += pool->m_mjitCodeRegexp;
+            *unused += pool->m_allocation.size - pool->m_mjitCodeMethod - pool->m_mjitCodeRegexp;
+        }
     }
 }
 
