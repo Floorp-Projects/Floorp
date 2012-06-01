@@ -13,6 +13,19 @@ Cu.import("resource://gre/modules/mms_consts.js");
 
 let DEBUG; // set to true to see debug messages
 
+function translatePduErrorToStatus(error) {
+  switch (error) {
+    case MMS_PDU_ERROR_OK:
+      return MMS_PDU_STATUS_RETRIEVED;
+    case MMS_PDU_ERROR_TRANSIENT_FAILURE:
+    case MMS_PDU_ERROR_TRANSIENT_MESSAGE_NOT_FOUND:
+    case MMS_PDU_ERROR_TRANSIENT_NETWORK_PROBLEM:
+      return MMS_PDU_STATUS_DEFERRED;
+    default:
+      return MMS_PDU_STATUS_UNRECOGNISED;
+  }
+}
+
 /**
  * Internal decoding function for boolean values.
  *
@@ -1109,6 +1122,9 @@ if (DEBUG) {
 }
 
 const EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([
+  // Utility functions
+  "translatePduErrorToStatus",
+
   // Decoders
   "BooleanValue",
   "Address",
