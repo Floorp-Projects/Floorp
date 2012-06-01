@@ -12,6 +12,7 @@
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "AtkSocketAccessible.h"
 #endif
+#include "DocAccessible-inl.h"
 #include "FocusManager.h"
 #include "HTMLListAccessible.h"
 #include "HyperTextAccessibleWrap.h"

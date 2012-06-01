@@ -5,6 +5,7 @@
 
 #include "nsCaretAccessible.h"
 
+#include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
