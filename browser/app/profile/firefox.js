@@ -1039,6 +1039,9 @@ pref("devtools.inspector.highlighterShowInfobar", true);
 pref("devtools.layoutview.enabled", true);
 pref("devtools.layoutview.open", false);
 
+// Enable the Responsive UI tool
+pref("devtools.responsiveUI.enabled", true);
+
 // Enable the Debugger
 pref("devtools.debugger.enabled", true);
 pref("devtools.debugger.remote-enabled", false);
