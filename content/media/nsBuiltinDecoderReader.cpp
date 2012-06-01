@@ -158,19 +158,26 @@ VideoData* VideoData::Create(nsVideoInfo& aInfo,
   PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
 
   PlanarYCbCrImage::Data data;
-  data.mYChannel = aBuffer.mPlanes[0].mData;
-  data.mYSize = gfxIntSize(aBuffer.mPlanes[0].mWidth, aBuffer.mPlanes[0].mHeight);
-  data.mYStride = aBuffer.mPlanes[0].mStride;
-  data.mCbChannel = aBuffer.mPlanes[1].mData;
-  data.mCrChannel = aBuffer.mPlanes[2].mData;
-  data.mCbCrSize = gfxIntSize(aBuffer.mPlanes[1].mWidth, aBuffer.mPlanes[1].mHeight);
-  data.mCbCrStride = aBuffer.mPlanes[1].mStride;
+  const YCbCrBuffer::Plane &Y = aBuffer.mPlanes[0];
+  const YCbCrBuffer::Plane &Cb = aBuffer.mPlanes[1];
+  const YCbCrBuffer::Plane &Cr = aBuffer.mPlanes[2];
+
+  data.mYChannel = Y.mData;
+  data.mYSize = gfxIntSize(Y.mWidth, Y.mHeight);
+  data.mYStride = Y.mStride;
+  data.mCbChannel = Cb.mData;
+  data.mCrChannel = Cr.mData;
+  data.mCbCrSize = gfxIntSize(Cb.mWidth, Cb.mHeight);
+  data.mCbCrStride = Cb.mStride;
   data.mPicX = aPicture.x;
   data.mPicY = aPicture.y;
   data.mPicSize = gfxIntSize(aPicture.width, aPicture.height);
   data.mStereoMode = aInfo.mStereoMode;
 
-  videoImage->SetData(data); // Copies buffer
+  videoImage->CopyData(data,
+                       Y.mOffset, Y.mSkip,
+                       Cb.mOffset, Cb.mSkip,
+                       Cr.mOffset, Cr.mSkip);
   return v.forget();
 }
 

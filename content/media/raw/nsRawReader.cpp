@@ -186,6 +186,7 @@ bool nsRawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   b.mPlanes[0].mStride = mMetadata.frameWidth * mMetadata.lumaChannelBpp / 8.0;
   b.mPlanes[0].mHeight = mMetadata.frameHeight;
   b.mPlanes[0].mWidth = mMetadata.frameWidth;
+  b.mPlanes[0].mOffset = b.mPlanes[0].mSkip = 0;
 
   PRUint32 cbcrStride = mMetadata.frameWidth * mMetadata.chromaChannelBpp / 8.0;
 
@@ -193,11 +194,13 @@ bool nsRawReader::DecodeVideoFrame(bool &aKeyframeSkip,
   b.mPlanes[1].mStride = cbcrStride;
   b.mPlanes[1].mHeight = mMetadata.frameHeight / 2;
   b.mPlanes[1].mWidth = mMetadata.frameWidth / 2;
+  b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
 
   b.mPlanes[2].mData = b.mPlanes[1].mData + mMetadata.frameHeight * cbcrStride / 2;
   b.mPlanes[2].mStride = cbcrStride;
   b.mPlanes[2].mHeight = mMetadata.frameHeight / 2;
   b.mPlanes[2].mWidth = mMetadata.frameWidth / 2;
+  b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
 
   VideoData *v = VideoData::Create(mInfo,
                                    mDecoder->GetImageContainer(),

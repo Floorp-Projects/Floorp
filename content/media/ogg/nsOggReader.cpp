@@ -574,6 +574,7 @@ nsresult nsOggReader::DecodeTheora(ogg_packet* aPacket, PRInt64 aTimeThreshold)
       b.mPlanes[i].mHeight = buffer[i].height;
       b.mPlanes[i].mWidth = buffer[i].width;
       b.mPlanes[i].mStride = buffer[i].stride;
+      b.mPlanes[i].mOffset = b.mPlanes[i].mSkip = 0;
     }
 
     VideoData *v = VideoData::Create(mInfo,
