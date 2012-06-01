@@ -176,7 +176,7 @@
 }
 
 .ruleview-ruleclose {
-  width: -moz-min-content;
+  cursor: text;
   padding-right: 20px;
 }
 
@@ -213,13 +213,13 @@
 
 .ruleview-propertyname {
   padding: 1px 0;
-  cursor: text;
   color: #0060C0;
-  text-decoration: inherit;
 }
 
+.ruleview-namecontainer,
+.ruleview-propertycontainer,
+.ruleview-propertyname,
 .ruleview-propertyvalue {
-  cursor: text;
   text-decoration: inherit;
 }
 
@@ -248,4 +248,14 @@
 
 .ruleview-property[dirty] {
   border-left-color: #68E268;
+}
+
+.ruleview-namecontainer > .ruleview-propertyname,
+.ruleview-propertycontainer > .ruleview-propertyvalue {
+  border-bottom: 1px dotted transparent;
+}
+
+.ruleview-namecontainer:hover > .ruleview-propertyname,
+.ruleview-propertycontainer:hover > .ruleview-propertyvalue {
+  border-bottom-color: black;
 }
