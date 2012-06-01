@@ -110,8 +110,10 @@ function finishTestComparisons()
   let veilBoxWidth = veilBoxDims.width;
   let veilBoxHeight = veilBoxDims.height;
 
-  is(veilBoxWidth, divWidth, "transparent veil box width matches dimensions of element (no zoom)");
-  is(veilBoxHeight, divHeight, "transparent veil box height matches dimensions of element (no zoom)");
+  // Disabled due to bug 716245
+  //is(veilBoxWidth, divWidth, "transparent veil box width matches dimensions of element (no zoom)");
+  //is(veilBoxHeight, divHeight, "transparent veil box height matches dimensions of element (no zoom)");
+
   // zoom the page by a factor of 2
   let contentViewer = InspectorUI.browser.docShell.contentViewer
                              .QueryInterface(Ci.nsIMarkupDocumentViewer);
@@ -132,8 +134,9 @@ function finishTestComparisons()
     let veilBoxWidth = veilBoxDims.width;
     let veilBoxHeight = veilBoxDims.height;
 
-    is(veilBoxWidth, divWidth, "transparent veil box width matches width of element (2x zoom)");
-    is(veilBoxHeight, divHeight, "transparent veil box height matches width of element (2x zoom)");
+    // Disabled due to bug 716245
+    //is(veilBoxWidth, divWidth, "transparent veil box width matches width of element (2x zoom)");
+    //is(veilBoxHeight, divHeight, "transparent veil box height matches width of element (2x zoom)");
 
     doc = h1 = div = null;
     executeSoon(finishUp);
