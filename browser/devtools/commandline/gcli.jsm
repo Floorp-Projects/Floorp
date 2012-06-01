@@ -4157,7 +4157,7 @@ var ResourceCache = {
    * Drop all cache entries. Helpful to prevent memory leaks
    */
   clear: function() {
-    ResourceCache._cached = {};
+    ResourceCache._cached = [];
   }
 };
 
@@ -8082,7 +8082,7 @@ define("text!gcli/commands/help_list.html", [], "\n" +
   "    <tr foreach=\"command in ${getMatchingCommands()}\"\n" +
   "        onclick=\"${onclick}\" ondblclick=\"${ondblclick}\">\n" +
   "      <th class=\"gcli-help-name\">${command.name}</th>\n" +
-  "      <td class=\"gcli-help-arrow\">&#x2192;</td>\n" +
+  "      <td class=\"gcli-help-arrow\">-</td>\n" +
   "      <td>\n" +
   "        ${command.description}\n" +
   "        <span class=\"gcli-out-shortcut\" data-command=\"help ${command.name}\">help ${command.name}</span>\n" +

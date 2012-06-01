@@ -35,7 +35,7 @@ function resumeAndFinish() {
     addScriptsAndCheckOrder(1, function() {
       addScriptsAndCheckOrder(2, function() {
         addScriptsAndCheckOrder(3, function() {
-          closeDebuggerAndFinish(gTab);
+          closeDebuggerAndFinish();
         });
       });
     });

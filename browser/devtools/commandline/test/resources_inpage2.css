@@ -1,0 +1,11 @@
+@charset "utf-8";
+
+/*
+ * Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
+ */
+
+*[data-a1=p]   { border-left: 4px solid #F00; }
+*[data-a1=div] { border-left: 4px solid #00F; }
+*[data-a1=h4]  { border-left: 4px solid #0F0; }
+*[data-a1=h3]  { border-left: 4px solid #FF0; }

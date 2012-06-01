@@ -13,7 +13,7 @@
  */
 
 #dbg-content {
-  padding: 6px;
+  padding: 0;
 }
 
 /**
@@ -52,7 +52,7 @@
 }
 
 /**
- * Properties elements
+ * Properties view
  */
 
 #variables {
@@ -60,7 +60,7 @@
 }
 
 /**
- * Generic element details container
+ * Property element details container
  */
 
 .details {
@@ -73,24 +73,17 @@
  */
 
 .scope > .title {
-  margin-top: 1px;
-  -moz-margin-start: 1px;
-  -moz-padding-start: 2px;
-
-  background: -moz-linear-gradient(bottom,
-      rgb(160,175,205) 0,
-      rgb(120,140,175) 100%);
-
-  border-bottom: 1px solid #888;
-  box-shadow: 0 0 4px #ccc;
-  text-shadow: 0 1px #777;
+  text-shadow: 0 1px #222;
   color: #fff;
   font: -moz-list;
 }
 
+.scope > .title > .arrow {
+  margin-top: -2px;
+}
+
 .scope > .title > .name {
   padding-top: 2px;
-  padding-bottom: 2px;
 }
 
 .scope > .details {
@@ -106,7 +99,7 @@
   -moz-margin-start: 1px;
   -moz-margin-end: 1px;
   margin-top: 2px;
-  border-bottom: 1px dotted #aaa;
+  border-bottom: 1px dotted #ccc;
   border-radius: 8px;
   -moz-transition: background 1s ease-in-out;
   background: #fff;
@@ -143,8 +136,13 @@
   color: #881090;
 }
 
+.property > .title > .non-enumerable.key,
+.property > .title > .proto.key {
+  color: #c48bc8;
+}
+
 /**
- * Property colors
+ * Property values colors
  */
 
 .token-undefined {
@@ -222,12 +220,12 @@
  */
 
 #resume {
+  list-style-image: url("chrome://browser/skin/devtools/debugger-play.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
 #resume[checked=true] {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
-  list-style-image: url("chrome://browser/skin/devtools/debugger-pause.png");
 }
 
 #step-over {

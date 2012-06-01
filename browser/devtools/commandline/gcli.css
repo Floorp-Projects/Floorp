@@ -2,23 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.gclichrome-output {
-  max-width: 350px;
-}
-
-.gclichrome-tooltip {
-  max-width: 350px;
-}
-
 .gcli-help-name {
   text-align: end;
 }
 
+.gcli-out-shortcut,
 .gcli-help-synopsis {
   cursor: pointer;
   display: inline-block;
 }
 
+.gcli-out-shortcut:before,
 .gcli-help-synopsis:before {
   content: '\bb';
 }
@@ -34,8 +28,9 @@
   width: 100%;
 }
 
-.gcli-menu-error {
-  overflow: hidden;
-  white-space: nowrap;
+.gcli-menu-name,
+.gcli-out-shortcut,
+.gcli-help-synopsis {
+  direction: ltr;
 }
 

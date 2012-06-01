@@ -189,7 +189,7 @@ function testSimpleCall() {
         "The scope should have been removed from the parent container tree.");
 
       gDebugger.DebuggerController.activeThread.resume(function() {
-        closeDebuggerAndFinish(gTab);
+        closeDebuggerAndFinish();
       });
     }}, 0);
   });

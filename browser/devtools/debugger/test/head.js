@@ -49,13 +49,13 @@ function removeTab(aTab) {
   gBrowser.removeTab(aTab);
 }
 
-function closeDebuggerAndFinish(aTab, aRemoteFlag) {
+function closeDebuggerAndFinish(aRemoteFlag) {
   DebuggerUI.chromeWindow.addEventListener("Debugger:Shutdown", function cleanup() {
     DebuggerUI.chromeWindow.removeEventListener("Debugger:Shutdown", cleanup, false);
     finish();
   }, false);
   if (!aRemoteFlag) {
-    DebuggerUI.getDebugger(aTab).close();
+    DebuggerUI.getDebugger().close();
   } else {
     DebuggerUI.getRemoteDebugger().close();
   }

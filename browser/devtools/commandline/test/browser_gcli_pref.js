@@ -95,7 +95,7 @@ function testPrefStatus() {
 
   DeveloperToolbarTest.checkInputStatus({
     typed:  "pref show devtools.toolbar.ena",
-    markup: "VVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",
+    markup: "VVVVVVVVVVIIIIIIIIIIIIIIIIIIII",
     directTabText: "bled",
     status: "ERROR",
     emptyParameters: [ ]
@@ -103,7 +103,7 @@ function testPrefStatus() {
 
   DeveloperToolbarTest.checkInputStatus({
     typed:  "pref show hideIntro",
-    markup: "VVVVVVVVVVVVVVVVVVV",
+    markup: "VVVVVVVVVVIIIIIIIII",
     directTabText: "",
     arrowTabText: "devtools.gcli.hideIntro",
     status: "ERROR",

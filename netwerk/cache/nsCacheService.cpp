@@ -1759,7 +1759,7 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
 
     if (request->mListener) {  // Asynchronous
     
-        if (NS_FAILED(rv) && calledFromOpenCacheEntry)
+        if (NS_FAILED(rv) && calledFromOpenCacheEntry && request->IsBlocking())
             return rv;  // skip notifying listener, just return rv to caller
             
         // call listener to report error or descriptor

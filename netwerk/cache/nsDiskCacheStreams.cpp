@@ -108,11 +108,25 @@ nsDiskCacheInputStream::Read(char * buffer, PRUint32 count, PRUint32 * bytesRead
 {
     *bytesRead = 0;
 
-    if (mClosed)
+    if (mClosed) {
+        CACHE_LOG_DEBUG(("CACHE: nsDiskCacheInputStream::Read "
+                         "[stream=%p] stream was closed",
+                         this, buffer, count));
         return NS_OK;
+    }
     
-    if (mPos == mStreamEnd)  return NS_OK;
-    if (mPos > mStreamEnd)   return NS_ERROR_UNEXPECTED;
+    if (mPos == mStreamEnd) {
+        CACHE_LOG_DEBUG(("CACHE: nsDiskCacheInputStream::Read "
+                         "[stream=%p] stream at end of file",
+                         this, buffer, count));
+        return NS_OK;
+    }
+    if (mPos > mStreamEnd) {
+        CACHE_LOG_DEBUG(("CACHE: nsDiskCacheInputStream::Read "
+                         "[stream=%p] stream past end of file (!)",
+                         this, buffer, count));
+        return NS_ERROR_UNEXPECTED;
+    }
     
     if (count > mStreamEnd - mPos)
         count = mStreamEnd - mPos;
@@ -120,7 +134,14 @@ nsDiskCacheInputStream::Read(char * buffer, PRUint32 count, PRUint32 * bytesRead
     if (mFD) {
         // just read from file
         PRInt32  result = PR_Read(mFD, buffer, count);
-        if (result < 0)  return  NS_ErrorAccordingToNSPR();
+        if (result < 0) {
+            PRErrorCode error = PR_GetError();
+            nsresult rv = NS_ErrorAccordingToNSPR();
+            CACHE_LOG_DEBUG(("CACHE: nsDiskCacheInputStream::Read PR_Read failed"
+                             "[stream=%p, rv=%d, NSPR error %s",
+                             this, PRIntn(rv), PR_ErrorToName(error)));
+            return rv;
+        }
         
         mPos += (PRUint32)result;
         *bytesRead = (PRUint32)result;
@@ -134,6 +155,9 @@ nsDiskCacheInputStream::Read(char * buffer, PRUint32 count, PRUint32 * bytesRead
         // no data source for input stream
     }
 
+    CACHE_LOG_DEBUG(("CACHE: nsDiskCacheInputStream::Read "
+                     "[stream=%p, count=%ud, byteRead=%ud] ",
+                     this, PRUintn(count), PRUintn(*bytesRead)));
     return NS_OK;
 }
 
@@ -679,6 +703,8 @@ nsDiskCacheStreamIO::OpenCacheFile(PRIntn flags, PRFileDesc ** fd)
 {
     NS_ENSURE_ARG_POINTER(fd);
     
+    CACHE_LOG_DEBUG(("nsDiskCacheStreamIO::OpenCacheFile"));
+
     nsresult         rv;
     nsDiskCacheMap * cacheMap = mDevice->CacheMap();
     

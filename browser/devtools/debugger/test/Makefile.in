@@ -14,6 +14,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_TEST_FILES = \
 	browser_dbg_createRemote.js \
 	browser_dbg_createChrome.js \
+	browser_dbg_debugger-tab-switch.js \
 	browser_dbg_debuggerstatement.js \
 	browser_dbg_listtabs.js \
 	browser_dbg_tabactor-01.js \
@@ -34,6 +35,7 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_propertyview-10.js \
 	browser_dbg_propertyview-edit.js \
 	browser_dbg_panesize.js \
+	browser_dbg_panesize-inner.js \
 	browser_dbg_stack-01.js \
 	browser_dbg_stack-02.js \
 	browser_dbg_stack-03.js \

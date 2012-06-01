@@ -380,7 +380,11 @@ nsHttpResponseHead::IsResumable() const
 {
     // even though some HTTP/1.0 servers may support byte range requests, we're not
     // going to bother with them, since those servers wouldn't understand If-Range.
-    return mVersion >= NS_HTTP_VERSION_1_1 &&
+    // Also, while in theory it may be possible to resume when the status code
+    // is not 200, it is unlikely to be worth the trouble, especially for
+    // non-2xx responses.
+    return mStatus == 200 &&
+           mVersion >= NS_HTTP_VERSION_1_1 &&
            PeekHeader(nsHttp::Content_Length) && 
           (PeekHeader(nsHttp::ETag) || PeekHeader(nsHttp::Last_Modified)) &&
            HasHeaderValue(nsHttp::Accept_Ranges, "bytes");
