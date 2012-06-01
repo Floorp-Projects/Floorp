@@ -194,7 +194,7 @@ appUpdater.prototype =
   // true when updating in background is enabled.
   get backgroundUpdateEnabled() {
     return this.updateEnabled &&
-           Services.prefs.getBoolPref("app.update.stage.enabled");
+           gAppUpdater.aus.canStageUpdates;
   },
 
   // true when updating is automatic.

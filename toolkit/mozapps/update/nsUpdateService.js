@@ -2049,6 +2049,13 @@ UpdateService.prototype = {
   /**
    * See nsIUpdateService.idl
    */
+  get canStageUpdates() {
+    return gCanStageUpdates;
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
   addDownloadListener: function AUS_addDownloadListener(listener) {
     if (!this._downloader) {
       LOG("UpdateService:addDownloadListener - no downloader!");
