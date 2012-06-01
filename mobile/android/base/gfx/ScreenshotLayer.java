@@ -35,6 +35,7 @@ public class ScreenshotLayer extends SingleTileLayer {
     private IntSize mImageSize;
     // Whether we have an up-to-date image to draw
     private boolean mHasImage;
+    private static String LOGTAG = "GeckoScreenshot";
 
     public static int getMaxNumPixels() {
         return SCREENSHOT_SIZE_LIMIT;
@@ -44,6 +45,19 @@ public class ScreenshotLayer extends SingleTileLayer {
         mHasImage = false;
     }
 
+    void setBitmap(ByteBuffer data, int width, int height) {
+        mImageSize = new IntSize(width, height);
+        if (IntSize.isPowerOfTwo(width) && IntSize.isPowerOfTwo(height)) {
+            mBufferSize = mImageSize;
+            mHasImage = true;
+            mImage.setBitmap(data, width, height, CairoImage.FORMAT_RGB16_565);
+        } else {
+            Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+            b.copyPixelsFromBuffer(data);
+            setBitmap(b);
+        }
+    }
+    
     void setBitmap(Bitmap bitmap) {
         mImageSize = new IntSize(bitmap.getWidth(), bitmap.getHeight());
         int width = IntSize.nextPowerOfTwo(bitmap.getWidth());
@@ -116,7 +130,17 @@ public class ScreenshotLayer extends SingleTileLayer {
             }
         }
 
-        void setBitmap(Bitmap bitmap, int width, int height, int format) {
+        void copyBuffer(ByteBuffer src, ByteBuffer dst, int size) {
+            dst.asIntBuffer().put(src.asIntBuffer());
+        }
+
+        synchronized void setBitmap(ByteBuffer data, int width, int height, int format) {
+            mSize = new IntSize(width, height);
+            mFormat = format;
+            copyBuffer(data, mBuffer, width * height * 2);
+        }
+
+        synchronized void setBitmap(Bitmap bitmap, int width, int height, int format) {
             Bitmap tmp;
             mSize = new IntSize(width, height);
             mFormat = format;
@@ -138,10 +162,10 @@ public class ScreenshotLayer extends SingleTileLayer {
         }
 
         @Override
-        public ByteBuffer getBuffer() { return mBuffer; }
+        synchronized public ByteBuffer getBuffer() { return mBuffer; }
         @Override
-        public IntSize getSize() { return mSize; }
+        synchronized public IntSize getSize() { return mSize; }
         @Override
-        public int getFormat() { return mFormat; }
+        synchronized public int getFormat() { return mFormat; }
     }
 }
