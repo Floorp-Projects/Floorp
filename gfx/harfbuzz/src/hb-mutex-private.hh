@@ -35,20 +35,12 @@
 #include "hb-private.hh"
 
 
-
 /* mutex */
 
 /* We need external help for these */
 
-#if !defined(HB_NO_MT) && defined(HAVE_GLIB)
+#if 0
 
-#include <glib.h>
-typedef GStaticMutex hb_mutex_impl_t;
-#define HB_MUTEX_IMPL_INIT	G_STATIC_MUTEX_INIT
-#define hb_mutex_impl_init(M)	g_static_mutex_init (M)
-#define hb_mutex_impl_lock(M)	g_static_mutex_lock (M)
-#define hb_mutex_impl_unlock(M)	g_static_mutex_unlock (M)
-#define hb_mutex_impl_free(M)	g_static_mutex_free (M)
 
 #elif !defined(HB_NO_MT) && defined(_MSC_VER) || defined(__MINGW32__)
 
@@ -60,6 +52,7 @@ typedef CRITICAL_SECTION hb_mutex_impl_t;
 #define hb_mutex_impl_unlock(M)	LeaveCriticalSection (M)
 #define hb_mutex_impl_free(M)	DeleteCriticalSection (M)
 
+
 #elif !defined(HB_NO_MT) && defined(__APPLE__)
 
 #include <pthread.h>
@@ -69,6 +62,18 @@ typedef pthread_mutex_t hb_mutex_impl_t;
 #define hb_mutex_impl_lock(M)	pthread_mutex_lock (M)
 #define hb_mutex_impl_unlock(M)	pthread_mutex_unlock (M)
 #define hb_mutex_impl_free(M)	pthread_mutex_destroy (M)
+
+
+#elif !defined(HB_NO_MT) && defined(HAVE_GLIB)
+
+#include <glib.h>
+typedef GStaticMutex hb_mutex_impl_t;
+#define HB_MUTEX_IMPL_INIT	G_STATIC_MUTEX_INIT
+#define hb_mutex_impl_init(M)	g_static_mutex_init (M)
+#define hb_mutex_impl_lock(M)	g_static_mutex_lock (M)
+#define hb_mutex_impl_unlock(M)	g_static_mutex_unlock (M)
+#define hb_mutex_impl_free(M)	g_static_mutex_free (M)
+
 
 #else
 

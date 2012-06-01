@@ -33,6 +33,8 @@
 #include "hb-open-file-private.hh"
 #include "hb-ot-head-table.hh"
 
+#include "hb-cache-private.hh"
+
 #include <string.h>
 
 
@@ -729,7 +731,7 @@ hb_face_set_index (hb_face_t    *face,
   if (hb_object_is_inert (face))
     return;
 
-  face->index = 0;
+  face->index = index;
 }
 
 unsigned int

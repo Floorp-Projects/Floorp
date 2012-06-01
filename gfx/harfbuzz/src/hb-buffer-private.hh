@@ -70,6 +70,15 @@ struct _hb_buffer_t {
   hb_glyph_info_t     *out_info;
   hb_glyph_position_t *pos;
 
+  inline hb_glyph_info_t &cur (unsigned int i = 0) { return info[idx + i]; }
+  inline hb_glyph_info_t cur (unsigned int i = 0) const { return info[idx + i]; }
+
+  inline hb_glyph_position_t &cur_pos (unsigned int i = 0) { return pos[idx + i]; }
+  inline hb_glyph_position_t cur_pos (unsigned int i = 0) const { return pos[idx + i]; }
+
+  inline hb_glyph_info_t &prev (void) { return out_info[out_len - 1]; }
+  inline hb_glyph_info_t prev (void) const { return info[out_len - 1]; }
+
   unsigned int serial;
   uint8_t allocated_var_bytes[8];
   const char *allocated_var_owner[8];
@@ -104,7 +113,7 @@ struct _hb_buffer_t {
 					const uint16_t *glyph_data_be);
   HB_INTERNAL void replace_glyphs (unsigned int num_in,
 				   unsigned int num_out,
-				   const uint16_t *glyph_data);
+				   const hb_codepoint_t *glyph_data);
   HB_INTERNAL void replace_glyph (hb_codepoint_t glyph_index);
   /* Makes a copy of the glyph at idx to output and replace glyph_index */
   HB_INTERNAL void output_glyph (hb_codepoint_t glyph_index);

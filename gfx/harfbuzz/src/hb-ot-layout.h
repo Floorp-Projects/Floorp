@@ -182,6 +182,12 @@ hb_ot_layout_substitute_lookup (hb_face_t    *face,
 void
 hb_ot_layout_substitute_finish (hb_buffer_t  *buffer);
 
+
+void
+hb_ot_layout_substitute_closure_lookup (hb_face_t    *face,
+				        hb_set_t     *glyphs,
+				        unsigned int  lookup_index);
+
 /*
  * GPOS
  */
@@ -201,7 +207,7 @@ hb_ot_layout_position_lookup (hb_font_t    *font,
 
 /* Should be called after all the position_lookup's are done */
 void
-hb_ot_layout_position_finish (hb_face_t *face, hb_buffer_t  *buffer);
+hb_ot_layout_position_finish (hb_buffer_t  *buffer);
 
 
 HB_END_DECLS
