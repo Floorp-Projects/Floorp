@@ -1882,6 +1882,9 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     case AndroidGeckoEvent::IME_COMPOSITION_END:
         {
             ALOGIME("IME: IME_COMPOSITION_END");
+            MOZ_ASSERT(mIMEComposing,
+                       "IME_COMPOSITION_END when we are not composing?!");
+
             nsCompositionEvent event(true, NS_COMPOSITION_END, this);
             InitEvent(event, nsnull);
             event.data = mIMELastDispatchedComposingText;
@@ -1892,6 +1895,9 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     case AndroidGeckoEvent::IME_COMPOSITION_BEGIN:
         {
             ALOGIME("IME: IME_COMPOSITION_BEGIN");
+            MOZ_ASSERT(!mIMEComposing,
+                       "IME_COMPOSITION_BEGIN when we are already composing?!");
+
             mIMELastDispatchedComposingText.Truncate();
             nsCompositionEvent event(true, NS_COMPOSITION_START, this);
             InitEvent(event, nsnull);
@@ -1900,11 +1906,16 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         return;
     case AndroidGeckoEvent::IME_ADD_RANGE:
         {
+            NS_ASSERTION(mIMEComposing,
+                         "IME_ADD_RANGE when we are not composing?!");
             OnIMEAddRange(ae);
         }
         return;
     case AndroidGeckoEvent::IME_SET_TEXT:
         {
+            NS_ASSERTION(mIMEComposing,
+                         "IME_SET_TEXT when we are not composing?!");
+
             OnIMEAddRange(ae);
 
             nsTextEvent event(true, NS_TEXT_TEXT, this);
@@ -1927,8 +1938,12 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                     return;
             }
 
-            ALOGIME("IME: IME_SET_TEXT: l=%u, r=%u",
-                event.theText.Length(), mIMERanges.Length());
+#ifdef DEBUG_ANDROID_IME
+            const NS_ConvertUTF16toUTF8 theText8(event.theText);
+            const char* text = theText8.get();
+            ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%u, range=%u",
+                    text, event.theText.Length(), mIMERanges.Length());
+#endif // DEBUG_ANDROID_IME
 
             DispatchEvent(&event);
             mIMERanges.Clear();
@@ -1955,12 +1970,14 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                     event.mReply.mString.get(), 
                     event.mReply.mString.Length(), 0, 0);
             }
-            //ALOGIME("IME:     -> l=%u", event.mReply.mString.Length());
         }
         return;
     case AndroidGeckoEvent::IME_DELETE_TEXT:
         {
             ALOGIME("IME: IME_DELETE_TEXT");
+            NS_ASSERTION(mIMEComposing,
+                         "IME_DELETE_TEXT when we are not composing?!");
+
             nsKeyEvent event(true, NS_KEY_PRESS, this);
             ANPEvent pluginEvent;
             InitKeyEvent(event, *ae, &pluginEvent);
