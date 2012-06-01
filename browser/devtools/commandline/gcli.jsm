@@ -4157,7 +4157,7 @@ var ResourceCache = {
    * Drop all cache entries. Helpful to prevent memory leaks
    */
   clear: function() {
-    ResourceCache._cached = {};
+    ResourceCache._cached = [];
   }
 };
 
