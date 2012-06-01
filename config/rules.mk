@@ -1248,7 +1248,7 @@ endif
 # Export the elements of $(XPIDLSRCS)
 # generating .h and .xpt files and moving them to the appropriate places.
 
-ifneq ($(XPIDLSRCS),)
+ifneq ($(XPIDLSRCS),) #{
 
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS))
 
@@ -1316,20 +1316,12 @@ endif # NO_GEN_XPT
 
 GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
 
-endif # XPIDLSRCS
+endif #} XPIDLSRCS
 
-ifneq ($(XPIDLSRCS),)
-# export .idl files to $(IDL_DIR)
-ifndef NO_DIST_INSTALL
-export:: $(XPIDLSRCS) $(IDL_DIR)
-	$(INSTALL) $(IFLAGS1) $^
 
-export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(DIST)/include
-	$(INSTALL) $(IFLAGS1) $^
-endif # NO_DIST_INSTALL
-
-endif # XPIDLSRCS
-
+ifndef INCLUDED_XPIDL_MK
+  include $(topsrcdir)/config/makefiles/xpidl.mk
+endif
 
 
 # General rules for exporting idl files.
