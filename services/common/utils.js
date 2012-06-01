@@ -59,11 +59,23 @@ let CommonUtils = {
 
   /**
    * Encode byte string as base64URL (RFC 4648).
+   *
+   * @param bytes
+   *        (string) Raw byte string to encode.
+   * @param pad
+   *        (bool) Whether to include padding characters (=). Defaults
+   *        to true for historical reasons.
    */
-  encodeBase64URL: function encodeBase64URL(bytes) {
-    return btoa(bytes).replace("+", "-", "g").replace("/", "_", "g");
+  encodeBase64URL: function encodeBase64URL(bytes, pad=true) {
+    let s = btoa(bytes).replace("+", "-", "g").replace("/", "_", "g");
+
+    if (!pad) {
+      s = s.replace("=", "");
+    }
+
+    return s;
   },
-  
+
   /**
    * Create a nsIURI instance from a string.
    */
