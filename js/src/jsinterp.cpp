@@ -2595,24 +2595,6 @@ BEGIN_CASE(JSOP_FUNCALL)
 
     bool newType = cx->typeInferenceEnabled() && UseNewType(cx, script, regs.pc);
 
-#ifdef JS_METHODJIT
-    if (!newType && cx->methodJitEnabled) {
-        /* Try to ensure methods are method JIT'd.  */
-        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, script->code,
-                                                        construct,
-                                                        mjit::CompileRequest_Interpreter);
-        if (status == mjit::Compile_Error)
-            goto error;
-        if (status == mjit::Compile_Okay) {
-            mjit::JaegerStatus status = mjit::JaegerShot(cx, true);
-            CHECK_PARTIAL_METHODJIT(status);
-            interpReturnOK = mjit::JaegerStatusToSuccess(status);
-            CHECK_INTERRUPT_HANDLER();
-            goto jit_return;
-        }
-    }
-#endif
-
 #ifdef JS_ION
     if (!newType && ion::IsEnabled(cx)) {
         ion::MethodStatus status = ion::CanEnter(cx, script, regs.fp(), newType);
@@ -2627,6 +2609,24 @@ BEGIN_CASE(JSOP_FUNCALL)
                 DO_OP();
             }
             interpReturnOK = (exec == ion::IonExec_Error) ? false : true;
+            goto jit_return;
+        }
+    }
+#endif
+
+#ifdef JS_METHODJIT
+    if (!newType && cx->methodJitEnabled) {
+        /* Try to ensure methods are method JIT'd.  */
+        mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, script->code,
+                                                        construct,
+                                                        mjit::CompileRequest_Interpreter);
+        if (status == mjit::Compile_Error)
+            goto error;
+        if (status == mjit::Compile_Okay) {
+            mjit::JaegerStatus status = mjit::JaegerShot(cx, true);
+            CHECK_PARTIAL_METHODJIT(status);
+            interpReturnOK = mjit::JaegerStatusToSuccess(status);
+            CHECK_INTERRUPT_HANDLER();
             goto jit_return;
         }
     }
