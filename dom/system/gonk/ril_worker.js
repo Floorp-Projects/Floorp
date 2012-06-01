@@ -686,15 +686,13 @@ let RIL = {
         if (model_id == "I9100") {
           if (DEBUG) {
             debug("Detected I9100, enabling " +
+                  "RILQUIRKS_CALLSTATE_EXTRA_UINT32, " +
                   "RILQUIRKS_DATACALLSTATE_DOWN_IS_UP, " +
                   "RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL.");
           }
+          RILQUIRKS_CALLSTATE_EXTRA_UINT32 = true;
           RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = true;
           RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = true;
-          if (RILQUIRKS_V5_LEGACY) {
-            if (DEBUG) debug("...and RILQUIRKS_CALLSTATE_EXTRA_UINT32");
-            RILQUIRKS_CALLSTATE_EXTRA_UINT32 = true;
-          }
         }
         if (model_id == "I9023" || model_id == "I9020") {
           if (DEBUG) {
