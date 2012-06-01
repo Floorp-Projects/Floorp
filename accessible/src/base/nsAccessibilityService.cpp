@@ -475,28 +475,16 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
                                              nsIContent* aStartChild,
                                              nsIContent* aEndChild)
 {
-#ifdef DEBUG_CONTENTMUTATION
-  nsAutoString tag;
-  aStartChild->Tag()->ToString(tag);
-
-  nsIAtom* atomid = aStartChild->GetID();
-  nsCAutoString id;
-  if (atomid)
-    atomid->ToUTF8String(id);
-
-  nsAutoString ctag;
-  nsCAutoString cid;
-  nsIAtom* catomid = nsnull;
-  if (aContainer) {
-    aContainer->Tag()->ToString(ctag);
-    catomid = aContainer->GetID();
-    if (catomid)
-      catomid->ToUTF8String(cid);
+#ifdef DEBUG
+  if (logging::IsEnabled(logging::eTree)) {
+    logging::MsgBegin("TREE", "content inserted");
+    logging::Node("container", aContainer);
+    for (nsIContent* child = aStartChild; child != aEndChild;
+         child = child->GetNextSibling()) {
+      logging::Node("content", child);
+    }
+    logging::MsgEnd();
   }
-
-  printf("\ncontent inserted: %s@id='%s', container: %s@id='%s', end node: %p\n\n",
-         NS_ConvertUTF16toUTF8(tag).get(), id.get(),
-         NS_ConvertUTF16toUTF8(ctag).get(), cid.get(), aEndChild);
 #endif
 
   DocAccessible* docAccessible = GetDocAccessible(aPresShell);
@@ -509,28 +497,13 @@ nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
                                        nsIContent* aContainer,
                                        nsIContent* aChild)
 {
-#ifdef DEBUG_CONTENTMUTATION
-  nsAutoString tag;
-  aChild->Tag()->ToString(tag);
-
-  nsIAtom* atomid = aChild->GetID();
-  nsCAutoString id;
-  if (atomid)
-    atomid->ToUTF8String(id);
-
-  nsAutoString ctag;
-  nsCAutoString cid;
-  nsIAtom* catomid = nsnull;
-  if (aContainer) {
-    aContainer->Tag()->ToString(ctag);
-    catomid = aContainer->GetID();
-    if (catomid)
-      catomid->ToUTF8String(cid);
+#ifdef DEBUG
+  if (logging::IsEnabled(logging::eTree)) {
+    logging::MsgBegin("TREE", "content removed");
+    logging::Node("container", aContainer);
+    logging::Node("content", aChild);
+    logging::MsgEnd();
   }
-
-  printf("\ncontent removed: %s@id='%s', container: %s@id='%s'\n\n",
-           NS_ConvertUTF16toUTF8(tag).get(), id.get(),
-           NS_ConvertUTF16toUTF8(ctag).get(), cid.get());
 #endif
 
   DocAccessible* docAccessible = GetDocAccessible(aPresShell);
