@@ -565,8 +565,11 @@ JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
      */
     while (o) {
         ScopeObject &scope = o->asDebugScope().scope();
-        if (scope.isCall())
+        if (scope.isCall()) {
+            JS_ASSERT_IF(cx->compartment->debugMode() && fp->isNonEvalFunctionFrame(),
+                         fp == scope.asCall().maybeStackFrame());
             return o;
+        }
         o = o->enclosingScope();
     }
     return NULL;
@@ -802,10 +805,10 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
               |  (!shape->writable()  ? JSPD_READONLY  : 0)
               |  (!shape->configurable() ? JSPD_PERMANENT : 0);
     pd->spare = 0;
-    if (shape->setter() == CallObject::setArgOp) {
+    if (shape->getter() == CallObject::getArgOp) {
         pd->slot = shape->shortid();
         pd->flags |= JSPD_ARGUMENT;
-    } else if (shape->setter() == CallObject::setVarOp) {
+    } else if (shape->getter() == CallObject::getVarOp) {
         pd->slot = shape->shortid();
         pd->flags |= JSPD_VARIABLE;
     } else {
