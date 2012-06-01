@@ -343,6 +343,28 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
   return true;
 }
 
+bool
+ShadowLayerForwarder::ShadowDrawToTarget(gfxContext* aTarget) {
+
+  SurfaceDescriptor descriptorIn, descriptorOut;
+  AllocBuffer(aTarget->OriginalSurface()->GetSize(),
+              aTarget->OriginalSurface()->GetContentType(),
+              &descriptorIn);
+  if (!mShadowManager->SendDrawToSurface(descriptorIn, &descriptorOut)) {
+    return false;
+  }
+
+  nsRefPtr<gfxASurface> surface = OpenDescriptor(descriptorOut);
+  aTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
+  aTarget->DrawSurface(surface, surface->GetSize());
+
+  surface = nsnull;
+  DestroySharedSurface(&descriptorOut);
+
+  return true;
+}
+
+
 static SharedMemory::SharedMemoryType
 OptimalShmemType()
 {
