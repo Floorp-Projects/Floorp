@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011  Google, Inc.
+ * Copyright © 2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -24,38 +24,23 @@
  * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-fallback-shape-private.hh"
+#include "hb-ot-shape-complex-indic-private.hh"
 
-#include "hb-buffer-private.hh"
-
-hb_bool_t
-_hb_fallback_shape (hb_font_t          *font,
-		    hb_buffer_t        *buffer,
-		    const hb_feature_t *features HB_UNUSED,
-		    unsigned int        num_features HB_UNUSED)
+int
+main (void)
 {
-  buffer->guess_properties ();
+  hb_unicode_funcs_t *funcs = hb_unicode_funcs_get_default ();
 
-  unsigned int count = buffer->len;
+  printf ("There are split matras without a Unicode decomposition:\n");
+  for (hb_codepoint_t u = 0; u < 0x110000; u++)
+  {
+    unsigned int type = get_indic_categories (u);
 
-  for (unsigned int i = 0; i < count; i++)
-    hb_font_get_glyph (font, buffer->info[i].codepoint, 0, &buffer->info[i].codepoint);
+    unsigned int category = type & 0x0F;
+    unsigned int position = type >> 4;
 
-  buffer->clear_positions ();
-
-  for (unsigned int i = 0; i < count; i++) {
-    hb_font_get_glyph_advance_for_direction (font, buffer->info[i].codepoint,
-					     buffer->props.direction,
-					     &buffer->pos[i].x_advance,
-					     &buffer->pos[i].y_advance);
-    hb_font_subtract_glyph_origin_for_direction (font, buffer->info[i].codepoint,
-						 buffer->props.direction,
-						 &buffer->pos[i].x_offset,
-						 &buffer->pos[i].y_offset);
+    hb_codepoint_t a, b;
+    if (!hb_unicode_decompose (funcs, u, &a, &b))
+      printf ("U+%04X\n", u);
   }
-
-  if (HB_DIRECTION_IS_BACKWARD (buffer->props.direction))
-    hb_buffer_reverse (buffer);
-
-  return TRUE;
 }

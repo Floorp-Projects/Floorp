@@ -359,6 +359,9 @@ retry:
 				glyph_props + glyphs_offset,
 				(int *) &glyphs_len);
 
+      for (unsigned int j = chars_offset; j < chars_offset + item_chars_len; j++)
+        log_clusters[j] += glyphs_offset;
+
       if (unlikely (items[i].a.fNoGlyphIndex))
 	FAIL ("ScriptShapeOpenType() set fNoGlyphIndex");
       if (unlikely (hr == E_OUTOFMEMORY))

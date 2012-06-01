@@ -271,7 +271,7 @@ hb_buffer_t::replace_glyphs_be16 (unsigned int num_in,
 void
 hb_buffer_t::replace_glyphs (unsigned int num_in,
 			     unsigned int num_out,
-			     const uint16_t *glyph_data)
+			     const uint32_t *glyph_data)
 {
   if (!make_room_for (num_in, num_out)) return;
 

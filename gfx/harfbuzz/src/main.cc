@@ -124,10 +124,11 @@ main (int argc, char **argv)
 	    const LangSys &langsys = n_langsys == -1
 				   ? script.get_default_lang_sys ()
 				   : script.get_lang_sys (n_langsys);
-	    printf (n_langsys == -1
-		   ? "      Default Language System\n"
-		   : "      Language System %2d of %2d: %.4s\n", n_langsys, num_langsys,
-	            (const char *)script.get_lang_sys_tag (n_langsys));
+	    if (n_langsys == -1)
+	      printf ("      Default Language System\n");
+	    else
+	      printf ("      Language System %2d of %2d: %.4s\n", n_langsys, num_langsys,
+		      (const char *)script.get_lang_sys_tag (n_langsys));
 	    if (langsys.get_required_feature_index () == Index::NOT_FOUND_INDEX)
 	      printf ("        No required feature\n");
 

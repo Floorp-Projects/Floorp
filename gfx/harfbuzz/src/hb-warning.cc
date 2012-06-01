@@ -24,8 +24,8 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "hb-atomic-private.hh"
 #include "hb-mutex-private.hh"
-#include "hb-object-private.hh"
 
 
 #if !defined(HB_NO_MT) && defined(HB_ATOMIC_INT_NIL)
