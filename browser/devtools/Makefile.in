@@ -24,6 +24,7 @@ DIRS = \
   debugger \
   layoutview \
   shared \
+  responsivedesign \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -15,7 +15,7 @@ var runs = [
       is(tabbrowser.browsers.length, 1, "Window has one browser");
       is(tabbrowser.selectedTab, newTab, "Remaining tab is selected");
       is(tabbrowser.selectedBrowser, newBrowser, "Browser for remaining tab is selected");
-      is(tabbrowser.mTabBox.selectedPanel, newBrowser.parentNode.parentNode, "Panel for remaining tab is selected");
+      is(tabbrowser.mTabBox.selectedPanel, newBrowser.parentNode.parentNode.parentNode, "Panel for remaining tab is selected");
     }
   }
 ];
