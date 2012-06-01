@@ -56,11 +56,11 @@
     defined(__ARMEL__) || defined(__avr32__) || \
     defined(__hppa__) || defined(__ia64__) || \
     defined(__mips__) || defined(__powerpc__) || \
-    defined(__sparc__) || defined(__s390__) || \
+    defined(__sparc__) || defined(__sparc) || defined(__s390__) || \
     defined(__SH4__) || defined(__alpha__) || \
     defined(_MIPS_ARCH_MIPS32R2)
 #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
-#elif defined(_M_IX86) || defined(__i386__)
+#elif defined(_M_IX86) || defined(__i386__) || defined(__i386)
 #if defined(_WIN32)
 // Windows uses a 64bit wide floating point stack.
 #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
