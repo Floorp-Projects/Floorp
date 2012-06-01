@@ -390,6 +390,9 @@ let CommonUtils = {
    *        function, it'll be used as the object to make a json string.
    * @param callback
    *        Function called when the write has been performed. Optional.
+   *        The first argument will be a Components.results error
+   *        constant on error or null if no error was encountered (and
+   *        the file saved successfully).
    */
   jsonSave: function jsonSave(filePath, that, obj, callback) {
     let path = filePath + ".json";
@@ -405,7 +408,8 @@ let CommonUtils = {
     let is = this._utf8Converter.convertToInputStream(out);
     NetUtil.asyncCopy(is, fos, function (result) {
       if (typeof callback == "function") {
-        callback.call(that);
+        let error = (result == Cr.NS_OK) ? null : result;
+        callback.call(that, error);
       }
     });
   },
