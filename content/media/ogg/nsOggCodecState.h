@@ -15,7 +15,11 @@
 #endif
 #ifdef MOZ_OPUS
 #include <opus/opus.h>
+// For MOZ_SAMPLE_TYPE_*
+#include "nsBuiltinDecoderStateMachine.h"
+#include "nsBuiltinDecoderReader.h"
 #endif
+#include <nsAutoRef.h>
 #include <nsDeque.h>
 #include <nsTArray.h>
 #include <nsClassHashtable.h>
@@ -83,8 +87,10 @@ public:
   static nsOggCodecState* Create(ogg_page* aPage);
   
   virtual CodecType GetType() { return TYPE_UNKNOWN; }
-  
+
   // Reads a header packet. Returns true when last header has been read.
+  // This function takes ownership of the packet and is responsible for
+  // releasing it or queuing it for later processing.
   virtual bool DecodeHeader(ogg_packet* aPacket) {
     return (mDoneReadingHeaders = true);
   }
@@ -298,23 +304,34 @@ public:
 
   CodecType GetType() { return TYPE_OPUS; }
   bool DecodeHeader(ogg_packet* aPacket);
-  PRInt64 Time(PRInt64 granulepos);
+  PRInt64 Time(PRInt64 aGranulepos);
   bool Init();
   nsresult Reset();
+  nsresult Reset(bool aStart);
   bool IsHeader(ogg_packet* aPacket);
   nsresult PageIn(ogg_page* aPage);
 
+  // Returns the end time that a granulepos represents.
+  static PRInt64 Time(int aPreSkip, PRInt64 aGranulepos);
+
   // Various fields from the Ogg Opus header.
   int mRate;        // Sample rate the decoder uses (always 48 kHz).
-  int mNominalRate; // Original sample rate of the data (informational).
+  PRUint32 mNominalRate; // Original sample rate of the data (informational).
   int mChannels;    // Number of channels the stream encodes.
-  int mPreSkip;     // Number of samples to strip after decoder reset.
-  float mGain;      // Gain (dB) to apply to decoder output.
+  PRUint16 mPreSkip; // Number of samples to strip after decoder reset.
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+  float mGain;      // Gain to apply to decoder output.
+#else
+  PRInt32 mGain_Q16; // Gain to apply to the decoder output.
+#endif
   int mChannelMapping; // Channel mapping family.
   int mStreams;     // Number of packed streams in each packet.
 
   OpusDecoder *mDecoder;
   int mSkip;        // Number of samples left to trim before playback.
+  // Granule position (end sample) of the last decoded Opus packet. This is
+  // used to calculate the amount we should trim from the last packet.
+  PRInt64 mPrevPacketGranulepos;
 
 private:
 
@@ -323,7 +340,13 @@ private:
   // the stream, with the last packet having a known granulepos. Using this
   // known granulepos, and the known frame numbers, we recover the granulepos
   // of all frames in the array. This enables us to determine their timestamps.
-  void ReconstructGranulepos();
+  bool ReconstructOpusGranulepos();
+
+  // Granule position (end sample) of the last decoded Opus page. This is
+  // used to calculate the Opus per-packet granule positions on the last page,
+  // where we may need to trim some samples from the end.
+  PRInt64 mPrevPageGranulepos;
+
 #endif /* MOZ_OPUS */
 };
 
@@ -459,6 +482,17 @@ private:
 
   // Maps Ogg serialnos to the index-keypoint list.
   nsClassHashtable<nsUint32HashKey, nsKeyFrameIndex> mIndex;
+};
+
+// This allows the use of nsAutoRefs for an ogg_packet that properly free the
+// contents of the packet.
+template <>
+class nsAutoRefTraits<ogg_packet> : public nsPointerRefTraits<ogg_packet>
+{
+public:
+  static void Release(ogg_packet* aPacket) {
+    nsOggCodecState::ReleasePacket(aPacket);
+  }
 };
 
 #endif

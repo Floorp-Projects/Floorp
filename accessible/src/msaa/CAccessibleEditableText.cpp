@@ -8,7 +8,7 @@
 #include "CAccessibleEditableText.h"
 
 #include "AccessibleEditableText_i.c"
-#include "nsHyperTextAccessible.h"
+#include "HyperTextAccessible.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -38,7 +38,7 @@ STDMETHODIMP
 CAccessibleEditableText::copyText(long aStartOffset, long aEndOffset)
 {
 __try {
-  nsRefPtr<nsHyperTextAccessible> textAcc(do_QueryObject(this));
+  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -53,7 +53,7 @@ STDMETHODIMP
 CAccessibleEditableText::deleteText(long aStartOffset, long aEndOffset)
 {
 __try {
-  nsRefPtr<nsHyperTextAccessible> textAcc(do_QueryObject(this));
+  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -68,7 +68,7 @@ STDMETHODIMP
 CAccessibleEditableText::insertText(long aOffset, BSTR *aText)
 {
 __try {
-  nsRefPtr<nsHyperTextAccessible> textAcc(do_QueryObject(this));
+  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -86,7 +86,7 @@ STDMETHODIMP
 CAccessibleEditableText::cutText(long aStartOffset, long aEndOffset)
 {
 __try {
-  nsRefPtr<nsHyperTextAccessible> textAcc(do_QueryObject(this));
+  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -101,7 +101,7 @@ STDMETHODIMP
 CAccessibleEditableText::pasteText(long aOffset)
 {
 __try {
-  nsRefPtr<nsHyperTextAccessible> textAcc(do_QueryObject(this));
+  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -117,7 +117,7 @@ CAccessibleEditableText::replaceText(long aStartOffset, long aEndOffset,
                                      BSTR *aText)
 {
 __try {
-  nsRefPtr<nsHyperTextAccessible> textAcc(do_QueryObject(this));
+  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 

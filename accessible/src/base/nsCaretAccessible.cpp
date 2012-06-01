@@ -243,7 +243,7 @@ nsCaretAccessible::NormalSelectionChanged(nsISelection* aSelection)
     return; // No selection
   }
 
-  nsHyperTextAccessible* textAcc =
+  HyperTextAccessible* textAcc =
     nsAccUtils::GetTextAccessibleFromSelection(aSelection);
   if (!textAcc)
     return;
@@ -278,7 +278,7 @@ nsCaretAccessible::SpellcheckSelectionChanged(nsISelection* aSelection)
   // misspelled word). If spellchecking is disabled (for example,
   // @spellcheck="false" on html:body) then we won't fire any event.
 
-  nsHyperTextAccessible* textAcc =
+  HyperTextAccessible* textAcc =
     nsAccUtils::GetTextAccessibleFromSelection(aSelection);
   if (!textAcc)
     return;

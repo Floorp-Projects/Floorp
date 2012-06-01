@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+    <RelativeLayout android:id="@+id/menu_panel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/menu_popup_bg">
+
+        <!-- MenuPanel will be added here dynamically -->
+
+    </RelativeLayout>
+
+    <ImageView android:id="@+id/menu_arrow"
+               android:layout_width="28dip"
+               android:layout_height="10dip"
+               android:layout_marginTop="2dip"
+               android:layout_alignParentRight="true"
+               android:src="@drawable/menu_popup_arrow"
+               android:scaleType="fitXY"/>
+
+</RelativeLayout>

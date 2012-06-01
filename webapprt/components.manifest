@@ -3,6 +3,10 @@ component {6d69c782-40a3-469b-8bfd-3ee366105a4a} CommandLineHandler.js applicati
 contract @mozilla.org/webapprt/clh;1 {6d69c782-40a3-469b-8bfd-3ee366105a4a} application=webapprt@mozilla.org
 category command-line-handler x-default @mozilla.org/webapprt/clh;1 application=webapprt@mozilla.org
 
+# ContentPermission.js
+component {07ef5b2e-88fb-47bd-8cec-d3b0bef11ac4} ContentPermission.js
+contract @mozilla.org/content-permission/prompt;1 {07ef5b2e-88fb-47bd-8cec-d3b0bef11ac4}
+
 # ContentPolicy.js
 component {75acd178-3d5a-48a7-bd92-fba383520ae6} ContentPolicy.js application=webapprt@mozilla.org
 contract @mozilla.org/webapprt/content-policy;1 {75acd178-3d5a-48a7-bd92-fba383520ae6} application=webapprt@mozilla.org

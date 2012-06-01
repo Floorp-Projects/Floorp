@@ -44,7 +44,7 @@ using namespace mozilla::a11y;
 
 nsHTMLTableCellAccessible::
   nsHTMLTableCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -52,7 +52,7 @@ nsHTMLTableCellAccessible::
 // nsHTMLTableCellAccessible: nsISupports implementation
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTableCellAccessible,
-                             nsHyperTextAccessible,
+                             HyperTextAccessible,
                              nsIAccessibleTableCell)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ nsHTMLTableCellAccessible::NativeRole()
 PRUint64
 nsHTMLTableCellAccessible::NativeState()
 {
-  PRUint64 state = nsHyperTextAccessibleWrap::NativeState();
+  PRUint64 state = HyperTextAccessibleWrap::NativeState();
 
   nsIFrame *frame = mContent->GetPrimaryFrame();
   NS_ASSERTION(frame, "No frame for valid cell accessible!");
@@ -87,7 +87,7 @@ nsHTMLTableCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttri
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
+  nsresult rv = HyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // table-cell-index attribute
@@ -1512,7 +1512,7 @@ nsHTMLTableAccessible::IsProbablyLayoutTable()
 Relation
 nsHTMLCaptionAccessible::RelationByType(PRUint32 aType)
 {
-  Relation rel = nsHyperTextAccessible::RelationByType(aType);
+  Relation rel = HyperTextAccessible::RelationByType(aType);
   if (aType == nsIAccessibleRelation::RELATION_LABEL_FOR)
     rel.AppendTarget(Parent());
 
