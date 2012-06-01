@@ -2103,14 +2103,20 @@ nsTableFrame::AppendFrames(ChildListID     aListID,
   return NS_OK;
 }
 
+// Needs to be at file scope or ArrayLength fails to compile.
+struct ChildListInsertions {
+  nsIFrame::ChildListID mID;
+  nsFrameList mList;
+};
+
 NS_IMETHODIMP
 nsTableFrame::InsertFrames(ChildListID     aListID,
                            nsIFrame*       aPrevFrame,
                            nsFrameList&    aFrameList)
 {
-  // Asssume there's only one frame being inserted. The problem is that
-  // row group frames and col group frames go in separate child lists and
-  // so if there's more than one type of frames this gets messy...
+  // The frames in aFrameList can be a mix of row group frames and col group
+  // frames. The problem is that they should go in separate child lists so
+  // we need to deal with that here...
   // XXX The frame construction code should be separating out child frames
   // based on the type, bug 343048.
 
@@ -2123,15 +2129,55 @@ nsTableFrame::InsertFrames(ChildListID     aListID,
     return AppendFrames(aListID, aFrameList);
   }
 
+  // Collect ColGroupFrames into a separate list and insert those separately
+  // from the other frames (bug 759249).
+  ChildListInsertions insertions[2]; // ColGroup, other
+  const nsStyleDisplay* display = aFrameList.FirstChild()->GetStyleDisplay();
+  nsFrameList::FrameLinkEnumerator e(aFrameList);
+  for (; !aFrameList.IsEmpty(); e.Next()) {
+    nsIFrame* next = e.NextFrame();
+    if (!next || next->GetStyleDisplay()->mDisplay != display->mDisplay) {
+      nsFrameList head = aFrameList.ExtractHead(e);
+      if (display->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP) {
+        insertions[0].mID = kColGroupList;
+        insertions[0].mList.AppendFrames(nsnull, head);
+      } else {
+        insertions[1].mID = kPrincipalList;
+        insertions[1].mList.AppendFrames(nsnull, head);
+      }
+      if (!next) {
+        break;
+      }
+      display = next->GetStyleDisplay();
+    }
+  }
+  for (PRUint32 i = 0; i < ArrayLength(insertions); ++i) {
+    // We pass aPrevFrame for both ColGroup and other frames since
+    // HomogenousInsertFrames will only use it if it's a suitable
+    // prev-sibling for the frames in the frame list.
+    if (!insertions[i].mList.IsEmpty()) {
+      HomogenousInsertFrames(insertions[i].mID, aPrevFrame,
+                             insertions[i].mList);
+    }
+  }
+  return NS_OK;
+}
+
+void
+nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
+                                     nsIFrame*       aPrevFrame,
+                                     nsFrameList&    aFrameList)
+{
   // See what kind of frame we have
   const nsStyleDisplay* display = aFrameList.FirstChild()->GetStyleDisplay();
 #ifdef DEBUG
-  // verify that all sibling have the same type, if they do not, expect cellmap issues
+  // Verify that either all siblings have display:table-column-group, or they
+  // all have display values different from table-column-group.
   for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
     const nsStyleDisplay* nextDisplay = e.get()->GetStyleDisplay();
-    NS_ASSERTION((display->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP) ==
-        (nextDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP),
-      "heterogenous childlist");
+    MOZ_ASSERT((display->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP) ==
+               (nextDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP),
+               "heterogenous childlist");
   }
 #endif
   if (aPrevFrame) {
@@ -2189,8 +2235,7 @@ nsTableFrame::InsertFrames(ChildListID     aListID,
     }
   }
   if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay) {
-    NS_ASSERTION(aListID == kPrincipalList || aListID == kColGroupList,
-                 "unexpected child list");
+    NS_ASSERTION(aListID == kColGroupList, "unexpected child list");
     // Insert the column group frames
     const nsFrameList::Slice& newColgroups =
       mColGroups.InsertFrames(nsnull, aPrevFrame, aFrameList);
@@ -2217,7 +2262,7 @@ nsTableFrame::InsertFrames(ChildListID     aListID,
     NS_NOTREACHED("How did we even get here?");
     // Just insert the frame and don't worry about reflowing it
     mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
-    return NS_OK;
+    return;
   }
 
   PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -2227,7 +2272,7 @@ nsTableFrame::InsertFrames(ChildListID     aListID,
   printf("=== TableFrame::InsertFrames\n");
   Dump(true, true, true);
 #endif
-  return NS_OK;
+  return;
 }
 
 NS_IMETHODIMP
