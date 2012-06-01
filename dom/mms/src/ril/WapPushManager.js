@@ -6,6 +6,9 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
 Cu.import("resource://gre/modules/WspPduHelper.jsm");
 
 const DEBUG = false; // set to true to see debug messages
@@ -38,9 +41,14 @@ let WapPushManager = {
       return;
     }
 
-    // FIXME: hand over to others
-
-    debug("No WAP Push application registered for " + appid);
+    if (appid == "x-wap-application:mms.ua") {
+      let mmsService = Cc["@mozilla.org/mms/rilmmsservice;1"]
+                       .getService(Ci.nsIMmsService);
+      mmsService.QueryInterface(Ci.nsIWapPushApplication)
+                .receiveWapPush(data.array, data.array.length, data.offset, options);
+    } else {
+      debug("No WAP Push application registered for " + appid);
+    }
   },
 
   /**
