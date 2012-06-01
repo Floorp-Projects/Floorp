@@ -67,8 +67,8 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAppShell, nsBaseAppShell, nsIObserver)
 
 class ScreenshotRunnable : public nsRunnable {
 public:
-    ScreenshotRunnable(nsIAndroidBrowserApp* aBrowserApp, int aTabId, nsTArray<nsIntPoint>& aPoints, int aToken):
-        mBrowserApp(aBrowserApp), mTabId(aTabId), mPoints(aPoints), mToken(aToken) {}
+    ScreenshotRunnable(nsIAndroidBrowserApp* aBrowserApp, int aTabId, nsTArray<nsIntPoint>& aPoints, int aToken, RefCountedJavaObject* aBuffer):
+        mBrowserApp(aBrowserApp), mTabId(aTabId), mPoints(aPoints), mToken(aToken), mBuffer(aBuffer) {}
 
     virtual nsresult Run() {
         nsCOMPtr<nsIDOMWindow> domWindow;
@@ -81,16 +81,16 @@ public:
         if (!domWindow)
             return NS_OK;
 
-        float scale = 1.0;
-        NS_ASSERTION(mPoints.Length() == 4, "Screenshot event does not have enough coordinates");
+        NS_ASSERTION(mPoints.Length() == 5, "Screenshot event does not have enough coordinates");
 
-        AndroidBridge::Bridge()->TakeScreenshot(domWindow, mPoints[0].x, mPoints[0].y, mPoints[1].x, mPoints[1].y, mPoints[3].x, mPoints[3].y, mTabId, scale, mToken);
+        AndroidBridge::Bridge()->TakeScreenshot(domWindow, mPoints[0].x, mPoints[0].y, mPoints[1].x, mPoints[1].y, mPoints[2].x, mPoints[2].y, mPoints[3].x, mPoints[3].y, mPoints[4].x, mPoints[4].y, mTabId, mToken, mBuffer->GetObject());
         return NS_OK;
     }
 private:
     nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
     nsTArray<nsIntPoint> mPoints;
     int mTabId, mToken;
+    nsRefPtr<RefCountedJavaObject> mBuffer;
 };
 
 class AfterPaintListener : public nsIDOMEventListener {
@@ -119,23 +119,15 @@ class AfterPaintListener : public nsIDOMEventListener {
         if (!paintEvent)
             return NS_OK;
 
-        nsCOMPtr<nsIDOMClientRectList> rects;
-        paintEvent->GetClientRects(getter_AddRefs(rects));
-        if (!rects)
-            return NS_OK;
-        PRUint32 length;
-        rects->GetLength(&length);
-        for (PRUint32 i = 0; i < length; ++i) {
-            float top, left, bottom, right;
-            nsCOMPtr<nsIDOMClientRect> rect = rects->GetItemAt(i);
-            if (!rect)
-                continue;
-            rect->GetTop(&top);
-            rect->GetLeft(&left);
-            rect->GetRight(&right);
-            rect->GetBottom(&bottom);
-            AndroidBridge::NotifyPaintedRect(top, left, bottom, right);
-        }
+        nsCOMPtr<nsIDOMClientRect> rect;
+        paintEvent->GetBoundingClientRect(getter_AddRefs(rect));
+        float top, left, bottom, right;
+        rect->GetTop(&top);
+        rect->GetLeft(&left);
+        rect->GetRight(&right);
+        rect->GetBottom(&bottom);
+        __android_log_print(ANDROID_LOG_INFO, "GeckoScreenshot", "rect: %f, %f, %f, %f", top, left, right, bottom);
+        AndroidBridge::NotifyPaintedRect(top, left, bottom, right);
         return NS_OK;
     }
 
@@ -457,8 +449,9 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         PRInt32 token = curEvent->Flags();
         PRInt32 tabId = curEvent->MetaState();
         nsTArray<nsIntPoint> points = curEvent->Points();
+        RefCountedJavaObject* buffer = curEvent->ByteBuffer();
         nsCOMPtr<ScreenshotRunnable> sr = 
-            new ScreenshotRunnable(mBrowserApp, tabId, points, token);
+            new ScreenshotRunnable(mBrowserApp, tabId, points, token, buffer);
         MessageLoop::current()->PostIdleTask(
             FROM_HERE, NewRunnableMethod(sr.get(), &ScreenshotRunnable::Run));
         break;
