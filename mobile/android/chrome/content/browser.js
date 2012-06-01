@@ -3253,6 +3253,7 @@ var FindHelper = {
       // fall through and clean up anyway
     }
 
+    this._find.collapseSelection();
     this._find = null;
     this._findInProgress = false;
     this._targetTab = null;
