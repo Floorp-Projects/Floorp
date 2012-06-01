@@ -23,6 +23,7 @@ EXPORT_LIBRARY = 1
 ##
 IPDLDIRS =  \
   uriloader/exthandler \
+  dom/indexedDB/ipc \
   dom/plugins/ipc  \
   dom/ipc  \
   dom/sms/src/ipc \

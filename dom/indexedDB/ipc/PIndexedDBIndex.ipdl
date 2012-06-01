@@ -1,0 +1,127 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PIndexedDBCursor;
+include protocol PIndexedDBObjectStore;
+include protocol PIndexedDBRequest;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using mozilla::dom::indexedDB::Key;
+using mozilla::dom::indexedDB::IDBCursor::Direction;
+using mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo;
+
+using mozilla::void_t;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+namespace ipc {
+
+namespace FIXME_Bug_521898_index {
+
+struct KeyRange
+{
+  Key lower;
+  Key upper;
+  bool lowerOpen;
+  bool upperOpen;
+  bool isOnly;
+};
+
+union OptionalKeyRange
+{
+  KeyRange;
+  void_t;
+};
+
+struct GetParams
+{
+  KeyRange keyRange;
+};
+
+struct GetAllParams
+{
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct CountParams
+{
+  OptionalKeyRange optionalKeyRange;
+};
+
+struct OpenCursorParams
+{
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+} // namespace FIXME_Bug_521898_index
+
+struct GetKeyParams
+{
+  KeyRange keyRange;
+};
+
+struct GetAllKeysParams
+{
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct OpenKeyCursorParams
+{
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+union IndexRequestParams
+{
+  GetParams;
+  GetKeyParams;
+  GetAllParams;
+  GetAllKeysParams;
+  CountParams;
+  OpenCursorParams;
+  OpenKeyCursorParams;
+};
+
+union OptionalStructuredCloneReadInfo
+{
+  SerializedStructuredCloneReadInfo;
+  void_t;
+};
+
+struct IndexCursorConstructorParams
+{
+  PIndexedDBRequest request;
+  Direction direction;
+  Key key;
+  Key objectKey;
+  OptionalStructuredCloneReadInfo optionalCloneInfo;
+};
+
+} // namespace ipc
+
+protocol PIndexedDBIndex
+{
+  manager PIndexedDBObjectStore;
+
+  manages PIndexedDBCursor;
+  manages PIndexedDBRequest;
+
+parent:
+  __delete__();
+
+  PIndexedDBRequest(IndexRequestParams params);
+
+child:
+  PIndexedDBCursor(IndexCursorConstructorParams params);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla
