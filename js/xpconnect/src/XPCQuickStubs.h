@@ -496,7 +496,7 @@ inline nsresult
 xpc_qsUnwrapArg(JSContext *cx, jsval v, Interface **ppArg,
                 StrongRefType **ppArgRef, jsval *vp)
 {
-    nsISupports* argRef;
+    nsISupports* argRef = *ppArgRef;
     nsresult rv = xpc_qsUnwrapArgImpl(cx, v, NS_GET_TEMPLATE_IID(Interface),
                                       reinterpret_cast<void **>(ppArg), &argRef,
                                       vp);
