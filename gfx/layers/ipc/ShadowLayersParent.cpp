@@ -410,6 +410,14 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   return true;
 }
 
+bool
+ShadowLayersParent::RecvDrawToSurface(const SurfaceDescriptor& surfaceIn,
+                                      SurfaceDescriptor* surfaceOut)
+{
+  *surfaceOut = surfaceIn;
+  return true;
+}
+
 PLayerParent*
 ShadowLayersParent::AllocPLayer()
 {
