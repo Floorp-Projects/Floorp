@@ -284,6 +284,12 @@ RadioInterfaceLayer.prototype = {
       case "dataregistrationstatechange":
         this.updateDataConnection(message);
         break;
+      case "datacallerror":
+        // 3G Network revoked the data connection, possible unavailable APN
+        debug("Received data registration error message. Failed APN " +
+              Services.prefs.getCharPref("ril.data.apn"));
+        RILNetworkInterface.reset();
+        break;
       case "signalstrengthchange":
         this.handleSignalStrengthChange(message);
         break;
@@ -739,6 +745,7 @@ RadioInterfaceLayer.prototype = {
         for each (let msgname in RIL_IPC_MSG_NAMES) {
           ppmm.removeMessageListener(msgname, this);
         }
+        RILNetworkInterface.shutdown();
         ppmm = null;
         Services.obs.removeObserver(this, "xpcom-shutdown");
         Services.obs.removeObserver(this, kMozSettingsChangedObserverTopic);
@@ -1424,6 +1431,17 @@ let RILNetworkInterface = {
   NETWORK_TYPE_MOBILE:     Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
   NETWORK_TYPE_MOBILE_MMS: Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS,
 
+  /**
+   * Standard values for the APN connection retry process
+   * Retry funcion: time(secs) = A * numer_of_retries^2 + B
+   */
+  NETWORK_APNRETRY_FACTOR: 8,
+  NETWORK_APNRETRY_ORIGIN: 3,
+  NETWORK_APNRETRY_MAXRETRIES: 10,
+
+  // Event timer for connection retries
+  timer: null,
+
   type: Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
 
   name: null,
@@ -1470,6 +1488,9 @@ let RILNetworkInterface = {
   registeredAsNetworkInterface: false,
   connecting: false,
 
+  // APN failed connections. Retry counter
+  apnRetryCounter: 0,
+
   get mRIL() {
     delete this.mRIL;
     return this.mRIL = Cc["@mozilla.org/telephony/system-worker-manager;1"]
@@ -1510,6 +1531,33 @@ let RILNetworkInterface = {
     this.connecting = true;
   },
 
+  reset: function reset() {
+    let apnRetryTimer;
+    this.connecting = false;
+    // We will retry the connection in increasing times
+    // based on the function: time = A * numer_of_retries^2 + B
+    if (this.apnRetryCounter >= this.NETWORK_APNRETRY_MAXRETRIES) {
+      this.apnRetryCounter = 0;
+      this.timer = null;
+      debug("Too many APN Connection retries - STOP retrying");
+      return;
+    }
+
+    apnRetryTimer = this.NETWORK_APNRETRY_FACTOR *
+                    (this.apnRetryCounter * this.apnRetryCounter) +
+                    this.NETWORK_APNRETRY_ORIGIN;
+    this.apnRetryCounter++;
+    debug("Data call - APN Connection Retry Timer (secs-counter): " +
+          apnRetryTimer + "-" + this.apnRetryCounter);
+
+    if (this.timer == null) {
+      // Event timer for connection retries
+      this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    }
+    this.timer.initWithCallback(this, apnRetryTimer * 1000,
+                                Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
   disconnect: function disconnect() {
     if (this.state == RIL.GECKO_NETWORK_STATE_DISCONNECTING ||
         this.state == RIL.GECKO_NETWORK_STATE_DISCONNECTED) {
@@ -1519,6 +1567,15 @@ let RILNetworkInterface = {
     debug("Going to disconnet data connection " + this.cid);
     this.mRIL.deactivateDataCall(this.cid, reason);
   },
+
+  // Entry method for timer events. Used to reconnect to a failed APN
+  notify: function(timer) {
+    RILNetworkInterface.connect();
+  },
+
+  shutdown: function() {
+    this.timer = null;
+  }
 
 };
 
