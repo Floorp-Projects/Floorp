@@ -15,6 +15,7 @@ import org.mozilla.gecko.gfx.ScreenshotLayer;
 import org.mozilla.gecko.FloatUtils;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.ViewportMetrics;
+import org.mozilla.gecko.gfx.RectUtils;
 
 import java.io.*;
 import java.lang.reflect.*;
@@ -83,8 +84,7 @@ public class GeckoAppShell
     public static final String SHORTCUT_TYPE_BOOKMARK = "bookmark";
 
     static public final int SCREENSHOT_THUMBNAIL = 0;
-    static public final int SCREENSHOT_WHOLE_PAGE = 1;
-    static public final int SCREENSHOT_UPDATE = 2;
+    static public final int SCREENSHOT_CHECKERBOARD = 1;
 
     static public final int RESTORE_NONE = 0;
     static public final int RESTORE_OOM = 1;
@@ -98,11 +98,6 @@ public class GeckoAppShell
     private static Boolean sNSSLibsLoaded = false;
     private static Boolean sLibsSetup = false;
     private static File sGREDir = null;
-    private static RectF sCheckerboardPageRect;
-    private static float sLastCheckerboardWidthRatio, sLastCheckerboardHeightRatio;
-    private static RepaintRunnable sRepaintRunnable = new RepaintRunnable();
-    static private int sMaxTextureSize = 0;
-
     private static Map<String, CopyOnWriteArrayList<GeckoEventListener>> mEventListeners
             = new HashMap<String, CopyOnWriteArrayList<GeckoEventListener>>();
 
@@ -127,8 +122,6 @@ public class GeckoAppShell
     private static boolean mLocationHighAccuracy = false;
 
     private static Handler sGeckoHandler;
-
-    private static boolean sDisableScreenshot = false;
 
     /* The Android-side API: API methods that Android calls */
 
@@ -535,42 +528,7 @@ public class GeckoAppShell
     // Called by AndroidBridge using JNI
     public static void notifyScreenShot(final ByteBuffer data, final int tabId, final int x, final int y,
                                         final int width, final int height, final int token) {
-        getHandler().post(new Runnable() {
-            public void run() {
-                try {
-                    final Tab tab = Tabs.getInstance().getTab(tabId);
-                    if (tab == null)
-                        return;
-
-                    if (!Tabs.getInstance().isSelectedTab(tab) && SCREENSHOT_THUMBNAIL != token)
-                        return;
-
-                    Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-                    b.copyPixelsFromBuffer(data);
-                    switch (token) {
-                    case SCREENSHOT_WHOLE_PAGE:
-                        GeckoApp.mAppContext.getLayerController()
-                            .getView().getRenderer()
-                            .setCheckerboardBitmap(b, sCheckerboardPageRect);
-                        break;
-                    case SCREENSHOT_UPDATE:
-                        GeckoApp.mAppContext.getLayerController().getView().getRenderer().
-                            updateCheckerboardBitmap(
-                                b, sLastCheckerboardWidthRatio * x,
-                                sLastCheckerboardHeightRatio * y,
-                                sLastCheckerboardWidthRatio * width,
-                                sLastCheckerboardHeightRatio * height,
-                                sCheckerboardPageRect);
-                        break;
-                    case SCREENSHOT_THUMBNAIL:
-                        GeckoApp.mAppContext.processThumbnail(tab, b, null);
-                        break;
-                    }
-                } finally {
-                    freeDirectBuffer(data);
-                }
-            }
-        });
+        ScreenshotHandler.notifyScreenShot(data, tabId, x, y, width, height, token);
     }
 
     private static CountDownLatch sGeckoPendingAcks = null;
@@ -2136,6 +2094,26 @@ public class GeckoAppShell
         if (!GeckoApp.mAppContext.showFilePicker(aMimeType, new AsyncResultHandler(id)))
             GeckoAppShell.notifyFilePickerResult("", id);
     }
+    public static void screenshotWholePage(Tab tab) {
+        ScreenshotHandler.screenshotWholePage(tab);
+    }
+
+    // Called by AndroidBridge using JNI
+    public static void notifyPaintedRect(float top, float left, float bottom, float right) {
+        ScreenshotHandler.notifyPaintedRect(top, left, bottom, right);
+    }
+}
+
+class ScreenshotHandler {
+    private static Queue<PendingScreenshot> sPendingScreenshots = new ArrayDeque<PendingScreenshot>();
+    private static RectF sCheckerboardPageRect;
+    private static float sLastCheckerboardWidthRatio, sLastCheckerboardHeightRatio;
+    private static RepaintRunnable sRepaintRunnable = new RepaintRunnable();
+    private static int sMaxTextureSize = 0;
+    private static final String LOGTAG = "GeckoScreenshot";
+    private static boolean sDisableScreenshot = false;
+    private static ByteBuffer sWholePageScreenshotBuffer;
+    private static int sCheckerboardBufferWidth, sCheckerboardBufferHeight;
 
     static class RepaintRunnable implements Runnable {
         private boolean mIsRepaintRunnablePosted = false;
@@ -2158,25 +2136,40 @@ public class GeckoAppShell
                 mIsRepaintRunnablePosted = false;
             }
 
+
             Tab tab = Tabs.getInstance().getSelectedTab();
-            GeckoAppShell.screenshotWholePage(tab);
+            ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
+            
+            if (RectUtils.fuzzyEquals(sCheckerboardPageRect, viewport.getCssPageRect())) {
+                float width = right - left;
+                float height = bottom - top;
+                scheduleCheckerboardScreenshotEvent(tab.getId(), 
+                                                    (int)left, (int)top, (int)width, (int)height, 
+                                                    (int)(sLastCheckerboardWidthRatio * left), 
+                                                    (int)(sLastCheckerboardHeightRatio * top),
+                                                    (int)(sLastCheckerboardWidthRatio * width),
+                                                    (int)(sLastCheckerboardHeightRatio * height),
+                                                    sCheckerboardBufferWidth, sCheckerboardBufferHeight);
+            } else {
+                GeckoAppShell.screenshotWholePage(tab);
+            }
         }
 
         void addRectToRepaint(float top, float left, float bottom, float right) {
             synchronized(this) {
-                mDirtyTop = Math.min(top, mDirtyTop);
-                mDirtyLeft = Math.min(left, mDirtyLeft);
-                mDirtyBottom = Math.max(bottom, mDirtyBottom);
-                mDirtyRight = Math.max(right, mDirtyRight);
+                ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
+                mDirtyTop = Math.max(sCheckerboardPageRect.top, Math.min(top, mDirtyTop));
+                mDirtyLeft = Math.max(sCheckerboardPageRect.left, Math.min(left, mDirtyLeft));
+                mDirtyBottom = Math.min(sCheckerboardPageRect.bottom, Math.max(bottom, mDirtyBottom));
+                mDirtyRight = Math.min(sCheckerboardPageRect.right, Math.max(right, mDirtyRight));
                 if (!mIsRepaintRunnablePosted) {
-                    getHandler().postDelayed(this, 5000);
+                    GeckoAppShell.getHandler().postDelayed(this, 5000);
                     mIsRepaintRunnablePosted = true;
                 }
             }
         }
     }
 
-    // Called by AndroidBridge using JNI
     public static void notifyPaintedRect(float top, float left, float bottom, float right) {
         sRepaintRunnable.addRectToRepaint(top, left, bottom, right);
     }
@@ -2203,7 +2196,9 @@ public class GeckoAppShell
             sMaxTextureSize = maxTextureSize[0];
             if (sMaxTextureSize == 0)
                 return;
+            sWholePageScreenshotBuffer = GeckoAppShell.allocateDirectBuffer(ScreenshotLayer.getMaxNumPixels() * 2 /* 16 bpp */);
         }
+
         ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
         Log.i(LOGTAG, "Taking whole-screen screenshot, viewport: " + viewport);
         // source width and height to screenshot
@@ -2224,14 +2219,96 @@ public class GeckoAppShell
         int dy = 0;
         int dw = clamp(minTextureSize, idealDstWidth, sMaxTextureSize);
         int dh = maxPixels / dw;
+        sCheckerboardBufferWidth = dw;
+        sCheckerboardBufferHeight = dh;
 
         sLastCheckerboardWidthRatio = dw / sw;
         sLastCheckerboardHeightRatio = dh / sh;
         sCheckerboardPageRect = viewport.getCssPageRect();
+        scheduleCheckerboardScreenshotEvent(tab.getId(), (int)sx, (int)sy, (int)sw, (int)sh, dx, dy, dw, dh, dw, dh);
+    }
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createScreenshotEvent(tab.getId(),
-                (int)FloatMath.ceil(sx), (int)FloatMath.ceil(sy),
-                (int)FloatMath.floor(sw), (int)FloatMath.floor(sh),
-                dx, dy, dw, dh, GeckoAppShell.SCREENSHOT_WHOLE_PAGE));
+    static void scheduleCheckerboardScreenshotEvent(int tabId, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int bw, int bh) {
+        float totalSize = sw * sh;
+        int numSlices = (int) Math.ceil(totalSize / 100000);
+        int srcSliceSize = (int) Math.ceil(sh / numSlices);
+        int dstSliceSize = (int) Math.ceil(dh / numSlices);
+        for (int i = 0; i < numSlices; i++) {
+            GeckoEvent event =
+                GeckoEvent.createScreenshotEvent(tabId, 
+                                                 sx, sy + srcSliceSize * i,  sw, srcSliceSize, 
+                                                 dx, dy + dstSliceSize * i,  dw, dstSliceSize, bw, bh,
+                                                 GeckoAppShell.SCREENSHOT_CHECKERBOARD,
+                                                 sWholePageScreenshotBuffer);
+            synchronized(sPendingScreenshots) {
+                sPendingScreenshots.add(new PendingScreenshot(tabId, event));
+                if (sPendingScreenshots.size() == 1)
+                    sendNextEventToGecko();
+            }
+        }
+    }
+
+    static void sendNextEventToGecko() {
+        synchronized(sPendingScreenshots) {
+            if (sPendingScreenshots.isEmpty())
+                return;
+            GeckoAppShell.sendEventToGecko(sPendingScreenshots.element().getEvent());
+        }
+    }
+    
+    static class PendingScreenshot {
+        private final GeckoEvent mEvent;
+        private final int mTabId;
+
+        PendingScreenshot(int tabId, GeckoEvent event) {
+            mTabId = tabId;
+            mEvent = event;
+        }
+
+        GeckoEvent getEvent() {
+            return mEvent;
+        }
+
+    }
+
+    public static void notifyScreenShot(final ByteBuffer data, final int tabId, final int x, final int y,
+                                        final int width, final int height, final int token) {
+
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                final Tab tab = Tabs.getInstance().getTab(tabId);
+                if (tab == null) {
+                    if (token == GeckoAppShell.SCREENSHOT_CHECKERBOARD) {
+                        synchronized(sPendingScreenshots) {
+                            sPendingScreenshots.remove();
+                            sendNextEventToGecko();
+                        }
+                    }
+                    return;
+                }
+                switch (token) {
+                    case GeckoAppShell.SCREENSHOT_CHECKERBOARD:
+                    {
+                        GeckoApp.mAppContext.getLayerController()
+                            .getView().getRenderer()
+                            .setCheckerboardBitmap(data, width, height, sCheckerboardPageRect);
+                        synchronized(sPendingScreenshots) {
+                            sPendingScreenshots.remove();
+                            sendNextEventToGecko();
+                        }
+                        break;
+                    }
+                    case GeckoAppShell.SCREENSHOT_THUMBNAIL:
+                    {
+                        if (Tabs.getInstance().isSelectedTab(tab)) {
+                            Bitmap b = tab.getThumbnailBitmap();
+                            b.copyPixelsFromBuffer(data);
+                            GeckoApp.mAppContext.processThumbnail(tab, b, null);
+                        }
+                        break;
+                    }
+                }
+            }
+        });
     }
 }
