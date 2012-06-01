@@ -352,7 +352,7 @@ interface nsIUpdateChecker : nsISupports
  * background update checks and provides utilities for selecting and
  * downloading update patches.
  */
-[scriptable, uuid(7bd62f69-f604-484b-b97c-e7229d7a3ee8)]
+[scriptable, uuid(900b4a18-3bef-4f3e-bcf5-84dce0021c6d)]
 interface nsIApplicationUpdateService : nsISupports
 {
   /**
@@ -422,6 +422,11 @@ interface nsIApplicationUpdateService : nsISupports
    * privileges to the install directory.
    */
   readonly attribute boolean canApplyUpdates;
+
+  /**
+   * Whether the Update Service is able to stage updates.
+   */
+  readonly attribute boolean canStageUpdates;
 };
 
 /**
