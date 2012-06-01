@@ -32,10 +32,10 @@ function isHostInMozPlaces(aURI)
   return result;
 }
 
-function isHostInMozHosts(aURI, aTyped)
+function isHostInMozHosts(aURI, aTyped, aPrefix)
 {
   let stmt = DBConn().createStatement(
-    "SELECT host, typed "
+    "SELECT host, typed, prefix "
     + "FROM moz_hosts "
     + "WHERE host = fixup_url(:host) "
     + "AND frecency NOTNULL "
@@ -43,10 +43,7 @@ function isHostInMozHosts(aURI, aTyped)
   let result = false;
   stmt.params.host = aURI.host;
   if (stmt.executeStep()) {
-    if (aTyped != null)
-      result = aTyped == stmt.row.typed;
-    else
-      result = true;
+    result = aTyped == stmt.row.typed && aPrefix == stmt.row.prefix;
   }
   stmt.finalize();
   return result;
@@ -54,15 +51,18 @@ function isHostInMozHosts(aURI, aTyped)
 
 let urls = [{uri: NetUtil.newURI("http://visit1.mozilla.org"),
              expected: "visit1.mozilla.org",
-             typed: 0
+             typed: 0,
+             prefix: null
             },
             {uri: NetUtil.newURI("http://visit2.mozilla.org"),
              expected: "visit2.mozilla.org",
-             typed: 0
+             typed: 0,
+             prefix: null
             },
             {uri: NetUtil.newURI("http://www.foo.mozilla.org"),
              expected: "foo.mozilla.org",
-             typed: 1
+             typed: 1,
+             prefix: "www."
             },
            ];
 
@@ -96,9 +96,9 @@ function test_moz_hosts_update()
       do_throw("gHistory.updatePlaces() failed");
     },
     handleCompletion: function () {
-      do_check_true(isHostInMozHosts(urls[0].uri, urls[0].typed));
-      do_check_true(isHostInMozHosts(urls[1].uri, urls[1].typed));
-      do_check_true(isHostInMozHosts(urls[2].uri, urls[2].typed));
+      do_check_true(isHostInMozHosts(urls[0].uri, urls[0].typed, urls[0].prefix));
+      do_check_true(isHostInMozHosts(urls[1].uri, urls[1].typed, urls[1].prefix));
+      do_check_true(isHostInMozHosts(urls[2].uri, urls[2].typed, urls[2].prefix));
       run_next_test();
     }
   });
@@ -112,7 +112,7 @@ function test_remove_places()
 
   waitForClearHistory(function (){
     for (let idx in urls) {
-      do_check_false(isHostInMozHosts(urls[idx].uri));
+      do_check_false(isHostInMozHosts(urls[idx].uri, urls[idx].typed, urls[idx].prefix));
     }
     run_next_test();
   });
@@ -135,8 +135,8 @@ function test_bookmark_changes()
   waitForClearHistory(function (){
     let newUri = NetUtil.newURI(NEW_URL);
     do_check_true(isHostInMozPlaces(newUri));
-    do_check_true(isHostInMozHosts(newUri));
-    do_check_false(isHostInMozHosts(NetUtil.newURI("http://test.mozilla.org")));
+    do_check_true(isHostInMozHosts(newUri, false, null));
+    do_check_false(isHostInMozHosts(NetUtil.newURI("http://test.mozilla.org"), false, null));
     run_next_test();
   });
 }
@@ -148,7 +148,7 @@ function test_bookmark_removal()
   let newUri = NetUtil.newURI(NEW_URL);
   PlacesUtils.bookmarks.removeItem(itemId);
   waitForClearHistory(function (){
-    do_check_false(isHostInMozHosts(newUri));
+    do_check_false(isHostInMozHosts(newUri, false, null));
     run_next_test();
   });
 }
@@ -170,7 +170,7 @@ function test_moz_hosts_typed_update()
       do_throw("gHistory.updatePlaces() failed");
     },
     handleCompletion: function () {
-      do_check_true(isHostInMozHosts(TEST_URI, true));
+      do_check_true(isHostInMozHosts(TEST_URI, true, null));
       run_next_test();
     }
   });
@@ -196,7 +196,8 @@ function test_moz_hosts_www_remove()
       },
       handleCompletion: function () {
         PlacesUtils.history.removePage(aURIToRemove);
-        do_check_true(isHostInMozHosts(aURIToKeep));
+        let prefix = /www/.test(aURIToKeep.spec) ? "www." : null;
+        do_check_true(isHostInMozHosts(aURIToKeep, false, prefix));
         waitForClearHistory(aCallback);
       }
     });
