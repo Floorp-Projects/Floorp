@@ -718,7 +718,12 @@ Database::InitSchema(bool* aDatabaseMigrated)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Firefox 14 uses schema version 20.
+      if (currentSchemaVersion < 21) {
+        rv = MigrateV21Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 14 uses schema version 21.
 
       // Schema Upgrades must add migration code here.
 
@@ -1834,6 +1839,39 @@ Database::MigrateV20Up()
   );
   NS_ENSURE_SUCCESS(rv, rv);
   rv = deleteOldBookmarkGUIDAnnosStmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+Database::MigrateV21Up()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Add a prefix column to moz_hosts.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT prefix FROM moz_hosts"
+  ), getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_hosts ADD COLUMN prefix"
+    ));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Update prefixes.
+  nsCOMPtr<mozIStorageAsyncStatement> updatePrefixesStmt;
+  rv = mMainConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
+    "UPDATE moz_hosts SET prefix = ( "
+      HOSTS_PREFIX_PRIORITY_FRAGMENT
+    ") "
+  ), getter_AddRefs(updatePrefixesStmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  rv = updatePrefixesStmt->ExecuteAsync(nsnull, getter_AddRefs(ps));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
