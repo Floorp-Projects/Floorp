@@ -48,7 +48,7 @@ function testRecurse() {
             "Should have reached the recurse limit.");
 
           gDebugger.DebuggerController.activeThread.resume(function() {
-            closeDebuggerAndFinish(gTab);
+            closeDebuggerAndFinish();
           });
         });
 

@@ -157,7 +157,7 @@ function testScriptSearching() {
     is(gScripts.visibleItemsCount, 1,
       "Not all the scripts are shown after the search. (20)");
 
-    closeDebuggerAndFinish(gTab);
+    closeDebuggerAndFinish();
   });
 }
 
