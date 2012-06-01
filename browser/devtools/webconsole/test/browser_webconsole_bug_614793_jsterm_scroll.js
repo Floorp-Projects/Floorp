@@ -14,7 +14,7 @@ function consoleOpened(hud) {
   let boxObject = outputNode.scrollBoxObject.element;
 
   for (let i = 0; i < 150; i++) {
-    hud.console.log("test message " + i);
+    content.console.log("test message " + i);
   }
 
   waitForSuccess({

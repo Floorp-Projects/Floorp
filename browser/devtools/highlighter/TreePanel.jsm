@@ -528,7 +528,7 @@ TreePanel.prototype = {
     }
 
     this.IUI.isDirty = dirty;
-    this.IUI.nodeChanged(this.registrationObject);
+    this.IUI.nodeChanged("treepanel");
 
     // event notification
     Services.obs.notifyObservers(null, this.IUI.INSPECTOR_NOTIFICATIONS.EDITOR_SAVED,

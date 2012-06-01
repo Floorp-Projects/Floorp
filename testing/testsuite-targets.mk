@@ -270,6 +270,7 @@ package-tests: \
   stage-peptest \
   stage-mozbase \
   stage-tps \
+  stage-modules \
   $(NULL)
 else
 # This staging area has been built for us by universal/flight.mk
@@ -336,6 +337,10 @@ stage-tps: make-stage-dir
 	@(cd $(topsrcdir)/services/sync/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
 	(cd $(topsrcdir)/services/sync/tests/tps && tar $(TAR_CREATE_FLAGS_QUIET) - *) | (cd $(PKG_STAGE)/tps/tests && tar -xf -)
 
+# This will get replaced by actual logic in a subsequent patch.
+stage-modules: make-stage-dir
+	$(TOUCH) $(PKG_STAGE)/modules/.dummy
+
 stage-mozbase: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/mozbase stage-package
 .PHONY: \
@@ -361,5 +366,6 @@ stage-mozbase: make-stage-dir
   stage-peptest \
   stage-mozbase \
   stage-tps \
+  stage-modules \
   $(NULL)
 
