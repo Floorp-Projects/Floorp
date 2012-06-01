@@ -1392,6 +1392,15 @@ let RIL = {
   },
 
   /**
+   * Get the available networks
+   */
+  getAvailableNetworks: function getAvailableNetworks(options) {
+    if (DEBUG) debug("Getting available networks");
+    Buf.newParcel(REQUEST_QUERY_AVAILABLE_NETWORKS, options);
+    Buf.sendParcel();
+  },
+
+  /**
    * Get current calls.
    */
   getCurrentCalls: function getCurrentCalls() {
@@ -2186,6 +2195,66 @@ let RIL = {
     }
   },
 
+  _processNetworks: function _processNetworks() {
+    let strings = Buf.readStringList();
+    let networks = [];
+
+    for (let i = 0; i < strings.length; i += 4) {
+      let network = {
+        longName: strings[i],
+        shortName: strings[i + 1],
+        mcc: 0, mnc: 0,
+        state: null
+      };
+
+      let networkTuple = strings[i + 2];
+      try {
+        this._processNetworkTuple(networkTuple, network);
+      } catch (e) {
+        debug("Error processing operator tuple: " + e);
+      }
+
+      let state = strings[i + 3];
+      if (state === NETWORK_STATE_UNKNOWN) {
+        // TODO: looks like this might conflict in style with
+        // GECKO_NETWORK_STYLE_UNKNOWN / nsINetworkManager
+        state = GECKO_QAN_STATE_UNKNOWN;
+      }
+
+      network.state = state;
+      networks.push(network);
+    }
+    return networks;
+  },
+
+  /**
+   * The "numeric" portion of the operator info is a tuple
+   * containing MCC (country code) and MNC (network code).
+   * AFAICT, MCC should always be 3 digits, making the remaining
+   * portion the MNC.
+   */
+  _processNetworkTuple: function _processNetworkTuple(networkTuple, network) {
+    let tupleLen = networkTuple.length;
+    let mcc = 0, mnc = 0;
+
+    if (tupleLen == 5 || tupleLen == 6) {
+      mcc = parseInt(networkTuple.substr(0, 3), 10);
+      if (isNaN(mcc)) {
+        throw new Error("MCC could not be parsed from network tuple: " + networkTuple );
+      }
+
+      mnc = parseInt(networkTuple.substr(3), 10);
+      if (isNaN(mnc)) {
+        throw new Error("MNC could not be parsed from network tuple: " + networkTuple);
+      }
+    } else {
+      throw new Error("Invalid network tuple (should be 5 or 6 digits): " + networkTuple);
+    }
+
+    network.mcc = mcc;
+    network.mnc = mnc;
+  },
+
   /**
    * Helper for processing received SMS parcel data.
    *
@@ -2938,7 +3007,16 @@ RIL[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUERY_NETWORK_SELEC
 };
 RIL[REQUEST_SET_NETWORK_SELECTION_AUTOMATIC] = null;
 RIL[REQUEST_SET_NETWORK_SELECTION_MANUAL] = null;
-RIL[REQUEST_QUERY_AVAILABLE_NETWORKS] = null;
+RIL[REQUEST_QUERY_AVAILABLE_NETWORKS] = function REQUEST_QUERY_AVAILABLE_NETWORKS(length, options) {
+  if (options.rilRequestError) {
+    options.error = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+    this.sendDOMMessage(options);
+    return;
+  }
+
+  options.networks = this._processNetworks();
+  this.sendDOMMessage(options);
+};
 RIL[REQUEST_DTMF_START] = null;
 RIL[REQUEST_DTMF_STOP] = null;
 RIL[REQUEST_BASEBAND_VERSION] = function REQUEST_BASEBAND_VERSION(length, options) {
