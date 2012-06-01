@@ -425,10 +425,10 @@ castNativeFromWrapper(JSContext *cx,
     if (wrapper) {
         native = wrapper->GetIdentityObject();
         cur = wrapper->GetFlatJSObject();
+    } else if (cur && IS_SLIM_WRAPPER(cur)) {
+        native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
     } else {
-        native = cur ?
-                 static_cast<nsISupports*>(xpc_GetJSPrivate(cur)) :
-                 nsnull;
+        native = nsnull;
     }
 
     *rv = NS_ERROR_XPC_BAD_CONVERT_JS;
