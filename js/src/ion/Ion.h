@@ -178,8 +178,6 @@ IonExecStatus SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 
 // Walk the stack and invalidate active Ion frames for the invalid scripts.
 void Invalidate(FreeOp *fop, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
-void InvalidateAll(FreeOp *fop, JSCompartment *comp);
-void FinishInvalidation(FreeOp *fop, JSScript *script);
 void MarkFromIon(JSCompartment *comp, Value *vp);
 
 static inline bool IsEnabled(JSContext *cx)

@@ -708,8 +708,7 @@ video > xul|videocontrols, audio > xul|videocontrols {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#videoControls");
 }
 
-video:not([controls]) > xul|videocontrols,
-audio:not([controls]) > xul|videocontrols {
+:-moz-any(video,audio):not([controls]) > xul|videocontrols:not(.forceControls) {
   visibility: hidden;
 }
 

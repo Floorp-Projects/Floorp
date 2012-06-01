@@ -19,17 +19,27 @@ function testExecutionScope(hud) {
   let jsterm = hud.jsterm;
 
   jsterm.clearOutput();
-  jsterm.execute("location;");
+  jsterm.execute("window.location;");
 
-  let nodes = jsterm.outputNode.querySelectorAll(".hud-msg-node");
-  is(nodes.length, 2, "Two children in output");
+  waitForSuccess({
+    name: "jsterm execution output (two nodes)",
+    validatorFn: function()
+    {
+      return jsterm.outputNode.querySelectorAll(".hud-msg-node").length == 2;
+    },
+    successFn: function()
+    {
+      let nodes = jsterm.outputNode.querySelectorAll(".hud-msg-node");
 
-  is(/location;/.test(nodes[0].textContent), true,
-     "'location;' written to output");
+      is(/window.location;/.test(nodes[0].textContent), true,
+        "'window.location;' written to output");
 
-  ok(nodes[0].textContent.indexOf(TEST_URI),
-    "command was executed in the window scope");
+      isnot(nodes[1].textContent.indexOf(TEST_URI), -1,
+        "command was executed in the window scope");
 
-  executeSoon(finishTest);
+      executeSoon(finishTest);
+    },
+    failureFn: finishTest,
+  });
 }
 

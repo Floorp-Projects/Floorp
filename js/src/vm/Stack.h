@@ -146,11 +146,15 @@ namespace detail {
  *
  * An additional feature (perhaps not for much longer: bug 650361) is that
  * multiple independent "contexts" can interleave (LIFO) on a single contiguous
- * stack. "Independent" here means that neither context sees the other's
- * frames. Concretely, an embedding may enter the JS engine on cx1 and then,
- * from a native called by the JS engine, reenter the VM on cx2. Changing from
- * cx1 to cx2 causes a new segment to be started for cx2's stack on top of
- * cx1's current segment. These two segments are linked from the perspective of
+ * stack. "Independent" here means that each context has its own callstack.
+ * Note, though, that eval-in-frame allows one context's callstack to join
+ * another context's callstack. Thus, in general, the structure of calls in a
+ * StackSpace is a forest.
+ *
+ * More concretely, an embedding may enter the JS engine on cx1 and then, from
+ * a native called by the JS engine, reenter the VM on cx2. Changing from cx1
+ * to cx2 causes a new segment to be started for cx2's stack on top of cx1's
+ * current segment. These two segments are linked from the perspective of
  * StackSpace, since they are adjacent on the thread's stack, but not from the
  * perspective of cx1 and cx2. Thus, each segment has two links: prevInMemory
  * and prevInContext. Each independent stack is encapsulated and managed by
@@ -509,6 +513,8 @@ class StackFrame
     inline void resetInlinePrev(StackFrame *prevfp, jsbytecode *prevpc);
 
     inline void initInlineFrame(JSFunction *fun, StackFrame *prevfp, jsbytecode *prevpc);
+
+    inline JSObject *createRestParameter(JSContext *cx);
 
     /*
      * Frame slots
@@ -1807,10 +1813,10 @@ class GeneratorFrameGuard : public FrameGuard
 /*****************************************************************************/
 
 /*
- * Iterate through the callstack of the given context. Each element of said
- * callstack can either be the execution of a script (scripted function call,
- * global code, eval code, debugger code) or the invocation of a (C++) native.
- * Example usage:
+ * Iterate through the callstack (following fp->prev) of the given context.
+ * Each element of said callstack can either be the execution of a script
+ * (scripted function call, global code, eval code, debugger code) or the
+ * invocation of a (C++) native. Example usage:
  *
  *   for (Stackiter i(cx); !i.done(); ++i) {
  *     if (i.isScript()) {

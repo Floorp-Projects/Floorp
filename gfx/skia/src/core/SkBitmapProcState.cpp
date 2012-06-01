@@ -217,8 +217,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        SA8_alpha_D32 ## suffix
 #define DSTSIZE                 32
 #define SRCTYPE                 uint8_t
-#define CHECKSTATE(state)       SkASSERT(state.fBitmap->config() == SkBitmap::kA8_Config); \
-                                SkASSERT(state.fAlphaScale == 256)
+#define CHECKSTATE(state)       SkASSERT(state.fBitmap->config() == SkBitmap::kA8_Config);
 #define PREAMBLE(state)         const SkPMColor pmColor = state.fPaintPMColor;
 #define RETURNDST(src)          SkAlphaMulQ(pmColor, SkAlpha255To256(src))
 #define SRC_TO_FILTER(src)      src
@@ -390,7 +389,9 @@ bool SkBitmapProcState::chooseProcs(const SkMatrix& inv, const SkPaint& paint) {
     fInvProc        = m->getMapXYProc();
     fInvType        = m->getType();
     fInvSx          = SkScalarToFixed(m->getScaleX());
+    fInvSxFractionalInt = SkScalarToFractionalInt(m->getScaleX());
     fInvKy          = SkScalarToFixed(m->getSkewY());
+    fInvKyFractionalInt = SkScalarToFractionalInt(m->getSkewY());
 
     fAlphaScale = SkAlpha255To256(paint.getAlpha());
 
@@ -537,6 +538,93 @@ bool SkBitmapProcState::chooseProcs(const SkMatrix& inv, const SkPaint& paint) {
     this->platformProcs();
     return true;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef SK_DEBUG
+
+static void check_scale_nofilter(uint32_t bitmapXY[], int count,
+                                 unsigned mx, unsigned my) {
+    unsigned y = *bitmapXY++;
+    SkASSERT(y < my);
+    
+    const uint16_t* xptr = reinterpret_cast<const uint16_t*>(bitmapXY);
+    for (int i = 0; i < count; ++i) {
+        SkASSERT(xptr[i] < mx);
+    }
+}
+
+static void check_scale_filter(uint32_t bitmapXY[], int count,
+                                 unsigned mx, unsigned my) {
+    uint32_t YY = *bitmapXY++;
+    unsigned y0 = YY >> 18;
+    unsigned y1 = YY & 0x3FFF;    
+    SkASSERT(y0 < my);
+    SkASSERT(y1 < my);
+    
+    for (int i = 0; i < count; ++i) {
+        uint32_t XX = bitmapXY[i];
+        unsigned x0 = XX >> 18;
+        unsigned x1 = XX & 0x3FFF;
+        SkASSERT(x0 < mx);
+        SkASSERT(x1 < mx);
+    }
+}
+
+static void check_affine_nofilter(uint32_t bitmapXY[], int count,
+                                 unsigned mx, unsigned my) {
+    for (int i = 0; i < count; ++i) {
+        uint32_t XY = bitmapXY[i];
+        unsigned x = XY & 0xFFFF;
+        unsigned y = XY >> 16;
+        SkASSERT(x < mx);
+        SkASSERT(y < my);
+    }
+}
+
+static void check_affine_filter(uint32_t bitmapXY[], int count,
+                                 unsigned mx, unsigned my) {
+    for (int i = 0; i < count; ++i) {
+        uint32_t YY = *bitmapXY++;
+        unsigned y0 = YY >> 18;
+        unsigned y1 = YY & 0x3FFF;
+        SkASSERT(y0 < my);
+        SkASSERT(y1 < my);
+
+        uint32_t XX = *bitmapXY++;
+        unsigned x0 = XX >> 18;
+        unsigned x1 = XX & 0x3FFF;
+        SkASSERT(x0 < mx);
+        SkASSERT(x1 < mx);
+    }
+}
+
+void SkBitmapProcState::DebugMatrixProc(const SkBitmapProcState& state,
+                                        uint32_t bitmapXY[], int count,
+                                        int x, int y) {
+    SkASSERT(bitmapXY);
+    SkASSERT(count > 0);
+
+    state.fMatrixProc(state, bitmapXY, count, x, y);
+
+    void (*proc)(uint32_t bitmapXY[], int count, unsigned mx, unsigned my);
+
+    // There are four formats possible:
+    //  scale -vs- affine
+    //  filter -vs- nofilter
+    if (state.fInvType <= (SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask)) {
+        proc = state.fDoFilter ? check_scale_filter : check_scale_nofilter;
+    } else {
+        proc = state.fDoFilter ? check_affine_filter : check_affine_nofilter;
+    }
+    proc(bitmapXY, count, state.fBitmap->width(), state.fBitmap->height());
+}
+
+SkBitmapProcState::MatrixProc SkBitmapProcState::getMatrixProc() const {
+    return DebugMatrixProc;
+}
+
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 /*

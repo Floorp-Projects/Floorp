@@ -13,7 +13,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsHyperTextAccessibleWrap,
                              nsHyperTextAccessible)
 
 IMPL_IUNKNOWN_INHERITED2(nsHyperTextAccessibleWrap,
-                         nsAccessibleWrap,
+                         AccessibleWrap,
                          ia2AccessibleHypertext,
                          CAccessibleEditableText);
 
@@ -24,7 +24,7 @@ nsHyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 
   if (eventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
       eventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED) {
-    nsAccessible *accessible = aEvent->GetAccessible();
+    Accessible* accessible = aEvent->GetAccessible();
     if (accessible) {
       nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryObject(accessible));
       if (winAccessNode) {
@@ -61,7 +61,7 @@ nsHyperTextAccessibleWrap::GetModifiedText(bool aGetInsertedText,
   if (aGetInsertedText != isInserted)
     return NS_OK;
 
-  nsAccessible *targetAcc = gTextEvent->GetAccessible();
+  Accessible* targetAcc = gTextEvent->GetAccessible();
   if (targetAcc != this)
     return NS_OK;
 

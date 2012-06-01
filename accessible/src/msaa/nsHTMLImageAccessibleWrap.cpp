@@ -11,6 +11,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLImageAccessibleWrap,
                              nsHTMLImageAccessible)
 
 IMPL_IUNKNOWN_INHERITED1(nsHTMLImageAccessibleWrap,
-                         nsAccessibleWrap,
+                         AccessibleWrap,
                          ia2AccessibleImage);
 

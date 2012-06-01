@@ -43,14 +43,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
 
     function testAction(aId, aAcc, aActionName)
     {
-      var numActions = aActionName ? 1 : 0;
-      is(aAcc.numActions, numActions,
+      var actionCount = aActionName ? 1 : 0;
+      is(aAcc.actionCount, actionCount,
          "Wrong actions number for ID " + aId);
       try {
         is(aAcc.getActionName(0), aActionName,
            "Wrong action name for ID " + aId);
       } catch (e) {
-        if (numActions)
+        if (actionCount)
           ok(false, "Exception on action name getting for ID " + aId);
         else
           ok(true, "Correct action name for ID " + aId);

@@ -134,27 +134,31 @@ function uninstall(appURL, check, next) {
 function js_traverse(template, check, object) {
   var type = typeof template;
 
+  // We apply SpecialPowers wrappers to the template to signal cases where
+  // we need to wrap the object to examine it. We do things this way, rather
+  // than wrapping unconditionally, to make sure that the default environment of
+  // the test suite is as close to that of the web as possible.
+  if (SpecialPowers.isWrapper(template))
+    object = SpecialPowers.wrap(object);
+
   if (type == "object") {
     if (Object.keys(template).length == 1 && template["status"]) {
       check(!object || object.length == 0,"The return object from mozApps api was null as expected");
       return;
     }
     for (var key in template) {
-      debug("key: ", key);
+      debug("key: " + key);
       var accessor = key.split(".",1);
       if (accessor.length > 1) {
         js_traverse(template[key], check, object[accessor[0]].accessor[1]);
       } else {
-        if(object[key]) {
-          js_traverse(template[key], check, object[key]);
+        var value = (key == "status") ? SpecialPowers.wrap(object)[key] : object[key];
+        if(value) {
+          js_traverse(template[key], check, value);
         } else {
           check(typeof template[key] == "undefined", key + " is undefined as expected");
         }
       }
-    }
-  } else if (type == "array") {
-    for (var i = 0; i < object.length; i++) {
-      js_traverse(template[i], check, object[i]);
     }
   } else {
     var evaluate = "";
@@ -188,14 +192,14 @@ function mozAppscb(pending, comparatorObj, check, next) {
   pending.onsuccess = function () {
     debug("success cb, called");
     if(pending.result) {
-      if(pending.result.length) {
+      if(typeof pending.result.length !== 'undefined') {
         for(i=0;i < pending.result.length;i++) {
-          pending.result[i].status= 'success';
+          SpecialPowers.wrap(pending).result[i].status= 'success';
           js_traverse(comparatorObj[i], check, pending.result[i]);
         }
       } else {
         debug("comparatorOBj in else");
-        pending.result.status = 'success';
+        SpecialPowers.wrap(pending).result.status = 'success';
         js_traverse(comparatorObj[0], check, pending.result);
       }
     } else {
@@ -208,7 +212,7 @@ function mozAppscb(pending, comparatorObj, check, next) {
   };
 
   pending.onerror = function () {
-    pending.error.status = 'error';
+    SpecialPowers.wrap(pending).error.status = 'error';
     check(true, "failure cb called");
     js_traverse(comparatorObj[0], check, pending.error);
     if(typeof next == 'function') {
@@ -267,10 +271,12 @@ function install(appURL, check, next) {
         installOrigin: "== " + installOrigin.quote(),
         origin: "== " + origin.quote(),
         manifestURL: "== " +  appURL.quote(),
-        manifest: {
+        // |manifest| is not accessible to content, so js_traverse needs to
+        // use SpecialPowers to see it. We signal this by wrapping it.
+        manifest: SpecialPowers.wrap({
           name: "== " + unescape(manifest.name).quote(),
           installs_allowed_from: manifest.installs_allowed_from
-        }
+        })
       }], check, 
       next);
 }
@@ -301,10 +307,12 @@ function getInstalled(appURLs, check, next) {
         origin: "== " + origin.quote(),
         manifestURL: "== " +  appURL.quote(),
         installTime: " \> Date.now() - 3000",
-        manifest: {
+        // |manifest| is not accessible to content, so js_traverse needs to
+        // use SpecialPowers to see it. We signal this by wrapping it.
+        manifest: SpecialPowers.wrap({
           name: "== " + unescape(manifest.name).quote(),
           installs_allowed_from: manifest.installs_allowed_from
-        }
+        })
      };
   }
   debug(JSON.stringify(checkInstalled));
@@ -316,8 +324,8 @@ function getInstalled(appURLs, check, next) {
  * @msg  The message you want to output
  */
 function debug(msg) {
-  if(DEBUG  == true)  {
-    info(msg);
+  if(DEBUG == true)  {
+    dump(msg + "\n");
   }
 }
 

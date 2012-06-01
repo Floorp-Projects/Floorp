@@ -12,7 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TESTS = \
-  test_event_constructor_js.html.json \
   test_storage_local_in_js.html.json \
   test_storage_local_removeitem_js.html.json \
   test_storage_session_in_js.html.json \

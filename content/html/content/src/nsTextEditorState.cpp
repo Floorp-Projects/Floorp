@@ -1934,16 +1934,9 @@ nsTextEditorState::ValueWasChanged(bool aNotify)
     return;
   }
 
-  bool showPlaceholder = false;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
-  if (!nsContentUtils::IsFocusedContent(content)) {
-    // If the content is focused, we don't care about the changes because
-    // the placeholder is going to be hidden/shown on blur.
-    nsAutoString valueString;
-    GetValue(valueString, true);
-    showPlaceholder = valueString.IsEmpty();
-  }
-  SetPlaceholderClass(showPlaceholder, aNotify);
+  nsAutoString valueString;
+  GetValue(valueString, true);
+  SetPlaceholderClass(valueString.IsEmpty(), aNotify);
 }
 
 void

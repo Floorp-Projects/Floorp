@@ -1710,6 +1710,11 @@ static bool
 GetInstallationDir(NS_tchar (&installDir)[N])
 {
   NS_tsnprintf(installDir, N, NS_T("%s"), gDestinationPath);
+  if (!sBackgroundUpdate && !sReplaceRequest) {
+    // no need to do any further processing
+    return true;
+  }
+
   NS_tchar *slash = (NS_tchar *) NS_tstrrchr(installDir, NS_SLASH);
   // Make sure we're not looking at a trailing slash
   if (slash && slash[1] == NS_T('\0')) {
@@ -2749,7 +2754,11 @@ int NS_main(int argc, NS_tchar **argv)
         if (!LaunchWinPostProcess(argv[callbackIndex], gSourcePath, false, NULL)) {
           LOG(("NS_main: The post update process could not be launched.\n"));
         }
-        StartServiceUpdate(argc, argv);
+
+        NS_tchar installDir[MAXPATHLEN];
+        if (GetInstallationDir(installDir)) {
+          StartServiceUpdate(installDir);
+        }
       }
     }
     EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 0);

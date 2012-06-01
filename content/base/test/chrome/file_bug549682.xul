@@ -91,6 +91,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
 
   function run() {
     var localmm = document.getElementById('ifr').messageManager;
+
+    var wn = document.getElementById('ifr').contentWindow
+      .getInterface(Components.interfaces.nsIWebNavigation);
+    opener.wrappedJSObject.ok(wn, "Should have webnavigation");
+    var cfmm = wn.getInterface(Components.interfaces.nsIContentFrameMessageManager);
+    opener.wrappedJSObject.ok(cfmm, "Should have content messageManager");
+
+    var didGetSyncMessage = false;
+    function syncContinueTestFn() {
+      didGetSyncMessage = true;
+    }
+    localmm.addMessageListener("syncContinueTest", syncContinueTestFn);
+    cfmm.sendSyncMessage("syncContinueTest", {});
+    localmm.removeMessageListener("syncContinueTest", syncContinueTestFn);
+    opener.wrappedJSObject.ok(didGetSyncMessage, "Should have got sync message!");
+    
     localmm.addMessageListener("lasync", localL);
     localmm.loadFrameScript("data:,sendAsyncMessage('lasync', { data: 2345 })", false);
 

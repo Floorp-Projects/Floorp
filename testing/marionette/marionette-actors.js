@@ -624,6 +624,12 @@ MarionetteDriverActor.prototype = {
     marionette.command_id = this.command_id;
 
     function chromeAsyncReturnFunc(value, status) {
+      if (that._emu_cbs && Object.keys(that._emu_cbs).length) {
+        value = "Emulator callback still pending when finish() called";
+        status = 500;
+        that._emu_cbs = null;
+      }
+
       if (value == undefined)
         value = null;
       if (that.command_id == marionette.command_id) {
@@ -1195,13 +1201,12 @@ MarionetteDriverActor.prototype = {
   _emu_cb_id: 0,
   _emu_cbs: null,
   runEmulatorCmd: function runEmulatorCmd(cmd, callback) {
-    if (typeof callback != "function") {
-      throw "Need to provide callback function!";
+    if (callback) {
+      if (!this._emu_cbs) {
+        this._emu_cbs = {};
+      }
+      this._emu_cbs[this._emu_cb_id] = callback;
     }
-    if (!this._emu_cbs) {
-      this._emu_cbs = {};
-    }
-    this._emu_cbs[this._emu_cb_id] = callback;
     this.sendToClient({emulator_cmd: cmd, id: this._emu_cb_id});
     this._emu_cb_id += 1;
   },
@@ -1212,8 +1217,15 @@ MarionetteDriverActor.prototype = {
       return;
     }
 
+    if (!this._emu_cbs) {
+      return;
+    }
+
     let cb = this._emu_cbs[message.id];
     delete this._emu_cbs[message.id];
+    if (!cb) {
+      return;
+    }
     try {
       cb(message.result);
     }

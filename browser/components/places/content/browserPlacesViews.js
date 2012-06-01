@@ -1241,14 +1241,13 @@ PlacesToolbar.prototype = {
       this._removeChild(elt);
       this._rootElt.insertBefore(elt, this._rootElt.childNodes[aNewIndex]);
 
-      // If the chevron popup is open, keep it in sync.
-      if (this._chevron.open) {
-        let chevronPopup = this._chevronPopup;
-        let menuitem = chevronPopup.childNodes[aOldIndex];
-        chevronPopup.removeChild(menuitem);
-        chevronPopup.insertBefore(menuitem,
-                                  chevronPopup.childNodes[aNewIndex]);
-      }
+      // The chevron view may get nodeMoved after the toolbar.  In such a case,
+      // we should ensure (by manually swapping menuitems) that the actual nodes
+      // are in the final position before updateChevron tries to updates their
+      // visibility, or the chevron may go out of sync.
+      // Luckily updateChevron runs on a timer, so, by the time it updates
+      // nodes, the menu has already handled the notification.
+
       this.updateChevron();
       return;
     }

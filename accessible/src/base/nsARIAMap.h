@@ -91,7 +91,7 @@ const bool kUseNativeRole = false;
 
 /**
  * This mask indicates the attribute should not be exposed as an object
- * attribute via the catch-all logic in nsAccessible::GetAttributes.
+ * attribute via the catch-all logic in Accessible::GetAttributes.
  * This means it either isn't mean't to be exposed as an object attribute, or
  * that it should, but is already handled in other code.
  */
@@ -99,7 +99,7 @@ const PRUint8 ATTR_BYPASSOBJ  = 0x0001;
 
 /**
  * This mask indicates the attribute is expected to have an NMTOKEN or bool value.
- * (See for example usage in nsAccessible::GetAttributes)
+ * (See for example usage in Accessible::GetAttributes)
  */
 const PRUint8 ATTR_VALTOKEN   = 0x0010;
 

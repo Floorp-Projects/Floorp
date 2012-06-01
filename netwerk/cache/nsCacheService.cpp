@@ -31,7 +31,6 @@
 #include "nsProxyRelease.h"
 #include "nsVoidArray.h"
 #include "nsDeleteDir.h"
-#include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 #include <math.h>  // for log()
 #include "mozilla/Util.h" // for DebugOnly
@@ -78,7 +77,7 @@ static const char * observerList[] = {
     "profile-before-change",
     "profile-do-change",
     NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-    NS_PRIVATE_BROWSING_SWITCH_TOPIC
+    "last-pb-context-exited"
 };
 static const char * prefList[] = { 
     DISK_CACHE_ENABLE_PREF,
@@ -100,7 +99,11 @@ static const char * prefList[] = {
 // Cache sizes, in KB
 const PRInt32 DEFAULT_CACHE_SIZE = 250 * 1024;  // 250 MB
 const PRInt32 MIN_CACHE_SIZE = 50 * 1024;       //  50 MB
+#ifdef ANDROID
+const PRInt32 MAX_CACHE_SIZE = 200 * 1024;      // 200 MB
+#else
 const PRInt32 MAX_CACHE_SIZE = 1024 * 1024;     //   1 GB
+#endif
 // Default cache size was 50 MB for many years until FF 4:
 const PRInt32 PRE_GECKO_2_0_DEFAULT_CACHE_SIZE = 50 * 1024;
 
@@ -121,7 +124,6 @@ public:
         , mMemoryCacheEnabled(true)
         , mMemoryCacheCapacity(-1)
         , mMemoryCacheMaxEntrySize(-1) // -1 means "no limit"
-        , mInPrivateBrowsing(false)
         , mCacheCompressionLevel(CACHE_COMPRESSION_LEVEL)
         , mSanitizeOnShutdown(false)
         , mClearCacheOnShutdown(false)
@@ -173,8 +175,6 @@ private:
     bool                    mMemoryCacheEnabled;
     PRInt32                 mMemoryCacheCapacity; // in kilobytes
     PRInt32                 mMemoryCacheMaxEntrySize; // in kilobytes
-
-    bool                    mInPrivateBrowsing;
 
     PRInt32                 mCacheCompressionLevel;
 
@@ -307,12 +307,6 @@ nsCacheProfilePrefObserver::Install()
             rv2 = rv;
     }
 
-    // determine the initial status of the private browsing mode
-    nsCOMPtr<nsIPrivateBrowsingService> pbs =
-      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-    if (pbs)
-      pbs->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
-
     // Determine if we have a profile already
     //     Install() is called *after* the profile-after-change notification
     //     when there is only a single profile, or it is specified on the
@@ -403,13 +397,11 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
         // which preference changed?
         if (!strcmp(DISK_CACHE_ENABLE_PREF, data.get())) {
 
-            if (!mInPrivateBrowsing) {
-                rv = branch->GetBoolPref(DISK_CACHE_ENABLE_PREF,
-                                         &mDiskCacheEnabled);
-                if (NS_FAILED(rv))  
-                    return rv;
-                nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
-            }
+            rv = branch->GetBoolPref(DISK_CACHE_ENABLE_PREF,
+                                     &mDiskCacheEnabled);
+            if (NS_FAILED(rv))  
+                return rv;
+            nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
 
         } else if (!strcmp(DISK_CACHE_CAPACITY_PREF, data.get())) {
 
@@ -460,12 +452,10 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
         // which preference changed?
         if (!strcmp(OFFLINE_CACHE_ENABLE_PREF, data.get())) {
 
-            if (!mInPrivateBrowsing) {
-                rv = branch->GetBoolPref(OFFLINE_CACHE_ENABLE_PREF,
-                                         &mOfflineCacheEnabled);
-                if (NS_FAILED(rv))  return rv;
-                nsCacheService::SetOfflineCacheEnabled(OfflineCacheEnabled());
-            }
+            rv = branch->GetBoolPref(OFFLINE_CACHE_ENABLE_PREF,
+                                     &mOfflineCacheEnabled);
+            if (NS_FAILED(rv))  return rv;
+            nsCacheService::SetOfflineCacheEnabled(OfflineCacheEnabled());
 
         } else if (!strcmp(OFFLINE_CACHE_CAPACITY_PREF, data.get())) {
 
@@ -525,38 +515,10 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
                 return rv;
             nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
         }
-    } else if (!strcmp(NS_PRIVATE_BROWSING_SWITCH_TOPIC, topic)) {
-        if (!strcmp(NS_PRIVATE_BROWSING_ENTER, data.get())) {
-            mInPrivateBrowsing = true;
-
-            nsCacheService::OnEnterExitPrivateBrowsing();
-
-            mDiskCacheEnabled = false;
-            nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
-
-            mOfflineCacheEnabled = false;
-            nsCacheService::SetOfflineCacheEnabled(OfflineCacheEnabled());
-        } else if (!strcmp(NS_PRIVATE_BROWSING_LEAVE, data.get())) {
-            mInPrivateBrowsing = false;
-
-            nsCacheService::OnEnterExitPrivateBrowsing();
-
-            nsCOMPtr<nsIPrefBranch> branch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-            if (NS_FAILED(rv))  
-                return rv;
-
-            mDiskCacheEnabled = true; // by default enabled
-            (void) branch->GetBoolPref(DISK_CACHE_ENABLE_PREF,
-                                       &mDiskCacheEnabled);
-            nsCacheService::SetDiskCacheEnabled(DiskCacheEnabled());
-
-            mOfflineCacheEnabled = true; // by default enabled
-            (void) branch->GetBoolPref(OFFLINE_CACHE_ENABLE_PREF,
-                                       &mOfflineCacheEnabled);
-            nsCacheService::SetOfflineCacheEnabled(OfflineCacheEnabled());
-        }
+    } else if (!strcmp("last-pb-context-exited", topic)) {
+        nsCacheService::LeavePrivateBrowsing();
     }
-    
+
     return NS_OK;
 }
 
@@ -590,8 +552,17 @@ SmartCacheSize(const PRUint32 availKB)
         avail10MBs = 50;
     }
 
+#ifdef ANDROID
+    // On Android, smaller/older devices may have very little storage and
+    // device owners may be sensitive to storage footprint: Use a smaller
+    // percentage of available space and a smaller minimum.
+
+    // 20% of space up to 500 MB (10 MB min)
+    sz10MBs += NS_MAX<PRUint32>(1, avail10MBs * .2);
+#else
     // 40% of space up to 500 MB (50 MB min)
     sz10MBs += NS_MAX<PRUint32>(5, avail10MBs * .4);
+#endif
 
     return NS_MIN<PRUint32>(MAX_CACHE_SIZE, sz10MBs * 10 * 1024);
 }
@@ -673,10 +644,8 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
     nsresult rv = NS_OK;
 
     // read disk cache device prefs
-    if (!mInPrivateBrowsing) {
-        mDiskCacheEnabled = true;  // presume disk cache is enabled
-        (void) branch->GetBoolPref(DISK_CACHE_ENABLE_PREF, &mDiskCacheEnabled);
-    }
+    mDiskCacheEnabled = true;  // presume disk cache is enabled
+    (void) branch->GetBoolPref(DISK_CACHE_ENABLE_PREF, &mDiskCacheEnabled);
 
     mDiskCacheCapacity = DISK_CACHE_CAPACITY;
     (void)branch->GetIntPref(DISK_CACHE_CAPACITY_PREF, &mDiskCacheCapacity);
@@ -754,11 +723,9 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
     }
 
     // read offline cache device prefs
-    if (!mInPrivateBrowsing) {
-        mOfflineCacheEnabled = true;  // presume offline cache is enabled
-        (void) branch->GetBoolPref(OFFLINE_CACHE_ENABLE_PREF,
-                                   &mOfflineCacheEnabled);
-    }
+    mOfflineCacheEnabled = true;  // presume offline cache is enabled
+    (void) branch->GetBoolPref(OFFLINE_CACHE_ENABLE_PREF,
+                              &mOfflineCacheEnabled);
 
     mOfflineCacheCapacity = OFFLINE_CACHE_CAPACITY;
     (void)branch->GetIntPref(OFFLINE_CACHE_CAPACITY_PREF,
@@ -1941,6 +1908,9 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
                                  request->StoragePolicy());
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        if (request->IsPrivate())
+            entry->MarkPrivate();
         
         entry->Fetched();
         ++mTotalEntries;
@@ -2155,7 +2125,7 @@ nsCacheService::OnProfileShutdown(bool cleanse)
     nsCacheServiceAutoLock lock;
     gService->mClearingEntries = true;
 
-    gService->DoomActiveEntries();
+    gService->DoomActiveEntries(nsnull);
     gService->ClearDoomList();
 
     // Make sure to wait for any pending cache-operations before
@@ -2701,19 +2671,24 @@ nsCacheService::DeactivateAndClearEntry(PLDHashTable *    table,
     return PL_DHASH_REMOVE; // and continue enumerating
 }
 
+struct ActiveEntryArgs
+{
+    nsTArray<nsCacheEntry*>* mActiveArray;
+    nsCacheService::DoomCheckFn mCheckFn;
+};
 
 void
-nsCacheService::DoomActiveEntries()
+nsCacheService::DoomActiveEntries(DoomCheckFn check)
 {
     nsAutoTArray<nsCacheEntry*, 8> array;
+    ActiveEntryArgs args = { &array, check };
 
-    mActiveEntries.VisitEntries(RemoveActiveEntry, &array);
+    mActiveEntries.VisitEntries(RemoveActiveEntry, &args);
 
     PRUint32 count = array.Length();
     for (PRUint32 i=0; i < count; ++i)
         DoomEntry_Internal(array[i], true);
 }
-
 
 PLDHashOperator
 nsCacheService::RemoveActiveEntry(PLDHashTable *    table,
@@ -2724,9 +2699,12 @@ nsCacheService::RemoveActiveEntry(PLDHashTable *    table,
     nsCacheEntry * entry = ((nsCacheEntryHashTableEntry *)hdr)->cacheEntry;
     NS_ASSERTION(entry, "### active entry = nsnull!");
 
-    nsTArray<nsCacheEntry*> * array = (nsTArray<nsCacheEntry*> *) arg;
-    NS_ASSERTION(array, "### array = nsnull!");
-    array->AppendElement(entry);
+    ActiveEntryArgs* args = static_cast<ActiveEntryArgs*>(arg);
+    if (args->mCheckFn && !args->mCheckFn(entry))
+        return PL_DHASH_NEXT;
+
+    NS_ASSERTION(args->mActiveArray, "### array = nsnull!");
+    args->mActiveArray->AppendElement(entry);
 
     // entry is being removed from the active entry list
     entry->MarkInactive();
@@ -2755,21 +2733,6 @@ nsCacheService::LogCacheStatistics()
                       mDeactivatedUnboundEntries));
 }
 #endif
-
-
-void
-nsCacheService::OnEnterExitPrivateBrowsing()
-{
-    if (!gService)  return;
-    nsCacheServiceAutoLock lock;
-
-    gService->DoomActiveEntries();
-
-    if (gService->mMemoryDevice) {
-        // clear memory cache
-        gService->mMemoryDevice->EvictEntries(nsnull);
-    }
-}
 
 nsresult
 nsCacheService::SetDiskSmartSize()
@@ -2806,4 +2769,23 @@ nsCacheService::SetDiskSmartSize_Locked()
     }
 
     return NS_OK;
+}
+
+static bool
+IsEntryPrivate(nsCacheEntry* entry)
+{
+    return entry->IsPrivate();
+}
+
+void
+nsCacheService::LeavePrivateBrowsing()
+{
+    nsCacheServiceAutoLock lock;
+
+    gService->DoomActiveEntries(IsEntryPrivate);
+
+    if (gService->mMemoryDevice) {
+        // clear memory cache
+        gService->mMemoryDevice->EvictPrivateEntries();
+    }
 }

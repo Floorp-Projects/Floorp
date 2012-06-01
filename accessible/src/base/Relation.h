@@ -37,11 +37,11 @@ public:
 
   Relation(AccIterable* aIter) : mFirstIter(aIter), mLastIter(aIter) { }
 
-  Relation(nsAccessible* aAcc) :
+  Relation(Accessible* aAcc) :
     mFirstIter(nsnull), mLastIter(nsnull)
     { AppendTarget(aAcc); }
 
-  Relation(nsDocAccessible* aDocument, nsIContent* aContent) :
+  Relation(DocAccessible* aDocument, nsIContent* aContent) :
     mFirstIter(nsnull), mLastIter(nsnull)
     { AppendTarget(aDocument, aContent); }
 
@@ -77,7 +77,7 @@ public:
   /**
    * Append the given accessible to the set of related accessibles.
    */
-  inline void AppendTarget(nsAccessible* aAcc)
+  inline void AppendTarget(Accessible* aAcc)
   {
     if (aAcc)
       AppendIter(new SingleAccIterator(aAcc));
@@ -87,7 +87,7 @@ public:
    * Append the one accessible for this content node to the set of related
    * accessibles.
    */
-  void AppendTarget(nsDocAccessible* aDocument, nsIContent* aContent)
+  void AppendTarget(DocAccessible* aDocument, nsIContent* aContent)
   {
     if (aContent)
       AppendTarget(aDocument->GetAccessible(aContent));
@@ -96,9 +96,9 @@ public:
   /**
    * compute and return the next related accessible.
    */
-  inline nsAccessible* Next()
+  inline Accessible* Next()
   {
-    nsAccessible* target = nsnull;
+    Accessible* target = nsnull;
 
     // a trick nsAutoPtr deletes what it used to point to when assigned to
     while (mFirstIter && !(target = mFirstIter->Next()))

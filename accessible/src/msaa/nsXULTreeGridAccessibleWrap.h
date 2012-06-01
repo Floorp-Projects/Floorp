@@ -19,7 +19,7 @@ class nsXULTreeGridAccessibleWrap : public nsXULTreeGridAccessible,
                                     public CAccessibleTable
 {
 public:
-  nsXULTreeGridAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULTreeGridAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
 
   // IUnknown
   DECL_IUNKNOWN_INHERITED
@@ -37,7 +37,7 @@ class nsXULTreeGridCellAccessibleWrap : public nsXULTreeGridCellAccessible,
 {
 public:
   nsXULTreeGridCellAccessibleWrap(nsIContent* aContent,
-                                  nsDocAccessible* aDoc,
+                                  DocAccessible* aDoc,
                                   nsXULTreeGridRowAccessible* aRowAcc,
                                   nsITreeBoxObject* aTree,
                                   nsITreeView* aTreeView,

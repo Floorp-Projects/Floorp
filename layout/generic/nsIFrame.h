@@ -65,7 +65,7 @@ class nsBoxLayoutState;
 class nsBoxLayout;
 class nsILineIterator;
 #ifdef ACCESSIBILITY
-class nsAccessible;
+class Accessible;
 #endif
 class nsDisplayListBuilder;
 class nsDisplayListSet;
@@ -284,6 +284,9 @@ typedef PRUint64 nsFrameState;
 // system based layout (as opposed to any of the CSS layout models). Note that
 // this does not include nsSVGOuterSVGFrame since it takes part is CSS layout.
 #define NS_FRAME_SVG_LAYOUT                         NS_FRAME_STATE_BIT(43)
+
+// Is this frame allowed to have generated (::before/::after) content?
+#define NS_FRAME_MAY_HAVE_GENERATED_CONTENT         NS_FRAME_STATE_BIT(44)
 
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
@@ -1289,6 +1292,11 @@ public:
     // to display on.
     bool associateWithNext;
   };
+  enum {
+    IGNORE_SELECTION_STYLE = 0x01,
+    // Treat visibility:hidden frames as non-selectable
+    SKIP_HIDDEN = 0x02
+  };
   /**
    * This function calculates the content offsets for selection relative to
    * a point.  Note that this should generally only be callled on the event
@@ -1297,11 +1305,11 @@ public:
    * @param aPoint point relative to this frame
    */
   ContentOffsets GetContentOffsetsFromPoint(nsPoint aPoint,
-                                            bool aIgnoreSelectionStyle = false);
+                                            PRUint32 aFlags = 0);
 
   virtual ContentOffsets GetContentOffsetsFromPointExternal(nsPoint aPoint,
-                                                            bool aIgnoreSelectionStyle = false)
-  { return GetContentOffsetsFromPoint(aPoint, aIgnoreSelectionStyle); }
+                                                            PRUint32 aFlags = 0)
+  { return GetContentOffsetsFromPoint(aPoint, aFlags); }
 
   /**
    * This structure holds information about a cursor. mContainer represents a
@@ -2410,11 +2418,11 @@ public:
    * Called to retrieve this frame's accessible.
    * If this frame implements Accessibility return a valid accessible
    * If not return NS_ERROR_NOT_IMPLEMENTED.
-   * Note: nsAccessible must be refcountable. Do not implement directly on your frame
+   * Note: Accessible must be refcountable. Do not implement directly on your frame
    * Use a mediatior of some kind.
    */
 #ifdef ACCESSIBILITY
-  virtual already_AddRefed<nsAccessible> CreateAccessible() = 0;
+  virtual already_AddRefed<Accessible> CreateAccessible() = 0;
 #endif
 
   /**

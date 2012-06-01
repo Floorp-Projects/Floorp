@@ -93,11 +93,11 @@ function init() {
     document.getElementById("addonsTree").hidden = false;
 
   // Fill the addons list
-  for (var i = 0; i < items.length; ++i) {
+  for (var item of items) {
     var treeitem = document.createElementNS(kXULNS, "treeitem");
     var treerow  = document.createElementNS(kXULNS, "treerow");
     var treecell = document.createElementNS(kXULNS, "treecell");
-    treecell.setAttribute("label", items[i]);
+    treecell.setAttribute("label", item);
     treerow.appendChild(treecell);
     treeitem.appendChild(treerow);
     addons.appendChild(treeitem);
@@ -105,11 +105,11 @@ function init() {
 
   // Set the messages
   var messages = ["message1", "message2", "message3"];
-  for (i = 0; i < messages.length; ++i) {
-    if (messages[i] in params) {
-      var message = document.getElementById(messages[i]);
+  for (let messageEntry of messages) {
+    if (messageEntry in params) {
+      var message = document.getElementById(messageEntry);
       message.hidden = false;
-      message.appendChild(document.createTextNode(params[messages[i]]));
+      message.appendChild(document.createTextNode(params[messageEntry]));
     }
   }
   

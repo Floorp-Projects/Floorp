@@ -872,6 +872,9 @@ CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
 inline void
 ReleaseScriptCode(FreeOp *fop, JSScript *script)
 {
+    if (!script->hasJITInfo())
+        return;
+
     for (int constructing = 0; constructing <= 1; constructing++) {
         for (int barriers = 0; barriers <= 1; barriers++) {
             JSScript::JITScriptHandle *jith = script->jitHandle((bool) constructing, (bool) barriers);
@@ -879,6 +882,8 @@ ReleaseScriptCode(FreeOp *fop, JSScript *script)
                 JSScript::ReleaseCode(fop, jith);
         }
     }
+
+    script->destroyJITInfo(fop);
 }
 
 // Expand all stack frames inlined by the JIT within a compartment.

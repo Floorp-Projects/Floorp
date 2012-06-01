@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -28,7 +28,7 @@ GetObjectOrRepresentedView(id <mozAccessible> aObject)
   /**
    * Weak reference; it owns us.
    */
-  nsAccessibleWrap* mGeckoAccessible;
+  AccessibleWrap* mGeckoAccessible;
   
   /**
    * Strong ref to array of children
@@ -55,7 +55,7 @@ GetObjectOrRepresentedView(id <mozAccessible> aObject)
 }
 
 // inits with the gecko owner.
-- (id)initWithAccessible:(nsAccessibleWrap*)geckoParent;
+- (id)initWithAccessible:(AccessibleWrap*)geckoParent;
 
 // our accessible parent (AXParent)
 - (id <mozAccessible>)parent;
@@ -116,7 +116,7 @@ GetObjectOrRepresentedView(id <mozAccessible> aObject)
 /** 
  * Append a child if they are already cached.
  */
-- (void)appendChild:(nsAccessible*)aAccessible;
+- (void)appendChild:(Accessible*)aAccessible;
 
 // makes ourselves "expired". after this point, we might be around if someone
 // has retained us (e.g., a third-party), but we really contain no information.

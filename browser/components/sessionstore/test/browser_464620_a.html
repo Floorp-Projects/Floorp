@@ -9,7 +9,7 @@
   var targetUrl = "http://mochi.test:8888/browser/" +
     "browser/components/sessionstore/test/browser_464620_xd.html";
   var firstPass;
-  
+
   function setup() {
     if (firstPass !== undefined)
       return;
@@ -19,7 +19,7 @@
     }
     frames[1].location = targetUrl;
   }
-  
+
   function step() {
     var x = frames[0].document.getElementById("x");
     if (x.value == "")
@@ -27,15 +27,15 @@
     x.style.display = "none";
     frames[0].document.designMode = "on";
   }
-  
+
   function xss() {
     step();
-    
+
     var documentInjected = false;
     document.getElementsByTagName("iframe")[0].onload =
       function() { documentInjected = true; };
     frames[0].location = targetUrl;
-    
+
     for (var c = 0; !documentInjected && c < 20; c++) {
       var r = new XMLHttpRequest();
       r.open("GET", location.href, false);
@@ -43,7 +43,7 @@
       r.send(null);
     }
     document.getElementById("state").textContent = "done";
-    
+
     var event = document.createEvent("MessageEvent");
     event.initMessageEvent("464620_a", true, false, "done", location.href, "", window);
     document.dispatchEvent(event);

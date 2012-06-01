@@ -375,7 +375,7 @@
 #endif
                  oncommand="openPreferences();">
           <menupopup id="appmenu_customizeMenu"
-                     onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleTabsOnTop').previousSibling);">
+                     onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('appmenu_toggleToolbarsSeparator'));">
             <menuitem id="appmenu_preferences"
 #ifdef XP_UNIX
                       label="&preferencesCmdUnix.label;"
@@ -384,7 +384,7 @@
 #endif
                       oncommand="openPreferences();"/>
             <menuseparator/>
-            <menuseparator/>
+            <menuseparator id="appmenu_toggleToolbarsSeparator"/>
             <menuitem id="appmenu_toggleTabsOnTop"
                       label="&viewTabsOnTop.label;"
                       type="checkbox"

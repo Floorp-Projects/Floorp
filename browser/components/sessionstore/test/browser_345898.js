@@ -4,7 +4,7 @@
 
 function test() {
   /** Test for Bug 345898 **/
-  
+
   function test(aLambda) {
     try {
       aLambda();

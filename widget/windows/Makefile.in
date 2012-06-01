@@ -118,4 +118,4 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)

@@ -11,7 +11,7 @@
 #define _nsAccessNodeWrap_H_
 
 // Avoid warning C4509:
-// nonstandard extension used: 'nsAccessibleWrap::[methodname]' 
+// nonstandard extension used: 'AccessibleWrap::[methodname]' 
 // uses SEH and 'xpAccessible' has destructor
 // At this point we're catching a crash which is of much greater
 // importance than the missing dereference for the nsCOMPtr<>
@@ -50,7 +50,7 @@ class nsAccessNodeWrap :  public nsAccessNode,
     STDMETHODIMP QueryService(REFGUID guidService, REFIID riid, void** ppv);
 
 public: // construction, destruction
-  nsAccessNodeWrap(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsAccessNodeWrap(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~nsAccessNodeWrap();
 
     // IUnknown
@@ -119,7 +119,7 @@ public: // construction, destruction
   static LRESULT CALLBACK WindowProc(HWND hWnd, UINT Msg,
                                      WPARAM WParam, LPARAM lParam);
 
-  static nsRefPtrHashtable<nsPtrHashKey<void>, nsDocAccessible> sHWNDCache;
+  static nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible> sHWNDCache;
 
 protected:
 

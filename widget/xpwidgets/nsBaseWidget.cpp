@@ -110,7 +110,7 @@ nsBaseWidget::nsBaseWidget()
 }
 
 
-static void DestroyCompositor(CompositorParent* aCompositorParent,
+static void DeferredDestroyCompositor(CompositorParent* aCompositorParent,
                               CompositorChild* aCompositorChild,
                               Thread* aCompositorThread)
 {
@@ -120,6 +120,27 @@ static void DestroyCompositor(CompositorParent* aCompositorParent,
     aCompositorChild->Release();
 }
 
+void nsBaseWidget::DestroyCompositor() 
+{
+  if (mCompositorChild) {
+    mCompositorChild->SendWillStop();
+
+    // The call just made to SendWillStop can result in IPC from the
+    // CompositorParent to the CompositorChild (e.g. caused by the destruction
+    // of shared memory). We need to ensure this gets processed by the
+    // CompositorChild before it gets destroyed. It suffices to ensure that
+    // events already in the MessageLoop get processed before the
+    // CompositorChild is destroyed, so we add a task to the MessageLoop to
+    // handle compositor desctruction.
+    MessageLoop::current()->PostTask(FROM_HERE,
+               NewRunnableFunction(DeferredDestroyCompositor, mCompositorParent,
+                                   mCompositorChild, mCompositorThread));
+    // The DestroyCompositor task we just added to the MessageLoop will handle
+    // releasing mCompositorParent and mCompositorChild.
+    mCompositorParent.forget();
+    mCompositorChild.forget();
+  }
+}
 
 //-------------------------------------------------------------------------
 //
@@ -138,25 +159,7 @@ nsBaseWidget::~nsBaseWidget()
     mLayerManager = nsnull;
   }
 
-  if (mCompositorChild) {
-    mCompositorChild->SendWillStop();
-
-    // The call just made to SendWillStop can result in IPC from the
-    // CompositorParent to the CompositorChild (e.g. caused by the destruction
-    // of shared memory). We need to ensure this gets processed by the
-    // CompositorChild before it gets destroyed. It suffices to ensure that
-    // events already in the MessageLoop get processed before the
-    // CompositorChild is destroyed, so we add a task to the MessageLoop to
-    // handle compositor desctruction.
-    MessageLoop::current()->
-      PostTask(FROM_HERE,
-               NewRunnableFunction(DestroyCompositor, mCompositorParent,
-                                   mCompositorChild, mCompositorThread));
-    // The DestroyCompositor task we just added to the MessageLoop will handle
-    // releasing mCompositorParent and mCompositorChild.
-    mCompositorParent.forget();
-    mCompositorChild.forget();
-  }
+  DestroyCompositor();
 
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets--;
@@ -873,8 +876,12 @@ void nsBaseWidget::CreateCompositor()
     AsyncChannel::Side childSide = mozilla::ipc::AsyncChannel::Child;
     mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
     PRInt32 maxTextureSize;
-    PLayersChild* shadowManager =
-      mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL, &maxTextureSize);
+    PLayersChild* shadowManager;
+    if (mUseAcceleratedRendering) {
+      shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL, &maxTextureSize);
+    } else {
+      shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_BASIC, &maxTextureSize);
+    }
 
     if (shadowManager) {
       ShadowLayerForwarder* lf = lm->AsShadowForwarder();
@@ -884,7 +891,10 @@ void nsBaseWidget::CreateCompositor()
         return;
       }
       lf->SetShadowManager(shadowManager);
-      lf->SetParentBackendType(LayerManager::LAYERS_OPENGL);
+      if (mUseAcceleratedRendering)
+        lf->SetParentBackendType(LayerManager::LAYERS_OPENGL);
+      else
+        lf->SetParentBackendType(LayerManager::LAYERS_BASIC);
       lf->SetMaxTextureSize(maxTextureSize);
 
       mLayerManager = lm;
@@ -910,16 +920,15 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayersChild* aShadowManager,
 
     mUseAcceleratedRendering = GetShouldAccelerate();
 
+    // Try to use an async compositor first, if possible
+    if (UseOffMainThreadCompositing()) {
+      // e10s uses the parameter to pass in the shadow manager from the TabChild
+      // so we don't expect to see it there since this doesn't support e10s.
+      NS_ASSERTION(aShadowManager == nsnull, "Async Compositor not supported with e10s");
+      CreateCompositor();
+    }
+
     if (mUseAcceleratedRendering) {
-
-      // Try to use an async compositor first, if possible
-      if (UseOffMainThreadCompositing()) {
-        // e10s uses the parameter to pass in the shadow manager from the TabChild
-        // so we don't expect to see it there since this doesn't support e10s.
-        NS_ASSERTION(aShadowManager == nsnull, "Async Compositor not supported with e10s");
-        CreateCompositor();
-      }
-
       if (!mLayerManager) {
         nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
         /**

@@ -138,7 +138,7 @@ class DeviceManagerADB(DeviceManager):
         return_code = m.group(1)
         outputfile.seek(-2, 2)
         outputfile.truncate() # truncate off the return code
-        return return_code
+        return int(return_code)
 
     return None
 

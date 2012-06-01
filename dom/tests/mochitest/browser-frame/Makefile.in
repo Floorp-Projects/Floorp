@@ -14,6 +14,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		file_empty.html \
+		file_focus.html \
 		browserFrameHelpers.js \
 		test_browserFrame1.html \
 		test_browserFrame2.html \
@@ -24,6 +25,8 @@ _TEST_FILES = \
 		test_browserFrame7.html \
 		test_browserFrame8.html \
 		test_browserFrame9.html \
+		test_browserFrame10.html \
+		test_browserFrame_keyEvents.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

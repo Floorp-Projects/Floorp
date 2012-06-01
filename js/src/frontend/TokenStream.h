@@ -47,6 +47,7 @@ enum TokenKind {
     TOK_MOD,                       /* modulus */
     TOK_INC, TOK_DEC,              /* increment/decrement (++ --) */
     TOK_DOT,                       /* member operator (.) */
+    TOK_TRIPLEDOT,                 /* for rest arguments (...) */
     TOK_LB, TOK_RB,                /* left and right brackets */
     TOK_LC, TOK_RC,                /* left and right curlies (braces) */
     TOK_LP, TOK_RP,                /* left and right parentheses */
@@ -381,13 +382,12 @@ enum TokenStreamFlags
     TSF_OPERAND = 0x08,         /* looking for operand, not operator */
     TSF_UNEXPECTED_EOF = 0x10,  /* unexpected end of input, i.e. TOK_EOF not at top-level. */
     TSF_KEYWORD_IS_NAME = 0x20, /* Ignore keywords and return TOK_NAME instead to the parser. */
-    TSF_STRICT_MODE_CODE = 0x40,/* Tokenize as appropriate for strict mode code. */
-    TSF_DIRTYLINE = 0x80,       /* non-whitespace since start of line */
-    TSF_OWNFILENAME = 0x100,    /* ts->filename is malloc'd */
-    TSF_XMLTAGMODE = 0x200,     /* scanning within an XML tag in E4X */
-    TSF_XMLTEXTMODE = 0x400,    /* scanning XMLText terminal from E4X */
-    TSF_XMLONLYMODE = 0x800,    /* don't scan {expr} within text/tag */
-    TSF_OCTAL_CHAR = 0x1000,    /* observed a octal character escape */
+    TSF_DIRTYLINE = 0x40,       /* non-whitespace since start of line */
+    TSF_OWNFILENAME = 0x80,     /* ts->filename is malloc'd */
+    TSF_XMLTAGMODE = 0x100,     /* scanning within an XML tag in E4X */
+    TSF_XMLTEXTMODE = 0x200,    /* scanning XMLText terminal from E4X */
+    TSF_XMLONLYMODE = 0x400,    /* don't scan {expr} within text/tag */
+    TSF_OCTAL_CHAR = 0x800,     /* observed a octal character escape */
 
     /*
      * To handle the hard case of contiguous HTML comments, we want to clear the
@@ -408,7 +408,25 @@ enum TokenStreamFlags
      * It does not cope with malformed comment hiding hacks where --> is hidden
      * by C-style comments, or on a dirty line.  Such cases are already broken.
      */
-    TSF_IN_HTML_COMMENT = 0x2000
+    TSF_IN_HTML_COMMENT = 0x1000
+};
+
+struct Parser;
+
+// Ideally, tokenizing would be entirely independent of context.  But the
+// strict mode flag, which is in SharedContext, affects tokenizing, and
+// TokenStream needs to see it.
+//
+// This class constitutes a tiny back-channel from TokenStream to the strict
+// mode flag that avoids exposing the rest of SharedContext to TokenStream.  
+// get() is implemented in Parser.cpp.
+//
+class StrictModeGetter {
+    Parser *parser;
+  public:
+    StrictModeGetter(Parser *p) : parser(p) { }
+
+    bool get() const;
 };
 
 class TokenStream
@@ -426,24 +444,10 @@ class TokenStream
   public:
     typedef Vector<jschar, 32> CharBuffer;
 
-    /*
-     * To construct a TokenStream, first call the constructor, which is
-     * infallible, then call |init|, which can fail. To destroy a TokenStream,
-     * first call |close| then call the destructor. If |init| fails, do not call
-     * |close|.
-     *
-     * This class uses JSContext.tempLifoAlloc to allocate internal buffers. The
-     * caller should JS_ARENA_MARK before calling |init| and JS_ARENA_RELEASE
-     * after calling |close|.
-     */
-    TokenStream(JSContext *, JSPrincipals *principals, JSPrincipals *originPrincipals);
+    TokenStream(JSContext *cx, JSPrincipals *principals, JSPrincipals *originPrincipals,
+                const jschar *base, size_t length, const char *filename, unsigned lineno,
+                JSVersion version, StrictModeGetter *smg);
 
-    /*
-     * Create a new token stream from an input buffer.
-     * Return false on memory-allocation failure.
-     */
-    bool init(const jschar *base, size_t length, const char *filename, unsigned lineno,
-              JSVersion version);
     ~TokenStream();
 
     /* Accessors. */
@@ -460,11 +464,12 @@ class TokenStream
     const CharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     unsigned getLineno() const { return lineno; }
-    /* Note that the version and hasXML can get out of sync via setXML. */
+    /* Note that the version and hasMoarXML can get out of sync via setMoarXML. */
     JSVersion versionNumber() const { return VersionNumber(version); }
     JSVersion versionWithFlags() const { return version; }
-    bool hasXML() const { return xml || VersionShouldParseXML(versionNumber()); }
-    void setXML(bool enabled) { xml = enabled; }
+    bool allowsXML() const { return allowXML && !isStrictMode(); }
+    bool hasMoarXML() const { return moarXML || VersionShouldParseXML(versionNumber()); }
+    void setMoarXML(bool enabled) { moarXML = enabled; }
 
     bool isCurrentTokenEquality() const {
         return TokenKindIsEquality(currentToken().type);
@@ -483,16 +488,15 @@ class TokenStream
     }
 
     /* Flag methods. */
-    void setStrictMode(bool enabled = true) { setFlag(enabled, TSF_STRICT_MODE_CODE); }
     void setXMLTagMode(bool enabled = true) { setFlag(enabled, TSF_XMLTAGMODE); }
     void setXMLOnlyMode(bool enabled = true) { setFlag(enabled, TSF_XMLONLYMODE); }
     void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
     void setOctalCharacterEscape(bool enabled = true) { setFlag(enabled, TSF_OCTAL_CHAR); }
 
-    bool isStrictMode() { return !!(flags & TSF_STRICT_MODE_CODE); }
-    bool isXMLTagMode() { return !!(flags & TSF_XMLTAGMODE); }
-    bool isXMLOnlyMode() { return !!(flags & TSF_XMLONLYMODE); }
-    bool isUnexpectedEOF() { return !!(flags & TSF_UNEXPECTED_EOF); }
+    bool isStrictMode() const { return strictModeGetter ? strictModeGetter->get() : false; }
+    bool isXMLTagMode() const { return !!(flags & TSF_XMLTAGMODE); }
+    bool isXMLOnlyMode() const { return !!(flags & TSF_XMLONLYMODE); }
+    bool isUnexpectedEOF() const { return !!(flags & TSF_UNEXPECTED_EOF); }
     bool isEOF() const { return !!(flags & TSF_EOF); }
     bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
@@ -651,12 +655,8 @@ class TokenStream
      */
     class TokenBuf {
       public:
-        TokenBuf() : base(NULL), limit(NULL), ptr(NULL) { }
-
-        void init(const jschar *buf, size_t length) {
-            base = ptr = buf;
-            limit = base + length;
-        }
+        TokenBuf(const jschar *buf, size_t length)
+          : base(buf), limit(buf + length), ptr(buf), ptrWhenPoisoned(NULL) { }
 
         bool hasRawChars() const {
             return ptr < limit;
@@ -797,9 +797,11 @@ class TokenStream
     bool                maybeEOL[256];       /* probabilistic EOL lookup table */
     bool                maybeStrSpecial[256];/* speeds up string scanning */
     JSVersion           version;        /* (i.e. to identify keywords) */
-    bool                xml;            /* see JSOPTION_XML */
+    bool                allowXML;       /* see JSOPTION_ALLOW_XML */
+    bool                moarXML;        /* see JSOPTION_MOAR_XML */
     JSContext           *const cx;
     JSPrincipals        *const originPrincipals;
+    StrictModeGetter    *strictModeGetter; /* used to test for strict mode */
 };
 
 struct KeywordInfo {
@@ -840,24 +842,10 @@ ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned
 
 /*
  * Report a condition that should elicit a warning with JSOPTION_STRICT,
- * or an error if ts or tc is handling strict mode code.  This function
- * defers to ReportCompileErrorNumber to do the real work.  Either tc
- * or ts may be NULL, if there is no tree context or token stream state
- * whose strictness should affect the report.
- *
- * One could have ReportCompileErrorNumber recognize the
- * JSREPORT_STRICT_MODE_ERROR flag instead of having a separate function
- * like this one.  However, the strict mode code flag we need to test is
- * in the ShareContext structure for that code; we would have to change
- * the ~120 ReportCompileErrorNumber calls to pass the additional
- * argument, even though many of those sites would never use it.  Using
- * ts's TSF_STRICT_MODE_CODE flag instead of sc's would be brittle: at some
- * points ts's flags don't correspond to those of the sc relevant to the
- * error.
+ * or an error if the current context is handling strict mode code.
  */
 bool
-ReportStrictModeError(JSContext *cx, TokenStream *ts, SharedContext *sc, ParseNode *pn,
-                      unsigned errorNumber, ...);
+ReportStrictModeError(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned errorNumber, ...);
 
 } /* namespace js */
 

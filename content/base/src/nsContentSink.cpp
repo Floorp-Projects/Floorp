@@ -18,6 +18,7 @@
 #include "nsStyleLinkElement.h"
 #include "nsINodeInfo.h"
 #include "nsIDocShell.h"
+#include "nsILoadContext.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsCPrefetchService.h"
 #include "nsIURI.h"
@@ -1032,6 +1033,13 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
     return;
   }
 
+  // If the docshell's in private browsing mode, we don't want to do any
+  // manifest processing.
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(mDocShell);
+  if (loadContext->UsePrivateBrowsing()) {
+    return;
+  }
+
   nsresult rv;
 
   // Grab the application cache the document was loaded from, if any.
@@ -1547,9 +1555,8 @@ nsContentSink::WillParseImpl(void)
     vm->GetLastUserEventTime(lastEventTime);
 
     bool newDynLower =
-      mDocument->IsInBackgroundWindow() ||
-      ((currentTime - mBeginLoadTime) > PRUint32(sInitialPerfTime) &&
-       (currentTime - lastEventTime) < PRUint32(sInteractiveTime));
+      (currentTime - mBeginLoadTime) > PRUint32(sInitialPerfTime) &&
+      (currentTime - lastEventTime) < PRUint32(sInteractiveTime);
     
     if (mDynamicLowerValue != newDynLower) {
       FavorPerformanceHint(!newDynLower, 0);

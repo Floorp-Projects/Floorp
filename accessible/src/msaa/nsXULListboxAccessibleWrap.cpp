@@ -10,7 +10,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListboxAccessibleWrap::
-  nsXULListboxAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULListboxAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULListboxAccessible(aContent, aDoc)
 {
 }
@@ -20,7 +20,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULListboxAccessibleWrap,
 
 IMPL_IUNKNOWN_QUERY_HEAD(nsXULListboxAccessibleWrap)
 IMPL_IUNKNOWN_QUERY_ENTRY_COND(CAccessibleTable, IsMulticolumn());
-IMPL_IUNKNOWN_QUERY_ENTRY(nsAccessibleWrap)
+IMPL_IUNKNOWN_QUERY_ENTRY(AccessibleWrap)
 IMPL_IUNKNOWN_QUERY_TAIL
 
 
@@ -29,7 +29,7 @@ IMPL_IUNKNOWN_QUERY_TAIL
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULListCellAccessibleWrap::
-  nsXULListCellAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULListCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
   nsXULListCellAccessible(aContent, aDoc)
 {
 }

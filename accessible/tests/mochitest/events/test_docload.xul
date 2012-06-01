@@ -92,6 +92,25 @@
     }
 
     /**
+     * Load the document having sub document. No document loading events for
+     * nested document.
+     */
+    function loadNestedDocURIInvoker(aNestedDocURI)
+    {
+      this.__proto__ = new loadURIInvoker(aNestedDocURI);
+
+      this.unexpectedEventSeq = [
+        new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getNestedDoc),
+        new invokerChecker(EVENT_STATE_CHANGE, getNestedDoc)
+      ];
+
+      function getNestedDoc()
+      {
+        return currentTabDocument().getElementsByTagName("iframe")[0].firstChild;
+      }
+    }
+
+    /**
      * Reload the page by F5 (isFromUserInput flag is true).
      */
     function userReloadInvoker()
@@ -170,6 +189,11 @@
     function doTests()
     {
       gQueue = new eventQueue();
+
+      var dataURL =
+        "data:text/html,<html><body><iframe src='http://example.com'></iframe></body></html>";
+      gQueue.push(new loadNestedDocURIInvoker(dataURL));
+
       gQueue.push(new loadURIInvoker("about:"));
       gQueue.push(new userReloadInvoker());
       gQueue.push(new loadURIInvoker("about:mozilla"));
@@ -194,6 +218,11 @@
        href="https://bugzilla.mozilla.org/show_bug.cgi?id=566103"
        title=" reorganize accessible document handling">
       Mozilla Bug 566103
+    </a>
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=754165"
+       title="Fire document load events on iframes too">
+      Mozilla Bug 754165
     </a>
     <p id="display"></p>
     <div id="content" style="display: none">

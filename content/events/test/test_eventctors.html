@@ -346,7 +346,7 @@ ok(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");
 ok(!e.bubbles, "Event shouldn't bubble!");
 ok(!e.cancelable, "Event shouldn't be cancelable!");
-is(e.key, "", "key should be ''");
+is(e.key, null, "key should be null");
 is(e.oldValue, null, "oldValue should be null");
 is(e.newValue, null, "newValue should be null");
 is(e.url, "", "url should be ''");

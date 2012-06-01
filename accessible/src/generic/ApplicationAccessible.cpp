@@ -4,7 +4,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "ApplicationAccessible.h"
 
 #include "nsAccessibilityService.h"
@@ -23,7 +23,7 @@
 using namespace mozilla::a11y;
 
 ApplicationAccessible::ApplicationAccessible() :
-  nsAccessibleWrap(nsnull, nsnull)
+  AccessibleWrap(nsnull, nsnull)
 {
   mFlags |= eApplicationAccessible;
 }
@@ -31,7 +31,7 @@ ApplicationAccessible::ApplicationAccessible() :
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED1(ApplicationAccessible, nsAccessible,
+NS_IMPL_ISUPPORTS_INHERITED1(ApplicationAccessible, Accessible,
                              nsIAccessibleApplication)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,31 +117,23 @@ ApplicationAccessible::GetAttributes(nsIPersistentProperties** aAttributes)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ApplicationAccessible::GroupPosition(PRInt32* aGroupLevel,
-                                     PRInt32* aSimilarItemsInGroup,
-                                     PRInt32* aPositionInGroup)
+GroupPos
+ApplicationAccessible::GroupPosition()
 {
-  NS_ENSURE_ARG_POINTER(aGroupLevel);
-  *aGroupLevel = 0;
-  NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
-  *aSimilarItemsInGroup = 0;
-  NS_ENSURE_ARG_POINTER(aPositionInGroup);
-  *aPositionInGroup = 0;
-  return NS_OK;
+  return GroupPos();
 }
 
-nsAccessible*
+Accessible*
 ApplicationAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                     EWhichChildAtPoint aWhichChild)
 {
   return nsnull;
 }
 
-nsAccessible*
+Accessible*
 ApplicationAccessible::FocusedChild()
 {
-  nsAccessible* focus = FocusMgr()->FocusedAccessible();
+  Accessible* focus = FocusMgr()->FocusedAccessible();
   if (focus && focus->Parent() == this)
     return focus;
 
@@ -295,7 +287,7 @@ ApplicationAccessible::IsPrimaryForNode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible public methods
+// Accessible public methods
 
 void
 ApplicationAccessible::ApplyARIAState(PRUint64* aState) const
@@ -328,7 +320,7 @@ ApplicationAccessible::AccessKey() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible protected methods
+// Accessible protected methods
 
 void
 ApplicationAccessible::CacheChildren()
@@ -370,7 +362,7 @@ ApplicationAccessible::CacheChildren()
   }
 }
 
-nsAccessible*
+Accessible*
 ApplicationAccessible::GetSiblingAtOffset(PRInt32 aOffset,
                                           nsresult* aError) const
 {

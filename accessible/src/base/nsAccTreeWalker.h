@@ -9,8 +9,8 @@
 #include "nsAutoPtr.h"
 #include "nsIContent.h"
 
-class nsAccessible;
-class nsDocAccessible;
+class Accessible;
+class DocAccessible;
 struct WalkState;
 
 /**
@@ -19,7 +19,7 @@ struct WalkState;
 class nsAccTreeWalker
 {
 public:
-  nsAccTreeWalker(nsDocAccessible* aDoc, nsIContent* aNode, 
+  nsAccTreeWalker(DocAccessible* aDoc, nsIContent* aNode, 
                   bool aWalkAnonymousContent, bool aWalkCache = false);
   virtual ~nsAccTreeWalker();
 
@@ -30,7 +30,7 @@ public:
    *       rejected during tree creation then the caller should be unbind it
    *       from the document.
    */
-  inline nsAccessible* NextChild()
+  Accessible* NextChild()
   {
     return NextChildInternal(false);
   }
@@ -44,7 +44,7 @@ private:
    *                     shouldn't go up through the tree if we failed find
    *                     accessible children.
    */
-  nsAccessible* NextChildInternal(bool aNoWalkUp);
+  Accessible* NextChildInternal(bool aNoWalkUp);
 
   /**
    * Create new state for the given node and push it on top of stack.
@@ -59,7 +59,7 @@ private:
    */
   void PopState();
 
-  nsDocAccessible* mDoc;
+  DocAccessible* mDoc;
   PRInt32 mChildFilter;
   bool mWalkCache;
   WalkState* mState;

@@ -11,32 +11,33 @@
 #endif
 
 /**
- * |nsPrintfCString| is syntactic sugar for a printf used as a
- * |const nsACString| with a small builtin autobuffer. In almost all cases
- * it is better to just use AppendPrintf. Example usage:
+ * nsPrintfCString lets you create a nsCString using a printf-style format
+ * string.  For example:
  *
  *   NS_WARNING(nsPrintfCString("Unexpected value: %f", 13.917).get());
+ *
+ * nsPrintfCString has a small built-in auto-buffer.  For larger strings, it
+ * will allocate on the heap.
+ *
+ * See also nsCString::AppendPrintf().
  */
 class nsPrintfCString : public nsFixedCString
+{
+  typedef nsCString string_type;
+
+public:
+  explicit nsPrintfCString( const char_type* format, ... )
+    : nsFixedCString(mLocalBuffer, kLocalBufferSize, 0)
   {
-    typedef nsCString string_type;
+    va_list ap;
+    va_start(ap, format);
+    AppendPrintf(format, ap);
+    va_end(ap);
+  }
 
-    public:
-      explicit nsPrintfCString( const char_type* format, ... )
-        : nsFixedCString(mLocalBuffer, kLocalBufferSize, 0)
-        {
-          va_list ap;
-          va_start(ap, format);
-          AppendPrintf(format, ap);
-          va_end(ap);
-        }
-
-    private:
-      enum { kLocalBufferSize=15 };
-      // ought to be large enough for most things ... a |long long| needs at most 20 (so you'd better ask)
-      //  pinkerton suggests 7.  We should measure and decide what's appropriate
-
-      char_type  mLocalBuffer[ kLocalBufferSize ];
-  };
+private:
+  static const PRUint32 kLocalBufferSize = 16;
+  char_type mLocalBuffer[kLocalBufferSize];
+};
 
 #endif // !defined(nsPrintfCString_h___)

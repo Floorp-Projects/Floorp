@@ -80,9 +80,9 @@ function appendToList(aHeaderId, aNodeId, aItems) {
     return 0;
   }
 
-  for (let i = 0; i < aItems.length; i++) {
+  for (let currentItem of aItems) {
     var label = document.createElement("label");
-    label.textContent = aItems[i];
+    label.textContent = currentItem;
     label.setAttribute("class", "contributor");
     node.appendChild(label);
   }

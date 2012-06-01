@@ -805,7 +805,8 @@ MediaStreamGraphImpl::UpdateCurrentTime()
     NS_ASSERTION(prevCurrentTime == nextCurrentTime, "Time can't go backwards!");
     // This could happen due to low clock resolution, maybe?
     LOG(PR_LOG_DEBUG, ("Time did not advance"));
-    return;
+    // There's not much left to do here, but the code below that notifies
+    // listeners that streams have ended still needs to run.
   }
 
   for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
@@ -838,7 +839,7 @@ MediaStreamGraphImpl::UpdateCurrentTime()
     // AdvanceTimeVaryingValuesToCurrentTime can rely on the value of mBlocked.
     stream->mBlocked.AdvanceCurrentTime(nextCurrentTime);
 
-    if (blockedTime < nextCurrentTime - mCurrentTime) {
+    if (blockedTime < nextCurrentTime - prevCurrentTime) {
       for (PRUint32 i = 0; i < stream->mListeners.Length(); ++i) {
         MediaStreamListener* l = stream->mListeners[i];
         l->NotifyOutput(this);
@@ -1305,11 +1306,17 @@ MediaStreamGraphImpl::RunThread()
       if (mForceShutDown || (IsEmpty() && mMessageQueue.IsEmpty())) {
         // Enter shutdown mode. The stable-state handler will detect this
         // and complete shutdown. Destroy any streams immediately.
-        for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
-          mStreams[i]->DestroyImpl();
-        }
         LOG(PR_LOG_DEBUG, ("MediaStreamGraph %p waiting for main thread cleanup", this));
         mLifecycleState = LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP;
+        {
+          MonitorAutoUnlock unlock(mMonitor);
+          // Unlock mMonitor while destroying our streams, since
+          // SourceMediaStream::DestroyImpl needs to take its lock while
+          // we're not holding mMonitor.
+          for (PRUint32 i = 0; i < mStreams.Length(); ++i) {
+            mStreams[i]->DestroyImpl();
+          }
+        }
         return;
       }
 
@@ -1762,6 +1769,17 @@ MediaStream::ChangeExplicitBlockerCount(PRInt32 aDelta)
 }
 
 void
+MediaStream::AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
+{
+  MediaStreamListener* listener = *mListeners.AppendElement() = aListener;
+  listener->NotifyBlockingChanged(GraphImpl(),
+    mBlocked.GetAt(GraphImpl()->mCurrentTime) ? MediaStreamListener::BLOCKED : MediaStreamListener::UNBLOCKED);
+  if (mNotifiedFinished) {
+    listener->NotifyFinished(GraphImpl());
+  }
+}
+
+void
 MediaStream::AddListener(MediaStreamListener* aListener)
 {
   class Message : public ControlMessage {
@@ -1794,35 +1812,45 @@ MediaStream::RemoveListener(MediaStreamListener* aListener)
 }
 
 void
-SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
-                            MediaSegment* aSegment)
+SourceMediaStream::DestroyImpl()
 {
   {
     MutexAutoLock lock(mMutex);
-    TrackData* data = mUpdateTracks.AppendElement();
-    data->mID = aID;
-    data->mRate = aRate;
-    data->mStart = aStart;
-    data->mCommands = TRACK_CREATE;
-    data->mData = aSegment;
-    data->mHaveEnough = false;
+    mDestroyed = true;
   }
-  GraphImpl()->EnsureNextIteration();
+  MediaStream::DestroyImpl();
+}
+
+void
+SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
+                            MediaSegment* aSegment)
+{
+  MutexAutoLock lock(mMutex);
+  TrackData* data = mUpdateTracks.AppendElement();
+  data->mID = aID;
+  data->mRate = aRate;
+  data->mStart = aStart;
+  data->mCommands = TRACK_CREATE;
+  data->mData = aSegment;
+  data->mHaveEnough = false;
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
+  }
 }
 
 void
 SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment)
 {
-  {
-    MutexAutoLock lock(mMutex);
-    TrackData *track = FindDataForTrack(aID);
-    if (track) {
-      track->mData->AppendFrom(aSegment);
-    } else {
-      NS_ERROR("Append to non-existant track!");
-    }
+  MutexAutoLock lock(mMutex);
+  TrackData *track = FindDataForTrack(aID);
+  if (track) {
+    track->mData->AppendFrom(aSegment);
+  } else {
+    NS_ERROR("Append to non-existent track!");
   }
-  GraphImpl()->EnsureNextIteration();
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
+  }
 }
 
 bool
@@ -1858,36 +1886,36 @@ SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
 void
 SourceMediaStream::EndTrack(TrackID aID)
 {
-  {
-    MutexAutoLock lock(mMutex);
-    TrackData *track = FindDataForTrack(aID);
-    if (track) {
-      track->mCommands |= TRACK_END;
-    } else {
-      NS_ERROR("End of non-existant track");
-    }
+  MutexAutoLock lock(mMutex);
+  TrackData *track = FindDataForTrack(aID);
+  if (track) {
+    track->mCommands |= TRACK_END;
+  } else {
+    NS_ERROR("End of non-existant track");
   }
-  GraphImpl()->EnsureNextIteration();
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
+  }
 }
 
 void
 SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime)
 {
-  {
-    MutexAutoLock lock(mMutex);
-    mUpdateKnownTracksTime = aKnownTime;
+  MutexAutoLock lock(mMutex);
+  mUpdateKnownTracksTime = aKnownTime;
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
   }
-  GraphImpl()->EnsureNextIteration();
 }
 
 void
 SourceMediaStream::Finish()
 {
-  {
-    MutexAutoLock lock(mMutex);
-    mUpdateFinished = true;
+  MutexAutoLock lock(mMutex);
+  mUpdateFinished = true;
+  if (!mDestroyed) {
+    GraphImpl()->EnsureNextIteration();
   }
-  GraphImpl()->EnsureNextIteration();
 }
 
 static const PRUint32 kThreadLimit = 4;

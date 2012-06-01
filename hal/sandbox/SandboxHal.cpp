@@ -35,11 +35,11 @@ Hal()
 }
 
 void
-Vibrate(const nsTArray<uint32>& pattern, const WindowIdentifier &id)
+Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
 {
   HAL_LOG(("Vibrate: Sending to parent process."));
 
-  AutoInfallibleTArray<uint32, 8> p(pattern);
+  AutoInfallibleTArray<uint32_t, 8> p(pattern);
 
   WindowIdentifier newID(id);
   newID.AppendProcessID();
@@ -271,7 +271,7 @@ class HalParent : public PHalParent
 public:
   NS_OVERRIDE virtual bool
   RecvVibrate(const InfallibleTArray<unsigned int>& pattern,
-              const InfallibleTArray<uint64> &id,
+              const InfallibleTArray<uint64_t> &id,
               PBrowserParent *browserParent)
   {
     // Check whether browserParent is active.  We should have already
@@ -297,7 +297,7 @@ public:
   }
 
   NS_OVERRIDE virtual bool
-  RecvCancelVibrate(const InfallibleTArray<uint64> &id,
+  RecvCancelVibrate(const InfallibleTArray<uint64_t> &id,
                     PBrowserParent *browserParent)
   {
     TabParent *tabParent = static_cast<TabParent*>(browserParent);

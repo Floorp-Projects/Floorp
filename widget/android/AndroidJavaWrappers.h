@@ -13,6 +13,7 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsString.h"
+#include "mozilla/gfx/Rect.h"
 
 //#define FORCE_ALOG 1
 
@@ -171,9 +172,8 @@ public:
     AndroidGeckoLayerClient() {}
     AndroidGeckoLayerClient(jobject jobj) { Init(jobj); }
 
-    void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight,
-                               float aCssPageWidth, float aCssPageHeight);
-    void SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight);
+    void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
+    void SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
     bool CreateFrame(AutoLocalJNIFrame *jniFrame, AndroidLayerRendererFrame& aFrame);
@@ -183,7 +183,7 @@ public:
 protected:
     static jclass jGeckoLayerClientClass;
     static jmethodID jSetFirstPaintViewport;
-    static jmethodID jSetPageSize;
+    static jmethodID jSetPageRect;
     static jmethodID jSyncViewportInfoMethod;
     static jmethodID jCreateFrameMethod;
     static jmethodID jActivateProgramMethod;

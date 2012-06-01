@@ -8,7 +8,7 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
-const URI_GENERIC_ICON_DOWNLOAD = "drawable://alertdownloads";
+const URI_GENERIC_ICON_DOWNLOAD = "drawable://alert_download";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");

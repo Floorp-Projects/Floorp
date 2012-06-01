@@ -93,7 +93,7 @@ gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
 {
     gfxASurface *newSurface = nsnull;
 
-    newSurface = new gfxQuartzSurface(size, gfxASurface::FormatFromContent(contentType));
+    newSurface = new gfxQuartzSurface(size, OptimalFormatForContent(contentType));
 
     NS_IF_ADDREF(newSurface);
     return newSurface;

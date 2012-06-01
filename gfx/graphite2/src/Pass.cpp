@@ -90,28 +90,30 @@ bool Pass::readPass(const byte * const pass_start, size_t pass_length, size_t su
     // Perform some sanity checks.
     if (   m_sTransition > m_sRows
             || m_sSuccess > m_sRows
-            || m_sSuccess + m_sTransition < m_sRows)
+            || m_sSuccess + m_sTransition < m_sRows
+            || numRanges == 0)
         return false;
 
     if (p + numRanges * 6 - 4 > pass_end) return false;
     m_numGlyphs = be::peek<uint16>(p + numRanges * 6 - 4) + 1;
-    // Caculate the start of vairous arrays.
+    // Calculate the start of various arrays.
     const byte * const ranges = p;
     be::skip<uint16>(p, numRanges*3);
     const byte * const o_rule_map = p;
     be::skip<uint16>(p, m_sSuccess + 1);
 
     // More sanity checks
-    if (   reinterpret_cast<const byte *>(o_rule_map + m_sSuccess*sizeof(uint16)) > pass_end
+    if (reinterpret_cast<const byte *>(o_rule_map + m_sSuccess*sizeof(uint16)) > pass_end
             || p > pass_end)
         return false;
     const size_t numEntries = be::peek<uint16>(o_rule_map + m_sSuccess*sizeof(uint16));
     const byte * const   rule_map = p;
     be::skip<uint16>(p, numEntries);
 
-    if (p + 2 > pass_end) return false;
+    if (p + 2*sizeof(uint8) > pass_end) return false;
     m_minPreCtxt = be::read<uint8>(p);
     m_maxPreCtxt = be::read<uint8>(p);
+    if (m_minPreCtxt > m_maxPreCtxt) return false;
     const byte * const start_states = p;
     be::skip<int16>(p, m_maxPreCtxt - m_minPreCtxt + 1);
     const uint16 * const sort_keys = reinterpret_cast<const uint16 *>(p);
@@ -120,7 +122,7 @@ bool Pass::readPass(const byte * const pass_start, size_t pass_length, size_t su
     be::skip<byte>(p, m_numRules);
     be::skip<byte>(p);     // skip reserved byte
 
-    if (p + 2 > pass_end) return false;
+    if (p + sizeof(uint16) > pass_end) return false;
     const size_t pass_constraint_len = be::read<uint16>(p);
     const uint16 * const o_constraint = reinterpret_cast<const uint16 *>(p);
     be::skip<uint16>(p, m_numRules + 1);

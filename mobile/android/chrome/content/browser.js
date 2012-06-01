@@ -43,6 +43,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "Haptic",
 XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
+XPCOMUtils.defineLazyServiceGetter(window, "URIFixup",
+  "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
+
 const kStateActive = 0x00000001; // :active pseudoclass for elements
 
 const kXLinkNamespace = "http://www.w3.org/1999/xlink";
@@ -119,14 +122,6 @@ var Strings = {};
   });
 });
 
-var MetadataProvider = {
-  getDrawMetadata: function getDrawMetadata() {
-    let viewport = BrowserApp.selectedTab.getViewport();
-    viewport.zoom = BrowserApp.selectedTab._drawZoom;
-    return JSON.stringify(viewport);
-  },
-};
-
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -140,8 +135,6 @@ var BrowserApp = {
     this.deck = document.getElementById("browsers");
     BrowserEventHandler.init();
     ViewportHandler.init();
-
-    getBridge().setDrawMetadataProvider(MetadataProvider);
 
     getBridge().browserApp = this;
 
@@ -198,6 +191,7 @@ var BrowserApp = {
 
     NativeWindow.init();
     Downloads.init();
+    FindHelper.init();
     FormAssistant.init();
     OfflineApps.init();
     IndexedDB.init();
@@ -399,6 +393,7 @@ var BrowserApp = {
   shutdown: function shutdown() {
     NativeWindow.uninit();
     FormAssistant.uninit();
+    FindHelper.uninit();
     OfflineApps.uninit();
     IndexedDB.uninit();
     ViewportHandler.uninit();
@@ -1520,7 +1515,8 @@ function Tab(aURL, aParams) {
   this._drawZoom = 1.0;
   this.userScrollPos = { x: 0, y: 0 };
   this.contentDocumentIsDisplayed = true;
-  this.clickToPlayPluginDoorhangerShown = false;
+  this.pluginDoorhangerTimeout = null;
+  this.shouldShowPluginDoorhanger = true;
   this.clickToPlayPluginsActivated = false;
 }
 
@@ -1859,20 +1855,10 @@ Tab.prototype = {
   },
 
   getPageSize: function(aDocument, aDefaultWidth, aDefaultHeight) {
-    if (aDocument instanceof SVGDocument) {
-      let rect = aDocument.rootElement.getBoundingClientRect();
-      // we need to add rect.left and rect.top twice so that the SVG is drawn
-      // centered on the page; if we add it only once then the SVG will be
-      // on the bottom-right of the page and if we don't add it at all then
-      // we end up with a cropped SVG (see bug 712065)
-      return [Math.ceil(rect.left + rect.width + rect.left),
-              Math.ceil(rect.top + rect.height + rect.top)];
-    } else {
-      let body = aDocument.body || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
-      let html = aDocument.documentElement || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
-      return [Math.max(body.scrollWidth, html.scrollWidth),
-              Math.max(body.scrollHeight, html.scrollHeight)];
-    }
+    let body = aDocument.body || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
+    let html = aDocument.documentElement || { scrollWidth: aDefaultWidth, scrollHeight: aDefaultHeight };
+    return [Math.max(body.scrollWidth, html.scrollWidth),
+      Math.max(body.scrollHeight, html.scrollHeight)];
   },
 
   getViewport: function() {
@@ -1881,11 +1867,15 @@ Tab.prototype = {
       height: gScreenHeight,
       cssWidth: gScreenWidth / this._zoom,
       cssHeight: gScreenHeight / this._zoom,
-      pageWidth: gScreenWidth,
-      pageHeight: gScreenHeight,
+      pageLeft: 0,
+      pageTop: 0,
+      pageRight: gScreenWidth,
+      pageBottom: gScreenHeight,
       // We make up matching css page dimensions
-      cssPageWidth: gScreenWidth / this._zoom,
-      cssPageHeight: gScreenHeight / this._zoom,
+      cssPageLeft: 0,
+      cssPageTop: 0,
+      cssPageRight: gScreenWidth / this._zoom,
+      cssPageBottom: gScreenHeight / this._zoom,
       zoom: this._zoom,
     };
 
@@ -1899,30 +1889,31 @@ Tab.prototype = {
 
     let doc = this.browser.contentDocument;
     if (doc != null) {
-      let [pageWidth, pageHeight] = this.getPageSize(doc, viewport.cssWidth, viewport.cssHeight);
-
-      let cssPageWidth = pageWidth;
-      let cssPageHeight = pageHeight;
-
-      /* Transform the page width and height based on the zoom factor. */
-      pageWidth *= viewport.zoom;
-      pageHeight *= viewport.zoom;
+      let cwu = this.browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let cssPageRect = cwu.getRootBounds();
 
       /*
        * Avoid sending page sizes of less than screen size before we hit DOMContentLoaded, because
        * this causes the page size to jump around wildly during page load. After the page is loaded,
        * send updates regardless of page size; we'll zoom to fit the content as needed.
        *
-       * Also, we need to compare the page size returned from getPageSize (in CSS pixels) to the floored
-       * screen size in CSS pixels because the page size returned from getPageSize may also be floored.
+       * In the check below, we floor the viewport size because there might be slight rounding errors
+       * introduced in the CSS page size due to the conversion to and from app units in Gecko. The
+       * error should be no more than one app unit so doing the floor is overkill, but safe in the
+       * sense that the extra page size updates that get sent as a result will be mostly harmless.
        */
-      let pageLargerThanScreen = (cssPageWidth >= Math.floor(viewport.cssWidth))
-                              && (cssPageHeight >= Math.floor(viewport.cssHeight));
+      let pageLargerThanScreen = (cssPageRect.width >= Math.floor(viewport.cssWidth))
+                              && (cssPageRect.height >= Math.floor(viewport.cssHeight));
       if (doc.readyState === 'complete' || pageLargerThanScreen) {
-        viewport.cssPageWidth = cssPageWidth;
-        viewport.cssPageHeight = cssPageHeight;
-        viewport.pageWidth = pageWidth;
-        viewport.pageHeight = pageHeight;
+        viewport.cssPageLeft = cssPageRect.left;
+        viewport.cssPageTop = cssPageRect.top;
+        viewport.cssPageRight = cssPageRect.right;
+        viewport.cssPageBottom = cssPageRect.bottom;
+        /* Transform the page width and height based on the zoom factor. */
+        viewport.pageLeft = (viewport.cssPageLeft * viewport.zoom);
+        viewport.pageTop = (viewport.cssPageTop * viewport.zoom);
+        viewport.pageRight = (viewport.cssPageRight * viewport.zoom);
+        viewport.pageBottom = (viewport.cssPageBottom * viewport.zoom);
       }
     }
 
@@ -2016,18 +2007,36 @@ Tab.prototype = {
             list.push("[" + rel + "]");
         }
 
+        // We want to get the largest icon size possible for our UI.
+        let maxSize = 0;
+
+        // We use the sizes attribute if available
+        // see http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#rel-icon
+        if (target.hasAttribute("sizes")) {
+          let sizes = target.getAttribute("sizes").toLowerCase();
+
+          if (sizes == "any") {
+            // Since Java expects an integer, use -1 to represent icons with sizes="any"
+            maxSize = -1; 
+          } else {
+            let tokens = sizes.split(" ");
+            tokens.forEach(function(token) {
+              // TODO: check for invalid tokens
+              let [w, h] = token.split("x");
+              maxSize = Math.max(maxSize, Math.max(w, h));
+            });
+          }
+        }
+
         let json = {
           type: "DOMLinkAdded",
           tabID: this.id,
           href: resolveGeckoURI(target.href),
           charset: target.ownerDocument.characterSet,
           title: target.title,
-          rel: list.join(" ")
+          rel: list.join(" "),
+          size: maxSize
         };
-
-        // rel=icon can also have a sizes attribute
-        if (target.hasAttribute("sizes"))
-          json.sizes = target.getAttribute("sizes");
 
         sendMessageToJava({ gecko: json });
         break;
@@ -2116,11 +2125,22 @@ Tab.prototype = {
         // If the plugin is hidden, or if the overlay is too small, show a doorhanger notification
         let overlay = plugin.ownerDocument.getAnonymousElementByAttribute(plugin, "class", "mainBox");
         if (!overlay || PluginHelper.isTooSmall(plugin, overlay)) {
-          if (!this.clickToPlayPluginDoorhangerShown)
-            PluginHelper.showDoorHanger(this);
+          // To avoid showing the doorhanger if there are also visible plugin overlays on the page,
+          // delay showing the doorhanger to check if visible plugins get added in the near future.
+          if (!this.pluginDoorhangerTimeout) {
+            this.pluginDoorhangerTimeout = setTimeout(function() {
+              if (this.shouldShowPluginDoorhanger)
+                PluginHelper.showDoorHanger(this);
+            }.bind(this), 500);
+          }
 
+          // No overlay? We're done here.
           if (!overlay)
             return;
+
+        } else {
+          // There's a large enough visible overlay that we don't need to show the doorhanger.
+          this.shouldShowPluginDoorhanger = false;
         }
 
         // Add click to play listener to the overlay
@@ -2135,8 +2155,7 @@ Tab.prototype = {
           tab.clickToPlayPluginsActivated = true;
           PluginHelper.playAllPlugins(win);
 
-          if (tab.clickToPlayPluginDoorhangerShown)
-            NativeWindow.doorhanger.hide("ask-to-play-plugins", tab.id);
+          NativeWindow.doorhanger.hide("ask-to-play-plugins", tab.id);
         }, true);
         break;
       }
@@ -2208,20 +2227,31 @@ Tab.prototype = {
 
     this._hostChanged = true;
 
-    let uri = aLocationURI.spec;
+    let fixedURI = aLocationURI;
+    try {
+      fixedURI = URIFixup.createExposableURI(aLocationURI);
+    } catch (ex) { }
+
     let documentURI = contentWin.document.documentURIObject.spec;
     let contentType = contentWin.document.contentType;
-    let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0;
+    
+    // XXX If fixedURI matches browser.lastURI, we assume this isn't a real location
+    // change but rather a spurious addition like a wyciwyg URI prefix. See Bug 747883.
+    let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0 ||
+                       ((this.browser.lastURI != null) && fixedURI.equals(this.browser.lastURI));
+    this.browser.lastURI = fixedURI;
 
     // Reset state of click-to-play plugin notifications.
-    this.clickToPlayPluginDoorhangerShown = false;
+    clearTimeout(this.pluginDoorhangerTimeout);
+    this.pluginDoorhangerTimeout = null;
+    this.shouldShowPluginDoorhanger = true;
     this.clickToPlayPluginsActivated = false;
 
     let message = {
       gecko: {
         type: "Content:LocationChange",
         tabID: this.id,
-        uri: uri,
+        uri: fixedURI.spec,
         documentURI: documentURI,
         contentType: contentType,
         sameDocument: sameDocument
@@ -2505,7 +2535,7 @@ Tab.prototype = {
           // call above does so at the end of the updateViewportSize function. As long
           // as that is happening, we don't need to do it again here.
 
-          if (contentDocument instanceof ImageDocument) {
+          if (contentDocument.mozSyntheticDocument) {
             // for images, scale to fit width. this needs to happen *after* the call
             // to updateMetadata above, because that call sets the CSS viewport which
             // will affect the page size (i.e. contentDocument.body.scroll*) that we
@@ -2705,13 +2735,13 @@ var BrowserEventHandler = {
 
       let viewport = BrowserApp.selectedTab.getViewport();
       let vRect = new Rect(viewport.cssX, viewport.cssY, viewport.cssWidth, viewport.cssHeight);
-      let bRect = new Rect(Math.max(0,rect.x - margin),
+      let bRect = new Rect(Math.max(viewport.cssPageLeft, rect.x - margin),
                            rect.y,
                            rect.w + 2*margin,
                            rect.h);
 
-      // constrict the rect to the screen width
-      bRect.width = Math.min(bRect.width, viewport.cssPageWidth - bRect.x);
+      // constrict the rect to the screen's right edge
+      bRect.width = Math.min(bRect.width, viewport.cssPageRight - bRect.x);
 
       let overlap = vRect.intersect(bRect);
       let overlapArea = overlap.width*overlap.height;
@@ -2964,10 +2994,11 @@ const ElementTouchHelper = {
       return target;
 
     target = null;
-    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top * dpiRatio,
-                                                   this.radius.right * dpiRatio,
-                                                   this.radius.bottom * dpiRatio,
-                                                   this.radius.left * dpiRatio, true, false);
+    let zoom = BrowserApp.selectedTab._zoom;
+    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top * dpiRatio / zoom,
+                                                   this.radius.right * dpiRatio / zoom,
+                                                   this.radius.bottom * dpiRatio / zoom,
+                                                   this.radius.left * dpiRatio / zoom, true, false);
 
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {
@@ -3143,6 +3174,97 @@ var ErrorPageEventHandler = {
         }
         break;
       }
+    }
+  }
+};
+
+var FindHelper = {
+  _find: null,
+  _findInProgress: false,
+  _targetTab: null,
+  _initialViewport: null,
+  _viewportChanged: false,
+
+  init: function() {
+    Services.obs.addObserver(this, "FindInPage:Find", false);
+    Services.obs.addObserver(this, "FindInPage:Prev", false);
+    Services.obs.addObserver(this, "FindInPage:Next", false);
+    Services.obs.addObserver(this, "FindInPage:Closed", false);
+  },
+
+  uninit: function() {
+    Services.obs.removeObserver(this, "FindInPage:Find", false);
+    Services.obs.removeObserver(this, "FindInPage:Prev", false);
+    Services.obs.removeObserver(this, "FindInPage:Next", false);
+    Services.obs.removeObserver(this, "FindInPage:Closed", false);
+  },
+
+  observe: function(aMessage, aTopic, aData) {
+    switch(aTopic) {
+      case "FindInPage:Find":
+        this.doFind(aData);
+        break;
+
+      case "FindInPage:Prev":
+        this.findAgain(aData, true);
+        break;
+
+      case "FindInPage:Next":
+        this.findAgain(aData, false);
+        break;
+
+      case "FindInPage:Closed":
+        this.findClosed();
+        break;
+    }
+  },
+
+  doFind: function(aSearchString) {
+    if (!this._findInProgress) {
+      this._findInProgress = true;
+      this._targetTab = BrowserApp.selectedTab;
+      this._find = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
+      this._find.init(this._targetTab.browser.docShell);
+      this._initialViewport = JSON.stringify(this._targetTab.viewport);
+      this._viewportChanged = false;
+    }
+
+    let result = this._find.find(aSearchString, false);
+    this.handleResult(result);
+  },
+
+  findAgain: function(aString, aFindBackwards) {
+    let result = this._find.findAgain(aFindBackwards, false);
+    this.handleResult(result);
+  },
+
+  findClosed: function() {
+    if (!this._findInProgress) {
+      // this should never happen
+      Cu.reportError("Warning: findClosed() called while _findInProgress is false!");
+      // fall through and clean up anyway
+    }
+
+    this._find = null;
+    this._findInProgress = false;
+    this._targetTab = null;
+    this._initialViewport = null;
+    this._viewportChanged = false;
+  },
+
+  handleResult: function(aResult) {
+    if (aResult == Ci.nsITypeAheadFind.FIND_NOTFOUND) {
+      if (this._viewportChanged) {
+        if (this._targetTab != BrowserApp.selectedTab) {
+          // this should never happen
+          Cu.reportError("Warning: selected tab changed during find!");
+          // fall through and restore viewport on the initial tab anyway
+        }
+        this._targetTab.viewport = JSON.parse(this._initialViewport);
+        this._targetTab.sendViewportUpdate();
+      }
+    } else {
+      this._viewportChanged = true;
     }
   }
 };
@@ -4219,7 +4341,7 @@ var PluginHelper = {
 
     // Even though we may not end up showing a doorhanger, this flag
     // lets us know that we've tried to show a doorhanger.
-    aTab.clickToPlayPluginDoorhangerShown = true;
+    aTab.shouldShowPluginDoorhanger = false;
 
     let uri = aTab.browser.currentURI;
 
@@ -5015,7 +5137,21 @@ var WebappsUI = {
 	   if (!aManifest)
 	     return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
+
+          // Add a homescreen shortcut
           this.createShortcut(manifest.name, manifest.fullLaunchPath(), manifest.iconURLForSize("64"), "webapp");
+
+          // Create a system notification allowing the user to launch the app
+          let observer = {
+            observe: function (aSubject, aTopic) {
+              if (aTopic == "alertclickcallback")
+                WebappsUI.openURL(manifest.fullLaunchPath(), aData.origin);
+            }
+          };
+    
+          let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
+          let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
+          alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", observer, "webapp");
         }).bind(this));
         break;
     }

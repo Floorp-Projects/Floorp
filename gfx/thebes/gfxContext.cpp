@@ -1458,7 +1458,7 @@ gfxContext::PushGroup(gfxASurface::gfxContentType content)
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
   } else {
     RefPtr<DrawTarget> newDT =
-      mDT->CreateSimilarDrawTarget(mDT->GetSize(), FormatForContent(content));
+      mDT->CreateSimilarDrawTarget(mDT->GetSize(), gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content));
 
     Save();
 

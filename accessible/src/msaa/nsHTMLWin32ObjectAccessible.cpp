@@ -16,8 +16,8 @@ using namespace mozilla::a11y;
 
 nsHTMLWin32ObjectOwnerAccessible::
   nsHTMLWin32ObjectOwnerAccessible(nsIContent* aContent,
-                                   nsDocAccessible* aDoc, void* aHwnd) :
-  nsAccessibleWrap(aContent, aDoc), mHwnd(aHwnd)
+                                   DocAccessible* aDoc, void* aHwnd) :
+  AccessibleWrap(aContent, aDoc), mHwnd(aHwnd)
 {
   // Our only child is a nsHTMLWin32ObjectAccessible object.
   mNativeAccessible = new nsHTMLWin32ObjectAccessible(mHwnd);
@@ -29,12 +29,12 @@ nsHTMLWin32ObjectOwnerAccessible::
 void
 nsHTMLWin32ObjectOwnerAccessible::Shutdown()
 {
-  nsAccessibleWrap::Shutdown();
+  AccessibleWrap::Shutdown();
   mNativeAccessible = nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLWin32ObjectOwnerAccessible: nsAccessible implementation
+// nsHTMLWin32ObjectOwnerAccessible: Accessible implementation
 
 role
 nsHTMLWin32ObjectOwnerAccessible::NativeRole()
@@ -47,11 +47,11 @@ nsHTMLWin32ObjectOwnerAccessible::NativeState()
 {
   // XXX: No HWND means this is windowless plugin which is not accessible in
   // the meantime.
-  return mHwnd ? nsAccessibleWrap::NativeState() : states::UNAVAILABLE;
+  return mHwnd ? AccessibleWrap::NativeState() : states::UNAVAILABLE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLWin32ObjectOwnerAccessible: nsAccessible protected implementation
+// nsHTMLWin32ObjectOwnerAccessible: Accessible protected implementation
 
 void
 nsHTMLWin32ObjectOwnerAccessible::CacheChildren()
@@ -68,7 +68,7 @@ nsHTMLWin32ObjectOwnerAccessible::CacheChildren()
 nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(void* aHwnd):
 nsLeafAccessible(nsnull, nsnull)
 {
-  // XXX: Mark it as defunct to make sure no single nsAccessible method is
+  // XXX: Mark it as defunct to make sure no single Accessible method is
   // running on it. We need to allow accessible without DOM nodes.
   mFlags |= eIsDefunct;
 
@@ -85,7 +85,7 @@ nsLeafAccessible(nsnull, nsnull)
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLWin32ObjectAccessible, nsAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLWin32ObjectAccessible, Accessible)
 
 NS_IMETHODIMP 
 nsHTMLWin32ObjectAccessible::GetNativeInterface(void** aNativeAccessible)

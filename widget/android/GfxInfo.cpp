@@ -255,14 +255,17 @@ GfxInfo::GetGfxDriverInfo()
     /* The following entry, when uncommented, will allow us to whitelist a
      * specific device. See the long comment in GetFeatureStatusImpl for more
      * info. */
- // APPEND_TO_DRIVER_BLOCKLIST( DRIVER_OS_ALL,
- //   my_vendor_id, my_device_id,
- //   nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_NO_INFO,
- //   DRIVER_LESS_THAN, GfxDriverInfo::allDevices );
+#ifdef MOZ_JAVA_COMPOSITOR
+    APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_ALL,
+      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAll), GfxDriverInfo::allDevices,
+      nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_NO_INFO,
+      DRIVER_COMPARISON_IGNORED, GfxDriverInfo::allDriverVersions );
+#else
     APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_ALL,
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAll), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_OPENGL_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions );
+#endif
   }
   return *mDriverInfo;
 }
@@ -281,7 +284,7 @@ GfxInfo::GetFeatureStatusImpl(PRInt32 aFeature,
   if (aOS)
     *aOS = os;
 
-  // Don't evaluate special cases when evaluating the downlaoded blocklist.
+  // Don't evaluate special cases when evaluating the downloaded blocklist.
   if (!aDriverInfo.Length()) {
     if (aFeature == FEATURE_OPENGL_LAYERS) {
       /* The following code is an old way to whitelist devices when we're ready.

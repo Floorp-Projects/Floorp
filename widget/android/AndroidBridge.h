@@ -304,8 +304,6 @@ public:
     
     void HandleGeckoMessage(const nsAString& message, nsAString &aRet);
 
-    nsCOMPtr<nsIAndroidDrawMetadataProvider> GetDrawMetadataProvider();
-
     void CheckURIVisited(const nsAString& uri);
     void MarkURIVisited(const nsAString& uri);
 
@@ -332,9 +330,8 @@ public:
     void EnableNetworkNotifications();
     void DisableNetworkNotifications();
 
-    void SetFirstPaintViewport(float aOffsetX, float aOffsetY, float aZoom, float aPageWidth, float aPageHeight,
-                               float aCssPageWidth, float aCssPageHeight);
-    void SetPageSize(float aZoom, float aPageWidth, float aPageHeight, float aCssPageWidth, float aCssPageHeight);
+    void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
+    void SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
     void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                           nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
 
@@ -343,8 +340,8 @@ public:
     void ShowSurface(jobject surface, const gfxRect& aRect, bool aInverted, bool aBlend);
     void HideSurface(jobject surface);
 
-    void AddPluginView(jobject view, const gfxRect& rect);
-    void RemovePluginView(jobject view);
+    void AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen, int orientation);
+    void RemovePluginView(jobject view, bool isFullScreen);
 
     // These methods don't use a ScreenOrientation because it's an
     // enum and that would require including the header which requires

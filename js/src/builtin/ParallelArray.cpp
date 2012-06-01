@@ -85,7 +85,7 @@ ParallelArray_get(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, ParallelArray_get, &ParallelArrayClass, &ok));
+    RootedObject obj(cx, NonGenericMethodGuard(cx, args, ParallelArray_get, &ParallelArrayClass, &ok));
     if (!obj)
         return ok;
 
@@ -114,14 +114,14 @@ ParallelArray_build(JSContext *cx, uint32_t length, const Value &thisv, JSObject
                     bool passElement, unsigned extrasc, Value *extrasp, Value *vp)
 {
     /* create data store for results */
-    RootedVarObject buffer(cx, NewDenseAllocatedArray(cx, length));
+    RootedObject buffer(cx, NewDenseAllocatedArray(cx, length));
     if (!buffer)
         return false;
 
     buffer->ensureDenseArrayInitializedLength(cx, length, 0);
 
     /* grab source buffer if we need to pass elements */
-    RootedVarObject srcBuffer(cx);
+    RootedObject srcBuffer(cx);
     if (passElement)
         srcBuffer = &(thisv.toObject().getSlot(JSSLOT_PA_BUFFER).toObject());
 
@@ -129,7 +129,7 @@ ParallelArray_build(JSContext *cx, uint32_t length, const Value &thisv, JSObject
     InvokeArgsGuard args;
     cx->stack.pushInvokeArgs(cx, extrasc + 1, &args);
 
-    RootedVarObject extra(cx);
+    RootedObject extra(cx);
     for (uint32_t i = 0; i < length; i++) {
         args.setCallee(ObjectValue(*elementalFun));
         if (passElement)
@@ -157,7 +157,7 @@ ParallelArray_build(JSContext *cx, uint32_t length, const Value &thisv, JSObject
     }
 
     /* create ParallelArray wrapper class */
-    RootedVarObject result(cx, NewParallelArray(cx, buffer, length));
+    RootedObject result(cx, NewParallelArray(cx, buffer, length));
     if (!result)
         return false;
 
@@ -183,14 +183,14 @@ ParallelArray_construct(JSContext *cx, unsigned argc, Value *vp)
             return false;
         }
 
-        RootedVarObject src(cx, &(args[0].toObject()));
+        RootedObject src(cx, &(args[0].toObject()));
 
         uint32_t srcLen;
         if (!js_GetLengthProperty(cx, src, &srcLen))
             return false;
 
         /* allocate buffer for result */
-        RootedVarObject buffer(cx, NewDenseAllocatedArray(cx, srcLen));
+        RootedObject buffer(cx, NewDenseAllocatedArray(cx, srcLen));
         if (!buffer)
             return false;
 
@@ -212,7 +212,7 @@ ParallelArray_construct(JSContext *cx, unsigned argc, Value *vp)
             buffer->setDenseArrayElementWithType(cx, i, elem);
         }
 
-        RootedVarObject result(cx, NewParallelArray(cx, buffer, srcLen));
+        RootedObject result(cx, NewParallelArray(cx, buffer, srcLen));
         if (!result)
             return false;
 
@@ -227,7 +227,7 @@ ParallelArray_construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     /* extract second argument, the elemental function */
-    RootedVarObject elementalFun(cx, js_ValueToCallableObject(cx, &args[1], JSV2F_SEARCH_STACK));
+    RootedObject elementalFun(cx, js_ValueToCallableObject(cx, &args[1], JSV2F_SEARCH_STACK));
     if (!elementalFun)
         return false;
 
@@ -258,7 +258,7 @@ ParallelArray_mapOrCombine(JSContext *cx, unsigned argc, Value *vp, bool isMap)
 
     /* make sure we are called on a ParallelArray */
     bool ok;
-    RootedVarObject obj(cx);
+    RootedObject obj(cx);
     obj = NonGenericMethodGuard(cx, args, (isMap ? ParallelArray_map : ParallelArray_combine),
                                 &ParallelArrayClass, &ok);
     if (!obj)
@@ -271,7 +271,7 @@ ParallelArray_mapOrCombine(JSContext *cx, unsigned argc, Value *vp, bool isMap)
     }
 
     /* extract first argument, the elemental function */
-    RootedVarObject elementalFun(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
+    RootedObject elementalFun(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
     if (!elementalFun)
         return false;
 
@@ -316,7 +316,7 @@ ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan)
 
     /* make sure we are called on a ParallelArray */
     bool ok;
-    RootedVarObject obj(cx);
+    RootedObject obj(cx);
     obj = NonGenericMethodGuard(cx, args, (isScan ? ParallelArray_scan : ParallelArray_reduce), &ParallelArrayClass, &ok);
     if (!obj)
         return ok;
@@ -329,8 +329,8 @@ ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan)
 
     uint32_t length = GetLength(obj);
 
-    RootedVarObject result(cx);
-    RootedVarObject resBuffer(cx);
+    RootedObject result(cx);
+    RootedObject resBuffer(cx);
     if (isScan) {
         /* create data store for results */
         resBuffer = NewDenseAllocatedArray(cx, length);
@@ -346,7 +346,7 @@ ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan)
     }
 
     /* extract first argument, the elemental function */
-    RootedVarObject elementalFun(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
+    RootedObject elementalFun(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
     if (!elementalFun)
         return false;
 
@@ -356,7 +356,7 @@ ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan)
         return true;
     }
 
-    RootedVarObject buffer(cx, GetBuffer(obj));
+    RootedObject buffer(cx, GetBuffer(obj));
 
     Value accu = buffer->getDenseArrayElement(0);
     if (isScan)
@@ -399,7 +399,7 @@ ParallelArray_filter(JSContext *cx, unsigned argc, Value *vp)
 
     /* make sure we are called on a ParallelArray */
     bool ok;
-    RootedVarObject obj(cx);
+    RootedObject obj(cx);
     obj = NonGenericMethodGuard(cx, args, ParallelArray_filter, &ParallelArrayClass, &ok);
     if (!obj)
         return ok;
@@ -411,15 +411,15 @@ ParallelArray_filter(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* extract first argument, the elemental function */
-    RootedVarObject elementalFun(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
+    RootedObject elementalFun(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
     if (!elementalFun)
         return false;
 
-    RootedVarObject buffer(cx, GetBuffer(obj));
+    RootedObject buffer(cx, GetBuffer(obj));
     uint32_t length = GetLength(obj);
 
     /* We just assume the length of the input as the length of the output. */
-    RootedVarObject resBuffer(cx, NewDenseAllocatedArray(cx, length));
+    RootedObject resBuffer(cx, NewDenseAllocatedArray(cx, length));
     if (!resBuffer)
         return false;
 
@@ -447,7 +447,7 @@ ParallelArray_filter(JSContext *cx, unsigned argc, Value *vp)
     resBuffer->setArrayLength(cx, pos);
 
     /* create ParallelArray wrapper class */
-    RootedVarObject result(cx, NewParallelArray(cx, resBuffer, pos));
+    RootedObject result(cx, NewParallelArray(cx, resBuffer, pos));
     if (!result)
         return false;
 
@@ -462,12 +462,12 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
 
     /* make sure we are called on a ParallelArray */
     bool ok;
-    RootedVarObject obj(cx);
+    RootedObject obj(cx);
     obj = NonGenericMethodGuard(cx, args, ParallelArray_scatter, &ParallelArrayClass, &ok);
     if (!obj)
         return ok;
 
-    RootedVarObject buffer(cx, GetBuffer(obj));
+    RootedObject buffer(cx, GetBuffer(obj));
 
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -480,7 +480,7 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PAR_ARRAY_SCATTER_INVALID_VEC);
         return false;
     }
-    RootedVarObject targets(cx, &args[0].toObject());
+    RootedObject targets(cx, &args[0].toObject());
 
     uint32_t scatterLen;
     if (!JS_GetArrayLength(cx, targets, &scatterLen))
@@ -492,11 +492,11 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* next, default value */
-    RootedVarValue defValue(cx, UndefinedValue());
+    RootedValue defValue(cx, UndefinedValue());
     if (args.length() >= 2)
         defValue = args[1];
 
-    RootedVarObject conflictFun(cx);
+    RootedObject conflictFun(cx);
     /* conflict resolution function */
     if ((args.length() >= 3) && !args[2].isUndefined()) {
         conflictFun = js_ValueToCallableObject(cx, &args[2], JSV2F_SEARCH_STACK);
@@ -515,7 +515,7 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* allocate space for the result */
-    RootedVarObject resBuffer(cx, NewDenseAllocatedArray(cx, length));
+    RootedObject resBuffer(cx, NewDenseAllocatedArray(cx, length));
     if (!resBuffer)
         return false;
 
@@ -524,7 +524,7 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
     /* iterate over the scatter vector */
     for (uint32_t i = 0; i < scatterLen; i++) {
         /* read target index */
-        RootedVarValue elem(cx);
+        RootedValue elem(cx);
         if (!targets->getElement(cx, targets, i, elem.address()))
             return false;
 
@@ -538,9 +538,9 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
         }
 
         /* read current value */
-        RootedVarValue readV(cx, buffer->getDenseArrayElement(i));
+        RootedValue readV(cx, buffer->getDenseArrayElement(i));
 
-        RootedVarValue previous(cx, resBuffer->getDenseArrayElement(targetIdx));
+        RootedValue previous(cx, resBuffer->getDenseArrayElement(targetIdx));
 
         if (!previous.reference().isMagic(JS_ARRAY_HOLE)) {
             if (conflictFun) {
@@ -577,7 +577,7 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* create ParallelArray wrapper class */
-    RootedVarObject result(cx, NewParallelArray(cx, resBuffer, length));
+    RootedObject result(cx, NewParallelArray(cx, resBuffer, length));
     if (!result)
         return false;
 
@@ -591,16 +591,16 @@ ParallelArray_forward_method(JSContext *cx, unsigned argc, Value *vp, Native nat
     CallArgs args = CallArgsFromVp(argc, vp);
 
     bool ok;
-    RootedVarObject obj(cx, NonGenericMethodGuard(cx, args, native, &ParallelArrayClass, &ok));
+    RootedObject obj(cx, NonGenericMethodGuard(cx, args, native, &ParallelArrayClass, &ok));
     if (!obj)
         return ok;
 
-    RootedVarValue callable(cx);
-    RootedVarObject buffer(cx, GetBuffer(obj));
+    RootedValue callable(cx);
+    RootedObject buffer(cx, GetBuffer(obj));
     if (!GetMethod(cx, buffer, id, 0, callable.address()))
         return false;
 
-    RootedVarValue rval(cx);
+    RootedValue rval(cx);
     if (!Invoke(cx, ObjectOrNullValue(buffer), callable, argc, vp, rval.address()))
         return false;
 
@@ -611,21 +611,21 @@ ParallelArray_forward_method(JSContext *cx, unsigned argc, Value *vp, Native nat
 static JSBool
 ParallelArray_toString(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedVarId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
+    RootedId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
     return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toString, id);
 }
 
 static JSBool
 ParallelArray_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedVarId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
+    RootedId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
     return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toLocaleString, id);
 }
 
 static JSBool
 ParallelArray_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedVarId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
+    RootedId id(cx, NameToId(cx->runtime->atomState.toStringAtom->asPropertyName()));
     return ParallelArray_forward_method(cx, argc, vp, ParallelArray_toSource, id);
 }
 
@@ -668,7 +668,7 @@ static JSBool
 ParallelArray_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
                             JSProperty **propp)
 {
-    RootedVarObject buffer(cx, GetBuffer(obj));
+    RootedObject buffer(cx, GetBuffer(obj));
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom) ||
         IsDenseArrayId(cx, buffer, id))
@@ -678,7 +678,7 @@ ParallelArray_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObje
         return true;
     }
 
-    RootedVarObject proto(cx, obj->getProto());
+    RootedObject proto(cx, obj->getProto());
     if (proto)
         return proto->lookupGeneric(cx, id, objp, propp);
 
@@ -691,7 +691,7 @@ static JSBool
 ParallelArray_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp,
                              JSProperty **propp)
 {
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
     return ParallelArray_lookupGeneric(cx, obj, id, objp, propp);
 }
 
@@ -718,7 +718,7 @@ static JSBool
 ParallelArray_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp,
                             JSProperty **propp)
 {
-    RootedVarId id(cx, SPECIALID_TO_JSID(sid));
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
     return ParallelArray_lookupGeneric(cx, obj, id, objp, propp);
 }
 
@@ -730,11 +730,11 @@ ParallelArray_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
         return true;
     }
 
-    RootedVarObject buffer(cx, GetBuffer(obj));
+    RootedObject buffer(cx, GetBuffer(obj));
     if (IsDenseArrayId(cx, buffer, id))
         return buffer->getGeneric(cx, receiver, id, vp);
 
-    RootedVarObject proto(cx, obj->getProto());
+    RootedObject proto(cx, obj->getProto());
     if (proto)
         return proto->getGeneric(cx, receiver, id, vp);
 
@@ -746,20 +746,20 @@ static JSBool
 ParallelArray_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                           HandlePropertyName name, Value *vp)
 {
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
     return ParallelArray_getGeneric(cx, obj, receiver, id, vp);
 }
 
 static JSBool
 ParallelArray_getElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index, Value *vp)
 {
-    RootedVarObject buffer(cx, GetBuffer(obj));
+    RootedObject buffer(cx, GetBuffer(obj));
     if (IsDenseArrayIndex(buffer, index)) {
         *vp = buffer->getDenseArrayElement(index);
         return true;
     }
 
-    RootedVarObject proto(cx, obj->getProto());
+    RootedObject proto(cx, obj->getProto());
     if (proto)
         return proto->getElement(cx, receiver, index, vp);
 
@@ -770,7 +770,7 @@ ParallelArray_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
 static JSBool
 ParallelArray_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid, Value *vp)
 {
-    RootedVarId id(cx, SPECIALID_TO_JSID(sid));
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
     return ParallelArray_getGeneric(cx, obj, receiver, id, vp);
 }
 
@@ -787,7 +787,7 @@ static JSBool
 ParallelArray_defineProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value *value,
                              JSPropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
     return ParallelArray_defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
@@ -804,7 +804,7 @@ static JSBool
 ParallelArray_defineSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, const Value *value,
                             PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    RootedVarId id(cx, SPECIALID_TO_JSID(sid));
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
     return ParallelArray_defineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
@@ -819,7 +819,7 @@ ParallelArray_setGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp
 static JSBool
 ParallelArray_setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict)
 {
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
     return ParallelArray_setGeneric(cx, obj, id, vp, strict);
 }
 
@@ -834,7 +834,7 @@ ParallelArray_setElement(JSContext *cx, HandleObject obj, uint32_t index, Value 
 static JSBool
 ParallelArray_setSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict)
 {
-    RootedVarId id(cx, SPECIALID_TO_JSID(sid));
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
     return ParallelArray_setGeneric(cx, obj, id, vp, strict);
 }
 
@@ -854,7 +854,7 @@ ParallelArray_getGenericAttributes(JSContext *cx, HandleObject obj, HandleId id,
 static JSBool
 ParallelArray_getPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
 {
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
     return ParallelArray_getGenericAttributes(cx, obj, id, attrsp);
 }
 
@@ -868,7 +868,7 @@ ParallelArray_getElementAttributes(JSContext *cx, HandleObject obj, uint32_t ind
 static JSBool
 ParallelArray_getSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
 {
-    RootedVarId id(cx, SPECIALID_TO_JSID(sid));
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
     return ParallelArray_getGenericAttributes(cx, obj, id, attrsp);
 }
 
@@ -883,7 +883,7 @@ ParallelArray_setGenericAttributes(JSContext *cx, HandleObject obj, HandleId id,
 static JSBool
 ParallelArray_setPropertyAttributes(JSContext *cx, HandleObject obj, HandlePropertyName name, unsigned *attrsp)
 {
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
     return ParallelArray_setGenericAttributes(cx, obj, id, attrsp);
 }
 
@@ -898,7 +898,7 @@ ParallelArray_setElementAttributes(JSContext *cx, HandleObject obj, uint32_t ind
 static JSBool
 ParallelArray_setSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
 {
-    RootedVarId id(cx, SPECIALID_TO_JSID(sid));
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
     return ParallelArray_setGenericAttributes(cx, obj, id, attrsp);
 }
 
@@ -912,7 +912,7 @@ ParallelArray_deleteGeneric(JSContext *cx, HandleObject obj, HandleId id, Value 
 static JSBool
 ParallelArray_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *rval, JSBool strict)
 {
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
     return ParallelArray_deleteGeneric(cx, obj, id, rval, strict);
 }
 
@@ -927,7 +927,7 @@ ParallelArray_deleteElement(JSContext *cx, HandleObject obj, uint32_t index, Val
 static JSBool
 ParallelArray_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *rval, JSBool strict)
 {
-    RootedVarId id(cx, SPECIALID_TO_JSID(sid));
+    RootedId id(cx, SPECIALID_TO_JSID(sid));
     return ParallelArray_deleteGeneric(cx, obj, id, rval, strict);
 }
 
@@ -1069,7 +1069,7 @@ js_InitParallelArrayClass(JSContext *cx, JSObject *obj)
 
     GlobalObject *global = &obj->asGlobal();
 
-    RootedVarObject parallelArrayProto(cx, global->createBlankPrototype(cx, &ParallelArrayProtoClass));
+    RootedObject parallelArrayProto(cx, global->createBlankPrototype(cx, &ParallelArrayProtoClass));
     if (!parallelArrayProto)
         return NULL;
     /* define the length property */
@@ -1078,7 +1078,7 @@ js_InitParallelArrayClass(JSContext *cx, JSObject *obj)
     parallelArrayProto->addProperty(cx, lengthId, ParallelArray_length_getter, NULL,
                                     SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_READONLY, 0, 0);
 
-    RootedVarFunction ctor(cx);
+    RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, ParallelArray_construct, CLASS_NAME(cx, ParallelArray), 0);
     if (!ctor)
         return NULL;

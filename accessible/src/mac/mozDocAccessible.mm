@@ -13,7 +13,7 @@
 using namespace mozilla::a11y;
 
 static id <mozAccessible, mozView> 
-getNativeViewFromRootAccessible(nsAccessible* aAccessible)
+getNativeViewFromRootAccessible(Accessible* aAccessible)
 {
   RootAccessibleWrap* root =
     static_cast<RootAccessibleWrap*>(aAccessible->AsRoot());

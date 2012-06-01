@@ -28,7 +28,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTextAccessible::
-  nsXULTextAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULTextAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
@@ -64,7 +64,7 @@ nsXULTextAccessible::RelationByType(PRUint32 aType)
     // Caption is the label for groupbox
     nsIContent *parent = mContent->GetParent();
     if (parent && parent->Tag() == nsGkAtoms::caption) {
-      nsAccessible* parent = Parent();
+      Accessible* parent = Parent();
       if (parent && parent->Role() == roles::GROUPING)
         rel.AppendTarget(parent);
     }
@@ -79,7 +79,7 @@ nsXULTextAccessible::RelationByType(PRUint32 aType)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULTooltipAccessible::
-  nsXULTooltipAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULTooltipAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLeafAccessible(aContent, aDoc)
 {
 }
@@ -106,7 +106,7 @@ nsXULTooltipAccessible::NativeRole()
 ////////////////////////////////////////////////////////////////////////////////
 
 nsXULLinkAccessible::
-  nsXULLinkAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsXULLinkAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
@@ -198,16 +198,16 @@ nsXULLinkAccessible::StartOffset()
   // a text.
   // XXX: accessible parent of XUL link accessible should be a hypertext
   // accessible.
-  if (nsAccessible::IsLink())
-    return nsAccessible::StartOffset();
+  if (Accessible::IsLink())
+    return Accessible::StartOffset();
   return IndexInParent();
 }
 
 PRUint32
 nsXULLinkAccessible::EndOffset()
 {
-  if (nsAccessible::IsLink())
-    return nsAccessible::EndOffset();
+  if (Accessible::IsLink())
+    return Accessible::EndOffset();
   return IndexInParent() + 1;
 }
 

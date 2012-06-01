@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=99:
  */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -68,11 +69,15 @@ void Mark##base(JSTracer *trc, HeapPtr<type> *thing, const char *name);         
 void Mark##base##Root(JSTracer *trc, type **thingp, const char *name);                            \
 void Mark##base##Unbarriered(JSTracer *trc, type **thingp, const char *name);                     \
 void Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *thing, const char *name);        \
-void Mark##base##RootRange(JSTracer *trc, size_t len, type **thing, const char *name);
+void Mark##base##RootRange(JSTracer *trc, size_t len, type **thing, const char *name);            \
+bool Is##base##Marked(type **thingp);                                                             \
+bool Is##base##Marked(HeapPtr<type> *thingp);
 
 DeclMarker(BaseShape, BaseShape)
 DeclMarker(BaseShape, UnownedBaseShape)
+DeclMarker(IonCode, ion::IonCode)
 DeclMarker(Object, ArgumentsObject)
+DeclMarker(Object, DebugScopeObject)
 DeclMarker(Object, GlobalObject)
 DeclMarker(Object, JSObject)
 DeclMarker(Object, JSFunction)
@@ -83,7 +88,6 @@ DeclMarker(String, JSString)
 DeclMarker(String, JSFlatString)
 DeclMarker(String, JSLinearString)
 DeclMarker(TypeObject, types::TypeObject)
-DeclMarker(IonCode, ion::IonCode)
 #if JS_HAS_XML_SUPPORT
 DeclMarker(XML, JSXML)
 #endif
@@ -110,6 +114,9 @@ MarkId(JSTracer *trc, EncapsulatedId *id, const char *name);
 
 void
 MarkIdRoot(JSTracer *trc, jsid *id, const char *name);
+
+void
+MarkIdUnbarriered(JSTracer *trc, jsid *id, const char *name);
 
 void
 MarkIdRange(JSTracer *trc, size_t len, HeapId *vec, const char *name);
@@ -142,6 +149,9 @@ MarkValueRootRange(JSTracer *trc, Value *begin, Value *end, const char *name)
 {
     MarkValueRootRange(trc, end - begin, begin, name);
 }
+
+bool
+IsValueMarked(Value *v);
 
 /*** Slot Marking ***/
 
@@ -238,25 +248,48 @@ Mark(JSTracer *trc, HeapPtr<ion::IonCode> *code, const char *name)
     MarkIonCode(trc, code, name);
 }
 
+bool
+IsCellMarked(Cell **thingp);
+
 inline bool
-IsMarked(const Value &v)
+IsMarked(EncapsulatedValue *v)
 {
-    if (v.isMarkable())
-        return !IsAboutToBeFinalized(v);
+    if (!v->isMarkable())
+        return true;
+    return IsValueMarked(v->unsafeGet());
+}
+
+inline bool
+IsMarked(HeapPtrObject *objp)
+{
+    return IsObjectMarked(objp);
+}
+
+inline bool
+IsMarked(HeapPtrScript *scriptp)
+{
+    return IsScriptMarked(scriptp);
+}
+
+#ifdef JS_ION
+/* Nonsense to get WeakCache to work with new Marking semantics. */
+
+inline bool
+IsMarked(const js::ion::VMFunction **vmfunc)
+{
+    /*
+     * Preserves entries in the WeakCache<VMFunction, IonCode>
+     * iff the IonCode has been marked.
+     */
     return true;
 }
 
 inline bool
-IsMarked(JSContext *cx, ion::IonCode *code)
+IsMarked(ReadBarriered<js::ion::IonCode> code)
 {
-    return !IsAboutToBeFinalized(code);
+    return IsIonCodeMarked(code.unsafeGet());
 }
-
-inline bool
-IsMarked(Cell *cell)
-{
-    return !IsAboutToBeFinalized(cell);
-}
+#endif
 
 inline Cell *
 ToMarkable(const Value &v)

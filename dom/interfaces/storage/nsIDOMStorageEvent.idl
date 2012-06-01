@@ -65,7 +65,7 @@ interface nsIDOMStorageEvent : nsIDOMEvent
 
 dictionary StorageEventInit : EventInit
 {
-  DOMString key;
+  DOMString? key;
   DOMString? oldValue;
   DOMString? newValue;
   DOMString url;

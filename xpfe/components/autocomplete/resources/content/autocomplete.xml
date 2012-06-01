@@ -101,6 +101,10 @@
         document.getAnonymousElementByAttribute(this, "anonid", "popup");
       ]]></field>
 
+      <property name="popupOpen"
+                onget="return this.mMenuOpen;"
+                onset="if (val) this.openPopup(); else this.closePopup(); return val;"/>
+
       <!-- option to turn off autocomplete -->
       <property name="disableAutoComplete"
                 onset="this.setAttribute('disableautocomplete', val); return val;"
@@ -146,6 +150,10 @@
       <property name="searchParam"
                 onget="return this.getAttribute('autocompletesearchparam') || '';"
                 onset="this.setAttribute('autocompletesearchparam', val); return val;"/>
+
+      <property name="textValue"
+                onget="return this.value;"
+                onset="this.setTextValue(val); return val;"/>
 
       <method name="onSearchBegin">
         <body><![CDATA[
@@ -1284,9 +1292,10 @@
       <method name="setTextValue">
         <parameter name="aValue"/>
         <body><![CDATA[
+          this.value = aValue;
+
           // Completing a result should simulate the user typing the result,
           // so fire an input event.
-          this.value = aValue;
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("input", true, false, window, 0);
           var oldIgnoreInput = this.ignoreInputEvent;
@@ -1625,21 +1634,6 @@
         </body>
       </method>
 
-      <method name="selectBy">
-        <parameter name="aReverse"/>
-        <parameter name="aPage"/>
-        <body><![CDATA[
-          try {
-            return this.selectedIndex = this.getNextIndex(aReverse, aPage, this.selectedIndex, this.view.rowCount - 1);
-          } catch (ex) {
-            // do nothing - occasionally timer-related js errors happen here
-            // e.g. "this.selectedIndex has no properties", when you type fast and hit a
-            // navigation key before this popup has opened
-            return -1;
-          }
-        ]]></body>
-      </method>
-
       <method name="getNextIndex">
         <parameter name="aReverse"/>
         <parameter name="aPage"/>
@@ -1748,6 +1742,21 @@
             this.adjustHeight();
           this.tree.treeBoxObject.invalidate();
         </body>
+      </method>
+
+      <method name="selectBy">
+        <parameter name="aReverse"/>
+        <parameter name="aPage"/>
+        <body><![CDATA[
+          try {
+            return this.selectedIndex = this.getNextIndex(aReverse, aPage, this.selectedIndex, this.view.rowCount - 1);
+          } catch (ex) {
+            // do nothing - occasionally timer-related js errors happen here
+            // e.g. "this.selectedIndex has no properties", when you type fast and hit a
+            // navigation key before this popup has opened
+            return -1;
+          }
+        ]]></body>
       </method>
     </implementation>
 

@@ -6,24 +6,29 @@
  */
 
 #include "SkBitmapProcState_opts_SSE2.h"
+#include "SkBitmapProcState_opts_SSSE3.h"
 #include "SkBlitMask.h"
+#include "SkBlitRow.h"
+#include "SkBlitRect_opts_SSE2.h"
 #include "SkBlitRow_opts_SSE2.h"
 #include "SkUtils_opts_SSE2.h"
 #include "SkUtils.h"
+
+#if defined(_MSC_VER) && defined(_WIN64)
+#include <intrin.h>
+#endif
 
 /* This file must *not* be compiled with -msse or -msse2, otherwise
    gcc may generate sse2 even for scalar ops (and thus give an invalid
    instruction on Pentium3 on the code below).  Only files named *_SSE2.cpp
    in this directory should be compiled with -msse2. */
 
-#if defined(__x86_64__) || defined(_WIN64)
-/* All x86_64 machines have SSE2, so don't even bother checking. */
-static inline bool hasSSE2() {
-    return true;
-}
-#else
+
 #ifdef _MSC_VER
 static inline void getcpuid(int info_type, int info[4]) {
+#if defined(_WIN64)
+    __cpuid(info, info_type);
+#else
     __asm {
         mov    eax, [info_type]
         cpuid
@@ -33,6 +38,16 @@ static inline void getcpuid(int info_type, int info[4]) {
         mov    [edi+8], ecx
         mov    [edi+12], edx
     }
+#endif
+}
+#else
+#if defined(__x86_64__)
+static inline void getcpuid(int info_type, int info[4]) {
+    asm volatile (
+        "cpuid \n\t"
+        : "=a"(info[0]), "=b"(info[1]), "=c"(info[2]), "=d"(info[3])
+        : "a"(info_type)
+    );
 }
 #else
 static inline void getcpuid(int info_type, int info[4]) {
@@ -47,6 +62,14 @@ static inline void getcpuid(int info_type, int info[4]) {
     );
 }
 #endif
+#endif
+
+#if defined(__x86_64__) || defined(_WIN64)
+/* All x86_64 machines have SSE2, so don't even bother checking. */
+static inline bool hasSSE2() {
+    return true;
+}
+#else
 
 static inline bool hasSSE2() {
     int cpu_info[4] = { 0 };
@@ -55,17 +78,57 @@ static inline bool hasSSE2() {
 }
 #endif
 
+static inline bool hasSSSE3() {
+    int cpu_info[4] = { 0 };
+    getcpuid(1, cpu_info);
+    return (cpu_info[2] & 0x200) != 0;
+}
+
 static bool cachedHasSSE2() {
     static bool gHasSSE2 = hasSSE2();
     return gHasSSE2;
 }
 
+static bool cachedHasSSSE3() {
+    static bool gHasSSSE3 = hasSSSE3();
+    return gHasSSSE3;
+}
+
 void SkBitmapProcState::platformProcs() {
-    if (cachedHasSSE2()) {
+    if (cachedHasSSSE3()) {
+#if !defined(SK_BUILD_FOR_ANDROID)
+        // Disable SSSE3 optimization for Android x86
+        if (fSampleProc32 == S32_opaque_D32_filter_DX) {
+            fSampleProc32 = S32_opaque_D32_filter_DX_SSSE3;
+        } else if (fSampleProc32 == S32_alpha_D32_filter_DX) {
+            fSampleProc32 = S32_alpha_D32_filter_DX_SSSE3;
+        }
+
+        if (fSampleProc32 == S32_opaque_D32_filter_DXDY) {
+            fSampleProc32 = S32_opaque_D32_filter_DXDY_SSSE3;
+        } else if (fSampleProc32 == S32_alpha_D32_filter_DXDY) {
+            fSampleProc32 = S32_alpha_D32_filter_DXDY_SSSE3;
+        }
+#endif
+    } else if (cachedHasSSE2()) {
         if (fSampleProc32 == S32_opaque_D32_filter_DX) {
             fSampleProc32 = S32_opaque_D32_filter_DX_SSE2;
         } else if (fSampleProc32 == S32_alpha_D32_filter_DX) {
             fSampleProc32 = S32_alpha_D32_filter_DX_SSE2;
+        }
+    }
+
+    if (cachedHasSSSE3() || cachedHasSSE2()) {
+        if (fMatrixProc == ClampX_ClampY_filter_scale) {
+            fMatrixProc = ClampX_ClampY_filter_scale_SSE2;
+        } else if (fMatrixProc == ClampX_ClampY_nofilter_scale) {
+            fMatrixProc = ClampX_ClampY_nofilter_scale_SSE2;
+        }
+
+        if (fMatrixProc == ClampX_ClampY_filter_affine) {
+            fMatrixProc = ClampX_ClampY_filter_affine_SSE2;
+        } else if (fMatrixProc == ClampX_ClampY_nofilter_affine) {
+            fMatrixProc = ClampX_ClampY_nofilter_affine_SSE2;
         }
     }
 }
@@ -126,6 +189,18 @@ SkBlitMask::ColorProc SkBlitMask::PlatformColorProcs(SkBitmap::Config dstConfig,
     return proc;
 }
 
+SkBlitMask::BlitLCD16RowProc SkBlitMask::PlatformBlitRowProcs16(bool isOpaque) {
+    if (cachedHasSSE2()) {
+        if (isOpaque) {
+            return SkBlitLCD16OpaqueRow_SSE2;
+        } else {
+            return SkBlitLCD16Row_SSE2;
+        }
+    } else {
+        return NULL;
+    }
+
+}
 SkBlitMask::RowProc SkBlitMask::PlatformRowProcs(SkBitmap::Config dstConfig,
                                                  SkMask::Format maskFormat,
                                                  RowFlags flags) {
@@ -147,3 +222,13 @@ SkMemset32Proc SkMemset32GetPlatformProc() {
         return NULL;
     }
 }
+
+SkBlitRow::ColorRectProc PlatformColorRectProcFactory() {
+    if (cachedHasSSE2()) {
+        return ColorRect32_SSE2;
+    } else {
+        return NULL;
+    }
+}
+
+

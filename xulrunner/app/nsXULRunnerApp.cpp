@@ -347,5 +347,5 @@ int main(int argc, char* argv[])
     return 2;
   }
 
-  return XRE_main(argc, argv, appData);
+  return XRE_main(argc, argv, appData, 0);
 }

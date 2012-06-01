@@ -212,6 +212,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     // and with startupcache not at all), but this is where we would start
     // if we need to re-add.
     // See bug 531886, bug 533038.
+    result->SetContentCharset(NS_LITERAL_CSTRING("UTF-8"));
 
     *aResult = result;
     NS_ADDREF(*aResult);

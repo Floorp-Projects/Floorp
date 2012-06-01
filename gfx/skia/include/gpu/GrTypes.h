@@ -225,6 +225,8 @@ static inline bool GrIsPrimTypeTris(GrPrimitiveType type) {
  * Coeffecients for alpha-blending.
  */
 enum GrBlendCoeff {
+    kInvalid_BlendCoeff = -1,
+
     kZero_BlendCoeff,    //<! 0
     kOne_BlendCoeff,     //<! 1
     kSC_BlendCoeff,      //<! src color
@@ -301,6 +303,8 @@ enum GrPixelConfig {
      * Unpremultiplied. Byte order is b,g,r,a
      */
     kBGRA_8888_UPM_GrPixelConfig,
+
+    kGrPixelConfigCount
 };
 
 // Aliases for pixel configs that match skia's byte order
@@ -318,11 +322,6 @@ enum GrPixelConfig {
 #else
     #error "SK_*32_SHIFT values must correspond to GL_BGRA or GL_RGBA format."
 #endif
-
-// WebKit is relying on this old name for the native skia PM config. This will
-// be deleted ASAP because it is so similar to kRGBA_PM_8888_GrPixelConfig but
-// has a different interpretation when skia is compiled BGRA.
-static const GrPixelConfig kRGBA_8888_GrPixelConfig = kSkia8888_PM_GrPixelConfig;
 
 // Returns true if the pixel config has 8bit r,g,b,a components in that byte
 // order
@@ -429,20 +428,6 @@ static inline bool GrPixelConfigIsAlphaOnly(GrPixelConfig config) {
 }
 
 /**
-    * Used to control the level of antialiasing available for a rendertarget.
-    * Anti-alias quality levels depend on the underlying API/GPU capabilities.
-    */
-enum GrAALevels {
-    kNone_GrAALevel, //<! No antialiasing available.
-    kLow_GrAALevel,  //<! Low quality antialiased rendering. Actual
-                     //   interpretation is platform-dependent.
-    kMed_GrAALevel,  //<! Medium quality antialiased rendering. Actual
-                     //   interpretation is platform-dependent.
-    kHigh_GrAALevel, //<! High quality antialiased rendering. Actual
-                     //   interpretation is platform-dependent.
-};
-
-/**
  * Optional bitfield flags that can be passed to createTexture.
  */
 enum GrTextureFlags {
@@ -479,30 +464,23 @@ enum {
  */
 struct GrTextureDesc {
     GrTextureFlags         fFlags;  //!< bitfield of TextureFlags
-    /**
-     * The level of antialiasing available for a rendertarget texture. Only used
-     * fFlags contains kRenderTarget_GrTextureFlag.
-     */
-    GrAALevels             fAALevel;
     int                    fWidth;  //!< Width of the texture
     int                    fHeight; //!< Height of the texture
+
     /**
      * Format of source data of the texture. Not guaraunteed to be the same as
      * internal format used by 3D API.
      */
     GrPixelConfig          fConfig;
-};
 
-/**
- * Set Operations used to construct clips.
- */
-enum GrSetOp {
-    kReplace_SetOp,
-    kIntersect_SetOp,
-    kUnion_SetOp,
-    kXor_SetOp,
-    kDifference_SetOp,
-    kReverseDifference_SetOp,
+    /**
+     * The number of samples per pixel or 0 to disable full scene AA. This only
+     * applies if the kRenderTarget_GrTextureFlagBit is set. The actual number
+     * of samples may not exactly match the request. The request will be rounded
+     * up to the next supported sample count, or down if it is larger than the
+     * max supportex count.
+     */
+    int fSampleCnt;
 };
 
 /**
@@ -592,24 +570,6 @@ static inline bool GrIsFillInverted(GrPathFill fill) {
     GR_STATIC_ASSERT(5 == kPathFillCount);
     return gIsFillInverted[fill];
 }
-
-/**
- * Hints provided about a path's convexity (or lack thereof).
- */
-enum GrConvexHint {
-    kNone_ConvexHint,                         //<! No hint about convexity
-                                              //   of the path
-    kConvex_ConvexHint,                       //<! Path is one convex piece
-    kNonOverlappingConvexPieces_ConvexHint,   //<! Multiple convex pieces,
-                                              //   pieces are known to be
-                                              //   disjoint
-    kSameWindingConvexPieces_ConvexHint,      //<! Multiple convex pieces,
-                                              //   may or may not intersect,
-                                              //   either all wind cw or all
-                                              //   wind ccw.
-    kConcave_ConvexHint                       //<! Path is known to be
-                                              //   concave
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -701,133 +661,6 @@ struct GrPlatformRenderTargetDesc {
      */
     GrPlatform3DObject              fRenderTargetHandle;
 };
-
-///////////////////////////////////////////////////////////////////////////////
-// DEPRECATED. createPlatformSurface is replaced by createPlatformTexture
-// and createPlatformRenderTarget. These enums and structs will be removed.
-
-enum GrPlatformSurfaceType {
-    /**
-     * Specifies that the object being created is a render target.
-     */
-    kRenderTarget_GrPlatformSurfaceType,
-    /**
-     * Specifies that the object being created is a texture.
-     */
-    kTexture_GrPlatformSurfaceType,
-    /**
-     * Specifies that the object being created is a texture and a render
-     * target.
-     */
-    kTextureRenderTarget_GrPlatformSurfaceType,
-};
-
-enum GrPlatformRenderTargetFlags {
-    kNone_GrPlatformRenderTargetFlagBit             = 0x0,
-
-    /**
-     * Gives permission to Gr to perform the downsample-resolve of a
-     * multisampled render target. If this is not set then read pixel
-     * operations may fail. If the object is both a texture and render target
-     * then this *must* be set. Otherwise, if the client wants do its own
-     * resolves it must create separate GrRenderTarget and GrTexture objects
-     * and insert appropriate flushes and resolves betweeen data hazards.
-     * GrRenderTarget has a flagForResolve()
-     */
-    kGrCanResolve_GrPlatformRenderTargetFlagBit     = 0x2,
-};
-
-GR_MAKE_BITFIELD_OPS(GrPlatformRenderTargetFlags)
-
-struct GrPlatformSurfaceDesc {
-    GrPlatformSurfaceType           fSurfaceType;   // type of surface to create
-    /**
-     * Flags for kRenderTarget and kTextureRenderTarget surface types
-     */
-    GrPlatformRenderTargetFlags     fRenderTargetFlags;
-
-    int                             fWidth;         // width in pixels
-    int                             fHeight;        // height in pixels
-    GrPixelConfig                   fConfig;        // color format
-    /**
-     * Number of per sample stencil buffer. Only relevant if kIsRenderTarget is
-     * set in fFlags.
-     */
-    int                             fStencilBits;
-
-    /**
-     * Number of samples per-pixel. Only relevant if kIsRenderTarget is set in
-     * fFlags.
-     */
-    int                             fSampleCnt;
-
-    /**
-     * Texture object in 3D API. Only relevant if fSurfaceType is kTexture or
-     * kTextureRenderTarget.
-     * GL: this is a texture object (glGenTextures)
-     */
-    GrPlatform3DObject              fPlatformTexture;
-    /**
-     * Render target object in 3D API. Only relevant if fSurfaceType is
-     * kRenderTarget or kTextureRenderTarget
-     * GL: this is a FBO object (glGenFramebuffers)
-     */
-    GrPlatform3DObject              fPlatformRenderTarget;
-    /**
-     * 3D API object used as destination of resolve. Only relevant if
-     * fSurfaceType is kRenderTarget or kTextureRenderTarget and
-     * kGrCanResolve is set in fRenderTargetFlags.
-     * fFlags.
-     * GL: this is a FBO object (glGenFramebuffers)
-     */
-    GrPlatform3DObject              fPlatformResolveDestination;
-
-    void reset() { memset(this, 0, sizeof(GrPlatformSurfaceDesc)); }
-};
-
-/**
- * Example of how to wrap render-to-texture-with-MSAA GL objects with a GrPlatformSurace
- *
- * GLint colorBufferID;
- * glGenRenderbuffers(1, &colorID);
- * glBindRenderbuffer(GL_RENDERBUFFER, colorBufferID);
- * glRenderbufferStorageMultisample(GL_RENDERBUFFER, S, GL_RGBA, W, H);
- *
- * GLint stencilBufferID;
- * glGenRenderBuffers(1, &stencilBufferID);
- * glBindRenderbuffer(GL_RENDERBUFFER, stencilBufferID);
- * glRenderbufferStorageMultisample(GL_RENDERBUFFER, S, GL_STENCIL_INDEX8, W, H);
- *
- * GLint drawFBOID;
- * glGenFramebuffers(1, &drawFBOID);
- * glBindFramebuffer(GL_FRAMEBUFFER, drawFBOID);
- * glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorBufferID);
- * glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, stencilBufferID);
- *
- * GLint textureID;
- * glGenTextures(1, &textureID);
- * glBindTexture(GL_TEXTURE_2D, textureID);
- * glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, W, H, ...);
- *
- * GLint readFBOID;
- * glGenFramebuffers(1, &readFBOID);
- * glBindFramebuffer(GL_FRAMEBUFFER, readFBOID);
- * glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureID, 0);
- *
- * GrPlatformSurfaceDesc renderTargetTextureDesc;
- * renderTargetTextureDesc.fSurfaceType       = kTextureRenderTarget_GrPlatformSurfaceType;
- * renderTargetTextureDesc.fRenderTargetFlags = kGrCanResolve_GrPlatformRenderTargetFlagBit;
- * renderTargetTextureDesc.fWidth = W;
- * renderTargetTextureDesc.fHeight = H;
- * renderTargetTextureDesc.fConfig = kSkia8888_PM_GrPixelConfig
- * renderTargetTextureDesc.fStencilBits = 8;
- * renderTargetTextureDesc.fSampleCnt = S;
- * renderTargetTextureDesc.fPlatformTexture = textureID;
- * renderTargetTextureDesc.fPlatformRenderTarget = drawFBOID;
- * renderTargetTextureDesc.fPlatformResolveDestination = readFBOID;
- *
- * GrTexture* texture = static_cast<GrTexture*>(grContext->createPlatrformSurface(renderTargetTextureDesc));
- */
 
 
 ///////////////////////////////////////////////////////////////////////////////

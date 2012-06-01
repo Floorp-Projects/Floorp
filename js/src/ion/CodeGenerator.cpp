@@ -900,7 +900,7 @@ CodeGenerator::visitNewArray(LNewArray *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    RootedVarObject templateObject(gen->cx, NewDenseUnallocatedArray(gen->cx, count));
+    RootedObject templateObject(gen->cx, NewDenseUnallocatedArray(gen->cx, count));
     if (!templateObject)
         return false;
     templateObject->setType(typeObj);
@@ -967,7 +967,7 @@ CodeGenerator::visitNewObject(LNewObject *lir)
 {
     Register objReg = ToRegister(lir->output());
 
-    RootedVarObject baseObj(gen->cx, lir->mir()->baseObj());
+    RootedObject baseObj(gen->cx, lir->mir()->baseObj());
     types::TypeObject *typeObj = lir->mir()->type();
 
     if (!gen->cx->typeInferenceEnabled() || !typeObj ||
@@ -980,7 +980,7 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    RootedVarObject templateObject(gen->cx, CopyInitializerObject(gen->cx, baseObj));
+    RootedObject templateObject(gen->cx, CopyInitializerObject(gen->cx, baseObj));
     if (!templateObject)
         return false;
     templateObject->setType(typeObj);
@@ -1073,7 +1073,7 @@ CodeGenerator::visitCreateThis(LCreateThis *lir)
         if (!addOutOfLineCode(ool))
             return false;
 
-        RootedVarObject templateObject(gen->cx, lir->mir()->getTemplateObject());
+        RootedObject templateObject(gen->cx, lir->mir()->getTemplateObject());
 
         masm.getNewObject(gen->cx, objReg, templateObject, ool->entry());
         masm.bind(ool->rejoin());

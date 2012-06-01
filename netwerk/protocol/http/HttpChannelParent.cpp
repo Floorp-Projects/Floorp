@@ -111,7 +111,8 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const nsCString&           entityID,
                                  const bool&                chooseApplicationCache,
                                  const nsCString&           appCacheClientID,
-                                 const bool&                allowSpdy)
+                                 const bool&                allowSpdy,
+                                 const bool&                usingPrivateBrowsing)
 {
   nsCOMPtr<nsIURI> uri(aURI);
   nsCOMPtr<nsIURI> originalUri(aOriginalURI);
@@ -207,6 +208,8 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
       }
     }
   }
+
+  httpChan->OverridePrivateBrowsing(usingPrivateBrowsing);
 
   rv = httpChan->AsyncOpen(channelListener, nsnull);
   if (NS_FAILED(rv))

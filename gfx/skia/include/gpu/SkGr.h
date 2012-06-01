@@ -18,7 +18,6 @@
 #include "GrContext.h"
 #include "GrFontScaler.h"
 #include "GrClipIterator.h"
-#include "GrPath.h"
 
 // skia headers
 #include "SkBitmap.h"
@@ -103,14 +102,16 @@ public:
     void reset(const SkClipStack& clipStack);
 
     // overrides
-    virtual bool isDone() const { return NULL == fCurr; }
-    virtual void next() { fCurr = fIter.next(); }
-    virtual void rewind() { this->reset(*fClipStack); }
-    virtual GrClipType getType() const;
+    virtual bool isDone() const SK_OVERRIDE { return NULL == fCurr; }
+    virtual void next() SK_OVERRIDE { fCurr = fIter.next(); }
+    virtual void rewind() SK_OVERRIDE { this->reset(*fClipStack); }
+    virtual GrClipType getType() const SK_OVERRIDE;
 
-    virtual GrSetOp getOp() const;
+    virtual SkRegion::Op getOp() const SK_OVERRIDE;
 
-    virtual void getRect(GrRect* rect) const {
+    virtual bool getDoAA() const SK_OVERRIDE;
+
+    virtual void getRect(GrRect* rect) const SK_OVERRIDE {
         if (!fCurr->fRect) {
             rect->setEmpty();
         } else {
@@ -118,11 +119,11 @@ public:
         }
     }
 
-    virtual const GrPath* getPath() {
+    virtual const SkPath* getPath() SK_OVERRIDE {
         return fCurr->fPath;
     }
 
-    virtual GrPathFill getPathFill() const;
+    virtual GrPathFill getPathFill() const SK_OVERRIDE;
 
 private:
     const SkClipStack*                  fClipStack;
@@ -130,46 +131,6 @@ private:
     // SkClipStack's auto advances on each get
     // so we store the current pos here.
     const SkClipStack::B2FIter::Clip*   fCurr;
-};
-
-class SkGrRegionIterator : public GrClipIterator {
-public:
-    SkGrRegionIterator() {}
-    SkGrRegionIterator(const SkRegion& region) { this->reset(region); }
-
-    void reset(const SkRegion& region) {
-        fRegion = &region;
-        fIter.reset(region);
-    }
-
-    // overrides
-    virtual bool isDone() const { return fIter.done(); }
-    virtual void next() { fIter.next(); }
-    virtual void rewind() { this->reset(*fRegion); }
-    virtual GrClipType getType() const { return kRect_ClipType; }
-
-    virtual GrSetOp getOp() const { return kUnion_SetOp; }
-
-    virtual void getRect(GrRect* rect) const {
-        const SkIRect& r = fIter.rect();
-        rect->fLeft   = GrIntToScalar(r.fLeft);
-        rect->fTop    = GrIntToScalar(r.fTop);
-        rect->fRight  = GrIntToScalar(r.fRight);
-        rect->fBottom = GrIntToScalar(r.fBottom);
-    }
-
-    virtual const GrPath* getPath() {
-        SkASSERT(0);
-        return NULL;
-    }
-
-    virtual GrPathFill getPathFill() const {
-        SkASSERT(0);
-        return kWinding_PathFill;
-    }
-private:
-    const SkRegion*     fRegion;
-    SkRegion::Iterator  fIter;
 };
 
 class SkGlyphCache;
@@ -185,7 +146,7 @@ public:
     virtual bool getPackedGlyphBounds(GrGlyph::PackedID, GrIRect* bounds);
     virtual bool getPackedGlyphImage(GrGlyph::PackedID, int width, int height,
                                      int rowBytes, void* image);
-    virtual bool getGlyphPath(uint16_t glyphID, GrPath*);
+    virtual bool getGlyphPath(uint16_t glyphID, SkPath*);
 
 private:
     SkGlyphCache* fStrike;

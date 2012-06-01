@@ -18,13 +18,13 @@ namespace a11y {
 /**
  * Accessible for ARIA grid and treegrid.
  */
-class ARIAGridAccessible : public nsAccessibleWrap,
+class ARIAGridAccessible : public AccessibleWrap,
                            public xpcAccessibleTable,
                            public nsIAccessibleTable,
                            public TableAccessible
 {
 public:
-  ARIAGridAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  ARIAGridAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -32,7 +32,7 @@ public:
   // nsIAccessibleTable
   NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::TableAccessible* AsTable() { return this; }
 
   // nsAccessNode
@@ -41,7 +41,7 @@ public:
   // TableAccessible
   virtual PRUint32 ColCount();
   virtual PRUint32 RowCount();
-  virtual nsAccessible* CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex);
+  virtual Accessible* CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex);
   virtual void UnselectCol(PRUint32 aColIdx);
   virtual void UnselectRow(PRUint32 aRowIdx);
 
@@ -57,19 +57,14 @@ protected:
   bool IsValidColumn(PRInt32 aColumn);
 
   /**
-   * Retrun true if given row and column indexes are valid.
-   */
-  bool IsValidRowNColumn(PRInt32 aRow, PRInt32 aColumn);
-
-  /**
    * Return row accessible at the given row index.
    */
-  nsAccessible *GetRowAt(PRInt32 aRow);
+  Accessible* GetRowAt(PRInt32 aRow);
 
   /**
    * Return cell accessible at the given column index in the row.
    */
-  nsAccessible *GetCellInRowAt(nsAccessible *aRow, PRInt32 aColumn);
+  Accessible* GetCellInRowAt(Accessible* aRow, PRInt32 aColumn);
 
   /**
    * Set aria-selected attribute value on DOM node of the given accessible.
@@ -79,7 +74,7 @@ protected:
    * @param  aNotify      [in, optional] specifies if DOM should be notified
    *                       about attribute change (used internally).
    */
-  nsresult SetARIASelected(nsAccessible *aAccessible, bool aIsSelected,
+  nsresult SetARIASelected(Accessible* aAccessible, bool aIsSelected,
                            bool aNotify = true);
 
   /**
@@ -97,7 +92,7 @@ class ARIAGridCellAccessible : public nsHyperTextAccessibleWrap,
                                public nsIAccessibleTableCell
 {
 public:
-  ARIAGridCellAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  ARIAGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -105,7 +100,7 @@ public:
   // nsIAccessibleTableCell
   NS_DECL_NSIACCESSIBLETABLECELL
 
-  // nsAccessible
+  // Accessible
   virtual void ApplyARIAState(PRUint64* aState) const;
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 };

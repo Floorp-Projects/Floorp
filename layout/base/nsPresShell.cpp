@@ -462,6 +462,15 @@ public:
   virtual void HandleEvent(nsEventChainPostVisitor& aVisitor)
   {
     if (aVisitor.mPresContext && aVisitor.mEvent->eventStructType != NS_EVENT) {
+      if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_DOWN ||
+          aVisitor.mEvent->message == NS_MOUSE_BUTTON_UP) {
+        // Mouse-up and mouse-down events call nsFrame::HandlePress/Release
+        // which call GetContentOffsetsFromPoint which requires up-to-date layout.
+        // Bring layout up-to-date now so that GetCurrentEventFrame() below
+        // will return a real frame and we don't have to worry about
+        // destroying it by flushing later.
+        mPresShell->FlushPendingNotifications(Flush_Layout);
+      }
       nsIFrame* frame = mPresShell->GetCurrentEventFrame();
       if (frame) {
         frame->HandleEvent(aVisitor.mPresContext,
@@ -3333,38 +3342,6 @@ PresShell::GetRectVisibility(nsIFrame* aFrame,
     return nsRectVisibility_kRightOfViewport;
 
   return nsRectVisibility_kVisible;
-}
-
-// GetLinkLocation: copy link location to clipboard
-nsresult PresShell::GetLinkLocation(nsIDOMNode* aNode, nsAString& aLocationString) const
-{
-#ifdef DEBUG_dr
-  printf("dr :: PresShell::GetLinkLocation\n");
-#endif
-
-  NS_ENSURE_ARG_POINTER(aNode);
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  if (content) {
-    nsCOMPtr<nsIURI> hrefURI = content->GetHrefURI();
-    if (hrefURI) {
-      nsCAutoString specUTF8;
-      nsresult rv = hrefURI->GetSpec(specUTF8);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsAutoString anchorText;
-      CopyUTF8toUTF16(specUTF8, anchorText);
-
-      // Remove all the '\t', '\r' and '\n' from 'anchorText'
-      static const char strippedChars[] = "\t\r\n";
-      anchorText.StripChars(strippedChars);
-      aLocationString = anchorText;
-      return NS_OK;
-    }
-  }
-
-  // if no link, fail.
-  return NS_ERROR_FAILURE;
 }
 
 void

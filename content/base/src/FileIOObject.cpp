@@ -11,7 +11,6 @@
 #include "nsIDOMProgressEvent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsEventDispatcher.h"
-#include "xpcprivate.h"
 
 #define ERROR_STR "error"
 #define ABORT_STR "abort"

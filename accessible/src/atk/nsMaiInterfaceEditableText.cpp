@@ -17,9 +17,9 @@ static gboolean
 setRunAttributesCB(AtkEditableText *aText, AtkAttributeSet *aAttribSet,
                    gint aStartOffset, gint aEndOffset)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    if (!accWrap)
-        return FALSE;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (!accWrap)
+    return FALSE;
 
     nsCOMPtr<nsIAccessibleEditableText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
@@ -37,9 +37,9 @@ setRunAttributesCB(AtkEditableText *aText, AtkAttributeSet *aAttribSet,
 static void
 setTextContentsCB(AtkEditableText *aText, const gchar *aString)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleEditableText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
@@ -57,9 +57,9 @@ static void
 insertTextCB(AtkEditableText *aText,
              const gchar *aString, gint aLength, gint *aPosition)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleEditableText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
@@ -84,9 +84,9 @@ insertTextCB(AtkEditableText *aText,
 static void
 copyTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleEditableText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
@@ -102,9 +102,9 @@ copyTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 static void
 cutTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleEditableText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
@@ -119,9 +119,9 @@ cutTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 static void
 deleteTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleEditableText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
@@ -137,9 +137,9 @@ deleteTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 static void
 pasteTextCB(AtkEditableText *aText, gint aPosition)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleEditableText> accText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleEditableText),

@@ -6,10 +6,11 @@
 #include "nsHTMLLinkAccessible.h"
 
 #include "nsCoreUtils.h"
+#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 
-#include "nsDocAccessible.h"
+#include "nsContentUtils.h"
 #include "nsEventStates.h"
 #include "mozilla/dom/Element.h"
 
@@ -20,7 +21,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHTMLLinkAccessible::
-  nsHTMLLinkAccessible(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHTMLLinkAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHyperTextAccessibleWrap(aContent, aDoc)
 {
 }
@@ -77,12 +78,8 @@ nsHTMLLinkAccessible::Value(nsString& aValue)
   aValue.Truncate();
 
   nsHyperTextAccessible::Value(aValue);
-  if (!aValue.IsEmpty())
-    return;
-  
-  nsIPresShell* presShell(mDoc->PresShell());
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
-  presShell->GetLinkLocation(DOMNode, aValue);
+  if (aValue.IsEmpty())
+    nsContentUtils::GetLinkLocation(mContent->AsElement(), aValue);
 }
 
 PRUint8

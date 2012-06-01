@@ -45,13 +45,13 @@ public:
      *  Return true if the two regions are equal. i.e. The enclose exactly
      *  the same area.
      */
-    friend bool operator==(const SkRegion& a, const SkRegion& b);
+    bool operator==(const SkRegion& other) const;
 
     /**
      *  Return true if the two regions are not equal.
      */
-    friend bool operator!=(const SkRegion& a, const SkRegion& b) {
-        return !(a == b);
+    bool operator!=(const SkRegion& other) const {
+        return !(*this == other);
     }
     
     /**
@@ -378,28 +378,53 @@ private:
     };
 
     enum {
-        kRectRegionRuns = 6 // need to store a region of a rect [T B L R S S]        
+        // T
+        // [B N L R S]
+        // S
+        kRectRegionRuns = 7
     };
 
     friend class android::Region;    // needed for marshalling efficiently
-    void allocateRuns(int count); // allocate space for count runs
 
     struct RunHead;
+    
+    // allocate space for count runs
+    void allocateRuns(int count);
+    void allocateRuns(int count, int ySpanCount, int intervalCount);
+    void allocateRuns(const RunHead& src);
 
     SkIRect     fBounds;
     RunHead*    fRunHead;
 
-    void            freeRuns();
-    const RunType*  getRuns(RunType tmpStorage[], int* count) const;
-    bool            setRuns(RunType runs[], int count);
+    void freeRuns();
+    
+    /**
+     *  Return the runs from this region, consing up fake runs if the region
+     *  is empty or a rect. In those 2 cases, we use tmpStorage to hold the
+     *  run data.
+     */
+    const RunType*  getRuns(RunType tmpStorage[], int* intervals) const;
+    
+    // This is called with runs[] that do not yet have their interval-count
+    // field set on each scanline. That is computed as part of this call
+    // (inside ComputeRunBounds).
+    bool setRuns(RunType runs[], int count);
 
     int count_runtype_values(int* itop, int* ibot) const;
     
     static void BuildRectRuns(const SkIRect& bounds,
                               RunType runs[kRectRegionRuns]);
-    // returns true if runs are just a rect
-    static bool ComputeRunBounds(const RunType runs[], int count,
-                                 SkIRect* bounds);
+
+    // If the runs define a simple rect, return true and set bounds to that
+    // rect. If not, return false and ignore bounds.
+    static bool RunsAreARect(const SkRegion::RunType runs[], int count,
+                             SkIRect* bounds);
+
+    /**
+     *  If the last arg is null, just return if the result is non-empty,
+     *  else store the result in the last arg.
+     */
+    static bool Oper(const SkRegion&, const SkRegion&, SkRegion::Op, SkRegion*);
 
     friend struct RunHead;
     friend class Iterator;

@@ -663,7 +663,7 @@ struct GetPropHelper {
     // These fields are set in the constructor and describe a property lookup.
     JSContext   *cx;
     JSObject    *obj;
-    RootedVarPropertyName name;
+    RootedPropertyName name;
     IC          &ic;
     VMFrame     &f;
 
@@ -683,7 +683,7 @@ struct GetPropHelper {
   public:
     LookupStatus bind() {
         RecompilationMonitor monitor(cx);
-        RootedVarObject scopeChain(cx, cx->stack.currentScriptedScopeChain());
+        RootedObject scopeChain(cx, cx->stack.currentScriptedScopeChain());
         if (js_CodeSpec[*f.pc()].format & JOF_GNAME)
             scopeChain = &scopeChain->global();
         if (!FindProperty(cx, name, scopeChain, &obj, &holder, &prop))
@@ -1393,8 +1393,8 @@ class ScopeNameCompiler : public PICStubCompiler
   private:
     typedef Vector<Jump, 8> JumpList;
 
-    RootedVarObject scopeChain;
-    RootedVarPropertyName name;
+    RootedObject scopeChain;
+    RootedPropertyName name;
     GetPropHelper<ScopeNameCompiler> getprop;
     ScopeNameCompiler *thisFromCtor() { return this; }
 
@@ -1734,8 +1734,8 @@ class ScopeNameCompiler : public PICStubCompiler
 
 class BindNameCompiler : public PICStubCompiler
 {
-    RootedVarObject scopeChain;
-    RootedVarPropertyName name;
+    RootedObject scopeChain;
+    RootedPropertyName name;
 
   public:
     BindNameCompiler(VMFrame &f, JSScript *script, JSObject *scopeChain, ic::PICInfo &pic,
@@ -2471,7 +2471,7 @@ GetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid i
     disable(f, "generated typed array stub");
 
     // Fetch the value as expected of Lookup_Cacheable for GetElement.
-    if (!obj->getGeneric(cx, RootedVarId(cx, id), vp))
+    if (!obj->getGeneric(cx, RootedId(cx, id), vp))
         return Lookup_Error;
 
     return Lookup_Cacheable;
@@ -2524,7 +2524,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 
     RecompilationMonitor monitor(cx);
 
-    RootedVarObject obj(cx, ValueToObject(cx, f.regs.sp[-2]));
+    RootedObject obj(cx, ValueToObject(cx, f.regs.sp[-2]));
     if (!obj)
         THROW();
 
@@ -2561,7 +2561,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         }
     }
 
-    if (!obj->getGeneric(cx, RootedVarId(cx, id), &f.regs.sp[-2]))
+    if (!obj->getGeneric(cx, RootedId(cx, id), &f.regs.sp[-2]))
         THROW();
 
 #if JS_HAS_NO_SUCH_METHOD

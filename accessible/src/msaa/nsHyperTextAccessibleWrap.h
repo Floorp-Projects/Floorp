@@ -18,7 +18,7 @@ class nsHyperTextAccessibleWrap : public nsHyperTextAccessible,
                                   public CAccessibleEditableText
 {
 public:
-  nsHyperTextAccessibleWrap(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsHyperTextAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
     nsHyperTextAccessible(aContent, aDoc) {}
 
   // IUnknown
@@ -27,7 +27,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsAccessible
+  // Accessible
   virtual nsresult HandleAccEvent(AccEvent* aEvent);
 
 protected:

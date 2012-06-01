@@ -59,8 +59,8 @@ pref("ui.scrollbarsCanOverlapContent", 1);
 pref("browser.cache.disk.enable", true);
 pref("browser.cache.disk.capacity", 20480); // kilobytes
 pref("browser.cache.disk.max_entry_size", 4096); // kilobytes
-pref("browser.cache.disk.smart_size.enabled", false);
-pref("browser.cache.disk.smart_size.first_run", false);
+pref("browser.cache.disk.smart_size.enabled", true);
+pref("browser.cache.disk.smart_size.first_run", true);
 
 pref("browser.cache.memory.enable", true);
 pref("browser.cache.memory.capacity", 1024); // kilobytes
@@ -419,10 +419,10 @@ pref("browser.ui.zoom.force-user-scalable", false);
 
 // Touch radius (area around the touch location to look for target elements),
 // in 1/240-inch pixels:
-pref("browser.ui.touch.left", 8);
-pref("browser.ui.touch.right", 8);
-pref("browser.ui.touch.top", 12);
-pref("browser.ui.touch.bottom", 4);
+pref("browser.ui.touch.left", 32);
+pref("browser.ui.touch.right", 32);
+pref("browser.ui.touch.top", 48);
+pref("browser.ui.touch.bottom", 16);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
@@ -462,10 +462,8 @@ pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/au
 pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 #endif
 #if MOZ_UPDATE_CHANNEL == beta
-pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");
 #else
-pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
 #endif
 pref("app.marketplaceURL", "https://marketplace.mozilla.org/");

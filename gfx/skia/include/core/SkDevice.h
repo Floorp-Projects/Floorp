@@ -62,7 +62,7 @@ public:
      *                  draw into this device such that all of the pixels will
      *                  be opaque.
      */
-    SkDevice* createCompatibleDevice(SkBitmap::Config config, 
+    SkDevice* createCompatibleDevice(SkBitmap::Config config,
                                      int width, int height,
                                      bool isOpaque);
 
@@ -139,7 +139,7 @@ public:
 protected:
     enum Usage {
        kGeneral_Usage,
-       kSaveLayer_Usage // <! internal use only
+       kSaveLayer_Usage  // <! internal use only
     };
 
     struct TextFlags {
@@ -258,7 +258,7 @@ protected:
      *  kARGB_8888_Config as SkPMColor
      *
      *  If the bitmap has pixels already allocated, the device pixels will be
-     *  written there. If not, bitmap->allocPixels() will be called 
+     *  written there. If not, bitmap->allocPixels() will be called
      *  automatically. If the bitmap is backed by a texture readPixels will
      *  fail.
      *
@@ -279,11 +279,14 @@ protected:
 
     ///////////////////////////////////////////////////////////////////////////
 
-    /** Update as needed the pixel value in the bitmap, so that the caller can access
-        the pixels directly. Note: only the pixels field should be altered. The config/width/height/rowbytes
-        must remain unchanged.
+    /** Update as needed the pixel value in the bitmap, so that the caller can
+        access the pixels directly. Note: only the pixels field should be
+        altered. The config/width/height/rowbytes must remain unchanged.
+        @param bitmap The device's bitmap
+        @return Echo the bitmap parameter, or an alternate (shadow) bitmap 
+            maintained by the subclass.
     */
-    virtual void onAccessBitmap(SkBitmap*);
+    virtual const SkBitmap& onAccessBitmap(SkBitmap*);
 
     SkPixelRef* getPixelRef() const { return fBitmap.pixelRef(); }
     // just for subclasses, to assign a custom pixelref
@@ -291,7 +294,7 @@ protected:
         fBitmap.setPixelRef(pr, offset);
         return pr;
     }
-    
+
     /**
      * Implements readPixels API. The caller will ensure that:
      *  1. bitmap has pixel config kARGB_8888_Config.
@@ -310,15 +313,33 @@ protected:
     virtual void unlockPixels();
 
     /**
-     *  Override and return true for filters that the device handles
-     *  intrinsically. Returning false means call the filter.
-     *  Default impl returns false.
+     *  Returns true if the device allows processing of this imagefilter. If
+     *  false is returned, then the filter is ignored. This may happen for
+     *  some subclasses that do not support pixel manipulations after drawing
+     *  has occurred (e.g. printing). The default implementation returns true.
      */
-    virtual bool filterImage(SkImageFilter*, const SkBitmap& src,
-                             const SkMatrix& ctm,
+    virtual bool allowImageFilter(SkImageFilter*);
+
+    /**
+     *  Override and return true for filters that the device can handle
+     *  intrinsically. Doing so means that SkCanvas will pass-through this
+     *  filter to drawSprite and drawDevice (and potentially filterImage).
+     *  Returning false means the SkCanvas will have apply the filter itself,
+     *  and just pass the resulting image to the device.
+     */
+    virtual bool canHandleImageFilter(SkImageFilter*);
+
+    /**
+     *  Related (but not required) to canHandleImageFilter, this method returns
+     *  true if the device could apply the filter to the src bitmap and return
+     *  the result (and updates offset as needed).
+     *  If the device does not recognize or support this filter,
+     *  it just returns false and leaves result and offset unchanged.
+     */
+    virtual bool filterImage(SkImageFilter*, const SkBitmap&, const SkMatrix&,
                              SkBitmap* result, SkIPoint* offset);
 
-    // This is equal kBGRA_Premul_Config8888 or kRGBA_Premul_Config8888 if 
+    // This is equal kBGRA_Premul_Config8888 or kRGBA_Premul_Config8888 if
     // either is identical to kNative_Premul_Config8888. Otherwise, -1.
     static const SkCanvas::Config8888 kPMColorAlias;
 
@@ -330,18 +351,32 @@ private:
     friend class SkDeviceFilteredPaint;
     friend class DeviceImageFilterProxy;
 
+    /**
+     * postSave is called by SkCanvas to inform the device that it has
+     * just completed a save operation. This allows derived
+     * classes to initialize their state-dependent caches.
+     */
+    virtual void postSave() {};
+
+    /**
+     * preRestore is called by SkCanvas right before it executes a restore
+     * operation. As the partner of postSave, it allows
+     * derived classes to clear their state-dependent caches.
+     */
+    virtual void preRestore() {};
+
     // just called by SkCanvas when built as a layer
     void setOrigin(int x, int y) { fOrigin.set(x, y); }
     // just called by SkCanvas for saveLayer
-    SkDevice* createCompatibleDeviceForSaveLayer(SkBitmap::Config config, 
+    SkDevice* createCompatibleDeviceForSaveLayer(SkBitmap::Config config,
                                                  int width, int height,
                                                  bool isOpaque);
 
     /**
      * Subclasses should override this to implement createCompatibleDevice.
      */
-    virtual SkDevice* onCreateCompatibleDevice(SkBitmap::Config config, 
-                                               int width, int height, 
+    virtual SkDevice* onCreateCompatibleDevice(SkBitmap::Config config,
+                                               int width, int height,
                                                bool isOpaque,
                                                Usage usage);
 

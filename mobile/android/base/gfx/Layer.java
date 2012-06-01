@@ -155,18 +155,16 @@ public abstract class Layer {
 
     public static class RenderContext {
         public final RectF viewport;
-        public final FloatSize pageSize;
-        public final IntSize screenSize;
+        public final RectF pageRect;
         public final float zoomFactor;
         public final int positionHandle;
         public final int textureHandle;
         public final FloatBuffer coordBuffer;
 
-        public RenderContext(RectF aViewport, FloatSize aPageSize, IntSize aScreenSize, float aZoomFactor,
+        public RenderContext(RectF aViewport, RectF aPageRect, float aZoomFactor,
                              int aPositionHandle, int aTextureHandle, FloatBuffer aCoordBuffer) {
             viewport = aViewport;
-            pageSize = aPageSize;
-            screenSize = aScreenSize;
+            pageRect = aPageRect;
             zoomFactor = aZoomFactor;
             positionHandle = aPositionHandle;
             textureHandle = aTextureHandle;
@@ -178,7 +176,7 @@ public abstract class Layer {
                 return false;
             }
             return RectUtils.fuzzyEquals(viewport, other.viewport)
-                && pageSize.fuzzyEquals(other.pageSize)
+                && RectUtils.fuzzyEquals(pageRect, other.pageRect)
                 && FloatUtils.fuzzyEquals(zoomFactor, other.zoomFactor);
         }
     }

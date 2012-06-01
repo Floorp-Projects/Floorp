@@ -262,6 +262,12 @@ public:
    *                              dispatch a Gecko key event.
    * @param aKeyEvent             The result -- a Gecko key event initialized
    *                              from the native key event.
+   *                              NOTE: When aKeyEvent is a keypress event and 
+   *                                    the caller expects that the event will
+   *                                    cause a character to be input (say in an
+   *                                     editor), the caller should set
+   *                                     aKeyEvent.charCode before calling this.
+   *                                     Then charCode won't be modified.
    */
   void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent);
 
@@ -319,6 +325,11 @@ protected:
    * @param aKeyEvent             The result -- a Gecko key event initialized
    *                              from the native key event.  This must be
    *                              NS_KEY_PRESS event.
+   *                              NOTE: If the caller expects this event to
+   *                                    cause character input (say in an editor),
+   *                                    the caller should set aKeyEvent.charCode
+   *                                    before calling this.  Then charCode
+   *                                    won't be modified.
    * @param aKbType               A native Keyboard Type value.  Typically,
    *                              this is a result of ::LMGetKbdType().
    */

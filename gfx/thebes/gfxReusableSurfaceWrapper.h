@@ -28,7 +28,7 @@ class gfxImageSurface;
  *    the content it then releases the read lock.
  */
 class gfxReusableSurfaceWrapper {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxReusableSurfaceWrapper);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxReusableSurfaceWrapper)
 public:
   /**
    * Pass the gfxASurface to the wrapper.

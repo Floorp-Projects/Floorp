@@ -124,6 +124,10 @@ ElementStyle.prototype = {
    */
   populate: function ElementStyle_populate()
   {
+    // Store the current list of rules (if any) during the population
+    // process.  They will be reused if possible.
+    this._refreshRules = this.rules;
+
     this.rules = [];
 
     let element = this.element;
@@ -134,6 +138,9 @@ ElementStyle.prototype = {
 
     // Mark overridden computed styles.
     this.markOverridden();
+
+    // We're done with the previous list of rules.
+    delete this._refreshRules;
   },
 
   _addElementRules: function ElementStyle_addElementRules(aElement)
@@ -190,7 +197,22 @@ ElementStyle.prototype = {
       return false;
     }
 
-    let rule = new Rule(this, aOptions);
+    let rule = null;
+
+    // If we're refreshing and the rule previously existed, reuse the
+    // Rule object.
+    for (let r of (this._refreshRules || [])) {
+      if (r.matches(aOptions)) {
+        rule = r;
+        rule.refresh();
+        break;
+      }
+    }
+
+    // If this is a new rule, create its Rule object.
+    if (!rule) {
+      rule = new Rule(this, aOptions);
+    }
 
     // Ignore inherited rules with no properties.
     if (aOptions.inherited && rule.textProps.length == 0) {
@@ -332,7 +354,10 @@ function Rule(aElementStyle, aOptions)
     }
   }
 
-  this._getTextProperties();
+  // Populate the text properties with the style's current cssText
+  // value, and add in any disabled properties from the store.
+  this.textProps = this._getTextProperties();
+  this.textProps = this.textProps.concat(this._getDisabledProperties());
 }
 
 Rule.prototype = {
@@ -382,6 +407,19 @@ Rule.prototype = {
   },
 
   /**
+   * Returns true if the rule matches the creation options
+   * specified.
+   *
+   * @param object aOptions
+   *        Creation options.  See the Rule constructor for
+   *        documentation.
+   */
+  matches: function Rule_matches(aOptions)
+  {
+    return (this.style === (aOptions.style || aOptions.domRule.style));
+  },
+
+  /**
    * Create a new TextProperty to include in the rule.
    *
    * @param {string} aName
@@ -406,8 +444,8 @@ Rule.prototype = {
    *
    * @param {string} [aName]
    *        A text property name (such as "background" or "border-top") used
-   *        when calling from setPropertyValue & setPropertyName to signify that
-   *        the property should be saved in store.userProperties.
+   *        when calling from setPropertyValue & setPropertyName to signify
+   *        that the property should be saved in store.userProperties.
    */
   applyProperties: function Rule_applyProperties(aName)
   {
@@ -424,11 +462,15 @@ Rule.prototype = {
         continue;
       }
 
+      this.style.setProperty(prop.name, prop.value, prop.priority);
+
       if (aName && prop.name == aName) {
-        store.userProperties.setProperty(this.style, prop.name, prop.value);
+        store.userProperties.setProperty(
+          this.style, prop.name,
+          this.style.getPropertyValue(prop.name),
+          prop.value);
       }
 
-      this.style.setProperty(prop.name, prop.value, prop.priority);
       // Refresh the property's priority from the style, to reflect
       // any changes made during parsing.
       prop.priority = this.style.getPropertyPriority(prop.name);
@@ -512,12 +554,12 @@ Rule.prototype = {
    */
   _getTextProperties: function Rule_getTextProperties()
   {
-    this.textProps = [];
+    let textProps = [];
     let store = this.elementStyle.store;
     let lines = this.style.cssText.match(CSS_LINE_RE);
     for each (let line in lines) {
       let matches = CSS_PROP_RE.exec(line);
-      if(!matches || !matches[2])
+      if (!matches || !matches[2])
         continue;
 
       let name = matches[1];
@@ -527,21 +569,153 @@ Rule.prototype = {
       }
       let value = store.userProperties.getProperty(this.style, name, matches[2]);
       let prop = new TextProperty(this, name, value, matches[3] || "");
-      this.textProps.push(prop);
+      textProps.push(prop);
     }
 
+    return textProps;
+  },
+
+  /**
+   * Return the list of disabled properties from the store for this rule.
+   */
+  _getDisabledProperties: function Rule_getDisabledProperties()
+  {
+    let store = this.elementStyle.store;
+
     // Include properties from the disabled property store, if any.
-    let disabledProps = this.elementStyle.store.disabled.get(this.style);
+    let disabledProps = store.disabled.get(this.style);
     if (!disabledProps) {
-      return;
+      return [];
     }
+
+    let textProps = [];
 
     for each (let prop in disabledProps) {
       let value = store.userProperties.getProperty(this.style, prop.name, prop.value);
       let textProp = new TextProperty(this, prop.name, value, prop.priority);
       textProp.enabled = false;
-      this.textProps.push(textProp);
+      textProps.push(textProp);
     }
+
+    return textProps;
+  },
+
+  /**
+   * Reread the current state of the rules and rebuild text
+   * properties as needed.
+   */
+  refresh: function Rule_refresh()
+  {
+    let newTextProps = this._getTextProperties();
+
+    // Update current properties for each property present on the style.
+    // This will mark any touched properties with _visited so we
+    // can detect properties that weren't touched (because they were
+    // removed from the style).
+    // Also keep track of properties that didn't exist in the current set
+    // of properties.
+    let brandNewProps = [];
+    for (let newProp of newTextProps) {
+      if (!this._updateTextProperty(newProp)) {
+        brandNewProps.push(newProp);
+      }
+    }
+
+    // Refresh editors and disabled state for all the properties that
+    // were updated.
+    for (let prop of this.textProps) {
+      // Properties that weren't touched during the update
+      // process must no longer exist on the node.  Mark them disabled.
+      if (!prop._visited) {
+        prop.enabled = false;
+        prop.updateEditor();
+      } else {
+        delete prop._visited;
+      }
+    }
+
+    // Add brand new properties.
+    this.textProps = this.textProps.concat(brandNewProps);
+
+    // Refresh the editor if one already exists.
+    if (this.editor) {
+      this.editor.populate();
+    }
+  },
+
+  /**
+   * Update the current TextProperties that match a given property
+   * from the cssText.  Will choose one existing TextProperty to update
+   * with the new property's value, and will disable all others.
+   *
+   * When choosing the best match to reuse, properties will be chosen
+   * by assigning a rank and choosing the highest-ranked property:
+   *   Name, value, and priority match, enabled. (6)
+   *   Name, value, and priority match, disabled. (5)
+   *   Name and value match, enabled. (4)
+   *   Name and value match, disabled. (3)
+   *   Name matches, enabled. (2)
+   *   Name matches, disabled. (1)
+   *
+   * If no existing properties match the property, nothing happens.
+   *
+   * @param TextProperty aNewProp
+   *        The current version of the property, as parsed from the
+   *        cssText in Rule._getTextProperties().
+   *
+   * @returns true if a property was updated, false if no properties
+   *          were updated.
+   */
+  _updateTextProperty: function Rule__updateTextProperty(aNewProp) {
+    let match = { rank: 0, prop: null };
+
+    for each (let prop in this.textProps) {
+      if (prop.name != aNewProp.name)
+        continue;
+
+      // Mark this property visited.
+      prop._visited = true;
+
+      // Start at rank 1 for matching name.
+      let rank = 1;
+
+      // Value and Priority matches add 2 to the rank.
+      // Being enabled adds 1.  This ranks better matches higher,
+      // with priority breaking ties.
+      if (prop.value === aNewProp.value) {
+        rank += 2;
+        if (prop.priority === aNewProp.priority) {
+          rank += 2;
+        }
+      }
+
+      if (prop.enabled) {
+        rank += 1;
+      }
+
+      if (rank > match.rank) {
+        if (match.prop) {
+          // We outrank a previous match, disable it.
+          match.prop.enabled = false;
+          match.prop.updateEditor();
+        }
+        match.rank = rank;
+        match.prop = prop;
+      } else if (rank) {
+        // A previous match outranks us, disable ourself.
+        prop.enabled = false;
+        prop.updateEditor();
+      }
+    }
+
+    // If we found a match, update its value with the new text property
+    // value.
+    if (match.prop) {
+      match.prop.set(aNewProp);
+      return true;
+    }
+
+    return false;
   },
 };
 
@@ -606,6 +780,28 @@ TextProperty.prototype = {
         value: dummyStyle.getPropertyValue(prop),
         priority: dummyStyle.getPropertyPriority(prop),
       });
+    }
+  },
+
+  /**
+   * Set all the values from another TextProperty instance into
+   * this TextProperty instance.
+   *
+   * @param TextProperty aOther
+   *        The other TextProperty instance.
+   */
+  set: function TextProperty_set(aOther)
+  {
+    let changed = false;
+    for (let item of ["name", "value", "priority", "enabled"]) {
+      if (this[item] != aOther[item]) {
+        this[item] = aOther[item];
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this.updateEditor();
     }
   },
 
@@ -777,8 +973,10 @@ CssRuleView.prototype = {
    */
   nodeChanged: function CssRuleView_nodeChanged()
   {
-    this._clearRules();
+    // Repopulate the element style.
     this._elementStyle.populate();
+
+    // Refresh the rule editors.
     this._createEditors();
   },
 
@@ -839,11 +1037,25 @@ CssRuleView.prototype = {
    */
   _createEditors: function CssRuleView_createEditors()
   {
+    // Run through the current list of rules, attaching
+    // their editors in order.  Create editors if needed.
+    let last = null;
     for each (let rule in this._elementStyle.rules) {
-      // Don't hold a reference to this editor beyond the one held
-      // by the node.
-      let editor = new RuleEditor(this, rule);
-      this.element.appendChild(editor.element);
+      if (!rule.editor) {
+        new RuleEditor(this, rule);
+      }
+
+      let target = last ? last.nextSibling : this.element.firstChild;
+      this.element.insertBefore(rule.editor.element, target);
+      last = rule.editor.element;
+    }
+
+    // ... and now editors for rules that don't exist anymore
+    // have been pushed to the end of the list, go ahead and
+    // delete their nodes.  The rules they edit have already been
+    // forgotten.
+    while (last && last.nextSibling) {
+      this.element.removeChild(last.nextSibling);
     }
   },
 
@@ -938,8 +1150,6 @@ CssRuleView.prototype = {
     this._declarationItem.disabled = disablePropertyItems;
     this._propertyItem.disabled = disablePropertyItems;
     this._propertyValueItem.disabled = disablePropertyItems;
-
-    dump("Done updating menu!\n");
   },
 
   _onMouseDown: function CssRuleView_onMouseDown()
@@ -1143,6 +1353,7 @@ function RuleEditor(aRuleView, aRule)
   this.ruleView = aRuleView;
   this.doc = this.ruleView.doc;
   this.rule = aRule;
+  this.rule.editor = this;
 
   this._onNewProperty = this._onNewProperty.bind(this);
 
@@ -1180,9 +1391,8 @@ RuleEditor.prototype = {
 
     let header = createChild(code, "div", {});
 
-    let selectors = createChild(header, "span", {
-      class: "ruleview-selector",
-      textContent: this.rule.selectorText
+    this.selectorText = createChild(header, "span", {
+      class: "ruleview-selector"
     });
 
     this.openBrace = createChild(header, "span", {
@@ -1198,10 +1408,7 @@ RuleEditor.prototype = {
       class: "ruleview-propertylist"
     });
 
-    for each (let prop in this.rule.textProps) {
-      let propEditor = new TextPropertyEditor(this, prop);
-      this.propertyList.appendChild(propEditor.element);
-    }
+    this.populate();
 
     this.closeBrace = createChild(code, "div", {
       class: "ruleview-ruleclose",
@@ -1222,6 +1429,38 @@ RuleEditor.prototype = {
     this.closeBrace.addEventListener("click", function(aEvent) {
       this.closeBrace.focus();
     }.bind(this), true);
+  },
+
+  /**
+   * Update the rule editor with the contents of the rule.
+   */
+  populate: function RuleEditor_populate()
+  {
+    this.selectorText.textContent = this.rule.selectorText;
+
+    for (let prop of this.rule.textProps) {
+      if (!prop.editor) {
+        new TextPropertyEditor(this, prop);
+        this.propertyList.appendChild(prop.editor.element);
+      }
+    }
+  },
+
+  /**
+   * Programatically add a new property to the rule.
+   *
+   * @param string aName
+   *        Property name.
+   * @param string aValue
+   *        Property value.
+   * @param string aPriority
+   *        Property priority.
+   */
+  addProperty: function RuleEditor_addProperty(aName, aValue, aPriority)
+  {
+    let prop = this.rule.createProperty(aName, aValue, aPriority);
+    let editor = new TextPropertyEditor(this, prop);
+    this.propertyList.appendChild(editor.element);
   },
 
   /**
@@ -1824,19 +2063,27 @@ UserProperties.prototype = {
    *        The CSSStyleDeclaration against which the property is mapped.
    * @param {String} aName
    *        The name of the property to get.
-   * @param {Boolean} aDefault
-   *        Indicates whether the property value is one entered by a user.
+   * @param {String} aComputedValue
+   *        The computed value of the property.  The user value will only be
+   *        returned if the computed value hasn't changed since, and this will
+   *        be returned as the default if no user value is available.
    * @returns {String}
    *          The property value if it has previously been set by the user, null
    *          otherwise.
    */
-  getProperty: function UP_getProperty(aStyle, aName, aDefault) {
+  getProperty: function UP_getProperty(aStyle, aName, aComputedValue) {
     let entry = this.weakMap.get(aStyle, null);
 
     if (entry && aName in entry) {
-      return entry[aName];
+      let item = entry[aName];
+      if (item.computed != aComputedValue) {
+        delete entry[aName];
+        return aComputedValue;
+      }
+
+      return item.user;
     }
-    return typeof aDefault != "undefined" ? aDefault : null;
+    return aComputedValue;
 
   },
 
@@ -1847,16 +2094,19 @@ UserProperties.prototype = {
    *        The CSSStyleDeclaration against which the property is to be mapped.
    * @param {String} aName
    *        The name of the property to set.
-   * @param {String} aValue
+   * @param {String} aComputedValue
+   *        The computed property value.  The user value will not be used if the
+   *        computed value changes.
+   * @param {String} aUserValue
    *        The value of the property to set.
    */
-  setProperty: function UP_setProperty(aStyle, aName, aValue) {
+  setProperty: function UP_setProperty(aStyle, aName, aComputedValue, aUserValue) {
     let entry = this.weakMap.get(aStyle, null);
     if (entry) {
-      entry[aName] = aValue;
+      entry[aName] = { computed: aComputedValue, user: aUserValue };
     } else {
       let props = {};
-      props[aName] = aValue;
+      props[aName] = { computed: aComputedValue, user: aUserValue };
       this.weakMap.set(aStyle, props);
     }
   },

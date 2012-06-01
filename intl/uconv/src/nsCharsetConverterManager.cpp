@@ -27,26 +27,32 @@
 // just for CONTRACTIDs
 #include "nsCharsetConverterManager.h"
 
+static nsIStringBundle * sDataBundle;
+static nsIStringBundle * sTitleBundle;
+
 // Class nsCharsetConverterManager [implementation]
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCharsetConverterManager,
                               nsICharsetConverterManager)
 
 nsCharsetConverterManager::nsCharsetConverterManager() 
-  : mDataBundle(NULL)
-  , mTitleBundle(NULL)
 {
 }
 
 nsCharsetConverterManager::~nsCharsetConverterManager() 
 {
-  NS_IF_RELEASE(mDataBundle);
-  NS_IF_RELEASE(mTitleBundle);
 }
 
-nsresult nsCharsetConverterManager::LoadExtensibleBundle(
-                                    const char* aCategory, 
-                                    nsIStringBundle ** aResult)
+//static
+void nsCharsetConverterManager::Shutdown()
+{
+  NS_IF_RELEASE(sDataBundle);
+  NS_IF_RELEASE(sTitleBundle);
+}
+
+static
+nsresult LoadExtensibleBundle(const char* aCategory, 
+                              nsIStringBundle ** aResult)
 {
   nsCOMPtr<nsIStringBundleService> sbServ =
     mozilla::services::GetStringBundleService();
@@ -56,10 +62,11 @@ nsresult nsCharsetConverterManager::LoadExtensibleBundle(
   return sbServ->CreateExtensibleBundle(aCategory, aResult);
 }
 
-nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle, 
-                                                   const char * aName, 
-                                                   const nsAFlatString& aProp, 
-                                                   PRUnichar ** aResult)
+static
+nsresult GetBundleValue(nsIStringBundle * aBundle, 
+                        const char * aName, 
+                        const nsAFlatString& aProp, 
+                        PRUnichar ** aResult)
 {
   nsAutoString key; 
 
@@ -70,10 +77,11 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
   return aBundle->GetStringFromName(key.get(), aResult);
 }
 
-nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle, 
-                                                   const char * aName, 
-                                                   const nsAFlatString& aProp, 
-                                                   nsAString& aResult)
+static
+nsresult GetBundleValue(nsIStringBundle * aBundle, 
+                        const char * aName, 
+                        const nsAFlatString& aProp, 
+                        nsAString& aResult)
 {
   nsresult rv = NS_OK;
 
@@ -85,6 +93,35 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
   aResult = value;
 
   return NS_OK;
+}
+
+static
+nsresult GetCharsetDataImpl(const char * aCharset, const PRUnichar * aProp,
+                            nsAString& aResult)
+{
+  if (aCharset == NULL)
+    return NS_ERROR_NULL_POINTER;
+  // aProp can be NULL
+
+  if (sDataBundle == NULL) {
+    nsresult rv = LoadExtensibleBundle(NS_DATA_BUNDLE_CATEGORY, &sDataBundle);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  return GetBundleValue(sDataBundle, aCharset, nsDependentString(aProp), aResult);
+}
+
+//static
+bool nsCharsetConverterManager::IsInternal(const nsACString& aCharset)
+{
+  nsAutoString str;
+  // fully qualify to possibly avoid vtable call
+  nsresult rv = GetCharsetDataImpl(PromiseFlatCString(aCharset).get(),
+                                   NS_LITERAL_STRING(".isXSSVulnerable").get(),
+                                   str);
+
+  return NS_SUCCEEDED(rv);
 }
 
 
@@ -133,28 +170,16 @@ nsCharsetConverterManager::GetUnicodeEncoderRaw(const char * aDest,
 }
 
 NS_IMETHODIMP
-nsCharsetConverterManager::GetUnicodeDecoderRaw(const char * aSrc,
-                                                nsIUnicodeDecoder ** aResult)
-{
-  nsresult rv;
-
-  nsAutoString str;
-  rv = GetCharsetData(aSrc, NS_LITERAL_STRING(".isXSSVulnerable").get(), str);
-  if (NS_SUCCEEDED(rv))
-    return NS_ERROR_UCONV_NOCONV;
-
-  return GetUnicodeDecoderRawInternal(aSrc, aResult);
-}
-
-NS_IMETHODIMP
 nsCharsetConverterManager::GetUnicodeDecoder(const char * aSrc, 
                                              nsIUnicodeDecoder ** aResult)
 {
   // resolve the charset first
   nsCAutoString charset;
-  
+
   // fully qualify to possibly avoid vtable call
-  nsCharsetConverterManager::GetCharsetAlias(aSrc, charset);
+  nsresult rv = nsCharsetConverterManager::GetCharsetAlias(aSrc, charset);
+  if (NS_FAILED(rv))
+    return rv;
 
   return nsCharsetConverterManager::GetUnicodeDecoderRaw(charset.get(),
                                                          aResult);
@@ -166,18 +191,18 @@ nsCharsetConverterManager::GetUnicodeDecoderInternal(const char * aSrc,
 {
   // resolve the charset first
   nsCAutoString charset;
-  
-  // fully qualify to possibly avoid vtable call
-  nsresult rv = nsCharsetConverterManager::GetCharsetAlias(aSrc, charset);
+
+  nsresult rv = nsCharsetAlias::GetPreferredInternal(nsDependentCString(aSrc),
+                                                     charset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return nsCharsetConverterManager::GetUnicodeDecoderRawInternal(charset.get(),
-                                                                 aResult);
+  return nsCharsetConverterManager::GetUnicodeDecoderRaw(charset.get(),
+                                                         aResult);
 }
 
 NS_IMETHODIMP
-nsCharsetConverterManager::GetUnicodeDecoderRawInternal(const char * aSrc, 
-                                                        nsIUnicodeDecoder ** aResult)
+nsCharsetConverterManager::GetUnicodeDecoderRaw(const char * aSrc, 
+                                                nsIUnicodeDecoder ** aResult)
 {
   *aResult= nsnull;
   nsCOMPtr<nsIUnicodeDecoder> decoder;
@@ -186,7 +211,7 @@ nsCharsetConverterManager::GetUnicodeDecoderRawInternal(const char * aSrc,
 
   NS_NAMED_LITERAL_CSTRING(contractbase, NS_UNICODEDECODER_CONTRACTID_BASE);
   nsDependentCString src(aSrc);
-  
+
   decoder = do_CreateInstance(PromiseFlatCString(contractbase + src).get(),
                               &rv);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UCONV_NOCONV);
@@ -195,10 +220,10 @@ nsCharsetConverterManager::GetUnicodeDecoderRawInternal(const char * aSrc,
   return rv;
 }
 
-nsresult 
-nsCharsetConverterManager::GetList(const nsACString& aCategory,
-                                   const nsACString& aPrefix,
-                                   nsIUTF8StringEnumerator** aResult)
+static
+nsresult GetList(const nsACString& aCategory,
+                 const nsACString& aPrefix,
+                 nsIUTF8StringEnumerator** aResult)
 {
   if (aResult == NULL) 
     return NS_ERROR_NULL_POINTER;
@@ -289,12 +314,12 @@ nsCharsetConverterManager::GetCharsetTitle(const char * aCharset,
 {
   NS_ENSURE_ARG_POINTER(aCharset);
 
-  if (mTitleBundle == NULL) {
-    nsresult rv = LoadExtensibleBundle(NS_TITLE_BUNDLE_CATEGORY, &mTitleBundle);
+  if (sTitleBundle == NULL) {
+    nsresult rv = LoadExtensibleBundle(NS_TITLE_BUNDLE_CATEGORY, &sTitleBundle);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return GetBundleValue(mTitleBundle, aCharset, NS_LITERAL_STRING(".title"), aResult);
+  return GetBundleValue(sTitleBundle, aCharset, NS_LITERAL_STRING(".title"), aResult);
 }
 
 NS_IMETHODIMP
@@ -302,17 +327,7 @@ nsCharsetConverterManager::GetCharsetData(const char * aCharset,
                                           const PRUnichar * aProp,
                                           nsAString& aResult)
 {
-  if (aCharset == NULL)
-    return NS_ERROR_NULL_POINTER;
-  // aProp can be NULL
-
-  if (mDataBundle == NULL) {
-    nsresult rv = LoadExtensibleBundle(NS_DATA_BUNDLE_CATEGORY, &mDataBundle);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
-  return GetBundleValue(mDataBundle, aCharset, nsDependentString(aProp), aResult);
+  return GetCharsetDataImpl(aCharset, aProp, aResult);
 }
 
 NS_IMETHODIMP
@@ -336,19 +351,10 @@ nsCharsetConverterManager::GetCharsetLangGroupRaw(const char * aCharset,
 {
 
   *aResult = nsnull;
-  if (aCharset == NULL)
-    return NS_ERROR_NULL_POINTER;
-
-  nsresult rv = NS_OK;
-
-  if (mDataBundle == NULL) {
-    rv = LoadExtensibleBundle(NS_DATA_BUNDLE_CATEGORY, &mDataBundle);
-    if (NS_FAILED(rv))
-      return rv;
-  }
-
   nsAutoString langGroup;
-  rv = GetBundleValue(mDataBundle, aCharset, NS_LITERAL_STRING(".LangGroup"), langGroup);
+  // fully qualify to possibly avoid vtable call
+  nsresult rv = nsCharsetConverterManager::GetCharsetData(
+      aCharset, NS_LITERAL_STRING(".LangGroup").get(), langGroup);
 
   if (NS_SUCCEEDED(rv)) {
     ToLowerCase(langGroup); // use lowercase for all language atoms

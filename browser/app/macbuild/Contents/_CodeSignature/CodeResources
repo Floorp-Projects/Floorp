@@ -15,30 +15,50 @@
             <key>^MacOS/extensions/.*</key><dict>
                 <key>omit</key>
                 <true/>
+                <key>weight</key>
+                <real>10</real>
             </dict>
             <key>^MacOS/distribution/.*</key><dict>
                 <key>omit</key>
                 <true/>
+                <key>weight</key>
+                <real>10</real>
             </dict>
             <key>^MacOS/updates/.*</key><dict>
                 <key>omit</key>
                 <true/>
+                <key>weight</key>
+                <real>10</real>
             </dict>
             <key>^MacOS/active-update.xml$</key><dict>
                 <key>omit</key>
                 <true/>
+                <key>weight</key>
+                <real>10</real>
             </dict>
             <key>^MacOS/defaults/.*</key><dict>
                 <key>omit</key>
                 <true/>
+                <key>weight</key>
+                <real>10</real>
             </dict>
             <key>^MacOS/mozilla.cfg$</key><dict>
                 <key>omit</key>
                 <true/>
+                <key>weight</key>
+                <real>10</real>
+            </dict>
+            <key>^MacOS/removed-files$</key><dict>
+                <key>omit</key>
+                <true/>
+                <key>weight</key>
+                <real>10</real>
             </dict>
             <key>^MacOS/updates.xml$</key><dict>
                 <key>omit</key>
                 <true/>
+                <key>weight</key>
+                <real>10</real>
             </dict>
         </dict>
     </dict>

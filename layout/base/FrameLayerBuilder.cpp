@@ -1664,7 +1664,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         ownLayer->SetTransform(transform);
       }
 
-      ownLayer->SetIsFixedPosition(!nsLayoutUtils::ScrolledByViewportScrolling(
+      ownLayer->SetIsFixedPosition(
+        !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(
                                       activeScrolledRoot, mBuilder));
 
       // Update that layer's clip and visible rects.
@@ -1716,8 +1717,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, aClip,
                            activeScrolledRoot);
 
-      data->mLayer->SetIsFixedPosition(!nsLayoutUtils::ScrolledByViewportScrolling(
-                                         activeScrolledRoot, mBuilder));
+      data->mLayer->SetIsFixedPosition(
+        !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(
+                                       activeScrolledRoot, mBuilder));
 
       InvalidateForLayerChange(item, data->mLayer);
 
@@ -2636,20 +2638,43 @@ FrameLayerBuilder::Clip::ApplyRoundedRectsTo(gfxContext* aContext,
   aEnd = NS_MIN<PRUint32>(aEnd, mRoundedClipRects.Length());
 
   for (PRUint32 i = aBegin; i < aEnd; ++i) {
-    const Clip::RoundedRect &rr = mRoundedClipRects[i];
-
-    gfxCornerSizes pixelRadii;
-    nsCSSRendering::ComputePixelRadii(rr.mRadii, A2D, &pixelRadii);
-
-    gfxRect clip = nsLayoutUtils::RectToGfxRect(rr.mRect, A2D);
-    clip.Round();
-    clip.Condition();
-    // REVIEW: This might make clip empty.  Is that OK?
-
-    aContext->NewPath();
-    aContext->RoundedRectangle(clip, pixelRadii);
+    AddRoundedRectPathTo(aContext, A2D, mRoundedClipRects[i]);
     aContext->Clip();
   }
+}
+
+void
+FrameLayerBuilder::Clip::DrawRoundedRectsTo(gfxContext* aContext,
+                                            PRInt32 A2D,
+                                            PRUint32 aBegin, PRUint32 aEnd) const
+{
+  aEnd = NS_MIN<PRUint32>(aEnd, mRoundedClipRects.Length());
+
+  if (aEnd - aBegin == 0)
+    return;
+
+  // If there is just one rounded rect we can just fill it, if there are more then we
+  // must clip the rest to get the intersection of clips
+  ApplyRoundedRectsTo(aContext, A2D, aBegin, aEnd - 1);
+  AddRoundedRectPathTo(aContext, A2D, mRoundedClipRects[aEnd - 1]);
+  aContext->Fill();
+}
+
+void
+FrameLayerBuilder::Clip::AddRoundedRectPathTo(gfxContext* aContext,
+                                              PRInt32 A2D,
+                                              const RoundedRect &aRoundRect) const
+{
+  gfxCornerSizes pixelRadii;
+  nsCSSRendering::ComputePixelRadii(aRoundRect.mRadii, A2D, &pixelRadii);
+
+  gfxRect clip = nsLayoutUtils::RectToGfxRect(aRoundRect.mRect, A2D);
+  clip.Round();
+  clip.Condition();
+  // REVIEW: This might make clip empty.  Is that OK?
+
+  aContext->NewPath();
+  aContext->RoundedRectangle(clip, pixelRadii);
 }
 
 nsRect
@@ -2790,16 +2815,17 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
                                PRUint32 aRoundedRectClipCount) 
 {
 #ifdef MOZ_ENABLE_MASK_LAYERS
+  nsIntRect boundingRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
   // don't build an unnecessary mask
   if (aClip.mRoundedClipRects.IsEmpty() ||
-      aRoundedRectClipCount <= 0) {
+      aRoundedRectClipCount <= 0 ||
+      boundingRect.IsEmpty()) {
     return;
   }
 
   const gfx3DMatrix& layerTransform = aLayer->GetTransform();
   NS_ASSERTION(layerTransform.CanDraw2D() || aLayer->AsContainerLayer(),
                "Only container layers may have 3D transforms.");
-  nsIntRect boundingRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
 
   // check if we can re-use the mask layer
   nsRefPtr<ImageLayer> maskLayer =  CreateOrRecycleMaskImageLayerFor(aLayer);
@@ -2855,12 +2881,9 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   //context->SetColor(gfxRGBA(0, 0, 0, 0.3));
   //context->Paint();
 
-  PRInt32 A2D = mContainerFrame->PresContext()->AppUnitsPerDevPixel();
-  aClip.ApplyRoundedRectsTo(context, A2D, 0, aRoundedRectClipCount);
-
-  // paint through the clipping rects with alpha to create the mask
-  context->SetColor(gfxRGBA(0, 0, 0, 1));
-  context->Paint();
+  // paint the clipping rects with alpha to create the mask
+  context->SetColor(gfxRGBA(0, 0, 0, 1));  PRInt32 A2D = mContainerFrame->PresContext()->AppUnitsPerDevPixel();
+  aClip.DrawRoundedRectsTo(context, A2D, 0, aRoundedRectClipCount);
 
   // build the image and container
   nsRefPtr<ImageContainer> container = aLayer->Manager()->CreateImageContainer();

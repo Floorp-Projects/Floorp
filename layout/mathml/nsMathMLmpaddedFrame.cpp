@@ -205,7 +205,13 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
       aPseudoUnit = NS_MATHML_PSEUDO_UNIT_ITSELF;
       return true;
     } else {
-      // The REC does not allow the case ["+"|"-"] unsigned-number
+      // case ["+"|"-"] unsigned-number
+      // XXXfredw: should we allow non-zero unitless values? See bug 757703.
+      if (!floatValue) {
+        aCSSValue.SetFloatValue(floatValue, eCSSUnit_Number);
+        aPseudoUnit = NS_MATHML_PSEUDO_UNIT_ITSELF;
+        return true;
+      }
     }
   }
   else if (unit.EqualsLiteral("width"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
@@ -225,7 +231,6 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
     }
 
     // see if the input was just a CSS value
-    // We use a specific flag to indicate that the call is made from mpadded.
     // We are not supposed to have a unitless, percent, negative or namedspace
     // value here.
     number.Append(unit); // leave the sign out if it was there

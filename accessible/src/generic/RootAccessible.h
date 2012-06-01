@@ -7,7 +7,7 @@
 #define mozilla_a11y_RootAccessible_h__
 
 #include "nsCaretAccessible.h"
-#include "nsDocAccessibleWrap.h"
+#include "DocAccessibleWrap.h"
 
 
 #include "nsHashtable.h"
@@ -21,7 +21,7 @@ class Relation;
 namespace mozilla {
 namespace a11y {
 
-class RootAccessible : public nsDocAccessibleWrap,
+class RootAccessible : public DocAccessibleWrap,
                        public nsIDOMEventListener
 {
   NS_DECL_ISUPPORTS_INHERITED
@@ -37,7 +37,7 @@ public:
   // nsAccessNode
   virtual void Shutdown();
 
-  // nsAccessible
+  // Accessible
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
   virtual Relation RelationByType(PRUint32 aType);
   virtual mozilla::a11y::role NativeRole();
@@ -49,7 +49,7 @@ public:
   /**
    * Notify that the sub document presshell was activated.
    */
-  virtual void DocumentActivated(nsDocAccessible* aDocument);
+  virtual void DocumentActivated(DocAccessible* aDocument);
 
 protected:
 
@@ -67,7 +67,7 @@ protected:
   /**
    * Process "popupshown" event. Used by HandleEvent().
    */
-  void HandlePopupShownEvent(nsAccessible* aAccessible);
+  void HandlePopupShownEvent(Accessible* aAccessible);
 
   /*
    * Process "popuphiding" event. Used by HandleEvent().
@@ -90,7 +90,7 @@ protected:
 } // namespace mozilla
 
 inline mozilla::a11y::RootAccessible*
-nsAccessible::AsRoot()
+Accessible::AsRoot()
 {
   return mFlags & eRootAccessible ?
     static_cast<mozilla::a11y::RootAccessible*>(this) : nsnull;

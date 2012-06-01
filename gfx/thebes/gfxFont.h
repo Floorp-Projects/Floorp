@@ -1457,6 +1457,8 @@ public:
     // This is called by the default Draw() implementation above.
     virtual bool SetupCairoFont(gfxContext *aContext) = 0;
 
+    virtual bool AllowSubpixelAA() { return true; }
+
     bool IsSyntheticBold() { return mApplySyntheticBold; }
 
     // Amount by which synthetic bold "fattens" the glyphs: 1/16 of the em-size

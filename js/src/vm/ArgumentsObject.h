@@ -119,7 +119,7 @@ class ArgumentsObject : public JSObject
      * This allows function-local analysis to determine that formals are
      * not aliased and generally simplifies arguments objects.
      */
-    static ArgumentsObject *createUnexpected(JSContext *cx, StackIter& iter);
+    static ArgumentsObject *createUnexpected(JSContext *cx, StackFrame *fp);
 
     /*
      * Return the initial length of the arguments.  This may differ from the

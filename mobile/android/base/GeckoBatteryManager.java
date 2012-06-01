@@ -43,8 +43,11 @@ public class GeckoBatteryManager
       if (!isRegistered) {
           IntentFilter filter = new IntentFilter();
           filter.addAction(Intent.ACTION_BATTERY_CHANGED);
-          activity.registerReceiver(this, filter);
-          isRegistered = true;
+
+          // registerReciever can return null if registering fails
+          isRegistered = activity.registerReceiver(this, filter) != null;
+          if (!isRegistered)
+              Log.e(LOGTAG, "Registering receiver failed");
       }
   }
 

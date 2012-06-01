@@ -21,6 +21,7 @@ using NPRect;
 using NPImageFormat;
 using NPNURLVariable;
 using NPCoordinateSpace;
+using NPNVariable;
 using mozilla::plugins::NativeWindowHandle;
 using mozilla::gfxSurfaceType;
 using gfxIntSize;
@@ -159,6 +160,8 @@ parent:
     returns (NativeWindowHandle value, NPError result);
   rpc NPN_GetValue_NPNVdocumentOrigin()
     returns (nsCString value, NPError result);
+  rpc NPN_GetValue_DrawingModelSupport(NPNVariable model)
+    returns (bool value);
 
   rpc NPN_SetValue_NPPVpluginWindow(bool windowed)
     returns (NPError result);
@@ -232,6 +235,9 @@ parent:
   // users can be notified that restarting the browser in i386 mode may allow
   // them to use the plugin.
   sync NegotiatedCarbon();
+
+  // Notifies us we can release a Async Surface DXGI texture.
+  async ReleaseDXGISharedSurface(DXGISharedSurfaceHandle handle);
 
 both:
   async PPluginScriptableObject();

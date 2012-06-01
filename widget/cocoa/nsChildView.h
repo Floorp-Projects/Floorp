@@ -9,7 +9,7 @@
 // formal protocols
 #include "mozView.h"
 #ifdef ACCESSIBILITY
-#include "nsAccessible.h"
+#include "mozilla/a11y/Accessible.h"
 #include "mozAccessibleProtocol.h"
 #endif
 
@@ -472,7 +472,7 @@ public:
   virtual bool      DispatchWindowEvent(nsGUIEvent& event);
   
 #ifdef ACCESSIBILITY
-  already_AddRefed<nsAccessible> GetDocumentAccessible();
+  already_AddRefed<Accessible> GetDocumentAccessible();
 #endif
 
   virtual void CreateCompositor();

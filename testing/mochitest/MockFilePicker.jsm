@@ -135,3 +135,15 @@ MockFilePickerInstance.prototype = {
     return MockFilePicker.returnValue;
   }
 };
+
+// Expose everything to content. We call reset() here so that all of the relevant
+// lazy expandos get added.
+MockFilePicker.reset();
+function exposeAll(obj) {
+  var props = {};
+  for (var prop in obj)
+    props[prop] = 'rw';
+  obj.__exposedProps__ = props;
+}
+exposeAll(MockFilePicker);
+exposeAll(MockFilePickerInstance.prototype);

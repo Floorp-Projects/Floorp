@@ -229,7 +229,7 @@ StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
     JS_ASSERT_IF(hasBlockChain(), blockChain_ == block.enclosingBlock());
 
     if (block.needsClone()) {
-        RootedVar<StaticBlockObject *> blockHandle(cx, &block);
+        Rooted<StaticBlockObject *> blockHandle(cx, &block);
         ClonedBlockObject *clone = ClonedBlockObject::create(cx, blockHandle, this);
         if (!clone)
             return false;
@@ -1143,6 +1143,27 @@ CrashIfInvalidSlot(StackFrame *fp, Value *vp)
     }
 }
 
+/*
+ * Given that the iterator's current value of fp_ and calls_ (initialized on
+ * construction or after operator++ popped the previous scripted/native call),
+ * "settle" the iterator on a new StackIter::State value. The goal is to
+ * present the client a simple linear sequence of native/scripted calls while
+ * covering up unpleasant stack implementation details:
+ *  - The frame change can be "saved" and "restored" (see JS_SaveFrameChain).
+ *    This artificially cuts the call chain and the StackIter client may want
+ *    to continue through this cut to the previous frame by passing
+ *    GO_THROUGH_SAVED.
+ *  - fp->prev can be in a different contiguous segment from fp. In this case,
+ *    the current values of sp/pc after calling popFrame/popCall are incorrect
+ *    and should be recovered from fp->prev's segment.
+ *  - there is no explicit relationship to determine whether fp_ or calls_ is
+ *    the innermost invocation so implicit memory ordering is used since both
+ *    push values on the stack.
+ *  - calls to natives directly from JS do not push a record and thus the
+ *    native call must be recovered by sniffing the stack.
+ *  - a native call's 'callee' argument is clobbered on return while the
+ *    CallArgsList element is still visible.
+ */
 void
 StackIter::settleOnNewState()
 {
@@ -1164,7 +1185,8 @@ StackIter::settleOnNewState()
         bool containsFrame = seg_->contains(fp_);
         bool containsCall = seg_->contains(calls_);
         while (!containsFrame && !containsCall) {
-            seg_ = seg_->prevInContext();
+            /* Eval-in-frame can cross contexts, so use prevInMemory. */
+            seg_ = seg_->prevInMemory();
             containsFrame = seg_->contains(fp_);
             containsCall = seg_->contains(calls_);
 
@@ -1179,8 +1201,10 @@ StackIter::settleOnNewState()
                 *this = tmp;
                 return;
             }
+
             /* There is no eval-in-frame equivalent for native calls. */
             JS_ASSERT_IF(containsCall, &seg_->calls() == calls_);
+
             settleOnNewSegment();
         }
 

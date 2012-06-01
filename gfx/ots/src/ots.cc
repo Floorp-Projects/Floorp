@@ -21,6 +21,20 @@ namespace {
 
 bool g_debug_output = true;
 
+#ifdef MOZ_OTS_REPORT_ERRORS
+
+// Generate a message with or without a table tag, when 'header' is the OpenTypeFile pointer
+#define OTS_FAILURE_MSG_TAG(msg_,tag_) OTS_FAILURE_MSG_TAG_(header, msg_, tag_)
+#define OTS_FAILURE_MSG_HDR(msg_)      OTS_FAILURE_MSG_(header, msg_)
+
+#else
+
+#define OTS_FAILURE_MSG_TAG(msg_,tag_) OTS_FAILURE()
+#define OTS_FAILURE_MSG_HDR(msg_)      OTS_FAILURE()
+
+#endif
+
+
 struct OpenTypeTable {
   uint32_t tag;
   uint32_t chksum;
@@ -47,6 +61,12 @@ bool CheckTag(uint32_t tag_value) {
     tag_value >>= 8;
   }
   return true;
+}
+
+uint32_t Tag(const char *tag_str) {	
+  uint32_t ret;	
+  std::memcpy(&ret, tag_str, 4);	
+  return ret;	
 }
 
 struct OutputTable {
@@ -81,92 +101,88 @@ struct Arena {
   std::vector<uint8_t*> hunks_;
 };
 
-// Use a macro instead of a function because gcc 4.4.3 creates static
-// initializers in that case. Note this macro assumes a little-endian system.
-#define TAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
-
 const struct {
-  uint32_t tag;
+  const char* tag;
   bool (*parse)(ots::OpenTypeFile *otf, const uint8_t *data, size_t length);
   bool (*serialise)(ots::OTSStream *out, ots::OpenTypeFile *file);
   bool (*should_serialise)(ots::OpenTypeFile *file);
   void (*free)(ots::OpenTypeFile *file);
   bool required;
 } table_parsers[] = {
-  { TAG('m', 'a', 'x', 'p'), ots::ots_maxp_parse, ots::ots_maxp_serialise,
+  { "maxp", ots::ots_maxp_parse, ots::ots_maxp_serialise,
     ots::ots_maxp_should_serialise, ots::ots_maxp_free, true },
-  { TAG('h', 'e', 'a', 'd'), ots::ots_head_parse, ots::ots_head_serialise,
+  { "head", ots::ots_head_parse, ots::ots_head_serialise,
     ots::ots_head_should_serialise, ots::ots_head_free, true },
-  { TAG('O', 'S', '/', '2'), ots::ots_os2_parse, ots::ots_os2_serialise,
+  { "OS/2", ots::ots_os2_parse, ots::ots_os2_serialise,
     ots::ots_os2_should_serialise, ots::ots_os2_free, true },
-  { TAG('c', 'm', 'a', 'p'), ots::ots_cmap_parse, ots::ots_cmap_serialise,
+  { "cmap", ots::ots_cmap_parse, ots::ots_cmap_serialise,
     ots::ots_cmap_should_serialise, ots::ots_cmap_free, true },
-  { TAG('h', 'h', 'e', 'a'), ots::ots_hhea_parse, ots::ots_hhea_serialise,
+  { "hhea", ots::ots_hhea_parse, ots::ots_hhea_serialise,
     ots::ots_hhea_should_serialise, ots::ots_hhea_free, true },
-  { TAG('h', 'm', 't', 'x'), ots::ots_hmtx_parse, ots::ots_hmtx_serialise,
+  { "hmtx", ots::ots_hmtx_parse, ots::ots_hmtx_serialise,
     ots::ots_hmtx_should_serialise, ots::ots_hmtx_free, true },
-  { TAG('n', 'a', 'm', 'e'), ots::ots_name_parse, ots::ots_name_serialise,
+  { "name", ots::ots_name_parse, ots::ots_name_serialise,
     ots::ots_name_should_serialise, ots::ots_name_free, true },
-  { TAG('p', 'o', 's', 't'), ots::ots_post_parse, ots::ots_post_serialise,
+  { "post", ots::ots_post_parse, ots::ots_post_serialise,
     ots::ots_post_should_serialise, ots::ots_post_free, true },
-  { TAG('l', 'o', 'c', 'a'), ots::ots_loca_parse, ots::ots_loca_serialise,
+  { "loca", ots::ots_loca_parse, ots::ots_loca_serialise,
     ots::ots_loca_should_serialise, ots::ots_loca_free, false },
-  { TAG('g', 'l', 'y', 'f'), ots::ots_glyf_parse, ots::ots_glyf_serialise,
+  { "glyf", ots::ots_glyf_parse, ots::ots_glyf_serialise,
     ots::ots_glyf_should_serialise, ots::ots_glyf_free, false },
-  { TAG('C', 'F', 'F', ' '), ots::ots_cff_parse, ots::ots_cff_serialise,
+  { "CFF ", ots::ots_cff_parse, ots::ots_cff_serialise,
     ots::ots_cff_should_serialise, ots::ots_cff_free, false },
-  { TAG('V', 'D', 'M', 'X'), ots::ots_vdmx_parse, ots::ots_vdmx_serialise,
+  { "VDMX", ots::ots_vdmx_parse, ots::ots_vdmx_serialise,
     ots::ots_vdmx_should_serialise, ots::ots_vdmx_free, false },
-  { TAG('h', 'd', 'm', 'x'), ots::ots_hdmx_parse, ots::ots_hdmx_serialise,
+  { "hdmx", ots::ots_hdmx_parse, ots::ots_hdmx_serialise,
     ots::ots_hdmx_should_serialise, ots::ots_hdmx_free, false },
-  { TAG('g', 'a', 's', 'p'), ots::ots_gasp_parse, ots::ots_gasp_serialise,
+  { "gasp", ots::ots_gasp_parse, ots::ots_gasp_serialise,
     ots::ots_gasp_should_serialise, ots::ots_gasp_free, false },
-  { TAG('c', 'v', 't', ' '), ots::ots_cvt_parse, ots::ots_cvt_serialise,
+  { "cvt ", ots::ots_cvt_parse, ots::ots_cvt_serialise,
     ots::ots_cvt_should_serialise, ots::ots_cvt_free, false },
-  { TAG('f', 'p', 'g', 'm'), ots::ots_fpgm_parse, ots::ots_fpgm_serialise,
+  { "fpgm", ots::ots_fpgm_parse, ots::ots_fpgm_serialise,
     ots::ots_fpgm_should_serialise, ots::ots_fpgm_free, false },
-  { TAG('p', 'r', 'e', 'p'), ots::ots_prep_parse, ots::ots_prep_serialise,
+  { "prep", ots::ots_prep_parse, ots::ots_prep_serialise,
     ots::ots_prep_should_serialise, ots::ots_prep_free, false },
-  { TAG('L', 'T', 'S', 'H'), ots::ots_ltsh_parse, ots::ots_ltsh_serialise,
+  { "LTSH", ots::ots_ltsh_parse, ots::ots_ltsh_serialise,
     ots::ots_ltsh_should_serialise, ots::ots_ltsh_free, false },
-  { TAG('V', 'O', 'R', 'G'), ots::ots_vorg_parse, ots::ots_vorg_serialise,
+  { "VORG", ots::ots_vorg_parse, ots::ots_vorg_serialise,
     ots::ots_vorg_should_serialise, ots::ots_vorg_free, false },
-  { TAG('k', 'e', 'r', 'n'), ots::ots_kern_parse, ots::ots_kern_serialise,
+  { "kern", ots::ots_kern_parse, ots::ots_kern_serialise,
     ots::ots_kern_should_serialise, ots::ots_kern_free, false },
   // We need to parse GDEF table in advance of parsing GSUB/GPOS tables
   // because they could refer GDEF table.
-  { TAG('G', 'D', 'E', 'F'), ots::ots_gdef_parse, ots::ots_gdef_serialise,
+  { "GDEF", ots::ots_gdef_parse, ots::ots_gdef_serialise,
     ots::ots_gdef_should_serialise, ots::ots_gdef_free, false },
-  { TAG('G', 'P', 'O', 'S'), ots::ots_gpos_parse, ots::ots_gpos_serialise,
+  { "GPOS", ots::ots_gpos_parse, ots::ots_gpos_serialise,
     ots::ots_gpos_should_serialise, ots::ots_gpos_free, false },
-  { TAG('G', 'S', 'U', 'B'), ots::ots_gsub_parse, ots::ots_gsub_serialise,
+  { "GSUB", ots::ots_gsub_parse, ots::ots_gsub_serialise,
     ots::ots_gsub_should_serialise, ots::ots_gsub_free, false },
-  { TAG('v', 'h', 'e', 'a'), ots::ots_vhea_parse, ots::ots_vhea_serialise,
+  { "vhea", ots::ots_vhea_parse, ots::ots_vhea_serialise,
     ots::ots_vhea_should_serialise, ots::ots_vhea_free, false },
-  { TAG('v', 'm', 't', 'x'), ots::ots_vmtx_parse, ots::ots_vmtx_serialise,
+  { "vmtx", ots::ots_vmtx_parse, ots::ots_vmtx_serialise,
     ots::ots_vmtx_should_serialise, ots::ots_vmtx_free, false },
   // SILGraphite layout tables - not actually parsed, just copied
-  { TAG('S', 'i', 'l', 'f'), ots::ots_silf_parse, ots::ots_silf_serialise,
+  { "Silf", ots::ots_silf_parse, ots::ots_silf_serialise,
     ots::ots_silf_should_serialise, ots::ots_silf_free, false },
-  { TAG('S', 'i', 'l', 'l'), ots::ots_sill_parse, ots::ots_sill_serialise,
+  { "Sill", ots::ots_sill_parse, ots::ots_sill_serialise,
     ots::ots_sill_should_serialise, ots::ots_sill_free, false },
-  { TAG('G', 'l', 'o', 'c'), ots::ots_gloc_parse, ots::ots_gloc_serialise,
+  { "Gloc", ots::ots_gloc_parse, ots::ots_gloc_serialise,
     ots::ots_gloc_should_serialise, ots::ots_gloc_free, false },
-  { TAG('G', 'l', 'a', 't'), ots::ots_glat_parse, ots::ots_glat_serialise,
+  { "Glat", ots::ots_glat_parse, ots::ots_glat_serialise,
     ots::ots_glat_should_serialise, ots::ots_glat_free, false },
-  { TAG('F', 'e', 'a', 't'), ots::ots_feat_parse, ots::ots_feat_serialise,
+  { "Feat", ots::ots_feat_parse, ots::ots_feat_serialise,
     ots::ots_feat_should_serialise, ots::ots_feat_free, false },
   // TODO(bashi): Support mort, base, and jstf tables.
   { 0, NULL, NULL, NULL, NULL, false },
 };
 
 bool IsValidVersionTag(uint32_t tag) {
-  return tag == TAG('\x00', '\x01', '\x00', '\x00') ||
+  return tag == Tag("\x00\x01\x00\x00") ||
          // OpenType fonts with CFF data have 'OTTO' tag.
-         tag == TAG('O', 'T', 'T', 'O') ||
+         tag == Tag("OTTO") ||
          // Older Mac fonts might have 'true' or 'typ1' tag.
-         tag == TAG('t', 'r', 'u', 'e') ||
-         tag == TAG('t', 'y', 'p', '1');
+         tag == Tag("true") ||
+         tag == Tag("typ1");
 }
 
 bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
@@ -180,27 +196,27 @@ bool ProcessTTF(ots::OpenTypeFile *header,
 
   // we disallow all files > 1GB in size for sanity.
   if (length > 1024 * 1024 * 1024) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("file exceeds 1GB");
   }
 
   if (!file.ReadTag(&header->version)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error reading version tag");
   }
   if (!IsValidVersionTag(header->version)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("invalid version tag");
   }
 
   if (!file.ReadU16(&header->num_tables) ||
       !file.ReadU16(&header->search_range) ||
       !file.ReadU16(&header->entry_selector) ||
       !file.ReadU16(&header->range_shift)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error reading table directory search header");
   }
 
   // search_range is (Maximum power of 2 <= numTables) x 16. Thus, to avoid
   // overflow num_tables is, at most, 2^16 / 16 = 2^12
   if (header->num_tables >= 4096 || header->num_tables < 1) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("excessive (or zero) number of tables");
   }
 
   unsigned max_pow2 = 0;
@@ -218,7 +234,7 @@ bool ProcessTTF(ots::OpenTypeFile *header,
 
   // entry_selector is Log2(maximum power of 2 <= numTables)
   if (header->entry_selector != max_pow2) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("incorrect entrySelector for table directory");
   }
 
   // range_shift is NumTables x 16-searchRange. We know that 16*num_tables
@@ -240,7 +256,7 @@ bool ProcessTTF(ots::OpenTypeFile *header,
         !file.ReadU32(&table.chksum) ||
         !file.ReadU32(&table.offset) ||
         !file.ReadU32(&table.length)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("error reading table directory");
     }
 
     table.uncompressed_length = table.length;
@@ -256,23 +272,23 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
 
   // we disallow all files > 1GB in size for sanity.
   if (length > 1024 * 1024 * 1024) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("file exceeds 1GB");
   }
 
   uint32_t woff_tag;
   if (!file.ReadTag(&woff_tag)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error reading WOFF marker");
   }
 
-  if (woff_tag != TAG('w', 'O', 'F', 'F')) {
-    return OTS_FAILURE();
+  if (woff_tag != Tag("wOFF")) {
+    return OTS_FAILURE_MSG_HDR("invalid WOFF marker");
   }
 
   if (!file.ReadTag(&header->version)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error reading version tag");
   }
   if (!IsValidVersionTag(header->version)) {
-      return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("invalid version tag");
   }
 
   header->search_range = 0;
@@ -281,27 +297,27 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
 
   uint32_t reported_length;
   if (!file.ReadU32(&reported_length) || length != reported_length) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("incorrect file size in WOFF header");
   }
 
   if (!file.ReadU16(&header->num_tables) || !header->num_tables) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error reading number of tables");
   }
 
   uint16_t reserved_value;
   if (!file.ReadU16(&reserved_value) || reserved_value) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error in reserved field of WOFF header");
   }
 
   uint32_t reported_total_sfnt_size;
   if (!file.ReadU32(&reported_total_sfnt_size)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error reading total sfnt size");
   }
 
   // We don't care about these fields of the header:
   //   uint16_t major_version, minor_version
   if (!file.Skip(2 * 2)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error skipping WOFF header fields");
   }
 
   // Checks metadata block size.
@@ -311,11 +327,11 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
   if (!file.ReadU32(&meta_offset) ||
       !file.ReadU32(&meta_length) ||
       !file.ReadU32(&meta_length_orig)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error reading WOFF header fields");
   }
   if (meta_offset) {
     if (meta_offset >= length || length - meta_offset < meta_length) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("invalid metadata block location/size");
     }
   }
 
@@ -324,11 +340,11 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
   uint32_t priv_length;
   if (!file.ReadU32(&priv_offset) ||
       !file.ReadU32(&priv_length)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error reading WOFF header fields");
   }
   if (priv_offset) {
     if (priv_offset >= length || length - priv_offset < priv_length) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("invalid private block location/size");
     }
   }
 
@@ -346,12 +362,12 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
         !file.ReadU32(&table.length) ||
         !file.ReadU32(&table.uncompressed_length) ||
         !file.ReadU32(&table.chksum)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("error reading table directory");
     }
 
     total_sfnt_size += Round4(table.uncompressed_length);
     if (total_sfnt_size > std::numeric_limits<uint32_t>::max()) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("sfnt size overflow");
     }
     tables.push_back(table);
     if (i == 0 || tables[first_index].offset > table.offset)
@@ -361,17 +377,17 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
   }
 
   if (reported_total_sfnt_size != total_sfnt_size) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("uncompressed sfnt size mismatch");
   }
 
   // Table data must follow immediately after the header.
   if (tables[first_index].offset != Round4(file.offset())) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("junk before tables in WOFF file");
   }
 
   if (tables[last_index].offset >= length ||
       length - tables[last_index].offset < tables[last_index].length) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("invalid table location/size");
   }
   // Blocks must follow immediately after the previous block.
   // (Except for padding with a maximum of three null bytes)
@@ -379,30 +395,30 @@ bool ProcessWOFF(ots::OpenTypeFile *header,
       static_cast<uint64_t>(tables[last_index].offset) +
       static_cast<uint64_t>(tables[last_index].length));
   if (block_end > std::numeric_limits<uint32_t>::max()) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("invalid table location/size");
   }
   if (meta_offset) {
     if (block_end != meta_offset) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("invalid metadata block location");
     }
     block_end = Round4(static_cast<uint64_t>(meta_offset) +
                        static_cast<uint64_t>(meta_length));
     if (block_end > std::numeric_limits<uint32_t>::max()) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("invalid metadata block size");
     }
   }
   if (priv_offset) {
     if (block_end != priv_offset) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("invalid private block location");
     }
     block_end = Round4(static_cast<uint64_t>(priv_offset) +
                        static_cast<uint64_t>(priv_length));
     if (block_end > std::numeric_limits<uint32_t>::max()) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("invalid private block size");
     }
   }
   if (block_end != Round4(length)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("file length mismatch (trailing junk?)");
   }
 
   return ProcessGeneric(header, output, data, length, tables, file);
@@ -423,46 +439,46 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
       const uint32_t this_tag = ntohl(tables[i].tag);
       const uint32_t prev_tag = ntohl(tables[i - 1].tag);
       if (this_tag <= prev_tag) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG_HDR("table directory not correctly ordered");
       }
     }
 
     // all tag names must be built from printable ASCII characters
     if (!CheckTag(tables[i].tag)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_TAG("invalid table tag", &tables[i].tag);
     }
 
     // tables must be 4-byte aligned
     if (tables[i].offset & 3) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_TAG("misaligned table", &tables[i].tag);
     }
 
     // and must be within the file
     if (tables[i].offset < data_offset || tables[i].offset >= length) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_TAG("invalid table offset", &tables[i].tag);
     }
     // disallow all tables with a zero length
     if (tables[i].length < 1) {
       // Note: malayalam.ttf has zero length CVT table...
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_TAG("zero-length table", &tables[i].tag);
     }
     // disallow all tables with a length > 1GB
     if (tables[i].length > 1024 * 1024 * 1024) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_TAG("table length exceeds 1GB", &tables[i].tag);
     }
     // disallow tables where the uncompressed size is < the compressed size.
     if (tables[i].uncompressed_length < tables[i].length) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_TAG("invalid compressed table", &tables[i].tag);
     }
     if (tables[i].uncompressed_length > tables[i].length) {
       // We'll probably be decompressing this table.
 
       // disallow all tables which uncompress to > 30 MB
       if (tables[i].uncompressed_length > 30 * 1024 * 1024) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG_TAG("uncompressed length exceeds 30MB", &tables[i].tag);
       }
       if (uncompressed_sum + tables[i].uncompressed_length < uncompressed_sum) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG_TAG("overflow of uncompressed sum", &tables[i].tag);
       }
 
       uncompressed_sum += tables[i].uncompressed_length;
@@ -474,13 +490,13 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
     // called TTX seems not to add 0-padding to the final table. It might be
     // ok to accept these fonts so we round up the length of the font file.
     if (!end_byte || end_byte > length) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_TAG("table overruns end of file", &tables[i].tag);
     }
   }
 
   // All decompressed tables uncompressed must be <= 30MB.
   if (uncompressed_sum > 30 * 1024 * 1024) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("uncompressed sum exceeds 30MB");
   }
 
   std::map<uint32_t, OpenTypeTable> table_map;
@@ -502,7 +518,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
   for (unsigned i = 0; i < overlap_checker.size(); ++i) {
     overlap_count += (overlap_checker[i].second ? 1 : -1);
     if (overlap_count > 1) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("overlapping tables");
     }
   }
 
@@ -512,11 +528,11 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
     if (table_parsers[i].parse == NULL) break;
 
     const std::map<uint32_t, OpenTypeTable>::const_iterator it
-        = table_map.find(table_parsers[i].tag);
+        = table_map.find(Tag(table_parsers[i].tag));
 
     if (it == table_map.end()) {
       if (table_parsers[i].required) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG_TAG("missing required table", table_parsers[i].tag);
       }
       continue;
     }
@@ -532,7 +548,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
       int r = uncompress((Bytef*) table_data, &dest_len,
                          data + it->second.offset, it->second.length);
       if (r != Z_OK || dest_len != table_length) {
-        return OTS_FAILURE();
+        return OTS_FAILURE_MSG_TAG("uncompress failed", table_parsers[i].tag);
       }
     } else {
       // uncompressed table. We can process directly from memory.
@@ -541,24 +557,26 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
     }
 
     if (!table_parsers[i].parse(header, table_data, table_length)) {
-      return OTS_FAILURE();
+      // TODO: parsers should generate specific messages detailing the failure;
+      // once those are all added, we won't need a generic failure message here
+      return OTS_FAILURE_MSG_TAG("failed to parse table", table_parsers[i].tag);
     }
   }
 
   if (header->cff) {
     // font with PostScript glyph
-    if (header->version != TAG('O', 'T', 'T', 'O')) {
-      return OTS_FAILURE();
+    if (header->version != Tag("OTTO")) {
+      return OTS_FAILURE_MSG_HDR("wrong font version for PostScript glyph data");
     }
     if (header->glyf || header->loca) {
       // mixing outline formats is not recommended
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("font contains both PS and TT glyphs");
     }
   } else {
     if (!header->glyf || !header->loca) {
       // No TrueType glyph found.
       // Note: bitmap-only fonts are not supported.
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("neither PS nor TT glyphs present");
     }
   }
 
@@ -579,19 +597,21 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
   }
   const uint16_t output_search_range = (1u << max_pow2) << 4;
 
+  // most of the errors here are highly unlikely - they'd only occur if the
+  // output stream returns a failure, e.g. lack of space to write
   output->ResetChecksum();
   if (!output->WriteTag(header->version) ||
       !output->WriteU16(num_output_tables) ||
       !output->WriteU16(output_search_range) ||
       !output->WriteU16(max_pow2) ||
       !output->WriteU16((num_output_tables << 4) - output_search_range)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error writing output");
   }
   const uint32_t offset_table_chksum = output->chksum();
 
   const size_t table_record_offset = output->Tell();
   if (!output->Pad(16 * num_output_tables)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error writing output");
   }
 
   std::vector<OutputTable> out_tables;
@@ -607,28 +627,29 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
     }
 
     OutputTable out;
-    out.tag = table_parsers[i].tag;
+    uint32_t tag = Tag(table_parsers[i].tag);
+    out.tag = tag;
     out.offset = output->Tell();
 
     output->ResetChecksum();
-    if (table_parsers[i].tag == TAG('h', 'e', 'a', 'd')) {
+    if (tag == Tag("head")) {
       head_table_offset = out.offset;
     }
     if (!table_parsers[i].serialise(output, header)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_TAG("failed to serialize table", table_parsers[i].tag);
     }
 
     const size_t end_offset = output->Tell();
     if (end_offset <= out.offset) {
       // paranoid check. |end_offset| is supposed to be greater than the offset,
       // as long as the Tell() interface is implemented correctly.
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("error writing output");
     }
     out.length = end_offset - out.offset;
 
     // align tables to four bytes
     if (!output->Pad((4 - (end_offset & 3)) % 4)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("error writing output");
     }
     out.chksum = output->chksum();
     out_tables.push_back(out);
@@ -639,7 +660,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
   // Need to sort the output tables for inclusion in the file
   std::sort(out_tables.begin(), out_tables.end(), OutputTable::SortByTag);
   if (!output->Seek(table_record_offset)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error writing output");
   }
 
   output->ResetChecksum();
@@ -649,7 +670,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
         !output->WriteU32(out_tables[i].chksum) ||
         !output->WriteU32(out_tables[i].offset) ||
         !output->WriteU32(out_tables[i].length)) {
-      return OTS_FAILURE();
+      return OTS_FAILURE_MSG_HDR("error writing output");
     }
     tables_chksum += out_tables[i].chksum;
   }
@@ -662,17 +683,17 @@ bool ProcessGeneric(ots::OpenTypeFile *header, ots::OTSStream *output,
 
   // seek into the 'head' table and write in the checksum magic value
   if (!head_table_offset) {
-    return OTS_FAILURE();  // not reached.
+    return OTS_FAILURE_MSG_HDR("internal error!");
   }
   if (!output->Seek(head_table_offset + 8)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error writing output");
   }
   if (!output->WriteU32(chksum_magic)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error writing output");
   }
 
   if (!output->Seek(end_of_file)) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_HDR("error writing output");
   }
 
   return true;
@@ -686,11 +707,20 @@ void DisableDebugOutput() {
   g_debug_output = false;
 }
 
-bool Process(OTSStream *output, const uint8_t *data, size_t length,
-             bool preserveGraphite) {
+bool OTS_API Process(OTSStream *output, const uint8_t *data, size_t length,
+#ifdef MOZ_OTS_REPORT_ERRORS
+                     MessageFunc message_func, void *user_data,
+#endif
+                     bool preserveGraphite) {
   OpenTypeFile header;
+
+#ifdef MOZ_OTS_REPORT_ERRORS
+  header.message_func = message_func;
+  header.user_data = user_data;
+#endif
+
   if (length < 4) {
-    return OTS_FAILURE();
+    return OTS_FAILURE_MSG_(&header, "file less than 4 bytes");
   }
 
   header.preserve_graphite = preserveGraphite;

@@ -94,7 +94,7 @@ NS_QUERYFRAME_HEAD(nsTextControlFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef ACCESSIBILITY
-already_AddRefed<nsAccessible>
+already_AddRefed<Accessible>
 nsTextControlFrame::CreateAccessible()
 {
   nsAccessibilityService* accService = nsIPresShell::AccService();
@@ -631,37 +631,12 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   mScrollEvent.Revoke();
 
   if (!aOn) {
-    if (mUsePlaceholder) {
-      PRInt32 textLength;
-      GetTextLength(&textLength);
-
-      if (!textLength) {
-        nsWeakFrame weakFrame(this);
-
-        txtCtrl->SetPlaceholderClass(true, true);
-
-        if (!weakFrame.IsAlive()) {
-          return;
-        }
-      }
-    }
-
     return;
   }
 
   nsISelectionController* selCon = txtCtrl->GetSelectionController();
   if (!selCon)
     return;
-
-  if (mUsePlaceholder) {
-    nsWeakFrame weakFrame(this);
-
-    txtCtrl->SetPlaceholderClass(false, true);
-
-    if (!weakFrame.IsAlive()) {
-      return;
-    }
-  }
 
   nsCOMPtr<nsISelection> ourSel;
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, 
@@ -1392,9 +1367,7 @@ nsTextControlFrame::SetValueChanged(bool aValueChanged)
   nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
   NS_ASSERTION(txtCtrl, "Content not a text control element");
 
-  if (mUsePlaceholder && !nsContentUtils::IsFocusedContent(mContent)) {
-    // If the content is focused, we don't care about the changes because
-    // the placeholder is going to be hidden/shown on blur.
+  if (mUsePlaceholder) {
     PRInt32 textLength;
     GetTextLength(&textLength);
 

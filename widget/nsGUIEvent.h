@@ -39,7 +39,7 @@ namespace plugins {
 }
 
 #ifdef ACCESSIBILITY
-class nsAccessible;
+class Accessible;
 #endif
 class nsRenderingContext;
 class nsIMenuItem;
@@ -1049,7 +1049,7 @@ public:
   {
   }
 
-  nsAccessible *mAccessible;
+  Accessible *mAccessible;
 };
 #endif
 

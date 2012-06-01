@@ -28,8 +28,7 @@ function test() {
   
   open_manager("addons://list/extension", function(aManager) {
     var addonList = aManager.document.getElementById("addon-list");
-    for (var i = 0; i < addonList.childNodes.length; i++) {
-      var addonItem = addonList.childNodes[i];
+    for (var addonItem of addonList.childNodes) {
       if (addonItem.hasAttribute("name") &&
           addonItem.getAttribute("name") == "Test add-on 1")
         break;
@@ -39,8 +38,7 @@ function test() {
                                                                    "preferences-btn");
     is(prefsBtn.hidden, true, "Prefs button should be hidden for addon with no optionsURL set")
 
-    for (i = 0; i < addonList.childNodes.length; i++) {
-      addonItem = addonList.childNodes[i];
+    for (addonItem of addonList.childNodes) {
       if (addonItem.hasAttribute("name") &&
           addonItem.getAttribute("name") == "Test add-on 2")
         break;

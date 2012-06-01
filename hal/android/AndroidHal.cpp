@@ -18,7 +18,7 @@ namespace mozilla {
 namespace hal_impl {
 
 void
-Vibrate(const nsTArray<uint32> &pattern, const WindowIdentifier &)
+Vibrate(const nsTArray<uint32_t> &pattern, const WindowIdentifier &)
 {
   // Ignore the WindowIdentifier parameter; it's here only because hal::Vibrate,
   // hal_sandbox::Vibrate, and hal_impl::Vibrate all must have the same
@@ -28,7 +28,7 @@ Vibrate(const nsTArray<uint32> &pattern, const WindowIdentifier &)
   // nop.  But we want to treat vibrate([0]) like CancelVibrate!  (Note that we
   // also need to treat vibrate([]) as a call to CancelVibrate.)
   bool allZero = true;
-  for (uint32 i = 0; i < pattern.Length(); i++) {
+  for (uint32_t i = 0; i < pattern.Length(); i++) {
     if (pattern[i] != 0) {
       allZero = false;
       break;

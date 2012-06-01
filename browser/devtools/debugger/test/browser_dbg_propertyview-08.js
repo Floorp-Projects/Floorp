@@ -36,7 +36,7 @@ function testFrameParameters()
       dump("After currentThread.dispatch!\n");
 
       var frames = gDebugger.DebuggerView.StackFrames._frames,
-          localScope = gDebugger.DebuggerView.Properties.localScope,
+          localScope = gDebugger.DebuggerView.Properties._vars.firstChild,
           localNodes = localScope.querySelector(".details").childNodes;
 
       dump("Got our variables:\n");
@@ -53,13 +53,13 @@ function testFrameParameters()
       is(localNodes.length, 11,
         "The localScope should contain all the created variable elements.");
 
-      is(localNodes[0].querySelector(".info").textContent, "[object Proxy]",
+      is(localNodes[0].querySelector(".value").getAttribute("value"), "[object Proxy]",
         "Should have the right property value for 'this'.");
 
       // Expand the 'this', 'arguments' and 'c' tree nodes. This causes
       // their properties to be retrieved and displayed.
       localNodes[0].expand();
-      localNodes[9].expand();
+      localNodes[8].expand();
       localNodes[10].expand();
 
       // Poll every few milliseconds until the properties are retrieved.
@@ -73,41 +73,41 @@ function testFrameParameters()
           resumeAndFinish();
         }
         if (!localNodes[0].fetched ||
-            !localNodes[9].fetched ||
+            !localNodes[8].fetched ||
             !localNodes[10].fetched) {
           return;
         }
         window.clearInterval(intervalID);
         is(localNodes[0].querySelector(".property > .title > .key")
-                        .textContent, "__proto__ ",
+                        .getAttribute("value"), "__proto__",
           "Should have the right property name for __proto__.");
 
         ok(localNodes[0].querySelector(".property > .title > .value")
-                        .textContent.search(/object/) != -1,
+                        .getAttribute("value").search(/object/) != -1,
           "__proto__ should be an object.");
 
-        is(localNodes[9].querySelector(".info").textContent, "[object Object]",
-          "Should have the right property value for 'c'.");
-
-        is(localNodes[9].querySelectorAll(".property > .title > .key")[1]
-                        .textContent, "a",
-          "Should have the right property name for 'a'.");
-
-        is(localNodes[9].querySelectorAll(".property > .title > .value")[1]
-                        .textContent, 1,
-          "Should have the right value for 'c.a'.");
-
-        is(localNodes[10].querySelector(".info").textContent,
+        is(localNodes[8].querySelector(".value").getAttribute("value"),
          "[object Arguments]",
          "Should have the right property value for 'arguments'.");
 
-        is(localNodes[10].querySelectorAll(".property > .title > .key")[7]
-                       .textContent, "length",
+        is(localNodes[8].querySelectorAll(".property > .title > .key")[7]
+                       .getAttribute("value"), "length",
          "Should have the right property name for 'length'.");
 
-        is(localNodes[10].querySelectorAll(".property > .title > .value")[7]
-                       .textContent, 5,
+        is(localNodes[8].querySelectorAll(".property > .title > .value")[7]
+                       .getAttribute("value"), 5,
          "Should have the right argument length.");
+
+        is(localNodes[10].querySelector(".value").getAttribute("value"), "[object Object]",
+          "Should have the right property value for 'c'.");
+
+        is(localNodes[10].querySelectorAll(".property > .title > .key")[1]
+                        .getAttribute("value"), "a",
+          "Should have the right property name for 'a'.");
+
+        is(localNodes[10].querySelectorAll(".property > .title > .value")[1]
+                        .getAttribute("value"), 1,
+          "Should have the right value for 'c.a'.");
 
         resumeAndFinish();
       }, 100);
@@ -120,19 +120,17 @@ function testFrameParameters()
 }
 
 function resumeAndFinish() {
-  let thread = gDebugger.DebuggerController.activeThread;
-  thread.addOneTimeListener("framescleared", function() {
-    Services.tm.currentThread.dispatch({ run: function() {
-      var frames = gDebugger.DebuggerView.StackFrames._frames;
+  gDebugger.addEventListener("Debugger:AfterFramesCleared", function listener() {
+    gDebugger.removeEventListener("Debugger:AfterFramesCleared", listener, true);
 
-      is(frames.querySelectorAll(".dbg-stackframe").length, 0,
-        "Should have no frames.");
+    var frames = gDebugger.DebuggerView.StackFrames._frames;
+    is(frames.querySelectorAll(".dbg-stackframe").length, 0,
+      "Should have no frames.");
 
-      closeDebuggerAndFinish(gTab);
-    }}, 0);
-  });
+    closeDebuggerAndFinish(gTab);
+  }, true);
 
-  thread.resume();
+  gDebugger.DebuggerController.activeThread.resume();
 }
 
 registerCleanupFunction(function() {

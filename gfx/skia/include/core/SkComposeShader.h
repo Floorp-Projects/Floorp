@@ -40,14 +40,13 @@ public:
     virtual void beginSession();
     virtual void endSession();
 
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkComposeShader)
+
 protected:
     SkComposeShader(SkFlattenableReadBuffer& );
-    virtual void flatten(SkFlattenableWriteBuffer& );
-    virtual Factory getFactory() { return CreateProc; }
+    virtual void flatten(SkFlattenableWriteBuffer&) const SK_OVERRIDE;
 
 private:
-    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer) { 
-        return SkNEW_ARGS(SkComposeShader, (buffer)); }
 
     SkShader*   fShaderA;
     SkShader*   fShaderB;

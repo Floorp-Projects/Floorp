@@ -6,25 +6,25 @@
 #ifndef _nsXULMenuAccessible_H_
 #define _nsXULMenuAccessible_H_
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "XULSelectControlAccessible.h"
 
 /**
  * Used for XUL menu, menuitem elements.
  */
-class nsXULMenuitemAccessible : public nsAccessibleWrap
+class nsXULMenuitemAccessible : public AccessibleWrap
 {
 public:
   enum { eAction_Click = 0 };
 
-  nsXULMenuitemAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULMenuitemAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
-  // nsAccessible
+  // Accessible
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
@@ -41,7 +41,7 @@ public:
   // Widgets
   virtual bool IsActiveWidget() const;
   virtual bool AreItemsOperable() const;
-  virtual nsAccessible* ContainerWidget() const;
+  virtual Accessible* ContainerWidget() const;
 };
 
 /**
@@ -50,13 +50,13 @@ public:
 class nsXULMenuSeparatorAccessible : public nsXULMenuitemAccessible
 {
 public:
-  nsXULMenuSeparatorAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULMenuSeparatorAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
-  // nsAccessible
+  // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
@@ -72,9 +72,9 @@ public:
 class nsXULMenupopupAccessible : public XULSelectControlAccessible
 {
 public:
-  nsXULMenupopupAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULMenupopupAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
@@ -84,18 +84,18 @@ public:
   virtual bool IsActiveWidget() const;
   virtual bool AreItemsOperable() const;
 
-  virtual nsAccessible* ContainerWidget() const;
+  virtual Accessible* ContainerWidget() const;
 };
 
 /**
  * Used for XUL menubar element.
  */
-class nsXULMenubarAccessible : public nsAccessibleWrap
+class nsXULMenubarAccessible : public AccessibleWrap
 {
 public:
-  nsXULMenubarAccessible(nsIContent* aContent, nsDocAccessible* aDoc);
+  nsXULMenubarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsAccessible
+  // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
@@ -103,8 +103,8 @@ public:
   // Widget
   virtual bool IsActiveWidget() const;
   virtual bool AreItemsOperable() const;
-  virtual nsAccessible* CurrentItem();
-  virtual void SetCurrentItem(nsAccessible* aItem);
+  virtual Accessible* CurrentItem();
+  virtual void SetCurrentItem(Accessible* aItem);
 };
 
 #endif

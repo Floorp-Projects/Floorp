@@ -1,3 +1,6 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 browser.jar:
 %  content browser %content/browser/ contentaccessible=yes
 #ifdef XP_MACOSX
@@ -71,6 +74,7 @@ browser.jar:
 #endif
 *       content/browser/openLocation.js               (content/openLocation.js)
 *       content/browser/openLocation.xul              (content/openLocation.xul)
+*       content/browser/safeMode.css                  (content/safeMode.css)
 *       content/browser/safeMode.js                   (content/safeMode.js)
 *       content/browser/safeMode.xul                  (content/safeMode.xul)
 *       content/browser/sanitize.js                   (content/sanitize.js)

@@ -495,10 +495,12 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
             hr = factory1->EnumAdapters1(0, getter_AddRefs(adapter1));
 
             if (SUCCEEDED(hr) && adapter1) {
-                hr = adapter1->CheckInterfaceSupport(__uuidof(ID3D10Device1),
+                hr = adapter1->CheckInterfaceSupport(__uuidof(ID3D10Device),
                                                      nsnull);
                 if (FAILED(hr)) {
-                    adapter1 = nsnull;
+                    // We should return and not accelerate if we don't have
+                    // D3D 10.0 support.
+                    return;
                 }
             }
         }
@@ -663,16 +665,16 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
     if (mRenderMode == RENDER_GDI)
-        surf = new gfxWindowsSurface(size, gfxASurface::FormatFromContent(contentType));
+        surf = new gfxWindowsSurface(size, OptimalFormatForContent(contentType));
 #endif
 
 #ifdef CAIRO_HAS_D2D_SURFACE
     if (mRenderMode == RENDER_DIRECT2D)
-        surf = new gfxD2DSurface(size, gfxASurface::FormatFromContent(contentType));
+        surf = new gfxD2DSurface(size, OptimalFormatForContent(contentType));
 #endif
 
     if (surf == nsnull)
-        surf = new gfxImageSurface(size, gfxASurface::FormatFromContent(contentType));
+        surf = new gfxImageSurface(size, OptimalFormatForContent(contentType));
 
     NS_IF_ADDREF(surf);
 

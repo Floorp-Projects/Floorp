@@ -40,6 +40,7 @@
 #include "nsDOMMutationObserver.h"
 
 using namespace mozilla::dom;
+using namespace xpc;
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsXPConnect,
                               nsIXPConnect,
@@ -2616,11 +2617,7 @@ SetLocationForGlobal(JSObject *global, const nsACString& location)
 {
     MOZ_ASSERT(global);
 
-    JSCompartment *compartment = js::GetObjectCompartment(global);
-    MOZ_ASSERT(compartment, "No compartment for global");
-
-    xpc::CompartmentPrivate *priv =
-        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
+    CompartmentPrivate *priv = GetCompartmentPrivate(global);
     MOZ_ASSERT(priv, "No compartment private");
 
     priv->SetLocation(location);
@@ -2631,11 +2628,7 @@ SetLocationForGlobal(JSObject *global, nsIURI *locationURI)
 {
     MOZ_ASSERT(global);
 
-    JSCompartment *compartment = js::GetObjectCompartment(global);
-    MOZ_ASSERT(compartment, "No compartment for global");
-
-    xpc::CompartmentPrivate *priv =
-        static_cast<xpc::CompartmentPrivate *>(JS_GetCompartmentPrivate(compartment));
+    CompartmentPrivate *priv = GetCompartmentPrivate(global);
     MOZ_ASSERT(priv, "No compartment private");
 
     priv->SetLocation(locationURI);

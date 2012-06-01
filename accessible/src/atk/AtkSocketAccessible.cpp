@@ -40,7 +40,7 @@ typedef struct _MaiAtkSocket
 {
   AtkSocket parent;
 
-  nsAccessibleWrap* accWrap;
+  AccessibleWrap* accWrap;
 } MaiAtkSocket;
 
 typedef struct _MaiAtkSocketClass
@@ -64,7 +64,7 @@ mai_atk_socket_init(MaiAtkSocket* aAcc)
 }
 
 static AtkObject*
-mai_atk_socket_new(nsAccessibleWrap* aAccWrap)
+mai_atk_socket_new(AccessibleWrap* aAccWrap)
 {
   NS_ENSURE_TRUE(aAccWrap, NULL);
 
@@ -113,9 +113,9 @@ mai_atk_component_iface_init(AtkComponentIface* aIface)
 }
 
 AtkSocketAccessible::AtkSocketAccessible(nsIContent* aContent,
-                                         nsDocAccessible* aDoc,
+                                         DocAccessible* aDoc,
                                          const nsCString& aPlugId) :
-  nsAccessibleWrap(aContent, aDoc)
+  AccessibleWrap(aContent, aDoc)
 {
   mAtkObject = mai_atk_socket_new(this);
   if (!mAtkObject)
@@ -149,5 +149,5 @@ AtkSocketAccessible::Shutdown()
     g_object_unref(mAtkObject);
     mAtkObject = nsnull;
   }
-  nsAccessibleWrap::Shutdown();
+  AccessibleWrap::Shutdown();
 }

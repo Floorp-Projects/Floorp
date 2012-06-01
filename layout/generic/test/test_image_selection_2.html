@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=758179
+-->
+<head>
+  <title>Test for Bug 758179</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+#t1 { width:80px; height:60px; background:yellow; }
+#t1.chosen #i1 { visibility:hidden; }
+  </style>
+</head>
+<body>
+<div id="t1">
+  <img id="i1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyAQMAAACQ%2B%2Bz9AAAAA1BMVEUA%2FwA0XsCoAAAAD0lEQVQoFWNgGAWjYGgCAAK8AAEb3eOQAAAAAElFTkSuQmCC">
+</div>
+
+<pre id="test">
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+var selection = window.getSelection();
+var t1 = document.getElementById("t1");
+
+function doTest() {
+  t1.addEventListener("mousedown", function() {
+    t1.className = "chosen";
+  }, false);
+  t1.addEventListener("mouseup", function() {
+    ok(selection.isCollapsed, "checking that selection is collapsed");
+  }, false);
+  synthesizeMouse(t1, 10, 10, {});
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(doTest);
+</script>
+</pre>
+</body>
+</html>

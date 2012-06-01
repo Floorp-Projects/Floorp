@@ -26,13 +26,13 @@ static JSObject *
 InitClass(JSContext *cx, Handle<GlobalObject*> global, Class *clasp, JSProtoKey key, Native construct,
           JSFunctionSpec *methods)
 {
-    RootedVarObject proto(cx, global->createBlankPrototype(cx, clasp));
+    RootedObject proto(cx, global->createBlankPrototype(cx, clasp));
     if (!proto)
         return NULL;
     proto->setPrivate(NULL);
 
     JSAtom *atom = cx->runtime->atomState.classAtoms[key];
-    RootedVarFunction ctor(cx, global->createConstructor(cx, construct, atom, 1));
+    RootedFunction ctor(cx, global->createConstructor(cx, construct, atom, 1));
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndBrand(cx, proto, NULL, methods) ||
@@ -155,7 +155,7 @@ JSFunctionSpec MapObject::methods[] = {
 JSObject *
 MapObject::initClass(JSContext *cx, JSObject *obj)
 {
-    return InitClass(cx, RootedVar<GlobalObject*>(cx, &obj->asGlobal()),
+    return InitClass(cx, Rooted<GlobalObject*>(cx, &obj->asGlobal()),
                      &class_, JSProto_Map, construct, methods);
 }
 
@@ -198,7 +198,7 @@ class AddToMap {
         if (!hkey.setValue(cx, key))
             return false;
 
-        HashableValue::StackRoot hkeyRoot(cx, &hkey);
+        HashableValue::AutoRooter hkeyRoot(cx, &hkey);
 
         Value val;
         if (!pairobj->getElement(cx, 1, &val))
@@ -215,7 +215,7 @@ class AddToMap {
 JSBool
 MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedVarObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
     if (!obj)
         return false;
 
@@ -357,7 +357,7 @@ JSFunctionSpec SetObject::methods[] = {
 JSObject *
 SetObject::initClass(JSContext *cx, JSObject *obj)
 {
-    return InitClass(cx, RootedVar<GlobalObject*>(cx, &obj->asGlobal()),
+    return InitClass(cx, Rooted<GlobalObject*>(cx, &obj->asGlobal()),
                      &class_, JSProto_Set, construct, methods);
 }
 
@@ -401,7 +401,7 @@ class AddToSet {
 JSBool
 SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedVarObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
     if (!obj)
         return false;
 

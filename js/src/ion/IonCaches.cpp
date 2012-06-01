@@ -275,14 +275,14 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
     IonScript *ion = topScript->ionScript();
 
     IonCacheGetProperty &cache = ion->getCache(cacheIndex).toGetProperty();
-    RootedVarPropertyName name(cx, cache.name());
+    RootedPropertyName name(cx, cache.name());
 
     JSScript *script;
     jsbytecode *pc;
     cache.getScriptedLocation(&script, &pc);
 
     // Root the object.
-    RootedVarObject objRoot(cx, obj);
+    RootedObject objRoot(cx, obj);
 
     // Override the return value if we are invalidated (bug 728188).
     AutoDetectInvalidation adi(cx, vp, topScript);
@@ -305,7 +305,7 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
         }
     }
 
-    RootedVarId id(cx, NameToId(name));
+    RootedId id(cx, NameToId(name));
     if (obj->getOps()->getProperty) {
         if (!GetPropertyGenericMaybeCallXML(cx, JSOp(*pc), objRoot, id, vp))
             return false;
@@ -562,7 +562,7 @@ js::ion::SetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Ha
 {
     IonScript *ion = GetTopIonJSScript(cx)->ion;
     IonCacheSetProperty &cache = ion->getCache(cacheIndex).toSetProperty();
-    RootedVarPropertyName name(cx, cache.name());
+    RootedPropertyName name(cx, cache.name());
     jsid id;
     const Shape *shape = NULL;
 
@@ -732,7 +732,7 @@ js::ion::GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const 
     // Override the return value if we are invalidated (bug 728188).
     AutoDetectInvalidation adi(cx, res, script);
 
-    RootedVarId id(cx);
+    RootedId id(cx);
     if (!FetchElementId(cx, obj, idval, id.address(), res))
         return false;
 

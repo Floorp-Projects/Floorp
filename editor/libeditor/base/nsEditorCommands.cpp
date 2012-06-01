@@ -546,6 +546,8 @@ nsDeleteCommand::IsCommandEnabled(const char * aCommandName,
     return NS_OK;
   else if (!nsCRT::strcmp(aCommandName,"cmd_delete"))
     return editor->CanCut(outCmdEnabled);
+  else if (!nsCRT::strcmp(aCommandName,"cmd_forwardDelete"))
+    return editor->CanCut(outCmdEnabled);
   else if (!nsCRT::strcmp(aCommandName,"cmd_deleteCharBackward"))
     *outCmdEnabled = true;
   else if (!nsCRT::strcmp(aCommandName,"cmd_deleteCharForward"))
@@ -573,6 +575,8 @@ nsDeleteCommand::DoCommand(const char *aCommandName, nsISupports *aCommandRefCon
   
   if (!nsCRT::strcmp("cmd_delete",aCommandName))
     deleteDir = nsIEditor::ePrevious;
+  else if (!nsCRT::strcmp("cmd_forwardDelete", aCommandName))
+    deleteDir = nsIEditor::eNext;
   else if (!nsCRT::strcmp("cmd_deleteCharBackward",aCommandName))
     deleteDir = nsIEditor::ePrevious;
   else if (!nsCRT::strcmp("cmd_deleteCharForward",aCommandName))

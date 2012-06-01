@@ -22,6 +22,14 @@
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
+      // null getText
+      //////////////////////////////////////////////////////////////////////////
+
+      var emptyTextAcc = getAccessible("nulltext", [nsIAccessibleText]);
+      is(emptyTextAcc.getText(0, -1), "", "getText() END_OF_TEXT with null string");
+      is(emptyTextAcc.getText(0, 0), "", "getText() Len==0 with null string");
+
+      //////////////////////////////////////////////////////////////////////////
       // hypertext
       //////////////////////////////////////////////////////////////////////////
 
@@ -85,10 +93,18 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=638326">
     Bug 638326
   </a>
+  <a target="_blank"
+     title="getText(0, -1) fails with empty text"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=749810">
+    Bug 749810
+  </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
+
+  <div id="nulltext"></div>
 
   <div id="hypertext">hello <a>friend</a> see <img></div>
   <div id="hypertext2">hello <a>friend</a> see <input></div>

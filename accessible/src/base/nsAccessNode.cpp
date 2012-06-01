@@ -35,7 +35,7 @@ ApplicationAccessible* nsAccessNode::gApplicationAccessible = nsnull;
  */
  
 ////////////////////////////////////////////////////////////////////////////////
-// nsAccessible. nsISupports
+// AccessNode. nsISupports
 
 NS_IMPL_CYCLE_COLLECTION_1(nsAccessNode, mContent)
 
@@ -50,7 +50,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsAccessNode, LastRelease())
 // nsAccessNode construction/desctruction
 
 nsAccessNode::
-  nsAccessNode(nsIContent* aContent, nsDocAccessible* aDoc) :
+  nsAccessNode(nsIContent* aContent, DocAccessible* aDoc) :
   mContent(aContent), mDoc(aDoc)
 {
 }
@@ -144,7 +144,7 @@ nsAccessNode::RootAccessible() const
     return nsnull;
   }
 
-  nsDocAccessible* docAcc = nsAccUtils::GetDocAccessibleFor(root);
+  DocAccessible* docAcc = nsAccUtils::GetDocAccessibleFor(root);
   return docAcc ? docAcc->AsRoot() : nsnull;
 }
 

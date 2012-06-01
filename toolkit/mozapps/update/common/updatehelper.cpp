@@ -3,6 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <windows.h>
+
+// Needed for CreateToolhelp32Snapshot
+#include <tlhelp32.h>
+#ifndef ONLY_SERVICE_LAUNCHING
+
 #include <stdio.h>
 #include "shlobj.h"
 #include "updatehelper.h"
@@ -10,8 +15,6 @@
 
 // Needed for PathAppendW
 #include <shlwapi.h>
-// Needed for CreateToolhelp32Snapshot
-#include <tlhelp32.h>
 #pragma comment(lib, "shlwapi.lib") 
 
 WCHAR* MakeCommandLine(int argc, WCHAR **argv);
@@ -181,17 +184,13 @@ LaunchWinPostProcess(const WCHAR *installationDir,
  * Starts the upgrade process for update of the service if it is
  * already installed.
  *
- * @param  argc The argc value normally sent to updater.exe
- * @param  argv The argv value normally sent to updater.exe
+ * @param  installDir the installation directory where
+ *         maintenanceservice_installer.exe is located.
  * @return TRUE if successful
  */
 BOOL
-StartServiceUpdate(int argc, LPWSTR *argv)
+StartServiceUpdate(LPCWSTR installDir)
 {
-  if (argc < 2) {
-    return FALSE;
-  }
-
   // Get a handle to the local computer SCM database
   SC_HANDLE manager = OpenSCManager(NULL, NULL, 
                                     SC_MANAGER_ALL_ACCESS);
@@ -219,7 +218,7 @@ StartServiceUpdate(int argc, LPWSTR *argv)
   PROCESS_INFORMATION pi = {0};
 
   WCHAR maintserviceInstallerPath[MAX_PATH + 1];
-  wcscpy(maintserviceInstallerPath, argv[2]);
+  wcscpy(maintserviceInstallerPath, installDir);
   PathAppendSafe(maintserviceInstallerPath, 
                  L"maintenanceservice_installer.exe");
   WCHAR cmdLine[64];
@@ -228,13 +227,15 @@ StartServiceUpdate(int argc, LPWSTR *argv)
                                                 cmdLine, 
                                                 NULL, NULL, FALSE, 
                                                 0, 
-                                                NULL, argv[2], &si, &pi);
+                                                NULL, installDir, &si, &pi);
   if (svcUpdateProcessStarted) {
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
   }
   return svcUpdateProcessStarted;
 }
+
+#endif 
 
 /**
  * Executes a maintenance service command
@@ -293,6 +294,8 @@ StartServiceCommand(int argc, LPCWSTR* argv)
   CloseServiceHandle(serviceManager);
   return lastError;
 }
+
+#ifndef ONLY_SERVICE_LAUNCHING
 
 /**
  * Launch a service initiated action for a software update with the 
@@ -402,6 +405,8 @@ WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
   CloseHandle(statusFile);
   return ok && wrote == toWrite;
 }
+
+#endif
 
 /**
  * Waits for a service to enter a stopped state.
@@ -535,6 +540,8 @@ WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds)
   return lastServiceState;
 }
 
+#ifndef ONLY_SERVICE_LAUNCHING
+
 /**
  * Determines if there is at least one process running for the specified
  * application. A match will be found across any session for any user.
@@ -619,6 +626,8 @@ DoesFallbackKeyExist()
   RegCloseKey(testOnlyFallbackKey);
   return TRUE;
 }
+
+#endif
 
 /**
  * Determines if the file system for the specified file handle is local

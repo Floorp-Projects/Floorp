@@ -2434,6 +2434,270 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
   }
 }
 
+
+/* static */ nscoord
+nsRuleNode::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
+                              nsPresContext* aPresContext,
+                              nsFontSizeType aFontSizeType)
+{
+#define sFontSizeTableMin  9 
+#define sFontSizeTableMax 16 
+
+// This table seems to be the one used by MacIE5. We hope its adoption in Mozilla
+// and eventually in WinIE5.5 will help to establish a standard rendering across
+// platforms and browsers. For now, it is used only in Strict mode. More can be read
+// in the document written by Todd Farhner at:
+// http://style.verso.com/font_size_intervals/altintervals.html
+//
+  static PRInt32 sStrictFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] =
+  {
+      { 9,    9,     9,     9,    11,    14,    18,    27},
+      { 9,    9,     9,    10,    12,    15,    20,    30},
+      { 9,    9,    10,    11,    13,    17,    22,    33},
+      { 9,    9,    10,    12,    14,    18,    24,    36},
+      { 9,   10,    12,    13,    16,    20,    26,    39},
+      { 9,   10,    12,    14,    17,    21,    28,    42},
+      { 9,   10,    13,    15,    18,    23,    30,    45},
+      { 9,   10,    13,    16,    18,    24,    32,    48}
+  };
+// HTML       1      2      3      4      5      6      7
+// CSS  xxs   xs     s      m      l     xl     xxl
+//                          |
+//                      user pref
+//
+//------------------------------------------------------------
+//
+// This table gives us compatibility with WinNav4 for the default fonts only.
+// In WinNav4, the default fonts were:
+//
+//     Times/12pt ==   Times/16px at 96ppi
+//   Courier/10pt == Courier/13px at 96ppi
+//
+// The 2 lines below marked "anchored" have the exact pixel sizes used by
+// WinNav4 for Times/12pt and Courier/10pt at 96ppi. As you can see, the
+// HTML size 3 (user pref) for those 2 anchored lines is 13px and 16px.
+//
+// All values other than the anchored values were filled in by hand, never
+// going below 9px, and maintaining a "diagonal" relationship. See for
+// example the 13s -- they follow a diagonal line through the table.
+//
+  static PRInt32 sQuirksFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] =
+  {
+      { 9,    9,     9,     9,    11,    14,    18,    28 },
+      { 9,    9,     9,    10,    12,    15,    20,    31 },
+      { 9,    9,     9,    11,    13,    17,    22,    34 },
+      { 9,    9,    10,    12,    14,    18,    24,    37 },
+      { 9,    9,    10,    13,    16,    20,    26,    40 }, // anchored (13)
+      { 9,    9,    11,    14,    17,    21,    28,    42 },
+      { 9,   10,    12,    15,    17,    23,    30,    45 },
+      { 9,   10,    13,    16,    18,    24,    32,    48 }  // anchored (16)
+  };
+// HTML       1      2      3      4      5      6      7
+// CSS  xxs   xs     s      m      l     xl     xxl
+//                          |
+//                      user pref
+
+#if 0
+//
+// These are the exact pixel values used by WinIE5 at 96ppi.
+//
+      { ?,    8,    11,    12,    13,    16,    21,    32 }, // smallest
+      { ?,    9,    12,    13,    16,    21,    27,    40 }, // smaller
+      { ?,   10,    13,    16,    18,    24,    32,    48 }, // medium
+      { ?,   13,    16,    19,    21,    27,    37,    ?? }, // larger
+      { ?,   16,    19,    21,    24,    32,    43,    ?? }  // largest
+//
+// HTML       1      2      3      4      5      6      7
+// CSS  ?     ?      ?      ?      ?      ?      ?      ?
+//
+// (CSS not tested yet.)
+//
+#endif
+
+  static PRInt32 sFontSizeFactors[8] = { 60,75,89,100,120,150,200,300 };
+
+  static PRInt32 sCSSColumns[7]  = {0, 1, 2, 3, 4, 5, 6}; // xxs...xxl
+  static PRInt32 sHTMLColumns[7] = {1, 2, 3, 4, 5, 6, 7}; // 1...7
+
+  double dFontSize;
+
+  if (aFontSizeType == eFontSize_HTML) {
+    aHTMLSize--;    // input as 1-7
+  }
+
+  if (aHTMLSize < 0)
+    aHTMLSize = 0;
+  else if (aHTMLSize > 6)
+    aHTMLSize = 6;
+
+  PRInt32* column;
+  switch (aFontSizeType)
+  {
+    case eFontSize_HTML: column = sHTMLColumns; break;
+    case eFontSize_CSS:  column = sCSSColumns;  break;
+  }
+
+  // Make special call specifically for fonts (needed PrintPreview)
+  PRInt32 fontSize = nsPresContext::AppUnitsToIntCSSPixels(aBasePointSize);
+
+  if ((fontSize >= sFontSizeTableMin) && (fontSize <= sFontSizeTableMax))
+  {
+    PRInt32 row = fontSize - sFontSizeTableMin;
+
+    if (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
+      dFontSize = nsPresContext::CSSPixelsToAppUnits(sQuirksFontSizeTable[row][column[aHTMLSize]]);
+    } else {
+      dFontSize = nsPresContext::CSSPixelsToAppUnits(sStrictFontSizeTable[row][column[aHTMLSize]]);
+    }
+  }
+  else
+  {
+    PRInt32 factor = sFontSizeFactors[column[aHTMLSize]];
+    dFontSize = (factor * aBasePointSize) / 100;
+  }
+
+
+  if (1.0 < dFontSize) {
+    return (nscoord)dFontSize;
+  }
+  return (nscoord)1;
+}
+
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
+/* static */ nscoord
+nsRuleNode::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
+                                    nsPresContext* aPresContext,
+                                    nsFontSizeType aFontSizeType)
+{
+  PRInt32 index;
+  PRInt32 indexMin;
+  PRInt32 indexMax;
+  float relativePosition;
+  nscoord smallerSize;
+  nscoord indexFontSize = aFontSize; // XXX initialize to quell a spurious gcc3.2 warning
+  nscoord smallestIndexFontSize;
+  nscoord largestIndexFontSize;
+  nscoord smallerIndexFontSize;
+  nscoord largerIndexFontSize;
+
+  nscoord onePx = nsPresContext::CSSPixelsToAppUnits(1);
+
+  if (aFontSizeType == eFontSize_HTML) {
+    indexMin = 1;
+    indexMax = 7;
+  } else {
+    indexMin = 0;
+    indexMax = 6;
+  }
+  
+  smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aPresContext, aFontSizeType);
+  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aPresContext, aFontSizeType); 
+  if (aFontSize > smallestIndexFontSize) {
+    if (aFontSize < NSToCoordRound(float(largestIndexFontSize) * 1.5)) { // smaller will be in HTML table
+      // find largest index smaller than current
+      for (index = indexMax; index >= indexMin; index--) {
+        indexFontSize = CalcFontPointSize(index, aBasePointSize, aPresContext, aFontSizeType);
+        if (indexFontSize < aFontSize)
+          break;
+      } 
+      // set up points beyond table for interpolation purposes
+      if (indexFontSize == smallestIndexFontSize) {
+        smallerIndexFontSize = indexFontSize - onePx;
+        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aPresContext, aFontSizeType);
+      } else if (indexFontSize == largestIndexFontSize) {
+        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aPresContext, aFontSizeType);
+        largerIndexFontSize = NSToCoordRound(float(largestIndexFontSize) * 1.5);
+      } else {
+        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aPresContext, aFontSizeType);
+        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aPresContext, aFontSizeType);
+      }
+      // compute the relative position of the parent size between the two closest indexed sizes
+      relativePosition = float(aFontSize - indexFontSize) / float(largerIndexFontSize - indexFontSize);            
+      // set the new size to have the same relative position between the next smallest two indexed sizes
+      smallerSize = smallerIndexFontSize + NSToCoordRound(relativePosition * (indexFontSize - smallerIndexFontSize));      
+    }
+    else {  // larger than HTML table, drop by 33%
+      smallerSize = NSToCoordRound(float(aFontSize) / 1.5);
+    }
+  }
+  else { // smaller than HTML table, drop by 1px
+    smallerSize = NS_MAX(aFontSize - onePx, onePx);
+  }
+  return smallerSize;
+}
+
+//------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------
+
+/* static */ nscoord
+nsRuleNode::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
+                                   nsPresContext* aPresContext,
+                                   nsFontSizeType aFontSizeType)
+{
+  PRInt32 index;
+  PRInt32 indexMin;
+  PRInt32 indexMax;
+  float relativePosition;
+  nscoord adjustment;
+  nscoord largerSize;
+  nscoord indexFontSize = aFontSize; // XXX initialize to quell a spurious gcc3.2 warning
+  nscoord smallestIndexFontSize;
+  nscoord largestIndexFontSize;
+  nscoord smallerIndexFontSize;
+  nscoord largerIndexFontSize;
+
+  nscoord onePx = nsPresContext::CSSPixelsToAppUnits(1);
+
+  if (aFontSizeType == eFontSize_HTML) {
+    indexMin = 1;
+    indexMax = 7;
+  } else {
+    indexMin = 0;
+    indexMax = 6;
+  }
+  
+  smallestIndexFontSize = CalcFontPointSize(indexMin, aBasePointSize, aPresContext, aFontSizeType);
+  largestIndexFontSize = CalcFontPointSize(indexMax, aBasePointSize, aPresContext, aFontSizeType); 
+  if (aFontSize > (smallestIndexFontSize - onePx)) {
+    if (aFontSize < largestIndexFontSize) { // larger will be in HTML table
+      // find smallest index larger than current
+      for (index = indexMin; index <= indexMax; index++) { 
+        indexFontSize = CalcFontPointSize(index, aBasePointSize, aPresContext, aFontSizeType);
+        if (indexFontSize > aFontSize)
+          break;
+      }
+      // set up points beyond table for interpolation purposes
+      if (indexFontSize == smallestIndexFontSize) {
+        smallerIndexFontSize = indexFontSize - onePx;
+        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aPresContext, aFontSizeType);
+      } else if (indexFontSize == largestIndexFontSize) {
+        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aPresContext, aFontSizeType);
+        largerIndexFontSize = NSCoordSaturatingMultiply(largestIndexFontSize, 1.5);
+      } else {
+        smallerIndexFontSize = CalcFontPointSize(index-1, aBasePointSize, aPresContext, aFontSizeType);
+        largerIndexFontSize = CalcFontPointSize(index+1, aBasePointSize, aPresContext, aFontSizeType);
+      }
+      // compute the relative position of the parent size between the two closest indexed sizes
+      relativePosition = float(aFontSize - smallerIndexFontSize) / float(indexFontSize - smallerIndexFontSize);
+      // set the new size to have the same relative position between the next largest two indexed sizes
+      adjustment = NSCoordSaturatingNonnegativeMultiply(largerIndexFontSize - indexFontSize, relativePosition);
+      largerSize = NSCoordSaturatingAdd(indexFontSize, adjustment);
+    }
+    else {  // larger than HTML table, increase by 50%
+      largerSize = NSCoordSaturatingMultiply(aFontSize, 1.5);
+    }
+  }
+  else { // smaller than HTML table, increase by 1px
+    largerSize = NSCoordSaturatingAdd(aFontSize, onePx);
+  }
+  return largerSize;
+}
+
 struct SetFontSizeCalcOps : public css::BasicCoordCalcOps,
                             public css::NumbersAlreadyNormalizedOps
 {
@@ -2509,12 +2773,12 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
     zoom = true;
     if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) &&
         (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
-      *aSize = nsStyleUtil::CalcFontPointSize(value, baseSize,
+      *aSize = CalcFontPointSize(value, baseSize,
                        aPresContext, eFontSize_CSS);
     }
     else if (NS_STYLE_FONT_SIZE_XXXLARGE == value) {
       // <font size="7"> is not specified in CSS, so we don't use eFontSize_CSS.
-      *aSize = nsStyleUtil::CalcFontPointSize(value, baseSize, aPresContext);
+      *aSize = CalcFontPointSize(value, baseSize, aPresContext);
     }
     else if (NS_STYLE_FONT_SIZE_LARGER  == value ||
              NS_STYLE_FONT_SIZE_SMALLER == value) {
@@ -2529,14 +2793,14 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
         nsStyleFont::UnZoomText(aPresContext, aParentSize);
 
       if (NS_STYLE_FONT_SIZE_LARGER == value) {
-        *aSize = nsStyleUtil::FindNextLargerFontSize(parentSize,
+        *aSize = FindNextLargerFontSize(parentSize,
                          baseSize, aPresContext, eFontSize_CSS);
 
         NS_ASSERTION(*aSize >= parentSize,
                      "FindNextLargerFontSize failed");
       }
       else {
-        *aSize = nsStyleUtil::FindNextSmallerFontSize(parentSize,
+        *aSize = FindNextSmallerFontSize(parentSize,
                          baseSize, aPresContext, eFontSize_CSS);
         NS_ASSERTION(*aSize < parentSize ||
                      parentSize <= nsPresContext::CSSPixelsToAppUnits(1),

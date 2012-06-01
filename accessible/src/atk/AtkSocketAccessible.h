@@ -7,7 +7,7 @@
 #ifndef _AtkSocketAccessible_H_
 #define _AtkSocketAccessible_H_
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 
 // This file gets included by nsAccessibilityService.cpp, which can't include
 // atk.h (or glib.h), so we can't rely on it being included.
@@ -18,10 +18,10 @@ extern "C" typedef void (*AtkSocketEmbedType) (void*, void*);
 #endif
 
 /**
- * Provides a nsAccessibleWrap wrapper around AtkSocket for out-of-process
+ * Provides a AccessibleWrap wrapper around AtkSocket for out-of-process
  * accessibles.
  */
-class AtkSocketAccessible: public nsAccessibleWrap
+class AtkSocketAccessible : public AccessibleWrap
 {
 public:
 
@@ -39,7 +39,7 @@ public:
    */
   static bool gCanEmbed;
 
-  AtkSocketAccessible(nsIContent* aContent, nsDocAccessible* aDoc,
+  AtkSocketAccessible(nsIContent* aContent, DocAccessible* aDoc,
                       const nsCString& aPlugId);
 
   // nsAccessNode

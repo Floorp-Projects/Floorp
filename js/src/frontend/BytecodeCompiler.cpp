@@ -22,12 +22,12 @@ using namespace js;
 using namespace js::frontend;
 
 bool
-MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script)
+MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script_)
 {
-    Root<JSScript*> root(cx, &script);
+    Rooted<JSScript*> script(cx, script_);
 
     Vector<JSScript *, 16> worklist(cx);
-    if (!worklist.append(script))
+    if (!worklist.append(script.reference()))
         return false;
 
     while (worklist.length()) {
@@ -84,7 +84,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
             Probes::compileScriptBegin(filename, lineno);
         }
         ~ProbesManager() { Probes::compileScriptEnd(filename, lineno); }
-    }; 
+    };
     ProbesManager probesManager(filename, lineno);
 
     /*
@@ -94,9 +94,9 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(callerFrame, compileAndGo);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
-    bool foldConstants = true;
-    Parser parser(cx, principals, originPrincipals, callerFrame, foldConstants, compileAndGo);
-    if (!parser.init(chars, length, filename, lineno, version))
+    Parser parser(cx, principals, originPrincipals, chars, length, filename, lineno, version,
+                  callerFrame, /* foldConstants = */ true, compileAndGo);
+    if (!parser.init())
         return NULL;
 
     SharedContext sc(cx, /* inFunction = */ false);
@@ -124,13 +124,8 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         return NULL;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
-    if (callerFrame &&
-        callerFrame->isScriptFrame() &&
-        callerFrame->script()->strictModeCode)
-    {
+    if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)
         bce.sc->setInStrictMode();
-        parser.tokenStream.setStrictMode();
-    }
 
 #ifdef DEBUG
     bool savedCallerFun;
@@ -231,6 +226,9 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     }
 #endif
 
+    if (!parser.checkForArgumentsAndRest())
+        return NULL;
+
     /*
      * Nowadays the threaded interpreter needs a stop instruction, so we
      * do have to emit that here.
@@ -240,7 +238,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     JS_ASSERT(bce.version() == version);
 
-    RootedVar<JSScript*> script(cx);
+    Rooted<JSScript*> script(cx);
     script = JSScript::NewScriptFromEmitter(cx, &bce);
     if (!script)
         return NULL;
@@ -263,11 +261,10 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
                               Bindings *bindings, const jschar *chars, size_t length,
                               const char *filename, unsigned lineno, JSVersion version)
 {
-    Parser parser(cx, principals, originPrincipals);
-    if (!parser.init(chars, length, filename, lineno, version))
+    Parser parser(cx, principals, originPrincipals, chars, length, filename, lineno, version,
+                  /* cfp = */ NULL, /* foldConstants = */ true, /* compileAndGo = */ false);
+    if (!parser.init())
         return false;
-
-    TokenStream &tokenStream = parser.tokenStream;
 
     SharedContext funsc(cx, /* inFunction = */ true);
 
@@ -319,7 +316,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
      */
     ParseNode *pn = fn ? parser.functionBody(Parser::StatementListBody) : NULL;
     if (pn) {
-        if (!tokenStream.matchToken(TOK_EOF)) {
+        if (!parser.tokenStream.matchToken(TOK_EOF)) {
             parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else if (!FoldConstants(cx, pn, &parser)) {

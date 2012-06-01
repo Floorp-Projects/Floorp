@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "nsAccessibleWrap.h"
+#include "AccessibleWrap.h"
 #include "nsMai.h"
 
 extern "C" {
@@ -14,9 +14,9 @@ extern "C" {
 static void
 getCurrentValueCB(AtkValue *obj, GValue *value)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleValue> accValue;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
@@ -35,9 +35,9 @@ getCurrentValueCB(AtkValue *obj, GValue *value)
 static void
 getMaximumValueCB(AtkValue *obj, GValue *value)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleValue> accValue;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
@@ -56,9 +56,9 @@ getMaximumValueCB(AtkValue *obj, GValue *value)
 static void
 getMinimumValueCB(AtkValue *obj, GValue *value)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleValue> accValue;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
@@ -77,9 +77,9 @@ getMinimumValueCB(AtkValue *obj, GValue *value)
 static void
 getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-    if (!accWrap)
-        return;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
+  if (!accWrap)
+    return;
 
     nsCOMPtr<nsIAccessibleValue> accValue;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),
@@ -98,9 +98,9 @@ getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
 static gboolean
 setCurrentValueCB(AtkValue *obj, const GValue *value)
 {
-    nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-    if (!accWrap)
-        return FALSE;
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
+  if (!accWrap)
+    return FALSE;
 
     nsCOMPtr<nsIAccessibleValue> accValue;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleValue),

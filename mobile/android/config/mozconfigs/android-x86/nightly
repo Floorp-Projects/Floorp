@@ -1,0 +1,25 @@
+# Global options
+mk_add_options MOZ_MAKE_FLAGS="-j4"
+
+# Build Fennec
+ac_add_options --enable-application=mobile/android
+
+# Android
+ac_add_options --target=i386-linux-android
+ac_add_options --with-endian=little
+ac_add_options --with-android-ndk="/tools/android-ndk-r7b"
+ac_add_options --with-android-sdk="/tools/android-sdk-r15/platforms/android-14"
+ac_add_options --with-android-version=9
+ac_add_options --with-system-zlib
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+
+export JAVA_HOME=/tools/jdk6
+export MOZILLA_OFFICIAL=1
+
+ac_add_options --with-branding=mobile/android/branding/nightly
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors
+
+# Use ccache
+ac_add_options --with-ccache=/usr/bin/ccache

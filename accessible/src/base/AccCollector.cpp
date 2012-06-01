@@ -4,14 +4,14 @@
 
 #include "AccCollector.h"
 
-#include "nsAccessible.h"
+#include "Accessible.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccCollector
 ////////////////////////////////////////////////////////////////////////////////
 
 AccCollector::
-  AccCollector(nsAccessible* aRoot, filters::FilterFuncPtr aFilterFunc) :
+  AccCollector(Accessible* aRoot, filters::FilterFuncPtr aFilterFunc) :
   mFilterFunc(aFilterFunc), mRoot(aRoot), mRootChildIdx(0)
 {
 }
@@ -27,10 +27,10 @@ AccCollector::Count()
   return mObjects.Length();
 }
 
-nsAccessible*
+Accessible*
 AccCollector::GetAccessibleAt(PRUint32 aIndex)
 {
-  nsAccessible *accessible = mObjects.SafeElementAt(aIndex, nsnull);
+  Accessible* accessible = mObjects.SafeElementAt(aIndex, nsnull);
   if (accessible)
     return accessible;
 
@@ -38,7 +38,7 @@ AccCollector::GetAccessibleAt(PRUint32 aIndex)
 }
 
 PRInt32
-AccCollector::GetIndexAt(nsAccessible *aAccessible)
+AccCollector::GetIndexAt(Accessible* aAccessible)
 {
   PRInt32 index = mObjects.IndexOf(aAccessible);
   if (index != -1)
@@ -50,12 +50,12 @@ AccCollector::GetIndexAt(nsAccessible *aAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccCollector protected
 
-nsAccessible*
+Accessible*
 AccCollector::EnsureNGetObject(PRUint32 aIndex)
 {
-  PRInt32 childCount = mRoot->GetChildCount();
+  PRUint32 childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
-    nsAccessible* child = mRoot->GetChildAt(mRootChildIdx++);
+    Accessible* child = mRoot->GetChildAt(mRootChildIdx++);
     if (!mFilterFunc(child))
       continue;
 
@@ -68,11 +68,11 @@ AccCollector::EnsureNGetObject(PRUint32 aIndex)
 }
 
 PRInt32
-AccCollector::EnsureNGetIndex(nsAccessible* aAccessible)
+AccCollector::EnsureNGetIndex(Accessible* aAccessible)
 {
-  PRInt32 childCount = mRoot->GetChildCount();
+  PRUint32 childCount = mRoot->ChildCount();
   while (mRootChildIdx < childCount) {
-    nsAccessible* child = mRoot->GetChildAt(mRootChildIdx++);
+    Accessible* child = mRoot->GetChildAt(mRootChildIdx++);
     if (!mFilterFunc(child))
       continue;
 
@@ -85,7 +85,7 @@ AccCollector::EnsureNGetIndex(nsAccessible* aAccessible)
 }
 
 void
-AccCollector::AppendObject(nsAccessible* aAccessible)
+AccCollector::AppendObject(Accessible* aAccessible)
 {
   mObjects.AppendElement(aAccessible);
 }
@@ -95,7 +95,7 @@ AccCollector::AppendObject(nsAccessible* aAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 
 PRInt32
-EmbeddedObjCollector::GetIndexAt(nsAccessible *aAccessible)
+EmbeddedObjCollector::GetIndexAt(Accessible* aAccessible)
 {
   if (aAccessible->mParent != mRoot)
     return -1;
@@ -107,7 +107,7 @@ EmbeddedObjCollector::GetIndexAt(nsAccessible *aAccessible)
 }
 
 void
-EmbeddedObjCollector::AppendObject(nsAccessible* aAccessible)
+EmbeddedObjCollector::AppendObject(Accessible* aAccessible)
 {
   aAccessible->mIndexOfEmbeddedChild = mObjects.Length();
   mObjects.AppendElement(aAccessible);
