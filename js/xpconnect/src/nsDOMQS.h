@@ -167,7 +167,7 @@ inline nsresult                                                               \
 xpc_qsUnwrapArg<_clazz>(JSContext *cx, jsval v, _clazz **ppArg,               \
                         _clazz **ppArgRef, jsval *vp)                         \
 {                                                                             \
-    nsISupports* argRef;                                                      \
+    nsISupports* argRef = static_cast<nsIContent*>(*ppArgRef);                \
     nsresult rv = xpc_qsUnwrapArg<_clazz>(cx, v, ppArg, &argRef, vp);         \
     *ppArgRef = static_cast<_clazz*>(static_cast<nsIContent*>(argRef));       \
     return rv;                                                                \
