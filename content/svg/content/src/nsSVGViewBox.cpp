@@ -82,10 +82,11 @@ nsSVGViewBox::SetAnimValue(float aX, float aY, float aWidth, float aHeight,
     // it's okay if allocation fails - and no point in reporting that
     mAnimVal = new nsSVGViewBoxRect(aX, aY, aWidth, aHeight);
   } else {
-    mAnimVal->x = aX;
-    mAnimVal->y = aY;
-    mAnimVal->width = aWidth;
-    mAnimVal->height = aHeight;
+    nsSVGViewBoxRect rect(aX, aY, aWidth, aHeight);
+    if (rect == *mAnimVal) {
+      return;
+    }
+    *mAnimVal = rect;
   }
   aSVGElement->DidAnimateViewBox();
 }

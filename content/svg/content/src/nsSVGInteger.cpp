@@ -99,6 +99,9 @@ nsSVGInteger::SetBaseValue(int aValue, nsSVGElement *aSVGElement)
 void
 nsSVGInteger::SetAnimValue(int aValue, nsSVGElement *aSVGElement)
 {
+  if (mIsAnimated && aValue == mAnimVal) {
+    return;
+  }
   mAnimVal = aValue;
   mIsAnimated = true;
   aSVGElement->DidAnimateInteger(mAttrEnum);

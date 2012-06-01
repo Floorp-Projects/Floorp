@@ -151,6 +151,9 @@ nsSVGNumberPair::SetBaseValues(float aValue1, float aValue2,
 void
 nsSVGNumberPair::SetAnimValue(const float aValue[2], nsSVGElement *aSVGElement)
 {
+  if (mIsAnimated && mAnimVal[0] == aValue[0] && mAnimVal[1] == aValue[1]) {
+    return;
+  }
   mAnimVal[0] = aValue[0];
   mAnimVal[1] = aValue[1];
   mIsAnimated = true;
