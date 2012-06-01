@@ -157,7 +157,9 @@ Key::EncodeJSValInternal(JSContext* aCx, const jsval aVal,
 
         nsresult rv = EncodeJSValInternal(aCx, val, aTypeOffset,
                                           aRecursionDepth + 1);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
 
         aTypeOffset = 0;
       }
