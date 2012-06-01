@@ -150,7 +150,7 @@ class UpvarCookie;
 
 class Proxy;
 class BaseProxyHandler;
-class Wrapper;
+class DirectWrapper;
 class CrossCompartmentWrapper;
 
 class TempAllocPolicy;
