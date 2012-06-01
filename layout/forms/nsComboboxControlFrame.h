@@ -242,9 +242,6 @@ protected:
   // size to the full width except the drop-marker.
   nscoord mDisplayWidth;
   
-  bool                  mDroppedDown;             // Current state of the dropdown list, true is dropped down
-  bool                  mInRedisplayText;
-
   nsRevocableEventPtr<RedisplayTextEvent> mRedisplayTextEvent;
 
   PRInt32               mRecentSelectedIndex;
@@ -254,6 +251,13 @@ protected:
   // make someone to listen to the button. If its programmatically pressed by someone like Accessibility
   // then open or close the combo box.
   nsCOMPtr<nsIDOMEventListener> mButtonListener;
+
+  // Current state of the dropdown list, true is dropped down.
+  bool                  mDroppedDown;
+  // See comment in HandleRedisplayTextEvent().
+  bool                  mInRedisplayText;
+  // Acting on ShowDropDown(true) is delayed until we're focused.
+  bool                  mDelayedShowDropDown;
 
   // static class data member for Bug 32920
   // only one control can be focused at a time
