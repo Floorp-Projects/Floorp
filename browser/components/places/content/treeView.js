@@ -91,30 +91,26 @@ PlacesTreeView.prototype = {
    * @return true if aContainer is a plain container, false otherwise.
    */
   _isPlainContainer: function PTV__isPlainContainer(aContainer) {
-    if (aContainer._plainContainer !== undefined)
-      return aContainer._plainContainer;
-
     // Livemarks are always plain containers.
     if (aContainer._feedURI)
-      return aContainer._plainContainer = true;
+      return true;
 
     // We don't know enough about non-query containers.
     if (!(aContainer instanceof Ci.nsINavHistoryQueryResultNode))
-      return aContainer._plainContainer = false;
+      return false;
 
     switch (aContainer.queryOptions.resultType) {
       case Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY:
       case Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY:
       case Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY:
       case Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY:
-        return aContainer._plainContainer = false;
+        return false;
     }
 
     // If it's a folder, it's not a plain container.
     let nodeType = aContainer.type;
-    return aContainer._plainContainer =
-           (nodeType != Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER &&
-            nodeType != Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT);
+    return nodeType != Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER &&
+           nodeType != Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
   },
 
   /**
@@ -828,7 +824,7 @@ PlacesTreeView.prototype = {
       for (let i = parentRow; i < this._rows.length; i++) {
         let child = this.nodeForTreeIndex(i);
         if (child.uri == aNode.uri) {
-          delete child._cellProperties;
+          this._cellProperties.delete(child);
           this._invalidateCellValue(child, this.COLUMN_TYPE_TITLE);
           break;
         }
@@ -858,9 +854,10 @@ PlacesTreeView.prototype = {
         (function (aStatus, aLivemark) {
           if (Components.isSuccessCode(aStatus)) {
             aNode._feedURI = aLivemark.feedURI;
-            if (aNode._cellProperties) {
-              aNode._cellProperties.push(this._getAtomFor("livemark"));
-            }
+            let properties = this._cellProperties.get(aNode, null);
+            if (properties)
+              properties.push(this._getAtomFor("livemark"));
+
             // The livemark attribute is set as a cell property on the title cell.
             this._invalidateCellValue(aNode, this.COLUMN_TYPE_TITLE);
           }
@@ -1084,8 +1081,16 @@ PlacesTreeView.prototype = {
       this._rootNode.containerOpen = false;
     }
 
-    this._result = val;
-    this._rootNode = val ? val.root : null;
+    if (val) {
+      this._result = val;
+      this._rootNode = this._result.root;
+      this._cellProperties = new WeakMap();
+    }
+    else if (this._result) {
+      delete this._result;
+      delete this._rootNode;
+      delete this._cellProperties;
+    }
 
     // If the tree is not set yet, setTree will call finishInit.
     if (this._tree && val)
@@ -1147,8 +1152,9 @@ PlacesTreeView.prototype = {
       aProperties.AppendElement(this._getAtomFor("cutting"));
     }
 
-    if (!node._cellProperties) {
-      let properties = new Array();
+    let properties = this._cellProperties.get(node, null);
+    if (!properties) {
+      properties = [];
       let itemId = node.itemId;
       let nodeType = node.type;
       if (PlacesUtils.containerTypes.indexOf(nodeType) != -1) {
@@ -1172,7 +1178,7 @@ PlacesTreeView.prototype = {
               (function (aStatus, aLivemark) {
                 if (Components.isSuccessCode(aStatus)) {
                   node._feedURI = aLivemark.feedURI;
-                  node._cellProperties.push(this._getAtomFor("livemark"));
+                  properties.push(this._getAtomFor("livemark"));
                   // The livemark attribute is set as a cell property on the title cell.
                   this._invalidateCellValue(node, this.COLUMN_TYPE_TITLE);
                 }
@@ -1200,10 +1206,11 @@ PlacesTreeView.prototype = {
         }
       }
 
-      node._cellProperties = properties;
+      this._cellProperties.set(node, properties);
     }
-    for (let i = 0; i < node._cellProperties.length; i++)
-      aProperties.AppendElement(node._cellProperties[i]);
+    for (let property of properties) {
+      aProperties.AppendElement(property);
+    }
   },
 
   getColumnProperties: function(aColumn, aProperties) { },
