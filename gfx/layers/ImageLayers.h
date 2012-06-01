@@ -725,8 +725,17 @@ public:
    * Make a copy of the YCbCr data into local storage.
    *
    * @param aData           Input image data.
+   * @param aYOffset        Pixels to skip between lines in the Y plane.
+   * @param aYSkip          Pixels to skip between pixels in the Y plane.
+   * @param aCbOffset       Pixels to skip between lines in the Cb plane.
+   * @param aCbSkip         Pixels to skip between pixels in the Cb plane.
+   * @param aCrOffset       Pixels to skip between lines in the Cr plane.
+   * @param aCrSkip         Pixels to skip between pixels in the Cr plane.
    */
-  void CopyData(const Data& aData);
+  void CopyData(const Data& aData,
+                PRInt32 aYOffset = 0, PRInt32 aYSkip = 0,
+                PRInt32 aCbOffset = 0, PRInt32 aCbSkip = 0,
+                PRInt32 aCrOffset = 0, PRInt32 aCrSkip = 0);
 
   /**
    * Return a buffer to store image data in.
