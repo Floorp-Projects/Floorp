@@ -31,8 +31,7 @@ using namespace mozilla;
 
 inline bool IsIgnorableCharacter(PRUnichar ch)
 {
-  return (ch == 0x200D || // ZERO-WIDTH JOINER
-          ch == 0xAD ||   // SOFT HYPHEN
+  return (ch == 0xAD ||   // SOFT HYPHEN
           ch == 0x1806);  // MONGOLIAN TODO SOFT HYPHEN
 }
 
@@ -353,7 +352,6 @@ IsDOMWordSeparator(PRUnichar ch)
        ch == 0x2002 ||  // EN SPACE
        ch == 0x2003 ||  // EM SPACE
        ch == 0x2009 ||  // THIN SPACE
-       ch == 0x200C ||  // ZERO WIDTH NON-JOINER
        ch == 0x3000))   // IDEOGRAPHIC SPACE
     return true;
 
@@ -767,11 +765,13 @@ WordSplitState::ClassifyCharacter(PRInt32 aIndex, bool aRecurse) const
     return CHAR_CLASS_SEPARATOR;
 
   // this will classify the character, we want to treat "ignorable" characters
-  // such as soft hyphens as word characters.
+  // such as soft hyphens, and also ZWJ and ZWNJ as word characters.
   nsIUGenCategory::nsUGenCategory
     charCategory = mozilla::unicode::GetGenCategory(mDOMWordText[aIndex]);
   if (charCategory == nsIUGenCategory::kLetter ||
-      IsIgnorableCharacter(mDOMWordText[aIndex]))
+      IsIgnorableCharacter(mDOMWordText[aIndex]) ||
+      mDOMWordText[aIndex] == 0x200C /* ZWNJ */ ||
+      mDOMWordText[aIndex] == 0x200D /* ZWJ */)
     return CHAR_CLASS_WORD;
 
   // If conditional punctuation is surrounded immediately on both sides by word
