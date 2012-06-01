@@ -176,6 +176,9 @@ include image-rect/reftest.list
 # image-region/
 include image-region/reftest.list
 
+# indic shaping with harfbuzz
+include indic-shaping/reftest.list
+
 # inline borders and padding
 include inline-borderpadding/reftest.list
 

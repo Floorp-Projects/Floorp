@@ -1,0 +1,22 @@
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) == devanagari-1a.html devanagari-1-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != devanagari-1b.html devanagari-1-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) == devanagari-2.html devanagari-2-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != devanagari-3a.html devanagari-3-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) == devanagari-3b.html devanagari-3-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != devanagari-4.html devanagari-4-notref.html
+
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) == gujarati-1a.html gujarati-1-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != gujarati-1b.html gujarati-1-ref.html
+fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) == gujarati-2.html gujarati-2-ref.html # bug 760379
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != gujarati-3a.html gujarati-3-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) == gujarati-3b.html gujarati-3-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != gujarati-4.html gujarati-4-notref.html
+
+fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) == bengali-1a.html bengali-1-ref.html # bug 760379
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != bengali-1b.html bengali-1-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != bengali-2a.html bengali-2-ref.html
+fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != bengali-2b.html bengali-2-ref.html # bug 760379
+fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) == bengali-3a.html bengali-3-ref.html # bug 760379
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != bengali-3b.html bengali-3-ref.html
+pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != bengali-3c.html bengali-3-ref.html
+fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) pref(gfx.font_rendering.harfbuzz.scripts,-1) HTTP(..) != bengali-3c.html bengali-3b.html # bug 760379

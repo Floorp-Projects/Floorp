@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Simple Devanagari shaping</title>
+<style>
+@font-face {
+  font-family: lohit-hi;
+  src: url(../fonts/ttf-indic/lohit_hi.ttf);
+}
+body {
+  font-family: lohit-hi;
+  font-size: 36px;
+  margin: 18px;
+}
+.w {
+  color: white;
+}
+</style>
+</head>
+<body>
+<!-- ska does not have the same width as saka, unless rendered with visible halant -->
+<div>
+!<span class="w">&#x0938;&#x094D;&#x200c;&#x0915;</span>!
+</div>
+</body>
+</html>
