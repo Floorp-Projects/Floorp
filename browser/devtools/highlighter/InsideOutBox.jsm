@@ -214,12 +214,13 @@ InsideOutBox.prototype =
     this.selectObjectBox(objectBox, forceOpen);
     if (makeBoxVisible) {
       this.openObjectBox(objectBox);
-      if (scrollIntoView) {
-        // We want to center the label of the element, not the whole tag
-        // (which includes all of its children, and is vertically huge).
-        LayoutHelpers.scrollIntoViewIfNeeded(objectBox.firstElementChild);
-      }
     }
+    if (scrollIntoView) {
+      // We want to center the label of the element, not the whole tag
+      // (which includes all of its children, and is vertically huge).
+      LayoutHelpers.scrollIntoViewIfNeeded(objectBox.firstElementChild);
+    }
+
     return objectBox;
   },
 
@@ -339,6 +340,141 @@ InsideOutBox.prototype =
         this.expandObjectBox(aObjectBox, true);
     }
   },
+
+  /**
+   * Returns the next object box in the tree for navigation purposes.
+   */
+  nextObjectBox: function IOBox_nextObjectBox(aBoxObject)
+  {
+    let candidate;
+    let boxObject = aBoxObject || this.selectedObjectBox;
+    if (!boxObject)
+      return this.rootObjectBox;
+
+    // If expanded, return the first child.
+    let isOpen = this.view.hasClass(boxObject, "open");
+    let childObjectBox = this.getChildObjectBox(boxObject);
+    if (isOpen && childObjectBox && childObjectBox.firstChild) {
+      candidate = childObjectBox.firstChild;
+    } else {
+      // Otherwise we get the next available sibling.
+      while (boxObject) {
+        if (boxObject.nextSibling) {
+          boxObject = boxObject.nextSibling;
+          break;
+        }
+        boxObject = this.getParentObjectBox(boxObject);
+      }
+      candidate = boxObject;
+    }
+
+    // If the node is not an element (comments or text nodes), we
+    // jump to the next line.
+    if (candidate &&
+        candidate.repObject.nodeType != candidate.repObject.ELEMENT_NODE) {
+      return this.nextObjectBox(candidate);
+    }
+
+    return candidate;
+  },
+
+  /**
+   * Returns the next object in the tree for navigation purposes.
+   */
+  nextObject: function IOBox_nextObject()
+  {
+    let next = this.nextObjectBox();
+    return next ? next.repObject : null;
+  },
+
+  /**
+   * Returns the object that is below the selection.
+   *
+   * @param aDistance Number of lines to jump.
+   */
+   farNextObject: function IOBox_farPreviousProject(aDistance)
+   {
+     let boxObject = this.selectedObjectBox;
+     while (aDistance-- > 0) {
+       let newBoxObject = this.nextObjectBox(boxObject);
+       if (!newBoxObject) {
+         break;
+       }
+       boxObject = newBoxObject;
+     }
+     return boxObject ? boxObject.repObject : null;
+   },
+
+  /**
+   * Returns the last visible child box of an object box.
+   */
+  lastVisible: function IOBox_lastVisibleChild(aNode)
+  {
+    if (!this.view.hasClass(aNode, "open"))
+      return aNode;
+
+    let childBox = this.getChildObjectBox(aNode);
+    if (!childBox || !childBox.lastChild)
+      return aNode;
+
+    return this.lastVisible(childBox.lastChild);
+  },
+
+  /**
+   * Returns the previous object box in the tree for navigation purposes.
+   */
+  previousObjectBox: function IOBox_previousObjectBox(aBoxObject)
+  {
+    let boxObject = aBoxObject || this.selectedObjectBox;
+    if (!boxObject)
+        return this.rootObjectBox;
+
+    let candidate;
+    let sibling = boxObject.previousSibling;
+    if (sibling) {
+      candidate = this.lastVisible(sibling);
+    } else {
+      candidate = this.getParentObjectBox(boxObject);
+    }
+
+    // If the node is not an element (comments or text nodes), we
+    // jump to the previous line.
+    if (candidate &&
+        candidate.repObject.nodeType != candidate.repObject.ELEMENT_NODE) {
+      return this.previousObjectBox(candidate);
+    }
+
+    return candidate;
+  },
+
+  /**
+   * Returns the previous object in the tree for navigation purposes.
+   */
+  previousObject: function IOBox_previousObject()
+  {
+    let boxObject = this.previousObjectBox();
+    return boxObject ? boxObject.repObject : null;
+  },
+
+  /**
+   * Returns the object that is above the selection.
+   *
+   * @param aDistance Number of lines to jump.
+   */
+   farPreviousObject: function IOBox_farPreviousProject(aDistance)
+   {
+     let boxObject = this.selectedObjectBox;
+     while (aDistance-- > 0) {
+       let newBoxObject = this.previousObjectBox(boxObject);
+       if (!newBoxObject) {
+         break;
+       }
+       boxObject = newBoxObject;
+       if (boxObject === this.rootObjectBox)
+         break;
+     }
+     return boxObject ? boxObject.repObject : null;
+   },
 
   /**
    * Open the ancestors of the given object box.

@@ -440,7 +440,7 @@ InspectorUI.prototype = {
   /**
    * Toggle the TreePanel.
    */
-  toggleHTMLPanel: function TP_toggleHTMLPanel()
+  toggleHTMLPanel: function IUI_toggleHTMLPanel()
   {
     if (this.treePanel.isOpen()) {
       this.treePanel.close();
@@ -849,7 +849,7 @@ InspectorUI.prototype = {
 
     this.breadcrumbs.update();
     this.chromeWin.Tilt.update(aNode);
-    this.treePanel.select(aNode, aScroll);
+    this.treePanel.select(aNode, aScroll, aFrom);
 
     this._notifySelected(aFrom);
   },
