@@ -871,9 +871,9 @@ Highlighter.prototype = {
       let win = aEvent.target.ownerDocument.defaultView;
       this.lock();
       win.focus();
+      aEvent.preventDefault();
+      aEvent.stopPropagation();
     }
-    aEvent.preventDefault();
-    aEvent.stopPropagation();
   },
 
   /**
@@ -884,10 +884,12 @@ Highlighter.prototype = {
    */
   handleMouseMove: function Highlighter_handleMouseMove(aEvent)
   {
-    let element = LayoutHelpers.getElementFromPoint(aEvent.target.ownerDocument,
-      aEvent.clientX, aEvent.clientY);
-    if (element && element != this.node) {
-      this.highlight(element);
+    if (aEvent.target.ownerDocument) {
+      let element = LayoutHelpers.getElementFromPoint(aEvent.target.ownerDocument,
+        aEvent.clientX, aEvent.clientY);
+      if (element && element != this.node) {
+        this.highlight(element);
+      }
     }
   },
 };

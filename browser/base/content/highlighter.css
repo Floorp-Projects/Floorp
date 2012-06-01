@@ -116,7 +116,7 @@ html|*#highlighter-nodeinfobar-tagname {
 
 #inspector-layoutview-container > iframe {
   /* header size */
-  height: 22px;
+  height: 28px;
 }
 
 #inspector-layoutview-container:not([disable-transitions]) > iframe {
@@ -125,6 +125,6 @@ html|*#highlighter-nodeinfobar-tagname {
 }
 
 #inspector-layoutview-container > iframe[open] {
-  /* header size + layout view size: 22px + 155px */
-  height: 177px;
+  /* header size + layout view size: 28px + 145px */
+  height: 173px;
 }

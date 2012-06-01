@@ -19,7 +19,7 @@ function testGen() {
   let scrollBox = outputNode.scrollBoxObject.element;
 
   for (let i = 0; i < 150; i++) {
-    hud.console.log("test message " + i);
+    content.console.log("test message " + i);
   }
 
   waitForSuccess({
@@ -46,7 +46,7 @@ function testGen() {
   isnot(topPosition, oldScrollTop, "scroll location updated (moved to top)");
 
   // add a message and make sure scroll doesn't change
-  hud.console.log("test message 150");
+  content.console.log("test message 150");
 
   waitForSuccess({
     name: "console.log message no. 151 displayed",
@@ -68,7 +68,7 @@ function testGen() {
 
   oldScrollTop = outputNode.scrollTop;
 
-  hud.console.log("test message 151");
+  content.console.log("test message 151");
 
   waitForSuccess({
     name: "console.log message no. 152 displayed",

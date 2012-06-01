@@ -52,7 +52,7 @@ function testWebDevLimits(aEvent) {
 function testWebDevLimits2() {
   // Fill the log with Web Developer errors.
   for (let i = 0; i < 11; i++) {
-    hud.console.log("test message " + i);
+    content.console.log("test message " + i);
   }
 
   waitForSuccess({
@@ -80,7 +80,7 @@ function testJsLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.exception", 10);
 
   hud.jsterm.clearOutput();
-  hud.console.log("testing JS limits");
+  content.console.log("testing JS limits");
 
   // Find the sentinel entry.
   waitForSuccess({
@@ -131,7 +131,7 @@ function testNetLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.network", 10);
 
   hud.jsterm.clearOutput();
-  hud.console.log("testing Net limits");
+  content.console.log("testing Net limits");
 
   // Find the sentinel entry.
   waitForSuccess({
@@ -176,7 +176,7 @@ function testCssLimits() {
   Services.prefs.setIntPref("devtools.hud.loglimit.cssparser", 10);
 
   hud.jsterm.clearOutput();
-  hud.console.log("testing CSS limits");
+  content.console.log("testing CSS limits");
 
   // Find the sentinel entry.
   waitForSuccess({

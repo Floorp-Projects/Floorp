@@ -866,14 +866,17 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Trims the query part of a url string, if necessary.
+   * Trims the id selector or query part of a url string, if necessary.
    *
    * @param string aUrl
    *        The script url.
    * @return string
    */
   _trimUrlQuery: function SS__trimUrlQuery(aUrl) {
-    let q = aUrl.indexOf('?');
+    let q = aUrl.indexOf('#');
+    if (q === -1) q = aUrl.indexOf('?');
+    if (q === -1) q = aUrl.indexOf('&');
+
     if (q > -1) {
       return aUrl.slice(0, q);
     }

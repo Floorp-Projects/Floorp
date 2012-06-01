@@ -189,6 +189,7 @@ browser.jar:
   skin/classic/browser/devtools/dropmarker.png              (devtools/dropmarker.png)
   skin/classic/browser/devtools/treepanel-button.png        (devtools/treepanel-button.png)
   skin/classic/browser/devtools/layout-background.png       (devtools/layout-background.png)
+  skin/classic/browser/devtools/layout-background-grid.png  (devtools/layout-background-grid.png)
   skin/classic/browser/devtools/layoutview.css              (devtools/layoutview.css)
   skin/classic/browser/devtools/layout-buttons.png          (devtools/layout-buttons.png)
   skin/classic/browser/devtools/debugger-pause.png          (devtools/debugger-pause.png)
