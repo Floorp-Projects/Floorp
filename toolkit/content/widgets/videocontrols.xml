@@ -815,13 +815,6 @@
                     this.startFade(this.volumeStack, isMouseOver);
                 },
 
-                forceControls: function () {
-                  if (document.mozFullScreenElement == this.video)
-                    this.videocontrols.classList.add("forceControls");
-                  else
-                    this.videocontrols.classList.remove("forceControls");
-                },
-
                 _controlsHiddenByTimeout : false,
                 _showControlsTimeout : 0,
                 SHOW_CONTROLS_TIMEOUT_MS: 500,
@@ -1404,7 +1397,6 @@
 
                     addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
                     addListener(this.video.ownerDocument, "mozfullscreenchange", this.setFullscreenButtonState);
-                    addListener(this.video.ownerDocument, "mozfullscreenchange", this.forceControls);
 
                     // Make the <video> element keyboard accessible.
                     this.video.setAttribute("tabindex", 0);
