@@ -997,14 +997,15 @@ bool
 CodeGeneratorX86Shared::visitRound(LRound *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    FloatRegister pointFive = ToFloatRegister(lir->temp());
+    FloatRegister temp = ToFloatRegister(lir->temp());
     FloatRegister scratch = ScratchFloatReg;
     Register output = ToRegister(lir->output());
 
     Label negative, end;
 
+    // Load 0.5 in the temp register.
     static const double PointFive = 0.5;
-    masm.loadStaticDouble(&PointFive, pointFive);
+    masm.loadStaticDouble(&PointFive, temp);
 
     // Branch to a slow path for negative inputs. Doesn't catch NaN or -0.
     masm.xorpd(scratch, scratch);
@@ -1015,10 +1016,12 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
     if (!bailoutIf(bailCond, lir->snapshot()))
         return false;
 
-    // Input is non-negative. Add 0.5 and truncate, rounding down.
-    masm.addsd(pointFive, input);
+    // Input is non-negative. Add 0.5 and truncate, rounding down. Note that we
+    // have to add the input to the temp register (which contains 0.5) because
+    // we're not allowed to modify the input register.
+    masm.addsd(input, temp);
 
-    masm.cvttsd2si(input, output);
+    masm.cvttsd2si(temp, output);
     masm.cmp32(output, Imm32(INT_MIN));
     if (!bailoutIf(Assembler::Equal, lir->snapshot()))
         return false;
@@ -1030,9 +1033,10 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
     masm.bind(&negative);
 
     if (AssemblerX86Shared::HasSSE41()) {
-        // Add 0.5 and round toward -Infinity.
-        masm.addsd(pointFive, input);
-        masm.roundsd(input, scratch, JSC::X86Assembler::RoundDown);
+        // Add 0.5 and round toward -Infinity. The result is stored in the temp
+        // register (currently contains 0.5).
+        masm.addsd(input, temp);
+        masm.roundsd(temp, scratch, JSC::X86Assembler::RoundDown);
 
         // Truncate.
         masm.cvttsd2si(scratch, output);
@@ -1047,21 +1051,21 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
             return false;
 
     } else {
-        masm.addsd(pointFive, input);
+        masm.addsd(input, temp);
 
         // Round toward -Infinity without the benefit of ROUNDSD.
         Label testZero;
         {
             // Truncate and round toward zero.
             // This is off-by-one for everything but integer-valued inputs.
-            masm.cvttsd2si(input, output);
+            masm.cvttsd2si(temp, output);
             masm.cmp32(output, Imm32(INT_MIN));
             if (!bailoutIf(Assembler::Equal, lir->snapshot()))
                 return false;
 
             // Test whether the truncated double was integer-valued.
             masm.cvtsi2sd(output, scratch);
-            masm.branchDouble(Assembler::DoubleEqualOrUnordered, input, scratch, &testZero);
+            masm.branchDouble(Assembler::DoubleEqualOrUnordered, temp, scratch, &testZero);
 
             // Input is not integer-valued, so we rounded off-by-one in the
             // wrong direction. Correct by subtraction.
