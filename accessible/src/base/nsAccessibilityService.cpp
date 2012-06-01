@@ -14,6 +14,7 @@
 #endif
 #include "FocusManager.h"
 #include "HTMLListAccessible.h"
+#include "HyperTextAccessibleWrap.h"
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
@@ -24,7 +25,6 @@
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessibleWrap.h"
 #include "nsHTMLTextAccessible.h"
-#include "nsHyperTextAccessibleWrap.h"
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
 #include "OuterDocAccessible.h"
@@ -205,7 +205,7 @@ nsAccessibilityService::CreateHyperTextAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHyperTextAccessibleWrap(aContent, GetDocAccessible(aPresShell));
+    new HyperTextAccessibleWrap(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -1052,7 +1052,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       return nsnull;
     }
 
-    newAcc = new nsHyperTextAccessibleWrap(content, docAcc);
+    newAcc = new HyperTextAccessibleWrap(content, docAcc);
     if (docAcc->BindToDocument(newAcc, aria::GetRoleMap(aNode)))
       return newAcc;
     return nsnull;
@@ -1227,7 +1227,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     // other accessibles can point to it, or so that it can hold a state, etc.
     if (isHTML) {
       // Interesting HTML container which may have selectable text and/or embedded objects
-      newAcc = new nsHyperTextAccessibleWrap(content, docAcc);
+      newAcc = new HyperTextAccessibleWrap(content, docAcc);
     }
     else {  // XUL, SVG, MathML etc.
       // Interesting generic non-HTML container
@@ -1657,7 +1657,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
     nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aContent);
     if (roleMapEntry && roleMapEntry->role != roles::NOTHING &&
         roleMapEntry->role != roles::LINK) {
-      Accessible* accessible = new nsHyperTextAccessibleWrap(aContent, aDoc);
+      Accessible* accessible = new HyperTextAccessibleWrap(aContent, aDoc);
       NS_IF_ADDREF(accessible);
       return accessible;
     }
@@ -1690,7 +1690,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
       tag == nsGkAtoms::h5 ||
       tag == nsGkAtoms::h6 ||
       tag == nsGkAtoms::q) {
-    Accessible* accessible = new nsHyperTextAccessibleWrap(aContent, aDoc);
+    Accessible* accessible = new HyperTextAccessibleWrap(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }

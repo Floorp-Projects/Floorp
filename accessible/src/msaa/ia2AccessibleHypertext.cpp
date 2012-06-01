@@ -9,7 +9,7 @@
 
 #include "AccessibleHypertext_i.c"
 
-#include "nsHyperTextAccessibleWrap.h"
+#include "HyperTextAccessibleWrap.h"
 
 // IUnknown
 
@@ -18,7 +18,7 @@ ia2AccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
   if (IID_IAccessibleHypertext == iid) {
-    nsHyperTextAccessibleWrap* hyperAcc = static_cast<nsHyperTextAccessibleWrap*>(this);
+    HyperTextAccessibleWrap* hyperAcc = static_cast<HyperTextAccessibleWrap*>(this);
     if (hyperAcc->IsTextRole()) {
       *ppv = static_cast<IAccessibleHypertext*>(this);
       (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
@@ -38,7 +38,7 @@ ia2AccessibleHypertext::get_nHyperlinks(long* aHyperlinkCount)
 __try {
   *aHyperlinkCount = 0;
 
-  nsHyperTextAccessibleWrap* hyperText = static_cast<nsHyperTextAccessibleWrap*>(this);
+  HyperTextAccessibleWrap* hyperText = static_cast<HyperTextAccessibleWrap*>(this);
   if (hyperText->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -56,7 +56,7 @@ ia2AccessibleHypertext::get_hyperlink(long aLinkIndex,
 __try {
   *aHyperlink = NULL;
 
-  nsHyperTextAccessibleWrap* hyperText = static_cast<nsHyperTextAccessibleWrap*>(this);
+  HyperTextAccessibleWrap* hyperText = static_cast<HyperTextAccessibleWrap*>(this);
   if (hyperText->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -84,7 +84,7 @@ ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex, long* aHyperlinkInde
 __try {
   *aHyperlinkIndex = 0;
 
-  nsHyperTextAccessibleWrap* hyperAcc = static_cast<nsHyperTextAccessibleWrap*>(this);
+  HyperTextAccessibleWrap* hyperAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (hyperAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
