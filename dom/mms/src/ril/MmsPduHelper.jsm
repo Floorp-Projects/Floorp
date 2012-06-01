@@ -1189,6 +1189,10 @@ const MMS_PDU_TYPES = (function () {
   add(MMS_PDU_TYPE_RETRIEVE_CONF, true, ["x-mms-message-type",
                                          "x-mms-mms-version",
                                          "content-type"]);
+  add(MMS_PDU_TYPE_NOTIFYRESP_IND, false, ["x-mms-message-type",
+                                           "x-mms-transaction-id",
+                                           "x-mms-mms-version",
+                                           "x-mms-status"]);
 
   return pdus;
 })();
