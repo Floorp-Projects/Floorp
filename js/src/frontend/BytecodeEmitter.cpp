@@ -5103,52 +5103,8 @@ EmitStatementList(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t 
 
     ParseNode *pnchild = pn->pn_head;
 
-    // Destructuring is handled in args body for functions with default
-    // arguments.
-    if (pn->pn_xflags & PNX_DESTRUCT && bce->sc->fun()->hasDefaults())
+    if (pn->pn_xflags & PNX_DESTRUCT)
         pnchild = pnchild->pn_next;
-    if (pn->pn_xflags & PNX_FUNCDEFS) {
-        /*
-         * This block contains top-level function definitions. To ensure
-         * that we emit the bytecode defining them before the rest of code
-         * in the block we use a separate pass over functions. During the
-         * main pass later the emitter will add JSOP_NOP with source notes
-         * for the function to preserve the original functions position
-         * when decompiling.
-         *
-         * Currently this is used only for functions, as compile-as-we go
-         * mode for scripts does not allow separate emitter passes.
-         */
-        JS_ASSERT(bce->sc->inFunction);
-        if (pn->pn_xflags & PNX_DESTRUCT && !bce->sc->fun()->hasDefaults()) {
-            /*
-             * Assign the destructuring arguments before defining any
-             * functions, see bug 419662.
-             */
-            JS_ASSERT(pnchild->isKind(PNK_SEMI));
-            JS_ASSERT(pnchild->pn_kid->isKind(PNK_VAR) || pnchild->pn_kid->isKind(PNK_CONST));
-            if (!EmitTree(cx, bce, pnchild))
-                return false;
-            pnchild = pnchild->pn_next;
-        }
-
-        for (ParseNode *pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
-            if (pn2->isKind(PNK_FUNCTION)) {
-                if (pn2->isOp(JSOP_NOP)) {
-                    if (!EmitTree(cx, bce, pn2))
-                        return false;
-                } else {
-                    /*
-                     * JSOP_DEFFUN in a top-level block with function
-                     * definitions appears, for example, when "if (true)"
-                     * is optimized away from "if (true) function x() {}".
-                     * See bug 428424.
-                     */
-                    JS_ASSERT(pn2->isOp(JSOP_DEFFUN));
-                }
-            }
-        }
-    }
 
     for (ParseNode *pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
         if (!EmitTree(cx, bce, pn2))
@@ -5869,12 +5825,7 @@ static bool
 EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_ARGSBODY));
-    ParseNode *pnlast = pn->last();
-    unsigned ndefaults = 0;
-    for (ParseNode *arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
-        if (arg->pn_expr)
-            ndefaults++;
-    }
+    uint16_t ndefaults = bce->sc->funbox->ndefaults;
     JSFunction *fun = bce->sc->fun();
     unsigned nformal = fun->nargs - fun->hasRest();
     EMIT_UINT16_IMM_OP(JSOP_ACTUALSFILLED, nformal - ndefaults);
@@ -5884,23 +5835,55 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
     jsbytecode *pc = bce->code(top + JUMP_OFFSET_LEN);
     JS_ASSERT(nformal >= ndefaults);
-    SET_JUMP_OFFSET(pc, nformal - ndefaults);
+    uint16_t defstart = nformal - ndefaults;
+    SET_JUMP_OFFSET(pc, defstart);
     pc += JUMP_OFFSET_LEN;
     SET_JUMP_OFFSET(pc, nformal - 1);
     pc += JUMP_OFFSET_LEN;
 
     // Fill body of switch, which sets defaults where needed.
-    for (ParseNode *arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
-        if (!arg->pn_expr)
+    unsigned i;
+    ParseNode *arg, *pnlast = pn->last();
+    for (arg = pn->pn_head, i = 0; arg != pnlast; arg = arg->pn_next, i++) {
+        if (!(arg->pn_dflags & PND_DEFAULT))
             continue;
         SET_JUMP_OFFSET(pc, bce->offset() - top);
         pc += JUMP_OFFSET_LEN;
-        if (!EmitTree(cx, bce, arg->pn_expr))
+        ParseNode *expr;
+        if (arg->isKind(PNK_NAME)) {
+            expr = arg->expr();
+        } else {
+            // The argument name is bound to a function. We still have to
+            // evaluate the default in case it has side effects.
+            JS_ASSERT(!arg->isDefn());
+            JS_ASSERT(arg->isKind(PNK_ASSIGN));
+            expr = arg->pn_right;
+        }
+        if (!EmitTree(cx, bce, expr))
             return false;
-        if (!BindNameToSlot(cx, bce, arg))
-            return false;
-        if (!EmitVarOp(cx, arg, JSOP_SETARG, bce))
-            return false;
+        if (arg->isKind(PNK_NAME)) {
+            if (!BindNameToSlot(cx, bce, arg))
+                return false;
+            if (!EmitVarOp(cx, arg, JSOP_SETARG, bce))
+                return false;
+        } else {
+            // Create a dummy JSOP_SETLOCAL for the decompiler. Jump over it
+            // with a JSOP_GOTO in real code.
+            if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
+                return false;
+            ptrdiff_t hop = bce->offset();
+            if (EmitJump(cx, bce, JSOP_GOTO, 0) < 0)
+                return false;
+
+            unsigned slot;
+            bce->sc->bindings.lookup(cx, arg->pn_left->atom(), &slot);
+
+            // It doesn't matter if this is correct with respect to aliasing or
+            // not. Only the decompiler is going to see it.
+            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, slot, bce))
+                return false;
+            SET_JUMP_OFFSET(bce->code(hop), bce->offset() - hop);
+        }
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
     }
@@ -5932,22 +5915,52 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       {
         JSFunction *fun = bce->sc->fun();
         ParseNode *pnlast = pn->last();
-        if (fun->hasDefaults()) {
-            if (pnlast->pn_xflags & PNX_DESTRUCT) {
-                JS_ASSERT(pnlast->pn_head->isKind(PNK_SEMI));
 
-                // Defaults must be able to access destructured arguments, so do
-                // that now.
-                if (!EmitTree(cx, bce, pnlast->pn_head))
-                    return false;
+        // Carefully emit everything in the right order:
+        // 1. Destructuring
+        // 2. Functions
+        // 3. Defaults
+        ParseNode *pnchild = pnlast->pn_head;
+        if (pnlast->pn_xflags & PNX_DESTRUCT) {
+            // Assign the destructuring arguments before defining any functions,
+            // see bug 419662.
+            JS_ASSERT(pnchild->isKind(PNK_SEMI));
+            JS_ASSERT(pnchild->pn_kid->isKind(PNK_VAR) || pnchild->pn_kid->isKind(PNK_CONST));
+            if (!EmitTree(cx, bce, pnchild))
+                return false;
+            pnchild = pnchild->pn_next;
+        }
+        if (pnlast->pn_xflags & PNX_FUNCDEFS) {
+            // This block contains top-level function definitions. To ensure
+            // that we emit the bytecode defining them before the rest of code
+            // in the block we use a separate pass over functions. During the
+            // main pass later the emitter will add JSOP_NOP with source notes
+            // for the function to preserve the original functions position
+            // when decompiling.
+             
+            // Currently this is used only for functions, as compile-as-we go
+            // mode for scripts does not allow separate emitter passes.
+            for (ParseNode *pn2 = pnchild; pn2; pn2 = pn2->pn_next) {
+                if (pn2->isKind(PNK_FUNCTION)) {
+                    if (pn2->isOp(JSOP_NOP)) {
+                        if (!EmitTree(cx, bce, pn2))
+                            return false;
+                    } else {
+                        //  JSOP_DEFFUN in a top-level block with function
+                        // definitions appears, for example, when "if (true)"
+                        // is optimized away from "if (true) function x() {}".
+                        // See bug 428424.
+                        JS_ASSERT(pn2->isOp(JSOP_DEFFUN));
+                    }
+                }
             }
-
+        }
+        if (fun->hasDefaults()) {
             ParseNode *rest = NULL;
             if (fun->hasRest()) {
                 JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
-
-                // Defaults and rest also need special handling. The rest
-                // parameter needs to be undefined while defaults are being
+                // Defaults with a rest parameter need special handling. The
+                // rest parameter needs to be undefined while defaults are being
                 // processed. To do this, we create the rest argument and let it
                 // sit on the stack while processing defaults. The rest
                 // parameter's slot is set to undefined for the course of
@@ -5984,7 +5997,6 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                     return JS_FALSE;
             }
             if (pn2->pn_next == pnlast && fun->hasRest() && !fun->hasDefaults()) {
-
                 // Fill rest parameter. We handled the case with defaults above.
                 JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
                 bce->switchToProlog();
