@@ -75,8 +75,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
         is(fileInputChange, 1, "change event shouldn't be dispatched on blur for file input element (2)");
       }
     }, false);
-
     input.click();
+    // blur the file input, we can't use blur() because of bug 760283
+    document.getElementById('input_text').focus();
+    setTimeout(testUserInput2, 0);
+  }
+
+  function testUserInput2() {
+    var input = document.getElementById('fileInput');
+    // remove it, otherwise cleanup() opens a native file picker!
+    input.parentNode.removeChild(input);
+    MockFilePicker.cleanup(); 
 
     //text, email, search, telephone, url & password input tests
     for (var i = 0; i < textInputTypes.length; ++i) {
@@ -134,9 +143,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     input.blur();
     is(NonTextInputChange[5], 1, "Change event shouldn't be dispatched for checkbox ---> text input type change");
 
-    MockFilePicker.cleanup;
     SimpleTest.finish();
-
   }
 
   addLoadEvent(testUserInput);
@@ -145,4 +152,3 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 </pre>
 </body>
 </html>
- 

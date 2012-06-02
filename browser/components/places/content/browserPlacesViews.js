@@ -68,16 +68,35 @@ PlacesViewBase.prototype = {
     if (val) {
       this._resultNode = val.root;
       this._rootElt._placesNode = this._resultNode;
-      this._resultNode._DOMElement = this._rootElt;
+      this._domNodes = new WeakMap();
+      this._domNodes.set(this._resultNode, this._rootElt);
 
       // This calls _rebuild through invalidateContainer.
       this._resultNode.containerOpen = true;
     }
     else {
       this._resultNode = null;
+      delete this._domNodes;
     }
 
     return val;
+  },
+
+  /**
+   * Gets the DOM node used for the given places node.
+   *
+   * @param aPlacesNode
+   *        a places result node.
+   * @throws if there is no DOM node set for aPlacesNode.
+   */
+  _getDOMNodeForPlacesNode:
+  function PVB__getDOMNodeForPlacesNode(aPlacesNode) {
+    let node = this._domNodes.get(aPlacesNode, null);
+    if (!node) {
+      throw new Error("No DOM node set for aPlacesNode.\nnode.type: " +
+                      aPlacesNode.type + ". node.parent: " + aPlacesNode);
+    }
+    return node;
   },
 
   get controller() this._controller,
@@ -194,7 +213,7 @@ PlacesViewBase.prototype = {
     if (!resultNode.containerOpen)
       return;
 
-    if (resultNode._feedURI) {
+    if (this.controller.hasCachedLivemarkInfo(resultNode)) {
       this._setEmptyPopupStatus(aPopup, false);
       aPopup._built = true;
       this._populateLivemarkPopup(aPopup);
@@ -254,7 +273,8 @@ PlacesViewBase.prototype = {
 
   _createMenuItemForPlacesNode:
   function PVB__createMenuItemForPlacesNode(aPlacesNode) {
-    delete aPlacesNode._DOMElement;
+    this._domNodes.delete(aPlacesNode);
+
     let element;
     let type = aPlacesNode.type;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
@@ -295,10 +315,9 @@ PlacesViewBase.prototype = {
 #endif
                 // Set an expando on the node, controller will use it to build
                 // its metadata.
-                aPlacesNode._feedURI = aLivemark.feedURI;
-                aPlacesNode._siteURI = aLivemark.siteURI;
+                this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
               }
-            }
+            }.bind(this)
           );
         }
 
@@ -316,7 +335,7 @@ PlacesViewBase.prototype = {
         element.appendChild(popup);
         element.className = "menu-iconic bookmark-item";
 
-        aPlacesNode._DOMElement = popup;
+        this._domNodes.set(aPlacesNode, popup);
       }
       else
         throw "Unexpected node";
@@ -329,8 +348,8 @@ PlacesViewBase.prototype = {
     }
 
     element._placesNode = aPlacesNode;
-    if (!aPlacesNode._DOMElement)
-      aPlacesNode._DOMElement = element;
+    if (!this._domNodes.has(aPlacesNode))
+      this._domNodes.set(aPlacesNode, element);
 
     return element;
   },
@@ -345,8 +364,9 @@ PlacesViewBase.prototype = {
 
   _setLivemarkSiteURIMenuItem:
   function PVB__setLivemarkSiteURIMenuItem(aPopup) {
-    let siteUrl = aPopup._placesNode._siteURI ? aPopup._placesNode._siteURI.spec
-                                              : null;
+    let livemarkInfo = this.controller.getCachedLivemarkInfo(aPopup._placesNode);
+    let siteUrl = livemarkInfo && livemarkInfo.siteURI ?
+                  livemarkInfo.siteURI.spec : null;
     if (!siteUrl && aPopup._siteURIMenuitem) {
       aPopup.removeChild(aPopup._siteURIMenuitem);
       aPopup._siteURIMenuitem = null;
@@ -412,23 +432,20 @@ PlacesViewBase.prototype = {
     }
   },
 
-  toggleCutNode: function PVB_toggleCutNode(aNode, aValue) {
-    let elt = aNode._DOMElement;
-    if (elt) {
-      // We may get the popup for menus, but we need the menu itself.
-      if (elt.localName == "menupopup")
-        elt = elt.parentNode;
-      if (aValue)
-        elt.setAttribute("cutting", "true");
-      else
-        elt.removeAttribute("cutting");
-    }
+  toggleCutNode: function PVB_toggleCutNode(aPlacesNode, aValue) {
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+
+    // We may get the popup for menus, but we need the menu itself.
+    if (elt.localName == "menupopup")
+      elt = elt.parentNode;
+    if (aValue)
+      elt.setAttribute("cutting", "true");
+    else
+      elt.removeAttribute("cutting");
   },
 
   nodeURIChanged: function PVB_nodeURIChanged(aPlacesNode, aURIString) {
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
     // Here we need the <menu>.
     if (elt.localName == "menupopup")
@@ -438,9 +455,7 @@ PlacesViewBase.prototype = {
   },
 
   nodeIconChanged: function PVB_nodeIconChanged(aPlacesNode) {
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
     // There's no UI representation for the root node, thus there's nothing to
     // be done when the icon changes.
@@ -460,9 +475,7 @@ PlacesViewBase.prototype = {
 
   nodeAnnotationChanged:
   function PVB_nodeAnnotationChanged(aPlacesNode, aAnno) {
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
     // All livemarks have a feedURI, so use it as our indicator of a livemark
     // being modified.
@@ -480,24 +493,20 @@ PlacesViewBase.prototype = {
 
       PlacesUtils.livemarks.getLivemark(
         { id: aPlacesNode.itemId },
-        (function (aStatus, aLivemark) {
+        function (aStatus, aLivemark) {
           if (Components.isSuccessCode(aStatus)) {
-            // Set an expando on the node, controller will use it to build
-            // its metadata.
-            aPlacesNode._feedURI = aLivemark.feedURI;
-            aPlacesNode._siteURI = aLivemark.siteURI;
+            // Controller will use this to build the meta data for the node.
+            this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
             this.invalidateContainer(aPlacesNode);
           }
-        }).bind(this)
+        }.bind(this)
       );
     }
   },
 
   nodeTitleChanged:
   function PVB_nodeTitleChanged(aPlacesNode, aNewTitle) {
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
     // There's no UI representation for the root node, thus there's
     // nothing to be done when the title changes.
@@ -521,13 +530,8 @@ PlacesViewBase.prototype = {
 
   nodeRemoved:
   function PVB_nodeRemoved(aParentPlacesNode, aPlacesNode, aIndex) {
-    let parentElt = aParentPlacesNode._DOMElement;
-    let elt = aPlacesNode._DOMElement;
-
-    if (!parentElt)
-      throw "aParentPlacesNode must have _DOMElement set";
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
+    let parentElt = this._getDOMNodeForPlacesNode(aPlacesNode);
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
     // Here we need the <menu>.
     if (elt.localName == "menupopup")
@@ -546,14 +550,9 @@ PlacesViewBase.prototype = {
 
   nodeReplaced:
   function PVB_nodeReplaced(aParentPlacesNode, aOldPlacesNode, aNewPlacesNode, aIndex) {
-    let parentElt = aParentPlacesNode._DOMElement;
-    if (!parentElt)
-      throw "aParentPlacesNode node must have _DOMElement set";
-
+    let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
     if (parentElt._built) {
-      let elt = aOldPlacesNode._DOMElement;
-      if (!elt)
-        throw "aOldPlacesNode must have _DOMElement set";
+      let elt = this._getDOMNodeForPlacesNode(aOldPlacesNode);
 
       // Here we need the <menu>.
       if (elt.localName == "menupopup")
@@ -571,9 +570,10 @@ PlacesViewBase.prototype = {
 
   nodeHistoryDetailsChanged:
   function PVB_nodeHistoryDetailsChanged(aPlacesNode, aTime, aCount) {
-    if (aPlacesNode.parent && aPlacesNode.parent._feedURI) {
+    if (aPlacesNode.parent &&
+        this.controller.hasCachedLivemarkInfo(aPlacesNode.parent)) {
       // Find the node in the parent.
-      let popup = aPlacesNode.parent._DOMElement;
+      let popup = this._getDOMNodeForPlacesNode(aPlacesNode.parent);
       for (let child = popup._startMarker.nextSibling;
            child != popup._endMarker;
            child = child.nextSibling) {
@@ -597,10 +597,7 @@ PlacesViewBase.prototype = {
 
   nodeInserted:
   function PVB_nodeInserted(aParentPlacesNode, aPlacesNode, aIndex) {
-    let parentElt = aParentPlacesNode._DOMElement;
-    if (!parentElt)
-      throw "aParentPlacesNode node must have _DOMElement set";
-
+    let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
     if (!parentElt._built)
       return;
 
@@ -619,9 +616,7 @@ PlacesViewBase.prototype = {
     // use this notification when the item in question is moved from one
     // folder to another.  Instead, it calls nodeRemoved and nodeInserted
     // for the two folders.  Thus, we can assume old-parent == new-parent.
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
     // Here we need the <menu>.
     if (elt.localName == "menupopup")
@@ -632,10 +627,7 @@ PlacesViewBase.prototype = {
     if (elt == this._rootElt)
       return;
 
-    let parentElt = aNewParentPlacesNode._DOMElement;
-    if (!parentElt)
-      throw "aNewParentPlacesNode node must have _DOMElement set";
-
+    let parentElt = this._getDOMNodeForPlacesNode(aNewParentPlacesNode);
     if (parentElt._built) {
       // Move the node.
       parentElt.removeChild(elt);
@@ -658,11 +650,11 @@ PlacesViewBase.prototype = {
         }
 
         PlacesUtils.livemarks.getLivemark({ id: aPlacesNode.itemId },
-          (function (aStatus, aLivemark) {
+          function (aStatus, aLivemark) {
             if (Components.isSuccessCode(aStatus)) {
-              let shouldInvalidate = !aPlacesNode._feedURI;
-              aPlacesNode._feedURI = aLivemark.feedURI;
-              aPlacesNode._siteURI = aLivemark.siteURI;
+              let shouldInvalidate =
+                !this.controller.hasCachedLivemarkInfo(aPlacesNode);
+              this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
               if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED) {
                 aLivemark.registerForUpdates(aPlacesNode, this);
                 // Prioritize the current livemark.
@@ -675,7 +667,7 @@ PlacesViewBase.prototype = {
                 aLivemark.unregisterForUpdates(aPlacesNode);
               }
             }
-          }).bind(this)
+          }.bind(this)
         );
       }
     }
@@ -689,7 +681,7 @@ PlacesViewBase.prototype = {
       this._setLivemarkStatusMenuItem(aPopup, Ci.mozILivemark.STATUS_LOADING);
 
     PlacesUtils.livemarks.getLivemark({ id: aPopup._placesNode.itemId },
-      (function (aStatus, aLivemark) {
+      function (aStatus, aLivemark) {
         let placesNode = aPopup._placesNode;
         if (!Components.isSuccessCode(aStatus) || !placesNode.containerOpen)
           return;
@@ -704,19 +696,16 @@ PlacesViewBase.prototype = {
           let child = children[i];
           this.nodeInserted(placesNode, child, i);
           if (child.accessCount)
-            child._DOMElement.setAttribute("visited", true);
+            this._getDOMNodeForPlacesNode(child).setAttribute("visited", true);
           else
-            child._DOMElement.removeAttribute("visited");
+            this._getDOMNodeForPlacesNode(child).removeAttribute("visited");
         }
-      }).bind(this)
+      }.bind(this)
     );
   },
 
   invalidateContainer: function PVB_invalidateContainer(aPlacesNode) {
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
-
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
     elt._built = false;
 
     // If the menupopup is open we should live-update it.
@@ -981,7 +970,8 @@ PlacesToolbar.prototype = {
 
   _insertNewItem:
   function PT__insertNewItem(aChild, aBefore) {
-    delete aChild._DOMElement;
+    this._domNodes.delete(aChild);
+
     let type = aChild.type;
     let button;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
@@ -1012,10 +1002,9 @@ PlacesToolbar.prototype = {
                 button.setAttribute("livemark", "true");
                 // Set an expando on the node, controller will use it to build
                 // its metadata.
-                aChild._feedURI = aLivemark.feedURI;
-                aChild._siteURI = aLivemark.siteURI;
+                this.controller.cacheLivemarkInfo(aChild, aLivemark);
               }
-            }
+            }.bind(this)
           );
         }
 
@@ -1027,7 +1016,7 @@ PlacesToolbar.prototype = {
         popup.setAttribute("context", "placesContext");
 #endif
 
-        aChild._DOMElement = popup;
+        this._domNodes.set(aChild, popup);
       }
       else if (PlacesUtils.nodeIsURI(aChild)) {
         button.setAttribute("scheme",
@@ -1036,8 +1025,8 @@ PlacesToolbar.prototype = {
     }
 
     button._placesNode = aChild;
-    if (!aChild._DOMElement)
-      aChild._DOMElement = button;
+    if (!this._domNodes.has(aChild))
+      this._domNodes.set(aChild, button);
 
     if (aBefore)
       this._rootElt.insertBefore(button, aBefore);
@@ -1180,10 +1169,7 @@ PlacesToolbar.prototype = {
 
   nodeInserted:
   function PT_nodeInserted(aParentPlacesNode, aPlacesNode, aIndex) {
-    let parentElt = aParentPlacesNode._DOMElement;
-    if (!parentElt) 
-      throw "aParentPlacesNode node must have _DOMElement set";
-
+    let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
     if (parentElt == this._rootElt) {
       let children = this._rootElt.childNodes;
       this._insertNewItem(aPlacesNode,
@@ -1197,13 +1183,8 @@ PlacesToolbar.prototype = {
 
   nodeRemoved:
   function PT_nodeRemoved(aParentPlacesNode, aPlacesNode, aIndex) {
-    let parentElt = aParentPlacesNode._DOMElement;
-    let elt = aPlacesNode._DOMElement;
-
-    if (!parentElt)
-      throw "aParentPlacesNode node must have _DOMElement set";
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
+    let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
     // Here we need the <menu>.
     if (elt.localName == "menupopup")
@@ -1222,17 +1203,12 @@ PlacesToolbar.prototype = {
   function PT_nodeMoved(aPlacesNode,
                         aOldParentPlacesNode, aOldIndex,
                         aNewParentPlacesNode, aNewIndex) {
-    let parentElt = aNewParentPlacesNode._DOMElement;
-    if (!parentElt) 
-      throw "aNewParentPlacesNode node must have _DOMElement set";
-
+    let parentElt = this._getDOMNodeForPlacesNode(aNewParentPlacesNode);
     if (parentElt == this._rootElt) {
       // Container is on the toolbar.
 
       // Move the element.
-      let elt = aPlacesNode._DOMElement;
-      if (!elt)
-        throw "aPlacesNode must have _DOMElement set";
+      let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
       // Here we need the <menu>.
       if (elt.localName == "menupopup")
@@ -1257,10 +1233,7 @@ PlacesToolbar.prototype = {
 
   nodeAnnotationChanged:
   function PT_nodeAnnotationChanged(aPlacesNode, aAnno) {
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
-
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
     if (elt == this._rootElt)
       return;
 
@@ -1277,15 +1250,14 @@ PlacesToolbar.prototype = {
 
         PlacesUtils.livemarks.getLivemark(
           { id: aPlacesNode.itemId },
-          (function (aStatus, aLivemark) {
+          function (aStatus, aLivemark) {
             if (Components.isSuccessCode(aStatus)) {
               // Set an expando on the node, controller will use it to build
               // its metadata.
-              aPlacesNode._feedURI = aLivemark.feedURI;
-              aPlacesNode._siteURI = aLivemark.siteURI;
+              this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
               this.invalidateContainer(aPlacesNode);
             }
-          }).bind(this)
+          }.bind(this)
         );
       }
     }
@@ -1296,9 +1268,7 @@ PlacesToolbar.prototype = {
   },
 
   nodeTitleChanged: function PT_nodeTitleChanged(aPlacesNode, aNewTitle) {
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
     // There's no UI representation for the root node, thus there's
     // nothing to be done when the title changes.
@@ -1320,14 +1290,9 @@ PlacesToolbar.prototype = {
   nodeReplaced:
   function PT_nodeReplaced(aParentPlacesNode,
                            aOldPlacesNode, aNewPlacesNode, aIndex) {
-    let parentElt = aParentPlacesNode._DOMElement;
-    if (!parentElt) 
-      throw "aParentPlacesNode node must have _DOMElement set";
-
+    let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
     if (parentElt == this._rootElt) {
-      let elt = aOldPlacesNode._DOMElement;
-      if (!elt)
-        throw "aOldPlacesNode must have _DOMElement set";
+      let elt = this._getDOMNodeForPlacesNode(aOldPlacesNode);
 
       // Here we need the <menu>.
       if (elt.localName == "menupopup")
@@ -1348,10 +1313,7 @@ PlacesToolbar.prototype = {
   },
 
   invalidateContainer: function PT_invalidateContainer(aPlacesNode) {
-    let elt = aPlacesNode._DOMElement;
-    if (!elt)
-      throw "aPlacesNode must have _DOMElement set";
-
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
     if (elt == this._rootElt) {
       // Container is the toolbar itself.
       this._rebuild();
@@ -1715,7 +1677,8 @@ PlacesToolbar.prototype = {
       // so we don't rebuild its contents whenever the popup is reopened.
       // Though, we want to always close feed containers so their expiration
       // status will be checked at next opening.
-      if (!PlacesUtils.nodeIsFolder(placesNode) || placesNode._feedURI) {
+      if (!PlacesUtils.nodeIsFolder(placesNode) ||
+          this.controller.hasCachedLivemarkInfo(placesNode)) {
         placesNode.containerOpen = false;
       }
     }
@@ -1821,7 +1784,8 @@ PlacesMenu.prototype = {
     // so we don't rebuild its contents whenever the popup is reopened.
     // Though, we want to always close feed containers so their expiration
     // status will be checked at next opening.
-    if (!PlacesUtils.nodeIsFolder(placesNode) || placesNode._feedURI)
+    if (!PlacesUtils.nodeIsFolder(placesNode) ||
+        this.controller.hasCachedLivemarkInfo(placesNode))
       placesNode.containerOpen = false;
 
     // The autoopened attribute is set for folders which have been

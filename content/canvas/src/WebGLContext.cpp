@@ -38,7 +38,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "nsIObserverService.h"
-
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -75,6 +75,7 @@ WebGLContext::WebGLContext()
     : mCanvasElement(nsnull),
       gl(nsnull)
 {
+    SetIsDOMBinding();
     mEnabledExtensions.SetLength(WebGLExtensionID_Max);
 
     mGeneration = 0;
@@ -162,6 +163,14 @@ WebGLContext::~WebGLContext()
     WebGLMemoryMultiReporterWrapper::RemoveWebGLContext(this);
     TerminateContextLossTimer();
     mContextRestorer = nsnull;
+}
+
+JSObject*
+WebGLContext::WrapObject(JSContext *cx, JSObject *scope,
+                         bool *triedToWrap)
+{
+    return dom::WebGLRenderingContextBinding::Wrap(cx, scope, this,
+                                                   triedToWrap);
 }
 
 void
