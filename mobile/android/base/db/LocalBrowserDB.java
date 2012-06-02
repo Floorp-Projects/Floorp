@@ -456,15 +456,14 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         // Restore deleted record if possible
         values.put(Bookmarks.IS_DELETED, 0);
 
-        Uri contentUri = mBookmarksUriWithProfile;
-        int updated = cr.update(contentUri,
+        int updated = cr.update(mBookmarksUriWithProfile,
                                 values,
                                 Bookmarks.URL + " = ? AND " +
                                 Bookmarks.PARENT + " = ?",
                                 new String[] { uri, String.valueOf(folderId) });
 
         if (updated == 0)
-            cr.insert(contentUri, values);
+            cr.insert(mBookmarksUriWithProfile, values);
 
         // Bump parent modified time using its ID.
         debug("Bumping parent modified time for addition to: " + folderId);
@@ -474,7 +473,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         ContentValues bumped = new ContentValues();
         bumped.put(Bookmarks.DATE_MODIFIED, now);
 
-        updated = cr.update(contentUri, bumped, where, args);
+        updated = cr.update(mBookmarksUriWithProfile, bumped, where, args);
         debug("Updated " + updated + " rows to new modified time.");
     }
 
