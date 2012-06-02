@@ -99,7 +99,7 @@
   -moz-margin-start: 1px;
   -moz-margin-end: 1px;
   margin-top: 2px;
-  border-bottom: 1px dotted #ccc;
+  border-bottom: 1px dotted #ddd;
   border-radius: 8px;
   -moz-transition: background 1s ease-in-out;
   background: #fff;
@@ -136,9 +136,34 @@
   color: #881090;
 }
 
-.property > .title > .non-enumerable.key,
-.property > .title > .proto.key {
-  color: #c48bc8;
+/**
+ * Non enumerable, configurable and writable variables and properties.
+ */
+
+.property[proto] > .title > .key,
+.variable[non-enumerable] > .title > .name,
+.property[non-enumerable] > .title > .key {
+  opacity: 0.5;
+}
+
+.variable[non-configurable] > .title > .name,
+.property[non-configurable] > .title > .key {
+  border-bottom: 1px dashed #99f;
+}
+
+.variable[non-writable] > .title > .name,
+.property[non-writable] > .title > .key {
+  border-bottom: 1px dashed #f99;
+}
+
+.variable[non-writable] > .title:after,
+.property[non-writable] > .title:after {
+  content: " ";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url("chrome://browser/skin/identity-icons-https.png") no-repeat;
+  opacity: 0.5;
 }
 
 /**

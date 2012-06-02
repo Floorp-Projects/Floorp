@@ -105,7 +105,9 @@ let DebuggerController = {
     if (!Prefs.remoteAutoConnect) {
       let prompt = new RemoteDebuggerPrompt();
       let result = prompt.show(!!this._remoteConnectionTimeout);
-      if (!result) {
+      // If the connection was not established before the user canceled the
+      // prompt, close the remote debugger.
+      if (!result && !DebuggerController.activeThread) {
         this.dispatchEvent("Debugger:Close");
         return false;
       }
@@ -582,7 +584,7 @@ StackFrames.prototype = {
             let variables = env.bindings.arguments;
             for each (let variable in variables) {
               let name = Object.getOwnPropertyNames(variable)[0];
-              let paramVar = scope.addVar(name);
+              let paramVar = scope.addVar(name, variable[name]);
               let paramVal = variable[name].value;
               paramVar.setGrip(paramVal);
               this._addExpander(paramVar, paramVal);
@@ -626,7 +628,7 @@ StackFrames.prototype = {
 
     // Add the sorted variables to the specified scope.
     for (let variable in variables) {
-      let paramVar = aScope.addVar(variable);
+      let paramVar = aScope.addVar(variable, variables[variable]);
       let paramVal = variables[variable].value;
       paramVar.setGrip(paramVal);
       this._addExpander(paramVar, paramVal);
