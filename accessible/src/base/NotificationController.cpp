@@ -299,6 +299,14 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   events.SwapElements(mEvents);
 
   PRUint32 eventCount = events.Length();
+#ifdef DEBUG
+  if (eventCount > 0 && logging::IsEnabled(logging::eEvents)) {
+    logging::MsgBegin("EVENTS", "events processing");
+    logging::Address("document", mDocument);
+    logging::MsgEnd();
+  }
+#endif
+
   for (PRUint32 idx = 0; idx < eventCount; idx++) {
     AccEvent* accEvent = events[idx];
     if (accEvent->mEventRule != AccEvent::eDoNotEmit) {

@@ -17,6 +17,7 @@ class DocAccessible;
 class nsIDocument;
 class nsINode;
 class nsIRequest;
+class nsISelection;
 class nsIWebProgress;
 
 namespace mozilla {
@@ -31,10 +32,17 @@ enum EModules {
   eDocCreate = 1 << 1,
   eDocDestroy = 1 << 2,
   eDocLifeCycle = eDocLoad | eDocCreate | eDocDestroy,
-  ePlatforms = 1 << 3,
-  eStack = 1 << 4,
-  eText = 1 << 5,
-  eTree = 1 << 6
+
+  eEvents = 1 << 3,
+  ePlatforms = 1 << 4,
+  eStack = 1 << 5,
+  eText = 1 << 6,
+  eTree = 1 << 7,
+
+  eDOMEvents = 1 << 8,
+  eFocus = 1 << 9,
+  eSelection = 1 << 10,
+  eNotifications = eDOMEvents | eSelection | eFocus
 };
 
 /**
@@ -77,6 +85,11 @@ void DocDestroy(const char* aMsg, nsIDocument* aDocumentNode,
 void OuterDocDestroy(OuterDocAccessible* OuterDoc);
 
 /**
+ * Log the selection change.
+ */
+void SelChange(nsISelection* aSelection, DocAccessible* aDocument);
+
+/**
  * Log the message ('title: text' format) on new line. Print the start and end
  * boundaries of the message body designated by '{' and '}' (2 spaces indent for
  * body).
@@ -85,7 +98,7 @@ void MsgBegin(const char* aTitle, const char* aMsgText, ...);
 void MsgEnd();
 
 /**
- * Log the entry into message body (4 spaces offset).
+ * Log the entry into message body (4 spaces indent).
  */
 void MsgEntry(const char* aEntryText, ...);
 
@@ -95,12 +108,12 @@ void MsgEntry(const char* aEntryText, ...);
 void Text(const char* aText);
 
 /**
- * Log the accesisble object address (4 spaces indent).
+ * Log the accessible object address as message entry (4 spaces indent).
  */
 void Address(const char* aDescr, Accessible* aAcc);
 
 /**
- * Log the DOM node info.
+ * Log the DOM node info as message entry.
  */
 void Node(const char* aDescr, nsINode* aNode);
 

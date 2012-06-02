@@ -15,6 +15,7 @@
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsISelectionPrivate.h"
 #include "nsTraceRefcntImpl.h"
 #include "nsIWebProgress.h"
 #include "prenv.h"
@@ -44,10 +45,17 @@ EnableLogging(const char* aModulesStr)
     { "doccreate", logging::eDocCreate },
     { "docdestroy", logging::eDocDestroy },
     { "doclifecycle", logging::eDocLifeCycle },
+
+    { "events", logging::eEvents },
     { "platforms", logging::ePlatforms },
     { "stack", logging::eStack },
     { "text", logging::eText },
-    { "tree", logging::eTree }
+    { "tree", logging::eTree },
+
+    { "DOMEvents", logging::eDOMEvents },
+    { "focus", logging::eFocus },
+    { "selection", logging::eSelection },
+    { "notifications", logging::eNotifications }
   };
 
   const char* token = aModulesStr;
@@ -454,6 +462,27 @@ logging::OuterDocDestroy(OuterDocAccessible* aOuterDoc)
 }
 
 void
+logging::SelChange(nsISelection* aSelection, DocAccessible* aDocument)
+{
+  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));
+
+  PRInt16 type = 0;
+  privSel->GetType(&type);
+
+  const char* strType = 0;
+  if (type == nsISelectionController::SELECTION_NORMAL)
+    strType = "normal";
+  else if (type == nsISelectionController::SELECTION_SPELLCHECK)
+    strType = "spellcheck";
+  else
+    strType = "unknown";
+
+  bool isIgnored = !aDocument || !aDocument->IsContentLoaded();
+  printf("\nSelection changed, selection type: %s, notification %s\n",
+         strType, (isIgnored ? "ignored" : "pending"));
+}
+
+void
 logging::MsgBegin(const char* aTitle, const char* aMsgText, ...)
 {
   printf("\nA11Y %s: ", aTitle);
@@ -494,13 +523,16 @@ logging::Text(const char* aText)
 void
 logging::Address(const char* aDescr, Accessible* aAcc)
 {
-  nsINode* node = aAcc->GetNode();
+  if (!aAcc->IsDoc()) {
+    printf("    %s accessible: %p, node: %p\n", aDescr,
+           static_cast<void*>(aAcc), static_cast<void*>(aAcc->GetNode()));
+  }
+
+  DocAccessible* doc = aAcc->Document();
   nsIDocument* docNode = aAcc->GetDocumentNode();
-  DocAccessible* doc = GetAccService()->GetDocAccessibleFromCache(docNode);
-  printf("    %s accessible: %p, node: %p\n", aDescr,
-         static_cast<void*>(aAcc), static_cast<void*>(node));
-  printf("    docacc for %s accessible: %p, node: %p\n", aDescr,
+  printf("    document: %p, node: %p\n",
          static_cast<void*>(doc), static_cast<void*>(docNode));
+
   printf("    ");
   LogDocURI(docNode);
   printf("\n");
