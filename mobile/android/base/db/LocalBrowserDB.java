@@ -445,11 +445,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         debug("Updated " + updated + " rows to new modified time.");
     }
 
-    public void addBookmark(ContentResolver cr, String title, String uri) {
-        long folderId = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
-        if (folderId < 0)
-            return;
-
+    private void addBookmarkItem(ContentResolver cr, String title, String uri, long folderId) {
         final long now = System.currentTimeMillis();
         ContentValues values = new ContentValues();
         values.put(Browser.BookmarkColumns.TITLE, title);
@@ -463,8 +459,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         Uri contentUri = mBookmarksUriWithProfile;
         int updated = cr.update(contentUri,
                                 values,
-                                Bookmarks.URL + " = ?",
-                                new String[] { uri });
+                                Bookmarks.URL + " = ? AND " +
+                                Bookmarks.PARENT + " = ?",
+                                new String[] { uri, String.valueOf(folderId) });
 
         if (updated == 0)
             cr.insert(contentUri, values);
@@ -479,6 +476,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         updated = cr.update(contentUri, bumped, where, args);
         debug("Updated " + updated + " rows to new modified time.");
+    }
+
+    public void addBookmark(ContentResolver cr, String title, String uri) {
+        long folderId = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
+        addBookmarkItem(cr, title, uri, folderId);
     }
 
     public void removeBookmark(ContentResolver cr, int id) {
