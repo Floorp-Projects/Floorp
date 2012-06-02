@@ -5702,7 +5702,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
         bool ret = JS_CallFunctionValue(cx, thisObject, funval, argc, args, &frval);
 
         if (!ret) {
-        	return NS_ERROR_FAILURE;
+          return NS_ERROR_FAILURE;
         }
       }
     }
