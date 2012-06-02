@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+    <LinearLayout android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_gravity="top|center_horizontal"
+                  android:orientation="vertical"
+                  android:background="@drawable/menu_popup_bg">
+
+        <Button android:id="@+id/reader_mode"
+                android:layout_width="fill_parent"
+                android:layout_height="44dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:background="@drawable/menu_item_bg"
+                android:gravity="center_vertical|left"
+                android:textColor="@color/menu_item_title"
+                android:textSize="16sp"
+                android:text="@string/reader_mode"/>
+
+        <Button android:id="@+id/reading_list"
+                android:layout_width="fill_parent"
+                android:layout_height="44dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:background="@drawable/menu_item_bg"
+                android:gravity="center_vertical|left"
+                android:textColor="@color/menu_item_title"
+                android:textSize="16sp"
+                android:text="@string/add_to_reading_list"/>
+
+    </LinearLayout>
+
+    <ImageView android:id="@+id/arrow"
+               android:layout_width="28dip"
+               android:layout_height="10dip"
+               android:layout_gravity="top|center_horizontal"
+               android:src="@drawable/menu_popup_arrow"
+               android:scaleType="fitXY"/>
+
+</FrameLayout>
+
