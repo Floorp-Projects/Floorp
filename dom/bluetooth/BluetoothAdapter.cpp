@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothAdapter.h"
-#include "BluetoothFirmware.h"
+#include "BluetoothUtils.h"
 
 #include "nsDOMClassInfo.h"
 #include "nsDOMEvent.h"
@@ -36,3 +36,29 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(BluetoothAdapter, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothAdapter, nsDOMEventTargetHelper)
 
+BluetoothAdapter::BluetoothAdapter(const nsCString& name) :
+  mName(name)
+{
+}
+
+BluetoothAdapter::~BluetoothAdapter()
+{
+  if (NS_FAILED(UnregisterBluetoothEventHandler(mName, this))) {
+    NS_WARNING("Failed to unregister object with observer!");
+  }
+}
+
+// static
+already_AddRefed<BluetoothAdapter>
+BluetoothAdapter::Create(const nsCString& name) {
+  nsRefPtr<BluetoothAdapter> adapter = new BluetoothAdapter(name);
+  if (NS_FAILED(RegisterBluetoothEventHandler(name, adapter))) {
+    NS_WARNING("Failed to register object with observer!");
+    return NULL;
+  }
+  return adapter.forget();
+}
+
+void BluetoothAdapter::Notify(const BluetoothEvent& aData) {
+  printf("Got an adapter message!\n");
+}
