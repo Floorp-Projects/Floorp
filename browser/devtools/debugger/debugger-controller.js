@@ -11,6 +11,7 @@ const Cu = Components.utils;
 
 const FRAME_STEP_CACHE_DURATION = 100; // ms
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
+const SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 1048576; // 1 MB in bytes
 
 Cu.import("resource:///modules/source-editor.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
@@ -1011,7 +1012,9 @@ SourceScripts.prototype = {
   _onShowScript: function SS__onShowScript(aScript, aOptions) {
     aOptions = aOptions || {};
 
-    this._setEditorMode(aScript.url, aScript.contentType);
+    if (aScript.text.length < SYNTAX_HIGHLIGHT_MAX_FILE_SIZE) {
+      this._setEditorMode(aScript.url, aScript.contentType);
+    }
 
     let editor = DebuggerView.editor;
     editor.setText(aScript.text);
