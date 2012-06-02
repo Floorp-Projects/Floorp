@@ -97,3 +97,6 @@ fails == underline-block-propagation-2-quirks.html underline-block-propagation-2
 != inline-baseline-almost-standards.html inline-baseline-almost-standards-ref.html
 != inline-baseline-quirks.html inline-baseline-quirks-ref.html
 == 676538-1.html 676538-1-ref.html
+== underline-button-1.html underline-button-1-ref.html
+fails-if(winWidget) == underline-button-2.html underline-button-2-ref.html # On windows, the underline spacing inside the button is different
+

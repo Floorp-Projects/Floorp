@@ -11,6 +11,7 @@ include protocol PDocumentRenderer;
 include protocol PContentPermissionRequest;
 include protocol PRenderFrame;
 include protocol POfflineCacheUpdate;
+include protocol PIndexedDB;
 
 include "TabMessageUtils.h";
 include "gfxMatrix.h";
@@ -45,6 +46,7 @@ rpc protocol PBrowser
     manages PContentPermissionRequest;
     manages PRenderFrame;
     manages POfflineCacheUpdate;
+    manages PIndexedDB;
 
 both:
     AsyncMessage(nsString aMessage, nsString aJSON);
@@ -199,6 +201,9 @@ parent:
      */
     POfflineCacheUpdate(URI manifestURI, URI documentURI, nsCString clientID,
                         bool stickDocument);
+
+    sync PIndexedDB(nsCString asciiOrigin)
+        returns (bool allowed);
 
     __delete__();
 

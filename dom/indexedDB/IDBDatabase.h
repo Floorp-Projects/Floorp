@@ -26,6 +26,9 @@ class IDBIndex;
 class IDBObjectStore;
 class IDBTransaction;
 class IndexedDatabaseManager;
+class IndexedDBDatabaseChild;
+class IndexedDBDatabaseParent;
+struct ObjectStoreInfoGuts;
 
 class IDBDatabase : public IDBWrapperCache,
                     public nsIIDBDatabase
@@ -103,6 +106,32 @@ public:
     return mFileManager;
   }
 
+  void
+  SetActor(IndexedDBDatabaseChild* aActorChild)
+  {
+    NS_ASSERTION(!aActorChild || !mActorChild, "Shouldn't have more than one!");
+    mActorChild = aActorChild;
+  }
+
+  void
+  SetActor(IndexedDBDatabaseParent* aActorParent)
+  {
+    NS_ASSERTION(!aActorParent || !mActorParent,
+                 "Shouldn't have more than one!");
+    mActorParent = aActorParent;
+  }
+
+  IndexedDBDatabaseChild*
+  GetActorChild() const
+  {
+    return mActorChild;
+  }
+
+  nsresult
+  CreateObjectStoreInternal(IDBTransaction* aTransaction,
+                            const ObjectStoreInfoGuts& aInfo,
+                            IDBObjectStore** _retval);
+
 private:
   IDBDatabase();
   ~IDBDatabase();
@@ -115,17 +144,20 @@ private:
   nsString mFilePath;
   nsCString mASCIIOrigin;
 
-  PRInt32 mInvalidated;
-  bool mRegistered;
-  bool mClosed;
-  bool mRunningVersionChange;
-
   nsRefPtr<FileManager> mFileManager;
 
   // Only touched on the main thread.
   NS_DECL_EVENT_HANDLER(abort)
   NS_DECL_EVENT_HANDLER(error)
   NS_DECL_EVENT_HANDLER(versionchange)
+
+  IndexedDBDatabaseChild* mActorChild;
+  IndexedDBDatabaseParent* mActorParent;
+
+  PRInt32 mInvalidated;
+  bool mRegistered;
+  bool mClosed;
+  bool mRunningVersionChange;
 };
 
 END_INDEXEDDB_NAMESPACE

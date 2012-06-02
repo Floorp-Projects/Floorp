@@ -11,10 +11,16 @@
 
 #include "mozIStorageStatement.h"
 
+namespace IPC {
+template <typename T> struct ParamTraits;
+} // namespace IPC
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 class Key
 {
+  friend struct IPC::ParamTraits<Key>;
+
 public:
   Key()
   {

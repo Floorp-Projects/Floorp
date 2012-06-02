@@ -1815,6 +1815,23 @@ ProcessReplaceRequest()
   LOG(("Begin moving sourceDir (" LOG_S ") to tmpDir (" LOG_S ")\n",
        sourceDir, tmpDir));
   int rv = rename_file(sourceDir, tmpDir, true);
+#ifdef XP_WIN
+  // On Windows, if Firefox is launched using the shortcut, it will hold a handle
+  // to its installation directory open, which might not get released in time.
+  // Therefore we wait a little bit here to see if the handle is released.
+  // If it's not released, we just fail to perform the replace request.
+  const int max_retries = 10;
+  int retries = 0;
+  while (rv == WRITE_ERROR && (retries++ < max_retries)) {
+    LOG(("PerformReplaceRequest: sourceDir rename attempt %d failed. " \
+         "File: " LOG_S ". Last error: %d, err: %d\n", retries,
+         sourceDir, GetLastError(), rv));
+
+    Sleep(100);
+
+    rv = rename_file(sourceDir, tmpDir, true);
+  }
+#endif
   if (rv) {
     LOG(("Moving sourceDir to tmpDir failed, err: %d\n", rv));
     return rv;
@@ -2428,7 +2445,10 @@ int NS_main(int argc, NS_tchar **argv)
       // we need to manually start the PostUpdate process from the
       // current user's session of this unelevated updater.exe the
       // current process is running as.
-      if (useService) {
+      // Note that we don't need to do this if we're just staging the
+      // update in the background, as the PostUpdate step runs when
+      // performing the replacing in that case.
+      if (useService && !sBackgroundUpdate) {
         bool updateStatusSucceeded = false;
         if (IsUpdateStatusSucceeded(updateStatusSucceeded) && 
             updateStatusSucceeded) {
@@ -2751,12 +2771,12 @@ int NS_main(int argc, NS_tchar **argv)
       // the service to a newer version in that case. If we are not running
       // through the service, then MOZ_USING_SERVICE will not exist.
       if (!usingService) {
-        if (!LaunchWinPostProcess(argv[callbackIndex], gSourcePath, false, NULL)) {
-          LOG(("NS_main: The post update process could not be launched.\n"));
-        }
-
         NS_tchar installDir[MAXPATHLEN];
         if (GetInstallationDir(installDir)) {
+          if (!LaunchWinPostProcess(installDir, gSourcePath, false, NULL)) {
+            LOG(("NS_main: The post update process could not be launched.\n"));
+          }
+
           StartServiceUpdate(installDir);
         }
       }

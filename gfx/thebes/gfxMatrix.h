@@ -65,6 +65,21 @@ public:
         return gfxMatrix(*this).Multiply(m);
     }
 
+    /* Returns true if the other matrix is fuzzy-equal to this matrix.
+     * Note that this isn't a cheap comparison!
+     */
+    bool operator==(const gfxMatrix& other) const
+    {
+      return FuzzyEqual(xx, other.xx) && FuzzyEqual(yx, other.yx) &&
+             FuzzyEqual(xy, other.xy) && FuzzyEqual(yy, other.yy) &&
+             FuzzyEqual(x0, other.x0) && FuzzyEqual(y0, other.y0);
+    }
+
+    bool operator!=(const gfxMatrix& other) const
+    {
+      return !(*this == other);
+    }
+
     // matrix operations
     /**
      * Resets this matrix to the identity matrix.

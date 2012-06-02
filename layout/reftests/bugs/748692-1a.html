@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<head>
+  <style>
+    body { color: red; }
+  </style>
+  <script>
+    document.styleSheets[0].insertRule("body { color: green; }", 1);
+    document.querySelector("style").className = "foo";
+  </script>
+</head>
+<body>
+  This text should be green
+</body>

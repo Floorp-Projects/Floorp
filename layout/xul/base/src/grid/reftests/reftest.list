@@ -13,6 +13,6 @@
 == not-full-row-leaf-align.xul not-full-basic-ref.xhtml
 == not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml
 == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
-fails-if(Android) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597
+fails-if(Android&&browserIsRemote) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597, 732569
 fails == scrollable-rows.xul scrollable-rows-ref.xhtml
 == sizing-2d.xul sizing-2d-ref.xul

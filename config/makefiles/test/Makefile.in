@@ -11,6 +11,7 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+USE_AUTOTARGETS_MK  = 1
 MAKEUTILS_UNIT_TEST = 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
