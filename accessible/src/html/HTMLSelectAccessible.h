@@ -7,9 +7,6 @@
 #define mozilla_a11y_HTMLSelectAccessible_h__
 
 #include "HTMLFormControlAccessible.h"
-#include "nsIDOMHTMLOptionsCollection.h"
-#include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMNode.h"
 
 class nsIMutableArray;
 
