@@ -1947,7 +1947,7 @@ GLContextProviderEGL::CreateForNativePixmapSurface(gfxASurface* aSurface)
 }
 
 GLContext *
-GLContextProviderEGL::GetGlobalContext()
+GLContextProviderEGL::GetGlobalContext(const ContextFlags)
 {
     static bool triedToCreateContext = false;
     if (!triedToCreateContext && !gGlobalContext) {

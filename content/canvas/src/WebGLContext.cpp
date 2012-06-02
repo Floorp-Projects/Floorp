@@ -379,6 +379,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 #endif
     bool forceEnabled =
         Preferences::GetBool("webgl.force-enabled", false);
+    bool useMesaLlvmPipe =
+        Preferences::GetBool("gfx.prefer-mesa-llvmpipe", false);
     bool disabled =
         Preferences::GetBool("webgl.disabled", false);
 
@@ -464,7 +466,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
 #ifdef XP_WIN
     // allow forcing GL and not EGL/ANGLE
-    if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
+    if (useMesaLlvmPipe || PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL")) {
         preferEGL = false;
         useANGLE = false;
         useOpenGL = true;
@@ -529,9 +531,14 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     // try the default provider, whatever that is
     if (!gl && useOpenGL) {
-        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), format);
+        GLContext::ContextFlags flag = useMesaLlvmPipe 
+                                       ? GLContext::ContextFlagsMesaLLVMPipe
+                                       : GLContext::ContextFlagsNone;
+        gl = gl::GLContextProvider::CreateOffscreen(gfxIntSize(width, height), 
+                                                               format, flag);
         if (gl && !InitAndValidateGL()) {
-            GenerateWarning("Error during OpenGL initialization");
+            GenerateWarning("Error during %s initialization", 
+                            useMesaLlvmPipe ? "Mesa LLVMpipe" : "OpenGL");
             return NS_ERROR_FAILURE;
         }
     }
