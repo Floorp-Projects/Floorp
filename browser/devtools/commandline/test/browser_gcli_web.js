@@ -3812,6 +3812,28 @@ exports.setup = function() {
 exports.shutdown = function() {
 };
 
+function forEachType(options, callback) {
+  types.getTypeNames().forEach(function(name) {
+    options.name = name;
+
+    // Provide some basic defaults to help selection/deferred/array work
+    if (name === 'selection') {
+      options.data = [ 'a', 'b' ];
+    }
+    else if (name === 'deferred') {
+      options.defer = function() {
+        return types.getType('string');
+      };
+    }
+    else if (name === 'array') {
+      options.subtype = 'string';
+    }
+
+    var type = types.getType(options);
+    callback(type);
+  });
+}
+
 exports.testDefault = function(options) {
   if (options.isNode) {
     test.log('Running under Node. ' +
@@ -3819,24 +3841,26 @@ exports.testDefault = function(options) {
     return;
   }
 
-  types.getTypeNames().forEach(function(name) {
-    if (name === 'selection') {
-      name = { name: 'selection', data: [ 'a', 'b' ] };
+  forEachType({}, function(type) {
+    var blank = type.getBlank().value;
+
+    // boolean and array types are exempt from needing undefined blank values
+    if (type.name === 'boolean') {
+      test.is(blank, false, 'blank boolean is false');
     }
-    if (name === 'deferred') {
-      name = {
-        name: 'deferred',
-        defer: function() { return types.getType('string'); }
-      };
+    else if (type.name === 'array') {
+      test.ok(Array.isArray(blank), 'blank array is array');
+      test.is(blank.length, 0, 'blank array is empty');
     }
-    if (name === 'array') {
-      name = { name: 'array', subtype: 'string' };
+    else {
+      test.is(blank, undefined, 'default defined for ' + type.name);
     }
-    var type = types.getType(name);
-    if (type.name !== 'boolean' && type.name !== 'array') {
-      test.ok(type.getBlank().value === undefined,
-              'default defined for ' + type.name);
-    }
+  });
+};
+
+exports.testNullDefault = function(options) {
+  forEachType({ defaultValue: null }, function(type) {
+    test.is(type.stringify(null), '', 'stringify(null) for ' + type.name);
   });
 };
 
