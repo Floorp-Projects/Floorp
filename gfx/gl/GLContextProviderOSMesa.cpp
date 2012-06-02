@@ -248,7 +248,7 @@ GLContextProviderOSMesa::CreateOffscreen(const gfxIntSize& aSize,
 }
 
 GLContext *
-GLContextProviderOSMesa::GetGlobalContext()
+GLContextProviderOSMesa::GetGlobalContext(const ContextFlags)
 {
     return nsnull;
 }

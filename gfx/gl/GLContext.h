@@ -554,7 +554,8 @@ public:
 
     enum ContextFlags {
         ContextFlagsNone = 0x0,
-        ContextFlagsGlobal = 0x1
+        ContextFlagsGlobal = 0x1,
+        ContextFlagsMesaLLVMPipe = 0x2
     };
 
     enum GLContextType {
