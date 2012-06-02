@@ -2543,6 +2543,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
     JSString *str;
     JSBool ok;
     JSBool foreach;
+    JSBool defaultsSwitch = false;
 #if JS_HAS_XML_SUPPORT
     JSBool inXML, quoteAttr;
 #else
@@ -4835,6 +4836,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 int32_t j, n, low, high;
                 TableEntry *table, *tmp;
 
+                if (defaultsSwitch) {
+                    defaultsSwitch = false;
+                    len = GET_JUMP_OFFSET(pc);
+                    if (jp->fun->hasRest()) {
+                        // Jump over rest parameter things.
+                        len += GetBytecodeLength(pc + len);
+                        LOCAL_ASSERT(pc[len] == JSOP_POP);
+                        len += GetBytecodeLength(pc + len);
+                    }
+                    todo = -2;
+                    break;
+                }
+
                 sn = js_GetSrcNote(jp->script, pc);
                 LOCAL_ASSERT(sn && SN_TYPE(sn) == SRC_SWITCH);
                 len = js_GetSrcNoteOffset(sn, 0);
@@ -5315,6 +5329,24 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                 break;
 #endif /* JS_HAS_XML_SUPPORT */
 
+              case JSOP_ACTUALSFILLED:
+                JS_ASSERT(!defaultsSwitch);
+                defaultsSwitch = true;
+                todo = -2;
+                break;
+
+              case JSOP_REST:
+                // Ignore bytecode related to handling rest.
+                pc += GetBytecodeLength(pc);
+                if (*pc == JSOP_UNDEFINED)
+                    pc += GetBytecodeLength(pc);
+                LOCAL_ASSERT(*pc == JSOP_SETALIASEDVAR || *pc == JSOP_SETARG);
+                pc += GetBytecodeLength(pc);
+                LOCAL_ASSERT(*pc == JSOP_POP);
+                len = GetBytecodeLength(pc);
+                todo = -2;
+                break;
+
               default:
                 todo = -2;
                 break;
@@ -5539,6 +5571,24 @@ js_DecompileFunction(JSPrinter *jp)
         uint16_t defstart = 0;
         unsigned nformal = fun->nargs - fun->hasRest();
 
+        if (fun->hasDefaults()) {
+            jsbytecode *defpc;
+            for (defpc = pc; defpc < endpc; defpc += GetBytecodeLength(defpc)) {
+                if (*defpc == JSOP_ACTUALSFILLED)
+                    break;
+            }
+            LOCAL_ASSERT_RV(defpc < endpc, JS_FALSE);
+            defpc += GetBytecodeLength(defpc);
+            LOCAL_ASSERT_RV(*defpc == JSOP_TABLESWITCH, JS_FALSE);
+            defbegin = defpc;
+            deflen = GET_JUMP_OFFSET(defpc);
+            defpc += JUMP_OFFSET_LEN;
+            defstart = GET_JUMP_OFFSET(defpc);
+            defpc += JUMP_OFFSET_LEN;
+            defpc += JUMP_OFFSET_LEN; // Skip high
+            deftable = defpc;
+        }
+
         for (unsigned i = 0; i < fun->nargs; i++) {
             if (i > 0)
                 js_puts(jp, ", ");
@@ -5555,7 +5605,6 @@ js_DecompileFunction(JSPrinter *jp)
                 ptrdiff_t todo;
                 const char *lval;
 
-                JS_ASSERT(deflen == 0);
                 LOCAL_ASSERT(*pc == JSOP_GETARG || *pc == JSOP_GETALIASEDVAR);
                 pc += js_CodeSpec[*pc].length;
                 LOCAL_ASSERT(*pc == JSOP_DUP);
@@ -5581,37 +5630,6 @@ js_DecompileFunction(JSPrinter *jp)
             }
 
 #endif
-
-            // Compute default parameters.
-            if ((*pc == JSOP_REST && pc[1] == JSOP_UNDEFINED) ||
-                *pc == JSOP_ACTUALSFILLED) {
-#define SKIP(pc, op) LOCAL_ASSERT(*pc == op); pc += js_CodeSpec[op].length;
-                JS_ASSERT(fun->hasDefaults());
-                JS_ASSERT(deflen == 0);
-                if (fun->hasRest()) {
-                    SKIP(pc, JSOP_REST);
-                    SKIP(pc, JSOP_UNDEFINED);
-                    JS_ASSERT(*pc == JSOP_SETARG || *pc == JSOP_SETALIASEDVAR);
-                    pc += js_CodeSpec[*pc].length;
-                    SKIP(pc, JSOP_POP);
-                }
-                SKIP(pc, JSOP_ACTUALSFILLED);
-                JS_ASSERT(*pc == JSOP_TABLESWITCH);
-                defbegin = pc;
-                deflen = GET_JUMP_OFFSET(pc);
-                pc += JUMP_OFFSET_LEN;
-                defstart = GET_JUMP_OFFSET(pc);
-                pc += JUMP_OFFSET_LEN;
-                pc += JUMP_OFFSET_LEN; // Skip high
-                deftable = pc;
-                pc = defbegin + deflen;
-                if (fun->hasRest()) {
-                    SKIP(pc, JSOP_SETARG);
-                    SKIP(pc, JSOP_POP);
-                }
-#undef SKIP
-            }
-
 #undef LOCAL_ASSERT
 
             if (fun->hasDefaults() && deflen && i >= defstart && !isRest) {

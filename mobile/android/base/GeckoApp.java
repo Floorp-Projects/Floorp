@@ -788,6 +788,7 @@ abstract public class GeckoApp
         tab.setContentType(contentType);
         tab.clearFavicon();
         tab.updateIdentityData(null);
+        tab.setReaderEnabled(false);
         tab.removeTransientDoorHangers();
         tab.setAllowZoom(true);
         tab.setDefaultZoom(0);
@@ -823,6 +824,21 @@ abstract public class GeckoApp
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab))
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
+            }
+        });
+    }
+
+    void handleReaderEnabled(final int tabId) {
+        final Tab tab = Tabs.getInstance().getTab(tabId);
+        if (tab == null)
+            return;
+
+        tab.setReaderEnabled(true);
+
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                if (Tabs.getInstance().isSelectedTab(tab))
+                    mBrowserToolbar.setReaderVisibility(tab.getReaderEnabled());
             }
         });
     }
@@ -1005,6 +1021,9 @@ abstract public class GeckoApp
                 final JSONObject identity = message.getJSONObject("identity");
                 Log.i(LOGTAG, "Security Mode - " + identity.getString("mode"));
                 handleSecurityChange(tabId, identity);
+            } else if (event.equals("Content:ReaderEnabled")) {
+                final int tabId = message.getInt("tabID");
+                handleReaderEnabled(tabId);
             } else if (event.equals("Content:StateChange")) {
                 final int tabId = message.getInt("tabID");
                 final String uri = message.getString("uri");
@@ -1363,12 +1382,14 @@ abstract public class GeckoApp
 
         tab.setState("about:home".equals(uri) ? Tab.STATE_SUCCESS : Tab.STATE_LOADING);
         tab.updateIdentityData(null);
+        tab.setReaderEnabled(false);
         if (Tabs.getInstance().isSelectedTab(tab))
             getLayerController().getView().getRenderer().resetCheckerboard();
         mMainHandler.post(new Runnable() {
             public void run() {
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     mBrowserToolbar.setSecurityMode(tab.getSecurityMode());
+                    mBrowserToolbar.setReaderVisibility(tab.getReaderEnabled());
                     mBrowserToolbar.updateBackButton(tab.canDoBack());
                     mBrowserToolbar.updateForwardButton(tab.canDoForward());
                     invalidateOptionsMenu();
@@ -1909,6 +1930,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("log", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Content:ReaderEnabled", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Content:PageShow", GeckoApp.mAppContext);
@@ -2260,6 +2282,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("log", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:LocationChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:SecurityChange", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Content:ReaderEnabled", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:StateChange", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:LoadError", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Content:PageShow", GeckoApp.mAppContext);
