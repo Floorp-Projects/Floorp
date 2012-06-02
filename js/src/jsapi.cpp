@@ -4802,6 +4802,14 @@ JS_DefineFunctionById(JSContext *cx, JSObject *obj_, jsid id_, JSNative call,
     return js_DefineFunction(cx, obj, id, call, nargs, attrs);
 }
 
+extern JS_PUBLIC_API(JSBool)
+JS_CallNonGenericMethodOnProxy(JSContext *cx, unsigned argc, jsval *vp, JSNative native,
+                               JSClass *clasp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return HandleNonGenericMethodClassMismatch(cx, args, native, Valueify(clasp));
+}
+
 struct AutoLastFrameCheck {
     AutoLastFrameCheck(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : cx(cx) {
