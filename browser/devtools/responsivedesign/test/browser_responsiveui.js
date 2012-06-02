@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  let instance;
+  let instance, widthBeforeClose, heightBeforeClose;
 
   waitForExplicitFinish();
 
@@ -97,6 +97,29 @@ function test() {
     let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
     is(width, initialHeight, "Label updated (width).");
     is(height, initialWidth, "Label updated (height).");
+
+    widthBeforeClose = content.innerWidth;
+    heightBeforeClose = content.innerHeight;
+
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+
+    executeSoon(restart);
+  }
+
+  function restart() {
+    synthesizeKeyFromKeyTag("key_responsiveUI");
+    executeSoon(onUIOpen2);
+  }
+
+  function onUIOpen2() {
+    let container = gBrowser.getBrowserContainer();
+    is(container.getAttribute("responsivemode"), "true", "In responsive mode.");
+
+    // Menus are correctly updated?
+    is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"), "true", "menus checked");
+
+    is(content.innerWidth, widthBeforeClose, "width restored.");
+    is(content.innerHeight, heightBeforeClose, "height restored.");
 
     EventUtils.synthesizeKey("VK_ESCAPE", {});
     executeSoon(finishUp);
