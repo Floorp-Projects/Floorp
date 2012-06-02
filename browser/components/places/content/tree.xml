@@ -98,17 +98,18 @@
               callback = new Function("aContainer", onOpenFlatContainer);
           }
 
-          let treeView = new PlacesTreeView(this.flatList, callback);
+          if (!this._controller) {
+            this._controller = new PlacesController(this);
+            this.controllers.appendController(this._controller);
+          }
+
+          let treeView = new PlacesTreeView(this.flatList, callback, this._controller);
 
           // Observer removal is done within the view itself.  When the tree
           // goes away, treeboxobject calls view.setTree(null), which then
           // calls removeObserver.
           result.addObserver(treeView, false);
           this.view = treeView;
-          if (!this._controller) {
-            this._controller = new PlacesController(this);
-            this.controllers.appendController(this._controller);
-          }
           this._cachedInsertionPoint = undefined;
         ]]></body>
       </method>
