@@ -32,31 +32,36 @@ ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp);
  * NonGenericMethodGuard performs this checking. Canonical usage is:
  *
  *   CallArgs args = ...
- *   bool ok;
- *   JSObject *thisObj = NonGenericMethodGuard(cx, args, clasp, &ok);
+ *   JSObject *thisObj;
+ *   if (!NonGenericMethodGuard(cx, args, clasp, &thisObj))
+ *     return false;
  *   if (!thisObj)
- *     return ok;
+ *     return true;
  *
- * Specifically: if obj is a proxy, NonGenericMethodGuard will call the
- * object's ProxyHandler's nativeCall hook (which may recursively call
- * args.callee in args.thisv's compartment). Thus, there are three possible
- * post-conditions:
+ * Specifically: if args.thisv is a proxy, NonGenericMethodGuard will call its
+ * ProxyHandler's nativeCall hook (which may recursively call args.callee in
+ * args.thisv's compartment). These are the possible post-conditions:
  *
- *   1. thisv is an object of the given clasp: the caller may proceed;
+ *   1. NonGenericMethodGuard returned false because it encountered an error:
+ *      args.thisv wasn't an object, was an object of the wrong class, was a
+ *      proxy to an object of the wrong class, or was a proxy to an object of
+ *      the right class but the recursive call to args.callee failed. This case
+ *      should be handled like any other failure: propagate it, or catch it and
+ *      continue.
+ *   2. NonGenericMethodGuard returned true, and thisObj was nulled out.  In
+ *      this case args.thisv was a proxy to an object with the desired class,
+ *      and recursive invocation of args.callee succeeded. This completes the
+ *      invocation of args.callee, so return true.
+ *   3. NonGenericMethodGuard returned true, and thisObj was set to a non-null
+ *      pointer. In this case args.thisv was exactly an object of the desired
+ *      class, and not a proxy to one. Finish up the call using thisObj as the
+ *      this object provided to the call, which will have clasp as its class.
  *
- *   2. there was an error: the caller must return 'false';
- *
- *   3. thisv wrapped an object of the given clasp and the native was reentered
- *      and completed succesfully: the caller must return 'true'.
- *
- * Case 1 is indicated by a non-NULL return value; case 2 by a NULL return
- * value with *ok == false; and case 3 by a NULL return value with *ok == true.
- *
- * NB: since this guard may reenter the native, the guard must be placed before
- * any effectful operations are performed.
+ * Be careful! This guard may reenter the native, so the guard must be placed
+ * before any effectful operations are performed.
  */
-inline JSObject *
-NonGenericMethodGuard(JSContext *cx, CallArgs args, Native native, Class *clasp, bool *ok);
+inline bool
+NonGenericMethodGuard(JSContext *cx, CallArgs args, Native native, Class *clasp, JSObject **thisObj);
 
 /*
  * NonGenericMethodGuard tests args.thisv's class using 'clasp'. If more than
