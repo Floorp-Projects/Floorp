@@ -162,9 +162,6 @@ exports.shutdown = function() {
  * 'string' the most basic string type that doesn't need to convert
  */
 function StringType(typeSpec) {
-  if (Object.keys(typeSpec).length > 0) {
-    throw new Error('StringType can not be customized');
-  }
 }
 
 StringType.prototype = Object.create(Type.prototype);
@@ -311,9 +308,6 @@ exports.NumberType = NumberType;
  * true/false values
  */
 function BooleanType(typeSpec) {
-  if (Object.keys(typeSpec).length > 0) {
-    throw new Error('BooleanType can not be customized');
-  }
 }
 
 BooleanType.prototype = Object.create(SelectionType.prototype);
@@ -334,6 +328,9 @@ BooleanType.prototype.parse = function(arg) {
 };
 
 BooleanType.prototype.stringify = function(value) {
+  if (value == null) {
+    return '';
+  }
   return '' + value;
 };
 
@@ -404,9 +401,6 @@ exports.DeferredType = DeferredType;
  * It should not be used anywhere else.
  */
 function BlankType(typeSpec) {
-  if (Object.keys(typeSpec).length > 0) {
-    throw new Error('BlankType can not be customized');
-  }
 }
 
 BlankType.prototype = Object.create(Type.prototype);
@@ -443,6 +437,9 @@ function ArrayType(typeSpec) {
 ArrayType.prototype = Object.create(Type.prototype);
 
 ArrayType.prototype.stringify = function(values) {
+  if (values == null) {
+    return '';
+  }
   // BUG 664204: Check for strings with spaces and add quotes
   return values.join(' ');
 };
@@ -1731,6 +1728,9 @@ SelectionType.prototype = Object.create(Type.prototype);
 SelectionType.prototype.maxPredictions = 10;
 
 SelectionType.prototype.stringify = function(value) {
+  if (value == null) {
+    return '';
+  }
   if (this.stringifyProperty != null) {
     return value[this.stringifyProperty];
   }
@@ -3219,9 +3219,6 @@ exports.unsetGlobalObject = function() {
  * 'javascript' handles scripted input
  */
 function JavascriptType(typeSpec) {
-  if (Object.keys(typeSpec).length > 0) {
-    throw new Error('JavascriptType can not be customized');
-  }
 }
 
 JavascriptType.prototype = Object.create(Type.prototype);
@@ -3773,9 +3770,6 @@ exports.getDocument = function() {
  * A CSS expression that refers to a single node
  */
 function NodeType(typeSpec) {
-  if (Object.keys(typeSpec).length > 0) {
-    throw new Error('NodeType can not be customized');
-  }
 }
 
 NodeType.prototype = Object.create(Type.prototype);
@@ -4210,10 +4204,6 @@ var lastSetting = null;
  * A type for selecting a known setting
  */
 function SettingType(typeSpec) {
-  if (Object.keys(typeSpec).length > 0) {
-    throw new Error('SettingType can not be customized');
-  }
-
   settings.onChange.add(function(ev) {
     this.clearCache();
   }, this);
@@ -4249,9 +4239,6 @@ SettingType.prototype.name = 'setting';
  * A type for entering the value of a known setting
  */
 function SettingValueType(typeSpec) {
-  if (Object.keys(typeSpec).length > 0) {
-    throw new Error('SettingType can not be customized');
-  }
 }
 
 SettingValueType.prototype = Object.create(DeferredType.prototype);
