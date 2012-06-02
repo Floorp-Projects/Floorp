@@ -406,6 +406,7 @@ RES_DRAWABLE_BASE = \
   res/drawable/site_security_identified.png \
   res/drawable/site_security_verified.png \
   res/drawable/urlbar_stop.png \
+  res/drawable/reading_list.png \
   res/drawable/validation_arrow.png \
   res/drawable/validation_arrow_inverted.png \
   res/drawable/validation_bg.9.png \
@@ -472,6 +473,7 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/site_security_identified.png \
   res/drawable-hdpi/site_security_verified.png \
   res/drawable-hdpi/urlbar_stop.png \
+  res/drawable-hdpi/reading_list.png \
   res/drawable-hdpi/validation_arrow.png \
   res/drawable-hdpi/validation_arrow_inverted.png \
   res/drawable-hdpi/validation_bg.9.png \
@@ -571,6 +573,7 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/find_next.png \
   res/drawable-xhdpi-v11/find_prev.png \
   res/drawable-xhdpi-v11/urlbar_stop.png \
+  res/drawable-xhdpi-v11/reading_list.png \
   res/drawable-xhdpi-v11/larry_blue.png \
   res/drawable-xhdpi-v11/larry_green.png \
   res/drawable-xhdpi-v11/menu.png \

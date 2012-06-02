@@ -111,6 +111,8 @@
   <string name="site_settings_clear">&site_settings_clear;</string>
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>
 
+  <string name="reading_list_removed">&reading_list_removed;</string>
+
   <string name="contextmenu_open_new_tab">&contextmenu_open_new_tab;</string>
   <string name="contextmenu_remove_history">&contextmenu_remove_history;</string>
   <string name="contextmenu_remove_bookmark">&contextmenu_remove_bookmark;</string>
