@@ -631,7 +631,9 @@ DocAccessible::Shutdown()
   RemoveEventListeners();
 
   // Mark the document as shutdown before AT is notified about the document
-  // removal from its container (valid for root documents on ATK).
+  // removal from its container (valid for root documents on ATK and due to
+  // some reason for MSAA, refer to bug 757392 for details).
+  mFlags |= eIsDefunct;
   nsCOMPtr<nsIDocument> kungFuDeathGripDoc = mDocument;
   mDocument = nsnull;
 
