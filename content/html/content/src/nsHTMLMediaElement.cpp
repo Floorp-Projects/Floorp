@@ -454,7 +454,7 @@ nsHTMLMediaElement::GetSrc(JSContext* aCtx, jsval *aParams)
 NS_IMETHODIMP
 nsHTMLMediaElement::SetSrc(JSContext* aCtx, const jsval & aParams)
 {
-  if (aParams.isObject()) { // not JSVAL_IS_OBJECT() because a null object is still an object
+  if (aParams.isObject()) {
     nsCOMPtr<nsIDOMMediaStream> stream;
     stream = do_QueryInterface(nsContentUtils::XPConnect()->
         GetNativeOfWrapper(aCtx, JSVAL_TO_OBJECT(aParams)));
