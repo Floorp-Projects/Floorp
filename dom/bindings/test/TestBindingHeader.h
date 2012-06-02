@@ -55,6 +55,16 @@ public:
   virtual nsISupports* GetParentObject();
 
   // And now our actual WebIDL API
+  // Constructors
+  static
+  already_AddRefed<TestInterface> Constructor(nsISupports*, ErrorResult&);
+  static
+  already_AddRefed<TestInterface> Constructor(nsISupports*, const nsAString&,
+                                              ErrorResult&);
+  static
+  already_AddRefed<TestInterface> Constructor(nsISupports*, uint32_t,
+                                              Nullable<bool>&, ErrorResult&);
+
   // Integer types
   int8_t GetReadonlyByte(ErrorResult&);
   int8_t GetWritableByte(ErrorResult&);
