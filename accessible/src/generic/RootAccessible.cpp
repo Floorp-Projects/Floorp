@@ -273,24 +273,15 @@ RootAccessible::HandleEvent(nsIDOMEvent* aDOMEvent)
     GetAccService()->GetDocAccessible(origTargetNode->OwnerDoc());
 
   if (document) {
-#ifdef DEBUG_NOTIFICATIONS
-    if (origTargetNode->IsElement()) {
-      nsIContent* elm = origTargetNode->AsElement();
-
-      nsAutoString tag;
-      elm->Tag()->ToString(tag);
-
-      nsIAtom* atomid = elm->GetID();
-      nsCAutoString id;
-      if (atomid)
-        atomid->ToUTF8String(id);
-
+#ifdef DEBUG
+    if (logging::IsEnabled(logging::eDOMEvents)) {
       nsAutoString eventType;
       aDOMEvent->GetType(eventType);
 
-      printf("\nPend DOM event processing for %s@id='%s', type: %s\n\n",
-             NS_ConvertUTF16toUTF8(tag).get(), id.get(),
-             NS_ConvertUTF16toUTF8(eventType).get());
+      logging::MsgBegin("DOMEvents", "event '%s' handled",
+                        NS_ConvertUTF16toUTF8(eventType).get());
+      logging::Node("target", origTargetNode);
+      logging::MsgEnd();
     }
 #endif
 
