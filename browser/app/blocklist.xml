@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1337963207000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1338423018000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -23,6 +23,10 @@
                   </emItem>
       <emItem  blockID="i43" id="supportaccessplugin@gmail.com">
                         </emItem>
+      <emItem  blockID="i82" id="{8f42fb8b-b6f6-45de-81c0-d6d39f54f971}">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i47" id="youtube@youtube2.com">
                         </emItem>
       <emItem  blockID="i88" id="anttoolbar@ant.com">
@@ -39,6 +43,10 @@
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="5.0a1" maxVersion="*" />
                           </targetApplication>
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i98" id="youtubeeing@youtuberie.com">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i65" id="activity@facebook.com">
@@ -112,6 +120,10 @@
                   </emItem>
       <emItem  blockID="i72" os="WINNT" id="{4ED1F68A-5463-4931-9384-8FFF5ED91D92}">
                         <versionRange  minVersion="3.4.1" maxVersion="3.4.1.194" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i97" id="support3_en@adobe122.com">
+                        <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i4" id="{4B3803EA-5230-4DC3-A7FC-33638F3D3542}">
@@ -266,7 +278,7 @@
                           </targetApplication>
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i82" id="{8f42fb8b-b6f6-45de-81c0-d6d39f54f971}">
+      <emItem  blockID="i99" id="pfzPXmnzQRXX6@2iABkVe.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
