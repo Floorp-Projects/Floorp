@@ -11,12 +11,6 @@
 #include "nsAccessibilityService.h"
 #include "NotificationController.h"
 
-inline DocAccessible*
-DocAccessible::ParentDocument() const
-{
-  return GetAccService()->GetDocAccessible(mDocument->GetParentDocument());
-}
-
 inline void
 DocAccessible::BindChildDocument(DocAccessible* aDocument)
 {
