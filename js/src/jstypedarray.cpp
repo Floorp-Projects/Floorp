@@ -134,12 +134,13 @@ ArrayBufferObject::fun_slice(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_slice, &ArrayBufferClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_slice, &ArrayBufferClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    ArrayBufferObject &arrayBuffer = obj->asArrayBuffer();
+    ArrayBufferObject &arrayBuffer = thisObj->asArrayBuffer();
 
     // these are the default values
     int32_t length = int32_t(arrayBuffer.byteLength());
@@ -1544,12 +1545,13 @@ class TypedArrayTemplate
     {
         CallArgs args = CallArgsFromVp(argc, vp);
 
-        bool ok;
-        JSObject *obj = NonGenericMethodGuard(cx, args, fun_subarray, fastClass(), &ok);
-        if (!obj)
-            return ok;
+        JSObject *thisObj;
+        if (!NonGenericMethodGuard(cx, args, fun_subarray, fastClass(), &thisObj))
+            return false;
+        if (!thisObj)
+            return true;
 
-        JSObject *tarray = getTypedArray(obj);
+        JSObject *tarray = getTypedArray(thisObj);
         if (!tarray)
             return true;
 
@@ -1583,12 +1585,13 @@ class TypedArrayTemplate
     {
         CallArgs args = CallArgsFromVp(argc, vp);
 
-        bool ok;
-        RootedObject obj(cx, NonGenericMethodGuard(cx, args, fun_set, fastClass(), &ok));
-        if (!obj)
-            return ok;
+        RootedObject thisObj(cx);
+        if (!NonGenericMethodGuard(cx, args, fun_set, fastClass(), thisObj.address()))
+            return false;
+        if (!thisObj)
+            return true;
 
-        RootedObject tarray(cx, getTypedArray(obj));
+        RootedObject tarray(cx, getTypedArray(thisObj));
         if (!tarray)
             return true;
 
@@ -1623,7 +1626,7 @@ class TypedArrayTemplate
                 return false;
             }
 
-            if (!copyFromTypedArray(cx, obj, src, offset))
+            if (!copyFromTypedArray(cx, thisObj, src, offset))
                 return false;
         } else {
             src = arg0;
@@ -1637,7 +1640,7 @@ class TypedArrayTemplate
                 return false;
             }
 
-            if (!copyFromArray(cx, obj, src, len, offset))
+            if (!copyFromArray(cx, thisObj, src, len, offset))
                 return false;
         }
 
@@ -2481,13 +2484,14 @@ DataViewObject::fun_getInt8(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getInt8, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_getInt8, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
     int8_t val;
-    if (!obj->asDataView().read(cx, args, &val, "getInt8"))
+    if (!thisObj->asDataView().read(cx, args, &val, "getInt8"))
         return false;
     args.rval().setInt32(val);
     return true;
@@ -2498,13 +2502,14 @@ DataViewObject::fun_getUint8(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getUint8, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_getUint8, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
     uint8_t val;
-    if (!obj->asDataView().read(cx, args, &val, "getUint8"))
+    if (!thisObj->asDataView().read(cx, args, &val, "getUint8"))
         return false;
     args.rval().setInt32(val);
     return true;
@@ -2515,13 +2520,14 @@ DataViewObject::fun_getInt16(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getInt16, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_getInt16, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
     int16_t val;
-    if (!obj->asDataView().read(cx, args, &val, "getInt16"))
+    if (!thisObj->asDataView().read(cx, args, &val, "getInt16"))
         return false;
     args.rval().setInt32(val);
     return true;
@@ -2532,13 +2538,14 @@ DataViewObject::fun_getUint16(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getUint16, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_getUint16, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
     uint16_t val;
-    if (!obj->asDataView().read(cx, args, &val, "getUint16"))
+    if (!thisObj->asDataView().read(cx, args, &val, "getUint16"))
         return false;
     args.rval().setInt32(val);
     return true;
@@ -2549,13 +2556,14 @@ DataViewObject::fun_getInt32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getInt32, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_getInt32, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
     int32_t val;
-    if (!obj->asDataView().read(cx, args, &val, "getInt32"))
+    if (!thisObj->asDataView().read(cx, args, &val, "getInt32"))
         return false;
     args.rval().setInt32(val);
     return true;
@@ -2566,13 +2574,14 @@ DataViewObject::fun_getUint32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getUint32, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_getUint32, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
     uint32_t val;
-    if (!obj->asDataView().read(cx, args, &val, "getUint32"))
+    if (!thisObj->asDataView().read(cx, args, &val, "getUint32"))
         return false;
     args.rval().setNumber(val);
     return true;
@@ -2583,13 +2592,14 @@ DataViewObject::fun_getFloat32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getFloat32, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_getFloat32, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
     float val;
-    if (!obj->asDataView().read(cx, args, &val, "getFloat32"))
+    if (!thisObj->asDataView().read(cx, args, &val, "getFloat32"))
         return false;
 
     args.rval().setDouble(JS_CANONICALIZE_NAN(val));
@@ -2601,13 +2611,14 @@ DataViewObject::fun_getFloat64(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_getFloat64, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_getFloat64, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
     double val;
-    if (!obj->asDataView().read(cx, args, &val, "getFloat64"))
+    if (!thisObj->asDataView().read(cx, args, &val, "getFloat64"))
         return false;
 
     args.rval().setDouble(JS_CANONICALIZE_NAN(val));
@@ -2619,12 +2630,13 @@ DataViewObject::fun_setInt8(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setInt8, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_setInt8, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    if (!obj->asDataView().write<int8_t>(cx, args, "setInt8"))
+    if (!thisObj->asDataView().write<int8_t>(cx, args, "setInt8"))
         return false;
     args.rval().setUndefined();
     return true;
@@ -2635,12 +2647,13 @@ DataViewObject::fun_setUint8(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setUint8, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_setUint8, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    if (!obj->asDataView().write<uint8_t>(cx, args, "setUint8"))
+    if (!thisObj->asDataView().write<uint8_t>(cx, args, "setUint8"))
         return false;
     args.rval().setUndefined();
     return true;
@@ -2651,12 +2664,13 @@ DataViewObject::fun_setInt16(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setInt16, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_setInt16, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    if (!obj->asDataView().write<int16_t>(cx, args, "setInt16"))
+    if (!thisObj->asDataView().write<int16_t>(cx, args, "setInt16"))
         return false;
     args.rval().setUndefined();
     return true;
@@ -2667,12 +2681,13 @@ DataViewObject::fun_setUint16(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setUint16, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_setUint16, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    if (!obj->asDataView().write<uint16_t>(cx, args, "setUint16"))
+    if (!thisObj->asDataView().write<uint16_t>(cx, args, "setUint16"))
         return false;
     args.rval().setUndefined();
     return true;
@@ -2683,12 +2698,13 @@ DataViewObject::fun_setInt32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setInt32, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_setInt32, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    if (!obj->asDataView().write<int32_t>(cx, args, "setInt32"))
+    if (!thisObj->asDataView().write<int32_t>(cx, args, "setInt32"))
         return false;
     args.rval().setUndefined();
     return true;
@@ -2699,12 +2715,13 @@ DataViewObject::fun_setUint32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setUint32, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_setUint32, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    if (!obj->asDataView().write<uint32_t>(cx, args, "setUint32"))
+    if (!thisObj->asDataView().write<uint32_t>(cx, args, "setUint32"))
         return false;
     args.rval().setUndefined();
     return true;
@@ -2715,12 +2732,13 @@ DataViewObject::fun_setFloat32(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setFloat32, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_setFloat32, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    if (!obj->asDataView().write<float>(cx, args, "setFloat32"))
+    if (!thisObj->asDataView().write<float>(cx, args, "setFloat32"))
         return false;
     args.rval().setUndefined();
     return true;
@@ -2731,12 +2749,13 @@ DataViewObject::fun_setFloat64(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, fun_setFloat64, &DataViewClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, fun_setFloat64, &DataViewClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    if (!obj->asDataView().write<double>(cx, args, "setFloat64"))
+    if (!thisObj->asDataView().write<double>(cx, args, "setFloat64"))
         return false;
     args.rval().setUndefined();
     return true;
