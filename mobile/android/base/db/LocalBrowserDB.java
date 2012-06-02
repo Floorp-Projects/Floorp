@@ -47,6 +47,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     // Use wrapped Boolean so that we can have a null state
     private Boolean mDesktopBookmarksExist;
+    private Boolean mReadingListItemsExist;
 
     private final Uri mBookmarksUriWithProfile;
     private final Uri mParentsUriWithProfile;
@@ -70,6 +71,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         mProfile = profile;
         mFolderIdMap = new HashMap<String, Long>();
         mDesktopBookmarksExist = null;
+        mReadingListItemsExist = null;
 
         mBookmarksUriWithProfile = appendProfile(Bookmarks.CONTENT_URI);
         mParentsUriWithProfile = appendProfile(Bookmarks.PARENTS_CONTENT_URI);
@@ -88,6 +90,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     // Invalidate cached data
     public void invalidateCachedState() {
         mDesktopBookmarksExist = null;
+        mReadingListItemsExist = null;
     }
 
     private Uri historyUriWithLimit(int limit) {
@@ -156,6 +159,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                              Combined.URL,
                                              Combined.TITLE,
                                              Combined.FAVICON,
+                                             Combined.DISPLAY,
                                              Combined.BOOKMARK_ID,
                                              Combined.HISTORY_ID },
                               constraint,
@@ -271,6 +275,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     public Cursor getBookmarksInFolder(ContentResolver cr, long folderId) {
         Cursor c = null;
         boolean addDesktopFolder = false;
+        boolean addReadingListFolder = false;
 
         // We always want to show mobile bookmarks in the root view.
         if (folderId == Bookmarks.FIXED_ROOT_ID) {
@@ -279,6 +284,10 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             // We'll add a fake "Desktop Bookmarks" folder to the root view if desktop 
             // bookmarks exist, so that the user can still access non-mobile bookmarks.
             addDesktopFolder = desktopBookmarksExist(cr);
+
+            // We'll add the Reading List folder to the root view if any reading
+            // list items exist.
+            addReadingListFolder = readingListItemsExist(cr);
         }
 
         if (folderId == Bookmarks.FAKE_DESKTOP_FOLDER_ID) {
@@ -306,9 +315,9 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                          null);
         }
 
-        if (addDesktopFolder) {
-            // Wrap cursor to add fake desktop bookmarks folder
-            c = new DesktopBookmarksCursorWrapper(c);
+        if (addDesktopFolder || addReadingListFolder) {
+            // Wrap cursor to add fake desktop bookmarks and reading list folders
+            c = new SpecialFoldersCursorWrapper(c, addDesktopFolder, addReadingListFolder);
         }
 
         return new LocalDBCursor(c);
@@ -340,8 +349,30 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         }
 
         // Cache result for future queries
-        mDesktopBookmarksExist = (count == 1);
+        mDesktopBookmarksExist = (count > 0);
         return mDesktopBookmarksExist;
+    }
+
+    private boolean readingListItemsExist(ContentResolver cr) {
+        if (mReadingListItemsExist != null)
+            return mReadingListItemsExist;
+
+        Cursor c = null;
+        int count = 0;
+        try {
+            c = cr.query(bookmarksUriWithLimit(1),
+                         new String[] { Bookmarks._ID },
+                         Bookmarks.PARENT + " = ?",
+                         new String[] { String.valueOf(Bookmarks.FIXED_READING_LIST_ID) },
+                         null);
+            count = c.getCount();
+        } finally {
+            c.close();
+        }
+
+        // Cache result for future queries
+        mReadingListItemsExist = (count > 0);
+        return mReadingListItemsExist;
     }
 
     public boolean isBookmark(ContentResolver cr, String uri) {
@@ -587,46 +618,71 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     // This wrapper adds a fake "Desktop Bookmarks" folder entry to the
     // beginning of the cursor's data set.
-    private static class DesktopBookmarksCursorWrapper extends CursorWrapper {
-        private boolean mAtDesktopBookmarksPosition = false;
+    private class SpecialFoldersCursorWrapper extends CursorWrapper {
+        private int mIndexOffset;
 
-        public DesktopBookmarksCursorWrapper(Cursor c) {
+        private int mDesktopBookmarksIndex = -1;
+        private int mReadingListIndex = -1;
+
+        private boolean mAtDesktopBookmarksPosition = false;
+        private boolean mAtReadingListPosition = false;
+
+        public SpecialFoldersCursorWrapper(Cursor c, boolean showDesktopBookmarks, boolean showReadingList) {
             super(c);
+
+            mIndexOffset = 0;
+
+            if (showDesktopBookmarks) {
+                mDesktopBookmarksIndex = mIndexOffset;
+                mIndexOffset++;
+            }
+
+            if (showReadingList) {
+                mReadingListIndex = mIndexOffset;
+                mIndexOffset++;
+            }
         }
 
         @Override
         public int getCount() {
-            return super.getCount() + 1;
+            return super.getCount() + mIndexOffset;
         }
 
         @Override
         public boolean moveToPosition(int position) {
-            if (position == 0) {
-                mAtDesktopBookmarksPosition = true;
-                return true;
-            }
+            mAtDesktopBookmarksPosition = (mDesktopBookmarksIndex == position);
+            mAtReadingListPosition = (mReadingListIndex == position);
 
-            mAtDesktopBookmarksPosition = false;
-            return super.moveToPosition(position - 1);
+            if (mAtDesktopBookmarksPosition || mAtReadingListPosition)
+                return true;
+
+            return super.moveToPosition(position - mIndexOffset);
         }
 
         @Override
         public long getLong(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition)
+            if (!mAtDesktopBookmarksPosition && !mAtReadingListPosition)
                 return super.getLong(columnIndex);
 
-            if (columnIndex == getColumnIndex(Bookmarks._ID))
-                return Bookmarks.FAKE_DESKTOP_FOLDER_ID;
-            if (columnIndex == getColumnIndex(Bookmarks.PARENT))
+            if (columnIndex == getColumnIndex(Bookmarks.PARENT)) {
                 return Bookmarks.FIXED_ROOT_ID;
+            }
 
             return -1;
         }
 
         @Override
         public int getInt(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition)
+            if (!mAtDesktopBookmarksPosition && !mAtReadingListPosition)
                 return super.getInt(columnIndex);
+
+            if (columnIndex == getColumnIndex(Bookmarks._ID)) {
+                if (mAtDesktopBookmarksPosition) {
+                    return Bookmarks.FAKE_DESKTOP_FOLDER_ID;
+                } else if (mAtReadingListPosition) {
+                    return Bookmarks.FIXED_READING_LIST_ID;
+                }
+            }
 
             if (columnIndex == getColumnIndex(Bookmarks.TYPE))
                 return Bookmarks.TYPE_FOLDER;
@@ -636,11 +692,16 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
         @Override
         public String getString(int columnIndex) {
-            if (!mAtDesktopBookmarksPosition)
+            if (!mAtDesktopBookmarksPosition && !mAtReadingListPosition)
                 return super.getString(columnIndex);
 
-            if (columnIndex == getColumnIndex(Bookmarks.GUID))
-                return Bookmarks.FAKE_DESKTOP_FOLDER_GUID;
+            if (columnIndex == getColumnIndex(Bookmarks.GUID)) {
+                if (mAtDesktopBookmarksPosition) {
+                    return Bookmarks.FAKE_DESKTOP_FOLDER_GUID;
+                } else if (mAtReadingListPosition) {
+                    return Bookmarks.READING_LIST_FOLDER_GUID;
+                }
+            }
 
             return "";
         }

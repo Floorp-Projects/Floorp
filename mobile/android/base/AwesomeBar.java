@@ -15,6 +15,7 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.Spanned;
@@ -569,7 +570,14 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 break;
             }
             case R.id.remove_bookmark: {
-                (new GeckoAsyncTask<Void, Void, Void>() {
+                (new AsyncTask<Void, Void, Void>() {
+                    private boolean mInReadingList;
+
+                    @Override
+                    public void onPreExecute() {
+                        mInReadingList = mAwesomeTabs.isInReadingList();
+                    }
+
                     @Override
                     public Void doInBackground(Void... params) {
                         BrowserDB.removeBookmark(mResolver, id);
@@ -578,7 +586,11 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
 
                     @Override
                     public void onPostExecute(Void result) {
-                        Toast.makeText(AwesomeBar.this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+                        int messageId = R.string.bookmark_removed;
+                        if (mInReadingList)
+                            messageId = R.string.reading_list_removed;
+
+                        Toast.makeText(AwesomeBar.this, messageId, Toast.LENGTH_SHORT).show();
                     }
                 }).execute();
                 break;
