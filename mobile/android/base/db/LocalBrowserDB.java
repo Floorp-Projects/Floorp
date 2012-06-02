@@ -376,10 +376,13 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     }
 
     public boolean isBookmark(ContentResolver cr, String uri) {
+        // This method is about normal bookmarks, not the Reading List
         Cursor cursor = cr.query(mBookmarksUriWithProfile,
                                  new String[] { Bookmarks._ID },
-                                 Bookmarks.URL + " = ?",
-                                 new String[] { uri },
+                                 Bookmarks.URL + " = ? AND " +
+                                 Bookmarks.PARENT + " != ?",
+                                 new String[] { uri,
+                                                String.valueOf(Bookmarks.FIXED_READING_LIST_ID) },
                                  Bookmarks.URL);
 
         int count = cursor.getCount();
