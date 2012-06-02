@@ -256,7 +256,7 @@ nsAccessibilityService::CreateHTMLImageAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLImageAccessibleWrap(aContent, GetDocAccessible(aPresShell));
+    new ImageAccessibleWrap(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -1017,7 +1017,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     // create any accessible for it and don't walk into it. The accessibles for
     // HTML area (nsHTMLAreaAccessible) the map contains are attached as
     // children of the appropriate accessible for HTML image
-    // (nsHTMLImageAccessible).
+    // (ImageAccessible).
     if (nsLayoutUtils::GetAllInFlowRectsUnion(weakFrame,
                                               weakFrame->GetParent()).IsEmpty()) {
       if (aIsSubtreeHidden)
@@ -1361,7 +1361,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
                              nsGkAtoms::tooltiptext))
         return nsnull;
 
-      accessible = new nsHTMLImageAccessibleWrap(aContent, aDoc);
+      accessible = new ImageAccessibleWrap(aContent, aDoc);
       break;
 
     }
