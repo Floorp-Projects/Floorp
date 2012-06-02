@@ -170,10 +170,12 @@ TestRunner.setFailureFile = function(fileName) {
     TestRunner._failureFile = fileName;
 }
 
-TestRunner.generateFailureList = function() {
-    var failures = new SpecialPowersLogger(TestRunner._failureFile);
-    failures.log(JSON.stringify(TestRunner._failedTests));
-    failures.close();
+TestRunner.generateFailureList = function () {
+    if (TestRunner._failureFile) {
+        var failures = new SpecialPowersLogger(TestRunner._failureFile);
+        failures.log(JSON.stringify(TestRunner._failedTests));
+        failures.close();
+    }
 };
 
 /**

@@ -1218,30 +1218,18 @@ PRUint32 nsBuiltinDecoderStateMachine::PlayFromAudioQueue(PRUint64 aFrameOffset,
   }
   PRInt64 offset = -1;
   PRUint32 frames = 0;
-  // The state machine could have paused since we've released the decoder
-  // monitor and acquired the audio monitor. Rather than acquire both
-  // monitors, the audio stream also maintains whether its paused or not.
-  // This prevents us from doing a blocking write while holding the audio
-  // monitor while paused; we would block, and the state machine won't be
-  // able to acquire the audio monitor in order to resume or destroy the
-  // audio stream.
-  if (!mAudioStream->IsPaused()) {
-    LOG(PR_LOG_DEBUG, ("%p Decoder playing %d frames of data to stream for AudioData at %lld",
-                       mDecoder.get(), audio->mFrames, audio->mTime));
-    mAudioStream->Write(audio->mAudioData,
-                        audio->mFrames);
+  LOG(PR_LOG_DEBUG, ("%p Decoder playing %d frames of data to stream for AudioData at %lld",
+                     mDecoder.get(), audio->mFrames, audio->mTime));
+  mAudioStream->Write(audio->mAudioData,
+                      audio->mFrames);
 
-    offset = audio->mOffset;
-    frames = audio->mFrames;
+  offset = audio->mOffset;
+  frames = audio->mFrames;
 
-    // Dispatch events to the DOM for the audio just written.
-    mEventManager.QueueWrittenAudioData(audio->mAudioData.get(),
-                                        audio->mFrames * aChannels,
-                                        (aFrameOffset + frames) * aChannels);
-  } else {
-    mReader->mAudioQueue.PushFront(audio);
-    audio.forget();
-  }
+  // Dispatch events to the DOM for the audio just written.
+  mEventManager.QueueWrittenAudioData(audio->mAudioData.get(),
+                                      audio->mFrames * aChannels,
+                                      (aFrameOffset + frames) * aChannels);
   if (offset != -1) {
     mDecoder->UpdatePlaybackOffset(offset);
   }
@@ -1267,11 +1255,6 @@ void nsBuiltinDecoderStateMachine::StopPlayback()
 
   mDecoder->mPlaybackStatistics.Stop(TimeStamp::Now());
 
-  // Reset mPlayStartTime before we pause/shutdown the nsAudioStream. This is
-  // so that if the audio loop is about to write audio, it will have the chance
-  // to check to see if we're paused and not write the audio. If not, the
-  // audio thread can block in the write, and we deadlock trying to acquire
-  // the audio monitor upon resume playback.
   if (IsPlaying()) {
     mPlayDuration += DurationToUsecs(TimeStamp::Now() - mPlayStartTime);
     mPlayStartTime = TimeStamp();

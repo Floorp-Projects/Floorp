@@ -24,20 +24,17 @@ var idbManager = Cc["@mozilla.org/dom/indexeddb/manager;1"].
 idbManager.initWindowless(this);
 
 function is(a, b, msg) {
-  if(a != b)
-    dump(msg);
+  dump("is(" + a + ", " + b + ", \"" + msg + "\")");
   do_check_eq(a, b, Components.stack.caller);
 }
 
 function ok(cond, msg) {
-  if( !cond )
-    dump(msg);
+  dump("ok(" + cond + ", \"" + msg + "\")");
   do_check_true(!!cond, Components.stack.caller); 
 }
 
 function isnot(a, b, msg) {
-  if( a == b )
-    dump(msg);
+  dump("isnot(" + a + ", " + b + ", \"" + msg + "\")");
   do_check_neq(a, b, Components.stack.caller); 
 }
 
@@ -81,7 +78,7 @@ function continueToNextStep()
 
 function errorHandler(event)
 {
-  dump("indexedDB error, code " + event.target.errorCode);
+  dump("indexedDB error: " + event.target.error.name);
   do_check_true(false);
   finishTest();
 }
@@ -174,3 +171,11 @@ function disallowUnlimitedQuota(url)
 {
   throw "disallowUnlimitedQuota";
 }
+
+var SpecialPowers = {
+  isMainProcess: function() {
+    return Components.classes["@mozilla.org/xre/app-info;1"]
+                     .getService(Components.interfaces.nsIXULRuntime)
+                     .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  }
+};

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2007,2008,2009  Red Hat, Inc.
- * Copyright © 2010,2011  Google, Inc.
+ * Copyright © 2010,2011,2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -71,8 +71,7 @@ struct AttachList
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return coverage.sanitize (c, this)
-	&& attachPoint.sanitize (c, this);
+    return TRACE_RETURN (coverage.sanitize (c, this) && attachPoint.sanitize (c, this));
   }
 
   private:
@@ -102,7 +101,7 @@ struct CaretValueFormat1
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return c->check_struct (this);
+    return TRACE_RETURN (c->check_struct (this));
   }
 
   private:
@@ -128,7 +127,7 @@ struct CaretValueFormat2
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return c->check_struct (this);
+    return TRACE_RETURN (c->check_struct (this));
   }
 
   private:
@@ -151,8 +150,7 @@ struct CaretValueFormat3
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return c->check_struct (this)
-	&& deviceTable.sanitize (c, this);
+    return TRACE_RETURN (c->check_struct (this) && deviceTable.sanitize (c, this));
   }
 
   private:
@@ -180,12 +178,12 @@ struct CaretValue
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    if (!u.format.sanitize (c)) return false;
+    if (!u.format.sanitize (c)) return TRACE_RETURN (false);
     switch (u.format) {
-    case 1: return u.format1.sanitize (c);
-    case 2: return u.format2.sanitize (c);
-    case 3: return u.format3.sanitize (c);
-    default:return true;
+    case 1: return TRACE_RETURN (u.format1.sanitize (c));
+    case 2: return TRACE_RETURN (u.format2.sanitize (c));
+    case 3: return TRACE_RETURN (u.format3.sanitize (c));
+    default:return TRACE_RETURN (true);
     }
   }
 
@@ -221,7 +219,7 @@ struct LigGlyph
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return carets.sanitize (c, this);
+    return TRACE_RETURN (carets.sanitize (c, this));
   }
 
   private:
@@ -255,8 +253,7 @@ struct LigCaretList
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return coverage.sanitize (c, this)
-	&& ligGlyph.sanitize (c, this);
+    return TRACE_RETURN (coverage.sanitize (c, this) && ligGlyph.sanitize (c, this));
   }
 
   private:
@@ -278,7 +275,7 @@ struct MarkGlyphSetsFormat1
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return coverage.sanitize (c, this);
+    return TRACE_RETURN (coverage.sanitize (c, this));
   }
 
   private:
@@ -302,10 +299,10 @@ struct MarkGlyphSets
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    if (!u.format.sanitize (c)) return false;
+    if (!u.format.sanitize (c)) return TRACE_RETURN (false);
     switch (u.format) {
-    case 1: return u.format1.sanitize (c);
-    default:return true;
+    case 1: return TRACE_RETURN (u.format1.sanitize (c));
+    default:return TRACE_RETURN (true);
     }
   }
 
@@ -365,12 +362,13 @@ struct GDEF
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return version.sanitize (c) && likely (version.major == 1)
-	&& glyphClassDef.sanitize (c, this)
-	&& attachList.sanitize (c, this)
-	&& ligCaretList.sanitize (c, this)
-	&& markAttachClassDef.sanitize (c, this)
-	&& (version.to_int () < 0x00010002 || markGlyphSetsDef[0].sanitize (c, this));
+    return TRACE_RETURN (version.sanitize (c) &&
+			 likely (version.major == 1) &&
+			 glyphClassDef.sanitize (c, this) &&
+			 attachList.sanitize (c, this) &&
+			 ligCaretList.sanitize (c, this) &&
+			 markAttachClassDef.sanitize (c, this) &&
+			 (version.to_int () < 0x00010002 || markGlyphSetsDef[0].sanitize (c, this)));
   }
 
 

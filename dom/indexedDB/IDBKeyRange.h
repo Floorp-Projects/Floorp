@@ -18,6 +18,12 @@ class mozIStorageStatement;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
+namespace ipc {
+namespace FIXME_Bug_521898_objectstore {
+class KeyRange;
+} // namespace FIXME_Bug_521898_objectstore
+} // namespace ipc
+
 class IDBKeyRange MOZ_FINAL : public nsIIDBKeyRange
 {
 public:
@@ -28,12 +34,17 @@ public:
   static JSBool DefineConstructors(JSContext* aCx,
                                    JSObject* aObject);
 
-  static
-  nsresult FromJSVal(JSContext* aCx,
-                     const jsval& aVal,
-                     IDBKeyRange** aKeyRange);
+  static nsresult FromJSVal(JSContext* aCx,
+                            const jsval& aVal,
+                            IDBKeyRange** aKeyRange);
 
-  IDBKeyRange(bool aLowerOpen, bool aUpperOpen, bool aIsOnly)
+  template <class T>
+  static already_AddRefed<IDBKeyRange>
+  FromSerializedKeyRange(const T& aKeyRange);
+
+  IDBKeyRange(bool aLowerOpen,
+              bool aUpperOpen,
+              bool aIsOnly)
   : mCachedLowerVal(JSVAL_VOID), mCachedUpperVal(JSVAL_VOID),
     mLowerOpen(aLowerOpen), mUpperOpen(aUpperOpen), mIsOnly(aIsOnly),
     mHaveCachedLowerVal(false), mHaveCachedUpperVal(false), mRooted(false)
@@ -83,8 +94,8 @@ public:
 
     if (IsOnly()) {
       // Both keys are set and they're equal.
-      _retval = andStr + aKeyColumnName + NS_LITERAL_CSTRING(" =") + spacecolon +
-                lowerKey;
+      _retval = andStr + aKeyColumnName + NS_LITERAL_CSTRING(" =") +
+                spacecolon + lowerKey;
     }
     else {
       nsCAutoString clause;
@@ -136,7 +147,10 @@ public:
     return NS_OK;
   }
 
-protected:
+  template <class T>
+  void ToSerializedKeyRange(T& aKeyRange);
+
+private:
   ~IDBKeyRange();
 
   Key mLower;

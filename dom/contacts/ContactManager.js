@@ -27,6 +27,10 @@ XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
   return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
 });
 
+XPCOMUtils.defineLazyGetter(this, "mRIL", function () {
+  return Cc["@mozilla.org/telephony/system-worker-manager;1"].getService(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIRadioInterfaceLayer);
+});
+
 const nsIClassInfo            = Ci.nsIClassInfo;
 const CONTACTPROPERTIES_CID   = Components.ID("{f5181640-89e8-11e1-b0c4-0800200c9a66}");
 const nsIDOMContactProperties = Ci.nsIDOMContactProperties;
@@ -207,7 +211,7 @@ Contact.prototype = {
 // ContactManager
 
 const CONTACTMANAGER_CONTRACTID = "@mozilla.org/contactManager;1";
-const CONTACTMANAGER_CID        = Components.ID("{d9ca0950-93d1-11e1-b0c4-0800200c9a66}");
+const CONTACTMANAGER_CID        = Components.ID("{d88af7e0-a45f-11e1-b3dd-0800200c9a66}");
 const nsIDOMContactManager      = Components.interfaces.nsIDOMContactManager;
 
 function ContactManager()
@@ -375,6 +379,25 @@ ContactManager.prototype = {
       return request;
     } else {
       debug("clear not allowed");
+      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    }
+  },
+
+  getSimContacts: function(aType) {
+    let request;
+    if (this.hasPrivileges) {
+      let callback = function(aType, aContacts) {
+        debug("got SIM contacts: " + aType + " " + JSON.stringify(aContacts));
+        let result = aContacts.map(function(c) { return { name: [c.alphaId], tel: [c.number] } });
+        debug("result: " + JSON.stringify(result));
+        Services.DOMRequest.fireSuccess(request, result);
+      };
+      debug("getSimContacts " + aType);
+      request = this.createRequest();
+      mRIL.getICCContacts(aType, callback);
+      return request;
+    } else {
+      debug("getSimContacts not allowed");
       throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     }
   },

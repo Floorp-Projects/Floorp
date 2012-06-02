@@ -15,7 +15,6 @@ const CoR = Components.results;
 
 const XMLNS_XUL               = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const PREF_APP_UPDATE_BACKGROUND         = "app.update.stage.enabled";
 const PREF_APP_UPDATE_BACKGROUNDERRORS   = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BILLBOARD_TEST_URL = "app.update.billboard.test_url";
 const PREF_APP_UPDATE_CERT_ERRORS        = "app.update.cert.errors";
@@ -1581,7 +1580,9 @@ var gDownloadingPage = {
       LOG("gDownloadingPage", "onStopRequest - patch verification succeeded");
       // If the background update pref is set, we should wait until the update
       // is actually staged in the background.
-      if (getPref("getBoolPref", PREF_APP_UPDATE_BACKGROUND, false)) {
+      var aus = CoC["@mozilla.org/updates/update-service;1"].
+                getService(CoI.nsIApplicationUpdateService);
+      if (aus.canStageUpdates) {
         this._setUpdateApplying();
       } else {
         this.cleanUp();
@@ -1602,6 +1603,12 @@ var gDownloadingPage = {
    */
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "update-staged") {
+      if (aData == STATE_DOWNLOADING) {
+        // We've fallen back to downloding the full update because the
+        // partial update failed to get staged in the background.
+        this._setStatus("downloading");
+        return;
+      }
       this.cleanUp();
       if (aData == STATE_APPLIED ||
           aData == STATE_APPLIED_SVC ||

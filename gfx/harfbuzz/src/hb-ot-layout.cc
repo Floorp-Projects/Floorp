@@ -461,7 +461,8 @@ hb_ot_layout_substitute_lookup (hb_face_t    *face,
 				unsigned int  lookup_index,
 				hb_mask_t     mask)
 {
-  return _get_gsub (face).substitute_lookup (face, buffer, lookup_index, mask);
+  hb_apply_context_t c (NULL, face, buffer, mask);
+  return _get_gsub (face).substitute_lookup (&c, lookup_index);
 }
 
 void
@@ -470,6 +471,14 @@ hb_ot_layout_substitute_finish (hb_buffer_t  *buffer HB_UNUSED)
   GSUB::substitute_finish (buffer);
 }
 
+void
+hb_ot_layout_substitute_closure_lookup (hb_face_t    *face,
+				        hb_set_t     *glyphs,
+				        unsigned int  lookup_index)
+{
+  hb_closure_context_t c (face, glyphs);
+  _get_gsub (face).closure_lookup (&c, lookup_index);
+}
 
 /*
  * GPOS
@@ -493,7 +502,8 @@ hb_ot_layout_position_lookup   (hb_font_t    *font,
 				unsigned int  lookup_index,
 				hb_mask_t     mask)
 {
-  return _get_gpos (font->face).position_lookup (font, buffer, lookup_index, mask);
+  hb_apply_context_t c (font, font->face, buffer, mask);
+  return _get_gpos (font->face).position_lookup (&c, lookup_index);
 }
 
 void
@@ -501,38 +511,25 @@ hb_ot_layout_position_finish (hb_face_t *face, hb_buffer_t *buffer)
 {
   /* force diacritics to have zero width */
   unsigned int count = buffer->len;
-  if (hb_ot_layout_has_glyph_classes (face)) {
-    const GDEF& gdef = _get_gdef (face);
-    if (buffer->props.direction == HB_DIRECTION_RTL) {
-      for (unsigned int i = 1; i < count; i++) {
-        if (gdef.get_glyph_class (buffer->info[i].codepoint) == GDEF::MarkGlyph) {
-          buffer->pos[i].x_advance = 0;
-        }
-      }
-    } else {
-      for (unsigned int i = 1; i < count; i++) {
-        if (gdef.get_glyph_class (buffer->info[i].codepoint) == GDEF::MarkGlyph) {
-          hb_glyph_position_t& pos = buffer->pos[i];
-          pos.x_offset -= pos.x_advance;
-          pos.x_advance = 0;
-        }
+  const hb_glyph_info_t *info = buffer->info;
+  hb_glyph_position_t *positions = buffer->pos;
+  /*
+   * Forcibly zero widths of chars with GC=Mn; we don't use the GDEF 'Mark' class
+   * because some fonts (e.g. C-DAC Yogesh) classify spacing Indic matras as 'Mark'
+   * but we don't want to force their width to zero.
+   */
+  if (buffer->props.direction == HB_DIRECTION_RTL) {
+    for (unsigned int i = 1; i < count; i++) {
+      if (_hb_glyph_info_get_general_category (&info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) {
+        positions[i].x_advance = 0;
       }
     }
   } else {
-    /* no GDEF classes available, so use General Category as a fallback */
-    if (buffer->props.direction == HB_DIRECTION_RTL) {
-      for (unsigned int i = 1; i < count; i++) {
-        if (buffer->info[i].general_category() == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) {
-          buffer->pos[i].x_advance = 0;
-        }
-      }
-    } else {
-      for (unsigned int i = 1; i < count; i++) {
-        if (buffer->info[i].general_category() == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) {
-          hb_glyph_position_t& pos = buffer->pos[i];
-          pos.x_offset -= pos.x_advance;
-          pos.x_advance = 0;
-        }
+    for (unsigned int i = 1; i < count; i++) {
+      if (_hb_glyph_info_get_general_category (&info[i]) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK) {
+        hb_glyph_position_t& pos = positions[i];
+        pos.x_offset -= pos.x_advance;
+        pos.x_advance = 0;
       }
     }
   }

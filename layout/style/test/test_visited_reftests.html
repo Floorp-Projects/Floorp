@@ -165,9 +165,9 @@ function startTest(i)
     }
     function reportSuccess()
     {
-      RemoveFinishDependency();
       ok(true, "(" + i + ") " +
                testData.op + " " + testData.test + " " + testData.reference);
+      RemoveFinishDependency();
     }
     var iframe = { element: element, loaded: false };
 

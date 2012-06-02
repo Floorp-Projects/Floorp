@@ -124,10 +124,8 @@ OuterDocAccessible::Shutdown()
   // the document doesn't get pagehide events. Shutdown underlying document if
   // any to avoid hanging document accessible.
 #ifdef DEBUG
-  if (logging::IsEnabled(logging::eDocDestroy)) {
-    logging::Msg("A11y outerdoc shutdown");
-    logging::Address("outerdoc", this);
-  }
+  if (logging::IsEnabled(logging::eDocDestroy))
+    logging::OuterDocDestroy(this);
 #endif
 
   Accessible* childAcc = mChildren.SafeElementAt(0, nsnull);
@@ -135,7 +133,7 @@ OuterDocAccessible::Shutdown()
 #ifdef DEBUG
     if (logging::IsEnabled(logging::eDocDestroy)) {
       logging::DocDestroy("outerdoc's child document shutdown",
-                      childAcc->GetDocumentNode());
+                          childAcc->GetDocumentNode());
     }
 #endif
     childAcc->Shutdown();
@@ -179,7 +177,7 @@ OuterDocAccessible::AppendChild(Accessible* aAccessible)
 #ifdef DEBUG
   if (logging::IsEnabled(logging::eDocCreate)) {
     logging::DocCreate("append document to outerdoc",
-                   aAccessible->GetDocumentNode());
+                       aAccessible->GetDocumentNode());
     logging::Address("outerdoc", this);
   }
 #endif
@@ -199,7 +197,7 @@ OuterDocAccessible::RemoveChild(Accessible* aAccessible)
 #ifdef DEBUG
   if (logging::IsEnabled(logging::eDocDestroy)) {
     logging::DocDestroy("remove document from outerdoc", child->GetDocumentNode(),
-                    child->AsDoc());
+                        child->AsDoc());
     logging::Address("outerdoc", this);
   }
 #endif
