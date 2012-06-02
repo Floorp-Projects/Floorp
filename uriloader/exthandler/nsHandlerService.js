@@ -489,7 +489,7 @@ HandlerService.prototype = {
       return Ci.nsIHandlerInfo.useSystemDefault;
     
     if (this._getValue(aInfoID, NC_HANDLE_INTERNALLY) == "true")
-      return Ci.nsIHandlerInfo.handleInternal;
+      return Ci.nsIHandlerInfo.handleInternally;
 
     return Ci.nsIHandlerInfo.useHelperApp;
   },

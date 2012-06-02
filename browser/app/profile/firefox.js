@@ -1160,6 +1160,18 @@ pref("full-screen-api.approval-required", true);
 // (this pref has no effect if more than 6 hours have passed since the last crash)
 pref("toolkit.startup.max_resumed_crashes", 3);
 
+// Completely disable pdf.js as an option to preview pdfs within firefox.
+// Note: if this is not disabled it does not necessarily mean pdf.js is the pdf
+// handler just that it is an option.
+pref("pdfjs.disabled", false);
+// Used by pdf.js to know the first time firefox is run with it installed so it
+// can become the default pdf viewer.
+pref("pdfjs.firstRun", true);
+// The values of preferredAction and alwaysAskBeforeHandling before pdf.js
+// became the default.
+pref("pdfjs.previousHandler.preferredAction", 0);
+pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
+
 // The maximum amount of decoded image data we'll willingly keep around (we
 // might keep around more than this, but we'll try to get down to this value).
 // (This is intentionally on the high side; see bug 746055.)
