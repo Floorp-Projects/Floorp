@@ -3781,6 +3781,9 @@ function NodeType(typeSpec) {
 NodeType.prototype = Object.create(Type.prototype);
 
 NodeType.prototype.stringify = function(value) {
+  if (value == null) {
+    return '';
+  }
   return value.__gcliQuery || 'Error';
 };
 
