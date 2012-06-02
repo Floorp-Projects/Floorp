@@ -880,6 +880,13 @@ CssRuleView.prototype = {
   // The element that we're inspecting.
   _viewedElement: null,
 
+  /**
+   * Returns true if the rule view currently has an input editor visible.
+   */
+  get isEditing() {
+    return this.element.querySelectorAll(".styleinspector-propertyeditor").length > 0;
+  },
+
   destroy: function CssRuleView_destroy()
   {
     this.clear();
@@ -946,11 +953,21 @@ CssRuleView.prototype = {
    */
   nodeChanged: function CssRuleView_nodeChanged()
   {
+    // Ignore refreshes during editing.
+    if (this.isEditing) {
+      return;
+    }
+
     // Repopulate the element style.
     this._elementStyle.populate();
 
     // Refresh the rule editors.
     this._createEditors();
+
+    // Notify anyone that cares that we refreshed.
+    var evt = this.doc.createEvent("Events");
+    evt.initEvent("CssRuleViewRefreshed", true, false);
+    this.element.dispatchEvent(evt);
   },
 
   /**
