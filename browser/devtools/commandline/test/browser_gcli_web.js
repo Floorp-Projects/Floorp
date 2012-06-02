@@ -3049,39 +3049,38 @@ exports.testPredictions = function(options) {
   }
 
   var resource1 = types.getType('resource');
-  var predictions1 = resource1.parseString('').getPredictions();
-  test.ok(predictions1.length > 1, 'have resources');
-  predictions1.forEach(function(prediction) {
+  var options1 = resource1.getLookup();
+  test.ok(options1.length > 1, 'have resources');
+  options1.forEach(function(prediction) {
     checkPrediction(resource1, prediction);
   });
 
   var resource2 = types.getType({ name: 'resource', include: 'text/javascript' });
-  var predictions2 = resource2.parseString('').getPredictions();
-  test.ok(predictions2.length > 1, 'have resources');
-  predictions2.forEach(function(prediction) {
+  var options2 = resource2.getLookup();
+  test.ok(options2.length > 1, 'have resources');
+  options2.forEach(function(prediction) {
     checkPrediction(resource2, prediction);
   });
 
   var resource3 = types.getType({ name: 'resource', include: 'text/css' });
-  var predictions3 = resource3.parseString('').getPredictions();
+  var options3 = resource3.getLookup();
   // jsdom fails to support digging into stylesheets
   if (!options.isNode) {
-    test.ok(predictions3.length >= 1, 'have resources');
+    test.ok(options3.length >= 1, 'have resources');
   }
   else {
     test.log('Running under Node. ' +
              'Skipping checks due to jsdom document.stylsheets support.');
   }
-  predictions3.forEach(function(prediction) {
+  options3.forEach(function(prediction) {
     checkPrediction(resource3, prediction);
   });
 
   var resource4 = types.getType({ name: 'resource' });
-  var predictions4 = resource4.parseString('').getPredictions();
+  var options4 = resource4.getLookup();
 
-  test.is(predictions1.length, predictions4.length, 'type spec');
-  // Bug 734045
-  // test.is(predictions2.length + predictions3.length, predictions4.length, 'split');
+  test.is(options1.length, options4.length, 'type spec');
+  test.is(options2.length + options3.length, options4.length, 'split');
 };
 
 function checkPrediction(res, prediction) {
