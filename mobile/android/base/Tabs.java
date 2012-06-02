@@ -76,10 +76,8 @@ public class Tabs implements GeckoEventListener {
 
     public void removeTab(int id) {
         if (tabs.containsKey(id)) {
-            Tab tab = getTab(id);
-            order.remove(tab);
+            order.remove(getTab(id));
             tabs.remove(id);
-            tab.freeBuffer();
             Log.i(LOGTAG, "Removed a tab with id: " + id);
         }
     }
