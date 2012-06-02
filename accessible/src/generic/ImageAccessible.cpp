@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLImageAccessible.h"
+#include "ImageAccessible.h"
 
 #include "nsAccUtils.h"
 #include "Role.h"
@@ -25,24 +25,24 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageAccessible
+// ImageAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLImageAccessible::
-  nsHTMLImageAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+ImageAccessible::
+  ImageAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsLinkableAccessible(aContent, aDoc)
 {
   mFlags |= eImageAccessible;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, Accessible,
+NS_IMPL_ISUPPORTS_INHERITED1(ImageAccessible, Accessible,
                              nsIAccessibleImage)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible public
 
 PRUint64
-nsHTMLImageAccessible::NativeState()
+ImageAccessible::NativeState()
 {
   // The state is a bitfield, get our inherited state, then logically OR it with
   // states::ANIMATED if this is an animated image.
@@ -71,7 +71,7 @@ nsHTMLImageAccessible::NativeState()
 }
 
 nsresult
-nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
+ImageAccessible::GetNameInternal(nsAString& aName)
 {
   bool hasAltAttrib =
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::alt, aName);
@@ -93,7 +93,7 @@ nsHTMLImageAccessible::GetNameInternal(nsAString& aName)
 }
 
 role
-nsHTMLImageAccessible::NativeRole()
+ImageAccessible::NativeRole()
 {
   return roles::GRAPHIC;
 }
@@ -102,14 +102,14 @@ nsHTMLImageAccessible::NativeRole()
 // nsIAccessible
 
 PRUint8
-nsHTMLImageAccessible::ActionCount()
+ImageAccessible::ActionCount()
 {
   PRUint8 actionCount = nsLinkableAccessible::ActionCount();
   return HasLongDesc() ? actionCount + 1 : actionCount;
 }
 
 NS_IMETHODIMP
-nsHTMLImageAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+ImageAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   aName.Truncate();
 
@@ -124,7 +124,7 @@ nsHTMLImageAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsHTMLImageAccessible::DoAction(PRUint8 aIndex)
+ImageAccessible::DoAction(PRUint8 aIndex)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -149,15 +149,13 @@ nsHTMLImageAccessible::DoAction(PRUint8 aIndex)
   nsCOMPtr<nsIDOMWindow> tmp;
   return win->Open(spec, EmptyString(), EmptyString(),
                    getter_AddRefs(tmp));
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessibleImage
 
 NS_IMETHODIMP
-nsHTMLImageAccessible::GetImagePosition(PRUint32 aCoordType,
-                                        PRInt32 *aX, PRInt32 *aY)
+ImageAccessible::GetImagePosition(PRUint32 aCoordType, PRInt32* aX, PRInt32* aY)
 {
   PRInt32 width, height;
   nsresult rv = GetBounds(aX, aY, &width, &height);
@@ -168,7 +166,7 @@ nsHTMLImageAccessible::GetImagePosition(PRUint32 aCoordType,
 }
 
 NS_IMETHODIMP
-nsHTMLImageAccessible::GetImageSize(PRInt32 *aWidth, PRInt32 *aHeight)
+ImageAccessible::GetImageSize(PRInt32* aWidth, PRInt32* aHeight)
 {
   PRInt32 x, y;
   return GetBounds(&x, &y, aWidth, aHeight);
@@ -176,11 +174,11 @@ nsHTMLImageAccessible::GetImageSize(PRInt32 *aWidth, PRInt32 *aHeight)
 
 // Accessible
 nsresult
-nsHTMLImageAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
+ImageAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
-  
+
   nsresult rv = nsLinkableAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -196,10 +194,10 @@ nsHTMLImageAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribute
 // Private methods
 
 already_AddRefed<nsIURI>
-nsHTMLImageAccessible::GetLongDescURI() const
+ImageAccessible::GetLongDescURI() const
 {
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::longdesc)) {
-    nsGenericHTMLElement* element = 
+    nsGenericHTMLElement* element =
       nsGenericHTMLElement::FromContent(mContent);
     if (element) {
       nsCOMPtr<nsIURI> uri;
@@ -228,7 +226,7 @@ nsHTMLImageAccessible::GetLongDescURI() const
 }
 
 bool
-nsHTMLImageAccessible::IsLongDescIndex(PRUint8 aIndex)
+ImageAccessible::IsLongDescIndex(PRUint8 aIndex)
 {
   return aIndex == nsLinkableAccessible::ActionCount();
 }

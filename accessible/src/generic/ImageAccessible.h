@@ -3,24 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsHTMLImageAccessible_H_
-#define _nsHTMLImageAccessible_H_
+#ifndef mozilla_a11y_ImageAccessible_h__
+#define mozilla_a11y_ImageAccessible_h__
 
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleImage.h"
 
 class nsGenericHTMLElement;
 
+namespace mozilla {
+namespace a11y {
+
 /* Accessible for supporting images
  * supports:
  * - gets name, role
  * - support basic state
  */
-class nsHTMLImageAccessible : public nsLinkableAccessible,
-                              public nsIAccessibleImage
+class ImageAccessible : public nsLinkableAccessible,
+                        public nsIAccessibleImage
 {
 public:
-  nsHTMLImageAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  ImageAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -34,7 +37,7 @@ public:
 
   // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
 
@@ -71,14 +74,17 @@ private:
 
 };
 
+} // namespace a11y
+} // namespace mozilla
+
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible downcasting method
 
-inline nsHTMLImageAccessible*
+inline mozilla::a11y::ImageAccessible*
 Accessible::AsImage()
 {
   return IsImage() ?
-    static_cast<nsHTMLImageAccessible*>(this) : nsnull;
+    static_cast<mozilla::a11y::ImageAccessible*>(this) : nsnull;
 }
 
 #endif

@@ -21,6 +21,7 @@ CPPSRCS = \
   DocAccessible.cpp \
   FormControlAccessible.cpp \
   HyperTextAccessible.cpp \
+  ImageAccessible.cpp \
   OuterDocAccessible.cpp \
   RootAccessible.cpp \
   TextLeafAccessible.cpp \
@@ -42,6 +43,8 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../base \
   -I$(srcdir)/../html \
   -I$(srcdir)/../xul \
+  -I$(srcdir)/../../../content/base/src \
+  -I$(srcdir)/../../../content/html/content/src \
   -I$(srcdir)/../../../layout/generic \
   -I$(srcdir)/../../../layout/xul/base/src \
   $(NULL)

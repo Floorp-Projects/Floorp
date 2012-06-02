@@ -9,8 +9,7 @@
 
 #include "AccessibleImage_i.c"
 
-#include "nsHTMLImageAccessibleWrap.h"
-#include "nsHTMLImageAccessible.h"
+#include "ImageAccessibleWrap.h"
 
 #include "nsIAccessible.h"
 #include "nsIAccessibleImage.h"
@@ -18,6 +17,9 @@
 #include "nsAccessNodeWrap.h"
 
 #include "nsString.h"
+
+using namespace mozilla;
+using namespace mozilla::a11y;
 
 // IUnknown
 
@@ -43,8 +45,7 @@ ia2AccessibleImage::get_description(BSTR* aDescription)
 __try {
   *aDescription = NULL;
 
-  nsHTMLImageAccessibleWrap* acc =
-    static_cast<nsHTMLImageAccessibleWrap*>(this);
+  ImageAccessibleWrap* acc = static_cast<ImageAccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -72,8 +73,7 @@ __try {
   *aX = 0;
   *aY = 0;
 
-  nsHTMLImageAccessibleWrap* imageAcc =
-    static_cast<nsHTMLImageAccessibleWrap*>(this);
+  ImageAccessibleWrap* imageAcc = static_cast<ImageAccessibleWrap*>(this);
   if (imageAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -102,8 +102,7 @@ __try {
   *aHeight = 0;
   *aWidth = 0;
 
-  nsHTMLImageAccessibleWrap* imageAcc =
-    static_cast<nsHTMLImageAccessibleWrap*>(this);
+  ImageAccessibleWrap* imageAcc = static_cast<ImageAccessibleWrap*>(this);
   if (imageAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
