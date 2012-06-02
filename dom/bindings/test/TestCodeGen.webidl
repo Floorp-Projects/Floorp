@@ -16,6 +16,9 @@ enum TestEnum {
 
 callback TestCallback = void();
 
+[Constructor,
+ Constructor(DOMString str),
+ Constructor(unsigned long num, boolean? bool)]
 interface TestInterface {
   // Integer types
   // XXXbz add tests for infallible versions of all the integer stuff

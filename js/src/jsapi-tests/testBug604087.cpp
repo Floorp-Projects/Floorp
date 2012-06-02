@@ -12,9 +12,9 @@
 #include "jsobj.h"
 #include "jswrapper.h"
 
-struct OuterWrapper : js::Wrapper
+struct OuterWrapper : js::DirectWrapper
 {
-    OuterWrapper() : Wrapper(0) {}
+    OuterWrapper() : DirectWrapper(0) {}
 
     virtual bool isOuterWindow() {
         return true;

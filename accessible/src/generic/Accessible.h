@@ -27,7 +27,6 @@ class EmbeddedObjCollector;
 class KeyBinding;
 class Accessible;
 class HyperTextAccessible;
-class nsHTMLImageAccessible;
 class nsHTMLImageMapAccessible;
 struct nsRoleMapEntry;
 class Relation;
@@ -36,6 +35,7 @@ namespace mozilla {
 namespace a11y {
 
 class HTMLLIAccessible;
+class ImageAccessible;
 class TableAccessible;
 class TextLeafAccessible;
 
@@ -480,7 +480,7 @@ public:
   mozilla::a11y::HTMLLIAccessible* AsHTMLListItem();
 
   inline bool IsImage() const { return mFlags & eImageAccessible; }
-  nsHTMLImageAccessible* AsImage();
+  mozilla::a11y::ImageAccessible* AsImage();
 
   bool IsImageMapAccessible() const { return mFlags & eImageMapAccessible; }
   nsHTMLImageMapAccessible* AsImageMap();

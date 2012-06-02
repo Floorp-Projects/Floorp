@@ -24,12 +24,13 @@
  * Google Author(s): Behdad Esfahbod
  */
 
+#include "hb-font-private.hh" /* Shall be first since may include windows.h */
+
 #include "hb-open-type-private.hh"
 
 #include "hb-ot-hhea-table.hh"
 #include "hb-ot-hmtx-table.hh"
 
-#include "hb-font-private.hh"
 #include "hb-blob.h"
 
 #include <string.h>

@@ -1,5 +1,6 @@
 /*
  * Copyright © 2007,2008,2009,2010  Red Hat, Inc.
+ * Copyright © 2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -22,6 +23,7 @@
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  * Red Hat Author(s): Behdad Esfahbod
+ * Google Author(s): Behdad Esfahbod
  */
 
 #ifndef HB_OPEN_TYPE_PRIVATE_HH
@@ -153,7 +155,7 @@ ASSERT_STATIC (Type::min_size + 1 <= sizeof (_Null##Type))
 
 
 #define TRACE_SANITIZE() \
-	hb_auto_trace_t<HB_DEBUG_SANITIZE> trace (&c->debug_depth, "SANITIZE", this, NULL, HB_FUNC);
+	hb_auto_trace_t<HB_DEBUG_SANITIZE> trace (&c->debug_depth, "SANITIZE", this, HB_FUNC, "");
 
 
 struct hb_sanitize_context_t
@@ -164,24 +166,24 @@ struct hb_sanitize_context_t
     this->writable = false;
   }
 
-  inline void setup (void)
+  inline void start_processing (void)
   {
     this->start = hb_blob_get_data (this->blob, NULL);
     this->end = this->start + hb_blob_get_length (this->blob);
     this->edit_count = 0;
     this->debug_depth = 0;
 
-    DEBUG_MSG (SANITIZE, this->blob,
-	       "init [%p..%p] (%lu bytes)",
-	       this->start, this->end,
-	       (unsigned long) (this->end - this->start));
+    DEBUG_MSG_LEVEL (SANITIZE, this->blob, 0, +1,
+		     "start [%p..%p] (%lu bytes)",
+		     this->start, this->end,
+		     (unsigned long) (this->end - this->start));
   }
 
-  inline void finish (void)
+  inline void end_processing (void)
   {
-    DEBUG_MSG (SANITIZE, this->blob,
-	       "fini [%p..%p] %u edit requests",
-	       this->start, this->end, this->edit_count);
+    DEBUG_MSG_LEVEL (SANITIZE, this->blob, 0, -1,
+		     "end [%p..%p] %u edit requests",
+		     this->start, this->end, this->edit_count);
 
     hb_blob_destroy (this->blob);
     this->blob = NULL;
@@ -191,18 +193,13 @@ struct hb_sanitize_context_t
   inline bool check_range (const void *base, unsigned int len) const
   {
     const char *p = (const char *) base;
-    bool ret = this->start <= p &&
-	       p <= this->end &&
-	       (unsigned int) (this->end - p) >= len;
 
-    DEBUG_MSG_LEVEL (SANITIZE, this->blob, this->debug_depth,
-		     "%-*d-> range [%p..%p] (%d bytes) in [%p..%p] -> %s",
-		     this->debug_depth, this->debug_depth,
-		     p, p + len, len,
-		     this->start, this->end,
-		     ret ? "pass" : "FAIL");
+    hb_auto_trace_t<HB_DEBUG_SANITIZE> trace (&this->debug_depth, "SANITIZE", this->blob, NULL,
+					      "check_range [%p..%p] (%d bytes) in [%p..%p]",
+					      p, p + len, len,
+					      this->start, this->end);
 
-    return likely (ret);
+    return TRACE_RETURN (likely (this->start <= p && p <= this->end && (unsigned int) (this->end - p) >= len));
   }
 
   inline bool check_array (const void *base, unsigned int record_size, unsigned int len) const
@@ -210,14 +207,12 @@ struct hb_sanitize_context_t
     const char *p = (const char *) base;
     bool overflows = _hb_unsigned_int_mul_overflows (len, record_size);
 
-    DEBUG_MSG_LEVEL (SANITIZE, this->blob, this->debug_depth,
-		     "%-*d-> array [%p..%p] (%d*%d=%ld bytes) in [%p..%p] -> %s",
-		     this->debug_depth, this->debug_depth,
-		     p, p + (record_size * len), record_size, len, (unsigned long) record_size * len,
-		     this->start, this->end,
-		     !overflows ? "does not overflow" : "OVERFLOWS FAIL");
+    hb_auto_trace_t<HB_DEBUG_SANITIZE> trace (&this->debug_depth, "SANITIZE", this->blob, NULL,
+					      "check_array [%p..%p] (%d*%d=%ld bytes) in [%p..%p]",
+					      p, p + (record_size * len), record_size, len, (unsigned long) record_size * len,
+					      this->start, this->end);
 
-    return likely (!overflows && this->check_range (base, record_size * len));
+    return TRACE_RETURN (likely (!overflows && this->check_range (base, record_size * len)));
   }
 
   template <typename Type>
@@ -226,23 +221,21 @@ struct hb_sanitize_context_t
     return likely (this->check_range (obj, obj->min_size));
   }
 
-  inline bool can_edit (const void *base HB_UNUSED, unsigned int len HB_UNUSED)
+  inline bool may_edit (const void *base HB_UNUSED, unsigned int len HB_UNUSED)
   {
     const char *p = (const char *) base;
     this->edit_count++;
 
-    DEBUG_MSG_LEVEL (SANITIZE, this->blob, this->debug_depth,
-		     "%-*d-> edit(%u) [%p..%p] (%d bytes) in [%p..%p] -> %s",
-		     this->debug_depth, this->debug_depth,
-		     this->edit_count,
-		     p, p + len, len,
-		     this->start, this->end,
-		     this->writable ? "granted" : "REJECTED");
+    hb_auto_trace_t<HB_DEBUG_SANITIZE> trace (&this->debug_depth, "SANITIZE", this->blob, NULL,
+					      "may_edit(%u) [%p..%p] (%d bytes) in [%p..%p] -> %s",
+					      this->edit_count,
+					      p, p + len, len,
+					      this->start, this->end);
 
-    return this->writable;
+    return TRACE_RETURN (this->writable);
   }
 
-  unsigned int debug_depth;
+  mutable unsigned int debug_depth;
   const char *start, *end;
   bool writable;
   unsigned int edit_count;
@@ -266,10 +259,10 @@ struct Sanitizer
   retry:
     DEBUG_MSG_FUNC (SANITIZE, blob, "start");
 
-    c->setup ();
+    c->start_processing ();
 
     if (unlikely (!c->start)) {
-      c->finish ();
+      c->end_processing ();
       return blob;
     }
 
@@ -303,7 +296,7 @@ struct Sanitizer
       }
     }
 
-    c->finish ();
+    c->end_processing ();
 
     DEBUG_MSG_FUNC (SANITIZE, blob, sane ? "PASSED" : "FAILED");
     if (sane)
@@ -374,7 +367,7 @@ struct IntType
   inline int cmp (Type a) const { Type b = v; return a < b ? -1 : a == b ? 0 : +1; }
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return likely (c->check_struct (this));
+    return TRACE_RETURN (likely (c->check_struct (this)));
   }
   protected:
   BEInt<Type, sizeof (Type)> v;
@@ -404,7 +397,7 @@ struct LONGDATETIME
 {
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return likely (c->check_struct (this));
+    return TRACE_RETURN (likely (c->check_struct (this)));
   }
   private:
   LONG major;
@@ -468,7 +461,7 @@ struct FixedVersion
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return c->check_struct (this);
+    return TRACE_RETURN (c->check_struct (this));
   }
 
   USHORT major;
@@ -496,26 +489,26 @@ struct GenericOffsetTo : OffsetType
 
   inline bool sanitize (hb_sanitize_context_t *c, void *base) {
     TRACE_SANITIZE ();
-    if (unlikely (!c->check_struct (this))) return false;
+    if (unlikely (!c->check_struct (this))) return TRACE_RETURN (false);
     unsigned int offset = *this;
-    if (unlikely (!offset)) return true;
+    if (unlikely (!offset)) return TRACE_RETURN (true);
     Type &obj = StructAtOffset<Type> (base, offset);
-    return likely (obj.sanitize (c)) || neuter (c);
+    return TRACE_RETURN (likely (obj.sanitize (c)) || neuter (c));
   }
   template <typename T>
   inline bool sanitize (hb_sanitize_context_t *c, void *base, T user_data) {
     TRACE_SANITIZE ();
-    if (unlikely (!c->check_struct (this))) return false;
+    if (unlikely (!c->check_struct (this))) return TRACE_RETURN (false);
     unsigned int offset = *this;
-    if (unlikely (!offset)) return true;
+    if (unlikely (!offset)) return TRACE_RETURN (true);
     Type &obj = StructAtOffset<Type> (base, offset);
-    return likely (obj.sanitize (c, user_data)) || neuter (c);
+    return TRACE_RETURN (likely (obj.sanitize (c, user_data)) || neuter (c));
   }
 
   private:
   /* Set the offset to Null */
   inline bool neuter (hb_sanitize_context_t *c) {
-    if (c->can_edit (this, this->static_size)) {
+    if (c->may_edit (this, this->static_size)) {
       this->set (0); /* 0 is Null offset */
       return true;
     }
@@ -561,7 +554,7 @@ struct GenericArrayOf
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    if (unlikely (!sanitize_shallow (c))) return false;
+    if (unlikely (!sanitize_shallow (c))) return TRACE_RETURN (false);
 
     /* Note: for structs that do not reference other structs,
      * we do not need to call their sanitize() as we already did
@@ -572,33 +565,32 @@ struct GenericArrayOf
      */
     (void) (false && array[0].sanitize (c));
 
-    return true;
+    return TRACE_RETURN (true);
   }
   inline bool sanitize (hb_sanitize_context_t *c, void *base) {
     TRACE_SANITIZE ();
-    if (unlikely (!sanitize_shallow (c))) return false;
+    if (unlikely (!sanitize_shallow (c))) return TRACE_RETURN (false);
     unsigned int count = len;
     for (unsigned int i = 0; i < count; i++)
       if (unlikely (!array[i].sanitize (c, base)))
-        return false;
-    return true;
+        return TRACE_RETURN (false);
+    return TRACE_RETURN (true);
   }
   template <typename T>
   inline bool sanitize (hb_sanitize_context_t *c, void *base, T user_data) {
     TRACE_SANITIZE ();
-    if (unlikely (!sanitize_shallow (c))) return false;
+    if (unlikely (!sanitize_shallow (c))) return TRACE_RETURN (false);
     unsigned int count = len;
     for (unsigned int i = 0; i < count; i++)
       if (unlikely (!array[i].sanitize (c, base, user_data)))
-        return false;
-    return true;
+        return TRACE_RETURN (false);
+    return TRACE_RETURN (true);
   }
 
   private:
   inline bool sanitize_shallow (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return c->check_struct (this)
-	&& c->check_array (this, Type::static_size, len);
+    return TRACE_RETURN (c->check_struct (this) && c->check_array (this, Type::static_size, len));
   }
 
   public:
@@ -640,12 +632,12 @@ struct OffsetListOf : OffsetArrayOf<Type>
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    return OffsetArrayOf<Type>::sanitize (c, this);
+    return TRACE_RETURN (OffsetArrayOf<Type>::sanitize (c, this));
   }
   template <typename T>
   inline bool sanitize (hb_sanitize_context_t *c, T user_data) {
     TRACE_SANITIZE ();
-    return OffsetArrayOf<Type>::sanitize (c, this, user_data);
+    return TRACE_RETURN (OffsetArrayOf<Type>::sanitize (c, this, user_data));
   }
 };
 
@@ -670,7 +662,7 @@ struct HeadlessArrayOf
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE ();
-    if (unlikely (!sanitize_shallow (c))) return false;
+    if (unlikely (!sanitize_shallow (c))) return TRACE_RETURN (false);
 
     /* Note: for structs that do not reference other structs,
      * we do not need to call their sanitize() as we already did
@@ -681,7 +673,7 @@ struct HeadlessArrayOf
      */
     (void) (false && array[0].sanitize (c));
 
-    return true;
+    return TRACE_RETURN (true);
   }
 
   USHORT len;

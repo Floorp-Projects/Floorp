@@ -4,7 +4,7 @@ load 226744-1.xhtml
 load 232095-1.xul
 load 277523-1.xhtml
 load 277950-1.xhtml
-skip-if(browserIsRemote) load 336744-1.html # no remote support for xul popups, bug 617653
+skip-if(Android||browserIsRemote) load 336744-1.html # no remote support for xul popups, bug 617653
 asserts(0-1) load 336960-1.html # maybe bug 429586
 load 342954-1.xhtml
 load 342954-2.xhtml
