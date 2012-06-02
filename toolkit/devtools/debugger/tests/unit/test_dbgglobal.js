@@ -14,7 +14,8 @@ function run_test()
   check_except(DebuggerServer.closeListener);
   check_except(DebuggerServer.connectPipe);
 
-  DebuggerServer.init();
+  // Allow incoming connections.
+  DebuggerServer.init(function () { return true; });
 
   // These should still fail because we haven't added a createRootActor
   // implementation yet.
