@@ -142,23 +142,21 @@ class HashTable : private AllocPolicy
       protected:
         friend class HashTable;
 
-        Range(Entry *c, Entry *e) : cur(c), end(e), validEntry(true) {
+        Range(Entry *c, Entry *e) : cur(c), end(e) {
             while (cur < end && !cur->isLive())
                 ++cur;
         }
 
         Entry *cur, *end;
-        DebugOnly<bool> validEntry;
 
       public:
-        Range() : cur(NULL), end(NULL), validEntry(false) {}
+        Range() : cur(NULL), end(NULL) {}
 
         bool empty() const {
             return cur == end;
         }
 
         T &front() const {
-            JS_ASSERT(validEntry);
             JS_ASSERT(!empty());
             return cur->t;
         }
@@ -167,7 +165,6 @@ class HashTable : private AllocPolicy
             JS_ASSERT(!empty());
             while (++cur < end && !cur->isLive())
                 continue;
-            validEntry = true;
         }
     };
 
@@ -208,7 +205,6 @@ class HashTable : private AllocPolicy
         void removeFront() {
             table.remove(*this->cur);
             removed = true;
-            this->validEntry = false;
         }
 
         /*
@@ -225,7 +221,6 @@ class HashTable : private AllocPolicy
             table.remove(*this->cur);
             table.add(l, e);
             added = true;
-            this->validEntry = false;
         }
 
         void rekeyFront(const Key &k) {

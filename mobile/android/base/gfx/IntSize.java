@@ -71,11 +71,5 @@ public class IntSize {
     public IntSize nextPowerOfTwo() {
         return new IntSize(nextPowerOfTwo(width), nextPowerOfTwo(height));
     }
-
-    public static boolean isPowerOfTwo(int value) {
-        if (value == 0)
-            return false;
-        return (value & (value - 1)) == 0;
-    }
 }
 
