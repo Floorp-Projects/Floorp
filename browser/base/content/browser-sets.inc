@@ -96,6 +96,7 @@
     <command id="Tools:ChromeDebugger" oncommand="DebuggerUI.toggleChromeDebugger();" disabled="true"/>
     <command id="Tools:Scratchpad" oncommand="Scratchpad.openScratchpad();" disabled="true"/>
     <command id="Tools:StyleEditor" oncommand="StyleEditor.openChrome();" disabled="true"/>
+    <command id="Tools:ResponsiveUI" oncommand="ResponsiveUI.toggle();" disabled="true"/>
     <command id="Tools:Addons" oncommand="BrowserOpenAddonsMgr();"/>
     <command id="Tools:Sanitize"
      oncommand="Cc['@mozilla.org/browser/browserglue;1'].getService(Ci.nsIBrowserGlue).sanitize(window);"/>
@@ -246,6 +247,13 @@
 #endif
     />
     <key id="key_inspect" key="&inspectMenu.commandkey;" command="Inspector:Inspect"
+#ifdef XP_MACOSX
+        modifiers="accel,alt"
+#else
+        modifiers="accel,shift"
+#endif
+    />
+    <key id="key_responsiveUI" key="&responsiveUI.commandkey;" command="Tools:ResponsiveUI"
 #ifdef XP_MACOSX
         modifiers="accel,alt"
 #else

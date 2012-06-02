@@ -13,30 +13,6 @@ let doc;
 let ruleDialog;
 let ruleView;
 
-function waitForEditorFocus(aParent, aCallback)
-{
-  aParent.addEventListener("focus", function onFocus(evt) {
-    if (inplaceEditor(evt.target)) {
-      aParent.removeEventListener("focus", onFocus, true);
-      let editor = inplaceEditor(evt.target);
-      executeSoon(function() {
-        aCallback(editor);
-      });
-    }
-  }, true);
-}
-
-function waitForEditorBlur(aEditor, aCallback)
-{
-  let input = aEditor.input;
-  input.addEventListener("blur", function onBlur() {
-    input.removeEventListener("blur", onBlur, false);
-    executeSoon(function() {
-      aCallback();
-    });
-  }, false);
-}
-
 var gRuleViewChanged = false;
 function ruleViewChanged()
 {
@@ -115,7 +91,6 @@ function testCreateNew()
       is(elementRuleEditor.propertyList.children.length, 1, "Should have created a property editor.");
       let textProp = elementRuleEditor.rule.textProps[0];
       is(aEditor, inplaceEditor(textProp.editor.valueSpan), "Should be editing the value span now.");
-
       aEditor.input.value = "#XYZ";
       waitForEditorBlur(aEditor, function() {
         expectChange();

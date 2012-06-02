@@ -868,15 +868,6 @@ function CssRuleView(aDoc, aStore)
   this.element.setAttribute("tabindex", "0");
   this.element.classList.add("ruleview");
   this.element.flex = 1;
-  this._selectionMode = false;
-
-  this._boundMouseDown = this._onMouseDown.bind(this);
-  this.element.addEventListener("mousedown",
-                                this._boundMouseDown);
-  this._boundMouseUp = this._onMouseUp.bind(this);
-  this.element.addEventListener("mouseup",
-                                this._boundMouseUp);
-  this._boundMouseMove = this._onMouseMove.bind(this);
 
   this._boundCopy = this._onCopy.bind(this);
   this.element.addEventListener("copy", this._boundCopy);
@@ -948,24 +939,6 @@ CssRuleView.prototype = {
     }.bind(this);
 
     this._createEditors();
-
-    // When creating a new property, we fake the normal property
-    // editor behavior (focusing a property's value after entering its
-    // name) by responding to the name's blur event, creating the
-    // value editor, and grabbing focus to the value editor.  But if
-    // focus has already moved to another document, we won't be able
-    // to move focus to the new editor.
-    // Create a focusable item at the end of the editors to catch these
-    // cases.
-    this._focusBackstop = createChild(this.element, "div", {
-      tabindex: 0,
-    });
-    this._backstopHandler = function() {
-      // If this item is actually focused long enough to get the focus
-      // event, allow focus to move on out of this document.
-      moveFocus(this.doc.defaultView, FOCUS_FORWARD);
-    }.bind(this);
-    this._focusBackstop.addEventListener("focus", this._backstopHandler, false);
   },
 
   /**
@@ -1013,12 +986,6 @@ CssRuleView.prototype = {
     this._clearRules();
     this._viewedElement = null;
     this._elementStyle = null;
-
-    if (this._focusBackstop) {
-      this._focusBackstop.removeEventListener("focus", this._backstopHandler, false);
-      this._backstopHandler = null;
-      this._focusBackstop = null;
-    }
   },
 
   /**
@@ -1150,22 +1117,6 @@ CssRuleView.prototype = {
     this._declarationItem.disabled = disablePropertyItems;
     this._propertyItem.disabled = disablePropertyItems;
     this._propertyValueItem.disabled = disablePropertyItems;
-  },
-
-  _onMouseDown: function CssRuleView_onMouseDown()
-  {
-    this.element.addEventListener("mousemove", this._boundMouseMove);
-  },
-
-  _onMouseUp: function CssRuleView_onMouseUp()
-  {
-    this.element.removeEventListener("mousemove", this._boundMouseMove);
-    this._selectionMode = false;
-  },
-
-  _onMouseMove: function CssRuleView_onMouseMove()
-  {
-    this._selectionMode = true;
   },
 
   /**
@@ -1342,8 +1293,7 @@ CssRuleView.prototype = {
  * Create a RuleEditor.
  *
  * @param CssRuleView aRuleView
- *        The CssRuleView containg the document holding this rule editor and the
- *        _selectionMode flag.
+ *        The CssRuleView containg the document holding this rule editor.
  * @param Rule aRule
  *        The Rule object we're editing.
  * @constructor
@@ -1356,6 +1306,7 @@ function RuleEditor(aRuleView, aRule)
   this.rule.editor = this;
 
   this._onNewProperty = this._onNewProperty.bind(this);
+  this._newPropertyDestroy = this._newPropertyDestroy.bind(this);
 
   this._create();
 }
@@ -1400,9 +1351,12 @@ RuleEditor.prototype = {
       textContent: " {"
     });
 
-    this.openBrace.addEventListener("click", function() {
-      this.newProperty();
-    }.bind(this), true);
+    code.addEventListener("click", function() {
+      let selection = this.doc.defaultView.getSelection();
+      if (selection.isCollapsed) {
+        this.newProperty();
+      }
+    }.bind(this), false);
 
     this.propertyList = createChild(code, "ul", {
       class: "ruleview-propertylist"
@@ -1416,19 +1370,10 @@ RuleEditor.prototype = {
       textContent: "}"
     });
 
-    // We made the close brace focusable, tabbing to it
-    // or clicking on it should start the new property editor.
-    this.closeBrace.addEventListener("focus", function(aEvent) {
-      if (!this.ruleView._selectionMode) {
-        this.newProperty();
-      }
-    }.bind(this), true);
-    this.closeBrace.addEventListener("mousedown", function(aEvent) {
-      aEvent.preventDefault();
-    }.bind(this), true);
-    this.closeBrace.addEventListener("click", function(aEvent) {
-      this.closeBrace.focus();
-    }.bind(this), true);
+    // Create a property editor when the close brace is clicked.
+    editableItem(this.closeBrace, function(aElement) {
+      this.newProperty();
+    }.bind(this));
   },
 
   /**
@@ -1470,6 +1415,11 @@ RuleEditor.prototype = {
    */
   newProperty: function RuleEditor_newProperty()
   {
+    // If we're already creating a new property, ignore this.
+    if (!this.closeBrace.hasAttribute("tabindex")) {
+      return;
+    }
+
     // While we're editing a new property, it doesn't make sense to
     // start a second new property editor, so disable focusing the
     // close brace for now.
@@ -1480,25 +1430,29 @@ RuleEditor.prototype = {
     });
 
     this.newPropSpan = createChild(this.newPropItem, "span", {
-      class: "ruleview-propertyname"
+      class: "ruleview-propertyname",
+      tabindex: "0"
     });
 
     new InplaceEditor({
       element: this.newPropSpan,
       done: this._onNewProperty,
+      destroy: this._newPropertyDestroy,
       advanceChars: ":"
     });
   },
 
-  _onNewProperty: function RuleEditor_onNewProperty(aValue, aCommit)
+  /**
+   * Called when the new property input has been dismissed.
+   * Will create a new TextProperty if necessary.
+   *
+   * @param string aValue
+   *        The value in the editor.
+   * @param bool aCommit
+   *        True if the value should be committed.
+   */
+  _onNewProperty: function RuleEditor__onNewProperty(aValue, aCommit)
   {
-    // We're done, make the close brace focusable again.
-    this.closeBrace.setAttribute("tabindex", "0");
-
-    this.propertyList.removeChild(this.newPropItem);
-    delete this.newPropItem;
-    delete this.newPropSpan;
-
     if (!aValue || !aCommit) {
       return;
     }
@@ -1507,8 +1461,21 @@ RuleEditor.prototype = {
     let prop = this.rule.createProperty(aValue, "", "");
     let editor = new TextPropertyEditor(this, prop);
     this.propertyList.appendChild(editor.element);
-    editor.valueSpan.focus();
+    editor.valueSpan.click();
   },
+
+  /**
+   * Called when the new property editor is destroyed.
+   */
+  _newPropertyDestroy: function RuleEditor__newPropertyDestroy()
+  {
+    // We're done, make the close brace focusable again.
+    this.closeBrace.setAttribute("tabindex", "0");
+
+    this.propertyList.removeChild(this.newPropItem);
+    delete this.newPropItem;
+    delete this.newPropSpan;
+  }
 };
 
 /**
@@ -1563,12 +1530,21 @@ TextPropertyEditor.prototype = {
     });
     this.expander.addEventListener("click", this._onExpandClicked, true);
 
+    this.nameContainer = createChild(this.element, "span", {
+      class: "ruleview-namecontainer"
+    });
+    this.nameContainer.addEventListener("click", function(aEvent) {
+      this.nameSpan.click();
+      aEvent.stopPropagation();
+    }.bind(this), false);
+
     // Property name, editable when focused.  Property name
     // is committed when the editor is unfocused.
-    this.nameSpan = createChild(this.element, "span", {
+    this.nameSpan = createChild(this.nameContainer, "span", {
       class: "ruleview-propertyname",
       tabindex: "0",
     });
+
     editableField({
       start: this._onStartEditing,
       element: this.nameSpan,
@@ -1576,12 +1552,23 @@ TextPropertyEditor.prototype = {
       advanceChars: ':'
     });
 
-    appendText(this.element, ": ");
+    appendText(this.nameContainer, ": ");
+
+    // Create a span that will hold the property and semicolon.
+    // Use this span to create a slightly larger click target
+    // for the value.
+    let propertyContainer = createChild(this.element, "span", {
+      class: "ruleview-propertycontainer"
+    });
+    propertyContainer.addEventListener("click", function(aEvent) {
+      this.valueSpan.click();
+      aEvent.stopPropagation();
+    }.bind(this), false);
 
     // Property value, editable when focused.  Changes to the
     // property value are applied as they are typed, and reverted
     // if the user presses escape.
-    this.valueSpan = createChild(this.element, "span", {
+    this.valueSpan = createChild(propertyContainer, "span", {
       class: "ruleview-propertyvalue",
       tabindex: "0",
     });
@@ -1599,7 +1586,7 @@ TextPropertyEditor.prototype = {
                        value: this.prop.value,
                        priority: this.prop.priority };
 
-    appendText(this.element, ";");
+    appendText(propertyContainer, ";");
 
     this.warning = createChild(this.element, "div", {
       hidden: "",
@@ -1713,18 +1700,20 @@ TextPropertyEditor.prototype = {
   /**
    * Handles clicks on the disabled property.
    */
-  _onEnableClicked: function TextPropertyEditor_onEnableClicked()
+  _onEnableClicked: function TextPropertyEditor_onEnableClicked(aEvent)
   {
     this.prop.setEnabled(this.enable.checked);
+    aEvent.stopPropagation();
   },
 
   /**
    * Handles clicks on the computed property expander.
    */
-  _onExpandClicked: function TextPropertyEditor_onExpandClicked()
+  _onExpandClicked: function TextPropertyEditor_onExpandClicked(aEvent)
   {
     this.expander.classList.toggle("styleinspector-open");
     this.computed.classList.toggle("styleinspector-open");
+    aEvent.stopPropagation();
   },
 
   /**
@@ -1824,44 +1813,85 @@ TextPropertyEditor.prototype = {
  *    {function} done:
  *       Called when input is committed or blurred.  Called with
  *       current value and a boolean telling the caller whether to
- *       commit the change.  This function is called after the editor
+ *       commit the change.  This function is called before the editor
  *       has been torn down.
+ *    {function} destroy:
+ *       Called when the editor is destroyed and has been torn down.
  *    {string} advanceChars:
  *       If any characters in advanceChars are typed, focus will advance
  *       to the next element.
  */
 function editableField(aOptions)
 {
-  aOptions.element.addEventListener("focus", function() {
+  editableItem(aOptions.element, function(aElement) {
     new InplaceEditor(aOptions);
-  }, false);
+  });
+}
 
-  // In order to allow selection on the element, prevent focus on
-  // mousedown.  Focus on click instead.
-  aOptions.element.addEventListener("mousedown", function(evt) {
-    evt.preventDefault();
-  }, false);
-  aOptions.element.addEventListener("click", function(evt) {
+/**
+ * Handle events for an element that should respond to
+ * clicks and sit in the editing tab order, and call
+ * a callback when it is activated.
+ *
+ * @param DOMElement aElement
+ *        The DOM element.
+ * @param function aCallback
+ *        Called when the editor is activated.
+ */
+
+function editableItem(aElement, aCallback)
+{
+  aElement.addEventListener("click", function(evt) {
     let win = this.ownerDocument.defaultView;
     let selection = win.getSelection();
     if (selection.isCollapsed) {
-      aOptions.element.focus();
-    } else {
-      selection.removeAllRanges();
+      aCallback(aElement);
     }
+    evt.stopPropagation();
   }, false);
+
+  // If focused by means other than a click, start editing by
+  // pressing enter or space.
+  aElement.addEventListener("keypress", function(evt) {
+    if (evt.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN ||
+        evt.charCode === Ci.nsIDOMKeyEvent.DOM_VK_SPACE) {
+      aCallback(aElement);
+    }
+  }, true);
+
+  // Ugly workaround - the element is focused on mousedown but
+  // the editor is activated on click/mouseup.  This leads
+  // to an ugly flash of the focus ring before showing the editor.
+  // So hide the focus ring while the mouse is down.
+  aElement.addEventListener("mousedown", function(evt) {
+    let cleanup = function() {
+      aElement.style.removeProperty("outline-style");
+      aElement.removeEventListener("mouseup", cleanup, false);
+      aElement.removeEventListener("mouseout", cleanup, false);
+    };
+    aElement.style.setProperty("outline-style", "none");
+    aElement.addEventListener("mouseup", cleanup, false);
+    aElement.addEventListener("mouseout", cleanup, false);
+  }, false);
+
+  // Mark the element editable field for tab
+  // navigation while editing.
+  aElement._editable = true;
 }
+
 var _editableField = editableField;
 
 function InplaceEditor(aOptions)
 {
   this.elt = aOptions.element;
+  let doc = this.elt.ownerDocument;
+  this.doc = doc;
   this.elt.inplaceEditor = this;
 
   this.change = aOptions.change;
   this.done = aOptions.done;
+  this.destroy = aOptions.destroy;
   this.initial = aOptions.initial ? aOptions.initial : this.elt.textContent;
-  this.doc = this.elt.ownerDocument;
 
   this._onBlur = this._onBlur.bind(this);
   this._onKeyPress = this._onKeyPress.bind(this);
@@ -1911,13 +1941,24 @@ InplaceEditor.prototype = {
    */
   _clear: function InplaceEditor_clear()
   {
+    if (!this.input) {
+      // Already cleared.
+      return;
+    }
+
     this.input.removeEventListener("blur", this._onBlur, false);
     this.input.removeEventListener("keypress", this._onKeyPress, false);
     this.input.removeEventListener("oninput", this._onInput, false);
     this._stopAutosize();
 
-    this.elt.parentNode.removeChild(this.input);
     this.elt.style.display = this.originalDisplay;
+    this.elt.focus();
+
+    if (this.destroy) {
+      this.destroy();
+    }
+
+    this.elt.parentNode.removeChild(this.input);
     this.input = null;
 
     delete this.elt.inplaceEditor;
@@ -1980,34 +2021,71 @@ InplaceEditor.prototype = {
   },
 
   /**
-   * Handle loss of focus by calling the client's done handler and
-   * clearing out.
+   * Call the client's done handler and clear out.
+   */
+  _apply: function InplaceEditor_apply(aEvent)
+  {
+    if (this._applied) {
+      return;
+    }
+
+    this._applied = true;
+
+    if (this.done) {
+      let val = this.input.value.trim();
+      return this.done(this.cancelled ? this.initial : val, !this.cancelled);
+    }
+    return null;
+  },
+
+  /**
+   * Handle loss of focus by calling done if it hasn't been called yet.
    */
   _onBlur: function InplaceEditor_onBlur(aEvent)
   {
-    let val = this.input.value.trim();
+    this._apply();
     this._clear();
-    if (this.done) {
-      this.done(this.cancelled ? this.initial : val, !this.cancelled);
-    }
   },
 
   _onKeyPress: function InplaceEditor_onKeyPress(aEvent)
   {
     let prevent = false;
     if (aEvent.charCode in this._advanceCharCodes
-       || aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN) {
-      // Focus the next element, triggering a blur which
-      // will eventually shut us down (making return roughly equal
-      // tab).
+       || aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_RETURN
+       || aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_TAB) {
       prevent = true;
-      moveFocus(this.input.ownerDocument.defaultView, FOCUS_FORWARD);
+
+      let direction = FOCUS_FORWARD;
+      if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_TAB &&
+          aEvent.shiftKey) {
+        this.cancelled = true;
+        direction = FOCUS_BACKWARD;
+      }
+
+      let input = this.input;
+
+      this._apply();
+
+      let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+      if (fm.focusedElement === input) {
+        // If the focused element wasn't changed by the done callback,
+        // move the focus as requested.
+        let next = moveFocus(this.doc.defaultView, direction);
+
+        // If the next node to be focused has been tagged as an editable
+        // node, send it a click event to trigger
+        if (next && next.ownerDocument === this.doc && next._editable) {
+          next.click();
+        }
+      }
+
+      this._clear();
     } else if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE) {
-      // Cancel and blur ourselves.  |_onBlur| will call the user's
-      // done handler for us.
+      // Cancel and blur ourselves.
       prevent = true;
       this.cancelled = true;
-      this.input.blur();
+      this._apply();
+      this._clear();
       aEvent.stopPropagation();
     } else if (aEvent.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_SPACE) {
       // No need for leading spaces here.  This is particularly
@@ -2194,7 +2272,7 @@ function copyTextStyles(aFrom, aTo)
 function moveFocus(aWin, aDirection)
 {
   let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-  fm.moveFocus(aWin, null, aDirection, 0);
+  return fm.moveFocus(aWin, null, aDirection, 0);
 }
 
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
