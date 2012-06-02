@@ -86,24 +86,28 @@
                      android:src="@drawable/favicon"
                      android:layout_alignLeft="@id/awesome_bar"/>
 
-        <ImageButton android:id="@+id/stop"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="24dip"
-                     android:layout_height="24dip"
-                     android:layout_marginRight="10dip"
-                     android:layout_centerVertical="true"
-                     android:src="@drawable/urlbar_stop"
-                     android:layout_alignRight="@id/awesome_bar"
-                     android:visibility="gone"/>
+        <LinearLayout android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_marginRight="10dip"
+                      android:layout_centerVertical="true"
+                      android:layout_alignRight="@id/awesome_bar"
+                      android:orientation="horizontal">
 
-        <ImageButton android:id="@+id/site_security"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="24dip"
-                     android:layout_height="24dip"
-                     android:layout_marginRight="10dip"
-                     android:layout_centerVertical="true"
-                     android:src="@drawable/site_security_level"
-                     android:layout_alignRight="@id/awesome_bar"/>
+            <ImageButton android:id="@+id/site_security"
+                         style="@style/AddressBar.ImageButton"
+                         android:layout_width="24dip"
+                         android:layout_height="24dip"
+                         android:src="@drawable/site_security_level"
+                         android:visibility="gone"/>
+
+            <ImageButton android:id="@+id/stop"
+                         style="@style/AddressBar.ImageButton"
+                         android:layout_width="24dip"
+                         android:layout_height="24dip"
+                         android:src="@drawable/urlbar_stop"
+                         android:visibility="gone"/>
+
+        </LinearLayout>
 
          <ImageView android:id="@+id/shadow"
                     android:layout_width="fill_parent"
