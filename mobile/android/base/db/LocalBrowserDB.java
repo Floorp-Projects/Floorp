@@ -506,6 +506,10 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         cr.delete(contentUri, urlEquals, urlArgs);
     }
 
+    public void addReadingListItem(ContentResolver cr, String title, String uri) {
+        addBookmarkItem(cr, title, uri, Bookmarks.FIXED_READING_LIST_ID);
+    }
+
     public void registerBookmarkObserver(ContentResolver cr, ContentObserver observer) {
         cr.registerContentObserver(mBookmarksUriWithProfile, false, observer);
     }
