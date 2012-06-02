@@ -368,7 +368,7 @@ case "$target" in
 
     CPPFLAGS="-isystem $android_platform/usr/include $CPPFLAGS"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
+    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions -Wno-psabi $CXXFLAGS"
     ASFLAGS="-isystem $android_platform/usr/include -DANDROID $ASFLAGS"
 
     dnl Add -llog by default, since we use it all over the place.
@@ -1712,6 +1712,17 @@ if test "$GNU_CC"; then
                   LDFLAGS=$_SAVE_LDFLAGS)
     _MOZ_RTTI_FLAGS_ON=-frtti
     _MOZ_RTTI_FLAGS_OFF=-fno-rtti
+
+    # Check for -mssse3 on $CC
+    AC_MSG_CHECKING([for -mssse3 option to $CC])
+    HAVE_COMPILER_FLAG_MSSSE3=
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS -mssse3"
+    AC_TRY_COMPILE(,,AC_MSG_RESULT([yes])
+                     [HAVE_COMPILER_FLAG_MSSSE3=1],
+                     AC_MSG_RESULT([no]))
+    CFLAGS=$_SAVE_CFLAGS
+    AC_SUBST(HAVE_COMPILER_FLAG_MSSSE3)
 
     # Turn on GNU-specific warnings:
     # -Wall - turn on a lot of warnings
@@ -5817,6 +5828,9 @@ if test -n "$MOZ_CUBEB"; then
         AC_DEFINE(MOZ_CUBEB)
         ;;
     *-mingw*)
+        AC_DEFINE(MOZ_CUBEB)
+        ;;
+    *-openbsd*)
         AC_DEFINE(MOZ_CUBEB)
         ;;
     *)

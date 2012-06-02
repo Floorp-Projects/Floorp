@@ -314,7 +314,7 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
     }
   }
 
-  {
+  if (HasAudio() || HasVideo()) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
     MediaResource* resource = mDecoder->GetResource();
@@ -338,6 +338,8 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
         LOG(PR_LOG_DEBUG, ("Got Ogg duration from seeking to end %lld", endTime));
       }
     }
+  } else {
+    return NS_ERROR_FAILURE;
   }
   *aInfo = mInfo;
 

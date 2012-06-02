@@ -7,6 +7,13 @@ var manager = null;
 var bufferCache = [];
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
+if (!SpecialPowers.isMainProcess()) {
+  window.runTest = function() {
+    todo(false, "Test disabled in child processes, for now");
+    finishTest();
+  }
+}
+
 function getView(size)
 {
   let buffer = new ArrayBuffer(size);

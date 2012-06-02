@@ -9,11 +9,34 @@
 
 #include "DocAccessible.h"
 #include "nsAccessibilityService.h"
+#include "NotificationController.h"
 
-inline DocAccessible*
-DocAccessible::ParentDocument() const
+inline void
+DocAccessible::BindChildDocument(DocAccessible* aDocument)
 {
-  return GetAccService()->GetDocAccessible(mDocument->GetParentDocument());
+  mNotificationController->ScheduleChildDocBinding(aDocument);
+}
+
+template<class Class, class Arg>
+inline void
+DocAccessible::HandleNotification(Class* aInstance,
+                                  typename TNotification<Class, Arg>::Callback aMethod,
+                                  Arg* aArg)
+{
+  if (mNotificationController) {
+    mNotificationController->HandleNotification<Class, Arg>(aInstance,
+                                                            aMethod, aArg);
+  }
+}
+
+inline void
+DocAccessible::UpdateText(nsIContent* aTextNode)
+{
+  NS_ASSERTION(mNotificationController, "The document was shut down!");
+
+  // Ignore the notification if initial tree construction hasn't been done yet.
+  if (mNotificationController && HasLoadState(eTreeConstructed))
+    mNotificationController->ScheduleTextUpdate(aTextNode);
 }
 
 #endif
