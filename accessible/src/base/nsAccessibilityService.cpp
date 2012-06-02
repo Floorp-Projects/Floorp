@@ -14,6 +14,7 @@
 #endif
 #include "DocAccessible-inl.h"
 #include "FocusManager.h"
+#include "HTMLElementAccessibles.h"
 #include "HTMLListAccessible.h"
 #include "HyperTextAccessibleWrap.h"
 #include "nsAccessiblePivot.h"
@@ -25,7 +26,6 @@
 #include "nsHTMLLinkAccessible.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessibleWrap.h"
-#include "nsHTMLTextAccessible.h"
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
 #include "OuterDocAccessible.h"
@@ -435,7 +435,7 @@ nsAccessibilityService::CreateHTMLLabelAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLLabelAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLLabelAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -445,7 +445,7 @@ nsAccessibilityService::CreateHTMLHRAccessible(nsIContent* aContent,
                                                nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLHRAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLHRAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -455,7 +455,7 @@ nsAccessibilityService::CreateHTMLBRAccessible(nsIContent* aContent,
                                                nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLBRAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLBRAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -1677,7 +1677,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
   }
 
   if (tag == nsGkAtoms::output) {
-    Accessible* accessible = new nsHTMLOutputAccessible(aContent, aDoc);
+    Accessible* accessible = new HTMLOutputAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
