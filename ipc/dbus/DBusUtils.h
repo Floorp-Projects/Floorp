@@ -19,6 +19,9 @@
 #ifndef mozilla_ipc_dbus_dbusutils_h__
 #define mozilla_ipc_dbus_dbusutils_h__
 
+#include <dbus/dbus.h>
+#include "mozilla/Scoped.h"
+
 // LOGE and free a D-Bus error
 // Using #define so that __FUNCTION__ resolves usefully
 #define LOG_AND_FREE_DBUS_ERROR_WITH_MSG(err, msg) log_and_free_dbus_error(err, __FUNCTION__, msg);
@@ -29,7 +32,71 @@ struct DBusError;
 
 namespace mozilla {
 namespace ipc {
-void log_and_free_dbus_error(DBusError* err, const char* function, DBusMessage* msg = NULL);
+
+class DBusMessageRefPtr
+{
+public:
+  DBusMessageRefPtr(DBusMessage* aMsg) : mMsg(aMsg)
+  {
+    if (mMsg) dbus_message_ref(mMsg);
+  }
+  ~DBusMessageRefPtr()
+  {
+    if (mMsg) dbus_message_unref(mMsg);
+  }
+  operator DBusMessage*() { return mMsg; }
+  DBusMessage* get() { return mMsg; }
+private:
+  DBusMessage* mMsg;
+};
+
+void log_and_free_dbus_error(DBusError* err,
+                             const char* function,
+                             DBusMessage* msg = NULL);
+dbus_bool_t dbus_func_args_async(DBusConnection *conn,
+                                 int timeout_ms,
+                                 void (*reply)(DBusMessage *, void *, void *),
+                                 void *user,
+                                 void *nat,
+                                 const char *path,
+                                 const char *ifc,
+                                 const char *func,
+                                 int first_arg_type,
+                                 ...);
+
+DBusMessage * dbus_func_args(DBusConnection *conn,
+                             const char *path,
+                             const char *ifc,
+                             const char *func,
+                             int first_arg_type,
+                             ...);
+
+DBusMessage * dbus_func_args_error(DBusConnection *conn,
+                                   DBusError *err,
+                                   const char *path,
+                                   const char *ifc,
+                                   const char *func,
+                                   int first_arg_type,
+                                   ...);
+
+DBusMessage * dbus_func_args_timeout(DBusConnection *conn,
+                                     int timeout_ms,
+                                     const char *path,
+                                     const char *ifc,
+                                     const char *func,
+                                     int first_arg_type,
+                                     ...);
+
+DBusMessage * dbus_func_args_timeout_valist(DBusConnection *conn,
+                                            int timeout_ms,
+                                            DBusError *err,
+                                            const char *path,
+                                            const char *ifc,
+                                            const char *func,
+                                            int first_arg_type,
+                                            va_list args);
+
+
 }
 }
 

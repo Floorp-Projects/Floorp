@@ -32,3 +32,13 @@ function f11(a=(0, c=1)) {}
 assertEq(f11.length, 1);
 var g = eval("(" + f11 + ")");
 assertEq(g.length, 1);
+function f12(a, b=4) {
+    return b;
+    function b() { }
+}
+assertEq(f12.toString(), "function f12(a, b = 4) {\n    return b;\n\n    function b() {\n    }\n\n}");
+function f13(a, b=4, ...rest) {
+    return b;
+    function b() { }
+}
+assertEq(f13.toString(), "function f13(a, b = 4, ...rest) {\n    return b;\n\n    function b() {\n    }\n\n}");
