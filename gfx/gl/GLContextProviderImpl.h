@@ -78,7 +78,7 @@ public:
      * Get a pointer to the global context, creating it if it doesn't exist.
      */
     static GLContext *
-    GetGlobalContext();
+    GetGlobalContext( const ContextFlags aFlags = GLContext::ContextFlagsNone);
 
     /**
      * Free any resources held by this Context Provider.
