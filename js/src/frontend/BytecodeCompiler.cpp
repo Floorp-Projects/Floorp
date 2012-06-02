@@ -289,6 +289,13 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         fn->pn_body = NULL;
         fn->pn_cookie.makeFree();
 
+        ParseNode *argsbody = ListNode::create(PNK_ARGSBODY, &parser);
+        if (!argsbody)
+            return false;
+        argsbody->setOp(JSOP_NOP);
+        argsbody->makeEmpty();
+        fn->pn_body = argsbody;
+
         unsigned nargs = fun->nargs;
         if (nargs) {
             /*
