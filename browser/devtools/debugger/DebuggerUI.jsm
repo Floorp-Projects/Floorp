@@ -247,8 +247,12 @@ DebuggerPane.prototype = {
 
   /**
    * Closes the debugger, removing child nodes and event listeners.
+   *
+   * @param function aCloseCallback
+   *        Clients can pass a close callback to be notified when
+   *        the panel successfully closes.
    */
-  close: function DP_close() {
+  close: function DP_close(aCloseCallback) {
     if (!this._win) {
       return;
     }
@@ -259,6 +263,16 @@ DebuggerPane.prototype = {
     DebuggerPreferences.height = this._frame.height;
     this._frame.removeEventListener("Debugger:Close", this.close, true);
     this._frame.removeEventListener("unload", this.close, true);
+
+    // This method is also used as an event handler, so only
+    // use aCloseCallback if it's a function.
+    if (typeof(aCloseCallback) == "function") {
+      let frame = this._frame;
+      frame.addEventListener("unload", function onUnload() {
+        frame.removeEventListener("unload", onUnload, true);
+        aCloseCallback();
+      }, true)
+    }
 
     this._nbox.removeChild(this._splitter);
     this._nbox.removeChild(this._frame);
