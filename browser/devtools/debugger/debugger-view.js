@@ -880,12 +880,14 @@ PropertiesView.prototype = {
    *        The parent scope element.
    * @param string aName
    *        The variable name.
+   * @param object aFlags
+   *        Optional, contains configurable, enumerable or writable flags.
    * @param string aId
    *        Optional, an id for the variable html node.
    * @return object
    *         The newly created html node representing the added var.
    */
-  _addVar: function DVP__addVar(aScope, aName, aId) {
+  _addVar: function DVP__addVar(aScope, aName, aFlags, aId) {
     // Make sure the scope container exists.
     if (!aScope) {
       return null;
@@ -926,6 +928,21 @@ PropertiesView.prototype = {
 
       // The variable information (type, class and/or value).
       valueLabel.className = "value plain";
+
+      if (aFlags) {
+        // Use attribute flags to specify the element type and tooltip text.
+        let tooltip = [];
+
+        !aFlags.configurable ? element.setAttribute("non-configurable", "")
+                             : tooltip.push("configurable");
+        !aFlags.enumerable   ? element.setAttribute("non-enumerable", "")
+                             : tooltip.push("enumerable");
+        !aFlags.writable     ? element.setAttribute("non-writable", "")
+                             : tooltip.push("writable");
+
+        element.setAttribute("tooltiptext", tooltip.join(", "));
+      }
+      if (aName === "this") { element.setAttribute("self", ""); }
 
       // Handle the click event when pressing the element value label.
       valueLabel.addEventListener("click", this._activateElementInputMode.bind({
@@ -1093,7 +1110,7 @@ PropertiesView.prototype = {
    *             ["someProp4", { type: "null" }]
    *             ["someProp5", { type: "object", class: "Object" }]
    * @param object aFlags
-   *        Contans configurable, enumberable or writable flags.
+   *        Contains configurable, enumerable or writable flags.
    * @param string aName
    *        Optional, the property name.
    * @paarm string aId
@@ -1139,15 +1156,7 @@ PropertiesView.prototype = {
 
       if ("undefined" !== typeof pKey) {
         // Use a key element to specify the property name.
-        let className = "";
-        if (aFlags) {
-          if (aFlags.configurable === false) { className += "non-configurable "; }
-          if (aFlags.enumerable === false) { className += "non-enumerable "; }
-          if (aFlags.writable === false) { className += "non-writable "; }
-        }
-        if (pKey === "__proto__ ") { className += "proto "; }
-
-        nameLabel.className = className + "key plain";
+        nameLabel.className = "key plain";
         nameLabel.setAttribute("value", pKey.trim());
         title.appendChild(nameLabel);
       }
@@ -1163,6 +1172,21 @@ PropertiesView.prototype = {
         title.appendChild(separatorLabel);
         title.appendChild(valueLabel);
       }
+
+      if (aFlags) {
+        // Use attribute flags to specify the element type and tooltip text.
+        let tooltip = [];
+
+        !aFlags.configurable ? element.setAttribute("non-configurable", "")
+                             : tooltip.push("configurable");
+        !aFlags.enumerable   ? element.setAttribute("non-enumerable", "")
+                             : tooltip.push("enumerable");
+        !aFlags.writable     ? element.setAttribute("non-writable", "")
+                             : tooltip.push("writable");
+
+        element.setAttribute("tooltiptext", tooltip.join(", "));
+      }
+      if (pKey === "__proto__ ") { element.setAttribute("proto", ""); }
 
       // Handle the click event when pressing the element value label.
       valueLabel.addEventListener("click", this._activateElementInputMode.bind({

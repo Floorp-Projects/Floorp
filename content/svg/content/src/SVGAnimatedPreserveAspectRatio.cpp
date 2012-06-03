@@ -269,10 +269,25 @@ SVGAnimatedPreserveAspectRatio::SetBaseValue(const SVGPreserveAspectRatio &aValu
   }
 }
 
+static PRUint64
+PackPreserveAspectRatio(const SVGPreserveAspectRatio& par)
+{
+  // All preserveAspectRatio values are enum values (do not interpolate), so we
+  // can safely collate them and treat them as a single enum as for SMIL.
+  PRUint64 packed = 0;
+  packed |= PRUint64(par.GetDefer() ? 1 : 0) << 16;
+  packed |= PRUint64(par.GetAlign()) << 8;
+  packed |= PRUint64(par.GetMeetOrSlice());
+  return packed;
+}
+
 void
 SVGAnimatedPreserveAspectRatio::SetAnimValue(PRUint64 aPackedValue,
                                              nsSVGElement *aSVGElement)
 {
+  if (mIsAnimated && PackPreserveAspectRatio(mAnimVal) == aPackedValue) {
+    return;
+  }
   mAnimVal.SetDefer(((aPackedValue & 0xff0000) >> 16) ? true : false);
   mAnimVal.SetAlign(PRUint16((aPackedValue & 0xff00) >> 8));
   mAnimVal.SetMeetOrSlice(PRUint16(aPackedValue & 0xff));
@@ -297,18 +312,6 @@ nsISMILAttr*
 SVGAnimatedPreserveAspectRatio::ToSMILAttr(nsSVGElement *aSVGElement)
 {
   return new SMILPreserveAspectRatio(this, aSVGElement);
-}
-
-static PRUint64
-PackPreserveAspectRatio(const SVGPreserveAspectRatio& par)
-{
-  // All preserveAspectRatio values are enum values (do not interpolate), so we
-  // can safely collate them and treat them as a single enum as for SMIL.
-  PRUint64 packed = 0;
-  packed |= PRUint64(par.GetDefer() ? 1 : 0) << 16;
-  packed |= PRUint64(par.GetAlign()) << 8;
-  packed |= PRUint64(par.GetMeetOrSlice());
-  return packed;
 }
 
 // typedef for inner class, to make function signatures shorter below:
