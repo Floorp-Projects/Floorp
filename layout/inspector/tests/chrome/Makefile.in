@@ -20,6 +20,8 @@ _CHROME_FILES =\
 		GentiumPlus-R.woff \
 		test_bug708874.xul \
 		test_bug708874.css \
+		test_bug727834.xul \
+		test_bug727834.css \
 		$(NULL)
 
 libs:: $(_CHROME_FILES)
