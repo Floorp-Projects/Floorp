@@ -1,5 +1,6 @@
 const modules = [
-  "client.js"
+  "client.js",
+  "storage.js"
 ];
 
 function run_test() {
