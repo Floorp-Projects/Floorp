@@ -7212,51 +7212,60 @@ nsHTMLEditRules::CacheInlineStyles(nsIDOMNode *aNode)
 }
 
 
-nsresult 
+nsresult
 nsHTMLEditRules::ReapplyCachedStyles()
 {
-  // The idea here is to examine our cached list of styles
-  // and see if any have been removed.  If so, add typeinstate
-  // for them, so that they will be reinserted when new 
-  // content is added.
+  // The idea here is to examine our cached list of styles and see if any have
+  // been removed.  If so, add typeinstate for them, so that they will be
+  // reinserted when new content is added.
 
   // remember if we are in css mode
   bool useCSS = mHTMLEditor->IsCSSEnabled();
 
-  // get selection point
-  nsCOMPtr<nsISelection>selection;
-  nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
-  nsCOMPtr<nsIDOMNode> selNode;
-  PRInt32 selOffset;
-  res = mHTMLEditor->GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(res, res);
+  // get selection point; if it doesn't exist, we have nothing to do
+  nsRefPtr<nsTypedSelection> selection = mHTMLEditor->GetTypedSelection();
+  MOZ_ASSERT(selection);
+  if (!selection->GetRangeCount()) {
+    // Nothing to do
+    return NS_OK;
+  }
+  nsCOMPtr<nsIContent> selNode =
+    do_QueryInterface(selection->GetRangeAt(0)->GetStartParent());
+  if (!selNode) {
+    // Nothing to do
+    return NS_OK;
+  }
 
-  for (PRInt32 j = 0; j < SIZE_STYLE_TABLE; ++j)
-  {
-    if (mCachedStyles[j].mPresent)
-    {
+  for (PRInt32 i = 0; i < SIZE_STYLE_TABLE; ++i) {
+    if (mCachedStyles[i].mPresent) {
       bool bFirst, bAny, bAll;
       bFirst = bAny = bAll = false;
-      
+
       nsAutoString curValue;
-      if (useCSS) // check computed style first in css case
-      {
-        mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(selNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr),
-                                                    bAny, curValue, COMPUTED_STYLE_TYPE);
+      if (useCSS) {
+        // check computed style first in css case
+        bAny = mHTMLEditor->mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
+          selNode, mCachedStyles[i].tag, &(mCachedStyles[i].attr), curValue,
+          COMPUTED_STYLE_TYPE);
       }
-      if (!bAny) // then check typeinstate and html style
-      {
-        res = mHTMLEditor->GetInlinePropertyBase(mCachedStyles[j].tag, &(mCachedStyles[j].attr), &(mCachedStyles[j].value), 
-                                                        &bFirst, &bAny, &bAll, &curValue, false);
+      if (!bAny) {
+        // then check typeinstate and html style
+        nsresult res = mHTMLEditor->GetInlinePropertyBase(mCachedStyles[i].tag,
+                                                     &(mCachedStyles[i].attr),
+                                                     &(mCachedStyles[i].value),
+                                                     &bFirst, &bAny, &bAll,
+                                                     &curValue, false);
         NS_ENSURE_SUCCESS(res, res);
       }
-      // this style has disappeared through deletion.  Add it onto our typeinstate:
+      // this style has disappeared through deletion.  Add to our typeinstate:
       if (!bAny || IsStyleCachePreservingAction(mTheAction)) {
-        mHTMLEditor->mTypeInState->SetProp(mCachedStyles[j].tag, mCachedStyles[j].attr, mCachedStyles[j].value);
+        mHTMLEditor->mTypeInState->SetProp(mCachedStyles[i].tag,
+                                           mCachedStyles[i].attr,
+                                           mCachedStyles[i].value);
       }
     }
   }
+
   return NS_OK;
 }
 

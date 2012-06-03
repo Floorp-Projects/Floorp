@@ -940,8 +940,32 @@ nsHTMLCSSUtils::GenerateCSSDeclarationsFromHTMLStyle(dom::Element* aElement,
   }
 }
 
-// Add to aNode the CSS inline style equivalent to HTMLProperty/aAttribute/aValue for the node,
-// and return in aCount the number of CSS properties set by the call
+// Add to aNode the CSS inline style equivalent to HTMLProperty/aAttribute/
+// aValue for the node, and return in aCount the number of CSS properties set
+// by the call.  The dom::Element version returns aCount instead.
+PRInt32
+nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(dom::Element* aElement,
+                                            nsIAtom* aProperty,
+                                            const nsAString* aAttribute,
+                                            const nsAString* aValue,
+                                            bool aSuppressTransaction)
+{
+  MOZ_ASSERT(aElement && aProperty);
+  MOZ_ASSERT_IF(aAttribute, aValue);
+  PRInt32 count;
+  // This can only fail if SetCSSProperty fails, which should only happen if
+  // something is pretty badly wrong.  In this case we assert so that hopefully
+  // someone will notice, but there's nothing more sensible to do than just
+  // return the count and carry on.
+  nsresult res = SetCSSEquivalentToHTMLStyle(aElement->AsDOMNode(),
+                                             aProperty, aAttribute,
+                                             aValue, &count,
+                                             aSuppressTransaction);
+  NS_ASSERTION(NS_SUCCEEDED(res), "SetCSSEquivalentToHTMLStyle failed");
+  NS_ENSURE_SUCCESS(res, count);
+  return count;
+}
+
 nsresult
 nsHTMLCSSUtils::SetCSSEquivalentToHTMLStyle(nsIDOMNode * aNode,
                                             nsIAtom *aHTMLProperty,
@@ -1067,6 +1091,29 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
 // style equivalent to the HTML style aHTMLProperty/aHTMLAttribute/valueString?
 // The value of aStyleType controls the styles we retrieve: specified or
 // computed. The return value aIsSet is true if the CSS styles are set.
+//
+// The nsIContent variant returns aIsSet instead of using an out parameter, and
+// does not modify aValue.
+bool
+nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIContent* aContent,
+                                                    nsIAtom* aProperty,
+                                                    const nsAString* aAttribute,
+                                                    const nsAString& aValue,
+                                                    PRUint8 aStyleType)
+{
+  MOZ_ASSERT(aContent && aProperty);
+  MOZ_ASSERT(aStyleType == SPECIFIED_STYLE_TYPE ||
+             aStyleType == COMPUTED_STYLE_TYPE);
+  bool isSet;
+  nsAutoString value(aValue);
+  nsresult res = IsCSSEquivalentToHTMLInlineStyleSet(aContent->AsDOMNode(),
+                                                     aProperty, aAttribute,
+                                                     isSet, value, aStyleType);
+  NS_ASSERTION(NS_SUCCEEDED(res), "IsCSSEquivalentToHTMLInlineStyleSet failed");
+  NS_ENSURE_SUCCESS(res, false);
+  return isSet;
+}
+
 nsresult
 nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
                                                     nsIAtom *aHTMLProperty,
@@ -1139,22 +1186,32 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
         if (NS_ColorNameToRGB(htmlValueString, &rgba) ||
             NS_HexToRGB(subStr, &rgba)) {
           nsAutoString htmlColor, tmpStr;
-          htmlColor.AppendLiteral("rgb(");
 
-          NS_NAMED_LITERAL_STRING(comma, ", ");
+          if (NS_GET_A(rgba) != 255) {
+            // This should only be hit by the "transparent" keyword, which
+            // currently serializes to "transparent" (not "rgba(0, 0, 0, 0)").
+            MOZ_ASSERT(NS_GET_R(rgba) == 0 && NS_GET_G(rgba) == 0 &&
+                       NS_GET_B(rgba) == 0 && NS_GET_A(rgba) == 0);
+            htmlColor.AppendLiteral("transparent");
+          } else {
+            htmlColor.AppendLiteral("rgb(");
 
-          tmpStr.AppendInt(NS_GET_R(rgba), 10);
-          htmlColor.Append(tmpStr + comma);
+            NS_NAMED_LITERAL_STRING(comma, ", ");
 
-          tmpStr.Truncate();
-          tmpStr.AppendInt(NS_GET_G(rgba), 10);
-          htmlColor.Append(tmpStr + comma);
+            tmpStr.AppendInt(NS_GET_R(rgba), 10);
+            htmlColor.Append(tmpStr + comma);
 
-          tmpStr.Truncate();
-          tmpStr.AppendInt(NS_GET_B(rgba), 10);
-          htmlColor.Append(tmpStr);
+            tmpStr.Truncate();
+            tmpStr.AppendInt(NS_GET_G(rgba), 10);
+            htmlColor.Append(tmpStr + comma);
 
-          htmlColor.Append(PRUnichar(')'));
+            tmpStr.Truncate();
+            tmpStr.AppendInt(NS_GET_B(rgba), 10);
+            htmlColor.Append(tmpStr);
+
+            htmlColor.Append(PRUnichar(')'));
+          }
+
           aIsSet = htmlColor.Equals(valueString,
                                     nsCaseInsensitiveStringComparator());
         } else {
@@ -1208,6 +1265,10 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
       aIsSet = true;
     }
 
+    if (htmlValueString.EqualsLiteral("-moz-editor-invert-value")) {
+      aIsSet = !aIsSet;
+    }
+
     if (nsEditProperty::u == aHTMLProperty || nsEditProperty::strike == aHTMLProperty) {
       // unfortunately, the value of the text-decoration property is not inherited.
       // that means that we have to look at ancestors of node to see if they are underlined
@@ -1234,6 +1295,14 @@ nsHTMLCSSUtils::IsCSSPrefChecked()
 // ElementsSameStyle compares two elements and checks if they have the same
 // specified CSS declarations in the STYLE attribute 
 // The answer is always negative if at least one of them carries an ID or a class
+bool
+nsHTMLCSSUtils::ElementsSameStyle(dom::Element* aFirstNode,
+                                  dom::Element* aSecondNode)
+{
+  MOZ_ASSERT(aFirstNode && aSecondNode);
+  return ElementsSameStyle(aFirstNode->AsDOMNode(), aSecondNode->AsDOMNode());
+}
+
 bool
 nsHTMLCSSUtils::ElementsSameStyle(nsIDOMNode *aFirstNode, nsIDOMNode *aSecondNode)
 {

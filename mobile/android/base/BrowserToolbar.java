@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -24,18 +25,21 @@ import android.view.animation.TranslateAnimation;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
 import android.view.ViewConfiguration;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
-import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.TextSwitcher;
+import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 public class BrowserToolbar implements ViewSwitcher.ViewFactory,
@@ -49,6 +53,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     public ImageButton mFavicon;
     public ImageButton mStop;
     public ImageButton mSiteSecurity;
+    public ImageButton mReader;
     private AnimationDrawable mProgressSpinner;
     private TextSwitcher mTabsCount;
     private ImageView mShadow;
@@ -60,8 +65,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     private LayoutInflater mInflater;
     private Handler mHandler;
     private int[] mPadding;
-    private boolean mTitleCanExpand;
     private boolean mHasSoftMenuButton;
+
+    private boolean mShowSiteSecurity;
+    private boolean mShowReader;
+
+    private ReaderPopup mReaderPopup;
 
     private static List<View> sActionItems;
 
@@ -82,7 +91,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     public void from(LinearLayout layout) {
         mLayout = layout;
-        mTitleCanExpand = true;
+
+        mShowSiteSecurity = false;
+        mShowReader = false;
+        mReaderPopup = null;
 
         mAwesomeBar = (Button) mLayout.findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
@@ -149,6 +161,16 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                 Tab tab = Tabs.getInstance().getSelectedTab();
                 if (tab != null)
                     tab.doStop();
+            }
+        });
+
+        mReader = (ImageButton) mLayout.findViewById(R.id.reader);
+        mReader.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View view) {
+                if (mReaderPopup == null)
+                    mReaderPopup = new ReaderPopup(GeckoApp.mAppContext);
+
+                mReaderPopup.show();
             }
         });
 
@@ -304,8 +326,11 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     public void setStopVisibility(boolean visible) {
         mStop.setVisibility(visible ? View.VISIBLE : View.GONE);
-        mSiteSecurity.setVisibility(visible ? View.GONE : View.VISIBLE);
-        if (!visible && mTitleCanExpand)
+
+        mSiteSecurity.setVisibility(mShowSiteSecurity && !visible ? View.VISIBLE : View.GONE);
+        mReader.setVisibility(mShowReader && !visible ? View.VISIBLE : View.GONE);
+
+        if (!visible && !mShowSiteSecurity && !mShowReader)
             mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[2], mPadding[3]);
         else
             mAwesomeBar.setPadding(mPadding[0], mPadding[1], mPadding[0], mPadding[3]);
@@ -342,7 +367,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
     
     public void setSecurityMode(String mode) {
-        mTitleCanExpand = false;
+        mShowSiteSecurity = true;
 
         if (mode.equals(SiteIdentityPopup.IDENTIFIED)) {
             mSiteSecurity.setImageLevel(1);
@@ -350,8 +375,12 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             mSiteSecurity.setImageLevel(2);
         } else {
             mSiteSecurity.setImageLevel(0);
-            mTitleCanExpand = true;
+            mShowSiteSecurity = false;
         }
+    }
+
+    public void setReaderVisibility(boolean showReader) {
+        mShowReader = showReader;
     }
 
     public void setVisibility(int visibility) {
@@ -372,10 +401,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
          mForward.setEnabled(enabled);
     }
 
-    public boolean hasSoftMenuButton() {
-        return mHasSoftMenuButton;
-    }
-
     @Override
     public void addActionItem(View actionItem) {
         mActionItemBar.addView(actionItem);
@@ -385,11 +410,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     @Override
-    public void removeActionItem(View actionItem) {
-        mActionItemBar.removeView(actionItem);
-
-        if (sActionItems.contains(actionItem))
-            sActionItems.remove(actionItem);
+    public void removeActionItem(int index) {
+        mActionItemBar.removeViewAt(index);
+        sActionItems.remove(index);
     }
 
     @Override
@@ -418,6 +441,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
             setTitle(tab.getDisplayTitle());
             setFavicon(tab.getFavicon());
             setSecurityMode(tab.getSecurityMode());
+            setReaderVisibility(tab.getReaderEnabled());
             setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
             setShadowVisibility((url == null) || !url.startsWith("about:"));
             updateTabCount(Tabs.getInstance().getCount());
@@ -432,14 +456,24 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mActionItemBar.removeAllViews();
     }
 
-    public void openOptionsMenu() {
+    public boolean openOptionsMenu() {
+        if (!mHasSoftMenuButton)
+            return false;
+
         if (mMenuPopup != null && !mMenuPopup.isShowing())
             mMenuPopup.show(mMenu);
+
+        return true;
     }
 
-    public void closeOptionsMenu() {
+    public boolean closeOptionsMenu() {
+        if (!mHasSoftMenuButton)
+            return false;
+
         if (mMenuPopup != null && mMenuPopup.isShowing())
             mMenuPopup.dismiss();
+
+        return true;
     }
 
     // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
@@ -494,6 +528,56 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
             // From the left of popup, the arrow should move half of (menuButtonWidth - arrowWidth)
             mArrow.setLayoutParams(newParams);
+        }
+    }
+
+    public class ReaderPopup extends PopupWindow {
+        private int mWidth;
+
+        private ReaderPopup(Context context) {
+            super(context);
+
+            setBackgroundDrawable(new BitmapDrawable());
+            setOutsideTouchable(true);
+            setWindowLayoutMode(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+
+            LayoutInflater inflater = LayoutInflater.from(context);
+            FrameLayout layout = (FrameLayout) inflater.inflate(R.layout.reader_popup, null);
+            setContentView(layout);
+
+            layout.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+            mWidth = layout.getMeasuredWidth();
+
+            Button readingListButton = (Button) layout.findViewById(R.id.reading_list);
+            readingListButton.setOnClickListener(new Button.OnClickListener() {
+                public void onClick(View v) {
+                    Tab selectedTab = Tabs.getInstance().getSelectedTab();
+                    if (selectedTab != null) {
+                        selectedTab.addToReadingList();
+                    }
+
+                    Toast.makeText(GeckoApp.mAppContext,
+                                   R.string.reading_list_added, Toast.LENGTH_SHORT).show();
+
+                    dismiss();
+                }
+            });
+
+            Button readerModeButton = (Button) layout.findViewById(R.id.reader_mode);
+            readerModeButton.setOnClickListener(new Button.OnClickListener() {
+                public void onClick(View v) {
+                    Tab selectedTab = Tabs.getInstance().getSelectedTab();
+                    if (selectedTab != null) {
+                        selectedTab.readerMode();
+                    }
+
+                    dismiss();
+                }
+            });
+        }
+
+        public void show() {
+            showAsDropDown(mReader, (mReader.getWidth() - mWidth) / 2, 0);
         }
     }
 }
