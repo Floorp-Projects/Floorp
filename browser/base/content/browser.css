@@ -553,6 +553,8 @@ statuspanel[inactive][previoustype=overLink] {
 /* highlighter */
 %include highlighter.css
 
+/* gcli */
+
 html|*#gcli-tooltip-frame,
 html|*#gcli-output-frame,
 #gcli-output,
@@ -564,4 +566,27 @@ html|*#gcli-output-frame,
 .gclitoolbar-complete-node,
 .gclitoolbar-prompt {
   direction: ltr;
+}
+
+/* Responsive Mode */
+
+vbox[anonid=browserContainer][responsivemode] {
+  overflow: auto;
+}
+
+.devtools-responsiveui-toolbar:-moz-locale-dir(rtl) {
+  -moz-box-pack: end;
+}
+
+stack[anonid=browserStack][responsivemode] {
+  -moz-transition-duration: 200ms;
+  -moz-transition-timing-function: linear;
+}
+
+stack[anonid=browserStack][responsivemode] {
+  -moz-transition-properties: min-width, max-width, min-height, max-height;
+}
+
+stack[anonid=browserStack][responsivemode][notransition] {
+  -moz-transition: none;
 }

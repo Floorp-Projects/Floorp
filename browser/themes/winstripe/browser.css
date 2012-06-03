@@ -3150,3 +3150,50 @@ html|*#gcli-output-frame {
 .gcli-in-closebrace {
   color: hsl(0,0%,80%);
 }
+
+/* Responsive Mode */
+
+vbox[anonid=browserContainer][responsivemode] {
+  background: #2a3643 url("chrome://browser/skin/devtools/responsive-background.png");
+  box-shadow: 0 0 7px black inset;
+  padding: 0 20px 20px 20px;
+}
+
+stack[anonid=browserStack][responsivemode] {
+  box-shadow: 0 0 7px black;
+}
+
+.devtools-responsiveui-toolbar {
+  background: transparent;
+  margin: 10px 0;
+  padding: 0;
+  box-shadow: none;
+  border-bottom-width: 0;
+}
+
+.devtools-responsiveui-toolbar > menulist,
+.devtools-responsiveui-toolbar > toolbarbutton {
+  min-width: 22px;
+  border-radius: 0;
+}
+
+.devtools-responsiveui-toolbar:-moz-locale-dir(ltr) > *:first-child,
+.devtools-responsiveui-toolbar:-moz-locale-dir(rtl) > *:last-child {
+  margin-left: 0;
+}
+
+.devtools-responsiveui-resizebar {
+  width: 7px;
+  height: 24px;
+  cursor: ew-resize;
+  -moz-transform: translate(12px, -12px);
+  background-image: url("chrome://browser/skin/devtools/responsive-vertical-resizer.png");
+}
+
+.devtools-responsiveui-resizehandle {
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  -moz-transform: translate(12px, 12px);
+  background-image: url("chrome://browser/skin/devtools/responsive-se-resizer.png");
+}

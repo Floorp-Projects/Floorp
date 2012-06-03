@@ -45,3 +45,12 @@
 .ruleview-property:not(:hover) > .ruleview-enableproperty {
   visibility: hidden;
 }
+
+.ruleview-namecontainer {
+  cursor: text;
+}
+
+.ruleview-propertycontainer {
+  cursor: text;
+  padding-right: 15px;
+}

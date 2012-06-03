@@ -213,7 +213,7 @@ PlacesViewBase.prototype = {
     if (!resultNode.containerOpen)
       return;
 
-    if (resultNode._feedURI) {
+    if (this.controller.hasCachedLivemarkInfo(resultNode)) {
       this._setEmptyPopupStatus(aPopup, false);
       aPopup._built = true;
       this._populateLivemarkPopup(aPopup);
@@ -315,10 +315,9 @@ PlacesViewBase.prototype = {
 #endif
                 // Set an expando on the node, controller will use it to build
                 // its metadata.
-                aPlacesNode._feedURI = aLivemark.feedURI;
-                aPlacesNode._siteURI = aLivemark.siteURI;
+                this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
               }
-            }
+            }.bind(this)
           );
         }
 
@@ -365,8 +364,9 @@ PlacesViewBase.prototype = {
 
   _setLivemarkSiteURIMenuItem:
   function PVB__setLivemarkSiteURIMenuItem(aPopup) {
-    let siteUrl = aPopup._placesNode._siteURI ? aPopup._placesNode._siteURI.spec
-                                              : null;
+    let livemarkInfo = this.controller.getCachedLivemarkInfo(aPopup._placesNode);
+    let siteUrl = livemarkInfo && livemarkInfo.siteURI ?
+                  livemarkInfo.siteURI.spec : null;
     if (!siteUrl && aPopup._siteURIMenuitem) {
       aPopup.removeChild(aPopup._siteURIMenuitem);
       aPopup._siteURIMenuitem = null;
@@ -493,15 +493,13 @@ PlacesViewBase.prototype = {
 
       PlacesUtils.livemarks.getLivemark(
         { id: aPlacesNode.itemId },
-        (function (aStatus, aLivemark) {
+        function (aStatus, aLivemark) {
           if (Components.isSuccessCode(aStatus)) {
-            // Set an expando on the node, controller will use it to build
-            // its metadata.
-            aPlacesNode._feedURI = aLivemark.feedURI;
-            aPlacesNode._siteURI = aLivemark.siteURI;
+            // Controller will use this to build the meta data for the node.
+            this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
             this.invalidateContainer(aPlacesNode);
           }
-        }).bind(this)
+        }.bind(this)
       );
     }
   },
@@ -533,7 +531,6 @@ PlacesViewBase.prototype = {
   nodeRemoved:
   function PVB_nodeRemoved(aParentPlacesNode, aPlacesNode, aIndex) {
     let parentElt = this._getDOMNodeForPlacesNode(aPlacesNode);
-
     let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
     // Here we need the <menu>.
@@ -573,9 +570,10 @@ PlacesViewBase.prototype = {
 
   nodeHistoryDetailsChanged:
   function PVB_nodeHistoryDetailsChanged(aPlacesNode, aTime, aCount) {
-    if (aPlacesNode.parent && aPlacesNode.parent._feedURI) {
+    if (aPlacesNode.parent &&
+        this.controller.hasCachedLivemarkInfo(aPlacesNode.parent)) {
       // Find the node in the parent.
-      let popup = this._getDOMNodeForPlacesNode(aPlacesNode);
+      let popup = this._getDOMNodeForPlacesNode(aPlacesNode.parent);
       for (let child = popup._startMarker.nextSibling;
            child != popup._endMarker;
            child = child.nextSibling) {
@@ -652,11 +650,11 @@ PlacesViewBase.prototype = {
         }
 
         PlacesUtils.livemarks.getLivemark({ id: aPlacesNode.itemId },
-          (function (aStatus, aLivemark) {
+          function (aStatus, aLivemark) {
             if (Components.isSuccessCode(aStatus)) {
-              let shouldInvalidate = !aPlacesNode._feedURI;
-              aPlacesNode._feedURI = aLivemark.feedURI;
-              aPlacesNode._siteURI = aLivemark.siteURI;
+              let shouldInvalidate =
+                !this.controller.hasCachedLivemarkInfo(aPlacesNode);
+              this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
               if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED) {
                 aLivemark.registerForUpdates(aPlacesNode, this);
                 // Prioritize the current livemark.
@@ -669,7 +667,7 @@ PlacesViewBase.prototype = {
                 aLivemark.unregisterForUpdates(aPlacesNode);
               }
             }
-          }).bind(this)
+          }.bind(this)
         );
       }
     }
@@ -683,7 +681,7 @@ PlacesViewBase.prototype = {
       this._setLivemarkStatusMenuItem(aPopup, Ci.mozILivemark.STATUS_LOADING);
 
     PlacesUtils.livemarks.getLivemark({ id: aPopup._placesNode.itemId },
-      (function (aStatus, aLivemark) {
+      function (aStatus, aLivemark) {
         let placesNode = aPopup._placesNode;
         if (!Components.isSuccessCode(aStatus) || !placesNode.containerOpen)
           return;
@@ -702,7 +700,7 @@ PlacesViewBase.prototype = {
           else
             this._getDOMNodeForPlacesNode(child).removeAttribute("visited");
         }
-      }).bind(this)
+      }.bind(this)
     );
   },
 
@@ -1004,10 +1002,9 @@ PlacesToolbar.prototype = {
                 button.setAttribute("livemark", "true");
                 // Set an expando on the node, controller will use it to build
                 // its metadata.
-                aChild._feedURI = aLivemark.feedURI;
-                aChild._siteURI = aLivemark.siteURI;
+                this.controller.cacheLivemarkInfo(aChild, aLivemark);
               }
-            }
+            }.bind(this)
           );
         }
 
@@ -1253,15 +1250,14 @@ PlacesToolbar.prototype = {
 
         PlacesUtils.livemarks.getLivemark(
           { id: aPlacesNode.itemId },
-          (function (aStatus, aLivemark) {
+          function (aStatus, aLivemark) {
             if (Components.isSuccessCode(aStatus)) {
               // Set an expando on the node, controller will use it to build
               // its metadata.
-              aPlacesNode._feedURI = aLivemark.feedURI;
-              aPlacesNode._siteURI = aLivemark.siteURI;
+              this.controller.cacheLivemarkInfo(aPlacesNode, aLivemark);
               this.invalidateContainer(aPlacesNode);
             }
-          }).bind(this)
+          }.bind(this)
         );
       }
     }
@@ -1681,7 +1677,8 @@ PlacesToolbar.prototype = {
       // so we don't rebuild its contents whenever the popup is reopened.
       // Though, we want to always close feed containers so their expiration
       // status will be checked at next opening.
-      if (!PlacesUtils.nodeIsFolder(placesNode) || placesNode._feedURI) {
+      if (!PlacesUtils.nodeIsFolder(placesNode) ||
+          this.controller.hasCachedLivemarkInfo(placesNode)) {
         placesNode.containerOpen = false;
       }
     }
@@ -1787,7 +1784,8 @@ PlacesMenu.prototype = {
     // so we don't rebuild its contents whenever the popup is reopened.
     // Though, we want to always close feed containers so their expiration
     // status will be checked at next opening.
-    if (!PlacesUtils.nodeIsFolder(placesNode) || placesNode._feedURI)
+    if (!PlacesUtils.nodeIsFolder(placesNode) ||
+        this.controller.hasCachedLivemarkInfo(placesNode))
       placesNode.containerOpen = false;
 
     // The autoopened attribute is set for folders which have been
