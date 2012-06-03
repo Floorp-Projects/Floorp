@@ -2,6 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+let tiltOpened = false;
+
 function test() {
   if (!isTiltEnabled()) {
     info("Skipping destruction test because Tilt isn't enabled.");
@@ -18,20 +20,30 @@ function test() {
     createTilt({
       onTiltOpen: function()
       {
-        Services.obs.addObserver(cleanup, DESTROYED, false);
+        tiltOpened = true;
+
+        Services.obs.addObserver(finalize, DESTROYED, false);
         InspectorUI.closeInspectorUI();
       }
+    }, false, function suddenDeath()
+    {
+      info("Tilt could not be initialized properly.");
+      cleanup();
     });
   });
 }
 
-function cleanup() {
+function finalize() {
   let id = TiltUtils.getWindowId(gBrowser.selectedBrowser.contentWindow);
 
   is(Tilt.visualizers[id], null,
     "The current instance of the visualizer wasn't destroyed properly.");
 
-  Services.obs.removeObserver(cleanup, DESTROYED);
+  cleanup();
+}
+
+function cleanup() {
+  if (tiltOpened) { Services.obs.removeObserver(finalize, DESTROYED); }
   gBrowser.removeCurrentTab();
   finish();
 }
