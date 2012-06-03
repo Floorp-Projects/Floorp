@@ -77,6 +77,7 @@ let DebuggerController = {
     DebuggerView.StackFrames.destroy();
     DebuggerView.Properties.destroy();
 
+    DebuggerController.Breakpoints.destroy();
     DebuggerController.SourceScripts.disconnect();
     DebuggerController.StackFrames.disconnect();
     DebuggerController.ThreadState.disconnect();
@@ -823,6 +824,12 @@ SourceScripts.prototype = {
     }
 
     this._addScript({ url: aPacket.url, startLine: aPacket.startLine }, true);
+    // If there are any stored breakpoints for this script, display them again.
+    for (let bp of DebuggerController.Breakpoints.store) {
+      if (bp.location.url == aPacket.url) {
+        DebuggerController.Breakpoints.displayBreakpoint(bp.location);
+      }
+    }
   },
 
   /**
@@ -1166,7 +1173,7 @@ Breakpoints.prototype = {
 
   /**
    * The list of breakpoints in the debugger as tracked by the current
-   * debugger instance. This an object where the values are BreakpointActor
+   * debugger instance. This is an object where the values are BreakpointActor
    * objects received from the client, while the keys are actor names, for
    * example "conn0.breakpoint3".
    *
@@ -1238,14 +1245,7 @@ Breakpoints.prototype = {
 
     let line = aBreakpoint.line + 1;
 
-    let callback = function(aClient, aError) {
-      if (aError) {
-        this._skipEditorBreakpointChange = true;
-        let result = this.editor.removeBreakpoint(aBreakpoint.line);
-        this._skipEditorBreakpointChange = false;
-      }
-    }.bind(this);
-    this.addBreakpoint({ url: url, line: line }, callback, true);
+    this.addBreakpoint({ url: url, line: line }, null, true);
   },
 
   /**
@@ -1316,21 +1316,33 @@ Breakpoints.prototype = {
     }
 
     this.activeThread.setBreakpoint(aLocation, function(aResponse, aBpClient) {
-      if (!aResponse.error) {
-        this.store[aBpClient.actor] = aBpClient;
-
-        if (!aNoEditorUpdate) {
-          let url = DebuggerView.Scripts.selected;
-          if (url == aLocation.url) {
-            this._skipEditorBreakpointChange = true;
-            this.editor.addBreakpoint(aLocation.line - 1);
-            this._skipEditorBreakpointChange = false;
-          }
-        }
-      }
-
+      this.store[aBpClient.actor] = aBpClient;
+      this.displayBreakpoint(aLocation, aNoEditorUpdate);
       aCallback && aCallback(aBpClient, aResponse.error);
     }.bind(this));
+  },
+
+  /**
+   * Update the editor to display the specified breakpoint in the gutter.
+   *
+   * @param object aLocation
+   *        The location where you want the breakpoint. This object must have
+   *        two properties:
+   *          - url - the URL of the script.
+   *          - line - the line number (starting from 1).
+   * @param boolean [aNoEditorUpdate=false]
+   *        Tells if you want to skip editor updates. Typically the editor is
+   *        updated to visually indicate that a breakpoint has been added.
+   */
+  displayBreakpoint: function BP_displayBreakpoint(aLocation, aNoEditorUpdate) {
+    if (!aNoEditorUpdate) {
+      let url = DebuggerView.Scripts.selected;
+      if (url == aLocation.url) {
+        this._skipEditorBreakpointChange = true;
+        this.editor.addBreakpoint(aLocation.line - 1);
+        this._skipEditorBreakpointChange = false;
+      }
+    }
   },
 
   /**
