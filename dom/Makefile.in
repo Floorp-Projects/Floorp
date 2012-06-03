@@ -50,6 +50,7 @@ DIRS += \
   battery \
   contacts \
   devicestorage \
+  media \
   power \
   settings \
   sms \

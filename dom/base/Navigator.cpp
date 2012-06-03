@@ -38,6 +38,9 @@
 #include "Connection.h"
 #include "MobileConnection.h"
 
+#ifdef MOZ_MEDIA_NAVIGATOR
+#include "MediaManager.h"
+#endif
 #ifdef MOZ_B2G_RIL
 #include "TelephonyFactory.h"
 #endif
@@ -95,6 +98,9 @@ NS_INTERFACE_MAP_BEGIN(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorBattery)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
+#ifdef MOZ_MEDIA_NAVIGATOR
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorUserMedia)
+#endif
 #ifdef MOZ_B2G_RIL
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorTelephony)
 #endif
@@ -900,6 +906,31 @@ NS_IMETHODIMP Navigator::GetGeolocation(nsIDOMGeoGeolocation** _retval)
 }
 
 //*****************************************************************************
+//    Navigator::nsIDOMNavigatorUserMedia (mozGetUserMedia)
+//*****************************************************************************
+#ifdef MOZ_MEDIA_NAVIGATOR
+NS_IMETHODIMP
+Navigator::MozGetUserMedia(nsIMediaStreamOptions* aParams,
+                           nsIDOMGetUserMediaSuccessCallback* onSuccess,
+                           nsIDOMGetUserMediaErrorCallback* onError)
+{
+  if (!Preferences::GetBool("media.navigator.enabled", false)) {
+    return NS_OK;
+  }
+
+  MediaManager *manager = MediaManager::Get();
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
+
+  if (!win || !win->GetOuterWindow() ||
+      win->GetOuterWindow()->GetCurrentInnerWindow() != win) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return manager->GetUserMedia(win->WindowID(), aParams, onSuccess, onError);
+}
+#endif
+
+//*****************************************************************************
 //    Navigator::nsIDOMNavigatorDesktopNotification
 //*****************************************************************************
 
@@ -1199,6 +1230,17 @@ Navigator::SetWindow(nsPIDOMWindow *aInnerWindow)
   NS_ASSERTION(aInnerWindow->IsInnerWindow(),
                "Navigator must get an inner window!");
   mWindow = do_GetWeakReference(aInnerWindow);
+}
+
+void
+Navigator::OnNavigation()
+{
+  // Inform MediaManager in case there are live streams or pending callbacks.
+#ifdef MOZ_MEDIA_NAVIGATOR
+  MediaManager *manager = MediaManager::Get();
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mWindow);
+  return manager->OnNavigation(win->WindowID());
+#endif
 }
 
 } // namespace dom

@@ -4548,6 +4548,7 @@ MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
 MOZ_MEDIA_PLUGINS=
+MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
 MOZ_VP8_ERROR_CONCEALMENT=
 MOZ_VP8_ENCODER=
@@ -5636,6 +5637,18 @@ MOZ_ARG_ENABLE_BOOL(media-plugins,
 
 if test -n "$MOZ_MEDIA_PLUGINS"; then
   AC_DEFINE(MOZ_MEDIA_PLUGINS)
+fi
+
+dnl ========================================================
+dnl = Enable getUserMedia support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(media-navigator,
+[  --enable-media-navigator  Enable support for getUserMedia],
+    MOZ_MEDIA_NAVIGATOR=1,
+    MOZ_MEDIA_NAVIGATOR=)
+
+if test -n "$MOZ_MEDIA_NAVIGATOR"; then
+  AC_DEFINE(MOZ_MEDIA_NAVIGATOR)
 fi
 
 dnl ========================================================
