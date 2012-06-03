@@ -26,6 +26,7 @@
 #include "nsIAtom.h"
 #include "nsRange.h"
 #include "mozilla/dom/Element.h"
+#include "nsCSSStyleSheet.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -423,4 +424,14 @@ inDOMUtils::ClearPseudoClassLocks(nsIDOMElement *aElement)
   element->ClearStyleStateLocks();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+inDOMUtils::ParseStyleSheet(nsIDOMCSSStyleSheet *aSheet,
+                            const nsAString& aInput)
+{
+  nsRefPtr<nsCSSStyleSheet> sheet = do_QueryObject(aSheet);
+  NS_ENSURE_ARG_POINTER(sheet);
+
+  return sheet->ParseSheet(aInput);
 }
