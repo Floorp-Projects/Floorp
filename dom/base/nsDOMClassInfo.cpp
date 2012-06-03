@@ -464,6 +464,7 @@
 
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
 #include "mozilla/dom/indexedDB/IDBFactory.h"
+#include "mozilla/dom/indexedDB/IDBFileHandle.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
 #include "mozilla/dom/indexedDB/IDBDatabase.h"
 #include "mozilla/dom/indexedDB/IDBEvents.h"
@@ -512,6 +513,10 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "DOMError.h"
 #include "DOMRequest.h"
+
+#include "DOMFileHandle.h"
+#include "FileRequest.h"
+#include "LockedFile.h"
 
 #include "mozilla/Likely.h"
 
@@ -1573,6 +1578,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(IDBFactory, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(IDBFileHandle, FileHandle, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBRequest, IDBEventTargetSH,
                            IDBEVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBDatabase, IDBEventTargetSH,
@@ -1637,6 +1644,13 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(DOMRequest, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(DOMFileHandle, FileHandle, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(FileRequest, nsEventTargetSH,
+                           EVENTTARGET_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(LockedFile, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
 };
 
@@ -4330,6 +4344,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBFactory)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(IDBFileHandle, nsIDOMFileHandle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileHandle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBFileHandle)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(IDBRequest, nsIIDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
@@ -4457,6 +4476,20 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(DOMRequest, nsIDOMDOMRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(DOMFileHandle, nsIDOMFileHandle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileHandle)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(FileRequest, nsIDOMFileRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(LockedFile, nsIDOMLockedFile)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMLockedFile)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG

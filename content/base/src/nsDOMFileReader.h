@@ -16,8 +16,6 @@
 #include "nsIJSNativeInitializer.h"
 #include "prtime.h"                
 #include "nsITimer.h"              
-#include "nsICharsetDetector.h"
-#include "nsICharsetDetectionObserver.h"
 
 #include "nsIDOMFile.h"
 #include "nsIDOMFileReader.h"
@@ -34,8 +32,7 @@ class nsDOMFileReader : public mozilla::dom::FileIOObject,
                         public nsIDOMFileReader,
                         public nsIInterfaceRequestor,
                         public nsSupportsWeakReference,
-                        public nsIJSNativeInitializer,
-                        public nsICharsetDetectionObserver
+                        public nsIJSNativeInitializer
 {
 public:
   nsDOMFileReader();
@@ -54,12 +51,9 @@ public:
   NS_DECL_EVENT_HANDLER(loadend)
   NS_DECL_EVENT_HANDLER(loadstart)
 
-  // nsIJSNativeInitializer                                                
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj, 
+  // nsIJSNativeInitializer
+  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
                         PRUint32 argc, jsval* argv);
-
-  // nsICharsetDetectionObserver
-  NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);
 
   // FileIOObject overrides
   NS_IMETHOD DoAbort(nsAString& aEvent);
@@ -88,7 +82,6 @@ protected:
   nsresult GetAsText(const nsACString &aCharset,
                      const char *aFileData, PRUint32 aDataLen, nsAString &aResult);
   nsresult GetAsDataURL(nsIDOMBlob *aFile, const char *aFileData, PRUint32 aDataLen, nsAString &aResult); 
-  nsresult GuessCharset(const char *aFileData, PRUint32 aDataLen, nsACString &aCharset); 
   nsresult ConvertStream(const char *aFileData, PRUint32 aDataLen, const char *aCharset, nsAString &aResult); 
 
   void FreeFileData() {

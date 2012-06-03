@@ -1001,7 +1001,7 @@ ContinueObjectStoreHelper::GatherResultsFromStatement(
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(aStatement, 1, 2,
-    mDatabase->Manager(), mCloneReadInfo);
+    mDatabase, mCloneReadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1071,7 +1071,7 @@ ContinueIndexObjectHelper::GatherResultsFromStatement(
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(aStatement, 2, 3,
-    mDatabase->Manager(), mCloneReadInfo);
+    mDatabase, mCloneReadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

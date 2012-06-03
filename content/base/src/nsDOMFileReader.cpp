@@ -11,14 +11,12 @@
 #include "nsDOMFile.h"
 #include "nsDOMError.h"
 #include "nsCharsetAlias.h"
-#include "nsICharsetDetector.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIConverterInputStream.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
 #include "nsIMIMEService.h"
-#include "nsIPlatformCharset.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -97,7 +95,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMFileReader)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY(nsICharsetDetectionObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(FileReader)
 NS_INTERFACE_MAP_END_INHERITING(FileIOObject)
 
@@ -110,15 +107,6 @@ nsDOMFileReader::RootResultArrayBuffer()
   nsContentUtils::PreserveWrapper(
     static_cast<nsIDOMEventTarget*>(
       static_cast<nsDOMEventTargetHelper*>(this)), this);
-}
-
-//nsICharsetDetectionObserver
-
-NS_IMETHODIMP
-nsDOMFileReader::Notify(const char *aCharset, nsDetectionConfident aConf)
-{
-  mCharset = aCharset;
-  return NS_OK;
 }
 
 //nsDOMFileReader constructors/initializers
@@ -457,7 +445,7 @@ nsDOMFileReader::GetAsText(const nsACString &aCharset,
   if (!aCharset.IsEmpty()) {
     charsetGuess = aCharset;
   } else {
-    rv = GuessCharset(aFileData, aDataLen, charsetGuess);
+    rv = nsContentUtils::GuessCharset(aFileData, aDataLen, charsetGuess);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -539,81 +527,4 @@ nsDOMFileReader::ConvertStream(const char *aFileData,
   aResult.SetLength(destLength); //Trim down to the correct size
 
   return rv;
-}
-
-nsresult
-nsDOMFileReader::GuessCharset(const char *aFileData,
-                              PRUint32 aDataLen,
-                              nsACString &aCharset)
-{
-  // First try the universal charset detector
-  nsCOMPtr<nsICharsetDetector> detector
-    = do_CreateInstance(NS_CHARSET_DETECTOR_CONTRACTID_BASE
-                        "universal_charset_detector");
-  if (!detector) {
-    // No universal charset detector, try the default charset detector
-    const nsAdoptingCString& detectorName =
-      Preferences::GetLocalizedCString("intl.charset.detector");
-    if (!detectorName.IsEmpty()) {
-      nsCAutoString detectorContractID;
-      detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
-      detectorContractID += detectorName;
-      detector = do_CreateInstance(detectorContractID.get());
-    }
-  }
-
-  nsresult rv;
-  // The charset detector doesn't work for empty (null) aFileData. Testing
-  // aDataLen instead of aFileData so that we catch potential errors.
-  if (detector && aDataLen != 0) {
-    mCharset.Truncate();
-    detector->Init(this);
-
-    bool done;
-
-    rv = detector->DoIt(aFileData, aDataLen, &done);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = detector->Done();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aCharset = mCharset;
-  } else {
-    // no charset detector available, check the BOM
-    unsigned char sniffBuf[3];
-    PRUint32 numRead = (aDataLen >= sizeof(sniffBuf) ? sizeof(sniffBuf) : aDataLen);
-    memcpy(sniffBuf, aFileData, numRead);
-
-    if (numRead >= 2 &&
-               sniffBuf[0] == 0xfe &&
-               sniffBuf[1] == 0xff) {
-      aCharset = "UTF-16BE";
-    } else if (numRead >= 2 &&
-               sniffBuf[0] == 0xff &&
-               sniffBuf[1] == 0xfe) {
-      aCharset = "UTF-16LE";
-    } else if (numRead >= 3 &&
-               sniffBuf[0] == 0xef &&
-               sniffBuf[1] == 0xbb &&
-               sniffBuf[2] == 0xbf) {
-      aCharset = "UTF-8";
-    }
-  }
-
-  if (aCharset.IsEmpty()) {
-    // no charset detected, default to the system charset
-    nsCOMPtr<nsIPlatformCharset> platformCharset =
-      do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = platformCharset->GetCharset(kPlatformCharsetSel_PlainTextInFile,
-                                       aCharset);
-    }
-  }
-
-  if (aCharset.IsEmpty()) {
-    // no sniffed or default charset, try UTF-8
-    aCharset.AssignLiteral("UTF-8");
-  }
-
-  return NS_OK;
 }
