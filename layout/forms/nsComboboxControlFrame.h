@@ -137,16 +137,7 @@ public:
    * @note This method might destroy |this|.
    */
   virtual void RollupFromList();
-
-  /**
-   * Return the available space above and below this frame for
-   * placing the drop-down list, and the current 2D translation.
-   * Note that either or both can be less than or equal to zero,
-   * if both are then the drop-down should be closed.
-   */
-  void GetAvailableDropdownSpace(nscoord* aAbove,
-                                 nscoord* aBelow,
-                                 nsPoint* aTranslation);
+  virtual void AbsolutelyPositionDropDown();
   virtual PRInt32 GetIndexOfDisplayArea();
   /**
    * @note This method might destroy |this|.
@@ -168,7 +159,6 @@ public:
    * @note This method might destroy |this|.
    */
   virtual nsIContent* Rollup(PRUint32 aCount, bool aGetLastRolledUp = false);
-  virtual void NotifyGeometryChange();
 
   /**
    * A combobox should roll up if a mousewheel event happens outside of
@@ -194,27 +184,17 @@ public:
   static bool ToolkitHasNativePopup();
 
 protected:
-  friend class RedisplayTextEvent;
-  friend class nsAsyncResize;
-  friend class nsResizeDropdownAtFinalPosition;
 
   // Utilities
   nsresult ReflowDropdown(nsPresContext*          aPresContext, 
                           const nsHTMLReflowState& aReflowState);
 
-  enum DropDownPositionState {
-    // can't show the dropdown at its current position
-    eDropDownPositionSuppressed,
-    // a resize reflow is pending, don't show it yet
-    eDropDownPositionPendingResize,
-    // the dropdown has its final size and position and can be displayed here
-    eDropDownPositionFinal
-  };
-  DropDownPositionState AbsolutelyPositionDropDown();
-
   // Helper for GetMinWidth/GetPrefWidth
   nscoord GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
                             nsLayoutUtils::IntrinsicWidthType aType);
+protected:
+  class RedisplayTextEvent;
+  friend class RedisplayTextEvent;
 
   class RedisplayTextEvent : public nsRunnable {
   public:
@@ -262,6 +242,9 @@ protected:
   // size to the full width except the drop-marker.
   nscoord mDisplayWidth;
   
+  bool                  mDroppedDown;             // Current state of the dropdown list, true is dropped down
+  bool                  mInRedisplayText;
+
   nsRevocableEventPtr<RedisplayTextEvent> mRedisplayTextEvent;
 
   PRInt32               mRecentSelectedIndex;
@@ -272,16 +255,9 @@ protected:
   // then open or close the combo box.
   nsCOMPtr<nsIDOMEventListener> mButtonListener;
 
-  // Current state of the dropdown list, true is dropped down.
-  bool                  mDroppedDown;
-  // See comment in HandleRedisplayTextEvent().
-  bool                  mInRedisplayText;
-  // Acting on ShowDropDown(true) is delayed until we're focused.
-  bool                  mDelayedShowDropDown;
-
   // static class data member for Bug 32920
   // only one control can be focused at a time
-  static nsComboboxControlFrame* sFocused;
+  static nsComboboxControlFrame * mFocused;
 
 #ifdef DO_REFLOW_COUNTER
   PRInt32 mReflowId;
