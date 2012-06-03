@@ -474,17 +474,13 @@ abstract public class GeckoApp
 
     @Override
     public void openOptionsMenu() {
-        if (mBrowserToolbar.hasSoftMenuButton())
-            mBrowserToolbar.openOptionsMenu();
-        else
+        if (!mBrowserToolbar.openOptionsMenu())
             super.openOptionsMenu();
     }
 
     @Override
     public void closeOptionsMenu() {
-        if (mBrowserToolbar.hasSoftMenuButton())
-            mBrowserToolbar.closeOptionsMenu();
-        else
+        if (!mBrowserToolbar.closeOptionsMenu())
             super.closeOptionsMenu();
     }
 

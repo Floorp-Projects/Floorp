@@ -401,10 +401,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
          mForward.setEnabled(enabled);
     }
 
-    public boolean hasSoftMenuButton() {
-        return mHasSoftMenuButton;
-    }
-
     @Override
     public void addActionItem(View actionItem) {
         mActionItemBar.addView(actionItem);
@@ -462,14 +458,24 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mActionItemBar.removeAllViews();
     }
 
-    public void openOptionsMenu() {
+    public boolean openOptionsMenu() {
+        if (!mHasSoftMenuButton)
+            return false;
+
         if (mMenuPopup != null && !mMenuPopup.isShowing())
             mMenuPopup.show(mMenu);
+
+        return true;
     }
 
-    public void closeOptionsMenu() {
+    public boolean closeOptionsMenu() {
+        if (!mHasSoftMenuButton)
+            return false;
+
         if (mMenuPopup != null && mMenuPopup.isShowing())
             mMenuPopup.dismiss();
+
+        return true;
     }
 
     // MenuPopup holds the MenuPanel in Honeycomb/ICS devices with no hardware key
