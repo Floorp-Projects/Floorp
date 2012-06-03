@@ -285,4 +285,4 @@ MediaEngineDefault::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSour
   return;
 }
 
-}
+} // namespace mozilla

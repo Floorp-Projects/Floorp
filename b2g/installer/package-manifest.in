@@ -142,7 +142,6 @@
 @BINPATH@/components/content_canvas.xpt
 @BINPATH@/components/content_htmldoc.xpt
 @BINPATH@/components/content_html.xpt
-@BINPATH@/components/content_media.xpt
 @BINPATH@/components/content_xslt.xpt
 @BINPATH@/components/content_xtf.xpt
 @BINPATH@/components/cookie.xpt
@@ -167,6 +166,7 @@
 @BINPATH@/components/dom_devicestorage.xpt
 @BINPATH@/components/dom_events.xpt
 @BINPATH@/components/dom_geolocation.xpt
+@BINPATH@/components/dom_media.xpt
 @BINPATH@/components/dom_network.xpt
 @BINPATH@/components/dom_notification.xpt
 @BINPATH@/components/dom_html.xpt
