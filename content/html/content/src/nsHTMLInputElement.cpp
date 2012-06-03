@@ -922,7 +922,7 @@ nsHTMLInputElement::SetHeight(uint32_t aHeight)
 NS_IMETHODIMP
 nsHTMLInputElement::GetIndeterminate(bool* aValue)
 {
-  *aValue = mIndeterminate;
+  *aValue = Indeterminate();
   return NS_OK;
 }
 
@@ -1641,7 +1641,7 @@ nsHTMLInputElement::SetValueChanged(bool aValueChanged)
 NS_IMETHODIMP 
 nsHTMLInputElement::GetChecked(bool* aChecked)
 {
-  *aChecked = mChecked;
+  *aChecked = Checked();
   return NS_OK;
 }
 
