@@ -436,6 +436,7 @@
 @BINPATH@/components/nsPrompter.js
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
+@BINPATH@/components/AitcComponents.manifest
 @BINPATH@/components/Weave.js
 #endif
 @BINPATH@/components/TelemetryPing.js
