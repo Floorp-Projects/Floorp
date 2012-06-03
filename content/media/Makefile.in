@@ -21,6 +21,7 @@ XPIDLSRCS = \
 EXPORTS = \
   AudioSegment.h \
   FileBlockCache.h \
+  MediaEngine.h \
   MediaResource.h \
   MediaSegment.h \
   MediaStreamGraph.h \
