@@ -17,6 +17,7 @@ enum StructuredCloneTags {
   SCTAG_DOM_BLOB,
   SCTAG_DOM_FILE,
   SCTAG_DOM_FILELIST,
+  SCTAG_DOM_FILEHANDLE,
 
   // These tags are used for both main thread and workers.
   SCTAG_DOM_IMAGEDATA,
