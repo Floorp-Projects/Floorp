@@ -499,9 +499,8 @@ let Manager = {
     Manager = ConsoleAPIObserver = JSTerm = ConsoleListener = NetworkMonitor =
       NetworkResponseListener = ConsoleProgressListener = null;
 
-    Cc = Ci = Cu = XPCOMUtils = Services = gConsoleStorage =
-      WebConsoleUtils = l10n = JSPropertyProvider = NetworkHelper =
-      NetUtil = activityDistributor = null;
+    XPCOMUtils = gConsoleStorage = WebConsoleUtils = l10n = JSPropertyProvider =
+      NetworkHelper = NetUtil = activityDistributor = null;
   },
 };
 
@@ -1503,7 +1502,7 @@ NetworkResponseListener.prototype = {
    */
   _findOpenResponse: function NRL__findOpenResponse()
   {
-    if (this._foundOpenResponse) {
+    if (!_alive || this._foundOpenResponse) {
       return;
     }
 
@@ -1611,7 +1610,9 @@ NetworkResponseListener.prototype = {
 
     this.receivedData = "";
 
-    NetworkMonitor.sendActivity(this.httpActivity);
+    if (_alive) {
+      NetworkMonitor.sendActivity(this.httpActivity);
+    }
 
     this.httpActivity.channel = null;
     this.httpActivity = null;
@@ -1745,7 +1746,7 @@ let NetworkMonitor = {
     // NetworkResponseListener is responsible with updating the httpActivity
     // object with the data from the new object in openResponses.
 
-    if (aTopic != "http-on-examine-response" ||
+    if (!_alive || aTopic != "http-on-examine-response" ||
         !(aSubject instanceof Ci.nsIHttpChannel)) {
       return;
     }

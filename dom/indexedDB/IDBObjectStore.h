@@ -73,7 +73,7 @@ public:
   GetStructuredCloneReadInfoFromStatement(mozIStorageStatement* aStatement,
                                           PRUint32 aDataIndex,
                                           PRUint32 aFileIdsIndex,
-                                          FileManager* aFileManager,
+                                          IDBDatabase* aDatabase,
                                           StructuredCloneReadInfo& aInfo);
 
   static void

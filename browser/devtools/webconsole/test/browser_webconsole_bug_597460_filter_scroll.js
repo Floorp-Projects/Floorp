@@ -23,18 +23,36 @@ function consoleOpened(aHud) {
   hud.filterBox.value = "test message";
   HUDService.updateFilterText(hud.filterBox);
 
-  browser.addEventListener("load", tabReload, true);
+  let waitForNetwork = {
+    name: "network message",
+    validatorFn: function()
+    {
+      return hud.outputNode.querySelector(".webconsole-msg-network");
+    },
+    successFn: testScroll,
+    failureFn: finishTest,
+  };
 
-  executeSoon(function() {
-    content.location.reload();
+  waitForSuccess({
+    name: "console messages displayed",
+    validatorFn: function()
+    {
+      return hud.outputNode.textContent.indexOf("test message 199") > -1;
+    },
+    successFn: function()
+    {
+      browser.addEventListener("load", function onReload() {
+        browser.removeEventListener("load", onReload, true);
+        waitForSuccess(waitForNetwork);
+      }, true);
+      content.location.reload();
+    },
+    failureFn: finishTest,
   });
 }
 
-function tabReload(aEvent) {
-  browser.removeEventListener(aEvent.type, tabReload, true);
-
+function testScroll() {
   let msgNode = hud.outputNode.querySelector(".webconsole-msg-network");
-  ok(msgNode, "found network message");
   ok(msgNode.classList.contains("hud-filtered-by-type"),
     "network message is filtered by type");
   ok(msgNode.classList.contains("hud-filtered-by-string"),

@@ -107,3 +107,10 @@ DOM_MSG_DEF(NS_ERROR_FACTORY_NOT_REGISTERED        , "Factory not registered")
 DOM_MSG_DEF(NS_ERROR_FACTORY_NOT_LOADED            , "Factory not loaded")
 DOM_MSG_DEF(NS_ERROR_FACTORY_NO_SIGNATURE_SUPPORT  , "Factory does not support signatures")
 DOM_MSG_DEF(NS_ERROR_FACTORY_EXISTS                , "Factory already exists")
+
+DOM4_MSG_DEF(UnknownError, "The operation failed for reasons unrelated to the file storage itself and not covered by any other error code.", NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR)
+DOM4_MSG_DEF(LockedFileInactiveError, "A request was placed against a locked file which is currently not active, or which is finished.", NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR)
+DOM4_MSG_DEF(ReadOnlyError, "A mutation operation was attempted in a READ_ONLY locked file.", NS_ERROR_DOM_FILEHANDLE_READ_ONLY_ERR)
+
+DOM4_MSG_DEF(InvalidStateError, "A mutation operation was attempted on a file storage that did not allow mutations.", NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR)
+DOM4_MSG_DEF(AbortError, "A request was aborted, for example through a call to LockedFile.abort.", NS_ERROR_DOM_FILEHANDLE_ABORT_ERR)
