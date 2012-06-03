@@ -216,8 +216,14 @@ TransactionThreadPool::FinishTransaction(IDBTransaction* aTransaction)
     mTransactionsInProgress.Remove(databaseId);
 
     // See if we need to fire any complete callbacks.
-    for (PRUint32 index = 0; index < mCompleteCallbacks.Length(); index++) {
-      MaybeFireCallback(index);
+    PRUint32 index = 0;
+    while (index < mCompleteCallbacks.Length()) {
+      if (MaybeFireCallback(mCompleteCallbacks[index])) {
+        mCompleteCallbacks.RemoveElementAt(index);
+      }
+      else {
+        index++;
+      }
     }
   }
   else {
@@ -459,7 +465,10 @@ TransactionThreadPool::WaitForAllDatabasesToComplete(
     NS_ERROR("This should never fail!");
   }
 
-  MaybeFireCallback(mCompleteCallbacks.Length() - 1);
+  if (MaybeFireCallback(*callback)) {
+    mCompleteCallbacks.RemoveElementAt(mCompleteCallbacks.Length() - 1);
+  }
+
   return true;
 }
 
@@ -540,25 +549,20 @@ TransactionThreadPool::HasTransactionsForDatabase(IDBDatabase* aDatabase)
   return false;
 }
 
-void
-TransactionThreadPool::MaybeFireCallback(PRUint32 aCallbackIndex)
+bool
+TransactionThreadPool::MaybeFireCallback(DatabasesCompleteCallback& aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  DatabasesCompleteCallback& callback = mCompleteCallbacks[aCallbackIndex];
-
-  bool freeToRun = true;
-  for (PRUint32 index = 0; index < callback.mDatabases.Length(); index++) {
-    if (mTransactionsInProgress.Get(callback.mDatabases[index]->Id(), nsnull)) {
-      freeToRun = false;
-      break;
+  for (PRUint32 index = 0; index < aCallback.mDatabases.Length(); index++) {
+    if (mTransactionsInProgress.Get(aCallback.mDatabases[index]->Id(),
+                                    nsnull)) {
+      return false;
     }
   }
 
-  if (freeToRun) {
-    callback.mCallback->Run();
-    mCompleteCallbacks.RemoveElementAt(aCallbackIndex);
-  }
+  aCallback.mCallback->Run();
+  return true;
 }
 
 TransactionThreadPool::

@@ -1172,7 +1172,7 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
 
   if (hasResult) {
     rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 0, 1,
-      mDatabase->Manager(), mCloneReadInfo);
+      mDatabase, mCloneReadInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1488,7 +1488,7 @@ GetAllHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
     NS_ASSERTION(readInfo, "This shouldn't fail!");
 
     rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 0, 1,
-      mDatabase->Manager(), *readInfo);
+      mDatabase, *readInfo);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
@@ -2023,7 +2023,7 @@ OpenCursorHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(stmt, 2, 3,
-    mDatabase->Manager(), mCloneReadInfo);
+    mDatabase, mCloneReadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now we need to make the query to get the next match.
