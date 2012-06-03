@@ -498,6 +498,8 @@ ThreadClient.prototype = {
   get state() { return this._state; },
   get paused() { return this._state === "paused"; },
 
+  _pauseOnExceptions: false,
+
   _actor: null,
   get actor() { return this._actor; },
 
@@ -525,8 +527,12 @@ ThreadClient.prototype = {
     this._state = "resuming";
 
     let self = this;
-    let packet = { to: this._actor, type: DebugProtocolTypes.resume,
-                   resumeLimit: aLimit };
+    let packet = {
+      to: this._actor,
+      type: DebugProtocolTypes.resume,
+      resumeLimit: aLimit,
+      pauseOnExceptions: this._pauseOnExceptions
+    };
     this._client.request(packet, function(aResponse) {
       if (aResponse.error) {
         // There was an error resuming, back to paused state.
@@ -581,6 +587,31 @@ ThreadClient.prototype = {
         aOnResponse(aResponse);
       }
     });
+  },
+
+  /**
+   * Enable or disable pausing when an exception is thrown.
+   *
+   * @param boolean aFlag
+   *        Enables pausing if true, disables otherwise.
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  pauseOnExceptions: function TC_pauseOnExceptions(aFlag, aOnResponse) {
+    this._pauseOnExceptions = aFlag;
+    // If the debuggee is paused, the value of the flag will be communicated in
+    // the next resumption. Otherwise we have to force a pause in order to send
+    // the flag.
+    if (!this.paused) {
+      this.interrupt(function(aResponse) {
+        if (aResponse.error) {
+          // Can't continue if pausing failed.
+          aOnResponse(aResponse);
+          return;
+        }
+        this.resume(aOnResponse);
+      }.bind(this));
+    }
   },
 
   /**
