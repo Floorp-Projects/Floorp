@@ -410,11 +410,9 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     @Override
-    public void removeActionItem(View actionItem) {
-        mActionItemBar.removeView(actionItem);
-
-        if (sActionItems.contains(actionItem))
-            sActionItems.remove(actionItem);
+    public void removeActionItem(int index) {
+        mActionItemBar.removeViewAt(index);
+        sActionItems.remove(index);
     }
 
     @Override
