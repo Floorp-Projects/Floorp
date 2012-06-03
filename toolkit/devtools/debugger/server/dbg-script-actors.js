@@ -259,6 +259,10 @@ ThreadActor.prototype = {
                    message: "Unknown resumeLimit type" };
       }
     }
+
+    if (aRequest && aRequest.pauseOnExceptions) {
+      this.dbg.onExceptionUnwind = this.onExceptionUnwind.bind(this);
+    }
     let packet = this._resumed();
     DebuggerServer.xpcInspector.exitNestedEventLoop();
     return packet;
@@ -589,6 +593,7 @@ ThreadActor.prototype = {
 
     // Clear stepping hooks.
     this.dbg.onEnterFrame = undefined;
+    this.dbg.onExceptionUnwind = undefined;
     if (aFrame) {
       aFrame.onStep = undefined;
       aFrame.onPop = undefined;
@@ -853,6 +858,33 @@ ThreadActor.prototype = {
    */
   onDebuggerStatement: function TA_onDebuggerStatement(aFrame) {
     return this._pauseAndRespond(aFrame, { type: "debuggerStatement" });
+  },
+
+  /**
+   * A function that the engine calls when an exception has been thrown and has
+   * propagated to the specified frame.
+   *
+   * @param aFrame Debugger.Frame
+   *        The youngest remaining stack frame.
+   * @param aValue object
+   *        The exception that was thrown.
+   */
+  onExceptionUnwind: function TA_onExceptionUnwind(aFrame, aValue) {
+    try {
+      let packet = this._paused(aFrame);
+      if (!packet) {
+        return undefined;
+      }
+
+      packet.why = { type: "exception",
+                     exception: this.createValueGrip(aValue) };
+      this.conn.send(packet);
+      return this._nest();
+    } catch(e) {
+      Cu.reportError("Got an exception during TA_onExceptionUnwind: " + e +
+                     ": " + e.stack);
+      return undefined;
+    }
   },
 
   /**
