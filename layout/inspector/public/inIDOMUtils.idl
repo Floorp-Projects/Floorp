@@ -14,8 +14,9 @@ interface nsIDOMNode;
 interface nsIDOMNodeList;
 interface nsIDOMFontFaceList;
 interface nsIDOMRange;
+interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(983475e4-6bdf-4741-a733-76e9a8d119b9)]
+[scriptable, uuid(f7a37305-a963-4a2a-b951-2c97a6b27fb4)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -51,4 +52,13 @@ interface inIDOMUtils : nsISupports
   void removePseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);
   bool hasPseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);
   void clearPseudoClassLocks(in nsIDOMElement aElement);
+
+  /**
+   * Parse CSS and update the style sheet in place.
+   *
+   * @param DOMCSSStyleSheet aSheet
+   * @param DOMString aInput
+   *        The new source string for the style sheet.
+   */
+  void parseStyleSheet(in nsIDOMCSSStyleSheet aSheet, in DOMString aInput);
 };

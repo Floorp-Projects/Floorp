@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<!--
+vim: set ts=2 et sw=2 tw=80:
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<?xml-stylesheet type="text/css" href="test_bug727834.css"?>
+<window title="Mozilla Bug 727834"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="RunTests();">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"><![CDATA[
+/** Test for Bug 727834 - Add an API to (re)parse a style sheet in place **/
+
+function RunTests() {
+  SimpleTest.waitForExplicitFinish();
+
+  let DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
+                   .getService(Components.interfaces.inIDOMUtils);
+  let body = document.querySelector("body");
+  let testSheet = document.styleSheets[2];
+  let rule = document.styleSheets[2].cssRules[0];
+
+  is(testSheet.cssRules.length, 1,
+     "style sheet has 1 rule");
+  is(rule.style.paddingTop, "100px",
+     "original first rule has padding-top 100px");
+  is(window.getComputedStyle(body).paddingTop, "100px",
+     "original first rule applies");
+
+  DOMUtils.parseStyleSheet(testSheet,
+    "@import url(test_bug727834.css); body{background: red;}");
+
+  is(testSheet.cssRules.length, 2,
+     "style sheet now has 2 rules");
+  is(window.getComputedStyle(body).backgroundColor, "rgb(255, 0, 0)",
+     "background is now red");
+
+  let exceptionName;
+  try {
+    rule.style.paddingLeft = "100px";
+  } catch (ex) {
+    exceptionName = ex.name;
+  } finally {
+    is(exceptionName, "NS_ERROR_NOT_AVAILABLE",
+       "original rule is not available for modification anymore");
+  }
+  is(window.getComputedStyle(body).paddingLeft, "0px",
+     "original rule does not apply to document");
+
+  rule = testSheet.cssRules[0];
+
+  is(rule.parentStyleSheet, testSheet,
+     "rule's parent style sheet is not null");
+
+  DOMUtils.parseStyleSheet(testSheet,
+    "body{background: lime;}");
+
+  is(testSheet.cssRules.length, 1,
+     "style sheet now has 1 rule");
+  is(window.getComputedStyle(body).backgroundColor, "rgb(0, 255, 0)",
+     "background is now lime");
+  is(rule.parentStyleSheet, null,
+     "detached rule's parent style sheet is null");
+
+  SimpleTest.executeSoon(function () {
+    DOMUtils.parseStyleSheet(testSheet,
+      "@import url(test_bug727834.css); body{background: blue;}");
+
+    is(testSheet.cssRules.length, 2,
+       "style sheet now has 2 rules");
+    is(window.getComputedStyle(body).backgroundColor, "rgb(0, 0, 255)",
+       "background is now blue");
+    is(testSheet.cssRules[0].parentStyleSheet, testSheet,
+       "parent style sheet is the test sheet");
+
+    SimpleTest.finish();
+  });
+}
+  ]]></script>
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=727834">
+      Mozilla Bug 727834 - Add an API to (re)parse a style sheet in place
+    </a>
+  </body>
+</window>
