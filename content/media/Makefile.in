@@ -12,11 +12,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = content
 LIBRARY_NAME = gkconmedia_s
 LIBXUL_LIBRARY = 1
-XPIDL_MODULE = content_media
-
-XPIDLSRCS = \
-  nsIDOMMediaStream.idl \
-  $(NULL)
 
 EXPORTS = \
   AudioSegment.h \
