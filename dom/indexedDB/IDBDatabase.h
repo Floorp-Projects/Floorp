@@ -10,6 +10,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "nsIDocument.h"
+#include "nsIFileStorage.h"
 #include "nsIIDBDatabase.h"
 #include "nsDOMEventTargetHelper.h"
 #include "mozilla/dom/indexedDB/IDBWrapperCache.h"
@@ -31,7 +32,8 @@ class IndexedDBDatabaseParent;
 struct ObjectStoreInfoGuts;
 
 class IDBDatabase : public IDBWrapperCache,
-                    public nsIIDBDatabase
+                    public nsIIDBDatabase,
+                    public nsIFileStorage
 {
   friend class AsyncConnectionHelper;
   friend class IndexedDatabaseManager;
@@ -39,6 +41,7 @@ class IDBDatabase : public IDBWrapperCache,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBDATABASE
+  NS_DECL_NSIFILESTORAGE
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBDatabase, IDBWrapperCache)
 

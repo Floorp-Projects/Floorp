@@ -246,7 +246,7 @@ protected:
   nsresult PopListItem(nsIDOMNode *aListItem, bool *aOutOfList);
   nsresult RemoveListStructure(nsIDOMNode *aList);
   nsresult CacheInlineStyles(nsIDOMNode *aNode);
-  nsresult ReapplyCachedStyles(); 
+  nsresult ReapplyCachedStyles();
   nsresult ClearCachedStyles();
   nsresult AdjustSpecialBreaks(bool aSafeToAskFrames = false);
   nsresult AdjustWhitespace(nsISelection *aSelection);

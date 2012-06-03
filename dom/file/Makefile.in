@@ -1,0 +1,58 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH            = ../..
+topsrcdir        = @top_srcdir@
+srcdir           = @srcdir@
+VPATH            = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE           = dom
+LIBRARY_NAME     = domfile_s
+XPIDL_MODULE     = dom_file
+LIBXUL_LIBRARY   = 1
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/dom/dom-config.mk
+
+EXPORTS_NAMESPACES = mozilla/dom/file
+
+CPPSRCS = \
+  AsyncHelper.cpp \
+  DOMFileHandle.cpp \
+  File.cpp \
+  FileHandle.cpp \
+  FileHelper.cpp \
+  FileRequest.cpp \
+  FileService.cpp \
+  FileStreamWrappers.cpp \
+  LockedFile.cpp \
+  MemoryStreams.cpp \
+  MetadataHelper.cpp \
+  $(NULL)
+
+EXPORTS = \
+  nsIFileStorage.h \
+  $(NULL)
+
+EXPORTS_mozilla/dom/file = \
+  DOMFileHandle.h \
+  File.h \
+  FileCommon.h \
+  FileHandle.h \
+  FileHelper.h \
+  FileService.h \
+  LockedFile.h \
+  $(NULL)
+
+XPIDLSRCS = \
+  nsIDOMFileHandle.idl \
+  nsIDOMFileRequest.idl \
+  nsIDOMLockedFile.idl \
+  $(NULL)
+
+TEST_DIRS += test
+
+include $(topsrcdir)/config/rules.mk

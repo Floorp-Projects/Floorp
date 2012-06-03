@@ -927,20 +927,15 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
   nsIContent* oldFocusedContent = mFocusedContent;
   mFocusedContent = nsnull;
 
-  nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
-  nsCOMPtr<nsIPresShell> presShell;
-  focusedDocShell->GetPresShell(getter_AddRefs(presShell));
-
   if (oldFocusedContent && oldFocusedContent->IsInDoc()) {
     NotifyFocusStateChange(oldFocusedContent,
                            mFocusedWindow->ShouldShowFocusRing(),
                            false);
-    window->UpdateCommands(NS_LITERAL_STRING("focus"));
-
-    SendFocusOrBlurEvent(NS_BLUR_CONTENT, presShell,
-                         oldFocusedContent->GetCurrentDoc(),
-                         oldFocusedContent, 1, false);
   }
+
+  nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
+  nsCOMPtr<nsIPresShell> presShell;
+  focusedDocShell->GetPresShell(getter_AddRefs(presShell));
 
   nsIMEStateManager::OnTextStateBlur(nsnull, nsnull);
   if (presShell) {
