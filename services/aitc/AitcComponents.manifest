@@ -1,5 +1,5 @@
-# service.js
-component {a3d387ca-fd26-44ca-93be-adb5fda5a78d} service.js
+# Aitc.js
+component {a3d387ca-fd26-44ca-93be-adb5fda5a78d} Aitc.js
 contract @mozilla.org/services/aitc;1 {a3d387ca-fd26-44ca-93be-adb5fda5a78d}
 category app-startup AitcService service,@mozilla.org/services/aitc;1
 # Register resource aliases
