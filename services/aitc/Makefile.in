@@ -11,7 +11,7 @@ include $(DEPTH)/config/autoconf.mk
 
 EXTRA_COMPONENTS = \
   AitcComponents.manifest \
-  service.js \
+  Aitc.js \
   $(NULL)
 
 PREF_JS_EXPORTS = $(srcdir)/services-aitc.js

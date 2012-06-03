@@ -1,6 +1,8 @@
 const modules = [
   "client.js",
   "browserid.js",
+  "main.js",
+  "manager.js",
   "storage.js"
 ];
 
