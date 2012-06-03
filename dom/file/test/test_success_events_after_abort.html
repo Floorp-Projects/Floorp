@@ -1,0 +1,66 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    for each (let fileStorage in fileStorages) {
+      let request = getFileHandle(fileStorage.key, "test.txt");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let fileHandle = event.target.result;
+      fileHandle.onerror = errorHandler;
+
+      let lockedFile = fileHandle.open();
+
+      lockedFile.oncomplete = unexpectedSuccessHandler;
+      lockedFile.onabort = grabEventAndContinueHandler;
+
+      let sawError = false;
+
+      request = lockedFile.getMetadata({ size: true });
+      request.onsuccess = unexpectedSuccessHandler;
+      request.onerror = function(event) {
+        is(event.target.error.name, "AbortError", "Good error");
+        sawError = true;
+        event.stopPropagation();
+      }
+
+      lockedFile.abort();
+
+      event = yield;
+
+      is(event.type, "abort", "Got abort event");
+      is(sawError, true, "Saw getMetadata() error");
+
+      // Make sure the success event isn't queued somehow.
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var thread = Components.classes["@mozilla.org/thread-manager;1"]
+                             .getService(Components.interfaces.nsIThreadManager)
+                             .currentThread;
+      while (thread.hasPendingEvents()) {
+        thread.processNextEvent(false);
+      }
+    }  
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

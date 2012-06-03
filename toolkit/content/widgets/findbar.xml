@@ -942,14 +942,14 @@
             return textFound;
 
           if (aHighlight) {
-            this._searchRange = doc.createRange();
-            this._searchRange.selectNodeContents(doc.body);
+            var searchRange = doc.createRange();
+            searchRange.selectNodeContents(doc.body);
 
-            this._startPt = this._searchRange.cloneRange();
-            this._startPt.collapse(true);
+            var startPt = searchRange.cloneRange();
+            startPt.collapse(true);
 
-            this._endPt = this._searchRange.cloneRange();
-            this._endPt.collapse(false);
+            var endPt = searchRange.cloneRange();
+            endPt.collapse(false);
 
             var retRange = null;
             var finder = Components.classes["@mozilla.org/embedcomp/rangefind;1"]
@@ -958,11 +958,11 @@
 
             finder.caseSensitive = this._shouldBeCaseSensitive(aWord);
 
-            while ((retRange = finder.Find(aWord, this._searchRange,
-                                          this._startPt, this._endPt))) {
+            while ((retRange = finder.Find(aWord, searchRange,
+                                           startPt, endPt))) {
               this._highlight(retRange, controller);
-              this._startPt = retRange.cloneRange();
-              this._startPt.collapse(false);
+              startPt = retRange.cloneRange();
+              startPt.collapse(false);
 
               textFound = true;
             }

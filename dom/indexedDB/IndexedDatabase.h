@@ -28,19 +28,34 @@
   using namespace mozilla::dom::indexedDB;
 
 class nsIDOMBlob;
+class nsIInputStream;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 class FileInfo;
+class IDBDatabase;
+class IDBTransaction;
+
+template <class T>
+void SwapData(T& aData1, T& aData2)
+{
+  T temp = aData2;
+  aData2 = aData1;
+  aData1 = temp;
+}
 
 struct SerializedStructuredCloneReadInfo;
 
 struct StructuredCloneReadInfo
 {
+  // In IndexedDatabaseInlines.h
+  inline StructuredCloneReadInfo();
+
   void Swap(StructuredCloneReadInfo& aCloneReadInfo)
   {
     mCloneBuffer.swap(aCloneReadInfo.mCloneBuffer);
     mFileInfos.SwapElements(aCloneReadInfo.mFileInfos);
+    SwapData(mDatabase, aCloneReadInfo.mDatabase);
   }
 
   // In IndexedDatabaseInlines.h
@@ -49,6 +64,7 @@ struct StructuredCloneReadInfo
 
   JSAutoStructuredCloneBuffer mCloneBuffer;
   nsTArray<nsRefPtr<FileInfo> > mFileInfos;
+  IDBDatabase* mDatabase;
 };
 
 struct SerializedStructuredCloneReadInfo
@@ -77,22 +93,41 @@ struct SerializedStructuredCloneReadInfo
   size_t dataLength;
 };
 
+struct StructuredCloneFile
+{
+  bool operator==(const StructuredCloneFile& aOther) const
+  {
+    return this->mFile == aOther.mFile &&
+           this->mFileInfo == aOther.mFileInfo &&
+           this->mInputStream == aOther.mInputStream;
+  }
+
+  nsCOMPtr<nsIDOMBlob> mFile;
+  nsRefPtr<FileInfo> mFileInfo;
+  nsCOMPtr<nsIInputStream> mInputStream;
+};
+
 struct SerializedStructuredCloneWriteInfo;
 
 struct StructuredCloneWriteInfo
 {
+  // In IndexedDatabaseInlines.h
+  inline StructuredCloneWriteInfo();
+
   void Swap(StructuredCloneWriteInfo& aCloneWriteInfo)
   {
     mCloneBuffer.swap(aCloneWriteInfo.mCloneBuffer);
-    mBlobs.SwapElements(aCloneWriteInfo.mBlobs);
-    mOffsetToKeyProp = aCloneWriteInfo.mOffsetToKeyProp;
+    mFiles.SwapElements(aCloneWriteInfo.mFiles);
+    SwapData(mTransaction, aCloneWriteInfo.mTransaction);
+    SwapData(mOffsetToKeyProp, aCloneWriteInfo.mOffsetToKeyProp);
   }
 
   bool operator==(const StructuredCloneWriteInfo& aOther) const
   {
     return this->mCloneBuffer.nbytes() == aOther.mCloneBuffer.nbytes() &&
            this->mCloneBuffer.data() == aOther.mCloneBuffer.data() &&
-           this->mBlobs == aOther.mBlobs &&
+           this->mFiles == aOther.mFiles &&
+           this->mTransaction == aOther.mTransaction &&
            this->mOffsetToKeyProp == aOther.mOffsetToKeyProp;
   }
 
@@ -101,7 +136,8 @@ struct StructuredCloneWriteInfo
   SetFromSerialized(const SerializedStructuredCloneWriteInfo& aOther);
 
   JSAutoStructuredCloneBuffer mCloneBuffer;
-  nsTArray<nsCOMPtr<nsIDOMBlob> > mBlobs;
+  nsTArray<StructuredCloneFile> mFiles;
+  IDBTransaction* mTransaction;
   PRUint64 mOffsetToKeyProp;
 };
 

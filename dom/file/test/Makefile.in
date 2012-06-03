@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH            = ../../..
+topsrcdir        = @top_srcdir@
+srcdir           = @srcdir@
+VPATH            = @srcdir@
+relativesrcdir   = dom/file/test
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/rules.mk
+
+TEST_FILES = \
+  helpers.js \
+  test_append_read_data.html \
+  test_getFileId.html \
+  test_lockedfile_lifetimes.html \
+  test_lockedfile_lifetimes_nested.html \
+  test_lockedfile_ordering.html \
+  test_overlapping_lockedfiles.html \
+  test_progress_events.html \
+  test_readonly_lockedfiles.html \
+  test_request_readyState.html \
+  test_stream_tracking.html \
+  test_success_events_after_abort.html \
+  test_truncate.html \
+  test_write_read_data.html \
+  $(NULL)
+
+libs:: $(TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
