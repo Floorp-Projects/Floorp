@@ -87,7 +87,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
 XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
   "resource:///modules/sessionstore/DocumentUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
- "resource:///modules/sessionstore/SessionStorage.jsm");
+  "resource:///modules/sessionstore/SessionStorage.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -1993,9 +1993,11 @@ let SessionStoreInternal = {
     else if (tabData.extData)
       delete tabData.extData;
 
-    if (history && browser.docShell instanceof Ci.nsIDocShell)
-      SessionStorage.serialize(tabData, history, browser.docShell, aFullData,
-                               aTab.pinned);
+    if (history && browser.docShell instanceof Ci.nsIDocShell) {
+      let storageData = SessionStorage.serialize(browser.docShell, aFullData)
+      if (Object.keys(storageData).length)
+        tabData.storage = storageData;
+    }
 
     return tabData;
   },
@@ -3061,7 +3063,7 @@ let SessionStoreInternal = {
       tab.setAttribute(name, tabData.attributes[name]);
 
     if (tabData.storage && browser.docShell instanceof Ci.nsIDocShell)
-      SessionStorage.deserialize(tabData.storage, browser.docShell);
+      SessionStorage.deserialize(browser.docShell, tabData.storage);
 
     // notify the tabbrowser that the tab chrome has been restored
     var event = aWindow.document.createEvent("Events");
