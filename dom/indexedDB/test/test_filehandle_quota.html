@@ -1,0 +1,66 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const READ_WRITE = IDBTransaction.READ_WRITE;
+    const DEFAULT_QUOTA_MB = 50;
+
+    const name = window.location.pathname;
+    const description = "My Test Database";
+
+    let request = mozIndexedDB.open(name, 1, description);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield;
+
+    is(event.type, "upgradeneeded", "Got correct event type");
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    event = yield;
+
+    request = db.mozCreateFileHandle("test.bin", "binary");
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let fileHandle = event.target.result;
+    fileHandle.onerror = errorHandler;
+
+    let lockedFile = fileHandle.open("readwrite");
+
+    let blob = getNullBlob((50 + 1) * 1024 * 1024 - getUsageSync());
+
+    request = lockedFile.write(blob);
+    request.onerror = new ExpectError("UnknownError");
+    request.onsuccess = unexpectedSuccessHandler;
+    event = yield;
+
+    lockedFile.oncomplete = grabEventAndContinueHandler;
+    event = yield;
+
+    is(event.type, "complete", "Got correct event type");
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest(true);"></body>
+
+</html>

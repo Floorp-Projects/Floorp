@@ -31,6 +31,8 @@ function test() {
     instance = gBrowser.selectedTab.responsiveUI;
     ok(instance, "instance of the module is attached to the tab.");
 
+    instance.transitionsEnabled = false;
+
     testPresets();
   }
 
@@ -41,13 +43,12 @@ function test() {
         return;
       }
       instance.menulist.selectedIndex = c;
-      window.setTimeout(function() {
-        let item = instance.menulist.firstChild.childNodes[c];
-        let [width, height] = extractSizeFromString(item.getAttribute("label"));
-        is(content.innerWidth, width, "preset " + c + ": dimension valid (width)");
-        is(content.innerHeight, height, "preset " + c + ": dimension valid (height)");
-        testOnePreset(c - 1);
-      }, 500);
+      let item = instance.menulist.firstChild.childNodes[c];
+      let [width, height] = extractSizeFromString(item.getAttribute("label"));
+      is(content.innerWidth, width, "preset " + c + ": dimension valid (width)");
+      is(content.innerHeight, height, "preset " + c + ": dimension valid (height)");
+
+      testOnePreset(c - 1);
     }
     testOnePreset(instance.menulist.firstChild.childNodes.length - 1);
   }
@@ -71,19 +72,17 @@ function test() {
     EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mousemove"}, window);
     EventUtils.synthesizeMouse(instance.resizer, x, y, {type: "mouseup"}, window);
 
-    window.setTimeout(function() {
-      let expectedWidth = initialWidth + 20;
-      let expectedHeight = initialHeight + 10;
-      info("initial width: " + initialWidth);
-      info("initial height: " + initialHeight);
-      is(content.innerWidth, expectedWidth, "Size correcty updated (width).");
-      is(content.innerHeight, expectedHeight, "Size correcty updated (height).");
-      is(instance.menulist.selectedIndex, 0, "Custom menuitem selected");
-      let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
-      is(width, expectedWidth, "Label updated (width).");
-      is(height, expectedHeight, "Label updated (height).");
-      rotate();
-    }, 500);
+    let expectedWidth = initialWidth + 20;
+    let expectedHeight = initialHeight + 10;
+    info("initial width: " + initialWidth);
+    info("initial height: " + initialHeight);
+    is(content.innerWidth, expectedWidth, "Size correcty updated (width).");
+    is(content.innerHeight, expectedHeight, "Size correcty updated (height).");
+    is(instance.menulist.selectedIndex, 0, "Custom menuitem selected");
+    let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
+    is(width, expectedWidth, "Label updated (width).");
+    is(height, expectedHeight, "Label updated (height).");
+    rotate();
   }
 
   function rotate() {
@@ -93,16 +92,14 @@ function test() {
     info("rotate");
     instance.rotate();
 
-    window.setTimeout(function() {
-      is(content.innerWidth, initialHeight, "The width is now the height.");
-      is(content.innerHeight, initialWidth, "The height is now the width.");
-      let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
-      is(width, initialHeight, "Label updated (width).");
-      is(height, initialWidth, "Label updated (height).");
+    is(content.innerWidth, initialHeight, "The width is now the height.");
+    is(content.innerHeight, initialWidth, "The height is now the width.");
+    let [width, height] = extractSizeFromString(instance.menulist.firstChild.firstChild.getAttribute("label"));
+    is(width, initialHeight, "Label updated (width).");
+    is(height, initialWidth, "Label updated (height).");
 
-       EventUtils.synthesizeKey("VK_ESCAPE", {});
-      executeSoon(finishUp);
-    }, 500);
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    executeSoon(finishUp);
   }
 
   function finishUp() {

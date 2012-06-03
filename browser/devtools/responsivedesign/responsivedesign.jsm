@@ -136,6 +136,17 @@ function ResponsiveUI(aWindow, aTab)
 }
 
 ResponsiveUI.prototype = {
+  _transitionsEnabled: true,
+  get transitionsEnabled() this._transitionsEnabled,
+  set transitionsEnabled(aValue) {
+    this._transitionsEnabled = aValue;
+    if (aValue && !this._resizing && this.stack.hasAttribute("responsivemode")) {
+      this.stack.removeAttribute("notransition");
+    } else if (!aValue) {
+      this.stack.setAttribute("notransition", "true");
+    }
+  },
+
   /**
    * Destroy the nodes. Remove listeners. Reset the style.
    */
@@ -384,6 +395,7 @@ ResponsiveUI.prototype = {
     this.mainWindow.addEventListener("mousemove", this.bound_onDrag, true);
     this.container.style.pointerEvents = "none";
 
+    this._resizing = true;
     this.stack.setAttribute("notransition", "true");
 
     this.lastClientX = aEvent.clientX;
@@ -431,7 +443,10 @@ ResponsiveUI.prototype = {
     this.mainWindow.removeEventListener("mouseup", this.bound_stopResizing, true);
     this.mainWindow.removeEventListener("mousemove", this.bound_onDrag, true);
 
-    this.stack.removeAttribute("notransition");
+    delete this._resizing;
+    if (this.transitionsEnabled) {
+      this.stack.removeAttribute("notransition");
+    }
     this.ignoreY = false;
   },
 }

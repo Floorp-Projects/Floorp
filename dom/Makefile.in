@@ -50,6 +50,7 @@ DIRS += \
   battery \
   contacts \
   devicestorage \
+  file \
   media \
   power \
   settings \
