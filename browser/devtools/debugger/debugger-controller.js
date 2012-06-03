@@ -364,6 +364,12 @@ StackFrames.prototype = {
   selectedFrame: null,
 
   /**
+   * A flag that defines whether the debuggee will pause whenever an exception
+   * is thrown.
+   */
+  pauseOnExceptions: false,
+
+  /**
    * Gets the current thread the client has connected to.
    */
   get activeThread() {
@@ -379,12 +385,14 @@ StackFrames.prototype = {
   connect: function SF_connect(aCallback) {
     window.addEventListener("Debugger:FetchedVariables", this._onFetchedVars, false);
 
+    this._onFramesCleared();
+
     this.activeThread.addListener("paused", this._onPaused);
     this.activeThread.addListener("resumed", this._onResume);
     this.activeThread.addListener("framesadded", this._onFrames);
     this.activeThread.addListener("framescleared", this._onFramesCleared);
 
-    this._onFramesCleared();
+    this.updatePauseOnExceptions(this.pauseOnExceptions);
 
     aCallback && aCallback();
   },
@@ -406,8 +414,17 @@ StackFrames.prototype = {
 
   /**
    * Handler for the thread client's paused notification.
+   *
+   * @param string aEvent
+   *        The name of the notification ("paused" in this case).
+   * @param object aPacket
+   *        The response packet.
    */
-  _onPaused: function SF__onPaused() {
+  _onPaused: function SF__onPaused(aEvent, aPacket) {
+    // In case the pause was caused by an exception, store the exception value.
+    if (aPacket.why.type == "exception") {
+      this.exception = aPacket.why.exception;
+    }
     this.activeThread.fillFrames(this.pageSize);
   },
 
@@ -445,12 +462,13 @@ StackFrames.prototype = {
    * Handler for the thread client's framescleared notification.
    */
   _onFramesCleared: function SF__onFramesCleared() {
+    this.selectedFrame = null;
+    this.exception = null;
     // After each frame step (in, over, out), framescleared is fired, which
     // forces the UI to be emptied and rebuilt on framesadded. Most of the times
     // this is not necessary, and will result in a brief redraw flicker.
     // To avoid it, invalidate the UI only after a short time if necessary.
     window.setTimeout(this._afterFramesCleared, FRAME_STEP_CACHE_DURATION);
-    this.selectedFrame = null;
   },
 
   /**
@@ -484,6 +502,18 @@ StackFrames.prototype = {
     } else {
       editor.setDebugLocation(-1);
     }
+  },
+
+  /**
+   * Inform the debugger client whether the debuggee should be paused whenever
+   * an exception is thrown.
+   *
+   * @param boolean aFlag
+   *        The new value of the flag: true for pausing, false otherwise.
+   */
+  updatePauseOnExceptions: function SF_updatePauseOnExceptions(aFlag) {
+    this.pauseOnExceptions = aFlag;
+    this.activeThread.pauseOnExceptions(this.pauseOnExceptions);
   },
 
   /**
@@ -557,14 +587,32 @@ StackFrames.prototype = {
 
         let scope = DebuggerView.Properties.addScope(label);
 
-        // Add "this" to the innermost scope.
-        if (frame.this && env == frame.environment) {
-          let thisVar = scope.addVar("this");
-          thisVar.setGrip({
-            type: frame.this.type,
-            class: frame.this.class
-          });
-          this._addExpander(thisVar, frame.this);
+        // Special additions to the innermost scope.
+        if (env == frame.environment) {
+          // Add any thrown exception.
+          if (aDepth == 0 && this.exception) {
+            let excVar = scope.addVar("<exception>");
+            if (typeof this.exception == "object") {
+              excVar.setGrip({
+                type: this.exception.type,
+                class: this.exception.class
+              });
+              this._addExpander(excVar, this.exception);
+            } else {
+              excVar.setGrip(this.exception);
+            }
+          }
+
+          // Add "this".
+          if (frame.this) {
+            let thisVar = scope.addVar("this");
+            thisVar.setGrip({
+              type: frame.this.type,
+              class: frame.this.class
+            });
+            this._addExpander(thisVar, frame.this);
+          }
+
           // Expand the innermost scope by default.
           scope.expand(true);
           scope.addToHierarchy();
