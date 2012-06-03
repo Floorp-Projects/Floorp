@@ -116,19 +116,7 @@ abstract public class GeckoApp
     private int mRestoreMode = GeckoAppShell.RESTORE_NONE;
     private boolean mInitialized = false;
 
-    static class ExtraMenuItem implements MenuItem.OnMenuItemClickListener {
-        String label;
-        String icon;
-        int id;
-        public boolean onMenuItemClick(MenuItem item) {
-            Log.i(LOGTAG, "menu item clicked");
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(id)));
-            ((Activity) GeckoApp.mAppContext).closeOptionsMenu();
-            return true;
-        }
-    }
-
-    static Vector<ExtraMenuItem> sExtraMenuItems = new Vector<ExtraMenuItem>();
+    static Vector<MenuItem> sAddonMenuItems = new Vector<MenuItem>();
 
     public enum LaunchState {Launching, WaitForDebugger,
                              Launched, GeckoRunning, GeckoExiting};
@@ -347,6 +335,64 @@ abstract public class GeckoApp
         return pluginCL.loadClass(className);
     }
 
+    private void addAddonMenuItem(final int id, final String label, final String icon) {
+        if (sMenu == null)
+            return;
+
+        final MenuItem item = sMenu.add(Menu.NONE, id, Menu.NONE, label);
+
+        item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Log.i(LOGTAG, "menu item clicked");
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Menu:Clicked", Integer.toString(id)));
+                ((Activity) GeckoApp.mAppContext).closeOptionsMenu();
+                return true;
+            }
+        });
+
+        if (icon != null) {
+            if (icon.startsWith("data")) {
+                byte[] raw = GeckoAppShell.decodeBase64(icon.substring(22), GeckoAppShell.BASE64_DEFAULT);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+                BitmapDrawable drawable = new BitmapDrawable(bitmap);
+                item.setIcon(drawable);
+            }
+            else if (icon.startsWith("jar:") || icon.startsWith("file://")) {
+                GeckoAppShell.getHandler().post(new Runnable() {
+                    public void run() {
+                        try {
+                            URL url = new URL(icon);
+                            InputStream is = (InputStream) url.getContent();
+                            Drawable drawable = Drawable.createFromStream(is, "src");
+                            item.setIcon(drawable);
+                        } catch (Exception e) {
+                            Log.w(LOGTAG, "Unable to set icon", e);
+                        }
+                    }
+                });
+            }
+        }
+        sAddonMenuItems.add(item);
+    }
+
+    private void removeAddonMenuItem(int id) {
+        for (MenuItem item : sAddonMenuItems) {
+            if (item.getItemId() == id) {
+                sAddonMenuItems.remove(item);
+
+                if (sMenu == null)
+                    break;
+
+                MenuItem menuItem = sMenu.findItem(id);
+                if (menuItem != null)
+                    sMenu.removeItem(id);
+
+                break;
+            }
+        }
+    }
+
     @Override
     public void invalidateOptionsMenu() {
         if (sMenu == null)
@@ -375,37 +421,6 @@ abstract public class GeckoApp
     @Override
     public boolean onPrepareOptionsMenu(Menu aMenu)
     {
-        Iterator<ExtraMenuItem> i = sExtraMenuItems.iterator();
-        while (i.hasNext()) {
-            final ExtraMenuItem item = i.next();
-            if (aMenu.findItem(item.id) == null) {
-                final MenuItem mi = aMenu.add(Menu.NONE, item.id, Menu.NONE, item.label);
-                if (item.icon != null) {
-                    if (item.icon.startsWith("data")) {
-                        byte[] raw = GeckoAppShell.decodeBase64(item.icon.substring(22), GeckoAppShell.BASE64_DEFAULT);
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-                        BitmapDrawable drawable = new BitmapDrawable(bitmap);
-                        mi.setIcon(drawable);
-                    }
-                    else if (item.icon.startsWith("jar:") || item.icon.startsWith("file://")) {
-                        GeckoAppShell.getHandler().post(new Runnable() {
-                            public void run() {
-                                try {
-                                    URL url = new URL(item.icon);
-                                    InputStream is = (InputStream) url.getContent();
-                                    Drawable drawable = Drawable.createFromStream(is, "src");
-                                    mi.setIcon(drawable);
-                                } catch (Exception e) {
-                                    Log.w(LOGTAG, "onPrepareOptionsMenu: Unable to set icon", e);
-                                }
-                            }
-                        });
-                    }
-                }
-                mi.setOnMenuItemClickListener(item);
-            }
-        }
-
         if (!sIsGeckoReady)
             aMenu.findItem(R.id.settings).setEnabled(false);
 
@@ -459,12 +474,10 @@ abstract public class GeckoApp
 
     @Override
     public void openOptionsMenu() {
-        if (mBrowserToolbar.hasSoftMenuButton()) {
-            onPreparePanel(Window.FEATURE_OPTIONS_PANEL, mMenuPanel, sMenu);
+        if (mBrowserToolbar.hasSoftMenuButton())
             mBrowserToolbar.openOptionsMenu();
-        } else {
+        else
             super.openOptionsMenu();
-        }
     }
 
     @Override
@@ -946,28 +959,25 @@ abstract public class GeckoApp
         Log.i(LOGTAG, "Got message: " + event);
         try {
             if (event.equals("Menu:Add")) {
-                ExtraMenuItem item = new ExtraMenuItem();
-                item.label = message.getString("name");
-                item.id = message.getInt("id");
+                final String label = message.getString("name");
+                final int id = message.getInt("id");
+                String iconRes = null;
                 try { // icon is optional
-                    item.icon = message.getString("icon");
+                    iconRes = message.getString("icon");
                 } catch (Exception ex) { }
-                sExtraMenuItems.add(item);
-            } else if (event.equals("Menu:Remove")) {
-                // remove it from the menu and from our vector
-                Iterator<ExtraMenuItem> i = sExtraMenuItems.iterator();
-                int id = message.getInt("id");
-                while (i.hasNext()) {
-                    ExtraMenuItem item = i.next();
-                    if (item.id == id) {
-                        sExtraMenuItems.remove(item);
-                        if (sMenu == null)
-                            return;
-                        MenuItem menu = sMenu.findItem(id);
-                        if (menu != null)
-                            sMenu.removeItem(id);
+                final String icon = iconRes;
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        addAddonMenuItem(id, label, icon);
                     }
-                }
+                });
+            } else if (event.equals("Menu:Remove")) {
+                final int id = message.getInt("id");
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        removeAddonMenuItem(id);
+                    }
+                });
             } else if (event.equals("Toast:Show")) {
                 final String msg = message.getString("message");
                 final String duration = message.getString("duration");
