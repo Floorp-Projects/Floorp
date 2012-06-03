@@ -29,7 +29,7 @@ public class GeckoMenu extends LinearLayout
 
     public static interface ActionItemBarPresenter {
         public void addActionItem(View actionItem);
-        public void removeActionItem(View actionItem);
+        public void removeActionItem(int index);
         public int getActionItemsCount();
     }
 
@@ -38,8 +38,8 @@ public class GeckoMenu extends LinearLayout
     // Default list of items.
     private List<GeckoMenuItem> mItems;
 
-    // List of indices of items in action-bar.
-    private List<Integer> mActionItems;
+    // List of items in action-bar.
+    private List<GeckoMenuItem> mActionItems;
 
     // Reference to action-items bar in action-bar.
     private ActionItemBarPresenter mActionItemBarPresenter;
@@ -54,7 +54,7 @@ public class GeckoMenu extends LinearLayout
         setOrientation(VERTICAL);
 
         mItems = new ArrayList<GeckoMenuItem>();
-        mActionItems = new ArrayList<Integer>();
+        mActionItems = new ArrayList<GeckoMenuItem>();
     }
 
     @Override
@@ -115,10 +115,19 @@ public class GeckoMenu extends LinearLayout
         addView(menuItem.getLayout());
     }
 
-    private void addActionButtonItem(GeckoMenuItem menuItem) {
-        // Add the menuItem at the end.
-        mActionItems.add(mItems.size());
-        mItems.add(menuItem);
+    private void addActionItem(GeckoMenuItem menuItem) {
+        menuItem.setOnShowAsActionChangedListener(this);
+
+        int index = 0;
+        for (GeckoMenuItem item : mItems) {
+            if (item.getOrder() <= menuItem.getOrder())
+                index++;
+            else
+                break;
+        }
+
+        mActionItems.add(menuItem);
+        mItems.add(index, menuItem);
         mActionItemBarPresenter.addActionItem(menuItem.getLayout());
     }
 
@@ -205,10 +214,14 @@ public class GeckoMenu extends LinearLayout
     public void removeItem(int id) {
         for (GeckoMenuItem menuItem : mItems) {
             if (menuItem.getItemId() == id) {
-                removeView(findViewById(id));
+                if (mActionItems.contains(menuItem)) {
+                    if (mActionItemBarPresenter != null)
+                        mActionItemBarPresenter.removeActionItem(mActionItems.indexOf(menuItem));
 
-                if (mActionItemBarPresenter != null)
-                    mActionItemBarPresenter.removeActionItem(findViewById(id));
+                   mActionItems.remove(menuItem);
+                } else {
+                    removeView(findViewById(id));
+                }
 
                 mItems.remove(menuItem);
                 return;
@@ -238,13 +251,18 @@ public class GeckoMenu extends LinearLayout
     }
 
     @Override
-    public void onShowAsActionChanged(GeckoMenuItem item) {
-         addItemAsActionButton(item);
+    public boolean hasActionItemBar() {
+         return (mActionItemBarPresenter != null);
     }
 
-    public void addItemAsActionButton(MenuItem item) {
+    @Override
+    public void onShowAsActionChanged(GeckoMenuItem item, boolean isActionItem) {
         removeItem(item.getItemId());
-        addActionButtonItem((GeckoMenuItem) item);
+
+        if (isActionItem)
+            addActionItem(item);
+        else
+            addItem(item);
     }
 
     public void setActionItemBarPresenter(ActionItemBarPresenter presenter) {

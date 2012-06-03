@@ -616,7 +616,7 @@ protected:
   // Non-null only when we are able to get a os-file representation of the
   // response, i.e. when loading from a file, or when the http-stream
   // caches into a file or is reading from a cached file.
-  nsRefPtr<nsDOMFileBase> mDOMFile;
+  nsRefPtr<nsDOMFile> mDOMFile;
   // We stream data to mBuilder when response type is "blob" or "moz-blob"
   // and mDOMFile is null.
   nsRefPtr<nsDOMBlobBuilder> mBuilder;

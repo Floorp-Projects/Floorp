@@ -192,6 +192,8 @@ public:
                                 const nsAString &aNodeType,
                                 const nsAString *aAttribute = nsnull,
                                 const nsAString *aValue = nsnull);
+  nsresult JoinNodes(nsINode* aNodeToKeep, nsIContent* aNodeToMove);
+  nsresult MoveNode(nsIContent* aNode, nsINode* aParent, PRInt32 aOffset);
   nsresult MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset);
 
   /* Method to replace certain CreateElementNS() calls. 

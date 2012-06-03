@@ -738,6 +738,7 @@ struct ParseNode {
                                            still valid, but this use no longer
                                            optimizable via an upvar opcode */
 #define PND_CLOSED      0x200           /* variable is closed over */
+#define PND_DEFAULT     0x400           /* definition is an arg with a default */
 
 /* Flags to propagate from uses to definition. */
 #define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_CLOSED)
@@ -1406,7 +1407,7 @@ struct Definition : public ParseNode
 
     enum Kind { VAR, CONST, LET, FUNCTION, ARG, UNKNOWN };
 
-    bool isBindingForm() { return int(kind()) <= int(LET); }
+    bool canHaveInitializer() { return int(kind()) <= int(LET) || kind() == ARG; }
 
     static const char *kindString(Kind kind);
 
@@ -1510,6 +1511,7 @@ struct FunctionBox : public ObjectBox
     FunctionBox     *parent;
     Bindings        bindings;               /* bindings for this function */
     uint32_t        level:JSFB_LEVEL_BITS;
+    uint16_t        ndefaults;
     bool            queued:1;
     bool            inLoop:1;               /* in a loop in parent function */
     bool            inWith:1;               /* some enclosing scope is a with-statement
