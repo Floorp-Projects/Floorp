@@ -61,7 +61,9 @@ CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 {
     JS_ASSERT(!absolute);
     size_t new_off = (size_t)raw_;
+#ifdef JS_SMALL_BRANCH
     size_t jumpTableEntryOffset = reinterpret_cast<size_t>(jumpTableEntry_);
+#endif
     if (masm != NULL) {
 #ifdef JS_CPU_X64
         JS_ASSERT((uint64_t)raw_ <= UINT32_MAX);

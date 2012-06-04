@@ -1564,6 +1564,8 @@ class Assembler
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
     void flush() {
+        JS_ASSERT(!isFinished);
+        m_buffer.flushPool();
         return;
     }
 
