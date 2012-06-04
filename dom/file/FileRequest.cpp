@@ -135,7 +135,7 @@ NS_IMPL_RELEASE_INHERITED(FileRequest, DOMRequest)
 
 DOMCI_DATA(FileRequest, FileRequest)
 
-NS_IMPL_EVENT_HANDLER(FileRequest, progress);
+NS_IMPL_EVENT_HANDLER(FileRequest, progress)
 
 void
 FileRequest::FireProgressEvent(PRUint64 aLoaded, PRUint64 aTotal)

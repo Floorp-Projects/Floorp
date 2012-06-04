@@ -349,9 +349,9 @@ NS_IMPL_RELEASE_INHERITED(LockedFile, nsDOMEventTargetHelper)
 
 DOMCI_DATA(LockedFile, LockedFile)
 
-NS_IMPL_EVENT_HANDLER(LockedFile, complete);
-NS_IMPL_EVENT_HANDLER(LockedFile, abort);
-NS_IMPL_EVENT_HANDLER(LockedFile, error);
+NS_IMPL_EVENT_HANDLER(LockedFile, complete)
+NS_IMPL_EVENT_HANDLER(LockedFile, abort)
+NS_IMPL_EVENT_HANDLER(LockedFile, error)
 
 nsresult
 LockedFile::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
