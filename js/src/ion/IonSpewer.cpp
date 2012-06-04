@@ -217,6 +217,7 @@ ion::CheckLogging()
             "  caches     Inline caches\n"
             "  osi        Invalidation\n"
             "  safepoints Safepoints\n"
+            "  pools      Literal Pools (ARM only for now)\n"
             "  logs       C1 and JSON visualization logging\n"
             "  all        Everything\n"
             "\n"
@@ -250,6 +251,8 @@ ion::CheckLogging()
         EnableChannel(IonSpew_InlineCaches);
     if (ContainsFlag(env, "safepoints"))
         EnableChannel(IonSpew_Safepoints);
+    if (ContainsFlag(env, "pools"))
+        EnableChannel(IonSpew_Pools);
     if (ContainsFlag(env, "logs"))
         EnableIonDebugLogging();
     if (ContainsFlag(env, "all"))

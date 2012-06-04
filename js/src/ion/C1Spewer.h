@@ -45,11 +45,16 @@
 #define jsion_c1spewer_h__
 
 #include "jscntxt.h"
-#include "MIR.h"
-#include "LinearScan.h"
 
 namespace js {
 namespace ion {
+
+class MDefinition;
+class MInstruction;
+class MBasicBlock;
+class MIRGraph;
+class LinearScanAllocator;
+class LInstruction;
 
 class C1Spewer
 {

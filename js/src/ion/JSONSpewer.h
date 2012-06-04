@@ -44,13 +44,18 @@
 
 #include <stdio.h>
 
-#include "MIR.h"
-#include "MIRGraph.h"
-#include "LIR.h"
-#include "LinearScan.h"
+struct JSScript;
 
 namespace js {
 namespace ion {
+
+class MDefinition;
+class MInstruction;
+class MBasicBlock;
+class MIRGraph;
+class MResumePoint;
+class LinearScanAllocator;
+class LInstruction;
 
 class JSONSpewer
 {

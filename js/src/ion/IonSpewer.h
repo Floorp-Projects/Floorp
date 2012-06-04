@@ -45,8 +45,7 @@
 #include <stdarg.h>
 #include "C1Spewer.h"
 #include "JSONSpewer.h"
-#include "LinearScan.h"
-#include "MIRGraph.h"
+#include "mozilla/Util.h"
 
 namespace js {
 namespace ion {
@@ -78,7 +77,10 @@ namespace ion {
     /* Generated inline cache stubs */      \
     _(InlineCaches)                         \
     /* Debug info about safepoints */       \
-    _(Safepoints)
+    _(Safepoints)                           \
+    /* Debug info about Pools*/             \
+    _(Pools)
+
 
 enum IonSpewChannel {
 #define IONSPEW_CHANNEL(name) IonSpew_##name,
@@ -168,7 +170,7 @@ static inline void EnableIonDebugLogging()
 template <IonSpewChannel Channel>
 class AutoDisableSpew
 {
-    DebugOnly<bool> enabled_;
+    mozilla::DebugOnly<bool> enabled_;
 
   public:
     AutoDisableSpew()
