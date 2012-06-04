@@ -55,6 +55,7 @@ DIRS += \
   power \
   settings \
   sms \
+  mms \
   src \
   locales \
   network \
