@@ -7,9 +7,9 @@
 #include "nsAccessiblePivot.h"
 
 #include "Accessible-inl.h"
-#include "nsAccUtils.h"
-#include "nsHyperTextAccessible.h"
 #include "DocAccessible.h"
+#include "HyperTextAccessible.h"
+#include "nsAccUtils.h"
 #include "States.h"
 
 #include "nsArrayUtils.h"
@@ -155,7 +155,7 @@ nsAccessiblePivot::SetTextRange(nsIAccessibleText* aTextAccessible,
                  (aStartOffset >= 0 || (aStartOffset != -1 && aEndOffset != -1)),
                  NS_ERROR_INVALID_ARG);
 
-  nsRefPtr<nsHyperTextAccessible> newPosition = do_QueryObject(aTextAccessible);
+  nsRefPtr<HyperTextAccessible> newPosition = do_QueryObject(aTextAccessible);
   if (!newPosition || !IsRootDescendant(newPosition))
     return NS_ERROR_INVALID_ARG;
 

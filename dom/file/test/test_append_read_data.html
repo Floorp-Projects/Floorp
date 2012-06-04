@@ -1,0 +1,103 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const maxLocation = 18446744073709552000;
+
+    var testString = "Lorem ipsum his ponderum delicatissimi ne, at noster dolores urbanitas pro, cibo elaboraret no his. Ea dicunt maiorum usu. Ad appareat facilisis mediocritatem eos. Tale graeci mentitum in eos, hinc insolens at nam. Graecis nominavi aliquyam eu vix. Id solet assentior sadipscing pro. Et per atqui graecis, usu quot viris repudiandae ei, mollis evertitur an nam. At nam dolor ignota, liber labore omnesque ea mei, has movet voluptaria in. Vel an impetus omittantur. Vim movet option salutandi ex, ne mei ignota corrumpit. Mucius comprehensam id per. Est ea putant maiestatis.";
+    for (let i = 0; i < 5; i++) {
+      testString += testString;
+    }
+
+    var testBuffer = getRandomBuffer(100000);
+
+    var testBlob = getBlob("binary/random", testBuffer);
+
+    for each (let fileStorage in fileStorages) {
+      let request = getFileHandle(fileStorage.key, "test.txt");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let fileHandle = event.target.result;
+      fileHandle.onerror = errorHandler;
+
+      let location = 0;
+
+      let lockedFile = fileHandle.open("readwrite");
+      is(lockedFile.location, location, "Correct location");
+
+      request = lockedFile.append(testString);
+      is(lockedFile.location, maxLocation, "Correct location");
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      lockedFile.location = 0;
+      request = lockedFile.readAsText(testString.length);
+      location += testString.length
+      is(lockedFile.location, location, "Correct location");
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let resultString = event.target.result;
+      ok(resultString == testString, "Correct string data");
+
+      request = lockedFile.append(testBuffer);
+      is(lockedFile.location, maxLocation, "Correct location");
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      lockedFile.location = location;
+      request = lockedFile.readAsArrayBuffer(testBuffer.byteLength);
+      location += testBuffer.byteLength;
+      is(lockedFile.location, location, "Correct location");
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let resultBuffer = event.target.result;
+      ok(compareBuffers(resultBuffer, testBuffer), "Correct array buffer data");
+
+      request = lockedFile.append(testBlob);
+      is(lockedFile.location, maxLocation, "Correct location");
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      lockedFile.location = location;
+      request = lockedFile.readAsArrayBuffer(testBlob.size);
+      location += testBlob.size;
+      is(lockedFile.location, location, "Correct location");
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      resultBuffer = event.target.result;
+      ok(compareBuffers(resultBuffer, testBuffer), "Correct blob data");
+
+      request = lockedFile.getMetadata({ size: true });
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let result = event.target.result;
+      is(result.size, location, "Correct size");
+    }
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

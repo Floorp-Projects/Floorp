@@ -11,3 +11,6 @@ pref("extensions.enabledScopes", 1);
 pref("extensions.autoDisableScopes", 1);
 // Disable add-on installation via the web-exposed APIs
 pref("xpinstall.enabled", false);
+
+// Whether or not we've ever run.  We use this to set permissions on firstrun.
+pref("webapprt.firstrun", false);

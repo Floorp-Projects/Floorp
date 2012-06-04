@@ -74,21 +74,53 @@
                  STATE_FOCUSED, EXT_STATE_ACTIVE);
 
       // listbox
-      var listbox = getAccessible("listbox");
-      testStates(listbox, STATE_FOCUSABLE, 0,
+      testStates("listbox",
+                 STATE_FOCUSABLE, 0,
                  STATE_HASPOPUP | STATE_COLLAPSED | STATE_FOCUSED);
 
-      testStates(listbox.firstChild, STATE_SELECTABLE, EXT_STATE_ACTIVE,
-                 STATE_SELECTED | STATE_FOCUSED | STATE_FOCUSED);
+      testStates("listitem-active",
+                 STATE_FOCUSABLE | STATE_SELECTABLE, EXT_STATE_ACTIVE,
+                 STATE_SELECTED | STATE_FOCUSED);
 
-      testStates(listbox.lastChild, STATE_SELECTABLE, 0,
-                 STATE_SELECTED | STATE_FOCUSED | STATE_FOCUSED,
-                 0, 0, EXT_STATE_ACTIVE);
+      testStates("listitem",
+                 STATE_FOCUSABLE | STATE_SELECTABLE, 0,
+                 STATE_SELECTED | STATE_FOCUSED, EXT_STATE_ACTIVE);
+
+      testStates("listitem-disabled",
+                 STATE_UNAVAILABLE, 0,
+                 STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE,
+                 EXT_STATE_ACTIVE);
+
+      testStates("listgroup",
+                 0, 0,
+                 STATE_UNAVAILABLE | STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE,
+                 EXT_STATE_ACTIVE);
+
+      testStates("listgroup-disabled",
+                 STATE_UNAVAILABLE, 0,
+                 STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE,
+                 EXT_STATE_ACTIVE);
+
+      todo(false, "no unavailable state on option in disabled group (bug 759666)");
+//      testStates("listitem-disabledgroup",
+//                 STATE_UNAVAILABLE, 0,
+//                 STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE,
+//                 EXT_STATE_ACTIVE);
+
+      testStates("listbox-disabled",
+                 STATE_UNAVAILABLE, 0,
+                 STATE_FOCUSABLE);
+
+      todo(false, "no unavailable state on option in disabled select (bug 759666)");
+//      testStates("listitem-disabledlistbox",
+//                 STATE_UNAVAILABLE, 0,
+//                 STATE_SELECTABLE | STATE_SELECTED | STATE_FOCUSABLE,
+//                 EXT_STATE_ACTIVE);
 
       // open combobox
       gQueue = new eventQueue();
       gQueue.push(new openComboboxNCheckStates("combobox"));
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      gQueue.invoke(); // Will call */SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -113,6 +145,11 @@
      title="Expose active state on current item of selectable widgets">
     Mozilla Bug 689847
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=756983"
+     title="Isolate focusable and unavailable states from State()">
+    Mozilla Bug 756983
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -124,10 +161,19 @@
   </select>
 
   <select id="listbox" name="component" size="3">
-    <option>Build</option>
-    <option>Disability Access APIs</option>
-    <option>General</option>
-    <option>UI</option>
+    <option id="listitem-active">Build</option>
+    <option id="listitem">Disability Access APIs</option>
+    <option id="listitem-disabled" disabled>General</option>
+    <optgroup id="listgroup" label="group">
+      <option>option</option>
+    </optgroup>
+    <optgroup id="listgroup-disabled" disabled label="group2">
+      <option id="listitem-disabledgroup">UI</option>
+    </optgroup>
+  </select>
+
+  <select id="listbox-disabled" size="3" disabled>
+    <option id="listitem-disabledlistbox">option</option>
   </select>
 
 </body>

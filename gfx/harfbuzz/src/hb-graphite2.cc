@@ -247,11 +247,10 @@ _hb_graphite_shape (hb_font_t          *font,
     features++;
   }
 
-  unsigned short *gids = NULL;
+  hb_codepoint_t *gids = NULL, *pg;
   hb_gr_cluster_t *clusters = NULL;
   gr_segment *seg = NULL;
   uint32_t *text = NULL;
-  unsigned short *pg;
   const gr_slot *is;
   unsigned int ci = 0, ic = 0;
   float curradvx = 0., curradvy = 0.;
@@ -280,7 +279,7 @@ _hb_graphite_shape (hb_font_t          *font,
   clusters = (hb_gr_cluster_t *) calloc (charlen, sizeof (hb_gr_cluster_t));
   if (!glyphlen || !clusters) goto dieout;
 
-  gids = (uint16_t *) malloc (glyphlen * sizeof (uint16_t));
+  gids = (hb_codepoint_t *) malloc (glyphlen * sizeof (hb_codepoint_t));
   if (!gids) goto dieout;
 
   pg = gids;

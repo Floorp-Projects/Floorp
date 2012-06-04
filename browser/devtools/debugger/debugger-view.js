@@ -19,6 +19,17 @@ let DebuggerView = {
   editor: null,
 
   /**
+   * Initializes UI properties for all the displayed panes.
+   */
+  initializePanes: function DV_initializePanes() {
+    let stackframes = document.getElementById("stackframes");
+    stackframes.setAttribute("width", Prefs.stackframesWidth);
+
+    let variables = document.getElementById("variables");
+    variables.setAttribute("width", Prefs.variablesWidth);
+  },
+
+  /**
    * Initializes the SourceEditor instance.
    */
   initializeEditor: function DV_initializeEditor() {
@@ -34,6 +45,17 @@ let DebuggerView = {
 
     this.editor = new SourceEditor();
     this.editor.init(placeholder, config, this._onEditorLoad.bind(this));
+  },
+
+  /**
+   * Removes the displayed panes and saves any necessary state.
+   */
+  destroyPanes: function DV_destroyPanes() {
+    let stackframes = document.getElementById("stackframes");
+    Prefs.stackframesWidth = stackframes.getAttribute("width");
+
+    let variables = document.getElementById("variables");
+    Prefs.variablesWidth = variables.getAttribute("width");
   },
 
   /**
@@ -464,6 +486,7 @@ ScriptsView.prototype = {
  */
 function StackFramesView() {
   this._onFramesScroll = this._onFramesScroll.bind(this);
+  this._onPauseExceptionsClick = this._onPauseExceptionsClick.bind(this);
   this._onCloseButtonClick = this._onCloseButtonClick.bind(this);
   this._onResumeButtonClick = this._onResumeButtonClick.bind(this);
   this._onStepOverClick = this._onStepOverClick.bind(this);
@@ -668,6 +691,14 @@ StackFramesView.prototype = {
   },
 
   /**
+   * Listener handling the pause-on-exceptions click event.
+   */
+  _onPauseExceptionsClick: function DVF__onPauseExceptionsClick() {
+    let option = document.getElementById("pause-exceptions");
+    DebuggerController.StackFrames.updatePauseOnExceptions(option.checked);
+  },
+
+  /**
    * Listener handling the pause/resume button click event.
    */
   _onResumeButtonClick: function DVF__onResumeButtonClick() {
@@ -714,6 +745,7 @@ StackFramesView.prototype = {
    */
   initialize: function DVF_initialize() {
     let close = document.getElementById("close");
+    let pauseOnExceptions = document.getElementById("pause-exceptions");
     let resume = document.getElementById("resume");
     let stepOver = document.getElementById("step-over");
     let stepIn = document.getElementById("step-in");
@@ -721,6 +753,10 @@ StackFramesView.prototype = {
     let frames = document.getElementById("stackframes");
 
     close.addEventListener("click", this._onCloseButtonClick, false);
+    pauseOnExceptions.checked = DebuggerController.StackFrames.pauseOnExceptions;
+    pauseOnExceptions.addEventListener("click",
+                                        this._onPauseExceptionsClick,
+                                        false);
     resume.addEventListener("click", this._onResumeButtonClick, false);
     stepOver.addEventListener("click", this._onStepOverClick, false);
     stepIn.addEventListener("click", this._onStepInClick, false);
@@ -737,6 +773,7 @@ StackFramesView.prototype = {
    */
   destroy: function DVF_destroy() {
     let close = document.getElementById("close");
+    let pauseOnExceptions = document.getElementById("pause-exceptions");
     let resume = document.getElementById("resume");
     let stepOver = document.getElementById("step-over");
     let stepIn = document.getElementById("step-in");
@@ -744,6 +781,9 @@ StackFramesView.prototype = {
     let frames = this._frames;
 
     close.removeEventListener("click", this._onCloseButtonClick, false);
+    pauseOnExceptions.removeEventListener("click",
+                                          this._onPauseExceptionsClick,
+                                          false);
     resume.removeEventListener("click", this._onResumeButtonClick, false);
     stepOver.removeEventListener("click", this._onStepOverClick, false);
     stepIn.removeEventListener("click", this._onStepInClick, false);
@@ -813,6 +853,12 @@ PropertiesView.prototype = {
      */
     element.addToHierarchy = this.addScopeToHierarchy.bind(this, element);
 
+    // Setup the additional elements specific for a scope node.
+    element.refresh(function() {
+      let title = element.getElementsByClassName("title")[0];
+      title.classList.add("devtools-toolbar");
+    }.bind(this));
+
     // Return the element for later use if necessary.
     return element;
   },
@@ -852,12 +898,14 @@ PropertiesView.prototype = {
    *        The parent scope element.
    * @param string aName
    *        The variable name.
+   * @param object aFlags
+   *        Optional, contains configurable, enumerable or writable flags.
    * @param string aId
    *        Optional, an id for the variable html node.
    * @return object
    *         The newly created html node representing the added var.
    */
-  _addVar: function DVP__addVar(aScope, aName, aId) {
+  _addVar: function DVP__addVar(aScope, aName, aFlags, aId) {
     // Make sure the scope container exists.
     if (!aScope) {
       return null;
@@ -898,6 +946,21 @@ PropertiesView.prototype = {
 
       // The variable information (type, class and/or value).
       valueLabel.className = "value plain";
+
+      if (aFlags) {
+        // Use attribute flags to specify the element type and tooltip text.
+        let tooltip = [];
+
+        !aFlags.configurable ? element.setAttribute("non-configurable", "")
+                             : tooltip.push("configurable");
+        !aFlags.enumerable   ? element.setAttribute("non-enumerable", "")
+                             : tooltip.push("enumerable");
+        !aFlags.writable     ? element.setAttribute("non-writable", "")
+                             : tooltip.push("writable");
+
+        element.setAttribute("tooltiptext", tooltip.join(", "));
+      }
+      if (aName === "this") { element.setAttribute("self", ""); }
 
       // Handle the click event when pressing the element value label.
       valueLabel.addEventListener("click", this._activateElementInputMode.bind({
@@ -1035,12 +1098,12 @@ PropertiesView.prototype = {
 
         // Handle data property and accessor property descriptors.
         if (value !== undefined) {
-          this._addProperty(aVar, [i, value]);
+          this._addProperty(aVar, [i, value], desc);
         }
         if (getter !== undefined || setter !== undefined) {
           let prop = this._addProperty(aVar, [i]).expand();
-          prop.getter = this._addProperty(prop, ["get", getter]);
-          prop.setter = this._addProperty(prop, ["set", setter]);
+          prop.getter = this._addProperty(prop, ["get", getter], desc);
+          prop.setter = this._addProperty(prop, ["set", setter], desc);
         }
       }
     }
@@ -1054,7 +1117,7 @@ PropertiesView.prototype = {
    *
    * @param object aVar
    *        The parent variable element.
-   * @param {Array} aProperty
+   * @param array aProperty
    *        An array containing the key and grip properties, specifying
    *        the value and/or type & class of the variable (if the type
    *        is not specified, it will be inferred from the value).
@@ -1064,6 +1127,8 @@ PropertiesView.prototype = {
    *             ["someProp3", { type: "undefined" }]
    *             ["someProp4", { type: "null" }]
    *             ["someProp5", { type: "object", class: "Object" }]
+   * @param object aFlags
+   *        Contains configurable, enumerable or writable flags.
    * @param string aName
    *        Optional, the property name.
    * @paarm string aId
@@ -1071,7 +1136,7 @@ PropertiesView.prototype = {
    * @return object
    *         The newly created html node representing the added prop.
    */
-  _addProperty: function DVP__addProperty(aVar, aProperty, aName, aId) {
+  _addProperty: function DVP__addProperty(aVar, aProperty, aFlags, aName, aId) {
     // Make sure the variable container exists.
     if (!aVar) {
       return null;
@@ -1125,6 +1190,21 @@ PropertiesView.prototype = {
         title.appendChild(separatorLabel);
         title.appendChild(valueLabel);
       }
+
+      if (aFlags) {
+        // Use attribute flags to specify the element type and tooltip text.
+        let tooltip = [];
+
+        !aFlags.configurable ? element.setAttribute("non-configurable", "")
+                             : tooltip.push("configurable");
+        !aFlags.enumerable   ? element.setAttribute("non-enumerable", "")
+                             : tooltip.push("enumerable");
+        !aFlags.writable     ? element.setAttribute("non-writable", "")
+                             : tooltip.push("writable");
+
+        element.setAttribute("tooltiptext", tooltip.join(", "));
+      }
+      if (pKey === "__proto__ ") { element.setAttribute("proto", ""); }
 
       // Handle the click event when pressing the element value label.
       valueLabel.addEventListener("click", this._activateElementInputMode.bind({

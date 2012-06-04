@@ -1,0 +1,101 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const READ_WRITE = IDBTransaction.READ_WRITE;
+
+    const databaseInfo = [
+      { name: window.location.pathname + "1", description: "Test Database 1" },
+      { name: window.location.pathname + "2", description: "Test Database 2" }
+    ];
+
+    const objectStoreName = "Blobs";
+
+    const testFile = getRandomFile("random.bin", 100000);
+
+    let databases = [];
+    for each (let info in databaseInfo) {
+      let request = mozIndexedDB.open(info.name, 1, info.description);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      is(event.type, "upgradeneeded", "Got correct event type");
+
+      let db = event.target.result;
+      db.onerror = errorHandler;
+
+      db.createObjectStore(objectStoreName, { });
+
+      event = yield;
+
+      is(event.type, "success", "Got correct event type");
+
+      databases.push(db);
+    }
+
+    let db1 = databases[0];
+
+    let request = db1.mozCreateFileHandle("random.bin", "binary/random");
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let fileHandle = event.target.result;
+    is(getFileId(fileHandle), 1, "Correct file id");
+    is(fileHandle.name, "random.bin", "Correct name");
+    is(fileHandle.type, "binary/random", "Correct type");
+
+    let trans = db1.transaction([objectStoreName], READ_WRITE);
+    let objectStore = trans.objectStore(objectStoreName);
+
+    request = objectStore.add(fileHandle, 42);
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    request = objectStore.get(42);
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let result = event.target.result;
+    is(getFileId(result), 1, "Correct file id");
+    is(result.name, fileHandle.name, "Correct name");
+    is(result.type, fileHandle.type, "Correct type");
+
+    let db2 = databases[1];
+
+    trans = db2.transaction([objectStoreName], READ_WRITE);
+    objectStore = trans.objectStore(objectStoreName);
+
+    try {
+      objectStore.add(fileHandle, 42);
+      ok(false, "Should have thrown!");
+    }
+    catch (e) {
+      ok(e instanceof DOMException, "Got exception.");
+      is(e.name, "DataCloneError", "Good error.");
+      is(e.code, DOMException.DATA_CLONE_ERR, "Good error code.");
+    }
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

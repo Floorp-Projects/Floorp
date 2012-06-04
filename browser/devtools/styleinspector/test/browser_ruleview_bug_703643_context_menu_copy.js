@@ -51,30 +51,6 @@ function openInspector()
   InspectorUI.openInspectorUI();
 }
 
-function waitForEditorFocus(aParent, aCallback)
-{
-  aParent.addEventListener("focus", function onFocus(evt) {
-    if (inplaceEditor(evt.target)) {
-      aParent.removeEventListener("focus", onFocus, true);
-      let editor = inplaceEditor(evt.target);
-      executeSoon(function() {
-        aCallback(editor);
-      });
-    }
-  }, true);
-}
-
-function waitForEditorBlur(aEditor, aCallback)
-{
-  let input = aEditor.input;
-  input.addEventListener("blur", function onBlur() {
-    input.removeEventListener("blur", onBlur, false);
-    executeSoon(function() {
-      aCallback();
-    });
-  }, false);
-}
-
 function inspectorUIOpen()
 {
   Services.obs.removeObserver(inspectorUIOpen,
@@ -252,15 +228,16 @@ function checkCopySelection()
 {
   let contentDoc = ruleViewFrame().contentDocument;
   let props = contentDoc.querySelectorAll(".ruleview-property");
+  let values = contentDoc.querySelectorAll(".ruleview-propertycontainer");
 
   let range = document.createRange();
   range.setStart(props[0], 0);
-  range.setEnd(props[4], 8);
+  range.setEnd(values[4], 2);
 
   let selection = ruleViewFrame().contentWindow.getSelection();
   selection.addRange(range);
 
-  info("Checking that _boundCopy()  returns the correct" +
+  info("Checking that _boundCopy() returns the correct " +
     "clipboard value");
   let expectedPattern = "    margin: 10em;[\\r\\n]+" +
                         "    font-size: 14pt;[\\r\\n]+" +

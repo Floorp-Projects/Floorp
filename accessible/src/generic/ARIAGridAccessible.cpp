@@ -774,7 +774,7 @@ ARIAGridAccessible::GetSelectedColumnsArray(PRUint32* aColumnCount,
 
 ARIAGridCellAccessible::
   ARIAGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHyperTextAccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
@@ -782,7 +782,7 @@ ARIAGridCellAccessible::
 // nsISupports
 
 NS_IMPL_ISUPPORTS_INHERITED1(ARIAGridCellAccessible,
-                             nsHyperTextAccessible,
+                             HyperTextAccessible,
                              nsIAccessibleTableCell)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -956,7 +956,7 @@ ARIAGridCellAccessible::IsSelected(bool* aIsSelected)
 void
 ARIAGridCellAccessible::ApplyARIAState(PRUint64* aState) const
 {
-  nsHyperTextAccessibleWrap::ApplyARIAState(aState);
+  HyperTextAccessibleWrap::ApplyARIAState(aState);
 
   // Return if the gridcell has aria-selected="true".
   if (*aState & states::SELECTED)
@@ -982,7 +982,7 @@ ARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties* aAttribut
   if (IsDefunct())
     return NS_ERROR_FAILURE;
   
-  nsresult rv = nsHyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
+  nsresult rv = HyperTextAccessibleWrap::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Expose "table-cell-index" attribute.

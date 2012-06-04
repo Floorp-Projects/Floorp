@@ -48,7 +48,7 @@ var nbEvents = 15;
 function eventHandler(e) {
   ok(((e.type == 'keydown' || e.type == 'keypress' || e.type == 'keyup') &&
       !e.defaultPrevented &&
-      whitelistedEvents.indexOf(e.keyCode)),
+      (whitelistedEvents.indexOf(e.keyCode) != -1)),
       "[ " + e.type + "] Handled event should be a non prevented key event in the white list.");
 
   nbEvents--;

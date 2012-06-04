@@ -18,22 +18,54 @@ ifndef INCLUDED_AUTOTARGETS_MK #{
 MKDIR ?= mkdir -p
 TOUCH ?= touch
 
-###########################################################################
-# Threadsafe directory creation
-# GENERATED_DIRS - Automated creation of these directories.
-# Squeeze '//' from the path, easily created by $(dir $(path))
-###########################################################################
-mkdir_deps =$(subst //,/,$(foreach dir,$(getargv),$(dir)/.mkdir.done))
+# declare for local use, rules.mk may not have been loaded
+space = $(NULL) $(NULL)
+
+# Deps will be considered intermediate when used as a pre-requisite for
+# wildcard targets.  Inhibit their removal, mkdir -p is a standalone op.
+.PRECIOUS: %/.mkdir.done
+
+#########################
+##---]  FUNCTIONS  [---##
+#########################
+
+# Squeeze can be overzealous, restore root for abspath
+getPathPrefix =$(if $(filter /%,$(1)),/)
+
+# Squeeze '//' from the path, easily created by string functions
+_slashSqueeze =$(foreach val,$(getargv),$(call getPathPrefix,$(val))$(subst $(space),/,$(strip $(subst /,$(space),$(val)))))
+
+# Squeeze extraneous directory slashes from the path
+#  o protect embedded spaces within the path
+#  o replace //+ sequences with /
+slash_strip =\
+  $(strip \
+    $(subst <--[**]-->,$(space),\
+	$(call _slashSqueeze,\
+    $(subst $(space),<--[**]-->,$(1))\
+  )))
+
+# Extract directory path from a dependency file.
+mkdir_stem =$(foreach val,$(getargv),$(subst /.mkdir.done,$(NULL),$(val)))
+
+## Generate timestamp file for threadsafe directory creation
+mkdir_deps =$(foreach dir,$(getargv),$(call slash_strip,$(dir)/.mkdir.done))
+
+#######################
+##---]  TARGETS  [---##
+#######################
 
 %/.mkdir.done: # mkdir -p -p => mkdir -p
-	$(subst $(SPACE)-p,$(null),$(MKDIR)) -p $(dir $@)
+	$(subst $(space)-p,$(null),$(MKDIR)) -p $(dir $@)
 	@$(TOUCH) $@
 
 # A handful of makefiles are attempting "mkdir dot".  Likely not intended
 # or stale logic so add a stub target to handle the request and warn for now.
 .mkdir.done:
+ifndef NOWARN_AUTOTARGETS # {
 	@echo "WARNING: $(MKDIR) -dot- requested by $(MAKE) -C $(CURDIR) $(MAKECMDGOALS)"
 	@$(TOUCH) $@
+endif #}
 
 INCLUDED_AUTOTARGETS_MK = 1
 endif #}

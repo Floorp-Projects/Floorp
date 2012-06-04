@@ -26,15 +26,18 @@
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIHttpChannelAuthProvider.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsICryptoHash.h"
 #include "nsITimedChannel.h"
+#include "nsILocalFile.h"
 #include "nsDNSPrefetch.h"
 #include "TimingStruct.h"
+#include "AutoClose.h"
+#include "mozilla/Telemetry.h"
 
 class nsAHttpConnection;
-class AutoRedirectVetoNotifier;
 
-using namespace mozilla::net;
+namespace mozilla { namespace net {
+
+class HttpCacheQuery;
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel
@@ -156,7 +159,8 @@ private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
     bool     RequestIsConditional();
-    nsresult Connect(bool firstTime = true);
+    nsresult Connect();
+    nsresult ContinueConnect();
     void     SpeculativeConnect();
     nsresult SetupTransaction();
     nsresult CallOnStartRequest();
@@ -172,7 +176,6 @@ private:
     nsresult ProcessFailedSSLConnect(PRUint32 httpStatus);
     nsresult ProcessFallback(bool *waitingForRedirectCallback);
     nsresult ContinueProcessFallback(nsresult);
-    bool     ResponseWouldVary();
     void     HandleAsyncAbort();
     nsresult EnsureAssocReq();
 
@@ -200,11 +203,11 @@ private:
     nsresult ResolveProxy();
 
     // cache specific methods
-    nsresult OpenCacheEntry();
+    nsresult OpenCacheEntry(bool usingSSL);
     nsresult OnOfflineCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
                                           nsCacheAccessMode aAccess,
                                           nsresult aResult);
-    nsresult OpenNormalCacheEntry();
+    nsresult OpenNormalCacheEntry(bool usingSSL);
     nsresult OnNormalCacheEntryAvailable(nsICacheEntryDescriptor *aEntry,
                                          nsCacheAccessMode aAccess,
                                          nsresult aResult);
@@ -219,8 +222,9 @@ private:
     nsresult GenerateCacheKey(PRUint32 postID, nsACString &key);
     nsresult UpdateExpirationTime();
     nsresult CheckCache();
-    nsresult ShouldUpdateOfflineCacheEntry(bool *shouldCacheForOfflineUse);
-    nsresult ReadFromCache();
+    bool ShouldUpdateOfflineCacheEntry();
+    nsresult StartBufferingCachedEntity(bool usingSSL);
+    nsresult ReadFromCache(bool alreadyMarkedValid);
     void     CloseCacheEntry(bool doomOnFailure);
     void     CloseOfflineCacheEntry();
     nsresult InitCacheEntry();
@@ -232,7 +236,7 @@ private:
     nsresult InstallCacheListener(PRUint32 offset = 0);
     nsresult InstallOfflineCacheListener();
     void     MaybeInvalidateCacheEntryForSubsequentGet();
-    nsCacheStoragePolicy DetermineStoragePolicy();
+    nsCacheStoragePolicy DetermineStoragePolicy(bool isPrivate);
     nsresult DetermineCacheAccess(nsCacheAccessMode *_retval);
     void     AsyncOnExamineCachedResponse();
 
@@ -240,12 +244,10 @@ private:
     void ClearBogusContentEncodingIfNeeded();
 
     // byte range request specific methods
-    nsresult SetupByteRangeRequest(PRUint32 partialLen);
     nsresult ProcessPartialContent();
     nsresult OnDoneReadingPartialCacheEntry(bool *streamDone);
 
     nsresult DoAuthRetry(nsAHttpConnection *);
-    bool     MustValidateBasedOnQueryUrl();
 
     void     HandleAsyncRedirectChannelToHttps();
     nsresult AsyncRedirectChannelToHttps();
@@ -259,16 +261,10 @@ private:
      */
     nsresult ProcessSTSHeader();
 
-    /**
-     * Computes and returns a 64 bit encoded string holding a hash of the
-     * input buffer. Input buffer must be a null-terminated string.
-     */
-    nsresult Hash(const char *buf, nsACString &hash);
-
     void InvalidateCacheEntryForLocation(const char *location);
     void AssembleCacheKey(const char *spec, PRUint32 postID, nsACString &key);
     nsresult CreateNewURI(const char *loc, nsIURI **newURI);
-    void DoInvalidateCacheEntry(nsACString &key);
+    void DoInvalidateCacheEntry(const nsCString &key);
 
     // Ref RFC2616 13.10: "invalidation... MUST only be performed if
     // the host part is the same as in the Request-URI"
@@ -289,10 +285,15 @@ private:
     PRUint64                          mLogicalOffset;
 
     // cache specific data
+    nsRefPtr<HttpCacheQuery>          mCacheQuery;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
+    // We must close mCacheAsyncInputStream explicitly to avoid leaks.
+    AutoClose<nsIAsyncInputStream>    mCacheAsyncInputStream;
     nsRefPtr<nsInputStreamPump>       mCachePump;
     nsAutoPtr<nsHttpResponseHead>     mCachedResponseHead;
+    nsCOMPtr<nsISupports>             mCachedSecurityInfo;
     nsCacheAccessMode                 mCacheAccess;
+    mozilla::Telemetry::ID            mCacheEntryDeviceTelemetryID;
     PRUint32                          mPostID;
     PRUint32                          mRequestTime;
 
@@ -303,6 +304,8 @@ private:
     nsCOMPtr<nsICacheEntryDescriptor> mOfflineCacheEntry;
     nsCacheAccessMode                 mOfflineCacheAccess;
     nsCString                         mOfflineCacheClientID;
+
+    nsCOMPtr<nsILocalFile>            mProfileDirectory;
 
     // auth specific data
     nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
@@ -317,6 +320,8 @@ private:
 
     friend class AutoRedirectVetoNotifier;
     friend class HttpAsyncAborter<nsHttpChannel>;
+    friend class HttpCacheQuery;
+
     nsCOMPtr<nsIURI>                  mRedirectURI;
     nsCOMPtr<nsIChannel>              mRedirectChannel;
     PRUint32                          mRedirectType;
@@ -343,8 +348,6 @@ private:
     PRUint32                          mRequestTimeInitialized : 1;
 
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
-
-    nsCOMPtr<nsICryptoHash>        mHasher;
 
     PRTime                            mChannelCreationTime;
     mozilla::TimeStamp                mChannelCreationTimestamp;
@@ -373,5 +376,7 @@ private: // cache telemetry
     };
     bool mDidReval;
 };
+
+} } // namespace mozilla::net
 
 #endif // nsHttpChannel_h__

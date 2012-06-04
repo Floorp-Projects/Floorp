@@ -1,0 +1,82 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    var testBuffer = getRandomBuffer(100000);
+
+    for each (let fileStorage in fileStorages) {
+      let request = getFileHandle(fileStorage.key, "test.bin");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let fileHandle = event.target.result;
+      fileHandle.onerror = errorHandler;
+
+      let lockedFile = fileHandle.open("readwrite");
+      request = lockedFile.write(testBuffer);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(lockedFile.location, 100000, "Correct location");
+
+      for (let i = 0; i < 10; i++) {
+        let location = lockedFile.location - 10000;
+        lockedFile.location = location;
+
+        request = lockedFile.truncate();
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+
+        is(lockedFile.location, location, "Correct location");
+
+        request = lockedFile.getMetadata({ size: true });
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+
+        is(event.target.result.size, location, "Correct size");
+      }
+
+      request = lockedFile.write(testBuffer);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let location = lockedFile.location;
+      for (let i = 0; i < 10; i++) {
+        location -= 10000;
+
+        request = lockedFile.truncate(location);
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+
+        is(lockedFile.location, location, "Correct location");
+
+        request = lockedFile.getMetadata({ size: true });
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+
+        is(event.target.result.size, location, "Correct size");
+      }
+    }
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

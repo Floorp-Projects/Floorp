@@ -1015,8 +1015,10 @@ nsBufferedAudioStream::Init(PRInt32 aNumChannels, PRInt32 aRate, SampleFormat aF
 void
 nsBufferedAudioStream::Shutdown()
 {
+  if (mState == STARTED) {
+    Pause();
+  }
   if (mCubebStream) {
-    cubeb_stream_stop(mCubebStream);
     mCubebStream.reset();
   }
 }
@@ -1041,16 +1043,21 @@ nsBufferedAudioStream::Write(const void* aBuf, PRUint32 aFrames)
     src += available;
     bytesToCopy -= available;
 
-    if (mState != STARTED && cubeb_stream_start(mCubebStream) == CUBEB_OK) {
-      mState = STARTED;
-    }
-
-    if (mState == STARTED && bytesToCopy > 0) {
-      mon.Wait();
+    if (mState != STARTED) {
+      int r;
+      {
+        MonitorAutoUnlock mon(mMonitor);
+        r = cubeb_stream_start(mCubebStream);
+      }
+      mState = r == CUBEB_OK ? STARTED : ERRORED;
     }
 
     if (mState != STARTED) {
       return NS_ERROR_FAILURE;
+    }
+
+    if (bytesToCopy > 0) {
+      mon.Wait();
     }
   }
 
@@ -1065,7 +1072,8 @@ nsBufferedAudioStream::Available()
   return mBuffer.Available() / mBytesPerFrame;
 }
 
-PRInt32 nsBufferedAudioStream::GetMinWriteSize()
+PRInt32
+nsBufferedAudioStream::GetMinWriteSize()
 {
   return 1;
 }
@@ -1099,7 +1107,12 @@ nsBufferedAudioStream::Pause()
     return;
   }
 
-  if (cubeb_stream_stop(mCubebStream) == CUBEB_OK) {
+  int r;
+  {
+    MonitorAutoUnlock mon(mMonitor);
+    r = cubeb_stream_stop(mCubebStream);
+  }
+  if (mState != ERRORED && r == CUBEB_OK) {
     mState = STOPPED;
   }
 }
@@ -1112,12 +1125,18 @@ nsBufferedAudioStream::Resume()
     return;
   }
 
-  if (cubeb_stream_start(mCubebStream) == CUBEB_OK) {
+  int r;
+  {
+    MonitorAutoUnlock mon(mMonitor);
+    r = cubeb_stream_start(mCubebStream);
+  }
+  if (mState != ERRORED && r == CUBEB_OK) {
     mState = STARTED;
   }
 }
 
-PRInt64 nsBufferedAudioStream::GetPosition()
+PRInt64
+nsBufferedAudioStream::GetPosition()
 {
   MonitorAutoLock mon(mMonitor);
   PRInt64 frames = GetPositionInFramesUnlocked();
@@ -1144,8 +1163,11 @@ nsBufferedAudioStream::GetPositionInFramesUnlocked()
   }
 
   uint64_t position = 0;
-  if (cubeb_stream_get_position(mCubebStream, &position) != CUBEB_OK) {
-    return -1;
+  {
+    MonitorAutoUnlock mon(mMonitor);
+    if (cubeb_stream_get_position(mCubebStream, &position) != CUBEB_OK) {
+      return -1;
+    }
   }
 
   // Adjust the reported position by the number of silent frames written
@@ -1241,15 +1263,13 @@ nsBufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
 int
 nsBufferedAudioStream::StateCallback(cubeb_state aState)
 {
+  MonitorAutoLock mon(mMonitor);
   if (aState == CUBEB_STATE_DRAINED) {
-    MonitorAutoLock mon(mMonitor);
     mState = DRAINED;
-    mon.NotifyAll();
   } else if (aState == CUBEB_STATE_ERROR) {
-    MonitorAutoLock mon(mMonitor);
     mState = ERRORED;
-    mon.NotifyAll();
   }
+  mon.NotifyAll();
   return CUBEB_OK;
 }
 #endif

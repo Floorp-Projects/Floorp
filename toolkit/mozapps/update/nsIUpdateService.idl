@@ -12,13 +12,14 @@ interface nsIRequest;
 interface nsIRequestObserver;
 interface nsISimpleEnumerator;
 interface nsIXMLHttpRequest;
+interface nsIFile;
 
 /**
  * An interface that describes an object representing a patch file that can
  * be downloaded and applied to a version of this application so that it
  * can be updated.
  */
-[scriptable, uuid(60523512-bb69-417c-9b2c-87a0664b0bbe)]
+[scriptable, uuid(1134957d-9449-481b-a515-4d88b9998278)]
 interface nsIUpdatePatch : nsISupports
 {
   /**
@@ -352,7 +353,7 @@ interface nsIUpdateChecker : nsISupports
  * background update checks and provides utilities for selecting and
  * downloading update patches.
  */
-[scriptable, uuid(7bd62f69-f604-484b-b97c-e7229d7a3ee8)]
+[scriptable, uuid(900b4a18-3bef-4f3e-bcf5-84dce0021c6d)]
 interface nsIApplicationUpdateService : nsISupports
 {
   /**
@@ -400,6 +401,12 @@ interface nsIApplicationUpdateService : nsISupports
   void applyUpdateInBackground(in nsIUpdate update);
 
   /**
+   * Get the Active Updates directory
+   * @returns The active updates directory.
+   */
+  nsIFile getUpdatesDirectory();
+
+  /**
    * Pauses the active update download process
    */
   void pauseDownload();
@@ -422,6 +429,11 @@ interface nsIApplicationUpdateService : nsISupports
    * privileges to the install directory.
    */
   readonly attribute boolean canApplyUpdates;
+
+  /**
+   * Whether the Update Service is able to stage updates.
+   */
+  readonly attribute boolean canStageUpdates;
 };
 
 /**

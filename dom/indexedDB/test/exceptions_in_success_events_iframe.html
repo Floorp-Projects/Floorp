@@ -46,18 +46,12 @@
       }, 0);
     }
 
-    window.onerror = function(event) {
-      event.preventDefault();
+    window.onerror = function() {
+      return false;
     };
 
     function testSteps() {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-      let uri = SpecialPowers.getDocumentURIObject(window.document);
-      Components.classes["@mozilla.org/permissionmanager;1"]
-                .getService(Components.interfaces.nsIPermissionManager)
-                .add(uri, "indexedDB",
-                     Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+      window.parent.SpecialPowers.addPermission("indexedDB", true, document);
 
       let request = mozIndexedDB.open(window.location.pathname, 1);
       request.onerror = grabEventAndContinueHandler;
@@ -70,8 +64,6 @@
 
       is(event.type, "error",
          "Throwing during an upgradeneeded event should fire an error.");
-      ok(event.target.result instanceof IDBDatabase, "Should have a DB");
-      event.target.result.close();
 
       let request = mozIndexedDB.open(window.location.pathname, 1);
       request.onerror = grabEventAndContinueHandler;

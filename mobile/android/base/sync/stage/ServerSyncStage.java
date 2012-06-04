@@ -37,6 +37,7 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDeleg
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
+import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerDelegate;
 
@@ -139,7 +140,7 @@ public abstract class ServerSyncStage implements
   public Synchronizer getConfiguredSynchronizer(GlobalSession session) throws NoCollectionKeysSetException, URISyntaxException, NonObjectJSONException, IOException, ParseException {
     Repository remote = wrappedServerRepo();
 
-    Synchronizer synchronizer = new Synchronizer();
+    Synchronizer synchronizer = new ServerLocalSynchronizer();
     synchronizer.repositoryA = remote;
     synchronizer.repositoryB = this.getLocalRepository();
     synchronizer.load(getConfig());
@@ -495,6 +496,11 @@ public abstract class ServerSyncStage implements
     Logger.debug(LOG_TAG, "Reached end of execute.");
   }
 
+  /**
+   * We synced this engine!  Persist timestamps and advance the session.
+   *
+   * @param synchronizer the <code>Synchronizer</code> that succeeded.
+   */
   @Override
   public void onSynchronized(Synchronizer synchronizer) {
     Logger.debug(LOG_TAG, "onSynchronized.");
@@ -510,23 +516,31 @@ public abstract class ServerSyncStage implements
     session.advance();
   }
 
+  /**
+   * We failed to sync this engine! Do not persist timestamps (which means that
+   * the next sync will include this sync's data), but do advance the session
+   * (if we didn't get a Retry-After header).
+   *
+   * @param synchronizer the <code>Synchronizer</code> that failed.
+   */
   @Override
   public void onSynchronizeFailed(Synchronizer synchronizer,
                                   Exception lastException, String reason) {
-    Logger.debug(LOG_TAG, "onSynchronizeFailed: " + reason);
+    Logger.warn(LOG_TAG, "Synchronize failed: " + reason, lastException);
 
     // This failure could be due to a 503 or a 401 and it could have headers.
+    // Interrogate the headers but only abort the global session if Retry-After header is set.
     if (lastException instanceof HTTPFailureException) {
-      session.handleHTTPError(((HTTPFailureException)lastException).response, reason);
-    } else {
-      session.abort(lastException, reason);
+      SyncStorageResponse response = ((HTTPFailureException)lastException).response;
+      if (response.retryAfterInSeconds() > 0) {
+        session.handleHTTPError(response, reason); // Calls session.abort().
+        return;
+      } else {
+        session.interpretHTTPFailure(response.httpResponse()); // Does not call session.abort().
+      }
     }
-  }
 
-  @Override
-  public void onSynchronizeAborted(Synchronizer synchronize) {
-    Logger.info(LOG_TAG, "onSynchronizeAborted.");
-
-    session.abort(null, "Synchronization was aborted.");
+    Logger.info(LOG_TAG, "Advancing session even though stage failed. Timestamps not persisted.");
+    session.advance();
   }
 }

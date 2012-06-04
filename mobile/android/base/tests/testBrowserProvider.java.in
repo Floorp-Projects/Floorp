@@ -32,6 +32,7 @@ public class testBrowserProvider extends ContentProviderTest {
     private String TAGS_FOLDER_GUID;
     private String TOOLBAR_FOLDER_GUID;
     private String UNFILED_FOLDER_GUID;
+    private String READING_LIST_FOLDER_GUID;
 
     private Uri mBookmarksUri;
     private Uri mBookmarksPositionUri;
@@ -77,12 +78,15 @@ public class testBrowserProvider extends ContentProviderTest {
     private String mCombinedIdCol;
     private String mCombinedBookmarkIdCol;
     private String mCombinedHistoryIdCol;
+    private String mCombinedDisplayCol;
     private String mCombinedUrlCol;
     private String mCombinedTitleCol;
     private String mCombinedVisitsCol;
     private String mCombinedLastVisitedCol;
     private String mCombinedFaviconCol;
     private String mCombinedThumbnailCol;
+    private int mCombinedDisplayNormal;
+    private int mCombinedDisplayReader;
 
     private void loadContractInfo() throws Exception {
         mBookmarksUri = getContentUri("Bookmarks");
@@ -98,6 +102,7 @@ public class testBrowserProvider extends ContentProviderTest {
         TAGS_FOLDER_GUID = getStringColumn("Bookmarks", "TAGS_FOLDER_GUID");
         TOOLBAR_FOLDER_GUID = getStringColumn("Bookmarks", "TOOLBAR_FOLDER_GUID");
         UNFILED_FOLDER_GUID = getStringColumn("Bookmarks", "UNFILED_FOLDER_GUID");
+        READING_LIST_FOLDER_GUID = getStringColumn("Bookmarks", "READING_LIST_FOLDER_GUID");
 
         mBookmarksIdCol = getStringColumn("Bookmarks", "_ID");
         mBookmarksTitleCol = getStringColumn("Bookmarks", "TITLE");
@@ -137,12 +142,16 @@ public class testBrowserProvider extends ContentProviderTest {
         mCombinedIdCol = getStringColumn("Combined", "_ID");
         mCombinedBookmarkIdCol = getStringColumn("Combined", "BOOKMARK_ID");
         mCombinedHistoryIdCol = getStringColumn("Combined", "HISTORY_ID");
+        mCombinedDisplayCol = getStringColumn("Combined", "DISPLAY");
         mCombinedUrlCol = getStringColumn("Combined", "URL");
         mCombinedTitleCol = getStringColumn("Combined", "TITLE");
         mCombinedVisitsCol = getStringColumn("Combined", "VISITS");
         mCombinedLastVisitedCol = getStringColumn("Combined", "DATE_LAST_VISITED");
         mCombinedFaviconCol = getStringColumn("Combined", "FAVICON");
         mCombinedThumbnailCol = getStringColumn("Combined", "THUMBNAIL");
+
+        mCombinedDisplayNormal = getIntColumn("Combined", "DISPLAY_NORMAL");
+        mCombinedDisplayReader = getIntColumn("Combined", "DISPLAY_READER");
     }
 
     private void loadMobileFolderId() throws Exception {
@@ -163,16 +172,18 @@ public class testBrowserProvider extends ContentProviderTest {
                          guid + " != ? AND " +
                          guid + " != ? AND " +
                          guid + " != ? AND " +
+                         guid + " != ? AND " +
                          guid + " != ?",
                          new String[] { PLACES_FOLDER_GUID,
                                         MOBILE_FOLDER_GUID,
                                         MENU_FOLDER_GUID,
                                         TAGS_FOLDER_GUID,
                                         TOOLBAR_FOLDER_GUID,
-                                        UNFILED_FOLDER_GUID});
+                                        UNFILED_FOLDER_GUID,
+                                        READING_LIST_FOLDER_GUID });
 
         c = mProvider.query(appendUriParam(mBookmarksUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
-        mAsserter.is(c.getCount(), 6, "All non-special bookmarks and folders were deleted");
+        mAsserter.is(c.getCount(), 7, "All non-special bookmarks and folders were deleted");
 
         mProvider.delete(appendUriParam(mHistoryUri, "PARAM_IS_SYNC", "1"), null, null);
         c = mProvider.query(appendUriParam(mHistoryUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
@@ -304,6 +315,7 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestBatchOperations());
 
         mTests.add(new TestCombinedView());
+        mTests.add(new TestCombinedViewDisplay());
     }
 
     public void testBrowserProvider() throws Exception {
@@ -522,18 +534,21 @@ public class testBrowserProvider extends ContentProviderTest {
                                        mBookmarksGuidCol + " = ? OR " +
                                        mBookmarksGuidCol + " = ? OR " +
                                        mBookmarksGuidCol + " = ? OR " +
+                                       mBookmarksGuidCol + " = ? OR " +
                                        mBookmarksGuidCol + " = ?",
                                        new String[] { PLACES_FOLDER_GUID,
                                                       MOBILE_FOLDER_GUID,
                                                       MENU_FOLDER_GUID,
                                                       TAGS_FOLDER_GUID,
                                                       TOOLBAR_FOLDER_GUID,
-                                                      UNFILED_FOLDER_GUID },
+                                                      UNFILED_FOLDER_GUID,
+                                                      READING_LIST_FOLDER_GUID },
                                        null);
 
-            mAsserter.is(c.getCount(), 6, "Right number of special folders");
+            mAsserter.is(c.getCount(), 7, "Right number of special folders");
 
             int rootId = getIntColumn("Bookmarks", "FIXED_ROOT_ID");
+            int readingListId = getIntColumn("Bookmarks", "FIXED_READING_LIST_ID");
 
             while (c.moveToNext()) {
                 int id = c.getInt(c.getColumnIndex(mBookmarksIdCol));
@@ -542,6 +557,8 @@ public class testBrowserProvider extends ContentProviderTest {
 
                 if (guid.equals(PLACES_FOLDER_GUID)) {
                     mAsserter.is(new Integer(id), new Integer(rootId), "The id of places folder is correct");
+                } else if (guid.equals(READING_LIST_FOLDER_GUID)) {
+                    mAsserter.is(new Integer(id), new Integer(readingListId), "The id of reading list folder is correct");
                 }
 
                 mAsserter.is(new Integer(parentId), new Integer(rootId),
@@ -1414,6 +1431,61 @@ public class testBrowserProvider extends ContentProviderTest {
                           BOOKMARK_FAVICON, "Combined entry has bookmark favicon image");
             mAsserter.is(new String(c.getBlob(c.getColumnIndex(mCombinedThumbnailCol)), "UTF8"),
                           BOOKMARK_THUMBNAIL, "Combined entry has bookmark thumbnail image");
+        }
+    }
+
+    class TestCombinedViewDisplay extends Test {
+        public void test() throws Exception {
+            final String TITLE_1 = "Test Page 1";
+            final String TITLE_2 = "Test Page 2";
+            final String TITLE_3_HISTORY = "Test Page 3 (History Entry)";
+            final String TITLE_3_BOOKMARK = "Test Page 3 (Bookmark Entry)";
+            final String TITLE_4 = "Test Page 4";
+
+            final String URL_1 = "http://example.com";
+            final String URL_2 = "http://example.org";
+            final String URL_3 = "http://examples2.com";
+            final String URL_4 = "http://readinglist.com";
+
+            final int VISITS = 10;
+            final long LAST_VISITED = System.currentTimeMillis();
+
+            // Create a basic history entry
+            ContentValues basicHistory = createHistoryEntry(TITLE_1, URL_1, VISITS, LAST_VISITED);
+            ContentUris.parseId(mProvider.insert(mHistoryUri, basicHistory));
+
+            // Create a basic bookmark entry
+            ContentValues basicBookmark = createBookmark(TITLE_2, URL_2, mMobileFolderId,
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            mProvider.insert(mBookmarksUri, basicBookmark);
+
+            // Create a history entry and bookmark entry with the same URL to
+            // represent a visited bookmark
+            ContentValues combinedHistory = createHistoryEntry(TITLE_3_HISTORY, URL_3, VISITS, LAST_VISITED);
+            mProvider.insert(mHistoryUri, combinedHistory);
+
+            ContentValues combinedBookmark = createBookmark(TITLE_3_BOOKMARK, URL_3, mMobileFolderId,
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            mProvider.insert(mBookmarksUri, combinedBookmark);
+
+            // Create a reading list entry
+            int readingListId = getIntColumn("Bookmarks", "FIXED_READING_LIST_ID");
+            ContentValues readingListItem = createBookmark(TITLE_4, URL_4, readingListId,
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            long readingListItemId = ContentUris.parseId(mProvider.insert(mBookmarksUri, readingListItem));
+
+            Cursor c = mProvider.query(mCombinedUri, null, "", null, null);
+            mAsserter.is(c.getCount(), 4, "4 combined entries found");
+
+            while (c.moveToNext()) {
+                long id = c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol));
+
+                int display = c.getInt(c.getColumnIndex(mCombinedDisplayCol));
+                int expectedDisplay = (id == readingListItemId ? mCombinedDisplayReader : mCombinedDisplayNormal);
+
+                mAsserter.is(new Integer(display), new Integer(expectedDisplay),
+                                 "Combined display column should always be DISPLAY_READER for the reading list item");
+            }
         }
     }
 }

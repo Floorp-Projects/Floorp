@@ -97,7 +97,7 @@ function testSwitchPaused()
      "Found the expected editor mode.");
 
   gDebugger.DebuggerController.activeThread.resume(function() {
-    closeDebuggerAndFinish(gTab);
+    closeDebuggerAndFinish();
   });
 }
 

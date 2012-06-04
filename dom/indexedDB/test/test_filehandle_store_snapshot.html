@@ -1,0 +1,92 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const READ_WRITE = IDBTransaction.READ_WRITE;
+
+    const name = window.location.pathname;
+    const description = "My Test Database";
+
+    const objectStoreName = "Blobs";
+
+    const testFile = getRandomFile("random.bin", 100000);
+
+    let request = mozIndexedDB.open(name, 1, description);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield;
+
+    is(event.type, "upgradeneeded", "Got correct event type");
+
+    let db = event.target.result;
+    db.onerror = errorHandler;
+
+    let objectStore = db.createObjectStore(objectStoreName, { });
+
+    event = yield;
+
+    is(event.type, "success", "Got correct event type");
+
+    request = db.mozCreateFileHandle("random.bin", "binary/random");
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let fileHandle = event.target.result;
+    fileHandle.onerror = errorHandler;
+
+    let lockedFile = fileHandle.open("readwrite");
+
+    is(getFileId(fileHandle), 1, "Correct file id");
+
+    request = lockedFile.write(testFile);
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    request = fileHandle.getFile();
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    let file = event.target.result;
+
+    lockedFile = event.target.lockedFile;
+    is(lockedFile.active, true, "Correct active state");
+
+    let trans = db.transaction([objectStoreName], READ_WRITE);
+    let objectStore = trans.objectStore(objectStoreName);
+
+    request = objectStore.add(file, 42);
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    is(lockedFile.active, false, "Correct open state");
+
+    request = objectStore.get(42);
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield;
+
+    verifyBlob(event.target.result, testFile, 2);
+    yield;
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

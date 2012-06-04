@@ -31,4 +31,30 @@ libs::
 
 TEST_DIRS += tests
 
+# TODO enable once build infra supports testing modules.
+#TESTING_JS_MODULES := aitcserver.js storageserver.js
+#TESTING_JS_MODULE_DIR := services-common
+
+# What follows is a helper to launch a standalone storage server instance.
+# Most of the code lives in a Python script in the tests directory. If we
+# ever consolidate our Python code, and/or have a supplemental driver for the
+# build system, this can go away.
+
+storage_server_hostname := localhost
+storage_server_port := 8080
+
+head_path = $(srcdir)/tests/unit
+
+storage-server:
+	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
+	  $(MOZ_BUILD_ROOT) run_storage_server.js --port $(storage_server_port)
+
+# And the same thing for an AITC server.
+aitc_server_hostname := localhost
+aitc_server_port := 8080
+
+aitc-server:
+	$(PYTHON) $(srcdir)/tests/run_server.py $(topsrcdir) \
+		$(MOZ_BUILD_ROOT) run_aitc_server.js --port $(aitc_server_port)
+
 include $(topsrcdir)/config/rules.mk

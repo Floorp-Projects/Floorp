@@ -888,6 +888,9 @@ function JSPropertyProvider(aScope, aInputValue)
     matchProp = properties.pop().trimLeft();
     for (let i = 0; i < properties.length; i++) {
       let prop = properties[i].trim();
+      if (!prop) {
+        return null;
+      }
 
       // If obj is undefined or null, then there is no chance to run completion
       // on it. Exit here.

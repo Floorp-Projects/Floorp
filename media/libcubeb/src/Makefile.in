@@ -36,4 +36,10 @@ CSRCS           = \
                 $(NULL)
 endif
 
+ifeq ($(OS_ARCH),OpenBSD)
+CSRCS           = \
+                cubeb_sndio.c \
+                $(NULL)
+endif
+
 include $(topsrcdir)/config/rules.mk

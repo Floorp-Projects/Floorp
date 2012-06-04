@@ -44,6 +44,10 @@ const INSPECTOR_NOTIFICATIONS = {
 
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 
+// Timer, in milliseconds, between change events fired by
+// things like resize events.
+const LAYOUT_CHANGE_TIMER = 250;
+
 /**
  * Represents an open instance of the Inspector for a tab.
  * This is the object handed out to sidebars and other API consumers.
@@ -61,7 +65,10 @@ function Inspector(aIUI)
 {
   this._IUI = aIUI;
   this._winID = aIUI.winID;
+  this._browser = aIUI.browser;
   this._listeners = {};
+
+  this._browser.addEventListener("resize", this, true);
 }
 
 Inspector.prototype = {
@@ -106,7 +113,19 @@ Inspector.prototype = {
    */
   change: function Inspector_change(aContext)
   {
+    this._cancelLayoutChange();
     this._IUI.nodeChanged(aContext);
+  },
+
+  /**
+   * Returns true if a given sidebar panel is currently visible.
+   * @param string aPanelName
+   *        The panel name as registered with registerSidebar
+   */
+  isPanelVisible: function Inspector_isPanelVisible(aPanelName)
+  {
+    return this._IUI.sidebar.visible &&
+           this._IUI.sidebar.activePanel === aPanelName;
   },
 
   /**
@@ -114,8 +133,74 @@ Inspector.prototype = {
    */
   _destroy: function Inspector__destroy()
   {
+    this._cancelLayoutChange();
+    this._browser.removeEventListener("resize", this, true);
     delete this._IUI;
     delete this._listeners;
+  },
+
+  /**
+   * Event handler for DOM events.
+   *
+   * @param DOMEvent aEvent
+   */
+  handleEvent: function Inspector_handleEvent(aEvent)
+  {
+    switch(aEvent.type) {
+      case "resize":
+        this._scheduleLayoutChange();
+    }
+  },
+
+  /**
+   * Schedule a low-priority change event for things like paint
+   * and resize.
+   */
+  _scheduleLayoutChange: function Inspector_scheduleLayoutChange()
+  {
+    if (this._timer) {
+      return null;
+    }
+    this._timer = this._IUI.win.setTimeout(function() {
+      this.change("layout");
+    }.bind(this), LAYOUT_CHANGE_TIMER);
+  },
+
+  /**
+   * Cancel a pending low-priority change event if any is
+   * scheduled.
+   */
+  _cancelLayoutChange: function Inspector_cancelLayoutChange()
+  {
+    if (this._timer) {
+      this._IUI.win.clearTimeout(this._timer);
+      delete this._timer;
+    }
+  },
+
+  /**
+   * Called by InspectorUI after a tab switch, when the
+   * inspector is no longer the active tab.
+   */
+  _freeze: function Inspector__freeze()
+  {
+    this._cancelLayoutChange();
+    this._browser.removeEventListener("resize", this, true);
+    this._frozen = true;
+  },
+
+  /**
+   * Called by InspectorUI after a tab switch when the
+   * inspector is back to being the active tab.
+   */
+  _thaw: function Inspector__thaw()
+  {
+    if (!this._frozen) {
+      return;
+    }
+
+    this._browser.addEventListener("resize", this, true);
+    delete this._frozen;
   },
 
   /// Event stuff.  Would like to refactor this eventually.
@@ -176,8 +261,21 @@ Inspector.prototype = {
   {
     if (!(aEvent in this._listeners))
       return;
-    for each (let listener in this._listeners[aEvent]) {
-      listener.apply(null, arguments);
+
+    let originalListeners = this._listeners[aEvent];
+    for (let listener of this._listeners[aEvent]) {
+      // If the inspector was destroyed during event emission, stop
+      // emitting.
+      if (!this._listeners) {
+        break;
+      }
+
+      // If listeners were removed during emission, make sure the
+      // event handler we're going to fire wasn't removed.
+      if (originalListeners === this._listeners[aEvent] ||
+          this._listeners[aEvent].some(function(l) l === listener)) {
+        listener.apply(null, arguments);
+      }
     }
   }
 }
@@ -513,6 +611,7 @@ InspectorUI.prototype = {
     // Has this windowID been inspected before?
     if (this.store.hasID(this.winID)) {
       this._currentInspector = this.store.getInspector(this.winID);
+      this._currentInspector._thaw();
       let selectedNode = this.currentInspector._selectedNode;
       if (selectedNode) {
         this.inspectNode(selectedNode);
@@ -646,9 +745,12 @@ InspectorUI.prototype = {
       this.breadcrumbs = null;
     }
 
-    delete this._currentInspector;
-    if (!aKeepInspector)
+    if (aKeepInspector) {
+      this._currentInspector._freeze();
+    } else {
       this.store.deleteInspector(this.winID);
+    }
+    delete this._currentInspector;
 
     this.inspectorUICommand.setAttribute("checked", "false");
 
@@ -691,6 +793,7 @@ InspectorUI.prototype = {
 
   _notifySelected: function IUI__notifySelected(aFrom)
   {
+    this._currentInspector._cancelLayoutChange();
     this._currentInspector._emit("select", aFrom);
   },
 
@@ -1477,9 +1580,6 @@ InspectorStyleSidebar.prototype = {
     // wire up button to show the iframe
     let onClick = function() {
       this.activatePanel(aRegObj.id);
-      // Cheat a little bit and trigger a refresh
-      // when switching panels.
-      this._inspector.change("activatepanel-" + aRegObj.id);
     }.bind(this);
     btn.addEventListener("click", onClick, true);
 
@@ -1636,7 +1736,13 @@ InspectorStyleSidebar.prototype = {
       aTool.context = aTool.registration.load(this._inspector, aTool.frame);
 
       this._inspector._emit("sidebaractivated", aTool.id);
-      this._inspector._emit("sidebaractivated-" + aTool.id);
+
+      // Send an event specific to the activation of this panel.  For
+      // this initial event, include a "createpanel" argument
+      // to let panels watch sidebaractivated to refresh themselves
+      // but ignore the one immediately after their load.
+      // I don't really like this, we should find a better solution.
+      this._inspector._emit("sidebaractivated-" + aTool.id, "createpanel");
     }.bind(this);
     aTool.frame.addEventListener("load", aTool.onLoad, true);
     aTool.frame.setAttribute("src", aTool.registration.contentURL);

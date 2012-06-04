@@ -352,7 +352,7 @@ load 707098.html
 load 722137.html
 load 725535.html
 load 727601.html
-asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966
+skip-if(Android&&!browserIsRemote) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271
 asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
 asserts-if(winWidget,0-2) load 736924-1.html # bug 738803
 load 749816-1.html

@@ -193,4 +193,50 @@ private:
     xpc_TryUnmarkWrappedGrayObject(tmp->mOn##_event##Listener->GetInner());   \
   }
 
+/* Use this macro to declare functions that forward the behavior of this
+ * interface to another object.
+ * This macro doesn't forward PreHandleEvent because sometimes subclasses
+ * want to override it.
+ */
+#define NS_FORWARD_NSIDOMEVENTTARGET_NOPREHANDLEEVENT(_to) \
+  NS_SCRIPTABLE NS_IMETHOD AddEventListener(const nsAString & type, nsIDOMEventListener *listener, bool useCapture, bool wantsUntrusted, PRUint8 _argc) { \
+    return _to AddEventListener(type, listener, useCapture, wantsUntrusted, _argc); \
+  } \
+  NS_IMETHOD AddSystemEventListener(const nsAString & type, nsIDOMEventListener *listener, bool aUseCapture, bool aWantsUntrusted, PRUint8 _argc) { \
+    return _to AddSystemEventListener(type, listener, aUseCapture, aWantsUntrusted, _argc); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD RemoveEventListener(const nsAString & type, nsIDOMEventListener *listener, bool useCapture) { \
+    return _to RemoveEventListener(type, listener, useCapture); \
+  } \
+  NS_IMETHOD RemoveSystemEventListener(const nsAString & type, nsIDOMEventListener *listener, bool aUseCapture) { \
+    return _to RemoveSystemEventListener(type, listener, aUseCapture); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD DispatchEvent(nsIDOMEvent *evt, bool *_retval NS_OUTPARAM) { \
+    return _to DispatchEvent(evt, _retval); \
+  } \
+  virtual nsIDOMEventTarget * GetTargetForDOMEvent(void) { \
+    return _to GetTargetForDOMEvent(); \
+  } \
+  virtual nsIDOMEventTarget * GetTargetForEventTargetChain(void) { \
+    return _to GetTargetForEventTargetChain(); \
+  } \
+  virtual nsresult WillHandleEvent(nsEventChainPostVisitor & aVisitor) { \
+    return _to WillHandleEvent(aVisitor); \
+  } \
+  virtual nsresult PostHandleEvent(nsEventChainPostVisitor & aVisitor) { \
+    return _to PostHandleEvent(aVisitor); \
+  } \
+  virtual nsresult DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEvent, nsPresContext *aPresContext, nsEventStatus *aEventStatus) { \
+    return _to DispatchDOMEvent(aEvent, aDOMEvent, aPresContext, aEventStatus); \
+  } \
+  virtual nsEventListenerManager * GetListenerManager(bool aMayCreate) { \
+    return _to GetListenerManager(aMayCreate); \
+  } \
+  virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv NS_OUTPARAM) { \
+    return _to GetContextForEventHandlers(aRv); \
+  } \
+  virtual JSContext * GetJSContextForEventHandlers(void) { \
+    return _to GetJSContextForEventHandlers(); \
+  } 
+
 #endif // nsDOMEventTargetHelper_h_

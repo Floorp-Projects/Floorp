@@ -161,7 +161,7 @@ nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress* aWebProgress,
     if (NS_SUCCEEDED(aStatus)) {
         nsCOMPtr<nsIOfflineCacheUpdate> update;
         mService->Schedule(mManifestURI, mDocumentURI,
-                           updateDoc, window, getter_AddRefs(update));
+                           updateDoc, window, nsnull, getter_AddRefs(update));
     }
 
     aWebProgress->RemoveProgressListener(this);
@@ -436,6 +436,7 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
                                       nsIURI *aDocumentURI,
                                       nsIDOMDocument *aDocument,
                                       nsIDOMWindow* aWindow,
+                                      nsILocalFile* aCustomProfileDir,
                                       nsIOfflineCacheUpdate **aUpdate)
 {
     nsCOMPtr<nsIOfflineCacheUpdate> update;
@@ -448,7 +449,7 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
 
     nsresult rv;
 
-    rv = update->Init(aManifestURI, aDocumentURI, aDocument);
+    rv = update->Init(aManifestURI, aDocumentURI, aDocument, aCustomProfileDir);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = update->Schedule();
@@ -465,7 +466,19 @@ nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
                                             nsIDOMWindow *aWindow,
                                             nsIOfflineCacheUpdate **aUpdate)
 {
-    return Schedule(aManifestURI, aDocumentURI, nsnull, aWindow, aUpdate);
+    return Schedule(aManifestURI, aDocumentURI, nsnull, aWindow, nsnull, aUpdate);
+}
+
+NS_IMETHODIMP
+nsOfflineCacheUpdateService::ScheduleCustomProfileUpdate(nsIURI *aManifestURI,
+                                                         nsIURI *aDocumentURI,
+                                                         nsILocalFile *aProfileDir,
+                                                         nsIOfflineCacheUpdate **aUpdate)
+{
+    // The profile directory is mandatory
+    NS_ENSURE_ARG(aProfileDir);
+
+    return Schedule(aManifestURI, aDocumentURI, nsnull, nsnull, aProfileDir, aUpdate);
 }
 
 //-----------------------------------------------------------------------------

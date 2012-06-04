@@ -26,7 +26,7 @@
  *   class ObserverContainer
  *   {
  *   private:
- *     LinkedList<ElemType> list;
+ *     LinkedList<Observer> list;
  *
  *   public:
  *

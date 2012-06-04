@@ -6,8 +6,7 @@
 #ifndef __nsCaretAccessible_h__
 #define __nsCaretAccessible_h__
 
-#include "NotificationController.h"
-#include "nsHyperTextAccessible.h"
+#include "HyperTextAccessible.h"
 
 #include "nsISelectionListener.h"
 
@@ -118,7 +117,7 @@ private:
   // If it was on a control, then its control's selection. Otherwise, it's for
   // a document where the selection changed.
   nsCOMPtr<nsIWeakReference> mLastUsedSelection; // Weak ref to nsISelection
-  nsRefPtr<nsHyperTextAccessible> mLastTextAccessible;
+  nsRefPtr<HyperTextAccessible> mLastTextAccessible;
   PRInt32 mLastCaretOffset;
 
   mozilla::a11y::RootAccessible* mRootAccessible;

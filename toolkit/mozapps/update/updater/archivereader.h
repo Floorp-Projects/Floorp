@@ -11,9 +11,9 @@
 #include "mar.h"
 
 #ifdef XP_WIN
-# define NS_tchar WCHAR
+  typedef WCHAR NS_tchar;
 #else
-# define NS_tchar char
+  typedef char NS_tchar;
 #endif
 
 // This class provides an API to extract files from an update archive.

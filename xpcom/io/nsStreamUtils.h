@@ -181,6 +181,18 @@ NS_CopySegmentToBuffer(nsIInputStream *aInputStream, void *aClosure,
                        PRUint32 aCount, PRUint32 *aWriteCount);
 
 /**
+ * This function is intended to be passed to nsIOutputStream::WriteSegments to
+ * copy data into the nsIOutputStream from a character buffer passed as the
+ * aClosure parameter to the WriteSegments function.
+ *
+ * @see nsIOutputStream.idl for a description of this function's parameters.
+ */
+extern NS_METHOD
+NS_CopySegmentToBuffer(nsIOutputStream *aOutputStream, void *aClosure,
+                       char *aToSegment, PRUint32 aFromOffset,
+                       PRUint32 aCount, PRUint32 *aReadCount);
+
+/**
  * This function is intended to be passed to nsIInputStream::ReadSegments to
  * discard data from the nsIInputStream.  This can be used to efficiently read
  * data from the stream without actually copying any bytes.

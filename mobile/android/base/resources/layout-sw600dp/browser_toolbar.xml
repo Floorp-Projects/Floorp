@@ -9,7 +9,7 @@
 
     <RelativeLayout android:id="@+id/address_bar"
                     style="@style/AddressBar"
-                    android:background="@android:color/transparent">
+                    android:background="@drawable/address_bar_bg">
 
         <ImageButton android:id="@+id/tabs"
                      style="@style/AddressBar.ImageButton"
@@ -30,6 +30,23 @@
                      android:layout_alignLeft="@id/tabs"
                      android:gravity="center_horizontal"
                      android:visibility="gone"/>
+
+        <ImageButton android:id="@+id/menu"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="56dip"
+                     android:layout_alignParentRight="true"
+                     android:gravity="center_vertical"
+                     android:src="@drawable/menu"
+                     android:background="@drawable/action_bar_button"
+                     android:paddingLeft="14dip"
+                     android:paddingRight="14dip"
+                     android:visibility="gone"/>
+
+        <LinearLayout android:id="@+id/menu_items"
+                      android:layout_width="wrap_content"
+                      android:layout_height="fill_parent"
+                      android:orientation="horizontal"
+                      android:layout_toLeftOf="@id/menu"/>
         
         <Button android:id="@+id/awesome_bar"
                 style="@style/AddressBar.Button"
@@ -39,9 +56,10 @@
                 android:layout_marginBottom="6dp"
                 android:layout_marginRight="6dp"
                 android:layout_toRightOf="@id/tabs"
+                android:layout_toLeftOf="@id/menu_items"
                 android:layout_alignParentBottom="true"
                 android:layout_centerVertical="true"
-                android:background="@drawable/address_bar_url_default"
+                android:background="@drawable/address_bar_url"
                 android:singleLine="true"
                 android:gravity="center_vertical|left"
                 android:hint="@string/awesomebar_default_text"
@@ -52,7 +70,7 @@
         <ImageButton android:id="@+id/forward"
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="64dip"
-                     android:layout_height="38dip"
+                     android:layout_height="40dip"
                      android:layout_centerVertical="true"
                      android:layout_alignLeft="@id/awesome_bar"
                      android:paddingLeft="22dp"
@@ -78,24 +96,35 @@
                      android:src="@drawable/favicon"
                      android:layout_toRightOf="@id/forward"/>
 
-        <ImageButton android:id="@+id/stop"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="28dip"
-                     android:layout_height="28dip"
-                     android:layout_marginRight="10dip"
-                     android:layout_centerVertical="true"
-                     android:src="@drawable/urlbar_stop"
-                     android:layout_alignRight="@id/awesome_bar"
-                     android:visibility="gone"/>
+        <LinearLayout android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:layout_marginRight="10dip"
+                      android:layout_centerVertical="true"
+                      android:layout_alignRight="@id/awesome_bar"
+                      android:orientation="horizontal">
 
-        <ImageButton android:id="@+id/site_security"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="24dip"
-                     android:layout_height="24dip"
-                     android:layout_marginRight="10dip"
-                     android:layout_centerVertical="true"
-                     android:src="@drawable/site_security_level"
-                     android:layout_alignRight="@id/awesome_bar"/>
+            <ImageButton android:id="@+id/reader"
+                         style="@style/AddressBar.ImageButton"
+                         android:layout_width="24dip"
+                         android:layout_height="24dip"
+                         android:src="@drawable/reader"
+                         android:visibility="gone"/>
+
+            <ImageButton android:id="@+id/site_security"
+                         style="@style/AddressBar.ImageButton"
+                         android:layout_width="24dip"
+                         android:layout_height="24dip"
+                         android:src="@drawable/site_security_level"
+                         android:visibility="gone"/>
+
+            <ImageButton android:id="@+id/stop"
+                         style="@style/AddressBar.ImageButton"
+                         android:layout_width="24dip"
+                         android:layout_height="24dip"
+                         android:src="@drawable/urlbar_stop"
+                         android:visibility="gone"/>
+
+        </LinearLayout>
 
          <ImageView android:id="@+id/shadow"
                     android:layout_width="fill_parent"

@@ -517,7 +517,7 @@ cubeb_init(cubeb ** context, char const * context_name UNUSED)
   r = pthread_attr_init(&attr);
   assert(r == 0);
 
-  r = pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN);
+  r = pthread_attr_setstacksize(&attr, 256 * 1024);
   assert(r == 0);
 
   r = pthread_create(&ctx->thread, &attr, cubeb_run_thread, ctx);

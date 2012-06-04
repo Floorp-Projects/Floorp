@@ -11,6 +11,7 @@ webidl_files = \
   XMLHttpRequest.webidl \
   XMLHttpRequestEventTarget.webidl \
   XMLHttpRequestUpload.webidl \
+  WebGLRenderingContext.webidl \
   $(NULL)
 
 ifdef ENABLE_TESTS

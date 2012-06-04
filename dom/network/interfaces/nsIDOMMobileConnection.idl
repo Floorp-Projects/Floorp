@@ -32,7 +32,11 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   /**
    * Search for available networks.
    *
-   * If successful, the request result will be an array of operator names.
+   * If successful, the request's onsuccess will be called, and the request's
+   * result will be an array of nsIDOMMozMobileOperatorInfo.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'.
    */
   nsIDOMDOMRequest getNetworks();
 
@@ -207,4 +211,35 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
    */
   readonly attribute jsval relSignalStrength;
 
+};
+
+[scriptable, uuid(79217f7a-4401-4d75-9654-3b28bba698c9)]
+interface nsIDOMMozMobileOperatorInfo : nsISupports
+{
+  /**
+   * Short name of the network operator
+   */
+  readonly attribute DOMString shortName;
+
+  /**
+   * Long name of the network operator
+   */
+  readonly attribute DOMString longName;
+
+  /**
+   * Mobile Country Code (MCC) of the network operator
+   */
+  readonly attribute unsigned short mcc;
+
+  /**
+   * Mobile Network Code (MNC) of the network operator
+   */
+  readonly attribute unsigned short mnc;
+
+  /**
+   * State of this network operator.
+   *
+   * Possible values: 'available', 'connected', 'forbidden', or null (unknown)
+   */
+  readonly attribute DOMString state;
 };

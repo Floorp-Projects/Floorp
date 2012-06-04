@@ -71,7 +71,8 @@ EXPORTS_$(binding_include_path) = \
   $(NULL)
 
 LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
-  -I$(topsrcdir)/js/xpconnect/wrappers
+  -I$(topsrcdir)/js/xpconnect/wrappers \
+  -I$(topsrcdir)/content/html/content/src
 
 include $(topsrcdir)/config/rules.mk
 

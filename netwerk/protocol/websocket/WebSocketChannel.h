@@ -128,6 +128,8 @@ private:
   void AbortSession(nsresult reason);
   void ReleaseSession();
   void CleanupConnection();
+  void IncrementSessionCount();
+  void DecrementSessionCount();
 
   void EnsureHdrOut(PRUint32 size);
   void ApplyMask(PRUint32 mask, PRUint8 *data, PRUint64 len);
@@ -185,6 +187,8 @@ private:
   PRUint32                        mOpenRunning               : 1;
   PRUint32                        mChannelWasOpened          : 1;
   PRUint32                        mDataStarted               : 1;
+  PRUint32                        mIncrementedSessionCount   : 1;
+  PRUint32                        mDecrementedSessionCount   : 1;
 
   PRInt32                         mMaxMessageSize;
   nsresult                        mStopOnClose;

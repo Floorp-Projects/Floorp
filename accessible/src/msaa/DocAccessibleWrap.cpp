@@ -67,7 +67,7 @@ DocAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   *ppv = NULL;
 
   if (IID_ISimpleDOMDocument != iid)
-    return nsHyperTextAccessibleWrap::QueryInterface(iid, ppv);
+    return HyperTextAccessibleWrap::QueryInterface(iid, ppv);
 
   statistics::ISimpleDOMUsed();
   *ppv = static_cast<ISimpleDOMDocument*>(this);

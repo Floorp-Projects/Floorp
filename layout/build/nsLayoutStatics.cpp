@@ -75,6 +75,10 @@
 #include "nsHTMLMediaElement.h"
 #endif
 
+#ifdef MOZ_MEDIA_PLUGINS
+#include "nsMediaPluginHost.h"
+#endif
+
 #ifdef MOZ_SYDNEYAUDIO
 #include "nsAudioStream.h"
 #endif
@@ -305,6 +309,10 @@ nsLayoutStatics::Shutdown()
   nsXBLWindowKeyHandler::ShutDown();
   nsXBLService::Shutdown();
   nsAutoCopyListener::Shutdown();
+
+#ifdef MOZ_MEDIA_PLUGINS
+  nsMediaPluginHost::Shutdown();  
+#endif
 
 #ifdef MOZ_SYDNEYAUDIO
   nsAudioStream::ShutdownLibrary();

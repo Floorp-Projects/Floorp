@@ -18,6 +18,10 @@ class nsDisplayItem;
 class nsFontMetrics;
 class nsClientRectList;
 class nsFontFaceList;
+class nsHTMLCanvasElement;
+class nsHTMLVideoElement;
+class nsIImageLoadingContent;
+class nsHTMLImageElement;
 
 #include "prtypes.h"
 #include "nsChangeHint.h"
@@ -1393,6 +1397,17 @@ public:
   };
 
   static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::Element *aElement,
+                                                     PRUint32 aSurfaceFlags = 0);
+  static SurfaceFromElementResult SurfaceFromElement(nsIImageLoadingContent *aElement,
+                                                     PRUint32 aSurfaceFlags = 0);
+  // Need an nsHTMLImageElement overload, because otherwise the
+  // nsIImageLoadingContent and mozilla::dom::Element overloads are ambiguous
+  // for nsHTMLImageElement.
+  static SurfaceFromElementResult SurfaceFromElement(nsHTMLImageElement *aElement,
+                                                     PRUint32 aSurfaceFlags = 0);
+  static SurfaceFromElementResult SurfaceFromElement(nsHTMLCanvasElement *aElement,
+                                                     PRUint32 aSurfaceFlags = 0);
+  static SurfaceFromElementResult SurfaceFromElement(nsHTMLVideoElement *aElement,
                                                      PRUint32 aSurfaceFlags = 0);
 
   /**

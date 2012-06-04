@@ -4,6 +4,7 @@
 
 const ZOOM = 2;
 const RESIZE = 50;
+let tiltOpened = false;
 
 function test() {
   if (!isTiltEnabled()) {
@@ -25,6 +26,8 @@ function test() {
       },
       onTiltOpen: function(instance)
       {
+        tiltOpened = true;
+
         ok(isApprox(InspectorUI.highlighter.zoom, ZOOM),
           "The Highlighter zoom doesn't have the expected results.");
 
@@ -75,12 +78,16 @@ function test() {
           InspectorUI.closeInspectorUI();
         });
       }
+    }, false, function suddenDeath()
+    {
+      info("Tilt could not be initialized properly.");
+      cleanup();
     });
   });
 }
 
 function cleanup() {
-  Services.obs.removeObserver(cleanup, DESTROYED);
+  if (tiltOpened) { Services.obs.removeObserver(cleanup, DESTROYED); }
   gBrowser.removeCurrentTab();
   finish();
 }

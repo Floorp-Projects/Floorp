@@ -20,12 +20,12 @@ var manager = new MediaTestManager;
 function timeupdate(e) {
   var v = e.target;
   v._timeupdateCount++;
-  ok(!v.gotEnded, v._name + " - shouldn't get timeupdate after ended");
+  ok(v.gotEnded == 0, v._name + " - shouldn't get timeupdate after ended");
 }
 
 function ended(e) {
   var v = e.target;
-  v.gotEnded = true;
+  ++v.gotEnded;
   ok(v._timeupdateCount > 0, v._name + " - should see at least one timeupdate: " + v.currentTime);
   v._finished = true;
   // Finish the test after 500ms. We shouldn't receive any timeupdate events
@@ -40,6 +40,9 @@ function ended(e) {
       // confusing the test results.
       v.removeEventListener("ended", ended, false);
       v.removeEventListener("timeupdate", timeupdate, false);
+      v.removeEventListener("timeupdate", logEvent, false);
+      v.removeEventListener("pause", logEvent, false);
+      v.removeEventListener("stalled", logEvent, false);
       v.parentNode.removeChild(v);
       manager.finished(v.token);
     },
@@ -50,7 +53,11 @@ var eventsToLog = ["play", "canplay", "canplaythrough", "loadstart", "loadedmeta
   "loadeddata", "playing", "progress", "timeupdate", "ended", "suspend", "error", "stalled", "emptied", "abort",
   "waiting", "pause"];
 function logEvent(event) {
-  ok(true, event.target.currentSrc + " got " + event.type);
+  if (event.target.gotEnded > (event.type == "ended" ? 1 : 0)) {
+    ok(false, event.target.currentSrc + " got unexpected " + event.type + " after ended");
+  } else {
+    info(event.target.currentSrc + " got " + event.type);
+  }
 }
 
 function startTest(test, token) {
@@ -62,7 +69,7 @@ function startTest(test, token) {
   v._name = test.name;
   v._timeupdateCount = 0;
   v._finished = false;
-  v.gotEnded = false;
+  v.gotEnded = 0;
   v.autoplay = true;
   v.addEventListener("ended", ended, false);
   v.addEventListener("timeupdate", timeupdate, false);

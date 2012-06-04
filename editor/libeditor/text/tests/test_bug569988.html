@@ -35,12 +35,13 @@ function runTest()
   os.addObserver(onPromptLoad, "common-dialog-loaded", false);
   os.addObserver(onPromptLoad, "tabmodal-dialog-loaded", false);
 
-  ok(true, "opening prompt...");
+  info("opening prompt...");
   prompt("summary", "text");
-  ok(true, "prompt is closed");
+  info("prompt is closed");
 
   os.removeObserver(onPromptLoad, "tabmodal-dialog-loaded");
   os.removeObserver(onPromptLoad, "common-dialog-loaded");
+  SimpleTest.finish();
 }
 
 function onPromptLoad(subject, topic, data)
@@ -66,12 +67,11 @@ function onPromptFocus() {
       ok(!isPrevented, "ESC key event is prevented by editor");
       SpecialPowers.removeSystemEventListener(gPromptInput, "keypress",
                                               listener, false);
-      SimpleTest.finish();
     }
   };
   SpecialPowers.addSystemEventListener(gPromptInput, "keypress", listener,
                                        false);
-  ok(true, "sending key");
+  info("sending key");
   synthesizeKey("VK_ESCAPE", { }, gPromptInput.ownerDocument.defaultView);
 }
 

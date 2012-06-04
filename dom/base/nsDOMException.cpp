@@ -96,6 +96,9 @@ enum DOM4ErrorTypeCodeMap {
 
   /* File API errors http://dev.w3.org/2006/webapi/FileAPI/#ErrorAndException */
   NotReadableError         = 0,
+
+  /* FileHandle API errors */
+  LockedFileInactiveError = 0,
 };
 
 #define DOM4_MSG_DEF(name, message, nsresult) {(nsresult), name, #name, message},

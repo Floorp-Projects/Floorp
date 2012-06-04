@@ -39,11 +39,14 @@
 #include "mozilla/unused.h"
 #include "nsDebug.h"
 #include "nsPrintfCString.h"
+#include "IndexedDBParent.h"
+#include "IDBFactory.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using namespace mozilla::layout;
 using namespace mozilla::widget;
+using namespace mozilla::dom::indexedDB;
 
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
@@ -57,8 +60,12 @@ TabParent *TabParent::mIMETabParent = nsnull;
 NS_IMPL_ISUPPORTS3(TabParent, nsITabParent, nsIAuthPromptProvider, nsISecureBrowserUI)
 
 TabParent::TabParent()
-  : mIMEComposing(false)
+  : mFrameElement(NULL)
+  , mIMESelectionAnchor(0)
+  , mIMESelectionFocus(0)
+  , mIMEComposing(false)
   , mIMECompositionEnding(false)
+  , mIMECompositionStart(0)
   , mIMESeqno(0)
   , mDPI(0)
   , mActive(false)
@@ -651,6 +658,58 @@ TabParent::ReceiveMessage(const nsString& aMessage,
                             objectsArray,
                             aJSONRetVal);
   }
+  return true;
+}
+
+PIndexedDBParent*
+TabParent::AllocPIndexedDB(const nsCString& aASCIIOrigin, bool* /* aAllowed */)
+{
+  return new IndexedDBParent();
+}
+
+bool
+TabParent::DeallocPIndexedDB(PIndexedDBParent* aActor)
+{
+  delete aActor;
+  return true;
+}
+
+bool
+TabParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
+                                     const nsCString& aASCIIOrigin,
+                                     bool* aAllowed)
+{
+  nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
+  NS_ENSURE_TRUE(mgr, false);
+
+  if (!IndexedDatabaseManager::IsMainProcess()) {
+    NS_RUNTIMEABORT("Not supported yet!");
+  }
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(GetOwnerElement());
+  NS_ENSURE_TRUE(node, false);
+
+  nsIDocument* doc = node->GetOwnerDocument();
+  NS_ENSURE_TRUE(doc, false);
+
+  nsCOMPtr<nsPIDOMWindow> window = doc->GetInnerWindow();
+  NS_ENSURE_TRUE(window, false);
+
+  nsRefPtr<IDBFactory> factory;
+  nsresult rv =
+    IDBFactory::Create(window, aASCIIOrigin, getter_AddRefs(factory));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  if (!factory) {
+    *aAllowed = false;
+    return true;
+  }
+
+  IndexedDBParent* actor = static_cast<IndexedDBParent*>(aActor);
+  actor->mFactory = factory;
+  actor->mASCIIOrigin = aASCIIOrigin;
+
+  *aAllowed = true;
   return true;
 }
 

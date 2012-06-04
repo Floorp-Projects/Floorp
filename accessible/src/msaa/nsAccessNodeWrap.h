@@ -132,7 +132,7 @@ protected:
   ISimpleDOMNode *MakeAccessNode(nsINode *aNode);
 
     /**
-     * It is used in nsHyperTextAccessibleWrap for IA2::newText/oldText
+     * It is used in HyperTextAccessibleWrap for IA2::newText/oldText
      * implementation.
      */
     static AccTextChangeEvent* gTextEvent;
