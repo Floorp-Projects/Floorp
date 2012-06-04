@@ -36,8 +36,6 @@
 #include "nsSMILTypes.h"
 #include "nsIContentIterator.h"
 
-nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
