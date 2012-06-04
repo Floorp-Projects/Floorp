@@ -23,6 +23,10 @@ DIRS += win
 else
 ifeq ($(OS_ARCH),Darwin)
 DIRS += mac
+else
+ifeq ($(OS_ARCH),Linux)
+DIRS += linux
+endif # linux
 endif # mac
 endif # windows
 
