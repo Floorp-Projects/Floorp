@@ -46,7 +46,7 @@
 #include "ion/IonSpewer.h"
 namespace js {
 namespace ion {
-typedef SegmentedVector<BufferOffset, 512> LoadOffsets;
+typedef Vector<BufferOffset, 512, IonAllocPolicy> LoadOffsets;
 
 struct Pool {
     const int maxOffset;
@@ -85,7 +85,7 @@ struct Pool {
           bias(bias_), alignment(alignment_),
           isBackref(isBackref_), canDedup(canDedup_), other(other_),
           poolData(static_cast<uint8 *>(malloc(8*immSize))), numEntries(0),
-          buffSize(8), limitingUser(), limitingUsee(INT_MIN)
+          buffSize(8), limitingUser(), limitingUsee(INT_MIN), loadOffsets()
     {
     }
     static const int garbage=0xa5a5a5a5;
@@ -312,7 +312,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
     // The size of a footer that is put in a pool after it is full.
     const int footerSize;
     // the number of sub-pools that we can allocate into.
-    const int numPoolKinds;
+    static const int numPoolKinds = 1 << poolKindBits;
 
     Pool *pools;
 
@@ -358,9 +358,9 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         return tmp;
     }
   public:
-    AssemblerBufferWithConstantPool(int guardSize_, int headerSize_, int footerSize_, int numPoolKinds_, Pool *pools_, int instBufferAlign_)
+    AssemblerBufferWithConstantPool(int guardSize_, int headerSize_, int footerSize_, Pool *pools_, int instBufferAlign_)
         : guardSize(guardSize_), headerSize(headerSize_),
-          footerSize(footerSize_), numPoolKinds(numPoolKinds_),
+          footerSize(footerSize_),
           pools(pools_),
           instBufferAlign(instBufferAlign_), numDumps(0),
           poolInfo(static_cast<PoolInfo*>(calloc(sizeof(PoolInfo), 1 << logBasePoolInfo))),
@@ -650,9 +650,6 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                 return;
             }
         }
-        poolInfo[numDumps] = newPoolInfo;
-        poolSize += poolInfo[numDumps].size;
-        numDumps++;
 
         // In order to figure out how to fix up the loads for the second half of the pool
         // we need to find where the bits of the pool that have been implemented end.
@@ -664,12 +661,20 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             poolOffset=pools[poolIdx].align(poolOffset);
             poolOffset+=pools[poolIdx].numEntries * pools[poolIdx].immSize;
         }
+        LoadOffsets outcasts[1 << poolKindBits];
+        uint8 *outcastEntries[1 << poolKindBits];
         // All of the pool loads referred to by this code are going to
         // need fixing up here.
+        int skippedBytes = 0;
         for (int poolIdx = numPoolKinds-1; poolIdx >= 0; poolIdx--) {
             Pool *p =  pools[poolIdx].other;
             JS_ASSERT(p != NULL);
-            int idx = 0;
+            int idx = p->numEntries-1;
+            // Allocate space for tracking information that needs to be propagated to the next pool
+            // as well as space for quickly updating the pool entries in the current pool to remove
+            // the entries that don't actually fit.  I probably should change this over to a vector
+            outcastEntries[poolIdx] = new uint8[p->getPoolSize()];
+            bool *preservedEntries = new bool[p->numEntries];
             // Hacks on top of Hacks!
             // the patching code takes in the address of the instruction to be patched,
             // and the "address" of the element in the pool that we want to load.
@@ -682,9 +687,10 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             // eventually. We will want to provide the fixup function with a method to
             // convert from a 'token' into a pool offset.
             poolOffset = p->align(poolOffset);
+            int numSkips = 0;
             int fakePoolOffset = poolOffset - pools[poolIdx].numEntries * pools[poolIdx].immSize;
-            for (LoadOffsets::Iterator iter = p->loadOffsets.begin();
-                 iter != p->loadOffsets.end(); ++iter, ++idx)
+            for (BufferOffset *iter = p->loadOffsets.end()-1;
+                 iter != p->loadOffsets.begin()-1; --iter, --idx)
             {
 
                 IonSpew(IonSpew_Pools, "Linking entry %d in pool %d", idx, poolIdx);
@@ -693,15 +699,45 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
                 Inst * inst = this->getInst(*iter);
                 // Manually compute the offset, including a possible bias.
                 // Also take into account the whole size of the pool that is being placed.
-                int codeOffset = fakePoolOffset - iter->getOffset() - newPoolInfo.size;
+                int codeOffset = fakePoolOffset - iter->getOffset() - newPoolInfo.size + numSkips * p->immSize - skippedBytes;
                 // That is, patchConstantPoolLoad wants to be handed the address of the
                 // pool entry that is being loaded.  We need to do a non-trivial amount
                 // of math here, since the pool that we've made does not actually reside there
                 // in memory.
                 IonSpew(IonSpew_Pools, "Fixing offset to %d", codeOffset - magicAlign);
-                Asm::patchConstantPoolLoad(inst, (uint8*)inst + codeOffset - magicAlign);
+                if (!Asm::patchConstantPoolLoad(inst, (uint8*)inst + codeOffset - magicAlign)) {
+                    // NOTE: if removing this entry happens to change the alignment of the next
+                    // block, chances are you will have a bad time.
+                    // ADDENDUM: this CANNOT happen on ARM, because the only elements that
+                    // fall into this case are doubles loaded via vfp, but they will also be
+                    // the last pool, which means it cannot affect the alignment of any other
+                    // Sub Pools.
+                    IonSpew(IonSpew_Pools, "***Offset was still out of range!***", codeOffset - magicAlign);
+                    outcasts[poolIdx].append(iter->getOffset());
+                    memcpy(&outcastEntries[poolIdx][numSkips * p->immSize], &p->poolData[idx * p->immSize], p->immSize);
+                    numSkips++;
+                } else {
+                    preservedEntries[idx] = true;
+                }
+            }
+            // remove the elements of the pool that should not be there (YAY, MEMCPY)
+            int idxDest;
+            // If no elements were skipped, no expensive copy is necessary.
+            if (numSkips != 0) {
+                for (idx = 0; idx < p->numEntries; idx++) {
+                    if (preservedEntries[idx]) {
+                        if (idx != idxDest) {
+                            memcpy(&p->poolData[idxDest * p->immSize],
+                                   &p->poolData[idx * p->immSize],
+                                   p->immSize);
+                        }
+                        idxDest++;
+                    }
+                }
+                p->numEntries -= numSkips;
             }
             poolOffset += p->numEntries * p->immSize;
+            delete[] preservedEntries;
         }
         // bind the current pool to the perforation point.
         Pool **tmp = &perforatedNode->data;
@@ -710,6 +746,13 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             this->fail_oom();
             return;
         }
+        // The above operations may have changed the size of pools!
+        // recalibrate the size of the pool.
+        newPoolInfo = getPoolData();
+        poolInfo[numDumps] = newPoolInfo;
+        poolSize += poolInfo[numDumps].size;
+        numDumps++;
+
         memcpy(*tmp, pools, sizeof(Pool) * numPoolKinds);
 
         // reset everything to the state that it was in when we started
@@ -722,6 +765,45 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         new (&perforation) BufferOffset();
         perforatedNode = NULL;
         inBackref = false;
+
+        // Now that the backwards pool has been emptied, and a new forward pool
+        // has been allocated, it is time to populate the new forward pool with
+        // any entries that couldn't fit in the backwards pool.
+        for (int poolIdx = 0; poolIdx < numPoolKinds; poolIdx++) {
+            // Technically, the innermost pool will never have this issue, but it is easier
+            // to just handle this case.
+            // Since the pool entry was filled back-to-front, and in the next buffer, the elements
+            // should be front-to-back, this insertion also needs to proceed backwards
+            int idx = outcasts[poolIdx].length();
+            for (BufferOffset *iter = outcasts[poolIdx].end()-1;
+                 iter != outcasts[poolIdx].begin()-1;
+                 --iter, --idx) {
+                pools[poolIdx].updateLimiter(*iter);
+                Inst *inst = this->getInst(*iter);
+                Asm::insertTokenIntoTag(pools[poolIdx].instSize, (uint8*)inst, outcasts[poolIdx].end()-1-iter);
+                pools[poolIdx].insertEntry(&outcastEntries[poolIdx][idx*pools[poolIdx].immSize], *iter);
+            }
+            delete[] outcastEntries[poolIdx];
+        }
+        // this (*2) is not technically kosher, but I want to get this bug fixed.
+        // It should actually be guardSize + the size of the instruction that we're attempting
+        // to insert. Unfortunately that vaue is never passed in.  On ARM, these instructions
+        // are always 4 bytes, so guardSize is legit to use.
+        poolOffset = this->size() + guardSize * 2;
+        poolOffset += headerSize;
+        for (int poolIdx = 0; poolIdx < numPoolKinds; poolIdx++) {
+            // There can still be an awkward situation where the element that triggered the
+            // initial dump didn't fit into the pool backwards, and now, still does not fit into
+            // this pool.  Now it is necessary to go and dump this pool (note: this is almost
+            // certainly being called from dumpPool()).
+            poolOffset = pools[poolIdx].align(poolOffset);
+            if (pools[poolIdx].checkFull(poolOffset)) {
+                // ONCE AGAIN, UH-OH, TIME TO BAIL
+                dumpPool();
+                break;
+            }
+            poolOffset += pools[poolIdx].getPoolSize();
+        }
     }
 
     void dumpPool() {
@@ -764,7 +846,7 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             // Any entries that happened to be after the place we put our pool will need to be
             // switched from the forward-referenced pool to the backward-refrenced pool.
             int idx = 0;
-            for (LoadOffsets::Iterator iter = p->loadOffsets.begin();
+            for (BufferOffset *iter = p->loadOffsets.begin();
                  iter != p->loadOffsets.end(); ++iter, ++idx)
             {
                 if (iter->getOffset() >= perforation.getOffset()) {
