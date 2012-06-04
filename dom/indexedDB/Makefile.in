@@ -24,10 +24,12 @@ CPPSRCS = \
   DatabaseInfo.cpp \
   FileInfo.cpp \
   FileManager.cpp \
+  FileStream.cpp \
   IDBCursor.cpp \
   IDBDatabase.cpp \
   IDBEvents.cpp \
   IDBFactory.cpp \
+  IDBFileHandle.cpp \
   IDBIndex.cpp \
   IDBKeyRange.cpp \
   IDBObjectStore.cpp \
@@ -45,6 +47,8 @@ EXPORTS_mozilla/dom/indexedDB = \
   IDBCursor.h \
   IDBDatabase.h \
   IDBEvents.h \
+  IDBFactory.h \
+  IDBFileHandle.h \
   IDBIndex.h \
   IDBKeyRange.h \
   IDBObjectStore.h \
@@ -53,7 +57,6 @@ EXPORTS_mozilla/dom/indexedDB = \
   IDBWrapperCache.h \
   IndexedDatabase.h \
   IndexedDatabaseManager.h \
-  IDBFactory.h \
   Key.h \
   FileManager.h \
   FileInfo.h \
@@ -77,6 +80,7 @@ XPIDLSRCS = \
   nsIIDBCursorWithValue.idl \
   nsIIDBDatabase.idl \
   nsIIDBFactory.idl \
+  nsIIDBFileHandle.idl \
   nsIIDBIndex.idl \
   nsIIDBKeyRange.idl \
   nsIIDBObjectStore.idl \
@@ -85,6 +89,7 @@ XPIDLSRCS = \
   nsIIDBVersionChangeEvent.idl \
   nsIIDBOpenDBRequest.idl \
   nsIIndexedDatabaseManager.idl \
+  nsIStandardFileStream.idl \
   $(NULL)
 
 DIRS += ipc

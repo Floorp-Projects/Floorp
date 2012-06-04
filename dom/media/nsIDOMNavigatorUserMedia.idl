@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIDOMMediaStream.idl"
+
+[scriptable, function, uuid(f2a144fc-3534-4761-8c5d-989ae720f89a)]
+interface nsIDOMGetUserMediaSuccessCallback : nsISupports
+{
+  /*
+   * value must be a nsIDOMBlob if picture is true and a
+   * nsIDOMMediaStream if either audio or video are true.
+   */
+  void onSuccess(in nsISupports value);
+};
+
+[scriptable, function, uuid(2614bbcf-85cc-43e5-8740-964f52bdc7ca)]
+interface nsIDOMGetUserMediaErrorCallback : nsISupports
+{
+  void onError(in DOMString error);
+};
+
+[scriptable, uuid(8a26205e-e8f7-4372-bd15-97ff982b4c1c)]
+interface nsIMediaStreamOptions : nsISupports
+{
+  readonly attribute boolean audio;
+  readonly attribute boolean video;
+  readonly attribute boolean picture;
+  readonly attribute DOMString camera;
+};
+
+[scriptable, uuid(381e0071-0be5-4f6b-ae21-8e3407a37faa)]
+interface nsIDOMNavigatorUserMedia : nsISupports
+{
+  void mozGetUserMedia(in nsIMediaStreamOptions params,
+    in nsIDOMGetUserMediaSuccessCallback onsuccess,
+    in nsIDOMGetUserMediaErrorCallback onerror);
+};

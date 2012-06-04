@@ -39,7 +39,7 @@ interface nsIFile;
 interface nsIDOMTouch;
 interface nsIDOMClientRect;
 
-[scriptable, uuid(2b3ac53c-2a88-421f-af09-f10665c88acf)]
+[scriptable, uuid(858578f1-9653-4d5c-821a-07479bf2d9b2)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1040,12 +1040,30 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   boolean checkAndClearPaintedState(in nsIDOMElement aElement);
 
-  /*
-   * Get internal id of the stored blob.
+  /**
+   * Internal file constructor intended for testing of File objects.
+   * Example of constructor usage:
+   *   getFile("myfile.txt", [b1, "foo"], { type: "text/plain" })
    */
-  long long getFileId(in nsIDOMBlob aBlob);
+  [optional_argc, implicit_jscontext]
+  nsIDOMFile getFile(in DOMString aName, [optional] in jsval aBlobParts,
+                     [optional] in jsval aParameters);
 
-  /*
+  /**
+   * Internal blob constructor intended for testing of Blob objects.
+   * Example of constructor usage:
+   *   getBlob([b1, "foo"], { type: "text/plain" })
+   */
+  [optional_argc, implicit_jscontext]
+  nsIDOMBlob getBlob([optional] in jsval aBlobParts,
+                     [optional] in jsval aParameters);
+
+  /**
+   * Get internal id of the stored blob, file or file handle.
+   */
+  [implicit_jscontext] long long getFileId(in jsval aFile);
+
+  /**
    * Get file ref count info for given database and file id.
    *
    */

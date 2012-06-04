@@ -67,7 +67,7 @@ public class BrowserProvider extends ContentProvider {
 
     static final String DATABASE_NAME = "browser.db";
 
-    static final int DATABASE_VERSION = 8;
+    static final int DATABASE_VERSION = 9;
 
     // Maximum age of deleted records to be cleaned up (20 days in ms)
     static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
@@ -209,6 +209,7 @@ public class BrowserProvider extends ContentProvider {
         map.put(Combined._ID, Combined._ID);
         map.put(Combined.BOOKMARK_ID, Combined.BOOKMARK_ID);
         map.put(Combined.HISTORY_ID, Combined.HISTORY_ID);
+        map.put(Combined.DISPLAY, Combined.DISPLAY);
         map.put(Combined.URL, Combined.URL);
         map.put(Combined.TITLE, Combined.TITLE);
         map.put(Combined.VISITS, Combined.VISITS);
@@ -435,6 +436,64 @@ public class BrowserProvider extends ContentProvider {
                         " ON " + Combined.URL + " = " + qualifyColumn(TABLE_IMAGES, Images.URL));
         }
 
+        private void createCombinedWithImagesViewOn9(SQLiteDatabase db) {
+            debug("Creating " + VIEW_COMBINED_WITH_IMAGES + " view");
+
+            db.execSQL("CREATE VIEW IF NOT EXISTS " + VIEW_COMBINED_WITH_IMAGES + " AS" +
+                    " SELECT " + Combined.BOOKMARK_ID + ", " +
+                                 Combined.HISTORY_ID + ", " +
+                                 // We need to return an _id column because CursorAdapter requires it for its
+                                 // default implementation for the getItemId() method. However, since
+                                 // we're not using this feature in the parts of the UI using this view,
+                                 // we can just use 0 for all rows.
+                                 "0 AS " + Combined._ID + ", " +
+                                 Combined.URL + ", " +
+                                 Combined.TITLE + ", " +
+                                 Combined.VISITS + ", " +
+                                 Combined.DISPLAY + ", " +
+                                 Combined.DATE_LAST_VISITED + ", " +
+                                 qualifyColumn(TABLE_IMAGES, Images.FAVICON) + " AS " + Combined.FAVICON + ", " +
+                                 qualifyColumn(TABLE_IMAGES, Images.THUMBNAIL) + " AS " + Combined.THUMBNAIL +
+                    " FROM (" +
+                        // Bookmarks without history.
+                        " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
+                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " AS " + Combined.URL + ", " +
+                                     qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + " AS " + Combined.TITLE + ", " +
+                                     "CASE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.PARENT) + " WHEN " +
+                                        Bookmarks.FIXED_READING_LIST_ID + " THEN " + Combined.DISPLAY_READER + " ELSE " +
+                                        Combined.DISPLAY_NORMAL + " END AS " + Combined.DISPLAY + ", " +
+                                     "-1 AS " + Combined.HISTORY_ID + ", " +
+                                     "-1 AS " + Combined.VISITS + ", " +
+                                     "-1 AS " + Combined.DATE_LAST_VISITED +
+                        " FROM " + TABLE_BOOKMARKS +
+                        " WHERE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + " AND " +
+                                    qualifyColumn(TABLE_BOOKMARKS, Bookmarks.IS_DELETED)  + " = 0 AND " +
+                                    qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) +
+                                        " NOT IN (SELECT " + History.URL + " FROM " + TABLE_HISTORY + ")" +
+                        " UNION ALL" +
+                        // History with and without bookmark.
+                        " SELECT " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks._ID) + " AS " + Combined.BOOKMARK_ID + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.URL) + " AS " + Combined.URL + ", " +
+                                     // Prioritze bookmark titles over history titles, since the user may have
+                                     // customized the title for a bookmark.
+                                     "COALESCE(" + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TITLE) + ", " +
+                                                   qualifyColumn(TABLE_HISTORY, History.TITLE) +")" + " AS " + Combined.TITLE + ", " +
+                                     "CASE " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.PARENT) + " WHEN " +
+                                        Bookmarks.FIXED_READING_LIST_ID + " THEN " + Combined.DISPLAY_READER + " ELSE " +
+                                        Combined.DISPLAY_NORMAL + " END AS " + Combined.DISPLAY + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History._ID) + " AS " + Combined.HISTORY_ID + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.VISITS) + " AS " + Combined.VISITS + ", " +
+                                     qualifyColumn(TABLE_HISTORY, History.DATE_LAST_VISITED) + " AS " + Combined.DATE_LAST_VISITED +
+                        " FROM " + TABLE_HISTORY + " LEFT OUTER JOIN " + TABLE_BOOKMARKS +
+                            " ON " + qualifyColumn(TABLE_BOOKMARKS, Bookmarks.URL) + " = " + qualifyColumn(TABLE_HISTORY, History.URL) +
+                        " WHERE " + qualifyColumn(TABLE_HISTORY, History.URL) + " IS NOT NULL AND " +
+                                    qualifyColumn(TABLE_HISTORY, History.IS_DELETED)  + " = 0 AND (" +
+                                        qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE) + " IS NULL OR " +
+                                        qualifyColumn(TABLE_BOOKMARKS, Bookmarks.TYPE)  + " = " + Bookmarks.TYPE_BOOKMARK + ")" +
+                    ") LEFT OUTER JOIN " + TABLE_IMAGES +
+                        " ON " + Combined.URL + " = " + qualifyColumn(TABLE_IMAGES, Images.URL));
+        }
+
         @Override
         public void onCreate(SQLiteDatabase db) {
             debug("Creating browser.db: " + db.getPath());
@@ -445,7 +504,7 @@ public class BrowserProvider extends ContentProvider {
 
             createBookmarksWithImagesView(db);
             createHistoryWithImagesView(db);
-            createCombinedWithImagesView(db);
+            createCombinedWithImagesViewOn9(db);
 
             createOrUpdateSpecialFolder(db, Bookmarks.PLACES_FOLDER_GUID,
                 R.string.bookmarks_folder_places, 0);
@@ -539,6 +598,8 @@ public class BrowserProvider extends ContentProvider {
                 R.string.bookmarks_folder_tags, 3);
             createOrUpdateSpecialFolder(db, Bookmarks.UNFILED_FOLDER_GUID,
                 R.string.bookmarks_folder_unfiled, 4);
+            createOrUpdateSpecialFolder(db, Bookmarks.READING_LIST_FOLDER_GUID,
+                R.string.bookmarks_folder_reading_list, 5);
         }
 
         private void createOrUpdateSpecialFolder(SQLiteDatabase db,
@@ -550,6 +611,8 @@ public class BrowserProvider extends ContentProvider {
 
             if (guid.equals(Bookmarks.PLACES_FOLDER_GUID))
                 values.put(Bookmarks._ID, Bookmarks.FIXED_ROOT_ID);
+            else if (guid.equals(Bookmarks.READING_LIST_FOLDER_GUID))
+                values.put(Bookmarks._ID, Bookmarks.FIXED_READING_LIST_ID);
 
             // Set the parent to 0, which sync assumes is the root
             values.put(Bookmarks.PARENT, Bookmarks.FIXED_ROOT_ID);
@@ -845,6 +908,16 @@ public class BrowserProvider extends ContentProvider {
             db.execSQL("DROP TABLE " + TABLE_DUPES);
         }
 
+        private void upgradeDatabaseFrom8to9(SQLiteDatabase db) {
+            createOrUpdateSpecialFolder(db, Bookmarks.READING_LIST_FOLDER_GUID,
+                R.string.bookmarks_folder_reading_list, 5);
+
+            debug("Dropping view: " + VIEW_COMBINED_WITH_IMAGES);
+            db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_IMAGES);
+
+            createCombinedWithImagesViewOn9(db);
+        }
+
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -882,6 +955,9 @@ public class BrowserProvider extends ContentProvider {
 
                     case 8:
                         upgradeDatabaseFrom7to8(db);
+
+                    case 9:
+                        upgradeDatabaseFrom8to9(db);
                  }
              }
 

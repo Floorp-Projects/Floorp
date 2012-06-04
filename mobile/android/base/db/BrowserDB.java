@@ -61,6 +61,8 @@ public class BrowserDB {
 
         public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword);
 
+        public void addReadingListItem(ContentResolver cr, String title, String uri);
+
         public BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri);
 
         public void updateFaviconForUrl(ContentResolver cr, String uri, BitmapDrawable favicon);
@@ -146,6 +148,10 @@ public class BrowserDB {
 
     public static void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword) {
         sDb.updateBookmark(cr, id, uri, title, keyword);
+    }
+
+    public static void addReadingListItem(ContentResolver cr, String title, String uri) {
+        sDb.addReadingListItem(cr, title, uri);
     }
 
     public static BitmapDrawable getFaviconForUrl(ContentResolver cr, String uri) {
