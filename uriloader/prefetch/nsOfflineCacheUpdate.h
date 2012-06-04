@@ -52,8 +52,7 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSICHANNELEVENTSINK
 
-    nsOfflineCacheUpdateItem(nsOfflineCacheUpdate *aUpdate,
-                             nsIURI *aURI,
+    nsOfflineCacheUpdateItem(nsIURI *aURI,
                              nsIURI *aReferrerURI,
                              nsIApplicationCache *aPreviousApplicationCache,
                              const nsACString &aClientID,
@@ -67,12 +66,16 @@ public:
     nsCString                  mCacheKey;
     PRUint32                   mItemType;
 
-    nsresult OpenChannel();
+    nsresult OpenChannel(nsOfflineCacheUpdate *aUpdate);
     nsresult Cancel();
     nsresult GetRequestSucceeded(bool * succeeded);
 
+    bool IsInProgress();
+    bool IsScheduled();
+    bool IsCompleted();
+
 private:
-    nsOfflineCacheUpdate*          mUpdate;
+    nsRefPtr<nsOfflineCacheUpdate> mUpdate;
     nsCOMPtr<nsIChannel>           mChannel;
     PRUint16                       mState;
 
@@ -87,8 +90,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
 
-    nsOfflineManifestItem(nsOfflineCacheUpdate *aUpdate,
-                          nsIURI *aURI,
+    nsOfflineManifestItem(nsIURI *aURI,
                           nsIURI *aReferrerURI,
                           nsIApplicationCache *aPreviousApplicationCache,
                           const nsACString &aClientID);
@@ -179,12 +181,14 @@ public:
 
 class nsOfflineCacheUpdate : public nsIOfflineCacheUpdate
                            , public nsIOfflineCacheUpdateObserver
+                           , public nsIRunnable
                            , public nsOfflineCacheUpdateOwner
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOFFLINECACHEUPDATE
     NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
+    NS_DECL_NSIRUNNABLE
 
     nsOfflineCacheUpdate();
     ~nsOfflineCacheUpdate();
@@ -196,7 +200,7 @@ public:
     nsresult Begin();
     nsresult Cancel();
 
-    void LoadCompleted();
+    void LoadCompleted(nsOfflineCacheUpdateItem *aItem);
     void ManifestCheckCompleted(nsresult aStatus,
                                 const nsCString &aManifestHash);
     void StickDocument(nsIURI *aDocumentURI);
@@ -260,7 +264,7 @@ private:
     nsRefPtr<nsOfflineManifestItem> mManifestItem;
 
     /* Items being updated */
-    PRInt32 mCurrentItem;
+    PRUint32 mItemsInProgress;
     nsTArray<nsRefPtr<nsOfflineCacheUpdateItem> > mItems;
 
     /* Clients watching this update for changes */
