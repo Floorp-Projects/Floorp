@@ -298,6 +298,9 @@ class OutOfLineCode : public TempObject
     Label *entry() {
         return &entry_;
     }
+    virtual void bind(MacroAssembler *masm) {
+        masm->bind(entry());
+    }
     Label *rejoin() {
         return &rejoin_;
     }

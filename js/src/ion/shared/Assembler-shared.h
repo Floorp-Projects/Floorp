@@ -45,7 +45,11 @@
 #include "ion/IonAllocPolicy.h"
 #include "ion/Registers.h"
 #include "ion/RegisterSets.h"
-
+#if defined(JS_CPU_X64) || defined(JS_CPU_ARM)
+// JS_SMALL_BRANCH means the range on a branch instruction
+// is smaller than the whole address space
+#    define JS_SMALL_BRANCH
+#endif
 namespace js {
 namespace ion {
 
@@ -262,6 +266,44 @@ class Label : public LabelBase
     }
 };
 
+class RepatchLabel
+{
+    static const int32 INVALID_OFFSET = 0xC0000000;
+    int32 offset_ : 31;
+    uint32 bound_ : 1;
+  public:
+
+    RepatchLabel() : offset_(INVALID_OFFSET), bound_(0) {}
+
+    void use(uint32 newOffset) {
+        JS_ASSERT(offset_ == INVALID_OFFSET);
+        JS_ASSERT(newOffset != INVALID_OFFSET);
+        offset_ = newOffset;
+    }
+    bool bound() const {
+        return bound_;
+    }
+    void bind(int32 dest) {
+        JS_ASSERT(!bound_);
+        JS_ASSERT(dest != INVALID_OFFSET);
+        offset_ = dest;
+        bound_ = true;
+    }
+    int32 target() {
+        JS_ASSERT(bound());
+        int32 ret = offset_;
+        offset_ = INVALID_OFFSET;
+        return ret;
+    }
+    int32 offset() {
+        JS_ASSERT(!bound());
+        return offset_;
+    }
+    bool used() const {
+        return !bound() && offset_ != (INVALID_OFFSET);
+    }
+
+};
 // An absolute label is like a Label, except it represents an absolute
 // reference rather than a relative one. Thus, it cannot be patched until after
 // linking.
@@ -348,13 +390,13 @@ class CodeOffsetJump
 {
     size_t offset_;
 
-#ifdef JS_CPU_X64
+#ifdef JS_SMALL_BRANCH
     size_t jumpTableIndex_;
 #endif
 
   public:
 
-#ifdef JS_CPU_X64
+#ifdef JS_SMALL_BRANCH
     CodeOffsetJump(size_t offset, size_t jumpTableIndex)
         : offset_(offset), jumpTableIndex_(jumpTableIndex)
     {}
@@ -372,6 +414,7 @@ class CodeOffsetJump
     size_t offset() const {
         return offset_;
     }
+    void fixup(MacroAssembler *masm);
 };
 
 class CodeOffsetLabel
@@ -398,7 +441,7 @@ class CodeLocationJump
 {
     uint8 *raw_;
 
-#ifdef JS_CPU_X64
+#ifdef JS_SMALL_BRANCH
     uint8 *jumpTableEntry_;
 #endif
 
@@ -420,7 +463,7 @@ class CodeLocationJump
 
     void operator = (CodeOffsetJump base) {
         raw_ = (uint8 *) base.offset();
-#ifdef JS_CPU_X64
+#ifdef JS_SMALL_BRANCH
         jumpTableEntry_ = (uint8 *) base.jumpTableIndex();
 #endif
         markAbsolute(false);
@@ -437,7 +480,7 @@ class CodeLocationJump
         return raw_;
     }
 
-#ifdef JS_CPU_X64
+#ifdef JS_SMALL_BRANCH
     uint8 *jumpTableEntry() {
         JS_ASSERT(absolute);
         return jumpTableEntry_;

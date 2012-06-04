@@ -913,9 +913,16 @@ class BOffImm
     explicit BOffImm(int offset)
       : data ((offset - 8) >> 2 & 0x00ffffff)
     {
-        JS_ASSERT ((offset & 0x3) == 0);
-        JS_ASSERT ((offset - 8) >= -33554432);
-        JS_ASSERT ((offset - 8) <= 33554428);
+        JS_ASSERT((offset & 0x3) == 0);
+        JS_ASSERT(isInRange(offset));
+    }
+    static bool isInRange(int offset)
+    {
+        if ((offset - 8) < -33554432)
+            return false;
+        if ((offset - 8) > 33554428)
+            return false;
+        return true;
     }
     static const int INVALID = 0x00800000;
     BOffImm()
@@ -1046,10 +1053,10 @@ class Operand
 };
 
 void
-PatchJump(CodeLocationJump jump_, CodeLocationLabel label);
+PatchJump(CodeLocationJump &jump_, CodeLocationLabel label);
 
 class Assembler;
-typedef js::ion::AssemblerBufferWithConstantPool<16, 4, Instruction, Assembler> ARMBuffer;
+typedef js::ion::AssemblerBufferWithConstantPool<16, 4, Instruction, Assembler, 1> ARMBuffer;
 
 class Assembler
 {
@@ -1155,6 +1162,8 @@ class Assembler
   public:
     void resetCounter();
     uint32 actualOffset(uint32) const;
+    uint32 actualIndex(uint32) const;
+    static uint8 *PatchableJumpAddress(IonCode *code, uint32 index);
     BufferOffset actualOffset(BufferOffset) const;
   protected:
 
@@ -1397,9 +1406,12 @@ class Assembler
     void as_dtm(LoadStore ls, Register rn, uint32 mask,
                 DTMMode mode, DTMWriteBack wb, Condition c = Always);
     // load a 32 bit immediate from a pool into a register
-    void as_Imm32Pool(Register dest, uint32 value, Condition c = Always);
+    ARMBuffer::PoolEntry as_Imm32Pool(Register dest, uint32 value, Condition c = Always);
+    // make a patchable jump that can target the entire 32 bit address space.
+    ARMBuffer::PoolEntry as_BranchPool(uint32 value, RepatchLabel *label, Condition c);
+
     // load a 64 bit floating point immediate from a pool into a register
-    void as_FImm64Pool(VFPRegister dest, double value, Condition c = Always);
+    ARMBuffer::PoolEntry as_FImm64Pool(VFPRegister dest, double value, Condition c = Always);
     // Control flow stuff:
 
     // bx can *only* branch to a register
@@ -1524,7 +1536,7 @@ class Assembler
     // label operations
     bool nextLink(BufferOffset b, BufferOffset *next);
     void bind(Label *label, BufferOffset boff = BufferOffset());
-    static void Bind(IonCode *code, AbsoluteLabel *label, const void *address);
+    void bind(RepatchLabel *label);
     uint32 currentOffset() {
         return nextOffset().getOffset();
     }
@@ -1659,7 +1671,10 @@ class Assembler
     // this should return a BOffImm, but I didn't want to require everyplace that used the
     // AssemblerBuffer to make that class.
     static ptrdiff_t getBranchOffset(const Instruction *i);
-    static void retargetBranch(Instruction *i, int32 offset);
+    static void retargetNearBranch(Instruction *i, int offset, Condition cond);
+    static void retargetNearBranch(Instruction *i, int offset);
+    static void retargetFarBranch(Instruction *i, uint8 **slot, uint8 *dest, Condition cond);
+
     static void writePoolHeader(uint8 *start, Pool *p, bool isNatural);
     static void writePoolFooter(uint8 *start, Pool *p, bool isNatural);
     static void writePoolGuard(BufferOffset branch, Instruction *inst, BufferOffset dest);
@@ -1743,7 +1758,7 @@ class InstDTR : public Instruction
 
     // TODO: Replace the initialization with something that is safer.
     InstDTR(LoadStore ls, IsByte_ ib, Index mode, Register rt, DTRAddr addr, Assembler::Condition c)
-      : Instruction(ls | ib | mode | RT(rt) | addr.encode(), c)
+      : Instruction(ls | ib | mode | RT(rt) | addr.encode() | IsDTR, c)
     { }
 
     static bool isTHIS(const Instruction &i);

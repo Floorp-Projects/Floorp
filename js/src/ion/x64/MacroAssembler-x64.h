@@ -382,12 +382,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         j(cond, label);
     }
 
-    CodeOffsetJump jumpWithPatch(Label *label) {
+    CodeOffsetJump jumpWithPatch(RepatchLabel *label) {
         JmpSrc src = jmpSrc(label);
         return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
     }
     template <typename S, typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, Label *label) {
+    CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, RepatchLabel *label) {
         cmpPtr(lhs, ptr);
         JmpSrc src = jSrc(cond, label);
         return CodeOffsetJump(size(), addPatchableJump(src, Relocation::HARDCODED));
