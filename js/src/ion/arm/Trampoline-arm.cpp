@@ -439,9 +439,6 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.ma_add(sp, Imm32(8), sp);
     masm.ma_alu(sp, lsr(r4, FRAMESIZE_SHIFT), sp, op_add);      // Discard pushed arguments.
 
-    // remove the exitCode pointer from the stack.
-    masm.ma_add(sp, Imm32(sizeof(IonCode*)), sp);
-
     masm.ret();
     Linker linker(masm);
     return linker.newCode(cx);

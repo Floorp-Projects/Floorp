@@ -406,7 +406,7 @@ IonScript::IonScript()
     refcount_(0)
 {
 }
-
+static const int DataAlignment = 4;
 IonScript *
 IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
@@ -422,13 +422,20 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
     // This should not overflow on x86, because the memory is already allocated
     // *somewhere* and if their total overflowed there would be no memory left
     // at all.
-    size_t bytes = snapshotsSize +
-                   bailoutEntries * sizeof(uint32) +
-                   constants * sizeof(Value) +
-                   safepointIndices * sizeof(SafepointIndex) +
-                   osiIndices * sizeof(OsiIndex) +
-                   cacheEntries * sizeof(IonCache) +
-                   safepointsSize;
+    size_t paddedSnapshotsSize = AlignBytes(snapshotsSize, DataAlignment);
+    size_t paddedBailoutSize = AlignBytes(bailoutEntries * sizeof(uint32), DataAlignment);
+    size_t paddedConstantsSize = AlignBytes(constants * sizeof(Value), DataAlignment);
+    size_t paddedSafepointIndicesSize = AlignBytes(safepointIndices * sizeof(SafepointIndex), DataAlignment);
+    size_t paddedOsiIndicesSize = AlignBytes(osiIndices * sizeof(OsiIndex), DataAlignment);
+    size_t paddedCacheEntriesSize = AlignBytes(cacheEntries * sizeof(IonCache), DataAlignment);
+    size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
+    size_t bytes = paddedSnapshotsSize +
+                   paddedBailoutSize +
+                   paddedConstantsSize +
+                   paddedSafepointIndicesSize+
+                   paddedOsiIndicesSize +
+                   paddedCacheEntriesSize +
+                   paddedSafepointSize;
     uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
         return NULL;
@@ -440,31 +447,31 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
 
     script->snapshots_ = offsetCursor;
     script->snapshotsSize_ = snapshotsSize;
-    offsetCursor += snapshotsSize;
+    offsetCursor += paddedSnapshotsSize;
 
     script->bailoutTable_ = offsetCursor;
     script->bailoutEntries_ = bailoutEntries;
-    offsetCursor += bailoutEntries * sizeof(uint32);
+    offsetCursor += paddedBailoutSize;
 
     script->constantTable_ = offsetCursor;
     script->constantEntries_ = constants;
-    offsetCursor += constants * sizeof(Value);
+    offsetCursor += paddedConstantsSize;
 
     script->safepointIndexOffset_ = offsetCursor;
     script->safepointIndexEntries_ = safepointIndices;
-    offsetCursor += safepointIndices * sizeof(SafepointIndex);
+    offsetCursor += paddedSafepointIndicesSize;
 
     script->osiIndexOffset_ = offsetCursor;
     script->osiIndexEntries_ = osiIndices;
-    offsetCursor += osiIndices * sizeof(OsiIndex);
+    offsetCursor += paddedOsiIndicesSize;
 
     script->cacheList_ = offsetCursor;
     script->cacheEntries_ = cacheEntries;
-    offsetCursor += cacheEntries * sizeof(IonCache);
+    offsetCursor += paddedCacheEntriesSize;
 
     script->safepointsStart_ = offsetCursor;
     script->safepointsSize_ = safepointsSize;
-    offsetCursor += safepointsSize;
+    offsetCursor += paddedSafepointSize;
 
     script->frameLocals_ = frameLocals;
     script->frameSize_ = frameSize;
