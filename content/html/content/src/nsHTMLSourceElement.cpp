@@ -47,6 +47,10 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+protected:
+  virtual void GetItemValueText(nsAString& text);
+  virtual void SetItemValueText(const nsAString& text);
 };
 
 
@@ -83,6 +87,18 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLSourceElement)
 NS_IMPL_URI_ATTR(nsHTMLSourceElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLSourceElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLSourceElement, Media, media)
+
+void
+nsHTMLSourceElement::GetItemValueText(nsAString& aValue)
+{
+  GetSrc(aValue);
+}
+
+void
+nsHTMLSourceElement::SetItemValueText(const nsAString& aValue)
+{
+  SetSrc(aValue);
+}
 
 nsresult
 nsHTMLSourceElement::BindToTree(nsIDocument *aDocument,
