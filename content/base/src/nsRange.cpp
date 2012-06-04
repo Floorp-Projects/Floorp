@@ -33,9 +33,6 @@
 
 using namespace mozilla;
 
-nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
-nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
-
 /******************************************************
  * stack based utilty class for managing monitor
  ******************************************************/
@@ -1170,8 +1167,7 @@ RangeSubtreeIterator::Init(nsIDOMRange *aRange)
     // Now create a Content Subtree Iterator to be used
     // for the subtrees between the end points!
 
-    res = NS_NewContentSubtreeIterator(getter_AddRefs(mIter));
-    if (NS_FAILED(res)) return res;
+    mIter = NS_NewContentSubtreeIterator();
 
     res = mIter->Init(aRange);
     if (NS_FAILED(res)) return res;
@@ -2244,10 +2240,8 @@ nsRange::ToString(nsAString& aReturn)
      revisit - there are potential optimizations here and also tradeoffs.
   */
 
-  nsCOMPtr<nsIContentIterator> iter;
-  nsresult rv = NS_NewContentIterator(getter_AddRefs(iter));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = iter->Init(this);
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  nsresult rv = iter->Init(this);
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsString tempString;
