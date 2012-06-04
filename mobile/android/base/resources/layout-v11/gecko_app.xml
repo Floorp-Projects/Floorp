@@ -31,6 +31,6 @@
 
     <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
                                      style="@style/FindBar"
-                                     visibility="gone"/>
+                                     android:visibility="gone"/>
 
 </LinearLayout>
