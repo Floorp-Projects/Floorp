@@ -108,7 +108,7 @@ let webappsUI = {
     let mainAction = {
       label: bundle.getString("webapps.install"),
       accessKey: bundle.getString("webapps.install.accesskey"),
-      callback: function(notification) {
+      callback: function() {
         let app = WebappsInstaller.install(aData);
         if (app) {
           let localDir = null;
