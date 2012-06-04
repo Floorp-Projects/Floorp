@@ -238,6 +238,24 @@ TestOpensOpenedChild::AnswerHiRpc()
     return true;
 }
 
+static void
+ShutdownTestOpensOpenedChild(TestOpensOpenedChild* child,
+                             Transport* transport)
+{
+    delete child;
+
+    // Now delete the transport, which has to happen after the
+    // top-level actor is deleted.
+    XRE_GetIOMessageLoop()->PostTask(
+        FROM_HERE,
+        new DeleteTask<Transport>(transport));
+
+    // Kick off main-thread shutdown.
+    gMainThread->PostTask(
+        FROM_HERE,
+        NewRunnableMethod(gOpensChild, &TestOpensChild::Close));
+}
+
 void
 TestOpensOpenedChild::ActorDestroy(ActorDestroyReason why)
 {
@@ -248,18 +266,12 @@ TestOpensOpenedChild::ActorDestroy(ActorDestroyReason why)
 
     // ActorDestroy() is just a callback from IPDL-generated code,
     // which needs the top-level actor (this) to stay alive a little
-    // longer so other things can be cleaned up.
+    // longer so other things can be cleaned up.  Defer shutdown to
+    // let cleanup finish.
     MessageLoop::current()->PostTask(
         FROM_HERE,
-        new DeleteTask<TestOpensOpenedChild>(this));
-    XRE_GetIOMessageLoop()->PostTask(
-        FROM_HERE,
-        new DeleteTask<Transport>(mTransport));
-
-    // Kick off main-thread shutdown.
-    gMainThread->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(gOpensChild, &TestOpensChild::Close));
+        NewRunnableFunction(ShutdownTestOpensOpenedChild,
+                            this, mTransport));
 }
 
 } // namespace _ipdltest
