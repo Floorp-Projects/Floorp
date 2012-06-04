@@ -404,7 +404,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
         mNoListenerForEvent = NS_EVENT_TYPE_NULL;
         mNoListenerForEventAtom = nsnull;
 
-        if (deviceType) {
+        if (!deviceType) {
           return;
         }
         --typeCount;
