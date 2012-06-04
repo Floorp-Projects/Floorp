@@ -508,8 +508,9 @@ class HashTable : private AllocPolicy
      */
     Entry &findFreeEntry(HashNumber keyHash)
     {
-        METER(stats.searches++);
         JS_ASSERT(!(keyHash & sCollisionBit));
+        JS_ASSERT(table);
+        METER(stats.searches++);
 
         /* N.B. the |keyHash| has already been distributed. */
 
@@ -577,6 +578,8 @@ class HashTable : private AllocPolicy
 
     void add(const Lookup &l, const Entry &e)
     {
+        JS_ASSERT(table);
+
         HashNumber keyHash = prepareHash(l);
         Entry &entry = lookup(l, keyHash, sCollisionBit);
 
@@ -612,7 +615,9 @@ class HashTable : private AllocPolicy
 
     void remove(Entry &e)
     {
+        JS_ASSERT(table);
         METER(stats.removes++);
+
         if (e.hasCollision()) {
             e.setRemoved();
             removedCount++;
@@ -663,22 +668,27 @@ class HashTable : private AllocPolicy
     }
 
     Range all() const {
+        JS_ASSERT(table);
         return Range(table, table + capacity());
     }
 
     bool empty() const {
+        JS_ASSERT(table);
         return !entryCount;
     }
 
     uint32_t count() const {
+        JS_ASSERT(table);
         return entryCount;
     }
 
     uint32_t capacity() const {
+        JS_ASSERT(table);
         return JS_BIT(sHashBits - hashShift);
     }
 
     uint32_t generation() const {
+        JS_ASSERT(table);
         return gen;
     }
 
@@ -766,6 +776,7 @@ class HashTable : private AllocPolicy
 
     void remove(Ptr p)
     {
+        JS_ASSERT(table);
         ReentrancyGuard g(*this);
         JS_ASSERT(p.found());
         remove(*p.entry);
