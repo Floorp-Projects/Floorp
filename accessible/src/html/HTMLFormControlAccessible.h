@@ -20,7 +20,7 @@ typedef ProgressMeterAccessible<1> HTMLProgressMeterAccessible;
 /**
  * Accessible for HTML input@type="checkbox".
  */
-class HTMLCheckboxAccessible : public nsLeafAccessible
+class HTMLCheckboxAccessible : public LeafAccessible
 {
 
 public:

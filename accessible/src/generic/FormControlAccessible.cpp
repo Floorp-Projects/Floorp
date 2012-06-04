@@ -26,14 +26,14 @@ template class mozilla::a11y::ProgressMeterAccessible<100>;
 // nsISupports
 
 template<int Max>
-NS_IMPL_ADDREF_INHERITED(ProgressMeterAccessible<Max>, nsLeafAccessible)
+NS_IMPL_ADDREF_INHERITED(ProgressMeterAccessible<Max>, LeafAccessible)
 
 template<int Max>
-NS_IMPL_RELEASE_INHERITED(ProgressMeterAccessible<Max>, nsLeafAccessible)
+NS_IMPL_RELEASE_INHERITED(ProgressMeterAccessible<Max>, LeafAccessible)
 
 template<int Max>
 NS_IMPL_QUERY_INTERFACE_INHERITED1(ProgressMeterAccessible<Max>,
-                                   nsLeafAccessible,
+                                   LeafAccessible,
                                    nsIAccessibleValue)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ template<int Max>
 PRUint64
 ProgressMeterAccessible<Max>::NativeState()
 {
-  PRUint64 state = nsLeafAccessible::NativeState();
+  PRUint64 state = LeafAccessible::NativeState();
 
   // An undetermined progressbar (i.e. without a value) has a mixed state.
   nsAutoString attrValue;
@@ -79,7 +79,7 @@ template<int Max>
 void
 ProgressMeterAccessible<Max>::Value(nsString& aValue)
 {
-  nsLeafAccessible::Value(aValue);
+  LeafAccessible::Value(aValue);
   if (!aValue.IsEmpty())
     return;
 
@@ -105,7 +105,7 @@ template<int Max>
 NS_IMETHODIMP
 ProgressMeterAccessible<Max>::GetMaximumValue(double* aMaximumValue)
 {
-  nsresult rv = nsLeafAccessible::GetMaximumValue(aMaximumValue);
+  nsresult rv = LeafAccessible::GetMaximumValue(aMaximumValue);
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
@@ -124,7 +124,7 @@ template<int Max>
 NS_IMETHODIMP
 ProgressMeterAccessible<Max>::GetMinimumValue(double* aMinimumValue)
 {
-  nsresult rv = nsLeafAccessible::GetMinimumValue(aMinimumValue);
+  nsresult rv = LeafAccessible::GetMinimumValue(aMinimumValue);
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
@@ -136,7 +136,7 @@ template<int Max>
 NS_IMETHODIMP
 ProgressMeterAccessible<Max>::GetMinimumIncrement(double* aMinimumIncrement)
 {
-  nsresult rv = nsLeafAccessible::GetMinimumIncrement(aMinimumIncrement);
+  nsresult rv = LeafAccessible::GetMinimumIncrement(aMinimumIncrement);
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
@@ -148,7 +148,7 @@ template<int Max>
 NS_IMETHODIMP
 ProgressMeterAccessible<Max>::GetCurrentValue(double* aCurrentValue)
 {
-  nsresult rv = nsLeafAccessible::GetCurrentValue(aCurrentValue);
+  nsresult rv = LeafAccessible::GetCurrentValue(aCurrentValue);
   if (rv != NS_OK_NO_ARIA_VALUE)
     return rv;
 
@@ -181,7 +181,7 @@ ProgressMeterAccessible<Max>::SetCurrentValue(double aValue)
 
 RadioButtonAccessible::
   RadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsLeafAccessible(aContent, aDoc)
+  LeafAccessible(aContent, aDoc)
 {
 }
 

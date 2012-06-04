@@ -18,6 +18,7 @@ CPPSRCS = \
   Accessible.cpp \
   ApplicationAccessible.cpp \
   ARIAGridAccessible.cpp \
+  BaseAccessibles.cpp \
   DocAccessible.cpp \
   FormControlAccessible.cpp \
   HyperTextAccessible.cpp \

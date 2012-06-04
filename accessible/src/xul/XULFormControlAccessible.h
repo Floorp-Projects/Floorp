@@ -23,7 +23,7 @@ typedef ProgressMeterAccessible<100> XULProgressMeterAccessible;
 /**
  * Used for XUL button.
  *
- * @note  Don't inherit from nsLeafAccessible - it doesn't allow children
+ * @note  Don't inherit from LeafAccessible - it doesn't allow children
  *         and a button can have a dropmarker child.
  */
 class XULButtonAccessible : public AccessibleWrap
@@ -65,7 +65,7 @@ protected:
 /**
  * Used for XUL checkbox element.
  */
-class XULCheckboxAccessible : public nsLeafAccessible
+class XULCheckboxAccessible : public LeafAccessible
 {
 public:
   enum { eAction_Click = 0 };
@@ -86,7 +86,7 @@ public:
 /**
  * Used for XUL dropmarker element.
  */
-class XULDropmarkerAccessible : public nsLeafAccessible
+class XULDropmarkerAccessible : public LeafAccessible
 {
 public:
   enum { eAction_Click = 0 };
@@ -200,7 +200,7 @@ public:
 /**
  * Used for XUL toolbarseparator element.
  */
-class XULToolbarSeparatorAccessible : public nsLeafAccessible
+class XULToolbarSeparatorAccessible : public LeafAccessible
 {
 public:
   XULToolbarSeparatorAccessible(nsIContent* aContent,

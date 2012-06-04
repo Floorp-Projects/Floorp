@@ -188,7 +188,7 @@ HTMLListBulletAccessible::NativeRole()
 PRUint64
 HTMLListBulletAccessible::NativeState()
 {
-  return nsLeafAccessible::NativeState() | states::READONLY;
+  return LeafAccessible::NativeState() | states::READONLY;
 }
 
 void
