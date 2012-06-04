@@ -136,8 +136,6 @@ PRInt32 nsIContent::sTabFocusModel = eTabFocus_any;
 bool nsIContent::sTabFocusModelAppliesToXUL = false;
 PRUint32 nsMutationGuard::sMutationCount = 0;
 
-nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
-
 //----------------------------------------------------------------------
 
 nsINode::nsSlots::~nsSlots()

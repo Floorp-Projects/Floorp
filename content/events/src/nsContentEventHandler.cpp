@@ -27,8 +27,6 @@
 #include "nsIMEStateManager.h"
 #include "nsIObjectFrame.h"
 
-nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
-
 /******************************************************************/
 /* nsContentEventHandler                                          */
 /******************************************************************/
@@ -278,10 +276,7 @@ static PRUint32 ConvertToXPOffset(nsIContent* aContent, PRUint32 aNativeOffset)
 static nsresult GenerateFlatTextContent(nsRange* aRange,
                                         nsAFlatString& aString)
 {
-  nsCOMPtr<nsIContentIterator> iter;
-  nsresult rv = NS_NewContentIterator(getter_AddRefs(iter));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(iter, "NS_NewContentIterator succeeded, but the result is null");
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   iter->Init(aRange);
 
   NS_ASSERTION(aString.IsEmpty(), "aString must be empty string");
@@ -374,11 +369,8 @@ nsContentEventHandler::SetRangeFromFlatTextOffset(
                               PRUint32 aNativeLength,
                               bool aExpandToClusterBoundaries)
 {
-  nsCOMPtr<nsIContentIterator> iter;
-  nsresult rv = NS_NewContentIterator(getter_AddRefs(iter));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(iter, "NS_NewContentIterator succeeded, but the result is null");
-  rv = iter->Init(mRootContent);
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
+  nsresult rv = iter->Init(mRootContent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRUint32 nativeOffset = 0;
@@ -579,11 +571,8 @@ nsContentEventHandler::OnQueryTextRect(nsQueryContentEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // used to iterate over all contents and their frames
-  nsCOMPtr<nsIContentIterator> iter;
-  rv = NS_NewContentIterator(getter_AddRefs(iter));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   iter->Init(range);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // get the starting frame
   PRInt32 offset = range->StartOffset();
@@ -915,10 +904,7 @@ nsContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
   NS_ASSERTION(startDOMNode, "startNode doesn't have nsIDOMNode");
   prev->SetEnd(startDOMNode, aNodeOffset);
 
-  nsCOMPtr<nsIContentIterator> iter;
-  nsresult rv = NS_NewContentIterator(getter_AddRefs(iter));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(iter, "NS_NewContentIterator succeeded, but the result is null");
+  nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
   iter->Init(prev);
 
   nsCOMPtr<nsINode> startNode = do_QueryInterface(startDOMNode);
