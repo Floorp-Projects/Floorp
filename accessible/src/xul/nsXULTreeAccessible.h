@@ -156,6 +156,7 @@ public:
   // Accessible
   virtual mozilla::a11y::GroupPos GroupPosition();
   virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
   virtual PRInt32 IndexInParent() const;
   virtual Relation RelationByType(PRUint32 aType);
   virtual Accessible* FocusedChild();

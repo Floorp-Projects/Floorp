@@ -35,8 +35,8 @@ namespace docshell {
   NS_SCRIPTABLE NS_IMETHOD GetByteProgress(PRUint64 * _result) { return !_to ? NS_ERROR_NULL_POINTER : _to->GetByteProgress(_result); }
 
 class OfflineCacheUpdateGlue : public nsSupportsWeakReference
-                               , public nsIOfflineCacheUpdate
-                               , public nsIOfflineCacheUpdateObserver
+                             , public nsIOfflineCacheUpdate
+                             , public nsIOfflineCacheUpdateObserver
 {
 public:
     NS_DECL_ISUPPORTS
@@ -49,7 +49,8 @@ public:
     NS_SCRIPTABLE NS_IMETHOD Schedule(void);
     NS_SCRIPTABLE NS_IMETHOD Init(nsIURI *aManifestURI, 
                                   nsIURI *aDocumentURI, 
-                                  nsIDOMDocument *aDocument);
+                                  nsIDOMDocument *aDocument,
+                                  nsILocalFile *aCustomProfileDir);
 
     NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
 

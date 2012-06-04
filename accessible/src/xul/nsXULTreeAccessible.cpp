@@ -948,7 +948,7 @@ nsXULTreeItemAccessibleBase::NativeState()
     return states::DEFUNCT;
 
   // focusable and selectable states
-  PRUint64 state = states::FOCUSABLE | states::SELECTABLE;
+  PRUint64 state = NativeInteractiveState();
 
   // expanded/collapsed state
   if (IsExpandable()) {
@@ -979,6 +979,12 @@ nsXULTreeItemAccessibleBase::NativeState()
     state |= states::INVISIBLE;
 
   return state;
+}
+
+PRUint64
+nsXULTreeItemAccessibleBase::NativeInteractiveState() const
+{
+  return states::FOCUSABLE | states::SELECTABLE;
 }
 
 PRInt32

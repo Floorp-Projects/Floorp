@@ -1356,7 +1356,15 @@ class DebugScopeProxy : public BaseProxyHandler
 
     bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc) MOZ_OVERRIDE
     {
-        return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
+        bool found;
+        if (!has(cx, proxy, id, &found))
+            return false;
+        if (found)
+            return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
+
+        ScopeObject &scope = proxy->asDebugScope().scope();
+        return JS_DefinePropertyById(cx, &scope, id, desc->value, desc->getter, desc->setter,
+                                     desc->attrs);
     }
 
     bool getOwnPropertyNames(JSContext *cx, JSObject *proxy, AutoIdVector &props) MOZ_OVERRIDE

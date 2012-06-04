@@ -410,6 +410,30 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   return true;
 }
 
+bool
+ShadowLayersParent::RecvDrawToSurface(const SurfaceDescriptor& surfaceIn,
+                                      SurfaceDescriptor* surfaceOut)
+{
+  *surfaceOut = surfaceIn;
+  if (mDestroyed || layer_manager()->IsDestroyed()) {
+    return true;
+  }
+
+  nsRefPtr<gfxASurface> sharedSurface = ShadowLayerForwarder::OpenDescriptor(surfaceIn);
+
+  nsRefPtr<gfxASurface> localSurface =
+    gfxPlatform::GetPlatform()->CreateOffscreenSurface(sharedSurface->GetSize(),
+                                                       sharedSurface->GetContentType());
+  nsRefPtr<gfxContext> context = new gfxContext(localSurface);
+
+  layer_manager()->BeginTransactionWithTarget(context);
+  layer_manager()->EndTransaction(NULL, NULL);
+  nsRefPtr<gfxContext> contextForCopy = new gfxContext(sharedSurface);
+  contextForCopy->SetOperator(gfxContext::OPERATOR_SOURCE);
+  contextForCopy->DrawSurface(localSurface, localSurface->GetSize());
+  return true;
+}
+
 PLayerParent*
 ShadowLayersParent::AllocPLayer()
 {

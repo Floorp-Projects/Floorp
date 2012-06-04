@@ -166,6 +166,11 @@ nsSMILCSSProperty::SetAnimValue(const nsSMILValue& aValue)
   nsCOMPtr<nsICSSDeclaration> overrideDecl =
     do_QueryInterface(mElement->GetSMILOverrideStyle());
   if (overrideDecl) {
+    nsAutoString oldValStr;
+    overrideDecl->GetPropertyValue(mPropID, oldValStr);
+    if (valStr.Equals(oldValStr)) {
+      return NS_OK;
+    }
     overrideDecl->SetPropertyValue(mPropID, valStr);
   }
   return NS_OK;

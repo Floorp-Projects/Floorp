@@ -22,7 +22,7 @@ interface nsIDOMSVGTransform;
 #endif
 %}
 
-[scriptable, uuid(EF862DDA-DE4E-4F1C-9A70-4D3BEBDE5E6E)]
+[scriptable, uuid(BEC06C4F-3EF7-486E-A8F5-F375EE5CB5A8)]
 interface nsIDOMSVGSVGElement
   : nsIDOMSVGElement
 /*
@@ -56,8 +56,7 @@ interface nsIDOMSVGSVGElement
   readonly attribute float pixelUnitToMillimeterY;
   readonly attribute float screenPixelToMillimeterX;
   readonly attribute float screenPixelToMillimeterY;
-  attribute boolean useCurrentView;
-      // raises DOMException on setting
+  readonly attribute boolean useCurrentView;
   readonly attribute nsIDOMSVGViewSpec currentView;
   attribute float currentScale;
       // raises DOMException on setting

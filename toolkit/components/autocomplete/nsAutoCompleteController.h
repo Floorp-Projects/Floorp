@@ -66,8 +66,49 @@ private:
   nsresult GetResultValueLabelAt(PRInt32 aIndex, bool aValueOnly,
                                  bool aGetValue, nsAString & _retval);
 protected:
+
+  /**
+   * Gets and validates the defaultComplete result and the relative
+   * defaultIndex value.
+   *
+   * @param aResultIndex
+   *        Index of the defaultComplete result to be used.  Pass -1 to search
+   *        for the first result providing a valid defaultIndex.
+   * @param _result
+   *        The found result.
+   * @param _defaultIndex
+   *        The defaultIndex relative to _result.
+   */
+  nsresult GetDefaultCompleteResult(PRInt32 aResultIndex,
+                                    nsIAutoCompleteResult** _result,
+                                    PRInt32* _defaultIndex);
+
+  /**
+   * Gets the defaultComplete value to be suggested to the user.
+   *
+   * @param aResultIndex
+   *        Index of the defaultComplete result to be used.
+   * @param aPreserveCasing
+   *        Whether user casing should be preserved.
+   * @param _retval
+   *        The value to be completed.
+   */
   nsresult GetDefaultCompleteValue(PRInt32 aResultIndex, bool aPreserveCasing,
                                    nsAString &_retval);
+
+  /**
+   * Gets the defaultComplete value to be used when the user confirms the
+   * current match.
+   * The value is returned only if it case-insensitively matches the current
+   * input text, otherwise the method returns NS_ERROR_FAILURE.
+   * This happens because we don't want to replace text if the user backspaces
+   * just before Enter.
+   *
+   * @param _retval
+   *        The value to be completed.
+   */
+  nsresult GetFinalDefaultCompleteValue(nsAString &_retval);
+
   nsresult ClearResults();
   
   nsresult RowIndexToSearch(PRInt32 aRowIndex,

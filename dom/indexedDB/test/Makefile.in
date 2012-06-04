@@ -56,6 +56,8 @@ TEST_FILES = \
   test_file_resurrection_transaction_abort.html \
   test_file_sharing.html \
   test_file_transaction_abort.html \
+  test_filehandle_serialization.html \
+  test_filehandle_store_snapshot.html \
   test_getAll.html \
   test_global_data.html \
   test_index_empty_keyPath.html \

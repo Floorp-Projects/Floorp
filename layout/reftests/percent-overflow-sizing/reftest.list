@@ -1,24 +1,24 @@
 == simpleHeight100.html greenbox.html
 == simpleAbsHeight.html greenbox.html
-fails-if(Android) == hScrollSimpleHeight.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollSimpleHeightQuirks-1.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollSimpleHeightQuirks-2.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollSimpleHeightQuirks-3.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollAbsHeight.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollAbsHeightQuirks.html greenboxhbar.html # bug 650591
+fails-if(Android&&browserIsRemote) == hScrollSimpleHeight.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-1.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-2.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-3.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollAbsHeight.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollAbsHeightQuirks.html greenboxhbar.html # bug 650591, 732565
 == simpleHeight100D.html greenbox.html
 == simpleAbsHeightD.html greenbox.html
-fails-if(Android) == hScrollSimpleHeightD.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollSimpleHeightQuirks-1D.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollSimpleHeightQuirks-2D.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollSimpleHeightQuirks-3D.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollAbsHeightD.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollAbsHeightQuirksD.html greenboxhbar.html # bug 650591
+fails-if(Android&&browserIsRemote) == hScrollSimpleHeightD.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-1D.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-2D.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-3D.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollAbsHeightD.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollAbsHeightQuirksD.html greenboxhbar.html # bug 650591, 732565
 == simpleMinHeight100D.html greenbox.html
 == simpleAbsMinHeightD.html greenbox.html
-fails-if(Android) == hScrollSimpleMinHeightD.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollSimpleMinHeightQuirks-1D.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollSimpleMinHeightQuirks-3D.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollAbsMinHeightD.html greenboxhbar.html # bug 650591
-fails-if(Android) == hScrollAbsMinHeightQuirksD.html greenboxhbar.html # bug 650591
+fails-if(Android&&browserIsRemote) == hScrollSimpleMinHeightD.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollSimpleMinHeightQuirks-1D.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollSimpleMinHeightQuirks-3D.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollAbsMinHeightD.html greenboxhbar.html # bug 650591, 732565
+fails-if(Android&&browserIsRemote) == hScrollAbsMinHeightQuirksD.html greenboxhbar.html # bug 650591, 732565
 == dynamicHeight100.html dynamicHeight100-ref.html

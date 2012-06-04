@@ -2711,18 +2711,21 @@ panel[dimmed="true"] {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
-#inspector-toolbar {
+#inspector-toolbar,
+#developer-toolbar {
   border-top: 1px solid hsla(210, 8%, 5%, .65);
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#inspector-toolbar:-moz-locale-dir(ltr) {
+#inspector-toolbar:-moz-locale-dir(ltr),
+#developer-toolbar:-moz-locale-dir(ltr) {
   padding-left: 2px;
   padding-right: 16px; /* use -moz-padding-end when/if bug 631729 gets fixed */
 }
 
-#inspector-toolbar:-moz-locale-dir(rtl) {
+#inspector-toolbar:-moz-locale-dir(rtl),
+#developer-toolbar:-moz-locale-dir(rtl) {
   padding-left: 4px;
   padding-right: 18px; /* use -moz-padding-end when/if bug 631729 gets fixed */
 }
@@ -3122,39 +3125,69 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
   border-radius: 0 @toolbarbuttonCornerRadius@ @toolbarbuttonCornerRadius@ 0;
 }
 
-.gcli-panel-inner-arrowcontent {
+/* Highlight toolbar - Option menu */
+
+#inspector-option-toolbarbutton:-moz-focusring {
+  outline: 1px dotted hsla(210,30%,85%,0.4);
+  outline-offset: -2px;
+}
+
+html|*#gcli-tooltip-frame,
+html|*#gcli-output-frame {
   padding: 0;
+  border-width: 0;
+  background-color: transparent;
+}
+
+#gcli-output,
+#gcli-tooltip {
+  border-width: 0;
+  background-color: transparent;
+  margin-bottom: -2px;
 }
 
 .gclitoolbar-input-node,
 .gclitoolbar-complete-node,
 .gclitoolbar-prompt {
-  font-family: Menlo, Monaco, monospace;
+  margin: 0;
+  -moz-margin-end: 3px;
+  -moz-box-align: center;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-right: 4px;
+  border: 1px solid transparent;
+  border-radius: @toolbarbuttonCornerRadius@;
+  text-shadow: none;
 }
 
 .gclitoolbar-input-node {
+  padding-left: 20px;
   background-color: transparent;
   -moz-appearance: none;
-  border: none;
-  padding: 0 0 0 12px;
+  border-color: hsl(210,11%,10%);
+  color: hsl(210,30%,85%);
+  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
+  box-shadow: 0 1px 1px hsla(210,8%,5%,.3) inset,
+              0 0 0 1px hsla(210,16%,76%,.1) inset,
+              0 1px 0 hsla(210,16%,76%,.15);
 }
 
 .gclitoolbar-complete-node {
+  padding-left: 21px;
   background-color: transparent;
   color: transparent;
-  height: 100%;
-  padding: 7px 0 0 18px;
 }
 
 .gclitoolbar-prompt {
-  color: hsl(25,78%,50%);
-  -moz-appearance: textfield;
+  padding-left: 4px;
+  padding-bottom: 2px;
   font-size: 150%;
   font-weight: bold;
-  line-height: 100%;
-  padding-top: 2px;
+  color: hsl(210,30%,85%);
+  background-color: hsl(210,11%,16%);
 }
 
+.gclitoolbar-prompt-label,
 .gcli-in-incomplete,
 .gcli-in-error,
 .gcli-in-ontab,
@@ -3175,20 +3208,59 @@ html|*#highlighter-nodeinfobar-pseudo-classes {
 }
 
 .gcli-in-ontab {
-  color: hsl(200,40%,70%);
+  color: hsl(210,0%,35%);
 }
 
 .gcli-in-todo {
-  color: hsl(48,28%,76%);
+  color: hsl(210,50%,35%);
 }
 
 .gcli-in-closebrace {
   color: hsl(0,0%,80%);
 }
 
-/* Highlight toolbar - Option menu */
+/* Responsive Mode */
 
-#inspector-option-toolbarbutton:-moz-focusring {
-  outline: 1px dotted hsla(210,30%,85%,0.4);
-  outline-offset: -2px;
+vbox[anonid=browserContainer][responsivemode] {
+  background: #2a3643 url("chrome://browser/skin/devtools/responsive-background.png");
+  box-shadow: 0 0 7px black inset;
+  padding: 0 20px 20px 20px;
+}
+
+stack[anonid=browserStack][responsivemode] {
+  box-shadow: 0 0 7px black;
+}
+
+.devtools-responsiveui-toolbar {
+  background: transparent;
+  margin: 10px 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.devtools-responsiveui-toolbar > menulist,
+.devtools-responsiveui-toolbar > toolbarbutton {
+  min-width: 22px;
+  border-radius: 0;
+}
+
+.devtools-responsiveui-toolbar:-moz-locale-dir(ltr) > *:first-child,
+.devtools-responsiveui-toolbar:-moz-locale-dir(rtl) > *:last-child {
+  margin-left: 0;
+}
+
+.devtools-responsiveui-resizebar {
+  width: 7px;
+  height: 24px;
+  cursor: ew-resize;
+  -moz-transform: translate(12px, -12px);
+  background-image: url("chrome://browser/skin/devtools/responsive-vertical-resizer.png");
+}
+
+.devtools-responsiveui-resizehandle {
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  -moz-transform: translate(12px, 12px);
+  background-image: url("chrome://browser/skin/devtools/responsive-se-resizer.png");
 }

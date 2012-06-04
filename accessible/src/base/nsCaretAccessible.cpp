@@ -5,6 +5,7 @@
 
 #include "nsCaretAccessible.h"
 
+#include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
@@ -180,27 +181,9 @@ nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
   nsCOMPtr<nsIDocument> documentNode(do_QueryInterface(aDOMDocument));
   DocAccessible* document = GetAccService()->GetDocAccessible(documentNode);
 
-#ifdef DEBUG_NOTIFICATIONS
-  nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(aSelection));
-
-  PRInt16 type = 0;
-  privSel->GetType(&type);
-
-  if (type == nsISelectionController::SELECTION_NORMAL ||
-      type == nsISelectionController::SELECTION_SPELLCHECK) {
-
-    bool isNormalSelection =
-      (type == nsISelectionController::SELECTION_NORMAL);
-
-    bool isIgnored = !document || !document->IsContentLoaded();
-    printf("\nSelection changed, selection type: %s, notification %s\n",
-           (isNormalSelection ? "normal" : "spellcheck"),
-           (isIgnored ? "ignored" : "pending"));
-  } else {
-    bool isIgnored = !document || !document->IsContentLoaded();
-    printf("\nSelection changed, selection type: unknown, notification %s\n",
-               (isIgnored ? "ignored" : "pending"));
-  }
+#ifdef DEBUG
+  if (logging::IsEnabled(logging::eSelection))
+    logging::SelChange(aSelection, document);
 #endif
 
   // Don't fire events until document is loaded.
@@ -243,7 +226,7 @@ nsCaretAccessible::NormalSelectionChanged(nsISelection* aSelection)
     return; // No selection
   }
 
-  nsHyperTextAccessible* textAcc =
+  HyperTextAccessible* textAcc =
     nsAccUtils::GetTextAccessibleFromSelection(aSelection);
   if (!textAcc)
     return;
@@ -278,7 +261,7 @@ nsCaretAccessible::SpellcheckSelectionChanged(nsISelection* aSelection)
   // misspelled word). If spellchecking is disabled (for example,
   // @spellcheck="false" on html:body) then we won't fire any event.
 
-  nsHyperTextAccessible* textAcc =
+  HyperTextAccessible* textAcc =
     nsAccUtils::GetTextAccessibleFromSelection(aSelection);
   if (!textAcc)
     return;

@@ -104,6 +104,9 @@ nsSVGBoolean::SetBaseValue(bool aValue, nsSVGElement *aSVGElement)
 void
 nsSVGBoolean::SetAnimValue(bool aValue, nsSVGElement *aSVGElement)
 {
+  if (mIsAnimated && mAnimVal == aValue) {
+    return;
+  }
   mAnimVal = aValue;
   mIsAnimated = true;
   aSVGElement->DidAnimateBoolean(mAttrEnum);

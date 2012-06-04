@@ -84,23 +84,24 @@ class ConcurrentRecordConsumer extends RecordConsumer {
 
   @Override
   public void run() {
+    Record record;
+
     while (true) {
-      synchronized (monitor) {
-        trace("run() took monitor.");
-        if (stopImmediately) {
-          debug("Stopping immediately. Clearing queue.");
-          delegate.getQueue().clear();
-          debug("Notifying consumer.");
-          consumerIsDone();
-          return;
-        }
-        debug("run() dropped monitor.");
-      }
       // The queue is concurrent-safe.
-      while (!delegate.getQueue().isEmpty()) {
-        trace("Grabbing record...");
-        Record record = delegate.getQueue().remove();
-        trace("Storing record... " + delegate);
+      while ((record = delegate.getQueue().poll()) != null) {
+        synchronized (monitor) {
+          trace("run() took monitor.");
+          if (stopImmediately) {
+            debug("Stopping immediately. Clearing queue.");
+            delegate.getQueue().clear();
+            debug("Notifying consumer.");
+            consumerIsDone();
+            return;
+          }
+          debug("run() dropped monitor.");
+        }
+
+        trace("Storing record with guid " + record.guid + ".");
         try {
           delegate.store(record);
         } catch (Exception e) {

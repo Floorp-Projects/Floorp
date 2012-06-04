@@ -7,6 +7,13 @@ var manager = null;
 var bufferCache = [];
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
+if (!SpecialPowers.isMainProcess()) {
+  window.runTest = function() {
+    todo(false, "Test disabled in child processes, for now");
+    finishTest();
+  }
+}
+
 function getView(size)
 {
   let buffer = new ArrayBuffer(size);
@@ -41,12 +48,12 @@ function compareBuffers(buffer1, buffer2)
 
 function getBlob(type, view)
 {
-  return new Blob([view], {type: type});
+  return utils.getBlob([view], {type: type});
 }
 
 function getFile(name, type, view)
 {
-  return new Blob([view], {type: type});
+  return utils.getFile(name, [view], {type: type});
 }
 
 function getRandomBlob(size)
@@ -203,6 +210,11 @@ function getUsageSync()
 function scheduleGC()
 {
   SpecialPowers.exactGC(window, continueToNextStep);
+}
+
+function getFileId(file)
+{
+  return utils.getFileId(file);
 }
 
 function hasFileInfo(name, id)

@@ -55,6 +55,16 @@ public:
   virtual nsISupports* GetParentObject();
 
   // And now our actual WebIDL API
+  // Constructors
+  static
+  already_AddRefed<TestInterface> Constructor(nsISupports*, ErrorResult&);
+  static
+  already_AddRefed<TestInterface> Constructor(nsISupports*, const nsAString&,
+                                              ErrorResult&);
+  static
+  already_AddRefed<TestInterface> Constructor(nsISupports*, uint32_t,
+                                              Nullable<bool>&, ErrorResult&);
+
   // Integer types
   int8_t GetReadonlyByte(ErrorResult&);
   int8_t GetWritableByte(ErrorResult&);
@@ -246,18 +256,21 @@ public:
   TestEnum ReceiveEnum(ErrorResult&);
 
   // Callback types
-  void PassCallback(JSObject*, ErrorResult&);
-  void PassNullableCallback(JSObject*, ErrorResult&);
-  void PassOptionalCallback(const Optional<JSObject*>&, ErrorResult&);
-  void PassOptionalNullableCallback(const Optional<JSObject*>&, ErrorResult&);
-  void PassOptionalNullableCallbackWithDefaultValue(JSObject*, ErrorResult&);
-  JSObject* ReceiveCallback(ErrorResult&);
-  JSObject* ReceiveNullableCallback(ErrorResult&);
+  void PassCallback(JSContext*, JSObject*, ErrorResult&);
+  void PassNullableCallback(JSContext*, JSObject*, ErrorResult&);
+  void PassOptionalCallback(JSContext*, const Optional<JSObject*>&,
+                            ErrorResult&);
+  void PassOptionalNullableCallback(JSContext*, const Optional<JSObject*>&,
+                                    ErrorResult&);
+  void PassOptionalNullableCallbackWithDefaultValue(JSContext*, JSObject*,
+                                                    ErrorResult&);
+  JSObject* ReceiveCallback(JSContext*, ErrorResult&);
+  JSObject* ReceiveNullableCallback(JSContext*, ErrorResult&);
 
   // Any types
-  void PassAny(JS::Value, ErrorResult&);
-  void PassOptionalAny(const Optional<JS::Value>&, ErrorResult&);
-  JS::Value ReceiveAny(ErrorResult&);
+  void PassAny(JSContext*, JS::Value, ErrorResult&);
+  void PassOptionalAny(JSContext*, const Optional<JS::Value>&, ErrorResult&);
+  JS::Value ReceiveAny(JSContext*, ErrorResult&);
 
   void PassObject(JSContext*, JSObject&, ErrorResult&);
   void PassNullableObject(JSContext*, JSObject*, ErrorResult&);
@@ -389,8 +402,8 @@ private:
   void PassOptionalArrayBuffer(Optional<ArrayBuffer>&, ErrorResult&) MOZ_DELETE;
   void PassOptionalNullableArrayBuffer(Optional<ArrayBuffer*>&, ErrorResult&) MOZ_DELETE;
   void PassOptionalEnum(Optional<TestEnum>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalCallback(Optional<JSObject*>&, ErrorResult&) MOZ_DELETE;
-  void PassOptionalNullableCallback(Optional<JSObject*>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalCallback(JSContext*, Optional<JSObject*>&, ErrorResult&) MOZ_DELETE;
+  void PassOptionalNullableCallback(JSContext*, Optional<JSObject*>&, ErrorResult&) MOZ_DELETE;
   void PassOptionalAny(Optional<JS::Value>&, ErrorResult) MOZ_DELETE;
 
   // And test that string stuff is always const

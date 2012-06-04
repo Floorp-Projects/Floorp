@@ -225,6 +225,78 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
 
 
 
+// Helper function for SetInlinePropertyOn*: is aNode a simple old <b>, <font>,
+// <span style="">, etc. that we can reuse instead of creating a new one?
+bool
+nsHTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
+                                     nsIAtom* aProperty,
+                                     const nsAString* aAttribute,
+                                     const nsAString* aValue)
+{
+  // aContent can be null, in which case we'll return false in a few lines
+  MOZ_ASSERT(aProperty);
+  MOZ_ASSERT_IF(aAttribute, aValue);
+
+  nsCOMPtr<dom::Element> element = do_QueryInterface(aContent);
+  if (!element) {
+    return false;
+  }
+
+  // First check for <b>, <i>, etc.
+  if (element->IsHTML(aProperty) && !element->GetAttrCount() &&
+      (!aAttribute || aAttribute->IsEmpty())) {
+    return true;
+  }
+
+  // Special cases for various equivalencies: <strong>, <em>, <s>
+  if (!element->GetAttrCount() &&
+      ((aProperty == nsGkAtoms::b && element->IsHTML(nsGkAtoms::strong)) ||
+       (aProperty == nsGkAtoms::i && element->IsHTML(nsGkAtoms::em)) ||
+       (aProperty == nsGkAtoms::strike && element->IsHTML(nsGkAtoms::s)))) {
+    return true;
+  }
+
+  // Now look for things like <font>
+  if (aAttribute && !aAttribute->IsEmpty()) {
+    nsCOMPtr<nsIAtom> atom = do_GetAtom(*aAttribute);
+    MOZ_ASSERT(atom);
+
+    if (element->IsHTML(aProperty) && IsOnlyAttribute(element, *aAttribute) &&
+        element->AttrValueIs(kNameSpaceID_None, atom, *aValue, eIgnoreCase)) {
+      // This is not quite correct, because it excludes cases like
+      // <font face=000> being the same as <font face=#000000>.
+      // Property-specific handling is needed (bug 760211).
+      return true;
+    }
+  }
+
+  // No luck so far.  Now we check for a <span> with a single style=""
+  // attribute that sets only the style we're looking for, if this type of
+  // style supports it
+  if (!mHTMLCSSUtils->IsCSSEditableProperty(element, aProperty,
+                                            aAttribute, aValue) ||
+      !element->IsHTML(nsGkAtoms::span) || element->GetAttrCount() != 1 ||
+      !element->HasAttr(kNameSpaceID_None, nsGkAtoms::style)) {
+    return false;
+  }
+
+  // Some CSS styles are not so simple.  For instance, underline is
+  // "text-decoration: underline", which decomposes into four different text-*
+  // properties.  So for now, we just create a span, add the desired style, and
+  // see if it matches.
+  nsCOMPtr<nsIContent> newSpan;
+  nsresult res = CreateHTMLContent(NS_LITERAL_STRING("span"),
+                                   getter_AddRefs(newSpan));
+  NS_ASSERTION(NS_SUCCEEDED(res), "CreateHTMLContent failed");
+  NS_ENSURE_SUCCESS(res, false);
+  mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(newSpan->AsElement(), aProperty,
+                                             aAttribute, aValue,
+                                             /*suppress transaction*/ true);
+
+  return mHTMLCSSUtils->ElementsSameStyle(newSpan->AsElement(), element);
+}
+
+
 nsresult
 nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode, 
                                             PRInt32 aStartOffset,
@@ -250,8 +322,7 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   
   // don't need to do anything if property already set on node
   bool bHasProp;
-  if (IsCSSEnabled() &&
-      mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
+  if (mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty,
                                            aAttribute, aValue)) {
     // the HTML styles defined by aProperty/aAttribute has a CSS equivalence
     // in this implementation for node; let's check if it carries those css styles
@@ -290,16 +361,12 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   if (aAttribute) {
     // look for siblings that are correct type of node
     nsIContent* sibling = GetPriorHTMLSibling(content);
-    if (sibling && sibling->Tag() == aProperty &&
-        HasAttrVal(sibling, aAttribute, *aValue) &&
-        IsOnlyAttribute(sibling, *aAttribute)) {
+    if (IsSimpleModifiableNode(sibling, aProperty, aAttribute, aValue)) {
       // previous sib is already right kind of inline node; slide this over into it
       return MoveNode(node, sibling->AsDOMNode(), -1);
     }
     sibling = GetNextHTMLSibling(content);
-    if (sibling && sibling->Tag() == aProperty &&
-        HasAttrVal(sibling, aAttribute, *aValue) &&
-        IsOnlyAttribute(sibling, *aAttribute)) {
+    if (IsSimpleModifiableNode(sibling, aProperty, aAttribute, aValue)) {
       // following sib is already right kind of inline node; slide this over into it
       return MoveNode(node, sibling->AsDOMNode(), 0);
     }
@@ -349,13 +416,43 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
     return NS_OK;
   }
 
+  // First check if there's an adjacent sibling we can put our node into.
+  nsresult res;
+  nsCOMPtr<nsIContent> previousSibling = GetPriorHTMLSibling(aNode);
+  nsCOMPtr<nsIContent> nextSibling = GetNextHTMLSibling(aNode);
+  if (IsSimpleModifiableNode(previousSibling, aProperty, aAttribute, aValue)) {
+    res = MoveNode(aNode, previousSibling, -1);
+    NS_ENSURE_SUCCESS(res, res);
+    if (IsSimpleModifiableNode(nextSibling, aProperty, aAttribute, aValue)) {
+      res = JoinNodes(previousSibling, nextSibling);
+      NS_ENSURE_SUCCESS(res, res);
+    }
+    return NS_OK;
+  }
+  if (IsSimpleModifiableNode(nextSibling, aProperty, aAttribute, aValue)) {
+    res = MoveNode(aNode, nextSibling, 0);
+    NS_ENSURE_SUCCESS(res, res);
+    return NS_OK;
+  }
+
+  // don't need to do anything if property already set on node
+  if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty,
+                                           aAttribute, aValue)) {
+    if (mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(
+          aNode, aProperty, aAttribute, *aValue, COMPUTED_STYLE_TYPE)) {
+      return NS_OK;
+    }
+  } else if (IsTextPropertySetByContent(aNode, aProperty,
+                                        aAttribute, aValue)) {
+    return NS_OK;
+  }
+
   bool useCSS = (IsCSSEnabled() &&
                  mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty,
                                                       aAttribute, aValue)) ||
                 // bgcolor is always done using CSS
                 aAttribute->EqualsLiteral("bgcolor");
 
-  nsresult res;
   if (useCSS) {
     nsCOMPtr<nsIDOMNode> tmp = aNode->AsDOMNode();
     // We only add style="" to <span>s with no attributes (bug 746515).  If we
@@ -373,27 +470,6 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
                                                      aAttribute, aValue,
                                                      &count, false);
     NS_ENSURE_SUCCESS(res, res);
-
-    nsCOMPtr<nsIDOMNode> nextSibling, previousSibling;
-    GetNextHTMLSibling(tmp, address_of(nextSibling));
-    GetPriorHTMLSibling(tmp, address_of(previousSibling));
-    if (nextSibling || previousSibling) {
-      nsCOMPtr<nsIDOMNode> mergeParent;
-      res = tmp->GetParentNode(getter_AddRefs(mergeParent));
-      NS_ENSURE_SUCCESS(res, res);
-      if (previousSibling &&
-          nsEditor::NodeIsType(previousSibling, nsEditProperty::span) &&
-          NodesSameType(tmp, previousSibling)) {
-        res = JoinNodes(previousSibling, tmp, mergeParent);
-        NS_ENSURE_SUCCESS(res, res);
-      }
-      if (nextSibling &&
-          nsEditor::NodeIsType(nextSibling, nsEditProperty::span) &&
-          NodesSameType(tmp, nextSibling)) {
-        res = JoinNodes(tmp, nextSibling, mergeParent);
-        NS_ENSURE_SUCCESS(res, res);
-      }
-    }
     return NS_OK;
   }
 
@@ -402,26 +478,6 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
     // Just set the attribute on it.
     nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
     return SetAttribute(elem, *aAttribute, *aValue);
-  }
-
-  // Either put it inside a neighboring node, or make a new one.
-  // is either of its neighbors the right kind of node?
-  if (aAttribute) {
-    nsIContent* priorNode = GetPriorHTMLSibling(aNode);
-    if (priorNode && priorNode->Tag() == aProperty &&
-        HasAttrVal(priorNode, aAttribute, *aValue) &&
-        IsOnlyAttribute(priorNode, *aAttribute)) {
-      // previous sib is already right kind of inline node; slide this over into it
-      return MoveNode(aNode->AsDOMNode(), priorNode->AsDOMNode(), -1);
-    }
-
-    nsIContent* nextNode = GetNextHTMLSibling(aNode);
-    if (nextNode && nextNode->Tag() == aProperty &&
-        HasAttrVal(nextNode, aAttribute, *aValue) &&
-        IsOnlyAttribute(nextNode, *aAttribute)) {
-      // following sib is already right kind of inline node; slide this over into it
-      return MoveNode(aNode->AsDOMNode(), nextNode->AsDOMNode(), 0);
-    }
   }
 
   // ok, chuck it in its very own container
@@ -857,23 +913,6 @@ bool nsHTMLEditor::HasAttr(nsIDOMNode* aNode,
   return element->HasAttr(kNameSpaceID_None, atom);
 }
 
-
-bool nsHTMLEditor::HasAttrVal(const nsIContent* aNode,
-                              const nsAString* aAttribute,
-                              const nsAString& aValue)
-{
-  MOZ_ASSERT(aNode);
-
-  if (!aAttribute || aAttribute->IsEmpty()) {
-    // everybody has the 'null' attribute
-    return true;
-  }
-
-  nsCOMPtr<nsIAtom> atom = do_GetAtom(*aAttribute);
-  NS_ENSURE_TRUE(atom, false);
-
-  return aNode->AttrValueIs(kNameSpaceID_None, atom, aValue, eIgnoreCase);
-}
 
 nsresult nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsIDOMRange *inRange)
 {
@@ -1498,7 +1537,8 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
     // Let's see in what kind of element the selection is
     PRInt32 offset;
     nsCOMPtr<nsIDOMNode> selectedNode;
-    res = GetStartNodeAndOffset(selection, getter_AddRefs(selectedNode), &offset);
+    GetStartNodeAndOffset(selection, getter_AddRefs(selectedNode), &offset);
+    NS_ENSURE_TRUE(selectedNode, NS_OK);
     if (IsTextNode(selectedNode)) {
       nsCOMPtr<nsIDOMNode> parent;
       res = selectedNode->GetParentNode(getter_AddRefs(parent));

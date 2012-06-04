@@ -1,0 +1,52 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+<p>Mock BrowserID endpoint for a logged-in user</p>
+</body>
+<script>
+
+/**
+ * Object containing valid email/key paris for this user. An assertion is simply
+ * the string "_assertion_$audience" appended to the email. The exception is
+ * when the email address is "sameEmailAs@example.org" the assertion will
+ * be "assertion_for_sameEmailAs".
+ */
+var _emails = {
+  "default@example.org": "default@example.org_key",
+  "specific@example.org": "specific@example.org_key",
+  "sameEmailAs@example.org": "sameEmailAs@example.org_key"
+};
+var _sameEmailAs = "sameEmailAs@example.org";
+
+// Mock internal API
+window.BrowserID = {};
+window.BrowserID.User = {
+  getStoredEmailKeypairs: function() {
+    return _emails;
+  },
+  getAssertion: function(email, audience, success, error) {
+    if (email == _sameEmailAs) {
+      success("assertion_for_sameEmailAs");
+      return;
+    }
+    if (email in _emails) {
+      success(email + "_assertion_" + audience);
+      return;
+    }
+    error("invalid email specified");
+  }
+};
+window.BrowserID.Storage = {
+  site: {
+    get: function(domain, key) {
+      if (key == "email") {
+        return _sameEmailAs;
+      }
+      return "";
+    }
+  }
+};
+</script>
+</html>

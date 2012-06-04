@@ -119,7 +119,11 @@ nsXFormsInputAccessible::
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputAccessible, Accessible, nsHyperTextAccessible, nsIAccessibleText, nsIAccessibleEditableText)
+NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputAccessible,
+                             Accessible,
+                             HyperTextAccessible,
+                             nsIAccessibleText,
+                             nsIAccessibleEditableText)
 
 role
 nsXFormsInputAccessible::NativeRole()
@@ -551,7 +555,13 @@ nsXFormsSelectComboboxAccessible::NativeState()
   else
     state |= states::COLLAPSED;
 
-  return state | states::HASPOPUP | states::FOCUSABLE;
+  return state | states::HASPOPUP;
+}
+
+PRUint64
+nsXFormsSelectComboboxAccessible::NativeInteractiveState() const
+{
+  return NativelyUnavailable() ? states::UNAVAILABLE : states::FOCUSABLE;
 }
 
 bool
@@ -581,15 +591,17 @@ PRUint64
 nsXFormsItemComboboxAccessible::NativeState()
 {
   PRUint64 state = nsXFormsSelectableItemAccessible::NativeState();
-
-  if (state & states::UNAVAILABLE)
-    return state;
-
-  state |= states::SELECTABLE;
   if (IsSelected())
     state |= states::SELECTED;
 
   return state;
+}
+
+PRUint64
+nsXFormsItemComboboxAccessible::NativeInteractiveState() const
+{
+  return NativelyUnavailable() ?
+    states::UNAVAILABLE : states::FOCUSABLE | states::SELECTABLE;
 }
 
 NS_IMETHODIMP

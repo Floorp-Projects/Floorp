@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=759666
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for HTMLOptionElement disabled attribute and pseudo-class</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=759666">Mozilla Bug 759666</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for HTMLOptionElement disabled attribute and pseudo-class **/
+
+var testCases = [
+  // Static checks.
+  { html: "<option></option>",
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<option disabled></option>",
+    result: { attr: "", idl: true, pseudo: true } },
+  { html: "<optgroup><option></option></otpgroup>",
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup><option disabled></option></optgroup>",
+    result: { attr: "", idl: true, pseudo: true } },
+  { html: "<optgroup disabled><option disabled></option></optgroup>",
+    result: { attr: "", idl: true, pseudo: true } },
+  { html: "<optgroup disabled><option></option></optgroup>",
+    result: { attr: null, idl: false, pseudo: true } },
+  { html: "<optgroup><optgroup disabled><option></option></optgroup></optgroup>",
+    result: { attr: null, idl: false, pseudo: true } },
+  { html: "<optgroup disabled><optgroup><option></option></optgroup></optgroup>",
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup disabled><optgroup><option disabled></option></optgroup></optgroup>",
+    result: { attr: "", idl: true, pseudo: true } },
+
+  // Dynamic checks: changing disable value.
+  { html: "<option></option>",
+    modifier: function(c) { c.querySelector('option').disabled = true; },
+    result: { attr: "", idl: true, pseudo: true } },
+  { html: "<option disabled></option>",
+    modifier: function(c) { c.querySelector('option').disabled = false; },
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup><option></option></otpgroup>",
+    modifier: function(c) { c.querySelector('optgroup').disabled = true; },
+    result: { attr: null, idl: false, pseudo: true } },
+  { html: "<optgroup><option disabled></option></optgroup>",
+    modifier: function(c) { c.querySelector('option').disabled = false; },
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup disabled><option disabled></option></optgroup>",
+    modifier: function(c) { c.querySelector('optgroup').disabled = false; },
+    result: { attr: "", idl: true, pseudo: true } },
+  { html: "<optgroup disabled><option disabled></option></optgroup>",
+    modifier: function(c) { c.querySelector('option').disabled = false; },
+    result: { attr: null, idl: false, pseudo: true } },
+  { html: "<optgroup disabled><option disabled></option></optgroup>",
+    modifier: function(c) { c.querySelector('optgroup').disabled = c.querySelector('option').disabled = false; },
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup disabled><option></option></optgroup>",
+    modifier: function(c) { c.querySelector('optgroup').disabled = false; },
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup><optgroup disabled><option></option></optgroup></optgroup>",
+    modifier: function(c) { c.querySelector('optgroup[disabled]').disabled = false; },
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup disabled><optgroup><option></option></optgroup></optgroup>",
+    modifier: function(c) { c.querySelector('optgroup[disabled]').disabled = false; },
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup disabled><optgroup><option disabled></option></optgroup></optgroup>",
+    modifier: function(c) { c.querySelector('optgroup').disabled = false; },
+    result: { attr: "", idl: true, pseudo: true } },
+  { html: "<optgroup disabled><optgroup><option disabled></option></optgroup></optgroup>",
+    modifier: function(c) { c.querySelector('option').disabled = false; },
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup disabled><optgroup><option disabled></option></optgroup></optgroup>",
+    modifier: function(c) { c.querySelector('option').disabled = c.querySelector('option').disabled = false; },
+    result: { attr: null, idl: false, pseudo: false } },
+
+  // Dynamic checks: moving option element.
+  { html: "<optgroup id='a'><option></option></optgroup><optgroup id='b'></optgroup>",
+    modifier: function(c) { c.querySelector('#b').appendChild(c.querySelector('option')); },
+    result: { attr: null, idl: false, pseudo: false } },
+  { html: "<optgroup id='a'><option disabled></option></optgroup><optgroup id='b'></optgroup>",
+    modifier: function(c) { c.querySelector('#b').appendChild(c.querySelector('option')); },
+    result: { attr: "", idl: true, pseudo: true } },
+  { html: "<optgroup id='a'><option></option></optgroup><optgroup disabled id='b'></optgroup>",
+    modifier: function(c) { c.querySelector('#b').appendChild(c.querySelector('option')); },
+    result: { attr: null, idl: false, pseudo: true } },
+  { html: "<optgroup disabled id='a'><option></option></optgroup><optgroup id='b'></optgroup>",
+    modifier: function(c) { c.querySelector('#b').appendChild(c.querySelector('option')); },
+    result: { attr: null, idl: false, pseudo: false } },
+];
+
+var content = document.getElementById('content');
+
+testCases.forEach(function(testCase) {
+  var result = testCase.result;
+
+  content.innerHTML = testCase.html;
+
+  if (testCase.modifier !== undefined) {
+    testCase.modifier(content);
+  }
+
+  var option = content.querySelector('option');
+  is(option.getAttribute('disabled'), result.attr, "disabled content attribute value should be " + result.attr);
+  is(option.disabled, result.idl, "disabled idl attribute value should be " + result.idl);
+  is(option.mozMatchesSelector(":disabled"), result.pseudo, ":disabled state should be " + result.pseudo);
+  is(option.mozMatchesSelector(":enabled"), !result.pseudo, ":enabled state should be " + !result.pseudo);
+
+  content.innerHTML = "";
+});
+
+</script>
+</pre>
+</body>
+</html>

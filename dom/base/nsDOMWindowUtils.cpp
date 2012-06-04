@@ -63,6 +63,8 @@
 #include "mozilla/dom/indexedDB/FileInfo.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "sampler.h"
+#include "nsDOMBlobBuilder.h"
+#include "nsIDOMFileHandle.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -971,8 +973,11 @@ nsDOMWindowUtils::GarbageCollect(nsICycleCollectorListener *aListener,
   }
 #endif
 
+  for (int i = 0; i < 3; i++) {
+    nsJSContext::GarbageCollectNow(js::gcreason::DOM_UTILS, nsGCNormal, true);
+    nsJSContext::CycleCollectNow(aListener, aExtraForgetSkippableCalls);
+  }
   nsJSContext::GarbageCollectNow(js::gcreason::DOM_UTILS, nsGCNormal, true);
-  nsJSContext::CycleCollectNow(aListener, aExtraForgetSkippableCalls);
 
   return NS_OK;
 }
@@ -2267,14 +2272,99 @@ nsDOMWindowUtils::CheckAndClearPaintedState(nsIDOMElement* aElement, bool* aResu
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::GetFileId(nsIDOMBlob* aBlob, PRInt64* aResult)
+static nsresult
+GetFileOrBlob(const nsAString& aName, const jsval& aBlobParts,
+              const jsval& aParameters, JSContext* aCx,
+              PRUint8 aOptionalArgCount, nsISupports** aResult)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  *aResult = aBlob->GetFileId();
+  nsresult rv;
+
+  nsCOMPtr<nsISupports> file;
+
+  if (aName.IsVoid()) {
+    rv = nsDOMMultipartFile::NewBlob(getter_AddRefs(file));
+  }
+  else {
+    rv = nsDOMMultipartFile::NewFile(aName, getter_AddRefs(file));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIJSNativeInitializer> initializer = do_QueryInterface(file);
+  NS_ASSERTION(initializer, "what?");
+
+  jsval args[2] = { aBlobParts, aParameters };
+
+  rv = initializer->Initialize(nsnull, aCx, nsnull, aOptionalArgCount, args);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  file.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetFile(const nsAString& aName, const jsval& aBlobParts,
+                          const jsval& aParameters, JSContext* aCx,
+                          PRUint8 aOptionalArgCount, nsIDOMFile** aResult)
+{
+  nsCOMPtr<nsISupports> file;
+  nsresult rv = GetFileOrBlob(aName, aBlobParts, aParameters, aCx,
+                              aOptionalArgCount, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMFile> result = do_QueryInterface(file);
+  result.forget(aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetBlob(const jsval& aBlobParts, const jsval& aParameters,
+                          JSContext* aCx, PRUint8 aOptionalArgCount,
+                          nsIDOMBlob** aResult)
+{
+  nsAutoString name;
+  name.SetIsVoid(true);
+
+  nsCOMPtr<nsISupports> blob;
+  nsresult rv = GetFileOrBlob(name, aBlobParts, aParameters, aCx,
+                              aOptionalArgCount, getter_AddRefs(blob));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMBlob> result = do_QueryInterface(blob);
+  result.forget(aResult);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetFileId(const jsval& aFile, JSContext* aCx,
+                            PRInt64* aResult)
+{
+
+  if (!JSVAL_IS_PRIMITIVE(aFile)) {
+    JSObject* obj = JSVAL_TO_OBJECT(aFile);
+
+    nsISupports* nativeObj =
+      nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, obj);
+
+    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(nativeObj);
+    if (blob) {
+      *aResult = blob->GetFileId();
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMFileHandle> fileHandle = do_QueryInterface(nativeObj);
+    if (fileHandle) {
+      *aResult = fileHandle->GetFileId();
+      return NS_OK;
+    }
+  }
+
+  *aResult = -1;
   return NS_OK;
 }
 

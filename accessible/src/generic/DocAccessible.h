@@ -10,9 +10,8 @@
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessiblePivot.h"
 
+#include "HyperTextAccessibleWrap.h"
 #include "nsEventShell.h"
-#include "nsHyperTextAccessibleWrap.h"
-#include "NotificationController.h"
 
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
@@ -26,12 +25,16 @@
 #include "nsCOMArray.h"
 #include "nsIDocShellTreeNode.h"
 
+template<class Class, class Arg>
+class TNotification;
+class NotificationController;
+
 class nsIScrollableView;
 class nsAccessiblePivot;
 
 const PRUint32 kDefaultCacheSize = 256;
 
-class DocAccessible : public nsHyperTextAccessibleWrap,
+class DocAccessible : public HyperTextAccessibleWrap,
                       public nsIAccessibleDocument,
                       public nsIDocumentObserver,
                       public nsIObserver,
@@ -81,6 +84,8 @@ public:
   virtual Accessible* FocusedChild();
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
+  virtual bool NativelyUnavailable() const;
   virtual void ApplyARIAState(PRUint64* aState) const;
 
   virtual void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
@@ -91,7 +96,7 @@ public:
 
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
 
-  // nsHyperTextAccessible
+  // HyperTextAccessible
   virtual already_AddRefed<nsIEditor> GetEditor() const;
 
   // DocAccessible
@@ -149,7 +154,8 @@ public:
   /**
    * Return the parent document.
    */
-  DocAccessible* ParentDocument() const;
+  DocAccessible* ParentDocument() const
+    { return mParent ? mParent->Document() : nsnull; }
 
   /**
    * Return the child document count.
@@ -208,10 +214,7 @@ public:
   /**
    * Bind the child document to the tree.
    */
-  void BindChildDocument(DocAccessible* aDocument)
-  {
-    mNotificationController->ScheduleChildDocBinding(aDocument);
-  }
+  void BindChildDocument(DocAccessible* aDocument);
 
   /**
    * Process the generic notification.
@@ -222,14 +225,8 @@ public:
    */
   template<class Class, class Arg>
   void HandleNotification(Class* aInstance,
-                                 typename TNotification<Class, Arg>::Callback aMethod,
-                                 Arg* aArg)
-  {
-    if (mNotificationController) {
-      mNotificationController->HandleNotification<Class, Arg>(aInstance,
-                                                              aMethod, aArg);
-    }
-  }
+                          typename TNotification<Class, Arg>::Callback aMethod,
+                          Arg* aArg);
 
   /**
    * Return the cached accessible by the given DOM node if it's in subtree of
@@ -329,14 +326,7 @@ public:
   /**
    * Updates accessible tree when rendered text is changed.
    */
-  void UpdateText(nsIContent* aTextNode)
-  {
-    NS_ASSERTION(mNotificationController, "The document was shut down!");
-
-    // Ignore the notification if initial tree construction hasn't been done yet.
-    if (mNotificationController && HasLoadState(eTreeConstructed))
-      mNotificationController->ScheduleTextUpdate(aTextNode);
-  }
+  void UpdateText(nsIContent* aTextNode);
 
   /**
    * Recreate an accessible, results in hide/show events pair.

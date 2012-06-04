@@ -103,23 +103,6 @@ nsresult DataOwnerAdapter::Create(DataOwner* aDataOwner,
 ////////////////////////////////////////////////////////////////////////////
 // nsDOMFileBase implementation
 
-DOMCI_DATA(File, nsDOMFileBase)
-DOMCI_DATA(Blob, nsDOMFileBase)
-
-NS_INTERFACE_MAP_BEGIN(nsDOMFileBase)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, mIsFile)
-  NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
-  NS_INTERFACE_MAP_ENTRY(nsIMutable)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(File, mIsFile)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(Blob, !mIsFile)
-NS_INTERFACE_MAP_END
-
-// Threadsafe when GetMutable() == false
-NS_IMPL_THREADSAFE_ADDREF(nsDOMFileBase)
-NS_IMPL_THREADSAFE_RELEASE(nsDOMFileBase)
-
 NS_IMETHODIMP
 nsDOMFileBase::GetName(nsAString &aFileName)
 {
@@ -302,7 +285,7 @@ nsDOMFileBase::GetFileId()
 {
   PRInt64 id = -1;
 
-  if (IsStoredFile() && IsWholeFile()) {
+  if (IsStoredFile() && IsWholeFile() && !IsSnapshot()) {
     if (!indexedDB::IndexedDatabaseManager::IsClosed()) {
       indexedDB::IndexedDatabaseManager::FileMutex().Lock();
     }
@@ -353,7 +336,14 @@ nsDOMFileBase::GetFileInfo(indexedDB::FileManager* aFileManager)
   // A slice created from a stored file must keep the file info alive.
   // However, we don't support sharing of slices yet, so the slice must be
   // copied again. That's why we have to ignore the first file info.
-  PRUint32 startIndex = IsStoredFile() && !IsWholeFile() ? 1 : 0;
+  // Snapshots are handled in a similar way (they have to be copied).
+  PRUint32 startIndex;
+  if (IsStoredFile() && (!IsWholeFile() || IsSnapshot())) {
+    startIndex = 1;
+  }
+  else {
+    startIndex = 0;
+  }
 
   MutexAutoLock lock(indexedDB::IndexedDatabaseManager::FileMutex());
 
@@ -420,9 +410,47 @@ nsDOMFileBase::SetMutable(bool aMutable)
 }
 
 ////////////////////////////////////////////////////////////////////////////
+// nsDOMFile implementation
+
+DOMCI_DATA(File, nsDOMFile)
+DOMCI_DATA(Blob, nsDOMFile)
+
+NS_INTERFACE_MAP_BEGIN(nsDOMFile)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, mIsFile)
+  NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
+  NS_INTERFACE_MAP_ENTRY(nsIMutable)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(File, mIsFile)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(Blob, !mIsFile)
+NS_INTERFACE_MAP_END
+
+// Threadsafe when GetMutable() == false
+NS_IMPL_THREADSAFE_ADDREF(nsDOMFile)
+NS_IMPL_THREADSAFE_RELEASE(nsDOMFile)
+
+////////////////////////////////////////////////////////////////////////////
+// nsDOMFileCC implementation
+
+NS_IMPL_CYCLE_COLLECTION_0(nsDOMFileCC)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMFileCC)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFile)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMBlob)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, mIsFile)
+  NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
+  NS_INTERFACE_MAP_ENTRY(nsIMutable)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(File, mIsFile)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(Blob, !mIsFile)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMFileCC)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMFileCC)
+
+////////////////////////////////////////////////////////////////////////////
 // nsDOMFileFile implementation
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsDOMFileFile, nsDOMFileBase,
+NS_IMPL_ISUPPORTS_INHERITED1(nsDOMFileFile, nsDOMFile,
                              nsIJSNativeInitializer)
 
 already_AddRefed<nsIDOMBlob>

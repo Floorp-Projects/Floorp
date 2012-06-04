@@ -37,6 +37,7 @@ MAKEFILES_dom="
   dom/interfaces/xul/Makefile
   dom/base/Makefile
   dom/battery/Makefile
+  dom/file/Makefile
   dom/indexedDB/Makefile
   dom/ipc/Makefile
   dom/locales/Makefile
@@ -1581,6 +1582,18 @@ if [ "$MOZ_WEBM" ]; then
       media/libvpx/Makefile
     "
   fi
+fi
+
+if [ "$MOZ_MEDIA_PLUGINS" ]; then
+  add_makefiles "
+    content/media/plugins/Makefile
+  "
+fi
+
+if [ "$MOZ_OMX_PLUGIN" ]; then
+  add_makefiles "
+    media/omx-plugin/Makefile
+  "
 fi
 
 if [ "$MOZ_WAVE" ]; then

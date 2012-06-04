@@ -69,6 +69,10 @@ struct hb_ot_map_t
   inline void position (hb_font_t *font, hb_buffer_t *buffer) const
   { apply (1, (hb_ot_map_t::apply_lookup_func_t) hb_ot_layout_position_lookup, font, buffer); }
 
+  HB_INTERNAL void substitute_closure (hb_face_t *face,
+				       hb_set_t *glyphs) const;
+
+
   inline void finish (void) {
     features.finish ();
     lookups[0].finish ();

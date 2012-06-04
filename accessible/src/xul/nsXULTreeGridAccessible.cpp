@@ -1103,7 +1103,7 @@ nsXULTreeGridCellAccessible::NativeState()
     return states::DEFUNCT;
 
   // selectable/selected state
-  PRUint64 states = states::SELECTABLE;
+  PRUint64 states = states::SELECTABLE; // keep in sync with NativeInteractiveState
 
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
@@ -1126,6 +1126,12 @@ nsXULTreeGridCellAccessible::NativeState()
   }
 
   return states;
+}
+
+PRUint64
+nsXULTreeGridCellAccessible::NativeInteractiveState() const
+{
+  return states::SELECTABLE;
 }
 
 PRInt32

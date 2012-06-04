@@ -13,30 +13,6 @@ let doc;
 let ruleDialog;
 let ruleView;
 
-function waitForEditorFocus(aParent, aCallback)
-{
-  aParent.addEventListener("focus", function onFocus(evt) {
-    if (inplaceEditor(evt.target)) {
-      aParent.removeEventListener("focus", onFocus, true);
-      let editor = inplaceEditor(evt.target);
-      executeSoon(function() {
-        aCallback(editor);
-      });
-    }
-  }, true);
-}
-
-function waitForEditorBlur(aEditor, aCallback)
-{
-  let input = aEditor.input;
-  input.addEventListener("blur", function onBlur() {
-    input.removeEventListener("blur", onBlur, false);
-    executeSoon(function() {
-      aCallback();
-    });
-  }, false);
-}
-
 var gRuleViewChanged = false;
 function ruleViewChanged()
 {

@@ -1600,7 +1600,7 @@ public:
     eDeprecatedOperationCount
   };
 #undef DEPRECATED_OPERATION
-  void WarnOnceAbout(DeprecatedOperations aOperation);
+  void WarnOnceAbout(DeprecatedOperations aOperation, bool asError = false);
 
   virtual void PostVisibilityUpdateEvent() = 0;
   

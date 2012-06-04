@@ -594,6 +594,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_HOLE:
           case JSOP_LOOPHEAD:
           case JSOP_LOOPENTRY:
+          case JSOP_ACTUALSFILLED:
           case JSOP_NOTEARG:
             break;
 

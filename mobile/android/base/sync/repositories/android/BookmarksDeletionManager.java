@@ -12,7 +12,6 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
-import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 
 /**
  * Queue up deletions. Process them at the end.
@@ -222,11 +221,8 @@ public class BookmarksDeletionManager {
       return;
     }
     Logger.trace(LOG_TAG, "Invoking store callback for " + nonFolderGUIDs.length + " GUIDs.");
-    final long now = System.currentTimeMillis();
-    BookmarkRecord r = new BookmarkRecord(null, "bookmarks", now, true);
     for (String guid : nonFolderGUIDs) {
-      r.guid = guid;
-      delegate.onRecordStoreSucceeded(r);
+      delegate.onRecordStoreSucceeded(guid);
     }
   }
 

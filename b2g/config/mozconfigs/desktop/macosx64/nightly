@@ -1,0 +1,27 @@
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
+ac_add_options --enable-codesighs
+ac_add_options --enable-signmar
+
+# Nightlies only since this has a cost in performance
+ac_add_options --enable-js-diagnostics
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+export MOZ_TELEMETRY_REPORTING=1
+mk_add_options MOZ_MAKE_FLAGS="-j12"
+
+#ac_add_options --with-macbundlename-prefix=Firefox
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors
+ac_add_options --with-ccache
+
+# B2G Stuff
+ac_add_options --enable-application=b2g
+ac_add_options --enable-debug-symbols
+ac_add_options --with-ccache
+ac_add_options --enable-marionette
+
+export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP

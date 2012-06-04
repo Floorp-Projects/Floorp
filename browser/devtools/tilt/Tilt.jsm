@@ -100,6 +100,7 @@ Tilt.prototype = {
     // make sure the visualizer object was initialized properly
     if (!this.visualizers[id].isInitialized()) {
       this.destroy(id);
+      this.failureCallback && this.failureCallback();
       return;
     }
 
@@ -260,14 +261,14 @@ Tilt.prototype = {
     let onOpened = function() {
       if (this.inspector && this.highlighter && this.currentInstance) {
         this.inspector.stopInspecting();
-        this.inspector.inspectToolbutton.disabled = true;
+        this.inspectButton.disabled = true;
         this.highlighter.hide();
       }
     }.bind(this);
 
     let onClosed = function() {
       if (this.inspector && this.highlighter) {
-        this.inspector.inspectToolbutton.disabled = false;
+        this.inspectButton.disabled = false;
         this.highlighter.show();
       }
     }.bind(this);
@@ -333,5 +334,12 @@ Tilt.prototype = {
   get tiltButton()
   {
     return this.chromeWindow.document.getElementById("inspector-3D-button");
+  },
+
+  /**
+   * Gets the Inspect button in the Inspector toolbar.
+   */
+  get inspectButton() {
+    return this.chromeWindow.document.getElementById("inspector-inspect-toolbutton");
   }
 };

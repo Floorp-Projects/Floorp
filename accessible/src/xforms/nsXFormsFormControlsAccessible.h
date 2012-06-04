@@ -261,6 +261,7 @@ public:
   // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
   virtual bool CanHaveAnonChildren();
 };
 
@@ -283,6 +284,7 @@ public:
   // Accessible
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
 };
 
 #endif

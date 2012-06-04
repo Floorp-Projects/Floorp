@@ -52,6 +52,7 @@ CPPSRCS	=                        \
   hb-ot-shape-normalize.cc       \
   hb-ot-shape.cc                 \
   hb-ot-tag.cc                   \
+  hb-set.cc                      \
   hb-shape.cc                    \
   hb-unicode.cc                  \
   hb-warning.cc                  \
@@ -69,6 +70,7 @@ EXPORTS_harfbuzz = \
   hb-ot-layout.h   \
   hb-ot-tag.h      \
   hb-ot-shape.h    \
+  hb-set.h         \
   hb-shape.h       \
   hb-unicode.h     \
   hb-version.h     \

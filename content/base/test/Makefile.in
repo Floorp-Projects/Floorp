@@ -255,6 +255,7 @@ _TEST_FILES1 = \
 		test_DOMException.html \
 		test_mutationobservers.html \
 		mutationobserver_dialog.html \
+		test_bug744830.html \
 		$(NULL)
 
 _TEST_FILES2 = \

@@ -68,7 +68,7 @@ function testEvalCall() {
          "Second frame should not be selected after click inside the first frame.");
 
       gDebugger.DebuggerController.activeThread.resume(function() {
-        closeDebuggerAndFinish(gTab);
+        closeDebuggerAndFinish();
       });
     }}, 0);
   });

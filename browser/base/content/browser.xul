@@ -1034,8 +1034,10 @@
                          tooltiptext="&devToolbarCloseButton.tooltiptext;"/>
 #endif
           <stack class="gclitoolbar-stack-node" flex="1">
-            <description class="gclitoolbar-prompt">&#187;</description>
-            <description class="gclitoolbar-complete-node"/>
+            <hbox class="gclitoolbar-prompt">
+              <label class="gclitoolbar-prompt-label">&#187;</label>
+            </hbox>
+            <hbox class="gclitoolbar-complete-node"/>
             <textbox class="gclitoolbar-input-node" rows="1"/>
           </stack>
           <toolbarbutton id="developer-toolbar-webconsole"
@@ -1047,6 +1049,11 @@
                          class="devtools-toolbarbutton"
                          hidden="true"
                          command="Tools:Inspect"/>
+          <toolbarbutton id="developer-toolbar-responsiveui"
+                         label="&responsiveUI.label;"
+                         class="devtools-toolbarbutton"
+                         hidden="true"
+                         command="Tools:ResponsiveUI"/>
           <toolbarbutton id="developer-toolbar-debugger"
                          label="&scriptsButton.label;"
                          class="devtools-toolbarbutton"

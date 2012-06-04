@@ -86,6 +86,18 @@ var gAccRetrieval = Components.classes["@mozilla.org/accessibleRetrieval;1"].
   getService(nsIAccessibleRetrieval);
 
 /**
+ * Enable/disable logging.
+ */
+function enableLogging(aModules)
+{
+  gAccRetrieval.setLogging(aModules);
+}
+function disableLogging()
+{
+  gAccRetrieval.setLogging("");
+}
+
+/**
  * Invokes the given function when document is loaded and focused. Preferable
  * to mochitests 'addLoadEvent' function -- additionally ensures state of the
  * document accessible is not busy.

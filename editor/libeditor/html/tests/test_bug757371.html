@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=757371
+-->
+<title>Test for Bug 757371</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=757371">Mozilla Bug 757371</a>
+<div contenteditable></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var div = document.querySelector("div");
+  div.focus();
+  getSelection().collapse(div, 0);
+  document.execCommand("bold");
+  sendString("ab");
+  sendKey("BACK_SPACE");
+  sendChar("b");
+
+  is(div.innerHTML, "<b>ab</b>");
+
+  SimpleTest.finish();
+});
+</script>

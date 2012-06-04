@@ -177,6 +177,8 @@ protected:
   nsRefPtr<gfxContext> mDefaultTarget;
   // The context to draw into.
   nsRefPtr<gfxContext> mTarget;
+  // A context we want our shadow to draw into.
+  nsRefPtr<gfxContext> mShadowTarget;
   // Image factory we use.
   nsRefPtr<ImageFactory> mFactory;
 

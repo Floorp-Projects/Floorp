@@ -117,6 +117,7 @@ public:
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
   virtual bool CanHaveAnonChildren();
 
   // Widgets
@@ -135,7 +136,7 @@ private:
 /**
  * Class represents xul:listcell.
  */
-class nsXULListCellAccessible : public nsHyperTextAccessibleWrap,
+class nsXULListCellAccessible : public HyperTextAccessibleWrap,
                                 public nsIAccessibleTableCell
 {
 public:

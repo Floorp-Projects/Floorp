@@ -550,8 +550,10 @@ public:
    * @return boolean indicating whether a BOM was detected.
    */
   static bool CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
-                            nsACString& aCharset, bool *bigEndian = nsnull);
+                          nsACString& aCharset, bool *bigEndian = nsnull);
 
+  static nsresult GuessCharset(const char *aData, PRUint32 aDataLen,
+                               nsACString &aCharset);
 
   /**
    * Determine whether aContent is in some way associated with aForm.  If the

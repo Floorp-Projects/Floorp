@@ -136,7 +136,7 @@ function testSwitchRunning()
   is(gDebugger.editor.getDebugLocation(), -1,
      "editor debugger location is still -1.");
 
-  closeDebuggerAndFinish(gTab);
+  closeDebuggerAndFinish();
 }
 
 registerCleanupFunction(function() {

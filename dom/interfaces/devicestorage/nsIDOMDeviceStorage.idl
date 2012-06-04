@@ -24,7 +24,7 @@ interface nsIDOMDeviceStorage : nsISupports
 
     [implicit_jscontext]
     nsIDOMDOMRequest getEditable(in jsval aName);
-    
+
     [implicit_jscontext]
     nsIDOMDOMRequest delete(in jsval aName);
 
@@ -32,4 +32,3 @@ interface nsIDOMDeviceStorage : nsISupports
 
     nsIDOMDeviceStorageCursor enumerateEditable([optional] in DOMString directory);
 };
-

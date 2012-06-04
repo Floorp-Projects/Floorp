@@ -21,6 +21,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ public final class Tab {
     private String mFaviconUrl;
     private int mFaviconSize;
     private JSONObject mIdentityData;
+    private boolean mReaderEnabled;
     private Drawable mThumbnail;
     private int mHistoryIndex;
     private int mHistorySize;
@@ -64,6 +66,8 @@ public final class Tab {
     private ContentObserver mContentObserver;
     private int mCheckerboardColor = Color.WHITE;
     private int mState;
+    private ByteBuffer mThumbnailBuffer;
+    private Bitmap mThumbnailBitmap;
 
     public static final int STATE_DELAYED = 0;
     public static final int STATE_LOADING = 1;
@@ -80,6 +84,7 @@ public final class Tab {
         mFaviconUrl = null;
         mFaviconSize = 0;
         mIdentityData = null;
+        mReaderEnabled = false;
         mThumbnail = null;
         mHistoryIndex = -1;
         mHistorySize = 0;
@@ -138,6 +143,31 @@ public final class Tab {
         return mThumbnail;
     }
 
+    synchronized public ByteBuffer getThumbnailBuffer() {
+        int capacity = getThumbnailWidth() * getThumbnailHeight() * 2 /* 16 bpp */;
+        if (mThumbnailBuffer != null && mThumbnailBuffer.capacity() == capacity)
+            return mThumbnailBuffer;
+        if (mThumbnailBuffer != null)
+            GeckoAppShell.freeDirectBuffer(mThumbnailBuffer); // not calling freeBuffer() because it would deadlock
+        return mThumbnailBuffer = GeckoAppShell.allocateDirectBuffer(capacity);
+    }
+
+    public Bitmap getThumbnailBitmap() {
+        if (mThumbnailBitmap != null)
+            return mThumbnailBitmap;
+        return mThumbnailBitmap = Bitmap.createBitmap(getThumbnailWidth(), getThumbnailHeight(), Bitmap.Config.RGB_565);
+    }
+
+    public void finalize() {
+        freeBuffer();
+    }
+
+    synchronized void freeBuffer() {
+        if (mThumbnailBuffer != null)
+            GeckoAppShell.freeDirectBuffer(mThumbnailBuffer);
+        mThumbnailBuffer = null;
+    }
+
     float getDensity() {
         if (sDensity == 0.0f) {
             sDensity = GeckoApp.mAppContext.getDisplayMetrics().density;
@@ -159,13 +189,10 @@ public final class Tab {
             public void run() {
                 if (b != null) {
                     try {
-                        Bitmap bitmap = Bitmap.createScaledBitmap(b, getThumbnailWidth(), getThumbnailHeight(), false);
-
                         if (mState == Tab.STATE_SUCCESS)
-                            saveThumbnailToDB(new BitmapDrawable(bitmap));
+                            saveThumbnailToDB(new BitmapDrawable(b));
 
-                        mThumbnail = new BitmapDrawable(bitmap);
-                        b.recycle();
+                        mThumbnail = new BitmapDrawable(b);
                     } catch (OutOfMemoryError oom) {
                         Log.e(LOGTAG, "Unable to create/scale bitmap", oom);
                         mThumbnail = null;
@@ -197,6 +224,10 @@ public final class Tab {
 
     public JSONObject getIdentityData() {
         return mIdentityData;
+    }
+
+    public boolean getReaderEnabled() {
+        return mReaderEnabled;
     }
 
     public boolean isBookmark() {
@@ -333,6 +364,10 @@ public final class Tab {
         mIdentityData = identityData;
     }
 
+    public void setReaderEnabled(boolean readerEnabled) {
+        mReaderEnabled = readerEnabled;
+    }
+
     private void updateBookmark() {
         final String url = getURL();
         if (url == null)
@@ -370,6 +405,28 @@ public final class Tab {
                 BrowserDB.removeBookmarksWithURL(mContentResolver, url);
             }
         });
+    }
+
+    public void addToReadingList() {
+        if (!mReaderEnabled)
+            return;
+
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                String url = getURL();
+                if (url == null)
+                    return;
+
+                BrowserDB.addReadingListItem(mContentResolver, getTitle(), url);
+            }
+        });
+    }
+
+    public void readerMode() {
+        if (!mReaderEnabled)
+            return;
+
+        // Do nothing for now
     }
 
     public boolean doReload() {

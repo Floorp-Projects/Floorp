@@ -169,6 +169,11 @@ LayerManagerOGL::Initialize(nsRefPtr<GLContext> aContext, bool force)
   // Do not allow double initialization
   NS_ABORT_IF_FALSE(mGLContext == nsnull, "Don't reinitialize layer managers");
 
+#ifdef MOZ_WIDGET_ANDROID
+  if (!aContext)
+    NS_RUNTIMEABORT("We need a context on Android");
+#endif
+
   if (!aContext)
     return false;
 

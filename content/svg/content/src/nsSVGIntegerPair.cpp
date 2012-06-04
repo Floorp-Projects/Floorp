@@ -153,6 +153,9 @@ nsSVGIntegerPair::SetBaseValues(PRInt32 aValue1, PRInt32 aValue2,
 void
 nsSVGIntegerPair::SetAnimValue(const PRInt32 aValue[2], nsSVGElement *aSVGElement)
 {
+  if (mIsAnimated && mAnimVal[0] == aValue[0] && mAnimVal[1] == aValue[1]) {
+    return;
+  }
   mAnimVal[0] = aValue[0];
   mAnimVal[1] = aValue[1];
   mIsAnimated = true;

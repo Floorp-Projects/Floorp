@@ -489,3 +489,5 @@ pref("ui.click_hold_context_menus.delay", 1000);
 
 // Enable device storage
 pref("device.storage.enabled", true);
+
+pref("media.plugins.enabled", true);

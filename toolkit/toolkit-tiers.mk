@@ -138,6 +138,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifdef MOZ_OMX_PLUGIN
+tier_platform_dirs += \
+		media/omx-plugin \
+		$(NULL)
+endif
+
 ifndef MOZ_NATIVE_PNG
 tier_platform_dirs += media/libpng
 endif

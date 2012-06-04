@@ -14,25 +14,32 @@ function test() {
 }
 
 function onLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, arguments.callee, true);
-  openConsole();
-
-  browser.addEventListener("load", testBasicNetLogging, true);
-  content.location = TEST_NETWORK_URI;
+  browser.removeEventListener(aEvent.type, onLoad, true);
+  openConsole(null, function() {
+    browser.addEventListener("load", testBasicNetLogging, true);
+    content.location = TEST_NETWORK_URI;
+  });
 }
 
 function testBasicNetLogging(aEvent) {
-  browser.removeEventListener(aEvent.type, arguments.callee, true);
+  browser.removeEventListener(aEvent.type, testBasicNetLogging, true);
 
   outputNode = HUDService.getHudByWindow(content).outputNode;
 
-  executeSoon(function() {
-    findLogEntry("test-network.html");
-    findLogEntry("testscript.js");
-    findLogEntry("test-image.png");
-    findLogEntry("network console");
-
-    finishTest();
+  waitForSuccess({
+    name: "network console message",
+    validatorFn: function()
+    {
+      return outputNode.textContent.indexOf("running network console") > -1;
+    },
+    successFn: function()
+    {
+      findLogEntry("test-network.html");
+      findLogEntry("testscript.js");
+      findLogEntry("test-image.png");
+      finishTest();
+    },
+    failureFn: finishTest,
   });
 }
 

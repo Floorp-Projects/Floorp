@@ -1689,7 +1689,7 @@ needs-focus != 703186-1.html 703186-2.html
 == 714519-1-q.html 714519-1-ref.html
 == 714519-2-as.html 714519-2-ref.html
 == 714519-2-q.html 714519-2-ref.html
-fuzzy-if(true,1,21) fuzzy-if(cocoaWidget,1,170) fuzzy-if(Android,7,157) == 718521.html 718521-ref.html
+fuzzy-if(true,1,21) fuzzy-if(cocoaWidget,1,170) fuzzy-if(Android&&browserIsRemote,7,157) fails-if(Android&&!browserIsRemote) == 718521.html 718521-ref.html # bug 760270
 == 720987.html 720987-ref.html
 == 722923-1.html 722923-1-ref.html
 == 723484-1.html 723484-1-ref.html
@@ -1704,3 +1704,5 @@ needs-focus == 731726-1.html 731726-1-ref.html
 == 751012-1a.html 751012-1-ref.html
 == 751012-1b.html 751012-1-ref.html
 == 690643-1.html 690643-1-ref.html
+== 748692-1a.html 748692-1-ref.html
+== 748692-1b.html 748692-1-ref.html

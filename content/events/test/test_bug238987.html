@@ -133,7 +133,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
          backwardBlurArray.toString());
       is(expectedWindowBlurCount, 0,
          "|window| didn't get the right amount of blur events");
+
+      // Cleanup
       setOrRestoreTabFocus(0);
+      window.removeEventListener("focus", handleWindowFocus, true);
+      window.removeEventListener("focus", handleWindowFocus, false);
+      window.removeEventListener("blur", handleWindowBlur, true);
+      window.removeEventListener("blur", handleWindowBlur, false);
+      var elements = document.getElementsByTagName("*");
+      for (var i = 0; i < elements.length; ++i) {
+        if (elements[i].hasAttribute("id")) {
+          elements[i].removeEventListener("focus", handleFocus, false);
+          elements[i].removeEventListener("blur", handleBlur, false);
+        }
+      }
+
       SimpleTest.finish();
     } else {
       setTimeout(tab, 0);

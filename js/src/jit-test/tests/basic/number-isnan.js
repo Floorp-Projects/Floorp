@@ -1,0 +1,15 @@
+assertEq(Number.isNaN(NaN), true);
+assertEq(Number.isNaN(0/0), true);
+assertEq(Number.isNaN(Number("NaN")), true);
+assertEq(Number.isNaN(4), false);
+assertEq(Number.isNaN(4.5), false);
+assertEq(Number.isNaN("hi"), false);
+assertEq(Number.isNaN("1.3"), false);
+assertEq(Number.isNaN("51"), false);
+assertEq(Number.isNaN(0), false);
+assertEq(Number.isNaN(-0), false);
+assertEq(Number.isNaN({valueOf: function () { return 3; }}), false);
+assertEq(Number.isNaN({valueOf: function () { return 0/0; }}), false);
+assertEq(Number.isNaN({ valueOf: function() { throw 17; } }), false);
+assertEq(Number.isNaN({ toString: function() { throw 17; } }), false);
+assertEq(Number.isNaN({ valueOf: function() { throw 17; }, toString: function() { throw 42; } }), false);
