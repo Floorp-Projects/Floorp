@@ -2069,6 +2069,18 @@ Assembler::flushBuffer()
 }
 
 void
+Assembler::enterNoPool()
+{
+    m_buffer.enterNoPool();
+}
+
+void
+Assembler::leaveNoPool()
+{
+    m_buffer.leaveNoPool();
+}
+
+void
 Assembler::as_jumpPool(uint32 numCases)
 {
     for (uint32 i = 0; i < numCases; i++)
