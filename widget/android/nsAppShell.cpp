@@ -6,6 +6,8 @@
 // Make sure the order of included headers
 #include "base/basictypes.h"
 #include "nspr/prtypes.h"
+#include "base/message_loop.h"
+#include "base/task.h"
 
 #include "mozilla/Hal.h"
 #include "nsAppShell.h"
@@ -62,6 +64,34 @@ nsAutoPtr<mozilla::AndroidGeckoEvent> gLastSizeChange;
 nsAppShell *nsAppShell::gAppShell = nsnull;
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsAppShell, nsBaseAppShell, nsIObserver)
+
+class ScreenshotRunnable : public nsRunnable {
+public:
+    ScreenshotRunnable(nsIAndroidBrowserApp* aBrowserApp, int aTabId, nsTArray<nsIntPoint>& aPoints, int aToken):
+        mBrowserApp(aBrowserApp), mTabId(aTabId), mPoints(aPoints), mToken(aToken) {}
+
+    virtual nsresult Run() {
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<nsIBrowserTab> tab;
+        mBrowserApp->GetBrowserTab(mTabId, getter_AddRefs(tab));
+        if (!tab)
+            return NS_OK;
+
+        tab->GetWindow(getter_AddRefs(domWindow));
+        if (!domWindow)
+            return NS_OK;
+
+        float scale = 1.0;
+        NS_ASSERTION(mPoints.Length() == 4, "Screenshot event does not have enough coordinates");
+
+        AndroidBridge::Bridge()->TakeScreenshot(domWindow, mPoints[0].x, mPoints[0].y, mPoints[1].x, mPoints[1].y, mPoints[3].x, mPoints[3].y, mTabId, scale, mToken);
+        return NS_OK;
+    }
+private:
+    nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
+    nsTArray<nsIntPoint> mPoints;
+    int mTabId, mToken;
+};
 
 class AfterPaintListener : public nsIDOMEventListener {
   public:
@@ -425,21 +455,12 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
             break;
 
         PRInt32 token = curEvent->Flags();
-
-        nsCOMPtr<nsIDOMWindow> domWindow;
-        nsCOMPtr<nsIBrowserTab> tab;
-        mBrowserApp->GetBrowserTab(curEvent->MetaState(), getter_AddRefs(tab));
-        if (!tab)
-            break;
-
-        tab->GetWindow(getter_AddRefs(domWindow));
-        if (!domWindow)
-            break;
-
-        float scale = 1.0;
+        PRInt32 tabId = curEvent->MetaState();
         nsTArray<nsIntPoint> points = curEvent->Points();
-        NS_ASSERTION(points.Length() == 4, "Screenshot event does not have enough coordinates");
-        bridge->TakeScreenshot(domWindow, points[0].x, points[0].y, points[1].x, points[1].y, points[3].x, points[3].y, curEvent->MetaState(), scale, curEvent->Flags());
+        nsCOMPtr<ScreenshotRunnable> sr = 
+            new ScreenshotRunnable(mBrowserApp, tabId, points, token);
+        MessageLoop::current()->PostIdleTask(
+            FROM_HERE, NewRunnableMethod(sr.get(), &ScreenshotRunnable::Run));
         break;
     }
 
