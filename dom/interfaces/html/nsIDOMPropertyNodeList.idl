@@ -1,0 +1,23 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set tw=80 expandtab softtabstop=2 ts=2 sw=2: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIVariant.idl"
+
+interface nsIDOMNode;
+interface nsIContent;
+
+[scriptable, uuid(255cc828-49e8-4fb0-8e36-875e6e072da3)]
+interface nsIDOMPropertyNodeList : nsISupports {
+  [getter,forward(getNodeAt)] nsIDOMNode    item(in unsigned long index);
+  readonly attribute unsigned long          length;
+
+  /**
+   * Get the node at the index.  Returns null if the index is out of bounds
+   */
+  [noscript,notxpcom,nostdcall] nsIContent  getNodeAt(in unsigned long index);
+
+  nsIVariant getValues();
+};

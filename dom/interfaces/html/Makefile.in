@@ -61,6 +61,8 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLParagraphElement.idl		\
 	nsIDOMHTMLParamElement.idl		\
 	nsIDOMHTMLPreElement.idl		\
+	nsIDOMHTMLPropertiesCollection.idl  \
+	nsIDOMPropertyNodeList.idl  \
 	nsIDOMHTMLProgressElement.idl		\
 	nsIDOMHTMLQuoteElement.idl		\
 	nsIDOMHTMLScriptElement.idl		\
