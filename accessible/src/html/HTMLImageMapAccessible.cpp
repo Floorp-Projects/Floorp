@@ -150,7 +150,7 @@ HTMLImageMapAccessible::CacheChildren()
 
 HTMLAreaAccessible::
   HTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsHTMLLinkAccessible(aContent, aDoc)
+  HTMLLinkAccessible(aContent, aDoc)
 {
 }
 
@@ -158,7 +158,7 @@ HTMLAreaAccessible::
 // HTMLAreaAccessible: nsIAccessible
 
 nsresult
-HTMLAreaAccessible::GetNameInternal(nsAString & aName)
+HTMLAreaAccessible::GetNameInternal(nsAString& aName)
 {
   nsresult rv = Accessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -199,7 +199,7 @@ HTMLAreaAccessible::IsPrimaryForNode() const
 
 Accessible*
 HTMLAreaAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                   EWhichChildAtPoint aWhichChild)
+                                 EWhichChildAtPoint aWhichChild)
 {
   // Don't walk into area accessibles.
   return this;
