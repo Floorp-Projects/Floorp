@@ -1670,6 +1670,8 @@ class Assembler
     // is more convenient to do a dump.
     void dumpPool();
     void flushBuffer();
+    void enterNoPool();
+    void leaveNoPool();
     // this should return a BOffImm, but I didn't want to require everyplace that used the
     // AssemblerBuffer to make that class.
     static ptrdiff_t getBranchOffset(const Instruction *i);
@@ -1977,6 +1979,17 @@ class DoubleEncoder {
             }
         }
         return false;
+    }
+};
+
+class DePooler {
+    Assembler *masm_;
+  public:
+    DePooler(Assembler *masm) : masm_(masm) {
+        masm_->enterNoPool();
+    }
+    ~DePooler() {
+        masm_->leaveNoPool();
     }
 };
 
