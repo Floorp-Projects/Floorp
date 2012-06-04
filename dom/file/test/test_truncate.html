@@ -31,10 +31,31 @@
       is(lockedFile.location, 100000, "Correct location");
 
       for (let i = 0; i < 10; i++) {
-        let location = lockedFile.location - 10000
+        let location = lockedFile.location - 10000;
         lockedFile.location = location;
 
         request = lockedFile.truncate();
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+
+        is(lockedFile.location, location, "Correct location");
+
+        request = lockedFile.getMetadata({ size: true });
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+
+        is(event.target.result.size, location, "Correct size");
+      }
+
+      request = lockedFile.write(testBuffer);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let location = lockedFile.location;
+      for (let i = 0; i < 10; i++) {
+        location -= 10000;
+
+        request = lockedFile.truncate(location);
         request.onsuccess = grabEventAndContinueHandler;
         event = yield;
 

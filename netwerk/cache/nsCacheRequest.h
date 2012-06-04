@@ -37,7 +37,8 @@ private:
           mInfo(0),
           mListener(listener),
           mLock("nsCacheRequest.mLock"),
-          mCondVar(mLock, "nsCacheRequest.mCondVar")
+          mCondVar(mLock, "nsCacheRequest.mCondVar"),
+          mProfileDir(session->ProfileDir())
     {
         MOZ_COUNT_CTOR(nsCacheRequest);
         PR_INIT_CLIST(this);
@@ -152,6 +153,7 @@ private:
     nsCOMPtr<nsIThread>        mThread;
     Mutex                      mLock;
     CondVar                    mCondVar;
+    nsCOMPtr<nsILocalFile>     mProfileDir;
 };
 
 #endif // _nsCacheRequest_h_
