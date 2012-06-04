@@ -7,6 +7,7 @@
 
 var gWindow = null;
 var gTab = null;
+var gRemotePort = null;
 var gAutoConnect = null;
 
 const TEST_URL = EXAMPLE_URL + "browser_dbg_iframes.html";
@@ -16,6 +17,11 @@ function test() {
     gTab = aTab;
     gWindow = aWindow;
     let gDebugger = gWindow.contentWindow;
+
+    info("Current remote port: " +
+      Services.prefs.getIntPref("devtools.debugger.remote-port"));
+    info("Current autoconnect flag: " +
+      Services.prefs.getBoolPref("devtools.debugger.remote-autoconnect"));
 
     is(gDebugger.document.getElementById("close").getAttribute("hidden"), "true",
       "The close button should be hidden in a remote debugger.");
@@ -60,21 +66,46 @@ function test() {
     }
     DebuggerServer.closeListener();
 
+    gRemotePort = Services.prefs.getIntPref("devtools.debugger.remote-port");
     gAutoConnect = Services.prefs.getBoolPref("devtools.debugger.remote-autoconnect");
-    Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", true);
 
     // Open the listener at some point in the future to test automatic reconnect.
-    window.setTimeout(function() {
-      DebuggerServer.openListener(
-        Services.prefs.getIntPref("devtools.debugger.remote-port"));
-    }, Math.random() * 1000);
+    openListener(gRemotePort + 1);
   });
 }
 
+let attempts = 0;
+
+function openListener(port) {
+  Services.prefs.setIntPref("devtools.debugger.remote-port", port);
+  Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", true);
+
+  info("Attempting to open a new listener on port " + port);
+  try {
+    info("Closing listener...");
+    DebuggerServer.closeListener();
+    info("Opening listener...");
+    DebuggerServer.openListener(port);
+  } catch (e) {
+    info(e);
+    info("Exception caught when opening listener on port " + port);
+    info("Retrying with port " + (++port));
+
+    if (++attempts < 100) {
+      DebuggerServer.closeListener();
+      openListener(port);
+    } else {
+      ok(false, "Timed out while opening a listener.");
+    }
+  }
+}
+
 registerCleanupFunction(function() {
+  Services.prefs.setIntPref("devtools.debugger.remote-port", gRemotePort);
   Services.prefs.setBoolPref("devtools.debugger.remote-autoconnect", gAutoConnect);
   removeTab(gTab);
   gWindow = null;
   gTab = null;
+  gRemotePort = null;
   gAutoConnect = null;
 });
