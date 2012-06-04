@@ -1,8 +1,9 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Cross-platform lightweight thread local data wrappers
+/* Cross-platform lightweight thread local data wrappers. */
 
 #ifndef mozilla_TLS_h_
 #define mozilla_TLS_h_
@@ -63,7 +64,7 @@ typedef sig_atomic_t sig_safe_t;
  * // Get the TLS value
  * int value = tlsKey.get();
  */
-template <typename T>
+template<typename T>
 class ThreadLocal
 {
 #if defined(XP_WIN)
@@ -73,7 +74,7 @@ class ThreadLocal
 #endif
 
     union Helper {
-      void *ptr;
+      void* ptr;
       T value;
     };
 
@@ -93,10 +94,13 @@ class ThreadLocal
     bool inited;
 };
 
-template <typename T>
+template<typename T>
 inline bool
-ThreadLocal<T>::init() {
-  MOZ_STATIC_ASSERT(sizeof(T) <= sizeof(void *), "mozilla::ThreadLocal can't be used for types larger than a pointer");
+ThreadLocal<T>::init()
+{
+  MOZ_STATIC_ASSERT(sizeof(T) <= sizeof(void *),
+                    "mozilla::ThreadLocal can't be used for types larger than "
+                    "a pointer");
   MOZ_ASSERT(!initialized());
 #ifdef XP_WIN
   key = TlsAlloc();
@@ -107,9 +111,10 @@ ThreadLocal<T>::init() {
   return inited;
 }
 
-template <typename T>
+template<typename T>
 inline T
-ThreadLocal<T>::get() const {
+ThreadLocal<T>::get() const
+{
   MOZ_ASSERT(initialized());
   Helper h;
 #ifdef XP_WIN
@@ -120,9 +125,10 @@ ThreadLocal<T>::get() const {
   return h.value;
 }
 
-template <typename T>
+template<typename T>
 inline bool
-ThreadLocal<T>::set(const T value) {
+ThreadLocal<T>::set(const T value)
+{
   MOZ_ASSERT(initialized());
   Helper h;
   h.value = value;
