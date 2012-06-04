@@ -1418,7 +1418,8 @@ js_IsDebugScopeSlow(const JSObject *obj)
 /*****************************************************************************/
 
 DebugScopes::DebugScopes(JSRuntime *rt)
- : proxiedScopes(rt),
+ : rt(rt),
+   proxiedScopes(rt),
    missingScopes(rt),
    liveScopes(rt)
 {}
@@ -1447,7 +1448,7 @@ DebugScopes::mark(JSTracer *trc)
 }
 
 void
-DebugScopes::sweep(JSRuntime *rt)
+DebugScopes::sweep()
 {
     /*
      * Note: missingScopes points to debug scopes weakly not just so that debug
@@ -1455,7 +1456,7 @@ DebugScopes::sweep(JSRuntime *rt)
      * creating an uncollectable cycle with suspended generator frames.
      */
     for (MissingScopeMap::Enum e(missingScopes); !e.empty(); e.popFront()) {
-        if (!IsObjectMarked(&e.front().value))
+        if (!IsObjectMarked(e.front().value.unsafeGet()))
             e.removeFront();
     }
 
@@ -1700,8 +1701,25 @@ DebugScopes::updateLiveScopes(JSContext *cx)
 StackFrame *
 DebugScopes::hasLiveFrame(ScopeObject &scope)
 {
-    if (LiveScopeMap::Ptr p = liveScopes.lookup(&scope))
-        return p->value;
+    if (LiveScopeMap::Ptr p = liveScopes.lookup(&scope)) {
+        StackFrame *fp = p->value;
+
+        /*
+         * Since liveScopes is effectively a weak pointer, we need a read
+         * barrier. The scenario where this is necessary is:
+         *  1. GC starts, a suspended generator is not live
+         *  2. hasLiveFrame returns a StackFrame* to the (soon to be dead)
+         *     suspended generator
+         *  3. stack frame values (which will neve be marked) are read from the
+         *     StackFrame
+         *  4. GC completes, live objects may now point to values that weren't
+         *     marked and thus may point to swept GC things
+         */
+        if (JSGenerator *gen = fp->maybeSuspendedGenerator(rt))
+            JSObject::readBarrier(gen->obj);
+
+        return fp;
+    }
     return NULL;
 }
 

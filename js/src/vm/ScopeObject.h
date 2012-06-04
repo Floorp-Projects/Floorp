@@ -414,6 +414,8 @@ class DebugScopeObject : public JSObject
 /* Maintains runtime-wide debug scope bookkeeping information. */
 class DebugScopes
 {
+    JSRuntime *rt;
+
     /* The map from (non-debug) scopes to debug scopes. */
     typedef WeakMap<HeapPtrObject, HeapPtrObject> ObjectWeakMap;
     ObjectWeakMap proxiedScopes;
@@ -423,7 +425,7 @@ class DebugScopes
      * corresponding debug scopes.
      */
     typedef HashMap<ScopeIter,
-                    DebugScopeObject *,
+                    ReadBarriered<DebugScopeObject>,
                     ScopeIter,
                     RuntimeAllocPolicy> MissingScopeMap;
     MissingScopeMap missingScopes;
@@ -447,7 +449,7 @@ class DebugScopes
     bool init();
 
     void mark(JSTracer *trc);
-    void sweep(JSRuntime *rt);
+    void sweep();
 
     DebugScopeObject *hasDebugScope(JSContext *cx, ScopeObject &scope) const;
     bool addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &debugScope);
