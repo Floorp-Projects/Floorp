@@ -54,13 +54,29 @@ function testPageLoad()
 
 function testPageLoadBody()
 {
+  let loaded = false;
+  let requestCallbackInvoked = false;
+
   // Turn off logging of request bodies and check again.
   requestCallback = function() {
     ok(lastRequest, "Page load was logged again");
     lastRequest = null;
     requestCallback = null;
-    executeSoon(testXhrGet);
+    requestCallbackInvoked = true;
+
+    if (loaded) {
+      executeSoon(testXhrGet);
+    }
   };
+
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    loaded = true;
+
+    if (requestCallbackInvoked) {
+      executeSoon(testXhrGet);
+    }
+  }, true);
 
   content.location.reload();
 }
