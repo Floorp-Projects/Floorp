@@ -165,6 +165,22 @@ var VirtualCursorController = {
       QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
   },
 
+  moveCursorToObject: function moveCursorToObject(aAccessible, aRule) {
+    let doc = aAccessible.document;
+    while (doc) {
+      let vc = null;
+      try {
+        vc = doc.QueryInterface(Ci.nsIAccessibleCursorable).virtualCursor;
+      } catch (x) {
+        doc = doc.parentDocument;
+        continue;
+      }
+      if (vc)
+        vc.moveNext(aRule || this.SimpleTraversalRule, aAccessible, true);
+      break;
+    }
+  },
+
   SimpleTraversalRule: {
     getMatchRoles: function SimpleTraversalRule_getmatchRoles(aRules) {
       aRules.value = this._matchRoles;
