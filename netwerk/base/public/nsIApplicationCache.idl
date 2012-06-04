@@ -7,6 +7,7 @@
 #include "nsISupports.idl"
 
 interface nsIArray;
+interface nsILocalFile;
 
 /**
  * Application caches can store a set of namespace entries that affect
@@ -78,7 +79,7 @@ interface nsIApplicationCacheNamespace : nsISupports
  * loads.  Inactive caches will be removed from the cache when they are
  * no longer referenced.
  */
-[scriptable, uuid(32f83e3f-470c-4423-a86a-d35d1c215ccb)]
+[scriptable, uuid(231e1e53-05c1-41b6-b9de-dbbcce9385c9)]
 interface nsIApplicationCache : nsISupports
 {
     /**
@@ -189,4 +190,10 @@ interface nsIApplicationCache : nsISupports
      * Get the most specific namespace matching a given key.
      */
     nsIApplicationCacheNamespace getMatchingNamespace(in ACString key);
+
+    /**
+     * If set, this offline cache is placed in a different directory
+     * than the current application profile.
+     */
+    readonly attribute nsILocalFile cacheDirectory;
 };

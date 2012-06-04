@@ -7,12 +7,13 @@
 #include "nsISupports.idl"
 
 interface nsIApplicationCache;
+interface nsILocalFile;
 
 /**
  * The application cache service manages the set of application cache
  * groups.
  */
-[scriptable, uuid(10fdea21-1224-4c29-8507-8f3205a121d5)]
+[scriptable, uuid(28adfdc7-6718-4b3e-bdb2-ecfefa3c8910)]
 interface nsIApplicationCacheService : nsISupports
 {
     /**
@@ -20,6 +21,22 @@ interface nsIApplicationCacheService : nsISupports
      * group.
      */
     nsIApplicationCache createApplicationCache(in ACString group);
+
+    /**
+     * Create a new, empty application cache for the given cache
+     * group residing in a custom directory with a custom quota.
+     *
+     * @param group
+     *    URL of the manifest
+     * @param directory
+     *    Actually a reference to a profile directory where to
+     *    create the OfflineCache sub-dir.
+     * @param quota
+     *    Optional override of the default quota.
+     */
+    nsIApplicationCache createCustomApplicationCache(in ACString group,
+                                                     in nsILocalFile profileDir,
+                                                     in PRInt32 quota);
 
     /**
      * Get an application cache object for the given client ID.
