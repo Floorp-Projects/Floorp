@@ -1246,7 +1246,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     script->mainOffset = prologLength;
     PodCopy<jsbytecode>(script->code, bce->prologBase(), prologLength);
     PodCopy<jsbytecode>(script->main(), bce->base(), mainLength);
-    nfixed = bce->sc->inFunction ? bce->sc->bindings.numVars() : 0;
+    nfixed = bce->sc->inFunction() ? bce->sc->bindings.numVars() : 0;
     JS_ASSERT(nfixed < SLOTNO_LIMIT);
     script->nfixed = uint16_t(nfixed);
     InitAtomMap(cx, bce->atomIndices.getMap(), script->atoms);
@@ -1309,7 +1309,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         script->debugMode = true;
 #endif
 
-    if (bce->sc->inFunction) {
+    if (bce->sc->inFunction()) {
         if (bce->sc->funArgumentsHasLocalBinding()) {
             // This must precede the script->bindings.transfer() call below.
             script->setArgumentsHasLocalBinding(bce->sc->argumentsLocalSlot());
@@ -1318,9 +1318,6 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         } else {
             JS_ASSERT(!bce->sc->funDefinitelyNeedsArgsObj());
         }
-    } else {
-        JS_ASSERT(!bce->sc->funArgumentsHasLocalBinding());
-        JS_ASSERT(!bce->sc->funDefinitelyNeedsArgsObj());
     }
 
     if (nClosedArgs)
@@ -1331,7 +1328,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     script->bindings.transfer(cx, &bce->sc->bindings);
 
     fun = NULL;
-    if (bce->sc->inFunction) {
+    if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->noScriptRval);
         JS_ASSERT(!bce->needScriptGlobal);
 
@@ -1362,10 +1359,6 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         script->globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
 
     } else {
-        // It'd be nice to JS_ASSERT(!bce->sc->funIsHeavyweight()) here, but
-        // Parser.cpp is sloppy and sometimes applies it to non-functions.
-        JS_ASSERT(!bce->sc->funIsGenerator());
-
         /*
          * Initialize script->object, if necessary, so that the debugger has a
          * valid holder object.

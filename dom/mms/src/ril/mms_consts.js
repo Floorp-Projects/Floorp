@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Encoded X-Mms-Message-Type values
+// @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.30
+const MMS_PDU_TYPE_SEND_REQ = 128;
+const MMS_PDU_TYPE_SEND_CONF = 129;
+const MMS_PDU_TYPE_NOTIFICATION_IND = 130;
+const MMS_PDU_TYPE_NOTIFYRESP_IND = 131;
+const MMS_PDU_TYPE_RETRIEVE_CONF = 132;
+const MMS_PDU_TYPE_ACKNOWLEDGE_IND = 133;
+const MMS_PDU_TYPE_DELIVERY_IND = 134;
+const MMS_PDU_TYPE_READ_REC_IND = 135;
+const MMS_PDU_TYPE_READ_ORIG_IND = 136;
+const MMS_PDU_TYPE_FORWARD_REQ = 137;
+const MMS_PDU_TYPE_FORWARD_CONF = 138;
+const MMS_PDU_TYPE_MBOX_STORE_REQ = 139;
+const MMS_PDU_TYPE_MBOX_STORE_CONF = 140;
+const MMS_PDU_TYPE_MBOX_VIEW_REQ = 141;
+const MMS_PDU_TYPE_MBOX_VIEW_CONF = 142;
+const MMS_PDU_TYPE_MBOX_UPLOAD_REQ = 143;
+const MMS_PDU_TYPE_MBOX_UPLOAD_CONF = 144;
+const MMS_PDU_TYPE_MBOX_DELETE_REQ = 145;
+const MMS_PDU_TYPE_MBOX_DELETE_CONF = 146;
+const MMS_PDU_TYPE_MBOX_DESCR = 147;
+const MMS_PDU_TYPE_DELETE_REQ = 148;
+const MMS_PDU_TYPE_DELETE_CONF = 149;
+const MMS_PDU_TYPE_CANCEL_REQ = 150;
+const MMS_PDU_TYPE_CANCEL_CONF = 151;
+
+// MMS version 1.3
+// @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.34
+const MMS_VERSION = (0x01 << 4) | 0x03;
+
+// X-Mms-Retrieve-Status values
+// @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.50
+const MMS_PDU_ERROR_OK                            = 128;
+const MMS_PDU_ERROR_TRANSIENT_FAILURE             = 192;
+const MMS_PDU_ERROR_TRANSIENT_MESSAGE_NOT_FOUND   = 193;
+const MMS_PDU_ERROR_TRANSIENT_NETWORK_PROBLEM     = 194;
+const MMS_PDU_ERROR_PERMANENT_FAILURE             = 224;
+const MMS_PDU_ERROR_PERMANENT_SERVICE_DENIED      = 225;
+const MMS_PDU_ERROR_PERMANENT_MESSAGE_NOT_FOUND   = 226;
+const MMS_PDU_ERROR_PERMANENT_CONTENT_UNSUPPORTED = 227;
+
+// X-Mms-Status values
+// @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.54
+const MMS_PDU_STATUS_EXPIRED       = 128;
+const MMS_PDU_STATUS_RETRIEVED     = 129;
+const MMS_PDU_STATUS_REJECTED      = 130;
+const MMS_PDU_STATUS_DEFERRED      = 131;
+const MMS_PDU_STATUS_UNRECOGNISED  = 132;
+const MMS_PDU_STATUS_INDETERMINATE = 133;
+const MMS_PDU_STATUS_FORWARDED     = 134;
+const MMS_PDU_STATUS_UNREACHABLE   = 135;
+
+const ALL_CONST_SYMBOLS = Object.keys(this);
+
+// Allow this file to be imported via Components.utils.import().
+const EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS;
+

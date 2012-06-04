@@ -31,7 +31,8 @@ public:
   // Accessible
   virtual void Value(nsString& aValue);
   virtual mozilla::a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
+  virtual bool NativelyUnavailable() const;
   virtual bool CanHaveAnonChildren();
 
   // ActionAccessible
@@ -41,7 +42,7 @@ protected:
   /**
    * Return anonymous slider element.
    */
-  nsIContent* GetSliderElement();
+  nsIContent* GetSliderElement() const;
 
   nsresult GetSliderAttr(nsIAtom *aName, nsAString& aValue);
   nsresult SetSliderAttr(nsIAtom *aName, const nsAString& aValue);
@@ -50,7 +51,7 @@ protected:
   nsresult SetSliderAttr(nsIAtom *aName, double aValue);
 
 private:
-  nsCOMPtr<nsIContent> mSliderNode;
+  mutable nsCOMPtr<nsIContent> mSliderNode;
 };
 
 

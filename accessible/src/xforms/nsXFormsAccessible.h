@@ -52,6 +52,7 @@ public:
   // Returns state of xforms element taking into account state of instance node
   // that it is bound to.
   virtual PRUint64 NativeState();
+  virtual bool NativelyUnavailable() const;
 
   // Denies accessible nodes in anonymous content of xforms element by
   // always returning false value.

@@ -15,21 +15,69 @@
           src="../role.js" />
   <script type="application/javascript"
           src="../states.js" />
+  <script type="application/javascript"
+          src="../events.js" />
 
   <script type="application/javascript">
   <![CDATA[
+    function openColorpicker(aID)
+    {
+      this.popupNode = getNode(aID).mPicker.parentNode;
+      this.popup = getAccessible(this.popupNode);
 
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, this.popupNode)
+      ];
+
+      this.invoke = function openColorpicker_invoke()
+      {
+        getNode(aID).showPopup();
+      }
+
+      this.finalCheck = function openColorpicker_finalCheck()
+      {
+        testStates(this.popup.firstChild,
+                   STATE_FOCUSABLE | STATE_SELECTABLE, 0,
+                   STATE_UNAVAILABLE);
+      }
+
+      this.getID = function openColorpicker_getID()
+      {
+        return "open colorpicker";
+      }
+    }
+
+    var gQueue = null;
     function doTest()
     {
       testStates("checkbox", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
       testStates("checkbox2", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
-      testStates("radio-group", 0, 0, STATE_UNAVAILABLE);
-      testStates("orange", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
-      testStates("violet", 0, 0, STATE_UNAVAILABLE);
-      testStates("radio-group2", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
-      testStates("orange2", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("radiogroup", 0, 0, STATE_FOCUSABLE | STATE_UNAVAILABLE);
+      testStates("radio", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("radio-disabled", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("radiogroup-disabled", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("radio-disabledradiogroup", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("button", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("button-disabled", STATE_UNAVAILABLE, 0 , STATE_FOCUSABLE);
+      testStates("colorpicker", STATE_FOCUSABLE | STATE_HASPOPUP, 0, STATE_UNAVAILABLE);
+      testStates("colorpicker-disabled", STATE_HASPOPUP, 0, STATE_FOCUSABLE);
+      testStates("combobox", STATE_FOCUSABLE | STATE_HASPOPUP, 0, STATE_UNAVAILABLE);
+      testStates("combobox-disabled", STATE_UNAVAILABLE | STATE_HASPOPUP, 0, STATE_FOCUSABLE);
+      testStates("listbox", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("listitem", STATE_FOCUSABLE | STATE_SELECTABLE, 0, STATE_UNAVAILABLE);
+      testStates("listbox-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
+      testStates("listitem-disabledlistbox", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
+      testStates("menubar", 0, 0, STATE_FOCUSABLE);
+      testStates("menu", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("menu-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE);
+      testStates("scale", STATE_FOCUSABLE, 0, STATE_UNAVAILABLE);
+      testStates("scale-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE);
+      testStates("tab", STATE_FOCUSABLE | STATE_SELECTABLE | STATE_SELECTED, 0, STATE_UNAVAILABLE);
+      testStates("tab-disabled", STATE_UNAVAILABLE, 0, STATE_FOCUSABLE | STATE_SELECTABLE | STATE_SELECTED);
 
-      SimpleTest.finish()
+      gQueue = new eventQueue();
+      gQueue.push(new openColorpicker("colorpicker"));
+      gQueue.invoke(); // Will call SimpleTest.finish()
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -43,7 +91,12 @@
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=599163"
          title="check disabled state instead of attribute">
         Mozilla Bug 599163
-     </a><br/>
+     </a>
+     <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=756983"
+         title="Isolate focusable and unavailable states from State()">
+        Mozilla Bug 756983
+     </a>
       <p id="display"></p>
       <div id="content" style="display: none">
       </div>
@@ -56,18 +109,72 @@
     <checkbox id="checkbox" checked="true" label="Steak"/>
     <checkbox id="checkbox2" checked="true" label="Salad" disabled="true"/>
 
-    <radiogroup id="radio-group">
-      <radio id="orange" label="Orange" disabled="true"/>
-      <radio id="violet" selected="true" label="Violet"/>
-      <radio id="yellow" label="Yellow"/>
+    <radiogroup id="radiogroup">
+      <radio id="radio" label="Orange"/>
+      <radio id="radio-disabled" selected="true" label="Violet" disabled="true"/>
     </radiogroup>
 
-    <radiogroup id="radio-group2" disabled="true">
-      <radio id="orange2" label="Orange"/>
+    <radiogroup id="radiogroup-disabled" disabled="true">
+      <radio id="radio-disabledradiogroup" label="Orange"/>
       <radio id="violet2" selected="true" label="Violet"/>
-      <radio id="yellow2" label="Yellow"/>
     </radiogroup>
 
+    <button id="button" value="button"/>
+    <button id="button-disabled" disabled="true" value="button"/>
+
+    <colorpicker id="colorpicker" type="button"/>
+    <colorpicker id="colorpicker-disabled" type="button" disabled="true"/>
+
+    <menulist id="combobox">
+      <menupopup>
+        <menuitem label="item1"/>
+      </menupopup>
+    </menulist>
+
+    <menulist id="combobox-disabled" disabled="true">
+      <menupopup>
+        <menuitem label="item1"/>
+      </menupopup>
+    </menulist>
+
+    <listbox id="listbox">
+      <listitem id="listitem" label="list item"/>
+    </listbox>
+
+    <listbox id="listbox-disabled" disabled="true">
+      <listitem id="listitem-disabledlistbox" label="list item"/>
+    </listbox>
+
+    <toolbox>
+      <menubar id="menubar">
+        <menu id="menu" label="menu1">
+          <menupopup>
+            <menuitem id="menu1-item1" label="menuitem1.1"/>
+          </menupopup>
+        </menu>
+        <menu id="menu-disabled" label="menu2" disabled="true">
+          <menupopup>
+            <menuitem id="menu-disabled-item1" label="menuitem2.1"/>
+          </menupopup>
+        </menu>
+      </menubar>
+    </toolbox>
+
+    <scale id="scale" min="1" max="10"/>
+    <scale id="scale-disabled" min="1" max="10" disabled="true"/>
+
+    <tabbox>
+      <tabs>
+        <tab id="tab" label="tab1" tooltip="tooltip"/>
+        <tab id="tab-disabled" label="tab1" disabled="true"/>
+      </tabs>
+      <tabpanels>
+        <tabpanel/>
+        <tabpanel/>
+      </tabpanels>
+    </tabbox>
+
+    <tooltip id="tooltip"><description>tooltip</description></tooltip>
     </vbox>
   </hbox>
 
