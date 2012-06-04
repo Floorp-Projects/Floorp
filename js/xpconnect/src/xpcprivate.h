@@ -2704,6 +2704,15 @@ public:
                            nsISupports* aCOMObj,
                            XPCWrappedNative** aWrapper);
 
+    // Returns the wrapper corresponding to the parent of our mFlatJSObject.
+    //
+    // If the parent does not have a WN, or if there is no parent, null is
+    // returned.
+    XPCWrappedNative *GetParentWrapper();
+
+    bool IsOrphan();
+    nsresult RescueOrphans(XPCCallContext& ccx);
+
     void FlatJSObjectFinalized();
 
     void SystemIsBeingShutDown();

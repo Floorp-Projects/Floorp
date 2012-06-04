@@ -1547,6 +1547,19 @@ MoveWrapper(XPCCallContext& ccx, XPCWrappedNative *wrapper,
         return NS_OK;
     }
 
+    // For performance reasons, we wait to fix up orphaned wrappers (wrappers
+    // whose parents have moved to another scope) until right before they
+    // threaten to confuse us.
+    //
+    // If this wrapper is an orphan, reunite it with its parent. If, following
+    // that, the wrapper is no longer in the old scope, then we don't need to
+    // reparent it.
+    MOZ_ASSERT(wrapper->GetScope() == oldScope);
+    nsresult rv = wrapper->RescueOrphans(ccx);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (wrapper->GetScope() != oldScope)
+        return NS_OK;
+
     nsISupports *identity = wrapper->GetIdentityObject();
     nsCOMPtr<nsIClassInfo> info(do_QueryInterface(identity));
 
@@ -1571,9 +1584,9 @@ MoveWrapper(XPCCallContext& ccx, XPCWrappedNative *wrapper,
         return NS_OK;
 
     JSObject *newParent = oldScope->GetGlobalJSObject();
-    nsresult rv = sciWrapper.GetCallback()->PreCreate(identity, ccx,
-                                                      newParent,
-                                                      &newParent);
+    rv = sciWrapper.GetCallback()->PreCreate(identity, ccx,
+                                             newParent,
+                                             &newParent);
     if (NS_FAILED(rv))
         return rv;
 
