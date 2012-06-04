@@ -173,9 +173,9 @@ Parser::newObjectBox(JSObject *obj)
 FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn, TreeContext *tc)
   : ObjectBox(traceListHead, obj),
     node(fn),
-    siblings(tc->sc->functionList),
+    siblings(tc->functionList),
     kids(NULL),
-    parent(tc->sc->funbox),
+    parent(tc->sc->inFunction() ? tc->sc->funbox() : NULL),
     bindings(tc->sc->context),
     level(tc->sc->staticLevel),
     ndefaults(0),
@@ -192,7 +192,7 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn,
             break;
         }
     }
-    if (!tc->sc->inFunction) {
+    if (!tc->sc->inFunction()) {
         JSObject *scope = tc->sc->scopeChain();
         while (scope) {
             if (scope->isWith())
@@ -221,7 +221,7 @@ Parser::newFunctionBox(JSObject *obj, ParseNode *fn, TreeContext *tc)
         return NULL;
     }
 
-    traceListHead = tc->sc->functionList = funbox;
+    traceListHead = tc->functionList = funbox;
 
     return funbox;
 }
@@ -267,11 +267,10 @@ Parser::parse(JSObject *chain)
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
-    SharedContext globalsc(context, /* inFunction = */ false);
+    SharedContext globalsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL);
     TreeContext globaltc(this, &globalsc);
     if (!globaltc.init())
         return NULL;
-    globalsc.setScopeChain(chain);
     if (!GenerateBlockId(&globalsc, globalsc.bodyid))
         return NULL;
 
@@ -432,7 +431,7 @@ ReportBadReturn(JSContext *cx, Parser *parser, ParseNode *pn, unsigned flags, un
 static JSBool
 CheckFinalReturn(JSContext *cx, Parser *parser, ParseNode *pn)
 {
-    JS_ASSERT(parser->tc->sc->inFunction);
+    JS_ASSERT(parser->tc->sc->inFunction());
     return HasFinalReturn(pn) == ENDS_IN_RETURN ||
            ReportBadReturn(cx, parser, pn, JSREPORT_WARNING | JSREPORT_STRICT,
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
@@ -505,7 +504,7 @@ static bool
 CheckStrictParameters(JSContext *cx, Parser *parser)
 {
     SharedContext *sc = parser->tc->sc;
-    JS_ASSERT(sc->inFunction);
+    JS_ASSERT(sc->inFunction());
 
     if (!sc->needStrictChecks() || sc->bindings.numArgs() == 0)
         return true;
@@ -574,7 +573,7 @@ BindLocalVariable(JSContext *cx, SharedContext *sc, ParseNode *pn, BindingKind k
 ParseNode *
 Parser::functionBody(FunctionBodyType type)
 {
-    JS_ASSERT(tc->sc->inFunction);
+    JS_ASSERT(tc->sc->inFunction());
 
     StmtInfo stmtInfo(context);
     PushStatement(tc->sc, &stmtInfo, STMT_BLOCK, -1);
@@ -734,7 +733,7 @@ Parser::functionBody(FunctionBodyType type)
 bool
 Parser::checkForArgumentsAndRest()
 {
-    JS_ASSERT(!tc->sc->inFunction);
+    JS_ASSERT(!tc->sc->inFunction());
     if (callerFrame && callerFrame->isFunctionFrame() && callerFrame->fun()->hasRest()) {
         PropertyName *arguments = context->runtime->atomState.argumentsAtom;
         for (AtomDefnRange r = tc->lexdeps->all(); !r.empty(); r.popFront()) {
@@ -992,7 +991,7 @@ static JSBool
 BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
 {
     TreeContext *tc = parser->tc;
-    JS_ASSERT(tc->sc->inFunction);
+    JS_ASSERT(tc->sc->inFunction());
 
     /*
      * NB: Check tc->decls rather than tc->sc->bindings, because destructuring
@@ -1048,7 +1047,7 @@ Parser::newFunction(TreeContext *tc, JSAtom *atom, FunctionSyntaxKind kind)
         tc = tc->parent;
 
     RootedObject parent(context);
-    parent = tc->sc->inFunction ? NULL : tc->sc->scopeChain();
+    parent = tc->sc->inFunction() ? NULL : tc->sc->scopeChain();
 
     RootedFunction fun(context);
     fun = js_NewFunction(context, NULL, NULL, 0,
@@ -1080,31 +1079,17 @@ MatchOrInsertSemicolon(JSContext *cx, TokenStream *ts)
     return JS_TRUE;
 }
 
-static FunctionBox *
-EnterFunction(ParseNode *fn, Parser *parser, JSAtom *funAtom = NULL,
-              FunctionSyntaxKind kind = Expression)
+static bool
+EnterFunction(SharedContext *outersc, SharedContext *funsc)
 {
-    TreeContext *funtc = parser->tc;
-    TreeContext *outertc = funtc->parent;
-    JSFunction *fun = parser->newFunction(outertc, funAtom, kind);
-    if (!fun)
-        return NULL;
+    /* Initialize non-default members of funsc. */
+    funsc->blockidGen = outersc->blockidGen;
+    if (!GenerateBlockId(funsc, funsc->bodyid))
+        return false;
+    if (!SetStaticLevel(funsc, outersc->staticLevel + 1))
+        return false;
 
-    /* Create box for fun->object early to protect against last-ditch GC. */
-    FunctionBox *funbox = parser->newFunctionBox(fun, fn, outertc);
-    if (!funbox)
-        return NULL;
-
-    /* Initialize non-default members of funtc->sc. */
-    funtc->sc->blockidGen = outertc->sc->blockidGen;
-    if (!GenerateBlockId(funtc->sc, funtc->sc->bodyid))
-        return NULL;
-    funtc->sc->setFunction(fun);
-    funtc->sc->funbox = funbox;
-    if (!SetStaticLevel(funtc->sc, outertc->sc->staticLevel + 1))
-        return NULL;
-
-    return funbox;
+    return true;
 }
 
 static bool
@@ -1293,7 +1278,7 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
         return false;
     argsbody->setOp(JSOP_NOP);
     argsbody->makeEmpty();
-    tc->sc->funbox->node->pn_body = argsbody;
+    tc->sc->funbox()->node->pn_body = argsbody;
 
     if (!tokenStream.matchToken(TOK_RP)) {
         bool hasDefaults = false;
@@ -1418,7 +1403,7 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                 uint16_t slot;
                 if (!tc->sc->bindings.addArgument(context, name, &slot))
                     return false;
-                if (!DefineArg(tc->sc->funbox->node, name, slot, this))
+                if (!DefineArg(tc->sc->funbox()->node, name, slot, this))
                     return false;
 
                 if (tokenStream.matchToken(TOK_ASSIGN)) {
@@ -1430,10 +1415,10 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                     ParseNode *def_expr = assignExprWithoutYield(JSMSG_YIELD_IN_DEFAULT);
                     if (!def_expr)
                         return false;
-                    ParseNode *arg = tc->sc->funbox->node->pn_body->last();
+                    ParseNode *arg = tc->sc->funbox()->node->pn_body->last();
                     arg->pn_dflags |= PND_DEFAULT;
                     arg->pn_expr = def_expr;
-                    tc->sc->funbox->ndefaults++;
+                    tc->sc->funbox()->ndefaults++;
                 } else if (!hasRest && hasDefaults) {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT);
                     return false;
@@ -1552,7 +1537,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
          * when BytecodeEmitter.cpp's BindNameToSlot can optimize a JSOP_NAME
          * into a JSOP_GETLOCAL bytecode).
          */
-        if (bodyLevel && tc->sc->inFunction) {
+        if (bodyLevel && tc->sc->inFunction()) {
             /*
              * Define a local in the outer function so that BindNameToSlot
              * can properly optimize accesses. Note that we need a local
@@ -1581,20 +1566,26 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
 
     TreeContext *outertc = tc;
 
+    RootedFunction fun(context, newFunction(outertc, funName, kind));
+    if (!fun)
+        return NULL;
+
+    /* Create box for fun->object early to protect against last-ditch GC. */
+    FunctionBox *funbox = newFunctionBox(fun, pn, outertc);
+    if (!funbox)
+        return NULL;
+
     /* Initialize early for possible flags mutation via destructuringExpr. */
-    SharedContext funsc(context, /* inFunction = */ true);
+    SharedContext funsc(context, /* scopeChain = */ NULL, fun, funbox);
     TreeContext funtc(this, &funsc);
     if (!funtc.init())
         return NULL;
 
-    FunctionBox *funbox = EnterFunction(pn, this, funName, kind);
-    if (!funbox)
+    if (!EnterFunction(outertc->sc, &funsc))
         return NULL;
 
     if (outertc->sc->inStrictMode())
         funsc.setInStrictMode();    // inherit strict mode from parent
-
-    RootedFunction fun(context, funbox->function());
 
     /* Now parse formal argument list and compute fun->nargs. */
     ParseNode *prelude = NULL;
@@ -1757,14 +1748,14 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         }
     }
 
-    funbox->kids = funsc.functionList;
+    funbox->kids = funtc.functionList;
 
     pn->pn_funbox = funbox;
     pn->setOp(op);
     pn->pn_body->append(body);
     pn->pn_body->pn_pos = body->pn_pos;
 
-    JS_ASSERT_IF(!outertc->sc->inFunction && bodyLevel && kind == Statement,
+    JS_ASSERT_IF(!outertc->sc->inFunction() && bodyLevel && kind == Statement,
                  pn->pn_cookie.isFree());
 
     pn->pn_blockid = outertc->sc->blockid();
@@ -2123,7 +2114,7 @@ OuterLet(SharedContext *sc, StmtInfo *stmt, JSAtom *atom)
 static bool
 BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, SharedContext *sc)
 {
-    JS_ASSERT(sc->inFunction);
+    JS_ASSERT(sc->inFunction());
 
     ParseNode *pn = data->pn;
     JSAtom *name = pn->pn_atom;
@@ -2146,7 +2137,7 @@ BindFunctionLocal(JSContext *cx, BindData *data, MultiDeclRange &mdl, SharedCont
     }
 
     if (kind == ARGUMENT) {
-        JS_ASSERT(sc->inFunction);
+        JS_ASSERT(sc->inFunction());
         JS_ASSERT(!mdl.empty() && mdl.front()->kind() == Definition::ARG);
     } else {
         JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
@@ -2299,7 +2290,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
     if (data->op == JSOP_DEFCONST)
         pn->pn_dflags |= PND_CONST;
 
-    if (tc->sc->inFunction)
+    if (tc->sc->inFunction())
         return BindFunctionLocal(cx, data, mdl, tc->sc);
 
     return true;
@@ -2355,7 +2346,7 @@ NoteLValue(JSContext *cx, ParseNode *pn, SharedContext *sc, unsigned dflag = PND
      * mode, we must have a binding for it in the scope chain; we ensure this
      * happens by making such functions heavyweight.
      */
-    if (sc->inFunction && pn->pn_atom == sc->fun()->atom)
+    if (sc->inFunction() && pn->pn_atom == sc->fun()->atom)
         sc->setFunIsHeavyweight();
 }
 
@@ -2691,7 +2682,7 @@ ParseNode *
 Parser::returnOrYield(bool useAssignExpr)
 {
     TokenKind tt = tokenStream.currentToken().type;
-    if (!tc->sc->inFunction) {
+    if (!tc->sc->inFunction()) {
         reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD,
                           (tt == TOK_RETURN) ? js_return_str : js_yield_str);
         return NULL;
@@ -3160,7 +3151,7 @@ Parser::forStatement()
              * expressions involving an 'in' operator are illegal in the init
              * clause of an ordinary for loop.
              */
-            tc->sc->inForInit = true;
+            tc->inForInit = true;
             if (tt == TOK_VAR || tt == TOK_CONST) {
                 forDecl = true;
                 tokenStream.consumeKnownToken(tt);
@@ -3183,7 +3174,7 @@ Parser::forStatement()
             else {
                 pn1 = expr();
             }
-            tc->sc->inForInit = false;
+            tc->inForInit = false;
             if (!pn1)
                 return NULL;
         }
@@ -3201,7 +3192,7 @@ Parser::forStatement()
      * We can be sure that it's a for/in loop if there's still an 'in'
      * keyword here, even if JavaScript recognizes 'in' as an operator,
      * as we've excluded 'in' from being parsed in RelExpr by setting
-     * tc->sc->inForInit.
+     * tc->inForInit.
      */
     ParseNode *forHead;        /* initialized by both branches. */
     StmtInfo letStmt(context); /* used if blockObj != NULL. */
@@ -4264,7 +4255,7 @@ Parser::variables(ParseNodeKind kind, StaticBlockObject *blockObj, VarContext va
             if (!CheckDestructuring(context, &data, pn2, this))
                 return NULL;
             bool ignored;
-            if (tc->sc->inForInit && matchInOrOf(&ignored)) {
+            if (tc->inForInit && matchInOrOf(&ignored)) {
                 tokenStream.ungetToken();
                 pn->append(pn2);
                 continue;
@@ -4471,8 +4462,8 @@ BEGIN_EXPR_PARSER(relExpr1)
      * Uses of the in operator in shiftExprs are always unambiguous,
      * so unset the flag that prohibits recognizing it.
      */
-    bool oldInForInit = tc->sc->inForInit;
-    tc->sc->inForInit = false;
+    bool oldInForInit = tc->inForInit;
+    tc->inForInit = false;
 
     ParseNode *pn = shiftExpr1i();
     while (pn &&
@@ -4488,7 +4479,7 @@ BEGIN_EXPR_PARSER(relExpr1)
         pn = ParseNode::newBinaryOrAppend(kind, op, pn, shiftExpr1n(), this);
     }
     /* Restore previous state of inForInit flag. */
-    tc->sc->inForInit |= oldInForInit;
+    tc->inForInit |= oldInForInit;
 
     return pn;
 }
@@ -4582,10 +4573,10 @@ Parser::condExpr1()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    bool oldInForInit = tc->sc->inForInit;
-    tc->sc->inForInit = false;
+    bool oldInForInit = tc->inForInit;
+    tc->inForInit = false;
     ParseNode *thenExpr = assignExpr();
-    tc->sc->inForInit = oldInForInit;
+    tc->inForInit = oldInForInit;
     if (!thenExpr)
         return NULL;
 
@@ -5007,7 +4998,7 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
     TreeContext *tc = parser->tc;
     if (tc->yieldCount > 0) {
         tc->sc->setFunIsGenerator();
-        if (!tc->sc->inFunction) {
+        if (!tc->sc->inFunction()) {
             parser->reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD,
                                       js_yield_str);
             return false;
@@ -5112,9 +5103,9 @@ CompExprTransplanter::transplant(ParseNode *pn)
 
         funbox->level = tc->sc->staticLevel + funcLevel;
         if (++funcLevel == 1 && genexp) {
-            FunctionBox *parent = tc->sc->funbox;
+            FunctionBox *parent = tc->sc->funbox();
 
-            FunctionBox **funboxp = &tc->parent->sc->functionList;
+            FunctionBox **funboxp = &tc->parent->functionList;
             while (*funboxp != funbox)
                 funboxp = &(*funboxp)->siblings;
             *funboxp = funbox->siblings;
@@ -5499,13 +5490,22 @@ Parser::generatorExpr(ParseNode *kid)
 
     {
         TreeContext *outertc = tc;
-        SharedContext gensc(context, /* inFunction = */ true);
+
+        RootedFunction fun(context, newFunction(outertc, /* atom = */ NULL, Expression));
+        if (!fun)
+            return NULL;
+
+        /* Create box for fun->object early to protect against last-ditch GC. */
+        FunctionBox *funbox = newFunctionBox(fun, genfn, outertc);
+        if (!funbox)
+            return NULL;
+
+        SharedContext gensc(context, /* scopeChain = */ NULL, fun, funbox);
         TreeContext gentc(this, &gensc);
         if (!gentc.init())
             return NULL;
 
-        FunctionBox *funbox = EnterFunction(genfn, this);
-        if (!funbox)
+        if (!EnterFunction(outertc->sc, &gensc))
             return NULL;
 
         /*
@@ -5874,10 +5874,10 @@ Parser::bracketedExpr()
      * where it's unambiguous, even if we might be parsing the init of a
      * for statement.
      */
-    bool oldInForInit = tc->sc->inForInit;
-    tc->sc->inForInit = false;
+    bool oldInForInit = tc->inForInit;
+    tc->inForInit = false;
     ParseNode *pn = expr();
-    tc->sc->inForInit = oldInForInit;
+    tc->inForInit = oldInForInit;
     return pn;
 }
 
@@ -6477,12 +6477,11 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * lightweight function activation, or if its scope chain doesn't match
      * the one passed to us.
      */
-    SharedContext xmlsc(context, /* inFunction = */ false);
+    SharedContext xmlsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL);
     TreeContext xmltc(this, &xmlsc);
     if (!xmltc.init())
         return NULL;
     JS_ASSERT(!xmlsc.inStrictMode());
-    xmlsc.setScopeChain(chain);
 
     /* Set XML-only mode to turn off special treatment of {expr} in XML. */
     tokenStream.setXMLOnlyMode();

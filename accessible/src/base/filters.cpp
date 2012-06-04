@@ -20,7 +20,7 @@ filters::GetSelected(Accessible* aAccessible)
 bool
 filters::GetSelectable(Accessible* aAccessible)
 {
-  return aAccessible->State() & states::SELECTABLE;
+  return aAccessible->InteractiveState() & states::SELECTABLE;
 }
 
 bool

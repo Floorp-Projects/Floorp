@@ -37,6 +37,30 @@ LocationCallback(GpsLocation* location)
   callback->Update(somewhere);
 }
 
+static void
+StatusCallback(GpsStatus* status)
+{}
+
+static void
+SvStatusCallback(GpsSvStatus* sv_info)
+{}
+
+static void
+NmeaCallback(GpsUtcTime timestamp, const char* nmea, int length)
+{}
+
+static void
+SetCapabilitiesCallback(uint32_t capabilities)
+{}
+
+static void
+AcquireWakelockCallback()
+{}
+
+static void
+ReleaseWakelockCallback()
+{}
+
 typedef void *(*pthread_func)(void *);
 
 /** Callback for creating a thread that can call into the JS codes.
@@ -57,16 +81,23 @@ CreateThreadCallback(const char* name, void (*start)(void *), void* arg)
   return thread;
 }
 
+static void
+RequestUtcTimeCallback()
+{}
+
 static GpsCallbacks gCallbacks = {
   sizeof(GpsCallbacks),
   LocationCallback,
-  NULL, /* StatusCallback */
-  NULL, /* SvStatusCallback */
-  NULL, /* NmeaCallback */
-  NULL, /* SetCapabilitiesCallback */
-  NULL, /* AcquireWakelockCallback */
-  NULL, /* ReleaseWakelockCallback */
+  StatusCallback,
+  SvStatusCallback,
+  NmeaCallback,
+  SetCapabilitiesCallback,
+  AcquireWakelockCallback,
+  ReleaseWakelockCallback,
   CreateThreadCallback,
+#ifdef GPS_CAPABILITY_ON_DEMAND_TIME
+  RequestUtcTimeCallback,
+#endif
 };
 
 GonkGPSGeolocationProvider::GonkGPSGeolocationProvider()

@@ -351,6 +351,11 @@ var AccessFu = {
         }
         break;
       }
+      case Ci.nsIAccessibleEvent.EVENT_SCROLLING_START:
+      {
+        VirtualCursorController.moveCursorToObject(aEvent.accessible);
+        break;
+      }
       default:
         break;
     }

@@ -223,6 +223,8 @@ public:
   bool UseForPresentation(nsPresContext* aPresContext,
                             nsMediaQueryResultCacheKey& aKey) const;
 
+  nsresult ParseSheet(const nsAString& aInput);
+
   // nsIDOMStyleSheet interface
   NS_DECL_NSIDOMSTYLESHEET
 
