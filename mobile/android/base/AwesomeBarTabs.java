@@ -481,7 +481,6 @@ public class AwesomeBarTabs extends TabHost {
             byte[] favicon = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
             Integer bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID));
             Integer historyId = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
-            Integer display = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.DISPLAY));
 
             // Use the URL instead of an empty title for consistency with the normal URL
             // bar view - this is the equivalent of getDisplayTitle() in Tab.java
