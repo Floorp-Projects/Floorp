@@ -14,6 +14,7 @@ include $(DEPTH)/config/autoconf.mk
 ifdef MOZ_B2G_RIL
 EXTRA_JS_MODULES = \
   ril/wap_consts.js \
+  ril/WapPushManager.js \
   ril/WspPduHelper.jsm \
   $(NULL)
 endif
