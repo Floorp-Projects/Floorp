@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsBaseWidgetAccessible_H_
-#define _nsBaseWidgetAccessible_H_
+#ifndef mozilla_a11y_BaseAccessibles_h__
+#define mozilla_a11y_BaseAccessibles_h__
 
 #include "AccessibleWrap.h"
 #include "HyperTextAccessibleWrap.h"
@@ -16,14 +16,17 @@
   *  the HTML and XUL widget sets.  --jgaunt
   */
 
-/** 
+namespace mozilla {
+namespace a11y {
+
+/**
   * Leaf version of DOM Accessible -- has no children
   */
-class nsLeafAccessible : public AccessibleWrap
+class LeafAccessible : public AccessibleWrap
 {
 public:
 
-  nsLeafAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  LeafAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -44,12 +47,12 @@ protected:
  * report the state of the host link (traveled or not) and can activate (click)
  * the host accessible programmatically.
  */
-class nsLinkableAccessible : public AccessibleWrap
+class LinkableAccessible : public AccessibleWrap
 {
 public:
   enum { eAction_Jump = 0 };
 
-  nsLinkableAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  LinkableAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -87,21 +90,24 @@ protected:
 
 /**
  * A simple accessible that gets its enumerated role passed into constructor.
- */ 
-class nsEnumRoleAccessible : public AccessibleWrap
+ */
+class EnumRoleAccessible : public AccessibleWrap
 {
 public:
-  nsEnumRoleAccessible(nsIContent* aContent, DocAccessible* aDoc,
-                       mozilla::a11y::role aRole);
-  virtual ~nsEnumRoleAccessible() { }
+  EnumRoleAccessible(nsIContent* aContent, DocAccessible* aDoc, 
+                     a11y::role aRole);
+  virtual ~EnumRoleAccessible() { }
 
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
 
 protected:
-  mozilla::a11y::role mRole;
+  a11y::role mRole;
 };
 
-#endif  
+} // namespace a11y
+} // namespace mozilla
+
+#endif

@@ -30,7 +30,7 @@ using namespace mozilla::a11y;
 
 ImageAccessible::
   ImageAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsLinkableAccessible(aContent, aDoc)
+  LinkableAccessible(aContent, aDoc)
 {
   mFlags |= eImageAccessible;
 }
@@ -47,7 +47,7 @@ ImageAccessible::NativeState()
   // The state is a bitfield, get our inherited state, then logically OR it with
   // states::ANIMATED if this is an animated image.
 
-  PRUint64 state = nsLinkableAccessible::NativeState();
+  PRUint64 state = LinkableAccessible::NativeState();
 
   nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mContent));
   nsCOMPtr<imgIRequest> imageRequest;
@@ -104,7 +104,7 @@ ImageAccessible::NativeRole()
 PRUint8
 ImageAccessible::ActionCount()
 {
-  PRUint8 actionCount = nsLinkableAccessible::ActionCount();
+  PRUint8 actionCount = LinkableAccessible::ActionCount();
   return HasLongDesc() ? actionCount + 1 : actionCount;
 }
 
@@ -120,7 +120,7 @@ ImageAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
     aName.AssignLiteral("showlongdesc"); 
     return NS_OK;
   }
-  return nsLinkableAccessible::GetActionName(aIndex, aName);
+  return LinkableAccessible::GetActionName(aIndex, aName);
 }
 
 NS_IMETHODIMP
@@ -131,7 +131,7 @@ ImageAccessible::DoAction(PRUint8 aIndex)
 
   // Get the long description uri and open in a new window.
   if (!IsLongDescIndex(aIndex))
-    return nsLinkableAccessible::DoAction(aIndex);
+    return LinkableAccessible::DoAction(aIndex);
 
   nsCOMPtr<nsIURI> uri = GetLongDescURI();
   if (!uri)
@@ -179,7 +179,7 @@ ImageAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsresult rv = nsLinkableAccessible::GetAttributesInternal(aAttributes);
+  nsresult rv = LinkableAccessible::GetAttributesInternal(aAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoString src;
@@ -228,6 +228,6 @@ ImageAccessible::GetLongDescURI() const
 bool
 ImageAccessible::IsLongDescIndex(PRUint8 aIndex)
 {
-  return aIndex == nsLinkableAccessible::ActionCount();
+  return aIndex == LinkableAccessible::ActionCount();
 }
 

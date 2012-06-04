@@ -719,7 +719,7 @@ nsXULTreeGridCellAccessible::
                               nsXULTreeGridRowAccessible* aRowAcc,
                               nsITreeBoxObject* aTree, nsITreeView* aTreeView,
                               PRInt32 aRow, nsITreeColumn* aColumn) :
-  nsLeafAccessible(aContent, aDoc), mTree(aTree),
+  LeafAccessible(aContent, aDoc), mTree(aTree),
   mTreeView(aTreeView), mRow(aRow), mColumn(aColumn)
 {
   mParent = aRowAcc;
@@ -731,13 +731,13 @@ nsXULTreeGridCellAccessible::
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXULTreeGridCellAccessible)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULTreeGridCellAccessible,
-                                                  nsLeafAccessible)
+                                                  LeafAccessible)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTree)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mColumn)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULTreeGridCellAccessible,
-                                                nsLeafAccessible)
+                                                LeafAccessible)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTree)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mColumn)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -746,9 +746,9 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULTreeGridCellAccessible)
   NS_INTERFACE_TABLE_INHERITED2(nsXULTreeGridCellAccessible,
                                 nsIAccessibleTableCell,
                                 nsXULTreeGridCellAccessible)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsLeafAccessible)
-NS_IMPL_ADDREF_INHERITED(nsXULTreeGridCellAccessible, nsLeafAccessible)
-NS_IMPL_RELEASE_INHERITED(nsXULTreeGridCellAccessible, nsLeafAccessible)
+NS_INTERFACE_TABLE_TAIL_INHERITING(LeafAccessible)
+NS_IMPL_ADDREF_INHERITED(nsXULTreeGridCellAccessible, LeafAccessible)
+NS_IMPL_RELEASE_INHERITED(nsXULTreeGridCellAccessible, LeafAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeGridCellAccessible: nsIAccessible implementation
@@ -1029,7 +1029,7 @@ nsXULTreeGridCellAccessible::IsSelected(bool *aIsSelected)
 bool
 nsXULTreeGridCellAccessible::Init()
 {
-  if (!nsLeafAccessible::Init() || !mTreeView)
+  if (!LeafAccessible::Init() || !mTreeView)
     return false;
 
   PRInt16 type;

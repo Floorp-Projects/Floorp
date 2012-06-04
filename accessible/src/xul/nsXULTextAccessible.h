@@ -6,8 +6,8 @@
 #ifndef _nsXULTextAccessible_H_
 #define _nsXULTextAccessible_H_
 
+#include "BaseAccessibles.h"
 #include "HyperTextAccessibleWrap.h"
-#include "nsBaseWidgetAccessible.h"
 
 /**
  * Used for XUL description and label elements.
@@ -27,7 +27,7 @@ public:
 /**
  * Used for XUL tooltip element.
  */
-class nsXULTooltipAccessible : public nsLeafAccessible
+class nsXULTooltipAccessible : public mozilla::a11y::LeafAccessible
 {
 
 public:

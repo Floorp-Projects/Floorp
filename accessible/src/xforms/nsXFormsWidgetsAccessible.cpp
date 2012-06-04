@@ -17,7 +17,7 @@ using namespace mozilla::a11y;
 nsXFormsDropmarkerWidgetAccessible::
   nsXFormsDropmarkerWidgetAccessible(nsIContent* aContent,
                                      DocAccessible* aDoc) :
-  nsLeafAccessible(aContent, aDoc)
+  LeafAccessible(aContent, aDoc)
 {
 }
 

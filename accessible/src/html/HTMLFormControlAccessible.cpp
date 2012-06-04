@@ -43,7 +43,7 @@ using namespace mozilla::a11y;
 
 HTMLCheckboxAccessible::
   HTMLCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsLeafAccessible(aContent, aDoc)
+  LeafAccessible(aContent, aDoc)
 {
 }
 
@@ -91,7 +91,7 @@ HTMLCheckboxAccessible::DoAction(PRUint8 aIndex)
 PRUint64
 HTMLCheckboxAccessible::NativeState()
 {
-  PRUint64 state = nsLeafAccessible::NativeState();
+  PRUint64 state = LeafAccessible::NativeState();
 
   state |= states::CHECKABLE;
   bool checkState = false;   // Radio buttons and check boxes can be checked or mixed
