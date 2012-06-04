@@ -491,7 +491,10 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint32 aKey, bool *_retval)
         // The user wants explicitely to use that result, so this ensures
         // association of the result with the autocompleted text.
         nsAutoString value;
-        if (NS_SUCCEEDED(GetFinalDefaultCompleteValue(value))) {
+        nsAutoString inputValue;
+        input->GetTextValue(inputValue);
+        if (NS_SUCCEEDED(GetDefaultCompleteValue(-1, false, value)) &&
+            value.Equals(inputValue, nsCaseInsensitiveStringComparator())) {
           input->SetTextValue(value);
           input->SelectTextRange(value.Length(), value.Length());
         }
@@ -1166,14 +1169,17 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
     bool completeSelection;
     input->GetCompleteSelectedIndex(&completeSelection);
 
-    // If completeselectedindex is false or a row was selected from the popup,
-    // enter it into the textbox. If completeselectedindex is true, or
-    // EnterMatch was called via other means, for instance pressing Enter,
-    // don't fill in the value as it will have already been filled in as needed.
     PRInt32 selectedIndex;
     popup->GetSelectedIndex(&selectedIndex);
-    if (selectedIndex >= 0 && (!completeSelection || aIsPopupSelection))
-      GetResultValueAt(selectedIndex, true, value);
+    if (selectedIndex >= 0) {
+      // If completeselectedindex is false or a row was selected from the popup,
+      // enter it into the textbox. If completeselectedindex is true, or
+      // EnterMatch was called via other means, for instance pressing Enter,
+      // don't fill in the value as it will have already been filled in as
+      // needed.
+      if (!completeSelection || aIsPopupSelection)
+        GetResultValueAt(selectedIndex, true, value);
+    }
     else if (shouldComplete) {
       // We usually try to preserve the casing of what user has typed, but
       // if he wants to autocomplete, we will replace the value with the
@@ -1528,24 +1534,25 @@ nsAutoCompleteController::GetFinalDefaultCompleteValue(nsAString &_retval)
   nsresult rv = GetDefaultCompleteResult(-1, &result, &defaultIndex);
   if (NS_FAILED(rv)) return rv;
 
+  result->GetValueAt(defaultIndex, _retval);
+  nsAutoString inputValue;
+  mInput->GetTextValue(inputValue);
+  if (!_retval.Equals(inputValue, nsCaseInsensitiveStringComparator())) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Hack: For typeAheadResults allow the comment to be used as the final
   // defaultComplete value if provided, otherwise fall back to the usual
   // value.  This allows to provide a different complete text when the user
   // confirms the match.  Don't rely on this for production code, since it's a
   // temporary solution that needs a dedicated API (bug 754265).
   bool isTypeAheadResult = false;
+  nsAutoString commentValue;
   if (NS_SUCCEEDED(result->GetTypeAheadResult(&isTypeAheadResult)) &&
       isTypeAheadResult &&
-      NS_SUCCEEDED(result->GetCommentAt(defaultIndex, _retval)) &&
-      !_retval.IsEmpty()) {
-    return NS_OK;
-  }
-
-  result->GetValueAt(defaultIndex, _retval);
-  nsAutoString inputValue;
-  mInput->GetTextValue(inputValue);
-  if (!_retval.Equals(inputValue, nsCaseInsensitiveStringComparator())) {
-    return NS_ERROR_FAILURE;
+      NS_SUCCEEDED(result->GetCommentAt(defaultIndex, commentValue)) &&
+      !commentValue.IsEmpty()) {
+    _retval = commentValue;
   }
 
   return NS_OK;

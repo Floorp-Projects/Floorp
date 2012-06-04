@@ -97,13 +97,12 @@ protected:
                                    nsAString &_retval);
 
   /**
-   * Gets the defaultComplete value to be used when the user navigates or
-   * confirms the current match.
+   * Gets the defaultComplete value to be used when the user confirms the
+   * current match.
    * The value is returned only if it case-insensitively matches the current
    * input text, otherwise the method returns NS_ERROR_FAILURE.
-   * This happens because we don't want to override user casing in case of a
-   * navigation key (unless the text is the same), or to replace text if the
-   * user backspaces just before Enter.
+   * This happens because we don't want to replace text if the user backspaces
+   * just before Enter.
    *
    * @param _retval
    *        The value to be completed.

@@ -21,6 +21,7 @@
 #include "CheckQuotaHelper.h"
 #include "DatabaseInfo.h"
 #include "IDBEvents.h"
+#include "IDBFileHandle.h"
 #include "IDBIndex.h"
 #include "IDBObjectStore.h"
 #include "IDBTransaction.h"
@@ -88,6 +89,53 @@ public:
 private:
   // In-params.
   PRInt64 mObjectStoreId;
+};
+
+class CreateFileHelper : public AsyncConnectionHelper
+{
+public:
+  CreateFileHelper(IDBDatabase* aDatabase,
+                   IDBRequest* aRequest,
+                   const nsAString& aName,
+                   const nsAString& aType)
+  : AsyncConnectionHelper(aDatabase, aRequest),
+    mName(aName), mType(aType)
+  { }
+
+  ~CreateFileHelper()
+  { }
+
+  nsresult DoDatabaseWork(mozIStorageConnection* aConnection);
+  nsresult GetSuccessResult(JSContext* aCx,
+                            jsval* aVal);
+  void ReleaseMainThreadObjects()
+  {
+    mFileInfo = nsnull;
+    AsyncConnectionHelper::ReleaseMainThreadObjects();
+  }
+
+  virtual ChildProcessSendResult MaybeSendResponseToChildProcess(
+                                                           nsresult aResultCode)
+                                                           MOZ_OVERRIDE
+  {
+    return Success_NotSent;
+  }
+
+  virtual nsresult UnpackResponseFromParentProcess(
+                                            const ResponseValue& aResponseValue)
+                                            MOZ_OVERRIDE
+  {
+    MOZ_NOT_REACHED("Should never get here!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+private:
+  // In-params.
+  nsString mName;
+  nsString mType;
+
+  // Out-params.
+  nsRefPtr<FileInfo> mFileInfo;
 };
 
 NS_STACK_CLASS
@@ -349,6 +397,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBDatabase)
   NS_INTERFACE_MAP_ENTRY(nsIIDBDatabase)
+  NS_INTERFACE_MAP_ENTRY(nsIFileStorage)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBDatabase)
 NS_INTERFACE_MAP_END_INHERITING(IDBWrapperCache)
 
@@ -693,6 +742,36 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
 }
 
 NS_IMETHODIMP
+IDBDatabase::MozCreateFileHandle(const nsAString& aName,
+                                 const nsAString& aType,
+                                 nsIIDBRequest** _retval)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (IndexedDatabaseManager::IsShuttingDown()) {
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  if (mClosed) {
+    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
+  }
+
+  nsRefPtr<IDBRequest> request = IDBRequest::Create(nsnull, this, nsnull);
+
+  nsRefPtr<CreateFileHelper> helper =
+    new CreateFileHelper(this, request, aName, aType);
+
+  IndexedDatabaseManager* manager = IndexedDatabaseManager::Get();
+  NS_ASSERTION(manager, "We should definitely have a manager here");
+
+  nsresult rv = helper->Dispatch(manager->IOThread());
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  request.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 IDBDatabase::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -701,6 +780,37 @@ IDBDatabase::Close()
 
   NS_ASSERTION(mClosed, "Should have set the closed flag!");
   return NS_OK;
+}
+
+nsISupports*
+IDBDatabase::StorageId()
+{
+  return Id();
+}
+
+bool
+IDBDatabase::IsStorageInvalidated()
+{
+  return IsInvalidated();
+}
+
+bool
+IDBDatabase::IsStorageShuttingDown()
+{
+  return IndexedDatabaseManager::IsShuttingDown();
+}
+
+void
+IDBDatabase::SetThreadLocals()
+{
+  NS_ASSERTION(GetOwner(), "Should have owner!");
+  IndexedDatabaseManager::SetCurrentWindow(GetOwner());
+}
+
+void
+IDBDatabase::UnsetThreadLocals()
+{
+  IndexedDatabaseManager::SetCurrentWindow(nsnull);
 }
 
 nsresult
@@ -845,4 +955,36 @@ DeleteObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;
+}
+
+nsresult
+CreateFileHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  FileManager* fileManager = mDatabase->Manager();
+
+  mFileInfo = fileManager->GetNewFileInfo();
+  NS_ENSURE_TRUE(mFileInfo, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsCOMPtr<nsIFile> directory = fileManager->GetDirectory();
+  NS_ENSURE_TRUE(directory, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsCOMPtr<nsIFile> file = fileManager->GetFileForId(directory, mFileInfo->Id());
+  NS_ENSURE_TRUE(file, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsresult rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  return NS_OK;
+}
+
+nsresult
+CreateFileHelper::GetSuccessResult(JSContext* aCx,
+                                   jsval* aVal)
+{
+  nsRefPtr<IDBFileHandle> fileHandle =
+    IDBFileHandle::Create(mDatabase, mName, mType, mFileInfo.forget());
+  NS_ENSURE_TRUE(fileHandle, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  return WrapNative(aCx, NS_ISUPPORTS_CAST(nsIDOMFileHandle*, fileHandle),
+                    aVal);
 }

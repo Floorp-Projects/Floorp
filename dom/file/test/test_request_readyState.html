@@ -1,0 +1,57 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    for each (let fileStorage in fileStorages) {
+      let request = getFileHandle(fileStorage.key, "test.txt");
+      is(request.readyState, "pending", "Correct readyState");
+
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      is(request.readyState, "done", "Correct readyState");
+
+      let fileHandle = event.target.result;
+      fileHandle.onerror = errorHandler;
+
+      let lockedFile = fileHandle.open("readwrite");
+      request = lockedFile.write("string");
+      is(request.readyState, "pending", "Correct readyState");
+
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(request.readyState, "done", "Correct readyState");
+
+      lockedFile.location = 0;
+      request = lockedFile.readAsText(6);
+      request.onsuccess = grabEventAndContinueHandler;
+      is(request.readyState, "pending", "Correct readyState");
+      event = yield;
+
+      ok(event.target.result, "Got something");
+      is(request.readyState, "done", "Correct readyState");
+    }
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

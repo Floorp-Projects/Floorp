@@ -17,8 +17,8 @@ interface nsIDOMDOMRequest : nsIDOMEventTarget
   readonly attribute jsval result;
   readonly attribute nsIDOMDOMError error;
 
-           attribute nsIDOMEventListener onsuccess;
-           attribute nsIDOMEventListener onerror;
+  attribute nsIDOMEventListener onsuccess;
+  attribute nsIDOMEventListener onerror;
 };
 
 [scriptable, builtinclass, uuid(eebcdf29-f8fa-4c36-bbc7-2146b1cbaf7b)]

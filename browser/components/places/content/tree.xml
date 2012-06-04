@@ -45,7 +45,7 @@
       <property name="view">
         <getter><![CDATA[
           try {
-            return this.treeBoxObject.view.QueryInterface(Ci.nsINavHistoryResultTreeViewer);
+            return this.treeBoxObject.view.wrappedJSObject;
           }
           catch(e) {
             return null;
@@ -312,10 +312,7 @@
         <parameter name="aNode"/>
         <parameter name="aValue"/>
         <body><![CDATA[
-          aNode._cutting = aValue;
-          try {
-            this.view.nodeIconChanged(aNode);
-          } catch(ex) { /* ignore no more valid nodes */ }
+          this.view.toggleCutNode(aNode, aValue);
         ]]></body>
       </method>
 

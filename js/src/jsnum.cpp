@@ -836,6 +836,27 @@ static JSFunctionSpec number_methods[] = {
     JS_FS_END
 };
 
+
+// ES6 draft ES6 15.7.3.10
+static JSBool
+Number_isNaN(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 1 || !args[0].isDouble()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+    args.rval().setBoolean(MOZ_DOUBLE_IS_NaN(args[0].toDouble()));
+    return true;
+}
+
+
+static JSFunctionSpec number_static_methods[] = {
+    JS_FN("isNaN", Number_isNaN, 1, 0),
+    JS_FS_END
+};
+
+
 /* NB: Keep this in synch with number_constants[]. */
 enum nc_slot {
     NC_NaN,
@@ -996,6 +1017,9 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 
     /* Add numeric constants (MAX_VALUE, NaN, &c.) to the Number constructor. */
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
+        return NULL;
+
+    if (!DefinePropertiesAndBrand(cx, ctor, NULL, number_static_methods))
         return NULL;
 
     if (!DefinePropertiesAndBrand(cx, numberProto, NULL, number_methods))
