@@ -1089,6 +1089,7 @@ nsCacheService::nsCacheService()
 
     // create list of cache devices
     PR_INIT_CLIST(&mDoomedEntries);
+    mCustomOfflineDevices.Init();
 }
 
 nsCacheService::~nsCacheService()
@@ -1143,6 +1144,15 @@ nsCacheService::Init()
     return NS_OK;
 }
 
+// static
+PLDHashOperator
+nsCacheService::ShutdownCustomCacheDeviceEnum(const nsAString& aProfileDir,
+                                              nsRefPtr<nsOfflineCacheDevice>& aDevice,
+                                              void* aUserArg)
+{
+    aDevice->Shutdown();
+    return PL_DHASH_REMOVE;
+}
 
 void
 nsCacheService::Shutdown()
@@ -1197,6 +1207,8 @@ nsCacheService::Shutdown()
             mOfflineDevice->Shutdown();
 
         NS_IF_RELEASE(mOfflineDevice);
+
+        mCustomOfflineDevices.Enumerate(&nsCacheService::ShutdownCustomCacheDeviceEnum, nsnull);
 
 #ifdef PR_LOGGING
         LogCacheStatistics();
@@ -1533,31 +1545,74 @@ nsCacheService::GetOfflineDevice(nsOfflineCacheDevice **aDevice)
 }
 
 nsresult
+nsCacheService::GetCustomOfflineDevice(nsILocalFile *aProfileDir,
+                                       PRInt32 aQuota,
+                                       nsOfflineCacheDevice **aDevice)
+{
+    nsresult rv;
+
+    nsAutoString profilePath;
+    rv = aProfileDir->GetPath(profilePath);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mCustomOfflineDevices.Get(profilePath, aDevice)) {
+        rv = CreateCustomOfflineDevice(aProfileDir, aQuota, aDevice);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mCustomOfflineDevices.Put(profilePath, *aDevice);
+    }
+
+    return NS_OK;
+}
+
+nsresult
 nsCacheService::CreateOfflineDevice()
 {
-    CACHE_LOG_ALWAYS(("Creating offline device"));
+    CACHE_LOG_ALWAYS(("Creating default offline device"));
+
+    if (mOfflineDevice)        return NS_OK;
+    if (!mObserver)            return NS_ERROR_NOT_AVAILABLE;
+
+    nsresult rv = CreateCustomOfflineDevice(
+        mObserver->OfflineCacheParentDirectory(),
+        mObserver->OfflineCacheCapacity(),
+        &mOfflineDevice);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
+nsresult
+nsCacheService::CreateCustomOfflineDevice(nsILocalFile *aProfileDir,
+                                          PRInt32 aQuota,
+                                          nsOfflineCacheDevice **aDevice)
+{
+    NS_ENSURE_ARG(aProfileDir);
+
+#if defined(PR_LOGGING)
+    nsCAutoString profilePath;
+    aProfileDir->GetNativePath(profilePath);
+    CACHE_LOG_ALWAYS(("Creating custom offline device, %s, %d",
+                      profilePath.BeginReading(), aQuota));
+#endif
 
     if (!mInitialized)         return NS_ERROR_NOT_AVAILABLE;
     if (!mEnableOfflineDevice) return NS_ERROR_NOT_AVAILABLE;
-    if (mOfflineDevice)        return NS_OK;
 
-    mOfflineDevice = new nsOfflineCacheDevice;
-    if (!mOfflineDevice)       return NS_ERROR_OUT_OF_MEMORY;
+    *aDevice = new nsOfflineCacheDevice;
 
-    NS_ADDREF(mOfflineDevice);
+    NS_ADDREF(*aDevice);
 
     // set the preferences
-    mOfflineDevice->SetCacheParentDirectory(
-        mObserver->OfflineCacheParentDirectory());
-    mOfflineDevice->SetCapacity(mObserver->OfflineCacheCapacity());
+    (*aDevice)->SetCacheParentDirectory(aProfileDir);
+    (*aDevice)->SetCapacity(aQuota);
 
-    nsresult rv = mOfflineDevice->Init();
+    nsresult rv = (*aDevice)->Init();
     if (NS_FAILED(rv)) {
-        CACHE_LOG_DEBUG(("mOfflineDevice->Init() failed (0x%.8x)\n", rv));
+        CACHE_LOG_DEBUG(("OfflineDevice->Init() failed (0x%.8x)\n", rv));
         CACHE_LOG_DEBUG(("    - disabling offline cache for this session.\n"));
 
-        mEnableOfflineDevice = false;
-        NS_RELEASE(mOfflineDevice);
+        NS_RELEASE(*aDevice);
     }
     return rv;
 }
@@ -1732,6 +1787,20 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
             DeactivateEntry(entry);
         }
         // loop back around to look for another entry
+    }
+
+    if (NS_SUCCEEDED(rv) && request->mProfileDir) {
+        // Custom cache directory has been demanded.  Preset the cache device.
+        if (entry->StoragePolicy() != nsICache::STORE_OFFLINE) {
+            // Failsafe check: this is implemented only for offline cache atm.
+            rv = NS_ERROR_FAILURE;
+        } else {
+            nsRefPtr<nsOfflineCacheDevice> customCacheDevice;
+            rv = GetCustomOfflineDevice(request->mProfileDir, -1,
+                                        getter_AddRefs(customCacheDevice));
+            if (NS_SUCCEEDED(rv))
+                entry->SetCustomCacheDevice(customCacheDevice);
+        }
     }
 
     nsICacheEntryDescriptor *descriptor = nsnull;
@@ -2046,12 +2115,16 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
             (void)CreateOfflineDevice(); // ignore the error (check for mOfflineDevice instead)
         }
 
-        if (mOfflineDevice) {
+        device = entry->CustomCacheDevice()
+               ? entry->CustomCacheDevice()
+               : mOfflineDevice;
+
+        if (device) {
             entry->MarkBinding();
-            nsresult rv = mOfflineDevice->BindEntry(entry);
+            nsresult rv = device->BindEntry(entry);
             entry->ClearBinding();
-            if (NS_SUCCEEDED(rv))
-                device = mOfflineDevice;
+            if (NS_FAILED(rv))
+                device = nsnull;
         }
     }
 
@@ -2146,6 +2219,9 @@ nsCacheService::OnProfileShutdown(bool cleanse)
 
         gService->mOfflineDevice->Shutdown();
     }
+    gService->mCustomOfflineDevices.Enumerate(
+        &nsCacheService::ShutdownCustomCacheDeviceEnum, nsnull);
+
     gService->mEnableOfflineDevice = false;
 
     if (gService->mMemoryDevice) {

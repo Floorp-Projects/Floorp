@@ -48,6 +48,9 @@ static const PRUint32 kPinnedEntryRetriesLimit = 3;
 // Maximum number of parallel items loads
 static const PRUint32 kParallelLoadLimit = 15;
 
+// Quota for offline apps when preloading
+static const PRInt32  kCustomProfileQuota = 512000;
+
 #if defined(PR_LOGGING)
 //
 // To enable logging (see prlog.h for full details):
@@ -284,11 +287,13 @@ NS_IMPL_ISUPPORTS6(nsOfflineCacheUpdateItem,
 
 nsOfflineCacheUpdateItem::nsOfflineCacheUpdateItem(nsIURI *aURI,
                                                    nsIURI *aReferrerURI,
+                                                   nsIApplicationCache *aApplicationCache,
                                                    nsIApplicationCache *aPreviousApplicationCache,
                                                    const nsACString &aClientID,
                                                    PRUint32 type)
     : mURI(aURI)
     , mReferrerURI(aReferrerURI)
+    , mApplicationCache(aApplicationCache)
     , mPreviousApplicationCache(aPreviousApplicationCache)
     , mClientID(aClientID)
     , mItemType(type)
@@ -348,6 +353,13 @@ nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate *aUpdate)
         do_QueryInterface(mChannel);
     if (cachingChannel) {
         rv = cachingChannel->SetCacheForOfflineUse(true);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsILocalFile> cacheDirectory;
+        rv = mApplicationCache->GetCacheDirectory(getter_AddRefs(cacheDirectory));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = cachingChannel->SetProfileDirectory(cacheDirectory);
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (!mClientID.IsEmpty()) {
@@ -497,10 +509,18 @@ nsOfflineCacheUpdateItem::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     if (newCachingChannel) {
         rv = newCachingChannel->SetCacheForOfflineUse(true);
         NS_ENSURE_SUCCESS(rv, rv);
+
         if (!mClientID.IsEmpty()) {
             rv = newCachingChannel->SetOfflineCacheClientID(mClientID);
             NS_ENSURE_SUCCESS(rv, rv);
         }
+
+        nsCOMPtr<nsILocalFile> cacheDirectory;
+        rv = mApplicationCache->GetCacheDirectory(getter_AddRefs(cacheDirectory));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = newCachingChannel->SetProfileDirectory(cacheDirectory);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     nsCAutoString oldScheme;
@@ -662,10 +682,11 @@ nsOfflineCacheUpdateItem::GetStatus(PRUint16 *aStatus)
 
 nsOfflineManifestItem::nsOfflineManifestItem(nsIURI *aURI,
                                              nsIURI *aReferrerURI,
+                                             nsIApplicationCache *aApplicationCache,
                                              nsIApplicationCache *aPreviousApplicationCache,
                                              const nsACString &aClientID)
     : nsOfflineCacheUpdateItem(aURI, aReferrerURI,
-                               aPreviousApplicationCache, aClientID,
+                               aApplicationCache, aPreviousApplicationCache, aClientID,
                                nsIApplicationCache::ITEM_MANIFEST)
     , mParserState(PARSE_INIT)
     , mNeedsUpdate(true)
@@ -1172,7 +1193,8 @@ nsOfflineCacheUpdate::GetCacheKey(nsIURI *aURI, nsACString &aKey)
 nsresult
 nsOfflineCacheUpdate::Init(nsIURI *aManifestURI,
                            nsIURI *aDocumentURI,
-                           nsIDOMDocument *aDocument)
+                           nsIDOMDocument *aDocument,
+                           nsILocalFile *aCustomProfileDir)
 {
     nsresult rv;
 
@@ -1214,13 +1236,32 @@ nsOfflineCacheUpdate::Init(nsIURI *aManifestURI,
         do_GetService(NS_APPLICATIONCACHESERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = cacheService->GetActiveCache(manifestSpec,
-                                      getter_AddRefs(mPreviousApplicationCache));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (aCustomProfileDir) {
+        // Create only a new offline application cache in the custom profile
+        // This is a preload of a new cache.
 
-    rv = cacheService->CreateApplicationCache(manifestSpec,
-                                              getter_AddRefs(mApplicationCache));
-    NS_ENSURE_SUCCESS(rv, rv);
+        // XXX Custom updates don't support "updating" of an existing cache
+        // in the custom profile at the moment.  This support can be, though,
+        // simply added as well when needed.
+        mPreviousApplicationCache = nsnull;
+
+        rv = cacheService->CreateCustomApplicationCache(manifestSpec,
+                                                        aCustomProfileDir,
+                                                        kCustomProfileQuota,
+                                                        getter_AddRefs(mApplicationCache));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mCustomProfileDir = aCustomProfileDir;
+    }
+    else {
+        rv = cacheService->GetActiveCache(manifestSpec,
+                                          getter_AddRefs(mPreviousApplicationCache));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = cacheService->CreateApplicationCache(manifestSpec,
+                                                  getter_AddRefs(mApplicationCache));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     rv = mApplicationCache->GetClientID(mClientID);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1547,7 +1588,7 @@ nsOfflineCacheUpdate::ManifestCheckCompleted(nsresult aStatus,
             new nsOfflineCacheUpdate();
         // Leave aDocument argument null. Only glues and children keep
         // document instances.
-        newUpdate->Init(mManifestURI, mDocumentURI, nsnull);
+        newUpdate->Init(mManifestURI, mDocumentURI, nsnull, mCustomProfileDir);
 
         // In a rare case the manifest will not be modified on the next refetch
         // transfer all master document URIs to the new update to ensure that
@@ -1587,6 +1628,7 @@ nsOfflineCacheUpdate::Begin()
 
     mManifestItem = new nsOfflineManifestItem(mManifestURI,
                                               mDocumentURI,
+                                              mApplicationCache,
                                               mPreviousApplicationCache,
                                               mClientID);
     if (!mManifestItem) {
@@ -2091,8 +2133,11 @@ nsOfflineCacheUpdate::AddURI(nsIURI *aURI, PRUint32 aType)
     }
 
     nsRefPtr<nsOfflineCacheUpdateItem> item =
-        new nsOfflineCacheUpdateItem(aURI, mDocumentURI,
-                                     mPreviousApplicationCache, mClientID,
+        new nsOfflineCacheUpdateItem(aURI, 
+                                     mDocumentURI,
+                                     mApplicationCache,
+                                     mPreviousApplicationCache, 
+                                     mClientID,
                                      aType);
     if (!item) return NS_ERROR_OUT_OF_MEMORY;
 

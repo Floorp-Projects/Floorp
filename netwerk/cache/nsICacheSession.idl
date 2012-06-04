@@ -9,6 +9,7 @@
 
 interface nsICacheEntryDescriptor;
 interface nsICacheListener;
+interface nsILocalFile;
 
 [scriptable, uuid(1dd7708c-de48-4ffe-b5aa-cd218c762887)]
 interface nsICacheSession : nsISupports
@@ -20,6 +21,14 @@ interface nsICacheSession : nsISupports
      * cached content).  This attribute defaults to true.
      */
     attribute boolean doomEntriesIfExpired;
+
+    /**
+     * When set, entries created with this session will be placed to a cache
+     * based at this directory.  Use when storing entries to a different
+     * profile than the active profile of the the current running application
+     * process.
+     */
+    attribute nsILocalFile profileDirectory;
 
     /**
      * A cache session can only give out one descriptor with WRITE access
