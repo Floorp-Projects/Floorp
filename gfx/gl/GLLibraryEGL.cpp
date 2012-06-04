@@ -48,8 +48,6 @@ static PRLibrary* LoadApitraceLibrary()
 bool
 GLLibraryEGL::EnsureInitialized()
 {
-    nsresult rv;
-
     if (mInitialized) {
         return true;
     }
@@ -62,6 +60,7 @@ GLLibraryEGL::EnsureInitialized()
         // we should look for them there. We have to load the libs in this
         // order, because libEGL.dll depends on libGLESv2.dll.
 
+        nsresult rv;
         nsCOMPtr<nsIFile> libraryFile;
 
         nsCOMPtr<nsIProperties> dirService =
