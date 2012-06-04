@@ -1240,11 +1240,11 @@ class Assembler
         // Set up the backwards double region
         new (&pools_[2]) Pool (1024, 8, 4, 8, 8, true);
         // Set up the backwards 32 bit region
-        new (&pools_[3]) Pool (4096, 4, 4, 4, 4, true, true);
+        new (&pools_[3]) Pool (4096, 4, 4, 8, 4, true, true);
         // Set up the forwards double region
         new (doublePool) Pool (1024, 8, 4, 8, 8, false, false, &pools_[2]);
         // Set up the forwards 32 bit region
-        new (int32Pool) Pool (4096, 4, 4, 4, 4, false, true, &pools_[3]);
+        new (int32Pool) Pool (4096, 4, 4, 8, 4, false, true, &pools_[3]);
         for (int i = 0; i < 4; i++) {
             if (pools_[i].poolData == NULL) {
                 m_buffer.fail_oom();
