@@ -16,6 +16,8 @@
 class nsGenericElement;
 class nsIAtom;
 
+// nsISupports must be on the primary inheritance chain 
+// because nsDOMSettableTokenList is traversed by nsGenericElement.
 class nsDOMSettableTokenList : public nsDOMTokenList,
                                public nsIDOMDOMSettableTokenList
 {
@@ -30,7 +32,6 @@ public:
   virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                bool *triedToWrap);
 
-protected:
   virtual ~nsDOMSettableTokenList();
 };
 

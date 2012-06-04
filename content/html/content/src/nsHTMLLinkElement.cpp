@@ -95,6 +95,9 @@ protected:
                                  nsAString& aType,
                                  nsAString& aMedia,
                                  bool* aIsAlternate);
+protected:
+  virtual void GetItemValueText(nsAString& text);
+  virtual void SetItemValueText(const nsAString& text);
 };
 
 
@@ -171,6 +174,18 @@ NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
+
+void
+nsHTMLLinkElement::GetItemValueText(nsAString& aValue)
+{
+  GetHref(aValue);
+}
+
+void
+nsHTMLLinkElement::SetItemValueText(const nsAString& aValue)
+{
+  SetHref(aValue);
+}
 
 nsresult
 nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,

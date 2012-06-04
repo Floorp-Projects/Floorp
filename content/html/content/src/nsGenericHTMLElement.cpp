@@ -91,6 +91,9 @@
 #include "mozilla/dom/FromParser.h"
 #include "mozilla/BloomFilter.h"
 
+#include "HTMLPropertiesCollection.h"
+#include "nsVariant.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -247,7 +250,6 @@ NS_INTERFACE_TABLE_HEAD(nsGenericHTMLElementTearoff)
                                 nsIDOMElementCSSInlineStyle)
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsGenericHTMLElementTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
-
 
 NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsGenericHTMLElement, TabIndex, tabindex, -1)
 NS_IMPL_BOOL_ATTR(nsGenericHTMLElement, Hidden, hidden)
@@ -1699,6 +1701,13 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
+    if (HasProperties()) {
+      HTMLPropertiesCollection* properties = 
+        static_cast<HTMLPropertiesCollection*>(GetProperty(nsGkAtoms::microdataProperties));
+      if (properties) {
+        properties->SetDocument(aDocument);
+      }
+    }
     RegAccessKey();
     if (HasName()) {
       aDocument->
@@ -1720,6 +1729,14 @@ nsGenericHTMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   if (IsInDoc()) {
     UnregAccessKey();
+  }
+  
+  if(HasProperties()) {
+    HTMLPropertiesCollection* properties = 
+      static_cast<HTMLPropertiesCollection*>(GetProperty(nsGkAtoms::microdataProperties));
+    if (properties) {
+      properties->SetDocument(nsnull);
+    }
   }
 
   RemoveFromNameTable();
@@ -2071,6 +2088,13 @@ nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
 
     if (aAttribute == nsGkAtoms::contenteditable) {
       aResult.ParseAtom(aValue);
+      return true;
+    }
+
+    if (aAttribute == nsGkAtoms::itemref ||
+        aAttribute == nsGkAtoms::itemprop ||
+        aAttribute == nsGkAtoms::itemtype) {
+      aResult.ParseAtomArray(aValue);
       return true;
     }
   }
@@ -4081,3 +4105,162 @@ nsGenericHTMLElement::ChangeEditableState(PRInt32 aChange)
   nsAutoScriptBlocker scriptBlocker;
   MakeContentDescendantsEditable(this, document);
 }
+
+NS_IMPL_BOOL_ATTR(nsGenericHTMLElement, ItemScope, itemscope)
+NS_IMPL_URI_ATTR(nsGenericHTMLElement, ItemId, itemid)
+
+NS_IMETHODIMP
+nsGenericHTMLElement::GetItemValue(nsIVariant** aValue)
+{
+  nsCOMPtr<nsIWritableVariant> out = new nsVariant();
+
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::itemprop)) {
+    out->SetAsEmpty();
+    out.forget(aValue);
+    return NS_OK;
+  }
+
+  bool itemScope;
+  GetItemScope(&itemScope);
+  if (itemScope) {
+    out->SetAsISupports(static_cast<nsISupports*>(this));
+  } else {
+    nsAutoString string;
+    GetItemValueText(string);
+    out->SetAsAString(string);
+  }
+
+  out.forget(aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::SetItemValue(nsIVariant* aValue)
+{
+  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::itemprop) ||
+      HasAttr(kNameSpaceID_None, nsGkAtoms::itemscope)) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+
+  nsAutoString string;
+  aValue->GetAsAString(string);
+  SetItemValueText(string);
+  return NS_OK;
+}
+
+void
+nsGenericHTMLElement::GetItemValueText(nsAString& text)
+{
+  GetTextContent(text);
+}
+
+void
+nsGenericHTMLElement::SetItemValueText(const nsAString& text)
+{
+  SetTextContent(text);
+}
+
+static void
+nsDOMSettableTokenListPropertyDestructor(void *aObject, nsIAtom *aProperty,
+                                         void *aPropertyValue, void *aData)
+{
+  nsDOMSettableTokenList* list =
+    static_cast<nsDOMSettableTokenList*>(aPropertyValue);
+  NS_IF_RELEASE(list);
+}
+
+nsDOMSettableTokenList*
+nsGenericHTMLElement::GetTokenList(nsIAtom* aAtom)
+{
+  nsDOMSettableTokenList* list = NULL;
+  if (HasProperties()) {
+    list = static_cast<nsDOMSettableTokenList*>(GetProperty(aAtom));
+  }
+  if (!list) {
+    list = new nsDOMSettableTokenList(this, aAtom);
+    NS_ADDREF(list);
+    SetProperty(aAtom, list, nsDOMSettableTokenListPropertyDestructor);
+  }                       
+  return list;
+}  
+
+NS_IMETHODIMP
+nsGenericHTMLElement::GetItemRef(nsIVariant** aResult)
+{
+  nsIDOMDOMSettableTokenList* itemRef = GetTokenList(nsGkAtoms::itemref);
+  nsCOMPtr<nsIWritableVariant> out = new nsVariant();
+  out->SetAsInterface(NS_GET_IID(nsIDOMDOMSettableTokenList), itemRef);
+  out.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::SetItemRef(nsIVariant* aValue)
+{
+  nsDOMSettableTokenList* itemRef = GetTokenList(nsGkAtoms::itemref);
+  nsAutoString string;
+  aValue->GetAsAString(string);
+  return itemRef->SetValue(string);
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::GetItemProp(nsIVariant** aResult)
+{
+  nsIDOMDOMSettableTokenList* itemProp = GetTokenList(nsGkAtoms::itemprop);
+  nsCOMPtr<nsIWritableVariant> out = new nsVariant();
+  out->SetAsInterface(NS_GET_IID(nsIDOMDOMSettableTokenList), itemProp);
+  out.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::SetItemProp(nsIVariant* aValue)
+{
+  nsDOMSettableTokenList* itemProp = GetTokenList(nsGkAtoms::itemprop);
+  nsAutoString string;
+  aValue->GetAsAString(string);
+  return itemProp->SetValue(string);
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::GetItemType(nsIVariant** aResult)
+{
+  nsIDOMDOMSettableTokenList* itemType = GetTokenList(nsGkAtoms::itemtype);
+  nsCOMPtr<nsIWritableVariant> out = new nsVariant();
+  out->SetAsInterface(NS_GET_IID(nsIDOMDOMSettableTokenList), itemType);
+  out.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::SetItemType(nsIVariant* aValue)
+{
+  nsDOMSettableTokenList* itemType = GetTokenList(nsGkAtoms::itemtype);
+  nsAutoString string;
+  aValue->GetAsAString(string);
+  return itemType->SetValue(string);
+}
+
+static void
+nsIDOMHTMLPropertiesCollectionDestructor(void *aObject, nsIAtom *aProperty,
+                                         void *aPropertyValue, void *aData)
+{
+  nsIDOMHTMLPropertiesCollection* properties = 
+    static_cast<nsIDOMHTMLPropertiesCollection*>(aPropertyValue);
+  NS_IF_RELEASE(properties);
+}
+
+NS_IMETHODIMP
+nsGenericHTMLElement::GetProperties(nsIDOMHTMLPropertiesCollection** aReturn)
+{
+  nsIDOMHTMLPropertiesCollection* properties = 
+    static_cast<nsIDOMHTMLPropertiesCollection*>(GetProperty(nsGkAtoms::microdataProperties));
+  if (!properties) {
+     properties = new HTMLPropertiesCollection(this);
+     NS_ADDREF(properties);
+     SetProperty(nsGkAtoms::microdataProperties, properties, nsIDOMHTMLPropertiesCollectionDestructor);
+  }
+  NS_ADDREF(*aReturn = properties);
+  return NS_OK;
+}
+
