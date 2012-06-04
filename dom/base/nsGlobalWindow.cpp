@@ -10040,35 +10040,44 @@ nsGlobalWindow::EnableDeviceSensor(PRUint32 aType)
     }
   }
 
-  if (alreadyEnabled)
-    return;
-
   mEnabledSensors.AppendElement(aType);
 
+  if (alreadyEnabled) {
+    return;
+  }
+
   nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
-  if (ac)
+  if (ac) {
     ac->AddWindowListener(aType, this);
+  }
 }
 
 void
 nsGlobalWindow::DisableDeviceSensor(PRUint32 aType)
 {
   PRInt32 doomedElement = -1;
+  PRInt32 listenerCount = 0;
   for (PRUint32 i = 0; i < mEnabledSensors.Length(); i++) {
     if (mEnabledSensors[i] == aType) {
       doomedElement = i;
-      break;
+      listenerCount++;
     }
   }
 
-  if (doomedElement == -1)
+  if (doomedElement == -1) {
     return;
+  }
 
   mEnabledSensors.RemoveElementAt(doomedElement);
 
+  if (listenerCount > 1) {
+    return;
+  }
+
   nsCOMPtr<nsIDeviceSensors> ac = do_GetService(NS_DEVICE_SENSORS_CONTRACTID);
-  if (ac)
+  if (ac) {
     ac->RemoveWindowListener(aType, this);
+  }
 }
 
 NS_IMETHODIMP
