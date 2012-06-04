@@ -73,7 +73,7 @@ CodeGeneratorShared::generateOutOfLineCode()
         if (!gen->temp().ensureBallast())
             return false;
         masm.setFramePushed(outOfLineCode_[i]->framePushed());
-        masm.bind(outOfLineCode_[i]->entry());
+        outOfLineCode_[i]->bind(&masm);
 
         if (!outOfLineCode_[i]->generate(this))
             return false;
@@ -251,7 +251,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     snapshots_.endSnapshot();
 
     snapshot->setSnapshotOffset(offset);
-
+    
     return !snapshots_.oom();
 }
 

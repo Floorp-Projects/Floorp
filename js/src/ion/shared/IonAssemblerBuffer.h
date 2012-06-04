@@ -78,6 +78,8 @@ class BufferOffset
 
     explicit BufferOffset(Label *l) : offset(l->offset()) {
     }
+    explicit BufferOffset(RepatchLabel *l) : offset(l->offset()) {
+    }
 
     BufferOffset() : offset(INT_MIN) {}
     bool assigned() const { return offset != INT_MIN; };
