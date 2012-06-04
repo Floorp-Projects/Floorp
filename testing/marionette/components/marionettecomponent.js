@@ -70,6 +70,9 @@ MarionetteComponent.prototype = {
       try {
         Cu.import('resource:///modules/devtools/dbg-server.jsm');
         DebuggerServer.addActors('chrome://marionette/content/marionette-actors.js');
+        // This pref is required for the remote debugger to open a socket,
+        // so force it to true.  See bug 761252.
+        Services.prefs.setBoolPref('devtools.debugger.remote-enabled', true);
         // Always allow remote connections.
         DebuggerServer.initTransport(function () { return true; });
         DebuggerServer.openListener(port, true);
