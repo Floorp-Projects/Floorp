@@ -2309,7 +2309,7 @@ CodeGenerator::visitStoreFixedSlotT(LStoreFixedSlotT *ins)
 class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
 {
     LInstruction *ins;
-
+    RepatchLabel repatchEntry_;
     CodeOffsetJump inlineJump;
     CodeOffsetLabel inlineLabel;
 
@@ -2352,6 +2352,12 @@ class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
     LInstruction *cache() {
         return ins;
     }
+    void bind(MacroAssembler *masm) {
+        masm->bind(&repatchEntry_);
+    }
+    RepatchLabel *repatchEntry() {
+        return &repatchEntry_;
+    }
 };
 
 bool
@@ -2361,7 +2367,7 @@ CodeGenerator::visitCache(LInstruction *ins)
     if (!addOutOfLineCode(ool))
         return false;
 
-    CodeOffsetJump jump = masm.jumpWithPatch(ool->entry());
+    CodeOffsetJump jump = masm.jumpWithPatch(ool->repatchEntry());
     CodeOffsetLabel label = masm.labelForPatch();
     masm.bind(ool->rejoin());
 

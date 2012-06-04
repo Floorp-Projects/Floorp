@@ -412,15 +412,24 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(Operand(lhs), ptr);
         j(cond, label);
     }
+    template <typename T, typename S>
+    void branchPtr(Condition cond, T lhs, S ptr, RepatchLabel *label) {
+        cmpl(Operand(lhs), ptr);
+        j(cond, label);
+    }
 
-    CodeOffsetJump jumpWithPatch(Label *label) {
+    CodeOffsetJump jumpWithPatch(RepatchLabel *label) {
         jump(label);
         return CodeOffsetJump(size());
     }
     template <typename S, typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, Label *label) {
+    CodeOffsetJump branchPtrWithPatch(Condition cond, S lhs, T ptr, RepatchLabel *label) {
         branchPtr(cond, lhs, ptr, label);
         return CodeOffsetJump(size());
+    }
+    void branchPtr(Condition cond, Register lhs, Register rhs, RepatchLabel *label) {
+        cmpl(lhs, rhs);
+        j(cond, label);
     }
     void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         cmpl(lhs, rhs);

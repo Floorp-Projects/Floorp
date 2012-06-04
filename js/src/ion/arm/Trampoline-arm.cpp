@@ -287,7 +287,7 @@ GenerateBailoutTail(MacroAssembler &masm)
                        JSReturnReg_Data, EDtrAddr(sp, EDtrOffImm(8)));
 
         // Test for an exception
-        masm.as_cmp(r0, Imm8(Interpret_Ok));
+        masm.as_cmp(r0, Imm8(Interpret_Error));
         masm.ma_b(&exception, Assembler::Zero);
 
         masm.leaveExitFrame();

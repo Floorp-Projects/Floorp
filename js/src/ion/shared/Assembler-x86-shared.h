@@ -454,11 +454,37 @@ class AssemblerX86Shared
         }
         return j;
     }
+
+    JmpSrc jSrc(Condition cond, RepatchLabel *label) {
+        JmpSrc j = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
+        if (label->bound()) {
+            // The jump can be immediately patched to the correct destination.
+            masm.linkJump(j, JmpDst(label->offset()));
+        } else {
+            label->use(j.offset());
+        }
+        return j;
+    }
+    JmpSrc jmpSrc(RepatchLabel *label) {
+        JmpSrc j = masm.jmp();
+        if (label->bound()) {
+            // The jump can be immediately patched to the correct destination.
+            masm.linkJump(j, JmpDst(label->offset()));
+        } else {
+            // Thread the jump list through the unpatched jump targets.
+            label->use(j.offset());
+        }
+        return j;
+    }
+
   public:
 
     void nop() { masm.nop(); }
     void j(Condition cond, Label *label) { jSrc(cond, label); }
     void jmp(Label *label) { jmpSrc(label); }
+    void j(Condition cond, RepatchLabel *label) { jSrc(cond, label); }
+    void jmp(RepatchLabel *label) { jmpSrc(label); }
+
     void jmp(const Operand &op){
         switch (op.kind()) {
           case Operand::SCALE:
@@ -482,6 +508,14 @@ class AssemblerX86Shared
                 masm.linkJump(jmp, masm.label());
                 jmp = next;
             } while (more);
+        }
+        label->bind(masm.label().offset());
+    }
+    void bind(RepatchLabel *label) {
+        JSC::MacroAssembler::Label jsclabel;
+        if (label->used()) {
+            JSC::X86Assembler::JmpSrc jmp(label->offset());
+            masm.linkJump(jmp, masm.label());
         }
         label->bind(masm.label().offset());
     }
@@ -1055,6 +1089,10 @@ class AssemblerX86Shared
 
     // Defined for compatibility with ARM's assembler
     uint32 actualOffset(uint32 x) {
+        return x;
+    }
+
+    uint32 actualIndex(uint32 x) {
         return x;
     }
 
