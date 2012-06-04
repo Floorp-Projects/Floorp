@@ -1,0 +1,19 @@
+DEPTH = ../../../../../../../..
+
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+relativesrcdir = dom/imptests/failures/html/tests/submission/Opera/microdata 
+
+DIRS = \
+  $(NULL)
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_TESTS = \
+  test_001.html.json \
+  $(NULL)
+
+libs:: $(_TESTS)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
