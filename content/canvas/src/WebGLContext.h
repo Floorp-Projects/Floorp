@@ -482,10 +482,6 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(WebGLContext,
                                                            nsIDOMWebGLRenderingContext)
 
-    nsINode* GetParentObject() {
-        return mCanvasElement;
-    }
-
     virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
                                  bool *triedToWrap);
 
