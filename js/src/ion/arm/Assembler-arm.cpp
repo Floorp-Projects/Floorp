@@ -401,6 +401,7 @@ ion::PatchJump(CodeLocationJump &jump_, CodeLocationLabel label)
 void
 Assembler::finish()
 {
+    flush();
     JS_ASSERT(!isFinished);
     isFinished = true;
     for (size_t i = 0; i < jumps_.length(); i++) {

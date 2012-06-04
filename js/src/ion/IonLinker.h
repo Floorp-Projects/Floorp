@@ -63,7 +63,9 @@ class Linker
     }
 
     IonCode *newCode(JSContext *cx, IonCompartment *comp) {
+#ifndef JS_CPU_ARM
         masm.flush();
+#endif
         if (masm.oom())
             return fail(cx);
 
