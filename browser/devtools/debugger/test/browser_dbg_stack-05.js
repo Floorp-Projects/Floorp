@@ -98,7 +98,7 @@ function testRecurse()
   gDebugger.DebuggerController.activeThread.resume(function() {
     is(gDebugger.editor.getDebugLocation(), -1,
        "editor debugger location is correct after resume.");
-    closeDebuggerAndFinish(gTab);
+    closeDebuggerAndFinish();
   });
 }
 

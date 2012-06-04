@@ -15,6 +15,7 @@ include $(topsrcdir)/config/rules.mk
 _BROWSER_TEST_FILES = \
   browser_gcli_break.js \
   browser_gcli_commands.js \
+  browser_gcli_edit.js \
   browser_gcli_inspect.js \
   browser_gcli_integrate.js \
   browser_gcli_pref.js \
@@ -26,6 +27,10 @@ _BROWSER_TEST_FILES = \
 _BROWSER_TEST_PAGES = \
   browser_gcli_break.html \
   browser_gcli_inspect.html \
+  resources_inpage.js \
+  resources_inpage1.css \
+  resources_inpage2.css \
+  resources.html \
   $(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)

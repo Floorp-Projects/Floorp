@@ -34,8 +34,8 @@
 
 #include "hb-private.hh"
 
+#include "hb-atomic-private.hh"
 #include "hb-mutex-private.hh"
-
 
 
 /* Debug */
@@ -43,49 +43,6 @@
 #ifndef HB_DEBUG_OBJECT
 #define HB_DEBUG_OBJECT (HB_DEBUG+0)
 #endif
-
-
-/* atomic_int */
-
-/* We need external help for these */
-
-#if !defined(HB_NO_MT) && defined(HAVE_GLIB)
-
-#include <glib.h>
-typedef volatile int hb_atomic_int_t;
-#if GLIB_CHECK_VERSION(2,29,5)
-#define hb_atomic_int_add(AI, V)	g_atomic_int_add (&(AI), V)
-#else
-#define hb_atomic_int_add(AI, V)	g_atomic_int_exchange_and_add (&(AI), V)
-#endif
-#define hb_atomic_int_get(AI)		g_atomic_int_get (&(AI))
-
-
-#elif !defined(HB_NO_MT) && defined(_MSC_VER) && _MSC_VER >= 1600
-
-#include <intrin.h>
-typedef long hb_atomic_int_t;
-#define hb_atomic_int_add(AI, V)	_InterlockedExchangeAdd (&(AI), V)
-#define hb_atomic_int_get(AI)		(_ReadBarrier (), (AI))
-
-#elif !defined(HB_NO_MT) && defined(__APPLE__)
-
-#include <libkern/OSAtomic.h>
-typedef int32_t hb_atomic_int_t;
-#define hb_atomic_int_add(AI, V)	(OSAtomicAdd32Barrier((V), &(AI)), (AI) - (V))
-#define hb_atomic_int_get(AI)		OSAtomicAdd32Barrier(0, &(AI))
-
-#else
-
-#define HB_ATOMIC_INT_NIL 1
-
-typedef volatile int hb_atomic_int_t;
-#define hb_atomic_int_add(AI, V)	((AI) += (V), (AI) - (V))
-#define hb_atomic_int_get(AI)		(AI)
-
-#endif
-
-
 
 
 /* reference_count */
@@ -196,15 +153,16 @@ struct _hb_object_header_t {
   }
 
   inline void trace (const char *function) const {
+    if (unlikely (!this)) return;
+    /* XXX We cannot use DEBUG_MSG_FUNC here since that one currecntly only
+     * prints the class name and throws away the template info. */
     DEBUG_MSG (OBJECT, (void *) this,
-	       "refcount=%d %s",
-	       this ? ref_count.get_unsafe () : 0,
-	       function);
+	       "%s refcount=%d",
+	       function,
+	       this ? ref_count.get_unsafe () : 0);
   }
 
 };
-
-
 
 
 /* object */
@@ -255,9 +213,6 @@ static inline void *hb_object_get_user_data (Type               *obj,
 {
   return obj->header.get_user_data (key);
 }
-
-
-
 
 
 #endif /* HB_OBJECT_PRIVATE_HH */

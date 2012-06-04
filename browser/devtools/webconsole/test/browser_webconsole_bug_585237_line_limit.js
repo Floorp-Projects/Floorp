@@ -96,21 +96,6 @@ function testGen() {
   is(countMessageNodes(), 30, "there are 30 message nodes in the output " +
      "when the log limit is set to 30");
 
-  prefBranch.setIntPref("console", 0);
-  console.log("baz");
-
-  waitForSuccess({
-    name: "clear output",
-    validatorFn: function()
-    {
-      return countMessageNodes() == 0;
-    },
-    successFn: testNext,
-    failureFn: finishTest,
-  });
-
-  yield;
-
   prefBranch.clearUserPref("console");
   hud = testDriver = prefBranch = console = outputNode = null;
   finishTest();

@@ -23,7 +23,7 @@ add_autocomplete_test([
 add_autocomplete_test([
   "Searching for cased entry 3",
   "mozilla.org/T",
-  { autoFilled: "mozilla.org/Test/", completed: "mozilla.org/Test/" },
+  { autoFilled: "mozilla.org/Test/", completed: "http://mozilla.org/Test/" },
   function () {
     addBookmark({ url: "http://mozilla.org/Test/" });
   }
@@ -41,7 +41,7 @@ add_autocomplete_test([
 add_autocomplete_test([
   "Searching for cased entry 5",
   "mOzilla.org/T",
-  { autoFilled: "mOzilla.org/Test/", completed: "mozilla.org/Test/" },
+  { autoFilled: "mOzilla.org/Test/", completed: "http://mozilla.org/Test/" },
   function () {
     addBookmark({ url: "http://mozilla.org/Test/" });
   },
@@ -59,7 +59,7 @@ add_autocomplete_test([
 add_autocomplete_test([
   "Searching for untrimmed cased entry with www",
   "http://www.mOz",
-  { autoFilled: "http://www.mOzilla.org/", completed: "http://www.mozilla.org/" },
+  { autoFilled: "http://www.mOzilla.org/", completed: "www.mozilla.org/" },
   function () {
     addBookmark({ url: "http://www.mozilla.org/Test/" });
   },

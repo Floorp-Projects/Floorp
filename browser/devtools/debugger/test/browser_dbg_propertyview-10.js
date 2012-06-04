@@ -90,7 +90,7 @@ function resumeAndFinish() {
       is(frames.querySelectorAll(".dbg-stackframe").length, 0,
         "Should have no frames.");
 
-      closeDebuggerAndFinish(gTab);
+      closeDebuggerAndFinish();
     }}, 0);
   }, true);
 

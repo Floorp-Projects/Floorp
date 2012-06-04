@@ -133,7 +133,8 @@ public:
   nsresult PrepareEditor(const nsAString *aValue = nsnull);
   void InitializeKeyboardEventListeners();
 
-  void SetValue(const nsAString& aValue, bool aUserInput);
+  void SetValue(const nsAString& aValue, bool aUserInput,
+                bool aSetValueAsChanged);
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
   void EmptyValue() { if (mValue) mValue->Truncate(); }
   bool IsEmpty() const { return mValue ? mValue->IsEmpty() : true; }

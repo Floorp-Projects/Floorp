@@ -136,6 +136,7 @@ sync/repositories/domain/PasswordRecord.java
 sync/repositories/domain/Record.java
 sync/repositories/domain/TabsRecord.java
 sync/repositories/domain/VersionConstants.java
+sync/repositories/FetchFailedException.java
 sync/repositories/HashSetStoreTracker.java
 sync/repositories/HistoryRepository.java
 sync/repositories/IdentityRecordFactory.java
@@ -157,8 +158,11 @@ sync/repositories/RepositorySession.java
 sync/repositories/RepositorySessionBundle.java
 sync/repositories/Server11Repository.java
 sync/repositories/Server11RepositorySession.java
+sync/repositories/StoreFailedException.java
 sync/repositories/StoreTracker.java
 sync/repositories/StoreTrackingRepositorySession.java
+sync/Server11PreviousPostFailedException.java
+sync/Server11RecordPostFailedException.java
 sync/setup/activities/AccountActivity.java
 sync/setup/activities/ActivityUtils.java
 sync/setup/activities/SetupFailureActivity.java
@@ -198,6 +202,8 @@ sync/synchronizer/RecordsChannel.java
 sync/synchronizer/RecordsChannelDelegate.java
 sync/synchronizer/RecordsConsumerDelegate.java
 sync/synchronizer/SerialRecordConsumer.java
+sync/synchronizer/ServerLocalSynchronizer.java
+sync/synchronizer/ServerLocalSynchronizerSession.java
 sync/synchronizer/SessionNotBegunException.java
 sync/synchronizer/Synchronizer.java
 sync/synchronizer/SynchronizerDelegate.java

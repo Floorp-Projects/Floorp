@@ -54,6 +54,9 @@ public:
 
   virtual nsXPCClassInfo* GetClassInfo();
 
+  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAttrValue* aValue, bool aNotify);
+
   virtual nsIDOMNode* AsDOMNode() { return this; }
 
   virtual bool IsDisabled() const {
@@ -163,6 +166,26 @@ nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, bool aNotify)
   nsSafeOptionListMutation safeMutation(GetSelect(), this, nsnull, aIndex,
                                         aNotify);
   nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
+}
+
+nsresult
+nsHTMLOptGroupElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                    const nsAttrValue* aValue, bool aNotify)
+{
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled) {
+    // All our children <option> have their :disabled state depending on our
+    // disabled attribute. We should make sure their state is updated.
+    for (nsIContent* child = nsINode::GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      if (child->IsHTML(nsGkAtoms::option)) {
+        // No need to call |IsElement()| because it's an HTML element.
+        child->AsElement()->UpdateState(true);
+      }
+    }
+  }
+
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify);
 }
 
 nsEventStates

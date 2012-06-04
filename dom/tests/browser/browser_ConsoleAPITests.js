@@ -5,7 +5,7 @@
 
 const TEST_URI = "http://example.com/browser/dom/tests/browser/test-console-api.html";
 
-var gWindow, gLevel, gArgs;
+var gWindow, gLevel, gArgs, gTestDriver;
 
 function test() {
   waitForExplicitFinish();
@@ -15,6 +15,7 @@ function test() {
   var browser = gBrowser.selectedBrowser;
 
   registerCleanupFunction(function () {
+    gWindow = gLevel = gArgs = gTestDriver = null;
     gBrowser.removeTab(tab);
   });
 
@@ -25,7 +26,8 @@ function test() {
     executeSoon(function test_executeSoon() {
       gWindow = browser.contentWindow;
       consoleAPISanityTest();
-      observeConsoleTest();
+      gTestDriver = observeConsoleTest();
+      gTestDriver.next();
     });
 
   }, false);
@@ -42,9 +44,6 @@ function testConsoleData(aMessageObject) {
   if (gLevel == "trace") {
     is(aMessageObject.arguments.toSource(), gArgs.toSource(),
        "stack trace is correct");
-
-    // Now test the location information in console.log()
-    startLocationTest();
   }
   else {
     gArgs.forEach(function (a, i) {
@@ -52,10 +51,7 @@ function testConsoleData(aMessageObject) {
     });
   }
 
-  if (aMessageObject.level == "error") {
-    // Now test console.trace()
-    startTraceTest();
-  }
+  gTestDriver.next();
 }
 
 function testLocationData(aMessageObject) {
@@ -163,9 +159,11 @@ function observeConsoleTest() {
   let win = XPCNativeWrapper.unwrap(gWindow);
   expect("log", "arg");
   win.console.log("arg");
+  yield;
 
   expect("info", "arg", "extra arg");
   win.console.info("arg", "extra arg");
+  yield;
 
   // We don't currently support width and precision qualifiers, but we don't
   // choke on them either.
@@ -174,29 +172,49 @@ function observeConsoleTest() {
                    1,
                    "PI",
                    3.14159);
+  yield;
+
   expect("log", "%d, %s, %l");
   win.console.log("%d, %s, %l");
+  yield;
+
   expect("log", "%a %b %c");
   win.console.log("%a %b %c");
+  yield;
+
   expect("log", "%a %b %c", "a", "b");
   win.console.log("%a %b %c", "a", "b");
+  yield;
+
   expect("log", "2, a, %l", 3);
   win.console.log("%d, %s, %l", 2, "a", 3);
+  yield;
 
   // Bug #692550 handle null and undefined.
   expect("log", "null, undefined");
   win.console.log("%s, %s", null, undefined);
+  yield;
 
   // Bug #696288 handle object as first argument.
   let obj = { a: 1 };
   expect("log", obj, "a");
   win.console.log(obj, "a");
+  yield;
 
   expect("dir", win.toString());
   win.console.dir(win);
+  yield;
 
   expect("error", "arg");
   win.console.error("arg");
+
+  yield;
+
+  startTraceTest();
+  yield;
+
+  startLocationTest();
+  yield;
 }
 
 function consoleAPISanityTest() {

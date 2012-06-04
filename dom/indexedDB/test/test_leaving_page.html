@@ -15,9 +15,17 @@
   <a id="a" href="leaving_page_iframe.html"></a>
 
   <script type="text/javascript;version=1.7">
+    if (!SpecialPowers.isMainProcess()) {
+      window.runTest = function() {
+        todo(false, "Figure out this test for child processes!");
+        finishTest();
+      }
+    }
+
     onmessage = function(e) {
       ok(false, "gotmessage: " + e.data);
     }
+
     function testSteps()
     {
       var iframe = $("inner");

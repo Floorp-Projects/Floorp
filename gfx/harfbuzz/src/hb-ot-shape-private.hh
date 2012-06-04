@@ -53,4 +53,31 @@ _hb_ot_shape (hb_font_t          *font,
 	      const hb_feature_t *features,
 	      unsigned int        num_features);
 
+
+inline void
+_hb_glyph_info_set_unicode_props (hb_glyph_info_t *info, hb_unicode_funcs_t *unicode)
+{
+  info->unicode_props0() = ((unsigned int) hb_unicode_general_category (unicode, info->codepoint)) |
+			   (_hb_unicode_is_zero_width (info->codepoint) ? 0x80 : 0);
+  info->unicode_props1() = _hb_unicode_modified_combining_class (unicode, info->codepoint);
+}
+
+inline hb_unicode_general_category_t
+_hb_glyph_info_get_general_category (const hb_glyph_info_t *info)
+{
+  return (hb_unicode_general_category_t) (info->unicode_props0() & 0x7F);
+}
+
+inline unsigned int
+_hb_glyph_info_get_modified_combining_class (const hb_glyph_info_t *info)
+{
+  return info->unicode_props1();
+}
+
+inline hb_bool_t
+_hb_glyph_info_is_zero_width (const hb_glyph_info_t *info)
+{
+  return !!(info->unicode_props0() & 0x80);
+}
+
 #endif /* HB_OT_SHAPE_PRIVATE_HH */

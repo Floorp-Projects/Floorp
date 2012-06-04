@@ -729,6 +729,20 @@ NS_CopySegmentToBuffer(nsIInputStream *inStr,
 }
 
 NS_METHOD
+NS_CopySegmentToBuffer(nsIOutputStream *outStr,
+                       void *closure,
+                       char *buffer,
+                       PRUint32 offset,
+                       PRUint32 count,
+                       PRUint32 *countRead)
+{
+    const char* fromBuf = static_cast<const char*>(closure);
+    memcpy(buffer, &fromBuf[offset], count);
+    *countRead = count;
+    return NS_OK;
+}
+
+NS_METHOD
 NS_DiscardSegment(nsIInputStream *inStr,
                   void *closure,
                   const char *buffer,

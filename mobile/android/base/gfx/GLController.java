@@ -29,10 +29,7 @@ public class GLController {
     private EGL10 mEGL;
     private EGLDisplay mEGLDisplay;
     private EGLConfig mEGLConfig;
-    private EGLContext mEGLContext;
     private EGLSurface mEGLSurface;
-
-    private GL mGL;
 
     private static final int LOCAL_EGL_OPENGL_ES2_BIT = 4;
 
@@ -55,10 +52,8 @@ public class GLController {
         mGLVersion = version;
     }
 
-    public GL getGL()                       { return mEGLContext.getGL(); }
     public EGLDisplay getEGLDisplay()       { return mEGLDisplay;         }
     public EGLConfig getEGLConfig()         { return mEGLConfig;          }
-    public EGLContext getEGLContext()       { return mEGLContext;         }
     public EGLSurface getEGLSurface()       { return mEGLSurface;         }
     public LayerView getView()              { return mView;               }
 
@@ -77,9 +72,7 @@ public class GLController {
 
         mEGLDisplay = null;
         mEGLConfig = null;
-        mEGLContext = null;
         mEGLSurface = null;
-        mGL = null;
         return true;
     }
 
@@ -111,9 +104,6 @@ public class GLController {
     synchronized void surfaceChanged(int newWidth, int newHeight) {
         mWidth = newWidth;
         mHeight = newHeight;
-        if (mGL != null) {
-          mView.getRenderer().onSurfaceChanged((GL10)mGL, mWidth, mHeight);
-        }
         mSurfaceValid = true;
         notifyAll();
     }
@@ -128,20 +118,13 @@ public class GLController {
 
         mEGLConfig = chooseConfig();
 
-        int[] attribList = { EGL_CONTEXT_CLIENT_VERSION, mGLVersion, EGL10.EGL_NONE };
-        mEGLContext = mEGL.eglCreateContext(mEGLDisplay, mEGLConfig, EGL10.EGL_NO_CONTEXT,
-                                            attribList);
-        if (mEGLContext == null || mEGLContext == EGL10.EGL_NO_CONTEXT) {
-            throw new GLControllerException("createContext() failed " +
-                                            getEGLError());
-        }
-
-        mGL = mEGLContext.getGL();
-
-        if (mView.getRenderer() != null) {
-            mView.getRenderer().onSurfaceCreated((GL10)mGL, mEGLConfig);
-            mView.getRenderer().onSurfaceChanged((GL10)mGL, mWidth, mHeight);
-        }
+        // updating the state in the view/controller/client should be
+        // done on the main UI thread, not the GL renderer thread
+        mView.post(new Runnable() {
+            public void run() {
+                mView.setViewportSize(new IntSize(mWidth, mHeight));
+            }
+        });
     }
 
     private EGLConfig chooseConfig() {

@@ -1,0 +1,51 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+%{C++
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+class FileInfo;
+}
+}
+}
+%}
+
+[ptr] native FileInfo(mozilla::dom::indexedDB::FileInfo);
+
+interface nsIDOMEventListener;
+interface nsIDOMFileRequest;
+interface nsIDOMLockedFile;
+
+[scriptable, builtinclass, uuid(0dc9c73c-4e44-4430-8898-85f61a70b1d2)]
+interface nsIDOMFileHandle : nsISupports
+{
+  readonly attribute DOMString name;
+
+  readonly attribute DOMString type;
+
+  // mode can be either "readonly" or "readwrite"
+  [optional_argc]
+  nsIDOMLockedFile
+  open([optional /* "readonly" */] in DOMString mode);
+
+  nsIDOMFileRequest
+  getFile();
+
+  [notxpcom]
+  long long
+  getFileId();
+
+  [notxpcom]
+  FileInfo
+  getFileInfo();
+
+  attribute nsIDOMEventListener onabort;
+
+  attribute nsIDOMEventListener onerror;
+};

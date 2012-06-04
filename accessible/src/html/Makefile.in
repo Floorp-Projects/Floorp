@@ -17,20 +17,14 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS = \
-  nsHTMLCanvasAccessible.cpp \
+  HTMLElementAccessibles.cpp \
   HTMLFormControlAccessible.cpp \
   HTMLListAccessible.cpp \
-  nsHTMLImageAccessible.cpp \
+  nsHTMLCanvasAccessible.cpp \
   nsHTMLImageMapAccessible.cpp \
   nsHTMLLinkAccessible.cpp \
   nsHTMLSelectAccessible.cpp \
   nsHTMLTableAccessible.cpp \
-  nsHTMLTextAccessible.cpp \
-  nsHyperTextAccessible.cpp \
-  $(NULL)
-
-EXPORTS = \
-  nsHyperTextAccessible.h \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
@@ -42,7 +36,6 @@ LOCAL_INCLUDES = \
   -I$(srcdir)/../base \
   -I$(srcdir)/../generic \
   -I$(srcdir)/../xpcom \
-  -I$(srcdir)/../../../content/base/src \
   -I$(srcdir)/../../../content/html/content/src \
   -I$(srcdir)/../../../layout/generic \
   -I$(srcdir)/../../../layout/xul/base/src \

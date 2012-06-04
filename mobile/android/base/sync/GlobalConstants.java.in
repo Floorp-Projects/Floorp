@@ -10,8 +10,10 @@ package org.mozilla.gecko.sync;
  */
 public class GlobalConstants {
   public static final String PRODUCT_NAME = "@MOZ_APP_DISPLAYNAME@";
-  public static final String SYNC_VERSION_STRING = "0.8";
+  public static final String SYNC_VERSION_STRING = "0.9";
 
   public static final String USER_AGENT = "Firefox AndroidSync " + SYNC_VERSION_STRING +
                                           " (" + PRODUCT_NAME + ")";
+  public static final String BROWSER_INTENT_PACKAGE = "@ANDROID_PACKAGE_NAME@";
+  public static final String BROWSER_INTENT_CLASS = BROWSER_INTENT_PACKAGE + ".App";
 }

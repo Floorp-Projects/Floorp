@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsCache.h"
 #include "nsDiskCache.h"
 #include "nsDiskCacheBlockFile.h"
 #include "mozilla/FileUtils.h"
@@ -31,14 +32,15 @@ nsDiskCacheBlockFile::Open(nsILocalFile * blockFile,
     
     // open the file - restricted to user, the data could be confidential
     nsresult rv = blockFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE, 00600, &mFD);
-    if (NS_FAILED(rv))  return rv;  // unable to open or create file
+    if (NS_FAILED(rv)) {
+        CACHE_LOG_DEBUG(("CACHE: nsDiskCacheBlockFile::Open "
+                         "[this=%p] unable to open or create file: %d",
+                         this, rv));
+        return rv;  // unable to open or create file
+    }
     
     // allocate bit map buffer
     mBitMap = new PRUint32[mBitMapWords];
-    if (!mBitMap) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto error_exit;
-    }
     
     // check if we just creating the file
     mFileSize = PR_Available(mFD);
@@ -79,9 +81,13 @@ nsDiskCacheBlockFile::Open(nsILocalFile * blockFile,
             goto error_exit;
         }
     }
+    CACHE_LOG_DEBUG(("CACHE: nsDiskCacheBlockFile::Open [this=%p] succeeded",
+                      this));
     return NS_OK;
 
 error_exit:
+    CACHE_LOG_DEBUG(("CACHE: nsDiskCacheBlockFile::Open [this=%p] failed with "
+                     "error %d", this, rv));
     Close(false);
     return rv;
 }
@@ -234,6 +240,9 @@ nsDiskCacheBlockFile::ReadBlocks( void *    buffer,
     }
     *bytesRead = PR_Read(mFD, buffer, bytesToRead);
     
+    CACHE_LOG_DEBUG(("CACHE: nsDiskCacheBlockFile::Read [this=%p] "
+                     "returned %d / %d bytes", this, *bytesRead, bytesToRead));
+
     return NS_OK;
 }
 

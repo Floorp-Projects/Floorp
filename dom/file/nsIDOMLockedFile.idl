@@ -1,0 +1,67 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMEventListener;
+interface nsIDOMFileHandle;
+interface nsIDOMFileRequest;
+
+dictionary DOMFileMetadataParameters
+{
+  boolean size;
+  boolean lastModified;
+};
+
+[scriptable, builtinclass, uuid(e1f69cc5-c6ce-4850-bc09-c4211b1d4290)]
+interface nsIDOMLockedFile : nsISupports
+{
+  readonly attribute nsIDOMFileHandle fileHandle;
+
+  // "readonly" or "readwrite"
+  readonly attribute DOMString mode;
+
+  readonly attribute boolean active;
+
+  attribute unsigned long long location;
+
+  [implicit_jscontext]
+  nsIDOMFileRequest
+  getMetadata(/* DOMFileMetadataParameters */
+              [optional /* all */] in jsval parameters);
+
+  [implicit_jscontext]
+  nsIDOMFileRequest
+  readAsArrayBuffer(in unsigned long long size);
+
+  nsIDOMFileRequest
+  readAsText(in unsigned long long size,
+             [optional] in DOMString encoding);
+
+  [implicit_jscontext]
+  nsIDOMFileRequest
+  write(in jsval value);
+
+  [implicit_jscontext]
+  nsIDOMFileRequest
+  append(in jsval value);
+
+  [optional_argc]
+  nsIDOMFileRequest
+  truncate([optional] in unsigned long long location);
+
+  nsIDOMFileRequest
+  flush();
+
+  void
+  abort();
+
+  attribute nsIDOMEventListener oncomplete;
+
+  attribute nsIDOMEventListener onabort;
+
+  attribute nsIDOMEventListener onerror;
+};

@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
@@ -116,6 +117,7 @@ function RuleViewTool(aInspector, aFrame)
 
   this._onChange = this.onChange.bind(this);
   this.inspector.on("change", this._onChange);
+  this.inspector.on("sidebaractivated-ruleview", this._onChange);
 
   this.onSelect();
 }
@@ -134,11 +136,11 @@ RuleViewTool.prototype = {
   },
 
   onChange: function RVT_onChange(aEvent, aFrom) {
-    if (aFrom == "ruleview") {
+    if (aFrom == "ruleview" || aFrom == "createpanel") {
       return;
     }
 
-    if (this.inspector.locked) {
+    if (this.inspector.locked && this.inspector.isPanelVisible("ruleview")) {
       this.view.nodeChanged();
     }
   },
@@ -146,6 +148,7 @@ RuleViewTool.prototype = {
   destroy: function RVT_destroy() {
     this.inspector.removeListener("select", this._onSelect);
     this.inspector.removeListener("change", this._onChange);
+    this.inspector.removeListener("sidebaractivated-ruleview", this._onChange);
     this.view.element.removeEventListener("CssRuleViewChanged",
                                           this._changeHandler);
     this.view.element.removeEventListener("CssRuleViewCSSLinkClicked",
@@ -172,14 +175,13 @@ function ComputedViewTool(aInspector, aFrame)
 
   this._onSelect = this.onSelect.bind(this);
   this.inspector.on("select", this._onSelect);
-
   this._onChange = this.onChange.bind(this);
   this.inspector.on("change", this._onChange);
 
   // Since refreshes of the computed view are non-destructive,
   // refresh when the tab is changed so we can notice script-driven
   // changes.
-  this.inspector.on("sidebaractivated", this._onChange);
+  this.inspector.on("sidebaractivated-computedview", this._onChange);
 
   this.cssLogic.highlight(null);
   this.view.highlight(null);
@@ -199,19 +201,22 @@ ComputedViewTool.prototype = {
   onChange: function CVT_change(aEvent, aFrom)
   {
     if (aFrom == "computedview" ||
+        aFrom == "createpanel" ||
         this.inspector.selection != this.cssLogic.viewedElement) {
       return;
     }
 
-    this.cssLogic.highlight(this.inspector.selection);
-    this.view.refreshPanel();
+    if (this.inspector.locked && this.inspector.isPanelVisible("computedview")) {
+      this.cssLogic.highlight(this.inspector.selection);
+      this.view.refreshPanel();
+    }
   },
 
   destroy: function CVT_destroy(aContext)
   {
     this.inspector.removeListener("select", this._onSelect);
     this.inspector.removeListener("change", this._onChange);
-    this.inspector.removeListener("sidebaractivated", this._onChange);
+    this.inspector.removeListener("sidebaractivated-computedview", this._onChange);
     this.view.destroy();
     delete this.view;
 

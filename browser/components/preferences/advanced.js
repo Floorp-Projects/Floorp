@@ -5,6 +5,7 @@
 
 // Load DownloadUtils module for convertByteUnits
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/ctypes.jsm");
 
 var gAdvancedPane = {
   _inited: false,
@@ -52,7 +53,7 @@ var gAdvancedPane = {
     var preference = document.getElementById("browser.preferences.advanced.selectedTabIndex");
     preference.valueFromPreferences = advancedPrefs.selectedIndex;
   },
-  
+
   // GENERAL TAB
 
   /*
@@ -170,7 +171,7 @@ var gAdvancedPane = {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/connection.xul",
                                            "", null);
   },
- 
+
   // Retrieves the amount of space currently used by disk or offline cache
   updateActualCacheSize: function (device)
   {
@@ -220,7 +221,7 @@ var gAdvancedPane = {
     var disabled = document.getElementById("browser.cache.disk.smart_size.enabled").value;
     this.updateCacheSizeUI(!disabled);
   },
-  
+
   /**
    * Converts the cache size from units of KB to units of MB and returns that
    * value.
@@ -451,7 +452,7 @@ var gAdvancedPane = {
    * based on the pref values and locked states.
    *
    * UI state matrix for update preference conditions
-   * 
+   *
    * UI Components:                              Preferences
    * Radiogroup                                  i   = app.update.enabled
    * Warn before disabling extensions checkbox   ii  = app.update.auto
@@ -516,6 +517,24 @@ var gAdvancedPane = {
     }
     if (installed != 1) {
       document.getElementById("useService").hidden = true;
+    }
+    try {
+      const DRIVE_FIXED = 3;
+      const LPCWSTR = ctypes.jschar.ptr;
+      const UINT = ctypes.uint32_t;
+      let kernel32 = ctypes.open("kernel32");
+      let GetDriveType = kernel32.declare("GetDriveTypeW", ctypes.default_abi, UINT, LPCWSTR);
+      var UpdatesDir = Components.classes["@mozilla.org/updates/update-service;1"].
+                       getService(Components.interfaces.nsIApplicationUpdateService);
+      let rootPath = UpdatesDir.getUpdatesDirectory();
+      while (rootPath.parent != null) {
+        rootPath = rootPath.parent;
+      }
+      if (GetDriveType(rootPath.path) != DRIVE_FIXED) {
+        document.getElementById("useService").hidden = true;
+      }
+      kernel32.close();
+    } catch(e) {
     }
 #endif
   },
@@ -635,7 +654,7 @@ var gAdvancedPane = {
    */
   showCRLs: function ()
   {
-    document.documentElement.openWindow("mozilla:crlmanager", 
+    document.documentElement.openWindow("mozilla:crlmanager",
                                         "chrome://pippki/content/crlManager.xul",
                                         "", null);
   },

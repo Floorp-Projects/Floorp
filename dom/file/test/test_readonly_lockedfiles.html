@@ -1,0 +1,73 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    for each (let fileStorage in fileStorages) {
+      let request = getFileHandle(fileStorage.key, "test.txt");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let fileHandle = event.target.result;
+      fileHandle.onerror = errorHandler;
+
+      request = fileHandle.open("readwrite").write({});
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.target.lockedFile.mode, "readwrite", "Correct mode");
+
+      try {
+        fileHandle.open().write({});
+        ok(false, "Writing to a readonly locked file should fail!");
+      }
+      catch (e) {
+        ok(true, "Writing to a readonly locked file failed");
+      }
+
+      try {
+        fileHandle.open().append({});
+        ok(false, "Appending to a readonly locked file should fail!");
+      }
+      catch (e) {
+        ok(true, "Appending to a readonly locked file failed");
+      }
+
+      try {
+        fileHandle.open().truncate({});
+        ok(false, "Truncating a readonly locked file should fail!");
+      }
+      catch (e) {
+        ok(true, "Truncating a readonly locked file failed");
+      }
+
+      try {
+        fileHandle.open().flush({});
+        ok(false, "Flushing a readonly locked file should fail!");
+      }
+      catch (e) {
+        ok(true, "Flushing a readonly locked file failed");
+      }
+    }
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

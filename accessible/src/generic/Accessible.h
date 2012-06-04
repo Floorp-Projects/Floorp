@@ -26,8 +26,7 @@ class AccGroupInfo;
 class EmbeddedObjCollector;
 class KeyBinding;
 class Accessible;
-class nsHyperTextAccessible;
-class nsHTMLImageAccessible;
+class HyperTextAccessible;
 class nsHTMLImageMapAccessible;
 struct nsRoleMapEntry;
 class Relation;
@@ -36,6 +35,7 @@ namespace mozilla {
 namespace a11y {
 
 class HTMLLIAccessible;
+class ImageAccessible;
 class TableAccessible;
 class TextLeafAccessible;
 
@@ -208,6 +208,17 @@ public:
   virtual PRUint64 State();
 
   /**
+   * Return interactive states present on the accessible
+   * (@see NativeInteractiveState).
+   */
+  PRUint64 InteractiveState() const
+  {
+    PRUint64 state = NativeInteractiveState();
+    ApplyARIAState(&state);
+    return state;
+  }
+
+  /**
    * Return link states present on the accessible.
    */
   PRUint64 LinkState() const
@@ -224,6 +235,11 @@ public:
   virtual PRUint64 NativeState();
 
   /**
+   * Return native interactice state (unavailable, focusable or selectable).
+   */
+  virtual PRUint64 NativeInteractiveState() const;
+
+  /**
    * Return native link states present on the accessible.
    */
   virtual PRUint64 NativeLinkState() const;
@@ -232,6 +248,11 @@ public:
    * Return bit set of invisible and offscreen states.
    */
   PRUint64 VisibilityState();
+
+  /**
+   * Return true if native unavailable state present.
+   */
+  virtual bool NativelyUnavailable() const;
 
   /**
    * Returns attributes for accessible without explicitly setted ARIA
@@ -244,7 +265,6 @@ public:
    */
   virtual mozilla::a11y::GroupPos GroupPosition();
 
-  /**
   /**
    * Used by ChildAtPoint() method to get direct or deepest child at point.
    */
@@ -473,7 +493,7 @@ public:
   DocAccessible* AsDoc();
 
   inline bool IsHyperText() const { return mFlags & eHyperTextAccessible; }
-  nsHyperTextAccessible* AsHyperText();
+  HyperTextAccessible* AsHyperText();
 
   inline bool IsHTMLFileInput() const { return mFlags & eHTMLFileInputAccessible; }
 
@@ -481,7 +501,7 @@ public:
   mozilla::a11y::HTMLLIAccessible* AsHTMLListItem();
 
   inline bool IsImage() const { return mFlags & eImageAccessible; }
-  nsHTMLImageAccessible* AsImage();
+  mozilla::a11y::ImageAccessible* AsImage();
 
   bool IsImageMapAccessible() const { return mFlags & eImageMapAccessible; }
   nsHTMLImageMapAccessible* AsImageMap();
@@ -825,10 +845,8 @@ protected:
   /**
    * Return the action rule based on ARIA enum constants EActionRule
    * (see nsARIAMap.h). Used by ActionCount() and GetActionName().
-   *
-   * @param aStates  [in] states of the accessible
    */
-  PRUint32 GetActionRule(PRUint64 aStates);
+  PRUint32 GetActionRule();
 
   /**
    * Return group info.

@@ -2062,9 +2062,9 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj_)
         if (!js::IsStandardClassResolved(obj, stdnm.clasp)
 #if JS_HAS_XML_SUPPORT
             && ((stdnm.init != js_InitXMLClass &&
-              stdnm.init != js_InitNamespaceClass &&
-              stdnm.init != js_InitQNameClass) ||
-             VersionHasAllowXML(cx->findVersion()))
+                 stdnm.init != js_InitNamespaceClass &&
+                 stdnm.init != js_InitQNameClass) ||
+                VersionHasAllowXML(cx->findVersion()))
 #endif
             )
         {

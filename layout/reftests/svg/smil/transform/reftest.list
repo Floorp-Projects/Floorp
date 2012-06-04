@@ -10,6 +10,6 @@
 == rotate-angle-5.svg rotate-angle-ref.svg
 == scale-1.svg scale-1-ref.svg
 == skew-1.svg skew-1-ref.svg
-== translate-clipPath-1.svg lime.svg
+random-if(Android&&!browserIsRemote) == translate-clipPath-1.svg lime.svg # bug 760266
 fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) == translate-gradient-1.svg lime.svg
 == translate-pattern-1.svg lime.svg

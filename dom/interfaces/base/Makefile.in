@@ -52,6 +52,7 @@ XPIDLSRCS =					\
 	nsITabChild.idl				\
 	nsITabParent.idl			\
 	nsIDOMGlobalPropertyInitializer.idl	\
+	nsIDOMGlobalObjectConstructor.idl \
 	nsIStructuredCloneContainer.idl		\
 	nsIDOMPerformance.idl			\
 	nsIDOMPerformanceTiming.idl		\

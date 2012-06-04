@@ -14,24 +14,44 @@ function test() {
   var CSS = {};
   Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm", CSS);
 
-  function checkStorageOccurs(shouldOccur) {
+  let innerID, beforeEvents, storageShouldOccur;
+
+  var ConsoleObserver = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+    observe: function CO_observe(aSubject, aTopic, aData)
+    {
+      if (aTopic != "console-api-log-event") {
+        return;
+      }
+
+      let afterEvents = CSS.ConsoleAPIStorage.getEvents(innerID);
+
+      is(beforeEvents.length == afterEvents.length - 1,
+         storageShouldOccur,
+         "storage should" + (storageShouldOccur ? "" : " not") + " occur");
+
+      executeSoon(function() {
+        Services.obs.removeObserver(ConsoleObserver, "console-api-log-event");
+        pb.privateBrowsingEnabled = storageShouldOccur;
+      });
+    }
+  };
+
+  function checkStorageOccurs() {
+    Services.obs.addObserver(ConsoleObserver, "console-api-log-event", false);
+
     let win = XPCNativeWrapper.unwrap(browser.contentWindow);
-    let innerID = getInnerWindowId(win);
+    innerID = getInnerWindowId(win);
 
-    let beforeEvents = CSS.ConsoleAPIStorage.getEvents(innerID);
-    win.console.log("foo bar baz (private: " + !shouldOccur + ")");
-
-    let afterEvents = CSS.ConsoleAPIStorage.getEvents(innerID);
-
-    is(beforeEvents.length == afterEvents.length - 1,
-       shouldOccur, "storage should" + (shouldOccur ? "" : "n't") + " occur");
+    beforeEvents = CSS.ConsoleAPIStorage.getEvents(innerID);
+    win.console.log("foo bar baz (private: " + !storageShouldOccur + ")");
   }
 
   function pbObserver(aSubject, aTopic, aData) {
     if (aData == "enter") {
-      checkStorageOccurs(false);
-
-      executeSoon(function () { pb.privateBrowsingEnabled = false; });
+      storageShouldOccur = false;
+      checkStorageOccurs();
     } else if (aData == "exit") {
       executeSoon(finish);
     }
@@ -61,9 +81,8 @@ function test() {
 
     browser.removeEventListener("DOMContentLoaded", onLoad, false);
 
-    checkStorageOccurs(true);
-
-    pb.privateBrowsingEnabled = true;
+    storageShouldOccur = true;
+    checkStorageOccurs();
   }, false);
 }
 

@@ -45,7 +45,6 @@
                      tooltiptext="&debuggerUI.closeButton.tooltip;"
                      class="devtools-closebutton"/>
 #endif
-
       <hbox id="debugger-controls">
         <toolbarbutton id="resume"
                        class="devtools-toolbarbutton"
@@ -69,6 +68,10 @@
       <textbox id="scripts-search" type="search"
                class="devtools-searchinput"
                emptytext="&debuggerUI.emptyFilterText;"/>
+      <checkbox id="pause-exceptions"
+                type="checkbox"
+                tabindex="0"
+                label="&debuggerUI.pauseExceptions;"/>
       <spacer flex="1"/>
 #ifndef XP_MACOSX
       <toolbarbutton id="close"
@@ -77,17 +80,11 @@
 #endif
     </toolbar>
     <hbox id="dbg-content" flex="1">
-      <vbox id="stack" flex="1">
-        <vbox id="stackframes" class="dbg-default" flex="1"/>
-      </vbox>
-      <splitter id="stack-script-splitter"
-                class="devtools-side-splitter"/>
-      <vbox id="editor" class="dbg-default" flex="1"/>
-      <splitter id="script-properties-splitter"
-                class="devtools-side-splitter"/>
-      <vbox id="properties" flex="1">
-        <vbox id="variables" class="dbg-default" flex="1"/>
-      </vbox>
+      <vbox id="stackframes"/>
+      <splitter id="stack-script-splitter" class="devtools-side-splitter"/>
+      <vbox id="editor" flex="1"/>
+      <splitter id="script-properties-splitter" class="devtools-side-splitter"/>
+      <vbox id="variables"/>
     </hbox>
   </vbox>
 </window>

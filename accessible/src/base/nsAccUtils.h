@@ -23,7 +23,7 @@
 
 class nsAccessNode;
 class Accessible;
-class nsHyperTextAccessible;
+class HyperTextAccessible;
 class nsHTMLTableAccessible;
 class DocAccessible;
 struct nsRoleMapEntry;
@@ -157,7 +157,7 @@ public:
    * @param aSelection  [in] the given selection
    * @return            text accessible
    */
-  static nsHyperTextAccessible*
+  static HyperTextAccessible*
     GetTextAccessibleFromSelection(nsISelection* aSelection);
 
   /**

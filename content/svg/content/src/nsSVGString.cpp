@@ -57,6 +57,9 @@ void
 nsSVGString::SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement)
 {
   if (aSVGElement->IsStringAnimatable(mAttrEnum)) {
+    if (mAnimVal && mAnimVal->Equals(aValue)) {
+      return;
+    }
     if (!mAnimVal) {
       mAnimVal = new nsString();
     }

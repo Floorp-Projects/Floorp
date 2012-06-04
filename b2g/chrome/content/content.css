@@ -78,3 +78,8 @@ xul|thumb {
   border-radius: 3px;
 }
 
+/* -moz-touch-enabled? media elements */
+video > xul|videocontrols,
+audio > xul|videocontrols {
+  -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
+}

@@ -2,6 +2,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+  <!-- Used for setup success. -->
+  <string name="brand_short_name">&brandShortName;</string>
+
   <string name="sync_app_name">&sync.app.name.label;</string>
   <string name="sync_title_connect">&sync.title.adddevice.label;</string>
   <string name="sync_title_pair">&sync.title.pair.label;</string>
@@ -35,9 +38,9 @@
   
   <!-- Setup Success -->
   <string name="sync_title_success">&sync.title.success.label;</string>
-  <string name="sync_subtitle_success">&sync.subtitle.success.label;</string>
+  <string name="sync_subtitle_success">&sync.subtitle.success.label1;</string>
   <string name="sync_settings">&sync.settings.label;</string>
-  <string name="sync_subtitle_manage">&sync.subtitle.manage.label;</string>
+  <string name="sync_subtitle_manage">&sync.subtitle.manage.label1;</string>
   
   <!-- Pair Device -->
   <string name="sync_pair_tryagain">&sync.pair.tryagain.label;</string>
@@ -61,6 +64,7 @@
   <string name="bookmarks_folder_unfiled">&bookmarks.folder.unfiled.label;</string>
   <string name="bookmarks_folder_desktop">&bookmarks.folder.desktop.label;</string>
   <string name="bookmarks_folder_mobile">&bookmarks.folder.mobile.label;</string>
+  <string name="bookmarks_folder_reading_list">&bookmarks.folder.readinglist.label;</string>
 
   <!-- Notification strings -->
   <string name="sync_notification_oneaccount">&sync.notification.oneaccount.label;</string>

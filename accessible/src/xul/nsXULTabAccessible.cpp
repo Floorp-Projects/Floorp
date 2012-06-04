@@ -82,21 +82,7 @@ nsXULTabAccessible::NativeState()
   // get focus and disable status from base class
   PRUint64 state = AccessibleWrap::NativeState();
 
-  // In the past, tabs have been focusable in classic theme
-  // They may be again in the future
-  // Check style for -moz-user-focus: normal to see if it's focusable
-  state &= ~states::FOCUSABLE;
-
-  nsIFrame *frame = mContent->GetPrimaryFrame();
-  if (frame) {
-    const nsStyleUserInterface* ui = frame->GetStyleUserInterface();
-    if (ui->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL)
-      state |= states::FOCUSABLE;
-  }
-
   // Check whether the tab is selected
-  state |= states::SELECTABLE;
-  state &= ~states::SELECTED;
   nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mContent));
   if (tab) {
     bool selected = false;
@@ -104,6 +90,13 @@ nsXULTabAccessible::NativeState()
       state |= states::SELECTED;
   }
   return state;
+}
+
+PRUint64
+nsXULTabAccessible::NativeInteractiveState() const
+{
+  PRUint64 state = Accessible::NativeInteractiveState();
+  return (state & states::UNAVAILABLE) ? state : state | states::SELECTABLE;
 }
 
 // nsIAccessible

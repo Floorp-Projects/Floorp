@@ -33,6 +33,9 @@ TiltUtils.Output = {
    */
   log: function TUO_log(aMessage)
   {
+    if (this.suppressLogs) {
+      return;
+    }
     // get the console service
     let consoleService = Cc["@mozilla.org/consoleservice;1"]
       .getService(Ci.nsIConsoleService);
@@ -51,6 +54,9 @@ TiltUtils.Output = {
    */
   error: function TUO_error(aMessage, aProperties)
   {
+    if (this.suppressErrors) {
+      return;
+    }
     // make sure the properties parameter is a valid object
     aProperties = aProperties || {};
 
@@ -85,6 +91,9 @@ TiltUtils.Output = {
    */
   alert: function TUO_alert(aTitle, aMessage)
   {
+    if (this.suppressAlerts) {
+      return;
+    }
     if (!aMessage) {
       aMessage = aTitle;
       aTitle = "";

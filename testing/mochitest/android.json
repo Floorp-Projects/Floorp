@@ -1,6 +1,7 @@
 {"content/smil/test": "",
  "content/xml/document/test": "",
  "content/xslt/tests/mochitest": "",
+ "dom/file/test": "",
  "dom/src/json/test": "",
  "dom/src/jsurl/test": "",
  "dom/tests/mochitest/dom-level0": "", "js": "",

@@ -277,6 +277,31 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
   return nsContentUtils::SetNodeTextContent(this, aText, true);
 }
 
+nsresult
+nsHTMLOptionElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                                nsIContent* aBindingParent,
+                                bool aCompileEventHandlers)
+{
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Our new parent might change :disabled/:enabled state.
+  UpdateState(false);
+
+  return NS_OK;
+}
+
+void
+nsHTMLOptionElement::UnbindFromTree(bool aDeep, bool aNullParent)
+{
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+
+  // Our previous parent could have been involved in :disabled/:enabled state.
+  UpdateState(false);
+}
+
 nsEventStates
 nsHTMLOptionElement::IntrinsicState() const
 {
@@ -288,12 +313,21 @@ nsHTMLOptionElement::IntrinsicState() const
     state |= NS_EVENT_STATE_DEFAULT;
   }
 
+  // An <option> is disabled if it has @disabled set or if it's <optgroup> has
+  // @disabled set.
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
     state |= NS_EVENT_STATE_DISABLED;
     state &= ~NS_EVENT_STATE_ENABLED;
   } else {
-    state &= ~NS_EVENT_STATE_DISABLED;
-    state |= NS_EVENT_STATE_ENABLED;
+    nsIContent* parent = GetParent();
+    if (parent && parent->IsHTML(nsGkAtoms::optgroup) &&
+        parent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
+      state |= NS_EVENT_STATE_DISABLED;
+      state &= ~NS_EVENT_STATE_ENABLED;
+    } else {
+      state &= ~NS_EVENT_STATE_DISABLED;
+      state |= NS_EVENT_STATE_ENABLED;
+    }
   }
 
   return state;

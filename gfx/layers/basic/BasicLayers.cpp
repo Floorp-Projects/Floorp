@@ -3509,11 +3509,26 @@ void
 BasicShadowLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 {
   NS_ABORT_IF_FALSE(mKeepAlive.IsEmpty(), "uncommitted txn?");
+  nsRefPtr<gfxContext> targetContext = aTarget;
+
   // If the last transaction was incomplete (a failed DoEmptyTransaction),
   // don't signal a new transaction to ShadowLayerForwarder. Carry on adding
   // to the previous transaction.
   if (HasShadowManager()) {
     ShadowLayerForwarder::BeginTransaction();
+
+    // If we have a non-default target, we need to let our shadow manager draw
+    // to it. This will happen at the end of the transaction.
+    if (aTarget && (aTarget != mDefaultTarget)) {
+      mShadowTarget = aTarget;
+
+      // Create a temporary target for ourselves, so that mShadowTarget is only
+      // drawn to by our shadow manager.
+      nsRefPtr<gfxASurface> targetSurface = gfxPlatform::GetPlatform()->
+        CreateOffscreenSurface(aTarget->OriginalSurface()->GetSize(),
+                               aTarget->OriginalSurface()->GetContentType());
+      targetContext = new gfxContext(targetSurface);
+    }
   }
   BasicLayerManager::BeginTransactionWithTarget(aTarget);
 }
@@ -3525,6 +3540,10 @@ BasicShadowLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
 {
   BasicLayerManager::EndTransaction(aCallback, aCallbackData, aFlags);
   ForwardTransaction();
+  if (mShadowTarget) {
+    ShadowLayerForwarder::ShadowDrawToTarget(mShadowTarget);
+    mShadowTarget = nsnull;
+  }
 }
 
 bool

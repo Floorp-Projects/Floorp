@@ -257,13 +257,13 @@ public class PasswordsRepositorySession extends
       public void run() {
         if (!isActive()) {
           Logger.warn(LOG_TAG, "RepositorySession is inactive. Store failing.");
-          delegate.onRecordStoreFailed(new InactiveSessionException(null));
+          delegate.onRecordStoreFailed(new InactiveSessionException(null), record.guid);
           return;
         }
 
         final String guid = remoteRecord.guid;
         if (guid == null) {
-          delegate.onRecordStoreFailed(new RuntimeException("Can't store record with null GUID."));
+          delegate.onRecordStoreFailed(new RuntimeException("Can't store record with null GUID."), record.guid);
           return;
         }
 
@@ -272,10 +272,10 @@ public class PasswordsRepositorySession extends
           existingRecord = retrieveByGUID(guid);
         } catch (NullCursorException e) {
           // Indicates a serious problem.
-          delegate.onRecordStoreFailed(e);
+          delegate.onRecordStoreFailed(e, record.guid);
           return;
         } catch (RemoteException e) {
-          delegate.onRecordStoreFailed(e);
+          delegate.onRecordStoreFailed(e, record.guid);
           return;
         }
 
@@ -330,7 +330,15 @@ public class PasswordsRepositorySession extends
         // Now we're processing a non-deleted incoming record.
         if (existingRecord == null) {
           trace("Looking up match for record " + remoteRecord.guid);
-          existingRecord = findExistingRecord(remoteRecord);
+          try {
+            existingRecord = findExistingRecord(remoteRecord);
+          } catch (RemoteException e) {
+            Logger.error(LOG_TAG, "Remote exception in findExistingRecord.");
+            delegate.onRecordStoreFailed(e, record.guid);
+          } catch (NullCursorException e) {
+            Logger.error(LOG_TAG, "Null cursor in findExistingRecord.");
+            delegate.onRecordStoreFailed(e, record.guid);
+          }
         }
 
         if (existingRecord == null) {
@@ -342,11 +350,11 @@ public class PasswordsRepositorySession extends
             inserted = insert(remoteRecord);
           } catch (RemoteException e) {
             Logger.debug(LOG_TAG, "Record insert caused a RemoteException.");
-            delegate.onRecordStoreFailed(e);
+            delegate.onRecordStoreFailed(e, record.guid);
             return;
           }
           trackRecord(inserted);
-          delegate.onRecordStoreSucceeded(inserted);
+          delegate.onRecordStoreSucceeded(inserted.guid);
           return;
         }
 
@@ -369,7 +377,7 @@ public class PasswordsRepositorySession extends
           replaced = replace(existingRecord, toStore);
         } catch (RemoteException e) {
           Logger.debug(LOG_TAG, "Record replace caused a RemoteException.");
-          delegate.onRecordStoreFailed(e);
+          delegate.onRecordStoreFailed(e, record.guid);
           return;
         }
 
@@ -377,7 +385,7 @@ public class PasswordsRepositorySession extends
         // of reconcileRecords.
         Logger.debug(LOG_TAG, "Calling delegate callback with guid " + replaced.guid +
                               "(" + replaced.androidID + ")");
-        delegate.onRecordStoreSucceeded(replaced);
+        delegate.onRecordStoreSucceeded(record.guid);
         return;
       }
     };
@@ -581,7 +589,7 @@ public class PasswordsRepositorySession extends
     Passwords.USERNAME_FIELD  + " = ? AND " +
     Passwords.PASSWORD_FIELD  + " = ?";
 
-  private PasswordRecord findExistingRecord(PasswordRecord record) {
+  private PasswordRecord findExistingRecord(PasswordRecord record) throws NullCursorException, RemoteException {
     PasswordRecord foundRecord = null;
     Cursor cursor = null;
     // Only check the data table.
@@ -610,12 +618,6 @@ public class PasswordsRepositorySession extends
           return foundRecord;
         }
       }
-    } catch (RemoteException e) {
-      Logger.error(LOG_TAG, "Remote exception in findExistingRecord.");
-      delegate.onRecordStoreFailed(e);
-    } catch (NullCursorException e) {
-      Logger.error(LOG_TAG, "Null cursor in findExistingRecord.");
-      delegate.onRecordStoreFailed(e);
     } finally {
       if (cursor != null) {
         cursor.close();
@@ -630,10 +632,10 @@ public class PasswordsRepositorySession extends
       deleteGUID(record.guid);
     } catch (RemoteException e) {
       Logger.error(LOG_TAG, "RemoteException in password delete.");
-      delegate.onRecordStoreFailed(e);
+      delegate.onRecordStoreFailed(e, record.guid);
       return;
     }
-    delegate.onRecordStoreSucceeded(record);
+    delegate.onRecordStoreSucceeded(record.guid);
   }
 
   /**

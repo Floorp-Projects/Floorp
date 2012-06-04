@@ -28,6 +28,8 @@ USING_INDEXEDDB_NAMESPACE
 
 IDBRequest::IDBRequest()
 : mResultVal(JSVAL_VOID),
+  mActorParent(nsnull),
+  mErrorCode(NS_OK),
   mHaveResultOrErrorCode(false),
   mRooted(false)
 {
@@ -90,30 +92,18 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
 
   // If the request failed then set the error code and return.
   if (NS_FAILED(rv)) {
-    mError = DOMError::CreateForNSResult(rv);
+    SetError(rv);
     return NS_OK;
   }
 
   // Otherwise we need to get the result from the helper.
-  JSContext* cx;
-  if (GetScriptOwner()) {
-    nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
-    NS_ASSERTION(cxStack, "Failed to get thread context stack!");
-
-    cx = cxStack->GetSafeJSContext();
-    if (!cx) {
-      NS_WARNING("Failed to get safe JSContext!");
-      rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      mError = DOMError::CreateForNSResult(rv);
-      return rv;
-    }
+  JSContext* cx = GetJSContext();
+  if (!cx) {
+    NS_WARNING("Failed to get safe JSContext!");
+    rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    SetError(rv);
+    return rv;
   }
-  else {
-    nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-    NS_ENSURE_STATE(sc);
-    cx = sc->GetNativeContext();
-    NS_ASSERTION(cx, "Failed to get a context!");
-  } 
 
   JSObject* global = GetParentObject();
   NS_ASSERTION(global, "This should never be null!");
@@ -137,7 +127,7 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
     mError = nsnull;
   }
   else {
-    mError = DOMError::CreateForNSResult(rv);
+    SetError(rv);
     mResultVal = JSVAL_VOID;
   }
 
@@ -145,12 +135,76 @@ IDBRequest::NotifyHelperCompleted(HelperBase* aHelper)
 }
 
 void
-IDBRequest::SetError(nsresult rv)
+IDBRequest::NotifyHelperSentResultsToChildProcess(nsresult aRv)
 {
-  NS_ASSERTION(NS_FAILED(rv), "Er, what?");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!mHaveResultOrErrorCode, "Already called!");
+  NS_ASSERTION(!PreservingWrapper(), "Already rooted?!");
+  NS_ASSERTION(JSVAL_IS_VOID(mResultVal), "Should be undefined!");
+
+  // See if our window is still valid. If not then we're going to pretend that
+  // we never completed.
+  if (NS_FAILED(CheckInnerWindowCorrectness())) {
+    return;
+  }
+
+  mHaveResultOrErrorCode = true;
+
+  if (NS_FAILED(aRv)) {
+    SetError(aRv);
+  }
+}
+
+void
+IDBRequest::SetError(nsresult aRv)
+{
+  NS_ASSERTION(NS_FAILED(aRv), "Er, what?");
   NS_ASSERTION(!mError, "Already have an error?");
 
-  mError = DOMError::CreateForNSResult(rv);
+  mHaveResultOrErrorCode = true;
+  mError = DOMError::CreateForNSResult(aRv);
+  mErrorCode = aRv;
+
+  mResultVal = JSVAL_VOID;
+  UnrootResultVal();
+}
+
+#ifdef DEBUG
+nsresult
+IDBRequest::GetErrorCode() const
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mHaveResultOrErrorCode, "Don't call me yet!");
+  return mErrorCode;
+}
+#endif
+
+JSContext*
+IDBRequest::GetJSContext()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  JSContext* cx;
+
+  if (GetScriptOwner()) {
+    nsIThreadJSContextStack* cxStack = nsContentUtils::ThreadJSContextStack();
+    NS_ASSERTION(cxStack, "Failed to get thread context stack!");
+
+    cx = cxStack->GetSafeJSContext();
+    NS_ENSURE_TRUE(cx, nsnull);
+
+    return cx;
+  }
+
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_TRUE(sc, nsnull);
+
+  cx = sc->GetNativeContext();
+  NS_ASSERTION(cx, "Failed to get a context!");
+
+  return cx;
 }
 
 void
@@ -307,6 +361,11 @@ IDBOpenDBRequest::Create(nsPIDOMWindow* aOwner,
 void
 IDBOpenDBRequest::SetTransaction(IDBTransaction* aTransaction)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ASSERTION(!aTransaction || !mTransaction,
+               "Shouldn't have a transaction here!");
+
   mTransaction = aTransaction;
 }
 
@@ -348,3 +407,37 @@ DOMCI_DATA(IDBOpenDBRequest, IDBOpenDBRequest)
 
 NS_IMPL_EVENT_HANDLER(IDBOpenDBRequest, blocked);
 NS_IMPL_EVENT_HANDLER(IDBOpenDBRequest, upgradeneeded);
+
+nsresult
+IDBOpenDBRequest::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+{
+  NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
+
+  nsPIDOMWindow* owner = GetOwner();
+  if (!owner) {
+    return NS_OK;
+  }
+
+  if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
+    nsString type;
+    nsresult rv = aVisitor.mDOMEvent->GetType(type);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (type.EqualsLiteral(ERROR_EVT_STR)) {
+      nsRefPtr<nsDOMEvent> duplicateEvent =
+        CreateGenericEvent(type, eDoesNotBubble, eNotCancelable);
+      NS_ENSURE_STATE(duplicateEvent);
+
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(owner));
+      NS_ASSERTION(target, "How can this happen?!");
+
+      bool dummy;
+      rv = target->DispatchEvent(duplicateEvent, &dummy);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  }
+
+  return NS_OK;
+}

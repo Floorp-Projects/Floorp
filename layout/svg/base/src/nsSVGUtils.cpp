@@ -52,6 +52,7 @@
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextContainerFrame.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "mozilla/unused.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1669,9 +1670,9 @@ nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)
   PRInt32 stride = aSurface->Stride();
   for (int y=0; y<size.height; y++) {
     for (int x=0; x<size.width; x++) {
-      fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_R, 1, 1, f);
-      fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_G, 1, 1, f);
-      fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_B, 1, 1, f);
+      unused << fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_R, 1, 1, f);
+      unused << fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_G, 1, 1, f);
+      unused << fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_B, 1, 1, f);
     }
   }
   fclose(f);

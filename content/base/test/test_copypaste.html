@@ -248,10 +248,11 @@ if (false) {
     copyRangeToClipboard($("div12").childNodes[0],0, $("div12").childNodes[1],2);
     testClipboardValue("text/unicode", "Xdiv12");
     testClipboardValue("text/html", "<div><p>X<span>div</span>12</p></div>");
-    setTimeout(function(){testSelectionToString("div12")},0);
+    setTimeout(function(){ 
+      testSelectionToString("div12"); 
+      setTimeout(SimpleTest.finish,0);
+    },0);
   },0);
-
-  setTimeout(function(){SimpleTest.finish()},0);
 }
 
 

@@ -44,9 +44,9 @@
   
 <!-- Setup Success -->
 <!ENTITY sync.title.success.label 'Setup Complete'>
-<!ENTITY sync.subtitle.success.label 'Your data is now being downloaded in the background. You can go to Settings to manage your account.'>
+<!ENTITY sync.subtitle.success.label1 'Your data is now being downloaded in the background. You can go to Settings to manage your account, or start browsing with &brandShortName;.'>
 <!ENTITY sync.settings.label 'Settings'>
-<!ENTITY sync.subtitle.manage.label 'Your &syncBrand.fullName.label; account is already set up. Go to Settings to manage your account.'>
+<!ENTITY sync.subtitle.manage.label1 'Your &syncBrand.fullName.label; account is already set up. You can go to Settings to manage your account, or launch &brandShortName;.'>
 
 <!-- Pair Device -->
 <!ENTITY sync.pair.tryagain.label 'Please try again.'>
@@ -72,6 +72,7 @@
 <!ENTITY bookmarks.folder.unfiled.label 'Unsorted Bookmarks'>
 <!ENTITY bookmarks.folder.desktop.label 'Desktop Bookmarks'>
 <!ENTITY bookmarks.folder.mobile.label 'Mobile Bookmarks'>
+<!ENTITY bookmarks.folder.readinglist.label 'Reading List'>
 
 <!-- Notification strings -->
 <!ENTITY sync.notification.oneaccount.label 'Only one &syncBrand.fullName.label; account is supported.'>

@@ -288,8 +288,11 @@ MapsReporter::ParseMapping(
   unsigned long long addrStart, addrEnd;
   char perms[5];
   unsigned long long offset;
-  char devMajor[3];
-  char devMinor[3];
+  // The 2.6 and 3.0 kernels allocate 12 bits for the major device number and
+  // 20 bits for the minor device number.  Future kernels might allocate more.
+  // 64 bits ought to be enough for anybody.
+  char devMajor[17];
+  char devMinor[17];
   unsigned int inode;
   char path[1025];
 
@@ -301,7 +304,9 @@ MapsReporter::ParseMapping(
   // with or without a path, but we don't want to look to a new line for the
   // path.  Thus we have %u%1024[^\n] at the end of the pattern.  This will
   // capture into the path some leading whitespace, which we'll later trim off.
-  int numRead = fscanf(aFile, "%llx-%llx %4s %llx %2s:%2s %u%1024[^\n]",
+  int numRead = fscanf(aFile,
+                       "%llx-%llx %4s %llx "
+                       "%16[0-9a-fA-F]:%16[0-9a-fA-F] %u%1024[^\n]",
                        &addrStart, &addrEnd, perms, &offset, devMajor,
                        devMinor, &inode, path);
 

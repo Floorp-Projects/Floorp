@@ -142,7 +142,6 @@
 @BINPATH@/components/content_canvas.xpt
 @BINPATH@/components/content_htmldoc.xpt
 @BINPATH@/components/content_html.xpt
-@BINPATH@/components/content_media.xpt
 @BINPATH@/components/content_xslt.xpt
 @BINPATH@/components/content_xtf.xpt
 @BINPATH@/components/cookie.xpt
@@ -166,13 +165,18 @@
 @BINPATH@/components/dom_css.xpt
 @BINPATH@/components/dom_devicestorage.xpt
 @BINPATH@/components/dom_events.xpt
+@BINPATH@/components/dom_file.xpt
 @BINPATH@/components/dom_geolocation.xpt
+@BINPATH@/components/dom_media.xpt
 @BINPATH@/components/dom_network.xpt
 @BINPATH@/components/dom_notification.xpt
 @BINPATH@/components/dom_html.xpt
 @BINPATH@/components/dom_indexeddb.xpt
 @BINPATH@/components/dom_offline.xpt
 @BINPATH@/components/dom_json.xpt
+#ifdef MOZ_B2G_RIL
+@BINPATH@/components/dom_mms.xpt
+#endif
 @BINPATH@/components/dom_power.xpt
 @BINPATH@/components/dom_range.xpt
 @BINPATH@/components/dom_settings.xpt
@@ -424,6 +428,8 @@
 @BINPATH@/components/NetworkManager.js
 @BINPATH@/components/RadioInterfaceLayer.manifest
 @BINPATH@/components/RadioInterfaceLayer.js
+@BINPATH@/components/MmsService.manifest
+@BINPATH@/components/MmsService.js
 @BINPATH@/components/RILContentHelper.js
 @BINPATH@/components/SmsDatabaseService.manifest
 @BINPATH@/components/SmsDatabaseService.js
@@ -639,6 +645,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/B2GComponents.manifest
 @BINPATH@/components/B2GComponents.xpt
 @BINPATH@/components/CameraContent.js
+@BINPATH@/@DLL_PREFIX@omxplugin@DLL_SUFFIX@
 @BINPATH@/chrome/marionette@JAREXT@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/MarionetteComponents.manifest

@@ -389,7 +389,7 @@ ListBase<LC>::getPrototype(JSContext *cx, JSObject *receiver, bool *enabled)
     XPCWrappedNativeScope *scope =
         XPCWrappedNativeScope::FindInJSObjectScope(cx, receiver);
     if (!scope)
-        return false;
+        return NULL;
 
     return getPrototype(cx, scope, receiver);
 }

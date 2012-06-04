@@ -91,7 +91,7 @@ function nextTest(aTestNum) {
 function runTest(testNum) {
     // Seems we need to enable this again, or sendKeyEvent() complaints.
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    ok(true, "Starting test #" + testNum);
+    info("Starting test #" + testNum);
 
     switch(testNum) {
     case 1:
@@ -400,13 +400,13 @@ function runTest(testNum) {
         ok(true, "oninput should have been received");
         ok(event.bubbles, "input event should bubble");
         ok(event.cancelable, "input event should be cancelable");
+        checkForm("Google");
         SimpleTest.finish();
       }, false);
 
       doKey("down");
       checkForm("");
       doKey("return");
-      checkForm("Google");
       return;
 
     default:

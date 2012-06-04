@@ -814,13 +814,13 @@ SpecialPowersAPI.prototype = {
     doPreciseGCandCC();
   },
 
-  hasContentProcesses: function() {
+  isMainProcess: function() {
     try {
-      var rt = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-      return rt.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-    } catch (e) {
-      return true;
-    }
+      return Cc["@mozilla.org/xre/app-info;1"].
+               getService(Ci.nsIXULRuntime).
+               processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+    } catch (e) { }
+    return true;
   },
 
   _xpcomabi: null,
@@ -1080,5 +1080,44 @@ SpecialPowersAPI.prototype = {
     var pm = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
     var uri = this.getDocumentURIObject(document);
     pm.remove(uri.host, "fullscreen");
+  },
+
+  _getURI: function(urlOrDocument) {
+    if (typeof(urlOrDocument) == "string") {
+      return Cc["@mozilla.org/network/io-service;1"].
+               getService(Ci.nsIIOService).
+               newURI(url, null, null);
+    }
+    // Assume document.
+    return this.getDocumentURIObject(urlOrDocument);
+  },
+
+  addPermission: function(type, allow, urlOrDocument) {
+    let uri = this._getURI(urlOrDocument);
+
+    let permission = allow ?
+                     Ci.nsIPermissionManager.ALLOW_ACTION :
+                     Ci.nsIPermissionManager.DENY_ACTION;
+
+    var msg = {
+      'op': "add",
+      'type': type,
+      'url': uri.spec,
+      'permission': permission
+    };
+
+    this._sendSyncMessage('SPPermissionManager', msg);
+  },
+
+  removePermission: function(type, urlOrDocument) {
+    let uri = this._getURI(urlOrDocument);
+
+    var msg = {
+      'op': "remove",
+      'type': type,
+      'url': uri.spec
+    };
+
+    this._sendSyncMessage('SPPermissionManager', msg);
   }
 };

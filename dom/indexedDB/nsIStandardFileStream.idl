@@ -1,0 +1,60 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIFile;
+
+/**
+ * A stream that allows you to read from a file or stream to a file
+ * using standard file APIs.
+ */
+[scriptable, uuid(ebbbb779-92a3-4b2a-b7cf-6efbe904c453)]
+interface nsIStandardFileStream : nsISupports
+{
+  /**
+   * If this is set, the file will be opened (i.e., a call to
+   * fopen done) only when we do an actual operation on the stream,
+   * or more specifically, when one of the following is called:
+   *   - Seek
+   *   - Tell
+   *   - SetEOF
+   *   - Available
+   *   - Read
+   *   - Write
+   *   - Flush
+   *   - GetSize
+   *   - GetLastModified
+   *   - Sync
+   *
+   * FLAGS_DEFER_OPEN is useful if we use the stream on a background
+   * thread, so that the opening and possible |stat|ing of the file
+   * happens there as well.
+   *
+   * @note Using this flag results in the file not being opened
+   *       during the call to Init.  This means that any errors that might
+   *       happen when this flag is not set would happen during the
+   *       first read.  Also, the file is not locked when Init is called,
+   *       so it might be deleted before we try to read from it.
+   */
+  const long FLAGS_DEFER_OPEN = 1 << 0;
+
+  /**
+   * @param file          file to read from or stream to
+   * @param mode          file open mode (see fopen documentation)
+   * @param flags         flags specifying various behaviors of the class
+   *        (see enumerations in the class)
+   */
+  void init(in nsIFile file,
+            in AString mode,
+            in long flags);
+
+  /**
+   * Flush all written content held in memory buffers out to disk.
+   * This is the equivalent of fflush()
+   */
+  void flushBuffers();
+};

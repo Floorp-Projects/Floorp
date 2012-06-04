@@ -274,20 +274,23 @@ nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     Link::ResetLinkState(!!aNotify);
   }
 
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
+      (aName == nsGkAtoms::href ||
+       aName == nsGkAtoms::rel ||
+       aName == nsGkAtoms::title ||
+       aName == nsGkAtoms::media ||
+       aName == nsGkAtoms::type)) {
     bool dropSheet = false;
-    if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::rel &&
-        GetStyleSheet()) {
+    if (aName == nsGkAtoms::rel && GetStyleSheet()) {
       PRUint32 linkTypes = nsStyleLinkElement::ParseLinkTypes(aValue);
       dropSheet = !(linkTypes & STYLESHEET);          
     }
     
     UpdateStyleSheetInternal(nsnull,
                              dropSheet ||
-                             (aNameSpaceID == kNameSpaceID_None &&
-                              (aName == nsGkAtoms::title ||
-                               aName == nsGkAtoms::media ||
-                               aName == nsGkAtoms::type)));
+                             (aName == nsGkAtoms::title ||
+                              aName == nsGkAtoms::media ||
+                              aName == nsGkAtoms::type));
   }
 
   return rv;
@@ -299,13 +302,15 @@ nsHTMLLinkElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                 aNotify);
-  if (NS_SUCCEEDED(rv)) {
-    UpdateStyleSheetInternal(nsnull,
-                             aNameSpaceID == kNameSpaceID_None &&
-                             (aAttribute == nsGkAtoms::rel ||
-                              aAttribute == nsGkAtoms::title ||
-                              aAttribute == nsGkAtoms::media ||
-                              aAttribute == nsGkAtoms::type));
+  // Since removing href or rel makes us no longer link to a
+  // stylesheet, force updates for those too.
+  if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
+      (aAttribute == nsGkAtoms::href ||
+       aAttribute == nsGkAtoms::rel ||
+       aAttribute == nsGkAtoms::title ||
+       aAttribute == nsGkAtoms::media ||
+       aAttribute == nsGkAtoms::type)) {
+    UpdateStyleSheetInternal(nsnull, true);
   }
 
   // The ordering of the parent class's UnsetAttr call and Link::ResetLinkState

@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PIndexedDBIndex;
+include protocol PIndexedDBObjectStore;
+include protocol PIndexedDBRequest;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using mozilla::dom::indexedDB::Key;
+using mozilla::dom::indexedDB::IDBCursor::Direction;
+
+using mozilla::void_t;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+namespace ipc {
+
+struct ContinueParams
+{
+  Key key;
+  uint32_t count;
+};
+
+union CursorRequestParams
+{
+  ContinueParams;
+};
+
+} // namespace ipc
+
+protocol PIndexedDBCursor
+{
+  manager PIndexedDBObjectStore or PIndexedDBIndex;
+
+  manages PIndexedDBRequest;
+
+parent:
+  __delete__();
+
+  PIndexedDBRequest(CursorRequestParams params);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

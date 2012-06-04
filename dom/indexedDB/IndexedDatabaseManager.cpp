@@ -4,13 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
-
 #include "IndexedDatabaseManager.h"
 #include "DatabaseInfo.h"
 
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIFile.h"
+#include "nsIFileStorage.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -19,11 +18,11 @@
 #include "nsISimpleEnumerator.h"
 #include "nsITimer.h"
 
+#include "mozilla/dom/file/FileService.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/storage.h"
-#include "mozilla/dom/ContentChild.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
@@ -59,6 +58,7 @@
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::services;
 using mozilla::Preferences;
+using mozilla::dom::file::FileService;
 
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -116,6 +116,7 @@ public:
 NS_IMPL_THREADSAFE_ISUPPORTS1(QuotaCallback, mozIStorageQuotaCallback)
 
 // Adds all databases in the hash to the given array.
+template <class T>
 PLDHashOperator
 EnumerateToTArray(const nsACString& aKey,
                   nsTArray<IDBDatabase*>* aValue,
@@ -126,8 +127,8 @@ EnumerateToTArray(const nsACString& aKey,
   NS_ASSERTION(aValue, "Null pointer!");
   NS_ASSERTION(aUserArg, "Null pointer!");
 
-  nsTArray<IDBDatabase*>* array =
-    static_cast<nsTArray<IDBDatabase*>*>(aUserArg);
+  nsTArray<T>* array =
+    static_cast<nsTArray<T>*>(aUserArg);
 
   if (!array->AppendElements(*aValue)) {
     NS_WARNING("Out of memory!");
@@ -168,9 +169,11 @@ IndexedDatabaseManager::IndexedDatabaseManager()
 IndexedDatabaseManager::~IndexedDatabaseManager()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(gInstance == this, "Different instances!");
+  NS_ASSERTION(!gInstance || gInstance == this, "Different instances!");
   gInstance = nsnull;
 }
+
+bool IndexedDatabaseManager::sIsMainProcess = false;
 
 // static
 already_AddRefed<IndexedDatabaseManager>
@@ -186,12 +189,7 @@ IndexedDatabaseManager::GetOrCreate()
   nsRefPtr<IndexedDatabaseManager> instance(gInstance);
 
   if (!instance) {
-    if (NS_FAILED(Preferences::AddIntVarCache(&gIndexedDBQuotaMB,
-                                              PREF_INDEXEDDB_QUOTA,
-                                              DEFAULT_QUOTA_MB))) {
-      NS_WARNING("Unable to respond to quota pref changes!");
-      gIndexedDBQuotaMB = DEFAULT_QUOTA_MB;
-    }
+    sIsMainProcess = XRE_GetProcessType() == GeckoProcessType_Default;
 
     instance = new IndexedDatabaseManager();
 
@@ -209,22 +207,33 @@ IndexedDatabaseManager::GetOrCreate()
       return nsnull;
     }
 
-    nsCOMPtr<nsIFile> dbBaseDirectory;
-    nsresult rv =
-      NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                             getter_AddRefs(dbBaseDirectory));
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    nsresult rv;
 
-    rv = dbBaseDirectory->Append(NS_LITERAL_STRING("indexedDB"));
-    NS_ENSURE_SUCCESS(rv, nsnull);
+    if (sIsMainProcess) {
+      nsCOMPtr<nsIFile> dbBaseDirectory;
+      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                  getter_AddRefs(dbBaseDirectory));
+      NS_ENSURE_SUCCESS(rv, nsnull);
 
-    rv = dbBaseDirectory->GetPath(instance->mDatabaseBasePath);
-    NS_ENSURE_SUCCESS(rv, nsnull);
+      rv = dbBaseDirectory->Append(NS_LITERAL_STRING("indexedDB"));
+      NS_ENSURE_SUCCESS(rv, nsnull);
 
-    // Make a timer here to avoid potential failures later. We don't actually
-    // initialize the timer until shutdown.
-    instance->mShutdownTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    NS_ENSURE_TRUE(instance->mShutdownTimer, nsnull);
+      rv = dbBaseDirectory->GetPath(instance->mDatabaseBasePath);
+      NS_ENSURE_SUCCESS(rv, nsnull);
+
+      // Make a lazy thread for any IO we need (like clearing or enumerating the
+      // contents of indexedDB database directories).
+      instance->mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
+                                                LazyIdleThread::ManualShutdown);
+
+      // We need one quota callback object to hand to SQLite.
+      instance->mQuotaCallbackSingleton = new QuotaCallback();
+
+      // Make a timer here to avoid potential failures later. We don't actually
+      // initialize the timer until shutdown.
+      instance->mShutdownTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+      NS_ENSURE_TRUE(instance->mShutdownTimer, nsnull);
+    }
 
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     NS_ENSURE_TRUE(obs, nsnull);
@@ -233,13 +242,12 @@ IndexedDatabaseManager::GetOrCreate()
     rv = obs->AddObserver(instance, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
-    // Make a lazy thread for any IO we need (like clearing or enumerating the
-    // contents of indexedDB database directories).
-    instance->mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
-                                             LazyIdleThread::ManualShutdown);
-
-    // We need one quota callback object to hand to SQLite.
-    instance->mQuotaCallbackSingleton = new QuotaCallback();
+    if (NS_FAILED(Preferences::AddIntVarCache(&gIndexedDBQuotaMB,
+                                              PREF_INDEXEDDB_QUOTA,
+                                              DEFAULT_QUOTA_MB))) {
+      NS_WARNING("Unable to respond to quota pref changes!");
+      gIndexedDBQuotaMB = DEFAULT_QUOTA_MB;
+    }
 
     // The observer service will hold our last reference, don't AddRef here.
     gInstance = instance;
@@ -274,11 +282,7 @@ IndexedDatabaseManager::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
     do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const nsString& path = XRE_GetProcessType() == GeckoProcessType_Default ?
-                         GetBaseDirectory() :
-                         ContentChild::GetSingleton()->GetIndexedDBPath();
-
-  rv = directory->InitWithPath(path);
+  rv = directory->InitWithPath(GetBaseDirectory());
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ConvertASCIItoUTF16 originSanitized(aASCIIOrigin);
@@ -289,6 +293,21 @@ IndexedDatabaseManager::GetDirectoryForOrigin(const nsACString& aASCIIOrigin,
 
   directory.forget(reinterpret_cast<nsILocalFile**>(aDirectory));
   return NS_OK;
+}
+
+// static
+already_AddRefed<nsIAtom>
+IndexedDatabaseManager::GetDatabaseId(const nsACString& aOrigin,
+                                      const nsAString& aName)
+{
+  nsCString str(aOrigin);
+  str.Append("*");
+  str.Append(NS_ConvertUTF16toUTF8(aName));
+
+  nsCOMPtr<nsIAtom> atom = do_GetAtom(str);
+  NS_ENSURE_TRUE(atom, nsnull);
+
+  return atom.forget();
 }
 
 bool
@@ -503,8 +522,10 @@ IndexedDatabaseManager::AbortCloseDatabasesForWindow(nsPIDOMWindow* aWindow)
   NS_ASSERTION(aWindow, "Null pointer!");
 
   nsAutoTArray<IDBDatabase*, 50> liveDatabases;
-  mLiveDatabases.EnumerateRead(EnumerateToTArray, &liveDatabases);
+  mLiveDatabases.EnumerateRead(EnumerateToTArray<IDBDatabase*>,
+                               &liveDatabases);
 
+  FileService* service = FileService::Get();
   TransactionThreadPool* pool = TransactionThreadPool::Get();
 
   for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
@@ -512,6 +533,10 @@ IndexedDatabaseManager::AbortCloseDatabasesForWindow(nsPIDOMWindow* aWindow)
     if (database->GetOwner() == aWindow) {
       if (NS_FAILED(database->Close())) {
         NS_WARNING("Failed to close database for dying window!");
+      }
+
+      if (service) {
+        service->AbortLockedFilesForStorage(database);
       }
 
       if (pool) {
@@ -528,17 +553,20 @@ IndexedDatabaseManager::HasOpenTransactions(nsPIDOMWindow* aWindow)
   NS_ASSERTION(aWindow, "Null pointer!");
 
   nsAutoTArray<IDBDatabase*, 50> liveDatabases;
-  mLiveDatabases.EnumerateRead(EnumerateToTArray, &liveDatabases);
-
+  mLiveDatabases.EnumerateRead(EnumerateToTArray<IDBDatabase*>,
+                               &liveDatabases);
+  
+  FileService* service = FileService::Get();
   TransactionThreadPool* pool = TransactionThreadPool::Get();
-  if (!pool) {
+  if (!service && !pool) {
     return false;
   }
 
   for (PRUint32 index = 0; index < liveDatabases.Length(); index++) {
     IDBDatabase*& database = liveDatabases[index];
     if (database->GetOwner() == aWindow &&
-        pool->HasTransactionsForDatabase(database)) {
+        ((service && service->HasLockedFilesForStorage(database)) ||
+         (pool && pool->HasTransactionsForDatabase(database)))) {
       return true;
     }
   }
@@ -572,21 +600,38 @@ IndexedDatabaseManager::OnDatabaseClosed(IDBDatabase* aDatabase)
           // transactions that have not completed.  We need to wait for those
           // before we dispatch the helper.
 
-          TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
-          if (!pool) {
-            NS_ERROR("IndexedDB is totally broken.");
-            return;
+          FileService* service = FileService::Get();
+          TransactionThreadPool* pool = TransactionThreadPool::Get();
+
+          PRUint32 count = !!service + !!pool;
+
+          nsRefPtr<WaitForTransactionsToFinishRunnable> runnable =
+            new WaitForTransactionsToFinishRunnable(op,
+                                                    NS_MAX<PRUint32>(count, 1));
+
+          if (!count) {
+            runnable->Run();
           }
+          else {
+            // Use the WaitForTransactionsToxFinishRunnable as the callback.
 
-          nsRefPtr<WaitForTransactionsToFinishRunnable> waitRunnable =
-            new WaitForTransactionsToFinishRunnable(op);
+            if (service) {
+              nsTArray<nsCOMPtr<nsIFileStorage> > array;
+              array.AppendElement(aDatabase);
 
-          nsAutoTArray<nsRefPtr<IDBDatabase>, 1> array;
-          array.AppendElement(aDatabase);
+              if (!service->WaitForAllStoragesToComplete(array, runnable)) {
+                NS_WARNING("Failed to wait for storages to complete!");
+              }
+            }
 
-          // Use the WaitForTransactionsToFinishRunnable as the callback.
-          if (!pool->WaitForAllDatabasesToComplete(array, waitRunnable)) {
-            NS_WARNING("Failed to wait for transaction to complete!");
+            if (pool) {
+              nsTArray<nsRefPtr<IDBDatabase> > array;
+              array.AppendElement(aDatabase);
+
+              if (!pool->WaitForAllDatabasesToComplete(array, runnable)) {
+                NS_WARNING("Failed to wait for databases to complete!");
+              }
+            }
           }
         }
         break;
@@ -692,7 +737,7 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
 
   nsTHashtable<nsStringHashKey> validSubdirs;
   validSubdirs.Init(20);
-  
+
   nsCOMPtr<nsISimpleEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -709,6 +754,10 @@ IndexedDatabaseManager::EnsureOriginIsInitialized(const nsACString& aOrigin,
     nsString leafName;
     rv = file->GetLeafName(leafName);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (StringEndsWith(leafName, NS_LITERAL_STRING(".sqlite-journal"))) {
+      continue;
+    }
 
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
@@ -884,7 +933,7 @@ IndexedDatabaseManager::GetASCIIOriginFromWindow(nsPIDOMWindow* aWindow,
 
   if (!aWindow) {
     aASCIIOrigin.AssignLiteral("chrome");
-    NS_ASSERTION(nsContentUtils::IsCallerChrome(), 
+    NS_ASSERTION(nsContentUtils::IsCallerChrome(),
                  "Null window but not chrome!");
     return NS_OK;
   }
@@ -910,6 +959,19 @@ IndexedDatabaseManager::GetASCIIOriginFromWindow(nsPIDOMWindow* aWindow,
 
   return NS_OK;
 }
+
+#ifdef DEBUG
+//static
+bool
+IndexedDatabaseManager::IsMainProcess()
+{
+  NS_ASSERTION(gInstance,
+               "IsMainProcess() called before indexedDB has been initialized!");
+  NS_ASSERTION((XRE_GetProcessType() == GeckoProcessType_Default) ==
+               sIsMainProcess, "XRE_GetProcessType changed its tune!");
+  return sIsMainProcess;
+}
+#endif
 
 already_AddRefed<FileManager>
 IndexedDatabaseManager::GetOrCreateFileManager(const nsACString& aOrigin,
@@ -1216,24 +1278,59 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
       NS_ERROR("Shutdown more than once?!");
     }
 
-    // Make sure to join with our IO thread.
-    if (NS_FAILED(mIOThread->Shutdown())) {
-      NS_WARNING("Failed to shutdown IO thread!");
-    }
+    if (sIsMainProcess) {
+      FileService* service = FileService::Get();
+      if (service) {
+        // This should only wait for IDB databases (file storages) to complete.
+        // Other file storages may still have running locked files.
+        // If the necko service (thread pool) gets the shutdown notification
+        // first then the sync loop won't be processed at all, otherwise it will
+        // lock the main thread until all IDB file storages are finished.
 
-    // Kick off the shutdown timer.
-    if (NS_FAILED(mShutdownTimer->Init(this, DEFAULT_SHUTDOWN_TIMER_MS,
-                                       nsITimer::TYPE_ONE_SHOT))) {
-      NS_WARNING("Failed to initialize shutdown timer!");
-    }
+        nsTArray<nsCOMPtr<nsIFileStorage> >
+          liveDatabases(mLiveDatabases.Count());
+        mLiveDatabases.EnumerateRead(
+                                  EnumerateToTArray<nsCOMPtr<nsIFileStorage> >,
+                                  &liveDatabases);
 
-    // This will spin the event loop while we wait on all the database threads
-    // to close. Our timer may fire during that loop.
-    TransactionThreadPool::Shutdown();
+        if (!liveDatabases.IsEmpty()) {
+          nsRefPtr<WaitForLockedFilesToFinishRunnable> runnable =
+            new WaitForLockedFilesToFinishRunnable();
 
-    // Cancel the timer regardless of whether it actually fired.
-    if (NS_FAILED(mShutdownTimer->Cancel())) {
-      NS_WARNING("Failed to cancel shutdown timer!");
+          if (!service->WaitForAllStoragesToComplete(liveDatabases,
+                                                     runnable)) {
+            NS_WARNING("Failed to wait for databases to complete!");
+          }
+
+          nsIThread* thread = NS_GetCurrentThread();
+          while (runnable->IsBusy()) {
+            if (!NS_ProcessNextEvent(thread)) {
+              NS_ERROR("Failed to process next event!");
+              break;
+            }
+          }
+        }
+      }
+
+      // Make sure to join with our IO thread.
+      if (NS_FAILED(mIOThread->Shutdown())) {
+        NS_WARNING("Failed to shutdown IO thread!");
+      }
+
+      // Kick off the shutdown timer.
+      if (NS_FAILED(mShutdownTimer->Init(this, DEFAULT_SHUTDOWN_TIMER_MS,
+                                         nsITimer::TYPE_ONE_SHOT))) {
+        NS_WARNING("Failed to initialize shutdown timer!");
+      }
+
+      // This will spin the event loop while we wait on all the database threads
+      // to close. Our timer may fire during that loop.
+      TransactionThreadPool::Shutdown();
+
+      // Cancel the timer regardless of whether it actually fired.
+      if (NS_FAILED(mShutdownTimer->Cancel())) {
+        NS_WARNING("Failed to cancel shutdown timer!");
+      }
     }
 
     mFileManagers.EnumerateRead(InvalidateAllFileManagers, nsnull);
@@ -1246,12 +1343,15 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC)) {
+    NS_ASSERTION(sIsMainProcess, "Should only happen in the main process!");
+
     NS_WARNING("Some database operations are taking longer than expected "
                "during shutdown and will be aborted!");
 
     // Grab all live databases, for all origins.
     nsAutoTArray<IDBDatabase*, 50> liveDatabases;
-    mLiveDatabases.EnumerateRead(EnumerateToTArray, &liveDatabases);
+    mLiveDatabases.EnumerateRead(EnumerateToTArray<IDBDatabase*>,
+                                 &liveDatabases);
 
     // Invalidate them all.
     if (!liveDatabases.IsEmpty()) {
@@ -1457,7 +1557,7 @@ IndexedDatabaseManager::AsyncUsageRunnable::GetUsageForDirectory(
     rv = file->GetFileSize(&fileSize);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ASSERTION(fileSize > 0, "Negative size?!");
+    NS_ASSERTION(fileSize >= 0, "Negative size?!");
 
     IncrementUsage(aUsage, PRUint64(fileSize));
   }
@@ -1496,6 +1596,11 @@ IndexedDatabaseManager::WaitForTransactionsToFinishRunnable::Run()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mOp && mOp->mHelper, "What?");
+  NS_ASSERTION(mCountdown, "Wrong countdown!");
+
+  if (--mCountdown) {
+    return NS_OK;
+  }
 
   // Don't hold the callback alive longer than necessary.
   nsRefPtr<AsyncConnectionHelper> helper;
@@ -1511,6 +1616,18 @@ IndexedDatabaseManager::WaitForTransactionsToFinishRunnable::Run()
   return NS_OK;
 }
 
+NS_IMPL_THREADSAFE_ISUPPORTS1(IndexedDatabaseManager::WaitForLockedFilesToFinishRunnable,
+                              nsIRunnable)
+
+NS_IMETHODIMP
+IndexedDatabaseManager::WaitForLockedFilesToFinishRunnable::Run()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  mBusy = false;
+
+  return NS_OK;
+}
 
 IndexedDatabaseManager::SynchronizedOp::SynchronizedOp(const nsACString& aOrigin,
                                                        nsIAtom* aId)
@@ -1592,11 +1709,14 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
 
   JSObject* global = JS_GetGlobalForObject(aCx, obj);
 
-  nsCOMPtr<nsIIDBFactory> factory = IDBFactory::Create(aCx, global);
-  NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
+  nsRefPtr<IDBFactory> factory;
+  nsresult rv = IDBFactory::Create(aCx, global, getter_AddRefs(factory));
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  NS_ASSERTION(factory, "This should never fail for chrome!");
 
   jsval mozIndexedDBVal;
-  nsresult rv = nsContentUtils::WrapNative(aCx, obj, factory, &mozIndexedDBVal);
+  rv = nsContentUtils::WrapNative(aCx, obj, factory, &mozIndexedDBVal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!JS_DefineProperty(aCx, obj, "mozIndexedDB", mozIndexedDBVal, nsnull,

@@ -89,7 +89,7 @@ function testScriptLabelShortening() {
       is(vs._scripts.itemCount, 9,
         "Didn't get the correct number of scripts in the list.");
 
-      closeDebuggerAndFinish(gTab);
+      closeDebuggerAndFinish();
     });
   });
 }

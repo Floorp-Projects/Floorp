@@ -407,52 +407,6 @@ nsHttpHandler::IsAcceptableEncoding(const char *enc)
 }
 
 nsresult
-nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
-                               bool isPrivate,
-                               nsICacheSession **result)
-{
-    nsresult rv;
-
-    // Skip cache if disabled in preferences
-    if (!mUseCache)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    // We want to get the pointer to the cache service each time we're called,
-    // because it's possible for some add-ons (such as Google Gears) to swap
-    // in new cache services on the fly, and we want to pick them up as
-    // appropriate.
-    nsCOMPtr<nsICacheService> serv = do_GetService(NS_CACHESERVICE_CONTRACTID,
-                                                   &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    const char *sessionName = "HTTP";
-    switch (storagePolicy) {
-    case nsICache::STORE_IN_MEMORY:
-        sessionName = isPrivate ? "HTTP-memory-only-PB" : "HTTP-memory-only";
-        break;
-    case nsICache::STORE_OFFLINE:
-        sessionName = "HTTP-offline";
-        break;
-    default:
-        break;
-    }
-
-    nsCOMPtr<nsICacheSession> cacheSession;
-    rv = serv->CreateSession(sessionName,
-                             storagePolicy,
-                             nsICache::STREAM_BASED,
-                             getter_AddRefs(cacheSession));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = cacheSession->SetDoomEntriesIfExpired(false);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_ADDREF(*result = cacheSession);
-
-    return NS_OK;
-}
-
-nsresult
 nsHttpHandler::GetStreamConverterService(nsIStreamConverterService **result)
 {
     if (!mStreamConvSvc) {

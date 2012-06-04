@@ -22,24 +22,28 @@ let TestObserver = {
 };
 
 function tabLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, arguments.callee, true);
+  browser.removeEventListener(aEvent.type, tabLoad, true);
 
-  openConsole();
-
-  let hudId = HUDService.getHudIdByWindow(content);
-  hud = HUDService.hudReferences[hudId];
-
-  Services.obs.addObserver(TestObserver, "console-api-log-event", false);
-  content.location.reload();
+  openConsole(null, function(aHud) {
+    hud = aHud;
+    Services.obs.addObserver(TestObserver, "console-api-log-event", false);
+    content.location.reload();
+  });
 }
 
 function performTest() {
-  isnot(hud.outputNode.textContent.indexOf("foobarBug613013"), -1,
-        "console.log() message found");
-
   Services.obs.removeObserver(TestObserver, "console-api-log-event");
   TestObserver = null;
-  finishTest();
+
+  waitForSuccess({
+    name: "console.log() message",
+    validatorFn: function()
+    {
+      return hud.outputNode.textContent.indexOf("foobarBug613013") > -1;
+    },
+    successFn: finishTest,
+    failureFn: finishTest,
+  });
 }
 
 function test() {

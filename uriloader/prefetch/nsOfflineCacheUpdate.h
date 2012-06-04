@@ -52,9 +52,9 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSICHANNELEVENTSINK
 
-    nsOfflineCacheUpdateItem(nsOfflineCacheUpdate *aUpdate,
-                             nsIURI *aURI,
+    nsOfflineCacheUpdateItem(nsIURI *aURI,
                              nsIURI *aReferrerURI,
+                             nsIApplicationCache *aApplicationCache,
                              nsIApplicationCache *aPreviousApplicationCache,
                              const nsACString &aClientID,
                              PRUint32 aType);
@@ -62,17 +62,22 @@ public:
 
     nsCOMPtr<nsIURI>           mURI;
     nsCOMPtr<nsIURI>           mReferrerURI;
+    nsCOMPtr<nsIApplicationCache> mApplicationCache;
     nsCOMPtr<nsIApplicationCache> mPreviousApplicationCache;
     nsCString                  mClientID;
     nsCString                  mCacheKey;
     PRUint32                   mItemType;
 
-    nsresult OpenChannel();
+    nsresult OpenChannel(nsOfflineCacheUpdate *aUpdate);
     nsresult Cancel();
     nsresult GetRequestSucceeded(bool * succeeded);
 
+    bool IsInProgress();
+    bool IsScheduled();
+    bool IsCompleted();
+
 private:
-    nsOfflineCacheUpdate*          mUpdate;
+    nsRefPtr<nsOfflineCacheUpdate> mUpdate;
     nsCOMPtr<nsIChannel>           mChannel;
     PRUint16                       mState;
 
@@ -87,9 +92,9 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
 
-    nsOfflineManifestItem(nsOfflineCacheUpdate *aUpdate,
-                          nsIURI *aURI,
+    nsOfflineManifestItem(nsIURI *aURI,
                           nsIURI *aReferrerURI,
+                          nsIApplicationCache *aApplicationCache,
                           nsIApplicationCache *aPreviousApplicationCache,
                           const nsACString &aClientID);
     virtual ~nsOfflineManifestItem();
@@ -179,12 +184,14 @@ public:
 
 class nsOfflineCacheUpdate : public nsIOfflineCacheUpdate
                            , public nsIOfflineCacheUpdateObserver
+                           , public nsIRunnable
                            , public nsOfflineCacheUpdateOwner
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOFFLINECACHEUPDATE
     NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
+    NS_DECL_NSIRUNNABLE
 
     nsOfflineCacheUpdate();
     ~nsOfflineCacheUpdate();
@@ -196,7 +203,7 @@ public:
     nsresult Begin();
     nsresult Cancel();
 
-    void LoadCompleted();
+    void LoadCompleted(nsOfflineCacheUpdateItem *aItem);
     void ManifestCheckCompleted(nsresult aStatus,
                                 const nsCString &aManifestHash);
     void StickDocument(nsIURI *aDocumentURI);
@@ -250,6 +257,7 @@ private:
     nsCString mUpdateDomain;
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIURI> mDocumentURI;
+    nsCOMPtr<nsILocalFile> mCustomProfileDir;
 
     nsCString mClientID;
     nsCOMPtr<nsIApplicationCache> mApplicationCache;
@@ -260,7 +268,7 @@ private:
     nsRefPtr<nsOfflineManifestItem> mManifestItem;
 
     /* Items being updated */
-    PRInt32 mCurrentItem;
+    PRUint32 mItemsInProgress;
     nsTArray<nsRefPtr<nsOfflineCacheUpdateItem> > mItems;
 
     /* Clients watching this update for changes */
@@ -309,6 +317,7 @@ public:
                       nsIURI *aDocumentURI,
                       nsIDOMDocument *aDocument,
                       nsIDOMWindow* aWindow,
+                      nsILocalFile* aCustomProfileDir,
                       nsIOfflineCacheUpdate **aUpdate);
 
     virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);

@@ -7,7 +7,7 @@
 #ifndef mozilla_a11y_HTMLListAccessible_h__
 #define mozilla_a11y_HTMLListAccessible_h__
 
-#include "nsHyperTextAccessibleWrap.h"
+#include "HyperTextAccessibleWrap.h"
 #include "nsBaseWidgetAccessible.h"
 
 namespace mozilla {
@@ -18,11 +18,11 @@ class HTMLListBulletAccessible;
 /**
  * Used for HTML list (like HTML ul).
  */
-class HTMLListAccessible : public nsHyperTextAccessibleWrap
+class HTMLListAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLListAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    nsHyperTextAccessibleWrap(aContent, aDoc) { }
+    HyperTextAccessibleWrap(aContent, aDoc) { }
   virtual ~HTMLListAccessible() { }
 
   // nsISupports
@@ -37,7 +37,7 @@ public:
 /**
  * Used for HTML list item (e.g. HTML li).
  */
-class HTMLLIAccessible : public nsHyperTextAccessibleWrap
+class HTMLLIAccessible : public HyperTextAccessibleWrap
 {
 public:
   HTMLLIAccessible(nsIContent* aContent, DocAccessible* aDoc);

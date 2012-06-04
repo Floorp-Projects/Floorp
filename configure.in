@@ -368,7 +368,7 @@ case "$target" in
 
     CPPFLAGS="-isystem $android_platform/usr/include $CPPFLAGS"
     CFLAGS="-mandroid -fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions $CXXFLAGS"
+    CXXFLAGS="-mandroid -fno-short-enums -fno-exceptions -Wno-psabi $CXXFLAGS"
     ASFLAGS="-isystem $android_platform/usr/include -DANDROID $ASFLAGS"
 
     dnl Add -llog by default, since we use it all over the place.
@@ -400,9 +400,6 @@ case "$target" in
     if test -z "$ANDROID_PACKAGE_NAME" ; then
         ANDROID_PACKAGE_NAME='org.mozilla.$(MOZ_APP_NAME)'
     fi
-    if test -z "$MOZ_MOBILE_COMPAT" ; then
-        MOZ_MOBILE_COMPAT='All'
-    fi
 
     AC_DEFINE(ANDROID)
     AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
@@ -420,11 +417,11 @@ fi
 
 AC_SUBST(ANDROID_NDK)
 AC_SUBST(ANDROID_TOOLCHAIN)
+AC_SUBST(ANDROID_SOURCE)
 AC_SUBST(ANDROID_PLATFORM)
 AC_SUBST(ANDROID_SDK)
 AC_SUBST(ANDROID_PLATFORM_TOOLS)
 AC_SUBST(ANDROID_PACKAGE_NAME)
-AC_SUBST(MOZ_MOBILE_COMPAT)
 AC_SUBST(OBJCOPY)
 
 dnl ========================================================
@@ -1711,6 +1708,17 @@ if test "$GNU_CC"; then
                   LDFLAGS=$_SAVE_LDFLAGS)
     _MOZ_RTTI_FLAGS_ON=-frtti
     _MOZ_RTTI_FLAGS_OFF=-fno-rtti
+
+    # Check for -mssse3 on $CC
+    AC_MSG_CHECKING([for -mssse3 option to $CC])
+    HAVE_COMPILER_FLAG_MSSSE3=
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS -mssse3"
+    AC_TRY_COMPILE(,,AC_MSG_RESULT([yes])
+                     [HAVE_COMPILER_FLAG_MSSSE3=1],
+                     AC_MSG_RESULT([no]))
+    CFLAGS=$_SAVE_CFLAGS
+    AC_SUBST(HAVE_COMPILER_FLAG_MSSSE3)
 
     # Turn on GNU-specific warnings:
     # -Wall - turn on a lot of warnings
@@ -4535,6 +4543,9 @@ MOZ_WAVE=1
 MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
+MOZ_MEDIA_PLUGINS=
+MOZ_MEDIA_NAVIGATOR=
+MOZ_OMX_PLUGIN=
 MOZ_VP8_ERROR_CONCEALMENT=
 MOZ_VP8_ENCODER=
 VPX_AS=
@@ -5612,6 +5623,48 @@ MOZ_ARG_DISABLE_BOOL(webm,
     MOZ_WEBM=,
     MOZ_WEBM=1)
 
+dnl ========================================================
+dnl = Disable media plugin support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(media-plugins,
+[  --enable-media-plugins  Enable support for media plugins],
+    MOZ_MEDIA_PLUGINS=1,
+    MOZ_MEDIA_PLUGINS=)
+
+if test -n "$MOZ_MEDIA_PLUGINS"; then
+  AC_DEFINE(MOZ_MEDIA_PLUGINS)
+fi
+
+dnl ========================================================
+dnl = Enable getUserMedia support
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(media-navigator,
+[  --enable-media-navigator  Enable support for getUserMedia],
+    MOZ_MEDIA_NAVIGATOR=1,
+    MOZ_MEDIA_NAVIGATOR=)
+
+if test -n "$MOZ_MEDIA_NAVIGATOR"; then
+  AC_DEFINE(MOZ_MEDIA_NAVIGATOR)
+fi
+
+dnl ========================================================
+dnl = Enable building OMX media plugin (B2G)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(omx-plugin,
+[  --enable-omx-plugin      Enable building OMX plugin (B2G)],
+    MOZ_OMX_PLUGIN=1,
+    MOZ_OMX_PLUGIN=)
+
+if test -n "$MOZ_OMX_PLUGIN"; then
+    if test "$OS_TARGET" = "Android" -a -n "$gonkdir"; then
+        dnl Only allow building OMX plugin on Gonk (B2G)
+        AC_DEFINE(MOZ_OMX_PLUGIN)
+    else
+       dnl fail if we're not building on Gonk
+       AC_MSG_ERROR([OMX media plugin can only be built on B2G])
+    fi
+fi
+
 dnl system libvpx Support
 dnl ========================================================
 MOZ_ARG_WITH_BOOL(system-libvpx,
@@ -5784,6 +5837,9 @@ if test -n "$MOZ_CUBEB"; then
         AC_DEFINE(MOZ_CUBEB)
         ;;
     *-mingw*)
+        AC_DEFINE(MOZ_CUBEB)
+        ;;
+    *-openbsd*)
         AC_DEFINE(MOZ_CUBEB)
         ;;
     *)
@@ -6353,6 +6409,9 @@ MOZ_ARG_DISABLE_BOOL(webapp-runtime,
 [  --disable-webapp-runtime  Disable Web App Runtime],
     MOZ_WEBAPP_RUNTIME=,
     MOZ_WEBAPP_RUNTIME=1)
+if test "$MOZ_WIDGET_TOOLKIT" != "windows" -a "$MOZ_WIDGET_TOOLKIT" != "cocoa" -a "$MOZ_WIDGET_TOOLKIT" != "gtk2"; then
+    MOZ_WEBAPP_RUNTIME=
+fi
 if test "$OS_ARCH" = "WINNT" -a -z "$MAKENSISU" -a -n "$CROSS_COMPILE"; then
     MOZ_WEBAPP_RUNTIME=
 fi
@@ -8739,6 +8798,8 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
+AC_SUBST(MOZ_MEDIA_PLUGINS)
+AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
 AC_SUBST(MOZ_VP8_ENCODER)
 AC_SUBST(MOZ_OGG)

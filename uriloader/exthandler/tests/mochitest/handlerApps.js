@@ -66,6 +66,17 @@ function test() {
                             // seems better than explicitly killing it, since
                             // developers who run the tests locally may well
                             // information in their running copy of iCal
+
+    if (navigator.userAgent.match(/ SeaMonkey\//)) {
+      // SeaMonkey tinderboxes don't like to have iCal lingering (and focused)
+      // on next test suite run(s).
+      todo(false, "On SeaMonkey, testing OS X as generic Unix. (Bug 749872)");
+
+      // assume a generic UNIX variant
+      exe = Components.classes["@mozilla.org/file/local;1"].
+            createInstance(Components.interfaces.nsILocalFile);
+      exe.initWithPath("/bin/echo");
+    }
   } else {
     // assume a generic UNIX variant
     exe = Components.classes["@mozilla.org/file/local;1"].

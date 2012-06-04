@@ -12,15 +12,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = content
 LIBRARY_NAME = gkconmedia_s
 LIBXUL_LIBRARY = 1
-XPIDL_MODULE = content_media
-
-XPIDLSRCS = \
-  nsIDOMMediaStream.idl \
-  $(NULL)
 
 EXPORTS = \
   AudioSegment.h \
   FileBlockCache.h \
+  MediaEngine.h \
+  MediaEngineDefault.h \
   MediaResource.h \
   MediaSegment.h \
   MediaStreamGraph.h \
@@ -42,6 +39,7 @@ EXPORTS = \
 CPPSRCS = \
   AudioSegment.cpp \
   FileBlockCache.cpp \
+  MediaEngineDefault.cpp \
   MediaResource.cpp \
   MediaStreamGraph.cpp \
   nsAudioAvailableEventManager.cpp \
@@ -83,6 +81,10 @@ endif
 
 ifdef MOZ_GSTREAMER
 PARALLEL_DIRS += gstreamer
+endif
+
+ifdef MOZ_MEDIA_PLUGINS
+PARALLEL_DIRS += plugins
 endif
 
 ifdef ENABLE_TESTS

@@ -6,7 +6,7 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "nsHyperTextAccessible.h"
+#include "HyperTextAccessible.h"
 #include "nsMai.h"
 
 #include "nsIPersistentProperties2.h"
@@ -314,7 +314,7 @@ getCharacterCountCB(AtkText *aText)
   if (!accWrap)
     return 0;
 
-  nsHyperTextAccessible* textAcc = accWrap->AsHyperText();
+  HyperTextAccessible* textAcc = accWrap->AsHyperText();
   return textAcc->IsDefunct() ?
     0 : static_cast<gint>(textAcc->CharacterCount());
 }

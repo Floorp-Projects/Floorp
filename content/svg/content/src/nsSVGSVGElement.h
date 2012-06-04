@@ -268,7 +268,7 @@ private:
   const nsSVGViewBoxRect* GetViewBoxProperty() const;
   bool ClearViewBoxProperty();
   bool SetZoomAndPanProperty(PRUint16 aValue);
-  const PRUint16* GetZoomAndPanProperty() const;
+  PRUint16 GetZoomAndPanProperty() const;
   bool ClearZoomAndPanProperty();
 
   bool IsRoot() const {
@@ -363,7 +363,6 @@ private:
   float                             mCurrentScale;
   nsSVGTranslatePoint               mPreviousTranslate;
   float                             mPreviousScale;
-  PRInt32                           mRedrawSuspendCount;
 
   // For outermost <svg> elements created from parsing, animation is started by
   // the onload event in accordance with the SVG spec, but for <svg> elements
@@ -373,6 +372,7 @@ private:
   bool                              mImageNeedsTransformInvalidation;
   bool                              mIsPaintingSVGImageElement;
   bool                              mHasChildrenOnlyTransform;
+  bool                              mUseCurrentView;
 };
 
 #endif

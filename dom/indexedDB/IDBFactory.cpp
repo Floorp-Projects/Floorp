@@ -9,22 +9,20 @@
 #include "IDBFactory.h"
 
 #include "nsILocalFile.h"
+#include "nsIPrincipal.h"
 #include "nsIScriptContext.h"
 
 #include "mozilla/storage.h"
-#include "mozilla/dom/ContentChild.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
-#include "nsIPrincipal.h"
 #include "nsHashKeys.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCID.h"
-#include "nsXULAppAPI.h"
 
 #include "AsyncConnectionHelper.h"
 #include "CheckPermissionsHelper.h"
@@ -35,13 +33,15 @@
 #include "IndexedDatabaseManager.h"
 #include "Key.h"
 
-using namespace mozilla;
+#include "mozilla/dom/PBrowserChild.h"
+#include "mozilla/dom/TabChild.h"
+using mozilla::dom::TabChild;
+
+#include "ipc/IndexedDBChild.h"
 
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
-
-GeckoProcessType gAllowedProcessType = GeckoProcessType_Invalid;
 
 struct ObjectStoreInfoMap
 {
@@ -55,53 +55,112 @@ struct ObjectStoreInfoMap
 } // anonymous namespace
 
 IDBFactory::IDBFactory()
-: mOwningObject(nsnull)
+: mOwningObject(nsnull), mActorChild(nsnull), mActorParent(nsnull)
 {
-  IDBFactory::NoteUsedByProcessType(XRE_GetProcessType());
 }
 
 IDBFactory::~IDBFactory()
 {
+  NS_ASSERTION(!mActorParent, "Actor parent owns us, how can we be dying?!");
+  if (mActorChild) {
+    NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+    mActorChild->Send__delete__(mActorChild);
+    NS_ASSERTION(!mActorChild, "Should have cleared in Send__delete__!");
+  }
 }
 
 // static
-already_AddRefed<nsIIDBFactory>
-IDBFactory::Create(nsPIDOMWindow* aWindow)
+nsresult
+IDBFactory::Create(nsPIDOMWindow* aWindow,
+                   const nsACString& aASCIIOrigin,
+                   IDBFactory** aFactory)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aASCIIOrigin.IsEmpty() || nsContentUtils::IsCallerChrome(),
+               "Non-chrome may not supply their own origin!");
 
-  NS_ENSURE_TRUE(aWindow, nsnull);
+  NS_ENSURE_TRUE(aWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   if (aWindow->IsOuterWindow()) {
     aWindow = aWindow->GetCurrentInnerWindow();
-    NS_ENSURE_TRUE(aWindow, nsnull);
+    NS_ENSURE_TRUE(aWindow, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+
+  // Make sure that the manager is up before we do anything here since lots of
+  // decisions depend on which process we're running in.
+  nsRefPtr<indexedDB::IndexedDatabaseManager> mgr =
+    indexedDB::IndexedDatabaseManager::GetOrCreate();
+  NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  nsresult rv;
+
+  nsCString origin(aASCIIOrigin);
+  if (origin.IsEmpty()) {
+    rv = IndexedDatabaseManager::GetASCIIOriginFromWindow(aWindow, origin);
+    if (NS_FAILED(rv)) {
+      // Not allowed.
+      *aFactory = nsnull;
+      return NS_OK;
+    }
   }
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();
+  factory->mASCIIOrigin = origin;
   factory->mWindow = aWindow;
-  return factory.forget();
+
+  if (!IndexedDatabaseManager::IsMainProcess()) {
+    TabChild* tabChild = GetTabChildFrom(aWindow);
+    NS_ENSURE_TRUE(tabChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    IndexedDBChild* actor = new IndexedDBChild(origin);
+
+    bool allowed;
+    tabChild->SendPIndexedDBConstructor(actor, origin, &allowed);
+
+    if (!allowed) {
+      actor->Send__delete__(actor);
+      *aFactory = nsnull;
+      return NS_OK;
+    }
+
+    actor->SetFactory(factory);
+  }
+
+  factory.forget(aFactory);
+  return NS_OK;
 }
 
 // static
-already_AddRefed<nsIIDBFactory>
+nsresult
 IDBFactory::Create(JSContext* aCx,
-                   JSObject* aOwningObject)
+                   JSObject* aOwningObject,
+                   IDBFactory** aFactory)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aCx, "Null context!");
   NS_ASSERTION(aOwningObject, "Null object!");
   NS_ASSERTION(JS_GetGlobalForObject(aCx, aOwningObject) == aOwningObject,
                "Not a global object!");
+  NS_ASSERTION(nsContentUtils::IsCallerChrome(), "Only for chrome!");
+
+  nsCString origin;
+  nsresult rv =
+    IndexedDatabaseManager::GetASCIIOriginFromWindow(nsnull, origin);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();
+  factory->mASCIIOrigin = origin;
   factory->mOwningObject = aOwningObject;
-  return factory.forget();
+
+  factory.forget(aFactory);
+  return NS_OK;
 }
 
 // static
 already_AddRefed<mozIStorageConnection>
 IDBFactory::GetConnection(const nsAString& aDatabaseFilePath)
 {
+  NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
   NS_ASSERTION(StringEndsWith(aDatabaseFilePath, NS_LITERAL_STRING(".sqlite")),
                "Bad file path!");
 
@@ -132,17 +191,6 @@ IDBFactory::GetConnection(const nsAString& aDatabaseFilePath)
   NS_ENSURE_SUCCESS(rv, nsnull);
 
   return connection.forget();
-}
-
-// static
-void
-IDBFactory::NoteUsedByProcessType(GeckoProcessType aProcessType)
-{
-  if (gAllowedProcessType == GeckoProcessType_Invalid) {
-    gAllowedProcessType = aProcessType;
-  } else if (aProcessType != gAllowedProcessType) {
-    NS_RUNTIMEABORT("More than one process type is accessing IndexedDB!");
-  }
 }
 
 inline
@@ -220,6 +268,8 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
 
     info->nextAutoIncrementId = stmt->AsInt64(3);
     info->comittedAutoIncrementId = info->nextAutoIncrementId;
+
+    info->autoIncrement = !!info->nextAutoIncrementId;
 
     ObjectStoreInfoMap* mapEntry = infoMap.AppendElement();
     NS_ENSURE_TRUE(mapEntry, NS_ERROR_OUT_OF_MEMORY);
@@ -378,18 +428,10 @@ nsresult
 IDBFactory::OpenCommon(const nsAString& aName,
                        PRInt64 aVersion,
                        bool aDeleting,
-                       nsIIDBOpenDBRequest** _retval)
+                       IDBOpenDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mWindow || mOwningObject, "Must have one of these!");
-
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // Force ContentChild to cache the path from the parent, so that
-    // we do not end up in a side thread that asks for the path (which
-    // would make ContentChild try to send a message in a thread other
-    // than the main one).
-    ContentChild::GetSingleton()->GetIndexedDBPath();
-  }
 
   nsCOMPtr<nsPIDOMWindow> window;
   nsCOMPtr<nsIScriptGlobalObject> sgo;
@@ -402,29 +444,49 @@ IDBFactory::OpenCommon(const nsAString& aName,
     scriptOwner = mOwningObject;
   }
 
-  nsCString origin;
-  nsresult rv =
-    IndexedDatabaseManager::GetASCIIOriginFromWindow(window, origin);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsRefPtr<IDBOpenDBRequest> request =
     IDBOpenDBRequest::Create(window, scriptOwner);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsRefPtr<OpenDatabaseHelper> openHelper =
-    new OpenDatabaseHelper(request, aName, origin, aVersion, aDeleting);
+  nsresult rv;
 
-  rv = openHelper->Init();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  if (IndexedDatabaseManager::IsMainProcess()) {
+    nsRefPtr<OpenDatabaseHelper> openHelper =
+      new OpenDatabaseHelper(request, aName, mASCIIOrigin, aVersion, aDeleting);
 
-  nsRefPtr<CheckPermissionsHelper> permissionHelper =
-    new CheckPermissionsHelper(openHelper, window, origin, aDeleting);
+    rv = openHelper->Init();
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::GetOrCreate();
-  NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    nsRefPtr<CheckPermissionsHelper> permissionHelper =
+      new CheckPermissionsHelper(openHelper, window, mASCIIOrigin, aDeleting);
 
-  rv = mgr->WaitForOpenAllowed(origin, openHelper->Id(), permissionHelper);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
+    NS_ASSERTION(mgr, "This should never be null!");
+
+    rv = 
+      mgr->WaitForOpenAllowed(mASCIIOrigin, openHelper->Id(), permissionHelper);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  }
+  else if (aDeleting) {
+    nsCOMPtr<nsIAtom> databaseId =
+      IndexedDatabaseManager::GetDatabaseId(mASCIIOrigin, aName);
+    NS_ENSURE_TRUE(databaseId, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    IndexedDBDeleteDatabaseRequestChild* actor =
+      new IndexedDBDeleteDatabaseRequestChild(this, request, databaseId);
+
+    mActorChild->SendPIndexedDBDeleteDatabaseRequestConstructor(
+                                                               actor,
+                                                               nsString(aName));
+  }
+  else {
+    IndexedDBDatabaseChild* dbActor =
+      static_cast<IndexedDBDatabaseChild*>(
+        mActorChild->SendPIndexedDBDatabaseConstructor(nsString(aName),
+                                                       aVersion));
+
+    dbActor->SetRequest(request);
+  }
 
   request.forget(_retval);
   return NS_OK;
@@ -440,14 +502,24 @@ IDBFactory::Open(const nsAString& aName,
     return NS_ERROR_TYPE_ERR;
   }
 
-  return OpenCommon(aName, aVersion, false, _retval);
+  nsRefPtr<IDBOpenDBRequest> request;
+  nsresult rv = OpenCommon(aName, aVersion, false, getter_AddRefs(request));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBFactory::DeleteDatabase(const nsAString& aName,
                            nsIIDBOpenDBRequest** _retval)
 {
-  return OpenCommon(aName, 0, true, _retval);
+  nsRefPtr<IDBOpenDBRequest> request;
+  nsresult rv = OpenCommon(aName, 0, true, getter_AddRefs(request));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -458,10 +530,14 @@ IDBFactory::Cmp(const jsval& aFirst,
 {
   Key first, second;
   nsresult rv = first.SetFromJSVal(aCx, aFirst);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   rv = second.SetFromJSVal(aCx, aSecond);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   if (first.IsUnset() || second.IsUnset()) {
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
