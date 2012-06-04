@@ -1,0 +1,35 @@
+# for pgo
+mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) $(MOZ_OBJDIR)/_profile/pgo/profileserver.py'
+
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
+ac_add_options --enable-jemalloc
+ac_add_options --enable-signmar
+
+# Nightlies only since this has a cost in performance
+ac_add_options --enable-js-diagnostics
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+export MOZ_TELEMETRY_REPORTING=1
+
+mk_add_options MOZ_MAKE_FLAGS=-j1
+
+if test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD64"; then
+  . $topsrcdir/build/win32/mozconfig.vs2010-win64
+else
+  . $topsrcdir/build/win32/mozconfig.vs2010
+fi
+
+# For known full-clobber builds on Windows (like nightlies/try), 
+# this speeds things up. IS_NIGHTLY is set by the build automation.
+if test "$IS_NIGHTLY" != ""; then 
+  ac_add_options --disable-auto-deps
+fi
+
+# B2G Options
+ac_add_options --enable-application=b2g
+ac_add_options --enable-marionette
+
+export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
