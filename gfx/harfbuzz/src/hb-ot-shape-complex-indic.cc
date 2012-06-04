@@ -617,7 +617,7 @@ final_reordering_syllable (hb_buffer_t *buffer, hb_mask_t *mask_array,
        REPH_BEFORE_SUBSCRIPT,
        REPH_AFTER_SUBSCRIPT,
        REPH_BEFORE_POSTSCRIPT,
-       REPH_AFTER_POSTSCRIPT,
+       REPH_AFTER_POSTSCRIPT
      } reph_pos;
 
      /* XXX Figure out old behavior too */
