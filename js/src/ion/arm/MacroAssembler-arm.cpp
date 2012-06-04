@@ -1116,11 +1116,11 @@ MacroAssemblerARM::ma_b(void *target, Relocation::Kind reloc, Assembler::Conditi
         as_bx(ScratchRegister, c);
         break;
       case Assembler::B_LDR_BX:
-        as_Imm32Pool(ScratchRegister, trg, c);
+        as_Imm32Pool(ScratchRegister, trg, NULL, c);
         as_bx(ScratchRegister, c);
         break;
       case Assembler::B_LDR:
-        as_Imm32Pool(pc, trg, c);
+        as_Imm32Pool(pc, trg, NULL, c);
         if (c == Always)
             m_buffer.markGuard();
         break;
@@ -2892,8 +2892,8 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label *bail
 CodeOffsetJump
 MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel *label, Condition cond)
 {
-    BufferOffset bo = nextOffset();
-    ARMBuffer::PoolEntry pe = as_BranchPool(0xdeadbeef, label, cond);
+    ARMBuffer::PoolEntry pe;
+    BufferOffset bo = as_BranchPool(0xdeadbeef, label, &pe, cond);
 
     // Fill in a new CodeOffset with both the load and the
     // pool entry that the instruction loads from.

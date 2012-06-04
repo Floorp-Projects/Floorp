@@ -41,6 +41,7 @@
 
 #include "Safepoints.h"
 #include "IonSpewer.h"
+#include "LIR.h"
 
 using namespace js;
 using namespace ion;

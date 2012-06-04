@@ -151,21 +151,23 @@ struct AssemblerBuffer {
         return true;
     }
 
-    void putByte(uint8 value) {
-        putBlob(sizeof(value), (uint8*)&value);
+    BufferOffset putByte(uint8 value) {
+        return putBlob(sizeof(value), (uint8*)&value);
     }
 
-    void putShort(uint16 value) {
-        putBlob(sizeof(value), (uint8*)&value);
+    BufferOffset putShort(uint16 value) {
+        return putBlob(sizeof(value), (uint8*)&value);
     }
 
-    void putInt(uint32 value) {
-        putBlob(sizeof(value), (uint8*)&value);
+    BufferOffset putInt(uint32 value) {
+        return putBlob(sizeof(value), (uint8*)&value);
     }
-    void putBlob(uint32 instSize, uint8 *inst) {
+    BufferOffset putBlob(uint32 instSize, uint8 *inst) {
         if (!ensureSpace(instSize))
-            return;
+            return BufferOffset();
+        BufferOffset ret = nextOffset();
         tail->putBlob(instSize, inst);
+        return ret;
     }
     unsigned int size() const {
         int executableSize;

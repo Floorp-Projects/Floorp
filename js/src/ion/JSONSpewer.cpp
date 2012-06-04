@@ -45,7 +45,8 @@
 #include "LIR.h"
 #include "TypeOracle.h"
 #include "MIR.h"
-
+#include "MIRGraph.h"
+#include "LinearScan.h"
 using namespace js;
 using namespace js::ion;
 
