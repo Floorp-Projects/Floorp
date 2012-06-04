@@ -2105,7 +2105,7 @@ public class GeckoAppShell
 }
 
 class ScreenshotHandler {
-    private static Queue<PendingScreenshot> sPendingScreenshots = new ArrayDeque<PendingScreenshot>();
+    private static Queue<PendingScreenshot> sPendingScreenshots = new LinkedList<PendingScreenshot>();
     private static RectF sCheckerboardPageRect;
     private static float sLastCheckerboardWidthRatio, sLastCheckerboardHeightRatio;
     private static RepaintRunnable sRepaintRunnable = new RepaintRunnable();
@@ -2206,6 +2206,8 @@ class ScreenshotHandler {
         float sy = viewport.cssPageRectTop;
         float sw = viewport.cssPageRectRight - viewport.cssPageRectLeft;
         float sh = viewport.cssPageRectBottom - viewport.cssPageRectTop;
+        if (sw == 0 || sh == 0)
+            return;
         int maxPixels = Math.min(ScreenshotLayer.getMaxNumPixels(), sMaxTextureSize * sMaxTextureSize);
         // 2Mb of 16bit image data
         // may be bumped by up to 4x for power of 2 alignment
@@ -2231,6 +2233,8 @@ class ScreenshotHandler {
     static void scheduleCheckerboardScreenshotEvent(int tabId, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int bw, int bh) {
         float totalSize = sw * sh;
         int numSlices = (int) Math.ceil(totalSize / 100000);
+        if (numSlices == 0)
+            return;
         int srcSliceSize = (int) Math.ceil(sh / numSlices);
         int dstSliceSize = (int) Math.ceil(dh / numSlices);
         for (int i = 0; i < numSlices; i++) {
