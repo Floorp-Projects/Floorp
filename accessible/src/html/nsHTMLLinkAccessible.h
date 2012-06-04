@@ -24,6 +24,7 @@ public:
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual PRUint64 NativeLinkState() const;
+  virtual PRUint64 NativeInteractiveState() const;
 
   // ActionAccessible
   virtual PRUint8 ActionCount();

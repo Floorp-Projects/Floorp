@@ -52,13 +52,17 @@ PRUint64
 nsXULColorPickerTileAccessible::NativeState()
 {
   PRUint64 state = AccessibleWrap::NativeState();
-  if (!(state & states::UNAVAILABLE))
-    state |= states::FOCUSABLE | states::SELECTABLE;
-
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::selected))
     state |= states::SELECTED;
 
   return state;
+}
+
+PRUint64
+nsXULColorPickerTileAccessible::NativeInteractiveState() const
+{
+  return NativelyUnavailable() ?
+    states::UNAVAILABLE : states::FOCUSABLE | states::SELECTABLE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,14 +97,8 @@ nsXULColorPickerAccessible::
 PRUint64
 nsXULColorPickerAccessible::NativeState()
 {
-  // Possible states: focused, focusable, unavailable(disabled).
-
-  // get focus and disable status from base class
-  PRUint64 states = AccessibleWrap::NativeState();
-
-  states |= states::FOCUSABLE | states::HASPOPUP;
-
-  return states;
+  PRUint64 state = AccessibleWrap::NativeState();
+  return state | states::HASPOPUP;
 }
 
 role

@@ -119,12 +119,8 @@ nsXFormsAccessible::NativeState()
 
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
 
-  bool isRelevant = false;
-  nsresult rv = sXFormsService->IsRelevant(DOMNode, &isRelevant);
-  NS_ENSURE_SUCCESS(rv, 0);
-
   bool isReadonly = false;
-  rv = sXFormsService->IsReadonly(DOMNode, &isReadonly);
+  nsresult rv = sXFormsService->IsReadonly(DOMNode, &isReadonly);
   NS_ENSURE_SUCCESS(rv, 0);
 
   bool isRequired = false;
@@ -137,7 +133,7 @@ nsXFormsAccessible::NativeState()
 
   PRUint64 states = HyperTextAccessibleWrap::NativeState();
 
-  if (!isRelevant)
+  if (NativelyUnavailable())
     states |= states::UNAVAILABLE;
 
   if (isReadonly)
@@ -150,6 +146,16 @@ nsXFormsAccessible::NativeState()
     states |= states::INVALID;
 
   return states;
+}
+
+bool
+nsXFormsAccessible::NativelyUnavailable() const
+{
+  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
+
+  bool isRelevant = false;
+  sXFormsService->IsRelevant(DOMNode, &isRelevant);
+  return !isRelevant;
 }
 
 nsresult

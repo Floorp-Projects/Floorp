@@ -42,12 +42,12 @@ nsHTMLWin32ObjectOwnerAccessible::NativeRole()
   return roles::EMBEDDED_OBJECT;
 }
 
-PRUint64
-nsHTMLWin32ObjectOwnerAccessible::NativeState()
+bool
+nsHTMLWin32ObjectOwnerAccessible::NativelyUnavailable() const
 {
   // XXX: No HWND means this is windowless plugin which is not accessible in
   // the meantime.
-  return mHwnd ? AccessibleWrap::NativeState() : states::UNAVAILABLE;
+  return !mHwnd;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -132,6 +132,7 @@ public:
 
   // Accessible
   virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
 
   // Widgets
   virtual Accessible* ContainerWidget() const;
@@ -147,7 +148,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
 
   // Widgets
   virtual bool IsWidget() const;

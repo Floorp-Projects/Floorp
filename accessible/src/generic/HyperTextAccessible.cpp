@@ -1541,7 +1541,7 @@ HyperTextAccessible::GetEditor() const
 nsresult
 HyperTextAccessible::SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  bool isFocusable = State() & states::FOCUSABLE;
+  bool isFocusable = InteractiveState() & states::FOCUSABLE;
 
   // If accessible is focusable then focus it before setting the selection to
   // neglect control's selection changes on focus if any (for example, inputs
@@ -1612,7 +1612,7 @@ HyperTextAccessible::GetCaretOffset(PRInt32* aCaretOffset)
   // Not focused focusable accessible except document accessible doesn't have
   // a caret.
   if (!IsDoc() && !FocusMgr()->IsFocused(this) &&
-      (State() & states::FOCUSABLE)) {
+      (InteractiveState() & states::FOCUSABLE)) {
     return NS_OK;
   }
 
