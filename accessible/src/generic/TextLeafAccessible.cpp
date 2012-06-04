@@ -17,7 +17,7 @@ using namespace mozilla::a11y;
 
 TextLeafAccessible::
   TextLeafAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsLinkableAccessible(aContent, aDoc)
+  LinkableAccessible(aContent, aDoc)
 {
   mFlags |= eTextLeafAccessible;
 }

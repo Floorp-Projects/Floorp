@@ -52,7 +52,7 @@ nsXULColumAccessible::NativeState()
 
 nsXULColumnItemAccessible::
   nsXULColumnItemAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsLeafAccessible(aContent, aDoc)
+  LeafAccessible(aContent, aDoc)
 {
 }
 

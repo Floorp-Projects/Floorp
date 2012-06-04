@@ -31,7 +31,6 @@ CPPSRCS = \
   nsAccessibilityService.cpp \
   nsAccessiblePivot.cpp \
   nsAccTreeWalker.cpp \
-  nsBaseWidgetAccessible.cpp \
   nsEventShell.cpp \
   nsCaretAccessible.cpp \
   nsTextEquivUtils.cpp \

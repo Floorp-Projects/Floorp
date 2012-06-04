@@ -65,8 +65,8 @@ nsHTMLWin32ObjectOwnerAccessible::CacheChildren()
 // nsHTMLWin32ObjectAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(void* aHwnd):
-nsLeafAccessible(nsnull, nsnull)
+nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(void* aHwnd) :
+  LeafAccessible(nsnull, nsnull)
 {
   // XXX: Mark it as defunct to make sure no single Accessible method is
   // running on it. We need to allow accessible without DOM nodes.
