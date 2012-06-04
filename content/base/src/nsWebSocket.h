@@ -35,7 +35,7 @@
 
 #define NS_WEBSOCKET_CONTRACTID "@mozilla.org/websocket;1"
 
-class nsWSCloseEvent;
+class CallDispatchConnectionCloseEvents;
 class nsAutoCloseWS;
 
 class nsWebSocket: public nsDOMEventTargetHelper,
@@ -47,7 +47,7 @@ class nsWebSocket: public nsDOMEventTargetHelper,
                    public nsSupportsWeakReference,
                    public nsIRequest
 {
-friend class nsWSCloseEvent;
+friend class CallDispatchConnectionCloseEvents;
 friend class nsAutoCloseWS;
 
 public:
@@ -87,7 +87,6 @@ protected:
   // These methods when called can release the WebSocket object
   nsresult FailConnection(PRUint16 reasonCode,
                           const nsACString& aReasonString = EmptyCString());
-  void     FailConnectionQuietly();
   nsresult CloseConnection(PRUint16 reasonCode,
                            const nsACString& aReasonString = EmptyCString());
   nsresult Disconnect();
@@ -107,6 +106,18 @@ protected:
                          JSContext *aCx);
 
   nsresult DoOnMessageAvailable(const nsACString & aMsg, bool isBinary);
+
+  // ConnectionCloseEvents: 'error' event if needed, then 'close' event.
+  // - These must not be dispatched while we are still within an incoming call
+  //   from JS (ex: close()).  Set 'sync' to false in that case to dispatch in a
+  //   separate new event.
+  nsresult ScheduleConnectionCloseEvents(nsISupports *aContext,
+                                         nsresult aStatusCode,
+                                         bool sync);
+  // 2nd half of ScheduleConnectionCloseEvents, sometimes run in its own event.
+  void     DispatchConnectionCloseEvents();
+
+  // These methods actually do the dispatch for various events.
   nsresult CreateAndDispatchSimpleEvent(const nsString& aName);
   nsresult CreateAndDispatchMessageEvent(const nsACString& aData,
                                          bool isBinary);
@@ -114,8 +125,6 @@ protected:
                                        const nsString &aReason);
   nsresult CreateResponseBlob(const nsACString& aData, JSContext *aCx,
                               jsval &jsData);
-
-  void SetReadyState(PRUint16 aNewReadyState);
 
   // if there are "strong event listeners" (see comment in nsWebSocket.cpp) or
   // outgoing not sent messages then this method keeps the object alive
@@ -142,7 +151,8 @@ protected:
 
   bool mKeepingAlive;
   bool mCheckMustKeepAlive;
-  bool mTriggeredCloseEvent;
+  bool mOnCloseScheduled;
+  bool mFailed;
   bool mDisconnected;
 
   // Set attributes of DOM 'onclose' message
