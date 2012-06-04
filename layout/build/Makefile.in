@@ -63,9 +63,11 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/dom/battery/$(LIB_PREFIX)dom_battery_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/contacts/$(LIB_PREFIX)jsdomcontacts_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/devicestorage/$(LIB_PREFIX)domdevicestorage_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/file/$(LIB_PREFIX)domfile_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/power/$(LIB_PREFIX)dom_power_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/settings/$(LIB_PREFIX)jsdomsettings_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/network/src/$(LIB_PREFIX)dom_network_s.$(LIB_SUFFIX) \
+	$(DEPTH)/dom/media/$(LIB_PREFIX)dom_media_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/sms/src/$(LIB_PREFIX)dom_sms_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/events/$(LIB_PREFIX)jsdomevents_s.$(LIB_SUFFIX) \
 	$(DEPTH)/dom/src/json/$(LIB_PREFIX)json_s.$(LIB_SUFFIX) \

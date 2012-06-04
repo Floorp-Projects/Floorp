@@ -15,6 +15,16 @@ XPIDL_MODULE     = dom_bluetooth
 LIBXUL_LIBRARY   = 1
 FORCE_STATIC_LIB = 1
 
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+VPATH += $(srcdir)/linux
+LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
+endif
+
+ifdef MOZ_ENABLE_DBUS
+VPATH += $(srcdir)/linux
+LOCAL_INCLUDES += $(MOZ_DBUS_CFLAGS)
+endif
+
 include $(topsrcdir)/dom/dom-config.mk
 
 CPPSRCS = \
@@ -23,23 +33,23 @@ CPPSRCS = \
   BluetoothFirmware.cpp \
   $(NULL)
 
+ifdef MOZ_ENABLE_DBUS
+CPPSRCS += BluetoothDBusUtils.cpp
+endif
+
+ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
+CPPSRCS += BluetoothDBusUtils.cpp
+endif
+
 XPIDLSRCS = \
   nsIDOMNavigatorBluetooth.idl \
   nsIDOMBluetoothManager.idl \
   nsIDOMBluetoothAdapter.idl \
   $(NULL)
 
-ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CFLAGS += $(MOZ_DBUS_CFLAGS)
-CXXFLAGS += $(MOZ_DBUS_CFLAGS) -DHAVE_PTHREADS
-endif
-
 include $(topsrcdir)/config/rules.mk
 
-ifeq (Linux,$(OS_TARGET))
 ifdef MOZ_ENABLE_DBUS
 CFLAGS += $(MOZ_DBUS_GLIB_CFLAGS)
 CXXFLAGS += $(MOZ_DBUS_GLIB_CFLAGS) -DHAVE_PTHREADS
 endif
-endif
-

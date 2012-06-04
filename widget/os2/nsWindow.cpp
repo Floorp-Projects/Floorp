@@ -766,9 +766,7 @@ void nsWindow::NS2PM_PARENT(POINTL& ptl)
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
   if (mFrame) {
-    nsresult rv = mFrame->Move(aX, aY);
-    NotifyRollupGeometryChange(gRollupListener);
-    return rv;
+    return mFrame->Move(aX, aY);
   }
   Resize(aX, aY, mBounds.width, mBounds.height, false);
   return NS_OK;
@@ -779,9 +777,7 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
   if (mFrame) {
-    nsresult rv = mFrame->Resize(aWidth, aHeight, aRepaint);
-    NotifyRollupGeometryChange(gRollupListener);
-    return rv;
+    return mFrame->Resize(aWidth, aHeight, aRepaint);
   }
   Resize(mBounds.x, mBounds.y, aWidth, aHeight, aRepaint);
   return NS_OK;
@@ -793,9 +789,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
 {
   if (mFrame) {
-    nsresult rv = mFrame->Resize(aX, aY, aWidth, aHeight, aRepaint);
-    NotifyRollupGeometryChange(gRollupListener);
-    return rv;
+    return mFrame->Resize(aX, aY, aWidth, aHeight, aRepaint);
   }
 
   // For mWnd & eWindowType_child set the cached values upfront, see bug 286555.
@@ -833,7 +827,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY,
     }
   }
 
-  NotifyRollupGeometryChange(gRollupListener);
   return NS_OK;
 }
 

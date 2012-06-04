@@ -14,6 +14,8 @@ function PlacesTreeView(aFlatList, aOnOpenFlatContainer, aController) {
 }
 
 PlacesTreeView.prototype = {
+  get wrappedJSObject() this,
+
   _makeAtom: function PTV__makeAtom(aString) {
     return Cc["@mozilla.org/atom-service;1"].
            getService(Ci.nsIAtomService).
@@ -1087,11 +1089,13 @@ PlacesTreeView.prototype = {
       this._result = val;
       this._rootNode = this._result.root;
       this._cellProperties = new WeakMap();
+      this._cuttingNodes = new Set();
     }
     else if (this._result) {
       delete this._result;
       delete this._rootNode;
       delete this._cellProperties;
+      delete this._cuttingNodes;
     }
 
     // If the tree is not set yet, setTree will call finishInit.
@@ -1150,7 +1154,7 @@ PlacesTreeView.prototype = {
 
     let node = this._getNodeForRow(aRow);
 
-    if (node._cutting) {
+    if (this._cuttingNodes.has(node)) {
       aProperties.AppendElement(this._getAtomFor("cutting"));
     }
 
@@ -1678,6 +1682,18 @@ PlacesTreeView.prototype = {
     if (node.title != aText) {
       let txn = new PlacesEditItemTitleTransaction(node.itemId, aText);
       PlacesUtils.transactionManager.doTransaction(txn);
+    }
+  },
+
+  toggleCutNode: function PTV_toggleCutNode(aNode, aValue) {
+    let currentVal = this._cuttingNodes.has(aNode);
+    if (currentVal != aValue) {
+      if (aValue)
+        this._cuttingNodes.add(aNode);
+      else
+        this._cuttingNodes.delete(aNode);
+
+      this._invalidateCellValue(aNode, this.COLUMN_TYPE_TITLE);
     }
   },
 
