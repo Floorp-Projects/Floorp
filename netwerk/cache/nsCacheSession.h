@@ -9,7 +9,9 @@
 
 #include "nspr.h"
 #include "nsError.h"
+#include "nsCOMPtr.h"
 #include "nsICacheSession.h"
+#include "nsILocalFile.h"
 #include "nsString.h"
 
 class nsCacheSession : public nsICacheSession
@@ -53,9 +55,12 @@ public:
         mInfo |= policy;
     }
 
+    nsILocalFile* ProfileDir() { return mProfileDir; }
+
 private:
     nsCString               mClientID;
     PRUint32                mInfo;
+    nsCOMPtr<nsILocalFile>  mProfileDir;
 };
 
 #endif // _nsCacheSession_h_

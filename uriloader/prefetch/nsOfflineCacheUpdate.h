@@ -54,6 +54,7 @@ public:
 
     nsOfflineCacheUpdateItem(nsIURI *aURI,
                              nsIURI *aReferrerURI,
+                             nsIApplicationCache *aApplicationCache,
                              nsIApplicationCache *aPreviousApplicationCache,
                              const nsACString &aClientID,
                              PRUint32 aType);
@@ -61,6 +62,7 @@ public:
 
     nsCOMPtr<nsIURI>           mURI;
     nsCOMPtr<nsIURI>           mReferrerURI;
+    nsCOMPtr<nsIApplicationCache> mApplicationCache;
     nsCOMPtr<nsIApplicationCache> mPreviousApplicationCache;
     nsCString                  mClientID;
     nsCString                  mCacheKey;
@@ -92,6 +94,7 @@ public:
 
     nsOfflineManifestItem(nsIURI *aURI,
                           nsIURI *aReferrerURI,
+                          nsIApplicationCache *aApplicationCache,
                           nsIApplicationCache *aPreviousApplicationCache,
                           const nsACString &aClientID);
     virtual ~nsOfflineManifestItem();
@@ -254,6 +257,7 @@ private:
     nsCString mUpdateDomain;
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIURI> mDocumentURI;
+    nsCOMPtr<nsILocalFile> mCustomProfileDir;
 
     nsCString mClientID;
     nsCOMPtr<nsIApplicationCache> mApplicationCache;
@@ -313,6 +317,7 @@ public:
                       nsIURI *aDocumentURI,
                       nsIDOMDocument *aDocument,
                       nsIDOMWindow* aWindow,
+                      nsILocalFile* aCustomProfileDir,
                       nsIOfflineCacheUpdate **aUpdate);
 
     virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate);

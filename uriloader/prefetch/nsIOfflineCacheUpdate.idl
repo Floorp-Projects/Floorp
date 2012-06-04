@@ -14,6 +14,7 @@ interface nsIOfflineCacheUpdate;
 interface nsIPrincipal;
 interface nsIPrefBranch;
 interface nsIApplicationCache;
+interface nsILocalFile;
 
 [scriptable, uuid(47360d57-8ef4-4a5d-8865-1a27a739ad1a)]
 interface nsIOfflineCacheUpdateObserver : nsISupports {
@@ -105,7 +106,8 @@ interface nsIOfflineCacheUpdate : nsISupports {
    * @param aDocumentURI
    *        The page that is requesting the update.
    */
-  void init(in nsIURI aManifestURI, in nsIURI aDocumentURI, in nsIDOMDocument aDocument);
+  void init(in nsIURI aManifestURI, in nsIURI aDocumentURI, in nsIDOMDocument aDocument,
+            [optional] in nsILocalFile aCustomProfileDir);
 
   /**
    * Initialize the update for partial processing. 
@@ -162,7 +164,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   readonly attribute PRUint64 byteProgress;
 };
 
-[scriptable, uuid(6fd2030f-7b00-4102-a0e3-d73078821eb1)]
+[scriptable, uuid(dc5de18c-197c-41d2-9584-dd7ac7494611)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
      * Constants for the offline-app permission.
@@ -191,6 +193,15 @@ interface nsIOfflineCacheUpdateService : nsISupports {
     nsIOfflineCacheUpdate scheduleUpdate(in nsIURI aManifestURI,
                                          in nsIURI aDocumentURI,
                                          in nsIDOMWindow aWindow);
+
+    /**
+     * Schedule a cache update for a given offline manifest and let the data
+     * be stored to a custom profile directory.  There is no coalescing of
+     * manifests by manifest URL.
+     */
+    nsIOfflineCacheUpdate scheduleCustomProfileUpdate(in nsIURI aManifestURI,
+                                                      in nsIURI aDocumentURI,
+                                                      in nsILocalFile aProfileDir);
 
     /**
      * Schedule a cache update for a manifest when the document finishes

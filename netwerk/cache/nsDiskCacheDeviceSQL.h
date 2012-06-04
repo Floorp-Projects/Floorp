@@ -168,6 +168,7 @@ public:
   void                    SetCacheParentDirectory(nsILocalFile * parentDir);
   void                    SetCapacity(PRUint32  capacity);
 
+  nsILocalFile *          BaseDirectory() { return mBaseDirectory; }
   nsILocalFile *          CacheDirectory() { return mCacheDirectory; }
   PRUint32                CacheCapacity() { return mCacheCapacity; }
   PRUint32                CacheSize();
@@ -252,6 +253,7 @@ private:
   nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateGroups;
   nsCOMPtr<mozIStorageStatement>  mStatement_EnumerateGroupsTimeOrder;
 
+  nsCOMPtr<nsILocalFile>          mBaseDirectory;
   nsCOMPtr<nsILocalFile>          mCacheDirectory;
   PRUint32                        mCacheCapacity; // in bytes
   PRInt32                         mDeltaCounter;
