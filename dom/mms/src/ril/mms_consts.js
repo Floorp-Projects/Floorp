@@ -29,6 +29,10 @@ const MMS_PDU_TYPE_DELETE_CONF = 149;
 const MMS_PDU_TYPE_CANCEL_REQ = 150;
 const MMS_PDU_TYPE_CANCEL_CONF = 151;
 
+// MMS version 1.3
+// @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.34
+const MMS_VERSION = (0x01 << 4) | 0x03;
+
 // X-Mms-Retrieve-Status values
 // @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.3.50
 const MMS_PDU_ERROR_OK                            = 128;
