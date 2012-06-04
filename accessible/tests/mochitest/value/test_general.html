@@ -39,13 +39,13 @@
       var rootDir = getRootDirectory(window.location.href);
       var href = getRootDirectory(window.location.href) + "foo";
 
-      // roles that can't live as nsHTMLLinkAccessibles
+      // roles that can't live as HTMLLinkAccessibles
       testValue("aria_menuitem_link", "");
       testValue("aria_button_link", "");
       testValue("aria_checkbox_link", "");
       testValue("aria_application_link", "");
 
-      // roles that can live as nsHTMLLinkAccessibles
+      // roles that can live as HTMLLinkAccessibles
       testValue("aria_link_link", href);
       testValue("aria_main_link", href);
       testValue("aria_navigation_link", href);

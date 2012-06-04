@@ -20,9 +20,9 @@ CPPSRCS = \
   HTMLElementAccessibles.cpp \
   HTMLFormControlAccessible.cpp \
   HTMLImageMapAccessible.cpp \
+  HTMLLinkAccessible.cpp \
   HTMLListAccessible.cpp \
   nsHTMLCanvasAccessible.cpp \
-  nsHTMLLinkAccessible.cpp \
   nsHTMLSelectAccessible.cpp \
   nsHTMLTableAccessible.cpp \
   $(NULL)
