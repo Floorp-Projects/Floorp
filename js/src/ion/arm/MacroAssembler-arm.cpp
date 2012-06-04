@@ -382,6 +382,14 @@ MacroAssemblerARM::ma_mvn(Register src1, Register dest,
     as_alu(dest, InvalidReg, O2Reg(src1), op_mvn, sc, c);
 }
 
+// Negate (dest <- -src), src is a register, rather than a general op2.
+void
+MacroAssemblerARM::ma_neg(Register src1, Register dest,
+                          SetCond_ sc, Assembler::Condition c)
+{
+    as_rsb(dest, src1, Imm8(0), sc, c);
+}
+
     // and
 void
 MacroAssemblerARM::ma_and(Register src, Register dest,
@@ -911,13 +919,59 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
     // we can encode this as a standard ldr... MAKE IT SO
     if (size == 32 || (size == 8 && !IsSigned) ) {
         if (off < 4096 && off > -4096) {
+            // This encodes as a single instruction, Emulating mode's behavior
+            // in a multi-instruction sequence is not necessary.
             as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrOffImm(off)), cc);
             return;
         }
-        // We cannot encode this offset in a a single ldr.  Try to encode it as
-        // an add scratch, base, imm; ldr dest, [scratch, +offset].
+        // We cannot encode this offset in a a single ldr. For mode == index,
+        // try to encode it as |add scratch, base, imm; ldr dest, [scratch, +offset]|.
+        // This does not wark for mode == PreIndex or mode == PostIndex.
+        // PreIndex is simple, just do the add into the base register first, then do
+        // a PreIndex'ed load. PostIndexed loads can be tricky.  Normally, doing the load with
+        // an index of 0, then doing an add would work, but if the destination is the PC,
+        // you don't get to execute the instruction after the branch, which will lead to
+        // the base register not being updated correctly. Explicitly handle this case, without
+        // doing anything fancy, then handle all of the other cases.
+
+        // mode == Offset
+        //  add   scratch, base, offset_hi
+        //  ldr   dest, [scratch, +offset_lo]
+        //
+        // mode == PreIndex
+        //  add   base, base, offset_hi
+        //  ldr   dest, [base, +offset_lo]!
+        //
+        // mode == PostIndex, dest == pc
+        //  ldr   scratch, [base]
+        //  add   base, base, offset_hi
+        //  add   base, base, offset_lo
+        //  mov   dest, scratch
+        // PostIndex with the pc as the destination needs to be handled
+        // specially, since in the code below, the write into 'dest'
+        // is going to alter the control flow, so the following instruction would
+        // never get emitted.
+        //
+        // mode == PostIndex, dest != pc
+        //  ldr   dest, [base], offset_lo
+        //  add   base, base, offset_hi
+
+        if (rt == pc && mode == PostIndex && ls == IsLoad) {
+            ma_mov(rn, ScratchRegister);
+            ma_alu(rn, offset, rn, op_add);
+            as_dtr(IsLoad, size, Offset, pc, DTRAddr(ScratchRegister, DtrOffImm(0)), cc);
+            return;
+        }
         int bottom = off & 0xfff;
         int neg_bottom = 0x1000 - bottom;
+        // For a regular offset, base == ScratchRegister does what we want.  Modify the
+        // scratch register, leaving the actual base unscathed.
+        Register base = ScratchRegister;
+        // For the preindex case, we want to just re-use rn as the base register, so when
+        // the base register is updated *before* the load, rn is updated.
+        if (mode == PreIndex)
+            base = rn;
+        JS_ASSERT(mode != PostIndex);
         // at this point, both off - bottom and off + neg_bottom will be reasonable-ish
         // quantities.
         if (off < 0) {
@@ -947,12 +1001,13 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                 return;
             }
         }
-        JS_NOT_REACHED("TODO: implement bigger offsets :(");
-
+        ma_mov(offset, ScratchRegister);
+        as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrRegImmShift(ScratchRegister, LSL, 0)));
     } else {
         // should attempt to use the extended load/store instructions
         if (off < 256 && off > -256) {
             as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffImm(off)), cc);
+            return;
         }
         // We cannot encode this offset in a a single extldr.  Try to encode it as
         // an add scratch, base, imm; extldr dest, [scratch, +offset].
@@ -995,7 +1050,8 @@ MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                 return;
             }
         }
-        JS_NOT_REACHED("TODO: implement bigger offsets :(");
+        ma_mov(offset, ScratchRegister);
+        as_extdtr(ls, size, IsSigned, mode, rt, EDtrAddr(rn, EDtrOffReg(ScratchRegister)), cc);
     }
 }
 void

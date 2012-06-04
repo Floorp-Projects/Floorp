@@ -115,6 +115,9 @@ class MacroAssemblerARM : public Assembler
     void ma_mvn(Register src1, Register dest,
                 SetCond_ sc = NoSetCond, Condition c = Always);
 
+    // Negate (dest <- -src) implemented as rsb dest, src, 0
+    void ma_neg(Register src, Register dest,
+                SetCond_ sc = NoSetCond, Condition c = Always);
 
     // and
     void ma_and(Register src, Register dest,
@@ -472,8 +475,24 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void push(const Register &reg) {
         ma_push(reg);
     }
+    void pushWithPadding(const Register &reg, const Imm32 extraSpace) {
+        Imm32 totSpace = Imm32(extraSpace.value + 4);
+        ma_dtr(IsStore, sp, totSpace, reg, PreIndex);
+    }
+    void pushWithPadding(const Imm32 &imm, const Imm32 extraSpace) {
+        Imm32 totSpace = Imm32(extraSpace.value + 4);
+        // need to use lr, since ma_dtr may need the scratch register to adjust the stack.
+        ma_mov(imm, lr);
+        ma_dtr(IsStore, sp, totSpace, lr, PreIndex);
+    }
+
     void pop(const Register &reg) {
         ma_pop(reg);
+    }
+
+    void popN(const Register &reg, Imm32 extraSpace) {
+        Imm32 totSpace = Imm32(extraSpace.value + 4);
+        ma_dtr(IsLoad, sp, totSpace, reg, PostIndex);
     }
 
     CodeOffsetLabel pushWithPatch(ImmWord imm) {
@@ -852,6 +871,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     CodeOffsetLabel PushWithPatch(const ImmWord &word) {
         framePushed_ += sizeof(word.value);
         return pushWithPatch(word);
+    }
+
+
+    void PushWithPadding(const Register &reg, const Imm32 extraSpace) {
+        pushWithPadding(reg, extraSpace);
+        adjustFrame(STACK_SLOT_SIZE + extraSpace.value);
+    }
+    void PushWithPadding(const Imm32 imm, const Imm32 extraSpace) {
+        pushWithPadding(imm, extraSpace);
+        adjustFrame(STACK_SLOT_SIZE + extraSpace.value);
     }
 
     void Pop(const Register &reg) {
