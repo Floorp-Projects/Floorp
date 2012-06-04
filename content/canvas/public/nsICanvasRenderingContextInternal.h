@@ -50,6 +50,10 @@ public:
   {
     mCanvasElement = aParentCanvas;
   }
+  nsHTMLCanvasElement* GetParentObject() const
+  {
+    return mCanvasElement;
+  }
 
   // Sets the dimensions of the canvas, in pixels.  Called
   // whenever the size of the element changes.

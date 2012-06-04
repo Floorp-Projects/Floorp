@@ -24,6 +24,8 @@
 #include "xpcpublic.h"
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
+#include "XPCQuickStubs.h"
+#include "nsDOMQS.h"
 
 #include "mozilla/dom/RegisterBindings.h"
 
@@ -415,8 +417,7 @@
 #include "nsIDOMSVGZoomAndPan.h"
 #include "nsIDOMSVGZoomEvent.h"
 
-#include "nsIDOMCanvasRenderingContext2D.h"
-#include "nsIDOMWebGLRenderingContext.h"
+#include "nsICanvasRenderingContextInternal.h"
 
 #include "nsIImageDocument.h"
 
@@ -621,13 +622,21 @@ static const char kDOMStringBundleURL[] =
   // nothing
 #endif
 
-DOMCI_DATA(Crypto, void)
-DOMCI_DATA(CRMFObject, void)
-DOMCI_DATA(SmartCardEvent, void)
-DOMCI_DATA(ContentFrameMessageManager, void)
+/**
+ * To generate the bitmap for a class that we're sure doesn't implement any of
+ * the interfaces in DOMCI_CASTABLE_INTERFACES.
+ */
+#define DOMCI_DATA_NO_CLASS(_dom_class)                                       \
+const PRUint32 kDOMClassInfo_##_dom_class##_interfaces =                      \
+  0;
 
-DOMCI_DATA(DOMPrototype, void)
-DOMCI_DATA(DOMConstructor, void)
+DOMCI_DATA_NO_CLASS(Crypto)
+DOMCI_DATA_NO_CLASS(CRMFObject)
+DOMCI_DATA_NO_CLASS(SmartCardEvent)
+DOMCI_DATA_NO_CLASS(ContentFrameMessageManager)
+
+DOMCI_DATA_NO_CLASS(DOMPrototype)
+DOMCI_DATA_NO_CLASS(DOMConstructor)
 
 #define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
                                            _flags)                            \
@@ -690,6 +699,10 @@ public:
 };
 
 } // anonymous namespace
+
+typedef nsNewDOMBindingSH<nsICanvasRenderingContextInternal>
+  nsCanvasRenderingContextSH;
+
 
 // This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
 // classes their correct behavior when used through XPConnect. The
@@ -1317,7 +1330,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(HTMLCanvasElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContext2D, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContext2D,
+                           nsCanvasRenderingContextSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasGradient, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -2002,8 +2016,7 @@ WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 // nsWrapperCache.
 static inline nsresult
 WrapNativeParent(JSContext *cx, JSObject *scope, nsISupports *native,
-                                        nsWrapperCache *nativeWrapperCache,
-                                        JSObject **parentObj)
+                 nsWrapperCache *nativeWrapperCache, JSObject **parentObj)
 {
   // In the common case, |native| is a wrapper cache with an existing wrapper
 #ifdef DEBUG
@@ -2031,6 +2044,14 @@ WrapNativeParent(JSContext *cx, JSObject *scope, nsISupports *native,
   NS_ENSURE_SUCCESS(rv, rv);
   *parentObj = JSVAL_TO_OBJECT(v);
   return NS_OK;
+}
+
+template<class P>
+static inline nsresult
+WrapNativeParent(JSContext *cx, JSObject *scope, P *parent,
+                 JSObject **parentObj)
+{
+  return WrapNativeParent(cx, scope, ToSupports(parent), parent, parentObj);
 }
 
 // Helper to handle torn-down inner windows.
@@ -7976,8 +7997,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // to wrap here? But that's not always reachable, let's use
   // globalObj for now...
 
-  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, native_parent,
-                                 parentObj);
+  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return node->IsInNativeAnonymousSubtree() ?
@@ -10312,7 +10332,7 @@ nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   }
 
   nsresult rv =
-    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
+    WrapNativeParent(cx, globalObj, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
@@ -10927,7 +10947,7 @@ WebGLExtensionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   WebGLContext *webgl = ext->Context();
   nsINode *node = webgl->GetParentObject();
 
-  return WrapNativeParent(cx, globalObj, node, node, parentObj);
+  return WrapNativeParent(cx, globalObj, node, parentObj);
 }
 
 nsresult
@@ -10940,15 +10960,18 @@ nsNewDOMBindingNoWrapperCacheSH::PreCreate(nsISupports *nativeObj,
   return NS_ERROR_UNEXPECTED;
 }
 
+template<class T, class BaseType>
 NS_IMETHODIMP
-nsWebGLViewportHandlerSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                                    JSObject *globalObj, JSObject **parentObj)
+nsNewDOMBindingSH<T, BaseType>::PreCreate(nsISupports *nativeObj,
+                                          JSContext *cx,
+                                          JSObject *globalObj,
+                                          JSObject **parentObj)
 {
   *parentObj = globalObj;
 
-  WebGLContext *webgl = static_cast<WebGLContext*>(
-    static_cast<nsIDOMWebGLRenderingContext*>(nativeObj));
-  nsINode *node = webgl->GetParentObject();
-
-  return WrapNativeParent(cx, globalObj, node, node, parentObj);
+  T *native = static_cast<T*>(static_cast<BaseType*>(nativeObj));
+  if (!native->GetParentObject()) {
+    return NS_OK;
+  }
+  return WrapNativeParent(cx, globalObj, native->GetParentObject(), parentObj);
 }
