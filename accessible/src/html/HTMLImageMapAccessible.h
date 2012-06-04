@@ -3,28 +3,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsHTMLAreaAccessible_H_
-#define _nsHTMLAreaAccessible_H_
+#ifndef mozilla_a11y_HTMLImageMapAccessible_h__
+#define mozilla_a11y_HTMLImageMapAccessible_h__
 
 #include "ImageAccessibleWrap.h"
 #include "nsHTMLLinkAccessible.h"
-
 #include "nsIDOMHTMLMapElement.h"
+
+namespace mozilla {
+namespace a11y {
 
 /**
  * Used for HTML image maps.
  */
-class nsHTMLImageMapAccessible : public mozilla::a11y::ImageAccessibleWrap
+class HTMLImageMapAccessible : public ImageAccessibleWrap
 {
 public:
-  nsHTMLImageMapAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsHTMLImageMapAccessible() { }
+  HTMLImageMapAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~HTMLImageMapAccessible() { }
 
   // nsISupports and cycle collector
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
 
   // HyperLinkAccessible
   virtual PRUint32 AnchorCount();
@@ -42,25 +44,14 @@ protected:
   virtual void CacheChildren();
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Accessible downcasting method
-
-inline nsHTMLImageMapAccessible*
-Accessible::AsImageMap()
-{
-  return IsImageMapAccessible() ?
-    static_cast<nsHTMLImageMapAccessible*>(this) : nsnull;
-}
-
-
 /**
  * Accessible for image map areas - must be child of image.
  */
-class nsHTMLAreaAccessible : public nsHTMLLinkAccessible
+class HTMLAreaAccessible : public nsHTMLLinkAccessible
 {
 public:
 
-  nsHTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  HTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsAccessNode
   virtual bool IsPrimaryForNode() const;
@@ -81,5 +72,18 @@ protected:
   // Accessible
   virtual void CacheChildren();
 };
+
+} // namespace a11y
+} // namespace mozilla
+
+////////////////////////////////////////////////////////////////////////////////
+// Accessible downcasting method
+
+inline mozilla::a11y::HTMLImageMapAccessible*
+Accessible::AsImageMap()
+{
+  return IsImageMapAccessible() ?
+    static_cast<mozilla::a11y::HTMLImageMapAccessible*>(this) : nsnull;
+}
 
 #endif

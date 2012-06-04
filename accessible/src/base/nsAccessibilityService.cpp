@@ -15,6 +15,7 @@
 #include "DocAccessible-inl.h"
 #include "FocusManager.h"
 #include "HTMLElementAccessibles.h"
+#include "HTMLImageMapAccessible.h"
 #include "HTMLListAccessible.h"
 #include "HyperTextAccessibleWrap.h"
 #include "nsAccessiblePivot.h"
@@ -22,7 +23,6 @@
 #include "nsARIAMap.h"
 #include "nsIAccessibleProvider.h"
 #include "nsHTMLCanvasAccessible.h"
-#include "nsHTMLImageMapAccessible.h"
 #include "nsHTMLLinkAccessible.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessibleWrap.h"
@@ -170,7 +170,7 @@ nsAccessibilityService::GetRootDocumentAccessible(nsIPresShell* aPresShell,
   }
   return nsnull;
 }
- 
+
 already_AddRefed<Accessible>
 nsAccessibilityService::CreateOuterDocAccessible(nsIContent* aContent,
                                                  nsIPresShell* aPresShell)
@@ -266,7 +266,7 @@ nsAccessibilityService::CreateHTMLImageMapAccessible(nsIContent* aContent,
                                                      nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLImageMapAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLImageMapAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -562,7 +562,7 @@ nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame)
     Accessible* accessible =
       document->GetAccessible(aImageFrame->GetContent());
     if (accessible) {
-      nsHTMLImageMapAccessible* imageMap = accessible->AsImageMap();
+      HTMLImageMapAccessible* imageMap = accessible->AsImageMap();
       if (imageMap) {
         imageMap->UpdateChildAreas();
         return;
@@ -1015,7 +1015,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
     // map rect is empty then it is used for links grouping. Otherwise it should
     // be used in conjunction with HTML image element and in this case we don't
     // create any accessible for it and don't walk into it. The accessibles for
-    // HTML area (nsHTMLAreaAccessible) the map contains are attached as
+    // HTML area (HTMLAreaAccessible) the map contains are attached as
     // children of the appropriate accessible for HTML image
     // (ImageAccessible).
     if (nsLayoutUtils::GetAllInFlowRectsUnion(weakFrame,
