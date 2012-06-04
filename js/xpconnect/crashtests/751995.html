@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function frameDoc() { return document.getElementById("f").contentDocument; }
+
+function arm() {
+  // Create an element in the iframe.
+  var div = frameDoc().createElement("div");
+
+  // Force a wrapper to be created for .style.
+  var style = div.style;
+  style.color = "green";
+
+  // Adopt the element out of the iframe, leaving the |style| behind.
+  document.adoptNode(div);
+}
+
+function boom()
+{
+  // Create an orphan.
+  arm();
+
+  // Force an iteration over all the wrappers in frameDoc's scope, causing
+  // us to notice the orphan.
+  frameDoc().write("2");
+
+  // All done.
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+<body onload="boom();"><iframe id="f" src="data:text/html,1"></iframe></body>
+</html>
