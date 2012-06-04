@@ -42,18 +42,7 @@ nsHTMLLinkAccessible::NativeRole()
 PRUint64
 nsHTMLLinkAccessible::NativeState()
 {
-  PRUint64 states = HyperTextAccessibleWrap::NativeState();
-
-  states  &= ~states::READONLY;
-
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::name)) {
-    // This is how we indicate it is a named anchor
-    // In other words, this anchor can be selected as a location :)
-    // There is no other better state to use to indicate this.
-    states |= states::SELECTABLE;
-  }
-
-  return states;
+  return HyperTextAccessibleWrap::NativeState() & ~states::READONLY;
 }
 
 PRUint64
@@ -70,6 +59,20 @@ nsHTMLLinkAccessible::NativeLinkState() const
   // it doesn't have any attributes. Check if 'click' event handler is
   // registered, otherwise bail out.
   return nsCoreUtils::HasClickListener(mContent) ? states::LINKED : 0;
+}
+
+PRUint64
+nsHTMLLinkAccessible::NativeInteractiveState() const
+{
+  PRUint64 state = HyperTextAccessibleWrap::NativeInteractiveState();
+
+  // This is how we indicate it is a named anchor. In other words, this anchor
+  // can be selected as a location :) There is no other better state to use to
+  // indicate this.
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::name))
+    state |= states::SELECTABLE;
+
+  return state;
 }
 
 void
