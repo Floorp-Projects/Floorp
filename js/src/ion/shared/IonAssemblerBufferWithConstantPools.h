@@ -128,7 +128,11 @@ struct Pool {
     bool checkFullBackref(int poolOffset, int codeOffset) {
         if (!limitingUser.assigned())
             return false;
-        if (signed(limitingUser.getOffset() + bias - codeOffset + poolOffset + (numEntries - limitingUsee) * immSize) >= maxOffset)
+        signed int distance =
+            limitingUser.getOffset() + bias
+            - codeOffset + poolOffset +
+            (numEntries - limitingUsee + 1) * immSize;
+        if (distance >= maxOffset)
             return true;
         return false;
     }
