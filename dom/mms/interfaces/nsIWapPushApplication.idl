@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Handle WAP Push notifications.
+ */
+[scriptable, uuid(fd6f7f6b-a67e-4892-930d-fca864df8fe7)]
+interface nsIWapPushApplication : nsISupports
+{
+  /**
+   * Receive WAP Push message.
+   *
+   * @param aData
+   *        An array containing raw PDU data.
+   * @param aLength
+   *        Length of aData.
+   * @param aOffset
+   *        Start offset of aData containing message body of the Push PDU.
+   * @param options
+   *        An object containing various attributes from lower transport layer.
+   */
+  [implicit_jscontext]
+  void receiveWapPush([array, size_is(aLength)] in octet aData,
+                      in unsigned long                   aLength,
+                      in unsigned long                   aOffset,
+                      in jsval                           aOptions);
+};
+
