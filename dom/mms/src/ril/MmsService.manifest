@@ -1,0 +1,4 @@
+# MmsService.js
+component {217ddd76-75db-4210-955d-8806cd8d87f9} MmsService.js
+contract @mozilla.org/mms/rilmmsservice;1 {217ddd76-75db-4210-955d-8806cd8d87f9}
+category profile-after-change MmsService @mozilla.org/mms/rilmmsservice;1

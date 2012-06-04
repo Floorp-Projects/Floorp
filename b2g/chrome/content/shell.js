@@ -651,9 +651,17 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
     });
   });
 
-  ['ril.data.apn', 'ril.data.user', 'ril.data.passwd'].forEach(function(key) {
+  let strPrefs = ['ril.data.apn', 'ril.data.user', 'ril.data.passwd',
+                  'ril.data.mmsc', 'ril.data.mmsproxy'];
+  strPrefs.forEach(function(key) {
     SettingsListener.observe(key, false, function(value) {
       Services.prefs.setCharPref(key, value);
+    });
+  });
+
+  ['ril.data.mmsport'].forEach(function(key) {
+    SettingsListener.observe(key, false, function(value) {
+      Services.prefs.setIntPref(key, value);
     });
   });
 })();

@@ -5,26 +5,15 @@
 DEPTH            = ../../..
 topsrcdir        = @top_srcdir@
 srcdir           = @srcdir@
-VPATH            = \
-  $(srcdir) \
-  $(NULL)
+VPATH            = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_B2G_RIL
-EXTRA_COMPONENTS = \
-  ril/MmsService.js \
-  ril/MmsService.manifest \
+XPIDL_MODULE = dom_mms
+
+XPIDLSRCS = \
+  nsIMmsService.idl \
+  nsIWapPushApplication.idl \
   $(NULL)
 
-EXTRA_JS_MODULES = \
-  ril/mms_consts.js \
-  ril/MmsPduHelper.jsm \
-  ril/wap_consts.js \
-  ril/WapPushManager.js \
-  ril/WspPduHelper.jsm \
-  $(NULL)
-endif
-
-include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
