@@ -452,6 +452,8 @@ bool nsGStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
         i, height);
     b.mPlanes[i].mWidth = gst_video_format_get_component_width(format,
         i, width);
+    b.mPlanes[i].mOffset = 0;
+    b.mPlanes[i].mSkip = 0;
   }
 
   bool isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer,
