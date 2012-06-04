@@ -86,6 +86,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
   "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
   "resource:///modules/sessionstore/DocumentUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
+  "resource:///modules/sessionstore/SessionStorage.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -200,6 +202,10 @@ let SessionStore = {
 
   restoreLastSession: function ss_restoreLastSession() {
     SessionStoreInternal.restoreLastSession();
+  },
+
+  checkPrivacyLevel: function ss_checkPrivacyLevel(aIsHTTPS, aUseDefaultPref) {
+    return SessionStoreInternal.checkPrivacyLevel(aIsHTTPS, aUseDefaultPref);
   }
 };
 
@@ -1987,9 +1993,11 @@ let SessionStoreInternal = {
     else if (tabData.extData)
       delete tabData.extData;
 
-    if (history && browser.docShell instanceof Ci.nsIDocShell)
-      this._serializeSessionStorage(tabData, history, browser.docShell, aFullData,
-                                    aTab.pinned);
+    if (history && browser.docShell instanceof Ci.nsIDocShell) {
+      let storageData = SessionStorage.serialize(browser.docShell, aFullData)
+      if (Object.keys(storageData).length)
+        tabData.storage = storageData;
+    }
 
     return tabData;
   },
@@ -2054,7 +2062,7 @@ let SessionStoreInternal = {
     try {
       var prefPostdata = this._prefBranch.getIntPref("sessionstore.postdata");
       if (aEntry.postData && (aFullData || prefPostdata &&
-            this._checkPrivacyLevel(aEntry.URI.schemeIs("https"), aIsPinned))) {
+            this.checkPrivacyLevel(aEntry.URI.schemeIs("https"), aIsPinned))) {
         aEntry.postData.QueryInterface(Ci.nsISeekableStream).
                         seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
         var stream = Cc["@mozilla.org/binaryinputstream;1"].
@@ -2133,78 +2141,6 @@ let SessionStoreInternal = {
     }
 
     return entry;
-  },
-
-  /**
-   * Updates all sessionStorage "super cookies"
-   * @param aTabData
-   *        The data object for a specific tab
-   * @param aHistory
-   *        That tab's session history
-   * @param aDocShell
-   *        That tab's docshell (containing the sessionStorage)
-   * @param aFullData
-   *        always return privacy sensitive data (use with care)
-   * @param aIsPinned
-   *        the tab is pinned and should be treated differently for privacy
-   */
-  _serializeSessionStorage:
-    function ssi_serializeSessionStorage(aTabData, aHistory, aDocShell, aFullData, aIsPinned) {
-    let storageData = {};
-    let hasContent = false;
-
-    for (let i = 0; i < aHistory.count; i++) {
-      let uri;
-      try {
-        uri = aHistory.getEntryAtIndex(i, false).URI;
-      }
-      catch (ex) {
-        // Chances are that this is getEntryAtIndex throwing, as seen in bug 669196.
-        // We've already asserted in _collectTabData, so we won't show that again.
-        continue;
-      }
-      // sessionStorage is saved per origin (cf. nsDocShell::GetSessionStorageForURI)
-      let domain = uri.spec;
-      try {
-        if (uri.host)
-          domain = uri.prePath;
-      }
-      catch (ex) { /* this throws for host-less URIs (such as about: or jar:) */ }
-      if (storageData[domain] ||
-          !(aFullData || this._checkPrivacyLevel(uri.schemeIs("https"), aIsPinned)))
-        continue;
-
-      let storage, storageItemCount = 0;
-      try {
-        var principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
-
-        // Using getSessionStorageForPrincipal instead of getSessionStorageForURI
-        // just to be able to pass aCreate = false, that avoids creation of the
-        // sessionStorage object for the page earlier than the page really
-        // requires it. It was causing problems while accessing a storage when
-        // a page later changed its domain.
-        storage = aDocShell.getSessionStorageForPrincipal(principal, "", false);
-        if (storage)
-          storageItemCount = storage.length;
-      }
-      catch (ex) { /* sessionStorage might throw if it's turned off, see bug 458954 */ }
-      if (storageItemCount == 0)
-        continue;
-
-      let data = storageData[domain] = {};
-      for (let j = 0; j < storageItemCount; j++) {
-        try {
-          let key = storage.key(j);
-          let item = storage.getItem(key);
-          data[key] = item;
-        }
-        catch (ex) { /* XXXzeniko this currently throws for secured items (cf. bug 442048) */ }
-      }
-      hasContent = true;
-    }
-
-    if (hasContent)
-      aTabData.storage = storageData;
   },
 
   /**
@@ -2295,7 +2231,7 @@ let SessionStoreInternal = {
     var isHTTPS = this._getURIFromString((aContent.parent || aContent).
                                          document.location.href).schemeIs("https");
     let isAboutSR = aContent.top.document.location.href == "about:sessionrestore";
-    if (aFullData || this._checkPrivacyLevel(isHTTPS, aIsPinned) || isAboutSR) {
+    if (aFullData || this.checkPrivacyLevel(isHTTPS, aIsPinned) || isAboutSR) {
       if (aFullData || aUpdateFormData) {
         let formData = DocumentUtils.getFormData(aContent.document);
 
@@ -2417,7 +2353,7 @@ let SessionStoreInternal = {
     // case testing scheme will be sufficient.
     if (/https?/.test(aScheme) && !aHosts[aHost] &&
         (!aCheckPrivacy ||
-         this._checkPrivacyLevel(aScheme == "https", aIsPinned))) {
+         this.checkPrivacyLevel(aScheme == "https", aIsPinned))) {
       // By setting this to true or false, we can determine when looking at
       // the host in _updateCookies if we should check for privacy.
       aHosts[aHost] = aIsPinned;
@@ -2488,8 +2424,8 @@ let SessionStoreInternal = {
           var cookie = list.getNext().QueryInterface(Ci.nsICookie2);
           // window._hosts will only have hosts with the right privacy rules,
           // so there is no need to do anything special with this call to
-          // _checkPrivacyLevel.
-          if (cookie.isSession && _this._checkPrivacyLevel(cookie.isSecure, isPinned)) {
+          // checkPrivacyLevel.
+          if (cookie.isSession && _this.checkPrivacyLevel(cookie.isSecure, isPinned)) {
             // use the cookie's host, path, and name as keys into a hash,
             // to make sure we serialize each cookie only once
             if (!(cookie.host in jscookies &&
@@ -3127,7 +3063,7 @@ let SessionStoreInternal = {
       tab.setAttribute(name, tabData.attributes[name]);
 
     if (tabData.storage && browser.docShell instanceof Ci.nsIDocShell)
-      this._deserializeSessionStorage(tabData.storage, browser.docShell);
+      SessionStorage.deserialize(browser.docShell, tabData.storage);
 
     // notify the tabbrowser that the tab chrome has been restored
     var event = aWindow.document.createEvent("Events");
@@ -3424,26 +3360,6 @@ let SessionStoreInternal = {
     }
 
     return shEntry;
-  },
-
-  /**
-   * restores all sessionStorage "super cookies"
-   * @param aStorageData
-   *        Storage data to be restored
-   * @param aDocShell
-   *        A tab's docshell (containing the sessionStorage)
-   */
-  _deserializeSessionStorage: function ssi_deserializeSessionStorage(aStorageData, aDocShell) {
-    for (let url in aStorageData) {
-      let uri = this._getURIFromString(url);
-      let storage = aDocShell.getSessionStorageForURI(uri, "");
-      for (let key in aStorageData[url]) {
-        try {
-          storage.setItem(key, aStorageData[url][key]);
-        }
-        catch (ex) { Cu.reportError(ex); } // throws e.g. for URIs that can't have sessionStorage
-      }
-    }
   },
 
   /**
@@ -3929,7 +3845,7 @@ let SessionStoreInternal = {
    *        don't do normal check for deferred
    * @returns bool
    */
-  _checkPrivacyLevel: function ssi_checkPrivacyLevel(aIsHTTPS, aUseDefaultPref) {
+  checkPrivacyLevel: function ssi_checkPrivacyLevel(aIsHTTPS, aUseDefaultPref) {
     let pref = "sessionstore.privacy_level";
     // If we're in the process of quitting and we're not autoresuming the session
     // then we should treat it as a deferred session. We have a different privacy

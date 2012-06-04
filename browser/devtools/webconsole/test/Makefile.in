@@ -108,6 +108,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_622303_persistent_filters.js \
 	browser_webconsole_window_zombie.js \
 	browser_cached_messages.js \
+	browser_bug664688_sandbox_update_after_navigation.js \
 	head.js \
 	$(NULL)
 

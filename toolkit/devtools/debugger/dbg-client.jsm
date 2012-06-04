@@ -344,7 +344,8 @@ DebuggerClient.prototype = {
       throw Error("Have not yet received a hello packet from the server.");
     }
     if (!aRequest.to) {
-      throw Error("Request packet has no destination.");
+      let type = aRequest.type || "";
+      throw Error("'" + type + "' request packet has no destination.");
     }
 
     this._pendingRequests.push({ to: aRequest.to,
@@ -497,6 +498,8 @@ ThreadClient.prototype = {
   get state() { return this._state; },
   get paused() { return this._state === "paused"; },
 
+  _pauseOnExceptions: false,
+
   _actor: null,
   get actor() { return this._actor; },
 
@@ -524,8 +527,12 @@ ThreadClient.prototype = {
     this._state = "resuming";
 
     let self = this;
-    let packet = { to: this._actor, type: DebugProtocolTypes.resume,
-                   resumeLimit: aLimit };
+    let packet = {
+      to: this._actor,
+      type: DebugProtocolTypes.resume,
+      resumeLimit: aLimit,
+      pauseOnExceptions: this._pauseOnExceptions
+    };
     this._client.request(packet, function(aResponse) {
       if (aResponse.error) {
         // There was an error resuming, back to paused state.
@@ -580,6 +587,31 @@ ThreadClient.prototype = {
         aOnResponse(aResponse);
       }
     });
+  },
+
+  /**
+   * Enable or disable pausing when an exception is thrown.
+   *
+   * @param boolean aFlag
+   *        Enables pausing if true, disables otherwise.
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  pauseOnExceptions: function TC_pauseOnExceptions(aFlag, aOnResponse) {
+    this._pauseOnExceptions = aFlag;
+    // If the debuggee is paused, the value of the flag will be communicated in
+    // the next resumption. Otherwise we have to force a pause in order to send
+    // the flag.
+    if (!this.paused) {
+      this.interrupt(function(aResponse) {
+        if (aResponse.error) {
+          // Can't continue if pausing failed.
+          aOnResponse(aResponse);
+          return;
+        }
+        this.resume(aOnResponse);
+      }.bind(this));
+    }
   },
 
   /**
@@ -650,24 +682,18 @@ ThreadClient.prototype = {
       let packet = { to: this._actor, type: DebugProtocolTypes.setBreakpoint,
                      location: aLocation };
       this._client.request(packet, function (aResponse) {
-          if (aOnResponse) {
-            if (aResponse.error) {
-              if (aCallback) {
-                aCallback(aOnResponse.bind(undefined, aResponse));
-              } else {
-                aOnResponse(aResponse);
-              }
-              return;
-            }
-            let bpClient = new BreakpointClient(this._client, aResponse.actor,
-                                                aLocation);
-            if (aCallback) {
-              aCallback(aOnResponse(aResponse, bpClient));
-            } else {
-              aOnResponse(aResponse, bpClient);
-            }
+        // Ignoring errors, since the user may be setting a breakpoint in a
+        // dead script that will reappear on a page reload.
+        if (aOnResponse) {
+          let bpClient = new BreakpointClient(this._client, aResponse.actor,
+                                              aLocation);
+          if (aCallback) {
+            aCallback(aOnResponse(aResponse, bpClient));
+          } else {
+            aOnResponse(aResponse, bpClient);
           }
-        }.bind(this));
+        }
+      }.bind(this));
     }.bind(this);
 
     // If the debuggee is paused, just set the breakpoint.
