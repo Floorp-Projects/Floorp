@@ -483,6 +483,28 @@ public:
   nsRefPtr<PresShell> mPresShell;
 };
 
+class nsBeforeFirstPaintDispatcher : public nsRunnable
+{
+public:
+  nsBeforeFirstPaintDispatcher(nsIDocument* aDocument)
+  : mDocument(aDocument) {}
+
+  // Fires the "before-first-paint" event so that interested parties (right now, the
+  // mobile browser) are aware of it.
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(mDocument, "before-first-paint", NULL);
+    }
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIDocument> mDocument;
+};
+
 bool PresShell::sDisableNonTestMouseEvents = false;
 
 #ifdef PR_LOGGING
@@ -3509,7 +3531,14 @@ PresShell::UnsuppressAndInvalidate()
     // No point; we're about to be torn down anyway.
     return;
   }
-  
+
+  if (!mDocument->IsResourceDoc()) {
+    // Notify observers that a new page is about to be drawn. Execute this
+    // as soon as it is safe to run JS, which is guaranteed to be before we
+    // go back to the event loop and actually draw the page.
+    nsContentUtils::AddScriptRunner(new nsBeforeFirstPaintDispatcher(mDocument));
+  }
+
   mPaintingSuppressed = false;
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   if (rootFrame) {
