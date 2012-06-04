@@ -2225,24 +2225,26 @@ class ScreenshotHandler {
         sLastCheckerboardWidthRatio = dw / sw;
         sLastCheckerboardHeightRatio = dh / sh;
         sCheckerboardPageRect = viewport.getCssPageRect();
+        scheduleCheckerboardScreenshotEvent(tab.getId(), (int)sx, (int)sy, (int)sw, (int)sh, dx, dy, dw, dh, dw, dh);
+    }
 
+    static void scheduleCheckerboardScreenshotEvent(int tabId, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int bw, int bh) {
         float totalSize = sw * sh;
         int numSlices = (int) Math.ceil(totalSize / 100000);
         int srcSliceSize = (int) Math.ceil(sh / numSlices);
         int dstSliceSize = (int) Math.ceil(dh / numSlices);
         for (int i = 0; i < numSlices; i++) {
-            scheduleCheckerboardScreenshotEvent(tab.getId(), 
-                                                0, srcSliceSize * i, (int)sw, srcSliceSize, 
-                                                0, dstSliceSize * i,  dw, dstSliceSize, dw, dh);
-        }
-    }
-
-    static void scheduleCheckerboardScreenshotEvent(int tabId, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int bw, int bh) {
-        GeckoEvent event = GeckoEvent.createScreenshotEvent(tabId, sx, sy, sw, sh, dx, dy, dw, dh, bw, bh, GeckoAppShell.SCREENSHOT_CHECKERBOARD, sWholePageScreenshotBuffer);
-        synchronized(sPendingScreenshots) {
-            sPendingScreenshots.add(new PendingScreenshot(tabId, event));
-            if (sPendingScreenshots.size() == 1)
-                sendNextEventToGecko();
+            GeckoEvent event =
+                GeckoEvent.createScreenshotEvent(tabId, 
+                                                 sx, sy + srcSliceSize * i,  sw, srcSliceSize, 
+                                                 dx, dy + dstSliceSize * i,  dw, dstSliceSize, bw, bh,
+                                                 GeckoAppShell.SCREENSHOT_CHECKERBOARD,
+                                                 sWholePageScreenshotBuffer);
+            synchronized(sPendingScreenshots) {
+                sPendingScreenshots.add(new PendingScreenshot(tabId, event));
+                if (sPendingScreenshots.size() == 1)
+                    sendNextEventToGecko();
+            }
         }
     }
 
