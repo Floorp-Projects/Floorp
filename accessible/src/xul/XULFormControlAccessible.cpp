@@ -95,16 +95,6 @@ XULButtonAccessible::NativeState()
   // get focus and disable status from base class
   PRUint64 state = Accessible::NativeState();
 
-  bool disabled = false;
-  nsCOMPtr<nsIDOMXULControlElement> xulFormElement(do_QueryInterface(mContent));
-  if (xulFormElement) {
-    xulFormElement->GetDisabled(&disabled);
-    if (disabled)
-      state |= states::UNAVAILABLE;
-    else 
-      state |= states::FOCUSABLE;
-  }
-
   // Buttons can be checked -- they simply appear pressed in rather than checked
   nsCOMPtr<nsIDOMXULButtonElement> xulButtonElement(do_QueryInterface(mContent));
   if (xulButtonElement) {
@@ -481,9 +471,6 @@ XULRadioButtonAccessible::NativeState()
   PRUint64 state = nsLeafAccessible::NativeState();
   state |= states::CHECKABLE;
 
-  if (!(state & states::UNAVAILABLE))
-    state |= states::FOCUSABLE;
-
   nsCOMPtr<nsIDOMXULSelectControlItemElement> radioButton =
     do_QueryInterface(mContent);
   if (radioButton) {
@@ -495,6 +482,12 @@ XULRadioButtonAccessible::NativeState()
   }
 
   return state;
+}
+
+PRUint64
+XULRadioButtonAccessible::NativeInteractiveState() const
+{
+  return NativelyUnavailable() ? states::UNAVAILABLE : states::FOCUSABLE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -533,12 +526,12 @@ XULRadioGroupAccessible::NativeRole()
 }
 
 PRUint64
-XULRadioGroupAccessible::NativeState()
+XULRadioGroupAccessible::NativeInteractiveState() const
 {
   // The radio group is not focusable. Sometimes the focus controller will
   // report that it is focused. That means that the actual selected radio button
   // should be considered focused.
-  return Accessible::NativeState() & ~(states::FOCUSABLE | states::FOCUSED);
+  return NativelyUnavailable() ? states::UNAVAILABLE : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
