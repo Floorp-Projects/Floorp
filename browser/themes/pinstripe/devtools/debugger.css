@@ -18,6 +18,10 @@
   padding: 0;
 }
 
+#scripts {
+  max-width: 350px;
+}
+
 /**
  * Lists and headers
  */
@@ -49,6 +53,7 @@
 }
 
 .dbg-stackframe-name {
+  -moz-padding-end: 4px;
   font-weight: 600;
 }
 

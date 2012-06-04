@@ -926,7 +926,7 @@ SourceScripts.prototype = {
     }
 
     // Use JS mode for files with .js and .jsm extensions.
-    if (/\.jsm?$/.test(this._trimUrlQuery(aUrl))) {
+    if (/\.jsm?$/.test(this.trimUrlQuery(aUrl))) {
       DebuggerView.editor.setMode(SourceEditor.MODES.JAVASCRIPT);
     } else {
       DebuggerView.editor.setMode(SourceEditor.MODES.HTML);
@@ -934,50 +934,121 @@ SourceScripts.prototype = {
   },
 
   /**
-   * Trims the id selector or query part of a url string, if necessary.
+   * Trims the query part or reference identifier of a url string, if necessary.
    *
    * @param string aUrl
    *        The script url.
    * @return string
+   *         The url with the trimmed query.
    */
-  _trimUrlQuery: function SS__trimUrlQuery(aUrl) {
-    let q = aUrl.indexOf('#');
-    if (q === -1) q = aUrl.indexOf('?');
-    if (q === -1) q = aUrl.indexOf('&');
+  trimUrlQuery: function SS_trimUrlQuery(aUrl) {
+    let length = aUrl.length;
+    let q1 = aUrl.indexOf('?');
+    let q2 = aUrl.indexOf('&');
+    let q3 = aUrl.indexOf('#');
+    let q = Math.min(q1 !== -1 ? q1 : length,
+                     q2 !== -1 ? q2 : length,
+                     q3 !== -1 ? q3 : length);
 
-    if (q > -1) {
-      return aUrl.slice(0, q);
-    }
-    return aUrl;
+    return aUrl.slice(0, q);
   },
 
   /**
-   * Gets the prePath for a script URL.
+   * Trims as much as possible from a URL, while keeping the result unique
+   * in the Debugger View scripts container.
    *
-   * @param string aUrl
-   *        The script url.
+   * @param string | nsIURL aUrl
+   *        The script URL.
+   * @param string aLabel [optional]
+   *        The resulting label at each step.
+   * @param number aSeq [optional]
+   *        The current iteration step.
    * @return string
-   *         The script prePath if the url is valid, null otherwise.
+   *         The resulting label at the final step.
    */
-  _getScriptPrePath: function SS__getScriptDomain(aUrl) {
-    try {
-      return Services.io.newURI(aUrl, null, null).prePath + "/";
-    } catch (e) {
+  _trimURL: function SS__trimURL(aUrl, aLabel, aSeq) {
+    if (!(aUrl instanceof Ci.nsIURL)) {
+      try {
+        // Use an nsIURL to parse all the url path parts.
+        aUrl = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
+      } catch (e) {
+        // This doesn't look like a url, or nsIURL can't handle it.
+        return aUrl;
+      }
     }
-    return null;
+    if (!aSeq) {
+      let name = aUrl.fileName;
+      if (name) {
+        // This is a regular file url, get only the file name (contains the
+        // base name and extension if available).
+
+        // If this url contains an invalid query, unfortunately nsIURL thinks
+        // it's part of the file extension. It must be removed.
+        aLabel = aUrl.fileName.replace(/\&.*/, "");
+      } else {
+        // This is not a file url, hence there is no base name, nor extension.
+        // Proceed using other available information.
+        aLabel = "";
+      }
+      aSeq = 1;
+    }
+
+    // If we have a label and it doesn't start with a query...
+    if (aLabel && aLabel.indexOf("?") !== 0) {
+
+      if (DebuggerView.Scripts.containsIgnoringQuery(aUrl.spec)) {
+        // A page may contain multiple requests to the same url but with different
+        // queries. It would be redundant to show each one.
+        return aLabel;
+      }
+      if (!DebuggerView.Scripts.containsLabel(aLabel)) {
+        // We found the shortest unique label for the url.
+        return aLabel;
+      }
+    }
+
+    // Append the url query.
+    if (aSeq === 1) {
+      let query = aUrl.query;
+      if (query) {
+        return this._trimURL(aUrl, aLabel + "?" + query, aSeq + 1);
+      }
+      aSeq++;
+    }
+    // Append the url reference.
+    if (aSeq === 2) {
+      let ref = aUrl.ref;
+      if (ref) {
+        return this._trimURL(aUrl, aLabel + "#" + aUrl.ref, aSeq + 1);
+      }
+      aSeq++;
+    }
+    // Prepend the url directory.
+    if (aSeq === 3) {
+      let dir = aUrl.directory;
+      if (dir) {
+        return this._trimURL(aUrl, dir.replace(/^\//, "") + aLabel, aSeq + 1);
+      }
+      aSeq++;
+    }
+    // Prepend the hostname and port number.
+    if (aSeq === 4) {
+      let host = aUrl.hostPort;
+      if (host) {
+        return this._trimURL(aUrl, host + "/" + aLabel, aSeq + 1);
+      }
+      aSeq++;
+    }
+    // Use the whole url spec but ignoring the reference.
+    if (aSeq === 5) {
+      return this._trimURL(aUrl, aUrl.specIgnoringRef, aSeq + 1);
+    }
+    // Give up.
+    return aUrl.spec;
   },
 
   /**
    * Gets a unique, simplified label from a script url.
-   * ex: a). ici://some.address.com/random/subrandom/
-   *     b). ni://another.address.org/random/subrandom/page.html
-   *     c). san://interesting.address.gro/random/script.js
-   *     d). si://interesting.address.moc/random/another/script.js
-   * =>
-   *     a). subrandom/
-   *     b). page.html
-   *     c). script.js
-   *     d). another/script.js
    *
    * @param string aUrl
    *        The script url.
@@ -988,30 +1059,7 @@ SourceScripts.prototype = {
    *         The simplified label.
    */
   _getScriptLabel: function SS__getScriptLabel(aUrl, aHref) {
-    let url = this._trimUrlQuery(aUrl);
-
-    if (this._labelsCache[url]) {
-      return this._labelsCache[url];
-    }
-
-    let content = window.parent.content;
-    let domain = content ? content.location.href : this._getScriptPrePath(aUrl);
-
-    let href = aHref || domain;
-    let pathElements = url.split("/");
-    let label = pathElements.pop() || (pathElements.pop() + "/");
-
-    // If the label as a leaf name is already present in the scripts list.
-    if (DebuggerView.Scripts.containsLabel(label)) {
-      label = url.replace(href.substring(0, href.lastIndexOf("/") + 1), "");
-
-      // If the path/to/script is exactly the same, we're in different domains.
-      if (DebuggerView.Scripts.containsLabel(label)) {
-        label = url;
-      }
-    }
-
-    return this._labelsCache[url] = label;
+    return this._labelsCache[aUrl] || (this._labelsCache[aUrl] = this._trimURL(aUrl));
   },
 
   /**
