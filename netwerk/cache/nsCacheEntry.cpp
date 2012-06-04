@@ -32,6 +32,7 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
       mPredictedDataSize(-1),
       mDataSize(0),
       mCacheDevice(nsnull),
+      mCustomDevice(nsnull),
       mData(nsnull)
 {
     MOZ_COUNT_CTOR(nsCacheEntry);

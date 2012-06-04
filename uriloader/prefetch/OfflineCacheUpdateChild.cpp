@@ -177,8 +177,9 @@ OfflineCacheUpdateChild::AssociateDocument(nsIDOMDocument *aDocument,
 
 NS_IMETHODIMP
 OfflineCacheUpdateChild::Init(nsIURI *aManifestURI,
-                           nsIURI *aDocumentURI,
-                           nsIDOMDocument *aDocument)
+                              nsIURI *aDocumentURI,
+                              nsIDOMDocument *aDocument,
+                              nsILocalFile *aCustomProfileDir)
 {
     nsresult rv;
 
@@ -187,6 +188,11 @@ OfflineCacheUpdateChild::Init(nsIURI *aManifestURI,
         nsOfflineCacheUpdateService::EnsureService();
     if (!service)
         return NS_ERROR_FAILURE;
+
+    if (aCustomProfileDir) {
+        NS_ERROR("Custom Offline Cache Update not supported on child process");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     LOG(("OfflineCacheUpdateChild::Init [%p]", this));
 
