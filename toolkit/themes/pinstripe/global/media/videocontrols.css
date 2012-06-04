@@ -38,6 +38,10 @@
   background: url(chrome://global/skin/media/unmuteButton.png) no-repeat center;
 }
 
+.muteButton[noAudio] {
+  background: url(chrome://global/skin/media/noAudio.png) no-repeat center;
+}
+
 .fullscreenButton {
   background: -moz-image-rect(url("chrome://global/skin/media/fullscreenButton.png"), 0, 16, 16, 0) no-repeat center;
   -moz-appearance: none;

@@ -534,6 +534,9 @@
                                 this.startFadeIn(this.controlBar);
                             }
                             this.showDuration(Math.round(this.video.duration * 1000));
+                            if (!this.isAudioOnly && !this.video.mozHasAudio) {
+                              this.muteButton.setAttribute("noAudio", "true");
+                            }
                             break;
                         case "loadeddata":
                             this.firstFrameShown = true;
@@ -1388,7 +1391,7 @@
                     addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
 
-                    if (!this.isAudioOnly) {
+                    if (!this.isAudioOnly && this.video.mozHasAudio) {
                       addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
                       addListener(this.muteButton, "mouseout", this.onVolumeMouseInOut);
                       addListener(this.volumeStack, "mouseover", this.onVolumeMouseInOut);
