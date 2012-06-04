@@ -3,15 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsHTMLLinkAccessible_H_
-#define _nsHTMLLinkAccessible_H_
+#ifndef mozilla_a11y_HTMLLinkAccessible_h__
+#define mozilla_a11y_HTMLLinkAccessible_h__
 
 #include "HyperTextAccessibleWrap.h"
 
-class nsHTMLLinkAccessible : public HyperTextAccessibleWrap
+namespace mozilla {
+namespace a11y {
+
+class HTMLLinkAccessible : public HyperTextAccessibleWrap
 {
 public:
-  nsHTMLLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  HTMLLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
  
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -21,7 +24,7 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual PRUint64 NativeLinkState() const;
   virtual PRUint64 NativeInteractiveState() const;
@@ -42,4 +45,7 @@ protected:
   bool IsLinked();
 };
 
-#endif  
+} // namespace a11y
+} // namespace mozilla
+
+#endif

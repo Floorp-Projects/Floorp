@@ -6,8 +6,8 @@
 #ifndef mozilla_a11y_HTMLImageMapAccessible_h__
 #define mozilla_a11y_HTMLImageMapAccessible_h__
 
+#include "HTMLLinkAccessible.h"
 #include "ImageAccessibleWrap.h"
-#include "nsHTMLLinkAccessible.h"
 #include "nsIDOMHTMLMapElement.h"
 
 namespace mozilla {
@@ -47,7 +47,7 @@ protected:
 /**
  * Accessible for image map areas - must be child of image.
  */
-class HTMLAreaAccessible : public nsHTMLLinkAccessible
+class HTMLAreaAccessible : public HTMLLinkAccessible
 {
 public:
 
