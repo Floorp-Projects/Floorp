@@ -88,7 +88,7 @@ AccEvent::CreateXPCOMObject()
 ////////////////////////////////////////////////////////////////////////////////
 // AccEvent cycle collection
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(AccEvent)
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(AccEvent)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(AccEvent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mAccessible)
