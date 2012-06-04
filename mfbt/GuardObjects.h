@@ -1,5 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=8 sw=4 et tw=99 ft=cpp: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,6 +17,7 @@
 
 namespace mozilla {
 namespace detail {
+
 /*
  * The following classes are designed to cause assertions to detect
  * inadvertent use of guard objects as temporaries. In other words,
@@ -25,11 +25,11 @@ namespace detail {
  * destructor (and is never otherwise referenced), the intended use
  * might be:
  *
- *     AutoRestore savePainting(mIsPainting);
+ *   AutoRestore savePainting(mIsPainting);
  *
  * but is is easy to accidentally write:
  *
- *     AutoRestore(mIsPainting);
+ *   AutoRestore(mIsPainting);
  *
  * which compiles just fine, but runs the destructor well before the
  * intended time.
@@ -72,14 +72,14 @@ class MOZ_EXPORT_API(GuardObjectNotifier)
     bool* statementDone;
 
   public:
-    GuardObjectNotifier() : statementDone(NULL) {}
+    GuardObjectNotifier() : statementDone(NULL) { }
 
     ~GuardObjectNotifier() {
-        *statementDone = true;
+      *statementDone = true;
     }
 
     void setStatementDone(bool* statementIsDone) {
-        statementDone = statementIsDone;
+      statementDone = statementIsDone;
     }
 };
 
@@ -89,25 +89,24 @@ class MOZ_EXPORT_API(GuardObjectNotificationReceiver)
     bool statementDone;
 
   public:
-    GuardObjectNotificationReceiver() : statementDone(false) {}
+    GuardObjectNotificationReceiver() : statementDone(false) { }
 
     ~GuardObjectNotificationReceiver() {
-        /*
-         * Assert that the guard object was not used as a temporary.
-         * (Note that this assert might also fire if init is not called
-         * because the guard object's implementation is not using the
-         * above macros correctly.)
-         */
-        MOZ_ASSERT(statementDone);
+      /*
+       * Assert that the guard object was not used as a temporary.  (Note that
+       * this assert might also fire if init is not called because the guard
+       * object's implementation is not using the above macros correctly.)
+       */
+      MOZ_ASSERT(statementDone);
     }
 
     void init(const GuardObjectNotifier& constNotifier) {
-        /*
-         * constNotifier is passed as a const reference so that we can pass a
-         * temporary, but we really intend it as non-const.
-         */
-        GuardObjectNotifier& notifier = const_cast<GuardObjectNotifier&>(constNotifier);
-        notifier.setStatementDone(&statementDone);
+      /*
+       * constNotifier is passed as a const reference so that we can pass a
+       * temporary, but we really intend it as non-const.
+       */
+      GuardObjectNotifier& notifier = const_cast<GuardObjectNotifier&>(constNotifier);
+      notifier.setStatementDone(&statementDone);
     }
 };
 
