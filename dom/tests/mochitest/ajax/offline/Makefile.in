@@ -31,6 +31,13 @@ _TEST_FILES	= \
 	test_bug460353.html \
 	test_bug474696.html \
 	test_bug544462.html \
+  test_bug744719.html \
+  744719.cacheManifest \
+  744719.cacheManifest^headers^ \
+  test_bug744719-cancel.html \
+  744719-cancel.cacheManifest \
+  744719-cancel.cacheManifest^headers^ \
+  subresource744719.html \
 	test_foreign.html \
 	test_fallback.html \
 	test_overlap.html \
