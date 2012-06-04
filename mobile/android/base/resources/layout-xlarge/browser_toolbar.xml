@@ -103,6 +103,13 @@
                       android:layout_alignRight="@id/awesome_bar"
                       android:orientation="horizontal">
 
+            <ImageButton android:id="@+id/reader"
+                         style="@style/AddressBar.ImageButton"
+                         android:layout_width="24dip"
+                         android:layout_height="24dip"
+                         android:src="@drawable/reader"
+                         android:visibility="gone"/>
+
             <ImageButton android:id="@+id/site_security"
                          style="@style/AddressBar.ImageButton"
                          android:layout_width="24dip"
