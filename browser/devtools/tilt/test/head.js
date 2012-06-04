@@ -65,11 +65,19 @@ const INSP_ENABLED = Services.prefs.getBoolPref("devtools.inspector.enabled");
 
 
 function isTiltEnabled() {
-  return TILT_ENABLED && INSP_ENABLED;
+  let enabled = TILT_ENABLED && INSP_ENABLED;
+
+  info("Apparently, Tilt is" + (enabled ? "" : " not") + " enabled.");
+  return enabled;
 }
 
 function isWebGLSupported() {
-  return TiltGL.isWebGLSupported() && TiltGL.create3DContext(createCanvas());
+  let supported = !TiltGL.isWebGLForceEnabled() &&
+                   TiltGL.isWebGLSupported() &&
+                   TiltGL.create3DContext(createCanvas());
+
+  info("Apparently, WebGL is" + (supported ? "" : " not") + " supported.");
+  return supported;
 }
 
 function isApprox(num1, num2, delta) {
@@ -118,6 +126,9 @@ function createCanvas() {
 
 
 function createTab(callback, location) {
+  info("Creating a tab, with callback " + typeof callback +
+                      ", and location " + location + ".");
+
   let tab = gBrowser.selectedTab = gBrowser.addTab();
 
   gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
@@ -130,35 +141,48 @@ function createTab(callback, location) {
 }
 
 
-function createTilt(callbacks, close) {
-  Services.prefs.setBoolPref("webgl.verbose", true);
+function createTilt(callbacks, close, suddenDeath) {
+  info("Creating Tilt, with callbacks {" + Object.keys(callbacks) + "}" +
+                   ", autoclose param " + close +
+          ", and sudden death handler " + typeof suddenDeath + ".");
 
+  Services.prefs.setBoolPref("webgl.verbose", true);
+  TiltUtils.Output.suppressAlerts = true;
+
+  info("Attempting to start the inspector.");
   Services.obs.addObserver(onInspectorOpen, INSPECTOR_OPENED, false);
   InspectorUI.toggleInspectorUI();
 
   function onInspectorOpen() {
+    info("Inspector was opened.");
     Services.obs.removeObserver(onInspectorOpen, INSPECTOR_OPENED);
 
     executeSoon(function() {
       if ("function" === typeof callbacks.onInspectorOpen) {
+        info("Calling 'onInspectorOpen'.");
         callbacks.onInspectorOpen();
       }
       executeSoon(function() {
+        info("Attempting to start Tilt.");
         Services.obs.addObserver(onTiltOpen, INITIALIZING, false);
+        handleFailure(suddenDeath);
         Tilt.initialize();
       });
     });
   }
 
   function onTiltOpen() {
+    info("Tilt was opened.");
     Services.obs.removeObserver(onTiltOpen, INITIALIZING);
 
     executeSoon(function() {
       if ("function" === typeof callbacks.onTiltOpen) {
+        info("Calling 'onTiltOpen'.");
         callbacks.onTiltOpen(Tilt.visualizers[Tilt.currentWindowId]);
       }
       if (close) {
         executeSoon(function() {
+          info("Attempting to close Tilt.");
           Services.obs.addObserver(onTiltClose, DESTROYED, false);
           Tilt.destroy(Tilt.currentWindowId);
         });
@@ -167,14 +191,17 @@ function createTilt(callbacks, close) {
   }
 
   function onTiltClose() {
+    info("Tilt was closed.");
     Services.obs.removeObserver(onTiltClose, DESTROYED);
 
     executeSoon(function() {
       if ("function" === typeof callbacks.onTiltClose) {
+        info("Calling 'onTiltClose'.");
         callbacks.onTiltClose();
       }
       if (close) {
         executeSoon(function() {
+          info("Attempting to close the Inspector.");
           Services.obs.addObserver(onInspectorClose, INSPECTOR_CLOSED, false);
           InspectorUI.closeInspectorUI();
         });
@@ -183,16 +210,29 @@ function createTilt(callbacks, close) {
   }
 
   function onInspectorClose() {
+    info("Inspector was closed.");
     Services.obs.removeObserver(onInspectorClose, INSPECTOR_CLOSED);
 
     executeSoon(function() {
       if ("function" === typeof callbacks.onInspectorClose) {
+        info("Calling 'onInspectorClose'.");
         callbacks.onInspectorClose();
       }
       if ("function" === typeof callbacks.onEnd) {
+        info("Calling 'onEnd'.");
         callbacks.onEnd();
       }
     });
+  }
+
+  function handleFailure(suddenDeath) {
+    Tilt.failureCallback = function() {
+      info("Tilt FAIL.");
+      Services.obs.removeObserver(onTiltOpen, INITIALIZING);
+
+      info("Now relying on sudden death handler " + typeof suddenDeath + ".");
+      suddenDeath && suddenDeath();
+    }
   }
 }
 
