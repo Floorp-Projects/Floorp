@@ -50,23 +50,19 @@ nsXULComboboxAccessible::NativeState()
   //     STATE_COLLAPSED
 
   // Get focus status from base class
-  PRUint64 states = Accessible::NativeState();
+  PRUint64 state = Accessible::NativeState();
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (menuList) {
-    bool isOpen;
+    bool isOpen = false;
     menuList->GetOpen(&isOpen);
-    if (isOpen) {
-      states |= states::EXPANDED;
-    }
-    else {
-      states |= states::COLLAPSED;
-    }
+    if (isOpen)
+      state |= states::EXPANDED;
+    else
+      state |= states::COLLAPSED;
   }
 
-  states |= states::HASPOPUP | states::FOCUSABLE;
-
-  return states;
+  return state | states::HASPOPUP;
 }
 
 void

@@ -99,7 +99,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!parser.init())
         return NULL;
 
-    SharedContext sc(cx, /* inFunction = */ false);
+    SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL);
 
     TreeContext tc(&parser, &sc);
     if (!tc.init())
@@ -118,14 +118,13 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(globalObj, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalObj->getClass()));
 
     GlobalScope globalScope(cx, globalObj);
-    bce.sc->setScopeChain(scopeChain);
     bce.globalScope = &globalScope;
-    if (!SetStaticLevel(bce.sc, staticLevel))
+    if (!SetStaticLevel(&sc, staticLevel))
         return NULL;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)
-        bce.sc->setInStrictMode();
+        sc.setInStrictMode();
 
 #ifdef DEBUG
     bool savedCallerFun;
@@ -165,10 +164,8 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
      * Inline this->statements to emit as we go to save AST space. We must
      * generate our script-body blockid since we aren't calling Statements.
      */
-    uint32_t bodyid;
-    if (!GenerateBlockId(bce.sc, bodyid))
+    if (!GenerateBlockId(&sc, sc.bodyid))
         return NULL;
-    bce.sc->bodyid = bodyid;
 
     ParseNode *pn;
 #if JS_HAS_XML_SUPPORT
@@ -201,7 +198,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
         if (!AnalyzeFunctions(bce.parser))
             return NULL;
-        bce.sc->functionList = NULL;
+        tc.functionList = NULL;
 
         if (!EmitTree(cx, &bce, pn))
             return NULL;
@@ -266,7 +263,8 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!parser.init())
         return false;
 
-    SharedContext funsc(cx, /* inFunction = */ true);
+    JS_ASSERT(fun);
+    SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL);
 
     TreeContext funtc(&parser, &funsc);
     if (!funtc.init())
@@ -277,7 +275,6 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!funbce.init())
         return false;
 
-    funsc.setFunction(fun);
     funsc.bindings.transfer(cx, bindings);
     fun->setArgCount(funsc.bindings.numArgs());
     if (!GenerateBlockId(&funsc, funsc.bodyid))

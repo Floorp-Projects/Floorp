@@ -119,14 +119,18 @@ nsXFormsComboboxPopupWidgetAccessible::NativeState()
   nsresult rv = sXFormsService->IsDropmarkerOpen(DOMNode, &isOpen);
   NS_ENSURE_SUCCESS(rv, state);
 
-  state |= states::FOCUSABLE;
-
   if (isOpen)
     state = states::FLOATING;
   else
     state = states::INVISIBLE;
 
   return state;
+}
+
+PRUint64
+nsXFormsComboboxPopupWidgetAccessible::NativeInteractiveState() const
+{
+  return NativelyUnavailable() ? states::UNAVAILABLE : states::FOCUSABLE;
 }
 
 nsresult

@@ -72,13 +72,16 @@ nsHTMLTableCellAccessible::NativeState()
   nsIFrame *frame = mContent->GetPrimaryFrame();
   NS_ASSERTION(frame, "No frame for valid cell accessible!");
 
-  if (frame) {
-    state |= states::SELECTABLE;
-    if (frame->IsSelected())
-      state |= states::SELECTED;
-  }
+  if (frame && frame->IsSelected())
+    state |= states::SELECTED;
 
   return state;
+}
+
+PRUint64
+nsHTMLTableCellAccessible::NativeInteractiveState() const
+{
+  return HyperTextAccessibleWrap::NativeInteractiveState() | states::SELECTABLE;
 }
 
 nsresult

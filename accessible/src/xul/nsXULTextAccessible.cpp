@@ -87,11 +87,7 @@ nsXULTooltipAccessible::
 PRUint64
 nsXULTooltipAccessible::NativeState()
 {
-  PRUint64 states = nsLeafAccessible::NativeState();
-
-  states &= ~states::FOCUSABLE;
-  states |= states::READONLY;
-  return states;
+  return nsLeafAccessible::NativeState() | states::READONLY;
 }
 
 role

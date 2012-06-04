@@ -32,6 +32,8 @@ let WebappsInstaller = {
     let shell = new WinNativeApp(aData);
 #elifdef XP_MACOSX
     let shell = new MacNativeApp(aData);
+#elifdef XP_UNIX
+    let shell = new LinuxNativeApp(aData);
 #else
     return false;
 #endif
@@ -48,8 +50,8 @@ let WebappsInstaller = {
 }
 
 /**
- * This function implements the common constructor for both
- * the Windows and Mac native app shells. It reads and parses
+ * This function implements the common constructor for
+ * the Windows, Mac and Linux native app shells. It reads and parses
  * the data from the app manifest and stores it in the NativeApp
  * object. It's meant to be called as NativeApp.call(this, aData)
  * from the platform-specific constructor.
@@ -113,6 +115,8 @@ function NativeApp(aData) {
     "registryDir": this.profileFolder.path,
     "app": app
   };
+
+  this.processFolder = Services.dirsvc.get("CurProcD", Ci.nsIFile);
 }
 
 #ifdef XP_WIN
@@ -188,12 +192,16 @@ WinNativeApp.prototype = {
 
     // The ${InstallDir} format is as follows:
     //  host of the app origin + ";" +
-    //  protocol + ";" +
-    //  port (-1 for default port)
+    //  protocol
+    //  + ";" + port (only if port is not default)
     this.installDir = Services.dirsvc.get("AppData", Ci.nsIFile);
-    this.installDir.append(this.launchURI.host + ";" + 
-                           this.launchURI.scheme + ";" +
-                           this.launchURI.port);
+    let installDirLeaf = this.launchURI.scheme
+                       + ";"
+                       + this.launchURI.host;
+    if (this.launchURI.port != -1) {
+      installDirLeaf += ";" + this.launchURI.port;
+    }
+    this.installDir.append(installDirLeaf);
 
     this.uninstallDir = this.installDir.clone();
     this.uninstallDir.append("uninstall");
@@ -207,8 +215,6 @@ WinNativeApp.prototype = {
     this.iconFile.append("default");
     this.iconFile.append("default.ico");
 
-    this.processFolder = Services.dirsvc.get("CurProcD", Ci.nsIFile);
-
     this.desktopShortcut = Services.dirsvc.get("Desk", Ci.nsILocalFile);
     this.desktopShortcut.append(this.appNameAsFilename + ".lnk");
     this.desktopShortcut.followLinks = false;
@@ -218,8 +224,7 @@ WinNativeApp.prototype = {
     this.startMenuShortcut.followLinks = false;
 
     this.uninstallSubkeyStr = this.launchURI.scheme + "://" +
-                              this.launchURI.host + ":" +
-                              this.launchURI.port;
+                              this.launchURI.hostPort;
   },
 
   /**
@@ -482,8 +487,6 @@ MacNativeApp.prototype = {
 
     this.iconFile = this.resourcesDir.clone();
     this.iconFile.append("appicon.icns");
-
-    this.processFolder = Services.dirsvc.get("CurProcD", Ci.nsIFile);
   },
 
   install: function() {
@@ -638,6 +641,154 @@ MacNativeApp.prototype = {
     }
   }
 
+}
+
+#elifdef XP_UNIX
+
+function LinuxNativeApp(aData) {
+  NativeApp.call(this, aData);
+  this._init();
+}
+
+LinuxNativeApp.prototype = {
+  _init: function() {
+    // The ${InstallDir} and desktop entry filename format is as follows:
+    // host of the app origin + ";" +
+    // protocol
+    // + ";" + port (only if port is not default)
+
+    this.uniqueName = this.launchURI.scheme + ";" + this.launchURI.host;
+    if (this.launchURI.port != -1)
+      this.uniqueName += ";" + this.launchURI.port;
+
+    this.installDir = Services.dirsvc.get("Home", Ci.nsIFile);
+    this.installDir.append("." + this.uniqueName);
+
+    this.iconFile = this.installDir.clone();
+    this.iconFile.append(this.uniqueName + ".png");
+
+    this.webapprt = this.installDir.clone();
+    this.webapprt.append("webapprt-stub");
+
+    let env = Cc["@mozilla.org/process/environment;1"]
+                .getService(Ci.nsIEnvironment);
+    let xdg_data_home_env = env.get("XDG_DATA_HOME");
+    if (xdg_data_home_env != "") {
+      this.desktopINI = Cc["@mozilla.org/file/local;1"]
+                          .createInstance(Ci.nsILocalFile);
+      this.desktopINI.initWithPath(xdg_data_home_env);
+    }
+    else {
+      this.desktopINI = Services.dirsvc.get("Home", Ci.nsIFile);
+      this.desktopINI.append(".local");
+      this.desktopINI.append("share");
+    }
+
+    this.desktopINI.append("applications");
+    this.desktopINI.append("owa-" + this.uniqueName + ".desktop");
+  },
+
+  install: function() {
+    this._removeInstallation();
+
+    try {
+      this._createDirectoryStructure();
+      this._copyPrebuiltFiles();
+      this._createConfigFiles();
+    } catch (ex) {
+      this._removeInstallation();
+      throw(ex);
+    }
+
+    getIconForApp(this, function() {});
+  },
+
+  _removeInstallation: function() {
+    try {
+      if (this.installDir.exists())
+        this.installDir.remove(true);
+
+      if (this.desktopINI.exists())
+        this.desktopINI.remove(false);
+    } catch(ex) {
+    }
+  },
+
+  _createDirectoryStructure: function() {
+    this.installDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  },
+
+  _copyPrebuiltFiles: function() {
+    let webapprtPre = this.processFolder.clone();
+    webapprtPre.append(this.webapprt.leafName);
+    webapprtPre.copyTo(this.installDir, this.webapprt.leafName);
+  },
+
+  _createConfigFiles: function() {
+    // ${InstallDir}/webapp.json
+    let configJson = this.installDir.clone();
+    configJson.append("webapp.json");
+    writeToFile(configJson, JSON.stringify(this.webappJson), function() {});
+
+    // ${InstallDir}/webapp.ini
+    let webappINI = this.installDir.clone();
+    webappINI.append("webapp.ini");
+
+    let factory = Cc["@mozilla.org/xpcom/ini-processor-factory;1"]
+                    .getService(Ci.nsIINIParserFactory);
+
+    let writer = factory.createINIParser(webappINI).QueryInterface(Ci.nsIINIParserWriter);
+    writer.setString("Webapp", "Name", this.appName);
+    writer.setString("Webapp", "Profile", this.uniqueName);
+    writer.setString("WebappRT", "InstallDir", this.processFolder.path);
+    writer.writeFile();
+
+    // $XDG_DATA_HOME/applications/owa-<webappuniquename>.desktop
+    this.desktopINI.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0755);
+
+    writer = factory.createINIParser(this.desktopINI).QueryInterface(Ci.nsIINIParserWriter);
+    writer.setString("Desktop Entry", "Name", this.appName);
+    writer.setString("Desktop Entry", "Comment", this.shortDescription);
+    writer.setString("Desktop Entry", "Exec", '"'+this.webapprt.path+'"');
+    writer.setString("Desktop Entry", "Icon", this.iconFile.path);
+    writer.setString("Desktop Entry", "Type", "Application");
+    writer.setString("Desktop Entry", "Terminal", "false");
+    writer.writeFile();
+  },
+
+  /**
+   * This variable specifies if the icon retrieval process should
+   * use a temporary file in the system or a binary stream. This
+   * is accessed by a common function in WebappsIconHelpers.js and
+   * is different for each platform.
+   */
+  useTmpForIcon: false,
+
+  /**
+   * Process the icon from the imageStream as retrieved from
+   * the URL by getIconForApp().
+   *
+   * @param aMimeType     ahe icon mimetype
+   * @param aImageStream  the stream for the image data
+   * @param aCallback     a callback function to be called
+   *                      after the process finishes
+   */
+  processIcon: function(aMimeType, aImageStream, aCallback) {
+    let iconStream;
+    try {
+      let imgTools = Cc["@mozilla.org/image/tools;1"]
+                       .createInstance(Ci.imgITools);
+      let imgContainer = { value: null };
+
+      imgTools.decodeImageData(aImageStream, aMimeType, imgContainer);
+      iconStream = imgTools.encodeImage(imgContainer.value, "image/png");
+    } catch (e) {
+      throw("processIcon - Failure converting icon (" + e + ")");
+    }
+
+    let outputStream = FileUtils.openSafeFileOutputStream(this.iconFile);
+    NetUtil.asyncCopy(iconStream, outputStream);
+  }
 }
 
 #endif

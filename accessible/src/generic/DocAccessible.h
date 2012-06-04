@@ -84,6 +84,8 @@ public:
   virtual Accessible* FocusedChild();
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
+  virtual bool NativelyUnavailable() const;
   virtual void ApplyARIAState(PRUint64* aState) const;
 
   virtual void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);

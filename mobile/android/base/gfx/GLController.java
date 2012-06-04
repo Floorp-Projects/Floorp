@@ -104,7 +104,6 @@ public class GLController {
     synchronized void surfaceChanged(int newWidth, int newHeight) {
         mWidth = newWidth;
         mHeight = newHeight;
-        mView.getRenderer().onSurfaceChanged(null, mWidth, mHeight);
         mSurfaceValid = true;
         notifyAll();
     }
@@ -119,9 +118,13 @@ public class GLController {
 
         mEGLConfig = chooseConfig();
 
-        if (mView.getRenderer() != null) {
-            mView.getRenderer().resizeView(mWidth, mHeight);
-        }
+        // updating the state in the view/controller/client should be
+        // done on the main UI thread, not the GL renderer thread
+        mView.post(new Runnable() {
+            public void run() {
+                mView.setViewportSize(new IntSize(mWidth, mHeight));
+            }
+        });
     }
 
     private EGLConfig chooseConfig() {

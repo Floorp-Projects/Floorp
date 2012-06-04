@@ -86,6 +86,7 @@ public:
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual mozilla::a11y::role NativeRole();
   virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
 
   virtual PRInt32 GetLevelInternal();
   virtual void GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame);
@@ -141,7 +142,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole();
-  virtual PRUint64 NativeState();
+  virtual PRUint64 NativeInteractiveState() const;
 
   // ActionAccessible
   virtual PRUint8 ActionCount();

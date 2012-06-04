@@ -653,7 +653,6 @@ Accessible::NativeState()
   if (!document || !document->IsInDocument(this))
     state |= states::STALE;
 
-  bool disabled = false;
   if (mContent->IsElement()) {
     nsEventStates elementState = mContent->AsElement()->State();
 
@@ -663,23 +662,7 @@ Accessible::NativeState()
     if (elementState.HasState(NS_EVENT_STATE_REQUIRED))
       state |= states::REQUIRED;
 
-    disabled = mContent->IsHTML() ? 
-      (elementState.HasState(NS_EVENT_STATE_DISABLED)) :
-      (mContent->AttrValueIs(kNameSpaceID_None,
-                             nsGkAtoms::disabled,
-                             nsGkAtoms::_true,
-                             eCaseMatters));
-  }
-
-  // Set unavailable state based on disabled state, otherwise set focus states
-  if (disabled) {
-    state |= states::UNAVAILABLE;
-  }
-  else if (mContent->IsElement()) {
-    nsIFrame* frame = GetFrame();
-    if (frame && frame->IsFocusable())
-      state |= states::FOCUSABLE;
-
+    state |= NativeInteractiveState();
     if (FocusMgr()->IsFocused(this))
       state |= states::FOCUSED;
   }
@@ -705,10 +688,36 @@ Accessible::NativeState()
 }
 
 PRUint64
+Accessible::NativeInteractiveState() const
+{
+  if (!mContent->IsElement())
+    return 0;
+
+  if (NativelyUnavailable())
+    return states::UNAVAILABLE;
+
+  nsIFrame* frame = GetFrame();
+  if (frame && frame->IsFocusable())
+    return states::FOCUSABLE;
+
+  return 0;
+}
+
+PRUint64
 Accessible::NativeLinkState() const
 {
   // Expose linked state for simple xlink.
   return nsCoreUtils::IsXLink(mContent) ? states::LINKED : 0;
+}
+
+bool
+Accessible::NativelyUnavailable() const
+{
+  if (mContent->IsHTML())
+    return mContent->AsElement()->State().HasState(NS_EVENT_STATE_DISABLED);
+
+  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                               nsGkAtoms::_true, eCaseMatters);
 }
 
   /* readonly attribute boolean focusedChild; */
@@ -1838,7 +1847,7 @@ Accessible::GetActionCount(PRUint8* aActionCount)
 PRUint8
 Accessible::ActionCount()
 {
-  return GetActionRule(State()) == eNoAction ? 0 : 1;
+  return GetActionRule() == eNoAction ? 0 : 1;
 }
 
 /* DOMString getAccActionName (in PRUint8 index); */
@@ -1853,8 +1862,7 @@ Accessible::GetActionName(PRUint8 aIndex, nsAString& aName)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  PRUint64 states = State();
-  PRUint32 actionRule = GetActionRule(states);
+  PRUint32 actionRule = GetActionRule();
 
  switch (actionRule) {
    case eActivateAction:
@@ -1870,20 +1878,23 @@ Accessible::GetActionName(PRUint8 aIndex, nsAString& aName)
      return NS_OK;
 
    case eCheckUncheckAction:
-     if (states & states::CHECKED)
+   {
+     PRUint64 state = State();
+     if (state & states::CHECKED)
        aName.AssignLiteral("uncheck");
-     else if (states & states::MIXED)
+     else if (state & states::MIXED)
        aName.AssignLiteral("cycle");
      else
        aName.AssignLiteral("check");
      return NS_OK;
+   }
 
    case eJumpAction:
      aName.AssignLiteral("jump");
      return NS_OK;
 
    case eOpenCloseAction:
-     if (states & states::COLLAPSED)
+     if (State() & states::COLLAPSED)
        aName.AssignLiteral("open");
      else
        aName.AssignLiteral("close");
@@ -1896,13 +1907,13 @@ Accessible::GetActionName(PRUint8 aIndex, nsAString& aName)
    case eSwitchAction:
      aName.AssignLiteral("switch");
      return NS_OK;
-     
+
    case eSortAction:
      aName.AssignLiteral("sort");
      return NS_OK;
-   
+
    case eExpandAction:
-     if (states & states::COLLAPSED)
+     if (State() & states::COLLAPSED)
        aName.AssignLiteral("expand");
      else
        aName.AssignLiteral("collapse");
@@ -1935,7 +1946,7 @@ Accessible::DoAction(PRUint8 aIndex)
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  if (GetActionRule(State()) != eNoAction) {
+  if (GetActionRule() != eNoAction) {
     DoCommand();
     return NS_OK;
   }
@@ -3142,11 +3153,11 @@ Accessible::GetAttrValue(nsIAtom *aProperty, double *aValue)
 }
 
 PRUint32
-Accessible::GetActionRule(PRUint64 aStates)
+Accessible::GetActionRule()
 {
-  if (aStates & states::UNAVAILABLE)
+  if (InteractiveState() & states::UNAVAILABLE)
     return eNoAction;
-  
+
   // Check if it's simple xlink.
   if (nsCoreUtils::IsXLink(mContent))
     return eJumpAction;
