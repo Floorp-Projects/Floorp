@@ -69,10 +69,11 @@
  * 44. Test sending/receving binary ArrayBuffer 
  * 45. Test sending/receving binary Blob 
  * 46. Test that we don't dispatch incoming msgs once in CLOSING state
+ * 47. Make sure onerror/onclose aren't called during close()
  */
 
 var first_test = 1;
-var last_test = 46;
+var last_test = 47;
 
 
 // Set this to >1 if you want to run the suite multiple times to probe for
@@ -282,6 +283,7 @@ function test3()
   {
     shouldCloseNotCleanly(e);
     ok(hasError, "rcvd onerror event");
+    ok(e.code == 1006, "test-3 close code should be 1006 but is:" + e.code);
     doTest(4);
   };
 }
@@ -1434,6 +1436,41 @@ function test46()
     doTest(47);
   }
 }
+
+function test47()
+{
+  var hasError = false;
+  var ws = CreateTestWS("ws://another.websocket.server.that.probably.does.not.exist");
+  ws.onopen = shouldNotOpen;
+
+  ws.onerror = function (e)
+  {
+    ok(ws.readyState == 3, "test-47: readyState should be CLOSED(3) in onerror: got " 
+       + ws.readyState);
+    ok(!ws._withinClose, "onerror() called during close()!");
+    hasError = true;
+  }
+
+  ws.onclose = function(e)
+  {
+    shouldCloseNotCleanly(e);
+    ok(hasError, "test-47: should have called onerror before onclose");
+    ok(ws.readyState == 3, "test-47: readyState should be CLOSED(3) in onclose: got " 
+       + ws.readyState);
+    ok(!ws._withinClose, "onclose() called during close()!");
+    ok(e.code == 1006, "test-47 close code should be 1006 but is:" + e.code);
+    doTest(48);
+  };
+
+  // Call close before we're connected: throws error
+  // Make sure we call onerror/onclose asynchronously
+  ws._withinClose = 1;
+  ws.close(3333, "Closed before we were open: error");
+  ws._withinClose = 0;
+  ok(ws.readyState == 2, "test-47: readyState should be CLOSING(2) after close(): got "
+     + ws.readyState);
+}
+
 
 var ranAllTests = false;
 
