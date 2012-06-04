@@ -1230,7 +1230,7 @@ class Assembler
     Assembler()
       : dataBytesNeeded_(0),
         enoughMemory_(true),
-        m_buffer(4, 4, 0, 2, &pools_[0], 8),
+        m_buffer(4, 4, 0, &pools_[0], 8),
         int32Pool(m_buffer.getPool(1)),
         doublePool(m_buffer.getPool(0)),
         isFinished(false),
@@ -1655,16 +1655,18 @@ class Assembler
         padForAlign32 = (int)0xe12fff7f  // 'bkpt 0xffff'
     };
 
+    // API for speaking with the IonAssemblerBufferWithConstantPools
     // generate an initial placeholder instruction that we want to later fix up
-    static uint32 patchConstantPoolLoad(uint32 load, int32 value);
     static void insertTokenIntoTag(uint32 size, uint8 *load, int32 token);
     // take the stub value that was written in before, and write in an actual load
     // using the index we'd computed previously as well as the address of the pool start.
-    static void patchConstantPoolLoad(void* loadAddr, void* constPoolAddr);
+    static bool patchConstantPoolLoad(void* loadAddr, void* constPoolAddr);
     // this is a callback for when we have filled a pool, and MUST flush it now.
     // The pool requires the assembler to place a branch past the pool, and it
     // calls this function.
     static uint32 placeConstantPoolBarrier(int offset);
+    // END API
+
     // move our entire pool into the instruction stream
     // This is to force an opportunistic dump of the pool, prefferably when it
     // is more convenient to do a dump.
