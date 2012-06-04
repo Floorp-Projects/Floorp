@@ -256,6 +256,14 @@ void MessageLoop::PostNonNestableDelayedTask(
   PostTask_Helper(from_here, task, delay_ms, false);
 }
 
+void MessageLoop::PostIdleTask(
+    const tracked_objects::Location& from_here, Task* task) {
+  DCHECK(current() == this);
+  task->SetBirthPlace(from_here);
+  PendingTask pending_task(task, false);
+  deferred_non_nestable_work_queue_.push(pending_task);
+}
+
 // Possibly called on a background thread!
 void MessageLoop::PostTask_Helper(
     const tracked_objects::Location& from_here, Task* task, int delay_ms,
