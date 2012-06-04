@@ -192,12 +192,16 @@ WinNativeApp.prototype = {
 
     // The ${InstallDir} format is as follows:
     //  host of the app origin + ";" +
-    //  protocol + ";" +
-    //  port (-1 for default port)
+    //  protocol
+    //  + ";" + port (only if port is not default)
     this.installDir = Services.dirsvc.get("AppData", Ci.nsIFile);
-    this.installDir.append(this.launchURI.host + ";" + 
-                           this.launchURI.scheme + ";" +
-                           this.launchURI.port);
+    let installDirLeaf = this.launchURI.scheme
+                       + ";"
+                       + this.launchURI.host;
+    if (this.launchURI.port != -1) {
+      installDirLeaf += ";" + this.launchURI.port;
+    }
+    this.installDir.append(installDirLeaf);
 
     this.uninstallDir = this.installDir.clone();
     this.uninstallDir.append("uninstall");
@@ -220,8 +224,7 @@ WinNativeApp.prototype = {
     this.startMenuShortcut.followLinks = false;
 
     this.uninstallSubkeyStr = this.launchURI.scheme + "://" +
-                              this.launchURI.host + ":" +
-                              this.launchURI.port;
+                              this.launchURI.hostPort;
   },
 
   /**
