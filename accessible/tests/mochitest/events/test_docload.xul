@@ -99,6 +99,10 @@
     {
       this.__proto__ = new loadURIInvoker(aNestedDocURI);
 
+      // Remove reorder event checker since the event is likely coalesced by
+      // reorder event on Firefox UI (refer to bug 759670 for details).
+      this.eventSeq.shift();
+
       this.unexpectedEventSeq = [
         new invokerChecker(EVENT_DOCUMENT_LOAD_COMPLETE, getNestedDoc),
         new invokerChecker(EVENT_STATE_CHANGE, getNestedDoc)
@@ -183,14 +187,12 @@
     ////////////////////////////////////////////////////////////////////////////
     // Tests
 
-    gA11yEventDumpToConsole = true; // debug
-    gA11yEventDumpFeature = "parentchain:reorder";
+    //gA11yEventDumpToConsole = true; // debug
+    //gA11yEventDumpFeature = "parentchain:reorder";
 
     var gQueue = null;
     function doTests()
     {
-      enableLogging("events");
-
       gQueue = new eventQueue();
 
       var dataURL =
@@ -206,7 +208,7 @@
       gQueue.push(new loadErrorPageInvoker("https://nocert.example.com:443",
                                           "Untrusted Connection"));
 
-      gQueue.onFinish = function() { closeBrowserWindow(); disableLogging(); }
+      gQueue.onFinish = function() { closeBrowserWindow(); }
       gQueue.invoke();
     }
 
