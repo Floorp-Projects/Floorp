@@ -1773,6 +1773,11 @@ abstract public class GeckoApp
         }
 
         GeckoAppShell.loadMozGlue();
+        sGeckoThread = new GeckoThread();
+        String uri = getURIFromIntent(getIntent());
+        if (uri != null && uri.length() > 0 && !uri.equals("about:home"))
+            sGeckoThread.start();
+
         mMainHandler = new Handler();
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - onCreate");
 
@@ -1871,17 +1876,17 @@ abstract public class GeckoApp
             passedUri = "about:empty";
         }
 
-        sGeckoThread = new GeckoThread(intent, passedUri, mRestoreMode);
+        sGeckoThread.init(intent, passedUri, mRestoreMode);
         if (!ACTION_DEBUG.equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.Launched)) {
-            sGeckoThread.start();
+            sGeckoThread.reallyStart();
         } else if (ACTION_DEBUG.equals(action) &&
             checkAndSetLaunchState(LaunchState.Launching, LaunchState.WaitForDebugger)) {
             mMainHandler.postDelayed(new Runnable() {
                 public void run() {
                     Log.i(LOGTAG, "Launching from debug intent after 5s wait");
                     setLaunchState(LaunchState.Launching);
-                    sGeckoThread.start();
+                    sGeckoThread.reallyStart();
                 }
             }, 1000 * 5 /* 5 seconds */);
             Log.i(LOGTAG, "Intent : ACTION_DEBUG - waiting 5s before launching");
