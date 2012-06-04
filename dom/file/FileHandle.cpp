@@ -72,8 +72,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(FileHandle, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(FileHandle, nsDOMEventTargetHelper)
 
-NS_IMPL_EVENT_HANDLER(FileHandle, abort);
-NS_IMPL_EVENT_HANDLER(FileHandle, error);
+NS_IMPL_EVENT_HANDLER(FileHandle, abort)
+NS_IMPL_EVENT_HANDLER(FileHandle, error)
 
 NS_IMETHODIMP
 FileHandle::GetName(nsAString& aName)

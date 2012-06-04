@@ -35,6 +35,23 @@ nsApplicationCacheService::CreateApplicationCache(const nsACString &group,
 }
 
 NS_IMETHODIMP
+nsApplicationCacheService::CreateCustomApplicationCache(const nsACString & group,
+                                                        nsILocalFile *profileDir,
+                                                        PRInt32 quota,
+                                                        nsIApplicationCache **out)
+{
+    if (!mCacheService)
+        return NS_ERROR_UNEXPECTED;
+
+    nsRefPtr<nsOfflineCacheDevice> device;
+    nsresult rv = mCacheService->GetCustomOfflineDevice(profileDir,
+                                                        quota,
+                                                        getter_AddRefs(device));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return device->CreateApplicationCache(group, out);
+}
+
+NS_IMETHODIMP
 nsApplicationCacheService::GetApplicationCache(const nsACString &clientID,
                                                nsIApplicationCache **out)
 {

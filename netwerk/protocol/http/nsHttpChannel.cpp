@@ -2617,6 +2617,11 @@ nsHttpChannel::OpenOfflineCacheEntryForWriting()
                              getter_AddRefs(session));
     if (NS_FAILED(rv)) return rv;
 
+    if (mProfileDirectory) {
+        rv = session->SetProfileDirectory(mProfileDirectory);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     mOnCacheEntryAvailableCallback =
         &nsHttpChannel::OnOfflineCacheEntryForWritingAvailable;
     rv = session->AsyncOpenCacheEntry(cacheKey, nsICache::ACCESS_READ_WRITE,
@@ -3934,6 +3939,7 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
             // cacheClientID, cacheForOfflineUse
             cachingChannel->SetOfflineCacheClientID(mOfflineCacheClientID);
             cachingChannel->SetCacheForOfflineUse(mCacheForOfflineUse);
+            cachingChannel->SetProfileDirectory(mProfileDirectory);
         }
     }
 
@@ -5358,6 +5364,22 @@ nsHttpChannel::SetOfflineCacheClientID(const nsACString &value)
 
     mOfflineCacheClientID = value;
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetProfileDirectory(nsILocalFile **_result)
+{
+    NS_ENSURE_ARG(_result);
+
+    NS_ADDREF(*_result = mProfileDirectory);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetProfileDirectory(nsILocalFile *value)
+{
+    mProfileDirectory = value;
     return NS_OK;
 }
 

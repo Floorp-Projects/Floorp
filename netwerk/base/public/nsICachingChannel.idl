@@ -6,6 +6,7 @@
 #include "nsICacheInfoChannel.idl"
 
 interface nsIFile;
+interface nsILocalFile;
 
 /**
  * A channel may optionally implement this interface to allow clients
@@ -17,7 +18,7 @@ interface nsIFile;
  *   3) Support for uniquely identifying cached data in cases when the URL
  *      is insufficient (e.g., HTTP form submission).
  */
-[scriptable, uuid(830D4BCB-3E46-4011-9BDA-51A5D1AF891F)]
+[scriptable, uuid(E2143B61-62FE-4da5-BE2E-E31981095889)]
 interface nsICachingChannel : nsICacheInfoChannel
 {
     /**
@@ -86,6 +87,12 @@ interface nsICachingChannel : nsICacheInfoChannel
      * data will be placed in "HTTP-offline"
      */
     attribute ACString offlineCacheClientID;
+
+    /**
+     * Override base (profile) directory to work with when accessing the cache.
+     * When not specified, the current process' profile directory will be used.
+     */
+    attribute nsILocalFile profileDirectory;
 
     /**
      * Get the "file" where the cached data can be found.  This is valid for

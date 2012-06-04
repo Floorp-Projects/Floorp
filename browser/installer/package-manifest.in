@@ -442,7 +442,9 @@
 @BINPATH@/components/nsPrompter.js
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
+@BINPATH@/components/AitcComponents.manifest
 @BINPATH@/components/Weave.js
+@BINPATH@/components/Aitc.js
 #endif
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
@@ -517,6 +519,7 @@
 @BINPATH@/@PREF_DIR@/firefox-branding.js
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/@PREF_DIR@/services-sync.js
+@BINPATH@/@PREF_DIR@/services-aitc.js
 #endif
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js

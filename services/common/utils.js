@@ -59,11 +59,23 @@ let CommonUtils = {
 
   /**
    * Encode byte string as base64URL (RFC 4648).
+   *
+   * @param bytes
+   *        (string) Raw byte string to encode.
+   * @param pad
+   *        (bool) Whether to include padding characters (=). Defaults
+   *        to true for historical reasons.
    */
-  encodeBase64URL: function encodeBase64URL(bytes) {
-    return btoa(bytes).replace("+", "-", "g").replace("/", "_", "g");
+  encodeBase64URL: function encodeBase64URL(bytes, pad=true) {
+    let s = btoa(bytes).replace("+", "-", "g").replace("/", "_", "g");
+
+    if (!pad) {
+      s = s.replace("=", "");
+    }
+
+    return s;
   },
-  
+
   /**
    * Create a nsIURI instance from a string.
    */
@@ -92,6 +104,20 @@ let CommonUtils = {
       callback = callback.bind(thisObj);
     }
     Services.tm.currentThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
+  /**
+   * Spin the event loop and return once the next tick is executed.
+   *
+   * This is an evil function and should not be used in production code. It
+   * exists in this module for ease-of-use.
+   */
+  waitForNextTick: function waitForNextTick() {
+    let cb = Async.makeSyncCallback();
+    this.nextTick(cb);
+    Async.waitForSyncCallback(cb);
+
+    return;
   },
 
   /**
@@ -364,6 +390,9 @@ let CommonUtils = {
    *        function, it'll be used as the object to make a json string.
    * @param callback
    *        Function called when the write has been performed. Optional.
+   *        The first argument will be a Components.results error
+   *        constant on error or null if no error was encountered (and
+   *        the file saved successfully).
    */
   jsonSave: function jsonSave(filePath, that, obj, callback) {
     let path = filePath + ".json";
@@ -379,9 +408,62 @@ let CommonUtils = {
     let is = this._utf8Converter.convertToInputStream(out);
     NetUtil.asyncCopy(is, fos, function (result) {
       if (typeof callback == "function") {
-        callback.call(that);
+        let error = (result == Cr.NS_OK) ? null : result;
+        callback.call(that, error);
       }
     });
+  },
+
+  /**
+   * Ensure that the specified value is defined in integer milliseconds since
+   * UNIX epoch.
+   *
+   * This throws an error if the value is not an integer, is negative, or looks
+   * like seconds, not milliseconds.
+   *
+   * If the value is null or 0, no exception is raised.
+   *
+   * @param value
+   *        Value to validate.
+   */
+  ensureMillisecondsTimestamp: function ensureMillisecondsTimestamp(value) {
+    if (!value) {
+      return;
+    }
+
+    if (value < 0) {
+      throw new Error("Timestamp value is negative: " + value);
+    }
+
+    // Catch what looks like seconds, not milliseconds.
+    if (value < 10000000000) {
+      throw new Error("Timestamp appears to be in seconds: " + value);
+    }
+
+    if (Math.floor(value) != Math.ceil(value)) {
+      throw new Error("Timestamp value is not an integer: " + value);
+    }
+  },
+
+  /**
+   * Read bytes from an nsIInputStream into a string.
+   *
+   * @param stream
+   *        (nsIInputStream) Stream to read from.
+   * @param count
+   *        (number) Integer number of bytes to read. If not defined, or
+   *        0, all available input is read.
+   */
+  readBytesFromInputStream: function readBytesFromInputStream(stream, count) {
+    let BinaryInputStream = Components.Constructor(
+        "@mozilla.org/binaryinputstream;1",
+        "nsIBinaryInputStream",
+        "setInputStream");
+    if (!count) {
+      count = stream.available();
+    }
+
+    return new BinaryInputStream(stream).readBytes(count);
   },
 };
 
