@@ -827,9 +827,35 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
         perforate();
     }
     void enterNoPool() {
-        if (canNotPlacePool) {
-            // mark the last instruction, in case a sane dump site does not exist, and
-            // we believe we need to dump the pool in the middle of a no-pool zone.
+        if (!canNotPlacePool && !perforation.assigned()) {
+            // Embarassing mode: The Assembler requests the start of a no pool section
+            // and there have been no valid places that a pool could be dumped thusfar.
+            // If a pool were to fill up before this no-pool section ends, we need to go back
+            // in the stream and enter a pool guard after the fact.  This is feasable, but
+            // for now, it is easier to just allocate a junk instruction, default it to a nop, and
+            // finally, if the pool *is* needed, patch the nop to  apool guard.
+            // What the assembler requests:
+
+            // #request no-pool zone
+            // push pc
+            // blx r12
+            // #end no-pool zone
+
+            // however, if we would need to insert a pool, and there is no perforation point...
+            // so, actual generated code:
+
+            // b next; <= perforation point
+            // next:
+            // #beginning of no pool zone
+            // push pc
+            // blx r12
+
+            BufferOffset branch = this->nextOffset();
+            this->markNextAsBranch();
+            this->putBlob(guardSize, NULL);
+            BufferOffset afterPool = this->nextOffset();
+            Asm::writePoolGuard(branch, this->getInst(branch), afterPool);
+            markGuard();
         }
         canNotPlacePool++;
     }
