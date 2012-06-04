@@ -132,6 +132,8 @@ opus_decoder_ctl
 opus_decoder_get_nb_samples
 opus_decode
 opus_decode_float
+opus_packet_get_nb_frames
+opus_packet_get_samples_per_frame
 #endif
 ShInitialize
 ShFinalize
