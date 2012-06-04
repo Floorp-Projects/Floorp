@@ -1492,16 +1492,6 @@ Assembler::as_FImm64Pool(VFPRegister dest, double value, ARMBuffer::PoolEntry *p
     return m_buffer.insertEntry(4, (uint8*)&php.raw, doublePool, (uint8*)&value, pe);
 }
 // Pool callbacks stuff:
-uint32
-Assembler::patchConstantPoolLoad(uint32 load, int32 index)
-{
-    PoolHintPun php;
-    php.raw = load;
-    php.phd.setIndex(index);
-    return php.raw;
-}
-
-// Pool callbacks stuff:
 void
 Assembler::insertTokenIntoTag(uint32 instSize, uint8 *load_, int32 token)
 {
@@ -1513,7 +1503,7 @@ Assembler::insertTokenIntoTag(uint32 instSize, uint8 *load_, int32 token)
 }
 // patchConstantPoolLoad takes the address of the instruction that wants to be patched, and
 //the address of the start of the constant pool, and figures things out from there.
-void
+bool
 Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
 {
     PoolHintData data = *(PoolHintData*)loadAddr;
@@ -1541,10 +1531,15 @@ Assembler::patchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
         }
         break;
       case PoolHintData::poolVDTR:
+        if ((offset + (8 * data.getIndex()) - 8) < -1023 ||
+            (offset + (8 * data.getIndex()) - 8) > 1023) {
+            return false;
+        }
         dummy->as_vdtr(IsLoad, data.getVFPReg(),
                        VFPAddr(pc, VFPOffImm(offset+8*data.getIndex() - 8)), data.getCond(), instAddr);
         break;
     }
+    return true;
 }
 
 uint32
