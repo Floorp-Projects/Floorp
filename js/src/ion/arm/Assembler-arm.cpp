@@ -2261,6 +2261,23 @@ bool instIsGuard(Instruction *inst, const PoolHeader **ph)
     return *ph != NULL;
 }
 
+bool instIsBNop(Instruction *inst) {
+    // In some special situations, it is necessary to insert a NOP
+    // into the instruction stream that nobody knows about, since nobody should know about
+    // it, make sure it gets skipped when Instruction::next() is called.
+    // this generates a very specific nop, namely a branch to the next instruction.
+    Assembler::Condition c;
+    inst->extractCond(&c);
+    if (c != Assembler::Always)
+        return false;
+    if (!inst->is<InstBImm>())
+        return false;
+    InstBImm *b = inst->as<InstBImm>();
+    BOffImm offset;
+    b->extractImm(&offset);
+    return offset.decode() == 4;
+}
+
 bool instIsArtificialGuard(Instruction *inst, const PoolHeader **ph)
 {
     if (!instIsGuard(inst, ph))
@@ -2269,10 +2286,36 @@ bool instIsArtificialGuard(Instruction *inst, const PoolHeader **ph)
 }
 
 // Cases to be handled:
-// 1) no pools in sight => return this+1
-// 2) this+1 is an artificial guard for a pool => return first instruction after the pool
-// 3) this+1 is a natural guard => return the branch
-// 4) this is a branch, right before a pool => return first instruction after the pool
+// 1) no pools or branches in sight => return this+1
+// 2) branch to next instruction => return this+2, because a nop needed to be inserted into the stream.
+// 3) this+1 is an artificial guard for a pool => return first instruction after the pool
+// 4) this+1 is a natural guard => return the branch
+// 5) this is a branch, right before a pool => return first instruction after the pool
+// in assembly form:
+// 1) add r0, r0, r0 <= this
+//    add r1, r1, r1 <= returned value
+//    add r2, r2, r2
+//
+// 2) add r0, r0, r0 <= this
+//    b foo
+//    foo:
+//    add r2, r2, r2 <= returned value
+//
+// 3) add r0, r0, r0 <= this
+//    b after_pool;
+//    .word 0xffff0002  # bit 15 being 0 indicates that the branch was not requested by the assembler
+//    0xdeadbeef        # the 2 indicates that there is 1 pool entry, and the pool header
+//    add r4, r4, r4 <= returned value
+// 4) add r0, r0, r0 <= this
+//    b after_pool  <= returned value
+//    .word 0xffff8002  # bit 15 being 1 indicates that the branch was requested by the assembler
+//    0xdeadbeef
+//    add r4, r4, r4
+// 5) b after_pool  <= this
+//    .word 0xffff8002  # bit 15 has no bearing on the returned value
+//    0xdeadbeef
+//    add r4, r4, r4  <= returned value
+
 Instruction *
 Instruction::next()
 {
@@ -2284,7 +2327,9 @@ Instruction::next()
     if (instIsGuard(this, &ph)) {
         return ret + ph->size();
     } else if (instIsArtificialGuard(ret, &ph)) {
-            return ret + 1 + ph->size();
+        return ret + 1 + ph->size();
+    } else if (instIsBNop(this)) {
+        return ret + 1;
     }
     return ret;
 }
