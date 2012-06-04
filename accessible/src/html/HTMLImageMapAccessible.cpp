@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLImageMapAccessible.h"
+#include "HTMLImageMapAccessible.h"
 
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
@@ -21,47 +21,47 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageMapAccessible
+// HTMLImageMapAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLImageMapAccessible::
-  nsHTMLImageMapAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+HTMLImageMapAccessible::
+  HTMLImageMapAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   ImageAccessibleWrap(aContent, aDoc)
 {
   mFlags |= eImageMapAccessible;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageMapAccessible: nsISupports
+// HTMLImageMapAccessible: nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLImageMapAccessible, ImageAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLImageMapAccessible, ImageAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageMapAccessible: Accessible public
+// HTMLImageMapAccessible: Accessible public
 
 role
-nsHTMLImageMapAccessible::NativeRole()
+HTMLImageMapAccessible::NativeRole()
 {
   return roles::IMAGE_MAP;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageMapAccessible: HyperLinkAccessible
+// HTMLImageMapAccessible: HyperLinkAccessible
 
 PRUint32
-nsHTMLImageMapAccessible::AnchorCount()
+HTMLImageMapAccessible::AnchorCount()
 {
   return ChildCount();
 }
 
 Accessible*
-nsHTMLImageMapAccessible::AnchorAt(PRUint32 aAnchorIndex)
+HTMLImageMapAccessible::AnchorAt(PRUint32 aAnchorIndex)
 {
   return GetChildAt(aAnchorIndex);
 }
 
 already_AddRefed<nsIURI>
-nsHTMLImageMapAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
+HTMLImageMapAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
   Accessible* area = GetChildAt(aAnchorIndex);
   if (!area)
@@ -72,10 +72,10 @@ nsHTMLImageMapAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageMapAccessible: public
+// HTMLImageMapAccessible: public
 
 void
-nsHTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
+HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
 {
   nsImageFrame* imageFrame = do_QueryFrame(mContent->GetPrimaryFrame());
 
@@ -108,7 +108,7 @@ nsHTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
 
     Accessible* area = mChildren.SafeElementAt(idx);
     if (!area || area->GetContent() != areaContent) {
-      nsRefPtr<Accessible> area = new nsHTMLAreaAccessible(areaContent, mDoc);
+      nsRefPtr<Accessible> area = new HTMLAreaAccessible(areaContent, mDoc);
       if (!mDoc->BindToDocument(area, aria::GetRoleMap(areaContent)))
         break;
 
@@ -135,30 +135,30 @@ nsHTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageMapAccessible: Accessible protected
+// HTMLImageMapAccessible: Accessible protected
 
 void
-nsHTMLImageMapAccessible::CacheChildren()
+HTMLImageMapAccessible::CacheChildren()
 {
   UpdateChildAreas(false);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLAreaAccessible
+// HTMLAreaAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLAreaAccessible::
-  nsHTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+HTMLAreaAccessible::
+  HTMLAreaAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   nsHTMLLinkAccessible(aContent, aDoc)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLAreaAccessible: nsIAccessible
+// HTMLAreaAccessible: nsIAccessible
 
 nsresult
-nsHTMLAreaAccessible::GetNameInternal(nsAString & aName)
+HTMLAreaAccessible::GetNameInternal(nsAString & aName)
 {
   nsresult rv = Accessible::GetNameInternal(aName);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -173,7 +173,7 @@ nsHTMLAreaAccessible::GetNameInternal(nsAString & aName)
 }
 
 void
-nsHTMLAreaAccessible::Description(nsString& aDescription)
+HTMLAreaAccessible::Description(nsString& aDescription)
 {
   aDescription.Truncate();
 
@@ -184,10 +184,10 @@ nsHTMLAreaAccessible::Description(nsString& aDescription)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLAreaAccessible: nsAccessNode public
+// HTMLAreaAccessible: nsAccessNode public
 
 bool
-nsHTMLAreaAccessible::IsPrimaryForNode() const
+HTMLAreaAccessible::IsPrimaryForNode() const
 {
   // Make HTML area DOM element not accessible. HTML image map accessible
   // manages its tree itself.
@@ -195,10 +195,10 @@ nsHTMLAreaAccessible::IsPrimaryForNode() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLAreaAccessible: Accessible public
+// HTMLAreaAccessible: Accessible public
 
 Accessible*
-nsHTMLAreaAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
+HTMLAreaAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    EWhichChildAtPoint aWhichChild)
 {
   // Don't walk into area accessibles.
@@ -206,10 +206,10 @@ nsHTMLAreaAccessible::ChildAtPoint(PRInt32 aX, PRInt32 aY,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLImageMapAccessible: HyperLinkAccessible
+// HTMLImageMapAccessible: HyperLinkAccessible
 
 PRUint32
-nsHTMLAreaAccessible::StartOffset()
+HTMLAreaAccessible::StartOffset()
 {
   // Image map accessible is not hypertext accessible therefore
   // StartOffset/EndOffset implementations of Accessible doesn't work here.
@@ -220,22 +220,22 @@ nsHTMLAreaAccessible::StartOffset()
 }
 
 PRUint32
-nsHTMLAreaAccessible::EndOffset()
+HTMLAreaAccessible::EndOffset()
 {
   return IndexInParent() + 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLAreaAccessible: Accessible protected
+// HTMLAreaAccessible: Accessible protected
 
 void
-nsHTMLAreaAccessible::CacheChildren()
+HTMLAreaAccessible::CacheChildren()
 {
   // No children for aria accessible.
 }
 
 void
-nsHTMLAreaAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame)
+HTMLAreaAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame)
 {
   nsIFrame* frame = GetFrame();
   if (!frame)
