@@ -706,7 +706,7 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *cla
             return false;
     }
 
-    if (!DirectWrapper::nativeCall(cx, wrapper, clasp, native, dstArgs))
+    if (!CallJSNative(cx, native, dstArgs))
         return false;
 
     srcArgs.rval() = dstArgs.rval();
