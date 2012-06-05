@@ -87,10 +87,11 @@ void
 js::TraceCycleDetectionSet(JSTracer *trc, js::ObjectSet &set)
 {
     for (js::ObjectSet::Enum e(set); !e.empty(); e.popFront()) {
-        JSObject *prior = e.front();
-        MarkObjectRoot(trc, const_cast<JSObject **>(&e.front()), "cycle detector table entry");
-        if (prior != e.front())
-            e.rekeyFront(e.front());
+        JSObject *key = e.front();
+        trc->setTracingLocation((void *)&e.front());
+        MarkObjectRoot(trc, &key, "cycle detector table entry");
+        if (key != e.front())
+            e.rekeyFront(key);
     }
 }
 
@@ -100,9 +101,13 @@ JSCompartment::sweepCallsiteClones()
     if (callsiteClones.initialized()) {
         for (CallsiteCloneTable::Enum e(callsiteClones); !e.empty(); e.popFront()) {
             CallsiteCloneKey key = e.front().key();
-            JSFunction *fun = e.front().value();
-            if (!IsScriptMarked(&key.script) || !IsObjectMarked(&fun))
+            if (IsObjectAboutToBeFinalized(&key.original) || IsScriptAboutToBeFinalized(&key.script) ||
+                IsObjectAboutToBeFinalized(e.front().value().unsafeGet()))
+            {
                 e.removeFront();
+            } else if (key != e.front().key()) {
+                e.rekeyFront(key);
+            }
         }
     }
 }
