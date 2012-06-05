@@ -160,9 +160,11 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
 {
   PRUint32 type = aSensorData.sensor();
 
-  double x = aSensorData.values()[0];
-  double y = aSensorData.values()[1];
-  double z = aSensorData.values()[2];
+  const InfallibleTArray<float>& values = aSensorData.values();
+  size_t len = values.Length();
+  double x = len > 0 ? values[0] : 0.0;
+  double y = len > 1 ? values[1] : 0.0;
+  double z = len > 2 ? values[2] : 0.0;
 
   nsCOMArray<nsIDOMWindow> windowListeners;
   for (PRUint32 i = 0; i < mWindowListeners[type]->Length(); i++) {
