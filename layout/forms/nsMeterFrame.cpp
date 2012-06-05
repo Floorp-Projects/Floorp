@@ -245,6 +245,7 @@ nsMeterFrame::AttributeChanged(PRInt32  aNameSpaceID,
     PresContext()->PresShell()->FrameNeedsReflow(barFrame,
                                                  nsIPresShell::eResize,
                                                  NS_FRAME_IS_DIRTY);
+    Invalidate(GetVisualOverflowRectRelativeToSelf());
   }
 
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
@@ -270,8 +271,30 @@ nsMeterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   } else {
     autoSize.width *= 5; // 5em
   }
-  
+
   return autoSize;
+}
+
+nscoord
+nsMeterFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
+{
+  nsRefPtr<nsFontMetrics> fontMet;
+  NS_ENSURE_SUCCESS(
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet)), 0);
+
+  nscoord minWidth = fontMet->Font().size; // 1em
+
+  if (GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_HORIZONTAL) {
+    minWidth *= 5; // 5em
+  }
+
+  return minWidth;
+}
+
+nscoord
+nsMeterFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
+{
+  return GetMinWidth(aRenderingContext);
 }
 
 bool

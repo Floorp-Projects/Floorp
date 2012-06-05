@@ -2,19 +2,18 @@
 <html>
   <link rel='stylesheet' type='text/css' href='style.css'>
   <style>
-    progress { width: 10em; height: 1em; }
-    progress.vertical { -moz-orient: vertical; width: 1em; height: 10em; }
+    meter.vertical { -moz-orient: vertical; }
   </style>
   <body>
     <table>
       <tr>
         <td>foo</td>
-        <td><progress value='0.5'></progress></td>
+        <td><meter value='0.5'></meter></td>
         <td>bar</td>
       </tr>
       <tr>
         <td>foo</td>
-        <td><progress class='vertical' value='0.5'></progress></td>
+        <td><meter class='vertical' value='0.5'></meter></td>
         <td>bar</td>
       </tr>
     </table>
