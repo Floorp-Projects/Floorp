@@ -353,7 +353,7 @@ public:
     void LockScreenOrientation(uint32_t aOrientation);
     void UnlockScreenOrientation();
 
-    void PumpMessageLoop();
+    bool PumpMessageLoop();
 
 protected:
     static AndroidBridge *sBridge;
