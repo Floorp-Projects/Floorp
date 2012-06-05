@@ -88,6 +88,9 @@ class Location(object):
             self._line = self._lexdata[startofline:]
         self._colno = self._lexpos - startofline
 
+        # Our line number seems to point to the start of self._lexdata
+        self._lineno += self._lexdata.count('\n', 0, startofline)
+
     def get(self):
         self.resolve()
         return "%s line %s:%s" % (self._file, self._lineno, self._colno)
@@ -2923,7 +2926,7 @@ class Parser(Tokenizer):
         self.lexer.input(Parser._builtins)
         self._filename = None
 
-        self.parser.parse(lexer=self.lexer)
+        self.parser.parse(lexer=self.lexer,tracking=True)
 
     def _installBuiltins(self, scope):
         assert isinstance(scope, IDLScope)
@@ -2943,7 +2946,7 @@ class Parser(Tokenizer):
         #    print tok
 
         self._filename = filename
-        self._productions.extend(self.parser.parse(lexer=self.lexer))
+        self._productions.extend(self.parser.parse(lexer=self.lexer,tracking=True))
         self._filename = None
 
     def finish(self):
