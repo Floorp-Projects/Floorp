@@ -43,6 +43,10 @@
 	  <EditText android:id="@+id/keyInput"
 	    style="@style/SyncEditItem"
 	    android:hint="@string/sync_input_key" />
+
+	  <TextView android:id="@+id/cred_error"
+	    style="@style/SyncTextError"
+	    android:text="@string/sync_invalidcreds_label" />
 	
 	  <CheckBox android:id="@+id/checkbox_server"
 	    android:layout_width="wrap_content"
@@ -56,6 +60,10 @@
 	    android:visibility="gone"
 	    android:hint="@string/sync_input_server" />
 
+	  <TextView android:id="@+id/server_error"
+	    style="@style/SyncTextError"
+	    android:text="@string/sync_invalidserver_label" />
+
 	</LinearLayout>
   </ScrollView>
 
@@ -65,6 +73,7 @@
     android:orientation="horizontal" >
 
     <Button
+      android:id="@+id/accountCancelButton"
       style="@style/SyncButton"
       android:onClick="cancelClickHandler"
       android:text="@string/sync_button_cancel" />

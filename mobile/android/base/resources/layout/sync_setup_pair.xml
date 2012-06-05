@@ -66,7 +66,7 @@
         android:visibility="invisible" >
 
         <TextView
-          style="@style/SyncTextItem"
+          style="@style/SyncTextError"
           android:layout_margin="10dp"
           android:text="@string/sync_pair_tryagain"
           android:textSize="10dp" />
