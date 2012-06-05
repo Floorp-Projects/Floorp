@@ -27,6 +27,7 @@
 #include "nsNetUtil.h"
 #include "nsPluginNativeWindow.h"
 #include "sampler.h"
+#include "nsObjectLoadingContent.h"
 
 #define MAGIC_REQUEST_CONTEXT 0x01020304
 
@@ -264,13 +265,11 @@ public:
 
 // nsPluginStreamListenerPeer
 
-NS_IMPL_ISUPPORTS8(nsPluginStreamListenerPeer,
+NS_IMPL_ISUPPORTS6(nsPluginStreamListenerPeer,
                    nsIStreamListener,
                    nsIRequestObserver,
                    nsIHttpHeaderVisitor,
                    nsISupportsWeakReference,
-                   nsIPluginStreamInfo,
-                   nsINPAPIPluginStreamInfo,
                    nsIInterfaceRequestor,
                    nsIChannelEventSink)
 
@@ -635,7 +634,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(nsIRequest *request,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginStreamListenerPeer::GetContentType(char** result)
 {
   *result = const_cast<char*>(mContentType.get());
@@ -643,28 +642,28 @@ nsPluginStreamListenerPeer::GetContentType(char** result)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsPluginStreamListenerPeer::IsSeekable(bool* result)
 {
   *result = mSeekable;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginStreamListenerPeer::GetLength(PRUint32* result)
 {
   *result = mLength;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginStreamListenerPeer::GetLastModified(PRUint32* result)
 {
   *result = mModified;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginStreamListenerPeer::GetURL(const char** result)
 {
   *result = mURLSpec.get();
@@ -707,7 +706,7 @@ nsPluginStreamListenerPeer::MakeByteRangeString(NPByteRange* aRangeList, nsACStr
   return;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
 {
   nsCAutoString rangeString;
@@ -770,14 +769,14 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginStreamListenerPeer::GetStreamOffset(PRInt32* result)
 {
   *result = mStreamOffset;
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPluginStreamListenerPeer::SetStreamOffset(PRInt32 value)
 {
   mStreamOffset = value;
@@ -1289,11 +1288,11 @@ nsPluginStreamListenerPeer::GetInterface(const nsIID& aIID, void** result)
 class ChannelRedirectProxyCallback : public nsIAsyncVerifyRedirectCallback
 {
 public:
-  ChannelRedirectProxyCallback(nsINPAPIPluginStreamInfo* listener,
+  ChannelRedirectProxyCallback(nsPluginStreamListenerPeer* listener,
                                nsIAsyncVerifyRedirectCallback* parent,
                                nsIChannel* oldChannel,
                                nsIChannel* newChannel)
-    : mWeakListener(do_GetWeakReference(listener))
+    : mWeakListener(do_GetWeakReference(static_cast<nsIStreamListener*>(listener)))
     , mParent(parent)
     , mOldChannel(oldChannel)
     , mNewChannel(newChannel)
@@ -1308,9 +1307,9 @@ public:
   NS_IMETHODIMP OnRedirectVerifyCallback(nsresult result)
   {
     if (NS_SUCCEEDED(result)) {
-      nsCOMPtr<nsINPAPIPluginStreamInfo> listener = do_QueryReferent(mWeakListener);
+      nsCOMPtr<nsIStreamListener> listener = do_QueryReferent(mWeakListener);
       if (listener)
-        listener->ReplaceRequest(mOldChannel, mNewChannel);
+        static_cast<nsPluginStreamListenerPeer*>(listener.get())->ReplaceRequest(mOldChannel, mNewChannel);
     }
     return mParent->OnRedirectVerifyCallback(result);
   }
