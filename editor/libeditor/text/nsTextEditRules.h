@@ -91,7 +91,7 @@ protected:
 
   // nsTextEditRules implementation methods
   nsresult WillInsertText(  nsEditor::OperationID aAction,
-                            nsISelection *aSelection, 
+                            nsTypedSelection* aSelection,
                             bool            *aCancel,
                             bool            *aHandled,
                             const nsAString *inString,
@@ -100,14 +100,14 @@ protected:
   nsresult DidInsertText(nsISelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
 
-  nsresult WillInsertBreak(nsISelection *aSelection, bool *aCancel,
+  nsresult WillInsertBreak(nsTypedSelection* aSelection, bool* aCancel,
                            bool *aHandled, PRInt32 aMaxLength);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
 
   nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
   nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillDeleteSelection(nsISelection *aSelection, 
+  nsresult WillDeleteSelection(nsTypedSelection* aSelection,
                                nsIEditor::EDirection aCollapsedAction, 
                                bool *aCancel,
                                bool *aHandled);
@@ -156,7 +156,7 @@ protected:
 
   /** returns a truncated insertion string if insertion would place us
       over aMaxLength */
-  nsresult TruncateInsertionIfNeeded(nsISelection             *aSelection, 
+  nsresult TruncateInsertionIfNeeded(nsTypedSelection*         aSelection,
                                      const nsAString          *aInString,
                                      nsAString                *aOutString,
                                      PRInt32                   aMaxLength,
