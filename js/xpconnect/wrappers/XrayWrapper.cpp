@@ -837,13 +837,22 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
     desc->obj = NULL;
 
     unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
-    JSObject *expando = GetExpandoObject(holder);
+    JSObject *target = GetWrappedNativeObjectFromHolder(holder);
+    JSObject *expando = LookupExpandoObject(target, wrapper);
 
-    // Check for expando properties first.
-    if (expando && !JS_GetPropertyDescriptorById(cx, expando, id, flags, desc)) {
-        return false;
+    // Check for expando properties first. Note that the expando object lives
+    // in the target compartment.
+    if (expando) {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, expando) ||
+            !JS_GetPropertyDescriptorById(cx, expando, id, flags, desc))
+        {
+            return false;
+        }
     }
     if (desc->obj) {
+        if (!JS_WrapPropertyDescriptor(cx, desc))
+            return false;
         // Pretend the property lives on the wrapper.
         desc->obj = wrapper;
         return true;
@@ -901,24 +910,42 @@ XPCWrappedNativeXrayTraits::defineProperty(JSContext *cx, JSObject *wrapper, jsi
                                      desc->attrs);
     }
 
-    JSObject *expando = EnsureExpandoObject(cx, holder);
-    if (!expando)
+    // We're placing an expando. The expando objects live in the target
+    // compartment, so we need to enter it.
+    JSObject *target = GetWrappedNativeObjectFromHolder(holder);
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, target))
         return false;
 
-    return JS_DefinePropertyById(cx, expando, id, desc->value, desc->getter, desc->setter,
-                                 desc->attrs);
+    // Grab the relevant expando object.
+    JSObject *expandoObject = EnsureExpandoObject(cx, wrapper, target);
+    if (!expandoObject)
+        return false;
+
+    // Wrap the property descriptor for the target compartment.
+    PropertyDescriptor wrappedDesc = *desc;
+    if (!JS_WrapPropertyDescriptor(cx, &wrappedDesc))
+        return false;
+
+    return JS_DefinePropertyById(cx, expandoObject, id, wrappedDesc.value,
+                                 wrappedDesc.getter, wrappedDesc.setter,
+                                 wrappedDesc.attrs);
 }
 
 bool
 XPCWrappedNativeXrayTraits::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
     JSObject *holder = getHolderObject(wrapper);
-    JSObject *expando = GetExpandoObject(holder);
+    JSObject *target = GetWrappedNativeObjectFromHolder(holder);
+    JSObject *expando = LookupExpandoObject(target, wrapper);
+    JSAutoEnterCompartment ac;
     JSBool b = true;
     jsval v;
     if (expando &&
-        (!JS_DeletePropertyById2(cx, expando, id, &v) ||
-         !JS_ValueToBoolean(cx, v, &b))) {
+        (!ac.enter(cx, expando) ||
+         !JS_DeletePropertyById2(cx, expando, id, &v) ||
+         !JS_ValueToBoolean(cx, v, &b)))
+    {
         return false;
     }
 
@@ -932,9 +959,19 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, uns
 {
     JSObject *holder = getHolderObject(wrapper);
 
-    // Enumerate expando properties first.
-    JSObject *expando = GetExpandoObject(holder);
-    if (expando && !js::GetPropertyNames(cx, expando, flags, &props))
+    // Enumerate expando properties first. Note that the expando object lives
+    // in the target compartment.
+    JSObject *target = GetWrappedNativeObjectFromHolder(holder);
+    JSObject *expando = LookupExpandoObject(target, wrapper);
+    if (expando) {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, expando) ||
+            !js::GetPropertyNames(cx, expando, flags, &props))
+        {
+            return false;
+        }
+    }
+    if (!JS_WrapAutoIdVector(cx, props))
         return false;
 
     // Force all native properties to be materialized onto the wrapped native.
