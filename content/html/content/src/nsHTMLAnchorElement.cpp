@@ -110,6 +110,10 @@ public:
   virtual void OnDNSPrefetchDeferred();
   virtual void OnDNSPrefetchRequested();
   virtual bool HasDeferredDNSPrefetchRequest();
+
+protected:
+  virtual void GetItemValueText(nsAString& text);
+  virtual void SetItemValueText(const nsAString& text);
 };
 
 // Indicates that a DNS Prefetch has been requested from this Anchor elem
@@ -165,6 +169,18 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Shape, shape)
 NS_IMPL_INT_ATTR(nsHTMLAnchorElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
+
+void
+nsHTMLAnchorElement::GetItemValueText(nsAString& aValue)
+{
+  GetHref(aValue);
+}
+
+void
+nsHTMLAnchorElement::SetItemValueText(const nsAString& aValue)
+{
+  SetHref(aValue);
+}
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::GetDraggable(bool* aDraggable)

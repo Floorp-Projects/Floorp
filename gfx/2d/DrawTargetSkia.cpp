@@ -630,7 +630,17 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
   SkIRect source = IntRectToSkIRect(aSourceRect);
   mCanvas->clipRect(dest, SkRegion::kReplace_Op);
   SkPaint paint;
-  paint.setXfermodeMode(GfxOpToSkiaOp(OP_SOURCE));
+
+  if (mBitmap.config() == SkBitmap::kRGB_565_Config &&
+      mCanvas->getDevice()->config() == SkBitmap::kRGB_565_Config) {
+    // Set the xfermode to SOURCE_OVER to workaround
+    // http://code.google.com/p/skia/issues/detail?id=628
+    // RGB565 is opaque so they're equivalent anyway
+    paint.setXfermodeMode(SkXfermode::kSrcOver_Mode);
+  } else {
+    paint.setXfermodeMode(SkXfermode::kSrc_Mode);
+  }
+
   mCanvas->drawBitmapRect(bitmap, &source, dest, &paint);
   mCanvas->restore();
 }

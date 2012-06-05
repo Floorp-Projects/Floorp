@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDOMElement.idl"
+#include "nsIVariant.idl"
 
 interface nsIDOMDOMStringMap;
 interface nsIDOMHTMLMenuElement;
+interface nsIDOMHTMLPropertiesCollection;
 
 /**
  * The nsIDOMHTMLElement interface is the primary [X]HTML element
@@ -19,7 +21,7 @@ interface nsIDOMHTMLMenuElement;
  * with changes from the work-in-progress WHATWG HTML specification:
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
-[scriptable, uuid(5C8B21BC-EF6E-4599-A26F-FACC05B4ADBE)]
+[scriptable, uuid(9a677a5b-e6f7-4e2e-9ef9-22c2ac9967b3)]
 interface nsIDOMHTMLElement : nsIDOMElement
 {
   // metadata attributes
@@ -29,6 +31,16 @@ interface nsIDOMHTMLElement : nsIDOMElement
            attribute DOMString        dir;
            attribute DOMString        className;
   readonly attribute nsIDOMDOMStringMap dataset;
+
+           attribute boolean                        itemScope;
+           attribute nsIVariant                     itemType;
+           attribute DOMString                      itemId;
+  readonly attribute nsIDOMHTMLPropertiesCollection properties; 
+  // The following attributes are really nsDOMSettableTokenList, which has
+  // PutForwards, so we express them as nsIVariants to deal with this.
+           attribute nsIVariant                     itemValue;
+           attribute nsIVariant                     itemProp;
+           attribute nsIVariant                     itemRef;
 
   // user interaction
   /**

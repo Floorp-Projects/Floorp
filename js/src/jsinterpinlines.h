@@ -421,118 +421,11 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, uns
     return true;
 }
 
-inline bool
-FunctionNeedsPrologue(JSContext *cx, JSFunction *fun)
-{
-    /* Heavyweight functions need call objects created. */
-    if (fun->isHeavyweight())
-        return true;
-
-    /* Outer and inner functions need to preserve nesting invariants. */
-    if (cx->typeInferenceEnabled() && fun->script()->nesting())
-        return true;
-
-    return false;
-}
-
-inline bool
-ScriptPrologue(JSContext *cx, StackFrame *fp, bool newType)
-{
-    JS_ASSERT_IF(fp->isNonEvalFunctionFrame() && fp->fun()->isHeavyweight(), fp->hasCallObj());
-
-    if (fp->isConstructing()) {
-        JSObject *obj = js_CreateThisForFunction(cx, RootedObject(cx, &fp->callee()), newType);
-        if (!obj)
-            return false;
-        fp->functionThis().setObject(*obj);
-    }
-
-    Probes::enterJSFun(cx, fp->maybeFun(), fp->script());
-
-    return true;
-}
-
-inline bool
-ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
-{
-    Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
-
-    /*
-     * If inline-constructing, replace primitive rval with the new object
-     * passed in via |this|, and instrument this constructor invocation.
-     */
-    if (fp->isConstructing() && ok) {
-        if (fp->returnValue().isPrimitive())
-            fp->setReturnValue(ObjectValue(fp->constructorThis()));
-    }
-
-    return ok;
-}
-
-inline bool
-ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp, bool newType)
-{
-    if (!fp->isGeneratorFrame())
-        return ScriptPrologue(cx, fp, newType);
-    return true;
-}
-
-inline bool
-ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok)
-{
-    if (!fp->isYielding())
-        return ScriptEpilogue(cx, fp, ok);
-    return ok;
-}
-
 inline void
 InterpreterFrames::enableInterruptsIfRunning(JSScript *script)
 {
     if (script == regs->fp()->script())
         enabler.enableInterrupts();
-}
-
-inline void
-AssertValidEvalFrameScopeChainAtExit(StackFrame *fp)
-{
-#ifdef DEBUG
-    JS_ASSERT(fp->isEvalFrame());
-
-    JS_ASSERT(!fp->hasBlockChain());
-    JSObject &scope = *fp->scopeChain();
-
-    if (fp->isStrictEvalFrame())
-        JS_ASSERT(scope.asCall().maybeStackFrame() == fp);
-    else if (fp->isDebuggerFrame())
-        JS_ASSERT(!scope.isScope());
-    else if (fp->isDirectEvalFrame())
-        JS_ASSERT(scope == *fp->prev()->scopeChain());
-    else
-        JS_ASSERT(scope.isGlobal());
-#endif
-}
-
-inline void
-AssertValidFunctionScopeChainAtExit(StackFrame *fp)
-{
-#ifdef DEBUG
-    JS_ASSERT(fp->isFunctionFrame());
-    if (fp->isGeneratorFrame() || fp->isYielding())
-        return;
-
-    if (fp->isEvalFrame()) {
-        AssertValidEvalFrameScopeChainAtExit(fp);
-        return;
-    }
-
-    JS_ASSERT(!fp->hasBlockChain());
-    JSObject &scope = *fp->scopeChain();
-
-    if (fp->fun()->isHeavyweight() && fp->hasCallObj())
-        JS_ASSERT(scope.asCall().maybeStackFrame() == fp);
-    else if (scope.isCall() || scope.isBlock())
-        JS_ASSERT(scope.asScope().maybeStackFrame() != fp);
-#endif
 }
 
 static JS_ALWAYS_INLINE bool
@@ -722,7 +615,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
                         break;
                 }
             } else if (obj->isArguments()) {
-                if (obj->asArguments().getElement(index, res))
+                if (obj->asArguments().maybeGetElement(index, res))
                     break;
             }
             if (!obj->getElement(cx, index, res))
@@ -888,7 +781,7 @@ GuardFunApplySpeculation(JSContext *cx, FrameRegs &regs)
         if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
             if (!JSScript::applySpeculationFailed(cx, regs.fp()->script()))
                 return false;
-            args[1] = ObjectValue(regs.fp()->argsObj());
+            regs.sp[-1] = ObjectValue(regs.fp()->argsObj());
         }
     }
     return true;

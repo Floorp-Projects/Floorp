@@ -611,8 +611,7 @@ nsTextEditRules::WillInsertText(nsEditor::OperationID aAction,
   if (IsPasswordEditor())
   {
     if (aAction == nsEditor::kOpInsertIMEText) {
-      res = RemoveIMETextFromPWBuf(start, outString);
-      NS_ENSURE_SUCCESS(res, res);
+      RemoveIMETextFromPWBuf(start, outString);
     }
   }
 
@@ -657,8 +656,7 @@ nsTextEditRules::WillInsertText(nsEditor::OperationID aAction,
     } 
     else 
     {
-      res = FillBufWithPWChars(outString, outString->Length());
-      NS_ENSURE_SUCCESS(res, res);
+      FillBufWithPWChars(outString, outString->Length());
     }
   }
 
@@ -1178,9 +1176,7 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
     res = mEditor->GetTextSelectionOffsets(aSelection, start, end);
     if (NS_FAILED(res)) { return res; }
 
-    PRInt32 oldCompStrLength;
-    res = mEditor->GetIMEBufferLength(&oldCompStrLength);
-    if (NS_FAILED(res)) { return res; }
+    PRInt32 oldCompStrLength = mEditor->GetIMEBufferLength();
 
     const PRInt32 selectionLength = end - start;
     const PRInt32 resultingDocLength = docLength - selectionLength - oldCompStrLength;
@@ -1206,19 +1202,16 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
   return res;
 }
 
-nsresult
+void
 nsTextEditRules::ResetIMETextPWBuf()
 {
   mPasswordIMEText.Truncate();
-  return NS_OK;
 }
 
-nsresult
+void
 nsTextEditRules::RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString)
 {
-  if (!aIMEString) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  MOZ_ASSERT(aIMEString);
 
   // initialize PasswordIME
   if (mPasswordIMEText.IsEmpty()) {
@@ -1231,7 +1224,6 @@ nsTextEditRules::RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString)
   }
 
   mPasswordIMEText.Assign(*aIMEString);
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsTextEditRules::Notify(class nsITimer *) {
@@ -1271,10 +1263,10 @@ nsresult nsTextEditRules::HideLastPWInput() {
 }
 
 // static
-nsresult
+void
 nsTextEditRules::FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength)
 {
-  if (!aOutString) {return NS_ERROR_NULL_POINTER;}
+  MOZ_ASSERT(aOutString);
 
   // change the output to the platform password character
   PRUnichar passwordChar = LookAndFeel::GetPasswordCharacter();
@@ -1283,8 +1275,6 @@ nsTextEditRules::FillBufWithPWChars(nsAString *aOutString, PRInt32 aLength)
   aOutString->Truncate();
   for (i=0; i < aLength; i++)
     aOutString->Append(passwordChar);
-
-  return NS_OK;
 }
 
 

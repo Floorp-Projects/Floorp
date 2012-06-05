@@ -258,7 +258,7 @@ public:
     *
     * @param aIsCSSPrefChecked [IN] the new boolean state for the pref
     */
-  nsresult    SetCSSEnabled(bool aIsCSSPrefChecked);
+  void        SetCSSEnabled(bool aIsCSSPrefChecked);
 
   /** retrieves the mIsCSSPrefChecked private member, true if the css pref is checked,
     * false if it is not

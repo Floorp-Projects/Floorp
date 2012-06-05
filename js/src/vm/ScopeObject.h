@@ -21,24 +21,26 @@ namespace js {
  * given lexically-enclosing variable. A scope coordinate has two dimensions:
  *  - hops: the number of scope objects on the scope chain to skip
  *  - binding: which binding on the scope object
- *
- * XXX: Until bug 659577 lands, this is all for show and all ScopeCoordinates
- * have hops fixed at 0 and 'binding' is just the js::Bindings binding for args
- * and vars and the stack depth for let bindings. Thus, aliased-var access
- * touches the StackFrame like it always did and 'binding' must be first
- * converted to either an arg or local slot (using Bindings::bindingToLocal or
- * bindingToArg). With bug 659577, ScopeObject will have a 'var' function that
- * takes a ScopeCoordinate.
+ * Additionally (as described in jsopcode.tbl) there is a 'block' index, but
+ * this is only needed for decompilation/inference so it is not included in the
+ * main ScopeCoordinate struct: use ScopeCoordinate{BlockChain,Atom} instead.
  */
 struct ScopeCoordinate
 {
     uint16_t hops;
-    uint16_t binding;
+    uint16_t slot;
+
     inline ScopeCoordinate(jsbytecode *pc);
+    inline ScopeCoordinate() {}
 };
 
-inline JSAtom *
-ScopeCoordinateAtom(JSScript *script, jsbytecode *pc);
+/* Return the static block chain (or null) accessed by *pc. */
+extern StaticBlockObject *
+ScopeCoordinateBlockChain(JSScript *script, jsbytecode *pc);
+
+/* Return the name being accessed by the given ALIASEDVAR op. */
+extern PropertyName *
+ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc);
 
 /*****************************************************************************/
 
@@ -82,13 +84,13 @@ ScopeCoordinateAtom(JSScript *script, jsbytecode *pc);
 
 class ScopeObject : public JSObject
 {
-    /* Use maybeStackFrame() instead. */
-    void *getPrivate() const;
-
   protected:
     static const uint32_t SCOPE_CHAIN_SLOT = 0;
 
   public:
+    /* Number of reserved slots for both CallObject and BlockObject. */
+    static const uint32_t CALL_BLOCK_RESERVED_SLOTS = 2;
+
     /*
      * Since every scope chain terminates with a global object and GlobalObject
      * does not derive ScopeObject (it has a completely different layout), the
@@ -98,12 +100,13 @@ class ScopeObject : public JSObject
     inline bool setEnclosingScope(JSContext *cx, HandleObject obj);
 
     /*
-     * The stack frame for this scope object, if the frame is still active.
-     * Note: these members may not be called for a StaticBlockObject or
-     * WithObject.
+     * Get or set an aliased variable contained in this scope. Unaliased
+     * variables should instead access the StackFrame. Aliased variable access
+     * is primarily made through JOF_SCOPECOORD ops which is why these members
+     * take a ScopeCoordinate instead of just the slot index.
      */
-    inline StackFrame *maybeStackFrame() const;
-    inline void setStackFrame(StackFrame *frame);
+    inline const Value &aliasedVar(ScopeCoordinate sc);
+    inline void setAliasedVar(ScopeCoordinate sc, const Value &v);
 
     /* For jit access. */
     static inline size_t offsetOfEnclosingScope();
@@ -114,10 +117,10 @@ class CallObject : public ScopeObject
     static const uint32_t CALLEE_SLOT = 1;
 
     static CallObject *
-    create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleObject callee);
+    create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee);
 
   public:
-    static const uint32_t RESERVED_SLOTS = 3;
+    static const uint32_t RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
 
     static CallObject *createForFunction(JSContext *cx, StackFrame *fp);
     static CallObject *createForStrictEval(JSContext *cx, StackFrame *fp);
@@ -134,14 +137,12 @@ class CallObject : public ScopeObject
     inline void setCallee(JSObject *callee);
 
     /* Returns the formal argument at the given index. */
-    inline const Value &arg(unsigned i) const;
-    inline void setArg(unsigned i, const Value &v);
-    inline void initArgUnchecked(unsigned i, const Value &v);
+    inline const Value &arg(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
+    inline void setArg(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
     /* Returns the variable at the given index. */
-    inline const Value &var(unsigned i) const;
-    inline void setVar(unsigned i, const Value &v);
-    inline void initVarUnchecked(unsigned i, const Value &v);
+    inline const Value &var(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
+    inline void setVar(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
     /*
      * Get the actual arrays of arguments and variables. Only call if type
@@ -151,15 +152,11 @@ class CallObject : public ScopeObject
     inline HeapSlotArray argArray();
     inline HeapSlotArray varArray();
 
-    inline void copyValues(unsigned nargs, Value *argv, unsigned nvars, Value *slots);
-
-    static JSBool getArgOp(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-    static JSBool getVarOp(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
     static JSBool setArgOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
     static JSBool setVarOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
 
-    /* Return whether this environment contains 'name' and, if so, its value. */
-    bool containsVarOrArg(PropertyName *name, Value *vp, JSContext *cx);
+    /* Copy in all the unaliased formals and locals. */
+    void copyUnaliasedValues(StackFrame *fp);
 };
 
 class DeclEnvObject : public ScopeObject
@@ -184,10 +181,6 @@ class NestedScopeObject : public ScopeObject
 
 class WithObject : public NestedScopeObject
 {
-    /* These ScopeObject operations are not valid on a with object. */
-    js::StackFrame *maybeStackFrame() const;
-    void setStackFrame(StackFrame *frame);
-
     static const unsigned THIS_SLOT = 2;
 
     /* Use WithObject::object() instead. */
@@ -195,7 +188,11 @@ class WithObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 3;
+#ifdef JS_THREADSAFE
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
+#else
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
+#endif
 
     static WithObject *
     create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth);
@@ -210,23 +207,31 @@ class WithObject : public NestedScopeObject
 class BlockObject : public NestedScopeObject
 {
   public:
-    static const unsigned RESERVED_SLOTS = 2;
+    static const unsigned RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
+#ifdef JS_THREADSAFE
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
+#else
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
+#endif
 
     /* Return the number of variables associated with this block. */
     inline uint32_t slotCount() const;
 
+    /*
+     * Return the local corresponding to the ith binding where i is in the
+     * range [0, slotCount()) and the return local index is in the range
+     * [script->nfixed, script->nfixed + script->nslots).
+     */
+    unsigned slotToFrameLocal(JSScript *script, unsigned i);
+
   protected:
     /* Blocks contain an object slot for each slot i: 0 <= i < slotCount. */
-    inline HeapSlot &slotValue(unsigned i);
+    inline const Value &slotValue(unsigned i);
+    inline void setSlotValue(unsigned i, const Value &v);
 };
 
 class StaticBlockObject : public BlockObject
 {
-    /* These ScopeObject operations are not valid on a static block object. */
-    StackFrame *maybeStackFrame() const;
-    void setStackFrame(StackFrame *frame);
-
   public:
     static StaticBlockObject *create(JSContext *cx);
 
@@ -254,7 +259,7 @@ class StaticBlockObject : public BlockObject
      * A static block object is cloned (when entering the block) iff some
      * variable of the block isAliased.
      */
-    bool needsClone() const;
+    bool needsClone();
 
     const Shape *addVar(JSContext *cx, jsid id, int index, bool *redeclared);
 };
@@ -268,17 +273,12 @@ class ClonedBlockObject : public BlockObject
     /* The static block from which this block was cloned. */
     StaticBlockObject &staticBlock() const;
 
-    /*
-     * When this block's stack slots are about to be popped, 'put' must be
-     * called to copy the slot values into this block's object slots.
-     */
-    void put(StackFrame *fp);
-
     /* Assuming 'put' has been called, return the value of the ith let var. */
-    const Value &closedSlot(unsigned i);
+    const Value &var(unsigned i, MaybeCheckAliasing = CHECK_ALIASING);
+    void setVar(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
-    /* Return whether this environment contains 'name' and, if so, its value. */
-    bool containsVar(PropertyName *name, Value *vp, JSContext *cx);
+    /* Copy in all the unaliased formals and locals. */
+    void copyUnaliasedValues(StackFrame *fp);
 };
 
 template<XDRMode mode>
@@ -414,6 +414,8 @@ class DebugScopeObject : public JSObject
 /* Maintains runtime-wide debug scope bookkeeping information. */
 class DebugScopes
 {
+    JSRuntime *rt;
+
     /* The map from (non-debug) scopes to debug scopes. */
     typedef WeakMap<HeapPtrObject, HeapPtrObject> ObjectWeakMap;
     ObjectWeakMap proxiedScopes;
@@ -422,8 +424,24 @@ class DebugScopes
      * The map from live frames which have optimized-away scopes to the
      * corresponding debug scopes.
      */
-    typedef HashMap<ScopeIter, DebugScopeObject *, ScopeIter, RuntimeAllocPolicy> MissingScopeMap;
+    typedef HashMap<ScopeIter,
+                    ReadBarriered<DebugScopeObject>,
+                    ScopeIter,
+                    RuntimeAllocPolicy> MissingScopeMap;
     MissingScopeMap missingScopes;
+
+    /*
+     * The map from scope objects of live frames to the live frame. This map
+     * updated lazily whenever the debugger needs the information. In between
+     * two lazy updates, liveScopes becomes incomplete (but not invalid, onPop*
+     * removes scopes as they are popped). Thus, two consecutive debugger lazy
+     * updates of liveScopes need only fill in the new scopes.
+     */
+    typedef HashMap<ScopeObject *,
+                    StackFrame *,
+                    DefaultHasher<ScopeObject *>,
+                    RuntimeAllocPolicy> LiveScopeMap;
+    LiveScopeMap liveScopes;
 
   public:
     DebugScopes(JSRuntime *rt);
@@ -439,12 +457,17 @@ class DebugScopes
     DebugScopeObject *hasDebugScope(JSContext *cx, ScopeIter si) const;
     bool addDebugScope(JSContext *cx, ScopeIter si, DebugScopeObject &debugScope);
 
+    bool updateLiveScopes(JSContext *cx);
+    StackFrame *hasLiveFrame(ScopeObject &scope);
+
     /*
      * In debug-mode, these must be called whenever exiting a call/block or
      * when activating/yielding a generator.
      */
     void onPopCall(StackFrame *fp);
     void onPopBlock(JSContext *cx, StackFrame *fp);
+    void onPopWith(StackFrame *fp);
+    void onPopStrictEvalScope(StackFrame *fp);
     void onGeneratorFrameChange(StackFrame *from, StackFrame *to);
     void onCompartmentLeaveDebugMode(JSCompartment *c);
 };

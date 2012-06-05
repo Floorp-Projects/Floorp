@@ -136,9 +136,7 @@ struct SharedContext {
     StmtInfo        *topStmt;       /* top of statement info stack */
     StmtInfo        *topScopeStmt;  /* top lexical scope statement */
     Rooted<StaticBlockObject *> blockChain;
-                                    /* compile time block scope chain (NB: one
-                                       deeper than the topScopeStmt/downScope
-                                       chain when in head of let block/expr) */
+                                    /* compile time block scope chain */
 
   private:
     const RootedFunction fun_;      /* function to store argument and variable
@@ -189,7 +187,7 @@ struct SharedContext {
 
 #undef INFUNC
 
-    unsigned argumentsLocalSlot() const;
+    unsigned argumentsLocal() const;
 
     bool inFunction() const { return !!fun_; }
 

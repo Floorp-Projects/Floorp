@@ -31,6 +31,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "webappsUI",
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
                                   "resource:///modules/PageThumbs.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PdfJs",
+                                  "resource://pdf.js/PdfJs.jsm");
+
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
@@ -328,6 +331,8 @@ BrowserGlue.prototype = {
     webappsUI.init();
 
     PageThumbs.init();
+
+    PdfJs.init();
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },

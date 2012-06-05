@@ -262,65 +262,28 @@ ForOf(JSContext *cx, const Value &iterable, Op op)
 /*
  * Generator state codes.
  */
-typedef enum JSGeneratorState {
+enum JSGeneratorState
+{
     JSGEN_NEWBORN,  /* not yet started */
     JSGEN_OPEN,     /* started by a .next() or .send(undefined) call */
     JSGEN_RUNNING,  /* currently executing via .next(), etc., call */
     JSGEN_CLOSING,  /* close method is doing asynchronous return */
     JSGEN_CLOSED    /* closed, cannot be started or closed again */
-} JSGeneratorState;
+};
 
-struct JSGenerator {
+struct JSGenerator
+{
     js::HeapPtrObject   obj;
     JSGeneratorState    state;
     js::FrameRegs       regs;
     JSObject            *enumerators;
-    js::StackFrame      *floating;
-    js::HeapValue       floatingStack[1];
-
-    js::StackFrame *floatingFrame() {
-        return floating;
-    }
-
-    js::StackFrame *liveFrame() {
-        JS_ASSERT((state == JSGEN_RUNNING || state == JSGEN_CLOSING) ==
-                  (regs.fp() != floatingFrame()));
-        return regs.fp();
-    }
+    JSGenerator         *prevGenerator;
+    js::StackFrame      *fp;
+    js::HeapValue       stackSnapshot[1];
 };
 
 extern JSObject *
 js_NewGenerator(JSContext *cx);
-
-/*
- * Generator stack frames do not have stable pointers since they get copied to
- * and from the generator object and the stack (see SendToGenerator). This is a
- * problem for Block and With objects, which need to store a pointer to the
- * enclosing stack frame. The solution is for Block and With objects to store
- * a pointer to the "floating" stack frame stored in the generator object,
- * since it is stable, and maintain, in the generator object, a pointer to the
- * "live" stack frame (either a copy on the stack or the floating frame). Thus,
- * Block and With objects must "normalize" to and from the floating/live frames
- * in the case of generators using the following functions.
- */
-inline js::StackFrame *
-js_FloatingFrameIfGenerator(JSContext *cx, js::StackFrame *fp)
-{
-    if (JS_UNLIKELY(fp->isGeneratorFrame()))
-        return cx->generatorFor(fp)->floatingFrame();
-    return fp;
-}
-
-/* Given a floating frame, given the JSGenerator containing it. */
-extern JSGenerator *
-js_FloatingFrameToGenerator(js::StackFrame *fp);
-
-inline js::StackFrame *
-js_LiveFrameIfGenerator(js::StackFrame *fp)
-{
-    return fp->isGeneratorFrame() ? js_FloatingFrameToGenerator(fp)->liveFrame() : fp;
-}
-
 #endif
 
 extern JSObject *

@@ -6,7 +6,7 @@
 #ifndef mozilla_a11y_TextLeafAccessible_h__
 #define mozilla_a11y_TextLeafAccessible_h__
 
-#include "nsBaseWidgetAccessible.h"
+#include "BaseAccessibles.h"
 
 namespace mozilla {
 namespace a11y {
@@ -14,7 +14,7 @@ namespace a11y {
 /**
  * Generic class used for text nodes.
  */
-class TextLeafAccessible : public nsLinkableAccessible
+class TextLeafAccessible : public LinkableAccessible
 {
 public:
   TextLeafAccessible(nsIContent* aContent, DocAccessible* aDoc);

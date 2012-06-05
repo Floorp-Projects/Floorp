@@ -13,7 +13,7 @@
  */
 interface nsISelection;
 
-[scriptable, uuid(1B93973F-28CC-4F33-8E7B-B89C63AA9200)]
+[scriptable, uuid(ecae54c6-2ab9-4167-b0ef-61960aadbb68)]
 interface nsIDOMHTMLDocument : nsIDOMDocument
 {
   readonly attribute DOMString            URL;
@@ -34,6 +34,7 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
   readonly attribute nsIDOMHTMLCollection forms;
   readonly attribute nsIDOMHTMLCollection scripts;
   nsIDOMNodeList            getElementsByName(in DOMString elementName);
+  nsIDOMNodeList  getItems([optional] in DOMString types);
 
   // If aContentType is not something supported by nsHTMLDocument and
   // the HTML content sink, trying to write to the document will
