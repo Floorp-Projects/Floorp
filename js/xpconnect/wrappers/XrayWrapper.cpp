@@ -42,6 +42,169 @@ JSClass HolderClass = {
     JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub
 };
 
+/*
+ * Xray expando handling.
+ *
+ * We hang expandos for Xray wrappers off a reserved slot on the target object
+ * so that same-origin compartments can share expandos for a given object. We
+ * have a linked list of expando objects, one per origin. The properties on these
+ * objects are generally wrappers pointing back to the compartment that applied
+ * them.
+ *
+ * The expando objects should _never_ be exposed to script. The fact that they
+ * live in the target compartment is a detail of the implementation, and does
+ * not imply that code in the target compartment should be allowed to inspect
+ * them. They are private to the origin that placed them.
+ */
+
+enum ExpandoSlots {
+    JSSLOT_EXPANDO_NEXT = 0,
+    JSSLOT_EXPANDO_ORIGIN,
+    JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL,
+    JSSLOT_EXPANDO_COUNT
+};
+
+static nsIPrincipal*
+ObjectPrincipal(JSObject *obj)
+{
+    return GetCompartmentPrincipal(js::GetObjectCompartment(obj));
+}
+
+static nsIPrincipal*
+GetExpandoObjectPrincipal(JSObject *expandoObject)
+{
+    JS::Value v = JS_GetReservedSlot(expandoObject, JSSLOT_EXPANDO_ORIGIN);
+    return static_cast<nsIPrincipal*>(v.toPrivate());
+}
+
+static void
+ExpandoObjectFinalize(JSFreeOp *fop, JSObject *obj)
+{
+    // Release the principal.
+    nsIPrincipal *principal = GetExpandoObjectPrincipal(obj);
+    NS_RELEASE(principal);
+}
+
+JSClass ExpandoObjectClass = {
+    "XrayExpandoObject",
+    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT),
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, ExpandoObjectFinalize
+};
+
+bool
+ExpandoObjectMatchesConsumer(JSObject *expandoObject,
+                             nsIPrincipal *consumerOrigin,
+                             JSObject *exclusiveGlobal)
+{
+    // First, compare the principals.
+    nsIPrincipal *o = GetExpandoObjectPrincipal(expandoObject);
+    bool equal;
+    // Note that it's very important here to ignore document.domain. We
+    // pull the principal for the expando object off of the first consumer
+    // for a given origin, and freely share the expandos amongst multiple
+    // same-origin consumers afterwards. However, this means that we have
+    // no way to know whether _all_ consumers have opted in to collaboration
+    // by explicitly setting document.domain. So we just mandate that expando
+    // sharing is unaffected by it.
+    nsresult rv = consumerOrigin->EqualsIgnoringDomain(o, &equal);
+    if (NS_FAILED(rv) || !equal)
+        return false;
+
+    // Sandboxes want exclusive expando objects.
+    JSObject *owner = JS_GetReservedSlot(expandoObject,
+                                         JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL)
+                                        .toObjectOrNull();
+    if (!owner && !exclusiveGlobal)
+        return true;
+    return owner == exclusiveGlobal;
+}
+
+JSObject *
+LookupExpandoObject(JSObject *target, nsIPrincipal *origin,
+                    JSObject *exclusiveGlobal)
+{
+    // Iterate through the chain, looking for a same-origin object.
+    JSObject *head = GetExpandoChain(target);
+    while (head) {
+        if (ExpandoObjectMatchesConsumer(head, origin, exclusiveGlobal))
+            return head;
+        head = JS_GetReservedSlot(head, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
+    }
+
+    // Not found.
+    return nsnull;
+}
+
+// Convenience method for the above.
+JSObject *
+LookupExpandoObject(JSObject *target, JSObject *consumer)
+{
+    JSObject *consumerGlobal = js::GetGlobalForObjectCrossCompartment(consumer);
+    bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
+    return LookupExpandoObject(target, ObjectPrincipal(consumer),
+                               isSandbox ? consumerGlobal : nsnull);
+}
+
+JSObject *
+AttachExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
+                    JSObject *exclusiveGlobal)
+{
+    // We should only be used for WNs.
+    MOZ_ASSERT(IS_WN_WRAPPER(target));
+
+    // No duplicates allowed.
+    MOZ_ASSERT(!LookupExpandoObject(target, origin, exclusiveGlobal));
+
+    // Create the expando object. We parent it directly to the target object.
+    JSObject *expandoObject = JS_NewObjectWithGivenProto(cx, &ExpandoObjectClass,
+                                                         nsnull, target);
+    if (!expandoObject)
+        return nsnull;
+
+    // AddRef and store the principal.
+    NS_ADDREF(origin);
+    JS_SetReservedSlot(expandoObject, JSSLOT_EXPANDO_ORIGIN, PRIVATE_TO_JSVAL(origin));
+
+    // Note the exclusive global, if any.
+    JS_SetReservedSlot(expandoObject, JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL,
+                       OBJECT_TO_JSVAL(exclusiveGlobal));
+
+    // If this is our first expando object, take the opportunity to preserve
+    // the wrapper. This keeps our expandos alive even if the Xray wrapper gets
+    // collected.
+    JSObject *chain = GetExpandoChain(target);
+    if (!chain) {
+        XPCWrappedNative *wn =
+          static_cast<XPCWrappedNative *>(xpc_GetJSPrivate(target));
+        nsRefPtr<nsXPCClassInfo> ci;
+        CallQueryInterface(wn->Native(), getter_AddRefs(ci));
+        if (ci)
+            ci->PreserveWrapper(wn->Native());
+    }
+
+    // Insert it at the front of the chain.
+    JS_SetReservedSlot(expandoObject, JSSLOT_EXPANDO_NEXT, OBJECT_TO_JSVAL(chain));
+    SetExpandoChain(target, expandoObject);
+
+    return expandoObject;
+}
+
+JSObject *
+EnsureExpandoObject(JSContext *cx, JSObject *wrapper, JSObject *target)
+{
+    JSObject *expandoObject = LookupExpandoObject(target, wrapper);
+    if (!expandoObject) {
+        // If the object is a sandbox, we don't want it to share expandos with
+        // anyone else, so we tag it with the sandbox global.
+        JSObject *consumerGlobal = js::GetGlobalForObjectCrossCompartment(wrapper);
+        bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
+        expandoObject = AttachExpandoObject(cx, target, ObjectPrincipal(wrapper),
+                                            isSandbox ? consumerGlobal : nsnull);
+    }
+    return expandoObject;
+}
+
 JSObject *
 createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent)
 {
