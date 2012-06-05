@@ -6,8 +6,8 @@
 #ifndef mozilla_a11y_HTMLElementAccessibles_h__
 #define mozilla_a11y_HTMLElementAccessibles_h__
 
+#include "BaseAccessibles.h"
 #include "nsAutoPtr.h"
-#include "nsBaseWidgetAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -15,12 +15,12 @@ namespace a11y {
 /**
  * Used for HTML hr element.
  */
-class HTMLHRAccessible : public nsLeafAccessible
+class HTMLHRAccessible : public LeafAccessible
 {
 public:
 
   HTMLHRAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    nsLeafAccessible(aContent, aDoc) {};
+    LeafAccessible(aContent, aDoc) {};
 
   // Accessible
   virtual a11y::role NativeRole();
@@ -29,12 +29,12 @@ public:
 /**
  * Used for HTML br element.
  */
-class HTMLBRAccessible : public nsLeafAccessible
+class HTMLBRAccessible : public LeafAccessible
 {
 public:
 
   HTMLBRAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    nsLeafAccessible(aContent, aDoc) {};
+    LeafAccessible(aContent, aDoc) {};
 
   // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);

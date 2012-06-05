@@ -365,7 +365,8 @@ def writeResultConv(f, type, interfaceResultTemplate, jsvalPtr, jsvalRef):
         template = resultConvTemplates.get(typeName)
     elif isInterfaceType(type):
         if isVariantType(type):
-            template = "    return xpc_qsVariantToJsval(lccx, result, ${jsvalPtr});\n"
+            template =  ("    XPCLazyCallContext lccx(JS_CALLER, cx, obj);\n"
+                         "    return xpc_qsVariantToJsval(lccx, result, ${jsvalPtr});\n")
         else:
             template = ("    if (!result) {\n"
                         "      *${jsvalPtr} = JSVAL_NULL;\n"

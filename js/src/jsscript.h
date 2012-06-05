@@ -114,12 +114,12 @@ class Bindings
      * These functions map between argument/var indices [0, nargs/nvars) and
      * and Bindings indices [0, nargs + nvars).
      */
-    bool bindingIsArg(uint16_t i) const { return i < nargs; }
-    bool bindingIsLocal(uint16_t i) const { return i >= nargs; }
-    uint16_t argToBinding(uint16_t i) { JS_ASSERT(i < nargs); return i; }
-    uint16_t localToBinding(uint16_t i) { return i + nargs; }
-    uint16_t bindingToArg(uint16_t i) { JS_ASSERT(bindingIsArg(i)); return i; }
-    uint16_t bindingToLocal(uint16_t i) { JS_ASSERT(bindingIsLocal(i)); return i - nargs; }
+    bool slotIsArg(uint16_t i) const { return i < nargs; }
+    bool slotIsLocal(uint16_t i) const { return i >= nargs; }
+    uint16_t argToSlot(uint16_t i) { JS_ASSERT(i < nargs); return i; }
+    uint16_t localToSlot(uint16_t i) { return i + nargs; }
+    uint16_t slotToArg(uint16_t i) { JS_ASSERT(slotIsArg(i)); return i; }
+    uint16_t slotToLocal(uint16_t i) { JS_ASSERT(slotIsLocal(i)); return i - nargs; }
 
     /* Ensure these bindings have a shape lineage. */
     inline bool ensureShape(JSContext *cx);
@@ -493,7 +493,7 @@ struct JSScript : public js::gc::Cell
     uint16_t        staticLevel;/* static level for display maintenance */
 
   private:
-    uint16_t        argsSlot_;  /* slot holding 'arguments' (if argumentsHasLocalBindings) */
+    uint16_t        argsLocal_; /* local holding 'arguments' (if argumentsHasLocalBindings) */
 
     // 8-bit fields.
 
@@ -588,8 +588,8 @@ struct JSScript : public js::gc::Cell
     /* See ContextFlags::funArgumentsHasLocalBinding comment. */
     bool argumentsHasLocalBinding() const { return argsHasLocalBinding_; }
     jsbytecode *argumentsBytecode() const { JS_ASSERT(code[0] == JSOP_ARGUMENTS); return code; }
-    unsigned argumentsLocalSlot() const { JS_ASSERT(argsHasLocalBinding_); return argsSlot_; }
-    void setArgumentsHasLocalBinding(uint16_t slot);
+    unsigned argumentsLocal() const { JS_ASSERT(argsHasLocalBinding_); return argsLocal_; }
+    void setArgumentsHasLocalBinding(uint16_t local);
 
     /*
      * As an optimization, even when argsHasLocalBinding, the function prologue
@@ -861,12 +861,11 @@ struct JSScript : public js::gc::Cell
     }
 
 
-#ifdef DEBUG
     bool varIsAliased(unsigned varSlot);
     bool formalIsAliased(unsigned argSlot);
     bool formalLivesInArgumentsObject(unsigned argSlot);
     bool formalLivesInCallObject(unsigned argSlot);
-#endif
+
   private:
     /*
      * Recompile with or without single-stepping support, as directed
@@ -943,12 +942,6 @@ JS_STATIC_ASSERT(sizeof(JSScript::ArrayBitsT) * 8 >= JSScript::LIMIT);
 
 /* If this fails, add/remove padding within JSScript. */
 JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::Cell::CellSize == 0);
-
-static JS_INLINE unsigned
-StackDepth(JSScript *script)
-{
-    return script->nslots - script->nfixed;
-}
 
 /*
  * New-script-hook calling is factored from NewScriptFromEmitter so that it

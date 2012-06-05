@@ -1,2 +1,3 @@
 https://dvcs.w3.org/hg/html|html
 tests/submission/Mozilla
+tests/submission/Opera/microdata

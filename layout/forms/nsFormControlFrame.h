@@ -25,6 +25,8 @@ public:
     */
   nsFormControlFrame(nsStyleContext*);
 
+  virtual nsIAtom* GetType() const;
+
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsLeafFrame::IsFrameOfType(aFlags &

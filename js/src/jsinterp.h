@@ -18,31 +18,6 @@
 
 namespace js {
 
-/*
- * ScriptPrologue/ScriptEpilogue must be called in pairs. ScriptPrologue
- * must be called before the script executes. ScriptEpilogue must be called
- * after the script returns or exits via exception.
- */
-
-inline bool
-ScriptPrologue(JSContext *cx, StackFrame *fp, JSScript *script);
-
-inline bool
-ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok);
-
-/*
- * It is not valid to call ScriptPrologue when a generator is resumed or to
- * call ScriptEpilogue when a generator yields. However, the debugger still
- * needs LIFO notification of generator start/stop. This pair of functions does
- * the right thing based on the state of 'fp'.
- */
-
-inline bool
-ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp);
-
-inline bool
-ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok);
-
 /* Implemented in jsdbgapi: */
 
 /*
@@ -273,9 +248,6 @@ UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
 
 extern bool
 OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, Value *vp);
-
-inline void
-AssertValidFunctionScopeChainAtExit(StackFrame *fp);
 
 class TryNoteIter
 {

@@ -6,15 +6,15 @@
 #ifndef _nsXFormsWidgetsAccessible_H_
 #define _nsXFormsWidgetsAccessible_H_
 
+#include "BaseAccessibles.h"
 #include "nsXFormsAccessible.h"
-#include "nsBaseWidgetAccessible.h"
 
 /**
  * Accessible object for dropmarker widget that is used inside xforms elements
  * of combobox representation. For example, these are xforms:select1,
  * xforms:input[type="xsd:date"].
  */
-class nsXFormsDropmarkerWidgetAccessible : public nsLeafAccessible,
+class nsXFormsDropmarkerWidgetAccessible : public mozilla::a11y::LeafAccessible,
                                            public nsXFormsAccessibleBase
 {
 public:

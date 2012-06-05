@@ -994,9 +994,9 @@ JSContext::JSContext(JSRuntime *rt)
     functionCallback(NULL),
 #endif
     enumerators(NULL),
+    innermostGenerator_(NULL),
 #ifdef DEBUG
     stackIterAssertionEnabled(true),
-    okToAccessUnaliasedBindings(0),
 #endif
     activeCompilations(0)
 {
@@ -1080,25 +1080,23 @@ JSContext::wrapPendingException()
         setPendingException(v);
 }
 
-JSGenerator *
-JSContext::generatorFor(StackFrame *fp) const
+
+void
+JSContext::enterGenerator(JSGenerator *gen)
 {
-    JS_ASSERT(stack.containsSlow(fp));
-    JS_ASSERT(fp->isGeneratorFrame());
-    JS_ASSERT(!fp->isFloatingGenerator());
-    JS_ASSERT(!genStack.empty());
-
-    if (JS_LIKELY(fp == genStack.back()->liveFrame()))
-        return genStack.back();
-
-    /* General case; should only be needed for debug APIs. */
-    for (size_t i = 0; i < genStack.length(); ++i) {
-        if (genStack[i]->liveFrame() == fp)
-            return genStack[i];
-    }
-    JS_NOT_REACHED("no matching generator");
-    return NULL;
+    JS_ASSERT(!gen->prevGenerator);
+    gen->prevGenerator = innermostGenerator_;
+    innermostGenerator_ = gen;
 }
+
+void
+JSContext::leaveGenerator(JSGenerator *gen)
+{
+    JS_ASSERT(innermostGenerator_ == gen);
+    innermostGenerator_ = innermostGenerator_->prevGenerator;
+    gen->prevGenerator = NULL;
+}
+
 
 bool
 JSContext::runningWithTrustedPrincipals() const

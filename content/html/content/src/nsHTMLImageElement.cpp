@@ -116,6 +116,18 @@ NS_IMPL_URI_ATTR(nsHTMLImageElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 
+void
+nsHTMLImageElement::GetItemValueText(nsAString& aValue)
+{
+  GetSrc(aValue);
+}
+
+void
+nsHTMLImageElement::SetItemValueText(const nsAString& aValue)
+{
+  SetSrc(aValue);
+}
+
 // crossorigin is not "limited to only known values" per spec, so it's
 // just a string attr purposes of the DOM crossOrigin property.
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, CrossOrigin, crossorigin)

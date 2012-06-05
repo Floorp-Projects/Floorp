@@ -239,7 +239,7 @@ XULButtonAccessible::ContainsMenu()
 
 XULDropmarkerAccessible::
   XULDropmarkerAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsLeafAccessible(aContent, aDoc)
+  LeafAccessible(aContent, aDoc)
 {
 }
 
@@ -323,7 +323,7 @@ XULDropmarkerAccessible::NativeState()
 
 XULCheckboxAccessible::
   XULCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsLeafAccessible(aContent, aDoc)
+  LeafAccessible(aContent, aDoc)
 {
 }
 
@@ -376,7 +376,7 @@ XULCheckboxAccessible::NativeState()
 {
   // Possible states: focused, focusable, unavailable(disabled), checked
   // Get focus and disable status from base class
-  PRUint64 state = nsLeafAccessible::NativeState();
+  PRUint64 state = LeafAccessible::NativeState();
   
   state |= states::CHECKABLE;
   
@@ -468,7 +468,7 @@ XULRadioButtonAccessible::
 PRUint64
 XULRadioButtonAccessible::NativeState()
 {
-  PRUint64 state = nsLeafAccessible::NativeState();
+  PRUint64 state = LeafAccessible::NativeState();
   state |= states::CHECKABLE;
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> radioButton =
@@ -659,7 +659,7 @@ XULToolbarAccessible::GetNameInternal(nsAString& aName)
 
 XULToolbarSeparatorAccessible::
   XULToolbarSeparatorAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsLeafAccessible(aContent, aDoc)
+  LeafAccessible(aContent, aDoc)
 {
 }
 

@@ -246,6 +246,24 @@ public:
 
   // event handler
   IMPL_EVENT_HANDLER(readystatechange, Readystatechange)
+  JSObject* GetOnuploadprogress(JSContext* /* unused */)
+  {
+    nsIDocument* doc = GetOwner() ? GetOwner()->GetExtantDoc() : NULL;
+    if (doc) {
+      doc->WarnOnceAbout(nsIDocument::eOnuploadprogress);
+    }
+    return GetListenerAsJSObject(mOnUploadProgressListener);
+  }
+  void SetOnuploadprogress(JSContext* aCx, JSObject* aCallback,
+                           ErrorResult& aRv)
+  {
+    nsIDocument* doc = GetOwner() ? GetOwner()->GetExtantDoc() : NULL;
+    if (doc) {
+      doc->WarnOnceAbout(nsIDocument::eOnuploadprogress);
+    }
+    aRv = SetJSObjectListener(aCx, NS_LITERAL_STRING("uploadprogress"),
+                              mOnUploadProgressListener, aCallback);
+  }
 
   // states
   uint16_t GetReadyState();
