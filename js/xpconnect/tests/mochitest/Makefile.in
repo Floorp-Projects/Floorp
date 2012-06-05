@@ -67,6 +67,7 @@ _TEST_FILES =	bug500931_helper.html \
 		file_nodelists.html \
 		file_bug706301.html \
 		file_exnstack.html \
+		file_expandosharing.html \
 		$(NULL)
 
 _CHROME_FILES	= \

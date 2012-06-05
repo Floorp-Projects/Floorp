@@ -47,6 +47,8 @@ _CHROME_FILES = \
 		test_exnstack.xul \
 		test_weakref.xul \
 		test_bug726949.xul \
+		test_expandosharing.xul \
+		file_expandosharing.jsm \
 		test_bug758563.xul \
 		test_bug760076.xul \
 		$(NULL)
