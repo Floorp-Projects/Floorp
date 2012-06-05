@@ -167,17 +167,50 @@ abstract public class GeckoApp
 
     String[] getPluginDirectories() {
 
-        // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            File tegraDriverPath = new File("/system/lib/hw/gralloc.tegra.so");
-            if (tegraDriverPath.exists())
+        // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
+        boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists();
+        if (isTegra) {
+            // disable Flash on pre-HC Tegra (bug 703056)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + Gingerbread bug (bug 703056)");
                 return new String[0];
+            }
+
+            // disable Flash on Tegra ICS with CM9 and other custom firmware (bug 736421)
+            File vfile = new File("/proc/version");
+            FileReader vreader = null;
+            try {
+                if (vfile.canRead()) {
+                    vreader = new FileReader(vfile);
+                    String version = new BufferedReader(vreader).readLine();
+                    if (version.indexOf("CM9") != -1 ||
+                        version.indexOf("cyanogen") != -1 ||
+                        version.indexOf("Nova") != -1)
+                    {
+                        Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + unofficial ICS bug (bug 736421)");
+                        return new String[0];
+                    }
+                }
+            } catch (IOException ex) {
+                // nothing
+            } finally {
+                try {
+                    if (vreader != null) {
+                        vreader.close();
+                    }
+                } catch (IOException ex) {
+                    // nothing
+                }
+            }
         }
 
         // we don't support Honeycomb
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
             Build.VERSION.SDK_INT < 14 /*Build.VERSION_CODES.ICE_CREAM_SANDWICH*/ )
+        {
+            Log.w(LOGTAG, "Blocking plugins because of Honeycomb");
             return new String[0];
+        }
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of getPluginDirectories");
 
