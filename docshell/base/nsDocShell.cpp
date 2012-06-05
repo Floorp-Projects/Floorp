@@ -8046,6 +8046,23 @@ private:
     bool mFirstParty;
 };
 
+/**
+ * Returns true if we started an asynchronous load (i.e., from the network), but
+ * the document we're loading there hasn't yet become this docshell's active
+ * document.
+ *
+ * When JustStartedNetworkLoad is true, you should be careful about modifying
+ * mLoadType and mLSHE.  These are both set when the asynchronous load first
+ * starts, and the load expects that, when it eventually runs InternalLoad,
+ * mLoadType and mLSHE will have their original values.
+ */
+bool
+nsDocShell::JustStartedNetworkLoad()
+{
+    return mDocumentRequest &&
+           mDocumentRequest != GetCurrentDocChannel();
+}
+
 NS_IMETHODIMP
 nsDocShell::InternalLoad(nsIURI * aURI,
                          nsIURI * aReferrer,
@@ -8462,7 +8479,16 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             // See bug 737307.
             AutoRestore<PRUint32> loadTypeResetter(mLoadType);
 
-            mLoadType = aLoadType;
+            // If a non-short-circuit load (i.e., a network load) is pending,
+            // make this a replacement load, so that we don't add a SHEntry here
+            // and the network load goes into the SHEntry it expects to.
+            if (JustStartedNetworkLoad() && (aLoadType & LOAD_CMD_NORMAL)) {
+                mLoadType = LOAD_NORMAL_REPLACE;
+            }
+            else {
+                mLoadType = aLoadType;
+            }
+
             mURIResultedInDocument = true;
 
             /* we need to assign mLSHE to aSHEntry right here, so that on History loads,
@@ -9661,6 +9687,16 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // Note that we completely ignore the aTitle parameter.
 
     nsresult rv;
+
+    // Don't clobber the load type of an existing network load.
+    AutoRestore<PRUint32> loadTypeResetter(mLoadType);
+
+    // pushState effectively becomes replaceState when we've started a network
+    // load but haven't adopted its document yet.  This mirrors what we do with
+    // changes to the hash at this stage of the game.
+    if (JustStartedNetworkLoad()) {
+        aReplace = true;
+    }
 
     nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
     NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
