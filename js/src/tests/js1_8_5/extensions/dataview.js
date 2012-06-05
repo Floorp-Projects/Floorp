@@ -1631,6 +1631,14 @@ function test() {
     assertEq(av.getUint8(4), 100);
     assertEq(Object.getPrototypeOf(av), DataView.prototype);
 
+    // Bug 760904: call another compartment's constructor with an ArrayBuffer
+    // from this compartment, both as a constructor and as a regular call. (The
+    // latter is what was broken in that bug.)
+    var alien_constructor = alien.DataView;
+    var local_buffer = (new Int8Array(3)).buffer;
+    var foreign_exchange_student_1 = alien_constructor(local_buffer);
+    var foreign_exchange_student_2 = new alien_constructor(local_buffer);
+
     reportCompare(0, 0, 'done.');
     exitFunc ('test');
 }
