@@ -20,3 +20,7 @@
 
 # default style
 include default-style/reftest.list
+
+# Tests for bugs:
+== block-invalidate.html block-invalidate-ref.html
+== in-cells.html in-cells-ref.html
