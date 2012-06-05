@@ -190,6 +190,11 @@ struct ShapeTable {
     bool            init(ThreadSafeContext *cx, Shape *lastProp);
     bool            change(int log2Delta, ThreadSafeContext *cx);
     Shape           **search(jsid id, bool adding);
+
+#ifdef JSGC_COMPACTING
+    /* Update entries whose shapes have been moved */
+    void            fixupAfterMovingGC();
+#endif
 };
 
 /*
@@ -505,6 +510,10 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
             gc::MarkObject(trc, &metadata, "metadata");
     }
 
+#ifdef JSGC_COMPACTING
+    void fixupAfterMovingGC();
+#endif
+
   private:
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(BaseShape, clasp_) == offsetof(js::shadow::BaseShape, clasp_));
@@ -550,7 +559,7 @@ BaseShape::baseUnowned()
 }
 
 /* Entries for the per-compartment baseShapes set of unowned base shapes. */
-struct StackBaseShape
+struct StackBaseShape : public DefaultHasher<ReadBarrieredUnownedBaseShape>
 {
     typedef const StackBaseShape *Lookup;
 
@@ -1028,10 +1037,19 @@ class Shape : public gc::BarrieredCell<Shape>
     inline Shape *search(ExclusiveContext *cx, jsid id);
     inline Shape *searchLinear(jsid id);
 
+#ifdef JSGC_COMPACTING
+    void fixupAfterMovingGC();
+#endif
+
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
 
   private:
+#ifdef JSGC_COMPACTING
+    void fixupDictionaryShapeAfterMovingGC();
+    void fixupShapeTreeAfterMovingGC();
+#endif
+
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(Shape, base_) == offsetof(js::shadow::Shape, base));
         JS_STATIC_ASSERT(offsetof(Shape, slotInfo) == offsetof(js::shadow::Shape, slotInfo));
