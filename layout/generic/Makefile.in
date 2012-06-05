@@ -19,6 +19,7 @@ LIBXUL_LIBRARY	= 1
 
 EXPORTS		= \
 		nsQueryFrame.h \
+		nsFrameIdList.h \
 		nsFrameList.h \
 		nsCanvasFrame.h \
 		nsHTMLParts.h \
