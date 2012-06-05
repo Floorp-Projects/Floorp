@@ -156,9 +156,26 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   nsWindowSizes windowSizes(DOMStyleMallocSizeOf);
   aWindow->SizeOfIncludingThis(&windowSizes);
 
-  REPORT("/dom", windowSizes.mDOM,
-         "Memory used by a window and the DOM within it.");
-  aWindowTotalSizes->mDOM += windowSizes.mDOM;
+  REPORT("/dom/other", windowSizes.mDOMOther,
+         "Memory used by a window's DOM, excluding element, text, CDATA, "
+         "and comment nodes.");
+  aWindowTotalSizes->mDOMOther += windowSizes.mDOMOther;
+
+  REPORT("/dom/element-nodes", windowSizes.mDOMElementNodes,
+         "Memory used by the element nodes in a window's DOM.");
+  aWindowTotalSizes->mDOMElementNodes += windowSizes.mDOMElementNodes;
+
+  REPORT("/dom/text-nodes", windowSizes.mDOMTextNodes,
+         "Memory used by the text nodes in a window's DOM.");
+  aWindowTotalSizes->mDOMTextNodes += windowSizes.mDOMTextNodes;
+
+  REPORT("/dom/cdata-nodes", windowSizes.mDOMCDATANodes,
+         "Memory used by the CDATA nodes in a window's DOM.");
+  aWindowTotalSizes->mDOMCDATANodes += windowSizes.mDOMCDATANodes;
+
+  REPORT("/dom/comment-nodes", windowSizes.mDOMCommentNodes,
+         "Memory used by the comment nodes in a window's DOM.");
+  aWindowTotalSizes->mDOMCommentNodes += windowSizes.mDOMCommentNodes;
 
   REPORT("/style-sheets", windowSizes.mStyleSheets,
          "Memory used by style sheets within a window.");
@@ -246,10 +263,27 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
     NS_ENSURE_SUCCESS(rv, rv);                                                \
   } while (0)
 
-  REPORT("window-objects-dom", windowTotalSizes.mDOM, 
-         "Memory used for the DOM within windows. "
-         "This is the sum of all windows' 'dom' numbers.");
-    
+  REPORT("window-objects-dom-other", windowTotalSizes.mDOMOther, 
+         "Memory used for the DOM within windows, "
+         "excluding element, text, CDATA, and comment nodes. "
+         "This is the sum of all windows' 'dom/other' numbers.");
+
+  REPORT("window-objects-dom-element-nodes", windowTotalSizes.mDOMElementNodes,
+         "Memory used for DOM element nodes within windows. "
+         "This is the sum of all windows' 'dom/element-nodes' numbers.");
+
+  REPORT("window-objects-dom-text-nodes", windowTotalSizes.mDOMTextNodes,
+         "Memory used for DOM text nodes within windows. "
+         "This is the sum of all windows' 'dom/text-nodes' numbers.");
+
+  REPORT("window-objects-dom-cdata-nodes", windowTotalSizes.mDOMCDATANodes,
+         "Memory used for DOM CDATA nodes within windows. "
+         "This is the sum of all windows' 'dom/cdata-nodes' numbers.");
+
+  REPORT("window-objects-dom-comment-nodes", windowTotalSizes.mDOMCommentNodes,
+         "Memory used for DOM comment nodes within windows. "
+         "This is the sum of all windows' 'dom/comment-nodes' numbers.");
+
   REPORT("window-objects-style-sheets", windowTotalSizes.mStyleSheets, 
          "Memory used for style sheets within windows. "
          "This is the sum of all windows' 'style-sheets' numbers.");
