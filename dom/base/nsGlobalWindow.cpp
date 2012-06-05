@@ -10131,13 +10131,13 @@ nsGlobalWindow::HasPerformanceSupport()
 void
 nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 {
-  aWindowSizes->mDOM += aWindowSizes->mMallocSizeOf(this);
+  aWindowSizes->mDOMOther += aWindowSizes->mMallocSizeOf(this);
 
   if (IsInnerWindow()) {
     nsEventListenerManager* elm =
       const_cast<nsGlobalWindow*>(this)->GetListenerManager(false);
     if (elm) {
-      aWindowSizes->mDOM +=
+      aWindowSizes->mDOMOther +=
         elm->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
     }
     if (mDoc) {
@@ -10145,7 +10145,7 @@ nsGlobalWindow::SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
     }
   }
 
-  aWindowSizes->mDOM +=
+  aWindowSizes->mDOMOther +=
     mNavigator ?
       mNavigator->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf) : 0;
 }
