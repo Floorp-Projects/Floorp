@@ -42,7 +42,7 @@
 }
 
 /* hide the content, but don't destroy the frames */
-[collapsed="true"], 
+[collapsed="true"],
 [moz-collapsed="true"] {
   visibility: collapse;
 }
@@ -79,7 +79,7 @@ xbl|children,
 commands, commandset, command,
 broadcasterset, broadcaster, observes,
 keyset, key, toolbarpalette, toolbarset,
-template, rule, conditions, action, 
+template, rule, conditions, action,
 bindings, binding, content, member, triple,
 treechildren, treeitem, treeseparator, treerow, treecell {
   display: none;
@@ -106,7 +106,7 @@ menulist[editable="true"] {
 
 /******** window & page ******/
 
-window, 
+window,
 page {
   overflow: -moz-hidden-unscrollable;
   -moz-box-orient: vertical;
@@ -255,11 +255,11 @@ caption {
 
 /******* toolbar *******/
 
-toolbox { 
+toolbox {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbox");
   -moz-box-orient: vertical;
 }
-  
+
 toolbar {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
 }
@@ -336,7 +336,7 @@ menubar > menu.menu-iconic {
 menu {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menu");
 }
-  
+
 menu.menu-iconic {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic");
 }
@@ -388,7 +388,7 @@ menuseparator {
 
 /********* popup & menupopup ***********/
 
-/* <popup> is deprecated.  Only <menupopup> and <tooltip> are still valid. */ 
+/* <popup> is deprecated.  Only <menupopup> and <tooltip> are still valid. */
 
 popup,
 menupopup {
@@ -437,7 +437,7 @@ grid {
   display: -moz-grid;
 }
 
-rows, 
+rows,
 columns {
   display: -moz-grid-group;
 }
@@ -854,7 +854,7 @@ popup[type="autocomplete"][hidden="true"] {
   visibility: hidden;
 }
 
-/* The following rule is here to fix bug 96899 (and now 117952).  
+/* The following rule is here to fix bug 96899 (and now 117952).
    Somehow trees create a situation
    in which a popupset flows itself as if its popup child is directly within it
    instead of the placeholder child that should actually be inside the popupset.
@@ -1093,12 +1093,12 @@ wizardpage {
 
 prefwindow,
 prefwindow:root /* override :root from above */ {
-  -moz-binding: url("chrome://global/content/bindings/preferences.xml#prefwindow");  
+  -moz-binding: url("chrome://global/content/bindings/preferences.xml#prefwindow");
   -moz-box-orient: vertical;
 }
 
 prefpane {
-  -moz-binding: url("chrome://global/content/bindings/preferences.xml#prefpane");  
+  -moz-binding: url("chrome://global/content/bindings/preferences.xml#prefpane");
   -moz-box-orient: vertical;
 }
 
@@ -1125,12 +1125,12 @@ preferences {
 }
 
 preference {
-  -moz-binding: url("chrome://global/content/bindings/preferences.xml#preference");  
+  -moz-binding: url("chrome://global/content/bindings/preferences.xml#preference");
   visibility: collapse;
 }
 
 radio[pane] {
-  -moz-binding: url("chrome://global/content/bindings/preferences.xml#panebutton") !important; 
+  -moz-binding: url("chrome://global/content/bindings/preferences.xml#panebutton") !important;
   -moz-box-orient: vertical;
   -moz-box-align: center;
 }
