@@ -1655,40 +1655,13 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
                 }
 
                 // Ok, now we do the special object-plus-wrapper transplant.
-                //
-                // This is some pretty serious brain surgery.
-                //
-                // In the case where we wrap a Location object from a same-
-                // origin compartment, we actually want our cross-compartment
-                // wrapper to point to the same-compartment wrapper in the
-                // other compartment. This double-wrapping allows expandos to
-                // be shared. So our wrapping callback (in WrapperFactory.cpp)
-                // calls XPCWrappedNative::GetSameCompartmentSecurityWrapper
-                // before wrapping same-origin Location objects.
-                //
-                // This normally works fine, but gets tricky here.
-                // js_TransplantObjectWithWrapper needs to update the old
-                // same-compartment security wrapper to be a cross-compartment
-                // wrapper to the newly transplanted object. So it needs to go
-                // through the aforementioned double-wrapping mechanism.
-                // But during the call, things aren't really in a consistent
-                // state, because mFlatJSObject hasn't yet been updated to
-                // point to the object in the new compartment.
-                //
-                // So we need to cache the new same-compartment security
-                // wrapper on the XPCWN before the call, so that
-                // GetSameCompartmentSecurityWrapper can return early before
-                // getting confused. Hold your breath.
-                JSObject *wwsaved = ww;
-                wrapper->SetWrapper(newwrapper);
                 ww = js_TransplantObjectWithWrapper(ccx, flat, ww, newobj,
                                                     newwrapper);
-                if (!ww) {
-                    wrapper->SetWrapper(wwsaved);
+                if (!ww)
                     return NS_ERROR_FAILURE;
-                }
 
                 flat = newobj;
+                wrapper->SetWrapper(ww);
             } else {
                 flat = JS_TransplantObject(ccx, flat, newobj);
                 if (!flat)
@@ -2234,10 +2207,6 @@ XPCWrappedNative::GetSameCompartmentSecurityWrapper(JSContext *cx)
     JSObject *wrapper = GetWrapper();
 
     // If we already have a wrapper, it must be what we want.
-    //
-    // NB: This must come before anything below because of some trickiness
-    // with brain transplants. See the "pretty serious brain surgery" comment
-    // in ReparentWrapperIfFound.
     if (wrapper)
         return wrapper;
 
