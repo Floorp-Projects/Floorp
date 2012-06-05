@@ -14,6 +14,7 @@ DIRS = \
   failures/webapps/WebStorage/tests/submissions/Ms2ger \
   failures/webapps/WebStorage/tests/submissions/Infraware \
   failures/webapps/DOMCore/tests/submissions/Opera \
+  failures/html/tests/submission/Opera/microdata \
   $(NULL)
 
 include $(srcdir)/editing.mk

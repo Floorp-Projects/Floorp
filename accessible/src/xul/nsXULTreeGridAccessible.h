@@ -104,7 +104,7 @@ protected:
   { 0xa9, 0x32, 0x4c, 0x5c, 0xa5, 0xde, 0x5d, 0xff }  \
 }
 
-class nsXULTreeGridCellAccessible : public nsLeafAccessible,
+class nsXULTreeGridCellAccessible : public mozilla::a11y::LeafAccessible,
                                     public nsIAccessibleTableCell
 {
 public:
@@ -117,12 +117,12 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeGridCellAccessible,
-                                           nsLeafAccessible)
+                                           LeafAccessible)
 
   // nsIAccessible
 
-  NS_IMETHOD GetBounds(PRInt32 *aX, PRInt32 *aY,
-                       PRInt32 *aWidth, PRInt32 *aHeight);
+  NS_IMETHOD GetBounds(PRInt32* aX, PRInt32* aY,
+                       PRInt32* aWidth, PRInt32* aHeight);
 
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 aIndex);
@@ -137,7 +137,7 @@ public:
   // Accessible
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
   virtual Accessible* FocusedChild();
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
+  virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
   virtual PRInt32 IndexInParent() const;
   virtual Relation RelationByType(PRUint32 aType);
   virtual mozilla::a11y::role NativeRole();
@@ -164,8 +164,8 @@ public:
 protected:
   // Accessible
   virtual Accessible* GetSiblingAtOffset(PRInt32 aOffset,
-                                         nsresult *aError = nsnull) const;
-  virtual void DispatchClickEvent(nsIContent *aContent, PRUint32 aActionIndex);
+                                         nsresult* aError = nsnull) const;
+  virtual void DispatchClickEvent(nsIContent* aContent, PRUint32 aActionIndex);
 
   // nsXULTreeGridCellAccessible
 

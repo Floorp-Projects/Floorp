@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLLinkAccessible.h"
+#include "HTMLLinkAccessible.h"
 
 #include "nsCoreUtils.h"
 #include "DocAccessible.h"
@@ -17,36 +17,36 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLLinkAccessible
+// HTMLLinkAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsHTMLLinkAccessible::
-  nsHTMLLinkAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+HTMLLinkAccessible::
+  HTMLLinkAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
 // Expose nsIAccessibleHyperLink unconditionally
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLLinkAccessible, HyperTextAccessibleWrap,
+NS_IMPL_ISUPPORTS_INHERITED1(HTMLLinkAccessible, HyperTextAccessibleWrap,
                              nsIAccessibleHyperLink)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
 role
-nsHTMLLinkAccessible::NativeRole()
+HTMLLinkAccessible::NativeRole()
 {
   return roles::LINK;
 }
 
 PRUint64
-nsHTMLLinkAccessible::NativeState()
+HTMLLinkAccessible::NativeState()
 {
   return HyperTextAccessibleWrap::NativeState() & ~states::READONLY;
 }
 
 PRUint64
-nsHTMLLinkAccessible::NativeLinkState() const
+HTMLLinkAccessible::NativeLinkState() const
 {
   nsEventStates eventState = mContent->AsElement()->State();
   if (eventState.HasState(NS_EVENT_STATE_UNVISITED))
@@ -62,7 +62,7 @@ nsHTMLLinkAccessible::NativeLinkState() const
 }
 
 PRUint64
-nsHTMLLinkAccessible::NativeInteractiveState() const
+HTMLLinkAccessible::NativeInteractiveState() const
 {
   PRUint64 state = HyperTextAccessibleWrap::NativeInteractiveState();
 
@@ -76,7 +76,7 @@ nsHTMLLinkAccessible::NativeInteractiveState() const
 }
 
 void
-nsHTMLLinkAccessible::Value(nsString& aValue)
+HTMLLinkAccessible::Value(nsString& aValue)
 {
   aValue.Truncate();
 
@@ -86,13 +86,13 @@ nsHTMLLinkAccessible::Value(nsString& aValue)
 }
 
 PRUint8
-nsHTMLLinkAccessible::ActionCount()
+HTMLLinkAccessible::ActionCount()
 {
   return IsLinked() ? 1 : HyperTextAccessible::ActionCount();
 }
 
 NS_IMETHODIMP
-nsHTMLLinkAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+HTMLLinkAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   aName.Truncate();
 
@@ -108,7 +108,7 @@ nsHTMLLinkAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsHTMLLinkAccessible::DoAction(PRUint8 aIndex)
+HTMLLinkAccessible::DoAction(PRUint8 aIndex)
 {
   if (!IsLinked())
     return HyperTextAccessible::DoAction(aIndex);
@@ -128,14 +128,14 @@ nsHTMLLinkAccessible::DoAction(PRUint8 aIndex)
 // HyperLinkAccessible
 
 bool
-nsHTMLLinkAccessible::IsLink()
+HTMLLinkAccessible::IsLink()
 {
   // Expose HyperLinkAccessible unconditionally.
   return true;
 }
 
 already_AddRefed<nsIURI>
-nsHTMLLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
+HTMLLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 {
   return aAnchorIndex == 0 ? mContent->GetHrefURI() : nsnull;
 }
@@ -144,7 +144,7 @@ nsHTMLLinkAccessible::AnchorURIAt(PRUint32 aAnchorIndex)
 // Protected members
 
 bool
-nsHTMLLinkAccessible::IsLinked()
+HTMLLinkAccessible::IsLinked()
 {
   if (IsDefunct())
     return false;

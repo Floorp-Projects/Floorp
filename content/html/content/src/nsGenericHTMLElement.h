@@ -13,6 +13,8 @@
 #include "nsFrameLoader.h"
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsDOMSettableTokenList.h"
+#include "nsIDOMHTMLPropertiesCollection.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -33,6 +35,7 @@ struct nsSize;
 class nsHTMLFormElement;
 class nsIDOMDOMStringMap;
 class nsIDOMHTMLMenuElement;
+class nsIDOMHTMLCollection;
 
 typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 
@@ -114,6 +117,26 @@ public:
   NS_IMETHOD SetSpellcheck(bool aSpellcheck);
   NS_IMETHOD GetDraggable(bool* aDraggable);
   NS_IMETHOD SetDraggable(bool aDraggable);
+  NS_IMETHOD GetItemScope(bool* aItemScope);
+  NS_IMETHOD SetItemScope(bool aItemScope);
+  NS_IMETHOD GetItemValue(nsIVariant** aValue);
+  NS_IMETHOD SetItemValue(nsIVariant* aValue);
+protected:
+  // These methods are used to implement element-specific behavior of Get/SetItemValue
+  // when an element has @itemprop but no @itemscope.
+  virtual void GetItemValueText(nsAString& text);
+  virtual void SetItemValueText(const nsAString& text);
+  nsDOMSettableTokenList* GetTokenList(nsIAtom* aAtom);
+public:
+  NS_IMETHOD GetItemType(nsIVariant** aType);
+  NS_IMETHOD SetItemType(nsIVariant* aType);
+  NS_IMETHOD GetItemId(nsAString& aId);
+  NS_IMETHOD SetItemId(const nsAString& aId);
+  NS_IMETHOD GetItemRef(nsIVariant** aRef);
+  NS_IMETHOD SetItemRef(nsIVariant* aValue);
+  NS_IMETHOD GetItemProp(nsIVariant** aProp);
+  NS_IMETHOD SetItemProp(nsIVariant* aValue);
+  NS_IMETHOD GetProperties(nsIDOMHTMLPropertiesCollection** aReturn);
   NS_IMETHOD GetAccessKey(nsAString &aAccessKey);
   NS_IMETHOD SetAccessKey(const nsAString& aAccessKey);
   NS_IMETHOD GetAccessKeyLabel(nsAString& aLabel);
@@ -771,9 +794,6 @@ private:
   void ChangeEditableState(PRInt32 aChange);
 };
 
-
-//----------------------------------------------------------------------
-
 class nsHTMLFieldSetElement;
 
 /**
@@ -1375,6 +1395,45 @@ PR_STATIC_ASSERT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1 < 32);
   } \
   NS_SCRIPTABLE NS_IMETHOD Blur() { \
     return _to Blur(); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD GetItemScope(bool* aItemScope) { \
+    return _to GetItemScope(aItemScope); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD SetItemScope(bool aItemScope) { \
+    return _to SetItemScope(aItemScope); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD GetItemType(nsIVariant** aType) { \
+    return _to GetItemType(aType); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD SetItemType(nsIVariant* aType) { \
+    return _to SetItemType(aType); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD GetItemId(nsAString& aId) { \
+    return _to GetItemId(aId); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD SetItemId(const nsAString& aId) { \
+    return _to SetItemId(aId); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD GetProperties(nsIDOMHTMLPropertiesCollection** aReturn) { \
+    return _to GetProperties(aReturn); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD GetItemValue(nsIVariant** aValue) { \
+    return _to GetItemValue(aValue); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD SetItemValue(nsIVariant* aValue) { \
+    return _to SetItemValue(aValue); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD GetItemRef(nsIVariant** aRef) { \
+    return _to GetItemRef(aRef); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD SetItemRef(nsIVariant* aRef) { \
+    return _to SetItemRef(aRef); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD GetItemProp(nsIVariant** aProp) { \
+    return _to GetItemProp(aProp); \
+  } \
+  NS_SCRIPTABLE NS_IMETHOD SetItemProp(nsIVariant* aProp) { \
+    return _to SetItemProp(aProp); \
   } \
   NS_SCRIPTABLE NS_IMETHOD GetAccessKey(nsAString& aAccessKey) { \
     return _to GetAccessKey(aAccessKey); \

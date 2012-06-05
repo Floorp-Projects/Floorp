@@ -6,7 +6,7 @@
 #ifndef mozilla_a11y_ImageAccessible_h__
 #define mozilla_a11y_ImageAccessible_h__
 
-#include "nsBaseWidgetAccessible.h"
+#include "BaseAccessibles.h"
 #include "nsIAccessibleImage.h"
 
 class nsGenericHTMLElement;
@@ -19,7 +19,7 @@ namespace a11y {
  * - gets name, role
  * - support basic state
  */
-class ImageAccessible : public nsLinkableAccessible,
+class ImageAccessible : public LinkableAccessible,
                         public nsIAccessibleImage
 {
 public:

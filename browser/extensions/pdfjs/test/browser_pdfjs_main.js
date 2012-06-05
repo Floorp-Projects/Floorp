@@ -1,12 +1,21 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const RELATIVE_DIR = "browser/extensions/pdfjs/test/";
 const TESTROOT = "http://example.com/browser/" + RELATIVE_DIR;
 
 function test() {
   var tab;
+
+  let handlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(Ci.nsIHandlerService);
+  let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+  let handlerInfo = mimeService.getFromTypeAndExtension('application/pdf', 'pdf');
+
+  // Make sure pdf.js is the default handler.
+  is(handlerInfo.alwaysAskBeforeHandling, false, 'pdf handler defaults to always-ask is false');
+  is(handlerInfo.preferredAction, Ci.nsIHandlerInfo.handleInternally, 'pdf handler defaults to internal');
+
+  info('Pref action: ' + handlerInfo.preferredAction);
 
   waitForExplicitFinish();
   registerCleanupFunction(function() {
@@ -23,13 +32,14 @@ function test() {
 
     // Runs tests after all 'load' event handlers have fired off
     setTimeout(function() {
-      runTests(document, window);
+      runTests(document, window, finish);
     }, 0);
   }, true);
 }
 
 
-function runTests(document, window) {
+function runTests(document, window, callback) {
+
   //
   // Overall sanity tests
   //
@@ -67,5 +77,5 @@ function runTests(document, window) {
   viewBookmark.click();
   ok(viewBookmark.href.length > 0, 'viewBookmark button has href');
 
-  finish();
+  callback();
 }

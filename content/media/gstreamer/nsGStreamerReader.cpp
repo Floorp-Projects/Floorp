@@ -278,7 +278,7 @@ nsresult nsGStreamerReader::ReadMetadata(nsVideoInfo* aInfo)
   if (gst_element_query_duration(GST_ELEMENT(mPlayBin),
       &format, &duration) && format == GST_FORMAT_TIME) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    LOG(PR_LOG_DEBUG, ("returning duration %"GST_TIME_FORMAT,
+    LOG(PR_LOG_DEBUG, ("returning duration %" GST_TIME_FORMAT,
           GST_TIME_ARGS (duration)));
     duration = GST_TIME_AS_USECONDS (duration);
     mDecoder->GetStateMachine()->SetDuration(duration);
@@ -422,8 +422,8 @@ bool nsGStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
       nextTimestamp += gst_util_uint64_scale(GST_USECOND, fpsNum, fpsDen);
 
     if (timestamp < aTimeThreshold) {
-      LOG(PR_LOG_DEBUG, ("skipping frame %"GST_TIME_FORMAT
-            " threshold %"GST_TIME_FORMAT,
+      LOG(PR_LOG_DEBUG, ("skipping frame %" GST_TIME_FORMAT
+            " threshold %" GST_TIME_FORMAT,
             GST_TIME_ARGS(timestamp), GST_TIME_ARGS(aTimeThreshold)));
       gst_buffer_unref(buffer);
       buffer = NULL;
@@ -452,6 +452,8 @@ bool nsGStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
         i, height);
     b.mPlanes[i].mWidth = gst_video_format_get_component_width(format,
         i, width);
+    b.mPlanes[i].mOffset = 0;
+    b.mPlanes[i].mSkip = 0;
   }
 
   bool isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer,
@@ -487,7 +489,7 @@ nsresult nsGStreamerReader::Seek(PRInt64 aTarget,
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
   gint64 seekPos = aTarget * GST_USECOND;
-  LOG(PR_LOG_DEBUG, ("%p About to seek to %"GST_TIME_FORMAT,
+  LOG(PR_LOG_DEBUG, ("%p About to seek to %" GST_TIME_FORMAT,
         mDecoder, GST_TIME_ARGS(seekPos)));
 
   if (!gst_element_seek_simple(mPlayBin, GST_FORMAT_TIME,
@@ -590,7 +592,7 @@ PRInt64 nsGStreamerReader::QueryDuration()
   if (gst_element_query_duration(GST_ELEMENT(mPlayBin),
       &format, &duration)) {
     if (format == GST_FORMAT_TIME) {
-      LOG(PR_LOG_DEBUG, ("pipeline duration %"GST_TIME_FORMAT,
+      LOG(PR_LOG_DEBUG, ("pipeline duration %" GST_TIME_FORMAT,
             GST_TIME_ARGS (duration)));
       duration = GST_TIME_AS_USECONDS (duration);
     }
