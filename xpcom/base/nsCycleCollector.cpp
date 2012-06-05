@@ -116,6 +116,7 @@
 #include "nsThreadUtils.h"
 #include "nsTArray.h"
 #include "mozilla/Services.h"
+#include "mozilla/Attributes.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIXPConnect.h"
 #include "nsIJSRuntimeService.h"
@@ -1264,7 +1265,7 @@ struct CCGraphDescriber
   Type mType;
 };
 
-class nsCycleCollectorLogger : public nsICycleCollectorListener
+class nsCycleCollectorLogger MOZ_FINAL : public nsICycleCollectorListener
 {
 public:
     nsCycleCollectorLogger() :
