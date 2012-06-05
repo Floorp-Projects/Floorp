@@ -380,3 +380,8 @@ class Marionette(object):
 
     def get_logs(self):
         return self._send_message('getLogs', 'value')
+
+    def import_script(self, file):
+        f = open(file, "r")
+        js = f.read()
+        return self._send_message('importScript', 'ok', script=js)
