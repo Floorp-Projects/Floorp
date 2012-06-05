@@ -15,6 +15,7 @@ import android.view.animation.Interpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.View;
 import android.view.ViewGroup;
+import android.util.Log;
 
 public class PropertyAnimator extends TimerTask {
     private static final String LOGTAG = "GeckoPropertyAnimator";
@@ -57,6 +58,12 @@ public class PropertyAnimator extends TimerTask {
     }
 
     public void attach(View view, Property property, int to) {
+        if (!(view instanceof ViewGroup) && (property == Property.SHRINK_LEFT ||
+                                             property == Property.SHRINK_TOP)) {
+            Log.i(LOGTAG, "Margin can only be animated on Viewgroups");
+            return;
+        }
+
         ElementHolder element = new ElementHolder();
 
         element.view = view;
@@ -95,16 +102,17 @@ public class PropertyAnimator extends TimerTask {
 
         // Fix the from value based on current position and property
         for (ElementHolder element : mElementsList) {
-            ViewGroup.MarginLayoutParams params = ((ViewGroup.MarginLayoutParams) element.view.getLayoutParams());
- 
-            if (element.property == Property.SHRINK_TOP)
-                element.from = params.topMargin;
-            else if (element.property == Property.SHRINK_LEFT)
-                element.from = params.leftMargin;
-            else if (element.property == Property.SLIDE_TOP)
+            if (element.property == Property.SLIDE_TOP)
                 element.from = element.view.getScrollY();
             else if (element.property == Property.SLIDE_LEFT)
                 element.from = element.view.getScrollX();
+            else {
+                ViewGroup.MarginLayoutParams params = ((ViewGroup.MarginLayoutParams) element.view.getLayoutParams());
+                if (element.property == Property.SHRINK_TOP)
+                    element.from = params.topMargin;
+                else if (element.property == Property.SHRINK_LEFT)
+                    element.from = params.leftMargin;
+            }
         }
 
         if (mDuration != 0) {
@@ -138,17 +146,21 @@ public class PropertyAnimator extends TimerTask {
         element.view.getHandler().post(new Runnable() {
             @Override
             public void run() {
+                if (element.property == Property.SLIDE_TOP) {
+                    element.view.scrollTo(element.view.getScrollX(), delta);
+                    return;
+                } else if (element.property == Property.SLIDE_LEFT) {
+                    element.view.scrollTo(delta, element.view.getScrollY());
+                    return;
+                }
+
                 ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) element.view.getLayoutParams();
- 
+
                 if (element.property == Property.SHRINK_TOP)
                     params.setMargins(params.leftMargin, delta, params.rightMargin, params.bottomMargin);
                 else if (element.property == Property.SHRINK_LEFT)
                     params.setMargins(delta, params.topMargin, params.rightMargin, params.bottomMargin);
-                else if (element.property == Property.SLIDE_TOP)
-                    element.view.scrollTo(element.view.getScrollX(), delta);
-                else if (element.property == Property.SLIDE_LEFT)
-                    element.view.scrollTo(delta, element.view.getScrollY());
- 
+
                 element.view.requestLayout();
             }
         });
