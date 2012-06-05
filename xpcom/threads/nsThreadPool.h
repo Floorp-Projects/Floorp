@@ -14,8 +14,10 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Attributes.h"
 
-class nsThreadPool : public nsIThreadPool, public nsIRunnable
+class nsThreadPool MOZ_FINAL : public nsIThreadPool,
+                               public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
