@@ -4487,9 +4487,16 @@ ContentUnbinder* ContentUnbinder::sContentUnbinder = nsnull;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   nsINode::Unlink(tmp);
 
-  if (tmp->HasProperties() && tmp->IsXUL()) {
-    tmp->DeleteProperty(nsGkAtoms::contextmenulistener);
-    tmp->DeleteProperty(nsGkAtoms::popuplistener);
+  if (tmp->HasProperties()) {
+    if (tmp->IsHTML()) {
+      tmp->DeleteProperty(nsGkAtoms::microdataProperties);
+      tmp->DeleteProperty(nsGkAtoms::itemtype);
+      tmp->DeleteProperty(nsGkAtoms::itemref);
+      tmp->DeleteProperty(nsGkAtoms::itemprop);
+    } else if (tmp->IsXUL()) {
+      tmp->DeleteProperty(nsGkAtoms::contextmenulistener);
+      tmp->DeleteProperty(nsGkAtoms::popuplistener);
+    }
   }
 
   // Unlink child content (and unbind our subtree).
@@ -4987,14 +4994,25 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericElement)
 
   tmp->OwnerDoc()->BindingManager()->Traverse(tmp, cb);
 
-  if (tmp->HasProperties() && tmp->IsXUL()) {
-    nsISupports* property =
-      static_cast<nsISupports*>
-                 (tmp->GetProperty(nsGkAtoms::contextmenulistener));
-    cb.NoteXPCOMChild(property);
-    property = static_cast<nsISupports*>
-                          (tmp->GetProperty(nsGkAtoms::popuplistener));
-    cb.NoteXPCOMChild(property);
+  if (tmp->HasProperties()) {
+    if (tmp->IsHTML()) {
+      nsISupports* property = static_cast<nsISupports*>
+                                         (tmp->GetProperty(nsGkAtoms::microdataProperties));
+      cb.NoteXPCOMChild(property);
+      property = static_cast<nsISupports*>(tmp->GetProperty(nsGkAtoms::itemref));
+      cb.NoteXPCOMChild(property);
+      property = static_cast<nsISupports*>(tmp->GetProperty(nsGkAtoms::itemprop));
+      cb.NoteXPCOMChild(property);
+      property = static_cast<nsISupports*>(tmp->GetProperty(nsGkAtoms::itemtype));
+      cb.NoteXPCOMChild(property);
+    } else if (tmp->IsXUL()) {
+      nsISupports* property = static_cast<nsISupports*>
+                                         (tmp->GetProperty(nsGkAtoms::contextmenulistener));
+      cb.NoteXPCOMChild(property);
+      property = static_cast<nsISupports*>
+                            (tmp->GetProperty(nsGkAtoms::popuplistener));
+      cb.NoteXPCOMChild(property);
+    }
   }
 
   // Traverse attribute names and child content.

@@ -112,7 +112,6 @@ public:
                                        UseExistingNameString, aName);
   }
 
-
   virtual nsresult ResolveName(const nsAString& aName,
                                nsIContent *aForm,
                                nsISupports **aResult,

@@ -116,6 +116,9 @@
 % locale testpilot @AB_CD@ %locale/feedback/
     locale/feedback/main.dtd                       (%feedback/main.dtd)
     locale/feedback/main.properties                (%feedback/main.properties)
+% locale pdf.js @AB_CD@ %locale/pdfviewer/
+    locale/pdfviewer/viewer.properties             (%pdfviewer/viewer.properties)
+    locale/pdfviewer/chrome.properties             (%pdfviewer/chrome.properties)
 #ifdef MOZ_WEBAPP_RUNTIME
 % locale webapprt @AB_CD@ %locale/webapprt/
     locale/webapprt/webapp.dtd                     (%webapprt/webapp.dtd)

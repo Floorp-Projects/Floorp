@@ -4593,7 +4593,15 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_GRAPHITE=1
-ACCESSIBILITY=1
+
+case "${target}" in
+*darwin*)
+    ACCESSIBILITY=
+    ;;
+*)
+    ACCESSIBILITY=1
+    ;;
+esac
 
 case "$target_os" in
     mingw*)
@@ -5526,9 +5534,10 @@ AC_DEFINE(IBMBIDI)
 
 dnl ========================================================
 dnl accessibility support on by default on all platforms
+dnl except OS X.
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(accessibility,
-[  --disable-accessibility Disable accessibility support],
+[  --disable-accessibility Disable accessibility support (off by default on OS X)],
     ACCESSIBILITY=,
     ACCESSIBILITY=1 )
 if test "$ACCESSIBILITY"; then

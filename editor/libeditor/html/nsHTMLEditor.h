@@ -96,6 +96,8 @@ public:
            nsHTMLEditor();
   virtual  ~nsHTMLEditor();
 
+  bool GetReturnInParagraphCreatesNewParagraph();
+
   /* ------------ nsPlaintextEditor overrides -------------- */
   NS_IMETHOD GetIsDocumentEditable(bool *aIsDocumentEditable);
   NS_IMETHOD BeginningOfDocument();
@@ -228,13 +230,13 @@ public:
   static already_AddRefed<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
 
   static already_AddRefed<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
-  nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, 
+  void     IsNextCharWhitespace(nsIDOMNode *aParentNode,
                                 PRInt32 aOffset, 
                                 bool *outIsSpace, 
                                 bool *outIsNBSP,
                                 nsCOMPtr<nsIDOMNode> *outNode = 0,
                                 PRInt32 *outOffset = 0);
-  nsresult IsPrevCharWhitespace(nsIDOMNode *aParentNode, 
+  void     IsPrevCharWhitespace(nsIDOMNode *aParentNode,
                                 PRInt32 aOffset, 
                                 bool *outIsSpace, 
                                 bool *outIsNBSP,

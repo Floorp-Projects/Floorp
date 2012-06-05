@@ -12,6 +12,7 @@ const Cr = Components.results;
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/ContactService.jsm');
+Cu.import('resource://gre/modules/SettingsChangeNotifier.jsm');
 Cu.import('resource://gre/modules/Webapps.jsm');
 
 XPCOMUtils.defineLazyServiceGetter(Services, 'env',

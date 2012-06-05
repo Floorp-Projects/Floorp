@@ -279,7 +279,7 @@ class RepatchLabel
 
     void use(uint32 newOffset) {
         JS_ASSERT(offset_ == INVALID_OFFSET);
-        JS_ASSERT(newOffset != INVALID_OFFSET);
+        JS_ASSERT(newOffset != (uint32)INVALID_OFFSET);
         offset_ = newOffset;
     }
     bool bound() const {

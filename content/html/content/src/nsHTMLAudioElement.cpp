@@ -83,6 +83,20 @@ nsHTMLAudioElement::~nsHTMLAudioElement()
 {
 }
 
+void
+nsHTMLAudioElement::GetItemValueText(nsAString& aValue)
+{
+  // Can't call GetSrc because we don't have a JSContext
+  GetURIAttr(nsGkAtoms::src, nsnull, aValue);
+}
+
+void
+nsHTMLAudioElement::SetItemValueText(const nsAString& aValue)
+{
+  // Can't call SetSrc because we don't have a JSContext
+  SetAttr(kNameSpaceID_None, nsGkAtoms::src, aValue, true);
+}
+
 NS_IMETHODIMP
 nsHTMLAudioElement::Initialize(nsISupports* aOwner, JSContext* aContext,
                                JSObject *aObj, PRUint32 argc, jsval *argv)

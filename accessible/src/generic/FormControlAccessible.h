@@ -6,7 +6,7 @@
 #ifndef MOZILLA_A11Y_FormControlAccessible_H_
 #define MOZILLA_A11Y_FormControlAccessible_H_
 
-#include "nsBaseWidgetAccessible.h"
+#include "BaseAccessibles.h"
 
 namespace mozilla {
 namespace a11y {
@@ -15,11 +15,11 @@ namespace a11y {
   * Generic class used for progress meters.
   */
 template<int Max>
-class ProgressMeterAccessible : public nsLeafAccessible
+class ProgressMeterAccessible : public LeafAccessible
 {
 public:
   ProgressMeterAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-    nsLeafAccessible(aContent, aDoc)
+    LeafAccessible(aContent, aDoc)
   {
   }
 
@@ -38,7 +38,7 @@ public:
 /**
   * Generic class used for radio buttons.
   */
-class RadioButtonAccessible : public nsLeafAccessible
+class RadioButtonAccessible : public LeafAccessible
 {
 
 public:
