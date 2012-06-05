@@ -17,6 +17,7 @@
 #include "vm/Shape-inl.h"
 
 using namespace js;
+using namespace js::gc;
 
 inline HashNumber
 ShapeHasher::hash(const Lookup &l)
@@ -267,6 +268,76 @@ Shape::finalize(FreeOp *fop)
     if (!inDictionary() && kids.isHash())
         fop->delete_(kids.toHash());
 }
+
+#ifdef JSGC_COMPACTING
+
+void
+Shape::fixupDictionaryShapeAfterMovingGC()
+{
+    if (!listp)
+        return;
+
+    JS_ASSERT(!IsInsideNursery(reinterpret_cast<Cell *>(listp)));
+    AllocKind kind = reinterpret_cast<Cell *>(listp)->tenuredGetAllocKind();
+    JS_ASSERT(kind == FINALIZE_SHAPE || kind <= FINALIZE_OBJECT_LAST);
+    if (kind == FINALIZE_SHAPE) {
+        // listp points to the parent field of the next shape.
+        Shape *next = reinterpret_cast<Shape *>(uintptr_t(listp) -
+                                                offsetof(Shape, parent));
+        listp = &gc::MaybeForwarded(next)->parent;
+    } else {
+        // listp points to the shape_ field of an object.
+        JSObject *last = reinterpret_cast<JSObject *>(uintptr_t(listp) -
+                                                      offsetof(JSObject, shape_));
+        listp = &gc::MaybeForwarded(last)->shape_;
+    }
+}
+
+void
+Shape::fixupShapeTreeAfterMovingGC()
+{
+    if (kids.isNull())
+        return;
+
+    if (kids.isShape()) {
+        if (gc::IsForwarded(kids.toShape()))
+            kids.setShape(gc::Forwarded(kids.toShape()));
+        return;
+    }
+
+    JS_ASSERT(kids.isHash());
+    KidsHash *kh = kids.toHash();
+    for (KidsHash::Enum e(*kh); !e.empty(); e.popFront()) {
+        Shape *key = e.front();
+        if (!IsForwarded(key))
+            continue;
+
+        key = Forwarded(key);
+        BaseShape *base = key->base();
+        if (IsForwarded(base))
+            base = Forwarded(base);
+        UnownedBaseShape *unowned = base->unowned();
+        if (IsForwarded(unowned))
+            unowned = Forwarded(unowned);
+        StackShape lookup(unowned,
+                          const_cast<Shape *>(key)->propidRef(),
+                          key->slotInfo & Shape::SLOT_MASK,
+                          key->attrs,
+                          key->flags);
+        e.rekeyFront(lookup, key);
+    }
+}
+
+void
+Shape::fixupAfterMovingGC()
+{
+    if (inDictionary())
+        fixupDictionaryShapeAfterMovingGC();
+    else
+        fixupShapeTreeAfterMovingGC();
+}
+
+#endif // JSGC_COMPACTING
 
 #ifdef DEBUG
 

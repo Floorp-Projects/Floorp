@@ -175,7 +175,8 @@ struct Zone : public JS::shadow::Zone,
         Mark,
         MarkGray,
         Sweep,
-        Finished
+        Finished,
+        Compact
     };
     void setGCState(GCState state) {
         JS_ASSERT(runtimeFromMainThread()->isHeapBusy());
@@ -193,7 +194,8 @@ struct Zone : public JS::shadow::Zone,
     // If this returns true, all object tracing must be done with a GC marking
     // tracer.
     bool requireGCTracer() const {
-        return runtimeFromMainThread()->isHeapMajorCollecting() && gcState_ != NoGC;
+        JSRuntime *rt = runtimeFromMainThread();
+        return rt->isHeapMajorCollecting() && !rt->isHeapCompacting() && gcState_ != NoGC;
     }
 
     bool isGCMarking() {
@@ -208,6 +210,8 @@ struct Zone : public JS::shadow::Zone,
     bool isGCMarkingGray() { return gcState_ == MarkGray; }
     bool isGCSweeping() { return gcState_ == Sweep; }
     bool isGCFinished() { return gcState_ == Finished; }
+    bool isGCCompacting() { return gcState_ == Compact; }
+    bool isGCSweepingOrCompacting() { return gcState_ == Sweep || gcState_ == Compact; }
 
     // Get a number that is incremented whenever this zone is collected, and
     // possibly at other times too.

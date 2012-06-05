@@ -1571,6 +1571,8 @@ FinalizeGenerator(FreeOp *fop, JSObject *obj)
 static void
 MarkGeneratorFrame(JSTracer *trc, JSGenerator *gen)
 {
+    gen->obj = MaybeForwarded(gen->obj.get());
+    MarkObject(trc, &gen->obj, "Generator Object");
     MarkValueRange(trc,
                    HeapValueify(gen->fp->generatorArgsSnapshotBegin()),
                    HeapValueify(gen->fp->generatorArgsSnapshotEnd()),

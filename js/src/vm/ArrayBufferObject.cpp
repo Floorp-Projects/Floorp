@@ -826,9 +826,10 @@ ArrayBufferObject::finalize(FreeOp *fop, JSObject *obj)
 /* static */ void
 ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
 {
-    if (!IS_GC_MARKING_TRACER(trc) && !trc->runtime()->isHeapMinorCollecting()
+    JSRuntime *rt = trc->runtime();
+    if (!IS_GC_MARKING_TRACER(trc) && !rt->isHeapMinorCollecting() && !rt->isHeapCompacting()
 #ifdef JSGC_FJGENERATIONAL
-        && !trc->runtime()->isFJMinorCollecting()
+        && !rt->isFJMinorCollecting()
 #endif
         )
     {
@@ -852,15 +853,16 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
     if (!viewsHead)
         return;
 
-    buffer.setViewList(UpdateObjectIfRelocated(trc->runtime(), &viewsHead));
+    ArrayBufferViewObject *tmp = viewsHead;
+    buffer.setViewList(UpdateObjectIfRelocated(rt, &tmp));
 
-    if (viewsHead->nextView() == nullptr) {
+    if (tmp->nextView() == nullptr) {
         // Single view: mark it, but only if we're actually doing a GC pass
         // right now. Otherwise, the tracing pass for barrier verification will
         // fail if we add another view and the pointer becomes weak.
         MarkObjectUnbarriered(trc, &viewsHead, "arraybuffer.singleview");
         buffer.setViewListNoBarrier(viewsHead);
-    } else {
+    } else if (!rt->isHeapCompacting()) {
         // Multiple views: do not mark, but append buffer to list.
         ArrayBufferVector &gcLiveArrayBuffers = buffer.compartment()->gcLiveArrayBuffers;
 
@@ -877,6 +879,19 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
             buffer.setInLiveList(true);
         } else {
             CrashAtUnhandlableOOM("OOM while updating live array buffers");
+        }
+    } else {
+        // If we're fixing up pointers after compacting then trace everything.
+        ArrayBufferViewObject *prev = nullptr;
+        ArrayBufferViewObject *view = viewsHead;
+        while (view) {
+            JS_ASSERT(buffer.compartment() == MaybeForwarded(view)->compartment());
+            MarkObjectUnbarriered(trc, &view, "arraybuffer.singleview");
+            if (prev)
+                prev->setNextView(view);
+            else
+                buffer.setViewListNoBarrier(view);
+            view = view->nextView();
         }
     }
 }
