@@ -134,8 +134,8 @@ public class LayerRenderer {
         "    gl_FragColor = texture2D(sTexture, vTexCoord);\n" +
         "}\n";
 
-    public void setCheckerboardBitmap(ByteBuffer data, int width, int height, RectF pageRect) {
-        mCheckerboardLayer.setBitmap(data, width, height);
+    public void setCheckerboardBitmap(Bitmap bitmap, RectF pageRect) {
+        mCheckerboardLayer.setBitmap(bitmap);
         mCheckerboardLayer.beginTransaction();
         try {
             mCheckerboardLayer.setPosition(RectUtils.round(pageRect));
