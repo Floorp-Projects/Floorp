@@ -79,4 +79,5 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [ChromeOnly] readonly attribute MozChannel channel;
   void sendAsBinary(DOMString body);
   any getInterface(IID iid);
+  [TreatNonCallableAsNull] attribute Function? onuploadprogress;
 };
