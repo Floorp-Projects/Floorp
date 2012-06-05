@@ -2300,6 +2300,9 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
         argv[argc + 2].setObject(*proto);
         argv[0].setUndefined(); // We want to use a different callee (avoid an assertion)
 
+        // Appease 'thisv' assertion in CrossCompartmentWrapper::nativeCall
+        argv[1].setMagic(JS_IS_CONSTRUCTING);
+
         CallArgs proxyArgs = CallArgsFromVp(argc + 1, argv.begin());
         if (!Proxy::nativeCall(cx, bufobj, &DataViewClass, constructWithProto, proxyArgs))
             return false;
