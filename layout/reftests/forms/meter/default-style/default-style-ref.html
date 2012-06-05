@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <style>
+    /* optimum = 0.0 */
+    div:nth-child(1) > .meter-optimum { width: 0%; }
+    div:nth-child(2) > .meter-optimum { width: 10%; }
+    div:nth-child(3) > .meter-sub-optimum { width: 30%; }
+    div:nth-child(4) > .meter-sub-optimum { width: 50%; }
+    div:nth-child(5) > .meter-sub-optimum { width: 70%; }
+    div:nth-child(6) > .meter-sub-sub-optimum { width: 80%; }
+    div:nth-child(7) > .meter-sub-sub-optimum { width: 100%; }
+
+    /* optimum = 0.1 */
+    div:nth-child(8) > .meter-optimum { width: 0%; }
+    div:nth-child(9) > .meter-optimum { width: 10%; }
+    div:nth-child(10) > .meter-sub-optimum { width: 30%; }
+    div:nth-child(11) > .meter-sub-optimum { width: 50%; }
+    div:nth-child(12) > .meter-sub-optimum { width: 70%; }
+    div:nth-child(13) > .meter-sub-sub-optimum { width: 80%; }
+    div:nth-child(14) > .meter-sub-sub-optimum { width: 100%; }
+
+    /* optimum = 0.3 */
+    div:nth-child(15) > .meter-sub-optimum { width: 0%; }
+    div:nth-child(16) > .meter-sub-optimum { width: 10%; }
+    div:nth-child(17) > .meter-optimum { width: 30%; }
+    div:nth-child(18) > .meter-optimum { width: 50%; }
+    div:nth-child(19) > .meter-optimum { width: 70%; }
+    div:nth-child(20) > .meter-sub-optimum { width: 80%; }
+    div:nth-child(21) > .meter-sub-optimum { width: 100%; }
+
+    /* optimum = 0.5 */
+    div:nth-child(22) > .meter-sub-optimum { width: 0%; }
+    div:nth-child(23) > .meter-sub-optimum { width: 10%; }
+    div:nth-child(24) > .meter-optimum { width: 30%; }
+    div:nth-child(25) > .meter-optimum { width: 50%; }
+    div:nth-child(26) > .meter-optimum { width: 70%; }
+    div:nth-child(27) > .meter-sub-optimum { width: 80%; }
+    div:nth-child(28) > .meter-sub-optimum { width: 100%; }
+
+    /* optimum = 0.7 */
+    div:nth-child(29) > .meter-sub-optimum { width: 0%; }
+    div:nth-child(30) > .meter-sub-optimum { width: 10%; }
+    div:nth-child(31) > .meter-optimum { width: 30%; }
+    div:nth-child(32) > .meter-optimum { width: 50%; }
+    div:nth-child(33) > .meter-optimum { width: 70%; }
+    div:nth-child(34) > .meter-sub-optimum { width: 80%; }
+    div:nth-child(35) > .meter-sub-optimum { width: 100%; }
+
+    /* optimum = 0.8 */
+    div:nth-child(36) > .meter-sub-sub-optimum { width: 0%; }
+    div:nth-child(37) > .meter-sub-sub-optimum { width: 10%; }
+    div:nth-child(38) > .meter-sub-optimum { width: 30%; }
+    div:nth-child(39) > .meter-sub-optimum { width: 50%; }
+    div:nth-child(40) > .meter-sub-optimum { width: 70%; }
+    div:nth-child(41) > .meter-optimum { width: 80%; }
+    div:nth-child(42) > .meter-optimum { width: 100%; }
+
+    /* optimum = 1.0 */
+    div:nth-child(43) > .meter-sub-sub-optimum { width: 0%; }
+    div:nth-child(44) > .meter-sub-sub-optimum { width: 10%; }
+    div:nth-child(45) > .meter-sub-optimum { width: 30%; }
+    div:nth-child(46) > .meter-sub-optimum { width: 50%; }
+    div:nth-child(47) > .meter-sub-optimum { width: 70%; }
+    div:nth-child(48) > .meter-optimum { width: 80%; }
+    div:nth-child(49) > .meter-optimum { width: 100%; }
+  </style>
+  <body>
+    <!-- optimum = 0.0 -->
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-sub-optimum">
+      </div>
+    </div>
+
+    <!-- optimum = 0.1 -->
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-sub-optimum">
+      </div>
+    </div>
+
+    <!-- optimum = 0.3 -->
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+
+    <!-- optimum = 0.5 -->
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+
+    <!-- optimum = 0.7 -->
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+
+    <!-- optimum = 0.8 -->
+    <div class="meter-element">
+      <div class="meter-sub-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+
+    <!-- optimum = 1.0 -->
+    <div class="meter-element">
+      <div class="meter-sub-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-sub-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-optimum">
+      </div>
+    </div>
+  </body>
+</html>
