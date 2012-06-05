@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=743666
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 743666</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=743666">Mozilla Bug 743666</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 743666 **/
+
+var called = false;
+function uploadprogress()
+{
+  called = true;
+}
+
+var xhr = new XMLHttpRequest();
+xhr.onuploadprogress = uploadprogress;
+var event = document.createEvent("ProgressEvent");
+event.initProgressEvent("uploadprogress", false, false, false, false, 0);
+xhr.dispatchEvent(event);
+ok(called,
+   "XMLHttpRequest.onuploadprogress sets uploadprogress event listener");
+
+
+</script>
+</pre>
+</body>
+</html>
