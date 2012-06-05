@@ -36,11 +36,15 @@ public class SuggestClient {
     // the maximum number of suggestions to return
     private final int mMaxResults;
 
+    // used by robocop for testing; referenced via reflection
+    private boolean mCheckNetwork;
+
     public SuggestClient(Context context, String suggestTemplate, int timeout, int maxResults) {
         mContext = context;
         mMaxResults = maxResults;
         mSuggestTemplate = suggestTemplate;
         mTimeout = timeout;
+        mCheckNetwork = true;
     }
 
     public SuggestClient(Context context, String suggestTemplate, int timeout) {
@@ -56,7 +60,7 @@ public class SuggestClient {
             return suggestions;
         }
 
-        if (!isNetworkConnected()) {
+        if (!isNetworkConnected() && mCheckNetwork) {
             Log.i(LOGTAG, "Not connected to network");
             return suggestions;
         }
