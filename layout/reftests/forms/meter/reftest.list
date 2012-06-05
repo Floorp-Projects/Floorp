@@ -17,3 +17,6 @@
 # transformations will not behave exactly the same for <meter> and two divs.
 # However, it would be possible to manually check those.
 # == transformations.html transformations-ref.html
+
+# default style
+include default-style/reftest.list
