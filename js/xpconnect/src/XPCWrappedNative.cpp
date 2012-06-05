@@ -91,16 +91,6 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
         cb.NoteJSChild(obj);
     }
 
-    if (tmp->MightHaveExpandoObject()) {
-        XPCJSRuntime *rt = tmp->GetRuntime();
-        XPCCompartmentSet &set = rt->GetCompartmentSet();
-        for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
-            CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
-            NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "XPCWrappedNative expando object");
-            cb.NoteJSChild(priv->LookupExpandoObjectPreserveColor(tmp));
-        }
-    }
-
     // XPCWrappedNative keeps its native object alive.
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mIdentity");
     cb.NoteXPCOMChild(tmp->GetIdentityObject());

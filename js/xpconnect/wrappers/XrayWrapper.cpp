@@ -29,7 +29,6 @@ using namespace js;
 
 static const uint32_t JSSLOT_WN = 0;
 static const uint32_t JSSLOT_RESOLVING = 1;
-static const uint32_t JSSLOT_EXPANDO = 2;
 
 static XPCWrappedNative *GetWrappedNative(JSObject *obj);
 
@@ -37,7 +36,7 @@ namespace XrayUtils {
 
 JSClass HolderClass = {
     "NativePropertyHolder",
-    JSCLASS_HAS_RESERVED_SLOTS(3),
+    JSCLASS_HAS_RESERVED_SLOTS(2),
     JS_PropertyStub,        JS_PropertyStub, holder_get,      holder_set,
     JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub
 };
@@ -232,10 +231,8 @@ createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent)
     if (!holder)
         return nsnull;
 
-    CompartmentPrivate *priv = GetCompartmentPrivate(holder);
     JSObject *inner = JS_ObjectToInnerObject(cx, wrappedNative);
     XPCWrappedNative *wn = GetWrappedNative(inner);
-    Value expando = ObjectOrNullValue(priv->LookupExpandoObject(wn));
 
     // A note about ownership: the holder has a direct pointer to the wrapped
     // native that we're wrapping. Normally, we'd have to AddRef the pointer
@@ -249,7 +246,6 @@ createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent)
               js::GetObjectClass(wrappedNative)->ext.innerObject);
     js::SetReservedSlot(holder, JSSLOT_WN, PrivateValue(wn));
     js::SetReservedSlot(holder, JSSLOT_RESOLVING, PrivateValue(NULL));
-    js::SetReservedSlot(holder, JSSLOT_EXPANDO, expando);
     return holder;
 }
 
@@ -424,43 +420,6 @@ static JSObject *
 GetWrappedNativeObjectFromHolder(JSObject *holder)
 {
     return GetWrappedNativeFromHolder(holder)->GetFlatJSObject();
-}
-
-static JSObject *
-GetExpandoObject(JSObject *holder)
-{
-    MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
-    return js::GetReservedSlot(holder, JSSLOT_EXPANDO).toObjectOrNull();
-}
-
-static JSObject *
-EnsureExpandoObject(JSContext *cx, JSObject *holder)
-{
-    MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
-    JSObject *expando = GetExpandoObject(holder);
-    if (expando)
-        return expando;
-    CompartmentPrivate *priv = GetCompartmentPrivate(holder);
-    XPCWrappedNative *wn = GetWrappedNativeFromHolder(holder);
-    expando = priv->LookupExpandoObject(wn);
-    if (!expando) {
-        expando = JS_NewObjectWithGivenProto(cx, nsnull, nsnull,
-                                             js::GetObjectParent(holder));
-        if (!expando)
-            return NULL;
-        // Add the expando object to the expando map to keep it alive.
-        if (!priv->RegisterExpandoObject(wn, expando)) {
-            JS_ReportOutOfMemory(cx);
-            return NULL;
-        }
-        // Make sure the wn stays alive so it keeps the expando object alive.
-        nsRefPtr<nsXPCClassInfo> ci;
-        CallQueryInterface(wn->Native(), getter_AddRefs(ci));
-        if (ci)
-            ci->PreserveWrapper(wn->Native());
-    }
-    js::SetReservedSlot(holder, JSSLOT_EXPANDO, ObjectValue(*expando));
-    return expando;
 }
 
 static inline JSObject *
