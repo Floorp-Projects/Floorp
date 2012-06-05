@@ -526,9 +526,11 @@ public class GeckoAppShell
     }
 
     // Called by AndroidBridge using JNI
-    public static void notifyScreenShot(final ByteBuffer data, final int tabId, final int x, final int y,
-                                        final int width, final int height, final int token) {
-        ScreenshotHandler.notifyScreenShot(data, tabId, x, y, width, height, token);
+    public static void notifyScreenShot(final ByteBuffer data, final int tabId, 
+                                        final int left, final int top,
+                                        final int right, final int bottom, 
+                                        final int bufferWidth, final int bufferHeight, final int token) {
+        ScreenshotHandler.notifyScreenShot(data, tabId, left, top, right, bottom, bufferWidth, bufferHeight, token);
     }
 
     private static CountDownLatch sGeckoPendingAcks = null;
@@ -2275,8 +2277,10 @@ class ScreenshotHandler {
 
     }
 
-    public static void notifyScreenShot(final ByteBuffer data, final int tabId, final int x, final int y,
-                                        final int width, final int height, final int token) {
+    public static void notifyScreenShot(final ByteBuffer data, final int tabId, 
+                                        final int left, final int top,
+                                        final int right, final int bottom, 
+                                        final int bufferWidth, final int bufferHeight, final int token) {
 
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
@@ -2295,7 +2299,7 @@ class ScreenshotHandler {
                     {
                         GeckoApp.mAppContext.getLayerController()
                             .getView().getRenderer()
-                            .setCheckerboardBitmap(data, width, height, sCheckerboardPageRect);
+                            .setCheckerboardBitmap(data, bufferWidth, bufferHeight, sCheckerboardPageRect, new Rect(left, top, right, bottom));
                         synchronized(sPendingScreenshots) {
                             sPendingScreenshots.remove();
                             sendNextEventToGecko();

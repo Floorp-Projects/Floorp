@@ -45,12 +45,12 @@ public class ScreenshotLayer extends SingleTileLayer {
         mHasImage = false;
     }
 
-    void setBitmap(ByteBuffer data, int width, int height) {
+    void setBitmap(ByteBuffer data, int width, int height, Rect rect) {
         mImageSize = new IntSize(width, height);
         if (IntSize.isPowerOfTwo(width) && IntSize.isPowerOfTwo(height)) {
             mBufferSize = mImageSize;
             mHasImage = true;
-            mImage.setBitmap(data, width, height, CairoImage.FORMAT_RGB16_565);
+            mImage.setBitmap(data, width, height, CairoImage.FORMAT_RGB16_565, rect);
         } else {
             Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
             b.copyPixelsFromBuffer(data);
@@ -130,14 +130,18 @@ public class ScreenshotLayer extends SingleTileLayer {
             }
         }
 
-        void copyBuffer(ByteBuffer src, ByteBuffer dst, int size) {
-            dst.asIntBuffer().put(src.asIntBuffer());
+        void copyBuffer(ByteBuffer src, ByteBuffer dst, Rect rect, int stride) {
+            int start = rect.left + rect.top * stride;
+            int end = Math.min(Math.min(rect.right + (rect.bottom - 1) * stride, src.capacity()), dst.limit());
+            dst.position(start);
+            src.position(start).limit(end);
+            dst.put(src);
         }
 
-        synchronized void setBitmap(ByteBuffer data, int width, int height, int format) {
+        synchronized void setBitmap(ByteBuffer data, int width, int height, int format, Rect rect) {
             mSize = new IntSize(width, height);
             mFormat = format;
-            copyBuffer(data, mBuffer, width * height * 2);
+            copyBuffer(data.asReadOnlyBuffer(), mBuffer.duplicate(), rect, width * 2);
         }
 
         synchronized void setBitmap(Bitmap bitmap, int width, int height, int format) {
