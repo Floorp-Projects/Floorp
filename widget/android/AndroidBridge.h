@@ -343,7 +343,7 @@ public:
     void LockScreenOrientation(uint32_t aOrientation);
     void UnlockScreenOrientation();
 
-    void PumpMessageLoop();
+    bool PumpMessageLoop();
 
     void NotifyWakeLockChanged(const nsAString& topic, const nsAString& state);
 

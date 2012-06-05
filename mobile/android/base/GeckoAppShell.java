@@ -2233,16 +2233,17 @@ public class GeckoAppShell
         GeckoScreenOrientationListener.getInstance().unlockScreenOrientation();
     }
 
-    public static void pumpMessageLoop() {
+    public static boolean pumpMessageLoop() {
         MessageQueue mq = Looper.myQueue();
         Message msg = getNextMessageFromQueue(mq); 
         if (msg == null)
-            return;
-        if (msg.getTarget() == null)
+            return false;
+        if (msg.getTarget() == null) 
             Looper.myLooper().quit();
         else
             msg.getTarget().dispatchMessage(msg);
         msg.recycle();
+        return true;
     }
 
     static class AsyncResultHandler extends FilePickerResultHandler {
