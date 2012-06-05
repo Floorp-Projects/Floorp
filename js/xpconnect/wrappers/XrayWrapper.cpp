@@ -205,6 +205,26 @@ EnsureExpandoObject(JSContext *cx, JSObject *wrapper, JSObject *target)
     return expandoObject;
 }
 
+bool
+CloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
+{
+    MOZ_ASSERT(js::IsObjectInContextCompartment(dst, cx));
+    MOZ_ASSERT(GetExpandoChain(dst) == nsnull);
+
+    JSObject *oldHead = GetExpandoChain(src);
+    while (oldHead) {
+        JSObject *exclusive = JS_GetReservedSlot(oldHead,
+                                                 JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL)
+                                                .toObjectOrNull();
+        JSObject *newHead =
+          AttachExpandoObject(cx, dst, GetExpandoObjectPrincipal(oldHead), exclusive);
+        if (!JS_CopyPropertiesFrom(cx, newHead, oldHead))
+            return false;
+        oldHead = JS_GetReservedSlot(oldHead, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
+    }
+    return true;
+}
+
 JSObject *
 createHolder(JSContext *cx, JSObject *wrappedNative, JSObject *parent)
 {
