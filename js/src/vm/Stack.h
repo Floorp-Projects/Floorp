@@ -36,9 +36,10 @@ class ScriptFrameIter;
 class AllFramesIter;
 
 class ArgumentsObject;
-class ScopeCoordinate;
 class ScopeObject;
 class StaticBlockObject;
+
+struct ScopeCoordinate;
 
 #ifdef JS_METHODJIT
 namespace mjit {
@@ -415,7 +416,7 @@ class StackFrame
 #ifdef JS_METHODJIT
     friend class mjit::CallCompiler;
     friend class mjit::GetPropCompiler;
-    friend class mjit::ic::GetElementIC;
+    friend struct mjit::ic::GetElementIC;
 #endif
 
     /*
