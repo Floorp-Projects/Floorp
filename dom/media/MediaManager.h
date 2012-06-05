@@ -9,9 +9,8 @@
 #include "nsClassHashtable.h"
 #include "nsObserverService.h"
 
+#include "nsPIDOMWindow.h"
 #include "nsIDOMNavigatorUserMedia.h"
-
-#include "stdio.h"
 
 namespace mozilla {
 
@@ -96,7 +95,7 @@ public:
   MediaEngine* GetBackend();
   WindowTable* GetActiveWindows();
 
-  nsresult GetUserMedia(PRUint64 aWindowID, nsIMediaStreamOptions* aParams,
+  nsresult GetUserMedia(nsPIDOMWindow* aWindow, nsIMediaStreamOptions* aParams,
     nsIDOMGetUserMediaSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
   void OnNavigation(PRUint64 aWindowID);

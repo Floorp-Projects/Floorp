@@ -3,6 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaEngineDefault.h"
+#include "nsDOMFile.h"
+
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#include "nsISupportsUtils.h"
+#endif
 
 #define WIDTH 320
 #define HEIGHT 240
@@ -149,8 +155,27 @@ MediaEngineDefaultVideoSource::Stop()
 nsresult
 MediaEngineDefaultVideoSource::Snapshot(PRUint32 aDuration, nsIDOMFile** aFile)
 {
-   *aFile = nsnull;
-   return NS_ERROR_NOT_IMPLEMENTED;
+  *aFile = nsnull;
+
+#ifndef MOZ_WIDGET_ANDROID
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  if (!AndroidBridge::Bridge()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsAutoString filePath;
+  AndroidBridge::Bridge()->ShowFilePickerForMimeType(filePath, NS_LITERAL_STRING("image/*"));
+
+  nsCOMPtr<nsILocalFile> localFile;
+  nsresult rv = NS_NewLocalFile(filePath, false, getter_AddRefs(localFile));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  NS_ADDREF(*aFile = new nsDOMFileFile(localFile));
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
