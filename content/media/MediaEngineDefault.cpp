@@ -4,6 +4,15 @@
 
 #include "MediaEngineDefault.h"
 
+#include "nsCOMPtr.h"
+#include "nsDOMFile.h"
+#include "nsILocalFile.h"
+
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#include "nsISupportsUtils.h"
+#endif
+
 #define WIDTH 320
 #define HEIGHT 240
 #define FPS 10
@@ -149,8 +158,25 @@ MediaEngineDefaultVideoSource::Stop()
 nsresult
 MediaEngineDefaultVideoSource::Snapshot(PRUint32 aDuration, nsIDOMFile** aFile)
 {
-   *aFile = nsnull;
-   return NS_ERROR_NOT_IMPLEMENTED;
+  *aFile = nsnull;
+
+#ifndef MOZ_WIDGET_ANDROID
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  if (!AndroidBridge::Bridge()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsAutoString filePath;
+  AndroidBridge::Bridge()->ShowFilePickerForMimeType(filePath, NS_LITERAL_STRING("image/*"));
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_NewLocalFile(filePath, false, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*aFile = new nsDOMFileFile(file));
+  return NS_OK;
+#endif
 }
 
 NS_IMETHODIMP
