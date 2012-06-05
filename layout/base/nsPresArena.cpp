@@ -414,16 +414,14 @@ nsPresArena::~nsPresArena()
 void*
 nsPresArena::AllocateBySize(size_t aSize)
 {
-  return mState->Allocate(PRUint32(aSize) |
-                          PRUint32(nsQueryFrame::NON_FRAME_MARKER),
+  return mState->Allocate(PRUint32(aSize) | PRUint32(NON_OBJECT_MARKER),
                           aSize);
 }
 
 void
 nsPresArena::FreeBySize(size_t aSize, void* aPtr)
 {
-  mState->Free(PRUint32(aSize) |
-               PRUint32(nsQueryFrame::NON_FRAME_MARKER), aPtr);
+  mState->Free(PRUint32(aSize) | PRUint32(NON_OBJECT_MARKER), aPtr);
 }
 
 void*
