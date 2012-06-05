@@ -944,14 +944,19 @@ mjit::CanMethodJIT(JSContext *cx, JSScript *script, jsbytecode *pc,
         jit = MakeJITScript(cx, script);
         if (!jit)
             return Compile_Error;
+
+        // Script analysis can trigger GC, watch in case needsBarrier() changed.
+        if (gcNumber != cx->runtime->gcNumber) {
+            FreeOp *fop = cx->runtime->defaultFreeOp();
+            jit->destroy(fop);
+            fop->free_(jit);
+            goto restart;
+        }
+
         jith->setValid(jit);
     } else {
         jit = jith->getValid();
     }
-
-    // Script analysis can trigger GC, watch in case needsBarrier() changed.
-    if (gcNumber != cx->runtime->gcNumber)
-        goto restart;
 
     unsigned chunkIndex = jit->chunkIndex(pc);
     ChunkDescriptor &desc = jit->chunkDescriptor(chunkIndex);
