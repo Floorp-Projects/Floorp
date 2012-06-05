@@ -358,15 +358,6 @@ TraceJSHolder(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32_t number,
 }
 
 static PLDHashOperator
-TraceExpandos(XPCWrappedNative *wn, JSObject *&expando, void *aClosure)
-{
-    if (wn->IsWrapperExpired())
-        return PL_DHASH_REMOVE;
-    JS_CALL_OBJECT_TRACER(static_cast<JSTracer *>(aClosure), expando, "expando object");
-    return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
 TraceDOMExpandos(nsPtrHashKey<JSObject> *expando, void *aClosure)
 {
     JS_CALL_OBJECT_TRACER(static_cast<JSTracer *>(aClosure), expando->GetKey(),
@@ -400,8 +391,6 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
     XPCCompartmentSet &set = GetCompartmentSet();
     for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
         CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
-        if (priv->expandoMap)
-            priv->expandoMap->Enumerate(TraceExpandos, trc);
         if (priv->domExpandoMap)
             priv->domExpandoMap->EnumerateEntries(TraceDOMExpandos, trc);
     }
@@ -462,15 +451,6 @@ XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
     JSObject* obj = wrapper->GetFlatJSObjectPreserveColor();
     if (xpc_IsGrayGCThing(obj) || cb.WantAllTraces())
         cb.NoteJSRoot(obj);
-}
-
-static PLDHashOperator
-SuspectExpandos(XPCWrappedNative *wrapper, JSObject *expando, void *arg)
-{
-    Closure* closure = static_cast<Closure*>(arg);
-    XPCJSRuntime::SuspectWrappedNative(wrapper, *closure->cb);
-
-    return PL_DHASH_NEXT;
 }
 
 static PLDHashOperator
@@ -546,12 +526,10 @@ XPCJSRuntime::AddXPConnectRoots(nsCycleCollectionTraversalCallback &cb)
         JS_DHashTableEnumerate(&mJSHolders, NoteJSHolder, &closure);
     }
 
-    // Suspect wrapped natives with expando objects.
+    // Suspect objects with expando objects.
     XPCCompartmentSet &set = GetCompartmentSet();
     for (XPCCompartmentRange r = set.all(); !r.empty(); r.popFront()) {
         CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
-        if (priv->expandoMap)
-            priv->expandoMap->EnumerateRead(SuspectExpandos, &closure);
         if (priv->domExpandoMap)
             priv->domExpandoMap->EnumerateEntries(SuspectDOMExpandos, &closure);
     }
@@ -597,14 +575,6 @@ DoDeferredRelease(nsTArray<T> &array)
         array.RemoveElementAt(count-1);
         NS_RELEASE(wrapper);
     }
-}
-
-static PLDHashOperator
-SweepExpandos(XPCWrappedNative *wn, JSObject *&expando, void *arg)
-{
-    return JS_IsAboutToBeFinalized(wn->GetFlatJSObjectPreserveColor())
-           ? PL_DHASH_REMOVE
-           : PL_DHASH_NEXT;
 }
 
 /* static */ void
@@ -688,8 +658,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
                 CompartmentPrivate *priv = GetCompartmentPrivate(r.front());
                 if (priv->waiverWrapperMap)
                     priv->waiverWrapperMap->Sweep();
-                if (priv->expandoMap)
-                    priv->expandoMap->Enumerate(SweepExpandos, NULL);
             }
 
             self->mDoingFinalization = true;
