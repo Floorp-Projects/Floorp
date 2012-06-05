@@ -112,7 +112,7 @@ extern "C" {
     */
 #  define MOZ_CRASH() \
      do { \
-       *((volatile int *) NULL) = 123; \
+       *((volatile int*) NULL) = 123; \
        exit(3); \
      } while (0)
 #elif defined(ANDROID)
@@ -124,30 +124,21 @@ extern "C" {
 #  ifdef __cplusplus
 #    define MOZ_CRASH() \
        do { \
-         *((volatile int *) NULL) = 123; \
+         *((volatile int*) NULL) = 123; \
          ::abort(); \
        } while (0)
 #  else
 #    define MOZ_CRASH() \
        do { \
-         *((volatile int *) NULL) = 123; \
+         *((volatile int*) NULL) = 123; \
          abort(); \
        } while (0)
 #  endif
-#elif defined(__APPLE__)
-   /*
-    * On Mac OS X, Breakpad ignores signals. Only real Mach exceptions are
-    * trapped.
-    */
-#  define MOZ_CRASH() \
-     do { \
-       *((volatile int *) NULL) = 123; \
-       raise(SIGABRT);  /* In case above statement gets nixed by the optimizer. */ \
-     } while (0)
 #else
 #  define MOZ_CRASH() \
      do { \
-       raise(SIGABRT);  /* To continue from here in GDB: "signal 0". */ \
+       *((volatile int*) NULL) = 123; \
+       raise(SIGABRT);  /* In case above statement gets nixed by the optimizer. */ \
      } while (0)
 #endif
 
@@ -279,7 +270,7 @@ MOZ_OutputAssertMessage(const char* s, const char *file, int ln)
 #    define MOZ_NOT_REACHED_MARKER() __builtin_unreachable()
 #  endif
 #elif defined(_MSC_VER)
-# define MOZ_NOT_REACHED_MARKER() __assume(0)
+#  define MOZ_NOT_REACHED_MARKER() __assume(0)
 #endif
 
 /*
