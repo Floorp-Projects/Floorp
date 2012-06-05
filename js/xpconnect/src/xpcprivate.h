@@ -301,7 +301,31 @@ typedef XPCCompartmentSet::Range XPCCompartmentRange;
 #define WRAPPER_SLOTS (JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | \
                        JSCLASS_HAS_RESERVED_SLOTS(1))
 
+// WRAPPER_MULTISLOT is defined in xpcpublic.h
+
 #define INVALID_OBJECT ((JSObject *)1)
+
+inline void SetSlimWrapperProto(JSObject *obj, XPCWrappedNativeProto *proto)
+{
+    JS_SetReservedSlot(obj, WRAPPER_MULTISLOT, PRIVATE_TO_JSVAL(proto));
+}
+
+inline XPCWrappedNativeProto* GetSlimWrapperProto(JSObject *obj)
+{
+    MOZ_ASSERT(IS_SLIM_WRAPPER(obj));
+    const JS::Value &v = js::GetReservedSlot(obj, WRAPPER_MULTISLOT);
+    return static_cast<XPCWrappedNativeProto*>(v.toPrivate());
+}
+
+// A slim wrapper is identified by having a native pointer in its reserved slot.
+// This function, therefore, does the official transition from a slim wrapper to
+// a non-slim wrapper.
+inline void MorphMultiSlot(JSObject *obj)
+{
+    MOZ_ASSERT(IS_SLIM_WRAPPER(obj));
+    JS_SetReservedSlot(obj, WRAPPER_MULTISLOT, JSVAL_NULL);
+    MOZ_ASSERT(!IS_SLIM_WRAPPER(obj));
+}
 
 /***************************************************************************/
 // Auto locking support class...
@@ -2425,14 +2449,6 @@ extern JSBool ConstructSlimWrapper(XPCCallContext &ccx,
                                    XPCWrappedNativeScope* xpcScope,
                                    jsval *rval);
 extern JSBool MorphSlimWrapper(JSContext *cx, JSObject *obj);
-
-static inline XPCWrappedNativeProto*
-GetSlimWrapperProto(JSObject *obj)
-{
-  const js::Value &v = js::GetReservedSlot(obj, 0);
-  return static_cast<XPCWrappedNativeProto*>(v.toPrivate());
-}
-
 
 /***********************************************/
 // XPCWrappedNativeTearOff represents the info needed to make calls to one
