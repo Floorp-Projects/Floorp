@@ -14,8 +14,8 @@
 
 <!ENTITY restorepage.tryagainButton "Restore">
 <!ENTITY restorepage.restore.access "R">
-<!ENTITY restorepage.cancelButton   "Start New Session">
-<!ENTITY restorepage.cancel.access  "S">
+<!ENTITY restorepage.closeButton    "Close">
+<!ENTITY restorepage.close.access   "C">
 
 <!ENTITY restorepage.restoreHeader  "Restore">
 <!ENTITY restorepage.listHeader     "Windows and Tabs">
