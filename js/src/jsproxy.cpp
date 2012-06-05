@@ -2834,7 +2834,7 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
 
 #ifdef DEBUG
     if (trc->runtime()->gc.isStrictProxyCheckingEnabled() && proxy->is<WrapperObject>()) {
-        JSObject *referent = &proxy->private_().toObject();
+        JSObject *referent = MaybeForwarded(&proxy->private_().toObject());
         if (referent->compartment() != proxy->compartment()) {
             /*
              * Assert that this proxy is tracked in the wrapper map. We maintain
@@ -2842,6 +2842,7 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
              */
             Value key = ObjectValue(*referent);
             WrapperMap::Ptr p = proxy->compartment()->lookupWrapper(key);
+            JS_ASSERT(p);
             JS_ASSERT(*p->value().unsafeGet() == ObjectValue(*proxy));
         }
     }

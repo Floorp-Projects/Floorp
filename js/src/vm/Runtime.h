@@ -937,13 +937,14 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Garbage collector state, used by jsgc.c. */
     js::gc::GCRuntime   gc;
 
-    /* Garbase collector state has been sucessfully initialized. */
+    /* Garbage collector state has been sucessfully initialized. */
     bool                gcInitialized;
 
     bool isHeapBusy() { return gc.isHeapBusy(); }
     bool isHeapMajorCollecting() { return gc.isHeapMajorCollecting(); }
     bool isHeapMinorCollecting() { return gc.isHeapMinorCollecting(); }
     bool isHeapCollecting() { return gc.isHeapCollecting(); }
+    bool isHeapCompacting() { return gc.isHeapCompacting(); }
 
     bool isFJMinorCollecting() { return gc.isFJMinorCollecting(); }
 
