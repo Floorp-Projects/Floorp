@@ -804,7 +804,12 @@ CheckFrame(StackFrame *fp)
         return false;
     }
 
-    if (fp->hasCallObj()) {
+    if (fp->isFunctionFrame() && fp->fun()->isHeavyweight()) {
+        IonSpew(IonSpew_Abort, "function is heavyweight");
+        return false;
+    }
+
+    if (fp->isFunctionFrame() && fp->isStrictEvalFrame() && fp->hasCallObj()) {
         // Functions with call objects aren't supported yet. To support them,
         // we need to fix bug 659577 which would prevent aliasing locals to
         // stack slots.
@@ -812,7 +817,7 @@ CheckFrame(StackFrame *fp)
         return false;
     }
 
-    if (fp->hasArgsObj() || fp->script()->argumentsHasLocalBinding()) {
+    if (fp->script()->needsArgsObj() || fp->script()->argumentsHasLocalBinding()) {
         // Functions with arguments objects, or scripts that use arguments, are
         // not supported yet.
         IonSpew(IonSpew_Abort, "frame has argsobj");
@@ -1002,13 +1007,13 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
         // CountArgSlot include |this| and the |scopeChain|, -1 is used to
         // discard the |scopeChain|.
         argc = CountArgSlots(fp->fun()) - 1;
-        argv = fp->formalArgs() - 1;
+        argv = fp->formals() - 1;
 
         if (fp->hasOverflowArgs()) {
             int formalArgc = argc;
             Value *formalArgv = argv;
             argc = fp->numActualArgs() + 1;
-            argv = fp->actualArgs() - 1;
+            argv = fp->actuals() - 1;
             // The beginning of the actual args is not updated, so we just copy
             // the formal args into the actual args to get a linear vector which
             // can be copied by generateEnterJit.
@@ -1041,8 +1046,6 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 
     // The trampoline wrote the return value but did not set the HAS_RVAL flag.
     fp->setReturnValue(result);
-    if (fp->isFunctionFrame())
-        fp->updateEpilogueFlags();
 
     // Ion callers wrap primitive constructor return.
     if (!result.isMagic() && fp->isConstructing() && fp->returnValue().isPrimitive())

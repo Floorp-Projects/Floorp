@@ -4,12 +4,9 @@
 
 "use strict";
 
-/* static functions */
-let DEBUG = false;
-if (DEBUG)
-  debug = function (s) { dump("-*- SettingsManager: " + s + "\n"); };
-else
-  debug = function (s) {};
+function debug(s) {
+//  dump("-*- SettingsManager: " + s + "\n");
+}
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -19,6 +16,10 @@ Cu.import("resource://gre/modules/SettingsQueue.jsm");
 Cu.import("resource://gre/modules/SettingsDB.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
+  return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
+});
 
 const nsIClassInfo            = Ci.nsIClassInfo;
 const SETTINGSLOCK_CONTRACTID = "@mozilla.org/settingsLock;1";
@@ -67,10 +68,7 @@ SettingsLock.prototype = {
             req.onsuccess = function() { 
               lock._open = true;
               Services.DOMRequest.fireSuccess(request, 0);
-              Services.obs.notifyObservers(lock, "mozsettings-changed", JSON.stringify({
-                key: key,
-                value: info.settings[key]
-              }));
+              cpmm.sendAsyncMessage("Settings:Changed", { key: key, value: info.settings[key] });
               lock._open = false;
             };
 
@@ -227,14 +225,37 @@ SettingsManager.prototype = {
     return lock;
   },
 
+  receiveMessage: function(aMessage) {
+    debug("Settings::receiveMessage: " + aMessage.name);
+    let msg = aMessage.json;
+
+    switch (aMessage.name) {
+      case "Settings:Change:Return:OK":
+        debug("Settings:Change:Return:OK");
+        if (!this._onsettingchange)
+          return;
+
+        debug('key:' + msg.key + ', value:' + msg.value + '\n');
+        let event = new this._window.MozSettingsEvent("settingchanged", {
+          settingName: msg.key,
+          settingValue: msg.value
+        });
+
+        this._onsettingchange.handleEvent(event);
+        break;
+      default: 
+        debug("Wrong message: " + aMessage.name);
+    }
+  },
+
   init: function(aWindow) {
     // Set navigator.mozSettings to null.
     if (!Services.prefs.getBoolPref("dom.mozSettings.enabled"))
       return null;
 
+    cpmm.addMessageListener("Settings:Change:Return:OK", this);
     this._window = aWindow;
     Services.obs.addObserver(this, "inner-window-destroyed", false);
-    Services.obs.addObserver(this, "mozsettings-changed", false);
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this.innerWindowID = util.currentInnerWindowID;
 
@@ -253,26 +274,14 @@ SettingsManager.prototype = {
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == this.innerWindowID) {
         Services.obs.removeObserver(this, "inner-window-destroyed");
-        Services.obs.removeObserver(this, "mozsettings-changed");
+        cpmm.removeMessageListener("Settings:Change:Return:OK", this);
         this._requests = null;
         this._window = null;
         this._innerWindowID = null;
         this._onsettingchange = null;
         this._settingsDB.close();
+        cpmm = null;
       }
-    } else if (aTopic == "mozsettings-changed") {
-      if (!this._onsettingchange)
-        return;
-
-      let data = JSON.parse(aData);
-      debug('data:' + data.key + ':' + data.value + '\n');
-
-      let event = new this._window.MozSettingsEvent("settingchanged", {
-        settingName: data.key,
-        settingValue: data.value
-      });
-
-      this._onsettingchange.handleEvent(event);
     }
   },
 

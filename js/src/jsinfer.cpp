@@ -4310,6 +4310,11 @@ public:
 };
 
 static bool
+AnalyzePoppedThis(JSContext *cx, Vector<SSAUseChain *> *pendingPoppedThis,
+                  TypeObject *type, JSFunction *fun, JSObject **pbaseobj,
+                  Vector<TypeNewScript::Initializer> *initializerList);
+
+static bool
 AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSObject **pbaseobj,
                            Vector<TypeNewScript::Initializer> *initializerList)
 {
@@ -4347,14 +4352,23 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
 
     /*
      * Offset of the last bytecode which popped 'this' and which we have
-     * processed. For simplicity, we scan for places where 'this' is pushed
-     * and immediately analyze the place where that pushed value is popped.
-     * This runs the risk of doing things out of order, if the script looks
-     * something like 'this.f  = (this.g = ...)', so we watch and bail out if
-     * a 'this' is pushed before the previous 'this' value was popped.
+     * processed. To support compound inline assignments to properties like
+     * 'this.f = (this.g = ...)'  where multiple 'this' values are pushed
+     * and popped en masse, we keep a stack of 'this' values that have yet to
+     * be processed. If a 'this' is pushed before the previous 'this' value
+     * was popped, we defer processing it until we see a 'this' that is popped
+     * after the previous 'this' was popped, i.e. the end of the compound
+     * inline assignment, or we encounter a return from the script.
+     */
+    Vector<SSAUseChain *> pendingPoppedThis(cx);
+
+    /*
+     * lastThisPopped is the largest use offset of a 'this' value we've
+     * processed so far.
      */
     uint32_t lastThisPopped = 0;
 
+    bool entirelyAnalyzed = true;
     unsigned nextOffset = 0;
     while (nextOffset < script->length) {
         unsigned offset = nextOffset;
@@ -4375,16 +4389,20 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
         if (op == JSOP_RETURN || op == JSOP_STOP || op == JSOP_RETRVAL) {
             if (offset < lastThisPopped) {
                 *pbaseobj = NULL;
-                return false;
+                entirelyAnalyzed = false;
+                break;
             }
-            return code->unconditional;
+
+            entirelyAnalyzed = code->unconditional;
+            break;
         }
 
         /* 'this' can escape through a call to eval. */
         if (op == JSOP_EVAL) {
             if (offset < lastThisPopped)
                 *pbaseobj = NULL;
-            return false;
+            entirelyAnalyzed = false;
+            break;
         }
 
         /*
@@ -4394,30 +4412,68 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
         if (op != JSOP_THIS)
             continue;
 
-        /* Maintain ordering property on how 'this' is used, as described above. */
-        if (offset < lastThisPopped) {
-            *pbaseobj = NULL;
-            return false;
-        }
-
         SSAValue thisv = SSAValue::PushedValue(offset, 0);
         SSAUseChain *uses = analysis->useChain(thisv);
 
         JS_ASSERT(uses);
         if (uses->next || !uses->popped) {
             /* 'this' value popped in more than one place. */
-            return false;
+            entirelyAnalyzed = false;
+            break;
         }
-
-        lastThisPopped = uses->offset;
 
         /* Only handle 'this' values popped in unconditional code. */
         Bytecode *poppedCode = analysis->maybeCode(uses->offset);
-        if (!poppedCode || !poppedCode->unconditional)
-            return false;
+        if (!poppedCode || !poppedCode->unconditional) {
+            entirelyAnalyzed = false;
+            break;
+        }
 
-        pc = script->code + uses->offset;
-        op = JSOp(*pc);
+        /*
+         * If offset >= the offset at the top of the pending stack, we either
+         * encountered the end of a compound inline assignment or a 'this' was
+         * immediately popped and used. In either case, handle the use.
+         */
+        if (!pendingPoppedThis.empty() &&
+            offset >= pendingPoppedThis.back()->offset) {
+            lastThisPopped = pendingPoppedThis[0]->offset;
+            if (!AnalyzePoppedThis(cx, &pendingPoppedThis, type, fun, pbaseobj,
+                                   initializerList)) {
+                return false;
+            }
+        }
+
+        if (!pendingPoppedThis.append(uses)) {
+            entirelyAnalyzed = false;
+            break;
+        }
+    }
+
+    /* Handle any remaining 'this' uses on the stack. */
+    if (!pendingPoppedThis.empty() &&
+        !AnalyzePoppedThis(cx, &pendingPoppedThis, type, fun, pbaseobj,
+                           initializerList)) {
+        return false;
+    }
+
+    /* Will have hit a STOP or similar, unless the script always throws. */
+    return entirelyAnalyzed;
+}
+
+static bool
+AnalyzePoppedThis(JSContext *cx, Vector<SSAUseChain *> *pendingPoppedThis,
+                  TypeObject *type, JSFunction *fun, JSObject **pbaseobj,
+                  Vector<TypeNewScript::Initializer> *initializerList)
+{
+    JSScript *script = fun->script();
+    ScriptAnalysis *analysis = script->analysis();
+
+    while (!pendingPoppedThis->empty()) {
+        SSAUseChain *uses = pendingPoppedThis->back();
+        pendingPoppedThis->popBack();
+
+        jsbytecode *pc = script->code + uses->offset;
+        JSOp op = JSOp(*pc);
 
         RootedObject obj(cx, *pbaseobj);
 
@@ -4559,7 +4615,6 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun, JSO
         }
     }
 
-    /* Will have hit a STOP or similar, unless the script always throws. */
     return true;
 }
 
@@ -5245,8 +5300,8 @@ NestingPrologue(JSContext *cx, StackFrame *fp)
         }
 
         nesting->activeCall = &fp->callObj();
-        nesting->argArray = fp->formalArgs();
-        nesting->varArray = fp->slots();
+        nesting->argArray = Valueify(nesting->activeCall->argArray());
+        nesting->varArray = Valueify(nesting->activeCall->varArray());
     }
 
     /* Maintain stack frame count for the function. */

@@ -909,12 +909,12 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
                                      TextureImage::Flags aFlags)
     : TextureImage(aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType, aFlags)
     , mCurrentImage(0)
+    , mIterationCallback(nsnull)
     , mInUpdate(false)
     , mRows(0)
     , mColumns(0)
     , mGL(aGL)
     , mTextureState(Created)
-    , mIterationCallback(nsnull)
 {
     mTileSize = (!(aFlags & TextureImage::ForceSingleTile) && mGL->WantsSmallTiles())
         ? 256 : mGL->GetMaxTextureSize();

@@ -19,10 +19,10 @@ LIBXUL_LIBRARY = 1
 CPPSRCS = \
   HTMLElementAccessibles.cpp \
   HTMLFormControlAccessible.cpp \
+  HTMLImageMapAccessible.cpp \
+  HTMLLinkAccessible.cpp \
   HTMLListAccessible.cpp \
   nsHTMLCanvasAccessible.cpp \
-  nsHTMLImageMapAccessible.cpp \
-  nsHTMLLinkAccessible.cpp \
   nsHTMLSelectAccessible.cpp \
   nsHTMLTableAccessible.cpp \
   $(NULL)

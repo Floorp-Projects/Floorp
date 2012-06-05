@@ -150,11 +150,11 @@
                 else if (this.type == "volumeControl")
                     this.Utils.setVolume(newValue / 100);
                 break;
-  
+
               case "minpos":
                 this.setAttribute("min", newValue);
                 break;
-  
+
               case "maxpos":
                 if (this.type == "scrubber") {
                     // Update the value bar to match the thumb position.
@@ -481,7 +481,7 @@
 
                     return enabled;
                 },
-                
+
                 handleEvent : function (aEvent) {
                     this.log("Got media event ----> " + aEvent.type);
 
@@ -534,6 +534,9 @@
                                 this.startFadeIn(this.controlBar);
                             }
                             this.showDuration(Math.round(this.video.duration * 1000));
+                            if (!this.isAudioOnly && !this.video.mozHasAudio) {
+                              this.muteButton.setAttribute("noAudio", "true");
+                            }
                             break;
                         case "loadeddata":
                             this.firstFrameShown = true;
@@ -609,8 +612,8 @@
                             // We'll show the error status icon when we receive an error event
                             // under either of the following conditions:
                             // 1. The video has its error attribute set; this means we're loading
-                            //    from our src attribute, and the load failed, or we we're loading 
-                            //    from source children and the decode or playback failed after we 
+                            //    from our src attribute, and the load failed, or we we're loading
+                            //    from source children and the decode or playback failed after we
                             //    determined our selected resource was playable.
                             // 2. The video's networkState is NETWORK_NO_SOURCE. This means we we're
                             //    loading from child source elements, but we were unable to select
@@ -641,7 +644,7 @@
 
                     for each(let element in this.controlListeners)
                         element.item.removeEventListener(element.event, element.func, false);
-                    
+
                     delete this.controlListeners;
 
                     this.video.removeEventListener("media-showStatistics", this._handleCustomEventsBound, false);
@@ -1388,7 +1391,7 @@
                     addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
 
-                    if (!this.isAudioOnly) {
+                    if (!this.isAudioOnly && this.video.mozHasAudio) {
                       addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
                       addListener(this.muteButton, "mouseout", this.onVolumeMouseInOut);
                       addListener(this.volumeStack, "mouseover", this.onVolumeMouseInOut);
@@ -1427,7 +1430,7 @@
         </handler>
     </handlers>
   </binding>
-  
+
   <binding id="touchControls" extends="chrome://global/content/bindings/videocontrols.xml#videoControls">
 
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="mediaControlsFrame">
@@ -1518,7 +1521,7 @@
                 this.delayHideControls(this.controlsTimeout);
               }
             },
-            
+
             delayHideControls : function(aTimeout) {
               if (this.controlsTimer) {
                 clearTimeout(this.controlsTimer);
@@ -1563,7 +1566,7 @@
               this.Utils.playButton.addEventListener("command", function() {
                 if (!self.Utils.video.paused)
                     self.delayHideControls(0);
-                else 
+                else
                     self.showControls();
               }, false);
               this.Utils.scrubber.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); }, false);

@@ -136,6 +136,9 @@ private:
    * value. This is used to know the default tabindex value.
    */
   bool IsFocusableForTabIndex();
+  
+  virtual void GetItemValueText(nsAString& text);
+  virtual void SetItemValueText(const nsAString& text);
 
   bool mIsDoneAddingChildren;
 };
@@ -222,6 +225,18 @@ NS_IMETHODIMP
 nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement **aForm)
 {
   return nsGenericHTMLFormElement::GetForm(aForm);
+}
+
+void
+nsHTMLObjectElement::GetItemValueText(nsAString& aValue)
+{
+  GetData(aValue);
+}
+
+void
+nsHTMLObjectElement::SetItemValueText(const nsAString& aValue)
+{
+  SetData(aValue);
 }
 
 nsresult

@@ -17,10 +17,15 @@ var Cr = Components.results;
 /*
 #endif
 */
+Components.utils.import('resource://gre/modules/Services.jsm');
 
 const TYPE_MAYBE_FEED = "application/vnd.mozilla.maybe.feed";
 const TYPE_MAYBE_VIDEO_FEED = "application/vnd.mozilla.maybe.video.feed";
 const TYPE_MAYBE_AUDIO_FEED = "application/vnd.mozilla.maybe.audio.feed";
+const TYPE_PDF = "application/pdf";
+
+const PREF_PDFJS_DISABLED = "pdfjs.disabled";
+const TOPIC_PDFJS_HANDLER_CHANGED = "pdfjs:handlerChanged";
 
 const PREF_DISABLED_PLUGIN_TYPES = "plugin.disable_full_page_plugin_for_types";
 
@@ -810,6 +815,46 @@ var audioFeedHandlerInfo = {
   _appPrefLabel: "audioPodcastFeed"
 }
 
+/**
+ * InternalHandlerInfoWrapper provides a basic mechanism to create an internal
+ * mime type handler that can be enabled/disabled in the applications preference
+ * menu.
+ */
+function InternalHandlerInfoWrapper(aMIMEType) {
+  var mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+  var handlerInfo = mimeSvc.getFromTypeAndExtension(aMIMEType, null);
+
+  HandlerInfoWrapper.call(this, aMIMEType, handlerInfo);
+}
+
+InternalHandlerInfoWrapper.prototype = {
+  __proto__: HandlerInfoWrapper.prototype,
+
+  // Override store so we so we can notify any code listening for registration
+  // or unregistration of this handler.
+  store: function() {
+    HandlerInfoWrapper.prototype.store.call(this);
+    Services.obs.notifyObservers(null, this._handlerChanged, null);
+  },
+
+  get enabled() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+
+  get description() {
+    return this.element("bundlePreferences").getString(this._appPrefLabel);
+  }
+};
+
+var pdfHandlerInfo = {
+  __proto__: new InternalHandlerInfoWrapper(TYPE_PDF),
+  _handlerChanged: TOPIC_PDFJS_HANDLER_CHANGED,
+  _appPrefLabel: "portableDocumentFormat",
+  get enabled() {
+    return !Services.prefs.getBoolPref(PREF_PDFJS_DISABLED);
+  },
+};
+
 
 //****************************************************************************//
 // Prefpane Controller
@@ -999,6 +1044,7 @@ var gApplicationsPane = {
 
   _loadData: function() {
     this._loadFeedHandler();
+    this._loadInternalHandlers();
     this._loadPluginHandlers();
     this._loadApplicationHandlers();
   },
@@ -1012,6 +1058,19 @@ var gApplicationsPane = {
 
     this._handledTypes[TYPE_MAYBE_AUDIO_FEED] = audioFeedHandlerInfo;
     audioFeedHandlerInfo.handledOnlyByPlugin = false;
+  },
+
+  /**
+   * Load higher level internal handlers so they can be turned on/off in the
+   * applications menu.
+   */
+  _loadInternalHandlers: function() {
+    var internalHandlers = [pdfHandlerInfo];
+    for (let internalHandler of internalHandlers) {
+      if (internalHandler.enabled) {
+        this._handledTypes[internalHandler.type] = internalHandler;
+      }
+    }
   },
 
   /**
@@ -1216,9 +1275,15 @@ var gApplicationsPane = {
 
       case Ci.nsIHandlerInfo.handleInternally:
         // For the feed type, handleInternally means live bookmarks.
-        if (isFeedType(aHandlerInfo.type)) 
+        if (isFeedType(aHandlerInfo.type)) {
           return this._prefsBundle.getFormattedString("addLiveBookmarksInApp",
                                                       [this._brandShortName]);
+        }
+
+        if (aHandlerInfo instanceof InternalHandlerInfoWrapper) {
+          return this._prefsBundle.getFormattedString("previewInApp",
+                                                      [this._brandShortName]);
+        }
 
         // For other types, handleInternally looks like either useHelperApp
         // or useSystemDefault depending on whether or not there's a preferred
@@ -1318,6 +1383,18 @@ var gApplicationsPane = {
     // Clear out existing items.
     while (menuPopup.hasChildNodes())
       menuPopup.removeChild(menuPopup.lastChild);
+
+    // Add the "Preview in Firefox" option for optional internal handlers.
+    if (handlerInfo instanceof InternalHandlerInfoWrapper) {
+      var internalMenuItem = document.createElement("menuitem");
+      internalMenuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
+      let label = this._prefsBundle.getFormattedString("previewInApp",
+                                                       [this._brandShortName]);
+      internalMenuItem.setAttribute("label", label);
+      internalMenuItem.setAttribute("tooltiptext", label);
+      internalMenuItem.setAttribute(APP_ICON_ATTR_NAME, "ask");
+      menuPopup.appendChild(internalMenuItem);
+    }
 
     {
       var askMenuItem = document.createElement("menuitem");
@@ -1738,6 +1815,9 @@ var gApplicationsPane = {
       case Ci.nsIHandlerInfo.handleInternally:
         if (isFeedType(aHandlerInfo.type)) {
           aElement.setAttribute(APP_ICON_ATTR_NAME, "feed");
+          return true;
+        } else if (aHandlerInfo instanceof InternalHandlerInfoWrapper) {
+          aElement.setAttribute(APP_ICON_ATTR_NAME, "ask");
           return true;
         }
         break;

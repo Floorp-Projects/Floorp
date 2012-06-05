@@ -301,6 +301,9 @@ nsEventListenerManager::IsDeviceType(PRUint32 aType)
   switch (aType) {
     case NS_DEVICE_ORIENTATION:
     case NS_DEVICE_MOTION:
+    case NS_DEVICE_LIGHT:
+    case NS_DEVICE_PROXIMITY:
+    case NS_USER_PROXIMITY:
       return true;
     default:
       break;
@@ -401,7 +404,7 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
         mNoListenerForEvent = NS_EVENT_TYPE_NULL;
         mNoListenerForEventAtom = nsnull;
 
-        if (deviceType) {
+        if (!deviceType) {
           return;
         }
         --typeCount;

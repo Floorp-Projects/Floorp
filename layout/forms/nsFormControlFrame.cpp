@@ -25,6 +25,12 @@ nsFormControlFrame::~nsFormControlFrame()
 {
 }
 
+nsIAtom*
+nsFormControlFrame::GetType() const
+{
+  return nsGkAtoms::formControlFrame; 
+}
+
 void
 nsFormControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {

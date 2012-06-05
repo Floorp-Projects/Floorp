@@ -164,10 +164,6 @@ ${PARENT_ENABLED_CASES_PROC}
         return;                 // unreached
     }
 
-    // Create the two processes:
-    if (NS_FAILED(nsRegion::InitStatic()))
-        fail("initializing nsRegion");
-
     printf(MOZ_IPDL_TESTINFO_LABEL "| running test | %s\n", gIPDLUnitTestName);
 
     std::vector<std::string> testCaseArgs;
@@ -218,10 +214,6 @@ ${PARENT_ENABLED_CASES_THREAD}
         fail("not reached");
         return;                 // unreached
     }
-
-    // Create the two threads:
-    if (NS_FAILED(nsRegion::InitStatic()))
-        fail("initializing nsRegion");
 
     printf(MOZ_IPDL_TESTINFO_LABEL "| running test | %s\n", gIPDLUnitTestName);
 
