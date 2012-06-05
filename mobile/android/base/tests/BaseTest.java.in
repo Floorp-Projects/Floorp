@@ -32,6 +32,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected Assert mAsserter;
     protected Actions mActions;
     protected String mBaseUrl;
+    protected String mRawBaseUrl;
     private String mTestType;
     private String mLogFile;
     protected String mProfile;
@@ -70,6 +71,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
         mLogFile = (String)config.get("logfile");
         mBaseUrl = ((String)config.get("host")).replaceAll("(/$)", "");
+        mRawBaseUrl = ((String)config.get("rawhost")).replaceAll("(/$)", "");
     }
 
     public void setTestType(String type) {
@@ -170,6 +172,10 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
     protected final String getAbsoluteUrl(String url) {
         return mBaseUrl + "/" + url.replaceAll("(^/)", "");
+    }
+
+    protected final String getAbsoluteRawUrl(String url) {
+        return mRawBaseUrl + "/" + url.replaceAll("(^/)", "");
     }
 
     protected final boolean waitForTest(BooleanTest t, int timeout) {
