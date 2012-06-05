@@ -184,7 +184,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
         jSurfacePointerField = jEnv->GetFieldID(jSurfaceClass, "mNativeSurface", "I");
 
 #ifdef MOZ_JAVA_COMPOSITOR
-    jPumpMessageLoop = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "pumpMessageLoop", "()Z");
+    jPumpMessageLoop = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "pumpMessageLoop", "()V");
 
     jAddPluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "addPluginView", "(Landroid/view/View;IIIIZI)V");
     jRemovePluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "removePluginView", "(Landroid/view/View;Z)V");
@@ -2281,20 +2281,20 @@ AndroidBridge::UnlockScreenOrientation()
     env->CallStaticVoidMethod(mGeckoAppShellClass, jUnlockScreenOrientation);
 }
 
-bool
+void
 AndroidBridge::PumpMessageLoop()
 {
 #if MOZ_JAVA_COMPOSITOR
     JNIEnv* env = GetJNIEnv();
     if (!env)
-        return false;
+        return;
 
     AutoLocalJNIFrame jniFrame(env, 0);
 
     if ((void*)pthread_self() != mThread)
-        return false;
+        return;
 
-    return env->CallStaticBooleanMethod(mGeckoAppShellClass, jPumpMessageLoop);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jPumpMessageLoop);
 #endif
 }
 
