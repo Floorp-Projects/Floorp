@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:padding="6dip">
+
+    <ImageView android:id="@+id/suggestion_icon"
+               android:layout_width="32dip"
+               android:layout_height="32dip"
+               android:layout_marginRight="10dip"
+               android:minWidth="32dip"
+               android:minHeight="32dip"
+               android:scaleType="fitCenter"/>
+
+    <org.mozilla.gecko.FlowLayout android:id="@+id/suggestion_layout"
+                                  android:layout_toRightOf="@id/suggestion_icon"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content">
+
+        <include layout="@layout/awesomebar_suggestion_item"
+                 android:id="@+id/suggestion_user_entered"/>
+
+    </org.mozilla.gecko.FlowLayout>
+
+</RelativeLayout>
