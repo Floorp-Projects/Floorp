@@ -1422,14 +1422,14 @@ class TypedArrayTemplate
         obj->setSlot(FIELD_BUFFER, ObjectValue(*bufobj));
 
         JS_ASSERT(bufobj->isArrayBuffer());
-        ArrayBufferObject &buffer = bufobj->asArrayBuffer();
+        Rooted<ArrayBufferObject *> buffer(cx, &bufobj->asArrayBuffer());
 
         /*
          * N.B. The base of the array's data is stored in the object's
          * private data rather than a slot, to avoid alignment restrictions
          * on private Values.
          */
-        obj->setPrivate(buffer.dataPointer() + byteOffset);
+        obj->setPrivate(buffer->dataPointer() + byteOffset);
 
         obj->setSlot(FIELD_LENGTH, Int32Value(len));
         obj->setSlot(FIELD_BYTEOFFSET, Int32Value(byteOffset));
@@ -1445,10 +1445,10 @@ class TypedArrayTemplate
             return NULL;
         obj->setLastPropertyInfallible(empty);
 
-        DebugOnly<uint32_t> bufferByteLength = buffer.byteLength();
+        DebugOnly<uint32_t> bufferByteLength = buffer->byteLength();
         JS_ASSERT(bufferByteLength - getByteOffset(obj) >= getByteLength(obj));
         JS_ASSERT(getByteOffset(obj) <= bufferByteLength);
-        JS_ASSERT(buffer.dataPointer() <= getDataOffset(obj));
+        JS_ASSERT(buffer->dataPointer() <= getDataOffset(obj));
         JS_ASSERT(getDataOffset(obj) <= offsetData(obj, bufferByteLength));
 
         JS_ASSERT(obj->numFixedSlots() == NUM_FIXED_SLOTS);

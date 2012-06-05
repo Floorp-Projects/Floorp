@@ -122,6 +122,7 @@ class Handle
 
 typedef Handle<JSObject*>    HandleObject;
 typedef Handle<JSFunction*>  HandleFunction;
+typedef Handle<JSScript*>    HandleScript;
 typedef Handle<JSString*>    HandleString;
 typedef Handle<jsid>         HandleId;
 typedef Handle<Value>        HandleValue;
@@ -224,6 +225,7 @@ Handle<T>::Handle(const Rooted<S> &root)
 
 typedef Rooted<JSObject*>    RootedObject;
 typedef Rooted<JSFunction*>  RootedFunction;
+typedef Rooted<JSScript*>    RootedScript;
 typedef Rooted<JSString*>    RootedString;
 typedef Rooted<jsid>         RootedId;
 typedef Rooted<Value>        RootedValue;
