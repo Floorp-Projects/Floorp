@@ -98,19 +98,19 @@ public class AccountActivity extends AccountAuthenticatorActivity {
   }
 
   @Override
-  public void onStart() {
-    super.onStart();
-    // Start with an empty form
-    usernameInput.setText("");
-    passwordInput.setText("");
-    synckeyInput.setText("");
-    passwordInput.setText("");
+  public void onResume() {
+    super.onResume();
+    clearCredentials();
   }
 
   public void cancelClickHandler(View target) {
     finish();
   }
 
+  private void clearCredentials() {
+    // Only clear password. Re-typing the sync key or email is annoying.
+    passwordInput.setText("");
+  }
   /*
    * Get credentials on "Connect" and write to AccountManager, where it can be
    * accessed by Fennec and Sync Service.
