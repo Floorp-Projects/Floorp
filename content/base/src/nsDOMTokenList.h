@@ -14,6 +14,8 @@
 
 class nsAttrValue;
 
+// nsISupports must be on the primary inheritance chain 
+// because nsDOMSettableTokenList is traversed by nsGenericElement.
 class nsDOMTokenList : public nsIDOMDOMTokenList,
                        public nsWrapperCache
 {
@@ -34,15 +36,15 @@ public:
     return mElement;
   }
 
-protected:
-  ~nsDOMTokenList();
-
   const nsAttrValue* GetParsedAttr() {
     if (!mElement) {
       return nsnull;
     }
     return mElement->GetAttrInfo(kNameSpaceID_None, mAttrAtom).mValue;
   }
+
+protected:
+  ~nsDOMTokenList();
 
   nsresult CheckToken(const nsAString& aStr);
   void AddInternal(const nsAttrValue* aAttr, const nsAString& aToken);

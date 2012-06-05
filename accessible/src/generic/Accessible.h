@@ -27,13 +27,13 @@ class EmbeddedObjCollector;
 class KeyBinding;
 class Accessible;
 class HyperTextAccessible;
-class nsHTMLImageMapAccessible;
 struct nsRoleMapEntry;
 class Relation;
 
 namespace mozilla {
 namespace a11y {
 
+class HTMLImageMapAccessible;
 class HTMLLIAccessible;
 class ImageAccessible;
 class TableAccessible;
@@ -504,7 +504,7 @@ public:
   mozilla::a11y::ImageAccessible* AsImage();
 
   bool IsImageMapAccessible() const { return mFlags & eImageMapAccessible; }
-  nsHTMLImageMapAccessible* AsImageMap();
+  mozilla::a11y::HTMLImageMapAccessible* AsImageMap();
 
   inline bool IsXULTree() const { return mFlags & eXULTreeAccessible; }
   nsXULTreeAccessible* AsXULTree();
@@ -879,7 +879,7 @@ protected:
 
   nsAutoPtr<AccGroupInfo> mGroupInfo;
   friend class AccGroupInfo;
-  
+
   /**
    * Non-null indicates author-supplied role; possibly state & value as well
    */

@@ -514,14 +514,15 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       }
 
       case JOF_SCOPECOORD: {
-        unsigned i = GET_UINT16(pc);
-        Sprint(sp, " %u", i);
-        pc += sizeof(uint16_t);
-        i = GET_UINT16(pc);
-        Sprint(sp, " %u", i);
-        pc += sizeof(uint16_t);
-        /* FALL THROUGH */
+        Value v = StringValue(ScopeCoordinateName(cx->runtime, script, pc));
+        JSAutoByteString bytes;
+        if (!ToDisassemblySource(cx, v, &bytes))
+            return 0;
+        ScopeCoordinate sc(pc);
+        Sprint(sp, " %s (hops = %u, slot = %u)", bytes.ptr(), sc.hops, sc.slot);
+        break;
       }
+
       case JOF_ATOM: {
         Value v = StringValue(script->getAtom(GET_UINT32_INDEX(pc)));
         JSAutoByteString bytes;
@@ -1408,6 +1409,12 @@ AddParenSlop(SprintStack *ss)
     ss->sprinter.reserveAndClear(PAREN_SLOP);
 }
 
+static unsigned
+StackDepth(JSScript *script)
+{
+    return script->nslots - script->nfixed;
+}
+
 static JSBool
 PushOff(SprintStack *ss, ptrdiff_t off, JSOp op, jsbytecode *pc = NULL)
 {
@@ -1843,7 +1850,7 @@ static bool
 IsVarSlot(JSPrinter *jp, jsbytecode *pc, JSAtom **varAtom, int *localSlot)
 {
     if (JOF_OPTYPE(*pc) == JOF_SCOPECOORD) {
-        *varAtom = ScopeCoordinateAtom(jp->script, pc);
+        *varAtom = ScopeCoordinateName(jp->sprinter.context->runtime, jp->script, pc);
         LOCAL_ASSERT_RV(*varAtom, NULL);
         return true;
     }
@@ -5724,7 +5731,7 @@ js_DecompileValueGenerator(JSContext *cx, int spindex, jsval v,
              * calculated value matching v under assumption that it is
              * it that caused exception, see bug 328664.
              */
-            Value *stackBase = fp->base();
+            Value *stackBase = cx->regs().spForStackDepth(0);
             Value *sp = cx->regs().sp;
             do {
                 if (sp == stackBase) {

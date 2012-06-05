@@ -1950,12 +1950,11 @@ nsEditor::ArePreservingSelection()
   return !(mSavedSel.IsEmpty());
 }
 
-nsresult 
+void
 nsEditor::PreserveSelectionAcrossActions(nsISelection *aSel)
 {
   mSavedSel.SaveSelection(aSel);
   mRangeUpdater.RegisterSelectionState(mSavedSel);
-  return NS_OK;
 }
 
 nsresult 
@@ -4245,10 +4244,10 @@ nsEditor::JoinNodeDeep(nsIDOMNode *aLeftNode,
   return res;
 }
 
-nsresult nsEditor::BeginUpdateViewBatch()
+void
+nsEditor::BeginUpdateViewBatch()
 {
   NS_PRECONDITION(mUpdateCount >= 0, "bad state");
-
 
   if (0 == mUpdateCount)
   {
@@ -4265,8 +4264,6 @@ nsresult nsEditor::BeginUpdateViewBatch()
   }
 
   mUpdateCount++;
-
-  return NS_OK;
 }
 
 
@@ -4397,11 +4394,10 @@ nsEditor::DeleteSelectionAndCreateNode(const nsAString& aTag,
 
 /* Non-interface, protected methods */
 
-nsresult
-nsEditor::GetIMEBufferLength(PRInt32* length)
+PRInt32
+nsEditor::GetIMEBufferLength()
 {
-  *length = mIMEBufferLength;
-  return NS_OK;
+  return mIMEBufferLength;
 }
 
 void

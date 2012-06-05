@@ -64,6 +64,13 @@ public:
   static
   already_AddRefed<TestInterface> Constructor(nsISupports*, uint32_t,
                                               Nullable<bool>&, ErrorResult&);
+  static
+  already_AddRefed<TestInterface> Constructor(nsISupports*, TestInterface*,
+                                              ErrorResult&);
+  static
+  already_AddRefed<TestInterface> Constructor(nsISupports*,
+                                              NonNull<TestNonCastableInterface>&,
+                                              ErrorResult&);
 
   // Integer types
   int8_t GetReadonlyByte(ErrorResult&);

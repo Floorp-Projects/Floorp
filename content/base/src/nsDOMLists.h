@@ -28,6 +28,11 @@ public:
     return mNames.AppendElement(aName) != nsnull;
   }
 
+  void Clear()
+  {
+    mNames.Clear();
+  }
+
 private:
   nsTArray<nsString> mNames;
 };

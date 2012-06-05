@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#pragma once
-
 #include "PathD2D.h"
 #include "HelpersD2D.h"
 #include <math.h>

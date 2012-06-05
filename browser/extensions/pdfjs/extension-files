@@ -1,8 +1,6 @@
-bootstrap.js
-icon.png
-icon64.png
 chrome.manifest
 components/PdfStreamConverter.js
+content/PdfJs.jsm
 content/web/debugger.js
 content/web/images/annotation-check.svg
 content/web/images/annotation-comment.svg
@@ -18,6 +16,7 @@ content/web/images/toolbarButton-pageDown.png
 content/web/images/toolbarButton-pageUp-rtl.png
 content/web/images/toolbarButton-pageUp.png
 content/web/images/toolbarButton-print.png
+content/web/images/toolbarButton-search.png
 content/web/images/toolbarButton-sidebarToggle.png
 content/web/images/toolbarButton-viewOutline.png
 content/web/images/toolbarButton-viewThumbnail.png

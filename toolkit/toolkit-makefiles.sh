@@ -202,7 +202,6 @@ MAKEFILES_content="
   content/xul/document/public/Makefile
   content/xul/document/src/Makefile
   content/xbl/Makefile
-  content/xbl/public/Makefile
   content/xbl/src/Makefile
   content/xbl/builtin/Makefile
   content/xslt/Makefile

@@ -129,6 +129,12 @@ MarkValue(JSTracer *trc, EncapsulatedValue *v, const char *name);
 void
 MarkValueRange(JSTracer *trc, size_t len, EncapsulatedValue *vec, const char *name);
 
+inline void
+MarkValueRange(JSTracer *trc, HeapValue *begin, HeapValue *end, const char *name)
+{
+    return MarkValueRange(trc, end - begin, begin, name);
+}
+
 void
 MarkValueRoot(JSTracer *trc, Value *v, const char *name);
 

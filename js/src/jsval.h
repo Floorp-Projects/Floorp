@@ -215,10 +215,11 @@ typedef enum JSWhyMagic
     JS_ARG_POISON,               /* used in debug builds to catch tracing errors */
     JS_SERIALIZE_NO_NODE,        /* an empty subnode in the AST serializer */
     JS_LAZY_ARGUMENTS,           /* lazy arguments value on the stack */
-    JS_UNASSIGNED_ARGUMENTS,     /* the initial value of callobj.arguments */
     JS_OPTIMIZED_ARGUMENTS,      /* optimized-away 'arguments' value */
     JS_IS_CONSTRUCTING,          /* magic value passed to natives to indicate construction */
     JS_OVERWRITTEN_CALLEE,       /* arguments.callee has been overwritten */
+    JS_FORWARD_TO_CALL_OBJECT,   /* args object element stored in call object */
+    JS_BLOCK_NEEDS_CLONE,        /* value of static block object slot */
     JS_GENERIC_MAGIC             /* for local use */
 } JSWhyMagic;
 

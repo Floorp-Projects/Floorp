@@ -1281,31 +1281,14 @@ AssertJit(JSContext *cx, unsigned argc, jsval *vp)
 static JSScript *
 ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
 {
-    JSScript *script = NULL;
-    JSFunction *fun = NULL;
+    JSFunction *fun = JS_ValueToFunction(cx, v);
+    if (!fun)
+        return NULL;
 
-    if (!JSVAL_IS_PRIMITIVE(v)) {
-        JSObject *obj = JSVAL_TO_OBJECT(v);
-        JSClass *clasp = JS_GetClass(obj);
+    JSScript *script = fun->maybeScript();
+    if (!script)
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_SCRIPTS_ONLY);
 
-        if (clasp == Jsvalify(&GeneratorClass)) {
-            if (JSGenerator *gen = (JSGenerator *) JS_GetPrivate(obj)) {
-                fun = gen->floatingFrame()->fun();
-                script = fun->script();
-            }
-        }
-    }
-
-    if (!script) {
-        fun = JS_ValueToFunction(cx, v);
-        if (!fun)
-            return NULL;
-        script = fun->maybeScript();
-        if (!script) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                                 JSSMSG_SCRIPTS_ONLY);
-        }
-    }
     if (fun && funp)
         *funp = fun;
 

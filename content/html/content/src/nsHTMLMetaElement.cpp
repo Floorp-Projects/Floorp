@@ -45,6 +45,10 @@ public:
   virtual nsXPCClassInfo* GetClassInfo();
 
   virtual nsIDOMNode* AsDOMNode() { return this; }
+
+protected:
+  virtual void GetItemValueText(nsAString& text);
+  virtual void SetItemValueText(const nsAString& text);
 };
 
 
@@ -82,6 +86,19 @@ NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Content, content)
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, HttpEquiv, httpEquiv)
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Scheme, scheme)
+
+void
+nsHTMLMetaElement::GetItemValueText(nsAString& aValue)
+{
+  GetContent(aValue);
+}
+
+void
+nsHTMLMetaElement::SetItemValueText(const nsAString& aValue)
+{
+  SetContent(aValue);
+}
+
 
 nsresult
 nsHTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
