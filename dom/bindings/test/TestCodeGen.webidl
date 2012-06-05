@@ -18,7 +18,9 @@ callback TestCallback = void();
 
 [Constructor,
  Constructor(DOMString str),
- Constructor(unsigned long num, boolean? bool)]
+ Constructor(unsigned long num, boolean? bool),
+ Constructor(TestInterface? iface),
+ Constructor(TestNonCastableInterface iface)]
 interface TestInterface {
   // Integer types
   // XXXbz add tests for infallible versions of all the integer stuff

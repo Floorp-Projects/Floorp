@@ -460,6 +460,10 @@ class IDLInterface(IDLObjectWithScope):
         for member in self.members:
             member.finish(scope)
 
+        ctor = self.ctor()
+        if ctor is not None:
+            ctor.finish(scope)
+
     def isInterface(self):
         return True
 
