@@ -347,6 +347,13 @@ struct nsPresArena::State {
     list->mEntries.AppendElement(aPtr);
   }
 
+  static size_t SizeOfFreeListEntryExcludingThis(FreeList* aEntry,
+                                                 nsMallocSizeOfFun aMallocSizeOf,
+                                                 void *)
+  {
+    return aEntry->mEntries.SizeOfExcludingThis(aMallocSizeOf);
+  }
+
   size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
   {
     size_t n = aMallocSizeOf(this);
@@ -359,6 +366,8 @@ struct nsPresArena::State {
       n += aMallocSizeOf(arena);
       arena = arena->next;
     }
+    n += mFreeLists.SizeOfExcludingThis(SizeOfFreeListEntryExcludingThis,
+                                        aMallocSizeOf);
     return n;
   }
 };
