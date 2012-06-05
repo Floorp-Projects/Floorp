@@ -43,7 +43,7 @@ void InitAndroidJavaWrappers(JNIEnv *jEnv);
 
 class RefCountedJavaObject {
 public:
-    RefCountedJavaObject(JNIEnv* env, jobject obj) : mObject(env->NewGlobalRef(obj)) {}
+    RefCountedJavaObject(JNIEnv* env, jobject obj) : mRefCnt(0), mObject(env->NewGlobalRef(obj)) {}
 
     ~RefCountedJavaObject();
 
