@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -42,6 +43,7 @@ import android.widget.TabWidget;
 import android.widget.Toast;
 
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
@@ -53,6 +55,9 @@ import org.json.JSONObject;
 
 public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     private static final String LOGTAG = "GeckoAwesomeBar";
+
+    private static final int SUGGESTION_TIMEOUT = 2000;
+    private static final int SUGGESTION_MAX = 3;
 
     static final String URL_KEY = "url";
     static final String CURRENT_URL_KEY = "currenturl";
@@ -67,6 +72,11 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     private ImageButton mGoButton;
     private ContentResolver mResolver;
     private ContextMenuSubject mContextMenuSubject;
+    private SuggestClient mSuggestClient;
+    private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
+
+    private static String sSuggestEngine;
+    private static String sSuggestTemplate;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -91,8 +101,20 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 openUrlAndFinish(url);
             }
 
-            public void onSearch(String engine) {
-                openSearchAndFinish(mText.getText().toString(), engine);
+            public void onSearch(String engine, String text) {
+                openSearchAndFinish(text, engine);
+            }
+
+            public void onEditSuggestion(final String text) {
+                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                    public void run() {
+                        mText.setText(text);
+                        mText.setSelection(mText.getText().length());
+                        mText.requestFocus();
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.showSoftInput(mText, InputMethodManager.SHOW_IMPLICIT);
+                    }
+                });
             }
         });
 
@@ -159,6 +181,24 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
 
                 // no composition string. It is safe to update IME flags.
                 updateGoButton(text);
+
+                // cancel previous query
+                if (mSuggestTask != null) {
+                    mSuggestTask.cancel(true);
+                }
+
+                if (mSuggestClient != null) {
+                    mSuggestTask = new AsyncTask<String, Void, ArrayList<String>>() {
+                         protected ArrayList<String> doInBackground(String... query) {
+                             return mSuggestClient.query(query[0]);
+                         }
+
+                         protected void onPostExecute(ArrayList<String> suggestions) {
+                             mAwesomeTabs.setSuggestions(suggestions);
+                         }
+                    };
+                    mSuggestTask.execute(text);
+                }
             }
 
             public void beforeTextChanged(CharSequence s, int start, int count,
@@ -190,19 +230,63 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.bookmarks_list));
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
 
+        if (sSuggestTemplate == null) {
+            loadSuggestClientFromPrefs();
+        } else {
+            loadSuggestClient();
+        }
+
         GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
+    }
+
+    private void loadSuggestClientFromPrefs() {
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                SharedPreferences prefs = getSearchPreferences();
+                sSuggestEngine = prefs.getString("suggestEngine", null);
+                sSuggestTemplate = prefs.getString("suggestTemplate", null);
+                if (sSuggestTemplate != null) {
+                    loadSuggestClient();
+                    mAwesomeTabs.setSuggestEngine(sSuggestEngine, null);
+                }
+            }
+        });
+    }
+
+    private void loadSuggestClient() {
+        mSuggestClient = new SuggestClient(GeckoApp.mAppContext, sSuggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
     }
 
     public void handleMessage(String event, JSONObject message) {
         try {
             if (event.equals("SearchEngines:Data")) {
-                mAwesomeTabs.setSearchEngines(message.getJSONArray("searchEngines"));
+                final String suggestEngine = message.optString("suggestEngine");
+                final String suggestTemplate = message.optString("suggestTemplate");
+                if (!TextUtils.equals(suggestTemplate, sSuggestTemplate)) {
+                    saveSuggestEngineData(suggestEngine, suggestTemplate);
+                    sSuggestEngine = suggestEngine;
+                    sSuggestTemplate = suggestTemplate;
+                    loadSuggestClient();
+                }
+                mAwesomeTabs.setSearchEngines(suggestEngine, message.getJSONArray("searchEngines"));
             }
         } catch (Exception e) {
             // do nothing
             Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
         }
+    }
+
+    private void saveSuggestEngineData(final String suggestEngine, final String suggestTemplate) {
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                SharedPreferences prefs = getSearchPreferences();
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("suggestEngine", suggestEngine);
+                editor.putString("suggestTemplate", suggestTemplate);
+                editor.commit();
+            }
+        });
     }
 
     @Override
@@ -677,5 +761,9 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         public void setOnKeyPreImeListener(OnKeyPreImeListener listener) {
             mOnKeyPreImeListener = listener;
         }
+    }
+
+    private SharedPreferences getSearchPreferences() {
+        return getSharedPreferences("search.prefs", MODE_PRIVATE);
     }
 }
