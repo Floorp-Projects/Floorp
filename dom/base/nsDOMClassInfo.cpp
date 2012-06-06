@@ -320,6 +320,8 @@
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMMozBrowserFrame.h"
+#include "nsIDOMHTMLPropertiesCollection.h"
+#include "nsIDOMPropertyNodeList.h"
 
 #include "nsIDOMGetSVGDocument.h"
 #include "nsIDOMSVGAElement.h"
