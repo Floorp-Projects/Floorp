@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:background="@drawable/suggestion_selector"
+              android:gravity="center_vertical"
+              android:orientation="horizontal">
+
+    <ImageView xmlns:android="http://schemas.android.com/apk/res/android"  
+               android:id="@+id/suggestion_magnifier"
+               android:src="@drawable/ic_awesomebar_search"
+               android:layout_marginRight="3dip"
+               android:layout_width="16dip"
+               android:layout_height="16dip" />
+
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"  
+              android:id="@+id/suggestion_text"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textColor="?android:attr/textColorPrimary"/>
+
+</LinearLayout>

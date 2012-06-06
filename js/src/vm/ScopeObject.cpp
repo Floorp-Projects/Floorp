@@ -332,12 +332,6 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
 static JSBool
 with_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp, JSProperty **propp)
 {
-    /* Fixes bug 463997 */
-    unsigned flags = cx->resolveFlags;
-    if (flags == RESOLVE_INFER)
-        flags = js_InferFlags(cx, flags);
-    flags |= JSRESOLVE_WITH;
-    JSAutoResolveFlags rf(cx, flags);
     return obj->asWith().object().lookupGeneric(cx, id, objp, propp);
 }
 
@@ -1375,7 +1369,7 @@ int DebugScopeProxy::family = 0;
 DebugScopeProxy DebugScopeProxy::singleton;
 
 /* static */ DebugScopeObject *
-DebugScopeObject::create(JSContext *cx, ScopeObject &scope, JSObject &enclosing)
+DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosing)
 {
     JSObject *obj = NewProxyObject(cx, &DebugScopeProxy::singleton, ObjectValue(scope),
                                    NULL /* proto */, &scope.global(),
@@ -1383,8 +1377,8 @@ DebugScopeObject::create(JSContext *cx, ScopeObject &scope, JSObject &enclosing)
     if (!obj)
         return NULL;
 
-    JS_ASSERT(!enclosing.isScope());
-    SetProxyExtra(obj, ENCLOSING_EXTRA, ObjectValue(enclosing));
+    JS_ASSERT(!enclosing->isScope());
+    SetProxyExtra(obj, ENCLOSING_EXTRA, ObjectValue(*enclosing.value()));
 
     return &obj->asDebugScope();
 }
@@ -1735,19 +1729,19 @@ GetDebugScopeForScope(JSContext *cx, ScopeObject &scope, ScopeIter enclosing)
     if (DebugScopeObject *debugScope = debugScopes.hasDebugScope(cx, scope))
         return debugScope;
 
-    JSObject *enclosingDebug = GetDebugScope(cx, enclosing);
+    RootedObject enclosingDebug(cx, GetDebugScope(cx, enclosing));
     if (!enclosingDebug)
         return NULL;
 
     JSObject &maybeDecl = scope.enclosingScope();
     if (maybeDecl.isDeclEnv()) {
         JS_ASSERT(CallObjectLambdaName(scope.asCall().getCalleeFunction()));
-        enclosingDebug = DebugScopeObject::create(cx, maybeDecl.asDeclEnv(), *enclosingDebug);
+        enclosingDebug = DebugScopeObject::create(cx, maybeDecl.asDeclEnv(), enclosingDebug);
         if (!enclosingDebug)
             return NULL;
     }
 
-    DebugScopeObject *debugScope = DebugScopeObject::create(cx, scope, *enclosingDebug);
+    DebugScopeObject *debugScope = DebugScopeObject::create(cx, scope, enclosingDebug);
     if (!debugScope)
         return NULL;
 
@@ -1760,11 +1754,13 @@ GetDebugScopeForScope(JSContext *cx, ScopeObject &scope, ScopeIter enclosing)
 static DebugScopeObject *
 GetDebugScopeForMissing(JSContext *cx, ScopeIter si)
 {
+    SkipRoot si_(cx, &si);
+
     DebugScopes &debugScopes = *cx->runtime->debugScopes;
     if (DebugScopeObject *debugScope = debugScopes.hasDebugScope(cx, si))
         return debugScope;
 
-    JSObject *enclosingDebug = GetDebugScope(cx, si.enclosing());
+    RootedObject enclosingDebug(cx, GetDebugScope(cx, si.enclosing()));
     if (!enclosingDebug)
         return NULL;
 
@@ -1784,12 +1780,12 @@ GetDebugScopeForMissing(JSContext *cx, ScopeIter si)
         if (callobj->enclosingScope().isDeclEnv()) {
             JS_ASSERT(CallObjectLambdaName(callobj->getCalleeFunction()));
             DeclEnvObject &declenv = callobj->enclosingScope().asDeclEnv();
-            enclosingDebug = DebugScopeObject::create(cx, declenv, *enclosingDebug);
+            enclosingDebug = DebugScopeObject::create(cx, declenv, enclosingDebug);
             if (!enclosingDebug)
                 return NULL;
         }
 
-        debugScope = DebugScopeObject::create(cx, *callobj, *enclosingDebug);
+        debugScope = DebugScopeObject::create(cx, *callobj, enclosingDebug);
         break;
       }
       case ScopeIter::Block: {
@@ -1798,7 +1794,7 @@ GetDebugScopeForMissing(JSContext *cx, ScopeIter si)
         if (!block)
             return NULL;
 
-        debugScope = DebugScopeObject::create(cx, *block, *enclosingDebug);
+        debugScope = DebugScopeObject::create(cx, *block, enclosingDebug);
         break;
       }
       case ScopeIter::With:

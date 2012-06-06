@@ -15,6 +15,8 @@
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
 #include "nsNPAPIPluginInstance.h"
+#include "nsPluginInstanceOwner.h"
+#include "nsObjectLoadingContent.h"
 #include "nsIHTTPHeaderListener.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIObserverService.h"

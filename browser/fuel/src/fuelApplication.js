@@ -20,6 +20,12 @@ var Utilities = {
     return this.bookmarks;
   },
 
+  get bookmarksObserver() {
+    let bookmarksObserver = new BookmarksObserver();
+    this.__defineGetter__("bookmarksObserver", function() bookmarksObserver);
+    return this.bookmarksObserver;
+  },
+
   get livemarks() {
     let livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
                     getService[Ci.mozIAsyncLivemarks].
@@ -49,15 +55,16 @@ var Utilities = {
     return this.windowMediator;
   },
 
-  makeURI : function(aSpec) {
+  makeURI: function fuelutil_makeURI(aSpec) {
     if (!aSpec)
       return null;
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     return ios.newURI(aSpec, null, null);
   },
 
-  free : function() {
+  free: function fuelutil_free() {
     delete this.bookmarks;
+    delete this.bookmarksObserver;
     delete this.livemarks
     delete this.annotations;
     delete this.history;
@@ -68,19 +75,26 @@ var Utilities = {
 
 //=================================================
 // Window implementation
+
+var fuelWindowMap = new WeakMap();
+function getWindow(aWindow) {
+  let fuelWindow = fuelWindowMap.get(aWindow);
+  if (!fuelWindow) {
+    fuelWindow = new Window(aWindow);
+    fuelWindowMap.set(aWindow, fuelWindow);
+  }
+  return fuelWindow;
+}
+
+// Don't call new Window() directly; use getWindow instead.
 function Window(aWindow) {
   this._window = aWindow;
-  this._tabbrowser = aWindow.getBrowser();
   this._events = new Events();
-  this._cleanup = {};
 
   this._watch("TabOpen");
   this._watch("TabMove");
   this._watch("TabClose");
   this._watch("TabSelect");
-
-  var self = this;
-  gShutdown.push(function() { self._shutdown(); });
 }
 
 Window.prototype = {
@@ -88,65 +102,75 @@ Window.prototype = {
     return this._events;
   },
 
+  get _tabbrowser() {
+    return this._window.getBrowser();
+  },
+
   /*
    * Helper used to setup event handlers on the XBL element. Note that the events
    * are actually dispatched to tabs, so we capture them.
    */
-  _watch : function win_watch(aType) {
-    var self = this;
-    this._tabbrowser.tabContainer.addEventListener(aType,
-      this._cleanup[aType] = function(e){ self._event(e); },
-      true);
+  _watch: function win_watch(aType) {
+    this._tabbrowser.tabContainer.addEventListener(aType, this,
+                                                   /* useCapture = */ true);
   },
 
-  /*
-   * Helper event callback used to redirect events made on the XBL element
-   */
-  _event : function win_event(aEvent) {
-    this._events.dispatch(aEvent.type, new BrowserTab(this, aEvent.originalTarget.linkedBrowser));
+  handleEvent: function win_handleEvent(aEvent) {
+    this._events.dispatch(aEvent.type, getBrowserTab(this, aEvent.originalTarget.linkedBrowser));
   },
+
   get tabs() {
     var tabs = [];
     var browsers = this._tabbrowser.browsers;
     for (var i=0; i<browsers.length; i++)
-      tabs.push(new BrowserTab(this, browsers[i]));
+      tabs.push(getBrowserTab(this, browsers[i]));
     return tabs;
   },
+
   get activeTab() {
-    return new BrowserTab(this, this._tabbrowser.selectedBrowser);
-  },
-  open : function win_open(aURI) {
-    return new BrowserTab(this, this._tabbrowser.addTab(aURI.spec).linkedBrowser);
-  },
-  _shutdown : function win_shutdown() {
-    for (var type in this._cleanup)
-      this._tabbrowser.removeEventListener(type, this._cleanup[type], true);
-    this._cleanup = null;
-
-    this._window = null;
-    this._tabbrowser = null;
-    this._events = null;
+    return getBrowserTab(this, this._tabbrowser.selectedBrowser);
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIWindow])
+  open: function win_open(aURI) {
+    return getBrowserTab(this, this._tabbrowser.addTab(aURI.spec).linkedBrowser);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.fuelIWindow])
 };
 
 //=================================================
 // BrowserTab implementation
+
+var fuelBrowserTabMap = new WeakMap();
+function getBrowserTab(aFUELWindow, aBrowser) {
+  let fuelBrowserTab = fuelBrowserTabMap.get(aBrowser);
+  if (!fuelBrowserTab) {
+    fuelBrowserTab = new BrowserTab(aFUELWindow, aBrowser);
+    fuelBrowserTabMap.set(aBrowser, fuelBrowserTab);
+  }
+  else {
+    // This tab may have moved to another window, so make sure its cached
+    // window is up-to-date.
+    fuelBrowserTab._window = aFUELWindow;
+  }
+
+  return fuelBrowserTab;
+}
+
+// Don't call new BrowserTab() directly; call getBrowserTab instead.
 function BrowserTab(aFUELWindow, aBrowser) {
   this._window = aFUELWindow;
-  this._tabbrowser = aFUELWindow._tabbrowser;
   this._browser = aBrowser;
   this._events = new Events();
-  this._cleanup = {};
 
   this._watch("load");
-
-  var self = this;
-  gShutdown.push(function() { self._shutdown(); });
 }
 
 BrowserTab.prototype = {
+  get _tabbrowser() {
+    return this._window._tabbrowser;
+  },
+
   get uri() {
     return this._browser.currentURI;
   },
@@ -175,17 +199,12 @@ BrowserTab.prototype = {
   /*
    * Helper used to setup event handlers on the XBL element
    */
-  _watch : function bt_watch(aType) {
-    var self = this;
-    this._browser.addEventListener(aType,
-      this._cleanup[aType] = function(e){ self._event(e); },
-      true);
+  _watch: function bt_watch(aType) {
+    this._browser.addEventListener(aType, this,
+                                   /* useCapture = */ true);
   },
 
-  /*
-   * Helper event callback used to redirect events made on the XBL element
-   */
-  _event : function bt_event(aEvent) {
+  handleEvent: function bt_handleEvent(aEvent) {
     if (aEvent.type == "load") {
       if (!(aEvent.originalTarget instanceof Ci.nsIDOMDocument))
         return;
@@ -199,44 +218,33 @@ BrowserTab.prototype = {
   /*
    * Helper used to determine the index offset of the browsertab
    */
-  _getTab : function bt_gettab() {
+  _getTab: function bt_gettab() {
     var tabs = this._tabbrowser.tabs;
     return tabs[this.index] || null;
   },
 
-  load : function bt_load(aURI) {
+  load: function bt_load(aURI) {
     this._browser.loadURI(aURI.spec, null, null);
   },
 
-  focus : function bt_focus() {
+  focus: function bt_focus() {
     this._tabbrowser.selectedTab = this._getTab();
     this._tabbrowser.focus();
   },
 
-  close : function bt_close() {
+  close: function bt_close() {
     this._tabbrowser.removeTab(this._getTab());
   },
 
-  moveBefore : function bt_movebefore(aBefore) {
+  moveBefore: function bt_movebefore(aBefore) {
     this._tabbrowser.moveTabTo(this._getTab(), aBefore.index);
   },
 
-  moveToEnd : function bt_moveend() {
+  moveToEnd: function bt_moveend() {
     this._tabbrowser.moveTabTo(this._getTab(), this._tabbrowser.browsers.length);
   },
 
-  _shutdown : function bt_shutdown() {
-    for (var type in this._cleanup)
-      this._browser.removeEventListener(type, this._cleanup[type], true);
-    this._cleanup = null;
-
-    this._window = null;
-    this._tabbrowser = null;
-    this._browser = null;
-    this._events = null;
-  },
-
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBrowserTab])
+  QueryInterface: XPCOMUtils.generateQI([Ci.fuelIBrowserTab])
 };
 
 
@@ -251,52 +259,177 @@ Annotations.prototype = {
     return Utilities.annotations.getItemAnnotationNames(this._id);
   },
 
-  has : function ann_has(aName) {
+  has: function ann_has(aName) {
     return Utilities.annotations.itemHasAnnotation(this._id, aName);
   },
 
-  get : function(aName) {
+  get: function ann_get(aName) {
     if (this.has(aName))
       return Utilities.annotations.getItemAnnotation(this._id, aName);
     return null;
   },
 
-  set : function(aName, aValue, aExpiration) {
+  set: function ann_set(aName, aValue, aExpiration) {
     Utilities.annotations.setItemAnnotation(this._id, aName, aValue, 0, aExpiration);
   },
 
-  remove : function ann_remove(aName) {
+  remove: function ann_remove(aName) {
     if (aName)
       Utilities.annotations.removeItemAnnotation(this._id, aName);
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIAnnotations])
+  QueryInterface: XPCOMUtils.generateQI([Ci.fuelIAnnotations])
 };
 
 
 //=================================================
+// BookmarksObserver implementation (internal class)
+//
+// BookmarksObserver is a global singleton which watches the browser's
+// bookmarks and sends you events when things change.
+//
+// You can register three different kinds of event listeners on
+// BookmarksObserver, using addListener, addFolderListener, and
+// addRootlistener.
+//
+//  - addListener(aId, aEvent, aListener) lets you listen to a specific
+//    bookmark.  You can listen to the "change", "move", and "remove" events.
+//
+//  - addFolderListener(aId, aEvent, aListener) lets you listen to a specific
+//    bookmark folder.  You can listen to "addchild" and "removechild".
+//
+//  - addRootListener(aEvent, aListener) lets you listen to the root bookmark
+//    node.  This lets you hear "add", "remove", and "change" events on all
+//    bookmarks.
+//
+
+function BookmarksObserver() {
+  this._eventsDict = {};
+  this._folderEventsDict = {};
+  this._rootEvents = new Events();
+  Utilities.bookmarks.addObserver(this, /* ownsWeak = */ true);
+}
+
+BookmarksObserver.prototype = {
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch: function () {},
+  onBeforeItemRemoved: function () {},
+  onItemVisited: function () {},
+
+  onItemAdded: function bo_onItemAdded(aId, aFolder, aIndex, aItemType, aURI) {
+    this._rootEvents.dispatch("add", aId);
+    this._dispatchToEvents("addchild", aId, this._folderEventsDict[aFolder]);
+  },
+
+  onItemRemoved: function bo_onItemRemoved(aId, aFolder, aIndex) {
+    this._rootEvents.dispatch("remove", aId);
+    this._dispatchToEvents("remove", aId, this._eventsDict[aId]);
+    this._dispatchToEvents("removechild", aId, this._folderEventsDict[aFolder]);
+  },
+
+  onItemChanged: function bo_onItemChanged(aId, aProperty, aIsAnnotationProperty, aValue) {
+    this._rootEvents.dispatch("change", aProperty);
+    this._dispatchToEvents("change", aProperty, this._eventsDict[aId]);
+  },
+
+  onItemMoved: function bo_onItemMoved(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+    this._dispatchToEvents("move", aId, this._eventsDict[aId]);
+  },
+
+  _dispatchToEvents: function bo_dispatchToEvents(aEvent, aData, aEvents) {
+    if (aEvents) {
+      aEvents.dispatch(aEvent, aData);
+    }
+  },
+
+  _addListenerToDict: function bo_addListenerToDict(aId, aEvent, aListener, aDict) {
+    var events = aDict[aId];
+    if (!events) {
+      events = new Events();
+      aDict[aId] = events;
+    }
+    events.addListener(aEvent, aListener);
+  },
+
+  _removeListenerFromDict: function bo_removeListenerFromDict(aId, aEvent, aListener, aDict) {
+    var events = aDict[aId];
+    if (!events) {
+      return;
+    }
+    events.removeListener(aEvent, aListener);
+    if (events._listeners.length == 0) {
+      delete aDict[aId];
+    }
+  },
+
+  addListener: function bo_addListener(aId, aEvent, aListener) {
+    this._addListenerToDict(aId, aEvent, aListener, this._eventsDict);
+  },
+
+  removeListener: function bo_removeListener(aId, aEvent, aListener) {
+    this._removeListenerFromDict(aId, aEvent, aListener, this._eventsDict);
+  },
+
+  addFolderListener: function addFolderListener(aId, aEvent, aListener) {
+    this._addListenerToDict(aId, aEvent, aListener, this._folderEventsDict);
+  },
+
+  removeFolderListener: function removeFolderListener(aId, aEvent, aListener) {
+    this._removeListenerFromDict(aId, aEvent, aListener, this._folderEventsDict);
+  },
+
+  addRootListener: function addRootListener(aEvent, aListener) {
+    this._rootEvents.addListener(aEvent, aListener);
+  },
+
+  removeRootListener: function removeRootListener(aEvent, aListener) {
+    this._rootEvents.removeListener(aEvent, aListener);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarksObserver,
+                                         Ci.nsISupportsWeakReference])
+};
+
+//=================================================
 // Bookmark implementation
+//
+// Bookmark event listeners are stored in BookmarksObserver, not in the
+// Bookmark objects themselves.  Thus, you don't have to hold on to a Bookmark
+// object in order for your event listener to stay valid, and Bookmark objects
+// not kept alive by the extension can be GC'ed.
+//
+// A consequence of this is that if you have two different Bookmark objects x
+// and y for the same bookmark (i.e., x != y but x.id == y.id), and you do
+//
+//   x.addListener("foo", fun);
+//   y.removeListener("foo", fun);
+//
+// the second line will in fact remove the listener added in the first line.
+//
+
 function Bookmark(aId, aParent, aType) {
   this._id = aId;
   this._parent = aParent;
   this._type = aType || "bookmark";
   this._annotations = new Annotations(this._id);
-  this._events = new Events();
 
-  Utilities.bookmarks.addObserver(this, false);
-
+  // Our _events object forwards to bookmarksObserver.
   var self = this;
-  gShutdown.push(function() { self._shutdown(); });
+  this._events = {
+    addListener: function bookmarkevents_al(aEvent, aListener) {
+      Utilities.bookmarksObserver.addListener(self._id, aEvent, aListener);
+    },
+    removeListener: function bookmarkevents_rl(aEvent, aListener) {
+      Utilities.bookmarksObserver.removeListener(self._id, aEvent, aListener);
+    },
+    QueryInterface: XPCOMUtils.generateQI([Ci.extIEvents])
+  };
+
+  // For our onItemMoved listener, which updates this._parent.
+  Utilities.bookmarks.addObserver(this, /* ownsWeak = */ true);
 }
 
 Bookmark.prototype = {
-  _shutdown : function bm_shutdown() {
-    this._annotations = null;
-    this._events = null;
-
-    Utilities.bookmarks.removeObserver(this);
-  },
-
   get id() {
     return this._id;
   },
@@ -358,66 +491,86 @@ Bookmark.prototype = {
     Utilities.bookmarks.removeItem(this._id);
   },
 
-  // observer
-  onBeginUpdateBatch : function bm_obub() {
-  },
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch: function () {},
+  onItemAdded: function () {},
+  onBeforeItemRemoved: function () {},
+  onItemVisited: function () {},
+  onItemRemoved: function () {},
+  onItemChanged: function () {},
 
-  onEndUpdateBatch : function bm_oeub() {
-  },
-
-  onItemAdded : function bm_oia(aId, aFolder, aIndex, aItemType, aURI) {
-    // bookmark object doesn't exist at this point
-  },
-
-  onBeforeItemRemoved : function bm_obir(aId) {
-  },
-
-  onItemRemoved : function bm_oir(aId, aFolder, aIndex) {
-    if (this._id == aId)
-      this._events.dispatch("remove", aId);
-  },
-
-  onItemChanged : function bm_oic(aId, aProperty, aIsAnnotationProperty, aValue) {
-    if (this._id == aId)
-      this._events.dispatch("change", aProperty);
-  },
-
-  onItemVisited: function bm_oiv(aId, aVisitID, aTime) {
-  },
-
-  onItemMoved: function bm_oim(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
-    if (this._id == aId) {
+  onItemMoved: function(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+    if (aId == this._id) {
       this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));
-      this._events.dispatch("move", aId);
     }
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmark, Ci.nsINavBookmarkObserver])
+  QueryInterface: XPCOMUtils.generateQI([Ci.fuelIBookmark,
+                                         Ci.nsINavBookmarksObserver,
+                                         Ci.nsISupportsWeakReference])
 };
 
 
 //=================================================
 // BookmarkFolder implementation
+//
+// As with Bookmark, events on BookmarkFolder are handled by the
+// BookmarksObserver singleton.
+//
+
 function BookmarkFolder(aId, aParent) {
   this._id = aId;
   this._parent = aParent;
   this._annotations = new Annotations(this._id);
-  this._events = new Events();
 
-  Utilities.bookmarks.addObserver(this, false);
+  // Our event listeners are handled by the BookmarksObserver singleton.  This
+  // is a bit complicated because there are three different kinds of events we
+  // might want to listen to here:
+  //
+  //  - If this._parent is null, we're the root bookmark folder, and all our
+  //    listeners should be root listeners.
+  //
+  //  - Otherwise, events ending with "child" (addchild, removechild) are
+  //    handled by a folder listener.
+  //
+  //  - Other events are handled by a vanilla bookmark listener.
 
   var self = this;
-  gShutdown.push(function() { self._shutdown(); });
+  this._events = {
+    addListener: function bmfevents_al(aEvent, aListener) {
+      if (self._parent) {
+        if (/child$/.test(aEvent)) {
+          Utilities.bookmarksObserver.addFolderListener(self._id, aEvent, aListener);
+        }
+        else {
+          Utilities.bookmarksObserver.addListener(self._id, aEvent, aListener);
+        }
+      }
+      else {
+        Utilities.bookmarksObserver.addRootListener(aEvent, aListener);
+      }
+    },
+    removeListener: function bmfevents_rl(aEvent, aListener) {
+      if (self._parent) {
+        if (/child$/.test(aEvent)) {
+          Utilities.bookmarksObserver.removeFolderListener(self._id, aEvent, aListener);
+        }
+        else {
+          Utilities.bookmarksObserver.removeListener(self._id, aEvent, aListener);
+        }
+      }
+      else {
+        Utilities.bookmarksObserver.removeRootListener(aEvent, aListener);
+      }
+    },
+    QueryInterface: XPCOMUtils.generateQI([Ci.extIEvents])
+  };
+
+  // For our onItemMoved listener, which updates this._parent.
+  Utilities.bookmarks.addObserver(this, /* ownsWeak = */ true);
 }
 
 BookmarkFolder.prototype = {
-  _shutdown : function bmf_shutdown() {
-    this._annotations = null;
-    this._events = null;
-
-    Utilities.bookmarks.removeObserver(this);
-  },
-
   get id() {
     return this._id;
   },
@@ -489,93 +642,53 @@ BookmarkFolder.prototype = {
     return items;
   },
 
-  addBookmark : function bmf_addbm(aTitle, aUri) {
+  addBookmark: function bmf_addbm(aTitle, aUri) {
     var newBookmarkID = Utilities.bookmarks.insertBookmark(this._id, aUri, Utilities.bookmarks.DEFAULT_INDEX, aTitle);
     var newBookmark = new Bookmark(newBookmarkID, this, "bookmark");
     return newBookmark;
   },
 
-  addSeparator : function bmf_addsep() {
+  addSeparator: function bmf_addsep() {
     var newBookmarkID = Utilities.bookmarks.insertSeparator(this._id, Utilities.bookmarks.DEFAULT_INDEX);
     var newBookmark = new Bookmark(newBookmarkID, this, "separator");
     return newBookmark;
   },
 
-  addFolder : function bmf_addfolder(aTitle) {
+  addFolder: function bmf_addfolder(aTitle) {
     var newFolderID = Utilities.bookmarks.createFolder(this._id, aTitle, Utilities.bookmarks.DEFAULT_INDEX);
     var newFolder = new BookmarkFolder(newFolderID, this);
     return newFolder;
   },
 
-  remove : function bmf_remove() {
+  remove: function bmf_remove() {
     Utilities.bookmarks.removeItem(this._id);
   },
 
   // observer
-  onBeginUpdateBatch : function bmf_obub() {
-  },
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch : function () {},
+  onItemAdded : function () {},
+  onBeforeItemRemoved : function () {},
+  onItemRemoved : function () {},
+  onItemChanged : function () {},
 
-  onEndUpdateBatch : function bmf_oeub() {
-  },
-
-  onItemAdded : function bmf_oia(aId, aFolder, aIndex, aItemType, aURI) {
-    // handle root folder events
-    if (!this._parent)
-      this._events.dispatch("add", aId);
-
-    // handle this folder events
-    if (this._id == aFolder)
-      this._events.dispatch("addchild", aId);
-  },
-
-  onBeforeItemRemoved : function bmf_oir(aId) {
-  },
-
-  onItemRemoved : function bmf_oir(aId, aFolder, aIndex) {
-    // handle root folder events
-    if (!this._parent || this._id == aId)
-      this._events.dispatch("remove", aId);
-
-    // handle this folder events
-    if (this._id == aFolder)
-      this._events.dispatch("removechild", aId);
-  },
-
-  onItemChanged : function bmf_oic(aId, aProperty, aIsAnnotationProperty, aValue) {
-    // handle root folder and this folder events
-    if (!this._parent || this._id == aId)
-      this._events.dispatch("change", aProperty);
-  },
-
-  onItemVisited: function bmf_oiv(aId, aVisitID, aTime) {
-  },
-
-  onItemMoved: function bmf_oim(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
-    // handle this folder event, root folder cannot be moved
+  onItemMoved: function bf_onItemMoved(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
     if (this._id == aId) {
       this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));
-      this._events.dispatch("move", aId);
     }
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmarkFolder, Ci.nsINavBookmarkObserver])
+  QueryInterface: XPCOMUtils.generateQI([Ci.fuelIBookmarkFolder,
+                                         Ci.nsINavBookmarksObserver,
+                                         Ci.nsISupportsWeakReference])
 };
 
 //=================================================
 // BookmarkRoots implementation
 function BookmarkRoots() {
-  var self = this;
-  gShutdown.push(function() { self._shutdown(); });
 }
 
 BookmarkRoots.prototype = {
-  _shutdown : function bmr_shutdown() {
-    this._menu = null;
-    this._toolbar = null;
-    this._tags = null;
-    this._unfiled = null;
-  },
-
   get menu() {
     if (!this._menu)
       this._menu = new BookmarkFolder(Utilities.bookmarks.bookmarksMenuFolder, null);
@@ -604,7 +717,7 @@ BookmarkRoots.prototype = {
     return this._unfiled;
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmarkRoots])
+  QueryInterface: XPCOMUtils.generateQI([Ci.fuelIBookmarkRoots])
 };
 
 
@@ -632,21 +745,20 @@ var ApplicationFactory = {
 // Application constructor
 function Application() {
   this.initToolkitHelpers();
-  this._bookmarks = null;
 }
 
 //=================================================
 // Application implementation
 Application.prototype = {
   // for nsIClassInfo + XPCOMUtils
-  classID:          APPLICATION_CID,
+  classID: APPLICATION_CID,
 
   // redefine the default factory for XPCOMUtils
   _xpcom_factory: ApplicationFactory,
 
   // for nsISupports
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIApplication, Ci.extIApplication,
-                                          Ci.nsIObserver]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.fuelIApplication, Ci.extIApplication,
+                                         Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   // for nsIClassInfo
   classInfo: XPCOMUtils.generateCI({classID: APPLICATION_CID,
@@ -662,7 +774,6 @@ Application.prototype = {
     this.__proto__.__proto__.observe.call(this, aSubject, aTopic, aData);
     if (aTopic == "xpcom-shutdown") {
       this._obs.removeObserver(this, "xpcom-shutdown");
-      this._bookmarks = null;
       Utilities.free();
     }
   },
@@ -678,13 +789,13 @@ Application.prototype = {
     var browserEnum = Utilities.windowMediator.getEnumerator("navigator:browser");
 
     while (browserEnum.hasMoreElements())
-      win.push(new Window(browserEnum.getNext()));
+      win.push(getWindow(browserEnum.getNext()));
 
     return win;
   },
 
   get activeWindow() {
-    return new Window(Utilities.windowMediator.getMostRecentWindow("navigator:browser"));
+    return getWindow(Utilities.windowMediator.getMostRecentWindow("navigator:browser"));
   }
 };
 

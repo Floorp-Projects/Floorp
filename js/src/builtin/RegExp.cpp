@@ -295,12 +295,13 @@ regexp_compile(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, regexp_compile, &RegExpClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, regexp_compile, &RegExpClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    RegExpObjectBuilder builder(cx, &obj->asRegExp());
+    RegExpObjectBuilder builder(cx, &thisObj->asRegExp());
     return CompileRegExpObject(cx, builder, args);
 }
 
@@ -333,12 +334,13 @@ regexp_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, regexp_toString, &RegExpClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, regexp_toString, &RegExpClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    JSString *str = obj->asRegExp().toString(cx);
+    JSString *str = thisObj->asRegExp().toString(cx);
     if (!str)
         return false;
 
@@ -540,12 +542,13 @@ ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
-    bool ok;
-    JSObject *obj = NonGenericMethodGuard(cx, args, native, &RegExpClass, &ok);
-    if (!obj)
-        return ok;
+    JSObject *thisObj;
+    if (!NonGenericMethodGuard(cx, args, native, &RegExpClass, &thisObj))
+        return false;
+    if (!thisObj)
+        return true;
 
-    Rooted<RegExpObject*> reobj(cx, &obj->asRegExp());
+    Rooted<RegExpObject*> reobj(cx, &thisObj->asRegExp());
 
     RegExpGuard re;
     if (StartsWithGreedyStar(reobj->getSource())) {

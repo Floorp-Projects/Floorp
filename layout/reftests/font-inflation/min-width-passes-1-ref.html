@@ -1,0 +1,23 @@
+<html>
+<head>
+<title>Bug Reproduction</title>
+</head>
+<style type="text/css">
+html, body {
+  /*
+   * Work around bug 759755 / bug 757179.  Setting overflow hidden
+   * avoids these bugs being triggered due to the hypothetical scrollbar
+   * reflows.
+   */
+  overflow: hidden;
+}
+table { width: 100% }
+body, table, tbody, tr, td {
+  margin: 0; border: none; padding: 0; border-spacing: 0;
+}
+</style>
+<body>
+  <h1 id="welcome">Welcome to Bugzilla</h1>
+  <input type="button" id="find" value="Quick Search"></input>
+</body>
+</html>
