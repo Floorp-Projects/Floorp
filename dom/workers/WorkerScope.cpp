@@ -768,7 +768,7 @@ private:
   {
     JSClass* classPtr = JS_GetClass(aObj);
     if (classPtr == Class()) {
-      return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, classPtr);
+      return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
     }
 
     JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL,
@@ -803,7 +803,7 @@ private:
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
     DedicatedWorkerGlobalScope* scope =
-      UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, Class());
+      UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
     if (scope) {
       DestroyProtoOrIfaceCache(aObj);
       scope->_finalize(aFop);
@@ -815,7 +815,7 @@ private:
   {
     JS_ASSERT(JS_GetClass(aObj) == Class());
     DedicatedWorkerGlobalScope* scope =
-      UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, Class());
+      UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
     if (scope) {
       mozilla::dom::TraceProtoOrIfaceCache(aTrc, aObj);
       scope->_trace(aTrc);
@@ -888,7 +888,7 @@ WorkerGlobalScope::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
   JS_ASSERT(classPtr != Class());
 
   if (classPtr == DedicatedWorkerGlobalScope::Class()) {
-    return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj, classPtr);
+    return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
   }
 
   JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
