@@ -86,44 +86,25 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor,
       return NS_ERROR_FAILURE;
   }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   {
-    PRUint32 count;
-    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(mStartParent);
-    if (textNode)
-      textNode->GetLength(&count);
-    else
-    {
-      nsCOMPtr<nsIDOMNodeList> children;
-      result = mStartParent->GetChildNodes(getter_AddRefs(children));
-      NS_ASSERTION(((NS_SUCCEEDED(result)) && children), "bad start child list");
-      children->GetLength(&count);
-    }
-    NS_ASSERTION(mStartOffset<=(PRInt32)count, "bad start offset");
+    nsCOMPtr<nsINode> start = do_QueryInterface(mStartParent);
+    MOZ_ASSERT(start);
+    NS_ASSERTION(mStartOffset <= PRInt32(start->Length()), "bad start offset");
 
-    textNode = do_QueryInterface(mEndParent);
-    if (textNode)
-      textNode->GetLength(&count);
-    else
-    {
-      nsCOMPtr<nsIDOMNodeList> children;
-      result = mEndParent->GetChildNodes(getter_AddRefs(children));
-      NS_ASSERTION(((NS_SUCCEEDED(result)) && children), "bad end child list");
-      children->GetLength(&count);
-    }
-    NS_ASSERTION(mEndOffset<=(PRInt32)count, "bad end offset");
+    nsCOMPtr<nsINode> end = do_QueryInterface(mEndParent);
+    MOZ_ASSERT(end);
+    NS_ASSERTION(mEndOffset <= PRInt32(end->Length()), "bad end offset");
 
-#ifdef NS_DEBUG
     if (gNoisy)
     {
       printf ("DeleteRange: %d of %p to %d of %p\n", 
                mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);
     }         
-#endif
   }
-#endif
-  return result;
+#endif // DEBUG
 
+  return NS_OK;
 }
 
 NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
