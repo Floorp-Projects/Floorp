@@ -689,9 +689,6 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         mLayerManager = CreateBasicLayerManager();
         return mLayerManager;
     }
-
-    mUseAcceleratedRendering = GetShouldAccelerate();
-
 #ifdef MOZ_JAVA_COMPOSITOR
     bool useCompositor = UseOffMainThreadCompositing();
 
@@ -706,6 +703,7 @@ nsWindow::GetLayerManager(PLayersChild*, LayersBackend, LayerManagerPersistence,
         sFailedToCreateGLContext = true;
     }
 #endif
+    mUseAcceleratedRendering = GetShouldAccelerate();
 
     if (!mUseAcceleratedRendering ||
         sFailedToCreateGLContext)
