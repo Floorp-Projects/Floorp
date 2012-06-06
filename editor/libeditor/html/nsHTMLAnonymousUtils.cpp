@@ -27,6 +27,8 @@
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
 
+using namespace mozilla;
+
 // retrieve an integer stored into a CSS computed float value
 static PRInt32 GetCSSFloatValue(nsIDOMCSSStyleDeclaration * aDecl,
                                 const nsAString & aProperty)
@@ -123,7 +125,7 @@ nsHTMLEditor::CreateAnonymousElement(const nsAString & aTag, nsIDOMNode *  aPare
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
   // Create a new node through the element factory
-  nsCOMPtr<nsIContent> newContent;
+  nsCOMPtr<dom::Element> newContent;
   nsresult res = CreateHTMLContent(aTag, getter_AddRefs(newContent));
   NS_ENSURE_SUCCESS(res, res);
 

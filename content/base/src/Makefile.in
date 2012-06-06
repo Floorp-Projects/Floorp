@@ -34,6 +34,13 @@ EXPORTS		= \
 		nsTextFragment.h \
 		mozAutoDocUpdate.h \
 		nsFrameMessageManager.h \
+		nsAttrAndChildArray.h \
+		nsAttrValue.h \
+		nsCrossSiteListenerProxy.h \
+		nsDOMAttributeMap.h \
+		nsGenericElement.h \
+		nsMappedAttributeElement.h \
+		nsStyledElement.h \
 		$(NULL)
 
 EXPORTS_NAMESPACES = mozilla/dom
