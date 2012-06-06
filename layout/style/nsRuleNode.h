@@ -734,6 +734,24 @@ public:
   static nscoord FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
                                         nsPresContext* aPresContext,
                                         nsFontSizeType aFontSizeType = eFontSize_HTML);
+
+  /**
+   * @param aValue The color value, returned from nsCSSParser::ParseColorString
+   * @param aPresContext Presentation context whose preferences are used
+   *                     for certain enumerated colors
+   * @param aStyleContext Style context whose color is used for 'currentColor'
+   *
+   * @note aPresContext and aStyleContext may be null, but in that case, fully
+   *       opaque black will be returned for the values that rely on these
+   *       objects to compute the color. (For example, -moz-hyperlinktext.)
+   *
+   * @return false if we fail to extract a color; this will not happen if both
+   *         aPresContext and aStyleContext are non-null
+   */
+  static bool ComputeColor(const nsCSSValue& aValue,
+                           nsPresContext* aPresContext,
+                           nsStyleContext* aStyleContext,
+                           nscolor& aResult);
 };
 
 #endif
