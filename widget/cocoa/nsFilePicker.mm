@@ -11,7 +11,7 @@
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsIComponentManager.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsILocalFileMac.h"
 #include "nsIURL.h"
 #include "nsArrayEnumerator.h"
@@ -210,7 +210,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 // make this look as much like Carbon nsFilePicker as possible.  
 
   mFiles.Clear();
-  nsCOMPtr<nsILocalFile> theFile;
+  nsCOMPtr<nsIFile> theFile;
 
   switch (mMode)
   {
@@ -284,7 +284,7 @@ void UpdatePanelFileTypes(NSOpenPanel* aPanel, NSArray* aFilters)
 
 // Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog. 
 PRInt16
-nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles)
+nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOMArray<nsIFile>& outFiles)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -367,7 +367,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
       continue;
     }
 
-    nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsIFile> localFile;
     NS_NewLocalFile(EmptyString(), true, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
     if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)url))) {
@@ -385,7 +385,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOM
 
 // Use OpenPanel to do a GetFolder. Returns |returnOK| if the user presses OK in the dialog.
 PRInt16
-nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
+nsFilePicker::GetLocalFolder(const nsString& inTitle, nsIFile** outFile)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
   NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
@@ -419,7 +419,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
   // get the path for the folder (we allow just 1, so that's all we get)
   NSURL *theURL = [[thePanel URLs] objectAtIndex:0];
   if (theURL) {
-    nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsIFile> localFile;
     NS_NewLocalFile(EmptyString(), true, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
     if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)theURL))) {
@@ -436,7 +436,7 @@ nsFilePicker::GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile)
 
 // Returns |returnOK| if the user presses OK in the dialog.
 PRInt16
-nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile)
+nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsIFile** outFile)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
   NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
@@ -473,7 +473,7 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
 
   NSURL* fileURL = [thePanel URL];
   if (fileURL) { 
-    nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsIFile> localFile;
     NS_NewLocalFile(EmptyString(), true, getter_AddRefs(localFile));
     nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(localFile);
     if (macLocalFile && NS_SUCCEEDED(macLocalFile->InitWithCFURL((CFURLRef)fileURL))) {
@@ -547,7 +547,7 @@ nsFilePicker::SetDialogTitle(const nsString& inTitle, id aPanel)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 } 
 
-// Converts path from an nsILocalFile into a NSString path
+// Converts path from an nsIFile into a NSString path
 // If it fails, returns an empty string.
 NSString *
 nsFilePicker::PanelDefaultDirectory()
@@ -565,7 +565,7 @@ nsFilePicker::PanelDefaultDirectory()
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
+NS_IMETHODIMP nsFilePicker::GetFile(nsIFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
   *aFile = nsnull;

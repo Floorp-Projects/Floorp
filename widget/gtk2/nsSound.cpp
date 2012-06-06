@@ -69,7 +69,7 @@ static ca_proplist_sets_fn ca_proplist_sets;
 static ca_context_play_full_fn ca_context_play_full;
 
 struct ScopedCanberraFile {
-    ScopedCanberraFile(nsILocalFile *file): mFile(file) {};
+    ScopedCanberraFile(nsIFile *file): mFile(file) {};
 
     ~ScopedCanberraFile() {
         if (mFile) {
@@ -80,10 +80,10 @@ struct ScopedCanberraFile {
     void forget() {
         mFile.forget();
     }
-    nsILocalFile* operator->() { return mFile; }
-    operator nsILocalFile*() { return mFile; }
+    nsIFile* operator->() { return mFile; }
+    operator nsIFile*() { return mFile; }
 
-    nsCOMPtr<nsILocalFile> mFile;
+    nsCOMPtr<nsIFile> mFile;
 };
 
 static ca_context*
@@ -153,7 +153,7 @@ ca_finish_cb(ca_context *c,
              int error_code,
              void *userdata)
 {
-    nsILocalFile *file = reinterpret_cast<nsILocalFile *>(userdata);
+    nsIFile *file = reinterpret_cast<nsIFile *>(userdata);
     if (file) {
         file->Remove(false);
         NS_RELEASE(file);
@@ -243,8 +243,8 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         return aStatus;
     }
 
-    nsCOMPtr<nsILocalFile> tmpFile;
-    nsDirectoryService::gService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsILocalFile),
+    nsCOMPtr<nsIFile> tmpFile;
+    nsDirectoryService::gService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile),
                                       getter_AddRefs(tmpFile));
 
     nsresult rv = tmpFile->AppendNative(nsDependentCString("mozilla_audio_sample"));
@@ -415,8 +415,8 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
     nsresult rv;
     nsCOMPtr <nsIURI> fileURI;
 
-    // create a nsILocalFile and then a nsIFileURL from that
-    nsCOMPtr <nsILocalFile> soundFile;
+    // create a nsIFile and then a nsIFileURL from that
+    nsCOMPtr <nsIFile> soundFile;
     rv = NS_NewLocalFile(aSoundAlias, true, 
                          getter_AddRefs(soundFile));
     NS_ENSURE_SUCCESS(rv,rv);

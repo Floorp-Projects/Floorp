@@ -6,7 +6,7 @@
 
 #include "nsXPCOM.h"
 #include "nsINIParser.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 static bool
 StringCB(const char *aKey, const char *aValue, void* aClosure)
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     return 255;
   }
 
-  nsCOMPtr<nsILocalFile> lf;
+  nsCOMPtr<nsIFile> lf;
 
   nsresult rv = NS_NewNativeLocalFile(nsDependentCString(argv[1]),
                                       true,

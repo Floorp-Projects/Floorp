@@ -12,7 +12,7 @@
 #include "GLContext.h"
 #include "GLLibraryLoader.h"
 
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 typedef int EGLint;
 typedef unsigned int EGLBoolean;

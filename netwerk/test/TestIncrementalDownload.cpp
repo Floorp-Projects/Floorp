@@ -68,7 +68,7 @@ static nsresult
 DoIncrementalFetch(const char *uriSpec, const char *resultPath, PRInt32 chunkSize,
                    PRInt32 interval)
 {
-  nsCOMPtr<nsILocalFile> resultFile;
+  nsCOMPtr<nsIFile> resultFile;
   nsresult rv = NS_NewNativeLocalFile(nsDependentCString(resultPath),
                                       false, getter_AddRefs(resultFile));
   if (NS_FAILED(rv))

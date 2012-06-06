@@ -167,7 +167,7 @@ nsMacShellService::SetDesktopBackground(nsIDOMElement* aElement,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get the current user's "Pictures" folder (That's ~/Pictures):
-  fileLocator->Get(NS_OSX_PICTURE_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile),
+  fileLocator->Get(NS_OSX_PICTURE_DOCUMENTS_DIR, NS_GET_IID(nsIFile),
                    getter_AddRefs(mBackgroundFile));
   if (!mBackgroundFile)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -329,7 +329,7 @@ nsMacShellService::OpenApplication(PRInt32 aApplication)
     break;
   case nsIMacShellService::APPLICATION_NETWORK:
     {
-      nsCOMPtr<nsILocalFile> lf;
+      nsCOMPtr<nsIFile> lf;
       rv = NS_NewNativeLocalFile(NETWORK_PREFPANE, true, getter_AddRefs(lf));
       NS_ENSURE_SUCCESS(rv, rv);
       bool exists;
@@ -341,7 +341,7 @@ nsMacShellService::OpenApplication(PRInt32 aApplication)
     break;
   case nsIMacShellService::APPLICATION_DESKTOP:
     {
-      nsCOMPtr<nsILocalFile> lf;
+      nsCOMPtr<nsIFile> lf;
       rv = NS_NewNativeLocalFile(DESKTOP_PREFPANE, true, getter_AddRefs(lf));
       NS_ENSURE_SUCCESS(rv, rv);
       bool exists;
@@ -382,7 +382,7 @@ nsMacShellService::SetDesktopBackgroundColor(PRUint32 aColor)
 }
 
 NS_IMETHODIMP
-nsMacShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsACString& aURI)
+nsMacShellService::OpenApplicationWithURI(nsIFile* aApplication, const nsACString& aURI)
 {
   nsCOMPtr<nsILocalFileMac> lfm(do_QueryInterface(aApplication));
   CFURLRef appURL;
@@ -419,7 +419,7 @@ nsMacShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsAC
 }
 
 NS_IMETHODIMP
-nsMacShellService::GetDefaultFeedReader(nsILocalFile** _retval)
+nsMacShellService::GetDefaultFeedReader(nsIFile** _retval)
 {
   nsresult rv = NS_ERROR_FAILURE;
   *_retval = nsnull;

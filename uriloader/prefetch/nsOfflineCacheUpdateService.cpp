@@ -436,7 +436,7 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
                                       nsIURI *aDocumentURI,
                                       nsIDOMDocument *aDocument,
                                       nsIDOMWindow* aWindow,
-                                      nsILocalFile* aCustomProfileDir,
+                                      nsIFile* aCustomProfileDir,
                                       nsIOfflineCacheUpdate **aUpdate)
 {
     nsCOMPtr<nsIOfflineCacheUpdate> update;
@@ -472,7 +472,7 @@ nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::ScheduleCustomProfileUpdate(nsIURI *aManifestURI,
                                                          nsIURI *aDocumentURI,
-                                                         nsILocalFile *aProfileDir,
+                                                         nsIFile *aProfileDir,
                                                          nsIOfflineCacheUpdate **aUpdate)
 {
     // The profile directory is mandatory

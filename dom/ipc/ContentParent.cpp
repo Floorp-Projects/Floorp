@@ -1014,7 +1014,7 @@ ContentParent::RecvShowFilePicker(const PRInt16& mode,
         nsCOMPtr<nsISimpleEnumerator> fileIter;
         *result = filePicker->GetFiles(getter_AddRefs(fileIter));
 
-        nsCOMPtr<nsILocalFile> singleFile;
+        nsCOMPtr<nsIFile> singleFile;
         bool loop = true;
         while (NS_SUCCEEDED(fileIter->HasMoreElements(&loop)) && loop) {
             fileIter->GetNext(getter_AddRefs(singleFile));
@@ -1026,7 +1026,7 @@ ContentParent::RecvShowFilePicker(const PRInt16& mode,
         }
         return true;
     }
-    nsCOMPtr<nsILocalFile> file;
+    nsCOMPtr<nsIFile> file;
     filePicker->GetFile(getter_AddRefs(file));
 
     // even with NS_OK file can be null if nothing was selected 

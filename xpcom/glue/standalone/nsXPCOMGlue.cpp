@@ -169,7 +169,7 @@ NS_GetMemoryManager(nsIMemory* *result)
 }
 
 XPCOM_API(nsresult)
-NS_NewLocalFile(const nsAString &path, bool followLinks, nsILocalFile* *result)
+NS_NewLocalFile(const nsAString &path, bool followLinks, nsIFile* *result)
 {
     if (!xpcomFunctions.newLocalFile)
         return NS_ERROR_NOT_INITIALIZED;
@@ -177,7 +177,7 @@ NS_NewLocalFile(const nsAString &path, bool followLinks, nsILocalFile* *result)
 }
 
 XPCOM_API(nsresult)
-NS_NewNativeLocalFile(const nsACString &path, bool followLinks, nsILocalFile* *result)
+NS_NewNativeLocalFile(const nsACString &path, bool followLinks, nsIFile* *result)
 {
     if (!xpcomFunctions.newNativeLocalFile)
         return NS_ERROR_NOT_INITIALIZED;

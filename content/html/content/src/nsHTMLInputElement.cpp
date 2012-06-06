@@ -66,7 +66,7 @@
 #include "nsIRadioGroupContainer.h"
 
 // input type=file
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "nsDOMFile.h"
 #include "nsIFilePicker.h"
@@ -297,17 +297,14 @@ AsyncClickHandler::Run()
 
     oldFiles[0]->GetMozFullPathInternal(path);
 
-    nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsIFile> localFile;
     rv = NS_NewLocalFile(path, false, getter_AddRefs(localFile));
 
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIFile> parentFile;
       rv = localFile->GetParent(getter_AddRefs(parentFile));
       if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsILocalFile> parentLocalFile = do_QueryInterface(parentFile, &rv);
-        if (parentLocalFile) {
-          filePicker->SetDisplayDirectory(parentLocalFile);
-        }
+        filePicker->SetDisplayDirectory(parentFile);
       }
     }
 
@@ -323,7 +320,7 @@ AsyncClickHandler::Run()
     }
   } else {
     // Attempt to retrieve the last used directory from the content pref service
-    nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsIFile> localFile;
     nsHTMLInputElement::gUploadLastDir->FetchLastUsedDirectory(doc->GetDocumentURI(),
                                                                getter_AddRefs(localFile));
     if (!localFile) {
@@ -358,7 +355,7 @@ AsyncClickHandler::Run()
     bool loop = true;
     while (NS_SUCCEEDED(iter->HasMoreElements(&loop)) && loop) {
       iter->GetNext(getter_AddRefs(tmp));
-      nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(tmp);
+      nsCOMPtr<nsIFile> localFile = do_QueryInterface(tmp);
       if (localFile) {
         nsString unicodePath;
         rv = localFile->GetPath(unicodePath);
@@ -377,7 +374,7 @@ AsyncClickHandler::Run()
     }
   }
   else {
-    nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsIFile> localFile;
     rv = filePicker->GetFile(getter_AddRefs(localFile));
     if (localFile) {
       nsString unicodePath;
@@ -430,7 +427,7 @@ nsHTMLInputElement::DestroyUploadLastDir() {
 }
 
 nsresult
-UploadLastDir::FetchLastUsedDirectory(nsIURI* aURI, nsILocalFile** aFile)
+UploadLastDir::FetchLastUsedDirectory(nsIURI* aURI, nsIFile** aFile)
 {
   NS_PRECONDITION(aURI, "aURI is null");
   NS_PRECONDITION(aFile, "aFile is null");
@@ -452,7 +449,7 @@ UploadLastDir::FetchLastUsedDirectory(nsIURI* aURI, nsILocalFile** aFile)
     nsString prefStr;
     pref->GetAsAString(prefStr);
 
-    nsCOMPtr<nsILocalFile> localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+    nsCOMPtr<nsIFile> localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
     if (!localFile)
       return NS_ERROR_OUT_OF_MEMORY;
     localFile->InitWithPath(prefStr);
@@ -462,7 +459,7 @@ UploadLastDir::FetchLastUsedDirectory(nsIURI* aURI, nsILocalFile** aFile)
 }
 
 nsresult
-UploadLastDir::StoreLastUsedDirectory(nsIURI* aURI, nsILocalFile* aFile)
+UploadLastDir::StoreLastUsedDirectory(nsIURI* aURI, nsIFile* aFile)
 {
   NS_PRECONDITION(aURI, "aURI is null");
   NS_PRECONDITION(aFile, "aFile is null");
@@ -471,7 +468,6 @@ UploadLastDir::StoreLastUsedDirectory(nsIURI* aURI, nsILocalFile* aFile)
   if (!parentFile) {
     return NS_OK;
   }
-  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(parentFile);
 
   // Attempt to get the CPS, if it's not present we'll just return
   nsCOMPtr<nsIContentPrefService> contentPrefService =
@@ -1065,10 +1061,8 @@ nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, PRUint32 a
 
     if (!file) {
       // this is no "file://", try as local file
-      nsCOMPtr<nsILocalFile> localFile;
       NS_NewLocalFile(nsDependentString(aFileNames[i]),
-                      false, getter_AddRefs(localFile));
-      file = do_QueryInterface(localFile);
+                      false, getter_AddRefs(file));
     }
 
     if (file) {

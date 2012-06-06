@@ -7,7 +7,7 @@
 #include "nsXULAppAPI.h"
 
 #include "nsPrefBranch.h"
-#include "nsILocalFile.h"
+#include "nsILocalFile.h" // nsILocalFile used for backwards compatibility
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -232,18 +232,19 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     return rv;
   }
 
-  if (aType.Equals(NS_GET_IID(nsILocalFile))) {
+  // also check nsILocalFile, for backwards compatibility
+  if (aType.Equals(NS_GET_IID(nsIFile)) || aType.Equals(NS_GET_IID(nsILocalFile))) {
     if (GetContentChild()) {
-      NS_ERROR("cannot get nsILocalFile pref from content process");
+      NS_ERROR("cannot get nsIFile pref from content process");
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+    nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
 
     if (NS_SUCCEEDED(rv)) {
       rv = file->SetPersistentDescriptor(utf8String);
       if (NS_SUCCEEDED(rv)) {
-        file.forget(reinterpret_cast<nsILocalFile**>(_retval));
+        file.forget(reinterpret_cast<nsIFile**>(_retval));
         return NS_OK;
       }
     }
@@ -268,15 +269,15 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
       return NS_ERROR_FAILURE;
     nsCAutoString key(Substring(keyBegin, keyEnd));
     
-    nsCOMPtr<nsILocalFile> fromFile;        
+    nsCOMPtr<nsIFile> fromFile;
     nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
       return rv;
-    rv = directoryService->Get(key.get(), NS_GET_IID(nsILocalFile), getter_AddRefs(fromFile));
+    rv = directoryService->Get(key.get(), NS_GET_IID(nsIFile), getter_AddRefs(fromFile));
     if (NS_FAILED(rv))
       return rv;
     
-    nsCOMPtr<nsILocalFile> theFile;
+    nsCOMPtr<nsIFile> theFile;
     rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(theFile));
     if (NS_FAILED(rv))
       return rv;
@@ -317,8 +318,9 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
   nsresult   rv = NS_NOINTERFACE;
 
-  if (aType.Equals(NS_GET_IID(nsILocalFile))) {
-    nsCOMPtr<nsILocalFile> file = do_QueryInterface(aValue);
+  // also check nsILocalFile, for backwards compatibility
+  if (aType.Equals(NS_GET_IID(nsIFile)) || aType.Equals(NS_GET_IID(nsILocalFile))) {
+    nsCOMPtr<nsIFile> file = do_QueryInterface(aValue);
     if (!file)
       return NS_NOINTERFACE;
     nsCAutoString descriptorString;
@@ -335,18 +337,18 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     if (!relFilePref)
       return NS_NOINTERFACE;
     
-    nsCOMPtr<nsILocalFile> file;
+    nsCOMPtr<nsIFile> file;
     relFilePref->GetFile(getter_AddRefs(file));
     if (!file)
       return NS_NOINTERFACE;
     nsCAutoString relativeToKey;
     (void) relFilePref->GetRelativeToKey(relativeToKey);
 
-    nsCOMPtr<nsILocalFile> relativeToFile;        
+    nsCOMPtr<nsIFile> relativeToFile;
     nsCOMPtr<nsIProperties> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
       return rv;
-    rv = directoryService->Get(relativeToKey.get(), NS_GET_IID(nsILocalFile), getter_AddRefs(relativeToFile));
+    rv = directoryService->Get(relativeToKey.get(), NS_GET_IID(nsIFile), getter_AddRefs(relativeToFile));
     if (NS_FAILED(rv))
       return rv;
 
@@ -802,7 +804,7 @@ nsRelativeFilePref::~nsRelativeFilePref()
 {
 }
 
-NS_IMETHODIMP nsRelativeFilePref::GetFile(nsILocalFile **aFile)
+NS_IMETHODIMP nsRelativeFilePref::GetFile(nsIFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
   *aFile = mFile;
@@ -810,7 +812,7 @@ NS_IMETHODIMP nsRelativeFilePref::GetFile(nsILocalFile **aFile)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRelativeFilePref::SetFile(nsILocalFile *aFile)
+NS_IMETHODIMP nsRelativeFilePref::SetFile(nsIFile *aFile)
 {
   mFile = aFile;
   return NS_OK;

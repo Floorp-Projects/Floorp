@@ -329,7 +329,7 @@ nsDownloadScanner::Scan::Start()
   nsresult rv = NS_OK;
 
   // Get the path to the file on disk
-  nsCOMPtr<nsILocalFile> file;
+  nsCOMPtr<nsIFile> file;
   rv = mDownload->GetTargetFile(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = file->GetPath(mPath);
