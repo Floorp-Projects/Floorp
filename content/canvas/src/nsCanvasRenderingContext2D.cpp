@@ -87,6 +87,7 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/ipc/PDocumentRendererParent.h"
+#include "mozilla/unused.h"
 
 // windows.h (included by chromium code) defines this, in its infinite wisdom
 #undef DrawText
@@ -173,12 +174,16 @@ public:
         if (!FloatValidate(offset) || offset < 0.0 || offset > 1.0)
             return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
-        nscolor color;
+        nsCSSValue value;
         nsCSSParser parser;
-        nsresult rv = parser.ParseColorString(nsString(colorstr),
-                                              nsnull, 0, &color);
-        if (NS_FAILED(rv))
+        if (!parser.ParseColorString(colorstr, nsnull, 0, value)) {
             return NS_ERROR_DOM_SYNTAX_ERR;
+        }
+
+        nscolor color;
+        if (!nsRuleNode::ComputeColor(value, nsnull, nsnull, color)) {
+            return NS_ERROR_DOM_SYNTAX_ERR;
+        }
 
         mPattern->AddColorStop(offset, gfxRGBA(color));
 
@@ -402,6 +407,9 @@ protected:
     // Some helpers.  Doesn't modify acolor on failure.
     nsresult SetStyleFromStringOrInterface(const nsAString& aStr, nsISupports *aInterface, Style aWhichStyle);
     nsresult GetStyleAsStringOrInterface(nsAString& aStr, nsISupports **aInterface, PRInt32 *aType, Style aWhichStyle);
+
+    // Returns whether a color was successfully parsed.
+    bool ParseColor(const nsAString& aString, nscolor* aColor);
 
     void StyleColorToString(const nscolor& aColor, nsAString& aStr);
 
@@ -819,6 +827,36 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
     }
 }
 
+bool
+nsCanvasRenderingContext2D::ParseColor(const nsAString& aString,
+                                       nscolor* aColor)
+{
+    nsIDocument* document = HTMLCanvasElement()
+                             ? HTMLCanvasElement()->OwnerDoc()
+                             : nsnull;
+
+    // Pass the CSS Loader object to the parser, to allow parser error
+    // reports to include the outer window ID.
+    nsCSSParser parser(document ? document->CSSLoader() : nsnull);
+    nsCSSValue value;
+    if (!parser.ParseColorString(aString, nsnull, 0, value)) {
+        return false;
+    }
+
+    nsIPresShell* presShell = GetPresShell();
+    nsRefPtr<nsStyleContext> parentContext;
+    if (HTMLCanvasElement() && HTMLCanvasElement()->IsInDoc()) {
+        // Inherit from the canvas element.
+        parentContext = nsComputedDOMStyle::GetStyleContextForElement(
+            HTMLCanvasElement(), nsnull, presShell);
+    }
+
+    unused << nsRuleNode::ComputeColor(
+        value, presShell ? presShell->GetPresContext() : nsnull, parentContext,
+        *aColor);
+    return true;
+}
+
 nsresult
 nsCanvasRenderingContext2D::Reset()
 {
@@ -844,19 +882,9 @@ nsCanvasRenderingContext2D::SetStyleFromStringOrInterface(const nsAString& aStr,
                                                           nsISupports *aInterface,
                                                           Style aWhichStyle)
 {
-    nsresult rv;
-    nscolor color;
-
     if (!aStr.IsVoid()) {
-        nsIDocument* document = mCanvasElement ?
-                                HTMLCanvasElement()->OwnerDoc() : nsnull;
-
-        // Pass the CSS Loader object to the parser, to allow parser error
-        // reports to include the outer window ID.
-        nsCSSParser parser(document ? document->CSSLoader() : nsnull);
-        rv = parser.ParseColorString(aStr, nsnull, 0, &color);
-        if (NS_FAILED(rv)) {
-            // Error reporting happens inside the CSS parser
+        nscolor color;
+        if (!ParseColor(aStr, &color)) {
             return NS_OK;
         }
 
@@ -1896,18 +1924,10 @@ nsCanvasRenderingContext2D::GetShadowBlur(float *blur)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetShadowColor(const nsAString& colorstr)
+nsCanvasRenderingContext2D::SetShadowColor(const nsAString& aColor)
 {
-    nsIDocument* document = mCanvasElement ?
-                            HTMLCanvasElement()->OwnerDoc() : nsnull;
-
-    // Pass the CSS Loader object to the parser, to allow parser error reports
-    // to include the outer window ID.
-    nsCSSParser parser(document ? document->CSSLoader() : nsnull);
     nscolor color;
-    nsresult rv = parser.ParseColorString(colorstr, nsnull, 0, &color);
-    if (NS_FAILED(rv)) {
-        // Error reporting happens inside the CSS parser
+    if (!ParseColor(aColor, &color)) {
         return NS_OK;
     }
 
@@ -3651,19 +3671,9 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
         return NS_ERROR_FAILURE;
 
     nscolor bgColor;
-
-    nsIDocument* elementDoc = mCanvasElement ?
-                              HTMLCanvasElement()->OwnerDoc() : nsnull;
-
-    // Pass the CSS Loader object to the parser, to allow parser error reports
-    // to include the outer window ID.
-    nsCSSParser parser(elementDoc ? elementDoc->CSSLoader() : nsnull);
-    nsresult rv = parser.ParseColorString(PromiseFlatString(aBGColor),
-                                          nsnull, 0, &bgColor);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsIPresShell* presShell = presContext->PresShell();
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    if (!ParseColor(aBGColor, &bgColor)) {
+        return NS_ERROR_FAILURE;
+    }
 
     nsRect r(nsPresContext::CSSPixelsToAppUnits(aX),
              nsPresContext::CSSPixelsToAppUnits(aY),
@@ -3685,7 +3695,8 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
         renderDocFlags |= nsIPresShell::RENDER_ASYNC_DECODE_IMAGES;
     }
 
-    rv = presShell->RenderDocument(r, renderDocFlags, bgColor, mThebes);
+    nsresult rv = presContext->PresShell()->
+        RenderDocument(r, renderDocFlags, bgColor, mThebes);
 
     // get rid of the pattern surface ref, just in case
     mThebes->SetColor(gfxRGBA(1,1,1,1));
