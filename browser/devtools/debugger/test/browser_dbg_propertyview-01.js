@@ -37,21 +37,32 @@ function testScriptLabelShortening() {
     vs.empty();
     vs._scripts.removeEventListener("select", vs._onScriptsChange, false);
 
-    is(ss._trimUrlQuery("a/b/c.d?test=1&random=4"), "a/b/c.d",
+    is(ss.trimUrlQuery("a/b/c.d?test=1&random=4#reference"), "a/b/c.d",
       "Trimming the url query isn't done properly.");
 
     let urls = [
-      { href: "ichi://some.address.com/random/", leaf: "subrandom/" },
-      { href: "ni://another.address.org/random/subrandom/", leaf: "page.html" },
-      { href: "san://interesting.address.gro/random/", leaf: "script.js" },
-      { href: "shi://interesting.address.moc/random/", leaf: "script.js" },
-      { href: "shi://interesting.address.moc/random/", leaf: "x/script.js" },
-      { href: "shi://interesting.address.moc/random/", leaf: "x/y/script.js?a=1" },
-      { href: "shi://interesting.address.moc/random/x/", leaf: "y/script.js?a=1&b=2", dupe: true },
-      { href: "shi://interesting.address.moc/random/x/y/", leaf: "script.js?a=1&b=2&c=3", dupe: true },
-      { href: "go://random/", leaf: "script_t1.js&a=1&b=2&c=3" },
-      { href: "roku://random/", leaf: "script_t2.js#id" },
-      { href: "nana://random/", leaf: "script_t3.js#id?a=1&b=2" }
+      { href: "http://some.address.com/random/", leaf: "subrandom/" },
+      { href: "http://some.address.com/random/", leaf: "suprandom/?a=1" },
+      { href: "http://some.address.com/random/", leaf: "?a=1" },
+      { href: "https://another.address.org/random/subrandom/", leaf: "page.html" },
+
+      { href: "ftp://interesting.address.org/random/", leaf: "script.js" },
+      { href: "ftp://interesting.address.com/random/", leaf: "script.js" },
+      { href: "ftp://interesting.address.com/random/", leaf: "x/script.js" },
+      { href: "ftp://interesting.address.com/random/", leaf: "x/y/script.js?a=1" },
+      { href: "ftp://interesting.address.com/random/x/", leaf: "y/script.js?a=1&b=2", dupe: true },
+      { href: "ftp://interesting.address.com/random/x/y/", leaf: "script.js?a=1&b=2&c=3", dupe: true },
+      { href: "ftp://interesting.address.com/random/", leaf: "x/y/script.js?a=2", dupe: true },
+      { href: "ftp://interesting.address.com/random/x/", leaf: "y/script.js?a=2&b=3", dupe: true },
+      { href: "ftp://interesting.address.com/random/x/y/", leaf: "script.js?a=2&b=3&c=4", dupe: true },
+
+      { href: "file://random/", leaf: "script_t1.js&a=1&b=2&c=3" },
+      { href: "file://random/", leaf: "script_t2_1.js#id" },
+      { href: "file://random/", leaf: "script_t2_2.js?a" },
+      { href: "file://random/", leaf: "script_t2_3.js&b" },
+      { href: "resource://random/", leaf: "script_t3_1.js#id?a=1&b=2" },
+      { href: "resource://random/", leaf: "script_t3_2.js?a=1&b=2#id" },
+      { href: "resource://random/", leaf: "script_t3_3.js&a=1&b=2#id" }
     ];
 
     urls.forEach(function(url) {
@@ -62,31 +73,55 @@ function testScriptLabelShortening() {
     });
 
     executeSoon(function() {
+      info("Script labels:");
+      info(vs.scriptLabels.toSource());
+
+      info("Script locations:");
+      info(vs.scriptLocations.toSource());
+
       urls.forEach(function(url) {
         let loc = url.href + url.leaf;
-        ok(url.dupe || vs.contains(loc), "Script url is incorrect: " + loc);
+        if (url.dupe) {
+          ok(!vs.contains(loc), "Shouldn't contain script: " + loc);
+        } else {
+          ok(vs.contains(loc), "Should contain script: " + loc);
+        }
       });
 
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("subrandom/"),
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("random/subrandom/"),
         "Script (0) label is incorrect.");
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("page.html"),
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("random/suprandom/?a=1"),
         "Script (1) label is incorrect.");
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("script.js"),
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("random/?a=1"),
         "Script (2) label is incorrect.");
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("shi://interesting.address.moc/random/script.js"),
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("page.html"),
         "Script (3) label is incorrect.");
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("x/script.js"),
-        "Script (4) label is incorrect.");
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("x/y/script.js"),
-        "Script (5) label is incorrect.");
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t1.js"),
-        "Script (6) label is incorrect.");
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t2.js"),
-        "Script (7) label is incorrect.");
-      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t3.js"),
-        "Script (8) label is incorrect.");
 
-      is(vs._scripts.itemCount, 9,
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script.js"),
+        "Script (4) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("random/script.js"),
+        "Script (5) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("random/x/script.js"),
+        "Script (6) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script.js?a=1"),
+        "Script (7) label is incorrect.");
+
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t1.js"),
+        "Script (8) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t2_1.js"),
+        "Script (9) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t2_2.js"),
+        "Script (10) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t2_3.js"),
+        "Script (11) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t3_1.js"),
+        "Script (12) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t3_2.js"),
+        "Script (13) label is incorrect.");
+      ok(gDebugger.DebuggerView.Scripts.containsLabel("script_t3_3.js"),
+        "Script (14) label is incorrect.");
+
+      is(vs._scripts.itemCount, urls.filter(function(url) !url.dupe).length,
         "Didn't get the correct number of scripts in the list.");
 
       closeDebuggerAndFinish();
