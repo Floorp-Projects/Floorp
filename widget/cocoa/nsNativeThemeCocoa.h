@@ -79,6 +79,8 @@ protected:
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
                     bool inIsIndeterminate, bool inIsHorizontal,
                     double inValue, double inMaxValue, nsIFrame* aFrame);
+  void DrawMeter(CGContextRef context, const HIRect& inBoxRect,
+                 nsIFrame* aFrame);
   void DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
                    nsEventStates inState, nsIFrame* aFrame,
                    const SegmentedControlRenderSettings& aSettings);
@@ -126,6 +128,7 @@ private:
   NSPopUpButtonCell* mDropdownCell;
   NSComboBoxCell* mComboBoxCell;
   NSProgressBarCell* mProgressBarCell;
+  NSLevelIndicatorCell* mMeterBarCell;
   CellDrawView* mCellDrawView;
 };
 
