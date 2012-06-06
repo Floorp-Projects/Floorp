@@ -1237,6 +1237,21 @@ public:
                                    size_t *aPresContextSize) const = 0;
 
   /**
+   * Methods that retrieve the cached font inflation preferences.
+   */
+  PRUint32 FontSizeInflationEmPerLine() const {
+    return mFontSizeInflationEmPerLine;
+  }
+
+  PRUint32 FontSizeInflationMinTwips() const {
+    return mFontSizeInflationMinTwips;
+  }
+
+  PRUint32 FontSizeInflationLineThreshold() const {
+    return mFontSizeInflationLineThreshold;
+  }
+
+  /**
    * Refresh observer management.
    */
 protected:
@@ -1362,6 +1377,12 @@ protected:
   bool                      mScrollPositionClampingScrollPortSizeSet : 1;
 
   static nsIContent*        gKeyDownTarget;
+
+  // Cached font inflation values. This is done to prevent changing of font
+  // inflation until a page is reloaded.
+  PRUint32 mFontSizeInflationEmPerLine;
+  PRUint32 mFontSizeInflationMinTwips;
+  PRUint32 mFontSizeInflationLineThreshold;
 };
 
 /**
