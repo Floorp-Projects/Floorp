@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body>
+    <style>
+      #a { border: 1px solid black; max-width: 100px; height: 100px; }
+    </style>
+    <script>
+      document.addEventListener("MozReftestInvalidate", function() {
+        var a = document.querySelector("#a");
+        a.style.maxWidth = "200px";
+        document.documentElement.removeAttribute("class");
+      }, false);
+    </script>
+    <div id="a">
+    </div>
+  </body>
+</html>
