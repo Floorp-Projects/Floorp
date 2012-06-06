@@ -647,6 +647,8 @@ protected:
   // created. Synchronized by the decoder monitor.
   bool mRequestedNewDecodeThread;
   
+  // The maximum number of second we spend buffering when we are short on
+  // unbuffered data.
   PRUint32 mBufferingWait;
   PRInt64  mLowDataThresholdUsecs;
 
