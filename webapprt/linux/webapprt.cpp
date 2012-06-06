@@ -167,6 +167,7 @@ bool GRELoadAndLaunch(const char* firefoxDir, const char* profile)
     }
 
     SetAllocatedString(webShellAppData->profile, profile);
+    SetAllocatedString(webShellAppData->name, profile);
 
     nsCOMPtr<nsIFile> directory;
     if (NS_FAILED(XRE_GetFileFromPath(rtPath, getter_AddRefs(directory)))) {
