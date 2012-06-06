@@ -22,11 +22,12 @@
 
 #include "nsIAsyncInputStream.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace net {
 
-class nsPreloadedStream : public nsIAsyncInputStream
+class nsPreloadedStream MOZ_FINAL : public nsIAsyncInputStream
 {
  public:
     NS_DECL_ISUPPORTS

@@ -47,6 +47,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Util.h" // for DebugOnly
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -325,8 +326,6 @@ protected:
   virtual const char *GetOpType() = 0;
 
 public:
-  NS_DECL_ISUPPORTS
-
   NS_IMETHOD HandleError(mozIStorageError* aError)
   {
     PRInt32 result = -1;
@@ -348,18 +347,18 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS1(DBListenerErrorHandler, mozIStorageStatementCallback)
-
 /******************************************************************************
  * InsertCookieDBListener impl:
  * mozIStorageStatementCallback used to track asynchronous insertion operations.
  ******************************************************************************/
-class InsertCookieDBListener : public DBListenerErrorHandler
+class InsertCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
 protected:
   virtual const char *GetOpType() { return "INSERT"; }
 
 public:
+  NS_DECL_ISUPPORTS
+
   InsertCookieDBListener(DBState* dbState) : DBListenerErrorHandler(dbState) { }
   NS_IMETHOD HandleResult(mozIStorageResultSet*)
   {
@@ -380,16 +379,20 @@ public:
   }
 };
 
+NS_IMPL_ISUPPORTS1(InsertCookieDBListener, mozIStorageStatementCallback)
+
 /******************************************************************************
  * UpdateCookieDBListener impl:
  * mozIStorageStatementCallback used to track asynchronous update operations.
  ******************************************************************************/
-class UpdateCookieDBListener : public DBListenerErrorHandler
+class UpdateCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
 protected:
   virtual const char *GetOpType() { return "UPDATE"; }
 
 public:
+  NS_DECL_ISUPPORTS
+
   UpdateCookieDBListener(DBState* dbState) : DBListenerErrorHandler(dbState) { }
   NS_IMETHOD HandleResult(mozIStorageResultSet*)
   {
@@ -402,16 +405,20 @@ public:
   }
 };
 
+NS_IMPL_ISUPPORTS1(UpdateCookieDBListener, mozIStorageStatementCallback)
+
 /******************************************************************************
  * RemoveCookieDBListener impl:
  * mozIStorageStatementCallback used to track asynchronous removal operations.
  ******************************************************************************/
-class RemoveCookieDBListener :  public DBListenerErrorHandler
+class RemoveCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
 protected:
   virtual const char *GetOpType() { return "REMOVE"; }
 
 public:
+  NS_DECL_ISUPPORTS
+
   RemoveCookieDBListener(DBState* dbState) : DBListenerErrorHandler(dbState) { }
   NS_IMETHOD HandleResult(mozIStorageResultSet*)
   {
@@ -424,17 +431,21 @@ public:
   }
 };
 
+NS_IMPL_ISUPPORTS1(RemoveCookieDBListener, mozIStorageStatementCallback)
+
 /******************************************************************************
  * ReadCookieDBListener impl:
  * mozIStorageStatementCallback used to track asynchronous removal operations.
  ******************************************************************************/
-class ReadCookieDBListener :  public DBListenerErrorHandler
+class ReadCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
 protected:
   virtual const char *GetOpType() { return "READ"; }
   bool mCanceled;
 
 public:
+  NS_DECL_ISUPPORTS
+
   ReadCookieDBListener(DBState* dbState)
     : DBListenerErrorHandler(dbState)
     , mCanceled(false)
@@ -498,12 +509,14 @@ public:
   }
 };
 
+NS_IMPL_ISUPPORTS1(ReadCookieDBListener, mozIStorageStatementCallback)
+
 /******************************************************************************
  * CloseCookieDBListener imp:
  * Static mozIStorageCompletionCallback used to notify when the database is
  * successfully closed.
  ******************************************************************************/
-class CloseCookieDBListener :  public mozIStorageCompletionCallback
+class CloseCookieDBListener MOZ_FINAL :  public mozIStorageCompletionCallback
 {
 public:
   CloseCookieDBListener(DBState* dbState) : mDBState(dbState) { }

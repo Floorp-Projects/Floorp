@@ -3,6 +3,7 @@
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
+#include "mozilla/Attributes.h"
 
 #if defined(PR_LOGGING)
 //
@@ -12,7 +13,7 @@ static PRLogModuleInfo *gTestLog = nsnull;
 #endif
 #define LOG(args) PR_LOG(gTestLog, PR_LOG_DEBUG, args)
 
-class MyStreamLoaderObserver : public nsIStreamLoaderObserver
+class MyStreamLoaderObserver MOZ_FINAL : public nsIStreamLoaderObserver
 {
 public:
   NS_DECL_ISUPPORTS

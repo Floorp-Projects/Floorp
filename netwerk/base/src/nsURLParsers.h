@@ -7,6 +7,7 @@
 #define nsURLParsers_h__
 
 #include "nsIURLParser.h"
+#include "mozilla/Attributes.h"
 
 //----------------------------------------------------------------------------
 // base class for url parsers
@@ -15,7 +16,6 @@
 class nsBaseURLParser : public nsIURLParser
 {
 public:
-    NS_DECL_ISUPPORTS
     NS_DECL_NSIURLPARSER
 
     nsBaseURLParser() { }
@@ -40,9 +40,11 @@ protected:
 //     file://foo/bar.txt     (the authority "foo"  is ignored)
 //----------------------------------------------------------------------------
 
-class nsNoAuthURLParser : public nsBaseURLParser
+class nsNoAuthURLParser MOZ_FINAL : public nsBaseURLParser
 {
-public: 
+public:
+    NS_DECL_ISUPPORTS
+
 #if defined(XP_WIN) || defined(XP_OS2)
     NS_IMETHOD ParseFilePath(const char *, PRInt32,
                              PRUint32 *, PRInt32 *,
@@ -72,7 +74,11 @@ public:
 
 class nsAuthURLParser : public nsBaseURLParser
 {
-public: 
+public:
+    NS_DECL_ISUPPORTS
+
+    virtual ~nsAuthURLParser() {}
+
     NS_IMETHOD ParseAuthority(const char *auth, PRInt32 authLen,
                               PRUint32 *usernamePos, PRInt32 *usernameLen,
                               PRUint32 *passwordPos, PRInt32 *passwordLen,

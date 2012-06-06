@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Attributes.h"
 
 #include "nspr.h"
 
@@ -49,7 +50,7 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 //   receives the fully converted data, although it doesn't do anything with
 //   the data.
 ////////////////////////////////////////////////////////////////////////
-class EndListener : public nsIStreamListener {
+class EndListener MOZ_FINAL : public nsIStreamListener {
 public:
     // nsISupports declaration
     NS_DECL_ISUPPORTS

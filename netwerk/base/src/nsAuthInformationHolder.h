@@ -16,6 +16,8 @@ public:
                             const nsCString& aAuthType)
         : mFlags(aFlags), mRealm(aRealm), mAuthType(aAuthType) {}
 
+    virtual ~nsAuthInformationHolder() {}
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTHINFORMATION
 
