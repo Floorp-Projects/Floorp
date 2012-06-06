@@ -71,8 +71,8 @@
       <!-- Buttons -->
       <hbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="buttons">
 #ifdef XP_UNIX
-        <button id="errorCancel" label="&restorepage.cancelButton;"
-                accesskey="&restorepage.cancel.access;"
+        <button id="errorCancel" label="&restorepage.closeButton;"
+                accesskey="&restorepage.close.access;"
                 oncommand="startNewSession();"/>
         <button id="errorTryAgain" label="&restorepage.tryagainButton;"
                 accesskey="&restorepage.restore.access;"
@@ -81,8 +81,8 @@
         <button id="errorTryAgain" label="&restorepage.tryagainButton;"
                 accesskey="&restorepage.restore.access;"
                 oncommand="restoreSession();"/>
-        <button id="errorCancel" label="&restorepage.cancelButton;"
-                accesskey="&restorepage.cancel.access;"
+        <button id="errorCancel" label="&restorepage.closeButton;"
+                accesskey="&restorepage.close.access;"
                 oncommand="startNewSession();"/>
 #endif
       </hbox>
