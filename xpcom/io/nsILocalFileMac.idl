@@ -16,7 +16,7 @@
 [ptr] native FSRefPtr(FSRef);
       native CFURLRef(CFURLRef);
 
-[scriptable, uuid(E5DE2CC9-BF06-4329-8F91-5D2D45284500)]
+[scriptable, builtinclass, uuid(E5DE2CC9-BF06-4329-8F91-5D2D45284500)]
 interface nsILocalFileMac : nsILocalFile
 {
    /**
