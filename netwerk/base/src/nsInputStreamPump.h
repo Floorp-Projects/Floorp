@@ -16,9 +16,10 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIThread.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
-class nsInputStreamPump : public nsIInputStreamPump
-                        , public nsIInputStreamCallback
+class nsInputStreamPump MOZ_FINAL : public nsIInputStreamPump
+                                  , public nsIInputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS

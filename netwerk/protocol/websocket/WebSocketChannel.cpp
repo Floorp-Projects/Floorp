@@ -33,6 +33,7 @@
 #include "nsAlgorithm.h"
 #include "nsProxyRelease.h"
 #include "nsNetUtil.h"
+#include "mozilla/Attributes.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -80,7 +81,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS11(WebSocketChannel,
 // CallOnMessageAvailable
 //-----------------------------------------------------------------------------
 
-class CallOnMessageAvailable : public nsIRunnable
+class CallOnMessageAvailable MOZ_FINAL : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -114,7 +115,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(CallOnMessageAvailable, nsIRunnable)
 // CallOnStop
 //-----------------------------------------------------------------------------
 
-class CallOnStop : public nsIRunnable
+class CallOnStop MOZ_FINAL : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -143,7 +144,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(CallOnStop, nsIRunnable)
 // CallOnServerClose
 //-----------------------------------------------------------------------------
 
-class CallOnServerClose : public nsIRunnable
+class CallOnServerClose MOZ_FINAL : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -174,7 +175,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(CallOnServerClose, nsIRunnable)
 // CallAcknowledge
 //-----------------------------------------------------------------------------
 
-class CallAcknowledge : public nsIRunnable
+class CallAcknowledge MOZ_FINAL : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -203,7 +204,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(CallAcknowledge, nsIRunnable)
 // CallOnTransportAvailable
 //-----------------------------------------------------------------------------
 
-class CallOnTransportAvailable : public nsIRunnable
+class CallOnTransportAvailable MOZ_FINAL : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -347,7 +348,7 @@ private:
 // OutboundEnqueuer
 //-----------------------------------------------------------------------------
 
-class OutboundEnqueuer : public nsIRunnable
+class OutboundEnqueuer MOZ_FINAL : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS

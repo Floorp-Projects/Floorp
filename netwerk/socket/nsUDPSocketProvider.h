@@ -6,8 +6,9 @@
 #define nsUDPSocketProvider_h__
 
 #include "nsISocketProvider.h"
+#include "mozilla/Attributes.h"
 
-class nsUDPSocketProvider : public nsISocketProvider
+class nsUDPSocketProvider MOZ_FINAL : public nsISocketProvider
 {
 public:
     NS_DECL_ISUPPORTS

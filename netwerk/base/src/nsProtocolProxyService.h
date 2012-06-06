@@ -23,14 +23,15 @@
 #include "prtime.h"
 #include "prmem.h"
 #include "prio.h"
+#include "mozilla/Attributes.h"
 
 typedef nsDataHashtable<nsCStringHashKey, PRUint32> nsFailedProxyTable;
 
 class nsProxyInfo;
 struct nsProtocolInfo;
 
-class nsProtocolProxyService : public nsIProtocolProxyService2
-                             , public nsIObserver
+class nsProtocolProxyService MOZ_FINAL : public nsIProtocolProxyService2
+                                       , public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS

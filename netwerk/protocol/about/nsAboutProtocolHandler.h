@@ -8,6 +8,7 @@
 
 #include "nsIProtocolHandler.h"
 #include "nsSimpleNestedURI.h"
+#include "mozilla/Attributes.h"
 
 class nsCString;
 class nsIAboutModule;
@@ -25,7 +26,7 @@ public:
     virtual ~nsAboutProtocolHandler() {}
 };
 
-class nsSafeAboutProtocolHandler : public nsIProtocolHandler
+class nsSafeAboutProtocolHandler MOZ_FINAL : public nsIProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS

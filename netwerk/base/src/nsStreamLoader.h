@@ -10,8 +10,9 @@
 #include "nsIStreamLoader.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
-class nsStreamLoader : public nsIStreamLoader
+class nsStreamLoader MOZ_FINAL : public nsIStreamLoader
 {
 public:
   NS_DECL_ISUPPORTS

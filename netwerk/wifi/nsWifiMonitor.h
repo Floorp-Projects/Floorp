@@ -13,6 +13,7 @@
 #include "prlog.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
+#include "mozilla/Attributes.h"
 
 #ifndef __nsWifiMonitor__
 #define __nsWifiMonitor__
@@ -39,7 +40,7 @@ class nsWifiListener
   bool mHasSentData;
 };
 
-class nsWifiMonitor : nsIRunnable, nsIWifiMonitor, nsIObserver
+class nsWifiMonitor MOZ_FINAL : nsIRunnable, nsIWifiMonitor, nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS

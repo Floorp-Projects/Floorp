@@ -23,6 +23,7 @@
 #include "nsIClassInfo.h"
 #include "nsISizeOf.h"
 #include "prclist.h"
+#include "mozilla/Attributes.h"
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 #define DEBUG_DUMP_URLS_AT_SHUTDOWN
@@ -93,7 +94,7 @@ public: /* internal -- HPUX compiler can't handle this being private */
     //
     // Pref observer
     //
-    class nsPrefObserver : public nsIObserver
+    class nsPrefObserver MOZ_FINAL : public nsIObserver
     {
     public:
         NS_DECL_ISUPPORTS
