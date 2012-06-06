@@ -72,12 +72,17 @@ class CGNativePropertyHooks(CGThing):
     def define(self):
         if self.descriptor.workers:
             return ""
+        if self.descriptor.concrete and self.descriptor.proxy:
+            resolveOwnProperty = "ResolveOwnProperty"
+            enumerateOwnProperties = "EnumerateOwnProperties"
+        else:
+            enumerateOwnProperties = resolveOwnProperty = "NULL"
         parent = self.descriptor.interface.parent
         parentHooks = ("&" + toBindingNamespace(parent.identifier.name) + "::NativeHooks"
                        if parent else 'NULL')
         return """
-const NativePropertyHooks NativeHooks = { ResolveProperty, EnumerateProperties, %s };
-""" % parentHooks
+const NativePropertyHooks NativeHooks = { %s, ResolveProperty, %s, EnumerateProperties, %s };
+""" % (resolveOwnProperty, enumerateOwnProperties, parentHooks)
 
 def DOMClass(descriptor):
         protoList = ['prototypes::id::' + proto for proto in descriptor.prototypeChain]
@@ -4202,6 +4207,37 @@ class CGClass(CGThing):
             result = result + memberString
         return result
 
+class CGResolveOwnProperty(CGAbstractMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper'),
+                Argument('jsid', 'id'), Argument('bool', 'set'),
+                Argument('JSPropertyDescriptor*', 'desc')]
+        CGAbstractMethod.__init__(self, descriptor, "ResolveOwnProperty", "bool", args)
+    def definition_body(self):
+        return """  JSObject* obj = wrapper;
+  if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
+    obj = js::UnwrapObject(obj);
+  }
+  // We rely on getOwnPropertyDescriptor not shadowing prototype properties by named
+  // properties. If that changes we'll need to filter here.
+  return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, set, desc);
+"""
+
+class CGEnumerateOwnProperties(CGAbstractMethod):
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper'),
+                Argument('JS::AutoIdVector&', 'props')]
+        CGAbstractMethod.__init__(self, descriptor, "EnumerateOwnProperties", "bool", args)
+    def definition_body(self):
+        return """  JSObject* obj = wrapper;
+  if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
+    obj = js::UnwrapObject(obj);
+  }
+  // We rely on getOwnPropertyNames not shadowing prototype properties by named
+  // properties. If that changes we'll need to filter here.
+  return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);
+"""
+
 class CGXrayHelper(CGAbstractMethod):
     def __init__(self, descriptor, name, args, properties):
         CGAbstractMethod.__init__(self, descriptor, name, "bool", args)
@@ -4256,7 +4292,8 @@ class CGResolveProperty(CGXrayHelper):
 
 class CGEnumerateProperties(CGXrayHelper):
     def __init__(self, descriptor, properties):
-        args = [Argument('JS::AutoIdVector&', 'props')]
+        args = [Argument('JSContext*', 'cx'), Argument('JSObject*', 'wrapper'),
+                Argument('JS::AutoIdVector&', 'props')]
         CGXrayHelper.__init__(self, descriptor, "EnumerateProperties", args,
                               properties)
 
@@ -4478,6 +4515,9 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             fillDescriptor = "FillPropertyDescriptor(desc, proxy, %s);\nreturn true;" % readonly
             templateValues = {'jsvalRef': 'desc->value', 'jsvalPtr': '&desc->value',
                               'obj': 'proxy', 'successCode': fillDescriptor}
+            # Once we start supporting OverrideBuiltins we need to make
+            # ResolveOwnProperty or EnumerateOwnProperties filter out named
+            # properties that shadow prototype properties.
             namedGet = ("\n" +
                         "if (!set && JSID_IS_STRING(id) && !HasPropertyOnPrototype(cx, proxy, this, id)) {\n" +
                         "  JS::Value nameVal = STRING_TO_JSVAL(JSID_TO_STRING(id));\n" +
@@ -4887,6 +4927,9 @@ class CGDescriptor(CGThing):
         # it in workers.
         if (descriptor.interface.hasInterfacePrototypeObject() and
             not descriptor.workers):
+            if descriptor.concrete and descriptor.proxy:
+                cgThings.append(CGResolveOwnProperty(descriptor))
+                cgThings.append(CGEnumerateOwnProperties(descriptor))
             cgThings.append(CGResolveProperty(descriptor, properties))
             cgThings.append(CGEnumerateProperties(descriptor, properties))
 

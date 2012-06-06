@@ -1036,12 +1036,13 @@ DOMXrayTraits::resolveNativeProperty(JSContext *cx, JSObject *wrapper, JSObject 
                                      bool set, JSPropertyDescriptor *desc)
 {
     JSObject *obj = getInnerObject(wrapper);
-    const NativePropertyHooks *nativeHooks =
-        DOMJSClass::FromJSClass(JS_GetClass(obj))->mClass.mNativeHooks;
+    const NativePropertyHooks *nativeHooks = GetDOMClass(obj)->mNativeHooks;
 
     do {
-        if (nativeHooks->mResolveProperty(cx, wrapper, id, set, desc) &&
-            desc->obj) {
+        if (!nativeHooks->mResolveProperty(cx, wrapper, id, set, desc))
+            return false;
+
+        if (desc->obj) {
             NS_ASSERTION(desc->obj == wrapper, "What did we resolve this on?");
             return true;
         }
@@ -1054,6 +1055,17 @@ bool
 DOMXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWrapper, JSObject *wrapper,
                                   JSObject *holder, jsid id, bool set, JSPropertyDescriptor *desc)
 {
+    JSObject *obj = getInnerObject(wrapper);
+    const NativePropertyHooks *nativeHooks = GetDOMClass(obj)->mNativeHooks;
+
+    if (nativeHooks->mResolveOwnProperty) {
+        if (!nativeHooks->mResolveOwnProperty(cx, wrapper, id, set, desc))
+            return false;
+
+        NS_ASSERTION(!desc->obj || desc->obj == wrapper,
+                     "What did we resolve this on?");
+    }
+
     return true;
 }
 
@@ -1082,16 +1094,19 @@ bool
 DOMXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, unsigned flags,
                               JS::AutoIdVector &props)
 {
+    JSObject *obj = getInnerObject(wrapper);
+    const NativePropertyHooks *nativeHooks = GetDOMClass(obj)->mNativeHooks;
+
+    if (nativeHooks->mEnumerateOwnProperties &&
+        !nativeHooks->mEnumerateOwnProperties(cx, wrapper, props))
+        return false;
+
     if (flags & (JSITER_OWNONLY | JSITER_HIDDEN))
         // Probably need to return expandos on the Xray here!
         return true;
 
-    JSObject *obj = getInnerObject(wrapper);
-    const NativePropertyHooks *nativeHooks =
-        DOMJSClass::FromJSClass(JS_GetClass(obj))->mClass.mNativeHooks;
-
     do {
-        if (!nativeHooks->mEnumerateProperties(props)) {
+        if (!nativeHooks->mEnumerateProperties(cx, wrapper, props)) {
             return false;
         }
     } while ((nativeHooks = nativeHooks->mProtoHooks));
