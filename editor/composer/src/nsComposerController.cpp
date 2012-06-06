@@ -124,9 +124,9 @@ nsComposerController::RegisterHTMLEditorCommands(
 
   // Insert content
   NS_REGISTER_ONE_COMMAND(nsInsertHTMLCommand, "cmd_insertHTML");
-  NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertLinkNoUI", "a");
-  NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertImageNoUI", "img");
-  NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertHR", "hr");
+  NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertLinkNoUI", nsGkAtoms::a);
+  NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertImageNoUI", nsGkAtoms::img);
+  NS_REGISTER_TAG_COMMAND(nsInsertTagCommand, "cmd_insertHR", nsGkAtoms::hr);
 
   NS_REGISTER_ONE_COMMAND(nsAbsolutePositioningCommand, "cmd_absPos");
   NS_REGISTER_ONE_COMMAND(nsDecreaseZIndexCommand, "cmd_decreaseZIndex");

@@ -178,6 +178,12 @@ public:
                                            nsIDOMNode ** aNewNode);
 
   /* helper routines for node/parent manipulations */
+  nsresult ReplaceContainer(nsINode* inNode,
+                            mozilla::dom::Element** outNode,
+                            const nsAString& aNodeType,
+                            const nsAString* aAttribute = nsnull,
+                            const nsAString* aValue = nsnull,
+                            bool aCloneAttributes = false);
   nsresult ReplaceContainer(nsIDOMNode *inNode, 
                             nsCOMPtr<nsIDOMNode> *outNode, 
                             const nsAString &aNodeType,
@@ -187,6 +193,11 @@ public:
 
   nsresult RemoveContainer(nsINode* aNode);
   nsresult RemoveContainer(nsIDOMNode *inNode);
+  nsresult InsertContainerAbove(nsIContent* aNode,
+                                mozilla::dom::Element** aOutNode,
+                                const nsAString& aNodeType,
+                                const nsAString* aAttribute = nsnull,
+                                const nsAString* aValue = nsnull);
   nsresult InsertContainerAbove(nsIDOMNode *inNode, 
                                 nsCOMPtr<nsIDOMNode> *outNode, 
                                 const nsAString &aNodeType,
@@ -201,7 +212,8 @@ public:
       nsString& aTag          - tag you want
       nsIContent** aContent   - returned Content that was created with above namespace.
   */
-  nsresult CreateHTMLContent(const nsAString& aTag, nsIContent** aContent);
+  nsresult CreateHTMLContent(const nsAString& aTag,
+                             mozilla::dom::Element** aContent);
 
   // IME event handlers
   virtual nsresult BeginIMEComposition();
@@ -523,14 +535,6 @@ public:
     return GetTag(aNode) == aTag;
   }
 
-  // we should get rid of this method if we can
-  static inline bool NodeIsTypeString(nsIDOMNode *aNode, const nsAString &aTag)
-  {
-    nsIAtom *nodeAtom = GetTag(aNode);
-    return nodeAtom && nodeAtom->Equals(aTag);
-  }
-
-
   /** returns true if aParent can contain a child of type aTag */
   bool CanContain(nsIDOMNode* aParent, nsIDOMNode* aChild);
   bool CanContainTag(nsIDOMNode* aParent, nsIAtom* aTag);
@@ -564,7 +568,7 @@ public:
   bool IsMozEditorBogusNode(nsIContent *aNode);
 
   /** counts number of editable child nodes */
-  nsresult CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount);
+  PRUint32 CountEditableChildren(nsINode* aNode);
   
   /** Find the deep first and last children. */
   nsINode* GetFirstEditableNode(nsINode* aRoot);

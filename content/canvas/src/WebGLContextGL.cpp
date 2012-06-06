@@ -3841,7 +3841,7 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
         return;
     }
 
-    if (HTMLCanvasElement()->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
+    if (mCanvasElement->IsWriteOnly() && !nsContentUtils::IsCallerTrustedForRead()) {
         GenerateWarning("readPixels: Not allowed");
         return rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -4343,7 +4343,7 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
     // validated for cross-domain use.
     if (!res.mCORSUsed) {
         bool subsumes;
-        nsresult rv = HTMLCanvasElement()->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
+        nsresult rv = mCanvasElement->NodePrincipal()->Subsumes(res.mPrincipal, &subsumes);
         if (NS_FAILED(rv) || !subsumes) {
             GenerateWarning("It is forbidden to load a WebGL texture from a cross-domain element that has not been validated with CORS. "
                                 "See https://developer.mozilla.org/en/WebGL/Cross-Domain_Textures");

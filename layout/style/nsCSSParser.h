@@ -23,6 +23,7 @@ class nsIURI;
 struct nsCSSSelectorList;
 class nsMediaList;
 class nsCSSKeyframeRule;
+class nsCSSValue;
 
 namespace mozilla {
 namespace css {
@@ -136,18 +137,15 @@ public:
                           bool               aHTMLMode);
 
   /**
-   * Parse aBuffer into a nscolor |aColor|.  The alpha component of the
-   * resulting aColor may vary due to rgba()/hsla().  Will return
-   * NS_ERROR_FAILURE if aBuffer is not a valid CSS color specification.
-   *
-   * Will also currently return NS_ERROR_FAILURE if it is not
-   * self-contained (i.e.  doesn't reference any external style state,
-   * such as "initial" or "inherit").
+   * Parse aBuffer into a nsCSSValue |aValue|. Will return false
+   * if aBuffer is not a valid CSS color specification.
+   * One can use nsRuleNode::ComputeColor to compute an nscolor from
+   * the returned nsCSSValue.
    */
-  nsresult ParseColorString(const nsSubstring& aBuffer,
-                            nsIURI*            aURL,
-                            PRUint32           aLineNumber,
-                            nscolor*           aColor);
+  bool ParseColorString(const nsSubstring& aBuffer,
+                        nsIURI*            aURL,
+                        PRUint32           aLineNumber,
+                        nsCSSValue&        aValue);
 
   /**
    * Parse aBuffer into a selector list.  On success, caller must

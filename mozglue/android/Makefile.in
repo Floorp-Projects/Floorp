@@ -35,7 +35,6 @@ LOCAL_INCLUDES += -I$(topsrcdir)/base/src
 LOCAL_INCLUDES += -I$(topsrcdir)/nsprpub/lib/ds
 LOCAL_INCLUDES += -I$(topsrcdir)/nsprpub/lib/libc/include
 LOCAL_INCLUDES += -I$(topsrcdir)/nsprpub/pr/include
-LOCAL_INCLUDES += -I$(topsrcdir)/ipc/chromium/src/base/third_party/nspr
 LOCAL_INCLUDES += -I$(topsrcdir)/ipc/chromium/src
 LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/nss
 LOCAL_INCLUDES += -I$(topsrcdir)/security/nss/lib/util
@@ -64,3 +63,12 @@ endif
 EXPORTS = APKOpen.h
 
 include $(topsrcdir)/config/rules.mk
+
+prcpucfg.h: $(topsrcdir)/nsprpub/pr/include/md/_linux.cfg
+	cp $< $@
+
+$(OBJS): prcpucfg.h
+
+GARBAGE += \
+  prcpucfg.h \
+  $(NULL)
