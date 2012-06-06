@@ -20,6 +20,12 @@ var Utilities = {
     return this.bookmarks;
   },
 
+  get bookmarksObserver() {
+    let bookmarksObserver = new BookmarksObserver();
+    this.__defineGetter__("bookmarksObserver", function() bookmarksObserver);
+    return this.bookmarksObserver;
+  },
+
   get livemarks() {
     let livemarks = Cc["@mozilla.org/browser/livemark-service;2"].
                     getService[Ci.mozIAsyncLivemarks].
@@ -58,6 +64,7 @@ var Utilities = {
 
   free : function() {
     delete this.bookmarks;
+    delete this.bookmarksObserver;
     delete this.livemarks
     delete this.annotations;
     delete this.history;
@@ -273,28 +280,154 @@ Annotations.prototype = {
 
 
 //=================================================
+// BookmarksObserver implementation (internal class)
+//
+// BookmarksObserver is a global singleton which watches the browser's
+// bookmarks and sends you events when things change.
+//
+// You can register three different kinds of event listeners on
+// BookmarksObserver, using addListener, addFolderListener, and
+// addRootlistener.
+//
+//  - addListener(aId, aEvent, aListener) lets you listen to a specific
+//    bookmark.  You can listen to the "change", "move", and "remove" events.
+//
+//  - addFolderListener(aId, aEvent, aListener) lets you listen to a specific
+//    bookmark folder.  You can listen to "addchild" and "removechild".
+//
+//  - addRootListener(aEvent, aListener) lets you listen to the root bookmark
+//    node.  This lets you hear "add", "remove", and "change" events on all
+//    bookmarks.
+//
+
+function BookmarksObserver() {
+  this._eventsDict = {};
+  this._folderEventsDict = {};
+  this._rootEvents = new Events();
+  Utilities.bookmarks.addObserver(this, /* ownsWeak = */ true);
+}
+
+BookmarksObserver.prototype = {
+  onBeginUpdateBatch : function() {},
+  onEndUpdateBatch : function() {},
+  onBeforeItemRemoved : function(aId) {},
+
+  onItemAdded : function(aId, aFolder, aIndex, aItemType, aURI) {
+    this._rootEvents.dispatch("add", aId);
+    this._dispatchToEvents("addchild", aId, this._folderEventsDict[aFolder]);
+  },
+
+  onItemVisited: function(aId, aVisitID, aTime) {},
+
+  onItemRemoved : function(aId, aFolder, aIndex) {
+    this._rootEvents.dispatch("remove", aId);
+    this._dispatchToEvents("remove", aId, this._eventsDict[aId]);
+    this._dispatchToEvents("removechild", aId, this._folderEventsDict[aFolder]);
+  },
+
+  onItemChanged : function(aId, aProperty, aIsAnnotationProperty, aValue) {
+    this._rootEvents.dispatch("change", aProperty);
+    this._dispatchToEvents("change", aProperty, this._eventsDict[aId]);
+  },
+
+  onItemMoved: function(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+    this._dispatchToEvents("move", aId, this._eventsDict[aId]);
+  },
+
+  _dispatchToEvents: function(aEvent, aData, aEvents) {
+    if (aEvents) {
+      aEvents.dispatch(aEvent, aData);
+    }
+  },
+
+  _addListenerToDict: function(aId, aEvent, aListener, aDict) {
+    var events = aDict[aId];
+    if (!events) {
+      events = new Events();
+      aDict[aId] = events;
+    }
+    events.addListener(aEvent, aListener);
+  },
+
+  _removeListenerFromDict: function(aId, aEvent, aListener, aDict) {
+    var events = aDict[aId];
+    if (!events) {
+      return;
+    }
+    events.removeListener(aEvent, aListener);
+    if (events._listeners.length == 0) {
+      delete aDict[aId];
+    }
+  },
+
+  addListener: function(aId, aEvent, aListener) {
+    this._addListenerToDict(aId, aEvent, aListener, this._eventsDict);
+  },
+
+  removeListener: function(aId, aEvent, aListener) {
+    this._removeListenerFromDict(aId, aEvent, aListener, this._eventsDict);
+  },
+
+  addFolderListener: function(aId, aEvent, aListener) {
+    this._addListenerToDict(aId, aEvent, aListener, this._folderEventsDict);
+  },
+
+  removeFolderListener: function(aId, aEvent, aListener) {
+    this._removeListenerFromDict(aId, aEvent, aListener, this._folderEventsDict);
+  },
+
+  addRootListener: function(aEvent, aListener) {
+    this._rootEvents.addListener(aEvent, aListener);
+  },
+
+  removeRootListener: function(aEvent, aListener) {
+    this._rootEvents.removeListener(aEvent, aListener);
+  },
+
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsINavBookmarksObserver,
+                                          Ci.nsISupportsWeakReference])
+};
+
+//=================================================
 // Bookmark implementation
+//
+// Bookmark event listeners are stored in BookmarksObserver, not in the
+// Bookmark objects themselves.  Thus, you don't have to hold on to a Bookmark
+// object in order for your event listener to stay valid, and Bookmark objects
+// not kept alive by the extension can be GC'ed.
+//
+// A consequence of this is that if you have two different Bookmark objects x
+// and y for the same bookmark (i.e., x != y but x.id == y.id), and you do
+//
+//   x.addListener("foo", fun);
+//   y.removeListener("foo", fun);
+//
+// the second line will in fact remove the listener added in the first line.
+//
+
 function Bookmark(aId, aParent, aType) {
   this._id = aId;
   this._parent = aParent;
   this._type = aType || "bookmark";
   this._annotations = new Annotations(this._id);
-  this._events = new Events();
 
-  Utilities.bookmarks.addObserver(this, false);
-
+  // Our _events object forwards to bookmarksObserver.
   var self = this;
-  gShutdown.push(function() { self._shutdown(); });
+  this._events = {
+    addListener: function(aEvent, aListener) {
+      Utilities.bookmarksObserver.addListener(self._id, aEvent, aListener);
+    },
+    removeListener: function(aEvent, aListener) {
+      Utilities.bookmarksObserver.removeListener(self._id, aEvent, aListener);
+    },
+    QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
+  };
+
+  // For our onItemMoved listener, which updates this._parent.
+  Utilities.bookmarks.addObserver(this, /* ownsWeak = */ true);
 }
 
 Bookmark.prototype = {
-  _shutdown : function bm_shutdown() {
-    this._annotations = null;
-    this._events = null;
-
-    Utilities.bookmarks.removeObserver(this);
-  },
-
   get id() {
     return this._id;
   },
@@ -356,66 +489,86 @@ Bookmark.prototype = {
     Utilities.bookmarks.removeItem(this._id);
   },
 
-  // observer
-  onBeginUpdateBatch : function bm_obub() {
-  },
+  onBeginUpdateBatch : function() {},
+  onEndUpdateBatch : function() {},
+  onItemAdded : function(aId, aFolder, aIndex, aItemType, aURI) {},
+  onBeforeItemRemoved : function(aId) {},
+  onItemVisited: function(aId, aVisitID, aTime) {},
+  onItemRemoved : function(aId, aFolder, aIndex) {},
+  onItemChanged : function(aId, aProperty, aIsAnnotationProperty, aValue) {},
 
-  onEndUpdateBatch : function bm_oeub() {
-  },
-
-  onItemAdded : function bm_oia(aId, aFolder, aIndex, aItemType, aURI) {
-    // bookmark object doesn't exist at this point
-  },
-
-  onBeforeItemRemoved : function bm_obir(aId) {
-  },
-
-  onItemRemoved : function bm_oir(aId, aFolder, aIndex) {
-    if (this._id == aId)
-      this._events.dispatch("remove", aId);
-  },
-
-  onItemChanged : function bm_oic(aId, aProperty, aIsAnnotationProperty, aValue) {
-    if (this._id == aId)
-      this._events.dispatch("change", aProperty);
-  },
-
-  onItemVisited: function bm_oiv(aId, aVisitID, aTime) {
-  },
-
-  onItemMoved: function bm_oim(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
-    if (this._id == aId) {
+  onItemMoved: function(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
+    if (aId == this._id) {
       this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));
-      this._events.dispatch("move", aId);
     }
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmark, Ci.nsINavBookmarkObserver])
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmark,
+                                          Ci.nsINavBookmarksObserver,
+                                          Ci.nsISupportsWeakReference])
 };
 
 
 //=================================================
 // BookmarkFolder implementation
+//
+// As with Bookmark, events on BookmarkFolder are handled by the
+// BookmarksObserver singleton.
+//
+
 function BookmarkFolder(aId, aParent) {
   this._id = aId;
   this._parent = aParent;
   this._annotations = new Annotations(this._id);
-  this._events = new Events();
 
-  Utilities.bookmarks.addObserver(this, false);
+  // Our event listeners are handled by the BookmarksObserver singleton.  This
+  // is a bit complicated because there are three different kinds of events we
+  // might want to listen to here:
+  //
+  //  - If this._parent is null, we're the root bookmark folder, and all our
+  //    listeners should be root listeners.
+  //
+  //  - Otherwise, events ending with "child" (addchild, removechild) are
+  //    handled by a folder listener.
+  //
+  //  - Other events are handled by a vanilla bookmark listener.
 
   var self = this;
-  gShutdown.push(function() { self._shutdown(); });
+  this._events = {
+    addListener: function(aEvent, aListener) {
+      if (self._parent) {
+        if (/child$/.test(aEvent)) {
+          Utilities.bookmarksObserver.addFolderListener(self._id, aEvent, aListener);
+        }
+        else {
+          Utilities.bookmarksObserver.addListener(self._id, aEvent, aListener);
+        }
+      }
+      else {
+        Utilities.bookmarksObserver.addRootListener(aEvent, aListener);
+      }
+    },
+    removeListener: function(aEvent, aListener) {
+      if (self._parent) {
+        if (/child$/.test(aEvent)) {
+          Utilities.bookmarksObserver.removeFolderListener(self._id, aEvent, aListener);
+        }
+        else {
+          Utilities.bookmarksObserver.removeListener(self._id, aEvent, aListener);
+        }
+      }
+      else {
+        Utilities.bookmarksObserver.removeRootListener(aEvent, aListener);
+      }
+    },
+    QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
+  };
+
+  // For our onItemMoved listener, which updates this._parent.
+  Utilities.bookmarks.addObserver(this, /* ownsWeak = */ true);
 }
 
 BookmarkFolder.prototype = {
-  _shutdown : function bmf_shutdown() {
-    this._annotations = null;
-    this._events = null;
-
-    Utilities.bookmarks.removeObserver(this);
-  },
-
   get id() {
     return this._id;
   },
@@ -510,70 +663,30 @@ BookmarkFolder.prototype = {
   },
 
   // observer
-  onBeginUpdateBatch : function bmf_obub() {
-  },
+  onBeginUpdateBatch : function() {},
+  onEndUpdateBatch : function() {},
+  onItemAdded : function(aId, aFolder, aIndex, aItemType, aURI) {},
+  onBeforeItemRemoved : function(aId) {},
+  onItemRemoved : function(aId, aFolder, aIndex) {},
+  onItemChanged : function(aId, aProperty, aIsAnnotationProperty, aValue) {},
 
-  onEndUpdateBatch : function bmf_oeub() {
-  },
-
-  onItemAdded : function bmf_oia(aId, aFolder, aIndex, aItemType, aURI) {
-    // handle root folder events
-    if (!this._parent)
-      this._events.dispatch("add", aId);
-
-    // handle this folder events
-    if (this._id == aFolder)
-      this._events.dispatch("addchild", aId);
-  },
-
-  onBeforeItemRemoved : function bmf_oir(aId) {
-  },
-
-  onItemRemoved : function bmf_oir(aId, aFolder, aIndex) {
-    // handle root folder events
-    if (!this._parent || this._id == aId)
-      this._events.dispatch("remove", aId);
-
-    // handle this folder events
-    if (this._id == aFolder)
-      this._events.dispatch("removechild", aId);
-  },
-
-  onItemChanged : function bmf_oic(aId, aProperty, aIsAnnotationProperty, aValue) {
-    // handle root folder and this folder events
-    if (!this._parent || this._id == aId)
-      this._events.dispatch("change", aProperty);
-  },
-
-  onItemVisited: function bmf_oiv(aId, aVisitID, aTime) {
-  },
-
-  onItemMoved: function bmf_oim(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
-    // handle this folder event, root folder cannot be moved
+  onItemMoved: function(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
     if (this._id == aId) {
       this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));
-      this._events.dispatch("move", aId);
     }
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmarkFolder, Ci.nsINavBookmarkObserver])
+  QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmarkFolder,
+                                          Ci.nsINavBookmarksObserver,
+                                          Ci.nsISupportsWeakReference])
 };
 
 //=================================================
 // BookmarkRoots implementation
 function BookmarkRoots() {
-  var self = this;
-  gShutdown.push(function() { self._shutdown(); });
 }
 
 BookmarkRoots.prototype = {
-  _shutdown : function bmr_shutdown() {
-    this._menu = null;
-    this._toolbar = null;
-    this._tags = null;
-    this._unfiled = null;
-  },
-
   get menu() {
     if (!this._menu)
       this._menu = new BookmarkFolder(Utilities.bookmarks.bookmarksMenuFolder, null);
@@ -630,7 +743,6 @@ var ApplicationFactory = {
 // Application constructor
 function Application() {
   this.initToolkitHelpers();
-  this._bookmarks = null;
 }
 
 //=================================================
@@ -660,7 +772,6 @@ Application.prototype = {
     this.__proto__.__proto__.observe.call(this, aSubject, aTopic, aData);
     if (aTopic == "xpcom-shutdown") {
       this._obs.removeObserver(this, "xpcom-shutdown");
-      this._bookmarks = null;
       Utilities.free();
     }
   },
