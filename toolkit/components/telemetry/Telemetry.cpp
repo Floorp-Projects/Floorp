@@ -15,7 +15,6 @@
 #include "nsStringGlue.h"
 #include "nsITelemetry.h"
 #include "nsIFile.h"
-#include "nsILocalFile.h"
 #include "Telemetry.h" 
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
@@ -1340,13 +1339,9 @@ TelemetrySessionData::LoadFromDisk(nsIFile *file, TelemetrySessionData **ptr)
 {
   *ptr = nsnull;
   nsresult rv;
-  nsCOMPtr<nsILocalFile> f(do_QueryInterface(file, &rv));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   AutoFDClose fd;
-  rv = f->OpenNSPRFileDesc(PR_RDONLY, 0, &fd.rwget());
+  rv = file->OpenNSPRFileDesc(PR_RDONLY, 0, &fd.rwget());
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }
@@ -1432,13 +1427,9 @@ nsresult
 TelemetrySessionData::SaveToDisk(nsIFile *file, const nsACString &uuid)
 {
   nsresult rv;
-  nsCOMPtr<nsILocalFile> f(do_QueryInterface(file, &rv));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   AutoFDClose fd;
-  rv = f->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd.rwget());
+  rv = file->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600, &fd.rwget());
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -6,7 +6,7 @@
 #include "nsPluginDirServiceProvider.h"
 
 #include "nsCRT.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsDependentString.h"
 #include "prmem.h"
 #include "nsArrayEnumerator.h"
@@ -189,7 +189,7 @@ NS_IMETHODIMP
 nsPluginDirServiceProvider::GetFile(const char *charProp, bool *persistant,
                                     nsIFile **_retval)
 {
-  nsCOMPtr<nsILocalFile>  localFile;
+  nsCOMPtr<nsIFile>  localFile;
   nsresult rv = NS_ERROR_FAILURE;
 
   NS_ENSURE_ARG(charProp);
@@ -451,7 +451,7 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
   NS_ENSURE_ARG_POINTER(aEnumerator);
   *aEnumerator = nsnull;
 
-  nsCOMArray<nsILocalFile> dirs;
+  nsCOMArray<nsIFile> dirs;
 
   GetPLIDDirectoriesWithRootKey(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, dirs);
   GetPLIDDirectoriesWithRootKey(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, dirs);
@@ -460,7 +460,7 @@ nsPluginDirServiceProvider::GetPLIDDirectories(nsISimpleEnumerator **aEnumerator
 }
 
 nsresult
-nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMArray<nsILocalFile> &aDirs)
+nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMArray<nsIFile> &aDirs)
 {
   nsCOMPtr<nsIWindowsRegKey> regKey =
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
@@ -485,7 +485,7 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMAr
         nsAutoString path;
         rv = childKey->ReadStringValue(NS_LITERAL_STRING("Path"), path);
         if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsILocalFile> localFile;
+          nsCOMPtr<nsIFile> localFile;
           if (NS_SUCCEEDED(NS_NewLocalFile(path, true,
                                            getter_AddRefs(localFile))) &&
               localFile) {
@@ -496,7 +496,7 @@ nsPluginDirServiceProvider::GetPLIDDirectoriesWithRootKey(PRUint32 aKey, nsCOMAr
               nsCOMPtr<nsIFile> temp;
               localFile->GetParent(getter_AddRefs(temp));
               if (temp)
-                localFile = do_QueryInterface(temp);
+                localFile = temp;
             }
 
             // Now we check to make sure it's actually on disk and

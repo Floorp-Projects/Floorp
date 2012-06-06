@@ -8,7 +8,7 @@
 
 #include "nsIDirectoryService.h"
 #include "nsIProfileMigrator.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
@@ -30,7 +30,7 @@ public:
 
   // if aXULAppDir is null, use gArgv[0]
   nsresult Initialize(nsIFile *aXULAppDir,
-                      nsILocalFile *aGREDir,
+                      nsIFile *aGREDir,
                       nsIDirectoryServiceProvider* aAppProvider = nsnull);
   ~nsXREDirProvider();
 
@@ -55,16 +55,16 @@ public:
 
   nsresult GetProfileDefaultsDir(nsIFile* *aResult);
 
-  static nsresult GetUserAppDataDirectory(nsILocalFile* *aFile) {
+  static nsresult GetUserAppDataDirectory(nsIFile* *aFile) {
     return GetUserDataDirectory(aFile, false, nsnull, nsnull, nsnull);
   }
-  static nsresult GetUserLocalDataDirectory(nsILocalFile* *aFile) {
+  static nsresult GetUserLocalDataDirectory(nsIFile* *aFile) {
     return GetUserDataDirectory(aFile, true, nsnull, nsnull, nsnull);
   }
 
   // By default GetUserDataDirectory gets profile path from gAppData,
   // but that can be overridden by using aProfileName/aAppName/aVendorName.
-  static nsresult GetUserDataDirectory(nsILocalFile** aFile, bool aLocal,
+  static nsresult GetUserDataDirectory(nsIFile** aFile, bool aLocal,
                                        const nsACString* aProfileName,
                                        const nsACString* aAppName,
                                        const nsACString* aVendorName);
@@ -100,10 +100,10 @@ public:
 
 protected:
   nsresult GetFilesInternal(const char* aProperty, nsISimpleEnumerator** aResult);
-  static nsresult GetUserDataDirectoryHome(nsILocalFile* *aFile, bool aLocal);
-  static nsresult GetSysUserExtensionsDirectory(nsILocalFile* *aFile);
+  static nsresult GetUserDataDirectoryHome(nsIFile* *aFile, bool aLocal);
+  static nsresult GetSysUserExtensionsDirectory(nsIFile* *aFile);
 #if defined(XP_UNIX) || defined(XP_MACOSX)
-  static nsresult GetSystemExtensionsDirectory(nsILocalFile** aFile);
+  static nsresult GetSystemExtensionsDirectory(nsIFile** aFile);
 #endif
   static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
   void EnsureProfileFileExists(nsIFile* aFile);
@@ -130,7 +130,7 @@ protected:
   void Append(nsIFile* aDirectory);
 
   nsCOMPtr<nsIDirectoryServiceProvider> mAppProvider;
-  nsCOMPtr<nsILocalFile> mGREDir;
+  nsCOMPtr<nsIFile>      mGREDir;
   nsCOMPtr<nsIFile>      mXULAppDir;
   nsCOMPtr<nsIFile>      mProfileDir;
   nsCOMPtr<nsIFile>      mProfileLocalDir;

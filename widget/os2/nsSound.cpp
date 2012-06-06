@@ -260,7 +260,7 @@ nsresult nsSound::PlaySoundFile(const nsAString &aSoundFile)
 nsresult nsSound::PlaySoundFile(const nsACString &aSoundFile)
 {
   nsresult rv;
-  nsCOMPtr <nsILocalFile> soundFile;
+  nsCOMPtr <nsIFile> soundFile;
   rv = NS_NewNativeLocalFile(aSoundFile, false, 
                              getter_AddRefs(soundFile));
   NS_ENSURE_SUCCESS(rv,rv);

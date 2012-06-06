@@ -39,7 +39,7 @@ class nsINativeAppSupport;
 class nsICmdLineService;
 class nsXREDirProvider;
 class nsIToolkitProfileService;
-class nsILocalFile;
+class nsIFile;
 class nsIProfileLock;
 class nsIProfileUnlocker;
 class nsIFactory;
@@ -89,7 +89,7 @@ NS_NewToolkitProfileFactory(nsIFactory* *aResult);
  *         directory cannot be unlocked.
  */
 NS_HIDDEN_(nsresult)
-NS_LockProfilePath(nsILocalFile* aPath, nsILocalFile* aTempPath,
+NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
                    nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult);
 
 NS_HIDDEN_(void)

@@ -9,7 +9,7 @@
 #include "nsNetUtil.h"
 #include "nsIServiceManager.h"
 #include "nsIPlatformCharset.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include "nsEnumeratorUtils.h"
@@ -257,7 +257,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
         if (filedlg.papszFQFilename) {
           for (ULONG i=0;i<filedlg.ulFQFCount;i++) {
-            nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+            nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
             NS_ENSURE_SUCCESS(rv,rv);
 
             rv = file->InitWithNativePath(nsDependentCString(*(filedlg.papszFQFilename)[i]));
@@ -268,7 +268,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
           }
           WinFreeFileDlgList(filedlg.papszFQFilename);
         } else {
-          nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+          nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
           NS_ENSURE_SUCCESS(rv,rv);
 
           rv = file->InitWithNativePath(nsDependentCString(filedlg.szFullFile));
@@ -305,25 +305,22 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
     nsresult rv;
     // Remember last used directory.
-    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1", &rv));
+    nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1", &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
     file->InitWithNativePath(mFile);
     nsCOMPtr<nsIFile> dir;
     if (NS_SUCCEEDED(file->GetParent(getter_AddRefs(dir)))) {
-      nsCOMPtr<nsILocalFile> localDir(do_QueryInterface(dir));
-      if (localDir) {
-        nsCAutoString newDir;
-        localDir->GetNativePath(newDir);
-        if(!newDir.IsEmpty())
-          PL_strncpyz(mLastUsedDirectory, newDir.get(), MAX_PATH+1);
-        // Update mDisplayDirectory with this directory, also.
-        // Some callers rely on this.
-        if (!mDisplayDirectory)
-           mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
-        if (mDisplayDirectory)
-           mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
-      }
+      nsCAutoString newDir;
+      dir->GetNativePath(newDir);
+      if(!newDir.IsEmpty())
+        PL_strncpyz(mLastUsedDirectory, newDir.get(), MAX_PATH+1);
+      // Update mDisplayDirectory with this directory, also.
+      // Some callers rely on this.
+      if (!mDisplayDirectory)
+         mDisplayDirectory = do_CreateInstance("@mozilla.org/file/local;1");
+      if (mDisplayDirectory)
+         mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
     }
 
     if (mMode == modeSave) {
@@ -344,14 +341,14 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
 
 
-NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
+NS_IMETHODIMP nsFilePicker::GetFile(nsIFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
 
   if (mFile.IsEmpty())
       return NS_OK;
 
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+  nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
@@ -366,7 +363,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 NS_IMETHODIMP nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
   *aFileURL = nsnull;
-  nsCOMPtr<nsILocalFile> file;
+  nsCOMPtr<nsIFile> file;
   nsresult rv = GetFile(getter_AddRefs(file));
   if (!file)
     return rv;

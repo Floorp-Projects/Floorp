@@ -82,7 +82,7 @@ void StartupSpecialSystemDirectory()
 
 #if defined (XP_WIN)
 
-static nsresult GetKnownFolder(GUID* guid, nsILocalFile** aFile)
+static nsresult GetKnownFolder(GUID* guid, nsIFile** aFile)
 {
     if (!guid || !gGetKnownFolderPath)
         return NS_ERROR_FAILURE;
@@ -102,7 +102,7 @@ static nsresult GetKnownFolder(GUID* guid, nsILocalFile** aFile)
 }
 
 //----------------------------------------------------------------------------------------
-static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
+static nsresult GetWindowsFolder(int folder, nsIFile** aFile)
 //----------------------------------------------------------------------------------------
 {
     WCHAR path_orig[MAX_PATH + 3];
@@ -128,7 +128,7 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
  * querying the registry when the call to SHGetSpecialFolderPathW is unable to
  * provide these paths (Bug 513958).
  */
-static nsresult GetRegWindowsAppDataFolder(bool aLocal, nsILocalFile** aFile)
+static nsresult GetRegWindowsAppDataFolder(bool aLocal, nsIFile** aFile)
 {
     HKEY key;
     NS_NAMED_LITERAL_STRING(keyName,
@@ -163,7 +163,7 @@ static nsresult GetRegWindowsAppDataFolder(bool aLocal, nsILocalFile** aFile)
 
 #if defined(XP_UNIX)
 static nsresult
-GetUnixHomeDir(nsILocalFile** aFile)
+GetUnixHomeDir(nsIFile** aFile)
 {
 #ifdef VMS
     char *pHome;
@@ -358,14 +358,14 @@ static const PRUint8 xdg_user_dir_offsets[] = {
 
 static nsresult
 GetUnixXDGUserDirectory(SystemDirectories aSystemDirectory,
-                        nsILocalFile** aFile)
+                        nsIFile** aFile)
 {
     char *dir = xdg_user_dir_lookup
                     (xdg_user_dirs + xdg_user_dir_offsets[aSystemDirectory -
                                                          Unix_XDG_Desktop]);
 
     nsresult rv;
-    nsCOMPtr<nsILocalFile> file;
+    nsCOMPtr<nsIFile> file;
     if (dir) {
         rv = NS_NewNativeLocalFile(nsDependentCString(dir), true,
                                    getter_AddRefs(file));
@@ -422,7 +422,7 @@ GetUnixXDGUserDirectory(SystemDirectories aSystemDirectory,
 
 nsresult
 GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
-                          nsILocalFile** aFile)
+                          nsIFile** aFile)
 {
 #if defined(XP_WIN)
     WCHAR path[MAX_PATH];
@@ -852,7 +852,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
 #if defined (MOZ_WIDGET_COCOA)
 nsresult
-GetOSXFolderType(short aDomain, OSType aFolderType, nsILocalFile **localFile)
+GetOSXFolderType(short aDomain, OSType aFolderType, nsIFile **localFile)
 {
     OSErr err;
     FSRef fsRef;

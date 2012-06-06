@@ -8,7 +8,7 @@
 #include "prmem.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "nsPluginHost.h"
 #include "nsNPAPIPlugin.h"

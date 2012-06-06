@@ -23,7 +23,7 @@
 #include "winbase.h"
 
 #include "nsString.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsUnicharUtils.h"
 
 using namespace mozilla;
@@ -239,15 +239,13 @@ nsPluginFile::~nsPluginFile()
  */
 nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
 {
-  nsCOMPtr<nsILocalFile> plugin = do_QueryInterface(mPlugin);
-
-  if (!plugin)
+  if (!mPlugin)
     return NS_ERROR_NULL_POINTER;
 
   bool protectCurrentDirectory = true;
 
   nsAutoString pluginFolderPath;
-  plugin->GetPath(pluginFolderPath);
+  mPlugin->GetPath(pluginFolderPath);
 
   PRInt32 idx = pluginFolderPath.RFindChar('\\');
   if (kNotFound == idx)
@@ -273,7 +271,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
     SetDllDirectory(NULL);
   }
 
-  nsresult rv = plugin->Load(outLibrary);
+  nsresult rv = mPlugin->Load(outLibrary);
   if (NS_FAILED(rv))
       *outLibrary = NULL;
 
