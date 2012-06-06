@@ -27,9 +27,9 @@ nsresult NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output);
 /* 
  * This function indicates whether the character encoding used in the file
  * system (more exactly what's used for |GetNativeFoo| and |SetNativeFoo|
- * of |nsILocalFile|) is UTF-8 or not. Knowing that helps us avoid an 
+ * of |nsIFile|) is UTF-8 or not. Knowing that helps us avoid an
  * unncessary encoding conversion in some cases. For instance, to get the leaf
- * name in UTF-8 out of nsILocalFile, we can just use |GetNativeLeafName| rather
+ * name in UTF-8 out of nsIFile, we can just use |GetNativeLeafName| rather
  * than using |GetLeafName| and converting the result to UTF-8 if the file 
  * system  encoding is UTF-8.
  * On Unix (but not on Mac OS X), it depends on the locale and is not known

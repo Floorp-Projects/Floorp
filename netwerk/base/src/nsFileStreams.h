@@ -59,7 +59,7 @@ protected:
     bool mDeferredOpen;
 
     struct OpenParams {
-        nsCOMPtr<nsILocalFile> localFile;
+        nsCOMPtr<nsIFile> localFile;
         PRInt32 ioFlags;
         PRInt32 perm;
     };
@@ -74,7 +74,7 @@ protected:
      * by calling DoOpen(), or leaves it to be opened later by a call to
      * DoPendingOpen().
      */
-    nsresult MaybeOpen(nsILocalFile* aFile, PRInt32 aIoFlags, PRInt32 aPerm,
+    nsresult MaybeOpen(nsIFile* aFile, PRInt32 aIoFlags, PRInt32 aPerm,
                        bool aDeferred);
 
     /**

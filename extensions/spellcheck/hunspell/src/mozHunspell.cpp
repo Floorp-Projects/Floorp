@@ -188,7 +188,7 @@ NS_IMETHODIMP mozHunspell::SetDictionary(const PRUnichar *aDictionary)
 
   // XXX This isn't really good. nsIFile->NativePath isn't safe for all
   // character sets on Windows.
-  // A better way would be to QI to nsILocalFile, and get a filehandle
+  // A better way would be to QI to nsIFile, and get a filehandle
   // from there. Only problem is that hunspell wants a path
 
   nsresult rv = affFile->GetNativePath(affFileName);

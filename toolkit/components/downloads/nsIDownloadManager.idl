@@ -8,7 +8,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsILocalFile;
+interface nsIFile;
 interface nsIDownload;
 interface nsICancelable;
 interface nsIMIMEInfo;
@@ -120,7 +120,7 @@ interface nsIDownloadManager : nsISupports {
                           in AString aDisplayName,
                           in nsIMIMEInfo aMIMEInfo,
                           in PRTime aStartTime,
-                          in nsILocalFile aTempFile,
+                          in nsIFile aTempFile,
                           in nsICancelable aCancelable);
 
   /**
@@ -239,7 +239,7 @@ interface nsIDownloadManager : nsISupports {
   /**
    * Returns the platform default downloads directory.
    */
-  readonly attribute nsILocalFile defaultDownloadsDirectory;
+  readonly attribute nsIFile defaultDownloadsDirectory;
 
   /**
    * Returns the user configured downloads directory. 
@@ -261,7 +261,7 @@ interface nsIDownloadManager : nsISupports {
    *   where downloaded files are saved. The use of which is
    *   enabled when folderList equals 2. 
    */
-  readonly attribute nsILocalFile userDownloadsDirectory;
+  readonly attribute nsIFile userDownloadsDirectory;
 };
 
 

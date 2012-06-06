@@ -37,7 +37,7 @@ public:
    static nsresult GetPLIDDirectories(nsISimpleEnumerator **aEnumerator);
 private:
    static nsresult GetPLIDDirectoriesWithRootKey(PRUint32 aKey,
-     nsCOMArray<nsILocalFile> &aDirs);
+     nsCOMArray<nsIFile> &aDirs);
 #endif
 
 protected:

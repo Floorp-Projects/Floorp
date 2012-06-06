@@ -15,7 +15,7 @@
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsMemory.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsStringStream.h"
 #include "nsDragService.h"
 #include "nsEscape.h"

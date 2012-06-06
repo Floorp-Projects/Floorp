@@ -27,7 +27,7 @@ WriteConsoleLog()
 {
   nsresult rv;
 
-  nsCOMPtr<nsILocalFile> lfile;
+  nsCOMPtr<nsIFile> lfile;
 
   char* logFileEnv = PR_GetEnv("XRE_CONSOLE_LOG");
   if (logFileEnv && *logFileEnv) {

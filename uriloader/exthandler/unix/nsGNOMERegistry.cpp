@@ -8,7 +8,7 @@
 #include "prmem.h"
 #include "nsString.h"
 #include "nsIComponentManager.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsMIMEInfoUnix.h"
 #include "nsAutoPtr.h"
 #include "nsIGConfService.h"

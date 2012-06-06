@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsIHelperAppLauncher;
-interface nsILocalFile;
+interface nsIFile;
 
 /**
  * This interface is used to display a confirmation dialog before
@@ -59,7 +59,7 @@ interface nsIHelperAppLauncherDialog : nsISupports {
 
   /**
    * Invoke a save-to-file dialog instead of the full fledged helper app dialog.
-   * Returns the a nsILocalFile for the file name/location selected.
+   * Returns the a nsIFile for the file name/location selected.
    *
    * @param aLauncher
    *        A nsIHelperAppLauncher to be invoked when a file is selected.
@@ -74,11 +74,11 @@ interface nsIHelperAppLauncherDialog : nsISupports {
    *        name/location, otherwise perferences may control if the user is
    *        prompted.
    */
-  nsILocalFile promptForSaveToFile(in nsIHelperAppLauncher aLauncher, 
-                                   in nsISupports aWindowContext, 
-                                   in wstring aDefaultFileName, 
-                                   in wstring aSuggestedFileExtension,
-                                   in boolean aForcePrompt);
+  nsIFile promptForSaveToFile(in nsIHelperAppLauncher aLauncher,
+                              in nsISupports aWindowContext,
+                              in wstring aDefaultFileName,
+                              in wstring aSuggestedFileExtension,
+                              in boolean aForcePrompt);
 };
 
 

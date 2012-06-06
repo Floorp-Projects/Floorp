@@ -2222,16 +2222,6 @@ nsGlobalWindow::DetachFromDocShell()
   nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
   if (currentInner) {
-    JSObject* obj = currentInner->FastGetGlobalJSObject();
-    if (obj) {
-      JSContext* cx = nsContentUtils::ThreadJSContextStack()->GetSafeJSContext();
-
-      JSAutoRequest ar(cx);
-
-      js::NukeChromeCrossCompartmentWrappersForGlobal(cx, obj,
-                                                      js::NukeForGlobalObject);
-    }
-
     NS_ASSERTION(mDoc, "Must have doc!");
     
     // Remember the document's principal.

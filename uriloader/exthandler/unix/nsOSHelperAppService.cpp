@@ -25,7 +25,7 @@
 #include "nsIURL.h"
 #include "nsIFileStreams.h"
 #include "nsILineInputStream.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIProcess.h"
 #include "nsNetCID.h"
 #include "nsXPCOM.h"
@@ -201,7 +201,7 @@ nsOSHelperAppService::GetFileLocation(const char* aPrefName,
       // an nsIFile with the native path and asking it for the Unicode
       // version.
       nsresult rv;
-      nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+      nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = file->InitWithNativePath(nsDependentCString(prefValue));
@@ -271,7 +271,7 @@ nsOSHelperAppService::CreateInputStream(const nsAString& aFilename,
   LOG(("-- CreateInputStream"));
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
   rv = file->InitWithPath(aFilename);
@@ -947,7 +947,7 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
   nsresult rv = NS_OK;
   bool more = false;
   
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
   rv = file->InitWithPath(aFilename);
@@ -1088,7 +1088,7 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
                   nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID, &rv);
                   if (NS_FAILED(rv))
                     continue;
-                  nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+                  nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
                   if (NS_FAILED(rv))
                     continue;
                   rv = file->InitWithNativePath(NS_LITERAL_CSTRING("/bin/sh"));
@@ -1203,7 +1203,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   // If we get here, we really should have a relative path.
   NS_ASSERTION(*platformAppPath != PRUnichar('/'), "Unexpected absolute path");
 
-  nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+  nsCOMPtr<nsIFile> localFile (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
 
   if (!localFile) return NS_ERROR_NOT_INITIALIZED;
  
@@ -1579,7 +1579,7 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
 }
 
 void
-nsOSHelperAppService::FixFilePermissions(nsILocalFile* aFile)
+nsOSHelperAppService::FixFilePermissions(nsIFile* aFile)
 {
   aFile->SetPermissions(mPermissions); 
 }

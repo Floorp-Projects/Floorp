@@ -10,7 +10,6 @@
 #include <propkey.h>
 
 #include "nsIFile.h"
-#include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "nsCRT.h"
 #include "nsNetCID.h"
@@ -491,10 +490,8 @@ nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
   // Path
   nsCOMPtr<nsIFile> executable;
   handlerApp->GetExecutable(getter_AddRefs(executable));
-  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(executable, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = localFile->GetPath(appPath);
+  rv = executable->GetPath(appPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Command line parameters
@@ -587,7 +584,7 @@ static nsresult IsPathInOurIconCache(nsCOMPtr<nsIJumpListShortcut>& aShortcut,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Construct the parent path of the passed in path
-  nsCOMPtr<nsILocalFile> passedInFile = do_CreateInstance("@mozilla.org/file/local;1");
+  nsCOMPtr<nsIFile> passedInFile = do_CreateInstance("@mozilla.org/file/local;1");
   NS_ENSURE_TRUE(passedInFile, NS_ERROR_FAILURE);
   nsAutoString passedInPath(aPath);
   rv = passedInFile->InitWithPath(passedInPath);
@@ -620,7 +617,7 @@ nsresult JumpListShortcut::GetJumpListShortcut(IShellLinkW *pLink, nsCOMPtr<nsIJ
   if (FAILED(hres))
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsILocalFile> file;
+  nsCOMPtr<nsIFile> file;
   nsDependentString filepath(buf);
   rv = NS_NewLocalFile(filepath, false, getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -577,7 +577,7 @@ struct MessageWindow {
 #if MOZ_DEBUG_DDE
             printf( "Incoming request: %s\n", (const char*)cds->lpData );
 #endif
-            nsCOMPtr<nsILocalFile> workingDir;
+            nsCOMPtr<nsIFile> workingDir;
 
             if (1 >= cds->dwData) {
                 char* wdpath = (char*) cds->lpData;

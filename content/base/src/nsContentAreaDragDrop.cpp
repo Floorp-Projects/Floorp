@@ -167,7 +167,7 @@ nsContentAreaDragDropDataProvider::SaveURIToFile(nsAString& inSourceURIString,
 //    that in AddStringsToDataTransfer.
 //
 // 2. Someone put a kFilePromiseDirectoryMime flavor into the
-//    transferable with an nsILocalFile for the directory we are to
+//    transferable with an nsIFile for the directory we are to
 //    save in. That has to be done by platform-specific code (in
 //    widget), which gets the destination directory from
 //    OS-specific drag information.
@@ -218,7 +218,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     dataSize = 0;
     aTransferable->GetTransferData(kFilePromiseDirectoryMime,
                                    getter_AddRefs(dirPrimitive), &dataSize);
-    nsCOMPtr<nsILocalFile> destDirectory = do_QueryInterface(dirPrimitive);
+    nsCOMPtr<nsIFile> destDirectory = do_QueryInterface(dirPrimitive);
     if (!destDirectory)
       return NS_ERROR_FAILURE;
 
@@ -229,7 +229,7 @@ nsContentAreaDragDropDataProvider::GetFlavorData(nsITransferable *aTransferable,
     file->Append(targetFilename);
 
     rv = SaveURIToFile(sourceURLString, file);
-    // send back an nsILocalFile
+    // send back an nsIFile
     if (NS_SUCCEEDED(rv)) {
       CallQueryInterface(file, aData);
       *aDataLen = sizeof(nsIFile*);

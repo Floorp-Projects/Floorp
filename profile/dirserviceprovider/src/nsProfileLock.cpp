@@ -195,7 +195,7 @@ void nsProfileLock::FatalSignalHandler(int signo
     _exit(signo);
 }
 
-nsresult nsProfileLock::LockWithFcntl(nsILocalFile *aLockFile)
+nsresult nsProfileLock::LockWithFcntl(nsIFile *aLockFile)
 {
     nsresult rv = NS_OK;
 
@@ -305,7 +305,7 @@ static bool IsSymlinkStaleLock(struct in_addr* aAddr, const char* aFileName,
     return true;
 }
 
-nsresult nsProfileLock::LockWithSymlink(nsILocalFile *aLockFile, bool aHaveFcntlLock)
+nsresult nsProfileLock::LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock)
 {
     nsresult rv;
     nsCAutoString lockFilePath;
@@ -431,7 +431,7 @@ nsresult nsProfileLock::GetReplacedLockTime(PRInt64 *aResult) {
     return NS_OK;
 }
 
-nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
+nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
                              nsIProfileUnlocker* *aUnlocker)
 {
 #if defined (XP_MACOSX)
@@ -457,8 +457,8 @@ nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
     if (!isDir)
         return NS_ERROR_FILE_NOT_DIRECTORY;
 
-    nsCOMPtr<nsILocalFile> lockFile;
-    rv = aProfileDir->Clone((nsIFile **)((void **)getter_AddRefs(lockFile)));
+    nsCOMPtr<nsIFile> lockFile;
+    rv = aProfileDir->Clone(getter_AddRefs(lockFile));
     if (NS_FAILED(rv))
         return rv;
 
@@ -528,8 +528,8 @@ nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
     }
 #elif defined(XP_UNIX)
     // Get the old lockfile name
-    nsCOMPtr<nsILocalFile> oldLockFile;
-    rv = aProfileDir->Clone((nsIFile **)((void **)getter_AddRefs(oldLockFile)));
+    nsCOMPtr<nsIFile> oldLockFile;
+    rv = aProfileDir->Clone(getter_AddRefs(oldLockFile));
     if (NS_FAILED(rv))
         return rv;
     rv = oldLockFile->Append(OLD_LOCKFILE_NAME);

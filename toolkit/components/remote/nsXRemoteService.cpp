@@ -16,7 +16,7 @@
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIServiceManager.h"
 #include "nsIWeakReference.h"
 #include "nsIWidget.h"
@@ -318,7 +318,7 @@ nsXRemoteService::HandleCommandLine(char* aBuffer, nsIDOMWindow* aWindow,
   PRInt32 argc = TO_LITTLE_ENDIAN32(*reinterpret_cast<PRInt32*>(aBuffer));
   char *wd   = aBuffer + ((argc + 1) * sizeof(PRInt32));
 
-  nsCOMPtr<nsILocalFile> lf;
+  nsCOMPtr<nsIFile> lf;
   rv = NS_NewNativeLocalFile(nsDependentCString(wd), true,
                              getter_AddRefs(lf));
   if (NS_FAILED(rv))

@@ -36,7 +36,7 @@ nsApplicationCacheService::CreateApplicationCache(const nsACString &group,
 
 NS_IMETHODIMP
 nsApplicationCacheService::CreateCustomApplicationCache(const nsACString & group,
-                                                        nsILocalFile *profileDir,
+                                                        nsIFile *profileDir,
                                                         PRInt32 quota,
                                                         nsIApplicationCache **out)
 {

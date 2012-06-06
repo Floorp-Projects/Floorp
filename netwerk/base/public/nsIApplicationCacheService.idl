@@ -7,7 +7,7 @@
 #include "nsISupports.idl"
 
 interface nsIApplicationCache;
-interface nsILocalFile;
+interface nsIFile;
 
 /**
  * The application cache service manages the set of application cache
@@ -35,7 +35,7 @@ interface nsIApplicationCacheService : nsISupports
      *    Optional override of the default quota.
      */
     nsIApplicationCache createCustomApplicationCache(in ACString group,
-                                                     in nsILocalFile profileDir,
+                                                     in nsIFile profileDir,
                                                      in PRInt32 quota);
 
     /**

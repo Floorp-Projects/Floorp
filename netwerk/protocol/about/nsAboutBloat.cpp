@@ -19,7 +19,7 @@
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 static void GC_gcollect() {}
 
@@ -101,10 +101,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         if (NS_FAILED(rv)) return rv;
 
         FILE* out;
-        nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
-        if (lfile == nsnull)
-            return NS_ERROR_FAILURE;
-        rv = lfile->OpenANSIFileDesc("w", &out);
+        rv = file->OpenANSIFileDesc("w", &out);
         if (NS_FAILED(rv)) return rv;
 
         rv = nsTraceRefcntImpl::DumpStatistics(statType, out);

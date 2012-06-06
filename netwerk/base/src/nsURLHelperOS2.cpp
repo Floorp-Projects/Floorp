@@ -10,7 +10,7 @@
 #include <os2.h>
 #include "nsURLHelper.h"
 #include "nsEscape.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 nsresult
 net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result)
@@ -49,10 +49,10 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
 {
     nsresult rv;
     
-    nsCOMPtr<nsILocalFile> localFile(
+    nsCOMPtr<nsIFile> localFile(
             do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) {
-        NS_ERROR("Only nsILocalFile supported right now");
+        NS_ERROR("Only nsIFile supported right now");
         return rv;
     }
 

@@ -19,9 +19,9 @@ using namespace mozilla;
  *  Open
  *****************************************************************************/
 nsresult
-nsDiskCacheBlockFile::Open(nsILocalFile * blockFile,
-                           PRUint32       blockSize,
-                           PRUint32       bitMapSize)
+nsDiskCacheBlockFile::Open(nsIFile * blockFile,
+                           PRUint32  blockSize,
+                           PRUint32  bitMapSize)
 {
     if (bitMapSize % 32)
         return NS_ERROR_INVALID_ARG;

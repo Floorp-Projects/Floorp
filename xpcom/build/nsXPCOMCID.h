@@ -22,7 +22,7 @@
  *   The file abstraction provides ways to obtain and access files and 
  *   directories located on the local system. 
  *
- *   This contract supports the nsIFile interface and the nsILocalFile interface.
+ *   This contract supports the nsIFile interface.
  *   This contract may also support platform specific interfaces such as 
  *   nsILocalFileMac on platforms where additional interfaces are required.
  *
