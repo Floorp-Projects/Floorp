@@ -606,23 +606,25 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
   mFrameType = frameType;
 }
 
-void
-nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
+/* static */ void
+nsHTMLReflowState::ComputeRelativeOffsets(PRUint8 aCBDirection,
+                                          nsIFrame* aFrame,
                                           nscoord aContainingBlockWidth,
                                           nscoord aContainingBlockHeight,
-                                          nsPresContext* aPresContext)
+                                          nsMargin& aComputedOffsets)
 {
+  const nsStylePosition* position = aFrame->GetStylePosition();
+
   // Compute the 'left' and 'right' values. 'Left' moves the boxes to the right,
   // and 'right' moves the boxes to the left. The computed values are always:
   // left=-right
-  bool    leftIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetLeftUnit();
-  bool    rightIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetRightUnit();
+  bool    leftIsAuto = eStyleUnit_Auto == position->mOffset.GetLeftUnit();
+  bool    rightIsAuto = eStyleUnit_Auto == position->mOffset.GetRightUnit();
 
   // If neither 'left' not 'right' are auto, then we're over-constrained and
   // we ignore one of them
   if (!leftIsAuto && !rightIsAuto) {
-    if (mCBReflowState &&
-        NS_STYLE_DIRECTION_RTL == mCBReflowState->mStyleVisibility->mDirection) {
+    if (aCBDirection == NS_STYLE_DIRECTION_RTL) {
       leftIsAuto = true;
     } else {
       rightIsAuto = true;
@@ -632,42 +634,42 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   if (leftIsAuto) {
     if (rightIsAuto) {
       // If both are 'auto' (their initial values), the computed values are 0
-      mComputedOffsets.left = mComputedOffsets.right = 0;
+      aComputedOffsets.left = aComputedOffsets.right = 0;
     } else {
       // 'Right' isn't 'auto' so compute its value
-      mComputedOffsets.right = nsLayoutUtils::
+      aComputedOffsets.right = nsLayoutUtils::
         ComputeWidthDependentValue(aContainingBlockWidth,
-                                   mStylePosition->mOffset.GetRight());
+                                   position->mOffset.GetRight());
 
       // Computed value for 'left' is minus the value of 'right'
-      mComputedOffsets.left = -mComputedOffsets.right;
+      aComputedOffsets.left = -aComputedOffsets.right;
     }
 
   } else {
     NS_ASSERTION(rightIsAuto, "unexpected specified constraint");
     
     // 'Left' isn't 'auto' so compute its value
-    mComputedOffsets.left = nsLayoutUtils::
+    aComputedOffsets.left = nsLayoutUtils::
       ComputeWidthDependentValue(aContainingBlockWidth,
-                                 mStylePosition->mOffset.GetLeft());
+                                 position->mOffset.GetLeft());
 
     // Computed value for 'right' is minus the value of 'left'
-    mComputedOffsets.right = -mComputedOffsets.left;
+    aComputedOffsets.right = -aComputedOffsets.left;
   }
 
   // Compute the 'top' and 'bottom' values. The 'top' and 'bottom' properties
   // move relatively positioned elements up and down. They also must be each 
   // other's negative
-  bool    topIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit();
-  bool    bottomIsAuto = eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit();
+  bool    topIsAuto = eStyleUnit_Auto == position->mOffset.GetTopUnit();
+  bool    bottomIsAuto = eStyleUnit_Auto == position->mOffset.GetBottomUnit();
 
   // Check for percentage based values and a containing block height that
   // depends on the content height. Treat them like 'auto'
   if (NS_AUTOHEIGHT == aContainingBlockHeight) {
-    if (mStylePosition->OffsetHasPercent(NS_SIDE_TOP)) {
+    if (position->OffsetHasPercent(NS_SIDE_TOP)) {
       topIsAuto = true;
     }
-    if (mStylePosition->OffsetHasPercent(NS_SIDE_BOTTOM)) {
+    if (position->OffsetHasPercent(NS_SIDE_BOTTOM)) {
       bottomIsAuto = true;
     }
   }
@@ -680,38 +682,38 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   if (topIsAuto) {
     if (bottomIsAuto) {
       // If both are 'auto' (their initial values), the computed values are 0
-      mComputedOffsets.top = mComputedOffsets.bottom = 0;
+      aComputedOffsets.top = aComputedOffsets.bottom = 0;
     } else {
       // 'Bottom' isn't 'auto' so compute its value
-      mComputedOffsets.bottom = nsLayoutUtils::
+      aComputedOffsets.bottom = nsLayoutUtils::
         ComputeHeightDependentValue(aContainingBlockHeight,
-                                    mStylePosition->mOffset.GetBottom());
+                                    position->mOffset.GetBottom());
       
       // Computed value for 'top' is minus the value of 'bottom'
-      mComputedOffsets.top = -mComputedOffsets.bottom;
+      aComputedOffsets.top = -aComputedOffsets.bottom;
     }
 
   } else {
     NS_ASSERTION(bottomIsAuto, "unexpected specified constraint");
     
     // 'Top' isn't 'auto' so compute its value
-    mComputedOffsets.top = nsLayoutUtils::
+    aComputedOffsets.top = nsLayoutUtils::
       ComputeHeightDependentValue(aContainingBlockHeight,
-                                  mStylePosition->mOffset.GetTop());
+                                  position->mOffset.GetTop());
 
     // Computed value for 'bottom' is minus the value of 'top'
-    mComputedOffsets.bottom = -mComputedOffsets.top;
+    aComputedOffsets.bottom = -aComputedOffsets.top;
   }
 
   // Store the offset
-  FrameProperties props(aPresContext->PropertyTable(), frame);
+  FrameProperties props = aFrame->Properties();
   nsPoint* offsets = static_cast<nsPoint*>
     (props.Get(nsIFrame::ComputedOffsetProperty()));
   if (offsets) {
-    offsets->MoveTo(mComputedOffsets.left, mComputedOffsets.top);
+    offsets->MoveTo(aComputedOffsets.left, aComputedOffsets.top);
   } else {
     props.Set(nsIFrame::ComputedOffsetProperty(),
-              new nsPoint(mComputedOffsets.left, mComputedOffsets.top));
+              new nsPoint(aComputedOffsets.left, aComputedOffsets.top));
   }
 }
 
@@ -1794,7 +1796,12 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     // the correct containing block width and height here, which is why we need
     // to do it after all the quirks-n-such above.
     if (NS_STYLE_POSITION_RELATIVE == mStyleDisplay->mPosition) {
-      ComputeRelativeOffsets(cbrs, aContainingBlockWidth, aContainingBlockHeight, aPresContext);
+      PRUint8 direction = NS_STYLE_DIRECTION_LTR;
+      if (cbrs && NS_STYLE_DIRECTION_RTL == cbrs->mStyleVisibility->mDirection) {
+        direction = NS_STYLE_DIRECTION_RTL;
+      }
+      ComputeRelativeOffsets(direction, frame, aContainingBlockWidth,
+          aContainingBlockHeight, mComputedOffsets);
     } else {
       // Initialize offsets to 0
       mComputedOffsets.SizeTo(0, 0, 0, 0);
