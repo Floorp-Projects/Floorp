@@ -1454,6 +1454,7 @@ class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy
     {
         setGuard();
         setMovable();
+        setResultType(MIRType_Object);
     }
 
   public:
@@ -1461,6 +1462,10 @@ class MGuardObject : public MUnaryInstruction, public SingleObjectPolicy
 
     static MGuardObject *New(MDefinition *ins) {
         return new MGuardObject(ins);
+    }
+
+    MDefinition *input() const {
+        return getOperand(0);
     }
 
     TypePolicy *typePolicy() {

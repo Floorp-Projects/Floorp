@@ -1408,6 +1408,13 @@ LIRGenerator::visitGuardClass(MGuardClass *ins)
 }
 
 bool
+LIRGenerator::visitGuardObject(MGuardObject *ins)
+{
+    LGuardObject *lir = new LGuardObject(useAtStart(ins->input()));
+    return defineReuseInput(lir, ins, 0);
+}
+
+bool
 LIRGenerator::visitCallGetProperty(MCallGetProperty *ins)
 {
     LCallGetProperty *lir = new LCallGetProperty();
