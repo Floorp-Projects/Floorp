@@ -1594,47 +1594,39 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
 //                  the parent of inNode
 //
 nsresult
-nsEditor::RemoveContainer(nsINode* aNode)
+nsEditor::RemoveContainer(nsIDOMNode* aNode)
 {
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   return RemoveContainer(node);
 }
 
 nsresult
-nsEditor::RemoveContainer(nsIDOMNode *inNode)
+nsEditor::RemoveContainer(nsINode* aNode)
 {
-  NS_ENSURE_TRUE(inNode, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> parent;
-  PRInt32 offset;
-  
-  nsresult res = GetNodeLocation(inNode, address_of(parent), &offset);
-  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+
+  nsINode* parent = aNode->GetNodeParent();
+  NS_ENSURE_STATE(parent);
+
+  PRInt32 offset = parent->IndexOf(aNode);
   
   // loop through the child nodes of inNode and promote them
   // into inNode's parent.
-  bool bHasMoreChildren;
-  inNode->HasChildNodes(&bHasMoreChildren);
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-  res = inNode->GetChildNodes(getter_AddRefs(nodeList));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(nodeList, NS_ERROR_NULL_POINTER);
-  PRUint32 nodeOrigLen;
-  nodeList->GetLength(&nodeOrigLen);
+  PRUint32 nodeOrigLen = aNode->GetChildCount();
 
   // notify our internal selection state listener
-  nsAutoRemoveContainerSelNotify selNotify(mRangeUpdater, inNode, parent, offset, nodeOrigLen);
+  nsAutoRemoveContainerSelNotify selNotify(mRangeUpdater, aNode, parent, offset, nodeOrigLen);
                                    
-  nsCOMPtr<nsIDOMNode> child;
-  while (bHasMoreChildren)
-  {
-    inNode->GetLastChild(getter_AddRefs(child));
-    res = DeleteNode(child);
-    NS_ENSURE_SUCCESS(res, res);
-    res = InsertNode(child, parent, offset);
-    NS_ENSURE_SUCCESS(res, res);
-    inNode->HasChildNodes(&bHasMoreChildren);
+  while (aNode->HasChildren()) {
+    nsIContent* child = aNode->GetLastChild();
+    nsresult rv = DeleteNode(child->AsDOMNode());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = InsertNode(child->AsDOMNode(), parent->AsDOMNode(), offset);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  return DeleteNode(inNode);
+
+  return DeleteNode(aNode->AsDOMNode());
 }
 
 
