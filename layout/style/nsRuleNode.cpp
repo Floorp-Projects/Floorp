@@ -1129,7 +1129,7 @@ void*
 nsRuleNode::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
-  return aPresContext->AllocateFromShell(sz);
+  return aPresContext->PresShell()->AllocateByObjectID(nsPresArena::nsRuleNode_id, sz);
 }
 
 /* static */ PLDHashOperator
@@ -1192,7 +1192,7 @@ nsRuleNode::DestroyInternal(nsRuleNode ***aDestroyQueueTail)
 
   // Don't let the memory be freed, since it will be recycled
   // instead. Don't call the global operator delete.
-  mPresContext->FreeToShell(sizeof(nsRuleNode), this);
+  mPresContext->PresShell()->FreeByObjectID(nsPresArena::nsRuleNode_id, this);
 }
 
 nsRuleNode* nsRuleNode::CreateRootNode(nsPresContext* aPresContext)

@@ -398,6 +398,15 @@ struct nsPresArena::State {
         break;
 #include "nsFrameIdList.h"
 #undef FRAME_ID
+    case nsLineBox_id:
+      p = &data->stats->mLineBoxes;
+      break;
+    case nsRuleNode_id:
+      p = &data->stats->mRuleNodes;
+      break;
+    case nsStyleContext_id:
+      p = &data->stats->mStyleContexts;
+      break;
     default:
       return PL_DHASH_NEXT;
     }
