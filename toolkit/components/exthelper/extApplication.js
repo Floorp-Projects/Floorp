@@ -9,17 +9,17 @@ Components.utils.import("resource://gre/modules/AddonManager.jsm");
 // Console constructor
 function Console() {
   this._console = Components.classes["@mozilla.org/consoleservice;1"]
-    .getService(Ci.nsIConsoleService);
+                            .getService(Ci.nsIConsoleService);
 }
 
 //=================================================
 // Console implementation
 Console.prototype = {
-  log : function cs_log(aMsg) {
+  log: function cs_log(aMsg) {
     this._console.logStringMessage(aMsg);
   },
 
-  open : function cs_open() {
+  open: function cs_open() {
     var wMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                               .getService(Ci.nsIWindowMediator);
     var console = wMediator.getMostRecentWindow("global:console");
@@ -34,7 +34,7 @@ Console.prototype = {
     }
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extIConsole])
+  QueryInterface: XPCOMUtils.generateQI([Ci.extIConsole])
 };
 
 
@@ -48,7 +48,7 @@ function EventItem(aType, aData) {
 //=================================================
 // EventItem implementation
 EventItem.prototype = {
-  _cancel : false,
+  _cancel: false,
 
   get type() {
     return this._type;
@@ -58,11 +58,11 @@ EventItem.prototype = {
     return this._data;
   },
 
-  preventDefault : function ei_pd() {
+  preventDefault: function ei_pd() {
     this._cancel = true;
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extIEventItem])
+  QueryInterface: XPCOMUtils.generateQI([Ci.extIEventItem])
 };
 
 
@@ -76,7 +76,7 @@ function Events(notifier) {
 //=================================================
 // Events implementation
 Events.prototype = {
-  addListener : function evts_al(aEvent, aListener) {
+  addListener: function evts_al(aEvent, aListener) {
     function hasFilter(element) {
       return element.event == aEvent && element.listener == aListener;
     }
@@ -94,7 +94,7 @@ Events.prototype = {
     }
   },
 
-  removeListener : function evts_rl(aEvent, aListener) {
+  removeListener: function evts_rl(aEvent, aListener) {
     function hasFilter(element) {
       return (element.event != aEvent) || (element.listener != aListener);
     }
@@ -102,7 +102,7 @@ Events.prototype = {
     this._listeners = this._listeners.filter(hasFilter);
   },
 
-  dispatch : function evts_dispatch(aEvent, aEventItem) {
+  dispatch: function evts_dispatch(aEvent, aEventItem) {
     var eventItem = new EventItem(aEvent, aEventItem);
 
     this._listeners.forEach(function(key){
@@ -116,7 +116,7 @@ Events.prototype = {
     return !eventItem._cancel;
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
+  QueryInterface: XPCOMUtils.generateQI([Ci.extIEvents])
 };
 
 //=================================================
@@ -139,7 +139,7 @@ PreferenceObserver.prototype = {
    * @param aListener the function to call back when the event fires.  This
    *                  function will receive an EventData argument.
    */
-  addListener: function(aPrefs, aDomain, aEvent, aListener) {
+  addListener: function po_al(aPrefs, aDomain, aEvent, aListener) {
     var root = aPrefs.root;
     if (!this._observersDict[root]) {
       this._observersDict[root] = {};
@@ -149,7 +149,7 @@ PreferenceObserver.prototype = {
     if (!observer) {
       observer = {
         events: new Events(),
-        observe: function(aSubject, aTopic, aData) {
+        observe: function po_observer_obs(aSubject, aTopic, aData) {
           this.events.dispatch("change", aData);
         },
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -170,7 +170,7 @@ PreferenceObserver.prototype = {
    *
    * This function's parameters are identical to addListener's.
    */
-  removeListener: function(aPrefs, aDomain, aEvent, aListener) {
+  removeListener: function po_rl(aPrefs, aDomain, aEvent, aListener) {
     var root = aPrefs.root;
     if (!this._observersDict[root] ||
         !this._observersDict[root][aDomain]) {
@@ -209,13 +209,13 @@ function PreferenceBranch(aBranch) {
 
   let prefs = this._prefs;
   this._events = {
-    addListener: function(aEvent, aListener) {
+    addListener: function pb_al(aEvent, aListener) {
       gPreferenceObserver.addListener(prefs, "", aEvent, aListener);
     },
-    removeListener: function(aEvent, aListener) {
+    removeListener: function pb_rl(aEvent, aListener) {
       gPreferenceObserver.removeListener(prefs, "", aEvent, aListener);
     },
-    QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
+    QueryInterface: XPCOMUtils.generateQI([Ci.extIEvents])
   };
 }
 
@@ -240,7 +240,7 @@ PreferenceBranch.prototype = {
   // type: Boolean, Number, String (getPrefType)
   // locked: true, false (prefIsLocked)
   // modified: true, false (prefHasUserValue)
-  find : function prefs_find(aOptions) {
+  find: function prefs_find(aOptions) {
     var retVal = [];
     var items = this._prefs.getChildList("");
 
@@ -251,15 +251,15 @@ PreferenceBranch.prototype = {
     return retVal;
   },
 
-  has : function prefs_has(aName) {
+  has: function prefs_has(aName) {
     return (this._prefs.getPrefType(aName) != Ci.nsIPrefBranch.PREF_INVALID);
   },
 
-  get : function prefs_get(aName) {
+  get: function prefs_get(aName) {
     return this.has(aName) ? new Preference(aName, this) : null;
   },
 
-  getValue : function prefs_gv(aName, aValue) {
+  getValue: function prefs_gv(aName, aValue) {
     var type = this._prefs.getPrefType(aName);
 
     switch (type) {
@@ -277,7 +277,7 @@ PreferenceBranch.prototype = {
     return aValue;
   },
 
-  setValue : function prefs_sv(aName, aValue) {
+  setValue: function prefs_sv(aName, aValue) {
     var type = aValue != null ? aValue.constructor.name : "";
 
     switch (type) {
@@ -298,11 +298,11 @@ PreferenceBranch.prototype = {
     }
   },
 
-  reset : function prefs_reset() {
+  reset: function prefs_reset() {
     this._prefs.resetBranch("");
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extIPreferenceBranch])
+  QueryInterface: XPCOMUtils.generateQI([Ci.extIPreferenceBranch])
 };
 
 
@@ -314,13 +314,13 @@ function Preference(aName, aBranch) {
 
   var self = this;
   this._events = {
-    addListener: function(aEvent, aListener) {
+    addListener: function pref_al(aEvent, aListener) {
       gPreferenceObserver.addListener(self._branch._prefs, self._name, aEvent, aListener);
     },
-    removeListener: function(aEvent, aListener) {
+    removeListener: function pref_rl(aEvent, aListener) {
       gPreferenceObserver.removeListener(self._branch._prefs, self._name, aEvent, aListener);
     },
-    QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
+    QueryInterface: XPCOMUtils.generateQI([Ci.extIEvents])
   };
 }
 
@@ -378,11 +378,11 @@ Preference.prototype = {
     return this._events;
   },
 
-  reset : function pref_reset() {
+  reset: function pref_reset() {
     this.branch._prefs.clearUserPref(this.name);
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extIPreference])
+  QueryInterface: XPCOMUtils.generateQI([Ci.extIPreference])
 };
 
 
@@ -400,16 +400,16 @@ SessionStorage.prototype = {
     return this._events;
   },
 
-  has : function ss_has(aName) {
+  has: function ss_has(aName) {
     return this._storage.hasOwnProperty(aName);
   },
 
-  set : function ss_set(aName, aValue) {
+  set: function ss_set(aName, aValue) {
     this._storage[aName] = aValue;
     this._events.dispatch("change", aName);
   },
 
-  get : function ss_get(aName, aDefaultValue) {
+  get: function ss_get(aName, aDefaultValue) {
     return this.has(aName) ? this._storage[aName] : aDefaultValue;
   },
 
@@ -432,27 +432,27 @@ function ExtensionObserver() {
 //=================================================
 // ExtensionObserver implementation (internal class)
 ExtensionObserver.prototype = {
-  onDisabling: function(addon, needsRestart) {
+  onDisabling: function eo_onDisabling(addon, needsRestart) {
     this._dispatchEvent(addon.id, "disable");
   },
 
-  onEnabling: function(addon, needsRestart) {
+  onEnabling: function eo_onEnabling(addon, needsRestart) {
     this._dispatchEvent(addon.id, "enable");
   },
 
-  onUninstalling: function(addon, needsRestart) {
+  onUninstalling: function eo_onUninstalling(addon, needsRestart) {
     this._dispatchEvent(addon.id, "uninstall");
   },
 
-  onOperationCancelled: function(addon) {
+  onOperationCancelled: function eo_onOperationCancelled(addon) {
     this._dispatchEvent(addon.id, "cancel");
   },
 
-  onInstallEnded: function(install, addon) {
+  onInstallEnded: function eo_onInstallEnded(install, addon) {
     this._dispatchEvent(addon.id, "upgrade");
   },
 
-  addListener: function(aId, aEvent, aListener) {
+  addListener: function eo_al(aId, aEvent, aListener) {
     var events = this._eventsDict[aId];
     if (!events) {
       events = new Events();
@@ -461,7 +461,7 @@ ExtensionObserver.prototype = {
     events.addListener(aEvent, aListener);
   },
 
-  removeListener: function(aId, aEvent, aListener) {
+  removeListener: function eo_rl(aId, aEvent, aListener) {
     var events = this._eventsDict[aId];
     if (!events) {
       return;
@@ -472,7 +472,7 @@ ExtensionObserver.prototype = {
     }
   },
 
-  _dispatchEvent: function(aId, aEvent) {
+  _dispatchEvent: function eo_dispatchEvent(aId, aEvent) {
     var events = this._eventsDict[aId];
     if (events) {
       events.dispatch(aEvent, aId);
@@ -490,13 +490,13 @@ function Extension(aItem) {
 
   let id = this.id;
   this._events = {
-    addListener: function(aEvent, aListener) {
+    addListener: function ext_events_al(aEvent, aListener) {
       gExtensionObserver.addListener(id, aEvent, aListener);
     },
-    removeListener: function(aEvent, aListener) {
+    removeListener: function ext_events_rl(aEvent, aListener) {
       gExtensionObserver.addListener(id, aEvent, aListener);
     },
-    QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
+    QueryInterface: XPCOMUtils.generateQI([Ci.extIEvents])
   };
 
   var installPref = "install-event-fired";
@@ -541,7 +541,7 @@ Extension.prototype = {
     return this._events;
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extIExtension])
+  QueryInterface: XPCOMUtils.generateQI([Ci.extIExtension])
 };
 
 
@@ -550,7 +550,7 @@ Extension.prototype = {
 function Extensions(addons) {
   this._cache = {};
 
-  addons.forEach(function(addon) {
+  addons.forEach(function (addon) {
     this._cache[addon.id] = new Extension(addon);
   }, this);
 }
@@ -568,19 +568,19 @@ Extensions.prototype = {
   // version: "1.0.1"
   // minVersion: "1.0"
   // maxVersion: "2.0"
-  find : function exts_find(aOptions) {
+  find: function exts_find(aOptions) {
     return [e for each (e in this._cache)];
   },
 
-  has : function exts_has(aId) {
+  has: function exts_has(aId) {
     return aId in this._cache;
   },
 
-  get : function exts_get(aId) {
+  get: function exts_get(aId) {
     return this.has(aId) ? this._cache[aId] : null;
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extIExtensions])
+  QueryInterface: XPCOMUtils.generateQI([Ci.extIExtensions])
 };
 
 //=================================================
@@ -647,24 +647,24 @@ extApplication.prototype = {
 
   get console() {
     let console = new Console();
-    this.__defineGetter__("console", function() console);
+    this.__defineGetter__("console", function () console);
     return this.console;
   },
 
   get storage() {
     let storage = new SessionStorage();
-    this.__defineGetter__("storage", function() storage);
+    this.__defineGetter__("storage", function () storage);
     return this.storage;
   },
 
   get prefs() {
     let prefs = new PreferenceBranch("");
-    this.__defineGetter__("prefs", function() prefs);
+    this.__defineGetter__("prefs", function () prefs);
     return this.prefs;
   },
 
   getExtensions: function(callback) {
-    AddonManager.getAddonsByTypes(["extension"], function(addons) {
+    AddonManager.getAddonsByTypes(["extension"], function (addons) {
       callback.callback(new Extensions(addons));
     });
   },
@@ -687,7 +687,7 @@ extApplication.prototype = {
     }
 
     let events = new Events(registerCheck);
-    this.__defineGetter__("events", function() events);
+    this.__defineGetter__("events", function () events);
     return this.events;
   },
 
@@ -715,5 +715,5 @@ extApplication.prototype = {
                                Components.interfaces.nsIAppStartup.eRestart);
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extIApplication, Ci.nsISupportsWeakReference])
+  QueryInterface: XPCOMUtils.generateQI([Ci.extIApplication, Ci.nsISupportsWeakReference])
 };
