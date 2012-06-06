@@ -35,11 +35,14 @@ typedef bool
 (* ResolveProperty)(JSContext* cx, JSObject* wrapper, jsid id, bool set,
                     JSPropertyDescriptor* desc);
 typedef bool
-(* EnumerateProperties)(JS::AutoIdVector& props);
+(* EnumerateProperties)(JSContext* cx, JSObject* wrapper,
+                        JS::AutoIdVector& props);
 
 struct NativePropertyHooks
 {
+  ResolveProperty mResolveOwnProperty;
   ResolveProperty mResolveProperty;
+  EnumerateProperties mEnumerateOwnProperties;
   EnumerateProperties mEnumerateProperties;
 
   const NativePropertyHooks *mProtoHooks;
