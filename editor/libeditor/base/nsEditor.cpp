@@ -1644,24 +1644,41 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
                                 const nsAString *aValue)
 {
   NS_ENSURE_TRUE(inNode && outNode, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> parent;
-  PRInt32 offset;
-  nsresult res = GetNodeLocation(inNode, address_of(parent), &offset);
-  NS_ENSURE_SUCCESS(res, res);
+
+  nsCOMPtr<nsIContent> node = do_QueryInterface(inNode);
+  NS_ENSURE_STATE(node);
+
+  nsCOMPtr<dom::Element> element;
+  nsresult rv = InsertContainerAbove(node, getter_AddRefs(element), aNodeType,
+                                     aAttribute, aValue);
+  *outNode = element ? element->AsDOMNode() : nsnull;
+  return rv;
+}
+
+nsresult
+nsEditor::InsertContainerAbove(nsIContent* aNode,
+                               dom::Element** aOutNode,
+                               const nsAString& aNodeType,
+                               const nsAString* aAttribute,
+                               const nsAString* aValue)
+{
+  MOZ_ASSERT(aNode);
+
+  nsCOMPtr<nsIContent> parent = aNode->GetParent();
+  NS_ENSURE_STATE(parent);
+  PRInt32 offset = parent->IndexOf(aNode);
 
   // create new container
   nsCOMPtr<dom::Element> newContent;
 
   //new call to use instead to get proper HTML element, bug# 39919
-  res = CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(newContent);
+  nsresult res = CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
   NS_ENSURE_SUCCESS(res, res);
-  *outNode = do_QueryInterface(elem);
-  
+
   // set attribute if needed
-  if (aAttribute && aValue && !aAttribute->IsEmpty())
-  {
-    res = elem->SetAttribute(*aAttribute, *aValue);
+  if (aAttribute && aValue && !aAttribute->IsEmpty()) {
+    nsIDOMNode* elem = newContent->AsDOMNode();
+    res = static_cast<nsIDOMElement*>(elem)->SetAttribute(*aAttribute, *aValue);
     NS_ENSURE_SUCCESS(res, res);
   }
   
@@ -1669,17 +1686,19 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
   nsAutoInsertContainerSelNotify selNotify(mRangeUpdater);
   
   // put inNode in new parent, outNode
-  res = DeleteNode(inNode);
+  res = DeleteNode(aNode->AsDOMNode());
   NS_ENSURE_SUCCESS(res, res);
 
   {
     nsAutoTxnsConserveSelection conserveSelection(this);
-    res = InsertNode(inNode, *outNode, 0);
+    res = InsertNode(aNode->AsDOMNode(), newContent->AsDOMNode(), 0);
     NS_ENSURE_SUCCESS(res, res);
   }
 
   // put new parent in doc
-  return InsertNode(*outNode, parent, offset);
+  res = InsertNode(newContent->AsDOMNode(), parent->AsDOMNode(), offset);
+  newContent.forget(aOutNode);
+  return res;  
 }
 
 ///////////////////////////////////////////////////////////////////////////

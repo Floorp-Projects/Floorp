@@ -187,6 +187,11 @@ public:
 
   nsresult RemoveContainer(nsINode* aNode);
   nsresult RemoveContainer(nsIDOMNode *inNode);
+  nsresult InsertContainerAbove(nsIContent* aNode,
+                                mozilla::dom::Element** aOutNode,
+                                const nsAString& aNodeType,
+                                const nsAString* aAttribute = nsnull,
+                                const nsAString* aValue = nsnull);
   nsresult InsertContainerAbove(nsIDOMNode *inNode, 
                                 nsCOMPtr<nsIDOMNode> *outNode, 
                                 const nsAString &aNodeType,
