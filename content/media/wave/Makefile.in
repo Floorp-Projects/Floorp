@@ -26,8 +26,3 @@ CPPSRCS		= \
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
-
-INCLUDES	+= \
-		-I$(srcdir)/../../base/src \
-		-I$(srcdir)/../../html/content/src \
-		$(NULL)
