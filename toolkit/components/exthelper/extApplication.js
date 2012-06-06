@@ -124,6 +124,79 @@ Events.prototype = {
   QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
 };
 
+//=================================================
+// PreferenceObserver (internal class)
+//
+// PreferenceObserver is a global singleton which watches the browser's
+// preferences and sends you events when things change.
+
+function PreferenceObserver() {
+  this._observersDict = {};
+}
+
+PreferenceObserver.prototype = {
+  /**
+   * Add a preference observer.
+   *
+   * @param aPrefs the nsIPrefBranch onto which we'll install our listener.
+   * @param aDomain the domain our listener will watch (a string).
+   * @param aEvent the event to listen to (you probably want "change").
+   * @param aListener the function to call back when the event fires.  This
+   *                  function will receive an EventData argument.
+   */
+  addListener: function(aPrefs, aDomain, aEvent, aListener) {
+    var root = aPrefs.root;
+    if (!this._observersDict[root]) {
+      this._observersDict[root] = {};
+    }
+    var observer = this._observersDict[root][aDomain];
+
+    if (!observer) {
+      observer = {
+        events: new Events(),
+        observe: function(aSubject, aTopic, aData) {
+          this.events.dispatch("change", aData);
+        },
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                               Ci.nsISupportsWeakReference])
+      };
+      observer.prefBranch = aPrefs;
+      observer.prefBranch.addObserver(aDomain, observer, /* ownsWeak = */ true);
+
+      // Notice that the prefBranch keeps a weak reference to the observer;
+      // it's this._observersDict which keeps the observer alive.
+      this._observersDict[root][aDomain] = observer;
+    }
+    observer.events.addListener(aEvent, aListener);
+  },
+
+  /**
+   * Remove a preference observer.
+   *
+   * This function's parameters are identical to addListener's.
+   */
+  removeListener: function(aPrefs, aDomain, aEvent, aListener) {
+    var root = aPrefs.root;
+    if (!this._observersDict[root] ||
+        !this._observersDict[root][aDomain]) {
+      return;
+    }
+    var observer = this._observersDict[root][aDomain];
+    observer.events.removeListener(aEvent, aListener);
+
+    if (observer.events._listeners.length == 0) {
+      // nsIPrefBranch objects are not singletons -- we can have two
+      // nsIPrefBranch'es for the same branch.  There's no guarantee that
+      // aPrefs is the same object as observer.prefBranch, so we have to call
+      // removeObserver on observer.prefBranch.
+      observer.prefBranch.removeObserver(aDomain, observer);
+      delete this._observersDict[root][aDomain];
+      if (Object.keys(this._observersDict[root]).length == 0) {
+        delete this._observersDict[root];
+      }
+    }
+  }
+};
 
 //=================================================
 // PreferenceBranch constructor
@@ -133,38 +206,27 @@ function PreferenceBranch(aBranch) {
 
   this._root = aBranch;
   this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Ci.nsIPrefService);
+                          .getService(Ci.nsIPrefService)
+                          .QueryInterface(Ci.nsIPrefBranch);
 
   if (aBranch)
     this._prefs = this._prefs.getBranch(aBranch);
 
-  this._prefs.QueryInterface(Ci.nsIPrefBranch);
-
-  // we want to listen to "all" changes for this branch, so pass in a blank domain
-  this._prefs.addObserver("", this, true);
-  this._events = new Events();
-
-  var self = this;
-  gShutdown.push(function() { self._shutdown(); });
+  let prefs = this._prefs;
+  this._events = {
+    addListener: function(aEvent, aListener) {
+      gPreferenceObserver.addListener(prefs, "", aEvent, aListener);
+    },
+    removeListener: function(aEvent, aListener) {
+      gPreferenceObserver.removeListener(prefs, "", aEvent, aListener);
+    },
+    QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
+  };
 }
 
 //=================================================
 // PreferenceBranch implementation
 PreferenceBranch.prototype = {
-  // cleanup observer so we don't leak
-  _shutdown: function prefs_shutdown() {
-    this._prefs.removeObserver(this._root, this);
-
-    this._prefs = null;
-    this._events = null;
-  },
-
-  // for nsIObserver
-  observe: function prefs_observe(aSubject, aTopic, aData) {
-    if (aTopic == "nsPref:changed")
-      this._events.dispatch("change", aData);
-  },
-
   get root() {
     return this._root;
   },
@@ -245,7 +307,7 @@ PreferenceBranch.prototype = {
     this._prefs.resetBranch("");
   },
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.extIPreferenceBranch, Ci.nsISupportsWeakReference])
+  QueryInterface : XPCOMUtils.generateQI([Ci.extIPreferenceBranch])
 };
 
 
@@ -254,14 +316,17 @@ PreferenceBranch.prototype = {
 function Preference(aName, aBranch) {
   this._name = aName;
   this._branch = aBranch;
-  this._events = new Events();
 
   var self = this;
-
-  this.branch.events.addListener("change", function(aEvent){
-    if (aEvent.data == self.name)
-      self.events.dispatch(aEvent.type, aEvent.data);
-  });
+  this._events = {
+    addListener: function(aEvent, aListener) {
+      gPreferenceObserver.addListener(self._branch._prefs, self._name, aEvent, aListener);
+    },
+    removeListener: function(aEvent, aListener) {
+      gPreferenceObserver.removeListener(self._branch._prefs, self._name, aEvent, aListener);
+    },
+    QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
+  };
 }
 
 //=================================================
@@ -500,6 +565,11 @@ Extensions.prototype = {
 };
 
 //=================================================
+// Application globals
+
+gPreferenceObserver = new PreferenceObserver();
+
+//=================================================
 // extApplication constructor
 function extApplication() {
 }
@@ -557,6 +627,8 @@ extApplication.prototype = {
         gShutdown[i]();
       }
       gShutdown.splice(0, gShutdown.length);
+
+      gPreferenceObserver = null;
     }
   },
 
