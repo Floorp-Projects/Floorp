@@ -117,7 +117,7 @@ DOMJSClass Class = {
     JSCLASS_NO_INTERNAL_MEMBERS
   },
   { %s },
-  -1, %s, DOM_OBJECT_SLOT,
+  -1, %s,
   %s
 };
 """ % (self.descriptor.interface.identifier.name,
