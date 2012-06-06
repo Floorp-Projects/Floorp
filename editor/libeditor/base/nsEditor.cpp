@@ -1540,7 +1540,7 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
   NS_ENSURE_SUCCESS(res, res);
 
   // create new container
-  nsCOMPtr<nsIContent> newContent;
+  nsCOMPtr<dom::Element> newContent;
 
   //new call to use instead to get proper HTML element, bug# 39919
   res = CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
@@ -1658,7 +1658,7 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
   NS_ENSURE_SUCCESS(res, res);
 
   // create new container
-  nsCOMPtr<nsIContent> newContent;
+  nsCOMPtr<dom::Element> newContent;
 
   //new call to use instead to get proper HTML element, bug# 39919
   res = CreateHTMLContent(aNodeType, getter_AddRefs(newContent));
@@ -5034,7 +5034,7 @@ nsresult nsEditor::ClearSelection()
 }
 
 nsresult
-nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
+nsEditor::CreateHTMLContent(const nsAString& aTag, dom::Element** aContent)
 {
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
@@ -5047,7 +5047,8 @@ nsEditor::CreateHTMLContent(const nsAString& aTag, nsIContent** aContent)
     return NS_ERROR_FAILURE;
   }
 
-  return doc->CreateElem(aTag, nsnull, kNameSpaceID_XHTML, aContent);
+  return doc->CreateElem(aTag, nsnull, kNameSpaceID_XHTML,
+                         reinterpret_cast<nsIContent**>(aContent));
 }
 
 nsresult
