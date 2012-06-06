@@ -19,7 +19,7 @@ NullHttpTransaction::NullHttpTransaction(nsHttpConnectionInfo *ci,
                                          nsIEventTarget *target,
                                          PRUint8 caps)
   : mStatus(NS_OK)
-  , mCaps(caps)
+  , mCaps(caps | NS_HTTP_ALLOW_KEEPALIVE)
   , mCallbacks(callbacks)
   , mEventTarget(target)
   , mConnectionInfo(ci)
