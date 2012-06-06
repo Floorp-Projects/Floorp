@@ -123,11 +123,11 @@ var shell = {
     addPermissions(domains.split(","));
 
     // Load webapi.js as a frame script
-    let frameScriptUrl = 'chrome://browser/content/webapi.js';
+    let webapiUrl = 'chrome://browser/content/webapi.js';
     try {
-      messageManager.loadFrameScript(frameScriptUrl, true);
+      messageManager.loadFrameScript(webapiUrl, true);
     } catch (e) {
-      dump('Error loading ' + frameScriptUrl + ' as a frame script: ' + e + '\n');
+      dump('Error loading ' + webapiUrl + ' as a frame script: ' + e + '\n');
     }
 
     CustomEventManager.init();
@@ -406,16 +406,19 @@ var CustomEventManager = {
 
   handleEvent: function custevt_handleEvent(evt) {
     let detail = evt.detail;
-    dump("XXX FIXME : Got a mozContentEvent: " + detail.type);
+    dump('XXX FIXME : Got a mozContentEvent: ' + detail.type);
 
     switch(detail.type) {
-      case "desktop-notification-click":
-      case "desktop-notification-close":
+      case 'desktop-notification-click':
+      case 'desktop-notification-close':
         AlertsHelper.handleEvent(detail);
         break;
-      case "webapps-install-granted":
-      case "webapps-install-denied":
+      case 'webapps-install-granted':
+      case 'webapps-install-denied':
         WebappsHelper.handleEvent(detail);
+        break;
+      case 'select-choicechange':
+        FormsHelper.handleEvent(detail);
         break;
     }
   }
