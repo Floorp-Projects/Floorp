@@ -17,8 +17,10 @@ FAIL_ON_WARNINGS = 1
 
 
 EXPORTS		= \
+		nsGenericHTMLElement.h \
 		nsClientRect.h \
 		nsHTMLDNSPrefetch.h \
+		nsTimeRanges.h \
 		$(NULL)
 
 CPPSRCS		= \

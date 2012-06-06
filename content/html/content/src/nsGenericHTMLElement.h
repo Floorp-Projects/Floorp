@@ -10,11 +10,8 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
-#include "nsFrameLoader.h"
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsDOMSettableTokenList.h"
-#include "nsIDOMHTMLPropertiesCollection.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -36,6 +33,8 @@ class nsHTMLFormElement;
 class nsIDOMDOMStringMap;
 class nsIDOMHTMLMenuElement;
 class nsIDOMHTMLCollection;
+class nsDOMSettableTokenList;
+class nsIDOMHTMLPropertiesCollection;
 
 typedef nsMappedAttributeElement nsGenericHTMLElementBase;
 

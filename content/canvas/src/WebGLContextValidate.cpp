@@ -5,8 +5,9 @@
 
 #include "WebGLContext.h"
 
-#include "mozilla/Preferences.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 
 #include "jsfriendapi.h"
 
