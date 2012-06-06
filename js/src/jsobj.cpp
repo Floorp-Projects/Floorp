@@ -4643,9 +4643,9 @@ DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &
 /*
  * Call obj's resolve hook.
  *
- * cx, start, id, and flags are the parameters initially passed to the ongoing
- * lookup; objp and propp are its out parameters. obj is an object along
- * start's prototype chain.
+ * cx, id, and flags are the parameters initially passed to the ongoing lookup;
+ * objp and propp are its out parameters. obj is an object along the prototype
+ * chain from where the lookup started.
  *
  * There are four possible outcomes:
  *
@@ -4661,7 +4661,7 @@ DefineNativeProperty(JSContext *cx, HandleObject obj, HandleId id, const Value &
  *     and return true.
  */
 static JSBool
-CallResolveOp(JSContext *cx, JSObject *start, HandleObject obj, HandleId id, unsigned flags,
+CallResolveOp(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
               JSObject **objp, JSProperty **propp, bool *recursedp)
 {
     Class *clasp = obj->getClass();
@@ -4690,8 +4690,7 @@ CallResolveOp(JSContext *cx, JSObject *start, HandleObject obj, HandleId id, uns
         if (flags == RESOLVE_INFER)
             flags = js_InferFlags(cx, 0);
 
-        RootedObject obj2(cx);
-        obj2 = (clasp->flags & JSCLASS_NEW_RESOLVE_GETS_START) ? start : NULL;
+        RootedObject obj2(cx, NULL);
         if (!newresolve(cx, obj, id, flags, obj2.address()))
             return false;
 
@@ -4742,7 +4741,7 @@ LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsi
         /* Try obj's class resolve hook if id was not found in obj's scope. */
         if (current->getClass()->resolve != JS_ResolveStub) {
             bool recursed;
-            if (!CallResolveOp(cx, obj, current, id, flags, objp, propp, &recursed))
+            if (!CallResolveOp(cx, current, id, flags, objp, propp, &recursed))
                 return false;
             if (recursed)
                 break;
