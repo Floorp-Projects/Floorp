@@ -4206,7 +4206,7 @@ nsCanvasRenderingContext2DAzure::PutImageData_explicit(PRInt32 x, PRInt32 y, PRU
           return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
       dirtyX = checkedDirtyX.value();
-      dirtyWidth = -(int32)dirtyWidth;
+      dirtyWidth = -dirtyWidth;
     }
 
     if (dirtyHeight < 0) {
@@ -4218,7 +4218,7 @@ nsCanvasRenderingContext2DAzure::PutImageData_explicit(PRInt32 x, PRInt32 y, PRU
           return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
       dirtyY = checkedDirtyY.value();
-      dirtyHeight = -(int32)dirtyHeight;
+      dirtyHeight = -dirtyHeight;
     }
 
     // bound the dirty rect within the imageData rectangle

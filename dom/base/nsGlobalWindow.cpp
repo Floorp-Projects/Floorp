@@ -5936,8 +5936,8 @@ struct StructuredCloneInfo {
 static JSObject*
 PostMessageReadStructuredClone(JSContext* cx,
                                JSStructuredCloneReader* reader,
-                               uint32 tag,
-                               uint32 data,
+                               uint32_t tag,
+                               uint32_t data,
                                void* closure)
 {
   NS_ASSERTION(closure, "Must have closure!");
