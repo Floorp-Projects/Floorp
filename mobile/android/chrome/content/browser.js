@@ -5161,8 +5161,8 @@ var WebappsUI = {
         break;
       case "webapps-launch":
         DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
-	   if (!aManifest)
-	     return;
+          if (!aManifest)
+            return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
           this.openURL(manifest.fullLaunchPath(), data.origin);
         }).bind(this));
@@ -5170,8 +5170,8 @@ var WebappsUI = {
       case "webapps-sync-install":
         // Wait until we know the app install worked, then make a homescreen shortcut
         DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
-	   if (!aManifest)
-	     return;
+          if (!aManifest)
+            return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
 
           // Add a homescreen shortcut
