@@ -277,7 +277,6 @@ public:
   virtual bool TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag);
   
   /** returns true if aNode is a container */
-  virtual bool IsContainer(nsINode* aNode);
   virtual bool IsContainer(nsIDOMNode *aNode);
 
   /** make the given selection span the entire document */
