@@ -22,8 +22,8 @@ CPPSRCS = \
   HTMLImageMapAccessible.cpp \
   HTMLLinkAccessible.cpp \
   HTMLListAccessible.cpp \
+  HTMLSelectAccessible.cpp \
   nsHTMLCanvasAccessible.cpp \
-  nsHTMLSelectAccessible.cpp \
   nsHTMLTableAccessible.cpp \
   $(NULL)
 
