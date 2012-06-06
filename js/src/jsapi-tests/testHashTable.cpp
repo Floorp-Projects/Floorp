@@ -193,11 +193,13 @@ BEGIN_TEST(testHashRekeyManual)
         CHECK(AddLowKeys(&am, &bm, i));
         CHECK(MapsAreEqual(am, bm));
 
-        for (IntMap::Enum e(am); !e.empty(); e.popFront()) {
+        IntMap::Enum e(am);
+        for (; !e.empty(); e.popFront()) {
             uint32_t tmp = LowToHigh::rekey(e.front().key);
             if (tmp != e.front().key)
                 e.rekeyFront(tmp);
         }
+        CHECK(e.endEnumeration());
         CHECK(SlowRekey<LowToHigh>(&bm));
 
         CHECK(MapsAreEqual(am, bm));
@@ -215,11 +217,13 @@ BEGIN_TEST(testHashRekeyManual)
         CHECK(AddLowKeys(&as, &bs, i));
         CHECK(SetsAreEqual(as, bs));
 
-        for (IntSet::Enum e(as); !e.empty(); e.popFront()) {
+        IntSet::Enum e(as);
+        for (; !e.empty(); e.popFront()) {
             uint32_t tmp = LowToHigh::rekey(e.front());
             if (tmp != e.front())
                 e.rekeyFront(tmp);
         }
+        CHECK(e.endEnumeration());
         CHECK(SlowRekey<LowToHigh>(&bs));
 
         CHECK(SetsAreEqual(as, bs));
@@ -243,7 +247,8 @@ BEGIN_TEST(testHashRekeyManualRemoval)
         CHECK(AddLowKeys(&am, &bm, i));
         CHECK(MapsAreEqual(am, bm));
 
-        for (IntMap::Enum e(am); !e.empty(); e.popFront()) {
+        IntMap::Enum e(am);
+        for (; !e.empty(); e.popFront()) {
             if (LowToHighWithRemoval::shouldBeRemoved(e.front().key)) {
                 e.removeFront();
             } else {
@@ -252,6 +257,7 @@ BEGIN_TEST(testHashRekeyManualRemoval)
                     e.rekeyFront(tmp);
             }
         }
+        CHECK(e.endEnumeration());
         CHECK(SlowRekey<LowToHighWithRemoval>(&bm));
 
         CHECK(MapsAreEqual(am, bm));
@@ -269,7 +275,8 @@ BEGIN_TEST(testHashRekeyManualRemoval)
         CHECK(AddLowKeys(&as, &bs, i));
         CHECK(SetsAreEqual(as, bs));
 
-        for (IntSet::Enum e(as); !e.empty(); e.popFront()) {
+        IntSet::Enum e(as);
+        for (; !e.empty(); e.popFront()) {
             if (LowToHighWithRemoval::shouldBeRemoved(e.front())) {
                 e.removeFront();
             } else {
@@ -278,6 +285,7 @@ BEGIN_TEST(testHashRekeyManualRemoval)
                     e.rekeyFront(tmp);
             }
         }
+        CHECK(e.endEnumeration());
         CHECK(SlowRekey<LowToHighWithRemoval>(&bs));
 
         CHECK(SetsAreEqual(as, bs));
