@@ -153,6 +153,7 @@ _BROWSER_FILES = \
                  browser_bug743421.js \
                  browser_bug749738.js \
                  browser_canonizeURL.js \
+                 browser_customize.js \
                  browser_findbarClose.js \
                  browser_homeDrop.js \
                  browser_keywordBookmarklets.js \
@@ -260,7 +261,6 @@ _BROWSER_FILES += \
 else
 _BROWSER_FILES += \
 		browser_bug565667.js \
-		browser_customize.js \
 		$(NULL)
 
 # TODO: Activate after carbon test plugin lands, bug 628651
