@@ -22,7 +22,6 @@
 
 .list-item {
   padding: 2px;
-  font: -moz-list;
 }
 
 .list-item.selected {
@@ -65,7 +64,6 @@
 
 .details {
   -moz-margin-start: 10px;
-  font: -moz-list;
 }
 
 /**
@@ -75,7 +73,6 @@
 .scope > .title {
   text-shadow: 0 1px #222;
   color: #fff;
-  font: -moz-list;
 }
 
 .scope > .title > .arrow {
