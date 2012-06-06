@@ -663,10 +663,10 @@ nsHTMLEditRules::GetListState(bool *aMixed, bool *aOL, bool *aUL, bool *aDL)
     } else if (curElement->IsHTML(nsGkAtoms::ol)) {
       *aOL = true;
     } else if (curElement->IsHTML(nsGkAtoms::li)) {
-      if (nsINode* parent = curElement->GetElementParent()) {
-        if (parent->AsElement()->IsHTML(nsGkAtoms::ul)) {
+      if (dom::Element* parent = curElement->GetElementParent()) {
+        if (parent->IsHTML(nsGkAtoms::ul)) {
           *aUL = true;
-        } else if (parent->AsElement()->IsHTML(nsGkAtoms::ol)) {
+        } else if (parent->IsHTML(nsGkAtoms::ol)) {
           *aOL = true;
         }
       }

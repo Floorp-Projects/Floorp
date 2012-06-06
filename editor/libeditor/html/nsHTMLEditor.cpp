@@ -2088,11 +2088,11 @@ nsHTMLEditor::GetHTMLBackgroundColorState(bool *aMixed, nsAString &aOutColor)
                                                  getter_AddRefs(domElement));
   NS_ENSURE_SUCCESS(res, res);
 
-  nsCOMPtr<nsINode> element = do_QueryInterface(domElement);
+  nsCOMPtr<dom::Element> element = do_QueryInterface(domElement);
 
   while (element) {
     // We are in a cell or selected table
-    element->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::bgcolor, aOutColor);
+    element->GetAttr(kNameSpaceID_None, nsGkAtoms::bgcolor, aOutColor);
 
     // Done if we have a color explicitly set
     if (!aOutColor.IsEmpty()) {
@@ -2100,7 +2100,7 @@ nsHTMLEditor::GetHTMLBackgroundColorState(bool *aMixed, nsAString &aOutColor)
     }
 
     // Once we hit the body, we're done
-    if (element->AsElement()->IsHTML(nsGkAtoms::body)) {
+    if (element->IsHTML(nsGkAtoms::body)) {
       return NS_OK;
     }
 
