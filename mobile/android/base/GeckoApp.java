@@ -1275,7 +1275,7 @@ abstract public class GeckoApp
             } else if (event.equals("Shortcut:Remove")) {
                 final String url = message.getString("url");
                 final String title = message.getString("title");
-                final String title = message.getString("shortcutType");
+                final String type = message.getString("shortcutType");
                 GeckoAppShell.removeShortcut(title, url, type);
             }
         } catch (Exception e) {
