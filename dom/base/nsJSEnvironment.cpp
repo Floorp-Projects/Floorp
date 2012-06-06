@@ -2067,42 +2067,6 @@ nsJSContext::GetNativeGlobal()
     return JS_GetGlobalObject(mContext);
 }
 
-nsresult
-nsJSContext::CreateNativeGlobalForInner(
-                                nsIScriptGlobalObject *aNewInner,
-                                nsIURI *aURI,
-                                bool aIsChrome,
-                                nsIPrincipal *aPrincipal,
-                                JSObject** aNativeGlobal, nsISupports **aHolder)
-{
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  PRUint32 flags = aIsChrome? nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT : 0;
-
-  nsCOMPtr<nsIPrincipal> systemPrincipal;
-  if (aIsChrome) {
-    nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
-    ssm->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-  }
-
-  nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
-  nsresult rv = xpc->
-          InitClassesWithNewWrappedGlobal(mContext, aNewInner,
-                                          aIsChrome ? systemPrincipal.get() : aPrincipal,
-                                          flags, getter_AddRefs(jsholder));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  jsholder->GetJSObject(aNativeGlobal);
-  jsholder.forget(aHolder);
-
-  // Set the location information for the new global, so that tools like
-  // about:memory may use that information
-  MOZ_ASSERT(aNativeGlobal && *aNativeGlobal);
-  xpc::SetLocationForGlobal(*aNativeGlobal, aURI);
-
-  return NS_OK;
-}
-
 JSContext*
 nsJSContext::GetNativeContext()
 {
