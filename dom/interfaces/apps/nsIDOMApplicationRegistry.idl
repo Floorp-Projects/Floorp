@@ -24,14 +24,14 @@ interface mozIDOMApplication  : nsISupports
   nsIDOMDOMRequest uninstall(); 
 };
 
-[scriptable, uuid(870bfbdc-3e13-4042-99dd-18e25720782d)]
-interface mozIDOMApplicationEvent : nsIDOMEvent
+[scriptable, uuid(f1dd58d8-5211-46ce-8470-d54dde596725)]
+interface mozIDOMApplicationEvent : nsISupports
 {
   readonly attribute mozIDOMApplication application;
 };
 
-[scriptable, uuid(a82771f6-ba46-4073-9e6e-f1ad3f42b1f6)]
-interface mozIDOMApplicationMgmt : nsIDOMEventTarget
+[scriptable, uuid(bd304874-d532-4e13-8034-544211445583)]
+interface mozIDOMApplicationMgmt : nsISupports
 {
   /**
    * the request will return the all the applications installed. Only accessible
