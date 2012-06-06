@@ -287,7 +287,7 @@ DOMJSClass Worker::sClass = {
   },
   { prototypes::id::EventTarget_workers, prototypes::id::_ID_Count,
     prototypes::id::_ID_Count },
-  -1, false, DOM_OBJECT_SLOT
+  -1, false, NULL
 };
 
 JSPropertySpec Worker::sProperties[] = {
@@ -405,7 +405,7 @@ DOMJSClass ChromeWorker::sClass = {
   },
   { prototypes::id::EventTarget_workers, prototypes::id::_ID_Count,
     prototypes::id::_ID_Count },
-  -1, false, DOM_OBJECT_SLOT
+  -1, false, NULL
 };
 
 WorkerPrivate*
