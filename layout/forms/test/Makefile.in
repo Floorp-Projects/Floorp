@@ -36,7 +36,6 @@ _TEST_FILES =	test_bug231389.html \
 		test_bug563642.html \
 		test_bug564115.html \
 		bug564115_window.html \
-		test_bug377624.html \
 		test_bug571352.html \
 		test_bug572406.html \
 		test_bug572649.html \
