@@ -59,6 +59,7 @@ ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
     if (offset < *currentOffset) {
         /* Scripts containing loops are never inlined. */
         isInlineable = false;
+        hasLoops_ = true;
 
         if (code->analyzed) {
             /*

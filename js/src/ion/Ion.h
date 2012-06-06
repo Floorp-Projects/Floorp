@@ -99,8 +99,14 @@ struct IonOptions
     // How many invocations or loop iterations are needed before functions
     // are compiled.
     //
-    // Default: 40.
+    // Default: 10,240
     uint32 usesBeforeCompile;
+
+    // How many invocations or loop iterations are needed before functions
+    // are compiled when JM is disabled.
+    //
+    // Default: 40
+    uint32 usesBeforeCompileNoJaeger;
 
     // How many invocations or loop iterations are needed before calls
     // are inlined.
@@ -109,10 +115,10 @@ struct IonOptions
     uint32 usesBeforeInlining;
 
     void setEagerCompilation() {
-        usesBeforeCompile = 0;
+        usesBeforeCompile = usesBeforeCompileNoJaeger = 0;
 
         // Eagerly inline calls to improve test coverage.
-        usesBeforeInlining = usesBeforeCompile;
+        usesBeforeInlining = 0;
     }
 
     IonOptions()
@@ -124,8 +130,9 @@ struct IonOptions
         lsra(true),
         inlining(true),
         rangeAnalysis(true),
-        usesBeforeCompile(40),
-        usesBeforeInlining(10240)
+        usesBeforeCompile(10240),
+        usesBeforeCompileNoJaeger(40),
+        usesBeforeInlining(usesBeforeCompile)
     { }
 };
 

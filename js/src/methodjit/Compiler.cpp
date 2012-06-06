@@ -49,9 +49,9 @@ using namespace js::analyze;
 
 /*
  * Number of times a script must be called or had a backedge before we try to
- * inline its calls.
+ * inline its calls. This number should match IonMonkey's usesBeforeCompile.
  */
-static const size_t USES_BEFORE_INLINING = 10000;
+static const size_t USES_BEFORE_INLINING = 10240;
 
 mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
                          unsigned chunkIndex, bool isConstructing)
@@ -910,6 +910,11 @@ IonGetsFirstChance(JSContext *cx, JSScript *script, CompileRequest request)
 {
 #ifdef JS_ION
     if (!ion::IsEnabled(cx))
+        return false;
+
+    // If the script is not hot, use JM. recompileCheckHelper will insert a check
+    // to trigger a recompile when the script becomes hot.
+    if (script->getUseCount() < ion::js_IonOptions.usesBeforeCompile)
         return false;
 
     // If we're called from JM, use JM to avoid slow JM -> Ion calls.
@@ -3885,13 +3890,30 @@ mjit::Compiler::interruptCheckHelper()
     stubcc.rejoin(Changes(0));
 }
 
+static bool
+MaybeIonCompileable(JSContext *cx, JSScript *script)
+{
+#ifdef JS_ION
+    if (!ion::IsEnabled(cx))
+        return false;
+    if (!script->canIonCompile())
+        return false;
+    return true;
+#endif
+    return false;
+}
+
 void
 mjit::Compiler::recompileCheckHelper()
 {
-    if (inlining() || debugMode() || !globalObj ||
-        !analysis->hasFunctionCalls() || !cx->typeInferenceEnabled()) {
+    if (inlining() || debugMode() || !globalObj || !cx->typeInferenceEnabled())
         return;
-    }
+
+    // Insert a recompile check if either:
+    // 1) IonMonkey is enabled, to optimize the function when it becomes hot.
+    // 2) The script contains function calls JM can inline.
+    if (!MaybeIonCompileable(cx, outerScript) && !analysis->hasFunctionCalls())
+        return;
 
     uint32_t *addr = script->addressOfUseCount();
     masm.add32(Imm32(1), AbsoluteAddress(addr));
