@@ -19,7 +19,7 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(2A50D295-8DB8-4223-AE0D-070C6EB6C76E)]
+[scriptable, uuid(e85194cf-56e6-44a6-92d9-0096c9d2536e)]
 interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
 {
            attribute boolean                     autofocus;
@@ -27,7 +27,7 @@ interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
   readonly attribute nsIDOMHTMLFormElement       form;
            attribute boolean                     multiple;
            attribute DOMString                   name;
-           attribute long                        size;
+           attribute unsigned long               size;
 
   readonly attribute DOMString                   type;
 
