@@ -215,6 +215,7 @@ private:
         OP_XOR_GvEv                     = 0x33,
         OP_CMP_EvGv                     = 0x39,
         OP_CMP_GvEv                     = 0x3B,
+        OP_CMP_EAXIv                    = 0x3D,
 #if WTF_CPU_X86_64
         PRE_REX                         = 0x40,
 #endif
@@ -1877,6 +1878,18 @@ public:
                        IPFX "call       %s0x%x(%s)\n", MAYBE_PAD,
                        PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_GROUP5_Ev, GROUP5_OP_CALLN, base, offset);
+    }
+
+    // Comparison of EAX against a 32-bit immediate. The immediate is patched
+    // in as if it were a jump target. The intention is to toggle the first
+    // byte of the instruction between a CMP and a JMP to produce a pseudo-NOP.
+    JmpSrc cmp_eax()
+    {
+        m_formatter.oneByteOp(OP_CMP_EAXIv);
+        JmpSrc r = m_formatter.immediateRel32();
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "cmp        eax, ((%d))\n", MAYBE_PAD, r.m_offset);
+        return r;
     }
 
     JmpSrc jmp()

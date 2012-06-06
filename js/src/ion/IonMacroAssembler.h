@@ -116,6 +116,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         return size();
     }
 
+    void reportMemory(bool success) {
+        enoughMemory_ &= success;
+    }
     bool oom() const {
         return !enoughMemory_ || MacroAssemblerSpecific::oom();
     }
@@ -333,13 +336,19 @@ class MacroAssembler : public MacroAssemblerSpecific
             branch32(cond, length, Imm32(key.constant()), label);
     }
 
-    template <typename T>
-    void emitPreBarrier(const T &address, MIRType type) {
-        JS_ASSERT(type == MIRType_Value ||
-                  type == MIRType_String ||
-                  type == MIRType_Object);
+    void branchTestNeedsBarrier(Condition cond, const Register &scratch, Label *label) {
+        JS_ASSERT(cond == Zero || cond == NonZero);
+        JSCompartment *comp = GetIonContext()->cx->compartment;
+        movePtr(ImmWord(comp), scratch);
+        Address needsBarrierAddr(scratch, JSCompartment::OffsetOfNeedsBarrier());
+        branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
+    }
 
+    template <typename T>
+    void callPreBarrier(const T &address, MIRType type) {
+        JS_ASSERT(type == MIRType_Value || type == MIRType_String || type == MIRType_Object);
         Label done;
+
         if (type == MIRType_Value)
             branchTestGCThing(Assembler::NotEqual, address, &done);
 
@@ -348,16 +357,31 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         JSContext *cx = GetIonContext()->cx;
         IonCode *preBarrier = cx->compartment->ionCompartment()->preBarrier(cx);
-        if (!preBarrier) {
+        if (!preBarrier)
             enoughMemory_ = false;
-            return;
-        }
 
         call(preBarrier);
         Pop(PreBarrierReg);
 
-        if (type == MIRType_Value)
-            bind(&done);
+        bind(&done);
+    }
+
+    template <typename T>
+    CodeOffsetLabel patchableCallPreBarrier(const T &address, MIRType type) {
+        JS_ASSERT(type == MIRType_Value || type == MIRType_String || type == MIRType_Object);
+        JSContext *cx = GetIonContext()->cx;
+
+        Label done;
+
+        // Patchable jump. If write barriers are required, patched to a CMP for fallthrough.
+        CodeOffsetLabel nopJump = toggledJump(!cx->compartment->needsBarrier(), &done);
+
+        callPreBarrier(address, type);
+        jump(&done);
+
+        align(16);
+        bind(&done);
+        return nopJump;
     }
 
     template<typename T>
