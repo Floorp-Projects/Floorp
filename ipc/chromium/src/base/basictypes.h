@@ -31,9 +31,6 @@
 
 #include "obsolete/protypes.h"
 
-#define _INT32
-#define _UINT32
-
 #ifdef _WIN32_SAVE
 #undef _WIN32_SAVE
 #define _WIN32
@@ -48,37 +45,6 @@
 #ifndef COMPILER_MSVC
 // stdint.h is part of C99 but MSVC doesn't have it.
 #include <stdint.h>         // For intptr_t.
-#endif
-
-typedef signed char         schar;
-typedef signed char         int8;
-typedef short               int16;
-// TODO(mbelshe) Remove these type guards.  These are
-//               temporary to avoid conflicts with npapi.h.
-#ifndef _INT32
-#define _INT32
-typedef int                 int32;
-#endif
-#ifndef PROTYPES_H
-typedef long long           int64;
-#endif
-
-// NOTE: unsigned types are DANGEROUS in loops and other arithmetical
-// places.  Use the signed types unless your variable represents a bit
-// pattern (eg a hash value) or you really need the extra bit.  Do NOT
-// use 'unsigned' to express "this value should always be positive";
-// use assertions for this.
-
-typedef unsigned char      uint8;
-typedef unsigned short     uint16;
-// TODO(mbelshe) Remove these type guards.  These are
-//               temporary to avoid conflicts with npapi.h.
-#ifndef _UINT32
-#define _UINT32
-typedef unsigned int       uint32;
-#endif
-#ifndef PROTYPES_H
-typedef unsigned long long uint64;
 #endif
 
 // A type to represent a Unicode code-point value. As of Unicode 4.0,
