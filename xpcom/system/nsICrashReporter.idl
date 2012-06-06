@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsILocalFile;
+interface nsIFile;
 interface nsIURL;
 
 /**
@@ -39,7 +39,7 @@ interface nsICrashReporter : nsISupports
    *
    * @throw NS_ERROR_NOT_INITIALIZED if crash reporting is not initialized
    */
-  attribute nsILocalFile minidumpPath;
+  attribute nsIFile minidumpPath;
 
   /**
    * Add some extra data to be submitted with a crash report.

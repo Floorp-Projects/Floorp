@@ -8,7 +8,7 @@
 
 #include "mozilla/StandardInteger.h"
 
-class nsILocalFile;
+class nsIFile;
 
 /**
  * Application-specific data needed to start the apprunner.
@@ -30,7 +30,7 @@ struct nsXREAppData
    * The directory of the application to be run. May be null if the
    * xulrunner and the app are installed into the same directory.
    */
-  nsILocalFile* directory;
+  nsIFile* directory;
 
   /**
    * The name of the application vendor. This must be ASCII, and is normally
@@ -85,7 +85,7 @@ struct nsXREAppData
    * The location of the XRE. XRE_main may not be able to figure this out
    * programatically.
    */
-  nsILocalFile* xreDirectory;
+  nsIFile* xreDirectory;
 
   /**
    * The minimum/maximum compatible XRE version.

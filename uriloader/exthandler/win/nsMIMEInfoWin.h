@@ -57,7 +57,7 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
     // Lookup a rundll command handler and return
     // a populated command template for use with rundll32.exe.
     bool GetDllLaunchInfo(nsIFile * aDll,
-                            nsILocalFile * aFile,
+                            nsIFile * aFile,
                             nsAString& args, bool bEdit);
 
     // Helper routine used in tracking app lists

@@ -440,7 +440,7 @@ nsOSHelperAppService::GetDefaultAppInfo(const nsAString& aAppInfo,
   // There are some rare cases this can happen - ["url.dll" -foo]
   // for example won't resolve correctly to the system dir. The 
   // subsequent launch of the helper app will work though.
-  nsCOMPtr<nsILocalFile> lf;
+  nsCOMPtr<nsIFile> lf;
   NS_NewLocalFile(handlerCommand, true, getter_AddRefs(lf));
   if (!lf)
     return NS_ERROR_FILE_NOT_FOUND;

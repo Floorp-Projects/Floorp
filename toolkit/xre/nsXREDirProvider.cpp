@@ -12,7 +12,7 @@
 #include "nsIJSRuntimeService.h"
 #include "nsIAppStartup.h"
 #include "nsIDirectoryEnumerator.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIProfileChangeStatus.h"
@@ -63,14 +63,13 @@
 
 #define PREF_OVERRIDE_DIRNAME "preferences"
 
-static already_AddRefed<nsILocalFile>
+static already_AddRefed<nsIFile>
 CloneAndAppend(nsIFile* aFile, const char* name)
 {
   nsCOMPtr<nsIFile> file;
   aFile->Clone(getter_AddRefs(file));
-  nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
-  lfile->AppendNative(nsDependentCString(name));
-  return lfile.forget();
+  file->AppendNative(nsDependentCString(name));
+  return file.forget();
 }
 
 nsXREDirProvider* gDirServiceProvider = nsnull;
@@ -94,7 +93,7 @@ nsXREDirProvider::GetSingleton()
 
 nsresult
 nsXREDirProvider::Initialize(nsIFile *aXULAppDir,
-                             nsILocalFile *aGREDir,
+                             nsIFile *aGREDir,
                              nsIDirectoryServiceProvider* aAppProvider)
 {
   NS_ENSURE_ARG(aXULAppDir);
@@ -162,8 +161,7 @@ nsXREDirProvider::GetUserProfilesRootDir(nsIFile** aResult,
                                          const nsACString* aVendorName)
 {
   nsCOMPtr<nsIFile> file;
-  nsresult rv = GetUserDataDirectory((nsILocalFile**)(nsIFile**)
-                                      getter_AddRefs(file),
+  nsresult rv = GetUserDataDirectory(getter_AddRefs(file),
                                      false,
                                      aProfileName, aAppName, aVendorName);
 
@@ -185,8 +183,7 @@ nsXREDirProvider::GetUserProfilesLocalDir(nsIFile** aResult,
                                           const nsACString* aVendorName)
 {
   nsCOMPtr<nsIFile> file;
-  nsresult rv = GetUserDataDirectory((nsILocalFile**)(nsIFile**)
-                                     getter_AddRefs(file),
+  nsresult rv = GetUserDataDirectory(getter_AddRefs(file),
                                      true,
                                      aProfileName, aAppName, aVendorName);
 
@@ -275,7 +272,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   }
   else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_DIR) ||
            !strcmp(aProperty, XRE_USER_APP_DATA_DIR)) {
-    rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
+    rv = GetUserAppDataDirectory(getter_AddRefs(file));
   }
   else if (!strcmp(aProperty, XRE_UPDATE_ROOT_DIR)) {
 #if defined(XP_WIN)
@@ -286,7 +283,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
 #endif
   }
   else if (!strcmp(aProperty, NS_APP_APPLICATION_REGISTRY_FILE)) {
-    rv = GetUserAppDataDirectory((nsILocalFile**)(nsIFile**) getter_AddRefs(file));
+    rv = GetUserAppDataDirectory(getter_AddRefs(file));
     if (NS_SUCCEEDED(rv))
       rv = file->AppendNative(NS_LITERAL_CSTRING(APP_REGISTRY_NAME));
   }
@@ -297,7 +294,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     rv = GetUserProfilesLocalDir(getter_AddRefs(file), nsnull, nsnull, nsnull);
   }
   else if (!strcmp(aProperty, XRE_EXECUTABLE_FILE) && gArgv[0]) {
-    nsCOMPtr<nsILocalFile> lf;
+    nsCOMPtr<nsIFile> lf;
     rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
     if (NS_SUCCEEDED(rv))
       file = lf;
@@ -320,7 +317,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
 #if defined(XP_UNIX) || defined(XP_MACOSX)
   else if (!strcmp(aProperty, XRE_SYS_LOCAL_EXTENSION_PARENT_DIR)) {
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
-    return GetSystemExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
+    return GetSystemExtensionsDirectory(aFile);
 #else
     return NS_ERROR_FAILURE;
 #endif
@@ -331,7 +328,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     static const char *const sysLExtDir = "/usr/share/mozilla/extensions";
     return NS_NewNativeLocalFile(nsDependentCString(sysLExtDir),
-                                 false, (nsILocalFile**)(nsIFile**) aFile);
+                                 false, aFile);
 #else
     return NS_ERROR_FAILURE;
 #endif
@@ -339,7 +336,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
 #endif
   else if (!strcmp(aProperty, XRE_USER_SYS_EXTENSION_DIR)) {
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
-    return GetSysUserExtensionsDirectory((nsILocalFile**)(nsIFile**) aFile);
+    return GetSysUserExtensionsDirectory(aFile);
 #else
     return NS_ERROR_FAILURE;
 #endif
@@ -524,7 +521,7 @@ LoadExtensionDirectories(nsINIParser &parser,
     if (NS_FAILED(rv))
       return;
 
-    nsCOMPtr<nsILocalFile> dir = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+    nsCOMPtr<nsIFile> dir = do_CreateInstance("@mozilla.org/file/local;1", &rv);
     if (NS_FAILED(rv))
       continue;
 
@@ -537,7 +534,7 @@ LoadExtensionDirectories(nsINIParser &parser,
       XRE_AddJarManifestLocation(aType, dir);
     }
     else {
-      nsCOMPtr<nsILocalFile> manifest =
+      nsCOMPtr<nsIFile> manifest =
         CloneAndAppend(dir, "chrome.manifest");
       XRE_AddManifestLocation(aType, manifest);
     }
@@ -556,7 +553,7 @@ nsXREDirProvider::LoadExtensionBundleDirectories()
 
     extensionsINI->AppendNative(NS_LITERAL_CSTRING("extensions.ini"));
 
-    nsCOMPtr<nsILocalFile> extensionsINILF =
+    nsCOMPtr<nsIFile> extensionsINILF =
       do_QueryInterface(extensionsINI);
     if (!extensionsINILF)
       return;
@@ -597,7 +594,7 @@ nsXREDirProvider::LoadAppBundleDirs()
   while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(subdir))) && subdir) {
     mAppBundleDirectories.AppendObject(subdir);
 
-    nsCOMPtr<nsILocalFile> manifest =
+    nsCOMPtr<nsIFile> manifest =
       CloneAndAppend(subdir, "chrome.manifest");
     XRE_AddManifestLocation(NS_COMPONENT_LOCATION, manifest);
   }
@@ -984,7 +981,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
     programName.AssignASCII(MOZ_APP_NAME);
   }
 
-  nsCOMPtr<nsILocalFile> updRoot;
+  nsCOMPtr<nsIFile> updRoot;
   rv = GetUserLocalDataDirectory(getter_AddRefs(updRoot));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1039,11 +1036,11 @@ nsXREDirProvider::GetProfileDir(nsIFile* *aResult)
 }
 
 nsresult
-nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, bool aLocal)
+nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile, bool aLocal)
 {
   // Copied from nsAppFileLocationProvider (more or less)
   nsresult rv;
-  nsCOMPtr<nsILocalFile> localDir;
+  nsCOMPtr<nsIFile> localDir;
 
 #if defined(XP_MACOSX)
   FSRef fsRef;
@@ -1130,9 +1127,9 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsILocalFile** aFile, bool aLocal)
 }
 
 nsresult
-nsXREDirProvider::GetSysUserExtensionsDirectory(nsILocalFile** aFile)
+nsXREDirProvider::GetSysUserExtensionsDirectory(nsIFile** aFile)
 {
-  nsCOMPtr<nsILocalFile> localDir;
+  nsCOMPtr<nsIFile> localDir;
   nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1148,10 +1145,10 @@ nsXREDirProvider::GetSysUserExtensionsDirectory(nsILocalFile** aFile)
 
 #if defined(XP_UNIX) || defined(XP_MACOSX)
 nsresult
-nsXREDirProvider::GetSystemExtensionsDirectory(nsILocalFile** aFile)
+nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile)
 {
   nsresult rv;
-  nsCOMPtr<nsILocalFile> localDir;
+  nsCOMPtr<nsIFile> localDir;
 #if defined(XP_MACOSX)
   FSRef fsRef;
   OSErr err = ::FSFindFolder(kOnSystemDisk, kApplicationSupportFolderType, kCreateFolder, &fsRef);
@@ -1194,12 +1191,12 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsILocalFile** aFile)
 #endif
 
 nsresult
-nsXREDirProvider::GetUserDataDirectory(nsILocalFile** aFile, bool aLocal,
+nsXREDirProvider::GetUserDataDirectory(nsIFile** aFile, bool aLocal,
                                        const nsACString* aProfileName,
                                        const nsACString* aAppName,
                                        const nsACString* aVendorName)
 {
-  nsCOMPtr<nsILocalFile> localDir;
+  nsCOMPtr<nsIFile> localDir;
   nsresult rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), aLocal);
   NS_ENSURE_SUCCESS(rv, rv);
 

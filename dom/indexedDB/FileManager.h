@@ -9,7 +9,6 @@
 
 #include "IndexedDatabase.h"
 #include "nsIFile.h"
-#include "nsILocalFile.h"
 #include "nsIDOMFile.h"
 #include "nsDataHashtable.h"
 

@@ -740,7 +740,7 @@ enum nsCStringEncoding {
   /* Conversion from UTF-16 to the native filesystem charset may result in a
    * loss of information.  No attempt is made to protect against data loss in
    * this case.  The native filesystem charset applies to strings passed to
-   * the "Native" method variants on nsIFile and nsILocalFile. */
+   * the "Native" method variants on nsIFile. */
   NS_CSTRING_ENCODING_NATIVE_FILESYSTEM = 2
 };
 

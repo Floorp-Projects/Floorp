@@ -14,7 +14,7 @@ interface nsIOfflineCacheUpdate;
 interface nsIPrincipal;
 interface nsIPrefBranch;
 interface nsIApplicationCache;
-interface nsILocalFile;
+interface nsIFile;
 
 [scriptable, uuid(47360d57-8ef4-4a5d-8865-1a27a739ad1a)]
 interface nsIOfflineCacheUpdateObserver : nsISupports {
@@ -107,7 +107,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        The page that is requesting the update.
    */
   void init(in nsIURI aManifestURI, in nsIURI aDocumentURI, in nsIDOMDocument aDocument,
-            [optional] in nsILocalFile aCustomProfileDir);
+            [optional] in nsIFile aCustomProfileDir);
 
   /**
    * Initialize the update for partial processing. 
@@ -201,7 +201,7 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      */
     nsIOfflineCacheUpdate scheduleCustomProfileUpdate(in nsIURI aManifestURI,
                                                       in nsIURI aDocumentURI,
-                                                      in nsILocalFile aProfileDir);
+                                                      in nsIFile aProfileDir);
 
     /**
      * Schedule a cache update for a manifest when the document finishes

@@ -36,7 +36,6 @@
 #include "nsNativeCharsetUtils.h"
 
 // File Picker
-#include "nsILocalFile.h"
 #include "nsIFile.h"
 #include "nsIFilePicker.h"
 #include "nsIStringBundle.h"
@@ -283,7 +282,7 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
   if (fileName) {
     if (*fileName) {
       nsAutoString leafName;
-      nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+      nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
       if (file) {
         rv = file->InitWithPath(nsDependentString(fileName));
         if (NS_SUCCEEDED(rv)) {
@@ -306,7 +305,7 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
     return NS_ERROR_ABORT;
   }
 
-  nsCOMPtr<nsILocalFile> localFile;
+  nsCOMPtr<nsIFile> localFile;
   rv = filePicker->GetFile(getter_AddRefs(localFile));
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -487,7 +486,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     width  /= TWIPS_PER_POINT_FLOAT;
     height /= TWIPS_PER_POINT_FLOAT;
 
-    nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+    nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     nsresult rv = file->InitWithPath(filename);
     if (NS_FAILED(rv))
       return rv;

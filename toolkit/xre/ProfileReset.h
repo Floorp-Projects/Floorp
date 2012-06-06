@@ -37,7 +37,7 @@ private:
 class ProfileResetCleanupAsyncTask : public nsRunnable
 {
 public:
-  ProfileResetCleanupAsyncTask(nsILocalFile* aProfileDir, nsILocalFile* aProfileLocalDir,
+  ProfileResetCleanupAsyncTask(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
                                nsIFile* aDesktop, const nsAString &aLeafName)
     : mProfileDir(aProfileDir)
     , mProfileLocalDir(aProfileLocalDir)
@@ -73,8 +73,8 @@ public:
   }
 
 private:
-  nsCOMPtr<nsILocalFile> mProfileDir;
-  nsCOMPtr<nsILocalFile> mProfileLocalDir;
+  nsCOMPtr<nsIFile> mProfileDir;
+  nsCOMPtr<nsIFile> mProfileLocalDir;
   nsCOMPtr<nsIFile> mDesktop;
   nsAutoString mLeafName;
 };

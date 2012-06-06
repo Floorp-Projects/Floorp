@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsILocalFileMac.h"
 #include "nsMimeTypes.h"
 #include "nsIStringBundle.h"
@@ -567,7 +567,7 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
 }
 
 void
-nsOSHelperAppService::FixFilePermissions(nsILocalFile* aFile)
+nsOSHelperAppService::FixFilePermissions(nsIFile* aFile)
 {
   aFile->SetPermissions(mPermissions);
 }

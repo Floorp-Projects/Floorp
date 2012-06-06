@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-interface nsILocalFile;
+interface nsIFile;
 
 /**
- * The nsIRelativeFilePref interface is a wrapper for an nsILocalFile and
+ * The nsIRelativeFilePref interface is a wrapper for an nsIFile and
  * and a directory service key. When used as a pref value, it stores a
  * relative path to the file from the location pointed to by the directory
  * service key. The path has the same syntax across all platforms.
@@ -25,7 +25,7 @@ interface nsIRelativeFilePref : nsISupports
    *
    * The file whose location is stored or retrieved.
    */
-  attribute nsILocalFile file;
+  attribute nsIFile file;
 
   /**
    * relativeToKey
@@ -53,7 +53,7 @@ interface nsIRelativeFilePref : nsISupports
 #include "nsComponentManagerUtils.h"
 
 inline nsresult
-NS_NewRelativeFilePref(nsILocalFile* aFile, const nsACString& relativeToKey, nsIRelativeFilePref** result)
+NS_NewRelativeFilePref(nsIFile* aFile, const nsACString& relativeToKey, nsIRelativeFilePref** result)
 {
     nsresult rv;
     nsCOMPtr<nsIRelativeFilePref> local(do_CreateInstance(NS_RELATIVEFILEPREF_CONTRACTID, &rv));

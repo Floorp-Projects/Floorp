@@ -204,7 +204,7 @@ nsDirEnumeratorUnix::GetNextFile(nsIFile **_retval)
         return NS_OK;
     }
 
-    nsCOMPtr<nsILocalFile> file = new nsLocalFile();
+    nsCOMPtr<nsIFile> file = new nsLocalFile();
     if (!file)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -699,8 +699,7 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
             nsCOMPtr<nsIFile> destClone;
             rv = newParent->Clone(getter_AddRefs(destClone));
             if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsILocalFile> newDir(do_QueryInterface(destClone));
-                if (NS_FAILED(rv = entry->CopyToNative(newDir, EmptyCString()))) {
+                if (NS_FAILED(rv = entry->CopyToNative(destClone, EmptyCString()))) {
 #ifdef DEBUG
                     nsresult rv2;
                     nsCAutoString pathName;
@@ -780,7 +779,7 @@ nsLocalFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
         if (!newFile)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        nsCOMPtr<nsILocalFile> fileRef(newFile); // release on exit
+        nsCOMPtr<nsIFile> fileRef(newFile); // release on exit
 
         rv = newFile->InitWithNativePath(newPathName);
         if (NS_FAILED(rv))
@@ -1320,7 +1319,7 @@ nsLocalFile::GetParent(nsIFile **aParent)
     char c = *slashp;
     *slashp = '\0';
 
-    nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsIFile> localFile;
     nsresult rv = NS_NewNativeLocalFile(nsDependentCString(buffer), true,
                                         getter_AddRefs(localFile));
 
@@ -1601,12 +1600,9 @@ nsLocalFile::GetNativeTarget(nsACString &_retval)
             nsCOMPtr<nsIFile> parent;
             if (NS_FAILED(rv = self->GetParent(getter_AddRefs(parent))))
                 break;
-            nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(parent, &rv));
-            if (NS_FAILED(rv))
+            if (NS_FAILED(rv = parent->AppendRelativeNativePath(nsDependentCString(target))))
                 break;
-            if (NS_FAILED(rv = localFile->AppendRelativeNativePath(nsDependentCString(target))))
-                break;
-            if (NS_FAILED(rv = localFile->GetNativePath(_retval)))
+            if (NS_FAILED(rv = parent->GetNativePath(_retval)))
                 break;
             self = parent;
         } else {
@@ -1879,7 +1875,7 @@ nsLocalFile::Launch()
 }
 
 nsresult
-NS_NewNativeLocalFile(const nsACString &path, bool followSymlinks, nsILocalFile **result)
+NS_NewNativeLocalFile(const nsACString &path, bool followSymlinks, nsIFile **result)
 {
     nsLocalFile *file = new nsLocalFile();
     if (!file)
@@ -2003,7 +1999,7 @@ nsLocalFile::GetHashCode(PRUint32 *aResult)
 }
 
 nsresult 
-NS_NewLocalFile(const nsAString &path, bool followLinks, nsILocalFile* *result)
+NS_NewLocalFile(const nsAString &path, bool followLinks, nsIFile* *result)
 {
     nsCAutoString buf;
     nsresult rv = NS_CopyUnicodeToNative(path, buf);
@@ -2247,7 +2243,7 @@ nsLocalFile::SetFileCreator(OSType aFileCreator)
 }
   
 NS_IMETHODIMP
-nsLocalFile::LaunchWithDoc(nsILocalFile *aDocToLoad, bool aLaunchInBackground)
+nsLocalFile::LaunchWithDoc(nsIFile *aDocToLoad, bool aLaunchInBackground)
 {    
   bool isExecutable;
   nsresult rv = IsExecutable(&isExecutable);
@@ -2290,7 +2286,7 @@ nsLocalFile::LaunchWithDoc(nsILocalFile *aDocToLoad, bool aLaunchInBackground)
 }
 
 NS_IMETHODIMP
-nsLocalFile::OpenDocWithApp(nsILocalFile *aAppToOpenWith, bool aLaunchInBackground)
+nsLocalFile::OpenDocWithApp(nsIFile *aAppToOpenWith, bool aLaunchInBackground)
 {
   FSRef docFSRef;
   nsresult rv = GetFSRef(&docFSRef);

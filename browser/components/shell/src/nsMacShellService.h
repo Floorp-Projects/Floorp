@@ -8,7 +8,7 @@
 
 #include "nsIMacShellService.h"
 #include "nsIWebProgressListener.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsCOMPtr.h"
 
 class nsMacShellService : public nsIMacShellService,
@@ -26,7 +26,7 @@ public:
 protected:
 
 private:
-  nsCOMPtr<nsILocalFile> mBackgroundFile;
+  nsCOMPtr<nsIFile> mBackgroundFile;
 
   bool      mCheckedThisSession;
 };

@@ -5,7 +5,7 @@
 #include <string.h>
 #include "nsJARInputStream.h"
 #include "nsJAR.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIConsoleService.h"
 #include "nsICryptoHash.h"
 #include "prprf.h"
@@ -216,10 +216,6 @@ nsJAR::Extract(const nsACString &aEntryName, nsIFile* outFile)
   // we need to use a lock to prevent bug #51267
   MutexAutoLock lock(mLock);
 
-  nsresult rv;
-  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(outFile, &rv);
-  if (NS_FAILED(rv)) return rv;
-
   nsZipItem *item = mZip->GetItem(PromiseFlatCString(aEntryName).get());
   NS_ENSURE_TRUE(item, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
 
@@ -232,22 +228,22 @@ nsJAR::Extract(const nsACString &aEntryName, nsIFile* outFile)
   //XXX is always FILE_DIR_NOT_EMPTY, we can remove
   //XXX |rv == NS_ERROR_FAILURE| - bug 322183 needs to be completely
   //XXX fixed before that can happen
-  rv = localFile->Remove(false);
+  nsresult rv = outFile->Remove(false);
   if (rv == NS_ERROR_FILE_DIR_NOT_EMPTY ||
       rv == NS_ERROR_FAILURE)
     return rv;
 
   if (item->IsDirectory())
   {
-    rv = localFile->Create(nsIFile::DIRECTORY_TYPE, item->Mode());
+    rv = outFile->Create(nsIFile::DIRECTORY_TYPE, item->Mode());
     //XXX Do this in nsZipArchive?  It would be nice to keep extraction
     //XXX code completely there, but that would require a way to get a
-    //XXX PRDir from localFile.
+    //XXX PRDir from outFile.
   }
   else
   {
     PRFileDesc* fd;
-    rv = localFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, item->Mode(), &fd);
+    rv = outFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, item->Mode(), &fd);
     if (NS_FAILED(rv)) return rv;
 
     // ExtractFile also closes the fd handle and resolves the symlink if needed

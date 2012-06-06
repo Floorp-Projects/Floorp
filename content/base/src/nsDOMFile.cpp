@@ -599,12 +599,8 @@ nsDOMFileFile::Initialize(nsISupports* aOwner,
       return NS_ERROR_XPC_BAD_CONVERT_JS;
     }
 
-    nsCOMPtr<nsILocalFile> localFile;
-    rv = NS_NewLocalFile(xpcomStr, false, getter_AddRefs(localFile));
+    rv = NS_NewLocalFile(xpcomStr, false, getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    file = do_QueryInterface(localFile);
-    NS_ASSERTION(file, "This should never happen");
   }
 
   bool exists;
