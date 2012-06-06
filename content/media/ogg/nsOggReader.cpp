@@ -1532,8 +1532,7 @@ nsresult nsOggReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   // HasAudio and HasVideo are not used here as they take a lock and cause
   // a deadlock. Accessing mInfo doesn't require a lock - it doesn't change
-  // after metadata is read and GetBuffered isn't called before metadata is
-  // read.
+  // after metadata is read.
   if (!mInfo.mHasVideo && !mInfo.mHasAudio) {
     // No need to search through the file if there are no audio or video tracks
     return NS_OK;
