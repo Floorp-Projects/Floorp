@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyServiceGetter(Services, 'fm',
     let type = targetElement.type;
     // FIXME/bug 344616 is input type='number'
     // Until then, let's return 'number' even if the platform returns 'text'
-    let attributeType = targetElement.getAttribute('type');
+    let attributeType = targetElement.getAttribute('type') || '';
     if (attributeType && attributeType.toLowerCase() === 'number')
       type = 'number';
 

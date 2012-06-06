@@ -30,5 +30,12 @@ interface nsIB2GKeyboard : nsISupports
   // selection, then the last index specified in indexes will be selected.
   void setSelectedOptions(in jsval indexes);
 
+  // Set the value on the currently focused element. This has to be used
+  // for special situations where the value had to be chosen amongst a
+  // list (type=month) or a widget (type=date, time, etc.).
+  // If the value passed in parameter isn't valid (in the term of HTML5
+  // Forms Validation), the value will simply be ignored by the element. 
+  void setValue(in jsval value);
+
   attribute nsIDOMEventListener onfocuschange;
 };
