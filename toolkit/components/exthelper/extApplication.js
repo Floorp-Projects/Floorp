@@ -421,6 +421,69 @@ SessionStorage.prototype = {
   QueryInterface : XPCOMUtils.generateQI([Ci.extISessionStorage])
 };
 
+//=================================================
+// ExtensionObserver constructor (internal class)
+//
+// ExtensionObserver is a global singleton which watches the browser's
+// extensions and sends you events when things change.
+
+function ExtensionObserver() {
+  this._eventsDict = {};
+
+  AddonManager.addAddonListener(this);
+  AddonManager.addInstallListener(this);
+}
+
+//=================================================
+// ExtensionObserver implementation (internal class)
+ExtensionObserver.prototype = {
+  onDisabling: function(addon, needsRestart) {
+    this._dispatchEvent(addon.id, "disable");
+  },
+
+  onEnabling: function(addon, needsRestart) {
+    this._dispatchEvent(addon.id, "enable");
+  },
+
+  onUninstalling: function(addon, needsRestart) {
+    this._dispatchEvent(addon.id, "uninstall");
+  },
+
+  onOperationCancelled: function(addon) {
+    this._dispatchEvent(addon.id, "cancel");
+  },
+
+  onInstallEnded: function(install, addon) {
+    this._dispatchEvent(addon.id, "upgrade");
+  },
+
+  addListener: function(aId, aEvent, aListener) {
+    var events = this._eventsDict[aId];
+    if (!events) {
+      events = new Events();
+      this._eventsDict[aId] = events;
+    }
+    events.addListener(aEvent, aListener);
+  },
+
+  removeListener: function(aId, aEvent, aListener) {
+    var events = this._eventsDict[aId];
+    if (!events) {
+      return;
+    }
+    events.removeListener(aEvent, aListener);
+    if (events._listeners.length == 0) {
+      delete this._eventsDict[aId];
+    }
+  },
+
+  _dispatchEvent: function(aId, aEvent) {
+    var events = this._eventsDict[aId];
+    if (events) {
+      events.dispatch(aEvent, aId);
+    }
+  }
+};
 
 //=================================================
 // Extension constructor
@@ -429,60 +492,28 @@ function Extension(aItem) {
   this._firstRun = false;
   this._prefs = new PreferenceBranch("extensions." + this.id + ".");
   this._storage = new SessionStorage();
-  this._events = new Events();
+
+  let id = this.id;
+  this._events = {
+    addListener: function(aEvent, aListener) {
+      gExtensionObserver.addListener(id, aEvent, aListener);
+    },
+    removeListener: function(aEvent, aListener) {
+      gExtensionObserver.addListener(id, aEvent, aListener);
+    },
+    QueryInterface : XPCOMUtils.generateQI([Ci.extIEvents])
+  };
 
   var installPref = "install-event-fired";
   if (!this._prefs.has(installPref)) {
     this._prefs.setValue(installPref, true);
     this._firstRun = true;
   }
-
-  AddonManager.addAddonListener(this);
-  AddonManager.addInstallListener(this);
-
-  var self = this;
-  gShutdown.push(function(){ self._shutdown(); });
 }
 
 //=================================================
 // Extension implementation
 Extension.prototype = {
-  // cleanup observer so we don't leak
-  _shutdown: function ext_shutdown() {
-    AddonManager.removeAddonListener(this);
-    AddonManager.removeInstallListener(this);
-
-    this._prefs = null;
-    this._storage = null;
-    this._events = null;
-  },
-
-  // for AddonListener
-  onDisabling: function(addon, needsRestart) {
-    if (addon.id == this.id)
-      this._events.dispatch("disable", this.id);
-  },
-
-  onEnabling: function(addon, needsRestart) {
-    if (addon.id == this.id)
-      this._events.dispatch("enable", this.id);
-  },
-
-  onUninstalling: function(addon, needsRestart) {
-    if (addon.id == this.id)
-      this._events.dispatch("uninstall", this.id);
-  },
-
-  onOperationCancelled: function(addon) {
-    if (addon.id == this.id)
-      this._events.dispatch("cancel", this.id);
-  },
-
-  onInstallEnded: function(install, addon) {
-    if (addon.id == this.id)
-      this._events.dispatch("upgrade", this.id);
-  },
-
   get id() {
     return this._item.id;
   },
@@ -527,18 +558,11 @@ function Extensions(addons) {
   addons.forEach(function(addon) {
     this._cache[addon.id] = new Extension(addon);
   }, this);
-
-  var self = this;
-  gShutdown.push(function() { self._shutdown(); });
 }
 
 //=================================================
 // Extensions implementation
 Extensions.prototype = {
-  _shutdown : function exts_shutdown() {
-    this._cache = null;
-  },
-
   get all() {
     return this.find({});
   },
@@ -567,6 +591,7 @@ Extensions.prototype = {
 //=================================================
 // Application globals
 
+gExtensionObserver = new ExtensionObserver();
 gPreferenceObserver = new PreferenceObserver();
 
 //=================================================
@@ -628,6 +653,7 @@ extApplication.prototype = {
       }
       gShutdown.splice(0, gShutdown.length);
 
+      gExtensionObserver = null;
       gPreferenceObserver = null;
     }
   },
