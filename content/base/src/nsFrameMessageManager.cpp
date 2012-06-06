@@ -159,7 +159,7 @@ nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
 }
 
 static JSBool
-JSONCreator(const jschar* aBuf, uint32 aLen, void* aData)
+JSONCreator(const jschar* aBuf, uint32_t aLen, void* aData)
 {
   nsAString* result = static_cast<nsAString*>(aData);
   result->Append(static_cast<const PRUnichar*>(aBuf),
@@ -779,7 +779,7 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
       mGlobal->GetJSObject(&global);
       JSAutoEnterCompartment ac;
       if (global && ac.enter(mCx, global)) {
-        uint32 oldopts = JS_GetOptions(mCx);
+        uint32_t oldopts = JS_GetOptions(mCx);
         JS_SetOptions(mCx, oldopts | JSOPTION_NO_SCRIPT_RVAL);
 
         JSScript* script =
