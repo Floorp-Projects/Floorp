@@ -5,7 +5,9 @@
 #ifndef _nsApplicationCacheService_h_
 #define _nsApplicationCacheService_h_
 
-class nsApplicationCacheService : public nsIApplicationCacheService
+#include "mozilla/Attributes.h"
+
+class nsApplicationCacheService MOZ_FINAL : public nsIApplicationCacheService
 {
 public:
     nsApplicationCacheService();
