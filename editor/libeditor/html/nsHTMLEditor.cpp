@@ -2856,7 +2856,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement
   //  go through the transaction system
 
   nsCOMPtr<nsIDOMElement>newElement;
-  nsCOMPtr<nsIContent> newContent;
+  nsCOMPtr<dom::Element> newContent;
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
 
