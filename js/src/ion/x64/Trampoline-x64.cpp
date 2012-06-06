@@ -64,7 +64,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     const Register reg_code  = IntArgReg0;
     const Register reg_argc  = IntArgReg1;
     const Register reg_argv  = IntArgReg2;
-    const Register reg_frame = IntArgReg3;
+    JS_ASSERT(OsrFrameReg == IntArgReg3);
 
 #if defined(_WIN64)
     const Operand token  = Operand(rbp, 16 + ShadowStackSpace);
@@ -140,9 +140,6 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     Push the number of bytes we've pushed so far on the stack and call
     *****************************************************************/
     masm.subq(rsp, r14);
-
-    // Don't need to load OsrFrameReg -- it's always passed by the caller.
-    JS_ASSERT(OsrFrameReg == IntArgReg3);
 
     // Create a frame descriptor.
     masm.makeFrameDescriptor(r14, IonFrame_Entry);

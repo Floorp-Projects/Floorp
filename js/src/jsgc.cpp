@@ -3742,6 +3742,7 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
     bool startBackgroundSweep = false;
     {
         AutoUnlockGC unlock(rt);
+        AutoCopyFreeListToArenas copy(rt);
 
         if (!incremental) {
             /* If non-incremental GC was requested, reset incremental GC. */
@@ -3750,8 +3751,6 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
         } else {
             BudgetIncrementalGC(rt, &budget);
         }
-
-        AutoCopyFreeListToArenas copy(rt);
 
         bool shouldSweep;
         if (budget == SliceBudget::Unlimited && rt->gcIncrementalState == NO_INCREMENTAL) {

@@ -1,5 +1,7 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=4 sw=4 et tw=79:
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -97,6 +99,10 @@ struct JSCompartment
     }
 
     void setNeedsBarrier(bool needs);
+
+    static size_t OffsetOfNeedsBarrier() {
+        return offsetof(JSCompartment, needsBarrier_);
+    }
 
     js::GCMarker *barrierTracer() {
         JS_ASSERT(needsBarrier_);

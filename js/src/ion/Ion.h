@@ -180,6 +180,8 @@ IonExecStatus SideCannon(JSContext *cx, StackFrame *fp, jsbytecode *pc);
 void Invalidate(FreeOp *fop, const Vector<types::RecompileInfo> &invalid, bool resetUses = true);
 void MarkFromIon(JSCompartment *comp, Value *vp);
 
+void ToggleBarriers(JSCompartment *comp, bool needs);
+
 static inline bool IsEnabled(JSContext *cx)
 {
     return cx->hasRunOption(JSOPTION_ION) && cx->typeInferenceEnabled();

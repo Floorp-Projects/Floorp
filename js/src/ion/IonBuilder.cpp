@@ -3845,7 +3845,7 @@ IonBuilder::jsop_setgname(HandlePropertyName name)
     current->add(store);
 
     // Determine whether write barrier is required.
-    if (cx->compartment->needsBarrier() && (!propertyTypes || propertyTypes->needsBarrier(cx)))
+    if (!propertyTypes || propertyTypes->needsBarrier(cx))
         store->setNeedsBarrier(true);
 
     // Pop the global object pushed by bindgname.
@@ -4192,7 +4192,7 @@ IonBuilder::jsop_setelem_dense()
     }
 
     // Determine whether a write barrier is required.
-    if (cx->compartment->needsBarrier() && oracle->elementWriteNeedsBarrier(script, pc))
+    if (oracle->elementWriteNeedsBarrier(script, pc))
         store->setNeedsBarrier(true);
 
     if (elementType != MIRType_None && packed)
@@ -4426,7 +4426,7 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
             MStoreFixedSlot *fixed = MStoreFixedSlot::New(obj, value, propTypes->definiteSlot());
             current->add(fixed);
             current->push(value);
-            if (cx->compartment->needsBarrier() && propTypes->needsBarrier(cx))
+            if (propTypes->needsBarrier(cx))
                 fixed->setNeedsBarrier();
             return resumeAfter(fixed);
         }
@@ -4441,10 +4441,8 @@ IonBuilder::jsop_setprop(HandlePropertyName name)
         ins = MSetPropertyCache::New(obj, value, name, script->strictModeCode);
 
         RootedId id(cx, NameToId(name));
-        if (cx->compartment->needsBarrier() &&
-            (!binaryTypes.lhsTypes || binaryTypes.lhsTypes->propertyNeedsBarrier(cx, id))) {
+        if (!binaryTypes.lhsTypes || binaryTypes.lhsTypes->propertyNeedsBarrier(cx, id))
             ins->setNeedsBarrier();
-        }
     }
 
     current->add(ins);

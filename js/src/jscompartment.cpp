@@ -29,6 +29,7 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "ion/IonCompartment.h"
+#include "ion/Ion.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -105,6 +106,12 @@ JSCompartment::setNeedsBarrier(bool needs)
     if (needsBarrier_ != needs)
         mjit::ClearAllFrames(this);
 #endif
+
+#ifdef JS_ION
+    if (needsBarrier_ != needs)
+        ion::ToggleBarriers(this, needs);
+#endif
+
     needsBarrier_ = needs;
 }
 
@@ -116,7 +123,7 @@ JSCompartment::ensureIonCompartmentExists(JSContext *cx)
     if (ionCompartment_)
         return true;
 
-    // Set the compartment early, so linking works.
+    /* Set the compartment early, so linking works. */
     ionCompartment_ = cx->new_<IonCompartment>();
 
     if (!ionCompartment_ || !ionCompartment_->initialize(cx)) {
@@ -463,9 +470,11 @@ JSCompartment::discardJitCode(FreeOp *fop)
     ion::InvalidateAll(fop, this);
 # endif
 
-    if (gcPreserveCode) {
+    if (isPreservingCode()) {
         for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
+
+            /* Discard JM caches. */
             for (int constructing = 0; constructing <= 1; constructing++) {
                 for (int barriers = 0; barriers <= 1; barriers++) {
                     mjit::JITScript *jit = script->getJIT((bool) constructing, (bool) barriers);
@@ -474,10 +483,9 @@ JSCompartment::discardJitCode(FreeOp *fop)
                 }
             }
 
-# ifdef JS_ION
-            // As a temporary measure until Bug 746691 lands, always kill Ion code.
-            ion::FinishInvalidation(fop, script);
-# endif
+            /* Discard Ion caches. */
+            if (script->hasIonScript())
+                script->ion->purgeCaches();
         }
     } else {
         for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {

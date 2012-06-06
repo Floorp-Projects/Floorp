@@ -59,7 +59,7 @@ using namespace js::ion;
 void
 CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 {
-    JS_ASSERT(!absolute);
+    JS_ASSERT(!absolute_);
     size_t new_off = (size_t)raw_;
 #ifdef JS_SMALL_BRANCH
     size_t jumpTableEntryOffset = reinterpret_cast<size_t>(jumpTableEntry_);
@@ -77,13 +77,13 @@ CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
 #ifdef JS_SMALL_BRANCH
     jumpTableEntry_ = Assembler::PatchableJumpAddress(code, (size_t) jumpTableEntryOffset);
 #endif
-    markAbsolute(true);
+    absolute_ = true;
 }
 
 void
 CodeLocationLabel::repoint(IonCode *code, MacroAssembler *masm)
 {
-     JS_ASSERT(!absolute);
+     JS_ASSERT(!absolute_);
      size_t new_off = (size_t)raw_;
      if (masm != NULL) {
 #ifdef JS_CPU_X64
@@ -94,7 +94,7 @@ CodeLocationLabel::repoint(IonCode *code, MacroAssembler *masm)
      JS_ASSERT(new_off < code->instructionsSize());
 
      raw_ = code->raw() + new_off;
-     markAbsolute(true);
+     absolute_ = true;
 }
 
 void
@@ -301,9 +301,6 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
     jsbytecode *pc;
     cache.getScriptedLocation(&script, &pc);
 
-    // Root the object.
-    RootedObject objRoot(cx, obj);
-
     // Override the return value if we are invalidated (bug 728188).
     AutoDetectInvalidation adi(cx, vp, topScript);
 
@@ -327,17 +324,17 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
 
     RootedId id(cx, NameToId(name));
     if (obj->getOps()->getProperty) {
-        if (!GetPropertyGenericMaybeCallXML(cx, JSOp(*pc), objRoot, id, vp))
+        if (!GetPropertyGenericMaybeCallXML(cx, JSOp(*pc), obj, id, vp))
             return false;
     } else {
-        if (!GetPropertyHelper(cx, objRoot, id, 0, vp))
+        if (!GetPropertyHelper(cx, obj, id, 0, vp))
             return false;
     }
 
 #if JS_HAS_NO_SUCH_METHOD
     // Handle objects with __noSuchMethod__.
     if (JSOp(*pc) == JSOP_CALLPROP && JS_UNLIKELY(vp->isPrimitive())) {
-        if (!OnUnknownMethod(cx, objRoot, IdToValue(id), vp))
+        if (!OnUnknownMethod(cx, obj, IdToValue(id), vp))
             return false;
     }
 #endif
@@ -354,6 +351,15 @@ IonCache::updateBaseAddress(IonCode *code, MacroAssembler &masm)
     initialJump_.repoint(code, &masm);
     lastJump_.repoint(code, &masm);
     cacheLabel_.repoint(code, &masm);
+}
+
+void
+IonCache::reset()
+{
+    PatchJump(initialJump_, cacheLabel_);
+
+    this->stubCount_ = 0;
+    this->lastJump_ = initialJump_;
 }
 
 bool
@@ -373,7 +379,7 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Sh
         Address addr(object(), JSObject::getFixedSlotOffset(shape->slot()));
 
         if (cx->compartment->needsBarrier())
-            masm.emitPreBarrier(addr, MIRType_Value);
+            masm.callPreBarrier(addr, MIRType_Value);
 
         masm.storeConstantOrRegister(value(), addr);
     } else {
@@ -383,7 +389,7 @@ IonCacheSetProperty::attachNativeExisting(JSContext *cx, JSObject *obj, const Sh
         Address addr(slotsReg, obj->dynamicSlotIndex(shape->slot()) * sizeof(Value));
 
         if (cx->compartment->needsBarrier())
-            masm.emitPreBarrier(addr, MIRType_Value);
+            masm.callPreBarrier(addr, MIRType_Value);
 
         masm.storeConstantOrRegister(value(), addr);
     }
