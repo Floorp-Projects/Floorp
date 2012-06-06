@@ -597,7 +597,7 @@ WebGLContext::InitAndValidateGL()
         return false;
     }
 
-#ifdef ANDROID
+#ifdef MOZ_JAVA_COMPOSITOR
     // bug 736123, blacklist WebGL on Adreno
     bool forceEnabled = Preferences::GetBool("webgl.force-enabled", false);
     if (!forceEnabled) {
