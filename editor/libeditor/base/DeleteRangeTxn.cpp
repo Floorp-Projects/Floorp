@@ -14,6 +14,10 @@
 #include "nsIContent.h"
 #include "nsComponentManagerUtils.h"
 
+#include "mozilla/Util.h"
+
+using namespace mozilla;
+
 #ifdef NS_DEBUG
 static bool gNoisy = false;
 #endif
@@ -64,7 +68,7 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor,
   mRange  = do_QueryInterface(aRange);
   mRangeUpdater = aRangeUpdater;
   
-  nsresult result = aRange->GetStartContainer(getter_AddRefs(mStartParent));
+  DebugOnly<nsresult> result = aRange->GetStartContainer(getter_AddRefs(mStartParent));
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetStartParent failed.");
   result = aRange->GetEndContainer(getter_AddRefs(mEndParent));
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetEndParent failed.");
