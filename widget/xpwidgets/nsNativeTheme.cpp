@@ -462,6 +462,13 @@ nsNativeTheme::IsVerticalProgress(nsIFrame* aFrame)
          aFrame->GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL;
 }
 
+bool
+nsNativeTheme::IsVerticalMeter(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "You have to pass a non-null aFrame");
+  return aFrame->GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL;
+}
+
 // menupopup:
 bool
 nsNativeTheme::IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent)
