@@ -4000,8 +4000,8 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         return true;
       }
 
-      Element* rootElement =
-        static_cast<nsIDocument*>(aParent)->GetRootElement();
+      nsIDocument* parentDocument = static_cast<nsIDocument*>(aParent);
+      Element* rootElement = parentDocument->GetRootElement();
       if (rootElement) {
         // Already have a documentElement, so this is only OK if we're
         // replacing it.
@@ -4015,13 +4015,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         return true;
       }
 
-      // Now grovel for a doctype
-      nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aParent);
-      NS_ASSERTION(doc, "Shouldn't happen");
-      nsCOMPtr<nsIDOMDocumentType> docType;
-      doc->GetDoctype(getter_AddRefs(docType));
-      nsCOMPtr<nsIContent> docTypeContent = do_QueryInterface(docType);
-      
+      nsIContent* docTypeContent = parentDocument->GetDocumentType();
       if (!docTypeContent) {
         // It's all good.
         return true;
@@ -4043,11 +4037,8 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
         return false;
       }
 
-      nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aParent);
-      NS_ASSERTION(doc, "Shouldn't happen");
-      nsCOMPtr<nsIDOMDocumentType> docType;
-      doc->GetDoctype(getter_AddRefs(docType));
-      nsCOMPtr<nsIContent> docTypeContent = do_QueryInterface(docType);
+      nsIDocument* parentDocument = static_cast<nsIDocument*>(aParent);
+      nsIContent* docTypeContent = parentDocument->GetDocumentType();
       if (docTypeContent) {
         // Already have a doctype, so this is only OK if we're replacing it
         return aIsReplace && docTypeContent == aRefChild;
@@ -4055,8 +4046,7 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
 
       // We don't have a doctype yet.  Our one remaining constraint is
       // that the doctype must come before the documentElement.
-      Element* rootElement =
-        static_cast<nsIDocument*>(aParent)->GetRootElement();
+      Element* rootElement = parentDocument->GetRootElement();
       if (!rootElement) {
         // It's all good
         return true;

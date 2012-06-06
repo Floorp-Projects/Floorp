@@ -4295,22 +4295,25 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 //
 // nsIDOMDocument interface
 //
+nsIContent*
+nsIDocument::GetDocumentType() const
+{
+  for (nsIContent* child = GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+      return child;
+    }
+  }
+  return NULL;
+}
+
 NS_IMETHODIMP
 nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 {
-  NS_ENSURE_ARG_POINTER(aDoctype);
-
-  *aDoctype = nsnull;
-  PRInt32 i, count;
-  count = mChildren.ChildCount();
-  for (i = 0; i < count; i++) {
-    CallQueryInterface(mChildren.ChildAt(i), aDoctype);
-
-    if (*aDoctype) {
-      return NS_OK;
-    }
-  }
-
+  MOZ_ASSERT(aDoctype);
+  nsCOMPtr<nsIDOMDocumentType> doctype = do_QueryInterface(GetDocumentType());
+  doctype.forget(aDoctype);
   return NS_OK;
 }
 
