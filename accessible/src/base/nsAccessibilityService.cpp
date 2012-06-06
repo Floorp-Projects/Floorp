@@ -18,13 +18,13 @@
 #include "HTMLImageMapAccessible.h"
 #include "HTMLLinkAccessible.h"
 #include "HTMLListAccessible.h"
+#include "HTMLSelectAccessible.h"
 #include "HyperTextAccessibleWrap.h"
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
 #include "nsIAccessibleProvider.h"
 #include "nsHTMLCanvasAccessible.h"
-#include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessibleWrap.h"
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
@@ -226,7 +226,7 @@ nsAccessibilityService::CreateHTMLComboboxAccessible(nsIContent* aContent,
                                                      nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLComboboxAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLComboboxAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -286,7 +286,7 @@ nsAccessibilityService::CreateHTMLListboxAccessible(nsIContent* aContent,
                                                     nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLSelectListAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLSelectListAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -1604,13 +1604,13 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
   }
 
   if (tag == nsGkAtoms::option) {
-    Accessible* accessible = new nsHTMLSelectOptionAccessible(aContent, aDoc);
+    Accessible* accessible = new HTMLSelectOptionAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
 
   if (tag == nsGkAtoms::optgroup) {
-    Accessible* accessible = new nsHTMLSelectOptGroupAccessible(aContent, aDoc);
+    Accessible* accessible = new HTMLSelectOptGroupAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
