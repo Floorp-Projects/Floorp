@@ -32,8 +32,8 @@ public:
   NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
 #ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 
-  NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
-  NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
+  NS_IMETHOD GetDisplayDirectory(nsIFile * *aDisplayDirectory);
+  NS_IMETHOD SetDisplayDirectory(nsIFile * aDisplayDirectory);
 #endif
   NS_IMETHOD GetAddToRecentDocs(bool *aFlag);
   NS_IMETHOD SetAddToRecentDocs(bool aFlag);
@@ -45,7 +45,7 @@ protected:
 
   bool mAddToRecentDocs;
 #ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 
-  nsCOMPtr<nsILocalFile> mDisplayDirectory;
+  nsCOMPtr<nsIFile> mDisplayDirectory;
 #endif
 };
 

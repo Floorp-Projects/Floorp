@@ -14,7 +14,7 @@
 #include "nsCOMArray.h"
 
 class nsIWidget;
-class nsILocalFile;
+class nsIFile;
 
 class nsFilePicker : public nsBaseFilePicker
 {
@@ -33,7 +33,7 @@ public:
   NS_IMETHODIMP GetDefaultExtension(nsAString& aExtension);
   NS_IMETHODIMP GetFilterIndex(PRInt32 *aFilterIndex);
   NS_IMETHODIMP SetFilterIndex(PRInt32 aFilterIndex);
-  NS_IMETHODIMP GetFile(nsILocalFile **aFile);
+  NS_IMETHODIMP GetFile(nsIFile **aFile);
   NS_IMETHODIMP GetFileURL(nsIURI **aFileURL);
   NS_IMETHODIMP GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHODIMP Show(PRInt16 *aReturn);
@@ -47,7 +47,7 @@ protected:
   void ReadValuesFromFileChooser(GtkWidget *file_chooser);
 
   nsCOMPtr<nsIWidget>    mParentWidget;
-  nsCOMArray<nsILocalFile> mFiles;
+  nsCOMArray<nsIFile> mFiles;
 
   PRInt16   mMode;
   PRInt16   mSelectedType;
@@ -61,7 +61,7 @@ protected:
   nsTArray<nsCString> mFilterNames;
 
 private:
-  static nsILocalFile *mPrevDisplayDirectory;
+  static nsIFile *mPrevDisplayDirectory;
 };
 
 #endif

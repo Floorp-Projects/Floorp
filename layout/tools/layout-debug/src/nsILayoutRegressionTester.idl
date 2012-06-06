@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsIDOMWindow;
-interface nsILocalFile;
+interface nsIFile;
 
 [scriptable, uuid(B249B2C0-EE11-11DA-8AD9-0800200C9A66)]
 interface nsILayoutRegressionTester : nsISupports
@@ -28,7 +28,7 @@ interface nsILayoutRegressionTester : nsISupports
   const long DUMP_RESULT_LOADING             = 1;   // still loading
   const long DUMP_RESULT_ERROR               = 2;   // an error occurred
   
-  long dumpFrameModel(in nsIDOMWindow aWindowToDump, in nsILocalFile aFile, in unsigned long aFlagsMask);
+  long dumpFrameModel(in nsIDOMWindow aWindowToDump, in nsIFile aFile, in unsigned long aFlagsMask);
 
   /**
    * Compares the contents of frame model files
@@ -39,6 +39,6 @@ interface nsILayoutRegressionTester : nsISupports
    */
   const short COMPARE_FLAGS_VERBOSE        = 0;
   const short COMPARE_FLAGS_BRIEF          = 1;
-  long compareFrameModels(in nsILocalFile aBaseFile, in nsILocalFile aVerFile, in unsigned long aFlags);
+  long compareFrameModels(in nsIFile aBaseFile, in nsIFile aVerFile, in unsigned long aFlags);
 };
 

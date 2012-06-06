@@ -8,7 +8,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIFileURL.h"
 #include "nsEscape.h"
 #include "nsNetUtil.h"
@@ -260,7 +260,7 @@ nsMIMEInfoBase::SetAlwaysAskBeforeHandling(bool aAlwaysAsk)
 
 /* static */
 nsresult 
-nsMIMEInfoBase::GetLocalFileFromURI(nsIURI *aURI, nsILocalFile **aFile)
+nsMIMEInfoBase::GetLocalFileFromURI(nsIURI *aURI, nsIFile **aFile)
 {
   nsresult rv;
 

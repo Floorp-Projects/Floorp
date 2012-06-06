@@ -9,7 +9,7 @@
 #include "nsIObserver.h"
 #include "nsIIdleService.h"
 #include "nsISimpleEnumerator.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsXULAppAPI.h"
@@ -31,7 +31,7 @@
 // media cache temp files which were supposed to be deleted on application
 // exit were actually deleted as they may not be if we previously crashed.
 // See bug 572579. This is only needed on some versions of Windows,
-// nsILocalFile::DELETE_ON_CLOSE works on other platforms.
+// nsIFile::DELETE_ON_CLOSE works on other platforms.
 class nsMediaCacheRemover : public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
@@ -87,12 +87,8 @@ public:
     if (NS_FAILED(rv))
       return;
 
-    nsCOMPtr<nsILocalFile> tmpFile = do_QueryInterface(tmpDir);
-    if (!tmpFile)
-      return;
-
     // Remove the directory recursively.  
-    tmpFile->Remove(true);
+    tmpDir->Remove(true);
   }
 };
 

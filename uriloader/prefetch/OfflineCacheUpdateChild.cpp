@@ -179,7 +179,7 @@ NS_IMETHODIMP
 OfflineCacheUpdateChild::Init(nsIURI *aManifestURI,
                               nsIURI *aDocumentURI,
                               nsIDOMDocument *aDocument,
-                              nsILocalFile *aCustomProfileDir)
+                              nsIFile *aCustomProfileDir)
 {
     nsresult rv;
 

@@ -22,7 +22,7 @@
 #include "xptinfo.h"
 
 #include "nsIServiceManager.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -134,10 +134,10 @@ public:
     // Directory stuff...
 
     PRUint32 GetDirectoryCount();
-    nsresult GetCloneOfDirectoryAt(PRUint32 i, nsILocalFile** dir);
-    nsresult GetDirectoryAt(PRUint32 i, nsILocalFile** dir);
-    bool     FindDirectory(nsILocalFile* dir, PRUint32* index);
-    bool     FindDirectoryOfFile(nsILocalFile* file, PRUint32* index);
+    nsresult GetCloneOfDirectoryAt(PRUint32 i, nsIFile** dir);
+    nsresult GetDirectoryAt(PRUint32 i, nsIFile** dir);
+    bool     FindDirectory(nsIFile* dir, PRUint32* index);
+    bool     FindDirectoryOfFile(nsIFile* file, PRUint32* index);
     bool     DirectoryAtMatchesPersistentDescriptor(PRUint32 i, const char* desc);
 
 private:

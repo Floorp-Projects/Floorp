@@ -15,7 +15,6 @@
 
 #include "nsError.h"
 #include "nsIFile.h"
-#include "nsILocalFile.h"
 #include "nsIStreamListener.h"
 #include "nsNetUtil.h"
 #include "nsIChannelEventSink.h"

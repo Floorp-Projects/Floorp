@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsDeviceContextAndroid.h"
 #include "nsString.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsAutoPtr.h"
 #include "gfxPDFSurface.h"
@@ -64,7 +64,7 @@ NS_IMETHODIMP
 nsDeviceContextSpecAndroid::EndDocument()
 {
   nsXPIDLString targetPath;
-  nsCOMPtr<nsILocalFile> destFile;
+  nsCOMPtr<nsIFile> destFile;
   mPrintSettings->GetToFileName(getter_Copies(targetPath));
   
   nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(targetPath),

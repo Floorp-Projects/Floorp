@@ -11,7 +11,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsEscape.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsICharsetConverterManager.h"

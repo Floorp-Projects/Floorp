@@ -10,7 +10,7 @@
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsStringAPI.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
 #include "prenv.h"
@@ -108,7 +108,7 @@ main(int argc, char* argv[])
         gTestLog = PR_NewLogModule("Test");
 #endif
 
-        nsCOMPtr<nsILocalFile> file;
+        nsCOMPtr<nsIFile> file;
         rv = NS_NewNativeLocalFile(nsDependentCString(fileName), false, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
 

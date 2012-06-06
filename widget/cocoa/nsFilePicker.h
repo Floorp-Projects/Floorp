@@ -10,7 +10,7 @@
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsIFileChannel.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 
@@ -32,7 +32,7 @@ public:
   NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
   NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
-  NS_IMETHOD GetFile(nsILocalFile * *aFile);
+  NS_IMETHOD GetFile(nsIFile * *aFile);
   NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *_retval); 
@@ -53,9 +53,9 @@ protected:
   // aFile is an existing but unspecified file. These functions must specify it.
   //
   // will return |returnCancel| or |returnOK| as result.
-  PRInt16 GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles);
-  PRInt16 GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile);
-  PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile);
+  PRInt16 GetLocalFiles(const nsString& inTitle, bool inAllowMultiple, nsCOMArray<nsIFile>& outFiles);
+  PRInt16 GetLocalFolder(const nsString& inTitle, nsIFile** outFile);
+  PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsIFile** outFile);
 
   void     SetDialogTitle(const nsString& inTitle, id aDialog);
   NSString *PanelDefaultDirectory();
@@ -63,7 +63,7 @@ protected:
                                                 
   nsString               mTitle;
   PRInt16                mMode;
-  nsCOMArray<nsILocalFile> mFiles;
+  nsCOMArray<nsIFile>    mFiles;
   nsString               mDefault;
 
   nsTArray<nsString>     mFilters; 
