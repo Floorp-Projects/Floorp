@@ -1329,9 +1329,18 @@ static void InitOnlyOnce()
   // X11 (else it would crash).
   sUseOffMainThreadCompositing = (PR_GetEnv("MOZ_USE_OMTC") != NULL);
 #else
-  sUseOffMainThreadCompositing = mozilla::Preferences::GetBool(
+  sUseOffMainThreadCompositing = Preferences::GetBool(
         "layers.offmainthreadcomposition.enabled", 
         false);
+  // Until https://bugzilla.mozilla.org/show_bug.cgi?id=745148 lands,
+  // we use either omtc or content processes, but not both.  Prefer
+  // OOP content to omtc.  (Currently, this only affects b2g.)
+  //
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=761962 .
+  if (!Preferences::GetBool("dom.ipc.tabs.disabled", true)) {
+    // Disable omtc if OOP content isn't force-disabled.
+    sUseOffMainThreadCompositing = false;
+  }
 #endif
 }
 
