@@ -5875,50 +5875,54 @@ nsHTMLEditRules::LookInsideDivBQandList(nsCOMArray<nsIDOMNode>& aNodeArray)
 {
   // if there is only one node in the array, and it is a list, div, or blockquote,
   // then look inside of it until we find inner list or content.
-  nsresult res = NS_OK;
   PRInt32 listCount = aNodeArray.Count();
-  if (listCount == 1)
-  {
-    nsCOMPtr<nsIDOMNode> curNode = aNodeArray[0];
-    
-    while (nsHTMLEditUtils::IsDiv(curNode)
-           || nsHTMLEditUtils::IsList(curNode)
-           || nsHTMLEditUtils::IsBlockquote(curNode))
-    {
-      // dive as long as there is only one child, and it is a list, div, blockquote
-      PRUint32 numChildren;
-      res = mHTMLEditor->CountEditableChildren(curNode, numChildren);
-      NS_ENSURE_SUCCESS(res, res);
-      
-      if (numChildren == 1)
-      {
-        // keep diving
-        nsCOMPtr <nsIDOMNode> tmpNode = nsEditor::GetChildAt(curNode, 0);
-        if (nsHTMLEditUtils::IsDiv(tmpNode)
-            || nsHTMLEditUtils::IsList(tmpNode)
-            || nsHTMLEditUtils::IsBlockquote(tmpNode))
-        {
-          // check editablility XXX floppy moose
-          curNode = tmpNode;
-        }
-        else break;
-      }
-      else break;
-    }
-    // we've found innermost list/blockquote/div: 
-    // replace the one node in the array with these nodes
-    aNodeArray.RemoveObjectAt(0);
-    if ((nsHTMLEditUtils::IsDiv(curNode) || nsHTMLEditUtils::IsBlockquote(curNode)))
-    {
-      PRInt32 j=0;
-      res = GetInnerContent(curNode, aNodeArray, &j, false, false);
-    }
-    else
-    {
-      aNodeArray.AppendObject(curNode);
-    }
+  if (listCount != 1) {
+    return NS_OK;
   }
-  return res;
+
+  nsCOMPtr<nsINode> curNode = do_QueryInterface(aNodeArray[0]);
+  NS_ENSURE_STATE(curNode);
+
+  while (curNode->IsElement() &&
+         (curNode->AsElement()->IsHTML(nsGkAtoms::div) ||
+          nsHTMLEditUtils::IsList(curNode->AsElement()) ||
+          curNode->AsElement()->IsHTML(nsGkAtoms::blockquote))) {
+    // dive as long as there is only one child, and it is a list, div, blockquote
+    PRUint32 numChildren = mHTMLEditor->CountEditableChildren(curNode);
+    if (numChildren != 1) {
+      break;
+    }
+
+    // keep diving
+    // XXX One would expect to dive into the one editable node.
+    nsIContent* tmp = curNode->GetFirstChild();
+    if (!tmp->IsElement()) {
+      break;
+    }
+
+    dom::Element* element = tmp->AsElement();
+    if (!element->IsHTML(nsGkAtoms::div) &&
+        !nsHTMLEditUtils::IsList(element) &&
+        !element->IsHTML(nsGkAtoms::blockquote)) {
+      break;
+    }
+
+    // check editablility XXX floppy moose
+    curNode = tmp;
+  }
+
+  // we've found innermost list/blockquote/div: 
+  // replace the one node in the array with these nodes
+  aNodeArray.RemoveObjectAt(0);
+  if (curNode->IsElement() &&
+      (curNode->AsElement()->IsHTML(nsGkAtoms::div) ||
+       curNode->AsElement()->IsHTML(nsGkAtoms::blockquote))) {
+    PRInt32 j = 0;
+    return GetInnerContent(curNode->AsDOMNode(), aNodeArray, &j, false, false);
+  }
+
+  aNodeArray.AppendObject(curNode->AsDOMNode());
+  return NS_OK;
 }
 
 
