@@ -535,14 +535,6 @@ public:
     return GetTag(aNode) == aTag;
   }
 
-  // we should get rid of this method if we can
-  static inline bool NodeIsTypeString(nsIDOMNode *aNode, const nsAString &aTag)
-  {
-    nsIAtom *nodeAtom = GetTag(aNode);
-    return nodeAtom && nodeAtom->Equals(aTag);
-  }
-
-
   /** returns true if aParent can contain a child of type aTag */
   bool CanContain(nsIDOMNode* aParent, nsIDOMNode* aChild);
   bool CanContainTag(nsIDOMNode* aParent, nsIAtom* aTag);
