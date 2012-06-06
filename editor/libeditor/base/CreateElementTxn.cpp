@@ -54,14 +54,6 @@ NS_IMETHODIMP CreateElementTxn::Init(nsEditor      *aEditor,
   mTag = aTag;
   mParent = do_QueryInterface(aParent);
   mOffsetInParent = aOffsetInParent;
-#ifdef NS_DEBUG
-  {
-    nsCOMPtr<nsIDOMNodeList> testChildNodes;
-    nsresult testResult = mParent->GetChildNodes(getter_AddRefs(testChildNodes));
-    NS_ASSERTION(testChildNodes, "bad parent type, can't have children.");
-    NS_ASSERTION(NS_SUCCEEDED(testResult), "bad result.");
-  }
-#endif
   return NS_OK;
 }
 
