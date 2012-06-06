@@ -11,6 +11,8 @@
 #include "prmem.h"
 #include "nsDOMFile.h"
 
+#include "nsICanvasRenderingContextInternal.h"
+#include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
@@ -453,15 +455,9 @@ nsHTMLCanvasElement::GetContextHelper(const nsAString& aContextId,
     return NS_OK;
   }
 
-  rv = ctx->SetCanvasElement(this);
-  if (NS_FAILED(rv)) {
-    *aContext = nsnull;
-    return rv;
-  }
-
+  ctx->SetCanvasElement(this);
   ctx.forget(aContext);
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
