@@ -569,7 +569,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
 
   // Now compute the height we want to have
   mNumDisplayRows = kMaxDropDownRows;
-  if (visibleHeight > mNumDisplayRows * heightOfARow) {
+  if (visibleHeight > nscoord(mNumDisplayRows * heightOfARow)) {
     visibleHeight = mNumDisplayRows * heightOfARow;
     // This is an adaptive algorithm for figuring out how many rows 
     // should be displayed in the drop down. The standard size is 20 rows, 
@@ -963,7 +963,7 @@ nsListControlFrame::SetInitialChildList(ChildListID    aListID,
 
 //---------------------------------------------------------
 nsresult
-nsListControlFrame::GetSizeAttribute(PRInt32 *aSize) {
+nsListControlFrame::GetSizeAttribute(PRUint32 *aSize) {
   nsresult rv = NS_OK;
   nsIDOMHTMLSelectElement* selectElement;
   rv = mContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),(void**) &selectElement);
@@ -2403,13 +2403,13 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     case nsIDOMKeyEvent::DOM_VK_PAGE_UP: {
       AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
                                 (PRInt32)numOptions,
-                                -NS_MAX(1, mNumDisplayRows-1), -1);
+                                -NS_MAX(1, PRInt32(mNumDisplayRows-1)), -1);
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_PAGE_DOWN: {
       AdjustIndexForDisabledOpt(mEndSelectionIndex, newIndex,
                                 (PRInt32)numOptions,
-                                NS_MAX(1, mNumDisplayRows-1), 1);
+                                NS_MAX(1, PRInt32(mNumDisplayRows-1)), 1);
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_HOME: {
