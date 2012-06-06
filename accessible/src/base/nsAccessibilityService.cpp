@@ -14,6 +14,7 @@
 #endif
 #include "DocAccessible-inl.h"
 #include "FocusManager.h"
+#include "HTMLCanvasAccessible.h"
 #include "HTMLElementAccessibles.h"
 #include "HTMLImageMapAccessible.h"
 #include "HTMLLinkAccessible.h"
@@ -24,7 +25,6 @@
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
 #include "nsIAccessibleProvider.h"
-#include "nsHTMLCanvasAccessible.h"
 #include "nsHTMLTableAccessibleWrap.h"
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
@@ -236,7 +236,7 @@ nsAccessibilityService::CreateHTMLCanvasAccessible(nsIContent* aContent,
                                                    nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLCanvasAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLCanvasAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
