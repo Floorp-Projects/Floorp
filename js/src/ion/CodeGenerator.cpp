@@ -501,6 +501,29 @@ CodeGenerator::visitCallNative(LCallNative *call)
 }
 
 bool
+CodeGenerator::emitCallInvokeFunction(LCallGeneric *call, uint32 unusedStack)
+{
+    typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
+    static const VMFunction InvokeFunctionInfo = FunctionInfo<pf>(InvokeFunction);
+
+    // Nestle %esp up to the argument vector.
+    // Each path must account for framePushed_ separately, for callVM to be valid.
+    masm.freeStack(unusedStack);
+
+    pushArg(StackPointer);                    // argv.
+    pushArg(Imm32(call->bytecodeArgc()));     // argc.
+    pushArg(ToRegister(call->getFunction())); // JSFunction *.
+
+    if (!callVM(InvokeFunctionInfo, call))
+        return false;
+
+    // Un-nestle %esp from the argument vector. No prefix was pushed.
+    masm.reserveStack(unusedStack);
+
+    return true;
+}
+
+bool
 CodeGenerator::visitCallGeneric(LCallGeneric *call)
 {
     // Holds the function object.
@@ -526,6 +549,22 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         masm.cmpPtr(nargsreg, ImmWord(&js::FunctionClass));
         if (!bailoutIf(Assembler::NotEqual, call->snapshot()))
             return false;
+    }
+
+    // If the function is known to be uncompilable, only emit the call to InvokeFunction.
+    if (call->hasSingleTarget() &&
+        call->getSingleTarget()->script()->ion == ION_DISABLED_SCRIPT)
+    {
+        emitCallInvokeFunction(call, unusedStack);
+
+        if (call->mir()->isConstructing()) {
+            Label notPrimitive;
+            masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand, &notPrimitive);
+            masm.loadValue(Address(StackPointer, unusedStack), JSReturnOperand);
+            masm.bind(&notPrimitive);
+        }
+
+        return true;
     }
 
     Label end, invoke;
@@ -610,26 +649,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.jump(&end);
 
     // Handle uncompiled or native functions.
-    {
-        masm.bind(&invoke);
-
-        typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
-        static const VMFunction InvokeFunctionInfo = FunctionInfo<pf>(InvokeFunction);
-
-        // Nestle %esp up to the argument vector.
-        // Each path must account for framePushed_ separately, for callVM to be valid.
-        masm.freeStack(unusedStack);
-
-        pushArg(StackPointer);                 // argv.
-        pushArg(Imm32(call->bytecodeArgc()));  // argc.
-        pushArg(calleereg);                    // JSFunction *.
-
-        if (!callVM(InvokeFunctionInfo, call))
-            return false;
-
-        // Un-nestle %esp from the argument vector. No prefix was pushed.
-        masm.reserveStack(unusedStack);
-    }
+    masm.bind(&invoke);
+    emitCallInvokeFunction(call, unusedStack);
 
     masm.bind(&end);
 
@@ -637,10 +658,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     // replace the return value with the Object from CreateThis.
     if (call->mir()->isConstructing()) {
         Label notPrimitive;
-
         masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand, &notPrimitive);
         masm.loadValue(Address(StackPointer, unusedStack), JSReturnOperand);
-
         masm.bind(&notPrimitive);
     }
 
