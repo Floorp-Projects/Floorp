@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIInputStream;
-interface nsILocalFile;
+interface nsIFile;
 interface nsIOutputStream;
 interface nsISimpleEnumerator;
 
@@ -66,7 +66,7 @@ interface nsIHttpServer : nsISupports
    *   the file to serve for the given path, or null to remove any mapping that
    *   might exist; this file must exist for the lifetime of the server
    */
-  void registerFile(in string path, in nsILocalFile file);
+  void registerFile(in string path, in nsIFile file);
 
   /**
    * Registers a custom path handler.
@@ -140,7 +140,7 @@ interface nsIHttpServer : nsISupports
    *   if dir is non-null and does not exist or is not a directory, or if path
    *   does not begin with and end with a forward slash
    */
-  void registerDirectory(in string path, in nsILocalFile dir);
+  void registerDirectory(in string path, in nsIFile dir);
 
   /**
    * Associates files with the given extension with the given Content-Type when

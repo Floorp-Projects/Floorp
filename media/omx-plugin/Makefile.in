@@ -37,7 +37,6 @@ INCLUDES        += \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
-                -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
                 -I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
                 $(NULL)

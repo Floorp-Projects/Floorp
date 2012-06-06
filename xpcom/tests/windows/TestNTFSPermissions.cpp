@@ -10,7 +10,7 @@
 
 #include "../TestHarness.h"
 #include "nsEmbedString.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include <windows.h>
 #include <aclapi.h>
 
@@ -25,9 +25,9 @@ nsresult TestPermissions()
 
     // File variables
     HANDLE tempFileHandle;
-    nsCOMPtr<nsILocalFile> tempFile;
-    nsCOMPtr<nsILocalFile> tempDirectory1;
-    nsCOMPtr<nsILocalFile> tempDirectory2;
+    nsCOMPtr<nsIFile> tempFile;
+    nsCOMPtr<nsIFile> tempDirectory1;
+    nsCOMPtr<nsIFile> tempDirectory2;
     WCHAR filePath[MAX_PATH];
     WCHAR dir1Path[MAX_PATH];
     WCHAR dir2Path[MAX_PATH];

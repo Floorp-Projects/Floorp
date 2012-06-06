@@ -26,7 +26,6 @@
 #include "nsString.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsILocalFile.h"
 #include "nsIChannel.h"
 #include "nsITimer.h"
 
@@ -153,7 +152,7 @@ protected:
    * implementation, subclasses can use this to correctly inherit ACLs from the
    * parent directory, to make the permissions obey the umask, etc.
    */
-  virtual void FixFilePermissions(nsILocalFile* aFile);
+  virtual void FixFilePermissions(nsIFile* aFile);
 
 #ifdef PR_LOGGING
   /**
@@ -171,7 +170,7 @@ protected:
   /**
    * Helper function for ExpungeTemporaryFiles and ExpungeTemporaryPrivateFiles
    */
-  static void ExpungeTemporaryFilesHelper(nsCOMArray<nsILocalFile> &fileList);
+  static void ExpungeTemporaryFilesHelper(nsCOMArray<nsIFile> &fileList);
   /**
    * Functions related to the tempory file cleanup service provided by
    * nsExternalHelperAppService
@@ -186,12 +185,12 @@ protected:
   /**
    * Array for the files that should be deleted
    */
-  nsCOMArray<nsILocalFile> mTemporaryFilesList;
+  nsCOMArray<nsIFile> mTemporaryFilesList;
   /**
    * Array for the files that should be deleted (for the temporary files
    * added during the private browsing mode)
    */
-  nsCOMArray<nsILocalFile> mTemporaryPrivateFilesList;
+  nsCOMArray<nsIFile> mTemporaryPrivateFilesList;
   /**
    * Whether we are in private browsing mode
    */
@@ -337,7 +336,7 @@ protected:
    * what's going on...
    */
   nsresult CreateProgressListener();
-  nsresult PromptForSaveToFile(nsILocalFile ** aNewFile,
+  nsresult PromptForSaveToFile(nsIFile ** aNewFile,
                                const nsAFlatString &aDefaultFile,
                                const nsAFlatString &aDefaultFileExt);
 

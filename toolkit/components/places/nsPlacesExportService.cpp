@@ -946,7 +946,7 @@ nsPlacesExportService::WriteContainerContents(nsINavHistoryResultNode* aFolder,
 
 
 NS_IMETHODIMP
-nsPlacesExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
+nsPlacesExportService::ExportHTMLToFile(nsIFile* aBookmarksFile)
 {
   NS_ENSURE_ARG(aBookmarksFile);
 
@@ -1105,14 +1105,12 @@ nsPlacesExportService::BackupBookmarksFile()
                               getter_AddRefs(bookmarksFileDir));
 
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsILocalFile> bookmarksFile = do_QueryInterface(bookmarksFileDir);
-  NS_ENSURE_STATE(bookmarksFile);
 
   // Create the file if it doesn't exist.
   bool exists;
-  rv = bookmarksFile->Exists(&exists);
+  rv = bookmarksFileDir->Exists(&exists);
   if (NS_FAILED(rv) || !exists) {
-    rv = bookmarksFile->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
+    rv = bookmarksFileDir->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
     if (NS_FAILED(rv)) {
       NS_WARNING("Unable to create bookmarks.html!");
       return rv;
@@ -1120,7 +1118,7 @@ nsPlacesExportService::BackupBookmarksFile()
   }
 
   // export bookmarks.html
-  rv = ExportHTMLToFile(bookmarksFile);
+  rv = ExportHTMLToFile(bookmarksFileDir);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

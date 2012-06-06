@@ -30,7 +30,7 @@ public:
                      const nsAString& aDisplayName,
                      nsIMIMEInfo *aMIMEInfo,
                      PRTime aStartTime,
-                     nsILocalFile* aTempFile,
+                     nsIFile* aTempFile,
                      nsICancelable* aCancelable) {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);

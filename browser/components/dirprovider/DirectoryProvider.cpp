@@ -54,7 +54,7 @@ DirectoryProvider::GetFile(const char *aKey, bool *aPersist, nsIFile* *aResult)
       nsCString path;
       rv = prefs->GetCharPref("browser.bookmarks.file", getter_Copies(path));
       if (NS_SUCCEEDED(rv)) {
-        NS_NewNativeLocalFile(path, true, (nsILocalFile**)(nsIFile**) getter_AddRefs(file));
+        NS_NewNativeLocalFile(path, true, getter_AddRefs(file));
       }
     }
   }

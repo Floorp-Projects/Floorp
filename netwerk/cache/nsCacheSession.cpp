@@ -41,7 +41,7 @@ NS_IMETHODIMP nsCacheSession::GetDoomEntriesIfExpired(bool *result)
 }
 
 
-NS_IMETHODIMP nsCacheSession::SetProfileDirectory(nsILocalFile *profileDir)
+NS_IMETHODIMP nsCacheSession::SetProfileDirectory(nsIFile *profileDir)
 {
   if (StoragePolicy() != nsICache::STORE_OFFLINE && profileDir) {
         // Profile directory override is currently implemented only for
@@ -55,7 +55,7 @@ NS_IMETHODIMP nsCacheSession::SetProfileDirectory(nsILocalFile *profileDir)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheSession::GetProfileDirectory(nsILocalFile **profileDir)
+NS_IMETHODIMP nsCacheSession::GetProfileDirectory(nsIFile **profileDir)
 {
     if (mProfileDir)
         NS_ADDREF(*profileDir = mProfileDir);

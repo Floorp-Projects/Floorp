@@ -54,7 +54,7 @@ public:
 protected:
   char* mTarget;
   nsCString mFileURL;
-  nsCOMPtr<nsILocalFile> mTempFile;
+  nsCOMPtr<nsIFile> mTempFile;
   nsCOMPtr<nsIOutputStream> mOutputStream;
   nsIPluginInstanceOwner* mOwner;
 };

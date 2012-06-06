@@ -27,7 +27,7 @@
 #include "nsIHttpChannelAuthProvider.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsITimedChannel.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsDNSPrefetch.h"
 #include "TimingStruct.h"
 #include "AutoClose.h"
@@ -305,7 +305,7 @@ private:
     nsCacheAccessMode                 mOfflineCacheAccess;
     nsCString                         mOfflineCacheClientID;
 
-    nsCOMPtr<nsILocalFile>            mProfileDirectory;
+    nsCOMPtr<nsIFile>                 mProfileDirectory;
 
     // auth specific data
     nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
