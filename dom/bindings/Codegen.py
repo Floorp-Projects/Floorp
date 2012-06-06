@@ -464,8 +464,7 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
 
     def definition_body_prologue(self):
         return """
-  MOZ_ASSERT(js::GetObjectJSClass(obj) == Class.ToJSClass());
-  %s* self = UnwrapDOMObject<%s>(obj, Class.ToJSClass());
+  %s* self = UnwrapDOMObject<%s>(obj);
 """ % (self.descriptor.nativeType, self.descriptor.nativeType)
 
     def definition_body(self):

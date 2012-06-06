@@ -60,9 +60,15 @@ IsDOMClass(const JSClass* clasp)
   return clasp->flags & JSCLASS_IS_DOMJSCLASS;
 }
 
+inline bool
+IsDOMClass(const js::Class* clasp)
+{
+  return clasp->flags & JSCLASS_IS_DOMJSCLASS;
+}
+
 template <class T>
 inline T*
-UnwrapDOMObject(JSObject* obj, const JSClass* clasp)
+UnwrapDOMObject(JSObject* obj)
 {
   JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
   // XXXbz/khuey worker code tries to unwrap interface objects (which have
@@ -74,13 +80,6 @@ UnwrapDOMObject(JSObject* obj, const JSClass* clasp)
   }
   
   return static_cast<T*>(val.toPrivate());
-}
-
-template <class T>
-inline T*
-UnwrapDOMObject(JSObject* obj, const js::Class* clasp)
-{
-  return UnwrapDOMObject<T>(obj, Jsvalify(clasp));
 }
 
 // Some callers don't want to set an exception when unwrappin fails
@@ -120,7 +119,7 @@ UnwrapObject(JSContext* cx, JSObject* obj, U& value)
   DOMJSClass* domClass = DOMJSClass::FromJSClass(clasp);
   if (domClass->mInterfaceChain[PrototypeTraits<PrototypeID>::Depth] ==
       PrototypeID) {
-    value = UnwrapDOMObject<T>(obj, clasp);
+    value = UnwrapDOMObject<T>(obj);
     return NS_OK;
   }
 
