@@ -2850,7 +2850,8 @@ var BrowserEventHandler = {
     var computedStyle = win.getComputedStyle(elem);
     if (!computedStyle)
       return false;
-    return computedStyle.overflow == 'auto' || computedStyle.overflow == 'scroll';
+    return computedStyle.overflowX == 'auto' || computedStyle.overflowX == 'scroll'
+        || computedStyle.overflowY == 'auto' || computedStyle.overflowY == 'scroll';
   },
 
   _findScrollableElement: function(elem, checkElem) {
