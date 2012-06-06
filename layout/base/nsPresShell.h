@@ -316,10 +316,11 @@ public:
   }
 
   void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                           size_t *aArenasSize,
+                           nsArenaMemoryStats *aArenaObjectsSize,
+                           size_t *aPresShellSize,
                            size_t *aStyleSetsSize,
                            size_t *aTextRunsSize,
-                           size_t *aPresContextSize) const;
+                           size_t *aPresContextSize);
   size_t SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const;
 
   // This data is stored as a content property (nsGkAtoms::scrolling) on
