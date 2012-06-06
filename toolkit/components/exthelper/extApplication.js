@@ -512,13 +512,9 @@ extApplication.prototype = {
                                        "@mozilla.org/xre/app-info;1",
                                        "nsIXULAppInfo");
 
-    // While the other event listeners are loaded only if needed,
-    // FUEL *must* listen for shutdown in order to clean up it's
-    // references to various services, and to remove itself as
-    // observer of any other notifications.
     this._obs = Cc["@mozilla.org/observer-service;1"].
                 getService(Ci.nsIObserverService);
-    this._obs.addObserver(this, "xpcom-shutdown", false);
+    this._obs.addObserver(this, "xpcom-shutdown", /* ownsWeak = */ true);
     this._registered = {"unload": true};
   },
 
@@ -561,12 +557,6 @@ extApplication.prototype = {
         gShutdown[i]();
       }
       gShutdown.splice(0, gShutdown.length);
-
-      // release our observers
-      this._obs.removeObserver(this, "app-startup");
-      this._obs.removeObserver(this, "final-ui-startup");
-      this._obs.removeObserver(this, "quit-application-requested");
-      this._obs.removeObserver(this, "xpcom-shutdown");
     }
   },
 
@@ -607,7 +597,7 @@ extApplication.prototype = {
       if (!(aEvent in rmap) || aEvent in self._registered)
         return;
 
-      self._obs.addObserver(self, rmap[aEvent]);
+      self._obs.addObserver(self, rmap[aEvent], /* ownsWeak = */ true);
       self._registered[aEvent] = true;
     }
 

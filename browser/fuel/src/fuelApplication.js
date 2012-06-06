@@ -646,7 +646,7 @@ Application.prototype = {
 
   // for nsISupports
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIApplication, Ci.extIApplication,
-                                          Ci.nsIObserver]),
+                                          Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   // for nsIClassInfo
   classInfo: XPCOMUtils.generateCI({classID: APPLICATION_CID,
