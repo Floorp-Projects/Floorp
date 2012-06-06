@@ -13,32 +13,40 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 dump("###################################### forms.js loaded\n");
 
+let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
+let HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
 let HTMLSelectElement = Ci.nsIDOMHTMLSelectElement;
 let HTMLOptGroupElement = Ci.nsIDOMHTMLOptGroupElement;
 let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
 
 let FormAssistant = {
   init: function fa_init() {
-    addEventListener("focus", this, true, false);
     addEventListener("click", this, true, false);
     addEventListener("blur", this, true, false);
     addMessageListener("Forms:Select:Choice", this);
+    addMessageListener("Forms:Input:Value", this);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
   currentTarget: null,
   handleEvent: function fa_handleEvent(evt) {
     switch (evt.type) {
-      case "click":
-      case "focus": {
+      case "click": {
+        let target =
+          Services.fm.getFocusedElementForWindow(content, true, {}) ||
+          evt.target;
+
         content.setTimeout(function(self) {
-          let target = evt.target;
           if (target instanceof HTMLSelectElement) { 
             sendAsyncMessage("Forms:Input", self._getJSON(target));
             self.currentTarget = target;
           } else if (target instanceof HTMLOptionElement &&
                      target.parentNode instanceof HTMLSelectElement) {
             target = target.parentNode;
+            sendAsyncMessage("Forms:Input", self._getJSON(target));
+            self.currentTarget = target;
+          } else if (target instanceof HTMLInputElement ||
+                     target instanceof HTMLTextAreaElement) {
             sendAsyncMessage("Forms:Input", self._getJSON(target));
             self.currentTarget = target;
           }
@@ -69,13 +77,18 @@ let FormAssistant = {
   },
 
   receiveMessage: function fa_receiveMessage(msg) {
+    let target = this.currentTarget;
+    if (!target)
+      return;
+
     let json = msg.json;
     switch (msg.name) {
-      case "Forms:Select:Choice":
-        if (!this.currentTarget)
-          return;
+      case "Forms:Input:Value":
+        target.value = json.value;
+        break;
 
-        let options = this.currentTarget.options;
+      case "Forms:Select:Choice":
+        let options = target.options;
         if ("index" in json) {
           options.item(json.index).selected = true;
         } else if ("indexes" in json) {
