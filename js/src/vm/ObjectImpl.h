@@ -17,6 +17,7 @@
 
 #include "gc/Barrier.h"
 #include "vm/NumericConversions.h"
+#include "vm/String.h"
 
 namespace js {
 
@@ -36,6 +37,55 @@ CastAsStrictPropertyOp(JSObject *object)
 {
     return JS_DATA_TO_FUNC_PTR(StrictPropertyOp, object);
 }
+
+/*
+ * Properties are stored differently depending on the type of the key.  If the
+ * key is an unsigned 32-bit integer (i.e. an index), we call such properties
+ * "elements" and store them in one of a number of forms (optimized for dense
+ * property storage, typed array data, and so on).  All other properties are
+ * stored using shapes and shape trees.  Keys for these properties are either
+ * PropertyNames (that is, atomized strings whose contents are not unsigned
+ * 32-bit integers) or SpecialIds (object values for E4X and a couple other
+ * things, see jsid for details); the union of these types, used in individual
+ * shapes, is PropertyId.
+ */
+class PropertyId
+{
+    jsid id;
+
+  public:
+    bool isName() const {
+        MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_SPECIAL(id));
+        return JSID_IS_STRING(id);
+    }
+    bool isSpecial() const {
+        MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_SPECIAL(id));
+        return !isName();
+    }
+
+    PropertyId() {
+        *this = PropertyId(SpecialId());
+    }
+    explicit PropertyId(PropertyName *name)
+      : id(NON_INTEGER_ATOM_TO_JSID(name))
+    { }
+    explicit PropertyId(const SpecialId &sid)
+      : id(SPECIALID_TO_JSID(sid))
+    { }
+
+    PropertyName * asName() const {
+        return JSID_TO_STRING(id)->asAtom().asPropertyName();
+    }
+    SpecialId asSpecial() const {
+        return JSID_TO_SPECIALID(id);
+    }
+    jsid asId() const {
+        return id;
+    }
+
+    bool operator==(const PropertyId &rhs) const { return id == rhs.id; }
+    bool operator!=(const PropertyId &rhs) const { return id != rhs.id; }
+};
 
 /*
  * A representation of ECMA-262 ed. 5's internal Property Descriptor data
