@@ -6800,24 +6800,16 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
   
   nsresult res = NS_OK;
   
-  nsCOMPtr<nsIDOMNode> curNode, curParent, curBlock, firstNode, lastNode;
-  PRInt32 offset;
+  nsCOMPtr<nsIDOMNode> curBlock, firstNode, lastNode;
   PRInt32 listCount = arrayOfNodes.Count();
-    
-  PRInt32 i;
-  for (i=0; i<listCount; i++)
-  {
+  for (PRInt32 i = 0; i < listCount; ++i) {
     // get the node to act on, and its location
-    curNode = arrayOfNodes[i];
-    res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
-    NS_ENSURE_SUCCESS(res, res);
-    nsAutoString curNodeTag, curBlockTag;
-    nsEditor::GetTagString(curNode, curNodeTag);
-    ToLowerCase(curNodeTag);
- 
+    nsCOMPtr<nsIDOMNode> curNode = arrayOfNodes[i];
+
+    nsCOMPtr<dom::Element> curElement = do_QueryInterface(curNode);
+
     // if curNode is a address, p, header, address, or pre, remove it 
-    if (nsHTMLEditUtils::IsFormatNode(curNode))
-    {
+    if (curElement && nsHTMLEditUtils::IsFormatNode(curElement)) {
       // process any partial progress saved
       if (curBlock)
       {
@@ -6828,16 +6820,15 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
       // remove curent block
       res = mHTMLEditor->RemoveBlockContainer(curNode); 
       NS_ENSURE_SUCCESS(res, res);
-    }
-    else if (nsHTMLEditUtils::IsTable(curNode)                    || 
-             nsHTMLEditUtils::IsTableRow(curNode)                 ||
-             (curNodeTag.EqualsLiteral("tbody"))      ||
-             (curNodeTag.EqualsLiteral("td"))         ||
-             nsHTMLEditUtils::IsList(curNode)                     ||
-             (curNodeTag.EqualsLiteral("li"))         ||
-             nsHTMLEditUtils::IsBlockquote(curNode)               ||
-             nsHTMLEditUtils::IsDiv(curNode))
-    {
+    } else if (curElement &&
+               (curElement->IsHTML(nsGkAtoms::table)      ||
+                curElement->IsHTML(nsGkAtoms::tr)         ||
+                curElement->IsHTML(nsGkAtoms::tbody)      ||
+                curElement->IsHTML(nsGkAtoms::td)         ||
+                nsHTMLEditUtils::IsList(curElement)       ||
+                curElement->IsHTML(nsGkAtoms::li)         ||
+                curElement->IsHTML(nsGkAtoms::blockquote) ||
+                curElement->IsHTML(nsGkAtoms::div))) {
       // process any partial progress saved
       if (curBlock)
       {
