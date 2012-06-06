@@ -64,16 +64,7 @@ template <class T>
 inline T*
 UnwrapDOMObject(JSObject* obj, const JSClass* clasp)
 {
-  MOZ_ASSERT(IsDOMClass(clasp));
-  MOZ_ASSERT(JS_GetClass(obj) == clasp);
-
-  size_t slot = DOMJSClass::FromJSClass(clasp)->mNativeSlot;
-  MOZ_ASSERT((slot == DOM_OBJECT_SLOT &&
-              !(clasp->flags & JSCLASS_DOM_GLOBAL)) ||
-             (slot == DOM_GLOBAL_OBJECT_SLOT &&
-              (clasp->flags & JSCLASS_DOM_GLOBAL)));
-
-  JS::Value val = js::GetReservedSlot(obj, slot);
+  JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
   // XXXbz/khuey worker code tries to unwrap interface objects (which have
   // nothing here).  That needs to stop.
   // XXX We don't null-check UnwrapObject's result; aren't we going to crash

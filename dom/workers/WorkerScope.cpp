@@ -681,7 +681,7 @@ public:
     nsRefPtr<DedicatedWorkerGlobalScope> scope =
       new DedicatedWorkerGlobalScope(aCx, aWorkerPrivate);
 
-    js::SetReservedSlot(aObj, DOM_GLOBAL_OBJECT_SLOT, PRIVATE_TO_JSVAL(scope));
+    js::SetReservedSlot(aObj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(scope));
 
     scope->SetIsDOMBinding();
     scope->SetWrapper(aObj);
@@ -859,7 +859,7 @@ DOMJSClass DedicatedWorkerGlobalScope::sClass = {
   },
   { prototypes::id::EventTarget_workers, prototypes::id::_ID_Count,
     prototypes::id::_ID_Count },
-  -1, false, DOM_GLOBAL_OBJECT_SLOT
+  -1, false, NULL
 };
 
 JSPropertySpec DedicatedWorkerGlobalScope::sProperties[] = {
