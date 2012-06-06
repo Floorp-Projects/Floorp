@@ -1,0 +1,4 @@
+# Please see the comment at the beginning of reftest.list
+
+== mixed-dimentionN.html?padding_parent mixed-dimentionN-ref.html?padding_parent
+== mixed-dimentionA.html?padding_parent mixed-dimentionA-ref.html?padding_parent
