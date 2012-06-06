@@ -6,11 +6,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 //=================================================
-// Shutdown - used to store cleanup functions which will
-//            be called on Application shutdown
-var gShutdown = [];
-
-//=================================================
 // Console constructor
 function Console() {
   this._console = Components.classes["@mozilla.org/consoleservice;1"]
@@ -644,15 +639,7 @@ extApplication.prototype = {
         aSubject.data = true;
     }
     else if (aTopic == "xpcom-shutdown") {
-
       this.events.dispatch("unload", "application");
-
-      // call the cleanup functions and empty the array
-      for (let i = 0; i < gShutdown.length; i++) {
-        gShutdown[i]();
-      }
-      gShutdown.splice(0, gShutdown.length);
-
       gExtensionObserver = null;
       gPreferenceObserver = null;
     }
