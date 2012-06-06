@@ -253,6 +253,8 @@ nsresult
 nsFileStreamBase::MaybeOpen(nsIFile* aFile, PRInt32 aIoFlags,
                             PRInt32 aPerm, bool aDeferred)
 {
+    NS_ENSURE_STATE(aFile);
+
     mOpenParams.ioFlags = aIoFlags;
     mOpenParams.perm = aPerm;
 
@@ -814,8 +816,6 @@ nsFileStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
 
     mBehaviorFlags = behaviorFlags;
 
-    nsresult rv;
-    if (NS_FAILED(rv)) return rv;
     if (ioFlags == -1)
         ioFlags = PR_RDWR;
     if (perm <= 0)
