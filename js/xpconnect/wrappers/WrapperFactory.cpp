@@ -290,13 +290,13 @@ enum XrayType {
 static XrayType
 GetXrayType(JSObject *obj)
 {
-    js::Class* clasp = js::GetObjectClass(obj);
-    if (mozilla::dom::IsDOMClass(Jsvalify(clasp))) {
+    if (mozilla::dom::IsDOMObject(obj))
         return XrayForDOMObject;
-    }
-    if (mozilla::dom::oldproxybindings::instanceIsProxy(obj)) {
+
+    if (mozilla::dom::oldproxybindings::instanceIsProxy(obj))
         return XrayForDOMProxyObject;
-    }
+
+    js::Class* clasp = js::GetObjectClass(obj);
     if (IS_WRAPPER_CLASS(clasp) || clasp->ext.innerObject) {
         NS_ASSERTION(clasp->ext.innerObject || IS_WN_WRAPPER_OBJECT(obj),
                      "We forgot to Morph a slim wrapper!");
@@ -368,10 +368,10 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                 wrapper = &FilteringWrapper<Xray, LocationPolicy>::singleton;
             else
                 wrapper = &FilteringWrapper<Xray, CrossOriginAccessiblePropertiesOnly>::singleton;
+        } else if (mozilla::dom::IsDOMObject(obj)) {
+            wrapper = &FilteringWrapper<XrayDOM, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (mozilla::dom::oldproxybindings::instanceIsProxy(obj)) {
             wrapper = &FilteringWrapper<XrayProxy, CrossOriginAccessiblePropertiesOnly>::singleton;
-        } else if (mozilla::dom::IsDOMClass(JS_GetClass(obj))) {
-            wrapper = &FilteringWrapper<XrayDOM, CrossOriginAccessiblePropertiesOnly>::singleton;
         } else if (IsComponentsObject(obj)) {
             wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper,
                                         ComponentsObjectPolicy>::singleton;
