@@ -4371,7 +4371,13 @@ IonBuilder::jsop_getprop(HandlePropertyName name)
     }
 
     if (types::TypeSet *propTypes = GetDefiniteSlot(cx, unaryTypes.inTypes, name)) {
-        MLoadFixedSlot *fixed = MLoadFixedSlot::New(obj, propTypes->definiteSlot());
+        MDefinition *useObj = obj;
+        if (unaryTypes.inTypes && unaryTypes.inTypes->baseFlags()) {
+            MGuardObject *guard = MGuardObject::New(obj);
+            current->add(guard);
+            useObj = guard;
+        }
+        MLoadFixedSlot *fixed = MLoadFixedSlot::New(useObj, propTypes->definiteSlot());
         if (!barrier)
             fixed->setResultType(unary.rval);
 
