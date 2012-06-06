@@ -512,7 +512,7 @@ def main(argv):
                 new_test.jitflags.extend(variant)
                 job_list.append(new_test)
     elif OPTIONS.ion:
-        flags = [[], ['--ion-eager']]
+        flags = [['--no-jm'], ['--ion-eager']]
         for test in test_list:
             for variant in flags:
                 new_test = test.copy()

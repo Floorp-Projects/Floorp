@@ -882,6 +882,7 @@ class ScriptAnalysis
     bool isInlineable:1;
     bool isJaegerCompileable:1;
     bool canTrackVars:1;
+    bool hasLoops_:1;
 
     uint32_t numReturnSites_;
 
@@ -927,6 +928,8 @@ class ScriptAnalysis
     bool usesThisValue() const { return usesThisValue_; }
     bool hasFunctionCalls() const { return hasFunctionCalls_; }
     uint32_t numReturnSites() const { return numReturnSites_; }
+
+    bool hasLoops() const { return hasLoops_; }
 
     /*
      * True if all named formal arguments are not modified. If the arguments
