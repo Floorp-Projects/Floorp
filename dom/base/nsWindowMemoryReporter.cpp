@@ -187,6 +187,21 @@ CollectWindowReports(nsGlobalWindow *aWindow,
          "within a window.");
   aWindowTotalSizes->mLayoutPresShell += windowSizes.mLayoutPresShell;
 
+  REPORT("/layout/line-boxes", windowSizes.mArenaStats.mLineBoxes,
+         "Memory used by line boxes within a window.");
+  aWindowTotalSizes->mArenaStats.mLineBoxes
+    += windowSizes.mArenaStats.mLineBoxes;
+
+  REPORT("/layout/rule-nodes", windowSizes.mArenaStats.mRuleNodes,
+         "Memory used by CSS rule nodes within a window.");
+  aWindowTotalSizes->mArenaStats.mRuleNodes
+    += windowSizes.mArenaStats.mRuleNodes;
+
+  REPORT("/layout/style-contexts", windowSizes.mArenaStats.mStyleContexts,
+         "Memory used by style contexts within a window.");
+  aWindowTotalSizes->mArenaStats.mStyleContexts
+    += windowSizes.mArenaStats.mStyleContexts;
+
   REPORT("/layout/style-sets", windowSizes.mLayoutStyleSets,
          "Memory used by style sets within a window.");
   aWindowTotalSizes->mLayoutStyleSets += windowSizes.mLayoutStyleSets;
@@ -322,6 +337,21 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
          "areas within windows. This is the sum of all windows' "
          "'layout/arenas' numbers.");
     
+  REPORT("window-objects-layout-line-boxes",
+         windowTotalSizes.mArenaStats.mLineBoxes, 
+         "Memory used for line-boxes within windows. "
+         "This is the sum of all windows' 'layout/line-boxes' numbers.");
+
+  REPORT("window-objects-layout-rule-nodes",
+         windowTotalSizes.mArenaStats.mRuleNodes,
+         "Memory used for CSS rule nodes within windows. "
+         "This is the sum of all windows' 'layout/rule-nodes' numbers.");
+
+  REPORT("window-objects-layout-style-contexts",
+         windowTotalSizes.mArenaStats.mStyleContexts,
+         "Memory used for style contexts within windows. "
+         "This is the sum of all windows' 'layout/style-contexts' numbers.");
+
   REPORT("window-objects-layout-style-sets", windowTotalSizes.mLayoutStyleSets, 
          "Memory used for style sets within windows. "
          "This is the sum of all windows' 'layout/style-sets' numbers.");
