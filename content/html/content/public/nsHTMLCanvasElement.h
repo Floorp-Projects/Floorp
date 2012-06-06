@@ -16,14 +16,14 @@
 #include "nsDOMError.h"
 #include "nsNodeInfoManager.h"
 
-#include "nsICanvasRenderingContextInternal.h"
 #include "nsICanvasElementExternal.h"
-#include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsLayoutUtils.h"
 
 #include "Layers.h"
 
+class nsICanvasRenderingContextInternal;
 class nsIDOMFile;
+class nsIPropertyBag;
 
 class nsHTMLCanvasElement : public nsGenericHTMLElement,
                             public nsICanvasElementExternal,

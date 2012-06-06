@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=761120
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 761120</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=761120">Mozilla Bug 761120</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 761120 **/
+var doc = document.implementation.createHTMLDocument("title");
+try {
+  doc.appendChild(doc.createTextNode("text"));
+  ok(false, "Didn't throw");
+} catch (e) {
+  is(e.name, "HierarchyRequestError");
+}
+
+var el = document.createElement("div");
+var text = document.createTextNode("text");
+el.appendChild(text);
+is(el.firstChild, text);
+
+var df = document.createDocumentFragment();
+text = document.createTextNode("text");
+df.appendChild(text);
+is(df.firstChild, text);
+</script>
+</pre>
+</body>
+</html>
