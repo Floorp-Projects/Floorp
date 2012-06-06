@@ -649,7 +649,10 @@ nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   if (!node)
     return NS_ERROR_INVALID_ARG;
 
-  NS_IF_ADDREF(*aAccessible = GetAccessible(node, nsnull));
+  DocAccessible* document = GetDocAccessible(node->OwnerDoc());
+  if (document)
+    NS_IF_ADDREF(*aAccessible = document->GetAccessible(node));
+
   return NS_OK;
 }
 
@@ -877,16 +880,6 @@ nsAccessibilityService::SetLogging(const nsACString& aModules)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService public
-
-Accessible*
-nsAccessibilityService::GetAccessible(nsINode* aNode, nsIPresShell* aPresShell)
-{
-  NS_PRECONDITION(aNode, "Getting an accessible for null node! Crash.");
-
-  // XXX handle the presshell
-  DocAccessible* document = GetDocAccessible(aNode->OwnerDoc());
-  return document ? document->GetAccessible(aNode) : nsnull;
-}
 
 static bool HasRelatedContent(nsIContent *aContent)
 {

@@ -175,12 +175,6 @@ public:
   Accessible* GetOrCreateAccessible(nsINode* aNode, DocAccessible* aDoc,
                                     bool* aIsSubtreeHidden = nsnull);
 
-  /**
-   * Return an accessible for the given DOM node and eventually a presentation
-   * shell.
-   */
-  Accessible* GetAccessible(nsINode* aNode, nsIPresShell* aPresShell);
-
 private:
   // nsAccessibilityService creation is controlled by friend
   // NS_GetAccessibilityService, keep constructors private.
