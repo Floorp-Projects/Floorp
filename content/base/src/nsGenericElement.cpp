@@ -3960,25 +3960,24 @@ nsGenericElement::SaveSubtreeState()
 // latter case it may be null.
 static
 bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
-                        bool aIsReplace, nsINode* aRefChild)
+                      bool aIsReplace, nsINode* aRefChild)
 {
-  NS_PRECONDITION(aNewChild, "Must have new child");
-  NS_PRECONDITION(!aIsReplace || aRefChild,
-                  "Must have ref content for replace");
-  NS_PRECONDITION(aParent->IsNodeOfType(nsINode::eDOCUMENT) ||
-                  aParent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
-                  aParent->IsElement(),
-                  "Nodes that are not documents, document fragments or "
-                  "elements can't be parents!");
+  MOZ_ASSERT(aNewChild, "Must have new child");
+  MOZ_ASSERT_IF(aIsReplace, aRefChild);
+  MOZ_ASSERT(aParent);
+  MOZ_ASSERT(aParent->IsNodeOfType(nsINode::eDOCUMENT) ||
+             aParent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
+             aParent->IsElement(),
+             "Nodes that are not documents, document fragments or elements "
+             "can't be parents!");
 
   // A common case is that aNewChild has no kids, in which case
   // aParent can't be a descendant of aNewChild unless they're
   // actually equal to each other.  Fast-path that case, since aParent
   // could be pretty deep in the DOM tree.
-  if (aParent &&
-      (aNewChild == aParent ||
-       (aNewChild->GetFirstChild() &&
-        nsContentUtils::ContentIsDescendantOf(aParent, aNewChild)))) {
+  if (aNewChild == aParent ||
+      (aNewChild->GetFirstChild() &&
+       nsContentUtils::ContentIsDescendantOf(aParent, aNewChild))) {
     return false;
   }
 
@@ -3991,8 +3990,8 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
   case nsIDOMNode::TEXT_NODE :
   case nsIDOMNode::CDATA_SECTION_NODE :
   case nsIDOMNode::ENTITY_REFERENCE_NODE :
-    // Only allowed under elements
-    return aParent != nsnull;
+    // Allowed under Elements and DocumentFragments
+    return aParent->NodeType() != nsIDOMNode::DOCUMENT_NODE;
   case nsIDOMNode::ELEMENT_NODE :
     {
       if (!aParent->IsNodeOfType(nsINode::eDOCUMENT)) {
