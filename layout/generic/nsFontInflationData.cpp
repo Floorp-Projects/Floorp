@@ -131,6 +131,11 @@ ComputeDescendantWidth(const nsHTMLReflowState& aAncestorReflowState,
     frames.AppendElement(f);
   }
 
+  // This ignores the width contributions made by scrollbars, though in
+  // reality we don't have any scrollbars on the sorts of devices on
+  // which we use font inflation, so it's not a problem.  But it may
+  // occasionally cause problems when writing tests on desktop.
+
   PRUint32 len = frames.Length();
   nsHTMLReflowState *reflowStates = static_cast<nsHTMLReflowState*>
                                 (moz_xmalloc(sizeof(nsHTMLReflowState) * len));
