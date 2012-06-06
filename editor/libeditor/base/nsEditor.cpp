@@ -3748,40 +3748,19 @@ nsEditor::IsMozEditorBogusNode(nsIContent *element)
                               kMOZEditorBogusNodeValue, eCaseMatters);
 }
 
-nsresult
-nsEditor::CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount) 
+PRUint32
+nsEditor::CountEditableChildren(nsINode* aNode)
 {
-  outCount = 0;
-  if (!aNode) { return NS_ERROR_NULL_POINTER; }
-  nsresult res=NS_OK;
-  bool hasChildNodes;
-  aNode->HasChildNodes(&hasChildNodes);
-  if (hasChildNodes)
-  {
-    nsCOMPtr<nsIDOMNodeList>nodeList;
-    res = aNode->GetChildNodes(getter_AddRefs(nodeList));
-    if (NS_SUCCEEDED(res) && nodeList) 
-    {
-      PRUint32 i;
-      PRUint32 len;
-      nodeList->GetLength(&len);
-      for (i=0 ; i<len; i++)
-      {
-        nsCOMPtr<nsIDOMNode> child;
-        res = nodeList->Item((PRInt32)i, getter_AddRefs(child));
-        if ((NS_SUCCEEDED(res)) && (child))
-        {
-          if (IsEditable(child))
-          {
-            outCount++;
-          }
-        }
-      }
+  MOZ_ASSERT(aNode);
+  PRUint32 count = 0;
+  for (nsIContent* child = aNode->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (IsEditable(child)) {
+      ++count;
     }
-    else if (!nodeList)
-      res = NS_ERROR_NULL_POINTER;
   }
-  return res;
+  return count;
 }
 
 //END nsEditor static utility methods
