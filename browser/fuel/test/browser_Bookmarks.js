@@ -1,5 +1,6 @@
 var gLastFolderAction = "";
 var gLastBookmarkAction = "";
+var gLastRootAction = "";
 
 function url(spec) {
   return Services.io.newURI(spec, null, null);
@@ -187,6 +188,24 @@ function test() {
   testFolderA.parent = testFolderB;
   is(testFolderA.parent.title, "folder-b", "Checking for new parent after moving folder");
   is(gLastFolderAction, "move", "Checking for event handler after moving folder");
+
+  // test events on the root
+  root.events.addListener("add", onRootAdd);
+  root.events.addListener("remove", onRootRemove);
+  root.events.addListener("change", onRootChange);
+  var testFolderC = root.addFolder("folder-c");
+  is(gLastRootAction, "add");
+
+  root.events.removeListener("add", onRootAdd);
+  gLastRootAction = "";
+  var testFolderD = root.addFolder("folder-d");
+  is(gLastRootAction, "");
+
+  testFolderC.remove();
+  is(gLastRootAction, "remove");
+
+  testFolderD.description = "Foo";
+  is(gLastRootAction, "bookmarkProperties/description");
 }
 
 function onFolderChange(evt) {
@@ -219,4 +238,16 @@ function onBookmarkRemove(evt) {
 
 function onBookmarkMove(evt) {
   gLastBookmarkAction = evt.type;
+}
+
+function onRootAdd(evt) {
+  gLastRootAction = evt.type;
+}
+
+function onRootRemove(evt) {
+  gLastRootAction = evt.type;
+}
+
+function onRootChange(evt) {
+  gLastRootAction = evt.data;
 }
