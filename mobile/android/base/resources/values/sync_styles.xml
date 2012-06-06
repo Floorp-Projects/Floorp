@@ -28,7 +28,12 @@
     <item name="android:layout_height">wrap_content</item>
     <item name="android:textSize">15dp</item>
   </style>
-  <style name="SyncLinkItem" parent="SyncTextItem">
+  <style name="SyncTextError" parent="@style/SyncTextItem">
+    <item name="android:layout_margin">10dp</item>
+    <item name="android:textSize">15dp</item>
+    <item name="android:visibility">gone</item>
+  </style>
+  <style name="SyncLinkItem" parent="@style/SyncTextItem">
     <item name="android:clickable">true</item>
     <item name="android:textColor">#ACC4D5</item>
   </style>
@@ -43,6 +48,7 @@
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:singleLine">true</item>
+    <item name="android:inputType">textNoSuggestions</item>
   </style>
   <style name="SyncEditPin" parent="@style/SyncEditItem">
     <item name="android:layout_width">wrap_content</item>
@@ -66,6 +72,7 @@
     <style name="SyncBottom">
     <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
+    <item name="android:layout_gravity">center</item>
     <item name="android:gravity">center</item>
     <item name="android:layout_alignParentBottom">true</item>
     <item name="android:background">@android:drawable/bottom_bar</item>

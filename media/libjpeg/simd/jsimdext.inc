@@ -322,15 +322,15 @@ const_base:
 	push rsi
 	push rdi
 	sub     rsp, SIZEOF_XMMWORD
-	movlpd  XMMWORD [rsp], xmm6
+	movaps  XMMWORD [rsp], xmm6
 	sub     rsp, SIZEOF_XMMWORD
-	movlpd  XMMWORD [rsp], xmm7
+	movaps  XMMWORD [rsp], xmm7
 %endmacro
 
 %imacro uncollect_args 0
-	movlpd  xmm7, XMMWORD [rsp]
+	movaps  xmm7, XMMWORD [rsp]
 	add     rsp, SIZEOF_XMMWORD
-	movlpd  xmm6, XMMWORD [rsp]
+	movaps  xmm6, XMMWORD [rsp]
 	add     rsp, SIZEOF_XMMWORD
 	pop rdi
 	pop rsi

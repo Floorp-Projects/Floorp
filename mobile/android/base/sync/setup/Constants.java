@@ -26,6 +26,17 @@ public class Constants {
     Intent.FLAG_ACTIVITY_REORDER_TO_FRONT |
     Intent.FLAG_ACTIVITY_NO_ANIMATION;
 
+  // Constants for Account Authentication.
+  public static final String AUTH_NODE_DEFAULT    = "https://auth.services.mozilla.com/";
+  public static final String AUTH_NODE_PATHNAME   = "user/";
+  public static final String AUTH_NODE_VERSION    = "1.0/";
+  public static final String AUTH_NODE_SUFFIX     = "node/weave";
+  public static final String AUTH_SERVER_VERSION  = "1.1/";
+  public static final String AUTH_SERVER_SUFFIX   = "info/collections/";
+
+  // Account Authentication Errors.
+  public static final String AUTH_ERROR_NOUSER    = "auth.error.badcredentials";
+
   // Links for J-PAKE setup help pages.
   public static final String LINK_FIND_CODE       = "https://support.mozilla.org/kb/find-code-to-add-device-to-firefox-sync";
   public static final String LINK_FIND_ADD_DEVICE = "https://support.mozilla.org/kb/add-a-device-to-firefox-sync";

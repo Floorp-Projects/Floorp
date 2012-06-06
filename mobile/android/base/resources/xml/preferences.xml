@@ -75,6 +75,11 @@
                             android:defaultValue="false"
                             android:persistent="false" />
 
+        <CheckBoxPreference android:key="browser.search.suggest.enabled"
+                            android:title="@string/pref_search_suggestions"
+                            android:defaultValue="true"
+                            android:persistent="false" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>
