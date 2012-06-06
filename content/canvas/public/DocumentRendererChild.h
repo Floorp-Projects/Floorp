@@ -6,7 +6,6 @@
 #define mozilla_dom_DocumentRendererChild
 
 #include "mozilla/ipc/PDocumentRendererChild.h"
-#include "nsICanvasRenderingContextInternal.h"
 #include "nsString.h"
 #include "gfxContext.h"
 

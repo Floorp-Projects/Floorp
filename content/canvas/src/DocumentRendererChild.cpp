@@ -11,6 +11,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
+#include "nsIDocShell.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
