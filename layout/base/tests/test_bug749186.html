@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=749186
+Note that this is a crashtest, but because of the special privileges
+required, it needs to be run as a mochitest. Thus, the expected
+behavior of this test is that it actually loads and doesn't crash the
+browser.
+-->
+  <head>
+    <title>Test for Bug 749186 (Crashtest)</title>
+    <script type="application/javascript" src="/MochiKit/packed.js"></script>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script>
+     function endTest() {
+       ok(true, 'test finished without crashing');
+       SimpleTest.finish();
+     }
+
+     function setEmPerLineTo0() {
+       SpecialPowers.setIntPref("font.size.inflation.emPerLine", 0);
+       setTimeout(endTest, 100);
+     }
+
+     function removeBoldStyle() {
+       document.getElementById('b').removeAttribute('style');
+       setTimeout(setEmPerLineTo0, 100);
+     }
+
+     function setEmPerLineTo8() {
+       SpecialPowers.setIntPref("font.size.inflation.emPerLine", 8);
+       setTimeout(removeBoldStyle, 100);
+     }
+
+     function startTest() {
+       SimpleTest.waitForExplicitFinish();
+       setTimeout(setEmPerLineTo8, 100);
+     }
+
+     startTest();
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+
+  <body>
+    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=749186">Bug 749186</a>
+    <iframe id="a" style="display: none;"></iframe>
+    <div id="b" style="display: inline;"></div>
+  </body>
+</html>
