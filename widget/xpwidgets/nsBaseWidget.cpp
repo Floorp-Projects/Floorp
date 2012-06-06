@@ -876,12 +876,8 @@ void nsBaseWidget::CreateCompositor()
     AsyncChannel::Side childSide = mozilla::ipc::AsyncChannel::Child;
     mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
     PRInt32 maxTextureSize;
-    PLayersChild* shadowManager;
-    if (mUseAcceleratedRendering) {
-      shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL, &maxTextureSize);
-    } else {
-      shadowManager = mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_BASIC, &maxTextureSize);
-    }
+    PLayersChild* shadowManager =
+      mCompositorChild->SendPLayersConstructor(LayerManager::LAYERS_OPENGL, &maxTextureSize);
 
     if (shadowManager) {
       ShadowLayerForwarder* lf = lm->AsShadowForwarder();
@@ -891,10 +887,7 @@ void nsBaseWidget::CreateCompositor()
         return;
       }
       lf->SetShadowManager(shadowManager);
-      if (mUseAcceleratedRendering)
-        lf->SetParentBackendType(LayerManager::LAYERS_OPENGL);
-      else
-        lf->SetParentBackendType(LayerManager::LAYERS_BASIC);
+      lf->SetParentBackendType(LayerManager::LAYERS_OPENGL);
       lf->SetMaxTextureSize(maxTextureSize);
 
       mLayerManager = lm;
