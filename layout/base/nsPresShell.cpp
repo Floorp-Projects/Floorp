@@ -8927,13 +8927,15 @@ PresShell::GetRootPresShell()
 
 void
 PresShell::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
-                               size_t *aArenasSize,
+                               nsArenaMemoryStats *aArenaObjectsSize,
+                               size_t *aPresShellSize,
                                size_t *aStyleSetsSize,
                                size_t *aTextRunsSize,
-                               size_t *aPresContextSize) const
+                               size_t *aPresContextSize)
 {
-  *aArenasSize = aMallocSizeOf(this);
-  *aArenasSize += mFrameArena.SizeOfExcludingThis(aMallocSizeOf);
+  mFrameArena.SizeOfExcludingThis(aMallocSizeOf, aArenaObjectsSize);
+  *aPresShellSize = aMallocSizeOf(this);
+  *aPresShellSize += aArenaObjectsSize->mOther;
 
   *aStyleSetsSize = StyleSet()->SizeOfIncludingThis(aMallocSizeOf);
 

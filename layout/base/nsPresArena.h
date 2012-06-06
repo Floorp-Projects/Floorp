@@ -13,6 +13,8 @@
 
 #include "mozilla/StandardInteger.h"
 
+class nsArenaMemoryStats;
+
 // Uncomment this to disable arenas, instead forwarding to
 // malloc for every allocation.
 //#define DEBUG_TRACEMALLOC_PRESARENA 1
@@ -56,7 +58,12 @@ public:
   NS_HIDDEN_(void*) AllocateByObjectID(ObjectID aID, size_t aSize);
   NS_HIDDEN_(void)  FreeByObjectID(ObjectID aID, void* aPtr);
 
-  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+  /**
+   * Fill aArenaStats with sizes of interesting objects allocated in
+   * this arena and its mOther field with the size of everything else.
+   */
+  void SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                           nsArenaMemoryStats* aArenaStats);
 
   /**
    * Get the poison value that can be used to fill a memory space with
