@@ -4,14 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+dump("###################################### forms.js loaded\n");
+
+"use strict";
 
 let Ci = Components.interfaces;
 let Cc = Components.classes;
 let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
-
-dump("###################################### forms.js loaded\n");
+XPCOMUtils.defineLazyServiceGetter(Services, "fm",
+                                   "@mozilla.org/focus-manager;1",
+                                   "nsIFocusManager");
 
 let HTMLInputElement = Ci.nsIDOMHTMLInputElement;
 let HTMLTextAreaElement = Ci.nsIDOMHTMLTextAreaElement;
@@ -21,63 +25,85 @@ let HTMLOptionElement = Ci.nsIDOMHTMLOptionElement;
 
 let FormAssistant = {
   init: function fa_init() {
+    addEventListener("focus", this, true, false);
+    addEventListener("keypress", this, true, false);
+    addEventListener("mousedown", this, true, false);
+    addEventListener("resize", this, true, false);
     addEventListener("click", this, true, false);
     addEventListener("blur", this, true, false);
     addMessageListener("Forms:Select:Choice", this);
     addMessageListener("Forms:Input:Value", this);
+    Services.obs.addObserver(this, "ime-enabled-state-changed", false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
-  currentTarget: null,
+  isKeyboardOpened: false,
+  previousTarget : null,
   handleEvent: function fa_handleEvent(evt) {
+    let previousTarget = this.previousTarget;
+    let target = evt.target;
+
     switch (evt.type) {
-      case "click": {
-        let target =
-          Services.fm.getFocusedElementForWindow(content, true, {}) ||
-          evt.target;
-
-        content.setTimeout(function(self) {
-          if (target instanceof HTMLSelectElement) { 
-            sendAsyncMessage("Forms:Input", self._getJSON(target));
-            self.currentTarget = target;
-          } else if (target instanceof HTMLOptionElement &&
-                     target.parentNode instanceof HTMLSelectElement) {
-            target = target.parentNode;
-            sendAsyncMessage("Forms:Input", self._getJSON(target));
-            self.currentTarget = target;
-          } else if (target instanceof HTMLInputElement ||
-                     target instanceof HTMLTextAreaElement) {
-            sendAsyncMessage("Forms:Input", self._getJSON(target));
-            self.currentTarget = target;
-          }
-        }, 0, this);
+      case "focus":
+        this.previousTarget = Services.fm.focusedElement;
         break;
-      }
 
-      case "blur": {
-        let target = this.currentTarget;
+      case "blur":
         if (!target)
           return;
+        this.previousTarget = null;
 
-        this.currentTarget = null;
+        if (target instanceof HTMLSelectElement ||
+            (target instanceof HTMLOptionElement && target.parentNode instanceof HTMLSelectElement)) {
+
+          sendAsyncMessage("Forms:Input", { "type": "blur" });
+        }
+        break;
+
+      case 'resize':
+        if (!this.isKeyboardOpened)
+          return;
+
+        Services.fm.focusedElement.scrollIntoView(false);
+        break;
+
+      case "mousedown":
+        if (evt.target != target || this.isKeyboardOpened)
+          return;
+
+        if (!(evt.target instanceof HTMLInputElement  ||
+              evt.target instanceof HTMLTextAreaElement))
+          return;
+
+        this.isKeyboardOpened = this.tryShowIme(evt.target);
+        break;
+
+      case "keypress":
+        if (evt.keyCode != evt.DOM_VK_ESCAPE || !this.isKeyboardOpened)
+          return;
 
         sendAsyncMessage("Forms:Input", { "type": "blur" });
+        this.isKeyboardOpened = false;
 
-        let e = target.ownerDocument.createEvent("Events");
-        e.initEvent("change", true, true, target.ownerDocument.defaultView,
-                    0, false, false, false, false, null);
-
-        content.setTimeout(function() {
-          target.dispatchEvent(evt);
-        }, 0);
-
+        evt.preventDefault();
+        evt.stopPropagation();
         break;
-      }
+
+      case "click":
+        content.setTimeout(function showIMEForSelect() {
+          if (evt.target instanceof HTMLSelectElement) { 
+            sendAsyncMessage("Forms:Input", getJSON(evt.target));
+          } else if (evt.target instanceof HTMLOptionElement &&
+                     evt.target.parentNode instanceof HTMLSelectElement) {
+            sendAsyncMessage("Forms:Input", getJSON(evt.target.parentNode));
+          }
+        });
+        break;
     }
   },
 
   receiveMessage: function fa_receiveMessage(msg) {
-    let target = this.currentTarget;
+    let target = Services.fm.focusedElement;
     if (!target)
       return;
 
@@ -101,20 +127,61 @@ let FormAssistant = {
   },
 
   observe: function fa_observe(subject, topic, data) {
-    Services.obs.removeObserver(this, "xpcom-shutdown");
-    removeMessageListener("Forms:Select:Choice", this);
+    switch (topic) {
+      case "ime-enabled-state-changed":
+        let isOpen = this.isKeyboardOpened;
+        let shouldOpen = parseInt(data);
+        if (shouldOpen && !isOpen) {
+          let target = Services.fm.focusedElement;
+
+          if (!target || !this.tryShowIme(target)) {
+            this.previousTarget = null;
+            return;
+          } else {
+            this.previousTarget = target;
+          }
+        } else if (!shouldOpen && isOpen) {
+          sendAsyncMessage("Forms:Input", { "type": "blur" });
+        }
+        this.isKeyboardOpened = shouldOpen;
+        break;
+
+      case "xpcom-shutdown":
+        Services.obs.removeObserver(this, "ime-enabled-state-changed", false);
+        Services.obs.removeObserver(this, "xpcom-shutdown");
+        removeMessageListener("Forms:Select:Choice", this);
+        break;
+    }
   },
 
-  _getJSON: function fa_getJSON(element) {
-    let choices = getListForElement(element);
-    return {
-      type: element.type.toLowerCase(),
-      choices: choices
-    };
+  tryShowIme: function(element) {
+    // FIXME/bug 729623: work around apparent bug in the IME manager
+    // in gecko.
+    let readonly = element.getAttribute("readonly");
+    if (readonly)
+      return false;
+
+    sendAsyncMessage("Forms:Input", getJSON(element));
+    return true;
   }
 };
 
 FormAssistant.init();
+
+
+function getJSON(element) {
+  let type = element.type;
+  // FIXME/bug 344616 is input type="number"
+  // Until then, let's return 'number' even if the platform returns 'text'
+  let attributeType = element.getAttribute("type") || "";
+  if (attributeType && attributeType.toLowerCase() === "number")
+    type = "number";
+
+  return {
+    "type": type.toLowerCase(),
+    "choices": getListForElement(element)
+  };
+}
 
 function getListForElement(element) {
   if (!(element instanceof HTMLSelectElement))
