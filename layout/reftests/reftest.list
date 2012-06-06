@@ -228,7 +228,8 @@ include pixel-rounding/reftest.list
 include ../../dom/plugins/test/reftest/reftest.list
 
 # position-dynamic-changes/
-include position-dynamic-changes/reftest.list
+# Disabled on Native Fennec for now, because running them takes too long
+skip-if(Android&&!browserIsRemote) include position-dynamic-changes/reftest.list # Bug 762181
 
 # printing
 include printing/reftest.list
