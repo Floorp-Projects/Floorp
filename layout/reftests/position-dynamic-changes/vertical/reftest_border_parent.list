@@ -1,0 +1,20 @@
+# Please see the comment at the beginning of reftest.list
+
+== topN-heightA-bottomA.html?border_parent topN-heightA-bottomA-ref.html?border_parent
+== topN-heightA-bottomN.html?border_parent topN-heightA-bottomN-ref.html?border_parent
+== topA-heightN-bottomA.html?border_parent topA-heightN-bottomA-ref.html?border_parent
+== topN-heightN-bottomA.html?border_parent topN-heightN-bottomA-ref.html?border_parent
+== topA-heightN-bottomN.html?border_parent topA-heightN-bottomN-ref.html?border_parent
+== topA-heightA-bottomN.html?border_parent topA-heightA-bottomN-ref.html?border_parent
+== toauto-topN-heightA-bottomA.html?border_parent toauto-topN-heightA-bottomA-ref.html?border_parent
+== toauto-topN-heightA-bottomN.html?border_parent toauto-topN-heightA-bottomN-ref.html?border_parent
+== toauto-topA-heightN-bottomA.html?border_parent toauto-topA-heightN-bottomA-ref.html?border_parent
+== toauto-topN-heightN-bottomA.html?border_parent toauto-topN-heightN-bottomA-ref.html?border_parent
+== toauto-topA-heightN-bottomN.html?border_parent toauto-topA-heightN-bottomN-ref.html?border_parent
+== toauto-topA-heightA-bottomN.html?border_parent toauto-topA-heightA-bottomN-ref.html?border_parent
+== fromauto-topN-heightA-bottomA.html?border_parent topN-heightA-bottomA-ref.html?border_parent
+== fromauto-topN-heightA-bottomN.html?border_parent topN-heightA-bottomN-ref.html?border_parent
+== fromauto-topA-heightN-bottomA.html?border_parent topA-heightN-bottomA-ref.html?border_parent
+== fromauto-topN-heightN-bottomA.html?border_parent topN-heightN-bottomA-ref.html?border_parent
+== fromauto-topA-heightN-bottomN.html?border_parent topA-heightN-bottomN-ref.html?border_parent
+== fromauto-topA-heightA-bottomN.html?border_parent topA-heightA-bottomN-ref.html?border_parent
