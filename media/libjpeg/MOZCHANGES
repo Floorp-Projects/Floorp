@@ -58,6 +58,9 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
     $ hg addremove
 
+== June 5, 2012 (libjpeg-turbo v1.2.x branch, r831 2012-05-30) ==
+
+* Updated to latest version on v1.2.x branch (bug 759891).
 
 == February 10, 2012 (libjpeg-turbo v1.2.0 r807 2012-02-10) ==
 
