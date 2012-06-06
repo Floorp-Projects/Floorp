@@ -1,0 +1,5 @@
+include horizontal/reftest.list
+include vertical/reftest.list
+include mixed/reftest.list
+include mixed-abspos-root/reftest.list
+include relative/reftest.list
