@@ -71,6 +71,12 @@ MozKeyboard.prototype = {
     });
   },
 
+  setValue: function mozKeyboardSetValue(value) {
+    messageManager.sendAsyncMessage("Forms:Input:Value", {
+      "value": value
+    });
+  },
+
   setSelectedOptions: function mozKeyboardSetSelectedOptions(indexes) {
     messageManager.sendAsyncMessage("Forms:Select:Choice", {
       "indexes": indexes || []
