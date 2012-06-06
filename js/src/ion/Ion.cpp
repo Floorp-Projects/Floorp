@@ -399,10 +399,14 @@ IonScript::IonScript()
     safepointIndexEntries_(0),
     frameLocals_(0),
     frameSize_(0),
-    safepointsStart_(0),
-    safepointsSize_(0),
+    osiIndexOffset_(0),
+    osiIndexEntries_(0),
     cacheList_(0),
     cacheEntries_(0),
+    prebarrierList_(0),
+    prebarrierEntries_(0),
+    safepointsStart_(0),
+    safepointsSize_(0),
     refcount_(0)
 {
 }
@@ -410,7 +414,8 @@ static const int DataAlignment = 4;
 IonScript *
 IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
-               size_t osiIndices, size_t cacheEntries, size_t safepointsSize)
+               size_t osiIndices, size_t cacheEntries, size_t prebarrierEntries,
+               size_t safepointsSize)
 {
     if (snapshotsSize >= MAX_BUFFER_SIZE ||
         (bailoutEntries >= MAX_BUFFER_SIZE / sizeof(uint32)))
@@ -428,6 +433,8 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
     size_t paddedSafepointIndicesSize = AlignBytes(safepointIndices * sizeof(SafepointIndex), DataAlignment);
     size_t paddedOsiIndicesSize = AlignBytes(osiIndices * sizeof(OsiIndex), DataAlignment);
     size_t paddedCacheEntriesSize = AlignBytes(cacheEntries * sizeof(IonCache), DataAlignment);
+    size_t paddedPrebarrierEntriesSize =
+        AlignBytes(prebarrierEntries * sizeof(CodeOffsetLabel), DataAlignment);
     size_t paddedSafepointSize = AlignBytes(safepointsSize, DataAlignment);
     size_t bytes = paddedSnapshotsSize +
                    paddedBailoutSize +
@@ -435,6 +442,7 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
                    paddedSafepointIndicesSize+
                    paddedOsiIndicesSize +
                    paddedCacheEntriesSize +
+                   paddedPrebarrierEntriesSize +
                    paddedSafepointSize;
     uint8 *buffer = (uint8 *)cx->malloc_(sizeof(IonScript) + bytes);
     if (!buffer)
@@ -468,6 +476,10 @@ IonScript::New(JSContext *cx, uint32 frameLocals, uint32 frameSize, size_t snaps
     script->cacheList_ = offsetCursor;
     script->cacheEntries_ = cacheEntries;
     offsetCursor += paddedCacheEntriesSize;
+
+    script->prebarrierList_ = offsetCursor;
+    script->prebarrierEntries_ = prebarrierEntries;
+    offsetCursor += paddedPrebarrierEntriesSize;
 
     script->safepointsStart_ = offsetCursor;
     script->safepointsSize_ = safepointsSize;
@@ -553,6 +565,23 @@ IonScript::copyCacheEntries(const IonCache *caches, MacroAssembler &masm)
      */
     for (size_t i = 0; i < numCaches(); i++)
         getCache(i).updateBaseAddress(method_, masm);
+}
+
+inline CodeOffsetLabel &
+IonScript::getPrebarrier(size_t index)
+{
+    JS_ASSERT(index < numPrebarriers());
+    return prebarrierList()[index];
+}
+
+void
+IonScript::copyPrebarrierEntries(const CodeOffsetLabel *barriers, MacroAssembler &masm)
+{
+    memcpy(prebarrierList(), barriers, numPrebarriers() * sizeof(CodeOffsetLabel));
+
+    // On ARM, the saved offset may be wrong due to shuffling code buffers. Correct it.
+    for (size_t i = 0; i < numPrebarriers(); i++)
+        getPrebarrier(i).fixup(&masm);
 }
 
 const SafepointIndex *
@@ -642,6 +671,36 @@ void
 IonScript::Destroy(FreeOp *fop, IonScript *script)
 {
     fop->free_(script);
+}
+
+void
+IonScript::toggleBarriers(bool enabled)
+{
+    for (size_t i = 0; i < numPrebarriers(); i++) {
+        CodeLocationLabel loc(method(), getPrebarrier(i));
+
+        if (enabled)
+            Assembler::ToggleToCmp(loc);
+        else
+            Assembler::ToggleToJmp(loc);
+    }
+}
+
+void
+IonScript::purgeCaches()
+{
+    for (size_t i = 0; i < numCaches(); i++)
+        getCache(i).reset();
+}
+
+void
+ion::ToggleBarriers(JSCompartment *comp, bool needs)
+{
+    for (gc::CellIterUnderGC i(comp, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+        if (script->hasIonScript())
+            script->ion->toggleBarriers(needs);
+    }
 }
 
 static bool

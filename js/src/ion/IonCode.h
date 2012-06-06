@@ -64,6 +64,7 @@ static const uint32 SNAPSHOT_MAX_NARGS = 127;
 static const uint32 SNAPSHOT_MAX_STACK = 127;
 
 class MacroAssembler;
+class CodeOffsetLabel;
 
 class IonCode : public gc::Cell
 {
@@ -207,23 +208,27 @@ struct IonScript
     uint32 safepointIndexOffset_;
     uint32 safepointIndexEntries_;
 
-    // Map OSI-point displacement to snapshot.
-    uint32 osiIndexOffset_;
-    uint32 osiIndexEntries_;
-
     // Local slot count and frame size. Frame size is the value that can
     // be added to the StackPointer along with the frame prefix to get a
     // valid IonJSFrameLayout.
     uint32 frameLocals_;
     uint32 frameSize_;
 
-    // Offset to and length of the safepoint table in bytes.
-    uint32 safepointsStart_;
-    uint32 safepointsSize_;
+    // Map OSI-point displacement to snapshot.
+    uint32 osiIndexOffset_;
+    uint32 osiIndexEntries_;
 
     // State for polymorphic caches in the compiled code.
     uint32 cacheList_;
     uint32 cacheEntries_;
+
+    // Offset list for patchable pre-barriers.
+    uint32 prebarrierList_;
+    uint32 prebarrierEntries_;
+
+    // Offset to and length of the safepoint table in bytes.
+    uint32 safepointsStart_;
+    uint32 safepointsSize_;
 
     // Number of references from invalidation records.
     size_t refcount_;
@@ -249,6 +254,9 @@ struct IonScript
     IonCache *cacheList() {
         return (IonCache *)(reinterpret_cast<uint8 *>(this) + cacheList_);
     }
+    CodeOffsetLabel *prebarrierList() {
+        return (CodeOffsetLabel *)(reinterpret_cast<uint8 *>(this) + prebarrierList_);
+    }
 
   private:
     void trace(JSTracer *trc);
@@ -260,7 +268,7 @@ struct IonScript
     static IonScript *New(JSContext *cx, uint32 frameLocals, uint32 frameSize,
                           size_t snapshotsSize, size_t snapshotEntries,
                           size_t constants, size_t safepointIndexEntries, size_t osiIndexEntries,
-                          size_t cacheEntries, size_t safepointsSize);
+                          size_t cacheEntries, size_t prebarrierEntries, size_t safepointsSize);
     static void Trace(JSTracer *trc, IonScript *script);
     static void Destroy(FreeOp *fop, IonScript *script);
 
@@ -368,12 +376,19 @@ struct IonScript
     size_t numCaches() const {
         return cacheEntries_;
     }
+    inline CodeOffsetLabel &getPrebarrier(size_t index);
+    size_t numPrebarriers() const {
+        return prebarrierEntries_;
+    }
+    void toggleBarriers(bool enabled);
+    void purgeCaches();
     void copySnapshots(const SnapshotWriter *writer);
     void copyBailoutTable(const SnapshotOffset *table);
     void copyConstants(const HeapValue *vp);
     void copySafepointIndices(const SafepointIndex *firstSafepointIndex, MacroAssembler &masm);
     void copyOsiIndices(const OsiIndex *firstOsiIndex, MacroAssembler &masm);
     void copyCacheEntries(const IonCache *caches, MacroAssembler &masm);
+    void copyPrebarrierEntries(const CodeOffsetLabel *barriers, MacroAssembler &masm);
     void copySafepoints(const SafepointWriter *writer);
 
     bool invalidated() const {

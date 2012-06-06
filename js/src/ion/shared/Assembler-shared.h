@@ -442,18 +442,10 @@ class CodeOffsetLabel
 class CodeLocationJump
 {
     uint8 *raw_;
+    DebugOnly<bool> absolute_;
 
 #ifdef JS_SMALL_BRANCH
     uint8 *jumpTableEntry_;
-#endif
-
-#ifdef DEBUG
-    bool absolute;
-    void markAbsolute(bool value) {
-        absolute = value;
-    }
-#else
-    void markAbsolute(bool value) {}
 #endif
 
   public:
@@ -465,26 +457,26 @@ class CodeLocationJump
 
     void operator = (CodeOffsetJump base) {
         raw_ = (uint8 *) base.offset();
+        absolute_ = false;
 #ifdef JS_SMALL_BRANCH
         jumpTableEntry_ = (uint8 *) base.jumpTableIndex();
 #endif
-        markAbsolute(false);
     }
 
     void repoint(IonCode *code, MacroAssembler* masm = NULL);
 
     uint8 *raw() const {
-        JS_ASSERT(absolute);
+        JS_ASSERT(absolute_);
         return raw_;
     }
     uint8 *offset() const {
-        JS_ASSERT(!absolute);
+        JS_ASSERT(!absolute_);
         return raw_;
     }
 
 #ifdef JS_SMALL_BRANCH
     uint8 *jumpTableEntry() {
-        JS_ASSERT(absolute);
+        JS_ASSERT(absolute_);
         return jumpTableEntry_;
     }
 #endif
@@ -493,14 +485,7 @@ class CodeLocationJump
 class CodeLocationLabel
 {
     uint8 *raw_;
-#ifdef DEBUG
-    bool absolute;
-    void markAbsolute(bool value) {
-        absolute = value;
-    }
-#else
-    void markAbsolute(bool value) {}
-#endif
+    DebugOnly<bool> absolute_;
 
   public:
     CodeLocationLabel() {}
@@ -510,16 +495,16 @@ class CodeLocationLabel
     }
     CodeLocationLabel(IonCode *code) {
         raw_ = code->raw();
-        markAbsolute(true);
+        absolute_ = true;
     }
     CodeLocationLabel(uint8 *raw) {
         raw_ = raw;
-        markAbsolute(true);
+        absolute_ = true;
     }
 
     void operator = (CodeOffsetLabel base) {
-        raw_ = (uint8 *) base.offset();
-        markAbsolute(false);
+        raw_ = (uint8 *)base.offset();
+        absolute_ = false;
     }
     ptrdiff_t operator - (const CodeLocationLabel &other) {
         return raw_ - other.raw_;
@@ -528,11 +513,11 @@ class CodeLocationLabel
     void repoint(IonCode *code, MacroAssembler *masm = NULL);
 
     uint8 *raw() {
-        JS_ASSERT(absolute);
+        JS_ASSERT(absolute_);
         return raw_;
     }
     uint8 *offset() {
-        JS_ASSERT(!absolute);
+        JS_ASSERT(!absolute_);
         return raw_;
     }
 };

@@ -136,6 +136,7 @@ uint32 maybeRD(Register r);
 uint32 maybeRT(Register r);
 uint32 maybeRN(Register r);
 
+Register toRN (Instruction &i);
 Register toRM (Instruction &i);
 Register toRD (Instruction &i);
 Register toR (Instruction &i);
@@ -1696,6 +1697,10 @@ class Assembler
         return (offset+1)&~1;
     }
     static uint8 *nextInstruction(uint8 *instruction, uint32 *count = NULL);
+    // Toggle a jmp or cmp emitted by toggledJump().
+    static void ToggleToJmp(CodeLocationLabel inst_);
+    static void ToggleToCmp(CodeLocationLabel inst_);
+
 }; // Assembler
 
 // An Instruction is a structure for both encoding and decoding any and all ARM instructions.
@@ -1909,6 +1914,31 @@ class InstMovT : public InstMovWT
     static bool isTHIS (const Instruction &i);
     static InstMovT *asTHIS (const Instruction &i);
 };
+
+class InstALU : public Instruction
+{
+    static const int32 ALUMask = 0xc << 24;
+  public:
+    InstALU (Register rd, Register rn, Operand2 op2, ALUOp op, SetCond_ sc, Assembler::Condition c)
+        : Instruction(RD(rd) | RN(rn) | op2.encode() | op | sc | c)
+    { }
+    static bool isTHIS (const Instruction &i);
+    static InstALU *asTHIS (const Instruction &i);
+    void extractOp(ALUOp *ret);
+    bool checkOp(ALUOp op);
+    void extractDest(Register *ret);
+    bool checkDest(Register rd);
+    void extractOp1(Register *ret);
+    bool checkOp1(Register rn);
+    void extractOp2(Operand2 *ret);
+};
+class InstCMP : public InstALU
+{
+  public:
+    static bool isTHIS (const Instruction &i);
+    static InstCMP *asTHIS (const Instruction &i);
+};
+
 static const uint32 NumArgRegs = 4;
 static inline bool
 GetArgReg(uint32 arg, Register *out)

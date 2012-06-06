@@ -92,6 +92,9 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Vector of information about generated polymorphic inline caches.
     js::Vector<IonCache, 0, SystemAllocPolicy> cacheList_;
 
+    // Vector of all patchable write pre-barrier offsets.
+    js::Vector<CodeOffsetLabel, 0, SystemAllocPolicy> barrierOffsets_;
+
   protected:
     // The offset of the first instruction of the OSR entry block from the
     // beginning of the code buffer.
@@ -165,8 +168,12 @@ class CodeGeneratorShared : public LInstructionVisitor
 
     size_t allocateCache(const IonCache &cache) {
         size_t index = cacheList_.length();
-        cacheList_.append(cache);
+        masm.reportMemory(cacheList_.append(cache));
         return index;
+    }
+
+    void addPreBarrierOffset(CodeOffsetLabel offset) {
+        masm.reportMemory(barrierOffsets_.append(offset));
     }
 
   protected:
@@ -201,6 +208,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     bool emitTruncateDouble(const FloatRegister &src, const Register &dest);
 
     void emitPreBarrier(Register base, const LAllocation *index, MIRType type);
+    void emitPreBarrier(Address address, MIRType type);
 
     inline bool isNextBlock(LBlock *block) {
         return (current->mir()->id() + 1 == block->mir()->id());

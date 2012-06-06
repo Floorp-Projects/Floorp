@@ -129,6 +129,12 @@ js::ion::toRM(Instruction &i)
     return Register::FromCode((i.encode()>>8) & 0xf);
 }
 
+Register
+js::ion::toRN(Instruction &i)
+{
+    return Register::FromCode((i.encode()>>16) & 0xf);
+}
+
 uint32
 js::ion::VD(VFPRegister vr)
 {
@@ -367,14 +373,82 @@ InstMovT::isTHIS(const Instruction &i)
     return (i.encode() & IsWTMask) == IsT;
 }
 
+InstALU *
+InstALU::asTHIS(const Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstALU*) (&i);
+    return NULL;
+}
+bool
+InstALU::isTHIS(const Instruction &i)
+{
+    return (i.encode() & ALUMask) == 0;
+}
+void
+InstALU::extractOp(ALUOp *ret)
+{
+    *ret = ALUOp(encode() & (0xf << 21));
+}
+bool
+InstALU::checkOp(ALUOp op)
+{
+    ALUOp mine;
+    extractOp(&mine);
+    return mine == op;
+}
+void
+InstALU::extractDest(Register *ret)
+{
+    *ret = toRD(*this);
+}
+bool
+InstALU::checkDest(Register rd)
+{
+    return rd == toRD(*this);
+}
+void
+InstALU::extractOp1(Register *ret)
+{
+    *ret = toRN(*this);
+}
+bool
+InstALU::checkOp1(Register rn)
+{
+    return rn == toRN(*this);
+}
+
+InstCMP *
+InstCMP::asTHIS(const Instruction &i)
+{
+    if (isTHIS(i))
+        return (InstCMP*) (&i);
+    return NULL;
+}
+
+bool
+InstCMP::isTHIS(const Instruction &i)
+{
+    return InstALU::isTHIS(i) && InstALU::asTHIS(i)->checkDest(r0);
+}
+
 Imm16::Imm16(Instruction &inst)
-  : lower(inst.encode() & 0xfff), upper(inst.encode() >> 16), invalid(0xfff) {}
+  : lower(inst.encode() & 0xfff),
+    upper(inst.encode() >> 16),
+    invalid(0xfff)
+{ }
+
 Imm16::Imm16(uint32 imm)
-   : lower(imm & 0xfff), pad(0), upper((imm>>12) & 0xf), invalid(0)
+  : lower(imm & 0xfff), pad(0),
+    upper((imm>>12) & 0xf),
+    invalid(0)
 {
     JS_ASSERT(decode() == imm);
 }
-Imm16::Imm16() : invalid(0xfff) {}
+
+Imm16::Imm16()
+  : invalid(0xfff)
+{ }
 
 void
 ion::PatchJump(CodeLocationJump &jump_, CodeLocationLabel label)
@@ -2343,6 +2417,44 @@ Instruction::next()
         return ret + 1;
     }
     return ret;
+}
+
+void
+Assembler::ToggleToJmp(CodeLocationLabel inst_)
+{
+    uint32 *ptr = (uint32 *)inst_.raw();
+
+    DebugOnly<Instruction *> inst = (Instruction *)inst_.raw();
+    JS_ASSERT(inst->is<InstCMP>());
+
+    // Zero bits 20-27, then set 24-27 to be correct for a branch.
+    // 20-23 will be party of the B's immediate, and should be 0.
+    *ptr = (*ptr & ~(0xff << 20)) | (0xa0 << 20);
+
+    JSC::ExecutableAllocator::cacheFlush(ptr, sizeof(Instruction));
+}
+
+void
+Assembler::ToggleToCmp(CodeLocationLabel inst_)
+{
+    uint32 *ptr = (uint32 *)inst_.raw();
+
+    DebugOnly<Instruction *> inst = (Instruction *)inst_.raw();
+    JS_ASSERT(inst->is<InstBImm>());
+
+    // Ensure that this masking operation doesn't affect the offset of the
+    // branch instruction when it gets toggled back.
+    JS_ASSERT((*ptr & (0xf << 20)) == 0);
+
+    // Also make sure that the CMP is valid. Part of having a valid CMP is that
+    // all of the bits describing the destination in most ALU instructions are
+    // all unset (looks like it is encoding r0).
+    JS_ASSERT(toRD(*inst) == r0);
+
+    // Zero out bits 20-27, then set them to be correct for a compare.
+    *ptr = (*ptr & ~(0xff << 20)) | (0x35 << 20);
+
+    JSC::ExecutableAllocator::cacheFlush(ptr, sizeof(Instruction));
 }
 
 Assembler *Assembler::dummy = NULL;

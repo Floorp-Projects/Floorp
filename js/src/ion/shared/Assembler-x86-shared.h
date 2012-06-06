@@ -455,6 +455,18 @@ class AssemblerX86Shared
         return j;
     }
 
+    // Comparison of EAX against the address given by a Label.
+    JmpSrc cmpSrc(Label *label) {
+        JmpSrc j = masm.cmp_eax();
+        if (label->bound()) {
+            // The jump can be immediately patched to the correct destination.
+            masm.linkJump(j, JmpDst(label->offset()));
+        } else {
+            label->use(j.offset());
+        }
+        return j;
+    }
+
     JmpSrc jSrc(Condition cond, RepatchLabel *label) {
         JmpSrc j = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         if (label->bound()) {
@@ -478,7 +490,6 @@ class AssemblerX86Shared
     }
 
   public:
-
     void nop() { masm.nop(); }
     void j(Condition cond, Label *label) { jSrc(cond, label); }
     void jmp(Label *label) { jmpSrc(label); }
@@ -497,6 +508,7 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void cmpEAX(Label *label) { cmpSrc(label); }
     void bind(Label *label) {
         JSC::MacroAssembler::Label jsclabel;
         if (label->used()) {
@@ -1137,6 +1149,18 @@ class AssemblerX86Shared
     }
     static uint8 *nextInstruction(uint8 *cur, uint32 *count) {
         JS_NOT_REACHED("nextInstruction NYI on x86");
+    }
+
+    // Toggle a jmp or cmp emitted by toggledJump().
+    static void ToggleToJmp(CodeLocationLabel inst) {
+        uint8_t *ptr = (uint8_t *)inst.raw();
+        JS_ASSERT(*ptr == 0x3D);
+        *ptr = 0xE9;
+    }
+    static void ToggleToCmp(CodeLocationLabel inst) {
+        uint8_t *ptr = (uint8_t *)inst.raw();
+        JS_ASSERT(*ptr == 0xE9);
+        *ptr = 0x3D;
     }
 };
 
