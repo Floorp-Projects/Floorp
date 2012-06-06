@@ -1420,9 +1420,38 @@ nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
     [cell setCriticalValue:value];
   }
 
-  DrawCellWithSnapping(cell, cgContext, inBoxRect,
+  HIRect rect = CGRectStandardize(inBoxRect);
+  BOOL vertical = IsVerticalMeter(aFrame);
+
+  CGContextSaveGState(cgContext);
+
+  if (vertical) {
+    /**
+     * Cocoa doesn't provide a vertical meter bar so to show one, we have to
+     * show a rotated horizontal meter bar.
+     * Given that we want to show a vertical meter bar, we assume that the rect
+     * has vertical dimensions but we can't correctly draw a meter widget inside
+     * such a rectangle so we need to inverse width and height (and re-position)
+     * to get a rectangle with horizontal dimensions.
+     * Finally, we want to show a vertical meter so we want to rotate the result
+     * so it is vertical. We do that by changing the context.
+     */
+    CGFloat tmp = rect.size.width;
+    rect.size.width = rect.size.height;
+    rect.size.height = tmp;
+    rect.origin.x += rect.size.height / 2.f - rect.size.width / 2.f;
+    rect.origin.y += rect.size.width / 2.f - rect.size.height / 2.f;
+
+    CGContextTranslateCTM(cgContext, CGRectGetMidX(rect), CGRectGetMidY(rect));
+    CGContextRotateCTM(cgContext, -M_PI / 2.f);
+    CGContextTranslateCTM(cgContext, -CGRectGetMidX(rect), -CGRectGetMidY(rect));
+  }
+
+  DrawCellWithSnapping(cell, cgContext, rect,
                        meterSetting, VerticalAlignFactor(aFrame),
-                       mCellDrawView, IsFrameRTL(aFrame));
+                       mCellDrawView, !vertical && IsFrameRTL(aFrame));
+
+  CGContextRestoreGState(cgContext);
 
   NS_OBJC_END_TRY_ABORT_BLOCK
 }
