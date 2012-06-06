@@ -108,7 +108,6 @@ public:
   virtual JSContext* GetNativeContext();
   virtual JSObject* GetNativeGlobal();
   virtual nsresult InitContext();
-  virtual nsresult InitOuterWindow();
   virtual bool IsContextInitialized();
 
   virtual void ScriptEvaluated(bool aTerminated);
