@@ -453,7 +453,7 @@ protected:
   bool AllCellsInRowSelected(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aNumberOfColumns);
   bool AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32 aNumberOfRows);
 
-  bool     IsEmptyCell(nsIDOMElement *aCell);
+  bool IsEmptyCell(mozilla::dom::Element* aCell);
 
   // Most insert methods need to get the same basic context data
   // Any of the pointers may be null if you don't need that datum (for more efficiency)
