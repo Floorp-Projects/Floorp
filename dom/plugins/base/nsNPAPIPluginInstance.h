@@ -139,7 +139,7 @@ public:
   // These are really mozilla::dom::ScreenOrientation, but it's
   // difficult to include that here
   PRUint32 FullScreenOrientation() { return mFullScreenOrientation; }
-  void SetFullScreenOrientation(PRUint32 orientation) { mFullScreenOrientation = orientation; }
+  void SetFullScreenOrientation(PRUint32 orientation);
 
   void SetWakeLock(bool aLock);
 #endif
@@ -229,6 +229,7 @@ protected:
 
   PRUint32 mFullScreenOrientation;
   bool mWakeLocked;
+  bool mFullScreen;
 #endif
 
   enum {

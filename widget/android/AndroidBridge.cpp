@@ -188,7 +188,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
 #ifdef MOZ_JAVA_COMPOSITOR
     jPumpMessageLoop = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "pumpMessageLoop", "()V");
 
-    jAddPluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "addPluginView", "(Landroid/view/View;IIIIZI)V");
+    jAddPluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "addPluginView", "(Landroid/view/View;IIIIZ)V");
     jRemovePluginView = jEnv->GetStaticMethodID(jGeckoAppShellClass, "removePluginView", "(Landroid/view/View;Z)V");
 
     jCreateSurface = jEnv->GetStaticMethodID(jGeckoAppShellClass, "createSurface", "()Landroid/view/Surface;");
@@ -2333,7 +2333,7 @@ NS_IMETHODIMP nsAndroidBridge::SetBrowserApp(nsIAndroidBrowserApp *aBrowserApp)
 }
 
 void
-AndroidBridge::AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen, int orientation) {
+AndroidBridge::AddPluginView(jobject view, const gfxRect& rect, bool isFullScreen) {
     JNIEnv *env = GetJNIEnv();
     if (!env)
         return;
@@ -2344,7 +2344,7 @@ AndroidBridge::AddPluginView(jobject view, const gfxRect& rect, bool isFullScree
     env->CallStaticVoidMethod(sBridge->mGeckoAppShellClass,
                               sBridge->jAddPluginView, view,
                               (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height,
-                              isFullScreen, orientation);
+                              isFullScreen);
 #else
     env->CallStaticVoidMethod(sBridge->mGeckoAppShellClass,
                               sBridge->jAddPluginView, view,
