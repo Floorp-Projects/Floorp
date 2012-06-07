@@ -56,7 +56,7 @@ interface nsIDOMHTMLMeterElement : nsIDOMHTMLElement
            attribute double low;
            attribute double high;
            attribute double optimum;
-  readonly attribute nsIDOMHTMLFormElement form;
+
   /**
    * The labels attribute will be done with bug 556743.
    */

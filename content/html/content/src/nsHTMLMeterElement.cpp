@@ -45,7 +45,7 @@
 #include "nsAlgorithm.h"
 
 
-class nsHTMLMeterElement : public nsGenericHTMLFormElement,
+class nsHTMLMeterElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLMeterElement
 {
 public:
@@ -56,21 +56,16 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   /* nsIDOMNode */
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
 
   /* nsIDOMElement */
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   /* nsIDOMHTMLElement */
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   /* nsIDOMHTMLMeterElement */
   NS_DECL_NSIDOMHTMLMETERELEMENT
-
-  /* nsIFormControl */
-  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_METER; }
-  NS_IMETHOD Reset();
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
 
   virtual nsEventStates IntrinsicState() const;
 
@@ -126,7 +121,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Meter)
 
 
 nsHTMLMeterElement::nsHTMLMeterElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : nsGenericHTMLFormElement(aNodeInfo)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
@@ -143,30 +138,16 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLMeterElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLMeterElement,
                                    nsIDOMHTMLMeterElement)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLMeterElement,
-                                               nsGenericHTMLFormElement)
+                                               nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLMeterElement)
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLMeterElement)
 
 
-NS_IMETHODIMP
-nsHTMLMeterElement::Reset()
-{
-  /* The meter element is not resettable. */
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLMeterElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
-{
-  /* The meter element is not submittable. */
-  return NS_OK;
-}
-
 nsEventStates
 nsHTMLMeterElement::IntrinsicState() const
 {
-  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
+  nsEventStates state = nsGenericHTMLElement::IntrinsicState();
 
   state |= GetOptimumState();
 
@@ -185,14 +166,8 @@ nsHTMLMeterElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLFormElement::ParseAttribute(aNamespaceID, aAttribute,
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute,
                                                   aValue, aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLMeterElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 /*
