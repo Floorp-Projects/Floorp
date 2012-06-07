@@ -13,7 +13,7 @@ include protocol PRenderFrame;
 include protocol POfflineCacheUpdate;
 include protocol PIndexedDB;
 
-include "TabMessageUtils.h";
+include "mozilla/dom/TabMessageUtils.h";
 include "gfxMatrix.h";
 include "mozilla/net/NeckoMessageUtils.h";
 include "IPC/nsGUIEventIPC.h";
