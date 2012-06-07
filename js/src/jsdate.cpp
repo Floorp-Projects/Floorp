@@ -2613,15 +2613,17 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
     /* Date called as constructor. */
     double d;
     if (args.length() == 0) {
+        /* ES5 15.9.3.3. */
         d = NowAsMillis();
     } else if (args.length() == 1) {
-        if (!args[0].isString()) {
-            /* the argument is a millisecond number */
-            if (!ToNumber(cx, args[0], &d))
-                return false;
-            d = TimeClip(d);
-        } else {
-            /* the argument is a string; parse it. */
+        /* ES5 15.9.3.2. */
+
+        /* Step 1. */
+        if (!ToPrimitive(cx, &args[0]))
+            return false;
+
+        if (args[0].isString()) {
+            /* Step 2. */
             JSString *str = ToString(cx, args[0]);
             if (!str)
                 return false;
@@ -2634,6 +2636,11 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
                 d = js_NaN;
             else
                 d = TimeClip(d);
+        } else {
+            /* Step 3. */
+            if (!ToNumber(cx, args[0], &d))
+                return false;
+            d = TimeClip(d);
         }
     } else {
         double msec_time;
