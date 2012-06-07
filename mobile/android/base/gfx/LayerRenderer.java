@@ -623,7 +623,7 @@ public class LayerRenderer {
 
                 /* restrict the viewport to page bounds so we don't
                  * count overscroll as checkerboard */
-                if (!viewport.intersect(0, 0, mPageRect.width(), mPageRect.height())) {
+                if (!viewport.intersect(mPageRect)) {
                     /* if the rectangles don't intersect
                        intersect() doesn't change viewport
                        so we set it to empty by hand */

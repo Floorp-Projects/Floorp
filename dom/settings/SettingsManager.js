@@ -76,23 +76,33 @@ SettingsLock.prototype = {
           }
           break;
         case "get":
-          if (info.name == "*") {
-            req = store.getAll();
-          } else {
-            req = store.getAll(info.name);
-          }
+          req = (info.name === "*") ? store.getAll()
+                                    : store.getAll(info.name);
+
           req.onsuccess = function(event) {
             debug("Request for '" + info.name + "' successful. " + 
                   "Record count: " + event.target.result.length);
             debug("result: " + JSON.stringify(event.target.result));
-            var result = {};
-            for (var i in event.target.result)
-              result[event.target.result[i].settingName] = event.target.result[i].settingValue;
+
+            let results = {
+              __exposedProps__: {
+              }
+            };
+
+            for (var i in event.target.result) {
+              let result = event.target.result[i];
+              results[result.settingName] = result.settingValue;
+              results.__exposedProps__[result.settingName] = "r";
+            }
+
             this._open = true;
-            Services.DOMRequest.fireSuccess(request, result);
+            Services.DOMRequest.fireSuccess(request, results);
             this._open = false;
           }.bind(lock);
-          req.onerror = function() { Services.DOMRequest.fireError(request, 0)};
+
+          req.onerror = function() {
+            Services.DOMRequest.fireError(request, 0)
+          };
           break;
       }
     }

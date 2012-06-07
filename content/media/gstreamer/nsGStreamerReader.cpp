@@ -505,6 +505,10 @@ nsresult nsGStreamerReader::Seek(PRInt64 aTarget,
 nsresult nsGStreamerReader::GetBuffered(nsTimeRanges* aBuffered,
                                         PRInt64 aStartTime)
 {
+  if (!mInfo.mHasVideo && !mInfo.mHasAudio) {
+    return NS_OK;
+  }
+
   GstFormat format = GST_FORMAT_TIME;
   MediaResource* resource = mDecoder->GetResource();
   gint64 resourceLength = resource->GetLength();

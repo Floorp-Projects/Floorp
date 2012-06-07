@@ -5,20 +5,26 @@
 
 #include "HyperTextAccessible.h"
 
-#ifndef _nsHTMLCanvasAccessible_H_
-#define _nsHTMLCanvasAccessible_H_
+#ifndef mozilla_a11y_HTMLCanvasAccessible_h__
+#define mozilla_a11y_HTMLCanvasAccessible_h__
+
+namespace mozilla {
+namespace a11y {
 
 /**
  * HTML canvas accessible (html:canvas).
  */
-class nsHTMLCanvasAccessible : public HyperTextAccessible
+class HTMLCanvasAccessible : public HyperTextAccessible
 {
 public:
-  nsHTMLCanvasAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsHTMLCanvasAccessible() { }
+  HTMLCanvasAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~HTMLCanvasAccessible() { }
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

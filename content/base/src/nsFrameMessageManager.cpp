@@ -21,10 +21,13 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSRuntimeService.h"
 #include "xpcpublic.h"
+#include "mozilla/Preferences.h"
 
 #ifdef ANDROID
 #include <android/log.h>
 #endif
+
+using namespace mozilla;
 
 static bool
 IsChromeProcess()
@@ -831,9 +834,10 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope)
 
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
+  bool allowXML = Preferences::GetBool("javascript.options.xml.chrome");
   JS_SetOptions(cx, JS_GetOptions(cx) |
                     JSOPTION_PRIVATE_IS_NSISUPPORTS |
-                    JSOPTION_ALLOW_XML);
+                    (allowXML ? JSOPTION_ALLOW_XML : 0));
   JS_SetVersion(cx, JSVERSION_LATEST);
   JS_SetErrorReporter(cx, ContentScriptErrorReporter);
 

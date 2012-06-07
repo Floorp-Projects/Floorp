@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLCanvasAccessible.h"
+#include "HTMLCanvasAccessible.h"
 
 #include "Role.h"
 
 using namespace mozilla::a11y;
 
-nsHTMLCanvasAccessible::
-  nsHTMLCanvasAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+HTMLCanvasAccessible::
+  HTMLCanvasAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessible(aContent, aDoc)
 {
 }
 
 role
-nsHTMLCanvasAccessible::NativeRole()
+HTMLCanvasAccessible::NativeRole()
 {
   return roles::CANVAS;
 }
