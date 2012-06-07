@@ -5,6 +5,11 @@
   <meta charset="utf-8" />
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
+  <style type="text/css">
+    .gencontent:before { content: "*"; }
+    .gencontent:after  { content: "*"; }
+  </style>
+
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
@@ -506,6 +511,19 @@
       };
       testTextAttrs(ID, 39, attrs, defAttrs, 39, 44);
 
+      //////////////////////////////////////////////////////////////////////////
+      // area18, "auto-generation text" tests
+      ID = "area18";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      testDefaultTextAttrs(ID, defAttrs);
+
+      var attrs = {
+        "auto-generated": "true"
+      };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 2);
+      testTextAttrs(ID, 2, { }, defAttrs, 2, 6);
+      testTextAttrs(ID, 6, attrs, defAttrs, 6, 7);
+
       SimpleTest.finish();
     }
 
@@ -539,6 +557,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=735645"
      title="expose sub and sup elements in text attributes">
     Mozilla Bug 735645
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=445516"
+     title="Support auto-generated text attribute on bullet lists">
+    Mozilla Bug 445516
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -644,5 +667,10 @@
     </span><span style="text-decoration: line-through; -moz-text-decoration-style: wavy;">wavy
     </span>
   </p>
+
+  <ul>
+    <li id="area18" class="gencontent">item</li>
+  </ul>
+
 </body>
 </html>
