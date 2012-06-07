@@ -17,21 +17,21 @@ function run_test()
   removeMetadata();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
 
-  let search = Services.search; // Cause service initialization
+  let search = Services.search;
 
   do_test_pending();
-  do_timeout(500,
-             function()
-             {
-               // Check that search-metadata.json has not been created
-               // Note that we cannot du much better than a timeout for
-               // checking a non-event.
-               let metadata = gProfD.clone();
-               metadata.append("search-metadata.json");
-               do_check_true(!metadata.exists());
-               removeMetadata();
+  search.init(function ss_initialized(rv) {
+    do_check_true(Components.isSuccessCode(rv));
+    do_timeout(500, function() {
+      // Check that search-metadata.json has not been
+      // created. Note that we cannot do much better
+      // than a timeout for checking a non-event.
+      let metadata = gProfD.clone();
+      metadata.append("search-metadata.json");
+      do_check_true(!metadata.exists());
+      removeMetadata();
 
-               do_test_finished();
-             }
-            );
+      do_test_finished();
+    });
+  });
 }
