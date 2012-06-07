@@ -61,7 +61,7 @@ if [ ! "$LIBXUL_SDK" ]; then
   "
   if [ "$MOZ_MEMORY" ]; then
     add_makefiles "
-      memory/jemalloc/Makefile
+      memory/mozjemalloc/Makefile
       memory/build/Makefile
     "
   fi
