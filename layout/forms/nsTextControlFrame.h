@@ -26,6 +26,11 @@ class nsIAccessible;
 #endif
 class EditorInitializerEntryTracker;
 class nsTextEditorState;
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
 
 class nsTextControlFrame : public nsStackFrame,
                            public nsIAnonymousContentCreator,
@@ -286,7 +291,6 @@ protected:
     nsTextControlFrame* mFrame;
   };
 
-  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
   nsresult OffsetToDOMPoint(PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
 
   /**
@@ -347,6 +351,7 @@ private:
   /**
    * Return the root DOM element, and implicitly initialize the editor if needed.
    */
+  mozilla::dom::Element* GetRootNodeAndInitializeEditor();
   nsresult GetRootNodeAndInitializeEditor(nsIDOMElement **aRootElement);
 
   void FinishedInitializer() {
