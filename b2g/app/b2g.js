@@ -487,3 +487,9 @@ pref("ui.click_hold_context_menus.delay", 1000);
 pref("device.storage.enabled", true);
 
 pref("media.plugins.enabled", true);
+
+// Disable printing (particularly, window.print())
+pref("dom.disable_window_print", true);
+
+// Disable window.showModalDialog
+pref("dom.disable_window_showModalDialog", true);

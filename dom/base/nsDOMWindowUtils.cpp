@@ -1793,7 +1793,6 @@ nsDOMWindowUtils::LeaveModalStateWithWindow(nsIDOMWindow *aWindow)
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   NS_ENSURE_STATE(window);
 
-  NS_ENSURE_ARG_POINTER(aWindow);
   window->LeaveModalState(aWindow);
   return NS_OK;
 }
