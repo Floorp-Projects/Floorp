@@ -5,7 +5,7 @@
 
 #include "nsIDOMEventTarget.idl"
 
-[scriptable, uuid(9b978f58-5bfe-409d-aa3f-946ca934e51d)]
+[scriptable, builtinclass, uuid(9b978f58-5bfe-409d-aa3f-946ca934e51d)]
 interface nsIDOMScreen : nsIDOMEventTarget
 {
   readonly attribute long             top;
