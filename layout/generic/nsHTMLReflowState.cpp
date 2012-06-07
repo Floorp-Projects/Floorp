@@ -305,6 +305,12 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                    "have unconstrained width; this should only result from "
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
+
+  if (frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
+    // Create our font inflation data if we don't have it already, and
+    // give it our current width information.
+    nsFontInflationData::UpdateFontInflationDataWidthFor(*this);
+  }
 }
 
 void nsHTMLReflowState::InitCBReflowState()
@@ -358,20 +364,6 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs, nsIAtom* aFrameType)
 void
 nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType)
 {
-  if (frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
-    // Create our font inflation data if we don't have it already, and
-    // give it our current width information.
-    bool dirty = nsFontInflationData::UpdateFontInflationDataWidthFor(*this);
-    if (dirty) {
-      // FIXME: This isn't so great for the cases where
-      // nsHTMLReflowState::SetComputedWith is called, if the first time
-      // we go through InitResizeFlags we set mHResize to true, and then
-      // the second time we'd set it to false even without the
-      // NS_FRAME_IS_DIRTY bit already set.
-      frame->AddStateBits(NS_FRAME_IS_DIRTY);
-    }
-  }
-
   mFlags.mHResize = !(frame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
                     frame->GetSize().width !=
                       mComputedWidth + mComputedBorderPadding.LeftRight();
