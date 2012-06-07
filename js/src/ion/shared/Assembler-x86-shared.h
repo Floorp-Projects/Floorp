@@ -462,7 +462,9 @@ class AssemblerX86Shared
             // The jump can be immediately patched to the correct destination.
             masm.linkJump(j, JmpDst(label->offset()));
         } else {
-            label->use(j.offset());
+            // Thread the jump list through the unpatched jump targets.
+            JmpSrc prev = JmpSrc(label->use(j.offset()));
+            masm.setNextJump(j, prev);
         }
         return j;
     }
