@@ -183,6 +183,8 @@ AndroidBridge::Init(JNIEnv *jEnv,
     else /* not Froyo */
         jSurfacePointerField = jEnv->GetFieldID(jSurfaceClass, "mNativeSurface", "I");
 
+    jNotifyWakeLockChanged = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyWakeLockChanged", "(Ljava/lang/String;Ljava/lang/String;)V");
+
 #ifdef MOZ_JAVA_COMPOSITOR
     jPumpMessageLoop = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "pumpMessageLoop", "()V");
 
@@ -2296,6 +2298,23 @@ AndroidBridge::PumpMessageLoop()
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jPumpMessageLoop);
 #endif
+}
+
+void
+AndroidBridge::NotifyWakeLockChanged(const nsAString& topic, const nsAString& state)
+{
+    JNIEnv* env = GetJNIEnv();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    jstring jstrTopic = env->NewString(nsPromiseFlatString(topic).get(),
+                                       topic.Length());
+    jstring jstrState = env->NewString(nsPromiseFlatString(state).get(),
+                                       state.Length());
+
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jNotifyWakeLockChanged, jstrTopic, jstrState);
 }
 
 /* attribute nsIAndroidBrowserApp browserApp; */
