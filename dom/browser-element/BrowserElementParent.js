@@ -112,6 +112,7 @@ BrowserElementParent.prototype = {
     addMessageListener("loadend", this._fireEventFromMsg);
     addMessageListener("titlechange", this._fireEventFromMsg);
     addMessageListener("iconchange", this._fireEventFromMsg);
+    addMessageListener("close", this._fireEventFromMsg);
     addMessageListener("get-mozapp-manifest-url", this._sendMozAppManifestURL);
     addMessageListener("keyevent", this._fireKeyEvent);
     addMessageListener("showmodalprompt", this._handleShowModalPrompt);
