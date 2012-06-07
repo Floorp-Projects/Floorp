@@ -42,27 +42,16 @@ static void Output(bool isError, const char *fmt, ... )
   va_start(ap, fmt);
 
 #if (defined(XP_WIN) && !MOZ_WINCONSOLE)
-  char *msg = PR_vsmprintf(fmt, ap);
-  if (msg)
-  {
-    UINT flags = MB_OK;
-    if (isError)
-      flags |= MB_ICONERROR;
-    else
-      flags |= MB_ICONINFORMATION;
-    
-    wchar_t wide_msg[2048];
-    MultiByteToWideChar(CP_ACP,
-			0,
-			msg,
-			-1,
-			wide_msg,
-			sizeof(wide_msg) / sizeof(wchar_t));
-    
-    MessageBoxW(NULL, wide_msg, L"XULRunner", flags);
+  PRUnichar msg[2048];
+  _vsnwprintf(msg, sizeof(msg)/sizeof(msg[0]), NS_ConvertUTF8toUTF16(fmt).get(), ap);
 
-    PR_smprintf_free(msg);
-  }
+  UINT flags = MB_OK;
+  if (isError)
+    flags |= MB_ICONERROR;
+  else
+    flags |= MB_ICONINFORMATION;
+    
+  MessageBoxW(NULL, msg, L"XULRunner", flags);
 #else
   vfprintf(stderr, fmt, ap);
 #endif
@@ -79,12 +68,12 @@ static bool IsArg(const char* arg, const char* s)
   {
     if (*++arg == '-')
       ++arg;
-    return !PL_strcasecmp(arg, s);
+    return !strcasecmp(arg, s);
   }
 
 #if defined(XP_WIN) || defined(XP_OS2)
   if (*arg == '/')
-    return !PL_strcasecmp(++arg, s);
+    return !strcasecmp(++arg, s);
 #endif
 
   return false;
@@ -306,7 +295,7 @@ int main(int argc, char* argv[])
     }
   }
 
-  const char *appDataFile = PR_GetEnv("XUL_APP_FILE");
+  const char *appDataFile = getenv("XUL_APP_FILE");
 
   if (!(appDataFile && *appDataFile)) {
     if (argc < 2) {
@@ -330,8 +319,8 @@ int main(int argc, char* argv[])
     --argc;
 
     static char kAppEnv[MAXPATHLEN];
-    PR_snprintf(kAppEnv, MAXPATHLEN, "XUL_APP_FILE=%s", appDataFile);
-    PR_SetEnv(kAppEnv);
+    snprintf(kAppEnv, MAXPATHLEN, "XUL_APP_FILE=%s", appDataFile);
+    putenv(kAppEnv);
   }
 
   nsCOMPtr<nsIFile> appDataLF;
