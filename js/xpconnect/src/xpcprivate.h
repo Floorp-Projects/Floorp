@@ -3667,7 +3667,7 @@ public:
         // XPConnect off the main thread. If you're an extension developer hitting
         // this, you need to change your code. See bug 716167.
         if (!NS_LIKELY(NS_IsMainThread() || NS_IsCycleCollectorThread()))
-            MOZ_Assert("NS_IsMainThread()", __FILE__, __LINE__);
+            MOZ_CRASH();
 
         if (cx) {
             if (js::GetOwnerThread(cx) == sMainJSThread)
