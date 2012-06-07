@@ -4864,9 +4864,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         // Inherit various things (principals, version, etc) from the parent.
         Rooted<JSScript*> script(cx);
         Rooted<JSScript*> parent(cx, bce->script);
-        script = JSScript::Create(cx, parent->principals, parent->originPrincipals,
-                                  parent->compileAndGo, /* noScriptRval = */ false,
-                                  parent->getVersion());
+        script = JSScript::Create(cx, parent->savedCallerFun, parent->principals,
+                                  parent->originPrincipals, parent->compileAndGo,
+                                  /* noScriptRval = */ false, parent->getVersion());
         if (!script)
             return false;
 
