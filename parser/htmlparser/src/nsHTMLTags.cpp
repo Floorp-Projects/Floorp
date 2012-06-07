@@ -172,6 +172,8 @@ static const PRUnichar sHTMLTagUnicodeName_menuitem[] =
   {'m', 'e', 'n', 'u', 'i', 't', 'e', 'm', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_meta[] =
   {'m', 'e', 't', 'a', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_meter[] =
+  {'m', 'e', 't', 'e', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_multicol[] =
   {'m', 'u', 'l', 't', 'i', 'c', 'o', 'l', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_nav[] =

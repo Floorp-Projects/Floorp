@@ -27,7 +27,11 @@ public:
     mMallocSizeOf = aMallocSizeOf;
   }
   nsMallocSizeOfFun mMallocSizeOf;
-  size_t mDOM;
+  size_t mDOMElementNodes;
+  size_t mDOMTextNodes;
+  size_t mDOMCDATANodes;
+  size_t mDOMCommentNodes;
+  size_t mDOMOther;
   size_t mStyleSheets;
   size_t mLayoutArenas;
   size_t mLayoutStyleSets;

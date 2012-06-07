@@ -45,8 +45,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
                               NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 #define NS_ISCRIPTCONTEXT_IID \
-  { 0xec47ccd4, 0x5f6a, 0x40d6, \
-    { 0xbc, 0x2f, 0x5a, 0x1e, 0xd3, 0xe4, 0xb4, 0xff } }
+{ 0x9a4df96d, 0xa231, 0x4108, \
+  { 0xb5, 0xbc, 0xaf, 0x67, 0x7a, 0x36, 0xa7, 0x44 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -260,28 +260,9 @@ public:
   virtual JSObject* GetNativeGlobal() = 0;
 
   /**
-   * Create a new global object that will be used for an inner window.
-   * Return the native global and an nsISupports 'holder' that can be used
-   * to manage the lifetime of it.
-   */
-  virtual nsresult CreateNativeGlobalForInner(
-                                      nsIScriptGlobalObject *aNewInner,
-                                      nsIURI *aURI,
-                                      bool aIsChrome,
-                                      nsIPrincipal *aPrincipal,
-                                      JSObject** aNativeGlobal,
-                                      nsISupports **aHolder) = 0;
-
-  /**
    * Initialize the context generally. Does not create a global object.
    **/
   virtual nsresult InitContext() = 0;
-
-  /**
-   * Prepares this context for use with the current inner window for the
-   * context's global object. This must be called after CreateOuterObject.
-   */
-  virtual nsresult InitOuterWindow() = 0;
 
   /**
    * Check to see if context is as yet intialized. Used to prevent

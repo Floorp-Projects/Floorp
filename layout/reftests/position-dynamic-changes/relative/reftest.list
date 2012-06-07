@@ -1,0 +1,2 @@
+fuzzy-if(d2d,85,20) == move-right-bottom.html move-right-bottom-ref.html # Bug 742176
+random-if(cocoaWidget) fuzzy-if(d2d,85,20) == move-top-left.html move-top-left-ref.html # Bug 688545, bug 742176

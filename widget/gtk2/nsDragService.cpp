@@ -708,7 +708,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                 PR_LOG(sDragLm, PR_LOG_DEBUG, ("dataFound = false\n"));
 
                 // Dragging and dropping from the file manager would cause us 
-                // to parse the source text as a nsILocalFile URL.
+                // to parse the source text as a nsIFile URL.
                 if ( strcmp(flavorStr, kFileMime) == 0 ) {
                     gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
                     GetTargetDragData(gdkFlavor);
@@ -734,7 +734,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                                         // The common wrapping code at the end of 
                                         // this function assumes the data is text
                                         // and calls text-specific operations.
-                                        // Make a secret hideout here for nsILocalFile
+                                        // Make a secret hideout here for nsIFile
                                         // objects and return early.
                                         aTransferable->SetTransferData(flavorStr, file,
                                                                        convertedTextLen);

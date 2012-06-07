@@ -13,7 +13,7 @@
 
 #include "nsTArray.h"
 #include "nsString.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsAppRunner.h"
 #include "AndroidBridge.h"
 #include "APKOpen.h"

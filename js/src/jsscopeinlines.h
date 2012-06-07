@@ -259,7 +259,7 @@ Shape::getUserId(JSContext *cx, jsid *idp) const
             return ValueToId(cx, Int32Value(id), idp);
         *idp = INT_TO_JSID(id);
     } else {
-        *idp = propid();
+        *idp = self->propid();
     }
     return true;
 }
@@ -274,11 +274,12 @@ Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj, 
         return InvokeGetterOrSetter(cx, receiver, fval, 0, 0, vp);
     }
 
+    Rooted<const Shape *> self(cx, this);
     RootedId id(cx);
-    if (!getUserId(cx, id.address()))
+    if (!self->getUserId(cx, id.address()))
         return false;
 
-    return CallJSPropertyOp(cx, getterOp(), receiver, id, vp);
+    return CallJSPropertyOp(cx, self->getterOp(), receiver, id, vp);
 }
 
 inline bool
@@ -294,8 +295,9 @@ Shape::set(JSContext* cx, HandleObject obj, bool strict, Value* vp) const
     if (attrs & JSPROP_GETTER)
         return js_ReportGetterOnlyAssignment(cx);
 
+    Rooted<const Shape *> self(cx, this);
     RootedId id(cx);
-    if (!getUserId(cx, id.address()))
+    if (!self->getUserId(cx, id.address()))
         return false;
 
     /*
@@ -304,10 +306,10 @@ Shape::set(JSContext* cx, HandleObject obj, bool strict, Value* vp) const
      */
     if (obj->isWith()) {
         RootedObject nobj(cx, &obj->asWith().object());
-        return CallJSPropertyOpSetter(cx, setterOp(), nobj, id, strict, vp);
+        return CallJSPropertyOpSetter(cx, self->setterOp(), nobj, id, strict, vp);
     }
 
-    return CallJSPropertyOpSetter(cx, setterOp(), obj, id, strict, vp);
+    return CallJSPropertyOpSetter(cx, self->setterOp(), obj, id, strict, vp);
 }
 
 inline void

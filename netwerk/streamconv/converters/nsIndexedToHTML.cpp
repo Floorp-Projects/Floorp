@@ -205,9 +205,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         nsCOMPtr<nsIFile> file;
         rv = fileUrl->GetFile(getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file, &rv);
-        if (NS_FAILED(rv)) return rv;
-        lfile->SetFollowLinks(true);
+        file->SetFollowLinks(true);
         
         nsCAutoString url;
         rv = net_GetURLSpecFromFile(file, url);

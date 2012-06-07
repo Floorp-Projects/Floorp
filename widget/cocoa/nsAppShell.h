@@ -46,6 +46,14 @@ private:
   nsTArray<nsCocoaAppModalWindowListItem> mList;
 };
 
+// GeckoNSApplication
+//
+// Subclass of NSApplication for filtering out certain events.
+@interface GeckoNSApplication : NSApplication
+{
+}
+@end
+
 @class AppShellDelegate;
 
 class nsAppShell : public nsBaseAppShell

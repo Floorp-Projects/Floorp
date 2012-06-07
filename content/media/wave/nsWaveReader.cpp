@@ -239,6 +239,9 @@ static double RoundToUsecs(double aSeconds) {
 
 nsresult nsWaveReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
+  if (!mInfo.mHasAudio) {
+    return NS_OK;
+  }
   PRInt64 startOffset = mDecoder->GetResource()->GetNextCachedData(mWavePCMOffset);
   while (startOffset >= 0) {
     PRInt64 endOffset = mDecoder->GetResource()->GetCachedDataEnd(startOffset);

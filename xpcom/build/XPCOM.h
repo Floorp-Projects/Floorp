@@ -128,7 +128,6 @@
 #include "nsIConverterOutputStream.h"
 #include "nsIDebug2.h"
 #include "nsIInputStreamTee.h"
-#include "nsILocalFile.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsIMutableArray.h"
 #include "nsIPersistentProperties2.h"

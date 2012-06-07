@@ -466,6 +466,7 @@ nsHTMLEditUtils::IsFormWidget(dom::Element* node)
       || (nodeAtom == nsEditProperty::output)
       || (nodeAtom == nsEditProperty::keygen)
       || (nodeAtom == nsEditProperty::progress)
+      || (nodeAtom == nsEditProperty::meter)
       || (nodeAtom == nsEditProperty::input);
 }
 
@@ -517,7 +518,7 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 // strong, var
 #define GROUP_PHRASE           (1 << 4)
 
-// a, applet, basefont, bdo, br, font, iframe, img, map, object, output,
+// a, applet, basefont, bdo, br, font, iframe, img, map, meter, object, output,
 // progress, q, script, span, sub, sup
 #define GROUP_SPECIAL          (1 << 5)
 
@@ -695,6 +696,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(menu, true, true, GROUP_BLOCK, GROUP_LI | GROUP_FLOW_ELEMENT),
   ELEM(menuitem, false, false, GROUP_NONE, GROUP_NONE),
   ELEM(meta, false, false, GROUP_HEAD_CONTENT, GROUP_NONE),
+  ELEM(meter, true, false, GROUP_SPECIAL, GROUP_FLOW_ELEMENT),
   ELEM(multicol, false, false, GROUP_NONE, GROUP_NONE),
   ELEM(nav, true, true, GROUP_BLOCK, GROUP_FLOW_ELEMENT),
   ELEM(nobr, false, false, GROUP_NONE, GROUP_NONE),

@@ -8,7 +8,7 @@
 #include "nsIAppShellService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"

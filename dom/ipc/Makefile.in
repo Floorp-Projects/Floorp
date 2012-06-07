@@ -19,7 +19,7 @@ ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 TEST_DIRS += tests
 endif
 
-EXPORTS = TabMessageUtils.h PCOMContentPermissionRequestChild.h
+EXPORTS = PCOMContentPermissionRequestChild.h
 
 EXPORTS_NAMESPACES = mozilla/dom
 

@@ -3966,6 +3966,7 @@ AC_CACHE_CHECK(for __thread keyword for TLS variables,
                             ac_cv_thread_keyword=no)])
 LDFLAGS=$_SAVE_LDFLAGS
 # The custom dynamic linker doesn't support TLS variables
+MOZ_TLS=
 if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
   # mips builds fail with TLS variables because of a binutils bug.
   # See bug 528687
@@ -3978,6 +3979,7 @@ if test "$ac_cv_thread_keyword" = yes -a "$MOZ_LINKER" != 1; then
       ;;
     *)
       AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
+      MOZ_TLS=1
       ;;
   esac
 fi
@@ -7277,6 +7279,9 @@ else
   fi
 
   AC_DEFINE(MOZ_MEMORY)
+  if test -n "$MOZ_JEMALLOC"; then
+    AC_DEFINE(MOZ_JEMALLOC)
+  fi
   if test "x$MOZ_DEBUG" = "x1"; then
     AC_DEFINE(MOZ_MEMORY_DEBUG)
   fi
@@ -7332,6 +7337,7 @@ else
   esac
 fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
+AC_SUBST(MOZ_JEMALLOC)
 AC_SUBST(MOZ_GLUE_LDFLAGS)
 AC_SUBST(MOZ_GLUE_PROGRAM_LDFLAGS)
 AC_SUBST(WIN32_CRT_LIBS)
@@ -9119,6 +9125,42 @@ if test "$CAIRO_FEATURES_H"; then
   else
     rm -f "$CAIRO_FEATURES_H".orig 2> /dev/null
   fi
+fi
+
+# Run jemalloc configure script
+
+if test "$MOZ_JEMALLOC" -a "$MOZ_MEMORY"; then
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS --build=$build --host=$target --enable-stats --with-jemalloc-prefix=je_"
+  if test "$OS_ARCH" = "Linux"; then
+    MANGLE="malloc calloc valloc free realloc memalign posix_memalign malloc_usable_size"
+    MANGLED=
+    JEMALLOC_WRAPPER=
+    if test -n "$_WRAP_MALLOC"; then
+      JEMALLOC_WRAPPER=__wrap_
+    fi
+    for mangle in ${MANGLE}; do
+      if test -n "$MANGLED"; then
+        MANGLED="$mangle:$JEMALLOC_WRAPPER$mangle,$MANGLED"
+      else
+        MANGLED="$mangle:$JEMALLOC_WRAPPER$mangle"
+      fi
+    done
+    ac_configure_args="$ac_configure_args --with-mangling=$MANGLED"
+  fi
+  unset CONFIG_FILES
+  if test -z "$MOZ_TLS"; then
+    ac_configure_args="$ac_configure_args --disable-tls"
+  fi
+  EXTRA_CFLAGS="$CFLAGS"
+  for var in AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS EXTRA_CFLAGS LDFLAGS; do
+    ac_configure_args="$ac_configure_args $var='`eval echo \\${${var}}`'"
+  done
+  ac_configure_args="$ac_configure_args je_cv_static_page_shift=12"
+  _save_cache_file="$cache_file"
+  cache_file=$_objdir/memory/jemalloc/src/config.cache
+  AC_OUTPUT_SUBDIRS(memory/jemalloc/src)
+  cache_file="$_save_cache_file"
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi
 
 dnl Build libunwind for Android profiling builds

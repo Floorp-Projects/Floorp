@@ -41,7 +41,7 @@
 
 #elif defined(XP_WIN)
 
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 #define GLES2_LIB "libGLESv2.dll"
 
@@ -1949,7 +1949,7 @@ GLContextProviderEGL::CreateForNativePixmapSurface(gfxASurface* aSurface)
 GLContext *
 GLContextProviderEGL::GetGlobalContext(const ContextFlags)
 {
-#ifdef ANDROID
+#ifdef MOZ_JAVA_COMPOSITOR
     return nsnull;
 #endif
 

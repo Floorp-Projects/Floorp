@@ -1,0 +1,4 @@
+# Please see the comment at the beginning of reftest.list
+
+== mixed-dimentionN.html?margin_parent mixed-dimentionN-ref.html?margin_parent
+== mixed-dimentionA.html?margin_parent mixed-dimentionA-ref.html?margin_parent

@@ -6,7 +6,7 @@
 #ifndef __nsProfileLock_h___
 #define __nsProfileLock_h___
 
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 class nsIProfileUnlocker;
 
@@ -47,7 +47,7 @@ public:
      *                     be returned at all.
      * @throws NS_ERROR_FILE_ACCESS_DENIED if the profile is locked.
      */
-    nsresult                Lock(nsILocalFile* aProfileDir, nsIProfileUnlocker* *aUnlocker);
+    nsresult                Lock(nsIFile* aProfileDir, nsIProfileUnlocker* *aUnlocker);
 
     /**
      * Unlock a profile directory.  If you're unlocking the directory because
@@ -86,13 +86,13 @@ private:
                                                );
     static PRCList          mPidLockList;
 
-    nsresult                LockWithFcntl(nsILocalFile *aLockFile);
+    nsresult                LockWithFcntl(nsIFile *aLockFile);
 
     /**
      * @param aHaveFcntlLock if true, we've already acquired an fcntl lock so this
      * lock is merely an "obsolete" lock to keep out old Firefoxes
      */
-    nsresult                LockWithSymlink(nsILocalFile *aLockFile, bool aHaveFcntlLock);
+    nsresult                LockWithSymlink(nsIFile *aLockFile, bool aHaveFcntlLock);
 
     char*                   mPidLockFileName;
     int                     mLockFileDesc;

@@ -17,7 +17,7 @@
 #include "nsTArray.h"
 
 #include "nsIWindowsRegKey.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "plbase64.h"
 #include "nsIXULRuntime.h"
 

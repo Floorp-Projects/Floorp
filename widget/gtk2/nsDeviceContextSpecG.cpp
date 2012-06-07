@@ -30,7 +30,7 @@
 #include "nsPrintSettingsGTK.h"
 
 #include "nsIFileStreams.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsTArray.h"
 
 #include "mozilla/Preferences.h"
@@ -535,12 +535,12 @@ nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMetho
 static void
 print_callback(GtkPrintJob *aJob, gpointer aData, GError *aError) {
   g_object_unref(aJob);
-  ((nsILocalFile*) aData)->Remove(false);
+  ((nsIFile*) aData)->Remove(false);
 }
 
 static void
 ns_release_macro(gpointer aData) {
-  nsILocalFile* spoolFile = (nsILocalFile*) aData;
+  nsIFile* spoolFile = (nsIFile*) aData;
   NS_RELEASE(spoolFile);
 }
 
@@ -572,7 +572,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
   } else {
     // Handle print-to-file ourselves for the benefit of embedders
     nsXPIDLString targetPath;
-    nsCOMPtr<nsILocalFile> destFile;
+    nsCOMPtr<nsIFile> destFile;
     mPrintSettings->GetToFileName(getter_Copies(targetPath));
 
     nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(targetPath),

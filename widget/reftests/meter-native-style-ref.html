@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <!-- Empty meter, no bar. -->
+    <meter></meter>
+    <!-- Full meter green colored. -->
+    <meter min=0 low=0 high=1 optimum=2 max=10 value=10></meter>
+    <!-- Full meter orange colored. -->
+    <meter min=0 low=0 high=1 optimum=1 max=10 value=10></meter>
+    <!-- Full meter red colored. -->
+    <meter min=0 low=1 high=2 optimum=0 max=10 value=10></meter>
+    <!-- Half-empty orange colored. -->
+    <meter min=0 low=0 high=1 optimum=0 max=10 value=5></meter>
+    <!-- Half-empty orange colored. -->
+    <meter min=0 low=0 high=1 optimum=0 max=10 value=5></meter>
+    <!-- With RTL, the bar should begin on the right. -->
+    <meter style="-moz-transform: scale(-1, 1);" value=0.5></meter>
+  </body>
+</html>

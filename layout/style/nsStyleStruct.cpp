@@ -1163,33 +1163,38 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     return NS_CombineHint(hint, nsChangeHint_ReflowFrame);
   }
 
-  if ((mWidth == aOther.mWidth) &&
-      (mMinWidth == aOther.mMinWidth) &&
-      (mMaxWidth == aOther.mMaxWidth)) {
-    if (mOffset == aOther.mOffset) {
-      return hint;
-    } else {
-      // Offset changes only affect positioned content, and can't affect any
-      // intrinsic widths.  They also don't need to force reflow of
-      // descendants.
-      return NS_CombineHint(hint, nsChangeHint_NeedReflow);
-    }
+  if (mWidth != aOther.mWidth ||
+      mMinWidth != aOther.mMinWidth ||
+      mMaxWidth != aOther.mMaxWidth) {
+    // None of our width differences can affect descendant intrinsic
+    // sizes and none of them need to force children to reflow.
+    return
+      NS_CombineHint(hint,
+                     NS_SubtractHint(nsChangeHint_ReflowFrame,
+                                     NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
+                                                    nsChangeHint_NeedDirtyReflow)));
   }
 
-  // None of our width differences can affect descendant intrinsic
-  // sizes and none of them need to force children to reflow.
-  return
-    NS_CombineHint(hint,
-                   NS_SubtractHint(nsChangeHint_ReflowFrame,
-                                   NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                                  nsChangeHint_NeedDirtyReflow)));
+  // If width and height have not changed, but any of the offsets have changed,
+  // then return the respective hints so that we would hopefully be able to
+  // avoid reflowing.
+  // Note that it is possible that we'll need to reflow when processing
+  // restyles, but we don't have enough information to make a good decision
+  // right now.
+  if (mOffset != aOther.mOffset) {
+    NS_UpdateHint(hint, nsChangeHint(nsChangeHint_RecomputePosition |
+                                     nsChangeHint_UpdateOverflow));
+  }
+  return hint;
 }
 
 #ifdef DEBUG
 /* static */
 nsChangeHint nsStylePosition::MaxDifference()
 {
-  return NS_STYLE_HINT_REFLOW;
+  return NS_CombineHint(NS_STYLE_HINT_REFLOW,
+                        nsChangeHint(nsChangeHint_RecomputePosition |
+                                     nsChangeHint_UpdateOverflow));
 }
 #endif
 

@@ -370,7 +370,7 @@ nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
       [filePath getCharacters:clipboardDataPtr];
       clipboardDataPtr[stringLength] = 0; // null terminate
 
-      nsCOMPtr<nsILocalFile> file;
+      nsCOMPtr<nsIFile> file;
       nsresult rv = NS_NewLocalFile(nsDependentString(clipboardDataPtr), true, getter_AddRefs(file));
       free(clipboardDataPtr);
       if (NS_FAILED(rv))

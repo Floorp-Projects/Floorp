@@ -942,6 +942,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
                                             js_pccounts_content_str);
   bool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
   bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
+  bool useXML = Preferences::GetBool(chromeWindow || !contentWindow ?
+                                     "javascript.options.xml.chrome" :
+                                     "javascript.options.xml.content");
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
@@ -952,6 +955,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       usePCCounts = false;
       useTypeInference = false;
       useMethodJITAlways = true;
+      useXML = false;
       useHardening = false;
     }
   }
@@ -975,6 +979,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
   else
     newDefaultJSOptions &= ~JSOPTION_TYPE_INFERENCE;
+
+  if (useXML)
+    newDefaultJSOptions |= JSOPTION_ALLOW_XML;
+  else
+    newDefaultJSOptions &= ~JSOPTION_ALLOW_XML;
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if
@@ -2067,42 +2076,6 @@ nsJSContext::GetNativeGlobal()
     return JS_GetGlobalObject(mContext);
 }
 
-nsresult
-nsJSContext::CreateNativeGlobalForInner(
-                                nsIScriptGlobalObject *aNewInner,
-                                nsIURI *aURI,
-                                bool aIsChrome,
-                                nsIPrincipal *aPrincipal,
-                                JSObject** aNativeGlobal, nsISupports **aHolder)
-{
-  nsIXPConnect *xpc = nsContentUtils::XPConnect();
-  PRUint32 flags = aIsChrome? nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT : 0;
-
-  nsCOMPtr<nsIPrincipal> systemPrincipal;
-  if (aIsChrome) {
-    nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
-    ssm->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-  }
-
-  nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
-  nsresult rv = xpc->
-          InitClassesWithNewWrappedGlobal(mContext, aNewInner,
-                                          aIsChrome ? systemPrincipal.get() : aPrincipal,
-                                          flags, getter_AddRefs(jsholder));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  jsholder->GetJSObject(aNativeGlobal);
-  jsholder.forget(aHolder);
-
-  // Set the location information for the new global, so that tools like
-  // about:memory may use that information
-  MOZ_ASSERT(aNativeGlobal && *aNativeGlobal);
-  xpc::SetLocationForGlobal(*aNativeGlobal, aURI);
-
-  return NS_OK;
-}
-
 JSContext*
 nsJSContext::GetNativeContext()
 {
@@ -2122,17 +2095,6 @@ nsJSContext::InitContext()
   ::JS_SetErrorReporter(mContext, NS_ScriptErrorReporter);
 
   JSOptionChangedCallback(js_options_dot_str, this);
-
-  return NS_OK;
-}
-
-nsresult
-nsJSContext::InitOuterWindow()
-{
-  JSObject *global = JS_ObjectToInnerObject(mContext, JS_GetGlobalObject(mContext));
-
-  nsresult rv = InitClasses(global); // this will complete global object initialization
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

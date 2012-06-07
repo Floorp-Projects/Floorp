@@ -30,6 +30,8 @@
 #define NS_DEBUG_CRT "msvcr90d.dll"
 #elif _MSC_VER == 1600
 #define NS_DEBUG_CRT "msvcr100d.dll"
+#elif _MSC_VER == 1700
+#define NS_DEBUG_CRT "msvcr110d.dll"
 #else
 #error "Don't know filename of MSVC debug library."
 #endif

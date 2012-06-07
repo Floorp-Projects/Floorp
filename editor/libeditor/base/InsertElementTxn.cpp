@@ -75,26 +75,23 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 
   NS_ENSURE_TRUE(mNode && mParent, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  nsresult result = mParent->GetChildNodes(getter_AddRefs(childNodes));
-  NS_ENSURE_SUCCESS(result, result);
-  nsCOMPtr<nsIDOMNode>refNode;
-  if (childNodes)
-  {
-    PRUint32 count;
-    childNodes->GetLength(&count);
-    if (mOffset>(PRInt32)count) mOffset = count;
+  nsCOMPtr<nsINode> parent = do_QueryInterface(mParent);
+  NS_ENSURE_STATE(parent);
+
+  PRUint32 count = parent->GetChildCount();
+  if (mOffset > PRInt32(count) || mOffset == -1) {
     // -1 is sentinel value meaning "append at end"
-    if (mOffset == -1) mOffset = count;
-    result = childNodes->Item(mOffset, getter_AddRefs(refNode));
-    NS_ENSURE_SUCCESS(result, result); 
-    // note, it's ok for mRefNode to be null.  that means append
+    mOffset = count;
   }
+
+  nsIContent* refContent = parent->GetChildAt(mOffset);
+  // note, it's ok for refNode to be null.  that means append
+  nsCOMPtr<nsIDOMNode> refNode = refContent ? refContent->AsDOMNode() : nsnull;
 
   mEditor->MarkNodeDirty(mNode);
 
   nsCOMPtr<nsIDOMNode> resultNode;
-  result = mParent->InsertBefore(mNode, refNode, getter_AddRefs(resultNode));
+  nsresult result = mParent->InsertBefore(mNode, refNode, getter_AddRefs(resultNode));
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(resultNode, NS_ERROR_NULL_POINTER);
 

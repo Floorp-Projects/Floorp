@@ -876,7 +876,7 @@ nsDataObj :: GetFileContents ( FORMATETC& aFE, STGMEDIUM& aSTG )
 // any title that starts with a forbidden name and extension (e.g. "nul" is invalid, but 
 // "nul." and "nul.txt" are also invalid and will cause problems).
 //
-// It would seem that this is more functionality suited to being in nsILocalFile.
+// It would seem that this is more functionality suited to being in nsIFile.
 //
 static void
 MangleTextToValidFilename(nsString & aText)
@@ -907,7 +907,7 @@ MangleTextToValidFilename(nsString & aText)
 // with the supplied extension. This ensures that we do not cut MBCS characters
 // in the middle.
 //
-// It would seem that this is more functionality suited to being in nsILocalFile.
+// It would seem that this is more functionality suited to being in nsIFile.
 //
 static bool
 CreateFilenameFromTextA(nsString & aText, const char * aExtension, 

@@ -123,11 +123,11 @@ var shell = {
     addPermissions(domains.split(","));
 
     // Load webapi.js as a frame script
-    let frameScriptUrl = 'chrome://browser/content/webapi.js';
+    let webapiUrl = 'chrome://browser/content/webapi.js';
     try {
-      messageManager.loadFrameScript(frameScriptUrl, true);
+      messageManager.loadFrameScript(webapiUrl, true);
     } catch (e) {
-      dump('Error loading ' + frameScriptUrl + ' as a frame script: ' + e + '\n');
+      dump('Error loading ' + webapiUrl + ' as a frame script: ' + e + '\n');
     }
 
     CustomEventManager.init();
@@ -406,16 +406,19 @@ var CustomEventManager = {
 
   handleEvent: function custevt_handleEvent(evt) {
     let detail = evt.detail;
-    dump("XXX FIXME : Got a mozContentEvent: " + detail.type);
+    dump('XXX FIXME : Got a mozContentEvent: ' + detail.type);
 
     switch(detail.type) {
-      case "desktop-notification-click":
-      case "desktop-notification-close":
+      case 'desktop-notification-click':
+      case 'desktop-notification-close':
         AlertsHelper.handleEvent(detail);
         break;
-      case "webapps-install-granted":
-      case "webapps-install-denied":
+      case 'webapps-install-granted':
+      case 'webapps-install-denied':
         WebappsHelper.handleEvent(detail);
+        break;
+      case 'select-choicechange':
+        FormsHelper.handleEvent(detail);
         break;
     }
   }
@@ -528,52 +531,6 @@ window.addEventListener('ContentStart', function(evt) {
   }
 });
 
-
-// Once Bug 731746 - Allow chrome JS object to implement nsIDOMEventTarget
-// is resolved this helper could be removed.
-var SettingsListener = {
-  _callbacks: {},
-
-  init: function sl_init() {
-    if ('mozSettings' in navigator && navigator.mozSettings)
-      navigator.mozSettings.onsettingchange = this.onchange.bind(this);
-  },
-
-  onchange: function sl_onchange(evt) {
-    var callback = this._callbacks[evt.settingName];
-    if (callback) {
-      callback(evt.settingValue);
-    }
-  },
-
-  observe: function sl_observe(name, defaultValue, callback) {
-    var settings = window.navigator.mozSettings;
-    if (!settings) {
-      window.setTimeout(function() { callback(defaultValue); });
-      return;
-    }
-
-    if (!callback || typeof callback !== 'function') {
-      throw new Error('Callback is not a function');
-    }
-
-    var req = settings.getLock().get(name);
-    req.addEventListener('success', (function onsuccess() {
-      callback(typeof(req.result[name]) != 'undefined' ?
-        req.result[name] : defaultValue);
-    }));
-
-    this._callbacks[name] = callback;
-  }
-};
-
-SettingsListener.init();
-
-SettingsListener.observe('language.current', 'en-US', function(value) {
-  Services.prefs.setCharPref('intl.accept_languages', value);
-});
-
-
 (function PowerManager() {
   // This will eventually be moved to content, so use content API as
   // much as possible here. TODO: Bug 738530
@@ -641,29 +598,6 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
   window.addEventListener('unload', function removeIdleObjects() {
     Services.idle.removeIdleObserver(idleHandler, idleTimeout);
     power.removeWakeLockListener(wakeLockHandler);
-  });
-})();
-
-
-(function RILSettingsToPrefs() {
-  ['ril.data.enabled', 'ril.data.roaming.enabled'].forEach(function(key) {
-    SettingsListener.observe(key, false, function(value) {
-      Services.prefs.setBoolPref(key, value);
-    });
-  });
-
-  let strPrefs = ['ril.data.apn', 'ril.data.user', 'ril.data.passwd',
-                  'ril.data.mmsc', 'ril.data.mmsproxy'];
-  strPrefs.forEach(function(key) {
-    SettingsListener.observe(key, false, function(value) {
-      Services.prefs.setCharPref(key, value);
-    });
-  });
-
-  ['ril.data.mmsport'].forEach(function(key) {
-    SettingsListener.observe(key, false, function(value) {
-      Services.prefs.setIntPref(key, value);
-    });
   });
 })();
 

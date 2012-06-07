@@ -29,7 +29,6 @@ FileLocation::FileLocation(const FileLocation &file, const char *path)
     if (path) {
       nsCOMPtr<nsIFile> cfile;
       file.mBaseFile->GetParent(getter_AddRefs(cfile));
-      nsCOMPtr<nsILocalFile> clfile = do_QueryInterface(cfile);
 
 #if defined(XP_WIN) || defined(XP_OS2)
       nsCAutoString pathStr(path);
@@ -40,11 +39,11 @@ FileLocation::FileLocation(const FileLocation &file, const char *path)
             *p = '\\';
         }
       }
-      clfile->AppendRelativeNativePath(pathStr);
+      cfile->AppendRelativeNativePath(pathStr);
 #else
-      clfile->AppendRelativeNativePath(nsDependentCString(path));
+      cfile->AppendRelativeNativePath(nsDependentCString(path));
 #endif
-      Init(clfile);
+      Init(cfile);
     } else {
       Init(file.mBaseFile);
     }
@@ -67,7 +66,7 @@ FileLocation::GetURIString(nsACString &result) const
   }
 }
 
-already_AddRefed<nsILocalFile>
+already_AddRefed<nsIFile>
 FileLocation::GetBaseFile()
 {
   if (IsZip() && mBaseZip) {
@@ -77,7 +76,7 @@ FileLocation::GetBaseFile()
     return NULL;
   }
 
-  nsCOMPtr<nsILocalFile> file = mBaseFile;
+  nsCOMPtr<nsIFile> file = mBaseFile;
   return file.forget();
 }
 
