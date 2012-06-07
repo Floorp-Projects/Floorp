@@ -864,10 +864,44 @@ Number_isFinite(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+// ES6 draft ES6 15.7.3.12
+static JSBool
+Number_isInteger(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 1 || !args[0].isNumber()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+    Value val = args[0];
+    args.rval().setBoolean(val.isInt32() ||
+                           (MOZ_DOUBLE_IS_FINITE(val.toDouble()) &&
+                            ToInteger(val.toDouble()) == val.toDouble()));
+    return true;
+}
+
+// ES6 drafult ES6 15.7.3.13
+static JSBool
+Number_toInteger(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 1) {
+        args.rval().setInt32(0);
+        return true;
+    }
+    double asint;
+    if (!ToInteger(cx, args[0], &asint))
+        return false;
+    args.rval().setNumber(asint);
+    return true;
+}
+
 
 static JSFunctionSpec number_static_methods[] = {
     JS_FN("isFinite", Number_isFinite, 1, 0),
+    JS_FN("isInteger", Number_isInteger, 1, 0),
     JS_FN("isNaN", Number_isNaN, 1, 0),
+    JS_FN("toInteger", Number_toInteger, 1, 0),
     JS_FS_END
 };
 
