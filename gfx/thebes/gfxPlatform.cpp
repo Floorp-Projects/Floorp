@@ -558,13 +558,6 @@ gfxPlatform::GetScaledFontForFont(gfxFont *aFont)
   return scaledFont;
 }
 
-cairo_user_data_key_t kDrawSourceSurface;
-static void
-DataSourceSurfaceDestroy(void *dataSourceSurface)
-{
-  static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
-}
-
 UserDataKey kThebesSurfaceKey;
 void
 DestroyThebesSurface(void *data)
@@ -604,11 +597,12 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
     IntSize size = data->GetSize();
     gfxASurface::gfxImageFormat format = OptimalFormatForContent(ContentForFormat(data->GetFormat()));
 
-    surf =
-      new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
-                          data->Stride(), format);
-
-    surf->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
+    // We need to make a copy here because data might change its data under us
+    nsRefPtr<gfxImageSurface> imageSurf = new gfxImageSurface(gfxIntSize(size.width, size.height), format, false);
+ 
+    bool resultOfCopy = imageSurf->CopyFrom(source);
+    NS_ASSERTION(resultOfCopy, "Failed to copy surface.");
+    surf = imageSurf;
   }
 
   // add a reference to be held by the drawTarget
