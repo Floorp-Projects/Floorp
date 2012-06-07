@@ -127,7 +127,7 @@ var shell = {
     try {
       messageManager.loadFrameScript(webapiUrl, true);
     } catch (e) {
-      dump('Error loading ' + webapiUrl + ' as a frame script: ' + e + '\n');
+      dump('shell.js: Error loading ' + webapiUrl + ' as a frame script: ' + e + '\n');
     }
 
     CustomEventManager.init();
@@ -340,16 +340,6 @@ nsBrowserAccess.prototype = {
     return contentWindow == window;
   }
 };
-
-// Pipe `console` log messages to the nsIConsoleService which writes them
-// to logcat.
-Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
-  let message = subject.wrappedJSObject;
-  let prefix = "Content JS " + message.level.toUpperCase() +
-               " at " + message.filename + ":" + message.lineNumber +
-               " in " + (message.functionName || "anonymous") + ": ";
-  Services.console.logStringMessage(prefix + Array.join(message.arguments, " "));
-}, "console-api-log-event", false);
 
 (function Repl() {
   if (!Services.prefs.getBoolPref('b2g.remote-js.enabled')) {
