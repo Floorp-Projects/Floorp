@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the public domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 // Test that alertCheck (i.e., alert with the opportunity to opt out of future
 // alerts), promptCheck, and confirmCheck work.  We do this by spamming
 // alerts/prompts/confirms from inside an <iframe mozbrowser>.
