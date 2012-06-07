@@ -7,7 +7,10 @@
 let Cu = Components.utils;
 let Ci = Components.interfaces;
 let Cc = Components.classes;
+let Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
 // Event whitelisted for bubbling.
 let whitelistedEvents = [
@@ -45,12 +48,17 @@ var global = this;
 
 function BrowserElementChild() {
   this._init();
+
+  // Maps outer window id --> weak ref to window.  Used by modal dialog code.
+  this._windowIDDict = {};
 };
 
 BrowserElementChild.prototype = {
   _init: function() {
     debug("Starting up.");
     sendAsyncMsg("hello");
+
+    BrowserElementPromptService.mapWindowToBrowserElementChild(content, this);
 
     docShell.QueryInterface(Ci.nsIWebProgress)
             .addProgressListener(this._progressListener,
@@ -87,11 +95,14 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
-    addMessageListener("browser-element-api:get-screenshot",
-                       this._recvGetScreenshot.bind(this));
+    var self = this;
+    function addMsgListener(msg, handler) {
+      addMessageListener('browser-element-api:' + msg, handler.bind(self));
+    }
 
-    addMessageListener("browser-element-api:set-visible",
-                        this._recvSetVisible.bind(this));
+    addMsgListener("get-screenshot", this._recvGetScreenshot);
+    addMsgListener("set-visible", this._recvSetVisible);
+    addMsgListener("unblock-modal-prompt", this._recvStopWaiting);
 
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
                 .getService(Ci.nsIEventListenerService);
@@ -107,6 +118,136 @@ BrowserElementChild.prototype = {
     els.addSystemEventListener(global, 'keyup',
                                this._keyEventHandler.bind(this),
                                /* useCapture = */ true);
+  },
+
+  _tryGetInnerWindowID: function(win) {
+    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils);
+    try {
+      return utils.currentInnerWindowID;
+    }
+    catch(e) {
+      return null;
+    }
+  },
+
+  /**
+   * Show a modal prompt.  Called by BrowserElementPromptService.
+   */
+  showModalPrompt: function(win, args) {
+    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils);
+
+    args.windowID = { outer: utils.outerWindowID,
+                      inner: this._tryGetInnerWindowID(win) };
+    sendAsyncMsg('showmodalprompt', args);
+
+    let returnValue = this._waitForResult(win);
+
+    if (args.promptType == 'prompt' ||
+        args.promptType == 'confirm') {
+      return returnValue;
+    }
+  },
+
+  /**
+   * Spin in a nested event loop until we receive a unblock-modal-prompt message for
+   * this window.
+   */
+  _waitForResult: function(win) {
+    debug("_waitForResult(" + win + ")");
+    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils);
+
+    let outerWindowID = utils.outerWindowID;
+    let innerWindowID = this._tryGetInnerWindowID(win);
+    if (innerWindowID === null) {
+      // I have no idea what waiting for a result means when there's no inner
+      // window, so let's just bail.
+      debug("_waitForResult: No inner window. Bailing.");
+      return;
+    }
+
+    this._windowIDDict[outerWindowID] = Cu.getWeakReference(win);
+
+    debug("Entering modal state (outerWindowID=" + outerWindowID + ", " +
+                                "innerWindowID=" + innerWindowID + ")");
+
+    // In theory, we're supposed to pass |modalStateWin| back to
+    // leaveModalStateWithWindow.  But in practice, the window is always null,
+    // because it's the window associated with this script context, which
+    // doesn't have a window.  But we'll play along anyway in case this
+    // changes.
+    var modalStateWin = utils.enterModalStateWithWindow();
+
+    // We'll decrement win.modalDepth when we receive a unblock-modal-prompt message
+    // for the window.
+    if (!win.modalDepth) {
+      win.modalDepth = 0;
+    }
+    win.modalDepth++;
+    let origModalDepth = win.modalDepth;
+
+    let thread = Services.tm.currentThread;
+    debug("Nested event loop - begin");
+    while (win.modalDepth == origModalDepth) {
+      // Bail out of the loop if the inner window changed; that means the
+      // window navigated.
+      if (this._tryGetInnerWindowID(win) !== innerWindowID) {
+        debug("_waitForResult: Inner window ID changed " +
+              "while in nested event loop.");
+        break;
+      }
+
+      thread.processNextEvent(/* mayWait = */ true);
+    }
+    debug("Nested event loop - finish");
+
+    // If we exited the loop because the inner window changed, then bail on the
+    // modal prompt.
+    if (innerWindowID !== this._tryGetInnerWindowID(win)) {
+      throw Components.Exception("Modal state aborted by navigation",
+                                 Cr.NS_ERROR_NOT_AVAILABLE);
+    }
+
+    let returnValue = win.modalReturnValue;
+    delete win.modalReturnValue;
+
+    utils.leaveModalStateWithWindow(modalStateWin);
+
+    debug("Leaving modal state (outerID=" + outerWindowID + ", " +
+                               "innerID=" + innerWindowID + ")");
+    return returnValue;
+  },
+
+  _recvStopWaiting: function(msg) {
+    let outerID = msg.json.windowID.outer;
+    let innerID = msg.json.windowID.inner;
+    let returnValue = msg.json.returnValue;
+    debug("recvStopWaiting(outer=" + outerID + ", inner=" + innerID +
+          ", returnValue=" + returnValue + ")");
+
+    if (!this._windowIDDict[outerID]) {
+      debug("recvStopWaiting: No record of outer window ID " + outerID);
+      return;
+    }
+
+    let win = this._windowIDDict[outerID].get();
+    delete this._windowIDDict[outerID];
+
+    if (!win) {
+      debug("recvStopWaiting, but window is gone\n");
+      return;
+    }
+
+    if (innerID !== this._tryGetInnerWindowID(win)) {
+      debug("recvStopWaiting, but inner ID has changed\n");
+      return;
+    }
+
+    debug("recvStopWaiting " + win);
+    win.modalReturnValue = returnValue;
+    win.modalDepth--;
   },
 
   _titleChangedHandler: function(e) {
@@ -179,8 +320,7 @@ BrowserElementChild.prototype = {
   // to keep a strong ref to it ourselves.
   _progressListener: {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                           Ci.nsISupportsWeakReference,
-                                           Ci.nsISupports]),
+                                           Ci.nsISupportsWeakReference]),
     _seenLoadStart: false,
 
     onLocationChange: function(webProgress, request, location, flags) {

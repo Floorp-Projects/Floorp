@@ -18,6 +18,14 @@ function debug(msg) {
   //dump("BrowserElementParent - " + msg + "\n");
 }
 
+function sendAsyncMsg(frameElement, msg, data) {
+  let mm = frameElement.QueryInterface(Ci.nsIFrameLoaderOwner)
+                       .frameLoader
+                       .messageManager;
+
+  mm.sendAsyncMessage('browser-element-api:' + msg, data);
+}
+
 /**
  * The BrowserElementParent implements one half of <iframe mozbrowser>.
  * (The other half is, unsurprisingly, BrowserElementChild.)
@@ -38,8 +46,6 @@ BrowserElementParent.prototype = {
    * changed.
    */
   _init: function() {
-    debug("_init");
-
     if (this._initialized) {
       return;
     }
@@ -52,6 +58,7 @@ BrowserElementParent.prototype = {
       return;
     }
 
+    debug("_init");
     this._initialized = true;
 
     this._screenshotListeners = {};
@@ -107,6 +114,7 @@ BrowserElementParent.prototype = {
     addMessageListener("iconchange", this._fireEventFromMsg);
     addMessageListener("get-mozapp-manifest-url", this._sendMozAppManifestURL);
     addMessageListener("keyevent", this._fireKeyEvent);
+    addMessageListener("showmodalprompt", this._handleShowModalPrompt);
     mm.addMessageListener('browser-element-api:got-screenshot',
                           this._recvGotScreenshot.bind(this));
 
@@ -129,24 +137,83 @@ BrowserElementParent.prototype = {
    * |data|.
    */
   _fireEventFromMsg: function(frameElement, data) {
-    let name = data.name;
+    let name = data.name.substring('browser-element-api:'.length);
     let detail = data.json;
 
-    debug('fireEventFromMsg: ' + name + ' ' + detail);
-    let evtName = name.substring('browser-element-api:'.length);
+    debug('fireEventFromMsg: ' + name + ', ' + detail);
+    let evt = this._createEvent(frameElement, name, detail,
+                                /* cancelable = */ false);
+    frameElement.dispatchEvent(evt);
+  },
+
+  _handleShowModalPrompt: function(frameElement, data) {
+    // Fire a showmodalprmopt event on the iframe.  When this method is called,
+    // the child is spinning in a nested event loop waiting for an
+    // unblock-modal-prompt message.
+    //
+    // If the embedder calls preventDefault() on the showmodalprompt event,
+    // we'll block the child until event.detail.unblock() is called.
+    //
+    // Otherwise, if preventDefault() is not called, we'll send the
+    // unblock-modal-prompt message to the child as soon as the event is done
+    // dispatching.
+
+    let detail = data.json;
+    debug('handleShowPrompt ' + JSON.stringify(detail));
+
+    // Strip off the windowID property from the object we send along in the
+    // event.
+    let windowID = detail.windowID;
+    delete detail.windowID;
+    debug("Event will have detail: " + JSON.stringify(detail));
+    let evt = this._createEvent(frameElement, 'showmodalprompt', detail,
+                                /* cancelable = */ true);
+
+    let unblockMsgSent = false;
+    function sendUnblockMsg() {
+      if (unblockMsgSent) {
+        return;
+      }
+      unblockMsgSent = true;
+
+      // We don't need to sanitize evt.detail.returnValue (e.g. converting the
+      // return value of confirm() to a boolean); Gecko does that for us.
+
+      let data = { windowID: windowID,
+                   returnValue: evt.detail.returnValue };
+      sendAsyncMsg(frameElement, 'unblock-modal-prompt', data);
+    }
+
+    XPCNativeWrapper.unwrap(evt.detail).unblock = function() {
+      sendUnblockMsg();
+    };
+
+    frameElement.dispatchEvent(evt);
+
+    if (!evt.defaultPrevented) {
+      // Unblock the inner frame immediately.  Otherwise we'll unblock upon
+      // evt.detail.unblock().
+      sendUnblockMsg();
+    }
+  },
+
+  _createEvent: function(frameElement, evtName, detail, cancelable) {
     let win = frameElement.ownerDocument.defaultView;
     let evt;
 
     // This will have to change if we ever want to send a CustomEvent with null
     // detail.  For now, it's OK.
     if (detail !== undefined && detail !== null) {
-      evt = new win.CustomEvent('mozbrowser' + evtName, {detail: detail});
+      evt = new win.CustomEvent('mozbrowser' + evtName,
+                                {bubbles: true, cancelable: cancelable,
+                                 detail: detail});
     }
     else {
-      evt = new win.Event('mozbrowser' + evtName);
+      evt = new win.Event('mozbrowser' + evtName,
+                          {bubbles: true, cancelable: cancelable});
     }
 
-    frameElement.dispatchEvent(evt);
+    return evt;
   },
 
   _sendMozAppManifestURL: function(frameElement, data) {
