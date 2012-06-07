@@ -1293,9 +1293,9 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     uint16_t level = cookie.level();
-    JS_ASSERT(bce->sc->staticLevel >= level);
+    JS_ASSERT(bce->script->staticLevel >= level);
 
-    const unsigned skip = bce->sc->staticLevel - level;
+    const unsigned skip = bce->script->staticLevel - level;
     if (skip != 0)
         return true;
 
@@ -4855,7 +4855,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     {
         FunctionBox *funbox = pn->pn_funbox;
-        SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox, bce->sc->staticLevel + 1);
+        SharedContext sc(cx, /* scopeChain = */ NULL, fun, funbox);
         sc.cxFlags = funbox->cxFlags;
         if (bce->sc->funMightAliasLocals())
             sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
@@ -4866,7 +4866,8 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         Rooted<JSScript*> parent(cx, bce->script);
         script = JSScript::Create(cx, parent->savedCallerFun, parent->principals,
                                   parent->originPrincipals, parent->compileAndGo,
-                                  /* noScriptRval = */ false, parent->getVersion());
+                                  /* noScriptRval = */ false, parent->getVersion(),
+                                  parent->staticLevel + 1);
         if (!script)
             return false;
 
