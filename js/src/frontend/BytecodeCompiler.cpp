@@ -113,13 +113,14 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         return NULL;
 
     bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
+    GlobalObject *globalObject = needScriptGlobal ? GetCurrentGlobal(cx) : NULL;
     Rooted<JSScript*> script(cx);
     script = JSScript::Create(cx, savedCallerFun, principals, originPrincipals, compileAndGo,
-                              noScriptRval, version, staticLevel);
+                              noScriptRval, globalObject, version, staticLevel);
     if (!script)
         return NULL;
 
-    BytecodeEmitter bce(&parser, &sc, script, lineno, needScriptGlobal);
+    BytecodeEmitter bce(&parser, &sc, script, lineno);
     if (!bce.init())
         return NULL;
 
@@ -271,14 +272,15 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!funtc.init())
         return false;
 
+    GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
     Rooted<JSScript*> script(cx);
     script = JSScript::Create(cx, /* savedCallerFun = */ false, principals, originPrincipals,
                               /* compileAndGo = */ false, /* noScriptRval = */ false,
-                              version, staticLevel);
+                              globalObject, version, staticLevel);
     if (!script)
         return false;
 
-    BytecodeEmitter funbce(&parser, &funsc, script, lineno, /* needsScriptGlobal = */ false);
+    BytecodeEmitter funbce(&parser, &funsc, script, lineno);
     if (!funbce.init())
         return false;
 

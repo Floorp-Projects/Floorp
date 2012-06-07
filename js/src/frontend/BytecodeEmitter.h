@@ -123,16 +123,11 @@ struct BytecodeEmitter
 
     uint16_t        typesetCount;   /* Number of JOF_TYPESET opcodes generated */
 
-    /* This should only be true if sc->inFunction() is false. */
-    const bool      needScriptGlobal:1; /* API caller does not want result value
-                                           from global script. */
-
     bool            hasSingletons:1;    /* script contains singleton initializer JSOP_OBJECT */
 
     bool            inForInit:1;        /* emitting init expr of for; exclude 'in' */
 
-    BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script, unsigned lineno,
-                    bool needScriptGlobal);
+    BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script, unsigned lineno);
     bool init();
 
     /*
