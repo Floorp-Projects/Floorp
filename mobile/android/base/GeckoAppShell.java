@@ -2263,4 +2263,8 @@ public class GeckoAppShell
                 (int)FloatMath.floor(sw), (int)FloatMath.floor(sh),
                 dx, dy, dw, dh, GeckoAppShell.SCREENSHOT_WHOLE_PAGE));
     }
+
+    public static void notifyWakeLockChanged(String topic, String state) {
+        GeckoApp.mAppContext.notifyWakeLockChanged(topic, state);
+    }
 }

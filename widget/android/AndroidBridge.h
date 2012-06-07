@@ -355,6 +355,8 @@ public:
 
     void PumpMessageLoop();
 
+    void NotifyWakeLockChanged(const nsAString& topic, const nsAString& state);
+
 protected:
     static AndroidBridge *sBridge;
 
@@ -474,6 +476,7 @@ protected:
     jmethodID jLockScreenOrientation;
     jmethodID jUnlockScreenOrientation;
     jmethodID jPumpMessageLoop;
+    jmethodID jNotifyWakeLockChanged;
 
     // For native surface stuff
     jclass jSurfaceClass;
