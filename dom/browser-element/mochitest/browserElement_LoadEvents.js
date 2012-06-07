@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the public domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 // Test that an iframe with the |mozbrowser| attribute emits mozbrowserloadX
 // events when this page is in the whitelist.
 

@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the public domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 // Test that an <iframe mozbrowser> is a window.{top,parent,frameElement} barrier.
 "use strict";
 
