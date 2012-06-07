@@ -113,7 +113,8 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 
         Rooted<JSScript*> script(cx);
         script = JSScript::Create(cx, /* principals = */ NULL, /* originPrincipals = */ NULL,
-                                  /* noScriptRval = */ true, JSVERSION_DEFAULT);
+                                  /* compileAndGo = */ false, /* noScriptRval = */ true,
+                                  JSVERSION_DEFAULT);
         if (!script || !script->fullyInitTrivial(cx))
             return NULL;
 
