@@ -59,9 +59,14 @@ public:
 
 namespace {
 
-static void DestroyRegion(void* aPropertyValue)
+class RefCountedRegion : public RefCounted<RefCountedRegion> {
+public:
+  nsRegion mRegion;
+};
+
+static void DestroyRefCountedRegion(void* aPropertyValue)
 {
-  delete static_cast<nsRegion*>(aPropertyValue);
+  static_cast<RefCountedRegion*>(aPropertyValue)->Release();
 }
 
 /**
@@ -78,7 +83,7 @@ static void DestroyRegion(void* aPropertyValue)
  * When the property value is null, the region is infinite --- i.e. all
  * areas of the ThebesLayers should be invalidated.
  */
-NS_DECLARE_FRAME_PROPERTY(ThebesLayerInvalidRegionProperty, DestroyRegion)
+NS_DECLARE_FRAME_PROPERTY(ThebesLayerInvalidRegionProperty, DestroyRefCountedRegion)
 
 static void DestroyPoint(void* aPropertyValue)
 {
@@ -675,8 +680,13 @@ FrameLayerBuilder::WillEndTransaction(LayerManager* aManager)
                "Some frame must have a layer!");
 }
 
+/**
+ * If *aThebesLayerInvalidRegion is non-null, use it as this frame's
+ * region property. Otherwise set it to the frame's region property.
+ */
 static void
-SetHasContainerLayer(nsIFrame* aFrame, nsPoint aOffsetToRoot)
+SetHasContainerLayer(nsIFrame* aFrame, nsPoint aOffsetToRoot,
+                     RefCountedRegion** aThebesLayerInvalidRegion)
 {
   aFrame->AddStateBits(NS_FRAME_HAS_CONTAINER_LAYER);
   for (nsIFrame* f = aFrame;
@@ -692,6 +702,24 @@ SetHasContainerLayer(nsIFrame* aFrame, nsPoint aOffsetToRoot)
     *lastPaintOffset = aOffsetToRoot;
   } else {
     props.Set(ThebesLayerLastPaintOffsetProperty(), new nsPoint(aOffsetToRoot));
+  }
+
+  // Reset or create the invalid region now so we can start collecting
+  // new dirty areas.
+  if (*aThebesLayerInvalidRegion) {
+    (*aThebesLayerInvalidRegion)->AddRef();
+    props.Set(ThebesLayerInvalidRegionProperty(), *aThebesLayerInvalidRegion);
+  } else {
+    RefCountedRegion* invalidRegion = static_cast<RefCountedRegion*>
+      (props.Get(ThebesLayerInvalidRegionProperty()));
+    if (invalidRegion) {
+      invalidRegion->mRegion.SetEmpty();
+    } else {
+      invalidRegion = new RefCountedRegion();
+      invalidRegion->AddRef();
+      props.Set(ThebesLayerInvalidRegionProperty(), invalidRegion);
+    }
+    *aThebesLayerInvalidRegion = invalidRegion;
   }
 }
 
@@ -722,19 +750,7 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
     return PL_DHASH_REMOVE;
   }
 
-  if (newDisplayItems->HasNonEmptyContainerLayer()) {
-    // Reset or create the invalid region now so we can start collecting
-    // new dirty areas.
-    // Note that the NS_FRAME_HAS_CONTAINER_LAYER bit is set in
-    // BuildContainerLayerFor, so we don't need to set it here.
-    nsRegion* invalidRegion = static_cast<nsRegion*>
-      (props.Get(ThebesLayerInvalidRegionProperty()));
-    if (invalidRegion) {
-      invalidRegion->SetEmpty();
-    } else {
-      props.Set(ThebesLayerInvalidRegionProperty(), new nsRegion());
-    }
-  } else {
+  if (!newDisplayItems->HasNonEmptyContainerLayer()) {
     SetNoContainerLayer(f);
   }
 
@@ -761,10 +777,6 @@ FrameLayerBuilder::StoreNewDisplayItemData(DisplayItemDataEntry* aEntry,
 
   newEntry->mData.SwapElements(aEntry->mData);
   props.Set(LayerManagerDataProperty(), data);
-
-  if (f->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) {
-    props.Set(ThebesLayerInvalidRegionProperty(), new nsRegion());
-  }
   return PL_DHASH_REMOVE;
 }
 
@@ -2025,26 +2037,22 @@ ApplyThebesLayerInvalidation(nsDisplayListBuilder* aBuilder,
                              ContainerState& aState,
                              nsPoint* aCurrentOffset)
 {
-  FrameProperties props = aContainerFrame->Properties();
-  nsPoint* offsetAtLastPaint = static_cast<nsPoint*>
-    (props.Get(ThebesLayerLastPaintOffsetProperty()));
   *aCurrentOffset = aContainerItem ? aContainerItem->ToReferenceFrame()
     : aBuilder->ToReferenceFrame(aContainerFrame);
 
-  nsRegion* invalidThebesContent = static_cast<nsRegion*>
+  FrameProperties props = aContainerFrame->Properties();
+  RefCountedRegion* invalidThebesContent = static_cast<RefCountedRegion*>
     (props.Get(ThebesLayerInvalidRegionProperty()));
   if (invalidThebesContent) {
-    nsPoint offset = offsetAtLastPaint ? *offsetAtLastPaint : *aCurrentOffset;
-    invalidThebesContent->MoveBy(offset);
     const FrameLayerBuilder::ContainerParameters& scaleParameters = aState.ScaleParameters();
-    aState.AddInvalidThebesContent(invalidThebesContent->
+    aState.AddInvalidThebesContent(invalidThebesContent->mRegion.
       ScaleToOutsidePixels(scaleParameters.mXScale, scaleParameters.mYScale,
                            aState.GetAppUnitsPerDevPixel()));
     // We have to preserve the current contents of invalidThebesContent
     // because there might be multiple container layers for the same
     // frame and we need to invalidate the ThebesLayer children of all
-    // of them.
-    invalidThebesContent->MoveBy(-offset);
+    // of them. Also, multiple calls to ApplyThebesLayerInvalidation for the
+    // same layer can share the same region.
   } else {
     // The region was deleted to indicate that everything should be
     // invalidated.
@@ -2119,7 +2127,8 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     nsPoint currentOffset;
     ApplyThebesLayerInvalidation(aBuilder, aContainerFrame, aContainerItem, state,
                                  &currentOffset);
-    SetHasContainerLayer(aContainerFrame, currentOffset);
+    RefCountedRegion* thebesLayerInvalidRegion = nsnull;
+    SetHasContainerLayer(aContainerFrame, currentOffset, &thebesLayerInvalidRegion);
 
     nsAutoTArray<nsIFrame*,4> mergedFrames;
     if (aContainerItem) {
@@ -2135,7 +2144,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
       }
       ApplyThebesLayerInvalidation(aBuilder, mergedFrame, nsnull, state,
                                    &currentOffset);
-      SetHasContainerLayer(mergedFrame, currentOffset);
+      SetHasContainerLayer(mergedFrame, currentOffset, &thebesLayerInvalidRegion);
     }
   }
 
@@ -2195,12 +2204,19 @@ FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
 FrameLayerBuilder::InvalidateThebesLayerContents(nsIFrame* aFrame,
                                                  const nsRect& aRect)
 {
-  nsRegion* invalidThebesContent = static_cast<nsRegion*>
-    (aFrame->Properties().Get(ThebesLayerInvalidRegionProperty()));
+  FrameProperties props = aFrame->Properties();
+  RefCountedRegion* invalidThebesContent = static_cast<RefCountedRegion*>
+    (props.Get(ThebesLayerInvalidRegionProperty()));
   if (!invalidThebesContent)
     return;
-  invalidThebesContent->Or(*invalidThebesContent, aRect);
-  invalidThebesContent->SimplifyOutward(20);
+
+  nsPoint* offsetAtLastPaint = static_cast<nsPoint*>
+    (props.Get(ThebesLayerLastPaintOffsetProperty()));
+  NS_ASSERTION(offsetAtLastPaint,
+               "This must have been set up along with ThebesLayerInvalidRegionProperty");
+  invalidThebesContent->mRegion.Or(invalidThebesContent->mRegion,
+          aRect + *offsetAtLastPaint);
+  invalidThebesContent->mRegion.SimplifyOutward(20);
 }
 
 /**
