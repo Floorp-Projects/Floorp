@@ -327,7 +327,6 @@ SettingsManager.prototype = {
         this._innerWindowID = null;
         this._onsettingchange = null;
         this._settingsDB.close();
-        cpmm = null;
       }
     }
   },
