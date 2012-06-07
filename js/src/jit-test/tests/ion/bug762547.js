@@ -1,4 +1,6 @@
-gcPreserveCode();
+if (typeof(gcPreserveCode) == "function")
+	gcPreserveCode();
+
 function testStrict() {
     var n = 10, a = [];
     for (var i = 0; i < 10; ++i) {
