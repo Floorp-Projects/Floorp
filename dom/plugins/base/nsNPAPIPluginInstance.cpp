@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_WIDGET_ANDROID
-// For ScreenOrientation.h
+// For ScreenOrientation.h and Hal.h
 #include "base/basictypes.h"
 #endif
 
@@ -41,6 +41,7 @@
 #include "mozilla/CondVar.h"
 #include "AndroidBridge.h"
 #include "mozilla/dom/ScreenOrientation.h"
+#include "mozilla/Hal.h"
 
 class PluginEventRunnable : public nsRunnable
 {
@@ -81,6 +82,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
     mANPDrawingModel(0),
     mOnScreen(true),
     mFullScreenOrientation(dom::eScreenOrientation_LandscapePrimary),
+    mWakeLocked(false),
 #endif
     mRunning(NOT_STARTED),
     mWindowless(false),
@@ -115,6 +117,10 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
     PR_Free((void *)mMIMEType);
     mMIMEType = nsnull;
   }
+
+#if MOZ_WIDGET_ANDROID
+  SetWakeLock(false);
+#endif
 }
 
 void
@@ -786,6 +792,17 @@ void nsNPAPIPluginInstance::PostEvent(void* event)
 void nsNPAPIPluginInstance::PopPostedEvent(PluginEventRunnable* r)
 {
   mPostedEvents.RemoveElement(r);
+}
+
+void nsNPAPIPluginInstance::SetWakeLock(bool aLocked)
+{
+  if (aLocked == mWakeLocked)
+    return;
+
+  mWakeLocked = aLocked;
+  hal::ModifyWakeLock(NS_LITERAL_STRING("nsNPAPIPluginInstance"),
+                      mWakeLocked ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_REMOVE_ONE,
+                      hal::WAKE_LOCK_NO_CHANGE);
 }
 
 #endif
