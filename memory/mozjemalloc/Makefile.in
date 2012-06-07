@@ -12,12 +12,15 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jemalloc
 
+EXPORTS = jemalloc.h jemalloc_types.h
+
+ifndef MOZ_JEMALLOC
 # jemalloc.c properly uses 'static', so don't burden it with manually exposing
 # symbols.
 VISIBILITY_FLAGS=
 
 CSRCS = jemalloc.c
-EXPORTS = jemalloc.h jemalloc_types.h
+
 LIBRARY_NAME = jemalloc
 FORCE_STATIC_LIB= 1
 
@@ -31,6 +34,7 @@ ifeq (Linux,$(OS_TARGET))
 #XXX: PGO on Linux causes problems here
 # See bug 419470
 NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

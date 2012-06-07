@@ -1,0 +1,47 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+
+VPATH		= $(srcdir) $(srcdir)/src/src
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = jemalloc
+LIBRARY_NAME = jemalloc
+FORCE_STATIC_LIB = 1
+
+ifdef MOZ_GLUE_PROGRAM_LDFLAGS
+SDK_LIBRARY = $(REAL_LIBRARY)
+DIST_INSTALL = 1
+endif
+
+CSRCS := $(notdir $(wildcard $(srcdir)/src/src/*.c))
+ifneq ($(OS_TARGET),Darwin)
+CSRCS := $(filter-out zone.c,$(CSRCS))
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += \
+  -I$(srcdir)/src/include \
+  -Isrc/include \
+  $(NULL)
+
+ifdef _MSC_VER
+LOCAL_INCLUDES += -I$(srcdir)/src/include/msvc_compat
+
+DEFINES += -DDLLEXPORT
+endif
+
+ifeq ($(OS_TARGET),Linux)
+# For mremap
+DEFINES += -D_GNU_SOURCE
+endif
+
+ifdef GNU_CC
+CFLAGS += -std=gnu99
+endif
