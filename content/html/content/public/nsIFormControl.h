@@ -26,7 +26,6 @@ enum FormControlsTypes {
   NS_FORM_SELECT,
   NS_FORM_TEXTAREA,
   NS_FORM_OBJECT,
-  NS_FORM_METER,
   eFormControlsWithoutSubTypesMax,
   // After this, all types will have sub-types which introduce new enum lists.
   // eFormControlsWithoutSubTypesMax let us know if the previous types values
