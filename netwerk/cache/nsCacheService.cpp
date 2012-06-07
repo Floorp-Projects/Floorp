@@ -23,7 +23,7 @@
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIOService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -140,12 +140,12 @@ public:
     PRInt32         DiskCacheCapacity()         { return mDiskCacheCapacity; }
     void            SetDiskCacheCapacity(PRInt32);
     PRInt32         DiskCacheMaxEntrySize()     { return mDiskCacheMaxEntrySize; }
-    nsILocalFile *  DiskCacheParentDirectory()  { return mDiskCacheParentDirectory; }
+    nsIFile *       DiskCacheParentDirectory()  { return mDiskCacheParentDirectory; }
     bool            SmartSizeEnabled()          { return mSmartSizeEnabled; }
 
     bool            OfflineCacheEnabled();
     PRInt32         OfflineCacheCapacity()         { return mOfflineCacheCapacity; }
-    nsILocalFile *  OfflineCacheParentDirectory()  { return mOfflineCacheParentDirectory; }
+    nsIFile *       OfflineCacheParentDirectory()  { return mOfflineCacheParentDirectory; }
     
     bool            MemoryCacheEnabled();
     PRInt32         MemoryCacheCapacity();
@@ -165,12 +165,12 @@ private:
     bool                    mDiskCacheEnabled;
     PRInt32                 mDiskCacheCapacity; // in kilobytes
     PRInt32                 mDiskCacheMaxEntrySize; // in kilobytes
-    nsCOMPtr<nsILocalFile>  mDiskCacheParentDirectory;
+    nsCOMPtr<nsIFile>       mDiskCacheParentDirectory;
     bool                    mSmartSizeEnabled;
 
     bool                    mOfflineCacheEnabled;
     PRInt32                 mOfflineCacheCapacity; // in kilobytes
-    nsCOMPtr<nsILocalFile>  mOfflineCacheParentDirectory;
+    nsCOMPtr<nsIFile>       mOfflineCacheParentDirectory;
     
     bool                    mMemoryCacheEnabled;
     PRInt32                 mMemoryCacheCapacity; // in kilobytes
@@ -584,7 +584,7 @@ nsCacheProfilePrefObserver::GetSmartCacheSize(const nsAString& cachePath,
 {
     // Check for free space on device where cache directory lives
     nsresult rv;
-    nsCOMPtr<nsILocalFile> 
+    nsCOMPtr<nsIFile> 
         cacheDirectory (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
     if (NS_FAILED(rv) || !cacheDirectory)
         return DEFAULT_CACHE_SIZE;
@@ -656,7 +656,7 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
     mDiskCacheMaxEntrySize = NS_MAX(-1, mDiskCacheMaxEntrySize);
     
     (void) branch->GetComplexValue(DISK_CACHE_DIR_PREF,     // ignore error
-                                   NS_GET_IID(nsILocalFile),
+                                   NS_GET_IID(nsIFile),
                                    getter_AddRefs(mDiskCacheParentDirectory));
     
     if (!mDiskCacheParentDirectory) {
@@ -733,7 +733,7 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
     mOfflineCacheCapacity = NS_MAX(0, mOfflineCacheCapacity);
 
     (void) branch->GetComplexValue(OFFLINE_CACHE_DIR_PREF,     // ignore error
-                                   NS_GET_IID(nsILocalFile),
+                                   NS_GET_IID(nsIFile),
                                    getter_AddRefs(mOfflineCacheParentDirectory));
 
     if (!mOfflineCacheParentDirectory) {
@@ -1161,7 +1161,7 @@ nsCacheService::Shutdown()
     Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN> totalTimer;
 
     bool shouldSanitize = false;
-    nsCOMPtr<nsILocalFile> parentDir;
+    nsCOMPtr<nsIFile> parentDir;
 
     {
     nsCacheServiceAutoLock lock;
@@ -1545,7 +1545,7 @@ nsCacheService::GetOfflineDevice(nsOfflineCacheDevice **aDevice)
 }
 
 nsresult
-nsCacheService::GetCustomOfflineDevice(nsILocalFile *aProfileDir,
+nsCacheService::GetCustomOfflineDevice(nsIFile *aProfileDir,
                                        PRInt32 aQuota,
                                        nsOfflineCacheDevice **aDevice)
 {
@@ -1583,7 +1583,7 @@ nsCacheService::CreateOfflineDevice()
 }
 
 nsresult
-nsCacheService::CreateCustomOfflineDevice(nsILocalFile *aProfileDir,
+nsCacheService::CreateCustomOfflineDevice(nsIFile *aProfileDir,
                                           PRInt32 aQuota,
                                           nsOfflineCacheDevice **aDevice)
 {

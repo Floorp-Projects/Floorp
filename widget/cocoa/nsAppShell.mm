@@ -144,14 +144,6 @@ bool nsCocoaAppModalWindowList::GeckoModalAboveCocoaModal()
   return (topItem.mWidget != nsnull);
 }
 
-// GeckoNSApplication
-//
-// Subclass of NSApplication for filtering out certain events.
-@interface GeckoNSApplication : NSApplication
-{
-}
-@end
-
 @implementation GeckoNSApplication
 
 - (void)sendEvent:(NSEvent *)anEvent

@@ -8,7 +8,7 @@
 interface nsIURI;
 interface nsICancelable;
 interface nsIMIMEInfo;
-interface nsILocalFile;
+interface nsIFile;
 
 [scriptable, uuid(3a982955-dc44-422e-8734-8462bf8d2121)]
 interface nsITransfer : nsIWebProgressListener2 {
@@ -50,7 +50,7 @@ interface nsITransfer : nsIWebProgressListener2 {
               in AString aDisplayName,
               in nsIMIMEInfo aMIMEInfo,
               in PRTime startTime,
-              in nsILocalFile aTempFile,
+              in nsIFile aTempFile,
               in nsICancelable aCancelable);
 };
 

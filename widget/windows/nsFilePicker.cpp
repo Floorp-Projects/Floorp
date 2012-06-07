@@ -805,7 +805,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   while (current && *current && *(current + NS_strlen(current) + 1)) {
     current = current + NS_strlen(current) + 1;
     
-    nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+    nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     NS_ENSURE_TRUE(file, false);
 
     // Only prepend the directory if the path specified is a relative path
@@ -827,7 +827,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   // specify OFN_ALLOWMULTISELECT and the user selects only one file the
   // lpstrFile string does not have a separator between the path and file name.
   if (current && *current && (current == fileBuffer)) {
-    nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+    nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     NS_ENSURE_TRUE(file, false);
     
     nsAutoString canonicalizedPath;
@@ -983,7 +983,7 @@ nsFilePicker::ShowFilePicker(const nsString& aInitialDir)
     if (SUCCEEDED(items->GetItemAt(idx, getter_AddRefs(item)))) {
       if (!WinUtils::GetShellItemPath(item, str))
         continue;
-      nsCOMPtr<nsILocalFile> file = do_CreateInstance("@mozilla.org/file/local;1");
+      nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
       if (file && NS_SUCCEEDED(file->InitWithPath(str)))
         mFiles.AppendObject(file);
     }
@@ -1040,7 +1040,7 @@ nsFilePicker::ShowW(PRInt16 *aReturnVal)
   if (mMode == modeSave) {
     // Windows does not return resultReplace, we must check if file
     // already exists.
-    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+    nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     bool flag = false;
     if (file && NS_SUCCEEDED(file->InitWithPath(mUnicodeFile)) &&
         NS_SUCCEEDED(file->Exists(&flag)) && flag) {
@@ -1059,7 +1059,7 @@ nsFilePicker::Show(PRInt16 *aReturnVal)
 }
 
 NS_IMETHODIMP
-nsFilePicker::GetFile(nsILocalFile **aFile)
+nsFilePicker::GetFile(nsIFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
   *aFile = nsnull;
@@ -1067,7 +1067,7 @@ nsFilePicker::GetFile(nsILocalFile **aFile)
   if (mUnicodeFile.IsEmpty())
       return NS_OK;
 
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+  nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
@@ -1082,7 +1082,7 @@ NS_IMETHODIMP
 nsFilePicker::GetFileURL(nsIURI **aFileURL)
 {
   *aFileURL = nsnull;
-  nsCOMPtr<nsILocalFile> file;
+  nsCOMPtr<nsIFile> file;
   nsresult rv = GetFile(getter_AddRefs(file));
   if (!file)
     return rv;
@@ -1228,7 +1228,7 @@ nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 void
 nsFilePicker::RememberLastUsedDirectory()
 {
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+  nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
   if (!file || NS_FAILED(file->InitWithPath(mUnicodeFile))) {
     NS_WARNING("RememberLastUsedDirectory failed to init file path.");
     return;

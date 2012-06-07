@@ -1110,8 +1110,8 @@ Shape::search(JSContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
         if (start->isBigEnoughForAShapeTable()) {
             RootedShape startRoot(cx, start);
             RootedId idRoot(cx, id);
-            if (start->hashify(cx)) {
-                Shape **spp = start->table().search(id, adding);
+            if (startRoot->hashify(cx)) {
+                Shape **spp = startRoot->table().search(id, adding);
                 return SHAPE_FETCH(spp);
             }
             start = startRoot;

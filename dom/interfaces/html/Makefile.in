@@ -51,6 +51,7 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLMenuElement.idl		\
 	nsIDOMHTMLMenuItemElement.idl		\
 	nsIDOMHTMLMetaElement.idl		\
+	nsIDOMHTMLMeterElement.idl		\
 	nsIDOMHTMLModElement.idl		\
 	nsIDOMHTMLOListElement.idl		\
 	nsIDOMHTMLObjectElement.idl		\

@@ -7,7 +7,6 @@
 #define nsNPAPIPluginStreamListener_h_
 
 #include "nscore.h"
-#include "nsIPluginStreamInfo.h"
 #include "nsIHTTPHeaderListener.h"
 #include "nsIRequest.h"
 #include "nsITimer.h"
@@ -22,7 +21,6 @@
 
 #define MAX_PLUGIN_NECKO_BUFFER 16384
 
-class nsINPAPIPluginStreamInfo;
 class nsPluginStreamListenerPeer;
 class nsNPAPIPluginStreamListener;
 
@@ -42,64 +40,6 @@ protected:
   nsNPAPIPluginStreamListener*          mStreamListener; // only valid if browser initiated
 };
 
-// nsINPAPIPluginStreamInfo is an internal helper interface that exposes
-// the underlying necko request to consumers of nsIPluginStreamInfo's.
-#define NS_INPAPIPLUGINSTREAMINFO_IID       \
-{ 0x097fdaaa, 0xa2a3, 0x49c2, \
-{0x91, 0xee, 0xeb, 0xc5, 0x7d, 0x6c, 0x9c, 0x97} }
-
-class nsINPAPIPluginStreamInfo : public nsIPluginStreamInfo
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INPAPIPLUGINSTREAMINFO_IID)
-
-  void TrackRequest(nsIRequest* request)
-  {
-    mRequests.AppendObject(request);
-  }
-
-  void ReplaceRequest(nsIRequest* oldRequest, nsIRequest* newRequest)
-  {
-    PRInt32 i = mRequests.IndexOfObject(oldRequest);
-    if (i == -1) {
-      NS_ASSERTION(mRequests.Count() == 0,
-                   "Only our initial stream should be unknown!");
-      mRequests.AppendObject(oldRequest);
-    }
-    else {
-      mRequests.ReplaceObjectAt(newRequest, i);
-    }
-  }
-  
-  void CancelRequests(nsresult status)
-  {
-    // Copy the array to avoid modification during the loop.
-    nsCOMArray<nsIRequest> requestsCopy(mRequests);
-    for (PRInt32 i = 0; i < requestsCopy.Count(); ++i)
-      requestsCopy[i]->Cancel(status);
-  }
-
-  void SuspendRequests() {
-    nsCOMArray<nsIRequest> requestsCopy(mRequests);
-    for (PRInt32 i = 0; i < requestsCopy.Count(); ++i)
-      requestsCopy[i]->Suspend();
-  }
-
-  void ResumeRequests() {
-    nsCOMArray<nsIRequest> requestsCopy(mRequests);
-    for (PRInt32 i = 0; i < requestsCopy.Count(); ++i)
-      requestsCopy[i]->Resume();
-  }
-
-protected:
-  friend class nsPluginByteRangeStreamListener;
-  
-  nsCOMArray<nsIRequest> mRequests;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsINPAPIPluginStreamInfo,
-                              NS_INPAPIPLUGINSTREAMINFO_IID)
-
 // Used to handle NPN_NewStream() - writes the stream as received by the plugin
 // to a file and at completion (NPN_DestroyStream), tells the browser to load it into
 // a plugin-specified target
@@ -114,7 +54,7 @@ public:
 protected:
   char* mTarget;
   nsCString mFileURL;
-  nsCOMPtr<nsILocalFile> mTempFile;
+  nsCOMPtr<nsIFile> mTempFile;
   nsCOMPtr<nsIOutputStream> mOutputStream;
   nsIPluginInstanceOwner* mOwner;
 };
@@ -134,13 +74,13 @@ public:
                               const char* aURL);
   virtual ~nsNPAPIPluginStreamListener();
 
-  nsresult OnStartBinding(nsIPluginStreamInfo* pluginInfo);
-  nsresult OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
+  nsresult OnStartBinding(nsPluginStreamListenerPeer* streamPeer);
+  nsresult OnDataAvailable(nsPluginStreamListenerPeer* streamPeer,
                            nsIInputStream* input,
                            PRUint32 length);
-  nsresult OnFileAvailable(nsIPluginStreamInfo* pluginInfo, 
+  nsresult OnFileAvailable(nsPluginStreamListenerPeer* streamPeer, 
                            const char* fileName);
-  nsresult OnStopBinding(nsIPluginStreamInfo* pluginInfo, 
+  nsresult OnStopBinding(nsPluginStreamListenerPeer* streamPeer, 
                          nsresult status);
   nsresult GetStreamType(PRInt32 *result);
 
@@ -167,7 +107,6 @@ protected:
   char* mStreamBuffer;
   char* mNotifyURL;
   nsRefPtr<nsNPAPIPluginInstance> mInst;
-  nsPluginStreamListenerPeer* mStreamListenerPeer;
   nsNPAPIStreamWrapper *mNPStreamWrapper;
   PRUint32 mStreamBufferSize;
   PRInt32 mStreamBufferByteCount;
@@ -184,7 +123,7 @@ protected:
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mHTTPRedirectCallback;
 
 public:
-  nsCOMPtr<nsIPluginStreamInfo> mStreamInfo;
+  nsRefPtr<nsPluginStreamListenerPeer> mStreamListenerPeer;
 };
 
 #endif // nsNPAPIPluginStreamListener_h_

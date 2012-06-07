@@ -11,7 +11,7 @@
 #include "nsAutoPtr.h"
 #include "nsIMemoryReporter.h"
 #include "nsThreadUtils.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
@@ -1494,10 +1494,8 @@ Connection::SetGrowthIncrement(PRInt32 aChunkSize, const nsACString &aDatabaseNa
   // on log structured file systems used by Android devices
 #if !defined(ANDROID) && !defined(MOZ_PLATFORM_MAEMO)
   // Don't preallocate if less than 500MiB is available.
-  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mDatabaseFile);
-  NS_ENSURE_STATE(localFile);
   PRInt64 bytesAvailable;
-  nsresult rv = localFile->GetDiskSpaceAvailable(&bytesAvailable);
+  nsresult rv = mDatabaseFile->GetDiskSpaceAvailable(&bytesAvailable);
   NS_ENSURE_SUCCESS(rv, rv);
   if (bytesAvailable < MIN_AVAILABLE_BYTES_PER_CHUNKED_GROWTH) {
     return NS_ERROR_FILE_TOO_BIG;

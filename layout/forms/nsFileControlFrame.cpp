@@ -28,7 +28,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMEventTarget.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsHTMLInputElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"

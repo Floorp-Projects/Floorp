@@ -355,7 +355,7 @@ nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate *aUpdate)
         rv = cachingChannel->SetCacheForOfflineUse(true);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<nsILocalFile> cacheDirectory;
+        nsCOMPtr<nsIFile> cacheDirectory;
         rv = mApplicationCache->GetCacheDirectory(getter_AddRefs(cacheDirectory));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -515,7 +515,7 @@ nsOfflineCacheUpdateItem::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
             NS_ENSURE_SUCCESS(rv, rv);
         }
 
-        nsCOMPtr<nsILocalFile> cacheDirectory;
+        nsCOMPtr<nsIFile> cacheDirectory;
         rv = mApplicationCache->GetCacheDirectory(getter_AddRefs(cacheDirectory));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1194,7 +1194,7 @@ nsresult
 nsOfflineCacheUpdate::Init(nsIURI *aManifestURI,
                            nsIURI *aDocumentURI,
                            nsIDOMDocument *aDocument,
-                           nsILocalFile *aCustomProfileDir)
+                           nsIFile *aCustomProfileDir)
 {
     nsresult rv;
 

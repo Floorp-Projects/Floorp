@@ -78,8 +78,7 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile)
       return NS_ERROR_FAILURE;
     }
   }
-  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile);
-  return app->LaunchWithDoc(localFile, false);
+  return app->LaunchWithDoc(aFile, false);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

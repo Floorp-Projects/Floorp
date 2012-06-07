@@ -14,6 +14,10 @@
 #include "nsIContent.h"
 #include "nsComponentManagerUtils.h"
 
+#include "mozilla/Util.h"
+
+using namespace mozilla;
+
 #ifdef NS_DEBUG
 static bool gNoisy = false;
 #endif
@@ -64,7 +68,7 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor,
   mRange  = do_QueryInterface(aRange);
   mRangeUpdater = aRangeUpdater;
   
-  nsresult result = aRange->GetStartContainer(getter_AddRefs(mStartParent));
+  DebugOnly<nsresult> result = aRange->GetStartContainer(getter_AddRefs(mStartParent));
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetStartParent failed.");
   result = aRange->GetEndContainer(getter_AddRefs(mEndParent));
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetEndParent failed.");
@@ -86,44 +90,24 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor,
       return NS_ERROR_FAILURE;
   }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   {
-    PRUint32 count;
-    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(mStartParent);
-    if (textNode)
-      textNode->GetLength(&count);
-    else
-    {
-      nsCOMPtr<nsIDOMNodeList> children;
-      result = mStartParent->GetChildNodes(getter_AddRefs(children));
-      NS_ASSERTION(((NS_SUCCEEDED(result)) && children), "bad start child list");
-      children->GetLength(&count);
-    }
-    NS_ASSERTION(mStartOffset<=(PRInt32)count, "bad start offset");
+    nsCOMPtr<nsINode> start = do_QueryInterface(mStartParent);
+    MOZ_ASSERT(start);
+    NS_ASSERTION(mStartOffset <= PRInt32(start->Length()), "bad start offset");
 
-    textNode = do_QueryInterface(mEndParent);
-    if (textNode)
-      textNode->GetLength(&count);
-    else
-    {
-      nsCOMPtr<nsIDOMNodeList> children;
-      result = mEndParent->GetChildNodes(getter_AddRefs(children));
-      NS_ASSERTION(((NS_SUCCEEDED(result)) && children), "bad end child list");
-      children->GetLength(&count);
-    }
-    NS_ASSERTION(mEndOffset<=(PRInt32)count, "bad end offset");
+    nsCOMPtr<nsINode> end = do_QueryInterface(mEndParent);
+    MOZ_ASSERT(end);
+    NS_ASSERTION(mEndOffset <= PRInt32(end->Length()), "bad end offset");
 
-#ifdef NS_DEBUG
-    if (gNoisy)
-    {
+    if (gNoisy) {
       printf ("DeleteRange: %d of %p to %d of %p\n", 
                mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);
     }         
-#endif
   }
-#endif
-  return result;
+#endif // DEBUG
 
+  return NS_OK;
 }
 
 NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
@@ -220,50 +204,40 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent,
                                           PRUint32    aStartOffset, 
                                           PRUint32    aEndOffset)
 {
-  nsresult result = NS_OK;
   // see what kind of node we have
   nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(aStartParent);
-  if (textNode)
-  { // if the node is a text node, then delete text content
+  if (textNode) {
+    // if the node is a text node, then delete text content
     nsRefPtr<DeleteTextTxn> txn = new DeleteTextTxn();
-    NS_ENSURE_TRUE(txn, NS_ERROR_OUT_OF_MEMORY);
 
     PRInt32 numToDel;
     if (aStartOffset==aEndOffset)
       numToDel = 1;
     else
       numToDel = aEndOffset-aStartOffset;
-    result = txn->Init(mEditor, textNode, aStartOffset, numToDel, mRangeUpdater);
+
+    nsresult rv = txn->Init(mEditor, textNode, aStartOffset, numToDel, mRangeUpdater);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    AppendChild(txn);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsINode> startParent = do_QueryInterface(aStartParent);
+  NS_ENSURE_STATE(startParent);
+  NS_ASSERTION(aEndOffset <= startParent->GetChildCount(), "bad aEndOffset");
+
+  nsCOMPtr<nsIContent> child = startParent->GetChildAt(aStartOffset);
+  NS_ENSURE_STATE(child);
+
+  nsresult result = NS_OK;
+  for (PRUint32 i = aStartOffset; i < aEndOffset; ++i) {
+    nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
+    result = txn->Init(mEditor, child->AsDOMNode(), mRangeUpdater);
     if (NS_SUCCEEDED(result))
       AppendChild(txn);
-  }
-  else
-  {
-    nsCOMPtr<nsIDOMNodeList> children;
-    result = aStartParent->GetChildNodes(getter_AddRefs(children));
-    NS_ENSURE_SUCCESS(result, result);
-    NS_ENSURE_TRUE(children, NS_ERROR_NULL_POINTER);
 
-#ifdef DEBUG
-    PRUint32 childCount;
-    children->GetLength(&childCount);
-    NS_ASSERTION(aEndOffset<=childCount, "bad aEndOffset");
-#endif
-    PRUint32 i;
-    for (i=aStartOffset; i<aEndOffset; i++)
-    {
-      nsCOMPtr<nsIDOMNode> child;
-      result = children->Item(i, getter_AddRefs(child));
-      NS_ENSURE_SUCCESS(result, result);
-      NS_ENSURE_TRUE(child, NS_ERROR_NULL_POINTER);
-
-      nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
-      NS_ENSURE_TRUE(txn, NS_ERROR_OUT_OF_MEMORY);
-
-      result = txn->Init(mEditor, child, mRangeUpdater);
-      if (NS_SUCCEEDED(result))
-        AppendChild(txn);
-    }
+    child = child->GetNextSibling();
   }
   return result;
 }

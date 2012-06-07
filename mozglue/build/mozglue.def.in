@@ -8,11 +8,9 @@ EXPORTS
 #ifdef MOZ_MEMORY
   ; symbols that are actually useful
   malloc=je_malloc
-  valloc=je_valloc
   calloc=je_calloc
   realloc=je_realloc
   free=je_free
-  memalign=je_memalign
   posix_memalign=je_posix_memalign
   strndup=je_strndup
   strdup=je_strdup
@@ -20,7 +18,11 @@ EXPORTS
   wcsdup=je_wcsdup
   _wcsdup=je_wcsdup
   malloc_usable_size=je_malloc_usable_size
+#ifdef MOZ_JEMALLOC
+  je_nallocm
+#else
   je_malloc_good_size
+#endif
   jemalloc_stats
   ; A hack to work around the CRT (see giant comment in Makefile.in)
   frex=je_dumb_free_thunk

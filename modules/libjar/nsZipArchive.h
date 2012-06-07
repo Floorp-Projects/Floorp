@@ -19,7 +19,7 @@
 #include "zlib.h"
 #include "zipstruct.h"
 #include "nsAutoPtr.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/FileLocation.h"
 
@@ -375,7 +375,7 @@ class nsZipHandle {
 friend class nsZipArchive;
 friend class mozilla::FileLocation;
 public:
-  static nsresult Init(nsILocalFile *file, nsZipHandle **ret NS_OUTPARAM);
+  static nsresult Init(nsIFile *file, nsZipHandle **ret NS_OUTPARAM);
   static nsresult Init(nsZipArchive *zip, const char *entry,
                        nsZipHandle **ret NS_OUTPARAM);
 

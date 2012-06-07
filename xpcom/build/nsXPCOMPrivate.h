@@ -35,8 +35,8 @@ typedef nsresult   (* GetServiceManagerFunc)(nsIServiceManager* *result);
 typedef nsresult   (* GetComponentManagerFunc)(nsIComponentManager* *result);
 typedef nsresult   (* GetComponentRegistrarFunc)(nsIComponentRegistrar* *result);
 typedef nsresult   (* GetMemoryManagerFunc)(nsIMemory* *result);
-typedef nsresult   (* NewLocalFileFunc)(const nsAString &path, bool followLinks, nsILocalFile* *result);
-typedef nsresult   (* NewNativeLocalFileFunc)(const nsACString &path, bool followLinks, nsILocalFile* *result);
+typedef nsresult   (* NewLocalFileFunc)(const nsAString &path, bool followLinks, nsIFile* *result);
+typedef nsresult   (* NewNativeLocalFileFunc)(const nsACString &path, bool followLinks, nsIFile* *result);
 
 typedef nsresult   (* GetDebugFunc)(nsIDebug* *result);
 typedef nsresult   (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);

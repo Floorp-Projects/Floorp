@@ -3040,7 +3040,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             dumpvar = ExprVar('aDump')
             getdump = MethodDefn(MethodDecl(
                 'TakeMinidump',
-                params=[ Decl(Type('nsILocalFile', ptrptr=1), dumpvar.name) ],
+                params=[ Decl(Type('nsIFile', ptrptr=1), dumpvar.name) ],
                 ret=Type.BOOL,
                 const=1))
             getdump.addstmts([

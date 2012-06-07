@@ -2442,9 +2442,9 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSObject *aObj
             if (!(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
                                      JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
                 priv = (nsISupports *) js::GetObjectPrivate(aObj);
-            } else if ((jsClass->flags & JSCLASS_IS_DOMJSCLASS) &&
+            } else if (IsDOMClass(jsClass) &&
                        DOMJSClass::FromJSClass(jsClass)->mDOMObjectIsISupports) {
-                priv = UnwrapDOMObject<nsISupports>(aObj, jsClass);
+                priv = UnwrapDOMObject<nsISupports>(aObj);
             } else {
                 priv = nsnull;
             }

@@ -16,7 +16,7 @@
 #include "nsIObserver.h"
 #include "nsIPropertyBag2.h"
 #include "nsIServiceManager.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsITimer.h"
 #include "nsNetUtil.h"
 #include "nsAutoPtr.h"
@@ -47,7 +47,7 @@
 //-----------------------------------------------------------------------------
 
 static nsresult
-WriteToFile(nsILocalFile *lf, const char *data, PRUint32 len, PRInt32 flags)
+WriteToFile(nsIFile *lf, const char *data, PRUint32 len, PRInt32 flags)
 {
   PRFileDesc *fd;
   nsresult rv = lf->OpenNSPRFileDesc(flags, 0600, &fd);
@@ -62,7 +62,7 @@ WriteToFile(nsILocalFile *lf, const char *data, PRUint32 len, PRInt32 flags)
 }
 
 static nsresult
-AppendToFile(nsILocalFile *lf, const char *data, PRUint32 len)
+AppendToFile(nsIFile *lf, const char *data, PRUint32 len)
 {
   PRInt32 flags = PR_WRONLY | PR_CREATE_FILE | PR_APPEND;
   return WriteToFile(lf, data, len, flags);
@@ -128,7 +128,7 @@ private:
   nsCOMPtr<nsIProgressEventSink>           mProgressSink;
   nsCOMPtr<nsIURI>                         mURI;
   nsCOMPtr<nsIURI>                         mFinalURI;
-  nsCOMPtr<nsILocalFile>                   mDest;
+  nsCOMPtr<nsIFile>                        mDest;
   nsCOMPtr<nsIChannel>                     mChannel;
   nsCOMPtr<nsITimer>                       mTimer;
   nsAutoArrayPtr<char>                     mChunk;

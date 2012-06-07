@@ -13,7 +13,7 @@
 #include "prerror.h"
 #include <sys/stat.h>
 #include "nsString.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 

@@ -30,7 +30,7 @@ public:
     NS_IMETHODIMP SetDefaultExtension(const nsAString& aDefaultExtension);
     NS_IMETHODIMP GetFilterIndex(PRInt32* aFilterIndex);
     NS_IMETHODIMP SetFilterIndex(PRInt32 aFilterIndex);
-    NS_IMETHODIMP GetFile(nsILocalFile* *aFile);
+    NS_IMETHODIMP GetFile(nsIFile* *aFile);
     NS_IMETHODIMP GetFileURL(nsIURI* *aFileURL);
     NS_IMETHODIMP GetFiles(nsISimpleEnumerator* *aFiles);
     NS_IMETHODIMP Show(PRInt16* aReturn);
@@ -41,7 +41,7 @@ private:
 
 protected:
     QPointer<QFileDialog> mDialog;
-    nsCOMArray<nsILocalFile> mFiles;
+    nsCOMArray<nsIFile> mFiles;
 
     PRInt16   mMode;
     PRInt16   mSelectedType;

@@ -4,7 +4,7 @@
 
 #include "nsXULAppAPI.h"
 #include "nsINIParser.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsAppRunner.h"
 #include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
@@ -76,7 +76,7 @@ ScopedAppData::~ScopedAppData()
 
   NS_IF_RELEASE(this->directory);
 
-  SetStrongPtr(this->xreDirectory, (nsILocalFile*) nsnull);
+  SetStrongPtr(this->xreDirectory, (nsIFile*) nsnull);
   SetAllocatedString(this->minVersion, nsnull);
   SetAllocatedString(this->maxVersion, nsnull);
 
@@ -85,7 +85,7 @@ ScopedAppData::~ScopedAppData()
 }
 
 nsresult
-XRE_CreateAppData(nsILocalFile* aINIFile, nsXREAppData **aAppData)
+XRE_CreateAppData(nsIFile* aINIFile, nsXREAppData **aAppData)
 {
   NS_ENSURE_ARG(aINIFile && aAppData);
 
@@ -162,7 +162,7 @@ ReadFlags(nsINIParser &parser, const ReadFlag *reads, PRUint32 *buffer)
 }
 
 nsresult
-XRE_ParseAppData(nsILocalFile* aINIFile, nsXREAppData *aAppData)
+XRE_ParseAppData(nsIFile* aINIFile, nsXREAppData *aAppData)
 {
   NS_ENSURE_ARG(aINIFile && aAppData);
 

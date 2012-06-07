@@ -6,7 +6,7 @@
 
 #include "nsILocalFile.idl"
 
-[scriptable, uuid(c7b3fd13-30f2-46e5-a0d9-7a79a9b73c5b)]
+[scriptable, builtinclass, uuid(c7b3fd13-30f2-46e5-a0d9-7a79a9b73c5b)]
 interface nsILocalFileWin : nsILocalFile
 {
    /**
@@ -22,7 +22,7 @@ interface nsILocalFileWin : nsILocalFile
 
     /**
      * The canonical path of the file, which avoids short/long
-     * pathname inconsistencies. The nsILocalFile persistent
+     * pathname inconsistencies. The nsIFile persistent
      * descriptor is not guaranteed to be canonicalized (it may
      * persist either the long or the short path name). The format of
      * the canonical path will vary with the underlying file system:
@@ -88,11 +88,11 @@ interface nsILocalFileWin : nsILocalFile
                               iconFile.  If iconFile contains only one icon, this
                               value should be 0.
      */
-     void setShortcut([optional] in nsILocalFile targetFile,
-                      [optional] in nsILocalFile workingDir,
+     void setShortcut([optional] in nsIFile targetFile,
+                      [optional] in nsIFile workingDir,
                       [optional] in wstring args,
                       [optional] in wstring description,
-                      [optional] in nsILocalFile iconFile,
+                      [optional] in nsIFile iconFile,
                       [optional] in long iconIndex);
 };
 

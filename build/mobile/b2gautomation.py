@@ -3,7 +3,9 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import automationutils
+import threading
 import os
+import Queue
 import re
 import socket
 import shutil
@@ -13,6 +15,21 @@ import time
 
 from automation import Automation
 from devicemanager import DeviceManager, NetworkTools
+from mozprocess import ProcessHandlerMixin
+
+
+class LogcatProc(ProcessHandlerMixin):
+    """Process handler for logcat which puts all output in a Queue.
+    """
+
+    def __init__(self, cmd, queue, **kwargs):
+        self.queue = queue
+        kwargs.setdefault('processOutputLine', []).append(self.handle_output)
+        ProcessHandlerMixin.__init__(self, cmd, **kwargs)
+
+    def handle_output(self, line):
+        self.queue.put_nowait(line)
+
 
 class B2GRemoteAutomation(Automation):
     _devicemanager = None
@@ -24,10 +41,14 @@ class B2GRemoteAutomation(Automation):
         self._remoteProfile = None
         self._remoteLog = remoteLog
         self.marionette = marionette
+        self._is_emulator = False
 
         # Default our product to b2g
         self._product = "b2g"
         Automation.__init__(self)
+
+    def setEmulator(self, is_emulator):
+        self._is_emulator = is_emulator
 
     def setDeviceManager(self, deviceManager):
         self._devicemanager = deviceManager
@@ -51,6 +72,8 @@ class B2GRemoteAutomation(Automation):
         if env is None:
             env = {}
 
+        # We always hide the results table in B2G; it's much slower if we don't.
+        env['MOZ_HIDE_RESULTS_TABLE'] = '1'
         return env
 
     def checkForCrashes(self, directory, symbolsPath):
@@ -119,6 +142,14 @@ class B2GRemoteAutomation(Automation):
 
         return (serial, status)
 
+    def restartB2G(self):
+        self._devicemanager.checkCmd(['shell', 'stop', 'b2g'])
+        # Wait for a bit to make sure B2G has completely shut down.
+        time.sleep(5)
+        self._devicemanager.checkCmd(['shell', 'start', 'b2g'])
+        if self._is_emulator:
+            self.marionette.emulator.wait_for_port()
+
     def rebootDevice(self):
         # find device's current status and serial number
         serial, status = self.getDeviceStatus()
@@ -153,7 +184,10 @@ class B2GRemoteAutomation(Automation):
         # XXX:  We could potentially use 'stop b2g' + 'start b2g' to achieve
         # a similar effect; will see which is more stable while attempting
         # to bring up the continuous integration.
-        self.rebootDevice()
+        if self._is_emulator:
+            self.restartB2G()
+        else:
+            self.rebootDevice()
 
         # Infrequently, gecko comes up before networking does, so wait a little
         # bit to give the network time to become available.
@@ -162,9 +196,10 @@ class B2GRemoteAutomation(Automation):
 
         # Set up port forwarding again for Marionette, since any that
         # existed previously got wiped out by the reboot.
-        self._devicemanager.checkCmd(['forward',
-                                      'tcp:%s' % self.marionette.port,
-                                      'tcp:%s' % self.marionette.port])
+        if not self._is_emulator:
+            self._devicemanager.checkCmd(['forward',
+                                          'tcp:%s' % self.marionette.port,
+                                          'tcp:%s' % self.marionette.port])
 
         # start a marionette session
         session = self.marionette.start_session()
@@ -185,7 +220,26 @@ class B2GRemoteAutomation(Automation):
 
         def __init__(self, dm):
             self.dm = dm
-            self.lastloglines = []
+            self.logcat_proc = None
+            self.queue = Queue.Queue()
+
+            # Launch logcat in a separate thread, and dump all output lines
+            # into a queue.  The lines in this queue are
+            # retrieved and returned by accessing the stdout property of
+            # this class.
+            cmd = [self.dm.adbPath]
+            if self.dm.deviceSerial:
+                cmd.extend(['-s', self.dm.deviceSerial])
+            cmd.append('logcat')
+            proc = threading.Thread(target=self._save_logcat_proc, args=(cmd, self.queue))
+            proc.daemon = True
+            proc.start()
+
+        def _save_logcat_proc(self, cmd, queue):
+            self.logcat_proc = LogcatProc(cmd, queue)
+            self.logcat_proc.run()
+            self.logcat_proc.waitForFinish()
+            self.logcat_proc = None
 
         @property
         def pid(self):
@@ -194,33 +248,15 @@ class B2GRemoteAutomation(Automation):
 
         @property
         def stdout(self):
-            # Return any part of logcat output that wasn't returned
-            # previously.  This is done by fetching about the last 50
-            # lines of the log (logcat -t 50 generally fetches 50-58 lines),
-            # and comparing against the previous set to find new lines.
-            t = self.dm.runCmd(['logcat', '-t', '50']).stdout.read()
-            if t == None: return ''
-
-            t = t.strip('\n').strip()
-            loglines = t.split('\n')
-            line_index = 0
-
-            # If there are more than 50 lines, we skip the first 20; this
-            # is because the number of lines returned
-            # by logcat -t 50 varies (usually between 50 and 58).
-            log_index = 20 if len(loglines) > 50 else 0
-
-            for index, line in enumerate(loglines[log_index:]):
-                line_index = index + log_index + 1
+            # Return any lines in the queue used by the
+            # logcat process handler.
+            lines = []
+            while True:
                 try:
-                    self.lastloglines.index(line)
-                except ValueError:
+                    lines.append(self.queue.get_nowait())
+                except Queue.Empty:
                     break
-
-            newoutput = '\n'.join(loglines[line_index:])
-            self.lastloglines = loglines
-
-            return newoutput
+            return '\n'.join(lines)
 
         def wait(self, timeout = None):
             # this should never happen

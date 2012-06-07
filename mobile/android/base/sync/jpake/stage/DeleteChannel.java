@@ -12,6 +12,7 @@ import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.jpake.JPakeClient;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncResourceDelegate;
+import org.mozilla.gecko.sync.setup.auth.AccountAuthenticator;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
@@ -85,7 +86,7 @@ public class DeleteChannel {
       }
     };
 
-    JPakeClient.runOnThread(new Runnable() {
+    AccountAuthenticator.runOnThread(new Runnable() {
       @Override
       public void run() {
         httpResource.delete();
