@@ -6625,7 +6625,7 @@ JS_AbortIfWrongThread(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
     if (!rt->onOwnerThread())
-        MOZ_Assert("rt->onOwnerThread()", __FILE__, __LINE__);
+        MOZ_CRASH();
 #endif
 }
 
