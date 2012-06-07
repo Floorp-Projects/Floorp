@@ -585,6 +585,7 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
 
         // principals and originPrincipals are set with xdr->initScriptPrincipals(script) below.
         script = JSScript::Create(cx, /* principals = */ NULL, /* originPrincipals = */ NULL,
+                                  /* compileAndGo = */ false,
                                   !!(scriptBits & (1 << NoScriptRval)), version_);
         if (!script || !script->partiallyInit(cx, length, nsrcnotes, natoms, nobjects,
                                               nregexps, ntrynotes, nconsts, nClosedArgs,
@@ -1095,7 +1096,7 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 
 JSScript *
 JSScript::Create(JSContext *cx, JSPrincipals *principals, JSPrincipals *originPrincipals,
-                 bool noScriptRval, JSVersion version)
+                 bool compileAndGo, bool noScriptRval, JSVersion version)
 {
     JSScript *script = js_NewGCScript(cx);
     if (!script)
@@ -1114,6 +1115,7 @@ JSScript::Create(JSContext *cx, JSPrincipals *principals, JSPrincipals *originPr
         JS_HoldPrincipals(script->originPrincipals);
     }
 
+    script->compileAndGo = compileAndGo;
     script->noScriptRval = noScriptRval;
  
     script->version = version;
@@ -1327,8 +1329,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     if (bce->constList.length() != 0)
         bce->constList.finish(script->consts());
     script->strictModeCode = bce->sc->inStrictMode();
-    if (bce->parser->compileAndGo) {
-        script->compileAndGo = true;
+    if (script->compileAndGo) {
         const StackFrame *fp = bce->parser->callerFrame;
         if (fp && fp->isFunctionFrame())
             script->savedCallerFun = true;
@@ -1793,7 +1794,7 @@ js::CloneScript(JSContext *cx, HandleScript src)
     /* Now that all fallible allocation is complete, create the GC thing. */
 
     JSScript *dst = JSScript::Create(cx, cx->compartment->principals, src->originPrincipals,
-                                     src->noScriptRval, src->getVersion());
+                                     src->compileAndGo, src->noScriptRval, src->getVersion());
     if (!dst) {
         Foreground::free_(data);
         return NULL;
@@ -1831,7 +1832,6 @@ js::CloneScript(JSContext *cx, HandleScript src)
     dst->cloneHasArray(src);
     dst->savedCallerFun = src->savedCallerFun;
     dst->strictModeCode = src->strictModeCode;
-    dst->compileAndGo = src->compileAndGo;
     dst->bindingsAccessedDynamically = src->bindingsAccessedDynamically;
     dst->funHasExtensibleScope = src->funHasExtensibleScope;
     dst->hasSingletons = src->hasSingletons;
