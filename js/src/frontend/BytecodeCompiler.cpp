@@ -106,16 +106,16 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!parser.init())
         return NULL;
 
-    SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL, staticLevel);
+    SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL);
 
-    TreeContext tc(&parser, &sc);
+    TreeContext tc(&parser, &sc, staticLevel);
     if (!tc.init())
         return NULL;
 
     bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
     Rooted<JSScript*> script(cx);
     script = JSScript::Create(cx, savedCallerFun, principals, originPrincipals, compileAndGo,
-                              noScriptRval, version);
+                              noScriptRval, version, staticLevel);
     if (!script)
         return NULL;
 
@@ -264,17 +264,17 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         return false;
 
     JS_ASSERT(fun);
-    SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL,
-                        /* staticLevel = */ 0);
+    SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL);
 
-    TreeContext funtc(&parser, &funsc);
+    unsigned staticLevel = 0;
+    TreeContext funtc(&parser, &funsc, staticLevel);
     if (!funtc.init())
         return false;
 
     Rooted<JSScript*> script(cx);
     script = JSScript::Create(cx, /* savedCallerFun = */ false, principals, originPrincipals,
                               /* compileAndGo = */ false, /* noScriptRval = */ false,
-                              version);
+                              version, staticLevel);
     if (!script)
         return false;
 
