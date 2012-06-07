@@ -22,6 +22,3 @@
 
 <!ENTITY showTabsInTaskbar.label          "Show tab previews in the Windows taskbar">
 <!ENTITY showTabsInTaskbar.accesskey      "k">
-
-<!ENTITY showNewTabPage.label          "Show the new tab page">
-<!ENTITY showNewTabPage.accesskey      "a">
