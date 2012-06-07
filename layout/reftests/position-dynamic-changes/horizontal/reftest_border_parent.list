@@ -1,0 +1,26 @@
+# Please see the comment at the beginning of reftest.list
+
+== leftN-widthA-rightA.html?border_parent leftN-widthA-rightA-ref.html?border_parent
+== leftN-widthA-rightA-2.html?border_parent leftN-widthA-rightA-2-ref.html?border_parent
+== leftN-widthA-rightN.html?border_parent leftN-widthA-rightN-ref.html?border_parent
+== leftN-widthA-rightN-2.html?border_parent leftN-widthA-rightN-2-ref.html?border_parent
+== leftA-widthN-rightA.html?border_parent leftA-widthN-rightA-ref.html?border_parent
+== leftN-widthN-rightA.html?border_parent leftN-widthN-rightA-ref.html?border_parent
+== leftA-widthN-rightN.html?border_parent leftA-widthN-rightN-ref.html?border_parent
+== leftA-widthA-rightN.html?border_parent leftA-widthA-rightN-ref.html?border_parent
+== toauto-leftN-widthA-rightA.html?border_parent toauto-leftN-widthA-rightA-ref.html?border_parent
+== toauto-leftN-widthA-rightA-2.html?border_parent toauto-leftN-widthA-rightA-2-ref.html?border_parent
+== toauto-leftN-widthA-rightN.html?border_parent toauto-leftN-widthA-rightN-ref.html?border_parent
+== toauto-leftN-widthA-rightN-2.html?border_parent toauto-leftN-widthA-rightN-2-ref.html?border_parent
+== toauto-leftA-widthN-rightA.html?border_parent toauto-leftA-widthN-rightA-ref.html?border_parent
+== toauto-leftN-widthN-rightA.html?border_parent toauto-leftN-widthN-rightA-ref.html?border_parent
+== toauto-leftA-widthN-rightN.html?border_parent toauto-leftA-widthN-rightN-ref.html?border_parent
+== toauto-leftA-widthA-rightN.html?border_parent toauto-leftA-widthA-rightN-ref.html?border_parent
+== fromauto-leftN-widthA-rightA.html?border_parent leftN-widthA-rightA-ref.html?border_parent
+random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html?border_parent leftN-widthA-rightA-2-ref.html?border_parent # Bug 688545
+== fromauto-leftN-widthA-rightN.html?border_parent leftN-widthA-rightN-ref.html?border_parent
+== fromauto-leftN-widthA-rightN-2.html?border_parent leftN-widthA-rightN-2-ref.html?border_parent
+== fromauto-leftA-widthN-rightA.html?border_parent leftA-widthN-rightA-ref.html?border_parent
+== fromauto-leftN-widthN-rightA.html?border_parent leftN-widthN-rightA-ref.html?border_parent
+== fromauto-leftA-widthN-rightN.html?border_parent leftA-widthN-rightN-ref.html?border_parent
+== fromauto-leftA-widthA-rightN.html?border_parent leftA-widthA-rightN-ref.html?border_parent

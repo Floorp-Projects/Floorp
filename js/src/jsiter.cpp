@@ -886,7 +886,7 @@ js::ValueToIterator(JSContext *cx, unsigned flags, Value *vp)
          * but it's "web JS" compatible. ES5 fixed for-in to match this de-facto
          * standard.
          */
-        if ((flags & JSITER_ENUMERATE)) {
+        if (flags & JSITER_ENUMERATE) {
             if (!js_ValueToObjectOrNull(cx, *vp, obj.address()))
                 return false;
             /* fall through */

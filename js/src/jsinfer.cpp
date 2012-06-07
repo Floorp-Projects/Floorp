@@ -3829,7 +3829,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_ENDINIT:
         break;
 
-      case JSOP_INITELEM: {
+      case JSOP_INITELEM:
+      case JSOP_INITELEM_INC:
+      case JSOP_SPREAD: {
         const SSAValue &objv = poppedValue(pc, 2);
         jsbytecode *initpc = script->code + objv.pushedOffset();
         TypeObject *initializer = GetInitializerType(cx, script, initpc);
@@ -3850,12 +3852,23 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
                 } else if (state.hasHole) {
                     if (!initializer->unknownProperties())
                         initializer->setFlags(cx, OBJECT_FLAG_NON_PACKED_ARRAY);
+                } else if (op == JSOP_SPREAD) {
+                    // Iterator could put arbitrary things into the array.
+                    types->addType(cx, Type::UnknownType());
                 } else {
                     poppedTypes(pc, 0)->addSubset(cx, types);
                 }
             }
         } else {
             pushed[0].addType(cx, Type::UnknownType());
+        }
+        switch (op) {
+          case JSOP_SPREAD:
+          case JSOP_INITELEM_INC:
+            poppedTypes(pc, 1)->addSubset(cx, &pushed[1]);
+            break;
+          default:
+            break;
         }
         state.hasGetSet = false;
         state.hasHole = false;

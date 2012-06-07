@@ -191,6 +191,14 @@ OmxDecoder::~OmxDecoder()
 {
   ReleaseVideoBuffer();
   ReleaseAudioBuffer();
+
+  if (mVideoSource.get()) {
+    mVideoSource->stop();
+  }
+
+  if (mAudioSource.get()) {
+    mAudioSource->stop();
+  }
 }
 
 class AutoStopMediaSource {

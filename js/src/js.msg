@@ -115,7 +115,7 @@ MSG_DEF(JSMSG_TOO_MANY_FUN_APPLY_ARGS, 61, 0, JSEXN_RANGEERR, "arguments array p
 MSG_DEF(JSMSG_UNMATCHED_RIGHT_PAREN,   62, 0, JSEXN_SYNTAXERR, "unmatched ) in regular expression")
 MSG_DEF(JSMSG_TOO_BIG_TO_ENCODE,       63, 0, JSEXN_INTERNALERR, "data are to big to encode")
 MSG_DEF(JSMSG_ARG_INDEX_OUT_OF_RANGE,  64, 1, JSEXN_RANGEERR, "argument {0} accesses an index that is out of range")
-MSG_DEF(JSMSG_UNUSED65,                65, 0, JSEXN_NONE,    "")
+MSG_DEF(JSMSG_SPREAD_TOO_LARGE,        65, 0, JSEXN_RANGEERR, "array too large due to spread operand(s)")
 MSG_DEF(JSMSG_UNUSED66,                66, 0, JSEXN_NONE,    "")
 MSG_DEF(JSMSG_UNUSED67,                67, 0, JSEXN_NONE,    "")
 MSG_DEF(JSMSG_BAD_SCRIPT_MAGIC,        68, 0, JSEXN_INTERNALERR, "bad script XDR magic number")

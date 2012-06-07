@@ -30,10 +30,10 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG(type, msg)
 #endif
 
-// Wait this number of milliseconds when buffering, then leave and play
+// Wait this number of seconds when buffering, then leave and play
 // as best as we can if the required amount of data hasn't been
 // retrieved.
-static const PRUint32 BUFFERING_WAIT = 30000;
+static const PRUint32 BUFFERING_WAIT_S = 30;
 
 // If audio queue has less than this many usecs of decoded audio, we won't risk
 // trying to decode the video, we'll skip decoding video up to the next
@@ -417,7 +417,7 @@ nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDe
   if (Preferences::GetBool("media.realtime_decoder.enabled", false) == false)
     mRealTime = false;
 
-  mBufferingWait = mRealTime ? 0 : BUFFERING_WAIT;
+  mBufferingWait = mRealTime ? 0 : BUFFERING_WAIT_S;
   mLowDataThresholdUsecs = mRealTime ? 0 : LOW_DATA_THRESHOLD_USECS;
 }
 
