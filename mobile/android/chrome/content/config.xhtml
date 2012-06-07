@@ -84,6 +84,9 @@
         this._container.parentNode.replaceChild(empty, this._container);
         this._container = empty;
 
+        if (!aValue)
+            return;
+
         let prefs = this._getPrefs(aValue);
         let fragment = document.createDocumentFragment();
         for (let i = 0; i < prefs.length; i++) {
