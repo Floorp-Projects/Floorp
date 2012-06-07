@@ -8,6 +8,7 @@ let Cu = Components.utils;
 let Ci = Components.interfaces;
 let Cc = Components.classes;
 let Cr = Components.results;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
@@ -47,10 +48,10 @@ function sendSyncMsg(msg, data) {
 var global = this;
 
 function BrowserElementChild() {
-  this._init();
-
   // Maps outer window id --> weak ref to window.  Used by modal dialog code.
   this._windowIDDict = {};
+
+  this._init();
 };
 
 BrowserElementChild.prototype = {
@@ -118,6 +119,9 @@ BrowserElementChild.prototype = {
     els.addSystemEventListener(global, 'keyup',
                                this._keyEventHandler.bind(this),
                                /* useCapture = */ true);
+    els.addSystemEventListener(global, 'DOMWindowClose',
+                               this._closeHandler.bind(this),
+                               /* useCapture = */ false);
   },
 
   _tryGetInnerWindowID: function(win) {
@@ -281,6 +285,19 @@ BrowserElementChild.prototype = {
         debug("Not top level!");
       }
     }
+  },
+
+  _closeHandler: function(e) {
+    let win = e.target;
+    if (win != content || e.defaultPrevented) {
+      return;
+    }
+
+    debug("Closing window " + win);
+    sendAsyncMsg('close');
+
+    // Inform the window implementation that we handled this close ourselves.
+    e.preventDefault();
   },
 
   _recvGetScreenshot: function(data) {

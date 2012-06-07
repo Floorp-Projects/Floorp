@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=757182
+-->
+<head>
+  <title>Test for Bug 757182</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="browserFrameHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=757182">Mozilla Bug 757182</a>
+
+<!--
+  Test that window.close() works.
+-->
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  browserFrameHelpers.setEnabledPref(true);
+  browserFrameHelpers.addToWhitelist();
+
+  var iframe = document.createElement('iframe');
+  iframe.mozbrowser = true;
+  document.body.appendChild(iframe);
+
+  iframe.addEventListener("mozbrowserclose", function(e) {
+    ok(true, "got mozbrowserclose event.");
+    SimpleTest.finish();
+  });
+
+  iframe.src = "data:text/html,<html><body><script>window.close()</scr"+"ipt></body></html>";
+}
+
+runTest();
+</script>
+</body>
+</html>

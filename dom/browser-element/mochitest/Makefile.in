@@ -30,6 +30,7 @@ _TEST_FILES = \
 		test_browserFrameAlert.html \
 		test_browserFramePromptCheck.html \
 		test_browserFramePromptConfirm.html \
+		test_browserFrameClose.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
