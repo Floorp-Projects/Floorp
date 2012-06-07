@@ -75,12 +75,17 @@ class SnapshotReader
 #endif
 
 #ifdef TRACK_SNAPSHOTS
+  private:
     uint32 pcOpcode_;
     uint32 mirOpcode_;
     uint32 mirId_;
     uint32 lirOpcode_;
     uint32 lirId_;
+  public:
+    void spewBailingFrom() const;
 #endif
+
+  private:
 
     void readSnapshotHeader();
     void readFrameHeader();

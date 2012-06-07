@@ -601,8 +601,6 @@ ion::MarkIonCompilerRoots(JSTracer *trc)
 void
 ion::GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
-    AutoDisableSpew<IonSpew_Bailouts> disableSpew;
-
     JS_ASSERT(cx->fp()->runningInIon());
     IonSpew(IonSpew_Snapshots, "Recover PC & Script from the last frame.");
 
