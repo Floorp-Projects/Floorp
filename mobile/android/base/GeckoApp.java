@@ -113,6 +113,8 @@ abstract public class GeckoApp
 
     private View mFullScreenPluginView;
 
+    private HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
+
     private int mRestoreMode = GeckoAppShell.RESTORE_NONE;
     private boolean mInitialized = false;
 
@@ -3113,6 +3115,19 @@ abstract public class GeckoApp
     {
     }
 
+    // Called when a Gecko Hal WakeLock is changed
+    public void notifyWakeLockChanged(String topic, String state) {
+        PowerManager.WakeLock wl = mWakeLocks.get(topic);
+        if (state.equals("locked-foreground") && wl == null) {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, topic);
+            wl.acquire();
+            mWakeLocks.put(topic, wl);
+        } else if (!state.equals("locked-foreground") && wl != null) {
+            wl.release();
+            mWakeLocks.remove(topic);
+        }
+    }
 
     private void connectGeckoLayerClient() {
         LayerController layerController = getLayerController();
