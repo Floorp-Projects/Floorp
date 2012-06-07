@@ -1026,7 +1026,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aNode);
-  if (roleMapEntry && !nsCRT::strcmp(roleMapEntry->roleString, "presentation")) {
+  if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::presentation)) {
     // Ignore presentation role if element is focusable (focus event shouldn't
     // be ever lost and should be sensible).
     if (content->IsFocusable())
@@ -1073,8 +1073,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
 #ifdef DEBUG
           nsRoleMapEntry* tableRoleMapEntry = aria::GetRoleMap(tableContent);
-          NS_ASSERTION(tableRoleMapEntry &&
-                       !nsCRT::strcmp(tableRoleMapEntry->roleString, "presentation"),
+          NS_ASSERTION(tableRoleMapEntry && tableRoleMapEntry->Is(nsGkAtoms::presentation),
                        "No accessible for parent table and it didn't have role of presentation");
 #endif
 
