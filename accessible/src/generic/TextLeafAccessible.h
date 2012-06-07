@@ -25,7 +25,6 @@ public:
   virtual void AppendTextTo(nsAString& aText, PRUint32 aStartOffset = 0,
                             PRUint32 aLength = PR_UINT32_MAX);
   virtual ENameValueFlag Name(nsString& aName);
-  virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
 
   // TextLeafAccessible
   void SetText(const nsAString& aText) { mText = aText; }

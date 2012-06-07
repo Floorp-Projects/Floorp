@@ -51,18 +51,6 @@ TextLeafAccessible::Name(nsString& aName)
   return eNameOK;
 }
 
-nsresult
-TextLeafAccessible::GetAttributesInternal(nsIPersistentProperties *aAttributes)
-{
-  if (NativeRole() == roles::STATICTEXT) {
-    nsAutoString oldValueUnused;
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("auto-generated"),
-                                  NS_LITERAL_STRING("true"), oldValueUnused);
-  }
-
-  return NS_OK;
-}
-
 void
 TextLeafAccessible::CacheChildren()
 {
