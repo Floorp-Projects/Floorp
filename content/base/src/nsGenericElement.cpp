@@ -6132,7 +6132,7 @@ inline static nsresult FindMatchingElements(nsINode* aRoot,
 
   nsIDocument* doc = aRoot->OwnerDoc();  
   TreeMatchContext matchingContext(false, nsRuleWalker::eRelevantLinkUnvisited,
-                                   doc);
+                                   doc, TreeMatchContext::eNeverMatchVisited);
   doc->FlushPendingLinkUpdates();
 
   // Fast-path selectors involving IDs.  We can only do this if aRoot
@@ -6246,7 +6246,8 @@ nsGenericElement::MozMatchesSelector(const nsAString& aSelector, nsresult* aResu
     OwnerDoc()->FlushPendingLinkUpdates();
     TreeMatchContext matchingContext(false,
                                      nsRuleWalker::eRelevantLinkUnvisited,
-                                     OwnerDoc());
+                                     OwnerDoc(),
+                                     TreeMatchContext::eNeverMatchVisited);
     matches = nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
                                                       selectorList);
   }
