@@ -1,24 +1,5 @@
-<!DOCTYPE HTML>
-<html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=757486
--->
-<head>
-  <title>Test for Bug 757486</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="application/javascript" src="browserFrameHelpers.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=757486">Mozilla Bug 757486</a>
-
-<!--
-  Test that an iframe with the |mozbrowser| attribute does bubble some
-  whitelisted key events.
--->
-
-<script type="application/javascript;version=1.7">
+// Test that an iframe with the |mozbrowser| attribute does bubble some
+// whitelisted key events.
 "use strict";
 
 let Ci = Components.interfaces;
@@ -93,7 +74,3 @@ SimpleTest.waitForFocus(function() {
   SimpleTest.executeSoon(runTest);
 });
 
-</script>
-
-</body>
-</html>

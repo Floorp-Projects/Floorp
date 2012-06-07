@@ -1,27 +1,7 @@
-<!DOCTYPE HTML>
-<html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=710231
--->
-<head>
-  <title>Test for Bug 710231</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="browserFrameHelpers.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=710231">Mozilla Bug 710231</a>
+// Test that an iframe with the |mozbrowser| attribute emits mozbrowserloadX
+// events when this page is in the whitelist.
 
-<!--
-  Test that an iframe with the |mozbrowser| attribute emits
-  mozbrowserX events when this page is in the whitelist.
--->
-
-<script type="application/javascript;version=1.7">
-
-// Bug 740626: This test fails on Windows XP
-if (navigator.userAgent.indexOf("Windows NT 5.1") == -1) {
-
+"use strict";
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
@@ -46,6 +26,7 @@ function runTest() {
     ok(e.isTrusted, 'Event should be trusted.');
     ok(!seenLoadEnd, 'loadstart before loadend.');
     ok(!seenLoadStart, 'Just one loadstart event.');
+    ok(!seenLocationChange, 'loadstart before locationchange.');
     seenLoadStart = true;
   }
 
@@ -132,13 +113,3 @@ function runTest2() {
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
-
-}
-else {
-  ok(true, "Somebody thought it was a great idea to make me type this.");
-}
-
-</script>
-
-</body>
-</html>
