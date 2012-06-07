@@ -322,6 +322,7 @@ public:
   virtual mozilla::css::StyleRule* GetSMILOverrideStyleRule();
   virtual nsresult SetSMILOverrideStyleRule(mozilla::css::StyleRule* aStyleRule,
                                             bool aNotify);
+  virtual bool IsLabelable() const;
 
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const
