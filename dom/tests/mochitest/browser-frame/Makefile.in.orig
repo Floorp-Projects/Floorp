@@ -25,11 +25,14 @@ _TEST_FILES = \
 		test_browserFrame7.html \
 		test_browserFrame8.html \
 		test_browserFrame9.html \
+<<<<<<< HEAD
 		test_browserFrame10.html \
 		test_browserFrame_keyEvents.html \
+=======
 		test_browserFrameAlert.html \
 		test_browserFramePromptCheck.html \
 		test_browserFramePromptConfirm.html \
+>>>>>>> Bug 741587 - Part 2: Tests for alert/prompt/confirm in <iframe mozbrowser>.
 		$(NULL)
 
 libs:: $(_TEST_FILES)
