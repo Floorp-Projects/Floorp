@@ -821,7 +821,7 @@ DoIncDec(JSContext *cx, JSScript *script, jsbytecode *pc, const Value &v, Value 
     }
 
     double d;
-    if (!ToNumber(cx, *slot, &d))
+    if (!ToNumber(cx, v, &d))
         return false;
 
     double sum = d + (cs.format & JOF_INC ? 1 : -1);
