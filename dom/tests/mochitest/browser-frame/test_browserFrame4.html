@@ -90,8 +90,8 @@ function runTest2() {
   var seenLoadEnd = false;
   var seenLocationChange = false;
 
-  var iframe = document.getElementById('iframe');
-  iframe.addEventListener('mozbrowserloadstart', function(e) {
+  // Add this event listener to the document; the events should bubble.
+  document.addEventListener('mozbrowserloadstart', function(e) {
     ok(e.isTrusted, 'Event should be trusted.');
     ok(!seenLoadStart, 'Just one loadstart event.');
     seenLoadStart = true;
@@ -99,6 +99,7 @@ function runTest2() {
     ok(!seenLocationChange, 'Got mozbrowserloadstart before locationchange.');
   });
 
+  var iframe = document.getElementById('iframe');
   iframe.addEventListener('mozbrowserlocationchange', function(e) {
     ok(e.isTrusted, 'Event should be trusted.');
     ok(!seenLocationChange, 'Just one locationchange event.');
