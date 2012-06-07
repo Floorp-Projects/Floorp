@@ -876,6 +876,8 @@ public:
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                  PRInt32* aTabIndex);
 
+  virtual bool IsLabelable() const;
+
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,

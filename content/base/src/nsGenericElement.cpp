@@ -3561,6 +3561,12 @@ nsGenericElement::SetSMILOverrideStyleRule(css::StyleRule* aStyleRule,
   return NS_OK;
 }
 
+bool
+nsGenericElement::IsLabelable() const
+{
+  return false;
+}
+
 css::StyleRule*
 nsGenericElement::GetInlineStyleRule()
 {
