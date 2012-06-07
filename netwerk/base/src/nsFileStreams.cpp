@@ -814,8 +814,6 @@ nsFileStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
 
     mBehaviorFlags = behaviorFlags;
 
-    nsresult rv;
-    if (NS_FAILED(rv)) return rv;
     if (ioFlags == -1)
         ioFlags = PR_RDWR;
     if (perm <= 0)
