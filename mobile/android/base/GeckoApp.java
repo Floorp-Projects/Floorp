@@ -654,15 +654,7 @@ abstract public class GeckoApp
                 }
                 return true;
             case R.id.share:
-                tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    String url = tab.getURL();
-                    if (url == null)
-                        return false;
-
-                    GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                                  Intent.ACTION_SEND, tab.getTitle());
-                }
+                shareCurrentUrl();
                 return true;
             case R.id.reload:
                 tab = Tabs.getInstance().getSelectedTab();
@@ -699,6 +691,19 @@ abstract public class GeckoApp
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void shareCurrentUrl() {
+      Tab tab = Tabs.getInstance().getSelectedTab();
+      if (tab == null)
+        return;
+
+      String url = tab.getURL();
+      if (url == null)
+          return;
+
+      GeckoAppShell.openUriExternal(url, "text/plain", "", "",
+                                    Intent.ACTION_SEND, tab.getTitle());
     }
 
     protected void onSaveInstanceState(Bundle outState) {
@@ -2832,20 +2837,30 @@ abstract public class GeckoApp
     }
 
     public boolean showAwesomebar(AwesomeBar.Type aType) {
+        return showAwesomebar(aType, null);
+    }
+
+    public boolean showAwesomebar(AwesomeBar.Type aType, String aUrl) {
         Intent intent = new Intent(getBaseContext(), AwesomeBar.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra(AwesomeBar.TYPE_KEY, aType.name());
 
-        if (aType != AwesomeBar.Type.ADD) {
-            // if we're not adding a new tab, show the old url
+        // if we were passed in a url, show it
+        if (aUrl != null && !TextUtils.isEmpty(aUrl)) {
+            intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
+        } else if (aType == AwesomeBar.Type.EDIT) {
+            // otherwise, if we're editing the current tab, show its url
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
-                String url = tab.getURL();
-                if (url != null) {
-                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, url);
+
+                aUrl = tab.getURL();
+                if (aUrl != null) {
+                    intent.putExtra(AwesomeBar.CURRENT_URL_KEY, aUrl);
                 }
+
             }
         }
+
         startActivityForResult(intent, mActivityResultHandlerMap.put(mAwesomebarResultHandler));
         return true;
     }
@@ -3007,7 +3022,7 @@ abstract public class GeckoApp
     }
 
     class CameraImageResultHandler implements ActivityResultHandler {
-        public void onActivityResult(int resultCode, Intent data) {            
+        public void onActivityResult(int resultCode, Intent data) {
             try {
                 if (resultCode != Activity.RESULT_OK) {
                     mFilePickerResult.put("");
@@ -3226,5 +3241,52 @@ abstract public class GeckoApp
             mFullScreenPluginView.onTrackballEvent(event);
             return true;
         }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.pasteandgo: {
+                String text = GeckoAppShell.getClipboardText();
+                if (text != null && !TextUtils.isEmpty(text)) {
+                    loadUrl(text, AwesomeBar.Type.EDIT);
+                }
+                return true;
+            }
+            case R.id.paste: {
+                String text = GeckoAppShell.getClipboardText();
+                if (text != null && !TextUtils.isEmpty(text)) {
+                    showAwesomebar(AwesomeBar.Type.EDIT, text);
+                }
+                return true;
+            }
+            case R.id.share: {
+                shareCurrentUrl();
+                return true;
+            }
+            case R.id.copyurl: {
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    String url = tab.getURL();
+                    if (url != null) {
+                        GeckoAppShell.setClipboardText(url);
+                    }
+                }
+                return true;
+            }
+            case R.id.add_to_launcher: {
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    String url = tab.getURL();
+                    String title = tab.getTitle();
+                    BitmapDrawable favicon = (BitmapDrawable)(tab.getFavicon());
+                    if (url != null && title != null) {
+                        GeckoAppShell.createShortcut(title, url, favicon == null ? null : favicon.getBitmap(), "");
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
     }
 }
