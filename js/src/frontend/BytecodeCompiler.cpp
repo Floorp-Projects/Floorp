@@ -112,9 +112,10 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!tc.init())
         return NULL;
 
+    bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
     Rooted<JSScript*> script(cx);
-    script = JSScript::Create(cx, principals, originPrincipals, compileAndGo, noScriptRval,
-                              version);
+    script = JSScript::Create(cx, savedCallerFun, principals, originPrincipals, compileAndGo,
+                              noScriptRval, version);
     if (!script)
         return NULL;
 
@@ -137,10 +138,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)
         sc.setInStrictMode();
 
-#ifdef DEBUG
-    bool savedCallerFun;
-    savedCallerFun = false;
-#endif
     if (compileAndGo) {
         if (source) {
             /*
@@ -165,9 +162,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
             funbox->emitLink = bce.objectList.lastbox;
             bce.objectList.lastbox = funbox;
             bce.objectList.length++;
-#ifdef DEBUG
-            savedCallerFun = true;
-#endif
         }
     }
 
@@ -247,8 +241,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!script->fullyInitFromEmitter(cx, &bce))
         return NULL;
 
-    JS_ASSERT(script->savedCallerFun == savedCallerFun);
-
     if (!MarkInnerAndOuterFunctions(cx, script))
         return NULL;
 
@@ -266,7 +258,8 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
                               const char *filename, unsigned lineno, JSVersion version)
 {
     Parser parser(cx, principals, originPrincipals, chars, length, filename, lineno, version,
-                  /* cfp = */ NULL, /* foldConstants = */ true, /* compileAndGo = */ false);
+                  /* callerFrame = */ NULL, /* foldConstants = */ true,
+                  /* compileAndGo = */ false);
     if (!parser.init())
         return false;
 
@@ -279,8 +272,9 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         return false;
 
     Rooted<JSScript*> script(cx);
-    script = JSScript::Create(cx, principals, originPrincipals, /* compileAndGo = */ false,
-                              /* noScriptRval = */ false, version);
+    script = JSScript::Create(cx, /* savedCallerFun = */ false, principals, originPrincipals,
+                              /* compileAndGo = */ false, /* noScriptRval = */ false,
+                              version);
     if (!script)
         return false;
 
