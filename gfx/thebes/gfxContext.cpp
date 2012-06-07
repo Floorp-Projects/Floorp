@@ -46,10 +46,10 @@ public:
       Matrix transform = state.surfTransform;
 
       if (state.patternTransformChanged) {
-        Matrix mat = state.patternTransform;
+        Matrix mat = mContext->mDT->GetTransform();
         mat.Invert();
 
-        transform = mat * mContext->mDT->GetTransform() * transform;
+        transform = mat * state.patternTransform * transform;
       }
 
       mPattern = new (mSurfacePattern.addr())
@@ -1423,7 +1423,7 @@ gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
     mDT->Mask(GeneralPattern(this), 
               SurfacePattern(sourceSurf, EXTEND_CLAMP,
                              Matrix(1.0f, 0, 0, 1.0f, Float(offset.x - pt.x), Float(offset.y - pt.y))),
-                             DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+              DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
   }
 }
 
