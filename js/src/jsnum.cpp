@@ -850,8 +850,23 @@ Number_isNaN(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+// ES6 draft ES6 15.7.3.11
+static JSBool
+Number_isFinite(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 1 || !args[0].isNumber()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+    args.rval().setBoolean(args[0].isInt32() ||
+                           MOZ_DOUBLE_IS_FINITE(args[0].toDouble()));
+    return true;
+}
+
 
 static JSFunctionSpec number_static_methods[] = {
+    JS_FN("isFinite", Number_isFinite, 1, 0),
     JS_FN("isNaN", Number_isNaN, 1, 0),
     JS_FS_END
 };
