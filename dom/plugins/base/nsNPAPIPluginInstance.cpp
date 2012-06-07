@@ -83,6 +83,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
     mOnScreen(true),
     mFullScreenOrientation(dom::eScreenOrientation_LandscapePrimary),
     mWakeLocked(false),
+    mFullScreen(false),
 #endif
     mRunning(NOT_STARTED),
     mWindowless(false),
@@ -760,10 +761,15 @@ void nsNPAPIPluginInstance::NotifyFullScreen(bool aFullScreen)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::NotifyFullScreen this=%p\n",this));
 
-  if (RUNNING != mRunning)
+  if (RUNNING != mRunning || mFullScreen == aFullScreen)
     return;
 
-  SendLifecycleEvent(this, aFullScreen ? kEnterFullScreen_ANPLifecycleAction : kExitFullScreen_ANPLifecycleAction);
+  mFullScreen = aFullScreen;
+  SendLifecycleEvent(this, mFullScreen ? kEnterFullScreen_ANPLifecycleAction : kExitFullScreen_ANPLifecycleAction);
+
+  if (mFullScreen && mFullScreenOrientation != dom::eScreenOrientation_None) {
+    AndroidBridge::Bridge()->LockScreenOrientation(mFullScreenOrientation);
+  }
 }
 
 void nsNPAPIPluginInstance::SetANPDrawingModel(PRUint32 aModel)
@@ -787,6 +793,27 @@ void nsNPAPIPluginInstance::PostEvent(void* event)
   mPostedEvents.AppendElement(nsRefPtr<PluginEventRunnable>(r));
 
   NS_DispatchToMainThread(r);
+}
+
+void nsNPAPIPluginInstance::SetFullScreenOrientation(PRUint32 orientation)
+{
+  if (mFullScreenOrientation == orientation)
+    return;
+
+  PRUint32 oldOrientation = mFullScreenOrientation;
+  mFullScreenOrientation = orientation;
+
+  if (mFullScreen) {
+    // We're already fullscreen so immediately apply the orientation change
+
+    if (mFullScreenOrientation != dom::eScreenOrientation_None) {
+      AndroidBridge::Bridge()->LockScreenOrientation(mFullScreenOrientation);
+    } else if (oldOrientation != dom::eScreenOrientation_None) {
+      // We applied an orientation when we entered fullscreen, but
+      // we don't want it anymore
+      AndroidBridge::Bridge()->UnlockScreenOrientation();
+    }
+  }
 }
 
 void nsNPAPIPluginInstance::PopPostedEvent(PluginEventRunnable* r)
