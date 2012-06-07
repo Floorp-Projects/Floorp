@@ -584,10 +584,12 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         JS_ASSERT((version_ & VersionFlags::FULL_MASK) == unsigned(version_));
 
         // principals and originPrincipals are set with xdr->initScriptPrincipals(script) below.
+        // staticLevel is set below.
         script = JSScript::Create(cx, !!(scriptBits & (1 << SavedCallerFun)),
                                   /* principals = */ NULL, /* originPrincipals = */ NULL,
                                   /* compileAndGo = */ false,
-                                  !!(scriptBits & (1 << NoScriptRval)), version_);
+                                  !!(scriptBits & (1 << NoScriptRval)), version_,
+                                  /* staticLevel = */ 0);
         if (!script || !script->partiallyInit(cx, length, nsrcnotes, natoms, nobjects,
                                               nregexps, ntrynotes, nconsts, nClosedArgs,
                                               nClosedVars, nTypeSets))
@@ -1096,7 +1098,7 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 JSScript *
 JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
                  JSPrincipals *originPrincipals, bool compileAndGo, bool noScriptRval,
-                 JSVersion version)
+                 JSVersion version, unsigned staticLevel)
 {
     JSScript *script = js_NewGCScript(cx);
     if (!script)
@@ -1122,6 +1124,16 @@ JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
  
     script->version = version;
     JS_ASSERT(script->getVersion() == version);     // assert that no overflow occurred
+
+    // This is an unsigned-to-uint16_t conversion, test for too-high values.
+    // In practice, recursion in Parser and/or BytecodeEmitter will blow the
+    // stack if we nest functions more than a few hundred deep, so this will
+    // never trigger.  Oh well.
+    if (staticLevel > UINT16_MAX) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP, js_function_str);
+        return false;
+    }
+    script->staticLevel = uint16_t(staticLevel);
 
     return script;
 }
@@ -1301,16 +1313,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         return false;
     }
     script->nslots = script->nfixed + bce->maxStackDepth;
-
-    // This is an unsigned-to-uint16_t conversion, test for too-high values.
-    // In practice, recursion in Parser and/or BytecodeEmitter will blow the
-    // stack if we nest functions more than a few hundred deep, so this will
-    // never trigger.  Oh well.
-    if (bce->sc->staticLevel > UINT_MAX) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP, js_function_str);
-        return false;
-    }
-    script->staticLevel = uint16_t(bce->sc->staticLevel);
 
     jschar *sourceMap = (jschar *) bce->parser->tokenStream.releaseSourceMap();
     if (sourceMap) {
@@ -1792,7 +1794,8 @@ js::CloneScript(JSContext *cx, HandleScript src)
 
     JSScript *dst = JSScript::Create(cx, src->savedCallerFun,
                                      cx->compartment->principals, src->originPrincipals,
-                                     src->compileAndGo, src->noScriptRval, src->getVersion());
+                                     src->compileAndGo, src->noScriptRval, src->getVersion(),
+                                     src->staticLevel);
     if (!dst) {
         Foreground::free_(data);
         return NULL;
@@ -1821,7 +1824,6 @@ js::CloneScript(JSContext *cx, HandleScript src)
     dst->nfixed = src->nfixed;
     dst->nTypeSets = src->nTypeSets;
     dst->nslots = src->nslots;
-    dst->staticLevel = src->staticLevel;
     if (src->argumentsHasLocalBinding()) {
         dst->setArgumentsHasLocalBinding(src->argumentsLocal());
         if (src->analyzedArgsUsage())

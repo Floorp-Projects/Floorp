@@ -566,8 +566,9 @@ struct JSScript : public js::gc::Cell
 
   public:
     static JSScript *Create(JSContext *cx, bool savedCallerFun,
-                            JSPrincipals *principals, JSPrincipals *originPrincipals, bool compileAndGo,
-                            bool noScriptRval, JSVersion version);
+                            JSPrincipals *principals, JSPrincipals *originPrincipals,
+                            bool compileAndGo, bool noScriptRval, JSVersion version,
+                            unsigned staticLevel);
 
     // Three ways ways to initialize a JSScript.  Callers of partiallyInit()
     // and fullyInitTrivial() are responsible for notifying the debugger after
