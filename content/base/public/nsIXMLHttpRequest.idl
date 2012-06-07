@@ -21,6 +21,27 @@ interface nsIDOMBlob;
 #include "jsapi.h"
 %}
 
+/**
+ * Parameters for instantiating an XMLHttpRequest. They are passed as an
+ * optional argument to the constructor:
+ *
+ *  new XMLHttpRequest({anon: true, system: true});
+ *
+ */
+dictionary XMLHttpRequestParameters
+{
+  /**
+   * If true, the request will be sent without cookie and authentication
+   * headers.
+   */
+  boolean mozAnon;
+
+  /**
+   * If true, the same origin policy will not be enforced on the request.
+   */
+  boolean mozSystem;
+};
+
 [scriptable, builtinclass, uuid(5e346bf8-7083-4ef8-b9b9-736a1b5aa7ab)]
 interface nsIXMLHttpRequestEventTarget : nsIDOMEventTarget {
   // event handler attributes
@@ -79,7 +100,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(8681ffbc-4755-45de-9fc1-b63e6930e76a)]
+[scriptable, uuid(2ed23d20-9d6d-47fd-b60f-2416dbd57005)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -351,6 +372,17 @@ interface nsIXMLHttpRequest : nsISupports
    * Call open() before setting an onreadystatechange listener.
    */
   attribute nsIDOMEventListener onreadystatechange;
+
+  /**
+   * If true, the request will be sent without cookie and authentication
+   * headers.
+   */
+  readonly attribute boolean mozAnon;
+
+  /**
+   * If true, the same origin policy will not be enforced on the request.
+   */
+  readonly attribute boolean mozSystem;
 };
 
 [scriptable, uuid(840d0d00-e83e-4a29-b3c7-67e96e90a499)]
