@@ -3109,7 +3109,8 @@ nsGenericHTMLElement::GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu)
 bool
 nsGenericHTMLElement::IsLabelable() const
 {
-  return Tag() == nsGkAtoms::progress;
+  return Tag() == nsGkAtoms::progress ||
+         Tag() == nsGkAtoms::meter;
 }
 
 //----------------------------------------------------------------------
@@ -3472,8 +3473,7 @@ nsGenericHTMLFormElement::CanBeDisabled() const
   return
     type != NS_FORM_LABEL &&
     type != NS_FORM_OBJECT &&
-    type != NS_FORM_OUTPUT &&
-    type != NS_FORM_METER;
+    type != NS_FORM_OUTPUT;
 }
 
 bool
@@ -3770,7 +3770,6 @@ nsGenericHTMLFormElement::IsLabelable() const
   return type & NS_FORM_INPUT_ELEMENT ||
          type & NS_FORM_BUTTON_ELEMENT ||
          // type == NS_FORM_KEYGEN ||
-         type == NS_FORM_METER ||
          type == NS_FORM_OUTPUT ||
          type == NS_FORM_SELECT ||
          type == NS_FORM_TEXTAREA;

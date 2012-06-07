@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=657938
 -->
 <head>
-  <title>Test for Bug 657938</title>
+  <title>Test for <meter></title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -21,21 +21,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=657938
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 657938 **/
+/** Test for <meter> **/
 
 function checkFormIDLAttribute(aElement)
 {
-  var form = document.forms[0];
-  var content = document.getElementById('content');
-  is(aElement.form, form, "The form IDL attribute should be the parent form");
-
-  content.removeChild(form);
-  content.appendChild(aElement);
-  is(aElement.form, null, "The form IDL attribute should be null");
-
-  // Cleaning-up.
-  content.appendChild(form);
-  form.appendChild(aElement);
+  is('form' in aElement, false, "<meter> shouldn't have a form attribute");
 }
 
 function checkAttribute(aElement, aAttribute, aNewValue, aExpectedValueForIDL)
@@ -330,7 +320,7 @@ function checkNotResetableAndFormSubmission(aElement)
      * element value should not appear.
      */
     is(frames['submit_frame'].location.href,
-      'http://mochi.test:8888/tests/content/html/content/test/foo?a=tulip',
+      'http://mochi.test:8888/tests/content/html/content/test/forms/foo?a=tulip',
        "The meter element value should not be submitted");
 
     checkNotResetable();
@@ -367,6 +357,7 @@ ok(m instanceof HTMLMeterElement,
 is(m.constructor, HTMLMeterElement,
    "The meter element constructor should be HTMLMeterElement");
 
+// There is no such attribute.
 checkFormIDLAttribute(m);
 
 checkValueAttribute();
