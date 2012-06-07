@@ -125,6 +125,9 @@ browserFrameHelpers.setOOPByDefaultPref(true);
 if (navigator.platform.indexOf('Win') != -1) {
   browserFrameHelpers.setOOPDisabledPref(true);
 }
+else {
+  browserFrameHelpers.setOOPDisabledPref(false);
+}
 
 addEventListener('unload', function() {
   browserFrameHelpers.restoreOriginalPrefs();
