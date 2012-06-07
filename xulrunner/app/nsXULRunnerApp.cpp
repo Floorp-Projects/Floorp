@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsXULAppAPI.h"
+#include "nsXPCOMGlue.h"
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef XP_WIN
@@ -26,6 +28,12 @@
 #ifdef XP_WIN
 #include "nsWindowsWMain.cpp"
 #endif
+
+#include "BinaryPath.h"
+
+#include "nsXPCOMPrivate.h" // for MAXPATHLEN and XPCOM_DLL
+
+using namespace mozilla;
 
 /**
  * Output a string to the user.  This method is really only meant to be used to
@@ -90,7 +98,7 @@ GetGREVersion(const char *argv0,
     aVersion->Assign("<Error>");
 
   nsCOMPtr<nsIFile> iniFile;
-  nsresult rv = XRE_GetBinaryPath(argv0, getter_AddRefs(iniFile));
+  nsresult rv = BinaryPath::GetFile(argv0, getter_AddRefs(iniFile));
   if (NS_FAILED(rv))
     return rv;
 
@@ -141,13 +149,26 @@ static void Usage(const char *argv0)
            milestone.get());
 }
 
+XRE_GetFileFromPathType XRE_GetFileFromPath;
+XRE_CreateAppDataType XRE_CreateAppData;
+XRE_FreeAppDataType XRE_FreeAppData;
+XRE_mainType XRE_main;
+
+static const nsDynamicFunctionLoad kXULFuncs[] = {
+    { "XRE_GetFileFromPath", (NSFuncPtr*) &XRE_GetFileFromPath },
+    { "XRE_CreateAppData", (NSFuncPtr*) &XRE_CreateAppData },
+    { "XRE_FreeAppData", (NSFuncPtr*) &XRE_FreeAppData },
+    { "XRE_main", (NSFuncPtr*) &XRE_main },
+    { nsnull, nsnull }
+};
+
 static nsresult
 GetXULRunnerDir(const char *argv0, nsIFile* *aResult)
 {
   nsresult rv;
 
   nsCOMPtr<nsIFile> appFile;
-  rv = XRE_GetBinaryPath(argv0, getter_AddRefs(appFile));
+  rv = BinaryPath::GetFile(argv0, getter_AddRefs(appFile));
   if (NS_FAILED(rv)) {
     Output(true, "Could not find XULRunner application path.\n");
     return rv;
@@ -230,6 +251,25 @@ private:
 
 int main(int argc, char* argv[])
 {
+  char exePath[MAXPATHLEN];
+  nsresult rv = mozilla::BinaryPath::Get(argv[0], exePath);
+  if (NS_FAILED(rv)) {
+    Output(true, "Couldn't calculate the application directory.\n");
+    return 255;
+  }
+
+  char *lastSlash = strrchr(exePath, XPCOM_FILE_PATH_SEPARATOR[0]);
+  if (!lastSlash || (size_t(lastSlash - exePath) > MAXPATHLEN - sizeof(XPCOM_DLL) - 1))
+    return 255;
+
+  strcpy(++lastSlash, XPCOM_DLL);
+
+  rv = XPCOMGlueStartup(exePath);
+  if (NS_FAILED(rv)) {
+    Output(true, "Couldn't load XPCOM.\n");
+    return 255;
+  }
+
   if (argc > 1 && (IsArg(argv[1], "h") ||
                    IsArg(argv[1], "help") ||
                    IsArg(argv[1], "?")))
@@ -248,9 +288,15 @@ int main(int argc, char* argv[])
     return 0;
   }
 
+  rv = XPCOMGlueLoadXULFunctions(kXULFuncs);
+  if (NS_FAILED(rv)) {
+    Output(true, "Couldn't load XRE functions.\n");
+    return 255;
+  }
+
   if (argc > 1) {
     nsCAutoString milestone;
-    nsresult rv = GetGREVersion(argv[0], &milestone, nsnull);
+    rv = GetGREVersion(argv[0], &milestone, nsnull);
     if (NS_FAILED(rv))
       return 2;
 
@@ -324,7 +370,7 @@ int main(int argc, char* argv[])
   }
 
   nsCOMPtr<nsIFile> appDataLF;
-  nsresult rv = XRE_GetFileFromPath(appDataFile, getter_AddRefs(appDataLF));
+  rv = XRE_GetFileFromPath(appDataFile, getter_AddRefs(appDataLF));
   if (NS_FAILED(rv)) {
     Output(true, "Error: unrecognized application.ini path.\n");
     return 2;
