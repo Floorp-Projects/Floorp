@@ -936,30 +936,6 @@ JSObject::nativeSetSlotWithType(JSContext *cx, js::Shape *shape, const js::Value
 }
 
 inline bool
-JSObject::nativeContains(JSContext *cx, js::HandleId id)
-{
-    return nativeLookup(cx, id) != NULL;
-}
-
-inline bool
-JSObject::nativeContains(JSContext *cx, js::HandleShape shape)
-{
-    return nativeLookup(cx, shape->propid()) == shape;
-}
-
-inline bool
-JSObject::nativeContainsNoAllocation(jsid id)
-{
-    return nativeLookupNoAllocation(id) != NULL;
-}
-
-inline bool
-JSObject::nativeContainsNoAllocation(const js::Shape &shape)
-{
-    return nativeLookupNoAllocation(shape.propid()) == &shape;
-}
-
-inline bool
 JSObject::nativeEmpty() const
 {
     return lastProperty()->isEmptyShape();
