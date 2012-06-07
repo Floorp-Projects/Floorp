@@ -7,12 +7,35 @@
 [scriptable, uuid(3615a616-571d-4194-bf54-ccf546067b14)]
 interface nsIB2GCameraContent : nsISupports
 {
-    /* temporary solution, waiting for getUserMedia */
-    DOMString getCameraURI([optional] in jsval options);
+  /* temporary solution, waiting for getUserMedia */
+  DOMString getCameraURI([optional] in jsval options);
 };
 
-[scriptable, uuid(80ad05f8-e5f6-4a36-b25d-5d5a969b365d)]
+[scriptable, uuid(53990d7a-ab2a-11e1-8543-7767e4cbcbff)]
 interface nsIB2GKeyboard : nsISupports
 {
-    void sendKey(in long aKeyCode, in long aCharCode);
+  void sendKey(in long keyCode, in long charCode);
+
+  // Select the <select> option specified by index.
+  // If this method is called on a <select> that support multiple
+  // selection, then the option specified by index will be added to
+  // the selection.
+  // If this method is called for a select that does not support multiple
+  // selection the previous element will be unselected.
+  void setSelectedOption(in jsval index);
+
+  // Select the <select> options specified by indexes. All other options
+  // will be deselected.
+  // If this method is called for a <select> that does not support multiple
+  // selection, then the last index specified in indexes will be selected.
+  void setSelectedOptions(in jsval indexes);
+
+  // Set the value on the currently focused element. This has to be used
+  // for special situations where the value had to be chosen amongst a
+  // list (type=month) or a widget (type=date, time, etc.).
+  // If the value passed in parameter isn't valid (in the term of HTML5
+  // Forms Validation), the value will simply be ignored by the element. 
+  void setValue(in jsval value);
+
+  attribute nsIDOMEventListener onfocuschange;
 };

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_WIDGET_ANDROID
-// For ScreenOrientation.h
+// For ScreenOrientation.h and Hal.h
 #include "base/basictypes.h"
 #endif
 
@@ -41,6 +41,7 @@
 #include "mozilla/CondVar.h"
 #include "AndroidBridge.h"
 #include "mozilla/dom/ScreenOrientation.h"
+#include "mozilla/Hal.h"
 
 class PluginEventRunnable : public nsRunnable
 {
@@ -81,6 +82,8 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
     mANPDrawingModel(0),
     mOnScreen(true),
     mFullScreenOrientation(dom::eScreenOrientation_LandscapePrimary),
+    mWakeLocked(false),
+    mFullScreen(false),
 #endif
     mRunning(NOT_STARTED),
     mWindowless(false),
@@ -115,6 +118,10 @@ nsNPAPIPluginInstance::~nsNPAPIPluginInstance()
     PR_Free((void *)mMIMEType);
     mMIMEType = nsnull;
   }
+
+#if MOZ_WIDGET_ANDROID
+  SetWakeLock(false);
+#endif
 }
 
 void
@@ -754,10 +761,15 @@ void nsNPAPIPluginInstance::NotifyFullScreen(bool aFullScreen)
 {
   PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("nsNPAPIPluginInstance::NotifyFullScreen this=%p\n",this));
 
-  if (RUNNING != mRunning)
+  if (RUNNING != mRunning || mFullScreen == aFullScreen)
     return;
 
-  SendLifecycleEvent(this, aFullScreen ? kEnterFullScreen_ANPLifecycleAction : kExitFullScreen_ANPLifecycleAction);
+  mFullScreen = aFullScreen;
+  SendLifecycleEvent(this, mFullScreen ? kEnterFullScreen_ANPLifecycleAction : kExitFullScreen_ANPLifecycleAction);
+
+  if (mFullScreen && mFullScreenOrientation != dom::eScreenOrientation_None) {
+    AndroidBridge::Bridge()->LockScreenOrientation(mFullScreenOrientation);
+  }
 }
 
 void nsNPAPIPluginInstance::SetANPDrawingModel(PRUint32 aModel)
@@ -783,9 +795,41 @@ void nsNPAPIPluginInstance::PostEvent(void* event)
   NS_DispatchToMainThread(r);
 }
 
+void nsNPAPIPluginInstance::SetFullScreenOrientation(PRUint32 orientation)
+{
+  if (mFullScreenOrientation == orientation)
+    return;
+
+  PRUint32 oldOrientation = mFullScreenOrientation;
+  mFullScreenOrientation = orientation;
+
+  if (mFullScreen) {
+    // We're already fullscreen so immediately apply the orientation change
+
+    if (mFullScreenOrientation != dom::eScreenOrientation_None) {
+      AndroidBridge::Bridge()->LockScreenOrientation(mFullScreenOrientation);
+    } else if (oldOrientation != dom::eScreenOrientation_None) {
+      // We applied an orientation when we entered fullscreen, but
+      // we don't want it anymore
+      AndroidBridge::Bridge()->UnlockScreenOrientation();
+    }
+  }
+}
+
 void nsNPAPIPluginInstance::PopPostedEvent(PluginEventRunnable* r)
 {
   mPostedEvents.RemoveElement(r);
+}
+
+void nsNPAPIPluginInstance::SetWakeLock(bool aLocked)
+{
+  if (aLocked == mWakeLocked)
+    return;
+
+  mWakeLocked = aLocked;
+  hal::ModifyWakeLock(NS_LITERAL_STRING("nsNPAPIPluginInstance"),
+                      mWakeLocked ? hal::WAKE_LOCK_ADD_ONE : hal::WAKE_LOCK_REMOVE_ONE,
+                      hal::WAKE_LOCK_NO_CHANGE);
 }
 
 #endif

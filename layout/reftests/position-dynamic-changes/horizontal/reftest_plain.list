@@ -1,0 +1,26 @@
+# Please see the comment at the beginning of reftest.list
+
+== leftN-widthA-rightA.html leftN-widthA-rightA-ref.html
+== leftN-widthA-rightA-2.html leftN-widthA-rightA-2-ref.html
+== leftN-widthA-rightN.html leftN-widthA-rightN-ref.html
+== leftN-widthA-rightN-2.html leftN-widthA-rightN-2-ref.html
+== leftA-widthN-rightA.html leftA-widthN-rightA-ref.html
+== leftN-widthN-rightA.html leftN-widthN-rightA-ref.html
+== leftA-widthN-rightN.html leftA-widthN-rightN-ref.html
+== leftA-widthA-rightN.html leftA-widthA-rightN-ref.html
+== toauto-leftN-widthA-rightA.html toauto-leftN-widthA-rightA-ref.html
+== toauto-leftN-widthA-rightA-2.html toauto-leftN-widthA-rightA-2-ref.html
+== toauto-leftN-widthA-rightN.html toauto-leftN-widthA-rightN-ref.html
+== toauto-leftN-widthA-rightN-2.html toauto-leftN-widthA-rightN-2-ref.html
+== toauto-leftA-widthN-rightA.html toauto-leftA-widthN-rightA-ref.html
+== toauto-leftN-widthN-rightA.html toauto-leftN-widthN-rightA-ref.html
+== toauto-leftA-widthN-rightN.html toauto-leftA-widthN-rightN-ref.html
+== toauto-leftA-widthA-rightN.html toauto-leftA-widthA-rightN-ref.html
+== fromauto-leftN-widthA-rightA.html leftN-widthA-rightA-ref.html
+random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html leftN-widthA-rightA-2-ref.html # Bug 688545
+== fromauto-leftN-widthA-rightN.html leftN-widthA-rightN-ref.html
+== fromauto-leftN-widthA-rightN-2.html leftN-widthA-rightN-2-ref.html
+== fromauto-leftA-widthN-rightA.html leftA-widthN-rightA-ref.html
+== fromauto-leftN-widthN-rightA.html leftN-widthN-rightA-ref.html
+== fromauto-leftA-widthN-rightN.html leftA-widthN-rightN-ref.html
+== fromauto-leftA-widthA-rightN.html leftA-widthA-rightN-ref.html

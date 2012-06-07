@@ -226,6 +226,7 @@
   "Command insertOrderedList, value \"quasit\": beforeinput event, uncanceled":true,
   "Command insertOrderedList, value \"quasit\": input event, uncanceled":true,
   "Command insertParagraph, value \"\": beforeinput event, canceled":true,
+  "Command insertParagraph, value \"\": input event, canceled":true,
   "Command insertParagraph, value \"\": beforeinput event, uncanceled":true,
   "Command insertParagraph, value \"\": input event, uncanceled":true,
   "Command insertParagraph, value \"quasit\": beforeinput event, canceled":true,

@@ -1,0 +1,20 @@
+# Please see the comment at the beginning of reftest.list
+
+== topN-heightA-bottomA.html?padding_abspos topN-heightA-bottomA-ref.html?padding_abspos
+== topN-heightA-bottomN.html?padding_abspos topN-heightA-bottomN-ref.html?padding_abspos
+== topA-heightN-bottomA.html?padding_abspos topA-heightN-bottomA-ref.html?padding_abspos
+== topN-heightN-bottomA.html?padding_abspos topN-heightN-bottomA-ref.html?padding_abspos
+== topA-heightN-bottomN.html?padding_abspos topA-heightN-bottomN-ref.html?padding_abspos
+== topA-heightA-bottomN.html?padding_abspos topA-heightA-bottomN-ref.html?padding_abspos
+== toauto-topN-heightA-bottomA.html?padding_abspos toauto-topN-heightA-bottomA-ref.html?padding_abspos
+== toauto-topN-heightA-bottomN.html?padding_abspos toauto-topN-heightA-bottomN-ref.html?padding_abspos
+== toauto-topA-heightN-bottomA.html?padding_abspos toauto-topA-heightN-bottomA-ref.html?padding_abspos
+== toauto-topN-heightN-bottomA.html?padding_abspos toauto-topN-heightN-bottomA-ref.html?padding_abspos
+== toauto-topA-heightN-bottomN.html?padding_abspos toauto-topA-heightN-bottomN-ref.html?padding_abspos
+== toauto-topA-heightA-bottomN.html?padding_abspos toauto-topA-heightA-bottomN-ref.html?padding_abspos
+== fromauto-topN-heightA-bottomA.html?padding_abspos topN-heightA-bottomA-ref.html?padding_abspos
+== fromauto-topN-heightA-bottomN.html?padding_abspos topN-heightA-bottomN-ref.html?padding_abspos
+== fromauto-topA-heightN-bottomA.html?padding_abspos topA-heightN-bottomA-ref.html?padding_abspos
+== fromauto-topN-heightN-bottomA.html?padding_abspos topN-heightN-bottomA-ref.html?padding_abspos
+== fromauto-topA-heightN-bottomN.html?padding_abspos topA-heightN-bottomN-ref.html?padding_abspos
+== fromauto-topA-heightA-bottomN.html?padding_abspos topA-heightA-bottomN-ref.html?padding_abspos

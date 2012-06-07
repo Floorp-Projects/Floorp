@@ -2,8 +2,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef __nsHTMLSelectAccessible_h__
-#define __nsHTMLSelectAccessible_h__
+
+#ifndef mozilla_a11y_HTMLSelectAccessible_h__
+#define mozilla_a11y_HTMLSelectAccessible_h__
 
 #include "HTMLFormControlAccessible.h"
 #include "nsIDOMHTMLOptionsCollection.h"
@@ -12,33 +13,36 @@
 
 class nsIMutableArray;
 
+namespace mozilla {
+namespace a11y {
+
 /**
   *  Selects, Listboxes and Comboboxes, are made up of a number of different
   *  widgets, some of which are shared between the two. This file contains
-	*  all of the widgets for both of the Selects, for HTML only.
+  *  all of the widgets for both of the Selects, for HTML only.
   *
   *  Listbox:
-  *     - nsHTMLSelectListAccessible
-  *        - nsHTMLSelectOptionAccessible
+  *     - HTMLSelectListAccessible
+  *        - HTMLSelectOptionAccessible
   *
   *  Comboboxes:
-  *     - nsHTMLComboboxAccessible
-  *        - nsHTMLComboboxListAccessible  [ inserted in accessible tree ]
-  *           - nsHTMLSelectOptionAccessible(s)
+  *     - HTMLComboboxAccessible
+  *        - HTMLComboboxListAccessible  [ inserted in accessible tree ]
+  *           - HTMLSelectOptionAccessible(s)
   */
 
 /*
  * The list that contains all the options in the select.
  */
-class nsHTMLSelectListAccessible : public AccessibleWrap
+class HTMLSelectListAccessible : public AccessibleWrap
 {
 public:
-  
-  nsHTMLSelectListAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsHTMLSelectListAccessible() {}
+
+  HTMLSelectListAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~HTMLSelectListAccessible() {}
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
   // SelectAccessible
@@ -58,24 +62,24 @@ protected:
   // Accessible
   virtual void CacheChildren();
 
-  // nsHTMLSelectListAccessible
+  // HTMLSelectListAccessible
 
   /**
    * Recursive helper for CacheChildren().
    */
-  void CacheOptSiblings(nsIContent *aParentContent);
+  void CacheOptSiblings(nsIContent* aParentContent);
 };
 
 /*
  * Options inside the select, contained within the list
  */
-class nsHTMLSelectOptionAccessible : public HyperTextAccessibleWrap
+class HTMLSelectOptionAccessible : public HyperTextAccessibleWrap
 {
 public:
-  enum { eAction_Select = 0 };  
-  
-  nsHTMLSelectOptionAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsHTMLSelectOptionAccessible() {}
+  enum { eAction_Select = 0 };
+
+  HTMLSelectOptionAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~HTMLSelectOptionAccessible() {}
 
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);
@@ -84,7 +88,7 @@ public:
 
   // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual PRUint64 NativeInteractiveState() const;
 
@@ -98,10 +102,10 @@ public:
   virtual Accessible* ContainerWidget() const;
 
 private:
-  
+
   /**
    * Return a select accessible the option belongs to if any.
-   */ 
+   */
   Accessible* GetSelect() const
   {
     if (mParent && mParent->IsListControl()) {
@@ -129,19 +133,19 @@ private:
 /*
  * Opt Groups inside the select, contained within the list
  */
-class nsHTMLSelectOptGroupAccessible : public nsHTMLSelectOptionAccessible
+class HTMLSelectOptGroupAccessible : public HTMLSelectOptionAccessible
 {
 public:
 
-  nsHTMLSelectOptGroupAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsHTMLSelectOptGroupAccessible() {}
+  HTMLSelectOptGroupAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~HTMLSelectOptGroupAccessible() {}
 
   // nsIAccessible
-  NS_IMETHOD DoAction(PRUint8 index);  
+  NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeInteractiveState() const;
 
   // ActionAccessible
@@ -156,18 +160,18 @@ protected:
 /**  Finally, the Combobox widgets                         */
 /** ------------------------------------------------------ */
 
-class nsHTMLComboboxListAccessible;
+class HTMLComboboxListAccessible;
 
 /*
  * A class the represents the HTML Combobox widget.
  */
-class nsHTMLComboboxAccessible : public AccessibleWrap
+class HTMLComboboxAccessible : public AccessibleWrap
 {
 public:
   enum { eAction_Click = 0 };
 
-  nsHTMLComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsHTMLComboboxAccessible() {}
+  HTMLComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~HTMLComboboxAccessible() {}
 
   // nsIAccessible
   NS_IMETHOD DoAction(PRUint8 index);
@@ -179,7 +183,7 @@ public:
   // Accessible
   virtual void Description(nsString& aDescription);
   virtual void Value(nsString& aValue);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual void InvalidateChildren();
 
@@ -203,7 +207,7 @@ protected:
   Accessible* SelectedOption() const;
 
 private:
-  nsRefPtr<nsHTMLComboboxListAccessible> mListAccessible;
+  nsRefPtr<HTMLComboboxListAccessible> mListAccessible;
 };
 
 /*
@@ -211,21 +215,20 @@ private:
  * of the drop down button inside the Select. This is the window
  * that is made visible when the button is pressed.
  */
-class nsHTMLComboboxListAccessible : public nsHTMLSelectListAccessible
+class HTMLComboboxListAccessible : public HTMLSelectListAccessible
 {
 public:
 
-  nsHTMLComboboxListAccessible(nsIAccessible* aParent, 
-                               nsIContent* aContent, 
-                               DocAccessible* aDoc);
-  virtual ~nsHTMLComboboxListAccessible() {}
+  HTMLComboboxListAccessible(nsIAccessible* aParent, nsIContent* aContent,
+                             DocAccessible* aDoc);
+  virtual ~HTMLComboboxListAccessible() {}
 
   // nsAccessNode
   virtual nsIFrame* GetFrame() const;
   virtual bool IsPrimaryForNode() const;
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
 
@@ -233,5 +236,8 @@ public:
   virtual bool IsActiveWidget() const;
   virtual bool AreItemsOperable() const;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

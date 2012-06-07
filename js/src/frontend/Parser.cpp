@@ -6656,6 +6656,7 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
 
         matched = tokenStream.matchToken(TOK_RB, TSF_OPERAND);
         if (!matched) {
+            bool spread = false;
             for (index = 0; ; index++) {
                 if (index == StackSpace::ARGS_LENGTH_MAX) {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARRAY_INIT_TOO_BIG);
@@ -6674,12 +6675,24 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                     pn2 = NullaryNode::create(PNK_COMMA, this);
                     pn->pn_xflags |= PNX_HOLEY | PNX_NONCONST;
                 } else {
+                    ParseNode *spreadNode = NULL;
+                    if (tt == TOK_TRIPLEDOT) {
+                        spread = true;
+                        spreadNode = UnaryNode::create(PNK_SPREAD, this);
+                        if (!spreadNode)
+                            return NULL;
+                        tokenStream.getToken();
+                    }
                     pn2 = assignExpr();
                     if (pn2) {
                         if (foldConstants && !FoldConstants(context, pn2, this))
                             return NULL;
-                        if (!pn2->isConstant())
+                        if (!pn2->isConstant() || spreadNode)
                             pn->pn_xflags |= PNX_NONCONST;
+                        if (spreadNode) {
+                            spreadNode->pn_kid = pn2;
+                            pn2 = spreadNode;
+                        }
                     }
                 }
                 if (!pn2)
@@ -6732,10 +6745,10 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
              * immediate operand, the local slot's stack index from fp->spbase.
              *
              * The array comprehension iteration step, array.push(i * j) in
-             * the example above, is done by <i * j>; JSOP_ARRAYCOMP <array>,
+             * the example above, is done by <i * j>; JSOP_ARRAYPUSH <array>,
              * where <array> is the index of array's stack slot.
              */
-            if (index == 0 && pn->pn_count != 0 && tokenStream.matchToken(TOK_FOR)) {
+            if (index == 0 && !spread && pn->pn_count != 0 && tokenStream.matchToken(TOK_FOR)) {
                 ParseNode *pnexp, *pntop;
 
                 /* Relabel pn as an array comprehension node. */

@@ -1034,9 +1034,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
   // We need to generate a new change list entry for every frame whose style
   // comparision returns one of these hints. These hints don't automatically
   // update all their descendant frames.
-  aMinChange = NS_SubtractHint(aMinChange, nsChangeHint_UpdateTransformLayer);
-  aMinChange = NS_SubtractHint(aMinChange, nsChangeHint_UpdateOpacityLayer);
-  aMinChange = NS_SubtractHint(aMinChange, nsChangeHint_UpdateOverflow);
+  aMinChange = NS_SubtractHint(aMinChange, nsChangeHint_NonInherited_Hints);
 
   // It would be nice if we could make stronger assertions here; they
   // would let us simplify the ?: expressions below setting |content|

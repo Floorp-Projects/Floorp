@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <body>
+    <style>
+      #a { border: 1px solid black; width: 100px; height: 100px; }
+      #b { border: 1px solid blue; width: 50px; height: 50px; }
+      div { position: absolute; }
+    </style>
+    <script>
+      document.addEventListener("MozReftestInvalidate", function() {
+        var a = document.querySelector("#a");
+        var b = document.querySelector("#b");
+        a.style.left = "10px";
+        b.style.left = "20px";
+        document.documentElement.removeAttribute("class");
+      }, false);
+    </script>
+    <div id="a">
+      <div id="b">
+      </div>
+    </div>
+  </body>
+</html>
