@@ -97,6 +97,9 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, SnapshotIterator &iter)
 {
     uint32 exprStackSlots = iter.slots() - fp->script()->nfixed;
 
+#ifdef TRACK_SNAPSHOTS
+    iter.spewBailingFrom();
+#endif
     IonSpew(IonSpew_Bailouts, " expr stack slots %u, is function frame %u",
             exprStackSlots, fp->isFunctionFrame());
 
@@ -199,6 +202,14 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
             it.script()->filename, it.script()->lineno, (void *) it.ionScript());
     IonSpew(IonSpew_Bailouts, " reading from snapshot offset %u size %u",
             it.snapshotOffset(), it.ionScript()->snapshotsSize());
+#ifdef DEBUG
+    // Use count is reset after invalidation. Log use count on bailouts to
+    // determine if we have a critical sequence of bailout.
+    if (it.script()->ion == it.ionScript()) {
+        IonSpew(IonSpew_Bailouts, " Current script use count is %u",
+                it.script()->getUseCount());
+    }
+#endif
 
     SnapshotIterator iter(it);
 

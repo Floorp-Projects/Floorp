@@ -1163,10 +1163,9 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
           case IonFrame_JS:
           {
             JS_ASSERT(it.isScripted());
-            IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p", frameno, it.fp());
-            IonSpew(IonSpew_Invalidate, "   token: %p", it.jsFrame()->calleeToken());
-            IonSpew(IonSpew_Invalidate, "   script: %p; %s:%d", it.script(),
-                    it.script()->filename, it.script()->lineno);
+            IonSpew(IonSpew_Invalidate, "#%d JS frame @ %p, %s:%d (fun: %p, script: %p, pc %p)",
+                    frameno, it.fp(), it.script()->filename, it.script()->lineno,
+                    it.maybeCallee(), it.script(), it.returnAddressToFp());
             break;
           }
           case IonFrame_Rectifier:
@@ -1182,7 +1181,6 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
             IonSpew(IonSpew_Invalidate, "#%d entry frame @ %p", frameno, it.fp());
             break;
         }
-        IonSpew(IonSpew_Invalidate, "   return address %p", it.returnAddress());
 #endif
 
         if (!it.isScripted())
@@ -1218,11 +1216,8 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
         // instructions after the call) in to capture an appropriate
         // snapshot after the call occurs.
 
-        IonSpew(IonSpew_Invalidate, "   ! requires invalidation");
         IonScript *ionScript = script->ion;
         ionScript->incref();
-        IonSpew(IonSpew_Invalidate, "   ionScript %p ref %u", (void *) ionScript,
-                unsigned(ionScript->refcount()));
 
         const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
         IonCode *ionCode = ionScript->method();
@@ -1251,8 +1246,8 @@ InvalidateActivation(FreeOp *fop, uint8 *ionTop, bool invalidateAll)
         CodeLocationLabel osiPatchPoint = SafepointReader::InvalidationPatchPoint(ionScript, si);
         CodeLocationLabel invalidateEpilogue(ionCode, ionScript->invalidateEpilogueOffset());
 
-        IonSpew(IonSpew_Invalidate, "   -> patching address to call instruction %p",
-                (void *) osiPatchPoint.raw());
+        IonSpew(IonSpew_Invalidate, "   ! Invalidate ionScript %p (ref %u) -> patching osipoint %p",
+                ionScript, ionScript->refcount(), (void *) osiPatchPoint.raw());
         Assembler::patchWrite_NearCall(osiPatchPoint, invalidateEpilogue);
     }
 
@@ -1273,11 +1268,16 @@ ion::InvalidateAll(FreeOp *fop, JSCompartment *c)
 void
 ion::Invalidate(FreeOp *fop, const Vector<types::RecompileInfo> &invalid, bool resetUses)
 {
+    IonSpew(IonSpew_Invalidate, "Start invalidation.");
     // Add an invalidation reference to all invalidated IonScripts to indicate
     // to the traversal which frames have been invalidated.
     for (size_t i = 0; i < invalid.length(); i++) {
-        if (invalid[i].script->hasIonScript())
-            invalid[i].script->ion->incref();
+        JSScript *script = invalid[i].script;
+        if (script->hasIonScript()) {
+            IonSpew(IonSpew_Invalidate, " Invalidate %s:%u, IonScript %p",
+                    script->filename, script->lineno, script->ion);
+            script->ion->incref();
+        }
     }
 
     for (IonActivationIterator iter(fop->runtime()); iter.more(); ++iter)
