@@ -51,6 +51,9 @@
 #include "LayerManagerOGL.h"
 #include "GLContext.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
 
 #include "mozilla/Preferences.h"
 
@@ -1905,6 +1908,9 @@ nsChildView::EndSecureKeyboardInput()
 already_AddRefed<Accessible>
 nsChildView::GetDocumentAccessible()
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return nsnull;
+
   Accessible *docAccessible = nsnull;
   if (mAccessible) {
     CallQueryReferent(mAccessible.get(), &docAccessible);
