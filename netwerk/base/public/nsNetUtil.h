@@ -44,7 +44,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsIFileProtocolHandler.h"
 #include "nsIStringStream.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIFileStreams.h"
 #include "nsIFileURL.h"
 #include "nsIProtocolProxyService.h"
@@ -1119,7 +1119,7 @@ NS_NewPostDataStream(nsIInputStream  **result,
     nsresult rv;
 
     if (isFile) {
-        nsCOMPtr<nsILocalFile> file;
+        nsCOMPtr<nsIFile> file;
         nsCOMPtr<nsIInputStream> fileStream;
 
         rv = NS_NewNativeLocalFile(data, false, getter_AddRefs(file));

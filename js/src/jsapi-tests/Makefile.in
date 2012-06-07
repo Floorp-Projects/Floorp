@@ -18,7 +18,9 @@ CPPSRCS = \
   selfTest.cpp \
   testAddPropertyPropcache.cpp \
   testArgumentsObject.cpp \
+  testBindCallable.cpp \
   testBug604087.cpp \
+  testCallNonGenericMethodOnProxy.cpp \
   testChromeBuffer.cpp \
   testClassGetter.cpp \
   testCloneScript.cpp \
@@ -61,7 +63,6 @@ CPPSRCS = \
   testValueABI.cpp \
   testVersion.cpp \
   testXDR.cpp \
-  testBindCallable.cpp \
   $(NULL)
 
 CSRCS = \

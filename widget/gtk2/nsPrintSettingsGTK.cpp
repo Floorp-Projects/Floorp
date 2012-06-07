@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPrintSettingsGTK.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsNetUtil.h"
 #include <stdlib.h>
 
@@ -415,7 +415,7 @@ nsPrintSettingsGTK::SetToFileName(const PRUnichar * aToFileName)
     gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_FILE_FORMAT, "pdf");
   }
 
-  nsCOMPtr<nsILocalFile> file;
+  nsCOMPtr<nsIFile> file;
   nsresult rv = NS_NewLocalFile(nsDependentString(aToFileName), true,
                                 getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);

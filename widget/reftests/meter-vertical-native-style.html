@@ -1,0 +1,13 @@
+<html>
+  <style>
+    meter { -moz-orient: vertical; }
+  </style>
+  <body>
+<!-- For some reasons, the ref has a small offset when there are spaces between meters.
+     Given that we don't want to test -moz-transform and even a perfect match but just
+     the general rendering, we are going to keep this dirty test.
+     It's very similar to the non-vertical test with a difference, for the RTL: RTL
+     does not apply for vertical meters. -->
+<meter vaue=0></meter><meter min=0 low=0 high=10 optimum=10 max=10 value=10></meter><meter min=0 low=9 high=10 optimum=8 max=10 value=10></meter><meter min=0 low=8 high=9 optimum=0 max=10 value=10></meter><meter min=0 low=3 high=4 optimum=4 max=10 value=5></meter><meter min=0 low=9 high=10 optimum=10 max=10 value=5></meter><meter value=0.5 dir=rtl></meter>
+  </body>
+</html>

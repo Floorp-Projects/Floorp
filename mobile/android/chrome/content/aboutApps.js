@@ -49,6 +49,16 @@ function onLoad(aEvent) {
   AppsUI.uninstall = contextmenus.add(gStrings.GetStringFromName("appsContext.uninstall"), contextmenus.SelectorContext("div[mozApp]"),
     function(aTarget) {
       aTarget.app.uninstall();
+
+      let manifest = aTarget.manifest;
+      gChromeWin.sendMessageToJava({
+        gecko: {
+          type: "Shortcut:Remove",
+          title: manifest.name,
+          url: manifest.fullLaunchPath(),
+          shortcutType: "webapp"
+        }
+      });
     });
 }
 

@@ -2159,7 +2159,7 @@ nsP12Runnable::Run()
     return NS_OK;  //User canceled.  It'd be nice if they couldn't, 
                    //but oh well.
 
-  nsCOMPtr<nsILocalFile> localFile;
+  nsCOMPtr<nsIFile> localFile;
   rv = filePicker->GetFile(getter_AddRefs(localFile));
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;

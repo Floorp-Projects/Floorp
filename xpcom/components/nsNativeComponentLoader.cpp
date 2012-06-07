@@ -31,7 +31,7 @@
 #include "nsThreadUtils.h"
 #include "nsTraceRefcntImpl.h"
 
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -105,7 +105,7 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
         NS_ERROR("Binary components cannot be loaded from JARs");
         return NULL;
     }
-    nsCOMPtr<nsILocalFile> file = aFile.GetBaseFile();
+    nsCOMPtr<nsIFile> file = aFile.GetBaseFile();
     nsresult rv;
 
     if (!NS_IsMainThread()) {

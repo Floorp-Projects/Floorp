@@ -32,7 +32,7 @@
 
 #include "nsICommandLine.h"
 #include "nsILocaleService.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"

@@ -12,7 +12,7 @@
 #include "nsCRT.h"
 #include "nsICertificateDialogs.h"
 #include "nsNSSCertTrust.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsPKCS12Blob.h"
 #include "nsPK11TokenDB.h"
 #include "nsOCSPResponder.h"
@@ -1103,7 +1103,7 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
 
 NS_IMETHODIMP 
 nsNSSCertificateDB::ImportCertsFromFile(nsISupports *aToken, 
-                                        nsILocalFile *aFile,
+                                        nsIFile *aFile,
                                         PRUint32 aType)
 {
   NS_ENSURE_ARG(aFile);
@@ -1170,7 +1170,7 @@ nsNSSCertificateDB::ImportCertsFromFile(nsISupports *aToken,
 
 NS_IMETHODIMP 
 nsNSSCertificateDB::ImportPKCS12File(nsISupports *aToken, 
-                                     nsILocalFile *aFile)
+                                     nsIFile *aFile)
 {
   NS_ENSURE_ARG(aFile);
   nsPKCS12Blob blob;
@@ -1183,7 +1183,7 @@ nsNSSCertificateDB::ImportPKCS12File(nsISupports *aToken,
 
 NS_IMETHODIMP 
 nsNSSCertificateDB::ExportPKCS12File(nsISupports     *aToken, 
-                                     nsILocalFile     *aFile,
+                                     nsIFile          *aFile,
                                      PRUint32          count,
                                      nsIX509Cert     **certs)
                                      //const PRUnichar **aCertNames)

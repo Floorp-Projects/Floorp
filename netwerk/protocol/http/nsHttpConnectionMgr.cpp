@@ -1587,19 +1587,31 @@ nsHttpConnectionMgr::DispatchAbstractTransaction(nsConnectionEntry *ent,
 
     /* Use pipeline datastructure even if connection does not currently qualify
        to pipeline this transaction because a different pipeline-eligible
-       transaction might be placed on the active connection */
+       transaction might be placed on the active connection. Make an exception
+       for CLASS_SOLO as that connection will never pipeline until it goes
+       quiescent */
 
-    nsRefPtr<nsHttpPipeline> pipeline;
-    nsresult rv = BuildPipeline(ent, aTrans, getter_AddRefs(pipeline));
-    if (!NS_SUCCEEDED(rv))
-        return rv;
+    nsRefPtr<nsAHttpTransaction> transaction;
+    nsresult rv;
+    if (conn->Classification() != nsAHttpTransaction::CLASS_SOLO) {
+        LOG(("   using pipeline datastructure.\n"));
+        nsRefPtr<nsHttpPipeline> pipeline;
+        rv = BuildPipeline(ent, aTrans, getter_AddRefs(pipeline));
+        if (!NS_SUCCEEDED(rv))
+            return rv;
+        transaction = pipeline;
+    }
+    else {
+        LOG(("   not using pipeline datastructure due to class solo.\n"));
+        transaction = aTrans;
+    }
 
     nsRefPtr<nsConnectionHandle> handle = new nsConnectionHandle(conn);
 
     // give the transaction the indirect reference to the connection.
-    pipeline->SetConnection(handle);
+    transaction->SetConnection(handle);
 
-    rv = conn->Activate(pipeline, caps, priority);
+    rv = conn->Activate(transaction, caps, priority);
     if (NS_FAILED(rv)) {
         LOG(("  conn->Activate failed [rv=%x]\n", rv));
         ent->mActiveConns.RemoveElement(conn);
@@ -1610,13 +1622,13 @@ nsHttpConnectionMgr::DispatchAbstractTransaction(nsConnectionEntry *ent,
 
         // sever back references to connection, and do so without triggering
         // a call to ReclaimConnection ;-)
-        pipeline->SetConnection(nsnull);
+        transaction->SetConnection(nsnull);
         NS_RELEASE(handle->mConn);
         // destroy the connection
         NS_RELEASE(conn);
     }
 
-    // As pipeline goes out of scope it will drop the last refernece to the
+    // As transaction goes out of scope it will drop the last refernece to the
     // pipeline if activation failed, in which case this will destroy
     // the pipeline, which will cause each the transactions owned by the 
     // pipeline to be restarted.
@@ -2643,8 +2655,10 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         // if we are using ssl and no other transactions are waiting right now,
         // then form a null transaction to drive the SSL handshake to
         // completion. Afterwards the connection will be 100% ready for the next
-        // transaction to use it.
-        if (mEnt->mConnInfo->UsingSSL() && !mEnt->mPendingQ.Length()) {
+        // transaction to use it. Make an exception for SSL over HTTP proxy as the
+        // NullHttpTransaction does not know how to drive CONNECT.
+        if (mEnt->mConnInfo->UsingSSL() && !mEnt->mPendingQ.Length() &&
+            !mEnt->mConnInfo->UsingHttpProxy()) {
             LOG(("nsHalfOpenSocket::OnOutputStreamReady null transaction will "
                  "be used to finish SSL handshake on conn %p\n", conn.get()));
             nsRefPtr<NullHttpTransaction>  trans =

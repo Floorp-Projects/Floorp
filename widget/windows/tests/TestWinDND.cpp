@@ -9,7 +9,7 @@
 
 #include "TestHarness.h"
 #include "nsIArray.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIFileURL.h"
@@ -48,7 +48,7 @@ nsresult CheckValidHDROP(STGMEDIUM* pSTG)
     if (s.IsEmpty())
       break;
     nsresult rv;
-    nsCOMPtr<nsILocalFile> localFile(
+    nsCOMPtr<nsIFile> localFile(
                do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
     rv = localFile->InitWithPath(s);
     if (NS_FAILED(rv)) {

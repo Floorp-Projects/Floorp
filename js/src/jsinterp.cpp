@@ -1019,6 +1019,27 @@ TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const FrameRe
 #endif
 }
 
+class SpreadContext {
+public:
+    JSContext *cx;
+    RootedObject arr;
+    int32_t *count;
+    SpreadContext(JSContext *cx, JSObject *array, int32_t *count)
+        : cx(cx), arr(cx, array), count(count) {
+        JS_ASSERT(array->isArray());
+    }
+    SpreadContext(SpreadContext &scx)
+         : cx(cx), arr(scx.cx, scx.arr), count(scx.count) {}
+    bool operator ()(JSContext *cx, const Value &item) {
+        if (*count == INT32_MAX) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_SPREAD_TOO_LARGE);
+            return false;
+        }
+        return arr->defineElement(cx, (*count)++, item, NULL, NULL, JSPROP_ENUMERATE);
+    }
+};
+
 JS_NEVER_INLINE bool
 js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 {
@@ -1438,7 +1459,6 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 /* No-ops for ease of decompilation. */
 ADD_EMPTY_CASE(JSOP_NOP)
-ADD_EMPTY_CASE(JSOP_UNUSED0)
 ADD_EMPTY_CASE(JSOP_UNUSED1)
 ADD_EMPTY_CASE(JSOP_UNUSED2)
 ADD_EMPTY_CASE(JSOP_UNUSED3)
@@ -1448,7 +1468,6 @@ ADD_EMPTY_CASE(JSOP_UNUSED10)
 ADD_EMPTY_CASE(JSOP_UNUSED11)
 ADD_EMPTY_CASE(JSOP_UNUSED12)
 ADD_EMPTY_CASE(JSOP_UNUSED13)
-ADD_EMPTY_CASE(JSOP_UNUSED14)
 ADD_EMPTY_CASE(JSOP_UNUSED15)
 ADD_EMPTY_CASE(JSOP_UNUSED17)
 ADD_EMPTY_CASE(JSOP_UNUSED18)
@@ -2329,11 +2348,11 @@ BEGIN_CASE(JSOP_GETXPROP)
 BEGIN_CASE(JSOP_LENGTH)
 BEGIN_CASE(JSOP_CALLPROP)
 {
-    Value rval;
-    if (!GetPropertyOperation(cx, regs.pc, regs.sp[-1], &rval))
+    RootedValue rval(cx);
+    if (!GetPropertyOperation(cx, regs.pc, regs.sp[-1], rval.address()))
         goto error;
 
-    TypeScript::Monitor(cx, script, regs.pc, rval);
+    TypeScript::Monitor(cx, script, regs.pc, rval.reference());
 
     regs.sp[-1] = rval;
     assertSameCompartment(cx, regs.sp[-1]);
@@ -3156,6 +3175,7 @@ BEGIN_CASE(JSOP_INITPROP)
 }
 END_CASE(JSOP_INITPROP);
 
+BEGIN_CASE(JSOP_INITELEM_INC)
 BEGIN_CASE(JSOP_INITELEM)
 {
     /* Pop the element's value into rval. */
@@ -3190,10 +3210,33 @@ BEGIN_CASE(JSOP_INITELEM)
         if (!obj->defineGeneric(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             goto error;
     }
-    regs.sp -= 2;
+    if (op == JSOP_INITELEM_INC) {
+        JS_ASSERT(obj->isArray());
+        if (JSID_TO_INT(id) == INT32_MAX) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_SPREAD_TOO_LARGE);
+            return false;
+        }
+        regs.sp[-2].setInt32(JSID_TO_INT(id) + 1);
+        regs.sp--;
+    } else {
+        regs.sp -= 2;
+    }
 }
 END_CASE(JSOP_INITELEM)
 
+BEGIN_CASE(JSOP_SPREAD)
+{
+    int32_t count = regs.sp[-2].toInt32();
+    SpreadContext scx(cx, &regs.sp[-3].toObject(), &count);
+    const Value iterable = regs.sp[-1];
+    if (!ForOf(cx, iterable, scx))
+        goto error;
+    regs.sp[-2].setInt32(count);
+    regs.sp--;
+}
+END_CASE(JSOP_SPREAD)
+    
 {
 BEGIN_CASE(JSOP_GOSUB)
     PUSH_BOOLEAN(false);

@@ -7,7 +7,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIAtom.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
@@ -87,7 +87,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsAppFileLocationProvider, nsIDirectoryServiceProv
 NS_IMETHODIMP
 nsAppFileLocationProvider::GetFile(const char *prop, bool *persistent, nsIFile **_retval)
 {
-    nsCOMPtr<nsILocalFile>  localFile;
+    nsCOMPtr<nsIFile>  localFile;
     nsresult rv = NS_ERROR_FAILURE;
 
     NS_ENSURE_ARG(prop);
@@ -246,7 +246,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, bool *persistent, nsIFile *
 }
 
 
-NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalFile)
+NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsIFile **aLocalFile)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
     nsresult rv;
@@ -275,11 +275,7 @@ NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalF
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsILocalFile> lfile = do_QueryInterface (aFile);
-    if (!lfile)
-        return NS_ERROR_FAILURE;
-
-    NS_IF_ADDREF(*aLocalFile = lfile);
+    NS_IF_ADDREF(*aLocalFile = aFile);
     return NS_OK;
 }
 
@@ -291,13 +287,13 @@ NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalF
 // WIN    : <Application Data folder on user's machine>\Mozilla
 // Mac    : :Documents:Mozilla:
 //----------------------------------------------------------------------------------------
-NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFile, bool aLocal)
+NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsIFile **aLocalFile, bool aLocal)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
 
     nsresult rv;
     bool exists;
-    nsCOMPtr<nsILocalFile> localDir;
+    nsCOMPtr<nsIFile> localDir;
 
 #if defined(MOZ_WIDGET_COCOA)
     FSRef fsRef;
@@ -313,14 +309,14 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+    rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsIFile), getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
 #elif defined(XP_WIN)
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     const char* prop = aLocal ? NS_WIN_LOCAL_APPDATA_DIR : NS_WIN_APPDATA_DIR;
-    rv = directoryService->Get(prop, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+    rv = directoryService->Get(prop, NS_GET_IID(nsIFile), getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
 #elif defined(XP_UNIX)
     rv = NS_NewNativeLocalFile(nsDependentCString(PR_GetEnv("HOME")), true, getter_AddRefs(localDir));
@@ -352,12 +348,12 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
 // WIN    : <Application Data folder on user's machine>\Mozilla\Profiles
 // Mac    : :Documents:Mozilla:Profiles:
 //----------------------------------------------------------------------------------------
-NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLocalFile, bool aLocal)
+NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsIFile **aLocalFile, bool aLocal)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
 
     nsresult rv;
-    nsCOMPtr<nsILocalFile> localDir;
+    nsCOMPtr<nsIFile> localDir;
 
     rv = GetProductDirectory(getter_AddRefs(localDir), aLocal);
     if (NS_FAILED(rv)) return rv;
@@ -485,7 +481,7 @@ class nsPathsDirectoryEnumerator : public nsAppDirectoryEnumerator
 
                 do { ++mEndPath; } while (*mEndPath && *mEndPath != PATH_SEPARATOR);
 
-                nsCOMPtr<nsILocalFile> localFile;
+                nsCOMPtr<nsIFile> localFile;
                 NS_NewNativeLocalFile(Substring(pathVar, mEndPath),
                                       true,
                                       getter_AddRefs(localFile));

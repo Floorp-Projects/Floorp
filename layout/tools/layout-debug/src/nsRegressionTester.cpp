@@ -28,7 +28,7 @@
 #include "nsIFrameUtil.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
 
@@ -49,7 +49,7 @@ NS_IMPL_ISUPPORTS1(nsRegressionTester, nsILayoutRegressionTester)
 
 NS_IMETHODIMP
 nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump,
-                                   nsILocalFile *aDestFile,
+                                   nsIFile *aDestFile,
                                    PRUint32 aFlagsMask, PRInt32 *aResult)
 {
   NS_ENSURE_ARG(aWindowToDump);
@@ -110,7 +110,7 @@ nsRegressionTester::DumpFrameModel(nsIDOMWindow *aWindowToDump,
 }
 
 NS_IMETHODIMP
-nsRegressionTester::CompareFrameModels(nsILocalFile *aBaseFile, nsILocalFile *aVerFile, PRUint32 aFlags, PRInt32 *aResult) 
+nsRegressionTester::CompareFrameModels(nsIFile *aBaseFile, nsIFile *aVerFile, PRUint32 aFlags, PRInt32 *aResult) 
 {
   NS_ENSURE_ARG(aBaseFile);
   NS_ENSURE_ARG(aVerFile);

@@ -1275,7 +1275,8 @@ nsSVGSVGElement::
   SVGPreserveAspectRatio* pAROverridePtr = new SVGPreserveAspectRatio(aPAR);
   nsresult rv = SetProperty(nsGkAtoms::overridePreserveAspectRatio,
                             pAROverridePtr,
-                            ReleasePreserveAspectRatioPropertyValue);
+                            ReleasePreserveAspectRatioPropertyValue,
+                            true);
   NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
                     "Setting override value when it's already set...?"); 
 
@@ -1387,7 +1388,8 @@ nsSVGSVGElement::SetViewBoxProperty(const nsSVGViewBoxRect& aViewBox)
   nsSVGViewBoxRect* pViewBoxOverridePtr = new nsSVGViewBoxRect(aViewBox);
   nsresult rv = SetProperty(nsGkAtoms::viewBox,
                             pViewBoxOverridePtr,
-                            ReleaseViewBoxPropertyValue);
+                            ReleaseViewBoxPropertyValue,
+                            true);
   NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
                     "Setting override value when it's already set...?"); 
 
@@ -1420,7 +1422,9 @@ nsSVGSVGElement::ClearViewBoxProperty()
 bool
 nsSVGSVGElement::SetZoomAndPanProperty(PRUint16 aValue)
 {
-  nsresult rv = SetProperty(nsGkAtoms::zoomAndPan, reinterpret_cast<void*>(aValue));
+  nsresult rv = SetProperty(nsGkAtoms::zoomAndPan,
+                            reinterpret_cast<void*>(aValue),
+                            nsnull, true);
   NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
                     "Setting override value when it's already set...?"); 
 

@@ -1467,6 +1467,11 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             stack[stackDepth - 1].v = code->poppedValues[1];
             break;
 
+          case JSOP_SPREAD:
+          case JSOP_INITELEM_INC:
+            stack[stackDepth - 2].v = code->poppedValues[2];
+            break;
+
           case JSOP_INITELEM:
             stack[stackDepth - 1].v = code->poppedValues[2];
             break;

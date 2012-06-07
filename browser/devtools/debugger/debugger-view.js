@@ -159,6 +159,31 @@ ScriptsView.prototype = {
 
   /**
    * Checks whether the script with the specified URL is among the scripts
+   * known to the debugger (ignoring the query & reference).
+   *
+   * @param string aUrl
+   *        The script URL.
+   * @return boolean
+   */
+  containsIgnoringQuery: function DVS_containsIgnoringQuery(aUrl) {
+    let sourceScripts = DebuggerController.SourceScripts;
+    aUrl = sourceScripts.trimUrlQuery(aUrl);
+
+    if (this._tmpScripts.some(function(element) {
+      return sourceScripts.trimUrlQuery(element.script.url) == aUrl;
+    })) {
+      return true;
+    }
+    if (this.scriptLocations.some(function(url) {
+      return sourceScripts.trimUrlQuery(url) == aUrl;
+    })) {
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Checks whether the script with the specified URL is among the scripts
    * known to the debugger and shown in the list.
    *
    * @param string aUrl
@@ -346,7 +371,7 @@ ScriptsView.prototype = {
     aLabel, aScript, aIndex, aSelectIfEmptyFlag)
   {
     // Make sure we don't duplicate anything.
-    if (aLabel == "null" || this.containsLabel(aLabel)) {
+    if (aLabel == "null" || this.containsLabel(aLabel) || this.contains(aScript.url)) {
       return;
     }
 

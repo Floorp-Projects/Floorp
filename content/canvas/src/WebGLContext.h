@@ -483,7 +483,7 @@ public:
                                                            nsIDOMWebGLRenderingContext)
 
     nsINode* GetParentObject() {
-        return HTMLCanvasElement();
+        return mCanvasElement;
     }
 
     virtual JSObject* WrapObject(JSContext *cx, JSObject *scope,
@@ -494,11 +494,6 @@ public:
     NS_DECL_NSITIMERCALLBACK
 
     // nsICanvasRenderingContextInternal
-    NS_IMETHOD SetCanvasElement(nsHTMLCanvasElement* aParentCanvas);
-    nsHTMLCanvasElement* HTMLCanvasElement() const {
-        return static_cast<nsHTMLCanvasElement*>(mCanvasElement.get());
-    }
-
     NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
     NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, PRInt32 width, PRInt32 height)
         { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -619,7 +614,7 @@ public:
 
     // WebIDL WebGLRenderingContext API
     nsHTMLCanvasElement* GetCanvas() const {
-        return HTMLCanvasElement();
+        return mCanvasElement;
     }
     WebGLsizei GetDrawingBufferWidth() const {
         if (!IsContextStable())
@@ -1106,8 +1101,6 @@ protected:
     static CheckedUint32 RoundedToNextMultipleOf(CheckedUint32 x, CheckedUint32 y) {
         return ((x + y - 1) / y) * y;
     }
-
-    nsCOMPtr<nsIDOMHTMLCanvasElement> mCanvasElement;
 
     nsRefPtr<gl::GLContext> gl;
 

@@ -610,7 +610,7 @@ NS_IMETHODIMP AsyncWriteIconToDisk::Run()
                                   getter_AddRefs(iconStream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILocalFile> icoFile
+  nsCOMPtr<nsIFile> icoFile
     = do_CreateInstance("@mozilla.org/file/local;1");
   NS_ENSURE_TRUE(icoFile, NS_ERROR_FAILURE);
   rv = icoFile->InitWithPath(mIconPath);
@@ -655,7 +655,7 @@ AsyncDeleteIconFromDisk::AsyncDeleteIconFromDisk(const nsAString &aIconPath)
 NS_IMETHODIMP AsyncDeleteIconFromDisk::Run()
 {
   // Construct the parent path of the passed in path
-  nsCOMPtr<nsILocalFile> icoFile = do_CreateInstance("@mozilla.org/file/local;1");
+  nsCOMPtr<nsIFile> icoFile = do_CreateInstance("@mozilla.org/file/local;1");
   NS_ENSURE_TRUE(icoFile, NS_ERROR_FAILURE);
   nsresult rv = icoFile->InitWithPath(mIconPath);
   NS_ENSURE_SUCCESS(rv, rv);

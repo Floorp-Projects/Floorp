@@ -31,7 +31,7 @@
 #include "mozilla/dom/CrashReporterParent.h"
 #endif
 #include "nsNPAPIPlugin.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 #ifdef XP_WIN
 #include "mozilla/widget/AudioSession.h"

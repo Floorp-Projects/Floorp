@@ -62,12 +62,12 @@ class RemoteOptions(MochitestOptions):
 
         self.add_option("--http-port", action = "store",
                     type = "string", dest = "httpPort",
-                    help = "ip address where the remote web server is hosted at")
+                    help = "http port of the remote web server")
         defaults["httpPort"] = automation.DEFAULT_HTTP_PORT
 
         self.add_option("--ssl-port", action = "store",
                     type = "string", dest = "sslPort",
-                    help = "ip address where the remote web server is hosted at")
+                    help = "ssl port of the remote web server")
         defaults["sslPort"] = automation.DEFAULT_SSL_PORT
 
         self.add_option("--pidfile", action = "store",
@@ -421,6 +421,7 @@ def main():
         fHandle.write("profile=%s\n" % (mochitest.remoteProfile))
         fHandle.write("logfile=%s\n" % (options.remoteLogFile))
         fHandle.write("host=http://mochi.test:8888/tests\n")
+        fHandle.write("rawhost=http://%s:%s/tests\n" % (options.remoteWebServer, options.httpPort))
         fHandle.close()
         deviceRoot = dm.getDeviceRoot()
       

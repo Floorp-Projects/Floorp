@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
     {
         strcpy(lastslash, "\\xulrunner");
 
-        nsCOMPtr<nsILocalFile> xuldir;
+        nsCOMPtr<nsIFile> xuldir;
         rv = NS_NewNativeLocalFile(nsCString(path), false,
                                    getter_AddRefs(xuldir));
         if (NS_FAILED(rv))
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 
         *lastslash = '\0';
 
-        nsCOMPtr<nsILocalFile> appdir;
+        nsCOMPtr<nsIFile> appdir;
         rv = NS_NewNativeLocalFile(nsCString(path), false,
                                    getter_AddRefs(appdir));
         if (NS_FAILED(rv))
@@ -746,7 +746,6 @@ nsresult StartupProfile()
       return rv;
 
 	appDataDir->AppendNative(nsCString("winembed"));
-	nsCOMPtr<nsILocalFile> localAppDataDir(do_QueryInterface(appDataDir));
 
 	nsCOMPtr<nsProfileDirServiceProvider> locProvider;
     NS_NewProfileDirServiceProvider(true, getter_AddRefs(locProvider));
@@ -757,7 +756,7 @@ nsresult StartupProfile()
     if (NS_FAILED(rv))
       return rv;
     
-	return locProvider->SetProfileDir(localAppDataDir);
+	return locProvider->SetProfileDir(appDataDir);
 
 }
 

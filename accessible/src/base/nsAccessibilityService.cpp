@@ -14,17 +14,17 @@
 #endif
 #include "DocAccessible-inl.h"
 #include "FocusManager.h"
+#include "HTMLCanvasAccessible.h"
 #include "HTMLElementAccessibles.h"
 #include "HTMLImageMapAccessible.h"
 #include "HTMLLinkAccessible.h"
 #include "HTMLListAccessible.h"
+#include "HTMLSelectAccessible.h"
 #include "HyperTextAccessibleWrap.h"
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
 #include "nsIAccessibleProvider.h"
-#include "nsHTMLCanvasAccessible.h"
-#include "nsHTMLSelectAccessible.h"
 #include "nsHTMLTableAccessibleWrap.h"
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
@@ -226,7 +226,7 @@ nsAccessibilityService::CreateHTMLComboboxAccessible(nsIContent* aContent,
                                                      nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLComboboxAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLComboboxAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -236,7 +236,7 @@ nsAccessibilityService::CreateHTMLCanvasAccessible(nsIContent* aContent,
                                                    nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLCanvasAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLCanvasAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -286,7 +286,7 @@ nsAccessibilityService::CreateHTMLListboxAccessible(nsIContent* aContent,
                                                     nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new nsHTMLSelectListAccessible(aContent, GetDocAccessible(aPresShell));
+    new HTMLSelectListAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -649,7 +649,10 @@ nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
   if (!node)
     return NS_ERROR_INVALID_ARG;
 
-  NS_IF_ADDREF(*aAccessible = GetAccessible(node, nsnull));
+  DocAccessible* document = GetDocAccessible(node->OwnerDoc());
+  if (document)
+    NS_IF_ADDREF(*aAccessible = document->GetAccessible(node));
+
   return NS_OK;
 }
 
@@ -877,16 +880,6 @@ nsAccessibilityService::SetLogging(const nsACString& aModules)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService public
-
-Accessible*
-nsAccessibilityService::GetAccessible(nsINode* aNode, nsIPresShell* aPresShell)
-{
-  NS_PRECONDITION(aNode, "Getting an accessible for null node! Crash.");
-
-  // XXX handle the presshell
-  DocAccessible* document = GetDocAccessible(aNode->OwnerDoc());
-  return document ? document->GetAccessible(aNode) : nsnull;
-}
 
 static bool HasRelatedContent(nsIContent *aContent)
 {
@@ -1604,13 +1597,13 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
   }
 
   if (tag == nsGkAtoms::option) {
-    Accessible* accessible = new nsHTMLSelectOptionAccessible(aContent, aDoc);
+    Accessible* accessible = new HTMLSelectOptionAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
 
   if (tag == nsGkAtoms::optgroup) {
-    Accessible* accessible = new nsHTMLSelectOptGroupAccessible(aContent, aDoc);
+    Accessible* accessible = new HTMLSelectOptGroupAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }

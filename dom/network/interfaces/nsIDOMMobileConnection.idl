@@ -8,7 +8,7 @@ interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
 interface nsIDOMMozMobileConnectionInfo;
 
-[scriptable, uuid(962298cd-3443-423e-9e47-f22e24ad850b)]
+[scriptable, builtinclass, uuid(962298cd-3443-423e-9e47-f22e24ad850b)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   /**

@@ -19,6 +19,7 @@
 #include "nsIComponentManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsProgressFrame.h"
+#include "nsMeterFrame.h"
 #include "nsMenuFrame.h"
 #include "mozilla/dom/Element.h"
 
@@ -247,6 +248,19 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
     }
   }
 
+  /**
+   * Meter bar appearance should be the same for the bar and the container
+   * frame. nsMeterFrame owns the logic and will tell us what we should do.
+   */
+  if (aWidgetType == NS_THEME_METERBAR_CHUNK ||
+      aWidgetType == NS_THEME_METERBAR) {
+    nsMeterFrame* meterFrame = do_QueryFrame(aWidgetType == NS_THEME_METERBAR_CHUNK
+                                       ? aFrame->GetParent() : aFrame);
+    if (meterFrame) {
+      return !meterFrame->ShouldUseNativeStyle();
+    }
+  }
+
   return (aWidgetType == NS_THEME_BUTTON ||
           aWidgetType == NS_THEME_TEXTFIELD ||
           aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
@@ -446,6 +460,13 @@ nsNativeTheme::IsVerticalProgress(nsIFrame* aFrame)
 {
   return aFrame &&
          aFrame->GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL;
+}
+
+bool
+nsNativeTheme::IsVerticalMeter(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(aFrame, "You have to pass a non-null aFrame");
+  return aFrame->GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL;
 }
 
 // menupopup:

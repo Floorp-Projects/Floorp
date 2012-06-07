@@ -50,7 +50,7 @@ public:
     NS_SCRIPTABLE NS_IMETHOD Init(nsIURI *aManifestURI, 
                                   nsIURI *aDocumentURI, 
                                   nsIDOMDocument *aDocument,
-                                  nsILocalFile *aCustomProfileDir);
+                                  nsIFile *aCustomProfileDir);
 
     NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
 

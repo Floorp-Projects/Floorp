@@ -248,6 +248,7 @@
 #include "nsIDOMHTMLMenuElement.h"
 #include "nsIDOMHTMLMenuItemElement.h"
 #include "nsIDOMHTMLMetaElement.h"
+#include "nsIDOMHTMLMeterElement.h"
 #include "nsIDOMHTMLModElement.h"
 #include "nsIDOMHTMLOListElement.h"
 #include "nsIDOMHTMLObjectElement.h"
@@ -320,6 +321,8 @@
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMMozBrowserFrame.h"
+#include "nsIDOMHTMLPropertiesCollection.h"
+#include "nsIDOMPropertyNodeList.h"
 
 #include "nsIDOMGetSVGDocument.h"
 #include "nsIDOMSVGAElement.h"
@@ -902,6 +905,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(HTMLMenuItemElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLMetaElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLMeterElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLModElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
@@ -2913,6 +2918,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLMetaElement, nsIDOMHTMLMetaElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLMetaElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(HTMLMeterElement, nsIDOMHTMLMeterElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLMeterElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -5555,10 +5565,17 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       NS_ASSERTION(frameWin->IsOuterWindow(), "GetChildFrame gave us an inner?");
 
       frameWin->EnsureInnerWindow();
+      JSObject *global = frameWin->GetGlobalJSObject();
+
+      // This null check fixes a hard-to-reproduce crash that occurs when we
+      // get here when we're mid-call to nsDocShell::Destroy. See bug 640904
+      // comment 105.
+      if (MOZ_UNLIKELY(!global))
+          return NS_ERROR_FAILURE;
 
       nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
       jsval v;
-      rv = WrapNative(cx, xpc_UnmarkGrayObject(frameWin->GetGlobalJSObject()),
+      rv = WrapNative(cx, xpc_UnmarkGrayObject(global),
                       frame, &NS_GET_IID(nsIDOMWindow), true, &v,
                       getter_AddRefs(holder));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -7453,7 +7470,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   // binding a name) a new undefined property that's not already
   // defined on our prototype chain. This way we can access this
   // expando w/o ever getting back into XPConnect.
-  if ((flags & JSRESOLVE_ASSIGNING) && !(flags & JSRESOLVE_WITH)) {
+  if (flags & JSRESOLVE_ASSIGNING) {
     JSObject *realObj;
     wrapper->GetJSObject(&realObj);
 

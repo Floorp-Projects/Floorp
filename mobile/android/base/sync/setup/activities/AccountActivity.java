@@ -12,19 +12,22 @@ import org.mozilla.gecko.sync.setup.Constants;
 import org.mozilla.gecko.sync.setup.InvalidSyncKeyException;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.SyncAccounts.SyncAccountParameters;
+import org.mozilla.gecko.sync.setup.auth.AccountAuthenticator;
+import org.mozilla.gecko.sync.setup.auth.AuthenticationResult;
 
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -33,14 +36,14 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 public class AccountActivity extends AccountAuthenticatorActivity {
-  private final static String LOG_TAG        = "AccountActivity";
+  private final static String LOG_TAG = "AccountActivity";
 
   private AccountManager      mAccountManager;
   private Context             mContext;
   private String              username;
   private String              password;
   private String              key;
-  private String              server;
+  private String              server = Constants.AUTH_NODE_DEFAULT;
 
   // UI elements.
   private EditText            serverInput;
@@ -49,6 +52,10 @@ public class AccountActivity extends AccountAuthenticatorActivity {
   private EditText            synckeyInput;
   private CheckBox            serverCheckbox;
   private Button              connectButton;
+  private Button              cancelButton;
+  private ProgressDialog      progressDialog;
+
+  private AccountAuthenticator accountAuthenticator;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -56,7 +63,7 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.sync_account);
     mContext = getApplicationContext();
-    Log.d(LOG_TAG, "AccountManager.get(" + mContext + ")");
+    Logger.debug(LOG_TAG, "AccountManager.get(" + mContext + ")");
     mAccountManager = AccountManager.get(mContext);
 
     // Set "screen on" flag.
@@ -78,18 +85,20 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     serverInput.addTextChangedListener(inputValidator);
 
     connectButton = (Button) findViewById(R.id.accountConnectButton);
+    cancelButton = (Button) findViewById(R.id.accountCancelButton);
     serverCheckbox = (CheckBox) findViewById(R.id.checkbox_server);
 
     serverCheckbox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
       @Override
       public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        Log.i(LOG_TAG, "Toggling checkbox: " + isChecked);
-        // Hack for pre-3.0 Android: can enter text into disabled EditText.
+        Logger.info(LOG_TAG, "Toggling checkbox: " + isChecked);
         if (!isChecked) { // Clear server input.
           serverInput.setVisibility(View.GONE);
+          findViewById(R.id.server_error).setVisibility(View.GONE);
           serverInput.setText("");
         } else {
           serverInput.setVisibility(View.VISIBLE);
+          serverInput.setEnabled(true);
         }
         // Activate connectButton if necessary.
         activateView(connectButton, validateInputs());
@@ -98,31 +107,49 @@ public class AccountActivity extends AccountAuthenticatorActivity {
   }
 
   @Override
-  public void onStart() {
-    super.onStart();
-    // Start with an empty form
-    usernameInput.setText("");
-    passwordInput.setText("");
-    synckeyInput.setText("");
-    passwordInput.setText("");
+  public void onResume() {
+    super.onResume();
+    clearCredentials();
+    usernameInput.requestFocus();
+    cancelButton.setOnClickListener(new OnClickListener() {
+
+      @Override
+      public void onClick(View v) {
+        cancelClickHandler(v);
+      }
+
+    });
   }
 
   public void cancelClickHandler(View target) {
     finish();
   }
 
+  public void cancelConnectHandler(View target) {
+    if (accountAuthenticator != null) {
+      accountAuthenticator.isCanceled = true;
+      accountAuthenticator = null;
+    }
+    displayVerifying(false);
+    activateView(connectButton, true);
+    clearCredentials();
+    usernameInput.requestFocus();
+  }
+
+  private void clearCredentials() {
+    // Only clear password. Re-typing the sync key or email is annoying.
+    passwordInput.setText("");
+  }
   /*
    * Get credentials on "Connect" and write to AccountManager, where it can be
    * accessed by Fennec and Sync Service.
    */
   public void connectClickHandler(View target) {
-    Log.d(LOG_TAG, "connectClickHandler for view " + target);
-    enableCredEntry(false);
+    Logger.debug(LOG_TAG, "connectClickHandler for view " + target);
     // Validate sync key format.
     try {
       key = ActivityUtils.validateSyncKey(synckeyInput.getText().toString());
     } catch (InvalidSyncKeyException e) {
-      enableCredEntry(true);
       // Toast: invalid sync key format.
       Toast toast = Toast.makeText(mContext, R.string.sync_new_recoverykey_status_incorrect, Toast.LENGTH_LONG);
       toast.show();
@@ -130,26 +157,42 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     }
     username = usernameInput.getText().toString().toLowerCase(Locale.US);
     password = passwordInput.getText().toString();
+    key      = synckeyInput.getText().toString();
+    server   = Constants.AUTH_NODE_DEFAULT;
+
     if (serverCheckbox.isChecked()) {
-      server = serverInput.getText().toString();
+      String userServer = serverInput.getText().toString();
+      if (userServer != null) {
+        userServer = userServer.trim();
+        if (userServer.length() != 0) {
+          if (!userServer.startsWith("https://") &&
+              !userServer.startsWith("http://")) {
+            // Assume HTTPS if not specified.
+            userServer = "https://" + userServer;
+            serverInput.setText(userServer);
+          }
+          server = userServer;
+        }
+      }
     }
 
-    // TODO : Authenticate with Sync Service, once implemented, with
-    // onAuthSuccess as callback
+    clearErrors();
+    displayVerifying(true);
+    cancelButton.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        cancelConnectHandler(v);
+        // Set cancel click handler to leave account setup.
+        cancelButton.setOnClickListener(new OnClickListener() {
+          public void onClick(View v) {
+            cancelClickHandler(v);
+          }
+        });
+      }
+    });
 
-    authCallback();
-  }
-
-  /* Helper UI functions */
-  private void enableCredEntry(boolean toEnable) {
-    usernameInput.setEnabled(toEnable);
-    passwordInput.setEnabled(toEnable);
-    synckeyInput.setEnabled(toEnable);
-    if (!toEnable) {
-      serverInput.setEnabled(toEnable);
-    } else {
-      serverInput.setEnabled(serverCheckbox.isChecked());
-    }
+    accountAuthenticator = new AccountAuthenticator(this);
+    accountAuthenticator.authenticate(server, username, password);
   }
 
   private TextWatcher makeInputValidator() {
@@ -185,13 +228,18 @@ public class AccountActivity extends AccountAuthenticatorActivity {
   /*
    * Callback that handles auth based on success/failure
    */
-  private void authCallback() {
-    // Create and add account to AccountManager
-    // TODO: only allow one account to be added?
-    final SyncAccountParameters syncAccount = new SyncAccountParameters(mContext, mAccountManager,
-        username, key, password, server);
+  public void authCallback(final AuthenticationResult result) {
+    displayVerifying(false);
+    if (result != AuthenticationResult.SUCCESS) {
+      Logger.debug(LOG_TAG, "displayFailure()");
+      displayFailure(result);
+      return;
+    }
+    // Successful authentication. Create and add account to AccountManager.
+    final SyncAccountParameters syncAccount = new SyncAccountParameters(
+        mContext, mAccountManager, username, key, password, server);
     final Account account = SyncAccounts.createSyncAccount(syncAccount);
-    final boolean result = (account != null);
+    final boolean accountResult = (account != null);
 
     final Intent intent = new Intent(); // The intent to return.
     intent.putExtra(AccountManager.KEY_ACCOUNT_NAME, syncAccount.username);
@@ -199,39 +247,77 @@ public class AccountActivity extends AccountAuthenticatorActivity {
     intent.putExtra(AccountManager.KEY_AUTHTOKEN, Constants.ACCOUNTTYPE_SYNC);
     setAccountAuthenticatorResult(intent.getExtras());
 
-    if (!result) {
+    if (!accountResult) {
       // Failed to add account!
       setResult(RESULT_CANCELED, intent);
       runOnUiThread(new Runnable() {
         @Override
         public void run() {
-          authFailure();
+          // Use default error.
+          // TODO: Display more accurate error (Account failed to be created).
+          Logger.debug(LOG_TAG, "displayFailure()");
+          displayFailure(result);
         }
       });
       return;
     }
 
-    // TODO: Currently, we do not actually authenticate username/pass against
-    // Moz sync server.
+    clearErrors();
+    if (intent != null) {
+      setAccountAuthenticatorResult(intent.getExtras());
+      setResult(RESULT_OK, intent);
 
-    // Successfully added account.
-    setResult(RESULT_OK, intent);
+      runOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          authSuccess();
+        }
+      });
+      return;
+    }
+  }
+
+  private void displayVerifying(final boolean isVerifying) {
+    if (isVerifying) {
+      progressDialog = ProgressDialog.show(AccountActivity.this, "", getString(R.string.sync_verifying_label), true);
+    } else {
+      progressDialog.dismiss();
+    }
+  }
+
+  private void displayFailure(final AuthenticationResult result) {
     runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        authSuccess();
+        switch (result) {
+        case FAILURE_USERNAME:
+          // No such username. Don't leak whether the username exists.
+        case FAILURE_PASSWORD:
+          findViewById(R.id.cred_error).setVisibility(View.VISIBLE);
+          usernameInput.requestFocus();
+          break;
+        case FAILURE_SERVER:
+          findViewById(R.id.server_error).setVisibility(View.VISIBLE);
+          serverInput.requestFocus();
+          break;
+        case FAILURE_OTHER:
+        default:
+          // Display default error screen.
+          Logger.debug(LOG_TAG, "displaying default failure.");
+          Intent intent = new Intent(mContext, SetupFailureActivity.class);
+          intent.setFlags(Constants.FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION);
+          startActivity(intent);
+        }
       }
     });
+    return;
   }
 
-  private void authFailure() {
-    enableCredEntry(true);
-    Intent intent = new Intent(mContext, SetupFailureActivity.class);
-    intent.setFlags(Constants.FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION);
-    startActivity(intent);
-  }
-
-  private void authSuccess() {
+  /**
+   * Feedback to user of account setup success.
+   */
+  public void authSuccess() {
+    // Display feedback of successful account setup.
     Intent intent = new Intent(mContext, SetupSuccessActivity.class);
     intent.setFlags(Constants.FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION);
     startActivity(intent);
@@ -241,5 +327,15 @@ public class AccountActivity extends AccountAuthenticatorActivity {
   private void activateView(View view, boolean toActivate) {
     view.setEnabled(toActivate);
     view.setClickable(toActivate);
+  }
+
+  private void clearErrors() {
+    runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        findViewById(R.id.cred_error).setVisibility(View.GONE);
+        findViewById(R.id.server_error).setVisibility(View.GONE);
+      }
+    });
   }
 }

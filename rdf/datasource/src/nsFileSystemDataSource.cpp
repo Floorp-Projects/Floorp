@@ -982,9 +982,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, bool allowHidden,
         return(rv);
 
     // ensure that we DO NOT resolve aliases
-    nsCOMPtr<nsILocalFile>  aDirLocal = do_QueryInterface(aDir);
-    if (aDirLocal)
-        aDirLocal->SetFollowLinks(false);
+    aDir->SetFollowLinks(false);
 
     nsCOMPtr<nsISimpleEnumerator>   dirContents;
     if (NS_FAILED(rv = aDir->GetDirectoryEntries(getter_AddRefs(dirContents))))
@@ -1094,9 +1092,7 @@ FileSystemDataSource::GetLastMod(nsIRDFResource *source, nsIRDFDate **aResult)
         return(NS_ERROR_UNEXPECTED);
 
     // ensure that we DO NOT resolve aliases
-    nsCOMPtr<nsILocalFile>  aFileLocal = do_QueryInterface(aFile);
-    if (aFileLocal)
-        aFileLocal->SetFollowLinks(false);
+    aFile->SetFollowLinks(false);
 
     PRInt64 lastModDate;
     if (NS_FAILED(rv = aFile->GetLastModifiedTime(&lastModDate)))
@@ -1143,9 +1139,7 @@ FileSystemDataSource::GetFileSize(nsIRDFResource *source, nsIRDFInt **aResult)
         return(NS_ERROR_UNEXPECTED);
 
     // ensure that we DO NOT resolve aliases
-    nsCOMPtr<nsILocalFile>  aFileLocal = do_QueryInterface(aFile);
-    if (aFileLocal)
-        aFileLocal->SetFollowLinks(false);
+    aFile->SetFollowLinks(false);
 
     // don't do anything with directories
     bool    isDir = false;
@@ -1196,9 +1190,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
         return(NS_ERROR_UNEXPECTED);
 
     // ensure that we DO NOT resolve aliases
-    nsCOMPtr<nsILocalFile>  aFileLocal = do_QueryInterface(aFile);
-    if (aFileLocal)
-        aFileLocal->SetFollowLinks(false);
+    aFile->SetFollowLinks(false);
 
     nsAutoString name;
     if (NS_FAILED(rv = aFile->GetLeafName(name)))

@@ -1,7 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sw=4 et tw=99 ft=cpp:
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -114,7 +112,7 @@ extern "C" {
     */
 #  define MOZ_CRASH() \
      do { \
-       *((volatile int *) NULL) = 123; \
+       *((volatile int*) NULL) = 123; \
        exit(3); \
      } while (0)
 #elif defined(ANDROID)
@@ -126,30 +124,21 @@ extern "C" {
 #  ifdef __cplusplus
 #    define MOZ_CRASH() \
        do { \
-         *((volatile int *) NULL) = 123; \
+         *((volatile int*) NULL) = 123; \
          ::abort(); \
        } while (0)
 #  else
 #    define MOZ_CRASH() \
        do { \
-         *((volatile int *) NULL) = 123; \
+         *((volatile int*) NULL) = 123; \
          abort(); \
        } while (0)
 #  endif
-#elif defined(__APPLE__)
-   /*
-    * On Mac OS X, Breakpad ignores signals. Only real Mach exceptions are
-    * trapped.
-    */
-#  define MOZ_CRASH() \
-     do { \
-       *((volatile int *) NULL) = 123; \
-       raise(SIGABRT);  /* In case above statement gets nixed by the optimizer. */ \
-     } while (0)
 #else
 #  define MOZ_CRASH() \
      do { \
-       raise(SIGABRT);  /* To continue from here in GDB: "signal 0". */ \
+       *((volatile int*) NULL) = 123; \
+       raise(SIGABRT);  /* In case above statement gets nixed by the optimizer. */ \
      } while (0)
 #endif
 
@@ -281,7 +270,7 @@ MOZ_OutputAssertMessage(const char* s, const char *file, int ln)
 #    define MOZ_NOT_REACHED_MARKER() __builtin_unreachable()
 #  endif
 #elif defined(_MSC_VER)
-# define MOZ_NOT_REACHED_MARKER() __assume(0)
+#  define MOZ_NOT_REACHED_MARKER() __assume(0)
 #endif
 
 /*

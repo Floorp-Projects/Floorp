@@ -13,7 +13,7 @@
 #include "nsIURL.h"
 #include "nsIFileStreams.h"
 #include "nsILineInputStream.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIProcess.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -192,7 +192,7 @@ nsOSHelperAppService::GetFileLocation(const char* aPrefName,
       // natural way to do the charset conversion is by just initing
       // an nsIFile with the native path and asking it for the Unicode
       // version.
-      nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+      nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = file->InitWithNativePath(nsDependentCString(prefValue));
@@ -270,7 +270,7 @@ nsOSHelperAppService::CreateInputStream(const nsAString& aFilename,
   LOG(("-- CreateInputStream"));
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
   rv = file->InitWithPath(aFilename);
@@ -900,7 +900,7 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
   nsresult rv = NS_OK;
   bool more = false;
   
-  nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  nsCOMPtr<nsIFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
   rv = file->InitWithPath(aFilename);
@@ -1594,7 +1594,7 @@ nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsASt
   }
 
 
-  nsCOMPtr<nsILocalFile> application;
+  nsCOMPtr<nsIFile> application;
   rv = NS_NewNativeLocalFile(nsDependentCString(applicationName.get()),
                              false,
                              getter_AddRefs(application));

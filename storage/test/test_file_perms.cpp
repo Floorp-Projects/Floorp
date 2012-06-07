@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "storage_test_harness.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 /**
  * This file tests that the file permissions of the sqlite files match what
@@ -19,11 +19,8 @@ test_file_perms()
   nsCOMPtr<nsIFile> dbFile;
   do_check_success(db->GetDatabaseFile(getter_AddRefs(dbFile)));
 
-  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(dbFile);
-  do_check_true(localFile);
-
   PRUint32 perms = 0;
-  do_check_success(localFile->GetPermissions(&perms));
+  do_check_success(dbFile->GetPermissions(&perms));
 
   // This reflexts the permissions defined by SQLITE_DEFAULT_FILE_PERMISSIONS in
   // db/sqlite3/src/Makefile.in and must be kept in sync with that

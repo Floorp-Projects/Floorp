@@ -160,12 +160,8 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
 	!StringEndsWith(leafName, NS_LITERAL_CSTRING(".desktop")))
         return NS_ERROR_NOT_AVAILABLE;
 
-    nsCOMPtr<nsILocalFile> file(do_QueryInterface(aFile, &rv));
-    if (NS_FAILED(rv))
-        return rv;
-
     nsINIParser parser;
-    rv = parser.Init(file);
+    rv = parser.Init(aFile);
     if (NS_FAILED(rv))
         return rv;
 

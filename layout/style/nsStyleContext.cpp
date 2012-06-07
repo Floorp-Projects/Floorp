@@ -396,6 +396,11 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
              this##struct_->CalcDifference(*other##struct_),                  \
              nsStyle##struct_::MaxDifference()),                              \
              "CalcDifference() returned bigger hint than MaxDifference()");   \
+        NS_ASSERTION(nsStyle##struct_::ForceCompare() ||                      \
+             NS_IsHintSubset(nsStyle##struct_::MaxDifference(),               \
+                             nsChangeHint(~nsChangeHint_NonInherited_Hints)), \
+             "Structs that can return non-inherited hints must return true "  \
+             "from ForceCompare");                                            \
         NS_UpdateHint(hint, this##struct_->CalcDifference(*other##struct_));  \
       }                                                                       \
     }                                                                         \
@@ -431,6 +436,10 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(SVGReset);
   DO_STRUCT_DIFFERENCE(SVG);
 
+  maxHint = nsChangeHint(NS_STYLE_HINT_REFLOW |
+      nsChangeHint_UpdateOverflow | nsChangeHint_RecomputePosition);
+  DO_STRUCT_DIFFERENCE(Position);
+
   // At this point, we know that the worst kind of damage we could do is
   // a reflow.
   maxHint = NS_STYLE_HINT_REFLOW;
@@ -442,7 +451,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   DO_STRUCT_DIFFERENCE(Margin);
   DO_STRUCT_DIFFERENCE(Padding);
   DO_STRUCT_DIFFERENCE(Border);
-  DO_STRUCT_DIFFERENCE(Position);
   DO_STRUCT_DIFFERENCE(TextReset);
 
   // Most backgrounds only require a re-render (i.e., a VISUAL change), but
