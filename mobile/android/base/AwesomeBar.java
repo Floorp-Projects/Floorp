@@ -61,12 +61,12 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
 
     static final String URL_KEY = "url";
     static final String CURRENT_URL_KEY = "currenturl";
-    static final String TYPE_KEY = "type";
+    static final String TARGET_KEY = "target";
     static final String SEARCH_KEY = "search";
     static final String USER_ENTERED_KEY = "user_entered";
-    static enum Type { ADD, EDIT };
+    static enum Target { NEW_TAB, CURRENT_TAB };
 
-    private String mType;
+    private String mTarget;
     private AwesomeBarTabs mAwesomeTabs;
     private AwesomeBarEditText mText;
     private ImageButton mGoButton;
@@ -126,7 +126,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
 
         Intent intent = getIntent();
         String currentUrl = intent.getStringExtra(CURRENT_URL_KEY);
-        mType = intent.getStringExtra(TYPE_KEY);
+        mTarget = intent.getStringExtra(TARGET_KEY);
         if (currentUrl != null) {
             mText.setText(currentUrl);
             mText.selectAll();
@@ -368,7 +368,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     private void openUrlAndFinish(String url) {
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
-        resultIntent.putExtra(TYPE_KEY, mType);
+        resultIntent.putExtra(TARGET_KEY, mTarget);
         finishWithResult(resultIntent);
     }
 
@@ -384,7 +384,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
 
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
-        resultIntent.putExtra(TYPE_KEY, mType);
+        resultIntent.putExtra(TARGET_KEY, mTarget);
         resultIntent.putExtra(USER_ENTERED_KEY, true);
         finishWithResult(resultIntent);
     }
@@ -392,7 +392,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     private void openSearchAndFinish(String url, String engine) {
         Intent resultIntent = new Intent();
         resultIntent.putExtra(URL_KEY, url);
-        resultIntent.putExtra(TYPE_KEY, mType);
+        resultIntent.putExtra(TARGET_KEY, mTarget);
         resultIntent.putExtra(SEARCH_KEY, engine);
         finishWithResult(resultIntent);
     }
@@ -589,7 +589,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                     break;
                 }
 
-                GeckoApp.mAppContext.loadUrl(url, AwesomeBar.Type.ADD);
+                GeckoApp.mAppContext.loadUrl(url, AwesomeBar.Target.NEW_TAB);
                 Toast.makeText(this, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
                 break;
             }
