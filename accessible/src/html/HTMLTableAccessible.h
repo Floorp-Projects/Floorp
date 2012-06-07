@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsHTMLTableAccessible_H_
-#define _nsHTMLTableAccessible_H_
+#ifndef mozilla_a11y_HTMLTableAccessible_h__
+#define mozilla_a11y_HTMLTableAccessible_h__
 
 #include "HyperTextAccessibleWrap.h"
 #include "nsIAccessibleTable.h"
@@ -14,14 +14,17 @@
 class nsITableLayout;
 class nsITableCellLayout;
 
+namespace mozilla {
+namespace a11y {
+
 /**
  * HTML table cell accessible (html:td).
  */
-class nsHTMLTableCellAccessible : public HyperTextAccessibleWrap,
-                                  public nsIAccessibleTableCell
+class HTMLTableCellAccessible : public HyperTextAccessibleWrap,
+                                public nsIAccessibleTableCell
 {
 public:
-  nsHTMLTableCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  HTMLTableCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -30,7 +33,7 @@ public:
   NS_DECL_NSIACCESSIBLETABLECELL
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual PRUint64 NativeInteractiveState() const;
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
@@ -62,14 +65,13 @@ protected:
 /**
  * HTML table row/column header accessible (html:th or html:td@scope).
  */
-class nsHTMLTableHeaderCellAccessible : public nsHTMLTableCellAccessible
+class HTMLTableHeaderCellAccessible : public HTMLTableCellAccessible
 {
 public:
-  nsHTMLTableHeaderCellAccessible(nsIContent* aContent,
-                                  DocAccessible* aDoc);
+  HTMLTableHeaderCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
 };
 
 
@@ -82,13 +84,13 @@ public:
 // data vs. layout heuristic
 // #define SHOW_LAYOUT_HEURISTIC
 
-class nsHTMLTableAccessible : public AccessibleWrap,
-                              public xpcAccessibleTable,
-                              public nsIAccessibleTable,
-                              public mozilla::a11y::TableAccessible
+class HTMLTableAccessible : public AccessibleWrap,
+                            public xpcAccessibleTable,
+                            public nsIAccessibleTable,
+                            public TableAccessible
 {
 public:
-  nsHTMLTableAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  HTMLTableAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -115,12 +117,12 @@ public:
   virtual mozilla::a11y::TableAccessible* AsTable() { return this; }
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   virtual Relation RelationByType(PRUint32 aRelationType);
 
-  // nsHTMLTableAccessible
+  // HTMLTableAccessible
 
   /**
    * Retun cell element at the given row and column index.
@@ -138,7 +140,7 @@ protected:
   // Accessible
   virtual void CacheChildren();
 
-  // nsHTMLTableAccessible
+  // HTMLTableAccessible
 
   /**
    * Add row or column to selection.
@@ -179,18 +181,21 @@ protected:
 /**
  * HTML caption accessible (html:caption).
  */
-class nsHTMLCaptionAccessible : public HyperTextAccessibleWrap
+class HTMLCaptionAccessible : public HyperTextAccessibleWrap
 {
 public:
-  nsHTMLCaptionAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+  HTMLCaptionAccessible(nsIContent* aContent, DocAccessible* aDoc) :
     HyperTextAccessibleWrap(aContent, aDoc) { }
-  virtual ~nsHTMLCaptionAccessible() { }
+  virtual ~HTMLCaptionAccessible() { }
 
   // nsIAccessible
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual Relation RelationByType(PRUint32 aRelationType);
 };
 
-#endif  
+} // namespace a11y
+} // namespace mozilla
+
+#endif

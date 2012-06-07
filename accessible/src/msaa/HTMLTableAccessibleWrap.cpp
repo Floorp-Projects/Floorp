@@ -5,39 +5,41 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsHTMLTableAccessibleWrap.h"
+#include "HTMLTableAccessibleWrap.h"
+
+using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTableAccessibleWrap
+// HTMLTableAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableAccessibleWrap,
-                             nsHTMLTableAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableAccessibleWrap,
+                             HTMLTableAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(nsHTMLTableAccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(HTMLTableAccessibleWrap,
                          AccessibleWrap,
                          CAccessibleTable)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTableCellAccessibleWrap
+// HTMLTableCellAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableCellAccessibleWrap,
-                             nsHTMLTableCellAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableCellAccessibleWrap,
+                             HTMLTableCellAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(nsHTMLTableCellAccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(HTMLTableCellAccessibleWrap,
                          HyperTextAccessibleWrap,
                          CAccessibleTableCell)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTMLTableCellAccessibleWrap
+// HTMLTableCellAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTableHeaderCellAccessibleWrap,
-                             nsHTMLTableHeaderCellAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLTableHeaderCellAccessibleWrap,
+                             HTMLTableHeaderCellAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(nsHTMLTableHeaderCellAccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(HTMLTableHeaderCellAccessibleWrap,
                          HyperTextAccessibleWrap,
                          CAccessibleTableCell)
