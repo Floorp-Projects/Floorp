@@ -237,6 +237,7 @@ static void _PR_InitializeRecycledThread(PRThread *thread)
     PR_ASSERT(thread->dumpArg == 0 && thread->dump == 0);
     PR_ASSERT(thread->errorString == 0 && thread->errorStringSize == 0);
     PR_ASSERT(thread->errorStringLength == 0);
+    PR_ASSERT(thread->name == 0);
 
     /* Reset data members in thread structure */
     thread->errorCode = thread->osErrorCode = 0;
@@ -1579,6 +1580,37 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thread,
         thread->priority = newPri;
         _PR_MD_SET_PRIORITY(&(thread->md), newPri);
     } else _PR_SetThreadPriority(thread, newPri);
+}
+
+PR_IMPLEMENT(PRStatus) PR_SetCurrentThreadName(const char *name)
+{
+    PRThread *thread;
+    size_t nameLen;
+
+    if (!name) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+
+    thread = PR_GetCurrentThread();
+    if (!thread)
+        return PR_FAILURE;
+
+    PR_Free(thread->name);
+    nameLen = strlen(name) + 1;
+    thread->name = (char *)PR_Malloc(nameLen);
+    if (!thread->name)
+        return PR_FAILURE;
+    memcpy(thread->name, name, nameLen);
+    _PR_MD_SET_CURRENT_THREAD_NAME(thread->name);
+    return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(const char *) PR_GetThreadName(const PRThread *thread)
+{
+    if (!thread)
+        return NULL;
+    return thread->name;
 }
 
 
