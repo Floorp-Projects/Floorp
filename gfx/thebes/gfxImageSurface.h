@@ -13,6 +13,12 @@
 
 class gfxSubimageSurface;
 
+namespace mozilla {
+namespace gfx {
+class SourceSurface;
+}
+}
+
 /**
  * A raw image buffer. The format can be set in the constructor. Its main
  * purpose is for storing read-only images and using it as a source surface,
@@ -68,6 +74,12 @@ public:
 
     /* Fast copy from another image surface; returns TRUE if successful, FALSE otherwise */
     bool CopyFrom (gfxImageSurface *other);
+
+    /**
+     * Fast copy from a source surface; returns TRUE if successful, FALSE otherwise
+     * Assumes that the format of this surface is compatable with aSurface
+     */
+    bool CopyFrom (mozilla::gfx::SourceSurface *aSurface);
 
     /* return new Subimage with pointing to original image starting from aRect.pos
      * and size of aRect.size. New subimage keeping current image reference
