@@ -28,10 +28,7 @@ var expectedMethods = ['navigator.mozApps.QueryInterface',
                        'navigator.mozApps.getSelf',
                        'navigator.mozApps.install',
                        'navigator.mozApps.mgmt.QueryInterface',
-                       'navigator.mozApps.mgmt.addEventListener',
-                       'navigator.mozApps.mgmt.dispatchEvent',
-                       'navigator.mozApps.mgmt.getAll',
-                       'navigator.mozApps.mgmt.removeEventListener'];
+                       'navigator.mozApps.mgmt.getAll'];
 var actualMethods = [];
 
 actualMethods = actualMethods.concat(iterateMethods("navigator.mozApps.", navigator.mozApps, ['setApplicationChooser', 'setRepoOrigin', 'setMockResponse']));

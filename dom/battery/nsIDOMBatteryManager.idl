@@ -6,7 +6,7 @@
 
 interface nsIDOMEventListener;
 
-[scriptable, uuid(41e88f87-42cb-4db1-8724-f5456a16c410)]
+[scriptable, builtinclass, uuid(41e88f87-42cb-4db1-8724-f5456a16c410)]
 interface nsIDOMMozBatteryManager : nsIDOMEventTarget
 {
   readonly attribute double     level;
