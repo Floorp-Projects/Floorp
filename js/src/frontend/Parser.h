@@ -50,9 +50,11 @@ struct Parser : private AutoGCRooter
     /* Perform constant-folding; must be true when interfacing with the emitter. */
     const bool          foldConstants:1;
 
+  private:
     /* Script can optimize name references based on scope chain. */
     const bool          compileAndGo:1;
 
+  public:
     Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
            const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion version,
            StackFrame *cfp, bool foldConstants, bool compileAndGo);
