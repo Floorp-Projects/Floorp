@@ -5789,7 +5789,7 @@ mjit::Compiler::jsop_bindname(PropertyName *name)
 void
 mjit::Compiler::jsop_aliasedArg(unsigned arg, bool get, bool poppedAfter)
 {
-    RegisterID reg = frame.allocReg();
+    RegisterID reg = frame.allocReg(Registers::SavedRegs).reg();
     masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfArgsObj()), reg);
     size_t dataOff = ArgumentsObject::getDataSlotOffset();
     masm.loadPrivate(Address(reg, dataOff), reg);
