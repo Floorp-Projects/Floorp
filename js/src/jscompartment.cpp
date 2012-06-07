@@ -431,7 +431,7 @@ JSCompartment::markTypes(JSTracer *trc)
      * compartment. These can be referred to directly by type sets, which we
      * cannot modify while code which depends on these type sets is active.
      */
-    JS_ASSERT(activeAnalysis || gcPreserveCode);
+    JS_ASSERT(activeAnalysis || isPreservingCode());
 
     for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
@@ -459,16 +459,13 @@ JSCompartment::discardJitCode(FreeOp *fop)
 
     /*
      * Kick all frames on the stack into the interpreter, and release all JIT
-     * code in the compartment unless gcPreserveCode is set, in which case
+     * code in the compartment unless code is being preserved, in which case
      * purge all caches in the JIT scripts. Even if we are not releasing all
      * JIT code, we still need to release code for scripts which are in the
      * middle of a native or getter stub call, as these stubs will have been
      * redirected to the interpoline.
      */
     mjit::ClearAllFrames(this);
-# ifdef JS_ION
-    ion::InvalidateAll(fop, this);
-# endif
 
     if (isPreservingCode()) {
         for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
@@ -488,6 +485,10 @@ JSCompartment::discardJitCode(FreeOp *fop)
                 script->ion->purgeCaches();
         }
     } else {
+# ifdef JS_ION
+        /* Only mark OSI points if code is being discarded. */
+        ion::InvalidateAll(fop, this);
+# endif
         for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             mjit::ReleaseScriptCode(fop, script);
@@ -538,7 +539,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
     /* JIT code can hold references on RegExpShared, so sweep regexps after clearing code. */
     regExps.sweep(rt);
 
-    if (!activeAnalysis && !gcPreserveCode) {
+    if (!activeAnalysis && !isPreservingCode()) {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
 
         /*
