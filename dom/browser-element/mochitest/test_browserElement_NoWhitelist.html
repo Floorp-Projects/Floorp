@@ -6,7 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 <head>
   <title>Test for Bug 710231</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="browserFrameHelpers.js"></script>
+  <script type="application/javascript" src="browserElementTestHelpers.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  browserFrameHelpers.setEnabledPref(true);
-  browserFrameHelpers.setWhitelistPref(' http://foobar.com');
+  browserElementTestHelpers.setEnabledPref(true);
+  browserElementTestHelpers.setWhitelistPref(' http://foobar.com');
 
   var iframe = document.createElement('iframe');
   iframe.mozbrowser = true;
@@ -39,7 +39,7 @@ function runTest() {
     SimpleTest.finish();
   });
 
-  iframe.src = browserFrameHelpers.emptyPage1;
+  iframe.src = browserElementTestHelpers.emptyPage1;
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
