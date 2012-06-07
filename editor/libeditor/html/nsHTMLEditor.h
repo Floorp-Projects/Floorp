@@ -326,13 +326,6 @@ public:
                               bool aNoEmptyNodes);
   virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode);
 
-  /** returns the absolute position of the end points of aSelection
-    * in the document as a text stream.
-    */
-  nsresult GetTextSelectionOffsets(nsISelection *aSelection,
-                                   PRInt32 &aStartOffset, 
-                                   PRInt32 &aEndOffset);
-
   // Use this to assure that selection is set after attribute nodes when 
   //  trying to collapse selection at begining of a block node
   //  e.g., when setting at beginning of a table cell
