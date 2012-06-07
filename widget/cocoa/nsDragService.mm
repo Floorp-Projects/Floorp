@@ -426,7 +426,7 @@ nsDragService::GetData(nsITransferable* aTransferable, PRUint32 aItemIndex)
     // in is accomplished with a file path drag instead of the image data itself.
     /*
     if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||
-        flavorStr.EqualsLiteral(kGIFImageMime)) {
+        flavorStr.EqualsLiteral(kJPGImageMime) || flavorStr.EqualsLiteral(kGIFImageMime)) {
 
     }
     */

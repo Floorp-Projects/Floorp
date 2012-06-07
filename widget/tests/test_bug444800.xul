@@ -84,6 +84,7 @@ function runTests(aCBSvc)
 {
   runImageClipboardTests(aCBSvc, "image/png");
   runImageClipboardTests(aCBSvc, "image/jpg");
+  runImageClipboardTests(aCBSvc, "image/jpeg");
 
   SimpleTest.finish();
 }
