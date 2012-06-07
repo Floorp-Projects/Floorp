@@ -29,3 +29,8 @@ category JavaScript-navigator-property mozKeyboard @mozilla.org/b2g-keyboard;1
 component {9181eb7c-6f87-11e1-90b1-4f59d80dd2e5} DirectoryProvider.js
 contract @mozilla.org/browser/directory-provider;1 {9181eb7c-6f87-11e1-90b1-4f59d80dd2e5}
 category xpcom-directory-providers browser-directory-provider @mozilla.org/browser/directory-provider;1
+
+# ProcessGlobal.js
+component {1a94c87a-5ece-4d11-91e1-d29c29f21b28} ProcessGlobal.js
+contract @mozilla.org/b2g-process-global;1 {1a94c87a-5ece-4d11-91e1-d29c29f21b28}
+category app-startup ProcessGlobal service,@mozilla.org/b2g-process-global;1

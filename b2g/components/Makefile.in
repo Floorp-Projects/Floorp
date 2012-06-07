@@ -17,12 +17,13 @@ XPIDLSRCS = \
         $(NULL)
 
 EXTRA_PP_COMPONENTS = \
+        AlertsService.js \
         B2GComponents.manifest \
         CameraContent.js \
-        AlertsService.js \
         ContentPermissionPrompt.js \
-        MozKeyboard.js \
         DirectoryProvider.js \
+        MozKeyboard.js \
+        ProcessGlobal.js \
         $(NULL)
 
 ifdef MOZ_UPDATER
