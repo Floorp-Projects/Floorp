@@ -157,11 +157,16 @@ public class AwesomeBarTabs extends TabHost {
             }
 
             Integer bookmarkId = (Integer) historyItem.get(Combined.BOOKMARK_ID);
+            Integer display = (Integer) historyItem.get(Combined.DISPLAY);
 
             // The bookmark id will be 0 (null in database) when the url
-            // is not a bookmark.
-            int visibility = (bookmarkId == 0 ? View.GONE : View.VISIBLE);
+            // is not a bookmark. Reading list items are irrelevant in history
+            // tab. We should never show any sign or them.
+            int visibility = (bookmarkId != 0 && display != Combined.DISPLAY_READER ?
+                              View.VISIBLE : View.GONE);
+
             viewHolder.bookmarkIconView.setVisibility(visibility);
+            viewHolder.bookmarkIconView.setImageResource(R.drawable.ic_awesomebar_star);
 
             return convertView;
         }
@@ -481,6 +486,7 @@ public class AwesomeBarTabs extends TabHost {
             byte[] favicon = cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON));
             Integer bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID));
             Integer historyId = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
+            Integer display = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.DISPLAY));
 
             // Use the URL instead of an empty title for consistency with the normal URL
             // bar view - this is the equivalent of getDisplayTitle() in Tab.java
@@ -495,6 +501,7 @@ public class AwesomeBarTabs extends TabHost {
 
             historyItem.put(Combined.BOOKMARK_ID, bookmarkId);
             historyItem.put(Combined.HISTORY_ID, historyId);
+            historyItem.put(Combined.DISPLAY, display);
 
             return historyItem;
         }
@@ -1088,10 +1095,19 @@ public class AwesomeBarTabs extends TabHost {
         int bookmarkIdIndex = cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID);
         long id = cursor.getLong(bookmarkIdIndex);
 
+        int displayIndex = cursor.getColumnIndexOrThrow(Combined.DISPLAY);
+        int display = cursor.getInt(displayIndex);
+
         // The bookmark id will be 0 (null in database) when the url
         // is not a bookmark.
         int visibility = (id == 0 ? View.GONE : View.VISIBLE);
         bookmarkIconView.setVisibility(visibility);
+
+        if (display == Combined.DISPLAY_READER) {
+            bookmarkIconView.setImageResource(R.drawable.ic_awesomebar_reader);
+        } else {
+            bookmarkIconView.setImageResource(R.drawable.ic_awesomebar_star);
+        }
     }
 
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
