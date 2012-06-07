@@ -165,7 +165,6 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       break;
     }
     else if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
-             flavorStr.EqualsLiteral(kJPGImageMime) ||
              flavorStr.EqualsLiteral(kPNGImageMime) ||
              flavorStr.EqualsLiteral(kGIFImageMime)) {
       // Figure out if there's data on the pasteboard we can grab (sanity check)
@@ -180,8 +179,7 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
 
       // Figure out what type we're converting to
       CFStringRef outputType = NULL; 
-      if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
-          flavorStr.EqualsLiteral(kJPGImageMime))
+      if (flavorStr.EqualsLiteral(kJPEGImageMime))
         outputType = CFSTR("public.jpeg");
       else if (flavorStr.EqualsLiteral(kPNGImageMime))
         outputType = CFSTR("public.png");
@@ -341,7 +339,6 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, PRUint32 aLength,
         break;
       }
     } else if (!strcmp(aFlavorList[i], kJPEGImageMime) ||
-               !strcmp(aFlavorList[i], kJPGImageMime) ||
                !strcmp(aFlavorList[i], kPNGImageMime) ||
                !strcmp(aFlavorList[i], kGIFImageMime)) {
       NSString* availableType = [generalPBoard availableTypeFromArray:
@@ -413,8 +410,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       nsMemory::Free(data);
     }
     else if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||
-             flavorStr.EqualsLiteral(kJPGImageMime) || flavorStr.EqualsLiteral(kGIFImageMime) ||
-             flavorStr.EqualsLiteral(kNativeImageMime)) {
+             flavorStr.EqualsLiteral(kGIFImageMime) || flavorStr.EqualsLiteral(kNativeImageMime)) {
       PRUint32 dataSize = 0;
       nsCOMPtr<nsISupports> transferSupports;
       aTransferable->GetTransferData(flavorStr, getter_AddRefs(transferSupports), &dataSize);
