@@ -585,10 +585,14 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
 
         // principals and originPrincipals are set with xdr->initScriptPrincipals(script) below.
         // staticLevel is set below.
-        script = JSScript::Create(cx, !!(scriptBits & (1 << SavedCallerFun)),
-                                  /* principals = */ NULL, /* originPrincipals = */ NULL,
+        script = JSScript::Create(cx,
+                                  !!(scriptBits & (1 << SavedCallerFun)),
+                                  /* principals = */ NULL,
+                                  /* originPrincipals = */ NULL,
                                   /* compileAndGo = */ false,
-                                  !!(scriptBits & (1 << NoScriptRval)), version_,
+                                  !!(scriptBits & (1 << NoScriptRval)),
+                                  /* globalObject = */ NULL,
+                                  version_,
                                   /* staticLevel = */ 0);
         if (!script || !script->partiallyInit(cx, length, nsrcnotes, natoms, nobjects,
                                               nregexps, ntrynotes, nconsts, nClosedArgs,
@@ -1098,7 +1102,7 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 JSScript *
 JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
                  JSPrincipals *originPrincipals, bool compileAndGo, bool noScriptRval,
-                 JSVersion version, unsigned staticLevel)
+                 GlobalObject *globalObject, JSVersion version, unsigned staticLevel)
 {
     JSScript *script = js_NewGCScript(cx);
     if (!script)
@@ -1122,6 +1126,8 @@ JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
     script->compileAndGo = compileAndGo;
     script->noScriptRval = noScriptRval;
  
+    script->globalObject = globalObject;
+
     script->version = version;
     JS_ASSERT(script->getVersion() == version);     // assert that no overflow occurred
 
@@ -1362,7 +1368,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
     JSFunction *fun = NULL;
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
-        JS_ASSERT(!bce->needScriptGlobal);
 
         script->isGenerator = bce->sc->funIsGenerator();
 
@@ -1376,9 +1381,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         if (bce->sc->funIsHeavyweight())
             fun->flags |= JSFUN_HEAVYWEIGHT;
 
-        /*
-         * Mark functions which will only be executed once as singletons.
-         */
+        /* Mark functions which will only be executed once as singletons. */
         bool singleton =
             cx->typeInferenceEnabled() &&
             bce->parent &&
@@ -1388,15 +1391,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
             return false;
 
         fun->setScript(script);
-        script->globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
-
-    } else {
-        /*
-         * Initialize script->object, if necessary, so that the debugger has a
-         * valid holder object.
-         */
-        if (bce->needScriptGlobal)
-            script->globalObject = GetCurrentGlobal(cx);
     }
 
     /* Tell the debugger about this compiled script. */
@@ -1794,7 +1788,8 @@ js::CloneScript(JSContext *cx, HandleScript src)
 
     JSScript *dst = JSScript::Create(cx, src->savedCallerFun,
                                      cx->compartment->principals, src->originPrincipals,
-                                     src->compileAndGo, src->noScriptRval, src->getVersion(),
+                                     src->compileAndGo, src->noScriptRval,
+                                     /* globalObject = */ NULL, src->getVersion(),
                                      src->staticLevel);
     if (!dst) {
         Foreground::free_(data);
