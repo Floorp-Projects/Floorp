@@ -31,7 +31,6 @@
 #ifdef XP_WIN
       <preference id="browser.taskbar.previews.enable" name="browser.taskbar.previews.enable" type="bool"/>
 #endif
-      <preference id="browser.newtabpage.enabled" name="browser.newtabpage.enabled" type="bool"/>
     </preferences>
     
     <script type="application/javascript" src="chrome://browser/content/preferences/tabs.js"/>
@@ -64,9 +63,6 @@
                 accesskey="&showTabsInTaskbar.accesskey;"
                 preference="browser.taskbar.previews.enable"/>
 #endif
-      <checkbox id="showNewTabPage" label="&showNewTabPage.label;"
-                accesskey="&showNewTabPage.accesskey;"
-                preference="browser.newtabpage.enabled"/>
     </vbox>
 
   </prefpane>
