@@ -2473,7 +2473,7 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 bool
 nsGlobalWindow::DialogOpenAttempted()
 {
-  nsGlobalWindow *topWindow = GetTop();
+  nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
     NS_ERROR("DialogOpenAttempted() called without a top window?");
 
@@ -2507,7 +2507,7 @@ nsGlobalWindow::DialogOpenAttempted()
 bool
 nsGlobalWindow::AreDialogsBlocked()
 {
-  nsGlobalWindow *topWindow = GetTop();
+  nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
     NS_ASSERTION(!mDocShell, "AreDialogsBlocked() called without a top window?");
 
@@ -2558,7 +2558,7 @@ nsGlobalWindow::ConfirmDialogAllowed()
 void
 nsGlobalWindow::PreventFurtherDialogs()
 {
-  nsGlobalWindow *topWindow = GetTop();
+  nsGlobalWindow *topWindow = GetScriptableTop();
   if (!topWindow) {
     NS_ERROR("PreventFurtherDialogs() called without a top window?");
 
@@ -6543,7 +6543,9 @@ nsGlobalWindow::ReallyCloseWindow()
 nsIDOMWindow *
 nsGlobalWindow::EnterModalState()
 {
-  nsGlobalWindow* topWin = GetTop();
+  // GetScriptableTop, not GetTop, so that EnterModalState works properly with
+  // <iframe mozbrowser>.
+  nsGlobalWindow* topWin = GetScriptableTop();
 
   if (!topWin) {
     NS_ERROR("Uh, EnterModalState() called w/o a reachable top window?");
@@ -6672,7 +6674,7 @@ private:
 void
 nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
 {
-  nsGlobalWindow *topWin = GetTop();
+  nsGlobalWindow* topWin = GetScriptableTop();
 
   if (!topWin) {
     NS_ERROR("Uh, LeaveModalState() called w/o a reachable top window?");
@@ -6714,7 +6716,7 @@ nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
 bool
 nsGlobalWindow::IsInModalState()
 {
-  nsGlobalWindow *topWin = GetTop();
+  nsGlobalWindow *topWin = GetScriptableTop();
 
   if (!topWin) {
     NS_ERROR("Uh, IsInModalState() called w/o a reachable top window?");

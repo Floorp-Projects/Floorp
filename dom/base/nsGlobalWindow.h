@@ -379,7 +379,17 @@ public:
     nsCOMPtr<nsIDOMWindow> top;
     GetTop(getter_AddRefs(top));
     if (top)
-      return static_cast<nsGlobalWindow *>(static_cast<nsIDOMWindow *>(top.get()));
+      return static_cast<nsGlobalWindow *>(top.get());
+    return nsnull;
+  }
+
+  inline nsGlobalWindow* GetScriptableTop()
+  {
+    nsCOMPtr<nsIDOMWindow> top;
+    GetScriptableTop(getter_AddRefs(top));
+    if (top) {
+      return static_cast<nsGlobalWindow *>(top.get());
+    }
     return nsnull;
   }
 
