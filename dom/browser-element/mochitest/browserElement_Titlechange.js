@@ -1,22 +1,4 @@
-<!DOCTYPE HTML>
-<html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=720157
--->
-<head>
-  <title>Test for Bug 720157</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="browserFrameHelpers.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=720157">Mozilla Bug 720157</a>
-
-<!--
-  Test that the onmozbrowsertitlechange event works.
--->
-
-<script type="application/javascript;version=1.7">
+// Test that the onmozbrowsertitlechange event works.
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
@@ -83,7 +65,4 @@ function runTest() {
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
 
-</script>
 
-</body>
-</html>

@@ -1,26 +1,8 @@
-<!DOCTYPE HTML>
-<html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=741587
--->
-<head>
-  <title>Test for Bug 741587</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="browserFrameHelpers.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=741587">Mozilla Bug 741587</a>
-
-<!--
-  Test that prompt and confirm work.  In particular, we're concerned that we
-  get correct return values out of them.
-
-  We use alert() to communicate the return values of prompt/confirm back to
-  ourselves.
--->
-
-<script type="application/javascript;version=1.7">
+// Test that prompt and confirm work.  In particular, we're concerned that we
+// get correct return values out of them.
+//
+// We use alert() to communicate the return values of prompt/confirm back to
+// ourselves.
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
@@ -101,6 +83,3 @@ function runTest() {
 }
 
 runTest();
-</script>
-</body>
-</html>
