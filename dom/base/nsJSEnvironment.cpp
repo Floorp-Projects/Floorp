@@ -942,6 +942,9 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
                                             js_pccounts_content_str);
   bool useMethodJITAlways = Preferences::GetBool(js_methodjit_always_str);
   bool useTypeInference = !chromeWindow && contentWindow && Preferences::GetBool(js_typeinfer_str);
+  bool useXML = Preferences::GetBool(chromeWindow || !contentWindow ?
+                                     "javascript.options.xml.chrome" :
+                                     "javascript.options.xml.content");
   bool useHardening = Preferences::GetBool(js_jit_hardening_str);
   nsCOMPtr<nsIXULRuntime> xr = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
   if (xr) {
@@ -952,6 +955,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
       usePCCounts = false;
       useTypeInference = false;
       useMethodJITAlways = true;
+      useXML = false;
       useHardening = false;
     }
   }
@@ -975,6 +979,11 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
     newDefaultJSOptions |= JSOPTION_TYPE_INFERENCE;
   else
     newDefaultJSOptions &= ~JSOPTION_TYPE_INFERENCE;
+
+  if (useXML)
+    newDefaultJSOptions |= JSOPTION_ALLOW_XML;
+  else
+    newDefaultJSOptions &= ~JSOPTION_ALLOW_XML;
 
 #ifdef DEBUG
   // In debug builds, warnings are enabled in chrome context if
