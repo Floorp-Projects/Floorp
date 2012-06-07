@@ -775,6 +775,7 @@ RES_COLOR = \
 
 RES_MENU = \
   res/menu/awesomebar_contextmenu.xml \
+  res/menu/titlebar_contextmenu.xml \
   $(NULL)
 
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
