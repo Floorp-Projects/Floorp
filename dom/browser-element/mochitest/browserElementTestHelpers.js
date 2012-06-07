@@ -2,7 +2,7 @@
 
 // Helpers for managing the browser frame preferences.
 
-const browserFrameHelpers = {
+const browserElementTestHelpers = {
   _getBoolPref: function(pref) {
     try {
       return SpecialPowers.getBoolPref(pref);
@@ -111,14 +111,14 @@ const browserFrameHelpers = {
                 '/file_focus.html',
 };
 
-browserFrameHelpers.origEnabledPref = browserFrameHelpers.getEnabledPref();
-browserFrameHelpers.origWhitelistPref = browserFrameHelpers.getWhitelistPref();
-browserFrameHelpers.origOOPDisabledPref = browserFrameHelpers.getOOPDisabledPref();
-browserFrameHelpers.origOOPByDefaultPref = browserFrameHelpers.getOOPByDefaultPref();
-browserFrameHelpers.origPageThumbsEnabledPref = browserFrameHelpers.getPageThumbsEnabledPref();
+browserElementTestHelpers.origEnabledPref = browserElementTestHelpers.getEnabledPref();
+browserElementTestHelpers.origWhitelistPref = browserElementTestHelpers.getWhitelistPref();
+browserElementTestHelpers.origOOPDisabledPref = browserElementTestHelpers.getOOPDisabledPref();
+browserElementTestHelpers.origOOPByDefaultPref = browserElementTestHelpers.getOOPByDefaultPref();
+browserElementTestHelpers.origPageThumbsEnabledPref = browserElementTestHelpers.getPageThumbsEnabledPref();
 
 // Disable tab view; it seriously messes us up.
-browserFrameHelpers.setPageThumbsEnabledPref(false);
+browserElementTestHelpers.setPageThumbsEnabledPref(false);
 
 // Enable or disable OOP depending on the test's filename.
 var oop;
@@ -130,9 +130,9 @@ else {
   oop = true;
 }
 
-browserFrameHelpers.setOOPByDefaultPref(oop);
-browserFrameHelpers.setOOPDisabledPref(false);
+browserElementTestHelpers.setOOPByDefaultPref(oop);
+browserElementTestHelpers.setOOPDisabledPref(false);
 
 addEventListener('unload', function() {
-  browserFrameHelpers.restoreOriginalPrefs();
+  browserElementTestHelpers.restoreOriginalPrefs();
 });

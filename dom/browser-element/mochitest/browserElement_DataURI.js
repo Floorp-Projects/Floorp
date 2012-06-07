@@ -4,8 +4,8 @@
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  browserFrameHelpers.setEnabledPref(true);
-  browserFrameHelpers.addToWhitelist();
+  browserElementTestHelpers.setEnabledPref(true);
+  browserElementTestHelpers.addToWhitelist();
 
   var iframe1 = document.createElement('iframe');
   iframe1.mozbrowser = true;
@@ -15,7 +15,7 @@ function runTest() {
     ok(true, 'Got first loadend event.');
     SimpleTest.executeSoon(runTest2);
   });
-  iframe1.src = browserFrameHelpers.emptyPage1;
+  iframe1.src = browserElementTestHelpers.emptyPage1;
   document.body.appendChild(iframe1);
 
   var iframe2 = document.createElement('iframe');
@@ -60,7 +60,7 @@ function runTest2() {
 
   // Load something into iframe2 to check that it doesn't trigger a
   // locationchange for our iframe1 listener.
-  iframe2.src = browserFrameHelpers.emptyPage2;
+  iframe2.src = browserElementTestHelpers.emptyPage2;
 }
 
 addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
