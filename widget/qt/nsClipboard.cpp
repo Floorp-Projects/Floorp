@@ -153,12 +153,13 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
                      && (!strcmp(flavorStr.get(), kNativeImageMime)
                      ||  !strcmp(flavorStr.get(), kPNGImageMime)
                      ||  !strcmp(flavorStr.get(), kJPEGImageMime)
+                     ||  !strcmp(flavorStr.get(), kJPGImageMime)
                      ||  !strcmp(flavorStr.get(), kGIFImageMime))
                     )
             {
                 // Look through our transfer data for the image
                 static const char* const imageMimeTypes[] = {
-                    kNativeImageMime, kPNGImageMime, kJPEGImageMime, kGIFImageMime };
+                    kNativeImageMime, kPNGImageMime, kJPEGImageMime, kJPGImageMime, kGIFImageMime };
                 nsCOMPtr<nsISupportsInterfacePointer> ptrPrimitive;
                 for (PRUint32 i = 0; !ptrPrimitive && i < ArrayLength(imageMimeTypes); i++)
                 {
@@ -323,6 +324,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
 
             // Image?
             if ((  !strcmp(flavorStr.get(), kJPEGImageMime)
+                || !strcmp(flavorStr.get(), kJPGImageMime)
                 || !strcmp(flavorStr.get(), kPNGImageMime)
                 || !strcmp(flavorStr.get(), kGIFImageMime))
                 && mimeData->hasImage())
@@ -334,7 +336,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
 
                 // Lets set the image format
                 QByteArray imageFormat;
-                if (!strcmp(flavorStr.get(), kJPEGImageMime))
+                if (!strcmp(flavorStr.get(), kJPEGImageMime) || !strcmp(flavorStr.get(), kJPGImageMime))
                     imageFormat = "jpeg";
                 else if (!strcmp(flavorStr.get(), kPNGImageMime))
                     imageFormat = "png";
