@@ -19,10 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=660238
 
 function checkOptimum(aElement, aValue, aOptimum, expectedResult)
 {
-  var errorString = "value attribute should be in the optimum region";
-  if (!expectedResult) {
-    errorString = "value attribute should not be in the optimum region";
-  }
+  var errorString = expectedResult
+                      ? "value attribute should be in the optimum region"
+                      : "value attribute should not be in the optimum region";
+
   aElement.setAttribute('value', aValue);
   aElement.setAttribute('optimum', aOptimum);
   is(aElement.mozMatchesSelector(":-moz-meter-optimum"),
@@ -154,8 +154,8 @@ function checkMozMatchesSelector()
     [ 0.8, 1.0, true, false, false ],
     [ 1.0, 1.0, true, false, false ],
   ];
-  
-  for each(var test in tests) {
+
+  for (var test of tests) {
     checkOptimum(element, test[0], test[1], test[2]);
     checkSubOptimum(element, test[0], test[1], test[3]);
     checkSubSubOptimum(element, test[0], test[1], test[4]);
