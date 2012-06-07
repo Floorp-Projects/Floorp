@@ -66,7 +66,7 @@ static JSBool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
 BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script,
-                                 unsigned lineno, bool needScriptGlobal)
+                                 unsigned lineno)
   : sc(sc),
     parent(NULL),
     script(sc->context, script),
@@ -82,7 +82,6 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScr
     closedArgs(sc->context),
     closedVars(sc->context),
     typesetCount(0),
-    needScriptGlobal(needScriptGlobal),
     hasSingletons(false),
     inForInit(false)
 {
@@ -4862,17 +4861,17 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         sc.bindings.transfer(cx, &funbox->bindings);
 
         // Inherit various things (principals, version, etc) from the parent.
+        GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
         Rooted<JSScript*> script(cx);
         Rooted<JSScript*> parent(cx, bce->script);
         script = JSScript::Create(cx, parent->savedCallerFun, parent->principals,
                                   parent->originPrincipals, parent->compileAndGo,
-                                  /* noScriptRval = */ false, parent->getVersion(),
-                                  parent->staticLevel + 1);
+                                  /* noScriptRval = */ false, globalObject,
+                                  parent->getVersion(), parent->staticLevel + 1);
         if (!script)
             return false;
 
-        BytecodeEmitter bce2(bce->parser, &sc, script, pn->pn_pos.begin.lineno,
-                             /* needsScriptGlobal = */ false);
+        BytecodeEmitter bce2(bce->parser, &sc, script, pn->pn_pos.begin.lineno);
         if (!bce2.init())
             return false;
         bce2.parent = bce;
