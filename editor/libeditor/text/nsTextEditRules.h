@@ -163,7 +163,7 @@ protected:
                                      bool                     *aTruncated);
 
   /** Remove IME composition text from password buffer */
-  void RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);
+  void RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAString *aIMEString);
 
   nsresult CreateMozBR(nsIDOMNode* inParent, PRInt32 inOffset,
                        nsIDOMNode** outBRNode = nsnull);
