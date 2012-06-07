@@ -34,6 +34,7 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
   RegisterClipboardFormat(kAOLMailMime);
   RegisterClipboardFormat(kPNGImageMime);
   RegisterClipboardFormat(kJPEGImageMime);
+  RegisterClipboardFormat(kJPGImageMime);
   RegisterClipboardFormat(kGIFImageMime);
   RegisterClipboardFormat(kFileMime);
   RegisterClipboardFormat(kURLMime);
@@ -138,7 +139,7 @@ bool nsClipboard::GetClipboardDataByID(PRUint32 aFormatID, const char *aFlavor)
   {
     if (aFormatID == CF_BITMAP)
     {
-      if (!strcmp( aFlavor, kJPEGImageMime ))
+      if (!strcmp( aFlavor, kJPEGImageMime ) || !strcmp( aFlavor, kJPGImageMime ))
       {
         // OS2TODO  Convert bitmap to jpg
 #ifdef DEBUG

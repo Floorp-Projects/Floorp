@@ -19,7 +19,8 @@
 #define kHTMLMime                   "text/html"
 #define kAOLMailMime                "AOLMAIL"
 #define kPNGImageMime               "image/png"
-#define kJPEGImageMime              "image/jpg"
+#define kJPEGImageMime              "image/jpeg"
+#define kJPGImageMime               "image/jpg"
 #define kGIFImageMime               "image/gif"
 #define kFileMime                   "application/x-moz-file"
 

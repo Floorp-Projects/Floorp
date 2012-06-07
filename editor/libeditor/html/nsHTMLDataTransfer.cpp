@@ -1002,6 +1002,7 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
       {
         case 0:  // prefer JPEG over PNG over GIF encoding
           (*aTransferable)->AddDataFlavor(kJPEGImageMime);
+          (*aTransferable)->AddDataFlavor(kJPGImageMime);
           (*aTransferable)->AddDataFlavor(kPNGImageMime);
           (*aTransferable)->AddDataFlavor(kGIFImageMime);
           break;
@@ -1009,11 +1010,13 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
         default:
           (*aTransferable)->AddDataFlavor(kPNGImageMime);
           (*aTransferable)->AddDataFlavor(kJPEGImageMime);
+          (*aTransferable)->AddDataFlavor(kJPGImageMime);
           (*aTransferable)->AddDataFlavor(kGIFImageMime);
           break;
         case 2:  // prefer GIF over JPEG over PNG encoding
           (*aTransferable)->AddDataFlavor(kGIFImageMime);
           (*aTransferable)->AddDataFlavor(kJPEGImageMime);
+          (*aTransferable)->AddDataFlavor(kJPGImageMime);
           (*aTransferable)->AddDataFlavor(kPNGImageMime);
           break;
       }
@@ -1235,6 +1238,7 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
   }
 
   if (0 == nsCRT::strcmp(type, kJPEGImageMime) ||
+      0 == nsCRT::strcmp(type, kJPGImageMime) ||
       0 == nsCRT::strcmp(type, kPNGImageMime) ||
       0 == nsCRT::strcmp(type, kGIFImageMime) ||
       insertAsImage)
@@ -1304,6 +1308,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
 
     if (0 == nsCRT::strcmp(bestFlavor, kFileMime) ||
         0 == nsCRT::strcmp(bestFlavor, kJPEGImageMime) ||
+        0 == nsCRT::strcmp(bestFlavor, kJPGImageMime) ||
         0 == nsCRT::strcmp(bestFlavor, kPNGImageMime) ||
         0 == nsCRT::strcmp(bestFlavor, kGIFImageMime)) {
       rv = InsertObject(bestFlavor, genericDataObj, isSafe,
@@ -1403,6 +1408,7 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
     if (!isText) {
       if (type.EqualsLiteral(kFileMime) ||
           type.EqualsLiteral(kJPEGImageMime) ||
+          type.EqualsLiteral(kJPGImageMime) ||
           type.EqualsLiteral(kPNGImageMime) ||
           type.EqualsLiteral(kGIFImageMime)) {
         nsCOMPtr<nsIVariant> variant;
@@ -1624,8 +1630,8 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
 
 static const char* textEditorFlavors[] = { kUnicodeMime };
 static const char* textHtmlEditorFlavors[] = { kUnicodeMime, kHTMLMime,
-                                               kJPEGImageMime, kPNGImageMime,
-                                               kGIFImageMime };
+                                               kJPEGImageMime, kJPGImageMime,
+                                               kPNGImageMime, kGIFImageMime };
 
 NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, bool *aCanPaste)
 {

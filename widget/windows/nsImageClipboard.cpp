@@ -201,7 +201,7 @@ nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, co
       nsCAutoString encoderCID(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
 
       // Map image/jpg to image/jpeg (which is how the encoder is registered).
-      if (strcmp(aMIMEFormat, kJPEGImageMime) == 0)
+      if (strcmp(aMIMEFormat, kJPGImageMime) == 0)
         encoderCID.Append("image/jpeg");
       else
         encoderCID.Append(aMIMEFormat);
