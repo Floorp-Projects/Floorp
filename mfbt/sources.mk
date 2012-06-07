@@ -8,7 +8,6 @@ the MFBT source directory)
 endif
 
 CPPSRCS += \
-  Assertions.cpp \
   HashFunctions.cpp \
   $(NULL)
 

@@ -6,6 +6,7 @@
 
 /* Various JS utility functions. */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
 #include <stdio.h>
@@ -20,6 +21,7 @@
 #endif
 
 #include "js/TemplateLib.h"
+#include "js/Utility.h"
 
 using namespace js;
 
@@ -35,41 +37,11 @@ JS_PUBLIC_DATA(uint32_t) OOM_counter = 0;
  */
 JS_STATIC_ASSERT(sizeof(void *) == sizeof(void (*)()));
 
-static JS_NEVER_INLINE void
-CrashInJS()
-{
-    /*
-     * We write 123 here so that the machine code for this function is
-     * unique. Otherwise the linker, trying to be smart, might use the
-     * same code for CrashInJS and for some other function. That
-     * messes up the signature in minidumps.
-     */
-
-#if defined(WIN32)
-    /*
-     * We used to call DebugBreak() on Windows, but amazingly, it causes
-     * the MSVS 2010 debugger not to be able to recover a call stack.
-     */
-    *((volatile int *) NULL) = 123;
-    exit(3);
-#elif defined(__APPLE__)
-    /*
-     * On Mac OS X, Breakpad ignores signals. Only real Mach exceptions are
-     * trapped.
-     */
-    *((volatile int *) NULL) = 123;  /* To continue from here in GDB: "return" then "continue". */
-    raise(SIGABRT);  /* In case above statement gets nixed by the optimizer. */
-#else
-    raise(SIGABRT);  /* To continue from here in GDB: "signal 0". */
-#endif
-}
-
 JS_PUBLIC_API(void)
 JS_Assert(const char *s, const char *file, int ln)
 {
-    fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
-    fflush(stderr);
-    CrashInJS();
+    MOZ_ReportAssertionFailure(s, file, ln);
+    MOZ_CRASH();
 }
 
 #ifdef JS_BASIC_STATS
