@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import java.util.List;
 import java.util.ArrayList;
 
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -22,8 +23,10 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.animation.TranslateAnimation;
+import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.View.MeasureSpec;
 import android.view.ViewGroup;
@@ -100,6 +103,33 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 onAwesomeBarSearch();
+            }
+        });
+        mAwesomeBar.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                MenuInflater inflater = GeckoApp.mAppContext.getMenuInflater();
+                inflater.inflate(R.menu.titlebar_contextmenu, menu);
+
+                String clipboard = GeckoAppShell.getClipboardText();
+                if (clipboard == null || clipboard.isEmpty()) {
+                    menu.findItem(R.id.pasteandgo).setVisible(false);
+                    menu.findItem(R.id.paste).setVisible(false);
+                }
+
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    String url = tab.getURL();
+                    if (url == null) {
+                        menu.findItem(R.id.copyurl).setVisible(false);
+                        menu.findItem(R.id.share).setVisible(false);
+                        menu.findItem(R.id.add_to_launcher).setVisible(false);
+                    }
+                } else {
+                    // if there is no tab, remove anything tab dependent
+                    menu.findItem(R.id.copyurl).setVisible(false);
+                    menu.findItem(R.id.share).setVisible(false);
+                    menu.findItem(R.id.add_to_launcher).setVisible(false);
+                }
             }
         });
 
