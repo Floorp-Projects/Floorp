@@ -44,7 +44,7 @@ function runTest() {
 
 var numMsgReceived = 0;
 function outerIframeLoaded() {
-  var injectedScript = 
+  var injectedScript =
     "data:,function is(a, b, desc) {                                     \
       if (a == b) {                                                      \
         sendAsyncMessage('test:test-pass', desc);                        \
@@ -67,7 +67,7 @@ function outerIframeLoaded() {
     numMsgReceived++;
     ok(true, msg.json);
   }
-  mm.addMessageListener('test:test-pass', onRecvTestPass); 
+  mm.addMessageListener('test:test-pass', onRecvTestPass);
 
   function onRecvTestFail(msg) {
     numMsgReceived++;
@@ -85,7 +85,7 @@ function waitForMessages(num) {
     SimpleTest.executeSoon(function() { waitForMessages(num); });
     return;
   }
-  
+
   SimpleTest.finish();
 }
 

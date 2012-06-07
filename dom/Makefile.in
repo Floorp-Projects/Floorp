@@ -48,6 +48,7 @@ DIRS += \
   base \
   bindings \
   battery \
+  browser-element \
   contacts \
   devicestorage \
   file \
