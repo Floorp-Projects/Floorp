@@ -47,7 +47,7 @@ tier_base_dirs += \
 endif
 
 ifdef MOZ_MEMORY
-tier_base_dirs += memory/jemalloc
+tier_base_dirs += memory/mozjemalloc
 tier_base_dirs += memory/build
 endif
 tier_base_dirs += \
