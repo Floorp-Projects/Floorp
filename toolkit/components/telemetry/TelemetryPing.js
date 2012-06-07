@@ -749,10 +749,12 @@ TelemetryPing.prototype = {
         idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
         this._isIdleObserver = false;
       }
-      reason = (Telemetry.canSend && aTopic == "idle"
-		? "idle-daily"
-		: "test-ping");
-      this.send(reason, server);
+      if (aTopic == "test-ping") {
+        this.send("test-ping", server);
+      }
+      else if (Telemetry.canSend && aTopic == "idle") {
+        this.send("idle-daily", server);
+      }
       break;
     case "quit-application-granted":
       Telemetry.saveHistograms(this.savedHistogramsFile(),
