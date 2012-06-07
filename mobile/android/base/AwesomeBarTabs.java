@@ -96,7 +96,7 @@ public class AwesomeBarTabs extends TabHost {
         public TextView titleView;
         public TextView urlView;
         public ImageView faviconView;
-        public ImageView starView;
+        public ImageView bookmarkIconView;
     }
 
     private class SearchEntryViewHolder {
@@ -127,7 +127,7 @@ public class AwesomeBarTabs extends TabHost {
                 viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
                 viewHolder.urlView = (TextView) convertView.findViewById(R.id.url);
                 viewHolder.faviconView = (ImageView) convertView.findViewById(R.id.favicon);
-                viewHolder.starView = (ImageView) convertView.findViewById(R.id.bookmark_star);
+                viewHolder.bookmarkIconView = (ImageView) convertView.findViewById(R.id.bookmark_icon);
 
                 convertView.setTag(viewHolder);
             } else {
@@ -161,7 +161,7 @@ public class AwesomeBarTabs extends TabHost {
             // The bookmark id will be 0 (null in database) when the url
             // is not a bookmark.
             int visibility = (bookmarkId == 0 ? View.GONE : View.VISIBLE);
-            viewHolder.starView.setVisibility(visibility);
+            viewHolder.bookmarkIconView.setVisibility(visibility);
 
             return convertView;
         }
@@ -766,7 +766,7 @@ public class AwesomeBarTabs extends TabHost {
                     viewHolder.titleView = (TextView) convertView.findViewById(R.id.title);
                     viewHolder.urlView = (TextView) convertView.findViewById(R.id.url);
                     viewHolder.faviconView = (ImageView) convertView.findViewById(R.id.favicon);
-                    viewHolder.starView = (ImageView) convertView.findViewById(R.id.bookmark_star);
+                    viewHolder.bookmarkIconView = (ImageView) convertView.findViewById(R.id.bookmark_icon);
 
                     convertView.setTag(viewHolder);
                 } else {
@@ -781,7 +781,7 @@ public class AwesomeBarTabs extends TabHost {
                 updateTitle(viewHolder.titleView, cursor);
                 updateUrl(viewHolder.urlView, cursor);
                 updateFavicon(viewHolder.faviconView, cursor);
-                updateBookmarkStar(viewHolder.starView, cursor);
+                updateBookmarkIcon(viewHolder.bookmarkIconView, cursor);
             }
 
             return convertView;
@@ -1084,14 +1084,14 @@ public class AwesomeBarTabs extends TabHost {
         urlView.setText(url);
     }
 
-    private void updateBookmarkStar(ImageView starView, Cursor cursor) {
+    private void updateBookmarkIcon(ImageView bookmarkIconView, Cursor cursor) {
         int bookmarkIdIndex = cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID);
         long id = cursor.getLong(bookmarkIdIndex);
 
         // The bookmark id will be 0 (null in database) when the url
         // is not a bookmark.
         int visibility = (id == 0 ? View.GONE : View.VISIBLE);
-        starView.setVisibility(visibility);
+        bookmarkIconView.setVisibility(visibility);
     }
 
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
