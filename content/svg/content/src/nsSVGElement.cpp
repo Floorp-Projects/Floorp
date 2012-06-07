@@ -1243,11 +1243,7 @@ ParseMappedAttrAnimValueCallback(void*    aObject,
     static_cast<MappedAttrParser*>(aData);
 
   nsStringBuffer* valueBuf = static_cast<nsStringBuffer*>(aPropertyValue);
-  nsAutoString value;
-  PRUint32 len = NS_strlen(static_cast<PRUnichar*>(valueBuf->Data()));
-  valueBuf->ToString(len, value);
-
-  mappedAttrParser->ParseMappedAttrValue(aPropertyName, value);
+  mappedAttrParser->ParseMappedAttrValue(aPropertyName, nsCheapString(valueBuf));
 }
 
 // Callback for freeing animated content style rule, in property table.
