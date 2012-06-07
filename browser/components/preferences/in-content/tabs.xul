@@ -31,6 +31,7 @@
               name="browser.taskbar.previews.enable"
               type="bool"/>
 #endif
+  <preference id="browser.newtabpage.enabled" name="browser.newtabpage.enabled" type="bool"/>
 </preferences>
 
 <hbox class="heading" data-category="paneTabs" hidden="true">
@@ -83,3 +84,8 @@
           preference="browser.taskbar.previews.enable"
           class="indent"/>
 #endif
+<checkbox id="showNewTabPage" label="&showNewTabPage.label;"
+          data-category="paneTabs" hidden="true"
+          accesskey="&showNewTabPage.accesskey;"
+          preference="browser.newtabpage.enabled"
+          class="indent"/>
