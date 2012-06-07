@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Test nsSearchService with nested jar: uris
+ * Test nsSearchService with nested jar: uris, without async initialization
  */
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
