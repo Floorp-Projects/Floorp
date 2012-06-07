@@ -50,6 +50,8 @@ cp $1/src/ports/*.h ./src/ports/
 cp $1/src/ports/*.cpp ./src/ports/
 cp $1/src/svg/*.cpp ./src/svg/
 cp $1/src/svg/*.h ./src/svg/
+cp $1/src/sfnt/*.cpp ./src/sfnt/
+cp $1/src/sfnt/*.h ./src/sfnt/
 cp $1/src/text/*.cpp ./src/text/
 cp $1/src/utils/mac/SampleApp-Info.plist ./src/utils/mac/
 cp $1/src/utils/mac/SampleApp.xib ./src/utils/mac/
