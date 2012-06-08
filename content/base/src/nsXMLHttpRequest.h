@@ -37,6 +37,7 @@
 #include "nsDOMBlobBuilder.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 
@@ -180,7 +181,10 @@ public:
 
   // The WebIDL constructor.
   static already_AddRefed<nsXMLHttpRequest>
-  Constructor(nsISupports* aGlobal, ErrorResult& aRv)
+  Constructor(JSContext* aCx,
+              nsISupports* aGlobal,
+              const mozilla::dom::Optional<jsval>& aParams,
+              ErrorResult& aRv)
   {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
     nsCOMPtr<nsIScriptObjectPrincipal> principal = do_QueryInterface(aGlobal);
@@ -191,6 +195,13 @@ public:
 
     nsRefPtr<nsXMLHttpRequest> req = new nsXMLHttpRequest();
     req->Construct(principal->GetPrincipal(), window);
+    if (aParams.WasPassed()) {
+      nsresult rv = req->InitParameters(aCx, &aParams.Value());
+      if (NS_FAILED(rv)) {
+        aRv.Throw(rv);
+        return req.forget();
+      }
+    }
     return req.forget();
   }
 
@@ -204,6 +215,9 @@ public:
     BindToOwner(aOwnerWindow);
     mBaseURI = aBaseURI;
   }
+
+  // Initialize XMLHttpRequestParameter object.
+  nsresult InitParameters(JSContext* aCx, const jsval* aParams);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -460,6 +474,9 @@ public:
   bool GetMultipart();
   void SetMultipart(bool aMultipart, nsresult& aRv);
 
+  bool GetMozAnon();
+  bool GetMozSystem();
+
   nsIChannel* GetChannel()
   {
     return mChannel;
@@ -688,6 +705,9 @@ protected:
   PRUint64 mLoadTransferred;
   nsCOMPtr<nsITimer> mProgressNotifier;
   void HandleProgressTimerCallback();
+
+  bool mIsSystem;
+  bool mIsAnon;
 
   /**
    * Close the XMLHttpRequest's channels and dispatch appropriate progress

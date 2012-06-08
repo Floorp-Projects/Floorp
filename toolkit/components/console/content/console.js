@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 var gConsole, gConsoleBundle, gTextBoxEval, gEvaluator, gCodeToEvaluate;
+var gFilter;
 
 /* :::::::: Console Initialization ::::::::::::::: */
 
@@ -13,6 +14,7 @@ window.onload = function()
   gConsoleBundle = document.getElementById("ConsoleBundle");
   gTextBoxEval = document.getElementById("TextboxEval")  
   gEvaluator = document.getElementById("Evaluator");
+  gFilter = document.getElementById("Filter");
   
   updateSortCommand(gConsole.sortOrder);
   updateModeCommand(gConsole.mode);
@@ -21,6 +23,13 @@ window.onload = function()
 }
 
 /* :::::::: Console UI Functions ::::::::::::::: */
+
+function changeFilter()
+{
+  gConsole.filter = gFilter.value;
+
+  document.persist("ConsoleBox", "filter")
+}
 
 function changeMode(aMode)
 {

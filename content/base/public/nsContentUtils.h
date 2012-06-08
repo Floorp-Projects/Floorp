@@ -117,6 +117,7 @@ struct nsIntMargin;
 class nsPIDOMWindow;
 class nsIDocumentLoaderFactory;
 class nsIDOMHTMLInputElement;
+class nsTypedSelection;
 
 namespace mozilla {
 
@@ -2027,6 +2028,22 @@ public:
    */
   static nsresult IsOnPrefWhitelist(nsPIDOMWindow* aWindow,
                                     const char* aPrefURL, bool *aAllowed);
+
+  /**
+   * Takes a selection, and a text control element (<input> or <textarea>), and
+   * returns the offsets in the text content corresponding to the selection.
+   * The selection's anchor and focus must both be in the root node passed or a
+   * descendant.
+   *
+   * @param aSelection      Selection to check
+   * @param aRoot           Root <input> or <textarea> element
+   * @param aOutStartOffset Output start offset
+   * @param aOutEndOffset   Output end offset
+   */
+  static void GetSelectionInTextControl(nsTypedSelection* aSelection,
+                                        Element* aRoot,
+                                        PRInt32& aOutStartOffset,
+                                        PRInt32& aOutEndOffset);
   
 private:
   static bool InitializeEventTable();

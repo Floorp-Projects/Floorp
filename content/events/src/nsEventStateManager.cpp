@@ -3175,10 +3175,10 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         if (!mCurrentTarget) {
           GetEventTarget();
         }
-        if (mCurrentTarget) {
-          ret = CheckForAndDispatchClick(presContext, (nsMouseEvent*)aEvent,
-                                         aStatus);
-        }
+        // Make sure to dispatch the click even if there is no frame for
+        // the current target element. This is required for Web compatibility.
+        ret = CheckForAndDispatchClick(presContext, (nsMouseEvent*)aEvent,
+                                       aStatus);
       }
 
       nsIPresShell *shell = presContext->GetPresShell();
