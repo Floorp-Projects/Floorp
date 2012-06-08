@@ -205,6 +205,7 @@ BaseProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver_, jsid 
             if (!(desc.attrs & JSPROP_GETTER))
                 desc.getter = JS_PropertyStub;
         }
+        desc.value = *vp;
         return defineProperty(cx, receiver, id, &desc);
     }
 
