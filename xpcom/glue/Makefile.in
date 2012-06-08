@@ -91,6 +91,7 @@ EXPORTS = \
 		$(NULL)
 
 EXPORTS_mozilla = \
+  AppData.h \
   AutoRestore.h \
   BlockingResourceBase.h \
   CondVar.h \
