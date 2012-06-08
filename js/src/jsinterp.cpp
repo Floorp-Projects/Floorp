@@ -708,7 +708,7 @@ js::UnwindScope(JSContext *cx, uint32_t stackDepth)
     StackFrame *fp = cx->fp();
     JS_ASSERT(stackDepth <= cx->regs().stackDepth());
 
-    for (ScopeIter si(fp); !si.done(); si = si.enclosing()) {
+    for (ScopeIter si(fp, cx); !si.done(); ++si) {
         switch (si.type()) {
           case ScopeIter::Block:
             if (si.staticBlock().stackDepth() < stackDepth)
