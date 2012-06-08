@@ -1157,10 +1157,10 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
  * and stores, given the compile-time information in bce and a PNK_NAME node pn.
  * It returns false on error, true on success.
  *
- * The caller can inspect pn->pn_cookie for FREE_UPVAR_COOKIE to tell whether
- * optimization occurred, in which case BindNameToSlot also updated pn->pn_op.
- * If pn->pn_cookie is still FREE_UPVAR_COOKIE on return, pn->pn_op still may
- * have been optimized, e.g., from JSOP_NAME to JSOP_CALLEE.  Whether or not
+ * The caller can test pn->pn_cookie.isFree() to tell whether optimization
+ * occurred, in which case BindNameToSlot also updated pn->pn_op.  If
+ * pn->pn_cookie.isFree() is still true on return, pn->pn_op still may have
+ * been optimized, e.g., from JSOP_NAME to JSOP_CALLEE.  Whether or not
  * pn->pn_op was modified, if this function finds an argument or local variable
  * name, PND_CONST will be set in pn_dflags for read-only properties after a
  * successful return.
@@ -4858,13 +4858,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         bce2.parent = bce;
         bce2.globalScope = bce->globalScope;
 
-        /*
-         * js::frontend::SetStaticLevel limited static nesting depth to fit in
-         * 16 bits and to reserve the all-ones value, thereby reserving the
-         * magic FREE_UPVAR_COOKIE value. Note the bce2.staticLevel assignment
-         * below.
-         */
-        JS_ASSERT(bce->sc->staticLevel < JS_BITMASK(16) - 1);
+        // js::frontend::SetStaticLevel limited static nesting depth to fit in
+        // 16 bits and to reserve the all-ones FREE_LEVEL value.
+        JS_ASSERT(bce->sc->staticLevel + 1 < UpvarCookie::FREE_LEVEL);
         sc.staticLevel = bce->sc->staticLevel + 1;
 
         /* We measured the max scope depth when we parsed the function. */

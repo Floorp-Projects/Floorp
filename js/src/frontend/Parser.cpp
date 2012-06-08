@@ -286,8 +286,6 @@ Parser::parse(JSObject *chain)
     return pn;
 }
 
-JS_STATIC_ASSERT(UpvarCookie::FREE_LEVEL == JS_BITMASK(JSFB_LEVEL_BITS));
-
 /*
  * Insist on a final return before control flows out of pn.  Try to be a bit
  * smart about loops: do {...; return e2;} while(0) at the end of a function
