@@ -3215,7 +3215,7 @@ BEGIN_CASE(JSOP_INITELEM)
         if (JSID_TO_INT(id) == INT32_MAX) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_SPREAD_TOO_LARGE);
-            return false;
+            goto error;
         }
         regs.sp[-2].setInt32(JSID_TO_INT(id) + 1);
         regs.sp--;
