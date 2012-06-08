@@ -42,6 +42,10 @@ else
   git clone git://github.com/mozilla/mozbase.git
   cd mozbase
   python setup_development.py
+  cd ..
+  git clone git://github.com/mozilla/datazilla_client.git
+  cd datazilla_client
+  python setup.py develop
 fi
 
 # update the marionette_client
