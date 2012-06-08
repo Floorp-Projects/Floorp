@@ -155,6 +155,10 @@ var gPlayTests = [
 // Optionally checks whether the file actually exists on disk at the location
 // we've specified.
 function fileUriToSrc(path, mustExist) {
+  // android mochitest doesn't support file://
+  if (navigator.appVersion.indexOf("Android") != -1)
+    return path;
+
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   const Ci = Components.interfaces;
   const Cc = Components.classes;
