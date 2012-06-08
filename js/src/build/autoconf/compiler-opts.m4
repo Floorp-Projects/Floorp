@@ -52,8 +52,34 @@ esac
 fi
 ])
 
+dnl ============================================================================
+dnl C++ rtti
+dnl We don't use it in the code, but it can be usefull for debugging, so give
+dnl the user the option of enabling it.
+dnl ============================================================================
+AC_DEFUN([MOZ_RTTI],
+[
+MOZ_ARG_ENABLE_BOOL(cpp-rtti,
+[  --enable-cpp-rtti       Enable C++ RTTI ],
+[ _MOZ_USE_RTTI=1 ],
+[ _MOZ_USE_RTTI= ])
+
+if test -z "$_MOZ_USE_RTTI"; then
+    if test "$GNU_CC"; then
+        CXXFLAGS="$CXXFLAGS -fno-rtti"
+    else
+        case "$target" in
+        *-mingw*)
+            CXXFLAGS="$CXXFLAGS -GR-"
+        esac
+    fi
+fi
+])
+
+dnl A high level macro for selecting compiler options.
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [
+  MOZ_RTTI
 if test "$CLANG_CXX"; then
     ## We disable return-type-c-linkage because jsval is defined as a C++ type but is
     ## returned by C functions. This is possible because we use knowledge about the ABI
@@ -64,7 +90,7 @@ fi
 
 if test "$GNU_CC"; then
     CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
-    CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
+    CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections -fno-exceptions"
 fi
 
 dnl ========================================================
