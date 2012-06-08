@@ -27,7 +27,6 @@ CPPSRCS = \
   nsHTMLWin32ObjectAccessible.cpp \
   nsXULMenuAccessibleWrap.cpp \
   nsXULListboxAccessibleWrap.cpp \
-  nsXULTreeGridAccessibleWrap.cpp \
   nsWinUtils.cpp \
   CAccessibleText.cpp \
   CAccessibleEditableText.cpp \
@@ -45,6 +44,12 @@ CPPSRCS = \
   RootAccessibleWrap.cpp \
   TextLeafAccessibleWrap.cpp \
   $(NULL)
+
+ifdef MOZ_XUL
+CPPSRCS += \
+  XULTreeGridAccessibleWrap.cpp \
+  $(NULL)
+endif
 
 EXPORTS = \
   nsAccessNodeWrap.h \
