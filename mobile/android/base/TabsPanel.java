@@ -34,8 +34,13 @@ public class TabsPanel extends LinearLayout {
         public void hide();
     }
 
+    public static interface TabsLayoutChangeListener {
+        public void onTabsLayoutChange(int width, int height);
+    }
+
     private Context mContext;
     private PanelView mPanel;
+    private TabsLayoutChangeListener mLayoutChangeListener;
 
     private static ImageButton mRemoteTabs;
     private TextView mTitle;
@@ -80,6 +85,7 @@ public class TabsPanel extends LinearLayout {
 
     public void show(Panel panel) {
         if (mPanel != null) {
+            // Remove the old panel.
             mPanel.hide();
             if (getChildCount() == 2)
                 removeViewAt(1);
@@ -102,7 +108,10 @@ public class TabsPanel extends LinearLayout {
         mPanel.setHeightRestriction(mHeightRestricted);
         mPanel.show();
         addView(mPanel.getLayout(), 1);
-        setVisibility(View.VISIBLE);
+
+        // Tablet has fixed sized panel, hence we need to inform when we show.
+        // Phones can be informed too. But the list wouldn't have been inflated by now.
+        dispatchLayoutChange(getWidth(), getHeight());
 
         // If Sync is set up, query the database for remote clients.
         final Context context = mContext;
@@ -124,11 +133,16 @@ public class TabsPanel extends LinearLayout {
     }
 
     public void hide() {
-        setVisibility(View.GONE);
-        mPanel.hide();
-        if (getChildCount() == 2)
-            removeViewAt(1);
         mVisible = false;
+        dispatchLayoutChange(0, 0);
+    }
+
+    @Override
+    public void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
+        // This is used only for sliding action on phones.
+        // Tablets have a fixed size pane, hence this should be done while showing.
+        if (mVisible)
+            dispatchLayoutChange(width, height);
     }
 
     public void refresh() {
@@ -139,5 +153,14 @@ public class TabsPanel extends LinearLayout {
     @Override
     public boolean isShown() {
         return mVisible;
+    }
+
+    public void setTabsLayoutChangeListener(TabsLayoutChangeListener listener) {
+        mLayoutChangeListener = listener;
+    }
+
+    private void dispatchLayoutChange(int width, int height) {
+        if (mLayoutChangeListener != null)
+            mLayoutChangeListener.onTabsLayoutChange(width, height);
     }
 }
