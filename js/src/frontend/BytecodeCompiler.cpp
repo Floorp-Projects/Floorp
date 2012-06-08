@@ -119,8 +119,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     GlobalScope globalScope(cx, globalObj);
     bce.globalScope = &globalScope;
-    if (!SetStaticLevel(&sc, staticLevel))
-        return NULL;
+    sc.staticLevel = staticLevel;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)

@@ -369,9 +369,6 @@ struct StmtInfo {
 namespace frontend {
 
 bool
-SetStaticLevel(SharedContext *sc, unsigned staticLevel);
-
-bool
 GenerateBlockId(SharedContext *sc, uint32_t &blockid);
 
 /*

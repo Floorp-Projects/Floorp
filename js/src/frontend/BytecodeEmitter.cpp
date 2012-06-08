@@ -1076,7 +1076,10 @@ EmitEnterBlock(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSOp op)
 
         JS_ASSERT(dn->isDefn());
         JS_ASSERT(unsigned(dn->frameSlot() + depthPlusFixed) < JS_BIT(16));
-        dn->pn_cookie.set(dn->pn_cookie.level(), uint16_t(dn->frameSlot() + depthPlusFixed));
+        if (!dn->pn_cookie.set(cx, dn->pn_cookie.level(),
+                               uint16_t(dn->frameSlot() + depthPlusFixed)))
+            return false;
+
 #ifdef DEBUG
         for (ParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
             JS_ASSERT(pnu->pn_lexdef == dn);
@@ -1169,7 +1172,7 @@ TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
  * to update the special cases in EmitFor (for-in) and EmitAssignment (= and
  * op=, e.g. +=).
  */
-static JSBool
+static bool
 BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     Definition *dn;
@@ -1180,7 +1183,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     /* Idempotency tests come first, since we may be called more than once. */
     if (pn->pn_dflags & PND_BOUND)
-        return JS_TRUE;
+        return true;
 
     /* No cookie initialized for callee; it is pre-bound by definition. */
     JS_ASSERT(!pn->isOp(JSOP_CALLEE));
@@ -1194,17 +1197,17 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         dn = pn->pn_lexdef;
         JS_ASSERT(dn->isDefn());
         if (pn->isDeoptimized())
-            return JS_TRUE;
+            return true;
         pn->pn_dflags |= (dn->pn_dflags & PND_CONST);
     } else {
         if (!pn->isDefn())
-            return JS_TRUE;
+            return true;
         dn = (Definition *) pn;
     }
 
     op = pn->getOp();
     if (op == JSOP_NOP)
-        return JS_TRUE;
+        return true;
 
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
     RootedAtom atom(cx, pn->pn_atom);
@@ -1231,7 +1234,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             else
                 pn->setOp(JSOP_FALSE);
             pn->pn_dflags |= PND_BOUND;
-            return JS_TRUE;
+            return true;
         }
         break;
       default:
@@ -1241,7 +1244,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 if (!js_AtomToPrintableString(cx, atom, &name) ||
                     !ReportStrictModeError(cx, bce->tokenStream(), pn, JSMSG_READ_ONLY, name.ptr()))
                 {
-                    return JS_FALSE;
+                    return false;
                 }
             }
             pn->setOp(op = JSOP_NAME);
@@ -1258,7 +1261,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
              * bug 470758.
              */
             if (bce->inForInit)
-                return JS_TRUE;
+                return true;
 
             JS_ASSERT(caller->isScriptFrame());
 
@@ -1269,24 +1272,24 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (caller->isGlobalFrame() && TryConvertToGname(bce, pn, &op)) {
                 pn->setOp(op);
                 pn->pn_dflags |= PND_BOUND;
-                return JS_TRUE;
+                return true;
             }
 
             /*
              * Out of tricks, so we must rely on PICs to optimize named
              * accesses from direct eval called from function code.
              */
-            return JS_TRUE;
+            return true;
         }
 
         /* Optimize accesses to undeclared globals. */
         if (!TryConvertToGname(bce, pn, &op))
-            return JS_TRUE;
+            return true;
 
         pn->setOp(op);
         pn->pn_dflags |= PND_BOUND;
 
-        return JS_TRUE;
+        return true;
     }
 
     uint16_t level = cookie.level();
@@ -1294,7 +1297,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     const unsigned skip = bce->sc->staticLevel - level;
     if (skip != 0)
-        return JS_TRUE;
+        return true;
 
     /*
      * We are compiling a function body and may be able to optimize name
@@ -1303,7 +1306,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      */
     switch (dn_kind) {
       case Definition::UNKNOWN:
-        return JS_TRUE;
+        return true;
 
       case Definition::LET:
         switch (op) {
@@ -1367,7 +1370,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             pn->setOp(op);
             pn->pn_dflags |= PND_BOUND;
-            return JS_TRUE;
+            return true;
         }
         /* FALL THROUGH */
 
@@ -1391,9 +1394,10 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     JS_ASSERT(!pn->isOp(op));
     pn->setOp(op);
-    pn->pn_cookie.set(0, cookie.slot());
+    if (!pn->pn_cookie.set(bce->sc->context, 0, cookie.slot()))
+        return false;
     pn->pn_dflags |= PND_BOUND;
-    return JS_TRUE;
+    return true;
 }
 
 /*
@@ -4858,9 +4862,6 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         bce2.parent = bce;
         bce2.globalScope = bce->globalScope;
 
-        // js::frontend::SetStaticLevel limited static nesting depth to fit in
-        // 16 bits and to reserve the all-ones FREE_LEVEL value.
-        JS_ASSERT(bce->sc->staticLevel + 1 < UpvarCookie::FREE_LEVEL);
         sc.staticLevel = bce->sc->staticLevel + 1;
 
         /* We measured the max scope depth when we parsed the function. */
