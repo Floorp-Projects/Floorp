@@ -149,9 +149,7 @@ function eventSource(aProto) {
         listener.apply(null, arguments);
       } catch (e) {
         // Prevent a bad listener from interfering with the others.
-        let msg = e + ": " + e.stack;
-        Cu.reportError(msg);
-        dumpn(msg);
+        Cu.reportError(e);
       }
     }
   }
