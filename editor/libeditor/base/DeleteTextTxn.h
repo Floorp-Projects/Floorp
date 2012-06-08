@@ -7,14 +7,14 @@
 #define DeleteTextTxn_h__
 
 #include "EditTxn.h"
-#include "nsIEditor.h"
 #include "nsIDOMCharacterData.h"
 #include "nsCOMPtr.h"
 
+class nsEditor;
 class nsRangeUpdater;
 
 /**
- * A transaction that removes text from a content node. 
+ * A transaction that removes text from a content node.
  */
 class DeleteTextTxn : public EditTxn
 {
@@ -25,11 +25,11 @@ public:
     * @param aOffset  the location in aElement to begin the deletion
     * @param aNumCharsToDelete  the number of characters to delete.  Not the number of bytes!
     */
-  NS_IMETHOD Init(nsIEditor *aEditor,
-                  nsIDOMCharacterData *aElement,
+  NS_IMETHOD Init(nsEditor* aEditor,
+                  nsIDOMCharacterData* aCharData,
                   PRUint32 aOffset,
                   PRUint32 aNumCharsToDelete,
-                  nsRangeUpdater *aRangeUpdater);
+                  nsRangeUpdater* aRangeUpdater);
 
   DeleteTextTxn();
 
@@ -45,12 +45,12 @@ public:
 protected:
 
   /** the provider of basic editing operations */
-  nsIEditor* mEditor;
+  nsEditor* mEditor;
 
-  /** the text element to operate upon */
-  nsCOMPtr<nsIDOMCharacterData> mElement;
-  
-  /** the offset into mElement where the deletion is to take place */
+  /** the CharacterData node to operate upon */
+  nsCOMPtr<nsIDOMCharacterData> mCharData;
+
+  /** the offset into mCharData where the deletion is to take place */
   PRUint32 mOffset;
 
   /** the number of characters to delete */
@@ -60,7 +60,7 @@ protected:
   nsString mDeletedText;
 
   /** range updater object */
-  nsRangeUpdater *mRangeUpdater;
+  nsRangeUpdater* mRangeUpdater;
 };
 
 #endif
