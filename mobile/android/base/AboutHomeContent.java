@@ -165,8 +165,7 @@ public class AboutHomeContent extends ScrollView
 
         mRemoteTabs.setOnMoreTextClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Context context = v.getContext();
-                context.startActivity(new Intent(context, RemoteTabs.class));
+                GeckoApp.mAppContext.showRemoteTabs();
             }
         });
 

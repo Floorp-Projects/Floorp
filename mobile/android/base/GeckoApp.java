@@ -103,6 +103,7 @@ abstract public class GeckoApp
     public static BrowserToolbar mBrowserToolbar;
     public static DoorHangerPopup mDoorHangerPopup;
     public static FormAssistPopup mFormAssistPopup;
+    public TabsPanel mTabsPanel;
     public Favicons mFavicons;
 
     private static LayerController mLayerController;
@@ -994,10 +995,29 @@ abstract public class GeckoApp
         showAwesomebar(AwesomeBar.Target.NEW_TAB);
     }
 
-    void showTabs() {
-        Intent intent = new Intent(mAppContext, TabsTray.class);
-        startActivity(intent);
-        overridePendingTransition(R.anim.grow_fade_in, 0);
+    public void showLocalTabs() {
+        showTabs(TabsPanel.Panel.LOCAL_TABS);
+    }
+
+    public void showRemoteTabs() {
+        showTabs(TabsPanel.Panel.REMOTE_TABS);
+    }
+
+    private void showTabs(TabsPanel.Panel panel) {
+        if (!sIsGeckoReady)
+            return;
+
+        mTabsPanel.show(panel);
+        mBrowserToolbar.updateTabs(true);
+    }
+
+    public void hideTabs() {
+        mTabsPanel.hide();
+        mBrowserToolbar.updateTabs(false);
+    }
+
+    public boolean areTabsShown() {
+        return mTabsPanel.isShown();
     }
 
     public void handleMessage(String event, JSONObject message) {
@@ -1813,12 +1833,10 @@ abstract public class GeckoApp
     // The ActionBar needs to be refreshed on rotation as different orientation uses different resources
     public void refreshActionBar() {
         if (Build.VERSION.SDK_INT >= 11) {
-            LinearLayout actionBar = (LinearLayout) getLayoutInflater().inflate(R.layout.browser_toolbar, null);
-            mBrowserToolbar.destroy();
-            mBrowserToolbar.from(actionBar);
+            mBrowserToolbar.requestLayout();
             mBrowserToolbar.refresh();
             invalidateOptionsMenu();
-            GeckoActionBar.setCustomView(this, actionBar);
+            mTabsPanel.refresh();
         }
     }
 
@@ -1860,12 +1878,7 @@ abstract public class GeckoApp
 
         setContentView(R.layout.gecko_app);
 
-        LinearLayout actionBar;
-        if (Build.VERSION.SDK_INT >= 11) {
-            actionBar = (LinearLayout) GeckoActionBar.getCustomView(this);
-        } else {
-            actionBar = (LinearLayout) findViewById(R.id.browser_toolbar);
-        }
+        LinearLayout actionBar = (LinearLayout) findViewById(R.id.browser_toolbar);
 
         mBrowserToolbar = new BrowserToolbar(mAppContext);
         mBrowserToolbar.from(actionBar);
@@ -1873,6 +1886,9 @@ abstract public class GeckoApp
         // setup gecko layout
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (LinearLayout) findViewById(R.id.main_layout);
+
+        // setup tabs panel
+        mTabsPanel = (TabsPanel) findViewById(R.id.tabs_panel);
 
         if (savedInstanceState != null) {
             mBrowserToolbar.setTitle(savedInstanceState.getString(SAVED_STATE_TITLE));
@@ -2867,6 +2883,11 @@ abstract public class GeckoApp
 
     @Override
     public void onBackPressed() {
+        if (mTabsPanel.isShown()) {
+            mTabsPanel.hide();
+            return;
+        }
+
         if (mDoorHangerPopup.isShowing()) {
             mDoorHangerPopup.dismiss();
             return;

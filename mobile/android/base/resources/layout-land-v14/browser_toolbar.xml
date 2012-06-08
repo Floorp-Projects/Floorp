@@ -55,8 +55,7 @@
                      android:layout_height="wrap_content"
                      android:layout_marginTop="2.5dp"
                      android:layout_alignRight="@id/tabs"
-                     android:gravity="center_horizontal"
-                     android:visibility="gone"/>
+                     android:gravity="center_horizontal"/>
         
         <Button android:id="@+id/awesome_bar"
                 style="@style/AddressBar.Button"
