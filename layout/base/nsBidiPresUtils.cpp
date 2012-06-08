@@ -302,11 +302,10 @@ struct BidiParagraphData {
   {
     // Advance aLine to the line containing aFrame
     nsIFrame* child = aFrame;
-    nsFrameManager* frameManager = aFrame->PresContext()->FrameManager();
-    nsIFrame* parent = nsLayoutUtils::GetParentOrPlaceholderFor(frameManager, child);
+    nsIFrame* parent = nsLayoutUtils::GetParentOrPlaceholderFor(child);
     while (parent && !nsLayoutUtils::GetAsBlock(parent)) {
       child = parent;
-      parent = nsLayoutUtils::GetParentOrPlaceholderFor(frameManager, child);
+      parent = nsLayoutUtils::GetParentOrPlaceholderFor(child);
     }
     NS_ASSERTION (parent, "aFrame is not a descendent of aBlockFrame");
     while (!IsFrameInCurrentLine(aLineIter, aPrevFrame, child)) {
