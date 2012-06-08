@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -136,7 +137,7 @@ public class Favicons {
         mContext = context;
         mDbHelper = new DatabaseHelper(context);
 
-        mLoadTasks = new HashMap<Long,LoadFaviconTask>();
+        mLoadTasks = Collections.synchronizedMap(new HashMap<Long,LoadFaviconTask>());
         mNextFaviconLoadId = 0;
     }
 
@@ -166,13 +167,17 @@ public class Favicons {
     public boolean cancelFaviconLoad(long taskId) {
         Log.d(LOGTAG, "Requesting cancelation of favicon load (" + taskId + ")");
 
-        if (!mLoadTasks.containsKey(taskId))
-            return false;
+        boolean cancelled = false;
+        synchronized (mLoadTasks) {
+            if (!mLoadTasks.containsKey(taskId))
+                return false;
 
-        Log.d(LOGTAG, "Cancelling favicon load (" + taskId + ")");
+            Log.d(LOGTAG, "Cancelling favicon load (" + taskId + ")");
 
-        LoadFaviconTask task = mLoadTasks.get(taskId);
-        return task.cancel(false);
+            LoadFaviconTask task = mLoadTasks.get(taskId);
+            cancelled = task.cancel(false);
+        }
+        return cancelled;
     }
 
     public void clearFavicons() {
@@ -184,11 +189,13 @@ public class Favicons {
         mDbHelper.close();
 
         // Cancel any pending tasks
-        Set<Long> taskIds = mLoadTasks.keySet();
-        Iterator<Long> iter = taskIds.iterator();
-        while (iter.hasNext()) {
-            long taskId = iter.next();
-            cancelFaviconLoad(taskId);
+        synchronized (mLoadTasks) {
+            Set<Long> taskIds = mLoadTasks.keySet();
+            Iterator<Long> iter = taskIds.iterator();
+            while (iter.hasNext()) {
+                long taskId = iter.next();
+                cancelFaviconLoad(taskId);
+            }
         }
     }
 
