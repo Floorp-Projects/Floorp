@@ -26,6 +26,7 @@
 #include "mozilla/Util.h"
 
 #include "nsAppRunner.h"
+#include "mozilla/AppData.h"
 #include "nsUpdateDriver.h"
 #include "ProfileReset.h"
 
