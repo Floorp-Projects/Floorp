@@ -407,7 +407,7 @@ function start() {
     window.webglTestHarness = testHarness;
   }
 
-  SimpleTest.requestLongerTimeout(3);
+  SimpleTest.requestLongerTimeout(kIsAndroid ? 6 : 3);
 
   var statusElem = document.getElementById("status");
   var statusTextNode = document.createTextNode('');
