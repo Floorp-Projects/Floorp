@@ -148,7 +148,7 @@ struct SharedContext {
     const RootedObject scopeChain_; /* scope chain object for the script */
 
   public:
-    unsigned        staticLevel;    /* static compilation unit nesting level */
+    const unsigned  staticLevel;    /* static compilation unit nesting level */
 
     Bindings        bindings;       /* bindings in this code, including
                                        arguments if we're compiling a function */
@@ -158,7 +158,8 @@ struct SharedContext {
 
     // If it's function code, fun must be non-NULL and scopeChain must be NULL.
     // If it's global code, fun and funbox must be NULL.
-    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox);
+    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox,
+                         unsigned staticLevel);
 
     // In theory, |fun*| flags are only relevant if |inFunction()| is true.
     // However, we get and set in some cases where |inFunction()| is false,
