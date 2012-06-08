@@ -6,7 +6,17 @@
 <level-list xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:maxLevel="0" android:drawable="@android:color/transparent"/>
-    <item android:maxLevel="1" android:drawable="@drawable/tabs_plus"/>
-    <item android:minLevel="2" android:maxLevel="100" android:drawable="@drawable/tabs_more"/>
+
+    <item android:maxLevel="1" android:drawable="@drawable/tabs_carat"/>
+
+    <item android:maxLevel="2">
+        <rotate android:drawable="@drawable/tabs_carat"
+                android:fromDegrees="0"
+                android:toDegrees="180"
+                android:pivotX="50%"
+                android:pivotY="50%"
+                android:duration="500"
+                android:interpolator="@android:anim/linear_interpolator"/>
+    </item>
 
 </level-list>

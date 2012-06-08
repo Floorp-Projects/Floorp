@@ -121,14 +121,6 @@ public:
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD TypedText(const nsAString& aString, ETypingAction aAction);
 
-  /** Returns the absolute position of the end points of aSelection
-   * in the document as a text stream.
-   * Invariant: aStartOffset <= aEndOffset.
-   */
-  nsresult GetTextSelectionOffsets(nsISelection *aSelection,
-                                   PRUint32 &aStartOffset, 
-                                   PRUint32 &aEndOffset);
-
   nsresult InsertTextAt(const nsAString &aStringToInsert,
                         nsIDOMNode *aDestinationNode,
                         PRInt32 aDestOffset,

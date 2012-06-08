@@ -37,8 +37,8 @@ public class testAboutPage extends BaseTest {
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
         // Tap on the "About Xxxx" setting
-        mSolo.waitForText("About (Fennec|Nightly|Aurora|Firefox)");
-        mSolo.clickOnText("About (Fennec|Nightly|Aurora|Firefox)");
+        mSolo.waitForText("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
+        mSolo.clickOnText("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
 
         // Wait for the new tab and page to load
         tabEventExpecter.blockForEvent();
@@ -46,6 +46,6 @@ public class testAboutPage extends BaseTest {
 
         // Grab the title to make sure the about: page was loaded
         awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
-        mAsserter.ok(awesomebar != null && awesomebar.getText() != null && awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox)"), "page title match", "about: page title is correct");
+        mAsserter.ok(awesomebar != null && awesomebar.getText() != null && awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)"), "page title match", "about: page title is correct");
     }
 }

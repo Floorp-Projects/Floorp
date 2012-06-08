@@ -35,6 +35,7 @@ void _PR_CleanupThread(PRThread *thread)
     }
     thread->dump = 0;
 
+    PR_DELETE(thread->name);
     PR_DELETE(thread->errorString);
     thread->errorStringSize = 0;
     thread->errorStringLength = 0;
