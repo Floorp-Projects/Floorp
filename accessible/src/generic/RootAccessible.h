@@ -15,7 +15,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMEventListener.h"
 
-class nsXULTreeAccessible;
 class Relation;
 
 namespace mozilla {
@@ -76,9 +75,9 @@ protected:
 
 #ifdef MOZ_XUL
     void HandleTreeRowCountChangedEvent(nsIDOMEvent* aEvent,
-                                        nsXULTreeAccessible* aAccessible);
+                                        XULTreeAccessible* aAccessible);
     void HandleTreeInvalidatedEvent(nsIDOMEvent* aEvent,
-                                    nsXULTreeAccessible* aAccessible);
+                                    XULTreeAccessible* aAccessible);
 
     PRUint32 GetChromeFlags();
 #endif

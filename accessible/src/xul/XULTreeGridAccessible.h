@@ -3,23 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __nsXULTreeGridAccessible_h__
-#define __nsXULTreeGridAccessible_h__
+#ifndef mozilla_a11y_XULTreeGridAccessible_h__
+#define mozilla_a11y_XULTreeGridAccessible_h__
 
-#include "nsXULTreeAccessible.h"
+#include "XULTreeAccessible.h"
 #include "TableAccessible.h"
 #include "xpcAccessibleTable.h"
+
+namespace mozilla {
+namespace a11y {
 
 /**
  * Represents accessible for XUL tree in the case when it has multiple columns.
  */
-class nsXULTreeGridAccessible : public nsXULTreeAccessible,
-                                public xpcAccessibleTable,
-                                public nsIAccessibleTable,
-                                public mozilla::a11y::TableAccessible
+class XULTreeGridAccessible : public XULTreeAccessible,
+                              public xpcAccessibleTable,
+                              public nsIAccessibleTable,
+                              public TableAccessible
 {
 public:
-  nsXULTreeGridAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULTreeGridAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -37,12 +40,12 @@ public:
   virtual void Shutdown();
 
   // Accessible
-  virtual mozilla::a11y::TableAccessible* AsTable() { return this; }
-  virtual mozilla::a11y::role NativeRole();
+  virtual TableAccessible* AsTable() { return this; }
+  virtual a11y::role NativeRole();
 
 protected:
 
-  // nsXULTreeAccessible
+  // XULTreeAccessible
   virtual already_AddRefed<Accessible> CreateTreeItemAccessible(PRInt32 aRow);
 };
 
@@ -51,33 +54,33 @@ protected:
  * Represents accessible for XUL tree item in the case when XUL tree has
  * multiple columns.
  */
-class nsXULTreeGridRowAccessible : public nsXULTreeItemAccessibleBase
+class XULTreeGridRowAccessible : public XULTreeItemAccessibleBase
 {
 public:
   using Accessible::GetChildAt;
 
-  nsXULTreeGridRowAccessible(nsIContent* aContent, DocAccessible* aDoc,
-                             Accessible* aParent, nsITreeBoxObject* aTree,
-                             nsITreeView* aTreeView, PRInt32 aRow);
+  XULTreeGridRowAccessible(nsIContent* aContent, DocAccessible* aDoc,
+                           Accessible* aParent, nsITreeBoxObject* aTree,
+                           nsITreeView* aTreeView, PRInt32 aRow);
 
   // nsISupports and cycle collection
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeGridRowAccessible,
-                                           nsXULTreeItemAccessibleBase)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULTreeGridRowAccessible,
+                                           XULTreeItemAccessibleBase)
 
   // nsAccessNode
   virtual void Shutdown();
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
-  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
+  virtual a11y::role NativeRole();
+  virtual ENameValueFlag Name(nsString& aName);
   virtual Accessible* ChildAtPoint(PRInt32 aX, PRInt32 aY,
                                    EWhichChildAtPoint aWhichChild);
 
   virtual Accessible* GetChildAt(PRUint32 aIndex);
   virtual PRUint32 ChildCount() const;
 
-  // nsXULTreeItemAccessibleBase
+  // XULTreeItemAccessibleBase
   virtual Accessible* GetCellAccessible(nsITreeColumn* aColumn);
   virtual void RowInvalidated(PRInt32 aStartColIdx, PRInt32 aEndColIdx);
 
@@ -86,7 +89,7 @@ protected:
   // Accessible
   virtual void CacheChildren();
 
-  // nsXULTreeItemAccessibleBase
+  // XULTreeItemAccessibleBase
   AccessibleHashtable mAccessibleCache;
 };
 
@@ -96,7 +99,7 @@ protected:
  * multiple columns.
  */
 
-#define NS_XULTREEGRIDCELLACCESSIBLE_IMPL_CID         \
+#define XULTREEGRIDCELLACCESSIBLE_IMPL_CID            \
 {  /* 84588ad4-549c-4196-a932-4c5ca5de5dff */         \
   0x84588ad4,                                         \
   0x549c,                                             \
@@ -104,19 +107,19 @@ protected:
   { 0xa9, 0x32, 0x4c, 0x5c, 0xa5, 0xde, 0x5d, 0xff }  \
 }
 
-class nsXULTreeGridCellAccessible : public mozilla::a11y::LeafAccessible,
-                                    public nsIAccessibleTableCell
+class XULTreeGridCellAccessible : public LeafAccessible,
+                                  public nsIAccessibleTableCell
 {
 public:
 
-  nsXULTreeGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc,
-                              nsXULTreeGridRowAccessible* aRowAcc,
-                              nsITreeBoxObject* aTree, nsITreeView* aTreeView,
-                              PRInt32 aRow, nsITreeColumn* aColumn);
+  XULTreeGridCellAccessible(nsIContent* aContent, DocAccessible* aDoc,
+                            XULTreeGridRowAccessible* aRowAcc,
+                            nsITreeBoxObject* aTree, nsITreeView* aTreeView,
+                            PRInt32 aRow, nsITreeColumn* aColumn);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULTreeGridCellAccessible,
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULTreeGridCellAccessible,
                                            LeafAccessible)
 
   // nsIAccessible
@@ -135,20 +138,20 @@ public:
   virtual bool IsPrimaryForNode() const;
 
   // Accessible
-  virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
+  virtual ENameValueFlag Name(nsString& aName);
   virtual Accessible* FocusedChild();
   virtual nsresult GetAttributesInternal(nsIPersistentProperties* aAttributes);
   virtual PRInt32 IndexInParent() const;
   virtual Relation RelationByType(PRUint32 aType);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual PRUint64 NativeInteractiveState() const;
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
 
-  // nsXULTreeGridCellAccessible
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULTREEGRIDCELLACCESSIBLE_IMPL_CID)
+  // XULTreeGridCellAccessible
+  NS_DECLARE_STATIC_IID_ACCESSOR(XULTREEGRIDCELLACCESSIBLE_IMPL_CID)
 
   /**
    * Return index of the column.
@@ -167,7 +170,7 @@ protected:
                                          nsresult* aError = nsnull) const;
   virtual void DispatchClickEvent(nsIContent* aContent, PRUint32 aActionIndex);
 
-  // nsXULTreeGridCellAccessible
+  // XULTreeGridCellAccessible
 
   /**
    * Return true if value of cell can be modified.
@@ -185,7 +188,10 @@ protected:
   nsString mCachedTextEquiv;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsXULTreeGridCellAccessible,
-                              NS_XULTREEGRIDCELLACCESSIBLE_IMPL_CID)
+NS_DEFINE_STATIC_IID_ACCESSOR(XULTreeGridCellAccessible,
+                              XULTREEGRIDCELLACCESSIBLE_IMPL_CID)
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

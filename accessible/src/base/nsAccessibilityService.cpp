@@ -76,7 +76,7 @@
 #include "nsXULSliderAccessible.h"
 #include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
-#include "nsXULTreeGridAccessibleWrap.h"
+#include "XULTreeGridAccessibleWrap.h"
 #endif
 
 using namespace mozilla;
@@ -530,7 +530,7 @@ nsAccessibilityService::TreeViewChanged(nsIPresShell* aPresShell,
   if (document) {
     Accessible* accessible = document->GetAccessible(aContent);
     if (accessible) {
-      nsXULTreeAccessible* treeAcc = accessible->AsXULTree();
+      XULTreeAccessible* treeAcc = accessible->AsXULTree();
       if (treeAcc) 
         treeAcc->TreeViewChanged(aView);
     }
@@ -1460,7 +1460,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       return CreateAccessibleForXULTree(aContent, aDoc);
 
     case nsIAccessibleProvider::XULTreeColumns:
-      accessible = new nsXULTreeColumAccessible(aContent, aDoc);
+      accessible = new XULTreeColumAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULTreeColumnItem:
@@ -1803,13 +1803,13 @@ nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
 
   // Outline of list accessible.
   if (count == 1) {
-    Accessible* accessible = new nsXULTreeAccessible(aContent, aDoc);
+    Accessible* accessible = new XULTreeAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
 
   // Table or tree table accessible.
-  Accessible* accessible = new nsXULTreeGridAccessibleWrap(aContent, aDoc);
+  Accessible* accessible = new XULTreeGridAccessibleWrap(aContent, aDoc);
   NS_IF_ADDREF(accessible);
   return accessible;
 }
