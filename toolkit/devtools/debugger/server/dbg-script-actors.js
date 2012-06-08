@@ -501,9 +501,7 @@ ThreadActor.prototype = {
   onScripts: function TA_onScripts(aRequest) {
     // Get the script list from the debugger.
     for (let s of this.dbg.findScripts()) {
-      if (s.url.indexOf("chrome://") != 0) {
-        this._addScript(s);
-      }
+      this._addScript(s);
     }
     // Build the cache.
     let scripts = [];
@@ -917,6 +915,10 @@ ThreadActor.prototype = {
    *        The source script that will be stored.
    */
   _addScript: function TA__addScript(aScript) {
+    // Ignore XBL bindings for content debugging.
+    if (aScript.url.indexOf("chrome://") == 0) {
+      return;
+    }
     // Use a sparse array for storing the scripts for each URL in order to
     // optimize retrieval.
     if (!this._scripts[aScript.url]) {
