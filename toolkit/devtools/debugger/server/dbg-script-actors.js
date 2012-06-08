@@ -170,10 +170,8 @@ ThreadActor.prototype = {
       this.conn.send(packet);
       return this._nest();
     } catch(e) {
-      let msg = "Got an exception during TA__pauseAndRespond: " + e +
-                ": " + e.stack;
-      Cu.reportError(msg);
-      dumpn(msg);
+      Cu.reportError("Got an exception during TA__pauseAndRespond: " + e +
+                     ": " + e.stack);
       return undefined;
     }
   },
@@ -1542,15 +1540,11 @@ EnvironmentActor.prototype = {
       // TODO: this part should be removed in favor of the commented-out part
       // below when getVariableDescriptor lands.
       let desc = {
+        value: this.obj.getVariable(name),
         configurable: false,
         writable: true,
         enumerable: true
       };
-      // Avoid "Debugger scope is not live" errors for |arguments|, introduced
-      // in bug 746601.
-      if (this.obj.callee.live) {
-        desc.value = this.obj.getVariable(name);
-      }
       //let desc = this.obj.getVariableDescriptor(name);
       let descForm = {
         enumerable: true,
