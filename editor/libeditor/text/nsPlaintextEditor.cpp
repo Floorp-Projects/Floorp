@@ -630,7 +630,7 @@ nsPlaintextEditor::DeleteSelection(EDirection aAction,
   nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
   // pre-process
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // If there is an existing selection when an extended delete is requested,
@@ -688,7 +688,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
 
   // pre-process
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsAutoString resultString;
   // XXX can we trust instring to outlive ruleInfo,
@@ -725,7 +725,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   nsAutoRules beginRulesSniffing(this, kOpInsertBreak, nsIEditor::eNext);
 
   // pre-process
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // Batching the selection and moving nodes out from under the caret causes
@@ -1073,7 +1073,7 @@ nsPlaintextEditor::Undo(PRUint32 aCount)
   nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(kOpUndo);
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   
@@ -1102,7 +1102,7 @@ nsPlaintextEditor::Redo(PRUint32 aCount)
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(kOpRedo);
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   
@@ -1376,7 +1376,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
     quotedStuff.Append(PRUnichar('\n'));
 
   // get selection
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);

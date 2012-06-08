@@ -16,8 +16,7 @@
 
 #include "nsIAtom.h"
 #include "nsIDOMDocument.h"
-#include "nsISelection.h"
-#include "nsTypedSelection.h"
+#include "mozilla/Selection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIPrivateTextRange.h"
 #include "nsITransactionManager.h"
@@ -595,7 +594,7 @@ public:
 #if DEBUG_JOE
   static void DumpNode(nsIDOMNode *aNode, PRInt32 indent=0);
 #endif
-  nsTypedSelection* GetTypedSelection();
+  mozilla::Selection* GetSelection();
 
   // Helpers to add a node to the selection. 
   // Used by table cell selection methods

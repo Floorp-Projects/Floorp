@@ -143,7 +143,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIDOMHTMLInputElement.h"
 #include "nsParserConstants.h"
 #include "nsIWebNavigation.h"
-#include "nsTypedSelection.h"
+#include "mozilla/Selection.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -6867,7 +6867,7 @@ nsContentUtils::IsOnPrefWhitelist(nsPIDOMWindow* aWindow,
 
 // static
 void
-nsContentUtils::GetSelectionInTextControl(nsTypedSelection* aSelection,
+nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
                                           Element* aRoot,
                                           PRInt32& aOutStartOffset,
                                           PRInt32& aOutEndOffset)

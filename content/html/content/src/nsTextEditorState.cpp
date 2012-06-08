@@ -33,10 +33,11 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIEditor.h"
 #include "nsTextEditRules.h"
-#include "nsTypedSelection.h"
+#include "mozilla/Selection.h"
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);

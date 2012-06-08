@@ -598,8 +598,8 @@ nsEditor::GetSelection(nsISelection **aSelection)
   return selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  // does an addref
 }
 
-nsTypedSelection*
-nsEditor::GetTypedSelection()
+Selection*
+nsEditor::GetSelection()
 {
   nsCOMPtr<nsISelection> sel;
   nsresult res = GetSelection(getter_AddRefs(sel));

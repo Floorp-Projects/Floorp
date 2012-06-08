@@ -31,7 +31,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsIServiceManager.h"
 #include "nsTextFragment.h"
-#include "nsTypedSelection.h"
+#include "mozilla/Selection.h"
 #include "gfxSkipChars.h"
 
 using namespace mozilla::a11y;

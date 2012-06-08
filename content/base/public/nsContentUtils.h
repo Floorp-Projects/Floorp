@@ -117,9 +117,10 @@ struct nsIntMargin;
 class nsPIDOMWindow;
 class nsIDocumentLoaderFactory;
 class nsIDOMHTMLInputElement;
-class nsTypedSelection;
 
 namespace mozilla {
+
+class Selection;
 
 namespace layers {
   class LayerManager;
@@ -2040,7 +2041,7 @@ public:
    * @param aOutStartOffset Output start offset
    * @param aOutEndOffset   Output end offset
    */
-  static void GetSelectionInTextControl(nsTypedSelection* aSelection,
+  static void GetSelectionInTextControl(mozilla::Selection* aSelection,
                                         Element* aRoot,
                                         PRInt32& aOutStartOffset,
                                         PRInt32& aOutEndOffset);
