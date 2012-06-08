@@ -96,7 +96,7 @@ $(test_webidl_files): %: $(srcdir)/test/%
 $(binding_header_files): %Binding.h: $(bindinggen_dependencies) \
                                      %.webidl \
                                      $(NULL)
-	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON_PATH) \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
 	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) header \
 	  $(srcdir)/Bindings.conf $*Binding \
@@ -105,7 +105,7 @@ $(binding_header_files): %Binding.h: $(bindinggen_dependencies) \
 $(binding_cpp_files): %Binding.cpp: $(bindinggen_dependencies) \
                                     %.webidl \
                                     $(NULL)
-	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON_PATH) \
 	  $(PLY_INCLUDE) -I$(srcdir)/parser \
 	  $(srcdir)/BindingGen.py $(ACCESSOR_OPT) cpp \
 	  $(srcdir)/Bindings.conf $*Binding \
@@ -130,7 +130,7 @@ $(CACHE_DIR)/.done:
 
 ParserResults.pkl: $(globalgen_dependencies) \
                    $(all_webidl_files)
-	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) $(topsrcdir)/config/pythonpath.py \
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON_PATH) \
     $(PLY_INCLUDE) -I$(srcdir)/parser \
     $(srcdir)/GlobalGen.py $(ACCESSOR_OPT) $(srcdir)/Bindings.conf . \
     --cachedir=$(CACHE_DIR) \
