@@ -809,8 +809,7 @@ public:
    * If aFrame is an out of flow frame, return its placeholder, otherwise
    * return its parent.
    */
-  static nsIFrame* GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
-                                             nsIFrame* aFrame);
+  static nsIFrame* GetParentOrPlaceholderFor(nsIFrame* aFrame);
 
   /**
    * Get a frame's next-in-flow, or, if it doesn't have one, its special sibling.
