@@ -266,7 +266,8 @@ Parser::parse(JSObject *chain)
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
-    SharedContext globalsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL);
+    SharedContext globalsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL,
+                           /* staticLevel = */ 0);
     TreeContext globaltc(this, &globalsc);
     if (!globaltc.init())
         return NULL;
@@ -1085,7 +1086,6 @@ EnterFunction(SharedContext *outersc, SharedContext *funsc)
     funsc->blockidGen = outersc->blockidGen;
     if (!GenerateBlockId(funsc, funsc->bodyid))
         return false;
-    funsc->staticLevel = outersc->staticLevel + 1;
 
     return true;
 }
@@ -1578,7 +1578,8 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         return NULL;
 
     /* Initialize early for possible flags mutation via destructuringExpr. */
-    SharedContext funsc(context, /* scopeChain = */ NULL, fun, funbox);
+    SharedContext funsc(context, /* scopeChain = */ NULL, fun, funbox,
+                        outertc->sc->staticLevel + 1);
     TreeContext funtc(this, &funsc);
     if (!funtc.init())
         return NULL;
@@ -5496,7 +5497,8 @@ Parser::generatorExpr(ParseNode *kid)
         if (!funbox)
             return NULL;
 
-        SharedContext gensc(context, /* scopeChain = */ NULL, fun, funbox);
+        SharedContext gensc(context, /* scopeChain = */ NULL, fun, funbox,
+                            outertc->sc->staticLevel + 1);
         TreeContext gentc(this, &gensc);
         if (!gentc.init())
             return NULL;
@@ -6473,7 +6475,8 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * lightweight function activation, or if its scope chain doesn't match
      * the one passed to us.
      */
-    SharedContext xmlsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL);
+    SharedContext xmlsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL,
+                        /* staticLevel = */ 0);
     TreeContext xmltc(this, &xmlsc);
     if (!xmltc.init())
         return NULL;
