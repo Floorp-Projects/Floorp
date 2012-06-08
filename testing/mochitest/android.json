@@ -1,4 +1,6 @@
-{"content/smil/test": "",
+{"content/canvas/test": "",
+ "content/media/test": "",
+ "content/smil/test": "",
  "content/xml/document/test": "",
  "content/xslt/tests/mochitest": "",
  "dom/file/test": "",
@@ -25,4 +27,3 @@
  "parser/htmlparser/tests/mochitest": "",
  "js": ""
 }
-
