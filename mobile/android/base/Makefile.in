@@ -61,7 +61,6 @@ FENNEC_JAVA_FILES = \
   FloatUtils.java \
   FlowLayout.java \
   FormAssistPopup.java \
-  GeckoActionBar.java \
   GeckoApplication.java \
   GeckoApp.java \
   GeckoAppShell.java \
@@ -102,6 +101,7 @@ FENNEC_JAVA_FILES = \
   SurfaceBits.java \
   Tab.java \
   Tabs.java \
+  TabsPanel.java \
   TabsTray.java \
   TabsAccessor.java \
   Telemetry.java \
@@ -281,6 +281,7 @@ RES_LAYOUT = \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_counter.xml \
+  res/layout/tabs_panel.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
@@ -293,20 +294,26 @@ RES_LAYOUT = \
   res/layout/validation_message.xml \
   $(NULL)
 
-RES_LAYOUT_V11 = \
-  res/layout-v11/gecko_app.xml \
-  $(NULL)
-
 RES_LAYOUT_LAND_V14 = \
   res/layout-land-v14/browser_toolbar.xml \
   $(NULL)
 
 RES_LAYOUT_XLARGE = \
   res/layout-xlarge/browser_toolbar.xml \
+  res/layout-xlarge/gecko_app.xml \
+  res/layout-xlarge/remote_tabs_child.xml \
+  res/layout-xlarge/remote_tabs_group.xml \
+  res/layout-xlarge/tabs_panel.xml \
+  res/layout-xlarge/tabs_row.xml \
   $(NULL)
 
 RES_LAYOUT_SW600DP = \
   res/layout-sw600dp/browser_toolbar.xml \
+  res/layout-sw600dp/gecko_app.xml \
+  res/layout-sw600dp/remote_tabs_child.xml \
+  res/layout-sw600dp/remote_tabs_group.xml \
+  res/layout-sw600dp/tabs_panel.xml \
+  res/layout-sw600dp/tabs_row.xml \
   $(NULL)
 
 RES_VALUES = \
@@ -323,6 +330,14 @@ RES_VALUES_V11 = \
   res/values-v11/dimens.xml \
   res/values-v11/styles.xml \
   res/values-v11/themes.xml \
+  $(NULL)
+
+RES_VALUES_XLARGE = \
+  res/values-xlarge/dimens.xml \
+  $(NULL)
+
+RES_VALUES_SW600DP = \
+  res/values-sw600dp/dimens.xml \
   $(NULL)
 
 RES_VALUES_LAND_V14 = \
@@ -349,6 +364,7 @@ RES_DRAWABLE_NODPI = \
   res/drawable-nodpi/background.png \
   res/drawable-nodpi/tabs_tray_bg.png \
   res/drawable-nodpi/tabs_tray_pressed_bg.png \
+  res/drawable-nodpi/tabs_tray_selected_bg.png \
   $(NULL)
 
 RES_DRAWABLE_BASE = \
@@ -383,11 +399,9 @@ RES_DRAWABLE_BASE = \
   res/drawable/tab_close.png \
   res/drawable/tab_thumbnail_default.png \
   res/drawable/tab_thumbnail_shadow.png \
-  res/drawable/tab_selected.png \
+  res/drawable/tabs_carat.png \
   res/drawable/tabs_normal.png \
   res/drawable/tabs_pressed.png \
-  res/drawable/tabs_more.png \
-  res/drawable/tabs_plus.png \
   res/drawable/address_bar_back_button.xml \
   res/drawable/address_bar_back_button_bg.xml \
   res/drawable/address_bar_back_button_pressed_bg.xml \
@@ -460,11 +474,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_close.png \
   res/drawable-hdpi/tab_thumbnail_default.png \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
-  res/drawable-hdpi/tab_selected.png \
+  res/drawable-hdpi/tabs_carat.png \
   res/drawable-hdpi/tabs_normal.png \
   res/drawable-hdpi/tabs_pressed.png \
-  res/drawable-hdpi/tabs_more.png \
-  res/drawable-hdpi/tabs_plus.png \
   res/drawable-hdpi/address_bar_texture_port.png \
   res/drawable-hdpi/address_bar_pressed_texture_port.png \
   res/drawable-hdpi/address_bar_url_default.9.png \
@@ -566,11 +578,9 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/tab_close.png \
   res/drawable-xhdpi-v11/tab_thumbnail_default.png \
   res/drawable-xhdpi-v11/tab_thumbnail_shadow.png \
-  res/drawable-xhdpi-v11/tab_selected.png \
+  res/drawable-xhdpi-v11/tabs_carat.png \
   res/drawable-xhdpi-v11/tabs_normal.png \
   res/drawable-xhdpi-v11/tabs_pressed.png \
-  res/drawable-xhdpi-v11/tabs_more.png \
-  res/drawable-xhdpi-v11/tabs_plus.png \
   res/drawable-xhdpi-v11/address_bar_texture_port.png \
   res/drawable-xhdpi-v11/address_bar_pressed_texture_port.png \
   res/drawable-xhdpi-v11/address_bar_url_default.9.png \
@@ -613,10 +623,9 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/address_bar_pressed_texture_land.png \
   res/drawable-land-mdpi-v14/address_bar_url_default.9.png \
   res/drawable-land-mdpi-v14/address_bar_url_pressed.9.png \
+  res/drawable-land-mdpi-v14/tabs_carat.png \
   res/drawable-land-mdpi-v14/tabs_normal.png \
   res/drawable-land-mdpi-v14/tabs_pressed.png \
-  res/drawable-land-mdpi-v14/tabs_more.png \
-  res/drawable-land-mdpi-v14/tabs_plus.png \
   res/drawable-land-mdpi-v14/urlbar_stop.png \
   res/drawable-land-mdpi-v14/site_security_identified.png \
   res/drawable-land-mdpi-v14/site_security_verified.png \
@@ -629,10 +638,9 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/address_bar_pressed_texture_land.png \
   res/drawable-land-hdpi-v14/address_bar_url_default.9.png \
   res/drawable-land-hdpi-v14/address_bar_url_pressed.9.png \
+  res/drawable-land-hdpi-v14/tabs_carat.png \
   res/drawable-land-hdpi-v14/tabs_normal.png \
   res/drawable-land-hdpi-v14/tabs_pressed.png \
-  res/drawable-land-hdpi-v14/tabs_more.png \
-  res/drawable-land-hdpi-v14/tabs_plus.png \
   res/drawable-land-hdpi-v14/urlbar_stop.png \
   res/drawable-land-hdpi-v14/site_security_identified.png \
   res/drawable-land-hdpi-v14/site_security_verified.png \
@@ -645,10 +653,9 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/address_bar_pressed_texture_land.png \
   res/drawable-land-xhdpi-v14/address_bar_url_default.9.png \
   res/drawable-land-xhdpi-v14/address_bar_url_pressed.9.png \
+  res/drawable-land-xhdpi-v14/tabs_carat.png \
   res/drawable-land-xhdpi-v14/tabs_normal.png \
   res/drawable-land-xhdpi-v14/tabs_pressed.png \
-  res/drawable-land-xhdpi-v14/tabs_more.png \
-  res/drawable-land-xhdpi-v14/tabs_plus.png \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
   res/drawable-land-xhdpi-v14/site_security_identified.png \
   res/drawable-land-xhdpi-v14/site_security_verified.png \
@@ -668,10 +675,9 @@ RES_DRAWABLE_XLARGE_MDPI = \
   res/drawable-xlarge-mdpi/ic_menu_bookmark_remove.png \
   res/drawable-xlarge-mdpi/ic_menu_reload.png \
   res/drawable-xlarge-mdpi/ic_menu_forward.png \
+  res/drawable-xlarge-mdpi/tabs_carat.png \
   res/drawable-xlarge-mdpi/tabs_normal.png \
   res/drawable-xlarge-mdpi/tabs_pressed.png \
-  res/drawable-xlarge-mdpi/tabs_more.png \
-  res/drawable-xlarge-mdpi/tabs_plus.png \
   res/drawable-xlarge-mdpi/urlbar_stop.png \
   $(NULL)
 
@@ -687,10 +693,9 @@ RES_DRAWABLE_XLARGE_HDPI = \
   res/drawable-xlarge-hdpi/ic_menu_bookmark_remove.png \
   res/drawable-xlarge-hdpi/ic_menu_reload.png \
   res/drawable-xlarge-hdpi/ic_menu_forward.png \
+  res/drawable-xlarge-hdpi/tabs_carat.png \
   res/drawable-xlarge-hdpi/tabs_normal.png \
   res/drawable-xlarge-hdpi/tabs_pressed.png \
-  res/drawable-xlarge-hdpi/tabs_more.png \
-  res/drawable-xlarge-hdpi/tabs_plus.png \
   res/drawable-xlarge-hdpi/urlbar_stop.png \
   $(NULL)
 
@@ -706,10 +711,9 @@ RES_DRAWABLE_XLARGE_XHDPI = \
   res/drawable-xlarge-xhdpi/ic_menu_bookmark_remove.png \
   res/drawable-xlarge-xhdpi/ic_menu_reload.png \
   res/drawable-xlarge-xhdpi/ic_menu_forward.png \
+  res/drawable-xlarge-xhdpi/tabs_carat.png \
   res/drawable-xlarge-xhdpi/tabs_normal.png \
   res/drawable-xlarge-xhdpi/tabs_pressed.png \
-  res/drawable-xlarge-xhdpi/tabs_more.png \
-  res/drawable-xlarge-xhdpi/tabs_plus.png \
   res/drawable-xlarge-xhdpi/urlbar_stop.png \
   $(NULL)
 
@@ -726,10 +730,9 @@ RES_DRAWABLE_SW600DP_MDPI = \
   res/drawable-sw600dp-mdpi/ic_menu_bookmark_remove.png \
   res/drawable-sw600dp-mdpi/ic_menu_reload.png \
   res/drawable-sw600dp-mdpi/ic_menu_forward.png \
+  res/drawable-sw600dp-mdpi/tabs_carat.png \
   res/drawable-sw600dp-mdpi/tabs_normal.png \
   res/drawable-sw600dp-mdpi/tabs_pressed.png \
-  res/drawable-sw600dp-mdpi/tabs_more.png \
-  res/drawable-sw600dp-mdpi/tabs_plus.png \
   res/drawable-sw600dp-mdpi/urlbar_stop.png \
   $(NULL)
 
@@ -745,10 +748,9 @@ RES_DRAWABLE_SW600DP_HDPI = \
   res/drawable-sw600dp-hdpi/ic_menu_bookmark_remove.png \
   res/drawable-sw600dp-hdpi/ic_menu_reload.png \
   res/drawable-sw600dp-hdpi/ic_menu_forward.png \
+  res/drawable-sw600dp-hdpi/tabs_carat.png \
   res/drawable-sw600dp-hdpi/tabs_normal.png \
   res/drawable-sw600dp-hdpi/tabs_pressed.png \
-  res/drawable-sw600dp-hdpi/tabs_more.png \
-  res/drawable-sw600dp-hdpi/tabs_plus.png \
   res/drawable-sw600dp-hdpi/urlbar_stop.png \
   $(NULL)
 
@@ -764,10 +766,9 @@ RES_DRAWABLE_SW600DP_XHDPI = \
   res/drawable-sw600dp-xhdpi/ic_menu_bookmark_remove.png \
   res/drawable-sw600dp-xhdpi/ic_menu_reload.png \
   res/drawable-sw600dp-xhdpi/ic_menu_forward.png \
+  res/drawable-sw600dp-xhdpi/tabs_carat.png \
   res/drawable-sw600dp-xhdpi/tabs_normal.png \
   res/drawable-sw600dp-xhdpi/tabs_pressed.png \
-  res/drawable-sw600dp-xhdpi/tabs_more.png \
-  res/drawable-sw600dp-xhdpi/tabs_plus.png \
   res/drawable-sw600dp-xhdpi/urlbar_stop.png \
   $(NULL)
 
@@ -819,7 +820,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/progress_spinner_10.png                \
   mobile/android/base/resources/drawable/progress_spinner_11.png                \
   mobile/android/base/resources/drawable/progress_spinner_12.png                \
-  mobile/android/base/resources/drawable/remote_tabs_group_bg_repeat.xml        \
+  mobile/android/base/resources/drawable/remote_tabs_level.xml                  \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
   mobile/android/base/resources/drawable/suggestion_selector.xml                \
@@ -827,24 +828,27 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \
   mobile/android/base/resources/drawable/tabs_tray_pressed_bg_repeat.xml        \
+  mobile/android/base/resources/drawable/tabs_tray_selected_bg_repeat.xml       \
+  mobile/android/base/resources/drawable/tabs_tray_active_selector.xml          \
+  mobile/android/base/resources/drawable/tabs_tray_default_selector.xml         \
   mobile/android/base/resources/drawable/tabs_tray_close_button.xml             \
   mobile/android/base/resources/drawable/tabs_tray_list_divider.xml             \
-  mobile/android/base/resources/drawable/tabs_tray_list_selector.xml            \
   mobile/android/base/resources/drawable/shadow.png                             \
   $(NULL)
 
 MOZ_ANDROID_DRAWABLES += $(shell if test -e $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn; then cat $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/android-resources.mn | tr '\n' ' ';  fi)
 
-RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_V11) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_XLARGE) $(RES_LAYOUT_SW600DP) $(RES_VALUES) $(RES_VALUES_V11) $(RES_VALUES_LAND_V14) $(RES_VALUES_SW600DP_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_XLARGE_MDPI) $(RES_DRAWABLE_XLARGE_HDPI) $(RES_DRAWABLE_XLARGE_XHDPI) $(RES_DRAWABLE_SW600DP_MDPI) $(RES_DRAWABLE_SW600DP_HDPI) $(RES_DRAWABLE_SW600DP_XHDPI) $(RES_COLOR) $(RES_MENU)
+RESOURCES=$(RES_LAYOUT) $(RES_LAYOUT_LAND_V14) $(RES_LAYOUT_XLARGE) $(RES_LAYOUT_SW600DP) $(RES_VALUES) $(RES_VALUES_V11) $(RES_VALUES_XLARGE) $(RES_VALUES_SW600DP) $(RES_VALUES_LAND_V14) $(RES_VALUES_SW600DP_V14) $(RES_XML) $(RES_ANIM) $(RES_DRAWABLE_NODPI) $(RES_DRAWABLE_BASE) $(RES_DRAWABLE_LDPI) $(RES_DRAWABLE_HDPI) $(RES_DRAWABLE_MDPI_V11) $(RES_DRAWABLE_HDPI_V11) $(RES_DRAWABLE_XHDPI_V11) $(RES_DRAWABLE_LAND_V14) $(RES_DRAWABLE_LAND_MDPI_V14) $(RES_DRAWABLE_LAND_HDPI_V14) $(RES_DRAWABLE_LAND_XHDPI_V14) $(RES_DRAWABLE_XLARGE_MDPI) $(RES_DRAWABLE_XLARGE_HDPI) $(RES_DRAWABLE_XLARGE_XHDPI) $(RES_DRAWABLE_SW600DP_MDPI) $(RES_DRAWABLE_SW600DP_HDPI) $(RES_DRAWABLE_SW600DP_XHDPI) $(RES_COLOR) $(RES_MENU)
 
 RES_DIRS= \
   res/layout              \
-  res/layout-v11          \
   res/layout-land-v14     \
   res/layout-xlarge       \
   res/layout-sw600dp      \
   res/values              \
   res/values-v11          \
+  res/values-xlarge       \
+  res/values-sw600dp      \
   res/values-land-v14     \
   res/values-sw600dp-v14  \
   res/xml                 \

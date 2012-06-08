@@ -3,9 +3,9 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<resources>
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <dimen name="browser_toolbar_height">56dp</dimen>
-    <dimen name="tabs_counter_size">26sp</dimen>
+    <item android:maxLevel="1" android:drawable="@drawable/tab_close"/>
+    <item android:maxLevel="2" android:drawable="@drawable/tab_new"/>
 
-</resources>
+</level-list>

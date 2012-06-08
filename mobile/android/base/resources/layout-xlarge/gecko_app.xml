@@ -8,14 +8,14 @@
                 android:layout_height="fill_parent">
 
    <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
-                                android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
+                                android:layout_width="200dip"
+                                android:layout_height="fill_parent"
                                 android:background="@drawable/tabs_tray_bg_repeat"
                                 android:visibility="gone"/>
 
    <LinearLayout android:id="@+id/main_layout"
                  style="@style/Screen"
-                 android:layout_below="@id/tabs_panel">
+                 android:layout_toRightOf="@id/tabs_panel">
  
         <include layout="@layout/browser_toolbar"/>
 
