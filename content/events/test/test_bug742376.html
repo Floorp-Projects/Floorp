@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=402089
+-->
+<head>
+  <title>Test for Bug 742376</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=742376">Mozilla Bug 742376</a>
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 742376 **/
+
+function getListenerCount() {
+
+  var Cc = SpecialPowers.wrap(Components).classes;
+  var Ci = SpecialPowers.wrap(Components).interfaces;
+  var dss = Cc["@mozilla.org/devicesensors;1"].getService(Ci.nsIDeviceSensors);
+
+  return dss.listenerCount(Ci.nsIDeviceSensorData.TYPE_ORIENTATION);
+}
+
+var startListenerCount = getListenerCount();
+
+function dumbListener(event) {}
+function dumbListener2(event) {}
+
+window.addEventListener("deviceorientation", dumbListener, false);
+window.addEventListener("deviceorientation", dumbListener2, false);
+
+window.setTimeout(function() {
+
+  window.removeEventListener("deviceorientation", dumbListener, false);
+  window.setTimeout(function() {
+
+    window.removeEventListener("deviceorientation", dumbListener2, false);
+    window.setTimeout(function() {
+      is (getListenerCount(), startListenerCount, "Must have the same listeners at this point");
+      SimpleTest.finish();
+    }, 0);
+  }, 0);
+}, 0);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

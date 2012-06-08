@@ -403,12 +403,11 @@ private:
 
     // Returns null if a principal cannot be found; generally callers
     // should error out at that point.
-    static nsIPrincipal*
-    doGetObjectPrincipal(JSObject *obj
+    static nsIPrincipal* doGetObjectPrincipal(JSObject *obj);
 #ifdef DEBUG
-                         , bool aAllowShortCircuit = true
+    static nsIPrincipal*
+    old_doGetObjectPrincipal(JSObject *obj, bool aAllowShortCircuit = true);
 #endif
-                         );
 
     // Returns null if a principal cannot be found.  Note that rv can be NS_OK
     // when this happens -- this means that there was no JS running.
@@ -554,17 +553,6 @@ private:
     PrintPolicyDB();
 #endif
 
-    struct ContextPrincipal {
-        ContextPrincipal(ContextPrincipal *next, JSContext *cx,
-                         JSStackFrame *fp, nsIPrincipal *principal)
-            : mNext(next), mCx(cx), mFp(fp), mPrincipal(principal) {}
-
-        ContextPrincipal *mNext;
-        JSContext *mCx;
-        JSStackFrame *mFp;
-        nsCOMPtr<nsIPrincipal> mPrincipal;
-    };
-
     // JS strings we need to clean up on shutdown
     static jsid sEnabledID;
 
@@ -577,7 +565,6 @@ private:
 
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
-    ContextPrincipal *mContextPrincipals;
     nsInterfaceHashtable<PrincipalKey, nsIPrincipal> mPrincipals;
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;

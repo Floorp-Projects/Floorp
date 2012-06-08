@@ -163,7 +163,6 @@ WebappsRegistry.prototype = {
                               "Webapps:GetInstalled:Return:OK", "Webapps:GetInstalled:Return:KO",
                               "Webapps:GetSelf:Return:OK", "Webapps:GetSelf:Return:KO"]);
 
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this._id = util.outerWindowID;
   },

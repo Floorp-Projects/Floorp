@@ -118,6 +118,17 @@ nsDeviceSensors::~nsDeviceSensors()
   }
 }
 
+NS_IMETHODIMP nsDeviceSensors::ListenerCount(PRUint32 aType, PRInt32 *aRetVal)
+{
+  if (!mEnabled) {
+    *aRetVal = 0;
+    return NS_OK;
+  }
+
+  *aRetVal = mWindowListeners[aType]->Length();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsDeviceSensors::AddWindowListener(PRUint32 aType, nsIDOMWindow *aWindow)
 {
   if (!mEnabled)
