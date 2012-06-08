@@ -890,7 +890,7 @@ nsXULListitemAccessible::NativeState()
 PRUint64
 nsXULListitemAccessible::NativeInteractiveState() const
 {
-  return NativelyUnavailable() || mParent->NativelyUnavailable() ?
+  return NativelyUnavailable() || (mParent && mParent->NativelyUnavailable()) ?
     states::UNAVAILABLE : states::FOCUSABLE | states::SELECTABLE;
 }
 

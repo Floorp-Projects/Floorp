@@ -103,13 +103,17 @@ function checkSetSizeException(element)
   }
   ok(!caught, "Setting a size to 0 from the IDL shouldn't throw an exception");
 
+  element.size = 1;
+
   caught = false;
   try {
     element.size = -1;
   } catch(e) {
     caught = true;
   }
-  ok(caught, "Setting an invalid size from the IDL should throw an exception");
+  ok(!caught, "Setting a negative size from the IDL shouldn't throw an exception");
+
+  is(element.size, 0, "The size should now be equal to the minimum non-negative value");
 
   caught = false;
   try {

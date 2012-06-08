@@ -190,13 +190,13 @@ class Debugger {
      * Allocate and initialize a Debugger.Script instance whose referent is
      * |script|.
      */
-    JSObject *newDebuggerScript(JSContext *cx, Handle<JSScript*> script);
+    JSObject *newDebuggerScript(JSContext *cx, HandleScript script);
 
     /*
      * Receive a "new script" event from the engine. A new script was compiled
      * or deserialized.
      */
-    void fireNewScript(JSContext *cx, Handle<JSScript*> script);
+    void fireNewScript(JSContext *cx, HandleScript script);
 
     static inline Debugger *fromLinks(JSCList *links);
     inline Breakpoint *firstBreakpoint() const;
@@ -337,7 +337,7 @@ class Debugger {
      * needed. The context |cx| must be in the debugger compartment; |script|
      * must be a script in a debuggee compartment.
      */
-    JSObject *wrapScript(JSContext *cx, Handle<JSScript*> script);
+    JSObject *wrapScript(JSContext *cx, HandleScript script);
 
   private:
     Debugger(const Debugger &) MOZ_DELETE;

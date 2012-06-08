@@ -1,0 +1,26 @@
+# Please see the comment at the beginning of reftest.list
+
+== leftN-widthA-rightA.html?border_abspos leftN-widthA-rightA-ref.html?border_abspos
+== leftN-widthA-rightA-2.html?border_abspos leftN-widthA-rightA-2-ref.html?border_abspos
+== leftN-widthA-rightN.html?border_abspos leftN-widthA-rightN-ref.html?border_abspos
+== leftN-widthA-rightN-2.html?border_abspos leftN-widthA-rightN-2-ref.html?border_abspos
+== leftA-widthN-rightA.html?border_abspos leftA-widthN-rightA-ref.html?border_abspos
+== leftN-widthN-rightA.html?border_abspos leftN-widthN-rightA-ref.html?border_abspos
+== leftA-widthN-rightN.html?border_abspos leftA-widthN-rightN-ref.html?border_abspos
+== leftA-widthA-rightN.html?border_abspos leftA-widthA-rightN-ref.html?border_abspos
+== toauto-leftN-widthA-rightA.html?border_abspos toauto-leftN-widthA-rightA-ref.html?border_abspos
+== toauto-leftN-widthA-rightA-2.html?border_abspos toauto-leftN-widthA-rightA-2-ref.html?border_abspos
+== toauto-leftN-widthA-rightN.html?border_abspos toauto-leftN-widthA-rightN-ref.html?border_abspos
+== toauto-leftN-widthA-rightN-2.html?border_abspos toauto-leftN-widthA-rightN-2-ref.html?border_abspos
+== toauto-leftA-widthN-rightA.html?border_abspos toauto-leftA-widthN-rightA-ref.html?border_abspos
+== toauto-leftN-widthN-rightA.html?border_abspos toauto-leftN-widthN-rightA-ref.html?border_abspos
+== toauto-leftA-widthN-rightN.html?border_abspos toauto-leftA-widthN-rightN-ref.html?border_abspos
+== toauto-leftA-widthA-rightN.html?border_abspos toauto-leftA-widthA-rightN-ref.html?border_abspos
+== fromauto-leftN-widthA-rightA.html?border_abspos leftN-widthA-rightA-ref.html?border_abspos
+random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html?border_abspos leftN-widthA-rightA-2-ref.html?border_abspos # Bug 688545
+== fromauto-leftN-widthA-rightN.html?border_abspos leftN-widthA-rightN-ref.html?border_abspos
+== fromauto-leftN-widthA-rightN-2.html?border_abspos leftN-widthA-rightN-2-ref.html?border_abspos
+== fromauto-leftA-widthN-rightA.html?border_abspos leftA-widthN-rightA-ref.html?border_abspos
+== fromauto-leftN-widthN-rightA.html?border_abspos leftN-widthN-rightA-ref.html?border_abspos
+== fromauto-leftA-widthN-rightN.html?border_abspos leftA-widthN-rightN-ref.html?border_abspos
+== fromauto-leftA-widthA-rightN.html?border_abspos leftA-widthA-rightN-ref.html?border_abspos

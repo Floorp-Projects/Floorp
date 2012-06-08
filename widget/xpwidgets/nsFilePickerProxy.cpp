@@ -84,9 +84,9 @@ nsFilePickerProxy::SetFilterIndex(PRInt32 aFilterIndex)
     return NS_OK;
 }
 
-/* readonly attribute nsILocalFile file; */
+/* readonly attribute nsIFile file; */
 NS_IMETHODIMP
-nsFilePickerProxy::GetFile(nsILocalFile** aFile)
+nsFilePickerProxy::GetFile(nsIFile** aFile)
 {
     NS_ENSURE_ARG_POINTER(aFile);
 
@@ -95,7 +95,7 @@ nsFilePickerProxy::GetFile(nsILocalFile** aFile)
         return NS_OK;
     }
 
-    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+    nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
     file->InitWithPath(mFile);
@@ -109,7 +109,7 @@ nsFilePickerProxy::GetFile(nsILocalFile** aFile)
 NS_IMETHODIMP
 nsFilePickerProxy::GetFileURL(nsIURI** aFileURL)
 {
-    nsCOMPtr<nsILocalFile> file;
+    nsCOMPtr<nsIFile> file;
     GetFile(getter_AddRefs(file));
 
     nsCOMPtr<nsIURI> uri;
@@ -152,7 +152,7 @@ NS_IMETHODIMP nsFilePickerProxy::Show(PRInt16* aReturn)
     
     if (mMode == nsIFilePicker::modeOpenMultiple) {
         for (PRUint32 i = 0; i < count; ++i) {
-            nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+            nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
             NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
             file->InitWithPath(filePaths[i]);

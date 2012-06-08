@@ -74,7 +74,12 @@ var tests = [
     let onTimeUpdate = function() {
       if (element.currentTime > element.duration/2) {
         element.removeEventListener("timeupdate", onTimeUpdate, false);
+        element.pause();
+        var oldEndRange = element.played.end(0);
         element.currentTime = element.duration / 4;
+        is(element.played.end(0), oldEndRange,
+            "When seeking back, |played| should not be changed");
+        element.play();
       }
     }
     element.addEventListener("timeupdate", onTimeUpdate, false);

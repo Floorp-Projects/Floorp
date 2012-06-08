@@ -72,6 +72,7 @@ _SERV_FILES = 	\
 		pywebsocket_wrapper.py \
  	 	plain-loop.html \
 		android.json \
+		android-failures.json \
 		$(NULL)	
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)

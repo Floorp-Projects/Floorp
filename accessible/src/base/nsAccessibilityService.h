@@ -33,10 +33,12 @@ FocusManager* FocusMgr();
  * XXX: this function and the next defined in ApplicationAccessibleWrap.cpp
  */
 void PreInit();
+#endif
 
+#if defined(MOZ_ACCESSIBILITY_ATK) || defined(XP_MACOSX)
 /**
  * Is platform accessibility enabled.
- * Only used on linux with atk for now.
+ * Only used on linux with atk and MacOS for now.
  */
 bool ShouldA11yBeEnabled();
 #endif
@@ -174,12 +176,6 @@ public:
    */
   Accessible* GetOrCreateAccessible(nsINode* aNode, DocAccessible* aDoc,
                                     bool* aIsSubtreeHidden = nsnull);
-
-  /**
-   * Return an accessible for the given DOM node and eventually a presentation
-   * shell.
-   */
-  Accessible* GetAccessible(nsINode* aNode, nsIPresShell* aPresShell);
 
 private:
   // nsAccessibilityService creation is controlled by friend

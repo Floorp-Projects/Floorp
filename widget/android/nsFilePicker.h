@@ -23,10 +23,10 @@ public:
     NS_IMETHOD SetDefaultString(const nsAString & aDefaultString);
     NS_IMETHOD GetDefaultExtension(nsAString & aDefaultExtension);
     NS_IMETHOD SetDefaultExtension(const nsAString & aDefaultExtension);
-    NS_IMETHOD GetFile(nsILocalFile * *aFile);
+    NS_IMETHOD GetFile(nsIFile * *aFile);
     NS_IMETHOD GetFileURL(nsIURI * *aFileURL);
-    NS_IMETHOD SetDisplayDirectory(nsILocalFile *aDisplayDirectory);
-    NS_IMETHOD GetDisplayDirectory(nsILocalFile **aDisplayDirectory);
+    NS_IMETHOD SetDisplayDirectory(nsIFile *aDisplayDirectory);
+    NS_IMETHOD GetDisplayDirectory(nsIFile **aDisplayDirectory);
     NS_IMETHOD Show(PRInt16 *aReturn);
 private:
     void InitNative(nsIWidget*, const nsAString&, PRInt16) {};

@@ -20,7 +20,7 @@
 #include "States.h"
 
 #include "mozilla/dom/Element.h"
-#include "nsHTMLSelectAccessible.h"
+
 #include "nsIAccessibleRelation.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"

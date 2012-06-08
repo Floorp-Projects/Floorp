@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIUTF8StringEnumerator;
-interface nsILocalFile;
+interface nsIFile;
 
 [scriptable, uuid(7eb955f6-3e78-4d39-b72f-c1bf12a94bce)]
 interface nsIINIParser : nsISupports
@@ -44,7 +44,7 @@ interface nsIINIParserWriter : nsISupports
   /**
    * Write to the INI file.
    */
-  void writeFile([optional] in nsILocalFile aINIFile,
+  void writeFile([optional] in nsIFile aINIFile,
                  [optional] in unsigned long aFlags);
 };
 
@@ -54,5 +54,5 @@ interface nsIINIParserFactory : nsISupports
   /**
    * Create an iniparser instance from a local file.
    */
-  nsIINIParser createINIParser(in nsILocalFile aINIFile);
+  nsIINIParser createINIParser(in nsIFile aINIFile);
 };

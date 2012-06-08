@@ -22,7 +22,7 @@
 #include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
 #include "mozilla/Module.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
 #include "mozJSComponentLoader.h"
@@ -59,6 +59,7 @@
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/Omnijar.h"
+#include "mozilla/Preferences.h"
 
 #include "jsdbgapi.h"
 
@@ -402,8 +403,10 @@ mozJSComponentLoader::ReallyInit()
     if (!mContext)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    uint32_t options = JS_GetOptions(mContext);
-    JS_SetOptions(mContext, options | JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML);
+    if (Preferences::GetBool("javascript.options.xml.chrome")) {
+        uint32_t options = JS_GetOptions(mContext);
+        JS_SetOptions(mContext, options | JSOPTION_ALLOW_XML | JSOPTION_MOAR_XML);
+    }
 
     // Always use the latest js version
     JS_SetVersion(mContext, JSVERSION_LATEST);
@@ -442,7 +445,7 @@ mozJSComponentLoader::ReallyInit()
 const mozilla::Module*
 mozJSComponentLoader::LoadModule(FileLocation &aFile)
 {
-    nsCOMPtr<nsILocalFile> file = aFile.GetBaseFile();
+    nsCOMPtr<nsIFile> file = aFile.GetBaseFile();
 
     nsCString spec;
     aFile.GetURIString(spec);
@@ -608,7 +611,7 @@ class ANSIFileAutoCloser
 #endif
 
 nsresult
-mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
+mozJSComponentLoader::GlobalForLocation(nsIFile *aComponentFile,
                                         nsIURI *aURI,
                                         JSObject **aGlobal,
                                         char **aLocation,
@@ -666,7 +669,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 
         nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
         rv = xpc->WrapNative(cx, global, aComponentFile,
-                             NS_GET_IID(nsILocalFile),
+                             NS_GET_IID(nsIFile),
                              getter_AddRefs(locationHolder));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1092,7 +1095,7 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
     rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsILocalFile> sourceLocalFile;
+    nsCOMPtr<nsIFile> sourceLocalFile;
     sourceLocalFile = do_QueryInterface(sourceFile, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    div.meter-element {
+      /**
+       * The purpose of this test is to not show the native style.
+       * -moz-appearance: meterbar;
+       */
+      display: inline-block;
+      height: 1em;
+      width: 5em;
+      vertical-align: -0.2em;
+
+      background: -moz-linear-gradient(top, #e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
+    }
+
+    div.meter-bar {
+      /**
+       * The purpose of this test is to not show the native style.
+       * -moz-appearance: meterchunk;
+       */
+
+      height: 100%;
+      width: 100%;
+
+      background: -moz-linear-gradient(top, #ad7, #ad7, #cea 20%, #7a3 45%, #7a3 55%);
+    }
+
+    div.meter-element { padding: 5px; }
+    body > div:nth-child(1)  { -moz-appearance: none; }
+    body > div:nth-child(2) > .meter-bar { -moz-appearance: none; }
+    body > div:nth-child(3)  { background: red; }
+    body > div:nth-child(4) > .meter-bar { background: red; }
+    body > div:nth-child(5)  { border: 2px solid red; }
+    body > div:nth-child(6) > .meter-bar { border: 5px solid red; width: -moz-calc(100% - 10px); }
+  </style>
+  <body>
+    <div class="meter-element">
+      <div class="meter-bar"></div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-bar"></div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-bar"></div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-bar"></div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-bar"></div>
+    </div>
+    <div class="meter-element">
+      <div class="meter-bar"></div>
+    </div>
+  </body>
+</html>

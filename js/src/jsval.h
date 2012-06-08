@@ -12,8 +12,6 @@
  * Implementation details for js::Value in jsapi.h.
  */
 
-#include "mozilla/FloatingPoint.h"
-
 #include "js/Utility.h"
 
 JS_BEGIN_EXTERN_C

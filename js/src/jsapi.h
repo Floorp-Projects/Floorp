@@ -3814,7 +3814,6 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_ASSIGNING     0x02    /* resolve on the left of assignment */
 #define JSRESOLVE_DETECTING     0x04    /* 'if (o.p)...' or '(o.p) ?...:...' */
 #define JSRESOLVE_DECLARING     0x08    /* var, const, or function prolog op */
-#define JSRESOLVE_WITH          0x10    /* resolve inside a with statement */
 
 /*
  * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on
@@ -3978,13 +3977,6 @@ JS_DeepFreezeObject(JSContext *cx, JSObject *obj);
  */
 extern JS_PUBLIC_API(JSBool)
 JS_FreezeObject(JSContext *cx, JSObject *obj);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *parent);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *parent,
-                                unsigned argc, jsval *argv);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_New(JSContext *cx, JSObject *ctor, unsigned argc, jsval *argv);
@@ -4475,6 +4467,66 @@ JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
 
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
+
+/*
+ * Methods usually act upon |this| objects only from a single global object and
+ * compartment.  Sometimes, however, a method must act upon |this| values from
+ * multiple global objects or compartments.  In such cases the |this| value a
+ * method might see will be wrapped, such that various access to the object --
+ * to its class, its private data, its reserved slots, and so on -- will not
+ * work properly without entering that object's compartment.  This method
+ * implements a solution to this problem.
+ *
+ * When called, this method attempts to unwrap |this| and call |native| on the
+ * underlying object with the provided arguments, entering |this|'s compartment
+ * in the process.  It is critical that |this|-checking occur right at the
+ * start of |native| so that reentrant invocation is idempotent!  If the call
+ * fails because |this| isn't a proxy to another object, a TypeError is thrown.
+ *
+ * The following example demonstrates the most common way this method might be
+ * used, to accept objects having only a particular class but which might be
+ * found in another compartment/global object or might be a proxy of some sort:
+ *
+ *     static JSClass MyClass = { "MyClass", JSCLASS_HAS_PRIVATE, ... };
+ *
+ *     inline bool
+ *     RequireMyClassThis(JSContext *cx, unsigned argc, JSObject **thisObj)
+ *     {
+ *         const Value &thisv = JS_THIS_VALUE(cx, vp);
+ *         if (!thisv.isObject()) {
+ *             JS_ReportError(cx, "this must be an object");
+ *             return false;
+ *         }
+ *
+ *         JSObject *obj = &thisv.toObject();
+ *         if (JS_GetClass(obj) == &MyClass) {
+ *             *thisObj = obj;
+ *             return true;
+ *         }
+ *
+ *         *thisObj = NULL; // prevent infinite recursion into calling method
+ *         return JS_CallNonGenericMethodOnProxy(cx, argc, vp, method, &MyClass);
+ *     }
+ *
+ *     static JSBool
+ *     Method(JSContext *cx, unsigned argc, jsval *vp)
+ *     {
+ *         if (!RequireMyClassThis(cx, argc, vp, &thisObj))
+ *             return false;
+ *         if (!thisObj)
+ *             return true; // method invocation was performed by nested call
+ *
+ *         // thisObj definitely has MyClass: implement the guts of the method.
+ *         void *priv = JS_GetPrivate(thisObj);
+ *         ...
+ *     }
+ *
+ * This method doesn't do any checking of its own, except to throw a TypeError
+ * if the |this| in the arguments isn't a proxy that can be unwrapped for the
+ * recursive call.  The client is responsible for performing all type-checks!
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_CallNonGenericMethodOnProxy(JSContext *cx, unsigned argc, jsval *vp, JSNative native, JSClass *clasp);
 
 /*
  * Given a buffer, return JS_FALSE if the buffer might become a valid

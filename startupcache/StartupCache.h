@@ -156,7 +156,7 @@ private:
 
   nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
   nsRefPtr<nsZipArchive> mArchive;
-  nsCOMPtr<nsILocalFile> mFile;
+  nsCOMPtr<nsIFile> mFile;
   
   nsCOMPtr<nsIObserverService> mObserverService;
   nsRefPtr<StartupCacheListener> mListener;

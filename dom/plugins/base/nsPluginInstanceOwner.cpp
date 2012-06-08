@@ -1743,7 +1743,7 @@ bool nsPluginInstanceOwner::AddPluginView(const gfxRect& aRect /* = gfxRect(0, 0
   }
 
   if (AndroidBridge::Bridge())
-    AndroidBridge::Bridge()->AddPluginView((jobject)mJavaView, aRect, mFullScreen, mInstance->FullScreenOrientation());
+    AndroidBridge::Bridge()->AddPluginView((jobject)mJavaView, aRect, mFullScreen);
 
   if (mFullScreen)
     sFullScreenInstance = this;

@@ -666,6 +666,39 @@ progress {
   background-color: #0064b4; /* blue */
 }
 
+meter {
+  -moz-appearance: meterbar;
+  display: inline-block;
+  vertical-align: -0.2em;
+
+  background: -moz-linear-gradient(top, #e6e6e6, #e6e6e6, #eeeeee 20%, #cccccc 45%, #cccccc 55%);
+}
+
+::-moz-meter-bar {
+  /* Block styles that would change the type of frame we construct. */
+  display: inline-block ! important;
+  float: none ! important;
+  position: static ! important;
+  overflow: visible ! important;
+
+  -moz-appearance: meterchunk;
+  height: 100%;
+  width: 100%;
+}
+
+:-moz-meter-optimum::-moz-meter-bar {
+  /* green. */
+  background: -moz-linear-gradient(top, #ad7, #ad7, #cea 20%, #7a3 45%, #7a3 55%);
+}
+:-moz-meter-sub-optimum::-moz-meter-bar {
+  /* orange. */
+  background: -moz-linear-gradient(top, #fe7, #fe7, #ffc 20%, #db3 45%, #db3 55%);
+}
+:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+  /* red. */
+  background: -moz-linear-gradient(top, #f77, #f77, #fcc 20%, #d44 45%, #d44 55%);
+}
+
 %ifdef XP_OS2
 input {
   font: medium serif; font-family: inherit

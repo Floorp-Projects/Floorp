@@ -1,0 +1,10 @@
+include horizontal/reftest.list
+include vertical/reftest.list
+include mixed/reftest.list
+include mixed-abspos-root/reftest.list
+include relative/reftest.list
+
+== multiple-changes.html multiple-changes-ref.html
+== shrink-wrap.html shrink-wrap-ref.html
+== max-width.html max-width-ref.html
+fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == min-width.html min-width-ref.html # Bug 761770

@@ -164,6 +164,7 @@ enum ParseNodeKind {
     PNK_FORHEAD,
     PNK_ARGSBODY,
     PNK_UPVARS,
+    PNK_SPREAD,
 
     /*
      * The following parse node kinds occupy contiguous ranges to enable easy
@@ -240,6 +241,7 @@ enum ParseNodeKind {
  *                            defined (free variables, either global property
  *                            references or reference errors).
  *                          pn_tree: PNK_ARGSBODY or PNK_STATEMENTLIST node
+ * PNK_SPREAD   unary       pn_kid: expression being spread
  *
  * <Statements>
  * PNK_STATEMENTLIST list   pn_head: list of pn_count statements

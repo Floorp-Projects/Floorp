@@ -489,8 +489,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                               js::GetObjectJSClass(obj))->mDOMObjectIsISupports,
                          "This only works on nsISupports classes!");
             identity =
-                mozilla::dom::UnwrapDOMObject<nsISupports>(obj,
-                                                           js::GetObjectJSClass(obj));
+                mozilla::dom::UnwrapDOMObject<nsISupports>(obj);
         } else {
             identity = nsnull;
         }

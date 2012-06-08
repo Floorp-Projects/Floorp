@@ -33,7 +33,7 @@
 #include "nsBidiKeyboard.h"
 #include "nsWindow.h"
 #include "nsDragService.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsFilePicker.h"
 #include "nsLookAndFeel.h"
 #include "nsSound.h"

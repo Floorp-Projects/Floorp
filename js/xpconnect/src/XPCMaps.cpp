@@ -129,7 +129,11 @@ Native2WrappedNativeMap::newMap(int size)
     Native2WrappedNativeMap* map = new Native2WrappedNativeMap(size);
     if (map && map->mTable)
         return map;
-    delete map;
+    // Allocation of the map or the creation of its hash table has
+    // failed. This will cause a NULL deref later when we attempt to
+    // use the map, so we abort immediately to provide a more useful
+    // crash stack.
+    NS_RUNTIMEABORT("Ran out of memory.");
     return nsnull;
 }
 
@@ -297,7 +301,11 @@ ClassInfo2WrappedNativeProtoMap::newMap(int size)
     ClassInfo2WrappedNativeProtoMap* map = new ClassInfo2WrappedNativeProtoMap(size);
     if (map && map->mTable)
         return map;
-    delete map;
+    // Allocation of the map or the creation of its hash table has
+    // failed. This will cause a NULL deref later when we attempt to
+    // use the map, so we abort immediately to provide a more useful
+    // crash stack.
+    NS_RUNTIMEABORT("Ran out of memory.");
     return nsnull;
 }
 

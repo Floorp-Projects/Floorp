@@ -669,6 +669,27 @@ nsBlockFrame::MarkIntrinsicWidthsDirty()
   nsBlockFrameSuper::MarkIntrinsicWidthsDirty();
 }
 
+void
+nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState()
+{
+  nsPresContext *presContext = PresContext();
+  if (!nsLayoutUtils::FontSizeInflationEnabled(presContext)) {
+    return;
+  }
+  bool inflationEnabled =
+    !presContext->mInflationDisabledForShrinkWrap;
+  if (inflationEnabled !=
+      !!(GetStateBits() & NS_BLOCK_FRAME_INTRINSICS_INFLATED)) {
+    mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+    mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+    if (inflationEnabled) {
+      AddStateBits(NS_BLOCK_FRAME_INTRINSICS_INFLATED);
+    } else {
+      RemoveStateBits(NS_BLOCK_FRAME_INTRINSICS_INFLATED);
+    }
+  }
+}
+
 /* virtual */ nscoord
 nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
@@ -677,6 +698,9 @@ nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
     return firstInFlow->GetMinWidth(aRenderingContext);
 
   DISPLAY_MIN_WIDTH(this, mMinWidth);
+
+  CheckIntrinsicCacheAgainstShrinkWrapState();
+
   if (mMinWidth != NS_INTRINSIC_WIDTH_UNKNOWN)
     return mMinWidth;
 
@@ -754,6 +778,8 @@ nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
     return firstInFlow->GetPrefWidth(aRenderingContext);
 
   DISPLAY_PREF_WIDTH(this, mPrefWidth);
+
+  CheckIntrinsicCacheAgainstShrinkWrapState();
 
   if (mPrefWidth != NS_INTRINSIC_WIDTH_UNKNOWN)
     return mPrefWidth;

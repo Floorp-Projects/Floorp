@@ -157,6 +157,7 @@ interface nsIContentViewer : nsISupports
 
   [noscript] readonly attribute nsIPresShellPtr presShell;
   [noscript] readonly attribute nsPresContextPtr presContext;
+  // aDocument must not be null.
   [noscript] void setDocumentInternal(in nsIDocumentPtr aDocument,
                                       in boolean aForceReuseInnerWindow);
   /**

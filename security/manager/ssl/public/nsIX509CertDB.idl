@@ -8,7 +8,7 @@
 
 interface nsIArray;
 interface nsIX509Cert;
-interface nsILocalFile;
+interface nsIFile;
 interface nsIInterfaceRequestor;
 
 %{C++
@@ -209,7 +209,7 @@ interface nsIX509CertDB : nsISupports {
    *               be imported. See type constants in nsIX509Cert.
    */
   void importCertsFromFile(in nsISupports aToken,
-                         in nsILocalFile aFile,
+                         in nsIFile aFile,
                          in unsigned long aType);
 
   /**
@@ -222,7 +222,7 @@ interface nsIX509CertDB : nsISupports {
    *               to be imported.
    */
   void importPKCS12File(in nsISupports aToken,
-                        in nsILocalFile aFile);
+                        in nsIFile aFile);
 
   /**
    *  Export a set of certs and keys from the database to a PKCS#12 file.
@@ -236,7 +236,7 @@ interface nsIX509CertDB : nsISupports {
    *  @param aCerts The array of all certificates to be exported.
    */
   void exportPKCS12File(in nsISupports aToken,
-                        in nsILocalFile aFile,
+                        in nsIFile aFile,
                         in unsigned long count,
                         [array, size_is(count)] in nsIX509Cert aCerts);
 

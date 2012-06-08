@@ -6,7 +6,7 @@
 
 'use strict';
 
-dump('======================= webapi+apps.js ======================= \n');
+dump('======================= webapi.js ======================= \n');
 
 let { classes: Cc, interfaces: Ci, utils: Cu }  = Components;
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
@@ -16,84 +16,6 @@ Cu.import('resource://gre/modules/Geometry.jsm');
 XPCOMUtils.defineLazyServiceGetter(Services, 'fm',
                                    '@mozilla.org/focus-manager;1',
                                    'nsIFocusManager');
-
-// MozKeyboard
-(function VirtualKeyboardManager() {
-  let activeElement = null;
-  let isKeyboardOpened = false;
-  
-  function fireEvent(type, details) {
-    let event = content.document.createEvent('CustomEvent');
-    event.initCustomEvent(type, true, true, details ? details : {});
-    content.dispatchEvent(event);
-  }
-
-  function maybeShowIme(targetElement) {
-    // FIXME/bug 729623: work around apparent bug in the IME manager
-    // in gecko.
-    let readonly = targetElement.getAttribute('readonly');
-    if (readonly)
-      return false;
-
-    let type = targetElement.type;
-    // FIXME/bug 344616 is input type='number'
-    // Until then, let's return 'number' even if the platform returns 'text'
-    let attributeType = targetElement.getAttribute('type');
-    if (attributeType && attributeType.toLowerCase() === 'number')
-      type = 'number';
-
-    fireEvent('showime', { type: type });
-    return true;
-  }
-
-  let constructor = {
-    handleEvent: function vkm_handleEvent(evt) {
-      switch (evt.type) {
-        case 'resize':
-          if (!isKeyboardOpened)
-            return;
-
-          activeElement.scrollIntoView(false);
-          break;
-        case 'keypress':
-          if (evt.keyCode != evt.DOM_VK_ESCAPE || !isKeyboardOpened)
-            return;
-
-          fireEvent('hideime');
-          isKeyboardOpened = false;
-
-          evt.preventDefault();
-          evt.stopPropagation();
-          break;
-
-        case 'mousedown':
-          if (evt.target != activeElement || isKeyboardOpened)
-            return;
-
-          isKeyboardOpened = maybeShowIme(activeElement);
-          break;
-      }
-    },
-    observe: function vkm_observe(subject, topic, data) {
-      let shouldOpen = parseInt(data);
-      if (shouldOpen && !isKeyboardOpened) {
-        activeElement = Services.fm.focusedElement;
-        if (!activeElement || !maybeShowIme(activeElement)) {
-          activeElement = null;
-          return;
-        }
-      } else if (!shouldOpen && isKeyboardOpened) {
-        fireEvent('hideime');
-      }
-      isKeyboardOpened = shouldOpen;
-    }
-  };
-
-  Services.obs.addObserver(constructor, 'ime-enabled-state-changed', false);
-  ['keypress', 'mousedown', 'resize'].forEach(function vkm_events(type) {
-    addEventListener(type, constructor, true);
-  });
-})();
 
 const ContentPanning = {
   init: function cp_init() {
@@ -431,3 +353,4 @@ const KineticPanning = {
     content.mozRequestAnimationFrame(callback);
   }
 };
+

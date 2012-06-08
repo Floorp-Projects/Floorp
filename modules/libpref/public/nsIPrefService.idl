@@ -17,7 +17,6 @@ struct nsTArrayInfallibleAllocator;
 [ptr] native nsPreferencePtrConst(const PrefTuple);
 
 interface nsIFile;
-interface nsILocalFile;
 
 /**
  * The nsIPrefService interface is the main entry point into the back end

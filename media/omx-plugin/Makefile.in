@@ -37,14 +37,13 @@ INCLUDES        += \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
-                -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
                 -I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
                 $(NULL)
 
 EXTRA_DSO_LDOPTS += \
 		-lutils -lstagefright -lmedia -lstagefright_omx -lbinder -lui \
-		-lsurfaceflinger_client -lhardware -lcutils \
+		-lhardware -lcutils \
 		$(NULL)
 
 libs::	$(DLL_PREFIX)$(LIBRARY_NAME)$(DLL_SUFFIX)

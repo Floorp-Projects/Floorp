@@ -1,0 +1,141 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=758415
+-->
+<window title="Mozilla Bug 758415"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=758415"
+     target="_blank">Mozilla Bug 758415</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Cross-Origin Xray Expando Sharing. **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  // Import our test JSM. We first strip the filename off
+  // the chrome url, then append the jsm filename.
+  var base = /.*\//.exec(window.location.href)[0];
+  Cu.import(base + "file_expandosharing.jsm");
+
+  // Wait for all child frames to load.
+  var gLoadCount = 0;
+  function frameLoaded() {
+    if (++gLoadCount == 4)
+      go();
+  }
+
+  function go() {
+
+    // Empower the content windows with some functions.
+    var wins = document.getElementsByTagName('iframe');
+    for (var i = 0; i < wins.length; ++i) {
+      var win = wins[i].contentWindow.wrappedJSObject;
+      win.ok = ok;
+      win.is = is;
+    }
+
+    // Grab references to the content windows. We abbreviate the origins as follows:
+    // A: test1.example.org
+    // B: test2.example.org
+    // C: sub1.test1.example.org
+    window.gWinA1 = document.getElementById('frameA1').contentWindow;
+    window.gWinA2 = document.getElementById('frameA2').contentWindow;
+    window.gWinB = document.getElementById('frameB').contentWindow;
+    window.gWinC = document.getElementById('frameC').contentWindow;
+
+    // Test expando sharing with a JSM for different types of Xrays.
+    // Note that we don't yet support it for nodelists and new bindings.
+    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetWN), is);
+    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetNodeList), todo_is);
+    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetXHR), todo_is);
+
+    // Make sure sandboxes never share expandos with anyone else.
+    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetWN));
+    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetNodeList));
+    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetXHR));
+
+    // Test XOWs using Location objects.
+    testLocation();
+
+    SimpleTest.finish();
+  }
+
+  // Make sure that expandos are shared between us and a JSM.
+  function testJSM(target, is_op) {
+    target.numProp = 42;
+    target.strProp = "foo";
+    target.objProp = { bar: "baz" };
+    checkFromJSM(target, is_op);
+  }
+
+  function testSandbox(target) {
+
+    // This gets both run in this scope and the sandbox scope.
+    var name = "harness";
+    function placeExpando() {
+      target.prop = name;
+    }
+
+    // Set up the sandboxes.
+    sb1 = Cu.Sandbox(window);
+    sb2 = Cu.Sandbox(window);
+    sb1.target = target;
+    sb2.target = target;
+    sb1.name = "sandbox1";
+    sb2.name = "sandbox2";
+    placeExpando();
+    Cu.evalInSandbox(placeExpando.toSource() + "placeExpando();", sb1);
+    Cu.evalInSandbox(placeExpando.toSource() + "placeExpando();", sb2);
+
+    // Make sure everyone sees a different value.
+    is(target.prop, "harness", "Harness sees its own value");
+    is(Cu.evalInSandbox("target.prop", sb1), "sandbox1", "Sandbox 1 sees its own value");
+    is(Cu.evalInSandbox("target.prop", sb2), "sandbox2", "Sandbox 2 sees its own value");
+  }
+
+  // Location is special in that same-origin access for content still involves
+  // an Xray wrapper. This gives us a good opportunity to test that we don't
+  // mix up chrome and content expandos.
+  function testLocation() {
+
+    // Each scope has an Xray wrapper to Location. make sure the sharing happens.
+    gWinA1.wrappedJSObject.placeExpando('A1_expando', 11, gWinA2.location);
+    gWinA2.wrappedJSObject.placeExpando('A2_expando', 22, gWinA2.location);
+    gWinA2.location.Chrome_expando = 33;
+
+    is(gWinA2.location.Chrome_expando, 33, "Read chrome expando properly");
+    is(typeof gWinA2.location.A1_expando, 'undefined', "Chrome doesn't see content expandos");
+    is(typeof gWinA2.location.A2_expando, 'undefined', "Chrome doesn't see content expandos");
+    gWinA1.wrappedJSObject.checkExpando('A1_expando', 11, gWinA2.location, "Content sees proper expandos");
+    gWinA2.wrappedJSObject.checkExpando('A1_expando', 11, gWinA2.location, "Content sees proper expandos");
+    gWinA1.wrappedJSObject.checkExpando('A2_expando', 22, gWinA2.location, "Content sees proper expandos");
+    gWinA2.wrappedJSObject.checkExpando('A2_expando', 22, gWinA2.location, "Content sees proper expandos");
+    gWinA1.wrappedJSObject.checkExpando('Chrome_expando', null, gWinA2.location, "Content doesn't see chrome expandos");
+    gWinA2.wrappedJSObject.checkExpando('Chrome_expando', null, gWinA2.location, "Content doesn't see chrome expandos");
+
+    // We very explicitly do not support expando sharing via document.domain.
+    // A comment in the implementation explains why.
+    gWinA1.document.domain = 'test1.example.org';
+    gWinA2.document.domain = 'test1.example.org';
+    gWinC.document.domain = 'test1.example.org';
+    gWinC.wrappedJSObject.checkExpando('A1_expando', null, gWinA2.location, "document.domain should have no effect here");
+    gWinC.wrappedJSObject.checkExpando('A2_expando', null, gWinA2.location, "document.domain should have no effect here");
+  }
+
+  ]]>
+  </script>
+  <iframe id="frameA1" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+  <iframe id="frameA2" onload="frameLoaded();" type="content" src="http://test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+  <iframe id="frameB" onload="frameLoaded();" type="content" src="http://test2.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+  <iframe id="frameC" onload="frameLoaded();" type="content" src="http://sub1.test1.example.org/tests/js/xpconnect/tests/mochitest/file_expandosharing.html" />
+</window>

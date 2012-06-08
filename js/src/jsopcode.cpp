@@ -5117,15 +5117,19 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
               {
                 JSBool isFirst;
                 const char *maybeComma;
+                const char *maybeSpread;
 
               case JSOP_INITELEM:
+              case JSOP_INITELEM_INC:
+              case JSOP_SPREAD:
+                JS_ASSERT(ss->top >= 3);
                 isFirst = IsInitializerOp(ss->opcodes[ss->top - 3]);
 
                 /* Turn off most parens. */
                 rval = PopStr(ss, JSOP_SETNAME, &rvalpc);
 
                 /* Turn off all parens for xval and lval, which we control. */
-                xval = PopStr(ss, JSOP_NOP);
+                xval = PopStr(ss, JSOP_NOP, &xvalpc);
                 lval = PopStr(ss, JSOP_NOP, &lvalpc);
                 sn = js_GetSrcNote(jp->script, pc);
 
@@ -5134,8 +5138,18 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
                     goto do_initprop;
                 }
                 maybeComma = isFirst ? "" : ", ";
-                todo = Sprint(&ss->sprinter, "%s%s", lval, maybeComma);
+                maybeSpread = op == JSOP_SPREAD ? "..." : "";
+                todo = Sprint(&ss->sprinter, "%s%s%s", lval, maybeComma, maybeSpread);
                 SprintOpcode(ss, rval, rvalpc, pc, todo);
+                if (op != JSOP_INITELEM && todo != -1) {
+                    if (!UpdateDecompiledText(ss, pushpc, todo))
+                        return NULL;
+                    if (!PushOff(ss, todo, saveop, pushpc))
+                        return NULL;
+                    if (!PushStr(ss, "", JSOP_NOP))
+                        return NULL;
+                    todo = -2;
+                }
                 break;
 
               case JSOP_INITPROP:
