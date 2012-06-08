@@ -46,7 +46,7 @@
                      android:nextFocusLeft="@+id/info"
                      android:layout_width="34dip"
                      android:layout_height="fill_parent"
-                     android:background="@drawable/tabs_tray_close_button"
+                     android:background="@drawable/action_bar_button"
                      android:padding="10dip"
                      android:scaleType="fitCenter"
                      android:contentDescription="@string/close_tab"

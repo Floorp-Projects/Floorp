@@ -30,7 +30,7 @@
                          android:paddingRight="20dip"
                          android:src="@drawable/remote_tabs_level"
                          android:contentDescription="@string/remote_tabs"
-                         android:background="@drawable/tabs_tray_default_selector"
+                         android:background="@drawable/action_bar_button"
                          android:visibility="gone"/>
     
             <ImageButton android:id="@+id/add_tab"
@@ -42,7 +42,7 @@
                          android:paddingRight="20dip"
                          android:src="@drawable/tab_new"
                          android:contentDescription="@string/new_tab"
-                         android:background="@drawable/tabs_tray_default_selector"/>
+                         android:background="@drawable/action_bar_button"/>
     
         </LinearLayout>
     
