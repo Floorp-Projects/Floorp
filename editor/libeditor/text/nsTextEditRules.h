@@ -42,7 +42,7 @@ public:
                         nsIEditor::EDirection aDirection);
   NS_IMETHOD AfterEdit(nsEditor::OperationID action,
                        nsIEditor::EDirection aDirection);
-  NS_IMETHOD WillDoAction(nsTypedSelection* aSelection, nsRulesInfo* aInfo,
+  NS_IMETHOD WillDoAction(mozilla::Selection* aSelection, nsRulesInfo* aInfo,
                           bool* aCancel, bool* aHandled);
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty);
@@ -91,7 +91,7 @@ protected:
 
   // nsTextEditRules implementation methods
   nsresult WillInsertText(  nsEditor::OperationID aAction,
-                            nsTypedSelection* aSelection,
+                            mozilla::Selection* aSelection,
                             bool            *aCancel,
                             bool            *aHandled,
                             const nsAString *inString,
@@ -100,14 +100,14 @@ protected:
   nsresult DidInsertText(nsISelection *aSelection, nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
 
-  nsresult WillInsertBreak(nsTypedSelection* aSelection, bool* aCancel,
+  nsresult WillInsertBreak(mozilla::Selection* aSelection, bool* aCancel,
                            bool *aHandled, PRInt32 aMaxLength);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
 
   nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
   nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
 
-  nsresult WillDeleteSelection(nsTypedSelection* aSelection,
+  nsresult WillDeleteSelection(mozilla::Selection* aSelection,
                                nsIEditor::EDirection aCollapsedAction, 
                                bool *aCancel,
                                bool *aHandled);
@@ -156,7 +156,7 @@ protected:
 
   /** returns a truncated insertion string if insertion would place us
       over aMaxLength */
-  nsresult TruncateInsertionIfNeeded(nsTypedSelection*         aSelection,
+  nsresult TruncateInsertionIfNeeded(mozilla::Selection*       aSelection,
                                      const nsAString          *aInString,
                                      nsAString                *aOutString,
                                      PRInt32                   aMaxLength,
