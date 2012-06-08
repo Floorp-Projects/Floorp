@@ -2109,9 +2109,19 @@ nsLayoutUtils::GetParentOrPlaceholderFor(nsIFrame* aFrame)
 {
   if ((aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
       && !aFrame->GetPrevInFlow()) {
-    return aFrame->PresContext()->PresShell()->FrameManager()->GetPlaceholderFrameFor(aFrame);
+    return aFrame->PresContext()->PresShell()->FrameManager()->
+      GetPlaceholderFrameFor(aFrame);
   }
   return aFrame->GetParent();
+}
+
+nsIFrame*
+nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame)
+{
+  nsIFrame* f = GetParentOrPlaceholderFor(aFrame);
+  if (f)
+    return f;
+  return GetCrossDocParentFrame(aFrame);
 }
 
 nsIFrame*
