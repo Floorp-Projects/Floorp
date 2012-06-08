@@ -27,17 +27,6 @@
                    android:layout_width="50dip"
                    android:layout_alignParentRight="true"/>
 
-        <ImageButton android:id="@+id/menu"
-                     style="@style/AddressBar.ImageButton"
-                     android:layout_width="36dip"
-                     android:layout_toLeftOf="@id/spacer"
-                     android:gravity="center_vertical"
-                     android:src="@drawable/menu"
-                     android:background="@drawable/action_bar_button"
-                     android:paddingLeft="8dip"
-                     android:paddingRight="8dip"
-                     android:visibility="gone"/>
-
         <ImageButton android:id="@+id/tabs"
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="72dip"
@@ -56,6 +45,17 @@
                      android:layout_marginTop="4dp"
                      android:layout_alignRight="@id/tabs"
                      android:gravity="center_horizontal"/>
+
+        <ImageButton android:id="@+id/menu"
+                     style="@style/AddressBar.ImageButton"
+                     android:layout_width="@dimen/browser_toolbar_height"
+                     android:layout_toLeftOf="@id/spacer"
+                     android:gravity="center_vertical"
+                     android:src="@drawable/menu"
+                     android:background="@drawable/action_bar_button"
+                     android:paddingLeft="12dip"
+                     android:paddingRight="12dip"
+                     android:visibility="gone"/>
         
         <Button android:id="@+id/awesome_bar"
                 style="@style/AddressBar.Button"
