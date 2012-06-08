@@ -4,116 +4,108 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DeleteTextTxn.h"
-#include "nsIDOMCharacterData.h"
-#include "nsISelection.h"
+#include "mozilla/Selection.h"
 #include "nsSelectionState.h"
+#include "nsEditor.h"
 
-#ifdef NS_DEBUG
-static bool gNoisy = false;
-#endif
+using namespace mozilla;
 
-DeleteTextTxn::DeleteTextTxn()
-: EditTxn()
-,mEditor(nsnull)
-,mElement()
-,mOffset(0)
-,mNumCharsToDelete(0)
-,mRangeUpdater(nsnull)
+DeleteTextTxn::DeleteTextTxn() :
+  EditTxn(),
+  mEditor(nsnull),
+  mCharData(),
+  mOffset(0),
+  mNumCharsToDelete(0),
+  mRangeUpdater(nsnull)
 {
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DeleteTextTxn)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DeleteTextTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCharData)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DeleteTextTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCharData)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteTextTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
-NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
-                                  nsIDOMCharacterData *aElement,
-                                  PRUint32 aOffset,
-                                  PRUint32 aNumCharsToDelete,
-                                  nsRangeUpdater *aRangeUpdater)
+NS_IMETHODIMP
+DeleteTextTxn::Init(nsEditor* aEditor,
+                    nsIDOMCharacterData* aCharData,
+                    PRUint32 aOffset,
+                    PRUint32 aNumCharsToDelete,
+                    nsRangeUpdater* aRangeUpdater)
 {
-  NS_ASSERTION(aEditor&&aElement, "bad arg");
-  if (!aEditor || !aElement) { return NS_ERROR_NULL_POINTER; }
+  MOZ_ASSERT(aEditor && aCharData && aNumCharsToDelete);
 
   mEditor = aEditor;
-  mElement = do_QueryInterface(aElement);
+  mCharData = aCharData;
+
   // do nothing if the node is read-only
-  if (!mEditor->IsModifiableNode(mElement)) {
+  if (!mEditor->IsModifiableNode(mCharData)) {
     return NS_ERROR_FAILURE;
   }
 
   mOffset = aOffset;
   mNumCharsToDelete = aNumCharsToDelete;
-  NS_ASSERTION(0!=aNumCharsToDelete, "bad arg, numCharsToDelete");
-  PRUint32 count;
-  aElement->GetLength(&count);
-  NS_ASSERTION(count>=aNumCharsToDelete, "bad arg, numCharsToDelete.  Not enough characters in node");
-  NS_ASSERTION(count>=aOffset+aNumCharsToDelete, "bad arg, numCharsToDelete.  Not enough characters in node");
+#ifdef DEBUG
+  PRUint32 length;
+  mCharData->GetLength(&length);
+  NS_ASSERTION(length >= aOffset + aNumCharsToDelete,
+               "Trying to delete more characters than in node");
+#endif
   mDeletedText.Truncate();
   mRangeUpdater = aRangeUpdater;
   return NS_OK;
 }
 
-NS_IMETHODIMP DeleteTextTxn::DoTransaction(void)
+NS_IMETHODIMP
+DeleteTextTxn::DoTransaction()
 {
-#ifdef NS_DEBUG
-  if (gNoisy) { printf("Do Delete Text\n"); }
-#endif
+  MOZ_ASSERT(mEditor && mCharData);
 
-  NS_ASSERTION(mEditor && mElement, "bad state");
-  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
   // get the text that we're about to delete
-  nsresult result = mElement->SubstringData(mOffset, mNumCharsToDelete, mDeletedText);
-  NS_ASSERTION(NS_SUCCEEDED(result), "could not get text to delete.");
-  result = mElement->DeleteData(mOffset, mNumCharsToDelete);
-  NS_ENSURE_SUCCESS(result, result);
+  nsresult res = mCharData->SubstringData(mOffset, mNumCharsToDelete,
+                                          mDeletedText);
+  NS_ASSERTION(NS_SUCCEEDED(res), "could not get text to delete.");
+  res = mCharData->DeleteData(mOffset, mNumCharsToDelete);
+  NS_ENSURE_SUCCESS(res, res);
 
-  if (mRangeUpdater) 
-    mRangeUpdater->SelAdjDeleteText(mElement, mOffset, mNumCharsToDelete);
+  if (mRangeUpdater) {
+    mRangeUpdater->SelAdjDeleteText(mCharData, mOffset, mNumCharsToDelete);
+  }
 
   // only set selection to deletion point if editor gives permission
   bool bAdjustSelection;
   mEditor->ShouldTxnSetSelection(&bAdjustSelection);
-  if (bAdjustSelection)
-  {
-    nsCOMPtr<nsISelection> selection;
-    result = mEditor->GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(result, result);
+  if (bAdjustSelection) {
+    nsRefPtr<Selection> selection = mEditor->GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    result = selection->Collapse(mElement, mOffset);
-    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of deletetext.");
+    res = selection->Collapse(mCharData, mOffset);
+    NS_ASSERTION(NS_SUCCEEDED(res),
+                 "selection could not be collapsed after undo of deletetext.");
+    NS_ENSURE_SUCCESS(res, res);
   }
-  else
-  {
-    // do nothing - dom range gravity will adjust selection
-  }
-  return result;
+  // else do nothing - dom range gravity will adjust selection
+  return NS_OK;
 }
 
 //XXX: we may want to store the selection state and restore it properly
 //     was it an insertion point or an extended selection?
-NS_IMETHODIMP DeleteTextTxn::UndoTransaction(void)
+NS_IMETHODIMP
+DeleteTextTxn::UndoTransaction()
 {
-#ifdef NS_DEBUG
-  if (gNoisy) { printf("Undo Delete Text\n"); }
-#endif
+  MOZ_ASSERT(mEditor && mCharData);
 
-  NS_ASSERTION(mEditor && mElement, "bad state");
-  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
-
-  return mElement->InsertData(mOffset, mDeletedText);
+  return mCharData->InsertData(mOffset, mDeletedText);
 }
 
-NS_IMETHODIMP DeleteTextTxn::GetTxnDescription(nsAString& aString)
+NS_IMETHODIMP
+DeleteTextTxn::GetTxnDescription(nsAString& aString)
 {
   aString.AssignLiteral("DeleteTextTxn: ");
   aString += mDeletedText;
