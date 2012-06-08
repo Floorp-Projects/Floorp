@@ -137,6 +137,7 @@ XPCOMUtils.defineLazyGetter(this, "Tilt", function() {
 let gInitialPages = [
   "about:blank",
   "about:newtab",
+  "about:home",
   "about:privatebrowsing",
   "about:sessionrestore"
 ];
