@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the public domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
 // Test that an iframe with the |mozbrowser| attribute does bubble some
 // whitelisted key events.
 "use strict";

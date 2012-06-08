@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the public domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
 // Test the setVisible property for mozbrowser
 "use strict";
 
