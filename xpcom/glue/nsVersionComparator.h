@@ -14,6 +14,31 @@
 #include "nsStringGlue.h"
 #endif
 
+/**
+ * In order to compare version numbers in Mozilla, you need to use the
+ * mozilla::Version class.  You can construct an object of this type by passing
+ * in a string version number to the constructor.  Objects of this type can be
+ * compared using the standard comparison operators.
+ *
+ * For example, let's say that you want to make sure that a given version
+ * number is not older than 15.a2.  Here's how you would write a function to
+ * do that.
+ *
+ * bool IsVersionValid(const char* version) {
+ *   return mozilla::Version("15.a2") <= mozilla::Version(version);
+ * }
+ *
+ * Or, since Version's constructor is implicit, you can simplify this code:
+ *
+ * bool IsVersionValid(const char* version) {
+ *   return mozilla::Version("15.a2") <= version;
+ * }
+ *
+ * On Windows, if your version strings are wide characters, you should use the
+ * mozilla::VersionW variant instead.  The semantics of that class is the same
+ * as Version.
+ */
+
 namespace mozilla {
 
 PRInt32 NS_COM_GLUE
