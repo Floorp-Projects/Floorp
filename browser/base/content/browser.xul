@@ -1192,6 +1192,18 @@
     <svg:clipPath id="windows-urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
       <svg:path d="M 0,0 0,7.8 C 2.5,11 4,14 4,18 4,22 2.5,25 0,28 l 0,22 10000,0 0,-50 L 0,0 z"/>
     </svg:clipPath>
+    <svg:clipPath id="windows-tab-curve-clip-path-start" clipPathUnits="userSpaceOnUse">
+      <svg:path d="M30,2.005C17.049,2.104,15.508,11.669,14.511,17c-1.565,8.376-4.276,13-13,13L0.34,31H30V2.005z"
+                stroke-width="1px" />
+    </svg:clipPath>
+    <svg:clipPath id="windows-tab-curve-clip-path-end" clipPathUnits="userSpaceOnUse">
+      <svg:path d="M-1,2.005L0,2.005C12.951,2.104,14.492,11.669,15.489,17c1.565,8.376,4.276,13,13,13l1.171,1H-1V2.005z"
+                stroke-width="1px" />
+    </svg:clipPath>
+    <svg:clipPath id="windows-tab-clip-path-outer" clipPathUnits="userSpaceOnUse">
+      <svg:path d="m 0,28 c 7.75,0 10.5,-5 12,-13 0.5,-5.5 2.5,-15 15.5,-15 l 10,0 c 13,0 15,9.5 15.5,15 1.5,8 4.25,13 13,13 z"
+                stroke-width="1px" stroke="black"/>
+    </svg:clipPath>
   </svg:svg>
 #endif
 #ifdef XP_MACOSX
