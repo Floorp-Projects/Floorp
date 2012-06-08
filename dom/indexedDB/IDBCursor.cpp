@@ -876,7 +876,7 @@ ContinueHelper::GetSuccessResult(JSContext* aCx,
   UpdateCursorState();
 
   if (mKey.IsUnset()) {
-    *aVal = JSVAL_VOID;
+    *aVal = JSVAL_NULL;
   }
   else {
     nsresult rv = WrapNative(aCx, mCursor, aVal);
