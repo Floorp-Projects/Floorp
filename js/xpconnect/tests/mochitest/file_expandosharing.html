@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="application/javascript">
+  function setup() {
+    // Set up different target objects for expandos, one for each binding type.
+    window.targetWN = document.body.firstChild;
+    window.targetNodeList = document.getElementsByTagName('span');
+    window.targetXHR = new XMLHttpRequest();
+  }
+
+  function placeExpando(name, val, target) {
+    target[name] = val;
+  }
+
+  // If val === null, then we shouldn't have access.
+  function checkExpando(name, val, target, msg) {
+    if (val !== null) {
+      ok(name in target, msg);
+      try {
+        is(target[name], val, "Got the right expando value");
+      } catch(e) { ok(false, "Threw when accessing same-origin expando"); }
+    }
+    else {
+      ok(!(name in target), msg);
+    }
+  }
+
+</script>
+</head>
+<body onload="setup();">
+    <span>Salut, Ma Cherise. ;-)</span>
+</body>
+</html>

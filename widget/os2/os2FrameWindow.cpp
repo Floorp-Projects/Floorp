@@ -479,7 +479,7 @@ nsresult os2FrameWindow::SetIcon(const nsAString& aIconSpec)
   HPOINTER        hWorkingIcon = 0;
 
   // Assume the given string is a local identifier for an icon file.
-  nsCOMPtr<nsILocalFile> iconFile;
+  nsCOMPtr<nsIFile> iconFile;
   mOwner->ResolveIconName(aIconSpec, NS_LITERAL_STRING(".ico"),
                           getter_AddRefs(iconFile));
 

@@ -87,7 +87,35 @@ enum nsChangeHint {
    * The children-only transform of an SVG frame changed, requiring the
    * overflow rects of the frame's immediate children to be updated.
    */
-  nsChangeHint_ChildrenOnlyTransform = 0x1000
+  nsChangeHint_ChildrenOnlyTransform = 0x1000,
+
+  /**
+   * The frame's offsets have changed, while its dimensions might have
+   * changed as well.  This hint is used for positioned frames if their
+   * offset changes.  If we decide that the dimensions are likely to
+   * change, this will trigger a reflow.
+   *
+   * Note that this should probably be used in combination with
+   * nsChangeHint_UpdateOverflow in order to get the overflow areas of
+   * the ancestors updated as well.
+   */
+  nsChangeHint_RecomputePosition = 0x2000,
+
+  /**
+   * We have an optimization when processing change hints which prevents
+   * us from visiting the descendants of a node when a hint on that node
+   * is being processed.  This optimization does not apply in some of the
+   * cases where applying a hint to an element does not necessarily result
+   * in the same hint being handled on the descendants.
+   *
+   * If you're adding such a hint, you should add your hint to this list.
+   */
+  nsChangeHint_NonInherited_Hints =
+    nsChangeHint_UpdateTransformLayer |
+    nsChangeHint_UpdateOpacityLayer |
+    nsChangeHint_UpdateOverflow |
+    nsChangeHint_ChildrenOnlyTransform |
+    nsChangeHint_RecomputePosition
 };
 
 // Redefine these operators to return nothing. This will catch any use

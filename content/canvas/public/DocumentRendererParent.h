@@ -6,10 +6,11 @@
 #define mozilla_dom_DocumentRendererParent
 
 #include "mozilla/ipc/PDocumentRendererParent.h"
-#include "nsICanvasRenderingContextInternal.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "gfxContext.h"
+
+class nsICanvasRenderingContextInternal;
 
 namespace mozilla {
 namespace ipc {

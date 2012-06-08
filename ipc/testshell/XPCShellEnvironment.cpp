@@ -84,7 +84,7 @@ public:
     void ClearGREDir() { mGREDir = nsnull; }
 
 private:
-    nsCOMPtr<nsILocalFile> mGREDir;
+    nsCOMPtr<nsIFile> mGREDir;
 };
 
 inline XPCShellEnvironment*

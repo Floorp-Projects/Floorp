@@ -3874,7 +3874,9 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_ENDINIT:
         break;
 
-      case JSOP_INITELEM: {
+      case JSOP_INITELEM:
+      case JSOP_INITELEM_INC:
+      case JSOP_SPREAD: {
         const SSAValue &objv = poppedValue(pc, 2);
         jsbytecode *initpc = script->code + objv.pushedOffset();
         TypeObject *initializer = GetInitializerType(cx, script, initpc);
@@ -3895,12 +3897,23 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
                 } else if (state.hasHole) {
                     if (!initializer->unknownProperties())
                         initializer->setFlags(cx, OBJECT_FLAG_NON_PACKED_ARRAY);
+                } else if (op == JSOP_SPREAD) {
+                    // Iterator could put arbitrary things into the array.
+                    types->addType(cx, Type::UnknownType());
                 } else {
                     poppedTypes(pc, 0)->addSubset(cx, types);
                 }
             }
         } else {
             pushed[0].addType(cx, Type::UnknownType());
+        }
+        switch (op) {
+          case JSOP_SPREAD:
+          case JSOP_INITELEM_INC:
+            poppedTypes(pc, 1)->addSubset(cx, &pushed[1]);
+            break;
+          default:
+            break;
         }
         state.hasGetSet = false;
         state.hasHole = false;
@@ -5561,15 +5574,18 @@ JSObject::shouldSplicePrototype(JSContext *cx)
 }
 
 bool
-JSObject::splicePrototype(JSContext *cx, JSObject *proto)
+JSObject::splicePrototype(JSContext *cx, JSObject *proto_)
 {
+    RootedObject proto(cx, proto_);
+    RootedObject self(cx, this);
+
     /*
      * For singleton types representing only a single JSObject, the proto
      * can be rearranged as needed without destroying type information for
      * the old or new types. Note that type constraints propagating properties
      * from the old prototype are not removed.
      */
-    JS_ASSERT_IF(cx->typeInferenceEnabled(), hasSingletonType());
+    JS_ASSERT_IF(cx->typeInferenceEnabled(), self->hasSingletonType());
 
     /* Inner objects may not appear on prototype chains. */
     JS_ASSERT_IF(proto, !proto->getClass()->ext.outerObject);
@@ -5578,7 +5594,7 @@ JSObject::splicePrototype(JSContext *cx, JSObject *proto)
      * Force type instantiation when splicing lazy types. This may fail,
      * in which case inference will be disabled for the compartment.
      */
-    TypeObject *type = getType(cx);
+    TypeObject *type = self->getType(cx);
     TypeObject *protoType = NULL;
     if (proto) {
         protoType = proto->getType(cx);
@@ -5590,7 +5606,7 @@ JSObject::splicePrototype(JSContext *cx, JSObject *proto)
         TypeObject *type = proto ? proto->getNewType(cx) : cx->compartment->getEmptyType(cx);
         if (!type)
             return false;
-        type_ = type;
+        self->type_ = type;
         return true;
     }
 

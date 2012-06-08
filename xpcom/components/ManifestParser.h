@@ -10,7 +10,7 @@
 #include "nsChromeRegistry.h"
 #include "mozilla/FileLocation.h"
 
-class nsILocalFile;
+class nsIFile;
 
 void ParseManifest(NSLocationType type, mozilla::FileLocation &file,
                    char* buf, bool aChromeOnly);

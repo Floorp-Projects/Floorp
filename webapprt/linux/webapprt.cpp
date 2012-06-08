@@ -12,7 +12,7 @@
 #include <unistd.h>
 
 // Mozilla headers
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsINIParser.h"
 #include "nsXPCOMGlue.h"
 #include "nsXPCOMPrivate.h"              // for MAXPATHLEN and XPCOM_DLL
@@ -147,7 +147,7 @@ bool GRELoadAndLaunch(const char* firefoxDir, const char* profile)
     snprintf(rtIniPath, MAXPATHLEN, "%s/%s", rtPath, kWEBAPPRT_INI);
 
     // Load the runtime's INI from its path
-    nsCOMPtr<nsILocalFile> rtINI;
+    nsCOMPtr<nsIFile> rtINI;
     if (NS_FAILED(XRE_GetFileFromPath(rtIniPath, getter_AddRefs(rtINI)))) {
       ErrorDialog("Couldn't load the runtime INI");
       return false;
@@ -167,14 +167,15 @@ bool GRELoadAndLaunch(const char* firefoxDir, const char* profile)
     }
 
     SetAllocatedString(webShellAppData->profile, profile);
+    SetAllocatedString(webShellAppData->name, profile);
 
-    nsCOMPtr<nsILocalFile> directory;
+    nsCOMPtr<nsIFile> directory;
     if (NS_FAILED(XRE_GetFileFromPath(rtPath, getter_AddRefs(directory)))) {
       ErrorDialog("Couldn't open runtime directory");
       return false;
     }
 
-    nsCOMPtr<nsILocalFile> xreDir;
+    nsCOMPtr<nsIFile> xreDir;
     if (NS_FAILED(XRE_GetFileFromPath(firefoxDir, getter_AddRefs(xreDir)))) {
       ErrorDialog("Couldn't open XRE directory");
       return false;

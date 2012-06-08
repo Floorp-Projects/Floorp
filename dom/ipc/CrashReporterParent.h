@@ -6,7 +6,7 @@
 #include "mozilla/dom/PCrashReporterParent.h"
 #include "mozilla/dom/TabMessageUtils.h"
 #include "nsXULAppAPI.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
@@ -115,8 +115,8 @@ CrashReporterParent::GeneratePairedMinidump(Toplevel* t)
 #else
   child = t->OtherProcess();
 #endif
-  nsCOMPtr<nsILocalFile> childDump;
-  nsCOMPtr<nsILocalFile> parentDump;
+  nsCOMPtr<nsIFile> childDump;
+  nsCOMPtr<nsIFile> parentDump;
   if (CrashReporter::CreatePairedMinidumps(child,
                                            mMainThread,
                                            &mHangID,
@@ -134,7 +134,7 @@ inline bool
 CrashReporterParent::GenerateCrashReport(Toplevel* t,
                                          const AnnotationTable* processNotes)
 {
-  nsCOMPtr<nsILocalFile> crashDump;
+  nsCOMPtr<nsIFile> crashDump;
   if (t->TakeMinidump(getter_AddRefs(crashDump)) &&
       CrashReporter::GetIDFromMinidump(crashDump, mChildDumpID)) {
     return GenerateChildData(processNotes);

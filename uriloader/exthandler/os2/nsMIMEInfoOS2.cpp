@@ -471,7 +471,7 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI *aURL)
 #endif
   PRInt32 numParams = 1;
 
-  nsCOMPtr<nsILocalFile> application;
+  nsCOMPtr<nsIFile> application;
   rv = NS_NewNativeLocalFile(nsDependentCString(applicationName.get()), false, getter_AddRefs(application));
   if (NS_FAILED(rv)) {
      /* Maybe they didn't qualify the name - search path */

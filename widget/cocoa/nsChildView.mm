@@ -25,7 +25,7 @@
 #include "nsIRollupListener.h"
 #include "nsIViewManager.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsILocalFileMac.h"
 #include "nsGfxCIID.h"
 #include "nsIDOMSimpleGestureEvent.h"
@@ -51,6 +51,9 @@
 #include "LayerManagerOGL.h"
 #include "GLContext.h"
 #include "mozilla/layers/CompositorCocoaWidgetHelper.h"
+#ifdef ACCESSIBILITY
+#include "nsAccessibilityService.h"
+#endif
 
 #include "mozilla/Preferences.h"
 
@@ -1905,6 +1908,9 @@ nsChildView::EndSecureKeyboardInput()
 already_AddRefed<Accessible>
 nsChildView::GetDocumentAccessible()
 {
+  if (!mozilla::a11y::ShouldA11yBeEnabled())
+    return nsnull;
+
   Accessible *docAccessible = nsnull;
   if (mAccessible) {
     CallQueryReferent(mAccessible.get(), &docAccessible);
@@ -4590,7 +4596,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView namesOfPromisedFilesDroppedAtDestination: entering callback for promised files\n"));
 
-  nsCOMPtr<nsILocalFile> targFile;
+  nsCOMPtr<nsIFile> targFile;
   NS_NewLocalFile(EmptyString(), true, getter_AddRefs(targFile));
   nsCOMPtr<nsILocalFileMac> macLocalFile = do_QueryInterface(targFile);
   if (!macLocalFile) {
@@ -4620,7 +4626,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       return nil;
     }
 
-    item->SetTransferData(kFilePromiseDirectoryMime, macLocalFile, sizeof(nsILocalFile*));
+    item->SetTransferData(kFilePromiseDirectoryMime, macLocalFile, sizeof(nsIFile*));
     
     // now request the kFilePromiseMime data, which will invoke the data provider
     // If successful, the returned data is a reference to the resulting file.

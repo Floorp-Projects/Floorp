@@ -93,11 +93,11 @@
 
 #include "HTMLPropertiesCollection.h"
 #include "nsVariant.h"
+#include "nsDOMSettableTokenList.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-#include "nsThreadUtils.h"
 
 class nsINodeInfo;
 class nsIDOMNodeList;
@@ -3466,7 +3466,8 @@ nsGenericHTMLFormElement::CanBeDisabled() const
   return
     type != NS_FORM_LABEL &&
     type != NS_FORM_OBJECT &&
-    type != NS_FORM_OUTPUT;
+    type != NS_FORM_OUTPUT &&
+    type != NS_FORM_METER;
 }
 
 bool

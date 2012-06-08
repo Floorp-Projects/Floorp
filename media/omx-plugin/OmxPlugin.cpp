@@ -6,14 +6,14 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include <DataSource.h>
-#include <MediaErrors.h>
-#include <MediaExtractor.h>
-#include <MediaSource.h>
-#include <MetaData.h>
-#include <OMXCodec.h>
+#include <stagefright/DataSource.h>
+#include <stagefright/MediaErrors.h>
+#include <stagefright/MediaExtractor.h>
+#include <stagefright/MediaSource.h>
+#include <stagefright/MetaData.h>
+#include <stagefright/OMXCodec.h>
+#include <stagefright/HardwareAPI.h>
 #include <OMX.h>
-#include <HardwareAPI.h>
 #include <ui/GraphicBuffer.h>
 #include <ui/Rect.h>
 #include <ui/Region.h>
@@ -191,6 +191,14 @@ OmxDecoder::~OmxDecoder()
 {
   ReleaseVideoBuffer();
   ReleaseAudioBuffer();
+
+  if (mVideoSource.get()) {
+    mVideoSource->stop();
+  }
+
+  if (mAudioSource.get()) {
+    mAudioSource->stop();
+  }
 }
 
 class AutoStopMediaSource {

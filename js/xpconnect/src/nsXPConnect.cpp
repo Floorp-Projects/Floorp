@@ -871,10 +871,10 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
         nsISupports *identity =
             static_cast<nsISupports*>(js::GetProxyPrivate(obj).toPrivate());
         cb.NoteXPCOMChild(identity);
-    } else if ((clazz->flags & JSCLASS_IS_DOMJSCLASS) &&
+    } else if (IsDOMClass(clazz) &&
                DOMJSClass::FromJSClass(clazz)->mDOMObjectIsISupports) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "UnwrapDOMObject(obj)");
-        nsISupports *identity = UnwrapDOMObject<nsISupports>(obj, clazz);
+        nsISupports *identity = UnwrapDOMObject<nsISupports>(obj);
         cb.NoteXPCOMChild(identity);
     }
 

@@ -131,6 +131,9 @@ extern JS_FRIEND_API(JSBool)
 JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc);
 
 extern JS_FRIEND_API(JSBool)
+JS_WrapAutoIdVector(JSContext *cx, JS::AutoIdVector &props);
+
+extern JS_FRIEND_API(JSBool)
 JS_EnumerateState(JSContext *cx, JSHandleObject obj, JSIterateOp enum_op, js::Value *statep, jsid *idp);
 
 struct JSFunctionSpecWithHelp {

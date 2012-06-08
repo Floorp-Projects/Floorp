@@ -2145,7 +2145,7 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
 
     uint32_t index = 0;
     for (; !iter.done(); ++index, ++iter) {
-        Value v;
+        RootedValue v(cx);
         if (iter.isNonEvalFunctionFrame() || iter.isNativeCall()) {
             v = iter.calleev();
         } else if (iter.isEvalFrame()) {
@@ -2153,9 +2153,9 @@ DumpStack(JSContext *cx, unsigned argc, Value *vp)
         } else {
             v = StringValue(globalStr);
         }
-        if (!JS_WrapValue(cx, &v))
+        if (!JS_WrapValue(cx, v.address()))
             return false;
-        if (!JS_SetElement(cx, arr, index, &v))
+        if (!JS_SetElement(cx, arr, index, v.address()))
             return false;
     }
 

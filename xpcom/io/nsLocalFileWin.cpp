@@ -623,11 +623,11 @@ OpenFile(const nsAFlatString &name, PRIntn osflags, PRIntn mode,
             flags = OPEN_EXISTING;
     }
 
-    if (osflags & nsILocalFile::DELETE_ON_CLOSE) {
+    if (osflags & nsIFile::DELETE_ON_CLOSE) {
       flag6 |= FILE_FLAG_DELETE_ON_CLOSE;
     }
 
-    if (osflags & nsILocalFile::OS_READAHEAD) {
+    if (osflags & nsIFile::OS_READAHEAD) {
       flag6 |= FILE_FLAG_SEQUENTIAL_SCAN;
     }
 
@@ -826,7 +826,7 @@ class nsDirEnumerator : public nsISimpleEnumerator,
         {
         }
 
-        nsresult Init(nsILocalFile* parent)
+        nsresult Init(nsIFile* parent)
         {
             nsAutoString filepath;
             parent->GetTarget(filepath);
@@ -934,9 +934,9 @@ class nsDirEnumerator : public nsISimpleEnumerator,
         }
 
     protected:
-        nsDir*                  mDir;
-        nsCOMPtr<nsILocalFile>  mParent;
-        nsCOMPtr<nsILocalFile>  mNext;
+        nsDir*             mDir;
+        nsCOMPtr<nsIFile>  mParent;
+        nsCOMPtr<nsIFile>  mNext;
 };
 
 NS_IMPL_ISUPPORTS2(nsDirEnumerator, nsISimpleEnumerator, nsIDirectoryEnumerator)
@@ -1676,11 +1676,11 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetShortcut(nsILocalFile* targetFile,
-                         nsILocalFile* workingDir,
+nsLocalFile::SetShortcut(nsIFile* targetFile,
+                         nsIFile* workingDir,
                          const PRUnichar* args,
                          const PRUnichar* description,
-                         nsILocalFile* iconFile,
+                         nsIFile* iconFile,
                          PRInt32 iconIndex)
 {
     bool exists;
@@ -1937,7 +1937,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
                     nsAutoString target;
                     newParentDir->GetTarget(target);
 
-                    nsCOMPtr<nsILocalFile> realDest = new nsLocalFile();
+                    nsCOMPtr<nsIFile> realDest = new nsLocalFile();
                     if (realDest == nsnull)
                         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -2566,8 +2566,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
       // Since GetDiskFreeSpaceExW works only on directories, use the parent.
       nsCOMPtr<nsIFile> parent;
       if (NS_SUCCEEDED(GetParent(getter_AddRefs(parent))) && parent) {
-        nsCOMPtr<nsILocalFile> localParent = do_QueryInterface(parent);
-        return localParent->GetDiskSpaceAvailable(aDiskSpaceAvailable);
+        return parent->GetDiskSpaceAvailable(aDiskSpaceAvailable);
       }
     }
 
@@ -2617,7 +2616,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     else
         parentPath.AssignLiteral("\\\\.");
 
-    nsCOMPtr<nsILocalFile> localFile;
+    nsCOMPtr<nsIFile> localFile;
     nsresult rv = NS_NewLocalFile(parentPath, mFollowSymlinks, getter_AddRefs(localFile));
 
     if (NS_SUCCEEDED(rv) && localFile) {
@@ -3173,7 +3172,7 @@ nsLocalFile::Launch()
 }
 
 nsresult
-NS_NewLocalFile(const nsAString &path, bool followLinks, nsILocalFile* *result)
+NS_NewLocalFile(const nsAString &path, bool followLinks, nsIFile* *result)
 {
     nsLocalFile* file = new nsLocalFile();
     if (file == nsnull)
@@ -3342,7 +3341,7 @@ nsLocalFile::GetNativeTarget(nsACString &_retval)
 }
 
 nsresult
-NS_NewNativeLocalFile(const nsACString &path, bool followLinks, nsILocalFile* *result)
+NS_NewNativeLocalFile(const nsACString &path, bool followLinks, nsIFile* *result)
 {
     nsAutoString buf;
     nsresult rv = NS_CopyNativeToUnicode(path, buf);
@@ -3461,7 +3460,7 @@ NS_IMETHODIMP nsDriveEnumerator::GetNext(nsISupports **aNext)
     nsString drive(Substring(mStartOfCurrentDrive, driveEnd));
     mStartOfCurrentDrive = ++driveEnd;
 
-    nsILocalFile *file;
+    nsIFile *file;
     nsresult rv = NS_NewLocalFile(drive, false, &file);
 
     *aNext = file;

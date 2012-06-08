@@ -284,16 +284,16 @@ nsHTMLEditor::IsSimpleModifiableNode(nsIContent* aContent,
   // "text-decoration: underline", which decomposes into four different text-*
   // properties.  So for now, we just create a span, add the desired style, and
   // see if it matches.
-  nsCOMPtr<nsIContent> newSpan;
+  nsCOMPtr<dom::Element> newSpan;
   nsresult res = CreateHTMLContent(NS_LITERAL_STRING("span"),
                                    getter_AddRefs(newSpan));
   NS_ASSERTION(NS_SUCCEEDED(res), "CreateHTMLContent failed");
   NS_ENSURE_SUCCESS(res, false);
-  mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(newSpan->AsElement(), aProperty,
+  mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(newSpan, aProperty,
                                              aAttribute, aValue,
                                              /*suppress transaction*/ true);
 
-  return mHTMLCSSUtils->ElementsSameStyle(newSpan->AsElement(), element);
+  return mHTMLCSSUtils->ElementsSameStyle(newSpan, element);
 }
 
 
@@ -386,10 +386,6 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
   MOZ_ASSERT(aNode && aProperty);
   MOZ_ASSERT(aValue);
 
-  nsAutoString tag;
-  aProperty->ToString(tag);
-  ToLowerCase(tag);
-
   // If this is an element that can't be contained in a span, we have to
   // recurse to its children.
   if (!TagCanContain(nsGkAtoms::span, aNode->AsDOMNode())) {
@@ -454,21 +450,24 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
                 aAttribute->EqualsLiteral("bgcolor");
 
   if (useCSS) {
-    nsCOMPtr<nsIDOMNode> tmp = aNode->AsDOMNode();
+    nsCOMPtr<dom::Element> tmp;
     // We only add style="" to <span>s with no attributes (bug 746515).  If we
     // don't have one, we need to make one.
-    if (!aNode->IsElement() || !aNode->AsElement()->IsHTML(nsGkAtoms::span) ||
-        aNode->AsElement()->GetAttrCount()) {
-      res = InsertContainerAbove(aNode->AsDOMNode(), address_of(tmp),
+    if (aNode->IsElement() && aNode->AsElement()->IsHTML(nsGkAtoms::span) &&
+        !aNode->AsElement()->GetAttrCount()) {
+      tmp = aNode->AsElement();
+    } else {
+      res = InsertContainerAbove(aNode, getter_AddRefs(tmp),
                                  NS_LITERAL_STRING("span"),
                                  nsnull, nsnull);
       NS_ENSURE_SUCCESS(res, res);
     }
+
     // Add the CSS styles corresponding to the HTML style request
     PRInt32 count;
-    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(tmp, aProperty,
-                                                     aAttribute, aValue,
-                                                     &count, false);
+    res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(tmp->AsDOMNode(),
+                                                     aProperty, aAttribute,
+                                                     aValue, &count, false);
     NS_ENSURE_SUCCESS(res, res);
     return NS_OK;
   }
@@ -481,6 +480,9 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
   }
 
   // ok, chuck it in its very own container
+  nsAutoString tag;
+  aProperty->ToString(tag);
+  ToLowerCase(tag);
   nsCOMPtr<nsIDOMNode> tmp;
   return InsertContainerAbove(aNode->AsDOMNode(), address_of(tmp), tag,
                               aAttribute, aValue);

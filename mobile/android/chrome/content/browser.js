@@ -2850,7 +2850,8 @@ var BrowserEventHandler = {
     var computedStyle = win.getComputedStyle(elem);
     if (!computedStyle)
       return false;
-    return computedStyle.overflow == 'auto' || computedStyle.overflow == 'scroll';
+    return computedStyle.overflowX == 'auto' || computedStyle.overflowX == 'scroll'
+        || computedStyle.overflowY == 'auto' || computedStyle.overflowY == 'scroll';
   },
 
   _findScrollableElement: function(elem, checkElem) {
@@ -4999,13 +5000,39 @@ var SearchEngines = {
         };
       });
 
+      let suggestTemplate = null;
+      let suggestEngine = null;
+      if (Services.prefs.getBoolPref("browser.search.suggest.enabled")) {
+        let engine = this.getSuggestionEngine();
+        if (engine != null) {
+          suggestEngine = engine.name;
+          suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
+        }
+      }
+
       sendMessageToJava({
         gecko: {
           type: "SearchEngines:Data",
-          searchEngines: searchEngines
+          searchEngines: searchEngines,
+          suggestEngine: suggestEngine,
+          suggestTemplate: suggestTemplate
         }
       });
     }
+  },
+
+  getSuggestionEngine: function () {
+    let engines = [ Services.search.currentEngine,
+                    Services.search.defaultEngine,
+                    Services.search.originalDefaultEngine ];
+
+    for (let i = 0; i < engines.length; i++) {
+      let engine = engines[i];
+      if (engine && engine.supportsResponseType("application/x-suggestions+json"))
+        return engine;
+    }
+
+    return null;
   },
 
   addEngine: function addEngine(aElement) {
@@ -5134,8 +5161,8 @@ var WebappsUI = {
         break;
       case "webapps-launch":
         DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
-	   if (!aManifest)
-	     return;
+          if (!aManifest)
+            return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
           this.openURL(manifest.fullLaunchPath(), data.origin);
         }).bind(this));
@@ -5143,8 +5170,8 @@ var WebappsUI = {
       case "webapps-sync-install":
         // Wait until we know the app install worked, then make a homescreen shortcut
         DOMApplicationRegistry.getManifestFor(data.origin, (function(aManifest) {
-	   if (!aManifest)
-	     return;
+          if (!aManifest)
+            return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
 
           // Add a homescreen shortcut

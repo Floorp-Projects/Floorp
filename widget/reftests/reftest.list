@@ -1,3 +1,6 @@
 skip-if(!cocoaWidget) != 507947.html about:blank
 == progressbar-fallback-default-style.html progressbar-fallback-default-style-ref.html
+== meter-native-style.html meter-native-style-ref.html
+skip-if(!cocoaWidget) == meter-vertical-native-style.html meter-vertical-native-style-ref.html
+== meter-fallback-default-style.html meter-fallback-default-style-ref.html
 load 664925.xhtml

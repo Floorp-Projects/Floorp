@@ -5,7 +5,7 @@
 #include "nsDeviceStorage.h"
 #include "DOMRequest.h"
 #include "nsServiceManagerUtils.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIDOMFile.h"
@@ -133,7 +133,7 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
 {
   PRInt32 typeResult = DEVICE_STORAGE_TYPE_DEFAULT;
 
-  nsCOMPtr<nsILocalFile> f;
+  nsCOMPtr<nsIFile> f;
   nsCOMPtr<nsIProperties> dirService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
   NS_ASSERTION(dirService, "Must have directory service");
 
@@ -149,11 +149,11 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
     }
 #elif defined (MOZ_WIDGET_COCOA)
     if (aIndex == 0) {
-      dirService->Get(NS_OSX_PICTURE_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+      dirService->Get(NS_OSX_PICTURE_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
     }
 #elif defined (XP_UNIX)
     if (aIndex == 0) {
-      dirService->Get(NS_UNIX_XDG_PICTURES_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+      dirService->Get(NS_UNIX_XDG_PICTURES_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
     }
 #endif
   }
@@ -170,11 +170,11 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
     }
 #elif defined (MOZ_WIDGET_COCOA)
     if (aIndex == 0) {
-      dirService->Get(NS_OSX_MOVIE_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+      dirService->Get(NS_OSX_MOVIE_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
     }
 #elif defined (XP_UNIX)
     if (aIndex == 0) {
-      dirService->Get(NS_UNIX_XDG_VIDEOS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+      dirService->Get(NS_UNIX_XDG_VIDEOS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
     }
 #endif
   }
@@ -191,11 +191,11 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
     }
 #elif defined (MOZ_WIDGET_COCOA)
     if (aIndex == 0) {
-      dirService->Get(NS_OSX_MUSIC_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+      dirService->Get(NS_OSX_MUSIC_DOCUMENTS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
     }
 #elif defined (XP_UNIX)
     if (aIndex == 0) {
-      dirService->Get(NS_UNIX_XDG_MUSIC_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+      dirService->Get(NS_UNIX_XDG_MUSIC_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
     }
 #endif
   }
@@ -205,12 +205,12 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
 
     // Temp directory
     if (aType.Equals(NS_LITERAL_STRING("temp")) && aIndex == 0) {
-      dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+      dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
     }
 
     // Profile directory
     else if (aType.Equals(NS_LITERAL_STRING("profile")) && aIndex == 0) {
-      dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(f));
+      dirService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(f));
     }
   } 
 

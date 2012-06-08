@@ -1834,4 +1834,7 @@ public class GeckoAppShell
     /* Stubbed out because this is called from AndroidBridge for Native Fennec */
     public static void showFilePickerAsync(String aMimeType, long id) {
     }
+
+    public static void notifyWakeLockChanged(String topic, String state) {
+    }
 }

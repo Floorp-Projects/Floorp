@@ -91,6 +91,16 @@ class nsIntervalSet;
 // (including <BR CLEAR="..."> frames)
 #define NS_BLOCK_HAS_CLEAR_CHILDREN         NS_FRAME_STATE_BIT(27)
 
+// Are our cached intrinsic widths intrinsic widths for font size
+// inflation?  i.e., what was the current state of
+// GetPresContext()->mInflationDisabledForShrinkWrap at the time they
+// were computed?
+// nsBlockFrame is the only thing that caches intrinsic widths that
+// needs to track this because it's the only thing that caches intrinsic
+// widths that lives inside of things (form controls) that do intrinsic
+// sizing with font inflation enabled.
+#define NS_BLOCK_FRAME_INTRINSICS_INFLATED  NS_FRAME_STATE_BIT(62)
+
 #define nsBlockFrameSuper nsContainerFrame
 
 /*
@@ -241,6 +251,9 @@ public:
   }
 
   virtual void MarkIntrinsicWidthsDirty();
+private:
+  void CheckIntrinsicCacheAgainstShrinkWrapState();
+public:
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
 

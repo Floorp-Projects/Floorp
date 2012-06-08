@@ -6,7 +6,7 @@
 
 #include "nsINavBookmarksService.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 #include "nsNavHistory.h"
 #include "nsPlacesTables.h"
