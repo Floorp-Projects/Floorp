@@ -29,22 +29,40 @@ function verifyInitialState() {
 function dial() {
   log("Make an outgoing call.");
 
-  outgoing = telephony.dial(number);
-  ok(outgoing);
-  is(outgoing.number, number);
-  is(outgoing.state, "dialing");
+  telephony.oncallschanged = function oncallschanged(event) {
+    log("Received 'callschanged' call event.");
 
-  is(outgoing, telephony.active);
-  //ok(telephony.calls === calls); // bug 717414
-  is(telephony.calls.length, 1);
-  is(telephony.calls[0], outgoing);
+    let expected_states = ["dialing", "disconnected"];
+    ok(expected_states.indexOf(event.call.state) != -1,
+      "Unexpected call state: " + event.call.state);
 
-  runEmulatorCmd("gsm list", function(result) {
-    log("Call list is now: " + result);
-    is(result[0], "outbound to  " + number + " : unknown");
-    is(result[1], "OK");
-    answer();
-  });
+    if (event.call.state == "dialing") {
+      outgoing = event.call;
+      ok(outgoing);
+      is(outgoing.number, number);
+
+      is(outgoing, telephony.active);
+      //ok(telephony.calls === calls); // bug 717414
+      is(telephony.calls.length, 1);
+      is(telephony.calls[0], outgoing);
+
+      runEmulatorCmd("gsm list", function(result) {
+        log("Call list is now: " + result);
+        is(result[0], "outbound to  " + number + " : unknown");
+        is(result[1], "OK");
+        answer();
+      });
+    }
+
+    if (event.call.state == "disconnected") {
+      is(outgoing.state, "disconnected");
+      is(telephony.active, null);
+      is(telephony.calls.length, 0);
+      cleanUp();
+    }
+  };
+
+  telephony.dial(number);
 }
 
 function answer() {
@@ -72,22 +90,6 @@ function answer() {
 function hangUp() {
   log("Hanging up the outgoing call.");
 
-  // We get no "disconnecting" event when the remote party terminates the call.
-
-  outgoing.ondisconnected = function ondisconnected(event) {
-    log("Received 'disconnected' call event.");
-    is(outgoing, event.call);
-    is(outgoing.state, "disconnected");
-
-    is(telephony.active, null);
-    is(telephony.calls.length, 0);
-
-    runEmulatorCmd("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "OK");
-      cleanUp();
-    });
-  };
   runEmulatorCmd("gsm cancel " + number);
 }
 
