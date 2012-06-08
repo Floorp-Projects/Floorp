@@ -47,11 +47,9 @@ class UpvarCookie
     uint16_t level() const { JS_ASSERT(!isFree()); return level_; }
     uint16_t slot()  const { JS_ASSERT(!isFree()); return slot_; }
 
-    void set(uint16_t newLevel, uint16_t newSlot) {
-        level_ = newLevel;
-        slot_ = newSlot;
-        JS_ASSERT(!isFree());
-    }
+    // This fails and issues an error message if newLevel is too large.
+    bool set(JSContext *cx, unsigned newLevel, uint16_t newSlot);
+
     void makeFree() {
         level_ = FREE_LEVEL;
         slot_ = 0;      // value doesn't matter, won't be used
