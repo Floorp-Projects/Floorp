@@ -6,6 +6,6 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:state_pressed="true" android:drawable="@drawable/address_bar_pressed_bg"/>
-    <item android:drawable="@drawable/address_bar_bg"/>
+    <item android:drawable="@android:color/transparent"/>
 
 </selector>
