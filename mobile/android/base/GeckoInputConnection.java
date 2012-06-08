@@ -1119,16 +1119,7 @@ public class GeckoInputConnection
                 return;
 
             if (mIMEState != IME_STATE_DISABLED) {
-                if (!v.isFocused()) {
-                    GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
-                        public void run() {
-                            v.requestFocus();
-                            imm.showSoftInput(v, 0);
-                        }
-                    });
-                } else {
-                    imm.showSoftInput(v, 0);
-                }
+                imm.showSoftInput(v, 0);
             } else {
                 imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
             }
