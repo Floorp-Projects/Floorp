@@ -191,13 +191,15 @@ SnapshotReader::readFrameHeader()
 void
 SnapshotReader::spewBailingFrom() const
 {
-    IonSpewHeader(IonSpew_Bailouts);
-    fprintf(IonSpewFile, " bailing from bytecode: %s, MIR: ", js_CodeName[pcOpcode_]);
-    MDefinition::PrintOpcodeName(IonSpewFile, MDefinition::Opcode(mirOpcode_));
-    fprintf(IonSpewFile, " [%u], LIR: ", mirId_);
-    LInstruction::printName(IonSpewFile, LInstruction::Opcode(lirOpcode_));
-    fprintf(IonSpewFile, " [%u]", lirId_);
-    fprintf(IonSpewFile, "\n");
+    if (IonSpewEnabled(IonSpew_Bailouts)) {
+        IonSpewHeader(IonSpew_Bailouts);
+        fprintf(IonSpewFile, " bailing from bytecode: %s, MIR: ", js_CodeName[pcOpcode_]);
+        MDefinition::PrintOpcodeName(IonSpewFile, MDefinition::Opcode(mirOpcode_));
+        fprintf(IonSpewFile, " [%u], LIR: ", mirId_);
+        LInstruction::printName(IonSpewFile, LInstruction::Opcode(lirOpcode_));
+        fprintf(IonSpewFile, " [%u]", lirId_);
+        fprintf(IonSpewFile, "\n");
+    }
 }
 #endif
 
