@@ -29,24 +29,41 @@ function verifyInitialState() {
 function simulateIncoming() {
   log("Simulating an incoming call.");
 
-  telephony.onincoming = function onincoming(event) {
-    log("Received 'incoming' call event.");
-    incoming = event.call;
-    ok(incoming);
-    is(incoming.number, number);
-    is(incoming.state, "incoming");
+  telephony.oncallschanged = function oncallschanged(event) {
+    log("Received 'callschanged' event.");
 
-    //ok(telephony.calls === calls); // bug 717414
-    is(telephony.calls.length, 1);
-    is(telephony.calls[0], incoming);
+    let expected_states = ["incoming", "disconnected"];
+    ok(expected_states.indexOf(event.call.state) != -1,
+      "Unexpected call state: " + event.call.state);
 
-    runEmulatorCmd("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "inbound from " + number + " : incoming");
-      is(result[1], "OK");
-      answer();
-    });
+    if (event.call.state == "incoming") {
+      log("Received 'callschanged' event for an incoming call.");
+      incoming = event.call;
+      ok(incoming);
+      is(incoming.number, number);
+
+      //ok(telephony.calls === calls); // bug 717414
+      is(telephony.calls.length, 1);
+      is(telephony.calls[0], incoming);
+
+      runEmulatorCmd("gsm list", function(result) {
+        log("Call list is now: " + result);
+        is(result[0], "inbound from " + number + " : incoming");
+        is(result[1], "OK");
+        answer();
+      });
+    }
+
+    if (event.call.state == "disconnected") {
+      log("Received 'callschanged' event for a disconnected call.");
+      is(event.call, incoming);
+      is(incoming.state, "disconnected");
+      is(telephony.active, null);
+      is(telephony.calls.length, 0);
+      cleanUp();
+    }
   };
+
   runEmulatorCmd("gsm call " + number);
 }
 
@@ -54,10 +71,13 @@ function answer() {
   log("Answering the incoming call.");
 
   let gotConnecting = false;
-  incoming.onconnecting = function onconnecting(event) { 
+  incoming.onconnecting = function onconnecting(event) {
     log("Received 'connecting' call event.");
     is(incoming, event.call);
     is(incoming.state, "connecting");
+
+    // Incoming call is not 'active' until its state becomes 'connected'.
+    isnot(incoming, telephony.active);
     gotConnecting = true;
   };
 
@@ -102,7 +122,6 @@ function hangUp() {
     runEmulatorCmd("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "OK");
-      cleanUp();
     });
   };
   incoming.hangUp();
