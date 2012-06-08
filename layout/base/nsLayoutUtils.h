@@ -812,6 +812,12 @@ public:
   static nsIFrame* GetParentOrPlaceholderFor(nsIFrame* aFrame);
 
   /**
+   * If aFrame is an out of flow frame, return its placeholder, otherwise
+   * return its (possibly cross-doc) parent.
+   */
+  static nsIFrame* GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame);
+
+  /**
    * Get a frame's next-in-flow, or, if it doesn't have one, its special sibling.
    */
   static nsIFrame*
