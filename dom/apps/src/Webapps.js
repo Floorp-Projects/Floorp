@@ -207,6 +207,7 @@ WebappsApplication.prototype = {
                       installOrigin: 'r',
                       installTime: 'r',
                       launch: 'r',
+                      receipts: 'r',
                       uninstall: 'r'
                      },
 
