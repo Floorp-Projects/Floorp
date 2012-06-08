@@ -1,8 +1,8 @@
 // Test that an <iframe mozbrowser> is a window.{top,parent,frameElement} barrier.
 "use strict";
 
-browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addToWhitelist();
+browserFrameHelpers.setEnabledPref(true);
+browserFrameHelpers.addToWhitelist();
 
 var iframe;
 function runTest() {

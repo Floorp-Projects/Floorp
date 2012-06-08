@@ -8,8 +8,8 @@
 
 SimpleTest.waitForExplicitFinish();
 
-browserElementTestHelpers.setEnabledPref(true);
-browserElementTestHelpers.addToWhitelist();
+browserFrameHelpers.setEnabledPref(true);
+browserFrameHelpers.addToWhitelist();
 
 // Test harness sets dom.successive_dialog_time_limit to 0 for some bizarre
 // reason.  That's not normal usage, and it keeps us from testing alertCheck!
