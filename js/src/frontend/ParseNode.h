@@ -34,7 +34,6 @@ class UpvarCookie
 
     void checkInvariants() {
         JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32_t));
-        JS_STATIC_ASSERT(UPVAR_LEVEL_LIMIT < FREE_LEVEL);
     }
 
   public:
@@ -44,11 +43,6 @@ class UpvarCookie
      */
     static const uint16_t FREE_LEVEL = 0x3fff;
 
-    /*
-     * If a function has a higher static level than this limit, we will not
-     * optimize it using UPVAR opcodes.
-     */
-    static const uint16_t UPVAR_LEVEL_LIMIT = 16;
     static const uint16_t CALLEE_SLOT = 0xffff;
     static bool isLevelReserved(uint16_t level) { return level >= FREE_LEVEL; }
 
