@@ -488,76 +488,63 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
   if (!mVideoSource.get())
     return false;
 
-  for (;;) {
-    ReleaseVideoBuffer();
+  ReleaseVideoBuffer();
 
-    status_t err;
+  status_t err;
 
-    if (aSeekTimeUs != -1) {
-      MediaSource::ReadOptions options;
-      options.setSeekTo(aSeekTimeUs);
-      err = mVideoSource->read(&mVideoBuffer, &options);
-    } else {
-      err = mVideoSource->read(&mVideoBuffer);
-    }
-
-    if (err == OK) {
-      if (mVideoBuffer->range_length() == 0) // If we get a spurious empty buffer, keep going
-        continue;
-
-      int64_t timeUs;
-      int32_t unreadable;
-      int32_t keyFrame;
-
-      if (!mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs) ) {
-        LOG("no key time");
-        return false;
-      }
-
-      if (!mVideoBuffer->meta_data()->findInt32(kKeyIsSyncFrame, &keyFrame)) {
-        keyFrame = 0;
-      }
-
-      if (!mVideoBuffer->meta_data()->findInt32(kKeyIsUnreadable, &unreadable)) {
-        unreadable = 0;
-      }
-
-      LOG("data: %p size: %u offset: %u length: %u unreadable: %d",
-          mVideoBuffer->data(), 
-          mVideoBuffer->size(),
-          mVideoBuffer->range_offset(),
-          mVideoBuffer->range_length(),
-          unreadable);
-
-      char *data = reinterpret_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
-      size_t length = mVideoBuffer->range_length();
-
-      if (unreadable) {
-        LOG("video frame is unreadable");
-      }
-
-      if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
-        return false;
-      }
-
-      return true;
-    }
-
-    if (err == INFO_FORMAT_CHANGED) {
-      // If the format changed, update our cached info.
-      if (!SetVideoFormat()) {
-        return false;
-      }
-
-      // Ok, try to read a buffer again.
-      continue;
-    }
-
-    /* err == ERROR_END_OF_STREAM */
-    break;
+  if (aSeekTimeUs != -1) {
+    MediaSource::ReadOptions options;
+    options.setSeekTo(aSeekTimeUs);
+    err = mVideoSource->read(&mVideoBuffer, &options);
+  } else {
+    err = mVideoSource->read(&mVideoBuffer);
   }
 
-  return false;
+  if (err == OK && mVideoBuffer->range_length() > 0) {
+    int64_t timeUs;
+    int32_t unreadable;
+    int32_t keyFrame;
+
+    if (!mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs) ) {
+      LOG("no key time");
+      return false;
+    }
+
+    if (!mVideoBuffer->meta_data()->findInt32(kKeyIsSyncFrame, &keyFrame)) {
+       keyFrame = 0;
+    }
+
+    if (!mVideoBuffer->meta_data()->findInt32(kKeyIsUnreadable, &unreadable)) {
+      unreadable = 0;
+    }
+
+    LOG("data: %p size: %u offset: %u length: %u unreadable: %d",
+        mVideoBuffer->data(), 
+        mVideoBuffer->size(),
+        mVideoBuffer->range_offset(),
+        mVideoBuffer->range_length(),
+        unreadable);
+
+    char *data = reinterpret_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
+    size_t length = mVideoBuffer->range_length();
+
+    if (unreadable) {
+      LOG("video frame is unreadable");
+    }
+
+    if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
+      return false;
+    }
+  }
+  else if (err == INFO_FORMAT_CHANGED) {
+    // If the format changed, update our cached info.
+    return SetVideoFormat();
+  }
+  else if (err == ERROR_END_OF_STREAM) {
+    return false;
+  }
+
+  return true;
 }
 
 bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
