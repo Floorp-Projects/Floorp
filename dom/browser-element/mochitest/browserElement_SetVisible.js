@@ -13,8 +13,8 @@ var iframeScript = function() {
 
 function runTest() {
 
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addToWhitelist();
+  browserFrameHelpers.setEnabledPref(true);
+  browserFrameHelpers.addToWhitelist();
 
   var mm;
   var numEvents = 0;
