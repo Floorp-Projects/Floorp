@@ -64,7 +64,7 @@ protected:
 					void *aClosure);
 
   void appendArg(const char* arg);
-  void resolveShortcutURL(nsILocalFile* aFile, nsACString& outURL);
+  void resolveShortcutURL(nsIFile* aFile, nsACString& outURL);
   nsresult EnumerateHandlers(EnumerateHandlersCallback aCallback, void *aClosure);
   nsresult EnumerateValidators(EnumerateValidatorsCallback aCallback, void *aClosure);
 
@@ -245,7 +245,7 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
 {
   NS_ENSURE_TRUE(mWorkingDir, NS_ERROR_NOT_INITIALIZED);
 
-  // This is some seriously screwed-up code. nsILocalFile.appendRelativeNativePath
+  // This is some seriously screwed-up code. nsIFile.appendRelativeNativePath
   // explicitly does not accept .. or . path parts, but that is exactly what we
   // need here. So we hack around it.
 
@@ -280,7 +280,7 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
   return NS_OK;
 
 #elif defined(XP_UNIX)
-  nsCOMPtr<nsILocalFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+  nsCOMPtr<nsIFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
   NS_ENSURE_TRUE(lf, NS_ERROR_OUT_OF_MEMORY);
 
   if (aArgument.First() == '/') {
@@ -311,7 +311,7 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
   return NS_OK;
 
 #elif defined(XP_WIN32)
-  nsCOMPtr<nsILocalFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+  nsCOMPtr<nsIFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
   NS_ENSURE_TRUE(lf, NS_ERROR_OUT_OF_MEMORY);
 
   rv = lf->InitWithPath(aArgument);
@@ -338,7 +338,7 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
   return NS_OK;
 
 #elif defined(XP_OS2)
-  nsCOMPtr<nsILocalFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+  nsCOMPtr<nsIFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
   NS_ENSURE_TRUE(lf, NS_ERROR_OUT_OF_MEMORY);
 
   rv = lf->InitWithPath(aArgument);
@@ -384,7 +384,7 @@ nsCommandLine::ResolveURI(const nsAString& aArgument, nsIURI* *aResult)
     io->NewFileURI(mWorkingDir, getter_AddRefs(workingDirURI));
   }
 
-  nsCOMPtr<nsILocalFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+  nsCOMPtr<nsIFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
   rv = lf->InitWithPath(aArgument);
   if (NS_SUCCEEDED(rv)) {
     lf->Normalize();
@@ -425,7 +425,7 @@ nsCommandLine::appendArg(const char* arg)
 }
 
 void
-nsCommandLine::resolveShortcutURL(nsILocalFile* aFile, nsACString& outURL)
+nsCommandLine::resolveShortcutURL(nsIFile* aFile, nsACString& outURL)
 {
   nsCOMPtr<nsIFileProtocolHandler> fph;
   nsresult rv = NS_GetFileProtocolHandler(getter_AddRefs(fph));

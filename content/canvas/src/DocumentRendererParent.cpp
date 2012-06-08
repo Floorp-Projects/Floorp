@@ -5,6 +5,7 @@
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "gfxImageSurface.h"
 #include "gfxPattern.h"
+#include "nsICanvasRenderingContextInternal.h"
 
 using namespace mozilla::ipc;
 

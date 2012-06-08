@@ -446,9 +446,10 @@ public:
       return item;
     }
 
-    const T &operator ++()
+    iterator &operator ++()
     {
-      return *(++item);
+      ++item;
+      return *this;
     }
 
     bool operator<(const iterator &other) const
@@ -479,6 +480,68 @@ public:
     if (length)
       return iterator(UnsizedArray<T>::operator[](length));
     return iterator();
+  }
+
+  /**
+   * Reverse iterator for an Array. Use is similar to that of STL
+   * const_reverse_iterators:
+   *
+   *   struct S { ... };
+   *   Array<S> a(buf, len);
+   *   for (Array<S>::reverse_iterator it = a.rbegin(); it < a.rend(); ++it) {
+   *     // Do something with *it.
+   *   }
+   */
+  class reverse_iterator
+  {
+  public:
+    reverse_iterator(): item(NULL) { }
+
+    const T &operator *() const
+    {
+      const T *tmp = item;
+      return *--tmp;
+    }
+
+    const T *operator ->() const
+    {
+      return &operator*();
+    }
+
+    reverse_iterator &operator ++()
+    {
+      --item;
+      return *this;
+    }
+
+    bool operator<(const reverse_iterator &other) const
+    {
+      return item > other.item;
+    }
+  protected:
+    friend class Array<T>;
+    reverse_iterator(const T &item): item(&item) { }
+
+  private:
+    const T *item;
+  };
+
+  /**
+   * Returns a reverse iterator pointing at the end of the Array
+   */
+  reverse_iterator rbegin() const {
+    if (length)
+      return reverse_iterator(UnsizedArray<T>::operator[](length));
+    return reverse_iterator();
+  }
+
+  /**
+   * Returns a reverse iterator pointing past the beginning of the Array
+   */
+  reverse_iterator rend() const {
+    if (length)
+      return reverse_iterator(UnsizedArray<T>::operator[](0));
+    return reverse_iterator();
   }
 private:
   idx_t length;

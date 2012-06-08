@@ -269,7 +269,8 @@ DOMSVGTests::GetOrCreateStringListAttribute(PRUint8 aAttrEnum) const
   stringListPtr->SetIsCommaSeparated(aAttrEnum == LANGUAGE);
   nsresult rv = element->SetProperty(attrName,
                                      stringListPtr,
-                                     ReleaseStringListPropertyValue);
+                                     ReleaseStringListPropertyValue,
+                                     true);
   NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
                     "Setting property value when it's already set...?"); 
 

@@ -166,7 +166,7 @@ NS_GetMemoryManager(nsIMemory* *result)
 EXPORT_XPCOM_API(nsresult)
 NS_NewLocalFile(const nsAString &path,
                 bool followLinks,
-                nsILocalFile **result)
+                nsIFile **result)
 {
   return NS_NewLocalFile_P(path, followLinks, result);
 }
@@ -175,7 +175,7 @@ NS_NewLocalFile(const nsAString &path,
 EXPORT_XPCOM_API(nsresult)
 NS_NewNativeLocalFile(const nsACString &path,
                       bool followLinks,
-                      nsILocalFile **result)
+                      nsIFile **result)
 {
   return NS_NewNativeLocalFile_P(path, followLinks, result);
 }

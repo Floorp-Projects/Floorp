@@ -111,7 +111,10 @@ abstract public class GeckoApp
     private static AbsoluteLayout mPluginContainer;
     private static FindInPageBar mFindInPageBar;
 
+    private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
+
+    private HashMap<String, PowerManager.WakeLock> mWakeLocks = new HashMap<String, PowerManager.WakeLock>();
 
     private int mRestoreMode = GeckoAppShell.RESTORE_NONE;
     private boolean mInitialized = false;
@@ -167,17 +170,50 @@ abstract public class GeckoApp
 
     String[] getPluginDirectories() {
 
-        // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            File tegraDriverPath = new File("/system/lib/hw/gralloc.tegra.so");
-            if (tegraDriverPath.exists())
+        // An awful hack to detect Tegra devices. Easiest way to do it without spinning up a EGL context.
+        boolean isTegra = (new File("/system/lib/hw/gralloc.tegra.so")).exists();
+        if (isTegra) {
+            // disable Flash on pre-HC Tegra (bug 703056)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + Gingerbread bug (bug 703056)");
                 return new String[0];
+            }
+
+            // disable Flash on Tegra ICS with CM9 and other custom firmware (bug 736421)
+            File vfile = new File("/proc/version");
+            FileReader vreader = null;
+            try {
+                if (vfile.canRead()) {
+                    vreader = new FileReader(vfile);
+                    String version = new BufferedReader(vreader).readLine();
+                    if (version.indexOf("CM9") != -1 ||
+                        version.indexOf("cyanogen") != -1 ||
+                        version.indexOf("Nova") != -1)
+                    {
+                        Log.w(LOGTAG, "Blocking plugins because of Tegra 2 + unofficial ICS bug (bug 736421)");
+                        return new String[0];
+                    }
+                }
+            } catch (IOException ex) {
+                // nothing
+            } finally {
+                try {
+                    if (vreader != null) {
+                        vreader.close();
+                    }
+                } catch (IOException ex) {
+                    // nothing
+                }
+            }
         }
 
         // we don't support Honeycomb
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
             Build.VERSION.SDK_INT < 14 /*Build.VERSION_CODES.ICE_CREAM_SANDWICH*/ )
+        {
+            Log.w(LOGTAG, "Blocking plugins because of Honeycomb");
             return new String[0];
+        }
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - start of getPluginDirectories");
 
@@ -474,6 +510,10 @@ abstract public class GeckoApp
 
     @Override
     public void openOptionsMenu() {
+        // Scroll custom menu to the top
+        if (mMenuPanel != null)
+            mMenuPanel.scrollTo(0, 0);
+
         if (!mBrowserToolbar.openOptionsMenu())
             super.openOptionsMenu();
     }
@@ -573,6 +613,10 @@ abstract public class GeckoApp
                 onCreatePanelMenu(featureId, menu);
                 onPreparePanel(featureId, mMenuPanel, sMenu);
             }
+
+            // Scroll custom menu to the top
+            if (mMenuPanel != null)
+                mMenuPanel.scrollTo(0, 0);
 
             return true;
         }
@@ -1231,6 +1275,11 @@ abstract public class GeckoApp
                                                                                        ret.toString()));
                     }
                 });
+            } else if (event.equals("Shortcut:Remove")) {
+                final String url = message.getString("url");
+                final String title = message.getString("title");
+                final String type = message.getString("shortcutType");
+                GeckoAppShell.removeShortcut(title, url, type);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1510,35 +1559,42 @@ abstract public class GeckoApp
         tabs.closeTab(tab);
     }
 
-    private void addFullScreenPluginView(View view, int orientation) {
+    private void addFullScreenPluginView(View view) {
         if (mFullScreenPluginView != null) {
             Log.w(LOGTAG, "Already have a fullscreen plugin view");
             return;
         }
 
         setFullScreen(true);
-        mBrowserToolbar.hide();
-
-        if (orientation != GeckoScreenOrientationListener.eScreenOrientation_None)
-            GeckoScreenOrientationListener.getInstance().lockScreenOrientation(orientation);
 
         view.setWillNotDraw(false);
         if (view instanceof SurfaceView) {
             ((SurfaceView) view).setZOrderOnTop(true);
         }
 
-        mPluginContainer.addView(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        mFullScreenPluginContainer = new FullScreenHolder(this);
+
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            Gravity.CENTER);
+        mFullScreenPluginContainer.addView(view, layoutParams);
+
+
+        FrameLayout decor = (FrameLayout)getWindow().getDecorView();
+        decor.addView(mFullScreenPluginContainer, layoutParams);
+
         mFullScreenPluginView = view;
     }
 
-    void addPluginView(final View view, final Rect rect, final boolean isFullScreen, final int orientation) {
+    void addPluginView(final View view, final Rect rect, final boolean isFullScreen) {
         mMainHandler.post(new Runnable() { 
             public void run() {
                 Tabs tabs = Tabs.getInstance();
                 Tab tab = tabs.getSelectedTab();
 
                 if (isFullScreen) {
-                    addFullScreenPluginView(view, orientation);
+                    addFullScreenPluginView(view);
                     return;
                 }
 
@@ -1569,13 +1625,23 @@ abstract public class GeckoApp
 
         GeckoAppShell.onFullScreenPluginHidden(view);
 
-        GeckoScreenOrientationListener.getInstance().unlockScreenOrientation();
+        mFullScreenPluginContainer.removeView(mFullScreenPluginView);
 
-        setFullScreen(false);
-        mBrowserToolbar.show();
+        // We need do do this on the next iteration in order to avoid
+        // a deadlock, see comment below in FullScreenHolder
+        mMainHandler.post(new Runnable() { 
+            public void run() {
+                mLayerController.getView().setVisibility(View.VISIBLE);
+            }
+        });
+
+        FrameLayout decor = (FrameLayout)getWindow().getDecorView();
+        decor.removeView(mFullScreenPluginContainer);
         
-        mPluginContainer.removeView(view);
         mFullScreenPluginView = null;
+
+        GeckoScreenOrientationListener.getInstance().unlockScreenOrientation();
+        setFullScreen(false);
     }
 
     void removePluginView(final View view, final boolean isFullScreen) {
@@ -1967,6 +2033,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Accessibility:Ready", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Shortcut:Remove", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2300,6 +2367,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Bookmark:Insert", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Accessibility:Ready", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Shortcut:Remove", GeckoApp.mAppContext);
 
         if (mFavicons != null)
             mFavicons.close();
@@ -3065,6 +3133,19 @@ abstract public class GeckoApp
     {
     }
 
+    // Called when a Gecko Hal WakeLock is changed
+    public void notifyWakeLockChanged(String topic, String state) {
+        PowerManager.WakeLock wl = mWakeLocks.get(topic);
+        if (state.equals("locked-foreground") && wl == null) {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, topic);
+            wl.acquire();
+            mWakeLocks.put(topic, wl);
+        } else if (!state.equals("locked-foreground") && wl != null) {
+            wl.release();
+            mWakeLocks.remove(topic);
+        }
+    }
 
     private void connectGeckoLayerClient() {
         LayerController layerController = getLayerController();
@@ -3082,5 +3163,68 @@ abstract public class GeckoApp
 
     public boolean linkerExtract() {
         return false;
+    }
+
+    private class FullScreenHolder extends FrameLayout {
+
+        public FullScreenHolder(Context ctx) {
+            super(ctx);
+        }
+
+        @Override
+        public void addView(View view, int index) {
+            /**
+             * This normally gets called when Flash adds a separate SurfaceView
+             * for the video. It is unhappy if we have the LayerView underneath
+             * it for some reason so we need to hide that. Hiding the LayerView causes
+             * its surface to be destroyed, which causes a pause composition
+             * event to be sent to Gecko. We synchronously wait for that to be
+             * processed. Simultaneously, however, Flash is waiting on a mutex so
+             * the post() below is an attempt to avoid a deadlock.
+             */
+            super.addView(view, index);
+
+            mMainHandler.post(new Runnable() { 
+                public void run() {
+                    mLayerController.getView().setVisibility(View.INVISIBLE);
+                }
+            });
+        }
+
+        /**
+         * The methods below are simply copied from what Android WebKit does.
+         * It wasn't ever called in my testing, but might as well
+         * keep it in case it is for some reason. The methods
+         * all return true because we don't want any events
+         * leaking out from the fullscreen view.
+         */
+        @Override
+        public boolean onKeyDown(int keyCode, KeyEvent event) {
+            if (event.isSystem()) {
+                return super.onKeyDown(keyCode, event);
+            }
+            mFullScreenPluginView.onKeyDown(keyCode, event);
+            return true;
+        }
+
+        @Override
+        public boolean onKeyUp(int keyCode, KeyEvent event) {
+            if (event.isSystem()) {
+                return super.onKeyUp(keyCode, event);
+            }
+            mFullScreenPluginView.onKeyUp(keyCode, event);
+            return true;
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            return true;
+        }
+
+        @Override
+        public boolean onTrackballEvent(MotionEvent event) {
+            mFullScreenPluginView.onTrackballEvent(event);
+            return true;
+        }
     }
 }

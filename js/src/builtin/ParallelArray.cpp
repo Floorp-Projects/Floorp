@@ -84,10 +84,11 @@ ParallelArray_get(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    RootedObject obj(cx, NonGenericMethodGuard(cx, args, ParallelArray_get, &ParallelArrayClass, &ok));
+    RootedObject obj(cx);
+    if (!NonGenericMethodGuard(cx, args, ParallelArray_get, &ParallelArrayClass, obj.address()))
+        return false;
     if (!obj)
-        return ok;
+        return true;
 
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -257,12 +258,14 @@ ParallelArray_mapOrCombine(JSContext *cx, unsigned argc, Value *vp, bool isMap)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* make sure we are called on a ParallelArray */
-    bool ok;
     RootedObject obj(cx);
-    obj = NonGenericMethodGuard(cx, args, (isMap ? ParallelArray_map : ParallelArray_combine),
-                                &ParallelArrayClass, &ok);
+    if (!NonGenericMethodGuard(cx, args, (isMap ? ParallelArray_map : ParallelArray_combine),
+                               &ParallelArrayClass, obj.address()))
+    {
+        return false;
+    }
     if (!obj)
-        return ok;
+        return true;
 
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -315,11 +318,14 @@ ParallelArray_scanOrReduce(JSContext *cx, unsigned argc, Value *vp, bool isScan)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* make sure we are called on a ParallelArray */
-    bool ok;
     RootedObject obj(cx);
-    obj = NonGenericMethodGuard(cx, args, (isScan ? ParallelArray_scan : ParallelArray_reduce), &ParallelArrayClass, &ok);
+    if (!NonGenericMethodGuard(cx, args, (isScan ? ParallelArray_scan : ParallelArray_reduce),
+                               &ParallelArrayClass, obj.address()))
+    {
+        return false;
+    }
     if (!obj)
-        return ok;
+        return true;
 
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -398,11 +404,11 @@ ParallelArray_filter(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* make sure we are called on a ParallelArray */
-    bool ok;
     RootedObject obj(cx);
-    obj = NonGenericMethodGuard(cx, args, ParallelArray_filter, &ParallelArrayClass, &ok);
+    if (!NonGenericMethodGuard(cx, args, ParallelArray_filter, &ParallelArrayClass, obj.address()))
+        return false;
     if (!obj)
-        return ok;
+        return true;
 
     if (args.length() < 1) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
@@ -461,11 +467,11 @@ ParallelArray_scatter(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* make sure we are called on a ParallelArray */
-    bool ok;
     RootedObject obj(cx);
-    obj = NonGenericMethodGuard(cx, args, ParallelArray_scatter, &ParallelArrayClass, &ok);
+    if (!NonGenericMethodGuard(cx, args, ParallelArray_scatter, &ParallelArrayClass, obj.address()))
+        return false;
     if (!obj)
-        return ok;
+        return true;
 
     RootedObject buffer(cx, GetBuffer(obj));
 
@@ -590,10 +596,11 @@ ParallelArray_forward_method(JSContext *cx, unsigned argc, Value *vp, Native nat
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool ok;
-    RootedObject obj(cx, NonGenericMethodGuard(cx, args, native, &ParallelArrayClass, &ok));
+    RootedObject obj(cx);
+    if (!NonGenericMethodGuard(cx, args, native, &ParallelArrayClass, obj.address()))
+        return false;
     if (!obj)
-        return ok;
+        return true;
 
     RootedValue callable(cx);
     RootedObject buffer(cx, GetBuffer(obj));

@@ -44,9 +44,9 @@ public class CrashReporter extends Activity
     private static final String NOTES_KEY = "Notes";
     private static final String SERVER_URL_KEY = "ServerURL";
 
-    private static final String CRASH_REPORT_DIR = "/data/data/@ANDROID_PACKAGE_NAME@/files/mozilla/Crash Reports/";
-    private static final String PENDING_DIR = CRASH_REPORT_DIR + "pending";
-    private static final String SUBMITTED_DIR = CRASH_REPORT_DIR + "submitted";
+    private static final String CRASH_REPORT_SUFFIX = "/mozilla/Crash Reports/";
+    private static final String PENDING_SUFFIX = CRASH_REPORT_SUFFIX + "pending";
+    private static final String SUBMITTED_SUFFIX = CRASH_REPORT_SUFFIX + "submitted";
 
     private Handler mHandler;
     private ProgressDialog mProgressDialog;
@@ -112,7 +112,7 @@ public class CrashReporter extends Activity
         final Button closeButton = (Button) findViewById(R.id.close);
         String passedMinidumpPath = getIntent().getStringExtra(PASSED_MINI_DUMP_KEY);
         File passedMinidumpFile = new File(passedMinidumpPath);
-        File pendingDir = new File(PENDING_DIR);
+        File pendingDir = new File(getFilesDir(), PENDING_SUFFIX);
         pendingDir.mkdirs();
         mPendingMinidumpFile = new File(pendingDir, passedMinidumpFile.getName());
         moveFile(passedMinidumpFile, mPendingMinidumpFile);
@@ -273,7 +273,8 @@ public class CrashReporter extends Activity
             readStringsFromReader(br, responseMap);
 
             if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                File submittedDir = new File(SUBMITTED_DIR);
+                File submittedDir = new File(getFilesDir(),
+                                             SUBMITTED_SUFFIX);
                 submittedDir.mkdirs();
                 minidumpFile.delete();
                 extrasFile.delete();

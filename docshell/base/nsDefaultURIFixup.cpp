@@ -11,7 +11,7 @@
 #include "nsCRT.h"
 
 #include "nsIPlatformCharset.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 
 #ifdef MOZ_TOOLKIT_SEARCH
 #include "nsIBrowserSearchService.h"
@@ -574,7 +574,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
         //       rejects bad file paths when using this code on a new
         //       platform.
 
-        nsCOMPtr<nsILocalFile> filePath;
+        nsCOMPtr<nsIFile> filePath;
         nsresult rv;
 
         // this is not the real fix but a temporary fix

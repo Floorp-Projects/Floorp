@@ -30,7 +30,6 @@ endif # }
 
 vpath %.cc \
   $(srcdir)/src/base \
-  $(srcdir)/src/base/third_party/nspr \
   $(srcdir)/src/chrome/common \
   $(NULL)
 
@@ -43,7 +42,6 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 CPPSRCS += \
-  prtime.cc \
   at_exit.cc \
   base_paths.cc \
   base_switches.cc \

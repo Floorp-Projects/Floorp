@@ -1,0 +1,40 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= jemalloc
+
+EXPORTS = jemalloc.h jemalloc_types.h
+
+ifndef MOZ_JEMALLOC
+# jemalloc.c properly uses 'static', so don't burden it with manually exposing
+# symbols.
+VISIBILITY_FLAGS=
+
+CSRCS = jemalloc.c
+
+LIBRARY_NAME = jemalloc
+FORCE_STATIC_LIB= 1
+
+ifeq ($(OS_ARCH),SunOS)
+ifndef GNU_CC
+MODULE_OPTIMIZE_FLAGS = -xO5
+endif
+endif
+
+ifeq (Linux,$(OS_TARGET))
+#XXX: PGO on Linux causes problems here
+# See bug 419470
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+endif
+
+include $(topsrcdir)/config/rules.mk

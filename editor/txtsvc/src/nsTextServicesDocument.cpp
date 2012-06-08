@@ -2550,32 +2550,17 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
 nsresult
 nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockSelectionStatus *aSelStatus, PRInt32 *aSelOffset, PRInt32 *aSelLength)
 {
-  nsresult result;
   nsCOMPtr<nsISelection> selection;
-
-  result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-
+  nsresult result = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(result, result);
-
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   // The calling function should have done the GetIsCollapsed()
   // check already. Just assume it's collapsed!
-
-  nsCOMPtr<nsIDOMRange> range;
-  OffsetEntry *entry;
-  nsCOMPtr<nsIDOMNode> parent;
-  PRInt32 offset, tableCount, i;
-  PRInt32 e1s1, e2s1;
-
-  OffsetEntry *eStart, *eEnd;
-  PRInt32 eStartOffset, eEndOffset;
-
-
   *aSelStatus = nsITextServicesDocument::eBlockOutside;
   *aSelOffset = *aSelLength = -1;
 
-  tableCount = mOffsetTable.Length();
+  PRInt32 tableCount = mOffsetTable.Length();
 
   if (tableCount == 0)
     return NS_OK;
@@ -2583,54 +2568,51 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   // Get pointers to the first and last offset entries
   // in the table.
 
-  eStart = mOffsetTable[0];
-
+  OffsetEntry* eStart = mOffsetTable[0];
+  OffsetEntry* eEnd;
   if (tableCount > 1)
     eEnd = mOffsetTable[tableCount - 1];
   else
     eEnd = eStart;
 
-  eStartOffset = eStart->mNodeOffset;
-  eEndOffset   = eEnd->mNodeOffset + eEnd->mLength;
+  PRInt32 eStartOffset = eStart->mNodeOffset;
+  PRInt32 eEndOffset   = eEnd->mNodeOffset + eEnd->mLength;
 
+  nsCOMPtr<nsIDOMRange> range;
   result = selection->GetRangeAt(0, getter_AddRefs(range));
-
   NS_ENSURE_SUCCESS(result, result);
 
-  result = range->GetStartContainer(getter_AddRefs(parent));
-
+  nsCOMPtr<nsIDOMNode> domParent;
+  result = range->GetStartContainer(getter_AddRefs(domParent));
   NS_ENSURE_SUCCESS(result, result);
 
+  nsCOMPtr<nsINode> parent = do_QueryInterface(domParent);
+  MOZ_ASSERT(parent);
+
+  PRInt32 offset;
   result = range->GetStartOffset(&offset);
-
   NS_ENSURE_SUCCESS(result, result);
 
-  e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
-                                       parent, offset);
-  e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
-                                       parent, offset);
+  PRInt32 e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
+                                               domParent, offset);
+  PRInt32 e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
+                                               domParent, offset);
 
-  if (e1s1 > 0 || e2s1 < 0)
-  {
-    // We're done if the caret is outside the
-    // current text block.
-
+  if (e1s1 > 0 || e2s1 < 0) {
+    // We're done if the caret is outside the current text block.
     return NS_OK;
   }
 
-  if (IsTextNode(parent))
-  {
+  if (parent->NodeType() == nsIDOMNode::TEXT_NODE) {
     // Good news, the caret is in a text node. Look
     // through the offset table for the entry that
     // matches its parent and offset.
 
-    for (i = 0; i < tableCount; i++)
-    {
-      entry = mOffsetTable[i];
-
+    for (PRInt32 i = 0; i < tableCount; i++) {
+      OffsetEntry* entry = mOffsetTable[i];
       NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
-      if (entry->mNode == parent.get() &&
+      if (entry->mNode == domParent.get() &&
           entry->mNodeOffset <= offset && offset <= (entry->mNodeOffset + entry->mLength))
       {
         *aSelStatus = nsITextServicesDocument::eBlockContains;
@@ -2654,25 +2636,15 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   // child of this non-text node. Then look for the closest text
   // node.
 
-  nsCOMPtr<nsIDOMNode> node, saveNode;
-  nsCOMPtr<nsIDOMNodeList> children;
-  nsCOMPtr<nsIContentIterator> iter;
-  bool hasChildren;
-
   result = CreateRange(eStart->mNode, eStartOffset, eEnd->mNode, eEndOffset, getter_AddRefs(range));
-
   NS_ENSURE_SUCCESS(result, result);
 
+  nsCOMPtr<nsIContentIterator> iter;
   result = CreateContentIterator(range, getter_AddRefs(iter));
-
   NS_ENSURE_SUCCESS(result, result);
 
-  result = parent->HasChildNodes(&hasChildren);
-
-  NS_ENSURE_SUCCESS(result, result);
-
-  if (hasChildren)
-  {
+  nsIContent* saveNode;
+  if (parent->HasChildren()) {
     // XXX: We need to make sure that all of parent's
     //      children are in the text block.
 
@@ -2681,120 +2653,73 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
 
     PRUint32 childIndex = (PRUint32)offset;
 
-    result = parent->GetChildNodes(getter_AddRefs(children));
-
-    NS_ENSURE_SUCCESS(result, result);
-
-    NS_ENSURE_TRUE(children, NS_ERROR_FAILURE);
-
-    if (childIndex > 0)
-    {
-      PRUint32 numChildren;
-
-      result = children->GetLength(&numChildren);
-
-      NS_ENSURE_SUCCESS(result, result);
-
+    if (childIndex > 0) {
+      PRUint32 numChildren = parent->GetChildCount();
       NS_ASSERTION(childIndex <= numChildren, "Invalid selection offset!");
 
-      if (childIndex > numChildren)
+      if (childIndex > numChildren) {
         childIndex = numChildren;
+      }
 
       childIndex -= 1;
     }
 
-    result = children->Item(childIndex, getter_AddRefs(saveNode));
-
-    NS_ENSURE_SUCCESS(result, result);
-
-    nsCOMPtr<nsIContent> content(do_QueryInterface(saveNode));
-
+    nsIContent* content = parent->GetChildAt(childIndex);
     NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
     result = iter->PositionAt(content);
-
     NS_ENSURE_SUCCESS(result, result);
-  }
-  else
-  {
+
+    saveNode = content;
+  } else {
     // The parent has no children, so position the iterator
     // on the parent.
-
-    nsCOMPtr<nsIContent> content(do_QueryInterface(parent));
-
+    nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
     NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
     result = iter->PositionAt(content);
-
     NS_ENSURE_SUCCESS(result, result);
 
-    saveNode = parent;
+    saveNode = content;
   }
 
   // Now iterate to the left, towards the beginning of
   // the text block, to find the first text node you
   // come across.
 
-  while (!iter->IsDone())
-  {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(iter->GetCurrentNode());
-
-    if (IsTextNode(content))
-    {
-      node = do_QueryInterface(content);
-
-      NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-
+  nsIContent* node = nsnull;
+  while (!iter->IsDone()) {
+    nsINode* current = iter->GetCurrentNode();
+    if (current->NodeType() == nsIDOMNode::TEXT_NODE) {
+      node = static_cast<nsIContent*>(current);
       break;
     }
-
-    node = nsnull;
 
     iter->Prev();
   }
 
-  if (node)
-  {
+  if (node) {
     // We found a node, now set the offset to the end
     // of the text node.
-
-    nsAutoString str;
-    result = node->GetNodeValue(str);
-
-    NS_ENSURE_SUCCESS(result, result);
-
-    offset = str.Length();
-  }
-  else
-  {
+    offset = node->TextLength();
+  } else {
     // We should never really get here, but I'm paranoid.
 
     // We didn't find a text node above, so iterate to
     // the right, towards the end of the text block, looking
     // for a text node.
 
-    {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(saveNode));
+    result = iter->PositionAt(saveNode);
+    NS_ENSURE_SUCCESS(result, result);
 
-      result = iter->PositionAt(content);
+    node = nsnull;
+    while (!iter->IsDone()) {
+      nsINode* current = iter->GetCurrentNode();
 
-      NS_ENSURE_SUCCESS(result, result);
-    }
-
-    while (!iter->IsDone())
-    {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(iter->GetCurrentNode());
-
-      if (IsTextNode(content))
-      {
-        node = do_QueryInterface(content);
-
-        NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-
+      if (current->NodeType() == nsIDOMNode::TEXT_NODE) {
+        node = static_cast<nsIContent*>(current);
         break;
       }
-
-      node = nsnull;
 
       iter->Next();
     }
@@ -2802,18 +2727,16 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
     NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
     // We found a text node, so set the offset to
-    // the begining of the node.
+    // the beginning of the node.
 
     offset = 0;
   }
 
-  for (i = 0; i < tableCount; i++)
-  {
-    entry = mOffsetTable[i];
-
+  for (PRInt32 i = 0; i < tableCount; i++) {
+    OffsetEntry* entry = mOffsetTable[i];
     NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
-    if (entry->mNode == node.get() &&
+    if (entry->mNode == node->AsDOMNode() &&
         entry->mNodeOffset <= offset && offset <= (entry->mNodeOffset + entry->mLength))
     {
       *aSelStatus = nsITextServicesDocument::eBlockContains;

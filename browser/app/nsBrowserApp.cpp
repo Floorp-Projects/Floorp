@@ -22,7 +22,7 @@
 #include <stdarg.h>
 
 #include "nsCOMPtr.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsStringGlue.h"
 
 #ifdef XP_WIN
@@ -106,7 +106,7 @@ static const nsDynamicFunctionLoad kXULFuncs[] = {
 
 static int do_main(int argc, char* argv[])
 {
-  nsCOMPtr<nsILocalFile> appini;
+  nsCOMPtr<nsIFile> appini;
   nsresult rv;
 
   // Allow firefox.exe to launch XULRunner apps via -app <application.ini>

@@ -3733,6 +3733,8 @@ ParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
       case PNK_NULL:
         vp->setNull();
         return true;
+      case PNK_SPREAD:
+        return false;
       case PNK_RB: {
         JS_ASSERT(isOp(JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
 
@@ -5822,29 +5824,51 @@ EmitArray(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
         return EmitSingletonInitialiser(cx, bce, pn);
 
+    int32_t nspread = 0;
+    for (ParseNode *elt = pn->pn_head; elt; elt = elt->pn_next) {
+        if (elt->isKind(PNK_SPREAD))
+            nspread++;
+    }
+
     ptrdiff_t off = EmitN(cx, bce, JSOP_NEWARRAY, 3);
     if (off < 0)
         return false;
     CheckTypeSet(cx, bce, JSOP_NEWARRAY);
     jsbytecode *pc = bce->code(off);
-    SET_UINT24(pc, pn->pn_count);
+
+    // For arrays with spread, this is a very pessimistic allocation, the
+    // minimum possible final size.
+    SET_UINT24(pc, pn->pn_count - nspread);
 
     ParseNode *pn2 = pn->pn_head;
     jsatomid atomIndex;
+    if (nspread && !EmitNumberOp(cx, 0, bce))
+        return false;
     for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
-        if (!EmitNumberOp(cx, atomIndex, bce))
+        if (!nspread && !EmitNumberOp(cx, atomIndex, bce))
             return false;
         if (pn2->isKind(PNK_COMMA) && pn2->isArity(PN_NULLARY)) {
             if (Emit1(cx, bce, JSOP_HOLE) < 0)
                 return false;
         } else {
-            if (!EmitTree(cx, bce, pn2))
+            ParseNode *expr = pn2->isKind(PNK_SPREAD) ? pn2->pn_kid : pn2;
+            if (!EmitTree(cx, bce, expr))
                 return false;
         }
-        if (Emit1(cx, bce, JSOP_INITELEM) < 0)
+        if (pn2->isKind(PNK_SPREAD)) {
+            if (Emit1(cx, bce, JSOP_SPREAD) < 0)
+                return false;
+        } else if (Emit1(cx, bce, nspread ? JSOP_INITELEM_INC : JSOP_INITELEM) < 0) {
             return false;
+        }
     }
     JS_ASSERT(atomIndex == pn->pn_count);
+    if (nspread) {
+        if (NewSrcNote(cx, bce, SRC_CONTINUE) < 0)
+            return false;
+        if (Emit1(cx, bce, JSOP_POP) < 0)
+            return false;
+    }
 
     if (pn->pn_xflags & PNX_ENDCOMMA) {
         /* Emit a source note so we know to decompile an extra comma. */

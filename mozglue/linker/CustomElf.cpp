@@ -720,8 +720,8 @@ CustomElf::CallFini()
 {
   if (!initialized)
     return;
-  for (Array<void *>::iterator it = fini_array.begin();
-       it < fini_array.end(); ++it) {
+  for (Array<void *>::reverse_iterator it = fini_array.rbegin();
+       it < fini_array.rend(); ++it) {
     /* Android x86 NDK wrongly puts 0xffffffff in FINI_ARRAY */
     if (*it && *it != reinterpret_cast<void *>(-1))
       CallFunction(*it);

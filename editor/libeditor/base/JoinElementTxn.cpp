@@ -69,55 +69,39 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
   NS_PRECONDITION((mEditor && mLeftNode && mRightNode), "null arg");
   if (!mEditor || !mLeftNode || !mRightNode) { return NS_ERROR_NOT_INITIALIZED; }
 
+  nsCOMPtr<nsINode> leftNode = do_QueryInterface(mLeftNode);
+  NS_ENSURE_STATE(leftNode);
+
+  nsCOMPtr<nsINode> rightNode = do_QueryInterface(mRightNode);
+  NS_ENSURE_STATE(rightNode);
+
   // get the parent node
-  nsCOMPtr<nsIDOMNode>leftParent;
-  nsresult result = mLeftNode->GetParentNode(getter_AddRefs(leftParent));
-  NS_ENSURE_SUCCESS(result, result);
+  nsCOMPtr<nsINode> leftParent = leftNode->GetNodeParent();
   NS_ENSURE_TRUE(leftParent, NS_ERROR_NULL_POINTER);
 
   // verify that mLeftNode and mRightNode have the same parent
-  nsCOMPtr<nsIDOMNode>rightParent;
-  result = mRightNode->GetParentNode(getter_AddRefs(rightParent));
-  NS_ENSURE_SUCCESS(result, result);
+  nsCOMPtr<nsINode> rightParent = rightNode->GetNodeParent();
   NS_ENSURE_TRUE(rightParent, NS_ERROR_NULL_POINTER);
 
-  if (leftParent==rightParent)
-  {
-    mParent= do_QueryInterface(leftParent); // set this instance mParent. 
-                                            // Other methods will see a non-null mParent and know all is well
-    nsCOMPtr<nsIDOMCharacterData> leftNodeAsText = do_QueryInterface(mLeftNode);
-    if (leftNodeAsText) 
-    {
-      leftNodeAsText->GetLength(&mOffset);
-    }
-    else 
-    {
-      nsCOMPtr<nsIDOMNodeList> childNodes;
-      result = mLeftNode->GetChildNodes(getter_AddRefs(childNodes));
-      NS_ENSURE_SUCCESS(result, result);
-      if (childNodes) 
-      {
-        childNodes->GetLength(&mOffset);
-      }
-    }
-    result = mEditor->JoinNodesImpl(mRightNode, mLeftNode, mParent, false);
-#ifdef NS_DEBUG
-    if (NS_SUCCEEDED(result))
-    {
-      if (gNoisy)
-      {
-        printf("  left node = %p removed\n",
-               static_cast<void*>(mLeftNode.get()));
-      }
-    }
-#endif
-  }
-  else 
-  {
+  if (leftParent != rightParent) {
     NS_ASSERTION(false, "2 nodes do not have same parent");
     return NS_ERROR_INVALID_ARG;
   }
-  return result;
+
+  // set this instance mParent. 
+  // Other methods will see a non-null mParent and know all is well
+  mParent = leftParent->AsDOMNode();
+  mOffset = leftNode->Length();
+
+  nsresult rv = mEditor->JoinNodesImpl(mRightNode, mLeftNode, mParent, false);
+
+#ifdef DEBUG
+  if (NS_SUCCEEDED(rv) && gNoisy) {
+    printf("  left node = %p removed\n", static_cast<void*>(mLeftNode.get()));
+  }
+#endif
+
+  return rv;
 }
 
 //XXX: what if instead of split, we just deleted the unneeded children of mRight

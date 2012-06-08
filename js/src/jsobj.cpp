@@ -1930,7 +1930,7 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
 
     JS_ASSERT(obj == obj2);
 
-    const Shape *shape = reinterpret_cast<Shape *>(current);
+    Rooted<const Shape *> shape(cx, reinterpret_cast<Shape *>(current));
     do {
         if (desc.isAccessorDescriptor()) {
             if (!shape->isAccessorDescriptor())
@@ -3040,10 +3040,8 @@ Detecting(JSContext *cx, jsbytecode *pc)
 }
 
 /*
- * Infer lookup flags from the currently executing bytecode. This does
- * not attempt to infer JSRESOLVE_WITH, because the current bytecode
- * does not indicate whether we are in a with statement. Return defaultFlags
- * if a currently executing bytecode cannot be determined.
+ * Infer lookup flags from the currently executing bytecode, returning
+ * defaultFlags if a currently executing bytecode cannot be determined.
  */
 unsigned
 js_InferFlags(JSContext *cx, unsigned defaultFlags)
@@ -4974,7 +4972,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
     Rooted<const Shape *> shapeRoot(cx, shape);
 
     int32_t sample = cx->runtime->propertyRemovals;
-    if (!shape->set(cx, RootedObject(cx, obj), strict, vp))
+    if (!shapeRoot->set(cx, RootedObject(cx, obj), strict, vp))
         return false;
 
     /*

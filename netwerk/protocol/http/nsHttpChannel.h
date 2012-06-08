@@ -27,7 +27,7 @@
 #include "nsIHttpChannelAuthProvider.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsITimedChannel.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsDNSPrefetch.h"
 #include "TimingStruct.h"
 #include "AutoClose.h"
@@ -275,6 +275,13 @@ private:
                 (tmpHost1 == tmpHost2));
     }
 
+    inline static bool DoNotRender3xxBody(nsresult rv) {
+        return rv == NS_ERROR_REDIRECT_LOOP         ||
+               rv == NS_ERROR_CORRUPTED_CONTENT     ||
+               rv == NS_ERROR_UNKNOWN_PROTOCOL      ||
+               rv == NS_ERROR_MALFORMED_URI;
+    }
+
 private:
     nsCOMPtr<nsISupports>             mSecurityInfo;
     nsCOMPtr<nsICancelable>           mProxyRequest;
@@ -305,7 +312,7 @@ private:
     nsCacheAccessMode                 mOfflineCacheAccess;
     nsCString                         mOfflineCacheClientID;
 
-    nsCOMPtr<nsILocalFile>            mProfileDirectory;
+    nsCOMPtr<nsIFile>                 mProfileDirectory;
 
     // auth specific data
     nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;

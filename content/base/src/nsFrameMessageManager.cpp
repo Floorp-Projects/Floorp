@@ -21,10 +21,13 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSRuntimeService.h"
 #include "xpcpublic.h"
+#include "mozilla/Preferences.h"
 
 #ifdef ANDROID
 #include <android/log.h>
 #endif
+
+using namespace mozilla;
 
 static bool
 IsChromeProcess()
@@ -159,7 +162,7 @@ nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
 }
 
 static JSBool
-JSONCreator(const jschar* aBuf, uint32 aLen, void* aData)
+JSONCreator(const jschar* aBuf, uint32_t aLen, void* aData)
 {
   nsAString* result = static_cast<nsAString*>(aData);
   result->Append(static_cast<const PRUnichar*>(aBuf),
@@ -779,7 +782,7 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
       mGlobal->GetJSObject(&global);
       JSAutoEnterCompartment ac;
       if (global && ac.enter(mCx, global)) {
-        uint32 oldopts = JS_GetOptions(mCx);
+        uint32_t oldopts = JS_GetOptions(mCx);
         JS_SetOptions(mCx, oldopts | JSOPTION_NO_SCRIPT_RVAL);
 
         JSScript* script =
@@ -831,9 +834,10 @@ nsFrameScriptExecutor::InitTabChildGlobalInternal(nsISupports* aScope)
 
   nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
+  bool allowXML = Preferences::GetBool("javascript.options.xml.chrome");
   JS_SetOptions(cx, JS_GetOptions(cx) |
                     JSOPTION_PRIVATE_IS_NSISUPPORTS |
-                    JSOPTION_ALLOW_XML);
+                    (allowXML ? JSOPTION_ALLOW_XML : 0));
   JS_SetVersion(cx, JSVERSION_LATEST);
   JS_SetErrorReporter(cx, ContentScriptErrorReporter);
 

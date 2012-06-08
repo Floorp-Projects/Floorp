@@ -12,7 +12,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIWebBrowserPersist.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -63,7 +63,7 @@ nsresult GetAtom( ATOM aAtom, char** outText);
 nsresult GetFileName(PDRAGITEM pditem, char** outText);
 nsresult GetFileContents(PCSZ pszPath, char** outText);
 nsresult GetTempFileName(char** outText);
-void     SaveTypeAndSource(nsILocalFile *file, nsIDOMDocument *domDoc,
+void     SaveTypeAndSource(nsIFile *file, nsIDOMDocument *domDoc,
                            PCSZ pszType);
 int      UnicodeToCodepage( const nsAString& inString, char **outText);
 int      CodepageToUnicode( const nsACString& inString, PRUnichar **outText);
@@ -494,7 +494,7 @@ nsresult nsDragService::SaveAsContents(PCSZ pszDest, nsIURL* aURL)
   if (!webPersist)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsILocalFile> file;
+  nsCOMPtr<nsIFile> file;
   NS_NewNativeLocalFile(nsDependentCString(pszDest), true,
                         getter_AddRefs(file));
   if (!file)
@@ -523,7 +523,7 @@ nsresult nsDragService::SaveAsURL(PCSZ pszDest, nsIURI* aURI)
   if (strUri.IsEmpty())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsILocalFile> file;
+  nsCOMPtr<nsIFile> file;
   NS_NewNativeLocalFile(nsDependentCString(pszDest), true,
                         getter_AddRefs(file));
   if (!file)
@@ -555,7 +555,7 @@ nsresult nsDragService::SaveAsText(PCSZ pszDest, nsISupportsString* aString)
   if (strData.IsEmpty())
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsILocalFile> file;
+  nsCOMPtr<nsIFile> file;
   NS_NewNativeLocalFile(nsDependentCString(pszDest), true,
                         getter_AddRefs(file));
   if (!file)
@@ -876,7 +876,7 @@ NS_IMETHODIMP nsDragService::NativeDragEnter(PDRAGINFO pdinfo)
         else
         if (isFQFile && !isAlt &&
             NS_SUCCEEDED(GetFileName(pditem, getter_Copies(someText)))) {
-          nsCOMPtr<nsILocalFile> file;
+          nsCOMPtr<nsIFile> file;
           if (NS_SUCCEEDED(NS_NewNativeLocalFile(someText, true,
                                                  getter_AddRefs(file)))) {
             nsCAutoString textStr;
@@ -1137,7 +1137,7 @@ NS_IMETHODIMP nsDragService::NativeDrop(PDRAGINFO pdinfo, HWND hwnd,
           rv = GetFileContents(fileName.get(), getter_Copies(dropText));
         else {
           isUrl = true;
-          nsCOMPtr<nsILocalFile> file;
+          nsCOMPtr<nsIFile> file;
           if (NS_SUCCEEDED(NS_NewNativeLocalFile(fileName,
                                          true, getter_AddRefs(file)))) {
             nsCAutoString textStr;
@@ -1439,7 +1439,7 @@ nsresult RenderToOS2FileComplete(PDRAGTRANSFER pdxfer, USHORT usResult,
       if (content)
         rv = GetFileContents(gTempFile, outText);
       else {
-        nsCOMPtr<nsILocalFile> file;
+        nsCOMPtr<nsIFile> file;
         if (NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(gTempFile),
                                          true, getter_AddRefs(file)))) {
           nsCAutoString textStr;
@@ -1676,7 +1676,7 @@ nsresult GetTempFileName(char** outText)
 // set the file's .TYPE and .SUBJECT EAs;  since this is non-critical
 // (though highly desirable), errors aren't reported
 
-void SaveTypeAndSource(nsILocalFile *file, nsIDOMDocument *domDoc,
+void SaveTypeAndSource(nsIFile *file, nsIDOMDocument *domDoc,
                        PCSZ pszType)
 {
   if (!file)

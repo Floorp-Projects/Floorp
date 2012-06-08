@@ -59,6 +59,7 @@ FENNEC_JAVA_FILES = \
   Favicons.java \
   FindInPageBar.java \
   FloatUtils.java \
+  FlowLayout.java \
   FormAssistPopup.java \
   GeckoActionBar.java \
   GeckoApplication.java \
@@ -97,6 +98,7 @@ FENNEC_JAVA_FILES = \
   RemoteTabs.java \
   SetupScreen.java \
   SiteIdentityPopup.java \
+  SuggestClient.java \
   SurfaceBits.java \
   Tab.java \
   Tabs.java \
@@ -253,6 +255,8 @@ RES_LAYOUT = \
   res/layout/awesomebar_folder_row.xml \
   res/layout/awesomebar_header_row.xml \
   res/layout/awesomebar_row.xml \
+  res/layout/awesomebar_suggestion_item.xml \
+  res/layout/awesomebar_suggestion_row.xml \
   res/layout/awesomebar_search.xml \
   res/layout/awesomebar_tab_indicator.xml \
   res/layout/awesomebar_tabs.xml \
@@ -814,6 +818,7 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/remote_tabs_group_bg_repeat.xml        \
   mobile/android/base/resources/drawable/start.png                              \
   mobile/android/base/resources/drawable/site_security_level.xml                \
+  mobile/android/base/resources/drawable/suggestion_selector.xml                \
   mobile/android/base/resources/drawable/tabs_button.xml                        \
   mobile/android/base/resources/drawable/tabs_level.xml                         \
   mobile/android/base/resources/drawable/tabs_tray_bg_repeat.xml                \

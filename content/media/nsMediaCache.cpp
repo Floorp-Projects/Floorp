@@ -523,14 +523,11 @@ nsMediaCache::Init()
   // In multi-process Gecko, there is no profile dir, so just store it in the
   // system temp directory instead.
   nsresult rv;
-  nsCOMPtr<nsIFile> tmp;
+  nsCOMPtr<nsIFile> tmpFile;
   const char* dir = (XRE_GetProcessType() == GeckoProcessType_Content) ?
     NS_OS_TEMP_DIR : NS_APP_USER_PROFILE_LOCAL_50_DIR;
-  rv = NS_GetSpecialDirectory(dir, getter_AddRefs(tmp));
+  rv = NS_GetSpecialDirectory(dir, getter_AddRefs(tmpFile));
   NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCOMPtr<nsILocalFile> tmpFile = do_QueryInterface(tmp);
-  NS_ENSURE_TRUE(tmpFile != nsnull, NS_ERROR_FAILURE);
 
   // We put the media cache file in
   // ${TempDir}/mozilla-media-cache/media_cache
@@ -560,7 +557,7 @@ nsMediaCache::Init()
   NS_ENSURE_SUCCESS(rv,rv);
 
   PRFileDesc* fileDesc = nsnull;
-  rv = tmpFile->OpenNSPRFileDesc(PR_RDWR | nsILocalFile::DELETE_ON_CLOSE,
+  rv = tmpFile->OpenNSPRFileDesc(PR_RDWR | nsIFile::DELETE_ON_CLOSE,
                                  PR_IRWXU, &fileDesc);
   NS_ENSURE_SUCCESS(rv,rv);
 

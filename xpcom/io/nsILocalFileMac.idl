@@ -16,7 +16,7 @@
 [ptr] native FSRefPtr(FSRef);
       native CFURLRef(CFURLRef);
 
-[scriptable, uuid(E5DE2CC9-BF06-4329-8F91-5D2D45284500)]
+[scriptable, builtinclass, uuid(E5DE2CC9-BF06-4329-8F91-5D2D45284500)]
 interface nsILocalFileMac : nsILocalFile
 {
    /**
@@ -118,11 +118,11 @@ interface nsILocalFileMac : nsILocalFile
     *
     * Launch the application that this file points to with a document.
     *
-    * @param   aDocToLoad          Must not be NULL. If no document, use nsILocalFile::launch
+    * @param   aDocToLoad          Must not be NULL. If no document, use nsIFile::launch
     * @param   aLaunchInBackground TRUE if the application should not come to the front.
     *
     */
-   void launchWithDoc(in nsILocalFile aDocToLoad, in boolean aLaunchInBackground);
+   void launchWithDoc(in nsIFile aDocToLoad, in boolean aLaunchInBackground);
 
    /**
     * openDocWithApp
@@ -135,7 +135,7 @@ interface nsILocalFileMac : nsILocalFile
     * @param   aLaunchInBackground TRUE if the application should not come to the front.
     *
     */
-   void openDocWithApp(in nsILocalFile aAppToOpenWith, in boolean aLaunchInBackground);
+   void openDocWithApp(in nsIFile aAppToOpenWith, in boolean aLaunchInBackground);
 
    /**
     * isPackage

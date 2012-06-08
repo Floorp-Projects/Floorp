@@ -1,0 +1,18 @@
+# This directory includes 7 different permutations of the same tests.
+# reftest_plain.list is the manifest file for tests without any border, margin
+# or padding applied to either the abs-pos element or the parent.
+# reftest_{prop}_{element}.list files are the manifest files for tests with the
+# CSS property {prop} applied to {element}.  These files use the query string
+# on the test file and the reference file to ask the code in ../handleprop.js add
+# the corresponding CSS style.
+
+# Any changes to the contents of the following files needs to be reflected on
+# all of them.
+
+include reftest_plain.list
+include reftest_border_abspos.list
+include reftest_border_parent.list
+include reftest_margin_abspos.list
+include reftest_margin_parent.list
+include reftest_padding_abspos.list
+include reftest_padding_parent.list

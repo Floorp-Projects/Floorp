@@ -26,7 +26,7 @@
 #include "nsXULAppAPI.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
-#include "nsILocalFile.h"
+#include "nsIFile.h"
 #include "nsStringGlue.h"
 
 const char WEBAPPRT_EXECUTABLE[] = "webapprt-stub";
@@ -229,7 +229,7 @@ main(int argc, char **argv)
         }
 
         // Load the runtime's INI from its path.
-        nsCOMPtr<nsILocalFile> rtINI;
+        nsCOMPtr<nsIFile> rtINI;
         if (NS_FAILED(XRE_GetFileFromPath(rtINIPath, getter_AddRefs(rtINI)))) {
           NSLog(@"Runtime INI path not recognized: '%s'\n", rtINIPath);
           @throw MakeException(@"Error", @"Incorrect path to base INI file.");
@@ -254,13 +254,13 @@ main(int argc, char **argv)
         NSLog(@"setting app profile: %s", profile);
         SetAllocatedString(webShellAppData->profile, profile);
 
-        nsCOMPtr<nsILocalFile> directory;
+        nsCOMPtr<nsIFile> directory;
         if (NS_FAILED(XRE_GetFileFromPath(rtDir, getter_AddRefs(directory)))) {
           NSLog(@"Unable to open app dir");
           @throw MakeException(@"Error", @"Unable to open application directory.");
         }
 
-        nsCOMPtr<nsILocalFile> xreDir;
+        nsCOMPtr<nsIFile> xreDir;
         if (NS_FAILED(XRE_GetFileFromPath(greDir, getter_AddRefs(xreDir)))) {
           NSLog(@"Unable to open XRE dir");
           @throw MakeException(@"Error", @"Unable to open application XRE directory.");

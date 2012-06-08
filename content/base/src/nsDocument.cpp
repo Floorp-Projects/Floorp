@@ -4295,22 +4295,25 @@ nsDocument::StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
 //
 // nsIDOMDocument interface
 //
+nsIContent*
+nsIDocument::GetDocumentType() const
+{
+  for (nsIContent* child = GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+      return child;
+    }
+  }
+  return NULL;
+}
+
 NS_IMETHODIMP
 nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 {
-  NS_ENSURE_ARG_POINTER(aDoctype);
-
-  *aDoctype = nsnull;
-  PRInt32 i, count;
-  count = mChildren.ChildCount();
-  for (i = 0; i < count; i++) {
-    CallQueryInterface(mChildren.ChildAt(i), aDoctype);
-
-    if (*aDoctype) {
-      return NS_OK;
-    }
-  }
-
+  MOZ_ASSERT(aDoctype);
+  nsCOMPtr<nsIDOMDocumentType> doctype = do_QueryInterface(GetDocumentType());
+  doctype.forget(aDoctype);
   return NS_OK;
 }
 
@@ -9655,7 +9658,7 @@ nsDocument::GetMozVisibilityState(nsAString& aState)
 /* virtual */ void
 nsIDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
 {
-  aWindowSizes->mDOM +=
+  aWindowSizes->mDOMOther +=
     nsINode::SizeOfExcludingThis(aWindowSizes->mMallocSizeOf);
 
   if (mPresShell) {
@@ -9674,7 +9677,7 @@ nsIDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
 void
 nsIDocument::DocSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 {
-  aWindowSizes->mDOM += aWindowSizes->mMallocSizeOf(this);
+  aWindowSizes->mDOMOther += aWindowSizes->mMallocSizeOf(this);
   DocSizeOfExcludingThis(aWindowSizes);
 }
 
@@ -9706,14 +9709,34 @@ nsDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
        node;
        node = node->GetNextNode(this))
   {
-    aWindowSizes->mDOM +=
-      node->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
+    size_t nodeSize = node->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
+    size_t* p;
+
+    switch (node->NodeType()) {
+    case nsIDOMNode::ELEMENT_NODE:
+      p = &aWindowSizes->mDOMElementNodes;
+      break;
+    case nsIDOMNode::TEXT_NODE:
+      p = &aWindowSizes->mDOMTextNodes;
+      break;
+    case nsIDOMNode::CDATA_SECTION_NODE:
+      p = &aWindowSizes->mDOMCDATANodes;
+      break;
+    case nsIDOMNode::COMMENT_NODE:
+      p = &aWindowSizes->mDOMCommentNodes;
+      break;
+    default:
+      p = &aWindowSizes->mDOMOther;
+      break;
+    }
+
+    *p += nodeSize;
   }
 
   aWindowSizes->mStyleSheets +=
     mStyleSheets.SizeOfExcludingThis(SizeOfStyleSheetsElementIncludingThis,
                                      aWindowSizes->mMallocSizeOf); 
-  aWindowSizes->mDOM +=
+  aWindowSizes->mDOMOther +=
     mAttrStyleSheet ?
     mAttrStyleSheet->DOMSizeOfIncludingThis(aWindowSizes->mMallocSizeOf) :
     0;

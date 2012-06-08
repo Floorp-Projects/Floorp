@@ -815,7 +815,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     if (!mWidget)
         return NS_OK;
 
-    nsCOMPtr<nsILocalFile> iconFile;
+    nsCOMPtr<nsIFile> iconFile;
     nsCAutoString path;
     nsTArray<nsCString> iconList;
 

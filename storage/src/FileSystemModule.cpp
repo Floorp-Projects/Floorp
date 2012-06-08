@@ -10,7 +10,6 @@
 #include "nsString.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIFile.h"
-#include "nsILocalFile.h"
 
 namespace {
 
@@ -63,7 +62,7 @@ private:
 nsresult
 VirtualTableCursor::Init(const nsAString& aPath)
 {
-  nsCOMPtr<nsILocalFile> directory =
+  nsCOMPtr<nsIFile> directory =
     do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
   NS_ENSURE_TRUE(directory, NS_ERROR_FAILURE);
 

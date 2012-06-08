@@ -282,6 +282,7 @@ members = [
     'nsIDOMHTMLInputElement.selectionDirection',
     'nsIDOMHTMLInputElement.setSelectionRange',
     'nsIDOMHTMLLinkElement.disabled',
+    'nsIDOMHTMLMeterElement.*',
     'nsIDOMHTMLMenuElement.*',
     'nsIDOMHTMLMenuItemElement.*',
     'nsIDOMHTMLOptionElement.index',

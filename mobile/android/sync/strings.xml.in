@@ -73,4 +73,7 @@
   <string name="sync_new_tab">&new_tab;</string>
 
   <!-- Incorrect settings and changing credentials. -->
-  <string name="sync.new.recoverykey.status.incorrect">&sync.new.recoverykey.status.incorrect;</string>
+  <string name="sync_invalidcreds_label">&sync.invalidcreds.label;</string>
+  <string name="sync_invalidserver_label">&sync.invalidserver.label;</string>
+  <string name="sync_verifying_label">&sync.verifying.label;</string>
+  <string name="sync_new_recoverykey_status_incorrect">&sync.new.recoverykey.status.incorrect;</string>
