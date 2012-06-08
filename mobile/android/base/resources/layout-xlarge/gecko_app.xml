@@ -10,12 +10,10 @@
    <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
                                 android:layout_width="200dip"
                                 android:layout_height="fill_parent"
-                                android:background="@drawable/tabs_tray_bg_repeat"
-                                android:visibility="gone"/>
+                                android:background="@drawable/tabs_tray_bg_repeat"/>
 
    <LinearLayout android:id="@+id/main_layout"
-                 style="@style/Screen"
-                 android:layout_toRightOf="@id/tabs_panel">
+                 style="@style/Screen">
  
         <include layout="@layout/browser_toolbar"/>
 
