@@ -14,6 +14,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -34,7 +35,6 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
@@ -46,6 +46,8 @@ public class Favicons {
 
     private Map<Long,LoadFaviconTask> mLoadTasks;
     private long mNextFaviconLoadId;
+    private static final String USER_AGENT = GeckoApp.mAppContext.getDefaultUAString();
+    private AndroidHttpClient mHttpClient;
 
     public interface OnFaviconLoadedListener {
         public void onFaviconLoaded(String url, Drawable favicon);
@@ -143,6 +145,14 @@ public class Favicons {
         mNextFaviconLoadId = 0;
     }
 
+    private synchronized AndroidHttpClient getHttpClient() {
+        if (mHttpClient != null)
+            return mHttpClient;
+
+        mHttpClient = AndroidHttpClient.newInstance(USER_AGENT);
+        return mHttpClient;
+    }
+
     public long loadFavicon(String pageUrl, String faviconUrl,
             OnFaviconLoadedListener listener) {
 
@@ -199,6 +209,8 @@ public class Favicons {
                 cancelFaviconLoad(taskId);
             }
         }
+        if (mHttpClient != null)
+            mHttpClient.close();
     }
 
     private class LoadFaviconTask extends AsyncTask<Void, Void, BitmapDrawable> {
@@ -272,22 +284,14 @@ public class Favicons {
             // skia decoder sometimes returns null; workaround is to use BufferedHttpEntity
             // http://groups.google.com/group/android-developers/browse_thread/thread/171b8bf35dbbed96/c3ec5f45436ceec8?lnk=raot 
             BitmapDrawable image = null;
-            InputStream contentStream = null;
             try {
                 HttpGet request = new HttpGet(faviconUrl.toURI());
-                HttpEntity entity = new DefaultHttpClient().execute(request).getEntity();
+                HttpEntity entity = getHttpClient().execute(request).getEntity();
                 BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
-                contentStream = bufferedEntity.getContent();
+                InputStream contentStream = bufferedEntity.getContent();
                 image = (BitmapDrawable) Drawable.createFromStream(contentStream, "src");
             } catch (Exception e) {
                 Log.e(LOGTAG, "Error reading favicon", e);
-            } finally {
-                try {
-                    if (contentStream != null)
-                        contentStream.close();
-                } catch (IOException e) {
-                    Log.d(LOGTAG, "error closing favicon stream");
-                }
             }
 
             return image;
