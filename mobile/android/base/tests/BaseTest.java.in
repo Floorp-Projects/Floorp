@@ -98,6 +98,14 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         super.tearDown();
     }
 
+    public void assertMatches(String value, String regex, String name) {
+        if (value == null) {
+            mAsserter.ok(false, name, "Expected /" + regex + "/, got null");
+            return;
+        }
+        mAsserter.ok(value.matches(regex), name, "Expected /" + regex +"/, got \"" + value + "\"");
+    }
+
     /**
      * Click on the specified element and return the resulting activity.
      * @return The created activity, or null if the element cannot be clicked.
