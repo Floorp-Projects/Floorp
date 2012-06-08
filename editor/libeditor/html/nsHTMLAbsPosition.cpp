@@ -46,7 +46,7 @@ nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
   
   // the line below does not match the code; should it be removed?
   // Find out if the selection is collapsed:
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsTextRulesInfo ruleInfo(aEnabled ? kOpSetAbsolutePosition :
@@ -159,7 +159,7 @@ nsHTMLEditor::RelativeChangeZIndex(PRInt32 aChange)
   
   // brade: can we get rid of this comment?
   // Find out if the selection is collapsed:
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsTextRulesInfo ruleInfo(aChange < 0 ? kOpDecreaseZIndex :
                                          kOpIncreaseZIndex);

@@ -88,7 +88,7 @@ nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
   }
   ForceCompositionEnd();
 
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   if (selection->Collapsed()) {
@@ -1333,7 +1333,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
   ForceCompositionEnd();
 
   nsresult res;
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   bool useCSS = IsCSSEnabled();

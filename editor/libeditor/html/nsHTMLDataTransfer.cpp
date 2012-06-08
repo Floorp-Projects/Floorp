@@ -153,7 +153,7 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
   nsAutoRules beginRulesSniffing(this, kOpLoadHTML, nsIEditor::eNext);
 
   // Get selection
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
   nsTextRulesInfo ruleInfo(kOpLoadHTML);
@@ -250,7 +250,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
   nsAutoRules beginRulesSniffing(this, kOpHTMLPaste, nsIEditor::eNext);
 
   // Get selection
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
   // create a dom document fragment that represents the structure to paste
@@ -1730,7 +1730,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAString & aCitation,
   nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
 
   // get selection
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // give rules a chance to handle or cancel
@@ -1927,7 +1927,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
 
   nsCOMPtr<nsIDOMNode> newNode;
   // get selection
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
@@ -2019,7 +2019,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   nsCOMPtr<nsIDOMNode> newNode;
 
   // get selection
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
