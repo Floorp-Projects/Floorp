@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPCOM_GLUE_SRC_LCPPSRCS =        \
+  AppData.cpp                    \
   nsArrayEnumerator.cpp          \
   nsArrayUtils.cpp               \
   nsCategoryCache.cpp            \

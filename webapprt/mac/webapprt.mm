@@ -28,6 +28,9 @@
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsStringGlue.h"
+#include "mozilla/AppData.h"
+
+using namespace mozilla;
 
 const char WEBAPPRT_EXECUTABLE[] = "webapprt-stub";
 const char FXAPPINI_NAME[] = "application.ini";
@@ -81,19 +84,6 @@ AttemptGRELoad(char *greDir)
 
   return rv;
 }
-
-// Copied from toolkit/xre/nsAppData.cpp.
-void
-SetAllocatedString(const char *&str, const char *newvalue)
-{
-  NS_Free(const_cast<char*>(str));
-  if (newvalue) {
-    str = NS_strdup(newvalue);
-  } else {
-    str = nsnull;
-  }
-}
-
 
 int
 main(int argc, char **argv)
