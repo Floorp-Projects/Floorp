@@ -64,7 +64,8 @@ import dalvik.system.*;
 abstract public class GeckoApp
                 extends GeckoActivity 
                 implements GeckoEventListener, SensorEventListener, LocationListener,
-                           GeckoApplication.ApplicationLifecycleCallbacks {
+                           GeckoApplication.ApplicationLifecycleCallbacks,
+                           TabsPanel.TabsLayoutChangeListener {
     private static final String LOGTAG = "GeckoApp";
 
     public static enum StartupMode {
@@ -111,6 +112,8 @@ abstract public class GeckoApp
     private AboutHomeContent mAboutHomeContent;
     private static AbsoluteLayout mPluginContainer;
     private static FindInPageBar mFindInPageBar;
+
+    private PropertyAnimator mMainLayoutAnimator;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
@@ -1020,6 +1023,28 @@ abstract public class GeckoApp
         return mTabsPanel.isShown();
     }
 
+    @Override
+    public void onTabsLayoutChange(int width, int height) {
+        if (mMainLayoutAnimator != null)
+            mMainLayoutAnimator.stop();
+
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mMainLayout.getLayoutParams();
+
+        if (isTablet())
+            mMainLayoutAnimator = new PropertyAnimator(mMainLayout,
+                                                       PropertyAnimator.Property.MARGIN_LEFT,
+                                                       params.leftMargin,
+                                                       width,
+                                                       200);
+        else
+            mMainLayoutAnimator = new PropertyAnimator(mMainLayout,
+                                                       PropertyAnimator.Property.MARGIN_TOP,
+                                                       params.topMargin,
+                                                       height,
+                                                       200);
+        mMainLayoutAnimator.start();
+    }
+
     public void handleMessage(String event, JSONObject message) {
         Log.i(LOGTAG, "Got message: " + event);
         try {
@@ -1889,6 +1914,7 @@ abstract public class GeckoApp
 
         // setup tabs panel
         mTabsPanel = (TabsPanel) findViewById(R.id.tabs_panel);
+        mTabsPanel.setTabsLayoutChangeListener(this);
 
         if (savedInstanceState != null) {
             mBrowserToolbar.setTitle(savedInstanceState.getString(SAVED_STATE_TITLE));
