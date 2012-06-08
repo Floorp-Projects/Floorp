@@ -120,18 +120,14 @@ browserFrameHelpers.origPageThumbsEnabledPref = browserFrameHelpers.getPageThumb
 // Disable tab view; it seriously messes us up.
 browserFrameHelpers.setPageThumbsEnabledPref(false);
 
-// Enable or disable OOP depending on the test's filename.
-var oop;
-if (location.pathname.indexOf("_inproc_") != -1) {
-  oop = false;
+// OOP by default, except on Windows, where OOP doesn't work.
+browserFrameHelpers.setOOPByDefaultPref(true);
+if (navigator.platform.indexOf('Win') != -1) {
+  browserFrameHelpers.setOOPDisabledPref(true);
 }
 else {
-  // oop by default
-  oop = true;
+  browserFrameHelpers.setOOPDisabledPref(false);
 }
-
-browserFrameHelpers.setOOPByDefaultPref(oop);
-browserFrameHelpers.setOOPDisabledPref(false);
 
 addEventListener('unload', function() {
   browserFrameHelpers.restoreOriginalPrefs();
