@@ -33,7 +33,7 @@ class Visitor:
             f.accept(self)
 
     def visitStructField(self, field):
-        field.type.accept(self)
+        field.typespec.accept(self)
 
     def visitUnionDecl(self, union):
         for t in union.components:
@@ -256,7 +256,7 @@ class Protocol(NamespacedNode):
 class StructField(Node):
     def __init__(self, loc, type, name):
         Node.__init__(self, loc)
-        self.type = type
+        self.typespec = type
         self.name = name
 
 class StructDecl(NamespacedNode):
