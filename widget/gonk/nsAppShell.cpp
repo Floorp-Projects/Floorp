@@ -506,6 +506,13 @@ nsAppShell::Init()
     return rv;
 }
 
+NS_IMETHODIMP
+nsAppShell::Exit()
+{
+  OrientationObserver::GetInstance()->DisableAutoOrientation();
+  return nsBaseAppShell::Exit();
+}
+
 void
 nsAppShell::InitInputDevices()
 {
