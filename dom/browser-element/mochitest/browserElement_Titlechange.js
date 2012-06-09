@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the public domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 // Test that the onmozbrowsertitlechange event works.
 "use strict";
 

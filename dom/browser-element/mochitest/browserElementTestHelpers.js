@@ -1,6 +1,8 @@
-"use strict";
+/* Any copyright is dedicated to the public domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Helpers for managing the browser frame preferences.
+"use strict";
 
 const browserElementTestHelpers = {
   _getBoolPref: function(pref) {
