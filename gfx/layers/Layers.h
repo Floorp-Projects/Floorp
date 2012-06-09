@@ -35,8 +35,6 @@ struct PRLogModuleInfo;
 #  define MOZ_LAYERS_LOG(_args)
 #endif  // if defined(DEBUG) || defined(PR_LOGGING)
 
-#define MOZ_ENABLE_MASK_LAYERS
-
 class gfxContext;
 class nsPaintEvent;
 
@@ -697,7 +695,6 @@ public:
    */
   void SetMaskLayer(Layer* aMaskLayer)
   {
-#ifdef MOZ_ENABLE_MASK_LAYERS
 #ifdef DEBUG
     if (aMaskLayer) {
       gfxMatrix maskTransform;
@@ -709,7 +706,6 @@ public:
 
     mMaskLayer = aMaskLayer;
     Mutated();
-#endif
   }
 
   /**
