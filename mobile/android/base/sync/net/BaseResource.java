@@ -240,16 +240,13 @@ public class BaseResource implements Resource {
   }
 
   private void execute() {
+    HttpResponse response;
     try {
-      HttpResponse response = client.execute(request, context);
+      response = client.execute(request, context);
       Logger.debug(LOG_TAG, "Response: " + response.getStatusLine().toString());
-      HttpResponseObserver observer = getHttpResponseObserver();
-      if (observer != null) {
-        observer.observeHttpResponse(response);
-      }
-      delegate.handleHttpResponse(response);
     } catch (ClientProtocolException e) {
       delegate.handleHttpProtocolException(e);
+      return;
     } catch (IOException e) {
       Logger.debug(LOG_TAG, "I/O exception returned from execute.");
       if (!retryOnFailedRequest) {
@@ -257,6 +254,7 @@ public class BaseResource implements Resource {
       } else {
         retryRequest();
       }
+      return;
     } catch (Exception e) {
       // Bug 740731: Don't let an exception fall through. Wrapping isn't
       // optimal, but often the exception is treated as an Exception anyway.
@@ -265,7 +263,15 @@ public class BaseResource implements Resource {
       } else {
         retryRequest();
       }
+      return;
     }
+
+    // Don't retry if the observer or delegate throws!
+    HttpResponseObserver observer = getHttpResponseObserver();
+    if (observer != null) {
+      observer.observeHttpResponse(response);
+    }
+    delegate.handleHttpResponse(response);
   }
 
   private void retryRequest() {
