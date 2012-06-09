@@ -148,9 +148,9 @@ class NamespacedNode(Node):
         return QualifiedId(self.loc, self.name,
                            [ ns.name for ns in self.namespaces ])
 
-class TranslationUnit(Node):
-    def __init__(self):
-        Node.__init__(self)
+class TranslationUnit(NamespacedNode):
+    def __init__(self, name):
+        NamespacedNode.__init__(self, name=name)
         self.filename = None
         self.cxxIncludes = [ ]
         self.includes = [ ]
