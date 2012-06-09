@@ -642,7 +642,7 @@ class GatherDecls(TcheckVisitor):
 
         # XXX ugh, this sucks.  but we need this information to compute
         # what friend decls we need in generated C++
-        p.decl.type._p = p
+        p.decl.type._ast = p
 
         # make sure we have decls for all dependent protocols
         for pinc in tu.protocolIncludes:
@@ -666,6 +666,10 @@ class GatherDecls(TcheckVisitor):
             elif isinstance(su, UnionDecl):
                 sutype = UnionType(qname, [ ])
             else: assert 0 and 'unknown type'
+
+            # XXX more suckage.  this time for pickling structs/unions
+            # declared in headers.
+            sutype._ast = su
 
             su.decl = self.declare(
                 loc=su.loc,
