@@ -566,7 +566,8 @@ With this information, it finally type checks the AST.'''
                 and runpass(CheckProcessGraph(self.errors))):
             return False
 
-        if (len(tu.protocol.startStates)
+        if (tu.protocol
+            and len(tu.protocol.startStates)
             and not runpass(CheckStateMachine(self.errors))):
             return False
         return True
@@ -612,37 +613,41 @@ class GatherDecls(TcheckVisitor):
         # sake of type checking and C++ code generation
         tu.using = self.builtinUsing + tu.using
 
-        p = tu.protocol
+        if tu.protocol:
+            assert tu.name == tu.protocol.name
 
-        # for everyone's sanity, enforce that the filename and
-        # protocol name match
-        basefilename = os.path.basename(tu.filename)
-        expectedfilename = '%s.ipdl'% (p.name)
+            p = tu.protocol
 
-        if basefilename != expectedfilename:
-            self.error(p.loc,
-                       "expected file defining protocol `%s' to be named `%s'; instead it's named `%s'",
-                       p.name, expectedfilename, basefilename)
+            # for everyone's sanity, enforce that the filename and
+            # protocol name match
+            basefilename = os.path.basename(tu.filename)
+            expectedfilename = '%s.ipdl'% (p.name)
 
-        # FIXME/cjones: it's a little weird and counterintuitive to put
-        # both the namespace and non-namespaced name in the global scope.
-        # try to figure out something better; maybe a type-neutral |using|
-        # that works for C++ and protocol types?
-        qname = p.qname()
-        if 0 == len(qname.quals):
-            fullname = None
-        else:
-            fullname = str(qname)
-        p.decl = self.declare(
-            loc=p.loc,
-            type=ProtocolType(qname, p.sendSemantics,
-                              stateless=(0 == len(p.transitionStmts))),
-            shortname=p.name,
-            fullname=fullname)
+            if basefilename != expectedfilename:
+                self.error(p.loc,
+                           "expected file defining protocol `%s' to be named `%s'; instead it's named `%s'",
+                           p.name, expectedfilename, basefilename)
 
-        # XXX ugh, this sucks.  but we need this information to compute
-        # what friend decls we need in generated C++
-        p.decl.type._ast = p
+            # FIXME/cjones: it's a little weird and counterintuitive
+            # to put both the namespace and non-namespaced name in the
+            # global scope.  try to figure out something better; maybe
+            # a type-neutral |using| that works for C++ and protocol
+            # types?
+            qname = p.qname()
+            if 0 == len(qname.quals):
+                fullname = None
+            else:
+                fullname = str(qname)
+            p.decl = self.declare(
+                loc=p.loc,
+                type=ProtocolType(qname, p.sendSemantics,
+                                  stateless=(0 == len(p.transitionStmts))),
+                shortname=p.name,
+                fullname=fullname)
+
+            # XXX ugh, this sucks.  but we need this information to compute
+            # what friend decls we need in generated C++
+            p.decl.type._ast = p
 
         # make sure we have decls for all dependent protocols
         for pinc in tu.includes:
@@ -681,8 +686,10 @@ class GatherDecls(TcheckVisitor):
         for su in tu.structsAndUnions:
             su.accept(self)
 
-        # grab symbols in the protocol itself
-        p.accept(self)
+        if tu.protocol:
+            # grab symbols in the protocol itself
+            p.accept(self)
+
 
         tu.type = VOID
 
@@ -696,7 +703,8 @@ class GatherDecls(TcheckVisitor):
                 "(type checking here will be unreliable because of an earlier error)")
             return
         inc.tu.accept(self)
-        self.symtab.declare(inc.tu.protocol.decl)
+        if inc.tu.protocol:
+            self.symtab.declare(inc.tu.protocol.decl)
 
     def visitStructDecl(self, sd):
         stype = sd.decl.type
@@ -1192,7 +1200,8 @@ class CheckTypes(TcheckVisitor):
         if inc.tu.filename in self.visited:
             return
         self.visited.add(inc.tu.filename)
-        inc.tu.protocol.accept(self)
+        if inc.tu.protocol:
+            inc.tu.protocol.accept(self)
 
 
     def visitStructDecl(self, sd):
@@ -1594,7 +1603,8 @@ class BuildProcessGraph(TcheckVisitor):
             TcheckVisitor.visitTranslationUnit(self, tu)
 
         def visitInclude(self, inc):
-            inc.tu.protocol.accept(self)
+            if inc.tu.protocol:
+                inc.tu.protocol.accept(self)
 
         def visitProtocol(self, p):
             ptype = p.decl.type
@@ -1631,7 +1641,8 @@ class BuildProcessGraph(TcheckVisitor):
         TcheckVisitor.visitTranslationUnit(self, tu)
 
     def visitInclude(self, inc):
-        inc.tu.protocol.accept(self)
+        if inc.tu.protocol:
+            inc.tu.protocol.accept(self)
 
     def visitProtocol(self, p):
         ptype = p.decl.type

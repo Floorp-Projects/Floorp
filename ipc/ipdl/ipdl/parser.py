@@ -206,8 +206,9 @@ def p_TranslationUnit(p):
 
     # The "canonical" namespace of the tu, what it's considered to be
     # in for the purposes of C++: |#include "foo/bar/TU.h"|
-    tu.namespaces = tu.protocol.namespaces
-    tu.name = tu.protocol.name
+    if tu.protocol:
+        tu.namespaces = tu.protocol.namespaces
+        tu.name = tu.protocol.name
 
     p[0] = tu
 
