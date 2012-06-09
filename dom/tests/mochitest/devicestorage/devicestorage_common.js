@@ -5,13 +5,6 @@
 
 var oldVal = false;
   
-// Array Remove - By John Resig (MIT Licensed)
-Array.prototype.remove = function(from, to) {
-  var rest = this.slice((to || from) + 1 || this.length);
-  this.length = from < 0 ? this.length + from : from;
-  return this.push.apply(this, rest);
-};
-
 function devicestorage_setup() {
   SimpleTest.waitForExplicitFinish();
   try {
@@ -53,7 +46,3 @@ function randomFilename(l) {
     return result;
 }
 
-function reportErrorAndQuit(e) {
-  ok(false, "handleError was called : " + e.target.error.name);
-  devicestorage_cleanup();
-}
