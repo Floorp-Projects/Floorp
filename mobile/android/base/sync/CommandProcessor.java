@@ -27,7 +27,6 @@ import android.net.Uri;
 public class CommandProcessor {
   private static final String LOG_TAG = "Command";
   private static AtomicInteger currentId = new AtomicInteger();
-  private GlobalSession session;
   protected ConcurrentHashMap<String, CommandRunner> commands = new ConcurrentHashMap<String, CommandRunner>();
 
   private final static CommandProcessor processor = new CommandProcessor();
@@ -69,10 +68,6 @@ public class CommandProcessor {
 
   public void registerCommand(String commandType, CommandRunner command) {
     commands.put(commandType, command);
-  }
-
-  public void registerSession(GlobalSession session) {
-    this.session = session;
   }
 
   public void processCommand(ExtendedJSONObject unparsedCommand) {
@@ -117,6 +112,19 @@ public class CommandProcessor {
     }
   }
 
+  @SuppressWarnings("unchecked")
+  public void sendURIToClientForDisplay(String uri, String clientID, String title, String sender, Context context) {
+    Logger.info(LOG_TAG, "Sending URI to client: " + uri + " -> " + clientID + " (" + title + ")");
+
+    JSONArray args = new JSONArray();
+    args.add(uri);
+    args.add(sender);
+    args.add(title);
+
+    Command displayURICommand = new Command("displayURI", args);
+    this.sendCommand(clientID, displayURICommand, context);
+  }
+
   /**
    * Validates and sends a command to a client or all clients.
    *
@@ -130,7 +138,7 @@ public class CommandProcessor {
    * @param command
    *        Command to invoke on remote clients
    */
-  public void sendCommand(String clientID, Command command) {
+  public void sendCommand(String clientID, Command command, Context context) {
     Logger.debug(LOG_TAG, "In sendCommand.");
 
     CommandRunner commandData = commands.get(command.commandType);
@@ -149,15 +157,15 @@ public class CommandProcessor {
     }
 
     if (clientID != null) {
-      this.sendCommandToClient(clientID, command);
+      this.sendCommandToClient(clientID, command, context);
       return;
     }
 
-    ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(session.getContext());
+    ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(context);
     try {
       Map<String, ClientRecord> clientMap = db.fetchAllClients();
       for (ClientRecord client : clientMap.values()) {
-        this.sendCommandToClient(client.guid, command);
+        this.sendCommandToClient(client.guid, command, context);
       }
     } catch (NullCursorException e) {
       Logger.error(LOG_TAG, "NullCursorException when fetching all GUIDs");
@@ -166,10 +174,10 @@ public class CommandProcessor {
     }
   }
 
-  protected void sendCommandToClient(String clientID, Command command) {
+  protected void sendCommandToClient(String clientID, Command command, Context context) {
     Logger.info(LOG_TAG, "Sending " + command.commandType + " to " + clientID);
 
-    ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(session.getContext());
+    ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(context);
     try {
       db.store(clientID, command);
     } catch (NullCursorException e) {
