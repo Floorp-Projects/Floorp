@@ -48,7 +48,7 @@ class Parser:
         self.loc = None         # not always up to date
         self.lexer = None
         self.parser = None
-        self.tu = TranslationUnit()
+        self.tu = TranslationUnit('(none)')
         self.direction = None
         self.errout = None
 
@@ -203,6 +203,11 @@ def p_TranslationUnit(p):
             tu.protocol = thing
         else:
             assert(0)
+
+    # The "canonical" namespace of the tu, what it's considered to be
+    # in for the purposes of C++: |#include "foo/bar/TU.h"|
+    tu.namespaces = tu.protocol.namespaces
+    tu.name = tu.protocol.name
 
     p[0] = tu
 

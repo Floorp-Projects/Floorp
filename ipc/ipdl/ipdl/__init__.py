@@ -35,7 +35,7 @@ def gencxx(ipdlfilename, ast, outheadersdir, outcppdir):
             hdr, 
             os.path.join(
                 outheadersdir,
-                *([ns.name for ns in ast.protocol.namespaces] + [hdr.name]))
+                *([ns.name for ns in ast.namespaces] + [hdr.name]))
         ]
     def resolveCpp(cpp):
         return [ cpp, os.path.join(outcppdir, cpp.name) ]
