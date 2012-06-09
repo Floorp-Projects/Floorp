@@ -2413,12 +2413,18 @@ nsGfxScrollFrameInner::GetScrollRangeForClamping() const
     return nsRect(nscoord_MIN/2, nscoord_MIN/2,
                   nscoord_MAX - nscoord_MIN/2, nscoord_MAX - nscoord_MIN/2);
   }
+  nsSize scrollPortSize = GetScrollPositionClampingScrollPortSize();
+  return GetScrollRange(scrollPortSize.width, scrollPortSize.height);
+}
+
+nsSize
+nsGfxScrollFrameInner::GetScrollPositionClampingScrollPortSize() const
+{
   nsIPresShell* presShell = mOuter->PresContext()->PresShell();
   if (mIsRoot && presShell->IsScrollPositionClampingScrollPortSizeSet()) {
-    nsSize size = presShell->GetScrollPositionClampingScrollPortSize();
-    return GetScrollRange(size.width, size.height);
+    return presShell->GetScrollPositionClampingScrollPortSize();
   }
-  return GetScrollRange();
+  return mScrollPort.Size();
 }
 
 static void
