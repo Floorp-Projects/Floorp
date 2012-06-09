@@ -645,7 +645,7 @@ class GatherDecls(TcheckVisitor):
         p.decl.type._ast = p
 
         # make sure we have decls for all dependent protocols
-        for pinc in tu.protocolIncludes:
+        for pinc in tu.includes:
             pinc.accept(self)
 
         # declare imported (and builtin) C++ types
@@ -689,14 +689,14 @@ class GatherDecls(TcheckVisitor):
         self.symtab = savedSymtab
 
 
-    def visitProtocolInclude(self, pi):
-        if pi.tu is None:
+    def visitInclude(self, inc):
+        if inc.tu is None:
             self.error(
-                pi.loc,
+                inc.loc,
                 "(type checking here will be unreliable because of an earlier error)")
             return
-        pi.tu.accept(self)
-        self.symtab.declare(pi.tu.protocol.decl)
+        inc.tu.accept(self)
+        self.symtab.declare(inc.tu.protocol.decl)
 
     def visitStructDecl(self, sd):
         stype = sd.decl.type
@@ -1188,7 +1188,7 @@ class CheckTypes(TcheckVisitor):
         self.visited = set()
         self.ptype = None
 
-    def visitProtocolInclude(self, inc):
+    def visitInclude(self, inc):
         if inc.tu.filename in self.visited:
             return
         self.visited.add(inc.tu.filename)
@@ -1593,8 +1593,8 @@ class BuildProcessGraph(TcheckVisitor):
         def visitTranslationUnit(self, tu):
             TcheckVisitor.visitTranslationUnit(self, tu)
 
-        def visitProtocolInclude(self, pi):
-            pi.tu.protocol.accept(self)
+        def visitInclude(self, inc):
+            inc.tu.protocol.accept(self)
 
         def visitProtocol(self, p):
             ptype = p.decl.type
@@ -1630,8 +1630,8 @@ class BuildProcessGraph(TcheckVisitor):
         tu.accept(self.findSpawns(self.errors))
         TcheckVisitor.visitTranslationUnit(self, tu)
 
-    def visitProtocolInclude(self, pi):
-        pi.tu.protocol.accept(self)
+    def visitInclude(self, inc):
+        inc.tu.protocol.accept(self)
 
     def visitProtocol(self, p):
         ptype = p.decl.type
