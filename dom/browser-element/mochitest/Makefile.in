@@ -16,9 +16,9 @@ _TEST_FILES = \
 		file_empty.html \
 		file_focus.html \
 		browserFrameHelpers.js \
-		test_browserFrame1.html \
-		test_browserFrame2.html \
-		test_browserFrame3.html \
+		test_browserElement_NoAttr.html \
+		test_browserElement_NoPref.html \
+		test_browserElement_NoWhitelist.html \
 		test_browserFrame4.html \
 		test_browserFrame5.html \
 		test_browserFrame6.html \
