@@ -8,8 +8,8 @@ var iframe;
 var mm;
 
 function runTest() {
-  browserFrameHelpers.setEnabledPref(true);
-  browserFrameHelpers.addToWhitelist();
+  browserElementTestHelpers.setEnabledPref(true);
+  browserElementTestHelpers.addToWhitelist();
 
   iframe = document.createElement('iframe');
   iframe.mozbrowser = true;
@@ -29,7 +29,7 @@ function runTest() {
   // for that load to finish, then start test1.
   iframe.addEventListener('mozbrowserloadend', function loadend() {
     iframe.removeEventListener('mozbrowserloadend', loadend);
-    iframe.src = browserFrameHelpers.emptyPage1;
+    iframe.src = browserElementTestHelpers.emptyPage1;
 
     iframe.addEventListener('mozbrowserloadend', function loadend2() {
       iframe.removeEventListener('mozbrowserloadend', loadend2);
@@ -132,7 +132,7 @@ function test5(e) {
 
 function test5a() {
   iframe.addEventListener('mozbrowserloadend', test5b);
-  iframe.src = browserFrameHelpers.emptyPage2;
+  iframe.src = browserElementTestHelpers.emptyPage2;
 }
 
 function test5b() {
