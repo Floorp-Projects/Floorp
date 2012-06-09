@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the public domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 // Test that alert works.
 "use strict";
 
