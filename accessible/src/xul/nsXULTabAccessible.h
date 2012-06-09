@@ -7,7 +7,7 @@
 #define _nsXULTabAccessible_H_
 
 // NOTE: alphabetically ordered
-#include "nsXULMenuAccessible.h"
+#include "XULMenuAccessible.h"
 #include "XULSelectControlAccessible.h"
 
 /**

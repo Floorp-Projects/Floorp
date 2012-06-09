@@ -17,16 +17,16 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS = \
-  XULSelectControlAccessible.cpp \
   nsXULAlertAccessible.cpp \
   nsXULColorPickerAccessible.cpp \
   nsXULComboboxAccessible.cpp \
-  XULFormControlAccessible.cpp \
-  nsXULListboxAccessible.cpp \
-  nsXULMenuAccessible.cpp \
   nsXULSliderAccessible.cpp \
   nsXULTabAccessible.cpp \
   XULElementAccessibles.cpp \
+  XULFormControlAccessible.cpp \
+  XULListboxAccessible.cpp \
+  XULMenuAccessible.cpp \
+  XULSelectControlAccessible.cpp \
   XULTreeAccessible.cpp \
   XULTreeGridAccessible.cpp \
   $(NULL)
