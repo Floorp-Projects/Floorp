@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsXULAlertAccessible.h"
+#include "XULAlertAccessible.h"
 
 #include "Role.h"
 #include "States.h"
@@ -11,31 +11,31 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULAlertAccessible
+// XULAlertAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsXULAlertAccessible::
-  nsXULAlertAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+XULAlertAccessible::
+  XULAlertAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULAlertAccessible, Accessible)
+NS_IMPL_ISUPPORTS_INHERITED0(XULAlertAccessible, Accessible)
 
 role
-nsXULAlertAccessible::NativeRole()
+XULAlertAccessible::NativeRole()
 {
   return roles::ALERT;
 }
 
 PRUint64
-nsXULAlertAccessible::NativeState()
+XULAlertAccessible::NativeState()
 {
   return Accessible::NativeState() | states::ALERT;
 }
 
 ENameValueFlag
-nsXULAlertAccessible::Name(nsString& aName)
+XULAlertAccessible::Name(nsString& aName)
 {
   // Screen readers need to read contents of alert, not the accessible name.
   // If we have both some screen readers will read the alert twice.
@@ -47,13 +47,13 @@ nsXULAlertAccessible::Name(nsString& aName)
 // Widgets
 
 bool
-nsXULAlertAccessible::IsWidget() const
+XULAlertAccessible::IsWidget() const
 {
   return true;
 }
 
 Accessible*
-nsXULAlertAccessible::ContainerWidget() const
+XULAlertAccessible::ContainerWidget() const
 {
   // If a part of colorpicker widget.
   if (mParent && mParent->IsMenuButton())

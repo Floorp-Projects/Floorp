@@ -3,29 +3,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsXULTabAccessible_H_
-#define _nsXULTabAccessible_H_
+#ifndef mozilla_a11y_XULTabAccessible_h__
+#define mozilla_a11y_XULTabAccessible_h__
 
 // NOTE: alphabetically ordered
 #include "XULMenuAccessible.h"
 #include "XULSelectControlAccessible.h"
 
+namespace mozilla {
+namespace a11y {
+
 /**
  * An individual tab, xul:tab element.
  */
-class nsXULTabAccessible : public AccessibleWrap
+class XULTabAccessible : public AccessibleWrap
 {
 public:
   enum { eAction_Switch = 0 };
 
-  nsXULTabAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULTabAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual PRUint64 NativeInteractiveState() const;
   virtual Relation RelationByType(PRUint32 aType);
@@ -38,15 +41,15 @@ public:
 /**
  * A container of tab objects, xul:tabs element.
  */
-class nsXULTabsAccessible : public XULSelectControlAccessible
+class XULTabsAccessible : public XULSelectControlAccessible
 {
 public:
-  nsXULTabsAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULTabsAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
   virtual void Value(nsString& aValue);
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
 
   // ActionAccessible
   virtual PRUint8 ActionCount();
@@ -56,13 +59,13 @@ public:
 /** 
  * A container of tab panels, xul:tabpanels element.
  */
-class nsXULTabpanelsAccessible : public AccessibleWrap
+class XULTabpanelsAccessible : public AccessibleWrap
 {
 public:
-  nsXULTabpanelsAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULTabpanelsAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
 };
 
 
@@ -76,15 +79,18 @@ public:
  * for example we do not create instance of this class for XUL textbox used as
  * a tabpanel.
  */
-class nsXULTabpanelAccessible : public AccessibleWrap
+class XULTabpanelAccessible : public AccessibleWrap
 {
 public:
-  nsXULTabpanelAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULTabpanelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual Relation RelationByType(PRUint32 aType);
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
 
