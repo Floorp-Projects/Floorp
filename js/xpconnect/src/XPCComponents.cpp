@@ -3351,6 +3351,68 @@ GetPrincipalOrSOP(JSContext *cx, JSObject &from, nsISupports **out)
     return NS_OK;
 }
 
+// the first parameter of the sandbox constructor might be an array of principals, either in string 
+// format or actual objects (see GetPrincipalOrSOP)
+nsresult
+GetExpandedPrincipal(JSContext *cx, JSObject &arrayObj, nsIExpandedPrincipal **out)
+{
+    MOZ_ASSERT(out);
+    uint32_t length;
+
+    if (!JS_IsArrayObject(cx, &arrayObj) ||
+        !JS_GetArrayLength(cx, &arrayObj, &length) ||
+        !length)
+    {
+        // we need a white list of principals or uri strings to create an
+        // expanded principal, if we got an empty array or something else
+        // report error
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    nsTArray< nsCOMPtr<nsIPrincipal> > allowedDomains(length);
+    allowedDomains.SetLength(length);
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    NS_ENSURE_TRUE(ssm, NS_ERROR_XPC_UNEXPECTED);
+
+    for (uint32_t i = 0; i < length; ++i) {
+        jsval allowed;
+
+        if (!JS_GetElement(cx, &arrayObj, i, &allowed))
+            return NS_ERROR_INVALID_ARG;
+        
+        nsresult rv;
+        nsCOMPtr<nsIPrincipal> principal;
+        if (allowed.isString()) {
+            // in case of string let's try to fetch a codebase principal from it
+            rv = GetPrincipalFromString(cx, allowed.toString(), getter_AddRefs(principal));
+            NS_ENSURE_SUCCESS(rv, rv);
+        } else if (allowed.isObject()) {
+            // in case of object let's see if it's a Principal or a ScriptObjectPrincipal
+            nsCOMPtr<nsISupports> prinOrSop;  
+            rv = GetPrincipalOrSOP(cx, allowed.toObject(), getter_AddRefs(prinOrSop));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(prinOrSop));
+            principal = do_QueryInterface(prinOrSop);
+            if (sop) {
+                principal = sop->GetPrincipal();
+            }                          
+        }
+        NS_ENSURE_TRUE(principal, NS_ERROR_INVALID_ARG);
+ 
+        // We do not allow ExpandedPrincipals to contain any system principals
+        bool isSystem;
+        rv = ssm->IsSystemPrincipal(principal, &isSystem);
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_FALSE(isSystem, NS_ERROR_INVALID_ARG);
+        allowedDomains[i] = principal;
+  }
+  
+  nsCOMPtr<nsIExpandedPrincipal> result = new nsExpandedPrincipal(allowedDomains);
+  result.forget(out);
+  return NS_OK;
+}
+
 // helper that tries to get a property form the options object
 nsresult 
 GetPropFromOptions(JSContext *cx, JSObject &from, const char *name, jsval *prop, JSBool *found)
@@ -3393,7 +3455,7 @@ GetObjPropFromOptions(JSContext *cx, JSObject &from, const char *name, JSObject 
     JSBool found;
 
     if (NS_FAILED(GetPropFromOptions(cx, from, name, &propVal, &found)))
-         return NS_ERROR_INVALID_ARG;
+        return NS_ERROR_INVALID_ARG;
 
     if (!found) {
         *prop = NULL;
@@ -3495,7 +3557,12 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
         rv = GetPrincipalFromString(cx, argv[0].toString(), getter_AddRefs(principal));
         prinOrSop = principal;
     } else if (argv[0].isObject()) {
-        rv = GetPrincipalOrSOP(cx, argv[0].toObject(), getter_AddRefs(prinOrSop));
+        if (JS_IsArrayObject(cx, &argv[0].toObject())) {
+            rv = GetExpandedPrincipal(cx, argv[0].toObject(), getter_AddRefs(expanded));
+            prinOrSop = expanded;
+        } else { 
+            rv = GetPrincipalOrSOP(cx, argv[0].toObject(), getter_AddRefs(prinOrSop));
+        }
     } else {
         return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
     }
