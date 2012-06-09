@@ -411,11 +411,19 @@
                     this.maxCurrentTimeSeen = currentTime;
                     this.showPosition(currentTime, duration);
 
-                    // If we have metadata, check if this is a <video> without video data.
+                    // If we have metadata, check if this is a <video> without
+                    // video data, or a video with no audio track.
                     if (this.video.readyState >= this.video.HAVE_METADATA) {
                         if (this.video instanceof HTMLVideoElement &&
                             (this.video.videoWidth == 0 || this.videoHeight == 0))
                             this.isAudioOnly = true;
+
+                        // We have to check again if the media has audio here,
+                        // because of bug 718107: switching to fullscreen may
+                        // cause the bindings to detach and reattach, hence
+                        // unsetting the attribute.
+                        if (!this.isAudioOnly && !this.video.mozHasAudio)
+                          this.muteButton.setAttribute("noAudio", "true");
                     }
 
                     if (this.isAudioOnly)
