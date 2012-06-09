@@ -660,27 +660,7 @@ class GatherDecls(TcheckVisitor):
         # first pass to "forward-declare" all structs and unions in
         # order to support recursive definitions
         for su in tu.structsAndUnions:
-            qname = su.qname()
-            if 0 == len(qname.quals):
-                fullname = None
-            else:
-                fullname = str(qname)
-
-            if isinstance(su, StructDecl):
-                sutype = StructType(qname, [ ])
-            elif isinstance(su, UnionDecl):
-                sutype = UnionType(qname, [ ])
-            else: assert 0 and 'unknown type'
-
-            # XXX more suckage.  this time for pickling structs/unions
-            # declared in headers.
-            sutype._ast = su
-
-            su.decl = self.declare(
-                loc=su.loc,
-                type=sutype,
-                shortname=su.name,
-                fullname=fullname)
+            self.declareStructOrUnion(su)
 
         # second pass to check each definition
         for su in tu.structsAndUnions:
@@ -694,6 +674,33 @@ class GatherDecls(TcheckVisitor):
         tu.type = VOID
 
         self.symtab = savedSymtab
+
+    def declareStructOrUnion(self, su):
+        if hasattr(su, 'decl'):
+            self.symtab.declare(su.decl)
+            return
+
+        qname = su.qname()
+        if 0 == len(qname.quals):
+            fullname = None
+        else:
+            fullname = str(qname)
+
+        if isinstance(su, StructDecl):
+            sutype = StructType(qname, [ ])
+        elif isinstance(su, UnionDecl):
+            sutype = UnionType(qname, [ ])
+        else: assert 0 and 'unknown type'
+
+        # XXX more suckage.  this time for pickling structs/unions
+        # declared in headers.
+        sutype._ast = su
+
+        su.decl = self.declare(
+            loc=su.loc,
+            type=sutype,
+            shortname=su.name,
+            fullname=fullname)
 
 
     def visitInclude(self, inc):
