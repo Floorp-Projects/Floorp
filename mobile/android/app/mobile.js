@@ -693,9 +693,6 @@ pref("direct-texture.force.disabled", false);
 // show checkerboard pattern on android; we use background colour instead
 pref("gfx.show_checkerboard_pattern", true);
 
-pref("remote-debugger.enabled", false);
-pref("remote-debugger.port", 6000);
-
 // This fraction in 1000ths of velocity remains after every animation frame when the velocity is low.
 pref("ui.scrolling.friction_slow", -1);
 // This fraction in 1000ths of velocity remains after every animation frame when the velocity is high.
