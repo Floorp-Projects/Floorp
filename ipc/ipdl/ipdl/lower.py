@@ -66,14 +66,21 @@ _DISCLAIMER = Whitespace('''//
 
 class _struct: pass
 
+def _namespacedHeaderName(name, namespaces):
+    pfx = '/'.join([ ns.name for ns in namespaces ])
+    if pfx:
+        return pfx +'/'+ name
+    else:
+        return name
+
+def _ipdlhHeaderName(tu):
+    assert tu.filetype == 'header'
+    return _namespacedHeaderName(tu.name, tu.namespaces)
+
 def _protocolHeaderName(p, side=''):
     if side: side = side.title()
     base = p.name + side
-
-    
-    pfx = '/'.join([ ns.name for ns in p.namespaces ])
-    if pfx: return pfx +'/'+ base
-    else:   return base
+    return _namespacedHeaderName(base, p.namespaces)
 
 def _includeGuardMacroName(headerfile):
     return re.sub(r'[./]', '_', headerfile.name)
@@ -1264,6 +1271,10 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
             TranslationUnit.upgrade(tu)
             self.typedefs[:] = sorted(list(self.typedefSet))
 
+    def visitInclude(self, inc):
+        if inc.tu.filetype == 'header':
+            inc.tu.accept(self)
+
     def visitProtocol(self, pro):
         self.protocolName = pro.name
         pro.decl.cxxtypedefs = self.typedefs
@@ -1355,6 +1366,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         hf.addthing(Whitespace.NL)
 
         ipdl.ast.Visitor.visitTranslationUnit(self, tu)
+        if tu.filetype == 'header':
+            self.cppIncludeHeaders.append(_ipdlhHeaderName(tu))
 
         hf.addthing(Whitespace.NL)
         hf.addthings(_includeGuardEnd(hf))
@@ -1380,6 +1393,11 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
     def visitCxxInclude(self, inc):
         self.hdrfile.addthing(CppDirective('include', '"'+ inc.file +'"'))
+
+    def visitInclude(self, inc):
+        if inc.tu.filetype == 'header':
+            self.hdrfile.addthing(CppDirective(
+                    'include', '"'+ _ipdlhHeaderName(inc.tu) +'.h"'))
 
     def processStructOrUnionClass(self, su, which, forwarddecls, cls):
         clsdecl, methoddefns = _splitClassDeclDefn(cls)

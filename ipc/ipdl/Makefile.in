@@ -52,6 +52,7 @@ DIRS += test
 endif
 
 vpath %.ipdl $(topsrcdir)
+vpath %.ipdlh $(topsrcdir)
 
 define ADD_IPDLDIR
 include $(topsrcdir)/$(IPDLDIR)/ipdl.mk
@@ -69,6 +70,7 @@ CPPSRCS =					\
   $(PROTOCOLS:%.ipdl=%Parent.cpp)		\
   $(PROTOCOLS:%.ipdl=%Child.cpp)		\
   $(PROTOCOLS:%.ipdl=%.cpp)			\
+  $(PROTOCOLS:%.ipdlh=%.cpp)			\
   $(NULL)
 
 GARBAGE += $(CPPSRCS)
