@@ -85,8 +85,8 @@ private:
 
   jsval     mResult;
   bool      mResultRooted;
-  PRInt32   mError;
   bool      mDone;
+  nsCOMPtr<nsIDOMDOMError> mError;
   nsCOMPtr<nsIDOMMozSmsCursor> mCursor;
 
   NS_DECL_EVENT_HANDLER(success)
