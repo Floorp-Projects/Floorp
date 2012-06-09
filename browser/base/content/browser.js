@@ -7170,9 +7170,8 @@ let gPrivateBrowsingUI = {
    * and the setter should only be used in tests.
    */
   get privateWindow() {
-    return gBrowser.selectedTab.linkedBrowser
-                               .docShell.QueryInterface(Ci.nsILoadContext)
-                               .usePrivateBrowsing;
+    return gBrowser.docShell.QueryInterface(Ci.nsILoadContext)
+                            .usePrivateBrowsing;
   }
 };
 
