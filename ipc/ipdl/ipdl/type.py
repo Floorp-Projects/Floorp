@@ -611,22 +611,24 @@ class GatherDecls(TcheckVisitor):
 
         # pretend like the translation unit "using"-ed these for the
         # sake of type checking and C++ code generation
-        tu.using = self.builtinUsing + tu.using
+        tu.builtinUsing = self.builtinUsing
+
+        # for everyone's sanity, enforce that the filename and tu name
+        # match
+        basefilename = os.path.basename(tu.filename)
+        expectedfilename = '%s.ipdl'% (tu.name)
+        if not tu.protocol:
+            # header
+            expectedfilename += 'h'
+        if basefilename != expectedfilename:
+            self.error(tu.loc,
+                       "expected file for translation unit `%s' to be named `%s'; instead it's named `%s'",
+                       tu.name, expectedfilename, basefilename)
 
         if tu.protocol:
             assert tu.name == tu.protocol.name
 
             p = tu.protocol
-
-            # for everyone's sanity, enforce that the filename and
-            # protocol name match
-            basefilename = os.path.basename(tu.filename)
-            expectedfilename = '%s.ipdl'% (p.name)
-
-            if basefilename != expectedfilename:
-                self.error(p.loc,
-                           "expected file defining protocol `%s' to be named `%s'; instead it's named `%s'",
-                           p.name, expectedfilename, basefilename)
 
             # FIXME/cjones: it's a little weird and counterintuitive
             # to put both the namespace and non-namespaced name in the
@@ -654,6 +656,8 @@ class GatherDecls(TcheckVisitor):
             pinc.accept(self)
 
         # declare imported (and builtin) C++ types
+        for using in tu.builtinUsing:
+            using.accept(self)
         for using in tu.using:
             using.accept(self)
 
@@ -665,6 +669,10 @@ class GatherDecls(TcheckVisitor):
         # second pass to check each definition
         for su in tu.structsAndUnions:
             su.accept(self)
+        for inc in tu.includes:
+            if inc.tu.filetype == 'header':
+                for su in inc.tu.structsAndUnions:
+                    su.accept(self)
 
         if tu.protocol:
             # grab symbols in the protocol itself
@@ -712,8 +720,19 @@ class GatherDecls(TcheckVisitor):
         inc.tu.accept(self)
         if inc.tu.protocol:
             self.symtab.declare(inc.tu.protocol.decl)
+        else:
+            # This is a header.  Import its "exported" globals into
+            # our scope.
+            for using in inc.tu.using:
+                using.accept(self)
+            for su in inc.tu.structsAndUnions:
+                self.declareStructOrUnion(su)
 
     def visitStructDecl(self, sd):
+        # If we've already processed this struct, don't do it again.
+        if hasattr(sd, 'symtab'):
+            return
+
         stype = sd.decl.type
 
         self.symtab.enterScope(sd)
@@ -736,6 +755,10 @@ class GatherDecls(TcheckVisitor):
 
     def visitUnionDecl(self, ud):
         utype = ud.decl.type
+
+        # If we've already processed this union, don't do it again.
+        if len(utype.components):
+            return
         
         for c in ud.components:
             cdecl = self.symtab.lookup(str(c))
