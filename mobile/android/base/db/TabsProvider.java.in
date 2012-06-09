@@ -198,7 +198,7 @@ public class TabsProvider extends ContentProvider {
 
         // Always fallback to default profile if none has been provided.
         if (TextUtils.isEmpty(profile)) {
-            profile = GeckoProfile.get(getContext()).getName();
+            profile = BrowserContract.DEFAULT_PROFILE;
         }
 
         DatabaseHelper dbHelper;

@@ -10,8 +10,6 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
 
-import org.mozilla.gecko.GeckoProfile;
-
 public class BrowserDB {
     public static String ABOUT_PAGES_URL_FILTER = "about:%";
 
@@ -25,7 +23,7 @@ public class BrowserDB {
         public static String KEYWORD = "keyword";
     }
 
-    private static BrowserDBIface sDb = null;
+    private static BrowserDBIface sDb;
 
     public interface BrowserDBIface {
         public void invalidateCachedState();
@@ -80,11 +78,7 @@ public class BrowserDB {
 
     static {
         // Forcing local DB no option to switch to Android DB for now
-        sDb = null;
-    }
-
-    public static void initialize(String profile) {
-        sDb = new LocalBrowserDB(profile);
+        sDb = new LocalBrowserDB(BrowserContract.DEFAULT_PROFILE);
     }
 
     public static void invalidateCachedState() {

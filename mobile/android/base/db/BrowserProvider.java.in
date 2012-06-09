@@ -1030,7 +1030,7 @@ public class BrowserProvider extends ContentProvider {
 
         // Always fallback to default profile if none has been provided.
         if (TextUtils.isEmpty(profile)) {
-            profile = GeckoProfile.get(mContext).getName();
+            profile = BrowserContract.DEFAULT_PROFILE;
         }
 
         DatabaseHelper dbHelper;
