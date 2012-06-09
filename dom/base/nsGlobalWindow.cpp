@@ -98,7 +98,7 @@
 #include "nsIDOMDesktopNotification.h"
 #include "nsPIDOMStorage.h"
 #include "nsDOMString.h"
-#include "nsIEmbeddingSiteWindow2.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsThreadUtils.h"
 #include "nsEventStateManager.h"
 #include "nsIHttpProtocolHandler.h"
@@ -5022,13 +5022,13 @@ nsGlobalWindow::Blur()
     return NS_OK;
   }
 
-  // If embedding apps don't implement nsIEmbeddingSiteWindow2, we
+  // If embedding apps don't implement nsIEmbeddingSiteWindow, we
   // shouldn't throw exceptions to web content.
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   GetTreeOwner(getter_AddRefs(treeOwner));
-  nsCOMPtr<nsIEmbeddingSiteWindow2> siteWindow(do_GetInterface(treeOwner));
+  nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_GetInterface(treeOwner));
   if (siteWindow) {
     // This method call may cause mDocShell to become nsnull.
     rv = siteWindow->Blur();
