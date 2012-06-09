@@ -20,62 +20,34 @@ maction:hover  {
   outline: 1px dotted black;
 /*  border: 1px solid black; */
 }
-maction[actiontype="restyle#background"] {
-  background-color: #3C6;
-  border: 1px dotted red;
-}
-maction[actiontype="restyle#zoom"] {
-  font-size: 40pt;
-}
 </style>
 </head>
 <body>
 
-<div>
-Click to toggle between expressions, and watch the satus line onmouseover/onmouseout:
+<p>Click to toggle between expressions, and watch the status line onmouseover/onmouseout:
 <br />
 
 <math mode="display" xmlns="&mathml;">
 <maction actiontype="toggle">
-  <maction actiontype="statusline#First Expression">
+  <maction actiontype="statusline">
     <mi>statusline#First Expression</mi>
+    <mtext>First Expression</mtext>
   </maction>
 
-  <maction actiontype="statusline#Second Expression">
+  <maction actiontype="statusline">
     <mi>statusline#Second Expression</mi>
+    <mtext>Second Expression</mtext>
   </maction>
 
 
-  <maction actiontype="statusline#And so on..">
-    <maction actiontype="restyle#background">
-      <mi>statusline#And so on...</mi>
-    </maction>
+  <maction actiontype="statusline">
+    <mi>statusline#And so on...</mi>
+    <mtext>And so on..</mtext>
   </maction>
 </maction>
-</math>
+</math></p>
 
-<br />
-Click the expression below to zoom-in/zoom-out using RESTYLE:
-<br />
-
-<math mode="display" xmlns="&mathml;">
-<maction actiontype="restyle#zoom">
-  <mrow>
-    <mi>&pi;</mi> 
-    <mo>=</mo>
-    <mn>2</mn><mi>i</mi>
-    <mo>&InvisibleTimes;</mo>
-    <mo>Log</mo>
-    <mfrac>
-      <mrow><mn>1</mn><mo>-</mo><mi>i</mi></mrow>
-      <mrow><mn>1</mn><mo>+</mo><mi>i</mi></mrow>
-    </mfrac>
-  </mrow>
-</maction>
-</math>
-
-<br />
-Click the expression below to see several definitions of pi:
+<p>Click the expression below to see several definitions of pi:
 <br />
 
 <math mode="display" xmlns="&mathml;">
@@ -201,11 +173,9 @@ Click the expression below to see several definitions of pi:
   </mrow>
 </maction>
 </mrow>
-</math>
+</math></p>
 
-<br />
-
-<math xmlns="&mathml;">
+<p><math xmlns="&mathml;">
 <!-- {{} \atop i} A {p \atop q} -->
 <mmultiscripts>
     <mi mathvariant="bold" mathsize="big">A</mi>
@@ -724,13 +694,9 @@ Click the expression below to see several definitions of pi:
   </mrow>
   <mi>dz</mi>
 </mrow>
-</math>
+</math></p>
 
-<br />
-
-<br />
-
-And this is from the "Thomson scattering theory"
+<p>And this is from the "Thomson scattering theory"
 
 <math xmlns="&mathml;" mode="display">
 <mrow>
@@ -1029,7 +995,7 @@ And this is from the "Thomson scattering theory"
 </mrow>
 </math>
 
-</div>
+</p>
 
 </body>
 </html>
