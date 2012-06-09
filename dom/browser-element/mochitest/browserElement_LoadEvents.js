@@ -5,8 +5,8 @@
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  browserFrameHelpers.setEnabledPref(true);
-  browserFrameHelpers.addToWhitelist();
+  browserElementTestHelpers.setEnabledPref(true);
+  browserElementTestHelpers.addToWhitelist();
 
   // Load emptypage1 into the iframe, wait for that to finish loading, then
   // call runTest2.
@@ -20,7 +20,7 @@ function runTest() {
   var iframe = document.createElement('iframe');
   iframe.mozbrowser = true;
   iframe.id = 'iframe';
-  iframe.src = browserFrameHelpers.emptyPage1;
+  iframe.src = browserElementTestHelpers.emptyPage1;
 
   function loadstart(e) {
     ok(e.isTrusted, 'Event should be trusted.');
@@ -36,7 +36,7 @@ function runTest() {
     seenLocationChange = true;
     ok(seenLoadStart, 'Location change after load start.');
     ok(!seenLoadEnd, 'Location change before load end.');
-    ok(e.detail, browserFrameHelpers.emptyPage1, "event's reported location");
+    ok(e.detail, browserElementTestHelpers.emptyPage1, "event's reported location");
   }
 
   function loadend(e) {
@@ -87,7 +87,7 @@ function runTest2() {
     seenLocationChange = true;
     ok(seenLoadStart, 'Location change after load start.');
     ok(!seenLoadEnd, 'Location change before load end.');
-    ok(e.detail, browserFrameHelpers.emptyPage2, "event's reported location");
+    ok(e.detail, browserElementTestHelpers.emptyPage2, "event's reported location");
   });
 
   iframe.addEventListener('mozbrowserloadend', function(e) {
@@ -98,7 +98,7 @@ function runTest2() {
     ok(seenLocationChange, 'Load end after location change.');
   });
 
-  iframe.src = browserFrameHelpers.emptyPage2;
+  iframe.src = browserElementTestHelpers.emptyPage2;
 
   function waitForAllCallbacks() {
     if (!seenLoadStart || !seenLoadEnd || !seenLocationChange) {
