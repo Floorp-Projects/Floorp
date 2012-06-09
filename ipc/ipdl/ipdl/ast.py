@@ -12,8 +12,8 @@ class Visitor:
     def visitTranslationUnit(self, tu):
         for cxxInc in tu.cxxIncludes:
             cxxInc.accept(self)
-        for protoInc in tu.protocolIncludes:
-            protoInc.accept(self)
+        for inc in tu.includes:
+            inc.accept(self)
         for su in tu.structsAndUnions:
             su.accept(self)
         for using in tu.using:
@@ -23,7 +23,7 @@ class Visitor:
     def visitCxxInclude(self, inc):
         pass
 
-    def visitProtocolInclude(self, inc):
+    def visitInclude(self, inc):
         # Note: we don't visit the child AST here, because that needs delicate
         # and pass-specific handling
         pass
@@ -153,13 +153,13 @@ class TranslationUnit(Node):
         Node.__init__(self)
         self.filename = None
         self.cxxIncludes = [ ]
-        self.protocolIncludes = [ ]
+        self.includes = [ ]
         self.using = [ ]
         self.structsAndUnions = [ ]
         self.protocol = None
 
     def addCxxInclude(self, cxxInclude): self.cxxIncludes.append(cxxInclude)
-    def addProtocolInclude(self, pInc): self.protocolIncludes.append(pInc)
+    def addInclude(self, inc): self.includes.append(inc)
     def addStructDecl(self, struct): self.structsAndUnions.append(struct)
     def addUnionDecl(self, union): self.structsAndUnions.append(union)
     def addUsingStmt(self, using): self.using.append(using)
@@ -171,10 +171,10 @@ class CxxInclude(Node):
         Node.__init__(self, loc)
         self.file = cxxFile
 
-class ProtocolInclude(Node):
-    def __init__(self, loc, protocolName):
+class Include(Node):
+    def __init__(self, loc, name):
         Node.__init__(self, loc)
-        self.file = "%s.ipdl" % protocolName
+        self.file = "%s.ipdl" % name
 
 class UsingStmt(Node):
     def __init__(self, loc, cxxTypeSpec):
