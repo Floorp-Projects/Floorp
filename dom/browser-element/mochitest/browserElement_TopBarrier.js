@@ -1,22 +1,4 @@
-<!DOCTYPE HTML>
-<html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=725796
--->
-<head>
-  <title>Test for Bug 725796</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="browserFrameHelpers.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=725796">Mozilla Bug 725796</a>
-
-<!--
-  Test that an <iframe mozbrowser> is a window.{top,parent,frameElement} barrier.
--->
-
-<script type="application/javascript;version=1.7">
+// Test that an <iframe mozbrowser> is a window.{top,parent,frameElement} barrier.
 "use strict";
 
 browserFrameHelpers.setEnabledPref(true);
@@ -90,7 +72,3 @@ function waitForMessages(num) {
 }
 
 runTest();
-
-</script>
-</body>
-</html>

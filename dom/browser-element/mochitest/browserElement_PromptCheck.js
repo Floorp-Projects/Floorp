@@ -1,27 +1,9 @@
-<!DOCTYPE HTML>
-<html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=741587
--->
-<head>
-  <title>Test for Bug 741587</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="browserFrameHelpers.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=741587">Mozilla Bug 741587</a>
-
-<!--
-  Test that alertCheck (i.e., alert with the opportunity to opt out of future
-  alerts), promptCheck, and confirmCheck work.  We do this by spamming
-  alerts/prompts/confirms from inside an <iframe mozbrowser>.
-
-  At the moment, we treat alertCheck/promptCheck/confirmCheck just like a
-  normal alert.  But it's different to nsIPrompt!
--->
-
-<script type="application/javascript;version=1.7">
+// Test that alertCheck (i.e., alert with the opportunity to opt out of future
+// alerts), promptCheck, and confirmCheck work.  We do this by spamming
+// alerts/prompts/confirms from inside an <iframe mozbrowser>.
+//
+// At the moment, we treat alertCheck/promptCheck/confirmCheck just like a
+// normal alert.  But it's different to nsIPrompt!
 "use strict";
 
 SimpleTest.waitForExplicitFinish();
@@ -77,7 +59,3 @@ iframe.src =
     for (; i < 20; i++) { confirm(i); } \
     for (; i < 30; i++) { prompt(i); } \
    </scr' + 'ipt></body></html>';
-
-</script>
-</body>
-</html>
