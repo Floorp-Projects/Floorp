@@ -1087,18 +1087,15 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
 //BEGIN nsFrameSelection methods
 
 NS_IMETHODIMP
-nsTypedSelection::ToString(PRUnichar **aReturn)
+nsTypedSelection::ToString(nsAString& aReturn)
 {
-  if (!aReturn) {
-    return NS_ERROR_NULL_POINTER;
-  }
   // We need Flush_Style here to make sure frames have been created for
   // the selected content.  Use mFrameSelection->GetShell() which returns
   // null if the Selection has been disconnected (the shell is Destroyed).
   nsCOMPtr<nsIPresShell> shell =
     mFrameSelection ? mFrameSelection->GetShell() : nsnull;
   if (!shell) {
-    *aReturn = ToNewUnicode(EmptyString());
+    aReturn.Truncate();
     return NS_OK;
   }
   shell->FlushPendingNotifications(Flush_Style);
@@ -1109,13 +1106,10 @@ nsTypedSelection::ToString(PRUnichar **aReturn)
 }
 
 NS_IMETHODIMP
-nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags, 
-                                   PRInt32 aWrapCol, PRUnichar **aReturn)
+nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags,
+                                     PRInt32 aWrapCol, nsAString& aReturn)
 {
   nsresult rv = NS_OK;
-  if (!aReturn)
-    return NS_ERROR_NULL_POINTER;
-  
   nsCAutoString formatType( NS_DOC_ENCODER_CONTRACTID_BASE );
   formatType.Append(aFormatType);
   nsCOMPtr<nsIDocumentEncoder> encoder =
@@ -1145,10 +1139,7 @@ nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags,
   if (aWrapCol != 0)
     encoder->SetWrapColumn(aWrapCol);
 
-  nsAutoString tmp;
-  rv = encoder->EncodeToString(tmp);
-  *aReturn = ToNewUnicode(tmp);//get the unicode pointer from it. this is temporary
-  return rv;
+  return encoder->EncodeToString(aReturn);
 }
 
 NS_IMETHODIMP
