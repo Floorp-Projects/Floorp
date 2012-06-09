@@ -2891,7 +2891,7 @@ ReleaseObservedTypes(JSRuntime *rt)
 {
     bool releaseTypes = false;
     int64_t now = PRMJ_Now();
-    if (now >= rt->gcJitReleaseTime) {
+    if (rt->gcZeal() || now >= rt->gcJitReleaseTime) {
         releaseTypes = true;
         rt->gcJitReleaseTime = now + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
     }

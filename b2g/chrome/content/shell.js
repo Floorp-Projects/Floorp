@@ -507,7 +507,7 @@ function startDebugger() {
     DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
   }
 
-  let port = Services.prefs.getIntPref('devtools.debugger.port') || 6000;
+  let port = Services.prefs.getIntPref('devtools.debugger.remote-port') || 6000;
   try {
     DebuggerServer.openListener(port, false);
   } catch (e) {
@@ -516,7 +516,7 @@ function startDebugger() {
 }
 
 window.addEventListener('ContentStart', function(evt) {
-  if (Services.prefs.getBoolPref('devtools.debugger.enabled')) {
+  if (Services.prefs.getBoolPref('devtools.debugger.remote-enabled')) {
     startDebugger();
   }
 });
