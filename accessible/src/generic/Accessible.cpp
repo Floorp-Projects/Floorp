@@ -345,7 +345,7 @@ Accessible::Description(nsString& aDescription)
 }
 
 NS_IMETHODIMP
-Accessible::GetKeyboardShortcut(nsAString& aAccessKey)
+Accessible::GetAccessKey(nsAString& aAccessKey)
 {
   aAccessKey.Truncate();
 
@@ -1753,34 +1753,13 @@ Accessible::SetName(const nsAString& aName)
 }
 
 NS_IMETHODIMP
-Accessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
+Accessible::GetKeyboardShortcut(nsAString& aKeyBinding)
 {
   aKeyBinding.Truncate();
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
   KeyboardShortcut().ToString(aKeyBinding);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-Accessible::GetKeyBindings(PRUint8 aActionIndex,
-                             nsIDOMDOMStringList** aKeyBindings)
-{
-  // Currently we support only unique key binding on element for default action.
-  NS_ENSURE_TRUE(aActionIndex == 0, NS_ERROR_INVALID_ARG);
-
-  nsAccessibleDOMStringList* keyBindings = new nsAccessibleDOMStringList();
-  NS_ENSURE_TRUE(keyBindings, NS_ERROR_OUT_OF_MEMORY);
-
-  nsAutoString defaultKey;
-  nsresult rv = GetDefaultKeyBinding(defaultKey);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!defaultKey.IsEmpty())
-    keyBindings->Add(defaultKey);
-
-  NS_ADDREF(*aKeyBindings = keyBindings);
   return NS_OK;
 }
 
