@@ -5,14 +5,15 @@
 #include "nsIDOMEventTarget.idl"
 
 interface nsIDOMEventListener;
+interface nsIDOMDOMError;
 
-[scriptable, builtinclass, uuid(1b24469d-cfb7-4667-aaf0-c1d17289ae7c)]
+[scriptable, builtinclass, uuid(a41765d7-6e5d-4458-b08a-993c2c60ce88)]
 interface nsIDOMMozSmsRequest : nsIDOMEventTarget
 {
   // Returns whether "processing" or "done".
   readonly attribute DOMString           readyState;
   // Can be null.
-  readonly attribute DOMString           error;
+  readonly attribute nsIDOMDOMError      error;
   // Can be bool, nsIDOMSmsMessage, nsIDOMSmsIterator or null.
   readonly attribute jsval               result;
 
