@@ -185,8 +185,8 @@ def p_TranslationUnit(p):
     for stmt in p[1]:
         if isinstance(stmt, CxxInclude):
             tu.addCxxInclude(stmt)
-        elif isinstance(stmt, ProtocolInclude):
-            tu.addProtocolInclude(stmt)
+        elif isinstance(stmt, Include):
+            tu.addInclude(stmt)
         elif isinstance(stmt, UsingStmt):
             tu.addUsingStmt(stmt)
         else:
@@ -236,7 +236,7 @@ def p_ProtocolIncludeStmt(p):
         _error(loc, "`include protocol \"P.ipdl\"' syntax is obsolete.  Use `include protocol P' instead.")
     
     Parser.current.loc = loc
-    inc = ProtocolInclude(loc, p[3])
+    inc = Include(loc, p[3])
 
     path = Parser.current.resolveIncludePath(inc.file)
     if path is None:

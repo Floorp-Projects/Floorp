@@ -2359,8 +2359,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     '"'+ _protocolHeaderName(tu.protocol) +'.h"')
             ])
 
-        for pinc in tu.protocolIncludes:
-            pinc.accept(self)
+        for inc in tu.includes:
+            inc.accept(self)
 
         # this generates the actor's full impl in self.cls
         tu.protocol.accept(self)
@@ -2438,8 +2438,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ])
 
 
-    def visitProtocolInclude(self, pi):
-        ip = pi.tu.protocol
+    def visitInclude(self, inc):
+        ip = inc.tu.protocol
 
         self.hdrfile.addthings([
             _makeForwardDeclForActor(ip.decl.type, self.side),
