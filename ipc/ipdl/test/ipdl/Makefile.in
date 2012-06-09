@@ -10,8 +10,8 @@ VPATH = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-OKTESTS := $(wildcard $(srcdir)/ok/*.ipdl)
-ERRORTESTS := $(wildcard $(srcdir)/error/*.ipdl)
+OKTESTS := $(wildcard $(srcdir)/ok/*.ipdl) $(wildcard $(srcdir)/ok/*.ipdlh)
+ERRORTESTS := $(wildcard $(srcdir)/error/*.ipdl) $(wildcard $(srcdir)/error/*.ipdlh)
 
 check::
 	@$(PYTHON) $(srcdir)/runtests.py  \
