@@ -4,11 +4,15 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.json.simple.JSONArray;
+import org.mozilla.gecko.sync.CommandProcessor.Command;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 
@@ -39,45 +43,80 @@ public class ClientsDatabaseAccessor {
     }
   }
 
-  public ClientRecord fetch(String accountGUID) throws NullCursorException {
-    Cursor cur = null;
-    try {
-      cur = db.fetch(accountGUID, getProfileId());
+  public void store(String accountGUID, Command command) throws NullCursorException {
+    db.store(accountGUID, command.commandType, command.args.toJSONString());
+  }
 
-      if (cur == null || !cur.moveToFirst()) {
+  public ClientRecord fetchClient(String accountGUID) throws NullCursorException {
+    final Cursor cur = db.fetchClientsCursor(accountGUID, getProfileId());
+    try {
+      if (!cur.moveToFirst()) {
         return null;
       }
       return recordFromCursor(cur);
     } finally {
-      if (cur != null) {
-        cur.close();
-      }
+      cur.close();
     }
   }
 
-  public Map<String, ClientRecord> fetchAll() throws NullCursorException {
-    HashMap<String, ClientRecord> map = new HashMap<String, ClientRecord>();
-    Cursor cur = null;
+  public Map<String, ClientRecord> fetchAllClients() throws NullCursorException {
+    final HashMap<String, ClientRecord> map = new HashMap<String, ClientRecord>();
+    final Cursor cur = db.fetchAllClients();
     try {
-      cur = db.fetchAll();
-      if (cur == null || !cur.moveToFirst()) {
+      if (!cur.moveToFirst()) {
         return Collections.unmodifiableMap(map);
       }
+
       while (!cur.isAfterLast()) {
         ClientRecord clientRecord = recordFromCursor(cur);
         map.put(clientRecord.guid, clientRecord);
         cur.moveToNext();
       }
-
       return Collections.unmodifiableMap(map);
     } finally {
-      if (cur != null) {
-        cur.close();
-      }
+      cur.close();
     }
   }
 
-  protected ClientRecord recordFromCursor(Cursor cur) {
+  public List<Command> fetchAllCommands() throws NullCursorException {
+    final List<Command> commands = new ArrayList<Command>();
+    final Cursor cur = db.fetchAllCommands();
+    try {
+      if (!cur.moveToFirst()) {
+        return Collections.unmodifiableList(commands);
+      }
+
+      while (!cur.isAfterLast()) {
+        Command command = commandFromCursor(cur);
+        commands.add(command);
+        cur.moveToNext();
+      }
+      return Collections.unmodifiableList(commands);
+    } finally {
+      cur.close();
+    }
+  }
+
+  public List<Command> fetchCommandsForClient(String accountGUID) throws NullCursorException {
+    final List<Command> commands = new ArrayList<Command>();
+    final Cursor cur = db.fetchCommandsForClient(accountGUID);
+    try {
+      if (!cur.moveToFirst()) {
+        return Collections.unmodifiableList(commands);
+      }
+
+      while(!cur.isAfterLast()) {
+        Command command = commandFromCursor(cur);
+        commands.add(command);
+        cur.moveToNext();
+      }
+      return Collections.unmodifiableList(commands);
+    } finally {
+      cur.close();
+    }
+  }
+
+  protected static ClientRecord recordFromCursor(Cursor cur) {
     String accountGUID = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_ACCOUNT_GUID);
     String clientName = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_NAME);
     String clientType = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_TYPE);
@@ -87,26 +126,40 @@ public class ClientsDatabaseAccessor {
     return record;
   }
 
+  protected static Command commandFromCursor(Cursor cur) {
+    String commandType = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_COMMAND);
+    JSONArray commandArgs = RepoUtils.getJSONArrayFromCursor(cur, ClientsDatabase.COL_ARGS);
+    return new Command(commandType, commandArgs);
+  }
+
   public int clientsCount() {
-    Cursor cur;
     try {
-      cur = db.fetchAll();
+      final Cursor cur = db.fetchAllClients();
+      try {
+        return cur.getCount();
+      } finally {
+        cur.close();
+      }
     } catch (NullCursorException e) {
       return 0;
     }
-    try {
-      return cur.getCount();
-    } finally {
-      cur.close();
-    }
+
   }
 
   private String getProfileId() {
     return ClientsDatabaseAccessor.PROFILE_ID;
   }
 
-  public void wipe() {
-    db.wipe();
+  public void wipeDB() {
+    db.wipeDB();
+  }
+
+  public void wipeClientsTable() {
+    db.wipeClientsTable();
+  }
+
+  public void wipeCommandsTable() {
+    db.wipeCommandsTable();
   }
 
   public void close() {
