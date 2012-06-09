@@ -12,10 +12,10 @@
 #include "nsCoreUtils.h"
 #include "DocAccessible.h"
 #include "nsIAccessibleRelation.h"
-#include "nsXULMenuAccessible.h"
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
+#include "XULMenuAccessible.h"
 
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSEditableElement.h"

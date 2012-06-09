@@ -6,7 +6,7 @@
 #ifndef __nsXULComboboxAccessible_h__
 #define __nsXULComboboxAccessible_h__
 
-#include "nsXULMenuAccessible.h"
+#include "XULMenuAccessible.h"
 
 /**
  * Used for XUL comboboxes like xul:menulist and autocomplete textbox.

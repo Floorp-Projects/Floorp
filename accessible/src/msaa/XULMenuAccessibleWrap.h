@@ -3,19 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __nsXULMenuAccessibleWrap_h__
-#define __nsXULMenuAccessibleWrap_h__
+#ifndef mozilla_a11y_XULMenuAccessibleWrap_h__
+#define mozilla_a11y_XULMenuAccessibleWrap_h__
 
-#include "nsXULMenuAccessible.h"
+#include "XULMenuAccessible.h"
 
-class nsXULMenuitemAccessibleWrap : public nsXULMenuitemAccessible
+namespace mozilla {
+namespace a11y {
+
+class XULMenuitemAccessibleWrap : public XULMenuitemAccessible
 {
 public:
-  nsXULMenuitemAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~nsXULMenuitemAccessibleWrap() {}
+  XULMenuitemAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc);
+  virtual ~XULMenuitemAccessibleWrap() {}
 
   // nsIAccessible
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif

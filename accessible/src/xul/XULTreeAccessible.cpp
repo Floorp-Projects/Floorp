@@ -1205,7 +1205,7 @@ XULTreeItemAccessible::CacheChildren()
 
 XULTreeColumAccessible::
   XULTreeColumAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsXULColumAccessible(aContent, aDoc)
+  XULColumAccessible(aContent, aDoc)
 {
 }
 
@@ -1214,7 +1214,7 @@ XULTreeColumAccessible::GetSiblingAtOffset(PRInt32 aOffset,
                                            nsresult* aError) const
 {
   if (aOffset < 0)
-    return nsXULColumAccessible::GetSiblingAtOffset(aOffset, aError);
+    return XULColumAccessible::GetSiblingAtOffset(aOffset, aError);
 
   if (aError)
     *aError =  NS_OK; // fail peacefully

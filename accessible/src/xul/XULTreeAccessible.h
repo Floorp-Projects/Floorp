@@ -9,7 +9,7 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
 #include "nsITreeColumns.h"
-#include "nsXULListboxAccessible.h"
+#include "XULListboxAccessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -259,7 +259,7 @@ protected:
 /**
  * Accessible class for columns element of XUL tree.
  */
-class XULTreeColumAccessible : public nsXULColumAccessible
+class XULTreeColumAccessible : public XULColumAccessible
 {
 public:
   XULTreeColumAccessible(nsIContent* aContent, DocAccessible* aDoc);
