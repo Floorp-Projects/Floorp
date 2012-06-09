@@ -339,11 +339,6 @@ def _ifLogging(stmts):
     iflogging.addifstmts(stmts)
     return iflogging
 
-# We need the ASTs of structs and unions to generate pickling code for
-# them, but the pickling codegen only has their type info.  This map
-# allows the pickling code to get these ASTs given the type info.
-_typeToAST = { }                        # [ Type -> Node ]
-
 # XXX we need to remove these and install proper error handling
 def _printErrorMessage(msg):
     if isinstance(msg, str):
@@ -952,7 +947,7 @@ def _subtreeUsesShmem(p):
     ptype = p.decl.type
     for mgd in ptype.manages:
         if ptype is not mgd:
-            if _subtreeUsesShmem(mgd._p):
+            if _subtreeUsesShmem(mgd._ast):
                 return True
     return False
 
@@ -1272,7 +1267,6 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
                 newfields.append(_StructField(ftype, f.name, sd))
         sd.fields = newfields
         StructDecl.upgrade(sd)
-        _typeToAST[sd.decl.type] = sd
 
         if sd.decl.fullname is not None:
             self.typedefs.append(Typedef(Type(sd.fqClassName()), sd.name))
@@ -1292,7 +1286,6 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
                 newcomponents.append(_UnionMember(ctype, ud))
         ud.components = newcomponents
         UnionDecl.upgrade(ud)
-        _typeToAST[ud.decl.type] = ud
 
         if ud.decl.fullname is not None:
             self.typedefs.append(Typedef(Type(ud.fqClassName()), ud.name))
@@ -1404,8 +1397,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 _makeForwardDeclForActor(ppt, pside),
                 _makeForwardDeclForActor(cpt, cside)
             ])
-            self.cppIncludeHeaders.append(_protocolHeaderName(ppt._p, pside))
-            self.cppIncludeHeaders.append(_protocolHeaderName(cpt._p, cside))
+            self.cppIncludeHeaders.append(_protocolHeaderName(ppt._ast, pside))
+            self.cppIncludeHeaders.append(_protocolHeaderName(cpt._ast, cside))
 
         opens = ProcessGraph.opensOf(p.decl.type)
         for o in opens:
@@ -1414,7 +1407,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 Whitespace.NL,
                 _makeForwardDeclForActor(optype, oside)
             ])
-            self.cppIncludeHeaders.append(_protocolHeaderName(optype._p, oside))
+            self.cppIncludeHeaders.append(_protocolHeaderName(optype._ast, oside))
 
         self.hdrfile.addthing(Whitespace("""
 //-----------------------------------------------------------------------------
@@ -2300,7 +2293,7 @@ class _FindFriends(ipdl.ast.Visitor):
         # |vtype| is the type currently being visited
         savedptype = self.vtype
         self.vtype = ptype
-        ptype._p.accept(self)
+        ptype._ast.accept(self)
         self.vtype = savedptype
 
     def visitMessageDecl(self, md):
@@ -4122,7 +4115,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         var = self.var
         intype = _cxxConstRefType(structtype, self.side)
         outtype = _cxxPtrToType(structtype, self.side)
-        sd = _typeToAST[structtype]
+        sd = structtype._ast
 
         write = MethodDefn(self.writeMethodDecl(intype, var))
         read = MethodDefn(self.readMethodDecl(outtype, var))        
@@ -4155,7 +4148,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         var = self.var
         intype = _cxxConstRefType(uniontype, self.side)
         outtype = _cxxPtrToType(uniontype, self.side)
-        ud = _typeToAST[uniontype]
+        ud = uniontype._ast
 
         typename = '__type'
         uniontdef = Typedef(_cxxBareType(uniontype, typename), typename)
