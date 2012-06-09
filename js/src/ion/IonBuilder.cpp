@@ -3681,9 +3681,13 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
     MInstruction *barrier;
     JSValueType type = observed->getKnownTypeTag(cx);
 
-    // An unbox instruction isn't enough to capture JSVAL_TYPE_OBJECT.
-    if (type == JSVAL_TYPE_OBJECT && !observed->hasType(types::Type::AnyObjectType()))
+    // An unbox instruction isn't enough to capture JSVAL_TYPE_OBJECT. Use a type
+    // barrier followed by an infallible unbox.
+    bool isObject = false;
+    if (type == JSVAL_TYPE_OBJECT && !observed->hasType(types::Type::AnyObjectType())) {
         type = JSVAL_TYPE_UNKNOWN;
+        isObject = true;
+    }
 
     switch (type) {
       case JSVAL_TYPE_UNKNOWN:
@@ -3696,6 +3700,10 @@ IonBuilder::pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::Ty
             return pushConstant(UndefinedValue());
         if (type == JSVAL_TYPE_NULL)
             return pushConstant(NullValue());
+        if (isObject) {
+            barrier = MUnbox::New(barrier, MIRType_Object, MUnbox::Infallible);
+            current->add(barrier);
+        }
         break;
       default:
         MUnbox::Mode mode = ins->isEffectful() ? MUnbox::TypeBarrier : MUnbox::TypeGuard;
