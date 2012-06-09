@@ -16,6 +16,7 @@
 #include "nsIPrincipal.h"
 #include "mozilla/Preferences.h"
 #include "nsJSUtils.h"
+#include "DictionaryHelpers.h"
 
 using namespace mozilla::dom;
 
@@ -307,7 +308,8 @@ public:
   nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
                            nsIURI* aURI,
                            DeviceStorageFile* aFile,
-                           bool aEditable);
+                           bool aEditable,
+                           PRUint64 aSince);
 
 private:
   ~nsDOMDeviceStorageCursor();
@@ -319,6 +321,7 @@ protected:
   nsRefPtr<DeviceStorageFile> mFile;
   nsCOMPtr<nsIURI> mURI;
   bool mEditable;
+  PRUint64 mSince;
 
   // to access mFiles
   friend class InitCursorEvent;
@@ -508,6 +511,15 @@ public:
     nsCOMPtr<nsIFile> f;
 
     while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(f))) && f) {
+      nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
+
+      PRInt64 msecs;
+      f->GetLastModifiedTime(&msecs);
+
+      if (msecs < (PRInt64) cursor->mSince) {
+        continue;
+      }
+
       bool isDir;
       f->IsDirectory(&isDir);
 
@@ -534,7 +546,6 @@ public:
         collectFiles(dsf);
       }
       else if (isFile) {
-        nsDOMDeviceStorageCursor* cursor = static_cast<nsDOMDeviceStorageCursor*>(mRequest.get());
         cursor->mFiles.AppendElement(dsf);
       }
     }
@@ -561,12 +572,14 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorageCursor, DOMRequest)
 nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
                                                    nsIURI* aURI,
                                                    DeviceStorageFile* aFile,
-                                                   bool aEditable)
+                                                   bool aEditable,
+                                                   PRUint64 aSince)
   : DOMRequest(aWindow)
   , mOkToCallContinue(false)
   , mFile(aFile)
   , mURI(aURI)
   , mEditable(aEditable)
+  , mSince(aSince)
 {
 }
 
@@ -1153,7 +1166,7 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob *aBlob,
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::Get(const JS::Value & aPath,
+nsDOMDeviceStorage::Get(const JS::Value& aPath,
                         JSContext* aCx,
                         nsIDOMDOMRequest * *_retval NS_OUTPARAM)
 {
@@ -1161,7 +1174,7 @@ nsDOMDeviceStorage::Get(const JS::Value & aPath,
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::GetEditable(const JS::Value & aPath,
+nsDOMDeviceStorage::GetEditable(const JS::Value& aPath,
                                 JSContext* aCx,
                                 nsIDOMDOMRequest * *_retval NS_OUTPARAM)
 {
@@ -1169,7 +1182,7 @@ nsDOMDeviceStorage::GetEditable(const JS::Value & aPath,
 }
 
 nsresult
-nsDOMDeviceStorage::GetInternal(const JS::Value & aPath,
+nsDOMDeviceStorage::GetInternal(const JS::Value& aPath,
                                 JSContext* aCx,
                                 nsIDOMDOMRequest * *_retval NS_OUTPARAM,
                                 bool aEditable)
@@ -1208,7 +1221,7 @@ nsDOMDeviceStorage::GetInternal(const JS::Value & aPath,
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::Delete(const JS::Value & aPath, JSContext* aCx, nsIDOMDOMRequest * *_retval NS_OUTPARAM)
+nsDOMDeviceStorage::Delete(const JS::Value& aPath, JSContext* aCx, nsIDOMDOMRequest * *_retval NS_OUTPARAM)
 {
   nsCOMPtr<nsIRunnable> r;
 
@@ -1243,34 +1256,84 @@ nsDOMDeviceStorage::Delete(const JS::Value & aPath, JSContext* aCx, nsIDOMDOMReq
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::Enumerate(const nsAString & aPath,
-                              nsIDOMDeviceStorageCursor * *_retval NS_OUTPARAM)
+nsDOMDeviceStorage::Enumerate(const JS::Value& aName,
+                              const JS::Value& aOptions,
+                              JSContext* aCx,
+                              PRUint8 aArgc,
+                              nsIDOMDeviceStorageCursor** aRetval)
 {
-  return EnumerateInternal(aPath, _retval, false);
+  return EnumerateInternal(aName, aOptions, aCx, aArgc, false, aRetval);
 }
 
 NS_IMETHODIMP
-nsDOMDeviceStorage::EnumerateEditable(const nsAString & aPath,
-                                      nsIDOMDeviceStorageCursor * *_retval NS_OUTPARAM)
+nsDOMDeviceStorage::EnumerateEditable(const JS::Value& aName,
+                                      const JS::Value& aOptions,
+                                      JSContext* aCx,
+                                      PRUint8 aArgc,
+                                      nsIDOMDeviceStorageCursor** aRetval)
 {
-  return EnumerateInternal(aPath, _retval, true);
+  return EnumerateInternal(aName, aOptions, aCx, aArgc, true, aRetval);
+}
+
+
+static PRTime
+ExtractDateFromOptions(JSContext* aCx, const JS::Value& aOptions)
+{
+  PRTime result = 0;
+  DeviceStorageEnumerationParameters params;
+  if (!JSVAL_IS_VOID(aOptions) && !aOptions.isNull()) {
+    nsresult rv = params.Init(aCx, &aOptions);
+    if (NS_SUCCEEDED(rv) && !JSVAL_IS_VOID(params.since) && !params.since.isNull() && params.since.isObject()) {
+      JSObject* obj = JSVAL_TO_OBJECT(params.since);
+      if (JS_ObjectIsDate(aCx, obj) && js_DateIsValid(aCx, obj)) {
+        result = js_DateGetMsecSinceEpoch(aCx, obj);
+      }
+    }
+  }
+  return result;
 }
 
 nsresult
-nsDOMDeviceStorage::EnumerateInternal(const nsAString & aPath,
-                                      nsIDOMDeviceStorageCursor * *_retval NS_OUTPARAM,
-                                      bool aEditable)
+nsDOMDeviceStorage::EnumerateInternal(const JS::Value& aName,
+                                      const JS::Value& aOptions,
+                                      JSContext* aCx,
+                                      PRUint8 aArgc,
+                                      bool aEditable,
+                                      nsIDOMDeviceStorageCursor** aRetval)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryReferent(mOwner);
   if (!win)
     return NS_ERROR_UNEXPECTED;
 
-  nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mFile, aPath);
+  PRTime since = 0;
+  nsString path;
+  path.SetIsVoid(true);
 
-  nsRefPtr<nsDOMDeviceStorageCursor> cursor = new nsDOMDeviceStorageCursor(win, mURI, dsf, aEditable);
-  NS_ADDREF(*_retval = cursor);
-
+  if (aArgc > 0) {
+    // inspect the first value to see if it is a string
+    if (JSVAL_IS_STRING(aName)) {
+      JSString* jsstr = JS_ValueToString(aCx, aName);
+      nsDependentJSString jspath;
+      jspath.init(aCx, jsstr);
+      path.Assign(jspath);
+    } else if (!JSVAL_IS_PRIMITIVE(aName)) {
+      // it also might be an options object
+      since = ExtractDateFromOptions(aCx, aName);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+      
+    if (aArgc == 2 && (JSVAL_IS_VOID(aOptions) || aOptions.isNull() || !aOptions.isObject())) {
+      return NS_ERROR_FAILURE;
+    }
+    since = ExtractDateFromOptions(aCx, aOptions);
+  }
+  
+  nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mFile, path);
+  nsRefPtr<nsDOMDeviceStorageCursor> cursor = new nsDOMDeviceStorageCursor(win, mURI, dsf, aEditable, since);
   nsRefPtr<DeviceStorageCursorRequest> r = new DeviceStorageCursorRequest(cursor);
+
+  NS_ADDREF(*aRetval = cursor);
 
   if (mozilla::Preferences::GetBool("device.storage.prompt.testing", false)) {
     r->Allow();
