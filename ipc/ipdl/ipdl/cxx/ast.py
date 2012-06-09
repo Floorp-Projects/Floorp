@@ -369,6 +369,14 @@ class Typedef(Node):
         self.fromtype = fromtype
         self.totypename = totypename
 
+    def __cmp__(self, o):
+        return cmp(self.totypename, o.totypename)
+    def __eq__(self, o):
+        return (self.__class__ == o.__class__
+                and 0 == cmp(self, o))
+    def __hash__(self):
+        return hash(self.totypename)
+
 class Using(Node):
     def __init__(self, type):
         Node.__init__(self)
