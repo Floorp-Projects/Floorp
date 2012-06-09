@@ -236,6 +236,7 @@ extensions/testpilot@labs.mozilla.com/skin/win/feedback.css
 extensions/testpilot@labs.mozilla.com/skin/win/notification-tail-down.png
 extensions/testpilot@labs.mozilla.com/skin/win/notification-tail-up.png
 extensions/testpilot@labs.mozilla.com/tests/test_data_store.js
+extensions/uriloader@pdf.js.xpi
 greprefs/all.js
 greprefs/security-prefs.js
 greprefs/xpinstall.js
