@@ -13,6 +13,7 @@
 class nsEventStateManager;
 class nsGlobalWindow;
 class nsFocusManager;
+class nsICSSDeclaration;
 
 // Element-specific flags
 enum {
@@ -180,10 +181,8 @@ public:
    *
    * Note: This method is analogous to the 'GetStyle' method in
    * nsGenericHTMLElement and nsStyledElement.
-   *
-   * TODO: Bug 744157 - All callers QI to nsICSSDeclaration.
    */
-  virtual nsIDOMCSSStyleDeclaration* GetSMILOverrideStyle() = 0;
+  virtual nsICSSDeclaration* GetSMILOverrideStyle() = 0;
 
   /**
    * Returns if the element is labelable as per HTML specification.
