@@ -31,7 +31,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMScreen.h"
 #include "nsIEmbeddingSiteWindow.h"
-#include "nsIEmbeddingSiteWindow2.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
@@ -179,10 +178,6 @@ NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
     return NS_OK;
 
   if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow)) && 
-    NS_SUCCEEDED(EnsureContentTreeOwner()) &&
-    NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
-    return NS_OK;
-  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow2)) && 
     NS_SUCCEEDED(EnsureContentTreeOwner()) &&
     NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
     return NS_OK;
