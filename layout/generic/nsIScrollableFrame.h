@@ -93,6 +93,11 @@ public:
    * device pixels.
    */
   virtual nsRect GetScrollRange() const = 0;
+  /**
+   * Get the size of the scroll port to use when clamping the scroll
+   * position.
+   */
+  virtual nsSize GetScrollPositionClampingScrollPortSize() const = 0;
 
   /**
    * Return how much we would try to scroll by in each direction if
