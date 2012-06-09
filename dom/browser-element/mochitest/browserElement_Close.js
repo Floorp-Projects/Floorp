@@ -4,8 +4,8 @@
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  browserFrameHelpers.setEnabledPref(true);
-  browserFrameHelpers.addToWhitelist();
+  browserElementTestHelpers.setEnabledPref(true);
+  browserElementTestHelpers.addToWhitelist();
 
   var iframe = document.createElement('iframe');
   iframe.mozbrowser = true;

@@ -12,14 +12,14 @@ relativesrcdir  = dom/browser-element/mochitest
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-# Note: browserFrameHelpers.js looks at the test's filename to determine
+# Note: browserElementTestHelpers.js looks at the test's filename to determine
 # whether the test should be OOP.  "_oop_" signals OOP, "_inproc_" signals in
 # process.  Default is OOP.
 
 _TEST_FILES = \
 		file_empty.html \
 		file_focus.html \
-		browserFrameHelpers.js \
+		browserElementTestHelpers.js \
 		test_browserElement_NoAttr.html \
 		test_browserElement_NoPref.html \
 		test_browserElement_NoWhitelist.html \
