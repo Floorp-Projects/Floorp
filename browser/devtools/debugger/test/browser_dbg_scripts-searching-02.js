@@ -105,7 +105,7 @@ function secondSearch() {
       });
     }
   });
-  write(".*-02\.js@debugger;");
+  write(".*-02\.js#debugger;");
 }
 
 function finalCheck() {

@@ -1044,9 +1044,8 @@ pref("devtools.responsiveUI.enabled", true);
 
 // Enable the Debugger
 pref("devtools.debugger.enabled", true);
-pref("devtools.debugger.remote-enabled", false);
+pref("devtools.debugger.chrome-enabled", false);
 pref("devtools.debugger.remote-host", "localhost");
-pref("devtools.debugger.remote-port", 6000);
 pref("devtools.debugger.remote-autoconnect", false);
 pref("devtools.debugger.remote-connection-retries", 3);
 pref("devtools.debugger.remote-timeout", 3000);
