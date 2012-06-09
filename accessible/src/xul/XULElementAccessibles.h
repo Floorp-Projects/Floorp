@@ -3,23 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsXULTextAccessible_H_
-#define _nsXULTextAccessible_H_
+#ifndef mozilla_a11y_XULElementAccessibles_h__
+#define mozilla_a11y_XULElementAccessibles_h__
 
 #include "BaseAccessibles.h"
 #include "HyperTextAccessibleWrap.h"
 
+namespace mozilla {
+namespace a11y {
+
 /**
  * Used for XUL description and label elements.
  */
-class nsXULTextAccessible : public HyperTextAccessibleWrap
+class XULLabelAccessible : public HyperTextAccessibleWrap
 {
 public:
-  nsXULTextAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULLabelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual Relation RelationByType(PRUint32 aRelationType);
 };
@@ -27,22 +30,22 @@ public:
 /**
  * Used for XUL tooltip element.
  */
-class nsXULTooltipAccessible : public mozilla::a11y::LeafAccessible
+class XULTooltipAccessible : public LeafAccessible
 {
 
 public:
-  nsXULTooltipAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULTooltipAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
 };
 
-class nsXULLinkAccessible : public HyperTextAccessibleWrap
+class XULLinkAccessible : public HyperTextAccessibleWrap
 {
 
 public:
-  nsXULLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -53,7 +56,7 @@ public:
   // Accessible
   virtual void Value(nsString& aValue);
   virtual nsresult GetNameInternal(nsAString& aName);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeLinkState() const;
 
   // ActionAccessible
@@ -70,4 +73,7 @@ protected:
 
 };
 
-#endif  
+} // namespace a11y
+} // namespace mozilla
+
+#endif
