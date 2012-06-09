@@ -292,9 +292,9 @@ GetPageFaultCount()
 #elif defined(XP_UNIX) || defined(XP_MACOSX) || defined(DARWIN)
 
 #include <sys/mman.h>
-#include <unistd.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <unistd.h>
 
 void
 InitMemorySubsystem()
