@@ -704,15 +704,15 @@ class GatherDecls(TcheckVisitor):
         self.symtab.enterScope(sd)
 
         for f in sd.fields:
-            ftypedecl = self.symtab.lookup(str(f.type))
+            ftypedecl = self.symtab.lookup(str(f.typespec))
             if ftypedecl is None:
                 self.error(f.loc, "field `%s' of struct `%s' has unknown type `%s'",
-                           f.name, sd.name, str(f.type))
+                           f.name, sd.name, str(f.typespec))
                 continue
 
             f.decl = self.declare(
                 loc=f.loc,
-                type=self._canonicalType(ftypedecl.type, f.type),
+                type=self._canonicalType(ftypedecl.type, f.typespec),
                 shortname=f.name,
                 fullname=None)
             stype.fields.append(f.decl.type)
