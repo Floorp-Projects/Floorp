@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsXULColorPickerAccessible.h"
+#include "XULColorPickerAccessible.h"
 
 #include "Accessible-inl.h"
 #include "nsAccUtils.h"
@@ -19,20 +19,20 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULColorPickerTileAccessible
+// XULColorPickerTileAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsXULColorPickerTileAccessible::
-  nsXULColorPickerTileAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+XULColorPickerTileAccessible::
+  XULColorPickerTileAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULColorPickerTileAccessible: nsIAccessible
+// XULColorPickerTileAccessible: nsIAccessible
 
 void
-nsXULColorPickerTileAccessible::Value(nsString& aValue)
+XULColorPickerTileAccessible::Value(nsString& aValue)
 {
   aValue.Truncate();
 
@@ -40,16 +40,16 @@ nsXULColorPickerTileAccessible::Value(nsString& aValue)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULColorPickerTileAccessible: Accessible
+// XULColorPickerTileAccessible: Accessible
 
 role
-nsXULColorPickerTileAccessible::NativeRole()
+XULColorPickerTileAccessible::NativeRole()
 {
   return roles::PUSHBUTTON;
 }
 
 PRUint64
-nsXULColorPickerTileAccessible::NativeState()
+XULColorPickerTileAccessible::NativeState()
 {
   PRUint64 state = AccessibleWrap::NativeState();
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::selected))
@@ -59,17 +59,17 @@ nsXULColorPickerTileAccessible::NativeState()
 }
 
 PRUint64
-nsXULColorPickerTileAccessible::NativeInteractiveState() const
+XULColorPickerTileAccessible::NativeInteractiveState() const
 {
   return NativelyUnavailable() ?
     states::UNAVAILABLE : states::FOCUSABLE | states::SELECTABLE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULColorPickerTileAccessible: Widgets
+// XULColorPickerTileAccessible: Widgets
 
 Accessible*
-nsXULColorPickerTileAccessible::ContainerWidget() const
+XULColorPickerTileAccessible::ContainerWidget() const
 {
   Accessible* parent = Parent();
   if (parent) {
@@ -81,49 +81,49 @@ nsXULColorPickerTileAccessible::ContainerWidget() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULColorPickerAccessible
+// XULColorPickerAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsXULColorPickerAccessible::
-  nsXULColorPickerAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  nsXULColorPickerTileAccessible(aContent, aDoc)
+XULColorPickerAccessible::
+  XULColorPickerAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+  XULColorPickerTileAccessible(aContent, aDoc)
 {
   mFlags |= eMenuButtonAccessible;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULColorPickerAccessible: Accessible
+// XULColorPickerAccessible: Accessible
 
 PRUint64
-nsXULColorPickerAccessible::NativeState()
+XULColorPickerAccessible::NativeState()
 {
   PRUint64 state = AccessibleWrap::NativeState();
   return state | states::HASPOPUP;
 }
 
 role
-nsXULColorPickerAccessible::NativeRole()
+XULColorPickerAccessible::NativeRole()
 {
   return roles::BUTTONDROPDOWNGRID;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULColorPickerAccessible: Widgets
+// XULColorPickerAccessible: Widgets
 
 bool
-nsXULColorPickerAccessible::IsWidget() const
+XULColorPickerAccessible::IsWidget() const
 {
   return true;
 }
 
 bool
-nsXULColorPickerAccessible::IsActiveWidget() const
+XULColorPickerAccessible::IsActiveWidget() const
 {
   return FocusMgr()->HasDOMFocus(mContent);
 }
 
 bool
-nsXULColorPickerAccessible::AreItemsOperable() const
+XULColorPickerAccessible::AreItemsOperable() const
 {
   Accessible* menuPopup = mChildren.SafeElementAt(0, nsnull);
   if (menuPopup) {
@@ -134,10 +134,10 @@ nsXULColorPickerAccessible::AreItemsOperable() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULColorPickerAccessible: protected Accessible
+// XULColorPickerAccessible: protected Accessible
 
 void
-nsXULColorPickerAccessible::CacheChildren()
+XULColorPickerAccessible::CacheChildren()
 {
   NS_ENSURE_TRUE(mDoc,);
 

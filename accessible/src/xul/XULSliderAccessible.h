@@ -3,20 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsXULSliderAccessible_H_
-#define _nsXULSliderAccessible_H_
+#ifndef mozilla_a11y_XULSliderAccessible_h__
+#define mozilla_a11y_XULSliderAccessible_h__
 
 #include "AccessibleWrap.h"
 
 #include "nsIDOMElement.h"
 
+namespace mozilla {
+namespace a11y {
+
 /**
  * Used for XUL slider and scale elements.
  */
-class nsXULSliderAccessible : public AccessibleWrap
+class XULSliderAccessible : public AccessibleWrap
 {
 public:
-  nsXULSliderAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULSliderAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -30,7 +33,7 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeInteractiveState() const;
   virtual bool NativelyUnavailable() const;
   virtual bool CanHaveAnonChildren();
@@ -58,14 +61,17 @@ private:
 /**
  * Used for slider's thumb element.
  */
-class nsXULThumbAccessible : public AccessibleWrap
+class XULThumbAccessible : public AccessibleWrap
 {
 public:
-  nsXULThumbAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULThumbAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
 

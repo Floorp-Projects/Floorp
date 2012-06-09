@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsXULSliderAccessible.h"
+#include "XULSliderAccessible.h"
 
 #include "nsAccessibilityService.h"
 #include "Role.h"
@@ -14,31 +14,31 @@
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULSliderAccessible
+// XULSliderAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsXULSliderAccessible::
-  nsXULSliderAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+XULSliderAccessible::
+  XULSliderAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
 }
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXULSliderAccessible,
+NS_IMPL_ISUPPORTS_INHERITED1(XULSliderAccessible,
                              AccessibleWrap,
                              nsIAccessibleValue)
 
 // Accessible
 
 role
-nsXULSliderAccessible::NativeRole()
+XULSliderAccessible::NativeRole()
 {
   return roles::SLIDER;
 }
 
 PRUint64
-nsXULSliderAccessible::NativeInteractiveState() const
+XULSliderAccessible::NativeInteractiveState() const
  {
   if (NativelyUnavailable())
     return states::UNAVAILABLE;
@@ -54,7 +54,7 @@ nsXULSliderAccessible::NativeInteractiveState() const
 }
 
 bool
-nsXULSliderAccessible::NativelyUnavailable() const
+XULSliderAccessible::NativelyUnavailable() const
 {
   return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
                                nsGkAtoms::_true, eCaseMatters);
@@ -63,19 +63,19 @@ nsXULSliderAccessible::NativelyUnavailable() const
 // nsIAccessible
 
 void
-nsXULSliderAccessible::Value(nsString& aValue)
+XULSliderAccessible::Value(nsString& aValue)
 {
   GetSliderAttr(nsGkAtoms::curpos, aValue);
 }
 
 PRUint8
-nsXULSliderAccessible::ActionCount()
+XULSliderAccessible::ActionCount()
 {
   return 1;
 }
 
 NS_IMETHODIMP
-nsXULSliderAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
+XULSliderAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 {
   aName.Truncate();
 
@@ -86,7 +86,7 @@ nsXULSliderAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
 }
 
 NS_IMETHODIMP
-nsXULSliderAccessible::DoAction(PRUint8 aIndex)
+XULSliderAccessible::DoAction(PRUint8 aIndex)
 {
   NS_ENSURE_ARG(aIndex == 0);
 
@@ -100,7 +100,7 @@ nsXULSliderAccessible::DoAction(PRUint8 aIndex)
 // nsIAccessibleValue
 
 NS_IMETHODIMP
-nsXULSliderAccessible::GetMaximumValue(double *aValue)
+XULSliderAccessible::GetMaximumValue(double* aValue)
 {
   nsresult rv = AccessibleWrap::GetMaximumValue(aValue);
 
@@ -112,7 +112,7 @@ nsXULSliderAccessible::GetMaximumValue(double *aValue)
 }
 
 NS_IMETHODIMP
-nsXULSliderAccessible::GetMinimumValue(double *aValue)
+XULSliderAccessible::GetMinimumValue(double* aValue)
 {
   nsresult rv = AccessibleWrap::GetMinimumValue(aValue);
 
@@ -124,7 +124,7 @@ nsXULSliderAccessible::GetMinimumValue(double *aValue)
 }
 
 NS_IMETHODIMP
-nsXULSliderAccessible::GetMinimumIncrement(double *aValue)
+XULSliderAccessible::GetMinimumIncrement(double* aValue)
 {
   nsresult rv = AccessibleWrap::GetMinimumIncrement(aValue);
 
@@ -136,7 +136,7 @@ nsXULSliderAccessible::GetMinimumIncrement(double *aValue)
 }
 
 NS_IMETHODIMP
-nsXULSliderAccessible::GetCurrentValue(double *aValue)
+XULSliderAccessible::GetCurrentValue(double* aValue)
 {
   nsresult rv = AccessibleWrap::GetCurrentValue(aValue);
 
@@ -148,7 +148,7 @@ nsXULSliderAccessible::GetCurrentValue(double *aValue)
 }
 
 NS_IMETHODIMP
-nsXULSliderAccessible::SetCurrentValue(double aValue)
+XULSliderAccessible::SetCurrentValue(double aValue)
 {
   nsresult rv = AccessibleWrap::SetCurrentValue(aValue);
 
@@ -160,7 +160,7 @@ nsXULSliderAccessible::SetCurrentValue(double aValue)
 }
 
 bool
-nsXULSliderAccessible::CanHaveAnonChildren()
+XULSliderAccessible::CanHaveAnonChildren()
 {
   // Do not allow anonymous xul:slider be accessible.
   return false;
@@ -169,7 +169,7 @@ nsXULSliderAccessible::CanHaveAnonChildren()
 // Utils
 
 nsIContent*
-nsXULSliderAccessible::GetSliderElement() const
+XULSliderAccessible::GetSliderElement() const
 {
   if (!mSliderNode) {
     // XXX: we depend on anonymous content.
@@ -182,7 +182,7 @@ nsXULSliderAccessible::GetSliderElement() const
 }
 
 nsresult
-nsXULSliderAccessible::GetSliderAttr(nsIAtom *aName, nsAString& aValue)
+XULSliderAccessible::GetSliderAttr(nsIAtom* aName, nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -197,7 +197,7 @@ nsXULSliderAccessible::GetSliderAttr(nsIAtom *aName, nsAString& aValue)
 }
 
 nsresult
-nsXULSliderAccessible::SetSliderAttr(nsIAtom *aName, const nsAString& aValue)
+XULSliderAccessible::SetSliderAttr(nsIAtom* aName, const nsAString& aValue)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
@@ -210,7 +210,7 @@ nsXULSliderAccessible::SetSliderAttr(nsIAtom *aName, const nsAString& aValue)
 }
 
 nsresult
-nsXULSliderAccessible::GetSliderAttr(nsIAtom *aName, double *aValue)
+XULSliderAccessible::GetSliderAttr(nsIAtom* aName, double* aValue)
 {
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = 0;
@@ -232,7 +232,7 @@ nsXULSliderAccessible::GetSliderAttr(nsIAtom *aName, double *aValue)
 }
 
 nsresult
-nsXULSliderAccessible::SetSliderAttr(nsIAtom *aName, double aValue)
+XULSliderAccessible::SetSliderAttr(nsIAtom* aName, double aValue)
 {
   nsAutoString value;
   value.AppendFloat(aValue);
@@ -242,20 +242,20 @@ nsXULSliderAccessible::SetSliderAttr(nsIAtom *aName, double aValue)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULThumbAccessible
+// XULThumbAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-nsXULThumbAccessible::
-  nsXULThumbAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+XULThumbAccessible::
+  XULThumbAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   AccessibleWrap(aContent, aDoc)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULThumbAccessible: Accessible
+// XULThumbAccessible: Accessible
 
 role
-nsXULThumbAccessible::NativeRole()
+XULThumbAccessible::NativeRole()
 {
   return roles::INDICATOR;
 }

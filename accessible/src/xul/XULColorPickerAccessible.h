@@ -3,23 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _nsXULColorPickerAccessible_H_
-#define _nsXULColorPickerAccessible_H_
+#ifndef mozilla_a11y_XULColorPickerAccessible_h__
+#define mozilla_a11y_XULColorPickerAccessible_h__
 
 #include "AccessibleWrap.h"
+
+namespace mozilla {
+namespace a11y {
 
 /**
  * Used for color button in colorpicker palette.
  */
-class nsXULColorPickerTileAccessible : public AccessibleWrap
+class XULColorPickerTileAccessible : public AccessibleWrap
 {
 public:
-  nsXULColorPickerTileAccessible(nsIContent* aContent,
-                                 DocAccessible* aDoc);
+  XULColorPickerTileAccessible(nsIContent* aContent,
+                               DocAccessible* aDoc);
 
   // Accessible
   virtual void Value(nsString& aValue);
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
   virtual PRUint64 NativeInteractiveState() const;
 
@@ -31,13 +34,13 @@ public:
 /**
  * Used for colorpicker button (xul:colorpicker@type="button").
  */
-class nsXULColorPickerAccessible : public nsXULColorPickerTileAccessible
+class XULColorPickerAccessible : public XULColorPickerTileAccessible
 {
 public:
-  nsXULColorPickerAccessible(nsIContent* aContent, DocAccessible* aDoc);
+  XULColorPickerAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual a11y::role NativeRole();
   virtual PRUint64 NativeState();
 
   // Widgets
@@ -50,5 +53,8 @@ protected:
   // Accessible
   virtual void CacheChildren();
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif  
