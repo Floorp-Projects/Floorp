@@ -16,6 +16,8 @@ class Visitor:
             inc.accept(self)
         for su in tu.structsAndUnions:
             su.accept(self)
+        for using in tu.builtinUsing:
+            using.accept(self)
         for using in tu.using:
             using.accept(self)
         if tu.protocol:
@@ -151,11 +153,13 @@ class NamespacedNode(Node):
                            [ ns.name for ns in self.namespaces ])
 
 class TranslationUnit(NamespacedNode):
-    def __init__(self, name):
+    def __init__(self, type, name):
         NamespacedNode.__init__(self, name=name)
+        self.filetype = type
         self.filename = None
         self.cxxIncludes = [ ]
         self.includes = [ ]
+        self.builtinUsing = [ ]
         self.using = [ ]
         self.structsAndUnions = [ ]
         self.protocol = None
@@ -174,9 +178,12 @@ class CxxInclude(Node):
         self.file = cxxFile
 
 class Include(Node):
-    def __init__(self, loc, name):
+    def __init__(self, loc, type, name):
         Node.__init__(self, loc)
-        self.file = "%s.ipdl" % name
+        suffix = 'ipdl'
+        if type == 'header':
+            suffix += 'h'
+        self.file = "%s.%s" % (name, suffix)
 
 class UsingStmt(Node):
     def __init__(self, loc, cxxTypeSpec):
