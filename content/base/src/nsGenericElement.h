@@ -318,7 +318,7 @@ public:
   {
     return nsnull;
   }
-  virtual nsIDOMCSSStyleDeclaration* GetSMILOverrideStyle();
+  virtual nsICSSDeclaration* GetSMILOverrideStyle();
   virtual mozilla::css::StyleRule* GetSMILOverrideStyleRule();
   virtual nsresult SetSMILOverrideStyleRule(mozilla::css::StyleRule* aStyleRule,
                                             bool aNotify);
