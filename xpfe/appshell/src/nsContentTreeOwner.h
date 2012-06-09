@@ -51,7 +51,7 @@ protected:
 
 protected:
    nsXULWindow      *mXULWindow;
-   nsSiteWindow    *mSiteWindow2;
+   nsSiteWindow    *mSiteWindow;
    bool              mPrimary;
    bool              mContentTitleSetting;
    nsString          mWindowTitleModifier;
