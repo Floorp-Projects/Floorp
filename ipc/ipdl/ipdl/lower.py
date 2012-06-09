@@ -1229,6 +1229,14 @@ class Protocol(ipdl.ast.Protocol):
         protocol.__class__ = Protocol
         return protocol
 
+
+class TranslationUnit(ipdl.ast.TranslationUnit):
+    @staticmethod
+    def upgrade(tu):
+        assert isinstance(tu, ipdl.ast.TranslationUnit)
+        tu.__class__ = TranslationUnit
+        return tu
+
 ##-----------------------------------------------------------------------------
 
 class _DecorateWithCxxStuff(ipdl.ast.Visitor):
@@ -1240,13 +1248,21 @@ This pass results in an AST that is a poor man's "IR"; in reality, a
 with some new IPDL/C++ nodes that are tuned for C++ codegen."""
 
     def __init__(self):
+        self.visitedTus = set()
         # the set of typedefs that allow generated classes to
         # reference known C++ types by their "short name" rather than
         # fully-qualified name. e.g. |Foo| rather than |a::b::Foo|.
-        self.typedefs = [ 
-            Typedef(Type('mozilla::ipc::ActorHandle'), 'ActorHandle')
-        ]
+        self.typedefs = [ ]
+        self.typedefSet = set([ Typedef(Type('mozilla::ipc::ActorHandle'),
+                                        'ActorHandle') ])
         self.protocolName = None
+
+    def visitTranslationUnit(self, tu):
+        if not isinstance(tu, TranslationUnit) and tu not in self.visitedTus:
+            self.visitedTus.add(tu)
+            ipdl.ast.Visitor.visitTranslationUnit(self, tu)
+            TranslationUnit.upgrade(tu)
+            self.typedefs[:] = sorted(list(self.typedefSet))
 
     def visitProtocol(self, pro):
         self.protocolName = pro.name
@@ -1257,8 +1273,8 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
 
     def visitUsingStmt(self, using):
         if using.decl.fullname is not None:
-            self.typedefs.append(Typedef(Type(using.decl.fullname),
-                                         using.decl.shortname))
+            self.typedefSet.add(Typedef(Type(using.decl.fullname),
+                                        using.decl.shortname))
 
     def visitStructDecl(self, sd):
         sd.decl.special = 0
@@ -1277,7 +1293,7 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
         StructDecl.upgrade(sd)
 
         if sd.decl.fullname is not None:
-            self.typedefs.append(Typedef(Type(sd.fqClassName()), sd.name))
+            self.typedefSet.add(Typedef(Type(sd.fqClassName()), sd.name))
 
 
     def visitUnionDecl(self, ud):
@@ -1296,7 +1312,7 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
         UnionDecl.upgrade(ud)
 
         if ud.decl.fullname is not None:
-            self.typedefs.append(Typedef(Type(ud.fqClassName()), ud.name))
+            self.typedefSet.add(Typedef(Type(ud.fqClassName()), ud.name))
 
 
     def visitDecl(self, decl):
@@ -1783,8 +1799,7 @@ stmt.  Some types generate both kinds.'''
     def visitShmemType(self, s):
         if s in self.visited: return
         self.visited.add(s)
-        self.usingTypedefs.append(Typedef(Type('mozilla::ipc::Shmem'),
-                                          'Shmem'))
+        self.maybeTypedef('mozilla::ipc::Shmem', 'Shmem')
 
     def visitVoidType(self, v): assert 0
     def visitMessageType(self, v): assert 0
