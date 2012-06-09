@@ -75,7 +75,7 @@
 #include "nsXULMenuAccessibleWrap.h"
 #include "nsXULSliderAccessible.h"
 #include "nsXULTabAccessible.h"
-#include "nsXULTextAccessible.h"
+#include "XULElementAccessibles.h"
 #include "XULTreeGridAccessibleWrap.h"
 #endif
 
@@ -1356,7 +1356,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
     }
     case nsIAccessibleProvider::XULLink:
-      accessible = new nsXULLinkAccessible(aContent, aDoc);
+      accessible = new XULLinkAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULListbox:
@@ -1445,7 +1445,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULText:
-      accessible = new nsXULTextAccessible(aContent, aDoc);
+      accessible = new XULLabelAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULTextBox:
@@ -1476,7 +1476,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULTooltip:
-      accessible = new nsXULTooltipAccessible(aContent, aDoc);
+      accessible = new XULTooltipAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULToolbarButton:
