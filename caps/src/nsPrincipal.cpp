@@ -1202,3 +1202,206 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
 
   return NS_OK;
 }
+
+
+/************************************************************************************************************************/
+
+static const char EXPANDED_PRINCIPAL_SPEC[] = "[Expanded Principal]";
+
+NS_IMPL_CLASSINFO(nsExpandedPrincipal, NULL, nsIClassInfo::MAIN_THREAD_ONLY,
+                  NS_EXPANDEDPRINCIPAL_CID)
+NS_IMPL_QUERY_INTERFACE2_CI(nsExpandedPrincipal,
+                            nsIPrincipal,
+                            nsIExpandedPrincipal)
+NS_IMPL_CI_INTERFACE_GETTER2(nsExpandedPrincipal,
+                             nsIPrincipal,
+                             nsIExpandedPrincipal)
+NS_IMPL_ADDREF_INHERITED(nsExpandedPrincipal, nsBasePrincipal);
+NS_IMPL_RELEASE_INHERITED(nsExpandedPrincipal, nsBasePrincipal);
+
+nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr <nsIPrincipal> > &aWhiteList)
+{
+  mPrincipals.AppendElements(aWhiteList);
+}
+
+nsExpandedPrincipal::~nsExpandedPrincipal()
+{ }
+
+NS_IMETHODIMP 
+nsExpandedPrincipal::GetDomain(nsIURI** aDomain)
+{
+  *aDomain = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsExpandedPrincipal::SetDomain(nsIURI* aDomain)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsExpandedPrincipal::GetOrigin(char** aOrigin)
+{
+  *aOrigin = ToNewCString(NS_LITERAL_CSTRING(EXPANDED_PRINCIPAL_SPEC));
+  return *aOrigin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+typedef nsresult (NS_STDCALL nsIPrincipal::*nsIPrincipalMemFn)(nsIPrincipal* aOther,
+                                                               bool* aResult);
+#define CALL_MEMBER_FUNCTION(THIS,MEM_FN)  ((THIS)->*(MEM_FN))
+
+// nsExpandedPrincipal::Equals and nsExpandedPrincipal::EqualsIgnoringDomain
+// shares the same logic. The difference only that Equals requires 'this' 
+// and 'aOther' to Subsume each other while EqualsIgnoringDomain requires 
+// bidirectional SubsumesIgnoringDomain.
+static nsresult 
+Equals(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther,
+       bool* aResult)
+{
+  // If (and only if) 'aThis' and 'aOther' both Subsume/SubsumesIgnoringDomain
+  // each other, then they are Equal.
+  *aResult = false;
+  // Calling the corresponding subsume function on this (aFn).
+  nsresult rv = CALL_MEMBER_FUNCTION(aThis, aFn)(aOther, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!*aResult)
+    return NS_OK;
+
+  // Calling the corresponding subsume function on aOther (aFn).
+  rv = CALL_MEMBER_FUNCTION(aOther, aFn)(aThis, aResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::Equals(nsIPrincipal* aOther, bool* aResult)
+{
+  return ::Equals(this, &nsIPrincipal::Subsumes, aOther, aResult);
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::EqualsIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
+{
+  return ::Equals(this, &nsIPrincipal::SubsumesIgnoringDomain, aOther, aResult);
+}
+
+// nsExpandedPrincipal::Subsumes and nsExpandedPrincipal::SubsumesIgnoringDomain
+// shares the same logic. The difference only that Subsumes calls are replaced
+//with SubsumesIgnoringDomain calls in the second case.
+static nsresult 
+Subsumes(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther, 
+         bool* aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIExpandedPrincipal> expanded = do_QueryInterface(aOther);  
+  if (expanded) {
+    // If aOther is an ExpandedPrincipal too, check if all of its 
+    // principals are subsumed.
+    nsTArray< nsCOMPtr<nsIPrincipal> >* otherList;
+    expanded->GetWhiteList(&otherList);
+    for (uint32_t i = 0; i < otherList->Length(); ++i){
+      rv = CALL_MEMBER_FUNCTION(aThis, aFn)((*otherList)[i], aResult);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!*aResult) {
+        // If we don't subsume at least one principal of aOther, return false.
+        return NS_OK;    
+      }
+    }
+  } else {
+    // For a regular aOther, one of our principals must subsume it.
+    nsTArray< nsCOMPtr<nsIPrincipal> >* list;
+    aThis->GetWhiteList(&list);
+    for (uint32_t i = 0; i < list->Length(); ++i){
+      rv = CALL_MEMBER_FUNCTION((*list)[i], aFn)(aOther, aResult);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (*aResult) {
+        // If one of our principal subsumes it, return true.
+        return NS_OK;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+#undef CALL_MEMBER_FUNCTION
+
+NS_IMETHODIMP
+nsExpandedPrincipal::Subsumes(nsIPrincipal* aOther, bool* aResult)
+{
+  return ::Subsumes(this, &nsIPrincipal::Subsumes, aOther, aResult);
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::SubsumesIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
+{
+  return ::Subsumes(this, &nsIPrincipal::SubsumesIgnoringDomain, aOther, aResult);
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::CheckMayLoad(nsIURI* uri, bool aReport)
+{
+  nsresult rv;
+  for (uint32_t i = 0; i < mPrincipals.Length(); ++i){
+    rv = mPrincipals[i]->CheckMayLoad(uri, aReport);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
+  return NS_ERROR_DOM_BAD_URI;
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::GetHashValue(PRUint32* result)
+{
+  MOZ_NOT_REACHED("extended principal should never be used as key in a hash map");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::GetURI(nsIURI** aURI)
+{
+  *aURI = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsExpandedPrincipal::GetWhiteList(nsTArray<nsCOMPtr<nsIPrincipal> >** aWhiteList)
+{
+  *aWhiteList = &mPrincipals;
+  return NS_OK;
+}
+
+void
+nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
+{
+  if (mCert) {
+    aStr.Assign(mCert->fingerprint);
+  } else {
+    // Is that a good idea to list it's principals?
+    aStr.Assign(EXPANDED_PRINCIPAL_SPEC);
+  }
+}
+
+#ifdef DEBUG
+void nsExpandedPrincipal::dumpImpl()
+{
+  fprintf(stderr, "nsExpandedPrincipal (%p)\n", this);
+}
+#endif 
+
+//////////////////////////////////////////
+// Methods implementing nsISerializable //
+//////////////////////////////////////////
+
+NS_IMETHODIMP
+nsExpandedPrincipal::Read(nsIObjectInputStream* aStream)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::Write(nsIObjectOutputStream* aStream)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

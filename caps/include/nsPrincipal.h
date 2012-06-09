@@ -16,6 +16,7 @@
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
+class DomainPolicy; 
 
 class nsBasePrincipal : public nsJSPrincipals
 {
@@ -160,6 +161,37 @@ public:
   bool mInitialized;
 };
 
+class nsExpandedPrincipal : public nsIExpandedPrincipal, public nsBasePrincipal
+{
+public:
+  nsExpandedPrincipal(nsTArray< nsCOMPtr<nsIPrincipal> > &aWhiteList);
+
+protected:
+  virtual ~nsExpandedPrincipal();
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIEXPANDEDPRINCIPAL
+  NS_DECL_NSISERIALIZABLE
+  NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
+  NS_IMETHOD EqualsIgnoringDomain(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
+  NS_IMETHOD GetHashValue(PRUint32* aHashValue);
+  NS_IMETHOD GetURI(nsIURI** aURI);
+  NS_IMETHOD GetDomain(nsIURI** aDomain);
+  NS_IMETHOD SetDomain(nsIURI* aDomain);
+  NS_IMETHOD GetOrigin(char** aOrigin);
+  NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
+  NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval NS_OUTPARAM);
+  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report);
+#ifdef DEBUG
+  virtual void dumpImpl();
+#endif
+  
+  virtual void GetScriptLocation(nsACString &aStr) MOZ_OVERRIDE;
+
+private:
+  nsTArray< nsCOMPtr<nsIPrincipal> > mPrincipals;
+};
 
 #define NS_PRINCIPAL_CLASSNAME  "principal"
 #define NS_PRINCIPAL_CONTRACTID "@mozilla.org/principal;1"
@@ -167,5 +199,10 @@ public:
   { 0x36102b6b, 0x7b62, 0x451a, \
     { 0xa1, 0xc8, 0xa0, 0xd4, 0x56, 0xc9, 0x2d, 0xc5 }}
 
+#define NS_EXPANDEDPRINCIPAL_CLASSNAME  "expandedprincipal"
+#define NS_EXPANDEDPRINCIPAL_CONTRACTID "@mozilla.org/expandedprincipal;1"
+#define NS_EXPANDEDPRINCIPAL_CID \
+  { 0xb33a3807, 0xb76c, 0x44e5, \
+    { 0xb9, 0x9d, 0x95, 0x7e, 0xe9, 0xba, 0x6e, 0x39 }}
 
 #endif // nsPrincipal_h__
