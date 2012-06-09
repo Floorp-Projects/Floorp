@@ -2999,6 +2999,8 @@ abstract public class GeckoApp
             if (data == null || resultCode != RESULT_OK)
                 return "";
             Uri uri = data.getData();
+            if (uri == null)
+                return "";
             if ("file".equals(uri.getScheme())) {
                 String path = uri.getPath();
                 return path == null ? "" : path;
