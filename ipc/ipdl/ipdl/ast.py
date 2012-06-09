@@ -18,7 +18,9 @@ class Visitor:
             su.accept(self)
         for using in tu.using:
             using.accept(self)
-        tu.protocol.accept(self)
+        if tu.protocol:
+            tu.protocol.accept(self)
+
 
     def visitCxxInclude(self, inc):
         pass

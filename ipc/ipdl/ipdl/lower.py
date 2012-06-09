@@ -25,20 +25,28 @@ lowered form of |tu|'''
         # annotate the AST with IPDL/C++ IR-type stuff used later
         tu.accept(_DecorateWithCxxStuff())
 
-        pname = tu.protocol.name
+        name = tu.name
+        pheader, pcpp = File(name +'.h'), File(name +'.cpp')
 
-        pheader, pcpp = File(pname +'.h'), File(pname +'.cpp')
         _GenerateProtocolCode().lower(tu, pheader, pcpp)
+        headers = [ pheader ]
+        cpps = [ pcpp ]
 
-        parentheader, parentcpp = File(pname +'Parent.h'), File(pname +'Parent.cpp')
-        _GenerateProtocolParentCode().lower(
-            tu, pname+'Parent', parentheader, parentcpp)
+        if tu.protocol:
+            pname = tu.protocol.name
 
-        childheader, childcpp = File(pname +'Child.h'), File(pname +'Child.cpp')
-        _GenerateProtocolChildCode().lower(
-            tu, pname+'Child', childheader, childcpp)
+            parentheader, parentcpp = File(pname +'Parent.h'), File(pname +'Parent.cpp')
+            _GenerateProtocolParentCode().lower(
+                tu, pname+'Parent', parentheader, parentcpp)
 
-        return [ pheader, parentheader, childheader ], [ pcpp, parentcpp, childcpp ]
+            childheader, childcpp = File(pname +'Child.h'), File(pname +'Child.cpp')
+            _GenerateProtocolChildCode().lower(
+                tu, pname+'Child', childheader, childcpp)
+
+            headers += [ parentheader, childheader ]
+            cpps += [ parentcpp, childcpp ]
+
+        return headers, cpps
 
 
 ##-----------------------------------------------------------------------------
@@ -1342,13 +1350,15 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 for h in self.cppIncludeHeaders ]
             + [ Whitespace.NL ]
         ))
-       
-        # construct the namespace into which we'll stick all our defns
-        ns = Namespace(self.protocol.name)
-        cf.addthing(_putInNamespaces(ns, self.protocol.namespaces))
-        ns.addstmts(([ Whitespace.NL]
-                     + self.funcDefns
-                     +[ Whitespace.NL ]))
+
+        if self.protocol:       
+            # construct the namespace into which we'll stick all our defns
+            ns = Namespace(self.protocol.name)
+            cf.addthing(_putInNamespaces(ns, self.protocol.namespaces))
+            ns.addstmts(([ Whitespace.NL]
+                         + self.funcDefns
+                         +[ Whitespace.NL ]))
+
         cf.addthings(self.structUnionDefns)
 
 
@@ -2440,6 +2450,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def visitInclude(self, inc):
         ip = inc.tu.protocol
+        if not ip:
+            return
 
         self.hdrfile.addthings([
             _makeForwardDeclForActor(ip.decl.type, self.side),
