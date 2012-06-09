@@ -23,7 +23,7 @@ interface nsIAccessibleRelation;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(45ce2c92-4d92-49d2-bff1-855934443261)]
+[scriptable, uuid(45600c50-b06a-11e1-afa6-0800200c9a66)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -115,21 +115,13 @@ interface nsIAccessible : nsISupports
    * The modifier may be affected by user and platform preferences.
    * Usually alt+letter, or just the letter alone for menu items. 
    */
-  readonly attribute AString keyboardShortcut;
+  readonly attribute AString accessKey;
 
   /**
    * Provides localized string of global keyboard accelerator for default
    * action, such as Ctrl+O for Open file
    */
-  readonly attribute AString defaultKeyBinding;
-
-  /**
-   * Provides array of localized string of global keyboard accelerator for
-   * the given action index supported by accessible.
-   *
-   * @param aActionIndex - index of the given action
-   */
-  nsIDOMDOMStringList getKeyBindings(in PRUint8 aActionIndex);
+  readonly attribute AString keyboardShortcut;
 
   /**
    * Enumerated accessible role (see the constants defined in nsIAccessibleRole).
