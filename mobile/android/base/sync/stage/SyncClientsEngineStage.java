@@ -152,7 +152,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
       // If we upload remote records, checkAndUpload() will be called upon
       // upload success in the delegate. Otherwise call checkAndUpload() now.
       if (toUpload.size() > 0) {
-        uploadRemoteRecords(response.normalizedWeaveTimestamp());
+        uploadRemoteRecords();
         return;
       }
       checkAndUpload();
@@ -212,7 +212,6 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
       try {
         return session.keyBundleForCollection(COLLECTION_NAME);
       } catch (NoCollectionKeysSetException e) {
-        session.abort(e, "No collection keys set.");
         return null;
       }
     }
@@ -239,7 +238,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
       Long timestampInMilliseconds = currentlyUploadingRecordTimestamp;
 
       // It's the first upload so we don't care about X-If-Unmodified-Since.
-      if (timestampInMilliseconds == 0) {
+      if (timestampInMilliseconds <= 0) {
         return null;
       }
 
@@ -293,7 +292,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
 
         Logger.debug(LOG_TAG, "Client upload failed. Aborting sync.");
         if (!currentlyUploadingLocalRecord) {
-          clearRecordsToUpload(); // These will be redownloaded.
+          toUpload.clear(); // These will be redownloaded.
         }
         BaseResource.consumeEntity(response); // The exception thrown should need the response body.
         session.abort(new HTTPFailureException(response), "Client upload failed.");
@@ -318,7 +317,6 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
       try {
         return session.keyBundleForCollection(COLLECTION_NAME);
       } catch (NoCollectionKeysSetException e) {
-        session.abort(e, "No collection keys set.");
         return null;
       }
     }
@@ -425,8 +423,12 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
   }
 
   @SuppressWarnings("unchecked")
-  protected void uploadRemoteRecords(long timestamp) {
+  protected void uploadRemoteRecords() {
     Logger.trace(LOG_TAG, "In uploadRemoteRecords. Uploading " + toUpload.size() + " records" );
+
+    for (ClientRecord r : toUpload) {
+      Logger.trace(LOG_TAG, ">> Uploading record " + r.guid + ": " + r.name);
+    }
 
     if (toUpload.size() == 1) {
       ClientRecord record = toUpload.get(0);
@@ -474,6 +476,10 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
     try {
       CryptoRecord cryptoRecord = recordToUpload.getEnvelope();
       cryptoRecord.keyBundle = clientUploadDelegate.keyBundle();
+      if (cryptoRecord.keyBundle == null) {
+        session.abort(new NoCollectionKeysSetException(), "No collection keys set.");
+        return null;
+      }
       return cryptoRecord.encrypt();
     } catch (UnsupportedEncodingException e) {
       session.abort(e, encryptionFailure + " Unsupported encoding.");
@@ -485,10 +491,10 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
 
   public void clearRecordsToUpload() {
     try {
-      db.wipeCommandsTable();
+      getClientsDatabaseAccessor().wipeCommandsTable();
       toUpload.clear();
     } finally {
-      db.close();
+      closeDataAccessor();
     }
   }
 
@@ -542,7 +548,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
   }
 
   protected void wipeAndStore(ClientRecord record) {
-    ClientsDatabaseAccessor db = getClientsDatabaseAccessor();
+    final ClientsDatabaseAccessor db = getClientsDatabaseAccessor();
     if (shouldWipe) {
       db.wipeClientsTable();
       shouldWipe = false;

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  style="@style/SyncLayout" >
+  <LinearLayout
+    android:id="@+id/sendtab_top"
+    style="@style/SyncTop">
+    <ImageView
+      style="@style/SyncTopIcon" />
+    <TextView
+      style="@style/SyncTextTitle"
+      android:text="@string/sync_title_send_tab" />
+  </LinearLayout>
+
+  <LinearLayout
+    android:id="@+id/device_list_layout"
+    android:layout_below="@id/sendtab_top"
+    android:layout_above="@+id/send_button"
+    style="@style/SyncLayout.Vertical" >
+
+    <ListView
+      android:id="@+id/device_list"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" >
+    </ListView>
+  </LinearLayout>
+
+  <LinearLayout
+    style="@style/SyncBottom" >
+    <Button
+      style="@style/SyncButton"
+      android:id="@+id/send_button"
+      android:onClick="sendClickHandler"
+      android:clickable="false"
+      android:enabled="false"
+      android:text="@string/sync_button_send" />
+  </LinearLayout>
+</RelativeLayout>

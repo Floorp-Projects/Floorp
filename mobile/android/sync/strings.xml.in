@@ -69,11 +69,18 @@
   <!-- Notification strings -->
   <string name="sync_notification_oneaccount">&sync.notification.oneaccount.label;</string>
 
-  <!-- Push tab to device strings -->
-  <string name="sync_new_tab">&new_tab;</string>
-
   <!-- Incorrect settings and changing credentials. -->
   <string name="sync_invalidcreds_label">&sync.invalidcreds.label;</string>
   <string name="sync_invalidserver_label">&sync.invalidserver.label;</string>
   <string name="sync_verifying_label">&sync.verifying.label;</string>
   <string name="sync_new_recoverykey_status_incorrect">&sync.new.recoverykey.status.incorrect;</string>
+
+  <!-- Send tab to device. -->
+  <string name="sync_new_tab">&new_tab;</string>
+  <string name="sync_title_send_tab">&sync.title.send.tab.label;</string>
+  <string name="sync_button_send">&sync.button.send.label;</string>
+  <string name="sync_button_setup">&sync.button.setup.label;</string>
+  <string name="sync_button_continue_browsing">&sync.button.continue.browsing.label;</string>
+  <string name="sync_title_redirect_to_setup">&sync.title.redirect.to.setup.label;</string>
+  <string name="sync_text_redirect_to_setup">&sync.text.redirect.to.setup.label;</string>
+  <string name="sync_text_tab_sent">&sync.text.tab.sent.label;</string>
