@@ -3,40 +3,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsXULListboxAccessibleWrap.h"
+#include "XULListboxAccessibleWrap.h"
+
+using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULListboxAccessibleWrap
+// XULListboxAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-nsXULListboxAccessibleWrap::
-  nsXULListboxAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-  nsXULListboxAccessible(aContent, aDoc)
+XULListboxAccessibleWrap::
+  XULListboxAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
+  XULListboxAccessible(aContent, aDoc)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULListboxAccessibleWrap,
-                             nsXULListboxAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(XULListboxAccessibleWrap,
+                             XULListboxAccessible)
 
-IMPL_IUNKNOWN_QUERY_HEAD(nsXULListboxAccessibleWrap)
+IMPL_IUNKNOWN_QUERY_HEAD(XULListboxAccessibleWrap)
 IMPL_IUNKNOWN_QUERY_ENTRY_COND(CAccessibleTable, IsMulticolumn());
 IMPL_IUNKNOWN_QUERY_ENTRY(AccessibleWrap)
 IMPL_IUNKNOWN_QUERY_TAIL
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULListCellAccessibleWrap
+// XULListCellAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-nsXULListCellAccessibleWrap::
-  nsXULListCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
-  nsXULListCellAccessible(aContent, aDoc)
+XULListCellAccessibleWrap::
+  XULListCellAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
+  XULListCellAccessible(aContent, aDoc)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULListCellAccessibleWrap,
-                             nsXULListCellAccessible)
+NS_IMPL_ISUPPORTS_INHERITED0(XULListCellAccessibleWrap,
+                             XULListCellAccessible)
 
-IMPL_IUNKNOWN_INHERITED1(nsXULListCellAccessibleWrap,
+IMPL_IUNKNOWN_INHERITED1(XULListCellAccessibleWrap,
                          HyperTextAccessibleWrap,
                          CAccessibleTableCell)

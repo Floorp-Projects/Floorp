@@ -345,7 +345,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 
     // radiogroup in prefWindow is exposed as a list,
     // and panebutton is exposed as XULListitem in A11y.
-    // nsXULListitemAccessible::GetStateInternal uses STATE_SELECTED in this case,
+    // XULListitemAccessible::GetStateInternal uses STATE_SELECTED in this case,
     // so we need to check states::SELECTED also.
     bool isEnabled = (state & (states::CHECKED | states::SELECTED)) != 0;
 
