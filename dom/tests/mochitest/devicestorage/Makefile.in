@@ -19,6 +19,8 @@ _TEST_FILES	= \
 		test_enumerateMultipleContinue.html \
 		test_overwrite.html \
 		test_dotdot.html \
+		test_enumerateOptions.html \
+		test_lastModificationFilter.html \
 		devicestorage_common.js \
 		$(NULL)
 

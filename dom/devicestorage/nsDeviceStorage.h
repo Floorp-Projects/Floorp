@@ -28,18 +28,29 @@ public:
 
   nsDOMDeviceStorage();
 
-  nsresult Init(nsPIDOMWindow* aWindow, const nsAString &aType, const PRInt32 aIndex);
+  nsresult Init(nsPIDOMWindow* aWindow, const nsAString&aType, const PRInt32 aIndex);
 
   PRInt32 SetRootFileForType(const nsAString& aType, const PRInt32 aIndex);
 
-  static void CreateDeviceStoragesFor(nsPIDOMWindow* aWin, const nsAString &aType, nsIVariant** _retval);
+  static void CreateDeviceStoragesFor(nsPIDOMWindow* aWin,
+                                      const nsAString& aType,
+                                      nsIVariant** aRetval);
 
 private:
   ~nsDOMDeviceStorage();
 
 
-  nsresult GetInternal(const JS::Value & aName, JSContext* aCx, nsIDOMDOMRequest * *_retval NS_OUTPARAM, bool aEditable);
-  nsresult EnumerateInternal(const nsAString & aName, nsIDOMDeviceStorageCursor * *_retval NS_OUTPARAM, bool aEditable);
+  nsresult GetInternal(const JS::Value& aName,
+                       JSContext* aCx,
+                       nsIDOMDOMRequest** aRetval,
+                       bool aEditable);
+
+  nsresult EnumerateInternal(const JS::Value& aName,
+                             const JS::Value& aOptions,
+                             JSContext* aCx,
+                             PRUint8 aArgc,
+                             bool aEditable,
+                             nsIDOMDeviceStorageCursor** aRetval);
 
   PRInt32 mStorageType;
   nsCOMPtr<nsIFile> mFile;
