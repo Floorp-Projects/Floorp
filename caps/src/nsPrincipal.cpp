@@ -44,35 +44,25 @@ static bool URIIsImmutable(nsIURI* aURI)
 }
 
 // Static member variables
-PRInt32 nsPrincipal::sCapabilitiesOrdinal = 0;
-const char nsPrincipal::sInvalid[] = "Invalid";
-
-
-NS_IMPL_CLASSINFO(nsPrincipal, NULL, nsIClassInfo::MAIN_THREAD_ONLY,
-                  NS_PRINCIPAL_CID)
-NS_IMPL_QUERY_INTERFACE2_CI(nsPrincipal,
-                            nsIPrincipal,
-                            nsISerializable)
-NS_IMPL_CI_INTERFACE_GETTER2(nsPrincipal,
-                             nsIPrincipal,
-                             nsISerializable)
+PRInt32 nsBasePrincipal::sCapabilitiesOrdinal = 0;
+const char nsBasePrincipal::sInvalid[] = "Invalid";
 
 NS_IMETHODIMP_(nsrefcnt)
-nsPrincipal::AddRef()
+nsBasePrincipal::AddRef()
 {
   NS_PRECONDITION(PRInt32(refcount) >= 0, "illegal refcnt");
   // XXXcaa does this need to be threadsafe?  See bug 143559.
   nsrefcnt count = PR_ATOMIC_INCREMENT(&refcount);
-  NS_LOG_ADDREF(this, count, "nsPrincipal", sizeof(*this));
+  NS_LOG_ADDREF(this, count, "nsBasePrincipal", sizeof(*this));
   return count;
 }
 
 NS_IMETHODIMP_(nsrefcnt)
-nsPrincipal::Release()
+nsBasePrincipal::Release()
 {
   NS_PRECONDITION(0 != refcount, "dup release");
   nsrefcnt count = PR_ATOMIC_DECREMENT(&refcount);
-  NS_LOG_RELEASE(this, count, "nsPrincipal");
+  NS_LOG_RELEASE(this, count, "nsBasePrincipal");
   if (count == 0) {
     delete this;
   }
@@ -80,13 +70,10 @@ nsPrincipal::Release()
   return count;
 }
 
-nsPrincipal::nsPrincipal()
+nsBasePrincipal::nsBasePrincipal()
   : mCapabilities(nsnull),
     mSecurityPolicy(nsnull),
-    mTrusted(false),
-    mInitialized(false),
-    mCodebaseImmutable(false),
-    mDomainImmutable(false)
+    mTrusted(false)
 {
   if (!gIsObservingCodeBasePrincipalSupport) {
     nsresult rv =
@@ -99,14 +86,14 @@ nsPrincipal::nsPrincipal()
   }
 }
 
-nsPrincipal::~nsPrincipal(void)
+nsBasePrincipal::~nsBasePrincipal(void)
 {
   SetSecurityPolicy(nsnull); 
   delete mCapabilities;
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
+nsBasePrincipal::GetSecurityPolicy(void** aSecurityPolicy)
 {
   if (mSecurityPolicy && mSecurityPolicy->IsInvalid()) 
     SetSecurityPolicy(nsnull);
@@ -116,7 +103,7 @@ nsPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
 }
 
 NS_IMETHODIMP
-nsPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
+nsBasePrincipal::SetSecurityPolicy(void* aSecurityPolicy)
 {
   DomainPolicy *newPolicy = reinterpret_cast<DomainPolicy *>(aSecurityPolicy);
   if (newPolicy)
@@ -130,7 +117,7 @@ nsPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
 }
 
 bool
-nsPrincipal::CertificateEquals(nsIPrincipal *aOther)
+nsBasePrincipal::CertificateEquals(nsIPrincipal *aOther)
 {
   bool otherHasCert;
   aOther->GetHasCertificate(&otherHasCert);
@@ -160,7 +147,7 @@ nsPrincipal::CertificateEquals(nsIPrincipal *aOther)
 }
 
 NS_IMETHODIMP
-nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
+nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
 {
   // If this principal is marked invalid, can't enable any capabilities
   if (mCapabilities) {
@@ -173,23 +160,20 @@ nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
   }
 
   if (!mCert && !mTrusted) {
-    NS_ASSERTION(mInitialized, "Trying to enable a capability on an "
-                               "uninitialized principal");
-
     // If we are a non-trusted codebase principal, capabilities can not
     // be enabled if the user has not set the pref allowing scripts to
     // request enhanced capabilities; however, the file: and resource:
     // schemes are special and may be able to get extra capabilities
     // even with the pref disabled.
-
-    if (!gCodeBasePrincipalSupport) {
-      bool mightEnable = false;
-      nsresult rv = mCodebase->SchemeIs("file", &mightEnable);
+    nsCOMPtr<nsIURI> codebase;
+    GetURI(getter_AddRefs(codebase));
+    if (!gCodeBasePrincipalSupport && codebase) {
+      bool mightEnable = false;     
+      nsresult rv = codebase->SchemeIs("file", &mightEnable);
       if (NS_FAILED(rv) || !mightEnable) {
-        rv = mCodebase->SchemeIs("resource", &mightEnable);
+        rv = codebase->SchemeIs("resource", &mightEnable);
         if (NS_FAILED(rv) || !mightEnable) {
           *result = nsIPrincipal::ENABLE_DENIED;
-
           return NS_OK;
         }
       }
@@ -226,8 +210,8 @@ nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
 }
 
 nsresult
-nsPrincipal::SetCanEnableCapability(const char *capability,
-                                    PRInt16 canEnable)
+nsBasePrincipal::SetCanEnableCapability(const char *capability,
+                                        PRInt16 canEnable)
 {
   // If this principal is marked invalid, can't enable any capabilities
   if (!mCapabilities) {
@@ -262,8 +246,8 @@ nsPrincipal::SetCanEnableCapability(const char *capability,
 }
 
 NS_IMETHODIMP
-nsPrincipal::IsCapabilityEnabled(const char *capability, void *annotation,
-                                 bool *result)
+nsBasePrincipal::IsCapabilityEnabled(const char *capability, void *annotation,
+                                     bool *result)
 {
   *result = false;
   nsHashtable *ht = (nsHashtable *) annotation;
@@ -293,14 +277,14 @@ nsPrincipal::IsCapabilityEnabled(const char *capability, void *annotation,
 }
 
 NS_IMETHODIMP
-nsPrincipal::EnableCapability(const char *capability, void **annotation)
+nsBasePrincipal::EnableCapability(const char *capability, void **annotation)
 {
   return SetCapability(capability, annotation, AnnotationEnabled);
 }
 
 nsresult
-nsPrincipal::SetCapability(const char *capability, void **annotation,
-                           AnnotationValue value)
+nsBasePrincipal::SetCapability(const char *capability, void **annotation,
+                               AnnotationValue value)
 {
   if (*annotation == nsnull) {
     nsHashtable* ht = new nsHashtable(5);
@@ -338,7 +322,7 @@ nsPrincipal::SetCapability(const char *capability, void **annotation,
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetHasCertificate(bool* aResult)
+nsBasePrincipal::GetHasCertificate(bool* aResult)
 {
   *aResult = (mCert != nsnull);
 
@@ -346,10 +330,10 @@ nsPrincipal::GetHasCertificate(bool* aResult)
 }
 
 nsresult
-nsPrincipal::SetCertificate(const nsACString& aFingerprint,
-                            const nsACString& aSubjectName,
-                            const nsACString& aPrettyName,
-                            nsISupports* aCert)
+nsBasePrincipal::SetCertificate(const nsACString& aFingerprint,
+                                const nsACString& aSubjectName,
+                                const nsACString& aPrettyName,
+                                nsISupports* aCert)
 {
   NS_ENSURE_STATE(!mCert);
 
@@ -366,7 +350,7 @@ nsPrincipal::SetCertificate(const nsACString& aFingerprint,
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetFingerprint(nsACString& aFingerprint)
+nsBasePrincipal::GetFingerprint(nsACString& aFingerprint)
 {
   NS_ENSURE_STATE(mCert);
 
@@ -376,7 +360,7 @@ nsPrincipal::GetFingerprint(nsACString& aFingerprint)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetPrettyName(nsACString& aName)
+nsBasePrincipal::GetPrettyName(nsACString& aName)
 {
   NS_ENSURE_STATE(mCert);
 
@@ -386,7 +370,7 @@ nsPrincipal::GetPrettyName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetSubjectName(nsACString& aName)
+nsBasePrincipal::GetSubjectName(nsACString& aName)
 {
   NS_ENSURE_STATE(mCert);
 
@@ -396,7 +380,7 @@ nsPrincipal::GetSubjectName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetCertificate(nsISupports** aCertificate)
+nsBasePrincipal::GetCertificate(nsISupports** aCertificate)
 {
   if (mCert) {
     NS_IF_ADDREF(*aCertificate = mCert->cert);
@@ -408,14 +392,14 @@ nsPrincipal::GetCertificate(nsISupports** aCertificate)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
+nsBasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {
   NS_IF_ADDREF(*aCsp = mCSP);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
+nsBasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
 {
   // If CSP was already set, it should not be destroyed!  Instead, it should
   // get set anew when a new principal is created.
@@ -427,9 +411,9 @@ nsPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
 }
 
 nsresult
-nsPrincipal::EnsureCertData(const nsACString& aSubjectName,
-                            const nsACString& aPrettyName,
-                            nsISupports* aCert)
+nsBasePrincipal::EnsureCertData(const nsACString& aSubjectName,
+                                const nsACString& aPrettyName,
+                                nsISupports* aCert)
 {
   NS_ENSURE_STATE(mCert);
 
@@ -469,10 +453,10 @@ AppendCapability(nsHashKey *aKey, void *aData, void *capListPtr)
 }
 
 NS_IMETHODIMP
-nsPrincipal::GetPreferences(char** aPrefName, char** aID,
-                            char** aSubjectName,
-                            char** aGrantedList, char** aDeniedList,
-                            bool* aIsTrusted)
+nsBasePrincipal::GetPreferences(char** aPrefName, char** aID,
+                                char** aSubjectName,
+                                char** aGrantedList, char** aDeniedList,
+                                bool* aIsTrusted)
 {
   if (mPrefName.IsEmpty()) {
     if (mCert) {
@@ -618,6 +602,26 @@ void nsPrincipal::dumpImpl()
   fprintf(stderr, "nsPrincipal (%p) = %s\n", this, str.get());
 }
 #endif 
+
+NS_IMPL_CLASSINFO(nsPrincipal, NULL, nsIClassInfo::MAIN_THREAD_ONLY,
+                  NS_PRINCIPAL_CID)
+NS_IMPL_QUERY_INTERFACE2_CI(nsPrincipal,
+                            nsIPrincipal,
+                            nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER2(nsPrincipal,
+                             nsIPrincipal,
+                             nsISerializable)
+NS_IMPL_ADDREF_INHERITED(nsPrincipal, nsBasePrincipal);
+NS_IMPL_RELEASE_INHERITED(nsPrincipal, nsBasePrincipal);
+
+nsPrincipal::nsPrincipal()
+  : mInitialized(false),
+    mCodebaseImmutable(false),
+    mDomainImmutable(false)
+{ }
+
+nsPrincipal::~nsPrincipal()
+{ }
 
 nsresult
 nsPrincipal::Init(const nsACString& aCertFingerprint,
