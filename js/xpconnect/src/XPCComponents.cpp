@@ -2946,6 +2946,25 @@ SandboxImport(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSBool
+CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
+{
+    JSObject *global = JS_GetGlobalForScopeChain(cx);
+    MOZ_ASSERT(global);
+
+    nsCOMPtr<nsISupports> inst;
+    nsresult rv;
+    inst = do_CreateInstance("@mozilla.org/xmlextras/xmlhttprequest;1", &rv);
+    if (NS_FAILED(rv))
+        return false;
+
+    rv = nsContentUtils::WrapNative(cx, global, inst, vp);
+    if (NS_FAILED(rv))
+        return false;
+
+    return true;
+}
+
+static JSBool
 sandbox_enumerate(JSContext *cx, JSHandleObject obj)
 {
     return JS_EnumerateStandardClasses(cx, obj);
@@ -3244,6 +3263,10 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
 
         if (!JS_DefineFunctions(cx, sandbox, SandboxFunctions))
             return NS_ERROR_XPC_UNEXPECTED;
+
+        if (options.wantXHRConstructor &&
+            !JS_DefineFunction(cx, sandbox, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR)) 
+            return NS_ERROR_XPC_UNEXPECTED;
     }
 
     if (vp) {
@@ -3505,6 +3528,10 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
 
     rv = GetBoolPropFromOptions(cx, optionsObject, 
                                 "wantComponents", &options.wantComponents);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetBoolPropFromOptions(cx, optionsObject, 
+                                "wantXHRConstructor", &options.wantXHRConstructor);
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = GetStringPropFromOptions(cx, optionsObject, 

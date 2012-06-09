@@ -4330,11 +4330,13 @@ struct SandboxOptions {
     SandboxOptions()
         : wantXrays(true)
         , wantComponents(true)
+        , wantXHRConstructor(false)
         , proto(NULL)
     { }
 
     bool wantXrays;
     bool wantComponents;
+    bool wantXHRConstructor;
     JSObject* proto;
     nsCString sandboxName;
 };
