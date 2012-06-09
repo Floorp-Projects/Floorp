@@ -123,14 +123,9 @@ browserElementTestHelpers.origPageThumbsEnabledPref = browserElementTestHelpers.
 browserElementTestHelpers.setPageThumbsEnabledPref(false);
 
 // Enable or disable OOP depending on the test's filename.
-var oop;
-if (location.pathname.indexOf("_inproc_") != -1) {
-  oop = false;
-}
-else {
-  // oop by default
-  oop = true;
-}
+// Always disable OOP on Windows (bug 763081).
+var oop = navigator.platform.indexOf('Win') == -1 &&
+          location.pathname.indexOf('_inproc_') == -1;
 
 browserElementTestHelpers.setOOPByDefaultPref(oop);
 browserElementTestHelpers.setOOPDisabledPref(false);
