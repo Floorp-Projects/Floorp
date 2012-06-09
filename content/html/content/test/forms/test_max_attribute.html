@@ -48,8 +48,10 @@ var types = [
 var input = document.createElement("input");
 document.getElementById('content').appendChild(input);
 
-function checkValidity(aElement, aValidity)
+function checkValidity(aElement, aValidity, aApply, aRangeApply)
 {
+  aValidity = aApply ? aValidity : true;
+
   is(aElement.validity.valid, aValidity,
      "element validity should be " + aValidity);
   is(aElement.validity.rangeOverflow, !aValidity,
@@ -63,7 +65,16 @@ function checkValidity(aElement, aValidity)
   is(aElement.mozMatchesSelector(":invalid"), aElement.willValidate && !aValidity,
      (aElement.wil && aValidity) ? ":invalid shouldn't apply" : "valid should apply");
 
-  // TODO: Add tests for out-of-range / in-range selectors, see bug 635554.
+  if (!aRangeApply) {
+    ok(!aElement.mozMatchesSelector(":in-range"), ":in-range should not match");
+    ok(!aElement.mozMatchesSelector(":out-of-range"),
+       ":out-of-range should not match");
+  } else {
+    is(aElement.mozMatchesSelector(":in-range"), aValidity,
+       ":in-range matches status should be " + aValidity);
+    is(aElement.mozMatchesSelector(":out-of-range"), !aValidity,
+       ":out-of-range matches status should be " + !aValidity);
+  }
 }
 
 for each (var data in types) {
@@ -75,17 +86,17 @@ for each (var data in types) {
     continue;
   }
 
-  checkValidity(input, true);
+  checkValidity(input, true, apply, false);
 
   input.max = '2';
-  checkValidity(input, true);
+  checkValidity(input, true, apply, apply);
 
   if (input.type == 'url') {
     input.value = 'http://mozilla.org';
-    checkValidity(input, true);
+    checkValidity(input, true, apply, apply);
   } else if (input.type == 'email') {
     input.value = 'foo@bar.com';
-    checkValidity(input, true);
+    checkValidity(input, true, apply, apply);
   } else if (input.type == 'file') {
     // Need privileges to set a filename with .value.
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
@@ -103,34 +114,34 @@ for each (var data in types) {
     outStream.close();
 
     input.value = file.path;
-    checkValidity(input, true);
+    checkValidity(input, true, apply, apply);
 
     file.remove(false);
   } else {
     input.value = '1';
-    checkValidity(input, true);
+    checkValidity(input, true, apply, apply);
 
     input.value = '2';
-    checkValidity(input, true);
+    checkValidity(input, true, apply, apply);
 
     input.value = 'foo';
-    checkValidity(input, true);
+    checkValidity(input, true, apply, apply);
 
     input.value = '2.1';
-    checkValidity(input, !apply);
+    checkValidity(input, false, apply, apply);
 
     input.max = '5';
-    checkValidity(input, true);
+    checkValidity(input, true, apply, apply);
 
     input.value = '42';
-    checkValidity(input, !apply);
+    checkValidity(input, false, apply, apply);
   }
 
   input.max = '';
-  checkValidity(input, true);
+  checkValidity(input, true, apply, false);
 
   input.max = 'foo';
-  checkValidity(input, true);
+  checkValidity(input, true, apply, false);
 
   // Check that we correctly convert input.max to a double in validationMessage.
   if (input.type == 'number') {
