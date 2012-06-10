@@ -642,6 +642,13 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *rval)
             js_ReportOutOfMemory(cx);
             return false;
         }
+
+        CrossCompartmentKey key(CrossCompartmentKey::DebuggerEnvironment, object, env);
+        if (!object->compartment()->crossCompartmentWrappers.put(key, ObjectValue(*envobj))) {
+            environments.remove(env);
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
     }
     rval->setObject(*envobj);
     return true;
@@ -671,6 +678,16 @@ Debugger::wrapDebuggeeValue(JSContext *cx, Value *vp)
                 js_ReportOutOfMemory(cx);
                 return false;
             }
+
+            if (obj->compartment() != object->compartment()) {
+                CrossCompartmentKey key(CrossCompartmentKey::DebuggerObject, object, obj);
+                if (!object->compartment()->crossCompartmentWrappers.put(key, ObjectValue(*dobj))) {
+                    objects.remove(obj);
+                    js_ReportOutOfMemory(cx);
+                    return false;
+                }
+            }
+
             vp->setObject(*dobj);
         }
     } else if (!cx->compartment->wrap(cx, vp)) {
@@ -2399,10 +2416,21 @@ Debugger::wrapScript(JSContext *cx, HandleScript script)
     ScriptWeakMap::AddPtr p = scripts.lookupForAdd(script);
     if (!p) {
         JSObject *scriptobj = newDebuggerScript(cx, script);
+        if (!scriptobj)
+            return NULL;
 
         /* The allocation may have caused a GC, which can remove table entries. */
-        if (!scriptobj || !scripts.relookupOrAdd(p, script.value(), scriptobj))
+        if (!scripts.relookupOrAdd(p, script, scriptobj)) {
+            js_ReportOutOfMemory(cx);
             return NULL;
+        }
+
+        CrossCompartmentKey key(CrossCompartmentKey::DebuggerScript, object, script);
+        if (!object->compartment()->crossCompartmentWrappers.put(key, ObjectValue(*scriptobj))) {
+            scripts.remove(script);
+            js_ReportOutOfMemory(cx);
+            return NULL;
+        }
     }
 
     JS_ASSERT(GetScriptReferent(p->value) == script);

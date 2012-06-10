@@ -1048,8 +1048,8 @@ js::NukeChromeCrossCompartmentWrappersForGlobal(JSContext *cx, JSObject *obj,
         for (WrapperMap::Enum e(pmap); !e.empty(); e.popFront()) {
             // Some cross-compartment wrappers are for strings.  We're not
             // interested in those.
-            const Value &k = e.front().key;
-            if (k.isString())
+            const CrossCompartmentKey &k = e.front().key;
+            if (k.kind != CrossCompartmentKey::ObjectWrapper)
                 continue;
 
             JSObject *wobj = &e.front().value.get().toObject();
