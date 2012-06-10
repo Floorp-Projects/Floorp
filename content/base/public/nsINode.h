@@ -374,6 +374,19 @@ public:
    */
   mozilla::dom::Element* AsElement();
 
+  /**
+   * Return whether the node is a content node
+   */
+  bool IsContent() const {
+    return IsNodeOfType(eCONTENT);
+  }
+
+  /**
+   * Return this node as nsIContent.  Should only be used for nodes for which
+   * IsContent() is true.  This is defined inline in nsIContent.h.
+   */
+  nsIContent* AsContent();
+
   virtual nsIDOMNode* AsDOMNode() = 0;
 
   /**
