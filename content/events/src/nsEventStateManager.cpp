@@ -30,7 +30,6 @@
 #include "nsIBaseWindow.h"
 #include "nsISelection.h"
 #include "nsFrameSelection.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIEnumerator.h"

@@ -24,7 +24,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsGUIEvent.h"
-#include "nsIPrivateDOMEvent.h"
 #include "prprf.h"
 #include "nsIDOMEventListener.h"
 #include "nsIJSContextStack.h"
@@ -1632,17 +1631,11 @@ nsXMLHttpRequest::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
     return rv;
   }
 
-  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(*aDOMEvent));
-  if (!privevent) {
-    NS_IF_RELEASE(*aDOMEvent);
-    return NS_ERROR_FAILURE;
-  }
-
   (*aDOMEvent)->InitEvent(NS_LITERAL_STRING(READYSTATE_STR),
                           false, false);
 
   // We assume anyone who managed to call CreateReadystatechangeEvent is trusted
-  privevent->SetTrusted(true);
+  (*aDOMEvent)->SetTrusted(true);
 
   return NS_OK;
 }
@@ -1677,11 +1670,7 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
     return;
   }
 
-  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(event));
-  if (!privevent) {
-    return;
-  }
-  privevent->SetTrusted(true);
+  event->SetTrusted(true);
 
   nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
   if (!progress) {
@@ -4034,7 +4023,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpProgressEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLSProgressEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLHttpProgressEvent)

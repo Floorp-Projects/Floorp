@@ -5,7 +5,6 @@
 
 #include "nsAsyncDOMEvent.h"
 #include "nsIDOMEvent.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventTarget.h"
 #include "nsContentUtils.h"
@@ -19,10 +18,8 @@ nsAsyncDOMEvent::nsAsyncDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
   nsEventDispatcher::CreateEvent(nsnull, &aEvent, EmptyString(),
                                  getter_AddRefs(mEvent));
   NS_ASSERTION(mEvent, "Should never fail to create an event");
-  nsCOMPtr<nsIPrivateDOMEvent> priv = do_QueryInterface(mEvent);
-  NS_ASSERTION(priv, "Should also not fail to QI to nsIDOMEventPrivate");
-  priv->DuplicatePrivateData();
-  priv->SetTrusted(trusted);
+  mEvent->DuplicatePrivateData();
+  mEvent->SetTrusted(trusted);
 }
 
 NS_IMETHODIMP nsAsyncDOMEvent::Run()

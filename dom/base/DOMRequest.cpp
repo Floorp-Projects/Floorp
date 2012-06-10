@@ -10,7 +10,6 @@
 #include "nsDOMClassInfo.h"
 #include "DOMError.h"
 #include "nsEventDispatcher.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsDOMEvent.h"
 
 using mozilla::dom::DOMRequest;

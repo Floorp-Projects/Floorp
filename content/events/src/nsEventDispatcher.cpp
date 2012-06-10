@@ -7,7 +7,6 @@
 #include "nsDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsPresContext.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
@@ -523,12 +522,9 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
   if (aDOMEvent) {
-    nsCOMPtr<nsIPrivateDOMEvent> privEvt(do_QueryInterface(aDOMEvent));
-    if (privEvt) {
-      nsEvent* innerEvent = privEvt->GetInternalNSEvent();
-      NS_ASSERTION(innerEvent == aEvent,
-                    "The inner event of aDOMEvent is not the same as aEvent!");
-    }
+    nsEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
+    NS_ASSERTION(innerEvent == aEvent,
+                  "The inner event of aDOMEvent is not the same as aEvent!");
   }
 #endif
 
@@ -661,10 +657,8 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
     // Duplicate private data if someone holds a pointer to it.
     nsrefcnt rc = 0;
     NS_RELEASE2(preVisitor.mDOMEvent, rc);
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent =
-      do_QueryInterface(preVisitor.mDOMEvent);
-    if (privateEvent) {
-      privateEvent->DuplicatePrivateData();
+    if (preVisitor.mDOMEvent) {
+      preVisitor.mDOMEvent->DuplicatePrivateData();
     }
   }
 
@@ -682,29 +676,26 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
                                     nsEventStatus* aEventStatus)
 {
   if (aDOMEvent) {
-    nsCOMPtr<nsIPrivateDOMEvent> privEvt(do_QueryInterface(aDOMEvent));
-    if (privEvt) {
-      nsEvent* innerEvent = privEvt->GetInternalNSEvent();
-      NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
+    nsEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
+    NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
 
-      bool dontResetTrusted = false;
-      if (innerEvent->flags & NS_EVENT_DISPATCHED) {
-        innerEvent->target = nsnull;
-        innerEvent->originalTarget = nsnull;
-      }
-      else {
-        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(privEvt));
-        nsevent->GetIsTrusted(&dontResetTrusted);
-      }
-
-      if (!dontResetTrusted) {
-        //Check security state to determine if dispatcher is trusted
-        privEvt->SetTrusted(nsContentUtils::IsCallerTrustedForWrite());
-      }
-
-      return nsEventDispatcher::Dispatch(aTarget, aPresContext, innerEvent,
-                                         aDOMEvent, aEventStatus);
+    bool dontResetTrusted = false;
+    if (innerEvent->flags & NS_EVENT_DISPATCHED) {
+      innerEvent->target = nsnull;
+      innerEvent->originalTarget = nsnull;
     }
+    else {
+      nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aDOMEvent));
+      nsevent->GetIsTrusted(&dontResetTrusted);
+    }
+
+    if (!dontResetTrusted) {
+      //Check security state to determine if dispatcher is trusted
+      aDOMEvent->SetTrusted(nsContentUtils::IsCallerTrustedForWrite());
+    }
+
+    return nsEventDispatcher::Dispatch(aTarget, aPresContext, innerEvent,
+                                       aDOMEvent, aEventStatus);
   } else if (aEvent) {
     return nsEventDispatcher::Dispatch(aTarget, aPresContext, aEvent,
                                        aDOMEvent, aEventStatus);
