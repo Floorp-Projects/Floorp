@@ -64,3 +64,7 @@ _TEST_FILES = \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+check::
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON_PATH) $(PLY_INCLUDE) \
+	  $(srcdir)/../parser/runtests.py

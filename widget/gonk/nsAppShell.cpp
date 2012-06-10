@@ -203,38 +203,17 @@ sendKeyEvent(PRUint32 keyCode, bool down, uint64_t timeMs)
     }
 }
 
+// Defines kKeyMapping
+#include "GonkKeyMapping.h"
+
 static void
 maybeSendKeyEvent(int keyCode, bool pressed, uint64_t timeMs)
 {
-    switch (keyCode) {
-    case KEY_BACK:
-        sendKeyEvent(NS_VK_ESCAPE, pressed, timeMs);
-        break;
-    case KEY_MENU:
-         sendKeyEvent(NS_VK_CONTEXT_MENU, pressed, timeMs);
-        break;
-    case KEY_SEARCH:
-        sendKeyEvent(NS_VK_F5, pressed, timeMs);
-        break;
-    case KEY_HOME:
-        sendKeyEvent(NS_VK_HOME, pressed, timeMs);
-        break;
-    case KEY_POWER:
-        sendKeyEvent(NS_VK_SLEEP, pressed, timeMs);
-        break;
-    case KEY_VOLUMEUP:
-        sendKeyEvent(NS_VK_PAGE_UP, pressed, timeMs);
-        break;
-    case KEY_VOLUMEDOWN:
-        sendKeyEvent(NS_VK_PAGE_DOWN, pressed, timeMs);
-        break;
-    case KEY_CAMERA:
-        sendKeyEvent(NS_VK_PRINTSCREEN, pressed, timeMs);
-        break;
-    default:
+    if (keyCode < ArrayLength(kKeyMapping) && kKeyMapping[keyCode])
+        sendKeyEvent(kKeyMapping[keyCode], pressed, timeMs);
+    else
         VERBOSE_LOG("Got unknown key event code. type 0x%04x code 0x%04x value %d",
                     keyCode, pressed);
-    }
 }
 
 class GeckoInputReaderPolicy : public InputReaderPolicyInterface {
@@ -379,7 +358,7 @@ GeckoInputDispatcher::dispatchOnce()
         break;
     }
     case UserInputData::KEY_DATA:
-        maybeSendKeyEvent(data.key.scanCode,
+        maybeSendKeyEvent(data.key.keyCode,
                           data.action == AKEY_EVENT_ACTION_DOWN,
                           data.timeMs);
         break;
@@ -525,6 +504,13 @@ nsAppShell::Init()
     // Delay initializing input devices until the screen has been
     // initialized (and we know the resolution).
     return rv;
+}
+
+NS_IMETHODIMP
+nsAppShell::Exit()
+{
+  OrientationObserver::GetInstance()->DisableAutoOrientation();
+  return nsBaseAppShell::Exit();
 }
 
 void

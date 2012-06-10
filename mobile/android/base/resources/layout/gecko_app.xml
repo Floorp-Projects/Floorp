@@ -3,36 +3,49 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/main_layout"
-              style="@style/Screen">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
 
-    <include layout="@layout/browser_toolbar"/>
+   <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
+                                android:layout_width="fill_parent"
+                                android:layout_height="wrap_content"
+                                android:background="@drawable/tabs_tray_bg_repeat"/>
 
-    <RelativeLayout android:id="@+id/gecko_layout"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="1">
+   <LinearLayout android:id="@+id/main_layout"
+                 style="@style/Screen">
+ 
+        <include layout="@layout/browser_toolbar"/>
 
-        <AbsoluteLayout android:id="@+id/plugin_container"
-                        android:background="@android:color/transparent"
+        <RelativeLayout android:id="@+id/gecko_layout"
                         android:layout_width="fill_parent"
-                        android:layout_height="fill_parent"/>
+                        android:layout_height="fill_parent"
+                        android:layout_weight="1">
 
-        <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
-                                           android:layout_width="fill_parent"
-                                           android:layout_height="fill_parent"
-                                           android:visibility="gone"/>
+            <AbsoluteLayout android:id="@+id/plugin_container"
+                            android:background="@android:color/transparent"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"/>
 
-        <org.mozilla.gecko.AboutHomeContent android:id="@+id/abouthome_content"
-                                            android:layout_width="fill_parent"
-                                            android:layout_height="fill_parent"
-                                            android:background="@drawable/abouthome_bg_repeat"/>
+            <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
+                                               android:layout_width="fill_parent"
+                                               android:layout_height="fill_parent"
+                                               android:visibility="gone"/>
 
-    </RelativeLayout>
+            <org.mozilla.gecko.AboutHomeContent android:id="@+id/abouthome_content"
+                                                android:layout_width="fill_parent"
+                                                android:layout_height="fill_parent"
+                                                android:background="@drawable/abouthome_bg_repeat"/>
 
-    <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
-                                     style="@style/FindBar"
-                                     android:visibility="gone"/>
+            <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
+                                             android:layout_width="fill_parent"
+                                             android:layout_height="wrap_content"
+                                             android:layout_alignParentBottom="true"
+                                             style="@style/FindBar"
+                                             android:visibility="gone"/>
 
- </LinearLayout>
+        </RelativeLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

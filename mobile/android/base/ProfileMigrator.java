@@ -702,7 +702,7 @@ public class ProfileMigrator {
         private ArrayList<ContentProviderOperation> mOperations;
         private int mMaxEntries;
         // We support 2 classes of schemas: Firefox Places 12-13
-        // and Firefox Places 13-20. The relevant difference for us
+        // and Firefox Places 13-21. The relevant difference for us
         // is whether there is a GUID on favicons or not.
         private boolean mHasFaviconGUID;
 
@@ -760,7 +760,7 @@ public class ProfileMigrator {
                 Log.d(LOGTAG, "Not Migrating Favicon GUIDs.");
                 mHasFaviconGUID = false;
                 return true;
-            } else if (schemaVersion <= 20) {
+            } else if (schemaVersion <= 21) {
                 Log.d(LOGTAG, "Migrating Favicon GUIDs.");
                 mHasFaviconGUID = true;
                 return true;

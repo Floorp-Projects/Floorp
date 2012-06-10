@@ -128,9 +128,48 @@ interface nsISearchEngine : nsISupports
 
 };
 
-[scriptable, uuid(8307b8f2-08ea-45b8-96bf-b1dc7688fe3b)]
+/**
+ * Callback for asynchronous initialization of nsIBrowserSearchService
+ */
+[scriptable, function, uuid(02256156-16e4-47f1-9979-76ff98ceb590)]
+interface nsIBrowserSearchInitObserver : nsISupports
+{
+  /**
+   * Called once initialization of the browser search service is complete.
+   *
+   * @param aStatus The status of that service.
+   */
+  void onInitComplete(in nsresult aStatus);
+};
+
+[scriptable, uuid(a676eb70-6987-4429-a668-3e253b6f7c7c)]
 interface nsIBrowserSearchService : nsISupports
 {
+  /**
+   * Start asynchronous initialization.
+   *
+   * The callback is triggered once initialization is complete, which may be
+   * immediately, if initialization has already been completed by some previous
+   * call to this method. The callback is always invoked asynchronously.
+   *
+   * @param aObserver An optional object observing the end of initialization.
+   */
+  void init([optional] in nsIBrowserSearchInitObserver aObserver);
+
+  /**
+   * Determine whether initialization has been completed.
+   *
+   * Clients of the service can use this attribute to quickly determine whether
+   * initialization is complete, and decide to trigger some immediate treatment,
+   * to launch asynchronous initialization or to bailout.
+   *
+   * Note that this attribute does not indicate that initialization has succeeded.
+   *
+   * @return |true| if the search service is now initialized, |false| if
+   * initialization has not been triggered yet.
+   */
+  readonly attribute bool isInitialized;
+
   /**
    * Adds a new search engine from the file at the supplied URI, optionally
    * asking the user for confirmation first.  If a confirmation dialog is

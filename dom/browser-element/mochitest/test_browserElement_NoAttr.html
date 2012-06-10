@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=710231
+-->
+<head>
+  <title>Test for Bug 710231</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=710231">Mozilla Bug 710231</a>
+
+<!--
+  Test that an iframe without the |mozbrowser| attribute does not emit
+  mozbrowserX events.
+-->
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  var iframe = document.getElementById('iframe');
+  iframe.addEventListener('mozbrowserloadstart', function() {
+    ok(false, 'Should not send mozbrowserloadstart event.');
+  });
+
+  iframe.addEventListener('load', function() {
+    ok(true, 'Got iframe load event.');
+    SimpleTest.finish();
+  });
+
+  iframe.src = browserElementTestHelpers.emptyPage1;
+}
+
+addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
+
+</script>
+
+<iframe id='iframe'></iframe>
+
+</body>
+</html>

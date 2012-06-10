@@ -26,7 +26,6 @@ enum FormControlsTypes {
   NS_FORM_SELECT,
   NS_FORM_TEXTAREA,
   NS_FORM_OBJECT,
-  NS_FORM_METER,
   eFormControlsWithoutSubTypesMax,
   // After this, all types will have sub-types which introduce new enum lists.
   // eFormControlsWithoutSubTypesMax let us know if the previous types values
@@ -70,8 +69,8 @@ PR_STATIC_ASSERT((PRUint32)eButtonElementTypesMax < (PRUint32)NS_FORM_INPUT_ELEM
 PR_STATIC_ASSERT((PRUint32)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
-{ 0x671ef379, 0x7ac0, 0x414c, \
- { 0xa2, 0x2b, 0xc1, 0x9e, 0x0b, 0x61, 0x4e, 0x83 } }
+{ 0xbc53dcf5, 0xbd4f, 0x4991, \
+ { 0xa1, 0x87, 0xc4, 0x57, 0x98, 0x54, 0xda, 0x6e } }
 
 /**
  * Interface which all form controls (e.g. buttons, checkboxes, text,
@@ -171,12 +170,6 @@ public:
   inline bool IsSingleLineTextControl(bool aExcludePassword) const;
 
   /**
-   * Returns whether this is a labelable form control.
-   * @return whether this is a labelable form control.
-   */
-  inline bool IsLabelableControl() const;
-
-  /**
    * Returns whether this is a submittable form control.
    * @return whether this is a submittable form control.
    */
@@ -238,21 +231,6 @@ nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, PRUint32 aType)
          aType == NS_FORM_INPUT_TEL ||
          aType == NS_FORM_INPUT_URL ||
          (!aExcludePassword && aType == NS_FORM_INPUT_PASSWORD);
-}
-
-bool
-nsIFormControl::IsLabelableControl() const
-{
-  // TODO: keygen should be in that list, see bug 101019.
-  // TODO: NS_FORM_INPUT_HIDDEN should be removed, see bug 597650.
-  PRUint32 type = GetType();
-  return type & NS_FORM_INPUT_ELEMENT ||
-         type & NS_FORM_BUTTON_ELEMENT ||
-         // type == NS_FORM_KEYGEN ||
-         type == NS_FORM_METER ||
-         type == NS_FORM_OUTPUT ||
-         type == NS_FORM_SELECT ||
-         type == NS_FORM_TEXTAREA;
 }
 
 bool

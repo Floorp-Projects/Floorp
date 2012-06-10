@@ -12,7 +12,6 @@
 #include "nsPresContext.h"
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsString.h"
 #include "nsEventDispatcher.h"
 #include "nsGUIEvent.h"

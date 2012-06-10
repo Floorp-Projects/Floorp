@@ -13,7 +13,7 @@
  * Gecko with the means to call up to the host to resize the window,
  * hide or show it and set/get its title.
  */
-[scriptable, uuid(3E5432CD-9568-4bd1-8CBE-D50ABA110743)]
+[scriptable, uuid(0b976267-4aaa-4f36-a2d4-27b5ca8d73bb)]
 interface nsIEmbeddingSiteWindow : nsISupports
 {
     /**
@@ -117,4 +117,9 @@ interface nsIEmbeddingSiteWindow : nsISupports
      * </ul>
      */
     [noscript] readonly attribute voidPtr siteWindow;
+    
+    /**
+     * Blur the window. This should unfocus the window and send an onblur event.
+     */
+    void blur();
 };

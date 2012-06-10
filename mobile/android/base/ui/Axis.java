@@ -255,7 +255,15 @@ abstract class Axis {
         }
 
         float excess = getExcess();
-        if (mDisableSnap || FloatUtils.fuzzyEquals(excess, 0.0f)) {
+        Overscroll overscroll = getOverscroll();
+        boolean decreasingOverscroll = false;
+        if ((overscroll == Overscroll.MINUS && mVelocity > 0) ||
+            (overscroll == Overscroll.PLUS && mVelocity < 0))
+        {
+            decreasingOverscroll = true;
+        }
+
+        if (mDisableSnap || FloatUtils.fuzzyEquals(excess, 0.0f) || decreasingOverscroll) {
             // If we aren't overscrolled, just apply friction.
             if (Math.abs(mVelocity) >= VELOCITY_THRESHOLD) {
                 mVelocity *= FRICTION_FAST;
@@ -266,7 +274,7 @@ abstract class Axis {
         } else {
             // Otherwise, decrease the velocity linearly.
             float elasticity = 1.0f - excess / (getViewportLength() * SNAP_LIMIT);
-            if (getOverscroll() == Overscroll.MINUS) {
+            if (overscroll == Overscroll.MINUS) {
                 mVelocity = Math.min((mVelocity + OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);
             } else { // must be Overscroll.PLUS
                 mVelocity = Math.max((mVelocity - OVERSCROLL_DECEL_RATE) * elasticity, 0.0f);

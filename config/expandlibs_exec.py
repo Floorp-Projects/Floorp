@@ -23,7 +23,7 @@ symbols appear in the resulting binary. Only works for ELF targets.
 from __future__ import with_statement
 import sys
 import os
-from expandlibs import ExpandArgs, relativize, isObject
+from expandlibs import ExpandArgs, relativize, isObject, ensureParentDir, ExpandLibsDeps
 import expandlibs_config as conf
 from optparse import OptionParser
 import subprocess
@@ -269,6 +269,10 @@ class SectionFinder(object):
 
 def main():
     parser = OptionParser()
+    parser.add_option("--depend", dest="depend", metavar="FILE",
+        help="generate dependencies for the given execution and store it in the given file")
+    parser.add_option("--target", dest="target", metavar="FILE",
+        help="designate the target for dependencies")
     parser.add_option("--extract", action="store_true", dest="extract",
         help="when a library has no descriptor file, extract it first, when possible")
     parser.add_option("--uselist", action="store_true", dest="uselist",
@@ -280,6 +284,15 @@ def main():
 
     (options, args) = parser.parse_args()
 
+    if not options.target:
+        options.depend = False
+    if options.depend:
+        deps = ExpandLibsDeps(args)
+        # Filter out common command wrappers
+        while os.path.basename(deps[0]) in ['ccache', 'distcc']:
+            deps.pop(0)
+        # Remove command
+        deps.pop(0)
     with ExpandArgsMore(args) as args:
         if options.extract:
             args.extract()
@@ -295,7 +308,15 @@ def main():
                 with open(tmp) as file:
                     print >>sys.stderr, "".join(["    " + l for l in file.readlines()])
             sys.stderr.flush()
-        exit(subprocess.call(args))
+        ret = subprocess.call(args)
+        if ret:
+            exit(ret)
+    if not options.depend:
+        return
+    ensureParentDir(options.depend)
+    with open(options.depend, 'w') as depfile:
+        depfile.write("%s : %s\n" % (options.target, ' '.join(dep for dep in deps if os.path.isfile(dep) and dep != options.target)))
+
 
 if __name__ == '__main__':
     main()
