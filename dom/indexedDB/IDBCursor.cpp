@@ -29,6 +29,7 @@
 #include "IndexedDatabaseInlines.h"
 
 USING_INDEXEDDB_NAMESPACE
+using namespace mozilla::dom::indexedDB::ipc;
 
 MOZ_STATIC_ASSERT(sizeof(size_t) >= sizeof(IDBCursor::Direction),
                   "Relying on conversion between size_t and "
@@ -39,8 +40,6 @@ namespace {
 class CursorHelper : public AsyncConnectionHelper
 {
 public:
-  typedef ipc::CursorRequestParams CursorRequestParams;
-
   CursorHelper(IDBCursor* aCursor)
   : AsyncConnectionHelper(aCursor->Transaction(), aCursor->Request()),
     mCursor(aCursor), mActor(nsnull)
@@ -889,7 +888,7 @@ ContinueHelper::GetSuccessResult(JSContext* aCx,
 nsresult
 ContinueHelper::PackArgumentsForParentProcess(CursorRequestParams& aParams)
 {
-  ipc::ContinueParams params;
+  ContinueParams params;
 
   params.key() = mCursor->mContinueToKey;
   params.count() = uint32_t(mCount);
@@ -914,12 +913,12 @@ ContinueHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     return Error;
   }
 
-  ipc::ResponseValue response;
+  ResponseValue response;
   if (NS_FAILED(aResultCode)) {
     response = aResultCode;
   }
   else {
-    ipc::ContinueResponse continueResponse;
+    ContinueResponse continueResponse;
     continueResponse.key() = mKey;
     continueResponse.objectKey() = mObjectKey;
     continueResponse.cloneInfo() = mCloneReadInfo;
@@ -942,7 +941,7 @@ ContinueHelper::UnpackResponseFromParentProcess(
   NS_ASSERTION(aResponseValue.type() == ResponseValue::TContinueResponse,
                "Bad response type!");
 
-  const ipc::ContinueResponse& response = aResponseValue.get_ContinueResponse();
+  const ContinueResponse& response = aResponseValue.get_ContinueResponse();
 
   mKey = response.key();
   mObjectKey = response.objectKey();
