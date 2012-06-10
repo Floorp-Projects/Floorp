@@ -21,6 +21,7 @@
 #include "mozilla/dom/indexedDB/PIndexedDBObjectStore.h"
 
 USING_INDEXEDDB_NAMESPACE
+using namespace mozilla::dom::indexedDB::ipc;
 
 namespace {
 
@@ -419,17 +420,17 @@ IDBKeyRange::GetUpperOpen(bool* aUpperOpen)
 
 // Explicitly instantiate for all our key range types... Grumble.
 template already_AddRefed<IDBKeyRange>
-IDBKeyRange::FromSerializedKeyRange<ipc::FIXME_Bug_521898_objectstore::KeyRange>
-(const ipc::FIXME_Bug_521898_objectstore::KeyRange& aKeyRange);
+IDBKeyRange::FromSerializedKeyRange<FIXME_Bug_521898_objectstore::KeyRange>
+(const FIXME_Bug_521898_objectstore::KeyRange& aKeyRange);
 
 template already_AddRefed<IDBKeyRange>
-IDBKeyRange::FromSerializedKeyRange<ipc::FIXME_Bug_521898_index::KeyRange>
-(const ipc::FIXME_Bug_521898_index::KeyRange& aKeyRange);
+IDBKeyRange::FromSerializedKeyRange<FIXME_Bug_521898_index::KeyRange>
+(const FIXME_Bug_521898_index::KeyRange& aKeyRange);
 
 template void
-IDBKeyRange::ToSerializedKeyRange<ipc::FIXME_Bug_521898_objectstore::KeyRange>
-(ipc::FIXME_Bug_521898_objectstore::KeyRange& aKeyRange);
+IDBKeyRange::ToSerializedKeyRange<FIXME_Bug_521898_objectstore::KeyRange>
+(FIXME_Bug_521898_objectstore::KeyRange& aKeyRange);
 
 template void
-IDBKeyRange::ToSerializedKeyRange<ipc::FIXME_Bug_521898_index::KeyRange>
-(ipc::FIXME_Bug_521898_index::KeyRange& aKeyRange);
+IDBKeyRange::ToSerializedKeyRange<FIXME_Bug_521898_index::KeyRange>
+(FIXME_Bug_521898_index::KeyRange& aKeyRange);
