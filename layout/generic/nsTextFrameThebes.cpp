@@ -4486,7 +4486,8 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext,
   for (nsIFrame* f = this, *fChild = nsnull;
        f;
        fChild = f,
-       f = nsLayoutUtils::GetParentOrPlaceholderFor(f))
+       f = nsLayoutUtils::GetParentOrPlaceholderFor(
+             aPresContext->FrameManager(), f))
   {
     nsStyleContext *const context = f->GetStyleContext();
     if (!context->HasTextDecorationLines()) {

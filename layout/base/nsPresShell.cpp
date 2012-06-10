@@ -53,7 +53,7 @@
 #include "nsHTMLParts.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
-#include "mozilla/Selection.h"
+#include "nsTypedSelection.h"
 #include "nsLayoutCID.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMRange.h"
@@ -2516,8 +2516,6 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
     if (aIntrinsicDirty == eStyleChange) {
       // Mark all descendants dirty (using an nsTArray stack rather than
       // recursion).
-      // Note that nsHTMLReflowState::InitResizeFlags has some similar
-      // code; see comments there for how and why it differs.
       nsAutoTArray<nsIFrame*, 32> stack;
       stack.AppendElement(subtreeRoot);
 
@@ -3098,9 +3096,7 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                              PRUint32                 aFlags)
 {
   nsPoint scrollPt = aScrollFrame->GetScrollPosition();
-  nsRect visibleRect(scrollPt,
-                     aScrollFrame->GetScrollPositionClampingScrollPortSize());
-
+  nsRect visibleRect(scrollPt, aScrollFrame->GetScrollPortRect().Size());
   nsSize lineSize;
   // Don't call GetLineScrollAmount unless we actually need it. Not only
   // does this save time, but it's not safe to call GetLineScrollAmount
@@ -6408,10 +6404,8 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
         }
         else {
           nsCOMPtr<nsIContent> targetContent;
-          if (mCurrentEventFrame) {
-            rv = mCurrentEventFrame->GetContentForEvent(aEvent,
-                                                        getter_AddRefs(targetContent));
-          }
+          rv = mCurrentEventFrame->GetContentForEvent(aEvent,
+                                                      getter_AddRefs(targetContent));
           if (NS_SUCCEEDED(rv) && targetContent) {
             nsEventDispatcher::Dispatch(targetContent, mPresContext, aEvent,
                                         nsnull, aStatus, &eventCB);

@@ -29,7 +29,6 @@
 #include "IndexedDatabaseInlines.h"
 
 USING_INDEXEDDB_NAMESPACE
-using namespace mozilla::dom::indexedDB::ipc;
 
 MOZ_STATIC_ASSERT(sizeof(size_t) >= sizeof(IDBCursor::Direction),
                   "Relying on conversion between size_t and "
@@ -40,6 +39,8 @@ namespace {
 class CursorHelper : public AsyncConnectionHelper
 {
 public:
+  typedef ipc::CursorRequestParams CursorRequestParams;
+
   CursorHelper(IDBCursor* aCursor)
   : AsyncConnectionHelper(aCursor->Transaction(), aCursor->Request()),
     mCursor(aCursor), mActor(nsnull)
@@ -456,10 +457,22 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
                "Should have a cached primary key");
   NS_ASSERTION(tmp->mHaveCachedValue || JSVAL_IS_VOID(tmp->mCachedValue),
                "Should have a cached value");
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScriptOwner)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCachedKey)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCachedPrimaryKey)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCachedValue)
+  if (tmp->mScriptOwner) {
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mScriptOwner,
+                                               "mScriptOwner")
+  }
+  if (JSVAL_IS_GCTHING(tmp->mCachedKey)) {
+    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedKey);
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mCachedKey")
+  }
+  if (JSVAL_IS_GCTHING(tmp->mCachedPrimaryKey)) {
+    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedPrimaryKey);
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mCachedPrimaryKey")
+  }
+  if (JSVAL_IS_GCTHING(tmp->mCachedValue)) {
+    void *gcThing = JSVAL_TO_GCTHING(tmp->mCachedValue);
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mCachedValue")
+  }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBCursor)
@@ -863,7 +876,7 @@ ContinueHelper::GetSuccessResult(JSContext* aCx,
   UpdateCursorState();
 
   if (mKey.IsUnset()) {
-    *aVal = JSVAL_NULL;
+    *aVal = JSVAL_VOID;
   }
   else {
     nsresult rv = WrapNative(aCx, mCursor, aVal);
@@ -876,7 +889,7 @@ ContinueHelper::GetSuccessResult(JSContext* aCx,
 nsresult
 ContinueHelper::PackArgumentsForParentProcess(CursorRequestParams& aParams)
 {
-  ContinueParams params;
+  ipc::ContinueParams params;
 
   params.key() = mCursor->mContinueToKey;
   params.count() = uint32_t(mCount);
@@ -901,12 +914,12 @@ ContinueHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     return Error;
   }
 
-  ResponseValue response;
+  ipc::ResponseValue response;
   if (NS_FAILED(aResultCode)) {
     response = aResultCode;
   }
   else {
-    ContinueResponse continueResponse;
+    ipc::ContinueResponse continueResponse;
     continueResponse.key() = mKey;
     continueResponse.objectKey() = mObjectKey;
     continueResponse.cloneInfo() = mCloneReadInfo;
@@ -929,7 +942,7 @@ ContinueHelper::UnpackResponseFromParentProcess(
   NS_ASSERTION(aResponseValue.type() == ResponseValue::TContinueResponse,
                "Bad response type!");
 
-  const ContinueResponse& response = aResponseValue.get_ContinueResponse();
+  const ipc::ContinueResponse& response = aResponseValue.get_ContinueResponse();
 
   mKey = response.key();
   mObjectKey = response.objectKey();

@@ -3106,13 +3106,6 @@ nsGenericHTMLElement::GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu)
   return NS_OK;
 }
 
-bool
-nsGenericHTMLElement::IsLabelable() const
-{
-  return Tag() == nsGkAtoms::progress ||
-         Tag() == nsGkAtoms::meter;
-}
-
 //----------------------------------------------------------------------
 
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo)
@@ -3473,7 +3466,8 @@ nsGenericHTMLFormElement::CanBeDisabled() const
   return
     type != NS_FORM_LABEL &&
     type != NS_FORM_OBJECT &&
-    type != NS_FORM_OUTPUT;
+    type != NS_FORM_OUTPUT &&
+    type != NS_FORM_METER;
 }
 
 bool
@@ -3759,20 +3753,6 @@ void
 nsGenericHTMLFormElement::FieldSetDisabledChanged(bool aNotify)
 {
   UpdateState(aNotify);
-}
-
-bool
-nsGenericHTMLFormElement::IsLabelable() const
-{
-  // TODO: keygen should be in that list, see bug 101019.
-  // TODO: NS_FORM_INPUT_HIDDEN should be removed, see bug 597650.
-  PRUint32 type = GetType();
-  return type & NS_FORM_INPUT_ELEMENT ||
-         type & NS_FORM_BUTTON_ELEMENT ||
-         // type == NS_FORM_KEYGEN ||
-         type == NS_FORM_OUTPUT ||
-         type == NS_FORM_SELECT ||
-         type == NS_FORM_TEXTAREA;
 }
 
 //----------------------------------------------------------------------

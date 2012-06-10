@@ -321,7 +321,7 @@ public final class Tab {
 
         // Only update the favicon if it's bigger than the current favicon.
         // We use -1 to represent icons with sizes="any".
-        if (size == -1 || size >= mFaviconSize) {
+        if (size == -1 || size > mFaviconSize) {
             mFaviconUrl = faviconUrl;
             mFaviconSize = size;
             Log.i(LOGTAG, "Updated favicon URL for tab with id: " + mId);

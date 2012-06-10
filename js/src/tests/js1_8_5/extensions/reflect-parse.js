@@ -25,18 +25,14 @@ function returnStmt(expr) Pattern({ type: "ReturnStatement", argument: expr })
 function yieldExpr(expr) Pattern({ type: "YieldExpression", argument: expr })
 function lit(val) Pattern({ type: "Literal", value: val })
 var thisExpr = Pattern({ type: "ThisExpression" });
-function funDecl(id, params, body, defaults=[], rest=null) Pattern(
-    { type: "FunctionDeclaration",
-      id: id,
-      params: params,
-      defaults: defaults,
-      body: body,
-      rest: rest,
-      generator: false })
+function funDecl(id, params, body) Pattern({ type: "FunctionDeclaration",
+                                             id: id,
+                                             params: params,
+                                             body: body,
+                                             generator: false })
 function genFunDecl(id, params, body) Pattern({ type: "FunctionDeclaration",
                                                 id: id,
                                                 params: params,
-                                                defaults: [],
                                                 body: body,
                                                 generator: true })
 function varDecl(decls) Pattern({ type: "VariableDeclaration", declarations: decls, kind: "var" })
@@ -216,14 +212,6 @@ assertDecl("function foo() { }",
            funDecl(ident("foo"), [], blockStmt([])));
 assertDecl("function foo() { return 42 }",
            funDecl(ident("foo"), [], blockStmt([returnStmt(lit(42))])));
-
-assertDecl("function foo(...rest) { }",
-           funDecl(ident("foo"), [], blockStmt([]), [], ident("rest")));
-
-assertDecl("function foo(a=4) { }", funDecl(ident("foo"), [ident("a")], blockStmt([]), [lit(4)]));
-assertDecl("function foo(a, b=4) { }", funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [lit(4)]));
-assertDecl("function foo(a, b=4, ...rest) { }",
-           funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [lit(4)], ident("rest")));
 
 
 // Bug 591437: rebound args have their defs turned into uses

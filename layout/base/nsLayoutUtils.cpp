@@ -23,6 +23,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"
 #include "nsDisplayList.h"
@@ -667,12 +668,12 @@ nsLayoutUtils::DoCompareTreePosition(nsIContent* aContent1,
 }
 
 static nsIFrame* FillAncestors(nsIFrame* aFrame,
-                               nsIFrame* aStopAtAncestor,
+                               nsIFrame* aStopAtAncestor, nsFrameManager* aFrameManager,
                                nsTArray<nsIFrame*>* aAncestors)
 {
   while (aFrame && aFrame != aStopAtAncestor) {
     aAncestors->AppendElement(aFrame);
-    aFrame = nsLayoutUtils::GetParentOrPlaceholderFor(aFrame);
+    aFrame = nsLayoutUtils::GetParentOrPlaceholderFor(aFrameManager, aFrame);
   }
   return aFrame;
 }
@@ -705,16 +706,17 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
     NS_ERROR("no common ancestor at all, different documents");
     return 0;
   }
+  nsFrameManager* frameManager = presContext->PresShell()->FrameManager();
 
   nsAutoTArray<nsIFrame*,20> frame1Ancestors;
-  if (!FillAncestors(aFrame1, aCommonAncestor, &frame1Ancestors)) {
+  if (!FillAncestors(aFrame1, aCommonAncestor, frameManager, &frame1Ancestors)) {
     // We reached the root of the frame tree ... if aCommonAncestor was set,
     // it is wrong
     aCommonAncestor = nsnull;
   }
 
   nsAutoTArray<nsIFrame*,20> frame2Ancestors;
-  if (!FillAncestors(aFrame2, aCommonAncestor, &frame2Ancestors) &&
+  if (!FillAncestors(aFrame2, aCommonAncestor, frameManager, &frame2Ancestors) &&
       aCommonAncestor) {
     // We reached the root of the frame tree ... aCommonAncestor was wrong.
     // Try again with no hint.
@@ -937,9 +939,11 @@ nsLayoutUtils::HasPseudoStyle(nsIContent* aContent,
 nsPoint
 nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(nsIDOMEvent* aDOMEvent, nsIFrame* aFrame)
 {
-  if (!aDOMEvent)
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aDOMEvent));
+  NS_ASSERTION(privateEvent, "bad implementation");
+  if (!privateEvent)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  nsEvent *event = aDOMEvent->GetInternalNSEvent();
+  nsEvent *event = privateEvent->GetInternalNSEvent();
   if (!event)
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   return GetEventCoordinatesRelativeTo(event, aFrame);
@@ -2094,31 +2098,23 @@ nsLayoutUtils::GetNonGeneratedAncestor(nsIFrame* aFrame)
   if (!(aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT))
     return aFrame;
 
+  nsFrameManager* frameManager = aFrame->PresContext()->FrameManager();
   nsIFrame* f = aFrame;
   do {
-    f = GetParentOrPlaceholderFor(f);
+    f = GetParentOrPlaceholderFor(frameManager, f);
   } while (f->GetStateBits() & NS_FRAME_GENERATED_CONTENT);
   return f;
 }
 
 nsIFrame*
-nsLayoutUtils::GetParentOrPlaceholderFor(nsIFrame* aFrame)
+nsLayoutUtils::GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
+                                         nsIFrame* aFrame)
 {
   if ((aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
       && !aFrame->GetPrevInFlow()) {
-    return aFrame->PresContext()->PresShell()->FrameManager()->
-      GetPlaceholderFrameFor(aFrame);
+    return aFrameManager->GetPlaceholderFrameFor(aFrame);
   }
   return aFrame->GetParent();
-}
-
-nsIFrame*
-nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame)
-{
-  nsIFrame* f = GetParentOrPlaceholderFor(aFrame);
-  if (f)
-    return f;
-  return GetCrossDocParentFrame(aFrame);
 }
 
 nsIFrame*

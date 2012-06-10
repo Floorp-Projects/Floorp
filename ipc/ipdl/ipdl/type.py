@@ -566,8 +566,7 @@ With this information, it finally type checks the AST.'''
                 and runpass(CheckProcessGraph(self.errors))):
             return False
 
-        if (tu.protocol
-            and len(tu.protocol.startStates)
+        if (len(tu.protocol.startStates)
             and not runpass(CheckStateMachine(self.errors))):
             return False
         return True
@@ -611,142 +610,105 @@ class GatherDecls(TcheckVisitor):
 
         # pretend like the translation unit "using"-ed these for the
         # sake of type checking and C++ code generation
-        tu.builtinUsing = self.builtinUsing
+        tu.using = self.builtinUsing + tu.using
 
-        # for everyone's sanity, enforce that the filename and tu name
-        # match
+        p = tu.protocol
+
+        # for everyone's sanity, enforce that the filename and
+        # protocol name match
         basefilename = os.path.basename(tu.filename)
-        expectedfilename = '%s.ipdl'% (tu.name)
-        if not tu.protocol:
-            # header
-            expectedfilename += 'h'
+        expectedfilename = '%s.ipdl'% (p.name)
+
         if basefilename != expectedfilename:
-            self.error(tu.loc,
-                       "expected file for translation unit `%s' to be named `%s'; instead it's named `%s'",
-                       tu.name, expectedfilename, basefilename)
+            self.error(p.loc,
+                       "expected file defining protocol `%s' to be named `%s'; instead it's named `%s'",
+                       p.name, expectedfilename, basefilename)
 
-        if tu.protocol:
-            assert tu.name == tu.protocol.name
+        # FIXME/cjones: it's a little weird and counterintuitive to put
+        # both the namespace and non-namespaced name in the global scope.
+        # try to figure out something better; maybe a type-neutral |using|
+        # that works for C++ and protocol types?
+        qname = p.qname()
+        if 0 == len(qname.quals):
+            fullname = None
+        else:
+            fullname = str(qname)
+        p.decl = self.declare(
+            loc=p.loc,
+            type=ProtocolType(qname, p.sendSemantics,
+                              stateless=(0 == len(p.transitionStmts))),
+            shortname=p.name,
+            fullname=fullname)
 
-            p = tu.protocol
-
-            # FIXME/cjones: it's a little weird and counterintuitive
-            # to put both the namespace and non-namespaced name in the
-            # global scope.  try to figure out something better; maybe
-            # a type-neutral |using| that works for C++ and protocol
-            # types?
-            qname = p.qname()
-            if 0 == len(qname.quals):
-                fullname = None
-            else:
-                fullname = str(qname)
-            p.decl = self.declare(
-                loc=p.loc,
-                type=ProtocolType(qname, p.sendSemantics,
-                                  stateless=(0 == len(p.transitionStmts))),
-                shortname=p.name,
-                fullname=fullname)
-
-            # XXX ugh, this sucks.  but we need this information to compute
-            # what friend decls we need in generated C++
-            p.decl.type._ast = p
+        # XXX ugh, this sucks.  but we need this information to compute
+        # what friend decls we need in generated C++
+        p.decl.type._p = p
 
         # make sure we have decls for all dependent protocols
-        for pinc in tu.includes:
+        for pinc in tu.protocolIncludes:
             pinc.accept(self)
 
         # declare imported (and builtin) C++ types
-        for using in tu.builtinUsing:
-            using.accept(self)
         for using in tu.using:
             using.accept(self)
 
         # first pass to "forward-declare" all structs and unions in
         # order to support recursive definitions
         for su in tu.structsAndUnions:
-            self.declareStructOrUnion(su)
+            qname = su.qname()
+            if 0 == len(qname.quals):
+                fullname = None
+            else:
+                fullname = str(qname)
+
+            if isinstance(su, StructDecl):
+                sutype = StructType(qname, [ ])
+            elif isinstance(su, UnionDecl):
+                sutype = UnionType(qname, [ ])
+            else: assert 0 and 'unknown type'
+
+            su.decl = self.declare(
+                loc=su.loc,
+                type=sutype,
+                shortname=su.name,
+                fullname=fullname)
 
         # second pass to check each definition
         for su in tu.structsAndUnions:
             su.accept(self)
-        for inc in tu.includes:
-            if inc.tu.filetype == 'header':
-                for su in inc.tu.structsAndUnions:
-                    su.accept(self)
 
-        if tu.protocol:
-            # grab symbols in the protocol itself
-            p.accept(self)
-
+        # grab symbols in the protocol itself
+        p.accept(self)
 
         tu.type = VOID
 
         self.symtab = savedSymtab
 
-    def declareStructOrUnion(self, su):
-        if hasattr(su, 'decl'):
-            self.symtab.declare(su.decl)
-            return
 
-        qname = su.qname()
-        if 0 == len(qname.quals):
-            fullname = None
-        else:
-            fullname = str(qname)
-
-        if isinstance(su, StructDecl):
-            sutype = StructType(qname, [ ])
-        elif isinstance(su, UnionDecl):
-            sutype = UnionType(qname, [ ])
-        else: assert 0 and 'unknown type'
-
-        # XXX more suckage.  this time for pickling structs/unions
-        # declared in headers.
-        sutype._ast = su
-
-        su.decl = self.declare(
-            loc=su.loc,
-            type=sutype,
-            shortname=su.name,
-            fullname=fullname)
-
-
-    def visitInclude(self, inc):
-        if inc.tu is None:
+    def visitProtocolInclude(self, pi):
+        if pi.tu is None:
             self.error(
-                inc.loc,
+                pi.loc,
                 "(type checking here will be unreliable because of an earlier error)")
             return
-        inc.tu.accept(self)
-        if inc.tu.protocol:
-            self.symtab.declare(inc.tu.protocol.decl)
-        else:
-            # This is a header.  Import its "exported" globals into
-            # our scope.
-            for using in inc.tu.using:
-                using.accept(self)
-            for su in inc.tu.structsAndUnions:
-                self.declareStructOrUnion(su)
+        pi.tu.accept(self)
+        self.symtab.declare(pi.tu.protocol.decl)
 
     def visitStructDecl(self, sd):
-        # If we've already processed this struct, don't do it again.
-        if hasattr(sd, 'symtab'):
-            return
-
         stype = sd.decl.type
 
         self.symtab.enterScope(sd)
 
         for f in sd.fields:
-            ftypedecl = self.symtab.lookup(str(f.typespec))
+            ftypedecl = self.symtab.lookup(str(f.type))
             if ftypedecl is None:
                 self.error(f.loc, "field `%s' of struct `%s' has unknown type `%s'",
-                           f.name, sd.name, str(f.typespec))
+                           f.name, sd.name, str(f.type))
                 continue
 
             f.decl = self.declare(
                 loc=f.loc,
-                type=self._canonicalType(ftypedecl.type, f.typespec),
+                type=self._canonicalType(ftypedecl.type, f.type),
                 shortname=f.name,
                 fullname=None)
             stype.fields.append(f.decl.type)
@@ -755,10 +717,6 @@ class GatherDecls(TcheckVisitor):
 
     def visitUnionDecl(self, ud):
         utype = ud.decl.type
-
-        # If we've already processed this union, don't do it again.
-        if len(utype.components):
-            return
         
         for c in ud.components:
             cdecl = self.symtab.lookup(str(c))
@@ -1226,12 +1184,11 @@ class CheckTypes(TcheckVisitor):
         self.visited = set()
         self.ptype = None
 
-    def visitInclude(self, inc):
+    def visitProtocolInclude(self, inc):
         if inc.tu.filename in self.visited:
             return
         self.visited.add(inc.tu.filename)
-        if inc.tu.protocol:
-            inc.tu.protocol.accept(self)
+        inc.tu.protocol.accept(self)
 
 
     def visitStructDecl(self, sd):
@@ -1632,9 +1589,8 @@ class BuildProcessGraph(TcheckVisitor):
         def visitTranslationUnit(self, tu):
             TcheckVisitor.visitTranslationUnit(self, tu)
 
-        def visitInclude(self, inc):
-            if inc.tu.protocol:
-                inc.tu.protocol.accept(self)
+        def visitProtocolInclude(self, pi):
+            pi.tu.protocol.accept(self)
 
         def visitProtocol(self, p):
             ptype = p.decl.type
@@ -1670,9 +1626,8 @@ class BuildProcessGraph(TcheckVisitor):
         tu.accept(self.findSpawns(self.errors))
         TcheckVisitor.visitTranslationUnit(self, tu)
 
-    def visitInclude(self, inc):
-        if inc.tu.protocol:
-            inc.tu.protocol.accept(self)
+    def visitProtocolInclude(self, pi):
+        pi.tu.protocol.accept(self)
 
     def visitProtocol(self, p):
         ptype = p.decl.type

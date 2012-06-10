@@ -14,7 +14,6 @@ let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
 loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
 loader.loadSubScript("chrome://marionette/content/marionette-log-obj.js");
-loader.loadSubScript("chrome://marionette/content/marionette-perf.js");
 Cu.import("chrome://marionette/content/marionette-elements.js");
 let utils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
@@ -122,7 +121,6 @@ function MarionetteDriverActor(aConnection)
   this.scriptTimeout = null;
   this.timer = null;
   this.marionetteLog = new MarionetteLogObj();
-  this.marionettePerf = new MarionettePerfData();
   this.command_id = null;
   this.mainFrame = null; //topmost chrome frame
   this.curFrame = null; //subframe that currently has focus
@@ -133,7 +131,7 @@ function MarionetteDriverActor(aConnection)
   this.messageManager.addMessageListener("Marionette:done", this);
   this.messageManager.addMessageListener("Marionette:error", this);
   this.messageManager.addMessageListener("Marionette:log", this);
-  this.messageManager.addMessageListener("Marionette:shareData", this);
+  this.messageManager.addMessageListener("Marionette:testLog", this);
   this.messageManager.addMessageListener("Marionette:register", this);
   this.messageManager.addMessageListener("Marionette:goUrl", this);
   this.messageManager.addMessageListener("Marionette:runEmulatorCmd", this);
@@ -395,21 +393,6 @@ MarionetteDriverActor.prototype = {
   },
 
   /**
-   * Log some performance data
-   */
-  addPerfData: function MDA_addPerfData(aRequest) {
-    this.marionettePerf.addPerfData(aRequest.suite, aRequest.name, aRequest.value);
-    this.sendOk();
-  },
-
-  /**
-   * Retrieve the performance data
-   */
-  getPerfData: function MDA_getPerfData() {
-    this.sendResponse(this.marionettePerf.getPerfData());
-  },
-
-  /**
    * Sets the context of the subsequent commands to be either 'chrome' or 'content'
    *
    * @param object aRequest
@@ -540,7 +523,7 @@ MarionetteDriverActor.prototype = {
     }
 
     let curWindow = this.getCurrentWindow();
-    let marionette = new Marionette(this, curWindow, "chrome", this.marionetteLog, this.marionettePerf);
+    let marionette = new Marionette(this, curWindow, "chrome", this.marionetteLog);
     let _chromeSandbox = this.createExecuteSandbox(curWindow, marionette, aRequest.args);
     if (!_chromeSandbox)
       return;
@@ -647,7 +630,7 @@ MarionetteDriverActor.prototype = {
     let curWindow = this.getCurrentWindow();
     let original_onerror = curWindow.onerror;
     let that = this;
-    let marionette = new Marionette(this, curWindow, "chrome", this.marionetteLog, this.marionettePerf);
+    let marionette = new Marionette(this, curWindow, "chrome", this.marionetteLog);
     marionette.command_id = this.command_id;
 
     function chromeAsyncReturnFunc(value, status) {
@@ -1218,7 +1201,7 @@ MarionetteDriverActor.prototype = {
     this.messageManager.removeMessageListener("Marionette:done", this);
     this.messageManager.removeMessageListener("Marionette:error", this);
     this.messageManager.removeMessageListener("Marionette:log", this);
-    this.messageManager.removeMessageListener("Marionette:shareData", this);
+    this.messageManager.removeMessageListener("Marionette:testLog", this);
     this.messageManager.removeMessageListener("Marionette:register", this);
     this.messageManager.removeMessageListener("Marionette:goUrl", this);
     this.messageManager.removeMessageListener("Marionette:runEmulatorCmd", this);
@@ -1307,14 +1290,9 @@ MarionetteDriverActor.prototype = {
         //log server-side messages
         logger.info(message.json.message);
         break;
-      case "Marionette:shareData":
+      case "Marionette:testLog":
         //log messages from tests
-        if (message.json.log) {
-          this.marionetteLog.addLogs(message.json.log);
-        }
-        if (message.json.perf) {
-          this.marionettePerf.appendPerfData(message.json.perf);
-        }
+        this.marionetteLog.addLogs(message.json.value);
         break;
       case "Marionette:runEmulatorCmd":
         this.sendToClient(message.json);
@@ -1353,8 +1331,6 @@ MarionetteDriverActor.prototype.requestTypes = {
   "newSession": MarionetteDriverActor.prototype.newSession,
   "log": MarionetteDriverActor.prototype.log,
   "getLogs": MarionetteDriverActor.prototype.getLogs,
-  "addPerfData": MarionetteDriverActor.prototype.addPerfData,
-  "getPerfData": MarionetteDriverActor.prototype.getPerfData,
   "setContext": MarionetteDriverActor.prototype.setContext,
   "executeScript": MarionetteDriverActor.prototype.execute,
   "setScriptTimeout": MarionetteDriverActor.prototype.setScriptTimeout,

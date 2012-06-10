@@ -89,10 +89,10 @@ pref("network.http.pipelining.ssl", true);
 pref("network.http.proxy.pipelining", true);
 pref("network.http.pipelining.maxrequests" , 6);
 pref("network.http.keep-alive.timeout", 600);
-pref("network.http.max-connections", 20);
-pref("network.http.max-connections-per-server", 15);
-pref("network.http.max-persistent-connections-per-server", 6);
-pref("network.http.max-persistent-connections-per-proxy", 8);
+pref("network.http.max-connections", 6);
+pref("network.http.max-connections-per-server", 4);
+pref("network.http.max-persistent-connections-per-server", 4);
+pref("network.http.max-persistent-connections-per-proxy", 4);
 #ifdef MOZ_PLATFORM_MAEMO
 pref("network.autodial-helper.enabled", true);
 #endif
@@ -438,10 +438,7 @@ pref("dom.ipc.plugins.enabled", true);
 #endif
 
 pref("plugins.click_to_play", true);
-// Disabled because of thread safety problem
-// in getting the bits from the surface.
-// Bug 756253
-pref("plugins.use_placeholder", 0);
+pref("plugins.use_placeholder", 1);
 
 // process priority
 // higher values give content process less CPU time
@@ -692,6 +689,9 @@ pref("direct-texture.force.disabled", false);
 
 // show checkerboard pattern on android; we use background colour instead
 pref("gfx.show_checkerboard_pattern", true);
+
+pref("remote-debugger.enabled", false);
+pref("remote-debugger.port", 6000);
 
 // This fraction in 1000ths of velocity remains after every animation frame when the velocity is low.
 pref("ui.scrolling.friction_slow", -1);

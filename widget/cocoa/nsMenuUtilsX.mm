@@ -16,6 +16,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXULCommandEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsPIDOMWindow.h"
 
 void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
@@ -30,16 +31,17 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
     domDoc->CreateEvent(NS_LITERAL_STRING("xulcommandevent"),
                         getter_AddRefs(event));
     nsCOMPtr<nsIDOMXULCommandEvent> command = do_QueryInterface(event);
+    nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(command);
 
     // FIXME: Should probably figure out how to init this with the actual
     // pressed keys, but this is a big old edge case anyway. -dwh
-    if (command &&
+    if (pEvent &&
         NS_SUCCEEDED(command->InitCommandEvent(NS_LITERAL_STRING("command"),
                                                true, true,
                                                doc->GetWindow(), 0,
                                                false, false, false,
                                                false, nsnull))) {
-      event->SetTrusted(true);
+      pEvent->SetTrusted(true);
       bool dummy;
       target->DispatchEvent(event, &dummy);
     }

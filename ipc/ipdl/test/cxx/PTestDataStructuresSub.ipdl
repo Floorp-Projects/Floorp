@@ -1,4 +1,3 @@
-include PTestDataStructuresCommon;
 include protocol PTestDataStructures;
 
 namespace mozilla {

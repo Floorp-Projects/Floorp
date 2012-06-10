@@ -95,13 +95,14 @@ StackFrame::initDummyFrame(JSContext *cx, JSObject &chain)
 
 template <class T, class U, StackFrame::TriggerPostBarriers doPostBarrier>
 void
-StackFrame::copyFrameAndValues(JSContext *cx, T *vp, StackFrame *otherfp, U *othervp, Value *othersp)
+StackFrame::copyFrameAndValues(JSContext *cx, StackFrame *fp, T *vp,
+                               StackFrame *otherfp, U *othervp, Value *othersp)
 {
     JS_ASSERT((U *)vp == (U *)this - ((U *)otherfp - othervp));
     JS_ASSERT((Value *)othervp == otherfp->generatorArgsSnapshotBegin());
     JS_ASSERT(othersp >= otherfp->slots());
     JS_ASSERT(othersp <= otherfp->generatorSlotsSnapshotBegin() + otherfp->script()->nslots);
-    JS_ASSERT((T *)this - vp == (U *)otherfp - othervp);
+    JS_ASSERT((T *)fp - vp == (U *)otherfp - othervp);
 
     /* Copy args, StackFrame, and slots. */
     U *srcend = (U *)otherfp->generatorArgsSnapshotEnd();
@@ -109,12 +110,12 @@ StackFrame::copyFrameAndValues(JSContext *cx, T *vp, StackFrame *otherfp, U *oth
     for (U *src = othervp; src < srcend; src++, dst++)
         *dst = *src;
 
-    *this = *otherfp;
+    *fp = *otherfp;
     if (doPostBarrier)
-        writeBarrierPost();
+        fp->writeBarrierPost();
 
     srcend = (U *)othersp;
-    dst = (T *)slots();
+    dst = (T *)fp->slots();
     for (U *src = (U *)otherfp->slots(); src < srcend; src++, dst++)
         *dst = *src;
 
@@ -123,29 +124,31 @@ StackFrame::copyFrameAndValues(JSContext *cx, T *vp, StackFrame *otherfp, U *oth
 }
 
 /* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
-template
-void StackFrame::copyFrameAndValues<Value, HeapValue, StackFrame::NoPostBarrier>(
-                                    JSContext *, Value *, StackFrame *, HeapValue *, Value *);
-template
-void StackFrame::copyFrameAndValues<HeapValue, Value, StackFrame::DoPostBarrier>(
-                                    JSContext *, HeapValue *, StackFrame *, Value *, Value *);
+template void StackFrame::copyFrameAndValues<Value, HeapValue, StackFrame::NoPostBarrier>(
+                                             JSContext *, StackFrame *, Value *,
+                                             StackFrame *, HeapValue *, Value *);
+template void StackFrame::copyFrameAndValues<HeapValue, Value, StackFrame::DoPostBarrier>(
+                                             JSContext *, StackFrame *, HeapValue *,
+                                             StackFrame *, Value *, Value *);
 
 void
 StackFrame::writeBarrierPost()
 {
-    /* This needs to follow the same rules as in StackFrame::mark. */
+    /* This needs to follow the same rules as in js_TraceStackFrame. */
     if (scopeChain_)
         JSObject::writeBarrierPost(scopeChain_, (void *)&scopeChain_);
     if (isDummyFrame())
         return;
     if (flags_ & HAS_ARGS_OBJ)
         JSObject::writeBarrierPost(argsObj_, (void *)&argsObj_);
-    if (isFunctionFrame()) {
-        JSFunction::writeBarrierPost(exec.fun, (void *)&exec.fun);
-        if (isEvalFrame())
-            JSScript::writeBarrierPost(u.evalScript, (void *)&u.evalScript);
-    } else {
-        JSScript::writeBarrierPost(exec.script, (void *)&exec.script);
+    if (isScriptFrame()) {
+        if (isFunctionFrame()) {
+            JSFunction::writeBarrierPost((JSObject *)exec.fun, (void *)&exec.fun);
+            if (isEvalFrame())
+                JSScript::writeBarrierPost(u.evalScript, (void *)&u.evalScript);
+        } else {
+            JSScript::writeBarrierPost(exec.script, (void *)&exec.script);
+        }
     }
     if (hasReturnValue())
         HeapValue::writeBarrierPost(rval_, &rval_);
@@ -1040,7 +1043,7 @@ ContextStack::pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrame
 
     /* Copy from the generator's floating frame to the stack. */
     stackfp->copyFrameAndValues<Value, HeapValue, StackFrame::NoPostBarrier>(
-                                cx, stackvp, gen->fp, genvp, gen->regs.sp);
+                                cx, stackfp, stackvp, gen->fp, genvp, gen->regs.sp);
     stackfp->resetGeneratorPrev(cx);
     gfg->regs_.rebaseFromTo(gen->regs, *stackfp);
 
@@ -1065,7 +1068,7 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
     if (stackfp->isYielding()) {
         gen->regs.rebaseFromTo(stackRegs, *gen->fp);
         gen->fp->copyFrameAndValues<HeapValue, Value, StackFrame::DoPostBarrier>(
-                                    cx_, genvp, stackfp, stackvp, stackRegs.sp);
+                                    cx_, gen->fp, genvp, stackfp, stackvp, stackRegs.sp);
     }
 
     /* ~FrameGuard/popFrame will finish the popping. */

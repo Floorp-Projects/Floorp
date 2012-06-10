@@ -7,7 +7,6 @@
 #include "nsIDOMClassInfo.h"
 #include "nsDOMEvent.h"
 #include "nsIObserverService.h"
-#include "USSDReceivedEvent.h"
 #include "mozilla/Services.h"
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
@@ -15,7 +14,6 @@
 #define VOICECHANGE_EVENTNAME      NS_LITERAL_STRING("voicechange")
 #define DATACHANGE_EVENTNAME       NS_LITERAL_STRING("datachange")
 #define CARDSTATECHANGE_EVENTNAME  NS_LITERAL_STRING("cardstatechange")
-#define USSDRECEIVED_EVENTNAME     NS_LITERAL_STRING("ussdreceived")
 
 DOMCI_DATA(MozMobileConnection, mozilla::dom::network::MobileConnection)
 
@@ -26,7 +24,6 @@ namespace network {
 const char* kVoiceChangedTopic     = "mobile-connection-voice-changed";
 const char* kDataChangedTopic      = "mobile-connection-data-changed";
 const char* kCardStateChangedTopic = "mobile-connection-cardstate-changed";
-const char* kUssdReceivedTopic     = "mobile-connection-ussd-received";
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MobileConnection)
 
@@ -35,7 +32,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MobileConnection,
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(cardstatechange)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(voicechange)
   NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(datachange)
-  NS_CYCLE_COLLECTION_TRAVERSE_EVENT_HANDLER(ussdreceived)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
@@ -43,7 +39,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MobileConnection,
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(cardstatechange)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(voicechange)
   NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(datachange)
-  NS_CYCLE_COLLECTION_UNLINK_EVENT_HANDLER(ussdreceived)
   tmp->mProvider = nsnull;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -81,7 +76,6 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
   obs->AddObserver(this, kVoiceChangedTopic, false);
   obs->AddObserver(this, kDataChangedTopic, false);
   obs->AddObserver(this, kCardStateChangedTopic, false);
-  obs->AddObserver(this, kUssdReceivedTopic, false);
 }
 
 void
@@ -96,7 +90,6 @@ MobileConnection::Shutdown()
   obs->RemoveObserver(this, kVoiceChangedTopic);
   obs->RemoveObserver(this, kDataChangedTopic);
   obs->RemoveObserver(this, kCardStateChangedTopic);
-  obs->RemoveObserver(this, kUssdReceivedTopic);
 }
 
 // nsIObserver
@@ -118,19 +111,6 @@ MobileConnection::Observe(nsISupports* aSubject,
 
   if (!strcmp(aTopic, kCardStateChangedTopic)) {
     InternalDispatchEvent(CARDSTATECHANGE_EVENTNAME);
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, kUssdReceivedTopic)) {
-    nsString ussd;
-    ussd.Assign(aData);
-    nsRefPtr<USSDReceivedEvent> event = USSDReceivedEvent::Create(ussd);
-    NS_ASSERTION(event, "This should never fail!");
-
-    nsresult rv =
-      event->Dispatch(ToIDOMEventTarget(), USSDRECEIVED_EVENTNAME);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     return NS_OK;
   }
 
@@ -218,27 +198,6 @@ MobileConnection::SetCardLock(const jsval& aInfo, nsIDOMDOMRequest** aDomRequest
   return mProvider->SetCardLock(GetOwner(), aInfo, aDomRequest);
 }
 
-NS_IMETHODIMP
-MobileConnection::SendUSSD(const nsAString& aUSSDString,
-                           nsIDOMDOMRequest** request)
-{
-  if (!mProvider) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mProvider->SendUSSD(GetOwner(), aUSSDString, request);
-}
-
-NS_IMETHODIMP
-MobileConnection::CancelUSSD(nsIDOMDOMRequest** request)
-{
-  if (!mProvider) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return mProvider->CancelUSSD(GetOwner(), request);
-}
-
 nsresult
 MobileConnection::InternalDispatchEvent(const nsAString& aType)
 {
@@ -259,7 +218,6 @@ MobileConnection::InternalDispatchEvent(const nsAString& aType)
 NS_IMPL_EVENT_HANDLER(MobileConnection, cardstatechange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, voicechange)
 NS_IMPL_EVENT_HANDLER(MobileConnection, datachange)
-NS_IMPL_EVENT_HANDLER(MobileConnection, ussdreceived)
 
 } // namespace network
 } // namespace dom

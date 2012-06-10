@@ -90,7 +90,6 @@ whitelist_prefs.forEach(function (pref) {
         if self.marionette.session is None:
             self.marionette.start_session()
         self.loglines = None
-        self.perfdata = None
 
     def tearDown(self):
         if self.marionette.session is not None:
@@ -175,9 +174,6 @@ class MarionetteJSTestCase(CommonTestCase):
             results = self.marionette.execute_js_script(js, args)
 
             self.loglines = self.marionette.get_logs()
-            self.perfdata = self.marionette.get_perf_data()
-            print "in marionette_test"
-            print self.perfdata
 
             if launch_app:
                 self.kill_gaia_app(launch_app)
@@ -197,9 +193,8 @@ class MarionetteJSTestCase(CommonTestCase):
                 self.assertEqual(0, results['failed'],
                                  '%d tests failed:\n%s' % (results['failed'], '\n'.join(fails)))
 
-            if not self.perfdata:
-                self.assertTrue(results['passed'] + results['failed'] > 0,
-                                'no tests run')
+            self.assertTrue(results['passed'] + results['failed'] > 0,
+                            'no tests run')
             if self.marionette.session is not None:
                 self.marionette.delete_session()
 

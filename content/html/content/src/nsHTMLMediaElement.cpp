@@ -56,6 +56,8 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
+
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMNotifyAudioAvailableEvent.h"
 #include "nsMediaFragmentURIParser.h"
 #include "nsURIHashKey.h"

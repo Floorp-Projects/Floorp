@@ -25,7 +25,7 @@
 #include "nsThreadUtils.h"
 
 #include "nsDOMEventTargetHelper.h"
-#include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDocument.h"
 
 class AlertServiceObserver;

@@ -24,6 +24,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsGUIEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "prprf.h"
 #include "nsIDOMEventListener.h"
 #include "nsIJSContextStack.h"
@@ -75,7 +76,6 @@
 #include "sampler.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "nsIDOMFormData.h"
-#include "DictionaryHelpers.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "nsStreamListenerWrapper.h"
@@ -451,9 +451,7 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mFirstStartRequestSeen(false),
     mInLoadProgressEvent(false),
     mResultJSON(JSVAL_VOID),
-    mResultArrayBuffer(nsnull),
-    mIsAnon(false),
-    mIsSystem(false)
+    mResultArrayBuffer(nsnull)
 {
   nsLayoutStatics::AddRef();
 
@@ -493,16 +491,41 @@ nsXMLHttpRequest::RootResultArrayBuffer()
 nsresult
 nsXMLHttpRequest::Init()
 {
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  // Set the original mPrincipal, if available.
+  // Get JSContext from stack.
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+  if (!stack) {
+    return NS_OK;
+  }
+
+  JSContext *cx;
+
+  if (NS_FAILED(stack->Peek(&cx)) || !cx) {
+    return NS_OK;
+  }
+
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
   nsCOMPtr<nsIPrincipal> subjectPrincipal;
   if (secMan) {
-    secMan->GetSystemPrincipal(getter_AddRefs(subjectPrincipal));
+    nsresult rv = secMan->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   NS_ENSURE_STATE(subjectPrincipal);
-  Construct(subjectPrincipal, nsnull);
+
+  nsIScriptContext* context = GetScriptContextFromJSContext(cx);
+  nsCOMPtr<nsPIDOMWindow> window;
+  if (context) {
+    window = do_QueryInterface(context->GetGlobalObject());
+    if (window) {
+      window = window->GetCurrentInnerWindow();
+    }
+  }
+
+  Construct(subjectPrincipal, window);
   return NS_OK;
 }
-
 /**
  * This Init method should only be called by C++ consumers.
  */
@@ -538,41 +561,6 @@ nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
   NS_ENSURE_STATE(scriptPrincipal);
 
   Construct(scriptPrincipal->GetPrincipal(), owner);
-  if (argc) {
-    nsresult rv = InitParameters(cx, argv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
-nsresult
-nsXMLHttpRequest::InitParameters(JSContext* aCx, const jsval* aParams)
-{
-  XMLHttpRequestParameters* params = new XMLHttpRequestParameters();
-  nsresult rv = params->Init(aCx, aParams);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check for permissions.
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetOwner());
-  NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
-
-  // Chrome is always allowed access, so do the permission check only
-  // for non-chrome pages.
-  if (!nsContentUtils::IsCallerChrome()) {
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
-    NS_ENSURE_TRUE(doc, NS_OK);
-
-    nsCOMPtr<nsIURI> uri;
-    doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-
-    if (!nsContentUtils::URIIsChromeOrInPref(uri, "dom.systemXHR.whitelist")) {
-      return NS_OK;
-    }
-  }
-
-  mIsAnon = params->mozAnon;
-  mIsSystem = params->mozSystem;
-
   return NS_OK;
 }
 
@@ -671,8 +659,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsXMLHttpRequest,
                                                nsXHREventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultArrayBuffer)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mResultJSON)
+  if(tmp->mResultArrayBuffer) {
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mResultArrayBuffer,
+                                               "mResultArrayBuffer")
+  }
+  if (JSVAL_IS_GCTHING(tmp->mResultJSON)) {
+    void *gcThing = JSVAL_TO_GCTHING(tmp->mResultJSON);
+    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mResultJSON")
+  }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMCI_DATA(XMLHttpRequest, nsXMLHttpRequest)
@@ -1625,11 +1619,17 @@ nsXMLHttpRequest::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
     return rv;
   }
 
+  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(*aDOMEvent));
+  if (!privevent) {
+    NS_IF_RELEASE(*aDOMEvent);
+    return NS_ERROR_FAILURE;
+  }
+
   (*aDOMEvent)->InitEvent(NS_LITERAL_STRING(READYSTATE_STR),
                           false, false);
 
   // We assume anyone who managed to call CreateReadystatechangeEvent is trusted
-  (*aDOMEvent)->SetTrusted(true);
+  privevent->SetTrusted(true);
 
   return NS_OK;
 }
@@ -1664,7 +1664,11 @@ nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
     return;
   }
 
-  event->SetTrusted(true);
+  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(event));
+  if (!privevent) {
+    return;
+  }
+  privevent->SetTrusted(true);
 
   nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
   if (!progress) {
@@ -1707,7 +1711,7 @@ nsXMLHttpRequest::GetCurrentHttpChannel()
 bool
 nsXMLHttpRequest::IsSystemXHR()
 {
-  return mIsSystem || nsContentUtils::IsSystemPrincipal(mPrincipal);
+  return !!nsContentUtils::IsSystemPrincipal(mPrincipal);
 }
 
 nsresult
@@ -2280,7 +2284,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     mResponseXML = do_QueryInterface(responseDoc);
     mResponseXML->SetPrincipal(documentPrincipal);
 
-    if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
+    if (IsSystemXHR()) {
       mResponseXML->ForceEnableXULXBL();
     }
 
@@ -3043,10 +3047,6 @@ nsXMLHttpRequest::Send(JSContext *aCx, nsIVariant* aVariant, const Nullable<Requ
     // created a listener around 'this', do so now.
 
     listener = new nsStreamListenerWrapper(listener);
-  }
-
-  if (mIsAnon) {
-    AddLoadFlags(mChannel, nsIRequest::LOAD_ANONYMOUS);
   }
 
   NS_ASSERTION(listener != this,
@@ -3891,32 +3891,6 @@ nsXMLHttpRequest::GetUpload(nsIXMLHttpRequestUpload** aUpload)
   return NS_OK;
 }
 
-bool
-nsXMLHttpRequest::GetMozAnon()
-{
-  return mIsAnon;
-}
-
-NS_IMETHODIMP
-nsXMLHttpRequest::GetMozAnon(bool* aAnon)
-{
-  *aAnon = GetMozAnon();
-  return NS_OK;
-}
-
-bool
-nsXMLHttpRequest::GetMozSystem()
-{
-  return IsSystemXHR();
-}
-
-NS_IMETHODIMP
-nsXMLHttpRequest::GetMozSystem(bool* aSystem)
-{
-  *aSystem = GetMozSystem();
-  return NS_OK;
-}
-
 void
 nsXMLHttpRequest::HandleTimeoutCallback()
 {
@@ -4017,6 +3991,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpProgressEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMProgressEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLSProgressEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XMLHttpProgressEvent)

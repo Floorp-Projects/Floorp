@@ -43,7 +43,7 @@ SettingsLock.prototype = {
 
     while (!lock._requests.isEmpty()) {
       let info = lock._requests.dequeue();
-      debug("info: " + info.intent);
+      debug("info:" + info.intent);
       let request = info.request;
       switch (info.intent) {
         case "clear":
@@ -188,7 +188,7 @@ SettingsLock.prototype = {
 };
 
 const SETTINGSMANAGER_CONTRACTID = "@mozilla.org/settingsManager;1";
-const SETTINGSMANAGER_CID        = Components.ID("{dd9f5380-a454-11e1-b3dd-0800200c9a66}");
+const SETTINGSMANAGER_CID        = Components.ID("{5609d0a0-52a9-11e1-b86c-0800200c9a66}");
 const nsIDOMSettingsManager      = Ci.nsIDOMSettingsManager;
 
 let myGlobal = this;
@@ -204,7 +204,6 @@ function SettingsManager()
 
 SettingsManager.prototype = {
   _onsettingchange: null,
-  _callbacks: null,
 
   nextTick: function nextTick(aCallback, thisObj) {
     if (thisObj)
@@ -243,55 +242,19 @@ SettingsManager.prototype = {
     switch (aMessage.name) {
       case "Settings:Change:Return:OK":
         debug("Settings:Change:Return:OK");
-        if (this._onsettingchange || this._callbacks) {
-          debug('data:' + msg.key + ':' + msg.value + '\n');
+        if (!this._onsettingchange)
+          return;
 
-          if (this._onsettingchange) {
-            let event = new this._window.MozSettingsEvent("settingchanged", {
-              settingName: msg.key,
-              settingValue: msg.value
-            });
-            this._onsettingchange.handleEvent(event);
-          }
-          if (this._callbacks && this._callbacks[msg.key]) {
-            debug("observe callback called! " + msg.key + " " + this._callbacks[msg.key].length);
-            for (let cb in this._callbacks[msg.key]) {
-              this._callbacks[msg.key].forEach(function(cb) {
-                cb({settingName: msg.key, settingValue: msg.value});
-              });
-            }
-          }
-        } else {
-          debug("no observers stored!");
-        }
+        debug('key:' + msg.key + ', value:' + msg.value + '\n');
+        let event = new this._window.MozSettingsEvent("settingchanged", {
+          settingName: msg.key,
+          settingValue: msg.value
+        });
+
+        this._onsettingchange.handleEvent(event);
         break;
       default: 
         debug("Wrong message: " + aMessage.name);
-    }
-  },
-
-  addObserver: function addObserver(aName, aCallback) {
-    debug("addObserver " + aName);
-    if (!this._callbacks)
-      this._callbacks = {};
-    if (!this._callbacks[aName]) {
-      this._callbacks[aName] = [aCallback];
-    } else {
-      this._callbacks[aName].push(aCallback);
-    }
-  },
-
-  removeObserver: function removeObserver(aName, aCallback) {
-    debug("deleteObserver " + aName);
-    if (this._callbacks && this._callbacks[aName]) {
-      let index = this._callbacks[aName].indexOf(aCallback)
-      if (index != -1) {
-        this._callbacks[aName].splice(index, 1)
-      } else {
-        debug("Callback not found for: " + aName);
-      }
-    } else {
-      debug("No observers stored for " + aName);
     }
   },
 
@@ -327,6 +290,7 @@ SettingsManager.prototype = {
         this._innerWindowID = null;
         this._onsettingchange = null;
         this._settingsDB.close();
+        cpmm = null;
       }
     }
   },

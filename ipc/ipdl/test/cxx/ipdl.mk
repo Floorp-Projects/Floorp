@@ -5,7 +5,6 @@ IPDLSRCS =					\
   PTestBridgeMainSub.ipdl			\
   PTestCrashCleanup.ipdl			\
   PTestDataStructures.ipdl			\
-  PTestDataStructuresCommon.ipdlh		\
   PTestDataStructuresSub.ipdl			\
   PTestDesc.ipdl				\
   PTestDescSub.ipdl				\

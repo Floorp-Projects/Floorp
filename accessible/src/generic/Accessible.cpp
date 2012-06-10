@@ -345,7 +345,7 @@ Accessible::Description(nsString& aDescription)
 }
 
 NS_IMETHODIMP
-Accessible::GetAccessKey(nsAString& aAccessKey)
+Accessible::GetKeyboardShortcut(nsAString& aAccessKey)
 {
   aAccessKey.Truncate();
 
@@ -881,14 +881,88 @@ Accessible::GetDeepestChildAtPoint(PRInt32 aX, PRInt32 aY,
 void
 Accessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
 {
-  nsIFrame* frame = GetFrame();
-  if (frame) {
-    *aBoundingFrame = nsLayoutUtils::GetContainingBlockForClientRect(frame);
-    aTotalBounds = nsLayoutUtils::
-      GetAllInFlowRectsUnion(frame, *aBoundingFrame,
-                             nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
+/*
+ * This method is used to determine the bounds of a content node.
+ * Because HTML wraps and links are not always rectangular, this
+ * method uses the following algorithm:
+ *
+ * 1) Start with an empty rectangle
+ * 2) Add the rect for the primary frame from for the DOM node.
+ * 3) For each next frame at the same depth with the same DOM node, add that rect to total
+ * 4) If that frame is an inline frame, search deeper at that point in the tree, adding all rects
+ */
+
+  // Initialization area
+  *aBoundingFrame = nsnull;
+  nsIFrame* firstFrame = GetFrame();
+  if (!firstFrame)
+    return;
+
+  // Find common relative parent
+  // This is an ancestor frame that will incompass all frames for this content node.
+  // We need the relative parent so we can get absolute screen coordinates
+  nsIFrame *ancestorFrame = firstFrame;
+
+  while (ancestorFrame) {  
+    *aBoundingFrame = ancestorFrame;
+    // If any other frame type, we only need to deal with the primary frame
+    // Otherwise, there may be more frames attached to the same content node
+    if (ancestorFrame->GetType() != nsGkAtoms::inlineFrame &&
+        ancestorFrame->GetType() != nsGkAtoms::textFrame)
+      break;
+    ancestorFrame = ancestorFrame->GetParent();
+  }
+
+  nsIFrame *iterFrame = firstFrame;
+  nsCOMPtr<nsIContent> firstContent(mContent);
+  nsIContent* iterContent = firstContent;
+  PRInt32 depth = 0;
+
+  // Look only at frames below this depth, or at this depth (if we're still on the content node we started with)
+  while (iterContent == firstContent || depth > 0) {
+    // Coordinates will come back relative to parent frame
+    nsRect currFrameBounds = iterFrame->GetRect();
+    
+    // Make this frame's bounds relative to common parent frame
+    currFrameBounds +=
+      iterFrame->GetParent()->GetOffsetToExternal(*aBoundingFrame);
+
+    // Add this frame's bounds to total
+    aTotalBounds.UnionRect(aTotalBounds, currFrameBounds);
+
+    nsIFrame *iterNextFrame = nsnull;
+
+    if (iterFrame->GetType() == nsGkAtoms::inlineFrame) {
+      // Only do deeper bounds search if we're on an inline frame
+      // Inline frames can contain larger frames inside of them
+      iterNextFrame = iterFrame->GetFirstPrincipalChild();
+    }
+
+    if (iterNextFrame) 
+      ++depth;  // Child was found in code above this: We are going deeper in this iteration of the loop
+    else {  
+      // Use next sibling if it exists, or go back up the tree to get the first next-in-flow or next-sibling 
+      // within our search
+      while (iterFrame) {
+        iterNextFrame = iterFrame->GetNextContinuation();
+        if (!iterNextFrame)
+          iterNextFrame = iterFrame->GetNextSibling();
+        if (iterNextFrame || --depth < 0) 
+          break;
+        iterFrame = iterFrame->GetParent();
+      }
+    }
+
+    // Get ready for the next round of our loop
+    iterFrame = iterNextFrame;
+    if (iterFrame == nsnull)
+      break;
+    iterContent = nsnull;
+    if (depth == 0)
+      iterContent = iterFrame->GetContent();
   }
 }
+
 
 /* void getBounds (out long x, out long y, out long width, out long height); */
 NS_IMETHODIMP
@@ -1679,13 +1753,34 @@ Accessible::SetName(const nsAString& aName)
 }
 
 NS_IMETHODIMP
-Accessible::GetKeyboardShortcut(nsAString& aKeyBinding)
+Accessible::GetDefaultKeyBinding(nsAString& aKeyBinding)
 {
   aKeyBinding.Truncate();
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
   KeyboardShortcut().ToString(aKeyBinding);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Accessible::GetKeyBindings(PRUint8 aActionIndex,
+                             nsIDOMDOMStringList** aKeyBindings)
+{
+  // Currently we support only unique key binding on element for default action.
+  NS_ENSURE_TRUE(aActionIndex == 0, NS_ERROR_INVALID_ARG);
+
+  nsAccessibleDOMStringList* keyBindings = new nsAccessibleDOMStringList();
+  NS_ENSURE_TRUE(keyBindings, NS_ERROR_OUT_OF_MEMORY);
+
+  nsAutoString defaultKey;
+  nsresult rv = GetDefaultKeyBinding(defaultKey);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!defaultKey.IsEmpty())
+    keyBindings->Add(defaultKey);
+
+  NS_ADDREF(*aKeyBindings = keyBindings);
   return NS_OK;
 }
 

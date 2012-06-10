@@ -28,7 +28,6 @@ PARALLEL_DIRS += \
   find \
   intl \
   microformats \
-  osfile \
   parentalcontrols \
   passwordmgr \
   perf \

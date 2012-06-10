@@ -642,8 +642,6 @@ protected:
     nsresult EnsureCommandHandler();
 
     nsIChannel* GetCurrentDocChannel();
-
-    bool ShouldBlockLoadingForBackButton();
 protected:
     // Override the parent setter from nsDocLoader
     virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);

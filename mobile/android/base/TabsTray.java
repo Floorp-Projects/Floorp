@@ -7,9 +7,13 @@ package org.mozilla.gecko;
 
 import java.util.ArrayList;
 
+import android.accounts.AccountManager;
+import android.app.Activity;
 import android.content.Context;
-import android.content.res.Resources;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
@@ -23,31 +27,38 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class TabsTray extends LinearLayout 
-                      implements TabsPanel.PanelView,
-                                 Tabs.OnTabsChangedListener {
-    private static final String LOGTAG = "GeckoTabsTray";
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 
-    private Context mContext;
-    private static boolean mHeightRestricted;
+public class TabsTray extends GeckoActivity implements Tabs.OnTabsChangedListener {
 
     private static int sPreferredHeight;
+    private static int sMaxHeight;
     private static int sListItemHeight;
-    private static int sListDividerHeight;
+    private static int sAddTabHeight;
     private static ListView mList;
     private static TabsListContainer mListContainer;
+    private static LinkTextView mRemoteTabs;
     private TabsAdapter mTabsAdapter;
     private boolean mWaitingForClose;
 
+    // 100 for item + 2 for divider
+    private static final int TABS_LIST_ITEM_HEIGHT = 102;
+    private static final int TABS_ADD_TAB_HEIGHT = 50;
+
     private static final String ABOUT_HOME = "about:home";
 
-    public TabsTray(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        mContext = context;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        LayoutInflater.from(context).inflate(R.layout.tabs_tray, this);
+        LayoutInflater.from(this).setFactory(GeckoViewsFactory.getInstance());
+
+        setContentView(R.layout.tabs_tray);
+
+        mWaitingForClose = false;
 
         mList = (ListView) findViewById(R.id.list);
         mList.setItemsCanFocus(true);
@@ -61,46 +72,79 @@ public class TabsTray extends LinearLayout
         });
 
         mListContainer = (TabsListContainer) findViewById(R.id.list_container);
-    }
 
-    @Override
-    public ViewGroup getLayout() {
-        return this;
-    }
+        ImageButton addTab = (ImageButton) findViewById(R.id.add_tab);
+        addTab.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                GeckoApp.mAppContext.addTab();
+                finishActivity();
+            }
+        });
 
-    @Override
-    public void setHeightRestriction(boolean isRestricted) {
-        mHeightRestricted = isRestricted;
-    }
+        mRemoteTabs = (LinkTextView) findViewById(R.id.remote_tabs);
+        mRemoteTabs.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                showRemoteTabs();
+            }
+        });
 
-    @Override
-    public void show() {
-        mWaitingForClose = false;
+        RelativeLayout toolbar = (RelativeLayout) findViewById(R.id.toolbar);
+        toolbar.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                // Consume the click event to avoid enclosing container consuming it
+            }
+        });
+
+        LinearLayout container = (LinearLayout) findViewById(R.id.container);
+        container.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                finishActivity();
+            }
+        });
 
         DisplayMetrics metrics = new DisplayMetrics();
-        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-        Resources resources = mContext.getResources();
-        sListItemHeight = (int) (resources.getDimension(R.dimen.local_tab_row_height));
-        sListDividerHeight = (int) (resources.getDimension(R.dimen.tabs_list_divider_height));
-        sPreferredHeight = (int) ((0.5 * metrics.heightPixels) + (0.33 * sListItemHeight));
+        sListItemHeight = (int) (TABS_LIST_ITEM_HEIGHT * metrics.density);
+        sAddTabHeight = (int) (TABS_ADD_TAB_HEIGHT * metrics.density);
+        sPreferredHeight = (int) (0.67 * metrics.heightPixels);
+        sMaxHeight = (int) (sPreferredHeight + (0.33 * sListItemHeight));
 
         Tabs.registerOnTabsChangedListener(this);
         Tabs.getInstance().refreshThumbnails();
         onTabChanged(null, null);
+
+        // If Sync is set up, query the database for remote clients.
+        final Context context = getApplicationContext();
+        new SyncAccounts.AccountsExistTask() {
+            @Override
+            protected void onPostExecute(Boolean result) {
+                if (!result.booleanValue()) {
+                    return;
+                }
+                TabsAccessor.areClientsAvailable(context, new TabsAccessor.OnClientsAvailableListener() {
+                    @Override
+                    public void areAvailable(boolean available) {
+                        final int visibility = available ? View.VISIBLE : View.GONE;
+                        mRemoteTabs.setVisibility(visibility);
+                    }
+                });
+            }
+        }.execute(context);
     }
 
     @Override
-    public void hide() {
+    public void onDestroy() {
+        super.onDestroy();
         Tabs.unregisterOnTabsChangedListener(this);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel",""));
-        mTabsAdapter.clear();
-        mTabsAdapter.notifyDataSetChanged();
     }
 
     public void onTabChanged(Tab tab, Tabs.TabEvents msg) {
+        if (Tabs.getInstance().getCount() == 1)
+            finishActivity();
+
         if (mTabsAdapter == null) {
-            mTabsAdapter = new TabsAdapter(mContext, Tabs.getInstance().getTabsInOrder());
+            mTabsAdapter = new TabsAdapter(this, Tabs.getInstance().getTabsInOrder());
             mList.setAdapter(mTabsAdapter);
             mListContainer.requestLayout();
 
@@ -130,8 +174,18 @@ public class TabsTray extends LinearLayout
         }
     }
 
-    void hideTabs() {
-        GeckoApp.mAppContext.hideTabs();
+    void finishActivity() {
+        finish();
+        overridePendingTransition(0, R.anim.shrink_fade_out);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Screenshot:Cancel",""));
+    }
+
+    void showRemoteTabs() {
+        Intent intent = new Intent(this, RemoteTabs.class);
+        intent.putExtra("exit-to-tabs-tray", true);
+        startActivity(intent);
+        overridePendingTransition(R.anim.grow_fade_in, R.anim.shrink_fade_out);
+        finishActivity();
     }
 
     // Tabs List Container holds the ListView and the New Tab button
@@ -142,13 +196,23 @@ public class TabsTray extends LinearLayout
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            if (mList.getAdapter() == null || !mHeightRestricted) {
+            if (mList.getAdapter() == null) {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
                 return;
             }
 
-            int childrenHeight = (mList.getAdapter().getCount() * (sListItemHeight + sListDividerHeight)) - sListDividerHeight;
-            int restrictedHeightSpec = MeasureSpec.makeMeasureSpec(Math.min(childrenHeight, sPreferredHeight), MeasureSpec.EXACTLY);
+            int restrictedHeightSpec;
+            int childrenHeight = (mList.getAdapter().getCount() * sListItemHeight) + sAddTabHeight;
+
+            if (childrenHeight <= sPreferredHeight) {
+                restrictedHeightSpec = MeasureSpec.makeMeasureSpec(childrenHeight, MeasureSpec.EXACTLY);
+            } else {
+                if (((childrenHeight - sAddTabHeight) % sListItemHeight == 0) && (childrenHeight >= sMaxHeight))
+                    restrictedHeightSpec = MeasureSpec.makeMeasureSpec(sMaxHeight, MeasureSpec.EXACTLY);
+                else
+                    restrictedHeightSpec = MeasureSpec.makeMeasureSpec(sPreferredHeight, MeasureSpec.EXACTLY);
+            }
+
             super.onMeasure(widthMeasureSpec, restrictedHeightSpec);
         }
     }
@@ -158,13 +222,13 @@ public class TabsTray extends LinearLayout
         int id;
         TextView title;
         ImageView thumbnail;
+        ImageView selectedIndicator;
         ImageButton close;
-        LinearLayout info;
 
         public TabRow(View view) {
-            info = (LinearLayout) view;
             title = (TextView) view.findViewById(R.id.title);
             thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
+            selectedIndicator = (ImageView) view.findViewById(R.id.selected_indicator);
             close = (ImageButton) view.findViewById(R.id.close);
         }
     }
@@ -192,7 +256,7 @@ public class TabsTray extends LinearLayout
             mOnInfoClickListener = new View.OnClickListener() {
                 public void onClick(View v) {
                     Tabs.getInstance().selectTab(((TabRow) v.getTag()).id);
-                    hideTabs();
+                    finishActivity();
                 }
             };
 
@@ -211,12 +275,8 @@ public class TabsTray extends LinearLayout
             };
         }
 
-        public void clear() {
-            mTabs = null;
-        }
-
         public int getCount() {
-            return (mTabs == null ? 0 : mTabs.size());
+            return mTabs.size();
         }
 
         public Tab getItem(int position) {
@@ -253,14 +313,14 @@ public class TabsTray extends LinearLayout
                 row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
 
             if (Tabs.getInstance().isSelectedTab(tab))
-                row.info.setBackgroundResource(R.drawable.tabs_tray_active_selector);
+                row.selectedIndicator.setVisibility(View.VISIBLE);
             else
-                row.info.setBackgroundResource(R.drawable.tabs_tray_default_selector);
+                row.selectedIndicator.setVisibility(View.GONE);
 
             row.title.setText(tab.getDisplayTitle());
 
             row.close.setTag(String.valueOf(row.id));
-            row.close.setVisibility(mTabs.size() > 1 ? View.VISIBLE : View.INVISIBLE);
+            row.close.setVisibility(mTabs.size() > 1 ? View.VISIBLE : View.GONE);
         }
 
         public View getView(int position, View convertView, ViewGroup parent) {

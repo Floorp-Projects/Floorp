@@ -446,7 +446,8 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
         }
       }
     } while (0 != decorMask &&
-             (f = nsLayoutUtils::GetParentOrPlaceholderFor(f)));
+             (f = nsLayoutUtils::GetParentOrPlaceholderFor(
+                                   presContext->FrameManager(), f)));
 
     nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));

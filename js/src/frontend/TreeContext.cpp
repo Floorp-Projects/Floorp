@@ -24,6 +24,22 @@ TreeContext::trace(JSTracer *trc)
 }
 
 bool
+frontend::SetStaticLevel(SharedContext *sc, unsigned staticLevel)
+{
+    /*
+     * This is a lot simpler than error-checking every UpvarCookie::set, and
+     * practically speaking it leaves more than enough room for upvars.
+     */
+    if (UpvarCookie::isLevelReserved(staticLevel)) {
+        JS_ReportErrorNumber(sc->context, js_GetErrorMessage, NULL,
+                             JSMSG_TOO_DEEP, js_function_str);
+        return false;
+    }
+    sc->staticLevel = staticLevel;
+    return true;
+}
+
+bool
 frontend::GenerateBlockId(SharedContext *sc, uint32_t &blockid)
 {
     if (sc->blockidGen == JS_BIT(20)) {

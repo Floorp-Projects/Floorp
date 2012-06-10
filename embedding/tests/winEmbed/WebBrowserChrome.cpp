@@ -494,12 +494,6 @@ NS_IMETHODIMP WebBrowserChrome::SetFocus()
     return NS_OK;
 }
 
-/* void blur (); */
-NS_IMETHODIMP WebBrowserChrome::Blur()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* attribute wstring title; */
 NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar * *aTitle)
 {

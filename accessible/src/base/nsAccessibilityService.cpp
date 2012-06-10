@@ -20,12 +20,12 @@
 #include "HTMLLinkAccessible.h"
 #include "HTMLListAccessible.h"
 #include "HTMLSelectAccessible.h"
-#include "HTMLTableAccessibleWrap.h"
 #include "HyperTextAccessibleWrap.h"
 #include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsARIAMap.h"
 #include "nsIAccessibleProvider.h"
+#include "nsHTMLTableAccessibleWrap.h"
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
 #include "OuterDocAccessible.h"
@@ -67,16 +67,16 @@
 #include "mozilla/Util.h"
 
 #ifdef MOZ_XUL
-#include "XULAlertAccessible.h"
-#include "XULColorPickerAccessible.h"
-#include "XULComboboxAccessible.h"
-#include "XULElementAccessibles.h"
+#include "nsXULAlertAccessible.h"
+#include "nsXULColorPickerAccessible.h"
+#include "nsXULComboboxAccessible.h"
 #include "XULFormControlAccessible.h"
-#include "XULListboxAccessibleWrap.h"
-#include "XULMenuAccessibleWrap.h"
-#include "XULSliderAccessible.h"
-#include "XULTabAccessible.h"
-#include "XULTreeGridAccessibleWrap.h"
+#include "nsXULListboxAccessibleWrap.h"
+#include "nsXULMenuAccessibleWrap.h"
+#include "nsXULSliderAccessible.h"
+#include "nsXULTabAccessible.h"
+#include "nsXULTextAccessible.h"
+#include "nsXULTreeGridAccessibleWrap.h"
 #endif
 
 using namespace mozilla;
@@ -385,7 +385,7 @@ nsAccessibilityService::CreateHTMLTableAccessible(nsIContent* aContent,
                                                   nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new HTMLTableAccessibleWrap(aContent, GetDocAccessible(aPresShell));
+    new nsHTMLTableAccessibleWrap(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -395,7 +395,7 @@ nsAccessibilityService::CreateHTMLTableCellAccessible(nsIContent* aContent,
                                                       nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new HTMLTableCellAccessibleWrap(aContent, GetDocAccessible(aPresShell));
+    new nsHTMLTableCellAccessibleWrap(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -465,7 +465,7 @@ nsAccessibilityService::CreateHTMLCaptionAccessible(nsIContent* aContent,
                                                     nsIPresShell* aPresShell)
 {
   Accessible* accessible =
-    new HTMLCaptionAccessible(aContent, GetDocAccessible(aPresShell));
+    new nsHTMLCaptionAccessible(aContent, GetDocAccessible(aPresShell));
   NS_ADDREF(accessible);
   return accessible;
 }
@@ -530,7 +530,7 @@ nsAccessibilityService::TreeViewChanged(nsIPresShell* aPresShell,
   if (document) {
     Accessible* accessible = document->GetAccessible(aContent);
     if (accessible) {
-      XULTreeAccessible* treeAcc = accessible->AsXULTree();
+      nsXULTreeAccessible* treeAcc = accessible->AsXULTree();
       if (treeAcc) 
         treeAcc->TreeViewChanged(aView);
     }
@@ -1026,7 +1026,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aNode);
-  if (roleMapEntry && roleMapEntry->Is(nsGkAtoms::presentation)) {
+  if (roleMapEntry && !nsCRT::strcmp(roleMapEntry->roleString, "presentation")) {
     // Ignore presentation role if element is focusable (focus event shouldn't
     // be ever lost and should be sensible).
     if (content->IsFocusable())
@@ -1073,7 +1073,8 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 
 #ifdef DEBUG
           nsRoleMapEntry* tableRoleMapEntry = aria::GetRoleMap(tableContent);
-          NS_ASSERTION(tableRoleMapEntry && tableRoleMapEntry->Is(nsGkAtoms::presentation),
+          NS_ASSERTION(tableRoleMapEntry &&
+                       !nsCRT::strcmp(tableRoleMapEntry->roleString, "presentation"),
                        "No accessible for parent table and it didn't have role of presentation");
 #endif
 
@@ -1313,7 +1314,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
     // XUL controls
     case nsIAccessibleProvider::XULAlert:
-      accessible = new XULAlertAccessible(aContent, aDoc);
+      accessible = new nsXULAlertAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULButton:
@@ -1325,15 +1326,15 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULColorPicker:
-      accessible = new XULColorPickerAccessible(aContent, aDoc);
+      accessible = new nsXULColorPickerAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULColorPickerTile:
-      accessible = new XULColorPickerTileAccessible(aContent, aDoc);
+      accessible = new nsXULColorPickerTileAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULCombobox:
-      accessible = new XULComboboxAccessible(aContent, aDoc);
+      accessible = new nsXULComboboxAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULDropmarker:
@@ -1356,35 +1357,35 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
 
     }
     case nsIAccessibleProvider::XULLink:
-      accessible = new XULLinkAccessible(aContent, aDoc);
+      accessible = new nsXULLinkAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULListbox:
-      accessible = new XULListboxAccessibleWrap(aContent, aDoc);
+      accessible = new nsXULListboxAccessibleWrap(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULListCell:
-      accessible = new XULListCellAccessibleWrap(aContent, aDoc);
+      accessible = new nsXULListCellAccessibleWrap(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULListHead:
-      accessible = new XULColumAccessible(aContent, aDoc);
+      accessible = new nsXULColumAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULListHeader:
-      accessible = new XULColumnItemAccessible(aContent, aDoc);
+      accessible = new nsXULColumnItemAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULListitem:
-      accessible = new XULListitemAccessible(aContent, aDoc);
+      accessible = new nsXULListitemAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULMenubar:
-      accessible = new XULMenubarAccessible(aContent, aDoc);
+      accessible = new nsXULMenubarAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULMenuitem:
-      accessible = new XULMenuitemAccessibleWrap(aContent, aDoc);
+      accessible = new nsXULMenuitemAccessibleWrap(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULMenupopup:
@@ -1400,12 +1401,12 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
                                                kNameSpaceID_XUL))
         return nsnull;
 #endif
-      accessible = new XULMenupopupAccessible(aContent, aDoc);
+      accessible = new nsXULMenupopupAccessible(aContent, aDoc);
       break;
 
     }
     case nsIAccessibleProvider::XULMenuSeparator:
-      accessible = new XULMenuSeparatorAccessible(aContent, aDoc);
+      accessible = new nsXULMenuSeparatorAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULPane:
@@ -1421,7 +1422,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULScale:
-      accessible = new XULSliderAccessible(aContent, aDoc);
+      accessible = new nsXULSliderAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULRadioButton:
@@ -1433,19 +1434,19 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULTab:
-      accessible = new XULTabAccessible(aContent, aDoc);
+      accessible = new nsXULTabAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULTabs:
-      accessible = new XULTabsAccessible(aContent, aDoc);
+      accessible = new nsXULTabsAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULTabpanels:
-      accessible = new XULTabpanelsAccessible(aContent, aDoc);
+      accessible = new nsXULTabpanelsAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULText:
-      accessible = new XULLabelAccessible(aContent, aDoc);
+      accessible = new nsXULTextAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULTextBox:
@@ -1453,18 +1454,18 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULThumb:
-      accessible = new XULThumbAccessible(aContent, aDoc);
+      accessible = new nsXULThumbAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULTree:
       return CreateAccessibleForXULTree(aContent, aDoc);
 
     case nsIAccessibleProvider::XULTreeColumns:
-      accessible = new XULTreeColumAccessible(aContent, aDoc);
+      accessible = new nsXULTreeColumAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULTreeColumnItem:
-      accessible = new XULColumnItemAccessible(aContent, aDoc);
+      accessible = new nsXULColumnItemAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULToolbar:
@@ -1476,7 +1477,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULTooltip:
-      accessible = new XULTooltipAccessible(aContent, aDoc);
+      accessible = new nsXULTooltipAccessible(aContent, aDoc);
       break;
 
     case nsIAccessibleProvider::XULToolbarButton:
@@ -1659,7 +1660,8 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
   }
 
   if (nsCoreUtils::IsHTMLTableHeader(aContent)) {
-    Accessible* accessible = new HTMLTableHeaderCellAccessibleWrap(aContent, aDoc);
+    Accessible* accessible = new nsHTMLTableHeaderCellAccessibleWrap(aContent,
+                                                                     aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
@@ -1769,7 +1771,7 @@ nsAccessibilityService::CreateAccessibleForDeckChild(nsIFrame* aFrame,
 #ifdef MOZ_XUL
       if (parentContent->NodeInfo()->Equals(nsGkAtoms::tabpanels,
                                             kNameSpaceID_XUL)) {
-        Accessible* accessible = new XULTabpanelAccessible(aContent, aDoc);
+        Accessible* accessible = new nsXULTabpanelAccessible(aContent, aDoc);
         NS_IF_ADDREF(accessible);
         return accessible;
       }
@@ -1803,13 +1805,13 @@ nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
 
   // Outline of list accessible.
   if (count == 1) {
-    Accessible* accessible = new XULTreeAccessible(aContent, aDoc);
+    Accessible* accessible = new nsXULTreeAccessible(aContent, aDoc);
     NS_IF_ADDREF(accessible);
     return accessible;
   }
 
   // Table or tree table accessible.
-  Accessible* accessible = new XULTreeGridAccessibleWrap(aContent, aDoc);
+  Accessible* accessible = new nsXULTreeGridAccessibleWrap(aContent, aDoc);
   NS_IF_ADDREF(accessible);
   return accessible;
 }

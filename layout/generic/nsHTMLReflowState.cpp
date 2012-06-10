@@ -257,9 +257,6 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
       !(parent->GetType() == nsGkAtoms::scrollFrame &&
         parent->GetStyleDisplay()->mOverflowY != NS_STYLE_OVERFLOW_HIDDEN)) {
     frame->AddStateBits(NS_FRAME_IN_CONSTRAINED_HEIGHT);
-  } else if (type == nsGkAtoms::svgForeignObjectFrame) {
-    // An SVG foreignObject frame is inherently constrained height.
-    frame->AddStateBits(NS_FRAME_IN_CONSTRAINED_HEIGHT);
   } else if ((mStylePosition->mHeight.GetUnit() != eStyleUnit_Auto ||
               mStylePosition->mMaxHeight.GetUnit() != eStyleUnit_None) &&
               // Don't set NS_FRAME_IN_CONSTRAINED_HEIGHT on body or html
@@ -308,6 +305,12 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                    "have unconstrained width; this should only result from "
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
+
+  if (frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
+    // Create our font inflation data if we don't have it already, and
+    // give it our current width information.
+    nsFontInflationData::UpdateFontInflationDataWidthFor(*this);
+  }
 }
 
 void nsHTMLReflowState::InitCBReflowState()
@@ -361,87 +364,34 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs, nsIAtom* aFrameType)
 void
 nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType)
 {
-  if ((frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) &&
-      nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
-    // Create our font inflation data if we don't have it already, and
-    // give it our current width information.
-    bool dirty = nsFontInflationData::UpdateFontInflationDataWidthFor(*this);
-    if (dirty) {
-      // When font size inflation is enabled, the change in the width of a
-      // block (or anything that returns true in
-      // IsContainerForFontSizeInflation) needs to cause a dirty reflow
-      // since it changes the size of text, line-heights, etc.  This is
-      // relatively similar to a classic case of style change reflow,
-      // except that because inflation doesn't affect the intrinsic sizing
-      // codepath, there's no need to invalidate intrinsic sizes.
-      //
-      // Note that this makes horizontal resizing a good bit more
-      // expensive.  However, font size inflation is targeted at a set of
-      // devices (zoom-and-pan devices) where the main use case for
-      // horizontal resizing needing to be efficient (window resizing) is
-      // not present.  It does still increase the cost of dynamic changes
-      // caused by script where a style or content change in one place
-      // causes a resize in another (e.g., rebalancing a table).
-
-      // FIXME: This isn't so great for the cases where
-      // nsHTMLReflowState::SetComputedWidth is called, if the first time
-      // we go through InitResizeFlags we set mHResize to true, and then
-      // the second time we'd set it to false even without the
-      // NS_FRAME_IS_DIRTY bit already set.
-      if (frame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
-        // Foreign object frames use dirty bits in a special way.
-        frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
-        nsIFrame *kid = frame->GetFirstPrincipalChild();
-        if (kid) {
-          kid->AddStateBits(NS_FRAME_IS_DIRTY);
-        }
-      } else {
-        frame->AddStateBits(NS_FRAME_IS_DIRTY);
-      }
-
-      // Mark intrinsic widths on all descendants dirty.  We need to do
-      // this (1) since we're changing the size of text and need to
-      // clear text runs on text frames and (2) since we actually are
-      // changing some intrinsic widths, but only those that live inside
-      // of containers.
-
-      // It makes sense to do this for descendants but not ancestors
-      // (which is unusual) because we're only changing the unusual
-      // inflation-dependent intrinsic widths (i.e., ones computed with
-      // nsPresContext::mInflationDisabledForShrinkWrap set to false),
-      // which should never affect anything outside of their inflation
-      // flow root (or, for that matter, even their inflation
-      // container).
-
-      // This is also different from what PresShell::FrameNeedsReflow
-      // does because it doesn't go through placeholders.  It doesn't
-      // need to because we're actually doing something that cares about
-      // frame tree geometry (the width on an ancestor) rather than
-      // style.
-
-      nsAutoTArray<nsIFrame*, 32> stack;
-      stack.AppendElement(frame);
-
-      do {
-        nsIFrame *f = stack.ElementAt(stack.Length() - 1);
-        stack.RemoveElementAt(stack.Length() - 1);
-
-        nsIFrame::ChildListIterator lists(f);
-        for (; !lists.IsDone(); lists.Next()) {
-          nsFrameList::Enumerator childFrames(lists.CurrentList());
-          for (; !childFrames.AtEnd(); childFrames.Next()) {
-            nsIFrame* kid = childFrames.get();
-            kid->MarkIntrinsicWidthsDirty();
-            stack.AppendElement(kid);
-          }
-        }
-      } while (stack.Length() != 0);
-    }
-  }
-
   mFlags.mHResize = !(frame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
                     frame->GetSize().width !=
                       mComputedWidth + mComputedBorderPadding.LeftRight();
+  if (mFlags.mHResize &&
+      nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
+    // When font size inflation is enabled, the change in the width of a
+    // block (or anything that returns true in
+    // IsContainerForFontSizeInflation) needs to cause a dirty reflow
+    // since it changes the size of text, line-heights, etc.  This is
+    // relatively similar to a classic case of style change reflow,
+    // except that because inflation doesn't affect the intrinsic sizing
+    // codepath, there's no need to invalidate intrinsic sizes.
+    //
+    // Note that this makes horizontal resizing a good bit more
+    // expensive.  However, font size inflation is targeted at a set of
+    // devices (zoom-and-pan devices) where the main use case for
+    // horizontal resizing needing to be efficient (window resizing) is
+    // not present.  It does still increase the cost of dynamic changes
+    // caused by script where a style or content change in one place
+    // causes a resize in another (e.g., rebalancing a table).
+
+    // FIXME: This isn't so great for the cases where
+    // nsHTMLReflowState::SetComputedWith is called, if the first time
+    // we go through InitResizeFlags we set mHResize to true, and then
+    // the second time we'd set it to false even without the
+    // NS_FRAME_IS_DIRTY bit already set.
+    frame->AddStateBits(NS_FRAME_IS_DIRTY);
+  }
 
   // XXX Should we really need to null check mCBReflowState?  (We do for
   // at least nsBoxFrame).

@@ -24,7 +24,7 @@ let TabView = {
     delete this.windowTitle;
     let brandBundle = document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
-    let title = gNavigatorBundle.getFormattedString("tabview.title", [brandShortName]);
+    let title = gNavigatorBundle.getFormattedString("tabView2.title", [brandShortName]);
     return this.windowTitle = title;
   },
 
@@ -310,13 +310,11 @@ let TabView = {
 
     if (!title.trim()) {
       let topChildLabel = groupItem.getTopChild().tab.label;
-      let childNum = groupItem.getChildren().length;
 
-      if (childNum > 1) {
-        let num = childNum - 1;
+      if (groupItem.getChildren().length > 1) {
         title =
-          gNavigatorBundle.getString("tabview.moveToUnnamedGroup.label");
-        title = PluralForm.get(num, title).replace("#1", topChildLabel).replace("#2", num);
+          gNavigatorBundle.getFormattedString("tabview2.moveToUnnamedGroup.label",
+            [topChildLabel, groupItem.getChildren().length - 1]);
       } else {
         title = topChildLabel;
       }

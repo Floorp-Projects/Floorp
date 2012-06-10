@@ -152,7 +152,7 @@ public class AboutHomeContent extends ScrollView
         TextView allTopSitesText = (TextView) findViewById(R.id.all_top_sites_text);
         allTopSitesText.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                GeckoApp.mAppContext.showAwesomebar(AwesomeBar.Target.CURRENT_TAB);
+                GeckoApp.mAppContext.showAwesomebar(AwesomeBar.Type.EDIT);
             }
         });
 
@@ -165,7 +165,8 @@ public class AboutHomeContent extends ScrollView
 
         mRemoteTabs.setOnMoreTextClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                GeckoApp.mAppContext.showRemoteTabs();
+                Context context = v.getContext();
+                context.startActivity(new Intent(context, RemoteTabs.class));
             }
         });
 

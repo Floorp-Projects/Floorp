@@ -535,8 +535,6 @@ public:
     return HasAttr(kNameSpaceID_None, nsGkAtoms::hidden);
   }
 
-  virtual bool IsLabelable() const;
-
 protected:
   /**
    * Add/remove this element to the documents name cache
@@ -877,8 +875,6 @@ public:
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
                                  PRInt32* aTabIndex);
-
-  virtual bool IsLabelable() const;
 
 protected:
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,

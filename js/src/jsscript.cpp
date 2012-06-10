@@ -374,7 +374,6 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
         SavedCallerFun,
         StrictModeCode,
         ContainsDynamicNameAccess,
-        FunHasExtensibleScope,
         ArgumentsHasLocalBinding,
         NeedsArgsObj,
         OwnFilename,
@@ -530,8 +529,6 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
             scriptBits |= (1 << StrictModeCode);
         if (script->bindingsAccessedDynamically)
             scriptBits |= (1 << ContainsDynamicNameAccess);
-        if (script->funHasExtensibleScope)
-            scriptBits |= (1 << FunHasExtensibleScope);
         if (script->argumentsHasLocalBinding())
             scriptBits |= (1 << ArgumentsHasLocalBinding);
         if (script->analyzedArgsUsage() && script->needsArgsObj())
@@ -605,8 +602,6 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
             script->strictModeCode = true;
         if (scriptBits & (1 << ContainsDynamicNameAccess))
             script->bindingsAccessedDynamically = true;
-        if (scriptBits & (1 << FunHasExtensibleScope))
-            script->funHasExtensibleScope = true;
         if (scriptBits & (1 << ArgumentsHasLocalBinding)) {
             PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
             unsigned local;
@@ -1269,17 +1264,7 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         return NULL;
     }
     script->nslots = script->nfixed + bce->maxStackDepth;
-
-    // This is an unsigned-to-uint16_t conversion, test for too-high values.
-    // In practice, recursion in Parser and/or BytecodeEmitter will blow the
-    // stack if we nest functions more than a few hundred deep, so this will
-    // never trigger.  Oh well.
-    if (bce->sc->staticLevel > UINT_MAX) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP, js_function_str);
-        return NULL;
-    }
     script->staticLevel = uint16_t(bce->sc->staticLevel);
-
     script->principals = bce->parser->principals;
 
     if (script->principals)
@@ -1318,7 +1303,6 @@ JSScript::NewScriptFromEmitter(JSContext *cx, BytecodeEmitter *bce)
             script->savedCallerFun = true;
     }
     script->bindingsAccessedDynamically = bce->sc->bindingsAccessedDynamically();
-    script->funHasExtensibleScope = bce->sc->funHasExtensibleScope();
     script->hasSingletons = bce->hasSingletons;
 #ifdef JS_METHODJIT
     if (cx->compartment->debugMode())
@@ -1826,7 +1810,6 @@ js::CloneScript(JSContext *cx, HandleScript src)
     dst->strictModeCode = src->strictModeCode;
     dst->compileAndGo = src->compileAndGo;
     dst->bindingsAccessedDynamically = src->bindingsAccessedDynamically;
-    dst->funHasExtensibleScope = src->funHasExtensibleScope;
     dst->hasSingletons = src->hasSingletons;
     dst->isGenerator = src->isGenerator;
 

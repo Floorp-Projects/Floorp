@@ -5,19 +5,18 @@
  * The Marionette object, passed to the script context.
  */
 
-function Marionette(scope, window, context, logObj, perfData) {
+function Marionette(scope, window, context, logObj) {
   this.scope = scope;
   this.window = window;
   this.tests = [];
   this.logObj = logObj;
-  this.perfData = perfData;
   this.context = context;
   this.timeout = 0;
 }
 
 Marionette.prototype = {
   exports: ['ok', 'is', 'isnot', 'log', 'getLogs', 'generate_results', 'waitFor',
-            'runEmulatorCmd', 'addPerfData', 'getPerfData'],
+            'runEmulatorCmd'],
 
   ok: function Marionette__ok(condition, name, diag) {
     let test = {'result': !!condition, 'name': name, 'diag': diag};
@@ -37,14 +36,6 @@ Marionette.prototype = {
     let diag = pass ? this.repr(a) + " should not equal " + this.repr(b)
                     : "didn't expect " + this.repr(a) + ", but got it";
     this.ok(pass, name, diag);
-  },
-
-  addPerfData: function Marionette__addPerfData(testSuite, testName, data) {
-    this.perfData.addPerfData(testSuite, testName, data);
-  },
-
-  getPerfData: function Marionette__getPerfData() {
-    return this.perfData.perfData;
   },
 
   log: function Marionette__log(msg, level) {

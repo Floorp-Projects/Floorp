@@ -148,7 +148,7 @@ struct SharedContext {
     const RootedObject scopeChain_; /* scope chain object for the script */
 
   public:
-    const unsigned  staticLevel;    /* static compilation unit nesting level */
+    unsigned        staticLevel;    /* static compilation unit nesting level */
 
     Bindings        bindings;       /* bindings in this code, including
                                        arguments if we're compiling a function */
@@ -158,8 +158,7 @@ struct SharedContext {
 
     // If it's function code, fun must be non-NULL and scopeChain must be NULL.
     // If it's global code, fun and funbox must be NULL.
-    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox,
-                         unsigned staticLevel);
+    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox);
 
     // In theory, |fun*| flags are only relevant if |inFunction()| is true.
     // However, we get and set in some cases where |inFunction()| is false,
@@ -368,6 +367,9 @@ struct StmtInfo {
     ((stmt)->update = (top), (stmt)->breaks = (stmt)->continues = (-1))
 
 namespace frontend {
+
+bool
+SetStaticLevel(SharedContext *sc, unsigned staticLevel);
 
 bool
 GenerateBlockId(SharedContext *sc, uint32_t &blockid);

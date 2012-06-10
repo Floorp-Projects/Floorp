@@ -35,10 +35,6 @@ let gNewEditor;       // to make sure only one new stylesheet got created
 let gUpdateCount = 0; // to make sure only one Update event is triggered
 let gCommitCount = 0; // to make sure only one Commit event is triggered
 let gTransitionEndCount = 0;
-let gOriginalStyleSheet;
-let gOriginalOwnerNode;
-let gOriginalHref;
-
 
 function finishOnTransitionEndAndCommit() {
   if (gCommitCount && gTransitionEndCount) {
@@ -46,17 +42,7 @@ function finishOnTransitionEndAndCommit() {
     is(gCommitCount, 1, "received one Commit event");
     is(gTransitionEndCount, 1, "received one transitionend event");
 
-    if (gNewEditor) {
-      is(gNewEditor.styleSheet, gOriginalStyleSheet,
-         "style sheet object did not change");
-      is(gNewEditor.styleSheet.ownerNode, gOriginalOwnerNode,
-         "style sheet owner node did not change");
-      is(gNewEditor.styleSheet.href, gOriginalHref,
-         "style sheet href did not change");
-
-      gNewEditor = null;
-      finish();
-    }
+    finish();
   }
 }
 
@@ -82,10 +68,6 @@ function testEditorAdded(aChrome, aEditor)
   let listener = {
     onAttach: function (aEditor) {
       waitForFocus(function () {
-        gOriginalStyleSheet = aEditor.styleSheet;
-        gOriginalOwnerNode = aEditor.styleSheet.ownerNode;
-        gOriginalHref = aEditor.styleSheet.href;
-
         ok(aEditor.isLoaded,
            "new editor is loaded when attached");
         ok(aEditor.hasFlag("new"),
@@ -160,6 +142,7 @@ function testEditorAdded(aChrome, aEditor)
          "StyleEditor's transition class has been removed from content");
 
       aEditor.removeActionListener(listener);
+      gNewEditor = null;
 
       executeSoon(finishOnTransitionEndAndCommit);
     }

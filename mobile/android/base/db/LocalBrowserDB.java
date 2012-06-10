@@ -253,7 +253,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                                            Combined.URL,
                                            Combined.TITLE,
                                            Combined.FAVICON,
-                                           Combined.DISPLAY,
                                            Combined.DATE_LAST_VISITED,
                                            Combined.VISITS },
                             History.DATE_LAST_VISITED + " > 0",

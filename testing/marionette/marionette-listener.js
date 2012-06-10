@@ -13,7 +13,6 @@ let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
 
 loader.loadSubScript("chrome://marionette/content/marionette-simpletest.js");
 loader.loadSubScript("chrome://marionette/content/marionette-log-obj.js");
-loader.loadSubScript("chrome://marionette/content/marionette-perf.js");
 Cu.import("chrome://marionette/content/marionette-elements.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");  
@@ -28,7 +27,6 @@ loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
 loader.loadSubScript("chrome://specialpowers/content/specialpowers.js");
 
 let marionetteLogObj = new MarionetteLogObj();
-let marionettePerf = new MarionettePerfData();
 
 let isB2G = false;
 
@@ -250,7 +248,7 @@ function createExecuteContentSandbox(aWindow) {
   sandbox.__proto__ = sandbox.window;
   sandbox.testUtils = utils;
 
-  let marionette = new Marionette(this, aWindow, "content", marionetteLogObj, marionettePerf);
+  let marionette = new Marionette(this, aWindow, "content", marionetteLogObj);
   sandbox.marionette = marionette;
   marionette.exports.forEach(function(fn) {
     sandbox[fn] = marionette[fn].bind(marionette);
@@ -272,10 +270,9 @@ function createExecuteContentSandbox(aWindow) {
       curWindow.clearTimeout(i);
     }
 
-    sendSyncMessage("Marionette:shareData", {log: elementManager.wrapValue(marionetteLogObj.getLogs()),
-                                             perf: elementManager.wrapValue(marionettePerf.getPerfData())});
+    sendSyncMessage("Marionette:testLog",
+                    {value: elementManager.wrapValue(marionetteLogObj.getLogs())});
     marionetteLogObj.clearLogs();
-    marionettePerf.clearPerfData();
     if (status == 0){
       sendResponse({value: elementManager.wrapValue(value), status: status}, asyncTestCommandId);
     }
@@ -326,10 +323,8 @@ function executeScript(msg, directInject) {
         script = data + script;
       }
       let res = Cu.evalInSandbox(script, sandbox, "1.8");
-      sendSyncMessage("Marionette:shareData", {log: elementManager.wrapValue(marionetteLogObj.getLogs()),
-                                               perf: elementManager.wrapValue(marionettePerf.getPerfData())});
+      sendSyncMessage("Marionette:testLog", {value: elementManager.wrapValue(marionetteLogObj.getLogs())});
       marionetteLogObj.clearLogs();
-      marionettePerf.clearPerfData();
       if (res == undefined || res.passed == undefined) {
         sendError("Marionette.finish() not called", 17, null);
       }
@@ -357,10 +352,8 @@ function executeScript(msg, directInject) {
         scriptSrc = data + scriptSrc;
       }
       let res = Cu.evalInSandbox(scriptSrc, sandbox, "1.8");
-      sendSyncMessage("Marionette:shareData", {log: elementManager.wrapValue(marionetteLogObj.getLogs()),
-                                               perf: elementManager.wrapValue(marionettePerf.getPerfData())});
+      sendSyncMessage("Marionette:testLog", {value: elementManager.wrapValue(marionetteLogObj.getLogs())});
       marionetteLogObj.clearLogs();
-      marionettePerf.clearPerfData();
       sendResponse({value: elementManager.wrapValue(res)});
     }
   }

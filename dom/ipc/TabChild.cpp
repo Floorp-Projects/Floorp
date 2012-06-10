@@ -32,6 +32,7 @@
 #include "nsIURI.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIJSRuntimeService.h"
@@ -120,6 +121,7 @@ NS_INTERFACE_MAP_BEGIN(TabChild)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow2)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
@@ -810,7 +812,8 @@ public:
     NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
     if (event) {
       event->InitEvent(NS_LITERAL_STRING("unload"), false, false);
-      event->SetTrusted(true);
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+      privateEvent->SetTrusted(true);
 
       bool dummy;
       mTabChildGlobal->DispatchEvent(event, &dummy);

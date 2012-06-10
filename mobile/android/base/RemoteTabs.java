@@ -10,84 +10,90 @@ import java.util.List;
 
 import org.json.JSONObject;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.content.Context;
-import android.content.res.Resources;
+import android.database.Cursor;
+import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.text.TextUtils;
+import android.util.Log;
 
-public class RemoteTabs extends LinearLayout
-                        implements TabsPanel.PanelView,
-                                   ExpandableListView.OnGroupClickListener,
-                                   ExpandableListView.OnChildClickListener, 
-                                   TabsAccessor.OnQueryTabsCompleteListener {
+public class RemoteTabs extends GeckoActivity
+       implements ExpandableListView.OnGroupClickListener, ExpandableListView.OnChildClickListener, 
+                  TabsAccessor.OnQueryTabsCompleteListener {
     private static final String LOGTAG = "GeckoRemoteTabs";
-
-    private Context mContext;
-    private static boolean mHeightRestricted;
 
     private static int sPreferredHeight;
     private static int sChildItemHeight;
     private static int sGroupItemHeight;
-    private static int sListDividerHeight;
     private static ExpandableListView mList;
+    private static boolean mExitToTabsTray;
     
     private static ArrayList <ArrayList <HashMap <String, String>>> mTabsList;
+
+    // 50 for child + 2 for divider
+    private static final int CHILD_ITEM_HEIGHT = 52;
+
+    // 30 for group + 2 for divider
+    private static final int GROUP_ITEM_HEIGHT = 32;
 
     private static final String[] CLIENT_KEY = new String[] { "name" };
     private static final String[] TAB_KEY = new String[] { "title" };
     private static final int[] CLIENT_RESOURCE = new int[] { R.id.client };
     private static final int[] TAB_RESOURCE = new int[] { R.id.tab };
 
-    public RemoteTabs(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        mContext = context;
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        LayoutInflater.from(context).inflate(R.layout.remote_tabs, this);
+        setContentView(R.layout.remote_tabs);
 
         mList = (ExpandableListView) findViewById(R.id.list);
         mList.setOnGroupClickListener(this);
         mList.setOnChildClickListener(this);
-    }
 
-    @Override
-    public ViewGroup getLayout() {
-        return this;
-    }
+        LinearLayout container = (LinearLayout) findViewById(R.id.container);
+        container.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                finishActivity();
+            }
+        });
 
-    @Override
-    public void setHeightRestriction(boolean isRestricted) {
-        mHeightRestricted = isRestricted;
-    }
-
-    @Override
-    public void show() {
         DisplayMetrics metrics = new DisplayMetrics();
-        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-        Resources resources = mContext.getResources();
-        sChildItemHeight = (int) (resources.getDimension(R.dimen.remote_tab_child_row_height));
-        sGroupItemHeight = (int) (resources.getDimension(R.dimen.remote_tab_group_row_height));
-        sListDividerHeight = (int) (resources.getDimension(R.dimen.tabs_list_divider_height));
-        sPreferredHeight = (int) (0.5 * metrics.heightPixels);
+        sChildItemHeight = (int) (CHILD_ITEM_HEIGHT * metrics.density);
+        sGroupItemHeight = (int) (GROUP_ITEM_HEIGHT * metrics.density);
+        sPreferredHeight = (int) (0.67 * metrics.heightPixels);
 
-        TabsAccessor.getTabs(mContext, this);
+        TabsAccessor.getTabs(getApplicationContext(), this);
+
+        // Exit to tabs-tray
+        mExitToTabsTray = getIntent().getBooleanExtra("exit-to-tabs-tray", false);
     }
 
     @Override
-    public void hide() {
+    public void onBackPressed() {
+        if (mExitToTabsTray) {
+            startActivity(new Intent(this, TabsTray.class));
+            overridePendingTransition(R.anim.grow_fade_in, R.anim.shrink_fade_out);
+        }
+
+        finishActivity();
     }
 
-    void hideTabs() {
-        GeckoApp.mAppContext.hideTabs();
+    void finishActivity() {
+        finish();
+        overridePendingTransition(0, R.anim.shrink_fade_out);
     }
 
     @Override
@@ -100,7 +106,7 @@ public class RemoteTabs extends LinearLayout
     public boolean onChildClick(ExpandableListView parent, View view, int groupPosition, int childPosition, long id) {
         HashMap <String, String> tab = mTabsList.get(groupPosition).get(childPosition);
         if (tab == null) {
-            hideTabs();
+            finishActivity();
             return true;
         }
 
@@ -116,7 +122,7 @@ public class RemoteTabs extends LinearLayout
 
         Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
-        hideTabs();
+        finishActivity();
         return true;
     }
 
@@ -129,16 +135,15 @@ public class RemoteTabs extends LinearLayout
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             SimpleExpandableListAdapter adapter = (SimpleExpandableListAdapter) mList.getExpandableListAdapter();
-            if (adapter == null || !mHeightRestricted) {
+            if (adapter == null) {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
                 return;
             }
 
             int groupCount = adapter.getGroupCount();
-            int childrenHeight = groupCount * (sGroupItemHeight + sListDividerHeight);
+            int childrenHeight = groupCount * sGroupItemHeight;
             for (int i = 0; i < groupCount; i++)
-                 childrenHeight += adapter.getChildrenCount(i) * (sChildItemHeight + sListDividerHeight);
-            childrenHeight -= sListDividerHeight;
+                 childrenHeight += adapter.getChildrenCount(i) * sChildItemHeight;
 
             int restrictedHeightSpec = MeasureSpec.makeMeasureSpec(Math.min(childrenHeight, sPreferredHeight), MeasureSpec.EXACTLY);
             super.onMeasure(widthMeasureSpec, restrictedHeightSpec);
@@ -149,7 +154,7 @@ public class RemoteTabs extends LinearLayout
     public void onQueryTabsComplete(List<TabsAccessor.RemoteTab> remoteTabsList) {
         ArrayList<TabsAccessor.RemoteTab> remoteTabs = new ArrayList<TabsAccessor.RemoteTab> (remoteTabsList);
         if (remoteTabs == null || remoteTabs.size() == 0) {
-            hideTabs();
+            finishActivity();
             return;
         }
         
@@ -180,7 +185,7 @@ public class RemoteTabs extends LinearLayout
             tabsForClient.add(tab);
         }
         
-        mList.setAdapter(new SimpleExpandableListAdapter(mContext,
+        mList.setAdapter(new SimpleExpandableListAdapter(getApplicationContext(),
                                                          clients,
                                                          R.layout.remote_tabs_group,
                                                          CLIENT_KEY,

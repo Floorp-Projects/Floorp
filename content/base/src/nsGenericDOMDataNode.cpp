@@ -17,6 +17,7 @@
 #include "nsMutationEvent.h"
 #include "nsINameSpaceManager.h"
 #include "nsIURI.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMText.h"
 #include "nsCOMPtr.h"

@@ -54,9 +54,6 @@
 // Preference that users can set to override DEFAULT_QUOTA_MB
 #define PREF_INDEXEDDB_QUOTA "dom.indexedDB.warningQuota"
 
-// profile-before-change, when we need to shut down IDB
-#define PROFILE_BEFORE_CHANGE_OBSERVER_ID "profile-before-change"
-
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::services;
 using mozilla::Preferences;
@@ -241,7 +238,7 @@ IndexedDatabaseManager::GetOrCreate()
     NS_ENSURE_TRUE(obs, nsnull);
 
     // We need this callback to know when to shut down all our threads.
-    rv = obs->AddObserver(instance, PROFILE_BEFORE_CHANGE_OBSERVER_ID, false);
+    rv = obs->AddObserver(instance, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     if (NS_FAILED(Preferences::AddIntVarCache(&gIndexedDBQuotaMB,
@@ -1273,7 +1270,7 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!strcmp(aTopic, PROFILE_BEFORE_CHANGE_OBSERVER_ID)) {
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     // Setting this flag prevents the service from being recreated and prevents
     // further databases from being created.
     if (PR_ATOMIC_SET(&gShutdown, 1)) {
