@@ -472,6 +472,37 @@ JSStructuredCloneWriter::startObject(JSObject *obj)
     return out.writePair(obj->isArray() ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
 }
 
+class AutoEnterCompartmentAndPushPrincipal : public JSAutoEnterCompartment
+{
+  public:
+    bool enter(JSContext *cx, JSObject *target) {
+        // First, enter the compartment.
+        if (!JSAutoEnterCompartment::enter(cx, target))
+            return false;
+
+        // We only need to push a principal if we changed compartments.
+        if (state != STATE_OTHER_COMPARTMENT)
+            return true;
+
+        // Push.
+        const JSSecurityCallbacks *cb = cx->runtime->securityCallbacks;
+        if (cb->pushContextPrincipal)
+          return cb->pushContextPrincipal(cx, target->principals(cx));
+        return true;
+    };
+
+    ~AutoEnterCompartmentAndPushPrincipal() {
+        // Pop the principal if necessary.
+        if (state == STATE_OTHER_COMPARTMENT) {
+            AutoCompartment *ac = getAutoCompartment();
+            const JSSecurityCallbacks *cb = ac->context->runtime->securityCallbacks;
+            if (cb->popContextPrincipal)
+              cb->popContextPrincipal(ac->context);
+        }
+    };
+};
+
+
 bool
 JSStructuredCloneWriter::startWrite(const Value &v)
 {
@@ -498,7 +529,7 @@ JSStructuredCloneWriter::startWrite(const Value &v)
 
         // If we unwrapped above, we'll need to enter the underlying compartment.
         // Let the AutoEnterCompartment do the right thing for us.
-        JSAutoEnterCompartment ac;
+        AutoEnterCompartmentAndPushPrincipal ac;
         if (!ac.enter(context(), obj))
             return false;
 
@@ -543,7 +574,7 @@ JSStructuredCloneWriter::write(const Value &v)
         RootedObject obj(context(), &objs.back().toObject());
 
         // The objects in |obj| can live in other compartments.
-        JSAutoEnterCompartment ac;
+        AutoEnterCompartmentAndPushPrincipal ac;
         if (!ac.enter(context(), obj))
             return false;
 
