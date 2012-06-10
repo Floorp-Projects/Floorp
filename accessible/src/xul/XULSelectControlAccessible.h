@@ -4,11 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _XULSelectControlAccessible_H_
-#define _XULSelectControlAccessible_H_
+#ifndef mozilla_a11y_XULSelectControlAccessible_h__
+#define mozilla_a11y_XULSelectControlAccessible_h__
 
 #include "AccessibleWrap.h"
 #include "nsIDOMXULSelectCntrlEl.h"
+
+namespace mozilla {
+namespace a11y {
 
 /**
  * The basic implementation of accessible selection for XUL select controls.
@@ -42,6 +45,9 @@ protected:
   // one of these if the widget is valid and not defunct
   nsCOMPtr<nsIDOMXULSelectControlElement> mSelectControl;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
 
