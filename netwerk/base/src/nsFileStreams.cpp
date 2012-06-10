@@ -253,6 +253,8 @@ nsresult
 nsFileStreamBase::MaybeOpen(nsIFile* aFile, PRInt32 aIoFlags,
                             PRInt32 aPerm, bool aDeferred)
 {
+    NS_ENSURE_STATE(aFile);
+
     mOpenParams.ioFlags = aIoFlags;
     mOpenParams.perm = aPerm;
 

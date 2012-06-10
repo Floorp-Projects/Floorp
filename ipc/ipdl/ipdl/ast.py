@@ -12,18 +12,22 @@ class Visitor:
     def visitTranslationUnit(self, tu):
         for cxxInc in tu.cxxIncludes:
             cxxInc.accept(self)
-        for protoInc in tu.protocolIncludes:
-            protoInc.accept(self)
+        for inc in tu.includes:
+            inc.accept(self)
         for su in tu.structsAndUnions:
             su.accept(self)
+        for using in tu.builtinUsing:
+            using.accept(self)
         for using in tu.using:
             using.accept(self)
-        tu.protocol.accept(self)
+        if tu.protocol:
+            tu.protocol.accept(self)
+
 
     def visitCxxInclude(self, inc):
         pass
 
-    def visitProtocolInclude(self, inc):
+    def visitInclude(self, inc):
         # Note: we don't visit the child AST here, because that needs delicate
         # and pass-specific handling
         pass
@@ -33,7 +37,7 @@ class Visitor:
             f.accept(self)
 
     def visitStructField(self, field):
-        field.type.accept(self)
+        field.typespec.accept(self)
 
     def visitUnionDecl(self, union):
         for t in union.components:
@@ -148,18 +152,20 @@ class NamespacedNode(Node):
         return QualifiedId(self.loc, self.name,
                            [ ns.name for ns in self.namespaces ])
 
-class TranslationUnit(Node):
-    def __init__(self):
-        Node.__init__(self)
+class TranslationUnit(NamespacedNode):
+    def __init__(self, type, name):
+        NamespacedNode.__init__(self, name=name)
+        self.filetype = type
         self.filename = None
         self.cxxIncludes = [ ]
-        self.protocolIncludes = [ ]
+        self.includes = [ ]
+        self.builtinUsing = [ ]
         self.using = [ ]
         self.structsAndUnions = [ ]
         self.protocol = None
 
     def addCxxInclude(self, cxxInclude): self.cxxIncludes.append(cxxInclude)
-    def addProtocolInclude(self, pInc): self.protocolIncludes.append(pInc)
+    def addInclude(self, inc): self.includes.append(inc)
     def addStructDecl(self, struct): self.structsAndUnions.append(struct)
     def addUnionDecl(self, union): self.structsAndUnions.append(union)
     def addUsingStmt(self, using): self.using.append(using)
@@ -171,10 +177,13 @@ class CxxInclude(Node):
         Node.__init__(self, loc)
         self.file = cxxFile
 
-class ProtocolInclude(Node):
-    def __init__(self, loc, protocolName):
+class Include(Node):
+    def __init__(self, loc, type, name):
         Node.__init__(self, loc)
-        self.file = "%s.ipdl" % protocolName
+        suffix = 'ipdl'
+        if type == 'header':
+            suffix += 'h'
+        self.file = "%s.%s" % (name, suffix)
 
 class UsingStmt(Node):
     def __init__(self, loc, cxxTypeSpec):
@@ -256,7 +265,7 @@ class Protocol(NamespacedNode):
 class StructField(Node):
     def __init__(self, loc, type, name):
         Node.__init__(self, loc)
-        self.type = type
+        self.typespec = type
         self.name = name
 
 class StructDecl(NamespacedNode):

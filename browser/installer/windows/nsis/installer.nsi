@@ -920,6 +920,7 @@ Function preSummary
     ; If Firefox isn't the http handler for this user show the option to set
     ; Firefox as the default browser.
     ${If} "$R9" != "true"
+    ${AndIf} ${AtMostWin2008R2}
       WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "4"
       WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Type   "checkbox"
       WriteINIStr "$PLUGINSDIR\summary.ini" "Field 4" Text   "$(SUMMARY_TAKE_DEFAULTS)"

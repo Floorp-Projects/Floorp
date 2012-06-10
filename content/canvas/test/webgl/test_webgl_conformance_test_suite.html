@@ -49,9 +49,12 @@ function start() {
   var kIsWindows = false;
   var kIsMac = false;
   var kIsLinux = false;
+  var kIsAndroid = false;
   if (navigator.platform.indexOf("Win") == 0)
     kIsWindows = true;
-  else if (navigator.platform.indexOf("Linux") == 0)
+  else if (navigator.appVersion.indexOf("Android") != -1)
+    kIsAndroid = true;
+  else if (navigator.platform.indexOf("Linux") == 0) // must be checked after android, as android also has a 'Linux' platform string
     kIsLinux = true;
   else if (navigator.platform.indexOf("Mac") == 0)
     kIsMac = true;
@@ -407,7 +410,7 @@ function start() {
     window.webglTestHarness = testHarness;
   }
 
-  SimpleTest.requestLongerTimeout(3);
+  SimpleTest.requestLongerTimeout(kIsAndroid ? 6 : 3);
 
   var statusElem = document.getElementById("status");
   var statusTextNode = document.createTextNode('');
@@ -432,6 +435,8 @@ function start() {
     failingTestsFilename = 'failing_tests_linux.txt';
   else if (kIsMac)
     failingTestsFilename = 'failing_tests_mac.txt';
+  else if (kIsAndroid)
+    failingTestsFilename = 'failing_tests_android.txt';
 
   var testsExpectedToFail = loadTextFileSynchronous(failingTestsFilename)
                             .replace(/\r/g, '') // convert to unix line breaks

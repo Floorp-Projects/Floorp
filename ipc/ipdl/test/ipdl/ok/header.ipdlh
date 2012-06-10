@@ -1,0 +1,17 @@
+include "foo.h";
+
+using foo;
+using bar::baz;
+
+struct Outer { };
+
+namespace a { struct Inner1 { }; }
+
+namespace b { struct Inner2 { }; }
+
+namespace c {
+union X {
+    int32_t;
+    float;
+};
+}

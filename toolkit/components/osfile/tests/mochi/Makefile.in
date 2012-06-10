@@ -1,0 +1,17 @@
+DEPTH           = ../../../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+relativesrcdir  = toolkit/components/osfile/tests/mochi
+
+MODULE          = osfile
+_CHROME_TEST_FILES = \
+        test_osfile_back.xul \
+        worker_test_osfile_unix.js \
+        worker_test_osfile_win.js \
+         $(NULL)
+
+ include $(topsrcdir)/config/rules.mk
+
+libs:: $(_CHROME_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

@@ -17,6 +17,60 @@
 
     function doTest()
     {
+      // ARIA role map.
+      testRole("aria_alert", ROLE_ALERT);
+      testRole("aria_alertdialog", ROLE_DIALOG);
+      testRole("aria_application", ROLE_APPLICATION);
+      testRole("aria_article", ROLE_DOCUMENT);
+      testRole("aria_button", ROLE_PUSHBUTTON);
+      testRole("aria_checkbox", ROLE_CHECKBUTTON);
+      testRole("aria_columnheader", ROLE_COLUMNHEADER);
+      testRole("aria_combobox", ROLE_COMBOBOX);
+      testRole("aria_dialog", ROLE_DIALOG);
+      testRole("aria_directory", ROLE_LIST);
+      testRole("aria_document", ROLE_DOCUMENT);
+      testRole("aria_form", ROLE_FORM);
+      testRole("aria_grid", ROLE_TABLE);
+      testRole("aria_gridcell", ROLE_GRID_CELL);
+      testRole("aria_group", ROLE_GROUPING);
+      testRole("aria_heading", ROLE_HEADING);
+      testRole("aria_img", ROLE_GRAPHIC);
+      testRole("aria_link", ROLE_LINK);
+      testRole("aria_list", ROLE_LIST);
+      testRole("aria_listbox", ROLE_LISTBOX);
+      testRole("aria_listitem", ROLE_LISTITEM);
+      testRole("aria_log", ROLE_TEXT_CONTAINER); // weak role
+      testRole("aria_marquee", ROLE_ANIMATION);
+      testRole("aria_math", ROLE_FLAT_EQUATION);
+      testRole("aria_menu", ROLE_MENUPOPUP);
+      testRole("aria_menubar", ROLE_MENUBAR);
+      testRole("aria_menuitem", ROLE_MENUITEM);
+      testRole("aria_menuitemcheckbox", ROLE_CHECK_MENU_ITEM);
+      testRole("aria_menuitemradio", ROLE_RADIO_MENU_ITEM);
+      testRole("aria_note", ROLE_NOTE);
+      testRole("aria_presentation", ROLE_TEXT_CONTAINER); // weak role
+      testRole("aria_progressbar", ROLE_PROGRESSBAR);
+      testRole("aria_radio", ROLE_RADIOBUTTON);
+      testRole("aria_radiogroup", ROLE_GROUPING);
+      testRole("aria_region", ROLE_PANE);
+      testRole("aria_row", ROLE_ROW);
+      testRole("aria_rowheader", ROLE_ROWHEADER);
+      testRole("aria_scrollbar", ROLE_SCROLLBAR);
+      testRole("aria_separator", ROLE_SEPARATOR);
+      testRole("aria_slider", ROLE_SLIDER);
+      testRole("aria_spinbutton", ROLE_SPINBUTTON);
+      testRole("aria_status", ROLE_STATUSBAR);
+      testRole("aria_tab", ROLE_PAGETAB);
+      testRole("aria_tablist", ROLE_PAGETABLIST);
+      testRole("aria_tabpanel", ROLE_PROPERTYPAGE);
+      testRole("aria_textbox", ROLE_ENTRY);
+      testRole("aria_timer", ROLE_TEXT_CONTAINER); // weak role
+      testRole("aria_toolbar", ROLE_TOOLBAR);
+      testRole("aria_tooltip", ROLE_TOOLTIP);
+      testRole("aria_tree", ROLE_OUTLINE);
+      testRole("aria_treegrid", ROLE_TREE_TABLE);
+      testRole("aria_treeitem", ROLE_OUTLINEITEM);
+
       // Note:
       // The phrase "weak foo" here means that there is no good foo-to-platform
       // role mapping. Similarly "strong foo" means there is a good foo-to-
@@ -123,6 +177,59 @@
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
+
+  <span id="aria_alert" role="alert"/>
+  <span id="aria_alertdialog" role="alertdialog"/>
+  <span id="aria_application" role="application"/>
+  <span id="aria_article" role="article"/>
+  <span id="aria_button" role="button"/>
+  <span id="aria_checkbox" role="checkbox"/>
+  <span id="aria_columnheader" role="columnheader"/>
+  <span id="aria_combobox" role="combobox"/>
+  <span id="aria_dialog" role="dialog"/>
+  <span id="aria_directory" role="directory"/>
+  <span id="aria_document" role="document"/>
+  <span id="aria_form" role="form"/>
+  <span id="aria_grid" role="grid"/>
+  <span id="aria_gridcell" role="gridcell"/>
+  <span id="aria_group" role="group"/>
+  <span id="aria_heading" role="heading"/>
+  <span id="aria_img" role="img"/>
+  <span id="aria_link" role="link"/>
+  <span id="aria_list" role="list"/>
+  <span id="aria_listbox" role="listbox"/>
+  <span id="aria_listitem" role="listitem"/>
+  <span id="aria_log" role="log"/>
+  <span id="aria_marquee" role="marquee"/>
+  <span id="aria_math" role="math"/>
+  <span id="aria_menu" role="menu"/>
+  <span id="aria_menubar" role="menubar"/>
+  <span id="aria_menuitem" role="menuitem"/>
+  <span id="aria_menuitemcheckbox" role="menuitemcheckbox"/>
+  <span id="aria_menuitemradio" role="menuitemradio"/>
+  <span id="aria_note" role="note"/>
+  <span id="aria_presentation" role="presentation" tabindex="0"/>
+  <span id="aria_progressbar" role="progressbar"/>
+  <span id="aria_radio" role="radio"/>
+  <span id="aria_radiogroup" role="radiogroup"/>
+  <span id="aria_region" role="region"/>
+  <span id="aria_row" role="row"/>
+  <span id="aria_rowheader" role="rowheader"/>
+  <span id="aria_scrollbar" role="scrollbar"/>
+  <span id="aria_separator" role="separator"/>
+  <span id="aria_slider" role="slider"/>
+  <span id="aria_spinbutton" role="spinbutton"/>
+  <span id="aria_status" role="status"/>
+  <span id="aria_tab" role="tab"/>
+  <span id="aria_tablist" role="tablist"/>
+  <span id="aria_tabpanel" role="tabpanel"/>
+  <span id="aria_textbox" role="textbox"/>
+  <span id="aria_timer" role="timer"/>
+  <span id="aria_toolbar" role="toolbar"/>
+  <span id="aria_tooltip" role="tooltip"/>
+  <span id="aria_tree" role="tree"/>
+  <span id="aria_treegrid" role="treegrid"/>
+  <span id="aria_treeitem" role="treeitem"/>
 
   <article id="articlemain" role="main">a main area</article>
   <article id="articleform" role="form">a form area</article>

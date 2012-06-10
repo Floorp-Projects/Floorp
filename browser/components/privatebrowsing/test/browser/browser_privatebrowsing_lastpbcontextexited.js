@@ -19,7 +19,7 @@ function test() {
       }
     };
     Services.obs.addObserver(observer, "last-pb-context-exited", false);
-    newWin.gPrivateBrowsingUI.privateWindow = true;
+    setPrivateWindow(newWin, true);
     expected = true;
     newWin.close(); // this will cause the docshells to leave PB mode
     newWin = null;

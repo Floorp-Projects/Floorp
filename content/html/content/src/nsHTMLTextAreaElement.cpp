@@ -31,7 +31,6 @@
 #include "nsLinebreakConverter.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsGUIEvent.h"
 #include "nsPresState.h"
 #include "nsReadableUtils.h"

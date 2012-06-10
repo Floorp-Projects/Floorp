@@ -524,8 +524,12 @@
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
+#ifndef LIBXUL_SDK
 ; Warning: changing the path to channel-prefs.js can cause bugs (Bug 756325)
 @BINPATH@/defaults/pref/channel-prefs.js
+#else
+@BINPATH@/@PREF_DIR@/channel-prefs.js
+#endif
 @BINPATH@/defaults/profile/prefs.js
 
 ; [Layout Engine Resources]

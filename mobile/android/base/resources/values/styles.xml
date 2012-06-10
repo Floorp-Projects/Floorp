@@ -34,15 +34,14 @@
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
         <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_height">@dimen/browser_toolbar_height</item>
         <item name="android:orientation">horizontal</item>
-        <item name="android:background">#000000</item>
     </style>
 
     <!-- Address bar -->
     <style name="AddressBar">
         <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">48dip</item>
+        <item name="android:layout_height">fill_parent</item>
         <item name="android:orientation">horizontal</item>
     </style>
 
@@ -90,6 +89,17 @@
         <item name="android:layout_weight">1</item>
     </style>
 
+    <!-- TabsTray Row -->
+    <style name="TabRowTextAppearance">
+        <item name="android:textColor">#E5F2FF</item>
+        <item name="android:shadowColor">#000000</item>
+        <item name="android:shadowRadius">1</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">1</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">middle</item>
+    </style>
+
     <!-- TabWidget --> 
     <style name="TabWidget">
         <item name="android:layout_width">fill_parent</item>
@@ -99,9 +109,6 @@
 
     <!-- Find bar -->
     <style name="FindBar">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:orientation">horizontal</item>
         <item name="android:background">#000000</item>
         <item name="android:paddingLeft">3dip</item>
         <item name="android:paddingRight">3dip</item>

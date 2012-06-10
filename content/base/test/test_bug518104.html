@@ -12,13 +12,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=518104
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=518104">Mozilla Bug 518104</a>
 <p id="display"></p>
-<div id="content" style="display: none">
-  <iframe id='iframe' src="data:text/html,
-    <div></div><div></div>
-    <script defer src='data:application/javascript,document.write(%2522<p></p>%2522);parent.done();document.close();'></script>">
-  </iframe>
-</div>
-<pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 518104 **/
@@ -32,6 +25,13 @@ function done() {
 }
 
 </script>
+<div id="content" style="display: none">
+  <iframe id='iframe' src="data:text/html,
+    <div></div><div></div>
+    <script defer src='data:application/javascript,document.write(%2522<p></p>%2522);parent.done();document.close();'></script>">
+  </iframe>
+</div>
+<pre id="test">
 </pre>
 </body>
 </html>

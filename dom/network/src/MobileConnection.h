@@ -37,11 +37,19 @@ public:
 private:
   nsCOMPtr<nsIMobileConnectionProvider> mProvider;
 
+  nsIDOMEventTarget*
+  ToIDOMEventTarget() const
+  {
+    return static_cast<nsDOMEventTargetHelper*>(
+           const_cast<MobileConnection*>(this));
+  }
+
   nsresult InternalDispatchEvent(const nsAString& aType);
 
   NS_DECL_EVENT_HANDLER(cardstatechange)
   NS_DECL_EVENT_HANDLER(voicechange)
   NS_DECL_EVENT_HANDLER(datachange)
+  NS_DECL_EVENT_HANDLER(ussdreceived)
 };
 
 } // namespace network
