@@ -11,6 +11,8 @@
 #include "nsArrayUtils.h"
 #include "nsComponentManagerUtils.h"
 
+using namespace mozilla::a11y;
+
 nsAccessibleRelation::nsAccessibleRelation(PRUint32 aType,
                                            Relation* aRel) :
   mType(aType)
