@@ -133,7 +133,7 @@ fh.addEntry("field6", "value");
 fh.addEntry("field7", "value");
 fh.addEntry("field8", "value");
 fh.addEntry("field9", "value");
-fh.addEntry("field10", "value");
+fh.addEntry("field10", "42");
 fh.addEntry("searchbar-history", "blacklist test");
 
 // All these non-implemeted types might need autocomplete tests in the future.
@@ -705,7 +705,6 @@ function runTest(testNum) {
     case 401:
     case 402:
     case 403:
-    case 404:
         checkMenuEntries(["value"]);
         doKey("down");
         doKey("return");
@@ -719,12 +718,22 @@ function runTest(testNum) {
           input = $_(11, "field9");
         } else if (testNum == 403) {
           input = $_(12, "field10");
-        } else if (testNum == 404) {
-          // Go to test 500.
-          fh.addEntry("field1", "value1");
-          input = $_(1, "field1");
-          testNum = 499;
         }
+
+        restoreForm();
+        doKey("down");
+        break;
+
+    case 404:
+        checkMenuEntries(["42"]);
+        doKey("down");
+        doKey("return");
+        checkForm("42");
+
+        // Go to test 500.
+        fh.addEntry("field1", "value1");
+        input = $_(1, "field1");
+        testNum = 499;
 
         restoreForm();
         doKey("down");
