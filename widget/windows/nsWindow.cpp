@@ -1877,7 +1877,7 @@ nsWindow::GetNonClientMargins(nsIntMargin &margins)
   margins.top = GetSystemMetrics(SM_CYCAPTION);
   margins.bottom = GetSystemMetrics(SM_CYFRAME);
   margins.top += margins.bottom;
-  margins.left = margins.right = GetSystemMetrics(SM_CYFRAME);
+  margins.left = margins.right = GetSystemMetrics(SM_CXFRAME);
 
   return NS_OK;
 }
