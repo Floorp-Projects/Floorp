@@ -34,13 +34,13 @@
       this.finalCheck = function openMenu_finalCheck()
       {
         var menu = getAccessible(aMenuID);
-        is(menu.keyboardShortcut, (MAC ? "u" : "Alt+u"),
+        is(menu.accessKey, (MAC ? "u" : "Alt+u"),
            "Wrong accesskey on " + prettyName(this.menuitemNode));
 
         var menuitem = getAccessible(aMenuitemID);
-        is(menuitem.keyboardShortcut, "p",
+        is(menuitem.accessKey, "p",
            "Wrong accesskey on " + prettyName(this.menuitemNode));
-        is(menuitem.defaultKeyBinding, (MAC ? "⌃l" : "Ctrl+l"),
+        is(menuitem.keyboardShortcut, (MAC ? "⌃l" : "Ctrl+l"),
            "Wrong keyboard shortcut on " + prettyName(this.menuitemNode));
       }
 

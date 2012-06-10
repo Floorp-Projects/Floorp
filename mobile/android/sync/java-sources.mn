@@ -165,6 +165,9 @@ sync/Server11PreviousPostFailedException.java
 sync/Server11RecordPostFailedException.java
 sync/setup/activities/AccountActivity.java
 sync/setup/activities/ActivityUtils.java
+sync/setup/activities/ClientRecordArrayAdapter.java
+sync/setup/activities/RedirectToSetupActivity.java
+sync/setup/activities/SendTabActivity.java
 sync/setup/activities/SetupFailureActivity.java
 sync/setup/activities/SetupSuccessActivity.java
 sync/setup/activities/SetupSyncActivity.java

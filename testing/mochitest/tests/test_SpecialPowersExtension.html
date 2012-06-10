@@ -96,7 +96,6 @@ function starttest(){
 
   // Try some basic stuff with XHR.
   var xhr2 = SpecialPowers.wrap(Components).classes["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Components.interfaces.nsIXMLHttpRequest);
-  is(xhr2.toString(), SpecialPowers.unwrap(xhr2).toString(), "toString should be transparently delegated");
   is(xhr.readyState, XMLHttpRequest.UNSENT, "Should be able to get props off privileged objects");
   var testURI = SpecialPowers.wrap(Components).classes['@mozilla.org/network/standard-url;1']
                                               .createInstance(Components.interfaces.nsIURI);
@@ -118,6 +117,16 @@ function starttest(){
   catch (e) {
     ok(false, "Threw while trying to call Xray-wrapped function.");
   }
+
+  // Check constructors.
+  var BinaryInputStream = SpecialPowers.wrap(Components).Constructor("@mozilla.org/binaryinputstream;1");
+  var bis = new BinaryInputStream();
+  ok(/nsISupports/.exec(bis.toString()), "Should get the proper object out of the constructor");
+  function TestConstructor() {
+    this.foo = 2;
+  }
+  var WrappedConstructor = SpecialPowers.wrap(TestConstructor);
+  is((new WrappedConstructor()).foo, 2, "JS constructors work properly when wrapped");
 
   // Check functions that return null.
   var returnsNull = function() { return null; }

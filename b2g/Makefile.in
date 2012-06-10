@@ -11,5 +11,9 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = chrome components locales app
 
+ifeq ($(OS_ARCH),WINNT)
+DIRS += $(DEPTH)/xulrunner/tools/redit
+endif
+
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/testing/testsuite-targets.mk

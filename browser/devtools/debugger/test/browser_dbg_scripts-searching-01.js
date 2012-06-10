@@ -56,7 +56,7 @@ function testScriptSearching() {
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line.");
 
-    write("@debugger");
+    write("#debugger");
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44,
       "The editor didn't jump to the correct token. (1)");
@@ -82,27 +82,27 @@ function testScriptSearching() {
       "The editor didn't jump to the correct token. (5)");
 
 
-    write(":bogus@debugger;");
+    write(":bogus#debugger;");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2,
       "The editor didn't jump to the correct token. (7)");
 
-    write(":13@debugger;");
+    write(":13#debugger;");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2,
       "The editor didn't jump to the correct token. (7)");
 
-    write(":@debugger;");
+    write(":#debugger;");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2,
       "The editor didn't jump to the correct token. (8)");
 
-    write("::@debugger;");
+    write("::#debugger;");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2,
       "The editor didn't jump to the correct token. (9)");
 
-    write(":::@debugger;");
+    write(":::#debugger;");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2,
       "The editor didn't jump to the correct token. (10)");
@@ -113,7 +113,7 @@ function testScriptSearching() {
        gEditor.getCaretPosition().col == 2,
       "The editor didn't remain at the correct token. (11)");
 
-    write("@__i do not exist__");
+    write("#__i do not exist__");
     ok(gEditor.getCaretPosition().line == 8 &&
        gEditor.getCaretPosition().col == 2,
       "The editor didn't remain at the correct token. (12)");
@@ -124,7 +124,7 @@ function testScriptSearching() {
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line. (13)");
 
-    write("@don't@find@me@instead@find@debugger");
+    write("#don't#find#me#instead#find#debugger");
     ok(gEditor.getCaretPosition().line == 2 &&
        gEditor.getCaretPosition().col == 44,
       "The editor didn't jump to the correct token. (14)");

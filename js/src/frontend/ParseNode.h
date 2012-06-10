@@ -28,38 +28,33 @@ namespace js {
  */
 class UpvarCookie
 {
-    uint32_t value;
-
-    static const uint32_t FREE_VALUE = 0xfffffffful;
+    uint16_t level_;
+    uint16_t slot_;
 
     void checkInvariants() {
         JS_STATIC_ASSERT(sizeof(UpvarCookie) == sizeof(uint32_t));
-        JS_STATIC_ASSERT(UPVAR_LEVEL_LIMIT < FREE_LEVEL);
     }
 
   public:
-    /*
-     * All levels above-and-including FREE_LEVEL are reserved so that
-     * FREE_VALUE can be used as a special value.
-     */
-    static const uint16_t FREE_LEVEL = 0x3fff;
+    // FREE_LEVEL is a distinguished value used to indicate the cookie is free.
+    static const uint16_t FREE_LEVEL = 0xffff;
 
-    /*
-     * If a function has a higher static level than this limit, we will not
-     * optimize it using UPVAR opcodes.
-     */
-    static const uint16_t UPVAR_LEVEL_LIMIT = 16;
     static const uint16_t CALLEE_SLOT = 0xffff;
-    static bool isLevelReserved(uint16_t level) { return level >= FREE_LEVEL; }
 
-    bool isFree() const { return value == FREE_VALUE; }
-    /* isFree check should be performed before using these accessors. */
-    uint16_t level() const { JS_ASSERT(!isFree()); return uint16_t(value >> 16); }
-    uint16_t slot() const { JS_ASSERT(!isFree()); return uint16_t(value); }
+    static bool isLevelReserved(uint16_t level) { return level == FREE_LEVEL; }
 
-    void set(const UpvarCookie &other) { set(other.level(), other.slot()); }
-    void set(uint16_t newLevel, uint16_t newSlot) { value = (uint32_t(newLevel) << 16) | newSlot; }
-    void makeFree() { set(0xffff, 0xffff); JS_ASSERT(isFree()); }
+    bool isFree() const { return level_ == FREE_LEVEL; }
+    uint16_t level() const { JS_ASSERT(!isFree()); return level_; }
+    uint16_t slot()  const { JS_ASSERT(!isFree()); return slot_; }
+
+    // This fails and issues an error message if newLevel is too large.
+    bool set(JSContext *cx, unsigned newLevel, uint16_t newSlot);
+
+    void makeFree() {
+        level_ = FREE_LEVEL;
+        slot_ = 0;      // value doesn't matter, won't be used
+        JS_ASSERT(isFree());
+    }
 };
 
 /*
@@ -1503,8 +1498,6 @@ struct ObjectBox {
     ObjectBox(ObjectBox *traceLink, JSObject *obj);
 };
 
-#define JSFB_LEVEL_BITS 14
-
 struct FunctionBox : public ObjectBox
 {
     ParseNode       *node;
@@ -1512,7 +1505,7 @@ struct FunctionBox : public ObjectBox
     FunctionBox     *kids;
     FunctionBox     *parent;
     Bindings        bindings;               /* bindings for this function */
-    uint32_t        level:JSFB_LEVEL_BITS;
+    uint16_t        level;
     uint16_t        ndefaults;
     bool            inLoop:1;               /* in a loop in parent function */
     bool            inWith:1;               /* some enclosing scope is a with-statement

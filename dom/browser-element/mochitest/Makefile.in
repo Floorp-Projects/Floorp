@@ -1,0 +1,65 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = dom/browser-element/mochitest
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+# Note: browserElementTestHelpers.js looks at the test's filename to determine
+# whether the test should be OOP.  "_oop_" signals OOP, "_inproc_" signals in
+# process.  Default is OOP.
+
+_TEST_FILES = \
+		file_empty.html \
+		file_focus.html \
+		browserElementTestHelpers.js \
+		test_browserElement_NoAttr.html \
+		test_browserElement_NoPref.html \
+		test_browserElement_NoWhitelist.html \
+		browserElement_LoadEvents.js \
+		test_browserElement_oop_LoadEvents.html \
+		test_browserElement_inproc_LoadEvents.html \
+		browserElement_DataURI.js \
+		test_browserElement_oop_DataURI.html \
+		test_browserElement_inproc_DataURI.html \
+		browserElement_Titlechange.js \
+		test_browserElement_oop_Titlechange.html \
+		test_browserElement_inproc_Titlechange.html \
+		browserElement_TopBarrier.js \
+		test_browserElement_oop_TopBarrier.html \
+		test_browserElement_inproc_TopBarrier.html \
+		browserElement_Iconchange.js \
+		test_browserElement_oop_Iconchange.html \
+		test_browserElement_inproc_Iconchange.html \
+		browserElement_GetScreenshot.js \
+		test_browserElement_oop_GetScreenshot.html \
+		test_browserElement_inproc_GetScreenshot.html \
+		browserElement_SetVisible.js \
+		test_browserElement_oop_SetVisible.html \
+		test_browserElement_inproc_SetVisible.html \
+		browserElement_KeyEvents.js \
+		test_browserElement_oop_KeyEvents.html \
+		test_browserElement_inproc_KeyEvents.html \
+		browserElement_Alert.js \
+		test_browserElement_oop_Alert.html \
+		test_browserElement_inproc_Alert.html \
+		browserElement_PromptCheck.js \
+		test_browserElement_oop_PromptCheck.html \
+		test_browserElement_inproc_PromptCheck.html \
+		browserElement_PromptConfirm.js \
+		test_browserElement_oop_PromptConfirm.html \
+		test_browserElement_inproc_PromptConfirm.html \
+		browserElement_Close.js \
+		test_browserElement_oop_Close.html \
+		test_browserElement_inproc_Close.html \
+		$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

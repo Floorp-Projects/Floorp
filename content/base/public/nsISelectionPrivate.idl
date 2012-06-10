@@ -34,7 +34,7 @@ struct ScrollAxis;
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, uuid(719a803f-aa1e-436c-8919-c42908f00599)]
+[scriptable, uuid(3a1a6d3b-3698-4561-ba00-ba648cb2b0d4)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -53,7 +53,7 @@ interface nsISelectionPrivate : nsISelection
     void  endBatchChanges();
 		
     nsIEnumerator  getEnumerator();
-    wstring  toStringWithFormat(in string formatType, in unsigned long flags, in PRInt32 wrapColumn);
+    DOMString  toStringWithFormat(in string formatType, in unsigned long flags, in PRInt32 wrapColumn);
     void  addSelectionListener(in nsISelectionListener newListener);
     void  removeSelectionListener(in nsISelectionListener listenerToRemove);
 

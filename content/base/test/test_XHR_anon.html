@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for XMLHttpRequest with system privileges</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests();">
+<p id="display">
+<iframe id="loader"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+
+function runTests() {
+  let tearDown = (function setUp() {
+    SimpleTest.waitForExplicitFinish();
+
+    const {classes: Cc, interfaces: Ci} = SpecialPowers.wrap(Components);
+
+    let authMgr = Cc["@mozilla.org/network/http-auth-manager;1"]
+                    .getService(Components.interfaces.nsIHttpAuthManager)
+    authMgr.setAuthIdentity("http", "example.com", 80, "basic", "testrealm",
+                            "", "example.com", "user1", "password1");
+
+    SpecialPowers.setCharPref("dom.systemXHR.whitelist",
+                              "http://mochi.test:8888");
+
+    return function tearDown() {
+      authMgr.clearAll();
+      SpecialPowers.clearUserPref("dom.systemXHR.whitelist");
+      SimpleTest.finish();
+    }
+  }());
+
+  // An XHR with the anon flag set will not send cookie and auth information.
+
+  const TEST_URL = "http://example.com/tests/content/base/test/file_XHR_anon.sjs";
+
+  document.cookie = "foo=bar";
+
+
+  function withoutCredentials() {
+    let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+    is(xhr.mozAnon, true, "withoutCredentials: .mozAnon == true");
+    xhr.open("GET", TEST_URL);
+    xhr.onload = function onload() {
+      is(xhr.status, 200, "withoutCredentials: " + xhr.responseText);
+      withCredentials();
+    };
+    xhr.onerror = function onerror() {
+      ok(false, "Got an error event!");
+      tearDown();
+    }
+    xhr.send();
+  }
+
+  function withCredentials() {
+    // TODO: this currently does not work as expected, see bug 761479
+    let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+    is(xhr.mozAnon, true, "withCredentials: .mozAnon == true");
+    xhr.open("GET", TEST_URL + "?expectAuth=true", true,
+             "user2name", "pass2word");
+    xhr.onload = function onload() {
+      todo_is(xhr.status, 200, "withCredentials: " + xhr.responseText);
+      let response = JSON.parse(xhr.responseText);
+      todo_is(response.authorization, "Basic dXNlcjJuYW1lOnBhc3Myd29yZA==");
+      tearDown();
+    };
+    xhr.onerror = function onerror() {
+      ok(false, "Got an error event!");
+      tearDown();
+    }
+    xhr.send();
+  }
+
+  withoutCredentials();
+}
+
+</script>
+</pre>
+</body>
+</html>

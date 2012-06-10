@@ -10,9 +10,11 @@
 #include "nsIDOMFile.h"
 #include "nsIEventTarget.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIPopupWindowManager.h"
 
 #include "nsJSUtils.h"
 #include "nsDOMFile.h"
+#include "nsGlobalWindow.h"
 
 namespace mozilla {
 
@@ -168,16 +170,43 @@ public:
     PRUint32 aDuration,
     nsIDOMGetUserMediaSuccessCallback* aSuccessCallback,
     nsIDOMGetUserMediaErrorCallback* aErrorCallback,
-    PRUint64 aWindowID)
+    nsPIDOMWindow* aWindow)
     : mSource(aSource)
     , mDuration(aDuration)
     , mSuccessCallback(aSuccessCallback)
     , mErrorCallback(aErrorCallback)
-    , mWindowID(aWindowID) {}
+    , mWindow(aWindow) {}
 
   NS_IMETHOD
   Run()
   {
+    mWindowID = mWindow->WindowID();
+
+    // Before getting a snapshot, check if page is allowed to open a popup.
+    // We do this because {picture:true} on all platforms will open a new
+    // "window" to let the user preview or select an image.
+
+    if (mWindow->GetPopupControlState() <= openControlled) {
+      return NS_OK;
+    }
+    
+    nsCOMPtr<nsIPopupWindowManager> pm =
+      do_GetService(NS_POPUPWINDOWMANAGER_CONTRACTID);
+    if (!pm) {
+      return NS_OK;
+    }
+
+    PRUint32 permission;
+    nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+    pm->TestPermission(doc->GetDocumentURI(), &permission);
+    if (permission == nsIPopupWindowManager::DENY_POPUP) {
+      nsCOMPtr<nsIDOMDocument> domDoc = mWindow->GetExtantDocument();
+      nsGlobalWindow::FirePopupBlockedEvent(
+        domDoc, mWindow, nsnull, EmptyString(), EmptyString()
+      );
+      return NS_OK;
+    }
+
     nsCOMPtr<nsDOMMediaStream> comStream = mSource->Allocate();
     if (!comStream) {
       NS_DispatchToMainThread(new ErrorCallbackRunnable(
@@ -201,6 +230,8 @@ private:
   PRUint32 mDuration;
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccessCallback;
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback>  mErrorCallback;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+
   PRUint64 mWindowID;
 };
 
@@ -218,13 +249,13 @@ public:
   GetUserMediaRunnable(bool aAudio, bool aVideo, bool aPicture,
     nsIDOMGetUserMediaSuccessCallback* aSuccess,
     nsIDOMGetUserMediaErrorCallback* aError,
-    PRUint64 aWindowID, StreamListeners* aListeners)
+    nsPIDOMWindow* aWindow, StreamListeners* aListeners)
     : mAudio(aAudio)
     , mVideo(aVideo)
     , mPicture(aPicture)
     , mSuccess(aSuccess)
     , mError(aError)
-    , mWindowID(aWindowID)
+    , mWindow(aWindow)
     , mListeners(aListeners) {}
 
   ~GetUserMediaRunnable() {}
@@ -239,6 +270,7 @@ public:
   Run()
   {
     mManager = MediaManager::Get();
+    mWindowID = mWindow->WindowID();
 
     if (mPicture) {
       SendPicture();
@@ -282,7 +314,7 @@ public:
     }
     MediaEngineVideoSource* videoSource = videoSources[count - 1];
     NS_DispatchToMainThread(new GetUserMediaSnapshotCallbackRunable(
-      videoSource, 0 /* duration */, mSuccess, mError, mWindowID
+      videoSource, 0 /* duration */, mSuccess, mError, mWindow
     ));
   }
 
@@ -335,10 +367,11 @@ private:
 
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mSuccess;
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
-  PRUint64 mWindowID;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
   StreamListeners* mListeners;
 
   MediaManager* mManager;
+  PRUint64 mWindowID;
 };
 
 
@@ -352,7 +385,7 @@ NS_IMPL_ISUPPORTS1(MediaManager, nsIObserver)
  * for handling all incoming getUserMedia calls from every window.
  */
 nsresult
-MediaManager::GetUserMedia(PRUint64 aWindowID, nsIMediaStreamOptions* aParams,
+MediaManager::GetUserMedia(nsPIDOMWindow* aWindow, nsIMediaStreamOptions* aParams,
   nsIDOMGetUserMediaSuccessCallback* onSuccess,
   nsIDOMGetUserMediaErrorCallback* onError)
 {
@@ -375,16 +408,17 @@ MediaManager::GetUserMedia(PRUint64 aWindowID, nsIMediaStreamOptions* aParams,
 
   // Store the WindowID in a hash table and mark as active. The entry is removed
   // when this window is closed or navigated away from.
-  StreamListeners* listeners = mActiveWindows.Get(aWindowID);
+  PRUint64 windowID = aWindow->WindowID();
+  StreamListeners* listeners = mActiveWindows.Get(windowID);
   if (!listeners) {
     listeners = new StreamListeners;
-    mActiveWindows.Put(aWindowID, listeners);
+    mActiveWindows.Put(windowID, listeners);
   }
 
   // Pass runanbles along to GetUserMediaRunnable so it can add the
   // MediaStreamListener to the runnable list.
   nsCOMPtr<nsIRunnable> gUMRunnable = new GetUserMediaRunnable(
-    audio, video, picture, onSuccess, onError, aWindowID, listeners
+    audio, video, picture, onSuccess, onError, aWindow, listeners
   );
 
   // Reuse the same thread to save memory.

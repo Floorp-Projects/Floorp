@@ -297,7 +297,7 @@ nsHTMLLabelElement::GetLabeledElement()
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::_for, elementId)) {
     // No @for, so we are a label for our first form control element.
     // Do a depth-first traversal to look for the first form control element.
-    return GetFirstDescendantFormControl();
+    return GetFirstLabelableDescendant();
   }
 
   // We have a @for. The id has to be linked to an element in the same document
@@ -308,13 +308,7 @@ nsHTMLLabelElement::GetLabeledElement()
   }
 
   Element* element = doc->GetElementById(elementId);
-  if (!element) {
-    return nsnull;
-  }
-
-  nsCOMPtr<nsIFormControl> controlElement = do_QueryInterface(element);
-  if (controlElement && controlElement->IsLabelableControl()) {
-    // Transfer the reference count of element to the returned value.
+  if (element && element->IsLabelable()) {
     return element;
   }
 
@@ -322,16 +316,13 @@ nsHTMLLabelElement::GetLabeledElement()
 }
 
 Element*
-nsHTMLLabelElement::GetFirstDescendantFormControl()
+nsHTMLLabelElement::GetFirstLabelableDescendant()
 {
-  // Have to cast do disambiguate GetFirstChild from the DOM method of that name
-  for (nsINode* cur = static_cast<nsINode*>(this)->GetFirstChild();
-       cur;
+  for (nsIContent* cur = nsINode::GetFirstChild(); cur;
        cur = cur->GetNextNode(this)) {
-    nsCOMPtr<nsIFormControl> element = do_QueryInterface(cur);
-    if (element && element->IsLabelableControl()) {
-      NS_ASSERTION(cur->IsElement(), "How did that happen?");
-      return cur->AsElement();
+    Element* element = cur->IsElement() ? cur->AsElement() : nsnull;
+    if (element && element->IsLabelable()) {
+      return element;
     }
   }
 
