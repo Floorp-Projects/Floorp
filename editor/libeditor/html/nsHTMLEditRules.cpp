@@ -515,7 +515,7 @@ nsHTMLEditRules::AfterEditInner(nsEditor::OperationID action,
 
 
 NS_IMETHODIMP
-nsHTMLEditRules::WillDoAction(nsTypedSelection* aSelection,
+nsHTMLEditRules::WillDoAction(Selection* aSelection,
                               nsRulesInfo* aInfo,
                               bool* aCancel,
                               bool* aHandled)
@@ -1237,7 +1237,7 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, bool *aCancel)
 
 nsresult
 nsHTMLEditRules::WillInsertText(nsEditor::OperationID aAction,
-                                nsTypedSelection* aSelection,
+                                Selection*       aSelection,
                                 bool            *aCancel,
                                 bool            *aHandled,
                                 const nsAString *inString,
@@ -1463,7 +1463,7 @@ nsHTMLEditRules::WillLoadHTML(nsISelection *aSelection, bool *aCancel)
 }
 
 nsresult
-nsHTMLEditRules::WillInsertBreak(nsTypedSelection* aSelection,
+nsHTMLEditRules::WillInsertBreak(Selection* aSelection,
                                  bool* aCancel, bool* aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) {
@@ -1779,7 +1779,7 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, bool aPlaintext, bool 
 
 
 nsresult
-nsHTMLEditRules::WillDeleteSelection(nsTypedSelection* aSelection,
+nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
                                      nsIEditor::EDirection aAction,
                                      nsIEditor::EStripWrappers aStripWrappers,
                                      bool* aCancel,
@@ -7244,7 +7244,7 @@ nsHTMLEditRules::ReapplyCachedStyles()
   bool useCSS = mHTMLEditor->IsCSSEnabled();
 
   // get selection point; if it doesn't exist, we have nothing to do
-  nsRefPtr<nsTypedSelection> selection = mHTMLEditor->GetTypedSelection();
+  nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
   MOZ_ASSERT(selection);
   if (!selection->GetRangeCount()) {
     // Nothing to do

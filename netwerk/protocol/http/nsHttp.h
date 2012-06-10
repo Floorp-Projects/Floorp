@@ -20,7 +20,7 @@
 // 2) #include IPDL boilerplate, and then undef LOG so our LOG wins.
 // 3) nsNetModule.cpp does its own crazy stuff with #including prlog.h
 //    multiple times; allow it to define ALLOW_LATE_NSHTTP_H_INCLUDE to bypass
-//    check. 
+//    check.
 #if defined(PR_LOG) && !defined(ALLOW_LATE_NSHTTP_H_INCLUDE)
 #error "If nsHttp.h #included it must come before any IPDL-generated files or other files that #include prlog.h"
 #endif
@@ -181,7 +181,7 @@ struct nsHttp
     }
 
     // Declare all atoms
-    // 
+    //
     // The atom names and values are stored in nsHttpAtomList.h and are brought
     // to you by the magic of C preprocessing.  Add new atoms to nsHttpAtomList
     // and all support logic will be auto-generated.
@@ -204,7 +204,7 @@ PRTimeToSeconds(PRTime t_usec)
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
 
 // round q-value to one decimal place; return most significant digit as uint.
-#define QVAL_TO_UINT(q) ((unsigned int) ((q + 0.05) * 10.0))
+#define QVAL_TO_UINT(q) ((unsigned int) ((q + 0.0005) * 1000.0))
 
 #define HTTP_LWS " \t"
 #define HTTP_HEADER_VALUE_SEPS HTTP_LWS ","
