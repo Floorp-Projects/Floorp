@@ -14,6 +14,8 @@
 
 #include "AccessibleRelation_i.c"
 
+using namespace mozilla::a11y;
+
 ia2AccessibleRelation::ia2AccessibleRelation(PRUint32 aType, Relation* aRel) :
   mType(aType), mReferences(0)
 {
