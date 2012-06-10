@@ -210,7 +210,7 @@ nsTextEditRules::AfterEdit(nsEditor::OperationID action,
 
 
 NS_IMETHODIMP
-nsTextEditRules::WillDoAction(nsTypedSelection* aSelection,
+nsTextEditRules::WillDoAction(Selection* aSelection,
                               nsRulesInfo* aInfo,
                               bool* aCancel,
                               bool* aHandled)
@@ -334,7 +334,7 @@ nsTextEditRules::DidInsert(nsISelection *aSelection, nsresult aResult)
 }
 
 nsresult
-nsTextEditRules::WillInsertBreak(nsTypedSelection* aSelection,
+nsTextEditRules::WillInsertBreak(Selection* aSelection,
                                  bool *aCancel,
                                  bool *aHandled,
                                  PRInt32 aMaxLength)
@@ -541,7 +541,7 @@ nsTextEditRules::HandleNewLines(nsString &aString,
 
 nsresult
 nsTextEditRules::WillInsertText(nsEditor::OperationID aAction,
-                                nsTypedSelection* aSelection,
+                                Selection* aSelection,
                                 bool            *aCancel,
                                 bool            *aHandled,
                                 const nsAString *inString,
@@ -753,7 +753,7 @@ nsTextEditRules::DidRemoveTextProperty(nsISelection *aSelection, nsresult aResul
 }
 
 nsresult
-nsTextEditRules::WillDeleteSelection(nsTypedSelection* aSelection,
+nsTextEditRules::WillDeleteSelection(Selection* aSelection,
                                      nsIEditor::EDirection aCollapsedAction, 
                                      bool *aCancel,
                                      bool *aHandled)
@@ -1138,7 +1138,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
 
 
 nsresult
-nsTextEditRules::TruncateInsertionIfNeeded(nsTypedSelection* aSelection,
+nsTextEditRules::TruncateInsertionIfNeeded(Selection* aSelection,
                                            const nsAString  *aInString,
                                            nsAString  *aOutString,
                                            PRInt32          aMaxLength,
@@ -1240,7 +1240,7 @@ nsresult nsTextEditRules::HideLastPWInput() {
   nsAutoString hiddenText;
   FillBufWithPWChars(&hiddenText, mLastLength);
 
-  nsRefPtr<nsTypedSelection> selection = mEditor->GetTypedSelection();
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   PRInt32 start, end;
   nsContentUtils::GetSelectionInTextControl(selection, mEditor->GetRoot(),
