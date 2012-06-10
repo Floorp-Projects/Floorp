@@ -1816,6 +1816,12 @@ CanScrollWithBlitting(nsIFrame* aFrame)
         f->IsFrameOfType(nsIFrame::eSVG)) {
       return false;
     }
+#ifndef MOZ_ENABLE_MASK_LAYERS
+    nsIScrollableFrame* sf = do_QueryFrame(f);
+    if ((sf || f->IsFrameOfType(nsIFrame::eReplaced)) &&
+        nsLayoutUtils::HasNonZeroCorner(f->GetStyleBorder()->mBorderRadius))
+      return false;
+#endif
     if (nsLayoutUtils::IsPopup(f))
       break;
   }
@@ -2407,18 +2413,12 @@ nsGfxScrollFrameInner::GetScrollRangeForClamping() const
     return nsRect(nscoord_MIN/2, nscoord_MIN/2,
                   nscoord_MAX - nscoord_MIN/2, nscoord_MAX - nscoord_MIN/2);
   }
-  nsSize scrollPortSize = GetScrollPositionClampingScrollPortSize();
-  return GetScrollRange(scrollPortSize.width, scrollPortSize.height);
-}
-
-nsSize
-nsGfxScrollFrameInner::GetScrollPositionClampingScrollPortSize() const
-{
   nsIPresShell* presShell = mOuter->PresContext()->PresShell();
   if (mIsRoot && presShell->IsScrollPositionClampingScrollPortSizeSet()) {
-    return presShell->GetScrollPositionClampingScrollPortSize();
+    nsSize size = presShell->GetScrollPositionClampingScrollPortSize();
+    return GetScrollRange(size.width, size.height);
   }
-  return mScrollPort.Size();
+  return GetScrollRange();
 }
 
 static void

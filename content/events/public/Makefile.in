@@ -15,6 +15,7 @@ XPIDL_MODULE	= content_events
 
 EXPORTS		= \
 		nsMutationEvent.h \
+		nsIPrivateDOMEvent.h \
 		nsIPrivateTextEvent.h \
 		nsIPrivateTextRange.h \
 		nsAsyncDOMEvent.h \

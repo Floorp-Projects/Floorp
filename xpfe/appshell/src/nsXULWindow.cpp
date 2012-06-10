@@ -25,11 +25,13 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXULElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMScreen.h"
 #include "nsIEmbeddingSiteWindow.h"
+#include "nsIEmbeddingSiteWindow2.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
@@ -180,6 +182,10 @@ NS_IMETHODIMP nsXULWindow::GetInterface(const nsIID& aIID, void** aSink)
     NS_SUCCEEDED(EnsureContentTreeOwner()) &&
     NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
     return NS_OK;
+  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow2)) && 
+    NS_SUCCEEDED(EnsureContentTreeOwner()) &&
+    NS_SUCCEEDED(mContentTreeOwner->QueryInterface(aIID, aSink)))
+    return NS_OK;
 
   return QueryInterface(aIID, aSink);
 }
@@ -244,7 +250,8 @@ NS_IMETHODIMP nsXULWindow::SetZLevel(PRUint32 aLevel)
       if (event) {
         event->InitEvent(NS_LITERAL_STRING("windowZLevel"), true, false);
 
-        event->SetTrusted(true);
+        nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+        privateEvent->SetTrusted(true);
 
         nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(domDoc);
         if (targ) {

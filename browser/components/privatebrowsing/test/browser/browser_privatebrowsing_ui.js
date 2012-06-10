@@ -70,9 +70,9 @@ function test() {
       testNewWindow(function() {
         // These are tests for the privateWindow setter.  Note that the setter should
         // not be used anywhere else for now!
-        setPrivateWindow(window, true);
+        gPrivateBrowsingUI.privateWindow = true;
         is(gPrivateBrowsingUI.privateWindow, true, "gPrivateBrowsingUI should accept the correct per-window private browsing status");
-        setPrivateWindow(window, false);
+        gPrivateBrowsingUI.privateWindow = false;
         is(gPrivateBrowsingUI.privateWindow, false, "gPrivateBrowsingUI should accept the correct per-window private browsing status");
 
         // now, test using the <command> object

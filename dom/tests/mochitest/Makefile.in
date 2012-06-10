@@ -27,6 +27,7 @@ DIRS	+= \
 	sessionstorage \
 	storageevent \
 	pointerlock \
+	browser-frame \
 	webapps \
 	$(NULL)
 

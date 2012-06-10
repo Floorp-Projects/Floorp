@@ -26,6 +26,7 @@
 #include "nsEventDispatcher.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMNode.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsISelectControlFrame.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"

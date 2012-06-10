@@ -22,6 +22,7 @@
 #include "nsAsyncDOMEvent.h"
 #include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
@@ -4505,7 +4506,12 @@ nsTreeBodyFrame::FireRowCountChangedEvent(PRInt32 aIndex, PRInt32 aCount)
   countVariant->SetAsInt32(aCount);
   treeEvent->SetData(NS_LITERAL_STRING("count"), countVariant);
 
-  event->SetTrusted(true);
+  // Fire an event.
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+  if (!privateEvent)
+    return;
+
+  privateEvent->SetTrusted(true);
 
   nsRefPtr<nsAsyncDOMEvent> plevent = new nsAsyncDOMEvent(content, event);
   if (!plevent)
@@ -4587,7 +4593,12 @@ nsTreeBodyFrame::FireInvalidateEvent(PRInt32 aStartRowIdx, PRInt32 aEndRowIdx,
     treeEvent->SetData(NS_LITERAL_STRING("endcolumn"), endColVariant);
   }
 
-  event->SetTrusted(true);
+  // Fire an event.
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+  if (!privateEvent)
+    return;
+
+  privateEvent->SetTrusted(true);
 
   nsRefPtr<nsAsyncDOMEvent> plevent = new nsAsyncDOMEvent(content, event);
   if (plevent)

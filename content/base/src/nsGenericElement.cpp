@@ -37,6 +37,7 @@
 #include "nsUnicharUtils.h"
 #include "nsEventStateManager.h"
 #include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -134,6 +135,8 @@ NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
 PRInt32 nsIContent::sTabFocusModel = eTabFocus_any;
 bool nsIContent::sTabFocusModelAppliesToXUL = false;
 PRUint32 nsMutationGuard::sMutationCount = 0;
+
+nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 
 //----------------------------------------------------------------------
 
@@ -3517,7 +3520,7 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
-nsICSSDeclaration*
+nsIDOMCSSStyleDeclaration*
 nsGenericElement::GetSMILOverrideStyle()
 {
   nsGenericElement::nsDOMSlots *slots = DOMSlots();
@@ -3558,12 +3561,6 @@ nsGenericElement::SetSMILOverrideStyleRule(css::StyleRule* aStyleRule,
   }
 
   return NS_OK;
-}
-
-bool
-nsGenericElement::IsLabelable() const
-{
-  return false;
 }
 
 css::StyleRule*
@@ -6131,7 +6128,7 @@ inline static nsresult FindMatchingElements(nsINode* aRoot,
 
   nsIDocument* doc = aRoot->OwnerDoc();  
   TreeMatchContext matchingContext(false, nsRuleWalker::eRelevantLinkUnvisited,
-                                   doc, TreeMatchContext::eNeverMatchVisited);
+                                   doc);
   doc->FlushPendingLinkUpdates();
 
   // Fast-path selectors involving IDs.  We can only do this if aRoot
@@ -6245,8 +6242,7 @@ nsGenericElement::MozMatchesSelector(const nsAString& aSelector, nsresult* aResu
     OwnerDoc()->FlushPendingLinkUpdates();
     TreeMatchContext matchingContext(false,
                                      nsRuleWalker::eRelevantLinkUnvisited,
-                                     OwnerDoc(),
-                                     TreeMatchContext::eNeverMatchVisited);
+                                     OwnerDoc());
     matches = nsCSSRuleProcessor::SelectorListMatches(this, matchingContext,
                                                       selectorList);
   }

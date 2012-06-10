@@ -1463,10 +1463,7 @@ XMLHttpRequest::_finalize(JSFreeOp* aFop)
 
 // static
 XMLHttpRequest*
-XMLHttpRequest::Constructor(JSContext* aCx,
-                            JSObject* aGlobal,
-                            const Optional<jsval>& aParams,
-                            ErrorResult& aRv)
+XMLHttpRequest::Constructor(JSContext* aCx, JSObject* aGlobal, ErrorResult& aRv)
 {
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
   MOZ_ASSERT(workerPrivate);
@@ -1477,8 +1474,6 @@ XMLHttpRequest::Constructor(JSContext* aCx,
     aRv.Throw(NS_ERROR_FAILURE);
     return NULL;
   }
-
-  // TODO: process aParams. See bug 761227
 
   xhr->mJSObject = xhr->GetJSObject();
   return xhr;

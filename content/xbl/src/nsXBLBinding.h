@@ -89,8 +89,8 @@ public:
 
   // Get the list of insertion points for aParent. The nsInsertionPointList
   // is owned by the binding, you should not delete it.
-  void GetInsertionPointsFor(nsIContent* aParent,
-                             nsInsertionPointList** aResult);
+  nsresult GetInsertionPointsFor(nsIContent* aParent,
+                                 nsInsertionPointList** aResult);
 
   nsInsertionPointList* GetExistingInsertionPointsFor(nsIContent* aParent);
 

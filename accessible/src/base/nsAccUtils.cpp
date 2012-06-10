@@ -152,8 +152,9 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
       if (!live.IsEmpty()) {
         SetAccAttr(aAttributes, nsGkAtoms::containerLive, live);
         if (role) {
-          nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::containerLiveRole,
-                                 role->ARIARoleString());
+          nsAccUtils::SetAccAttr(aAttributes,
+                                 nsGkAtoms::containerLiveRole,
+                                 NS_ConvertASCIItoUTF16(role->roleString));
         }
       }
     }

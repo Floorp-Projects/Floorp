@@ -53,6 +53,7 @@
 #include "nsStyleStructInlines.h"
 #include "nsIAppShell.h"
 #include "prenv.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsObjectFrame.h"
 #include "nsTransitionManager.h"
@@ -2081,15 +2082,14 @@ nsPresContext::FireDOMPaintEvent()
   NS_NewDOMNotifyPaintEvent(getter_AddRefs(event), this, nsnull,
                             NS_AFTERPAINT,
                             &mInvalidateRequests);
-  if (!event) {
-    return;
-  }
+  nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(event);
+  if (!pEvent) return;
 
   // Even if we're not telling the window about the event (so eventTarget is
   // the chrome event handler, not the window), the window is still
   // logically the event target.
-  event->SetTarget(eventTarget);
-  event->SetTrusted(true);
+  pEvent->SetTarget(eventTarget);
+  pEvent->SetTrusted(true);
   nsEventDispatcher::DispatchDOMEvent(dispatchTarget, nsnull, event, this, nsnull);
 }
 

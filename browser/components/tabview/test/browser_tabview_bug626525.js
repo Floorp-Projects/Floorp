@@ -138,10 +138,8 @@ function test3(win) {
 }
 
 function openTabContextPopup(win, tab) {
-  var evt = new Event("");
-  tab.dispatchEvent(evt);
   win.document.getElementById("tabContextMenu").openPopup(
-    tab, "end_after", 0, 0, true, false, evt);
+    tab, "end_after", 0, 0, true, false, {target: tab});
 }
 
 function closeTabContextPopup(win) {

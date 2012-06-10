@@ -28,6 +28,7 @@
 #include "nsEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
@@ -362,8 +363,9 @@ nsXBLPrototypeHandler::DispatchXBLCommand(nsIDOMEventTarget* aTarget, nsIDOMEven
   if (preventDefault)
     return NS_OK;
 
-  if (aEvent) {
-    bool dispatchStopped = aEvent->IsDispatchStopped();
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aEvent);
+  if (privateEvent) {
+    bool dispatchStopped = privateEvent->IsDispatchStopped();
     if (dispatchStopped)
       return NS_OK;
   }

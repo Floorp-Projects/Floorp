@@ -534,6 +534,94 @@ nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
 }
 
 nsresult
+nsPlaintextEditor::GetTextSelectionOffsets(nsISelection *aSelection,
+                                           PRUint32 &aOutStartOffset, 
+                                           PRUint32 &aOutEndOffset)
+{
+  NS_ASSERTION(aSelection, "null selection");
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  PRInt32 startNodeOffset, endNodeOffset;
+  aSelection->GetAnchorNode(getter_AddRefs(startNode));
+  aSelection->GetAnchorOffset(&startNodeOffset);
+  aSelection->GetFocusNode(getter_AddRefs(endNode));
+  aSelection->GetFocusOffset(&endNodeOffset);
+
+  dom::Element *rootElement = GetRoot();
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
+  NS_ENSURE_TRUE(rootNode, NS_ERROR_NULL_POINTER);
+
+  PRInt32 startOffset = -1;
+  PRInt32 endOffset = -1;
+
+  nsCOMPtr<nsIContentIterator> iter =
+    do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+#ifdef NS_DEBUG
+  PRInt32 nodeCount = 0; // only needed for the assertions below
+#endif
+  PRUint32 totalLength = 0;
+  iter->Init(rootElement);
+  for (; !iter->IsDone() && (startOffset == -1 || endOffset == -1); iter->Next()) {
+    nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(iter->GetCurrentNode());
+    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(currentNode);
+    if (textNode) {
+      // Note that sometimes we have an empty #text-node as start/endNode,
+      // which we regard as not editable because the frame width == 0,
+      // see nsEditor::IsEditable().
+      bool editable = IsEditable(currentNode);
+      if (currentNode == startNode) {
+        startOffset = totalLength + (editable ? startNodeOffset : 0);
+      }
+      if (currentNode == endNode) {
+        endOffset = totalLength + (editable ? endNodeOffset : 0);
+      }
+      if (editable) {
+        PRUint32 length;
+        textNode->GetLength(&length);
+        totalLength += length;
+      }
+    }
+#ifdef NS_DEBUG
+    // The post content iterator might return the parent node (which is the
+    // editor's root node) as the last item.  Don't count the root node itself
+    // as one of its children!
+    if (!SameCOMIdentity(currentNode, rootNode)) {
+      ++nodeCount;
+    }
+#endif
+  }
+
+  if (endOffset == -1) {
+    NS_ASSERTION(endNode == rootNode, "failed to find the end node");
+    NS_ASSERTION(IsPasswordEditor() ||
+                 (endNodeOffset == nodeCount-1 || endNodeOffset == 0),
+                 "invalid end node offset");
+    endOffset = endNodeOffset == 0 ? 0 : totalLength;
+  }
+  if (startOffset == -1) {
+    NS_ASSERTION(startNode == rootNode, "failed to find the start node");
+    NS_ASSERTION(startNodeOffset == nodeCount-1 || startNodeOffset == 0,
+                 "invalid start node offset");
+    startOffset = startNodeOffset == 0 ? 0 : totalLength;
+  }
+
+  // Make sure aOutStartOffset <= aOutEndOffset.
+  if (startOffset <= endOffset) {
+    aOutStartOffset = startOffset;
+    aOutEndOffset = endOffset;
+  }
+  else {
+    aOutStartOffset = endOffset;
+    aOutEndOffset = startOffset;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
                                             nsIEditor::EDirection *aAction)
 {
@@ -630,7 +718,7 @@ nsPlaintextEditor::DeleteSelection(EDirection aAction,
   nsAutoRules beginRulesSniffing(this, kOpDeleteSelection, aAction);
 
   // pre-process
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // If there is an existing selection when an extended delete is requested,
@@ -688,7 +776,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
 
   // pre-process
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsAutoString resultString;
   // XXX can we trust instring to outlive ruleInfo,
@@ -725,7 +813,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   nsAutoRules beginRulesSniffing(this, kOpInsertBreak, nsIEditor::eNext);
 
   // pre-process
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // Batching the selection and moving nodes out from under the caret causes
@@ -1073,7 +1161,7 @@ nsPlaintextEditor::Undo(PRUint32 aCount)
   nsAutoRules beginRulesSniffing(this, kOpUndo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(kOpUndo);
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   bool cancel, handled;
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   
@@ -1102,7 +1190,7 @@ nsPlaintextEditor::Redo(PRUint32 aCount)
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(kOpRedo);
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   bool cancel, handled;
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   
@@ -1376,7 +1464,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
     quotedStuff.Append(PRUnichar('\n'));
 
   // get selection
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);

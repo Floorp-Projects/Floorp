@@ -70,8 +70,6 @@ template <class T>
 inline T*
 UnwrapDOMObject(JSObject* obj)
 {
-  MOZ_ASSERT(IsDOMClass(JS_GetClass(obj)));
-
   JS::Value val = js::GetReservedSlot(obj, DOM_OBJECT_SLOT);
   // XXXbz/khuey worker code tries to unwrap interface objects (which have
   // nothing here).  That needs to stop.

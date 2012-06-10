@@ -207,7 +207,7 @@ class SwitchSensor : public RefCounted<SwitchSensor> {
     void Switch() {
       int index = HardwareSensorToHalSensor(mSensor.type);
 
-      MOZ_ASSERT(sSensorStatus[index].count || mActivate);
+      MOZ_ASSERT(sSensorStatus[index].count == 0 || mActivate);
 
       SensorDevice& device = SensorDevice::getInstance();
       

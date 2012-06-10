@@ -31,7 +31,7 @@ enum XMLHttpRequestResponseType {
   "moz-blob"
 };
 
-[Constructor(optional any params)]
+[Constructor]
 interface XMLHttpRequest : XMLHttpRequestEventTarget {
   // event handler
   [TreatNonCallableAsNull] attribute Function? onreadystatechange;
@@ -80,6 +80,4 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   void sendAsBinary(DOMString body);
   any getInterface(IID iid);
   [TreatNonCallableAsNull] attribute Function? onuploadprogress;
-  readonly attribute boolean mozAnon;
-  readonly attribute boolean mozSystem;
 };

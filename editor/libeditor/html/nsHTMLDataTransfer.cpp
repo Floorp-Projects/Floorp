@@ -24,6 +24,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsISelectionController.h"
 #include "nsIFileChannel.h"
+#include "nsIPrivateDOMEvent.h"
 
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
@@ -152,7 +153,7 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
   nsAutoRules beginRulesSniffing(this, kOpLoadHTML, nsIEditor::eNext);
 
   // Get selection
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_STATE(selection);
 
   nsTextRulesInfo ruleInfo(kOpLoadHTML);
@@ -249,7 +250,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
   nsAutoRules beginRulesSniffing(this, kOpHTMLPaste, nsIEditor::eNext);
 
   // Get selection
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_STATE(selection);
 
   // create a dom document fragment that represents the structure to paste
@@ -1001,7 +1002,6 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
       {
         case 0:  // prefer JPEG over PNG over GIF encoding
           (*aTransferable)->AddDataFlavor(kJPEGImageMime);
-          (*aTransferable)->AddDataFlavor(kJPGImageMime);
           (*aTransferable)->AddDataFlavor(kPNGImageMime);
           (*aTransferable)->AddDataFlavor(kGIFImageMime);
           break;
@@ -1009,13 +1009,11 @@ NS_IMETHODIMP nsHTMLEditor::PrepareHTMLTransferable(nsITransferable **aTransfera
         default:
           (*aTransferable)->AddDataFlavor(kPNGImageMime);
           (*aTransferable)->AddDataFlavor(kJPEGImageMime);
-          (*aTransferable)->AddDataFlavor(kJPGImageMime);
           (*aTransferable)->AddDataFlavor(kGIFImageMime);
           break;
         case 2:  // prefer GIF over JPEG over PNG encoding
           (*aTransferable)->AddDataFlavor(kGIFImageMime);
           (*aTransferable)->AddDataFlavor(kJPEGImageMime);
-          (*aTransferable)->AddDataFlavor(kJPGImageMime);
           (*aTransferable)->AddDataFlavor(kPNGImageMime);
           break;
       }
@@ -1237,7 +1235,6 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
   }
 
   if (0 == nsCRT::strcmp(type, kJPEGImageMime) ||
-      0 == nsCRT::strcmp(type, kJPGImageMime) ||
       0 == nsCRT::strcmp(type, kPNGImageMime) ||
       0 == nsCRT::strcmp(type, kGIFImageMime) ||
       insertAsImage)
@@ -1307,7 +1304,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
 
     if (0 == nsCRT::strcmp(bestFlavor, kFileMime) ||
         0 == nsCRT::strcmp(bestFlavor, kJPEGImageMime) ||
-        0 == nsCRT::strcmp(bestFlavor, kJPGImageMime) ||
         0 == nsCRT::strcmp(bestFlavor, kPNGImageMime) ||
         0 == nsCRT::strcmp(bestFlavor, kGIFImageMime)) {
       rv = InsertObject(bestFlavor, genericDataObj, isSafe,
@@ -1407,7 +1403,6 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
     if (!isText) {
       if (type.EqualsLiteral(kFileMime) ||
           type.EqualsLiteral(kJPEGImageMime) ||
-          type.EqualsLiteral(kJPGImageMime) ||
           type.EqualsLiteral(kPNGImageMime) ||
           type.EqualsLiteral(kGIFImageMime)) {
         nsCOMPtr<nsIVariant> variant;
@@ -1629,8 +1624,8 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
 
 static const char* textEditorFlavors[] = { kUnicodeMime };
 static const char* textHtmlEditorFlavors[] = { kUnicodeMime, kHTMLMime,
-                                               kJPEGImageMime, kJPGImageMime,
-                                               kPNGImageMime, kGIFImageMime };
+                                               kJPEGImageMime, kPNGImageMime,
+                                               kGIFImageMime };
 
 NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, bool *aCanPaste)
 {
@@ -1729,7 +1724,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAString & aCitation,
   nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
 
   // get selection
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // give rules a chance to handle or cancel
@@ -1926,7 +1921,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
 
   nsCOMPtr<nsIDOMNode> newNode;
   // get selection
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
@@ -2018,7 +2013,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   nsCOMPtr<nsIDOMNode> newNode;
 
   // get selection
-  nsRefPtr<Selection> selection = GetSelection();
+  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);

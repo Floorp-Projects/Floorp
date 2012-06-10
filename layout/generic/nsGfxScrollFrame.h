@@ -149,7 +149,6 @@ public:
   nsRect GetScrollRange() const;
   // Get the scroll range assuming the scrollport has size (aWidth, aHeight).
   nsRect GetScrollRange(nscoord aWidth, nscoord aHeight) const;
-  nsSize GetScrollPositionClampingScrollPortSize() const;
 protected:
   nsRect GetScrollRangeForClamping() const;
 
@@ -465,9 +464,6 @@ public:
   virtual nsRect GetScrollRange() const {
     return mInner.GetScrollRange();
   }
-  virtual nsSize GetScrollPositionClampingScrollPortSize() const {
-    return mInner.GetScrollPositionClampingScrollPortSize();
-  }
   virtual nsSize GetLineScrollAmount() const {
     return mInner.GetLineScrollAmount();
   }
@@ -712,9 +708,6 @@ public:
   }
   virtual nsRect GetScrollRange() const {
     return mInner.GetScrollRange();
-  }
-  virtual nsSize GetScrollPositionClampingScrollPortSize() const {
-    return mInner.GetScrollPositionClampingScrollPortSize();
   }
   virtual nsSize GetLineScrollAmount() const {
     return mInner.GetLineScrollAmount();

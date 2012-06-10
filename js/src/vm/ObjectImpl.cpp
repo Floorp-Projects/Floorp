@@ -578,9 +578,6 @@ js::GetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t in
         MOZ_NOT_REACHED("NYI: handle PropertyOp'd properties here");
         return false;
     } while (false);
-
-    MOZ_NOT_REACHED("buggy control flow");
-    return false;
 }
 
 bool
@@ -612,9 +609,6 @@ js::HasElement(JSContext *cx, ObjectImpl *obj, uint32_t index, bool *found)
         *found = false;
         return true;
     } while (false);
-
-    MOZ_NOT_REACHED("buggy control flow");
-    return false;
 }
 
 bool
@@ -807,7 +801,4 @@ js::SetElement(JSContext *cx, ObjectImpl *obj, ObjectImpl *receiver, uint32_t in
         PropDesc newDesc(v, PropDesc::Writable, PropDesc::Enumerable, PropDesc::Configurable);
         return DefineElement(cx, receiver, index, newDesc, false, succeeded);
     } while (false);
-
-    MOZ_NOT_REACHED("buggy control flow");
-    return false;
 }

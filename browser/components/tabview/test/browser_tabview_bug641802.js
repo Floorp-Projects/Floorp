@@ -4,9 +4,7 @@
 function test() {
   let openMoveToGroupPopup = function () {
     let tab = gBrowser.selectedTab;
-    var evt = new Event("");
-    tab.dispatchEvent(evt);
-    contextMenu.openPopup(tab, "end_after", 0, 0, true, false, evt);
+    contextMenu.openPopup(tab, "end_after", 0, 0, true, false, {target: tab});
     tvMenuPopup.openPopup(tvMenu, "end_after", 0, 0, true, false);
   }
 

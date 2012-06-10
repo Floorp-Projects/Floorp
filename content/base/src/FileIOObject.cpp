@@ -6,6 +6,7 @@
 #include "FileIOObject.h"
 #include "nsDOMFile.h"
 #include "nsDOMError.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsComponentManagerUtils.h"
@@ -111,7 +112,10 @@ FileIOObject::DispatchProgressEvent(const nsAString& aType)
                                                getter_AddRefs(event));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  event->SetTrusted(true);
+  nsCOMPtr<nsIPrivateDOMEvent> privevent(do_QueryInterface(event));
+  NS_ENSURE_TRUE(privevent, NS_ERROR_UNEXPECTED);
+
+  privevent->SetTrusted(true);
   nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
   NS_ENSURE_TRUE(progress, NS_ERROR_UNEXPECTED);
 

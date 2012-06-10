@@ -59,6 +59,7 @@
 #include "nsEventStateManager.h"
 #include "nsEventDispatcher.h"
 #include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
 

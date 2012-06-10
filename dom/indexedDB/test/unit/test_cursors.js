@@ -231,7 +231,6 @@ function testSteps()
       keyIndex += keyIndex ? 1 : 7;
     }
     else {
-      ok(cursor === null, "The request result should be null.");
       testGenerator.next();
     }
   }
@@ -243,12 +242,9 @@ function testSteps()
 
   request = objectStore.openCursor();
   request.onerror = errorHandler;
-  let storedCursor = null;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
-      storedCursor = cursor;
-
       is(cursor.key, sortedKeys[keyIndex], "Correct key");
       is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
       is(cursor.value, "foo", "Correct value");
@@ -267,8 +263,6 @@ function testSteps()
       }
     }
     else {
-      ok(cursor === null, "The request result should be null.");
-      ok(storedCursor.value === undefined, "The cursor's value should be undefined.");
       testGenerator.next();
     }
   }
@@ -295,12 +289,9 @@ function testSteps()
 
   request = objectStore.openCursor(null, "next");
   request.onerror = errorHandler;
-  storedCursor = null;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
-      storedCursor = cursor;
-
       is(cursor.key, sortedKeys[keyIndex], "Correct key");
       is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
       is(cursor.value, "foo", "Correct value");
@@ -319,8 +310,6 @@ function testSteps()
       cursor.continue();
     }
     else {
-      ok(cursor === null, "The request result should be null.");
-      ok(storedCursor.value === undefined, "The cursor's value should be undefined.");
       testGenerator.next();
     }
   }
@@ -345,12 +334,9 @@ function testSteps()
 
   request = objectStore.openCursor(null, "prev");
   request.onerror = errorHandler;
-  storedCursor = null;
   request.onsuccess = function (event) {
     let cursor = event.target.result;
     if (cursor) {
-      storedCursor = cursor;
-
       is(cursor.key, sortedKeys[keyIndex], "Correct key");
       is(cursor.primaryKey, sortedKeys[keyIndex], "Correct primary key");
       is(cursor.value, "foo", "Correct value");
@@ -364,8 +350,6 @@ function testSteps()
       keyIndex--;
     }
     else {
-      ok(cursor === null, "The request result should be null.");
-      ok(storedCursor.value === undefined, "The cursor's value should be undefined.");
       testGenerator.next();
     }
   }

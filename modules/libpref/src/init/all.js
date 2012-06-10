@@ -317,9 +317,6 @@ pref("toolkit.telemetry.debugSlowSql", false);
 
 // Disable remote debugging protocol logging
 pref("devtools.debugger.log", false);
-// Disable remote debugging connections
-pref("devtools.debugger.remote-enabled", false);
-pref("devtools.debugger.remote-port", 6000);
 
 // view source
 pref("view_source.syntax_highlight", true);

@@ -27,6 +27,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsEventDispatcher.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
@@ -96,7 +97,8 @@ public:
                                                     getter_AddRefs(event)))) {
       event->InitEvent(domEventToFire, true, true);
 
-      event->SetTrusted(true);
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+      privateEvent->SetTrusted(true);
 
       nsEventDispatcher::DispatchDOMEvent(mMenu, nsnull, event,
                                           mPresContext, nsnull);

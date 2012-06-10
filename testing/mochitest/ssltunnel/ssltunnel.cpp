@@ -600,7 +600,8 @@ void HandleConnection(void* data)
 
     if (!do_http_proxy)
     {
-      if (!ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse, caNone))
+      if (!ci->http_proxy_only && 
+          !ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse, caNone))
         client_error = true;
       else if (!ConnectSocket(other_sock, &remote_addr, connect_timeout))
         client_error = true;
@@ -864,21 +865,15 @@ void HandleConnection(void* data)
                 LOG_DEBUG((" proxy response sent to the client"));
                 // Proxy response has just been writen, update to ssl
                 ssl_updated = true;
-                if (ci->http_proxy_only)
-                {
-                  LOG_DEBUG((" not updating to SSL based on http_proxy_only for this socket"));
-                }
-                else if (!ConfigureSSLServerSocket(ci->client_sock, ci->server_info, 
-                                                   certificateToUse, clientAuth))
+                if (!ci->http_proxy_only && 
+                    !ConfigureSSLServerSocket(ci->client_sock, ci->server_info, certificateToUse, clientAuth))
                 {
                   LOG_ERRORD((" failed to config server socket\n"));
                   client_error = true;
                   break;
                 }
-                else
-                {
-                  LOG_DEBUG((" client socket updated to SSL"));
-                }
+
+                LOG_DEBUG((" client socket updated to SSL"));
               } // sslUpdate
 
               LOG_DEBUG((" dropping our write flag and setting other socket read flag"));
@@ -951,7 +946,6 @@ void StartServer(void* data)
   while (!shutdown_server) {
     connection_info_t* ci = new connection_info_t();
     ci->server_info = si;
-    ci->http_proxy_only = do_http_proxy;
     // block waiting for connections
     ci->client_sock = PR_Accept(listen_socket, &ci->client_addr,
                                 PR_INTERVAL_NO_TIMEOUT);
