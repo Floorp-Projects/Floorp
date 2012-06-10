@@ -671,14 +671,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsXMLHttpRequest,
                                                nsXHREventTarget)
-  if(tmp->mResultArrayBuffer) {
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(tmp->mResultArrayBuffer,
-                                               "mResultArrayBuffer")
-  }
-  if (JSVAL_IS_GCTHING(tmp->mResultJSON)) {
-    void *gcThing = JSVAL_TO_GCTHING(tmp->mResultJSON);
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mResultJSON")
-  }
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultArrayBuffer)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mResultJSON)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 DOMCI_DATA(XMLHttpRequest, nsXMLHttpRequest)

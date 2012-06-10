@@ -54,6 +54,7 @@
 #include "nsObjectFrame.h"
 #include "nsIServiceManager.h"
 #include "nsContentUtils.h"
+#include "nsIHTMLDocument.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -341,6 +342,27 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       rv = presShell->AddCanvasBackgroundColorItem(
              *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
              bounds, NS_RGBA(0,0,0,0), flags);
+    }
+  }
+
+  if (subdocRootFrame && !aBuilder->IsForEventDelivery()) {
+    bool framesetUsingDisplayPort = false;
+    nsIDocument* doc = presContext->Document();
+    if (doc) {
+      nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
+      if (htmlDoc && htmlDoc->GetIsFrameset()) {
+        nsIContent* root = doc->GetRootElement();
+        if (root) {
+          framesetUsingDisplayPort = nsLayoutUtils::GetDisplayPort(root, nsnull);
+        }
+      }
+    }
+    // Frameset document's don't have a scroll frame but we still need to
+    // communicate the basic metrics of the document.
+    if (framesetUsingDisplayPort) {
+      nsDisplaySimpleScrollLayer* item =
+        new (aBuilder) nsDisplaySimpleScrollLayer(aBuilder, subdocRootFrame, &childItems);
+      childItems.AppendToTop(item);
     }
   }
 
