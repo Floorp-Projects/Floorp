@@ -82,7 +82,7 @@ nsDOMScrollAreaEvent::InitScrollAreaEvent(const nsAString &aEventType,
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP_(void)
 nsDOMScrollAreaEvent::Serialize(IPC::Message* aMsg,
                                 bool aSerializeInterfaceType)
 {
@@ -103,7 +103,7 @@ nsDOMScrollAreaEvent::Serialize(IPC::Message* aMsg,
   IPC::WriteParam(aMsg, val);
 }
 
-bool
+NS_IMETHODIMP_(bool)
 nsDOMScrollAreaEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), false);

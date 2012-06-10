@@ -17,7 +17,6 @@
 #include "nsIContentViewer.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsIDocumentViewerPrint.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMBeforeUnloadEvent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
@@ -1099,16 +1098,14 @@ DocumentViewerImpl::PermitUnload(bool aCallerClosesWindow, bool *aPermitUnload)
   domDoc->CreateEvent(NS_LITERAL_STRING("beforeunloadevent"),
                       getter_AddRefs(event));
   nsCOMPtr<nsIDOMBeforeUnloadEvent> beforeUnload = do_QueryInterface(event);
-  nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(beforeUnload);
-  NS_ENSURE_STATE(pEvent);
+  NS_ENSURE_STATE(beforeUnload);
   nsresult rv = event->InitEvent(NS_LITERAL_STRING("beforeunload"),
                                  false, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX Dispatching to |window|, but using |document| as the target.
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mDocument);
-  pEvent->SetTarget(target);
-  pEvent->SetTrusted(true);
+  // Dispatching to |window|, but using |document| as the target.
+  event->SetTarget(mDocument);
+  event->SetTrusted(true);
 
   // In evil cases we might be destroyed while handling the
   // onbeforeunload event, don't let that happen. (see also bug#331040)
@@ -1128,7 +1125,7 @@ DocumentViewerImpl::PermitUnload(bool aCallerClosesWindow, bool *aPermitUnload)
   nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryReferent(mContainer));
   nsAutoString text;
   beforeUnload->GetReturnValue(text);
-  if (pEvent->GetInternalNSEvent()->flags & NS_EVENT_FLAG_NO_DEFAULT ||
+  if (event->GetInternalNSEvent()->flags & NS_EVENT_FLAG_NO_DEFAULT ||
       !text.IsEmpty()) {
     // Ask the user if it's ok to unload the current page
 

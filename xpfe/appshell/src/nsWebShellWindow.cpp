@@ -22,7 +22,6 @@
 #include "nsEscape.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowWatcher.h"
 

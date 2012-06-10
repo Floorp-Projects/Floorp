@@ -18,7 +18,6 @@
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"

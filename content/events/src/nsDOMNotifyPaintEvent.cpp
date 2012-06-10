@@ -115,7 +115,7 @@ nsDOMNotifyPaintEvent::GetPaintRequests(nsIDOMPaintRequestList** aResult)
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP_(void)
 nsDOMNotifyPaintEvent::Serialize(IPC::Message* aMsg,
                                  bool aSerializeInterfaceType)
 {
@@ -136,7 +136,7 @@ nsDOMNotifyPaintEvent::Serialize(IPC::Message* aMsg,
   }
 }
 
-bool
+NS_IMETHODIMP_(bool)
 nsDOMNotifyPaintEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), false);

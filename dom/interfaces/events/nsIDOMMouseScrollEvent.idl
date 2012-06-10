@@ -5,7 +5,7 @@
 
 #include "nsIDOMMouseEvent.idl"
 
-[scriptable, uuid(6b3631e5-8244-480e-9015-b70e2f88cc81)]
+[scriptable, builtinclass, uuid(44281a27-b48f-47bc-96c9-966f1cab6ae0)]
 interface nsIDOMMouseScrollEvent : nsIDOMMouseEvent
 {
   const long HORIZONTAL_AXIS = 1;

@@ -175,7 +175,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Event)
 NS_INTERFACE_MAP_END
@@ -573,7 +572,8 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool a
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::DuplicatePrivateData()
+NS_IMETHODIMP
+nsDOMEvent::DuplicatePrivateData()
 {
   // FIXME! Simplify this method and make it somehow easily extendable,
   //        Bug 329127
@@ -913,7 +913,8 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
   return NS_OK;
 }
 
-NS_METHOD nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
+NS_IMETHODIMP
+nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
 {
 #ifdef DEBUG
   {
@@ -1557,7 +1558,7 @@ nsDOMEvent::GetDefaultPrevented(bool* aReturn)
   return GetPreventDefault(aReturn);
 }
 
-void
+NS_IMETHODIMP_(void)
 nsDOMEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
@@ -1583,7 +1584,7 @@ nsDOMEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
   // No timestamp serialization for now!
 }
 
-bool
+NS_IMETHODIMP_(bool)
 nsDOMEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   nsString type;
