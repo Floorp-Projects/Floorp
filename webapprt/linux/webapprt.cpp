@@ -134,12 +134,6 @@ bool GRELoadAndLaunch(const char* firefoxDir, const char* profile)
     return false;
   }
 
-  // Override the class name part of the WM_CLASS property, so that the
-  // DE can match our window to the correct launcher
-  char programClass[MAXPATHLEN];
-  snprintf(programClass, MAXPATHLEN, "owa-%s", profile);
-  gdk_set_program_class(programClass);
-
   // NOTE: The GRE has successfully loaded, so we can use XPCOM now
   { // Scope for any XPCOM stuff we create
     ScopedLogging log;

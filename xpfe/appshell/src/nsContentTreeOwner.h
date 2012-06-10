@@ -20,7 +20,7 @@
 #include "nsIWindowProvider.h"
 
 class nsXULWindow;
-class nsSiteWindow;
+class nsSiteWindow2;
 
 class nsContentTreeOwner : public nsIDocShellTreeOwner,
                            public nsIBaseWindow,
@@ -29,7 +29,7 @@ class nsContentTreeOwner : public nsIDocShellTreeOwner,
                            public nsIWindowProvider
 {
 friend class nsXULWindow;
-friend class nsSiteWindow;
+friend class nsSiteWindow2;
 
 public:
    NS_DECL_ISUPPORTS
@@ -51,7 +51,7 @@ protected:
 
 protected:
    nsXULWindow      *mXULWindow;
-   nsSiteWindow    *mSiteWindow;
+   nsSiteWindow2    *mSiteWindow2;
    bool              mPrimary;
    bool              mContentTitleSetting;
    nsString          mWindowTitleModifier;

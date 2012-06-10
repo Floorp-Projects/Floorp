@@ -976,7 +976,8 @@ nsEventSource::AnnounceConnection()
     return;
   }
 
-  event->SetTrusted(true);
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  privateEvent->SetTrusted(true);
 
   rv = DispatchDOMEvent(nsnull, event, nsnull, nsnull);
   if (NS_FAILED(rv)) {
@@ -1046,7 +1047,8 @@ nsEventSource::ReestablishConnection()
     return;
   }
 
-  event->SetTrusted(true);
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  privateEvent->SetTrusted(true);
 
   rv = DispatchDOMEvent(nsnull, event, nsnull, nsnull);
   if (NS_FAILED(rv)) {
@@ -1202,7 +1204,8 @@ nsEventSource::FailConnection()
     return;
   }
 
-  event->SetTrusted(true);
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+  privateEvent->SetTrusted(true);
 
   rv = DispatchDOMEvent(nsnull, event, nsnull, nsnull);
   if (NS_FAILED(rv)) {
@@ -1436,7 +1439,8 @@ nsEventSource::DispatchAllMessageEvents()
       return;
     }
 
-    messageEvent->SetTrusted(true);
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
+    privateEvent->SetTrusted(true);
 
     rv = DispatchDOMEvent(nsnull, event, nsnull, nsnull);
     if (NS_FAILED(rv)) {

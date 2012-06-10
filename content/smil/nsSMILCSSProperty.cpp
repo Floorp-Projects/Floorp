@@ -91,7 +91,8 @@ nsSMILCSSProperty::GetBaseValue() const
   // GENERAL CASE: Non-Shorthands
   // (1) Put empty string in override style for property mPropID
   // (saving old override style value, so we can set it again when we're done)
-  nsICSSDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
+  nsCOMPtr<nsICSSDeclaration> overrideDecl =
+    do_QueryInterface(mElement->GetSMILOverrideStyle());
   nsAutoString cachedOverrideStyleVal;
   if (overrideDecl) {
     overrideDecl->GetPropertyValue(mPropID, cachedOverrideStyleVal);
@@ -162,7 +163,8 @@ nsSMILCSSProperty::SetAnimValue(const nsSMILValue& aValue)
   }
 
   // Use string value to style the target element
-  nsICSSDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
+  nsCOMPtr<nsICSSDeclaration> overrideDecl =
+    do_QueryInterface(mElement->GetSMILOverrideStyle());
   if (overrideDecl) {
     nsAutoString oldValStr;
     overrideDecl->GetPropertyValue(mPropID, oldValStr);
@@ -178,7 +180,8 @@ void
 nsSMILCSSProperty::ClearAnimValue()
 {
   // Put empty string in override style for our property
-  nsICSSDeclaration* overrideDecl = mElement->GetSMILOverrideStyle();
+  nsCOMPtr<nsICSSDeclaration> overrideDecl =
+    do_QueryInterface(mElement->GetSMILOverrideStyle());
   if (overrideDecl) {
     overrideDecl->SetPropertyValue(mPropID, EmptyString());
   }

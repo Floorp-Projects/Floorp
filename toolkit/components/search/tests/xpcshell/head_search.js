@@ -5,6 +5,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 
@@ -64,7 +65,7 @@ var gProfD = do_get_profile();
 
 function dumpn(text)
 {
-  dump("search test: " + text + "\n");
+  dump(text+"\n");
 }
 
 /**
@@ -107,6 +108,5 @@ function  parseJsonFromStream(aInputStream) {
   return data;
 }
 
-// Expand the amount of information available in error logs
 Services.prefs.setBoolPref("browser.search.log", true);
-
+//Otherwise, error logs contain no useful data

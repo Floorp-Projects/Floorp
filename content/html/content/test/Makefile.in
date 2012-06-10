@@ -264,6 +264,8 @@ _TEST_FILES = \
 		test_bug742030.html \
 		test_bug742549.html \
 		test_bug745685.html \
+		test_bug657938.html \
+		test_bug660238.html \
 		test_input_file_picker.html \
 		$(NULL)
 

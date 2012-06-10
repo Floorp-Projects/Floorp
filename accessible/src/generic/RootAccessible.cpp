@@ -18,9 +18,6 @@
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
-#ifdef MOZ_XUL
-#include "XULTreeAccessible.h"
-#endif
 
 #include "mozilla/dom/Element.h"
 
@@ -50,9 +47,11 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsReadableUtils.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsFocusManager.h"
 
 #ifdef MOZ_XUL
+#include "nsXULTreeAccessible.h"
 #include "nsIXULDocument.h"
 #include "nsIXULWindow.h"
 #endif
@@ -325,7 +324,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   nsINode* targetNode = accessible->GetNode();
 
 #ifdef MOZ_XUL
-  XULTreeAccessible* treeAcc = accessible->AsXULTree();
+  nsXULTreeAccessible* treeAcc = accessible->AsXULTree();
   if (treeAcc) {
     if (eventType.EqualsLiteral("TreeRowCountChanged")) {
       HandleTreeRowCountChangedEvent(aDOMEvent, treeAcc);
@@ -344,7 +343,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 
     // radiogroup in prefWindow is exposed as a list,
     // and panebutton is exposed as XULListitem in A11y.
-    // XULListitemAccessible::GetStateInternal uses STATE_SELECTED in this case,
+    // nsXULListitemAccessible::GetStateInternal uses STATE_SELECTED in this case,
     // so we need to check states::SELECTED also.
     bool isEnabled = (state & (states::CHECKED | states::SELECTED)) != 0;
 
@@ -404,7 +403,7 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
         // XXX: We need to fire EVENT_SELECTION_ADD and EVENT_SELECTION_REMOVE
         // for each tree item. Perhaps each tree item will need to cache its
         // selection state and fire an event after a DOM "select" event when
-        // that state changes. XULTreeAccessible::UpdateTreeSelection();
+        // that state changes. nsXULTreeAccessible::UpdateTreeSelection();
         nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
                                 accessible);
         return;
@@ -673,7 +672,7 @@ RootAccessible::HandlePopupHidingEvent(nsINode* aPopupNode)
 #ifdef MOZ_XUL
 void
 RootAccessible::HandleTreeRowCountChangedEvent(nsIDOMEvent* aEvent,
-                                               XULTreeAccessible* aAccessible)
+                                               nsXULTreeAccessible* aAccessible)
 {
   nsCOMPtr<nsIDOMDataContainerEvent> dataEvent(do_QueryInterface(aEvent));
   if (!dataEvent)
@@ -700,7 +699,7 @@ RootAccessible::HandleTreeRowCountChangedEvent(nsIDOMEvent* aEvent,
 
 void
 RootAccessible::HandleTreeInvalidatedEvent(nsIDOMEvent* aEvent,
-                                           XULTreeAccessible* aAccessible)
+                                           nsXULTreeAccessible* aAccessible)
 {
   nsCOMPtr<nsIDOMDataContainerEvent> dataEvent(do_QueryInterface(aEvent));
   if (!dataEvent)

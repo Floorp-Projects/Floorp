@@ -266,8 +266,7 @@ Parser::parse(JSObject *chain)
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
-    SharedContext globalsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL,
-                           /* staticLevel = */ 0);
+    SharedContext globalsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL);
     TreeContext globaltc(this, &globalsc);
     if (!globaltc.init())
         return NULL;
@@ -286,6 +285,8 @@ Parser::parse(JSObject *chain)
     }
     return pn;
 }
+
+JS_STATIC_ASSERT(UpvarCookie::FREE_LEVEL == JS_BITMASK(JSFB_LEVEL_BITS));
 
 /*
  * Insist on a final return before control flows out of pn.  Try to be a bit
@@ -563,8 +564,7 @@ BindLocalVariable(JSContext *cx, SharedContext *sc, ParseNode *pn, BindingKind k
     if (!sc->bindings.add(cx, RootedAtom(cx, pn->pn_atom), kind))
         return false;
 
-    if (!pn->pn_cookie.set(cx, sc->staticLevel, index))
-        return false;
+    pn->pn_cookie.set(sc->staticLevel, index);
     pn->pn_dflags |= PND_BOUND;
     return true;
 }
@@ -932,8 +932,7 @@ js::DefineArg(ParseNode *pn, JSAtom *atom, unsigned i, Parser *parser)
     argsbody->append(argpn);
 
     argpn->setOp(JSOP_GETARG);
-    if (!argpn->pn_cookie.set(parser->context, parser->tc->sc->staticLevel, i))
-        return false;
+    argpn->pn_cookie.set(parser->tc->sc->staticLevel, i);
     argpn->pn_dflags |= PND_BOUND;
     return true;
 }
@@ -1086,6 +1085,8 @@ EnterFunction(SharedContext *outersc, SharedContext *funsc)
     funsc->blockidGen = outersc->blockidGen;
     if (!GenerateBlockId(funsc, funsc->bodyid))
         return false;
+    if (!SetStaticLevel(funsc, outersc->staticLevel + 1))
+        return false;
 
     return true;
 }
@@ -1145,9 +1146,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 
             if (atom == funName && kind == Expression) {
                 dn->setOp(JSOP_CALLEE);
-                if (!dn->pn_cookie.set(parser->context, funtc->sc->staticLevel,
-                                       UpvarCookie::CALLEE_SLOT))
-                    return false;
+                dn->pn_cookie.set(funtc->sc->staticLevel, UpvarCookie::CALLEE_SLOT);
                 dn->pn_dflags |= PND_BOUND;
                 foundCallee = 1;
                 continue;
@@ -1340,8 +1339,7 @@ Parser::functionArguments(ParseNode **listp, bool &hasRest)
                 if (!rhs)
                     return false;
                 rhs->setOp(JSOP_GETARG);
-                if (!rhs->pn_cookie.set(context, tc->sc->staticLevel, slot))
-                    return false;
+                rhs->pn_cookie.set(tc->sc->staticLevel, slot);
                 rhs->pn_dflags |= PND_BOUND;
                 rhs->setDefn(true);
 
@@ -1556,8 +1554,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
                 /* FALL THROUGH */
 
               case VARIABLE:
-                if (!pn->pn_cookie.set(context, tc->sc->staticLevel, index))
-                    return NULL;
+                pn->pn_cookie.set(tc->sc->staticLevel, index);
                 pn->pn_dflags |= PND_BOUND;
                 break;
 
@@ -1578,8 +1575,7 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
         return NULL;
 
     /* Initialize early for possible flags mutation via destructuringExpr. */
-    SharedContext funsc(context, /* scopeChain = */ NULL, fun, funbox,
-                        outertc->sc->staticLevel + 1);
+    SharedContext funsc(context, /* scopeChain = */ NULL, fun, funbox);
     TreeContext funtc(this, &funsc);
     if (!funtc.init())
         return NULL;
@@ -2045,8 +2041,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, Parser *parser)
      * again to include script->nfixed.
      */
     pn->setOp(JSOP_GETLOCAL);
-    if (!pn->pn_cookie.set(parser->context, tc->sc->staticLevel, uint16_t(blockCount)))
-        return false;
+    pn->pn_cookie.set(tc->sc->staticLevel, uint16_t(blockCount));
     pn->pn_dflags |= PND_LET | PND_BOUND;
 
     /*
@@ -5026,12 +5021,19 @@ GenexpGuard::maybeNoteGenerator(ParseNode *pn)
 static bool
 BumpStaticLevel(ParseNode *pn, TreeContext *tc)
 {
-    if (pn->pn_cookie.isFree())
-        return true;
+    if (!pn->pn_cookie.isFree()) {
+        unsigned level = pn->pn_cookie.level() + 1;
 
-    unsigned level = unsigned(pn->pn_cookie.level()) + 1;
-    JS_ASSERT(level >= tc->sc->staticLevel);
-    return pn->pn_cookie.set(tc->sc->context, level, pn->pn_cookie.slot());
+        JS_ASSERT(level >= tc->sc->staticLevel);
+        if (level >= UpvarCookie::FREE_LEVEL) {
+            JS_ReportErrorNumber(tc->sc->context, js_GetErrorMessage, NULL,
+                                 JSMSG_TOO_DEEP, js_function_str);
+            return false;
+        }
+
+        pn->pn_cookie.set(level, pn->pn_cookie.slot());
+    }
+    return true;
 }
 
 static void
@@ -5497,8 +5499,7 @@ Parser::generatorExpr(ParseNode *kid)
         if (!funbox)
             return NULL;
 
-        SharedContext gensc(context, /* scopeChain = */ NULL, fun, funbox,
-                            outertc->sc->staticLevel + 1);
+        SharedContext gensc(context, /* scopeChain = */ NULL, fun, funbox);
         TreeContext gentc(this, &gensc);
         if (!gentc.init())
             return NULL;
@@ -6475,8 +6476,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * lightweight function activation, or if its scope chain doesn't match
      * the one passed to us.
      */
-    SharedContext xmlsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL,
-                        /* staticLevel = */ 0);
+    SharedContext xmlsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL);
     TreeContext xmltc(this, &xmlsc);
     if (!xmltc.init())
         return NULL;

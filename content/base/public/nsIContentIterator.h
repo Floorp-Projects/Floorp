@@ -7,7 +7,6 @@
 #define __nsIContentIterator_h___
 
 #include "nsISupports.h"
-#include "nsCOMPtr.h"
 
 class nsINode;
 class nsIDOMRange;
@@ -64,8 +63,5 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentIterator, NS_ICONTENTITERATOR_IID)
 
-already_AddRefed<nsIContentIterator> NS_NewContentIterator();
-already_AddRefed<nsIContentIterator> NS_NewPreContentIterator();
-already_AddRefed<nsIContentIterator> NS_NewContentSubtreeIterator();
-
 #endif // __nsIContentIterator_h___
+

@@ -102,12 +102,11 @@ function ContentPrefService() {
 
   // detect if we are in private browsing mode
   this._inPrivateBrowsing = false;
-  // The Private Browsing service might not be available.
-  if (["@mozilla.org/privatebrowsing;1"] in Cc) {
+  try { // The Private Browsing service might not be available.
     var pbs = Cc["@mozilla.org/privatebrowsing;1"].
                 getService(Ci.nsIPrivateBrowsingService);
     this._inPrivateBrowsing = pbs.privateBrowsingEnabled;
-  }
+  } catch (e) {}
   this._observerSvc.addObserver(this, "private-browsing", false);
 
   // Observe shutdown so we can shut down the database connection.

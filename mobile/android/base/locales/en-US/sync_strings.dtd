@@ -82,12 +82,3 @@
 <!ENTITY sync.invalidserver.label 'Please enter a valid server URL'>
 <!ENTITY sync.verifying.label 'Verifying…'>
 <!ENTITY sync.new.recoverykey.status.incorrect 'Recovery Key incorrect. Please try again.'>
-
-<!-- Send tab to device. -->
-<!ENTITY sync.title.send.tab.label 'Send Tab To Devices'>
-<!ENTITY sync.button.send.label 'Send'>
-<!ENTITY sync.button.setup.label 'Setup Sync'>
-<!ENTITY sync.button.continue.browsing.label 'Continue Browsing'>
-<!ENTITY sync.title.redirect.to.setup.label 'Setup Sync to Send Tabs'>
-<!ENTITY sync.text.redirect.to.setup.label 'Setup Firefox Sync on your device to send tabs to other devices.'>
-<!ENTITY sync.text.tab.sent.label 'Your tab was sent!'>

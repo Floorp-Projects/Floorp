@@ -821,7 +821,7 @@ DoIncDec(JSContext *cx, JSScript *script, jsbytecode *pc, const Value &v, Value 
     }
 
     double d;
-    if (!ToNumber(cx, v, &d))
+    if (!ToNumber(cx, *slot, &d))
         return false;
 
     double sum = d + (cs.format & JOF_INC ? 1 : -1);
@@ -3215,7 +3215,7 @@ BEGIN_CASE(JSOP_INITELEM)
         if (JSID_TO_INT(id) == INT32_MAX) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_SPREAD_TOO_LARGE);
-            goto error;
+            return false;
         }
         regs.sp[-2].setInt32(JSID_TO_INT(id) + 1);
         regs.sp--;

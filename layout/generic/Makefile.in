@@ -34,18 +34,14 @@ EXPORTS		= \
 		nsIStatefulFrame.h \
 		nsFrameSelection.h \
 		nsSubDocumentFrame.h \
-		Selection.h \
+		nsTypedSelection.h \
 		nsObjectFrame.h \
 		$(NULL)
 
-EXPORTS_NAMESPACES = mozilla/layout mozilla
+EXPORTS_NAMESPACES = mozilla/layout
 
 EXPORTS_mozilla/layout = \
 		FrameChildList.h \
-		$(NULL)
-
-EXPORTS_mozilla = \
-		Selection.h \
 		$(NULL)
 
 CPPSRCS		= \

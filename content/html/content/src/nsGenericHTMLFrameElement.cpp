@@ -7,6 +7,7 @@
 
 #include "nsGenericHTMLFrameElement.h"
 #include "nsIWebProgress.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMCustomEvent.h"
 #include "nsIVariant.h"
 #include "nsIInterfaceRequestorUtils.h"

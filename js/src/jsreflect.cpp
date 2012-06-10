@@ -374,27 +374,6 @@ class NodeBuilder
                setResult(node, dst);
     }
 
-    bool newNode(ASTType type, TokenPos *pos,
-                 const char *childName1, Value child1,
-                 const char *childName2, Value child2,
-                 const char *childName3, Value child3,
-                 const char *childName4, Value child4,
-                 const char *childName5, Value child5,
-                 const char *childName6, Value child6,
-                 const char *childName7, Value child7,
-                 Value *dst) {
-        JSObject *node;
-        return newNode(type, pos, &node) &&
-               setProperty(node, childName1, child1) &&
-               setProperty(node, childName2, child2) &&
-               setProperty(node, childName3, child3) &&
-               setProperty(node, childName4, child4) &&
-               setProperty(node, childName5, child5) &&
-               setProperty(node, childName6, child6) &&
-               setProperty(node, childName7, child7) &&
-               setResult(node, dst);
-    }
-
     bool listNode(ASTType type, const char *propName, NodeVector &elts, TokenPos *pos, Value *dst) {
         Value array;
         if (!newArray(elts, &array))
@@ -455,9 +434,8 @@ class NodeBuilder
     bool identifier(Value name, TokenPos *pos, Value *dst);
 
     bool function(ASTType type, TokenPos *pos,
-                  Value id, NodeVector &args, NodeVector &defaults,
-                  Value body, Value rest, bool isGenerator, bool isExpression,
-                  Value *dst);
+                  Value id, NodeVector &args, Value body,
+                  bool isGenerator, bool isExpression, Value *dst);
 
     bool variableDeclarator(Value id, Value init, TokenPos *pos, Value *dst);
 
@@ -1349,15 +1327,12 @@ NodeBuilder::arrayPattern(NodeVector &elts, TokenPos *pos, Value *dst)
 
 bool
 NodeBuilder::function(ASTType type, TokenPos *pos,
-                      Value id, NodeVector &args, NodeVector &defaults,
-                      Value body, Value rest,
+                      Value id, NodeVector &args, Value body,
                       bool isGenerator, bool isExpression,
                       Value *dst)
 {
-    Value array, defarray;
+    Value array;
     if (!newArray(args, &array))
-        return false;
-    if (!newArray(defaults, &defarray))
         return false;
 
     Value cb = callbacks[type];
@@ -1369,9 +1344,7 @@ NodeBuilder::function(ASTType type, TokenPos *pos,
     return newNode(type, pos,
                    "id", id,
                    "params", array,
-                   "defaults", defarray,
                    "body", body,
-                   "rest", rest,
                    "generator", BooleanValue(isGenerator),
                    "expression", BooleanValue(isExpression),
                    dst);
@@ -1584,7 +1557,7 @@ class ASTSerializer
     bool xmls(ParseNode *pn, NodeVector &elts);
     bool leftAssociate(ParseNode *pn, Value *dst);
     bool functionArgs(ParseNode *pn, ParseNode *pnargs, ParseNode *pndestruct, ParseNode *pnbody,
-                      NodeVector &args, NodeVector &defaults, Value *rest);
+                      NodeVector &args);
 
     bool sourceElement(ParseNode *pn, Value *dst);
 
@@ -1639,8 +1612,7 @@ class ASTSerializer
     bool objectPattern(ParseNode *pn, VarDeclKind *pkind, Value *dst);
 
     bool function(ParseNode *pn, ASTType type, Value *dst);
-    bool functionArgsAndBody(ParseNode *pn, NodeVector &args, NodeVector &defaults,
-                             Value *body, Value *rest);
+    bool functionArgsAndBody(ParseNode *pn, NodeVector &args, Value *body);
     bool functionBody(ParseNode *pn, TokenPos *pos, Value *dst);
 
     bool comprehensionBlock(ParseNode *pn, Value *dst);
@@ -2963,26 +2935,18 @@ ASTSerializer::function(ParseNode *pn, ASTType type, Value *dst)
         return false;
 
     NodeVector args(cx);
-    NodeVector defaults(cx);
 
     ParseNode *argsAndBody = pn->pn_body->isKind(PNK_UPVARS)
                              ? pn->pn_body->pn_tree
                              : pn->pn_body;
 
     Value body;
-    Value rest;
-    if (func->hasRest())
-        rest.setUndefined();
-    else
-        rest.setNull();
-    return functionArgsAndBody(argsAndBody, args, defaults, &body, &rest) &&
-        builder.function(type, &pn->pn_pos, id, args, defaults, body,
-                         rest, isGenerator, isExpression, dst);
+    return functionArgsAndBody(argsAndBody, args, &body) &&
+           builder.function(type, &pn->pn_pos, id, args, body, isGenerator, isExpression, dst);
 }
 
 bool
-ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args,
-                                   NodeVector &defaults, Value *body, Value *rest)
+ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args, Value *body)
 {
     ParseNode *pnargs;
     ParseNode *pnbody;
@@ -3013,7 +2977,7 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args,
     /* Serialize the arguments and body. */
     switch (pnbody->getKind()) {
       case PNK_RETURN: /* expression closure, no destructured args */
-        return functionArgs(pn, pnargs, NULL, pnbody, args, defaults, rest) &&
+        return functionArgs(pn, pnargs, NULL, pnbody, args) &&
                expression(pnbody->pn_kid, body);
 
       case PNK_SEQ:    /* expression closure with destructured args */
@@ -3021,7 +2985,7 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args,
         ParseNode *pnstart = pnbody->pn_head->pn_next;
         LOCAL_ASSERT(pnstart && pnstart->isKind(PNK_RETURN));
 
-        return functionArgs(pn, pnargs, pndestruct, pnbody, args, defaults, rest) &&
+        return functionArgs(pn, pnargs, pndestruct, pnbody, args) &&
                expression(pnstart->pn_kid, body);
       }
 
@@ -3031,7 +2995,7 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args,
                                ? pnbody->pn_head->pn_next
                                : pnbody->pn_head;
 
-        return functionArgs(pn, pnargs, pndestruct, pnbody, args, defaults, rest) &&
+        return functionArgs(pn, pnargs, pndestruct, pnbody, args) &&
                functionBody(pnstart, &pnbody->pn_pos, body);
       }
 
@@ -3042,8 +3006,7 @@ ASTSerializer::functionArgsAndBody(ParseNode *pn, NodeVector &args,
 
 bool
 ASTSerializer::functionArgs(ParseNode *pn, ParseNode *pnargs, ParseNode *pndestruct,
-                            ParseNode *pnbody, NodeVector &args, NodeVector &defaults,
-                            Value *rest)
+                            ParseNode *pnbody, NodeVector &args)
 {
     uint32_t i = 0;
     ParseNode *arg = pnargs ? pnargs->pn_head : NULL;
@@ -3075,25 +3038,14 @@ ASTSerializer::functionArgs(ParseNode *pn, ParseNode *pnargs, ParseNode *pndestr
              * index in the formals list, so we rely on the ability to
              * ask destructuring args their index above.
              */
-            if (!identifier(arg, &node))
+            if (!identifier(arg, &node) || !args.append(node))
                 return false;
-            if (rest->isUndefined() && arg->pn_next == pnbody)
-                rest->setObject(node.toObject());
-            else if (!args.append(node))
-                return false;
-            if (arg->pn_dflags & PND_DEFAULT) {
-                ParseNode *expr = arg->isDefn() ? arg->expr() : arg->pn_kid->pn_right;
-                Value def;
-                if (!expression(expr, &def) || !defaults.append(def))
-                    return false;
-            }
             arg = arg->pn_next;
         } else {
             LOCAL_NOT_REACHED("missing function argument");
         }
         ++i;
     }
-    JS_ASSERT(!rest->isUndefined());
 
     return true;
 }

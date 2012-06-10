@@ -192,16 +192,10 @@ struct NS_STACK_CLASS TreeMatchContext {
   // Whether this document is using PB mode
   bool mUsingPrivateBrowsing;
 
-  enum MatchVisited {
-    eNeverMatchVisited,
-    eMatchVisitedDefault
-  };
-
   // Constructor to use when creating a tree match context for styling
   TreeMatchContext(bool aForStyling,
                    nsRuleWalker::VisitedHandlingType aVisitedHandling,
-                   nsIDocument* aDocument,
-                   MatchVisited aMatchVisited = eMatchVisitedDefault)
+                   nsIDocument* aDocument)
     : mForStyling(aForStyling)
     , mHaveRelevantLink(false)
     , mVisitedHandling(aVisitedHandling)
@@ -211,14 +205,12 @@ struct NS_STACK_CLASS TreeMatchContext {
     , mCompatMode(aDocument->GetCompatibilityMode())
     , mUsingPrivateBrowsing(false)
   {
-    if (aMatchVisited != eNeverMatchVisited) {
-      nsCOMPtr<nsISupports> container = mDocument->GetContainer();
-      if (container) {
-        nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
-        NS_ASSERTION(loadContext, "Couldn't get loadContext from container; assuming no private browsing.");
-        if (loadContext) {
-          mUsingPrivateBrowsing = loadContext->UsePrivateBrowsing();
-        }
+    nsCOMPtr<nsISupports> container = mDocument->GetContainer();
+    if (container) {
+      nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
+      NS_ASSERTION(loadContext, "Couldn't get loadContext from container; assuming no private browsing.");
+      if (loadContext) {
+        mUsingPrivateBrowsing = loadContext->UsePrivateBrowsing();
       }
     }
   }

@@ -54,9 +54,6 @@ public:
     nsAppShell();
 
     nsresult Init();
-
-    NS_IMETHOD Exit() MOZ_OVERRIDE;
-
     virtual bool ProcessNextNativeEvent(bool maywait);
 
     void NotifyNativeEvent();

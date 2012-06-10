@@ -6,7 +6,7 @@
 
 #include "nsILocalFile.idl"
 
-[scriptable, builtinclass, uuid(c7b3fd13-30f2-46e5-a0d9-7a79a9b73c5b)]
+[scriptable, uuid(c7b3fd13-30f2-46e5-a0d9-7a79a9b73c5b)]
 interface nsILocalFileWin : nsILocalFile
 {
    /**

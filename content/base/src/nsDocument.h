@@ -1258,11 +1258,11 @@ private:
   static void ClearPendingPointerLockRequest(bool aDispatchErrorEvents);
 
   /**
-   * Find the (non-anonymous) element in this document that contains the
-   * content (possibly in a subdocument) associated with aFrame. Returns null
-   * if there is no such element.
+   * See if aDocument is a child of this.  If so, return the frame element in
+   * this document that holds currentDoc (or an ancestor).
    */
-  nsIContent* GetContentInThisDocument(nsIFrame* aFrame) const;
+  already_AddRefed<nsIDOMElement>
+    CheckAncestryAndGetFrame(nsIDocument* aDocument) const;
 
   // Just like EnableStyleSheetsForSet, but doesn't check whether
   // aSheetSet is null and allows the caller to control whether to set

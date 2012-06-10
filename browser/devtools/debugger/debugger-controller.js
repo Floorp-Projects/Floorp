@@ -882,7 +882,7 @@ SourceScripts.prototype = {
 
     this._addScript({ url: aPacket.url, startLine: aPacket.startLine }, true);
     // If there are any stored breakpoints for this script, display them again.
-    for each (let bp in DebuggerController.Breakpoints.store) {
+    for (let bp of DebuggerController.Breakpoints.store) {
       if (bp.location.url == aPacket.url) {
         DebuggerController.Breakpoints.displayBreakpoint(bp.location);
       }

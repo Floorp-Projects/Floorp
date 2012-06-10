@@ -109,4 +109,8 @@ private:
   bool mNativeInited;  
 };
 
+// Define unsupported wrap classes here
+typedef class nsHTMLTableCellAccessible    nsHTMLTableCellAccessibleWrap;
+typedef class nsHTMLTableAccessible        nsHTMLTableAccessibleWrap;
+
 #endif

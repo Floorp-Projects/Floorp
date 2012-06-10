@@ -38,7 +38,6 @@ class HTMLLIAccessible;
 class ImageAccessible;
 class TableAccessible;
 class TextLeafAccessible;
-class XULTreeAccessible;
 
 /**
  * Name type flags.
@@ -68,6 +67,8 @@ struct GroupPos
 
 } // namespace a11y
 } // namespace mozilla
+
+class nsXULTreeAccessible;
 
 struct nsRect;
 class nsIContent;
@@ -99,8 +100,8 @@ NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x25)
   { 0xbd, 0x50, 0x42, 0x6b, 0xd1, 0xd6, 0xe1, 0xad }    \
 }
 
-class Accessible : public nsAccessNodeWrap,
-                   public nsIAccessible,
+class Accessible : public nsAccessNodeWrap, 
+                   public nsIAccessible, 
                    public nsIAccessibleHyperLink,
                    public nsIAccessibleSelectable,
                    public nsIAccessibleValue
@@ -315,7 +316,7 @@ public:
    * Set the ARIA role map entry for a new accessible.
    * For a newly created accessible, specify which role map entry should be used.
    *
-   * @param aRoleMapEntry The ARIA nsRoleMapEntry* for the accessible, or
+   * @param aRoleMapEntry The ARIA nsRoleMapEntry* for the accessible, or 
    *                      nsnull if none.
    */
   virtual void SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry);
@@ -506,7 +507,7 @@ public:
   mozilla::a11y::HTMLImageMapAccessible* AsImageMap();
 
   inline bool IsXULTree() const { return mFlags & eXULTreeAccessible; }
-  mozilla::a11y::XULTreeAccessible* AsXULTree();
+  nsXULTreeAccessible* AsXULTree();
 
   inline bool IsListControl() const { return mFlags & eListControlAccessible; }
 

@@ -19,6 +19,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIFormControl.h"
@@ -539,14 +540,15 @@ nsFormFillController::OnTextEntered(bool* aPrevent)
 
   nsCOMPtr<nsIDOMEvent> event;
   domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  NS_ENSURE_STATE(event);
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+  NS_ENSURE_STATE(privateEvent);
 
   event->InitEvent(NS_LITERAL_STRING("DOMAutoComplete"), true, true);
 
   // XXXjst: We mark this event as a trusted event, it's up to the
   // callers of this to ensure that it's only called from trusted
   // code.
-  event->SetTrusted(true);
+  privateEvent->SetTrusted(true);
 
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mFocusedInput);
 

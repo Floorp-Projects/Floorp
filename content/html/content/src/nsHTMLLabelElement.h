@@ -98,7 +98,7 @@ public:
 
   mozilla::dom::Element* GetLabeledElement();
 protected:
-  mozilla::dom::Element* GetFirstLabelableDescendant();
+  mozilla::dom::Element* GetFirstDescendantFormControl();
 
   // XXX It would be nice if we could use an event flag instead.
   bool mHandlingEvent;

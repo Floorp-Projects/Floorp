@@ -23,6 +23,7 @@
 #include "nsPIDOMWindow.h"
 #include "TabChild.h"
 #include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsFrameLoader.h"
 #include "nsNetUtil.h"
 #include "nsContentUtils.h"

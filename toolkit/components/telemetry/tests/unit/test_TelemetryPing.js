@@ -145,8 +145,8 @@ function checkPayloadInfo(payload, reason) {
 function checkPersistedHistograms(request, response) {
   let payload = decodeRequestPayload(request);
 
-  httpserver.registerPathHandler(PATH, checkHistograms);
   checkPayloadInfo(payload, "saved-session");
+  httpserver.registerPathHandler(PATH, checkHistograms);
 }
 
 function checkHistograms(request, response) {

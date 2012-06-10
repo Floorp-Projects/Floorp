@@ -31,13 +31,14 @@
 #include "IndexedDatabaseInlines.h"
 
 USING_INDEXEDDB_NAMESPACE
-using namespace mozilla::dom::indexedDB::ipc;
 
 namespace {
 
 class IndexHelper : public AsyncConnectionHelper
 {
 public:
+  typedef ipc::IndexRequestParams IndexRequestParams;
+
   IndexHelper(IDBTransaction* aTransaction,
               IDBRequest* aRequest,
               IDBIndex* aIndex)
@@ -373,15 +374,15 @@ IDBIndex::Create(IDBObjectStore* aObjectStore,
 
     nsAutoPtr<IndexedDBIndexChild> actor(new IndexedDBIndexChild(index));
 
-    IndexConstructorParams params;
+    ipc::IndexConstructorParams params;
 
     if (aCreating) {
-      CreateIndexParams createParams;
+      ipc::CreateIndexParams createParams;
       createParams.info() = *aIndexInfo;
       params = createParams;
     }
     else {
-      GetIndexParams getParams;
+      ipc::GetIndexParams getParams;
       getParams.name() = aIndexInfo->name;
       params = getParams;
     }
@@ -1080,7 +1081,7 @@ GetKeyHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 {
   NS_ASSERTION(mKeyRange, "This should never be null!");
 
-  GetKeyParams params;
+  ipc::GetKeyParams params;
 
   mKeyRange->ToSerializedKeyRange(params.keyRange());
 
@@ -1099,12 +1100,12 @@ GetKeyHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     return Success_NotSent;
   }
 
-  ResponseValue response;
+  ipc::ResponseValue response;
   if (NS_FAILED(aResultCode)) {
     response = aResultCode;
   }
   else {
-    GetKeyResponse getKeyResponse;
+    ipc::GetKeyResponse getKeyResponse;
     getKeyResponse.key() = mKey;
     response = getKeyResponse;
   }
@@ -1202,7 +1203,7 @@ GetHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 {
   NS_ASSERTION(mKeyRange, "This should never be null!");
 
-  FIXME_Bug_521898_index::GetParams params;
+  ipc::FIXME_Bug_521898_index::GetParams params;
 
   mKeyRange->ToSerializedKeyRange(params.keyRange());
 
@@ -1226,14 +1227,14 @@ GetHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     return Error;
   }
 
-  ResponseValue response;
+  ipc::ResponseValue response;
   if (NS_FAILED(aResultCode)) {
     response = aResultCode;
   }
   else {
     SerializedStructuredCloneReadInfo readInfo;
     readInfo = mCloneReadInfo;
-    GetResponse getResponse = readInfo;
+    ipc::GetResponse getResponse = readInfo;
     response = getResponse;
   }
 
@@ -1376,10 +1377,10 @@ GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
 nsresult
 GetAllKeysHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 {
-  GetAllKeysParams params;
+  ipc::GetAllKeysParams params;
 
   if (mKeyRange) {
-    FIXME_Bug_521898_index::KeyRange keyRange;
+    ipc::FIXME_Bug_521898_index::KeyRange keyRange;
     mKeyRange->ToSerializedKeyRange(keyRange);
     params.optionalKeyRange() = keyRange;
   }
@@ -1404,12 +1405,12 @@ GetAllKeysHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     return Success_NotSent;
   }
 
-  ResponseValue response;
+  ipc::ResponseValue response;
   if (NS_FAILED(aResultCode)) {
     response = aResultCode;
   }
   else {
-    GetAllKeysResponse getAllKeysResponse;
+    ipc::GetAllKeysResponse getAllKeysResponse;
     getAllKeysResponse.keys().AppendElements(mKeys);
     response = getAllKeysResponse;
   }
@@ -1524,10 +1525,10 @@ GetAllHelper::ReleaseMainThreadObjects()
 nsresult
 GetAllHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 {
-  FIXME_Bug_521898_index::GetAllParams params;
+  ipc::FIXME_Bug_521898_index::GetAllParams params;
 
   if (mKeyRange) {
-    FIXME_Bug_521898_index::KeyRange keyRange;
+    ipc::FIXME_Bug_521898_index::KeyRange keyRange;
     mKeyRange->ToSerializedKeyRange(keyRange);
     params.optionalKeyRange() = keyRange;
   }
@@ -1559,12 +1560,12 @@ GetAllHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     }
   }
 
-  ResponseValue response;
+  ipc::ResponseValue response;
   if (NS_FAILED(aResultCode)) {
     response = aResultCode;
   }
   else {
-    GetAllResponse getAllResponse;
+    ipc::GetAllResponse getAllResponse;
 
     InfallibleTArray<SerializedStructuredCloneReadInfo>& infos =
       getAllResponse.cloneInfos();
@@ -1820,10 +1821,10 @@ OpenKeyCursorHelper::ReleaseMainThreadObjects()
 nsresult
 OpenKeyCursorHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 {
-  OpenKeyCursorParams params;
+  ipc::OpenKeyCursorParams params;
 
   if (mKeyRange) {
-    FIXME_Bug_521898_index::KeyRange keyRange;
+    ipc::FIXME_Bug_521898_index::KeyRange keyRange;
     mKeyRange->ToSerializedKeyRange(keyRange);
     params.optionalKeyRange() = keyRange;
   }
@@ -1858,12 +1859,12 @@ OpenKeyCursorHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     }
   }
 
-  ResponseValue response;
+  ipc::ResponseValue response;
   if (NS_FAILED(aResultCode)) {
     response = aResultCode;
   }
   else {
-    OpenCursorResponse openCursorResponse;
+    ipc::OpenCursorResponse openCursorResponse;
 
     if (!mCursor) {
       openCursorResponse = mozilla::void_t();
@@ -1875,7 +1876,7 @@ OpenKeyCursorHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
       IndexedDBRequestParentBase* requestActor = mRequest->GetActorParent();
       NS_ASSERTION(requestActor, "Must have an actor here!");
 
-      IndexCursorConstructorParams params;
+      ipc::IndexCursorConstructorParams params;
       params.requestParent() = requestActor;
       params.direction() = mDirection;
       params.key() = mKey;
@@ -1908,20 +1909,20 @@ OpenKeyCursorHelper::UnpackResponseFromParentProcess(
   NS_ASSERTION(aResponseValue.type() == ResponseValue::TOpenCursorResponse,
                "Bad response type!");
   NS_ASSERTION(aResponseValue.get_OpenCursorResponse().type() ==
-               OpenCursorResponse::Tvoid_t ||
+               ipc::OpenCursorResponse::Tvoid_t ||
                aResponseValue.get_OpenCursorResponse().type() ==
-               OpenCursorResponse::TPIndexedDBCursorChild,
+               ipc::OpenCursorResponse::TPIndexedDBCursorChild,
                "Bad response union type!");
   NS_ASSERTION(!mCursor, "Shouldn't have this yet!");
 
-  const OpenCursorResponse& response =
+  const ipc::OpenCursorResponse& response =
     aResponseValue.get_OpenCursorResponse();
 
   switch (response.type()) {
-    case OpenCursorResponse::Tvoid_t:
+    case ipc::OpenCursorResponse::Tvoid_t:
       break;
 
-    case OpenCursorResponse::TPIndexedDBCursorChild: {
+    case ipc::OpenCursorResponse::TPIndexedDBCursorChild: {
       IndexedDBCursorChild* actor =
         static_cast<IndexedDBCursorChild*>(
           response.get_PIndexedDBCursorChild());
@@ -2156,10 +2157,10 @@ OpenCursorHelper::ReleaseMainThreadObjects()
 nsresult
 OpenCursorHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 {
-  FIXME_Bug_521898_index::OpenCursorParams params;
+  ipc::FIXME_Bug_521898_index::OpenCursorParams params;
 
   if (mKeyRange) {
-    FIXME_Bug_521898_index::KeyRange keyRange;
+    ipc::FIXME_Bug_521898_index::KeyRange keyRange;
     mKeyRange->ToSerializedKeyRange(keyRange);
     params.optionalKeyRange() = keyRange;
   }
@@ -2199,12 +2200,12 @@ OpenCursorHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     }
   }
 
-  ResponseValue response;
+  ipc::ResponseValue response;
   if (NS_FAILED(aResultCode)) {
     response = aResultCode;
   }
   else {
-    OpenCursorResponse openCursorResponse;
+    ipc::OpenCursorResponse openCursorResponse;
 
     if (!mCursor) {
       openCursorResponse = mozilla::void_t();
@@ -2220,7 +2221,7 @@ OpenCursorHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
                    mSerializedCloneReadInfo.dataLength,
                    "Shouldn't be possible!");
 
-      IndexCursorConstructorParams params;
+      ipc::IndexCursorConstructorParams params;
       params.requestParent() = requestActor;
       params.direction() = mDirection;
       params.key() = mKey;
@@ -2327,10 +2328,10 @@ CountHelper::ReleaseMainThreadObjects()
 nsresult
 CountHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 {
-  FIXME_Bug_521898_index::CountParams params;
+  ipc::FIXME_Bug_521898_index::CountParams params;
 
   if (mKeyRange) {
-    FIXME_Bug_521898_index::KeyRange keyRange;
+    ipc::FIXME_Bug_521898_index::KeyRange keyRange;
     mKeyRange->ToSerializedKeyRange(keyRange);
     params.optionalKeyRange() = keyRange;
   }
@@ -2353,12 +2354,12 @@ CountHelper::MaybeSendResponseToChildProcess(nsresult aResultCode)
     return Success_NotSent;
   }
 
-  ResponseValue response;
+  ipc::ResponseValue response;
   if (NS_FAILED(aResultCode)) {
     response = aResultCode;
   }
   else {
-    CountResponse countResponse = mCount;
+    ipc::CountResponse countResponse = mCount;
     response = countResponse;
   }
 

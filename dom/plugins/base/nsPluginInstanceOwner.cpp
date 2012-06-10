@@ -46,6 +46,7 @@ using mozilla::DefaultXDisplay;
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsLayoutUtils.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIPluginWidget.h"
 #include "nsIViewManager.h"
 #include "nsIDocShellTreeOwner.h"
@@ -1846,17 +1847,22 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   }
 #endif
 
-  nsEvent* theEvent = aFocusEvent->GetInternalNSEvent();
-  if (theEvent) {
-    // we only care about the message in ProcessEvent
-    nsGUIEvent focusEvent(NS_IS_TRUSTED_EVENT(theEvent), theEvent->message,
-                          nsnull);
-    nsEventStatus rv = ProcessEvent(focusEvent);
-    if (nsEventStatus_eConsumeNoDefault == rv) {
-      aFocusEvent->PreventDefault();
-      aFocusEvent->StopPropagation();
-    }   
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aFocusEvent));
+  if (privateEvent) {
+    nsEvent * theEvent = privateEvent->GetInternalNSEvent();
+    if (theEvent) {
+      // we only care about the message in ProcessEvent
+      nsGUIEvent focusEvent(NS_IS_TRUSTED_EVENT(theEvent), theEvent->message,
+                            nsnull);
+      nsEventStatus rv = ProcessEvent(focusEvent);
+      if (nsEventStatus_eConsumeNoDefault == rv) {
+        aFocusEvent->PreventDefault();
+        aFocusEvent->StopPropagation();
+      }
+    }
+    else NS_ASSERTION(false, "nsPluginInstanceOwner::DispatchFocusToPlugin failed, focusEvent null");   
   }
+  else NS_ASSERTION(false, "nsPluginInstanceOwner::DispatchFocusToPlugin failed, privateEvent null");   
   
   return NS_OK;
 }    
@@ -1865,14 +1871,19 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 nsresult nsPluginInstanceOwner::Text(nsIDOMEvent* aTextEvent)
 {
   if (mInstance) {
-    nsEvent *event = aTextEvent->GetInternalNSEvent();
-    if (event && event->eventStructType == NS_TEXT_EVENT) {
-      nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
-      if (nsEventStatus_eConsumeNoDefault == rv) {
-        aTextEvent->PreventDefault();
-        aTextEvent->StopPropagation();
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aTextEvent));
+    if (privateEvent) {
+      nsEvent *event = privateEvent->GetInternalNSEvent();
+      if (event && event->eventStructType == NS_TEXT_EVENT) {
+        nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
+        if (nsEventStatus_eConsumeNoDefault == rv) {
+          aTextEvent->PreventDefault();
+          aTextEvent->StopPropagation();
+        }
       }
+      else NS_ASSERTION(false, "nsPluginInstanceOwner::DispatchTextToPlugin failed, textEvent null");
     }
+    else NS_ASSERTION(false, "nsPluginInstanceOwner::DispatchTextToPlugin failed, privateEvent null");
   }
 
   return NS_OK;
@@ -1887,13 +1898,16 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
     // KeyPress events are really synthesized keyDown events.
     // Here we check the native message of the event so that
     // we won't send the plugin two keyDown events.
-    nsEvent *theEvent = aKeyEvent->GetInternalNSEvent();
-    const EventRecord *ev;
-    if (theEvent &&
-        theEvent->message == NS_KEY_PRESS &&
-        (ev = (EventRecord*)(((nsGUIEvent*)theEvent)->pluginEvent)) &&
-        ev->what == keyDown)
-      return aKeyEvent->PreventDefault(); // consume event
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
+    if (privateEvent) {
+      nsEvent *theEvent = privateEvent->GetInternalNSEvent();
+      const EventRecord *ev;
+      if (theEvent &&
+          theEvent->message == NS_KEY_PRESS &&
+          (ev = (EventRecord*)(((nsGUIEvent*)theEvent)->pluginEvent)) &&
+          ev->what == keyDown)
+        return aKeyEvent->PreventDefault(); // consume event
+    }
 
     // Nasty hack to avoid recursive event dispatching with Java. Java can
     // dispatch key events to a TSM handler, which comes back and calls 
@@ -1935,14 +1949,19 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 #endif
 
   if (mInstance) {
-    nsEvent *event = aKeyEvent->GetInternalNSEvent();
-    if (event && event->eventStructType == NS_KEY_EVENT) {
-      nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
-      if (nsEventStatus_eConsumeNoDefault == rv) {
-        aKeyEvent->PreventDefault();
-        aKeyEvent->StopPropagation();
-      }   
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aKeyEvent));
+    if (privateEvent) {
+      nsEvent *event = privateEvent->GetInternalNSEvent();
+      if (event && event->eventStructType == NS_KEY_EVENT) {
+        nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
+        if (nsEventStatus_eConsumeNoDefault == rv) {
+          aKeyEvent->PreventDefault();
+          aKeyEvent->StopPropagation();
+        }
+      }
+      else NS_ASSERTION(false, "nsPluginInstanceOwner::DispatchKeyToPlugin failed, keyEvent null");   
     }
+    else NS_ASSERTION(false, "nsPluginInstanceOwner::DispatchKeyToPlugin failed, privateEvent null");   
   }
 
   return NS_OK;
@@ -1969,13 +1988,18 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  nsEvent* event = aMouseEvent->GetInternalNSEvent();
-    if (event && event->eventStructType == NS_MOUSE_EVENT) {
-      nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
-    if (nsEventStatus_eConsumeNoDefault == rv) {
-      return aMouseEvent->PreventDefault(); // consume event
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
+  if (privateEvent) {
+    nsEvent* event = privateEvent->GetInternalNSEvent();
+      if (event && event->eventStructType == NS_MOUSE_EVENT) {
+        nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
+      if (nsEventStatus_eConsumeNoDefault == rv) {
+        return aMouseEvent->PreventDefault(); // consume event
+      }
     }
+    else NS_ASSERTION(false, "nsPluginInstanceOwner::MouseDown failed, mouseEvent null");   
   }
+  else NS_ASSERTION(false, "nsPluginInstanceOwner::MouseDown failed, privateEvent null");   
   
   return NS_OK;
 }
@@ -1991,14 +2015,20 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
   if (!mWidgetVisible)
     return NS_OK;
 
-  nsEvent* event = aMouseEvent->GetInternalNSEvent();
-  if (event && event->eventStructType == NS_MOUSE_EVENT) {
-    nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
-    if (nsEventStatus_eConsumeNoDefault == rv) {
-      aMouseEvent->PreventDefault();
-      aMouseEvent->StopPropagation();
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
+  if (privateEvent) {
+    nsEvent* event = privateEvent->GetInternalNSEvent();
+    if (event && event->eventStructType == NS_MOUSE_EVENT) {
+      nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
+      if (nsEventStatus_eConsumeNoDefault == rv) {
+        aMouseEvent->PreventDefault();
+        aMouseEvent->StopPropagation();
+      }
     }
+    else NS_ASSERTION(false, "nsPluginInstanceOwner::DispatchMouseToPlugin failed, mouseEvent null");   
   }
+  else NS_ASSERTION(false, "nsPluginInstanceOwner::DispatchMouseToPlugin failed, privateEvent null");   
+  
   return NS_OK;
 }
 
@@ -2051,14 +2081,17 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
   if (dragEvent && mInstance) {
-    nsEvent* ievent = aEvent->GetInternalNSEvent();
-    if ((ievent && NS_IS_TRUSTED_EVENT(ievent)) &&
-         ievent->message != NS_DRAGDROP_ENTER && ievent->message != NS_DRAGDROP_OVER) {
-      aEvent->PreventDefault();
-    }
+    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aEvent));
+    if (privateEvent) {
+      nsEvent* ievent = privateEvent->GetInternalNSEvent();
+      if ((ievent && NS_IS_TRUSTED_EVENT(ievent)) &&
+           ievent->message != NS_DRAGDROP_ENTER && ievent->message != NS_DRAGDROP_OVER) {
+        aEvent->PreventDefault();
+      }
 
-    // Let the plugin handle drag events.
-    aEvent->StopPropagation();
+      // Let the plugin handle drag events.
+      aEvent->StopPropagation();
+    }
   }
   return NS_OK;
 }

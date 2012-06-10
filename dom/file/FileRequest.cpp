@@ -7,6 +7,7 @@
 #include "FileRequest.h"
 
 #include "nsIJSContextStack.h"
+#include "nsIPrivateDOMEvent.h"
 
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"

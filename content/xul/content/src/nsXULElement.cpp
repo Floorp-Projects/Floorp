@@ -21,6 +21,7 @@
 #include "nsDOMError.h"
 #include "nsDOMString.h"
 #include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
 #include "nsIBaseWindow.h"

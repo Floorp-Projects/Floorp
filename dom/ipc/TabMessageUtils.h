@@ -7,7 +7,7 @@
 #define TABMESSAGE_UTILS_H
 
 #include "IPC/IPCMessageUtils.h"
-#include "nsIDOMEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsCOMPtr.h"
 
 #ifdef MOZ_CRASHREPORTER
@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 struct RemoteDOMEvent
 {
-  nsCOMPtr<nsIDOMEvent> mEvent;
+  nsCOMPtr<nsIPrivateDOMEvent> mEvent;
 };
 
 bool ReadRemoteEvent(const IPC::Message* aMsg, void** aIter,

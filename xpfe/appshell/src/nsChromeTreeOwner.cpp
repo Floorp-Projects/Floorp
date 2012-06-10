@@ -11,6 +11,7 @@
 // Helper Classes
 #include "nsString.h"
 #include "nsIEmbeddingSiteWindow.h"
+#include "nsIEmbeddingSiteWindow2.h"
 #include "nsIServiceManager.h"
 #include "nsIDocShellTreeItem.h"
 
@@ -121,6 +122,10 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
     return mXULWindow->GetInterface(aIID, aSink);
   }
   if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow))) {
+    NS_ENSURE_STATE(mXULWindow);
+    return mXULWindow->GetInterface(aIID, aSink);
+  }
+  if (aIID.Equals(NS_GET_IID(nsIEmbeddingSiteWindow2))) {
     NS_ENSURE_STATE(mXULWindow);
     return mXULWindow->GetInterface(aIID, aSink);
   }
