@@ -44,12 +44,10 @@ var gInputTestData = [
   ['image',    false],
   ['radio',    false],
   ['submit',   false],
-  // TODO: the next states are not yet implemented but we can't use a todo for
-  // them as the check will success so the test will fail (todo _has_ to fail).
-  // The tests are not failing because the unvalid states fallback to 'text'.
   ['search',   true],
   ['email',    true],
   ['url',      true],
+  ['number',   false],
 ];
 
 /**
@@ -58,7 +56,6 @@ var gInputTestData = [
  */
 var gInputTodoData = [
 /* type        expected result */
-  ['number',   false],
   ['range',    false],
   ['color',    false],
   ['date',     false],

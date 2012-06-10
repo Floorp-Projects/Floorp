@@ -30,7 +30,7 @@ var inputTypes =
 
 var todoTypes =
 [
-  "number", "range", "color",
+  "range", "color",
   "date", "month", "week", "time", "datetime", "datetime-local",
 ];
 
@@ -60,7 +60,7 @@ function sanitizeValue(aType, aValue)
       // TODO: write the sanitize algorithm.
       return "";
     case "number":
-      // TODO: write the sanitize algorithm.
+      todo(false, "will be done with bug 635281");
       return "";
     case "range":
       // TODO: write the sanitize algorithm.
