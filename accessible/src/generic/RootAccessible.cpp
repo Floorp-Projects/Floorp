@@ -50,7 +50,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsReadableUtils.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsFocusManager.h"
 
 #ifdef MOZ_XUL

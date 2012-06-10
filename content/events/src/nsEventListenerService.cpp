@@ -13,7 +13,6 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsJSUtils.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIJSContextStack.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"

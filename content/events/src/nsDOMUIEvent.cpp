@@ -376,7 +376,7 @@ nsDOMUIEvent::GetIsChar(bool* aIsChar)
   }
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsDOMUIEvent::DuplicatePrivateData()
 {
   mClientPoint = nsDOMEvent::GetClientCoords(mPresContext,
@@ -400,7 +400,7 @@ nsDOMUIEvent::DuplicatePrivateData()
   return rv;
 }
 
-void
+NS_IMETHODIMP_(void)
 nsDOMUIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
@@ -414,7 +414,7 @@ nsDOMUIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
   IPC::WriteParam(aMsg, detail);
 }
 
-bool
+NS_IMETHODIMP_(bool)
 nsDOMUIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), false);

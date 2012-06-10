@@ -372,7 +372,8 @@ function checkPopupTest(nb, ntf)
   if (nb._animating)
     setTimeout(checkPopupTest, ntf);
   else {
-    var evt = { target:  ntf, originalTarget: ntf, stopPropagation: function() { } };
+    var evt = new Event("");
+    ntf.dispatchEvent(evt);
     evt.target.buttonInfo = testtag_notificationbox_buttons[0];
     ntf._doButtonCommand(evt);
   }

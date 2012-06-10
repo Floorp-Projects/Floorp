@@ -139,8 +139,7 @@ nsDOMDesktopNotification::DispatchNotificationEvent(const nsString& aName)
     // it doesn't bubble, and it isn't cancelable
     rv = event->InitEvent(aName, false, false);
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-      privateEvent->SetTrusted(true);
+      event->SetTrusted(true);
       DispatchDOMEvent(nsnull, event, nsnull, nsnull);
     }
   }

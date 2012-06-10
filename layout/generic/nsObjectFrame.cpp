@@ -46,7 +46,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIDocumentEncoder.h"
 #include "nsXPIDLString.h"
 #include "nsIDOMRange.h"

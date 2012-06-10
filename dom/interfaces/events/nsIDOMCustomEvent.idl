@@ -6,7 +6,7 @@
 #include "nsIDOMEvent.idl"
 interface nsIVariant;
 
-[scriptable, uuid(eee65f98-bb6f-489c-b7e3-40e5f0c90645)]
+[scriptable, builtinclass, uuid(90277f74-1383-4da8-8748-c7abd420cf06)]
 interface nsIDOMCustomEvent : nsIDOMEvent
 {
 

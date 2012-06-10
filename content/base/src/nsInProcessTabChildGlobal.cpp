@@ -17,7 +17,6 @@
 #include "nsScriptLoader.h"
 #include "nsIJSContextStack.h"
 #include "nsFrameLoader.h"
-#include "nsIPrivateDOMEvent.h"
 #include "xpcpublic.h"
 #include "nsIMozBrowserFrame.h"
 
@@ -213,8 +212,7 @@ nsInProcessTabChildGlobal::DelayedDisconnect()
   NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
   if (event) {
     event->InitEvent(NS_LITERAL_STRING("unload"), false, false);
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-    privateEvent->SetTrusted(true);
+    event->SetTrusted(true);
 
     bool dummy;
     nsDOMEventTargetHelper::DispatchEvent(event, &dummy);

@@ -19,7 +19,6 @@
 #include "nsITextControlFrame.h"
 #include "nsGkAtoms.h"
 #include "nsPIDOMWindow.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIJSEventListener.h"
 #include "prmem.h"
 #include "nsIScriptGlobalObject.h"

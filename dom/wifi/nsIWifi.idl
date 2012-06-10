@@ -109,7 +109,7 @@ interface nsIDOMWifiManager : nsISupports {
              attribute nsIDOMEventListener connectionInfoUpdate;
 };
 
-[scriptable, uuid(4674c6f1-ea64-44db-ac2f-e7bd6514dfd6)]
+[scriptable, builtinclass, uuid(5b8eaf12-08fb-4cba-b641-4d0b6aac3505)]
 interface nsIDOMWifiStatusChangeEvent : nsIDOMEvent {
     /**
      * Network object with a SSID field describing the network affected by
@@ -124,7 +124,7 @@ interface nsIDOMWifiStatusChangeEvent : nsIDOMEvent {
     readonly attribute string status;
 };
 
-[scriptable, uuid(5c9ee332-dd98-4227-b7fc-768418fd50e3)]
+[scriptable, builtinclass, uuid(effa623e-d758-4543-8d42-58334db64f8a)]
 interface nsIDOMWifiConnectionInfoEvent : nsIDOMEvent {
     /**
      * Network object with an SSID field.

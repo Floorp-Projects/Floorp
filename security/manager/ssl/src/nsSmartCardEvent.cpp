@@ -11,7 +11,7 @@
 
 // DOM event class to handle progress notifications
 nsSmartCardEvent::nsSmartCardEvent(const nsAString &aTokenName) 
-    : mInner(nsnull), mPrivate(nsnull), mTokenName(aTokenName)
+    : mInner(nsnull), mTokenName(aTokenName)
 {
 }
 
@@ -20,13 +20,11 @@ nsSmartCardEvent::~nsSmartCardEvent()
 
 //NS_DECL_DOM_CLASSINFO(SmartCardEvent)
 
-// QueryInterface implementation for nsXMLHttpRequest
 NS_INTERFACE_MAP_BEGIN(nsSmartCardEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMSmartCardEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSmartCardEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SmartCardEvent)
 NS_INTERFACE_MAP_END
 
@@ -42,15 +40,11 @@ NS_IMETHODIMP nsSmartCardEvent::Init(nsIDOMEvent * aInner)
 
   NS_ASSERTION(aInner, "SmartCardEvent initialized with a null Event");
   mInner = aInner;
-  mPrivate = do_QueryInterface(mInner, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
   mNSEvent = do_QueryInterface(mInner, &rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return mPrivate->SetTrusted(true);
+  return mInner->SetTrusted(true);
 }
 
 // nsSmartCard Specific methods
@@ -60,50 +54,49 @@ NS_IMETHODIMP nsSmartCardEvent::GetTokenName(nsAString &aTokenName)
   return NS_OK;
 }
 
-// nsIPrivateDOMEvent maps
 NS_IMETHODIMP nsSmartCardEvent::DuplicatePrivateData(void)
 {
-  NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
-  return mPrivate->DuplicatePrivateData();
+  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
+  return mInner->DuplicatePrivateData();
 }
 
 NS_IMETHODIMP nsSmartCardEvent::SetTarget(nsIDOMEventTarget *aTarget)
 {
-  NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
-  return mPrivate->SetTarget(aTarget);
+  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
+  return mInner->SetTarget(aTarget);
 }
 
 NS_IMETHODIMP_(bool ) nsSmartCardEvent::IsDispatchStopped()
 {
-  NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
-  return mPrivate->IsDispatchStopped();
+  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
+  return mInner->IsDispatchStopped();
 }
 
 NS_IMETHODIMP_(nsEvent*) nsSmartCardEvent::GetInternalNSEvent()
 {
-  NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
-  return mPrivate->GetInternalNSEvent();
+  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
+  return mInner->GetInternalNSEvent();
 }
 
 NS_IMETHODIMP nsSmartCardEvent::SetTrusted(bool aResult)
 {
-  NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
-  return mPrivate->SetTrusted(aResult);
+  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
+  return mInner->SetTrusted(aResult);
 }
 
 void
 nsSmartCardEvent::Serialize(IPC::Message* aMsg,
                             bool aSerializeInterfaceType)
 {
-  NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
-  mPrivate->Serialize(aMsg, aSerializeInterfaceType);
+  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
+  mInner->Serialize(aMsg, aSerializeInterfaceType);
 }
 
 bool
 nsSmartCardEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
-  NS_ASSERTION(mPrivate, "SmartCardEvent called without Init");
-  return mPrivate->Deserialize(aMsg, aIter);
+  NS_ASSERTION(mInner, "SmartCardEvent called without Init");
+  return mInner->Deserialize(aMsg, aIter);
 }
 
 // IDOMNSEvent maps
