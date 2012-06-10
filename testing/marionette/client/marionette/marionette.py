@@ -381,6 +381,12 @@ class Marionette(object):
     def get_logs(self):
         return self._send_message('getLogs', 'value')
 
+    def add_perf_data(self, suite, name, value):
+        return self._send_message('addPerfData', 'ok', suite=suite, name=name, value=value)
+
+    def get_perf_data(self):
+        return self._send_message('getPerfData', 'value')
+
     def import_script(self, file):
         f = open(file, "r")
         js = f.read()

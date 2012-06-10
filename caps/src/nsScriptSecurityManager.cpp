@@ -162,6 +162,44 @@ GetScriptContext(JSContext *cx)
     return GetScriptContextFromJSContext(cx);
 }
 
+// Callbacks for the JS engine to use to push/pop context principals.
+static JSBool
+PushPrincipalCallback(JSContext *cx, JSPrincipals *principals)
+{
+    // We should already be in the compartment of the given principal.
+    MOZ_ASSERT(principals ==
+               JS_GetCompartmentPrincipals((js::GetContextCompartment(cx))));
+
+    // Get the security manager.
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (!ssm) {
+        return true;
+    }
+
+    // Push the principal.
+    JSStackFrame *fp = NULL;
+    nsresult rv = ssm->PushContextPrincipal(cx, JS_FrameIterator(cx, &fp),
+                                            nsJSPrincipals::get(principals));
+    if (NS_FAILED(rv)) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
+static JSBool
+PopPrincipalCallback(JSContext *cx)
+{
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (ssm) {
+        ssm->PopContextPrincipal(cx);
+    }
+
+    return true;
+}
+
+
 inline void SetPendingException(JSContext *cx, const char *aMsg)
 {
     JSAutoRequest ar(cx);
@@ -364,6 +402,34 @@ nsScriptSecurityManager::GetCxSubjectPrincipalAndFrame(JSContext *cx, JSStackFra
         return nsnull;
 
     return principal;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::PushContextPrincipal(JSContext *cx,
+                                              JSStackFrame *fp,
+                                              nsIPrincipal *principal)
+{
+    NS_ASSERTION(principal, "Must pass a non-null principal");
+
+    ContextPrincipal *cp = new ContextPrincipal(mContextPrincipals, cx, fp,
+                                                principal);
+    if (!cp)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    mContextPrincipals = cp;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::PopContextPrincipal(JSContext *cx)
+{
+    NS_ASSERTION(mContextPrincipals->mCx == cx, "Mismatched push/pop");
+
+    ContextPrincipal *next = mContextPrincipals->mNext;
+    delete mContextPrincipals;
+    mContextPrincipals = next;
+
+    return NS_OK;
 }
 
 ////////////////////
@@ -1344,7 +1410,22 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     nsCOMPtr<nsIURI> sourceURI;
     aPrincipal->GetURI(getter_AddRefs(sourceURI));
     if (!sourceURI) {
-        NS_ERROR("Non-system principals passed to CheckLoadURIWithPrincipal "
+        nsCOMPtr<nsIExpandedPrincipal> expanded = do_QueryInterface(aPrincipal);
+        if (expanded) {
+            nsTArray< nsCOMPtr<nsIPrincipal> > *whiteList;
+            expanded->GetWhiteList(&whiteList);
+            for (uint32_t i = 0; i < whiteList->Length(); ++i) {
+                nsresult rv = CheckLoadURIWithPrincipal((*whiteList)[i],
+                                                        aTargetURI,
+                                                        aFlags);
+                if (NS_SUCCEEDED(rv)) {
+                    // Allow access if it succeeded with one of the white listed principals
+                    return NS_OK;
+                }
+            }
+            return NS_OK;
+        }
+        NS_ERROR("Non-system principals or expanded principal passed to CheckLoadURIWithPrincipal "
                  "must have a URI!");
         return NS_ERROR_UNEXPECTED;
     }
@@ -2222,10 +2303,24 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
 
     if (cx)
     {
+        JSStackFrame *target = nsnull;
+        nsIPrincipal *targetPrincipal = nsnull;
+        for (ContextPrincipal *cp = mContextPrincipals; cp; cp = cp->mNext)
+        {
+            if (cp->mCx == cx)
+            {
+                target = cp->mFp;
+                targetPrincipal = cp->mPrincipal;
+                break;
+            }
+        }
+
         // Get principals from innermost JavaScript frame.
         JSStackFrame *fp = nsnull; // tell JS_FrameIterator to start at innermost
         for (fp = JS_FrameIterator(cx, &fp); fp; fp = JS_FrameIterator(cx, &fp))
         {
+            if (fp == target)
+                break;
             nsIPrincipal* result = GetFramePrincipal(cx, fp, rv);
             if (result)
             {
@@ -2233,6 +2328,25 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
                 *frameResult = fp;
                 return result;
             }
+        }
+
+        // If targetPrincipal is non-null, then it means that someone wants to
+        // clamp the principals on this context to this principal. Note that
+        // fp might not equal target here (fp might be null) because someone
+        // could have set aside the frame chain in the meantime.
+        if (targetPrincipal)
+        {
+            if (fp && fp == target)
+            {
+                *frameResult = fp;
+            }
+            else
+            {
+                JSStackFrame *inner = nsnull;
+                *frameResult = JS_FrameIterator(cx, &inner);
+            }
+
+            return targetPrincipal;
         }
 
         nsIScriptContextPrincipal* scp =
@@ -2265,15 +2379,9 @@ nsIPrincipal*
 nsScriptSecurityManager::GetSubjectPrincipal(JSContext *cx,
                                              nsresult* rv)
 {
-    *rv = NS_OK;
-    JSCompartment *compartment = js::GetContextCompartment(cx);
-
-    // The context should always be in a compartment, either one it has entered
-    // or the one associated with its global.
-    MOZ_ASSERT(!!compartment);
-
-    JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
-    return nsJSPrincipals::get(principals);
+    NS_PRECONDITION(rv, "Null out param");
+    JSStackFrame *fp;
+    return GetPrincipalAndFrame(cx, &fp, rv);
 }
 
 NS_IMETHODIMP
@@ -2419,11 +2527,27 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     JSContext *cx = GetCurrentJSContext();
     fp = cx ? JS_FrameIterator(cx, &fp) : nsnull;
 
+    JSStackFrame *target = nsnull;
+    nsIPrincipal *targetPrincipal = nsnull;
+    for (ContextPrincipal *cp = mContextPrincipals; cp; cp = cp->mNext)
+    {
+        if (cp->mCx == cx)
+        {
+            target = cp->mFp;
+            targetPrincipal = cp->mPrincipal;
+            break;
+        }
+    }
+
     if (!fp)
     {
-        // No script code on stack. We don't have enough information and have
-        // to allow execution.
-        *result = true;
+        // No script code on stack. If we had a principal pushed for this
+        // context and fp is null, then we use that principal. Otherwise, we
+        // don't have enough information and have to allow execution.
+
+        *result = (targetPrincipal && !target)
+                  ? (targetPrincipal == mSystemPrincipal)
+                  : true;
 
         return NS_OK;
     }
@@ -2467,7 +2591,7 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         // the JS engine via JS_EvaluateScript or similar APIs.
         if (JS_IsGlobalFrame(cx, fp))
             break;
-    } while ((fp = JS_FrameIterator(cx, &fp)) != nsnull);
+    } while (fp != target && (fp = JS_FrameIterator(cx, &fp)) != nsnull);
 
     if (!previousPrincipal)
     {
@@ -2951,6 +3075,7 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
     : mOriginToPolicyMap(nsnull),
       mDefaultPolicy(nsnull),
       mCapabilities(nsnull),
+      mContextPrincipals(nsnull),
       mPrefInitialized(false),
       mIsJavaScriptEnabled(false),
       mIsWritingPrefs(false),
@@ -3011,7 +3136,9 @@ nsresult nsScriptSecurityManager::Init()
         CheckObjectAccess,
         nsJSPrincipals::Subsume,
         ObjectPrincipalFinder,
-        ContentSecurityPolicyPermitsJSAction
+        ContentSecurityPolicyPermitsJSAction,
+        PushPrincipalCallback,
+        PopPrincipalCallback
     };
 
     MOZ_ASSERT(!JS_GetSecurityCallbacks(sRuntime));
@@ -3030,6 +3157,7 @@ jsid nsScriptSecurityManager::sEnabledID   = JSID_VOID;
 nsScriptSecurityManager::~nsScriptSecurityManager(void)
 {
     Preferences::RemoveObservers(this, kObservedPrefs);
+    NS_ASSERTION(!mContextPrincipals, "Leaking mContextPrincipals");
     delete mOriginToPolicyMap;
     if(mDefaultPolicy)
         mDefaultPolicy->Drop();

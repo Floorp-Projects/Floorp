@@ -804,8 +804,7 @@ nsCSSRendering::FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
 
   nsIFrame* frame = nsnull;
   if (aStartAtParent) {
-    frame = nsLayoutUtils::GetParentOrPlaceholderFor(
-              aFrame->PresContext()->FrameManager(), aFrame);
+    frame = nsLayoutUtils::GetParentOrPlaceholderFor(aFrame);
   }
   if (!frame) {
     frame = aFrame;
@@ -820,8 +819,7 @@ nsCSSRendering::FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
     if (frame->IsThemed())
       break;
 
-    nsIFrame* parent = nsLayoutUtils::GetParentOrPlaceholderFor(
-                         frame->PresContext()->FrameManager(), frame);
+    nsIFrame* parent = nsLayoutUtils::GetParentOrPlaceholderFor(frame);
     if (!parent)
       break;
 

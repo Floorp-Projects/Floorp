@@ -1,4 +1,8 @@
 res/layout/sync_account.xml
+res/layout/sync_custom_popup.xml
+res/layout/sync_list_item.xml
+res/layout/sync_redirect_to_setup.xml
+res/layout/sync_send_tab.xml
 res/layout/sync_setup.xml
 res/layout/sync_setup_failure.xml
 res/layout/sync_setup_jpake_waiting.xml

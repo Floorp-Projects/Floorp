@@ -3,67 +3,59 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:focusable="true"
-                android:nextFocusLeft="@+id/close"
-                android:id="@+id/info"
-                android:layout_width="fill_parent"
-                android:layout_height="100dip"
-                android:minHeight="100dip"
-                android:background="@drawable/tabs_tray_list_selector">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:focusable="true"
+              android:nextFocusRight="@+id/close"
+              android:id="@+id/info"
+              android:layout_width="fill_parent"
+              android:layout_height="@dimen/local_tab_row_height"
+              android:minHeight="@dimen/local_tab_row_height"
+              android:background="@drawable/tabs_tray_default_selector"
+              android:gravity="center_vertical">
 
-    <ImageView android:id="@+id/thumbnail"
-               android:layout_width="136dip"
-               android:layout_height="78dip"
-               android:layout_marginLeft="35dip"
-               android:layout_alignParentLeft="true"
-               android:layout_centerVertical="true"
-               android:src="@drawable/tab_thumbnail_default"
-               android:scaleType="fitCenter"/>
+    <RelativeLayout android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dip">
 
-    <ImageView android:id="@+id/shadow"
-               android:layout_width="138dip"
-               android:layout_height="80dip"
-               android:layout_marginLeft="34dip"
-               android:layout_alignParentLeft="true"
-               android:layout_centerVertical="true"
-               android:src="@drawable/tab_thumbnail_shadow"
-               android:scaleType="fitCenter"/>
+        <ImageView android:id="@+id/thumbnail"
+                   android:layout_width="136dip"
+                   android:layout_height="78dip"
+                   android:layout_marginLeft="1dip"
+                   android:layout_marginTop="1dip"
+                   android:layout_alignParentLeft="true"
+                   android:layout_centerVertical="true"
+                   android:src="@drawable/tab_thumbnail_default"
+                   android:scaleType="fitCenter"/>
 
-    <ImageView android:id="@+id/selected_indicator"
-               android:layout_width="18dip"
-               android:layout_height="54dip"
-               android:layout_alignLeft="@id/shadow"
-               android:layout_centerVertical="true"
-               android:src="@drawable/tab_selected"
-               android:scaleType="fitCenter"
-               android:visibility="gone"/>
+        <ImageView android:id="@+id/shadow"
+                   android:layout_width="138dip"
+                   android:layout_height="80dip"
+                   android:layout_alignParentLeft="true"
+                   android:layout_centerVertical="true"
+                   android:src="@drawable/tab_thumbnail_shadow"
+                   android:scaleType="fitCenter"/>
+
+    </RelativeLayout>
 
     <TextView android:id="@+id/title"
               android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_toRightOf="@id/thumbnail"
-              android:layout_margin="10dip"
-              android:textAppearance="?android:attr/textAppearanceSmall"
-              android:textColor="#E5F2FF"
+              android:layout_height="fill_parent"
+              android:layout_weight="1.0"
+              android:paddingTop="10dip"
+              android:paddingBottom="10dip"
+              style="@style/TabRowTextAppearance"
+              android:textSize="14sp"
               android:singleLine="false"
-              android:maxLines="4"
-              android:ellipsize="middle"
-              android:shadowColor="#000000"
-              android:shadowRadius="1"
-              android:shadowDx="0"
-              android:shadowDy="1"/>
+              android:maxLines="4"/>
 
     <ImageButton android:id="@+id/close"
-                 android:nextFocusRight="@+id/info"
+                 android:nextFocusLeft="@+id/info"
                  android:layout_width="34dip"
-                 android:layout_height="34dip"
-                 android:layout_alignParentLeft="true"
-                 android:layout_centerVertical="true"
-                 android:background="@drawable/tabs_tray_close_button"
+                 android:layout_height="fill_parent"
+                 android:background="@drawable/action_bar_button"
                  android:padding="10dip"
-                 android:scaleType="centerInside"
+                 android:scaleType="fitCenter"
                  android:contentDescription="@string/close_tab"
                  android:src="@drawable/tab_close"/>
 
-</RelativeLayout>
+</LinearLayout>

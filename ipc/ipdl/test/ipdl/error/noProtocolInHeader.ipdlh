@@ -1,0 +1,4 @@
+protocol noProtocolInHeader {
+child:
+    __delete__();
+};

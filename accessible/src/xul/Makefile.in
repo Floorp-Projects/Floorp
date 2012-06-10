@@ -17,18 +17,18 @@ LIBXUL_LIBRARY = 1
 
 
 CPPSRCS = \
-  XULSelectControlAccessible.cpp \
-  nsXULAlertAccessible.cpp \
-  nsXULColorPickerAccessible.cpp \
-  nsXULComboboxAccessible.cpp \
+  XULAlertAccessible.cpp \
+  XULColorPickerAccessible.cpp \
+  XULComboboxAccessible.cpp \
+  XULElementAccessibles.cpp \
   XULFormControlAccessible.cpp \
-  nsXULListboxAccessible.cpp \
-  nsXULMenuAccessible.cpp \
-  nsXULSliderAccessible.cpp \
-  nsXULTabAccessible.cpp \
-  nsXULTextAccessible.cpp \
-  nsXULTreeAccessible.cpp \
-  nsXULTreeGridAccessible.cpp \
+  XULListboxAccessible.cpp \
+  XULMenuAccessible.cpp \
+  XULSelectControlAccessible.cpp \
+  XULSliderAccessible.cpp \
+  XULTabAccessible.cpp \
+  XULTreeAccessible.cpp \
+  XULTreeGridAccessible.cpp \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

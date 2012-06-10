@@ -5,7 +5,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, uuid(229244a6-0515-43bc-8218-9a1b1774959f)]
+[scriptable, builtinclass, uuid(c43c4852-5bb6-409f-82cd-4f5e842b7208)]
 interface nsIDOMKeyEvent : nsIDOMUIEvent
 {
   const unsigned long DOM_VK_CANCEL         = 0x03;

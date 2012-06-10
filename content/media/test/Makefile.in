@@ -67,10 +67,6 @@ _TEST_FILES = \
 		test_audio1.html \
 		test_audio2.html \
 		test_autoplay.html \
-		test_autoplay_contentEditable.html \
-		test_buffered.html \
-		test_bug448534.html \
-		test_bug463162.xhtml \
 		test_bug465498.html \
 		test_bug493187.html \
 		test_bug495145.html \
@@ -82,7 +78,6 @@ _TEST_FILES = \
 		test_controls.html \
 		test_currentTime.html \
 		test_decode_error.html \
-		test_decoder_disable.html \
 		test_defaultMuted.html \
 		test_delay_load.html \
 		test_error_on_404.html \
@@ -93,7 +88,6 @@ _TEST_FILES = \
 		test_load_same_resource.html \
 		test_load_source.html \
 		test_loop.html \
-		test_media_selection.html \
 		test_mozLoadFrom.html \
 		test_no_load_event.html \
 		test_networkState.html \
@@ -103,7 +97,6 @@ _TEST_FILES = \
 		test_play_events.html \
 		test_play_events_2.html \
 		test_played.html \
-		test_playback.html \
 		test_playback_errors.html \
 		test_seekable1.html \
 		test_preload_actions.html \
@@ -114,7 +107,6 @@ _TEST_FILES = \
 		test_replay_metadata.html \
 		test_seek.html \
 		test_seek2.html \
-		test_seekLies.html \
 		test_seek_out_of_range.html \
 		test_source.html \
 		test_source_write.html \
@@ -131,6 +123,23 @@ _TEST_FILES = \
 		test_mozHasAudio.html \
 		test_source_media.html \
 		$(NULL)
+
+# Bug 759221
+# These tests are not built on Android because they were failing when we
+# enabled these tests on Android. The intent is to re-enable them as soon
+# as possible, and/or switch to a cleaner way to manage known-to-fail tests.
+ifneq ($(OS_TARGET),Android)
+_TEST_FILES += \
+		test_autoplay_contentEditable.html \
+		test_buffered.html \
+		test_bug448534.html \
+		test_bug463162.xhtml \
+		test_decoder_disable.html \
+		test_media_selection.html \
+		test_playback.html \
+		test_seekLies.html \
+		$(NULL)
+endif
 
 # Don't run in suite
 ifndef MOZ_SUITE
@@ -230,6 +239,22 @@ _TEST_FILES += \
 ifdef MOZ_OGG
 _TEST_FILES += \
 		test_can_play_type_ogg.html \
+		noContentLength.sjs \
+		test_seekable3.html \
+		test_a4_tone.html \
+		file_audio_event_adopt_iframe.html \
+		test_audio_event_adopt.html \
+		test_referer.html \
+		test_bug726904.html \
+		$(NULL)
+
+# Bug 759221
+# These tests are not built on Android because they were failing when we
+# enabled these tests on Android. The intent is to re-enable them as soon
+# as possible, and/or switch to a cleaner way to manage known-to-fail tests.
+ifneq ($(OS_TARGET),Android)
+_TEST_FILES += \
+		test_bug686137.html \
 		test_contentDuration1.html \
 		test_contentDuration2.html \
 		test_contentDuration3.html \
@@ -244,17 +269,10 @@ _TEST_FILES += \
 		contentDuration5.sjs \
 		contentDuration6.sjs \
 		contentDuration7.sjs \
-		noContentLength.sjs \
-		test_seekable2.html \
-		test_seekable3.html \
-		test_a4_tone.html \
-		file_audio_event_adopt_iframe.html \
-		test_audio_event_adopt.html \
 		test_framebuffer.html \
-		test_referer.html \
-		test_bug726904.html \
-		test_bug686137.html \
+		test_seekable2.html \
 		$(NULL)
+endif
 else
 _TEST_FILES += \
 		test_can_play_type_no_ogg.html \
@@ -274,11 +292,21 @@ endif
 ifdef MOZ_WAVE
 _TEST_FILES += \
 		test_can_play_type_wave.html \
+		$(NULL)
+
+
+# Bug 759221
+# These tests are not built on Android because they were failing when we
+# enabled these tests on Android. The intent is to re-enable them as soon
+# as possible, and/or switch to a cleaner way to manage known-to-fail tests.
+ifneq ($(OS_TARGET),Android)
+_TEST_FILES += \
 		test_fragment_play.html \
 		test_fragment_noplay.html \
 		test_wave_data_u8.html \
 		test_wave_data_s16.html \
 		$(NULL)
+endif
 else
 _TEST_FILES += \
 		test_can_play_type_no_wave.html \

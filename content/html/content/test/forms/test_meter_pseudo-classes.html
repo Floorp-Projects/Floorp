@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=660238
+-->
+<head>
+  <title>Test for Bug 660238</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=770238">Mozilla Bug 660238</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 660238 **/
+
+function checkOptimum(aElement, aValue, aOptimum, expectedResult)
+{
+  var errorString = expectedResult
+                      ? "value attribute should be in the optimum region"
+                      : "value attribute should not be in the optimum region";
+
+  aElement.setAttribute('value', aValue);
+  aElement.setAttribute('optimum', aOptimum);
+  is(aElement.mozMatchesSelector(":-moz-meter-optimum"),
+    expectedResult, errorString);
+}
+
+function checkSubOptimum(aElement, aValue, aOptimum, expectedResult)
+{
+  var errorString = "value attribute should be in the suboptimal region";
+  if (!expectedResult) {
+    errorString = "value attribute should not be in the suboptimal region";
+  }
+  aElement.setAttribute('value', aValue);
+  aElement.setAttribute('optimum', aOptimum);
+  is(aElement.mozMatchesSelector(":-moz-meter-sub-optimum"),
+    expectedResult, errorString);
+}
+
+function checkSubSubOptimum(aElement, aValue, aOptimum, expectedResult)
+{
+  var errorString = "value attribute should be in the sub-suboptimal region";
+  if (!expectedResult) {
+    errorString = "value attribute should not be in the sub-suboptimal region";
+  }
+  aElement.setAttribute('value', aValue);
+  aElement.setAttribute('optimum', aOptimum);
+  is(aElement.mozMatchesSelector(":-moz-meter-sub-sub-optimum"),
+    expectedResult, errorString);
+}
+
+function checkMozMatchesSelector()
+{
+  var element = document.createElement('meter');
+  // all tests realised with default values for min and max (0 and 1)
+  // low = 0.3 and high = 0.7
+  element.setAttribute('low', 0.3);
+  element.setAttribute('high', 0.7);
+
+  var tests = [
+    /*
+     * optimum = 0.0 =>
+     *     optimum region        = [ 0.0, 0.3 [
+     *     suboptimal region     = [ 0.3, 0.7 ]
+     *     sub-suboptimal region = ] 0.7, 1.0 ]
+     */
+    [ 0.0, 0.0, true, false, false ],
+    [ 0.1, 0.0, true, false, false ],
+    [ 0.3, 0.0, false, true, false ],
+    [ 0.5, 0.0, false, true, false ],
+    [ 0.7, 0.0, false, true, false ],
+    [ 0.8, 0.0, false, false, true ],
+    [ 1.0, 0.0, false, false, true ],
+    /*
+     * optimum = 0.1 =>
+     *     optimum region        = [ 0.0, 0.3 [
+     *     suboptimal region     = [ 0.3, 0.7 ]
+     *     sub-suboptimal region = ] 0.7, 1.0 ]
+     */
+    [ 0.0, 0.1, true, false, false ],
+    [ 0.1, 0.1, true, false, false ],
+    [ 0.3, 0.1, false, true, false ],
+    [ 0.5, 0.1, false, true, false ],
+    [ 0.7, 0.1, false, true, false ],
+    [ 0.8, 0.1, false, false, true ],
+    [ 1.0, 0.1, false, false, true ],
+    /*
+     * optimum = 0.3 =>
+     *     suboptimal region     = [ 0.0, 0.3 [
+     *     optimum region        = [ 0.3, 0.7 ]
+     *     suboptimal region     = ] 0.7, 1.0 ]
+     */
+    [ 0.0, 0.3, false, true, false ],
+    [ 0.1, 0.3, false, true, false ],
+    [ 0.3, 0.3, true, false, false ],
+    [ 0.5, 0.3, true, false, false ],
+    [ 0.7, 0.3, true, false, false ],
+    [ 0.8, 0.3, false, true, false ],
+    [ 1.0, 0.3, false, true, false ],
+    /*
+     * optimum = 0.5 =>
+     *     suboptimal region     = [ 0.0, 0.3 [
+     *     optimum region        = [ 0.3, 0.7 ]
+     *     suboptimal region     = ] 0.7, 1.0 ]
+     */
+    [ 0.0, 0.5, false, true, false ],
+    [ 0.1, 0.5, false, true, false ],
+    [ 0.3, 0.5, true, false, false ],
+    [ 0.5, 0.5, true, false, false ],
+    [ 0.7, 0.5, true, false, false ],
+    [ 0.8, 0.5, false, true, false ],
+    [ 1.0, 0.5, false, true, false ],
+    /*
+     * optimum = 0.7 =>
+     *     suboptimal region     = [ 0.0, 0.3 [
+     *     optimum region        = [ 0.3, 0.7 ]
+     *     suboptimal region     = ] 0.7, 1.0 ]
+     */
+    [ 0.0, 0.7, false, true, false ],
+    [ 0.1, 0.7, false, true, false ],
+    [ 0.3, 0.7, true, false, false ],
+    [ 0.5, 0.7, true, false, false ],
+    [ 0.7, 0.7, true, false, false ],
+    [ 0.8, 0.7, false, true, false ],
+    [ 1.0, 0.7, false, true, false ],
+    /*
+     * optimum = 0.8 =>
+     *     sub-suboptimal region = [ 0.0, 0.3 [
+     *     suboptimal region     = [ 0.3, 0.7 ]
+     *     optimum region        = ] 0.7, 1.0 ]
+     */
+    [ 0.0, 0.8, false, false, true ],
+    [ 0.1, 0.8, false, false, true ],
+    [ 0.3, 0.8, false, true, false ],
+    [ 0.5, 0.8, false, true, false ],
+    [ 0.7, 0.8, false, true, false ],
+    [ 0.8, 0.8, true, false, false ],
+    [ 1.0, 0.8, true, false, false ],
+    /*
+     * optimum = 1.0 =>
+     *     sub-suboptimal region = [ 0.0, 0.3 [
+     *     suboptimal region     = [ 0.3, 0.7 ]
+     *     optimum region        = ] 0.7, 1.0 ]
+     */
+    [ 0.0, 1.0, false, false, true ],
+    [ 0.1, 1.0, false, false, true ],
+    [ 0.3, 1.0, false, true, false ],
+    [ 0.5, 1.0, false, true, false ],
+    [ 0.7, 1.0, false, true, false ],
+    [ 0.8, 1.0, true, false, false ],
+    [ 1.0, 1.0, true, false, false ],
+  ];
+
+  for (var test of tests) {
+    checkOptimum(element, test[0], test[1], test[2]);
+    checkSubOptimum(element, test[0], test[1], test[3]);
+    checkSubSubOptimum(element, test[0], test[1], test[4]);
+  }
+}
+
+checkMozMatchesSelector();
+
+</script>
+</pre>
+</body>
+</html>
