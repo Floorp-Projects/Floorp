@@ -26,7 +26,6 @@
 #include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
 #include "nsIPresShell.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamConverterService.h"
@@ -250,16 +249,15 @@ nsPluginCrashedEvent::Run()
   nsCOMPtr<nsIDOMEvent> event;
   domDoc->CreateEvent(NS_LITERAL_STRING("datacontainerevents"),
                       getter_AddRefs(event));
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
   nsCOMPtr<nsIDOMDataContainerEvent> containerEvent(do_QueryInterface(event));
-  if (!privateEvent || !containerEvent) {
+  if (!containerEvent) {
     NS_WARNING("Couldn't QI event for PluginCrashed event!");
     return NS_OK;
   }
 
   event->InitEvent(NS_LITERAL_STRING("PluginCrashed"), true, true);
-  privateEvent->SetTrusted(true);
-  privateEvent->GetInternalNSEvent()->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
+  event->SetTrusted(true);
+  event->GetInternalNSEvent()->flags |= NS_EVENT_FLAG_ONLY_CHROME_DISPATCH;
   
   nsCOMPtr<nsIWritableVariant> variant;
 

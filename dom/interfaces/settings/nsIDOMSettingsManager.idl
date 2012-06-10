@@ -32,7 +32,7 @@ interface nsIDOMSettingsManager : nsISupports
   attribute nsIDOMEventListener onsettingchange;
 };
 
-[scriptable, uuid(5ce02690-52a9-11e1-b86c-0800200c9a66)]
+[scriptable, builtinclass, uuid(5e304193-af49-4546-8329-bf7c9159ed98)]
 interface nsIDOMMozSettingsEvent : nsIDOMEvent
 {
   readonly attribute DOMString  settingName;

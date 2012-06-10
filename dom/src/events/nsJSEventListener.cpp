@@ -12,7 +12,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptRuntime.h"
 #include "nsIXPConnect.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsDOMScriptObjectHolder.h"
@@ -128,10 +127,9 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   bool handledScriptError = false;
   if (mEventName == nsGkAtoms::onerror) {
-    nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
-    NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
+    NS_ENSURE_TRUE(aEvent, NS_ERROR_UNEXPECTED);
 
-    nsEvent *event = priv->GetInternalNSEvent();
+    nsEvent* event = aEvent->GetInternalNSEvent();
     if (event->message == NS_LOAD_ERROR &&
         event->eventStructType == NS_SCRIPT_ERROR_EVENT) {
       nsScriptErrorEvent *scriptEvent =

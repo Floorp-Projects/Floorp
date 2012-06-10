@@ -32,7 +32,6 @@
 #include "nsIURI.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIDOMEvent.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIJSRuntimeService.h"
@@ -811,8 +810,7 @@ public:
     NS_NewDOMEvent(getter_AddRefs(event), nsnull, nsnull);
     if (event) {
       event->InitEvent(NS_LITERAL_STRING("unload"), false, false);
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-      privateEvent->SetTrusted(true);
+      event->SetTrusted(true);
 
       bool dummy;
       mTabChildGlobal->DispatchEvent(event, &dummy);
