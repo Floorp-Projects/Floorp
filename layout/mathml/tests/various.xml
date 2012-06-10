@@ -20,62 +20,36 @@ maction:hover  {
   outline: 1px dotted black;
 /*  border: 1px solid black; */
 }
-maction[actiontype="restyle#background"] {
-  background-color: #3C6;
-  border: 1px dotted red;
-}
-maction[actiontype="restyle#zoom"] {
-  font-size: 40pt;
-}
 </style>
 </head>
 <body>
 
-<div>
-Click to toggle between expressions, and watch the satus line onmouseover/onmouseout:
+<h2>&lt;maction&gt;</h2>
+
+<p>Click to toggle between expressions, and watch the status line onmouseover/onmouseout:
 <br />
 
 <math mode="display" xmlns="&mathml;">
 <maction actiontype="toggle">
-  <maction actiontype="statusline#First Expression">
+  <maction actiontype="statusline">
     <mi>statusline#First Expression</mi>
+    <mtext>First Expression</mtext>
   </maction>
 
-  <maction actiontype="statusline#Second Expression">
+  <maction actiontype="statusline">
     <mi>statusline#Second Expression</mi>
+    <mtext>Second Expression</mtext>
   </maction>
 
 
-  <maction actiontype="statusline#And so on..">
-    <maction actiontype="restyle#background">
-      <mi>statusline#And so on...</mi>
-    </maction>
+  <maction actiontype="statusline">
+    <mi>statusline#And so on...</mi>
+    <mtext>And so on..</mtext>
   </maction>
 </maction>
-</math>
+</math></p>
 
-<br />
-Click the expression below to zoom-in/zoom-out using RESTYLE:
-<br />
-
-<math mode="display" xmlns="&mathml;">
-<maction actiontype="restyle#zoom">
-  <mrow>
-    <mi>&pi;</mi> 
-    <mo>=</mo>
-    <mn>2</mn><mi>i</mi>
-    <mo>&InvisibleTimes;</mo>
-    <mo>Log</mo>
-    <mfrac>
-      <mrow><mn>1</mn><mo>-</mo><mi>i</mi></mrow>
-      <mrow><mn>1</mn><mo>+</mo><mi>i</mi></mrow>
-    </mfrac>
-  </mrow>
-</maction>
-</math>
-
-<br />
-Click the expression below to see several definitions of pi:
+<p>Click the expression below to see several definitions of pi:
 <br />
 
 <math mode="display" xmlns="&mathml;">
@@ -201,538 +175,11 @@ Click the expression below to see several definitions of pi:
   </mrow>
 </maction>
 </mrow>
-</math>
+</math></p>
 
-<br />
+<h2>Thomson scattering theory</h2>
 
-<math xmlns="&mathml;">
-<!-- {{} \atop i} A {p \atop q} -->
-<mmultiscripts>
-    <mi mathvariant="bold" mathsize="big">A</mi>
-    <mi>q</mi><mi>p</mi>
-  <mprescripts/>
-    <mi>i</mi><none/>
-</mmultiscripts>
-
-<mspace linebreak="newline"/>
-
-<!-- {3 \atop k} R {1 \atop i} {2 \atop j} -->
-<mmultiscripts>
-   <mi mathvariant="bold">R</mi>
-      <mi>i</mi><mi>1</mi>
-      <mi>j</mi><mn>230</mn>
-      <mi>j</mi><msup><mn>230</mn><mi>y</mi></msup>
-      <mi>j</mi><mn>230</mn>
-   <mprescripts/>
-      <mi>k</mi><mi>3</mi>
-      <mi>k</mi><mi>3</mi>
-</mmultiscripts>
-
-
-<!-- \int_a^b f(x)dx -->
-<msubsup>
-   <mo>&Integral;</mo>
-   <mi>a</mi>
-   <mi>b</mi>
-</msubsup>
-<mrow>
-    <mi>f</mi>
-    <mo>(</mo>
-    <mi>x</mi>
-    <mo>)</mo>
-    <mo>d</mo>
-    <mi>x</mi>
-</mrow>
-
-<!-- \frac{\partial}{\partial x}F(x,y) + \frac{\partial}{\partial y}F(x,y) -->
-
-<mrow>
-   <mfrac>
-      <mo>&PartialD;</mo>
-      <mrow>
-         <mo>&PartialD;</mo>
-         <mi>x</mi>
-      </mrow>
-   </mfrac>
-
-   <mrow>
-       <mi>F</mi>
-       <mo>(</mo>
-       <mi>x</mi>
-       <mo>,</mo>
-       <mi>y</mi>
-       <mo>)</mo>
-   </mrow>  
-
-   <mo>+</mo>
-
-   <mfrac>
-      <mo>&PartialD;</mo>
-      <mrow>
-         <mo>&PartialD;</mo>
-         <mi>y</mi>
-     </mrow>
-   </mfrac>
-
-   <mrow>
-       <mi>F</mi>
-       <mo>(</mo>
-       <mi>x</mi>
-       <mo>,</mo>
-       <mi>y</mi>
-       <mo>)</mo>
-   </mrow>
-</mrow>
-
-   <mo>&Exists;</mo>
-   <mi>a</mi> 
- 
-<!-- a_b -->
-<msub>
-  <mi>a</mi>
-  <mi>b</mi>
-</msub>
-
-<!-- a_i -->
-<msub>
-  <mi>a</mi>
-  <mi>i</mi>
-</msub>
-
-<!-- A_{I_{k}} -->
-
-
-<mrow>
-    <mi>A</mi>
-    <mi>A</mi>
-</mrow>
-
-<msub>
-  <mi>A</mi>
-  <msub>
-     <mi>A</mi>
-     <msub>
-        <mi>A</mi>
-        <mi>A</mi>
-     </msub>
-  </msub>
-</msub>
-
-<!-- d^b -->
-<msup>
-  <mi>d</mi>
-  <mi>b</mi>
-</msup>
-
-<!-- 2^{a_x} -->
-<msup>
-  <mn>2</mn>
-  <msub>
-    <mi>a</mi>
-    <mi>x</mi>
-  </msub>
-</msup>
-
-<!-- 2^{2^x} -->
-<msup>
-   <msup>
-      <mn>2</mn>
-      <mn>2</mn>
-   </msup>
-   <mi>x</mi>
-</msup>
-
-<!-- {\left( \frac{1}{2} \right) }^{y^{a_x}} -->
-
-<msup>
-  <mrow>
-    <mo>(</mo>
-    <mfrac>
-      <mn>1</mn>
-      <mn>2</mn>
-    </mfrac>
-    <mo>)</mo>
-  </mrow>
-  <msup>
-    <mi>y</mi>
-    <msub>
-      <mi>a</mi>
-      <mi>x</mi>
-    </msub>
-  </msup>
-</msup>
-
-
-<munder>
-  <mi>abcd</mi>
-  <mi>un</mi>
-</munder>
-
-<mover>
-  <mi>abcd</mi>
-  <mi>ov</mi>
-</mover>
-<munderover>
-  <mi>abcd</mi>
-  <mi>under</mi>
-  <mi>over</mi>
-</munderover>
-
-
-<!-- a_b^c -->
-<msubsup>
-  <mi>a</mi>
-  <mi>p</mi>
-  <mi>q</mi>
-</msubsup>
-
-<!-- a_{b+c}^x -->
-<msubsup>
-  <mi>a</mi>
-  <mrow>
-     <mi>a</mi>
-     <mo>+</mo>
-     <mi>b</mi>
-  </mrow>
-  <mi>x</mi>
-</msubsup>
-
-
-<!-- d^{ \left( \frac{a}{b} \right) } -->
-
-<msup>
-  <mi>d</mi>
-  <mrow>
-     <mo>(</mo>
-     <mfrac>
-        <mi>a</mi>
-        <mi>b</mi>
-     </mfrac>
-     <mo>)</mo>
-  </mrow>
-</msup>
-
-
-<!-- \frac{d*b^{ \left( \frac{i+j}{n!} \right) } + p_y*q} 
-          {p^x*b_x + \frac{a+c}{d}} -->
-
-<mfrac>
-   <mrow>
-      <mi>d</mi>
-      <mo>*</mo>
-      <msup>
-         <mi>T</mi>
-         <mrow>
-            <mo>(</mo>
-            <mfrac>
-               <mrow>
-                  <mi>i</mi>
-                  <mo>+</mo> 
-                  <mi>j</mi>
-               </mrow>
-               <mi>n</mi>
-            </mfrac>
-            <mo>)</mo>
-         </mrow>
-      </msup>
-      <mo>+</mo>
-      <msub>
-         <mi>p</mi>
-         <mi>y</mi>
-      </msub>
-      <mo>*</mo>
-      <mi>q</mi>
-   </mrow>
-   <mrow>
-      <msup>
-         <mi>p</mi>
-         <mi>x</mi>
-      </msup>
-      <mo>*</mo>
-      <msub>
-         <mi>b</mi>
-         <mi>x</mi>
-      </msub>
-      <mo>+</mo>
-      <mfrac>
-         <mrow>
-            <mi>a</mi>
-            <mo>+</mo>
-            <mi>c</mi>
-         </mrow>
-         <mi>d</mi>
-      </mfrac>
-   </mrow>
-</mfrac>
-
-
-<ms>This is a text in ms</ms>
-
-<!-- x^2  +  4*x  +  \frac{p}{q} = 0 --> 
-
-<mrow>
-   <mrow>
-      <msup>
-         <mi>x</mi>
-         <mn>2</mn>
-      </msup>
-      <mo>+</mo>
-      <mrow>
-         <mn>4</mn>
-         <mo>*</mo>
-         <mi>x</mi>
-      </mrow>
-      <mo>+</mo>
-      <mfrac>
-         <mi>p</mi>
-         <mi>q</mi>
-      </mfrac>
-   </mrow>
-  <mo>=</mo>
-  <mn>0</mn>
-</mrow>
-
-
-<mtext>This is a text in mtext</mtext>
-<merror><mtext>This is a text in merror</mtext></merror>
-
-<mrow>
-  <msub>
-     <mi>a</mi>
-     <mn>0</mn>
-  </msub>
-  <mo>+</mo>
-  <mfrac>
-     <mstyle scriptlevel="0">
-        <mn>1</mn>
-     </mstyle>
-     <mstyle scriptlevel="0">
-        <mrow>
-          <msub>
-             <mi>a</mi>
-             <mn>1</mn>
-          </msub>
-          <mo>+</mo>
-          <mfrac>
-            <mstyle scriptlevel="0">
-               <mn>1</mn>
-            </mstyle>
-            <mstyle scriptlevel="0">
-               <mrow>
-                 <msub>
-                    <mi>a</mi>
-                    <mn>2</mn>
-                 </msub>
-                 <mo>+</mo>
-                 <mfrac>
-                   <mstyle scriptlevel="0">
-                      <mn>1</mn>
-                   </mstyle>               
-                   <mstyle scriptlevel="0">
-                      <msub>
-                         <mi>a</mi>
-                         <mn>3</mn>
-                      </msub>
-                   </mstyle>
-                 </mfrac>      
-               </mrow>
-            </mstyle>
-          </mfrac>      
-        </mrow> 
-     </mstyle> 
-  </mfrac>  
-</mrow>
-
-<mo>;</mo>
-
-<mrow>
-   <msub>
-      <mi>c</mi>
-      <mrow>
-         <mi>i</mi><mo>+</mo><mi>j</mi>
-      </mrow>
-   </msub>
-   <mo>&LeftArrow;</mo>
-   <mrow>
-      <msub><mi>a</mi><mi>i</mi></msub>
-      <mo>*</mo>
-      <msub><mi>b</mi><mi>j</mi></msub>
-   </mrow>
-</mrow>
-
-<mspace linebreak="newline"/>
-
-  <mrow> 
-      <msup>
-         <mi>e</mi>
-         <mrow>
-            <mi>i</mi>
-            <mo>&pi;</mo>
-         </mrow>
-      </msup>
-      <mo>+</mo>
-      <mn>1</mn>
-      <mo>=</mo>
-      <mn>0</mn>
-
-      <mo>;</mo>
-</mrow>
-
-<mrow>
-   <mi>G</mi>
-   <mo>=</mo>
-   <mfrac>
-      <mrow>
-        <mi>F</mi>        
-        <msup><mi>d</mi><mn>2</mn></msup>
-      </mrow>
-      <mrow>
-        <msub><mi>m</mi><mn>1</mn></msub>
-        <msub><mi>m</mi><mn>2</mn></msub>
-      </mrow>
-   </mfrac>
-</mrow>
-
-<mo>;</mo>
-
-<mrow>
-<mi>t</mi><mo>+=</mo><mi>dt</mi>
-</mrow>
-
-<mspace linebreak="newline"/>
-
-<mrow>
-      <mi>x</mi>
-      <mo>=</mo>
-      <mi>a</mi>
-      <mo>*</mo>
-      <mi>b</mi>
-      <mo>+</mo>
-      <mrow>
-         <mo stretchy="false">(</mo>
-            <mfrac linethickness="2">
-               <mrow>
-                  <mi>aa</mi>
-                  <mo>+</mo>
-                  <mi>b</mi>
-               </mrow>
-               <mfrac>
-                  <mi>xy</mi>
-                  <mi>z</mi>
-               </mfrac>
-            </mfrac>
-         <mo>)</mo>
-      </mrow>
-</mrow>
-
-<mfrac>
-      <mfrac>
-         <mi>x</mi>
-         <mi>z</mi>
-      </mfrac>
-      <mstyle scriptlevel="-3">
-         <mfrac>
-            <mi>dy</mi>
-            <mstyle scriptlevel="1">
-               <mi>z</mi>
-            </mstyle>
-         </mfrac>
-      </mstyle>
-</mfrac>
-
-
-<mfrac>
-      <mstyle scriptlevel="0">
-         <mi>x</mi>
-      </mstyle>
-      <mi>z</mi>
-</mfrac>
-
-<mstyle scriptlevel="-4">
-         <mi>x</mi>
-</mstyle>
-
-</math>
-
-<math xmlns="&mathml;" mode="display">
-<mrow>
-  <msub>
-    <mi>Z</mi>
-    <mi>&alpha;</mi>
-  </msub>
-  <mrow>
-    <mo>(</mo>
-    <mi>f</mi>
-    <mo>)</mo>
-  </mrow>
-  <mo>=</mo>
-
-  <mfrac>
-    <mn>1</mn>
-    <mrow>
-      <mn>2</mn>
-      <mi>i</mi>
-      <mo>&ThinSpace;</mo>
-      <mi>cos</mi>
-      <mo>(</mo>
-      <mfrac>
-        <mrow>
-          <mi>&alpha;</mi>
-          <mi>&pi;</mi>
-        </mrow>
-        <mn>2</mn>
-      </mfrac>
-      <mo>)</mo>
-    </mrow>
-  </mfrac>
-
-  <mrow>
-    <msub>
-      <mo>&int;</mo>
-      <mi>C</mi>
-    </msub>
-    <mfrac>
-      <mrow>
-        <mi>f</mi>
-        <mo stretchy='false'>(</mo>
-        <mi>i</mi>
-        <mi>z</mi>
-        <mo stretchy='false'>)</mo>
-        <msup>
-          <mrow>
-            <mo>(</mo>
-            <mo>-</mo>
-            <mi>z</mi>
-            <mo>)</mo>
-          </mrow>
-          <mi>&alpha;</mi>
-        </msup>
-      </mrow>
-      <mrow>
-        <msup>
-          <mi>e</mi>
-          <mrow>
-            <mn>2</mn>
-            <mi>&pi;</mi>
-            <mi>z</mi>
-          </mrow>
-        </msup>
-        <mo>-</mo>
-        <mn>1</mn>
-      </mrow>
-    </mfrac>
-  </mrow>
-  <mi>dz</mi>
-</mrow>
-</math>
-
-<br />
-
-<br />
-
-And this is from the "Thomson scattering theory"
-
-<math xmlns="&mathml;" mode="display">
+<p><math xmlns="&mathml;" mode="display">
 <mrow>
   <mtable align='left'>
 
@@ -1029,7 +476,204 @@ And this is from the "Thomson scattering theory"
 </mrow>
 </math>
 
-</div>
+</p>
+
+<h2>Maxwell's Equations</h2>
+
+<p style="text-align:center">
+<math xmlns='&mathml;'>
+  <mstyle displaystyle='true'>
+    <mrow>
+      <mo>&lbrace;</mo>
+      <mtable columnalign='right center left' equalrows='false' equalcolumns='false'>
+        <mtr>
+          <mtd>
+            <mrow>
+              <mo>&nabla;</mo>
+              <mo>&times;</mo>
+              <mover accent='true'>
+                <mi mathvariant='bold'>B</mi>
+                <mo stretchy='true'>&RightArrow;</mo>
+              </mover>
+              <mo>-</mo>
+              <mfrac>
+                <mn>1</mn>
+                <mi>c</mi>
+              </mfrac>
+              <mfrac>
+                <mrow>
+                  <mo>&PartialD;</mo>
+                  <mover accent='true'>
+                    <mi mathvariant='bold'>E</mi>
+                    <mo stretchy='true'>&RightArrow;</mo>
+                  </mover>
+                </mrow>
+                <mrow>
+                  <mo>&PartialD;</mo>
+                  <mi>t</mi>
+                </mrow>
+              </mfrac>
+            </mrow>
+          </mtd>
+          <mtd>
+            <mo>=</mo>
+          </mtd>
+          <mtd>
+            <mrow>
+              <mfrac>
+                <mrow>
+                  <mn>4</mn>
+                  <mi>&pi;</mi>
+                </mrow>
+                <mi>c</mi>
+              </mfrac>
+              <mover accent='true'>
+                <mi mathvariant='bold'>j</mi>
+                <mo stretchy='true'>&RightArrow;</mo>
+              </mover>
+            </mrow>
+          </mtd>
+        </mtr>
+        <mtr>
+          <mtd>
+            <mrow>
+              <mo>&nabla;</mo>
+              <mo>&cdot;</mo>
+              <mover accent='true'>
+                <mi mathvariant='bold'>E</mi>
+                <mo stretchy='true'>&RightArrow;</mo>
+              </mover>
+            </mrow>
+          </mtd>
+          <mtd>
+            <mo>=</mo>
+          </mtd>
+          <mtd>
+            <mrow>
+              <mn>4</mn>
+              <mi>&pi;</mi>
+              <mi>&rho;</mi>
+            </mrow>
+          </mtd>
+        </mtr>
+        <mtr>
+          <mtd>
+            <mrow>
+              <mo>&nabla;</mo>
+              <mo>&times;</mo>
+              <mover accent='true'>
+                <mi mathvariant='bold'>E</mi>
+                <mo stretchy='true'>&RightArrow;</mo>
+              </mover>
+              <mo>+</mo>
+              <mfrac>
+                <mn>1</mn>
+                <mi>c</mi>
+              </mfrac>
+              <mfrac>
+                <mrow>
+                  <mo>&PartialD;</mo>
+                  <mover accent='true'>
+                    <mi mathvariant='bold'>B</mi>
+                    <mo stretchy='true'>&RightArrow;</mo>
+                  </mover>
+                </mrow>
+                <mrow>
+                  <mo>&PartialD;</mo>
+                  <mi>t</mi>
+                </mrow>
+              </mfrac>
+            </mrow>
+          </mtd>
+          <mtd>
+            <mo>=</mo>
+          </mtd>
+          <mtd>
+            <mover accent='true'>
+              <mn mathvariant='bold'>0</mn>
+              <mo stretchy='true'>&RightArrow;</mo>
+            </mover>
+          </mtd>
+        </mtr>
+        <mtr>
+          <mtd>
+            <mrow>
+              <mo>&nabla;</mo>
+              <mo>&cdot;</mo>
+              <mover accent='true'>
+                <mi mathvariant='bold'>B</mi>
+                <mo stretchy='true'>&RightArrow;</mo>
+              </mover>
+            </mrow>
+          </mtd>
+          <mtd>
+            <mo>=</mo>
+          </mtd>
+          <mtd>
+            <mn>0</mn>
+          </mtd>
+        </mtr>
+      </mtable>
+    </mrow>
+  </mstyle>
+</math>
+</p>
+
+<h2>Einstein's field equations</h2>
+
+<p style="text-align:center">
+<math xmlns='&mathml;'>
+  <mstyle displaystyle='true'>
+    <mrow>
+      <msub>
+        <mi mathvariant="normal">R</mi>
+        <mstyle scriptlevel='1'>
+          <mrow>
+            <mi>&mu;</mi>
+            <mi>&nu;</mi>
+          </mrow>
+        </mstyle>
+      </msub>
+      <mo>-</mo>
+      <mfrac>
+        <mn>1</mn>
+        <mn>2</mn>
+      </mfrac>
+      <msub> 
+        <mi>g</mi>
+        <mstyle scriptlevel='1'>
+          <mrow>
+            <mi>&mu;</mi>
+            <mi>&nu;</mi>
+          </mrow>
+        </mstyle>
+      </msub>
+      <mi mathvariant='normal'>R</mi>
+      <mo>=</mo>
+      <mfrac>
+        <mrow>
+          <mn>8</mn>
+          <mi>&pi;</mi>
+          <mi mathvariant='normal'>G</mi>
+        </mrow>
+        <msup>
+          <mi>c</mi>
+          <mn>4</mn>
+        </msup>
+      </mfrac>
+      <msub>
+        <mi mathvariant='normal'>T</mi>
+        <mstyle scriptlevel='1'>
+          <mrow>
+            <mi>&mu;</mi>
+            <mi>&nu;</mi>
+          </mrow>
+        </mstyle>
+      </msub>
+    </mrow>
+  </mstyle>
+</math>
+</p>
 
 </body>
 </html>

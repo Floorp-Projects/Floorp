@@ -46,7 +46,7 @@ nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
   
   // the line below does not match the code; should it be removed?
   // Find out if the selection is collapsed:
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsTextRulesInfo ruleInfo(aEnabled ? kOpSetAbsolutePosition :
@@ -159,7 +159,7 @@ nsHTMLEditor::RelativeChangeZIndex(PRInt32 aChange)
   
   // brade: can we get rid of this comment?
   // Find out if the selection is collapsed:
-  nsRefPtr<nsTypedSelection> selection = GetTypedSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   nsTextRulesInfo ruleInfo(aChange < 0 ? kOpDecreaseZIndex :
                                          kOpIncreaseZIndex);
@@ -489,7 +489,6 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     return NS_OK;
 
   nsAutoEditBatch batchIt(this);
-  nsresult res;
 
   if (aEnabled) {
     PRInt32 x, y;
@@ -512,11 +511,11 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     nsINode* parentNode = element->GetNodeParent();
     if (parentNode->GetChildCount() == 1) {
       nsCOMPtr<nsIDOMNode> brNode;
-      res = CreateBR(parentNode->AsDOMNode(), 0, address_of(brNode));
+      nsresult res = CreateBR(parentNode->AsDOMNode(), 0, address_of(brNode));
+      NS_ENSURE_SUCCESS(res, res);
     }
   }
   else {
-    res = NS_OK;
     mHTMLCSSUtils->RemoveCSSProperty(aElement,
                                      nsEditProperty::cssPosition,
                                      EmptyString(), false);
@@ -543,12 +542,13 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
     if (element && element->IsHTML(nsGkAtoms::div) && !HasStyleOrIdOrClass(element)) {
       nsHTMLEditRules* htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
       NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
-      res = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
+      nsresult res = htmlRules->MakeSureElemStartsOrEndsOnCR(aElement);
       NS_ENSURE_SUCCESS(res, res);
       res = RemoveContainer(aElement);
+      NS_ENSURE_SUCCESS(res, res);
     }
   }
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

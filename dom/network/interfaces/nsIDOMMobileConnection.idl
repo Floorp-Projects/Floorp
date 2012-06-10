@@ -8,7 +8,7 @@ interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
 interface nsIDOMMozMobileConnectionInfo;
 
-[scriptable, uuid(962298cd-3443-423e-9e47-f22e24ad850b)]
+[scriptable, builtinclass, uuid(e7309c47-9a2e-4e12-84ab-f8f39214eaba)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   /**
@@ -41,31 +41,13 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   nsIDOMDOMRequest getNetworks();
 
   /**
-   * The 'cardstatechange' event is notified when the 'cardState' attribute
-   * changes value.
-   */
-  attribute nsIDOMEventListener oncardstatechange;
-
-  /**
-   * The 'voicechange' event is notified whenever the voice connection object
-   * changes.
-   */
-  attribute nsIDOMEventListener onvoicechange;
-
-  /**
-   * The 'datachange' event is notified whenever the data connection object
-   * changes values.
-   */
-  attribute nsIDOMEventListener ondatachange;
-
-  /**
    * Find out about the status of an ICC lock (e.g. the PIN lock).
    *
    * @param lockType
    *        Identifies the lock type, e.g. "pin" for the PIN lock.
    *
    * @return a DOM Request.
-   *         The request's result will be an object containing 
+   *         The request's result will be an object containing
    *         information about the specified lock's status,
    *         e.g. {lockType: "pin", enabled: true}.
    */
@@ -95,7 +77,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *                   newPin: "..."});
    *
    * @return a nsIDOMDOMRequest.
-   *         The request's result will be an object containing 
+   *         The request's result will be an object containing
    *         information about the unlock operation.
    *
    * Examples:
@@ -142,7 +124,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *                newPin: "..."});
    *
    * @return a nsIDOMDOMRequest.
-   *         The request's result will be an object containing 
+   *         The request's result will be an object containing
    *         information about the operation.
    *
    * Examples:
@@ -163,6 +145,45 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    *     }
    */
   nsIDOMDOMRequest setCardLock(in jsval info);
+
+  /**
+   * Send a USSD message.
+   *
+   * The network reply will be reported via onussdreceived event.
+   *
+   * The 'success' event for the request means the USSD message has been sent
+   * successfully.
+   */
+  nsIDOMDOMRequest sendUSSD(in DOMString ussd);
+
+  /**
+   * Cancel the current USSD session if one exists.
+   */
+  nsIDOMDOMRequest cancelUSSD();
+
+  /**
+   * The 'cardstatechange' event is notified when the 'cardState' attribute
+   * changes value.
+   */
+  attribute nsIDOMEventListener oncardstatechange;
+
+  /**
+   * The 'voicechange' event is notified whenever the voice connection object
+   * changes.
+   */
+  attribute nsIDOMEventListener onvoicechange;
+
+  /**
+   * The 'datachange' event is notified whenever the data connection object
+   * changes values.
+   */
+  attribute nsIDOMEventListener ondatachange;
+
+  /**
+   * The 'ussdreceived' event is notified whenever a new USSD message is
+   * received.
+   */
+  attribute nsIDOMEventListener onussdreceived;
 };
 
 [scriptable, uuid(f3bb0611-5e4a-46f1-a8f5-cf592b37596e)]

@@ -85,7 +85,9 @@ for f in files:
     ast = ipdl.parse(None, filename, includedirs=includedirs)
     ipdl.gencxx(filename, ast, headersdir, cppdir)
     
-    allprotocols.append('%sMsgStart' % ast.protocol.name)
+    if ast.protocol:
+        allprotocols.append('%sMsgStart' % ast.protocol.name)
+
 
 allprotocols.sort()
 

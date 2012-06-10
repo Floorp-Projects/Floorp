@@ -36,11 +36,17 @@ const RIL_IPC_MSG_NAMES = [
   "RIL:SetCardLock:Return:KO",
   "RIL:UnlockCardLock:Return:OK",
   "RIL:UnlockCardLock:Return:KO",
+  "RIL:UssdReceived",
+  "RIL:SendUssd:Return:OK",
+  "RIL:SendUssd:Return:KO",
+  "RIL:CancelUssd:Return:OK",
+  "RIL:CancelUssd:Return:KO"
 ];
 
 const kVoiceChangedTopic     = "mobile-connection-voice-changed";
 const kDataChangedTopic      = "mobile-connection-data-changed";
 const kCardStateChangedTopic = "mobile-connection-cardstate-changed";
+const kUssdReceivedTopic     = "mobile-connection-ussd-received";
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -172,6 +178,30 @@ RILContentHelper.prototype = {
     let request = Services.DOMRequest.createRequest(window);
     info.requestId = this.getRequestId(request);
     cpmm.sendAsyncMessage("RIL:SetCardLock", info);
+    return request;
+  },
+
+  sendUSSD: function sendUSSD(window, ussd) {
+    debug("Sending USSD " + ussd);
+    if (!window) {
+      throw Components.Exception("Can't get window object",
+                                 Cr.NS_ERROR_EXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+    cpmm.sendAsyncMessage("RIL:SendUSSD", {ussd: ussd, requestId: requestId});
+    return request;
+  },
+
+  cancelUSSD: function cancelUSSD(window) {
+    debug("Cancel USSD");
+    if (!window) {
+      throw Components.Exception("Can't get window object",
+                                 Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = this.getRequestId(request);
+    cpmm.sendAsyncMessage("RIL:CancelUSSD", {requestId: requestId});
     return request;
   },
 
@@ -323,6 +353,24 @@ RILContentHelper.prototype = {
       case "RIL:GetCardLock:Return:KO":
       case "RIL:SetCardLock:Return:KO":
       case "RIL:UnlockCardLock:Return:KO":
+        request = this.takeRequest(msg.json.requestId);
+        if (request) {
+          Services.DOMRequest.fireError(request, msg.json.errorMsg);
+        }
+        break;
+      case "RIL:UssdReceived":
+        Services.obs.notifyObservers(null, kUssdReceivedTopic,
+                                     msg.json.message);
+        break;
+      case "RIL:SendUssd:Return:OK":
+      case "RIL:CancelUssd:Return:OK":
+        request = this.takeRequest(msg.json.requestId);
+        if (request) {
+          Services.DOMRequest.fireSuccess(request, msg.json);
+        }
+        break;
+      case "RIL:SendUssd:Return:KO":
+      case "RIL:CancelUssd:Return:KO":
         request = this.takeRequest(msg.json.requestId);
         if (request) {
           Services.DOMRequest.fireError(request, msg.json.errorMsg);

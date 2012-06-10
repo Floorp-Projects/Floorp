@@ -6,6 +6,8 @@
 package org.mozilla.gecko;
 
 import android.R;
+import android.os.Build;
+import android.os.SystemClock;
 import android.content.Context;
 import android.text.Editable;
 import android.text.InputType;
@@ -61,6 +63,24 @@ public class GeckoInputConnection
     private static final int NO_COMPOSITION_STRING = -1;
 
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
+
+    private static final char UNICODE_BULLET                    = '\u2022';
+    private static final char UNICODE_CENT_SIGN                 = '\u00a2';
+    private static final char UNICODE_COPYRIGHT_SIGN            = '\u00a9';
+    private static final char UNICODE_DIVISION_SIGN             = '\u00f7';
+    private static final char UNICODE_DOUBLE_LOW_QUOTATION_MARK = '\u201e';
+    private static final char UNICODE_ELLIPSIS                  = '\u2026';
+    private static final char UNICODE_EURO_SIGN                 = '\u20ac';
+    private static final char UNICODE_INVERTED_EXCLAMATION_MARK = '\u00a1';
+    private static final char UNICODE_MULTIPLICATION_SIGN       = '\u00d7';
+    private static final char UNICODE_PI                        = '\u03a0';
+    private static final char UNICODE_PILCROW_SIGN              = '\u00b6';
+    private static final char UNICODE_POUND_SIGN                = '\u00a3';
+    private static final char UNICODE_REGISTERED_SIGN           = '\u00ae';
+    private static final char UNICODE_SQUARE_ROOT               = '\u221a';
+    private static final char UNICODE_TRADEMARK_SIGN            = '\u2122';
+    private static final char UNICODE_WHITE_BULLET              = '\u25e6';
+    private static final char UNICODE_YEN_SIGN                  = '\u00a5';
 
     private static final Timer mIMETimer = new Timer("GeckoInputConnection Timer");
     private static int mIMEState;
@@ -545,6 +565,10 @@ public class GeckoInputConnection
         }
 
         CharSequence changedText = s.subSequence(start, start + count);
+        if (DEBUG) {
+            Log.d(LOGTAG, "onTextChanged: changedText=\"" + changedText + "\"");
+        }
+
         if (changedText.length() == 1) {
             char changedChar = changedText.charAt(0);
 
@@ -560,7 +584,7 @@ public class GeckoInputConnection
 
             // If we are committing a single character and didn't have an active composition string,
             // we can send Gecko keydown/keyup events instead of composition events.
-            if (mCommittingText && !hasCompositionString() && synthesizeKeyEvents(changedChar)) {
+            if (mCommittingText && !hasCompositionString() && sendKeyEventsToGecko(changedChar)) {
                 // Block this thread until all pending events are processed
                 GeckoAppShell.geckoEventSync();
                 return;
@@ -602,14 +626,9 @@ public class GeckoInputConnection
         GeckoAppShell.geckoEventSync();
     }
 
-    private boolean synthesizeKeyEvents(char inputChar) {
-        if (mKeyCharacterMap == null) {
-            mKeyCharacterMap = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD);
-        }
-
+    private boolean sendKeyEventsToGecko(char inputChar) {
         // Synthesize VKB key events that could plausibly generate the input character.
-        char[] inputChars = { inputChar };
-        KeyEvent[] events = mKeyCharacterMap.getEvents(inputChars);
+        KeyEvent[] events = synthesizeKeyEvents(inputChar);
         if (events == null) {
             if (DEBUG) {
                 Log.d(LOGTAG, "synthesizeKeyEvents: char '" + inputChar
@@ -634,6 +653,69 @@ public class GeckoInputConnection
         }
 
         return sentKeyEvents;
+    }
+
+    private KeyEvent[] synthesizeKeyEvents(char inputChar) {
+        // Some symbol characters produce unusual key events on Froyo and Gingerbread.
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.GINGERBREAD_MR1) {
+            switch (inputChar) {
+                case '&':
+                    // Gingerbread's KeyCharacterMap would return ALT+7, but we want SHIFT+7.
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+                        return createKeyDownKeyUpEvents(KeyEvent.KEYCODE_7, KeyEvent.META_SHIFT_ON);
+                    }
+                    // Froyo's KeyCharacterMap will return the correct '&' key events below.
+                    break;
+
+                case '<':
+                case '>':
+                    // We can't synthesize KeyEvents for '<' or '>' because Froyo and Gingerbread
+                    // return incorrect shifted char codes from KeyEvent.getUnicodeChar().
+                    // Send these characters as composition strings, not key events.
+                    return null;
+
+                // Some symbol characters produce key events on Froyo and Gingerbread, but not
+                // Honeycomb and ICS. Send these characters as composition strings, not key events,
+                // to more closely mimic Honeycomb and ICS.
+                case UNICODE_BULLET:
+                case UNICODE_CENT_SIGN:
+                case UNICODE_COPYRIGHT_SIGN:
+                case UNICODE_DIVISION_SIGN:
+                case UNICODE_DOUBLE_LOW_QUOTATION_MARK:
+                case UNICODE_ELLIPSIS:
+                case UNICODE_EURO_SIGN:
+                case UNICODE_INVERTED_EXCLAMATION_MARK:
+                case UNICODE_MULTIPLICATION_SIGN:
+                case UNICODE_PI:
+                case UNICODE_PILCROW_SIGN:
+                case UNICODE_POUND_SIGN:
+                case UNICODE_REGISTERED_SIGN:
+                case UNICODE_SQUARE_ROOT:
+                case UNICODE_TRADEMARK_SIGN:
+                case UNICODE_WHITE_BULLET:
+                case UNICODE_YEN_SIGN:
+                    return null;
+
+                default:
+                    // Look up the character's key events in KeyCharacterMap below.
+                    break;
+            }
+        }
+
+        if (mKeyCharacterMap == null) {
+            mKeyCharacterMap = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD);
+        }
+
+        char[] inputChars = { inputChar };
+        return mKeyCharacterMap.getEvents(inputChars);
+    }
+
+    private static KeyEvent[] createKeyDownKeyUpEvents(int keyCode, int metaState) {
+        long now = SystemClock.uptimeMillis();
+        KeyEvent keyDown = new KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0, metaState);
+        KeyEvent keyUp = KeyEvent.changeAction(keyDown, KeyEvent.ACTION_UP);
+        KeyEvent[] events = { keyDown, keyUp };
+        return events;
     }
 
     private void endComposition() {
@@ -1037,16 +1119,7 @@ public class GeckoInputConnection
                 return;
 
             if (mIMEState != IME_STATE_DISABLED) {
-                if (!v.isFocused()) {
-                    GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
-                        public void run() {
-                            v.requestFocus();
-                            imm.showSoftInput(v, 0);
-                        }
-                    });
-                } else {
-                    imm.showSoftInput(v, 0);
-                }
+                imm.showSoftInput(v, 0);
             } else {
                 imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
             }

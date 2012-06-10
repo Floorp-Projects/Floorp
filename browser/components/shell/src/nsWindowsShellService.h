@@ -25,7 +25,8 @@ public:
   NS_DECL_NSIWINDOWSSHELLSERVICE
 
 protected:
-  bool      IsDefaultBrowserVista(bool* aIsDefaultBrowser);
+  static nsresult IsDefaultBrowser(bool* aIsDefaultBrowser);
+  static bool IsDefaultBrowserVista(bool* aIsDefaultBrowser);
 
 private:
 #if defined(MOZ_MAINTENANCE_SERVICE)

@@ -13,7 +13,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+#ifdef ACCESSIBILITY
 Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
+#endif
 
 XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
   Cu.import("resource://gre/modules/PluralForm.jsm");
@@ -204,7 +206,9 @@ var BrowserApp = {
     ActivityObserver.init();
     WebappsUI.init();
     RemoteDebugger.init();
+#ifdef ACCESSIBILITY
     AccessFu.attach(window);
+#endif
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -5247,7 +5251,7 @@ var WebappsUI = {
 
 var RemoteDebugger = {
   init: function rd_init() {
-    Services.prefs.addObserver("remote-debugger.", this, false);
+    Services.prefs.addObserver("devtools.debugger.", this, false);
 
     if (this._isEnabled())
       this._start();
@@ -5258,14 +5262,14 @@ var RemoteDebugger = {
       return;
 
     switch (aData) {
-      case "remote-debugger.enabled":
+      case "devtools.debugger.remote-enabled":
         if (this._isEnabled())
           this._start();
         else
           this._stop();
         break;
 
-      case "remote-debugger.port":
+      case "devtools.debugger.remote-port":
         if (this._isEnabled())
           this._restart();
         break;
@@ -5273,16 +5277,16 @@ var RemoteDebugger = {
   },
 
   uninit: function rd_uninit() {
-    Services.prefs.removeObserver("remote-debugger.", this);
+    Services.prefs.removeObserver("devtools.debugger.", this);
     this._stop();
   },
 
   _getPort: function _rd_getPort() {
-    return Services.prefs.getIntPref("remote-debugger.port");
+    return Services.prefs.getIntPref("devtools.debugger.remote-port");
   },
 
   _isEnabled: function rd_isEnabled() {
-    return Services.prefs.getBoolPref("remote-debugger.enabled");
+    return Services.prefs.getBoolPref("devtools.debugger.remote-enabled");
   },
 
   /**
@@ -5304,7 +5308,7 @@ var RemoteDebugger = {
       return true;
     if (result == 2) {
       this._stop();
-      Services.prefs.setBoolPref("remote-debugger.enabled", false);
+      Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
     }
     return false;
   },

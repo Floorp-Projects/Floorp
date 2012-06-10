@@ -1,0 +1,12 @@
+{
+    "win7": {
+        "screen_resolution": {
+            "x": 1024,
+            "y": 768
+        },
+        "mouse_position": {
+            "x": 1010,
+            "y": 10
+        }
+    }
+}
