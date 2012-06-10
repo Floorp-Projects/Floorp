@@ -327,7 +327,7 @@ nsEditor::InstallEventListeners()
                  NS_ERROR_NOT_INITIALIZED);
 
   // Initialize the event target.
-  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(GetRoot());
+  nsCOMPtr<nsIContent> rootContent = GetRoot();
   NS_ENSURE_TRUE(rootContent, NS_ERROR_NOT_AVAILABLE);
   mEventTarget = do_QueryInterface(rootContent->GetParent());
   NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_AVAILABLE);
@@ -1938,8 +1938,9 @@ NS_IMETHODIMP
 nsEditor::DumpContentTree()
 {
 #ifdef DEBUG
-  nsCOMPtr<nsIContent> root = do_QueryInterface(mRootElement);
-  if (root)  root->List(stdout);
+  if (mRootElement) {
+    mRootElement->List(stdout);
+  }
 #endif
   return NS_OK;
 }
@@ -2139,7 +2140,7 @@ nsEditor::GetPreferredIMEState(IMEState *aState)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(GetRoot());
+  nsCOMPtr<nsIContent> content = GetRoot();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   nsIFrame* frame = content->GetPrimaryFrame();
