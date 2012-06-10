@@ -7,7 +7,7 @@
 
 interface nsIDOMMozSmsMessage;
 
-[scriptable, uuid(fa8d1c86-85b1-4e5b-978c-12dd296cd1cc)]
+[scriptable, builtinclass, uuid(6db4d0d3-6708-47e8-be0f-06e4cdc0b062)]
 interface nsIDOMMozSmsEvent : nsIDOMEvent
 {
   [binaryname(MessageMoz)]

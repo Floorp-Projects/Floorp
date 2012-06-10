@@ -20,7 +20,6 @@
 #include "nsDOMClassInfoID.h"
 #include "jsapi.h"
 #include "nsIURL.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsThreadUtils.h"
@@ -813,8 +812,7 @@ nsWebSocket::CreateAndDispatchSimpleEvent(const nsString& aName)
   rv = event->InitEvent(aName, false, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  rv = privateEvent->SetTrusted(true);
+  rv = event->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
@@ -884,8 +882,7 @@ nsWebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
                                       EmptyString(), nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  rv = privateEvent->SetTrusted(true);
+  rv = event->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchDOMEvent(nsnull, event, nsnull, nsnull);
@@ -936,8 +933,7 @@ nsWebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
                                   aWasClean, aCode, aReason);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(event);
-  rv = privateEvent->SetTrusted(true);
+  rv = event->SetTrusted(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return DispatchDOMEvent(nsnull, event, nsnull, nsnull);

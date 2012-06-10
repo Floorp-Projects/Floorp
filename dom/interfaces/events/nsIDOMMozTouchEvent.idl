@@ -7,7 +7,7 @@
 #include "nsIDOMMouseEvent.idl"
 
 
-[scriptable, uuid(b908dcc3-955b-45ce-93f9-0bda953884f7)]
+[scriptable, builtinclass, uuid(045b4fd3-c15d-4c76-9d28-9df6f870525a)]
 interface nsIDOMMozTouchEvent : nsIDOMMouseEvent
 {
   readonly attribute unsigned long streamId;

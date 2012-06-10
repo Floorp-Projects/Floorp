@@ -18,7 +18,6 @@
 #include "nsISelection.h"
 #include "nsCRT.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIPrivateDOMEvent.h"
 
 #include "nsIDOMRange.h"
 #include "nsIDOMDOMStringList.h"
@@ -164,8 +163,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   NS_ASSERTION(dragSession, "No drag session");
 
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aDropEvent));
-  nsDragEvent* dragEventInternal = static_cast<nsDragEvent *>(privateEvent->GetInternalNSEvent());
+  nsDragEvent* dragEventInternal = static_cast<nsDragEvent *>(aDropEvent->GetInternalNSEvent());
   if (nsContentUtils::CheckForSubFrameDrop(dragSession, dragEventInternal)) {
     return NS_OK;
   }

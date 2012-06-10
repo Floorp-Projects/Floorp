@@ -5,7 +5,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(57e2dd86-3c70-4d9c-81d0-856d42e6bc7d)]
+[scriptable, builtinclass, uuid(788edd11-0d81-4b2b-aaaa-f7d38246b0de)]
 interface nsIDOMSmartCardEvent : nsIDOMEvent
 {
   readonly attribute DOMString   tokenName;

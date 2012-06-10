@@ -29,7 +29,6 @@
 #include "nsIDOMLSProgressEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsITimer.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsDOMProgressEvent.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsContentUtils.h"
@@ -744,8 +743,7 @@ protected:
 
 class nsXMLHttpProgressEvent : public nsIDOMProgressEvent,
                                public nsIDOMLSProgressEvent,
-                               public nsIDOMNSEvent,
-                               public nsIPrivateDOMEvent
+                               public nsIDOMNSEvent
 {
 public:
   nsXMLHttpProgressEvent(nsIDOMProgressEvent* aInner,
@@ -760,36 +758,6 @@ public:
   NS_FORWARD_NSIDOMNSEVENT(mInner->)
   NS_FORWARD_NSIDOMPROGRESSEVENT(mInner->)
   NS_DECL_NSIDOMLSPROGRESSEVENT
-  // nsPrivateDOMEvent
-  NS_IMETHOD DuplicatePrivateData()
-  {
-    return mInner->DuplicatePrivateData();
-  }
-  NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget)
-  {
-    return mInner->SetTarget(aTarget);
-  }
-  NS_IMETHOD_(bool) IsDispatchStopped()
-  {
-    return mInner->IsDispatchStopped();
-  }
-  NS_IMETHOD_(nsEvent*) GetInternalNSEvent()
-  {
-    return mInner->GetInternalNSEvent();
-  }
-  NS_IMETHOD SetTrusted(bool aTrusted)
-  {
-    return mInner->SetTrusted(aTrusted);
-  }
-  virtual void Serialize(IPC::Message* aMsg,
-                         bool aSerializeInterfaceType)
-  {
-    mInner->Serialize(aMsg, aSerializeInterfaceType);
-  }
-  virtual bool Deserialize(const IPC::Message* aMsg, void** aIter)
-  {
-    return mInner->Deserialize(aMsg, aIter);
-  }
 
 protected:
   void WarnAboutLSProgressEvent(nsIDocument::DeprecatedOperations);
