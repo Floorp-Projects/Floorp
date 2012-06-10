@@ -3,11 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TextUpdater_h_
-#define TextUpdater_h_
+#ifndef mozilla_a11y_TextUpdater_h__
+#define mozilla_a11y_TextUpdater_h__
 
 #include "AccEvent.h"
 #include "HyperTextAccessible.h"
+
+namespace mozilla {
+namespace a11y {
 
 /**
  * Used to find a difference between old and new text and fire text change
@@ -19,13 +22,11 @@ public:
   /**
    * Start text of the text leaf update.
    */
-  static void Run(DocAccessible* aDocument,
-                  mozilla::a11y::TextLeafAccessible* aTextLeaf,
+  static void Run(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf,
                   const nsAString& aNewText);
 
 private:
-  TextUpdater(DocAccessible* aDocument,
-              mozilla::a11y::TextLeafAccessible* aTextLeaf) :
+  TextUpdater(DocAccessible* aDocument, TextLeafAccessible* aTextLeaf) :
     mDocument(aDocument), mTextLeaf(aTextLeaf), mHyperText(nsnull),
     mTextOffset(-1) { }
 
@@ -84,9 +85,12 @@ private:
 
 private:
   DocAccessible* mDocument;
-  mozilla::a11y::TextLeafAccessible* mTextLeaf;
+  TextLeafAccessible* mTextLeaf;
   HyperTextAccessible* mHyperText;
   PRInt32 mTextOffset;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
