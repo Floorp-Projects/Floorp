@@ -7,7 +7,7 @@
 
 #import "MacUtils.h"
 #include "Accessible-inl.h"
-#include "nsXULTabAccessible.h"
+#include "XULTabAccessible.h"
 
 #include "nsObjCExceptions.h"
 

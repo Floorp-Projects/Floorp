@@ -32,7 +32,7 @@ def _error(loc, fmt, *args):
     raise ParseError(loc, fmt, *args)
 
 class Parser:
-    # when we reach an |include protocol "foo.ipdl";| statement, we need to
+    # when we reach an |include [protocol] foo;| statement, we need to
     # save the current parser state and create a new one.  this "stack" is
     # where that state is saved
     #
@@ -41,14 +41,16 @@ class Parser:
     parseStack = [ ]
     parsed = { }
 
-    def __init__(self, debug=0):
+    def __init__(self, type, name, debug=0):
+        assert type and name
+        self.type = type
         self.debug = debug
         self.filename = None
         self.includedirs = None
         self.loc = None         # not always up to date
         self.lexer = None
         self.parser = None
-        self.tu = TranslationUnit()
+        self.tu = TranslationUnit(type, name)
         self.direction = None
         self.errout = None
 
@@ -182,11 +184,12 @@ def t_error(t):
 def p_TranslationUnit(p):
     """TranslationUnit : Preamble NamespacedStuff"""
     tu = Parser.current.tu
+    tu.loc = Loc(tu.filename)
     for stmt in p[1]:
         if isinstance(stmt, CxxInclude):
             tu.addCxxInclude(stmt)
-        elif isinstance(stmt, ProtocolInclude):
-            tu.addProtocolInclude(stmt)
+        elif isinstance(stmt, Include):
+            tu.addInclude(stmt)
         elif isinstance(stmt, UsingStmt):
             tu.addUsingStmt(stmt)
         else:
@@ -204,6 +207,21 @@ def p_TranslationUnit(p):
         else:
             assert(0)
 
+    # The "canonical" namespace of the tu, what it's considered to be
+    # in for the purposes of C++: |#include "foo/bar/TU.h"|
+    if tu.protocol:
+        assert tu.filetype == 'protocol'
+        tu.namespaces = tu.protocol.namespaces
+        tu.name = tu.protocol.name
+    else:
+        assert tu.filetype == 'header'
+        # There's not really a canonical "thing" in headers.  So
+        # somewhat arbitrarily use the namespace of the last
+        # interesting thing that was declared.
+        for thing in reversed(tu.structsAndUnions):
+            tu.namespaces = thing.namespaces
+            break
+
     p[0] = tu
 
 ##--------------------
@@ -219,7 +237,7 @@ def p_Preamble(p):
 
 def p_PreambleStmt(p):
     """PreambleStmt : CxxIncludeStmt
-                    | ProtocolIncludeStmt
+                    | IncludeStmt
                     | UsingStmt"""
     p[0] = p[1]
 
@@ -227,23 +245,26 @@ def p_CxxIncludeStmt(p):
     """CxxIncludeStmt : INCLUDE STRING"""
     p[0] = CxxInclude(locFromTok(p, 1), p[2])
 
-def p_ProtocolIncludeStmt(p):
-    """ProtocolIncludeStmt : INCLUDE PROTOCOL ID
-                           | INCLUDE PROTOCOL STRING"""
+def p_IncludeStmt(p):
+    """IncludeStmt : INCLUDE PROTOCOL ID
+                   | INCLUDE ID"""
     loc = locFromTok(p, 1)
-    
-    if 0 <= p[3].rfind('.ipdl'):
-        _error(loc, "`include protocol \"P.ipdl\"' syntax is obsolete.  Use `include protocol P' instead.")
-    
+ 
     Parser.current.loc = loc
-    inc = ProtocolInclude(loc, p[3])
+    if 4 == len(p):
+        id = p[3]
+        type = 'protocol'
+    else:
+        id = p[2]
+        type = 'header'
+    inc = Include(loc, type, id)
 
     path = Parser.current.resolveIncludePath(inc.file)
     if path is None:
-        raise ParseError(loc, "can't locate protocol include file `%s'"% (
+        raise ParseError(loc, "can't locate include file `%s'"% (
                 inc.file))
     
-    inc.tu = Parser().parse(open(path).read(), path, Parser.current.includedirs, Parser.current.errout)
+    inc.tu = Parser(type, id).parse(open(path).read(), path, Parser.current.includedirs, Parser.current.errout)
     p[0] = inc
 
 def p_UsingStmt(p):
@@ -314,6 +335,10 @@ def p_ProtocolDefn(p):
     protocol.name = p[3]
     protocol.sendSemantics = p[1]
     p[0] = protocol
+
+    if Parser.current.type == 'header':
+        _error(protocol.loc, 'can\'t define a protocol in a header.  Do it in a protocol spec instead.')
+
 
 def p_ProtocolBody(p):
     """ProtocolBody : SpawnsStmtsOpt"""

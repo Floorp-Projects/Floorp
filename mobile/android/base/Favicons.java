@@ -14,6 +14,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.http.AndroidHttpClient;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -21,6 +22,9 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -31,7 +35,6 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
@@ -43,6 +46,8 @@ public class Favicons {
 
     private Map<Long,LoadFaviconTask> mLoadTasks;
     private long mNextFaviconLoadId;
+    private static final String USER_AGENT = GeckoApp.mAppContext.getDefaultUAString();
+    private AndroidHttpClient mHttpClient;
 
     public interface OnFaviconLoadedListener {
         public void onFaviconLoaded(String url, Drawable favicon);
@@ -136,8 +141,16 @@ public class Favicons {
         mContext = context;
         mDbHelper = new DatabaseHelper(context);
 
-        mLoadTasks = new HashMap<Long,LoadFaviconTask>();
+        mLoadTasks = Collections.synchronizedMap(new HashMap<Long,LoadFaviconTask>());
         mNextFaviconLoadId = 0;
+    }
+
+    private synchronized AndroidHttpClient getHttpClient() {
+        if (mHttpClient != null)
+            return mHttpClient;
+
+        mHttpClient = AndroidHttpClient.newInstance(USER_AGENT);
+        return mHttpClient;
     }
 
     public long loadFavicon(String pageUrl, String faviconUrl,
@@ -166,13 +179,17 @@ public class Favicons {
     public boolean cancelFaviconLoad(long taskId) {
         Log.d(LOGTAG, "Requesting cancelation of favicon load (" + taskId + ")");
 
-        if (!mLoadTasks.containsKey(taskId))
-            return false;
+        boolean cancelled = false;
+        synchronized (mLoadTasks) {
+            if (!mLoadTasks.containsKey(taskId))
+                return false;
 
-        Log.d(LOGTAG, "Cancelling favicon load (" + taskId + ")");
+            Log.d(LOGTAG, "Cancelling favicon load (" + taskId + ")");
 
-        LoadFaviconTask task = mLoadTasks.get(taskId);
-        return task.cancel(false);
+            LoadFaviconTask task = mLoadTasks.get(taskId);
+            cancelled = task.cancel(false);
+        }
+        return cancelled;
     }
 
     public void clearFavicons() {
@@ -184,12 +201,16 @@ public class Favicons {
         mDbHelper.close();
 
         // Cancel any pending tasks
-        Set<Long> taskIds = mLoadTasks.keySet();
-        Iterator<Long> iter = taskIds.iterator();
-        while (iter.hasNext()) {
-            long taskId = iter.next();
-            cancelFaviconLoad(taskId);
+        synchronized (mLoadTasks) {
+            Set<Long> taskIds = mLoadTasks.keySet();
+            Iterator<Long> iter = taskIds.iterator();
+            while (iter.hasNext()) {
+                long taskId = iter.next();
+                cancelFaviconLoad(taskId);
+            }
         }
+        if (mHttpClient != null)
+            mHttpClient.close();
     }
 
     private class LoadFaviconTask extends AsyncTask<Void, Void, BitmapDrawable> {
@@ -247,27 +268,30 @@ public class Favicons {
                 return GeckoJarReader.getBitmapDrawable(mFaviconUrl);
             }
 
+            URI uri;
+            try {
+                uri = faviconUrl.toURI();
+            } catch (URISyntaxException e) {
+                Log.d(LOGTAG, "Could not get URI for favicon URL: " + mFaviconUrl);
+                return null;
+            }
+
+            // only get favicons for HTTP/HTTPS
+            String scheme = uri.getScheme();
+            if (!"http".equals(scheme) && !"https".equals(scheme))
+                return null;
+
             // skia decoder sometimes returns null; workaround is to use BufferedHttpEntity
             // http://groups.google.com/group/android-developers/browse_thread/thread/171b8bf35dbbed96/c3ec5f45436ceec8?lnk=raot 
             BitmapDrawable image = null;
-            InputStream contentStream = null;
             try {
                 HttpGet request = new HttpGet(faviconUrl.toURI());
-                HttpEntity entity = new DefaultHttpClient().execute(request).getEntity();
+                HttpEntity entity = getHttpClient().execute(request).getEntity();
                 BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
-                contentStream = bufferedEntity.getContent();
+                InputStream contentStream = bufferedEntity.getContent();
                 image = (BitmapDrawable) Drawable.createFromStream(contentStream, "src");
-            } catch (IOException e) {
-                // just close up and return null
             } catch (Exception e) {
                 Log.e(LOGTAG, "Error reading favicon", e);
-            } finally {
-                try {
-                    if (contentStream != null)
-                        contentStream.close();
-                } catch (IOException e) {
-                    Log.d(LOGTAG, "error closing favicon stream");
-                }
             }
 
             return image;

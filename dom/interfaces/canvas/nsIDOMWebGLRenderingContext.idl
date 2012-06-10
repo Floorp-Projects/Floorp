@@ -131,14 +131,14 @@ interface nsIWebGLExtensionStandardDerivatives : nsIWebGLExtension
   const WebGLenum FRAGMENT_SHADER_DERIVATIVE_HINT_OES   = 0x8B8B;
 };
 
-[scriptable, uuid(b0afc2eb-0895-4509-98de-5c383d160694)]
+[scriptable, builtinclass, uuid(b0afc2eb-0895-4509-98de-5c383d160694)]
 interface nsIWebGLExtensionLoseContext : nsIWebGLExtension
 {
   void loseContext();
   void restoreContext();
 };
 
-[scriptable, uuid(73bfb64d-94bd-4a7a-9eab-6b6d32e57aa0)]
+[scriptable, builtinclass, uuid(73bfb64d-94bd-4a7a-9eab-6b6d32e57aa0)]
 interface nsIWebGLExtensionTextureFilterAnisotropic : nsIWebGLExtension
 {
   const WebGLenum TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE;

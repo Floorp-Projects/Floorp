@@ -60,6 +60,10 @@
   display: none;
 }
 
+.filtered-by-string {
+  display: none;
+}
+
 /* If line number is 0, hide the line number section */
 .lineNumberRow[line="0"] {
   display: none;

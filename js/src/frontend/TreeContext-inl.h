@@ -17,7 +17,7 @@ namespace js {
 
 inline
 SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun,
-                             FunctionBox *funbox)
+                             FunctionBox *funbox, unsigned staticLevel)
   : context(cx),
     bodyid(0),
     blockidGen(0),
@@ -27,7 +27,7 @@ SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fu
     fun_(cx, fun),
     funbox_(funbox),
     scopeChain_(cx, scopeChain),
-    staticLevel(0),
+    staticLevel(staticLevel),
     bindings(cx),
     bindingsRoot(cx, &bindings),
     cxFlags(cx)

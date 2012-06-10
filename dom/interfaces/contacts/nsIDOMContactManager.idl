@@ -21,7 +21,7 @@ interface nsIDOMContact : nsIDOMContactProperties
   void init(in nsIDOMContactProperties properties);  // Workaround BUG 723206
 };
 
-[scriptable, uuid(a8cd4ba0-93d1-11e1-b0c4-0800200c9a66)]
+[scriptable, builtinclass, uuid(50e09826-d08e-4a75-8efb-5dfb2aa70874)]
 interface mozIDOMContactEvent : nsIDOMEvent
 {
   readonly attribute DOMString contactID;

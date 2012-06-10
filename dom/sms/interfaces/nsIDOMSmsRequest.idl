@@ -2,20 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEventTarget.idl"
+#include "nsIDOMDOMRequest.idl"
 
-interface nsIDOMEventListener;
-
-[scriptable, uuid(1b24469d-cfb7-4667-aaf0-c1d17289ae7c)]
-interface nsIDOMMozSmsRequest : nsIDOMEventTarget
+[scriptable, builtinclass, uuid(f77caa0f-d957-40b4-b1c6-195ebaace60c)]
+interface nsIDOMMozSmsRequest : nsIDOMDOMRequest
 {
-  // Returns whether "processing" or "done".
-  readonly attribute DOMString           readyState;
-  // Can be null.
-  readonly attribute DOMString           error;
-  // Can be bool, nsIDOMSmsMessage, nsIDOMSmsIterator or null.
-  readonly attribute jsval               result;
-
-           attribute nsIDOMEventListener onsuccess;
-           attribute nsIDOMEventListener onerror;
 };

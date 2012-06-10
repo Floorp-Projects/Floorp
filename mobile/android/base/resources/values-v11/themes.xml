@@ -7,9 +7,14 @@
 
     <style name="Gecko" parent="@android:style/Theme.Holo">
         <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
     
-    <style name="Gecko.TitleBar" parent="Gecko"/>
+    <style name="Gecko.TitleBar" parent="Gecko">
+        <item name="android:windowActionBar">true</item>
+        <item name="android:windowNoTitle">false</item>
+    </style>
 
     <style name="Gecko.NoActionBar" parent="@android:style/Theme.Holo">
         <item name="android:windowActionBar">false</item>
@@ -34,7 +39,6 @@
 
     <style name="Gecko.App">
         <item name="android:windowBackground">@drawable/abouthome_bg_repeat</item>
-        <item name="android:actionBarStyle">@style/ActionBar.GeckoApp</item>
         <item name="android:panelBackground">@drawable/menu_panel_bg</item>
     </style>
 

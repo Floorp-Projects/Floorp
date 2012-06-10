@@ -137,6 +137,7 @@ XPCOMUtils.defineLazyGetter(this, "Tilt", function() {
 let gInitialPages = [
   "about:blank",
   "about:newtab",
+  "about:home",
   "about:privatebrowsing",
   "about:sessionrestore"
 ];
@@ -1487,7 +1488,9 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   }
 
   // Enable Chrome Debugger?
-  let enabled = gPrefService.getBoolPref("devtools.chrome.enabled");
+  let enabled = gPrefService.getBoolPref("devtools.chrome.enabled") &&
+                gPrefService.getBoolPref("devtools.debugger.chrome-enabled") &&
+                gPrefService.getBoolPref("devtools.debugger.remote-enabled");
   if (enabled) {
     document.getElementById("menu_chromeDebugger").hidden = false;
     document.getElementById("Tools:ChromeDebugger").removeAttribute("disabled");
@@ -7167,25 +7170,8 @@ let gPrivateBrowsingUI = {
    * and the setter should only be used in tests.
    */
   get privateWindow() {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsIDocShellTreeItem)
-                 .treeOwner
-                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIXULWindow)
-                 .docShell.QueryInterface(Ci.nsILoadContext)
-                 .usePrivateBrowsing;
-  },
-
-  set privateWindow(val) {
-    return window.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .QueryInterface(Ci.nsIDocShellTreeItem)
-                 .treeOwner
-                 .QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIXULWindow)
-                 .docShell.QueryInterface(Ci.nsILoadContext)
-                 .usePrivateBrowsing = val;
+    return gBrowser.docShell.QueryInterface(Ci.nsILoadContext)
+                            .usePrivateBrowsing;
   }
 };
 

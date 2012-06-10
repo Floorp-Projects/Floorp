@@ -15,7 +15,8 @@ public class testAboutPage extends BaseTest {
         loadUrl(url);
 
         Element awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
-        mAsserter.ok(awesomebar != null && awesomebar.getText() != null && awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)"), "page title match", "about: page title is correct");
+        mAsserter.isnot(awesomebar, null, "Got the awesomebar");
+        assertMatches(awesomebar.getText(), "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)", "page title match");
 
         // Open a new page to remove the about: page from the current tab
         url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
@@ -37,8 +38,8 @@ public class testAboutPage extends BaseTest {
         Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
         // Tap on the "About Xxxx" setting
-        mSolo.waitForText("About (Fennec|Nightly|Aurora|Firefox)");
-        mSolo.clickOnText("About (Fennec|Nightly|Aurora|Firefox)");
+        mSolo.waitForText("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
+        mSolo.clickOnText("About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)");
 
         // Wait for the new tab and page to load
         tabEventExpecter.blockForEvent();
@@ -46,6 +47,7 @@ public class testAboutPage extends BaseTest {
 
         // Grab the title to make sure the about: page was loaded
         awesomebar = mDriver.findElement(getActivity(), "awesome_bar");
-        mAsserter.ok(awesomebar != null && awesomebar.getText() != null && awesomebar.getText().matches("About (Fennec|Nightly|Aurora|Firefox)"), "page title match", "about: page title is correct");
+        mAsserter.isnot(awesomebar, null, "Got the awesomebar");
+        assertMatches(awesomebar.getText(), "About (Fennec|Nightly|Aurora|Firefox|Firefox Beta)", "page title match");
     }
 }

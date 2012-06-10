@@ -392,10 +392,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     return false;
   }
 
-  // Default script language is whatever the root element specifies
-  // (which may come from a header or http-meta tag), or if there
-  // is no root element, from the script global object.
-  Element* rootElement = mDocument->GetRootElement();
   PRUint32 typeID = nsIProgrammingLanguage::JAVASCRIPT;
   PRUint32 version = 0;
   nsAutoString language, type, src;
