@@ -178,6 +178,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   case NS_FORM_INPUT_TEXT :
   case NS_FORM_INPUT_TEL :
   case NS_FORM_INPUT_URL :
+  case NS_FORM_INPUT_NUMBER :
   case NS_FORM_SELECT :
   case NS_FORM_TEXTAREA :
   case NS_FORM_FIELDSET :

@@ -119,6 +119,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "hidden", NS_FORM_INPUT_HIDDEN },
   { "reset", NS_FORM_INPUT_RESET },
   { "image", NS_FORM_INPUT_IMAGE },
+  { "number", NS_FORM_INPUT_NUMBER },
   { "password", NS_FORM_INPUT_PASSWORD },
   { "radio", NS_FORM_INPUT_RADIO },
   { "search", NS_FORM_INPUT_SEARCH },
@@ -130,7 +131,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 };
 
 // Default type is 'text'.
-static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[12];
+static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[13];
 
 static const PRUint8 NS_INPUT_AUTOCOMPLETE_OFF     = 0;
 static const PRUint8 NS_INPUT_AUTOCOMPLETE_ON      = 1;
@@ -646,6 +647,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
       if (mValueChanged) {
         // We don't have our default value anymore.  Set our value on
         // the clone.
@@ -1097,6 +1099,12 @@ nsHTMLInputElement::MozSetFileNameArray(const PRUnichar **aFileNames, PRUint32 a
 NS_IMETHODIMP
 nsHTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
 {
+  // TODO: temporary until bug 635240 is fixed.
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    *aResult = false;
+    return NS_OK;
+  }
+
   *aResult = IsSingleLineTextControl(aExcludePassword);
 
   return NS_OK;
@@ -2174,7 +2182,8 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           if (aVisitor.mEvent->message == NS_KEY_PRESS &&
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
-               IsSingleLineTextControl(false, mType)) {
+               (IsSingleLineTextControl(false, mType) ||
+                mType == NS_FORM_INPUT_NUMBER)) {
             FireChangeEventIfNeeded();   
             rv = MaybeSubmitForm(aVisitor.mPresContext);
             NS_ENSURE_SUCCESS(rv, rv);
@@ -3068,6 +3077,7 @@ nsHTMLInputElement::SaveState()
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_URL:
     case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_NUMBER:
       {
         if (mValueChanged) {
           inputState = new nsHTMLInputElementState();
@@ -3245,6 +3255,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
       case NS_FORM_INPUT_TEL:
       case NS_FORM_INPUT_URL:
       case NS_FORM_INPUT_HIDDEN:
+      case NS_FORM_INPUT_NUMBER:
         {
           SetValueInternal(inputState->GetValue(), false, true);
           break;
@@ -3469,6 +3480,7 @@ nsHTMLInputElement::GetValueMode() const
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
       return VALUE_MODE_VALUE;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in GetValueMode()");
@@ -3512,6 +3524,7 @@ nsHTMLInputElement::DoesReadOnlyApply() const
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesReadOnlyApply()");
@@ -3547,6 +3560,7 @@ nsHTMLInputElement::DoesRequiredApply() const
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_EMAIL:
     case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_NUMBER:
       return true;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
@@ -3561,6 +3575,11 @@ nsHTMLInputElement::DoesRequiredApply() const
 bool
 nsHTMLInputElement::DoesPatternApply() const
 {
+  // TODO: temporary until bug 635240 is fixed.
+  if (mType == NS_FORM_INPUT_NUMBER) {
+    return false;
+  }
+
   return IsSingleLineTextControl(false);
 }
 

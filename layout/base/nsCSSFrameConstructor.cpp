@@ -3443,6 +3443,8 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
     SIMPLE_INT_CREATE(NS_FORM_INPUT_TEL, NS_NewTextControlFrame),
     SIMPLE_INT_CREATE(NS_FORM_INPUT_URL, NS_NewTextControlFrame),
     SIMPLE_INT_CREATE(NS_FORM_INPUT_PASSWORD, NS_NewTextControlFrame),
+    // TODO: this is temporary until a frame is written: bug 635240.
+    SIMPLE_INT_CREATE(NS_FORM_INPUT_NUMBER, NS_NewTextControlFrame),
     { NS_FORM_INPUT_SUBMIT,
       FCDATA_WITH_WRAPPING_BLOCK(0, NS_NewGfxButtonControlFrame,
                                  nsCSSAnonBoxes::buttonContent) },
