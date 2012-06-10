@@ -2459,6 +2459,15 @@ nsHTMLInputElement::SanitizeValue(nsAString& aValue)
         aValue = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(aValue);
       }
       break;
+    case NS_FORM_INPUT_NUMBER:
+      {
+        PRInt32 ec;
+        PromiseFlatString(aValue).ToDouble(&ec);
+        if (NS_FAILED(ec)) {
+          aValue.Truncate();
+        }
+      }
+      break;
   }
 }
 
