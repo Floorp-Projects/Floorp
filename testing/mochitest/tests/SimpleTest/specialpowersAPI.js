@@ -118,9 +118,13 @@ function wrapPrivileged(obj) {
 
       // Constructors are tricky, because we can't easily call apply on them.
       // As a workaround, we create a wrapper constructor with the same
-      // |prototype| property.
+      // |prototype| property. ES semantics dictate that the return value from
+      // |new| is the return value of the |new|-ed function i.f.f. the returned
+      // value is an object. We can thus mimic the behavior of |new|-ing the
+      // underlying constructor just be passing along its return value in our
+      // constructor.
       var FakeConstructor = function() {
-        doApply(obj, this, unwrappedArgs);
+        return doApply(obj, this, unwrappedArgs);
       };
       FakeConstructor.prototype = obj.prototype;
 
@@ -767,8 +771,7 @@ SpecialPowersAPI.prototype = {
   },
 
   createSystemXHR: function() {
-    return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-             .createInstance(Ci.nsIXMLHttpRequest);
+    return this.wrap(Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest));
   },
 
   snapshotWindow: function (win, withCaret) {

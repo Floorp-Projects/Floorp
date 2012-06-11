@@ -926,7 +926,7 @@ Navigator::MozGetUserMedia(nsIMediaStreamOptions* aParams,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return manager->GetUserMedia(win->WindowID(), aParams, onSuccess, onError);
+  return manager->GetUserMedia(win, aParams, onSuccess, onError);
 }
 #endif
 

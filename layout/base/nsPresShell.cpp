@@ -53,7 +53,7 @@
 #include "nsHTMLParts.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
-#include "nsTypedSelection.h"
+#include "mozilla/Selection.h"
 #include "nsLayoutCID.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMRange.h"
@@ -3096,7 +3096,9 @@ static void ScrollToShowRect(nsIScrollableFrame*      aScrollFrame,
                              PRUint32                 aFlags)
 {
   nsPoint scrollPt = aScrollFrame->GetScrollPosition();
-  nsRect visibleRect(scrollPt, aScrollFrame->GetScrollPortRect().Size());
+  nsRect visibleRect(scrollPt,
+                     aScrollFrame->GetScrollPositionClampingScrollPortSize());
+
   nsSize lineSize;
   // Don't call GetLineScrollAmount unless we actually need it. Not only
   // does this save time, but it's not safe to call GetLineScrollAmount
@@ -6383,7 +6385,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
     rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aStatus);
 
     // 2. Give event to the DOM for third party and JS use.
-    if (GetCurrentEventFrame() && NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv)) {
       bool wasHandlingKeyBoardEvent =
         nsContentUtils::IsHandlingKeyBoardEvent();
       if (aEvent->eventStructType == NS_KEY_EVENT) {
@@ -6404,8 +6406,10 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
         }
         else {
           nsCOMPtr<nsIContent> targetContent;
-          rv = mCurrentEventFrame->GetContentForEvent(aEvent,
-                                                      getter_AddRefs(targetContent));
+          if (mCurrentEventFrame) {
+            rv = mCurrentEventFrame->GetContentForEvent(aEvent,
+                                                        getter_AddRefs(targetContent));
+          }
           if (NS_SUCCEEDED(rv) && targetContent) {
             nsEventDispatcher::Dispatch(targetContent, mPresContext, aEvent,
                                         nsnull, aStatus, &eventCB);

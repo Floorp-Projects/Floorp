@@ -36,7 +36,8 @@ FileHelper::FileHelper(LockedFile* aLockedFile,
 
 FileHelper::~FileHelper()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!mFileStorage && !mLockedFile && !mFileRequest && !mListener &&
+               !mRequest, "Should have cleared this!");
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(FileHelper, nsIRequestObserver)

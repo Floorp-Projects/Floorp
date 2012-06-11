@@ -24,12 +24,8 @@
 class nsAccessNode;
 class Accessible;
 class HyperTextAccessible;
-class nsHTMLTableAccessible;
 class DocAccessible;
 struct nsRoleMapEntry;
-#ifdef MOZ_XUL
-class nsXULTreeAccessible;
-#endif
 
 class nsAccUtils
 {

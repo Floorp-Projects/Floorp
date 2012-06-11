@@ -56,7 +56,18 @@
           return val;
         ]]></setter>
       </property>
-    
+
+      <property name="filter">
+        <setter><![CDATA[
+          val = val.toLowerCase();
+          if (this.mFilter != val) {
+            this.mFilter = val;
+            setTimeout(this.applyFilter.bind(this), 0);
+          }
+          return val;
+        ]]></setter>
+      </property>
+
       <property name="sortOrder">
         <getter>return this.getAttribute("sortOrder");</getter>
         <setter>this.setAttribute("sortOrder", val); return val;</setter>
@@ -107,6 +118,7 @@
           }          
                     
           this.mMode = this.getAttribute("mode") || "All";
+          this.mFilter = "";
 
           this.appendInitialItems();
           window.controllers.insertControllerAt(0, this._controller);
@@ -205,6 +217,7 @@
           } else {
             row.setAttribute("hideCode", "true");
           }
+
           this.appendConsoleRow(row);
         ]]></body>
       </method>
@@ -267,6 +280,7 @@
       <method name="appendConsoleRow">
         <parameter name="aRow"/>
         <body><![CDATA[
+          this.filterElement(aRow);
           this.mConsoleRowBox.appendChild(aRow);
           if (++this.mCount > this.limit) this.deleteFirst();
         ]]></body>
@@ -292,7 +306,27 @@
           this.selectedItem = null;
         ]]></body>
       </method>
-      
+
+      <method name="filterElement">
+        <parameter name="aRow" />
+        <body><![CDATA[
+          if (this.stringMatchesFilters(aRow.getAttribute("msg"), this.mFilter)) {
+            aRow.classList.remove("filtered-by-string")
+          } else {
+            aRow.classList.add("filtered-by-string")
+          }
+        ]]></body>
+      </method>
+
+      <method name="applyFilter">
+        <parameter name="aFilter" />
+        <body><![CDATA[
+          for (let aRow of this.mConsoleRowBox.children) {
+            this.filterElement(aRow);
+          }
+        ]]></body>
+      </method>
+
       <!-- UTILITY FUNCTIONS -->
       
       <method name="repeatChar">
@@ -306,6 +340,22 @@
             aChar += aChar;
 
           return aChar + aChar.slice(0, aCol - aChar.length);
+        ]]></body>
+      </method>
+
+      <method name="stringMatchesFilters">
+        <parameter name="aString"/>
+        <parameter name="aFilter"/>
+        <body><![CDATA[
+          if (!aString || !aFilter) {
+            return true;
+          }
+
+          let searchStr = aString.toLowerCase();
+          let filterStrings = aFilter.split(/\s+/);
+          return !filterStrings.some(function (f) {
+            return searchStr.indexOf(f) == -1;
+          });
         ]]></body>
       </method>
           
