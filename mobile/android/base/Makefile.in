@@ -152,6 +152,7 @@ FENNEC_PP_XML_FILES = \
   res/layout/abouthome_content.xml \
   res/menu/gecko_menu.xml \
   res/menu-v11/gecko_menu.xml \
+  res/menu-v11/titlebar_contextmenu.xml \
   res/menu-xlarge/gecko_menu.xml \
   res/menu-sw600dp/gecko_menu.xml \
   $(NULL)
