@@ -76,6 +76,7 @@ LOCAL_INCLUDES += \
   $(NULL)
 endif
 
+ifndef MOZ_ANDROID_HISTORY
 EXTRA_COMPONENTS = \
   toolkitplaces.manifest \
   nsLivemarkService.js \
@@ -98,6 +99,7 @@ EXTRA_PP_JS_MODULES = \
   $(NULL)
 
 TEST_DIRS += tests
+endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
