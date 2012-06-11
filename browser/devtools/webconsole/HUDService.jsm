@@ -1034,10 +1034,20 @@ function HeadsUpDisplay(aTab)
   // A cache for tracking repeated CSS Nodes.
   this.cssNodes = {};
 
+  this._networkRequests = {};
+
   this._setupMessageManager();
 }
 
 HeadsUpDisplay.prototype = {
+  /**
+   * Holds the network requests currently displayed by the Web Console. Each key
+   * represents the connection ID and the value is network request information.
+   * @private
+   * @type object
+   */
+  _networkRequests: null,
+
   /**
    * Last time when we displayed any message in the output. Timestamp in
    * milliseconds since the Unix epoch.
@@ -1835,7 +1845,10 @@ HeadsUpDisplay.prototype = {
    */
   pruneConsoleDirNode: function HUD_pruneConsoleDirNode(aMessageNode)
   {
-    aMessageNode.parentNode.removeChild(aMessageNode);
+    if (aMessageNode.parentNode) {
+      aMessageNode.parentNode.removeChild(aMessageNode);
+    }
+
     let tree = aMessageNode.querySelector("tree");
     tree.parentNode.removeChild(tree);
     aMessageNode.propertyTreeView = null;
@@ -2134,13 +2147,18 @@ HeadsUpDisplay.prototype = {
                                                      null,
                                                      clipboardText);
 
-    messageNode.setAttribute("connectionId", entry.connection);
+    messageNode._connectionId = entry.connection;
 
-    messageNode._httpActivity = aHttpActivity;
+    let networkInfo = {
+      node: messageNode,
+      httpActivity: aHttpActivity,
+    };
+
+    this._networkRequests[entry.connection] = networkInfo;
 
     this.makeOutputMessageLink(messageNode, function HUD_net_message_link() {
       if (!messageNode._panelOpen) {
-        HUDService.openNetworkPanel(messageNode, messageNode._httpActivity);
+        HUDService.openNetworkPanel(messageNode, networkInfo.httpActivity);
       }
     }.bind(this));
 
@@ -2381,12 +2399,13 @@ HeadsUpDisplay.prototype = {
     let request = entry.request;
     let response = entry.response;
 
-    let messageNode = this.outputNode.
-      querySelector("richlistitem[connectionId=" + entry.connection + "]");
-    if (!messageNode) {
+    if (!(entry.connection in this._networkRequests)) {
       return;
     }
-    messageNode._httpActivity = aMessage;
+
+    let loggedRequest = this._networkRequests[entry.connection];
+    let messageNode = loggedRequest.node;
+    loggedRequest.httpActivity = aMessage;
 
     if (stage == "TRANSACTION_CLOSE" || stage == "RESPONSE_HEADER") {
       let status = [response.httpVersion, response.status, response.statusText];
@@ -2676,13 +2695,25 @@ HeadsUpDisplay.prototype = {
         let n = Math.max(0, indexes.length - limit);
         pruned += n;
         for (let i = n - 1; i >= 0; i--) {
-          let node = this._outputQueue[indexes[i]][0];
+          this._pruneItemFromQueue(this._outputQueue[indexes[i]]);
           this._outputQueue.splice(indexes[i], 1);
         }
       }
     }
 
     return pruned;
+  },
+
+  /**
+   * Prune an item from the output queue.
+   *
+   * @private
+   * @param array aItem
+   *        The item you want to remove from the output queue.
+   */
+  _pruneItemFromQueue: function HUD__pruneItemFromQueue(aItem)
+  {
+    this.removeOutputMessage(aItem[0]);
   },
 
   /**
@@ -2728,12 +2759,17 @@ HeadsUpDisplay.prototype = {
       }
       delete this.cssNodes[desc + location];
     }
+    else if (aNode.classList.contains("webconsole-msg-network")) {
+      delete this._networkRequests[aNode._connectionId];
+    }
     else if (aNode.classList.contains("webconsole-msg-inspector")) {
       this.pruneConsoleDirNode(aNode);
       return;
     }
 
-    aNode.parentNode.removeChild(aNode);
+    if (aNode.parentNode) {
+      aNode.parentNode.removeChild(aNode);
+    }
   },
 
   /**
@@ -2742,8 +2778,6 @@ HeadsUpDisplay.prototype = {
    */
   destroy: function HUD_destroy()
   {
-    this._outputQueue = [];
-
     this.sendMessageToContent("WebConsole:Destroy", {});
 
     this._messageListeners.forEach(function(aName) {
@@ -3140,8 +3174,6 @@ JSTerm.prototype = {
   clearOutput: function JST_clearOutput(aClearStorage)
   {
     let hud = this.hud;
-    hud.cssNodes = {};
-
     let outputNode = hud.outputNode;
     let node;
     while ((node = outputNode.firstChild)) {
@@ -3150,6 +3182,10 @@ JSTerm.prototype = {
 
     hud.HUDBox.lastTimestamp = 0;
     hud.groupDepth = 0;
+    hud._outputQueue.forEach(hud._pruneItemFromQueue, hud);
+    hud._outputQueue = [];
+    hud._networkRequests = {};
+    hud.cssNodes = {};
 
     if (aClearStorage) {
       hud.sendMessageToContent("ConsoleAPI:ClearCache", {});
