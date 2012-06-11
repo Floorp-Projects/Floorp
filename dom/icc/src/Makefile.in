@@ -15,11 +15,19 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/dom/dom-config.mk
 
+EXPORTS_NAMESPACES = mozilla/dom/icc
+
+EXPORTS_mozilla/dom/icc = \
+  StkCommandEvent.h \
+  $(NULL)
+
 CPPSRCS = \
   IccManager.cpp \
+  StkCommandEvent.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
+  -I$(topsrcdir)/content/events/src \
   $(NULL)
 
 include $(topsrcdir)/config/config.mk

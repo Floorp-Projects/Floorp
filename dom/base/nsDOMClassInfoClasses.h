@@ -522,6 +522,7 @@ DOMCI_CLASS(CallEvent)
 DOMCI_CLASS(MozVoicemail)
 DOMCI_CLASS(MozVoicemailEvent)
 DOMCI_CLASS(MozIccManager)
+DOMCI_CLASS(MozStkCommandEvent)
 #endif
 
 #ifdef MOZ_B2G_BT
