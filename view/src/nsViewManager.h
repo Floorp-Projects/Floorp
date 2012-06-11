@@ -129,8 +129,7 @@ private:
   void InvalidateViews(nsView *aView);
 
   // aView is the view for aWidget and aRegion is relative to aWidget.
-  void Refresh(nsView *aView, nsIWidget *aWidget, const nsIntRegion& aRegion,
-               bool aWillSendDidPaint);
+  void Refresh(nsView *aView, const nsIntRegion& aRegion, bool aWillSendDidPaint);
 
   void InvalidateRectDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut);
   void InvalidateHorizontalBandDifference(nsView *aView, const nsRect& aRect, const nsRect& aCutOut,
