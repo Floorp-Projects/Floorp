@@ -282,7 +282,8 @@ MaybeReflowForInflationScreenWidthChange(nsPresContext *aPresContext)
               if (shell) {
                 nsIFrame *rootFrame = shell->GetRootFrame();
                 if (rootFrame) {
-                  shell->FrameNeedsReflow(rootFrame, nsIPresShell::eResize,
+                  shell->FrameNeedsReflow(rootFrame,
+                                          nsIPresShell::eStyleChange,
                                           NS_FRAME_IS_DIRTY);
                 }
               }
