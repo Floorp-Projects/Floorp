@@ -38,7 +38,7 @@ nsFontInflationData::FindFontInflationDataFor(const nsIFrame *aFrame)
              bfc->Properties().Get(FontInflationDataProperty()));
 }
 
-/* static */ bool
+/* static */ void
 nsFontInflationData::UpdateFontInflationDataWidthFor(const nsHTMLReflowState& aReflowState)
 {
   nsIFrame *bfc = aReflowState.frame;
@@ -47,22 +47,12 @@ nsFontInflationData::UpdateFontInflationDataWidthFor(const nsHTMLReflowState& aR
   FrameProperties bfcProps(bfc->Properties());
   nsFontInflationData *data = static_cast<nsFontInflationData*>(
                                 bfcProps.Get(FontInflationDataProperty()));
-  bool oldInflationEnabled;
-  nscoord oldNCAWidth;
-  if (data) {
-    oldNCAWidth = data->mNCAWidth;
-    oldInflationEnabled = data->mInflationEnabled;
-  } else {
+  if (!data) {
     data = new nsFontInflationData(bfc);
     bfcProps.Set(FontInflationDataProperty(), data);
-    oldNCAWidth = -1;
-    oldInflationEnabled = true; /* not relevant */
   }
 
   data->UpdateWidth(aReflowState);
-
-  return oldNCAWidth != data->mNCAWidth ||
-         oldInflationEnabled != data->mInflationEnabled;
 }
 
 /* static */ void
