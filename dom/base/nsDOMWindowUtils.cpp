@@ -492,6 +492,7 @@ nsDOMWindowUtils::SendMouseEventToWindow(const nsAString& aType,
                                          PRInt32 aModifiers,
                                          bool aIgnoreRootScrollFrame)
 {
+  SAMPLE_LABEL("nsDOMWindowUtils", "SendMouseEventToWindow");
   return SendMouseEventCommon(aType, aX, aY, aButton, aClickCount, aModifiers,
                               aIgnoreRootScrollFrame, true);
 }
