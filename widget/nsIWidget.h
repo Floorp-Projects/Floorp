@@ -1570,6 +1570,18 @@ class nsIWidget : public nsISupports {
      */
     virtual bool WidgetPaintsBackground() { return false; }
 
+    bool NeedsPaint() { 
+      bool visible;
+      nsresult rv = IsVisible(visible);
+      NS_ENSURE_SUCCESS(rv, false);
+      if (!visible) {
+        return false;
+      }
+      nsIntRect bounds;
+      rv = GetBounds(bounds);
+      NS_ENSURE_SUCCESS(rv, false);
+      return !bounds.IsEmpty();
+    }
 protected:
 
     // keep the list of children.  We also keep track of our siblings.
