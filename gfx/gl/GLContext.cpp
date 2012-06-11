@@ -311,10 +311,24 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         }
     }
 
+#ifdef DEBUG
+    if (PR_GetEnv("MOZ_GL_DEBUG"))
+        sDebugMode |= DebugEnabled;
+
+    // enables extra verbose output, informing of the start and finish of every GL call.
+    // useful e.g. to record information to investigate graphics system crashes/lockups
+    if (PR_GetEnv("MOZ_GL_DEBUG_VERBOSE"))
+        sDebugMode |= DebugTrace;
+
+    // aborts on GL error. Can be useful to debug quicker code that is known not to generate any GL error in principle.
+    if (PR_GetEnv("MOZ_GL_DEBUG_ABORT_ON_ERROR"))
+        sDebugMode |= DebugAbortOnError;
+#endif
+
     if (mInitialized) {
 #ifdef DEBUG
         static bool once = false;
-        if (!once) {
+        if (DebugMode() && !once) {
             const char *vendors[VendorOther] = {
                 "Intel",
                 "NVIDIA",
@@ -486,20 +500,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         UpdateActualFormat();
     }
 
-#ifdef DEBUG
-    if (PR_GetEnv("MOZ_GL_DEBUG"))
-        sDebugMode |= DebugEnabled;
-
-    // enables extra verbose output, informing of the start and finish of every GL call.
-    // useful e.g. to record information to investigate graphics system crashes/lockups
-    if (PR_GetEnv("MOZ_GL_DEBUG_VERBOSE"))
-        sDebugMode |= DebugTrace;
-
-    // aborts on GL error. Can be useful to debug quicker code that is known not to generate any GL error in principle.
-    if (PR_GetEnv("MOZ_GL_DEBUG_ABORT_ON_ERROR"))
-        sDebugMode |= DebugAbortOnError;
-#endif
-
     if (mInitialized)
         reporter.SetSuccessful();
     else {
@@ -527,7 +527,7 @@ GLContext::InitExtensions()
     const bool once = true;
 #endif
 
-    if (!once) {
+    if (DebugMode() && !once) {
         printf_stderr("GL extensions: %s\n", exts);
     }
 
@@ -543,7 +543,7 @@ GLContext::InitExtensions()
 
         for (int i = 0; sExtensionNames[i]; ++i) {
             if (strcmp(s, sExtensionNames[i]) == 0) {
-                if (!once) {
+                if (DebugMode() && !once) {
                     printf_stderr("Found extension %s\n", s);
                 }
                 mAvailableExtensions[i] = 1;
@@ -1505,7 +1505,9 @@ GLContext::AssembleOffscreenFBOs(const GLuint colorMSRB,
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("DrawFBO: Incomplete");
   #ifdef DEBUG
-        printf_stderr("Framebuffer status: %X\n", status);
+        if (DebugMode()) {
+            printf_stderr("Framebuffer status: %X\n", status);
+        }
   #endif
         isComplete = false;
     }
@@ -1515,7 +1517,9 @@ GLContext::AssembleOffscreenFBOs(const GLuint colorMSRB,
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
         NS_WARNING("ReadFBO: Incomplete");
   #ifdef DEBUG
-        printf_stderr("Framebuffer status: %X\n", status);
+        if (DebugMode()) {
+            printf_stderr("Framebuffer status: %X\n", status);
+        }
   #endif
         isComplete = false;
     }
@@ -3038,19 +3042,21 @@ ReportArrayContents(const nsTArray<GLContext::NamedResource>& aArray)
 void
 GLContext::ReportOutstandingNames()
 {
-    printf_stderr("== GLContext %p ==\n", this);
-    printf_stderr("Outstanding Textures:\n");
-    ReportArrayContents(mTrackedTextures);
-    printf_stderr("Outstanding Buffers:\n");
-    ReportArrayContents(mTrackedBuffers);
-    printf_stderr("Outstanding Programs:\n");
-    ReportArrayContents(mTrackedPrograms);
-    printf_stderr("Outstanding Shaders:\n");
-    ReportArrayContents(mTrackedShaders);
-    printf_stderr("Outstanding Framebuffers:\n");
-    ReportArrayContents(mTrackedFramebuffers);
-    printf_stderr("Outstanding Renderbuffers:\n");
-    ReportArrayContents(mTrackedRenderbuffers);
+    if (DebugMode()) {
+        printf_stderr("== GLContext %p ==\n", this);
+        printf_stderr("Outstanding Textures:\n");
+        ReportArrayContents(mTrackedTextures);
+        printf_stderr("Outstanding Buffers:\n");
+        ReportArrayContents(mTrackedBuffers);
+        printf_stderr("Outstanding Programs:\n");
+        ReportArrayContents(mTrackedPrograms);
+        printf_stderr("Outstanding Shaders:\n");
+        ReportArrayContents(mTrackedShaders);
+        printf_stderr("Outstanding Framebuffers:\n");
+        ReportArrayContents(mTrackedFramebuffers);
+        printf_stderr("Outstanding Renderbuffers:\n");
+        ReportArrayContents(mTrackedRenderbuffers);
+    }
 }
 
 #endif /* DEBUG */

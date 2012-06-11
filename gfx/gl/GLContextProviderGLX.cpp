@@ -658,7 +658,9 @@ public:
                                              GLX_DOUBLEBUFFER, &db);
         if (GLX_BAD_ATTRIBUTE != err) {
 #ifdef DEBUG
-            printf("[GLX] FBConfig is %sdouble-buffered\n", db ? "" : "not ");
+            if (DebugMode()) {
+                printf("[GLX] FBConfig is %sdouble-buffered\n", db ? "" : "not ");
+            }
 #endif
         }
 
