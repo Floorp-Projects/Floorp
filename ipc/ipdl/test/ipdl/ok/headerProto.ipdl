@@ -1,0 +1,10 @@
+include header;
+
+namespace c {
+
+protocol headerProto {
+child:
+    __delete__(foo a, baz b, Inner1 c, Inner2 d, X x);
+};
+
+}

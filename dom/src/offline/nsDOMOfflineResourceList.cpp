@@ -20,7 +20,6 @@
 #include "nsContentUtils.h"
 #include "nsIJSContextStack.h"
 #include "nsEventDispatcher.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsIObserverService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"
@@ -668,16 +667,10 @@ nsDOMOfflineResourceList::SendEvent(const nsAString &aEventName)
                                                NS_LITERAL_STRING("Events"),
                                                getter_AddRefs(event));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrivateDOMEvent> privevent = do_QueryInterface(event);
-  if (!privevent) {
-    return NS_ERROR_FAILURE;
-  }
-
   event->InitEvent(aEventName, false, true);
 
   // We assume anyone that managed to call SendEvent is trusted
-  privevent->SetTrusted(true);
+  event->SetTrusted(true);
 
   // If the window is frozen or we're still catching up on events that were
   // queued while frozen, save the event for later.

@@ -135,6 +135,9 @@ class OmxDecoder {
   MediaBuffer *mAudioBuffer;
   AudioFrame mAudioFrame;
 
+  // 'true' if a read from the audio stream was done while reading the metadata
+  bool mAudioMetadataRead;
+
   void ReleaseVideoBuffer();
   void ReleaseAudioBuffer();
 
@@ -180,11 +183,21 @@ public:
 };
 
 OmxDecoder::OmxDecoder(PluginHost *aPluginHost, Decoder *aDecoder) :
-  mPluginHost(aPluginHost), mDecoder(aDecoder)
+  mPluginHost(aPluginHost),
+  mDecoder(aDecoder),
+  mVideoWidth(0),
+  mVideoHeight(0),
+  mVideoColorFormat(0),
+  mVideoStride(0),
+  mVideoSliceHeight(0),
+  mVideoRotation(0),
+  mAudioChannels(-1),
+  mAudioSampleRate(-1),
+  mDurationUs(-1),
+  mVideoBuffer(NULL),
+  mAudioBuffer(NULL),
+  mAudioMetadataRead(false)
 {
-  mVideoWidth = mVideoHeight = mVideoColorFormat = mVideoStride = mVideoSliceHeight = mVideoRotation = 0;
-  mVideoBuffer = NULL;
-  mAudioBuffer = NULL;
 }
 
 OmxDecoder::~OmxDecoder()
@@ -236,10 +249,9 @@ bool OmxDecoder::Init() {
     return false;
   }
 
-  sp<MediaSource> videoTrack;
-  sp<MediaSource> audioTrack;
+  ssize_t audioTrackIndex = -1;
+  ssize_t videoTrackIndex = -1;
   const char *audioMime = NULL;
-  bool audioMetaFound = false;
 
   for (size_t i = 0; i < extractor->countTracks(); ++i) {
     sp<MetaData> meta = extractor->getTrackMetaData(i);
@@ -253,22 +265,15 @@ bool OmxDecoder::Init() {
       continue;
     }
 
-    if (videoTrack == NULL && !strncasecmp(mime, "video/", 6)) {
-      videoTrack = extractor->getTrack(i);
-    } else if (audioTrack == NULL && !strncasecmp(mime, "audio/", 6)) {
-      audioTrack = extractor->getTrack(i);
+    if (videoTrackIndex == -1 && !strncasecmp(mime, "video/", 6)) {
+      videoTrackIndex = i;
+    } else if (audioTrackIndex == -1 && !strncasecmp(mime, "audio/", 6)) {
+      audioTrackIndex = i;
       audioMime = mime;
-      if (!meta->findInt32(kKeyChannelCount, &mAudioChannels) ||
-          !meta->findInt32(kKeySampleRate, &mAudioSampleRate)) {
-        return false;
-      }
-      audioMetaFound = true;
-      LOG("channelCount: %d sampleRate: %d",
-           mAudioChannels, mAudioSampleRate);
     }
   }
 
-  if (videoTrack == NULL && audioTrack == NULL) {
+  if (videoTrackIndex == -1 && audioTrackIndex == -1) {
     return false;
   }
 
@@ -276,8 +281,9 @@ bool OmxDecoder::Init() {
 
   int64_t totalDurationUs = 0;
 
+  sp<MediaSource> videoTrack;
   sp<MediaSource> videoSource;
-  if (videoTrack != NULL) {
+  if (videoTrackIndex != -1 && (videoTrack = extractor->getTrack(videoTrackIndex)) != NULL) {
     videoSource = OMXCodec::Create(GetOMX(),
                                    videoTrack->getFormat(),
                                    false, // decoder
@@ -299,8 +305,10 @@ bool OmxDecoder::Init() {
     }
   }
 
+  sp<MediaSource> audioTrack;
   sp<MediaSource> audioSource;
-  if (audioTrack != NULL) {
+  if (audioTrackIndex != -1 && (audioTrack = extractor->getTrack(audioTrackIndex)) != NULL)
+  {
     if (!strcasecmp(audioMime, "audio/raw")) {
       audioSource = audioTrack;
     } else {
@@ -333,9 +341,21 @@ bool OmxDecoder::Init() {
   if (mVideoSource.get() && !SetVideoFormat())
     return false;
 
-  if (!audioMetaFound && mAudioSource.get() && !SetAudioFormat())
-    return false;
-
+  // To reliably get the channel and sample rate data we need to read from the
+  // audio source until we get a INFO_FORMAT_CHANGE status
+  if (mAudioSource.get()) {
+    if (mAudioSource->read(&mAudioBuffer) != INFO_FORMAT_CHANGED) {
+      sp<MetaData> meta = mAudioSource->getFormat();
+      if (!meta->findInt32(kKeyChannelCount, &mAudioChannels) ||
+          !meta->findInt32(kKeySampleRate, &mAudioSampleRate)) {
+        return false;
+      }
+      mAudioMetadataRead = true;
+    }
+    else if (!SetAudioFormat()) {
+        return false;
+    }
+  }
   return true;
 }
 
@@ -468,93 +488,84 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aSeekTimeUs)
   if (!mVideoSource.get())
     return false;
 
-  for (;;) {
-    ReleaseVideoBuffer();
-
-    status_t err;
-
-    if (aSeekTimeUs != -1) {
-      MediaSource::ReadOptions options;
-      options.setSeekTo(aSeekTimeUs);
-      err = mVideoSource->read(&mVideoBuffer, &options);
-    } else {
-      err = mVideoSource->read(&mVideoBuffer);
-    }
-
-    aSeekTimeUs = -1;
-
-    if (err == OK) {
-      if (mVideoBuffer->range_length() == 0) // If we get a spurious empty buffer, keep going
-        continue;
-
-      int64_t timeUs;
-      int32_t unreadable;
-      int32_t keyFrame;
-
-      if (!mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs) ) {
-        LOG("no key time");
-        return false;
-      }
-
-      if (!mVideoBuffer->meta_data()->findInt32(kKeyIsSyncFrame, &keyFrame)) {
-        keyFrame = 0;
-      }
-
-      if (!mVideoBuffer->meta_data()->findInt32(kKeyIsUnreadable, &unreadable)) {
-        unreadable = 0;
-      }
-
-      LOG("data: %p size: %u offset: %u length: %u unreadable: %d",
-          mVideoBuffer->data(), 
-          mVideoBuffer->size(),
-          mVideoBuffer->range_offset(),
-          mVideoBuffer->range_length(),
-          unreadable);
-
-      char *data = reinterpret_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
-      size_t length = mVideoBuffer->range_length();
-
-      if (unreadable) {
-        LOG("video frame is unreadable");
-      }
-
-      if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
-        return false;
-      }
-
-      return true;
-    }
-
-    if (err == INFO_FORMAT_CHANGED) {
-      // If the format changed, update our cached info.
-      if (!SetVideoFormat()) {
-        return false;
-      }
-
-      // Ok, try to read a buffer again.
-      continue;
-    }
-
-    /* err == ERROR_END_OF_STREAM */
-    break;
-  }
-
-  return false;
-}
-
-bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
-{
-  ReleaseAudioBuffer();
+  ReleaseVideoBuffer();
 
   status_t err;
 
   if (aSeekTimeUs != -1) {
     MediaSource::ReadOptions options;
     options.setSeekTo(aSeekTimeUs);
-    err = mAudioSource->read(&mAudioBuffer, &options);
+    err = mVideoSource->read(&mVideoBuffer, &options);
   } else {
-    err = mAudioSource->read(&mAudioBuffer);
+    err = mVideoSource->read(&mVideoBuffer);
   }
+
+  if (err == OK && mVideoBuffer->range_length() > 0) {
+    int64_t timeUs;
+    int32_t unreadable;
+    int32_t keyFrame;
+
+    if (!mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs) ) {
+      LOG("no key time");
+      return false;
+    }
+
+    if (!mVideoBuffer->meta_data()->findInt32(kKeyIsSyncFrame, &keyFrame)) {
+       keyFrame = 0;
+    }
+
+    if (!mVideoBuffer->meta_data()->findInt32(kKeyIsUnreadable, &unreadable)) {
+      unreadable = 0;
+    }
+
+    LOG("data: %p size: %u offset: %u length: %u unreadable: %d",
+        mVideoBuffer->data(), 
+        mVideoBuffer->size(),
+        mVideoBuffer->range_offset(),
+        mVideoBuffer->range_length(),
+        unreadable);
+
+    char *data = reinterpret_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
+    size_t length = mVideoBuffer->range_length();
+
+    if (unreadable) {
+      LOG("video frame is unreadable");
+    }
+
+    if (!ToVideoFrame(aFrame, timeUs, data, length, keyFrame)) {
+      return false;
+    }
+  }
+  else if (err == INFO_FORMAT_CHANGED) {
+    // If the format changed, update our cached info.
+    return SetVideoFormat();
+  }
+  else if (err == ERROR_END_OF_STREAM) {
+    return false;
+  }
+
+  return true;
+}
+
+bool OmxDecoder::ReadAudio(AudioFrame *aFrame, int64_t aSeekTimeUs)
+{
+  status_t err;
+
+  if (mAudioMetadataRead && aSeekTimeUs == -1) {
+    // Use the data read into the buffer during metadata time
+    err = OK;
+  }
+  else {
+    ReleaseAudioBuffer();
+    if (aSeekTimeUs != -1) {
+      MediaSource::ReadOptions options;
+      options.setSeekTo(aSeekTimeUs);
+      err = mAudioSource->read(&mAudioBuffer, &options);
+    } else {
+      err = mAudioSource->read(&mAudioBuffer);
+    }
+  }
+  mAudioMetadataRead = false;
 
   aSeekTimeUs = -1;
 

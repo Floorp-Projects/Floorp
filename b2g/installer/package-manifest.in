@@ -657,3 +657,4 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #endif
 @BINPATH@/components/MozKeyboard.js
 @BINPATH@/components/DirectoryProvider.js
+@BINPATH@/components/ProcessGlobal.js

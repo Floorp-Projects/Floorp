@@ -8,7 +8,7 @@ def WebIDLTest(parser, harness):
     try:
         parser.parse(input)
         results = parser.finish()
-    except WebIDL.WebIDLError as e:
+    except WebIDL.WebIDLError, e:
         threw = True
         lines = str(e).split('\n')
 

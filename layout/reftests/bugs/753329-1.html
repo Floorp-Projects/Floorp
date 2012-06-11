@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html style="overflow:hidden" class="reftest-wait"
+      reftest-displayport-w="800" reftest-displayport-h="2000">
+<body>
+<div id="x" style="position:absolute; width:400px; height:400px; background:red;">
+You should not see any red
+</div>
+<script>
+function doTest() {
+  document.getElementById('x').style.visibility = 'hidden';
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

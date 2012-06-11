@@ -844,6 +844,7 @@ Connection::getFilename()
 int
 Connection::stepStatement(sqlite3_stmt *aStatement)
 {
+  MOZ_ASSERT(aStatement);
   bool checkedMainThread = false;
   TimeStamp startTime = TimeStamp::Now();
 
@@ -880,16 +881,9 @@ Connection::stepStatement(sqlite3_stmt *aStatement)
   // Report very slow SQL statements to Telemetry
   TimeDuration duration = TimeStamp::Now() - startTime;
   if (duration.ToMilliseconds() >= Telemetry::kSlowStatementThreshold) {
-    const char *sql = ::sqlite3_sql(aStatement);
-    // FIXME: Try runs have found hard to reproduce crashes where sql is NULL.
-    // It is not clear how can we get a NULL sql statement in here.
-    // sqlite3_prepare_v2 always copies the incoming argument and fails
-    // if it runs out of memory.
-    if (sql) {
-      nsDependentCString statementString(sql);
-      Telemetry::RecordSlowSQLStatement(statementString, getFilename(),
-                                        duration.ToMilliseconds(), false);
-    }
+    nsDependentCString statementString(::sqlite3_sql(aStatement));
+    Telemetry::RecordSlowSQLStatement(statementString, getFilename(),
+                                      duration.ToMilliseconds(), false);
   }
 
   (void)::sqlite3_extended_result_codes(mDBConn, 0);
@@ -939,7 +933,15 @@ Connection::prepareStatement(const nsCString &aSQL,
 
   (void)::sqlite3_extended_result_codes(mDBConn, 0);
   // Drop off the extended result bits of the result code.
-  return srv & 0xFF;
+  int rc = srv & 0xFF;
+  // sqlite will return OK on a comment only string and set _stmt to NULL.
+  // The callers of this function are used to only checking the return value,
+  // so it is safer to return an error code.
+  if (rc == SQLITE_OK && *_stmt == NULL) {
+    return SQLITE_MISUSE;
+  }
+
+  return rc;
 }
 
 

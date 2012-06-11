@@ -29,8 +29,6 @@
 
 #ifdef DEBUG_CONTENT_LIST
 #include "nsIContentIterator.h"
-nsresult
-NS_NewPreContentIterator(nsIContentIterator** aInstancePtrResult);
 #define ASSERT_IN_SYNC AssertInSync()
 #else
 #define ASSERT_IN_SYNC PR_BEGIN_MACRO PR_END_MACRO
@@ -1016,7 +1014,7 @@ nsContentList::AssertInSync()
 
   nsCOMPtr<nsIContentIterator> iter;
   if (mDeep) {
-    NS_NewPreContentIterator(getter_AddRefs(iter));
+    iter = NS_NewPreContentIterator();
     iter->Init(root);
     iter->First();
   }

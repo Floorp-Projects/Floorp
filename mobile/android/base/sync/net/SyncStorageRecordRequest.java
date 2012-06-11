@@ -92,6 +92,15 @@ public class SyncStorageRecordRequest extends SyncStorageRequest {
     }
   }
 
+  public void post(JSONArray body) {
+    // Let's do this the trivial way for now.
+    try {
+      this.resource.post(jsonEntity(body));
+    } catch (UnsupportedEncodingException e) {
+      this.delegate.handleRequestError(e);
+    }
+  }
+
   public void put(JSONObject body) {
     // Let's do this the trivial way for now.
     try {

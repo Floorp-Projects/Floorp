@@ -10,7 +10,6 @@
 #include "nsDOMClassInfo.h"
 #include "DOMError.h"
 #include "nsEventDispatcher.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsDOMEvent.h"
 
 using mozilla::dom::DOMRequest;
@@ -52,10 +51,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(DOMRequest,
                                                nsDOMEventTargetHelper)
   // Don't need NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER because
   // nsDOMEventTargetHelper does it for us.
-  if (JSVAL_IS_GCTHING(tmp->mResult)) {
-    void *gcThing = JSVAL_TO_GCTHING(tmp->mResult);
-    NS_IMPL_CYCLE_COLLECTION_TRACE_JS_CALLBACK(gcThing, "mResult")
-  }
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mResult)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMRequest)

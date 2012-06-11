@@ -21,15 +21,18 @@ interface nsIDOMSettingsLock : nsISupports
   nsIDOMDOMRequest clear();
 };
 
-[scriptable, uuid(5609d0a0-52a9-11e1-b86c-0800200c9a66)]
+[scriptable, uuid(dd9f5380-a454-11e1-b3dd-0800200c9a66)]
 interface nsIDOMSettingsManager : nsISupports
 {
   nsIDOMSettingsLock getLock();
 
+  void addObserver(in DOMString name, in jsval callback);
+  void removeObserver(in DOMString name, in jsval callback);
+
   attribute nsIDOMEventListener onsettingchange;
 };
 
-[scriptable, uuid(5ce02690-52a9-11e1-b86c-0800200c9a66)]
+[scriptable, builtinclass, uuid(5e304193-af49-4546-8329-bf7c9159ed98)]
 interface nsIDOMMozSettingsEvent : nsIDOMEvent
 {
   readonly attribute DOMString  settingName;

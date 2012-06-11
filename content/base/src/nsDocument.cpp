@@ -22,7 +22,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsDocument.h"
 #include "nsUnicharUtils.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsContentList.h"
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
@@ -2813,29 +2812,11 @@ nsDocument::ElementFromPointHelper(float aX, float aY,
   if (!ptFrame)
     return NS_OK;
 
-  nsIContent* ptContent = ptFrame->GetContent();
-  NS_ENSURE_STATE(ptContent);
-
-  // If the content is in a subdocument, try to get the element from |this| doc
-  nsIDocument *currentDoc = ptContent->GetCurrentDoc();
-  if (currentDoc && (currentDoc != this)) {
-    *aReturn = CheckAncestryAndGetFrame(currentDoc).get();
-    return NS_OK;
+  nsIContent* elem = GetContentInThisDocument(ptFrame);
+  if (elem && !elem->IsElement()) {
+    elem = elem->GetParent();
   }
-
-  // If we have an anonymous element (such as an internal div from a textbox),
-  // or a node that isn't an element (such as a text frame node),
-  // replace it with the first non-anonymous parent node of type element.
-  while (ptContent &&
-         (!ptContent->IsElement() ||
-          ptContent->IsInAnonymousSubtree())) {
-    // XXXldb: Faster to jump to GetBindingParent if non-null?
-    ptContent = ptContent->GetParent();
-  }
- 
-  if (ptContent)
-    CallQueryInterface(ptContent, aReturn);
-  return NS_OK;
+  return CallQueryInterface(elem, aReturn);
 }
 
 nsresult
@@ -2882,47 +2863,23 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
   nsLayoutUtils::GetFramesForArea(rootFrame, rect, outFrames,
                                   true, aIgnoreRootScrollFrame);
 
-  PRInt32 length = outFrames.Length();
-  if (!length)
-    return NS_OK;
-
   // Used to filter out repeated elements in sequence.
   nsIContent* lastAdded = nsnull;
 
-  for (PRInt32 i = 0; i < length; i++) {
+  for (PRInt32 i = 0; i < outFrames.Length(); i++) {
+    nsIContent* node = GetContentInThisDocument(outFrames[i]);
 
-    nsIContent* ptContent = outFrames.ElementAt(i)->GetContent();
-    NS_ENSURE_STATE(ptContent);
-
-    // If the content is in a subdocument, try to get the element from |this| doc
-    nsIDocument *currentDoc = ptContent->GetCurrentDoc();
-    if (currentDoc && (currentDoc != this)) {
-      // XXX felipe: I can't get this type right without the intermediate vars
-      nsCOMPtr<nsIDOMElement> x = CheckAncestryAndGetFrame(currentDoc);
-      nsCOMPtr<nsIContent> elementDoc = do_QueryInterface(x);
-      if (elementDoc != lastAdded) {
-        elements->AppendElement(elementDoc);
-        lastAdded = elementDoc;
-      }
-      continue;
+    if (node && !node->IsElement() && !node->IsNodeOfType(nsINode::eTEXT)) {
+      // If we have a node that isn't an element or a text node,
+      // replace it with the first parent node.
+      node = node->GetParent();
     }
-
-    // If we have an anonymous element (such as an internal div from a textbox),
-    // or a node that isn't an element or a text node,
-    // replace it with the first non-anonymous parent node.
-    while (ptContent &&
-           (!(ptContent->IsElement() ||
-              ptContent->IsNodeOfType(nsINode::eTEXT)) ||
-            ptContent->IsInAnonymousSubtree())) {
-      // XXXldb: Faster to jump to GetBindingParent if non-null?
-      ptContent = ptContent->GetParent();
-    }
-   
-    if (ptContent && ptContent != lastAdded) {
-      elements->AppendElement(ptContent);
-      lastAdded = ptContent;
+    if (node && node != lastAdded) {
+      elements->AppendElement(node);
+      lastAdded = node;
     }
   }
+
   return NS_OK;
 }
 
@@ -4171,20 +4128,18 @@ nsDocument::DispatchContentLoadedEvents()
       nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(parent);
 
       nsCOMPtr<nsIDOMEvent> event;
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent;
       if (domDoc) {
         domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
                             getter_AddRefs(event));
 
-        privateEvent = do_QueryInterface(event);
       }
 
-      if (event && privateEvent) {
+      if (event) {
         event->InitEvent(NS_LITERAL_STRING("DOMFrameContentLoaded"), true,
                          true);
 
-        privateEvent->SetTarget(target_frame);
-        privateEvent->SetTrusted(true);
+        event->SetTarget(target_frame);
+        event->SetTrusted(true);
 
         // To dispatch this event we must manually call
         // nsEventDispatcher::Dispatch() on the ancestor document since the
@@ -4192,7 +4147,7 @@ nsDocument::DispatchContentLoadedEvents()
         // the ancestor document if we used the normal event
         // dispatching code.
 
-        nsEvent* innerEvent = privateEvent->GetInternalNSEvent();
+        nsEvent* innerEvent = event->GetInternalNSEvent();
         if (innerEvent) {
           nsEventStatus status = nsEventStatus_eIgnore;
 
@@ -7213,42 +7168,25 @@ nsDocument::DoUnblockOnload()
   }
 }
 
-/* See if document is a child of this.  If so, return the frame element in this
- * document that holds currentDoc (or an ancestor). */
-already_AddRefed<nsIDOMElement>
-nsDocument::CheckAncestryAndGetFrame(nsIDocument* aDocument) const
+nsIContent*
+nsDocument::GetContentInThisDocument(nsIFrame* aFrame) const
 {
-  nsIDocument* parentDoc;
-  for (parentDoc = aDocument->GetParentDocument();
-       parentDoc != static_cast<const nsIDocument* const>(this);
-       parentDoc = parentDoc->GetParentDocument()) {
-    if (!parentDoc) {
-      return nsnull;
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+    nsIContent* ptContent = f->GetContent();
+    if (!ptContent || ptContent->IsInAnonymousSubtree())
+      continue;
+
+    if (ptContent->OwnerDoc() == this) {
+      return ptContent;
     }
-
-    aDocument = parentDoc;
+    // We must be in a subdocument so jump directly to the root frame.
+    // GetParentOrPlaceholderForCrossDoc gets called immediately to jump up to
+    // the containing document.
+    f = f->PresContext()->GetPresShell()->GetRootFrame();
   }
 
-  // In a child document.  Get the appropriate frame.
-  nsPIDOMWindow* currentWindow = aDocument->GetWindow();
-  if (!currentWindow) {
-    return nsnull;
-  }
-  nsIDOMElement* frameElement = currentWindow->GetFrameElementInternal();
-  if (!frameElement) {
-    return nsnull;
-  }
-
-  // Sanity check result
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  frameElement->GetOwnerDocument(getter_AddRefs(domDocument));
-  if (domDocument != this) {
-    NS_ERROR("Child documents should live in windows the parent owns");
-    return nsnull;
-  }
-
-  NS_ADDREF(frameElement);
-  return frameElement;
+  return nsnull;
 }
 
 void
@@ -7260,12 +7198,11 @@ nsDocument::DispatchPageTransition(nsIDOMEventTarget* aDispatchTarget,
     nsCOMPtr<nsIDOMEvent> event;
     CreateEvent(NS_LITERAL_STRING("pagetransition"), getter_AddRefs(event));
     nsCOMPtr<nsIDOMPageTransitionEvent> ptEvent = do_QueryInterface(event);
-    nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(ptEvent);
-    if (pEvent && NS_SUCCEEDED(ptEvent->InitPageTransitionEvent(aType, true,
-                                                                true,
-                                                                aPersisted))) {
-      pEvent->SetTrusted(true);
-      pEvent->SetTarget(this);
+    if (ptEvent && NS_SUCCEEDED(ptEvent->InitPageTransitionEvent(aType, true,
+                                                                 true,
+                                                                 aPersisted))) {
+      event->SetTrusted(true);
+      event->SetTarget(this);
       nsEventDispatcher::DispatchDOMEvent(aDispatchTarget, nsnull, event,
                                           nsnull, nsnull);
     }
@@ -9740,6 +9677,12 @@ nsDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
     mAttrStyleSheet ?
     mAttrStyleSheet->DOMSizeOfIncludingThis(aWindowSizes->mMallocSizeOf) :
     0;
+
+  aWindowSizes->mDOMOther +=
+    mStyledLinks.SizeOfExcludingThis(NULL, aWindowSizes->mMallocSizeOf);
+
+  aWindowSizes->mDOMOther +=
+    mIdentifierMap.SizeOfExcludingThis(NULL, aWindowSizes->mMallocSizeOf);
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:

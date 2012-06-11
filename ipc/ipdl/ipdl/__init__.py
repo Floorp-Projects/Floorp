@@ -18,7 +18,15 @@ from ipdl.cxx.cgen import CxxCodeGen
 def parse(specstring, filename='/stdin', includedirs=[ ], errout=sys.stderr):
     '''Return an IPDL AST if parsing was successful.  Print errors to |errout|
     if it is not.'''
-    return Parser().parse(specstring, os.path.abspath(filename), includedirs, errout)
+    # The file type and name are later enforced by the type checker.
+    # This is just a hint to the parser.
+    prefix, ext = os.path.splitext(filename)
+    name = os.path.basename(prefix)
+    if ext == '.ipdlh':
+        type = 'header'
+    else:
+        type = 'protocol'
+    return Parser(type, name).parse(specstring, os.path.abspath(filename), includedirs, errout)
 
 
 def typecheck(ast, errout=sys.stderr):
@@ -35,7 +43,7 @@ def gencxx(ipdlfilename, ast, outheadersdir, outcppdir):
             hdr, 
             os.path.join(
                 outheadersdir,
-                *([ns.name for ns in ast.protocol.namespaces] + [hdr.name]))
+                *([ns.name for ns in ast.namespaces] + [hdr.name]))
         ]
     def resolveCpp(cpp):
         return [ cpp, os.path.join(outcppdir, cpp.name) ]
