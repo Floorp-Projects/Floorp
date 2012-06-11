@@ -175,6 +175,8 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
   mDirtyRegion = nsnull;
   mDeletionObserver = nsnull;
   mWidgetIsTopLevel = false;
+  mPendingRefresh = false;
+  mNeedsToTriggerPaintAfterRefresh = false;
 }
 
 void nsView::DropMouseGrabbing()
