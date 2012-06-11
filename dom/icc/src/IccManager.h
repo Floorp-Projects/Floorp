@@ -37,6 +37,15 @@ public:
 private:
   nsCOMPtr<nsIMobileConnectionProvider> mProvider;
 
+  nsIDOMEventTarget*
+  ToIDOMEventTarget() const
+  {
+    return static_cast<nsDOMEventTargetHelper*>(
+           const_cast<IccManager*>(this));
+  }
+
+  nsresult InternalDispatchEvent(const nsAString& aType);
+
   NS_DECL_EVENT_HANDLER(stkcommand)
   NS_DECL_EVENT_HANDLER(stksessionend)
 };
