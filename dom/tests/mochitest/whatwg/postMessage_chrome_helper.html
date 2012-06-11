@@ -37,7 +37,9 @@
     
     function respond(msg)
     {
-      SpecialPowers.wrap(window).parent.postMessage(msg, "*");
+      // ...so get privileges and test that this works with privileges
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      window.parent.postMessage(msg, "*");
     }
     
     window.addEventListener("message", receiveMessage, false);
