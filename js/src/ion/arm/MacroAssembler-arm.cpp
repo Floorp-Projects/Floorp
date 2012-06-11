@@ -2826,10 +2826,9 @@ MacroAssemblerARMCompat::floor(FloatRegister input, Register output, Label *bail
 }
 
 CodeOffsetLabel
-MacroAssemblerARMCompat::toggledJump(bool enabled, Label *label)
+MacroAssemblerARMCompat::toggledJump(Label *label)
 {
-    // The |enabled| bit is ignored; the jmp will be patched to a cmp
-    // during the end of code generation.
+    // Emit a B that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
     CodeOffsetLabel ret(nextOffset().getOffset());
     ma_b(label);
     return ret;
