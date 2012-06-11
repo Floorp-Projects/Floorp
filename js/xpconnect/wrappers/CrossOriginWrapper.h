@@ -15,7 +15,18 @@
 
 namespace xpc {
 
-class CrossOriginWrapper : public js::CrossCompartmentWrapper {
+class NoWaiverWrapper : public js::CrossCompartmentWrapper {
+  public:
+    NoWaiverWrapper(unsigned flags);
+    virtual ~NoWaiverWrapper();
+
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp) MOZ_OVERRIDE;
+    virtual void leave(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
+
+    static NoWaiverWrapper singleton;
+};
+
+class CrossOriginWrapper : public NoWaiverWrapper {
   public:
     CrossOriginWrapper(unsigned flags);
     virtual ~CrossOriginWrapper();
