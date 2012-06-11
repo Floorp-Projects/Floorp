@@ -3105,7 +3105,7 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
 
   uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
   nsJSContext::GarbageCollectNow(static_cast<js::gcreason::Reason>(reason),
-                                 nsGCNormal, false);
+                                 nsGCIncremental, false);
 }
 
 void
