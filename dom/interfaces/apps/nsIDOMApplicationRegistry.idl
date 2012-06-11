@@ -18,7 +18,26 @@ interface mozIDOMApplication  : nsISupports
   readonly attribute DOMString origin;
   readonly attribute DOMString installOrigin;
   readonly attribute unsigned long installTime;
-  
+
+  /* 
+   * The current progress when downloading an offline cache.
+   */
+  readonly attribute double progress;
+
+  /*
+   * The application status :
+   * "installed"   : The app is in the registry, but we have no offline cache.
+   * "downlading"  : We are downloading the offline cache.
+   * "cached"      : We are done with the offline cache download.
+   * "cache-error" : An error occured while downloading the offline-cache.
+   */
+  readonly attribute DOMString status;
+
+  /*
+   * fires a mozIDOMApplicationEvent when a change in appcache download or status happens
+   */
+  attribute nsIDOMEventListener onprogress;
+
   /* startPoint will be used when several launch_path exists for an app */
   nsIDOMDOMRequest launch([optional] in DOMString startPoint);
   nsIDOMDOMRequest uninstall(); 
