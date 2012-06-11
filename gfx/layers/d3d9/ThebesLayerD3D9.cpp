@@ -236,6 +236,10 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
     mValidRegion = neededRegion;
   }
 
+  if (mD3DManager->CompositingDisabled()) {
+    return;
+  }
+
   SetShaderTransformAndOpacity();
 
   if (mode == SURFACE_COMPONENT_ALPHA) {
@@ -654,7 +658,7 @@ ShadowThebesLayerD3D9::IsEmpty()
 void
 ShadowThebesLayerD3D9::RenderThebesLayer()
 {
-  if (!mBuffer) {
+  if (!mBuffer || mD3DManager->CompositingDisabled()) {
     return;
   }
   NS_ABORT_IF_FALSE(mBuffer, "should have a buffer here");
