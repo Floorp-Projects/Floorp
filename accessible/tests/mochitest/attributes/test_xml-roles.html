@@ -26,6 +26,7 @@
       testAttrs("section", {"xml-roles" : "region"}, true);
       testAttrs("main", {"xml-roles" : "main"}, true); // // ARIA override
       testAttrs("form", {"xml-roles" : "form"}, true);
+      testAttrs("article", {"xml-roles" : "article"}, true);
 
       SimpleTest.finish();
     }
@@ -61,6 +62,11 @@
      title="Map ARIA role FORM">
     Bug 734982
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=761891"
+     title="HTML5 article element should expose xml-roles:article object attribute">
+    Bug 761891
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -72,6 +78,7 @@
   <section id="section">a section</section>
   <article id="main" role="main">a main area</article>
   <article id="form" role="form">a form area</article>
+  <article id="article">article</article>
 
 </body>
 </html>
