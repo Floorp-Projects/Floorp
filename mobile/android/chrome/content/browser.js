@@ -2244,10 +2244,12 @@ Tab.prototype = {
     let documentURI = contentWin.document.documentURIObject.spec;
     let contentType = contentWin.document.contentType;
     
-    // XXX If fixedURI matches browser.lastURI, we assume this isn't a real location
+    // If fixedURI matches browser.lastURI, we assume this isn't a real location
     // change but rather a spurious addition like a wyciwyg URI prefix. See Bug 747883.
+    // Note that we have to ensure fixedURI is not the same as aLocationURI so we
+    // don't false-positive page reloads as spurious additions.
     let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0 ||
-                       ((this.browser.lastURI != null) && fixedURI.equals(this.browser.lastURI));
+                       ((this.browser.lastURI != null) && fixedURI.equals(this.browser.lastURI) && !fixedURI.equals(aLocationURI));
     this.browser.lastURI = fixedURI;
 
     // Reset state of click-to-play plugin notifications.
