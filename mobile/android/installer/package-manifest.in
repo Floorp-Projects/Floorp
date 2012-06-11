@@ -236,7 +236,6 @@
 @BINPATH@/components/necko.xpt
 @BINPATH@/components/loginmgr.xpt
 @BINPATH@/components/parentalcontrols.xpt
-@BINPATH@/components/places.xpt
 @BINPATH@/components/plugin.xpt
 @BINPATH@/components/pref.xpt
 @BINPATH@/components/prefetch.xpt
@@ -315,7 +314,6 @@
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
-@BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/nsPrivateBrowsingService.manifest
 @BINPATH@/components/nsPrivateBrowsingService.js
 @BINPATH@/components/toolkitsearch.manifest
@@ -372,15 +370,6 @@
 #endif
 @BINPATH@/components/txEXSLTRegExFunctions.manifest
 @BINPATH@/components/txEXSLTRegExFunctions.js
-@BINPATH@/components/toolkitplaces.manifest
-@BINPATH@/components/nsLivemarkService.js
-@BINPATH@/components/nsTaggingService.js
-@BINPATH@/components/nsPlacesDBFlush.js
-@BINPATH@/components/nsPlacesAutoComplete.manifest
-@BINPATH@/components/nsPlacesAutoComplete.js
-@BINPATH@/components/nsPlacesExpiration.js
-@BINPATH@/components/PlacesProtocolHandler.js
-@BINPATH@/components/PlacesCategoriesStarter.js
 @BINPATH@/components/nsDefaultCLH.manifest
 @BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.manifest
