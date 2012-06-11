@@ -9,8 +9,8 @@
 #define mozilla_Assertions_h_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Types.h"
 
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef WIN32
