@@ -17,6 +17,15 @@ function handleRequest(request, response)
   else if (query['xfo'] == "sameorigin") {
     response.setHeader("X-Frame-Options", "SAMEORIGIN", false);
   }
+  else if (query['xfo'] == "sameorigin2") {
+    response.setHeader("X-Frame-Options", "SAMEORIGIN, SAMEORIGIN", false);
+  }
+  else if (query['xfo'] == "sameorigin3") {
+    response.setHeader("X-Frame-Options", "SAMEORIGIN,SAMEORIGIN , SAMEORIGIN", false);
+  }
+  else if (query['xfo'] == "mixedpolicy") {
+    response.setHeader("X-Frame-Options", "DENY,SAMEORIGIN", false);
+  }
 
   // from the test harness we'll be checking for the presence of this element
   // to test if the page loaded
