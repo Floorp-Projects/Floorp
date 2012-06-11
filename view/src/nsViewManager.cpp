@@ -1309,6 +1309,7 @@ nsViewManager::ProcessPendingUpdates()
     return;
   }
 
+  mPresShell->GetPresContext()->RefreshDriver()->RevokeViewManagerFlush();
   ProcessPendingUpdatesForView(mRootView, true);
 }
 
