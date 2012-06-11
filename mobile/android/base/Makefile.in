@@ -26,6 +26,7 @@ FENNEC_JAVA_FILES = \
   AlertNotification.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \
+  BrowserApp.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
   SyncPreference.java \
