@@ -106,6 +106,8 @@ public:
   virtual PRInt32 CellIndexAt(PRUint32 aRowIdx, PRUint32 aColIdx);
   virtual PRUint32 ColExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
   virtual PRUint32 RowExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
+  virtual void SelectCol(PRUint32 aColIdx);
+  virtual void SelectRow(PRUint32 aRowIdx);
   virtual void UnselectCol(PRUint32 aColIdx);
   virtual void UnselectRow(PRUint32 aRowIdx);
   virtual bool IsProbablyLayoutTable();

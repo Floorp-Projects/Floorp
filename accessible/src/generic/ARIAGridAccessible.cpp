@@ -508,50 +508,34 @@ ARIAGridAccessible::GetSelectedRowIndices(PRUint32* aRowCount,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::SelectRow(PRInt32 aRow)
+void
+ARIAGridAccessible::SelectRow(PRUint32 aRowIdx)
 {
-  NS_ENSURE_ARG(IsValidRow(aRow));
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   AccIterator rowIter(this, filters::GetRow);
 
   Accessible* row = nsnull;
   for (PRInt32 rowIdx = 0; (row = rowIter.Next()); rowIdx++) {
-    nsresult rv = SetARIASelected(row, rowIdx == aRow);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsresult rv = SetARIASelected(row, rowIdx == aRowIdx);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "SetARIASelected() Shouldn't fail!");
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::SelectColumn(PRInt32 aColumn)
+void
+ARIAGridAccessible::SelectCol(PRUint32 aColIdx)
 {
-  NS_ENSURE_ARG(IsValidColumn(aColumn));
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   AccIterator rowIter(this, filters::GetRow);
 
   Accessible* row = nsnull;
   while ((row = rowIter.Next())) {
     // Unselect all cells in the row.
     nsresult rv = SetARIASelected(row, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "SetARIASelected() Shouldn't fail!");
 
     // Select cell at the column index.
-    Accessible* cell = GetCellInRowAt(row, aColumn);
-    if (cell) {
-      rv = SetARIASelected(cell, true);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    Accessible* cell = GetCellInRowAt(row, aColIdx);
+    if (cell)
+      SetARIASelected(cell, true);
   }
-
-  return NS_OK;
 }
 
 void
