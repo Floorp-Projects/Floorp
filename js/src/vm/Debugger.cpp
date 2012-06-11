@@ -3360,9 +3360,8 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar 
 
     /*
      * NB: This function breaks the assumption that the compiler can see all
-     * calls and properly compute a static level. In order to get around this,
-     * we use a static level that will cause us not to attempt to optimize
-     * variable references made by this frame.
+     * calls and properly compute a static level. In practice, any non-zero
+     * static level will suffice.
      */
     JSPrincipals *prin = fp->scopeChain()->principals(cx);
     bool compileAndGo = true;
@@ -3371,8 +3370,7 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, StackFrame *fp, const jschar 
     JSScript *script = frontend::CompileScript(cx, env, fp, prin, prin,
                                                compileAndGo, noScriptRval, needScriptGlobal,
                                                chars, length, filename, lineno,
-                                               cx->findVersion(), NULL,
-                                               UpvarCookie::UPVAR_LEVEL_LIMIT);
+                                               cx->findVersion(), NULL, /* staticLimit = */ 1);
     if (!script)
         return false;
 

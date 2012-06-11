@@ -312,8 +312,4 @@ protected:
   };
 };
 
-// Define unsupported wrap classes here
-typedef class nsHTMLTextFieldAccessible    nsHTMLTextFieldAccessibleWrap;
-typedef class nsXULTextFieldAccessible     nsXULTextFieldAccessibleWrap;
-
 #endif

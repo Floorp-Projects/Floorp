@@ -25,6 +25,7 @@ _TEST_FILES =\
 		test_caretmove.xul \
 		test_coalescence.html \
 		test_contextmenu.html \
+		test_docload_aria.html \
 		test_docload.html \
 		test_docload.xul \
 		test_dragndrop.html \

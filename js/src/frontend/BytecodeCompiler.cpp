@@ -34,6 +34,13 @@ MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script_)
         JSScript *outer = worklist.back();
         worklist.popBack();
 
+        /*
+         * If outer has an extensible scope, its slots may be resized which
+         * will invalidate nesting->varArray/argArray.
+         */
+        if (outer->funHasExtensibleScope)
+            continue;
+
         if (outer->hasObjects()) {
             ObjectArray *arr = outer->objects();
 
@@ -99,7 +106,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!parser.init())
         return NULL;
 
-    SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL);
+    SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL, staticLevel);
 
     TreeContext tc(&parser, &sc);
     if (!tc.init())
@@ -119,8 +126,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     GlobalScope globalScope(cx, globalObj);
     bce.globalScope = &globalScope;
-    if (!SetStaticLevel(&sc, staticLevel))
-        return NULL;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)
@@ -264,7 +269,8 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         return false;
 
     JS_ASSERT(fun);
-    SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL);
+    SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL,
+                        /* staticLevel = */ 0);
 
     TreeContext funtc(&parser, &funsc);
     if (!funtc.init())

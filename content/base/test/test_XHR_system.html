@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for XMLHttpRequest with system privileges</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTests();">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+function runTests() {
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.setCharPref("dom.systemXHR.whitelist",
+                            "http://mochi.test:8888");
+
+  function tearDown() {
+    SpecialPowers.clearUserPref("dom.systemXHR.whitelist");
+    SimpleTest.finish();
+  }
+
+  // An XHR with system privileges will be able to do cross-site calls.
+
+  const TEST_URL = "http://example.com/tests/content/base/test/test_XHR_system.html";
+  is(window.location.hostname, "mochi.test");
+
+  let xhr = new XMLHttpRequest({mozSystem: true});
+  is(xhr.mozSystem, true, ".mozSystem == true");
+  xhr.open("GET", TEST_URL);
+  xhr.onload = function onload() {
+    is(xhr.status, 200);
+    ok(xhr.responseText != null);
+    ok(xhr.responseText.length);
+    tearDown();
+  };
+  xhr.onerror = function onerror() {
+    ok(false, "Got an error event!");
+    tearDown();
+  }
+  xhr.send();
+}
+
+</script>
+</pre>
+</body>
+</html>
