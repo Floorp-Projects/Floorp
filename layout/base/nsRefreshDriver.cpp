@@ -411,15 +411,8 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
   }
 
   if (mViewManagerFlushIsPending) {
-#ifdef DEBUG_INVALIDATIONS
-    printf("Starting ProcessPendingUpdates\n");
-#endif
     mViewManagerFlushIsPending = false;
-    bool skippedFlush = mPresContext->GetPresShell()->GetViewManager()->ProcessPendingUpdates();
-    mViewManagerFlushIsPending |= skippedFlush;
-#ifdef DEBUG_INVALIDATIONS
-    printf("Ending ProcessPendingUpdates\n");
-#endif
+    mPresContext->GetPresShell()->GetViewManager()->ProcessPendingUpdates();
   }
 
   if (mThrottled ||

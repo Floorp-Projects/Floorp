@@ -587,11 +587,19 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
   if (!aCurrentFrame)
     return NS_OK;
 
+  // XXX We really need to round this out, now that we're doing better
+  // image scaling!
+  nsRect r = aRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect()) ?
+    GetInnerArea() :
+    SourceRectToDest(*aRect);
+
 #ifdef DEBUG_decode
-  printf("Source rect (%d,%d,%d,%d)\n",
-         aRect->x, aRect->y, aRect->width, aRect->height);
+  printf("Source rect (%d,%d,%d,%d) -> invalidate dest rect (%d,%d,%d,%d)\n",
+         aRect->x, aRect->y, aRect->width, aRect->height,
+         r.x, r.y, r.width, r.height);
 #endif
-  InvalidateFrame();
+
+  Invalidate(r);
   
   return NS_OK;
 }
@@ -650,8 +658,10 @@ nsImageFrame::NotifyNewCurrentRequest(imgIRequest *aRequest,
                                     NS_FRAME_IS_DIRTY);
       }
     } else {
+      nsSize s = GetSize();
+      nsRect r(0, 0, s.width, s.height);
       // Update border+content to account for image change
-      InvalidateFrame();
+      Invalidate(r);
     }
   }
 }
@@ -670,8 +680,12 @@ nsImageFrame::FrameChanged(imgIRequest *aRequest,
     return NS_OK;
   }
 
+  nsRect r = aDirtyRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect()) ?
+    GetInnerArea() :
+    SourceRectToDest(*aDirtyRect);
+
   // Update border+content to account for image change
-  InvalidateFrame();
+  Invalidate(r);
   return NS_OK;
 }
 
@@ -865,6 +879,15 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
 
   aMetrics.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aMetrics);
+
+  // Now that that's all done, check whether we're resizing... if we are,
+  // invalidate our rect.
+  // XXXbz we really only want to do this when reflow is completely done, but
+  // we have no way to detect when mRect changes (since SetRect is non-virtual,
+  // so this is the best we can do).
+  if (mRect.width != aMetrics.width || mRect.height != aMetrics.height) {
+    Invalidate(nsRect(0, 0, mRect.width, mRect.height));
+  }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsImageFrame::Reflow: size=%d,%d",
@@ -1988,7 +2011,7 @@ nsImageFrame::IconLoad::OnStopRequest(imgIRequest *aRequest,
   nsImageFrame *frame;
   while (iter.HasMore()) {
     frame = iter.GetNext();
-    frame->InvalidateFrame();
+    frame->Invalidate(frame->GetRect());
   }
 
   return NS_OK;
@@ -2009,7 +2032,7 @@ nsImageFrame::IconLoad::FrameChanged(imgIRequest *aRequest,
   nsImageFrame *frame;
   while (iter.HasMore()) {
     frame = iter.GetNext();
-    frame->InvalidateFrame();
+    frame->Invalidate(frame->GetRect());
   }
 
   return NS_OK;

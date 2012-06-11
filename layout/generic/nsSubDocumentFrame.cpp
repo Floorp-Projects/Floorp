@@ -55,7 +55,6 @@
 #include "nsIServiceManager.h"
 #include "nsContentUtils.h"
 #include "nsIHTMLDocument.h"
-#include "LayerTreeInvalidation.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
@@ -377,16 +376,14 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     nsDisplayZoom* zoomItem =
       new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
-                                   subdocAPD, parentAPD, 
-                                   nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
+                                   subdocAPD, parentAPD);
     childItems.AppendToTop(zoomItem);
   }
 
   if (!addedLayer && presContext->IsRootContentDocument()) {
     // We always want top level content documents to be in their own layer.
     nsDisplayOwnLayer* layerItem = new (aBuilder) nsDisplayOwnLayer(
-      aBuilder, subdocRootFrame ? subdocRootFrame : this, 
-      &childItems, nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
+      aBuilder, subdocRootFrame ? subdocRootFrame : this, &childItems);
     childItems.AppendToTop(layerItem);
   }
 
@@ -605,6 +602,9 @@ nsSubDocumentFrame::Reflow(nsPresContext*           aPresContext,
       aDesiredSize.mOverflowAreas.UnionWith(subdocRootFrame->GetOverflowAreas() + offset);
     }
   }
+
+  // Determine if we need to repaint our border, background or outline
+  CheckInvalidateSizeChange(aDesiredSize);
 
   FinishAndStoreOverflow(&aDesiredSize);
 
@@ -917,9 +917,6 @@ nsSubDocumentFrame::BeginSwapDocShells(nsIFrame* aOther)
       !other->mFrameLoader || !other->mDidCreateDoc) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-
-  NS_ASSERTION(HasAnyStateBits(NS_FRAME_IN_POPUP) == other->HasAnyStateBits(NS_FRAME_IN_POPUP),
-               "Can't swap doc shells when only one is within a popup!");
 
   if (mInnerView && other->mInnerView) {
     nsIView* ourSubdocViews = mInnerView->GetFirstChild();

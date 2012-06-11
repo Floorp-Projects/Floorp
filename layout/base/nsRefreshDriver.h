@@ -154,9 +154,6 @@ public:
   void RevokeViewManagerFlush() {
     mViewManagerFlushIsPending = false;
   }
-  bool ViewManagerFlushIsPending() {
-    return mViewManagerFlushIsPending;
-  }
 
   /**
    * Add a document for which we have nsIFrameRequestCallbacks

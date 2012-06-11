@@ -260,10 +260,6 @@ function InitAndStartRefTests()
     } catch(e) {
         gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | EXCEPTION: " + e + "\n");
     }
-
-    try {
-      prefs.setBoolPref("android.widget_paints_background", false);
-    } catch (e) {}
     
     /* set the gLoadTimeout */
     try {
@@ -301,7 +297,7 @@ function InitAndStartRefTests()
     } catch(e) { 
         gRemote = false;
     }
-    
+
     try {
         gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize");
     } catch(e) {

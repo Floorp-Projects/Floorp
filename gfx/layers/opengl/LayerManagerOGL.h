@@ -350,9 +350,6 @@ public:
    */
   void SetSurfaceSize(int width, int height);
 
-  bool CompositingDisabled() { return mCompositingDisabled; }
-  void SetCompositingDisabled(bool aCompositingDisabled) { mCompositingDisabled = aCompositingDisabled; }
-
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;
@@ -394,7 +391,6 @@ private:
 
   /** Misc */
   bool mHasBGRA;
-  bool mCompositingDisabled;
 
   /**
    * When rendering to an EGL surface (e.g. on Android), we rely on being told

@@ -10,7 +10,6 @@
 #include "gfxPattern.h"
 #include "gfxRect.h"
 #include "nsRect.h"
-#include "Layers.h"
 
 class nsDisplayList;
 class nsDisplayListBuilder;
@@ -49,8 +48,8 @@ public:
   /**
    * Adjust the frame's invalidation area to cover effects
    */
-  static nsIntRect
-  GetInvalidAreaForChangedSource(nsIFrame* aFrame, const nsIntRect& aInvalidRect);
+  static nsRect
+  GetInvalidAreaForChangedSource(nsIFrame* aFrame, const nsRect& aInvalidRect);
   /**
    * Figure out which area of the source is needed given an area to
    * repaint
@@ -71,10 +70,9 @@ public:
    */
   static void
   PaintFramesWithEffects(nsRenderingContext* aCtx,
-                         nsIFrame* aEffectsFrame,
-                         const nsRect& aDirtyRect,
+                         nsIFrame* aEffectsFrame, const nsRect& aDirtyRect,
                          nsDisplayListBuilder* aBuilder,
-                         mozilla::layers::LayerManager* aManager);
+                         nsDisplayList* aInnerList);
 
   static gfxMatrix
   GetInitialMatrix(nsIFrame* aNonSVGFrame);

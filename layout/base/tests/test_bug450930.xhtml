@@ -9,18 +9,208 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450930
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450930">Mozilla Bug 450930</a>
+<div id="display">
+  <div id="d" style="width:400px; height:200px;"></div>
+  <iframe id="iframe" style="width:400px; height:200px;"
+   src="data:text/html,&lt;div id='d'&gt;&lt;span style='margin-left:3px;'&gt;Hello&lt;/span&gt;
+        &lt;/div&gt;&lt;div style='margin-top:500px' id='d2'&gt;
+        &lt;span style='margin-left:3px;'&gt;Goodbye&lt;/span&gt;&lt;/div>"></iframe>
+  <svg:svg style="width:410px; height:210px;" id="svg">
+    <svg:foreignObject width="100%" height="100%">
+      <iframe id="iframe2" style="width:400px; height:200px;"
+       src="data:text/html,&lt;div id='d'&gt;&lt;span style='margin-left:3px;'&gt;Hello&lt;/span&gt;
+            &lt;/div&gt;&lt;div style='margin-top:500px' id='d2'&gt;
+            &lt;span style='margin-left:3px;'&gt;Goodbye&lt;/span&gt;&lt;/div>"></iframe>
+    </svg:foreignObject>
+  </svg:svg>
+</div>
+<div id="content" style="display: none">
+
+</div>
 <pre id="test">
 <script class="testbody" type="text/javascript"><![CDATA[
 
 /** Test for Bug 450930 **/
 SimpleTest.waitForExplicitFinish();
-var subwindow = window.open("./bug450930.xhtml", "bug450930", "width=800,height=1000");
 
-function finishTests() {
-  subwindow.close();
-  SimpleTest.finish();
+function flash(doc, name) {
+  var d = doc.getElementById(name);
+  d.style.backgroundColor = d.style.backgroundColor == "blue" ? "yellow" : "blue";
+  // Now flush out style changes in that document, since our event listeners
+  // seem to assume that things will work that way.
+  d.getBoundingClientRect();
 }
 
+function le(v1, v2, s) {
+  ok(v1 <= v2, s + " (" + v1 + "," + v2 + ")");
+}
+
+function checkContains(r1, r2, s) {
+  le(r1.left, r2.left, "Left edges out" + s);
+  le(r2.right, r1.right, "Right edges out" + s);
+  le(r1.top, r2.top, "Top edges out" + s);
+  le(r2.bottom, r1.bottom, "Bottom edges out" + s);
+}
+
+function isRect(r1, r2) {
+  return r1.left == r2.left && r1.right == r2.right &&
+         r1.top == r2.top && r1.bottom == r2.bottom;
+}
+
+function isRectInList(r, list) {
+  for (var i = 0; i < list.length; ++i) {
+    if (isRect(r, list[i]))
+      return true;
+  }
+  return false;
+}
+
+function doesRectContain(r1, r2) {
+  return r1.left <= r2.left && r2.right <= r1.right &&
+         r1.top <= r2.top && r2.bottom <= r1.bottom;
+}
+
+function rectToString(r) {
+  return "(" + r.left + "," + r.top + "," + r.right + "," + r.bottom + ")";
+}
+
+function doesRectContainListElement(r, list) {
+  dump("Incoming rect: " + rectToString(r) + "\n");
+  for (var i = 0; i < list.length; ++i) {
+    dump("List rect " + i + ": " + rectToString(list[i]));
+    if (doesRectContain(r, list[i])) {
+      dump(" FOUND\n");
+      return true;
+    }
+    dump("\n");
+  }
+  dump("NOT FOUND\n");
+  return false;
+}
+
+function checkGotSubdoc(list, container) {
+  var r = container.getBoundingClientRect();
+  return doesRectContainListElement(r, list);
+}
+
+function runTest1() {
+  // test basic functionality
+  var iterations = 0;
+  var foundExactRect = false;
+
+  function listener(event) {
+    var r = event.boundingClientRect;
+    var bounds = document.getElementById('d').getBoundingClientRect();
+    checkContains(r, bounds, "");
+    if (isRectInList(bounds, event.clientRects)) {
+      foundExactRect = true;
+    }
+    window.removeEventListener("MozAfterPaint", listener, false);
+    ++iterations;
+    if (iterations < 4) {
+      setTimeout(triggerPaint, 100);
+    } else {
+      ok(foundExactRect, "Found exact rect");
+      runNext();
+    }
+  }
+
+  function triggerPaint() {
+    window.addEventListener("MozAfterPaint", listener, false);
+    flash(document, 'd');
+  }
+  triggerPaint();
+}
+
+function runTest2(frameID, containerID) {
+  // test reporting of painting in subdocuments
+  var fired = 0;
+  var gotSubdocPrivileged = false;
+  var gotSubdocNonprivileged = false;
+  var iframe = document.getElementById(frameID);
+  var container = document.getElementById(containerID);
+
+  function listener(event) {
+    if (checkGotSubdoc(event.clientRects, container))
+      gotSubdocNonprivileged = true;
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    if (checkGotSubdoc(event.clientRects, container))
+      gotSubdocPrivileged = true;
+    if (++fired == 1)
+      setTimeout(check, 100);
+  }
+
+  function check() {
+    is(fired, 1, "Wrong event count (" + frameID + ")");
+    ok(gotSubdocPrivileged, "Didn't get subdoc invalidation while we were privileged (" + frameID + ")");
+    ok(!gotSubdocNonprivileged, "Got subdoc invalidation while we were not privileged (" + frameID + ")");
+    window.removeEventListener("MozAfterPaint", listener, false);
+    runNext();
+  }
+
+  function triggerPaint() {
+    window.addEventListener("MozAfterPaint", listener, false);
+    document.body.offsetTop;
+    flash(iframe.contentDocument, 'd');
+    // make sure an event fires; since we're not using a chrome event handler, even though we
+    // can get privileges we wouldn't get the event
+    flash(document, 'd');
+  }
+  triggerPaint();
+}
+
+function runTest3() {
+  // test reporting of painting of scrolled-out-of-view areas
+  var gotScrolledOutInMainDoc = false;
+  var gotScrolledOutInSubdoc = false;
+  var iframe = document.getElementById("iframe");
+
+  function listener(event) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    if (checkGotSubdoc(event.clientRects, iframe))
+      gotScrolledOutInMainDoc = true;
+  }
+
+  function check() {
+    ok(!gotScrolledOutInMainDoc, "scrolled-out invalidation should not propagate to main doc");
+    window.removeEventListener("MozAfterPaint", listener, false);
+    iframe.contentWindow.removeEventListener("MozAfterPaint", IFRAMEListener, false);
+    runNext();
+  }
+
+  function IFRAMEListener(event) {
+    if (doesRectContainListElement(
+          iframe.contentDocument.getElementById("d2").getBoundingClientRect(), event.clientRects)) {
+      ok(true, "scrolled-out invalidation should notify in subdoc");
+      setTimeout(check, 0);
+    }
+  }
+
+  function triggerPaint() {
+    window.addEventListener("MozAfterPaint", listener, false);
+    iframe.contentWindow.addEventListener("MozAfterPaint", IFRAMEListener, false);
+    flash(iframe.contentDocument, 'd2');
+  }
+  triggerPaint();
+}
+
+var test = 0;
+var tests = [runTest1,
+             function() { runTest2("iframe", "iframe") },
+             function() { runTest2("iframe2", "svg") },
+             runTest3];
+function runNext() {
+  if (test < tests.length) {
+    ++test;
+    tests[test - 1]();
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+window.onload = runNext();
 ]]></script>
 </pre>
 </body>

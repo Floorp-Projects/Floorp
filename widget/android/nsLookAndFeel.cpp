@@ -98,7 +98,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
         // (except here at least TextSelectBackground and TextSelectForeground)
         // The CSS2 colors below are used.
     case eColorID_WindowBackground:
-        aColor = NS_RGB(0xFF, 0xFF, 0xFF);
+        aColor = mSystemColors.colorBackground;
         break;
     case eColorID_WindowForeground:
         aColor = mSystemColors.textColorPrimary;

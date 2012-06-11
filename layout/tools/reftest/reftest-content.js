@@ -783,7 +783,6 @@ function SendUpdateCanvasForEvent(event)
  
     var rects = [ ];
     var rectList = event.clientRects;
-    LogInfo("SendUpdateCanvasForEvent with " + rectList.length + " rects");
     for (var i = 0; i < rectList.length; ++i) {
         var r = rectList[i];
         // Set left/top/right/bottom to "device pixel" boundaries
@@ -791,7 +790,6 @@ function SendUpdateCanvasForEvent(event)
         var top = Math.floor(roundTo(r.top*scale, 0.001));
         var right = Math.ceil(roundTo(r.right*scale, 0.001));
         var bottom = Math.ceil(roundTo(r.bottom*scale, 0.001));
-        LogInfo("Rect: " + left + " " + top + " " + right + " " + bottom);
 
         rects.push({ left: left, top: top, right: right, bottom: bottom });
     }

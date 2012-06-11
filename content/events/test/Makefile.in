@@ -36,7 +36,6 @@ _TEST_FILES = \
 		test_bug409604.html \
 		test_bug412567.html \
 		test_bug426082.html \
-		bug426082.html \
 		test_bug427537.html \
 		test_bug432698.html \
 		test_bug443985.html \
@@ -71,7 +70,6 @@ _TEST_FILES = \
 		test_bug648573.html \
 		test_bug615597.html \
 		test_bug656379-1.html \
-		bug656379-1.html \
 		test_bug656379-2.html \
 		test_bug656954.html \
 		test_bug659350.html \

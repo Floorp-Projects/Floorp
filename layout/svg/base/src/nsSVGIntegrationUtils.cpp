@@ -18,11 +18,6 @@
 #include "nsSVGMaskFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGUtils.h"
-#include "FrameLayerBuilder.h"
-#include "BasicLayers.h"
-
-using namespace mozilla;
-using namespace mozilla::layers;
 
 // ----------------------------------------------------------------------
 
@@ -111,9 +106,9 @@ nsSVGIntegrationUtils::ComputeFrameEffectsRect(nsIFrame* aFrame,
   return r + userSpaceRect.TopLeft() - aFrame->GetOffsetTo(firstFrame);
 }
 
-nsIntRect
+nsRect
 nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(nsIFrame* aFrame,
-                                                      const nsIntRect& aInvalidRect)
+                                                      const nsRect& aInvalidRect)
 {
   // Don't bother calling GetEffectProperties; the filter property should
   // already have been set up during reflow/ComputeFrameEffectsRect
@@ -129,23 +124,22 @@ nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(nsIFrame* aFrame,
     return aInvalidRect;
   }
 
-  PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-
   nsSVGFilterFrame* filterFrame = prop->GetFilterFrame();
   if (!filterFrame) {
     // The frame is either not there or not currently available,
     // perhaps because we're in the middle of tearing stuff down.
     // Be conservative.
-    nsRect overflow = aFrame->GetVisualOverflowRect();
-    return overflow.ToOutsidePixels(appUnitsPerDevPixel);
+    return aFrame->GetVisualOverflowRect();
   }
 
+  PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   nsRect userSpaceRect = GetNonSVGUserSpace(firstFrame);
   nsPoint offset = aFrame->GetOffsetTo(firstFrame) - userSpaceRect.TopLeft();
-  nsIntPoint o = offset.ToNearestPixels(appUnitsPerDevPixel);
-  nsIntRect p = aInvalidRect + o;
+  nsRect r = aInvalidRect + offset;
+  nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
   p = filterFrame->GetInvalidationBBox(firstFrame, p);
-  return p - o;
+  r = p.ToAppUnits(appUnitsPerDevPixel);
+  return r - offset;
 }
 
 nsRect
@@ -186,23 +180,23 @@ class RegularFramePaintCallback : public nsSVGFilterPaintCallback
 {
 public:
   RegularFramePaintCallback(nsDisplayListBuilder* aBuilder,
-                            LayerManager* aManager,
+                            nsDisplayList* aInnerList,
+                            nsIFrame* aFrame,
                             const nsPoint& aOffset)
-    : mBuilder(aBuilder), mLayerManager(aManager),
+    : mBuilder(aBuilder), mInnerList(aInnerList), mFrame(aFrame),
       mOffset(aOffset) {}
 
   virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
                      const nsIntRect* aDirtyRect)
   {
-    BasicLayerManager* basic = static_cast<BasicLayerManager*>(mLayerManager);
-    basic->SetTarget(aContext->ThebesContext());
     nsRenderingContext::AutoPushTranslation push(aContext, -mOffset);
-    mLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, mBuilder);
+    mInnerList->PaintForFrame(mBuilder, aContext, mFrame, nsDisplayList::PAINT_DEFAULT);
   }
 
 private:
   nsDisplayListBuilder* mBuilder;
-  LayerManager* mLayerManager;
+  nsDisplayList* mInnerList;
+  nsIFrame* mFrame;
   nsPoint mOffset;
 };
 
@@ -211,7 +205,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
                                               nsIFrame* aEffectsFrame,
                                               const nsRect& aDirtyRect,
                                               nsDisplayListBuilder* aBuilder,
-                                              LayerManager *aLayerManager)
+                                              nsDisplayList* aInnerList)
 {
 #ifdef DEBUG
   nsISVGChildFrame *svgChildFrame = do_QueryFrame(aEffectsFrame);
@@ -287,13 +281,14 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   /* Paint the child */
   if (filterFrame) {
-    RegularFramePaintCallback paint(aBuilder, aLayerManager,
+    RegularFramePaintCallback paint(aBuilder, aInnerList, aEffectsFrame,
                                     userSpaceRect.TopLeft());
     nsIntRect r = (aDirtyRect - userSpaceRect.TopLeft()).ToOutsidePixels(appUnitsPerDevPixel);
     filterFrame->FilterPaint(aCtx, aEffectsFrame, &paint, &r);
   } else {
     gfx->SetMatrix(savedCTM);
-    aLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
+    aInnerList->PaintForFrame(aBuilder, aCtx, aEffectsFrame,
+                              nsDisplayList::PAINT_DEFAULT);
     aCtx->Translate(userSpaceRect.TopLeft());
   }
 

@@ -46,12 +46,9 @@ _CHROME_FILES = \
 	$(NULL)
 
 ifdef MOZ_DEBUG
-# Disabled on Mac because of Bug 748219
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _CHROME_FILES += \
 	test_leaf_layers_partition_browser_window.xul \
 	$(NULL)
-endif
 endif
 
 libs:: $(_CHROME_FILES)

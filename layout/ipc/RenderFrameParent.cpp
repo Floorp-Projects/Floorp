@@ -507,6 +507,18 @@ RenderFrameParent::ShadowLayersUpdated(bool isFirstPaint)
     // to /dev/null.
     return;
   }
+
+  // FIXME/cjones: we should collect the rects/regions updated for
+  // Painted*Layer() calls and pass that region to here, then only
+  // invalidate that rect
+  //
+  // We pass INVALIDATE_NO_THEBES_LAYERS here because we're
+  // invalidating the <browser> on behalf of its counterpart in the
+  // content process.  Not only do we not need to invalidate the
+  // shadow layers, things would just break if we did --- we have no
+  // way to repaint shadow layers from this process.
+  nsRect rect = nsRect(nsPoint(0, 0), docFrame->GetRect().Size());
+  docFrame->InvalidateWithFlags(rect, nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
 }
 
 already_AddRefed<Layer>

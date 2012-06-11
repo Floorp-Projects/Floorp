@@ -65,6 +65,14 @@ public:
                            ReadbackProcessor* aReadback) {}
 
   /**
+   * Implementations return true here if they *must* retain their
+   * layer contents.  This is true of shadowable layers with shadows,
+   * because there's no target on which to composite directly in the
+   * layer-publishing child process.
+   */
+  virtual bool MustRetainContent() { return false; }
+
+  /**
    * Layers will get this call when their layer manager is destroyed, this
    * indicates they should clear resources they don't really need after their
    * LayerManager ceases to exist.
