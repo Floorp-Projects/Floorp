@@ -446,6 +446,7 @@ public:
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     mValidRegion.Sub(mValidRegion, aRegion);
+    AddInvalidRect(aRegion.GetBounds());
   }
 
   virtual void PaintThebes(gfxContext* aContext,

@@ -712,7 +712,7 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate)
     // given an explicit size that doesn't depend on the bbox of the element
     // being filtered, and then feFlood can be used to fill that area with paint.
     nsRect rect = FindFilterInvalidation(aFrame, svgFrame->GetCoveredRegion());
-    outerSVGFrame->Invalidate(rect);
+    outerSVGFrame->InvalidateSVG(rect);
   }
 }
 

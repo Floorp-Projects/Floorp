@@ -158,9 +158,6 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
-  virtual void InvalidateInternal(const nsRect& aDamageRect,
-                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                  PRUint32 aFlags);
   virtual nsIAtom* GetType() const;
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
