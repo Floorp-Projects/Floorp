@@ -2152,14 +2152,12 @@ CodeGenerator::generate()
 
     linkAbsoluteLabels();
 
-    // X86 can simply generate the correct barriers in place, but on ARM
-    // technical limitations means we need to generate a branch, let it be
-    // updated with the correct offsets, then once the rest of compilation
-    // is complete, switch the branch over to a cmp.
-#ifdef JS_CPU_ARM
-    bool needsBarrier = cx->compartment->needsBarrier();
-    script->ion->toggleBarriers(needsBarrier);
-#endif
+    // The correct state for prebarriers is unknown until the end of compilation,
+    // since a GC can occur during code generation. All barriers are emitted
+    // off-by-default, and are toggled on here if necessary.
+    if (cx->compartment->needsBarrier())
+        script->ion->toggleBarriers(true);
+
     return true;
 }
 

@@ -373,8 +373,9 @@ class MacroAssembler : public MacroAssemblerSpecific
 
         Label done;
 
-        // Patchable jump. If write barriers are required, patched to a CMP for fallthrough.
-        CodeOffsetLabel nopJump = toggledJump(!cx->compartment->needsBarrier(), &done);
+        // All barriers are off by default.
+        // They are enabled if necessary at the end of CodeGenerator::generate().
+        CodeOffsetLabel nopJump = toggledJump(&done);
 
         callPreBarrier(address, type);
         jump(&done);

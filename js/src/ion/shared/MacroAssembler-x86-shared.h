@@ -323,13 +323,10 @@ class MacroAssemblerX86Shared : public Assembler
         bind(&done);
     }
 
-    // Emit an instruction that can be toggled between a CMP, effectively a NOP, and a JMP.
-    CodeOffsetLabel toggledJump(bool enabled, Label *label) {
+    // Emit a JMP that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
+    CodeOffsetLabel toggledJump(Label *label) {
         CodeOffsetLabel offset(size());
-        if (enabled)
-            jump(label);
-        else
-            cmpEAX(label);
+        jump(label);
         return offset;
     }
 
