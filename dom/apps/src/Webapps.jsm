@@ -156,7 +156,9 @@ let DOMApplicationRegistry = {
       origin: aApp.origin,
       receipts: aApp.receipts,
       installTime: aApp.installTime,
-      manifestURL: aApp.manifestURL
+      manifestURL: aApp.manifestURL,
+      progress: aApp.progress || 0.0,
+      status: aApp.status || "installed"
     };
     return clone;
   },
@@ -165,7 +167,7 @@ let DOMApplicationRegistry = {
     ppmm.sendAsyncMessage("Webapps:Install:Return:KO", aData);
   },
 
-  confirmInstall: function(aData, aFromSync) {
+  confirmInstall: function(aData, aFromSync, aProfileDir, aOfflineCacheObserver) {
     let app = aData.app;
     let id = app.syncId || this._appId(app.origin);
 
@@ -191,11 +193,29 @@ let DOMApplicationRegistry = {
     this._writeFile(manFile, JSON.stringify(app.manifest));
     this.webapps[id] = appObject;
 
+    appObject.status = "installed";
+    
+    let manifest = new DOMApplicationManifest(app.manifest, app.origin);
+
     if (!aFromSync)
       this._saveApps((function() {
         ppmm.sendAsyncMessage("Webapps:Install:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
       }).bind(this));
+
+    // if the manifest has an appcache_path property, use it to populate the appcache
+    if (manifest.appcache_path) {
+      let appcacheURI = Services.io.newURI(manifest.fullAppcachePath(), null, null);
+      let updateService = Cc["@mozilla.org/offlinecacheupdate-service;1"]
+                            .getService(Ci.nsIOfflineCacheUpdateService);
+      let docURI = Services.io.newURI(manifest.fullLaunchPath(), null, null);
+      let cacheUpdate = aProfileDir ? updateService.scheduleCustomProfileUpdate(appcacheURI, docURI, aProfileDir)
+                                    : updateService.scheduleUpdate(appcacheURI, docURI, null);
+      cacheUpdate.addObserver(new AppcacheObserver(appObject), false);
+      if (aOfflineCacheObserver) {
+        cacheUpdate.addObserver(aOfflineCacheObserver, false);
+      }
+    }
   },
 
   _appId: function(aURI) {
@@ -429,6 +449,53 @@ let DOMApplicationRegistry = {
 };
 
 /**
+ * Appcache download observer
+ */
+AppcacheObserver = function(aApp) {
+  this.app = aApp;
+};
+
+AppcacheObserver.prototype = {
+  // nsIOfflineCacheUpdateObserver implementation
+  updateStateChanged: function appObs_Update(aUpdate, aState) {
+    let mustSave = false;
+    let app = this.app;
+
+    let setStatus = function appObs_setStatus(aStatus) {
+      mustSave = (app.status != aStatus);
+      app.status = aStatus;
+      ppmm.sendAsyncMessage("Webapps:OfflineCache", { manifest: app.manifestURL, status: aStatus });
+    }
+
+    switch (aState) {
+      case Ci.nsIOfflineCacheUpdateObserver.STATE_ERROR:
+        aUpdate.removeObserver(this);
+        setStatus("cache-error");
+        break;
+      case Ci.nsIOfflineCacheUpdateObserver.STATE_NOUPDATE:
+      case Ci.nsIOfflineCacheUpdateObserver.STATE_FINISHED:
+        aUpdate.removeObserver(this);
+        setStatus("cached");
+        break;
+      case Ci.nsIOfflineCacheUpdateObserver.STATE_DOWNLOADING:
+      case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMSTARTED:
+      case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMPROGRESS:
+        setStatus("downloading")
+        break;
+    }
+
+    // Status changed, update the stored version.
+    if (mustSave) {
+      DOMApplicationRegistry._saveApps();
+    }
+  },
+
+  applicationCacheAvailable: function appObs_CacheAvail(aApplicationCache) {
+    // Nothing to do.
+  }
+};
+
+/**
  * Helper object to access manifest information with locale support
  */
 DOMApplicationManifest = function(aManifest, aOrigin) {
@@ -481,6 +548,10 @@ DOMApplicationManifest.prototype = {
     return this._localeProp("icons");
   },
 
+  get appcache_path() {
+    return this._localeProp("appcache_path");
+  },
+
   iconURLForSize: function(aSize) {
     let icons = this._localeProp("icons");
     if (!icons)
@@ -501,6 +572,11 @@ DOMApplicationManifest.prototype = {
     let startPoint = aStartPoint || "";
     let launchPath = this._localeProp("launch_path") || "";
     return this._origin.resolve(launchPath + startPoint);
+  },
+
+  fullAppcachePath: function() {
+    let appcachePath = this._localeProp("appcache_path");
+    return this._origin.resolve(appcachePath ? appcachePath : "");
   }
 };
 
