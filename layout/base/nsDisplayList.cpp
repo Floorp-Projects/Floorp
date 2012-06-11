@@ -564,6 +564,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                "Must call ComputeVisibility before calling Paint");
 
   nsRefPtr<LayerManager> layerManager;
+  bool widgetTransaction = false;
   bool allowRetaining = false;
   bool doBeginTransaction = true;
   nsIView *view = nsnull;
@@ -577,6 +578,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       layerManager = window->GetLayerManager(&allowRetaining);
       if (layerManager) {
         doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
+        FrameLayerBuilder::SetWidgetLayerManager(layerManager);
+        widgetTransaction = true;
       }
     }
   }
