@@ -4643,7 +4643,7 @@ nsIFrame::IsInvalid()
 }
 
 void
-nsIFrame::SchedulePaint()
+nsIFrame::SchedulePaint(PRUint32 aFlags)
 {
   nsPresContext *pres = PresContext()->GetRootPresContext();
   if (HasAnyStateBits(NS_FRAME_IN_POPUP) || !pres) {
@@ -4654,7 +4654,7 @@ nsIFrame::SchedulePaint()
     }
     pres = displayRoot->PresContext();
   }
-  pres->PresShell()->ScheduleViewManagerFlush();
+  pres->PresShell()->ScheduleViewManagerFlush(aFlags);
 }
 
 Layer*
@@ -4678,7 +4678,7 @@ nsIFrame::InvalidateLayer(PRUint32 aDisplayItemKey, const nsIntRect* aDamageRect
     layer->SetInvalidRectToVisibleRegion();
   }
 
-  SchedulePaint();
+  SchedulePaint(PAINT_COMPOSITE_ONLY);
   return layer;
 }
 

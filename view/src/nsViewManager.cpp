@@ -433,7 +433,7 @@ nsViewManager::PostPendingUpdate()
   nsViewManager* rootVM = RootViewManager();
   rootVM->mHasPendingWidgetGeometryChanges = true;
   if (rootVM->mPresShell) {
-    rootVM->mPresShell->ScheduleViewManagerFlush();
+    rootVM->mPresShell->ScheduleViewManagerFlush(nsIFrame::PAINT_COMPOSITE_ONLY);
   }
 }
 
