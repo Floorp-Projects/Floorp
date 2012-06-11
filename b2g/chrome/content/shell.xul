@@ -10,7 +10,7 @@
 #ifdef ANDROID
         sizemode="fullscreen"
 #endif
-        style="background: black; overflow: hidden; width:480px; height:800px"
+        style="background: black; overflow: hidden; width:320px; height:480px"
         onload="shell.start();"
         onunload="shell.stop();">
 
