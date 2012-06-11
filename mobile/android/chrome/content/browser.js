@@ -3779,10 +3779,6 @@ var ViewportHandler = {
    *   autoScale (boolean): Adjust the viewport properties to account for display density.
    */
   getViewportMetadata: function getViewportMetadata(aWindow) {
-    let doctype = aWindow.document.doctype;
-    if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
-      return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
-
     if (aWindow.document instanceof XULDocument)
       return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
 
@@ -3808,11 +3804,15 @@ var ViewportHandler = {
 
 
     if (scale == NaN && minScale == NaN && maxScale == NaN && allowZoomStr == "" && widthStr == "" && heightStr == "") {
-	// Only check for HandheldFriendly if we don't have a viewport meta tag
-	let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+      // Only check for HandheldFriendly if we don't have a viewport meta tag
+      let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
 
-	if (handheldFriendly == "true")
-	    return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+      if (handheldFriendly == "true")
+        return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+
+      let doctype = aWindow.document.doctype;
+      if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
+        return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
     }
 
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
