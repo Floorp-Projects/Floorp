@@ -403,6 +403,44 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
       } else {
         frame->AddStateBits(NS_FRAME_IS_DIRTY);
       }
+
+      // Mark intrinsic widths on all descendants dirty.  We need to do
+      // this (1) since we're changing the size of text and need to
+      // clear text runs on text frames and (2) since we actually are
+      // changing some intrinsic widths, but only those that live inside
+      // of containers.
+
+      // It makes sense to do this for descendants but not ancestors
+      // (which is unusual) because we're only changing the unusual
+      // inflation-dependent intrinsic widths (i.e., ones computed with
+      // nsPresContext::mInflationDisabledForShrinkWrap set to false),
+      // which should never affect anything outside of their inflation
+      // flow root (or, for that matter, even their inflation
+      // container).
+
+      // This is also different from what PresShell::FrameNeedsReflow
+      // does because it doesn't go through placeholders.  It doesn't
+      // need to because we're actually doing something that cares about
+      // frame tree geometry (the width on an ancestor) rather than
+      // style.
+
+      nsAutoTArray<nsIFrame*, 32> stack;
+      stack.AppendElement(frame);
+
+      do {
+        nsIFrame *f = stack.ElementAt(stack.Length() - 1);
+        stack.RemoveElementAt(stack.Length() - 1);
+
+        nsIFrame::ChildListIterator lists(f);
+        for (; !lists.IsDone(); lists.Next()) {
+          nsFrameList::Enumerator childFrames(lists.CurrentList());
+          for (; !childFrames.AtEnd(); childFrames.Next()) {
+            nsIFrame* kid = childFrames.get();
+            kid->MarkIntrinsicWidthsDirty();
+            stack.AppendElement(kid);
+          }
+        }
+      } while (stack.Length() != 0);
     }
   }
 
