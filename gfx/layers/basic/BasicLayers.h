@@ -95,6 +95,8 @@ public:
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
 
+  virtual bool AreComponentAlphaLayersEnabled() { return HasShadowManager(); }
+
   virtual void SetRoot(Layer* aLayer);
 
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
