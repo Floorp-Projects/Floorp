@@ -494,7 +494,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_dtr(IsLoad, sp, totSpace, reg, PostIndex);
     }
 
-    CodeOffsetLabel toggledJump(bool enabled, Label *label);
+    CodeOffsetLabel toggledJump(Label *label);
 
     CodeOffsetLabel pushWithPatch(ImmWord imm) {
         CodeOffsetLabel label = currentOffset();
