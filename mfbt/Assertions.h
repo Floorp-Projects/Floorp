@@ -13,7 +13,23 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef WIN32
+#ifdef WIN32
+   /*
+    * TerminateProcess and GetCurrentProcess are defined in <winbase.h>, which
+    * further depends on <windef.h>.  We hardcode these few definitions manually
+    * because those headers clutter the global namespace with a significant
+    * number of undesired macros and symbols.
+    */
+#  ifdef __cplusplus
+   extern "C" {
+#  endif
+   __declspec(dllimport) int __stdcall
+   TerminateProcess(void* hProcess, unsigned int uExitCode);
+   __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
+#  ifdef __cplusplus
+   }
+#  endif
+#else
 #  include <signal.h>
 #endif
 #ifdef ANDROID
@@ -120,22 +136,30 @@ extern "C" {
     * On MSVC use the __debugbreak compiler intrinsic, which produces an inline
     * (not nested in a system function) breakpoint.  This distinctively invokes
     * Breakpad without requiring system library symbols on all stack-processing
-    * machines, as a nested breakpoint would require.  (Technically all Windows
-    * compilers would require this, but practically only MSVC matters.)
+    * machines, as a nested breakpoint would require.  We use TerminateProcess
+    * with the exit code aborting would generate because we don't want to invoke
+    * atexit handlers, destructors, library unload handlers, and so on when our
+    * process might be in a compromised state.  We don't use abort() because
+    * it'd cause Windows to annoyingly pop up the process error dialog multiple
+    * times.  See bug 345118 and bug 426163.
+    *
+    * (Technically these are Windows requirements, not MSVC requirements.  But
+    * practically you need MSVC for debugging, and we only ship builds created
+    * by MSVC, so doing it this way reduces complexity.)
     */
 #  ifdef __cplusplus
 #    define MOZ_CRASH() \
        do { \
          __debugbreak(); \
          *((volatile int*) NULL) = 123; \
-         ::exit(3); \
+         ::TerminateProcess(::GetCurrentProcess(), 3); \
        } while (0)
 #  else
 #    define MOZ_CRASH() \
        do { \
          __debugbreak(); \
          *((volatile int*) NULL) = 123; \
-         exit(3); \
+         TerminateProcess(GetCurrentProcess(), 3); \
        } while (0)
 #  endif
 #else
