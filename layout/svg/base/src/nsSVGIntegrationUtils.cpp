@@ -18,6 +18,11 @@
 #include "nsSVGMaskFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGUtils.h"
+#include "FrameLayerBuilder.h"
+#include "BasicLayers.h"
+
+using namespace mozilla;
+using namespace mozilla::layers;
 
 // ----------------------------------------------------------------------
 
@@ -180,23 +185,23 @@ class RegularFramePaintCallback : public nsSVGFilterPaintCallback
 {
 public:
   RegularFramePaintCallback(nsDisplayListBuilder* aBuilder,
-                            nsDisplayList* aInnerList,
-                            nsIFrame* aFrame,
+                            LayerManager* aManager,
                             const nsPoint& aOffset)
-    : mBuilder(aBuilder), mInnerList(aInnerList), mFrame(aFrame),
+    : mBuilder(aBuilder), mLayerManager(aManager),
       mOffset(aOffset) {}
 
   virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
                      const nsIntRect* aDirtyRect)
   {
+    BasicLayerManager* basic = static_cast<BasicLayerManager*>(mLayerManager);
+    basic->SetTarget(aContext->ThebesContext());
     nsRenderingContext::AutoPushTranslation push(aContext, -mOffset);
-    mInnerList->PaintForFrame(mBuilder, aContext, mFrame, nsDisplayList::PAINT_DEFAULT);
+    mLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, mBuilder);
   }
 
 private:
   nsDisplayListBuilder* mBuilder;
-  nsDisplayList* mInnerList;
-  nsIFrame* mFrame;
+  LayerManager* mLayerManager;
   nsPoint mOffset;
 };
 
@@ -205,7 +210,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
                                               nsIFrame* aEffectsFrame,
                                               const nsRect& aDirtyRect,
                                               nsDisplayListBuilder* aBuilder,
-                                              nsDisplayList* aInnerList)
+                                              LayerManager *aLayerManager)
 {
 #ifdef DEBUG
   nsISVGChildFrame *svgChildFrame = do_QueryFrame(aEffectsFrame);
@@ -281,14 +286,13 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   /* Paint the child */
   if (filterFrame) {
-    RegularFramePaintCallback paint(aBuilder, aInnerList, aEffectsFrame,
+    RegularFramePaintCallback paint(aBuilder, aLayerManager,
                                     userSpaceRect.TopLeft());
     nsIntRect r = (aDirtyRect - userSpaceRect.TopLeft()).ToOutsidePixels(appUnitsPerDevPixel);
     filterFrame->FilterPaint(aCtx, aEffectsFrame, &paint, &r);
   } else {
     gfx->SetMatrix(savedCTM);
-    aInnerList->PaintForFrame(aBuilder, aCtx, aEffectsFrame,
-                              nsDisplayList::PAINT_DEFAULT);
+    aLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
     aCtx->Translate(userSpaceRect.TopLeft());
   }
 

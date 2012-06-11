@@ -10,6 +10,7 @@
 #include "gfxPattern.h"
 #include "gfxRect.h"
 #include "nsRect.h"
+#include "Layers.h"
 
 class nsDisplayList;
 class nsDisplayListBuilder;
@@ -70,9 +71,10 @@ public:
    */
   static void
   PaintFramesWithEffects(nsRenderingContext* aCtx,
-                         nsIFrame* aEffectsFrame, const nsRect& aDirtyRect,
+                         nsIFrame* aEffectsFrame,
+                         const nsRect& aDirtyRect,
                          nsDisplayListBuilder* aBuilder,
-                         nsDisplayList* aInnerList);
+                         mozilla::layers::LayerManager* aManager);
 
   static gfxMatrix
   GetInitialMatrix(nsIFrame* aNonSVGFrame);
