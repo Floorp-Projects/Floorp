@@ -159,7 +159,7 @@ public:
     static void SchedulePauseComposition();
     static void ScheduleResumeComposition(int width, int height);
 
-    virtual bool WidgetPaintsBackground();
+    virtual bool WidgetPaintsBackground() { return true; }
 #endif
 
 protected:

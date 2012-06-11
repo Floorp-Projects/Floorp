@@ -296,11 +296,8 @@ public:
   /**
    * Flush the accumulated dirty region to the widget and update widget
    * geometry.
-   *
-   * @param True if a paint was skipped due to throttling and this
-   * should be called again after a delay.
    */
-  virtual bool ProcessPendingUpdates()=0;
+  virtual void ProcessPendingUpdates()=0;
 
   /**
    * Just update widget geometry without flushing the dirty region

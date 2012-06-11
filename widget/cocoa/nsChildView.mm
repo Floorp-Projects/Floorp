@@ -2551,9 +2551,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
       [self setGLContext:glContext];
     }
 
-    [glContext setView:self];
-    [glContext update];
-
     mGeckoChild->DispatchWindowEvent(paintEvent);
 
     // Force OpenGL to refresh the very first time we draw. This works around a

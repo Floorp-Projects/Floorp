@@ -456,6 +456,23 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsContainerFrame::PositionChildViews(aKidFrame);
   }
 
+  if (oldRect.TopLeft() != rect.TopLeft() || 
+      (aDelegatingFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    // The frame moved
+    aKidFrame->GetParent()->Invalidate(oldOverflowRect);
+    aKidFrame->InvalidateFrameSubtree();
+  } else if (oldRect.Size() != rect.Size()) {
+    // Invalidate the area where the frame changed size.
+    nscoord innerWidth = NS_MIN(oldRect.width, rect.width);
+    nscoord innerHeight = NS_MIN(oldRect.height, rect.height);
+    nscoord outerWidth = NS_MAX(oldRect.width, rect.width);
+    nscoord outerHeight = NS_MAX(oldRect.height, rect.height);
+    aKidFrame->GetParent()->Invalidate(
+        nsRect(rect.x + innerWidth, rect.y, outerWidth - innerWidth, outerHeight));
+    // Invalidate the horizontal strip
+    aKidFrame->GetParent()->Invalidate(
+        nsRect(rect.x, rect.y + innerHeight, outerWidth, outerHeight - innerHeight));
+  }
   aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
 
 #ifdef DEBUG

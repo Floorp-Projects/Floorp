@@ -916,6 +916,21 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   nsHTMLReflowState *innerRS =
     static_cast<nsHTMLReflowState*>((void*) innerRSSpace);
 
+  nsRect origInnerRect = InnerTableFrame()->GetRect();
+  nsRect origInnerVisualOverflow = InnerTableFrame()->GetVisualOverflowRect();
+  bool innerFirstReflow =
+    (InnerTableFrame()->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  nsRect origCaptionRect;
+  nsRect origCaptionVisualOverflow;
+  bool captionFirstReflow;
+  if (mCaptionFrames.NotEmpty()) {
+    origCaptionRect = mCaptionFrames.FirstChild()->GetRect();
+    origCaptionVisualOverflow =
+      mCaptionFrames.FirstChild()->GetVisualOverflowRect();
+    captionFirstReflow =
+      (mCaptionFrames.FirstChild()->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  }
+  
   // ComputeAutoSize has to match this logic.
   if (captionSide == NO_SIDE) {
     // We don't have a caption.
@@ -1036,6 +1051,14 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   FinishReflowChild(InnerTableFrame(), aPresContext, innerRS, innerMet,
                     innerOrigin.x, innerOrigin.y, 0);
   innerRS->~nsHTMLReflowState();
+
+  nsTableFrame::InvalidateFrame(InnerTableFrame(), origInnerRect,
+                                origInnerVisualOverflow, innerFirstReflow);
+  if (mCaptionFrames.NotEmpty()) {
+    nsTableFrame::InvalidateFrame(mCaptionFrames.FirstChild(), origCaptionRect,
+                                  origCaptionVisualOverflow,
+                                  captionFirstReflow);
+  }
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, captionMargin);
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aOuterRS, aStatus);

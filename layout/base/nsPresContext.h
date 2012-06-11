@@ -116,17 +116,6 @@ public:
   nsTArray<Request> mRequests;
 };
 
-/**
- * Layer UserData for ContainerLayers that want to be notified
- * of local invalidations of them and their descendant layers.
- * Pass a callback to ComputeDifferences to have these called.
- */
-class ContainerLayerPresContext : public mozilla::layers::LayerUserData {
-public:
-  nsPresContext* mPresContext;
-};
-extern PRUint8 gNotifySubDocInvalidationData;
-
 /* Used by nsPresContext::HasAuthorSpecifiedRules */
 #define NS_AUTHOR_SPECIFIED_BACKGROUND      (1 << 0)
 #define NS_AUTHOR_SPECIFIED_BORDER          (1 << 1)
@@ -851,16 +840,12 @@ public:
   bool EnsureSafeToHandOutCSSRules();
 
   void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
-  // aRect is in device pixels
-  void NotifyInvalidation(const nsIntRect& aRect, PRUint32 aFlags);
   void NotifyDidPaintForSubtree();
   void FireDOMPaintEvent();
 
-  // Callback for catching invalidations in ContainerLayers
-  // Passed to LayerProperties::ComputeDifference
-  static void NotifySubDocInvalidation(mozilla::layers::ContainerLayer* aContainer,
-                                       const nsIntRegion& aRegion);
-  bool IsDOMPaintEventPending();
+  bool IsDOMPaintEventPending() {
+    return !mInvalidateRequests.mRequests.IsEmpty();
+  }
   void ClearMozAfterPaintEvents() {
     mInvalidateRequests.mRequests.Clear();
   }
@@ -1075,21 +1060,11 @@ protected:
 public:
   void DoChangeCharSet(const nsCString& aCharSet);
 
-  /**
-   * Checks for MozAfterPaint listeners on the document
-   */
-  bool MayHavePaintEventListener();
-
-  /**
-   * Checks for MozAfterPaint listeners on the document and 
-   * any subdocuments, except for subdocuments that are non-top-level
-   * content documents.
-   */
-  bool MayHavePaintEventListenerInSubDocument();
-
 protected:
   void InvalidateThebesLayers();
   void AppUnitsPerDevPixelChanged();
+
+  bool MayHavePaintEventListener();
 
   void HandleRebuildUserFontSet() {
     mPostedFlushUserFontSet = false;

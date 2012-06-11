@@ -1316,7 +1316,7 @@ fails-if(Android) random-if(winWidget) fails-if(gtk2Widget) == 481948-3.html 481
 == 482398-1.html 482398-1-ref.html
 random-if(d2d) == 482592-1a.xhtml 482592-1-ref.html # bug 586771
 random-if(d2d) == 482592-1b.xhtml 482592-1-ref.html # bug 586771
-random-if(winWidget) == 482659-1a.html 482659-1-ref.html
+== 482659-1a.html 482659-1-ref.html
 == 482659-1b.html 482659-1-ref.html
 == 482659-1c.html 482659-1-ref.html
 == 482659-1d.html 482659-1-ref.html
@@ -1568,7 +1568,7 @@ fails-if(Android) random-if(layersGPUAccelerated) fails-if(/^Windows\x20NT\x205\
 == 582037-1b.html 582037-1-ref.html
 == 582037-2a.html 582037-2-ref.html
 == 582037-2b.html 582037-2-ref.html
-asserts(0-12) == 582146-1.html about:blank
+asserts(0-11) == 582146-1.html about:blank
 == 582476-1.svg 582476-1-ref.svg
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html

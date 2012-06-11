@@ -79,10 +79,11 @@ void VideoFrameContainer::Invalidate()
   }
 
   if (frame) {
+    nsRect contentRect = frame->GetContentRect() - frame->GetPosition();
     if (invalidateFrame) {
-      frame->InvalidateFrame();
+      frame->Invalidate(contentRect);
     } else {
-      frame->InvalidateLayer(nsDisplayItem::TYPE_VIDEO);
+      frame->InvalidateLayer(contentRect, nsDisplayItem::TYPE_VIDEO);
     }
   }
 
