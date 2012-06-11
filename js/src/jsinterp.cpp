@@ -1029,7 +1029,7 @@ public:
         JS_ASSERT(array->isArray());
     }
     SpreadContext(SpreadContext &scx)
-         : cx(cx), arr(scx.cx, scx.arr), count(scx.count) {}
+         : cx(scx.cx), arr(scx.cx, scx.arr), count(scx.count) {}
     bool operator ()(JSContext *cx, const Value &item) {
         if (*count == INT32_MAX) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
