@@ -1,0 +1,121 @@
+<html>
+<head>
+  <title>Test for table invalidation</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runNext()">
+  <table>
+    <tr>
+      <td>
+        <div style="width:100px; height:100px; background:red; overflow:hidden;"></div>
+      </td>
+      <td>
+        <div style="width:100px; height:100px; background:green; overflow:hidden;">
+          <div id="flash" style="width:100%; height:100%; background:green;"></div>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div style="width:100px; height:100px; background:blue; overflow:hidden;"></div>
+      </td>
+      <td>
+        <div style="width:100px; height:100px; background:black; overflow:hidden;"></div>
+      </td>
+    </tr>
+  </table>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function flash(doc, name) {
+  var d = doc.getElementById(name);
+  d.style.backgroundColor = d.style.backgroundColor == "green" ? "white" : "green";
+  // Now flush out style changes in that document, since our event listeners
+  // seem to assume that things will work that way.
+  d.getBoundingClientRect();
+}
+
+function le(v1, v2, s) {
+  window.opener.ok(v1 <= v2, s + " (" + v1 + "," + v2 + ")");
+}
+
+function checkContains(r1, r2, s) {
+  le(Math.round(r1.left), Math.round(r2.left), "Left edges out" + s);
+  le(Math.round(r2.right), Math.round(r1.right), "Right edges out" + s);
+  le(Math.round(r1.top), Math.round(r2.top), "Top edges out" + s);
+  le(Math.round(r2.bottom), Math.round(r1.bottom), "Bottom edges out" + s);
+}
+
+function isRect(r1, r2) {
+  return (Math.abs(r1.left - r2.left) <= 1 ||
+          Math.abs(r1.right - r2.right) <= 1 ||
+          Math.abs(r1.top - r2.top) <= 1 ||
+          Math.abs(r1.bottom - r2.bottom) <= 1);
+}
+
+function isRectInList(r, list) {
+  for (var i = 0; i < list.length; ++i) {
+    if (isRect(r, list[i]))
+      return true;
+  }
+  return false;
+}
+
+function runTest1() {
+  // test basic functionality
+  var iterations = 0;
+  var foundExactRect = false;
+
+  function listener(event) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var r = event.boundingClientRect;
+    var bounds = document.getElementById('flash').getBoundingClientRect();
+    checkContains(r, bounds, "");
+    if (isRectInList(bounds, event.clientRects)) {
+      foundExactRect = true;
+    }
+    window.removeEventListener("MozAfterPaint", listener, false);
+    ++iterations;
+    if (iterations < 4) {
+      setTimeout(triggerPaint, 100);
+    } else {
+      window.opener.ok(foundExactRect, "Found exact rect");
+      runNext();
+    }
+  }
+
+  function triggerPaint() {
+    window.addEventListener("MozAfterPaint", listener, false);
+    flash(document, 'flash');
+    window.opener.ok(true, "trigger test1 paint");
+  }
+  triggerPaint();
+}
+
+var test = 0;
+var tests = [runTest1];
+function runNext() {
+  var CI = Components.interfaces;
+  var utils = window.QueryInterface(CI.nsIInterfaceRequestor)
+              .getInterface(CI.nsIDOMWindowUtils);
+  if (utils.isMozAfterPaintPending) {
+    // Wait until there are no pending paints before trying to run tests
+    setTimeout(runNext, 100);
+    return;
+  }
+  if (test < tests.length) {
+    ++test;
+    tests[test - 1]();
+  } else {
+    window.opener.finishTests();
+  }
+}
+
+
+</script>
+</pre>
+
+</body>
+</html>
