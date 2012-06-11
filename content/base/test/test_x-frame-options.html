@@ -83,6 +83,31 @@ var testFramesLoaded = function() {
   var test5 = frame.contentDocument.getElementById("test");
   is(test5, null, "test sameorigin2");
 
+  // iframe from different origin, X-F-O: SAMEORIGIN, SAMEORIGIN - should not load
+  frame = harness.contentDocument.getElementById("sameorigin5");
+  var test6 = frame.contentDocument.getElementById("test");
+  is(test6, null, "test sameorigin5");
+
+  // iframe from same origin, X-F-O: SAMEORIGIN, SAMEORIGIN - should load
+  frame = harness.contentDocument.getElementById("sameorigin6");
+  var test7 = frame.contentDocument.getElementById("test").textContent;
+  is(test7, "sameorigin6", "test sameorigin6");
+
+  // iframe from same origin, X-F-O: SAMEORIGIN,SAMEORIGIN, SAMEORIGIN - should load
+  frame = harness.contentDocument.getElementById("sameorigin7");
+  var test8 = frame.contentDocument.getElementById("test").textContent;
+  is(test8, "sameorigin7", "test sameorigin7");
+
+  // iframe from same origin, X-F-O: SAMEORIGIN,SAMEORIGIN, SAMEORIGIN - should not load
+  frame = harness.contentDocument.getElementById("sameorigin8");
+  var test9 = frame.contentDocument.getElementById("test");
+  is(test9, null, "test sameorigin8");
+
+  // iframe from same origin, X-F-O: DENY,SAMEORIGIN - should not load
+  frame = harness.contentDocument.getElementById("mixedpolicy");
+  var test10 = frame.contentDocument.getElementById("test");
+  is(test10, null, "test mixedpolicy");
+
   // call tests to check principal comparison, e.g. a document can open a window
   // to a data: or javascript: document which frames an
   // X-Frame-Options: SAMEORIGIN document and the frame should load
