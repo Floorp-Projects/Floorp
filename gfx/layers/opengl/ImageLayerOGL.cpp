@@ -186,7 +186,7 @@ ImageLayerOGL::RenderLayer(int,
 {
   nsRefPtr<ImageContainer> container = GetContainer();
 
-  if (!container || mOGLManager->CompositingDisabled())
+  if (!container)
     return;
 
   mOGLManager->MakeCurrent();
@@ -772,9 +772,6 @@ void
 ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
                                  const nsIntPoint& aOffset)
 {
-  if (mOGLManager->CompositingDisabled()) {
-    return;
-  }
   mOGLManager->MakeCurrent();
 
   if (mTexImage) {

@@ -1481,7 +1481,7 @@ NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest,
   // The image has changed.
   // Invalidate the entire content area. Maybe it's not optimal but it's simple and
   // always correct, and I'll be a stunned mullet if it ever matters for performance
-  InvalidateFrame();
+  Invalidate(nsRect(0, 0, mRect.width, mRect.height));
 
   return NS_OK;
 }
@@ -1523,7 +1523,7 @@ NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIRequest *aRequest,
 {
   // Invalidate the entire content area. Maybe it's not optimal but it's simple and
   // always correct.
-  InvalidateFrame();
+  Invalidate(nsRect(0, 0, mRect.width, mRect.height));
 
   return NS_OK;
 }

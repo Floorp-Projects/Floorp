@@ -56,7 +56,6 @@ public:
    * Return true if this matrix and |aMatrix| are the same matrix.
    */
   bool operator==(const gfx3DMatrix& aMatrix) const;
-  bool operator!=(const gfx3DMatrix& aMatrix) const;
   
   /**
    * Divide all values in the matrix by a scalar value

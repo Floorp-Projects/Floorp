@@ -363,6 +363,16 @@ public:
   //--------------------------------------------------
   // Additional methods
 
+  /**
+   * Helper method to invalidate portions of a standard container frame if the
+   * desired size indicates that the size has changed (specifically border,
+   * background and outline).
+   * We assume that the difference between the old frame area and the new
+   * frame area is invalidated by some other means.
+   * @param aDesiredSize the new size of the frame
+   */
+  void CheckInvalidateSizeChange(nsHTMLReflowMetrics&     aNewDesiredSize);
+
   // Helper function that tests if the frame tree is too deep; if it is
   // it marks the frame as "unflowable", zeroes out the metrics, sets
   // the reflow status, and returns true. Otherwise, the frame is

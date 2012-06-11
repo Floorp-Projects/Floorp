@@ -26,16 +26,8 @@ public:
   /* Attaches untyped userData associated with key. destroy is called on destruction */
   void Add(UserDataKey *key, void *userData, destroyFunc destroy)
   {
-    for (int i=0; i<count; i++) {
-      if (key == entries[i].key) {
-        if (entries[i].destroy) {
-          entries[i].destroy(entries[i].userData);
-        }
-        entries[i].userData = userData;
-        entries[i].destroy = destroy;
-        return;
-      }
-    }
+    // XXX we should really warn if user data with key has already been added,
+    // since in that case Get() will return the old user data!
 
     // We could keep entries in a std::vector instead of managing it by hand
     // but that would propagate an stl dependency out which we'd rather not
@@ -82,21 +74,12 @@ public:
     return NULL;
   }
 
-  void Destroy()
-  {
-    for (int i=0; i<count; i++) {
-      if (entries[i].destroy) {
-        entries[i].destroy(entries[i].userData);
-      }
-    }
-    free(entries);
-    entries = NULL;
-    count = 0;
-  }
-
   ~UserData()
   {
-    Destroy();
+    for (int i=0; i<count; i++) {
+      entries[i].destroy(entries[i].userData);
+    }
+    free(entries);
   }
 
 private:
