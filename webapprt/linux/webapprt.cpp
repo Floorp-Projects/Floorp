@@ -17,6 +17,7 @@
 #include "nsXPCOMGlue.h"
 #include "nsXPCOMPrivate.h"              // for MAXPATHLEN and XPCOM_DLL
 #include "nsXULAppAPI.h"
+#include "BinaryPath.h"
 
 const char kAPP_INI[] = "application.ini";
 const char kWEBAPP_INI[] = "webapp.ini";
@@ -228,7 +229,7 @@ int main(int argc, char *argv[])
 
   // Get current executable path
   char curExePath[MAXPATHLEN];
-  if (readlink("/proc/self/exe", curExePath, MAXPATHLEN) == -1) {
+  if (NS_FAILED(mozilla::BinaryPath::Get(argv[0], curExePath))) {
     ErrorDialog("Couldn't read current executable path");
     return 255;
   }
