@@ -4183,19 +4183,11 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
 
   nsIDocument* doc = OwnerDoc();
   nsIContent* newContent = static_cast<nsIContent*>(aNewChild);
-  PRInt32 insPos;
-
-  mozAutoDocUpdate batch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, true);
-
-  // Figure out which index to insert at
-  if (aRefChild) {
-    insPos = IndexOf(aRefChild);
-    if (insPos < 0) {
-      return NS_ERROR_DOM_NOT_FOUND_ERR;
-    }
-  }
-  else {
-    insPos = GetChildCount();
+  if (newContent->IsRootOfAnonymousSubtree()) {
+    // This is anonymous content.  Don't allow its insertion
+    // anywhere, since it might have UnbindFromTree calls coming
+    // its way.
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   // Make sure that the inserted node is allowed as a child of its new parent.
@@ -4203,19 +4195,21 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsAutoMutationBatch mb;
-  // If we're replacing
+  // Record the node to insert before, if any
+  nsINode* nodeToInsertBefore;
   if (aReplace) {
-    mb.Init(this, true, true);
-    RemoveChildAt(insPos, true);
+    nodeToInsertBefore = aRefChild->GetNextSibling();
+  } else {
+    nodeToInsertBefore = aRefChild;
+  }
+  if (nodeToInsertBefore == aNewChild) {
+    // We're going to remove aNewChild from its parent, so use its next sibling
+    // as the node to insert before.
+    nodeToInsertBefore = nodeToInsertBefore->GetNextSibling();
   }
 
-  if (newContent->IsRootOfAnonymousSubtree()) {
-    // This is anonymous content.  Don't allow its insertion
-    // anywhere, since it might have UnbindFromTree calls coming
-    // its way.
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
+  mozAutoDocUpdate batch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, true);
+  nsAutoMutationBatch mb;
 
   // Remove the new child from the old parent if one exists
   nsCOMPtr<nsINode> oldParent = newContent->GetNodeParent();
@@ -4234,12 +4228,38 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       mb.SetPrevSibling(oldParent->GetChildAt(removeIndex - 1));
       mb.SetNextSibling(oldParent->GetChildAt(removeIndex));
     }
+  }
 
-    // Adjust insert index if the node we ripped out was a sibling
-    // of the node we're inserting before
-    if (oldParent == this && removeIndex < insPos) {
-      --insPos;
+  // Figure out which index we want to insert at.  Note that we use
+  // nodeToInsertBefore to determine this, because it's possible that
+  // aRefChild == aNewChild, in which case we just removed it from the
+  // parent list.
+  PRInt32 insPos;
+  if (nodeToInsertBefore) {
+    insPos = IndexOf(nodeToInsertBefore);
+    if (insPos < 0) {
+      // XXXbz How the heck would _that_ happen, exactly?
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
+  }
+  else {
+    insPos = GetChildCount();
+  }
+
+  // If we're replacing and we haven't removed aRefChild yet, do so now
+  if (aReplace && aRefChild != aNewChild) {
+    mb.Init(this, true, true);
+
+    // Since aRefChild is never null in the aReplace case, we know that at
+    // this point nodeToInsertBefore is the next sibling of aRefChild.
+    NS_ASSERTION(aRefChild->GetNextSibling() == nodeToInsertBefore,
+                 "Unexpected nodeToInsertBefore");
+
+    // An since nodeToInsertBefore is at index insPos, we want to remove
+    // at the previous index.
+    NS_ASSERTION(insPos >= 1, "insPos too small");
+    RemoveChildAt(insPos-1, true);
+    --insPos;
   }
 
   nsresult res = NS_OK;
