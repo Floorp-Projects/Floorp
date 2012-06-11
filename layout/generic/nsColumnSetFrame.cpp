@@ -441,13 +441,7 @@ static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
     return;
   }
   
-  nsRect r = aChild->GetVisualOverflowRect();
-  r += aChild->GetPosition();
-  aParent->Invalidate(r);
-  r -= aChild->GetPosition();
   aChild->SetPosition(aOrigin);
-  r += aOrigin;
-  aParent->Invalidate(r);
   PlaceFrameView(aChild);
 }
 
@@ -1065,8 +1059,6 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
     aStatus = NS_FRAME_COMPLETE;
   }
   
-  CheckInvalidateSizeChange(aDesiredSize);
-
   // XXXjwir3: This call should be replaced with FinishWithAbsoluteFrames
   //           when bug 724978 is fixed and nsColumnSetFrame is a full absolute
   //           container.
