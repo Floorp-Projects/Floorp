@@ -308,12 +308,6 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                    "have unconstrained width; this should only result from "
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
-
-  if (frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) {
-    // Create our font inflation data if we don't have it already, and
-    // give it our current width information.
-    nsFontInflationData::UpdateFontInflationDataWidthFor(*this);
-  }
 }
 
 void nsHTMLReflowState::InitCBReflowState()
@@ -367,34 +361,53 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs, nsIAtom* aFrameType)
 void
 nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType)
 {
-  mFlags.mHResize = !(frame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
-                    frame->GetSize().width !=
-                      mComputedWidth + mComputedBorderPadding.LeftRight();
-  if (mFlags.mHResize &&
-      nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
-    // When font size inflation is enabled, the change in the width of a
-    // block (or anything that returns true in
-    // IsContainerForFontSizeInflation) needs to cause a dirty reflow
-    // since it changes the size of text, line-heights, etc.  This is
-    // relatively similar to a classic case of style change reflow,
-    // except that because inflation doesn't affect the intrinsic sizing
-    // codepath, there's no need to invalidate intrinsic sizes.
-    //
-    // Note that this makes horizontal resizing a good bit more
-    // expensive.  However, font size inflation is targeted at a set of
-    // devices (zoom-and-pan devices) where the main use case for
-    // horizontal resizing needing to be efficient (window resizing) is
-    // not present.  It does still increase the cost of dynamic changes
-    // caused by script where a style or content change in one place
-    // causes a resize in another (e.g., rebalancing a table).
+  bool isHResize = frame->GetSize().width !=
+                     mComputedWidth + mComputedBorderPadding.LeftRight();
 
-    // FIXME: This isn't so great for the cases where
-    // nsHTMLReflowState::SetComputedWith is called, if the first time
-    // we go through InitResizeFlags we set mHResize to true, and then
-    // the second time we'd set it to false even without the
-    // NS_FRAME_IS_DIRTY bit already set.
-    frame->AddStateBits(NS_FRAME_IS_DIRTY);
+  if ((frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) &&
+      nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
+    // Create our font inflation data if we don't have it already, and
+    // give it our current width information.
+    bool dirty = nsFontInflationData::UpdateFontInflationDataWidthFor(*this);
+    if (dirty || (!frame->GetParent() && isHResize)) {
+      // When font size inflation is enabled, a change in either:
+      //  * the effective width of a font inflation flow root
+      //  * the width of the frame
+      // needs to cause a dirty reflow since they change the font size
+      // inflation calculations, which in turn change the size of text,
+      // line-heights, etc.  This is relatively similar to a classic
+      // case of style change reflow, except that because inflation
+      // doesn't affect the intrinsic sizing codepath, there's no need
+      // to invalidate intrinsic sizes.
+      //
+      // Note that this makes horizontal resizing a good bit more
+      // expensive.  However, font size inflation is targeted at a set of
+      // devices (zoom-and-pan devices) where the main use case for
+      // horizontal resizing needing to be efficient (window resizing) is
+      // not present.  It does still increase the cost of dynamic changes
+      // caused by script where a style or content change in one place
+      // causes a resize in another (e.g., rebalancing a table).
+
+      // FIXME: This isn't so great for the cases where
+      // nsHTMLReflowState::SetComputedWidth is called, if the first time
+      // we go through InitResizeFlags we set mHResize to true, and then
+      // the second time we'd set it to false even without the
+      // NS_FRAME_IS_DIRTY bit already set.
+      if (frame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
+        // Foreign object frames use dirty bits in a special way.
+        frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+        nsIFrame *kid = frame->GetFirstPrincipalChild();
+        if (kid) {
+          kid->AddStateBits(NS_FRAME_IS_DIRTY);
+        }
+      } else {
+        frame->AddStateBits(NS_FRAME_IS_DIRTY);
+      }
+    }
   }
+
+  mFlags.mHResize = !(frame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
+                    isHResize;
 
   // XXX Should we really need to null check mCBReflowState?  (We do for
   // at least nsBoxFrame).
