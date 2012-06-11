@@ -1,0 +1,81 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717103
+-->
+<head>
+  <title>Test for basic sanity of the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup()
+
+storage = navigator.getDeviceStorage("profile");
+
+
+throws = false;
+try {
+var cursor = storage[0].enumerate();
+} catch(e) {throws = true}
+ok(!throws, "enumerate no parameter");
+
+throws = false;
+try {
+var cursor = storage[0].enumerate("string");
+} catch(e) {throws = true}
+ok(!throws, "enumerate one string parameter");
+
+throws = false;
+try {
+var cursor = storage[0].enumerate("string", "string2");
+} catch(e) {throws = true}
+ok(throws, "enumerate two string parameter");
+
+throws = false;
+try {
+var cursor = storage[0].enumerate("string", {"since": 1});
+} catch(e) {throws = true}
+ok(!throws, "enumerate a string and object parameter");
+
+throws = false;
+try {
+var cursor = storage[0].enumerate({"path": "a"});
+} catch(e) {throws = true}
+ok(!throws, "enumerate object parameter with path");
+
+throws = false;
+try {
+var cursor = storage[0].enumerate({}, "string");
+} catch(e) {throws = true}
+ok(throws, "enumerate object then a string");
+
+throws = false;
+try {
+var cursor = storage[0].enumerate({"path": "a", "since": 0});
+} catch(e) {throws = true}
+ok(!throws, "enumerate object parameter with path");
+
+
+
+
+devicestorage_cleanup()
+</script>
+</pre>
+</body>
+</html>
+
