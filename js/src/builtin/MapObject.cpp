@@ -179,39 +179,6 @@ MapObject::finalize(FreeOp *fop, JSObject *obj)
         fop->delete_(map);
 }
 
-class AddToMap {
-  private:
-    ValueMap *map;
-
-  public:
-    AddToMap(ValueMap *map) : map(map) {}
-
-    bool operator()(JSContext *cx, const Value &v) {
-        JSObject *pairobj = js_ValueToNonNullObject(cx, v);
-        if (!pairobj)
-            return false;
-
-        Value key;
-        if (!pairobj->getElement(cx, 0, &key))
-            return false;
-        HashableValue hkey;
-        if (!hkey.setValue(cx, key))
-            return false;
-
-        HashableValue::AutoRooter hkeyRoot(cx, &hkey);
-
-        Value val;
-        if (!pairobj->getElement(cx, 1, &val))
-            return false;
-
-        if (!map->put(hkey, val)) {
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-        return true;
-    }
-};
-
 JSBool
 MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -230,7 +197,31 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.hasDefined(0)) {
-        if (!ForOf(cx, args[0], AddToMap(map)))
+        ForOfIterator iter(cx, args[0]);
+        while (iter.next()) {
+            JSObject *pairobj = js_ValueToNonNullObject(cx, iter.value());
+            if (!pairobj)
+                return false;
+
+            Value key;
+            if (!pairobj->getElement(cx, 0, &key))
+                return false;
+            HashableValue hkey;
+            if (!hkey.setValue(cx, key))
+                return false;
+
+            HashableValue::AutoRooter hkeyRoot(cx, &hkey);
+
+            Value val;
+            if (!pairobj->getElement(cx, 1, &val))
+                return false;
+
+            if (!map->put(hkey, val)) {
+                js_ReportOutOfMemory(cx);
+                return false;
+            }
+        }
+        if (!iter.close())
             return false;
     }
 
@@ -379,25 +370,6 @@ SetObject::finalize(FreeOp *fop, JSObject *obj)
         fop->delete_(set);
 }
 
-class AddToSet {
-  private:
-    ValueSet *set;
-
-  public:
-    AddToSet(ValueSet *set) : set(set) {}
-
-    bool operator()(JSContext *cx, const Value &v) {
-        HashableValue key;
-        if (!key.setValue(cx, v))
-            return false;
-        if (!set->put(key)) {
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-        return true;
-    }
-};
-
 JSBool
 SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -416,7 +388,17 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.hasDefined(0)) {
-        if (!ForOf(cx, args[0], AddToSet(set)))
+        ForOfIterator iter(cx, args[0]);
+        while (iter.next()) {
+            HashableValue key;
+            if (!key.setValue(cx, iter.value()))
+                return false;
+            if (!set->put(key)) {
+                js_ReportOutOfMemory(cx);
+                return false;
+            }
+        }
+        if (!iter.close())
             return false;
     }
 
