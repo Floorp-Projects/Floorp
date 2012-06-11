@@ -16,6 +16,8 @@ enum TestEnum {
 
 callback TestCallback = void();
 
+TestInterface implements ImplementedInterface;
+
 [Constructor,
  Constructor(DOMString str),
  Constructor(unsigned long num, boolean? bool),
@@ -223,3 +225,44 @@ interface TestInterface {
   readonly attribute byte attributeGetterRenamedFrom;
   attribute byte attributeRenamedFrom;
 };
+
+interface ImplementedInterfaceParent {
+  void implementedParentMethod();
+  attribute boolean implementedParentProperty;
+
+  const long implementedParentConstant = 8;
+};
+
+ImplementedInterfaceParent implements IndirectlyImplementedInterface;
+
+interface IndirectlyImplementedInterface {
+  void indirectlyImplementedMethod();
+  attribute boolean indirectlyImplementedProperty;
+
+  const long indirectlyImplementedConstant = 9;
+};
+
+interface ImplementedInterface : ImplementedInterfaceParent {
+  void implementedMethod();
+  attribute boolean implementedProperty;
+
+  const long implementedConstant = 5;
+};
+
+interface DiamondImplements {
+  readonly attribute long diamondImplementedProperty;
+};
+interface DiamondBranch1A {
+};
+interface DiamondBranch1B {
+};
+interface DiamondBranch2A : DiamondImplements {
+};
+interface DiamondBranch2B : DiamondImplements {
+};
+TestInterface implements DiamondBranch1A;
+TestInterface implements DiamondBranch1B;
+TestInterface implements DiamondBranch2A;
+TestInterface implements DiamondBranch2B;
+DiamondBranch1A implements DiamondImplements;
+DiamondBranch1B implements DiamondImplements;

@@ -83,6 +83,7 @@ bindinggen_dependencies := \
   Bindings.conf \
   Configuration.py \
   Codegen.py \
+  parser/WebIDL.py \
   ParserResults.pkl \
   $(GLOBAL_DEPS) \
   $(NULL)
@@ -120,6 +121,7 @@ globalgen_dependencies := \
   Bindings.conf \
   Configuration.py \
   Codegen.py \
+  parser/WebIDL.py \
   $(CACHE_DIR)/.done \
   $(GLOBAL_DEPS) \
   $(NULL)
