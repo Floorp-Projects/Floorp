@@ -259,8 +259,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)
 } // namespace dom
 } // namespace mozilla
 
-inline mozilla::dom::Element* nsINode::AsElement() {
-  NS_ASSERTION(IsElement(), "Not an element?");
+inline mozilla::dom::Element* nsINode::AsElement()
+{
+  MOZ_ASSERT(IsElement());
   return static_cast<mozilla::dom::Element*>(this);
 }
 
