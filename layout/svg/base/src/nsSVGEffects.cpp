@@ -236,7 +236,7 @@ static void
 InvalidateAllContinuations(nsIFrame* aFrame)
 {
   for (nsIFrame* f = aFrame; f; f = f->GetNextContinuation()) {
-    f->InvalidateOverflowRect();
+    f->InvalidateFrame();
   }
 }
 

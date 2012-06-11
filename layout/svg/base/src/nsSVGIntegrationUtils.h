@@ -49,8 +49,8 @@ public:
   /**
    * Adjust the frame's invalidation area to cover effects
    */
-  static nsRect
-  GetInvalidAreaForChangedSource(nsIFrame* aFrame, const nsRect& aInvalidRect);
+  static nsIntRect
+  GetInvalidAreaForChangedSource(nsIFrame* aFrame, const nsIntRect& aInvalidRect);
   /**
    * Figure out which area of the source is needed given an area to
    * repaint
