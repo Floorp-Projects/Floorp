@@ -320,7 +320,7 @@ LayerManagerD3D10::EndTransaction(DrawThebesLayerCallback aCallback,
     Log();
 #endif
 
-    Render();
+    Render(aFlags);
     mCurrentCallbackInfo.Callback = nsnull;
     mCurrentCallbackInfo.CallbackData = nsnull;
   }
@@ -649,9 +649,13 @@ LayerManagerD3D10::EnsureReadbackManager()
 }
 
 void
-LayerManagerD3D10::Render()
+LayerManagerD3D10::Render(EndTransactionFlags aFlags)
 {
   static_cast<LayerD3D10*>(mRoot->ImplData())->Validate();
+
+  if (aFlags & END_NO_COMPOSITE) {
+    return;
+  }
 
   SetupPipeline();
 
