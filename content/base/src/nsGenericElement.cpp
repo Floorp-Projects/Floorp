@@ -4208,9 +4208,6 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     nodeToInsertBefore = nodeToInsertBefore->GetNextSibling();
   }
 
-  mozAutoDocUpdate batch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, true);
-  nsAutoMutationBatch mb;
-
   // Remove the new child from the old parent if one exists
   nsCOMPtr<nsINode> oldParent = newContent->GetNodeParent();
   if (oldParent) {
@@ -4221,14 +4218,64 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
-    nsAutoMutationBatch mb(oldParent, true, true);
-    oldParent->RemoveChildAt(removeIndex, true);
-    if (nsAutoMutationBatch::GetCurrentBatch() == &mb) {
-      mb.RemovalDone();
-      mb.SetPrevSibling(oldParent->GetChildAt(removeIndex - 1));
-      mb.SetNextSibling(oldParent->GetChildAt(removeIndex));
+    // Hold a strong ref to nodeToInsertBefore across the removal of newContent
+    nsCOMPtr<nsINode> kungFuDeathGrip = nodeToInsertBefore;
+
+    // Removing a child can run script, via XBL destructors.
+    nsMutationGuard guard;
+
+    // Scope for the mutation batch and scriptblocker, so they go away
+    // while kungFuDeathGrip is still alive.
+    {
+      mozAutoDocUpdate batch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, true);
+      nsAutoMutationBatch mb(oldParent, true, true);
+      oldParent->RemoveChildAt(removeIndex, true);
+      if (nsAutoMutationBatch::GetCurrentBatch() == &mb) {
+        mb.RemovalDone();
+        mb.SetPrevSibling(oldParent->GetChildAt(removeIndex - 1));
+        mb.SetNextSibling(oldParent->GetChildAt(removeIndex));
+      }
+    }
+
+    // We expect one mutation (the removal) to have happened.
+    if (guard.Mutated(1)) {
+      // XBL destructors, yuck.
+      
+      // Verify that nodeToInsertBefore, if non-null, is still our child.  If
+      // it's not, there's no way we can do this insert sanely; just bail out.
+      if (nodeToInsertBefore && nodeToInsertBefore->GetParent() != this) {
+        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      }
+
+      // Verify that newContent has no parent.
+      if (newContent->GetParent()) {
+        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      }
+
+      // And verify that newContent is still allowed as our child.
+      if (aNewChild == aRefChild) {
+        // We've already removed aRefChild.  So even if we were doing a replace,
+        // now we're doing a simple insert before nodeToInsertBefore.
+        if (!IsAllowedAsChild(newContent, this, false, nodeToInsertBefore)) {
+          return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+        }
+      } else {
+        if ((aRefChild && aRefChild->GetParent() != this) ||
+            !IsAllowedAsChild(newContent, this, aReplace, aRefChild)) {
+          return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+        }
+        // And recompute nodeToInsertBefore, just in case.
+        if (aReplace) {
+          nodeToInsertBefore = aRefChild->GetNextSibling();
+        } else {
+          nodeToInsertBefore = aRefChild;
+        }
+      }
     }
   }
+
+  mozAutoDocUpdate batch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, true);
+  nsAutoMutationBatch mb;
 
   // Figure out which index we want to insert at.  Note that we use
   // nodeToInsertBefore to determine this, because it's possible that
