@@ -145,6 +145,32 @@ xpcAccessibleTable::IsProbablyForLayout(bool* aResult)
 }
 
 nsresult
+xpcAccessibleTable::SelectColumn(PRInt32 aColIdx)
+{
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aColIdx < 0 || static_cast<PRUint32>(aColIdx) >= mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  mTable->SelectCol(aColIdx);
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::SelectRow(PRInt32 aRowIdx)
+{
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aRowIdx < 0 || static_cast<PRUint32>(aRowIdx) >= mTable->RowCount())
+    return NS_ERROR_INVALID_ARG;
+
+  mTable->SelectRow(aRowIdx);
+  return NS_OK;
+}
+
+nsresult
 xpcAccessibleTable::UnselectColumn(PRInt32 aColIdx)
 {
   if (!mTable)
