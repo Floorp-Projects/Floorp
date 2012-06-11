@@ -22,13 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=717103
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-// Array Remove - By John Resig (MIT Licensed)
-Array.prototype.remove = function(from, to) {
-  var rest = this.slice((to || from) + 1 || this.length);
-  this.length = from < 0 ? this.length + from : from;
-  return this.push.apply(this, rest);
-};
-
 devicestorage_setup();
 
 function enumerateSuccess(e) {
@@ -40,9 +33,6 @@ function enumerateSuccess(e) {
     return;
   }
   
-  dump("asdfasdf"+ e.target.result + "\n");
-  dump("asdfasdf"+ e.target.result.name + "\n");
-
   var filename = e.target.result.name;
 
   var index = files.indexOf(filename);
