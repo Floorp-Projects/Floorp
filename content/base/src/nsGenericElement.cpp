@@ -3212,6 +3212,29 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   return NS_OK;
 }
 
+class RemoveFromBindingManagerRunnable : public nsRunnable {
+public:
+  RemoveFromBindingManagerRunnable(nsBindingManager* aManager,
+                                   Element* aElement,
+                                   nsIDocument* aDoc,
+                                   nsIContent* aBindingParent):
+    mManager(aManager), mElement(aElement), mDoc(aDoc),
+    mBindingParent(aBindingParent)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    mManager->RemovedFromDocumentInternal(mElement, mDoc, mBindingParent);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsBindingManager> mManager;
+  nsRefPtr<Element> mElement;
+  nsCOMPtr<nsIDocument> mDoc;
+  nsCOMPtr<nsIContent> mBindingParent;
+};
+
 void
 nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
@@ -3254,7 +3277,11 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
   if (document) {
     // Notify XBL- & nsIAnonymousContentCreator-generated
     // anonymous content that the document is changing.
-    document->BindingManager()->RemovedFromDocument(this, document);
+    if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+      nsContentUtils::AddScriptRunner(
+        new RemoveFromBindingManagerRunnable(document->BindingManager(), this,
+                                             document, GetBindingParent()));
+    }
 
     document->ClearBoxObjectFor(this);
   }
