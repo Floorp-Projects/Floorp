@@ -1068,36 +1068,28 @@ HTMLTableAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
   return rv;
 }
 
-NS_IMETHODIMP
-HTMLTableAccessible::SelectRow(PRInt32 aRow)
+void
+HTMLTableAccessible::SelectRow(PRUint32 aRowIdx)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
+  nsresult rv = RemoveRowsOrColumnsFromSelection(aRowIdx,
+                                                 nsISelectionPrivate::TABLESELECTION_ROW,
+                                                 true);
+  NS_ASSERTION(NS_SUCCEEDED(rv),
+               "RemoveRowsOrColumnsFromSelection() Shouldn't fail!");
 
-  nsresult rv =
-    RemoveRowsOrColumnsFromSelection(aRow,
-                                     nsISelectionPrivate::TABLESELECTION_ROW,
-                                     true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return AddRowOrColumnToSelection(aRow,
-                                   nsISelectionPrivate::TABLESELECTION_ROW);
+  AddRowOrColumnToSelection(aRowIdx, nsISelectionPrivate::TABLESELECTION_ROW);
 }
 
-NS_IMETHODIMP
-HTMLTableAccessible::SelectColumn(PRInt32 aColumn)
+void
+HTMLTableAccessible::SelectCol(PRUint32 aColIdx)
 {
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
+  nsresult rv = RemoveRowsOrColumnsFromSelection(aColIdx,
+                                                 nsISelectionPrivate::TABLESELECTION_COLUMN,
+                                                 true);
+  NS_ASSERTION(NS_SUCCEEDED(rv),
+               "RemoveRowsOrColumnsFromSelection() Shouldn't fail!");
 
-  nsresult rv =
-    RemoveRowsOrColumnsFromSelection(aColumn,
-                                     nsISelectionPrivate::TABLESELECTION_COLUMN,
-                                     true);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return AddRowOrColumnToSelection(aColumn,
-                                   nsISelectionPrivate::TABLESELECTION_COLUMN);
+  AddRowOrColumnToSelection(aColIdx, nsISelectionPrivate::TABLESELECTION_COLUMN);
 }
 
 void
