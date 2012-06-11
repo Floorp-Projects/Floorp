@@ -24,7 +24,9 @@
 @APPNAME@/Contents/Info.plist
 @APPNAME@/Contents/PkgInfo
 @APPNAME@/Contents/Resources/
+#ifdef MOZ_SIGNING
 @APPNAME@/Contents/_CodeSignature/CodeResources
+#endif
 #endif
 
 [@AB_CD@]
