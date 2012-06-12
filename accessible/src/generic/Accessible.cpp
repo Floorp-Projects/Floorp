@@ -649,8 +649,7 @@ Accessible::NativeState()
 {
   PRUint64 state = 0;
 
-  DocAccessible* document = Document();
-  if (!document || !document->IsInDocument(this))
+  if (!IsInDocument())
     state |= states::STALE;
 
   if (mContent->IsElement()) {
