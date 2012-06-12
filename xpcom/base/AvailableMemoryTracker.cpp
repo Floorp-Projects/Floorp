@@ -337,7 +337,7 @@ public:
 
   NS_IMETHOD GetPath(nsACString &aPath)
   {
-    aPath.AssignLiteral("low-memory-events-virtual");
+    aPath.AssignLiteral("low-memory-events/virtual");
     return NS_OK;
   }
 
@@ -425,7 +425,7 @@ public:
 
   NS_IMETHOD GetPath(nsACString &aPath)
   {
-    aPath.AssignLiteral("low-memory-events-physical");
+    aPath.AssignLiteral("low-memory-events/physical");
     return NS_OK;
   }
 
