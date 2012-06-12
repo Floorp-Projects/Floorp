@@ -5778,8 +5778,8 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     name = atom->asPropertyName();
                 }
             } else if (propExpr->isKind(PNK_NUMBER)) {
-                JSAtom *atom;
-                if (!js_ValueToAtom(context, NumberValue(propExpr->pn_dval), &atom))
+                JSAtom *atom = ToAtom(context, NumberValue(propExpr->pn_dval));
+                if (!atom)
                     return NULL;
                 if (!atom->isIndex(&index))
                     name = atom->asPropertyName();
@@ -6789,7 +6789,8 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                 if (!pn3)
                     return NULL;
                 pn3->pn_dval = tokenStream.currentToken().number();
-                if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
+                atom = ToAtom(context, DoubleValue(pn3->pn_dval));
+                if (!atom)
                     return NULL;
                 break;
               case TOK_NAME:
@@ -6822,7 +6823,8 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                             if (!pn3)
                                 return NULL;
                             pn3->pn_dval = index;
-                            if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
+                            atom = ToAtom(context, DoubleValue(pn3->pn_dval));
+                            if (!atom)
                                 return NULL;
                         } else {
                             pn3 = NameNode::create(PNK_STRING, atom, this, this->tc->sc);
@@ -6834,7 +6836,8 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                         if (!pn3)
                             return NULL;
                         pn3->pn_dval = tokenStream.currentToken().number();
-                        if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
+                        atom = ToAtom(context, DoubleValue(pn3->pn_dval));
+                        if (!atom)
                             return NULL;
                     } else {
                         tokenStream.ungetToken();

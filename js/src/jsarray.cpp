@@ -837,8 +837,8 @@ array_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleI
     if (ValueIsSpecial(obj, &idval, &sid, cx))
         return array_getSpecial(cx, obj, receiver, Rooted<SpecialId>(cx, sid), vp);
 
-    JSAtom *atom;
-    if (!js_ValueToAtom(cx, idval, &atom))
+    JSAtom *atom = ToAtom(cx, idval);
+    if (!atom)
         return false;
 
     if (atom->isIndex(&index))
