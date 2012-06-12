@@ -109,7 +109,6 @@ function nsUnknownContentTypeDialog() {
   // Initialize data properties.
   this.mLauncher = null;
   this.mContext  = null;
-  this.mSourcePath = null;
   this.chosenApp = null;
   this.givenDefaultApp = false;
   this.updateSelf = true;
@@ -370,7 +369,10 @@ nsUnknownContentTypeDialog.prototype = {
     var suggestedFileName = this.mLauncher.suggestedFileName;
 
     // Some URIs do not implement nsIURL, so we can't just QI.
-    var url   = this.mLauncher.source;
+    var url = this.mLauncher.source;
+    if (url instanceof Components.interfaces.nsINestedURI)
+      url = url.innermostURI;
+
     var fname = "";
     var iconPath = "goat";
     this.mSourcePath = url.prePath;
@@ -514,28 +516,17 @@ nsUnknownContentTypeDialog.prototype = {
     this.dialogElement( "location" ).setAttribute("realname", filename);
     this.dialogElement( "location" ).setAttribute("tooltiptext", displayname);
 
-    // if mSourcePath is a local file, then let's use the pretty path name instead of an ugly
-    // url...
-    var pathString = this.mSourcePath;
-    try
-    {
-      var fileURL = url.QueryInterface(Components.interfaces.nsIFileURL);
-      if (fileURL)
-      {
-        var fileObject = fileURL.file;
-        if (fileObject)
-        {
-          var parentObject = fileObject.parent;
-          if (parentObject)
-          {
-            pathString = parentObject.path;
-          }
-        }
-      }
-    } catch(ex) {}
+    // if mSourcePath is a local file, then let's use the pretty path name
+    // instead of an ugly url...
+    var pathString;
+    if (url instanceof Components.interfaces.nsIFileURL) {
+      try {
+        // Getting .file might throw, or .parent could be null
+        pathString = url.file.parent.path;
+      } catch (ex) {}
+    }
 
-    if (pathString == this.mSourcePath)
-    {
+    if (!pathString) {
       // wasn't a fileURL
       var tmpurl = url.clone(); // don't want to change the real url
       try {
