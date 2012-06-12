@@ -38,6 +38,7 @@
 #include "mozilla/unused.h"
 #include "nsDebug.h"
 #include "nsPrintfCString.h"
+#include "mozilla/BrowserElementParent.h"
 #include "IndexedDBParent.h"
 #include "IDBFactory.h"
 
@@ -920,6 +921,19 @@ TabParent::GetWidget() const
 
   nsCOMPtr<nsIWidget> widget = frame->GetNearestWidget();
   return widget.forget();
+}
+
+bool
+TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
+                                      const nsString& aURL,
+                                      const nsString& aName,
+                                      const nsString& aFeatures,
+                                      bool* aOutWindowOpened)
+{
+  *aOutWindowOpened =
+    BrowserElementParent::OpenWindowOOP(static_cast<TabParent*>(aOpener),
+                                        this, aURL, aName, aFeatures);
+  return true;
 }
 
 } // namespace tabs

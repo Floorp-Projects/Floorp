@@ -593,6 +593,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
                                      sizeSpec.SizeSpecified(),
                                      uriToLoad, name, features, &windowIsNew,
                                      getter_AddRefs(newWindow));
+
         if (NS_SUCCEEDED(rv)) {
           GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
           if (windowIsNew && newDocShellItem) {
@@ -604,6 +605,14 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
               do_QueryInterface(newDocShellItem);
             webNav->Stop(nsIWebNavigation::STOP_NETWORK);
           }
+        }
+        else if (rv == NS_ERROR_ABORT) {
+          // NS_ERROR_ABORT means the window provider has flat-out rejected
+          // the open-window call and we should bail.  Don't return an error
+          // here, because our caller may propagate that error, which might
+          // cause e.g. window.open to throw!  Just return null for our out
+          // param.
+          return NS_OK;
         }
       }
     }

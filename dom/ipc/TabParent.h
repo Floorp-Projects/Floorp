@@ -52,7 +52,11 @@ public:
 
     virtual bool RecvMoveFocus(const bool& aForward);
     virtual bool RecvEvent(const RemoteDOMEvent& aEvent);
-
+    virtual bool RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
+                                            const nsString& aURL,
+                                            const nsString& aName,
+                                            const nsString& aFeatures,
+                                            bool* aOutWindowOpened);
     virtual bool AnswerCreateWindow(PBrowserParent** retval);
     virtual bool RecvSyncMessage(const nsString& aMessage,
                                  const nsString& aJSON,
