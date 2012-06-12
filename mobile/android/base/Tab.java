@@ -386,15 +386,8 @@ public final class Tab {
         if (!mReaderEnabled)
             return;
 
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                String url = getURL();
-                if (url == null)
-                    return;
-
-                BrowserDB.addReadingListItem(mContentResolver, getTitle(), url);
-            }
-        });
+        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Add", String.valueOf(getId()));
+        GeckoAppShell.sendEventToGecko(e);
     }
 
     public void readerMode() {

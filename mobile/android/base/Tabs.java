@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.db.BrowserDB;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,6 +17,7 @@ import org.json.JSONObject;
 import android.content.ContentResolver;
 import android.os.SystemClock;
 import android.util.Log;
+import android.widget.Toast;
 
 public class Tabs implements GeckoEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -38,6 +41,7 @@ public class Tabs implements GeckoEventListener {
         GeckoAppShell.registerGeckoEventListener("Tab:Select", this);
         GeckoAppShell.registerGeckoEventListener("Session:RestoreBegin", this);
         GeckoAppShell.registerGeckoEventListener("Session:RestoreEnd", this);
+        GeckoAppShell.registerGeckoEventListener("Reader:Added", this);
     }
 
     public int getCount() {
@@ -266,10 +270,40 @@ public class Tabs implements GeckoEventListener {
                         GeckoApp.mBrowserToolbar.refresh();
                     }
                 });
+            } else if (event.equals("Reader:Added")) {
+                final boolean success = message.getBoolean("success");
+                final String title = message.getString("title");
+                final String url = message.getString("url");
+                handleReaderAdded(success, title, url);
             }
         } catch (Exception e) { 
             Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
         }
+    }
+
+    void handleReaderAdded(boolean success, final String title, final String url) {
+        if (!success) {
+            GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                public void run() {
+                    Toast.makeText(GeckoApp.mAppContext,
+                                   R.string.reading_list_failed, Toast.LENGTH_SHORT).show();
+                }
+            });
+            return;
+        }
+
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                BrowserDB.addReadingListItem(GeckoApp.mAppContext.getContentResolver(), title, url);
+
+                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                    public void run() {
+                        Toast.makeText(GeckoApp.mAppContext,
+                                       R.string.reading_list_added, Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
     }
 
     public void refreshThumbnails() {
