@@ -1300,7 +1300,7 @@ ${target} = tmp.forget();""").substitute(self.substitution)
 
 def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     isDefinitelyObject=False,
-                                    isSequenceMember=False,
+                                    isMember=False,
                                     isOptional=False):
     """
     Get a template for converting a JS value to a native object based on the
@@ -1315,7 +1315,9 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
     If isDefinitelyObject is True, that means we know the value
     isObject() and we have no need to recheck that.
 
-    if isSequenceMember is True, we're being converted as part of a sequence.
+    if isMember is True, we're being converted from a property of some
+    JS object, not from an actual method argument, so we can't rely on
+    our jsval being rooted or outliving us in any way.
 
     If isOptional is true, then we are doing conversion of an optional
     argument with no default value.
@@ -1380,8 +1382,14 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         raise TypeError("Can't handle array arguments yet")
 
     if type.isSequence():
-        if isSequenceMember:
-            raise TypeError("Can't handle sequences of sequences")
+        if isMember:
+            # XXXbz we probably _could_ handle this; we just have to be careful
+            # with reallocation behavior for arrays.  In particular, if we have
+            # a return value that's a sequence of dictionaries of sequences,
+            # that will cause us to have an nsTArray containing objects with
+            # nsAutoTArray members, which is a recipe for badness as the
+            # outermost array is resized.
+            raise TypeError("Can't handle unrooted sequences")
         if failureCode is not None:
             raise TypeError("Can't handle sequences when failureCode is not None")
         nullable = type.nullable();
@@ -1394,7 +1402,7 @@ def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
         # we wrap, so don't pass through isDefinitelyObject
         (elementTemplate, elementDeclType,
          elementHolderType, dealWithOptional) = getJSToNativeConversionTemplate(
-            elementType, descriptorProvider, isSequenceMember=True)
+            elementType, descriptorProvider, isMember=True)
         if dealWithOptional:
             raise TypeError("Shouldn't have optional things in sequences")
         if elementHolderType is not None:
@@ -1462,7 +1470,7 @@ for (uint32_t i = 0; i < length; ++i) {
         # Sequences and non-worker callbacks have to hold a strong ref to the
         # thing being passed down.
         forceOwningType = (descriptor.interface.isCallback() and
-                           not descriptor.workers) or isSequenceMember
+                           not descriptor.workers) or isMember
 
         typeName = descriptor.nativeType
         typePtr = typeName + "*"
@@ -1551,8 +1559,8 @@ for (uint32_t i = 0; i < length; ++i) {
         return (templateBody, declType, holderType, isOptional)
 
     if type.isSpiderMonkeyInterface():
-        if isSequenceMember:
-            raise TypeError("Can't handle sequences of arraybuffers or "
+        if isMember:
+            raise TypeError("Can't handle member arraybuffers or "
                             "arraybuffer views because making sure all the "
                             "objects are properly rooted is hard")
         name = type.name
@@ -1612,8 +1620,9 @@ for (uint32_t i = 0; i < length; ++i) {
         return (template, CGGeneric(declType), holderType, False)
 
     if type.isString():
-        if isSequenceMember:
-            raise TypeError("Can't handle sequences of strings")
+        if isMember:
+            raise TypeError("Can't handle member strings; need to sort out "
+                            "rooting issues")
         # XXXbz Need to figure out string behavior based on extended args?  Also, how to
         # detect them?
 
@@ -1657,8 +1666,9 @@ for (uint32_t i = 0; i < length; ++i) {
             CGGeneric(enum), None, isOptional)
 
     if type.isCallback():
-        if isSequenceMember:
-            raise TypeError("Can't handle sequences of callbacks")
+        if isMember:
+            raise TypeError("Can't handle member callbacks; need to sort out "
+                            "rooting issues")
         # XXXbz we're going to assume that callback types are always
         # nullable and always have [TreatNonCallableAsNull] for now.
         return (
@@ -1669,13 +1679,15 @@ for (uint32_t i = 0; i < length; ++i) {
             "}", CGGeneric("JSObject*"), None, isOptional)
 
     if type.isAny():
-        if isSequenceMember:
-            raise TypeError("Can't handle sequences of 'any'")
+        if isMember:
+            raise TypeError("Can't handle member 'any'; need to sort out "
+                            "rooting issues")
         return ("${declName} = ${val};", CGGeneric("JS::Value"), None, isOptional)
 
     if type.isObject():
-        if isSequenceMember:
-            raise TypeError("Can't handle sequences of 'object'")
+        if isMember:
+            raise TypeError("Can't handle member 'object'; need to sort out "
+                            "rooting issues")
         template = wrapObjectTemplate("${declName} = &${val}.toObject();",
                                       isDefinitelyObject, type,
                                       "${declName} = NULL",
