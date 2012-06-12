@@ -343,6 +343,12 @@ void
 IonCode::finalize(FreeOp *fop)
 {
     JS_ASSERT(!fop->onBackgroundThread());
+
+    // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
+    JS_POISON(code_, JS_FREE_PATTERN, bufferSize_);
+
+    // Code buffers are stored inside JSC pools.
+    // Pools are refcounted. Releasing the pool may free it.
     if (pool_)
         pool_->release();
 }
