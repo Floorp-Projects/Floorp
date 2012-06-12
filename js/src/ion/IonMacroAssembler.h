@@ -369,7 +369,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T>
     CodeOffsetLabel patchableCallPreBarrier(const T &address, MIRType type) {
         JS_ASSERT(type == MIRType_Value || type == MIRType_String || type == MIRType_Object);
-        JSContext *cx = GetIonContext()->cx;
 
         Label done;
 
