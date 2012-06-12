@@ -278,9 +278,10 @@ namespace {
       rv = XRE_GetFileFromPath(rtIniPath, getter_AddRefs(rtINI));
       NS_ENSURE_SUCCESS(rv, false);
 
-      if (!rtINI) {
+      bool exists;
+      rv = rtINI->Exists(&exists);
+      if (NS_FAILED(rv) || !exists)
         return false;
-      }
 
       ScopedXREAppData webShellAppData;
       rv = webShellAppData.create(rtINI);
