@@ -3252,4 +3252,18 @@ typedef void* GLeglImage;
 #define LOCAL_EGL_READ                        0x305A
 #define LOCAL_EGL_DRAW                        0x3059
 #define LOCAL_EGL_CONTEXT_LOST                0x300E
+
+// EGL_KHR_fence_sync
+#define LOCAL_EGL_SYNC_FENCE                  0x30F9
+#define LOCAL_EGL_SYNC_TYPE                   0x30F7
+#define LOCAL_EGL_SYNC_STATUS                 0x30F1
+#define LOCAL_EGL_SYNC_CONDITION              0x30F8
+#define LOCAL_EGL_SIGNALED                    0x30F2
+#define LOCAL_EGL_UNSIGNALED                  0x30F3
+#define LOCAL_EGL_SYNC_PRIOR_COMMANDS_COMPLETE  0x30F0
+#define LOCAL_EGL_SYNC_FLUSH_COMMANDS_BIT     0x0001
+#define LOCAL_EGL_FOREVER                     0xFFFFFFFFFFFFFFFFull
+#define LOCAL_EGL_TIMEOUT_EXPIRED             0x30F5
+#define LOCAL_EGL_CONDITION_SATISFIED         0x30F6
+
 #endif

@@ -20,6 +20,7 @@ static const char *sExtensionNames[] = {
     "EGL_ANGLE_surface_d3d_texture_2d_share_handle",
     "EGL_EXT_create_context_robustness",
     "EGL_KHR_image",
+    "EGL_KHR_fence_sync",
     nsnull
 };
 
@@ -240,6 +241,30 @@ GLLibraryEGL::EnsureInitialized()
             MarkExtensionUnsupported(ANGLE_surface_d3d_texture_2d_share_handle);
 
             mSymbols.fQuerySurfacePointerANGLE = nsnull;
+        }
+    }
+
+    if (IsExtensionSupported(KHR_fence_sync)) {
+        GLLibraryLoader::SymLoadStruct syncSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCreateSync,     { "eglCreateSyncKHR",     nsnull } },
+            { (PRFuncPtr*) &mSymbols.fDestroySync,    { "eglDestroySyncKHR",    nsnull } },
+            { (PRFuncPtr*) &mSymbols.fClientWaitSync, { "eglClientWaitSyncKHR", nsnull } },
+            { (PRFuncPtr*) &mSymbols.fGetSyncAttrib,  { "eglGetSyncAttribKHR",  nsnull } },
+            { nsnull, { nsnull } }
+        };
+
+        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
+                                                    &syncSymbols[0],
+                                                    lookupFunction);
+        if (!success) {
+            NS_ERROR("EGL supports KHR_fence_sync without exposing its functions!");
+
+            MarkExtensionUnsupported(KHR_fence_sync);
+
+            mSymbols.fCreateSync = nsnull;
+            mSymbols.fDestroySync = nsnull;
+            mSymbols.fClientWaitSync = nsnull;
+            mSymbols.fGetSyncAttrib = nsnull;
         }
     }
 
