@@ -5124,7 +5124,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, HandleId id, bool *t
 
     RootedObject proto(cx);
     if (!js_GetClassPrototype(cx, globalObj, key, proto.address(), NULL))
-        return NULL;
+        return false;
 
     return testSingletonProperty(proto, id);
 }

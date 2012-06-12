@@ -285,7 +285,7 @@ Snapshot(JSContext *cx, JSObject *obj_, unsigned flags, AutoIdVector *props)
 {
     IdSet ht(cx);
     if (!ht.init(32))
-        return NULL;
+        return false;
 
     RootedObject obj(cx, obj_), pobj(cx);
     pobj = obj;

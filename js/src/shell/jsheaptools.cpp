@@ -486,7 +486,7 @@ ReferenceFinder::addReferrer(jsval referrer_, Path *path)
     Rooted<jsval> referrer(context, referrer_);
 
     if (!context->compartment->wrap(context, referrer.address()))
-        return NULL;
+        return false;
 
     char *pathName = path->computeName(context);
     if (!pathName)

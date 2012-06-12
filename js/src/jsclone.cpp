@@ -489,7 +489,7 @@ class AutoEnterCompartmentAndPushPrincipal : public JSAutoEnterCompartment
         if (cb->pushContextPrincipal)
           return cb->pushContextPrincipal(cx, target->principals(cx));
         return true;
-    };
+    }
 
     ~AutoEnterCompartmentAndPushPrincipal() {
         // Pop the principal if necessary.
@@ -499,7 +499,7 @@ class AutoEnterCompartmentAndPushPrincipal : public JSAutoEnterCompartment
             if (cb->popContextPrincipal)
               cb->popContextPrincipal(ac->context);
         }
-    };
+    }
 };
 
 
