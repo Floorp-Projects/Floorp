@@ -1503,6 +1503,7 @@ public:
         ARB_robustness,
         EXT_robustness,
         ARB_sync,
+        OES_EGL_image,
         Extensions_Max
     };
 
@@ -3004,6 +3005,14 @@ public:
      void GLAPIENTRY fGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values) {
          BEFORE_GL_CALL;
          mSymbols.fGetSynciv(sync, pname, bufSize, length, values);
+         AFTER_GL_CALL;
+     }
+
+     // OES_EGL_image (GLES)
+     void fImageTargetTexture2D(GLenum target, GLeglImage image)
+     {
+         BEFORE_GL_CALL;
+         mSymbols.fImageTargetTexture2D(target, image);
          AFTER_GL_CALL;
      }
 

@@ -23,8 +23,7 @@ typedef void *EGLDisplay;
 typedef void *EGLSurface;
 typedef void *EGLClientBuffer;
 typedef void *EGLCastToRelevantPtr;
-typedef void *EGLImageKHR;
-typedef void *GLeglImageOES;
+typedef void *EGLImage;
 
 #if defined(XP_WIN)
 
@@ -310,35 +309,35 @@ public:
         return b;
     }
 
-    EGLImageKHR fCreateImageKHR(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
+    EGLImage fCreateImage(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list)
     {
          BEFORE_GL_CALL;
-         EGLImageKHR i = mSymbols.fCreateImageKHR(dpy, ctx, target, buffer, attrib_list);
+         EGLImage i = mSymbols.fCreateImage(dpy, ctx, target, buffer, attrib_list);
          AFTER_GL_CALL;
          return i;
     }
 
-    EGLBoolean fDestroyImageKHR(EGLDisplay dpy, EGLImageKHR image)
+    EGLBoolean fDestroyImage(EGLDisplay dpy, EGLImage image)
     {
         BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fDestroyImageKHR(dpy, image);
+        EGLBoolean b = mSymbols.fDestroyImage(dpy, image);
         AFTER_GL_CALL;
         return b;
     }
 
     // New extension which allow us to lock texture and get raw image pointer
-    EGLBoolean fLockSurfaceKHR(EGLDisplay dpy, EGLSurface surface, const EGLint *attrib_list)
+    EGLBoolean fLockSurface(EGLDisplay dpy, EGLSurface surface, const EGLint *attrib_list)
     {
         BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fLockSurfaceKHR(dpy, surface, attrib_list);
+        EGLBoolean b = mSymbols.fLockSurface(dpy, surface, attrib_list);
         AFTER_GL_CALL;
         return b;
     }
 
-    EGLBoolean fUnlockSurfaceKHR(EGLDisplay dpy, EGLSurface surface)
+    EGLBoolean fUnlockSurface(EGLDisplay dpy, EGLSurface surface)
     {
         BEFORE_GL_CALL;
-        EGLBoolean b = mSymbols.fUnlockSurfaceKHR(dpy, surface);
+        EGLBoolean b = mSymbols.fUnlockSurface(dpy, surface);
         AFTER_GL_CALL;
         return b;
     }
@@ -357,15 +356,6 @@ public:
         EGLBoolean b = mSymbols.fQuerySurfacePointerANGLE(dpy, surface, attribute, value);
         AFTER_GL_CALL;
         return b;
-    }
-
-    // This is EGL specific GL ext symbol "glEGLImageTargetTexture2DOES"
-    // Lets keep it here for now.
-    void fImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
-    {
-        BEFORE_GL_CALL;
-        mSymbols.fImageTargetTexture2DOES(target, image);
-        AFTER_GL_CALL;
     }
 
     EGLDisplay Display() {
@@ -456,26 +446,21 @@ public:
         pfnBindTexImage fBindTexImage;
         typedef EGLBoolean (GLAPIENTRY * pfnReleaseTexImage)(EGLDisplay, EGLSurface surface, EGLint buffer);
         pfnReleaseTexImage fReleaseTexImage;
-        typedef EGLImageKHR (GLAPIENTRY * pfnCreateImageKHR)(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
-        pfnCreateImageKHR fCreateImageKHR;
-        typedef EGLBoolean (GLAPIENTRY * pfnDestroyImageKHR)(EGLDisplay dpy, EGLImageKHR image);
-        pfnDestroyImageKHR fDestroyImageKHR;
+        typedef EGLImage (GLAPIENTRY * pfnCreateImage)(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
+        pfnCreateImage fCreateImage;
+        typedef EGLBoolean (GLAPIENTRY * pfnDestroyImage)(EGLDisplay dpy, EGLImage image);
+        pfnDestroyImage fDestroyImage;
 
         // New extension which allow us to lock texture and get raw image pointer
-        typedef EGLBoolean (GLAPIENTRY * pfnLockSurfaceKHR)(EGLDisplay dpy, EGLSurface surface, const EGLint *attrib_list);
-        pfnLockSurfaceKHR fLockSurfaceKHR;
-        typedef EGLBoolean (GLAPIENTRY * pfnUnlockSurfaceKHR)(EGLDisplay dpy, EGLSurface surface);
-        pfnUnlockSurfaceKHR fUnlockSurfaceKHR;
+        typedef EGLBoolean (GLAPIENTRY * pfnLockSurface)(EGLDisplay dpy, EGLSurface surface, const EGLint *attrib_list);
+        pfnLockSurface fLockSurface;
+        typedef EGLBoolean (GLAPIENTRY * pfnUnlockSurface)(EGLDisplay dpy, EGLSurface surface);
+        pfnUnlockSurface fUnlockSurface;
         typedef EGLBoolean (GLAPIENTRY * pfnQuerySurface)(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint *value);
         pfnQuerySurface fQuerySurface;
 
         typedef EGLBoolean (GLAPIENTRY * pfnQuerySurfacePointerANGLE)(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value);
         pfnQuerySurfacePointerANGLE fQuerySurfacePointerANGLE;
-
-        // This is EGL specific GL ext symbol "glEGLImageTargetTexture2DOES"
-        // Lets keep it here for now.
-        typedef void (GLAPIENTRY * pfnImageTargetTexture2DOES)(GLenum target, GLeglImageOES image);
-        pfnImageTargetTexture2DOES fImageTargetTexture2DOES;
     } mSymbols;
 
 private:
