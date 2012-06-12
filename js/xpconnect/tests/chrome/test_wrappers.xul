@@ -67,6 +67,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
    // Test getter/setter lookup on Xray wrappers.
    ok(Object.prototype.__lookupGetter__.call(win.document, 'title'), 'found getter on document');
    ok(Object.prototype.__lookupGetter__.call(win.document, 'title'), 'found getter on document');
+
+   // Test QI on new dom bindings.
+   var contentXHR = XPCNativeWrapper(win.wrappedJSObject.xhr);
+   try {
+     var QIed = contentXHR.QueryInterface(Components.interfaces.nsIClassInfo);
+     ok(QIed, "Successfully QI-ed on wrapper");
+   } catch(e) {
+     ok(false, "Threw while QI-ing on wrapper");
+   }
+
   }
 
   SimpleTest.waitForExplicitFinish();
