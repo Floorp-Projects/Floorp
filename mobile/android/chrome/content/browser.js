@@ -3421,6 +3421,12 @@ var FormAssistant = {
     if (!this._isAutoComplete(aElement))
       return false;
 
+    // Don't display the form auto-complete popup after the user starts typing
+    // to avoid confusing the IME. See bug 758820 and bug 632744.
+    if (aElement.value.length > 0) {
+        return false;
+    }
+
     let autoCompleteSuggestions = this._getAutoCompleteSuggestions(aElement.value, aElement);
     let listSuggestions = this._getListSuggestions(aElement);
 
