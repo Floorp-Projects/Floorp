@@ -74,6 +74,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_robustness",
     "GL_EXT_robustness",
     "GL_ARB_sync",
+    "GL_OES_EGL_image",
     NULL
 };
 
@@ -459,6 +460,20 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 mSymbols.fWaitSync = nsnull;
                 mSymbols.fGetInteger64v = nsnull;
                 mSymbols.fGetSynciv = nsnull;
+            }
+        }
+
+        if (IsExtensionSupported(OES_EGL_image)) {
+            SymLoadStruct imageSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fImageTargetTexture2D, { "glEGLImageTargetTexture2DOES", nsnull } },
+                { nsnull, { nsnull } },
+            };
+
+            if (!LoadSymbols(&imageSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports ARB_sync without supplying its functions.");
+
+                MarkExtensionUnsupported(OES_EGL_image);
+                mSymbols.fImageTargetTexture2D = nsnull;
             }
         }
        

@@ -776,7 +776,7 @@ public:
         , mSurface(nsnull)
         , mConfig(nsnull)
         , mTexture(aTexture)
-        , mImageKHR(nsnull)
+        , mEGLImage(nsnull)
         , mTextureState(Created)
         , mBound(false)
         , mIsLocked(false)
@@ -1104,7 +1104,7 @@ public:
             LOCAL_EGL_NONE
         };
 
-        sEGLLibrary.fLockSurfaceKHR(EGL_DISPLAY(), mSurface, lock_attribs);
+        sEGLLibrary.fLockSurface(EGL_DISPLAY(), mSurface, lock_attribs);
 
         mIsLocked = true;
 
@@ -1132,7 +1132,7 @@ public:
             return;
         }
 
-        sEGLLibrary.fUnlockSurfaceKHR(EGL_DISPLAY(), mSurface);
+        sEGLLibrary.fUnlockSurface(EGL_DISPLAY(), mSurface);
         mIsLocked = false;
     }
 
@@ -1202,21 +1202,21 @@ public:
         mConfig = nsnull;
 
         if (sEGLLibrary.HasKHRImagePixmap() && sEGLLibrary.HasKHRImageTexture2D()) {
-            mImageKHR =
-                sEGLLibrary.fCreateImageKHR(EGL_DISPLAY(),
-                                            EGL_NO_CONTEXT,
-                                            LOCAL_EGL_NATIVE_PIXMAP_KHR,
-                                            (EGLClientBuffer)xsurface->XDrawable(),
-                                            NULL);
+            mEGLImage =
+                sEGLLibrary.fCreateImage(EGL_DISPLAY(),
+                                         EGL_NO_CONTEXT,
+                                         LOCAL_EGL_NATIVE_PIXMAP_KHR,
+                                         (EGLClientBuffer)xsurface->XDrawable(),
+                                         nsnull);
 
-            if (!mImageKHR) {
+            if (!mEGLImage) {
                 printf_stderr("couldn't create EGL image: ERROR (0x%04x)\n", sEGLLibrary.fGetError());
                 return false;
             }
             mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-            sEGLLibrary.fImageTargetTexture2DOES(LOCAL_GL_TEXTURE_2D, mImageKHR);
-            sEGLLibrary.fDestroyImageKHR(EGL_DISPLAY(), mImageKHR);
-            mImageKHR = NULL;
+            mGLContext->fImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mEGLImage);
+            sEGLLibrary.fDestroyImage(EGL_DISPLAY(), mEGLImage);
+            mEGLImage = nsnull;
         } else {
             if (!CreateEGLSurface(xsurface)) {
                 printf_stderr("ProviderEGL Failed create EGL surface: ERROR (0x%04x)\n", sEGLLibrary.fGetError());
@@ -1247,7 +1247,7 @@ protected:
     EGLSurface mSurface;
     EGLConfig mConfig;
     GLuint mTexture;
-    EGLImageKHR mImageKHR;
+    EGLImage mEGLImage;
     TextureState mTextureState;
 
     bool mBound;
