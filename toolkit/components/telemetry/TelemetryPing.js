@@ -543,13 +543,7 @@ TelemetryPing.prototype = {
     let startTime = new Date();
     let file = this.savedHistogramsFile();
 
-    function finishRequest(channel) {
-      let success = false;
-      try {
-        success = channel.QueryInterface(Ci.nsIHttpChannel).requestSucceeded;
-      } catch(e) {
-      }
-
+    function finishRequest(success) {
       let hping = Telemetry.getHistogramById("TELEMETRY_PING");
       let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
 
@@ -561,11 +555,11 @@ TelemetryPing.prototype = {
       }
     }
 
-    function handler(callback) {
-      return function(event) { finishRequest(request.channel); callback() };
+    function handler(success, callback) {
+      return function(event) { finishRequest(success); callback() };
     }
-    request.addEventListener("error", handler(onError), false);
-    request.addEventListener("load", handler(onSuccess), false);
+    request.addEventListener("error", handler(false, onError), false);
+    request.addEventListener("load", handler(true, onSuccess), false);
 
     request.setRequestHeader("Content-Encoding", "gzip");
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
