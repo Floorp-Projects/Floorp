@@ -1456,6 +1456,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 string.Template(elementTemplate).substitute(
                     {
                         "val" : "temp",
+                        "valPtr": "&temp",
                         "declName" : "(*arr.AppendElement())"
                         }
                     ))).define()
@@ -1629,9 +1630,6 @@ for (uint32_t i = 0; i < length; ++i) {
         return (template, CGGeneric(declType), holderType, False)
 
     if type.isString():
-        if isMember:
-            raise TypeError("Can't handle member strings; need to sort out "
-                            "rooting issues")
         # XXXbz Need to figure out string behavior based on extended args?  Also, how to
         # detect them?
 
@@ -1643,6 +1641,22 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             nullBehavior = "eStringify"
             undefinedBehavior = "eStringify"
+
+        if isMember:
+            # We have to make a copy, because our jsval may well not
+            # live as long as our string needs to.
+            declType = CGGeneric("nsString")
+            return (
+                "{\n"
+                "  nsDependentString str;\n"
+                "  if (!ConvertJSValueToString(cx, ${val}, ${valPtr}, %s, %s, str)) {\n"
+                "    return false;\n"
+                "  }\n"
+                "  ${declName} = str;\n"
+                "}\n" %
+                (nullBehavior, undefinedBehavior),
+            declType, None,
+            isOptional)
 
         if isOptional:
             declType = "Optional<nsAString>"
