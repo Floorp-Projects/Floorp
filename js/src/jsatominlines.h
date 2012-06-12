@@ -24,29 +24,26 @@ js::AtomStateEntry::asPtr() const
     return atom;
 }
 
-inline bool
-js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
+namespace js {
+
+inline JSAtom *
+ToAtom(JSContext *cx, const js::Value &v)
 {
     if (!v.isString()) {
         JSString *str = js::ToStringSlow(cx, v);
         if (!str)
-            return false;
+            return NULL;
         JS::Anchor<JSString *> anchor(str);
-        *atomp = js_AtomizeString(cx, str);
-        return !!*atomp;
+        return js_AtomizeString(cx, str);
     }
 
     JSString *str = v.toString();
-    if (str->isAtom()) {
-        *atomp = &str->asAtom();
-        return true;
-    }
+    if (str->isAtom())
+        return &str->asAtom();
 
-    *atomp = js_AtomizeString(cx, str);
-    return !!*atomp;
+    JS::Anchor<JSString *> anchor(str);
+    return js_AtomizeString(cx, str);
 }
-
-namespace js {
 
 inline bool
 ValueToId(JSContext* cx, JSObject *obj, const Value &v, jsid *idp)
