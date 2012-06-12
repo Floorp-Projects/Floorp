@@ -5,6 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#if defined(XP_WIN) || defined(XP_OS2)
+#  define MOZALLOC_EXPORT __declspec(dllexport)
+#endif
+
 #include "mozilla/Assertions.h"
 
 #include <stdio.h>

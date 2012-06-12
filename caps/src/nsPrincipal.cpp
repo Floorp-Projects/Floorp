@@ -611,13 +611,13 @@ NS_IMPL_QUERY_INTERFACE2_CI(nsPrincipal,
 NS_IMPL_CI_INTERFACE_GETTER2(nsPrincipal,
                              nsIPrincipal,
                              nsISerializable)
-NS_IMPL_ADDREF_INHERITED(nsPrincipal, nsBasePrincipal);
-NS_IMPL_RELEASE_INHERITED(nsPrincipal, nsBasePrincipal);
+NS_IMPL_ADDREF_INHERITED(nsPrincipal, nsBasePrincipal)
+NS_IMPL_RELEASE_INHERITED(nsPrincipal, nsBasePrincipal)
 
 nsPrincipal::nsPrincipal()
-  : mInitialized(false),
-    mCodebaseImmutable(false),
-    mDomainImmutable(false)
+  : mCodebaseImmutable(false)
+  , mDomainImmutable(false)
+  , mInitialized(false)
 { }
 
 nsPrincipal::~nsPrincipal()
@@ -1216,8 +1216,8 @@ NS_IMPL_QUERY_INTERFACE2_CI(nsExpandedPrincipal,
 NS_IMPL_CI_INTERFACE_GETTER2(nsExpandedPrincipal,
                              nsIPrincipal,
                              nsIExpandedPrincipal)
-NS_IMPL_ADDREF_INHERITED(nsExpandedPrincipal, nsBasePrincipal);
-NS_IMPL_RELEASE_INHERITED(nsExpandedPrincipal, nsBasePrincipal);
+NS_IMPL_ADDREF_INHERITED(nsExpandedPrincipal, nsBasePrincipal)
+NS_IMPL_RELEASE_INHERITED(nsExpandedPrincipal, nsBasePrincipal)
 
 nsExpandedPrincipal::nsExpandedPrincipal(nsTArray<nsCOMPtr <nsIPrincipal> > &aWhiteList)
 {

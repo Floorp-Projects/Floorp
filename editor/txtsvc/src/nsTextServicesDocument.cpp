@@ -785,13 +785,11 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
 
     while (!iter->IsDone())
     {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(iter->GetCurrentNode());
-
-      if (IsTextNode(content))
-      {
+      if (iter->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
         // We found a text node, so position the document's
         // iterator at the beginning of the block, then get
         // the selection in terms of the string offset.
+        nsCOMPtr<nsIContent> content = iter->GetCurrentNode()->AsContent();
 
         result = mIterator->PositionAt(content);
 
@@ -910,12 +908,10 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
 
   while (!iter->IsDone())
   {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(iter->GetCurrentNode());
-
-    if (IsTextNode(content))
-    {
+    if (iter->GetCurrentNode()->NodeType() == nsIDOMNode::TEXT_NODE) {
       // We found a text node! Adjust the document's iterator to point
       // to the beginning of its text block, then get the current selection.
+      nsCOMPtr<nsIContent> content = iter->GetCurrentNode()->AsContent();
 
       result = mIterator->PositionAt(content);
 
@@ -1377,13 +1373,13 @@ nsTextServicesDocument::DeleteSelection()
 
       nsCOMPtr<nsIContent> curContent;
 
-      if (mIteratorStatus != nsTextServicesDocument::eIsDone)
-      {
+      if (mIteratorStatus != nsTextServicesDocument::eIsDone &&
+          mIterator->GetCurrentNode()->IsContent()) {
         // The old iterator is still pointing to something valid,
         // so get its current node so we can restore it after we
         // create the new iterator!
 
-        curContent = do_QueryInterface(mIterator->GetCurrentNode());
+        curContent = mIterator->GetCurrentNode()->AsContent();
       }
 
       // Create the new iterator.
@@ -2674,8 +2670,8 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   } else {
     // The parent has no children, so position the iterator
     // on the parent.
-    nsCOMPtr<nsIContent> content = do_QueryInterface(parent);
-    NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(parent->IsContent(), NS_ERROR_FAILURE);
+    nsCOMPtr<nsIContent> content = parent->AsContent();
 
     result = iter->PositionAt(content);
     NS_ENSURE_SUCCESS(result, result);
@@ -3160,7 +3156,9 @@ nsTextServicesDocument::FirstTextNodeInCurrentBlock(nsIContentIterator *iter)
 
   while (!iter->IsDone())
   {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(iter->GetCurrentNode());
+    nsCOMPtr<nsIContent> content = iter->GetCurrentNode()->IsContent()
+                                   ? iter->GetCurrentNode()->AsContent()
+                                   : nsnull;
 
     if (IsTextNode(content))
     {
@@ -3231,7 +3229,9 @@ nsTextServicesDocument::FirstTextNodeInNextBlock(nsIContentIterator *aIterator)
 
   while (!aIterator->IsDone())
   {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aIterator->GetCurrentNode());
+    nsCOMPtr<nsIContent> content = aIterator->GetCurrentNode()->IsContent()
+                                   ? aIterator->GetCurrentNode()->AsContent()
+                                   : nsnull;
 
     if (IsTextNode(content))
     {
@@ -3277,7 +3277,9 @@ nsTextServicesDocument::GetFirstTextNodeInPrevBlock(nsIContent **aContent)
 
   if (!mIterator->IsDone())
   {
-    nsCOMPtr<nsIContent> current = do_QueryInterface(mIterator->GetCurrentNode());
+    nsCOMPtr<nsIContent> current = mIterator->GetCurrentNode()->IsContent()
+                                   ? mIterator->GetCurrentNode()->AsContent()
+                                   : nsnull;
     current.forget(aContent);
   }
 
@@ -3311,7 +3313,9 @@ nsTextServicesDocument::GetFirstTextNodeInNextBlock(nsIContent **aContent)
 
   if (!mIterator->IsDone())
   {
-    nsCOMPtr<nsIContent> current = do_QueryInterface(mIterator->GetCurrentNode());
+    nsCOMPtr<nsIContent> current = mIterator->GetCurrentNode()->IsContent()
+                                   ? mIterator->GetCurrentNode()->AsContent()
+                                   : nsnull;
     current.forget(aContent);
   }
 
@@ -3371,7 +3375,9 @@ nsTextServicesDocument::CreateOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable,
 
   while (!aIterator->IsDone())
   {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aIterator->GetCurrentNode());
+    nsCOMPtr<nsIContent> content = aIterator->GetCurrentNode()->IsContent()
+                                   ? aIterator->GetCurrentNode()->AsContent()
+                                   : nsnull;
 
     if (IsTextNode(content))
     {
