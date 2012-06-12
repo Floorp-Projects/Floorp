@@ -201,38 +201,33 @@ GLLibraryEGL::EnsureInitialized()
     }
 
     if (hasKHRImage) {
-        GLLibraryLoader::SymLoadStruct khrSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCreateImageKHR, { "eglCreateImageKHR", NULL } },
-            { (PRFuncPtr*) &mSymbols.fDestroyImageKHR, { "eglDestroyImageKHR", NULL } },
-            { (PRFuncPtr*) &mSymbols.fImageTargetTexture2DOES, { "glEGLImageTargetTexture2DOES", NULL } },
+        GLLibraryLoader::SymLoadStruct imageSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCreateImage, { "eglCreateImageKHR", NULL } },
+            { (PRFuncPtr*) &mSymbols.fDestroyImage, { "eglDestroyImageKHR", NULL } },
             { NULL, { NULL } }
         };
 
-        GLLibraryLoader::LoadSymbols(mEGLLibrary, &khrSymbols[0],
-                                         (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress);
+        GLLibraryLoader::LoadSymbols(mEGLLibrary, &imageSymbols[0],
+                                     (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress);
     }
 
     if (mHave_EGL_KHR_lock_surface) {
         GLLibraryLoader::SymLoadStruct lockSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fLockSurfaceKHR, { "eglLockSurfaceKHR", NULL } },
-            { (PRFuncPtr*) &mSymbols.fUnlockSurfaceKHR, { "eglUnlockSurfaceKHR", NULL } },
+            { (PRFuncPtr*) &mSymbols.fLockSurface, { "eglLockSurfaceKHR", NULL } },
+            { (PRFuncPtr*) &mSymbols.fUnlockSurface, { "eglUnlockSurfaceKHR", NULL } },
             { NULL, { NULL } }
         };
 
         GLLibraryLoader::LoadSymbols(mEGLLibrary, &lockSymbols[0],
-                                         (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress);
-        if (!mSymbols.fLockSurfaceKHR) {
+                                     (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress);
+        if (!mSymbols.fLockSurface) {
             mHave_EGL_KHR_lock_surface = false;
         }
     }
 
-    if (!mSymbols.fCreateImageKHR) {
+    if (!mSymbols.fCreateImage) {
         mHave_EGL_KHR_image_base = false;
         mHave_EGL_KHR_image_pixmap = false;
-        mHave_EGL_KHR_gl_texture_2D_image = false;
-    }
-
-    if (!mSymbols.fImageTargetTexture2DOES) {
         mHave_EGL_KHR_gl_texture_2D_image = false;
     }
 
