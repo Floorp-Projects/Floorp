@@ -294,6 +294,14 @@ public:
   int8_t GetAttributeRenamedTo(ErrorResult&);
   void SetAttributeRenamedTo(int8_t, ErrorResult&);
 
+  // Dictionary tests
+  void PassDictionary(const Dict&, ErrorResult&);
+  void PassOptionalDictionary(const Optional<Dict>&, ErrorResult&);
+  void PassNullableDictionary(const Nullable<Dict>&, ErrorResult&);
+  void PassOptionalNullableDictionary(const Optional<Nullable<Dict> >&, ErrorResult&);
+  void PassOtherDictionary(const GrandparentDict&, ErrorResult&);
+  void PassSequenceOfDictionaries(const Sequence<Dict>&, ErrorResult&);
+
   // Methods and properties imported via "implements"
   bool GetImplementedProperty(ErrorResult&);
   void SetImplementedProperty(bool, ErrorResult&);
