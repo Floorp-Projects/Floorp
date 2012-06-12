@@ -571,9 +571,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                         selectedTab.addToReadingList();
                     }
 
-                    Toast.makeText(GeckoApp.mAppContext,
-                                   R.string.reading_list_added, Toast.LENGTH_SHORT).show();
-
                     dismiss();
                 }
             });
