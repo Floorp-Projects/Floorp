@@ -9,7 +9,7 @@ import java.util.Queue;
 
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.ThreadPool;
-import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.activities.AccountActivity;
 
 import android.util.Log;
@@ -52,7 +52,7 @@ public class AccountAuthenticator {
 
     // Calculate and save username hash.
     try {
-      username = KeyBundle.usernameFromAccount(account);
+      username = Utils.usernameFromAccount(account);
     } catch (Exception e) {
       abort(AuthenticationResult.FAILURE_OTHER, e);
       return;

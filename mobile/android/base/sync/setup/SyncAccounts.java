@@ -214,9 +214,13 @@ public class SyncAccounts {
     // TODO: for each, also add to res/xml to make visible in account settings
     Logger.debug(LOG_TAG, "Finished setting syncables.");
 
-    // TODO: correctly implement Sync Options.
-    Logger.info(LOG_TAG, "Clearing preferences for this account.");
+    // Purging global prefs assumes we have only a single Sync account at one time.
+    // TODO: Bug 761682: don't do anything with global prefs here.
+    Logger.info(LOG_TAG, "Clearing global prefs.");
+    SyncAdapter.purgeGlobalPrefs(context);
+
     try {
+      Logger.info(LOG_TAG, "Clearing preferences path " + Utils.getPrefsPath(username, serverURL) + " for this account.");
       SharedPreferences.Editor editor = Utils.getSharedPreferences(context, username, serverURL).edit().clear();
       if (syncAccount.clusterURL != null) {
         editor.putString(SyncConfiguration.PREF_CLUSTER_URL, syncAccount.clusterURL);
