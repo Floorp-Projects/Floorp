@@ -290,6 +290,8 @@ nsHttpChannel::nsHttpChannel()
     , mPostID(0)
     , mRequestTime(0)
     , mOnCacheEntryAvailableCallback(nsnull)
+    , mOfflineCacheAccess(0)
+    , mOfflineCacheLastModifiedTime(0)
     , mCachedContentIsValid(false)
     , mCachedContentIsPartial(false)
     , mTransactionReplaced(false)
@@ -2655,6 +2657,9 @@ nsHttpChannel::OnOfflineCacheEntryForWritingAvailable(
     if (NS_SUCCEEDED(aEntryStatus)) {
         mOfflineCacheEntry = aEntry;
         mOfflineCacheAccess = aAccess;
+        if (NS_FAILED(aEntry->GetLastModified(&mOfflineCacheLastModifiedTime))) {
+            mOfflineCacheLastModifiedTime = 0;
+        }
     }
 
     if (aEntryStatus == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
@@ -3287,13 +3292,11 @@ nsHttpChannel::ShouldUpdateOfflineCacheEntry()
         return true;
     }
 
-    PRUint32 offlineLastModifiedTime;
-    rv = mOfflineCacheEntry->GetLastModified(&offlineLastModifiedTime);
-    if (NS_FAILED(rv)) {
+    if (mOfflineCacheLastModifiedTime == 0) {
         return false;
     }
 
-    if (docLastModifiedTime > offlineLastModifiedTime) {
+    if (docLastModifiedTime > mOfflineCacheLastModifiedTime) {
         return true;
     }
 
