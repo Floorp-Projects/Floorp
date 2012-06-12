@@ -87,7 +87,7 @@ public class TabsTray extends LinearLayout
 
         Tabs.registerOnTabsChangedListener(this);
         Tabs.getInstance().refreshThumbnails();
-        onTabChanged(null, null, null);
+        onTabChanged(null, null);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class TabsTray extends LinearLayout
         mTabsAdapter.notifyDataSetChanged();
     }
 
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg) {
         if (mTabsAdapter == null) {
             mTabsAdapter = new TabsAdapter(mContext, Tabs.getInstance().getTabsInOrder());
             mList.setAdapter(mTabsAdapter);
