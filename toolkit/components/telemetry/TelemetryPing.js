@@ -542,13 +542,13 @@ TelemetryPing.prototype = {
         success = channel.QueryInterface(Ci.nsIHttpChannel).requestSucceeded;
       } catch(e) {
       }
-      if (recordSuccess) {
-        let hping = Telemetry.getHistogramById("TELEMETRY_PING");
-        let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
 
-        hsuccess.add(success);
-        hping.add(new Date() - startTime);
-      }
+      let hping = Telemetry.getHistogramById("TELEMETRY_PING");
+      let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
+
+      hsuccess.add(success);
+      hping.add(new Date() - startTime);
+
       if (success && file.exists()) {
         file.remove(true);
       }

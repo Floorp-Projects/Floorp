@@ -223,7 +223,7 @@ function checkPersistedHistogramsSync(request, response) {
 }
 
 function checkHistogramsSync(request, response) {
-  checkPayload(request, "test-ping", 1);
+  checkPayload(request, "test-ping", 2);
 
   Services.obs.addObserver(runAsyncTestObserver, "telemetry-test-xhr-complete", false);
 }
@@ -249,13 +249,13 @@ function runAsyncTestObserver(aSubject, aTopic, aData) {
 
 function checkPersistedHistogramsAsync(request, response) {
   httpserver.registerPathHandler(PATH, checkHistogramsAsync);
-  checkPayload(request, "saved-session", 2);
+  checkPayload(request, "saved-session", 3);
 }
 
 function checkHistogramsAsync(request, response) {
   // do not need the http server anymore
   httpserver.stop(do_test_finished);
-  checkPayload(request, "test-ping", 2);
+  checkPayload(request, "test-ping", 4);
 
   gFinished = true;
 }
