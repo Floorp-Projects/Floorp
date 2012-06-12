@@ -230,28 +230,10 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.bookmarks_list));
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
 
-        if (sSuggestTemplate == null) {
-            loadSuggestClientFromPrefs();
-        } else {
-            loadSuggestClient();
-        }
+        loadSuggestClient();
 
         GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
-    }
-
-    private void loadSuggestClientFromPrefs() {
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                SharedPreferences prefs = getSearchPreferences();
-                sSuggestEngine = prefs.getString("suggestEngine", null);
-                sSuggestTemplate = prefs.getString("suggestTemplate", null);
-                if (sSuggestTemplate != null) {
-                    loadSuggestClient();
-                    mAwesomeTabs.setSuggestEngine(sSuggestEngine, null);
-                }
-            }
-        });
     }
 
     private void loadSuggestClient() {
@@ -264,7 +246,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                 final String suggestEngine = message.optString("suggestEngine");
                 final String suggestTemplate = message.optString("suggestTemplate");
                 if (!TextUtils.equals(suggestTemplate, sSuggestTemplate)) {
-                    saveSuggestEngineData(suggestEngine, suggestTemplate);
                     sSuggestEngine = suggestEngine;
                     sSuggestTemplate = suggestTemplate;
                     loadSuggestClient();
@@ -275,18 +256,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             // do nothing
             Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
         }
-    }
-
-    private void saveSuggestEngineData(final String suggestEngine, final String suggestTemplate) {
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                SharedPreferences prefs = getSearchPreferences();
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("suggestEngine", suggestEngine);
-                editor.putString("suggestTemplate", suggestTemplate);
-                editor.commit();
-            }
-        });
     }
 
     @Override
@@ -765,9 +734,5 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         public void setOnKeyPreImeListener(OnKeyPreImeListener listener) {
             mOnKeyPreImeListener = listener;
         }
-    }
-
-    private SharedPreferences getSearchPreferences() {
-        return getSharedPreferences("search.prefs", MODE_PRIVATE);
     }
 }
