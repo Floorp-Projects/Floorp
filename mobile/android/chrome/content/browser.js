@@ -5355,11 +5355,12 @@ let Reader = {
     this._requests = {};
 
     Services.obs.addObserver(this, "Reader:Add", false);
+    Services.obs.addObserver(this, "Reader:Remove", false);
   },
 
   observe: function(aMessage, aTopic, aData) {
     switch(aTopic) {
-      case "Reader:Add":
+      case "Reader:Add": {
         let tab = BrowserApp.getTabForId(aData);
         let url = tab.browser.contentWindow.location.href;
 
@@ -5387,6 +5388,14 @@ let Reader = {
           });
         }.bind(this));
         break;
+      }
+
+      case "Reader:Remove": {
+        this.removeArticleFromCache(aData, function(success) {
+          this.log("Reader:Remove success=" + success + ", url=" + aData);
+        }.bind(this));
+        break;
+      }
     }
   },
 
@@ -5517,8 +5526,33 @@ let Reader = {
     }.bind(this));
   },
 
+  removeArticleFromCache: function Reader_removeArticleFromCache(url, callback) {
+    this._getCacheDB(function(cacheDB) {
+      if (!cacheDB) {
+        callback(false);
+        return;
+      }
+
+      let transaction = cacheDB.transaction(cacheDB.objectStoreNames, "readwrite");
+      let articles = transaction.objectStore(cacheDB.objectStoreNames[0]);
+
+      let request = articles.delete(url);
+
+      request.onerror = function(event) {
+        this.log("Error removing article from the cache DB: " + url);
+        callback(false);
+      }.bind(this);
+
+      request.onsuccess = function(event) {
+        this.log("Removed article from the cache DB: " + url);
+        callback(true);
+      }.bind(this);
+    }.bind(this));
+  },
+
   uninit: function Reader_uninit() {
     Services.obs.removeObserver(this, "Reader:Add", false);
+    Services.obs.removeObserver(this, "Reader:Remove", false);
 
     let requests = this._requests;
     for (let url in requests) {
