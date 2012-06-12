@@ -1294,13 +1294,12 @@ function appendTreeElements(aP, aRoot, aProcess, aPadText)
     // The percentage (omitted for single entries).
     let percText;
     if (!aT._isDegenerate) {
-      if (aT._amount === aRoot._amount) {
-        percText = " (100.0%)";
-      } else {
-        let num = 100 * aT._amount / aRoot._amount;
-        let numText = num.toFixed(2);
-        percText = (0 <= num && num < 10 ? " (0" : " (") + numText + "%)";
-      }
+      // Treat 0 / 0 as 100%.
+      let num = aRoot._amount === 0 ? 100 : (100 * aT._amount / aRoot._amount);
+      let numText = num.toFixed(2);
+      percText = numText === "100.00"
+               ? " (100.0%)"
+               : (0 <= num && num < 10 ? " (0" : " (") + numText + "%)";
       appendElementWithText(d, "span", "mrPerc", percText);
     }
 
