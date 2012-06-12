@@ -1407,15 +1407,12 @@ nsPresContext::ScreenWidthInchesForFontInflation(bool* aChanged)
   float deviceWidthInches =
     float(clientRect.width) / float(dx->AppUnitsPerPhysicalInch());
 
-  if (deviceWidthInches != mLastFontInflationScreenWidth) {
-    if (mLastFontInflationScreenWidth != -1.0) {
-      if (aChanged) {
-        *aChanged = true;
-      } else {
-        NS_NOTREACHED("somebody should have checked for screen width change "
-                      "and triggered a reflow");
-      }
-    }
+  if (mLastFontInflationScreenWidth == -1.0) {
+    mLastFontInflationScreenWidth = deviceWidthInches;
+  }
+
+  if (deviceWidthInches != mLastFontInflationScreenWidth && aChanged) {
+    *aChanged = true;
     mLastFontInflationScreenWidth = deviceWidthInches;
   }
 

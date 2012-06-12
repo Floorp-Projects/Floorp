@@ -64,7 +64,6 @@ EXPORTS_$(binding_include_path) = \
   PrototypeList.h \
   RegisterBindings.h \
   Nullable.h \
-  PrimitiveConversions.h \
   TypedArray.h \
   BindingUtils.h \
   $(exported_binding_headers) \

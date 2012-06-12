@@ -331,6 +331,10 @@ public class GeckoAppShell
         File cacheFile = getCacheDir();
         GeckoAppShell.putenv("MOZ_LINKER_CACHE=" + cacheFile.getPath());
 
+        // setup the app-specific cache path
+        f = geckoApp.getCacheDir();
+        GeckoAppShell.putenv("CACHE_DIRECTORY=" + f.getPath());
+
         // gingerbread introduces File.getUsableSpace(). We should use that.
         long freeSpace = getFreeSpace();
         try {
