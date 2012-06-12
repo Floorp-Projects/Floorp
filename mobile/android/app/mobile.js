@@ -719,3 +719,6 @@ pref("accessibility.accessfu.activate", 2);
 
 // Mobile manages state by autodetection
 pref("network.manage-offline-status", true);
+
+// increase the timeout clamp for background tabs to 15 minutes
+pref("dom.min_background_timeout_value", 900000);
