@@ -611,10 +611,10 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::MIPSRegiste
                               pc, pinlined, fd);                              \
     }
 
-    STUB_CALL_TYPE(JSObjStub);
-    STUB_CALL_TYPE(VoidPtrStubUInt32);
-    STUB_CALL_TYPE(VoidStubUInt32);
-    STUB_CALL_TYPE(VoidStub);
+    STUB_CALL_TYPE(JSObjStub)
+    STUB_CALL_TYPE(VoidPtrStubUInt32)
+    STUB_CALL_TYPE(VoidStubUInt32)
+    STUB_CALL_TYPE(VoidStub)
 
 #undef STUB_CALL_TYPE
 

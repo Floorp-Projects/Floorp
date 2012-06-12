@@ -156,7 +156,7 @@ obj_setProto(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value 
 static bool
 MarkSharpObjects(JSContext *cx, HandleObject obj, JSIdArray **idap, JSSharpInfo *value)
 {
-    JS_CHECK_RECURSION(cx, return NULL);
+    JS_CHECK_RECURSION(cx, return false);
 
     JSIdArray *ida;
 
@@ -2555,7 +2555,7 @@ JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
 
             last = cx->propertyTree().getChild(cx, last, self->numFixedSlots(), child);
             if (!last)
-                return NULL;
+                return false;
         }
 
         JS_ASSERT(self->lastProperty()->slotSpan() == last->slotSpan());

@@ -274,7 +274,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
 
     TreeContext funtc(&parser, &funsc);
     if (!funtc.init())
-        return NULL;
+        return false;
 
     BytecodeEmitter funbce(&parser, &funsc, lineno,
                            /* noScriptRval = */ false, /* needsScriptGlobal = */ false);
