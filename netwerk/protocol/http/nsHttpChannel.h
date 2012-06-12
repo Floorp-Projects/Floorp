@@ -310,6 +310,7 @@ private:
 
     nsCOMPtr<nsICacheEntryDescriptor> mOfflineCacheEntry;
     nsCacheAccessMode                 mOfflineCacheAccess;
+    PRUint32                          mOfflineCacheLastModifiedTime;
     nsCString                         mOfflineCacheClientID;
 
     nsCOMPtr<nsIFile>                 mProfileDirectory;
