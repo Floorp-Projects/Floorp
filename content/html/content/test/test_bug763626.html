@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=763626
+-->
+<head>
+<title>Test for Bug 763626</title>
+
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+function boom()
+{
+  var r = document.createElement("div").itemRef;
+  SpecialPowers.DOMWindowUtils.garbageCollect();
+  is("" + r, "", "ToString should return empty string when element is gone");
+  SimpleTest.finish();
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
+
