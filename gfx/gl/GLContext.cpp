@@ -41,7 +41,7 @@ const ContextFormat ContextFormat::BasicRGBA32Format(ContextFormat::BasicRGBA32)
 #define MAX_SYMBOL_LENGTH 128
 #define MAX_SYMBOL_NAMES 5
 
-// should match the order of GLExtensions
+// should match the order of GLExtensions, and be null-terminated.
 static const char *sExtensionNames[] = {
     "GL_EXT_framebuffer_object",
     "GL_ARB_framebuffer_object",
@@ -75,7 +75,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_robustness",
     "GL_ARB_sync",
     "GL_OES_EGL_image",
-    NULL
+    nsnull
 };
 
 /*
@@ -530,50 +530,25 @@ void
 GLContext::InitExtensions()
 {
     MakeCurrent();
-    const GLubyte *extensions = fGetString(LOCAL_GL_EXTENSIONS);
+    const char* extensions = (const char*)fGetString(LOCAL_GL_EXTENSIONS);
     if (!extensions)
         return;
 
-    char *exts = strdup((char *)extensions);
-
 #ifdef DEBUG
-    static bool once = false;
+    // If DEBUG, then be verbose the first time we're run.
+    static bool firstVerboseRun = true;
 #else
-    const bool once = true;
+    // Non-DEBUG, so never spew.
+    const bool firstVerboseRun = false;
 #endif
 
-    if (DebugMode() && !once) {
-        printf_stderr("GL extensions: %s\n", exts);
-    }
-
-    char *s = exts;
-    bool done = false;
-    while (!done) {
-        char *space = strchr(s, ' ');
-        if (space) {
-            *space = '\0';
-        } else {
-            done = true;
-        }
-
-        for (int i = 0; sExtensionNames[i]; ++i) {
-            if (strcmp(s, sExtensionNames[i]) == 0) {
-                if (DebugMode() && !once) {
-                    printf_stderr("Found extension %s\n", s);
-                }
-                mAvailableExtensions[i] = 1;
-            }
-        }
-
-        s = space+1;
-    }
-
-    free(exts);
+    mAvailableExtensions.Load(extensions, sExtensionNames, firstVerboseRun);
 
 #ifdef DEBUG
-    once = true;
+    firstVerboseRun = false;
 #endif
 }
+
 
 // Take texture data in a given buffer and copy it into a larger buffer,
 // padding out the edge pixels for filtering if necessary
