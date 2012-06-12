@@ -90,7 +90,7 @@ public class DoorHanger extends LinearLayout implements Button.OnClickListener {
 
         // This will hide the doorhanger (and hide the popup if there are no
         // more doorhangers to show)
-        ((GeckoApp)mContext).updatePopups(mTab);
+        GeckoApp.mDoorHangerPopup.updatePopup();
     }
 
     public void show() {
