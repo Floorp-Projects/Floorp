@@ -3933,8 +3933,6 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
         // prevent readback of arbitrary video memory through uninitialized renderbuffers!
         if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
             return ErrorInvalidFramebufferOperation("readPixels: incomplete framebuffer");
-    } else {
-        EnsureBackbufferClearedAsNeeded();
     }
     // Now that the errors are out of the way, on to actually reading
 
