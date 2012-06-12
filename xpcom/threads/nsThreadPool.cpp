@@ -120,6 +120,8 @@ nsThreadPool::Run()
 {
   LOG(("THRD-P(%p) enter\n", this));
 
+  mThreadNaming.SetThreadPoolName(mName);
+
   nsCOMPtr<nsIThread> current;
   nsThreadManager::get()->GetCurrentThread(getter_AddRefs(current));
 
@@ -330,5 +332,18 @@ nsThreadPool::SetListener(nsIThreadPoolListener* aListener)
     ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
     mListener.swap(swappedListener);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThreadPool::SetName(const nsACString& aName)
+{
+  {
+    ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
+    if (mThreads.Count())
+      return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mName = aName;
   return NS_OK;
 }

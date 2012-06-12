@@ -3018,6 +3018,8 @@ class nsCycleCollectorRunner : public nsRunnable
 public:
     NS_IMETHOD Run()
     {
+        PR_SetCurrentThreadName("XPCOM CC");
+
 #ifdef XP_WIN
         TlsSetValue(gTLSThreadIDIndex,
                     (void*) mozilla::threads::CycleCollector);

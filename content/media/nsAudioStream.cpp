@@ -383,9 +383,10 @@ nsIThread *
 nsAudioStream::GetThread()
 {
   if (!mAudioPlaybackThread) {
-    NS_NewThread(getter_AddRefs(mAudioPlaybackThread),
-                 nsnull,
-                 MEDIA_THREAD_STACK_SIZE);
+    NS_NewNamedThread("Audio Stream",
+                      getter_AddRefs(mAudioPlaybackThread),
+                      nsnull,
+                      MEDIA_THREAD_STACK_SIZE);
   }
   return mAudioPlaybackThread;
 }

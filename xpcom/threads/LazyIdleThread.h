@@ -18,6 +18,7 @@
 #include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "nsString.h"
 
 #define IDLE_THREAD_TOPIC "thread-shutting-down"
 
@@ -53,6 +54,7 @@ public:
    * number of milliseconds.
    */
   LazyIdleThread(PRUint32 aIdleTimeoutMS,
+                 const nsCSubstring& aName,
                  ShutdownMethod aShutdownMethod = AutomaticShutdown,
                  nsIObserver* aIdleObserver = nsnull);
 
@@ -205,6 +207,11 @@ private:
    * Whether or not the idle timeout is enabled.
    */
   bool mIdleTimeoutEnabled;
+
+  /**
+   * Name of the thread, set on the actual thread after it gets created.
+   */
+  nsCString mName;
 };
 
 } // namespace mozilla

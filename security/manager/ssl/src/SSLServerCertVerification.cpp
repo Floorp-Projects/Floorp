@@ -158,6 +158,7 @@ InitializeSSLServerCertVerificationThreads()
   (void) gCertVerificationThreadPool->SetIdleThreadLimit(5);
   (void) gCertVerificationThreadPool->SetIdleThreadTimeout(30 * 1000);
   (void) gCertVerificationThreadPool->SetThreadLimit(5);
+  (void) gCertVerificationThreadPool->SetName(NS_LITERAL_CSTRING("SSL Cert"));
 }
 
 // Called when the socket transport thread finishes, to destroy the thread

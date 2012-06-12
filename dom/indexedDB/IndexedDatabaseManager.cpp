@@ -226,7 +226,8 @@ IndexedDatabaseManager::GetOrCreate()
       // Make a lazy thread for any IO we need (like clearing or enumerating the
       // contents of indexedDB database directories).
       instance->mIOThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
-                                                LazyIdleThread::ManualShutdown);
+                                               NS_LITERAL_CSTRING("IndexedDB I/O"),
+                                               LazyIdleThread::ManualShutdown);
 
       // We need one quota callback object to hand to SQLite.
       instance->mQuotaCallbackSingleton = new QuotaCallback();
