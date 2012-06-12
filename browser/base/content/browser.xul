@@ -1047,7 +1047,7 @@
                          hidden="true"
                          command="Tools:Inspect"/>
           <toolbarbutton id="developer-toolbar-responsiveui"
-                         label="&responsiveUI.label;"
+                         label="&responsiveDesignTool.label;"
                          class="devtools-toolbarbutton"
                          hidden="true"
                          command="Tools:ResponsiveUI"/>

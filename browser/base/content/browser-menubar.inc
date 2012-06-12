@@ -538,8 +538,8 @@
                   <menuitem id="menu_responsiveUI"
                             type="checkbox"
                             hidden="true"
-                            label="&responsiveUI.label;"
-                            accesskey="&responsiveUI.accesskey;"
+                            label="&responsiveDesignTool.label;"
+                            accesskey="&responsiveDesignTool.accesskey;"
                             key="key_responsiveUI"
                             command="Tools:ResponsiveUI"/>
                   <menuitem id="menu_debugger"
