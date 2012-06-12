@@ -163,6 +163,9 @@ interface TestInterface {
   void passOptionalNullableSequenceWithDefaultValue(optional sequence<long>? arg = null);
   void passOptionalObjectSequence(optional sequence<TestInterface> arg);
 
+  sequence<DOMString> receiveStringSequence();
+  void passStringSequence(sequence<DOMString> arg);
+
   // Typed array types
   void passArrayBuffer(ArrayBuffer arg);
   void passNullableArrayBuffer(ArrayBuffer? arg);
@@ -279,6 +282,7 @@ dictionary Dict : ParentDict {
   long a;
   long b = 8;
   long z = 9;
+  DOMString str;
 };
 
 dictionary ParentDict : GrandparentDict {
