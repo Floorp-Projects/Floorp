@@ -13,13 +13,13 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NodeAuthenticationException;
 import org.mozilla.gecko.sync.NullClusterURLException;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncResourceDelegate;
 
-import android.util.Log;
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
@@ -69,7 +69,7 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
    */
   public static void fetchClusterURL(final String nodeWeaveURL,
                                      final ClusterURLFetchDelegate delegate) throws URISyntaxException {
-    Log.d(LOG_TAG, "In fetchClusterURL: node/weave is " + nodeWeaveURL);
+    Logger.info(LOG_TAG, "In fetchClusterURL: node/weave is " + nodeWeaveURL);
 
     BaseResource resource = new BaseResource(nodeWeaveURL);
     resource.delegate = new SyncResourceDelegate(resource) {
@@ -101,7 +101,7 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
           int status = response.getStatusLine().getStatusCode();
           switch (status) {
           case 200:
-            Log.i(LOG_TAG, "Got 200 for node/weave cluster URL request (user found; succeeding).");
+            Logger.info(LOG_TAG, "Got 200 for node/weave cluster URL request (user found; succeeding).");
             HttpEntity entity = response.getEntity();
             if (entity == null) {
               delegate.handleThrottled();
@@ -139,15 +139,15 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
             break;
           case 400:
           case 404:
-            Log.i(LOG_TAG, "Got " + status + " for node/weave cluster URL request (user not found; failing).");
+            Logger.info(LOG_TAG, "Got " + status + " for node/weave cluster URL request (user not found; failing).");
             delegate.handleFailure(response);
             break;
           case 503:
-            Log.i(LOG_TAG, "Got 503 for node/weave cluster URL request (error fetching node; failing).");
+            Logger.info(LOG_TAG, "Got 503 for node/weave cluster URL request (error fetching node; failing).");
             delegate.handleFailure(response);
             break;
           default:
-            Log.w(LOG_TAG, "Got " + status + " for node/weave cluster URL request (unexpected HTTP status; failing).");
+            Logger.warn(LOG_TAG, "Got " + status + " for node/weave cluster URL request (unexpected HTTP status; failing).");
             delegate.handleFailure(response);
           }
         } finally {
@@ -181,17 +181,17 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
     final boolean wantNodeAssignment = session.callback.wantNodeAssignment();
 
     if (!wantNodeAssignment && oldClusterURL != null) {
-      Log.i(LOG_TAG, "Cluster URL is already set and not stale. Continuing with sync.");
+      Logger.info(LOG_TAG, "Cluster URL is already set and not stale. Continuing with sync.");
       session.advance();
       return;
     }
 
-    Log.i(LOG_TAG, "Fetching cluster URL.");
+    Logger.info(LOG_TAG, "Fetching cluster URL.");
     final ClusterURLFetchDelegate delegate = new ClusterURLFetchDelegate() {
 
       @Override
       public void handleSuccess(final URI url) {
-        Log.i(LOG_TAG, "Node assignment pointed us to " + url);
+        Logger.info(LOG_TAG, "Node assignment pointed us to " + url);
 
         if (oldClusterURL != null && oldClusterURL.equals(url)) {
           // Our cluster URL is marked as stale and the fresh cluster URL is the same -- this is the user's problem.
@@ -219,16 +219,16 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
       @Override
       public void handleFailure(HttpResponse response) {
         int statusCode = response.getStatusLine().getStatusCode();
-        Log.w(LOG_TAG, "Got HTTP failure fetching node assignment: " + statusCode);
+        Logger.warn(LOG_TAG, "Got HTTP failure fetching node assignment: " + statusCode);
         if (statusCode == 404) {
           URI serverURL = session.config.serverURL;
           if (serverURL != null) {
-            Log.i(LOG_TAG, "Using serverURL <" + serverURL.toASCIIString() + "> as clusterURL.");
+            Logger.info(LOG_TAG, "Using serverURL <" + serverURL.toASCIIString() + "> as clusterURL.");
             session.config.setClusterURL(serverURL);
             session.advance();
             return;
           }
-          Log.w(LOG_TAG, "No serverURL set to use as fallback cluster URL. Aborting sync.");
+          Logger.warn(LOG_TAG, "No serverURL set to use as fallback cluster URL. Aborting sync.");
           // Fallthrough to abort.
         } else {
           session.interpretHTTPFailure(response);

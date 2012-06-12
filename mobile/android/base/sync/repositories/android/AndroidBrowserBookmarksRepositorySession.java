@@ -355,7 +355,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         }
       }
 
-      if (Logger.logVerbose(LOG_TAG)) {
+      if (Logger.shouldLogVerbose(LOG_TAG)) {
         // Don't JSON-encode unless we're logging.
         Logger.trace(LOG_TAG, "Output child array: " + childArray.toJSONString());
       }
@@ -709,7 +709,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     if (parentName == null) {
       return;
     }
-    if (Logger.logVerbose(LOG_TAG)) {
+    if (Logger.shouldLogVerbose(LOG_TAG)) {
       Logger.trace(LOG_TAG, "Replacing parent name \"" + r.parentName + "\" with \"" + parentName + "\".");
     }
     r.parentName = parentName;
@@ -815,7 +815,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
     JSONArray childArray = bmk.children;
 
-    if (Logger.logVerbose(LOG_TAG)) {
+    if (Logger.shouldLogVerbose(LOG_TAG)) {
       Logger.trace(LOG_TAG, bmk.guid + " has children " + childArray.toJSONString());
     }
     parentToChildArray.put(bmk.guid, childArray);

@@ -214,7 +214,7 @@ public class RepoUtils {
   }
 
   public static void logClient(ClientRecord rec) {
-    if (Logger.logVerbose(LOG_TAG)) {
+    if (Logger.shouldLogVerbose(LOG_TAG)) {
       Logger.trace(LOG_TAG, "Returning client record " + rec.guid + " (" + rec.androidID + ")");
       Logger.trace(LOG_TAG, "Client Name:   " + rec.name);
       Logger.trace(LOG_TAG, "Client Type:   " + rec.type);

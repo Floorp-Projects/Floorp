@@ -30,7 +30,6 @@ public class SyncAccounts {
 
   public final static String DEFAULT_SERVER = "https://auth.services.mozilla.com/";
   private static final String LOG_TAG = "SyncAccounts";
-  private static final String GLOBAL_LOG_TAG = "FxSync";
 
   /**
    * Returns true if a Sync account is set up.
@@ -146,7 +145,7 @@ public class SyncAccounts {
       try {
         return createSyncAccount(syncAccount);
       } catch (Exception e) {
-        Log.e(GLOBAL_LOG_TAG, "Unable to create account.", e);
+        Log.e(Logger.GLOBAL_LOG_TAG, "Unable to create account.", e);
         return null;
       }
     }
@@ -191,13 +190,13 @@ public class SyncAccounts {
       // We use Log rather than Logger here to avoid possibly hiding these errors.
       final String message = e.getMessage();
       if (message != null && (message.indexOf("is different than the authenticator's uid") > 0)) {
-        Log.wtf(GLOBAL_LOG_TAG,
+        Log.wtf(Logger.GLOBAL_LOG_TAG,
                 "Unable to create account. " +
                 "If you have more than one version of " +
                 "Firefox/Beta/Aurora/Nightly/Fennec installed, that's why.",
                 e);
       } else {
-        Log.e(GLOBAL_LOG_TAG, "Unable to create account.", e);
+        Log.e(Logger.GLOBAL_LOG_TAG, "Unable to create account.", e);
       }
     }
 

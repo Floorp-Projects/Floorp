@@ -249,7 +249,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements GlobalSe
 
     // Pick up log level changes. Do this here so that we don't do extra work
     // if we're not going to be syncing.
-    Logger.refreshLogLevels();
+    Logger.resetLogging();
 
     // TODO: don't clear the auth token unless we have a sync error.
     Log.i(LOG_TAG, "Got onPerformSync. Extras bundle is " + extras);
