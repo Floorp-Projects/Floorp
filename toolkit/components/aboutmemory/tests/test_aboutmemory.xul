@@ -92,6 +92,12 @@
     f2("", "other3/a/b/c/d/f",  OTHER,   PERCENTAGE, 10),
     f2("", "other3/a/b/c/d/g",  OTHER,   PERCENTAGE, 5),
     f2("", "other3/a/b/c/d/g",  OTHER,   PERCENTAGE, 5),
+    // Check that a rounded-up-to-100.00% value is shown as "100.0%" (i.e. one
+    // decimal point).
+    f2("", "other6/big",        OTHER,   COUNT, 99999),
+    f2("", "other6/small",      OTHER,   COUNT, 1),
+    // Check that a 0 / 0 is handled correctly.
+    f("", "other7/zero",        OTHER,   0),
     // These compartments ones shouldn't be displayed.
     f2("", "compartments/user/foo",   OTHER, COUNT, 1),
     f2("", "compartments/system/foo", OTHER, COUNT, 1)
@@ -277,6 +283,13 @@ Other Measurements\n\
    ├──20.00% (99.01%) ── e\n\
    └───0.20% (00.99%) ++ (2 tiny)\n\
 \n\
+100,000 (100.0%) -- other6\n\
+├───99,999 (100.0%) ── big\n\
+└────────1 (00.00%) ── small\n\
+\n\
+0.00 MB (100.0%) -- other7\n\
+└──0.00 MB (100.0%) ── zero\n\
+\n\
 888.00 MB ── explicit\n\
 500.00 MB ── heap-allocated\n\
 100.00 MB ── heap-unallocated\n\
@@ -428,6 +441,13 @@ Other Measurements\n\
    ├──20.00% (99.01%) ── e\n\
    ├───0.10% (00.50%) ── f\n\
    └───0.10% (00.50%) ── g [2]\n\
+\n\
+100,000 (100.0%) -- other6\n\
+├───99,999 (100.0%) ── big\n\
+└────────1 (00.00%) ── small\n\
+\n\
+0 B (100.0%) -- other7\n\
+└──0 B (100.0%) ── zero\n\
 \n\
 931,135,488 B ── explicit\n\
 524,288,000 B ── heap-allocated\n\
