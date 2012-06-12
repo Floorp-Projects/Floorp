@@ -220,10 +220,10 @@ class HashTable : private AllocPolicy
             JS_ASSERT(&k != &HashPolicy::getKey(this->cur->t));
             if (match(*this->cur, l))
                 return;
-            Entry e = *this->cur;
-            HashPolicy::setKey(e.t, const_cast<Key &>(k));
+            typename HashTableEntry<T>::NonConstT t = this->cur->t;
+            HashPolicy::setKey(t, const_cast<Key &>(k));
             table.remove(*this->cur);
-            table.add(l, e);
+            table.putNewInfallible(l, t);
             added = true;
             this->validEntry = false;
         }
@@ -234,22 +234,27 @@ class HashTable : private AllocPolicy
 
         /* Potentially rehashes the table. */
         ~Enum() {
-            if (added)
-                table.checkOverloaded();
+            JS_ASSERT(!added);
             if (removed)
                 table.checkUnderloaded();
         }
 
-        /* Can be used to end the enumeration before the destructor. */
-        void endEnumeration() {
+        /*
+         * Can be used to end the enumeration before the destructor. Unlike
+         * |~Enum()|, this can report OOM on resize, so must be called if
+         * |rekeyFront()| is used during enumeration.
+         */
+        bool endEnumeration() {
             if (added) {
-                table.checkOverloaded();
                 added = false;
+                if (table.checkOverloaded() == RehashFailed)
+                    return false;
             }
             if (removed) {
-                table.checkUnderloaded();
                 removed = false;
+                table.checkUnderloaded();
             }
+            return true;
         }
     };
 
@@ -519,7 +524,7 @@ class HashTable : private AllocPolicy
         Entry *entry = &table[h1];
 
         /* Miss: return space for a new entry. */
-        if (entry->isFree()) {
+        if (!entry->isLive()) {
             METER(stats.misses++);
             return *entry;
         }
@@ -535,14 +540,16 @@ class HashTable : private AllocPolicy
             h1 = applyDoubleHash(h1, dh);
 
             entry = &table[h1];
-            if (entry->isFree()) {
+            if (!entry->isLive()) {
                 METER(stats.misses++);
                 return *entry;
             }
         }
     }
 
-    bool changeTableSize(int deltaLog2)
+    enum RebuildStatus { NotOverloaded, Rehashed, RehashFailed };
+
+    RebuildStatus changeTableSize(int deltaLog2)
     {
         /* Look, but don't touch, until we succeed in getting new entry store. */
         Entry *oldTable = table;
@@ -551,12 +558,12 @@ class HashTable : private AllocPolicy
         uint32_t newCapacity = JS_BIT(newLog2);
         if (newCapacity > sMaxCapacity) {
             this->reportAllocOverflow();
-            return false;
+            return RehashFailed;
         }
 
         Entry *newTable = createTable(*this, newCapacity);
         if (!newTable)
-            return false;
+            return RehashFailed;
 
         /* We can't fail from here on, so update table parameters. */
         setTableSizeLog2(newLog2);
@@ -573,32 +580,13 @@ class HashTable : private AllocPolicy
         }
 
         destroyTable(*this, oldTable, oldCap);
-        return true;
+        return Rehashed;
     }
 
-    void add(const Lookup &l, const Entry &e)
-    {
-        JS_ASSERT(table);
-
-        HashNumber keyHash = prepareHash(l);
-        Entry &entry = lookup(l, keyHash, sCollisionBit);
-
-        if (entry.isRemoved()) {
-            METER(stats.addOverRemoved++);
-            removedCount--;
-            keyHash |= sCollisionBit;
-        }
-
-        entry.t = e.t;
-        entry.setLive(keyHash);
-        entryCount++;
-        mutationCount++;
-    }
-
-    bool checkOverloaded()
+    RebuildStatus checkOverloaded()
     {
         if (!overloaded())
-            return false;
+            return NotOverloaded;
 
         /* Compress if a quarter or more of all entries are removed. */
         int deltaLog2;
@@ -732,8 +720,11 @@ class HashTable : private AllocPolicy
             removedCount--;
             p.keyHash |= sCollisionBit;
         } else {
-            if (checkOverloaded())
-                /* Preserve the validity of |p.entry|. */
+            /* Preserve the validity of |p.entry|. */
+            RebuildStatus status = checkOverloaded();
+            if (status == RehashFailed)
+                return false;
+            if (status == Rehashed)
                 p.entry = &findFreeEntry(p.keyHash);
         }
 
@@ -761,6 +752,34 @@ class HashTable : private AllocPolicy
         if (!add(p))
             return false;
         p.entry->t = t;
+        return true;
+    }
+
+    void putNewInfallible(const Lookup &l, const T &t)
+    {
+        JS_ASSERT(table);
+
+        HashNumber keyHash = prepareHash(l);
+        Entry *entry = &findFreeEntry(keyHash);
+
+        if (entry->isRemoved()) {
+            METER(stats.addOverRemoved++);
+            removedCount--;
+            keyHash |= sCollisionBit;
+        }
+
+        entry->t = t;
+        entry->setLive(keyHash);
+        entryCount++;
+        mutationCount++;
+    }
+
+    bool putNew(const Lookup &l, const T &t)
+    {
+        if (checkOverloaded() == RehashFailed)
+            return false;
+
+        putNewInfallible(l, t);
         return true;
     }
 
@@ -1149,9 +1168,7 @@ class HashMap
 
     /* Like put, but assert that the given key is not already present. */
     bool putNew(const Key &k, const Value &v) {
-        AddPtr p = lookupForAdd(k);
-        JS_ASSERT(!p);
-        return add(p, k, v);
+        return impl.putNew(k, Entry(k, v));
     }
 
     /* Add (k,defaultValue) if k no found. Return false-y Ptr on oom. */
@@ -1357,15 +1374,11 @@ class HashSet
 
     /* Like put, but assert that the given key is not already present. */
     bool putNew(const T &t) {
-        AddPtr p = lookupForAdd(t);
-        JS_ASSERT(!p);
-        return add(p, t);
+        return impl.putNew(t, t);
     }
 
     bool putNew(const Lookup &l, const T &t) {
-        AddPtr p = lookupForAdd(l);
-        JS_ASSERT(!p);
-        return add(p, t);
+        return impl.putNew(l, t);
     }
 
     void remove(const Lookup &l) {

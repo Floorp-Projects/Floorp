@@ -14,6 +14,9 @@
 
 #include "AccessibleRelation.h"
 
+namespace mozilla {
+namespace a11y {
+
 class ia2AccessibleRelation : public IAccessibleRelation
 {
 public:
@@ -56,6 +59,9 @@ private:
   nsTArray<nsRefPtr<Accessible> > mTargets;
   ULONG mReferences;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
 

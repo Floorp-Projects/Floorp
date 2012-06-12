@@ -16,6 +16,12 @@ function onLoad() {
   let manifest = WebappRT.config.app.manifest;
   document.documentElement.setAttribute("title", manifest.name);
 
+  // Listen for clicks to redirect <a target="_blank"> to the browser.
+  // This doesn't capture clicks so content can capture them itself and do
+  // something different if it doesn't want the default behavior.
+  document.getElementById("content").addEventListener("click", onContentClick,
+                                                      false, true);
+
   // Only load the webapp on the initially launched main window
   if ("arguments" in window) {
     // Load the webapp's launch URL
@@ -27,6 +33,38 @@ function onLoad() {
   }
 }
 window.addEventListener("load", onLoad, false);
+
+/**
+ * Direct a click on <a target="_blank"> to the user's default browser.
+ *
+ * In the long run, it might be cleaner to move this to an extension of
+ * nsIWebBrowserChrome3::onBeforeLinkTraversal.
+ *
+ * @param {DOMEvent} event the DOM event
+ **/
+function onContentClick(event) {
+  let target = event.target;
+
+  if (!(target instanceof HTMLAnchorElement) ||
+      target.getAttribute("target") != "_blank") {
+    return;
+  }
+
+  let uri = Services.io.newURI(target.href,
+                               target.ownerDocument.characterSet,
+                               null);
+
+  // Direct the URL to the browser.
+  Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+    getService(Ci.nsIExternalProtocolService).
+    getProtocolHandlerInfo(uri.scheme).
+    launchWithURI(uri);
+
+  // Prevent the runtime from loading the URL.  We do this after directing it
+  // to the browser to give the runtime a shot at handling the URL if we fail
+  // to direct it to the browser for some reason.
+  event.preventDefault();
+}
 
 #ifdef XP_MACOSX
 // On Mac, we dynamically create the label for the Quit menuitem, using

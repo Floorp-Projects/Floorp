@@ -61,11 +61,13 @@ public:
   void RemovedFromDocument(nsIContent* aContent, nsIDocument* aOldDocument)
   {
     if (aContent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-      RemovedFromDocumentInternal(aContent, aOldDocument);
+      RemovedFromDocumentInternal(aContent, aOldDocument,
+                                  aContent->GetBindingParent());
     }
   }
   void RemovedFromDocumentInternal(nsIContent* aContent,
-                                   nsIDocument* aOldDocument);
+                                   nsIDocument* aOldDocument,
+                                   nsIContent* aContentBindingParent);
 
   nsIAtom* ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID);
 

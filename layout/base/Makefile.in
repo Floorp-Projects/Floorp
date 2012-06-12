@@ -29,6 +29,7 @@ EXPORTS_NAMESPACES = mozilla
 EXPORTS		= \
 		FrameLayerBuilder.h \
 		FramePropertyTable.h \
+		nsArenaMemoryStats.h \
 		nsBidi.h \
 		nsBidiPresUtils.h \
 		nsCaret.h \

@@ -4091,6 +4091,8 @@ nsImageRenderer::IsRasterImage()
 already_AddRefed<mozilla::layers::ImageContainer>
 nsImageRenderer::GetContainer()
 {
+  if (mType != eStyleImageType_Image)
+    return nsnull;
   nsCOMPtr<imgIContainer> img;
   nsresult rv = mImage->GetImageData()->GetImage(getter_AddRefs(img));
   if (NS_FAILED(rv) || !img)
