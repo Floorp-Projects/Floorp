@@ -462,7 +462,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(Imm32(imm.value), Operand(address));
     }
     void storePtr(ImmGCPtr imm, const Address &address) {
-        movl(Imm32(imm.value), Operand(address));
+        movl(imm, Operand(address));
     }
     void storePtr(Register src, const Address &address) {
         movl(src, Operand(address));
