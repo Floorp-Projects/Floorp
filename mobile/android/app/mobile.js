@@ -438,10 +438,7 @@ pref("dom.ipc.plugins.enabled", true);
 #endif
 
 pref("plugins.click_to_play", true);
-// Disabled because of thread safety problem
-// in getting the bits from the surface.
-// Bug 756253
-pref("plugins.use_placeholder", 0);
+pref("plugins.use_placeholder", 1);
 
 // process priority
 // higher values give content process less CPU time
