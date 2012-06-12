@@ -21,6 +21,7 @@
 #include "jstypes.h"
 
 #ifdef __cplusplus
+# include "mozilla/Scoped.h"
 
 /* The public JS engine namespace. */
 namespace JS {}
@@ -593,6 +594,15 @@ public:
 
 class UnwantedForeground : public Foreground {
 };
+
+template <typename T>
+struct ScopedDeletePtrTraits
+{
+    typedef T *type;
+    static T *empty() { return NULL; }
+    static void release(T *ptr) { Foreground::delete_(ptr); }
+};
+SCOPED_TEMPLATE(ScopedDeletePtr, ScopedDeletePtrTraits)
 
 } /* namespace js */
 
