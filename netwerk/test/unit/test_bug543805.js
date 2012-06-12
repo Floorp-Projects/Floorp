@@ -1,45 +1,3 @@
-function getURLContent(aURL) {
-  var ios = Components.classes["@mozilla.org/network/io-service;1"].
-            getService(Components.interfaces.nsIIOService);
-
-  var uri = ios.newURI(aURL, null, null);
-  var chan = ios.newChannelFromURI(uri);
-  var inp = chan.open();
-  var scinp = Components.classes["@mozilla.org/scriptableinputstream;1"].
-              createInstance(Components.interfaces.nsIScriptableInputStream);
-  scinp.init(inp);
-  var result = "";
-  var avail = scinp.available();
-  while (avail) {
-    result += scinp.read(avail);
-    avail = scinp.available();
-  }
-  return result;
-}
-
-function storeCache(aURL, aContent) {
-  const nsICache = Components.interfaces.nsICache;
-
-  var cache = Components.classes["@mozilla.org/network/cache-service;1"].
-              getService(Components.interfaces.nsICacheService);
-
-  var session = cache.createSession("FTP", nsICache.STORE_ANYWHERE, nsICache.STREAM_BASED);
-
-  var cacheEntry = session.openCacheEntry(aURL, nsICache.ACCESS_READ_WRITE, false);
-
-  cacheEntry.setMetaDataElement("servertype", "0");
-  var oStream = cacheEntry.openOutputStream(0);
-
-  var written = oStream.write(aContent, aContent.length);
-  if (written != aContent.length) {
-    do_throw("oStream.write has not written all data!\n" +
-             "  Expected: " + written  + "\n" +
-             "  Actual: " + aContent.length + "\n");
-  }
-  oStream.close();
-  cacheEntry.close();
-}
-
 const URL = "ftp://localhost/bug543805/";
 
 var year = new Date().getFullYear().toString();
@@ -81,10 +39,45 @@ const tests = [
    "201: \"test2.file\" 66 Sun%2C%2001%20Apr%202008%2000%3A00%3A00 FILE \n"]
 ]
 
-function run_test() {
-  for (var i = 0; i < tests.length; i++) {
-    storeCache(URL, tests[i][0]);
-    var parsedData = getURLContent(URL);
-    do_check_eq(parsedData, tests[i][1]);
+function checkData(request, data, ctx) {
+  do_check_eq(tests[0][1], data);
+  tests.shift();
+  next_test();
+}
+
+function storeData(status, entry) {
+  do_check_eq(status, Components.results.NS_OK);
+  entry.setMetaDataElement("servertype", "0");
+  var os = entry.openOutputStream(0);
+
+  var written = os.write(tests[0][0], tests[0][0].length);
+  if (written != tests[0][0].length) {
+    do_throw("os.write has not written all data!\n" +
+             "  Expected: " + written  + "\n" +
+             "  Actual: " + tests[0][0].length + "\n");
   }
+  os.close();
+  entry.close();
+
+  var ios = Components.classes["@mozilla.org/network/io-service;1"].
+            getService(Components.interfaces.nsIIOService);
+  var channel = ios.newChannel(URL, "", null);
+  channel.asyncOpen(new ChannelListener(checkData, null, CL_ALLOW_UNKNOWN_CL), null);
+}
+
+function next_test() {
+  if (tests.length == 0)
+    do_test_finished();
+  else {
+    asyncOpenCacheEntry(URL,
+                        "FTP",
+                        Components.interfaces.nsICache.STORE_ANYWHERE,
+                        Components.interfaces.nsICache.ACCESS_READ_WRITE,
+                        storeData);
+  }
+}
+
+function run_test() {
+  do_execute_soon(next_test);
+  do_test_pending();
 }

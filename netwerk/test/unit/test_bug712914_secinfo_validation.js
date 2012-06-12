@@ -2,7 +2,6 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cr = Components.results;
 
-var _cacheSvc;
 var _ios;
 
 var ACCESS_WRITE = Ci.nsICache.ACCESS_WRITE;
@@ -71,15 +70,6 @@ CacheVisitor.prototype = {
   }
 };
 
-function get_cache_service() {
-  if (!_cacheSvc) {
-    _cacheSvc = Cc["@mozilla.org/network/cache-service;1"].
-                getService(Ci.nsICacheService);
-  }
-
-  return _cacheSvc
-}
-
 function get_io_service() {
   if (!_ios) {
     _ios = Cc["@mozilla.org/network/io-service;1"].
@@ -141,8 +131,7 @@ function run_test() {
   do_get_profile();
 
   // Make sure the cache is empty
-  var cache = get_cache_service();
-  cache.evictEntries(Ci.nsICache.STORE_ANYWHERE);
+  evict_cache_entries();
 
   // Add new tests at the end of this section
   add_test(test_corrupt_secinfo);

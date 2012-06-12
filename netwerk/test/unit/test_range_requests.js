@@ -29,13 +29,6 @@ const decodedBody = [0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20,
 
 const partial_data_length = 4;
 
-function getCacheService()
-{
-    var nsCacheService = Components.classes["@mozilla.org/network/cache-service;1"];
-    var service = nsCacheService.getService(Components.interfaces.nsICacheService);
-    return service;
-}
-
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
@@ -249,7 +242,7 @@ function run_test() {
   httpserver.start(4444);
 
   // wipe out cached content
-  getCacheService().evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
+  evict_cache_entries();
 
   // Case 2: zero-length partial entry must not trigger range-request
   var chan = make_channel("http://localhost:4444/test_2");
