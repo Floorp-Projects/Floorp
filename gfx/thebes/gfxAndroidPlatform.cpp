@@ -35,7 +35,7 @@ gfxAndroidPlatform::gfxAndroidPlatform()
 
     mOffscreenFormat = mScreenDepth == 16
                        ? gfxASurface::ImageFormatRGB16_565
-                       : gfxASurface::ImageFormatARGB32;
+                       : gfxASurface::ImageFormatRGB24;
 }
 
 gfxAndroidPlatform::~gfxAndroidPlatform()
