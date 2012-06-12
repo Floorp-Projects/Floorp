@@ -1,6 +1,12 @@
 == display-types-01.html display-types-01-ref.html
 == dynamic-attr-01.html dynamic-attr-01-ref.html
+== dynamic-button-01a.html dynamic-button-01-ref.html
+== dynamic-button-01b.html dynamic-button-01-ref.html
+== dynamic-fieldset-01a.html dynamic-fieldset-01-ref.html
+== dynamic-fieldset-01b.html dynamic-fieldset-01-ref.html
 == dynamic-restyle-01.html dynamic-restyle-01-ref.html
+== dynamic-table-cell-01a.html dynamic-table-cell-01-ref.html
+== dynamic-table-cell-01b.html dynamic-table-cell-01-ref.html
 == floated-01.html floated-01-ref.html
 == images-01.html images-01-ref.html
 == positioned-01.html positioned-01-ref.html

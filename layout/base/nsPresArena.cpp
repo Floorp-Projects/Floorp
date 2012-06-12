@@ -15,6 +15,7 @@
 #include "prmem.h"
 #include "prinit.h"
 #include "prlog.h"
+#include "nsArenaMemoryStats.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"
@@ -251,11 +252,13 @@ public:
   typedef PRUint32 KeyType;
   nsTArray<void *> mEntries;
   size_t mEntrySize;
+  size_t mEntriesEverAllocated;
 
   typedef const void* KeyTypePointer;
   KeyTypePointer mKey;
 
-  FreeList(KeyTypePointer aKey) : mEntrySize(0), mKey(aKey) {}
+  FreeList(KeyTypePointer aKey)
+  : mEntrySize(0), mEntriesEverAllocated(0), mKey(aKey) {}
   // Default copy constructor and destructor are ok.
 
   bool KeyEquals(KeyTypePointer const aKey) const
@@ -327,6 +330,7 @@ struct nsPresArena::State {
     }
 
     // Allocate a new chunk from the arena
+    list->mEntriesEverAllocated++;
     PL_ARENA_ALLOCATE(result, &mPool, aSize);
     return result;
   }
@@ -347,7 +351,14 @@ struct nsPresArena::State {
     list->mEntries.AppendElement(aPtr);
   }
 
-  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+  static size_t SizeOfFreeListEntryExcludingThis(FreeList* aEntry,
+                                                 nsMallocSizeOfFun aMallocSizeOf,
+                                                 void *)
+  {
+    return aEntry->mEntries.SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  size_t SizeOfIncludingThisFromMalloc(nsMallocSizeOfFun aMallocSizeOf) const
   {
     size_t n = aMallocSizeOf(this);
 
@@ -359,14 +370,79 @@ struct nsPresArena::State {
       n += aMallocSizeOf(arena);
       arena = arena->next;
     }
+    n += mFreeLists.SizeOfExcludingThis(SizeOfFreeListEntryExcludingThis,
+                                        aMallocSizeOf);
     return n;
+  }
+
+  struct EnumerateData {
+    nsArenaMemoryStats* stats;
+    size_t total;
+  };
+
+  static PLDHashOperator FreeListEnumerator(FreeList* aEntry, void* aData)
+  {
+    EnumerateData* data = static_cast<EnumerateData*>(aData);
+    // Note that we're not measuring the size of the entries on the free
+    // list here.  The free list knows how many objects we've allocated
+    // ever (which includes any objects that may be on the FreeList's
+    // |mEntries| at this point) and we're using that to determine the
+    // total size of objects allocated with a given ID.
+    size_t totalSize = aEntry->mEntrySize * aEntry->mEntriesEverAllocated;
+    size_t* p;
+
+    switch (NS_PTR_TO_INT32(aEntry->mKey)) {
+#define FRAME_ID(classname)                                        \
+      case nsQueryFrame::classname##_id:                           \
+        p = &data->stats->FRAME_ID_STAT_FIELD(classname);          \
+        break;
+#include "nsFrameIdList.h"
+#undef FRAME_ID
+    case nsLineBox_id:
+      p = &data->stats->mLineBoxes;
+      break;
+    case nsRuleNode_id:
+      p = &data->stats->mRuleNodes;
+      break;
+    case nsStyleContext_id:
+      p = &data->stats->mStyleContexts;
+      break;
+    default:
+      return PL_DHASH_NEXT;
+    }
+
+    *p += totalSize;
+    data->total += totalSize;
+
+    return PL_DHASH_NEXT;
+  }
+
+  void SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                           nsArenaMemoryStats* aArenaStats)
+  {
+    // We do a complicated dance here because we want to measure the
+    // space taken up by the different kinds of objects in the arena,
+    // but we don't have pointers to those objects.  And even if we did,
+    // we wouldn't be able to use aMallocSizeOf on them, since they were
+    // allocated out of malloc'd chunks of memory.  So we compute the
+    // size of the arena as known by malloc and we add up the sizes of
+    // all the objects that we care about.  Subtracting these two
+    // quantities gives us a catch-all "other" number, which includes
+    // slop in the arena itself as well as the size of objects that
+    // we've not measured explicitly.
+
+    size_t mallocSize = SizeOfIncludingThisFromMalloc(aMallocSizeOf);
+    EnumerateData data = { aArenaStats, 0 };
+    mFreeLists.EnumerateEntries(FreeListEnumerator, &data);
+    aArenaStats->mOther = mallocSize - data.total;
   }
 };
 
-size_t
-nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+void
+nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf,
+                                 nsArenaMemoryStats* aArenaStats)
 {
-  return mState ? mState->SizeOfIncludingThis(aMallocSizeOf) : 0;
+  mState->SizeOfIncludingThis(aMallocSizeOf, aArenaStats);
 }
 
 #else
@@ -393,11 +469,9 @@ struct nsPresArena::State
   }
 };
 
-size_t
-nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
-{
-  return 0;
-}
+void
+nsPresArena::SizeOfExcludingThis(nsMallocSizeOfFun, nsArenaMemoryStats*)
+{}
 
 #endif // DEBUG_TRACEMALLOC_PRESARENA
 
