@@ -5,17 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-//-----------------------------------------------------------------------------
-//   XXXXXXXXXXXXXXXX
-//
-// How is this code supposed to be licensed?  I don't /think/ that
-// this code is doing anything different than, say,
-// GeckoChildProcess.h/cpp, so I /think/ this gets a MoFo copyright
-// and license.  Yes?
-//
-//   XXXXXXXXXXXXXXXX
-//-----------------------------------------------------------------------------
-
 #include <errno.h>
 #include <signal.h>
 #include <sys/types.h>

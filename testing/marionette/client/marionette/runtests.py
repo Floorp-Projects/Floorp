@@ -71,7 +71,7 @@ class MarionetteTestResult(unittest._TextTestResult):
         for testcase in test._tests:
             if testcase.perfdata:
                 if not self.perfdata:
-                    self.perfdata = datazilla.dzResult(testcase.perfdata)
+                    self.perfdata = datazilla.DatazillaResult(testcase.perfdata)
                 else:
                     self.perfdata.join_results(testcase.perfdata)
 
@@ -339,7 +339,7 @@ class MarionetteTestRunner(object):
                     self.logger.info("Using machine_name: %s" % machine_name)
                 os_name = platform.system()
                 os_version = platform.release()
-                self.perfrequest = datazilla.dzRequest(server=options.perfserv, machine_name=machine_name, os=os_name, os_version=os_version,
+                self.perfrequest = datazilla.DatazillaRequest(server=options.perfserv, machine_name=machine_name, os=os_name, os_version=os_version,
                                          platform=manifest.get("platform")[0], build_name=manifest.get("build_name")[0], 
                                          version=manifest.get("version")[0], revision=self.revision,
                                          branch=manifest.get("branch")[0], id=os.getenv('BUILD_ID'), test_date=int(time.time()))
@@ -370,7 +370,7 @@ class MarionetteTestRunner(object):
             results = MarionetteTextTestRunner(verbosity=3).run(suite)
             self.failed += len(results.failures) + len(results.errors)
             if results.perfdata:
-                self.perfrequest.add_dzresult(results.perfdata)
+                self.perfrequest.add_datazilla_result(results.perfdata)
             if hasattr(results, 'skipped'):
                 self.todo += len(results.skipped) + len(results.expectedFailures)
             self.passed += results.passed

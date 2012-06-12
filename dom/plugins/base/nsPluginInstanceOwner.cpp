@@ -1710,6 +1710,56 @@ void nsPluginInstanceOwner::ScrollPositionDidChange(nscoord aX, nscoord aY)
 
 #ifdef MOZ_WIDGET_ANDROID
 
+// Modified version of nsFrame::GetOffsetToCrossDoc that stops when it
+// hits an element with a displayport (or runs out of frames). This is
+// not really the right thing to do, but it's better than what was here before.
+static nsPoint
+GetOffsetRootContent(nsIFrame* aFrame)
+{
+  // offset will hold the final offset
+  // docOffset holds the currently accumulated offset at the current APD, it
+  // will be converted and added to offset when the current APD changes.
+  nsPoint offset(0, 0), docOffset(0, 0);
+  const nsIFrame* f = aFrame;
+  PRInt32 currAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
+  PRInt32 apd = currAPD;
+  nsRect displayPort;
+  while (f) {
+    if (f->GetContent() && nsLayoutUtils::GetDisplayPort(f->GetContent(), &displayPort))
+      break;
+
+    docOffset += f->GetPosition();
+    nsIFrame* parent = f->GetParent();
+    if (parent) {
+      f = parent;
+    } else {
+      nsPoint newOffset(0, 0);
+      f = nsLayoutUtils::GetCrossDocParentFrame(f, &newOffset);
+      PRInt32 newAPD = f ? f->PresContext()->AppUnitsPerDevPixel() : 0;
+      if (!f || newAPD != currAPD) {
+        // Convert docOffset to the right APD and add it to offset.
+        offset += docOffset.ConvertAppUnits(currAPD, apd);
+        docOffset.x = docOffset.y = 0;
+      }
+      currAPD = newAPD;
+      docOffset += newOffset;
+    }
+  }
+
+  offset += docOffset.ConvertAppUnits(currAPD, apd);
+
+  return offset;
+}
+
+gfxRect nsPluginInstanceOwner::GetPluginRect()
+{
+  // Get the offset of the content relative to the page
+  nsRect bounds = mObjectFrame->GetContentRectRelativeToSelf() + GetOffsetRootContent(mObjectFrame);
+  nsIntRect intBounds = bounds.ToNearestPixels(mObjectFrame->PresContext()->AppUnitsPerDevPixel());
+
+  return gfxRect(intBounds);
+}
+
 void nsPluginInstanceOwner::SendSize(int width, int height)
 {
   if (!mInstance)
@@ -1797,12 +1847,16 @@ void nsPluginInstanceOwner::ExitFullScreen() {
   PRInt32 model = mInstance->GetANPDrawingModel();
 
   if (model == kSurface_ANPDrawingModel) {
-    // We need to invalidate the plugin rect so Paint() gets called above.
-    // This will cause the view to be re-added. Gross.
-    Invalidate();
+    // We need to do this immediately, otherwise Flash
+    // sometimes causes a deadlock (bug 762407)
+    AddPluginView(GetPluginRect());
   }
 
   mInstance->NotifyFullScreen(mFullScreen);
+
+  // This will cause Paint() to be called, which is where
+  // we normally add/update views and layers
+  Invalidate();
 }
 
 void nsPluginInstanceOwner::ExitFullScreen(jobject view) {
@@ -2848,47 +2902,6 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, HPS aHPS)
 
 #ifdef MOZ_WIDGET_ANDROID
 
-// Modified version of nsFrame::GetOffsetToCrossDoc that stops when it
-// hits an element with a displayport (or runs out of frames). This is
-// not really the right thing to do, but it's better than what was here before.
-static nsPoint
-GetOffsetRootContent(nsIFrame* aFrame)
-{
-  // offset will hold the final offset
-  // docOffset holds the currently accumulated offset at the current APD, it
-  // will be converted and added to offset when the current APD changes.
-  nsPoint offset(0, 0), docOffset(0, 0);
-  const nsIFrame* f = aFrame;
-  PRInt32 currAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
-  PRInt32 apd = currAPD;
-  nsRect displayPort;
-  while (f) {
-    if (f->GetContent() && nsLayoutUtils::GetDisplayPort(f->GetContent(), &displayPort))
-      break;
-
-    docOffset += f->GetPosition();
-    nsIFrame* parent = f->GetParent();
-    if (parent) {
-      f = parent;
-    } else {
-      nsPoint newOffset(0, 0);
-      f = nsLayoutUtils::GetCrossDocParentFrame(f, &newOffset);
-      PRInt32 newAPD = f ? f->PresContext()->AppUnitsPerDevPixel() : 0;
-      if (!f || newAPD != currAPD) {
-        // Convert docOffset to the right APD and add it to offset.
-        offset += docOffset.ConvertAppUnits(currAPD, apd);
-        docOffset.x = docOffset.y = 0;
-      }
-      currAPD = newAPD;
-      docOffset += newOffset;
-    }
-  }
-
-  offset += docOffset.ConvertAppUnits(currAPD, apd);
-
-  return offset;
-}
-
 void nsPluginInstanceOwner::Paint(gfxContext* aContext,
                                   const gfxRect& aFrameRect,
                                   const gfxRect& aDirtyRect)
@@ -2898,10 +2911,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   PRInt32 model = mInstance->GetANPDrawingModel();
 
-  // Get the offset of the content relative to the page
-  nsRect bounds = mObjectFrame->GetContentRectRelativeToSelf() + GetOffsetRootContent(mObjectFrame);
-  nsIntRect intBounds = bounds.ToNearestPixels(mObjectFrame->PresContext()->AppUnitsPerDevPixel());
-  gfxRect pluginRect(intBounds);
+  gfxRect pluginRect = GetPluginRect();
 
   if (model == kSurface_ANPDrawingModel) {
     if (!AddPluginView(pluginRect)) {
