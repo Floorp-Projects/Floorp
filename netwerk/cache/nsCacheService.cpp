@@ -1116,7 +1116,8 @@ nsCacheService::Init()
 
     CACHE_LOG_INIT();
 
-    nsresult rv = NS_NewThread(getter_AddRefs(mCacheIOThread));
+    nsresult rv = NS_NewNamedThread("Cache I/O",
+                                    getter_AddRefs(mCacheIOThread));
     if (NS_FAILED(rv)) {
         NS_RUNTIMEABORT("Can't create cache IO thread");
     }

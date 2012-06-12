@@ -493,6 +493,7 @@ StartupCache::WaitOnWriteThread()
 void 
 StartupCache::ThreadedWrite(void *aClosure)
 {
+  PR_SetCurrentThreadName("StartupCache");
   gStartupCache->WriteToDisk();
 }
 

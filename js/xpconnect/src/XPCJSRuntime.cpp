@@ -885,6 +885,8 @@ class AutoLockWatchdog {
 void
 XPCJSRuntime::WatchdogMain(void *arg)
 {
+    PR_SetCurrentThreadName("JS Watchdog");
+
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
 
     // Lock lasts until we return

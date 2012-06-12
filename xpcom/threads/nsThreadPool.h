@@ -13,6 +13,7 @@
 #include "nsEventQueue.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsThreadUtils.h"
 
 class nsThreadPool : public nsIThreadPool, public nsIRunnable
 {
@@ -38,6 +39,8 @@ private:
   PRUint32              mIdleCount;
   nsCOMPtr<nsIThreadPoolListener> mListener;
   bool                  mShutdown;
+  nsCString             mName;
+  nsThreadPoolNaming    mThreadNaming;
 };
 
 #define NS_THREADPOOL_CLASSNAME "nsThreadPool"

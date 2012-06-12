@@ -137,6 +137,9 @@ TransactionThreadPool::Init()
   mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = mThreadPool->SetName(NS_LITERAL_CSTRING("IndexedDB Trans"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = mThreadPool->SetThreadLimit(kThreadLimit);
   NS_ENSURE_SUCCESS(rv, rv);
 
