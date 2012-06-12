@@ -265,6 +265,7 @@ _TEST_FILES = \
 		test_bug742549.html \
 		test_bug745685.html \
 		test_input_file_picker.html \
+		test_bug763626.html \
 		$(NULL)
 
 _BROWSER_TEST_FILES = \
