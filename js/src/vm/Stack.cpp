@@ -513,6 +513,7 @@ StackSpace::init()
     conservativeEnd_ = commitEnd_ = base_ + COMMIT_VALS;
     trustedEnd_ = base_ + CAPACITY_VALS;
     defaultEnd_ = trustedEnd_ - BUFFER_VALS;
+    Debug_SetValueRangeToCrashOnTouch(base_, commitEnd_);
 #elif defined(XP_OS2)
     if (DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE | OBJ_ANY) &&
         DosAllocMem(&p, CAPACITY_BYTES, PAG_COMMIT | PAG_READ | PAG_WRITE))
@@ -520,6 +521,7 @@ StackSpace::init()
     base_ = reinterpret_cast<Value *>(p);
     trustedEnd_ = base_ + CAPACITY_VALS;
     conservativeEnd_ = defaultEnd_ = trustedEnd_ - BUFFER_VALS;
+    Debug_SetValueRangeToCrashOnTouch(base_, trustedEnd_);
 #else
     JS_ASSERT(CAPACITY_BYTES % getpagesize() == 0);
     p = mmap(NULL, CAPACITY_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -528,6 +530,7 @@ StackSpace::init()
     base_ = reinterpret_cast<Value *>(p);
     trustedEnd_ = base_ + CAPACITY_VALS;
     conservativeEnd_ = defaultEnd_ = trustedEnd_ - BUFFER_VALS;
+    Debug_SetValueRangeToCrashOnTouch(base_, trustedEnd_);
 #endif
     assertInvariants();
     return true;
@@ -708,6 +711,8 @@ StackSpace::ensureSpaceSlow(JSContext *cx, MaybeReportError report, Value *from,
             return false;
         }
 
+        Debug_SetValueRangeToCrashOnTouch(commitEnd_, newCommit);
+
         commitEnd_ = newCommit;
         conservativeEnd_ = Min(commitEnd_, defaultEnd_);
         assertInvariants();
@@ -886,9 +891,13 @@ ContextStack::popInvokeArgs(const InvokeArgsGuard &iag)
     JS_ASSERT(onTop());
     JS_ASSERT(space().firstUnused() == seg_->calls().end());
 
+    Value *oldend = seg_->end();
+
     seg_->popCall();
     if (iag.pushedSeg_)
         popSegment();
+
+    Debug_SetValueRangeToCrashOnTouch(space().firstUnused(), oldend);
 }
 
 bool
@@ -997,9 +1006,13 @@ ContextStack::popFrame(const FrameGuard &fg)
     JS_ASSERT(space().firstUnused() == fg.regs_.sp);
     JS_ASSERT(&fg.regs_ == &seg_->regs());
 
+    Value *oldend = seg_->end();
+
     seg_->popRegs(fg.prevRegs_);
     if (fg.pushedSeg_)
         popSegment();
+
+    Debug_SetValueRangeToCrashOnTouch(space().firstUnused(), oldend);
 
     /*
      * NB: this code can call out and observe the stack (e.g., through GC), so
