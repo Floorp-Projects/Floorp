@@ -59,6 +59,15 @@ _TEST_FILES = \
 		browserElement_Close.js \
 		test_browserElement_oop_Close.html \
 		test_browserElement_inproc_Close.html \
+		browserElement_OpenWindow.js \
+		test_browserElement_oop_OpenWindow.html \
+		test_browserElement_inproc_OpenWindow.html \
+		file_browserElement_Open1.html \
+		file_browserElement_Open2.html \
+		browserElement_OpenWindowRejected.js \
+		test_browserElement_oop_OpenWindowRejected.html \
+		test_browserElement_inproc_OpenWindowRejected.html \
+		file_browserElement_OpenWindowRejected.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
