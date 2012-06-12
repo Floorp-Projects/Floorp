@@ -1441,13 +1441,17 @@ class AutoLockGC
 
 class AutoUnlockGC {
   private:
+#ifdef JS_THREADSAFE
     JSRuntime *rt;
+#endif
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
     explicit AutoUnlockGC(JSRuntime *rt
                           JS_GUARD_OBJECT_NOTIFIER_PARAM)
+#ifdef JS_THREADSAFE
       : rt(rt)
+#endif
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
         JS_UNLOCK_GC(rt);
