@@ -436,16 +436,17 @@ public:
 #else
     virtual bool
     RenewSurface() {
-        ReleaseSurface();
-        EGLConfig config;
-
+        sEGLLibrary.fMakeCurrent(EGL_DISPLAY(), EGL_NO_SURFACE, EGL_NO_SURFACE,
+                                 EGL_NO_CONTEXT);
+        if (!mSurface) {
 #ifdef MOZ_JAVA_COMPOSITOR
-        mSurface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
+            mSurface = mozilla::AndroidBridge::Bridge()->ProvideEGLSurface();
 #else
-        CreateConfig(&config);
-        mSurface = CreateSurfaceForWindow(NULL, config);
+            EGLConfig config;
+            CreateConfig(&config);
+            mSurface = CreateSurfaceForWindow(NULL, config);
 #endif
-
+        }
         return sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                         mSurface, mSurface,
                                         mContext);
