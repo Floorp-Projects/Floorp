@@ -107,15 +107,42 @@ public:
     GLLibraryEGL() 
         : mInitialized(false),
           mEGLLibrary(nsnull),
-          mIsANGLE(false),
-          mHasRobustness(false),
-          mHave_EGL_KHR_image_base(false),
-          mHave_EGL_KHR_image_pixmap(false),
-          mHave_EGL_KHR_gl_texture_2D_image(false),
-          mHave_EGL_KHR_lock_surface(false),
-          mHave_EGL_ANGLE_surface_d3d_texture_2d_share_handle(false)
+          mIsANGLE(false)
     {
     }
+
+    void InitExtensions();
+
+    /**
+     * Known GL extensions that can be queried by
+     * IsExtensionSupported.  The results of this are cached, and as
+     * such it's safe to use this even in performance critical code.
+     * If you add to this array, remember to add to the string names
+     * in GLContext.cpp.
+     */
+    enum EGLExtensions {
+        KHR_image_base,
+        KHR_image_pixmap,
+        KHR_gl_texture_2D_image,
+        KHR_lock_surface,
+        ANGLE_surface_d3d_texture_2d_share_handle,
+        EXT_create_context_robustness,
+        KHR_image,
+        Extensions_Max
+    };
+
+    bool IsExtensionSupported(EGLExtensions aKnownExtension) {
+        return mAvailableExtensions[aKnownExtension];
+    }
+
+    void MarkExtensionUnsupported(EGLExtensions aKnownExtension) {
+        mAvailableExtensions[aKnownExtension] = 0;
+    }
+
+protected:
+    GLContext::ExtensionBitset<Extensions_Max> mAvailableExtensions;
+
+public:
 
     EGLDisplay fGetDisplay(void* display_id)
     {
@@ -367,27 +394,27 @@ public:
     }
 
     bool HasKHRImageBase() {
-        return mHave_EGL_KHR_image_base;
+        return IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_base);
     }
 
     bool HasKHRImagePixmap() {
-        return mHave_EGL_KHR_image_pixmap;
+        return IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_pixmap);
     }
 
     bool HasKHRImageTexture2D() {
-        return mHave_EGL_KHR_gl_texture_2D_image;
+        return IsExtensionSupported(KHR_gl_texture_2D_image);
     }
 
     bool HasKHRLockSurface() {
-        return mHave_EGL_KHR_lock_surface;
+        return IsExtensionSupported(KHR_lock_surface);
     }
 
     bool HasANGLESurfaceD3DTexture2DShareHandle() {
-        return mHave_EGL_ANGLE_surface_d3d_texture_2d_share_handle;
+        return IsExtensionSupported(ANGLE_surface_d3d_texture_2d_share_handle);
     }
 
     bool HasRobustness() {
-        return mHasRobustness;
+        return IsExtensionSupported(EXT_create_context_robustness);
     }
 
     bool EnsureInitialized();
@@ -469,13 +496,6 @@ private:
     EGLDisplay mEGLDisplay;
 
     bool mIsANGLE;
-    bool mHasRobustness;
-
-    bool mHave_EGL_KHR_image_base;
-    bool mHave_EGL_KHR_image_pixmap;
-    bool mHave_EGL_KHR_gl_texture_2D_image;
-    bool mHave_EGL_KHR_lock_surface;
-    bool mHave_EGL_ANGLE_surface_d3d_texture_2d_share_handle;
 };
 
 } /* namespace gl */
