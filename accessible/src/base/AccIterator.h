@@ -22,7 +22,7 @@ public:
   virtual Accessible* Next() = 0;
 
 private:
-  friend class Relation;
+  friend class mozilla::a11y::Relation;
   nsAutoPtr<AccIterable> mNextIter;
 };
 

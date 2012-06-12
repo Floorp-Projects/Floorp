@@ -3130,6 +3130,10 @@ abstract public class GeckoApp
         }
     }
 
+    public void loadUrl(String url) {
+        loadRequest(url, AwesomeBar.Target.CURRENT_TAB, null, false);
+    }
+
     public void loadUrl(String url, AwesomeBar.Target target) {
         loadRequest(url, target, null, false);
     }

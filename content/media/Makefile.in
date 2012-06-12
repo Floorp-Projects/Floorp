@@ -87,9 +87,7 @@ ifdef MOZ_MEDIA_PLUGINS
 PARALLEL_DIRS += plugins
 endif
 
-ifdef ENABLE_TESTS
-PARALLEL_DIRS += test
-endif
+TEST_DIRS += test
 
 FORCE_STATIC_LIB = 1
 

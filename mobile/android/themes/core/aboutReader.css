@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%include defines.inc
+
+html {
+  font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
+  font-size: 24px;
+  background: #FFFFFF;
+  -moz-text-size-adjust: none;
+}
+
+body {
+  margin: 20px;
+}
+
+.header {
+  width: 100%;
+  color: black;
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  border-bottom: 4px solid;
+  -moz-border-bottom-colors: #ff9100 #f27900;
+  display: none;
+}
+
+.content {
+  font-family: "Droid Serif",serif;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  display: none;
+}

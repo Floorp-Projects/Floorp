@@ -6,13 +6,14 @@
 #include "mozilla/_ipdltest/PTestOpensParent.h"
 #include "mozilla/_ipdltest/PTestOpensChild.h"
 
-#include "mozilla/_ipdltest/PTestOpensOpenedParent.h"
-#include "mozilla/_ipdltest/PTestOpensOpenedChild.h"
+#include "mozilla/_ipdltest2/PTestOpensOpenedParent.h"
+#include "mozilla/_ipdltest2/PTestOpensOpenedChild.h"
 
 namespace mozilla {
-namespace _ipdltest {
 
 // parent process
+
+namespace _ipdltest {
 
 class TestOpensParent : public PTestOpensParent
 {
@@ -33,6 +34,10 @@ protected:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
 };
+
+} // namespace _ipdltest
+
+namespace _ipdltest2 {
 
 class TestOpensOpenedParent : public PTestOpensOpenedParent
 {
@@ -56,8 +61,11 @@ protected:
     Transport* mTransport;
 };
 
+} // namespace _ipdltest2
 
 // child process
+
+namespace _ipdltest {
 
 class TestOpensChild : public PTestOpensChild
 {
@@ -76,6 +84,10 @@ protected:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
 };
+
+} // namespace _ipdltest
+
+namespace _ipdltest2 {
 
 class TestOpensOpenedChild : public PTestOpensOpenedChild
 {
@@ -99,8 +111,8 @@ protected:
     Transport* mTransport;
 };
 
+} // namespace _ipdltest2
 
-} // namespace _ipdltest
 } // namespace mozilla
 
 
