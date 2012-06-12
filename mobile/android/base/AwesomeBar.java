@@ -234,8 +234,8 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     public void handleMessage(String event, JSONObject message) {
         try {
             if (event.equals("SearchEngines:Data")) {
-                final String suggestEngine = message.optString("suggestEngine");
-                final String suggestTemplate = message.optString("suggestTemplate");
+                final String suggestEngine =  message.isNull("suggestEngine") ? null : message.getString("suggestEngine");
+                final String suggestTemplate = message.isNull("suggestTemplate") ? null : message.getString("suggestTemplate");
                 if (suggestTemplate != null)
                     mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
                 mAwesomeTabs.setSearchEngines(suggestEngine, message.getJSONArray("searchEngines"));
