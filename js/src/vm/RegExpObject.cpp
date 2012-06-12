@@ -560,29 +560,26 @@ RegExpCompartment::get(JSContext *cx, JSAtom *keyAtom, JSAtom *source, RegExpFla
         return true;
     }
 
-    RegExpShared *shared = cx->runtime->new_<RegExpShared>(cx->runtime, flags);
+    ScopedDeletePtr<RegExpShared> shared(cx->new_<RegExpShared>(cx->runtime, flags));
     if (!shared)
-        goto error;
+        return false;
 
     if (!shared->compile(cx, source))
-        goto error;
+        return false;
 
     /* Re-lookup in case there was a GC. */
-    if (!map_.relookupOrAdd(p, key, shared))
-        goto error;
+    if (!map_.relookupOrAdd(p, key, shared)) {
+        js_ReportOutOfMemory(cx);
+        return false;
+    }
 
     /*
      * Since 'error' deletes 'shared', only guard 'shared' on success. This is
      * safe since 'shared' cannot be deleted by GC until after the call to
-     * map_.add() directly above.
+     * map_.relookupOrAdd() directly above.
      */
-    g->init(*shared);
+    g->init(*shared.forget());
     return true;
-
-  error:
-    Foreground::delete_(shared);
-    js_ReportOutOfMemory(cx);
-    return false;
 }
 
 bool
