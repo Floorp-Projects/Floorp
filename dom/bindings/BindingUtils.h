@@ -331,7 +331,7 @@ WrapNewBindingObject(JSContext* cx, JSObject* scope, T* value, JS::Value* vp)
 }
 
 // Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
-template <template <class> class SmartPtr, class T>
+template <template <typename> class SmartPtr, class T>
 inline bool
 WrapNewBindingObject(JSContext* cx, JSObject* scope, const SmartPtr<T>& value,
                      JS::Value* vp)
@@ -362,7 +362,7 @@ HandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope, T* value,
 }
 
 // Helper for smart pointers (nsAutoPtr/nsRefPtr/nsCOMPtr).
-template <template <class> class SmartPtr, class T>
+template <template <typename> class SmartPtr, class T>
 MOZ_ALWAYS_INLINE bool
 HandleNewBindingWrappingFailure(JSContext* cx, JSObject* scope,
                                 const SmartPtr<T>& value, JS::Value* vp)
@@ -439,7 +439,7 @@ struct ParentObject {
     mWrapperCache(GetWrapperCache(aObject))
   {}
 
-  template<class T, template<class> class SmartPtr>
+  template<class T, template<typename> class SmartPtr>
   ParentObject(const SmartPtr<T>& aObject) :
     mObject(aObject.get()),
     mWrapperCache(GetWrapperCache(aObject.get()))
