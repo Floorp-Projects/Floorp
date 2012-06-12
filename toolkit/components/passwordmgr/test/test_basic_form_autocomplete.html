@@ -81,21 +81,22 @@ Login Manager test: multiple login autocomplete
 /** Test for Login Manager: multiple login autocomplete. **/
 
 commonInit();
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 var uname = $_(1, "uname");
 var pword = $_(1, "pword");
 const shiftModifier = Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
 
 // Get the pwmgr service
-var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
-            .getService(Components.interfaces.nsILoginManager);
+var pwmgr = SpecialPowers.wrap(Components)
+                         .classes["@mozilla.org/login-manager;1"]
+                         .getService(Components.interfaces.nsILoginManager);
 ok(pwmgr != null, "nsLoginManager service");
 
 // Create some logins just for this form, since we'll be deleting them.
 var nsLoginInfo =
-Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                       Components.interfaces.nsILoginInfo, "init");
+SpecialPowers.wrap(Components)
+             .Constructor("@mozilla.org/login-manager/loginInfo;1",
+                          Components.interfaces.nsILoginInfo, "init");
 ok(nsLoginInfo != null, "nsLoginInfo constructor");
 
 
@@ -200,12 +201,10 @@ var gNextTestWillOpenPopup = true;
 var gLastTest = 704;
 
 function addPopupListener(eventName, func, capture) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   autocompletePopup.addEventListener(eventName, func, capture);
 }
 
 function removePopupListener(eventName, func, capture) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   autocompletePopup.removeEventListener(eventName, func, capture);
 }
 
@@ -218,12 +217,6 @@ function removePopupListener(eventName, func, capture) {
  * timeout.
  */
 function runTest(testNum) {
-  // Seems we need to enable this again, or sendKeyEvent() complaints.
-  // But don't for test 14, or else dispatchEvent will send it as a trusted
-  // event (we're testing to see if we ignore untrusted events, so don't want
-  // that).
-  if (testNum != 14)
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "Starting test #" + testNum);
 
   if (gNextTestWillOpenPopup) {
@@ -415,17 +408,25 @@ function runTest(testNum) {
         gNextTestWillOpenPopup = false;
         break;
 
+    /* The previous comments said that test 14 was special and needed to not
+     * have enablePrivilege, or else dispatchEvent will send a trusted event
+     * (we're testing to see if we ignore untrusted events, so don't want
+     * that).
+     * We should file a bug to look into this.
+     */
     case 14:
+    /*
         // Send a fake (untrusted) event.
         checkACForm("", "");
         uname.value = "zzzuser4";
         sendFakeAutocompleteEvent(uname);
         checkACForm("zzzuser4", "");
+    */
         gNextTestWillOpenPopup = true;
         break;
 
     case 15:
-        checkACForm("zzzuser4", "");
+        //checkACForm("zzzuser4", "");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -796,9 +797,8 @@ function getMenuEntries() {
 }
 
 function startTest() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var Ci = Components.interfaces;
-    chromeWin = window
+    chromeWin = SpecialPowers.wrap(window)
                     .QueryInterface(Ci.nsIInterfaceRequestor)
                     .getInterface(Ci.nsIWebNavigation)
                     .QueryInterface(Ci.nsIDocShellTreeItem)
