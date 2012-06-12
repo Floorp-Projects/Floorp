@@ -24,6 +24,8 @@ typedef void *EGLSurface;
 typedef void *EGLClientBuffer;
 typedef void *EGLCastToRelevantPtr;
 typedef void *EGLImage;
+typedef void *EGLSync;
+typedef uint64_t EGLTime;
 
 #if defined(XP_WIN)
 
@@ -65,6 +67,7 @@ typedef void *EGLNativeWindowType;
 #define EGL_NO_CONTEXT       ((EGLContext)0)
 #define EGL_NO_DISPLAY       ((EGLDisplay)0)
 #define EGL_NO_SURFACE       ((EGLSurface)0)
+#define EGL_NO_SYNC          ((EGLSync)0)
 
 #define EGL_DISPLAY()        sEGLLibrary.Display()
 
@@ -128,6 +131,7 @@ public:
         ANGLE_surface_d3d_texture_2d_share_handle,
         EXT_create_context_robustness,
         KHR_image,
+        KHR_fence_sync,
         Extensions_Max
     };
 
@@ -385,6 +389,38 @@ public:
         return b;
     }
 
+    EGLSync fCreateSync(EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
+    {
+        BEFORE_GL_CALL;
+        EGLSync ret = mSymbols.fCreateSync(dpy, type, attrib_list);
+        AFTER_GL_CALL;
+        return ret;
+    }
+
+    EGLBoolean fDestroySync(EGLDisplay dpy, EGLSync sync)
+    {
+        BEFORE_GL_CALL;
+        EGLBoolean b = mSymbols.fDestroySync(dpy, sync);
+        AFTER_GL_CALL;
+        return b;
+    }
+
+    EGLint fClientWaitSync(EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout)
+    {
+        BEFORE_GL_CALL;
+        EGLint ret = mSymbols.fClientWaitSync(dpy, sync, flags, timeout);
+        AFTER_GL_CALL;
+        return ret;
+    }
+
+    EGLBoolean fGetSyncAttrib(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLint *value)
+    {
+        BEFORE_GL_CALL;
+        EGLBoolean b = mSymbols.fGetSyncAttrib(dpy, sync, attribute, value);
+        AFTER_GL_CALL;
+        return b;
+    }
+
     EGLDisplay Display() {
         return mEGLDisplay;
     }
@@ -488,6 +524,15 @@ public:
 
         typedef EGLBoolean (GLAPIENTRY * pfnQuerySurfacePointerANGLE)(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value);
         pfnQuerySurfacePointerANGLE fQuerySurfacePointerANGLE;
+
+        typedef EGLSync (GLAPIENTRY * pfnCreateSync)(EGLDisplay dpy, EGLenum type, const EGLint *attrib_list);
+        pfnCreateSync fCreateSync;
+        typedef EGLBoolean (GLAPIENTRY * pfnDestroySync)(EGLDisplay dpy, EGLSync sync);
+        pfnDestroySync fDestroySync;
+        typedef EGLint (GLAPIENTRY * pfnClientWaitSync)(EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout);
+        pfnClientWaitSync fClientWaitSync;
+        typedef EGLBoolean (GLAPIENTRY * pfnGetSyncAttrib)(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLint *value);
+        pfnGetSyncAttrib fGetSyncAttrib;
     } mSymbols;
 
 private:
