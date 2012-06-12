@@ -5353,6 +5353,41 @@ let Reader = {
   init: function Reader_init() {
     this.log("Init()");
     this._requests = {};
+
+    Services.obs.addObserver(this, "Reader:Add", false);
+  },
+
+  observe: function(aMessage, aTopic, aData) {
+    switch(aTopic) {
+      case "Reader:Add":
+        let tab = BrowserApp.getTabForId(aData);
+        let url = tab.browser.contentWindow.location.href;
+
+        let sendResult = function(success, title) {
+          this.log("Reader:Add success=" + success + ", url=" + url + ", title=" + title);
+
+          sendMessageToJava({
+            gecko: {
+              type: "Reader:Added",
+              success: success,
+              title: title,
+              url: url,
+            }
+          });
+        }.bind(this);
+
+        this.parseDocumentFromTab(aData, function(article) {
+          if (!article) {
+            sendResult(false, "");
+            return;
+          }
+
+          this.storeArticleInCache(article, function(success) {
+            sendResult(success, article.title);
+          });
+        }.bind(this));
+        break;
+    }
   },
 
   parseDocumentFromURL: function Reader_parseDocumentFromURL(url, callback) {
@@ -5483,6 +5518,8 @@ let Reader = {
   },
 
   uninit: function Reader_uninit() {
+    Services.obs.removeObserver(this, "Reader:Add", false);
+
     let requests = this._requests;
     for (let url in requests) {
       let request = requests[url];
