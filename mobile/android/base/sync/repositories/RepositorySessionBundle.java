@@ -11,8 +11,6 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 
-import android.util.Log;
-
 public class RepositorySessionBundle extends ExtendedJSONObject {
 
   private static final String LOG_TAG = "RepositorySessionBundle";
@@ -38,7 +36,7 @@ public class RepositorySessionBundle extends ExtendedJSONObject {
   }
 
   public void setTimestamp(long timestamp) {
-    Log.d(LOG_TAG, "Setting timestamp on RepositorySessionBundle to " + timestamp);
+    Logger.debug(LOG_TAG, "Setting timestamp on RepositorySessionBundle to " + timestamp);
     this.put("timestamp", new Long(timestamp));
   }
 

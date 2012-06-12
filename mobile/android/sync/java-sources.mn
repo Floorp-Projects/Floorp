@@ -52,6 +52,13 @@ sync/jpake/stage/PutRequestStage.java
 sync/jpake/stage/VerifyPairingStage.java
 sync/jpake/Zkp.java
 sync/KeyBundleProvider.java
+sync/log/writers/AndroidLevelCachingLogWriter.java
+sync/log/writers/AndroidLogWriter.java
+sync/log/writers/LevelFilteringLogWriter.java
+sync/log/writers/LogWriter.java
+sync/log/writers/PrintLogWriter.java
+sync/log/writers/SingleTagLogWriter.java
+sync/log/writers/StringLogWriter.java
 sync/Logger.java
 sync/MetaGlobal.java
 sync/MetaGlobalException.java
@@ -62,7 +69,6 @@ sync/middleware/Crypto5MiddlewareRepositorySession.java
 sync/middleware/MiddlewareRepository.java
 sync/middleware/MiddlewareRepositorySession.java
 sync/net/BaseResource.java
-sync/net/CompletedEntity.java
 sync/net/ConnectionMonitorThread.java
 sync/net/HandleProgressException.java
 sync/net/HttpResponseObserver.java
