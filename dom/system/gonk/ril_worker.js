@@ -2849,15 +2849,29 @@ RIL[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length, options) {
   if (operator.length < 3) {
     if (DEBUG) debug("Expected at least 3 strings for operator.");
   }
-  if (!this.operator ||
-      this.operator.alphaLong  != operator[0] ||
-      this.operator.alphaShort != operator[1] ||
-      this.operator.numeric    != operator[2]) {
-    this.operator = {type: "operatorchange",
-                     alphaLong:  operator[0],
-                     alphaShort: operator[1],
-                     numeric:    operator[2]};
-    this.sendDOMMessage(this.operator);
+
+  if (!this.operator) {
+    this.operator = {type: "operatorchange"};
+  }
+
+  let numeric = String(this.operator.mcc) + this.operator.mnc;
+  if (this.operator.longName != operator[0] ||
+      this.operator.shortName != operator[1] ||
+      numeric != operator[2]) {
+
+    this.operator.longName = operator[0];
+    this.operator.shortName = operator[1];
+    this.operator.mcc = 0;
+    this.operator.mnc = 0;
+
+    let networkTuple = operator[2];
+    try {
+      this._processNetworkTuple(networkTuple, this.operator);
+    } catch (e) {
+      debug("Error processing operator tuple: " + e);
+    }
+
+   this.sendDOMMessage(this.operator);
   }
 };
 RIL[REQUEST_RADIO_POWER] = null;

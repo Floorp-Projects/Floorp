@@ -157,14 +157,14 @@ function RadioInterfaceLayer() {
     voice:          {connected: false,
                      emergencyCallsOnly: false,
                      roaming: false,
-                     operator: null,
+                     network: null,
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
     data:          {connected: false,
                      emergencyCallsOnly: false,
                      roaming: false,
-                     operator: null,
+                     network: null,
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
@@ -405,7 +405,7 @@ RadioInterfaceLayer.prototype = {
       voiceInfo.connected = false;
       voiceInfo.emergencyCallsOnly = false;
       voiceInfo.roaming = false;
-      voiceInfo.operator = null;
+      voiceInfo.network = null;
       voiceInfo.type = null;
       voiceInfo.signalStrength = null;
       voiceInfo.relSignalStrength = null;
@@ -475,15 +475,26 @@ RadioInterfaceLayer.prototype = {
     ppmm.sendAsyncMessage("RIL:DataInfoChanged", this.radioState.data);
   },
 
+  networkChanged: function networkChanged(srcNetwork, destNetwork) {
+    return !destNetwork ||
+      destNetwork.longName != srcNetwork.longName ||
+      destNetwork.shortName != srcNetwork.shortName ||
+      destNetwork.mnc != srcNetwork.mnc ||
+      destNetwork.mcc != srcNetwork.mcc;
+  },
+
   handleOperatorChange: function handleOperatorChange(message) {
-    let operator = message.alphaLong;
-    if (operator != this.radioState.voice.operator) {
-      this.radioState.voice.operator = operator;
-      ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", this.radioState.voice);
+    let voice = this.radioState.voice;
+    let data = this.radioState.data;
+
+    if (this.networkChanged(message, voice.network)) {
+      voice.network = message;
+      ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", voice);
     }
-    if (operator != this.radioState.data.operator) {
-      this.radioState.data.operator = operator;
-      ppmm.sendAsyncMessage("RIL:DataInfoChanged", this.radioState.data);
+
+    if (this.networkChanged(message, data.network)) {
+      data.network = message;
+      ppmm.sendAsyncMessage("RIL:DataInfoChanged", data);
     }
   },
 
