@@ -146,7 +146,7 @@ public class HistoryRecord extends Record {
 
   private boolean checkVisitsEquals(HistoryRecord other) {
     Logger.debug(LOG_TAG, "Checking visits.");
-    if (Logger.logVerbose(LOG_TAG)) {
+    if (Logger.shouldLogVerbose(LOG_TAG)) {
       // Don't JSON-encode unless we're logging.
       Logger.trace(LOG_TAG, ">> Mine:   " + ((this.visits == null) ? "null" : this.visits.toJSONString()));
       Logger.trace(LOG_TAG, ">> Theirs: " + ((other.visits == null) ? "null" : other.visits.toJSONString()));
