@@ -8,9 +8,13 @@ component {07ef5b2e-88fb-47bd-8cec-d3b0bef11ac4} ContentPermission.js
 contract @mozilla.org/content-permission/prompt;1 {07ef5b2e-88fb-47bd-8cec-d3b0bef11ac4}
 
 # ContentPolicy.js
-component {75acd178-3d5a-48a7-bd92-fba383520ae6} ContentPolicy.js application=webapprt@mozilla.org
-contract @mozilla.org/webapprt/content-policy;1 {75acd178-3d5a-48a7-bd92-fba383520ae6} application=webapprt@mozilla.org
-category content-policy webapprt-content-policy @mozilla.org/webapprt/content-policy;1 application=webapprt@mozilla.org
+# We used to use this component to heuristically determine which links to
+# direct to the user's default browser, but we no longer use that heuristic.
+# It will come in handy when we implement support for trusted apps, however,
+# so we left it in (although it is disabled here).
+# component {75acd178-3d5a-48a7-bd92-fba383520ae6} ContentPolicy.js application=webapprt@mozilla.org
+# contract @mozilla.org/webapprt/content-policy;1 {75acd178-3d5a-48a7-bd92-fba383520ae6} application=webapprt@mozilla.org
+# category content-policy webapprt-content-policy @mozilla.org/webapprt/content-policy;1 application=webapprt@mozilla.org
 
 # DirectoryProvider.js
 component {e1799fda-4b2f-4457-b671-e0641d95698d} DirectoryProvider.js application=webapprt@mozilla.org

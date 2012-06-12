@@ -24,7 +24,7 @@ else
 ifeq ($(OS_ARCH),Darwin)
 DIRS += mac
 else
-ifeq ($(OS_ARCH),Linux)
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 DIRS += linux
 endif # linux
 endif # mac

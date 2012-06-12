@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 // Event whitelisted for bubbling.
 let whitelistedEvents = [
   Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE,   // Back button.
+  Ci.nsIDOMKeyEvent.DOM_VK_SLEEP,    // Power button.
   Ci.nsIDOMKeyEvent.DOM_VK_CONTEXT_MENU,
   Ci.nsIDOMKeyEvent.DOM_VK_F5,       // Search button.
   Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP,  // Volume up.

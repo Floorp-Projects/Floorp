@@ -294,6 +294,18 @@ public:
   int8_t GetAttributeRenamedTo(ErrorResult&);
   void SetAttributeRenamedTo(int8_t, ErrorResult&);
 
+  // Methods and properties imported via "implements"
+  bool GetImplementedProperty(ErrorResult&);
+  void SetImplementedProperty(bool, ErrorResult&);
+  void ImplementedMethod(ErrorResult&);
+  bool GetImplementedParentProperty(ErrorResult&);
+  void SetImplementedParentProperty(bool, ErrorResult&);
+  void ImplementedParentMethod(ErrorResult&);
+  bool GetIndirectlyImplementedProperty(ErrorResult&);
+  void SetIndirectlyImplementedProperty(bool, ErrorResult&);
+  void IndirectlyImplementedMethod(ErrorResult&);
+  uint32_t GetDiamondImplementedProperty(ErrorResult&);
+
 private:
   // We add signatures here that _could_ start matching if the codegen
   // got data types wrong.  That way if it ever does we'll have a call

@@ -236,8 +236,7 @@ struct ArenaLists {
         return true;
     }
 
-#ifdef DEBUG
-    bool checkArenaListAllUnmarked() const {
+    void unmarkAll() {
         for (size_t i = 0; i != FINALIZE_LIMIT; ++i) {
 # ifdef JS_THREADSAFE
             /* The background finalization must have stopped at this point. */
@@ -245,13 +244,11 @@ struct ArenaLists {
                       backgroundFinalizeState[i] == BFS_JUST_FINISHED);
 # endif
             for (ArenaHeader *aheader = arenaLists[i].head; aheader; aheader = aheader->next) {
-                if (!aheader->chunk()->bitmap.noBitsSet(aheader))
-                    return false;
+                uintptr_t *word = aheader->chunk()->bitmap.arenaBits(aheader);
+                memset(word, 0, ArenaBitmapWords * sizeof(uintptr_t));
             }
         }
-        return true;
     }
-#endif
 
 #ifdef JS_THREADSAFE
     bool doneBackgroundFinalize(AllocKind kind) const {
