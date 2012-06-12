@@ -442,7 +442,6 @@ DrawTargetSkia::Stroke(const Path *aPath,
                        const DrawOptions &aOptions)
 {
   MarkChanged();
-  MOZ_ASSERT(aPath, "Null path");
   if (aPath->GetBackendType() != BACKEND_SKIA) {
     return;
   }
@@ -515,9 +514,7 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
                            const DrawOptions &aOptions,
                            const GlyphRenderingOptions*)
 {
-  if (aFont->GetType() != FONT_MAC &&
-      aFont->GetType() != FONT_SKIA &&
-      aFont->GetType() != FONT_GDI) {
+  if (aFont->GetType() != FONT_MAC && aFont->GetType() != FONT_SKIA) {
     return;
   }
 
