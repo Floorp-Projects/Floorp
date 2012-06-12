@@ -28,7 +28,6 @@ class KeyBinding;
 class Accessible;
 class HyperTextAccessible;
 struct nsRoleMapEntry;
-class Relation;
 
 namespace mozilla {
 namespace a11y {
@@ -36,6 +35,7 @@ namespace a11y {
 class HTMLImageMapAccessible;
 class HTMLLIAccessible;
 class ImageAccessible;
+class Relation;
 class TableAccessible;
 class TextLeafAccessible;
 class XULTreeAccessible;
@@ -306,7 +306,7 @@ public:
   /**
    * Get the relation of the given type.
    */
-  virtual Relation RelationByType(PRUint32 aType);
+  virtual mozilla::a11y::Relation RelationByType(PRUint32 aType);
 
   //////////////////////////////////////////////////////////////////////////////
   // Initializing methods

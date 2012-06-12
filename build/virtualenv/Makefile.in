@@ -25,7 +25,7 @@ setuptools_packages := \
 
 
 define install_setuptools_package
-cd $(topsrcdir)/$(1)/; $(PYTHON) setup.py develop
+cd $(topsrcdir)/$(1)/; CFLAGS="$(HOST_CFLAGS)" LDFLAGS="$(HOST_LDFLAGS)" CXXFLAGS="$(HOST_CXXFLAGS)" $(PYTHON) setup.py develop
 
 endef
 

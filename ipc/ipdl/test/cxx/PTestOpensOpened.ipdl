@@ -1,5 +1,5 @@
 namespace mozilla {
-namespace _ipdltest {
+namespace _ipdltest2 {
 
 // (Opens protocols can have different semantics than the endpoints
 // that opened them)
@@ -25,4 +25,4 @@ state DEAD:
 
 
 } // namespace mozilla
-} // namespace _ipdltest
+} // namespace _ipdltest2

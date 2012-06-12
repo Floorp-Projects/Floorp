@@ -39,7 +39,8 @@ private:
 
 
   nsresult GetInternal(const JS::Value & aName, JSContext* aCx, nsIDOMDOMRequest * *_retval NS_OUTPARAM, bool aEditable);
-  nsresult EnumerateInternal(const nsAString & aName, nsIDOMDeviceStorageCursor * *_retval NS_OUTPARAM, bool aEditable);
+
+  nsresult EnumerateInternal(const JS::Value & aName, const JS::Value & aOptions, JSContext* aCx, PRUint8 aArgc, bool aEditable, nsIDOMDeviceStorageCursor** aRetval);
 
   PRInt32 mStorageType;
   nsCOMPtr<nsIFile> mFile;

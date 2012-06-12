@@ -11,6 +11,9 @@
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
 
+namespace mozilla {
+namespace a11y {
+
 class Relation;
 
 /**
@@ -32,5 +35,8 @@ private:
   PRUint32 mType;
   nsCOMPtr<nsIMutableArray> mTargets;
 };
+
+} // namespace a11y
+} // namespace mozilla
 
 #endif
