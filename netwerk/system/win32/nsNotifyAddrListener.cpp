@@ -103,6 +103,8 @@ nsNotifyAddrListener::GetLinkType(PRUint32 *aLinkType)
 NS_IMETHODIMP
 nsNotifyAddrListener::Run()
 {
+    PR_SetCurrentThreadName("Link Monitor");
+
     HANDLE ev = CreateEvent(nsnull, FALSE, FALSE, nsnull);
     NS_ENSURE_TRUE(ev, NS_ERROR_OUT_OF_MEMORY);
 

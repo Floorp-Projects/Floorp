@@ -264,7 +264,7 @@ void StateMachineTracker::EnsureGlobalStateMachine()
   ReentrantMonitorAutoEnter mon(mMonitor);
   if (mStateMachineCount == 0) {
     NS_ASSERTION(!mStateMachineThread, "Should have null state machine thread!");
-    DebugOnly<nsresult> rv = NS_NewThread(&mStateMachineThread, nsnull);
+    DebugOnly<nsresult> rv = NS_NewNamedThread("Media State", &mStateMachineThread, nsnull);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't create media state machine thread");
   }
   mStateMachineCount++;
@@ -1617,9 +1617,10 @@ nsBuiltinDecoderStateMachine::StartDecodeThread()
 
   mRequestedNewDecodeThread = false;
 
-  nsresult rv = NS_NewThread(getter_AddRefs(mDecodeThread),
-                              nsnull,
-                              MEDIA_THREAD_STACK_SIZE);
+  nsresult rv = NS_NewNamedThread("Media Decode",
+                                  getter_AddRefs(mDecodeThread),
+                                  nsnull,
+                                  MEDIA_THREAD_STACK_SIZE);
   if (NS_FAILED(rv)) {
     // Give up, report error to media element.
     nsCOMPtr<nsIRunnable> event =
@@ -1644,14 +1645,16 @@ nsBuiltinDecoderStateMachine::StartAudioThread()
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
   mStopAudioThread = false;
   if (HasAudio() && !mAudioThread && !mAudioCaptured) {
-    nsresult rv = NS_NewThread(getter_AddRefs(mAudioThread),
-                               nsnull,
-                               MEDIA_THREAD_STACK_SIZE);
+    nsresult rv = NS_NewNamedThread("Media Audio",
+                                    getter_AddRefs(mAudioThread),
+                                    nsnull,
+                                    MEDIA_THREAD_STACK_SIZE);
     if (NS_FAILED(rv)) {
       LOG(PR_LOG_DEBUG, ("%p Changed state to SHUTDOWN because failed to create audio thread", mDecoder.get()));
       mState = DECODER_STATE_SHUTDOWN;
       return rv;
     }
+
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(this, &nsBuiltinDecoderStateMachine::AudioLoop);
     mAudioThread->Dispatch(event, NS_DISPATCH_NORMAL);
