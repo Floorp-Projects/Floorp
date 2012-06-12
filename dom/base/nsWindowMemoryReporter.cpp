@@ -678,7 +678,7 @@ ReportGhostWindowsEnumerator(nsUint64HashKey* aIDHashKey, void* aClosure)
   nsresult rv = data->callback->Callback(
     /* process = */ EmptyCString(),
     path,
-    nsIMemoryReporter::KIND_SUMMARY,
+    nsIMemoryReporter::KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,
     /* amount = */ 1,
     /* desc = */ EmptyCString(),
