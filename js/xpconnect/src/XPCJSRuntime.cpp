@@ -1220,7 +1220,7 @@ GetJSUserCompartmentCount()
 // easily report them via telemetry, so we live with the small risk of
 // inconsistencies.
 NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSSystemCompartmentCount,
-    "js-compartments-system",
+    "js-compartments/system",
     KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,
     GetJSSystemCompartmentCount,
@@ -1230,7 +1230,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSSystemCompartmentCount,
     "but such cases should be rare.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
-    "js-compartments-user",
+    "js-compartments/user",
     KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,
     GetJSUserCompartmentCount,
