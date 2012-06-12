@@ -4767,6 +4767,9 @@ nsEditor::CreateTxnForDeleteCharacter(nsIDOMCharacterData* aData,
                "invalid direction");
   nsAutoString data;
   aData->GetData(data);
+  NS_ASSERTION(data.Length(), "Trying to delete from a zero-length node");
+  NS_ENSURE_STATE(data.Length());
+
   PRUint32 segOffset = aOffset, segLength = 1;
   if (aDirection == eNext) {
     if (segOffset + 1 < data.Length() &&
@@ -4915,6 +4918,16 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       selectedNode = GetNextNode(node, offset, true);
     }
     NS_ENSURE_STATE(selectedNode);
+
+    while (selectedNode->IsNodeOfType(nsINode::eDATA_NODE) &&
+           !selectedNode->Length()) {
+      // Can't delete an empty chardata node (bug 762183)
+      if (aAction == ePrevious) {
+        selectedNode = GetPriorNode(selectedNode, true);
+      } else if (aAction == eNext) {
+        selectedNode = GetNextNode(selectedNode, true);
+      }
+    }
 
     nsCOMPtr<nsIDOMCharacterData> selectedNodeAsText =
       do_QueryInterface(selectedNode);
