@@ -3155,9 +3155,9 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
     return NS_ERROR_FAILURE;
   }
 
-  nsIPresShell* presShell = GetPresShell();
+  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   if (!presShell)
-      return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
 
   nsIDocument* document = presShell->GetDocument();
 
@@ -3213,15 +3213,15 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
   // bounding boxes before rendering anything
   nsBidi bidiEngine;
   rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
-                                textToDraw.Length(),
-                                isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                presShell->GetPresContext(),
-                                processor,
-                                nsBidiPresUtils::MODE_MEASURE,
-                                nsnull,
-                                0,
-                                &totalWidthCoord,
-                                &bidiEngine);
+                                    textToDraw.Length(),
+                                    isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                    presShell->GetPresContext(),
+                                    processor,
+                                    nsBidiPresUtils::MODE_MEASURE,
+                                    nsnull,
+                                    0,
+                                    &totalWidthCoord,
+                                    &bidiEngine);
   if (NS_FAILED(rv)) {
     return rv;
   }
