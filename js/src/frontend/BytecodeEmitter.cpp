@@ -5606,7 +5606,10 @@ EmitSyntheticStatements(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrd
     JS_ASSERT(pn->isArity(PN_LIST));
     StmtInfo stmtInfo(cx);
     PushStatement(bce->sc, &stmtInfo, STMT_SEQ, top);
-    for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
+    ParseNode *pn2 = pn->pn_head;
+    if (pn->pn_xflags & PNX_DESTRUCT)
+        pn2 = pn2->pn_next;
+    for (; pn2; pn2 = pn2->pn_next) {
         if (!EmitTree(cx, bce, pn2))
             return false;
     }
