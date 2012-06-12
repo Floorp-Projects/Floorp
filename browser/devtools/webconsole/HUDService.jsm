@@ -175,11 +175,17 @@ const PREFS_PREFIX = "devtools.webconsole.filter.";
 
 // The number of messages to display in a single display update. If we display
 // too many messages at once we slow the Firefox UI too much.
-const MESSAGES_IN_INTERVAL = 30;
+const MESSAGES_IN_INTERVAL = DEFAULT_LOG_LIMIT;
 
-// The delay between display updates - tells how often we should push new
-// messages to screen.
-const OUTPUT_INTERVAL = 90; // milliseconds
+// The delay between display updates - tells how often we should *try* to push
+// new messages to screen. This value is optimistic, updates won't always
+// happen. Keep this low so the Web Console output feels live.
+const OUTPUT_INTERVAL = 50; // milliseconds
+
+// When the output queue has more than MESSAGES_IN_INTERVAL items we throttle
+// output updates to this number of milliseconds. So during a lot of output we
+// update every N milliseconds given here.
+const THROTTLE_UPDATES = 1000; // milliseconds
 
 ///////////////////////////////////////////////////////////////////////////
 //// Helper for creating the network panel.
@@ -1049,22 +1055,13 @@ HeadsUpDisplay.prototype = {
   _networkRequests: null,
 
   /**
-   * Last time when we displayed any message in the output. Timestamp in
-   * milliseconds since the Unix epoch.
+   * Last time when we displayed any message in the output.
    *
    * @private
    * @type number
+   *       Timestamp in milliseconds since the Unix epoch.
    */
   _lastOutputFlush: 0,
-
-  /**
-   * The number of messages displayed in the last interval. The interval is
-   * given by OUTPUT_INTERVAL.
-   *
-   * @private
-   * @type number
-   */
-  _messagesDisplayedInInterval: 0,
 
   /**
    * Message nodes are stored here in a queue for later display.
@@ -1413,11 +1410,17 @@ HeadsUpDisplay.prototype = {
 
     aRemoteMessages.forEach(function(aMessage) {
       switch (aMessage._type) {
-        case "PageError":
-          this.reportPageError(aMessage);
+        case "PageError": {
+          let category = this.categoryForScriptError(aMessage.category);
+          if (category != -1) {
+            this.outputMessage(category, this.reportPageError,
+                               [category, aMessage]);
+          }
           break;
+        }
         case "ConsoleAPI":
-          this.logConsoleAPIMessage(aMessage);
+          this.outputMessage(CATEGORY_WEBDEV, this.logConsoleAPIMessage,
+                             [aMessage]);
           break;
       }
     }, this);
@@ -1890,6 +1893,8 @@ HeadsUpDisplay.prototype = {
    *          information.
    *          - argumentsToString - the array of arguments passed to the console
    *          method, each converted to a string.
+   * @return nsIDOMElement|undefined
+   *         The message element to display in the Web Console output.
    */
   logConsoleAPIMessage: function HUD_logConsoleAPIMessage(aMessage)
   {
@@ -2022,19 +2027,20 @@ HeadsUpDisplay.prototype = {
       }.bind(this));
     }
 
-    ConsoleUtils.outputMessageNode(node, this.hudId);
-
     if (level == "dir") {
-      // Initialize the inspector message node, by setting the PropertyTreeView
-      // object on the tree view. This has to be done *after* the node is
-      // shown, because the tree binding must be attached first.
-      let tree = node.querySelector("tree");
-      tree.view = node.propertyTreeView;
-
       // Make sure the cached evaluated object will be purged when the node is
       // removed.
       node._evalCacheId = aMessage.objectsCacheId;
+
+      // Initialize the inspector message node, by setting the PropertyTreeView
+      // object on the tree view. This has to be done *after* the node is
+      // shown, because the tree binding must be attached first.
+      node._onOutput = function _onMessageOutput() {
+        node.querySelector("tree").view = node.propertyTreeView;
+      };
     }
+
+    return node;
   },
 
   /**
@@ -2042,35 +2048,13 @@ HeadsUpDisplay.prototype = {
    *
    * @param nsIScriptError aScriptError
    *        The error message to report.
+   * @return nsIDOMElement|undefined
+   *         The message element to display in the Web Console output.
    */
-  reportPageError: function HUD_reportPageError(aScriptError)
+  reportPageError: function HUD_reportPageError(aCategory, aScriptError)
   {
     if (!aScriptError.outerWindowID) {
       return;
-    }
-
-    let category;
-
-    switch (aScriptError.category) {
-      // We ignore chrome-originating errors as we only care about content.
-      case "XPConnect JavaScript":
-      case "component javascript":
-      case "chrome javascript":
-      case "chrome registration":
-      case "XBL":
-      case "XBL Prototype Handler":
-      case "XBL Content Sink":
-      case "xbl javascript":
-        return;
-
-      case "CSS Parser":
-      case "CSS Loader":
-        category = CATEGORY_CSS;
-        break;
-
-      default:
-        category = CATEGORY_JS;
-        break;
     }
 
     // Warnings and legacy strict errors become warnings; other types become
@@ -2082,7 +2066,7 @@ HeadsUpDisplay.prototype = {
     }
 
     let node = ConsoleUtils.createMessageNode(this.chromeDocument,
-                                              category,
+                                              aCategory,
                                               severity,
                                               aScriptError.errorMessage,
                                               this.hudId,
@@ -2091,8 +2075,39 @@ HeadsUpDisplay.prototype = {
                                               null,
                                               null,
                                               aScriptError.timeStamp);
+    return node;
+  },
 
-    ConsoleUtils.outputMessageNode(node, this.hudId);
+  /**
+   * Determine the category of a given nsIScriptError.
+   *
+   * @param nsIScriptError aScriptError
+   *        The script error you want to determine the category for.
+   * @return CATEGORY_JS|CATEGORY_CSS|-1
+   *         Depending on the script error CATEGORY_JS or CATEGORY_CSS can be
+   *         returned. If the category is unknown -1 is returned.
+   */
+  categoryForScriptError: function HUD_categoryForScriptError(aScriptError)
+  {
+    switch (aScriptError.category) {
+      // We ignore chrome-originating errors as we only care about content.
+      case "XPConnect JavaScript":
+      case "component javascript":
+      case "chrome javascript":
+      case "chrome registration":
+      case "XBL":
+      case "XBL Prototype Handler":
+      case "XBL Content Sink":
+      case "xbl javascript":
+        return -1;
+
+      case "CSS Parser":
+      case "CSS Loader":
+        return CATEGORY_CSS;
+
+      default:
+        return CATEGORY_JS;
+    }
   },
 
   /**
@@ -2100,10 +2115,17 @@ HeadsUpDisplay.prototype = {
    *
    * @param object aHttpActivity
    *        The HTTP activity to log.
+   * @return nsIDOMElement|undefined
+   *         The message element to display in the Web Console output.
    */
-  logNetActivity: function HUD_logNetActivity(aHttpActivity)
+  logNetActivity: function HUD_logNetActivity(aConnectionId)
   {
-    let entry = aHttpActivity.log.entries[0];
+    let networkInfo = this._networkRequests[aConnectionId];
+    if (!networkInfo) {
+      return;
+    }
+
+    let entry = networkInfo.httpActivity.log.entries[0];
     let request = entry.request;
 
     let msgNode = this.chromeDocument.createElementNS(XUL_NS, "hbox");
@@ -2149,20 +2171,17 @@ HeadsUpDisplay.prototype = {
 
     messageNode._connectionId = entry.connection;
 
-    let networkInfo = {
-      node: messageNode,
-      httpActivity: aHttpActivity,
-    };
-
-    this._networkRequests[entry.connection] = networkInfo;
-
     this.makeOutputMessageLink(messageNode, function HUD_net_message_link() {
       if (!messageNode._panelOpen) {
         HUDService.openNetworkPanel(messageNode, networkInfo.httpActivity);
       }
     }.bind(this));
 
-    ConsoleUtils.outputMessageNode(messageNode, this.hudId);
+    networkInfo.node = messageNode;
+
+    this._updateNetMessage(entry.connection);
+
+    return messageNode;
   },
 
   /**
@@ -2170,6 +2189,8 @@ HeadsUpDisplay.prototype = {
    *
    * @param string aFileURI
    *        The file URI that was loaded.
+   * @return nsIDOMElement|undefined
+   *         The message element to display in the Web Console output.
    */
   logFileActivity: function HUD_logFileActivity(aFileURI)
   {
@@ -2197,12 +2218,15 @@ HeadsUpDisplay.prototype = {
       viewSourceUtils.viewSource(aFileURI, null, chromeDocument);
     });
 
-    ConsoleUtils.outputMessageNode(outputNode, this.hudId);
+    return outputNode;
   },
 
   /**
    * Inform user that the Web Console API has been replaced by a script
    * in a content page.
+   *
+   * @return nsIDOMElement|undefined
+   *         The message element to display in the Web Console output.
    */
   logWarningAboutReplacedAPI: function HUD_logWarningAboutReplacedAPI()
   {
@@ -2210,7 +2234,7 @@ HeadsUpDisplay.prototype = {
     let node = ConsoleUtils.createMessageNode(this.chromeDocument, CATEGORY_JS,
                                               SEVERITY_WARNING, message,
                                               this.hudId);
-    ConsoleUtils.outputMessageNode(node, this.hudId);
+    return node;
   },
 
   ERRORS: {
@@ -2276,11 +2300,18 @@ HeadsUpDisplay.prototype = {
         this.jsterm.handleInspectObject(aMessage.json);
         break;
       case "WebConsole:ConsoleAPI":
-        this.logConsoleAPIMessage(aMessage.json);
+        this.outputMessage(CATEGORY_WEBDEV, this.logConsoleAPIMessage,
+                           [aMessage.json]);
         break;
-      case "WebConsole:PageError":
-        this.reportPageError(aMessage.json.pageError);
+      case "WebConsole:PageError": {
+        let pageError = aMessage.json.pageError;
+        let category = this.categoryForScriptError(pageError);
+        if (category != -1) {
+          this.outputMessage(category, this.reportPageError,
+                             [category, pageError]);
+        }
         break;
+      }
       case "WebConsole:CachedMessages":
         this._displayCachedConsoleMessages(aMessage.json.messages);
         this._onInitComplete();
@@ -2289,13 +2320,14 @@ HeadsUpDisplay.prototype = {
         this.handleNetworkActivity(aMessage.json);
         break;
       case "WebConsole:FileActivity":
-        this.logFileActivity(aMessage.json.uri);
+        this.outputMessage(CATEGORY_NETWORK, this.logFileActivity,
+                           [aMessage.json.uri]);
         break;
       case "WebConsole:LocationChange":
         this.onLocationChange(aMessage.json);
         break;
       case "JSTerm:NonNativeConsoleAPI":
-        this.logWarningAboutReplacedAPI();
+        this.outputMessage(CATEGORY_JS, this.logWarningAboutReplacedAPI);
         break;
     }
   },
@@ -2389,27 +2421,69 @@ HeadsUpDisplay.prototype = {
   handleNetworkActivity: function HUD_handleNetworkActivity(aMessage)
   {
     let stage = aMessage.meta.stages[aMessage.meta.stages.length - 1];
+    let entry = aMessage.log.entries[0];
 
     if (stage == "REQUEST_HEADER") {
-      this.logNetActivity(aMessage);
+      let networkInfo = {
+        node: null,
+        httpActivity: aMessage,
+      };
+
+      this._networkRequests[entry.connection] = networkInfo;
+      this.outputMessage(CATEGORY_NETWORK, this.logNetActivity,
+                         [entry.connection]);
+      return;
+    }
+    else if (!(entry.connection in this._networkRequests)) {
       return;
     }
 
-    let entry = aMessage.log.entries[0];
+    let networkInfo = this._networkRequests[entry.connection];
+    networkInfo.httpActivity = aMessage;
+
+    if (networkInfo.node) {
+      this._updateNetMessage(entry.connection);
+    }
+
+    // For unit tests we pass the HTTP activity object to the test callback,
+    // once requests complete.
+    if (HUDService.lastFinishedRequestCallback &&
+        aMessage.meta.stages.indexOf("REQUEST_STOP") > -1 &&
+        aMessage.meta.stages.indexOf("TRANSACTION_CLOSE") > -1) {
+      HUDService.lastFinishedRequestCallback(aMessage);
+    }
+  },
+
+  /**
+   * Update an output message to reflect the latest state of a network request,
+   * given a network connection ID.
+   *
+   * @private
+   * @param string aConnectionId
+   *        The connection ID to update.
+   */
+  _updateNetMessage: function HUD__updateNetMessage(aConnectionId)
+  {
+    let networkInfo = this._networkRequests[aConnectionId];
+    if (!networkInfo || !networkInfo.node) {
+      return;
+    }
+
+    let messageNode = networkInfo.node;
+    let httpActivity = networkInfo.httpActivity;
+    let stages = httpActivity.meta.stages;
+    let hasTransactionClose = stages.indexOf("TRANSACTION_CLOSE") > -1;
+    let hasResponseHeader = stages.indexOf("RESPONSE_HEADER") > -1;
+    let entry = httpActivity.log.entries[0];
     let request = entry.request;
     let response = entry.response;
 
-    if (!(entry.connection in this._networkRequests)) {
-      return;
-    }
-
-    let loggedRequest = this._networkRequests[entry.connection];
-    let messageNode = loggedRequest.node;
-    loggedRequest.httpActivity = aMessage;
-
-    if (stage == "TRANSACTION_CLOSE" || stage == "RESPONSE_HEADER") {
-      let status = [response.httpVersion, response.status, response.statusText];
-      if (stage == "TRANSACTION_CLOSE") {
+    if (hasTransactionClose || hasResponseHeader) {
+      let status = [];
+      if (response.httpVersion && response.status) {
+        status = [response.httpVersion, response.status, response.statusText];
+      }
+      if (hasTransactionClose) {
         status.push(l10n.getFormatStr("NetworkPanel.durationMS", [entry.time]));
       }
       let statusText = "[" + status.join(" ") + "]";
@@ -2421,8 +2495,7 @@ HeadsUpDisplay.prototype = {
       messageNode.clipboardText = [request.method, request.url, statusText]
                                   .join(" ");
 
-      if (stage == "RESPONSE_HEADER" &&
-          response.status >= MIN_HTTP_ERROR_CODE &&
+      if (hasResponseHeader && response.status >= MIN_HTTP_ERROR_CODE &&
           response.status <= MAX_HTTP_ERROR_CODE) {
         ConsoleUtils.setMessageType(messageNode, CATEGORY_NETWORK,
                                     SEVERITY_ERROR);
@@ -2431,14 +2504,6 @@ HeadsUpDisplay.prototype = {
 
     if (messageNode._netPanel) {
       messageNode._netPanel.update();
-    }
-
-    // For unit tests we pass the HTTP activity object to the test callback,
-    // once requests complete.
-    if (HUDService.lastFinishedRequestCallback &&
-        aMessage.meta.stages.indexOf("REQUEST_STOP") > -1 &&
-        aMessage.meta.stages.indexOf("TRANSACTION_CLOSE") > -1) {
-      HUDService.lastFinishedRequestCallback(aMessage);
     }
   },
 
@@ -2503,15 +2568,32 @@ HeadsUpDisplay.prototype = {
    * Note: this call is async - the given message node may not be displayed when
    * you call this method.
    *
-   * @param nsIDOMNode aNode
-   *        The message node to send to the output.
-   * @param nsIDOMNode [aNodeAfter]
-   *        Insert the node after the given aNodeAfter (optional).
+   * @param integer aCategory
+   *        The category of the message you want to output. See the CATEGORY_*
+   *        constants.
+   * @param function|nsIDOMElement aMethodOrNode
+   *        The method that creates the message element to send to the output or
+   *        the actual element. If a method is given it will be bound to the HUD
+   *        object and the arguments will be |aArguments|.
+   * @param array [aArguments]
+   *        If a method is given to output the message element then the method
+   *        will be invoked with the list of arguments given here.
    */
-  outputMessageNode: function HUD_outputMessageNode(aNode, aNodeAfter)
+  outputMessage: function HUD_outputMessage(aCategory, aMethodOrNode, aArguments)
   {
-    this._outputQueue.push([aNode, aNodeAfter]);
-    this._flushMessageQueue();
+    if (!this._outputQueue.length) {
+      // If the queue is empty we consider that now was the last output flush.
+      // This avoid an immediate output flush when the timer executes.
+      this._lastOutputFlush = Date.now();
+    }
+
+    this._outputQueue.push([aCategory, aMethodOrNode, aArguments]);
+
+    if (!this._outputTimeout) {
+      this._outputTimeout =
+        this.chromeWindow.setTimeout(this._flushMessageQueue.bind(this),
+                                     OUTPUT_INTERVAL);
+    }
   },
 
   /**
@@ -2523,23 +2605,19 @@ HeadsUpDisplay.prototype = {
    */
   _flushMessageQueue: function HUD__flushMessageQueue()
   {
-    if ((Date.now() - this._lastOutputFlush) >= OUTPUT_INTERVAL) {
-      this._messagesDisplayedInInterval = 0;
+    let timeSinceFlush = Date.now() - this._lastOutputFlush;
+    if (this._outputQueue.length > MESSAGES_IN_INTERVAL &&
+        timeSinceFlush < THROTTLE_UPDATES) {
+      this._outputTimeout =
+        this.chromeWindow.setTimeout(this._flushMessageQueue.bind(this),
+                                     OUTPUT_INTERVAL);
+      return;
     }
 
     // Determine how many messages we can display now.
-    let toDisplay = Math.min(this._outputQueue.length,
-                             MESSAGES_IN_INTERVAL -
-                             this._messagesDisplayedInInterval);
-
-    if (!toDisplay) {
-      if (!this._outputTimeout && this._outputQueue.length > 0) {
-        this._outputTimeout =
-          this.chromeWindow.setTimeout(function() {
-            delete this._outputTimeout;
-            this._flushMessageQueue();
-          }.bind(this), OUTPUT_INTERVAL);
-      }
+    let toDisplay = Math.min(this._outputQueue.length, MESSAGES_IN_INTERVAL);
+    if (toDisplay < 1) {
+      this._outputTimeout = null;
       return;
     }
 
@@ -2552,6 +2630,7 @@ HeadsUpDisplay.prototype = {
 
     let batch = this._outputQueue.splice(0, toDisplay);
     if (!batch.length) {
+      this._outputTimeout = null;
       return;
     }
 
@@ -2564,21 +2643,18 @@ HeadsUpDisplay.prototype = {
 
     // Output the current batch of messages.
     for (let item of batch) {
-      if (this._outputMessageFromQueue(hudIdSupportsString, item)) {
-        lastVisibleNode = item[0];
+      let node = this._outputMessageFromQueue(hudIdSupportsString, item);
+      if (node) {
+        lastVisibleNode = node;
       }
     }
-
-    // Keep track of how many messages we displayed, so we do not display too
-    // many at once.
-    this._messagesDisplayedInInterval += batch.length;
 
     let oldScrollHeight = 0;
 
     // Prune messages if needed. We do not do this for every flush call to
     // improve performance.
     let removedNodes = 0;
-    if (shouldPrune || !(this._outputQueue.length % 20)) {
+    if (shouldPrune || !this._outputQueue.length) {
       oldScrollHeight = scrollBox.scrollHeight;
 
       let categories = Object.keys(this._pruneCategoriesQueue);
@@ -2611,12 +2687,13 @@ HeadsUpDisplay.prototype = {
     }
 
     // If the queue is not empty, schedule another flush.
-    if (!this._outputTimeout && this._outputQueue.length > 0) {
+    if (this._outputQueue.length > 0) {
       this._outputTimeout =
-        this.chromeWindow.setTimeout(function() {
-          delete this._outputTimeout;
-          this._flushMessageQueue();
-        }.bind(this), OUTPUT_INTERVAL);
+        this.chromeWindow.setTimeout(this._flushMessageQueue.bind(this),
+                                     OUTPUT_INTERVAL);
+    }
+    else {
+      this._outputTimeout = null;
     }
 
     this._lastOutputFlush = Date.now();
@@ -2630,13 +2707,26 @@ HeadsUpDisplay.prototype = {
    *        The HUD ID as an nsISupportsString.
    * @param array aItem
    *        An item from the output queue - this item represents a message.
-   * @return boolean
-   *         True if the message is visible, false otherwise.
+   * @return nsIDOMElement|undefined
+   *         The DOM element of the message if the message is visible, undefined
+   *         otherwise.
    */
   _outputMessageFromQueue:
   function HUD__outputMessageFromQueue(aHudIdSupportsString, aItem)
   {
-    let [node, afterNode] = aItem;
+    let [category, methodOrNode, args] = aItem;
+
+    let node = typeof methodOrNode == "function" ?
+               methodOrNode.apply(this, args || []) :
+               methodOrNode;
+    if (!node) {
+      return;
+    }
+
+    let afterNode = node._outputAfterNode;
+    if (afterNode) {
+      delete node._outputAfterNode;
+    }
 
     let isFiltered = ConsoleUtils.filterMessageNode(node, this.hudId);
 
@@ -2647,23 +2737,33 @@ HeadsUpDisplay.prototype = {
     }
 
     if (!isRepeated &&
+        !node.classList.contains("webconsole-msg-network") &&
         (node.classList.contains("webconsole-msg-console") ||
          node.classList.contains("webconsole-msg-exception") ||
          node.classList.contains("webconsole-msg-error"))) {
       isRepeated = ConsoleUtils.filterRepeatedConsole(node, this.outputNode);
     }
 
+    let lastVisible = !isRepeated && !isFiltered;
     if (!isRepeated) {
       this.outputNode.insertBefore(node,
                                    afterNode ? afterNode.nextSibling : null);
       this._pruneCategoriesQueue[node.category] = true;
+      if (afterNode) {
+        lastVisible = this.outputNode.lastChild == node;
+      }
+    }
+
+    if (node._onOutput) {
+      node._onOutput();
+      delete node._onOutput;
     }
 
     let nodeID = node.getAttribute("id");
     Services.obs.notifyObservers(aHudIdSupportsString,
                                  "web-console-message-created", nodeID);
 
-    return !isRepeated && !isFiltered;
+    return lastVisible ? node : null;
   },
 
   /**
@@ -2677,8 +2777,7 @@ HeadsUpDisplay.prototype = {
 
     // Group the messages per category.
     this._outputQueue.forEach(function(aItem, aIndex) {
-      let [node] = aItem;
-      let category = node.category;
+      let [category] = aItem;
       if (!(category in nodes)) {
         nodes[category] = [];
       }
@@ -2713,7 +2812,31 @@ HeadsUpDisplay.prototype = {
    */
   _pruneItemFromQueue: function HUD__pruneItemFromQueue(aItem)
   {
-    this.removeOutputMessage(aItem[0]);
+    let [category, methodOrNode, args] = aItem;
+    if (typeof methodOrNode != "function" &&
+        methodOrNode._evalCacheId && !methodOrNode._panelOpen) {
+      this.jsterm.clearObjectCache(methodOrNode._evalCacheId);
+    }
+
+    if (category == CATEGORY_NETWORK) {
+      let connectionId = null;
+      if (methodOrNode == this.logNetActivity) {
+        connectionId = args[0];
+      }
+      else if (typeof methodOrNode != "function") {
+        connectionId = methodOrNode._connectionId;
+      }
+      if (connectionId && connectionId in this._networkRequests) {
+        delete this._networkRequests[connectionId];
+      }
+    }
+    else if (category == CATEGORY_WEBDEV &&
+             methodOrNode == this.logConsoleAPIMessage) {
+      let level = args[0].apiMessage.level;
+      if (level == "dir") {
+        this.jsterm.clearObjectCache(args[0].objectsCacheId);
+      }
+    }
   },
 
   /**
@@ -3159,8 +3282,8 @@ JSTerm.prototype = {
                                               aSeverity, aOutputMessage,
                                               this.hudId, null, null, null,
                                               null, aTimestamp);
-
-    ConsoleUtils.outputMessageNode(node, this.hudId, aNodeAfter);
+    node._outputAfterNode = aNodeAfter;
+    this.hud.outputMessage(aCategory, node);
     return node;
   },
 
@@ -4283,7 +4406,8 @@ ConsoleUtils = {
     let lastMessage = aOutput.lastChild;
 
     // childNodes[2] is the description element
-    if (lastMessage && !aNode.classList.contains("webconsole-msg-inspector") &&
+    if (lastMessage && lastMessage.childNodes[2] &&
+        !aNode.classList.contains("webconsole-msg-inspector") &&
         aNode.childNodes[2].textContent ==
         lastMessage.childNodes[2].textContent) {
       this.mergeFilteredMessageNode(lastMessage, aNode);
@@ -4291,23 +4415,6 @@ ConsoleUtils = {
     }
 
     return false;
-  },
-
-  /**
-   * Filters a node appropriately, then sends it to the output, regrouping and
-   * pruning output as necessary.
-   *
-   * @param nsIDOMNode aNode
-   *        The message node to send to the output.
-   * @param string aHUDId
-   *        The ID of the HUD in which to insert this node.
-   * @param nsIDOMNode [aNodeAfter]
-   *        Insert the node after the given aNodeAfter (optional).
-   */
-  outputMessageNode:
-  function ConsoleUtils_outputMessageNode(aNode, aHUDId, aNodeAfter) {
-    let hud = HUDService.getHudReferenceById(aHUDId);
-    hud.outputMessageNode(aNode, aNodeAfter);
   },
 
   /**

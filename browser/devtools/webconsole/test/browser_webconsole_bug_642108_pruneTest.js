@@ -15,7 +15,17 @@ const SEVERITY_WARNING = 1;
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("DOMContentLoaded", testCSSPruning, false);
+  browser.addEventListener("load", function onLoad(){
+    browser.removeEventListener("load", onLoad, false);
+
+    Services.prefs.setIntPref("devtools.hud.loglimit.cssparser", LOG_LIMIT);
+
+    registerCleanupFunction(function() {
+      Services.prefs.clearUserPref("devtools.hud.loglimit.cssparser");
+    });
+
+    openConsole(null, testCSSPruning);
+  }, true);
 }
 
 function populateConsoleRepeats(aHudRef) {
@@ -27,7 +37,7 @@ function populateConsoleRepeats(aHudRef) {
                                               SEVERITY_WARNING,
                                               "css log x",
                                               aHudRef.hudId);
-    ConsoleUtils.outputMessageNode(node, aHudRef.hudId);
+   aHudRef.outputMessage(CATEGORY_CSS, node);
   }
 }
 
@@ -41,31 +51,40 @@ function populateConsole(aHudRef) {
                                               SEVERITY_WARNING,
                                               "css log " + i,
                                               aHudRef.hudId);
-    ConsoleUtils.outputMessageNode(node, aHudRef.hudId);
+    aHudRef.outputMessage(CATEGORY_CSS, node);
   }
 }
 
-function testCSSPruning() {
-  let prefBranch = Services.prefs.getBranch("devtools.hud.loglimit.");
-  prefBranch.setIntPref("cssparser", LOG_LIMIT);
-
-  browser.removeEventListener("DOMContentLoaded",testCSSPruning, false);
-
-  openConsole();
-  let hudRef = HUDService.getHudByWindow(content);
-
+function testCSSPruning(hudRef) {
   populateConsoleRepeats(hudRef);
-  ok(hudRef.cssNodes["css log x"], "repeated nodes in cssNodes");
 
-  populateConsole(hudRef);
+  let waitForNoRepeatedNodes = {
+    name:  "number of nodes is LOG_LIMIT",
+    validatorFn: function()
+    {
+      return countMessageNodes() == LOG_LIMIT;
+    },
+    successFn: function()
+    {
+      ok(!hudRef.cssNodes["css log x"], "repeated nodes pruned from cssNodes");
+      finishTest();
+    },
+    failureFn: finishTest,
+  };
 
-  is(countMessageNodes(), LOG_LIMIT, "number of nodes is LOG_LIMIT");
-  ok(!hudRef.cssNodes["css log x"], "repeated nodes pruned from cssNodes");
-
-  prefBranch.clearUserPref("loglimit");
-  prefBranch = null;
-
-  finishTest();
+  waitForSuccess({
+    name: "repeated nodes in cssNodes",
+    validatorFn: function()
+    {
+      return hudRef.cssNodes["css log x"];
+    },
+    successFn: function()
+    {
+      populateConsole(hudRef);
+      waitForSuccess(waitForNoRepeatedNodes);
+    },
+    failureFn: finishTest,
+  });
 }
 
 function countMessageNodes() {

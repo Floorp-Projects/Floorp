@@ -116,7 +116,19 @@ function testFormSubmission()
   requestCallback = function() {
     ok(lastRequest, "testFormSubmission() was logged");
     is(lastRequest.request.method, "POST", "Method is correct");
-    executeSoon(testLiveFilteringOnSearchStrings);
+    waitForSuccess({
+      name: "all network request displayed",
+      validatorFn: function() {
+        return hud.outputNode.querySelectorAll(".webconsole-msg-network")
+               .length == 5;
+      },
+      successFn: testLiveFilteringOnSearchStrings,
+      failureFn: function() {
+        let nodes = hud.outputNode.querySelectorAll(".webconsole-msg-network");
+        info("nodes: " + nodes.length + "\n");
+        finishTest();
+      },
+    });
   };
 
   let form = content.document.querySelector("form");
