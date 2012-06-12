@@ -150,6 +150,9 @@ class IDLObject(object):
     def isType(self):
         return False
 
+    def isDictionary(self):
+        return False;
+
     def getUserData(self, key, default):
         return self.userData.get(key, default)
 
@@ -602,6 +605,9 @@ class IDLDictionary(IDLObjectWithScope):
 
     def __str__(self):
         return "Dictionary '%s'" % self.identifier.name
+
+    def isDictionary(self):
+        return True;
 
     def finish(self, scope):
         if self._finished:
