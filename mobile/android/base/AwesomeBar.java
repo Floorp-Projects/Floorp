@@ -75,9 +75,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     private SuggestClient mSuggestClient;
     private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
 
-    private static String sSuggestEngine;
-    private static String sSuggestTemplate;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -230,14 +227,8 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.bookmarks_list));
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
 
-        loadSuggestClient();
-
         GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
-    }
-
-    private void loadSuggestClient() {
-        mSuggestClient = new SuggestClient(GeckoApp.mAppContext, sSuggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
     }
 
     public void handleMessage(String event, JSONObject message) {
@@ -245,11 +236,8 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             if (event.equals("SearchEngines:Data")) {
                 final String suggestEngine = message.optString("suggestEngine");
                 final String suggestTemplate = message.optString("suggestTemplate");
-                if (!TextUtils.equals(suggestTemplate, sSuggestTemplate)) {
-                    sSuggestEngine = suggestEngine;
-                    sSuggestTemplate = suggestTemplate;
-                    loadSuggestClient();
-                }
+                if (suggestTemplate != null)
+                    mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
                 mAwesomeTabs.setSearchEngines(suggestEngine, message.getJSONArray("searchEngines"));
             }
         } catch (Exception e) {
