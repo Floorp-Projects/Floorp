@@ -18,7 +18,7 @@ interface nsINode;
  * @version 1.0
  */
 
-[scriptable, uuid(dd40d5b8-1fe1-487f-b66e-28f4b837024f)]
+[scriptable, uuid(12cf5a4d-fffb-4f2f-9cec-c65195661d76)]
 interface nsISelection : nsISupports
 {
     /**
@@ -135,8 +135,8 @@ interface nsISelection : nsISupports
     /**
      * Returns the whole selection into a plain text string.
      */
-    wstring toString();
-    
+    DOMString toString();
+
     /**
      * Modifies the selection.  Note that the parameters are case-insensitive.
      *

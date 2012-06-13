@@ -840,7 +840,7 @@ DoIncDec(JSContext *cx, JSScript *script, jsbytecode *pc, const Value &v, Value 
     }
 
     double d;
-    if (!ToNumber(cx, *slot, &d))
+    if (!ToNumber(cx, v, &d))
         return false;
 
     double sum = d + (cs.format & JOF_INC ? 1 : -1);
@@ -1037,27 +1037,6 @@ TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const FrameRe
     }
 #endif
 }
-
-class SpreadContext {
-public:
-    JSContext *cx;
-    RootedObject arr;
-    int32_t *count;
-    SpreadContext(JSContext *cx, JSObject *array, int32_t *count)
-        : cx(cx), arr(cx, array), count(count) {
-        JS_ASSERT(array->isArray());
-    }
-    SpreadContext(SpreadContext &scx)
-         : cx(cx), arr(scx.cx, scx.arr), count(scx.count) {}
-    bool operator ()(JSContext *cx, const Value &item) {
-        if (*count == INT32_MAX) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_SPREAD_TOO_LARGE);
-            return false;
-        }
-        return arr->defineElement(cx, (*count)++, item, NULL, NULL, JSPROP_ENUMERATE);
-    }
-};
 
 JS_NEVER_INLINE InterpretStatus
 js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
@@ -3298,9 +3277,19 @@ END_CASE(JSOP_INITELEM)
 BEGIN_CASE(JSOP_SPREAD)
 {
     int32_t count = regs.sp[-2].toInt32();
-    SpreadContext scx(cx, &regs.sp[-3].toObject(), &count);
+    RootedObject arr(cx, &regs.sp[-3].toObject());
     const Value iterable = regs.sp[-1];
-    if (!ForOf(cx, iterable, scx))
+    ForOfIterator iter(cx, iterable);
+    while (iter.next()) {
+        if (count == INT32_MAX) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_SPREAD_TOO_LARGE);
+            goto error;
+        }
+        if (!arr->defineElement(cx, count++, iter.value(), NULL, NULL, JSPROP_ENUMERATE))
+            goto error;
+    }
+    if (!iter.close())
         goto error;
     regs.sp[-2].setInt32(count);
     regs.sp--;

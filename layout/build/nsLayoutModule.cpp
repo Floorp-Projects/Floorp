@@ -394,10 +394,7 @@ nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
 nsresult NS_NewDomSelection(nsISelection** aResult);
 nsresult NS_NewContentViewer(nsIContentViewer** aResult);
-nsresult NS_NewContentIterator(nsIContentIterator** aResult);
-nsresult NS_NewPreContentIterator(nsIContentIterator** aResult);
 nsresult NS_NewGenRegularIterator(nsIContentIterator** aResult);
-nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
 nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult);
 nsresult NS_NewHTMLCopyTextEncoder(nsIDocumentEncoder** aResult);
@@ -425,6 +422,23 @@ ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
     NS_RELEASE(inst);                                     \
   }                                                       \
   return rv;                                              \
+}
+
+// As above, but expects
+//   already_AddRefed<nsIFoo> NS_NewFoo();
+// instead of
+//   nsresult NS_NewFoo(nsIFoo**);
+#define MAKE_CTOR2(ctor_, iface_, func_)                  \
+static nsresult                                           \
+ctor_(nsISupports* aOuter, REFNSIID aIID, void** aResult) \
+{                                                         \
+  *aResult = nsnull;                                      \
+  if (aOuter) {                                           \
+    return NS_ERROR_NO_AGGREGATION;                       \
+  }                                                       \
+  nsCOMPtr<iface_> inst = func_();                        \
+  inst.forget(aResult);                                   \
+  return NS_OK;                                           \
 }
 
 #ifdef DEBUG
@@ -460,9 +474,9 @@ MAKE_CTOR(CreateXMLDocument,              nsIDocument,                 NS_NewXML
 MAKE_CTOR(CreateSVGDocument,              nsIDocument,                 NS_NewSVGDocument)
 MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewImageDocument)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
-MAKE_CTOR(CreateContentIterator,          nsIContentIterator,          NS_NewContentIterator)
-MAKE_CTOR(CreatePreContentIterator,       nsIContentIterator,          NS_NewPreContentIterator)
-MAKE_CTOR(CreateSubtreeIterator,          nsIContentIterator,          NS_NewContentSubtreeIterator)
+MAKE_CTOR2(CreateContentIterator,         nsIContentIterator,          NS_NewContentIterator)
+MAKE_CTOR2(CreatePreContentIterator,      nsIContentIterator,          NS_NewPreContentIterator)
+MAKE_CTOR2(CreateSubtreeIterator,         nsIContentIterator,          NS_NewContentSubtreeIterator)
 // CreateHTMLImgElement, see below
 // CreateHTMLOptionElement, see below
 // CreateHTMLAudioElement, see below

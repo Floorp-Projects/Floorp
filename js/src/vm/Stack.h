@@ -997,8 +997,7 @@ class StackFrame
         NoPostBarrier = false
     };
     template <class T, class U, TriggerPostBarriers doPostBarrier>
-    void copyFrameAndValues(JSContext *cx, StackFrame *fp, T *vp,
-                            StackFrame *otherfp, U *othervp, Value *othersp);
+    void copyFrameAndValues(JSContext *cx, T *vp, StackFrame *otherfp, U *othervp, Value *othersp);
 
     JSGenerator *maybeSuspendedGenerator(JSRuntime *rt);
 

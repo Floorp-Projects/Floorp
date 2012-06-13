@@ -2950,7 +2950,7 @@ ReleaseObservedTypes(JSRuntime *rt)
 {
     bool releaseTypes = false;
     int64_t now = PRMJ_Now();
-    if (now >= rt->gcJitReleaseTime) {
+    if (rt->gcZeal() || now >= rt->gcJitReleaseTime) {
         releaseTypes = true;
         rt->gcJitReleaseTime = now + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
     }
@@ -3083,8 +3083,9 @@ BeginMarkPhase(JSRuntime *rt)
     gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_MARK);
     gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_MARK_ROOTS);
 
-    for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
-        r.front()->bitmap.clear();
+    /* Unmark everything in the compartments being collected. */
+    for (GCCompartmentsIter c(rt); !c.done(); c.next())
+        c->arenas.unmarkAll();
 
     MarkRuntime(gcmarker);
 }
@@ -3145,13 +3146,38 @@ EndMarkPhase(JSRuntime *rt)
         ValidateIncrementalMarking(rt);
 #endif
 
-#ifdef DEBUG
-    /* Make sure that we didn't mark an object in another compartment */
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        JS_ASSERT_IF(!c->isCollecting() && c != rt->atomsCompartment,
-                     c->arenas.checkArenaListAllUnmarked());
+    /*
+     * Having black->gray edges violates our promise to the cycle
+     * collector. This can happen if we're collecting a compartment and it has
+     * an edge to an uncollected compartment: it's possible that the source and
+     * destination of the cross-compartment edge should be gray, but the source
+     * was marked black by the conservative scanner.
+     */
+    bool foundBlackGray = false;
+    for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+        for (WrapperMap::Enum e(c->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+            Cell *dst = e.front().key.wrapped;
+            Cell *src = ToMarkable(e.front().value);
+            JS_ASSERT(src->compartment() == c.get());
+            if (IsCellMarked(&src) && !src->isMarked(GRAY) && dst->isMarked(GRAY)) {
+                JS_ASSERT(!dst->compartment()->isCollecting());
+                foundBlackGray = true;
+            }
+        }
     }
-#endif
+
+    /*
+     * To avoid the black->gray edge, we completely clear the mark bits of all
+     * uncollected compartments. This is safe, although it may prevent the
+     * cycle collector from collecting some dead objects.
+     */
+    if (foundBlackGray) {
+        JS_ASSERT(false);
+        for (CompartmentsIter c(rt); !c.done(); c.next()) {
+            if (!c->isCollecting())
+                c->arenas.unmarkAll();
+        }
+    }
 
     rt->gcMarker.stop();
 

@@ -1,0 +1,111 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717103
+-->
+<head>
+  <title>Test for the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+
+
+function verifyAndDelete(prefix, files, e) {
+
+  if (e.target.result == null) {
+    ok(files.length == 0, "when the enumeration is done, we shouldn't have any files in this array")
+    dump("We still have length = " + files.length + "\n");
+    dump(files + "\n");
+    devicestorage_cleanup();
+    return;
+  }
+
+  var filename = e.target.result.name;
+
+  var index = files.indexOf(filename);
+  ok(index > -1, "filename should be in the enumeration : " + e.target.result.name);
+  if (index == -1)
+    return;
+
+  files.remove(index);
+
+  // clean up
+  var storage = navigator.getDeviceStorage("profile");
+  var cleanup = storage[0].delete(prefix + "/" + filename);
+  cleanup.onsuccess = function(e) {}
+}
+
+function addFiles(prefix, files, date, callback) {
+
+  const Cc = SpecialPowers.wrap(Components).classes;
+  const Ci = Components.interfaces;
+
+  var directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+
+  for (var i=0; i<files.length; i++) {
+    var f = directoryService.get("ProfD", Components.interfaces.nsIFile);
+    var path = prefix + '/' + files[i];
+    path.split("/").forEach(function(p) {
+      f.appendRelativePath(p);
+    });
+    f.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+    f.lastModifiedTime = date;
+  }
+  callback();
+}
+
+
+devicestorage_setup();
+
+var prefix = "devicestorage/" + randomFilename(12)
+
+var oldFiles = ["a", "b", "c"];
+var newFiles = ["d", "e", "f"];
+
+// 157795200 is a long long time ago.
+addFiles(prefix, oldFiles, 157795200, addNewFiles);
+
+function enumerateNew() {
+
+  var storage = navigator.getDeviceStorage("profile");
+  ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+
+// 836031600 is a long time ago
+  var cursor = storage[0].enumerate(prefix, {"since": new Date(836031600)});
+  cursor.onsuccess = function(e) {
+    verifyAndDelete(prefix, newFiles, e);
+    if (e.target.result) {
+      e.target.continue();
+    }
+  }
+
+  cursor.onerror = function (e) {
+    ok(false, "handleError was called : " + e.target.error.name);
+    devicestorage_cleanup();
+  }
+}
+
+function addNewFiles() {
+  addFiles(prefix, newFiles, Date.now(), enumerateNew);
+}
+
+
+</script>
+</pre>
+</body>
+</html>
+

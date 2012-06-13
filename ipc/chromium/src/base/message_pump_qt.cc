@@ -4,7 +4,8 @@
 
 #include <qabstracteventdispatcher.h>
 #include <qevent.h>
-#include <QApplication>
+#include <QCoreApplication>
+#include <QThread>
 #include <qtimer.h>
 
 #include "base/message_pump_qt.h"
@@ -110,7 +111,7 @@ void MessagePumpForUI::Run(Delegate* delegate) {
     }
 
     QAbstractEventDispatcher* dispatcher =
-      QAbstractEventDispatcher::instance(qApp->thread());
+      QAbstractEventDispatcher::instance(QThread::currentThread());
     // An assertion seems too much here, as during startup,
     // the dispatcher might not be ready yet.
     if (!dispatcher) {

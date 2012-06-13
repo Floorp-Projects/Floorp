@@ -77,6 +77,11 @@
       <toolbarseparator/>
       <toolbarbutton id="Console:clear" oncommand="clearConsole();"
                      label="&clear.label;" accesskey="&clear.accesskey;"/>
+
+      <vbox valign="middle" align="end" flex="1">
+        <textbox placeholder="&filter.label;" accesskey="&filter.accesskey;" type="search" id="Filter" 
+                 oncommand="changeFilter()" oninput="changeFilter()"/>
+      </vbox>
     </toolbar>
   
     <toolbar class="chromeclass-toolbar" id="ToolbarEval" align="center" nowindowdrag="true">

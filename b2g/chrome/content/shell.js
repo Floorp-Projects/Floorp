@@ -127,7 +127,7 @@ var shell = {
     try {
       messageManager.loadFrameScript(webapiUrl, true);
     } catch (e) {
-      dump('Error loading ' + webapiUrl + ' as a frame script: ' + e + '\n');
+      dump('shell.js: Error loading ' + webapiUrl + ' as a frame script: ' + e + '\n');
     }
 
     CustomEventManager.init();
@@ -191,13 +191,13 @@ var shell = {
     audioManager.masterVolume = volume;
   },
 
-  forwardKeyToHomescreen: function shell_forwardKeyToHomescreen(evt) {
+  forwardKeyToContent: function shell_forwardKeyToContent(evt) {
     let generatedEvent = content.document.createEvent('KeyboardEvent');
     generatedEvent.initKeyEvent(evt.type, true, true, evt.view, evt.ctrlKey,
                                 evt.altKey, evt.shiftKey, evt.metaKey,
                                 evt.keyCode, evt.charCode);
 
-    content.dispatchEvent(generatedEvent);
+    content.document.documentElement.dispatchEvent(generatedEvent);
   },
 
   handleEvent: function shell_handleEvent(evt) {
@@ -205,30 +205,9 @@ var shell = {
       case 'keydown':
       case 'keyup':
       case 'keypress':
-        // If the home key is pressed, always forward it to the homescreen
-        if (evt.eventPhase == evt.CAPTURING_PHASE) {
-          if (evt.keyCode == evt.VK_DOM_HOME) {
-            window.setTimeout(this.forwardKeyToHomescreen, 0, evt);
-            evt.preventDefault();
-            evt.stopPropagation();
-          } 
-          return;
-        }
-
-        // If one of the other keys is used in an application and is
-        // cancelled via preventDefault, do nothing.
-        let homescreen = (evt.target.ownerDocument.defaultView == content);
-        if (!homescreen && evt.defaultPrevented)
-          return;
-
-        // If one of the other keys is used in an application and is
-        // not used forward it to the homescreen
-        if (!homescreen)
-          window.setTimeout(this.forwardKeyToHomescreen, 0, evt);
-
         // For debug purposes and because some of the APIs are not yet exposed
         // to the content, let's react on some of the keyup events.
-        if (evt.type == 'keyup') {
+        if (evt.type == 'keyup' && evt.eventPhase == evt.BUBBLING_PHASE) {
           switch (evt.keyCode) {
             case evt.DOM_VK_F5:
               if (Services.prefs.getBoolPref('b2g.keys.search.enabled'))
@@ -243,6 +222,16 @@ var shell = {
               this.changeVolume(1);
               break;
           }
+        }
+
+        // Redirect the HOME key to System app and stop the applications from
+        // handling it.
+        let rootContentEvt = (evt.target.ownerDocument.defaultView == content);
+        if (!rootContentEvt && evt.eventPhase == evt.CAPTURING_PHASE &&
+            evt.keyCode == evt.DOM_VK_HOME) {
+          this.forwardKeyToContent(evt);
+          evt.preventDefault();
+          evt.stopImmediatePropagation();
         }
         break;
 
@@ -340,16 +329,6 @@ nsBrowserAccess.prototype = {
     return contentWindow == window;
   }
 };
-
-// Pipe `console` log messages to the nsIConsoleService which writes them
-// to logcat.
-Services.obs.addObserver(function onConsoleAPILogEvent(subject, topic, data) {
-  let message = subject.wrappedJSObject;
-  let prefix = "Content JS " + message.level.toUpperCase() +
-               " at " + message.filename + ":" + message.lineNumber +
-               " in " + (message.functionName || "anonymous") + ": ";
-  Services.console.logStringMessage(prefix + Array.join(message.arguments, " "));
-}, "console-api-log-event", false);
 
 (function Repl() {
   if (!Services.prefs.getBoolPref('b2g.remote-js.enabled')) {
@@ -517,7 +496,7 @@ function startDebugger() {
     DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');
   }
 
-  let port = Services.prefs.getIntPref('devtools.debugger.port') || 6000;
+  let port = Services.prefs.getIntPref('devtools.debugger.remote-port') || 6000;
   try {
     DebuggerServer.openListener(port, false);
   } catch (e) {
@@ -526,7 +505,7 @@ function startDebugger() {
 }
 
 window.addEventListener('ContentStart', function(evt) {
-  if (Services.prefs.getBoolPref('devtools.debugger.enabled')) {
+  if (Services.prefs.getBoolPref('devtools.debugger.remote-enabled')) {
     startDebugger();
   }
 });

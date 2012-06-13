@@ -5,10 +5,12 @@
 '''Given a list of object files and library names, prints a library
 descriptor to standard output'''
 
+from __future__ import with_statement
 import sys
 import os
 import expandlibs_config as conf
-from expandlibs import LibDescriptor, isObject
+from expandlibs import LibDescriptor, isObject, ensureParentDir, ExpandLibsDeps
+from optparse import OptionParser
 
 def generate(args):
     desc = LibDescriptor()
@@ -26,4 +28,20 @@ def generate(args):
     return desc
 
 if __name__ == '__main__':
-    print generate(sys.argv[1:])
+    parser = OptionParser()
+    parser.add_option("--depend", dest="depend", metavar="FILE",
+        help="generate dependencies for the given execution and store it in the given file")
+    parser.add_option("-o", dest="output", metavar="FILE",
+        help="send output to the given file")
+
+    (options, args) = parser.parse_args()
+    if not options.output:
+        raise Exception("Missing option: -o")
+
+    ensureParentDir(options.output)
+    with open(options.output, 'w') as outfile:
+        print >>outfile, generate(args)
+    if options.depend:
+        ensureParentDir(options.depend)
+        with open(options.depend, 'w') as depfile:
+            depfile.write("%s : %s\n" % (options.output, ' '.join(ExpandLibsDeps(args))))

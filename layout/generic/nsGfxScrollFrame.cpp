@@ -95,16 +95,6 @@ nsHTMLScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 NS_IMETHODIMP
-nsHTMLScrollFrame::Init(nsIContent* aContent,
-                        nsIFrame*   aParent,
-                        nsIFrame*   aPrevInFlow)
-{
-  nsresult rv = nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
-  mInner.Init();
-  return rv;
-}
-
-NS_IMETHODIMP
 nsHTMLScrollFrame::SetInitialChildList(ChildListID  aListID,
                                        nsFrameList& aChildList)
 {
@@ -1040,16 +1030,6 @@ nsXULScrollFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 NS_IMETHODIMP
-nsXULScrollFrame::Init(nsIContent* aContent,
-                       nsIFrame*   aParent,
-                       nsIFrame*   aPrevInFlow)
-{
-  nsresult rv = nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
-  mInner.Init();
-  return rv;
-}
-
-NS_IMETHODIMP
 nsXULScrollFrame::SetInitialChildList(ChildListID     aListID,
                                       nsFrameList&    aChildList)
 {
@@ -1643,14 +1623,6 @@ nsGfxScrollFrameInner::~nsGfxScrollFrameInner()
   }
 }
 
-void
-nsGfxScrollFrameInner::Init()
-{
-  if (mOuter->GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER) {
-    mOuter->AddStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
-  }
-}
-
 /*
  * Callback function from AsyncScroll, used in nsGfxScrollFrameInner::ScrollTo
  */
@@ -1816,12 +1788,6 @@ CanScrollWithBlitting(nsIFrame* aFrame)
         f->IsFrameOfType(nsIFrame::eSVG)) {
       return false;
     }
-#ifndef MOZ_ENABLE_MASK_LAYERS
-    nsIScrollableFrame* sf = do_QueryFrame(f);
-    if ((sf || f->IsFrameOfType(nsIFrame::eReplaced)) &&
-        nsLayoutUtils::HasNonZeroCorner(f->GetStyleBorder()->mBorderRadius))
-      return false;
-#endif
     if (nsLayoutUtils::IsPopup(f))
       break;
   }
@@ -2413,12 +2379,18 @@ nsGfxScrollFrameInner::GetScrollRangeForClamping() const
     return nsRect(nscoord_MIN/2, nscoord_MIN/2,
                   nscoord_MAX - nscoord_MIN/2, nscoord_MAX - nscoord_MIN/2);
   }
+  nsSize scrollPortSize = GetScrollPositionClampingScrollPortSize();
+  return GetScrollRange(scrollPortSize.width, scrollPortSize.height);
+}
+
+nsSize
+nsGfxScrollFrameInner::GetScrollPositionClampingScrollPortSize() const
+{
   nsIPresShell* presShell = mOuter->PresContext()->PresShell();
   if (mIsRoot && presShell->IsScrollPositionClampingScrollPortSizeSet()) {
-    nsSize size = presShell->GetScrollPositionClampingScrollPortSize();
-    return GetScrollRange(size.width, size.height);
+    return presShell->GetScrollPositionClampingScrollPortSize();
   }
-  return GetScrollRange();
+  return mScrollPort.Size();
 }
 
 static void

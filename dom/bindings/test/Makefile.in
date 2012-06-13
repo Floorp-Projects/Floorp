@@ -31,6 +31,7 @@ CPPSRCS := $(subst .webidl,Binding.cpp,$(test_webidl_files))
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/js/xpconnect/wrappers \
+  -I$(topsrcdir)/dom/bindings \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -43,6 +44,7 @@ bindinggen_dependencies := \
   ../Bindings.conf \
   ../Configuration.py \
   ../Codegen.py \
+  ../parser/WebIDL.py \
   ../ParserResults.pkl \
   ../Makefile \
   $(GLOBAL_DEPS) \
@@ -64,3 +66,7 @@ _TEST_FILES = \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+check::
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON_PATH) $(PLY_INCLUDE) \
+	  $(srcdir)/../parser/runtests.py

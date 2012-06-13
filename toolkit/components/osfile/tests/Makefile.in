@@ -1,0 +1,11 @@
+DEPTH            = ../../../..
+topsrcdir        = @top_srcdir@
+srcdir           = @srcdir@
+VPATH            = @srcdir@
+relativesrcdir   = toolkit/components/osfile/tests
+
+MODULE           = test_osfile
+DIRS = mochi
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk

@@ -45,6 +45,11 @@ class B2GOptions(MochitestOptions):
                     help = "Architecture of emulator to use: x86 or arm")
         defaults["emulator"] = None
 
+        self.add_option("--no-window", action="store_true",
+                    dest = "noWindow",
+                    help = "Pass --no-window to the emulator")
+        defaults["noWindow"] = False
+
         self.add_option("--adbpath", action="store",
                     type = "string", dest = "adbPath",
                     help = "path to adb")
@@ -385,6 +390,8 @@ def main():
     if options.emulator:
         kwargs['emulator'] = options.emulator
         auto.setEmulator(True)
+        if options.noWindow:
+            kwargs['noWindow'] = True
     if options.b2gPath:
         kwargs['homedir'] = options.b2gPath
     if options.marionette:

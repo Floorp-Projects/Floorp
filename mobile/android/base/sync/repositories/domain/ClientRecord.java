@@ -62,6 +62,9 @@ public class ClientRecord extends Record {
     putPayload(payload, "id",   this.guid);
     putPayload(payload, "name", this.name);
     putPayload(payload, "type", this.type);
+    if (this.commands != null) {
+      payload.put("commands",  this.commands);
+    }
   }
 
   @Override

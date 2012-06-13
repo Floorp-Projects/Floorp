@@ -7,6 +7,11 @@ interface nsIDOMBlob;
 interface nsIDOMDOMRequest;
 interface nsIDOMDeviceStorageCursor;
 
+dictionary DeviceStorageEnumerationParameters
+{
+  jsval since;
+};
+
 [scriptable, uuid(05C0D0C8-D698-4CCD-899C-7198A33BD7EC)]
 interface nsIDOMDeviceStorage : nsISupports
 {
@@ -28,7 +33,9 @@ interface nsIDOMDeviceStorage : nsISupports
     [implicit_jscontext]
     nsIDOMDOMRequest delete(in jsval aName);
 
-    nsIDOMDeviceStorageCursor enumerate([optional] in DOMString directory);
+    [optional_argc, implicit_jscontext]
+    nsIDOMDeviceStorageCursor enumerate([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
 
-    nsIDOMDeviceStorageCursor enumerateEditable([optional] in DOMString directory);
+    [optional_argc, implicit_jscontext]
+    nsIDOMDeviceStorageCursor enumerateEditable([optional] in jsval aName, /* DeviceStorageEnumerationParameters */ [optional] in jsval options);
 };

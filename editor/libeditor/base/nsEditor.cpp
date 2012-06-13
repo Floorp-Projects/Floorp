@@ -39,7 +39,6 @@
 #include "nsCaret.h"
 #include "nsIWidget.h"
 #include "nsIPlaintextEditor.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsGUIEvent.h"
 
 #include "nsIFrame.h"  // Needed by IME code
@@ -328,7 +327,7 @@ nsEditor::InstallEventListeners()
                  NS_ERROR_NOT_INITIALIZED);
 
   // Initialize the event target.
-  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(GetRoot());
+  nsCOMPtr<nsIContent> rootContent = GetRoot();
   NS_ENSURE_TRUE(rootContent, NS_ERROR_NOT_AVAILABLE);
   mEventTarget = do_QueryInterface(rootContent->GetParent());
   NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_AVAILABLE);
@@ -598,8 +597,8 @@ nsEditor::GetSelection(nsISelection **aSelection)
   return selcon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);  // does an addref
 }
 
-nsTypedSelection*
-nsEditor::GetTypedSelection()
+Selection*
+nsEditor::GetSelection()
 {
   nsCOMPtr<nsISelection> sel;
   nsresult res = GetSelection(getter_AddRefs(sel));
@@ -1939,8 +1938,9 @@ NS_IMETHODIMP
 nsEditor::DumpContentTree()
 {
 #ifdef DEBUG
-  nsCOMPtr<nsIContent> root = do_QueryInterface(mRootElement);
-  if (root)  root->List(stdout);
+  if (mRootElement) {
+    mRootElement->List(stdout);
+  }
 #endif
   return NS_OK;
 }
@@ -2140,7 +2140,7 @@ nsEditor::GetPreferredIMEState(IMEState *aState)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(GetRoot());
+  nsCOMPtr<nsIContent> content = GetRoot();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
   nsIFrame* frame = content->GetPrimaryFrame();
@@ -5385,9 +5385,8 @@ nsEditor::IsModifiableNode(nsINode *aNode)
 nsKeyEvent*
 nsEditor::GetNativeKeyEvent(nsIDOMKeyEvent* aDOMKeyEvent)
 {
-  nsCOMPtr<nsIPrivateDOMEvent> privDOMEvent = do_QueryInterface(aDOMKeyEvent);
-  NS_ENSURE_TRUE(privDOMEvent, nsnull);
-  nsEvent* nativeEvent = privDOMEvent->GetInternalNSEvent();
+  NS_ENSURE_TRUE(aDOMKeyEvent, nsnull);
+  nsEvent* nativeEvent = aDOMKeyEvent->GetInternalNSEvent();
   NS_ENSURE_TRUE(nativeEvent, nsnull);
   NS_ENSURE_TRUE(nativeEvent->eventStructType == NS_KEY_EVENT, nsnull);
   return static_cast<nsKeyEvent*>(nativeEvent);

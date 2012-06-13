@@ -1758,6 +1758,26 @@ let RIL = {
   },
 
   /**
+   * Send USSD.
+   *
+   * @param ussd
+   *        String containing the USSD code.
+   *
+   */
+   sendUSSD: function sendUSSD(options) {
+     Buf.newParcel(REQUEST_SEND_USSD, options);
+     Buf.writeString(options.ussd);
+     Buf.sendParcel();
+   },
+
+  /**
+   * Cancel pending USSD.
+   */
+   cancelUSSD: function cancelUSSD(options) {
+     Buf.simpleRequest(REQUEST_CANCEL_USSD, options);
+   },
+
+  /**
    * Check a given number against the list of emergency numbers provided by the RIL.
    *
    * @param number
@@ -2943,8 +2963,22 @@ RIL[REQUEST_SIM_IO] = function REQUEST_SIM_IO(length, options) {
   }
   this._processICCIO(options);
 };
-RIL[REQUEST_SEND_USSD] = null;
-RIL[REQUEST_CANCEL_USSD] = null;
+RIL[REQUEST_SEND_USSD] = function REQUEST_SEND_USSD(length, options) {
+  if (DEBUG) {
+    debug("REQUEST_SEND_USSD " + JSON.stringify(options)); 
+  }
+  options.type = "sendussd";
+  options.success = options.rilRequestError == 0 ? true : false;
+  this.sendDOMMessage(options);
+};
+RIL[REQUEST_CANCEL_USSD] = function REQUEST_CANCEL_USSD(length, options) {
+  if (DEBUG) {
+    debug("REQUEST_CANCEL_USSD" + JSON.stringify(options));
+  }
+  options.type = "cancelussd";
+  options.success = options.rilRequestError == 0 ? true : false;
+  this.sendDOMMessage(options);
+};
 RIL[REQUEST_GET_CLIR] = null;
 RIL[REQUEST_SET_CLIR] = null;
 RIL[REQUEST_QUERY_CALL_FORWARD_STATUS] = null;
@@ -3234,9 +3268,18 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS
   let info = Buf.readUint32List();
   //TODO
 };
-RIL[UNSOLICITED_ON_USSD] = null;
-RIL[UNSOLICITED_ON_USSD_REQUEST] = null;
-
+RIL[UNSOLICITED_ON_USSD] = function UNSOLICITED_ON_USSD() {
+  let [typeCode, message] = Buf.readStringList();
+  if (DEBUG) {
+    debug("On USSD. Type Code: " + typeCode + " Message: " + message);
+  }
+  // Empty message should not be progressed to the DOM.
+  if (!message || message == "") {
+    return;
+  }
+  this.sendDOMMessage({type: "ussdreceived",
+                       message: message});
+};
 RIL[UNSOLICITED_NITZ_TIME_RECEIVED] = function UNSOLICITED_NITZ_TIME_RECEIVED() {
   let dateString = Buf.readString();
 
