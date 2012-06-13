@@ -485,8 +485,6 @@ nsSVGUtils::GetNearestViewportElement(nsIContent *aContent)
 static gfxMatrix
 GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
 {
-  nsIDocument* currentDoc = aElement->GetCurrentDoc();
-
   gfxMatrix matrix = aElement->PrependLocalTransformsTo(gfxMatrix(),
     aHaveRecursed ? nsSVGElement::eAllTransforms : nsSVGElement::eUserSpaceToParent);
   nsSVGElement *element = aElement;
@@ -511,18 +509,30 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
     // didn't find a nearestViewportElement
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }
+  if (element->Tag() != nsGkAtoms::svg) {
+    // Not a valid SVG fragment
+    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+  }
+  if (element == aElement && !aHaveRecursed) {
+    // We get here when getScreenCTM() is called on an outer-<svg>.
+    // Consistency with other elements would have us include only the
+    // eFromUserSpace transforms, but we include the eAllTransforms
+    // transforms in this case since that's what we've been doing for
+    // a while, and it keeps us consistent with WebKit and Opera (if not
+    // really with the ambiguous spec).
+    matrix = aElement->PrependLocalTransformsTo(gfxMatrix());
+  }
   if (!ancestor || !ancestor->IsElement()) {
     return matrix;
   }
   if (ancestor->IsSVG()) {
-    if (element->Tag() != nsGkAtoms::svg) {
-      return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
-    }
     return
       matrix * GetCTMInternal(static_cast<nsSVGElement*>(ancestor), true, true);
   }
+
   // XXX this does not take into account CSS transform, or that the non-SVG
   // content that we've hit may itself be inside an SVG foreignObject higher up
+  nsIDocument* currentDoc = aElement->GetCurrentDoc();
   float x = 0.0f, y = 0.0f;
   if (currentDoc && element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
     nsIPresShell *presShell = currentDoc->GetShell();
