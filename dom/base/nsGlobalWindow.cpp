@@ -9327,8 +9327,6 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     PR_REMOVE_LINK(timeout);
 
     if (needsReinsertion) {
-      NS_ASSERTION(timeout->mTimer,
-                   "rescheduling interval timeout without a timer!");
       // Insert interval timeout onto list sorted in deadline order.
       // AddRefs timeout.
       InsertTimeoutIntoList(timeout);
