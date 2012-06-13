@@ -9,7 +9,13 @@
 function startInstall() {
   var whiteUrl = "https://example.org/";
 
-  Object.defineProperty(window, "location", { value : { href : whiteUrl }	});
+  try {
+    Object.defineProperty(window, "location", { value : { href : whiteUrl }	});
+    throw new Error("Object.defineProperty(window, 'location', ...) should have thrown");
+  } catch (exc) {
+    if (!(exc instanceof TypeError))
+      throw exc;
+  }
   Object.defineProperty(document, "documentURIObject", { spec : { href : whiteUrl }	});
 
   InstallTrigger.install({
