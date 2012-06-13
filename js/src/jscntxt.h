@@ -685,12 +685,10 @@ struct JSRuntime : js::RuntimeFriendFields
     /* Client opaque pointers */
     void                *data;
 
-#ifdef JS_THREADSAFE
     /* These combine to interlock the GC and new requests. */
     PRLock              *gcLock;
 
     js::GCHelperThread  gcHelperThread;
-#endif /* JS_THREADSAFE */
 
   private:
     js::FreeOp          defaultFreeOp_;
@@ -1015,12 +1013,10 @@ typedef HashSet<JSObject *,
 
 inline void
 FreeOp::free_(void* p) {
-#ifdef JS_THREADSAFE
     if (shouldFreeLater()) {
         runtime()->gcHelperThread.freeLater(p);
         return;
     }
-#endif
     runtime()->free_(p);
 }
 
@@ -1396,8 +1392,8 @@ class AutoXMLRooter : private AutoGCRooter {
 # define JS_LOCK_GC(rt)    PR_Lock((rt)->gcLock)
 # define JS_UNLOCK_GC(rt)  PR_Unlock((rt)->gcLock)
 #else
-# define JS_LOCK_GC(rt)
-# define JS_UNLOCK_GC(rt)
+# define JS_LOCK_GC(rt)    do { } while (0)
+# define JS_UNLOCK_GC(rt)  do { } while (0)
 #endif
 
 class AutoLockGC
@@ -1409,18 +1405,14 @@ class AutoLockGC
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         // Avoid MSVC warning C4390 for non-threadsafe builds.
-#ifdef JS_THREADSAFE
         if (rt)
             JS_LOCK_GC(rt);
-#endif
     }
 
     ~AutoLockGC()
     {
-#ifdef JS_THREADSAFE
         if (runtime)
             JS_UNLOCK_GC(runtime);
-#endif
     }
 
     bool locked() const {

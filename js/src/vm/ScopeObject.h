@@ -201,11 +201,7 @@ class WithObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 3;
-#ifdef JS_THREADSAFE
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
-#else
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
-#endif
 
     static WithObject *
     create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth);
@@ -221,11 +217,7 @@ class BlockObject : public NestedScopeObject
 {
   public:
     static const unsigned RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
-#ifdef JS_THREADSAFE
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
-#else
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
-#endif
 
     /* Return the number of variables associated with this block. */
     inline uint32_t slotCount() const;
