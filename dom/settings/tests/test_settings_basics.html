@@ -62,6 +62,28 @@ function equals(o1, o2) {
   }).all();
 };
 
+function observer1(setting) {
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, "0.7", "Same settingvalue");
+};
+
+function observer2(setting) {
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, "0.7", "Same settingvalue");
+};
+
+function observerWithNext(setting) {
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, "0.7", "Same settingvalue");
+  next();
+};
+
+function onsettingschangeWithNext(event) {
+  is(event.settingName, "screen.brightness", "Same settingName");
+  is(event.settingValue, "0.7", "Same settingvalue");
+  next();
+};
+
 function check(o1, o2) {
   is(JSON.stringify(o1), JSON.stringify(o2), "same");
 }
@@ -88,25 +110,108 @@ var steps = [
     req2.onerror = onFailure;
   },
   function() {
-    ok(true, "adding Event Listener2");
-    navigator.mozSettings.onsettingchange = function(event) {
-      is(event.settingName, "screen.brightness", "Same settingName");
-      is(event.settingValue, "0.7", "Same settingvalue");
-    }
+    ok(true, "adding onsettingchange");
+    navigator.mozSettings.onsettingchange = onsettingschangeWithNext;
     var lock = mozSettings.getLock();
     req2 = lock.get("screen.brightness");
     req2.onsuccess = function() {
+      ok(true, "end adding onsettingchange");
       next();
     };
     req2.onerror = onFailure;
   },
   function() {
-    ok(true, "adding Event Listener");
+    ok(true, "Test onsettingchange");
+    var lock = mozSettings.getLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done, observer has to call next");
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "delete onsettingschange");
+    var lock = mozSettings.getLock();
+    navigator.mozSettings.onsettingchange = null;
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Waiting for all set callbacks");
+    var lock = mozSettings.getLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function() {
+      ok(true, "Done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "adding Observers 1");
+    navigator.mozSettings.addObserver("screen.brightness", observer1);
+    navigator.mozSettings.addObserver("screen.brightness", observer1);
+    navigator.mozSettings.addObserver("screen.brightness", observer2);
+    navigator.mozSettings.addObserver("screen.brightness", observerWithNext);
+    var lock = mozSettings.getLock();
+    req2 = lock.get("screen.brightness");
+    req2.onsuccess = function() {
+      ok(true, "set observeSetting done!");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function() {
+    ok(true, "test observers");
     var lock = mozSettings.getLock();
     req = lock.set(screenBright);
     req.onsuccess = function () {
       ok(true, "set done");
-      navigator.mozSettings.onsettingchange = null;
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = mozSettings.getLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done");
+      navigator.mozSettings.removeObserver("screen.brightness", observer2);
+      navigator.mozSettings.removeObserver("screen.brightness", observer1);
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "test Event Listener");
+    var lock = mozSettings.getLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done");
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = mozSettings.getLock();
+    navigator.mozSettings.removeObserver("screen.brightness", observerWithNext);
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done");
+      navigator.mozSettings.removeObserver("screen.brightness", observer2);
+      navigator.mozSettings.removeObserver("screen.brightness", observer1);
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = mozSettings.getLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function () {
+      ok(true, "get done");
       next();
     }
     req.onerror = onFailure;

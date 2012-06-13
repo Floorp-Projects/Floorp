@@ -515,7 +515,7 @@ nsHTMLEditRules::AfterEditInner(nsEditor::OperationID action,
 
 
 NS_IMETHODIMP
-nsHTMLEditRules::WillDoAction(nsTypedSelection* aSelection,
+nsHTMLEditRules::WillDoAction(Selection* aSelection,
                               nsRulesInfo* aInfo,
                               bool* aCancel,
                               bool* aHandled)
@@ -1237,7 +1237,7 @@ nsHTMLEditRules::WillInsert(nsISelection *aSelection, bool *aCancel)
 
 nsresult
 nsHTMLEditRules::WillInsertText(nsEditor::OperationID aAction,
-                                nsISelection *aSelection, 
+                                Selection*       aSelection,
                                 bool            *aCancel,
                                 bool            *aHandled,
                                 const nsAString *inString,
@@ -1463,7 +1463,7 @@ nsHTMLEditRules::WillLoadHTML(nsISelection *aSelection, bool *aCancel)
 }
 
 nsresult
-nsHTMLEditRules::WillInsertBreak(nsISelection* aSelection,
+nsHTMLEditRules::WillInsertBreak(Selection* aSelection,
                                  bool* aCancel, bool* aHandled)
 {
   if (!aSelection || !aCancel || !aHandled) {
@@ -1779,7 +1779,7 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, bool aPlaintext, bool 
 
 
 nsresult
-nsHTMLEditRules::WillDeleteSelection(nsISelection* aSelection,
+nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
                                      nsIEditor::EDirection aAction,
                                      nsIEditor::EStripWrappers aStripWrappers,
                                      bool* aCancel,
@@ -1980,8 +1980,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection* aSelection,
         NS_ENSURE_SUCCESS(res, res);
 
         bool interLineIsRight;
-        nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
-        res = selPriv->GetInterlinePosition(&interLineIsRight);
+        res = aSelection->GetInterlinePosition(&interLineIsRight);
         NS_ENSURE_SUCCESS(res, res);
 
         if (startNode == selNode &&
@@ -1997,7 +1996,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection* aSelection,
           // by setting the interline position to left.
           ++selOffset;
           res = aSelection->Collapse(selNode, selOffset);
-          selPriv->SetInterlinePosition(false);
+          aSelection->SetInterlinePosition(false);
           mDidExplicitlySetInterline = true;
           *aHandled = true;
 
@@ -2350,8 +2349,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection* aSelection,
         // else blocks not same type, or not siblings.  Delete everything except
         // table elements.
         nsCOMPtr<nsIEnumerator> enumerator;
-        nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
-        res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
+        res = aSelection->GetEnumerator(getter_AddRefs(enumerator));
         NS_ENSURE_SUCCESS(res, res);
         NS_ENSURE_TRUE(enumerator, NS_ERROR_UNEXPECTED);
 
@@ -2384,10 +2382,12 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection* aSelection,
             // If something visible is deleted, no need to join.
             // Visible means all nodes except non-visible textnodes and breaks.
             if (join && origCollapsed) {
-              nsCOMPtr<nsIContent> content = do_QueryInterface(somenode);
-              if (!content) {
+              if (!somenode->IsContent()) {
                 join = false;
-              } else if (content->NodeType() == nsIDOMNode::TEXT_NODE) {
+                continue;
+              }
+              nsCOMPtr<nsIContent> content = somenode->AsContent();
+              if (content->NodeType() == nsIDOMNode::TEXT_NODE) {
                 mHTMLEditor->IsVisTextNode(content, &join, true);
               } else {
                 join = content->IsHTML(nsGkAtoms::br) &&
@@ -7246,7 +7246,7 @@ nsHTMLEditRules::ReapplyCachedStyles()
   bool useCSS = mHTMLEditor->IsCSSEnabled();
 
   // get selection point; if it doesn't exist, we have nothing to do
-  nsRefPtr<nsTypedSelection> selection = mHTMLEditor->GetTypedSelection();
+  nsRefPtr<Selection> selection = mHTMLEditor->GetSelection();
   MOZ_ASSERT(selection);
   if (!selection->GetRangeCount()) {
     // Nothing to do

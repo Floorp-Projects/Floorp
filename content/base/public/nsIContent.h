@@ -923,4 +923,10 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
 
+inline nsIContent* nsINode::AsContent()
+{
+  MOZ_ASSERT(IsContent());
+  return static_cast<nsIContent*>(this);
+}
+
 #endif /* nsIContent_h___ */

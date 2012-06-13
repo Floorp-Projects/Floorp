@@ -25,20 +25,28 @@ lowered form of |tu|'''
         # annotate the AST with IPDL/C++ IR-type stuff used later
         tu.accept(_DecorateWithCxxStuff())
 
-        pname = tu.protocol.name
+        name = tu.name
+        pheader, pcpp = File(name +'.h'), File(name +'.cpp')
 
-        pheader, pcpp = File(pname +'.h'), File(pname +'.cpp')
         _GenerateProtocolCode().lower(tu, pheader, pcpp)
+        headers = [ pheader ]
+        cpps = [ pcpp ]
 
-        parentheader, parentcpp = File(pname +'Parent.h'), File(pname +'Parent.cpp')
-        _GenerateProtocolParentCode().lower(
-            tu, pname+'Parent', parentheader, parentcpp)
+        if tu.protocol:
+            pname = tu.protocol.name
 
-        childheader, childcpp = File(pname +'Child.h'), File(pname +'Child.cpp')
-        _GenerateProtocolChildCode().lower(
-            tu, pname+'Child', childheader, childcpp)
+            parentheader, parentcpp = File(pname +'Parent.h'), File(pname +'Parent.cpp')
+            _GenerateProtocolParentCode().lower(
+                tu, pname+'Parent', parentheader, parentcpp)
 
-        return [ pheader, parentheader, childheader ], [ pcpp, parentcpp, childcpp ]
+            childheader, childcpp = File(pname +'Child.h'), File(pname +'Child.cpp')
+            _GenerateProtocolChildCode().lower(
+                tu, pname+'Child', childheader, childcpp)
+
+            headers += [ parentheader, childheader ]
+            cpps += [ parentcpp, childcpp ]
+
+        return headers, cpps
 
 
 ##-----------------------------------------------------------------------------
@@ -58,14 +66,21 @@ _DISCLAIMER = Whitespace('''//
 
 class _struct: pass
 
+def _namespacedHeaderName(name, namespaces):
+    pfx = '/'.join([ ns.name for ns in namespaces ])
+    if pfx:
+        return pfx +'/'+ name
+    else:
+        return name
+
+def _ipdlhHeaderName(tu):
+    assert tu.filetype == 'header'
+    return _namespacedHeaderName(tu.name, tu.namespaces)
+
 def _protocolHeaderName(p, side=''):
     if side: side = side.title()
     base = p.name + side
-
-    
-    pfx = '/'.join([ ns.name for ns in p.namespaces ])
-    if pfx: return pfx +'/'+ base
-    else:   return base
+    return _namespacedHeaderName(base, p.namespaces)
 
 def _includeGuardMacroName(headerfile):
     return re.sub(r'[./]', '_', headerfile.name)
@@ -339,11 +354,6 @@ def _ifLogging(stmts):
     iflogging.addifstmts(stmts)
     return iflogging
 
-# We need the ASTs of structs and unions to generate pickling code for
-# them, but the pickling codegen only has their type info.  This map
-# allows the pickling code to get these ASTs given the type info.
-_typeToAST = { }                        # [ Type -> Node ]
-
 # XXX we need to remove these and install proper error handling
 def _printErrorMessage(msg):
     if isinstance(msg, str):
@@ -437,37 +447,44 @@ class _DestroyReason:
 ## Intermediate representation (IR) nodes used during lowering
 
 class _ConvertToCxxType(TypeVisitor):
-    def __init__(self, side):  self.side = side
+    def __init__(self, side, fq):
+        self.side = side
+        self.fq = fq
+
+    def typename(self, thing):
+        if self.fq:
+            return thing.fullname()
+        return thing.name()
 
     def visitBuiltinCxxType(self, t):
-        return Type(t.name())
+        return Type(self.typename(t))
 
     def visitImportedCxxType(self, t):
-        return Type(t.name())
+        return Type(self.typename(t))
 
     def visitActorType(self, a):
-        return Type(_actorName(a.protocol.name(), self.side), ptr=1)
+        return Type(_actorName(self.typename(a.protocol), self.side), ptr=1)
 
     def visitStructType(self, s):
-        return Type(s.name())
+        return Type(self.typename(s))
 
     def visitUnionType(self, u):
-        return Type(u.name())
+        return Type(self.typename(u))
 
     def visitArrayType(self, a):
         basecxxtype = a.basetype.accept(self)
         return _cxxArrayType(basecxxtype)
 
     def visitShmemType(self, s):
-        return Type(s.name())
+        return Type(self.typename(s))
 
     def visitProtocolType(self, p): assert 0
     def visitMessageType(self, m): assert 0
     def visitVoidType(self, v): assert 0
     def visitStateType(self, st): assert 0
 
-def _cxxBareType(ipdltype, side):
-    return ipdltype.accept(_ConvertToCxxType(side))
+def _cxxBareType(ipdltype, side, fq=0):
+    return ipdltype.accept(_ConvertToCxxType(side, fq))
 
 def _cxxRefType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
@@ -952,7 +969,7 @@ def _subtreeUsesShmem(p):
     ptype = p.decl.type
     for mgd in ptype.manages:
         if ptype is not mgd:
-            if _subtreeUsesShmem(mgd._p):
+            if _subtreeUsesShmem(mgd._ast):
                 return True
     return False
 
@@ -1226,6 +1243,14 @@ class Protocol(ipdl.ast.Protocol):
         protocol.__class__ = Protocol
         return protocol
 
+
+class TranslationUnit(ipdl.ast.TranslationUnit):
+    @staticmethod
+    def upgrade(tu):
+        assert isinstance(tu, ipdl.ast.TranslationUnit)
+        tu.__class__ = TranslationUnit
+        return tu
+
 ##-----------------------------------------------------------------------------
 
 class _DecorateWithCxxStuff(ipdl.ast.Visitor):
@@ -1237,13 +1262,25 @@ This pass results in an AST that is a poor man's "IR"; in reality, a
 with some new IPDL/C++ nodes that are tuned for C++ codegen."""
 
     def __init__(self):
+        self.visitedTus = set()
         # the set of typedefs that allow generated classes to
         # reference known C++ types by their "short name" rather than
         # fully-qualified name. e.g. |Foo| rather than |a::b::Foo|.
-        self.typedefs = [ 
-            Typedef(Type('mozilla::ipc::ActorHandle'), 'ActorHandle')
-        ]
+        self.typedefs = [ ]
+        self.typedefSet = set([ Typedef(Type('mozilla::ipc::ActorHandle'),
+                                        'ActorHandle') ])
         self.protocolName = None
+
+    def visitTranslationUnit(self, tu):
+        if not isinstance(tu, TranslationUnit) and tu not in self.visitedTus:
+            self.visitedTus.add(tu)
+            ipdl.ast.Visitor.visitTranslationUnit(self, tu)
+            TranslationUnit.upgrade(tu)
+            self.typedefs[:] = sorted(list(self.typedefSet))
+
+    def visitInclude(self, inc):
+        if inc.tu.filetype == 'header':
+            inc.tu.accept(self)
 
     def visitProtocol(self, pro):
         self.protocolName = pro.name
@@ -1254,8 +1291,8 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
 
     def visitUsingStmt(self, using):
         if using.decl.fullname is not None:
-            self.typedefs.append(Typedef(Type(using.decl.fullname),
-                                         using.decl.shortname))
+            self.typedefSet.add(Typedef(Type(using.decl.fullname),
+                                        using.decl.shortname))
 
     def visitStructDecl(self, sd):
         sd.decl.special = 0
@@ -1272,10 +1309,9 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
                 newfields.append(_StructField(ftype, f.name, sd))
         sd.fields = newfields
         StructDecl.upgrade(sd)
-        _typeToAST[sd.decl.type] = sd
 
         if sd.decl.fullname is not None:
-            self.typedefs.append(Typedef(Type(sd.fqClassName()), sd.name))
+            self.typedefSet.add(Typedef(Type(sd.fqClassName()), sd.name))
 
 
     def visitUnionDecl(self, ud):
@@ -1292,10 +1328,9 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
                 newcomponents.append(_UnionMember(ctype, ud))
         ud.components = newcomponents
         UnionDecl.upgrade(ud)
-        _typeToAST[ud.decl.type] = ud
 
         if ud.decl.fullname is not None:
-            self.typedefs.append(Typedef(Type(ud.fqClassName()), ud.name))
+            self.typedefSet.add(Typedef(Type(ud.fqClassName()), ud.name))
 
 
     def visitDecl(self, decl):
@@ -1338,6 +1373,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         hf.addthing(Whitespace.NL)
 
         ipdl.ast.Visitor.visitTranslationUnit(self, tu)
+        if tu.filetype == 'header':
+            self.cppIncludeHeaders.append(_ipdlhHeaderName(tu))
 
         hf.addthing(Whitespace.NL)
         hf.addthings(_includeGuardEnd(hf))
@@ -1349,18 +1386,25 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 for h in self.cppIncludeHeaders ]
             + [ Whitespace.NL ]
         ))
-       
-        # construct the namespace into which we'll stick all our defns
-        ns = Namespace(self.protocol.name)
-        cf.addthing(_putInNamespaces(ns, self.protocol.namespaces))
-        ns.addstmts(([ Whitespace.NL]
-                     + self.funcDefns
-                     +[ Whitespace.NL ]))
+
+        if self.protocol:       
+            # construct the namespace into which we'll stick all our defns
+            ns = Namespace(self.protocol.name)
+            cf.addthing(_putInNamespaces(ns, self.protocol.namespaces))
+            ns.addstmts(([ Whitespace.NL]
+                         + self.funcDefns
+                         +[ Whitespace.NL ]))
+
         cf.addthings(self.structUnionDefns)
 
 
     def visitCxxInclude(self, inc):
         self.hdrfile.addthing(CppDirective('include', '"'+ inc.file +'"'))
+
+    def visitInclude(self, inc):
+        if inc.tu.filetype == 'header':
+            self.hdrfile.addthing(CppDirective(
+                    'include', '"'+ _ipdlhHeaderName(inc.tu) +'.h"'))
 
     def processStructOrUnionClass(self, su, which, forwarddecls, cls):
         clsdecl, methoddefns = _splitClassDeclDefn(cls)
@@ -1404,8 +1448,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 _makeForwardDeclForActor(ppt, pside),
                 _makeForwardDeclForActor(cpt, cside)
             ])
-            self.cppIncludeHeaders.append(_protocolHeaderName(ppt._p, pside))
-            self.cppIncludeHeaders.append(_protocolHeaderName(cpt._p, cside))
+            self.cppIncludeHeaders.append(_protocolHeaderName(ppt._ast, pside))
+            self.cppIncludeHeaders.append(_protocolHeaderName(cpt._ast, cside))
 
         opens = ProcessGraph.opensOf(p.decl.type)
         for o in opens:
@@ -1414,7 +1458,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 Whitespace.NL,
                 _makeForwardDeclForActor(optype, oside)
             ])
-            self.cppIncludeHeaders.append(_protocolHeaderName(optype._p, oside))
+            self.cppIncludeHeaders.append(_protocolHeaderName(optype._ast, oside))
 
         self.hdrfile.addthing(Whitespace("""
 //-----------------------------------------------------------------------------
@@ -1494,11 +1538,13 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
     def genBridgeFunc(self, bridge):
         p = self.protocol
         parentHandleType = _cxxBareType(ActorType(bridge.parent.ptype),
-                                        _otherSide(bridge.parent.side))
+                                        _otherSide(bridge.parent.side),
+                                        fq=1)
         parentvar = ExprVar('parentHandle')
 
         childHandleType = _cxxBareType(ActorType(bridge.child.ptype),
-                                       _otherSide(bridge.child.side))
+                                       _otherSide(bridge.child.side),
+                                       fq=1)
         childvar = ExprVar('childHandle')
 
         bridgefunc = MethodDefn(MethodDecl(
@@ -1519,7 +1565,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
     def genOpenFunc(self, o):
         p = self.protocol
         localside = o.opener.side
-        openertype = _cxxBareType(ActorType(o.opener.ptype), o.opener.side)
+        openertype = _cxxBareType(ActorType(o.opener.ptype), o.opener.side,
+                                  fq=1)
         openervar = ExprVar('opener')
         openfunc = MethodDefn(MethodDecl(
             'Open',
@@ -1780,8 +1827,7 @@ stmt.  Some types generate both kinds.'''
     def visitShmemType(self, s):
         if s in self.visited: return
         self.visited.add(s)
-        self.usingTypedefs.append(Typedef(Type('mozilla::ipc::Shmem'),
-                                          'Shmem'))
+        self.maybeTypedef('mozilla::ipc::Shmem', 'Shmem')
 
     def visitVoidType(self, v): assert 0
     def visitMessageType(self, v): assert 0
@@ -2300,7 +2346,7 @@ class _FindFriends(ipdl.ast.Visitor):
         # |vtype| is the type currently being visited
         savedptype = self.vtype
         self.vtype = ptype
-        ptype._p.accept(self)
+        ptype._ast.accept(self)
         self.vtype = savedptype
 
     def visitMessageDecl(self, md):
@@ -2366,8 +2412,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     '"'+ _protocolHeaderName(tu.protocol) +'.h"')
             ])
 
-        for pinc in tu.protocolIncludes:
-            pinc.accept(self)
+        for inc in tu.includes:
+            inc.accept(self)
 
         # this generates the actor's full impl in self.cls
         tu.protocol.accept(self)
@@ -2445,8 +2491,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ])
 
 
-    def visitProtocolInclude(self, pi):
-        ip = pi.tu.protocol
+    def visitInclude(self, inc):
+        ip = inc.tu.protocol
+        if not ip:
+            return
 
         self.hdrfile.addthings([
             _makeForwardDeclForActor(ip.decl.type, self.side),
@@ -4122,7 +4170,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         var = self.var
         intype = _cxxConstRefType(structtype, self.side)
         outtype = _cxxPtrToType(structtype, self.side)
-        sd = _typeToAST[structtype]
+        sd = structtype._ast
 
         write = MethodDefn(self.writeMethodDecl(intype, var))
         read = MethodDefn(self.readMethodDecl(outtype, var))        
@@ -4155,7 +4203,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         var = self.var
         intype = _cxxConstRefType(uniontype, self.side)
         outtype = _cxxPtrToType(uniontype, self.side)
-        ud = _typeToAST[uniontype]
+        ud = uniontype._ast
 
         typename = '__type'
         uniontdef = Typedef(_cxxBareType(uniontype, typename), typename)

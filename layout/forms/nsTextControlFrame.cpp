@@ -46,7 +46,6 @@
 
 #include "nsBoxLayoutState.h"
 //for keylistener for "return" check
-#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDocument.h" //observe documents to send onchangenotifications
 #include "nsIStyleSheet.h"//observe documents to send onchangenotifications
@@ -77,6 +76,8 @@
 #include "mozilla/FunctionTimer.h"
 
 #define DEFAULT_COLUMN_WIDTH 20
+
+using namespace mozilla;
 
 nsIFrame*
 NS_NewTextControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -817,6 +818,15 @@ nsTextControlFrame::ScrollSelectionIntoView()
   return NS_ERROR_FAILURE;
 }
 
+mozilla::dom::Element*
+nsTextControlFrame::GetRootNodeAndInitializeEditor()
+{
+  nsCOMPtr<nsIDOMElement> root;
+  GetRootNodeAndInitializeEditor(getter_AddRefs(root));
+  nsCOMPtr<mozilla::dom::Element> rootElem = do_QueryInterface(root);
+  return rootElem;
+}
+
 nsresult
 nsTextControlFrame::GetRootNodeAndInitializeEditor(nsIDOMElement **aRootElement)
 {
@@ -965,58 +975,6 @@ nsTextControlFrame::SetSelectionEnd(PRInt32 aSelectionEnd)
 }
 
 nsresult
-nsTextControlFrame::DOMPointToOffset(nsIDOMNode* aNode,
-                                     PRInt32 aNodeOffset,
-                                     PRInt32* aResult)
-{
-  NS_ENSURE_ARG_POINTER(aNode && aResult);
-
-  *aResult = 0;
-
-  nsCOMPtr<nsIDOMElement> rootElement;
-  nsresult rv = GetRootNodeAndInitializeEditor(getter_AddRefs(rootElement));
-  nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootElement));
-
-  NS_ENSURE_TRUE(rootNode, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMNodeList> nodeList;
-
-  rv = rootNode->GetChildNodes(getter_AddRefs(nodeList));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(nodeList, NS_ERROR_FAILURE);
-
-  PRUint32 length = 0;
-  rv = nodeList->GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!length || aNodeOffset < 0)
-    return NS_OK;
-
-  NS_ASSERTION(length <= 2, "We should have one text node and one mozBR at most");
-
-  nsCOMPtr<nsIDOMNode> firstNode;
-  rv = nodeList->Item(0, getter_AddRefs(firstNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(firstNode);
-
-  nsCOMPtr<nsIDOMText> nodeAsText = do_QueryInterface(aNode);
-  if (nodeAsText || (aNode == rootNode && aNodeOffset == 0)) {
-    // Selection is somewhere inside the text node; the offset is aNodeOffset
-    *aResult = aNodeOffset;
-  } else {
-    // Selection is on the mozBR node, so offset should be set to the length
-    // of the text node.
-    if (textNode) {
-      rv = textNode->GetLength(&length);
-      NS_ENSURE_SUCCESS(rv, rv);
-      *aResult = PRInt32(length);
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsTextControlFrame::OffsetToDOMPoint(PRInt32 aOffset,
                                      nsIDOMNode** aResult,
                                      PRInt32* aPosition)
@@ -1102,26 +1060,24 @@ nsTextControlFrame::GetSelectionRange(PRInt32* aSelectionStart,
   rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));  
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-
-  PRInt32 numRanges = 0;
-  selection->GetRangeCount(&numRanges);
-
-  if (numRanges < 1)
-    return NS_OK;
-
-  // We only operate on the first range in the selection!
+  nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
+  NS_ENSURE_TRUE(selPriv, NS_ERROR_FAILURE);
+  nsRefPtr<nsFrameSelection> frameSel;
+  rv = selPriv->GetFrameSelection(getter_AddRefs(frameSel));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(frameSel, NS_ERROR_FAILURE);
+  nsRefPtr<Selection> typedSel =
+    frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  NS_ENSURE_TRUE(typedSel, NS_ERROR_FAILURE);
 
   if (aDirection) {
-    nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
-    if (selPriv) {
-      nsDirection direction = selPriv->GetSelectionDirection();
-      if (direction == eDirNext) {
-        *aDirection = eForward;
-      } else if (direction == eDirPrevious) {
-        *aDirection = eBackward;
-      } else {
-        NS_NOTREACHED("Invalid nsDirection enum value");
-      }
+    nsDirection direction = typedSel->GetSelectionDirection();
+    if (direction == eDirNext) {
+      *aDirection = eForward;
+    } else if (direction == eDirPrevious) {
+      *aDirection = eBackward;
+    } else {
+      NS_NOTREACHED("Invalid nsDirection enum value");
     }
   }
 
@@ -1129,40 +1085,10 @@ nsTextControlFrame::GetSelectionRange(PRInt32* aSelectionStart,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMRange> firstRange;
-  rv = selection->GetRangeAt(0, getter_AddRefs(firstRange));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(firstRange, NS_ERROR_FAILURE);
+  nsContentUtils::GetSelectionInTextControl(typedSel,
+    GetRootNodeAndInitializeEditor(), *aSelectionStart, *aSelectionEnd);
 
-  nsCOMPtr<nsIDOMNode> startNode, endNode;
-  PRInt32 startOffset = 0, endOffset = 0;
-
-  // Get the start point of the range.
-
-  rv = firstRange->GetStartContainer(getter_AddRefs(startNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
-
-  rv = firstRange->GetStartOffset(&startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Get the end point of the range.
-
-  rv = firstRange->GetEndContainer(getter_AddRefs(endNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(endNode, NS_ERROR_FAILURE);
-
-  rv = firstRange->GetEndOffset(&endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Convert the start point to a selection offset.
-
-  rv = DOMPointToOffset(startNode, startOffset, aSelectionStart);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Convert the end point to a selection offset.
-
-  return DOMPointToOffset(endNode, endOffset, aSelectionEnd);
+  return NS_OK;
 }
 
 /////END INTERFACE IMPLEMENTATIONS

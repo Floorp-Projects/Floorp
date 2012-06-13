@@ -17,5 +17,6 @@ builtin(include, build/autoconf/frameptr.m4)dnl
 builtin(include, build/autoconf/compiler-opts.m4)dnl
 builtin(include, build/autoconf/expandlibs.m4)dnl
 builtin(include, build/autoconf/arch.m4)dnl
+builtin(include, build/autoconf/android.m4)dn
 
 MOZ_PROG_CHECKMSYS()

@@ -13,7 +13,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+#ifdef ACCESSIBILITY
 Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
+#endif
 
 XPCOMUtils.defineLazyGetter(this, "PluralForm", function() {
   Cu.import("resource://gre/modules/PluralForm.jsm");
@@ -28,6 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", function() {
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
+  ["Readability", "chrome://browser/content/Readability.js"],
 ].forEach(function (aScript) {
   let [name, script] = aScript;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -204,7 +207,10 @@ var BrowserApp = {
     ActivityObserver.init();
     WebappsUI.init();
     RemoteDebugger.init();
+    Reader.init();
+#ifdef ACCESSIBILITY
     AccessFu.attach(window);
+#endif
 
     // Init LoginManager
     Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
@@ -403,6 +409,7 @@ var BrowserApp = {
     SearchEngines.uninit();
     WebappsUI.uninit();
     RemoteDebugger.uninit();
+    Reader.uninit();
   },
 
   // This function returns false during periods where the browser displayed document is
@@ -2237,10 +2244,12 @@ Tab.prototype = {
     let documentURI = contentWin.document.documentURIObject.spec;
     let contentType = contentWin.document.contentType;
     
-    // XXX If fixedURI matches browser.lastURI, we assume this isn't a real location
+    // If fixedURI matches browser.lastURI, we assume this isn't a real location
     // change but rather a spurious addition like a wyciwyg URI prefix. See Bug 747883.
+    // Note that we have to ensure fixedURI is not the same as aLocationURI so we
+    // don't false-positive page reloads as spurious additions.
     let sameDocument = (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) != 0 ||
-                       ((this.browser.lastURI != null) && fixedURI.equals(this.browser.lastURI));
+                       ((this.browser.lastURI != null) && fixedURI.equals(this.browser.lastURI) && !fixedURI.equals(aLocationURI));
     this.browser.lastURI = fixedURI;
 
     // Reset state of click-to-play plugin notifications.
@@ -3726,7 +3735,7 @@ var ViewportHandler = {
         let document = target.ownerDocument;
         let browser = BrowserApp.getBrowserForDocument(document);
         let tab = BrowserApp.getTabForBrowser(browser);
-        if (tab)
+        if (tab && tab.contentDocumentIsDisplayed)
           this.updateMetadata(tab);
         break;
 
@@ -3772,10 +3781,6 @@ var ViewportHandler = {
    *   autoScale (boolean): Adjust the viewport properties to account for display density.
    */
   getViewportMetadata: function getViewportMetadata(aWindow) {
-    let doctype = aWindow.document.doctype;
-    if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
-      return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
-
     if (aWindow.document instanceof XULDocument)
       return { defaultZoom: 1, autoSize: true, allowZoom: false, autoScale: false };
 
@@ -3801,11 +3806,15 @@ var ViewportHandler = {
 
 
     if (scale == NaN && minScale == NaN && maxScale == NaN && allowZoomStr == "" && widthStr == "" && heightStr == "") {
-	// Only check for HandheldFriendly if we don't have a viewport meta tag
-	let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
+      // Only check for HandheldFriendly if we don't have a viewport meta tag
+      let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
 
-	if (handheldFriendly == "true")
-	    return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+      if (handheldFriendly == "true")
+        return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
+
+      let doctype = aWindow.document.doctype;
+      if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
+        return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
     }
 
     scale = this.clamp(scale, kViewportMinScale, kViewportMaxScale);
@@ -5247,7 +5256,7 @@ var WebappsUI = {
 
 var RemoteDebugger = {
   init: function rd_init() {
-    Services.prefs.addObserver("remote-debugger.", this, false);
+    Services.prefs.addObserver("devtools.debugger.", this, false);
 
     if (this._isEnabled())
       this._start();
@@ -5258,14 +5267,14 @@ var RemoteDebugger = {
       return;
 
     switch (aData) {
-      case "remote-debugger.enabled":
+      case "devtools.debugger.remote-enabled":
         if (this._isEnabled())
           this._start();
         else
           this._stop();
         break;
 
-      case "remote-debugger.port":
+      case "devtools.debugger.remote-port":
         if (this._isEnabled())
           this._restart();
         break;
@@ -5273,16 +5282,16 @@ var RemoteDebugger = {
   },
 
   uninit: function rd_uninit() {
-    Services.prefs.removeObserver("remote-debugger.", this);
+    Services.prefs.removeObserver("devtools.debugger.", this);
     this._stop();
   },
 
   _getPort: function _rd_getPort() {
-    return Services.prefs.getIntPref("remote-debugger.port");
+    return Services.prefs.getIntPref("devtools.debugger.remote-port");
   },
 
   _isEnabled: function rd_isEnabled() {
-    return Services.prefs.getBoolPref("remote-debugger.enabled");
+    return Services.prefs.getBoolPref("devtools.debugger.remote-enabled");
   },
 
   /**
@@ -5304,7 +5313,7 @@ var RemoteDebugger = {
       return true;
     if (result == 2) {
       this._stop();
-      Services.prefs.setBoolPref("remote-debugger.enabled", false);
+      Services.prefs.setBoolPref("devtools.debugger.remote-enabled", false);
     }
     return false;
   },
@@ -5334,3 +5343,288 @@ var RemoteDebugger = {
     dump("Remote debugger stopped");
   }
 }
+
+let Reader = {
+  // Version of the cache database schema
+  DB_VERSION: 1,
+
+  DEBUG: 1,
+
+  init: function Reader_init() {
+    this.log("Init()");
+    this._requests = {};
+  },
+
+  parseDocumentFromURL: function Reader_parseDocumentFromURL(url, callback) {
+    // If there's an on-going request for the same URL, simply append one
+    // more callback to it to be called when the request is done.
+    if (url in this._requests) {
+      let request = this._requests[url];
+      request.callbacks.push(callback);
+      return;
+    }
+
+    let request = { url: url, callbacks: [callback] };
+    this._requests[url] = request;
+
+    try {
+      this.log("parseDocumentFromURL: " + url);
+
+      // First, try to find a cached parsed article in the DB
+      this.getArticleFromCache(url, function(article) {
+        if (article) {
+          this.log("Page found in cache, return article immediately");
+          this._runCallbacksAndFinish(request, article);
+          return;
+        }
+
+        if (!this._requests) {
+          this.log("Reader has been destroyed, abort");
+          return;
+        }
+
+        // Article hasn't been found in the cache DB, we need to
+        // download the page and parse the article out of it.
+        this._downloadAndParseDocument(url, request);
+      }.bind(this));
+    } catch (e) {
+      this.log("Error parsing document from URL: " + e);
+      this._runCallbacksAndFinish(request, null);
+    }
+  },
+
+  parseDocumentFromTab: function(tabId, callback) {
+    try {
+      this.log("parseDocumentFromTab: " + tabId);
+
+      let tab = BrowserApp.getTabForId(tabId);
+      let url = tab.browser.contentWindow.location.href;
+
+      // First, try to find a cached parsed article in the DB
+      this.getArticleFromCache(url, function(article) {
+        if (article) {
+          this.log("Page found in cache, return article immediately");
+          callback(article);
+          return;
+        }
+
+        // We need to clone the document before parsing because readability
+        // changes the document object in several ways to find the article
+        // in it.
+        let doc = tab.browser.contentWindow.document.cloneNode(true);
+        let uri = Services.io.newURI(url, null, null);
+
+        let readability = new Readability(uri, doc);
+        let article = readability.parse();
+
+        if (!article) {
+          this.log("Failed to parse page");
+          callback(null);
+          return;
+        }
+
+        // Append URL to the article data
+        article.url = url;
+
+        callback(article);
+      }.bind(this));
+    } catch (e) {
+      this.log("Error parsing document from tab: " + e);
+      callback(null);
+    }
+  },
+
+  getArticleFromCache: function Reader_getArticleFromCache(url, callback) {
+    this._getCacheDB(function(cacheDB) {
+      if (!cacheDB) {
+        callback(false);
+        return;
+      }
+
+      let transaction = cacheDB.transaction(cacheDB.objectStoreNames);
+      let articles = transaction.objectStore(cacheDB.objectStoreNames[0]);
+
+      let request = articles.get(url);
+
+      request.onerror = function(event) {
+        this.log("Error getting article from the cache DB: " + url);
+        callback(null);
+      }.bind(this);
+
+      request.onsuccess = function(event) {
+        this.log("Got article from the cache DB: " + event.target.result);
+        callback(event.target.result);
+      }.bind(this);
+    }.bind(this));
+  },
+
+  storeArticleInCache: function Reader_storeArticleInCache(article, callback) {
+    this._getCacheDB(function(cacheDB) {
+      if (!cacheDB) {
+        callback(false);
+        return;
+      }
+
+      let transaction = cacheDB.transaction(cacheDB.objectStoreNames, "readwrite");
+      let articles = transaction.objectStore(cacheDB.objectStoreNames[0]);
+
+      let request = articles.add(article);
+
+      request.onerror = function(event) {
+        this.log("Error storing article in the cache DB: " + article.url);
+        callback(false);
+      }.bind(this);
+
+      request.onsuccess = function(event) {
+        this.log("Stored article in the cache DB: " + article.url);
+        callback(true);
+      }.bind(this);
+    }.bind(this));
+  },
+
+  uninit: function Reader_uninit() {
+    let requests = this._requests;
+    for (let url in requests) {
+      let request = requests[url];
+      if (request.browser) {
+        let browser = request.browser;
+        browser.parentNode.removeChild(browser);
+      }
+    }
+    delete this._requests;
+
+    if (this._cacheDB) {
+      this._cacheDB.close();
+      delete this._cacheDB;
+    }
+  },
+
+  log: function(msg) {
+    if (this.DEBUG)
+      dump("Reader: " + msg);
+  },
+
+  _runCallbacksAndFinish: function Reader_runCallbacksAndFinish(request, result) {
+    delete this._requests[request.url];
+
+    request.callbacks.forEach(function(callback) {
+      callback(result);
+    });
+  },
+
+  _dowloadDocument: function Reader_downloadDocument(url, callback) {
+    // We want to parse those arbitrary pages safely, outside the privileged
+    // context of chrome. We create a hidden browser element to fetch the
+    // loaded page's document object then discard the browser element.
+
+    let browser = document.createElement("browser");
+    browser.setAttribute("type", "content");
+    browser.setAttribute("collapsed", "true");
+
+    document.documentElement.appendChild(browser);
+    browser.stop();
+
+    browser.webNavigation.allowAuth = false;
+    browser.webNavigation.allowImages = false;
+    browser.webNavigation.allowJavascript = false;
+    browser.webNavigation.allowMetaRedirects = true;
+    browser.webNavigation.allowPlugins = false;
+
+    browser.addEventListener("DOMContentLoaded", function (event) {
+      let doc = event.originalTarget;
+      this.log("Done loading: " + doc);
+      if (doc.location.href == "about:blank" || doc.defaultView.frameElement) {
+        callback(null);
+
+        // Request has finished with error, remove browser element
+        browser.parentNode.removeChild(browser);
+        return;
+      }
+
+      callback(doc);
+
+      // Request has finished, remove browser element
+      browser.parentNode.removeChild(browser);
+    }.bind(this));
+
+    browser.loadURIWithFlags(url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
+                             null, null, null);
+
+    return browser;
+  },
+
+  _downloadAndParseDocument: function Reader_downloadAndParseDocument(url, request) {
+    try {
+      this.log("Needs to fetch page, creating request: " + url);
+
+      request.browser = this._dowloadDocument(url, function(doc) {
+        this.log("Finished loading page: " + doc);
+
+        // Delete reference to the browser element as we're
+        // now done with this request.
+        delete request.browser;
+
+        if (!doc) {
+          this.log("Error loading page");
+          this._runCallbacksAndFinish(request, null);
+        }
+
+        this.log("Parsing response with Readability");
+
+        let uri = Services.io.newURI(url, null, null);
+        let readability = new Readability(uri, doc);
+        let article = readability.parse();
+
+        if (!article) {
+          this.log("Failed to parse page");
+          this._runCallbacksAndFinish(request, null);
+          return;
+        }
+
+        this.log("Parsing has been successful");
+
+        // Append URL to the article data
+        article.url = url;
+
+        this._runCallbacksAndFinish(request, article);
+      }.bind(this));
+    } catch (e) {
+      this.log("Error downloading and parsing document: " + e);
+      this._runCallbacksAndFinish(request, null);
+    }
+  },
+
+  _getCacheDB: function Reader_getCacheDB(callback) {
+    if (this._cacheDB) {
+      callback(this._cacheDB);
+      return;
+    }
+
+    let request = window.mozIndexedDB.open("about:reader", this.DB_VERSION);
+
+    request.onerror = function(event) {
+      this.log("Error connecting to the cache DB");
+      this._cacheDB = null;
+      callback(null);
+    }.bind(this);
+
+    request.onsuccess = function(event) {
+      this.log("Successfully connected to the cache DB");
+      this._cacheDB = event.target.result;
+      callback(this._cacheDB);
+    }.bind(this);
+
+    request.onupgradeneeded = function(event) {
+      this.log("Database schema upgrade from " +
+           event.oldVersion + " to " + event.newVersion);
+
+      let cacheDB = event.target.result;
+
+      // Create the articles object store
+      this.log("Creating articles object store");
+      cacheDB.createObjectStore("articles", { keyPath: "url" });
+
+      this.log("Database upgrade done: " + this.DB_VERSION);
+    }.bind(this);
+  }
+};

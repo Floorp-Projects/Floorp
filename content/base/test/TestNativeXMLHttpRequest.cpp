@@ -43,11 +43,6 @@ nsresult TestNativeXMLHttpRequest()
   NS_NAMED_LITERAL_CSTRING(getString, "GET");
   NS_NAMED_LITERAL_CSTRING(testURL, TEST_URL);
   const nsAString& empty = EmptyString();
-  
-  printf("*** About to see an expected warning about mPrincipal:\n");
-  rv = xhr->Open(getString, testURL, false, empty, empty);
-  printf("*** End of expected warning output.\n");
-  TEST_ENSURE_FAILED(rv, "Open should have failed!");
 
   nsCOMPtr<nsIScriptSecurityManager> secman =
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);

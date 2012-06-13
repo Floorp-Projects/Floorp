@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
+
+   <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
+                                android:layout_width="200dip"
+                                android:layout_height="fill_parent"
+                                android:background="@drawable/tabs_tray_bg_repeat"/>
+
+   <LinearLayout android:id="@+id/main_layout"
+                 style="@style/Screen">
+ 
+        <include layout="@layout/browser_toolbar"/>
+
+        <RelativeLayout android:id="@+id/gecko_layout"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:layout_weight="1">
+
+            <AbsoluteLayout android:id="@+id/plugin_container"
+                            android:background="@android:color/transparent"
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"/>
+
+            <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
+                                               android:layout_width="fill_parent"
+                                               android:layout_height="fill_parent"
+                                               android:visibility="gone"/>
+
+            <org.mozilla.gecko.AboutHomeContent android:id="@+id/abouthome_content"
+                                                android:layout_width="fill_parent"
+                                                android:layout_height="fill_parent"
+                                                android:background="@drawable/abouthome_bg_repeat"/>
+
+            <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
+                                             android:layout_width="fill_parent"
+                                             android:layout_height="wrap_content"
+                                             android:layout_alignParentBottom="true"
+                                             style="@style/FindBar"
+                                             android:visibility="gone"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

@@ -4325,6 +4325,22 @@ xpc_GetJSPrivate(JSObject *obj)
     return js::GetObjectPrivate(obj);
 }
 
+namespace xpc {
+struct SandboxOptions {
+    SandboxOptions()
+        : wantXrays(true)
+        , wantComponents(true)
+        , wantXHRConstructor(false)
+        , proto(NULL)
+    { }
+
+    bool wantXrays;
+    bool wantComponents;
+    bool wantXHRConstructor;
+    JSObject* proto;
+    nsCString sandboxName;
+};
+}
 
 // Helper for creating a sandbox object to use for evaluating
 // untrusted code completely separated from all other code in the
@@ -4337,8 +4353,7 @@ xpc_GetJSPrivate(JSObject *obj)
 // and used.
 nsresult
 xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop,
-                        JSObject *proto, bool preferXray, bool wantComponents,
-                        const nsACString &sandboxName);
+                        xpc::SandboxOptions& options);
 // Helper for evaluating scripts in a sandbox object created with
 // xpc_CreateSandboxObject(). The caller is responsible of ensuring
 // that *rval doesn't get collected during the call or usage after the

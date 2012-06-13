@@ -24,7 +24,9 @@
 @APPNAME@/Contents/Info.plist
 @APPNAME@/Contents/PkgInfo
 @APPNAME@/Contents/Resources/
+#ifdef MOZ_SIGNING
 @APPNAME@/Contents/_CodeSignature/CodeResources
+#endif
 #endif
 
 [@AB_CD@]
@@ -467,6 +469,8 @@
 #ifdef MOZ_SAFE_BROWSING
 @BINPATH@/components/nsSafebrowsingApplication.manifest
 @BINPATH@/components/nsSafebrowsingApplication.js
+#endif
+#ifdef MOZ_URL_CLASSIFIER
 @BINPATH@/components/nsURLClassifier.manifest
 @BINPATH@/components/nsUrlClassifierHashCompleter.js
 @BINPATH@/components/nsUrlClassifierListManager.js
@@ -524,8 +528,12 @@
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
+#ifndef LIBXUL_SDK
 ; Warning: changing the path to channel-prefs.js can cause bugs (Bug 756325)
 @BINPATH@/defaults/pref/channel-prefs.js
+#else
+@BINPATH@/@PREF_DIR@/channel-prefs.js
+#endif
 @BINPATH@/defaults/profile/prefs.js
 
 ; [Layout Engine Resources]

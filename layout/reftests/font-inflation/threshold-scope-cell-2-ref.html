@@ -3,6 +3,8 @@
 <style>
 body { font-size: 12px; width: 600px; }
 p { margin: 0 }
+table { border-spacing: 0 } /* FIXME: why is this needed?  Something to do with ComputeDescendantWidth in nsFontInflationData? */
+td { padding: 0 }
 </style>
 <!--
 In a 600px container, the minimum font size at 15em per line is 40px.

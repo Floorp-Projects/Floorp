@@ -36,8 +36,7 @@ config_unix = {
 
 config = sys.modules['expandlibs_config'] = imp.new_module('expandlibs_config')
 
-from expandlibs import LibDescriptor, ExpandArgs, relativize
-from expandlibs_deps import ExpandLibsDeps, split_args
+from expandlibs import LibDescriptor, ExpandArgs, relativize, ExpandLibsDeps
 from expandlibs_gen import generate
 from expandlibs_exec import ExpandArgsMore, SectionFinder
 
@@ -212,12 +211,6 @@ class TestExpandLibsDeps(TestExpandInit):
         self.touch([self.tmpfile('liby', Lib('y'))])
         args = self.arg_files + [self.tmpfile('liby', Lib('y'))]
         self.assertRelEqual(ExpandLibsDeps(args), ExpandArgs(args))
-
-class TestSplitArgs(unittest.TestCase):
-    def test_split_args(self):
-        self.assertEqual(split_args(['a', '=', 'b', 'c']), {'a': ['b', 'c']})
-        self.assertEqual(split_args(['a', '=', 'b', 'c', ',', 'd', '=', 'e', 'f', 'g', ',', 'h', '=', 'i']),
-                         {'a': ['b', 'c'], 'd': ['e', 'f', 'g'], 'h': ['i']})
 
 class TestExpandArgsMore(TestExpandInit):
     def test_makelist(self):

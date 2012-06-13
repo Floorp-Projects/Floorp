@@ -1395,7 +1395,7 @@ nsXBLBinding::HasInsertionParent(nsIContent* aParent)
   return mNextBinding ? mNextBinding->HasInsertionParent(aParent) : false;
 }
 
-nsresult
+void
 nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
                                     nsInsertionPointList** aResult)
 {
@@ -1414,8 +1414,6 @@ nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
       aParent->SetFlags(NODE_IS_INSERTION_PARENT);
     }
   }
-
-  return NS_OK;
 }
 
 nsInsertionPointList*

@@ -236,6 +236,7 @@ extensions/testpilot@labs.mozilla.com/skin/win/feedback.css
 extensions/testpilot@labs.mozilla.com/skin/win/notification-tail-down.png
 extensions/testpilot@labs.mozilla.com/skin/win/notification-tail-up.png
 extensions/testpilot@labs.mozilla.com/tests/test_data_store.js
+extensions/uriloader@pdf.js.xpi
 greprefs/all.js
 greprefs/security-prefs.js
 greprefs/xpinstall.js
@@ -874,6 +875,9 @@ xpicleanup@BIN_SUFFIX@
   components/amContentHandler.js
   components/amWebInstallListener.js
   components/browser.xpt
+  components/BrowserElementParent.js
+  components/BrowserElementParent.manifest
+  components/BrowserElementPromptService.jsm
   components/components.manifest
   components/contentAreaDropListener.js
   components/contentSecurityPolicy.js
