@@ -25,12 +25,12 @@ var text = document.getElementById("text"),
 function CheckList(aListObject, aExpectedListLength, aListDescription)
 {
   is(aListObject.numberOfItems, aExpectedListLength, aListDescription + ".numberOfItems");
-  is(aListObject.numberOfItems, aExpectedListLength, aListDescription + ".length");
+  is(aListObject.length, aExpectedListLength, aListDescription + ".length");
   for (let i = 0; i < aListObject.length; i++) {
     let item = aListObject.getItem(i);
     ok(aListObject[i] === item, aListDescription + "[" + i + "]");
   }
-  ok(aListObject[aListObject.length] === void 0, aListDescription + "[outOfBounds]");
+  is(typeof(aListObject[aListObject.length]), "undefined", aListDescription + "[outOfBounds]");
 }
 
 var tests = [
