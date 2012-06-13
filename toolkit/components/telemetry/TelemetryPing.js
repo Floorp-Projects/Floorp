@@ -467,6 +467,8 @@ TelemetryPing.prototype = {
 
   getPayloads: function getPayloads(reason) {
     function payloadIter() {
+      yield this.getCurrentSessionPayloadAndSlug(reason);
+
       if (this._pendingPings.length > 0) {
         let data = this._pendingPings.pop();
         // Send persisted pings to the test URL too.
@@ -475,8 +477,6 @@ TelemetryPing.prototype = {
         }
         yield data;
       }
-
-      yield this.getCurrentSessionPayloadAndSlug(reason);
     }
 
     let payloadIterWithThis = payloadIter.bind(this);
