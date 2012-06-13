@@ -15,6 +15,7 @@
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
+#include "mozilla/Attributes.h"
 
 #define ZIPWRITER_CONTRACTID "@mozilla.org/zipwriter;1"
 #define ZIPWRITER_CLASSNAME "Zip Writer"
@@ -36,8 +37,8 @@ public:
     PRUint32 mPermissions;
 };
 
-class nsZipWriter : public nsIZipWriter,
-                    public nsIRequestObserver
+class nsZipWriter MOZ_FINAL : public nsIZipWriter,
+                              public nsIRequestObserver
 {
 public:
     NS_DECL_ISUPPORTS
