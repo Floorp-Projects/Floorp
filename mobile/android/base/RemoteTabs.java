@@ -11,10 +11,8 @@ import java.util.List;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.SystemClock;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,12 +30,7 @@ public class RemoteTabs extends LinearLayout
     private static final String LOGTAG = "GeckoRemoteTabs";
 
     private Context mContext;
-    private static boolean mHeightRestricted;
 
-    private static int sPreferredHeight;
-    private static int sChildItemHeight;
-    private static int sGroupItemHeight;
-    private static int sListDividerHeight;
     private static ExpandableListView mList;
     
     private static ArrayList <ArrayList <HashMap <String, String>>> mTabsList;
@@ -64,21 +57,7 @@ public class RemoteTabs extends LinearLayout
     }
 
     @Override
-    public void setHeightRestriction(boolean isRestricted) {
-        mHeightRestricted = isRestricted;
-    }
-
-    @Override
     public void show() {
-        DisplayMetrics metrics = new DisplayMetrics();
-        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-        Resources resources = mContext.getResources();
-        sChildItemHeight = (int) (resources.getDimension(R.dimen.remote_tab_child_row_height));
-        sGroupItemHeight = (int) (resources.getDimension(R.dimen.remote_tab_group_row_height));
-        sListDividerHeight = (int) (resources.getDimension(R.dimen.tabs_list_divider_height));
-        sPreferredHeight = (int) (0.5 * metrics.heightPixels);
-
         TabsAccessor.getTabs(mContext, this);
     }
 
@@ -118,31 +97,6 @@ public class RemoteTabs extends LinearLayout
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
         hideTabs();
         return true;
-    }
-
-    // Tabs List Container holds the ExpandableListView
-    public static class TabsListContainer extends LinearLayout {
-        public TabsListContainer(Context context, AttributeSet attrs) {
-            super(context, attrs);
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            SimpleExpandableListAdapter adapter = (SimpleExpandableListAdapter) mList.getExpandableListAdapter();
-            if (adapter == null || !mHeightRestricted) {
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-                return;
-            }
-
-            int groupCount = adapter.getGroupCount();
-            int childrenHeight = groupCount * (sGroupItemHeight + sListDividerHeight);
-            for (int i = 0; i < groupCount; i++)
-                 childrenHeight += adapter.getChildrenCount(i) * (sChildItemHeight + sListDividerHeight);
-            childrenHeight -= sListDividerHeight;
-
-            int restrictedHeightSpec = MeasureSpec.makeMeasureSpec(Math.min(childrenHeight, sPreferredHeight), MeasureSpec.EXACTLY);
-            super.onMeasure(widthMeasureSpec, restrictedHeightSpec);
-        }
     }
 
     @Override
