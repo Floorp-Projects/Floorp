@@ -1980,7 +1980,7 @@ CSS_PROP_POSITION(
         CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
-    VARIANT_HLP | VARIANT_CALC,
+    VARIANT_AHLP | VARIANT_CALC,
     nsnull,
     offsetof(nsStylePosition, mMinHeight),
     eStyleAnimType_Coord)
@@ -1992,7 +1992,7 @@ CSS_PROP_POSITION(
         CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     "",
-    VARIANT_HKLP | VARIANT_CALC,
+    VARIANT_AHKLP | VARIANT_CALC,
     kWidthKTable,
     offsetof(nsStylePosition, mMinWidth),
     eStyleAnimType_Coord)
