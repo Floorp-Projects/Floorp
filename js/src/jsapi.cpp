@@ -766,10 +766,8 @@ JSRuntime::JSRuntime()
     hadOutOfMemory(false),
     debugScopes(NULL),
     data(NULL),
-#ifdef JS_THREADSAFE
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
-#endif
     defaultFreeOp_(thisFromCtor(), false, false),
     debuggerMutations(0),
     securityCallbacks(const_cast<JSSecurityCallbacks *>(&NullSecurityCallbacks)),

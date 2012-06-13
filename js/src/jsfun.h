@@ -143,21 +143,11 @@ struct JSFunction : public JSObject
     }
 
 #if JS_BITS_PER_WORD == 32
-# ifdef JS_THREADSAFE
     static const js::gc::AllocKind FinalizeKind = js::gc::FINALIZE_OBJECT2_BACKGROUND;
     static const js::gc::AllocKind ExtendedFinalizeKind = js::gc::FINALIZE_OBJECT4_BACKGROUND;
-# else
-    static const js::gc::AllocKind FinalizeKind = js::gc::FINALIZE_OBJECT2;
-    static const js::gc::AllocKind ExtendedFinalizeKind = js::gc::FINALIZE_OBJECT4;
-# endif
 #else
-# ifdef JS_THREADSAFE
     static const js::gc::AllocKind FinalizeKind = js::gc::FINALIZE_OBJECT4_BACKGROUND;
     static const js::gc::AllocKind ExtendedFinalizeKind = js::gc::FINALIZE_OBJECT8_BACKGROUND;
-# else
-    static const js::gc::AllocKind FinalizeKind = js::gc::FINALIZE_OBJECT4;
-    static const js::gc::AllocKind ExtendedFinalizeKind = js::gc::FINALIZE_OBJECT8;
-# endif
 #endif
 
     inline void trace(JSTracer *trc);
