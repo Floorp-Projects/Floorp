@@ -96,10 +96,8 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
         return NULL;
 
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-#ifdef JS_THREADSAFE
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
     kind = gc::GetBackgroundAllocKind(kind);
-#endif
 
     RootedTypeObject type(cx);
     type = cx->compartment->getEmptyType(cx);
