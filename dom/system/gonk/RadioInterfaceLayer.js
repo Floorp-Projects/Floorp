@@ -30,7 +30,7 @@ const DOM_SMS_DELIVERY_RECEIVED          = "received";
 const DOM_SMS_DELIVERY_SENT              = "sent";
 
 const RIL_IPC_MSG_NAMES = [
-  "RIL:GetRadioState",
+  "RIL:GetRilContext",
   "RIL:EnumerateCalls",
   "RIL:GetMicrophoneMuted",
   "RIL:SetMicrophoneMuted",
@@ -146,7 +146,7 @@ function RadioInterfaceLayer() {
   this.worker.onerror = this.onerror.bind(this);
   this.worker.onmessage = this.onmessage.bind(this);
 
-  this.radioState = {
+  this.rilContext = {
     radioState:     RIL.GECKO_RADIOSTATE_UNAVAILABLE,
     cardState:      RIL.GECKO_CARDSTATE_UNAVAILABLE,
     icc:            null,
@@ -161,7 +161,7 @@ function RadioInterfaceLayer() {
                      type: null,
                      signalStrength: null,
                      relSignalStrength: null},
-    data:          {connected: false,
+    data:           {connected: false,
                      emergencyCallsOnly: false,
                      roaming: false,
                      network: null,
@@ -204,9 +204,9 @@ RadioInterfaceLayer.prototype = {
   receiveMessage: function receiveMessage(msg) {
     debug("Received '" + msg.name + "' message from content process");
     switch (msg.name) {
-      case "RIL:GetRadioState":
+      case "RIL:GetRilContext":
         // This message is sync.
-        return this.radioState;
+        return this.rilContext;
       case "RIL:EnumerateCalls":
         this.enumerateCalls();
         break;
@@ -324,7 +324,7 @@ RadioInterfaceLayer.prototype = {
         this.handleRadioStateChange(message);
         break;
       case "cardstatechange":
-        this.radioState.cardState = message.cardState;
+        this.rilContext.cardState = message.cardState;
         ppmm.sendAsyncMessage("RIL:CardStateChanged", message);
         break;
       case "sms-received":
@@ -359,7 +359,7 @@ RadioInterfaceLayer.prototype = {
               " timestamp=" + message.localTimeStampInMS);
         break;
       case "iccinfochange":
-        this.radioState.icc = message;
+        this.rilContext.icc = message;
         break;
       case "iccgetcardlock":
         this.handleICCGetCardLock(message);
@@ -381,7 +381,7 @@ RadioInterfaceLayer.prototype = {
         }
         break;
       case "celllocationchanged":
-        this.radioState.cell = message;
+        this.rilContext.cell = message;
         break;
       case "ussdreceived":
         debug("ussdreceived " + JSON.stringify(message));
@@ -399,7 +399,7 @@ RadioInterfaceLayer.prototype = {
   },
 
   updateVoiceConnection: function updateVoiceConnection(state) {
-    let voiceInfo = this.radioState.voice;
+    let voiceInfo = this.rilContext.voice;
     voiceInfo.type = "gsm"; //TODO see bug 726098.
     if (!state || state.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
       voiceInfo.connected = false;
@@ -466,13 +466,13 @@ RadioInterfaceLayer.prototype = {
 
   handleSignalStrengthChange: function handleSignalStrengthChange(message) {
     // TODO CDMA, EVDO, LTE, etc. (see bug 726098)
-    this.radioState.voice.signalStrength = message.gsmDBM;
-    this.radioState.voice.relSignalStrength = message.gsmRelative;
-    ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", this.radioState.voice);
+    this.rilContext.voice.signalStrength = message.gsmDBM;
+    this.rilContext.voice.relSignalStrength = message.gsmRelative;
+    ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", this.rilContext.voice);
 
-    this.radioState.data.signalStrength = message.gsmDBM;
-    this.radioState.data.relSignalStrength = message.gsmRelative;
-    ppmm.sendAsyncMessage("RIL:DataInfoChanged", this.radioState.data);
+    this.rilContext.data.signalStrength = message.gsmDBM;
+    this.rilContext.data.relSignalStrength = message.gsmRelative;
+    ppmm.sendAsyncMessage("RIL:DataInfoChanged", this.rilContext.data);
   },
 
   networkChanged: function networkChanged(srcNetwork, destNetwork) {
@@ -484,8 +484,8 @@ RadioInterfaceLayer.prototype = {
   },
 
   handleOperatorChange: function handleOperatorChange(message) {
-    let voice = this.radioState.voice;
-    let data = this.radioState.data;
+    let voice = this.rilContext.voice;
+    let data = this.rilContext.data;
 
     if (this.networkChanged(message, voice.network)) {
       voice.network = message;
@@ -500,34 +500,34 @@ RadioInterfaceLayer.prototype = {
 
   handleRadioStateChange: function handleRadioStateChange(message) {
     let newState = message.radioState;
-    if (this.radioState.radioState == newState) {
+    if (this.rilContext.radioState == newState) {
       return;
     }
-    this.radioState.radioState = newState;
+    this.rilContext.radioState = newState;
     //TODO Should we notify this change as a card state change?
 
     this._ensureRadioState();
   },
 
   _ensureRadioState: function _ensureRadioState() {
-    debug("Reported radio state is " + this.radioState.radioState +
+    debug("Reported radio state is " + this.rilContext.radioState +
           ", desired radio enabled state is " + this._radioEnabled);
     if (this._radioEnabled == null) {
       // We haven't read the initial value from the settings DB yet.
       // Wait for that.
       return;
     }
-    if (this.radioState.radioState == RIL.GECKO_RADIOSTATE_UNKNOWN) {
+    if (this.rilContext.radioState == RIL.GECKO_RADIOSTATE_UNKNOWN) {
       // We haven't received a radio state notification from the RIL
       // yet. Wait for that.
       return;
     }
 
-    if (this.radioState.radioState == RIL.GECKO_RADIOSTATE_OFF &&
+    if (this.rilContext.radioState == RIL.GECKO_RADIOSTATE_OFF &&
         this._radioEnabled) {
       this.setRadioEnabled(true);
     }
-    if (this.radioState.radioState == RIL.GECKO_RADIOSTATE_READY &&
+    if (this.rilContext.radioState == RIL.GECKO_RADIOSTATE_READY &&
         !this._radioEnabled) {
       this.setRadioEnabled(false);
     }
@@ -637,7 +637,7 @@ RadioInterfaceLayer.prototype = {
       bearer: WAP.WDP_BEARER_GSM_SMS_GSM_MSISDN,
       sourceAddress: message.sender,
       sourcePort: message.header.originatorPort,
-      destinationAddress: this.radioState.icc.MSISDN,
+      destinationAddress: this.rilContext.icc.msisdn,
       destinationPort: message.header.destinationPort,
     };
     WAP.WapPushManager.receiveWdpPDU(message.fullData, message.fullData.length,
@@ -890,7 +890,7 @@ RadioInterfaceLayer.prototype = {
     this.worker.postMessage({type: "setRadioPower", on: value});
   },
 
-  radioState: null,
+  rilContext: null,
 
   // Handle phone functions of nsIRILContentHelper
 
