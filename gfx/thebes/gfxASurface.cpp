@@ -6,6 +6,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsMemory.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Attributes.h"
 
 #include "gfxASurface.h"
 #include "gfxContext.h"
@@ -557,7 +558,7 @@ PR_STATIC_ASSERT(PRUint32(CAIRO_SURFACE_TYPE_SKIA) ==
 
 static PRInt64 gSurfaceMemoryUsed[gfxASurface::SurfaceTypeMax] = { 0 };
 
-class SurfaceMemoryReporter :
+class SurfaceMemoryReporter MOZ_FINAL :
     public nsIMemoryMultiReporter
 {
 public:
