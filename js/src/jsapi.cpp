@@ -5298,7 +5298,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *scriptArg, jsval *rval)
         *(volatile int *) 0 = 0xf0;
     AutoLastFrameCheck lfc(cx);
 
-    JS::Anchor<JSScript *> script;
+    JS::Anchor<JSScript *> script(NULL);
 
     /*
      * Mozilla caches pre-compiled scripts (e.g., in the XUL prototype cache)
