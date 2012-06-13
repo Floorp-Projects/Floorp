@@ -11,8 +11,9 @@
 #include "nsAHtml5TreeOpSink.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
 
-class nsHtml5Speculation : public nsAHtml5TreeOpSink
+class nsHtml5Speculation MOZ_FINAL : public nsAHtml5TreeOpSink
 {
   public:
     nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,
