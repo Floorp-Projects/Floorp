@@ -3265,6 +3265,5 @@ typedef void* GLeglImage;
 #define LOCAL_EGL_FOREVER                     0xFFFFFFFFFFFFFFFFull
 #define LOCAL_EGL_TIMEOUT_EXPIRED             0x30F5
 #define LOCAL_EGL_CONDITION_SATISFIED         0x30F6
-#define LOCAL_EGL_SUCCESS                     0x3000
 
 #endif
