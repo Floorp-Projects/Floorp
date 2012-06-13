@@ -78,6 +78,9 @@
 !define _WINVER_NTBIT    0x80000000
 !define _WINVER_NTSRVBIT 0x40000000
 !define _WINVER_MASKSP   0x000F0000
+!ifndef WINVER_2008R2
+!define WINVER_2008R2    0x601
+!endif
 
 !define OSVERSIONINFOW_SIZE   276
 !define OSVERSIONINFOEXW_SIZE 284
@@ -303,6 +306,10 @@
   !insertmacro _= $_LOGICLIB_TEMP `${_b}` `${_t}` `${_f}`
 !macroend
 !define IsServicePack `"" IsServicePack`
+
+!ifndef AtMostWin2008R2
+!insertmacro __WinVer_DefineOSTest AtMost 2008R2
+!endif
 
 !endif # _WINVER_VERXBIT
 
