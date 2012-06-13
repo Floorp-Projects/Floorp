@@ -36,6 +36,7 @@
 #include "nsWeakReference.h"
 #include "nsIPrompt.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
 
 class nsExternalAppHandler;
 class nsIMIMEInfo;
@@ -205,9 +206,9 @@ protected:
  * stored the data into.  We create a handler every time we have to process
  * data using a helper app.
  */
-class nsExternalAppHandler : public nsIStreamListener,
-                             public nsIHelperAppLauncher,
-                             public nsITimerCallback
+class nsExternalAppHandler MOZ_FINAL : public nsIStreamListener,
+                                       public nsIHelperAppLauncher,
+                                       public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
