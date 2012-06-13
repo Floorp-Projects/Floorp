@@ -493,6 +493,3 @@ pref("dom.disable_window_print", true);
 
 // Disable window.showModalDialog
 pref("dom.disable_window_showModalDialog", true);
-
-// Turns on gralloc-based direct texturing for Gonk
-pref("gfx.gralloc.enabled", false);
