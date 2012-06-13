@@ -182,30 +182,6 @@ GLLibraryEGL::EnsureInitialized()
     GLLibraryLoader::PlatformLookupFunction lookupFunction =
             (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
 
-    if (IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_base)) {
-        GLLibraryLoader::SymLoadStruct imageSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCreateImage,  { "eglCreateImageKHR",  nsnull } },
-            { (PRFuncPtr*) &mSymbols.fDestroyImage, { "eglDestroyImageKHR", nsnull } },
-            { nsnull, { nsnull } }
-        };
-
-        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
-                                                    &imageSymbols[0],
-                                                    lookupFunction);
-        if (!success) {
-            NS_ERROR("EGL supports KHR_image(_base) without exposing its functions!");
-
-            MarkExtensionUnsupported(KHR_image);
-            MarkExtensionUnsupported(KHR_image_base);
-            MarkExtensionUnsupported(KHR_image_pixmap);
-
-            mSymbols.fCreateImage = nsnull;
-            mSymbols.fDestroyImage = nsnull;
-        }
-    } else {
-        MarkExtensionUnsupported(KHR_image_pixmap);
-    }
-
     if (IsExtensionSupported(KHR_lock_surface)) {
         GLLibraryLoader::SymLoadStruct lockSymbols[] = {
             { (PRFuncPtr*) &mSymbols.fLockSurface,   { "eglLockSurfaceKHR",   nsnull } },
@@ -301,6 +277,39 @@ GLLibraryEGL::InitExtensions()
 #ifdef DEBUG
     firstVerboseRun = false;
 #endif
+}
+
+void
+GLLibraryEGL::LoadConfigSensitiveSymbols()
+{
+    GLLibraryLoader::PlatformLookupFunction lookupFunction =
+            (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
+
+    if (IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_base)) {
+        GLLibraryLoader::SymLoadStruct imageSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCreateImage,  { "eglCreateImageKHR",  nsnull } },
+            { (PRFuncPtr*) &mSymbols.fDestroyImage, { "eglDestroyImageKHR", nsnull } },
+            { (PRFuncPtr*) &mSymbols.fImageTargetTexture2DOES, { "glEGLImageTargetTexture2DOES", NULL } },
+            { nsnull, { nsnull } }
+        };
+
+        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
+                                                    &imageSymbols[0],
+                                                    lookupFunction);
+        if (!success) {
+            NS_ERROR("EGL supports KHR_image(_base) without exposing its functions!");
+
+            MarkExtensionUnsupported(KHR_image);
+            MarkExtensionUnsupported(KHR_image_base);
+            MarkExtensionUnsupported(KHR_image_pixmap);
+
+            mSymbols.fCreateImage = nsnull;
+            mSymbols.fDestroyImage = nsnull;
+            mSymbols.fImageTargetTexture2DOES = nsnull;
+        }
+    } else {
+        MarkExtensionUnsupported(KHR_image_pixmap);
+    }
 }
 
 void
