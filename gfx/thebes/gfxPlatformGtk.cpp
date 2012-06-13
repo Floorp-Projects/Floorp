@@ -68,7 +68,11 @@ static FT_Library gPlatformFTLibrary = NULL;
 static cairo_user_data_key_t cairo_gdk_drawable_key;
 static void do_gdk_drawable_unref (void *data)
 {
+#if defined(MOZ_WIDGET_GTK2)
     GdkDrawable *d = (GdkDrawable*) data;
+#else
+    GdkWindow *d = (GdkWindow*) data;
+#endif
     g_object_unref (d);
 }
 
@@ -475,7 +479,7 @@ gfxPlatformGtk::GetOffscreenFormat()
 {
     // Make sure there is a screen
     GdkScreen *screen = gdk_screen_get_default();
-    if (screen && gdk_visual_get_system()->depth == 16) {
+    if (screen && gdk_visual_get_depth(gdk_visual_get_system()) == 16) {
         return gfxASurface::ImageFormatRGB16_565;
     }
 
@@ -490,7 +494,7 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
     const char ICC_PROFILE_ATOM_NAME[] = "_ICC_PROFILE";
 
     Atom edidAtom, iccAtom;
-    Display *dpy = GDK_DISPLAY();
+    Display *dpy = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     Window root = gdk_x11_get_default_root_xwindow();
 
     Atom retAtom;
@@ -690,7 +694,7 @@ gfxPlatformGtk::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxF
 }
 #endif
 
-
+#if defined(MOZ_WIDGET_GTK2)
 void
 gfxPlatformGtk::SetGdkDrawable(gfxASurface *target,
                                GdkDrawable *drawable)
@@ -735,6 +739,7 @@ gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
 
     return NULL;
 }
+#endif
 
 RefPtr<ScaledFont>
 gfxPlatformGtk::GetScaledFontForFont(gfxFont *aFont)
@@ -755,4 +760,3 @@ gfxPlatformGtk::SupportsAzure(BackendType& aBackend)
     aBackend = BACKEND_SKIA;
     return true;
 }
-
