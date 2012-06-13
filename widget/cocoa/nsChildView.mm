@@ -1399,6 +1399,14 @@ nsChildView::GetShouldAccelerate()
   return nsBaseWidget::GetShouldAccelerate();
 }
 
+bool
+nsChildView::UseOffMainThreadCompositing()
+{
+  // OMTC doesn't work with Basic Layers on OS X right now. Once it works, we'll
+  // still want to disable it for certain kinds of windows (e.g. popups).
+  return nsBaseWidget::UseOffMainThreadCompositing() && GetShouldAccelerate();
+}
+
 inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
 {
   // return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
