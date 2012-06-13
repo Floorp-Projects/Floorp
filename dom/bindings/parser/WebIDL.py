@@ -948,7 +948,7 @@ class IDLType(IDLObject):
         return False
 
     def isAny(self):
-        return self.tag() == IDLType.Tags.any
+        return self.tag() == IDLType.Tags.any and not self.isSequence()
 
     def isDate(self):
         return self.tag() == IDLType.Tags.date
