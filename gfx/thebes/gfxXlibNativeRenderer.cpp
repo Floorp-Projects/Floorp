@@ -230,10 +230,16 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
     /* we're good to go! */
     NATIVE_DRAWING_NOTE("TAKING FAST PATH\n");
     cairo_surface_flush (target);
+#if defined(MOZ_WIDGET_GTK2)
     nsRefPtr<gfxASurface> surface = gfxASurface::Wrap(target);
     nsresult rv = DrawWithXlib(static_cast<gfxXlibSurface*>(surface.get()),
                                offset, rectangles,
                                needs_clip ? rect_count : 0);
+#else
+    nsresult rv = DrawWithXlib(cr,
+                               offset, rectangles,
+                               needs_clip ? rect_count : 0);
+#endif
     if (NS_SUCCEEDED(rv)) {
         cairo_surface_mark_dirty (target);
         return true;
@@ -412,6 +418,7 @@ CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
     return surface.forget();
 }
 
+#if defined(MOZ_WIDGET_GTK2)
 bool
 gfxXlibNativeRenderer::DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
                                            nsIntPoint offset)
@@ -423,6 +430,24 @@ gfxXlibNativeRenderer::DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
     tempXlibSurface->MarkDirty();
     return NS_SUCCEEDED(rv);
 }
+#else
+PRBool
+gfxXlibNativeRenderer::DrawOntoTempSurface(cairo_t *cr,
+                                           nsIntPoint offset)
+{
+    cairo_surface_t *target = cairo_get_group_target (cr);
+
+    cairo_surface_flush (target);
+    /* no clipping is needed because the callback can't draw outside the native
+       surface anyway */
+    nsresult rv = DrawWithXlib(cr, offset, NULL, 0);
+    if (NS_SUCCEEDED(rv)) {
+        cairo_surface_mark_dirty (target);
+    }
+
+    return NS_SUCCEEDED(rv);
+}
+#endif
 
 static already_AddRefed<gfxImageSurface>
 CopyXlibSurfaceToImage(gfxXlibSurface *tempXlibSurface,
@@ -523,9 +548,8 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         result = NULL;
     }
 
-    nsRefPtr<gfxContext> tmpCtx;
+    nsRefPtr<gfxContext> tmpCtx = new gfxContext(tempXlibSurface);
     if (!drawIsOpaque) {
-        tmpCtx = new gfxContext(tempXlibSurface);
         if (method == eCopyBackground) {
             tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
             tmpCtx->SetSource(target, -(offset + matrix.GetTranslation()));
@@ -542,9 +566,15 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         tmpCtx->Paint();
     }
 
+#if defined(MOZ_WIDGET_GTK2)
     if (!DrawOntoTempSurface(tempXlibSurface, -drawingRect.TopLeft())) {
         return;
     }
+#else
+    if (!DrawOntoTempSurface(tmpCtx->GetCairo(), -drawingRect.TopLeft())) {
+        return;
+    }
+#endif
   
     if (method != eAlphaExtraction) {
         ctx->SetSource(tempXlibSurface, offset);
@@ -565,7 +595,11 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
     tmpCtx->SetDeviceColor(gfxRGBA(1.0, 1.0, 1.0));
     tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
     tmpCtx->Paint();
+#if defined(MOZ_WIDGET_GTK2)
     DrawOntoTempSurface(tempXlibSurface, -drawingRect.TopLeft());
+#else
+    DrawOntoTempSurface(tmpCtx->GetCairo(), -drawingRect.TopLeft());
+#endif
     nsRefPtr<gfxImageSurface> whiteImage =
         CopyXlibSurfaceToImage(tempXlibSurface, gfxASurface::ImageFormatRGB24);
   

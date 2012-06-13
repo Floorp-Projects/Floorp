@@ -10,6 +10,10 @@
 #include "nsAutoPtr.h"
 #include "nsRect.h"
 #include <X11/Xlib.h>
+#if MOZ_WIDGET_GTK == 3
+#include "cairo-xlib.h"
+#include "cairo-xlib-xrender.h"
+#endif
 
 class gfxASurface;
 class gfxXlibSurface;
@@ -37,10 +41,19 @@ public:
      * @param numClipRects the number of rects in the array, or zero if
      *                     no clipping is required.
      */
+
+#if defined(MOZ_WIDGET_GTK2)
     virtual nsresult DrawWithXlib(gfxXlibSurface* surface,
                                   nsIntPoint offset,
                                   nsIntRect* clipRects, PRUint32 numClipRects) = 0;
-  
+#else
+    virtual nsresult DrawWithXlib(cairo_t *cr,
+                                  nsIntPoint offset,
+                                  nsIntRect* clipRects, PRUint32 numClipRects) = 0;
+#endif  
+ 
+
+ 
     enum {
         // If set, then Draw() is opaque, i.e., every pixel in the intersection
         // of the clipRect and (offset.x,offset.y,bounds.width,bounds.height)
@@ -89,9 +102,13 @@ private:
     bool DrawDirect(gfxContext *ctx, nsIntSize bounds,
                       PRUint32 flags, Screen *screen, Visual *visual);
 
+#if defined(MOZ_WIDGET_GTK2)
     bool DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
                                nsIntPoint offset);
-
+#else
+    PRBool DrawOntoTempSurface(cairo_t *cr,
+                               nsIntPoint offset);
+#endif
 };
 
 #endif /*GFXXLIBNATIVERENDER_H_*/

@@ -20,7 +20,7 @@
 #include "gfxTestCocoaHelper.h"
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
+#if (MOZ_WIDGET_GTK >= 2)
 #include "gtk/gtk.h"
 #endif
 
@@ -93,7 +93,7 @@ MakeContext ()
 
 int
 main (int argc, char **argv) {
-#ifdef MOZ_WIDGET_GTK2
+#if (MOZ_WIDGET_GTK >= 2)
    gtk_init(&argc, &argv);
 #endif
 #ifdef XP_MACOSX

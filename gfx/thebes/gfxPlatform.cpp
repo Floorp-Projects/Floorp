@@ -15,7 +15,7 @@
 #include "gfxD2DSurface.h"
 #elif defined(XP_MACOSX)
 #include "gfxPlatformMac.h"
-#elif defined(MOZ_WIDGET_GTK2)
+#elif (MOZ_WIDGET_GTK >= 2)
 #include "gfxPlatformGtk.h"
 #elif defined(MOZ_WIDGET_QT)
 #include "gfxQtPlatform.h"
@@ -258,7 +258,7 @@ gfxPlatform::Init()
     gPlatform = new gfxWindowsPlatform;
 #elif defined(XP_MACOSX)
     gPlatform = new gfxPlatformMac;
-#elif defined(MOZ_WIDGET_GTK2)
+#elif (MOZ_WIDGET_GTK >= 2)
     gPlatform = new gfxPlatformGtk;
 #elif defined(MOZ_WIDGET_QT)
     gPlatform = new gfxQtPlatform;
