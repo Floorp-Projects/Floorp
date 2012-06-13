@@ -23,6 +23,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 
 /* XXX DOM dependency */
 #include "nsIScriptContext.h"
@@ -3381,7 +3382,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(jsdService, jsdService::GetService)
  * and/or removed from the app-start category by the jsdService::initAtStartup
  * property.
  */
-class jsdASObserver : public nsIObserver 
+class jsdASObserver MOZ_FINAL : public nsIObserver
 {
   public:
     NS_DECL_ISUPPORTS
