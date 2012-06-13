@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Util.h"
+#include "mozilla/Attributes.h"
 
 #include "necko-config.h"
 
@@ -33,7 +34,6 @@
 #include "nsDeleteDir.h"
 #include "nsNetCID.h"
 #include <math.h>  // for log()
-#include "mozilla/Util.h" // for DebugOnly
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "nsITimer.h"
@@ -184,7 +184,7 @@ private:
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheProfilePrefObserver, nsIObserver)
 
-class nsSetDiskSmartSizeCallback : public nsITimerCallback
+class nsSetDiskSmartSizeCallback MOZ_FINAL : public nsITimerCallback
 {
 public:
     NS_DECL_ISUPPORTS

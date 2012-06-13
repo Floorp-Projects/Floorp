@@ -24,7 +24,7 @@ $(call errorifneq,$(zero),$(words $(call is_XinY,clean%,$(val))))
 val  := clean
 $(call errorifneq,$(zero),$(words $(call is_XinY,foo,$(val))))
 $(call errorifneq,$(one),$(words $(call is_XinY,clean,$(val))))
-$(call errorifneq,$(one,$(words $(call is_XinY,clean%,$(val)))))
+$(call errorifneq,$(one),$(words $(call is_XinY,clean%,$(val))))
 $(call errorifneq,$(one),$(words $(call is_XinY,%clean,$(val))))
 
 # List match for 'clean'

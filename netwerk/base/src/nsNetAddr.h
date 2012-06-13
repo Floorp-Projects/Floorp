@@ -9,8 +9,9 @@
 
 #include "nsINetAddr.h"
 #include "prio.h"
+#include "mozilla/Attributes.h"
 
-class nsNetAddr : public nsINetAddr
+class nsNetAddr MOZ_FINAL : public nsINetAddr
 {
 public:
   NS_DECL_ISUPPORTS

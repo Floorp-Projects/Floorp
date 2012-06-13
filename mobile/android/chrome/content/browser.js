@@ -207,7 +207,9 @@ var BrowserApp = {
     WebappsUI.init();
     RemoteDebugger.init();
     Reader.init();
+#ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.init();
+#endif
 #ifdef ACCESSIBILITY
     AccessFu.attach(window);
 #endif
@@ -297,7 +299,9 @@ var BrowserApp = {
       this.addTab(url, loadParams);
 
       // show telemetry door hanger if we aren't restoring a session
+#ifdef MOZ_TELEMETRY_REPORTING
       Telemetry.prompt();
+#endif
     }
 
     if (this.isAppUpdated())
@@ -353,7 +357,9 @@ var BrowserApp = {
     WebappsUI.uninit();
     RemoteDebugger.uninit();
     Reader.uninit();
+#ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.uninit();
+#endif
   },
 
   // This function returns false during periods where the browser displayed document is

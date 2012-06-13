@@ -18,6 +18,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsISocketTransport.h"
 #include "nsURLHelper.h"
+#include "mozilla/Attributes.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -150,7 +151,7 @@ nsFtpChannel::OnCallbacksChanged()
 
 namespace {
 
-class FTPEventSinkProxy : public nsIFTPEventSink
+class FTPEventSinkProxy MOZ_FINAL : public nsIFTPEventSink
 {
 public:
     FTPEventSinkProxy(nsIFTPEventSink* aTarget)

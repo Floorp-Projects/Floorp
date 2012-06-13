@@ -49,6 +49,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsITimedChannel.h"
 #include "nsChannelProperties.h"
+#include "mozilla/Attributes.h"
 
 #include "nsISimpleEnumerator.h"
 #include "nsStringAPI.h"
@@ -564,7 +565,7 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
 // NotificationCallbacks
 //-----------------------------------------------------------------------------
 
-class NotificationCallbacks : public nsIInterfaceRequestor {
+class NotificationCallbacks MOZ_FINAL : public nsIInterfaceRequestor {
 public:
     NS_DECL_ISUPPORTS
 

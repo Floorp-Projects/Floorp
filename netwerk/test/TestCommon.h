@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include "nsThreadUtils.h"
+#include "mozilla/Attributes.h"
 
 inline int test_common_init(int *argc, char ***argv)
 {
@@ -17,7 +18,7 @@ inline int test_common_init(int *argc, char ***argv)
 
 static bool gKeepPumpingEvents = false;
 
-class nsQuitPumpingEvent : public nsIRunnable {
+class nsQuitPumpingEvent MOZ_FINAL : public nsIRunnable {
 public:
   NS_DECL_ISUPPORTS
   NS_IMETHOD Run() {

@@ -11,6 +11,7 @@
 #include "nsISAXMutableAttributes.h"
 #include "nsTArray.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 #define NS_SAXATTRIBUTES_CONTRACTID "@mozilla.org/saxparser/attributes;1"
 #define NS_SAXATTRIBUTES_CLASSNAME "SAX Attributes"
@@ -28,7 +29,7 @@ struct SAXAttr
   nsString value;
 };
 
-class nsSAXAttributes : public nsISAXMutableAttributes
+class nsSAXAttributes MOZ_FINAL : public nsISAXMutableAttributes
 {
 public:
   NS_DECL_ISUPPORTS

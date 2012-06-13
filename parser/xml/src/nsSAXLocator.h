@@ -8,6 +8,7 @@
 
 #include "nsISAXLocator.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 #define NS_SAXLOCATOR_CONTRACTID "@mozilla.org/saxparser/locator;1"
 #define NS_SAXLOCATOR_CLASSNAME "SAX Locator"
@@ -16,7 +17,7 @@
 0xc1cd4045, 0x846b, 0x43bb, \
 { 0xa9, 0x5e, 0x74, 0x5a, 0x3d, 0x7b, 0x40, 0xe0} }
 
-class nsSAXLocator : public nsISAXLocator
+class nsSAXLocator MOZ_FINAL : public nsISAXLocator
 {
 public:
   NS_DECL_ISUPPORTS

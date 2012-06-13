@@ -17,6 +17,7 @@
 #include "nsIAsyncInputStream.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 class nsIProxyInfo;
 class nsITransportEventSink;
@@ -40,7 +41,7 @@ public:
     virtual void OnControlError(nsresult status) = 0;
 };
 
-class nsFtpControlConnection : public nsIInputStreamCallback
+class nsFtpControlConnection MOZ_FINAL : public nsIInputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS
