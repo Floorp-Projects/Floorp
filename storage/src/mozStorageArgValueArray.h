@@ -8,13 +8,14 @@
 #define mozStorageArgValueArray_h
 
 #include "mozIStorageValueArray.h"
+#include "mozilla/Attributes.h"
 
 #include "sqlite3.h"
 
 namespace mozilla {
 namespace storage {
 
-class ArgValueArray : public mozIStorageValueArray
+class ArgValueArray MOZ_FINAL : public mozIStorageValueArray
 {
 public:
   ArgValueArray(PRInt32 aArgc, sqlite3_value **aArgv);
