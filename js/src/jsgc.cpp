@@ -879,6 +879,45 @@ InFreeList(ArenaHeader *aheader, uintptr_t addr)
     }
 }
 
+#ifdef JSGC_USE_EXACT_ROOTING
+static void
+MarkExactStackRoots(JSTracer *trc)
+{
+    for (ContextIter cx(trc->runtime); !cx.done(); cx.next()) {
+        for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
+            Rooted<void*> *rooter = cx->thingGCRooters[i];
+            while (rooter) {
+                void **addr = (void **)rooter->address();
+                if (*addr) {
+                    if (i == THING_ROOT_OBJECT) {
+                        MarkObjectRoot(trc, (JSObject **)addr, "exact stackroot object");
+                    } else if (i == THING_ROOT_STRING) {
+                        MarkStringRoot(trc, (JSString **)addr, "exact stackroot string");
+                    } else if (i == THING_ROOT_ID) {
+                        MarkIdRoot(trc, (jsid *)addr, "exact stackroot id");
+                    } else if (i == THING_ROOT_VALUE) {
+                        MarkValueRoot(trc, (Value *)addr, "exact stackroot value");
+                    } else if (i == THING_ROOT_SHAPE) {
+                        MarkShapeRoot(trc, (Shape **)addr, "exact stackroot shape");
+                    } else if (i == THING_ROOT_BASE_SHAPE) {
+                        MarkBaseShapeRoot(trc, (BaseShape **)addr, "exact stackroot baseshape");
+                    } else if (i == THING_ROOT_TYPE_OBJECT) {
+                        MarkTypeObjectRoot(trc, (types::TypeObject **)addr, "exact stackroot typeobject");
+                    } else if (i == THING_ROOT_SCRIPT) {
+                        MarkScriptRoot(trc, (JSScript **)addr, "exact stackroot script");
+                    } else if (i == THING_ROOT_XML) {
+                        MarkXMLRoot(trc, (JSXML **)addr, "exact stackroot xml");
+                    } else {
+                        JS_NOT_REACHED("Invalid thing root kind.");
+                    }
+                }
+                rooter = rooter->previous();
+            }
+        }
+    }
+}
+#endif /* JSGC_USE_EXACT_ROOTING */
+
 enum ConservativeGCTest
 {
     CGCT_VALID,
@@ -1038,6 +1077,8 @@ MarkRangeConservatively(JSTracer *trc, const uintptr_t *begin, const uintptr_t *
         MarkWordConservatively(trc, *i);
 }
 
+#ifndef JSGC_USE_EXACT_ROOTING
+
 static JS_NEVER_INLINE void
 MarkConservativeStackRoots(JSTracer *trc, bool useSavedRoots)
 {
@@ -1083,6 +1124,8 @@ MarkConservativeStackRoots(JSTracer *trc, bool useSavedRoots)
                             ArrayEnd(cgcd->registerSnapshot.words));
 }
 
+#endif /* JSGC_USE_EXACT_ROOTING */
+
 void
 MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
 {
@@ -1100,8 +1143,6 @@ MarkStackRangeConservatively(JSTracer *trc, Value *beginv, Value *endv)
     MarkRangeConservatively(trc, begin, end);
 #endif
 }
-
-
 
 JS_NEVER_INLINE void
 ConservativeGCData::recordStackTop()
@@ -2299,8 +2340,13 @@ MarkRuntime(JSTracer *trc, bool useSavedRoots = false)
 
     AutoGCRooter::traceAll(trc);
 
-    if (rt->hasContexts())
+    if (rt->hasContexts()) {
+#ifdef JSGC_USE_EXACT_ROOTING
+        MarkExactStackRoots(trc);
+#else
         MarkConservativeStackRoots(trc, useSavedRoots);
+#endif
+    }
 
     for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
         gc_root_traversal(trc, r.front());
@@ -4086,7 +4132,7 @@ SetDeterministicGC(JSContext *cx, bool enabled)
 } /* namespace gc */
 } /* namespace js */
 
-#if defined(DEBUG) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 
 static void
 CheckStackRoot(JSTracer *trc, uintptr_t *w)
@@ -4146,7 +4192,9 @@ JS::CheckStackRoots(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
-    if (!rt->gcExactScanningEnabled)
+    if (rt->gcZeal_ != ZealStackRootingSafeValue && rt->gcZeal_ != ZealStackRootingValue)
+        return;
+    if (rt->gcZeal_ == ZealStackRootingSafeValue && !rt->gcExactScanningEnabled)
         return;
 
     AutoCopyFreeListToArenas copy(rt);
@@ -4206,7 +4254,7 @@ JS::CheckStackRoots(JSContext *cx)
                          ArrayEnd(cgcd->registerSnapshot.words));
 }
 
-#endif /* DEBUG && JSGC_ROOT_ANALYSIS && !JS_THREADSAFE */
+#endif /* DEBUG && JS_GC_ZEAL && JSGC_ROOT_ANALYSIS && !JS_THREADSAFE */
 
 namespace js {
 namespace gc {

@@ -6643,7 +6643,9 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
                    "  2: GC every F allocations (default: 100)\n"
                    "  3: GC when the window paints (browser only)\n"
                    "  4: Verify write barriers between instructions\n"
-                   "  5: Verify write barriers between paints\n");
+                   "  5: Verify write barriers between paints\n"
+                   "  6: Verify stack rooting (ignoring XML and Reflect)\n"
+                   "  7: Verify stack rooting (all roots)\n");
         }
         const char *p = strchr(env, ',');
         zeal = atoi(env);
