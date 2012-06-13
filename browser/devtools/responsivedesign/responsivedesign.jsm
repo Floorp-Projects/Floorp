@@ -57,6 +57,7 @@ function ResponsiveUI(aWindow, aTab)
 {
   this.mainWindow = aWindow;
   this.tab = aTab;
+  this.tabContainer = aWindow.gBrowser.tabContainer;
   this.browser = aTab.linkedBrowser;
   this.chromeDoc = aWindow.document;
   this.container = aWindow.gBrowser.getBrowserContainer(this.browser);
@@ -110,7 +111,7 @@ function ResponsiveUI(aWindow, aTab)
 
   // Events
   this.tab.addEventListener("TabClose", this);
-  this.tab.addEventListener("TabAttrModified", this);
+  this.tabContainer.addEventListener("TabSelect", this);
   this.mainWindow.addEventListener("keypress", this.bound_onKeypress, true);
 
   this.buildUI();
@@ -156,7 +157,7 @@ ResponsiveUI.prototype = {
     this.mainWindow.removeEventListener("keypress", this.bound_onKeypress, true);
     this.menulist.removeEventListener("select", this.bound_presetSelected, true);
     this.tab.removeEventListener("TabClose", this);
-    this.tab.removeEventListener("TabAttrModified", this);
+    this.tabContainer.removeEventListener("TabSelect", this);
     this.rotatebutton.removeEventListener("command", this.bound_rotate, true);
 
     // Removed elements.
@@ -208,10 +209,10 @@ ResponsiveUI.prototype = {
       case "TabClose":
         this.close();
         break;
-      case "TabAttrModified":
-        if (this.mainWindow.gBrowser.selectedBrowser == this.browser) {
+      case "TabSelect":
+        if (this.tab.selected) {
           this.checkMenus();
-        } else {
+        } else if (!this.mainWindow.gBrowser.selectedTab.responsiveUI) {
           this.unCheckMenus();
         }
         break;
