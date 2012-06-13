@@ -498,14 +498,14 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        sMenu = menu;
+        mMenu = menu;
 
         // Inform the menu about the action-items bar. 
         if (menu instanceof GeckoMenu && isTablet())
             ((GeckoMenu) menu).setActionItemBarPresenter(mBrowserToolbar);
 
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.gecko_menu, sMenu);
+        inflater.inflate(R.menu.gecko_menu, mMenu);
         return true;
     }
 
