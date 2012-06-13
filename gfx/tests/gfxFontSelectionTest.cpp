@@ -20,7 +20,7 @@
 #include "gfxTestCocoaHelper.h"
 #endif
 
-#if (MOZ_WIDGET_GTK >= 2)
+#ifdef MOZ_WIDGET_GTK2
 #include "gtk/gtk.h"
 #endif
 
@@ -297,7 +297,7 @@ main (int argc, char **argv) {
     int passed = 0;
     int failed = 0;
 
-#if (MOZ_WIDGET_GTK >= 2)
+#ifdef MOZ_WIDGET_GTK2
     gtk_init(&argc, &argv); 
 #endif
 #ifdef XP_MACOSX
