@@ -385,17 +385,16 @@ MacroAssembler::getNewObject(JSContext *cx, const Register &result,
     JS_ASSERT(!templateObject->hasDynamicElements());
 
 #ifdef JS_GC_ZEAL
-    if (cx->runtime->needZealousGC()) {
-        jump(fail);
-        return;
-    }
+    // Dynamic Cehck for GC Zeal.
+    movePtr(ImmWord(cx->runtime), result);
+    loadPtr(Address(result, offsetof(JSRuntime, gcZeal_)), result);
+    branch32(Assembler::NotEqual, result, Imm32(0), fail);
 #endif
 
     // Inline FreeSpan::allocate.
     // There is always exactly one FreeSpan per allocKind per JSCompartment.
     // If a FreeSpan is replaced, its members are updated in the freeLists table,
     // which the code below always re-reads.
-
     gc::FreeSpan *list = const_cast<gc::FreeSpan *>
                          (cx->compartment->arenas.getFreeList(allocKind));
     loadPtr(AbsoluteAddress(&list->first), result);

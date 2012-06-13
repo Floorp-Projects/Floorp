@@ -207,7 +207,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     FlattenedMResumePointIter mirOperandIter(snapshot->mir());
     if (!mirOperandIter.init())
         return false;
-    
+
     uint32 startIndex = 0;
     for (MResumePoint **it = mirOperandIter.begin(), **end = mirOperandIter.end();
          it != end;
@@ -251,7 +251,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     snapshots_.endSnapshot();
 
     snapshot->setSnapshotOffset(offset);
-    
+
     return !snapshots_.oom();
 }
 
@@ -474,7 +474,6 @@ void
 CodeGeneratorShared::emitPreBarrier(Address address, MIRType type)
 {
     addPreBarrierOffset(masm.patchableCallPreBarrier(address, type));
-    
 }
 
 } // namespace ion
