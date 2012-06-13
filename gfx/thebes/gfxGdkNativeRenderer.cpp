@@ -11,8 +11,6 @@
 #include <gdk/gdkx.h>
 #include "cairo-xlib.h"
 #include "gfxXlibSurface.h"
-
-#if defined(MOZ_WIDGET_GTK2)
 nsresult
 gfxGdkNativeRenderer::DrawWithXlib(gfxXlibSurface* surface,
                                    nsIntPoint offset,
@@ -60,37 +58,5 @@ gfxGdkNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
 
     gfxXlibNativeRenderer::Draw(ctx, size, flags, screen, visual, nsnull);
 }
-
-#else
-nsresult
-gfxGdkNativeRenderer::DrawWithXlib(cairo_t* cr,
-                                   nsIntPoint offset,
-                                   nsIntRect* clipRects, PRUint32 numClipRects)
-{
-    GdkRectangle clipRect;
-    if (numClipRects) {
-        NS_ASSERTION(numClipRects == 1, "Too many clip rects");
-        clipRect.x = clipRects[0].x;
-        clipRect.y = clipRects[0].y;
-        clipRect.width = clipRects[0].width;
-        clipRect.height = clipRects[0].height;
-    }
-
-    nsresult rv = DrawWithGDK(cr, offset.x, offset.y,
-                              numClipRects ? &clipRect : NULL, numClipRects);
-    return rv;
-}
-
-void
-gfxGdkNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
-                           PRUint32 flags, GdkVisual *visual)
-{
-    mVisual = gdk_visual_get_system();
-    Visual* xvisual = gdk_x11_visual_get_xvisual(mVisual);
-    Screen* xscreen = gdk_x11_screen_get_xscreen(gdk_screen_get_default());
-
-    gfxXlibNativeRenderer::Draw(ctx, size, flags, xscreen, xvisual, nsnull);
-}
-#endif
 
 #endif

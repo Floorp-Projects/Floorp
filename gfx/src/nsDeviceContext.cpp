@@ -23,7 +23,7 @@
 #include "gfxPDFSurface.h"
 #endif
 
-#if (MOZ_WIDGET_GTK >= 2)
+#ifdef MOZ_ENABLE_GTK2
 #include "gfxPSSurface.h"
 #elif XP_WIN
 #include "gfxWindowsSurface.h"
@@ -640,7 +640,7 @@ nsDeviceContext::CalcPrintingSize()
         break;
 #endif
 
-#if (MOZ_WIDGET_GTK >= 2)
+#ifdef MOZ_ENABLE_GTK2
     case gfxASurface::SurfaceTypePS:
         inPoints = true;
         size = reinterpret_cast<gfxPSSurface*>(mPrintingSurface.get())->GetSize();

@@ -22,7 +22,7 @@
 #include "gfxTestCocoaHelper.h"
 #endif
 
-#if (MOZ_WIDGET_GTK >= 2)
+#ifdef MOZ_WIDGET_GTK2
 #include "gtk/gtk.h"
 #endif
 
@@ -106,7 +106,7 @@ PRUint32 iterations = 20;
 
 int
 main (int argc, char **argv) {
-#if (MOZ_WIDGET_GTK >= 2)
+#ifdef MOZ_WIDGET_GTK2
     gtk_init(&argc, &argv); 
 #endif
 #ifdef XP_MACOSX
