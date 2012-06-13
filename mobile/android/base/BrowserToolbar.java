@@ -94,7 +94,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mInflater = LayoutInflater.from(context);
 
         sActionItems = new ArrayList<View>();
-        Tabs.getInstance().registerOnTabsChangedListener(this);
+        Tabs.registerOnTabsChangedListener(this);
     }
 
     public void from(LinearLayout layout) {
