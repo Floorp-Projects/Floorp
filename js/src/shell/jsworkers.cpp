@@ -434,6 +434,7 @@ class ThreadPool
     static JSClass jsClass;
 
     static void start(void* arg) {
+        PR_SetCurrentThreadName("JS Worker");
         ((WorkerQueue *) arg)->work();
     }
 

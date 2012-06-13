@@ -46,6 +46,7 @@ import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 public class BrowserToolbar implements ViewSwitcher.ViewFactory,
+                                       Tabs.OnTabsChangedListener,
                                        GeckoMenu.ActionItemBarPresenter {
     private static final String LOGTAG = "GeckoToolbar";
     private LinearLayout mLayout;
@@ -93,6 +94,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mInflater = LayoutInflater.from(context);
 
         sActionItems = new ArrayList<View>();
+        Tabs.getInstance().registerOnTabsChangedListener(this);
     }
 
     public void from(LinearLayout layout) {
@@ -180,7 +182,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
                 // Calculate the left margin for the arrow based on the position of the lock icon.
                 int leftMargin = lockLocation[0] - lockLayoutParams.rightMargin;
-                SiteIdentityPopup.getInstance().show(leftMargin);
+                SiteIdentityPopup.getInstance().show(mSiteSecurity, leftMargin);
             }
         });
 
@@ -264,6 +266,49 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
 
     public void requestLayout() {
         mLayout.invalidate();
+    }
+
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+        switch(msg) {
+            case TITLE:
+                // if (sameDocument)
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    setTitle(tab.getDisplayTitle());
+                }
+                break;
+            case START:
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    setSecurityMode(tab.getSecurityMode());
+                    setReaderVisibility(tab.getReaderEnabled());
+                    updateBackButton(tab.canDoBack());
+                    updateForwardButton(tab.canDoForward());
+                    Boolean showProgress = (Boolean)data;
+                    if (showProgress && tab.getState() == Tab.STATE_LOADING)
+                        setProgressVisibility(true);
+                }
+                break;
+            case STOP:
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    updateBackButton(tab.canDoBack());
+                    updateForwardButton(tab.canDoForward());
+                    setProgressVisibility(false);
+                }
+                break;
+            case RESTORED:
+            case SELECTED:
+            case LOCATION_CHANGE:
+            case LOAD_ERROR:
+                if (Tabs.getInstance().isSelectedTab(tab)) {
+                    refresh();
+                }
+                break;
+            case CLOSED:
+            case ADDED:
+                updateTabCountAndAnimate(Tabs.getInstance().getCount());
+                updateBackButton(false);
+                updateForwardButton(false);
+                break;
+        }
     }
 
     @Override
@@ -570,9 +615,6 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
                     if (selectedTab != null) {
                         selectedTab.addToReadingList();
                     }
-
-                    Toast.makeText(GeckoApp.mAppContext,
-                                   R.string.reading_list_added, Toast.LENGTH_SHORT).show();
 
                     dismiss();
                 }

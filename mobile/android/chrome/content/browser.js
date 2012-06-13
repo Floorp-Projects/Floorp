@@ -155,7 +155,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Preferences:Set", false);
     Services.obs.addObserver(this, "ScrollTo:FocusedInput", false);
     Services.obs.addObserver(this, "Sanitize:ClearAll", false);
-    Services.obs.addObserver(this, "Telemetry:Add", false);
     Services.obs.addObserver(this, "PanZoom:PanZoom", false);
     Services.obs.addObserver(this, "FullScreen:Exit", false);
     Services.obs.addObserver(this, "Viewport:Change", false);
@@ -208,6 +207,7 @@ var BrowserApp = {
     WebappsUI.init();
     RemoteDebugger.init();
     Reader.init();
+    Telemetry.init();
 #ifdef ACCESSIBILITY
     AccessFu.attach(window);
 #endif
@@ -297,7 +297,7 @@ var BrowserApp = {
       this.addTab(url, loadParams);
 
       // show telemetry door hanger if we aren't restoring a session
-      this._showTelemetryPrompt();
+      Telemetry.prompt();
     }
 
     if (this.isAppUpdated())
@@ -339,63 +339,6 @@ var BrowserApp = {
     Services.obs.notifyObservers(null, "Passwords:Init", "");
   },
 
-  _showTelemetryPrompt: function _showTelemetryPrompt() {
-    const PREF_TELEMETRY_PROMPTED = "toolkit.telemetry.prompted";
-    const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
-    const PREF_TELEMETRY_REJECTED = "toolkit.telemetry.rejected";
-    const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
-
-    // This is used to reprompt users when privacy message changes
-    const TELEMETRY_PROMPT_REV = 2;
-
-    let serverOwner = Services.prefs.getCharPref(PREF_TELEMETRY_SERVER_OWNER);
-    let telemetryPrompted = null;
-    try {
-      telemetryPrompted = Services.prefs.getIntPref(PREF_TELEMETRY_PROMPTED);
-    } catch (e) { /* Optional */ }
-
-    // If the user has seen the latest telemetry prompt, do not prompt again
-    // else clear old prefs and reprompt
-    if (telemetryPrompted === TELEMETRY_PROMPT_REV)
-      return;
-
-    Services.prefs.clearUserPref(PREF_TELEMETRY_PROMPTED);
-    Services.prefs.clearUserPref(PREF_TELEMETRY_ENABLED);
-  
-    let buttons = [
-      {
-        label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
-        callback: function () {
-          Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
-          Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
-        }
-      },
-      {
-        label: Strings.browser.GetStringFromName("telemetry.optin.no"),
-        callback: function () {
-          Services.prefs.setIntPref(PREF_TELEMETRY_PROMPTED, TELEMETRY_PROMPT_REV);
-          Services.prefs.setBoolPref(PREF_TELEMETRY_REJECTED, true);
-        }
-      }
-    ];
-
-    let brandShortName = Strings.brand.GetStringFromName("brandShortName");
-    let message = Strings.browser.formatStringFromName("telemetry.optin.message2", [serverOwner, brandShortName], 2);
-    let learnMoreLabel = Strings.browser.GetStringFromName("telemetry.optin.learnMore");
-    let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    learnMoreUrl += "how-can-i-help-submitting-performance-data";
-    let options = {
-      link: {
-        label: learnMoreLabel,
-        url: learnMoreUrl
-      },
-      // We're adding this doorhanger during startup, before the initial onLocationChange
-      // event fires, so we need to set persistence to make sure it doesn't disappear.
-      persistence: 1
-    };
-    NativeWindow.doorhanger.show(message, "telemetry-optin", buttons, this.selectedTab.id, options);
-  },
-
   shutdown: function shutdown() {
     NativeWindow.uninit();
     FormAssistant.uninit();
@@ -410,6 +353,7 @@ var BrowserApp = {
     WebappsUI.uninit();
     RemoteDebugger.uninit();
     Reader.uninit();
+    Telemetry.uninit();
   },
 
   // This function returns false during periods where the browser displayed document is
@@ -784,14 +728,6 @@ var BrowserApp = {
     } catch (e) {}
   },
 
-  addTelemetry: function addTelemetry(aData) {
-    let json = JSON.parse(aData);
-    var telemetry = Cc["@mozilla.org/base/telemetry;1"]
-          .getService(Ci.nsITelemetry);
-    let histogram = telemetry.getHistogramById(json.name);
-    histogram.add(json.value);
-  },
-
   setPreferences: function setPreferences(aPref) {
     let json = JSON.parse(aPref);
 
@@ -980,8 +916,6 @@ var BrowserApp = {
       } else {
         profiler.StartProfiler(100000, 25, ["stackwalk"], 1);
       }
-    } else if (aTopic == "Telemetry:Add") {
-      this.addTelemetry(aData);
     }
   },
 
@@ -3804,11 +3738,9 @@ var ViewportHandler = {
     let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
     let allowZoom = !/^(0|no|false)$/.test(allowZoomStr); // WebKit allows 0, "no", or "false"
 
-
-    if (scale == NaN && minScale == NaN && maxScale == NaN && allowZoomStr == "" && widthStr == "" && heightStr == "") {
+    if (isNaN(scale) && isNaN(minScale) && isNaN(maxScale) && allowZoomStr == "" && widthStr == "" && heightStr == "") {
       // Only check for HandheldFriendly if we don't have a viewport meta tag
       let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
-
       if (handheldFriendly == "true")
         return { defaultZoom: 1, autoSize: true, allowZoom: true, autoScale: true };
 
@@ -5342,7 +5274,90 @@ var RemoteDebugger = {
     DebuggerServer.closeListener();
     dump("Remote debugger stopped");
   }
-}
+};
+
+var Telemetry = {
+  _PREF_TELEMETRY_PROMPTED: "toolkit.telemetry.prompted",
+  _PREF_TELEMETRY_ENABLED: "toolkit.telemetry.enabled",
+  _PREF_TELEMETRY_REJECTED: "toolkit.telemetry.rejected",
+  _PREF_TELEMETRY_SERVER_OWNER: "toolkit.telemetry.server_owner",
+
+  // This is used to reprompt users when privacy message changes
+  _TELEMETRY_PROMPT_REV: 2,
+
+  init: function init() {
+    Services.obs.addObserver(this, "Preferences:Set", false);
+    Services.obs.addObserver(this, "Telemetry:Add", false);
+  },
+
+  uninit: function uninit() {
+    Services.obs.removeObserver(this, "Preferences:Set");
+    Services.obs.removeObserver(this, "Telemetry:Add");
+  },
+
+  observe: function observe(aSubject, aTopic, aData) {
+    if (aTopic == "Preferences:Set") {
+      // if user changes telemetry pref, treat it like they have been prompted
+      let pref = JSON.parse(aData);
+      if (pref.name == this._PREF_TELEMETRY_ENABLED)
+        Services.prefs.setIntPref(this._PREF_TELEMETRY_PROMPTED, this._TELEMETRY_PROMPT_REV);
+    } else if (aTopic == "Telemetry:Add") {
+      let json = JSON.parse(aData);
+      var telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+      let histogram = telemetry.getHistogramById(json.name);
+      histogram.add(json.value);
+    }
+  },
+
+  prompt: function prompt() {
+    let serverOwner = Services.prefs.getCharPref(this._PREF_TELEMETRY_SERVER_OWNER);
+    let telemetryPrompted = null;
+    try {
+      telemetryPrompted = Services.prefs.getIntPref(this._PREF_TELEMETRY_PROMPTED);
+    } catch (e) { /* Optional */ }
+
+    // If the user has seen the latest telemetry prompt, do not prompt again
+    // else clear old prefs and reprompt
+    if (telemetryPrompted === this._TELEMETRY_PROMPT_REV)
+      return;
+
+    Services.prefs.clearUserPref(this._PREF_TELEMETRY_PROMPTED);
+    Services.prefs.clearUserPref(this._PREF_TELEMETRY_ENABLED);
+
+    let buttons = [
+      {
+        label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
+        callback: function () {
+          Services.prefs.setIntPref(this._PREF_TELEMETRY_PROMPTED, this._TELEMETRY_PROMPT_REV);
+          Services.prefs.setBoolPref(this._PREF_TELEMETRY_ENABLED, true);
+        }
+      },
+      {
+        label: Strings.browser.GetStringFromName("telemetry.optin.no"),
+        callback: function () {
+          Services.prefs.setIntPref(this._PREF_TELEMETRY_PROMPTED, this._TELEMETRY_PROMPT_REV);
+          Services.prefs.setBoolPref(this._PREF_TELEMETRY_REJECTED, true);
+        }
+      }
+    ];
+
+    let brandShortName = Strings.brand.GetStringFromName("brandShortName");
+    let message = Strings.browser.formatStringFromName("telemetry.optin.message2", [serverOwner, brandShortName], 2);
+    let learnMoreLabel = Strings.browser.GetStringFromName("telemetry.optin.learnMore");
+    let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    learnMoreUrl += "how-can-i-help-submitting-performance-data";
+    let options = {
+      link: {
+        label: learnMoreLabel,
+        url: learnMoreUrl
+      },
+      // We're adding this doorhanger during startup, before the initial onLocationChange
+      // event fires, so we need to set persistence to make sure it doesn't disappear.
+      persistence: 1
+    };
+    NativeWindow.doorhanger.show(message, "telemetry-optin", buttons, BrowserApp.selectedTab.id, options);
+  },
+};
 
 let Reader = {
   // Version of the cache database schema
@@ -5353,6 +5368,50 @@ let Reader = {
   init: function Reader_init() {
     this.log("Init()");
     this._requests = {};
+
+    Services.obs.addObserver(this, "Reader:Add", false);
+    Services.obs.addObserver(this, "Reader:Remove", false);
+  },
+
+  observe: function(aMessage, aTopic, aData) {
+    switch(aTopic) {
+      case "Reader:Add": {
+        let tab = BrowserApp.getTabForId(aData);
+        let url = tab.browser.contentWindow.location.href;
+
+        let sendResult = function(success, title) {
+          this.log("Reader:Add success=" + success + ", url=" + url + ", title=" + title);
+
+          sendMessageToJava({
+            gecko: {
+              type: "Reader:Added",
+              success: success,
+              title: title,
+              url: url,
+            }
+          });
+        }.bind(this);
+
+        this.parseDocumentFromTab(aData, function(article) {
+          if (!article) {
+            sendResult(false, "");
+            return;
+          }
+
+          this.storeArticleInCache(article, function(success) {
+            sendResult(success, article.title);
+          });
+        }.bind(this));
+        break;
+      }
+
+      case "Reader:Remove": {
+        this.removeArticleFromCache(aData, function(success) {
+          this.log("Reader:Remove success=" + success + ", url=" + aData);
+        }.bind(this));
+        break;
+      }
+    }
   },
 
   parseDocumentFromURL: function Reader_parseDocumentFromURL(url, callback) {
@@ -5482,7 +5541,34 @@ let Reader = {
     }.bind(this));
   },
 
+  removeArticleFromCache: function Reader_removeArticleFromCache(url, callback) {
+    this._getCacheDB(function(cacheDB) {
+      if (!cacheDB) {
+        callback(false);
+        return;
+      }
+
+      let transaction = cacheDB.transaction(cacheDB.objectStoreNames, "readwrite");
+      let articles = transaction.objectStore(cacheDB.objectStoreNames[0]);
+
+      let request = articles.delete(url);
+
+      request.onerror = function(event) {
+        this.log("Error removing article from the cache DB: " + url);
+        callback(false);
+      }.bind(this);
+
+      request.onsuccess = function(event) {
+        this.log("Removed article from the cache DB: " + url);
+        callback(true);
+      }.bind(this);
+    }.bind(this));
+  },
+
   uninit: function Reader_uninit() {
+    Services.obs.removeObserver(this, "Reader:Add", false);
+    Services.obs.removeObserver(this, "Reader:Remove", false);
+
     let requests = this._requests;
     for (let url in requests) {
       let request = requests[url];

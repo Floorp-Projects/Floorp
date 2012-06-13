@@ -253,7 +253,7 @@
         modifiers="accel,shift"
 #endif
     />
-    <key id="key_responsiveUI" key="&responsiveUI.commandkey;" command="Tools:ResponsiveUI"
+    <key id="key_responsiveUI" key="&responsiveDesignTool.commandkey;" command="Tools:ResponsiveUI"
 #ifdef XP_MACOSX
         modifiers="accel,alt"
 #else

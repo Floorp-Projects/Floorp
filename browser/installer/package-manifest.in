@@ -60,9 +60,11 @@
 #ifndef MOZ_STATIC_JS
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
+#ifndef MOZ_NATIVE_NSPR
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@plc4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
+#endif
 @BINPATH@/@DLL_PREFIX@xpcom@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/XUL
@@ -111,7 +113,9 @@
 #endif
 @BINPATH@/platform.ini
 #ifndef XP_OS2
+#ifndef MOZ_NATIVE_SQLITE
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
+#endif
 #else
 @BINPATH@/mozsqlt3@DLL_SUFFIX@
 #endif
@@ -585,6 +589,7 @@
 ; NSS libraries are signed in the staging directory,
 ; meaning their .chk files are created there directly.
 ;
+#ifndef MOZ_NATIVE_NSS
 @BINPATH@/@DLL_PREFIX@freebl3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nss3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
@@ -595,6 +600,7 @@
 @BINPATH@/@DLL_PREFIX@smime3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@softokn3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@ssl3@DLL_SUFFIX@
+#endif
 @BINPATH@/chrome/pippki@JAREXT@
 @BINPATH@/chrome/pippki.manifest
 @BINPATH@/components/pipboot.xpt

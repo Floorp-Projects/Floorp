@@ -114,7 +114,7 @@ nsHtml5Module::GetStreamParserThread()
 {
   if (sOffMainThread) {
     if (!sStreamParserThread) {
-      NS_NewThread(&sStreamParserThread);
+      NS_NewNamedThread("HTML5 Parser", &sStreamParserThread);
       NS_ASSERTION(sStreamParserThread, "Thread creation failed!");
       nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       NS_ASSERTION(os, "do_GetService failed");
