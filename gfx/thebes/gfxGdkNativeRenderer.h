@@ -35,15 +35,9 @@ public:
      * @param numClipRects the number of rects in the array, or zero if
      * no clipping is required
      */
-
-#if defined(MOZ_WIDGET_GTK2)
     virtual nsresult DrawWithGDK(GdkDrawable * drawable, gint offsetX, 
             gint offsetY, GdkRectangle * clipRects, PRUint32 numClipRects) = 0;
-#else
-    virtual nsresult DrawWithGDK(cairo_t * cr, gint offsetX, 
-            gint offsetY, GdkRectangle * clipRects, PRUint32 numClipRects) = 0;
-#endif
-
+  
     enum {
         // If set, then Draw() is opaque, i.e., every pixel in the intersection
         // of the clipRect and (offset.x,offset.y,bounds.width,bounds.height)
@@ -71,29 +65,17 @@ public:
      * the rectangle (offset.x,offset.y,bounds.width,bounds.height)
      * @param dpy a display to use for the drawing if ctx doesn't have one
      */
-#if defined(MOZ_WIDGET_GTK2)
     void Draw(gfxContext* ctx, nsIntSize size,
               PRUint32 flags, GdkColormap* colormap);
-#else
-    void Draw(gfxContext* ctx, nsIntSize size,
-              PRUint32 flags, GdkVisual *visual);
-#endif
 
 private:
 #ifdef MOZ_X11
-#if defined(MOZ_WIDGET_GTK2)
     // for gfxXlibNativeRenderer:
     virtual nsresult DrawWithXlib(gfxXlibSurface* surface,
                                   nsIntPoint offset,
                                   nsIntRect* clipRects, PRUint32 numClipRects);
+
     GdkColormap *mColormap;
-#else
-    // for gfxXlibNativeRenderer:
-    virtual nsresult DrawWithXlib(cairo_t *cr,
-                                  nsIntPoint offset,
-                                  nsIntRect* clipRects, PRUint32 numClipRects);
-    GdkVisual *mVisual;
-#endif
 #endif
 };
 
