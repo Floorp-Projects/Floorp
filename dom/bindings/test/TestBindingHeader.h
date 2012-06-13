@@ -295,6 +295,8 @@ public:
   void ReceiveStringSequence(nsTArray<nsString>&);
   void PassStringSequence(const Sequence<nsString>&);
 
+  void ReceiveAnySequence(JSContext*, nsTArray<JS::Value>&);
+
   // Typed array types
   void PassArrayBuffer(ArrayBuffer&);
   void PassNullableArrayBuffer(ArrayBuffer*);
