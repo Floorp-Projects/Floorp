@@ -4704,7 +4704,7 @@ then
 
     if test -z "$QTDIR"; then
         PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
-        PKG_CHECK_MODULES(MOZ_QT5, QtWidgets QtMultimedia QtPrintSupport QtQuick1,
+        PKG_CHECK_MODULES(MOZ_QT5, QtWidgets QtMultimedia QtPrintSupport,
                       MOZ_ENABLE_QT5=1,
                       MOZ_ENABLE_QT5=)
         if test "$MOZ_ENABLE_QT5"; then
@@ -4731,12 +4731,9 @@ then
 
         # QtWidgets was introduced only in Qt5
         if test -d $QTDIR/include/QtWidgets; then
-            echo "Using qt5"
             MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtWidgets"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtMultimedia"
             MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtPrintSupport"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtQuick1"
-            MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtWidgets -lQtMultimedia -lQtPrintSupport -lQtQuick1"
+            MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtWidgets -lQtPrintSupport"
         fi
     fi
     if test -z "$HOST_MOC"; then
