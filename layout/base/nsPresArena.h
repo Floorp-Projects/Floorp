@@ -13,7 +13,7 @@
 
 #include "mozilla/StandardInteger.h"
 
-class nsArenaMemoryStats;
+struct nsArenaMemoryStats;
 
 // Uncomment this to disable arenas, instead forwarding to
 // malloc for every allocation.
