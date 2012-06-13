@@ -178,8 +178,6 @@ TelemetryPing.prototype = {
   _slowSQLStartup: {},
   _prevSession: null,
   _hasWindowRestoredObserver: false,
-  // Bug 756152
-  _disablePersistentTelemetrySending: true,
   _pendingPings: [],
   _doLoadSaveNotifications: false,
 
@@ -642,10 +640,6 @@ TelemetryPing.prototype = {
   },
 
   loadHistograms: function loadHistograms(file, sync) {
-    if (this._disablePersistentTelemetrySending) {
-      return;
-    }
-
     if (sync) {
       let stream = Cc["@mozilla.org/network/file-input-stream;1"]
                    .createInstance(Ci.nsIFileInputStream);
@@ -781,9 +775,6 @@ TelemetryPing.prototype = {
       break;
     case "test-enable-load-save-notifications":
       this._doLoadSaveNotifications = true;
-      break;
-    case "test-enable-persistent-telemetry-send":
-      this._disablePersistentTelemetrySending = false;
       break;
     case "test-ping":
       server = aData;
