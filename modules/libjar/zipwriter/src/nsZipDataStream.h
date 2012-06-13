@@ -10,8 +10,9 @@
 #include "nsIOutputStream.h"
 #include "nsIStreamListener.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
 
-class nsZipDataStream : public nsIStreamListener
+class nsZipDataStream MOZ_FINAL : public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
