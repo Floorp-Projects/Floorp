@@ -537,6 +537,8 @@ class NodeBuilder
 
     bool arrayExpression(NodeVector &elts, TokenPos *pos, Value *dst);
 
+    bool spreadExpression(Value expr, TokenPos *pos, Value *dst);
+
     bool objectExpression(NodeVector &elts, TokenPos *pos, Value *dst);
 
     bool thisExpression(TokenPos *pos, Value *dst);
@@ -1095,6 +1097,14 @@ bool
 NodeBuilder::arrayExpression(NodeVector &elts, TokenPos *pos, Value *dst)
 {
     return listNode(AST_ARRAY_EXPR, "elements", elts, pos, dst);
+}
+
+bool
+NodeBuilder::spreadExpression(Value expr, TokenPos *pos, Value *dst)
+{
+    return newNode(AST_SPREAD_EXPR, pos,
+                   "expression", expr,
+                   dst);
 }
 
 bool
@@ -2516,7 +2526,8 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
 
         return pn->isKind(PNK_NEW)
                ? builder.newExpression(callee, args, &pn->pn_pos, dst)
-               : builder.callExpression(callee, args, &pn->pn_pos, dst);
+
+            : builder.callExpression(callee, args, &pn->pn_pos, dst);
       }
 
       case PNK_DOT:
@@ -2553,6 +2564,13 @@ ASTSerializer::expression(ParseNode *pn, Value *dst)
         }
 
         return builder.arrayExpression(elts, &pn->pn_pos, dst);
+      }
+
+      case PNK_SPREAD:
+      {
+          Value expr;
+          return expression(pn->pn_kid, &expr) &&
+                 builder.spreadExpression(expr, &pn->pn_pos, dst);
       }
 
       case PNK_RC:
