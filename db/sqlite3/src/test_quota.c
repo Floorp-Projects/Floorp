@@ -1243,7 +1243,7 @@ sqlite3_int64 sqlite3_quota_file_truesize(quota_FILE *p){
 sqlite3_int64 sqlite3_quota_file_size(quota_FILE *p){
   return p->pFile ? p->pFile->iSize : -1;
 }
-
+ 
 /*
 ** Determine the amount of data in bytes available for reading
 ** in the given file.
@@ -1922,6 +1922,53 @@ static int test_quota_glob(
 }
 
 /*
+** tclcmd: sqlite3_quota_file_available HANDLE
+**
+** Return the number of bytes from the current file point to the end of
+** the file.
+*/
+static int test_quota_file_available(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  quota_FILE *p;
+  sqlite3_int64 x;
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "HANDLE");
+    return TCL_ERROR;
+  }
+  p = sqlite3TestTextToPtr(Tcl_GetString(objv[1]));
+  x = sqlite3_quota_file_available(p);
+  Tcl_SetObjResult(interp, Tcl_NewWideIntObj(x));
+  return TCL_OK;
+}
+
+/*
+** tclcmd: sqlite3_quota_ferror HANDLE
+**
+** Return true if the file handle is in the error state.
+*/
+static int test_quota_ferror(
+  void * clientData,
+  Tcl_Interp *interp,
+  int objc,
+  Tcl_Obj *CONST objv[]
+){
+  quota_FILE *p;
+  int x;
+  if( objc!=2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "HANDLE");
+    return TCL_ERROR;
+  }
+  p = sqlite3TestTextToPtr(Tcl_GetString(objv[1]));
+  x = sqlite3_quota_ferror(p);
+  Tcl_SetObjResult(interp, Tcl_NewIntObj(x));
+  return TCL_OK;
+}
+
+/*
 ** This routine registers the custom TCL commands defined in this
 ** module.  This should be the only procedure visible from outside
 ** of this module.
@@ -1950,6 +1997,8 @@ int Sqlitequota_Init(Tcl_Interp *interp){
     { "sqlite3_quota_file_mtime",    test_quota_file_mtime },
     { "sqlite3_quota_remove",        test_quota_remove },
     { "sqlite3_quota_glob",          test_quota_glob },
+    { "sqlite3_quota_file_available",test_quota_file_available },
+    { "sqlite3_quota_ferror",        test_quota_ferror },
   };
   int i;
 
