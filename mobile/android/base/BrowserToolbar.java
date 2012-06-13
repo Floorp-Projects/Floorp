@@ -264,6 +264,10 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         }
     }
 
+    public View getLayout() {
+        return mLayout;
+    }
+
     public void requestLayout() {
         mLayout.invalidate();
     }

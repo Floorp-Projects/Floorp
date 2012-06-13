@@ -61,11 +61,15 @@ import android.content.pm.*;
 import android.content.pm.PackageManager.*;
 import dalvik.system.*;
 
-abstract public class BrowserApp extends GeckoApp {
+abstract public class BrowserApp extends GeckoApp
+                                 implements TabsPanel.TabsLayoutChangeListener,
+                                            PropertyAnimator.PropertyAnimationListener {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     public static BrowserToolbar mBrowserToolbar;
     private AboutHomeContent mAboutHomeContent;
+
+    private PropertyAnimator mMainLayoutAnimator;
 
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
@@ -198,6 +202,9 @@ abstract public class BrowserApp extends GeckoApp {
         mBrowserToolbar = new BrowserToolbar(mAppContext);
         mBrowserToolbar.from(actionBar);
 
+        if (mTabsPanel != null)
+            mTabsPanel.setTabsLayoutChangeListener(this);
+
         if (savedInstanceState != null) {
             mBrowserToolbar.setTitle(savedInstanceState.getString(SAVED_STATE_TITLE));
         }
@@ -320,6 +327,57 @@ abstract public class BrowserApp extends GeckoApp {
 
     public boolean areTabsShown() {
         return mTabsPanel.isShown();
+    }
+
+    @Override
+    public void onTabsLayoutChange(int width, int height) {
+        if (mMainLayoutAnimator != null)
+            mMainLayoutAnimator.stop();
+
+        mMainLayoutAnimator = new PropertyAnimator(150);
+        mMainLayoutAnimator.setPropertyAnimationListener(this);
+
+        if (isTablet()) {
+            mMainLayoutAnimator.attach(mBrowserToolbar.getLayout(),
+                                       PropertyAnimator.Property.SHRINK_LEFT,
+                                       width);
+
+            // Set the gecko layout for sliding.
+            if (!mTabsPanel.isShown()) {
+                ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(0, 0, 0, 0);
+                mGeckoLayout.scrollTo(mTabsPanel.getWidth() * -1, 0);
+                mGeckoLayout.requestLayout();
+            }
+
+            mMainLayoutAnimator.attach(mGeckoLayout,
+                                       PropertyAnimator.Property.SLIDE_LEFT,
+                                       width);
+
+        } else {
+            mMainLayoutAnimator.attach(mMainLayout,
+                                       PropertyAnimator.Property.SLIDE_TOP,
+                                       height);
+        }
+
+        mMainLayoutAnimator.start();
+    }
+
+    @Override
+    public void onPropertyAnimationStart() {
+    }
+
+    @Override
+    public void onPropertyAnimationEnd() {
+        mMainHandler.post(new Runnable() {
+            public void run() {
+                if (isTablet() && mTabsPanel.isShown()) {
+                    // Fake the gecko layout to have been shrunk, instead of sliding.
+                    ((LinearLayout.LayoutParams) mGeckoLayout.getLayoutParams()).setMargins(mTabsPanel.getWidth(), 0, 0, 0);
+                    mGeckoLayout.scrollTo(0, 0);
+                    mGeckoLayout.requestLayout();
+                }
+            }
+        });
     }
 
     /* Doorhanger notification methods */
