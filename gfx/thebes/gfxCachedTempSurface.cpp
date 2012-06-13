@@ -5,8 +5,9 @@
 
 #include "gfxCachedTempSurface.h"
 #include "gfxContext.h"
+#include "mozilla/Attributes.h"
 
-class CachedSurfaceExpirationTracker :
+class CachedSurfaceExpirationTracker MOZ_FINAL :
   public nsExpirationTracker<gfxCachedTempSurface,2> {
 
 public:
