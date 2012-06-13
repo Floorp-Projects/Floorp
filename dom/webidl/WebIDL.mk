@@ -5,6 +5,7 @@
 webidl_base = $(topsrcdir)/dom/webidl
 
 webidl_files = \
+  CanvasRenderingContext2D.webidl \
   Function.webidl \
   EventListener.webidl \
   EventTarget.webidl \
