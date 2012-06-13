@@ -2892,6 +2892,13 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
 
     bool entered() const { return state != STATE_UNENTERED; }
 
+    /*
+     * In general, consumers should try to avoid calling leave() explicitly,
+     * and defer to the destructor by scoping the JSAutoEnterCompartment
+     * appropriately. Sometimes, though, it's unavoidable.
+     */
+    void leave();
+
     ~JSAutoEnterCompartment();
 };
 

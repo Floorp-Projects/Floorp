@@ -1444,13 +1444,22 @@ JSAutoEnterCompartment::enterAndIgnoreErrors(JSContext *cx, JSObject *target)
     (void) enter(cx, target);
 }
 
-JSAutoEnterCompartment::~JSAutoEnterCompartment()
+void
+JSAutoEnterCompartment::leave()
 {
+    JS_ASSERT(entered());
     if (state == STATE_OTHER_COMPARTMENT) {
         AutoCompartment* ac = getAutoCompartment();
         CHECK_REQUEST(ac->context);
         ac->~AutoCompartment();
     }
+    state = STATE_UNENTERED;
+}
+
+JSAutoEnterCompartment::~JSAutoEnterCompartment()
+{
+    if (entered())
+        leave();
 }
 
 namespace JS {
