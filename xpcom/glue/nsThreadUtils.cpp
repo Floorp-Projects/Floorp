@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsThreadUtils.h"
+#include "mozilla/Attributes.h"
 
 #ifdef MOZILLA_INTERNAL_API
 # include "nsThreadManager.h"
@@ -220,7 +221,7 @@ NS_ProcessNextEvent(nsIThread *thread, bool mayWait)
 
 namespace {
 
-class nsNameThreadRunnable : public nsIRunnable
+class nsNameThreadRunnable MOZ_FINAL : public nsIRunnable
 {
 public:
   nsNameThreadRunnable(const nsACString &name) : mName(name) { }
