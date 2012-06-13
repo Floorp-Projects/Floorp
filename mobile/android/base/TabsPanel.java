@@ -157,8 +157,10 @@ public class TabsPanel extends LinearLayout {
     }
 
     public void hide() {
-        mVisible = false;
-        dispatchLayoutChange(0, 0);
+        if (mVisible) {
+            mVisible = false;
+            dispatchLayoutChange(0, 0);
+        }
     }
 
     public void refresh() {

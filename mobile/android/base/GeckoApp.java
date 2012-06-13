@@ -65,8 +65,7 @@ abstract public class GeckoApp
                 extends GeckoActivity 
                 implements GeckoEventListener, SensorEventListener, LocationListener,
                            GeckoApplication.ApplicationLifecycleCallbacks,
-                           Tabs.OnTabsChangedListener,
-                           TabsPanel.TabsLayoutChangeListener
+                           Tabs.OnTabsChangedListener
 {
     private static final String LOGTAG = "GeckoApp";
 
@@ -87,8 +86,8 @@ abstract public class GeckoApp
     public static final String SAVED_STATE_TITLE    = "title";
 
     StartupMode mStartupMode = null;
-    private LinearLayout mMainLayout;
-    private RelativeLayout mGeckoLayout;
+    protected LinearLayout mMainLayout;
+    protected RelativeLayout mGeckoLayout;
     public View getView() { return mGeckoLayout; }
     public static SurfaceView cameraView;
     public static GeckoApp mAppContext;
@@ -113,8 +112,6 @@ abstract public class GeckoApp
     private static GeckoLayerClient mLayerClient;
     private static AbsoluteLayout mPluginContainer;
     private static FindInPageBar mFindInPageBar;
-
-    private PropertyAnimator mMainLayoutAnimator;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
@@ -923,28 +920,6 @@ abstract public class GeckoApp
 
     public boolean areTabsShown() { return false; }
 
-    @Override
-    public void onTabsLayoutChange(int width, int height) {
-        if (mMainLayoutAnimator != null)
-            mMainLayoutAnimator.stop();
-
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mMainLayout.getLayoutParams();
-
-        if (isTablet())
-            mMainLayoutAnimator = new PropertyAnimator(mMainLayout,
-                                                       PropertyAnimator.Property.MARGIN_LEFT,
-                                                       params.leftMargin,
-                                                       width,
-                                                       200);
-        else
-            mMainLayoutAnimator = new PropertyAnimator(mMainLayout,
-                                                       PropertyAnimator.Property.MARGIN_TOP,
-                                                       params.topMargin,
-                                                       height,
-                                                       200);
-        mMainLayoutAnimator.start();
-    }
-
     public void handleMessage(String event, JSONObject message) {
         Log.i(LOGTAG, "Got message: " + event);
         try {
@@ -1704,8 +1679,6 @@ abstract public class GeckoApp
 
         // setup tabs panel
         mTabsPanel = (TabsPanel) findViewById(R.id.tabs_panel);
-        if (mTabsPanel != null)
-            mTabsPanel.setTabsLayoutChangeListener(this);
 
         if (savedInstanceState != null) {
             mRestoreMode = GeckoAppShell.RESTORE_OOM;
