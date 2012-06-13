@@ -377,7 +377,7 @@ CompositorParent::TransformShadowTree()
     mIsFirstPaint = false;
   } else if (!metrics.mContentRect.IsEqualEdges(mContentRect)) {
     mContentRect = metrics.mContentRect;
-    SetPageRect(1/rootScaleX, mContentRect, metrics.mCSSContentRect);
+    SetPageRect(metrics.mCSSContentRect);
   }
 
   // We synchronise the viewport information with Java after sending the above
@@ -433,10 +433,10 @@ CompositorParent::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom,
 }
 
 void
-CompositorParent::SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
+CompositorParent::SetPageRect(const gfx::Rect& aCssPageRect)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  mozilla::AndroidBridge::Bridge()->SetPageRect(aZoom, aPageRect, aCssPageRect);
+  mozilla::AndroidBridge::Bridge()->SetPageRect(aCssPageRect);
 #endif
 }
 
