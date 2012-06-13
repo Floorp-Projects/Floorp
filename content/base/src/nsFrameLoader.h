@@ -27,6 +27,7 @@ class nsSubDocumentFrame;
 class nsIView;
 class nsIInProcessContentFrameMessageManager;
 class AutoResetInShow;
+class nsITabParent;
 
 namespace mozilla {
 namespace dom {
@@ -255,6 +256,16 @@ public:
   bool ShouldClipSubdocument() { return mClipSubdocument; }
 
   bool ShouldClampScrollPosition() { return mClampScrollPosition; }
+
+  /**
+   * Tell this FrameLoader to use a particular remote browser.
+   *
+   * This will assert if mRemoteBrowser or mCurrentRemoteFrame is non-null.  In
+   * practice, this means you can't have successfully run TryRemoteBrowser() on
+   * this object, which means you can't have called ShowRemoteFrame() or
+   * ReallyStartLoading().
+   */
+  void SetRemoteBrowser(nsITabParent* aTabParent);
 
 private:
 

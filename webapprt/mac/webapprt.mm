@@ -223,10 +223,6 @@ main(int argc, char **argv)
         // directory.
         snprintf(rtINIPath, MAXPATHLEN, "%s%s%s%s", [firefoxPath UTF8String], APP_CONTENTS_PATH, WEBAPPRT_PATH, WEBRTINI_NAME);
         NSLog(@"WebappRT application.ini path: %s", rtINIPath);
-        if (![[NSFileManager defaultManager] fileExistsAtPath:[NSString stringWithFormat:@"%s", rtINIPath]]) {
-          NSString* msg = [NSString stringWithFormat: @"This copy of Firefox (%@) cannot run web applications, because it is missing important files", firefoxVersion];
-          @throw MakeException(@"Missing WebRT Files", msg);
-        }
 
         // Load the runtime's INI from its path.
         nsCOMPtr<nsIFile> rtINI;
@@ -235,9 +231,11 @@ main(int argc, char **argv)
           @throw MakeException(@"Error", @"Incorrect path to base INI file.");
         }
 
-        if (!rtINI) {
-          NSLog(@"Error: missing WebappRT application.ini");
-          @throw MakeException(@"Error", @"Missing base INI file.");
+        bool exists;
+        nsresult rv = rtINI->Exists(&exists);
+        if (NS_FAILED(rv) || !exists) {
+          NSString* msg = [NSString stringWithFormat: @"This copy of Firefox (%@) cannot run web applications, because it is missing WebappRT application.ini", firefoxVersion];
+          @throw MakeException(@"Missing WebappRT application.ini", msg);
         }
 
         nsXREAppData *webShellAppData;

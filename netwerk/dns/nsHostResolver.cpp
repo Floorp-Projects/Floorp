@@ -31,6 +31,7 @@
 #include "pldhash.h"
 #include "plstr.h"
 #include "nsURLHelper.h"
+#include "nsThreadUtils.h"
 
 #include "mozilla/HashFunctions.h"
 #include "mozilla/FunctionTimer.h"
@@ -953,6 +954,10 @@ void
 nsHostResolver::ThreadFunc(void *arg)
 {
     LOG(("nsHostResolver::ThreadFunc entering\n"));
+
+    static nsThreadPoolNaming naming;
+    naming.SetThreadPoolName(NS_LITERAL_CSTRING("DNS Resolver"));
+
 #if defined(RES_RETRY_ON_FAILURE)
     nsResState rs;
 #endif

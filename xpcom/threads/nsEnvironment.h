@@ -6,6 +6,7 @@
 #ifndef nsEnvironment_h__
 #define nsEnvironment_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "nsIEnvironment.h"
 
@@ -14,7 +15,7 @@
   { 0X9B, 0XE9, 0X7C, 0XB2, 0X39, 0X87, 0X41, 0X72 } }
 #define NS_ENVIRONMENT_CONTRACTID "@mozilla.org/process/environment;1"
 
-class nsEnvironment : public nsIEnvironment
+class nsEnvironment MOZ_FINAL : public nsIEnvironment
 {
 public:
     NS_DECL_ISUPPORTS

@@ -163,6 +163,9 @@ interface TestInterface {
   void passOptionalNullableSequenceWithDefaultValue(optional sequence<long>? arg = null);
   void passOptionalObjectSequence(optional sequence<TestInterface> arg);
 
+  sequence<DOMString> receiveStringSequence();
+  void passStringSequence(sequence<DOMString> arg);
+
   // Typed array types
   void passArrayBuffer(ArrayBuffer arg);
   void passNullableArrayBuffer(ArrayBuffer? arg);
@@ -224,6 +227,13 @@ interface TestInterface {
   void methodRenamedFrom(byte argument);
   readonly attribute byte attributeGetterRenamedFrom;
   attribute byte attributeRenamedFrom;
+
+  void passDictionary(Dict x);
+  void passOptionalDictionary(optional Dict x);
+  void passNullableDictionary(Dict? x);
+  void passOptionalNullableDictionary(optional Dict? x);
+  void passOtherDictionary(GrandparentDict x);
+  void passSequenceOfDictionaries(sequence<Dict> x);
 };
 
 interface ImplementedInterfaceParent {
@@ -266,3 +276,15 @@ TestInterface implements DiamondBranch2A;
 TestInterface implements DiamondBranch2B;
 DiamondBranch1A implements DiamondImplements;
 DiamondBranch1B implements DiamondImplements;
+
+dictionary Dict : ParentDict {
+  long x;
+  long a;
+  long b = 8;
+  long z = 9;
+  DOMString str;
+};
+
+dictionary ParentDict : GrandparentDict {
+  long c = 5;
+};

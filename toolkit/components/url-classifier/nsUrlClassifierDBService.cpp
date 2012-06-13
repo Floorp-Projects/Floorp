@@ -4204,7 +4204,7 @@ nsUrlClassifierDBService::Init()
   }
 
   // Start the background thread.
-  rv = NS_NewThread(&gDbBackgroundThread);
+  rv = NS_NewNamedThread("URL Classifier", &gDbBackgroundThread);
   if (NS_FAILED(rv))
     return rv;
 

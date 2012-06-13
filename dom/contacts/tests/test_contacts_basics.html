@@ -19,14 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id={674720}
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-"use strict"
+"use strict";
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-Components.classes["@mozilla.org/permissionmanager;1"]
-          .getService(Components.interfaces.nsIPermissionManager)
-          .add(SpecialPowers.getDocumentURIObject(window.document),
-               "webcontacts-manage",
-               Components.interfaces.nsIPermissionManager.ALLOW_ACTION);
+SpecialPowers.addPermission("webcontacts-manage", true, document);
 
 // For Sorting
 var c1 = {
@@ -523,12 +518,6 @@ var steps = [
   function() {
     ok(true, "Saving old contact, should abort!");
     req = mozContacts.save(createResult1);
-    req.onsuccess = onUnwantedSuccess;
-    req.onerror   = function() { ok(true, "Successfully declined updating old contact!"); next(); };
-  },
-  function() {
-    ok(true, "Saving old contact, should abort!");
-    req = mozContacts.save(findResult1)
     req.onsuccess = onUnwantedSuccess;
     req.onerror   = function() { ok(true, "Successfully declined updating old contact!"); next(); };
   },

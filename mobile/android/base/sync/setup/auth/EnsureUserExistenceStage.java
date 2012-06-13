@@ -1,6 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko.sync.setup.auth;
 
@@ -17,7 +17,6 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncResourceDelegate;
 import org.mozilla.gecko.sync.setup.Constants;
 
-import android.util.Log;
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 
@@ -37,7 +36,7 @@ public class EnsureUserExistenceStage implements AuthenticatorStage {
       @Override
       public void handleSuccess() {
         // User exists; now determine auth node.
-        Log.d(LOG_TAG, "handleSuccess()");
+        Logger.debug(LOG_TAG, "handleSuccess()");
         aa.runNextStage();
       }
 

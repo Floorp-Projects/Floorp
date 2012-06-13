@@ -217,7 +217,14 @@ function continueTestPart2() {
   glErrorShouldBe(gl, gl.NO_ERROR, "there should be no GL errors");
 
   debug("");
-  finishTest();
+
+  // bug 763355: temporary logging of exceptions here to understand intermittent timeout
+  // in this test, apparently in this finishTest() call.
+  try {
+    finishTest();
+  } catch(e) {
+    testFailed("finishTest generated exception: " + e);
+  }
 }
 </script>
 </body>

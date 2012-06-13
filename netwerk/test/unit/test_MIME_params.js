@@ -112,7 +112,7 @@ var tests = [
 
   // First series, only please, and don't slurp up higher elements (*2 in this
   // case) from later series into earlier one (invalid; error recovery)
-  ["attachment; filename=basic; filename*0*=UTF-8''multi\r\n"
+  ["attachment; filename=basic; filename*0*=UTF-8''multi;\r\n"
     + " filename*1=line;\r\n" 
     + " filename*0*=UTF-8''wrong;\r\n"
     + " filename*1=bad;\r\n"
@@ -397,9 +397,16 @@ var tests = [
    "attachment", "basic"],
 
   // Bug 732369: Content-Disposition parser does not require presence of ";" between params
+  // optimally, this would not even return the disposition type "attachment"  
 
   ["attachment; extension=bla filename=foo", 
+   "attachment", Cr.NS_ERROR_INVALID_ARG], 
+
+  ["attachment; filename=foo extension=bla", 
    "attachment", "foo"], 
+
+  ["attachment filename=foo", 
+   "attachment", Cr.NS_ERROR_INVALID_ARG], 
 ];
 
 var rfc5987paramtests = [

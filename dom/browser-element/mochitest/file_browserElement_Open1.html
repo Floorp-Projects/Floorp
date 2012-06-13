@@ -1,0 +1,33 @@
+<html>
+<body>
+<script>
+
+// Because this file is inside <iframe mozbrowser>, the alert() calls below
+// don't trigger actual dialogs.  Instead, the document which contans the
+// iframe receives mozbrowsershowmodalprompt events, which the document uses
+// to determine test success/failure.
+
+function is(x, y, reason) {
+  if (x === y)  {
+    alert("success: " + x + " === " + y + ", " + reason);
+  }
+  else {
+    alert("failure: " + x + " !== " + y + ", " + reason);
+  }
+}
+
+function ok(bool, reason) {
+  alert((bool ? "success: " : "failure: ") + reason);
+}
+
+var w = window.open("file_browserElement_Open2.html", "name", "features");
+w.addEventListener("load", function() {
+  ok(true, "got load");
+  is(w.opener, window, 'opener property');
+  is(w.location.href, location.href.replace('Open1', 'Open2'), 'correct location');
+  is(w.document.getElementById('testElem').innerHTML, 'test', 'elem innerHTML');
+  alert("finish");
+});
+</script>
+</body>
+</html>

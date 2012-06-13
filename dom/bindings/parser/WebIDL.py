@@ -150,6 +150,9 @@ class IDLObject(object):
     def isType(self):
         return False
 
+    def isDictionary(self):
+        return False;
+
     def getUserData(self, key, default):
         return self.userData.get(key, default)
 
@@ -317,7 +320,7 @@ class IDLObjectWithScope(IDLObjectWithIdentifier, IDLScope):
         IDLObjectWithIdentifier.__init__(self, location, parentScope, identifier)
         IDLScope.__init__(self, location, parentScope, self.identifier)
 
-class IDLInterfacePlaceholder(IDLObjectWithIdentifier):
+class IDLIdentifierPlaceholder(IDLObjectWithIdentifier):
     def __init__(self, location, identifier):
         assert isinstance(identifier, IDLUnresolvedIdentifier)
         IDLObjectWithIdentifier.__init__(self, location, None, identifier)
@@ -328,8 +331,8 @@ class IDLInterfacePlaceholder(IDLObjectWithIdentifier):
         except:
             raise WebIDLError("Unresolved type '%s'." % self.identifier, self.location)
 
-        iface = self.identifier.resolve(scope, None)
-        return scope.lookupIdentifier(iface)
+        obj = self.identifier.resolve(scope, None)
+        return scope.lookupIdentifier(obj)
 
 class IDLExternalInterface(IDLObjectWithIdentifier):
     def __init__(self, location, parentScope, identifier):
@@ -358,7 +361,7 @@ class IDLInterface(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):
         assert isinstance(parentScope, IDLScope)
         assert isinstance(name, IDLUnresolvedIdentifier)
-        assert not parent or isinstance(parent, IDLInterfacePlaceholder)
+        assert not parent or isinstance(parent, IDLIdentifierPlaceholder)
 
         self.parent = parent
         self._callback = False
@@ -403,7 +406,7 @@ class IDLInterface(IDLObjectWithScope):
 
         self._finished = True
 
-        assert not self.parent or isinstance(self.parent, IDLInterfacePlaceholder)
+        assert not self.parent or isinstance(self.parent, IDLIdentifierPlaceholder)
         parent = self.parent.finish(scope) if self.parent else None
         assert not parent or isinstance(parent, IDLInterface)
 
@@ -587,6 +590,73 @@ class IDLInterface(IDLObjectWithScope):
             temp |= iface.getConsequentialInterfaces()
 
         return consequentialInterfaces | temp
+
+class IDLDictionary(IDLObjectWithScope):
+    def __init__(self, location, parentScope, name, parent, members):
+        assert isinstance(parentScope, IDLScope)
+        assert isinstance(name, IDLUnresolvedIdentifier)
+        assert not parent or isinstance(parent, IDLIdentifierPlaceholder)
+
+        self.parent = parent
+        self._finished = False
+        self.members = list(members)
+
+        IDLObjectWithScope.__init__(self, location, parentScope, name)
+
+    def __str__(self):
+        return "Dictionary '%s'" % self.identifier.name
+
+    def isDictionary(self):
+        return True;
+
+    def finish(self, scope):
+        if self._finished:
+            return
+
+        self._finished = True
+
+        if self.parent:
+            assert isinstance(self.parent, IDLIdentifierPlaceholder)
+            oldParent = self.parent
+            self.parent = self.parent.finish(scope)
+            if not isinstance(self.parent, IDLDictionary):
+                raise WebIDLError("Dictionary %s has parent that is not a dictionary" %
+                                  self.identifier.name,
+                                  oldParent.location,
+                                  extraLocation=self.parent.location)
+
+            # Make sure the parent resolves all its members before we start
+            # looking at them.
+            self.parent.finish(scope)
+
+        for member in self.members:
+            member.resolve(self)
+
+        # Members of a dictionary are sorted in lexicographic order
+        self.members.sort(cmp=cmp, key=lambda x: x.identifier.name)
+
+        inheritedMembers = []
+        ancestor = self.parent
+        while ancestor:
+            if ancestor == self:
+                raise WebIDLError("Dictionary %s has itself as an ancestor" %
+                                  self.identifier.name,
+                                  self.identifier.location)
+            inheritedMembers.extend(ancestor.members)
+            ancestor = ancestor.parent
+
+        # Catch name duplication
+        for inheritedMember in inheritedMembers:
+            for member in self.members:
+                if member.identifier.name == inheritedMember.identifier.name:
+                    raise WebIDLError("Dictionary %s has two members with name %s" %
+                                      (self.identifier.name, member.identifier.name),
+                                      member.location,
+                                      extraLocation=inheritedMember.location)
+
+    def addExtendedAttributes(self, attrs):
+        assert len(attrs) == 0
+
 
 class IDLEnum(IDLObjectWithIdentifier):
     def __init__(self, location, parentScope, name, values):
@@ -1093,7 +1163,7 @@ class IDLWrapperType(IDLType):
         return False
 
     def isDictionary(self):
-        return False
+        return isinstance(self.inner, IDLDictionary)
 
     def isInterface(self):
         return isinstance(self.inner, IDLInterface) or \
@@ -1114,6 +1184,8 @@ class IDLWrapperType(IDLType):
             return IDLType.Tags.interface
         elif self.isEnum():
             return IDLType.Tags.enum
+        elif self.isDictionary():
+            return IDLType.Tags.dictionary
         else:
             assert False
 
@@ -1481,6 +1553,9 @@ class IDLConst(IDLInterfaceMember):
                                     IDLInterfaceMember.Tags.Const)
 
         assert isinstance(type, IDLType)
+        if type.isDictionary():
+            raise WebIDLError("A constant cannot be of a dictionary type",
+                              self.location)
         self.type = type
 
         # The value might not match the type
@@ -1518,6 +1593,9 @@ class IDLAttribute(IDLInterfaceMember):
 
             assert not isinstance(t, IDLUnresolvedType)
             assert not isinstance(t.name, IDLUnresolvedIdentifier)
+            if t.isDictionary():
+                raise WebIDLError("An attribute cannot be of a dictionary type",
+                                  self.location)
             self.type = t
 
     def handleExtendedAttribute(self, name, list):
@@ -1804,8 +1882,8 @@ class IDLImplementsStatement(IDLObject):
         self.implementee = implementee
 
     def finish(self, scope):
-        assert(isinstance(self.implementor, IDLInterfacePlaceholder))
-        assert(isinstance(self.implementee, IDLInterfacePlaceholder))
+        assert(isinstance(self.implementor, IDLIdentifierPlaceholder))
+        assert(isinstance(self.implementee, IDLIdentifierPlaceholder))
         implementor = self.implementor.finish(scope)
         implementee = self.implementee.finish(scope)
         implementor.addImplementedInterface(implementee)
@@ -2041,7 +2119,7 @@ class Parser(Tokenizer):
         """
             Inheritance : COLON ScopedName
         """
-        p[0] = IDLInterfacePlaceholder(self.getLocation(p, 2), p[2])
+        p[0] = IDLIdentifierPlaceholder(self.getLocation(p, 2), p[2])
 
     def p_InheritanceEmpty(self, p):
         """
@@ -2077,20 +2155,37 @@ class Parser(Tokenizer):
         """
             Dictionary : DICTIONARY IDENTIFIER Inheritance LBRACE DictionaryMembers RBRACE SEMICOLON
         """
-        pass
+        location = self.getLocation(p, 1)
+        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 2), p[2])
+        members = p[5]
+        p[0] = IDLDictionary(location, self.globalScope(), identifier, p[3], members)
 
     def p_DictionaryMembers(self, p):
         """
             DictionaryMembers : ExtendedAttributeList DictionaryMember DictionaryMembers
                              |
         """
-        pass
+        if len(p) == 1:
+            # We're at the end of the list
+            p[0] = []
+            return
+        # Add our extended attributes
+        p[2].addExtendedAttributes(p[1])
+        p[0] = [p[2]]
+        p[0].extend(p[3])
 
     def p_DictionaryMember(self, p):
         """
             DictionaryMember : Type IDENTIFIER DefaultValue SEMICOLON
         """
-        pass
+        # These quack a lot like optional arguments, so just treat them that way.
+        t = p[1]
+        assert isinstance(t, IDLType)
+        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 2), p[2])
+        defaultValue = p[3]
+
+        p[0] = IDLArgument(self.getLocation(p, 2), identifier, t, optional=True,
+                           defaultValue=defaultValue, variadic=False)
 
     def p_DefaultValue(self, p):
         """
@@ -2167,8 +2262,8 @@ class Parser(Tokenizer):
             ImplementsStatement : ScopedName IMPLEMENTS ScopedName SEMICOLON
         """
         assert(p[2] == "implements")
-        implementor = IDLInterfacePlaceholder(self.getLocation(p, 1), p[1])
-        implementee = IDLInterfacePlaceholder(self.getLocation(p, 3), p[3])
+        implementor = IDLIdentifierPlaceholder(self.getLocation(p, 1), p[1])
+        implementee = IDLIdentifierPlaceholder(self.getLocation(p, 3), p[3])
         p[0] = IDLImplementsStatement(self.getLocation(p, 1), implementor,
                                       implementee)
 
