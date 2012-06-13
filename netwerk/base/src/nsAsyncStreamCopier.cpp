@@ -244,9 +244,12 @@ nsAsyncStreamCopier::AsyncCopy(nsIRequestObserver *observer, nsISupports *ctx)
     // we want to receive progress notifications; release happens in
     // OnAsyncCopyComplete.
     NS_ADDREF_THIS();
-    rv = NS_AsyncCopy(mSource, mSink, mTarget, mMode, mChunkSize,
-                      OnAsyncCopyComplete, this, mCloseSource, mCloseSink,
-                      getter_AddRefs(mCopierCtx));
+    {
+      MutexAutoLock lock(mLock);
+      rv = NS_AsyncCopy(mSource, mSink, mTarget, mMode, mChunkSize,
+                        OnAsyncCopyComplete, this, mCloseSource, mCloseSink,
+                        getter_AddRefs(mCopierCtx));
+    }
     if (NS_FAILED(rv)) {
         NS_RELEASE_THIS();
         Cancel(rv);

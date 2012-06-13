@@ -27,16 +27,7 @@ and
 
 function checkFormIDLAttribute(aElement)
 {
-  var form = document.forms[0];
-  var content = document.getElementById('content');
-
-  content.removeChild(form);
-  content.appendChild(aElement);
-  is(aElement.form, null, "The form IDL attribute should be null");
-
-  // Cleaning-up.
-  content.appendChild(form);
-  form.appendChild(aElement);
+  is("form" in aElement, false, "<progress> shouldn't have a form attribute");
 }
 
 function checkAttribute(aElement, aAttribute, aNewValue, aExpectedValueForIDL)
@@ -225,6 +216,20 @@ function checkFormListedElement(aElement)
   is(document.forms[0].elements.length, 0, "the form should have no element");
 }
 
+function checkLabelable(aElement)
+{
+  var content = document.getElementById('content');
+  var label = document.createElement('label');
+
+  content.appendChild(label);
+  label.appendChild(aElement);
+  is(label.control, aElement, "progress should be labelable");
+
+  // Cleaning-up.
+  content.removeChild(label);
+  content.appendChild(aElement);
+}
+
 function checkNotResetableAndFormSubmission(aElement)
 {
   // Creating an input element to check the submission worked.
@@ -296,6 +301,8 @@ checkPositionAttribute();
 checkIndeterminatePseudoClass();
 
 checkFormListedElement(p);
+
+checkLabelable(p);
 
 checkNotResetableAndFormSubmission(p);
 

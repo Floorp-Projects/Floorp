@@ -34,6 +34,8 @@ public:
                              PRInt32* aColumnExtent);
   nsresult GetRowExtentAt(PRInt32 row, PRInt32 column,
                           PRInt32* aRowExtent);
+  nsresult SelectColumn(PRInt32 aColIdx);
+  nsresult SelectRow(PRInt32 aRowIdx);
   nsresult UnselectColumn(PRInt32 aColIdx);
   nsresult UnselectRow(PRInt32 aRowIdx);
   nsresult IsProbablyForLayout(bool* aIsForLayout);
@@ -74,8 +76,10 @@ protected:
   NS_SCRIPTABLE NS_IMETHOD GetSelectedCellIndices(PRUint32 *cellsArraySize NS_OUTPARAM, PRInt32 **cellsArray NS_OUTPARAM); \
   NS_SCRIPTABLE NS_IMETHOD GetSelectedColumnIndices(PRUint32 *rowsArraySize NS_OUTPARAM, PRInt32 **rowsArray NS_OUTPARAM); \
   NS_SCRIPTABLE NS_IMETHOD GetSelectedRowIndices(PRUint32 *rowsArraySize NS_OUTPARAM, PRInt32 **rowsArray NS_OUTPARAM); \
-  NS_SCRIPTABLE NS_IMETHOD SelectRow(PRInt32 rowIndex); \
-  NS_SCRIPTABLE NS_IMETHOD SelectColumn(PRInt32 columnIndex); \
+  NS_SCRIPTABLE NS_IMETHOD SelectRow(PRInt32 aRowIdx) \
+    { return xpcAccessibleTable::SelectRow(aRowIdx); } \
+  NS_SCRIPTABLE NS_IMETHOD SelectColumn(PRInt32 aColIdx) \
+    { return xpcAccessibleTable::SelectColumn(aColIdx); } \
   NS_SCRIPTABLE NS_IMETHOD UnselectColumn(PRInt32 aColIdx) \
     { return xpcAccessibleTable::UnselectColumn(aColIdx); } \
   NS_IMETHOD UnselectRow(PRInt32 aRowIdx) \

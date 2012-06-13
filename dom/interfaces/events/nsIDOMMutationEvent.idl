@@ -5,7 +5,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[scriptable, uuid(72b3ddba-6cbb-4011-ac3b-50bd900b223d)]
+[scriptable, builtinclass, uuid(f5afec28-e7c0-4c1b-9cf4-8f3a5f0634d5)]
 interface nsIDOMMutationEvent : nsIDOMEvent
 {
   const unsigned short      MODIFICATION       = 1;

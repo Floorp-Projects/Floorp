@@ -24,11 +24,14 @@ interface nsIDeviceSensorData : nsISupports
   readonly attribute double z;
 };
 
-[scriptable, uuid(b672bfe0-4479-4094-a9ef-1b6847720d07)]
+[scriptable, uuid(83306c9f-1c8f-43c4-900a-245d7f219511)]
 interface nsIDeviceSensors : nsISupports
 {
+  long listenerCount(in unsigned long aType);
+
   // Holds pointers, not AddRef objects -- it is up to the caller
   // to call RemoveWindowListener before the window is deleted.
+
   [noscript] void addWindowListener(in unsigned long aType, in nsIDOMWindow aWindow);
   [noscript] void removeWindowListener(in unsigned long aType, in nsIDOMWindow aWindow);
   [noscript] void removeWindowAsListener(in nsIDOMWindow aWindow);

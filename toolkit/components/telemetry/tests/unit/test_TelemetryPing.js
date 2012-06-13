@@ -12,9 +12,7 @@ do_load_httpd_js();
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
-const gTestUUID = "3512c938-d9d2-4722-a575-a7f67086d3b2";
 const PATH = "/submit/telemetry/test-ping";
-const SAVED_PATH = "/submit/telemetry/" + gTestUUID;
 const SERVER = "http://localhost:4444";
 const IGNORE_HISTOGRAM = "test::ignore_me";
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
@@ -35,7 +33,14 @@ function telemetry_ping () {
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
   TelemetryPing.observe(null, "test-gather-startup", null);
   TelemetryPing.observe(null, "test-enable-persistent-telemetry-send", null);
+  TelemetryPing.observe(null, "test-enable-load-save-notifications", null);
   TelemetryPing.observe(null, "test-ping", SERVER);
+}
+
+// Mostly useful so that you can dump payloads from decodeRequestPayload.
+function dummyHandler(request, response) {
+  let p = decodeRequestPayload(request);
+  return p;
 }
 
 function nonexistentServerObserver(aSubject, aTopic, aData) {
@@ -44,35 +49,41 @@ function nonexistentServerObserver(aSubject, aTopic, aData) {
   httpserver.start(4444);
 
   // Provide a dummy function so it returns 200 instead of 404 to telemetry.
-  httpserver.registerPathHandler(PATH, function () {});
+  httpserver.registerPathHandler(PATH, dummyHandler);
   Services.obs.addObserver(telemetryObserver, "telemetry-test-xhr-complete", false);
   telemetry_ping();
 }
 
-function telemetryObserver(aSubject, aTopic, aData) {
-  Services.obs.removeObserver(telemetryObserver, aTopic);
-  httpserver.registerPathHandler(PATH, checkPersistedHistograms);
+function setupTestData() {
   Telemetry.newHistogram(IGNORE_HISTOGRAM, 1, 2, 3, Telemetry.HISTOGRAM_BOOLEAN);
   Telemetry.histogramFrom(IGNORE_CLONED_HISTOGRAM, IGNORE_HISTOGRAM_TO_CLONE);
   Services.startup.interrupted = true;
-  let dirService = Cc["@mozilla.org/file/directory_service;1"]
-                    .getService(Ci.nsIProperties);
-  let tmpDir = dirService.get("TmpD", Ci.nsILocalFile);
-  let histogramsFile = tmpDir.clone();
-  histogramsFile.append("saved-histograms.dat");
-  if (histogramsFile.exists()) {
-    histogramsFile.remove(true);
-  }
-  do_register_cleanup(function () histogramsFile.remove(true));
-  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
-  TelemetryPing.observe(histogramsFile, "test-save-histograms", gTestUUID);
-  TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
-
   Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM, 1, 5, 6,
                                    Telemetry.HISTOGRAM_LINEAR);
   h1 = Telemetry.getAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM);
   h1.add(1);
+}
 
+function getSavedHistogramsFile(basename) {
+  let tmpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  let histogramsFile = tmpDir.clone();
+  histogramsFile.append(basename);
+  if (histogramsFile.exists()) {
+    histogramsFile.remove(true);
+  }
+  do_register_cleanup(function () histogramsFile.remove(true));
+  return histogramsFile;
+}
+
+function telemetryObserver(aSubject, aTopic, aData) {
+  Services.obs.removeObserver(telemetryObserver, aTopic);
+  httpserver.registerPathHandler(PATH, checkPersistedHistogramsSync);
+  let histogramsFile = getSavedHistogramsFile("saved-histograms.dat");
+  setupTestData();
+
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  TelemetryPing.observe(histogramsFile, "test-save-histograms", null);
+  TelemetryPing.observe(histogramsFile, "test-load-histograms", null);
   telemetry_ping();
 }
 
@@ -142,19 +153,10 @@ function checkPayloadInfo(payload, reason) {
   }
 }
 
-function checkPersistedHistograms(request, response) {
+function checkPayload(request, reason, successfulPings) {
   let payload = decodeRequestPayload(request);
 
-  checkPayloadInfo(payload, "saved-session");
-  httpserver.registerPathHandler(PATH, checkHistograms);
-}
-
-function checkHistograms(request, response) {
-  // do not need the http server anymore
-  httpserver.stop(do_test_finished);
-  let payload = decodeRequestPayload(request);
-
-  checkPayloadInfo(payload, "test-ping");
+  checkPayloadInfo(payload, reason);
   do_check_eq(request.getHeader("content-type"), "application/json; charset=UTF-8");
   do_check_true(payload.simpleMeasurements.uptime >= 0);
   do_check_true(payload.simpleMeasurements.startupInterrupted === 1);
@@ -188,12 +190,11 @@ function checkHistograms(request, response) {
     range: [1, 2],
     bucket_count: 3,
     histogram_type: 2,
-    values: {0:1, 1:1, 2:0},
-    sum: 1
+    values: {0:1, 1:successfulPings, 2:0},
+    sum: successfulPings
   };
   let tc = payload.histograms[TELEMETRY_SUCCESS];
-  do_check_eq(uneval(tc), 
-              uneval(expected_tc));
+  do_check_eq(uneval(tc), uneval(expected_tc));
 
   // The ping should include data from memory reporters.  We can't check that
   // this data is correct, because we can't control the values returned by the
@@ -215,6 +216,48 @@ function checkHistograms(request, response) {
 
   do_check_true(("mainThread" in payload.slowSQL) &&
                 ("otherThreads" in payload.slowSQL));
+}
+
+function checkPersistedHistogramsSync(request, response) {
+  httpserver.registerPathHandler(PATH, checkHistogramsSync);
+  checkPayload(request, "saved-session", 1);
+}
+
+function checkHistogramsSync(request, response) {
+  checkPayload(request, "test-ping", 1);
+
+  Services.obs.addObserver(runAsyncTestObserver, "telemetry-test-xhr-complete", false);
+}
+
+function runAsyncTestObserver(aSubject, aTopic, aData) {
+  Services.obs.removeObserver(runAsyncTestObserver, aTopic);
+  httpserver.registerPathHandler(PATH, checkPersistedHistogramsAsync);
+  let histogramsFile = getSavedHistogramsFile("saved-histograms2.dat");
+
+  const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(arguments.callee, aTopic);
+
+    Services.obs.addObserver(function(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, aTopic);
+      telemetry_ping();
+    }, "telemetry-test-load-complete", false);
+
+    TelemetryPing.observe(histogramsFile, "test-load-histograms", "async");
+  }, "telemetry-test-save-complete", false);
+  TelemetryPing.observe(histogramsFile, "test-save-histograms", "async");
+}
+
+function checkPersistedHistogramsAsync(request, response) {
+  httpserver.registerPathHandler(PATH, checkHistogramsAsync);
+  checkPayload(request, "saved-session", 2);
+}
+
+function checkHistogramsAsync(request, response) {
+  // do not need the http server anymore
+  httpserver.stop(do_test_finished);
+  checkPayload(request, "test-ping", 2);
+
   gFinished = true;
 }
 

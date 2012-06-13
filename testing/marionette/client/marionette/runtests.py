@@ -13,6 +13,8 @@ import unittest
 import socket
 import sys
 import time
+import platform
+import datazilla
 
 try:
     from manifestparser import TestManifest
@@ -28,12 +30,12 @@ except ImportError:
 from marionette import Marionette
 from marionette_test import MarionetteJSTestCase
 
-
 class MarionetteTestResult(unittest._TextTestResult):
 
     def __init__(self, *args):
         super(MarionetteTestResult, self).__init__(*args)
         self.passed = 0
+        self.perfdata = None
 
     def addSuccess(self, test):
         super(MarionetteTestResult, self).addSuccess(test)
@@ -65,6 +67,13 @@ class MarionetteTestResult(unittest._TextTestResult):
                     print ' '.join(line)
                 print 'END LOG:'
 
+    def getPerfData(self, test):
+        for testcase in test._tests:
+            if testcase.perfdata:
+                if not self.perfdata:
+                    self.perfdata = datazilla.DatazillaResult(testcase.perfdata)
+                else:
+                    self.perfdata.join_results(testcase.perfdata)
 
 class MarionetteTextTestRunner(unittest.TextTestRunner):
 
@@ -92,6 +101,7 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
         timeTaken = stopTime - startTime
         result.printErrors()
         result.printLogs(test)
+        result.getPerfData(test)
         if hasattr(result, 'separator2'):
             self.stream.writeln(result.separator2)
         run = result.testsRun
@@ -155,6 +165,7 @@ class MarionetteTestRunner(object):
         self.baseurl = None
         self.marionette = None
         self.logcat_dir = logcat_dir
+        self.perfrequest = None
 
         self.reset_test_stats()
 
@@ -172,6 +183,7 @@ class MarionetteTestRunner(object):
         self.failed = 0
         self.todo = 0
         self.failures = []
+        self.perfrequest = None
 
     def start_httpd(self):
         host = iface.get_lan_ip()
@@ -256,8 +268,10 @@ class MarionetteTestRunner(object):
     def run_tests(self, tests, testtype=None):
         self.reset_test_stats()
         starttime = datetime.utcnow()
-        for test in tests:
-            self.run_test(test, testtype)
+        while options.repeat >=0 :
+            for test in tests:
+                self.run_test(test, testtype)
+            options.repeat -= 1
         self.logger.info('\nSUMMARY\n-------')
         self.logger.info('passed: %d' % self.passed)
         self.logger.info('failed: %d' % self.failed)
@@ -265,6 +279,12 @@ class MarionetteTestRunner(object):
         elapsedtime = datetime.utcnow() - starttime
         if self.autolog:
             self.post_to_autolog(elapsedtime)
+        if self.perfrequest and options.perf:
+            try:
+                self.perfrequest.submit()
+            except Exception, e:
+                print "Could not submit to datazilla"
+                print e
         if self.marionette.emulator:
             self.marionette.emulator.close()
             self.marionette.emulator = None
@@ -308,6 +328,22 @@ class MarionetteTestRunner(object):
 
             manifest = TestManifest()
             manifest.read(filepath)
+            if options.perf:
+                if options.perfserv is None:
+                    options.perfserv = manifest.get("perfserv")[0]
+                machine_name = socket.gethostname()
+                try:
+                    manifest.has_key("machine_name")
+                    machine_name = manifest.get("machine_name")[0]
+                except:
+                    self.logger.info("Using machine_name: %s" % machine_name)
+                os_name = platform.system()
+                os_version = platform.release()
+                self.perfrequest = datazilla.DatazillaRequest(server=options.perfserv, machine_name=machine_name, os=os_name, os_version=os_version,
+                                         platform=manifest.get("platform")[0], build_name=manifest.get("build_name")[0], 
+                                         version=manifest.get("version")[0], revision=self.revision,
+                                         branch=manifest.get("branch")[0], id=os.getenv('BUILD_ID'), test_date=int(time.time()))
+
             manifest_tests = manifest.get(**testargs)
 
             for i in manifest_tests:
@@ -333,6 +369,8 @@ class MarionetteTestRunner(object):
         if suite.countTestCases():
             results = MarionetteTextTestRunner(verbosity=3).run(suite)
             self.failed += len(results.failures) + len(results.errors)
+            if results.perfdata:
+                self.perfrequest.add_datazilla_result(results.perfdata)
             if hasattr(results, 'skipped'):
                 self.todo += len(results.skipped) + len(results.expectedFailures)
             self.passed += results.passed
@@ -358,7 +396,7 @@ if __name__ == "__main__":
                       help = "send test results to autolog")
     parser.add_option("--revision",
                       action = "store", dest = "revision",
-                      help = "git revision for autolog submissions")
+                      help = "git revision for autolog/perfdata submissions")
     parser.add_option("--testgroup",
                       action = "store", dest = "testgroup",
                       help = "testgroup names for autolog submissions")
@@ -398,7 +436,16 @@ if __name__ == "__main__":
     parser.add_option('--profile', dest='profile', action='store',
                       help='profile to use when launching the gecko process. If not '
                       'passed, then a profile will be constructed and used.')
-
+    parser.add_option('--perf', dest='perf', action='store_true',
+                      default = False,
+                      help='send performance data to perf data server')
+    parser.add_option('--perf-server', dest='perfserv', action='store',
+                      default=None,
+                      help='dataserver for perf data submission. Entering this value '
+                      'will overwrite the perfserv value in any passed .ini files.')
+    parser.add_option('--repeat', dest='repeat', action='store', type=int,
+                      default=0, help='number of times to repeat the test(s).')
+ 
     options, tests = parser.parse_args()
 
     if not tests:
@@ -428,6 +475,4 @@ if __name__ == "__main__":
     runner.run_tests(tests, testtype=options.type)
     if runner.failed > 0:
         sys.exit(10)
-
-
 

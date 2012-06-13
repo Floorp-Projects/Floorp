@@ -5,4 +5,4 @@
 toolkit.jar:
         content/global/test-ipc.xul (test.xul)
         content/global/remote-test-ipc.js (remote-test.js)
-        content/global/BrowserElementChild.js (../base/BrowserElementChild.js)
+        content/global/BrowserElementChild.js (../browser-element/BrowserElementChild.js)

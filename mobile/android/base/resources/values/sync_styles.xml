@@ -96,7 +96,7 @@
     <item name="android:text">@string/sync_pin_default</item>
   </style>
   <style name="SyncTopIcon">
-    <item name="android:src">@drawable/sync_ic_launcher</item>
+    <item name="android:src">@drawable/sync_fx_icon</item>
     <item name="android:layout_width">wrap_content</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:paddingTop">2dp</item>

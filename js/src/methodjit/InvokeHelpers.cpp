@@ -725,11 +725,6 @@ FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
               op == JSOP_ARGDEC || op == JSOP_DECARG);
     const JSCodeSpec *cs = &js_CodeSpec[op];
 
-    unsigned i = GET_SLOTNO(f.pc());
-    Value *var = (JOF_TYPE(cs->format) == JOF_LOCAL)
-                 ? &f.fp()->unaliasedLocal(i)
-                 : &f.fp()->unaliasedFormal(i);
-
     if (rejoin == REJOIN_POS) {
         double d = ov.toNumber();
         double N = (cs->format & JOF_INC) ? 1 : -1;
@@ -737,7 +732,14 @@ FinishVarIncOp(VMFrame &f, RejoinState rejoin, Value ov, Value nv, Value *vp)
             types::TypeScript::MonitorOverflow(cx, f.script(), f.pc());
     }
 
-    *var = nv;
+    unsigned i = GET_SLOTNO(f.pc());
+    if (JOF_TYPE(cs->format) == JOF_LOCAL)
+        f.fp()->unaliasedLocal(i) = nv;
+    else if (f.fp()->script()->argsObjAliasesFormals())
+        f.fp()->argsObj().setArg(i, nv);
+    else
+        f.fp()->unaliasedFormal(i) = nv;
+
     *vp = (cs->format & JOF_POST) ? ov : nv;
 }
 

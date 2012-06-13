@@ -31,7 +31,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsIServiceManager.h"
 #include "nsTextFragment.h"
-#include "nsTypedSelection.h"
+#include "mozilla/Selection.h"
 #include "gfxSkipChars.h"
 
 using namespace mozilla::a11y;
@@ -1224,6 +1224,9 @@ HyperTextAccessible::GetAttributesInternal(nsIPersistentProperties* aAttributes)
   else if (mContent->Tag() == nsGkAtoms::aside) 
     nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
                            NS_LITERAL_STRING("complementary"));
+  else if (mContent->Tag() == nsGkAtoms::article)
+    nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::xmlroles,
+                           NS_LITERAL_STRING("article"));
 
   return  NS_OK;
 }

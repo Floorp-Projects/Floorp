@@ -27,8 +27,18 @@ ${LIB_PREFIX}${ROOT}.${LIB_SUFFIX} following these rules:
   rules.
 '''
 from __future__ import with_statement
-import sys, os
+import sys, os, errno
 import expandlibs_config as conf
+
+def ensureParentDir(file):
+    '''Ensures the directory parent to the given file exists'''
+    dir = os.path.dirname(file)
+    if dir and not os.path.exists(dir):
+        try:
+            os.makedirs(dir)
+        except OSError, error:
+            if error.errno != errno.EEXIST:
+                raise
 
 def relativize(path):
     '''Returns a path relative to the current working directory, if it is
@@ -115,6 +125,14 @@ class ExpandArgs(list):
                 objs += self._expand(lib)
             return objs
         return [arg]
+
+class ExpandLibsDeps(ExpandArgs):
+    '''Same as ExpandArgs, but also adds the library descriptor to the list'''
+    def _expand_desc(self, arg):
+        objs = super(ExpandLibsDeps, self)._expand_desc(arg)
+        if os.path.exists(arg + conf.LIBS_DESC_SUFFIX):
+            objs += [relativize(arg + conf.LIBS_DESC_SUFFIX)]
+        return objs
 
 if __name__ == '__main__':
     print " ".join(ExpandArgs(sys.argv[1:]))

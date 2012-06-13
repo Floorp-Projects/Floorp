@@ -45,8 +45,6 @@ public:
   nsGfxScrollFrameInner(nsContainerFrame* aOuter, bool aIsRoot);
   ~nsGfxScrollFrameInner();
 
-  void Init();
-
   typedef nsIScrollableFrame::ScrollbarStyles ScrollbarStyles;
   ScrollbarStyles GetScrollbarStylesFromFrame() const;
 
@@ -149,6 +147,7 @@ public:
   nsRect GetScrollRange() const;
   // Get the scroll range assuming the scrollport has size (aWidth, aHeight).
   nsRect GetScrollRange(nscoord aWidth, nscoord aHeight) const;
+  nsSize GetScrollPositionClampingScrollPortSize() const;
 protected:
   nsRect GetScrollRangeForClamping() const;
 
@@ -352,9 +351,6 @@ public:
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList);
 
@@ -463,6 +459,9 @@ public:
   }
   virtual nsRect GetScrollRange() const {
     return mInner.GetScrollRange();
+  }
+  virtual nsSize GetScrollPositionClampingScrollPortSize() const {
+    return mInner.GetScrollPositionClampingScrollPortSize();
   }
   virtual nsSize GetLineScrollAmount() const {
     return mInner.GetLineScrollAmount();
@@ -587,9 +586,6 @@ public:
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
-  NS_IMETHOD Init(nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIFrame*        aPrevInFlow);
   NS_IMETHOD SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList);
 
@@ -708,6 +704,9 @@ public:
   }
   virtual nsRect GetScrollRange() const {
     return mInner.GetScrollRange();
+  }
+  virtual nsSize GetScrollPositionClampingScrollPortSize() const {
+    return mInner.GetScrollPositionClampingScrollPortSize();
   }
   virtual nsSize GetLineScrollAmount() const {
     return mInner.GetLineScrollAmount();

@@ -167,9 +167,9 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
   }
 
   protected void registerCommands() {
-    CommandProcessor processor = CommandProcessor.getProcessor();
+    final CommandProcessor processor = CommandProcessor.getProcessor();
 
-    processor.registerCommand("resetEngine", new CommandRunner() {
+    processor.registerCommand("resetEngine", new CommandRunner(1) {
       @Override
       public void executeCommand(List<String> args) {
         HashSet<String> names = new HashSet<String>();
@@ -178,14 +178,14 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       }
     });
 
-    processor.registerCommand("resetAll", new CommandRunner() {
+    processor.registerCommand("resetAll", new CommandRunner(0) {
       @Override
       public void executeCommand(List<String> args) {
         resetAllStages();
       }
     });
 
-    processor.registerCommand("wipeEngine", new CommandRunner() {
+    processor.registerCommand("wipeEngine", new CommandRunner(1) {
       @Override
       public void executeCommand(List<String> args) {
         HashSet<String> names = new HashSet<String>();
@@ -194,17 +194,17 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       }
     });
 
-    processor.registerCommand("wipeAll", new CommandRunner() {
+    processor.registerCommand("wipeAll", new CommandRunner(0) {
       @Override
       public void executeCommand(List<String> args) {
         wipeAllStages();
       }
     });
 
-    processor.registerCommand("displayURI", new CommandRunner() {
+    processor.registerCommand("displayURI", new CommandRunner(3) {
       @Override
       public void executeCommand(List<String> args) {
-        CommandProcessor.getProcessor().displayURI(args, getContext());
+        CommandProcessor.displayURI(args, context);
       }
     });
   }

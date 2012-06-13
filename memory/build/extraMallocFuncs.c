@@ -107,4 +107,10 @@ _je_malloc_message(void *cbopaque, const char *s)
 void (*je_malloc_message)(void *, const char *s) = _je_malloc_message;
 #endif
 
+#include <mozilla/Assertions.h>
+
+void moz_abort() {
+  MOZ_CRASH();
+}
+
 #endif /* MOZ_JEMALLOC */

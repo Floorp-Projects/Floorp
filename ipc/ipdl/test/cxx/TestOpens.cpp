@@ -12,17 +12,19 @@ struct RunnableMethodTraits<mozilla::_ipdltest::TestOpensChild>
 };
 
 template<>
-struct RunnableMethodTraits<mozilla::_ipdltest::TestOpensOpenedChild>
+struct RunnableMethodTraits<mozilla::_ipdltest2::TestOpensOpenedChild>
 {
-    static void RetainCallee(mozilla::_ipdltest::TestOpensOpenedChild* obj) { }
-    static void ReleaseCallee(mozilla::_ipdltest::TestOpensOpenedChild* obj) { }
+    static void RetainCallee(mozilla::_ipdltest2::TestOpensOpenedChild* obj) { }
+    static void ReleaseCallee(mozilla::_ipdltest2::TestOpensOpenedChild* obj) { }
 };
 
 using namespace base;
 using namespace mozilla::ipc;
 
 namespace mozilla {
-namespace _ipdltest {
+// NB: this is generally bad style, but I am lazy.
+using namespace _ipdltest;
+using namespace _ipdltest2;
 
 static MessageLoop* gMainThread;
 
@@ -274,5 +276,4 @@ TestOpensOpenedChild::ActorDestroy(ActorDestroyReason why)
                             this, mTransport));
 }
 
-} // namespace _ipdltest
 } // namespace mozilla

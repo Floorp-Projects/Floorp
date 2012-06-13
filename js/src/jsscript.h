@@ -535,6 +535,7 @@ struct JSScript : public js::gc::Cell
     bool            strictModeCode:1; /* code is in strict mode */
     bool            compileAndGo:1;   /* see Parser::compileAndGo */
     bool            bindingsAccessedDynamically:1; /* see ContextFlags' field of the same name */
+    bool            funHasExtensibleScope:1;       /* see ContextFlags' field of the same name */
     bool            warnedAboutTwoArgumentEval:1; /* have warned about use of
                                                      obsolete eval(s, o) in
                                                      this script */

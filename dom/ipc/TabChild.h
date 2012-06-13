@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIWebBrowserChrome2.h"
-#include "nsIEmbeddingSiteWindow2.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIWidget.h"
 #include "nsIDOMEventListener.h"
@@ -128,7 +128,7 @@ protected:
 class TabChild : public PBrowserChild,
                  public nsFrameScriptExecutor,
                  public nsIWebBrowserChrome2,
-                 public nsIEmbeddingSiteWindow2,
+                 public nsIEmbeddingSiteWindow,
                  public nsIWebBrowserChromeFocus,
                  public nsIInterfaceRequestor,
                  public nsIWindowProvider,
@@ -147,7 +147,6 @@ public:
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIWEBBROWSERCHROME2
     NS_DECL_NSIEMBEDDINGSITEWINDOW
-    NS_DECL_NSIEMBEDDINGSITEWINDOW2
     NS_DECL_NSIWEBBROWSERCHROMEFOCUS
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIWINDOWPROVIDER

@@ -24,6 +24,7 @@ public:
   friend class SmsRequestManager;
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMDOMREQUEST
   NS_DECL_NSIDOMMOZSMSREQUEST
 
   NS_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper::)
@@ -85,8 +86,8 @@ private:
 
   jsval     mResult;
   bool      mResultRooted;
-  PRInt32   mError;
   bool      mDone;
+  nsCOMPtr<nsIDOMDOMError> mError;
   nsCOMPtr<nsIDOMMozSmsCursor> mCursor;
 
   NS_DECL_EVENT_HANDLER(success)

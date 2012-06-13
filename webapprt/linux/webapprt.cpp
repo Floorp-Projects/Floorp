@@ -17,6 +17,7 @@
 #include "nsXPCOMGlue.h"
 #include "nsXPCOMPrivate.h"              // for MAXPATHLEN and XPCOM_DLL
 #include "nsXULAppAPI.h"
+#include "BinaryPath.h"
 
 const char kAPP_INI[] = "application.ini";
 const char kWEBAPP_INI[] = "webapp.ini";
@@ -134,6 +135,12 @@ bool GRELoadAndLaunch(const char* firefoxDir, const char* profile)
     return false;
   }
 
+  // Override the class name part of the WM_CLASS property, so that the
+  // DE can match our window to the correct launcher
+  char programClass[MAXPATHLEN];
+  snprintf(programClass, MAXPATHLEN, "owa-%s", profile);
+  gdk_set_program_class(programClass);
+
   // NOTE: The GRE has successfully loaded, so we can use XPCOM now
   { // Scope for any XPCOM stuff we create
     ScopedLogging log;
@@ -222,7 +229,7 @@ int main(int argc, char *argv[])
 
   // Get current executable path
   char curExePath[MAXPATHLEN];
-  if (readlink("/proc/self/exe", curExePath, MAXPATHLEN) == -1) {
+  if (NS_FAILED(mozilla::BinaryPath::Get(argv[0], curExePath))) {
     ErrorDialog("Couldn't read current executable path");
     return 255;
   }

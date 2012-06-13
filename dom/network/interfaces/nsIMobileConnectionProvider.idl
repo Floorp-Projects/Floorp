@@ -12,7 +12,7 @@ interface nsIDOMWindow;
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(93202514-9ae9-482e-95bc-9c6ed62aea99)]
+[scriptable, uuid(fb3fac34-c1c2-45a9-ad18-a7af0f7997c9)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   readonly attribute DOMString cardState;
@@ -23,4 +23,6 @@ interface nsIMobileConnectionProvider : nsISupports
   nsIDOMDOMRequest getCardLock(in nsIDOMWindow window, in DOMString lockType);
   nsIDOMDOMRequest unlockCardLock(in nsIDOMWindow window, in jsval info);
   nsIDOMDOMRequest setCardLock(in nsIDOMWindow window, in jsval info);
+  nsIDOMDOMRequest sendUSSD(in nsIDOMWindow window, in DOMString ussd);
+  nsIDOMDOMRequest cancelUSSD(in nsIDOMWindow window);
 };

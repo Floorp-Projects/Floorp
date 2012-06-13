@@ -58,6 +58,10 @@ let modules = {
   downloads: {
     uri: "chrome://browser/content/aboutDownloads.xhtml",
     privileged: true
+  },
+  reader: {
+    uri: "chrome://browser/content/aboutReader.html",
+    privileged: true
   }
 }
 
