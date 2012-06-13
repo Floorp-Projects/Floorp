@@ -8,6 +8,7 @@
 #include "nsDOMClassInfoID.h"
 
 #include "nsPresContext.h"
+#include "mozilla/dom/ClientRectListBinding.h"
 #include "dombindings.h"
 
 DOMCI_DATA(ClientRect, nsClientRect)
@@ -106,8 +107,14 @@ nsClientRectList::GetItemAt(uint32_t aIndex)
 JSObject*
 nsClientRectList::WrapObject(JSContext *cx, JSObject *scope, bool *triedToWrap)
 {
-  return mozilla::dom::oldproxybindings::ClientRectList::create(cx, scope, this,
-                                                       triedToWrap);
+  JSObject* obj = mozilla::dom::ClientRectListBinding::Wrap(cx, scope, this,
+                                                            triedToWrap);
+  if (obj || *triedToWrap) {
+    return obj;
+  }
+
+  *triedToWrap = true;
+  return mozilla::dom::oldproxybindings::ClientRectList::create(cx, scope, this);
 }
 
 static double
