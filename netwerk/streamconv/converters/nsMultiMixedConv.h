@@ -14,6 +14,7 @@
 #include "nsIByteRangeRequest.h"
 #include "nsIMultiPartChannel.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
 
 #define NS_MULTIMIXEDCONVERTER_CID                         \
 { /* 7584CE90-5B25-11d3-A175-0050041CAF44 */         \
@@ -30,9 +31,9 @@
 // Instances on this channel are passed out to the consumer through the
 // nsIStreamListener interface.
 //
-class nsPartChannel : public nsIChannel,
-                      public nsIByteRangeRequest,
-                      public nsIMultiPartChannel
+class nsPartChannel MOZ_FINAL : public nsIChannel,
+                                public nsIByteRangeRequest,
+                                public nsIMultiPartChannel
 {
 public:
   nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID,

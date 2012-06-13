@@ -66,9 +66,11 @@
                             android:title="@string/pref_cookies"
                             android:persistent="false" />
 
+#ifdef MOZ_TELEMETRY_REPORTING
         <CheckBoxPreference android:key="toolkit.telemetry.enabled"
                             android:title="@string/pref_telemetry"
                             android:persistent="false" />
+#endif
 
         <CheckBoxPreference android:key="privacy.masterpassword.enabled"
                             android:title="@string/pref_use_master_password"

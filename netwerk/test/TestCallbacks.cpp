@@ -20,6 +20,7 @@
 #include "nsIInterfaceRequestor.h" 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDNSService.h" 
+#include "mozilla/Attributes.h"
 
 #include "nsISimpleEnumerator.h"
 #include "nsNetUtil.h"
@@ -42,7 +43,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEquals, NS_IEQUALS_IID)
 
-class ConsumerContext : public nsIEquals {
+class ConsumerContext MOZ_FINAL : public nsIEquals {
 public:
     NS_DECL_ISUPPORTS
 
