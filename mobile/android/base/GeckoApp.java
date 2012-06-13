@@ -1759,7 +1759,7 @@ abstract public class GeckoApp
         mFavicons = new Favicons(this);
 
         Tabs.getInstance().setContentResolver(getContentResolver());
-        Tabs.getInstance().registerOnTabsChangedListener(this);
+        Tabs.registerOnTabsChangedListener(this);
 
         if (cameraView == null) {
             cameraView = new SurfaceView(this);
