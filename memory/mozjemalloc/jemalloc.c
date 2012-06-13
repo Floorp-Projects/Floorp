@@ -1563,7 +1563,7 @@ void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
 		MOZ_CRASH();			\
 	}					\
 } while (0)
-#elif
+#else
 #  define RELEASE_ASSERT(assertion) assert(assertion)
 #endif
 
