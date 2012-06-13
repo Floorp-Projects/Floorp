@@ -629,7 +629,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
         JS_ASSERT(ArgumentsRectifierReg != objreg);
         masm.move32(Imm32(call->nargs()), ArgumentsRectifierReg);
-        masm.movePtr(ImmWord(argumentsRectifier->raw()), objreg);
+        masm.movePtr(ImmGCPtr(argumentsRectifier), objreg);
     }
 
     masm.bind(&rejoin);
