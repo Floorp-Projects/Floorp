@@ -43,7 +43,8 @@ HttpRequestSucceeded(nsIStreamLoader *loader)
 
 // These objects are stored in nsPACMan::mPendingQ
 
-class PendingPACQuery : public PRCList, public nsIDNSListener
+class PendingPACQuery MOZ_FINAL : public PRCList,
+                                  public nsIDNSListener
 {
 public:
   NS_DECL_ISUPPORTS

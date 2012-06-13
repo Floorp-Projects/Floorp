@@ -9,6 +9,7 @@
 
 #include "nsIProxyInfo.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 // Use to support QI nsIProxyInfo to nsProxyInfo
 #define NS_PROXYINFO_IID \
@@ -21,7 +22,7 @@
 
 // This class is exposed to other classes inside Necko for fast access
 // to the nsIProxyInfo attributes.
-class nsProxyInfo : public nsIProxyInfo
+class nsProxyInfo MOZ_FINAL : public nsIProxyInfo
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROXYINFO_IID)

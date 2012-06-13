@@ -615,15 +615,15 @@ TelemetryPing.prototype = {
     // Delay full telemetry initialization to give the browser time to
     // run various late initializers. Otherwise our gathered memory
     // footprint and other numbers would be too optimistic.
-    let self = this;
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    let timerCallback = function() {
-      self._initialized = true;
-      self.attachObservers();
-      self.gatherMemory();
-      delete self._timer
+    function timerCallback() {
+      this._initialized = true;
+      this.attachObservers();
+      this.gatherMemory();
+      delete this._timer;
     }
-    this._timer.initWithCallback(timerCallback, TELEMETRY_DELAY, Ci.nsITimer.TYPE_ONE_SHOT);
+    this._timer.initWithCallback(timerCallback.bind(this), TELEMETRY_DELAY,
+                                 Ci.nsITimer.TYPE_ONE_SHOT);
     this.loadHistograms(this.savedHistogramsFile(), false);
   },
 
@@ -654,14 +654,13 @@ TelemetryPing.prototype = {
     } else {
       let channel = NetUtil.newChannel(file);
       channel.contentType = "application/json"
-      let self = this;
 
-      NetUtil.asyncFetch(channel, function(stream, result) {
+      NetUtil.asyncFetch(channel, (function(stream, result) {
         if (!Components.isSuccessCode(result)) {
           return;
         }
-        self.addToPendingPings(stream);
-      });
+        this.addToPendingPings(stream);
+      }).bind(this));
     }
   },
 

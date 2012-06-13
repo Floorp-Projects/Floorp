@@ -28,6 +28,7 @@
 #include "nsCharSeparatedTokenizer.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 
@@ -229,8 +230,8 @@ nsDNSRecord::ReportUnusable(PRUint16 aPort)
 
 //-----------------------------------------------------------------------------
 
-class nsDNSAsyncRequest : public nsResolveHostCallback
-                        , public nsICancelable
+class nsDNSAsyncRequest MOZ_FINAL : public nsResolveHostCallback
+                                  , public nsICancelable
 {
 public:
     NS_DECL_ISUPPORTS
@@ -483,7 +484,7 @@ nsDNSService::Shutdown()
 
 namespace {
 
-class DNSListenerProxy : public nsIDNSListener
+class DNSListenerProxy MOZ_FINAL : public nsIDNSListener
 {
 public:
   DNSListenerProxy(nsIDNSListener* aListener, nsIEventTarget* aTargetThread)

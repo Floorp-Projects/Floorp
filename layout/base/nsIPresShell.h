@@ -78,7 +78,7 @@ class nsARefreshObserver;
 class nsAccessibilityService;
 #endif
 class nsIWidget;
-class nsArenaMemoryStats;
+struct nsArenaMemoryStats;
 
 typedef short SelectionType;
 typedef PRUint64 nsFrameState;
