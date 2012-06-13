@@ -9,7 +9,7 @@
 
    <org.mozilla.gecko.TabsPanel android:id="@+id/tabs_panel"
                                 android:layout_width="fill_parent"
-                                android:layout_height="wrap_content"
+                                android:layout_height="fill_parent"
                                 android:background="@drawable/tabs_tray_bg_repeat"/>
 
    <LinearLayout android:id="@+id/main_layout"

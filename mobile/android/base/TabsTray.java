@@ -8,11 +8,9 @@ package org.mozilla.gecko;
 import java.util.ArrayList;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,13 +29,8 @@ public class TabsTray extends LinearLayout
     private static final String LOGTAG = "GeckoTabsTray";
 
     private Context mContext;
-    private static boolean mHeightRestricted;
 
-    private static int sPreferredHeight;
-    private static int sListItemHeight;
-    private static int sListDividerHeight;
     private static ListView mList;
-    private static TabsListContainer mListContainer;
     private TabsAdapter mTabsAdapter;
     private boolean mWaitingForClose;
 
@@ -59,8 +52,6 @@ public class TabsTray extends LinearLayout
                 row.thumbnail.setImageDrawable(null);
             }
         });
-
-        mListContainer = (TabsListContainer) findViewById(R.id.list_container);
     }
 
     @Override
@@ -69,21 +60,8 @@ public class TabsTray extends LinearLayout
     }
 
     @Override
-    public void setHeightRestriction(boolean isRestricted) {
-        mHeightRestricted = isRestricted;
-    }
-
-    @Override
     public void show() {
         mWaitingForClose = false;
-
-        DisplayMetrics metrics = new DisplayMetrics();
-        GeckoApp.mAppContext.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-        Resources resources = mContext.getResources();
-        sListItemHeight = (int) (resources.getDimension(R.dimen.local_tab_row_height));
-        sListDividerHeight = (int) (resources.getDimension(R.dimen.tabs_list_divider_height));
-        sPreferredHeight = (int) ((0.5 * metrics.heightPixels) + (0.33 * sListItemHeight));
 
         Tabs.registerOnTabsChangedListener(this);
         Tabs.getInstance().refreshThumbnails();
@@ -102,7 +80,6 @@ public class TabsTray extends LinearLayout
         if (mTabsAdapter == null) {
             mTabsAdapter = new TabsAdapter(mContext, Tabs.getInstance().getTabsInOrder());
             mList.setAdapter(mTabsAdapter);
-            mListContainer.requestLayout();
 
             int selected = mTabsAdapter.getPositionForTab(Tabs.getInstance().getSelectedTab());
             if (selected == -1)
@@ -132,25 +109,6 @@ public class TabsTray extends LinearLayout
 
     void hideTabs() {
         GeckoApp.mAppContext.hideTabs();
-    }
-
-    // Tabs List Container holds the ListView and the New Tab button
-    public static class TabsListContainer extends LinearLayout {
-        public TabsListContainer(Context context, AttributeSet attrs) {
-            super(context, attrs);
-        }
-
-        @Override
-        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            if (mList.getAdapter() == null || !mHeightRestricted) {
-                super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-                return;
-            }
-
-            int childrenHeight = (mList.getAdapter().getCount() * (sListItemHeight + sListDividerHeight)) - sListDividerHeight;
-            int restrictedHeightSpec = MeasureSpec.makeMeasureSpec(Math.min(childrenHeight, sPreferredHeight), MeasureSpec.EXACTLY);
-            super.onMeasure(widthMeasureSpec, restrictedHeightSpec);
-        }
     }
 
     // ViewHolder for a row in the list
