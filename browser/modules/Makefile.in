@@ -18,12 +18,13 @@ EXTRA_JS_MODULES = \
 	NetworkPrioritizer.jsm \
 	NewTabUtils.jsm \
 	offlineAppCache.jsm \
+	SignInToWebsite.jsm \
 	TelemetryTimestamps.jsm \
 	Social.jsm \
 	webappsUI.jsm \
 	$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXTRA_JS_MODULES += \
 	WindowsPreviewPerTab.jsm \
 	WindowsJumpLists.jsm \

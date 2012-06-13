@@ -2375,6 +2375,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   list-style-image: url(chrome://global/skin/icons/information-16.png);
 }
 
+#identity-notification-icon {
+  list-style-image: url(chrome://mozapps/skin/profile/profileicon.png);
+}
+
 #geo-notification-icon {
   list-style-image: url(chrome://browser/skin/Geolocation-16.png);
 }
