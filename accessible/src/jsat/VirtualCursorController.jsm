@@ -408,6 +408,8 @@ var VirtualCursorController = {
   SINGLE_LINE_EDITABLE: 1,
   MULTI_LINE_EDITABLE: 2,
 
+  explorebytouch: false,
+
   attach: function attach(aWindow) {
     this.chromeWin = aWindow;
     this.chromeWin.document.addEventListener('keypress', this, true);
