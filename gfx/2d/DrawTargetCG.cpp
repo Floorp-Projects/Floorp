@@ -774,7 +774,6 @@ DrawTargetCG::DrawSurfaceWithShadow(SourceSurface *aSurface, const Point &aDest,
   MarkChanged();
 
   CGImageRef image;
-  CGImageRef subimage = NULL;
   image = GetImageFromSourceSurface(aSurface);
 
   IntSize size = aSurface->GetSize();
@@ -797,7 +796,6 @@ DrawTargetCG::DrawSurfaceWithShadow(SourceSurface *aSurface, const Point &aDest,
 
   CGContextRestoreGState(mCg);
 
-  CGImageRelease(subimage);
 }
 
 bool
