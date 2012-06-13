@@ -1000,11 +1000,11 @@ let RIL = {
         debug("ICC_EF_MSISDN: invalid length of BCD number/SSC contents - " + len);
         return;
       }
-      this.iccInfo.MSISDN = GsmPDUHelper.readDiallingNumber(len);
+      this.iccInfo.msisdn = GsmPDUHelper.readDiallingNumber(len);
       Buf.readStringDelimiter(length);
 
-      if (DEBUG) debug("MSISDN: " + this.iccInfo.MSISDN);
-      if (this.iccInfo.MSISDN) {
+      if (DEBUG) debug("MSISDN: " + this.iccInfo.msisdn);
+      if (this.iccInfo.msisdn) {
         this._handleICCInfoChange();
       }
     }
@@ -1024,30 +1024,30 @@ let RIL = {
   },
 
   /**
-   * Read the AD from the ICC.
+   * Read the AD (Administrative Data) from the ICC.
    */
   getAD: function getAD() {
     function callback() {
       let length = Buf.readUint32();
       // Each octet is encoded into two chars.
       let len = length / 2;
-      this.iccInfo.AD = GsmPDUHelper.readHexOctetArray(len);
+      this.iccInfo.ad = GsmPDUHelper.readHexOctetArray(len);
       Buf.readStringDelimiter(length);
 
       if (DEBUG) {
         let str = "";
-        for (let i = 0; i < this.iccInfo.AD.length; i++) {
-          str += this.iccInfo.AD[i] + ", ";
+        for (let i = 0; i < this.iccInfo.ad.length; i++) {
+          str += this.iccInfo.ad[i] + ", ";
         }
         debug("AD: " + str);
       }
 
-      if (this.iccInfo.IMSI) {
+      if (this.iccInfo.imsi) {
         // MCC is the first 3 digits of IMSI
-        this.iccInfo.MCC = this.iccInfo.IMSI.substr(0,3);
+        this.iccInfo.mcc = parseInt(this.iccInfo.imsi.substr(0,3));
         // The 4th byte of the response is the length of MNC
-        this.iccInfo.MNC = this.iccInfo.IMSI.substr(3, this.iccInfo.AD[3]);
-        if (DEBUG) debug("MCC: " + this.iccInfo.MCC + " MNC: " + this.iccInfo.MNC);
+        this.iccInfo.mnc = parseInt(this.iccInfo.imsi.substr(3, this.iccInfo.ad[3]));
+        if (DEBUG) debug("MCC: " + this.iccInfo.mcc + " MNC: " + this.iccInfo.mnc);
         this._handleICCInfoChange();
       }
     }
@@ -1079,7 +1079,9 @@ let RIL = {
     service -= 1;
     let index = service / 8;
     let bitmask = 1 << (service % 8);
-    return this.UST && (index < this.UST.length) && (this.UST[index] & bitmask);
+    return this.iccInfo.ust &&
+           (index < this.iccInfo.ust.length) &&
+           (this.iccInfo.ust[index] & bitmask);
   },
 
   /**
@@ -1090,13 +1092,13 @@ let RIL = {
       let length = Buf.readUint32();
       // Each octet is encoded into two chars.
       let len = length / 2;
-      this.iccInfo.UST = GsmPDUHelper.readHexOctetArray(len);
+      this.iccInfo.ust = GsmPDUHelper.readHexOctetArray(len);
       Buf.readStringDelimiter(length);
       
       if (DEBUG) {
         let str = "";
-        for (let i = 0; i < this.iccInfo.UST.length; i++) {
-          str += this.iccInfo.UST[i] + ", ";
+        for (let i = 0; i < this.iccInfo.ust.length; i++) {
+          str += this.iccInfo.ust[i] + ", ";
         }
         debug("UST: " + str);
       }
@@ -1182,24 +1184,24 @@ let RIL = {
   getFDN: function getFDN(options) {
     function callback(options) {
       function add(contact) {
-        this.iccInfo.FDN.push(contact);
+        this.iccInfo.fdn.push(contact);
       };
       function finish() {
         if (DEBUG) {
-          for (let i = 0; i < this.iccInfo.FDN.length; i++) {
-            debug("FDN[" + i + "] alphaId = " + this.iccInfo.FDN[i].alphaId +
-                                " number = " + this.iccInfo.FDN[i].number);
+          for (let i = 0; i < this.iccInfo.fdn.length; i++) {
+            debug("FDN[" + i + "] alphaId = " + this.iccInfo.fdn[i].alphaId +
+                                " number = " + this.iccInfo.fdn[i].number);
           }
         }
         this.sendDOMMessage({type: "icccontacts",
                              contactType: "FDN",
-                             contacts: this.iccInfo.FDN,
+                             contacts: this.iccInfo.fdn,
                              requestId: options.requestId});
       };
       this.parseDiallingNumber(options, add, finish);
     }
     
-    this.iccInfo.FDN = [];
+    this.iccInfo.fdn = [];
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    ICC_EF_FDN,
@@ -1227,24 +1229,24 @@ let RIL = {
   getADN: function getADN(options) {
     function callback(options) {
       function add(contact) {
-        this.iccInfo.ADN.push(contact);
+        this.iccInfo.adn.push(contact);
       };
       function finish() {
         if (DEBUG) {
-          for (let i = 0; i < this.iccInfo.ADN.length; i++) {
-            debug("ADN[" + i + "] alphaId = " + this.iccInfo.ADN[i].alphaId +
-                                " number = " + this.iccInfo.ADN[i].number);
+          for (let i = 0; i < this.iccInfo.adn.length; i++) {
+            debug("ADN[" + i + "] alphaId = " + this.iccInfo.adn[i].alphaId +
+                                " number = " + this.iccInfo.adn[i].number);
           }
         }
         this.sendDOMMessage({type: "icccontacts",
                              contactType: "ADN",
-                             contacts: this.iccInfo.ADN,
+                             contacts: this.iccInfo.adn,
                              requestId: options.requestId});
       };
       this.parseDiallingNumber(options, add, finish);
     }
 
-    this.iccInfo.ADN = [];
+    this.iccInfo.adn = [];
     this.iccIO({
       command:   ICC_COMMAND_GET_RESPONSE,
       fileId:    options.fileId,
@@ -2006,13 +2008,15 @@ let RIL = {
 
     // From TS 23.003, 0000 and 0xfffe are indicated that no valid LAI exists
     // in MS. So we still need to report the '0000' as well.
-    if (cell.lac !== state[1]) {
-      cell.lac = state[1];
+    let lac = parseInt(state[1], 16);
+    if (cell.lac !== lac) {
+      cell.lac = lac;
       cellChanged = true;
     }
 
-    if (cell.cid !== state[2]) {
-      cell.cid = state[2];
+    let cid = parseInt(state[2], 16);
+    if (cell.cid !== cid) {
+      cell.cid = cid;
       cellChanged = true;
     }
 
@@ -2703,7 +2707,7 @@ RIL[REQUEST_GET_IMSI] = function REQUEST_GET_IMSI(length, options) {
     return;
   }
 
-  this.iccInfo.IMSI = Buf.readString();
+  this.iccInfo.imsi = Buf.readString();
 };
 RIL[REQUEST_HANGUP] = function REQUEST_HANGUP(length, options) {
   if (options.rilRequestError) {
