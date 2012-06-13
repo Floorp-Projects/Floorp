@@ -26,6 +26,7 @@
 #include "js/MemoryMetrics.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/Attributes.h"
 
 #include "nsJSPrincipals.h"
 
@@ -1620,7 +1621,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf, "js")
 
-class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
+class JSCompartmentsMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
   public:
     NS_DECL_ISUPPORTS
@@ -1700,7 +1701,7 @@ struct XPCJSRuntimeStats : public JS::RuntimeStats {
     }
 };
     
-class JSMemoryMultiReporter : public nsIMemoryMultiReporter
+class JSMemoryMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
 public:
     NS_DECL_ISUPPORTS
