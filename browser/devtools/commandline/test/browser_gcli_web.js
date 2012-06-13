@@ -2015,7 +2015,7 @@ define('gclitest/testHelp', ['require', 'exports', 'module' , 'gclitest/helpers'
     helpers.exec(options, {
       typed: 'help nomatch',
       args: { search: 'nomatch' },
-      outputMatch: /Commands starting with 'nomatch':$/
+      outputMatch: /No commands starting with 'nomatch'$/
     });
 
     helpers.exec(options, {
@@ -2031,7 +2031,7 @@ define('gclitest/testHelp', ['require', 'exports', 'module' , 'gclitest/helpers'
     helpers.exec(options, {
       typed: 'help a b',
       args: { search: 'a b' },
-      outputMatch: /Commands starting with 'a b':$/
+      outputMatch: /No commands starting with 'a b'$/
     });
 
     helpers.exec(options, {
