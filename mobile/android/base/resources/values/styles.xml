@@ -199,7 +199,7 @@
         <item name="android:layout_marginRight">5dip</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="android:layout_centerVertical">true</item>
-        <item name="android:background">@android:color/transparent</item>
+        <item name="android:background">@drawable/action_bar_button_inverse</item>
     </style>
 
     <style name="WebView">
