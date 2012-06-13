@@ -248,12 +248,12 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
                 MBoundsCheck *boundsCheck = MBoundsCheck::New(indexOrCode, length);
                 current->add(length);
                 current->add(boundsCheck);
-                ins = new MCharCodeAt(str, indexOrCode);
+                ins = MCharCodeAt::New(str, indexOrCode);
                 current->add(ins);
                 indexOrCode = ins;
             }
             if (native == js::str_fromCharCode || native == js_str_charAt) {
-                ins = new MFromCharCode(indexOrCode);
+                ins = MFromCharCode::New(indexOrCode);
                 current->add(ins);
             }
             current->push(ins);

@@ -311,6 +311,22 @@ TypeInferenceOracle::elementReadIsTypedArray(JSScript *script, jsbytecode *pc, i
 }
 
 bool
+TypeInferenceOracle::elementReadIsString(JSScript *script, jsbytecode *pc)
+{
+    // Check for string[int32].
+    types::TypeSet *value = script->analysis()->poppedTypes(pc, 1);
+    types::TypeSet *id = script->analysis()->poppedTypes(pc, 0);
+
+    if (value->getKnownTypeTag(cx) != JSVAL_TYPE_STRING)
+        return false;
+
+    if (id->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+        return false;
+
+    return true;
+}
+
+bool
 TypeInferenceOracle::elementReadIsPacked(JSScript *script, jsbytecode *pc)
 {
     types::TypeSet *types = script->analysis()->poppedTypes(pc, 1);
