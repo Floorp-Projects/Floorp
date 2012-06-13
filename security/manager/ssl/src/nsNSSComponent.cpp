@@ -365,7 +365,9 @@ nsNSSComponent::createBackgroundThreads()
                "Cert verification thread already created.");
 
   mCertVerificationThread = new nsCertVerificationThread;
-  nsresult rv = mCertVerificationThread->startThread();
+  nsresult rv = mCertVerificationThread->startThread(
+    NS_LITERAL_CSTRING("Cert Verify"));
+
   if (NS_FAILED(rv)) {
     delete mCertVerificationThread;
     mCertVerificationThread = nsnull;

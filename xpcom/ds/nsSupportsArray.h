@@ -9,10 +9,11 @@
 //#define DEBUG_SUPPORTSARRAY 1
 
 #include "nsISupportsArray.h"
+#include "mozilla/Attributes.h"
 
 static const PRUint32 kAutoArraySize = 8;
 
-class nsSupportsArray : public nsISupportsArray {
+class nsSupportsArray MOZ_FINAL : public nsISupportsArray {
 public:
   nsSupportsArray(void);
   ~nsSupportsArray(void); // nonvirtual since we're not subclassed

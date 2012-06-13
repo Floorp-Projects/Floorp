@@ -39,6 +39,7 @@ CPPSRCS		= \
 		nsMemoryReporterManager.cpp \
 		FunctionTimer.cpp \
 		ClearOnShutdown.cpp \
+		VisualEventTracer.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH),Linux)
@@ -73,6 +74,7 @@ EXPORTS_mozilla = \
 	ClearOnShutdown.h \
 	AvailableMemoryTracker.h \
 	StackWalk.h \
+	VisualEventTracer.h \
 	$(NULL)
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))

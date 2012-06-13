@@ -26,6 +26,7 @@ FENNEC_JAVA_FILES = \
   AlertNotification.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \
+  BrowserApp.java \
   BrowserToolbar.java \
   ConfirmPreference.java \
   SyncPreference.java \
@@ -602,6 +603,7 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/tabs_normal.png \
   res/drawable-land-mdpi-v14/tabs_pressed.png \
   res/drawable-land-mdpi-v14/urlbar_stop.png \
+  res/drawable-land-mdpi-v14/reader.png \
   res/drawable-land-mdpi-v14/site_security_identified.png \
   res/drawable-land-mdpi-v14/site_security_verified.png \
   $(NULL)
@@ -616,6 +618,7 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/tabs_normal.png \
   res/drawable-land-hdpi-v14/tabs_pressed.png \
   res/drawable-land-hdpi-v14/urlbar_stop.png \
+  res/drawable-land-hdpi-v14/reader.png \
   res/drawable-land-hdpi-v14/site_security_identified.png \
   res/drawable-land-hdpi-v14/site_security_verified.png \
   $(NULL)
@@ -630,6 +633,7 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/tabs_normal.png \
   res/drawable-land-xhdpi-v14/tabs_pressed.png \
   res/drawable-land-xhdpi-v14/urlbar_stop.png \
+  res/drawable-land-xhdpi-v14/reader.png \
   res/drawable-land-xhdpi-v14/site_security_identified.png \
   res/drawable-land-xhdpi-v14/site_security_verified.png \
   $(NULL)
@@ -642,6 +646,8 @@ RES_DRAWABLE_XLARGE_MDPI = \
   res/drawable-xlarge-mdpi/address_bar_url_default.9.png \
   res/drawable-xlarge-mdpi/address_bar_url_pressed.9.png \
   res/drawable-xlarge-mdpi/menu.png \
+  res/drawable-xlarge-mdpi/ic_awesomebar_go.png \
+  res/drawable-xlarge-mdpi/ic_awesomebar_search.png \
   res/drawable-xlarge-mdpi/ic_menu_bookmark_add.png \
   res/drawable-xlarge-mdpi/ic_menu_bookmark_remove.png \
   res/drawable-xlarge-mdpi/ic_menu_reload.png \
@@ -650,6 +656,9 @@ RES_DRAWABLE_XLARGE_MDPI = \
   res/drawable-xlarge-mdpi/tabs_normal.png \
   res/drawable-xlarge-mdpi/tabs_pressed.png \
   res/drawable-xlarge-mdpi/urlbar_stop.png \
+  res/drawable-xlarge-mdpi/reader.png \
+  res/drawable-xlarge-mdpi/site_security_identified.png \
+  res/drawable-xlarge-mdpi/site_security_verified.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_HDPI = \
@@ -659,6 +668,8 @@ RES_DRAWABLE_XLARGE_HDPI = \
   res/drawable-xlarge-hdpi/address_bar_url_default.9.png \
   res/drawable-xlarge-hdpi/address_bar_url_pressed.9.png \
   res/drawable-xlarge-hdpi/menu.png \
+  res/drawable-xlarge-hdpi/ic_awesomebar_go.png \
+  res/drawable-xlarge-hdpi/ic_awesomebar_search.png \
   res/drawable-xlarge-hdpi/ic_menu_bookmark_add.png \
   res/drawable-xlarge-hdpi/ic_menu_bookmark_remove.png \
   res/drawable-xlarge-hdpi/ic_menu_reload.png \
@@ -667,6 +678,9 @@ RES_DRAWABLE_XLARGE_HDPI = \
   res/drawable-xlarge-hdpi/tabs_normal.png \
   res/drawable-xlarge-hdpi/tabs_pressed.png \
   res/drawable-xlarge-hdpi/urlbar_stop.png \
+  res/drawable-xlarge-hdpi/reader.png \
+  res/drawable-xlarge-hdpi/site_security_identified.png \
+  res/drawable-xlarge-hdpi/site_security_verified.png \
   $(NULL)
 
 RES_DRAWABLE_XLARGE_XHDPI = \
@@ -676,6 +690,8 @@ RES_DRAWABLE_XLARGE_XHDPI = \
   res/drawable-xlarge-xhdpi/address_bar_url_default.9.png \
   res/drawable-xlarge-xhdpi/address_bar_url_pressed.9.png \
   res/drawable-xlarge-xhdpi/menu.png \
+  res/drawable-xlarge-xhdpi/ic_awesomebar_go.png \
+  res/drawable-xlarge-xhdpi/ic_awesomebar_search.png \
   res/drawable-xlarge-xhdpi/ic_menu_bookmark_add.png \
   res/drawable-xlarge-xhdpi/ic_menu_bookmark_remove.png \
   res/drawable-xlarge-xhdpi/ic_menu_reload.png \
@@ -684,6 +700,9 @@ RES_DRAWABLE_XLARGE_XHDPI = \
   res/drawable-xlarge-xhdpi/tabs_normal.png \
   res/drawable-xlarge-xhdpi/tabs_pressed.png \
   res/drawable-xlarge-xhdpi/urlbar_stop.png \
+  res/drawable-xlarge-xhdpi/reader.png \
+  res/drawable-xlarge-xhdpi/site_security_identified.png \
+  res/drawable-xlarge-xhdpi/site_security_verified.png \
   $(NULL)
 
 RES_DRAWABLE_SW600DP_MDPI = \
@@ -694,6 +713,8 @@ RES_DRAWABLE_SW600DP_MDPI = \
   res/drawable-sw600dp-mdpi/address_bar_url_default.9.png \
   res/drawable-sw600dp-mdpi/address_bar_url_pressed.9.png \
   res/drawable-sw600dp-mdpi/menu.png \
+  res/drawable-sw600dp-mdpi/ic_awesomebar_go.png \
+  res/drawable-sw600dp-mdpi/ic_awesomebar_search.png \
   res/drawable-sw600dp-mdpi/ic_menu_bookmark_add.png \
   res/drawable-sw600dp-mdpi/ic_menu_bookmark_remove.png \
   res/drawable-sw600dp-mdpi/ic_menu_reload.png \
@@ -702,6 +723,9 @@ RES_DRAWABLE_SW600DP_MDPI = \
   res/drawable-sw600dp-mdpi/tabs_normal.png \
   res/drawable-sw600dp-mdpi/tabs_pressed.png \
   res/drawable-sw600dp-mdpi/urlbar_stop.png \
+  res/drawable-sw600dp-mdpi/reader.png \
+  res/drawable-sw600dp-mdpi/site_security_identified.png \
+  res/drawable-sw600dp-mdpi/site_security_verified.png \
   $(NULL)
 
 RES_DRAWABLE_SW600DP_HDPI = \
@@ -711,6 +735,8 @@ RES_DRAWABLE_SW600DP_HDPI = \
   res/drawable-sw600dp-hdpi/address_bar_url_default.9.png \
   res/drawable-sw600dp-hdpi/address_bar_url_pressed.9.png \
   res/drawable-sw600dp-hdpi/menu.png \
+  res/drawable-sw600dp-hdpi/ic_awesomebar_go.png \
+  res/drawable-sw600dp-hdpi/ic_awesomebar_search.png \
   res/drawable-sw600dp-hdpi/ic_menu_bookmark_add.png \
   res/drawable-sw600dp-hdpi/ic_menu_bookmark_remove.png \
   res/drawable-sw600dp-hdpi/ic_menu_reload.png \
@@ -719,6 +745,9 @@ RES_DRAWABLE_SW600DP_HDPI = \
   res/drawable-sw600dp-hdpi/tabs_normal.png \
   res/drawable-sw600dp-hdpi/tabs_pressed.png \
   res/drawable-sw600dp-hdpi/urlbar_stop.png \
+  res/drawable-sw600dp-hdpi/reader.png \
+  res/drawable-sw600dp-hdpi/site_security_identified.png \
+  res/drawable-sw600dp-hdpi/site_security_verified.png \
   $(NULL)
 
 RES_DRAWABLE_SW600DP_XHDPI = \
@@ -728,6 +757,8 @@ RES_DRAWABLE_SW600DP_XHDPI = \
   res/drawable-sw600dp-xhdpi/address_bar_url_default.9.png \
   res/drawable-sw600dp-xhdpi/address_bar_url_pressed.9.png \
   res/drawable-sw600dp-xhdpi/menu.png \
+  res/drawable-sw600dp-xhdpi/ic_awesomebar_go.png \
+  res/drawable-sw600dp-xhdpi/ic_awesomebar_search.png \
   res/drawable-sw600dp-xhdpi/ic_menu_bookmark_add.png \
   res/drawable-sw600dp-xhdpi/ic_menu_bookmark_remove.png \
   res/drawable-sw600dp-xhdpi/ic_menu_reload.png \
@@ -736,6 +767,9 @@ RES_DRAWABLE_SW600DP_XHDPI = \
   res/drawable-sw600dp-xhdpi/tabs_normal.png \
   res/drawable-sw600dp-xhdpi/tabs_pressed.png \
   res/drawable-sw600dp-xhdpi/urlbar_stop.png \
+  res/drawable-sw600dp-xhdpi/reader.png \
+  res/drawable-sw600dp-xhdpi/site_security_identified.png \
+  res/drawable-sw600dp-xhdpi/site_security_verified.png \
   $(NULL)
 
 RES_COLOR = \
