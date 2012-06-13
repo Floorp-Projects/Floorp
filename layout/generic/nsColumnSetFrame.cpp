@@ -634,7 +634,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
       kidReflowState.mFlags.mTableIsSplittable = false;
       kidReflowState.mFlags.mIsColumnBalancing = aConfig.mBalanceColCount < PR_INT32_MAX;
 
-      #ifdef DEBUG_roc
+#ifdef DEBUG_roc
       printf("*** Reflowing child #%d %p: availHeight=%d\n",
              columnCount, (void*)child,availSize.height);
 #endif
