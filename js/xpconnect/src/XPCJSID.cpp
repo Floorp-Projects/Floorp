@@ -9,6 +9,7 @@
 #include "xpcprivate.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/Attributes.h"
 
 /***************************************************************************/
 // nsJSID
@@ -203,7 +204,7 @@ nsJSID::NewID(const nsID& id)
 // helper is not sufficient to convey the information that we don't want
 // static properties enumerated on the shared proto.
 
-class SharedScriptableHelperForJSIID : public nsIXPCScriptable
+class SharedScriptableHelperForJSIID MOZ_FINAL : public nsIXPCScriptable
 {
 public:
     NS_DECL_ISUPPORTS

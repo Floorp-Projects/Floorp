@@ -13,6 +13,7 @@
 #include "XPCWrapper.h"
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
+#include "mozilla/Attributes.h"
 
 #include "jsapi.h"
 
@@ -521,7 +522,7 @@ GetContextFromObject(JSObject *obj)
     return nsnull;
 }
 
-class SameOriginCheckedComponent : public nsISecurityCheckedComponent
+class SameOriginCheckedComponent MOZ_FINAL : public nsISecurityCheckedComponent
 {
 public:
     SameOriginCheckedComponent(nsXPCWrappedJS* delegate)
