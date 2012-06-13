@@ -6,7 +6,7 @@
 %include defines.inc
 
 html {
-  font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
+  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
   font-size: 18px;
   background-image: url("chrome://browser/skin/images/about-bg-lightblue.png");
   -moz-text-size-adjust: none;
