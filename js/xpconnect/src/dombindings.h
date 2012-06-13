@@ -151,14 +151,10 @@ private:
 
 public:
     static JSObject *create(JSContext *cx, JSObject *scope, ListType *list,
-                            nsWrapperCache* cache, bool *triedToWrap);
+                            nsWrapperCache* cache);
 
-    static JSObject *getPrototype(JSContext *cx, JSObject *receiver, bool *enabled);
-    static bool DefineDOMInterface(JSContext *cx, JSObject *receiver, bool *enabled)
-    {
-        return !!getPrototype(cx, receiver, enabled);
-    }
-
+    static JSObject *getPrototype(JSContext *cx, JSObject *receiver);
+    static bool DefineDOMInterface(JSContext *cx, JSObject *receiver, bool *enabled);
     bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
                                JSPropertyDescriptor *desc);
     bool getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
