@@ -7,6 +7,7 @@
 #define nsScriptableBase64Encoder_h__
 
 #include "nsIScriptableBase64Encoder.h"
+#include "mozilla/Attributes.h"
 
 #define NS_SCRIPTABLEBASE64ENCODER_CID                 \
   {0xaaf68860, 0xf849, 0x40ee,                         \
@@ -14,7 +15,7 @@
 #define NS_SCRIPTABLEBASE64ENCODER_CONTRACTID \
   "@mozilla.org/scriptablebase64encoder;1"
 
-class nsScriptableBase64Encoder : public nsIScriptableBase64Encoder
+class nsScriptableBase64Encoder MOZ_FINAL : public nsIScriptableBase64Encoder
 {
 public:
   NS_DECL_ISUPPORTS

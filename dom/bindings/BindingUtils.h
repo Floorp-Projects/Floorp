@@ -571,6 +571,16 @@ WrapNativeParent(JSContext* cx, JSObject* scope, const T& p)
          NULL;
 }
 
+static inline bool
+InternJSString(JSContext* cx, jsid& id, const char* chars)
+{
+  if (JSString *str = ::JS_InternString(cx, chars)) {
+    id = INTERNED_STRING_TO_JSID(cx, str);
+    return true;
+  }
+  return false;
+}
+
 // Spec needs a name property
 template <typename Spec>
 static bool
@@ -583,12 +593,9 @@ InitIds(JSContext* cx, Prefable<Spec>* prefableSpecs, jsid* ids)
     // because this is only done once per application runtime.
     Spec* spec = prefableSpecs->specs;
     do {
-      JSString *str = ::JS_InternString(cx, spec->name);
-      if (!str) {
+      if (!InternJSString(cx, *ids, spec->name)) {
         return false;
       }
-
-      *ids = INTERNED_STRING_TO_JSID(cx, str);
     } while (++ids, (++spec)->name);
 
     // We ran out of ids for that pref.  Put a JSID_VOID in on the id

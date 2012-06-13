@@ -129,7 +129,7 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
 
     UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
-        return NULL;
+        return false;
 
     StackShape child(nbase, id, slot, 0, attrs, Shape::HAS_SHORTID, *indexp);
 

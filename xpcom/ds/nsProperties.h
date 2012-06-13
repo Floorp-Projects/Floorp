@@ -10,6 +10,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
 #include "nsAgg.h"
+#include "mozilla/Attributes.h"
 
 #define NS_PROPERTIES_CID                            \
 { /* 4de2bc90-b1bf-11d3-93b6-00104ba0fd40 */         \
@@ -24,8 +25,8 @@ class nsIUnicharInputStream;
 typedef nsInterfaceHashtable<nsCharPtrHashKey, nsISupports>
         nsProperties_HashBase;
 
-class nsProperties : public nsIProperties,
-                     public nsProperties_HashBase {
+class nsProperties MOZ_FINAL : public nsIProperties,
+                               public nsProperties_HashBase {
 public:
 
   NS_DECL_AGGREGATED

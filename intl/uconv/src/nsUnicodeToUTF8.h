@@ -6,6 +6,8 @@
 #ifndef nsUnicodeToUTF8_h___
 #define nsUnicodeToUTF8_h___
 
+#include "mozilla/Attributes.h"
+
 // Class ID for our UnicodeToUTF8 charset converter
 // {7C657D18-EC5E-11d2-8AAC-00600811A836}
 #define NS_UNICODETOUTF8_CID \
@@ -25,7 +27,7 @@
  * @created         05/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToUTF8 : public nsIUnicodeEncoder
+class nsUnicodeToUTF8 MOZ_FINAL : public nsIUnicodeEncoder
 {
   NS_DECL_ISUPPORTS
 

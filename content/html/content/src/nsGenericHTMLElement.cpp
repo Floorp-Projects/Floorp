@@ -4187,7 +4187,8 @@ nsDOMSettableTokenListPropertyDestructor(void *aObject, nsIAtom *aProperty,
 {
   nsDOMSettableTokenList* list =
     static_cast<nsDOMSettableTokenList*>(aPropertyValue);
-  NS_IF_RELEASE(list);
+  list->DropReference();
+  NS_RELEASE(list);
 }
 
 nsDOMSettableTokenList*
