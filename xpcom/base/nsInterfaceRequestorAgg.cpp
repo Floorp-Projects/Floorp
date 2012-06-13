@@ -4,8 +4,9 @@
 
 #include "nsInterfaceRequestorAgg.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
-class nsInterfaceRequestorAgg : public nsIInterfaceRequestor
+class nsInterfaceRequestorAgg MOZ_FINAL : public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS

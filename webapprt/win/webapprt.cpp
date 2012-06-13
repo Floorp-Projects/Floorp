@@ -266,7 +266,7 @@ namespace {
       // Get the path to the runtime.
       char rtPath[MAXPATHLEN];
       rv = joinPath(rtPath, greDir, kWEBAPPRT_PATH, MAXPATHLEN);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS(rv, false);
 
       // Get the path to the runtime's INI file.
       char rtIniPath[MAXPATHLEN];
@@ -278,13 +278,14 @@ namespace {
       rv = XRE_GetFileFromPath(rtIniPath, getter_AddRefs(rtINI));
       NS_ENSURE_SUCCESS(rv, false);
 
-      if (!rtINI) {
+      bool exists;
+      rv = rtINI->Exists(&exists);
+      if (NS_FAILED(rv) || !exists)
         return false;
-      }
 
       ScopedXREAppData webShellAppData;
       rv = webShellAppData.create(rtINI);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS(rv, false);
 
       SetAllocatedString(webShellAppData->profile, profile);
       SetAllocatedString(webShellAppData->name, profile);
@@ -502,8 +503,7 @@ main(int argc, char* argv[])
 
   // Second attempt at loading Firefox binaries:
   //   Get the location of Firefox from the registry
-  rv = GetFirefoxDirFromRegistry(firefoxDir);
-  if (NS_SUCCEEDED(rv)) {
+  if (GetFirefoxDirFromRegistry(firefoxDir)) {
     if (AttemptLoadFromDir(firefoxDir)) {
       // XXX: Write gre dir location to webapp.ini
       return 0;

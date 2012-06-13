@@ -9,6 +9,7 @@
 #include "nsIOutputStream.h"
 #include "nsIConverterOutputStream.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 class nsIUnicodeEncoder;
 class nsIOutputStream;
@@ -18,7 +19,7 @@ class nsIOutputStream;
 { 0xff8780a5, 0xbbb1, 0x4bc5, \
   { 0x8e, 0xe7, 0x05, 0x7e, 0x7b, 0xc5, 0xc9, 0x25 } }
 
-class nsConverterOutputStream : public nsIConverterOutputStream {
+class nsConverterOutputStream MOZ_FINAL : public nsIConverterOutputStream {
     public:
         nsConverterOutputStream() {}
 

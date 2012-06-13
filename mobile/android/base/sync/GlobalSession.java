@@ -380,7 +380,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
       return false;
     }
 
-    if (Logger.logVerbose(LOG_TAG)) {
+    if (Logger.shouldLogVerbose(LOG_TAG)) {
       Logger.trace(LOG_TAG, "Uploading updated meta/global record since there are engines requesting upload: " +
           Utils.toCommaSeparatedString(enginesToUpdate.keySet()));
     }
@@ -648,7 +648,7 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
     if (config.enabledEngineNames == null) {
       Logger.warn(LOG_TAG, "meta/global reported no enabled engine names!");
     } else {
-      if (Logger.logVerbose(LOG_TAG)) {
+      if (Logger.shouldLogVerbose(LOG_TAG)) {
         Logger.trace(LOG_TAG, "Persisting enabled engine names '" +
             Utils.toCommaSeparatedString(config.enabledEngineNames) + "' from meta/global.");
       }

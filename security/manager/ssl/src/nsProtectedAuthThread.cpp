@@ -18,6 +18,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtectedAuthThread, nsIProtectedAuthThread)
 
 static void PR_CALLBACK nsProtectedAuthThreadRunner(void *arg)
 {
+    PR_SetCurrentThreadName("Protected Auth");
+
     nsProtectedAuthThread *self = static_cast<nsProtectedAuthThread *>(arg);
     self->Run();
 }

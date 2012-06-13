@@ -216,6 +216,8 @@ void TimerThread::UpdateFilter(PRUint32 aDelay, TimeStamp aTimeout,
 /* void Run(); */
 NS_IMETHODIMP TimerThread::Run()
 {
+  PR_SetCurrentThreadName("Timer");
+
   MonitorAutoLock lock(mMonitor);
 
   // We need to know how many microseconds give a positive PRIntervalTime. This

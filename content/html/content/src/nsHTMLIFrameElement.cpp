@@ -5,10 +5,8 @@
 
 #include "mozilla/Util.h"
 
-#include "nsIDOMHTMLIFrameElement.h"
-#include "nsGenericHTMLFrameElement.h"
+#include "nsHTMLIFrameElement.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMGetSVGDocument.h"
 #include "nsIDOMSVGDocument.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
@@ -20,53 +18,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class nsHTMLIFrameElement : public nsGenericHTMLFrameElement
-                          , public nsIDOMHTMLIFrameElement
-                          , public nsIDOMGetSVGDocument
-{
-public:
-  nsHTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                      mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
-  virtual ~nsHTMLIFrameElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLFrameElement::)
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFrameElement::)
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFrameElement::)
-
-  // nsIDOMHTMLIFrameElement
-  NS_DECL_NSIDOMHTMLIFRAMEELEMENT
-
-  // nsIDOMGetSVGDocument
-  NS_DECL_NSIDOMGETSVGDOCUMENT
-
-  // nsIContent
-  virtual bool ParseAttribute(PRInt32 aNamespaceID,
-                                nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsXPCClassInfo* GetClassInfo();
-  virtual nsIDOMNode* AsDOMNode() { return this; }
-
-protected:
-  virtual void GetItemValueText(nsAString& text);
-  virtual void SetItemValueText(const nsAString& text);
-};
-
-
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(IFrame)
-
 
 nsHTMLIFrameElement::nsHTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
                                          FromParser aFromParser)
@@ -77,7 +29,6 @@ nsHTMLIFrameElement::nsHTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo
 nsHTMLIFrameElement::~nsHTMLIFrameElement()
 {
 }
-
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameElement,nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameElement,nsGenericElement)
@@ -94,9 +45,7 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLIFrameElement)
                                                nsGenericHTMLFrameElement)
 NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLIFrameElement)
 
-
 NS_IMPL_ELEMENT_CLONE(nsHTMLIFrameElement)
-
 
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, FrameBorder, frameborder)

@@ -307,60 +307,60 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
     NS_ENSURE_SUCCESS(rv, rv);                                                \
   } while (0)
 
-  REPORT("window-objects-dom-other", windowTotalSizes.mDOMOther, 
+  REPORT("window-objects/dom/other", windowTotalSizes.mDOMOther, 
          "Memory used for the DOM within windows, "
          "excluding element, text, CDATA, and comment nodes. "
          "This is the sum of all windows' 'dom/other' numbers.");
 
-  REPORT("window-objects-dom-element-nodes", windowTotalSizes.mDOMElementNodes,
+  REPORT("window-objects/dom/element-nodes", windowTotalSizes.mDOMElementNodes,
          "Memory used for DOM element nodes within windows. "
          "This is the sum of all windows' 'dom/element-nodes' numbers.");
 
-  REPORT("window-objects-dom-text-nodes", windowTotalSizes.mDOMTextNodes,
+  REPORT("window-objects/dom/text-nodes", windowTotalSizes.mDOMTextNodes,
          "Memory used for DOM text nodes within windows. "
          "This is the sum of all windows' 'dom/text-nodes' numbers.");
 
-  REPORT("window-objects-dom-cdata-nodes", windowTotalSizes.mDOMCDATANodes,
+  REPORT("window-objects/dom/cdata-nodes", windowTotalSizes.mDOMCDATANodes,
          "Memory used for DOM CDATA nodes within windows. "
          "This is the sum of all windows' 'dom/cdata-nodes' numbers.");
 
-  REPORT("window-objects-dom-comment-nodes", windowTotalSizes.mDOMCommentNodes,
+  REPORT("window-objects/dom/comment-nodes", windowTotalSizes.mDOMCommentNodes,
          "Memory used for DOM comment nodes within windows. "
          "This is the sum of all windows' 'dom/comment-nodes' numbers.");
 
-  REPORT("window-objects-style-sheets", windowTotalSizes.mStyleSheets, 
+  REPORT("window-objects/style-sheets", windowTotalSizes.mStyleSheets, 
          "Memory used for style sheets within windows. "
          "This is the sum of all windows' 'style-sheets' numbers.");
     
-  REPORT("window-objects-layout-pres-shell", windowTotalSizes.mLayoutPresShell, 
+  REPORT("window-objects/layout/pres-shell", windowTotalSizes.mLayoutPresShell, 
          "Memory used by layout PresShell and other related "
          "areas within windows. This is the sum of all windows' "
          "'layout/arenas' numbers.");
     
-  REPORT("window-objects-layout-line-boxes",
+  REPORT("window-objects/layout/line-boxes",
          windowTotalSizes.mArenaStats.mLineBoxes, 
          "Memory used for line-boxes within windows. "
          "This is the sum of all windows' 'layout/line-boxes' numbers.");
 
-  REPORT("window-objects-layout-rule-nodes",
+  REPORT("window-objects/layout/rule-nodes",
          windowTotalSizes.mArenaStats.mRuleNodes,
          "Memory used for CSS rule nodes within windows. "
          "This is the sum of all windows' 'layout/rule-nodes' numbers.");
 
-  REPORT("window-objects-layout-style-contexts",
+  REPORT("window-objects/layout/style-contexts",
          windowTotalSizes.mArenaStats.mStyleContexts,
          "Memory used for style contexts within windows. "
          "This is the sum of all windows' 'layout/style-contexts' numbers.");
 
-  REPORT("window-objects-layout-style-sets", windowTotalSizes.mLayoutStyleSets, 
+  REPORT("window-objects/layout/style-sets", windowTotalSizes.mLayoutStyleSets, 
          "Memory used for style sets within windows. "
          "This is the sum of all windows' 'layout/style-sets' numbers.");
     
-  REPORT("window-objects-layout-text-runs", windowTotalSizes.mLayoutTextRuns, 
+  REPORT("window-objects/layout/text-runs", windowTotalSizes.mLayoutTextRuns, 
          "Memory used for text runs within windows. "
          "This is the sum of all windows' 'layout/text-runs' numbers.");
 
-  REPORT("window-objects-layout-pres-contexts", windowTotalSizes.mLayoutPresContext,
+  REPORT("window-objects/layout/pres-contexts", windowTotalSizes.mLayoutPresContext,
          "Memory used for layout PresContexts within windows. "
          "This is the sum of all windows' 'layout/pres-contexts' numbers.");
 
@@ -370,7 +370,7 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
 #include "nsFrameIdList.h"
 #undef FRAME_ID
 
-  REPORT("window-objects-layout-frames", frameTotal,
+  REPORT("window-objects/layout/frames", frameTotal,
          "Memory used for layout frames within windows. "
          "This is the sum of all windows' 'layout/frames/' numbers.");
 
@@ -678,7 +678,7 @@ ReportGhostWindowsEnumerator(nsUint64HashKey* aIDHashKey, void* aClosure)
   nsresult rv = data->callback->Callback(
     /* process = */ EmptyCString(),
     path,
-    nsIMemoryReporter::KIND_SUMMARY,
+    nsIMemoryReporter::KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,
     /* amount = */ 1,
     /* desc = */ EmptyCString(),

@@ -132,7 +132,7 @@ nsDeleteDir::InitThread()
   if (mThread)
     return NS_OK;
 
-  nsresult rv = NS_NewThread(getter_AddRefs(mThread));
+  nsresult rv = NS_NewNamedThread("Cache Deleter", getter_AddRefs(mThread));
   if (NS_FAILED(rv)) {
     NS_WARNING("Can't create background thread");
     return rv;

@@ -27,7 +27,7 @@ interface nsIThreadPoolListener : nsISupports
  * anonymous (unnamed) worker threads.  An event dispatched to the thread pool
  * will be run on the next available worker thread.
  */
-[scriptable, uuid(d628159b-1a03-4985-aa77-43122eb23bfc)]
+[scriptable, uuid(ba9a466b-8d4a-4b33-ae5c-6ed751068c90)]
 interface nsIThreadPool : nsIEventTarget
 {
   /**
@@ -71,4 +71,10 @@ interface nsIThreadPool : nsIEventTarget
    * long enough to receive the guaranteed onThreadShuttingDown() notification.
    */
   attribute nsIThreadPoolListener listener;
+
+  /**
+   * Set the label for threads in the pool. All threads will be named
+   * "<aName> #<n>", where <n> is a serial number.
+   */
+  void setName(in ACString aName);
 };

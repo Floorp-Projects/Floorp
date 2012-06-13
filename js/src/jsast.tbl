@@ -28,6 +28,7 @@ ASTDEF(AST_CALL_EXPR,             "CallExpression",                "callExpressi
 ASTDEF(AST_MEMBER_EXPR,           "MemberExpression",              "memberExpression")
 ASTDEF(AST_FUNC_EXPR,             "FunctionExpression",            "functionExpression")
 ASTDEF(AST_ARRAY_EXPR,            "ArrayExpression",               "arrayExpression")
+ASTDEF(AST_SPREAD_EXPR,           "SpreadExpression",              "spreadExpression")
 ASTDEF(AST_OBJECT_EXPR,           "ObjectExpression",              "objectExpression")
 ASTDEF(AST_THIS_EXPR,             "ThisExpression",                "thisExpression")
 ASTDEF(AST_GRAPH_EXPR,            "GraphExpression",               "graphExpression")

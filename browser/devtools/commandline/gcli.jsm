@@ -7920,9 +7920,39 @@ help.shutdown = function() {
  * Create a block of data suitable to be passed to the help_list.html template
  */
 function getListTemplateData(args, context) {
+  var matchingCommands = canon.getCommands().filter(function(command) {
+    if (command.hidden) {
+      return false;
+    }
+
+    if (args.search && command.name.indexOf(args.search) !== 0) {
+      // Filtered out because they don't match the search
+      return false;
+    }
+    if (!args.search && command.name.indexOf(' ') != -1) {
+      // We don't show sub commands with plain 'help'
+      return false;
+    }
+    return true;
+  });
+  matchingCommands.sort();
+
+  var heading;
+  if (matchingCommands.length === 0) {
+    heading = l10n.lookupFormat('helpListNone', [ args.search ]);
+  }
+  else if (args.search == null) {
+    heading = l10n.lookup('helpListAll');
+  }
+  else {
+    heading = l10n.lookupFormat('helpListPrefix', [ args.search ]);
+  }
+
   return {
     l10n: l10n.propertyLookup,
     includeIntro: args.search == null,
+    matchingCommands: matchingCommands,
+    heading: heading,
 
     onclick: function(ev) {
       util.updateCommand(ev.currentTarget, context);
@@ -7931,32 +7961,6 @@ function getListTemplateData(args, context) {
     ondblclick: function(ev) {
       util.executeCommand(ev.currentTarget, context);
     },
-
-    getHeading: function() {
-      return args.search == null ?
-              'Available Commands:' :
-              'Commands starting with \'' + args.search + '\':';
-    },
-
-    getMatchingCommands: function() {
-      var matching = canon.getCommands().filter(function(command) {
-        if (command.hidden) {
-          return false;
-        }
-
-        if (args.search && command.name.indexOf(args.search) !== 0) {
-          // Filtered out because they don't match the search
-          return false;
-        }
-        if (!args.search && command.name.indexOf(' ') != -1) {
-          // We don't show sub commands with plain 'help'
-          return false;
-        }
-        return true;
-      });
-      matching.sort();
-      return matching;
-    }
   };
 }
 
@@ -7986,10 +7990,10 @@ function getManTemplateData(command, context) {
     getTypeDescription: function(param) {
       var input = '';
       if (param.defaultValue === undefined) {
-        input = 'required';
+        input = l10n.lookup('helpManRequired');
       }
       else if (param.defaultValue === null) {
-        input = 'optional';
+        input = l10n.lookup('helpManOptional');
       }
       else {
         input = param.defaultValue;
@@ -8066,10 +8070,10 @@ define("text!gcli/commands/help_man.html", [], "\n" +
 
 define("text!gcli/commands/help_list.html", [], "\n" +
   "<div>\n" +
-  "  <h3>${getHeading()}</h3>\n" +
+  "  <h3>${heading}</h3>\n" +
   "\n" +
   "  <table>\n" +
-  "    <tr foreach=\"command in ${getMatchingCommands()}\"\n" +
+  "    <tr foreach=\"command in ${matchingCommands}\"\n" +
   "        onclick=\"${onclick}\" ondblclick=\"${ondblclick}\">\n" +
   "      <th class=\"gcli-help-name\">${command.name}</th>\n" +
   "      <td class=\"gcli-help-arrow\">-</td>\n" +

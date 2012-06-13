@@ -521,6 +521,8 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #include "DOMError.h"
 #include "DOMRequest.h"
+#include "nsIOpenWindowEventDetail.h"
+#include "nsIDOMGlobalObjectConstructor.h"
 
 #include "DOMFileHandle.h"
 #include "FileRequest.h"
@@ -530,8 +532,6 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #undef None // something included above defines this preprocessor symbol, maybe Xlib headers
 #include "WebGLContext.h"
-
-#include "nsIDOMGlobalObjectConstructor.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1663,6 +1663,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(DOMRequest, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(OpenWindowEventDetail, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(DOMFileHandle, FileHandle, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
@@ -4524,6 +4526,10 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(DOMRequest, nsIDOMDOMRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMRequest)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(OpenWindowEventDetail, nsIOpenWindowEventDetail)
+    DOM_CLASSINFO_MAP_ENTRY(nsIOpenWindowEventDetail)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(DOMFileHandle, nsIDOMFileHandle)
