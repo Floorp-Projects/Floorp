@@ -2302,7 +2302,6 @@ class MCharCodeAt
   : public MBinaryInstruction,
     public MixPolicy<StringPolicy, IntPolicy<1> >
 {
-  public:
     MCharCodeAt(MDefinition *str, MDefinition *index)
         : MBinaryInstruction(str, index)
     {
@@ -2310,14 +2309,20 @@ class MCharCodeAt
         setResultType(MIRType_Int32);
     }
 
+  public:
     INSTRUCTION_HEADER(CharCodeAt);
+
+    static MCharCodeAt *New(MDefinition *str, MDefinition *index) {
+        return new MCharCodeAt(str, index);
+    }
 
     TypePolicy *typePolicy() {
         return this;
     }
 
     virtual AliasSet getAliasSet() const {
-        return AliasSet::Load(AliasSet::ObjectFields);
+        // Strings are immutable, so there is no implicit dependency.
+        return AliasSet::None();
     }
 };
 
@@ -2325,7 +2330,6 @@ class MFromCharCode
   : public MUnaryInstruction,
     public IntPolicy<0>
 {
-  public:
     MFromCharCode(MDefinition *code)
       : MUnaryInstruction(code)
     {
@@ -2333,7 +2337,12 @@ class MFromCharCode
         setResultType(MIRType_String);
     }
 
+  public:
     INSTRUCTION_HEADER(FromCharCode);
+
+    static MFromCharCode *New(MDefinition *code) {
+        return new MFromCharCode(code);
+    }
 
     virtual AliasSet getAliasSet() const {
         return AliasSet::None();
@@ -4141,7 +4150,9 @@ class MStringLength
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const {
-        return AliasSet::Load(AliasSet::ObjectFields);
+        // The string |length| property is immutable, so there is no
+        // implicit dependency.
+        return AliasSet::None();
     }
 };
 

@@ -3934,6 +3934,9 @@ IonBuilder::jsop_getelem()
     if (oracle->elementReadIsTypedArray(script, pc, &arrayType))
         return jsop_getelem_typed(arrayType);
 
+    if (oracle->elementReadIsString(script, pc))
+        return jsop_getelem_string();
+
     MDefinition *rhs = current->pop();
     MDefinition *lhs = current->pop();
 
@@ -4122,6 +4125,31 @@ IonBuilder::jsop_getelem_typed(int arrayType)
 
         return resumeAfter(load) && pushTypeBarrier(load, types, barrier);
     }
+}
+
+bool
+IonBuilder::jsop_getelem_string()
+{
+    MDefinition *id = current->pop();
+    MDefinition *str = current->pop();
+
+    MInstruction *idInt32 = MToInt32::New(id);
+    current->add(idInt32);
+    id = idInt32;
+
+    MStringLength *length = MStringLength::New(str);
+    current->add(length);
+
+    MBoundsCheck *boundsCheck = MBoundsCheck::New(id, length);
+    current->add(boundsCheck);
+
+    MCharCodeAt *charCode = MCharCodeAt::New(str, id);
+    current->add(charCode);
+
+    MFromCharCode *result = MFromCharCode::New(charCode);
+    current->add(result);
+    current->push(result);
+    return true;
 }
 
 bool

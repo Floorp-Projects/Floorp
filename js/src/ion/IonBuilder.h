@@ -329,6 +329,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_getelem();
     bool jsop_getelem_dense();
     bool jsop_getelem_typed(int arrayType);
+    bool jsop_getelem_string();
     bool jsop_setelem();
     bool jsop_setelem_dense();
     bool jsop_setelem_typed(int arrayType);
