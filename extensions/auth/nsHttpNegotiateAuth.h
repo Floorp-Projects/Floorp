@@ -9,11 +9,12 @@
 #include "nsIHttpAuthenticator.h"
 #include "nsIURI.h"
 #include "nsSubstring.h"
+#include "mozilla/Attributes.h"
 
 // The nsHttpNegotiateAuth class provides responses for the GSS-API Negotiate method
 // as specified by Microsoft in draft-brezak-spnego-http-04.txt
 
-class nsHttpNegotiateAuth : public nsIHttpAuthenticator
+class nsHttpNegotiateAuth MOZ_FINAL : public nsIHttpAuthenticator
 {
 public:
     NS_DECL_ISUPPORTS
