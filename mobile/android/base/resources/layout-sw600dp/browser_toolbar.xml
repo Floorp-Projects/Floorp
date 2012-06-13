@@ -74,7 +74,7 @@
                      android:layout_alignLeft="@id/awesome_bar"
                      android:paddingLeft="22dp"
                      android:src="@drawable/ic_menu_forward"
-                     android:background="@drawable/action_bar_button"/>
+                     android:background="@drawable/address_bar_forward_button"/>
 
         <ImageButton android:id="@+id/back"
                      style="@style/AddressBar.ImageButton"
