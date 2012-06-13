@@ -615,6 +615,8 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         masm.movePtr(Address(objreg, IonCode::OffsetOfCode()), objreg);
     }
 
+    Label afterCall;
+
     // Argument fixup needed. Get ready to call the argumentsRectifier.
     if (!call->hasSingleTarget()) {
         // Skip this thunk unless an explicit jump target.
@@ -629,17 +631,22 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
         JS_ASSERT(ArgumentsRectifierReg != objreg);
         masm.move32(Imm32(call->nargs()), ArgumentsRectifierReg);
-        masm.movePtr(ImmGCPtr(argumentsRectifier), objreg);
+        masm.call(argumentsRectifier);
+        if (!markSafepoint(call))
+            return false;
+        masm.jump(&afterCall);
     }
 
     masm.bind(&rejoin);
 
     masm.checkStackAlignment();
 
-    // Finally call the function in objreg, as assigned by one of the paths above.
+    // Finally call the function in objreg.
     masm.callIon(objreg);
     if (!markSafepoint(call))
         return false;
+
+    masm.bind(&afterCall);
 
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
