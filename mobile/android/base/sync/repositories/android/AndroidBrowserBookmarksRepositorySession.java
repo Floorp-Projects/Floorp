@@ -195,6 +195,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    */
   public static boolean forbiddenGUID(String recordGUID) {
     return recordGUID == null ||
+           "readinglist".equals(recordGUID) ||      // Temporary: Bug 762118
            "places".equals(recordGUID) ||
            "tags".equals(recordGUID);
   }
@@ -511,6 +512,11 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
     if (forbiddenGUID(bmk.guid)) {
       Logger.debug(LOG_TAG, "Ignoring forbidden record with guid: " + bmk.guid);
+      return true;
+    }
+
+    if ("readinglist".equals(bmk.parentID)) {      // Temporary: Bug 762118
+      Logger.debug(LOG_TAG,  "Ignoring reading list item with guid: " + bmk.guid);
       return true;
     }
 
