@@ -582,6 +582,8 @@ nsSocketTransportService::AfterProcessNextEvent(nsIThreadInternal* thread,
 NS_IMETHODIMP
 nsSocketTransportService::Run()
 {
+    PR_SetCurrentThreadName("Socket Thread");
+
     SOCKET_LOG(("STS thread init\n"));
 
     psm::InitializeSSLServerCertVerificationThreads();

@@ -4,12 +4,12 @@
 
 package org.mozilla.gecko.sync.synchronizer;
 
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 
 import android.content.Context;
-import android.util.Log;
 
 /**
  * I perform a sync.
@@ -41,15 +41,15 @@ public class Synchronizer implements SynchronizerSessionDelegate {
 
   @Override
   public void onSynchronized(SynchronizerSession synchronizerSession) {
-    Log.d(LOG_TAG, "Got onSynchronized.");
-    Log.d(LOG_TAG, "Notifying SynchronizerDelegate.");
+    Logger.debug(LOG_TAG, "Got onSynchronized.");
+    Logger.debug(LOG_TAG, "Notifying SynchronizerDelegate.");
     this.synchronizerDelegate.onSynchronized(synchronizerSession.getSynchronizer());
   }
 
   @Override
   public void onSynchronizeSkipped(SynchronizerSession synchronizerSession) {
-    Log.d(LOG_TAG, "Got onSynchronizeSkipped.");
-    Log.d(LOG_TAG, "Notifying SynchronizerDelegate as if on success.");
+    Logger.debug(LOG_TAG, "Got onSynchronizeSkipped.");
+    Logger.debug(LOG_TAG, "Notifying SynchronizerDelegate as if on success.");
     this.synchronizerDelegate.onSynchronized(synchronizerSession.getSynchronizer());
   }
 

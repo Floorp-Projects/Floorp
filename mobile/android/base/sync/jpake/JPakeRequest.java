@@ -11,12 +11,9 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.Resource;
 import org.mozilla.gecko.sync.net.ResourceDelegate;
 
-import android.util.Log;
 import ch.boye.httpclientandroidlib.HttpEntity;
 
 public class JPakeRequest implements Resource {
-  private static String LOG_TAG = "JPakeRequest";
-
   private BaseResource resource;
   public JPakeRequestDelegate delegate;
 
@@ -27,7 +24,6 @@ public class JPakeRequest implements Resource {
   public JPakeRequest(URI uri, ResourceDelegate delegate) {
     this.resource = new BaseResource(uri);
     this.resource.delegate = delegate;
-    Log.d(LOG_TAG, "new URI: " + uri);
   }
 
   @Override

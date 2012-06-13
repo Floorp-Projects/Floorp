@@ -117,6 +117,8 @@ public:
 NS_IMETHODIMP
 AudioRunnable::Run()
 {
+  PR_SetCurrentThreadName("Android Audio");
+
   JNIEnv* jenv = GetJNIForThread();
   if (!jenv)
     return NS_ERROR_FAILURE;

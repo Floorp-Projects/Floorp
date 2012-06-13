@@ -15,8 +15,6 @@ import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.RepoUtils;
 
-import android.util.Log;
-
 /**
  * Covers the fields used by all bookmark objects.
  * @author rnewman
@@ -180,7 +178,7 @@ public class BookmarkRecord extends Record {
       try {
         this.children = payload.getArray("children");
       } catch (NonArrayJSONException e) {
-        Log.e(LOG_TAG, "Got non-array children in bookmark record " + this.guid, e);
+        Logger.error(LOG_TAG, "Got non-array children in bookmark record " + this.guid, e);
         // Let's see if we can recover later by using the parentid pointers.
         this.children = new JSONArray();
       }

@@ -243,6 +243,13 @@ public final class Tab {
 
         Log.i(LOGTAG, "Updated title: " + mTitle + " for tab with id: " + mId);
         updateHistory(mUrl, mTitle);
+        final Tab tab = this;
+
+        GeckoAppShell.getMainHandler().post(new Runnable() {
+            public void run() {
+                Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.TITLE);
+            }
+        });
     }
 
     private void updateHistory(final String uri, final String title) {
@@ -386,15 +393,8 @@ public final class Tab {
         if (!mReaderEnabled)
             return;
 
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                String url = getURL();
-                if (url == null)
-                    return;
-
-                BrowserDB.addReadingListItem(mContentResolver, getTitle(), url);
-            }
-        });
+        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Add", String.valueOf(getId()));
+        GeckoAppShell.sendEventToGecko(e);
     }
 
     public void readerMode() {

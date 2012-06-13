@@ -80,8 +80,24 @@
     f("", "explicit/g/a",       HEAP,      6 * MB),
     f("", "explicit/g/b",       HEAP,      5 * MB),
     f("", "explicit/g/other",   HEAP,      4 * MB),
-    f("", "other1",             OTHER,   111 * MB),
-    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 888),
+    // A degenerate tree with the same name as a non-degenerate tree should
+    // work ok.
+    f("", "explicit",           OTHER,   888 * MB),
+    f("", "other1/a/b",         OTHER,   111 * MB),
+    f("", "other1/c/d",         OTHER,    22 * MB),
+    f("", "other1/c/e",         OTHER,    33 * MB),
+    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 777),
+    f2("", "other4",            OTHER,   COUNT_CUMULATIVE, 111),
+    f2("", "other3/a/b/c/d/e",  OTHER,   PERCENTAGE, 2000),
+    f2("", "other3/a/b/c/d/f",  OTHER,   PERCENTAGE, 10),
+    f2("", "other3/a/b/c/d/g",  OTHER,   PERCENTAGE, 5),
+    f2("", "other3/a/b/c/d/g",  OTHER,   PERCENTAGE, 5),
+    // Check that a rounded-up-to-100.00% value is shown as "100.0%" (i.e. one
+    // decimal point).
+    f2("", "other6/big",        OTHER,   COUNT, 99999),
+    f2("", "other6/small",      OTHER,   COUNT, 1),
+    // Check that a 0 / 0 is handled correctly.
+    f("", "other7/zero",        OTHER,   0),
     // These compartments ones shouldn't be displayed.
     f2("", "compartments/user/foo",   OTHER, COUNT, 1),
     f2("", "compartments/system/foo", OTHER, COUNT, 1)
@@ -122,12 +138,12 @@
         function f(aP, aA) {
           aCbObj.callback("", aP, NONHEAP, BYTES, aA * 4 * KB, "Desc.", aClosure);
         }
-        f("vsize/a",     24);
+        f("size/a",      24);
         f("swap/a",       1);
         f("swap/a",       2);
-        f("vsize/a",      19);
+        f("size/a",       19);
         f("swap/b/c",     10);
-        f("resident/a",   42);
+        f("rss/a",        42);
         f("pss/a",        43);
       },
       explicitNonHeap: 0
@@ -182,8 +198,8 @@
     // The fact that we skip the "smaps" multi-reporter in the main
     // process won't cause these to be skipped;  the fall-back skipping will
     // be hit instead.
-    f("2nd", "vsize/e",         NONHEAP, 24*4*KB),
-    f("2nd", "vsize/f",         NONHEAP, 24*4*KB),
+    f("2nd", "size/e",          NONHEAP, 24*4*KB),
+    f("2nd", "size/f",          NONHEAP, 24*4*KB),
 
     // Check that we can handle "heap-allocated" not being present.
     f("3rd", "explicit/a/b",    HEAP,    333 * MB),
@@ -256,12 +272,30 @@ Explicit Allocations\n\
 └────0.58 MB (00.09%) ++ (2 tiny)\n\
 \n\
 Other Measurements\n\
+166.00 MB (100.0%) -- other1\n\
+├──111.00 MB (66.87%) ── a/b\n\
+└───55.00 MB (33.13%) -- c\n\
+    ├──33.00 MB (19.88%) ── e\n\
+    └──22.00 MB (13.25%) ── d\n\
+\n\
+20.20% (100.0%) -- other3\n\
+└──20.20% (100.0%) -- a/b/c/d\n\
+   ├──20.00% (99.01%) ── e\n\
+   └───0.20% (00.99%) ++ (2 tiny)\n\
+\n\
+100,000 (100.0%) -- other6\n\
+├───99,999 (100.0%) ── big\n\
+└────────1 (00.00%) ── small\n\
+\n\
+0.00 MB (100.0%) -- other7\n\
+└──0.00 MB (100.0%) ── zero\n\
+\n\
+888.00 MB ── explicit\n\
 500.00 MB ── heap-allocated\n\
 100.00 MB ── heap-unallocated\n\
-111.00 MB ── other1\n\
 222.00 MB ── other2\n\
       777 ── other3\n\
-      888 ── other4\n\
+      888 ── other4 [2]\n\
    45.67% ── perc1\n\
   100.00% ── perc2\n\
 \n\
@@ -384,24 +418,43 @@ Explicit Allocations\n\
 └──────102,400 B (00.02%) ── e\n\
 \n\
 Resident Set Size (RSS) Breakdown\n\
-172,032 B (100.0%) ++ resident\n\
+172,032 B (100.0%) ++ rss\n\
 \n\
 Proportional Set Size (PSS) Breakdown\n\
 176,128 B (100.0%) ++ pss\n\
 \n\
 Virtual Size Breakdown\n\
-176,128 B (100.0%) ++ vsize\n\
+176,128 B (100.0%) ++ size\n\
 \n\
-Swap Usage Breakdown\n\
+Swap Breakdown\n\
 53,248 B (100.0%) ++ swap\n\
 \n\
 Other Measurements\n\
+174,063,616 B (100.0%) -- other1\n\
+├──116,391,936 B (66.87%) ── a/b\n\
+└───57,671,680 B (33.13%) -- c\n\
+    ├──34,603,008 B (19.88%) ── e\n\
+    └──23,068,672 B (13.25%) ── d\n\
+\n\
+20.20% (100.0%) -- other3\n\
+└──20.20% (100.0%) -- a/b/c/d\n\
+   ├──20.00% (99.01%) ── e\n\
+   ├───0.10% (00.50%) ── f\n\
+   └───0.10% (00.50%) ── g [2]\n\
+\n\
+100,000 (100.0%) -- other6\n\
+├───99,999 (100.0%) ── big\n\
+└────────1 (00.00%) ── small\n\
+\n\
+0 B (100.0%) -- other7\n\
+└──0 B (100.0%) ── zero\n\
+\n\
+931,135,488 B ── explicit\n\
 524,288,000 B ── heap-allocated\n\
 104,857,600 B ── heap-unallocated\n\
-116,391,936 B ── other1\n\
 232,783,872 B ── other2\n\
           777 ── other3\n\
-          888 ── other4\n\
+          888 ── other4 [2]\n\
        45.67% ── perc1\n\
       100.00% ── perc2\n\
 \n\
@@ -415,7 +468,7 @@ Explicit Allocations\n\
 └────105,906,176 B (10.10%) ── heap-unclassified\n\
 \n\
 Virtual Size Breakdown\n\
-196,608 B (100.0%) ++ vsize\n\
+196,608 B (100.0%) ++ size\n\
 \n\
 Other Measurements\n\
 1,048,576,000 B ── heap-allocated\n\

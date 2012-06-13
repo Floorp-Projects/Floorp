@@ -42,8 +42,8 @@ const RW_OWNER = 0600;
 //
 const MEM_HISTOGRAMS = {
   "js-gc-heap": "MEMORY_JS_GC_HEAP",
-  "js-compartments-system": "MEMORY_JS_COMPARTMENTS_SYSTEM",
-  "js-compartments-user": "MEMORY_JS_COMPARTMENTS_USER",
+  "js-compartments/system": "MEMORY_JS_COMPARTMENTS_SYSTEM",
+  "js-compartments/user": "MEMORY_JS_COMPARTMENTS_USER",
   "explicit": "MEMORY_EXPLICIT",
   "resident": "MEMORY_RESIDENT",
   "storage-sqlite": "MEMORY_STORAGE_SQLITE",
@@ -53,9 +53,8 @@ const MEM_HISTOGRAMS = {
   "heap-committed-unused": "MEMORY_HEAP_COMMITTED_UNUSED",
   "heap-committed-unused-ratio": "MEMORY_HEAP_COMMITTED_UNUSED_RATIO",
   "page-faults-hard": "PAGE_FAULTS_HARD",
-  "low-memory-events-virtual": "LOW_MEMORY_EVENTS_VIRTUAL",
-  "low-memory-events-commit-space": "LOW_MEMORY_EVENTS_COMMIT_SPACE",
-  "low-memory-events-physical": "LOW_MEMORY_EVENTS_PHYSICAL",
+  "low-memory-events/virtual": "LOW_MEMORY_EVENTS_VIRTUAL",
+  "low-memory-events/physical": "LOW_MEMORY_EVENTS_PHYSICAL",
   "ghost-windows": "GHOST_WINDOWS"
 };
 

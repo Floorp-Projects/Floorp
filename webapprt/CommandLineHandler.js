@@ -21,7 +21,7 @@ CommandLineHandler.prototype = {
     Services.ww.openWindow(null,
                            "chrome://webapprt/content/webapp.xul",
                            "_blank",
-                           "chrome,dialog=no,all,resizable",
+                           "chrome,dialog=no,resizable,scrollbars",
                            []);
   },
 

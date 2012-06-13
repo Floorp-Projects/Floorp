@@ -31,6 +31,7 @@
 #include "nsTArray.h"
 #include "nsWeakReference.h"
 #include "nsICryptoHash.h"
+#include "mozilla/Attributes.h"
 
 class nsOfflineCacheUpdate;
 
@@ -182,10 +183,10 @@ public:
     virtual nsresult UpdateFinished(nsOfflineCacheUpdate *aUpdate) = 0;
 };
 
-class nsOfflineCacheUpdate : public nsIOfflineCacheUpdate
-                           , public nsIOfflineCacheUpdateObserver
-                           , public nsIRunnable
-                           , public nsOfflineCacheUpdateOwner
+class nsOfflineCacheUpdate MOZ_FINAL : public nsIOfflineCacheUpdate
+                                     , public nsIOfflineCacheUpdateObserver
+                                     , public nsIRunnable
+                                     , public nsOfflineCacheUpdateOwner
 {
 public:
     NS_DECL_ISUPPORTS
@@ -293,10 +294,10 @@ private:
     PRUint64                       mByteProgress;
 };
 
-class nsOfflineCacheUpdateService : public nsIOfflineCacheUpdateService
-                                  , public nsIObserver
-                                  , public nsOfflineCacheUpdateOwner
-                                  , public nsSupportsWeakReference
+class nsOfflineCacheUpdateService MOZ_FINAL : public nsIOfflineCacheUpdateService
+                                            , public nsIObserver
+                                            , public nsOfflineCacheUpdateOwner
+                                            , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS

@@ -30,6 +30,7 @@
 namespace mozilla {
 
 LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS,
+                               const nsCSubstring& aName,
                                ShutdownMethod aShutdownMethod,
                                nsIObserver* aIdleObserver)
 : mMutex("LazyIdleThread::mMutex"),
@@ -42,7 +43,8 @@ LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS,
   mShutdownMethod(aShutdownMethod),
   mShutdown(false),
   mThreadIsShuttingDown(false),
-  mIdleTimeoutEnabled(true)
+  mIdleTimeoutEnabled(true),
+  mName(aName)
 {
   NS_ASSERTION(mOwningThread, "This should never fail!");
 }
@@ -166,6 +168,8 @@ LazyIdleThread::EnsureThread()
 void
 LazyIdleThread::InitThread()
 {
+  PR_SetCurrentThreadName(mName.BeginReading());
+
   // Happens on mThread but mThread may not be set yet...
 
   nsCOMPtr<nsIThreadInternal> thread(do_QueryInterface(NS_GetCurrentThread()));

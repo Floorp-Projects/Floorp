@@ -16,8 +16,6 @@ import org.mozilla.gecko.sync.net.SyncStorageRecordRequest;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
-import android.util.Log;
-
 public class InfoCollections implements SyncStorageRequestDelegate {
   private static final String LOG_TAG = "InfoCollections";
   protected String infoURL;
@@ -108,7 +106,7 @@ public class InfoCollections implements SyncStorageRequestDelegate {
 
   @SuppressWarnings("unchecked")
   public void setFromRecord(ExtendedJSONObject record) throws IllegalStateException, IOException, ParseException, NonObjectJSONException {
-    Log.i(LOG_TAG, "info/collections is " + record.toJSONString());
+    Logger.info(LOG_TAG, "info/collections is " + record.toJSONString());
     HashMap<String, Long> map = new HashMap<String, Long>();
 
     Set<Entry<String, Object>> entrySet = record.object.entrySet();
@@ -129,7 +127,7 @@ public class InfoCollections implements SyncStorageRequestDelegate {
         map.put(key, Utils.decimalSecondsToMilliseconds((Integer) value));
         continue;
       }
-      Log.w(LOG_TAG, "Skipping info/collections entry for " + key);
+      Logger.warn(LOG_TAG, "Skipping info/collections entry for " + key);
     }
     this.timestamps = map;
   }
