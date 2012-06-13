@@ -657,7 +657,7 @@ class Worker MOZ_FINAL : public WorkerParent
         if (!ctor)
             goto bad;
 
-        js::SetFunctionNativeReserved(post, 0, PRIVATE_TO_JSVAL(this));
+        js::SetFunctionNativeReserved(ctor, 0, PRIVATE_TO_JSVAL(this));
 
         JS_EndRequest(context);
         return true;
