@@ -1157,7 +1157,7 @@ class DebugScopeProxy : public BaseProxyHandler
 
             if (maybefp) {
                 JSScript *script = maybefp->script();
-                    unsigned local = block.slotToFrameLocal(maybefp->script(), i);
+                unsigned local = block.slotToFrameLocal(script, i);
                 if (action == GET)
                     *vp = maybefp->unaliasedLocal(local);
                 else
