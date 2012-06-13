@@ -4814,7 +4814,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
 
   // determine if the insertion point is at the beginning, middle, or end of
   // the node
-  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(node);
+  nsCOMPtr<nsIDOMCharacterData> nodeAsCharData = do_QueryInterface(node);
 
   PRUint32 count = node->Length();
 
@@ -4832,15 +4832,16 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     nsCOMPtr<nsIContent> priorNode = GetPriorNode(node, true);
     NS_ENSURE_STATE(priorNode);
 
-    // there is a priorNode, so delete its last child (if text content, delete
-    // the last char.) if it has no children, delete it
-    nsCOMPtr<nsIDOMCharacterData> priorNodeAsText = do_QueryInterface(priorNode);
-    if (priorNodeAsText) {
+    // there is a priorNode, so delete its last child (if chardata, delete the
+    // last char). if it has no children, delete it
+    nsCOMPtr<nsIDOMCharacterData> priorNodeAsCharData =
+      do_QueryInterface(priorNode);
+    if (priorNodeAsCharData) {
       PRUint32 length = priorNode->Length();
-      // Bail out for empty text node XXX: Do we want to do something else?
+      // Bail out for empty chardata XXX: Do we want to do something else?
       NS_ENSURE_STATE(length);
       nsRefPtr<DeleteTextTxn> txn;
-      res = CreateTxnForDeleteCharacter(priorNodeAsText, length,
+      res = CreateTxnForDeleteCharacter(priorNodeAsCharData, length,
                                         ePrevious, getter_AddRefs(txn));
       NS_ENSURE_SUCCESS(res, res);
 
@@ -4848,7 +4849,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       *aLength = txn->GetNumCharsToDelete();
       aTxn->AppendChild(txn);
     } else {
-      // priorNode is not text, so tell its parent to delete it
+      // priorNode is not chardata, so tell its parent to delete it
       nsRefPtr<DeleteElementTxn> txn;
       res = CreateTxnForDeleteElement(priorNode->AsDOMNode(),
                                       getter_AddRefs(txn));
@@ -4868,15 +4869,16 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     nsCOMPtr<nsIContent> nextNode = GetNextNode(node, true);
     NS_ENSURE_STATE(nextNode);
 
-    // there is a nextNode, so delete its first child (if text content, delete
-    // the first char). if it has no children, delete it
-    nsCOMPtr<nsIDOMCharacterData> nextNodeAsText = do_QueryInterface(nextNode);
-    if (nextNodeAsText) {
+    // there is a nextNode, so delete its first child (if chardata, delete the
+    // first char). if it has no children, delete it
+    nsCOMPtr<nsIDOMCharacterData> nextNodeAsCharData =
+      do_QueryInterface(nextNode);
+    if (nextNodeAsCharData) {
       PRUint32 length = nextNode->Length();
-      // Bail out for empty text node XXX: Do we want to do something else?
+      // Bail out for empty chardata XXX: Do we want to do something else?
       NS_ENSURE_STATE(length);
       nsRefPtr<DeleteTextTxn> txn;
-      res = CreateTxnForDeleteCharacter(nextNodeAsText, 0, eNext,
+      res = CreateTxnForDeleteCharacter(nextNodeAsCharData, 0, eNext,
                                         getter_AddRefs(txn));
       NS_ENSURE_SUCCESS(res, res);
 
@@ -4884,7 +4886,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       *aLength = txn->GetNumCharsToDelete();
       aTxn->AppendChild(txn);
     } else {
-      // nextNode is not text, so tell its parent to delete it
+      // nextNode is not chardata, so tell its parent to delete it
       nsRefPtr<DeleteElementTxn> txn;
       res = CreateTxnForDeleteElement(nextNode->AsDOMNode(),
                                       getter_AddRefs(txn));
@@ -4897,10 +4899,10 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     return NS_OK;
   }
 
-  if (nodeAsText) {
-    // we have text, so delete a char at the proper offset
+  if (nodeAsCharData) {
+    // we have chardata, so delete a char at the proper offset
     nsRefPtr<DeleteTextTxn> txn;
-    res = CreateTxnForDeleteCharacter(nodeAsText, offset, aAction,
+    res = CreateTxnForDeleteCharacter(nodeAsCharData, offset, aAction,
                                       getter_AddRefs(txn));
     NS_ENSURE_SUCCESS(res, res);
 
@@ -4909,8 +4911,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     *aOffset = txn->GetOffset();
     *aLength = txn->GetNumCharsToDelete();
   } else {
-    // we're either deleting a node or some text, need to dig into the
-    // next/prev node to find out
+    // we're either deleting a node or chardata, need to dig into the next/prev
+    // node to find out
     nsCOMPtr<nsINode> selectedNode;
     if (aAction == ePrevious) {
       selectedNode = GetPriorNode(node, offset, true);
@@ -4929,16 +4931,16 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       }
     }
 
-    nsCOMPtr<nsIDOMCharacterData> selectedNodeAsText =
+    nsCOMPtr<nsIDOMCharacterData> selectedNodeAsCharData =
       do_QueryInterface(selectedNode);
-    if (selectedNodeAsText) {
-      // we are deleting from a text node, so do a text deletion
+    if (selectedNodeAsCharData) {
+      // we are deleting from a chardata node, so do a character deletion
       PRUint32 position = 0;
       if (aAction == ePrevious) {
         position = selectedNode->Length();
       }
       nsRefPtr<DeleteTextTxn> delTextTxn;
-      res = CreateTxnForDeleteCharacter(selectedNodeAsText, position,
+      res = CreateTxnForDeleteCharacter(selectedNodeAsCharData, position,
                                         aAction, getter_AddRefs(delTextTxn));
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_TRUE(delTextTxn, NS_ERROR_NULL_POINTER);
