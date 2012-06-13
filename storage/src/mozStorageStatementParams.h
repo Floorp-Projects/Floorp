@@ -9,6 +9,7 @@
 
 #include "mozIStorageStatementParams.h"
 #include "nsIXPCScriptable.h"
+#include "mozilla/Attributes.h"
 
 class mozIStorageStatement;
 
@@ -17,8 +18,8 @@ namespace storage {
 
 class Statement;
 
-class StatementParams : public mozIStorageStatementParams
-                      , public nsIXPCScriptable
+class StatementParams MOZ_FINAL : public mozIStorageStatementParams
+                                , public nsIXPCScriptable
 {
 public:
   StatementParams(mozIStorageStatement *aStatement);

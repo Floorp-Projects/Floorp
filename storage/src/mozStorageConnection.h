@@ -19,6 +19,7 @@
 #include "mozStorageService.h"
 
 #include "nsIMutableArray.h"
+#include "mozilla/Attributes.h"
 
 #include "sqlite3.h"
 
@@ -30,8 +31,8 @@ class nsIThread;
 namespace mozilla {
 namespace storage {
 
-class Connection : public mozIStorageConnection
-                 , public nsIInterfaceRequestor
+class Connection MOZ_FINAL : public mozIStorageConnection
+                           , public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
