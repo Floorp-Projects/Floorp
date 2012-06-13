@@ -46,7 +46,9 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   readonly attribute nsIDOMHTMLCanvasElement canvas;
 
   // state
+  [binaryname(MozSave)]
   void save();
+  [binaryname(MozRestore)]
   void restore();
 
   // transformations
@@ -93,7 +95,9 @@ enum CanvasMultiGetterType {
   nsIDOMCanvasGradient createRadialGradient(in float x0, in float y0, in float r0, in float x1, in float y1, in float r1);
   nsIDOMCanvasPattern createPattern(in nsIDOMHTMLElement image, [Null(Stringify)] in DOMString repetition);
   attribute float lineWidth; /* default 1 */
+  [binaryname(MozLineCap)]
   attribute DOMString lineCap; /* "butt", "round", "square" (default) */
+  [binaryname(MozLineJoin)]
   attribute DOMString lineJoin; /* "round", "bevel", "miter" (default) */
   attribute float miterLimit; /* default 10 */
 
@@ -105,6 +109,7 @@ enum CanvasMultiGetterType {
   attribute float shadowOffsetX;
   attribute float shadowOffsetY;
   attribute float shadowBlur;
+  [binaryname(MozShadowColor)]
   attribute DOMString shadowColor;
 
   // rects
@@ -113,7 +118,9 @@ enum CanvasMultiGetterType {
   void strokeRect(in float x, in float y, in float w, in float h);
 
   // path API
+  [binaryname(MozBeginPath)]
   void beginPath();
+  [binaryname(MozClosePath)]
   void closePath();
 
   void moveTo(in float x, in float y);
@@ -124,14 +131,20 @@ enum CanvasMultiGetterType {
   void arc(in float x, in float y, in float r, in float startAngle, in float endAngle, [optional] in boolean anticlockwise);
   void rect(in float x, in float y, in float w, in float h);
 
+  [binaryname(MozFill)]
   void fill();
+  [binaryname(MozStroke)]
   void stroke();
+  [binaryname(MozClip)]
   void clip();
 
   // text api
+  [binaryname(MozFont)]
   attribute DOMString font; /* default "10px sans-serif" */
+  [binaryname(MozTextAlign)]
   attribute DOMString textAlign; /* "start" (default), "end", "left", "right",
                                  "center" */
+  [binaryname(MozTextBaseline)]
   attribute DOMString textBaseline; /* "alphabetic" (default), "top", "hanging",
                                     "middle", "ideographic", "bottom" */
 
@@ -139,6 +152,7 @@ enum CanvasMultiGetterType {
   void strokeText(in DOMString text, in float x, in float y, [optional] in float maxWidth);
   nsIDOMTextMetrics measureText(in DOMString text);
 
+  [binaryname(TextStyle)]
   attribute DOMString mozTextStyle;
 
   // image api
