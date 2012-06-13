@@ -171,43 +171,29 @@ IonCompartment::initialize(JSContext *cx)
     return true;
 }
 
-static void
-MaybeMarkIonCodeRoot(JSTracer *trc, IonCode **code, const char *desc)
-{
-    if (*code)
-        MarkIonCodeRoot(trc, code, desc);
-}
-
 void
 IonCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 {
-    // Mark all shared IonCode attached to the compartment.
-    if (compartment->isPreservingCode()) {
+    // This function marks Ion code objects that must be kept alive if there is
+    // any Ion code currently running. These pointers are marked at the start
+    // of incremental GC. Entering Ion code in the middle of an incremental GC
+    // triggers a read barrier on both these pointers, so they will still be
+    // marked in that case.
 
-        MaybeMarkIonCodeRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
-        MaybeMarkIonCodeRoot(trc, bailoutHandler_.unsafeGet(), "bailoutHandler");
-        MaybeMarkIonCodeRoot(trc, argumentsRectifier_.unsafeGet(), "argumentsRectifier");
-        MaybeMarkIonCodeRoot(trc, invalidator_.unsafeGet(), "invalidator");
-        MaybeMarkIonCodeRoot(trc, preBarrier_.unsafeGet(), "preBarrier");
-
-        // functionWrappers_ does not require marking: IonCode references to
-        // VMWrapper shims are marked via the IonScript's data relocation buffer.
-        return;
-    }
-
-    // GC is known non-preserving -- we must only keep around the shared
-    // IonCode objects necessary to transition from IonMonkey back to the
-    // interpreter via an OSI point.
-    //
-    // This is done by iterating over the frames in every IonActivation and
-    // preserving the necessary shims. The iterator in the IonActivation never
-    // reaches the IonFrame_Entry, so enterJIT_ must be marked here.
+    bool mustMarkEnterJIT = false;
     for (IonActivationIterator iter(trc->runtime); iter.more(); ++iter) {
-        if (iter.activation()->compartment() == compartment) {
-            MarkIonCodeRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
-            return;
-        }
+        if (iter.activation()->compartment() != compartment)
+            continue;
+
+        // Both OSR and normal function calls depend on the EnterJIT code
+        // existing for entrance and exit.
+        mustMarkEnterJIT = true;
     }
+
+    // These must be available if we could be running JIT code; they are not
+    // traced as normal through IonCode or IonScript objects
+    if (mustMarkEnterJIT)
+        MarkIonCodeRoot(trc, enterJIT_.unsafeGet(), "enterJIT");
 
     // functionWrappers_ are not marked because this is a WeakCache of VM
     // function implementations.
