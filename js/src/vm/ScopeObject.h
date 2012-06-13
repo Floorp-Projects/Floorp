@@ -44,6 +44,17 @@ ScopeCoordinateBlockChain(JSScript *script, jsbytecode *pc);
 extern PropertyName *
 ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc);
 
+/*
+ * The 'slot' of a ScopeCoordinate is relative to the scope object. Type
+ * inference and jit compilation are instead relative to frame values (even if
+ * these values are aliased and thus never accessed, the the index of the
+ * variable is used to refer to the jit/inference information). This function
+ * maps from the ScopeCoordinate space to the StackFrame variable space.
+ */
+enum FrameVarType { FrameVar_Local, FrameVar_Arg };
+extern FrameVarType
+ScopeCoordinateToFrameVar(JSScript *script, jsbytecode *pc, unsigned *index);
+
 /*****************************************************************************/
 
 /*

@@ -61,6 +61,24 @@ js::ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc)
     return JSID_TO_ATOM(id)->asPropertyName();
 }
 
+FrameVarType
+js::ScopeCoordinateToFrameVar(JSScript *script, jsbytecode *pc, unsigned *index)
+{
+    ScopeCoordinate sc(pc);
+    if (StaticBlockObject *block = ScopeCoordinateBlockChain(script, pc)) {
+        *index = block->slotToFrameLocal(script, sc.slot);
+        return FrameVar_Local;
+    }
+
+    if (script->bindings.slotIsLocal(sc.slot)) {
+        *index = script->bindings.slotToLocal(sc.slot);
+        return FrameVar_Local;
+    }
+
+    *index = script->bindings.slotToArg(sc.slot);
+    return FrameVar_Arg;
+}
+
 /*****************************************************************************/
 
 /*
