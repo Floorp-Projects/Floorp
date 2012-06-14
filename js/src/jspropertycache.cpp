@@ -169,6 +169,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
      */
     pobj = obj;
 
+    JSObject *scopeObj = NULL;
     if (JOF_MODE(cs.format) == JOF_NAME) {
         uint8_t scopeIndex = entry->scopeIndex;
         while (scopeIndex > 0) {
@@ -179,7 +180,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
             scopeIndex--;
         }
 
-        *objp = pobj;
+        scopeObj = pobj;
     }
 
     uint8_t protoIndex = entry->protoIndex;
@@ -192,6 +193,8 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     }
 
     if (pobj->lastProperty() == entry->pshape) {
+        if (JOF_MODE(cs.format) == JOF_NAME)
+            *objp = scopeObj;
 #ifdef DEBUG
         PropertyName *name = GetNameFromBytecode(cx, pc, op, cs);
         JS_ASSERT(pobj->nativeContains(cx, NameToId(name)));

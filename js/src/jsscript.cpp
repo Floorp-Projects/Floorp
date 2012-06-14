@@ -125,7 +125,7 @@ Bindings::add(JSContext *cx, HandleAtom name, BindingKind kind)
         id = AtomToId(name);
     }
 
-    StackBaseShape base(&CallClass, NULL, BaseShape::VAROBJ);
+    StackBaseShape base(&CallClass, NULL, BaseShape::VAROBJ | BaseShape::DELEGATE);
     base.updateGetterSetter(attrs, getter, setter);
 
     UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);

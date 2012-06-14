@@ -107,9 +107,7 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
             return NULL;
     }
 
-    if (!obj->asScope().setEnclosingScope(cx, enclosing))
-        return NULL;
-
+    obj->asScope().setEnclosingScope(enclosing);
     obj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
 
     /*
@@ -120,6 +118,8 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
         if (!obj->generateOwnShape(cx))
             return NULL;
     }
+
+    JS_ASSERT(obj->isDelegate());
 
     return &obj->asCall();
 }
@@ -275,7 +275,8 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
 
     RootedShape emptyDeclEnvShape(cx);
     emptyDeclEnvShape = EmptyShape::getInitialShape(cx, &DeclEnvClass, NULL,
-                                                    &fp->global(), FINALIZE_KIND);
+                                                    &fp->global(), FINALIZE_KIND,
+                                                    BaseShape::DELEGATE);
     if (!emptyDeclEnvShape)
         return NULL;
 
@@ -283,9 +284,7 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
     if (!obj)
         return NULL;
 
-    if (!obj->asScope().setEnclosingScope(cx, fp->scopeChain()))
-        return NULL;
-
+    obj->asScope().setEnclosingScope(fp->scopeChain());
 
     if (!DefineNativeProperty(cx, obj, RootedId(cx, AtomToId(fp->fun()->atom)),
                               ObjectValue(fp->callee()), NULL, NULL,
@@ -315,9 +314,7 @@ WithObject::create(JSContext *cx, HandleObject proto, HandleObject enclosing, ui
     if (!obj)
         return NULL;
 
-    if (!obj->asScope().setEnclosingScope(cx, enclosing))
-        return NULL;
-
+    obj->asScope().setEnclosingScope(enclosing);
     obj->setReservedSlot(DEPTH_SLOT, PrivateUint32Value(depth));
 
     JSObject *thisp = proto->thisObject(cx);
@@ -595,6 +592,8 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Stac
             obj->asClonedBlock().setVar(i, *src);
     }
 
+    JS_ASSERT(obj->isDelegate());
+
     return &obj->asClonedBlock();
 }
 
@@ -618,7 +617,8 @@ StaticBlockObject::create(JSContext *cx)
         return NULL;
 
     RootedShape emptyBlockShape(cx);
-    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, FINALIZE_KIND);
+    emptyBlockShape = EmptyShape::getInitialShape(cx, &BlockClass, NULL, NULL, FINALIZE_KIND,
+                                                  BaseShape::DELEGATE);
     if (!emptyBlockShape)
         return NULL;
 

@@ -65,7 +65,7 @@ Bindings::initialShape(JSContext *cx) const
     JS_ASSERT(gc::GetGCKindSlots(kind) == CallObject::RESERVED_SLOTS);
 
     return EmptyShape::getInitialShape(cx, &CallClass, NULL, NULL, kind,
-                                       BaseShape::VAROBJ);
+                                       BaseShape::VAROBJ | BaseShape::DELEGATE);
 }
 
 bool
