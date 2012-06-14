@@ -490,8 +490,8 @@ interface nsIDOMWindowUtils : nsISupports {
   /** Synthesize a simple gesture event for a window. The event types
    *  supported are: MozSwipeGesture, MozMagnifyGestureStart,
    *  MozMagnifyGestureUpdate, MozMagnifyGesture, MozRotateGestureStart,
-   *  MozRotateGestureUpdate, MozRotateGesture, MozPressTapGesture, and
-   *  MozTapGesture.
+   *  MozRotateGestureUpdate, MozRotateGesture, MozPressTapGesture,
+   *  MozTapGesture, and MozEdgeUIGesture.
    *
    * Cannot be accessed from unprivileged context (not
    * content-accessible) Will throw a DOM security error if called
@@ -503,13 +503,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aDirection direction, using constants defined in nsIDOMSimpleGestureEvent
    * @param aDelta  amount of magnification or rotation for magnify and rotation events
    * @param aModifiers modifiers pressed, using constants defined in nsIDOMNSEvent
+   * @param aClickCount For tap gestures, the number of taps.
    */
   void sendSimpleGestureEvent(in AString aType,
                               in float aX,
                               in float aY,
                               in unsigned long aDirection,
                               in double aDelta,
-                              in long aModifiers);
+                              in long aModifiers,
+                              [optional] in unsigned long aClickCount);
 
   /**
    * Retrieve the element at point aX, aY in the window's document.

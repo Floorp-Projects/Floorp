@@ -55,7 +55,7 @@ function onDebugKeyPress(aEvent) {
     let evt = document.createEvent("SimpleGestureEvent");
     evt.initSimpleGestureEvent("MozSwipeGesture", true, true, window, null,
                                0, 0, 0, 0, false, false, false, false, 0, null,
-                               aDirection, 0);
+                               aDirection, 0, 0);
     Browser.selectedTab.inputHandler.dispatchEvent(evt);
   }
 
@@ -79,7 +79,7 @@ function onDebugKeyPress(aEvent) {
       function dispatchMagnifyEvent(aName, aDelta) {
         let evt = document.createEvent("SimpleGestureEvent");
         evt.initSimpleGestureEvent("MozMagnifyGesture" + aName, true, true, window, null,
-                                   0, 0, 0, 0, false, false, false, false, 0, null, 0, aDelta);
+                                   0, 0, 0, 0, false, false, false, false, 0, null, 0, aDelta, 0);
         Browser.selectedTab.inputHandler.dispatchEvent(evt);
       }
       dispatchMagnifyEvent("Start", 0);
