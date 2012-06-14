@@ -1,0 +1,11 @@
+Here lies most of the moving parts for push notifcations in the browser. DOM
+and UI bindings will live elsewhere; these files deal with talking to the API,
+storing messages, and creating persistent connections to the notification
+server.
+
+Structure:
+
+services.js::Service
+  This is a singleton that manages API calls and message storage. It's an
+  instance of the NotificationSvc class. Messages and state are persisted to a
+  JSON file on disk.

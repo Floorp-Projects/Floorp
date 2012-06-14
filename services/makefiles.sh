@@ -8,6 +8,7 @@ add_makefiles "
   services/common/Makefile
   services/crypto/Makefile
   services/crypto/component/Makefile
+  services/notifications/Makefile
   services/sync/Makefile
   services/sync/locales/Makefile
 "
@@ -16,6 +17,7 @@ if [ "$ENABLE_TESTS" ]; then
   add_makefiles "
     services/common/tests/Makefile
     services/crypto/tests/Makefile
+    services/notifications/tests/Makefile
     services/sync/tests/Makefile
   "
 fi
