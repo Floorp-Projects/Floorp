@@ -503,6 +503,7 @@
       <handler event="click" phase="capturing" button="0" preventdefault="true">
         <![CDATA[
           var url = this.getAttribute("href");
+          url = url.substring(url.lastIndexOf(" ") + 1);
           var line = getAttribute("line");
           gViewSourceUtils.viewSource(url, null, null, line);
         ]]>
