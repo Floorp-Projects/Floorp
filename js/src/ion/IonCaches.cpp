@@ -1104,7 +1104,7 @@ IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, Handle
 
     RootedObject obj2(cx, scopeChain);
     while (obj2) {
-        if (!IsCacheableNonGlobalScope(obj2) || !obj2->isGlobal())
+        if (!IsCacheableNonGlobalScope(obj2) && !obj2->isGlobal())
             return false;
 
         // Stop once we hit the global or target obj.
