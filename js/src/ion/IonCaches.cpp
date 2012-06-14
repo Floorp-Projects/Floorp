@@ -1066,7 +1066,8 @@ IonCacheName::attach(JSContext *cx, HandleObject scopeChain, HandleObject holder
 
     CodeLocationJump rejoinJump(code, rejoinOffset);
     CodeLocationJump exitJump(code, exitOffset);
-    PatchJump(lastJump(), CodeLocationLabel(code));
+    CodeLocationJump lastJump_ = lastJump();
+    PatchJump(lastJump_, CodeLocationLabel(code));
     PatchJump(rejoinJump, rejoinLabel());
     PatchJump(exitJump, cacheLabel());
     updateLastJump(exitJump);
