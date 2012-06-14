@@ -65,10 +65,11 @@ NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned sta
 static JSBool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
-BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script,
-                                 StackFrame *callerFrame, unsigned lineno)
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, SharedContext *sc,
+                                 HandleScript script, StackFrame *callerFrame, bool hasGlobalScope,
+                                 unsigned lineno)
   : sc(sc),
-    parent(NULL),
+    parent(parent),
     script(sc->context, script),
     parser(parser),
     callerFrame(callerFrame),
@@ -79,12 +80,12 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScr
     emitLevel(0),
     constMap(sc->context),
     constList(sc->context),
-    globalScope(NULL),
     closedArgs(sc->context),
     closedVars(sc->context),
     typesetCount(0),
     hasSingletons(false),
-    inForInit(false)
+    inForInit(false),
+    hasGlobalScope(hasGlobalScope)
 {
     JS_ASSERT_IF(callerFrame, callerFrame->isScriptFrame());
     memset(&prolog, 0, sizeof prolog);
@@ -1070,7 +1071,7 @@ static bool
 TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 {
     if (bce->script->compileAndGo &&
-        bce->globalScope->globalObj &&
+        bce->hasGlobalScope &&
         !bce->sc->funMightAliasLocals() &&
         !pn->isDeoptimized() &&
         !bce->sc->inStrictMode()) {
@@ -4743,11 +4744,10 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!script)
             return false;
 
-        BytecodeEmitter bce2(bce->parser, &sc, script, bce->callerFrame, pn->pn_pos.begin.lineno);
+        BytecodeEmitter bce2(bce, bce->parser, &sc, script, bce->callerFrame, bce->hasGlobalScope,
+                             pn->pn_pos.begin.lineno);
         if (!bce2.init())
             return false;
-        bce2.parent = bce;
-        bce2.globalScope = bce->globalScope;
 
         /* We measured the max scope depth when we parsed the function. */
         if (!EmitFunctionScript(cx, &bce2, pn->pn_body))
