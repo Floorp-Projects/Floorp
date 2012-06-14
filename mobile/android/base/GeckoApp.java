@@ -104,9 +104,9 @@ abstract public class GeckoApp
     private GeckoBatteryManager mBatteryReceiver;
     private PromptService mPromptService;
 
-    public static DoorHangerPopup mDoorHangerPopup;
+    protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
-    public TabsPanel mTabsPanel;
+    protected TabsPanel mTabsPanel;
     public Favicons mFavicons;
 
     private static LayerController mLayerController;
