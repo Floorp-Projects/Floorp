@@ -3128,12 +3128,12 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     masm.bind(&boundFunctionCheck);
 
     masm.loadBaseShape(rhsTmp, output);
-    masm.cmpPtr(Operand(output, BaseShape::offsetOfClass()), ImmWord(&js::FunctionClass));
+    masm.cmpPtr(Address(output, BaseShape::offsetOfClass()), ImmWord(&js::FunctionClass));
     masm.j(Assembler::NotEqual, call->entry());
 
     // Check Bound Function
     masm.loadPtr(Address(output, BaseShape::offsetOfFlags()), rhsFlags);
-    masm.andl(Imm32(BaseShape::BOUND_FUNCTION), rhsFlags); 
+    masm.and32(Imm32(BaseShape::BOUND_FUNCTION), rhsFlags);
     masm.j(Assembler::Zero, &boundFunctionDone);
 
     // Get Bound Function
@@ -3186,7 +3186,7 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     CodeOffsetJump jump = masm.jumpWithPatch(ool->repatchEntry());
     CodeOffsetLabel label = masm.labelForPatch();
     masm.bind(ool->rejoin());
-    ool->setInlineJump(jump, label); 
+    ool->setInlineJump(jump, label);
 
     // Move the OutOfLineCache return value and set the output on false
     masm.mov(output, rhsTmp);
@@ -3197,11 +3197,11 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
     masm.loadPtr(Address(lhsTmp, JSObject::offsetOfType()), lhsTmp);
     masm.loadPtr(Address(lhsTmp, offsetof(types::TypeObject, proto)), lhsTmp);
 
-    masm.testl(lhsTmp, lhsTmp);
+    masm.test32(lhsTmp, lhsTmp);
     masm.j(Assembler::Zero, &done);
 
     // Check lhs is equal to rhsShape
-    masm.cmpl(lhsTmp, rhsTmp);
+    masm.cmp32(lhsTmp, rhsTmp);
     masm.j(Assembler::NotEqual, &loopPrototypeChain);
 
     // return true
