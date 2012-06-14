@@ -99,7 +99,7 @@ class ScopeObject : public JSObject
      * enclosing scope of a ScopeObject is necessarily non-null.
      */
     inline JSObject &enclosingScope() const;
-    inline bool setEnclosingScope(JSContext *cx, HandleObject obj);
+    inline void setEnclosingScope(HandleObject obj);
 
     /*
      * Get or set an aliased variable contained in this scope. Unaliased
@@ -168,7 +168,6 @@ class DeclEnvObject : public ScopeObject
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2;
 
     static DeclEnvObject *create(JSContext *cx, StackFrame *fp);
-
 };
 
 class NestedScopeObject : public ScopeObject
