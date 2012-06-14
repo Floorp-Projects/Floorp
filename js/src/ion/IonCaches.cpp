@@ -853,7 +853,7 @@ GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
         CallObject *callObj = &scopeObj->asCall();
         if (JSFunction *fun = callObj->getCalleeFunction()) {
             JSScript *script = fun->script();
-            if (!script->bindings.extensibleParents())
+            if (!script->bindings.extensibleParents() && !script->funHasExtensibleScope)
                 return;
         }
     } else if (scopeObj->isGlobal()) {
