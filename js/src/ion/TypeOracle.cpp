@@ -551,3 +551,9 @@ TypeInferenceOracle::globalPropertyTypeSet(JSScript *script, jsbytecode *pc, jsi
     return type->getProperty(cx, id, false);
 }
 
+MIRType
+TypeInferenceOracle::aliasedVarType(JSScript *script, jsbytecode *pc)
+{
+    return getMIRType(script->analysis()->pushedTypes(pc, 0));
+}
+

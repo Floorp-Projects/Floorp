@@ -3452,14 +3452,18 @@ class MClampToUint8
     }
 };
 
-class MLoadFixedSlot : public MUnaryInstruction, public SingleObjectPolicy
+class MLoadFixedSlot
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
 {
     size_t slot_;
 
+  protected:
     MLoadFixedSlot(MDefinition *obj, size_t slot)
       : MUnaryInstruction(obj), slot_(slot)
     {
         setResultType(MIRType_Value);
+        setMovable();
     }
 
   public:
@@ -3492,20 +3496,27 @@ class MLoadFixedSlot : public MUnaryInstruction, public SingleObjectPolicy
     }
 };
 
-class MStoreFixedSlot : public MBinaryInstruction, public SingleObjectPolicy
+class MStoreFixedSlot
+  : public MBinaryInstruction,
+    public SingleObjectPolicy
 {
     bool needsBarrier_;
     size_t slot_;
 
-    MStoreFixedSlot(MDefinition *obj, MDefinition *rval, size_t slot)
-      : MBinaryInstruction(obj, rval), needsBarrier_(false), slot_(slot)
+    MStoreFixedSlot(MDefinition *obj, MDefinition *rval, size_t slot, bool barrier)
+      : MBinaryInstruction(obj, rval),
+        needsBarrier_(barrier),
+        slot_(slot)
     {}
 
   public:
     INSTRUCTION_HEADER(StoreFixedSlot);
 
     static MStoreFixedSlot *New(MDefinition *obj, size_t slot, MDefinition *rval) {
-        return new MStoreFixedSlot(obj, rval, slot);
+        return new MStoreFixedSlot(obj, rval, slot, false);
+    }
+    static MStoreFixedSlot *NewBarriered(MDefinition *obj, size_t slot, MDefinition *rval) {
+        return new MStoreFixedSlot(obj, rval, slot, true);
     }
 
     TypePolicy *typePolicy() {
@@ -3801,11 +3812,11 @@ class MStoreSlot
     MIRType slotType_;
     bool needsBarrier_;
 
-    MStoreSlot(MDefinition *slots, uint32 slot, MDefinition *value)
+    MStoreSlot(MDefinition *slots, uint32 slot, MDefinition *value, bool barrier)
         : MBinaryInstruction(slots, value),
           slot_(slot),
           slotType_(MIRType_Value),
-          needsBarrier_(false)
+          needsBarrier_(barrier)
     {
         JS_ASSERT(slots->type() == MIRType_Slots);
     }
@@ -3814,7 +3825,10 @@ class MStoreSlot
     INSTRUCTION_HEADER(StoreSlot);
 
     static MStoreSlot *New(MDefinition *slots, uint32 slot, MDefinition *value) {
-        return new MStoreSlot(slots, slot, value);
+        return new MStoreSlot(slots, slot, value, false);
+    }
+    static MStoreSlot *NewBarriered(MDefinition *slots, uint32 slot, MDefinition *value) {
+        return new MStoreSlot(slots, slot, value, true);
     }
 
     TypePolicy *typePolicy() {
@@ -4443,6 +4457,26 @@ class MNewCallObject : public MBinaryInstruction
         return templateObj_;
     }
     AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+// This is an alias for MLoadFixedSlot.
+class MEnclosingScope : public MLoadFixedSlot
+{
+    MEnclosingScope(MDefinition *obj)
+      : MLoadFixedSlot(obj, ScopeObject::enclosingScopeSlot())
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    static MEnclosingScope *New(MDefinition *obj) {
+        return new MEnclosingScope(obj);
+    }
+
+    AliasSet getAliasSet() const {
+        // ScopeObject reserved slots are immutable.
         return AliasSet::None();
     }
 };

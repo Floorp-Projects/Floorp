@@ -182,6 +182,9 @@ class TypeOracle
     virtual bool canEnterInlinedFunction(JSFunction *callee) {
         return false;
     }
+    virtual MIRType aliasedVarType(JSScript *script, jsbytecode *pc)  {
+        return MIRType_Value;
+    }
 };
 
 class DummyOracle : public TypeOracle
@@ -258,6 +261,7 @@ class TypeInferenceOracle : public TypeOracle
     bool canInlineCalls();
     bool canInlineCall(JSScript *caller, jsbytecode *pc);
     bool canEnterInlinedFunction(JSFunction *callee);
+    MIRType aliasedVarType(JSScript *script, jsbytecode *pc);
 };
 
 static inline MIRType

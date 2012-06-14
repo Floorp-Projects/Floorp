@@ -306,6 +306,8 @@ class IonBuilder : public MIRGenerator
 
     bool makeCall(HandleFunction target, uint32 argc, bool constructing);
 
+    MDefinition *walkScopeChain(unsigned hops);
+
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);
@@ -359,6 +361,8 @@ class IonBuilder : public MIRGenerator
     bool jsop_itermore();
     bool jsop_iterend();
     bool jsop_instanceof();
+    bool jsop_getaliasedvar(ScopeCoordinate sc);
+    bool jsop_setaliasedvar(ScopeCoordinate sc);
 
     /* Inlining. */
 
