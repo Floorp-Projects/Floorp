@@ -106,7 +106,7 @@ public final class Tab {
     }
 
     public void onDestroy() {
-        mDoorHangers = new HashMap<String, DoorHanger>();
+        mDoorHangers.clear();
         BrowserDB.unregisterContentObserver(mContentResolver, mContentObserver);
     }
 
