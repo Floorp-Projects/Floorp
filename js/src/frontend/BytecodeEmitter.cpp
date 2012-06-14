@@ -4725,14 +4725,19 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
         sc.bindings.transfer(&funbox->bindings);
 
-        // Inherit various things (principals, version, etc) from the parent.
+        // Inherit most things (principals, version, etc) from the parent.
         GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
         Rooted<JSScript*> script(cx);
         Rooted<JSScript*> parent(cx, bce->script);
-        script = JSScript::Create(cx, parent->savedCallerFun, parent->principals,
-                                  parent->originPrincipals, parent->compileAndGo,
-                                  /* noScriptRval = */ false, globalObject,
-                                  parent->getVersion(), parent->staticLevel + 1);
+        script = JSScript::Create(cx,
+                                  /* savedCallerFun = */ false,
+                                  parent->principals,
+                                  parent->originPrincipals,
+                                  parent->compileAndGo,
+                                  /* noScriptRval = */ false,
+                                  globalObject,
+                                  parent->getVersion(),
+                                  parent->staticLevel + 1);
         if (!script)
             return false;
 
