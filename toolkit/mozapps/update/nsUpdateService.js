@@ -1014,8 +1014,9 @@ function handleUpdateFailure(update, errorCode) {
  * Fall back to downloading a complete update in case an update has failed.
  *
  * @param update the update object that has failed to apply.
+ * @param postStaging true if we have just attempted to stage an update.
  */
-function handleFallbackToCompleteUpdate(update) {
+function handleFallbackToCompleteUpdate(update, postStaging) {
   cleanupActiveUpdate();
 
   update.statusText = gUpdateBundle.GetStringFromName("patchApplyFailure");
@@ -1028,7 +1029,7 @@ function handleFallbackToCompleteUpdate(update) {
         "failed, downloading complete patch");
     var status = Cc["@mozilla.org/updates/update-service;1"].
                  getService(Ci.nsIApplicationUpdateService).
-                 downloadUpdate(update, true);
+                 downloadUpdate(update, !postStaging);
     if (status == STATE_NONE)
       cleanupActiveUpdate();
   }
@@ -1621,7 +1622,7 @@ UpdateService.prototype = {
       }
 
       // Something went wrong with the patch application process.
-      handleFallbackToCompleteUpdate(update);
+      handleFallbackToCompleteUpdate(update, false);
 
       prompter.showUpdateError(update);
     }
@@ -2436,7 +2437,7 @@ UpdateManager.prototype = {
     if (update.state == STATE_FAILED && ary[1]) {
       updateSucceeded = false;
       if (!handleUpdateFailure(update, ary[1])) {
-        handleFallbackToCompleteUpdate(update);
+        handleFallbackToCompleteUpdate(update, true);
       }
     }
     if (update.state == STATE_APPLIED && shouldUseService()) {
