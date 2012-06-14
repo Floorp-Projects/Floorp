@@ -138,9 +138,6 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
   *aReturn = nsnull;
 
   nsresult rv;
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIDOMDocument> domDocument;
   nsCOMPtr<nsIDOMNode> contextNode;
