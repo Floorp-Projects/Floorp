@@ -577,8 +577,10 @@ public class GeckoAppShell
 
     // these 2 stubs are never called in XUL Fennec, but we need them so that
     // the JNI code shared between XUL and Native Fennec doesn't die.
-    public static void notifyScreenShot(final ByteBuffer data, final int tabId, final int x, final int y,
-                                        final int width, final int height, final int token) {
+    public static void notifyScreenShot(final ByteBuffer data, final int tabId, 
+                                        final int left, final int top,
+                                        final int right, final int bottom, 
+                                        final int bufferWidth, final int bufferHeight, final int token) {
     }
 
     public static void notifyPaintedRect(float top, float left, float bottom, float right) {
