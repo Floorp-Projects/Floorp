@@ -107,19 +107,23 @@ public:
 
 protected:
 
-  nsINode* GetDeepFirstChild(nsINode* aRoot, nsTArray<PRInt32>* aIndexes);
-  nsINode* GetDeepLastChild(nsINode* aRoot, nsTArray<PRInt32>* aIndexes);
+  nsINode* GetDeepFirstChild(nsINode* aRoot,
+                             nsTArray<PRInt32>* aIndexes = nsnull);
+  nsINode* GetDeepLastChild(nsINode* aRoot,
+                            nsTArray<PRInt32>* aIndexes = nsnull);
 
   // Get the next sibling of aNode.  Note that this will generally return null
   // if aNode happens not to be a content node.  That's OK.
-  nsINode* GetNextSibling(nsINode* aNode, nsTArray<PRInt32>* aIndexes);
+  nsINode* GetNextSibling(nsINode* aNode,
+                          nsTArray<PRInt32>* aIndexes = nsnull);
 
   // Get the prev sibling of aNode.  Note that this will generally return null
   // if aNode happens not to be a content node.  That's OK.
-  nsINode* GetPrevSibling(nsINode* aNode, nsTArray<PRInt32>* aIndexes);
+  nsINode* GetPrevSibling(nsINode* aNode,
+                          nsTArray<PRInt32>* aIndexes = nsnull);
 
-  nsINode* NextNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes);
-  nsINode* PrevNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes);
+  nsINode* NextNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes = nsnull);
+  nsINode* PrevNode(nsINode* aNode, nsTArray<PRInt32>* aIndexes = nsnull);
 
   // WARNING: This function is expensive
   nsresult RebuildIndexStack();
@@ -240,9 +244,9 @@ nsContentIterator::Init(nsINode* aRoot)
 
   if (mPre) {
     mFirst = aRoot;
-    mLast  = GetDeepLastChild(aRoot, nsnull);
+    mLast  = GetDeepLastChild(aRoot);
   } else {
-    mFirst = GetDeepFirstChild(aRoot, nsnull);
+    mFirst = GetDeepFirstChild(aRoot);
     mLast  = aRoot;
   }
 
@@ -321,7 +325,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
       //      the next sibling?
 
       if (!startIsData) {
-        mFirst = GetNextSibling(startNode, nsnull);
+        mFirst = GetNextSibling(startNode);
 
         // Does mFirst node really intersect the range?  The range could be
         // 'degenerate', i.e., not collapsed but still contain no content.
@@ -347,7 +351,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
       mFirst = cChild;
     } else {
       // post-order
-      mFirst = GetDeepFirstChild(cChild, nsnull);
+      mFirst = GetDeepFirstChild(cChild);
 
       // Does mFirst node really intersect the range?  The range could be
       // 'degenerate', i.e., not collapsed but still contain no content.
@@ -379,7 +383,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
       //      cdata node, should we set mLast to the prev sibling?
 
       if (!endIsData) {
-        mLast = GetPrevSibling(endNode, nsnull);
+        mLast = GetPrevSibling(endNode);
 
         if (!NodeIsInTraversalRange(mLast, mPre, startNode, startIndx,
                                     endNode, endIndx)) {
@@ -401,7 +405,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
     }
 
     if (mPre) {
-      mLast  = GetDeepLastChild(cChild, nsnull);
+      mLast  = GetDeepLastChild(cChild);
 
       if (!NodeIsInTraversalRange(mLast, mPre, startNode, startIndx,
                                   endNode, endIndx)) {
@@ -1198,7 +1202,7 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 
   if (!firstCandidate) {
     // then firstCandidate is next node after node
-    firstCandidate = GetNextSibling(node, nsnull);
+    firstCandidate = GetNextSibling(node);
 
     if (!firstCandidate) {
       MakeEmpty();
@@ -1206,7 +1210,7 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
     }
   }
 
-  firstCandidate = GetDeepFirstChild(firstCandidate, nsnull);
+  firstCandidate = GetDeepFirstChild(firstCandidate);
 
   // confirm that this first possible contained node is indeed contained.  Else
   // we have a range that does not fully contain any node.
@@ -1245,10 +1249,10 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
 
   if (!lastCandidate) {
     // then lastCandidate is prev node before node
-    lastCandidate = GetPrevSibling(node, nsnull);
+    lastCandidate = GetPrevSibling(node);
   }
 
-  lastCandidate = GetDeepLastChild(lastCandidate, nsnull);
+  lastCandidate = GetDeepLastChild(lastCandidate);
 
   // confirm that this last possible contained node is indeed contained.  Else
   // we have a range that does not fully contain any node.
@@ -1306,7 +1310,7 @@ nsContentSubtreeIterator::Next()
     return;
   }
 
-  nsINode* nextNode = GetNextSibling(mCurNode, nsnull);
+  nsINode* nextNode = GetNextSibling(mCurNode);
   NS_ASSERTION(nextNode, "No next sibling!?! This could mean deadlock!");
 
   PRInt32 i = mEndNodes.IndexOf(nextNode);
@@ -1346,11 +1350,11 @@ nsContentSubtreeIterator::Prev()
     return;
   }
 
-  nsINode* prevNode = GetDeepFirstChild(mCurNode, nsnull);
+  nsINode* prevNode = GetDeepFirstChild(mCurNode);
 
-  prevNode = PrevNode(prevNode, nsnull);
+  prevNode = PrevNode(prevNode);
 
-  prevNode = GetDeepLastChild(prevNode, nsnull);
+  prevNode = GetDeepLastChild(prevNode);
 
   mCurNode = GetTopAncestorInRange(prevNode);
 
