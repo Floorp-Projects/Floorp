@@ -218,6 +218,17 @@ StackFrame::pcQuadratic(const ContextStack &stack, StackFrame *next, InlinedSite
 }
 
 bool
+StackFrame::initCallObject(JSContext *cx)
+{
+    CallObject *callobj = CallObject::createForFunction(cx, this);
+    if (!callobj)
+        return false;
+    pushOnScopeChain(*callobj);
+    flags_ |= HAS_CALL_OBJ;
+    return true;
+}
+
+bool
 StackFrame::prologue(JSContext *cx, bool newType)
 {
     JS_ASSERT(!isDummyFrame());
@@ -240,13 +251,8 @@ StackFrame::prologue(JSContext *cx, bool newType)
 
     JS_ASSERT(isNonEvalFunctionFrame());
 
-    if (fun()->isHeavyweight()) {
-        CallObject *callobj = CallObject::createForFunction(cx, this);
-        if (!callobj)
-            return false;
-        pushOnScopeChain(*callobj);
-        flags_ |= HAS_CALL_OBJ;
-    }
+    if (fun()->isHeavyweight() && !initCallObject(cx))
+        return false;
 
     if (script()->nesting()) {
         types::NestingPrologue(cx, this);
