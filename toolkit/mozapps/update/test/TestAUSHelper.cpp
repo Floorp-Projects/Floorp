@@ -48,6 +48,7 @@
 # define NS_ttoi atoi
 # define NS_tstat stat
 # define NS_tgetcwd getcwd
+# define NS_tfputs fputs
 # define LOG_S "%s"
 #endif
 
@@ -171,6 +172,9 @@ int NS_main(int argc, NS_tchar **argv)
             "Usage: WORKINGDIR INFILE OUTFILE -s SECONDS [FILETOLOCK]\n"  \
             "   or: WORKINGDIR LOGFILE [ARG2 ARG3...]\n" \
             "   or: signature-check filepath\n" \
+            "   or: setup-symlink dir1 dir2 file symlink\n" \
+            "   or: remove-symlink dir1 dir2 file symlink\n" \
+            "   or: check-symlink symlink\n" \
             "\n" \
             "  WORKINGDIR  \tThe relative path to the working directory to use.\n" \
             "  INFILE      \tThe relative path from the working directory for the file to\n" \
@@ -201,6 +205,68 @@ int NS_main(int argc, NS_tchar **argv)
     }
 #else 
     // Not implemented on non-Windows platforms
+    return 1;
+#endif
+  }
+
+  if (!NS_tstrcmp(argv[1], NS_T("setup-symlink"))) {
+#ifdef XP_UNIX
+    NS_tchar path[MAXPATHLEN];
+    NS_tsnprintf(path, sizeof(path)/sizeof(path[0]),
+                 NS_T("%s/%s"), NS_T("/tmp"), argv[2]);
+    mkdir(path, 0755);
+    NS_tsnprintf(path, sizeof(path)/sizeof(path[0]),
+                 NS_T("%s/%s/%s"), NS_T("/tmp"), argv[2], argv[3]);
+    mkdir(path, 0755);
+    NS_tsnprintf(path, sizeof(path)/sizeof(path[0]),
+                 NS_T("%s/%s/%s/%s"), NS_T("/tmp"), argv[2], argv[3], argv[4]);
+    FILE * file = NS_tfopen(path, NS_T("w"));
+    if (file) {
+      NS_tfputs(NS_T("test"), file);
+      fclose(file);
+    }
+    symlink(path, argv[5]);
+    NS_tsnprintf(path, sizeof(path)/sizeof(path[0]),
+                 NS_T("%s/%s"), NS_T("/tmp"), argv[2]);
+    if (argc > 6 && !NS_tstrcmp(argv[6], NS_T("change-perm"))) {
+      chmod(path, 0644);
+    }
+    return 0;
+#else
+    // Not implemented on non-Unix platforms
+    return 1;
+#endif
+  }
+
+  if (!NS_tstrcmp(argv[1], NS_T("remove-symlink"))) {
+#ifdef XP_UNIX
+    NS_tchar path[MAXPATHLEN];
+    NS_tsnprintf(path, sizeof(path)/sizeof(path[0]),
+                 NS_T("%s/%s"), NS_T("/tmp"), argv[2]);
+    chmod(path, 0755);
+    NS_tsnprintf(path, sizeof(path)/sizeof(path[0]),
+                 NS_T("%s/%s/%s/%s"), NS_T("/tmp"), argv[2], argv[3], argv[4]);
+    unlink(path);
+    NS_tsnprintf(path, sizeof(path)/sizeof(path[0]),
+                 NS_T("%s/%s/%s"), NS_T("/tmp"), argv[2], argv[3]);
+    rmdir(path);
+    NS_tsnprintf(path, sizeof(path)/sizeof(path[0]),
+                 NS_T("%s/%s"), NS_T("/tmp"), argv[2]);
+    rmdir(path);
+    return 0;
+#else
+    // Not implemented on non-Unix platforms
+    return 1;
+#endif
+  }
+
+  if (!NS_tstrcmp(argv[1], NS_T("check-symlink"))) {
+#ifdef XP_UNIX
+    struct stat ss;
+    lstat(argv[2], &ss);
+    return S_ISLNK(ss.st_mode) ? 0 : 1;
+#else
+    // Not implemented on non-Unix platforms
     return 1;
 #endif
   }

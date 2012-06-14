@@ -14,7 +14,7 @@ const MAX_TIME_DIFFERENCE = 60000;
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
 // operations located in the precomplete file performed first.
-const TEST_FILES = [
+var TEST_FILES = [
 {
   description      : "Should never change",
   fileName         : "channel-prefs.js",
@@ -234,6 +234,39 @@ ADDITIONAL_TEST_DIRS = [
   dirRemoved   : true
 }];
 
+function runHelperProcess(args) {
+  let helperBin = do_get_file(HELPER_BIN_FILE);
+  let process = AUS_Cc["@mozilla.org/process/util;1"].
+                createInstance(AUS_Ci.nsIProcess);
+  process.init(helperBin);
+  logTestInfo("Running " + helperBin.path + " " + args.join(" "));
+  process.run(true, args, args.length);
+  do_check_eq(process.exitValue, 0);
+}
+
+function createSymlink() {
+  let args = ["setup-symlink", "moz-foo", "moz-bar", "target",
+              getApplyDirFile().path + "/a/b/link"];
+  runHelperProcess(args);
+  args = ["setup-symlink", "moz-foo2", "moz-bar2", "target2",
+          getApplyDirFile().path + "/a/b/link2", "change-perm"];
+  runHelperProcess(args);
+}
+
+function removeSymlink() {
+  let args = ["remove-symlink", "moz-foo", "moz-bar", "target",
+              getApplyDirFile().path + "/a/b/link"];
+  runHelperProcess(args);
+  args = ["remove-symlink", "moz-foo2", "moz-bar2", "target2",
+          getApplyDirFile().path + "/a/b/link2"];
+  runHelperProcess(args);
+}
+
+function checkSymlink() {
+  let args = ["check-symlink", getApplyDirFile().path + "/a/b/link"];
+  runHelperProcess(args);
+}
+
 function run_test() {
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
@@ -253,10 +286,31 @@ function run_test() {
     applyToDir.lastModifiedTime = yesterday;
   }
 
+  if (IS_UNIX) {
+    removeSymlink();
+    createSymlink();
+    do_register_cleanup(removeSymlink);
+    TEST_FILES.push({
+      description      : "Readable symlink",
+      fileName         : "link",
+      relPathDir       : "a/b/",
+      originalContents : "test",
+      compareContents  : "test",
+      originalFile     : null,
+      compareFile      : null,
+      originalPerms    : 0664,
+      comparePerms     : 0664
+    });
+  }
+
   // apply the complete mar
   let exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for success when " +
               "applying a complete mar");
+  let updateLog = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX, true);
+  updateLog.append(FILE_UPDATE_LOG);
+  let updateLogContents = readFileBytes(updateLog);
+  logTestInfo(updateLogContents);
   do_check_eq(exitValue, 0);
 
   logTestInfo("testing update.status should be " + STATE_APPLIED);
@@ -308,8 +362,10 @@ function run_test() {
   }
 
   checkFilesAfterUpdateSuccess();
-  // Sorting on Linux is different so skip this check for now.
-  if (!IS_UNIX) {
+  if (IS_UNIX) {
+    checkSymlink();
+  } else {
+    // Sorting on Linux is different so skip this check for now.
     checkUpdateLogContents(LOG_COMPLETE_SWITCH_SUCCESS);
   }
 

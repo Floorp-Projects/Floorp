@@ -551,6 +551,27 @@ static int ensure_parent_dir(const NS_tchar *path)
   return rv;
 }
 
+#ifdef XP_UNIX
+static int ensure_copy_symlink(const NS_tchar *path, const NS_tchar *dest)
+{
+  // Copy symlinks by creating a new symlink to the same target
+  NS_tchar target[MAXPATHLEN + 1] = {NS_T('\0')};
+  int rv = readlink(path, target, MAXPATHLEN);
+  if (rv == -1) {
+    LOG(("ensure_copy_symlink: failed to read the link: " LOG_S ", err: %d\n",
+         path, errno));
+    return READ_ERROR;
+  }
+  rv = symlink(target, dest);
+  if (rv == -1) {
+    LOG(("ensure_copy_symlink: failed to create the new link: " LOG_S ", target: " LOG_S " err: %d\n",
+         dest, target, errno));
+    return READ_ERROR;
+  }
+  return 0;
+}
+#endif
+
 // Copy the file named path onto a new file named dest.
 static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
 {
@@ -565,12 +586,18 @@ static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
   return 0;
 #else
   struct stat ss;
-  int rv = NS_tstat(path, &ss);
+  int rv = NS_tlstat(path, &ss);
   if (rv) {
     LOG(("ensure_copy: failed to read file status info: " LOG_S ", err: %d\n",
           path, errno));
     return READ_ERROR;
   }
+
+#ifdef XP_UNIX
+  if (S_ISLNK(ss.st_mode)) {
+    return ensure_copy_symlink(path, dest);
+  }
+#endif
 
   AutoFile infile = ensure_open(path, NS_T("rb"), ss.st_mode);
   if (!infile) {
@@ -646,12 +673,19 @@ static int ensure_copy_recursive(const NS_tchar *path, const NS_tchar *dest,
                                  copy_recursive_skiplist<N>& skiplist)
 {
   struct stat sInfo;
-  int rv = NS_tstat(path, &sInfo);
+  int rv = NS_tlstat(path, &sInfo);
   if (rv) {
     LOG(("ensure_copy_recursive: path doesn't exist: " LOG_S ", rv: %d, err: %d\n",
           path, rv, errno));
     return READ_ERROR;
   }
+
+#ifdef XP_UNIX
+  if (S_ISLNK(sInfo.st_mode)) {
+    return ensure_copy_symlink(path, dest);
+  }
+#endif
+
   if (!S_ISDIR(sInfo.st_mode)) {
     return ensure_copy(path, dest);
   }
