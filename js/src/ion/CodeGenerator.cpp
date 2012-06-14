@@ -2277,26 +2277,6 @@ CodeGenerator::visitCallGetProperty(LCallGetProperty *lir)
 }
 
 bool
-CodeGenerator::visitCallGetName(LCallGetName *lir)
-{
-    static const VMFunction Info = FunctionInfo<GetPropertyOrNameFn>(GetScopeName);
-
-    pushArg(ImmGCPtr(lir->mir()->name()));
-    pushArg(ToRegister(lir->getOperand(0)));
-    return callVM(Info, lir);
-}
-
-bool
-CodeGenerator::visitCallGetNameTypeOf(LCallGetNameTypeOf *lir)
-{
-    static const VMFunction Info = FunctionInfo<GetPropertyOrNameFn>(GetScopeNameForTypeOf);
-
-    pushArg(ImmGCPtr(lir->mir()->name()));
-    pushArg(ToRegister(lir->getOperand(0)));
-    return callVM(Info, lir);
-}
-
-bool
 CodeGenerator::visitCallGetElement(LCallGetElement *lir)
 {
     typedef bool (*pf)(JSContext *, const Value &, const Value &, Value *);
@@ -2430,6 +2410,8 @@ class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
             return codegen->visitOutOfLineSetPropertyCache(this);
           case LInstruction::LOp_BindNameCache:
             return codegen->visitOutOfLineBindNameCache(this);
+          case LInstruction::LOp_GetNameCache:
+            return codegen->visitOutOfLineGetNameCache(this);
           default:
             JS_NOT_REACHED("Bad instruction");
             return false;
@@ -2459,6 +2441,42 @@ CodeGenerator::visitCache(LInstruction *ins)
     masm.bind(ool->rejoin());
 
     ool->setInlineJump(jump, label);
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineGetNameCache(OutOfLineCache *ool)
+{
+    LGetNameCache *lir = ool->cache()->toGetNameCache();
+    const MGetNameCache *mir = lir->mir();
+    Register scopeChain = ToRegister(lir->scopeObj());
+    RegisterSet liveRegs = lir->safepoint()->liveRegs();
+    TypedOrValueRegister output(GetValueOutput(lir));
+
+    IonCache::Kind kind = (mir->accessKind() == MGetNameCache::NAME)
+                          ? IonCache::Name
+                          : IonCache::NameTypeOf;
+    IonCacheName cache(kind, ool->getInlineJump(), ool->getInlineLabel(),
+                       masm.labelForPatch(), liveRegs,
+                       scopeChain, mir->name(), output);
+
+    cache.setScriptedLocation(mir->block()->info().script(), mir->resumePoint()->pc());
+    size_t cacheIndex = allocateCache(cache);
+
+    saveLive(lir);
+
+    typedef bool (*pf)(JSContext *, size_t, HandleObject, Value *);
+    static const VMFunction GetNameCacheInfo = FunctionInfo<pf>(GetNameCache);
+
+    pushArg(scopeChain);
+    pushArg(Imm32(cacheIndex));
+    if (!callVM(GetNameCacheInfo, lir))
+        return false;
+
+    masm.storeCallResultValue(output);
+    restoreLive(lir);
+
+    masm.jump(ool->rejoin());
     return true;
 }
 

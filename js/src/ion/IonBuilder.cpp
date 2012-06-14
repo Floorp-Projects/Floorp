@@ -3988,13 +3988,11 @@ IonBuilder::jsop_getname(HandlePropertyName name)
         object = current->pop();
     }
 
-    MCallGetNameInstruction *ins;
-
-    JSOp op2 = JSOp(*GetNextPc(pc));
-    if (op2 == JSOP_TYPEOF)
-        ins = MCallGetNameTypeOf::New(object, name);
+    MGetNameCache *ins;
+    if (JSOp(*GetNextPc(pc)) == JSOP_TYPEOF)
+        ins = MGetNameCache::New(object, name, MGetNameCache::NAMETYPEOF);
     else
-        ins = MCallGetName::New(object, name);
+        ins = MGetNameCache::New(object, name, MGetNameCache::NAME);
 
     current->add(ins);
     current->push(ins);

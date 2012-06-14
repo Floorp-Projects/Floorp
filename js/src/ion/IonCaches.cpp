@@ -842,24 +842,44 @@ IonCacheBindName::attachGlobal(JSContext *cx, JSObject *scopeChain)
     return true;
 }
 
+static inline void
+GenerateScopeChainGuard(MacroAssembler &masm, JSObject *scopeObj,
+                        Register scopeObjReg, Shape *shape, Label *failures)
+{
+    if (scopeObj->isCall()) {
+        // We can skip a guard on the call object if the script's bindings are
+        // guaranteed to be immutable (and thus cannot introduce shadowing
+        // variables).
+        CallObject *callObj = &scopeObj->asCall();
+        if (JSFunction *fun = callObj->getCalleeFunction()) {
+            JSScript *script = fun->script();
+            if (!script->bindings.extensibleParents())
+                return;
+        }
+    } else if (scopeObj->isGlobal()) {
+        // If this is the last object on the scope walk, and the property we've
+        // found is not configurable, then we don't need a shape guard because
+        // the shape cannot be removed.
+        if (shape && !shape->configurable())
+            return;
+    }
+
+    Address shapeAddr(scopeObjReg, JSObject::offsetOfShape());
+    masm.branchPtr(Assembler::NotEqual, shapeAddr, ImmGCPtr(scopeObj->lastProperty()), failures);
+}
+
 static void
 GenerateScopeChainGuards(MacroAssembler &masm, JSObject *scopeChain, JSObject *holder,
-                         Register scopeChainReg, Register outputReg, Label *failures)
+                         Register outputReg, Label *failures)
 {
-    JS_ASSERT(scopeChain != holder);
-
-    // Load the parent of the scope object into outputReg.
-    JSObject *tobj = &scopeChain->asScope().enclosingScope();
-    masm.extractObject(Address(scopeChainReg, ScopeObject::offsetOfEnclosingScope()), outputReg);
+    JSObject *tobj = scopeChain;
 
     // Walk up the scope chain. Note that IsCacheableScopeChain guarantees the
     // |tobj == holder| condition terminates the loop.
     while (true) {
         JS_ASSERT(IsCacheableNonGlobalScope(tobj));
 
-        // Test intervening shapes.
-        Address shapeAddr(outputReg, JSObject::offsetOfShape());
-        masm.branchPtr(Assembler::NotEqual, shapeAddr, ImmGCPtr(tobj->lastProperty()), failures);
+        GenerateScopeChainGuard(masm, tobj, outputReg, NULL, failures);
         if (tobj == holder)
             break;
 
@@ -885,10 +905,14 @@ IonCacheBindName::attachNonGlobal(JSContext *cx, JSObject *scopeChain, JSObject 
                                 ImmGCPtr(scopeChain->lastProperty()),
                                 &failures);
 
-    if (holder != scopeChain)
-        GenerateScopeChainGuards(masm, scopeChain, holder, scopeChainReg(), outputReg(), &nonRepatchFailures);
-    else
+    if (holder != scopeChain) {
+        JSObject *parent = &scopeChain->asScope().enclosingScope();
+        masm.extractObject(Address(scopeChainReg(), ScopeObject::offsetOfEnclosingScope()), outputReg());
+
+        GenerateScopeChainGuards(masm, parent, holder, outputReg(), &nonRepatchFailures);
+    } else {
         masm.movePtr(scopeChainReg(), outputReg());
+    }
 
     // At this point outputReg holds the object on which the property
     // was found, so we're done.
@@ -982,3 +1006,155 @@ js::ion::BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain
 
     return holder;
 }
+
+bool
+IonCacheName::attach(JSContext *cx, HandleObject scopeChain, HandleObject holder, Shape *shape)
+{
+    MacroAssembler masm;
+    Label failures;
+
+    Register scratchReg = outputReg().valueReg().scratchReg();
+
+    masm.mov(scopeChainReg(), scratchReg);
+    GenerateScopeChainGuards(masm, scopeChain, holder, scratchReg, &failures);
+
+    unsigned slot;
+    if (holder->isCall()) {
+        slot = shape->shortid();
+        JSFunction *fun = holder->asCall().getCalleeFunction();
+
+        if (shape->setterOp() == CallObject::setVarOp)
+            slot += fun->nargs;
+        slot += CallObject::RESERVED_SLOTS;
+    } else {
+        JS_ASSERT(holder->isGlobal());
+        slot = shape->slot();
+    }
+
+    if (holder->isFixedSlot(slot)) {
+        Address addr(scratchReg, JSObject::getFixedSlotOffset(slot));
+        masm.loadTypedOrValue(addr, outputReg());
+    } else {
+        masm.loadPtr(Address(scratchReg, JSObject::offsetOfSlots()), scratchReg);
+
+        Address addr(scratchReg, holder->dynamicSlotIndex(slot) * sizeof(Value));
+        masm.loadTypedOrValue(addr, outputReg());
+    }
+
+    RepatchLabel rejoin;
+    CodeOffsetJump rejoinOffset = masm.jumpWithPatch(&rejoin);
+    masm.bind(&rejoin);
+
+    CodeOffsetJump exitOffset;
+
+    if (failures.used()) {
+        masm.bind(&failures);
+
+        RepatchLabel exit;
+        exitOffset = masm.jumpWithPatch(&exit);
+        masm.bind(&exit);
+    }
+
+    Linker linker(masm);
+    IonCode *code = linker.newCode(cx);
+    if (!code)
+        return false;
+
+    rejoinOffset.fixup(&masm);
+    if (failures.bound())
+        exitOffset.fixup(&masm);
+
+    CodeLocationJump rejoinJump(code, rejoinOffset);
+    CodeLocationJump exitJump(code, exitOffset);
+    PatchJump(lastJump(), CodeLocationLabel(code));
+    PatchJump(rejoinJump, rejoinLabel());
+    PatchJump(exitJump, cacheLabel());
+    updateLastJump(exitJump);
+
+    IonSpew(IonSpew_InlineCaches, "Generated NAME stub at %p", code->raw());
+    return true;
+}
+
+static bool
+IsCacheableName(JSContext *cx, HandleObject scopeChain, HandleObject obj, HandleObject holder,
+               JSProperty *prop)
+{
+    if (!prop)
+        return false;
+    if (!obj->isNative())
+        return false;
+    if (obj != holder)
+        return false;
+
+    Shape *shape = (Shape *)prop;
+    if (obj->isGlobal()) {
+        // Support only simple property lookups.
+        if (!IsCacheableGetProp(obj, holder, shape))
+            return false;
+    } else if (obj->isCall()) {
+        if (shape->setterOp() != CallObject::setArgOp &&
+            shape->setterOp() != CallObject::setVarOp)
+        {
+            return false;
+        }
+    } else {
+        // We don't yet support lookups on Block or DeclEnv objects.
+        return false;
+    }
+
+    RootedObject obj2(cx, scopeChain);
+    while (obj2) {
+        if (!IsCacheableNonGlobalScope(obj2) || !obj2->isGlobal())
+            return false;
+
+        // Stop once we hit the global or target obj.
+        if (obj2->isGlobal() || obj2 == obj)
+            break;
+
+        obj2 = obj2->enclosingScope();
+    }
+
+    return obj == obj2;
+}
+
+bool
+js::ion::GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, Value *vp)
+{
+    JSScript *topScript = GetTopIonJSScript(cx);
+    IonScript *ion = topScript->ionScript();
+
+    IonCacheName &cache = ion->getCache(cacheIndex).toName();
+    RootedPropertyName name(cx, cache.name());
+
+    JSScript *script;
+    jsbytecode *pc;
+    cache.getScriptedLocation(&script, &pc);
+
+    RootedObject obj(cx);
+    RootedObject holder(cx);
+    JSProperty *prop;
+    if (!FindProperty(cx, name, scopeChain, obj.address(), holder.address(), &prop))
+        return false;
+
+    if (cache.stubCount() < MAX_STUBS &&
+        IsCacheableName(cx, scopeChain, obj, holder, prop))
+    {
+        if (!cache.attach(cx, scopeChain, obj, (Shape *)prop))
+            return false;
+        cache.incrementStubCount();
+    }
+
+    if (cache.isTypeOf()) {
+        if (!FetchName<true>(cx, obj, holder, name, prop, vp))
+            return false;
+    } else {
+        if (!FetchName<false>(cx, obj, holder, name, prop, vp))
+            return false;
+    }
+
+    // Monitor changes to cache entry.
+    types::TypeScript::Monitor(cx, script, pc, *vp);
+
+    return true;
+}
+

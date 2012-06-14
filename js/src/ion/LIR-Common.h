@@ -2108,6 +2108,24 @@ class LStoreFixedSlotT : public LInstructionHelper<0, 2, 0>
     }
 };
 
+// Note, Name ICs always return a Value. There are no V/T variants.
+class LGetNameCache : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LIR_HEADER(GetNameCache);
+    BOX_OUTPUT_ACCESSORS();
+
+    LGetNameCache(const LAllocation &scopeObj) {
+        setOperand(0, scopeObj);
+    }
+    const LAllocation *scopeObj() {
+        return getOperand(0);
+    }
+    const MGetNameCache *mir() const {
+        return mir_->toGetNameCache();
+    }
+};
+
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // boxed value.
 class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1, 0>
@@ -2353,26 +2371,6 @@ class LCallGetProperty : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0
 
     MCallGetProperty *mir() const {
         return mir_->toCallGetProperty();
-    }
-};
-
-class LCallGetName : public LCallInstructionHelper<BOX_PIECES, 1, 0>
-{
-  public:
-    LIR_HEADER(CallGetName);
-
-    MCallGetName *mir() const {
-        return mir_->toCallGetName();
-    }
-};
-
-class LCallGetNameTypeOf : public LCallInstructionHelper<BOX_PIECES, 1, 0>
-{
-  public:
-    LIR_HEADER(CallGetNameTypeOf);
-
-    MCallGetNameTypeOf *mir() const {
-        return mir_->toCallGetNameTypeOf();
     }
 };
 

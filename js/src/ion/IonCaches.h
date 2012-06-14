@@ -56,6 +56,7 @@ class IonCacheGetProperty;
 class IonCacheSetProperty;
 class IonCacheGetElement;
 class IonCacheBindName;
+class IonCacheName;
 
 // Common structure encoding the state of a polymorphic inline cache contained
 // in the code for an IonScript. IonCaches are used for polymorphic operations
@@ -112,16 +113,19 @@ struct ConstantOrRegisterSpace
 
 class IonCache
 {
-  protected:
-
+  public:
     enum Kind {
         Invalid = 0,
         GetProperty,
         SetProperty,
         GetElement,
-        BindName
-    } kind : 8;
+        BindName,
+        Name,
+        NameTypeOf
+    };
 
+  protected:
+    Kind kind_ : 8;
     bool pure_ : 1;
     bool idempotent_ : 1;
     size_t stubCount_ : 6;
@@ -160,6 +164,11 @@ class IonCache
             PropertyName *name;
             Register output;
         } bindname;
+        struct {
+            Register scopeChain;
+            PropertyName *name;
+            TypedOrValueRegisterSpace output;
+        } name;
     } u;
 
     // Registers live after the cache, excluding output registers. The initial
@@ -174,7 +183,7 @@ class IonCache
               CodeOffsetJump initialJump,
               CodeOffsetLabel rejoinLabel,
               CodeOffsetLabel cacheLabel) {
-        this->kind = kind;
+        this->kind_ = kind;
         this->liveRegs = liveRegs;
         this->initialJump_ = initialJump;
         this->lastJump_ = initialJump;
@@ -205,12 +214,20 @@ class IonCache
         return CodeLocationLabel(ptr);
     }
 
-    bool pure() { return pure_; }
-    bool idempotent() { return idempotent_; }
+    bool pure() {
+        return pure_;
+    }
+    bool idempotent() {
+        return idempotent_;
+    }
 
-    void updateLastJump(CodeLocationJump jump) { lastJump_ = jump; }
+    void updateLastJump(CodeLocationJump jump) {
+        lastJump_ = jump;
+    }
 
-    size_t stubCount() const { return stubCount_; }
+    size_t stubCount() const {
+        return stubCount_;
+    }
     void incrementStubCount() {
         // The IC should stop generating stubs before wrapping stubCount.
         stubCount_++;
@@ -218,23 +235,24 @@ class IonCache
     }
 
     IonCacheGetProperty &toGetProperty() {
-        JS_ASSERT(kind == GetProperty);
-        return * (IonCacheGetProperty *) this;
+        JS_ASSERT(kind_ == GetProperty);
+        return *(IonCacheGetProperty *)this;
     }
-
     IonCacheSetProperty &toSetProperty() {
-        JS_ASSERT(kind == SetProperty);
-        return * (IonCacheSetProperty *) this;
+        JS_ASSERT(kind_ == SetProperty);
+        return *(IonCacheSetProperty *)this;
     }
-
     IonCacheGetElement &toGetElement() {
-        JS_ASSERT(kind == GetElement);
-        return * (IonCacheGetElement *) this;
+        JS_ASSERT(kind_ == GetElement);
+        return *(IonCacheGetElement *)this;
     }
-
     IonCacheBindName &toBindName() {
-        JS_ASSERT(kind == BindName);
-        return * (IonCacheBindName *) this;
+        JS_ASSERT(kind_ == BindName);
+        return *(IonCacheBindName *)this;
+    }
+    IonCacheName &toName() {
+        JS_ASSERT(kind_ == Name || kind_ == NameTypeOf);
+        return *(IonCacheName *)this;
     }
 
     void setScriptedLocation(JSScript *script, jsbytecode *pc) {
@@ -381,6 +399,39 @@ class IonCacheBindName : public IonCache
     bool attachNonGlobal(JSContext *cx, JSObject *scopeChain, JSObject *holder);
 };
 
+class IonCacheName : public IonCache
+{
+  public:
+    IonCacheName(Kind kind,
+                 CodeOffsetJump initialJump,
+                 CodeOffsetLabel rejoinLabel,
+                 CodeOffsetLabel cacheLabel,
+                 RegisterSet liveRegs,
+                 Register scopeChain, PropertyName *name,
+                 TypedOrValueRegister output)
+    {
+        init(kind, liveRegs, initialJump, rejoinLabel, cacheLabel);
+        u.name.scopeChain = scopeChain;
+        u.name.name = name;
+        u.name.output.data() = output;
+    }
+
+    Register scopeChainReg() const {
+        return u.name.scopeChain;
+    }
+    HandlePropertyName name() const {
+        return HandlePropertyName::fromMarkedLocation(&u.name.name);
+    }
+    TypedOrValueRegister outputReg() const {
+        return u.name.output.data();
+    }
+    bool isTypeOf() const {
+        return kind_ == NameTypeOf;
+    }
+
+    bool attach(JSContext *cx, HandleObject scopeChain, HandleObject obj, Shape *shape);
+};
+
 bool
 GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Value *vp);
 
@@ -393,6 +444,9 @@ GetElementCache(JSContext *cx, size_t cacheIndex, JSObject *obj, const Value &id
 
 JSObject *
 BindNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain);
+
+bool
+GetNameCache(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, Value *vp);
 
 } // namespace ion
 } // namespace js

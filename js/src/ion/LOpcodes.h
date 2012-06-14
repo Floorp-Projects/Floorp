@@ -155,8 +155,7 @@
     _(GetElementCacheV)             \
     _(BindNameCache)                \
     _(CallGetProperty)              \
-    _(CallGetName)                  \
-    _(CallGetNameTypeOf)            \
+    _(GetNameCache)                 \
     _(CallGetElement)               \
     _(CallSetElement)               \
     _(CallSetProperty)              \

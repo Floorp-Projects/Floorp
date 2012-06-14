@@ -318,41 +318,12 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
     return true;
 }
 
-inline bool
-NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
+template <bool TypeOf> inline bool
+FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName name,
+          JSProperty *prop, Value *vp)
 {
-    RootedObject obj(cx, cx->stack.currentScriptedScopeChain());
-
-    /*
-     * Skip along the scope chain to the enclosing global object. This is
-     * used for GNAME opcodes where the bytecode emitter has determined a
-     * name access must be on the global. It also insulates us from bugs
-     * in the emitter: type inference will assume that GNAME opcodes are
-     * accessing the global object, and the inferred behavior should match
-     * the actual behavior even if the id could be found on the scope chain
-     * before the global object.
-     */
-    if (js_CodeSpec[*pc].format & JOF_GNAME)
-        obj = &obj->global();
-
-    PropertyCacheEntry *entry;
-    JSObject *obj2;
-    RootedPropertyName name(cx);
-    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.reference(), obj2, entry, name.reference());
-    if (!name) {
-        AssertValidPropertyCacheHit(cx, obj, obj2, entry);
-        if (!NativeGet(cx, obj, obj2, entry->prop, 0, vp))
-            return false;
-        return true;
-    }
-
-    JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, true, obj, obj.address(), &obj2, &prop))
-        return false;
     if (!prop) {
-        /* Kludge to allow (typeof foo == "undefined") tests. */
-        JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
-        if (op2 == JSOP_TYPEOF) {
+        if (TypeOf) {
             vp->setUndefined();
             return true;
         }
@@ -374,8 +345,46 @@ NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
         if (!NativeGet(cx, normalized, obj2, shape, 0, vp))
             return false;
     }
-
     return true;
+}
+
+inline bool
+NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
+{
+    RootedObject obj(cx, cx->stack.currentScriptedScopeChain());
+
+    /*
+     * Skip along the scope chain to the enclosing global object. This is
+     * used for GNAME opcodes where the bytecode emitter has determined a
+     * name access must be on the global. It also insulates us from bugs
+     * in the emitter: type inference will assume that GNAME opcodes are
+     * accessing the global object, and the inferred behavior should match
+     * the actual behavior even if the id could be found on the scope chain
+     * before the global object.
+     */
+    if (js_CodeSpec[*pc].format & JOF_GNAME)
+        obj = &obj->global();
+
+    PropertyCacheEntry *entry;
+    RootedObject obj2(cx);
+    RootedPropertyName name(cx);
+    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.reference(), obj2.reference(), entry, name.reference());
+    if (!name) {
+        AssertValidPropertyCacheHit(cx, obj, obj2, entry);
+        if (!NativeGet(cx, obj, obj2, entry->prop, 0, vp))
+            return false;
+        return true;
+    }
+
+    JSProperty *prop;
+    if (!FindPropertyHelper(cx, name, true, obj, obj.address(), obj2.address(), &prop))
+        return false;
+
+    /* Kludge to allow (typeof foo == "undefined") tests. */
+    JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
+    if (op2 == JSOP_TYPEOF)
+        return FetchName<true>(cx, obj, obj2, name, prop, vp);
+    return FetchName<false>(cx, obj, obj2, name, prop, vp);
 }
 
 inline bool

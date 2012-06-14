@@ -3861,9 +3861,7 @@ class MStoreSlot
     }
 };
 
-// Inline call to get a name from a scope object. This is a superclass of the
-// actual opcodes which implement different variants of the operation.
-class MCallGetNameInstruction
+class MGetNameCache
   : public MUnaryInstruction,
     public SingleObjectPolicy
 {
@@ -3877,8 +3875,7 @@ class MCallGetNameInstruction
     CompilerRootPropertyName name_;
     AccessKind kind_;
 
-  protected:
-    MCallGetNameInstruction(MDefinition *obj, HandlePropertyName name, AccessKind kind)
+    MGetNameCache(MDefinition *obj, HandlePropertyName name, AccessKind kind)
       : MUnaryInstruction(obj),
         name_(name),
         kind_(kind)
@@ -3887,10 +3884,15 @@ class MCallGetNameInstruction
     }
 
   public:
+    INSTRUCTION_HEADER(GetNameCache);
+
+    static MGetNameCache *New(MDefinition *obj, HandlePropertyName name, AccessKind kind) {
+        return new MGetNameCache(obj, name, kind);
+    }
     TypePolicy *typePolicy() {
         return this;
     }
-    MDefinition *obj() const {
+    MDefinition *scopeObj() const {
         return getOperand(0);
     }
     PropertyName *name() const {
@@ -4051,34 +4053,6 @@ class MCallGetProperty
         if (markEffectful_)
             return AliasSet::Store(AliasSet::Any);
         return AliasSet::None();
-    }
-};
-
-class MCallGetName : public MCallGetNameInstruction
-{
-    MCallGetName(MDefinition *obj, HandlePropertyName name)
-        : MCallGetNameInstruction(obj, name, MCallGetNameInstruction::NAME)
-    {}
-
-  public:
-    INSTRUCTION_HEADER(CallGetName);
-
-    static MCallGetName *New(MDefinition *obj, HandlePropertyName name) {
-        return new MCallGetName(obj, name);
-    }
-};
-
-class MCallGetNameTypeOf : public MCallGetNameInstruction
-{
-    MCallGetNameTypeOf(MDefinition *obj, HandlePropertyName name)
-        : MCallGetNameInstruction(obj, name, MCallGetNameInstruction::NAMETYPEOF)
-    {}
-
-  public:
-    INSTRUCTION_HEADER(CallGetNameTypeOf);
-
-    static MCallGetNameTypeOf *New(MDefinition *obj, HandlePropertyName name) {
-        return new MCallGetNameTypeOf(obj, name);
     }
 };
 
