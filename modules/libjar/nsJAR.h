@@ -30,6 +30,7 @@
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsIObserver.h"
+#include "mozilla/Attributes.h"
 
 class nsIInputStream;
 class nsJARManifestItem;
@@ -153,7 +154,7 @@ private:
  * Enumerates a list of files in a zip archive 
  * (based on a pattern match in its member nsZipFind).
  */
-class nsJAREnumerator : public nsIUTF8StringEnumerator
+class nsJAREnumerator MOZ_FINAL : public nsIUTF8StringEnumerator
 {
 public:
     NS_DECL_ISUPPORTS

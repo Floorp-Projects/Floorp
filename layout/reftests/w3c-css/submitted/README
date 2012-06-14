@@ -1,0 +1,69 @@
+W3C CSS Test Suite Submission Directory
+---------------------------------------
+
+Put tests here that are to be submitted to the official W3C CSS test
+suites at http://test.csswg.org/. This directory will be sync'ed
+automatically with the contributors/mozilla/ directory in the CSSWG
+repository. The master copy is Mozilla's; make edits here, not there.
+
+Tests submitted here must conform to the CSSWG test format:
+  http://wiki.csswg.org/test/format
+The extra metadata is there to connect tests to their respective specs
+and to help reviewers and people trying to debug their implementations
+understand and analyze the tests. (These are not write-only regression
+tests.)
+
+TEST FILENAMES MUST BE GLOBALLY UNIQUE across the entire CSSWG test repo,
+so don't rely on directory names as context.
+
+The W3C format uses <link> tags for connecting reftests to their
+references and generates reftest.list from a build process. Until we
+set up a build process here, you need to link up the reftest both ways.
+
+Because W3C sometimes needs to allow multiple correct renderings for
+a particular case, a test linked to a reference must match ANY of them,
+not all of them. To require a test to match all references, chain the
+references to each other. If (a discrete number of) multiple renderings
+are conformant, make a reftest comparison for each of them, and mark
+all but the one we support as 'fails' in the reftest.list.
+
+You can copy the test-template-001.xht and references/test-template-001.xht
+files in this directory as a starting point
+
+Submitted tests are tracked in Shepherd: http://test.csswg.org/shepherd/
+
+Some things cannot be reftested; if another format is necessary to test
+a particular feature, contact public-css-testsuite@w3.org and/or ask
+the layout peers for help.
+
+Legal Stuff
+-----------
+
+The following license grant applies to contributions to this directory
+(unless copyright is owned by a W3C Member, in which case the Membership
+agreement applies):
+
+  The Contributor hereby grants to the W3C, a perpetual, non-exclusive,
+  royalty-free, world-wide right and license under any Contributor
+  copyrights in this contribution to copy, publish, use, and modify the
+  contribution and to distribute the contribution under a BSD License or one
+  with more restrictive terms, as well as a right and license of the same
+  scope to any derivative works prepared by the W3C and based on, or
+  incorporating all or part of the contribution. The Contributor further
+  agrees that any derivative works of this contribution prepared by the W3C
+  shall be solely owned by the W3C.
+
+  The Contributor states, to the best of her/his knowledge, that she/he,
+  or the company she/he represents, has all rights necessary to contribute
+  the Materials.
+
+  W3C will retain attribution of initial authorship to the Contributor. The
+  W3C makes no a-priori commitment to support or distribute contributions.
+
+  THE CONTRIBUTION IS PROVIDED AS IS, AND CONTRIBUTORS MAKE NO REPRESENTATIONS OR
+  WARRANTIES, EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, OR TITLE;
+  THAT THE CONTENTS OF THE DOCUMENT ARE SUITABLE FOR ANY PURPOSE. CONTRIBUTORS
+  MAKE NO REPRESENTATIONS, EXPRESS OR IMPLIED, THAT THE CONTRIBUTION OR THE USE
+  THEREOF INDICATES CONFORMANCE TO A SPECIFICATION; CONTRIBUTIONS ARE PROVIDED
+  ONLY TO HELP REACHING INTEROPERABILITY.

@@ -61,6 +61,24 @@ js::ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc)
     return JSID_TO_ATOM(id)->asPropertyName();
 }
 
+FrameVarType
+js::ScopeCoordinateToFrameVar(JSScript *script, jsbytecode *pc, unsigned *index)
+{
+    ScopeCoordinate sc(pc);
+    if (StaticBlockObject *block = ScopeCoordinateBlockChain(script, pc)) {
+        *index = block->slotToFrameLocal(script, sc.slot);
+        return FrameVar_Local;
+    }
+
+    if (script->bindings.slotIsLocal(sc.slot)) {
+        *index = script->bindings.slotToLocal(sc.slot);
+        return FrameVar_Local;
+    }
+
+    *index = script->bindings.slotToArg(sc.slot);
+    return FrameVar_Arg;
+}
+
 /*****************************************************************************/
 
 /*
@@ -78,10 +96,8 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
         return NULL;
 
     gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-#ifdef JS_THREADSAFE
     JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
     kind = gc::GetBackgroundAllocKind(kind);
-#endif
 
     RootedTypeObject type(cx);
     type = cx->compartment->getEmptyType(cx);

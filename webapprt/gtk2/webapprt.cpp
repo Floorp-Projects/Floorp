@@ -64,9 +64,9 @@ void SetAllocatedString(const char *&str, const char *newvalue)
 // Function to open a dialog box displaying the message provided
 void ErrorDialog(const char* message)
 {
-  GtkWidget* dialog;
+  gtk_init(pargc, pargv);
 
-  dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s", message);
+  GtkWidget* dialog = gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s", message);
   gtk_dialog_run(GTK_DIALOG(dialog));
   gtk_widget_destroy(dialog);
 }
@@ -222,8 +222,6 @@ void CopyAndRelaunch(const char* firefoxDir, const char* curExePath)
 
 int main(int argc, char *argv[])
 {
-  gtk_init(&argc, &argv);
-
   pargc = &argc;
   pargv = &argv;
 

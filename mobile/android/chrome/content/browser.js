@@ -2740,6 +2740,14 @@ var BrowserEventHandler = {
   },
 
   _cancelTapHighlight: function _cancelTapHighlight() {
+    if (!this._highlightElement)
+      return;
+
+    // If the active element is in a sub-frame, we need to make that frame's document
+    // active to remove the element's active state.
+    if (this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
+      DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
+
     DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
     this._highlightElement = null;
   },

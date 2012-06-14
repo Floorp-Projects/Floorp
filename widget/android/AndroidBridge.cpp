@@ -2048,13 +2048,13 @@ AndroidBridge::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, con
 }
 
 void
-AndroidBridge::SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
+AndroidBridge::SetPageRect(const gfx::Rect& aCssPageRect)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
         return;
 
-    client->SetPageRect(aZoom, aPageRect, aCssPageRect);
+    client->SetPageRect(aCssPageRect);
 }
 
 void

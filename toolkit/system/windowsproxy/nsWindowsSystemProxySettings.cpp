@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <windows.h>
-#include "nsIWindowsRegKey.h"
+#include <wininet.h>
 
 #include "nsISystemProxySettings.h"
 #include "nsIServiceManager.h"
@@ -26,7 +26,6 @@ public:
 private:
     ~nsWindowsSystemProxySettings() {};
 
-    nsCOMPtr<nsIWindowsRegKey> mKey;
     bool MatchOverride(const nsACString& aHost);
     bool PatternMatch(const nsACString& aHost, const nsACString& aOverride);
 };
@@ -36,14 +35,6 @@ NS_IMPL_ISUPPORTS1(nsWindowsSystemProxySettings, nsISystemProxySettings)
 nsresult
 nsWindowsSystemProxySettings::Init()
 {
-    nsresult rv;
-    mKey = do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_NAMED_LITERAL_STRING(key,
-        "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings");
-    rv = mKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, key,
-                    nsIWindowsRegKey::ACCESS_READ);
-    NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
 }
 
@@ -82,13 +73,59 @@ static void SetProxyResultDirect(nsACString& aResult)
     aResult.AssignASCII("DIRECT");
 }
 
+static nsresult ReadInternetOptionInt(PRUint32 aOption, PRUint32& aValue)
+{
+    INTERNET_PER_CONN_OPTIONW option;
+    option.dwOption = aOption;
+
+    INTERNET_PER_CONN_OPTION_LISTW list;
+    list.dwSize = sizeof(INTERNET_PER_CONN_OPTION_LISTW);
+    list.pszConnection = NULL;
+    list.dwOptionCount = 1;
+    list.dwOptionError = 0;
+    list.pOptions = &option;
+
+    unsigned long size = sizeof(INTERNET_PER_CONN_OPTION_LISTW);
+    if (!InternetQueryOptionW(NULL, INTERNET_OPTION_PER_CONNECTION_OPTION,
+                              &list, &size)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    aValue = option.Value.dwValue;
+    return NS_OK;
+}
+
+static nsresult ReadInternetOptionString(PRUint32 aOption, nsAString& aValue)
+{
+    INTERNET_PER_CONN_OPTIONW option;
+    option.dwOption = aOption;
+
+    INTERNET_PER_CONN_OPTION_LISTW list;
+    list.dwSize = sizeof(INTERNET_PER_CONN_OPTION_LISTW);
+    list.pszConnection = NULL;
+    list.dwOptionCount = 1;
+    list.dwOptionError = 0;
+    list.pOptions = &option;
+
+    unsigned long size = sizeof(INTERNET_PER_CONN_OPTION_LISTW);
+    if (!InternetQueryOptionW(NULL, INTERNET_OPTION_PER_CONNECTION_OPTION,
+                              &list, &size)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    aValue.Assign(option.Value.pszValue);
+    GlobalFree(option.Value.pszValue);
+
+    return NS_OK;
+}
+
 bool
 nsWindowsSystemProxySettings::MatchOverride(const nsACString& aHost)
 {
     nsresult rv;
     nsAutoString buf;
 
-    rv = mKey->ReadStringValue(NS_LITERAL_STRING("ProxyOverride"), buf);
+    rv = ReadInternetOptionString(INTERNET_PER_CONN_PROXY_BYPASS, buf);
     if (NS_FAILED(rv))
         return false;
 
@@ -171,10 +208,17 @@ nsWindowsSystemProxySettings::PatternMatch(const nsACString& aHost,
 nsresult
 nsWindowsSystemProxySettings::GetPACURI(nsACString& aResult)
 {
-    NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
     nsresult rv;
+    PRUint32 flags = 0;
+
+    rv = ReadInternetOptionInt(INTERNET_PER_CONN_FLAGS, flags);
+    if (!(flags & PROXY_TYPE_AUTO_PROXY_URL)) {
+        aResult.Truncate();
+        return rv;
+    }
+
     nsAutoString buf;
-    rv = mKey->ReadStringValue(NS_LITERAL_STRING("AutoConfigURL"), buf);
+    rv = ReadInternetOptionString(INTERNET_PER_CONN_AUTOCONFIG_URL, buf);
     if (NS_SUCCEEDED(rv))
         aResult = NS_ConvertUTF16toUTF8(buf);
     return rv;
@@ -183,12 +227,11 @@ nsWindowsSystemProxySettings::GetPACURI(nsACString& aResult)
 nsresult
 nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
 {
-    NS_ENSURE_TRUE(mKey, NS_ERROR_NOT_INITIALIZED);
     nsresult rv;
-    PRUint32 enabled = 0;
+    PRUint32 flags = 0;
 
-    rv = mKey->ReadIntValue(NS_LITERAL_STRING("ProxyEnable"), &enabled);
-    if (!enabled) {
+    rv = ReadInternetOptionInt(INTERNET_PER_CONN_FLAGS, flags);
+    if (!(flags & PROXY_TYPE_PROXY)) {
         SetProxyResultDirect(aResult);
         return NS_OK;
     }
@@ -208,7 +251,7 @@ nsWindowsSystemProxySettings::GetProxyForURI(nsIURI* aURI, nsACString& aResult)
 
     nsAutoString buf;
 
-    rv = mKey->ReadStringValue(NS_LITERAL_STRING("ProxyServer"), buf);
+    rv = ReadInternetOptionString(INTERNET_PER_CONN_PROXY_SERVER, buf);
     if (NS_FAILED(rv)) {
         SetProxyResultDirect(aResult);
         return NS_OK;

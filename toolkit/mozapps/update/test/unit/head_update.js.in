@@ -102,7 +102,7 @@ var gBackgroundUpdate = false;
 var gSwitchApp = false;
 
 // Time to wait for the test helper process before continuing the test
-const TEST_HELPER_TIMEOUT = 100;
+const TEST_HELPER_TIMEOUT = 1000;
 
 // Use a copy of the main application executable for the test to avoid main
 // executable in use errors.

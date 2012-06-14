@@ -296,8 +296,8 @@ Sampler::Sampler(int interval, bool profiling)
     : // isolate_(isolate),
       interval_(interval),
       profiling_(profiling),
-      active_(false),
-      paused_(false) /*,
+      paused_(false),
+      active_(false) /*,
       samples_taken_(0)*/ {
   data_ = new PlatformData;
 }

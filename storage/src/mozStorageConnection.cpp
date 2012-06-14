@@ -15,6 +15,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/Attributes.h"
 
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageCompletionCallback.h"
@@ -379,7 +380,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 //// Memory Reporting
 
-class StorageMemoryReporter : public nsIMemoryReporter
+class StorageMemoryReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
   NS_DECL_ISUPPORTS

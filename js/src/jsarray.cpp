@@ -3737,11 +3737,8 @@ static JS_ALWAYS_INLINE JSObject *
 NewArray(JSContext *cx, uint32_t length, JSObject *proto_)
 {
     gc::AllocKind kind = GuessArrayGCKind(length);
-
-#ifdef JS_THREADSAFE
     JS_ASSERT(CanBeFinalizedInBackground(kind, &ArrayClass));
     kind = GetBackgroundAllocKind(kind);
-#endif
 
     GlobalObject *parent_ = GetCurrentGlobal(cx);
 

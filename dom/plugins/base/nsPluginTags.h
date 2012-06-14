@@ -25,7 +25,7 @@ struct nsPluginInfo;
 #define NS_PLUGIN_FLAG_ENABLED      0x0001    // is this plugin enabled?
 // no longer used                   0x0002    // reuse only if regenerating pluginreg.dat
 #define NS_PLUGIN_FLAG_FROMCACHE    0x0004    // this plugintag info was loaded from cache
-#define NS_PLUGIN_FLAG_UNWANTED     0x0008    // this is an unwanted plugin
+// no longer used                   0x0008    // reuse only if regenerating pluginreg.dat
 #define NS_PLUGIN_FLAG_BLOCKLISTED  0x0010    // this is a blocklisted plugin
 
 // A linked-list of plugin information that is used for instantiating plugins
@@ -62,7 +62,6 @@ public:
   void UnMark(PRUint32 mask);
   bool HasFlag(PRUint32 flag);
   PRUint32 Flags();
-  bool Equals(nsPluginTag* aPluginTag);
   bool IsEnabled();
   void RegisterWithCategoryManager(bool aOverrideInternalTypes,
                                    nsRegisterType aType = ePluginRegister);
