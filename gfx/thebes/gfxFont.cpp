@@ -1088,8 +1088,8 @@ gfxFontCache::MemoryReporter::GetExplicitNonHeap(PRInt64* aAmount)
 
 // Observer for the memory-pressure notification, to trigger
 // flushing of the shaped-word caches
-class MemoryPressureObserver : public nsIObserver,
-                               public nsSupportsWeakReference
+class MemoryPressureObserver MOZ_FINAL : public nsIObserver,
+                                         public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS

@@ -5409,20 +5409,23 @@ scaled_bilinear_scanline_sse2_8888_8888_SRC (uint32_t *       dst,
 
 }
 
+/* Add extra NULL argument to the existing bilinear fast paths to indicate
+ * that we don't need two-pass processing */
+
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_cover_SRC,
-			       scaled_bilinear_scanline_sse2_8888_8888_SRC,
+			       scaled_bilinear_scanline_sse2_8888_8888_SRC, NULL,
 			       uint32_t, uint32_t, uint32_t,
 			       COVER, FLAG_NONE)
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_pad_SRC,
-			       scaled_bilinear_scanline_sse2_8888_8888_SRC,
+			       scaled_bilinear_scanline_sse2_8888_8888_SRC, NULL,
 			       uint32_t, uint32_t, uint32_t,
 			       PAD, FLAG_NONE)
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_none_SRC,
-			       scaled_bilinear_scanline_sse2_8888_8888_SRC,
+			       scaled_bilinear_scanline_sse2_8888_8888_SRC, NULL,
 			       uint32_t, uint32_t, uint32_t,
 			       NONE, FLAG_NONE)
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_normal_SRC,
-			       scaled_bilinear_scanline_sse2_8888_8888_SRC,
+			       scaled_bilinear_scanline_sse2_8888_8888_SRC, NULL,
 			       uint32_t, uint32_t, uint32_t,
 			       NORMAL, FLAG_NONE)
 
@@ -5510,21 +5513,55 @@ scaled_bilinear_scanline_sse2_8888_8888_OVER (uint32_t *       dst,
 }
 
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_cover_OVER,
-			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_OVER, NULL,
 			       uint32_t, uint32_t, uint32_t,
 			       COVER, FLAG_NONE)
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_pad_OVER,
-			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_OVER, NULL,
 			       uint32_t, uint32_t, uint32_t,
 			       PAD, FLAG_NONE)
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_none_OVER,
-			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_OVER, NULL,
 			       uint32_t, uint32_t, uint32_t,
 			       NONE, FLAG_NONE)
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8888_normal_OVER,
-			       scaled_bilinear_scanline_sse2_8888_8888_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_OVER, NULL,
 			       uint32_t, uint32_t, uint32_t,
 			       NORMAL, FLAG_NONE)
+
+
+/* An example of SSE2 two-stage bilinear_over_8888_0565 fast path, which is implemented
+   as scaled_bilinear_scanline_sse2_8888_8888_SRC + op_bilinear_over_8888_0565 */
+
+void op_bilinear_over_8888_0565(uint16_t *dst, const uint32_t *mask, const uint32_t *src, int width)
+{
+    /* Note: this is not really fast and should be based on 8 pixel loop from sse2_composite_over_8888_0565 */
+    while (--width >= 0)
+    {
+	*dst = composite_over_8888_0565pixel (*src, *dst);
+	src++;
+	dst++;
+    }
+}
+
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_0565_cover_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_SRC, op_bilinear_over_8888_0565,
+			       uint32_t, uint32_t, uint16_t,
+			       COVER, FLAG_NONE)
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_0565_pad_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_SRC, op_bilinear_over_8888_0565,
+			       uint32_t, uint32_t, uint16_t,
+			       PAD, FLAG_NONE)
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_0565_none_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_SRC, op_bilinear_over_8888_0565,
+			       uint32_t, uint32_t, uint16_t,
+			       NONE, FLAG_NONE)
+FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_0565_normal_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8888_SRC, op_bilinear_over_8888_0565,
+			       uint32_t, uint32_t, uint16_t,
+			       NORMAL, FLAG_NONE)
+
+/*****************************/
 
 static force_inline void
 scaled_bilinear_scanline_sse2_8888_8_8888_OVER (uint32_t *       dst,
@@ -5674,19 +5711,19 @@ scaled_bilinear_scanline_sse2_8888_8_8888_OVER (uint32_t *       dst,
 }
 
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8_8888_cover_OVER,
-			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER, NULL,
 			       uint32_t, uint8_t, uint32_t,
 			       COVER, FLAG_HAVE_NON_SOLID_MASK)
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8_8888_pad_OVER,
-			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER, NULL,
 			       uint32_t, uint8_t, uint32_t,
 			       PAD, FLAG_HAVE_NON_SOLID_MASK)
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8_8888_none_OVER,
-			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER, NULL,
 			       uint32_t, uint8_t, uint32_t,
 			       NONE, FLAG_HAVE_NON_SOLID_MASK)
 FAST_BILINEAR_MAINLOOP_COMMON (sse2_8888_8_8888_normal_OVER,
-			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER,
+			       scaled_bilinear_scanline_sse2_8888_8_8888_OVER, NULL,
 			       uint32_t, uint8_t, uint32_t,
 			       NORMAL, FLAG_HAVE_NON_SOLID_MASK)
 
@@ -5812,6 +5849,11 @@ static const pixman_fast_path_t sse2_fast_paths[] =
     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8b8g8r8, x8b8g8r8, sse2_8888_8_8888),
     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8r8g8b8, a8r8g8b8, sse2_8888_8_8888),
     SIMPLE_BILINEAR_A8_MASK_FAST_PATH (OVER, a8b8g8r8, a8b8g8r8, sse2_8888_8_8888),
+
+    /* and here the needed entries are added to the fast path table */
+
+    SIMPLE_BILINEAR_FAST_PATH (OVER, a8r8g8b8, r5g6b5, sse2_8888_0565),
+    SIMPLE_BILINEAR_FAST_PATH (OVER, a8b8g8r8, b5g6r5, sse2_8888_0565),
 
     { PIXMAN_OP_NONE },
 };

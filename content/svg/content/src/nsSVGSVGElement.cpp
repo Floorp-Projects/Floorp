@@ -733,7 +733,7 @@ nsSVGSVGElement::SetZoomAndPan(PRUint16 aZoomAndPan)
     return NS_OK;
   }
 
-  return NS_ERROR_DOM_SVG_INVALID_VALUE_ERR;
+  return NS_ERROR_RANGE_ERR;
 }
 
 //----------------------------------------------------------------------

@@ -249,7 +249,7 @@ AndroidGeckoLayerClient::InitGeckoLayerClientClass(JNIEnv *jEnv)
     jGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
 
     jSetFirstPaintViewport = getMethod("setFirstPaintViewport", "(FFFFFFFFFFF)V");
-    jSetPageRect = getMethod("setPageRect", "(FFFFFFFFF)V");
+    jSetPageRect = getMethod("setPageRect", "(FFFF)V");
     jSyncViewportInfoMethod = getMethod("syncViewportInfo",
                                         "(IIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;");
     jCreateFrameMethod = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
@@ -665,7 +665,7 @@ AndroidGeckoLayerClient::SetFirstPaintViewport(const nsIntPoint& aOffset, float 
 }
 
 void
-AndroidGeckoLayerClient::SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
+AndroidGeckoLayerClient::SetPageRect(const gfx::Rect& aCssPageRect)
 {
     NS_ASSERTION(!isNull(), "SetPageRect called on null layer client!");
     JNIEnv *env = GetJNIForThread();    // this is called on the compositor thread
@@ -673,8 +673,7 @@ AndroidGeckoLayerClient::SetPageRect(float aZoom, const nsIntRect& aPageRect, co
         return;
 
     AutoLocalJNIFrame jniFrame(env, 0);
-    return env->CallVoidMethod(wrapped_obj, jSetPageRect, aZoom,
-                               (float)aPageRect.x, (float)aPageRect.y, (float)aPageRect.XMost(), (float)aPageRect.YMost(),
+    return env->CallVoidMethod(wrapped_obj, jSetPageRect,
                                aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost());
 }
 

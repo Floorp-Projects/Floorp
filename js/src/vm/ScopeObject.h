@@ -44,6 +44,17 @@ ScopeCoordinateBlockChain(JSScript *script, jsbytecode *pc);
 extern PropertyName *
 ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc);
 
+/*
+ * The 'slot' of a ScopeCoordinate is relative to the scope object. Type
+ * inference and jit compilation are instead relative to frame values (even if
+ * these values are aliased and thus never accessed, the the index of the
+ * variable is used to refer to the jit/inference information). This function
+ * maps from the ScopeCoordinate space to the StackFrame variable space.
+ */
+enum FrameVarType { FrameVar_Local, FrameVar_Arg };
+extern FrameVarType
+ScopeCoordinateToFrameVar(JSScript *script, jsbytecode *pc, unsigned *index);
+
 /*****************************************************************************/
 
 /*
@@ -190,11 +201,7 @@ class WithObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 3;
-#ifdef JS_THREADSAFE
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
-#else
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
-#endif
 
     static WithObject *
     create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth);
@@ -210,11 +217,7 @@ class BlockObject : public NestedScopeObject
 {
   public:
     static const unsigned RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
-#ifdef JS_THREADSAFE
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
-#else
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
-#endif
 
     /* Return the number of variables associated with this block. */
     inline uint32_t slotCount() const;

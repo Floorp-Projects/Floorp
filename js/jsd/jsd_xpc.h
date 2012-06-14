@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nspr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 
 // #if defined(DEBUG_rginda_l)
 // #   define DEBUG_verbose
@@ -33,7 +34,7 @@ struct PCMapEntry {
  * reflected jsd data structures
  *******************************************************************************/
 
-class jsdObject : public jsdIObject
+class jsdObject MOZ_FINAL : public jsdIObject
 {
   public:
     NS_DECL_ISUPPORTS

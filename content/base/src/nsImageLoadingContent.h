@@ -286,6 +286,12 @@ protected:
   bool* GetRegisteredFlagForRequest(imgIRequest* aRequest);
 
   /**
+   * Reset animation of the current request if |mNewRequestsWillNeedAnimationReset|
+   * was true when the request was prepared.
+   */
+  void ResetAnimationIfNeeded();
+
+  /**
    * Static helper method to tell us if we have the size of a request. The
    * image may be null.
    */
