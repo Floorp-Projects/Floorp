@@ -34,7 +34,6 @@
                      android:background="@drawable/tabs_button"
                      android:gravity="center_vertical"
                      android:src="@drawable/tabs_level"
-                     android:paddingTop="2.5dip"
                      android:paddingLeft="31dip"
                      android:paddingRight="9dip"/>
 
@@ -42,7 +41,7 @@
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="38.5dip"
                      android:layout_height="wrap_content"
-                     android:layout_marginTop="2.5dp"
+                     android:layout_marginTop="4.5dp"
                      android:layout_alignRight="@id/tabs"
                      android:gravity="center_horizontal"/>
 
