@@ -8,10 +8,10 @@
 #include <stdlib.h>
 #ifdef XP_WIN
 #include <windows.h>
+#define snprintf _snprintf
+#define strcasecmp _stricmp
 #endif
 
-#include "nsXULAppAPI.h"
-#include "nsXPCOMGlue.h"
 #include "nsAppRunner.h"
 #include "nsIFile.h"
 #include "nsIXULAppInstall.h"
