@@ -92,6 +92,8 @@ struct BytecodeEmitter
 
     Parser          *parser;        /* the parser */
 
+    StackFrame      *const callerFrame;  /* scripted caller frame for eval and dbgapi */
+
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
     unsigned        firstLine;      /* first line, for JSScript::initFromEmitter */
 
@@ -127,7 +129,8 @@ struct BytecodeEmitter
 
     bool            inForInit:1;        /* emitting init expr of for; exclude 'in' */
 
-    BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script, unsigned lineno);
+    BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script,
+                    StackFrame *callerFrame, unsigned lineno);
     bool init();
 
     /*

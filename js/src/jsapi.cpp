@@ -4986,7 +4986,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *obj, c
     {
         Parser parser(cx, /* prin = */ NULL, /* originPrin = */ NULL,
                       chars, length, /* filename = */ NULL, /* lineno = */ 1, cx->findVersion(), 
-                      /* cfp = */ NULL, /* foldConstants = */ true, /* compileAndGo = */ false);
+                      /* foldConstants = */ true, /* compileAndGo = */ false);
         if (parser.init()) {
             older = JS_SetErrorReporter(cx, NULL);
             if (!parser.parse(obj) &&

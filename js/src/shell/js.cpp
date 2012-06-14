@@ -3272,7 +3272,7 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
     js::Parser parser(cx, /* prin = */ NULL, /* originPrin = */ NULL,
                       JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
                       "<string>", /* lineno = */ 1, cx->findVersion(),
-                      /* cfp = */ NULL, /* foldConstants = */ true, /* compileAndGo = */ false);
+                      /* foldConstants = */ true, /* compileAndGo = */ false);
     if (!parser.init())
         return false;
 
