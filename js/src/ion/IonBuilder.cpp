@@ -918,6 +918,13 @@ IonBuilder::inspectOpcode(JSOp op)
         current->pick(-GET_INT8(pc));
         return true;
 
+      case JSOP_GETALIASEDVAR:
+      case JSOP_CALLALIASEDVAR:
+        return jsop_getaliasedvar(ScopeCoordinate(pc));
+
+      case JSOP_SETALIASEDVAR:
+        return jsop_setaliasedvar(ScopeCoordinate(pc));
+
       case JSOP_UINT24:
         return pushConstant(Int32Value(GET_UINT24(pc)));
 
@@ -4765,6 +4772,95 @@ IonBuilder::jsop_iterend()
 
     return resumeAfter(ins);
 }
+
+MDefinition *
+IonBuilder::walkScopeChain(unsigned hops)
+{
+    MDefinition *scope = current->getSlot(info().scopeChainSlot());
+
+    for (unsigned i = 0; i < hops; i++) {
+        MInstruction *ins = MEnclosingScope::New(scope);
+        current->add(ins);
+        scope = ins;
+    }
+
+    return scope;
+}
+
+static inline bool
+InDynamicScopeSlots(JSScript *script, jsbytecode *pc, unsigned *slot)
+{
+    if (ScopeCoordinateBlockChain(script, pc)) {
+         // Block objects use a fixed AllocKind which means an invariant number
+         // of fixed slots. Any slot below the fixed slot count is inline, any
+         // slot over is in the dynamic slots.
+        uint32 nfixed = gc::GetGCKindSlots(BlockObject::FINALIZE_KIND);
+        if (nfixed <= *slot) {
+            *slot -= nfixed;
+            return true;
+        }
+    } else {
+         // Using special-case hackery in Shape::getChildBinding, CallObject
+         // slots are either altogether in fixed slots or altogether in dynamic
+         // slots (by having numFixed == RESERVED_SLOTS).
+         if (script->bindings.lastShape()->numFixedSlots() <= *slot) {
+             *slot -= ScopeObject::CALL_BLOCK_RESERVED_SLOTS;
+             return true;
+         }
+    }
+    return false;
+}
+
+bool
+IonBuilder::jsop_getaliasedvar(ScopeCoordinate sc)
+{
+    MIRType type = oracle->aliasedVarType(script, pc);
+
+    if (type == MIRType_Null || type == MIRType_Undefined) {
+        if (type == MIRType_Null)
+            return pushConstant(NullValue());
+        return pushConstant(UndefinedValue());
+    }
+
+    MDefinition *obj = walkScopeChain(sc.hops);
+    unsigned slot = ScopeObject::CALL_BLOCK_RESERVED_SLOTS + sc.slot;
+
+    MInstruction *load;
+    if (InDynamicScopeSlots(script, pc, &slot)) {
+        MInstruction *slots = MSlots::New(obj);
+        current->add(slots);
+
+        load = MLoadSlot::New(slots, slot);
+    } else {
+        load = MLoadFixedSlot::New(obj, slot);
+    }
+    load->setResultType(type);
+    current->add(load);
+    current->push(load);
+
+    return true;
+}
+
+bool
+IonBuilder::jsop_setaliasedvar(ScopeCoordinate sc)
+{
+    MDefinition *rval = current->peek(-1);
+    MDefinition *obj = walkScopeChain(sc.hops);
+    unsigned slot = ScopeObject::CALL_BLOCK_RESERVED_SLOTS + sc.slot;
+
+    MInstruction *store;
+    if (InDynamicScopeSlots(script, pc, &slot)) {
+        MInstruction *slots = MSlots::New(obj);
+        current->add(slots);
+        store = MStoreSlot::NewBarriered(slots, slot, rval);
+    } else {
+        store = MStoreFixedSlot::NewBarriered(obj, slot, rval);
+    }
+
+    current->add(store);
+    return resumeAfter(store);
+}
+
 
 bool
 IonBuilder::jsop_instanceof()
