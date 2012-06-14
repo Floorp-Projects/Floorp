@@ -161,11 +161,11 @@ public class Tabs implements GeckoEventListener {
 
         int tabId = tab.getId();
         removeTab(tabId);
+        tab.onDestroy();
 
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() { 
             public void run() {
                 notifyListeners(tab, TabEvents.CLOSED);
-                tab.onDestroy();
             }
         });
 
