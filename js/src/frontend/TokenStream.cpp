@@ -395,45 +395,63 @@ TokenStream::TokenBuf::findEOLMax(const jschar *p, size_t max)
 bool
 TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned errorNumber, va_list ap)
 {
-    JSErrorReport report;
-    char *message;
-    jschar *windowChars;
-    char *windowBytes;
-    bool warning;
-    JSBool ok;
-    const TokenPos *tp;
-    unsigned i;
+    class ReportManager
+    {
+        JSContext *cx;
+        JSErrorReport *report;
+        bool hasCharArgs;
+
+      public:
+        char *message;
+
+        ReportManager(JSContext *cx, JSErrorReport *report, bool hasCharArgs)
+          : cx(cx), report(report), hasCharArgs(hasCharArgs), message(NULL)
+        {}
+
+        ~ReportManager() {
+            cx->free_((void*)report->uclinebuf);
+            cx->free_((void*)report->linebuf);
+            cx->free_(message);
+            cx->free_((void*)report->ucmessage);
+
+            if (report->messageArgs) {
+                if (hasCharArgs) {
+                    unsigned i = 0;
+                    while (report->messageArgs[i])
+                        cx->free_((void *)report->messageArgs[i++]);
+                }
+                cx->free_((void *)report->messageArgs);
+            }
+        }
+    };
 
     if (JSREPORT_IS_STRICT(flags) && !cx->hasStrictOption())
         return true;
 
-    warning = JSREPORT_IS_WARNING(flags);
+    bool warning = JSREPORT_IS_WARNING(flags);
     if (warning && cx->hasWErrorOption()) {
         flags &= ~JSREPORT_WARNING;
         warning = false;
     }
 
+    const TokenPos *const tp = pn ? &pn->pn_pos : &currentToken().pos;
+
+    JSErrorReport report;
     PodZero(&report);
     report.flags = flags;
     report.errorNumber = errorNumber;
-    message = NULL;
-    windowChars = NULL;
-    windowBytes = NULL;
-
-    MUST_FLOW_THROUGH("out");
-    ok = js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL,
-                                 errorNumber, &message, &report,
-                                 !(flags & JSREPORT_UC), ap);
-    if (!ok) {
-        warning = false;
-        goto out;
-    }
-
     report.filename = filename;
     report.originPrincipals = originPrincipals;
-
-    tp = pn ? &pn->pn_pos : &currentToken().pos;
     report.lineno = tp->begin.lineno;
+
+    bool hasCharArgs = !(flags & JSREPORT_UC);
+
+    ReportManager mgr(cx, &report, hasCharArgs);
+
+    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL, errorNumber, &mgr.message, &report,
+                                 hasCharArgs, ap)) {
+        return false;
+    }
 
     /*
      * Given a token, T, that we want to complain about: if T's (starting)
@@ -469,25 +487,17 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
 
         // Create the windowed strings.
         StringBuffer windowBuf(cx);
-        if (!windowBuf.append(windowBase, windowLength) || !windowBuf.append((jschar)0)) {
-            warning = false;
-            goto out;
-        }
-        windowChars = windowBuf.extractWellSized();
-        if (!windowChars) {
-            warning = false;
-            goto out;
-        }
-        windowBytes = DeflateString(cx, windowChars, windowLength);
-        if (!windowBytes) {
-            warning = false;
-            goto out;
-        }
+        if (!windowBuf.append(windowBase, windowLength) || !windowBuf.append((jschar)0))
+            return false;
 
         // Unicode and char versions of the window into the offending source
         // line, without final \n.
-        report.linebuf = windowBytes;
-        report.uclinebuf = windowChars;
+        report.uclinebuf = windowBuf.extractWellSized();
+        if (!report.uclinebuf)
+            return false;
+        report.linebuf = DeflateString(cx, report.uclinebuf, windowLength);
+        if (!report.linebuf)
+            return false;
 
         // The lineno check above means we should only see single-line tokens here.
         JS_ASSERT(tp->begin.lineno == tp->end.lineno);
@@ -508,37 +518,20 @@ TokenStream::reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned 
      * returns false, the top-level reporter will eventually receive the
      * uncaught exception report.
      */
-    if (!js_ErrorToException(cx, message, &report, NULL, NULL)) {
+    if (!js_ErrorToException(cx, mgr.message, &report, NULL, NULL)) {
         /*
          * If debugErrorHook is present then we give it a chance to veto
          * sending the error on to the regular error reporter.
          */
         bool reportError = true;
-        if (JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook)
-            reportError = hook(cx, message, &report, cx->runtime->debugHooks.debugErrorHookData);
+        if (JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook) {
+            reportError = hook(cx, mgr.message, &report,
+                               cx->runtime->debugHooks.debugErrorHookData);
+        }
 
         /* Report the error */
         if (reportError && cx->errorReporter)
-            cx->errorReporter(cx, message, &report);
-    }
-
-  out:
-    if (windowBytes)
-        cx->free_(windowBytes);
-    if (windowChars)
-        cx->free_(windowChars);
-    if (message)
-        cx->free_(message);
-    if (report.ucmessage)
-        cx->free_((void *)report.ucmessage);
-
-    if (report.messageArgs) {
-        if (!(flags & JSREPORT_UC)) {
-            i = 0;
-            while (report.messageArgs[i])
-                cx->free_((void *)report.messageArgs[i++]);
-        }
-        cx->free_((void *)report.messageArgs);
+            cx->errorReporter(cx, mgr.message, &report);
     }
 
     return warning;
