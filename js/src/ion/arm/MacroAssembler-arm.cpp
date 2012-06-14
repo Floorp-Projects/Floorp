@@ -1861,6 +1861,13 @@ MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const Register &rhs)
 }
 
 void
+MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const ImmWord &rhs)
+{
+    loadPtr(lhs, ScratchRegister);
+    ma_cmp(ScratchRegister, Imm32(rhs.value));
+}
+
+void
 MacroAssemblerARMCompat::setStackArg(const Register &reg, uint32 arg)
 {
     ma_dataTransferN(IsStore, 32, true, sp, Imm32(arg * STACK_SLOT_SIZE), reg);
