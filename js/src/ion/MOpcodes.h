@@ -134,8 +134,7 @@ namespace ion {
     _(LoadFixedSlot)                                                        \
     _(StoreFixedSlot)                                                       \
     _(CallGetProperty)                                                      \
-    _(CallGetName)                                                          \
-    _(CallGetNameTypeOf)                                                    \
+    _(GetNameCache)                                                         \
     _(CallGetElement)                                                       \
     _(CallSetElement)                                                       \
     _(CallSetProperty)                                                      \

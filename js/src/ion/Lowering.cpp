@@ -1371,6 +1371,17 @@ LIRGenerator::visitStoreFixedSlot(MStoreFixedSlot *ins)
 }
 
 bool
+LIRGenerator::visitGetNameCache(MGetNameCache *ins)
+{
+    JS_ASSERT(ins->scopeObj()->type() == MIRType_Object);
+
+    LGetNameCache *lir = new LGetNameCache(useRegister(ins->scopeObj()));
+    if (!defineBox(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
 {
     JS_ASSERT(ins->object()->type() == MIRType_Object);
@@ -1433,22 +1444,6 @@ LIRGenerator::visitCallGetProperty(MCallGetProperty *ins)
     LCallGetProperty *lir = new LCallGetProperty();
     if (!useBox(lir, LCallGetProperty::Value, ins->value()))
         return false;
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
-}
-
-bool
-LIRGenerator::visitCallGetName(MCallGetName *ins)
-{
-    LCallGetName *lir = new LCallGetName();
-    lir->setOperand(0, useRegister(ins->getOperand(0)));
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
-}
-
-bool
-LIRGenerator::visitCallGetNameTypeOf(MCallGetNameTypeOf *ins)
-{
-    LCallGetNameTypeOf *lir = new LCallGetNameTypeOf();
-    lir->setOperand(0, useRegister(ins->getOperand(0)));
     return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
