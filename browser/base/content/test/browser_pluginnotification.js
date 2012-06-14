@@ -213,21 +213,6 @@ function test8() {
   prepareTest(test9a, gTestRoot + "plugin_test2.html");
 }
 
-function waitForCondition(condition, nextTest, errorMsg) {
-  var tries = 0;
-  var interval = setInterval(function() {
-    if (tries >= 500) {
-      ok(false, errorMsg);
-      moveOn();
-    }
-    if (condition()) {
-      moveOn();
-    }
-    tries++;
-  }, 10);
-  var moveOn = function() { clearInterval(interval); nextTest(); };
-}
-
 // Tests that activating one click-to-play plugin will activate only that plugin (part 1/3)
 function test9a() {
   var notificationBox = gBrowser.getNotificationBox(gTestBrowser);
