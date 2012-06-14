@@ -46,7 +46,6 @@ XPIDLSRCS	= \
 		nsIDOMSVGElement.idl \
 		nsIDOMSVGEllipseElement.idl \
 		nsIDOMSVGEvent.idl \
-		nsIDOMSVGException.idl \
 		nsIDOMSVGFilterElement.idl \
 		nsIDOMSVGFilters.idl \
 		nsIDOMSVGFitToViewBox.idl \

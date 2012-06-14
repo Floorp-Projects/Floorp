@@ -84,7 +84,7 @@ protected:
   virtual void Composite();
   virtual void ScheduleComposition();
   virtual void SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
-  virtual void SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect);
+  virtual void SetPageRect(const gfx::Rect& aCssPageRect);
   virtual void SyncViewportInfo(const nsIntRect& aDisplayPort, float aDisplayResolution, bool aLayersUpdated,
                                 nsIntPoint& aScrollOffset, float& aScaleX, float& aScaleY);
   void SetEGLSurfaceSize(int width, int height);

@@ -315,7 +315,6 @@
 #include "nsIXULTemplateBuilder.h"
 #include "nsTreeColumns.h"
 #endif
-#include "nsIDOMXPathException.h"
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMNSXPathExpression.h"
 #include "nsIDOMXPathNSResolver.h"
@@ -358,7 +357,6 @@
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGEllipseElement.h"
 #include "nsIDOMSVGEvent.h"
-#include "nsIDOMSVGException.h"
 #include "nsIDOMSVGFilterElement.h"
 #include "nsIDOMSVGFilters.h"
 #include "nsIDOMSVGFitToViewBox.h"
@@ -1242,8 +1240,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(SVGException, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGLength, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGLengthList, nsSVGLengthListSH,
@@ -1335,8 +1331,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(XPathEvaluator, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XPathException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XPathExpression, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3787,11 +3781,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(SVGException, nsIDOMSVGException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIException)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(SVGLength, nsIDOMSVGLength)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLength)
   DOM_CLASSINFO_MAP_END
@@ -3976,11 +3965,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(XPathEvaluator, nsIDOMXPathEvaluator)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathEvaluator)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(XPathException, nsIDOMXPathException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(XPathExpression, nsIDOMXPathExpression)
