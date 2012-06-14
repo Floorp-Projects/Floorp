@@ -84,15 +84,6 @@ abstract public class BrowserApp extends GeckoApp
                     maybeCancelFaviconLoad(tab);
                 }
                 break;
-            case START:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    invalidateOptionsMenu();
-                }
-            case STOP:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    invalidateOptionsMenu();
-                }
-                break;
             case SELECTED:
                 if ("about:home".equals(tab.getURL()))
                     showAboutHome();
