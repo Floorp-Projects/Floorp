@@ -147,6 +147,7 @@ namespace ion {
     _(StringLength)                                                         \
     _(Floor)                                                                \
     _(Round)                                                                \
+    _(InstanceOf)                                                           \
     _(InterruptCheck)
 
 // Forward declarations of MIR types.

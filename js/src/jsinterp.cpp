@@ -512,12 +512,12 @@ js::Execute(JSContext *cx, JSScript *script, JSObject &scopeChainArg, Value *rva
                          NULL /* evalInFrame */, rval);
 }
 
-JSBool
-js::HasInstance(JSContext *cx, HandleObject obj, const Value *v, JSBool *bp)
+bool
+js::HasInstance(JSContext *cx, HandleObject obj, const Value &v, JSBool *bp)
 {
     Class *clasp = obj->getClass();
     if (clasp->hasInstance)
-        return clasp->hasInstance(cx, obj, v, bp);
+        return clasp->hasInstance(cx, obj, &v, bp);
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                         JSDVG_SEARCH_STACK, ObjectValue(*obj), NULL);
     return JS_FALSE;
@@ -3368,7 +3368,7 @@ BEGIN_CASE(JSOP_INSTANCEOF)
     obj = &rref.toObject();
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!HasInstance(cx, obj, &lref, &cond))
+    if (!HasInstance(cx, obj, lref, &cond))
         goto error;
     regs.sp--;
     regs.sp[-1].setBoolean(cond);
