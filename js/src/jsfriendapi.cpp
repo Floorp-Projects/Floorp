@@ -499,6 +499,8 @@ js_DumpObject(JSObject *obj)
     obj->dump();
 }
 
+#endif
+
 struct DumpingChildInfo {
     void *node;
     JSGCTraceKind kind;
@@ -588,8 +590,8 @@ js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
 
     while (!dtrc.nodes.empty()) {
         DumpingChildInfo dci = dtrc.nodes.popCopy();
-        JS_PrintTraceThingInfo(dtrc.buffer, sizeof(dtrc.buffer),
-                               &dtrc, dci.node, dci.kind, JS_TRUE);
+        JS_GetTraceThingInfo(dtrc.buffer, sizeof(dtrc.buffer),
+                             &dtrc, dci.node, dci.kind, JS_TRUE);
         fprintf(fp, "%p %c %s\n", dci.node, MarkDescriptor(dci.node), dtrc.buffer);
         JS_TraceChildren(&dtrc, dci.node, dci.kind);
     }
@@ -597,8 +599,6 @@ js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
     dtrc.visited.finish();
     fflush(dtrc.output);
 }
-
-#endif
 
 namespace js {
 

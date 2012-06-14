@@ -1343,7 +1343,6 @@ public:
 
         ++gLogCounter;
 
-#ifdef DEBUG
         // Dump the JS heap.
         char gcname[MAXPATHLEN] = {'\0'};
         sprintf(gcname, "%s%sgc-edges-%d.%d.log", basename,
@@ -1355,7 +1354,6 @@ public:
             return NS_ERROR_FAILURE;
         xpc::DumpJSHeap(gcDumpFile);
         fclose(gcDumpFile);
-#endif
 
         // Open a file for dumping the CC graph.
         sprintf(ccname, "%s%scc-edges-%d.%d.log", basename,
@@ -1369,9 +1367,7 @@ public:
             do_GetService(NS_CONSOLESERVICE_CONTRACTID);
         if (cs) {
             cs->LogStringMessage(NS_ConvertUTF8toUTF16(ccname).get());
-#ifdef DEBUG
             cs->LogStringMessage(NS_ConvertUTF8toUTF16(gcname).get());
-#endif
         }
 
         return NS_OK;
