@@ -113,20 +113,15 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!script)
         return NULL;
 
-    BytecodeEmitter bce(&parser, &sc, script, callerFrame, lineno);
+    // We can specialize a bit for the given scope chain if that scope chain is the global object.
+    JSObject *globalScope = scopeChain && scopeChain == &scopeChain->global() ? scopeChain : NULL;
+    JS_ASSERT_IF(globalScope, globalScope->isNative());
+    JS_ASSERT_IF(globalScope, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalScope->getClass()));
+
+    BytecodeEmitter bce(/* parent = */ NULL, &parser, &sc, script, callerFrame, !!globalScope,
+                        lineno);
     if (!bce.init())
         return NULL;
-
-    // We can specialize a bit for the given scope chain if that scope chain is the global object.
-    JSObject *globalObj = scopeChain && scopeChain == &scopeChain->global()
-                          ? &scopeChain->global()
-                          : NULL;
-
-    JS_ASSERT_IF(globalObj, globalObj->isNative());
-    JS_ASSERT_IF(globalObj, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalObj->getClass()));
-
-    GlobalScope globalScope(cx, globalObj);
-    bce.globalScope = &globalScope;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)
@@ -281,7 +276,8 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         return false;
 
     StackFrame *nullCallerFrame = NULL;
-    BytecodeEmitter funbce(&parser, &funsc, script, nullCallerFrame, lineno);
+    BytecodeEmitter funbce(/* parent = */ NULL, &parser, &funsc, script, nullCallerFrame,
+                           /* hasGlobalScope = */ false, lineno);
     if (!funbce.init())
         return false;
 
