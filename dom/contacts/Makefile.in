@@ -19,6 +19,9 @@ MODULE         = dom
 LIBRARY_NAME   = jsdomcontacts_s
 LIBXUL_LIBRARY = 1
 
+XPIDL_MODULE   = dom_contacts
+GRE_MODULE     = 1
+
 EXTRA_COMPONENTS =        \
   ContactManager.js       \
   ContactManager.manifest \
