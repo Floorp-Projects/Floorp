@@ -1643,6 +1643,7 @@ GK_ATOM(onMozRotateGestureUpdate, "onMozRotateGestureUpdate")
 GK_ATOM(onMozRotateGesture, "onMozRotateGesture")
 GK_ATOM(onMozTapGesture, "onMozTapGesture")
 GK_ATOM(onMozPressTapGesture, "onMozPressTapGesture")
+GK_ATOM(onMozEdgeUIGesture, "onMozEdgeUIGesture")
 
 // Touch events
 GK_ATOM(onMozTouchDown, "onMozTouchDown")

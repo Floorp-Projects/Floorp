@@ -1005,7 +1005,8 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
                                          float aY,
                                          PRUint32 aDirection,
                                          PRFloat64 aDelta,
-                                         PRInt32 aModifiers)
+                                         PRInt32 aModifiers,
+                                         PRUint32 aClickCount)
 {
   if (!IsUniversalXPConnectCapable()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -1036,11 +1037,14 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
     msg = NS_SIMPLE_GESTURE_TAP;
   else if (aType.EqualsLiteral("MozPressTapGesture"))
     msg = NS_SIMPLE_GESTURE_PRESSTAP;
+  else if (aType.EqualsLiteral("MozEdgeUIGesture"))
+    msg = NS_SIMPLE_GESTURE_EDGEUI;
   else
     return NS_ERROR_FAILURE;
  
   nsSimpleGestureEvent event(true, msg, widget, aDirection, aDelta);
   event.modifiers = GetWidgetModifiers(aModifiers);
+  event.clickCount = aClickCount;
   event.time = PR_IntervalNow();
 
   nsPresContext* presContext = GetPresContext();
