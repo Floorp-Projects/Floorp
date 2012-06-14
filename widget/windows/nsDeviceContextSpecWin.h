@@ -12,6 +12,7 @@
 #include "nsIPrintSettings.h"
 #include "nsISupportsPrimitives.h"
 #include <windows.h>
+#include "mozilla/Attributes.h"
 
 class nsIWidget;
 
@@ -69,7 +70,7 @@ protected:
 //-------------------------------------------------------------------------
 // Printer Enumerator
 //-------------------------------------------------------------------------
-class nsPrinterEnumeratorWin : public nsIPrinterEnumerator
+class nsPrinterEnumeratorWin MOZ_FINAL : public nsIPrinterEnumerator
 {
 public:
   nsPrinterEnumeratorWin();
