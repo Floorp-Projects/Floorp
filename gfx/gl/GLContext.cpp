@@ -471,7 +471,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             };
 
             if (!LoadSymbols(&imageSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL supports ARB_sync without supplying its functions.");
+                NS_ERROR("GL supports OES_EGL_image without supplying its functions.");
 
                 MarkExtensionUnsupported(OES_EGL_image);
                 mSymbols.fImageTargetTexture2D = nsnull;
