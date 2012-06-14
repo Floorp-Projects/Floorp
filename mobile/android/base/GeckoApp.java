@@ -98,7 +98,7 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private GeckoProfile mProfile;
     public static boolean sIsGeckoReady = false;
-    public static int mOrientation;
+    private int mOrientation;
 
     private GeckoConnectivityReceiver mConnectivityReceiver;
     private GeckoBatteryManager mBatteryReceiver;
