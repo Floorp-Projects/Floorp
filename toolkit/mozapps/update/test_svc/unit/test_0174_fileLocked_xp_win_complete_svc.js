@@ -2,9 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File in use complete MAR file background patch apply success test */
+/* File locked complete MAR file background patch apply failure fallback test */
 
-const TEST_ID = "0184";
+const TEST_ID = "0174_svc";
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -19,7 +19,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "precomplete",
   relPathDir       : "",
   originalContents : null,
@@ -27,23 +27,23 @@ const TEST_FILES = [
   originalFile     : "data/partial_precomplete",
   compareFile      : "data/partial_precomplete"
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "searchpluginstext0",
   relPathDir       : "a/b/searchplugins/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
+  originalContents : "ShouldNotBeReplaced\n",
+  compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "searchpluginspng1.png",
   relPathDir       : "a/b/searchplugins/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/partial.png",
+  compareFile      : "data/partial.png"
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "searchpluginspng0.png",
   relPathDir       : "a/b/searchplugins/",
   originalContents : null,
@@ -51,7 +51,7 @@ const TEST_FILES = [
   originalFile     : "data/partial.png",
   compareFile      : "data/partial.png"
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "removed-files",
   relPathDir       : "a/b/",
   originalContents : null,
@@ -59,8 +59,7 @@ const TEST_FILES = [
   originalFile     : "data/partial_removed-files",
   compareFile      : "data/partial_removed-files"
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Not added for failed update (add-if)",
   fileName         : "extensions1text0",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
@@ -68,17 +67,15 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Not added for failed update (add-if)",
   fileName         : "extensions1png1.png",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : null,
+  compareFile      : null
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Not added for failed update (add-if)",
   fileName         : "extensions1png0.png",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
@@ -86,26 +83,23 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Not added for failed update (add-if)",
   fileName         : "extensions0text0",
   relPathDir       : "a/b/extensions/extensions0/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
+  originalContents : "ShouldNotBeReplaced\n",
+  compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Not added for failed update (add-if)",
   fileName         : "extensions0png1.png",
   relPathDir       : "a/b/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/partial.png",
+  compareFile      : "data/partial.png"
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Not added for failed update (add-if)",
   fileName         : "extensions0png0.png",
   relPathDir       : "a/b/extensions/extensions0/",
   originalContents : null,
@@ -113,116 +107,125 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "exe0.exe",
   relPathDir       : "a/b/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : HELPER_BIN_FILE,
-  compareFile      : HELPER_BIN_FILE
+  originalFile     : "data/partial.png",
+  compareFile      : "data/partial.png"
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "10text0",
   relPathDir       : "a/b/1/10/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
+  originalContents : "ShouldNotBeReplaced\n",
+  compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest (add) file in use",
+  description      : "Not added for failed update (add)",
   fileName         : "0exe0.exe",
   relPathDir       : "a/b/0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : HELPER_BIN_FILE,
-  compareFile      : HELPER_BIN_FILE
+  originalFile     : null,
+  compareFile      : null
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "00text1",
   relPathDir       : "a/b/0/00/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
+  originalContents : "ShouldNotBeReplaced\n",
+  compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "00text0",
   relPathDir       : "a/b/0/00/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
+  originalContents : "ShouldNotBeReplaced\n",
+  compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Not added for failed update (add)",
   fileName         : "00png0.png",
   relPathDir       : "a/b/0/00/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/partial.png",
+  compareFile      : "data/partial.png"
 }, {
-  description      : "Removed by precomplete (remove)",
+  description      : "Not removed for failed update (remove)",
   fileName         : "20text0",
   relPathDir       : "a/b/2/20/",
-  originalContents : "ToBeDeleted\n",
-  compareContents  : "ToBeDeleted\n",
+  originalContents : "ShouldNotBeDeleted\n",
+  compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Removed by precomplete (remove)",
+  description      : "Not removed for failed update (remove)",
   fileName         : "20png0.png",
   relPathDir       : "a/b/2/20/",
-  originalContents : "ToBeDeleted\n",
-  compareContents  : "ToBeDeleted\n",
+  originalContents : "ShouldNotBeDeleted\n",
+  compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
   compareFile      : null
 }];
 
 ADDITIONAL_TEST_DIRS = [
 {
-  description  : "Removed by precomplete (rmdir)",
+  description  : "Not removed for failed update (rmdir)",
   relPathDir   : "a/b/2/20/",
-  dirRemoved   : true
+  dirRemoved   : false
 }, {
-  description  : "Removed by precomplete (rmdir)",
+  description  : "Not removed for failed update (rmdir)",
   relPathDir   : "a/b/2/",
-  dirRemoved   : true
+  dirRemoved   : false
 }];
 
 function run_test() {
+  if (!shouldRunServiceTest()) {
+    return;
+  }
+
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
   gBackgroundUpdate = true;
   setupUpdaterTest(MAR_COMPLETE_FILE);
 
-  // Launch an existing file so it is in use during the update
-  let fileInUseBin = getApplyDirFile(TEST_FILES[14].relPathDir +
-                                     TEST_FILES[14].fileName);
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "40"];
-  let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
-                         createInstance(AUS_Ci.nsIProcess);
-  fileInUseProcess.init(fileInUseBin);
-  fileInUseProcess.run(false, args, args.length);
+  // Exclusively lock an existing file so it is in use during the update
+  let helperBin = do_get_file(HELPER_BIN_FILE);
+  let helperDestDir = getApplyDirFile("a/b/");
+  helperBin.copyTo(helperDestDir, HELPER_BIN_FILE);
+  helperBin = getApplyDirFile("a/b/" + HELPER_BIN_FILE);
+  // Strip off the first two directories so the path has to be from the helper's
+  // working directory.
+  let lockFileRelPath = TEST_FILES[3].relPathDir.split("/");
+  lockFileRelPath = lockFileRelPath.slice(2);
+  lockFileRelPath = lockFileRelPath.join("/") + "/" + TEST_FILES[3].fileName;
+  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "40", lockFileRelPath];
+  let lockFileProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                     createInstance(AUS_Ci.nsIProcess);
+  lockFileProcess.init(helperBin);
+  lockFileProcess.run(false, args, args.length);
 
   do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
 }
 
 function doUpdate() {
   // apply the complete mar
-  let exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "applying a complete mar");
-  do_check_eq(exitValue, 0);
+  runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED, checkUpdateApplied);
+}
 
-  logTestInfo("testing update.status should be " + STATE_APPLIED);
+function checkUpdateApplied() {
+  logTestInfo("testing update.status should be " + STATE_FAILED);
   let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir), STATE_APPLIED);
+  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
 
   // Now switch the application and its updated version
   gBackgroundUpdate = false;
   gSwitchApp = true;
-  gDisableReplaceFallback = true;
   exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for failure when " +
               "switching to the updated application");
@@ -232,14 +235,14 @@ function doUpdate() {
 }
 
 function checkUpdate() {
-  logTestInfo("testing update.status should be " + STATE_FAILED);
+  logTestInfo("testing update.status should be " + STATE_PENDING);
   let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
+  do_check_eq(readStatusFile(updatesDir), STATE_PENDING);
 
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
 
-  logTestInfo("testing tobedeleted directory does not exist");
+  logTestInfo("testing tobedeleted directory doesn't exist");
   let toBeDeletedDir = getApplyDirFile("tobedeleted", true);
   do_check_false(toBeDeletedDir.exists());
 
