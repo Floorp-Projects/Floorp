@@ -376,9 +376,10 @@ private:
     // Persistent HTTPS caching flag
     bool           mEnablePersistentHttpsCaching;
 
-    // For broadcasting the preference to not be tracked
+    // For broadcasting tracking preference
     bool           mDoNotTrackEnabled;
-    
+    PRUint8        mDoNotTrackValue;
+
     // Whether telemetry is reported or not
     bool           mTelemetryEnabled;
 
