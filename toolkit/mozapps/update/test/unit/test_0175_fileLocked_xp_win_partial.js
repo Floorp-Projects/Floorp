@@ -2,9 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File locked complete MAR file background patch apply failure test */
+/* File locked partial MAR file background patch apply failure fallback test */
 
-const TEST_ID = "0172";
+const TEST_ID = "0175";
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -24,8 +24,8 @@ const TEST_FILES = [
   relPathDir       : "",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial_precomplete",
-  compareFile      : "data/partial_precomplete"
+  originalFile     : "data/complete_precomplete",
+  compareFile      : "data/complete_precomplete"
 }, {
   description      : "Not added for failed update (add)",
   fileName         : "searchpluginstext0",
@@ -35,29 +35,21 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Not patched for failed update (patch-if)",
   fileName         : "searchpluginspng1.png",
   relPathDir       : "a/b/searchplugins/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Not patched for failed update (patch-if)",
   fileName         : "searchpluginspng0.png",
   relPathDir       : "a/b/searchplugins/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
-}, {
-  description      : "Not added for failed update (add)",
-  fileName         : "removed-files",
-  relPathDir       : "a/b/",
-  originalContents : null,
-  compareContents  : null,
-  originalFile     : "data/partial_removed-files",
-  compareFile      : "data/partial_removed-files"
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
   description      : "Not added for failed update (add-if)",
   fileName         : "extensions1text0",
@@ -67,21 +59,21 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Not patched for failed update (patch-if)",
   fileName         : "extensions1png1.png",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Not patched for failed update (patch-if)",
   fileName         : "extensions1png0.png",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
   description      : "Not added for failed update (add-if)",
   fileName         : "extensions0text0",
@@ -91,53 +83,38 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Not patched for failed update (patch-if)",
   fileName         : "extensions0png1.png",
   relPathDir       : "a/b/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Not patched for failed update (patch-if)",
   fileName         : "extensions0png0.png",
   relPathDir       : "a/b/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Not patched for failed update (patch)",
   fileName         : "exe0.exe",
   relPathDir       : "a/b/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add)",
-  fileName         : "10text0",
-  relPathDir       : "a/b/1/10/",
-  originalContents : "ShouldNotBeReplaced\n",
-  compareContents  : "ShouldNotBeReplaced\n",
-  originalFile     : null,
-  compareFile      : null
-}, {
-  description      : "Not added for failed update (add)",
+  description      : "Not patched for failed update (patch) and causes " +
+                     "LoadSourceFile failed",
   fileName         : "0exe0.exe",
   relPathDir       : "a/b/0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
-}, {
-  description      : "Not added for failed update (add)",
-  fileName         : "00text1",
-  relPathDir       : "a/b/0/00/",
-  originalContents : "ShouldNotBeReplaced\n",
-  compareContents  : "ShouldNotBeReplaced\n",
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/partial.png",
+  compareFile      : "data/partial.png"
 }, {
   description      : "Not added for failed update (add)",
   fileName         : "00text0",
@@ -147,25 +124,49 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Not patched for failed update (patch)",
   fileName         : "00png0.png",
   relPathDir       : "a/b/0/00/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not removed for failed update (remove)",
+  description      : "Not added for failed update (add)",
   fileName         : "20text0",
   relPathDir       : "a/b/2/20/",
+  originalContents : null,
+  compareContents  : null,
+  originalFile     : null,
+  compareFile      : null
+}, {
+  description      : "Not added for failed update (add)",
+  fileName         : "20png0.png",
+  relPathDir       : "a/b/2/20/",
+  originalContents : null,
+  compareContents  : null,
+  originalFile     : null,
+  compareFile      : null
+}, {
+  description      : "Not added for failed update (add)",
+  fileName         : "00text2",
+  relPathDir       : "a/b/0/00/",
+  originalContents : null,
+  compareContents  : null,
+  originalFile     : null,
+  compareFile      : null
+}, {
+  description      : "Not removed for failed update (remove)",
+  fileName         : "10text0",
+  relPathDir       : "a/b/1/10/",
   originalContents : "ShouldNotBeDeleted\n",
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
   compareFile      : null
 }, {
   description      : "Not removed for failed update (remove)",
-  fileName         : "20png0.png",
-  relPathDir       : "a/b/2/20/",
+  fileName         : "00text1",
+  relPathDir       : "a/b/0/00/",
   originalContents : "ShouldNotBeDeleted\n",
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
@@ -175,11 +176,11 @@ const TEST_FILES = [
 ADDITIONAL_TEST_DIRS = [
 {
   description  : "Not removed for failed update (rmdir)",
-  relPathDir   : "a/b/2/20/",
+  relPathDir   : "a/b/1/10/",
   dirRemoved   : false
 }, {
   description  : "Not removed for failed update (rmdir)",
-  relPathDir   : "a/b/2/",
+  relPathDir   : "a/b/1/",
   dirRemoved   : false
 }];
 
@@ -188,7 +189,7 @@ function run_test() {
   do_register_cleanup(cleanupUpdaterTest);
 
   gBackgroundUpdate = true;
-  setupUpdaterTest(MAR_COMPLETE_FILE);
+  setupUpdaterTest(MAR_PARTIAL_FILE);
 
   // Exclusively lock an existing file so it is in use during the update
   let helperBin = do_get_file(HELPER_BIN_FILE);
@@ -223,7 +224,6 @@ function doUpdate() {
   // Now switch the application and its updated version
   gBackgroundUpdate = false;
   gSwitchApp = true;
-  gDisableReplaceFallback = true;
   exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for failure when " +
               "switching to the updated application");
@@ -233,11 +233,9 @@ function doUpdate() {
 }
 
 function checkUpdate() {
-  logTestInfo("testing update.status should be " + STATE_FAILED);
+  logTestInfo("testing update.status should be " + STATE_PENDING);
   let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
-  // The update status format for a failure is failed: # where # is the error
-  // code for the failure.
-  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
+  do_check_eq(readStatusFile(updatesDir), STATE_PENDING);
 
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);

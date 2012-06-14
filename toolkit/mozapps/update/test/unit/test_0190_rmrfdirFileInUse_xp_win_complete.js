@@ -2,9 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File in use complete MAR file background patch apply success test */
+/* File in use inside removed dir complete MAR file background patch apply failure fallback test */
 
-const TEST_ID = "0184";
+const TEST_ID = "0190";
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -196,9 +196,19 @@ function run_test() {
   gBackgroundUpdate = true;
   setupUpdaterTest(MAR_COMPLETE_FILE);
 
+  let fileInUseBin = getApplyDirFile(TEST_DIRS[4].relPathDir +
+                                     TEST_DIRS[4].subDirs[0] +
+                                     TEST_DIRS[4].subDirFiles[0]);
+  // Remove the empty file created for the test so the helper application can
+  // replace it.
+  fileInUseBin.remove(false);
+
+  let helperBin = do_get_file(HELPER_BIN_FILE);
+  let fileInUseDir = getApplyDirFile(TEST_DIRS[4].relPathDir +
+                                    TEST_DIRS[4].subDirs[0]);
+  helperBin.copyTo(fileInUseDir, TEST_DIRS[4].subDirFiles[0]);
+
   // Launch an existing file so it is in use during the update
-  let fileInUseBin = getApplyDirFile(TEST_FILES[14].relPathDir +
-                                     TEST_FILES[14].fileName);
   let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "40"];
   let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
                          createInstance(AUS_Ci.nsIProcess);
@@ -209,7 +219,6 @@ function run_test() {
 }
 
 function doUpdate() {
-  // apply the complete mar
   let exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for success when " +
               "applying a complete mar");
@@ -222,7 +231,6 @@ function doUpdate() {
   // Now switch the application and its updated version
   gBackgroundUpdate = false;
   gSwitchApp = true;
-  gDisableReplaceFallback = true;
   exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for failure when " +
               "switching to the updated application");
@@ -232,9 +240,9 @@ function doUpdate() {
 }
 
 function checkUpdate() {
-  logTestInfo("testing update.status should be " + STATE_FAILED);
+  logTestInfo("testing update.status should be " + STATE_PENDING);
   let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
+  do_check_eq(readStatusFile(updatesDir), STATE_PENDING);
 
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);

@@ -267,6 +267,7 @@ static ArchiveReader gArchiveReader;
 static bool gSucceeded = false;
 static bool sBackgroundUpdate = false;
 static bool sReplaceRequest = false;
+static bool sUsingService = false;
 
 #ifdef XP_WIN
 // The current working directory specified in the command line.
@@ -550,6 +551,27 @@ static int ensure_parent_dir(const NS_tchar *path)
   return rv;
 }
 
+#ifdef XP_UNIX
+static int ensure_copy_symlink(const NS_tchar *path, const NS_tchar *dest)
+{
+  // Copy symlinks by creating a new symlink to the same target
+  NS_tchar target[MAXPATHLEN + 1] = {NS_T('\0')};
+  int rv = readlink(path, target, MAXPATHLEN);
+  if (rv == -1) {
+    LOG(("ensure_copy_symlink: failed to read the link: " LOG_S ", err: %d\n",
+         path, errno));
+    return READ_ERROR;
+  }
+  rv = symlink(target, dest);
+  if (rv == -1) {
+    LOG(("ensure_copy_symlink: failed to create the new link: " LOG_S ", target: " LOG_S " err: %d\n",
+         dest, target, errno));
+    return READ_ERROR;
+  }
+  return 0;
+}
+#endif
+
 // Copy the file named path onto a new file named dest.
 static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
 {
@@ -564,12 +586,18 @@ static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
   return 0;
 #else
   struct stat ss;
-  int rv = NS_tstat(path, &ss);
+  int rv = NS_tlstat(path, &ss);
   if (rv) {
     LOG(("ensure_copy: failed to read file status info: " LOG_S ", err: %d\n",
           path, errno));
     return READ_ERROR;
   }
+
+#ifdef XP_UNIX
+  if (S_ISLNK(ss.st_mode)) {
+    return ensure_copy_symlink(path, dest);
+  }
+#endif
 
   AutoFile infile = ensure_open(path, NS_T("rb"), ss.st_mode);
   if (!infile) {
@@ -645,12 +673,19 @@ static int ensure_copy_recursive(const NS_tchar *path, const NS_tchar *dest,
                                  copy_recursive_skiplist<N>& skiplist)
 {
   struct stat sInfo;
-  int rv = NS_tstat(path, &sInfo);
+  int rv = NS_tlstat(path, &sInfo);
   if (rv) {
     LOG(("ensure_copy_recursive: path doesn't exist: " LOG_S ", rv: %d, err: %d\n",
           path, rv, errno));
     return READ_ERROR;
   }
+
+#ifdef XP_UNIX
+  if (S_ISLNK(sInfo.st_mode)) {
+    return ensure_copy_symlink(path, dest);
+  }
+#endif
+
   if (!S_ISDIR(sInfo.st_mode)) {
     return ensure_copy(path, dest);
   }
@@ -1589,7 +1624,7 @@ LaunchCallbackApp(const NS_tchar *workingDir,
 }
 
 static void
-WriteStatusFile(int status)
+WriteStatusText(const char* text)
 {
   // This is how we communicate our completion status to the main application.
 
@@ -1601,6 +1636,12 @@ WriteStatusFile(int status)
   if (file == NULL)
     return;
 
+  fwrite(text, strlen(text), 1, file);
+}
+
+static void
+WriteStatusFile(int status)
+{
   const char *text;
 
   char buf[32];
@@ -1614,7 +1655,8 @@ WriteStatusFile(int status)
     snprintf(buf, sizeof(buf)/sizeof(buf[0]), "failed: %d\n", status);
     text = buf;
   }
-  fwrite(text, strlen(text), 1, file);
+
+  WriteStatusText(text);
 }
 
 static bool
@@ -2033,31 +2075,64 @@ UpdateThreadFunc(void *param)
     }
   }
 
-  if (rv) {
-    LOG(("failed: %d\n", rv));
-  }
-  else {
+  bool reportRealResults = true;
+  if (sReplaceRequest && rv && !getenv("MOZ_NO_REPLACE_FALLBACK")) {
+    // When attempting to replace the application, we should fall back
+    // to non-staged updates in case of a failure.  We do this by
+    // setting the status to pending, exiting the updater, and
+    // launching the callback application.  The callback application's
+    // startup path will see the pending status, and will start the
+    // updater application again in order to apply the update without
+    // staging.
+    // The MOZ_NO_REPLACE_FALLBACK environment variable is used to
+    // bypass this fallback, and is used in the updater tests.
+    // The only special thing which we should do here is to remove the
+    // staged directory as it won't be useful any more.
+    NS_tchar installDir[MAXPATHLEN];
+    if (GetInstallationDir(installDir)) {
+      NS_tchar stageDir[MAXPATHLEN];
+      NS_tsnprintf(stageDir, sizeof(stageDir)/sizeof(stageDir[0]),
 #ifdef XP_MACOSX
-    // If the update was successful we need to update the timestamp
-    // on the top-level Mac OS X bundle directory so that Mac OS X's
-    // Launch Services picks up any major changes. Here we assume that
-    // the current working directory is the top-level bundle directory.
-    char* cwd = getcwd(NULL, 0);
-    if (cwd) {
-      if (utimes(cwd, NULL) != 0) {
-        LOG(("Couldn't set access/modification time on application bundle.\n"));
-      }
-      free(cwd);
+                   NS_T("%s/Updated.app"),
+#else
+                   NS_T("%s/updated"),
+#endif
+                   installDir);
+
+      ensure_remove_recursive(stageDir);
+      WriteStatusText(sUsingService ? "pending-service" : "pending");
+      putenv("MOZ_PROCESS_UPDATES="); // We need to use -process-updates again in the tests
+      reportRealResults = false; // pretend success
+    }
+  }
+
+  if (reportRealResults) {
+    if (rv) {
+      LOG(("failed: %d\n", rv));
     }
     else {
-      LOG(("Couldn't get current working directory for setting "
-           "access/modification time on application bundle.\n"));
-    }
+#ifdef XP_MACOSX
+      // If the update was successful we need to update the timestamp
+      // on the top-level Mac OS X bundle directory so that Mac OS X's
+      // Launch Services picks up any major changes. Here we assume that
+      // the current working directory is the top-level bundle directory.
+      char* cwd = getcwd(NULL, 0);
+      if (cwd) {
+        if (utimes(cwd, NULL) != 0) {
+          LOG(("Couldn't set access/modification time on application bundle.\n"));
+        }
+        free(cwd);
+      }
+      else {
+        LOG(("Couldn't get current working directory for setting "
+             "access/modification time on application bundle.\n"));
+      }
 #endif
 
-    LOG(("succeeded\n"));
+      LOG(("succeeded\n"));
+    }
+    WriteStatusFile(rv);
   }
-  WriteStatusFile(rv);
 
   LOG(("calling QuitProgressUI\n"));
   QuitProgressUI();
@@ -2227,9 +2302,8 @@ int NS_main(int argc, NS_tchar **argv)
   // argument prior to callbackIndex is the working directory.
   const int callbackIndex = 5;
 
-  bool usingService = false;
 #if defined(XP_WIN)
-  usingService = getenv("MOZ_USING_SERVICE") != NULL;
+  sUsingService = getenv("MOZ_USING_SERVICE") != NULL;
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));
   // lastFallbackError keeps track of the last error for the service not being 
   // used, in case of an error when fallback is not enabled we write the 
@@ -2242,7 +2316,7 @@ int NS_main(int argc, NS_tchar **argv)
   // when write access is denied to the installation directory.
   HANDLE updateLockFileHandle = INVALID_HANDLE_VALUE;
   NS_tchar elevatedLockFilePath[MAXPATHLEN] = {NS_T('\0')};
-  if (!usingService &&
+  if (!sUsingService &&
       (argc > callbackIndex || sBackgroundUpdate || sReplaceRequest)) {
     NS_tchar updateLockFilePath[MAXPATHLEN];
     if (sBackgroundUpdate) {
@@ -2492,7 +2566,7 @@ int NS_main(int argc, NS_tchar **argv)
 
       if (argc > callbackIndex) {
         LaunchCallbackApp(argv[4], argc - callbackIndex,
-                          argv + callbackIndex, usingService);
+                          argv + callbackIndex, sUsingService);
       }
 
       CloseHandle(elevatedFileHandle);
@@ -2583,7 +2657,7 @@ int NS_main(int argc, NS_tchar **argv)
     EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
     if (argc > callbackIndex) {
       LaunchCallbackApp(argv[4], argc - callbackIndex,
-                        argv + callbackIndex, usingService);
+                        argv + callbackIndex, sUsingService);
     }
     return 1;
   }
@@ -2628,7 +2702,7 @@ int NS_main(int argc, NS_tchar **argv)
         LaunchCallbackApp(argv[4], 
                           argc - callbackIndex, 
                           argv + callbackIndex, 
-                          usingService);
+                          sUsingService);
       }
       return 1;
     }
@@ -2701,7 +2775,7 @@ int NS_main(int argc, NS_tchar **argv)
         LaunchCallbackApp(argv[4],
                           argc - callbackIndex,
                           argv + callbackIndex,
-                          usingService);
+                          sUsingService);
         return 1;
       }
     }
@@ -2770,7 +2844,7 @@ int NS_main(int argc, NS_tchar **argv)
       // service if the service failed to apply the update. We want to update
       // the service to a newer version in that case. If we are not running
       // through the service, then MOZ_USING_SERVICE will not exist.
-      if (!usingService) {
+      if (!sUsingService) {
         NS_tchar installDir[MAXPATHLEN];
         if (GetInstallationDir(installDir)) {
           if (!LaunchWinPostProcess(installDir, gSourcePath, false, NULL)) {
@@ -2791,7 +2865,7 @@ int NS_main(int argc, NS_tchar **argv)
     LaunchCallbackApp(argv[4], 
                       argc - callbackIndex, 
                       argv + callbackIndex, 
-                      usingService);
+                      sUsingService);
   }
 
   return gSucceeded ? 0 : 1;
