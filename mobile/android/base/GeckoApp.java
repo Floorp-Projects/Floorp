@@ -93,7 +93,7 @@ abstract public class GeckoApp
     public static GeckoApp mAppContext;
     public static boolean mDOMFullScreen = false;
     protected MenuPanel mMenuPanel;
-    public static Menu sMenu;
+    protected Menu mMenu;
     private static GeckoThread sGeckoThread = null;
     public Handler mMainHandler;
     private GeckoProfile mProfile;
@@ -411,10 +411,10 @@ abstract public class GeckoApp
     }
 
     private void addAddonMenuItem(final int id, final String label, final String icon) {
-        if (sMenu == null)
+        if (mMenu == null)
             return;
 
-        final MenuItem item = sMenu.add(Menu.NONE, id, Menu.NONE, label);
+        final MenuItem item = mMenu.add(Menu.NONE, id, Menu.NONE, label);
 
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
@@ -456,12 +456,12 @@ abstract public class GeckoApp
             if (item.getItemId() == id) {
                 sAddonMenuItems.remove(item);
 
-                if (sMenu == null)
+                if (mMenu == null)
                     break;
 
-                MenuItem menuItem = sMenu.findItem(id);
+                MenuItem menuItem = mMenu.findItem(id);
                 if (menuItem != null)
-                    sMenu.removeItem(id);
+                    mMenu.removeItem(id);
 
                 break;
             }
@@ -470,10 +470,10 @@ abstract public class GeckoApp
 
     @Override
     public void invalidateOptionsMenu() {
-        if (sMenu == null)
+        if (mMenu == null)
             return;
 
-        onPrepareOptionsMenu(sMenu);
+        onPrepareOptionsMenu(mMenu);
 
         if (Build.VERSION.SDK_INT >= 11)
             super.invalidateOptionsMenu();
@@ -482,16 +482,19 @@ abstract public class GeckoApp
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        sMenu = menu;
+        mMenu = menu;
 
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.gecko_menu, sMenu);
+        inflater.inflate(R.menu.gecko_menu, mMenu);
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu aMenu)
     {
+        if (aMenu == null)
+            return false;
+
         if (!sIsGeckoReady)
             aMenu.findItem(R.id.settings).setEnabled(false);
 
@@ -591,7 +594,7 @@ abstract public class GeckoApp
                 mMenuPanel = new MenuPanel(mAppContext, null);
             } else {
                 // Prepare the panel everytime before showing the menu.
-                onPreparePanel(featureId, mMenuPanel, sMenu);
+                onPreparePanel(featureId, mMenuPanel, mMenu);
             }
 
             return mMenuPanel; 
@@ -628,9 +631,9 @@ abstract public class GeckoApp
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         if (Build.VERSION.SDK_INT >= 11 && featureId == Window.FEATURE_OPTIONS_PANEL) {
-            if (sMenu == null) {
+            if (mMenu == null) {
                 onCreatePanelMenu(featureId, menu);
-                onPreparePanel(featureId, mMenuPanel, sMenu);
+                onPreparePanel(featureId, mMenuPanel, mMenu);
             }
 
             // Scroll custom menu to the top
@@ -1030,10 +1033,11 @@ abstract public class GeckoApp
                 handleDoorHangerRemove(message);
             } else if (event.equals("Gecko:Ready")) {
                 sIsGeckoReady = true;
+                final Menu menu = mMenu;
                 mMainHandler.post(new Runnable() {
                     public void run() {
-                        if (sMenu != null)
-                            sMenu.findItem(R.id.settings).setEnabled(true);
+                        if (menu != null)
+                            menu.findItem(R.id.settings).setEnabled(true);
                     }
                 });
                 setLaunchState(GeckoApp.LaunchState.GeckoRunning);
@@ -1089,10 +1093,11 @@ abstract public class GeckoApp
             } else if (event.equals("CharEncoding:State")) {
                 final boolean visible = message.getString("visible").equals("true");
                 GeckoPreferences.setCharEncodingState(visible);
+                final Menu menu = mMenu;
                 mMainHandler.post(new Runnable() {
                     public void run() {
-                        if (sMenu != null)
-                            sMenu.findItem(R.id.char_encoding).setVisible(visible);
+                        if (menu != null)
+                            menu.findItem(R.id.char_encoding).setVisible(visible);
                     }
                 });
             } else if (event.equals("Update:Restart")) {
