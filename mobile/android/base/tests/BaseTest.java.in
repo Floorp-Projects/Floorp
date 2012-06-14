@@ -74,20 +74,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mRawBaseUrl = ((String)config.get("rawhost")).replaceAll("(/$)", "");
     }
 
-    @Override
-    protected void runTest() throws Throwable {
-        try {
-            super.runTest();
-        } catch (Throwable t) {
-            if (mAsserter != null) {
-                mAsserter.dumpLog("Exception caught during test!", t);
-                mAsserter.ok(false, "Exception caught", t.toString());
-            }
-            // re-throw to continue bail-out
-            throw t;
-        }
-    }
-
     public void setTestType(String type) {
         mTestType = type;
 
