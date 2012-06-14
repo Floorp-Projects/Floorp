@@ -105,7 +105,7 @@ abstract public class GeckoApp
     private PromptService mPromptService;
 
     public static DoorHangerPopup mDoorHangerPopup;
-    public static FormAssistPopup mFormAssistPopup;
+    protected FormAssistPopup mFormAssistPopup;
     public TabsPanel mTabsPanel;
     public Favicons mFavicons;
 
@@ -923,6 +923,11 @@ abstract public class GeckoApp
     public void hideTabs() { }
 
     public boolean areTabsShown() { return false; }
+
+    public void hideFormAssistPopup() {
+        if (mFormAssistPopup != null)
+            mFormAssistPopup.hide();
+    }
 
     public void handleMessage(String event, JSONObject message) {
         Log.i(LOGTAG, "Got message: " + event);
@@ -2222,8 +2227,7 @@ abstract public class GeckoApp
 
         if (mOrientation != newConfig.orientation) {
             mOrientation = newConfig.orientation;
-            if (mFormAssistPopup != null)
-                mFormAssistPopup.hide();
+            hideFormAssistPopup();
             SiteIdentityPopup.getInstance().dismiss();
             refreshChrome();
         }
