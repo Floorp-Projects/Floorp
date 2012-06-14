@@ -316,6 +316,10 @@ def write_getter(a, iface, fd):
         fd.write("    uint32_t u;\n")
         fd.write("    NS_ENSURE_STATE(JS_ValueToECMAUint32(aCx, v, &u));\n")
         fd.write("    aDict.%s = u;\n" % a.name)
+    elif realtype.count("PRInt16"):
+        fd.write("    int32_t i;\n")
+        fd.write("    NS_ENSURE_STATE(JS_ValueToECMAInt32(aCx, v, &i));\n")
+        fd.write("    aDict.%s = i;\n" % a.name)
     elif realtype.count("nsAString"):
         if a.nullable:
             fd.write("    xpc_qsDOMString d(aCx, v, &v, xpc_qsDOMString::eNull, xpc_qsDOMString::eNull);\n")
