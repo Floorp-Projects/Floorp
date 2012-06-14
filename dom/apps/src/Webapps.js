@@ -356,14 +356,16 @@ WebappsApplicationMgmt.prototype = {
       case "Webapps:Install:Return:OK":
         if (this._oninstall) {
           let app = msg.app;
-          let event = new WebappsApplicationEvent(new WebappsApplication(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
-                                                app.installOrigin, app.installTime));
+          let event = new this._window.MozApplicationEvent("applicationinstall", 
+                           { application : new WebappsApplication(this._window, app.origin, app.manifest, app.manifestURL, app.receipts,
+                                                                  app.installOrigin, app.installTime) });
           this._oninstall.handleEvent(event);
         }
         break;
       case "Webapps:Uninstall:Return:OK":
         if (this._onuninstall) {
-          let event = new WebappsApplicationEvent(new WebappsApplication(this._window, msg.origin, null, null, null, null, 0));
+          let event = new this._window.MozApplicationEvent("applicationuninstall", 
+                           { application : new WebappsApplication(this._window, msg.origin, null, null, null, null, 0) });
           this._onuninstall.handleEvent(event);
         }
         break;
@@ -380,29 +382,6 @@ WebappsApplicationMgmt.prototype = {
                                     interfaces: [Ci.mozIDOMApplicationMgmt],
                                     flags: Ci.nsIClassInfo.DOM_OBJECT,
                                     classDescription: "Webapps Application Mgmt"})
-}
-
-/**
-  * mozIDOMApplicationEvent object
-  */
-function WebappsApplicationEvent(aApp) {
-  this._app = aApp;
-}
-
-WebappsApplicationEvent.prototype = {
-  get application() {
-    return this._app;
-  },
-
-  classID: Components.ID("{5bc42b2a-9acc-49d5-a336-c353c8125e48}"),
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.mozIDOMApplicationEvent]),
-
-  classInfo: XPCOMUtils.generateCI({classID: Components.ID("{8c1bca96-266f-493a-8d57-ec7a95098c15}"),
-                                    contractID: "@mozilla.org/webapps/application-event;1",
-                                    interfaces: [Ci.mozIDOMApplicationEvent],
-                                    flags: Ci.nsIClassInfo.DOM_OBJECT,
-                                    classDescription: "Webapps Application Event"})
 }
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([WebappsRegistry, WebappsApplication]);
