@@ -26,7 +26,10 @@ function test() {
 
     browser1.removeEventListener("load", check, true);
     browser2.removeEventListener("load", check, true);
+    executeSoon(_run_focus_tests);
+  }
 
+  function _run_focus_tests() {
     window.focus();
 
     _browser_tabfocus_test_lastfocus = gURLBar;
