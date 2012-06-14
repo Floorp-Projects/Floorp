@@ -134,6 +134,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height,
                                                              mScreenSize.width, mScreenSize.height);
         GeckoAppShell.sendEventToGecko(event);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Window:Resize", ""));
     }
 
     public Bitmap getBitmap() {
