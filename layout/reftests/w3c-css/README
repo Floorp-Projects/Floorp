@@ -1,0 +1,21 @@
+W3C CSS Test Suite Directory
+----------------------------
+
+This directory is for tests that are sync'ed with the official
+W3C CSS test suites at http://test.csswg.org/.
+ 
+submitted/ is for tests that are to be submitted to W3C.
+This directory is sync'ed automatically with the contributors/mozilla/
+directory in the CSSWG repository. The master copy is Mozilla's.
+
+received/ is for tests that are received from W3C.
+This directory is sync'ed semi-automatically with the approved/
+directory in the CSSWG repository. The master copy is CSSWG's.
+Don't make changes here; they'll be overwritten by the next sync.
+
+Legal Stuff
+-----------
+ 
+These files are copyright by W3C and/or the author listed in the test
+file. They are available under the BSD 3-clause license; see LICENSE
+or http://www.w3.org/Consortium/Legal/2008/03-bsd-license.html
