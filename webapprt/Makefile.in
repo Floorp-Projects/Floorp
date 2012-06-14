@@ -51,6 +51,10 @@ ifdef MOZ_DEBUG
 DEFINES += -DMOZ_DEBUG=1
 endif
 
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DMOZILLA_OFFICIAL
+endif
+
 libs::
 	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "resource webapprt ./"
 
