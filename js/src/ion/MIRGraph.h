@@ -122,6 +122,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Gets the instruction associated with various slot types.
     MDefinition *peek(int32 depth);
 
+    MDefinition *scopeChain();
+
     // Initializes a slot value; must not be called for normal stack
     // operations, as it will not create new SSA names for copies.
     void initSlot(uint32 index, MDefinition *ins);
@@ -151,6 +153,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void pushArg(uint32 arg);
     void pushLocal(uint32 local);
     void pushSlot(uint32 slot);
+    void setScopeChain(MDefinition *ins);
 
     // Returns the top of the stack, then decrements the virtual stack pointer.
     MDefinition *pop();

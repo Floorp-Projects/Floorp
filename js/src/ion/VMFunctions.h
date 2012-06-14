@@ -432,6 +432,8 @@ bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Handl
 
 bool InterruptCheck(JSContext *cx);
 
+JSObject *NewCallObject(JSContext *cx, HandleObject scopeObj, HandleFunction callee);
+
 } // namespace ion
 } // namespace js
 

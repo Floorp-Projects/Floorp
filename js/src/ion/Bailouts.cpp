@@ -92,45 +92,58 @@ InlineFrameIterator::InlineFrameIterator(const IonBailoutIterator *iter)
     }
 }
 
-static void
-RestoreOneFrame(JSContext *cx, StackFrame *fp, SnapshotIterator &iter)
+void
+StackFrame::initFromBailout(JSContext *cx, SnapshotIterator &iter)
 {
-    uint32 exprStackSlots = iter.slots() - fp->script()->nfixed;
+    uint32 exprStackSlots = iter.slots() - script()->nfixed;
 
 #ifdef TRACK_SNAPSHOTS
     iter.spewBailingFrom();
 #endif
     IonSpew(IonSpew_Bailouts, " expr stack slots %u, is function frame %u",
-            exprStackSlots, fp->isFunctionFrame());
+            exprStackSlots, isFunctionFrame());
 
-    // Temporary hack -- skip the (unused) scopeChain.
-    // In the non-heavyweight case, the scopeChain is derived from
-    // the callee's environment.
-    iter.skip();
+    if (iter.bailoutKind() == Bailout_ArgumentCheck) {
+        // Temporary hack -- skip the (unused) scopeChain, because it could be
+        // bogus (we can fail before the scope chain slot is set). Strip the
+        // hasScopeChain flag and we'll check this later to run prologue().
+        iter.skip();
+        flags_ &= ~StackFrame::HAS_SCOPECHAIN;
+    } else {
+        Value v = iter.read();
+        if (v.isObject()) {
+            scopeChain_ = &v.toObject();
+            flags_ |= StackFrame::HAS_SCOPECHAIN;
+            if (isFunctionFrame() && fun()->isHeavyweight())
+                flags_ |= StackFrame::HAS_CALL_OBJ;
+        } else {
+            JS_ASSERT(v.isUndefined());
+        }
+    }
 
-    if (fp->isFunctionFrame()) {
+    if (isFunctionFrame()) {
         Value thisv = iter.read();
-        fp->formals()[-1] = thisv;
+        formals()[-1] = thisv;
 
         // The new |this| must have already been constructed prior to an Ion
         // constructor running.
-        if (fp->isConstructing())
+        if (isConstructing())
             JS_ASSERT(!thisv.isPrimitive());
 
-        JS_ASSERT(iter.slots() >= CountArgSlots(fp->fun()));
+        JS_ASSERT(iter.slots() >= CountArgSlots(fun()));
         IonSpew(IonSpew_Bailouts, " frame slots %u, nargs %u, nfixed %u",
-                iter.slots(), fp->fun()->nargs, fp->script()->nfixed);
+                iter.slots(), fun()->nargs, script()->nfixed);
 
-        for (uint32 i = 0; i < fp->fun()->nargs; i++) {
+        for (uint32 i = 0; i < fun()->nargs; i++) {
             Value arg = iter.read();
-            fp->formals()[i] = arg;
+            formals()[i] = arg;
         }
     }
-    exprStackSlots -= CountArgSlots(fp->maybeFun());
+    exprStackSlots -= CountArgSlots(maybeFun());
 
-    for (uint32 i = 0; i < fp->script()->nfixed; i++) {
+    for (uint32 i = 0; i < script()->nfixed; i++) {
         Value slot = iter.read();
-        fp->slots()[i] = slot;
+        slots()[i] = slot;
     }
 
     IonSpew(IonSpew_Bailouts, " pushing %u expression stack slots", exprStackSlots);
@@ -149,14 +162,14 @@ RestoreOneFrame(JSContext *cx, StackFrame *fp, SnapshotIterator &iter)
         *regs.sp++ = v;
     }
     unsigned pcOff = iter.pcOffset();
-    regs.pc = fp->script()->code + pcOff;
+    regs.pc = script()->code + pcOff;
 
     if (iter.resumeAfter())
         regs.pc = GetNextPc(regs.pc);
 
     IonSpew(IonSpew_Bailouts, " new PC is offset %u within script %p (line %d)",
-            pcOff, (void *)fp->script(), PCToLineNumber(fp->script(), regs.pc));
-    JS_ASSERT(exprStackSlots == js_ReconstructStackDepth(cx, fp->script(), regs.pc));
+            pcOff, (void *)script(), PCToLineNumber(script(), regs.pc));
+    JS_ASSERT(exprStackSlots == js_ReconstructStackDepth(cx, script(), regs.pc));
 }
 
 static StackFrame *
@@ -260,7 +273,7 @@ ConvertFrames(JSContext *cx, IonActivation *activation, IonBailoutIterator &it)
 
     while (true) {
         IonSpew(IonSpew_Bailouts, " restoring frame");
-        RestoreOneFrame(cx, fp, iter);
+        fp->initFromBailout(cx, iter);
 
         if (!iter.moreFrames())
              break;
@@ -435,7 +448,7 @@ ReflowArgTypes(JSContext *cx)
     if (!fp->isConstructing())
         types::TypeScript::SetThis(cx, script, fp->thisValue());
     for (unsigned i = 0; i < nargs; ++i)
-        types::TypeScript::SetArgument(cx, script, i, fp->unaliasedFormal(i));
+        types::TypeScript::SetArgument(cx, script, i, fp->unaliasedFormal(i, DONT_CHECK_ALIASING));
 }
 
 uint32
@@ -495,12 +508,27 @@ ion::RecompileForInlining()
     return true;
 }
 
+bool
+ion::EnsureHasCallObject(JSContext *cx, StackFrame *fp)
+{
+    if (fp->isFunctionFrame() &&
+        fp->fun()->isHeavyweight() &&
+        !fp->hasCallObj())
+    {
+        return fp->initCallObject(cx);
+    }
+    return true;
+}
+
 uint32
 ion::ThunkToInterpreter(Value *vp)
 {
     JSContext *cx = GetIonContext()->cx;
     IonActivation *activation = cx->runtime->ionActivation;
     BailoutClosure *br = activation->takeBailout();
+
+    if (!EnsureHasCallObject(cx, cx->fp()))
+        return Interpret_Error;
 
     // By default we set the forbidOsr flag on the ion script, but if a GC
     // happens just after we re-enter the interpreter, the ion script get

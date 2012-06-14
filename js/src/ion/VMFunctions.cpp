@@ -324,5 +324,11 @@ InterruptCheck(JSContext *cx)
     return !!js_HandleExecutionInterrupt(cx);
 }
 
+JSObject *
+NewCallObject(JSContext *cx, HandleObject scopeObj, HandleFunction callee)
+{
+    return CallObject::create(cx, callee->script(), scopeObj, callee);
+}
+
 } // namespace ion
 } // namespace js
