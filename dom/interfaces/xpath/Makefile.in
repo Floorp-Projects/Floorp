@@ -14,7 +14,6 @@ XPIDL_MODULE	= dom_xpath
 
 XPIDLSRCS =                                     \
 	nsIDOMXPathEvaluator.idl			\
-	nsIDOMXPathException.idl			\
 	nsIDOMXPathExpression.idl			\
 	nsIDOMXPathNamespace.idl			\
 	nsIDOMXPathNSResolver.idl			\
