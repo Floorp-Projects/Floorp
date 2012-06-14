@@ -2463,7 +2463,7 @@ abstract public class GeckoApp
         }
 
         public void run() {
-            mPromptService.Show(mTitle, "", null, mItems, false);
+            mPromptService.show(mTitle, "", null, mItems, false);
         }
 
         private String mTitle;
