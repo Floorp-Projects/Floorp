@@ -290,6 +290,7 @@ class IonBuilder : public MIRGenerator
 
     bool initParameters();
     void rewriteParameters();
+    bool initScopeChain();
     bool pushConstant(const Value &v);
     bool pushTypeBarrier(MInstruction *ins, types::TypeSet *actual, types::TypeSet *observed);
     void monitorResult(MInstruction *ins, types::TypeSet *types);
@@ -300,6 +301,8 @@ class IonBuilder : public MIRGenerator
     MDefinition *createThisScripted(MDefinition *callee);
     MDefinition *createThisScriptedSingleton(HandleFunction target, HandleObject proto, MDefinition *callee);
     MDefinition *createThis(HandleFunction target, MDefinition *callee);
+    MInstruction *createCallObject(MDefinition *callee, MDefinition *scopeObj);
+    void copyFormalIntoCallObj(MDefinition *callObj, MDefinition *slots, unsigned formal);
 
     bool makeCall(HandleFunction target, uint32 argc, bool constructing);
 

@@ -3504,7 +3504,7 @@ class MStoreFixedSlot : public MBinaryInstruction, public SingleObjectPolicy
   public:
     INSTRUCTION_HEADER(StoreFixedSlot);
 
-    static MStoreFixedSlot *New(MDefinition *obj, MDefinition *rval, size_t slot) {
+    static MStoreFixedSlot *New(MDefinition *obj, size_t slot, MDefinition *rval) {
         return new MStoreFixedSlot(obj, rval, slot);
     }
 
@@ -4407,6 +4407,40 @@ class MMonitorTypes : public MUnaryInstruction
     }
     types::TypeSet *typeSet() const {
         return typeSet_;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+class MNewCallObject : public MBinaryInstruction
+{
+    CompilerRootObject templateObj_;
+
+    MNewCallObject(HandleObject templateObj, MDefinition *scopeObj, MDefinition *callee)
+      : MBinaryInstruction(scopeObj, callee),
+        templateObj_(templateObj)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewCallObject);
+
+    static MNewCallObject *New(HandleObject templateObj, MDefinition *scopeObj,
+                               MDefinition *callee)
+    {
+        return new MNewCallObject(templateObj, scopeObj, callee);
+    }
+
+    MDefinition *scopeObj() {
+        return getOperand(0);
+    }
+    MDefinition *callee() {
+        return getOperand(1);
+    }
+    JSObject *templateObj() {
+        return templateObj_;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();

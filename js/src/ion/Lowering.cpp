@@ -143,6 +143,19 @@ LIRGenerator::visitNewObject(MNewObject *ins)
 }
 
 bool
+LIRGenerator::visitNewCallObject(MNewCallObject *ins)
+{
+    JS_ASSERT(ins->scopeObj()->type() == MIRType_Object);
+    JS_ASSERT(ins->callee()->type() == MIRType_Object);
+
+    LNewCallObject *lir = new LNewCallObject(useRegister(ins->scopeObj()),
+                                             useRegister(ins->callee()));
+    if (ins->templateObj())
+        return define(lir, ins) && assignSafepoint(lir, ins);
+    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitInitProp(MInitProp *ins)
 {
     LInitProp *lir = new LInitProp(useRegister(ins->getObject()));

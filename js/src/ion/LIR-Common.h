@@ -253,6 +253,32 @@ class LNewObject : public LInstructionHelper<1, 0, 0>
     }
 };
 
+class LNewCallObject : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(NewCallObject);
+
+    LNewCallObject(const LAllocation &scopeObj, const LAllocation &callee) {
+        setOperand(0, scopeObj);
+        setOperand(1, callee);
+    }
+
+    bool isCall() const;
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
+    const LAllocation *scopeObj() {
+        return getOperand(0); 
+    }
+    const LAllocation *callee() {
+        return getOperand(1); 
+    }
+    MNewCallObject *mir() const {
+        return mir_->toNewCallObject();
+    }
+};
+
 // Takes in an Object and a Value.
 class LInitProp : public LInstructionHelper<0, 1 + BOX_PIECES, 0>
 {

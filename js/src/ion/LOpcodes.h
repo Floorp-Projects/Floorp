@@ -57,6 +57,7 @@
     _(Goto)                         \
     _(NewArray)                     \
     _(NewObject)                    \
+    _(NewCallObject)                \
     _(InitProp)                     \
     _(CheckOverRecursed)            \
     _(RecompileCheck)               \

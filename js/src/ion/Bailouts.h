@@ -232,6 +232,8 @@ class IonBailoutIterator : public IonFrameIterator
     }
 };
 
+bool EnsureHasCallObject(JSContext *cx, StackFrame *fp);
+
 // Called from a bailout thunk. Returns a BAILOUT_* error code.
 uint32 Bailout(BailoutStack *sp);
 

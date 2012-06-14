@@ -160,6 +160,8 @@ LIRGeneratorShared::defineReturn(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir
 template <size_t Defs, size_t Ops, size_t Temps> bool
 LIRGeneratorShared::defineVMReturn(LInstructionHelper<Defs, Ops, Temps> *lir, MDefinition *mir)
 {
+    lir->setMir(mir);
+
     JS_ASSERT(lir->isCall());
 
     uint32 vreg = getVirtualRegister();
@@ -187,7 +189,6 @@ LIRGeneratorShared::defineVMReturn(LInstructionHelper<Defs, Ops, Temps> *lir, MD
     }
 
     mir->setVirtualRegister(vreg);
-    lir->setMir(mir);
     return add(lir) && add(new LNop);
 }
 

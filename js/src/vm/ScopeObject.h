@@ -118,10 +118,11 @@ class CallObject : public ScopeObject
 {
     static const uint32_t CALLEE_SLOT = 1;
 
+  public:
+    /* This function is internal and is exposed only for JITs. */
     static CallObject *
     create(JSContext *cx, JSScript *script, HandleObject enclosing, HandleFunction callee);
 
-  public:
     static const uint32_t RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
 
     static CallObject *createForFunction(JSContext *cx, StackFrame *fp);
@@ -159,6 +160,9 @@ class CallObject : public ScopeObject
 
     /* Copy in all the unaliased formals and locals. */
     void copyUnaliasedValues(StackFrame *fp);
+
+    /* For jit access. */
+    static inline size_t offsetOfCallee();
 };
 
 class DeclEnvObject : public ScopeObject

@@ -357,6 +357,18 @@ MBasicBlock::pop()
     return slots_[--stackPosition_];
 }
 
+MDefinition *
+MBasicBlock::scopeChain()
+{
+    return getSlot(info().scopeChainSlot());
+}
+
+void
+MBasicBlock::setScopeChain(MDefinition *scopeObj)
+{
+    setSlot(info().scopeChainSlot(), scopeObj);
+}
+
 void
 MBasicBlock::pick(int32 depth)
 {
