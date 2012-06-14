@@ -11,6 +11,9 @@ include reftest-sanity/reftest.list
 # images (if libpr0n is busted, could result in weird failures in other tests)
 include ../../image/test/reftest/reftest.list
 
+# CSSWG tests
+include w3c-css/submitted/reftest.list
+
 # relative and absolute positioning
 include abs-pos/reftest.list
 
