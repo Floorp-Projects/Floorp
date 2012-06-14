@@ -84,13 +84,12 @@ StrictModeGetter::get() const
 
 Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
                const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion v,
-               StackFrame *cfp, bool foldConstants, bool compileAndGo)
+               bool foldConstants, bool compileAndGo)
   : AutoGCRooter(cx, PARSER),
     context(cx),
     strictModeGetter(this),
     tokenStream(cx, prin, originPrin, chars, length, fn, ln, v, &strictModeGetter),
     tempPoolMark(NULL),
-    callerFrame(cfp),
     allocator(cx),
     traceListHead(NULL),
     tc(NULL),
@@ -99,7 +98,6 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
     compileAndGo(compileAndGo)
 {
     cx->activeCompilations++;
-    JS_ASSERT_IF(cfp, cfp->isScriptFrame());
 }
 
 bool
@@ -708,24 +706,6 @@ Parser::functionBody(FunctionBodyType type)
     }
 
     return pn;
-}
-
-bool
-Parser::checkForArgumentsAndRest()
-{
-    JS_ASSERT(!tc->sc->inFunction());
-    if (callerFrame && callerFrame->isFunctionFrame() && callerFrame->fun()->hasRest()) {
-        PropertyName *arguments = context->runtime->atomState.argumentsAtom;
-        for (AtomDefnRange r = tc->lexdeps->all(); !r.empty(); r.popFront()) {
-            if (r.front().key() == arguments) {
-                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARGUMENTS_AND_REST);
-                return false;
-            }
-        }
-        /* We're not in a function context, so we don't expect any bindings. */
-        JS_ASSERT(tc->sc->bindings.lookup(context, arguments, NULL) == NONE);
-    }
-    return true;
 }
 
 // Create a placeholder Definition node for |atom|.

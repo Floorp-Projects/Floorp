@@ -66,11 +66,12 @@ static JSBool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
 BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script,
-                                 unsigned lineno)
+                                 StackFrame *callerFrame, unsigned lineno)
   : sc(sc),
     parent(NULL),
     script(sc->context, script),
     parser(parser),
+    callerFrame(callerFrame),
     atomIndices(sc->context),
     stackDepth(0), maxStackDepth(0),
     ntrynotes(0), lastTryNode(NULL),
@@ -85,6 +86,7 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScr
     hasSingletons(false),
     inForInit(false)
 {
+    JS_ASSERT_IF(callerFrame, callerFrame->isScriptFrame());
     memset(&prolog, 0, sizeof prolog);
     memset(&main, 0, sizeof main);
     current = &main;
@@ -1164,7 +1166,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
       case JSOP_DELNAME:
         if (dn_kind != Definition::UNKNOWN) {
-            if (bce->parser->callerFrame && dn->isTopLevel())
+            if (bce->callerFrame && dn->isTopLevel())
                 JS_ASSERT(bce->script->compileAndGo);
             else
                 pn->setOp(JSOP_FALSE);
@@ -1187,7 +1189,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     if (cookie.isFree()) {
-        StackFrame *caller = bce->parser->callerFrame;
+        StackFrame *caller = bce->callerFrame;
         if (caller) {
             JS_ASSERT(bce->script->compileAndGo);
 
@@ -4741,7 +4743,7 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!script)
             return false;
 
-        BytecodeEmitter bce2(bce->parser, &sc, script, pn->pn_pos.begin.lineno);
+        BytecodeEmitter bce2(bce->parser, &sc, script, bce->callerFrame, pn->pn_pos.begin.lineno);
         if (!bce2.init())
             return false;
         bce2.parent = bce;
