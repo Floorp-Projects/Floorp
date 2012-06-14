@@ -382,7 +382,8 @@ RES_DRAWABLE_BASE = \
   res/drawable/tab_close.png \
   res/drawable/tab_thumbnail_default.png \
   res/drawable/tab_thumbnail_shadow.png \
-  res/drawable/tabs_carat.png \
+  res/drawable/tabs_carat_contracted.png \
+  res/drawable/tabs_carat_expanded.png \
   res/drawable/tabs_expanded_normal.png \
   res/drawable/tabs_expanded_pressed.png \
   res/drawable/tabs_normal.png \
@@ -461,7 +462,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/tab_close.png \
   res/drawable-hdpi/tab_thumbnail_default.png \
   res/drawable-hdpi/tab_thumbnail_shadow.png \
-  res/drawable-hdpi/tabs_carat.png \
+  res/drawable-hdpi/tabs_carat_contracted.png \
+  res/drawable-hdpi/tabs_carat_expanded.png \
   res/drawable-hdpi/tabs_expanded_normal.png \
   res/drawable-hdpi/tabs_expanded_pressed.png \
   res/drawable-hdpi/tabs_normal.png \
@@ -568,7 +570,8 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/tab_close.png \
   res/drawable-xhdpi-v11/tab_thumbnail_default.png \
   res/drawable-xhdpi-v11/tab_thumbnail_shadow.png \
-  res/drawable-xhdpi-v11/tabs_carat.png \
+  res/drawable-xhdpi-v11/tabs_carat_contracted.png \
+  res/drawable-xhdpi-v11/tabs_carat_expanded.png \
   res/drawable-xhdpi-v11/tabs_expanded_normal.png \
   res/drawable-xhdpi-v11/tabs_expanded_pressed.png \
   res/drawable-xhdpi-v11/tabs_normal.png \
@@ -615,7 +618,8 @@ RES_DRAWABLE_LAND_MDPI_V14 = \
   res/drawable-land-mdpi-v14/remote_tabs_off.png \
   res/drawable-land-mdpi-v14/remote_tabs_on.png \
   res/drawable-land-mdpi-v14/tab_new.png \
-  res/drawable-land-mdpi-v14/tabs_carat.png \
+  res/drawable-land-mdpi-v14/tabs_carat_contracted.png \
+  res/drawable-land-mdpi-v14/tabs_carat_expanded.png \
   res/drawable-land-mdpi-v14/tabs_expanded_normal.png \
   res/drawable-land-mdpi-v14/tabs_expanded_pressed.png \
   res/drawable-land-mdpi-v14/tabs_normal.png \
@@ -635,7 +639,8 @@ RES_DRAWABLE_LAND_HDPI_V14 = \
   res/drawable-land-hdpi-v14/remote_tabs_off.png \
   res/drawable-land-hdpi-v14/remote_tabs_on.png \
   res/drawable-land-hdpi-v14/tab_new.png \
-  res/drawable-land-hdpi-v14/tabs_carat.png \
+  res/drawable-land-hdpi-v14/tabs_carat_contracted.png \
+  res/drawable-land-hdpi-v14/tabs_carat_expanded.png \
   res/drawable-land-hdpi-v14/tabs_expanded_normal.png \
   res/drawable-land-hdpi-v14/tabs_expanded_pressed.png \
   res/drawable-land-hdpi-v14/tabs_normal.png \
@@ -655,7 +660,8 @@ RES_DRAWABLE_LAND_XHDPI_V14 = \
   res/drawable-land-xhdpi-v14/remote_tabs_off.png \
   res/drawable-land-xhdpi-v14/remote_tabs_on.png \
   res/drawable-land-xhdpi-v14/tab_new.png \
-  res/drawable-land-xhdpi-v14/tabs_carat.png \
+  res/drawable-land-xhdpi-v14/tabs_carat_contracted.png \
+  res/drawable-land-xhdpi-v14/tabs_carat_expanded.png \
   res/drawable-land-xhdpi-v14/tabs_expanded_normal.png \
   res/drawable-land-xhdpi-v14/tabs_expanded_pressed.png \
   res/drawable-land-xhdpi-v14/tabs_normal.png \
@@ -683,7 +689,8 @@ RES_DRAWABLE_XLARGE_MDPI = \
   res/drawable-xlarge-mdpi/remote_tabs_off.png \
   res/drawable-xlarge-mdpi/remote_tabs_on.png \
   res/drawable-xlarge-mdpi/tab_new.png \
-  res/drawable-xlarge-mdpi/tabs_carat.png \
+  res/drawable-xlarge-mdpi/tabs_carat_contracted.png \
+  res/drawable-xlarge-mdpi/tabs_carat_expanded.png \
   res/drawable-xlarge-mdpi/tabs_expanded_normal.png \
   res/drawable-xlarge-mdpi/tabs_expanded_pressed.png \
   res/drawable-xlarge-mdpi/tabs_normal.png \
@@ -710,7 +717,8 @@ RES_DRAWABLE_XLARGE_HDPI = \
   res/drawable-xlarge-hdpi/remote_tabs_off.png \
   res/drawable-xlarge-hdpi/remote_tabs_on.png \
   res/drawable-xlarge-hdpi/tab_new.png \
-  res/drawable-xlarge-hdpi/tabs_carat.png \
+  res/drawable-xlarge-hdpi/tabs_carat_contracted.png \
+  res/drawable-xlarge-hdpi/tabs_carat_expanded.png \
   res/drawable-xlarge-hdpi/tabs_expanded_normal.png \
   res/drawable-xlarge-hdpi/tabs_expanded_pressed.png \
   res/drawable-xlarge-hdpi/tabs_normal.png \
@@ -737,7 +745,8 @@ RES_DRAWABLE_XLARGE_XHDPI = \
   res/drawable-xlarge-xhdpi/remote_tabs_off.png \
   res/drawable-xlarge-xhdpi/tab_new.png \
   res/drawable-xlarge-xhdpi/remote_tabs_on.png \
-  res/drawable-xlarge-xhdpi/tabs_carat.png \
+  res/drawable-xlarge-xhdpi/tabs_carat_contracted.png \
+  res/drawable-xlarge-xhdpi/tabs_carat_expanded.png \
   res/drawable-xlarge-xhdpi/tabs_expanded_normal.png \
   res/drawable-xlarge-xhdpi/tabs_expanded_pressed.png \
   res/drawable-xlarge-xhdpi/tabs_normal.png \
@@ -765,7 +774,8 @@ RES_DRAWABLE_SW600DP_MDPI = \
   res/drawable-sw600dp-mdpi/remote_tabs_off.png \
   res/drawable-sw600dp-mdpi/remote_tabs_on.png \
   res/drawable-sw600dp-mdpi/tab_new.png \
-  res/drawable-sw600dp-mdpi/tabs_carat.png \
+  res/drawable-sw600dp-mdpi/tabs_carat_contracted.png \
+  res/drawable-sw600dp-mdpi/tabs_carat_expanded.png \
   res/drawable-sw600dp-mdpi/tabs_expanded_normal.png \
   res/drawable-sw600dp-mdpi/tabs_expanded_pressed.png \
   res/drawable-sw600dp-mdpi/tabs_normal.png \
@@ -792,7 +802,8 @@ RES_DRAWABLE_SW600DP_HDPI = \
   res/drawable-sw600dp-hdpi/remote_tabs_off.png \
   res/drawable-sw600dp-hdpi/remote_tabs_on.png \
   res/drawable-sw600dp-hdpi/tab_new.png \
-  res/drawable-sw600dp-hdpi/tabs_carat.png \
+  res/drawable-sw600dp-hdpi/tabs_carat_contracted.png \
+  res/drawable-sw600dp-hdpi/tabs_carat_expanded.png \
   res/drawable-sw600dp-hdpi/tabs_expanded_normal.png \
   res/drawable-sw600dp-hdpi/tabs_expanded_pressed.png \
   res/drawable-sw600dp-hdpi/tabs_normal.png \
@@ -819,7 +830,8 @@ RES_DRAWABLE_SW600DP_XHDPI = \
   res/drawable-sw600dp-xhdpi/remote_tabs_off.png \
   res/drawable-sw600dp-xhdpi/remote_tabs_on.png \
   res/drawable-sw600dp-xhdpi/tab_new.png \
-  res/drawable-sw600dp-xhdpi/tabs_carat.png \
+  res/drawable-sw600dp-xhdpi/tabs_carat_contracted.png \
+  res/drawable-sw600dp-xhdpi/tabs_carat_expanded.png \
   res/drawable-sw600dp-xhdpi/tabs_expanded_normal.png \
   res/drawable-sw600dp-xhdpi/tabs_expanded_pressed.png \
   res/drawable-sw600dp-xhdpi/tabs_normal.png \

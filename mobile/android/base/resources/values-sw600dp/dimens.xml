@@ -6,5 +6,6 @@
 <resources>
 
     <dimen name="browser_toolbar_height">56dp</dimen>
+    <dimen name="tabs_counter_size">26sp</dimen>
 
 </resources>

@@ -92,7 +92,7 @@
     <!-- TabsTray Row -->
     <style name="TabRowTextAppearance">
         <item name="android:textColor">#E5F2FF</item>
-        <item name="android:shadowColor">#000000</item>
+        <item name="android:shadowColor">#7F000000</item>
         <item name="android:shadowRadius">1</item>
         <item name="android:shadowDx">0</item>
         <item name="android:shadowDy">1</item>
