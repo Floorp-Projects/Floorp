@@ -4520,7 +4520,7 @@ nsBrowserAccess.prototype = {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
         // FIXME: Bug 408379. So how come this doesn't send the
         // referrer like the other loads do?
-        var url = aURI ? aURI.spec : BROWSER_NEW_TAB_URL;
+        var url = aURI ? aURI.spec : "about:blank";
         // Pass all params to openDialog to ensure that "url" isn't passed through
         // loadOneOrMoreURIs, which splits based on "|"
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url, null, null, null);
@@ -4553,7 +4553,7 @@ nsBrowserAccess.prototype = {
         let loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
         let referrer = aOpener ? makeURI(aOpener.location.href) : null;
 
-        let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : BROWSER_NEW_TAB_URL, {
+        let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : "about:blank", {
                                           referrerURI: referrer,
                                           fromExternal: isExternal,
                                           inBackground: loadInBackground});
