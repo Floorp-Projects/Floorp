@@ -178,6 +178,11 @@ class NS_STACK_CLASS nsTreeSanitizer {
                               nsIURI* aBaseURI);
 
     /**
+     * Removes all attributes from an element node.
+     */
+    void RemoveAllAttributes(nsIContent* aElement);
+
+    /**
      * The whitelist of HTML elements.
      */
     static nsTHashtable<nsISupportsHashKey>* sElementsHTML;
