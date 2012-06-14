@@ -300,11 +300,11 @@ interface nsIMemoryReporterManager : nsISupports
     public:                                                                                   \
       NS_DECL_ISUPPORTS                                                                       \
       NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; }        \
-      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.Assign(_path); return NS_OK; }  \
+      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.AssignLiteral(_path); return NS_OK; }  \
       NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
       NS_IMETHOD GetUnits(int *units) { *units = _units; return NS_OK; }                      \
       NS_IMETHOD GetAmount(PRInt64 *amount) { *amount = _amountFunction(); return NS_OK; }    \
-      NS_IMETHOD GetDescription(nsACString &desc) { desc.Assign(_desc); return NS_OK; }       \
+      NS_IMETHOD GetDescription(nsACString &desc) { desc.AssignLiteral(_desc); return NS_OK; }       \
     };                                                                                        \
     NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
 
@@ -317,11 +317,11 @@ interface nsIMemoryReporterManager : nsISupports
     public:                                                                                   \
       NS_DECL_ISUPPORTS                                                                       \
       NS_IMETHOD GetProcess(nsACString &process) { process.Truncate(); return NS_OK; }        \
-      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.Assign(_path); return NS_OK; }  \
+      NS_IMETHOD GetPath(nsACString &memoryPath) { memoryPath.AssignLiteral(_path); return NS_OK; }  \
       NS_IMETHOD GetKind(int *kind) { *kind = _kind; return NS_OK; }                          \
       NS_IMETHOD GetUnits(int *units) { *units = _units; return NS_OK; }                      \
       NS_IMETHOD GetAmount(PRInt64 *amount) { return _amountFunction(amount); }               \
-      NS_IMETHOD GetDescription(nsACString &desc) { desc.Assign(_desc); return NS_OK; }       \
+      NS_IMETHOD GetDescription(nsACString &desc) { desc.AssignLiteral(_desc); return NS_OK; }       \
     };                                                                                        \
     NS_IMPL##_ts##ISUPPORTS1(MemoryReporter_##_classname, nsIMemoryReporter)
 
