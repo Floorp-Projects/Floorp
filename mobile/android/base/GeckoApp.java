@@ -104,6 +104,7 @@ abstract public class GeckoApp
     private GeckoBatteryManager mBatteryReceiver;
     private PromptService mPromptService;
 
+    private FindInPageBar mFindInPageBar;
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
     protected TabsPanel mTabsPanel;
@@ -112,7 +113,6 @@ abstract public class GeckoApp
     private static LayerController mLayerController;
     private static GeckoLayerClient mLayerClient;
     private static AbsoluteLayout mPluginContainer;
-    private static FindInPageBar mFindInPageBar;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
