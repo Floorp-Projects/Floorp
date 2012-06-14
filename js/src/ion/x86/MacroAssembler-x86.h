@@ -373,6 +373,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void cmpPtr(const Address &lhs, const Register &rhs) {
         cmpl(Operand(lhs), rhs);
     }
+    void cmpPtr(const Address &lhs, const ImmWord rhs) {
+        cmpl(Operand(lhs), rhs);
+    }
     void testPtr(const Register &lhs, const Register &rhs) {
         return testl(lhs, rhs);
     }
