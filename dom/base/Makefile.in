@@ -47,7 +47,6 @@ EXPORTS = \
   nsDOMJSUtils.h \
   nsDOMScriptObjectHolder.h \
   nsDOMString.h \
-  nsIBaseDOMException.h \
   nsIDOMClassInfo.h \
   nsIDOMScriptObjectFactory.h \
   nsIJSEventListener.h \
