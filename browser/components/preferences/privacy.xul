@@ -26,6 +26,9 @@
       <preference id="privacy.donottrackheader.enabled"
                   name="privacy.donottrackheader.enabled"
                   type="bool"/>
+      <preference id="privacy.donottrackheader.value"
+                  name="privacy.donottrackheader.value"
+                  type="int"/>
 
       <!-- XXX button prefs -->
       <preference id="pref.privacy.disable_button.cookie_exceptions"
@@ -90,11 +93,21 @@
     <!-- Tracking -->
     <groupbox id="trackingGroup">
       <caption label="&tracking.label;"/>
+      <radiogroup id="doNotTrackSelection" orient="vertical"
+                  preference="privacy.donottrackheader.value"
+                  onsynctopreference="return gPrivacyPane.setTrackingPrefs()"
+                  onsyncfrompreference="return gPrivacyPane.getTrackingPrefs()">
+        <radio id="dntnotrack" value="1" label="&dntTrackingNotOkay.label;"
+                accesskey="&dntTrackingNotOkay.accesskey;" />
+        <radio id="dntdotrack" value="0" label="&dntTrackingOkay.label;"
+                accesskey="&dntTrackingOkay.accesskey;" />
+        <radio id="dntnopref" value="-1" label="&dntTrackingNopref.label;"
+                accesskey="&dntTrackingNopref.accesskey;" />
+      </radiogroup>
+      <label class="text-link" id="doNotTrackInfo"
+             onclick="event.stopPropagation();gPrivacyPane.openTrackingInfoSite();"
+             value="&doNotTrackInfo.label;"/>
 
-      <checkbox id="privacyDoNotTrackPrefs"
-                label="&doNotTrack.label;"
-                accesskey="&doNotTrack.accesskey;"
-                preference="privacy.donottrackheader.enabled"/>
     </groupbox>
 
     <!-- History -->
