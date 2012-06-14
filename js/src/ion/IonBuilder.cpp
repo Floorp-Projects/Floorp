@@ -956,6 +956,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_ENDITER:
         return jsop_iterend();
 
+      case JSOP_INSTANCEOF:
+        return jsop_instanceof();
+
       default:
 #ifdef DEBUG
         return abort("Unsupported opcode: %s (line %d)", js_CodeName[op], info().lineno(cx, pc));
@@ -4677,3 +4680,17 @@ IonBuilder::jsop_iterend()
 
     return resumeAfter(ins);
 }
+
+bool
+IonBuilder::jsop_instanceof()
+{
+    MDefinition *proto = current->pop();
+    MDefinition *obj = current->pop();
+    MInstanceOf *ins = new MInstanceOf(obj, proto);
+
+    current->add(ins);
+    current->push(ins);
+
+    return resumeAfter(ins);
+}
+

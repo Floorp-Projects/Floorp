@@ -8,6 +8,7 @@ dbg.onDebuggerStatement = function (frame) {
     assertEq(args, frame.arguments);
     assertEq(args instanceof Array, true);
     assertEq(args.length, 2);
+    dumpObject(Debugger.Object);
     assertEq(args[0] instanceof Debugger.Object, true);
     assertEq(args[0].class, args[1]);
     hits++;

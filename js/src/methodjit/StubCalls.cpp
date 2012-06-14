@@ -1146,7 +1146,7 @@ stubs::InstanceOf(VMFrame &f)
     RootedObject obj(cx, &rref.toObject());
     const Value &lref = regs.sp[-2];
     JSBool cond = JS_FALSE;
-    if (!HasInstance(cx, obj, &lref, &cond))
+    if (!HasInstance(cx, obj, lref, &cond))
         THROWV(JS_FALSE);
     f.regs.sp[-2].setBoolean(cond);
     return cond;

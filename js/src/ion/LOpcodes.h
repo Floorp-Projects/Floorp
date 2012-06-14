@@ -175,6 +175,8 @@
     _(ToIdV)                        \
     _(Floor)                        \
     _(Round)                        \
+    _(InstanceOfO)                  \
+    _(InstanceOfV)                  \
     _(InterruptCheck)
 
 #if defined(JS_CPU_X86)

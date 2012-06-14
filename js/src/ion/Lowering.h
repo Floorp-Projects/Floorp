@@ -199,6 +199,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitIteratorEnd(MIteratorEnd *ins);
     bool visitStringLength(MStringLength *ins);
     bool visitThrow(MThrow *ins);
+    bool visitInstanceOf(MInstanceOf *ins);
 };
 
 } // namespace ion

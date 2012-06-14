@@ -193,8 +193,8 @@ SameValue(JSContext *cx, const Value &v1, const Value &v2, bool *same);
 extern JSType
 TypeOfValue(JSContext *cx, const Value &v);
 
-extern JSBool
-HasInstance(JSContext *cx, HandleObject obj, const js::Value *v, JSBool *bp);
+extern bool
+HasInstance(JSContext *cx, HandleObject obj, const js::Value &v, JSBool *bp);
 
 /*
  * A linked list of the |FrameRegs regs;| variables belonging to all

@@ -3213,7 +3213,7 @@ JS_HasInstance(JSContext *cx, JSObject *obj_, jsval v, JSBool *bp)
 
     AssertNoGC(cx);
     assertSameCompartment(cx, obj, v);
-    return HasInstance(cx, obj, &v, bp);
+    return HasInstance(cx, obj, v, bp);
 }
 
 JS_PUBLIC_API(void *)

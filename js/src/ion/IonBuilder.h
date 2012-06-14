@@ -355,6 +355,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_iternext(uint8 depth);
     bool jsop_itermore();
     bool jsop_iterend();
+    bool jsop_instanceof();
 
     /* Inlining. */
 

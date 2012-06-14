@@ -2709,6 +2709,52 @@ class LPhi : public LInstruction
     }
 };
 
+class LInstanceOfO : public LInstructionHelper<1, 2, 2>
+{
+  public:
+    LIR_HEADER(InstanceOfO);
+    LInstanceOfO(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp, const LDefinition &temp2) {
+        setOperand(0, lhs);
+        setOperand(1, rhs);
+        setTemp(0, temp);
+        setTemp(1, temp2);
+    }
+
+    const LAllocation *lhs() {
+        return getOperand(0);
+    }
+    const LAllocation *rhs() {
+        return getOperand(1);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
+class LInstanceOfV : public LInstructionHelper<1, BOX_PIECES+1, 2>
+{
+  public:
+    LIR_HEADER(InstanceOfV);
+    LInstanceOfV(const LAllocation &rhs, const LDefinition &temp, const LDefinition &temp2) {
+        setOperand(RHS, rhs);
+        setTemp(0, temp);
+        setTemp(1, temp2);
+    }
+
+    const LAllocation *lhs() {
+        return getOperand(LHS);
+    }
+    const LAllocation *rhs() {
+        return getOperand(RHS);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+
+    static const size_t LHS = 0;
+    static const size_t RHS = BOX_PIECES;
+};
+
 } // namespace ion
 } // namespace js
 
