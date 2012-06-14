@@ -466,6 +466,12 @@
 
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
+#ifdef ENABLE_MARIONETTE
+@BINPATH@/chrome/marionette@JAREXT@
+@BINPATH@/chrome/marionette.manifest
+@BINPATH@/components/MarionetteComponents.manifest
+@BINPATH@/components/marionettecomponent.js
+#endif
 
 ; Modules
 @BINPATH@/modules/*
