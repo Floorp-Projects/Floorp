@@ -24,6 +24,7 @@ EXPORTS_mozilla += \
   Scoped.h \
   StandardInteger.h \
   ThreadLocal.h \
+  TypeTraits.h \
   Types.h \
   Util.h \
   $(NULL)
