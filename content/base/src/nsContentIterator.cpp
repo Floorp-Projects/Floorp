@@ -17,15 +17,6 @@
 // couple of utility static functs
 
 ///////////////////////////////////////////////////////////////////////////
-// ContentHasChildren: returns true if the node has children
-//
-static inline bool
-NodeHasChildren(nsINode *aNode)
-{
-  return aNode->GetChildCount() > 0;
-}
-
-///////////////////////////////////////////////////////////////////////////
 // NodeToParentOffset: returns the node's parent and offset.
 //
 
@@ -318,7 +309,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
   nsIContent *cChild = nsnull;
 
-  if (!startIsData && NodeHasChildren(startNode))
+  if (!startIsData && startNode->HasChildren())
     cChild = startNode->GetChildAt(startIndx);
 
   if (!cChild) // no children, must be a text node
@@ -386,7 +377,7 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
   bool endIsData = endNode->IsNodeOfType(nsINode::eDATA_NODE);
 
-  if (endIsData || !NodeHasChildren(endNode) || endIndx == 0)
+  if (endIsData || !endNode->HasChildren() || endIndx == 0)
   {
     if (mPre) {
       if (endNode->IsNodeOfType(nsINode::eCONTENT)) {
@@ -693,7 +684,7 @@ nsContentIterator::NextNode(nsINode *aNode, nsTArray<PRInt32> *aIndexes)
   if (mPre)  // if we are a Pre-order iterator, use pre-order
   {
     // if it has children then next node is first child
-    if (NodeHasChildren(n))
+    if (n->HasChildren())
     {
       nsINode *nFirstChild = n->GetFirstChild();
 
