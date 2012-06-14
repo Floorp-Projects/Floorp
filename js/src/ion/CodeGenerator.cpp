@@ -2376,6 +2376,8 @@ class OutOfLineCache : public OutOfLineCodeBase<CodeGenerator>
 
     bool accept(CodeGenerator *codegen) {
         switch (ins->op()) {
+          case LInstruction::LOp_InstanceOfO:
+          case LInstruction::LOp_InstanceOfV:
           case LInstruction::LOp_GetPropertyCacheT:
           case LInstruction::LOp_GetPropertyCacheV:
             return codegen->visitOutOfLineCacheGetProperty(this);
@@ -2421,43 +2423,62 @@ CodeGenerator::visitCache(LInstruction *ins)
 bool
 CodeGenerator::visitOutOfLineCacheGetProperty(OutOfLineCache *ool)
 {
-    Register objReg = ToRegister(ool->cache()->getOperand(0));
     RegisterSet liveRegs = ool->cache()->safepoint()->liveRegs();
 
-    LInstruction *ins_ = ool->cache();
-    const MGetPropertyCache *mir;
+    LInstruction *ins = ool->cache();
+    const MInstruction *mir = ins->mirRaw()->toInstruction();
 
     TypedOrValueRegister output;
 
-    if (ins_->op() == LInstruction::LOp_GetPropertyCacheT) {
-        LGetPropertyCacheT *ins = (LGetPropertyCacheT *) ins_;
-        output = TypedOrValueRegister(ins->mir()->type(), ToAnyRegister(ins->getDef(0)));
-        mir = ins->mir();
-    } else {
-        LGetPropertyCacheV *ins = (LGetPropertyCacheV *) ins_;
+    Register objReg;
+
+    // Define the input and output registers each opcode wants,
+    // and which atom property it should get
+    // Note: because all registers are saved, the output register should be
+    //       a def register, else the result will be overriden by restoreLive(ins)
+    RootedPropertyName name(gen->cx);
+    switch (ins->op()) {
+      case LInstruction::LOp_InstanceOfO:
+      case LInstruction::LOp_InstanceOfV:
+        name = GetIonContext()->cx->runtime->atomState.classPrototypeAtom;
+        objReg = ToRegister(ins->getTemp(1));
+        output = TypedOrValueRegister(MIRType_Object, ToAnyRegister(ins->getDef(0)));
+        break;
+      case LInstruction::LOp_GetPropertyCacheT:
+        name = ((LGetPropertyCacheT *) ins)->mir()->name();
+        objReg = ToRegister(ins->getOperand(0));
+        output = TypedOrValueRegister(mir->type(), ToAnyRegister(ins->getDef(0)));
+        break;
+      case LInstruction::LOp_GetPropertyCacheV:
+        name = ((LGetPropertyCacheV *) ins)->mir()->name();
+        objReg = ToRegister(ins->getOperand(0));
         output = TypedOrValueRegister(GetValueOutput(ins));
-        mir = ins->mir();
+        break;
+      default:
+        JS_NOT_REACHED("Bad instruction");
+        return false;
     }
 
     IonCacheGetProperty cache(ool->getInlineJump(), ool->getInlineLabel(),
                               masm.labelForPatch(), liveRegs,
-                              objReg, mir->name(), output);
+                              objReg, name, output);
+    JS_ASSERT(mir->resumePoint() != NULL);
 
     cache.setScriptedLocation(mir->block()->info().script(), mir->resumePoint()->pc());
     size_t cacheIndex = allocateCache(cache);
 
-    saveLive(ins_);
+    saveLive(ins);
 
     typedef bool (*pf)(JSContext *, size_t, HandleObject, Value *);
     static const VMFunction GetPropertyCacheInfo = FunctionInfo<pf>(GetPropertyCache);
 
     pushArg(objReg);
     pushArg(Imm32(cacheIndex));
-    if (!callVM(GetPropertyCacheInfo, ins_))
+    if (!callVM(GetPropertyCacheInfo, ins))
         return false;
 
     masm.storeCallResultValue(output);
-    restoreLive(ins_);
+    restoreLive(ins);
 
     masm.jump(ool->rejoin());
 
@@ -3047,6 +3068,146 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
     masm.bind(&isZero);
     masm.move32(Imm32(0), output);
 
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGenerator::visitInstanceOfO(LInstanceOfO *ins)
+{
+    Register rhs = ToRegister(ins->getOperand(1));
+    return emitInstanceOf(ins, rhs);
+}
+
+bool
+CodeGenerator::visitInstanceOfV(LInstanceOfV *ins)
+{
+    Register rhs = ToRegister(ins->getOperand(LInstanceOfV::RHS));
+    return emitInstanceOf(ins, rhs);
+}
+
+bool
+CodeGenerator::emitInstanceOf(LInstruction *ins, Register rhs)
+{
+    Register rhsTmp = ToRegister(ins->getTemp(1));
+    Register output = ToRegister(ins->getDef(0));
+    
+    // This temporary is used in other parts of the code. 
+    // Different names are used so the purpose is clear.
+    Register rhsFlags = ToRegister(ins->getTemp(0));
+    Register lhsTmp = ToRegister(ins->getTemp(0));
+
+    Label callHasInstance;    
+    Label boundFunctionCheck;    
+    Label boundFunctionDone;    
+    Label done;
+    Label loopPrototypeChain;
+
+    typedef bool (*pf)(JSContext *, HandleObject, const Value &, JSBool *);
+    static const VMFunction HasInstanceInfo = FunctionInfo<pf>(js::HasInstance);
+
+    OutOfLineCode *call = oolCallVM(HasInstanceInfo, ins, (ArgList(), rhs, ToValue(ins, 0)),
+                                   StoreRegisterTo(output));
+    if (!call)
+        return false;
+
+    // 1. CODE FOR HASINSTANCE_BOUND_FUNCTION
+
+    // ASM-equivalent of following code
+    //  boundFunctionCheck:
+    //      if (!rhs->isFunction())
+    //          goto callHasInstance
+    //      if (!rhs->isBoundFunction())
+    //          goto HasInstanceCunction
+    //      rhs = rhs->getBoundFunction();
+    //      goto boundFunctionCheck
+
+    masm.mov(rhs, rhsTmp);
+
+    // Check Function
+    masm.bind(&boundFunctionCheck);
+
+    masm.loadBaseShape(rhsTmp, output);
+    masm.cmpPtr(Operand(output, BaseShape::offsetOfClass()), ImmWord(&js::FunctionClass));
+    masm.j(Assembler::NotEqual, call->entry());
+
+    // Check Bound Function
+    masm.loadPtr(Address(output, BaseShape::offsetOfFlags()), rhsFlags);
+    masm.andl(Imm32(BaseShape::BOUND_FUNCTION), rhsFlags); 
+    masm.j(Assembler::Zero, &boundFunctionDone);
+
+    // Get Bound Function
+    masm.loadPtr(Address(output, BaseShape::offsetOfParent()), rhsTmp);
+    masm.jump(&boundFunctionCheck); 
+
+    // 2. CODE FOR HASINSTANCE_FUNCTION
+    masm.bind(&boundFunctionDone); 
+
+    // ASM-equivalent of following code
+    //  if (!lhs->isObject()) {
+    //    output = false;
+    //    goto done;
+    //  }
+    //  rhs = rhs->getPrototypeClass();
+    //  output = false;
+    //  while (1) {
+    //    lhs = lhs->getType().proto;
+    //    if (lhs == NULL)
+    //      goto done;
+    //    if (lhs != rhs) {
+    //      output = true;
+    //      goto done; 
+    //    }
+    //  }
+
+    // When lhs is a value: The HasInstance for function objects always
+    // return false when lhs isn't an object. So check if 
+    // lhs is an object and otherwise return false
+    if (ins->isInstanceOfV()) {
+        Label isObject;
+        ValueOperand lhsValue = ToValue(ins, LInstanceOfV::LHS);
+        masm.branchTestObject(Assembler::Equal, lhsValue, &isObject);
+        masm.mov(Imm32(0), output);
+        masm.jump(&done); 
+
+        masm.bind(&isObject);
+        Register tmp = masm.extractObject(lhsValue, lhsTmp);
+        masm.mov(tmp, lhsTmp);
+    } else {
+        masm.mov(ToRegister(ins->getOperand(0)), lhsTmp);
+    }
+
+    // Get prototype-class by using a OutOfLine GetProperty Cache    
+    // It will use register 'rhsTmp' as input and register 'output' as output, see r1889
+    OutOfLineCache *ool = new OutOfLineCache(ins);
+    if (!addOutOfLineCode(ool))
+        return false;
+
+    CodeOffsetJump jump = masm.jumpWithPatch(ool->repatchEntry());
+    CodeOffsetLabel label = masm.labelForPatch();
+    masm.bind(ool->rejoin());
+    ool->setInlineJump(jump, label); 
+
+    // Move the OutOfLineCache return value and set the output on false
+    masm.mov(output, rhsTmp);
+    masm.mov(Imm32(0), output);
+
+    // Walk the prototype chain
+    masm.bind(&loopPrototypeChain);
+    masm.loadPtr(Address(lhsTmp, JSObject::offsetOfType()), lhsTmp);
+    masm.loadPtr(Address(lhsTmp, offsetof(types::TypeObject, proto)), lhsTmp);
+
+    masm.testl(lhsTmp, lhsTmp);
+    masm.j(Assembler::Zero, &done);
+
+    // Check lhs is equal to rhsShape
+    masm.cmpl(lhsTmp, rhsTmp);
+    masm.j(Assembler::NotEqual, &loopPrototypeChain);
+
+    // return true
+    masm.mov(Imm32(1), output); 
+
+    masm.bind(call->rejoin());
     masm.bind(&done);
     return true;
 }

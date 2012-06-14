@@ -4311,6 +4311,33 @@ class MIteratorEnd
     }
 };
 
+// Implementation for instanceof operator.
+class MInstanceOf
+  : public MBinaryInstruction,
+    public InstanceOfPolicy
+{
+  public:
+    MInstanceOf(MDefinition *obj, MDefinition *proto)
+      : MBinaryInstruction(obj, proto)
+    {
+        setResultType(MIRType_Boolean);
+    }
+
+    INSTRUCTION_HEADER(InstanceOf);
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    MDefinition *lhs() const {
+        return getOperand(0);
+    }
+
+    MDefinition *rhs() const {
+        return getOperand(1);
+    }
+};
+
 // Given a value, guard that the value is in a particular TypeSet, then returns
 // that value.
 class MTypeBarrier : public MUnaryInstruction

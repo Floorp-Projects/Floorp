@@ -382,6 +382,20 @@ CallSetElementPolicy::adjustInputs(MInstruction *ins)
 }
 
 bool
+InstanceOfPolicy::adjustInputs(MInstruction *def)
+{
+    // Box first operand if it isn't object
+    if (def->getOperand(0)->type() != MIRType_Object) {
+       BoxPolicy<0>::staticAdjustInputs(def);
+    }
+
+    // Unbox second operand forcefully to an object, 
+    // so it bailouts with other types
+    ObjectPolicy<1>::staticAdjustInputs(def);
+    return true;
+}
+
+bool
 StoreTypedArrayPolicy::adjustInputs(MInstruction *ins)
 {
     MStoreTypedArrayElement *store = ins->toStoreTypedArrayElement();
