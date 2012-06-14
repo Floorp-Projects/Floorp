@@ -2,9 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File in use complete MAR file background patch apply success test */
+/* File in use partial MAR file background patch apply failure fallback test */
 
-const TEST_ID = "0184";
+const TEST_ID = "0189";
+const MAR_IN_USE_WIN_FILE = "data/partial_win.mar";
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -24,40 +25,34 @@ const TEST_FILES = [
   relPathDir       : "",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial_precomplete",
-  compareFile      : "data/partial_precomplete"
+  originalFile     : "data/complete_precomplete",
+  compareFile      : "data/complete_precomplete"
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginstext0",
   relPathDir       : "a/b/searchplugins/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
+  originalContents : "ToBeReplacedWithFromPartial\n",
+  compareContents  : "ToBeReplacedWithFromPartial\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Patched by update.manifest if the file exists " +
+                     "(patch-if)",
   fileName         : "searchpluginspng1.png",
   relPathDir       : "a/b/searchplugins/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Patched by update.manifest if the file exists " +
+                     "(patch-if)",
   fileName         : "searchpluginspng0.png",
   relPathDir       : "a/b/searchplugins/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
-}, {
-  description      : "Added by update.manifest (add)",
-  fileName         : "removed-files",
-  relPathDir       : "a/b/",
-  originalContents : null,
-  compareContents  : null,
-  originalFile     : "data/partial_removed-files",
-  compareFile      : "data/partial_removed-files"
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -68,110 +63,118 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Patched by update.manifest if the parent directory " +
+                     "exists (patch-if)",
   fileName         : "extensions1png1.png",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Patched by update.manifest if the parent directory " +
+                     "exists (patch-if)",
   fileName         : "extensions1png0.png",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
   fileName         : "extensions0text0",
   relPathDir       : "a/b/extensions/extensions0/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
+  originalContents : "ToBeReplacedWithFromPartial\n",
+  compareContents  : "ToBeReplacedWithFromPartial\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Patched by update.manifest if the parent directory " +
+                     "exists (patch-if)",
   fileName         : "extensions0png1.png",
   relPathDir       : "a/b/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Added by update.manifest if the parent directory " +
-                     "exists (add-if)",
+  description      : "Patched by update.manifest if the parent directory " +
+                     "exists (patch-if)",
   fileName         : "extensions0png0.png",
   relPathDir       : "a/b/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Added by update.manifest (add)",
+  description      : "Patched by update.manifest (patch)",
   fileName         : "exe0.exe",
   relPathDir       : "a/b/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : HELPER_BIN_FILE,
-  compareFile      : HELPER_BIN_FILE
+  originalFile     : "data/partial_in_use_win_before.exe",
+  compareFile      : "data/partial_in_use_win_before.exe"
 }, {
-  description      : "Added by update.manifest (add)",
-  fileName         : "10text0",
-  relPathDir       : "a/b/1/10/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
-  originalFile     : null,
-  compareFile      : null
-}, {
-  description      : "Added by update.manifest (add) file in use",
+  description      : "Patched by update.manifest (patch) file in use",
   fileName         : "0exe0.exe",
   relPathDir       : "a/b/0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : HELPER_BIN_FILE,
-  compareFile      : HELPER_BIN_FILE
-}, {
-  description      : "Added by update.manifest (add)",
-  fileName         : "00text1",
-  relPathDir       : "a/b/0/00/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/partial_in_use_win_before.exe",
+  compareFile      : "data/partial_in_use_win_before.exe"
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text0",
   relPathDir       : "a/b/0/00/",
-  originalContents : "ToBeReplacedWithFromComplete\n",
-  compareContents  : "ToBeReplacedWithFromComplete\n",
+  originalContents : "ToBeReplacedWithFromPartial\n",
+  compareContents  : "ToBeReplacedWithFromPartial\n",
+  originalFile     : null,
+  compareFile      : null
+}, {
+  description      : "Patched by update.manifest (patch)",
+  fileName         : "00png0.png",
+  relPathDir       : "a/b/0/00/",
+  originalContents : null,
+  compareContents  : null,
+  originalFile     : "data/complete.png",
+  compareFile      : "data/complete.png"
+}, {
+  description      : "Added by update.manifest (add)",
+  fileName         : "20text0",
+  relPathDir       : "a/b/2/20/",
+  originalContents : null,
+  compareContents  : null,
   originalFile     : null,
   compareFile      : null
 }, {
   description      : "Added by update.manifest (add)",
-  fileName         : "00png0.png",
+  fileName         : "20png0.png",
+  relPathDir       : "a/b/2/20/",
+  originalContents : null,
+  compareContents  : null,
+  originalFile     : null,
+  compareFile      : null
+}, {
+  description      : "Added by update.manifest (add)",
+  fileName         : "00text2",
   relPathDir       : "a/b/0/00/",
   originalContents : null,
   compareContents  : null,
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Removed by precomplete (remove)",
-  fileName         : "20text0",
-  relPathDir       : "a/b/2/20/",
+  description      : "Removed by update.manifest (remove)",
+  fileName         : "10text0",
+  relPathDir       : "a/b/1/10/",
   originalContents : "ToBeDeleted\n",
   compareContents  : "ToBeDeleted\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Removed by precomplete (remove)",
-  fileName         : "20png0.png",
-  relPathDir       : "a/b/2/20/",
+  description      : "Removed by update.manifest (remove)",
+  fileName         : "00text1",
+  relPathDir       : "a/b/0/00/",
   originalContents : "ToBeDeleted\n",
   compareContents  : "ToBeDeleted\n",
   originalFile     : null,
@@ -180,12 +183,12 @@ const TEST_FILES = [
 
 ADDITIONAL_TEST_DIRS = [
 {
-  description  : "Removed by precomplete (rmdir)",
-  relPathDir   : "a/b/2/20/",
+  description  : "Removed by update.manifest (rmdir)",
+  relPathDir   : "a/b/1/10/",
   dirRemoved   : true
 }, {
-  description  : "Removed by precomplete (rmdir)",
-  relPathDir   : "a/b/2/",
+  description  : "Removed by update.manifest (rmdir)",
+  relPathDir   : "a/b/1/",
   dirRemoved   : true
 }];
 
@@ -194,11 +197,11 @@ function run_test() {
   do_register_cleanup(cleanupUpdaterTest);
 
   gBackgroundUpdate = true;
-  setupUpdaterTest(MAR_COMPLETE_FILE);
+  setupUpdaterTest(MAR_IN_USE_WIN_FILE);
 
   // Launch an existing file so it is in use during the update
-  let fileInUseBin = getApplyDirFile(TEST_FILES[14].relPathDir +
-                                     TEST_FILES[14].fileName);
+  let fileInUseBin = getApplyDirFile(TEST_FILES[12].relPathDir +
+                                     TEST_FILES[12].fileName);
   let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "40"];
   let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
                          createInstance(AUS_Ci.nsIProcess);
@@ -222,7 +225,6 @@ function doUpdate() {
   // Now switch the application and its updated version
   gBackgroundUpdate = false;
   gSwitchApp = true;
-  gDisableReplaceFallback = true;
   exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for failure when " +
               "switching to the updated application");
@@ -232,9 +234,9 @@ function doUpdate() {
 }
 
 function checkUpdate() {
-  logTestInfo("testing update.status should be " + STATE_FAILED);
+  logTestInfo("testing update.status should be " + STATE_PENDING);
   let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
+  do_check_eq(readStatusFile(updatesDir), STATE_PENDING);
 
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
