@@ -112,6 +112,10 @@ class ScopeObject : public JSObject
 
     /* For jit access. */
     static inline size_t offsetOfEnclosingScope();
+
+    static inline size_t enclosingScopeSlot() {
+        return SCOPE_CHAIN_SLOT;
+    }
 };
 
 class CallObject : public ScopeObject

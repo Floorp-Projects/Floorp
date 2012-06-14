@@ -286,14 +286,12 @@ MBasicBlock::setVariable(uint32 index)
 void
 MBasicBlock::setArg(uint32 arg)
 {
-    // :TODO:  assert not closed
     setVariable(info_.argSlot(arg));
 }
 
 void
 MBasicBlock::setLocal(uint32 local)
 {
-    // :TODO:  assert not closed
     setVariable(info_.localSlot(local));
 }
 
@@ -333,14 +331,12 @@ MBasicBlock::pushVariable(uint32 slot)
 void
 MBasicBlock::pushArg(uint32 arg)
 {
-    // :TODO:  assert not closed
     pushVariable(info_.argSlot(arg));
 }
 
 void
 MBasicBlock::pushLocal(uint32 local)
 {
-    // :TODO:  assert not closed
     pushVariable(info_.localSlot(local));
 }
 
