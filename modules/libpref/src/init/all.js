@@ -712,6 +712,9 @@ pref("privacy.popups.disable_from_plugins", 2);
 
 // "do not track" HTTP header, disabled by default
 pref("privacy.donottrackheader.enabled",    false);
+//   0 = tracking is acceptable
+//   1 = tracking is unacceptable
+pref("privacy.donottrackheader.value",      1);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
