@@ -61,6 +61,12 @@ public:
     }
   }
 
+  ModifierKeyState(Modifiers aModifiers) :
+    mModifiers(aModifiers)
+  {
+    EnsureAltGr();
+  }
+
   void Update();
 
   void Unset(Modifiers aRemovingModifiers)
@@ -106,6 +112,29 @@ private:
   }
 
   void InitMouseEvent(nsInputEvent& aMouseEvent) const;
+};
+
+struct UniCharsAndModifiers
+{
+  // Dead-key + up to 4 characters
+  PRUnichar mChars[5];
+  Modifiers mModifiers[5];
+  PRUint32  mLength;
+
+  UniCharsAndModifiers() : mLength(0) {}
+  UniCharsAndModifiers operator+(const UniCharsAndModifiers& aOther) const;
+  UniCharsAndModifiers& operator+=(const UniCharsAndModifiers& aOther);
+
+  /**
+   * Append a pair of unicode character and the final modifier.
+   */
+  void Append(PRUnichar aUniChar, Modifiers aModifiers);
+  void Clear() { mLength = 0; }
+
+  void FillModifiers(Modifiers aModifiers);
+
+  bool UniCharsEqual(const UniCharsAndModifiers& aOther) const;
+  bool UniCharsCaseInsensitiveEqual(const UniCharsAndModifiers& aOther) const;
 };
 
 struct DeadKeyEntry;
@@ -229,10 +258,8 @@ public:
                                            PRUint32 aEntries) const;
   inline PRUnichar GetCompositeChar(ShiftState aShiftState,
                                     PRUnichar aBaseChar) const;
-  PRUint32 GetNativeUniChars(ShiftState aShiftState,
-                             PRUnichar* aUniChars = nsnull) const;
-  PRUint32 GetUniChars(ShiftState aShiftState, PRUnichar* aUniChars,
-                       Modifiers* aFinalModifiers) const;
+  UniCharsAndModifiers GetNativeUniChars(ShiftState aShiftState) const;
+  UniCharsAndModifiers GetUniChars(ShiftState aShiftState) const;
 };
 
 class NativeKey {
@@ -283,9 +310,6 @@ class KeyboardLayout
   DeadKeyTableListEntry* mDeadKeyTableListHead;
   PRInt32 mActiveDeadKey;                 // -1 = no active dead-key
   VirtualKey::ShiftState mDeadKeyShiftState;
-  PRUnichar mChars[5];                    // Dead-key + up to 4 characters
-  Modifiers mModifiersOfChars[5];
-  PRUint8 mNumOfChars;
 
   static inline PRInt32 GetKeyIndex(PRUint8 aVirtualKey);
   static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
@@ -313,25 +337,29 @@ public:
 
   /**
    * IsDeadKey() returns true if aVirtualKey is a dead key with aModKeyState.
+   * This method isn't stateful.
    */
   bool IsDeadKey(PRUint8 aVirtualKey,
                  const ModifierKeyState& aModKeyState) const;
+
+  /**
+   * GetUniCharsAndModifiers() returns characters which is inputted by the
+   * aVirtualKey with aModKeyState.  This method isn't stateful.
+   */
+  UniCharsAndModifiers GetUniCharsAndModifiers(
+                         PRUint8 aVirtualKey,
+                         const ModifierKeyState& aModKeyState) const;
 
   /**
    * OnKeyDown() must be called when actually widget receives WM_KEYDOWN
    * message.  This method is stateful.  This saves current dead key state
    * and computes current inputted character(s).
    */
-  void OnKeyDown(PRUint8 aVirtualKey,
-                 const ModifierKeyState& aModKeyState);
+  UniCharsAndModifiers OnKeyDown(PRUint8 aVirtualKey,
+                                 const ModifierKeyState& aModKeyState);
 
   void LoadLayout(HKL aLayout);
 
-  PRUint32 GetUniChars(PRUnichar* aUniChars, Modifiers* aModifiersOfUniChars,
-                       PRUint32 aMaxChars) const;
-  PRUint32 GetUniCharsWithShiftState(PRUint8 aVirtualKey, Modifiers aModifiers,
-                                     PRUnichar* aUniChars,
-                                     PRUint32 aMaxChars) const;
   PRUint32 ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const;
 
   HKL GetLayout() const { return mKeyboardLayout; }
