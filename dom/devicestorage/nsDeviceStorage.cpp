@@ -328,7 +328,7 @@ protected:
   friend class ContinueCursorEvent;
 };
 
-class DeviceStorageCursorRequest : public nsIContentPermissionRequest
+class DeviceStorageCursorRequest MOZ_FINAL : public nsIContentPermissionRequest
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -887,7 +887,7 @@ private:
   nsRefPtr<DOMRequest> mRequest;
 };
 
-class DeviceStorageRequest : public nsIContentPermissionRequest, public nsIRunnable
+class DeviceStorageRequest MOZ_FINAL : public nsIContentPermissionRequest, public nsIRunnable
 {
 public:
 
