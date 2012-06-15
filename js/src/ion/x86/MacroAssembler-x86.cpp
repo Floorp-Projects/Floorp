@@ -150,7 +150,6 @@ MacroAssemblerX86::callWithABI(void *fun, Result result)
         reserveStack(sizeof(double));
         fstp(Operand(esp, 0));
         movsd(Operand(esp, 0), ReturnFloatReg);
-        breakpoint();
         freeStack(sizeof(double));
     }
     if (dynamicAlignment_)

@@ -95,6 +95,7 @@ static const Register JSReturnReg_Type = r3;
 static const Register JSReturnReg_Data = r2;
 static const Register StackPointer = sp;
 static const Register ReturnReg = r0;
+static const FloatRegister ReturnFloatReg = { FloatRegisters::d1 };
 static const FloatRegister ScratchFloatReg = { FloatRegisters::d0 };
 
 static const FloatRegister d0  = {FloatRegisters::d0};

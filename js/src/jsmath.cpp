@@ -249,8 +249,14 @@ js_math_ceil(JSContext *cx, unsigned argc, Value *vp)
     return JS_TRUE;
 }
 
-static JSBool
-math_cos(JSContext *cx, unsigned argc, Value *vp)
+double
+js::math_cos_impl(MathCache *cache, double x)
+{
+    return cache->lookup(cos, x);
+}
+
+JSBool
+js::math_cos(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -263,7 +269,7 @@ math_cos(JSContext *cx, unsigned argc, Value *vp)
     MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
-    z = mathCache->lookup(cos, x);
+    z = math_cos_impl(mathCache, x);
     vp->setDouble(z);
     return JS_TRUE;
 }
@@ -323,8 +329,18 @@ js_math_floor(JSContext *cx, unsigned argc, Value *vp)
     return JS_TRUE;
 }
 
-static JSBool
-math_log(JSContext *cx, unsigned argc, Value *vp)
+double
+js::math_log_impl(MathCache *cache, double x)
+{
+#if defined(SOLARIS) && defined(__GNUC__)
+    if (x < 0)
+        return js_NaN;
+#endif
+    return cache->lookup(log, x);
+}
+
+JSBool
+js::math_log(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -334,16 +350,10 @@ math_log(JSContext *cx, unsigned argc, Value *vp)
     }
     if (!ToNumber(cx, vp[2], &x))
         return JS_FALSE;
-#if defined(SOLARIS) && defined(__GNUC__)
-    if (x < 0) {
-        vp->setDouble(js_NaN);
-        return JS_TRUE;
-    }
-#endif
     MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
-    z = mathCache->lookup(log, x);
+    z = math_log_impl(mathCache, x);
     vp->setNumber(z);
     return JS_TRUE;
 }
@@ -565,8 +575,14 @@ js_math_round(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static JSBool
-math_sin(JSContext *cx, unsigned argc, Value *vp)
+double
+js::math_sin_impl(MathCache *cache, double x)
+{
+    return cache->lookup(sin, x);
+}
+
+JSBool
+js::math_sin(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -579,7 +595,7 @@ math_sin(JSContext *cx, unsigned argc, Value *vp)
     MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
-    z = mathCache->lookup(sin, x);
+    z = math_sin_impl(mathCache, x);
     vp->setDouble(z);
     return JS_TRUE;
 }
@@ -603,8 +619,14 @@ js_math_sqrt(JSContext *cx, unsigned argc, Value *vp)
     return JS_TRUE;
 }
 
-static JSBool
-math_tan(JSContext *cx, unsigned argc, Value *vp)
+double
+js::math_tan_impl(MathCache *cache, double x)
+{
+    return cache->lookup(tan, x);
+}
+
+JSBool
+js::math_tan(JSContext *cx, unsigned argc, Value *vp)
 {
     double x, z;
 
@@ -617,7 +639,7 @@ math_tan(JSContext *cx, unsigned argc, Value *vp)
     MathCache *mathCache = cx->runtime->getMathCache(cx);
     if (!mathCache)
         return JS_FALSE;
-    z = mathCache->lookup(tan, x);
+    z = math_tan_impl(mathCache, x);
     vp->setDouble(z);
     return JS_TRUE;
 }

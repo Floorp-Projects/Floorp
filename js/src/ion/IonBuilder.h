@@ -376,6 +376,8 @@ class IonBuilder : public MIRGenerator
     bool discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
     bool discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
     InliningStatus inlineNativeCall(JSFunction *target, uint32 argc, bool constructing);
+    InliningStatus inlineMathFunction(MMathFunction::Function function, MIRType argType,
+                                      MIRType returnType);
 
     bool jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inlineBuilder);
     bool inlineScriptedCall(JSFunction *target, uint32 argc);

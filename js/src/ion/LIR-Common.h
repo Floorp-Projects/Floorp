@@ -1046,6 +1046,25 @@ class LSqrtD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LMathFunctionD : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(MathFunctionD);
+    LMathFunctionD(const LAllocation &input) {
+        setOperand(0, input);
+    }
+
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+    MMathFunction *mir() const {
+        return mir_->toMathFunction();
+    }
+};
+
 // Adds two integers, returning an integer value.
 class LAddI : public LBinaryMath<0>
 {

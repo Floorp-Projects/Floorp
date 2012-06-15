@@ -88,6 +88,7 @@
     _(AbsI)                         \
     _(AbsD)                         \
     _(SqrtD)                        \
+    _(MathFunctionD)                \
     _(NotI)                         \
     _(NotD)                         \
     _(NotV)                         \

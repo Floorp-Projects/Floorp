@@ -81,6 +81,25 @@ IonBuilder::discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineMathFunction(MMathFunction::Function function, MIRType argType, MIRType returnType)
+{
+    if (!IsNumberType(argType))
+        return InliningStatus_NotInlined;
+
+    if (returnType != MIRType_Double)
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(/* argc = */ 1, argv, current))
+        return InliningStatus_Error;
+
+    MMathFunction *ins = MMathFunction::New(argv[1], function);
+    current->add(ins);
+    current->push(ins);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
 {
     JSNative native = target->native();
@@ -173,6 +192,14 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
                 return InliningStatus_Inlined;
             }
         }
+        if (native == js::math_log)
+            return inlineMathFunction(MMathFunction::Log, arg1Type, returnType);
+        if (native == js::math_sin)
+            return inlineMathFunction(MMathFunction::Sin, arg1Type, returnType);
+        if (native == js::math_cos)
+            return inlineMathFunction(MMathFunction::Cos, arg1Type, returnType);
+        if (native == js::math_tan)
+            return inlineMathFunction(MMathFunction::Tan, arg1Type, returnType);
         if (native == js_math_floor) {
             // argThis == MPassArg(MConstant(Math))
             if (arg1Type == MIRType_Double && returnType == MIRType_Int32) {
