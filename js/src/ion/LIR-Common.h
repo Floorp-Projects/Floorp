@@ -509,6 +509,9 @@ class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
         JS_ASSERT(mir()->numStackArgs() >= 1);
         return mir()->numStackArgs() - 1; // |this| is not a formal argument.
     }
+    uint32 numActualArgs() const {
+        return mir()->numActualArgs();
+    }
 
     const LAllocation *getArgJSContextReg() {
         return getTemp(0)->output();

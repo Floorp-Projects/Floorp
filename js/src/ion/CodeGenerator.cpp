@@ -514,7 +514,7 @@ CodeGenerator::emitCallInvokeFunction(LCallGeneric *call, uint32 unusedStack)
     masm.freeStack(unusedStack);
 
     pushArg(StackPointer);                    // argv.
-    pushArg(Imm32(call->numStackArgs()));     // argc.
+    pushArg(Imm32(call->numActualArgs()));    // argc.
     pushArg(ToRegister(call->getFunction())); // JSFunction *.
 
     if (!callVM(InvokeFunctionInfo, call))
