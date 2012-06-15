@@ -977,7 +977,7 @@ let gGestureSupport = {
 };
 
 var gBrowserInit = {
-  BrowserStartup: function() {
+  onLoad: function() {
     var uriToLoad = null;
 
     // window.arguments[0]: URI to load (string), or an nsISupportsArray of
@@ -1149,7 +1149,7 @@ var gBrowserInit = {
 
     retrieveToolbarIconsizesFromTheme();
 
-    gDelayedStartupTimeoutId = setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
+    gDelayedStartupTimeoutId = setTimeout(this._delayedStartup.bind(this), 0, isLoadingBlank, mustLoadSidebar);
     gStartupRan = true;
   },
 
@@ -1247,7 +1247,7 @@ var gBrowserInit = {
     gGestureSupport.init(true);
   },
 
-  delayedStartup: function(isLoadingBlank, mustLoadSidebar) {
+  _delayedStartup: function(isLoadingBlank, mustLoadSidebar) {
     let tmp = {};
     Cu.import("resource:///modules/TelemetryTimestamps.jsm", tmp);
     let TelemetryTimestamps = tmp.TelemetryTimestamps;
@@ -1290,7 +1290,7 @@ var gBrowserInit = {
     gNavToolbox.customizeChange = BrowserToolboxCustomizeChange;
 
     // Set up Sanitize Item
-    initializeSanitizer();
+    this._initializeSanitizer();
 
     // Enable/Disable auto-hide tabbar
     gBrowser.tabContainer.updateVisibility();
@@ -1557,7 +1557,7 @@ var gBrowserInit = {
     TelemetryTimestamps.add("delayedStartupFinished");
   },
 
-  BrowserShutdown: function() {
+  onUnload: function() {
     // In certain scenarios it's possible for unload to be fired before onload,
     // (e.g. if the window is being closed after browser.js loads but before the
     // load completes). In that case, there's nothing to do here.
@@ -1567,7 +1567,7 @@ var gBrowserInit = {
     if (!__lookupGetter__("InspectorUI"))
       InspectorUI.destroy();
 
-    // First clean up services initialized in BrowserStartup (or those whose
+    // First clean up services initialized in gBrowserInit.onLoad (or those whose
     // uninit methods don't depend on the services having been initialized).
     allTabs.uninit();
 
@@ -1707,7 +1707,7 @@ var gBrowserInit = {
       }
     }
 
-    gDelayedStartupTimeoutId = setTimeout(nonBrowserWindowDelayedStartup, 0);
+    gDelayedStartupTimeoutId = setTimeout(this.nonBrowserWindowDelayedStartup.bind(this), 0);
   },
 
   nonBrowserWindowDelayedStartup: function() {
@@ -1717,7 +1717,7 @@ var gBrowserInit = {
     BrowserOffline.init();
 
     // Set up Sanitize Item
-    initializeSanitizer();
+    this._initializeSanitizer();
 
     // initialize the private browsing UI
     gPrivateBrowsingUI.init();
@@ -1744,7 +1744,7 @@ var gBrowserInit = {
   },
 #endif
 
-  initializeSanitizer: function() {
+  _initializeSanitizer: function() {
     const kDidSanitizeDomain = "privacy.sanitize.didShutdownSanitize";
     if (gPrefService.prefHasUserValue(kDidSanitizeDomain)) {
       gPrefService.clearUserPref(kDidSanitizeDomain);
@@ -1792,9 +1792,9 @@ var gBrowserInit = {
 }
 
 /* Legacy global init functions */
-var BrowserStartup        = gBrowserInit.BrowserStartup.bind(gBrowserInit);
+var BrowserStartup        = gBrowserInit.onLoad.bind(gBrowserInit);
 var prepareForStartup     = gBrowserInit.prepareForStartup.bind(gBrowserInit);
-var BrowserShutdown       = gBrowserInit.BrowserShutdown.bind(gBrowserInit);
+var BrowserShutdown       = gBrowserInit.onUnload.bind(gBrowserInit);
 #ifdef XP_MACOSX
 var nonBrowserWindowStartup        = gBrowserInit.nonBrowserWindowStartup.bind(gBrowserInit);
 var nonBrowserWindowDelayedStartup = gBrowserInit.nonBrowserWindowDelayedStartup.bind(gBrowserInit);
@@ -4939,7 +4939,7 @@ function toggleSidebar(commandID, forceOpen) {
   sidebarTitle.value = title;
 
   // We set this attribute here in addition to setting it on the <browser>
-  // element itself, because the code in BrowserShutdown persists this
+  // element itself, because the code in gBrowserInit.onUnload persists this
   // attribute, not the "src" of the <browser id="sidebar">. The reason it
   // does that is that we want to delay sidebar load a bit when a browser
   // window opens. See delayedStartup().

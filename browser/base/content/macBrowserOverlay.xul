@@ -34,8 +34,8 @@
     return OpenBrowserWindow();
   }
 
-  addEventListener("load", nonBrowserWindowStartup, false);
-  addEventListener("unload", nonBrowserWindowShutdown, false);
+  addEventListener("load",   function() { gBrowserInit.nonBrowserWindowStartup()  }, false);
+  addEventListener("unload", function() { gBrowserInit.nonBrowserWindowShutdown() }, false);
 </script>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the 
