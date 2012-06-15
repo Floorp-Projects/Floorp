@@ -249,4 +249,19 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                         \
   NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
 
+#define NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(_class, _field1,\
+                                                _field2)        \
+  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                        \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                 \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(_field1)           \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(_field2)           \
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER           \
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_END                           \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)               \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_field1)         \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(_field2)         \
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS            \
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                         \
+  NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(_class)
+
 #endif /* nsWrapperCache_h___ */
