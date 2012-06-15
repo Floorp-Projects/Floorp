@@ -280,6 +280,44 @@ VirtualKey::GetNativeUniChars(ShiftState aShiftState,
   return index;
 }
 
+// static
+void
+VirtualKey::FillKbdState(PBYTE aKbdState,
+                         const ShiftState aShiftState)
+{
+  NS_ASSERTION(aShiftState < 16, "aShiftState out of range");
+
+  if (aShiftState & STATE_SHIFT) {
+    aKbdState[VK_SHIFT] |= 0x80;
+  } else {
+    aKbdState[VK_SHIFT]  &= ~0x80;
+    aKbdState[VK_LSHIFT] &= ~0x80;
+    aKbdState[VK_RSHIFT] &= ~0x80;
+  }
+
+  if (aShiftState & STATE_CONTROL) {
+    aKbdState[VK_CONTROL] |= 0x80;
+  } else {
+    aKbdState[VK_CONTROL]  &= ~0x80;
+    aKbdState[VK_LCONTROL] &= ~0x80;
+    aKbdState[VK_RCONTROL] &= ~0x80;
+  }
+
+  if (aShiftState & STATE_ALT) {
+    aKbdState[VK_MENU] |= 0x80;
+  } else {
+    aKbdState[VK_MENU]  &= ~0x80;
+    aKbdState[VK_LMENU] &= ~0x80;
+    aKbdState[VK_RMENU] &= ~0x80;
+  }
+
+  if (aShiftState & STATE_CAPSLOCK) {
+    aKbdState[VK_CAPITAL] |= 0x01;
+  } else {
+    aKbdState[VK_CAPITAL] &= ~0x01;
+  }
+}
+
 /*****************************************************************************
  * mozilla::widget::NativeKey
  *****************************************************************************/
@@ -466,7 +504,8 @@ static void FillModifiers(Modifiers* aDest, const Modifiers aSrc,
 }
 
 void
-KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
+KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey,
+                          const ModifierKeyState& aModKeyState)
 {
   PRInt32 virtualKeyIndex = GetKeyIndex(aVirtualKey);
 
@@ -477,12 +516,8 @@ KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
     return;
   }
 
-  BYTE kbdState[256];
-  if (!::GetKeyboardState(kbdState)) {
-    return;
-  }
-
-  PRUint8 shiftState = GetShiftState(kbdState);
+  PRUint8 shiftState =
+    VirtualKey::ModifiersToShiftState(aModKeyState.GetModifiers());
 
   if (mVirtualKeys[virtualKeyIndex].IsDeadKey(shiftState)) {
     if (mActiveDeadKey < 0) {
@@ -606,7 +641,7 @@ KeyboardLayout::LoadLayout(HKL aLayout)
   // for normal case when no any dead-key is active.
 
   for (VirtualKey::ShiftState shiftState = 0; shiftState < 16; shiftState++) {
-    SetShiftState(kbdState, shiftState);
+    VirtualKey::FillKbdState(kbdState, shiftState);
     for (PRUint32 virtualKey = 0; virtualKey < 256; virtualKey++) {
       PRInt32 vki = GetKeyIndex(virtualKey);
       if (vki < 0) {
@@ -644,7 +679,7 @@ KeyboardLayout::LoadLayout(HKL aLayout)
       continue;
     }
 
-    SetShiftState(kbdState, shiftState);
+    VirtualKey::FillKbdState(kbdState, shiftState);
 
     for (PRUint32 virtualKey = 0; virtualKey < 256; virtualKey++) {
       PRInt32 vki = GetKeyIndex(virtualKey);
@@ -665,56 +700,6 @@ KeyboardLayout::LoadLayout(HKL aLayout)
   }
 
   ::SetKeyboardState(originalKbdState);
-}
-
-
-// static
-VirtualKey::ShiftState
-KeyboardLayout::GetShiftState(const PBYTE aKbdState)
-{
-  bool isShift = (aKbdState[VK_SHIFT] & 0x80) != 0;
-  bool isCtrl  = (aKbdState[VK_CONTROL] & 0x80) != 0;
-  bool isAlt   = (aKbdState[VK_MENU] & 0x80) != 0;
-  bool isCaps  = (aKbdState[VK_CAPITAL] & 0x01) != 0;
-
-  return ((isCaps << 3) | (isAlt << 2) | (isCtrl << 1) | isShift);
-}
-
-void
-KeyboardLayout::SetShiftState(PBYTE aKbdState,
-                              VirtualKey::ShiftState aShiftState)
-{
-  NS_ASSERTION(aShiftState < 16, "aShiftState out of range");
-
-  if (aShiftState & VirtualKey::STATE_SHIFT) {
-    aKbdState[VK_SHIFT] |= 0x80;
-  } else {
-    aKbdState[VK_SHIFT]  &= ~0x80;
-    aKbdState[VK_LSHIFT] &= ~0x80;
-    aKbdState[VK_RSHIFT] &= ~0x80;
-  }
-
-  if (aShiftState & VirtualKey::STATE_CONTROL) {
-    aKbdState[VK_CONTROL] |= 0x80;
-  } else {
-    aKbdState[VK_CONTROL]  &= ~0x80;
-    aKbdState[VK_LCONTROL] &= ~0x80;
-    aKbdState[VK_RCONTROL] &= ~0x80;
-  }
-
-  if (aShiftState & VirtualKey::STATE_ALT) {
-    aKbdState[VK_MENU] |= 0x80;
-  } else {
-    aKbdState[VK_MENU]  &= ~0x80;
-    aKbdState[VK_LMENU] &= ~0x80;
-    aKbdState[VK_RMENU] &= ~0x80;
-  }
-
-  if (aShiftState & VirtualKey::STATE_CAPSLOCK) {
-    aKbdState[VK_CAPITAL] |= 0x01;
-  } else {
-    aKbdState[VK_CAPITAL] &= ~0x01;
-  }
 }
 
 inline PRInt32
@@ -844,7 +829,7 @@ KeyboardLayout::DeactivateDeadKeyState()
   BYTE kbdState[256];
   memset(kbdState, 0, sizeof(kbdState));
 
-  SetShiftState(kbdState, mDeadKeyShiftState);
+  VirtualKey::FillKbdState(kbdState, mDeadKeyShiftState);
 
   EnsureDeadKeyActive(false, mActiveDeadKey, kbdState);
   mActiveDeadKey = -1;
@@ -885,7 +870,7 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
       continue;
     }
 
-    SetShiftState(kbdState, shiftState);
+    VirtualKey::FillKbdState(kbdState, shiftState);
 
     for (PRUint32 virtualKey = 0; virtualKey < 256; virtualKey++) {
       PRInt32 vki = GetKeyIndex(virtualKey);
