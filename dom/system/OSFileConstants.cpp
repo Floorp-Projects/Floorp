@@ -225,7 +225,7 @@ static dom::ConstantSpec gWinProperties[] =
   INT_CONSTANT(FILE_ATTRIBUTE_READONLY),
   INT_CONSTANT(FILE_ATTRIBUTE_TEMPORARY),
 
-  // SetFilePointer error constant
+  // CreateFile error constant
   { "INVALID_HANDLE_VALUE", INT_TO_JSVAL(INT_PTR(INVALID_HANDLE_VALUE)) },
 
 
@@ -241,6 +241,7 @@ static dom::ConstantSpec gWinProperties[] =
   INT_CONSTANT(INVALID_SET_FILE_POINTER),
 
   // Errors
+  INT_CONSTANT(ERROR_FILE_EXISTS),
   INT_CONSTANT(ERROR_FILE_NOT_FOUND),
   INT_CONSTANT(ERROR_ACCESS_DENIED),
 
