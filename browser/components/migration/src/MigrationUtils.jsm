@@ -38,7 +38,7 @@ function getMigrationBundle() {
 }
 
 /**
- * Figure out what is the default browser, and if there is a migraotr
+ * Figure out what is the default browser, and if there is a migrator
  * for it, return that migrator's internal name.
  * For the time being, the "internal name" of a migraotr is its contract-id
  * trailer (e.g. ie for @mozilla.org/profile/migrator;1?app=browser&type=ie),
@@ -448,7 +448,8 @@ let MigrationUtils = Object.freeze({
    * @param aKey internal name of the migration source.
    *             Supported values: ie (windows),
    *                               safari (mac/windows),
-   *                               chrome (mac/windows/linux).
+   *                               chrome (mac/windows/linux),
+   *                               firefox.
    *
    * If null is returned,  either no data can be imported
    * for the given migrator, or aMigratorKey is invalid  (e.g. ie on mac,
@@ -468,11 +469,37 @@ let MigrationUtils = Object.freeze({
         migrator = Cc["@mozilla.org/profile/migrator;1?app=browser&type=" +
                       aKey].createInstance(Ci.nsIBrowserProfileMigrator);
       }
-      catch(ex) { Cu.reportError(ex); }
+      catch(ex) { }
       this._migrators.set(aKey, migrator);
     }
 
     return migrator && migrator.sourceExists ? migrator : null;
+  },
+
+  // Iterates the available migrators, in the most suitable
+  // order for the running platform.
+  get migrators() {
+    let migratorKeysOrdered = [
+#ifdef XP_WIN
+      "ie", "chrome", "safari"
+#elifdef XP_MACOSX
+      "safari", "chrome"
+#elifdef XP_UNIX
+      "chrome"
+#endif
+    ];
+
+    // If a supported default browser is found check it first
+    // so that the wizard defaults to import from that browser.
+    let defaultBrowserKey = getMigratorKeyForDefaultBrowser();
+    if (defaultBrowserKey)
+      migratorKeysOrdered.sort(function (a, b) b == defaultBrowserKey ? 1 : 0);
+
+    for (let migratorKey of migratorKeysOrdered) {
+      let migrator = this.getMigrator(migratorKey);
+      if (migrator)
+        yield migrator;
+    }
   },
 
   // Whether or not we're in the process of startup migration
@@ -565,6 +592,20 @@ let MigrationUtils = Object.freeze({
         migrator = this.getMigrator(defaultBrowserKey);
         if (migrator)
           migratorKey = defaultBrowserKey;
+      }
+    }
+
+    if (!migrator) {
+      // If there's no migrator set so far, ensure that there is at least one
+      // migrator available before opening the wizard.
+      try {
+        this.migrators.next();
+      }
+      catch(ex) {
+        this.finishMigration();
+        if (!(ex instanceof StopIteration))
+          throw ex;
+        return;
       }
     }
 

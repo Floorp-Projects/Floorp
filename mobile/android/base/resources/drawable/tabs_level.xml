@@ -7,16 +7,8 @@
 
     <item android:maxLevel="0" android:drawable="@android:color/transparent"/>
 
-    <item android:maxLevel="1" android:drawable="@drawable/tabs_carat"/>
+    <item android:maxLevel="1" android:drawable="@drawable/tabs_carat_contracted"/>
 
-    <item android:maxLevel="2">
-        <rotate android:drawable="@drawable/tabs_carat"
-                android:fromDegrees="0"
-                android:toDegrees="180"
-                android:pivotX="50%"
-                android:pivotY="50%"
-                android:duration="500"
-                android:interpolator="@android:anim/linear_interpolator"/>
-    </item>
+    <item android:maxLevel="2" android:drawable="@drawable/tabs_carat_expanded"/>
 
 </level-list>

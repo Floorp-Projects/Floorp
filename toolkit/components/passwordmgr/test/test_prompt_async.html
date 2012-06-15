@@ -10,25 +10,28 @@
     <script class="testbody" type="text/javascript">
         SimpleTest.waitForExplicitFinish();
 
-        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-
         // Class monitoring number of open dialog windows
         // It checks there is always open just a single dialog per application
         function dialogMonitor() {
-            var observerService = Cc["@mozilla.org/observer-service;1"].           
-                                  getService(Ci.nsIObserverService);
+            var observerService = SpecialPowers.wrap(Components)
+                                               .classes["@mozilla.org/observer-service;1"]
+                                               .getService(Ci.nsIObserverService);
             observerService.addObserver(this, "domwindowopened", false);
             observerService.addObserver(this, "domwindowclosed", false);
         }
 
+        /*
+         * As documented in Bug 718543, checking equality of objects pulled
+         * from SpecialPowers-wrapped objects is unreliable.  Because of that,
+         * `dialogMonitor` now tracks the number of open windows rather than
+         * specific window objects.
+         */
         dialogMonitor.prototype = {
-            windowsOpen : new Array(),
+            windowsOpen : 0,
             windowsRegistered : 0,
 
             QueryInterface : function (iid) {
-                const interfaces = [Ci.nsIObserver,
-                                                        Ci.nsISupports];
+                const interfaces = [Ci.nsIObserver, Ci.nsISupports];
 
                 if (!interfaces.some( function(v) { return iid.equals(v) } ))
                         throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -36,36 +39,28 @@
             },
 
             observe: function(subject, topic, data) {
-                netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
                 if (topic === "domwindowopened") {
-                    var win = subject.QueryInterface(Ci.nsIDOMWindow);
-                    this.windowsOpen.push(win);
-                    ok(this.windowsOpen.length == 1, "Didn't open more then one dialog at a time");
+                    this.windowsOpen++;
+                    ok(this.windowsOpen == 1, "Didn't open more then one dialog at a time");
                     this.windowsRegistered++;
                     return;
                 }
                 if (topic === "domwindowclosed") {
-                    var win = subject.QueryInterface(Ci.nsIDOMWindow);
-                    for (p in this.windowsOpen)
-                        if (win == this.windowsOpen[p]) {
-                            this.windowsOpen.splice(p, 1);
-                            break;
-                        }
+                    this.windowsOpen--;
                     return;
                 }
             },
 
             shutdown: function() {
-                netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-                var observerService = Cc["@mozilla.org/observer-service;1"].          
-                                      getService(Ci.nsIObserverService);
+                var observerService = SpecialPowers.wrap(Components)
+                                               .classes["@mozilla.org/observer-service;1"]
+                                               .getService(Ci.nsIObserverService);
                 observerService.removeObserver(this, "domwindowopened");
                 observerService.removeObserver(this, "domwindowclosed");
             },
 
             reset: function() {
-                while (this.windowsOpen.length)
-                    this.windowsOpen.shift();
+                this.windowsOpen = 0;
                 this.windowsRegistered = 0;
             }
         }
@@ -75,22 +70,27 @@
         var pwmgr, logins = [];
 
         function initLogins() {
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-            pwmgr = Cc["@mozilla.org/login-manager;1"].
-                            getService(Ci.nsILoginManager);
+            pwmgr = SpecialPowers.wrap(Components)
+                                 .classes["@mozilla.org/login-manager;1"]
+                                 .getService(Ci.nsILoginManager);
 
             function addLogin(host, realm, user, pass) {
-                var login = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                                        createInstance(Ci.nsILoginInfo);
+                var login = SpecialPowers.wrap(Components)
+                                         .classes["@mozilla.org/login-manager/loginInfo;1"]
+                                         .createInstance(Ci.nsILoginInfo);
                 login.init(host, null, realm, user, pass, "", "");
                 pwmgr.addLogin(login);
                 logins.push(login);
             }
 
             //need to allow for arbitrary network servers defined in PAC instead of a hardcoded moz-proxy.
-            var ios = Cc["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-            var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+            var ios = SpecialPowers.wrap(Components)
+                                   .classes["@mozilla.org/network/io-service;1"]
+                                   .getService(Components.interfaces.nsIIOService);
+
+            var pps = SpecialPowers.wrap(Components)
+                                   .classes["@mozilla.org/network/protocol-proxy-service;1"]
+                                   .getService();
 
             var uri = ios.newURI("http://example.com", null, null);
             var pi = pps.resolve(uri, 0);
@@ -121,14 +121,13 @@
         }
 
         function finishTest() {
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
             ok(true, "finishTest removing testing logins...");
             for (i in logins)
                 pwmgr.removeLogin(logins[i]);
 
-            var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
-                                        getService(Ci.nsIHttpAuthManager);
+            var authMgr = SpecialPowers.wrap(Components)
+                                       .classes['@mozilla.org/network/http-auth-manager;1']
+                                       .getService(Ci.nsIHttpAuthManager);
             authMgr.clearAll();
 
             monitor.shutdown();
@@ -158,8 +157,6 @@
         function onFrameLoad()
         {
             if (--expectedLoads == 0) {
-                netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
                 // All pages expected to load has loaded, continue with the next test
                 ok(true, "Expected frames loaded");
 
@@ -173,10 +170,17 @@
 
         function doTest(testNum)
         {
+            /*
+             * These contentDocument variables are located here,
+             * rather than in the global scope, because SpecialPowers threw
+             * errors (complaining that the objects were deleted)
+             * when these were in the global scope.
+             */
+            var iframe1Doc = SpecialPowers.wrap(iframe1).contentDocument;
+            var iframe2aDoc = SpecialPowers.wrap(iframe2a).contentDocument;
+            var iframe2bDoc = SpecialPowers.wrap(iframe2b).contentDocument;
             var exampleCom = "http://example.com/tests/toolkit/components/passwordmgr/test/";
             var exampleOrg = "http://example.org/tests/toolkit/components/passwordmgr/test/";
-            
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
             switch (testNum)
             {
@@ -249,7 +253,7 @@
                 ok(true, "doTest testNum 4");
                 expectedLoads = 1;
                 expectedDialogs = 2;
-                iframe1.contentDocument.location.reload();
+                iframe1Doc.location.reload();
                 break;
 
             case 5:
@@ -278,7 +282,7 @@
                 ok(true, "doTest testNum 6");
                 expectedLoads = 1;
                 expectedDialogs = 2;
-                iframe1.contentDocument.location.reload();
+                iframe1Doc.location.reload();
                 break;
 
             case 7:
@@ -288,7 +292,7 @@
                 ok(true, "doTest testNum 7");
                 expectedLoads = 1;
                 expectedDialogs = 1;
-                iframe1.contentDocument.location.reload();
+                iframe1Doc.location.reload();
                 break;
 
             case 8:
@@ -318,7 +322,6 @@
 
         function handleDialog(doc, testNum)
         {
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
             var dialog        = doc.getElementById("commonDialog");
 
             switch (testNum)
@@ -371,21 +374,23 @@
 
         function doCheck(testNum)
         {
-            netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
+            var iframe1Doc = SpecialPowers.wrap(iframe1).contentDocument;
+            var iframe2aDoc = SpecialPowers.wrap(iframe2a).contentDocument;
+            var iframe2bDoc = SpecialPowers.wrap(iframe2b).contentDocument;
             switch (testNum)
             {
                 case 1:
                     ok(true, "doCheck testNum 1");
                     is(monitor.windowsRegistered, 3, "Registered 3 open dialogs");
-                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
-                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+                    
+                    var authok1 = iframe1Doc.getElementById("ok").textContent;
+                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
 
-                    var authok2a = iframe2a.contentDocument.getElementById("ok").textContent;
-                    var proxyok2a = iframe2a.contentDocument.getElementById("proxy").textContent;
+                    var authok2a = iframe2aDoc.getElementById("ok").textContent;
+                    var proxyok2a = iframe2aDoc.getElementById("proxy").textContent;
 
-                    var authok2b = iframe2b.contentDocument.getElementById("ok").textContent;
-                    var proxyok2b = iframe2b.contentDocument.getElementById("proxy").textContent;
+                    var authok2b = iframe2bDoc.getElementById("ok").textContent;
+                    var proxyok2b = iframe2bDoc.getElementById("proxy").textContent;
 
                     is(authok1, "PASS", "WWW Authorization OK, frame1");
                     is(authok2a, "PASS", "WWW Authorization OK, frame2a");
@@ -400,24 +405,25 @@
                     ok(true, "doCheck testNum 2");
 
                     function checkIframe(frame) {
-                        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-                        var authok = frame.contentDocument.getElementById("ok").textContent;
-                        var proxyok = frame.contentDocument.getElementById("proxy").textContent;
+                        var doc = SpecialPowers.wrap(frame).contentDocument;
+                        
+                        var authok = doc.getElementById("ok").textContent;
+                        var proxyok = doc.getElementById("proxy").textContent;
 
                         is(authok, "PASS", "WWW Authorization OK, " + frame.id);
                         is(proxyok, "PASS", "Proxy Authorization OK, " + frame.id);
                     }
 
-                    checkIframe(iframe1.contentDocument.getElementById("iframe1"));
-                    checkIframe(iframe1.contentDocument.getElementById("iframe2"));
-                    checkIframe(iframe1.contentDocument.getElementById("iframe3"));
+                    checkIframe(iframe1Doc.getElementById("iframe1"));
+                    checkIframe(iframe1Doc.getElementById("iframe2"));
+                    checkIframe(iframe1Doc.getElementById("iframe3"));
                     break;
 
                 case 3:
                     ok(true, "doCheck testNum 3");
                     is(monitor.windowsRegistered, 1, "Registered 1 open dialog");
-                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
-                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+                    var authok1 = iframe1Doc.getElementById("ok").textContent;
+                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
 
                     is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
                     is(proxyok1, "FAIL", "Proxy Authorization FAILED, frame1");
@@ -426,8 +432,8 @@
                 case 4:
                     ok(true, "doCheck testNum 4");
                     is(monitor.windowsRegistered, 2, "Registered 2 open dialogs");
-                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
-                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
+                    var authok1 = iframe1Doc.getElementById("ok").textContent;
+                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
 
                     is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
                     is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
@@ -436,9 +442,9 @@
                 case 5:
                     ok(true, "doCheck testNum 5");
                     is(monitor.windowsRegistered, 1, "Registered 1 open dialog");
-                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
-                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
-                    var footnote = iframe1.contentDocument.getElementById("footnote").textContent;
+                    var authok1 = iframe1Doc.getElementById("ok").textContent;
+                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+                    var footnote = iframe1Doc.getElementById("footnote").textContent;
 
                     is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
                     is(proxyok1, "FAIL", "Proxy Authorization FAILED, frame1");
@@ -449,9 +455,9 @@
                 case 6:
                     ok(true, "doCheck testNum 6");
                     is(monitor.windowsRegistered, 2, "Registered 2 open dialogs");
-                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
-                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
-                    var footnote = iframe1.contentDocument.getElementById("footnote").textContent;
+                    var authok1 = iframe1Doc.getElementById("ok").textContent;
+                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+                    var footnote = iframe1Doc.getElementById("footnote").textContent;
 
                     is(authok1, "FAIL", "WWW Authorization FAILED, frame1");
                     is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
@@ -462,9 +468,9 @@
                 case 7:
                     ok(true, "doCheck testNum 7");
                     is(monitor.windowsRegistered, 1, "Registered 1 open dialogs");
-                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
-                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
-                    var footnote = iframe1.contentDocument.getElementById("footnote").textContent;
+                    var authok1 = iframe1Doc.getElementById("ok").textContent;
+                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+                    var footnote = iframe1Doc.getElementById("footnote").textContent;
 
                     is(authok1, "PASS", "WWW Authorization OK, frame1");
                     is(proxyok1, "PASS", "Proxy Authorization OK, frame1");
@@ -475,9 +481,9 @@
                 case 8:
                     ok(true, "doCheck testNum 8");
                     is(monitor.windowsRegistered, 5, "Registered 5 open dialogs");
-                    var authok1 = iframe1.contentDocument.getElementById("ok").textContent;
-                    var proxyok1 = iframe1.contentDocument.getElementById("proxy").textContent;
-                    var footnote = iframe1.contentDocument.getElementById("footnote").textContent;
+                    var authok1 = iframe1Doc.getElementById("ok").textContent;
+                    var proxyok1 = iframe1Doc.getElementById("proxy").textContent;
+                    var footnote = iframe1Doc.getElementById("footnote").textContent;
 
                     is(authok1, "PASS", "WWW Authorization OK, frame1");
                     is(proxyok1, "PASS", "Proxy Authorization OK, frame1");

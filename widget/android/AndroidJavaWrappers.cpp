@@ -42,6 +42,7 @@ jfieldID AndroidGeckoEvent::jLocationField = 0;
 jfieldID AndroidGeckoEvent::jBandwidthField = 0;
 jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
 jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
+jfieldID AndroidGeckoEvent::jByteBufferField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
 jfieldID AndroidPoint::jXField = 0;
@@ -103,6 +104,12 @@ jmethodID AndroidGeckoSurfaceView::jGetHolderMethod = 0;
 #define getMethod(fname, ftype) \
     ((jmethodID) jEnv->GetMethodID(jClass, fname, ftype))
 
+RefCountedJavaObject::~RefCountedJavaObject() {
+    if (mObject)
+        GetJNIForThread()->DeleteGlobalRef(mObject);
+    mObject = NULL;
+}
+
 void
 mozilla::InitAndroidJavaWrappers(JNIEnv *jEnv)
 {
@@ -154,6 +161,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jBandwidthField = getField("mBandwidth", "D");
     jCanBeMeteredField = getField("mCanBeMetered", "Z");
     jScreenOrientationField = getField("mScreenOrientation", "S");
+    jByteBufferField = getField("mBuffer", "Ljava/nio/ByteBuffer;");
 }
 
 void
@@ -498,7 +506,8 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
         case SCREENSHOT: {
             mMetaState = jenv->GetIntField(jobj, jMetaStateField);
             mFlags = jenv->GetIntField(jobj, jFlagsField);
-            ReadPointArray(mPoints, jenv, jPoints, 4);
+            ReadPointArray(mPoints, jenv, jPoints, 5);
+            mByteBuffer = new RefCountedJavaObject(jenv, jenv->GetObjectField(jobj, jByteBufferField));
             break;
         }
 

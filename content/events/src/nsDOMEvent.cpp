@@ -77,6 +77,7 @@ static const char* const sEventNames[] = {
   "MozRotateGesture",
   "MozTapGesture",
   "MozPressTapGesture",
+  "MozEdgeUIGesture",
   "MozTouchDown",
   "MozTouchMove",
   "MozTouchUp",
@@ -839,6 +840,7 @@ nsDOMEvent::DuplicatePrivateData()
       isInputEvent = true;
       simpleGestureEvent->direction = oldSimpleGestureEvent->direction;
       simpleGestureEvent->delta = oldSimpleGestureEvent->delta;
+      simpleGestureEvent->clickCount = oldSimpleGestureEvent->clickCount;
       newEvent = simpleGestureEvent;
       break;
     }
@@ -1503,6 +1505,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_MozTapGesture];
   case NS_SIMPLE_GESTURE_PRESSTAP:
     return sEventNames[eDOMEvents_MozPressTapGesture];
+  case NS_SIMPLE_GESTURE_EDGEUI:
+    return sEventNames[eDOMEvents_MozEdgeUIGesture];
   case NS_MOZTOUCH_DOWN:
     return sEventNames[eDOMEvents_MozTouchDown];
   case NS_MOZTOUCH_MOVE:

@@ -35,6 +35,7 @@ public class ScreenshotLayer extends SingleTileLayer {
     private IntSize mImageSize;
     // Whether we have an up-to-date image to draw
     private boolean mHasImage;
+    private static String LOGTAG = "GeckoScreenshot";
 
     public static int getMaxNumPixels() {
         return SCREENSHOT_SIZE_LIMIT;
@@ -44,6 +45,19 @@ public class ScreenshotLayer extends SingleTileLayer {
         mHasImage = false;
     }
 
+    void setBitmap(ByteBuffer data, int width, int height, Rect rect) {
+        mImageSize = new IntSize(width, height);
+        if (IntSize.isPowerOfTwo(width) && IntSize.isPowerOfTwo(height)) {
+            mBufferSize = mImageSize;
+            mHasImage = true;
+            mImage.setBitmap(data, width, height, CairoImage.FORMAT_RGB16_565, rect);
+        } else {
+            Bitmap b = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+            b.copyPixelsFromBuffer(data);
+            setBitmap(b);
+        }
+    }
+    
     void setBitmap(Bitmap bitmap) {
         mImageSize = new IntSize(bitmap.getWidth(), bitmap.getHeight());
         int width = IntSize.nextPowerOfTwo(bitmap.getWidth());
@@ -116,7 +130,21 @@ public class ScreenshotLayer extends SingleTileLayer {
             }
         }
 
-        void setBitmap(Bitmap bitmap, int width, int height, int format) {
+        void copyBuffer(ByteBuffer src, ByteBuffer dst, Rect rect, int stride) {
+            int start = rect.left + rect.top * stride;
+            int end = Math.min(Math.min(rect.right + (rect.bottom - 1) * stride, src.capacity()), dst.limit());
+            dst.position(start);
+            src.position(start).limit(end);
+            dst.put(src);
+        }
+
+        synchronized void setBitmap(ByteBuffer data, int width, int height, int format, Rect rect) {
+            mSize = new IntSize(width, height);
+            mFormat = format;
+            copyBuffer(data.asReadOnlyBuffer(), mBuffer.duplicate(), rect, width * 2);
+        }
+
+        synchronized void setBitmap(Bitmap bitmap, int width, int height, int format) {
             Bitmap tmp;
             mSize = new IntSize(width, height);
             mFormat = format;
@@ -138,10 +166,10 @@ public class ScreenshotLayer extends SingleTileLayer {
         }
 
         @Override
-        public ByteBuffer getBuffer() { return mBuffer; }
+        synchronized public ByteBuffer getBuffer() { return mBuffer; }
         @Override
-        public IntSize getSize() { return mSize; }
+        synchronized public IntSize getSize() { return mSize; }
         @Override
-        public int getFormat() { return mFormat; }
+        synchronized public int getFormat() { return mFormat; }
     }
 }

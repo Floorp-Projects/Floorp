@@ -205,13 +205,18 @@ class MochitestOptions(optparse.OptionParser):
 
     self.add_option("--run-only-tests",
                     action = "store", type="string", dest = "runOnlyTests",
-                    help = "JSON list of tests that we only want to run, cannot be specified with --exclude-tests.")
+                    help = "JSON list of tests that we only want to run, cannot be specified with --exclude-tests. [DEPRECATED- please use --test-manifest]")
     defaults["runOnlyTests"] = None
 
     self.add_option("--exclude-tests",
                     action = "store", type="string", dest = "excludeTests",
-                    help = "JSON list of tests that we want to not run, cannot be specified with --run-only-tests.")
+                    help = "JSON list of tests that we want to not run, cannot be specified with --run-only-tests. [DEPRECATED- please use --test-manifest]")
     defaults["excludeTests"] = None
+
+    self.add_option("--test-manifest",
+                    action = "store", type="string", dest = "testManifest",
+                    help = "JSON list of tests to specify 'runtests' and 'excludetests'.")
+    defaults["testManifest"] = None
 
     self.add_option("--failure-file",
                     action = "store", type="string", dest = "failureFile",
@@ -282,15 +287,22 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
                    mochitest.vmwareHelperPath)
 
     if options.runOnlyTests != None and options.excludeTests != None:
-      self.error("We can only support --run-only-tests OR --exclude-tests, not both.")
+      self.error("We can only support --run-only-tests OR --exclude-tests, not both.  Please consider using --test-manifest instead.")
+
+    if options.testManifest != None and (options.runOnlyTests != None or options.excludeTests != None):
+      self.error("Please use --test-manifest only and not --run-only-tests or --exclude-tests.")
       
     if options.runOnlyTests:
       if not os.path.exists(os.path.abspath(options.runOnlyTests)):
         self.error("unable to find --run-only-tests file '%s'" % options.runOnlyTests);
+      options.testManifest = options.runOnlyTests
+      options.runOnly = True
         
     if options.excludeTests:
       if not os.path.exists(os.path.abspath(options.excludeTests)):
         self.error("unable to find --exclude-tests file '%s'" % options.excludeTests);
+      options.testManifest = options.excludeTests
+      options.runOnly = False
 
     return options
 
@@ -562,12 +574,14 @@ class Mochitest(object):
         self.urlOpts.append("repeat=%d" % options.repeat)
       if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.repeat > 0:
         self.urlOpts.append("testname=%s" % ("/").join([self.TEST_PATH, options.testPath]))
-      if options.runOnlyTests:
-        self.urlOpts.append("runOnlyTests=%s" % options.runOnlyTests)
+      if options.testManifest:
+        self.urlOpts.append("testManifest=%s" % options.testManifest)
+        if options.runOnly:
+          self.urlOpts.append("runOnly=true")
+        else:
+          self.urlOpts.append("runOnly=false")
       if options.failureFile:
         self.urlOpts.append("failureFile=%s" % options.failureFile)
-      elif options.excludeTests:
-        self.urlOpts.append("excludeTests=%s" % options.excludeTests)
 
   def cleanup(self, manifest, options):
     """ remove temporary files and profile """

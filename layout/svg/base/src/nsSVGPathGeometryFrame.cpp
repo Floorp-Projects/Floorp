@@ -173,24 +173,24 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 
   bool isHit = false;
 
-  nsRefPtr<gfxContext> context =
+  nsRefPtr<gfxContext> tmpCtx =
     new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
-  GeneratePath(context);
+  GeneratePath(tmpCtx);
   gfxPoint userSpacePoint =
-    context->DeviceToUser(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
-                                   PresContext()->AppUnitsToGfxUnits(aPoint.y)));
+    tmpCtx->DeviceToUser(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
+                                  PresContext()->AppUnitsToGfxUnits(aPoint.y)));
 
   if (fillRule == NS_STYLE_FILL_RULE_EVENODD)
-    context->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
+    tmpCtx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
   else
-    context->SetFillRule(gfxContext::FILL_RULE_WINDING);
+    tmpCtx->SetFillRule(gfxContext::FILL_RULE_WINDING);
 
   if (hitTestFlags & SVG_HIT_TEST_FILL)
-    isHit = context->PointInFill(userSpacePoint);
+    isHit = tmpCtx->PointInFill(userSpacePoint);
   if (!isHit && (hitTestFlags & SVG_HIT_TEST_STROKE)) {
-    SetupCairoStrokeHitGeometry(context);
-    isHit = context->PointInStroke(userSpacePoint);
+    SetupCairoStrokeHitGeometry(tmpCtx);
+    isHit = tmpCtx->PointInStroke(userSpacePoint);
   }
 
   if (isHit && nsSVGUtils::HitTestClip(this, aPoint))
@@ -281,11 +281,11 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     return bbox;
   }
 
-  nsRefPtr<gfxContext> context =
+  nsRefPtr<gfxContext> tmpCtx =
     new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
-  GeneratePath(context, &aToBBoxUserspace);
-  context->IdentityMatrix();
+  GeneratePath(tmpCtx, &aToBBoxUserspace);
+  tmpCtx->IdentityMatrix();
 
   // Be careful when replacing the following logic to get the fill and stroke
   // extents independently (instead of computing the stroke extents from the
@@ -299,7 +299,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   // # If the stroke is very thin, cairo won't paint any stroke, and so the
   //   stroke bounds that it will return will be empty.
 
-  gfxRect pathExtents = context->GetUserPathExtent();
+  gfxRect pathExtents = tmpCtx->GetUserPathExtent();
 
   // Account for fill:
   if ((aFlags & nsSVGUtils::eBBoxIncludeFill) != 0 &&
@@ -311,7 +311,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   // Account for stroke:
   if ((aFlags & nsSVGUtils::eBBoxIncludeStroke) != 0 &&
       ((aFlags & nsSVGUtils::eBBoxIgnoreStrokeIfNone) == 0 || HasStroke())) {
-    // We can't use context->GetUserStrokeExtent() since it doesn't work for
+    // We can't use tmpCtx->GetUserStrokeExtent() since it doesn't work for
     // device space extents. Instead we approximate the stroke extents from
     // pathExtents using PathExtentsToMaxStrokeExtents.
     if (pathExtents.Width() <= 0 && pathExtents.Height() <= 0) {
@@ -319,10 +319,10 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
       // bounds depending on the value of stroke-linecap. We need to fix up
       // pathExtents before it can be used with PathExtentsToMaxStrokeExtents
       // though, because if pathExtents is empty, its position will not have
-      // been set. Happily we can use context->GetUserStrokeExtent() to find
+      // been set. Happily we can use tmpCtx->GetUserStrokeExtent() to find
       // the center point of the extents even though it gets the extents wrong.
-      SetupCairoStrokeGeometry(context);
-      pathExtents.MoveTo(context->GetUserStrokeExtent().Center());
+      SetupCairoStrokeGeometry(tmpCtx);
+      pathExtents.MoveTo(tmpCtx->GetUserStrokeExtent().Center());
       pathExtents.SizeTo(0, 0);
     }
     bbox.UnionEdges(nsSVGUtils::PathExtentsToMaxStrokeExtents(pathExtents,
