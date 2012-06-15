@@ -1609,6 +1609,7 @@ UpdateService.prototype = {
                                       "UPDATER_SERVICE_ENABLED");
       this._sendIntPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ERRORS,
                                      "UPDATER_SERVICE_ERRORS");
+      this._sendServiceInstalledTelemetryPing();
 #endif
 
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
@@ -1665,6 +1666,33 @@ UpdateService.prototype = {
       Components.utils.reportError(e);
     }
   },
+
+#ifdef XP_WIN
+  /**
+   * Submit a telemetry ping with a boolean value which indicates if the service
+   * is installed.
+   */
+  _sendServiceInstalledTelemetryPing: function AUS__svcInstallTelemetryPing() {
+    let installed = 0;
+    try {
+      let wrk = Components.classes["@mozilla.org/windows-registry-key;1"]
+                .createInstance(Components.interfaces.nsIWindowsRegKey);
+      wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
+               "SOFTWARE\\Mozilla\\MaintenanceService",
+               wrk.ACCESS_READ | wrk.WOW64_64);
+      installed = wrk.readIntValue("Installed");
+      wrk.close();
+    } catch(e) {
+    }
+    try {
+      let h = Services.telemetry.getHistogramById("UPDATER_SERVICE_INSTALLED");
+      h.add(installed);
+    } catch(e) {
+      // Don't allow any exception to be propagated.
+      Components.utils.reportError(e);
+    }
+  },
+#endif
 
   /**
    * Submit a telemetry ping with the int value of a pref for a histogram
