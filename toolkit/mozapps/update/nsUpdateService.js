@@ -1592,8 +1592,17 @@ UpdateService.prototype = {
                    createInstance(Ci.nsIUpdatePrompt);
 
     update.state = status;
-    this._submitTelemetryPing(status);
+    this._sendStatusCodeTelemetryPing(status);
+
     if (status == STATE_SUCCEEDED) {
+      // Report telemetry that we want after each successful update.
+      // We do this only on successful updates so that we only get
+      // one report from each user for each version.  If a user cancels
+      // UAC for example, we don't want 2 reports from them on the same
+      // version.
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_ENABLED,
+                                      "UPDATER_UPDATES_ENABLED");
+
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
 
       // Update the patch's metadata.
@@ -1629,12 +1638,33 @@ UpdateService.prototype = {
   },
 
   /**
+   * Submit a telemetry ping with the boolean value of a pref for a histogram
+   *
+   * @param  pref
+   *         The preference to report
+   * @param  histogram
+   *         The histogram ID to report to
+   */
+  _sendBoolPrefTelemetryPing: function AUS__boolTelemetryPing(pref, histogram) {
+    try {
+      // The getPref is already wrapped in a try/catch but we never
+      // want telemetry pings breaking app update so we just put it
+      // inside the try to be safe. 
+      let val = getPref("getBoolPref", pref, false);
+      Services.telemetry.getHistogramById(histogram).add(+val);
+    } catch(e) {
+      // Don't allow any exception to be propagated.
+      Components.utils.reportError(e);
+    }
+  },
+
+  /**
    * Submit the results of applying the update via telemetry.
    *
    * @param  status
    *         The status of the update as read from the update.status file
    */
-  _submitTelemetryPing: function AUS__submitTelemetryPing(status) {
+  _sendStatusCodeTelemetryPing: function AUS__statusTelemetryPing(status) {
     try {
       let parts = status.split(":");
       if ((parts.length == 1 && status != STATE_SUCCEEDED) ||
