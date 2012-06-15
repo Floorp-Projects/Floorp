@@ -206,7 +206,8 @@ CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObjec
      * with its type in existence.
      */
     if (fun->hasSingletonType()) {
-        if (!JSObject::setParent(cx, fun, RootedObject(cx, SkipScopeParent(parent))))
+        Rooted<JSObject*> obj(cx, SkipScopeParent(parent));
+        if (!JSObject::setParent(cx, fun, obj))
             return NULL;
         fun->setEnvironment(parent);
         return fun;
@@ -230,10 +231,9 @@ CloneFunctionObject(JSContext *cx, HandleFunction fun)
     if (fun->hasSingletonType())
         return fun;
 
-    return js_CloneFunctionObject(cx, fun,
-                                  RootedObject(cx, fun->environment()),
-                                  RootedObject(cx, fun->getProto()),
-                                  JSFunction::ExtendedFinalizeKind);
+    Rooted<JSObject*> env(cx, fun->environment());
+    Rooted<JSObject*> proto(cx, fun->getProto());
+    return js_CloneFunctionObject(cx, fun, env, proto, JSFunction::ExtendedFinalizeKind);
 }
 
 } /* namespace js */
