@@ -411,6 +411,8 @@
                     this.maxCurrentTimeSeen = currentTime;
                     this.showPosition(currentTime, duration);
 
+                    this.controlListeners = [];
+                    
                     // If we have metadata, check if this is a <video> without
                     // video data, or a video with no audio track.
                     if (this.video.readyState >= this.video.HAVE_METADATA) {
@@ -422,8 +424,7 @@
                         // because of bug 718107: switching to fullscreen may
                         // cause the bindings to detach and reattach, hence
                         // unsetting the attribute.
-                        if (!this.isAudioOnly && !this.video.mozHasAudio)
-                          this.muteButton.setAttribute("noAudio", "true");
+                        this.initVolumeControlListeners();
                     }
 
                     if (this.isAudioOnly)
@@ -542,9 +543,7 @@
                                 this.startFadeIn(this.controlBar);
                             }
                             this.showDuration(Math.round(this.video.duration * 1000));
-                            if (!this.isAudioOnly && !this.video.mozHasAudio) {
-                              this.muteButton.setAttribute("noAudio", "true");
-                            }
+                            this.initVolumeControlListeners();
                             break;
                         case "loadeddata":
                             this.firstFrameShown = true;
@@ -642,6 +641,29 @@
                     }
                 },
 
+                // Helper function to add an event listener to the given element.
+                addListener: function (elem, eventName, func) {
+                    let boundFunc = func.bind(this);
+                    this.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
+                    elem.addEventListener(eventName, boundFunc, false);
+                },
+                    
+                initVolumeControlListeners : function () {
+                    if (this.isAudioOnly) {
+                        return;
+                    }
+                    if (!this.video.mozHasAudio) {
+                        this.muteButton.setAttribute("noAudio", "true");
+                        this.muteButton.setAttribute("disabled", "true");
+                    } else {
+                        this.addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
+                        this.addListener(this.muteButton, "mouseout", this.onVolumeMouseInOut);
+                        this.addListener(this.volumeStack, "mouseover", this.onVolumeMouseInOut);
+                        this.addListener(this.volumeStack, "mouseout", this.onVolumeMouseInOut);
+                        this.addListener(this.muteButton, "command", this.toggleMute);
+                    }
+                },
+                
                 terminateEventListeners : function () {
                     if (this.statsInterval) {
                         clearInterval(this.statsInterval);
@@ -1382,37 +1404,18 @@
                     for each (let event in this.videoEvents)
                         this.video.addEventListener(event, this, (event == "error") ? true : false);
 
-                    var self = this;
+                    this.addListener(this.playButton, "command", this.togglePause);
+                    this.addListener(this.fullscreenButton, "command", this.toggleFullscreen);
+                    this.addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
+                    this.addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
 
-                    this.controlListeners = [];
-
-                    // Helper function to add an event listener to the given element
-                    function addListener(elem, eventName, func) {
-                      let boundFunc = func.bind(self);
-                      self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
-                      elem.addEventListener(eventName, boundFunc, false);
-                    }
-
-                    addListener(this.muteButton, "command", this.toggleMute);
-                    addListener(this.playButton, "command", this.togglePause);
-                    addListener(this.fullscreenButton, "command", this.toggleFullscreen);
-                    addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
-                    addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
-
-                    if (!this.isAudioOnly && this.video.mozHasAudio) {
-                      addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
-                      addListener(this.muteButton, "mouseout", this.onVolumeMouseInOut);
-                      addListener(this.volumeStack, "mouseover", this.onVolumeMouseInOut);
-                      addListener(this.volumeStack, "mouseout", this.onVolumeMouseInOut);
-                    }
-
-                    addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
-                    addListener(this.video.ownerDocument, "mozfullscreenchange", this.setFullscreenButtonState);
+                    this.addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
+                    this.addListener(this.video.ownerDocument, "mozfullscreenchange", this.setFullscreenButtonState);
 
                     // Make the <video> element keyboard accessible.
                     this.video.setAttribute("tabindex", 0);
 
-                    addListener(this.video, "keypress", this.keyHandler);
+                    this.addListener(this.video, "keypress", this.keyHandler);
 
                     this.log("--- videocontrols initialized ---");
                 }
