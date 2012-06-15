@@ -2903,7 +2903,7 @@ def getEnumValueName(value):
     if not re.match("^[a-z_]+$", value):
         raise SyntaxError('Enum value "' + value + '" contains characters '
                           'outside [a-z_]')
-    return value
+    return MakeNativeName(value)
 
 class CGEnum(CGThing):
     def __init__(self, enum):
