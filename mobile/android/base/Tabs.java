@@ -99,7 +99,7 @@ public class Tabs implements GeckoEventListener {
         selectedTab = tab;
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() { 
             public void run() {
-                GeckoApp.mAppContext.hideFormAssistPopup();
+                GeckoApp.mFormAssistPopup.hide();
                 if (isSelectedTab(tab)) {
                     String url = tab.getURL();
                     notifyListeners(tab, TabEvents.SELECTED);
@@ -157,21 +157,20 @@ public class Tabs implements GeckoEventListener {
         if (tab == null || nextTab == null)
             return;
 
+        selectTab(nextTab.getId());
+
         int tabId = tab.getId();
         removeTab(tabId);
-        tab.onDestroy();
 
         GeckoApp.mAppContext.mMainHandler.post(new Runnable() { 
             public void run() {
                 notifyListeners(tab, TabEvents.CLOSED);
+                tab.onDestroy();
             }
         });
 
         // Pass a message to Gecko to update tab state in BrowserApp
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Closed", String.valueOf(tabId)));
-
-        // Next tab selection should happen after closing the tab.
-        selectTab(nextTab.getId());
     }
 
     /** Return the tab that will be selected by default after this one is closed */
