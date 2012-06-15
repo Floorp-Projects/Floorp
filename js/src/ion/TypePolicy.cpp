@@ -173,6 +173,9 @@ ComparePolicy::adjustInputs(MInstruction *def)
           case MIRType_Object:
             replace = MUnbox::New(in, MIRType_Object, MUnbox::Infallible);
             break;
+          case MIRType_String:
+            replace = MUnbox::New(in, MIRType_String, MUnbox::Infallible);
+            break;
           default:
             JS_NOT_REACHED("Unknown compare specialization");
             return false;

@@ -337,6 +337,9 @@ class Assembler : public AssemblerX86Shared
         masm.cmpl_ir(ptr.value, src.code());
         writeDataRelocation(ptr);
     }
+    void cmpl(const Register &lhs, const Register &rhs) {
+        masm.cmpl_rr(rhs.code(), lhs.code());
+    }
     void cmpl(const Operand &op, ImmGCPtr imm) {
         switch (op.kind()) {
           case Operand::REG:
