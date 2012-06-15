@@ -1,3 +1,3 @@
 component {ddeafdac-cb39-47c4-9cb8-c9027ee36d26} BrowserElementParent.js
-contract @mozilla.org/browser-element-parent;1 {ddeafdac-cb39-47c4-9cb8-c9027ee36d26}
-category app-startup BrowserElementParent service,@mozilla.org/browser-element-parent;1
+contract @mozilla.org/browser-element-parent-factory;1 {ddeafdac-cb39-47c4-9cb8-c9027ee36d26}
+category app-startup BrowserElementParentFactory service,@mozilla.org/browser-element-parent-factory;1
