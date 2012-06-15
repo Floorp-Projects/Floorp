@@ -64,7 +64,6 @@ using namespace js::ion;
 // Note that the first frame doesn't have the "parent PC" field.
 //
 //   [ptr] Debug only: JSScript *
-//   [vwu] parent pc offset (inline frames only!)
 //   [vwu] pc offset
 //   [vwu] # of slots, including nargs
 // [slot*] N slot entries, where N = nargs + nfixed + stackDepth

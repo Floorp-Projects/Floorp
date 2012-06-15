@@ -785,6 +785,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void enterOsr(Register calleeToken, Register code) {
+        push(Imm32(0)); // num actual args.
         push(calleeToken);
         push(Imm32(MakeFrameDescriptor(0, IonFrame_Osr)));
         call(code);
