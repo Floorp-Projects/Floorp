@@ -189,20 +189,6 @@ GreaterThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *re
     return true;
 }
 
-template<bool Equal>
-bool
-StringsEqual(JSContext *cx, HandleString lhs, HandleString rhs, JSBool *res)
-{
-    bool equal;
-    if (!js::EqualStrings(cx, lhs, rhs, &equal))
-        return false;
-    *res = (equal == Equal);
-    return true;
-}
-
-template bool StringsEqual<true>(JSContext *cx, HandleString lhs, HandleString rhs, JSBool *res);
-template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString rhs, JSBool *res);
-
 bool
 ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output)
 {
