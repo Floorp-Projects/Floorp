@@ -1534,7 +1534,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLUniformLocation, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(WebGLUniformLocation,
+                           nsNewDOMBindingNoWrapperCacheSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLShaderPrecisionFormat, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -10898,6 +10899,16 @@ WebGLExtensionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsINode *node = webgl->GetParentObject();
 
   return WrapNativeParent(cx, globalObj, node, node, parentObj);
+}
+
+nsresult
+nsNewDOMBindingNoWrapperCacheSH::PreCreate(nsISupports *nativeObj,
+                                           JSContext *cx,
+                                           JSObject *globalObj,
+                                           JSObject **parentObj)
+{
+  // We don't allow this
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
