@@ -101,12 +101,8 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 
     SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL);
 
-    TreeContext tc(&parser, &sc, staticLevel);
+    TreeContext tc(&parser, &sc, staticLevel, /* bodyid = */ 0);
     if (!tc.init())
-        return NULL;
-    // Inline this->statements to emit as we go to save AST space. We must
-    // generate our script-body blockid since we aren't calling Statements.
-    if (!GenerateBlockId(&tc, tc.bodyid))
         return NULL;
 
     bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
@@ -262,10 +258,8 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     fun->setArgCount(funsc.bindings.numArgs());
 
     unsigned staticLevel = 0;
-    TreeContext funtc(&parser, &funsc, staticLevel);
+    TreeContext funtc(&parser, &funsc, staticLevel, /* bodyid = */ 0);
     if (!funtc.init())
-        return false;
-    if (!GenerateBlockId(&funtc, funtc.bodyid))
         return false;
 
     GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
