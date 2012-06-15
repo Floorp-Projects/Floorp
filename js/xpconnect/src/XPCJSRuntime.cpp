@@ -1857,7 +1857,7 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
 {
     switch (id) {
       case JS_TELEMETRY_GC_REASON:
-        Telemetry::Accumulate(Telemetry::GC_REASON, sample);
+        Telemetry::Accumulate(Telemetry::GC_REASON_2, sample);
         break;
       case JS_TELEMETRY_GC_IS_COMPARTMENTAL:
         Telemetry::Accumulate(Telemetry::GC_IS_COMPARTMENTAL, sample);
