@@ -91,10 +91,10 @@ struct IonOptions
     // Default: true
     bool inlining;
 
-    // Toggles whether Range Analysis is used.
+    // Toggles whether Edge Case Analysis is used.
     //
     // Default: true
-    bool rangeAnalysis;
+    bool edgeCaseAnalysis;
 
     // How many invocations or loop iterations are needed before functions
     // are compiled.
@@ -152,7 +152,7 @@ struct IonOptions
         limitScriptSize(true),
         lsra(true),
         inlining(true),
-        rangeAnalysis(true),
+        edgeCaseAnalysis(true),
         usesBeforeCompile(10240),
         usesBeforeCompileNoJaeger(40),
         usesBeforeInlining(usesBeforeCompile),
