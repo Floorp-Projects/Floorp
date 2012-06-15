@@ -570,7 +570,7 @@ LIRGenerator::visitSqrt(MSqrt *ins)
 {
     MDefinition *num = ins->num();
     JS_ASSERT(num->type() == MIRType_Double);
-    LSqrtD *lir = new LSqrtD(useRegister(num));
+    LSqrtD *lir = new LSqrtD(useRegisterAtStart(num));
     return define(lir, ins);
 }
 
@@ -940,13 +940,13 @@ LIRGenerator::visitImplicitThis(MImplicitThis *ins)
 bool
 LIRGenerator::visitSlots(MSlots *ins)
 {
-    return define(new LSlots(useRegister(ins->object())), ins);
+    return define(new LSlots(useRegisterAtStart(ins->object())), ins);
 }
 
 bool
 LIRGenerator::visitElements(MElements *ins)
 {
-    return define(new LElements(useRegister(ins->object())), ins);
+    return define(new LElements(useRegisterAtStart(ins->object())), ins);
 }
 
 bool
@@ -971,7 +971,7 @@ LIRGenerator::visitLoadSlot(MLoadSlot *ins)
 bool
 LIRGenerator::visitFunctionEnvironment(MFunctionEnvironment *ins)
 {
-    return define(new LFunctionEnvironment(useRegister(ins->function())), ins);
+    return define(new LFunctionEnvironment(useRegisterAtStart(ins->function())), ins);
 }
 
 bool
@@ -1025,7 +1025,7 @@ bool
 LIRGenerator::visitArrayLength(MArrayLength *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
-    return define(new LArrayLength(useRegister(ins->elements())), ins);
+    return define(new LArrayLength(useRegisterAtStart(ins->elements())), ins);
 }
 
 bool
@@ -1046,7 +1046,7 @@ bool
 LIRGenerator::visitInitializedLength(MInitializedLength *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
-    return define(new LInitializedLength(useRegister(ins->elements())), ins);
+    return define(new LInitializedLength(useRegisterAtStart(ins->elements())), ins);
 }
 
 bool
@@ -1080,7 +1080,7 @@ LIRGenerator::visitNot(MNot *ins)
         return lowerForALU(new LBitOpI(JSOP_BITXOR), ins, op, cons);
       }
       case MIRType_Int32: {
-        return define(new LNotI(useRegister(op)), ins);
+        return define(new LNotI(useRegisterAtStart(op)), ins);
       }
       case MIRType_Double:
         return define(new LNotD(useRegister(op)), ins);
@@ -1559,7 +1559,7 @@ bool
 LIRGenerator::visitStringLength(MStringLength *ins)
 {
     JS_ASSERT(ins->string()->type() == MIRType_String);
-    return define(new LStringLength(useRegister(ins->string())), ins);
+    return define(new LStringLength(useRegisterAtStart(ins->string())), ins);
 }
 
 bool
