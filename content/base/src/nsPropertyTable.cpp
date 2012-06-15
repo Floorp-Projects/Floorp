@@ -52,6 +52,8 @@ public:
     return mName == aPropertyName;
   }
 
+  size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
   nsCOMPtr<nsIAtom>  mName;           // property name
   PLDHashTable       mObjectValueMap; // map of object/value pairs
   NSPropertyDtorFunc mDtorFunc;       // property specific value dtor function
@@ -335,6 +337,26 @@ nsPropertyTable::PropertyList::DeletePropertyFor(nsPropertyOwner aObject)
     mDtorFunc(const_cast<void*>(aObject.get()), mName, value, mDtorData);
 
   return true;
+}
+
+size_t
+nsPropertyTable::PropertyList::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+  size_t n = aMallocSizeOf(this);
+  n += PL_DHashTableSizeOfExcludingThis(&mObjectValueMap, NULL, aMallocSizeOf);
+  return n;
+}
+
+size_t
+nsPropertyTable::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
+{
+  size_t n = 0;
+
+  for (PropertyList *prop = mPropertyList; prop; prop = prop->mNext) {
+    n += prop->SizeOfIncludingThis(aMallocSizeOf);
+  }
+
+  return n;
 }
 
 /* static */
