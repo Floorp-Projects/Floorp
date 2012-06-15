@@ -118,6 +118,40 @@ xpcAccessibleTable::GetRowExtentAt(PRInt32 aRowIdx, PRInt32 aColIdx,
   *aRowExtent = mTable->RowExtentAt(aRowIdx, aColIdx);
   return NS_OK;
 }
+
+nsresult
+xpcAccessibleTable::GetColumnDescription(PRInt32 aColIdx,
+                                         nsAString& aDescription)
+{
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aColIdx < 0 || static_cast<PRUint32>(aColIdx) >= mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  nsAutoString description;
+  mTable->ColDescription(aColIdx, description);
+  aDescription.Assign(description);
+
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetRowDescription(PRInt32 aRowIdx, nsAString& aDescription)
+{
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aRowIdx < 0 || static_cast<PRUint32>(aRowIdx) >= mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  nsAutoString description;
+  mTable->RowDescription(aRowIdx, description);
+  aDescription.Assign(description);
+
+  return NS_OK;
+}
+
 nsresult
 xpcAccessibleTable::IsColumnSelected(PRInt32 aColIdx, bool* aIsSelected)
 {

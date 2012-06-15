@@ -368,33 +368,19 @@ XULTreeGridAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-XULTreeGridAccessible::GetColumnDescription(PRInt32 aColumnIndex,
-                                            nsAString& aDescription)
+void
+XULTreeGridAccessible::ColDescription(PRUint32 aColIdx, nsString& aDescription)
 {
   aDescription.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessible> treeColumns;
   Accessible::GetFirstChild(getter_AddRefs(treeColumns));
   if (treeColumns) {
     nsCOMPtr<nsIAccessible> treeColumnItem;
-    treeColumns->GetChildAt(aColumnIndex, getter_AddRefs(treeColumnItem));
+    treeColumns->GetChildAt(aColIdx, getter_AddRefs(treeColumnItem));
     if (treeColumnItem)
-      return treeColumnItem->GetName(aDescription);
+      treeColumnItem->GetName(aDescription);
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XULTreeGridAccessible::GetRowDescription(PRInt32 aRowIndex,
-                                         nsAString& aDescription)
-{
-  aDescription.Truncate();
-  return NS_OK;
 }
 
 bool
