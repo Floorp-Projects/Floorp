@@ -90,6 +90,7 @@ XRE_FreeAppDataType XRE_FreeAppData;
 XRE_SetupDllBlocklistType XRE_SetupDllBlocklist;
 #endif
 XRE_TelemetryAccumulateType XRE_TelemetryAccumulate;
+XRE_StartupTimelineRecordType XRE_StartupTimelineRecord;
 XRE_mainType XRE_main;
 
 static const nsDynamicFunctionLoad kXULFuncs[] = {
@@ -100,6 +101,7 @@ static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_SetupDllBlocklist", (NSFuncPtr*) &XRE_SetupDllBlocklist },
 #endif
     { "XRE_TelemetryAccumulate", (NSFuncPtr*) &XRE_TelemetryAccumulate },
+    { "XRE_StartupTimelineRecord", (NSFuncPtr*) &XRE_StartupTimelineRecord },
     { "XRE_main", (NSFuncPtr*) &XRE_main },
     { nsnull, nsnull }
 };
@@ -189,8 +191,31 @@ bool IsPrefetchDisabledViaService()
 }
 #endif
 
+/* Local implementation of PR_Now, since the executable can't depend on NSPR */
+static PRTime _PR_Now()
+{
+#ifdef XP_WIN
+  MOZ_STATIC_ASSERT(sizeof(PRTime) == sizeof(FILETIME), "PRTime must have the same size as FILETIME");
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&ft);
+  PRTime now;
+  CopyMemory(&now, &ft, sizeof(PRTime));
+#ifdef __GNUC__
+  return (now - 116444736000000000LL) / 10LL;
+#else
+  return (now - 116444736000000000i64) / 10i64;
+#endif
+
+#else
+  struct timeval tm;
+  gettimeofday(&tm, 0);
+  return (((PRTime)tm.tv_sec * 1000000LL) + (PRTime)tm.tv_usec);
+#endif
+}
+
 int main(int argc, char* argv[])
 {
+  PRTime start = _PR_Now();
   char exePath[MAXPATHLEN];
 
 #ifdef XP_MACOSX
@@ -246,6 +271,8 @@ int main(int argc, char* argv[])
     Output("Couldn't load XRE functions.\n");
     return 255;
   }
+
+  XRE_StartupTimelineRecord(mozilla::StartupTimeline::START, start);
 
 #ifdef XRE_HAS_DLL_BLOCKLIST
   XRE_SetupDllBlocklist();
