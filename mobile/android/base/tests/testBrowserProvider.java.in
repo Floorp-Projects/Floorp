@@ -316,6 +316,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
         mTests.add(new TestCombinedView());
         mTests.add(new TestCombinedViewDisplay());
+        mTests.add(new TestCombinedViewWithDeletedBookmark());
     }
 
     public void testBrowserProvider() throws Exception {
@@ -1486,6 +1487,44 @@ public class testBrowserProvider extends ContentProviderTest {
                 mAsserter.is(new Integer(display), new Integer(expectedDisplay),
                                  "Combined display column should always be DISPLAY_READER for the reading list item");
             }
+        }
+    }
+
+    class TestCombinedViewWithDeletedBookmark extends Test {
+        public void test() throws Exception {
+            final String TITLE = "Test Page 1";
+            final String URL = "http://example.com";
+            final int VISITS = 10;
+            final long LAST_VISITED = System.currentTimeMillis();
+
+            // Create a combined history entry
+            ContentValues combinedHistory = createHistoryEntry(TITLE, URL, VISITS, LAST_VISITED);
+            mProvider.insert(mHistoryUri, combinedHistory);
+
+            // Create a combined bookmark entry
+            ContentValues combinedBookmark = createBookmark(TITLE, URL, mMobileFolderId,
+                mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            long combinedBookmarkId = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedBookmark));
+
+            Cursor c = mProvider.query(mCombinedUri, null, "", null, null);
+            mAsserter.is(c.getCount(), 1, "1 combined entry found");
+
+            mAsserter.is(c.moveToFirst(), true, "Found combined entry with bookmark id");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(combinedBookmarkId),
+                         "Bookmark id should be set correctly on combined entry");
+
+            int deleted = mProvider.delete(mBookmarksUri,
+                                           mBookmarksIdCol + " = ?",
+                                           new String[] { String.valueOf(combinedBookmarkId) });
+
+            mAsserter.is((deleted == 1), true, "Inserted combined bookmark was deleted");
+
+            c = mProvider.query(mCombinedUri, null, "", null, null);
+            mAsserter.is(c.getCount(), 1, "1 combined entry found");
+
+            mAsserter.is(c.moveToFirst(), true, "Found combined entry without bookmark id");
+            mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(0),
+                         "Bookmark id should not be set to removed bookmark id");
         }
     }
 }
