@@ -122,6 +122,8 @@ DeveloperToolbar.prototype.show = function DT_show(aCallback)
     return;
   }
 
+  Services.prefs.setBoolPref("devtools.toolbar.visible", true);
+
   this._notify(NOTIFICATIONS.LOAD);
   this._pendingShowCallback = aCallback;
   this._pendingHide = false;
@@ -280,6 +282,8 @@ DeveloperToolbar.prototype.hide = function DT_hide()
   }
 
   this._element.hidden = true;
+
+  Services.prefs.setBoolPref("devtools.toolbar.visible", false);
 
   this._doc.getElementById("Tools:DevToolbar").setAttribute("checked", "false");
   this.destroy();
