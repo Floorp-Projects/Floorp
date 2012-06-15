@@ -44,6 +44,7 @@
 #include "IonSpewer.h"
 #include "MIRGenerator.h"
 #include "shared/CodeGenerator-shared-inl.h"
+#include "jsmath.h"
 #include "jsnum.h"
 #include "jsinterpinlines.h"
 
@@ -1211,6 +1212,47 @@ CodeGenerator::visitAbsI(LAbsI *ins)
         return false;
     masm.bind(&positive);
 
+    return true;
+}
+
+bool
+CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
+
+    MathCache *mathCache = gen->cx->runtime->getMathCache(gen->cx);
+
+    saveVolatile(ReturnFloatReg);
+
+    // It's safe to use any volatile register as temp now.
+    Register temp = RegisterSet::Volatile().takeGeneral();
+    masm.setupUnalignedABICall(2, temp);
+    masm.movePtr(ImmWord(mathCache), temp);
+    masm.passABIArg(temp);
+    masm.passABIArg(input);
+
+    void *funptr = NULL;
+    switch (ins->mir()->function()) {
+      case MMathFunction::Log:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_log_impl);
+        break;
+      case MMathFunction::Sin:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_sin_impl);
+        break;
+      case MMathFunction::Cos:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_cos_impl);
+        break;
+      case MMathFunction::Tan:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_tan_impl);
+        break;
+      default:
+        JS_NOT_REACHED("Unknown math function");
+    }
+
+    masm.callWithABI(funptr, MacroAssembler::DOUBLE);
+
+    restoreVolatile(ReturnFloatReg);
     return true;
 }
 

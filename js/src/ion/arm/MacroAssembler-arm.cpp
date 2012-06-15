@@ -2722,6 +2722,11 @@ MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
     checkStackAlignment();
     ma_call(fun);
 
+    if (result == DOUBLE) {
+        // Move double from r0/r1 to ReturnFloatReg.
+        as_vxfer(r0, r1, ReturnFloatReg, CoreToFloat);
+    }
+
     freeStack(stackAdjust);
     if (dynamicAlignment_) {
         // x86 supports pop esp.  on arm, that isn't well defined, so just

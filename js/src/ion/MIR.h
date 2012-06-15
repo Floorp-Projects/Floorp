@@ -2064,12 +2064,11 @@ class MAbs
 
 class MSqrt
   : public MUnaryInstruction,
-    public ArithPolicy
+    public DoublePolicy<0>
 {
     MSqrt(MDefinition *num)
       : MUnaryInstruction(num)
     {
-        specialization_ = MIRType_Double;
         setResultType(MIRType_Double);
     }
 
@@ -2085,6 +2084,55 @@ class MSqrt
         return this;
     }
     bool congruentTo(MDefinition *const &ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+class MMathFunction
+  : public MUnaryInstruction,
+    public DoublePolicy<0>
+{
+  public:
+    enum Function {
+        Log,
+        Sin,
+        Cos,
+        Tan
+    };
+
+  private:
+    Function function_;
+
+    MMathFunction(MDefinition *input, Function function)
+      : MUnaryInstruction(input), function_(function)
+    {
+        setResultType(MIRType_Double);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(MathFunction);
+    static MMathFunction *New(MDefinition *input, Function function) {
+        return new MMathFunction(input, function);
+    }
+    Function function() const {
+        return function_;
+    }
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool congruentTo(MDefinition *const &ins) const {
+        if (!ins->isMathFunction())
+            return false;
+        if (ins->toMathFunction()->function() != function())
+            return false;
         return congruentIfOperandsEqual(ins);
     }
 

@@ -225,11 +225,27 @@ class CodeGeneratorShared : public LInstructionVisitor
         regs.maybeTake(output);
         masm.PopRegsInMask(regs);
     }
+    void saveVolatile(FloatRegister output) {
+        RegisterSet regs = RegisterSet::Volatile();
+        regs.maybeTake(output);
+        masm.PushRegsInMask(regs);
+    }
+    void restoreVolatile(FloatRegister output) {
+        RegisterSet regs = RegisterSet::Volatile();
+        regs.maybeTake(output);
+        masm.PopRegsInMask(regs);
+    }
     void saveVolatile(RegisterSet temps) {
         masm.PushRegsInMask(RegisterSet::VolatileNot(temps));
     }
     void restoreVolatile(RegisterSet temps) {
         masm.PopRegsInMask(RegisterSet::VolatileNot(temps));
+    }
+    void saveVolatile() {
+        masm.PushRegsInMask(RegisterSet::Volatile());
+    }
+    void restoreVolatile() {
+        masm.PopRegsInMask(RegisterSet::Volatile());
     }
 
     // These functions have to be called before and after any callVM and before

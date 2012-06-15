@@ -75,6 +75,7 @@ namespace ion {
     _(Ursh)                                                                 \
     _(Abs)                                                                  \
     _(Sqrt)                                                                 \
+    _(MathFunction)                                                         \
     _(Add)                                                                  \
     _(Sub)                                                                  \
     _(Mul)                                                                  \

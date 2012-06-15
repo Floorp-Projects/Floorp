@@ -87,4 +87,32 @@ js_math_ceil_impl(double x);
 extern double
 js_math_floor_impl(double x);
 
+namespace js {
+
+extern JSBool
+math_log(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern double
+math_log_impl(MathCache *cache, double x);
+
+extern JSBool
+math_sin(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern double
+math_sin_impl(MathCache *cache, double x);
+
+extern JSBool
+math_cos(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern double
+math_cos_impl(MathCache *cache, double x);
+
+extern JSBool
+math_tan(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern double
+math_tan_impl(MathCache *cache, double x);
+
+} /* namespace js */
+
 #endif /* jsmath_h___ */

@@ -575,6 +575,15 @@ LIRGenerator::visitSqrt(MSqrt *ins)
 }
 
 bool
+LIRGenerator::visitMathFunction(MMathFunction *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Double);
+    JS_ASSERT(ins->input()->type() == MIRType_Double);
+    LMathFunctionD *lir = new LMathFunctionD(useRegister(ins->input()));
+    return defineFixed(lir, ins, LAllocation(AnyRegister(ReturnFloatReg)));
+}
+
+bool
 LIRGenerator::visitAdd(MAdd *ins)
 {
     MDefinition *lhs = ins->getOperand(0);
