@@ -692,7 +692,8 @@ static void
 TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer, js::Vector<BufferOffset, 0, SystemAllocPolicy> *locs)
 {
     for (int idx = 0; idx < locs->length(); idx++) {
-        ARMBuffer::AssemblerBufferInstIterator iter(BufferOffset((*locs)[idx]), buffer);
+        BufferOffset bo = (*locs)[idx];
+        ARMBuffer::AssemblerBufferInstIterator iter(bo, buffer);
         const void *ptr = ion::Assembler::getPtr32Target(&iter);
 
         // No barrier needed since these are constants.
