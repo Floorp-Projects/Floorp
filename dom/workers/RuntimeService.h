@@ -20,6 +20,7 @@
 #include "nsHashKeys.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
+#include "mozilla/Attributes.h"
 
 class nsIThread;
 class nsITimer;
@@ -29,7 +30,7 @@ BEGIN_WORKERS_NAMESPACE
 
 class WorkerPrivate;
 
-class RuntimeService : public nsIObserver
+class RuntimeService MOZ_FINAL : public nsIObserver
 {
   struct WorkerDomainInfo
   {

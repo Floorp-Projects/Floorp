@@ -11,14 +11,15 @@
 
 #include "nsICharsetDetectionObserver.h"
 #include "nsStringGlue.h"
+#include "mozilla/Attributes.h"
 
 class nsIInputStream;
 class nsIDOMBlob;
 
 BEGIN_WORKERS_NAMESPACE
 
-class FileReaderSyncPrivate : public PrivatizableBase,
-                              public nsICharsetDetectionObserver
+class FileReaderSyncPrivate MOZ_FINAL : public PrivatizableBase,
+                                        public nsICharsetDetectionObserver
 {
   nsCString mCharset;
   nsresult ConvertStream(nsIInputStream *aStream, const char *aCharset,
