@@ -1408,7 +1408,9 @@ class MUnbox : public MUnaryInstruction
                   type == MIRType_Int32   ||
                   type == MIRType_Double  || 
                   type == MIRType_String  ||
-                  type == MIRType_Object);
+                  type == MIRType_Object  ||
+                  // For JS_OPTIMIZED_ARGUMENTS.
+                  type == MIRType_Magic);
 
         setResultType(type);
         setMovable();

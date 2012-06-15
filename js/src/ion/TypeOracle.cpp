@@ -557,3 +557,23 @@ TypeInferenceOracle::aliasedVarType(JSScript *script, jsbytecode *pc)
     return getMIRType(script->analysis()->pushedTypes(pc, 0));
 }
 
+bool
+TypeInferenceOracle::propertyReadMagicArguments(JSScript *script, jsbytecode *pc)
+{
+    types::TypeSet *obj = script->analysis()->poppedTypes(pc, 0);
+    return obj->isMagicArguments(cx);
+}
+
+bool
+TypeInferenceOracle::elementReadMagicArguments(JSScript *script, jsbytecode *pc)
+{
+    types::TypeSet *obj = script->analysis()->poppedTypes(pc, 1);
+    return obj->isMagicArguments(cx);
+}
+
+bool
+TypeInferenceOracle::elementWriteMagicArguments(JSScript *script, jsbytecode *pc)
+{
+    types::TypeSet *obj = script->analysis()->poppedTypes(pc, 2);
+    return obj->isMagicArguments(cx);
+}

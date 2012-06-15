@@ -58,6 +58,11 @@
 #include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 
+#ifdef JS_ION
+#include "ion/IonFrameIterator.h"
+#include "ion/IonFrameIterator-inl.h"
+#endif
+
 using namespace mozilla;
 using namespace js;
 using namespace js::gc;
@@ -698,18 +703,48 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
          * N.B. Changes here need to be propagated to stubs::SplatApplyArgs.
          */
         /* Steps 4-6. */
-        unsigned length = cx->fp()->numActualArgs();
-        JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
+        StackFrame *fp = cx->fp();
 
-        if (!cx->stack.pushInvokeArgs(cx, length, &args))
-            return false;
+#ifdef JS_ION
+        // We do not want to use StackIter to abstract here because this is
+        // supposed to be a fast path as opposed to StackIter which is doing
+        // complex logic to settle on the next frame twice.
+        if (fp->runningInIon()) {
+            ion::IonActivationIterator activations(cx);
+            ion::IonFrameIterator frame(activations);
+            JS_ASSERT(frame.isNative());
+            // Stop on the next Ion JS Frame.
+            ++frame;
+            ion::InlineFrameIterator iter(&frame);
 
-        /* Push fval, obj, and aobj's elements as args. */
-        args.calleev() = fval;
-        args.thisv() = vp[2];
+            unsigned length = iter.numActualArgs();
+            JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
 
-        /* Steps 7-8. */
-        cx->fp()->forEachUnaliasedActual(CopyTo(args.array()));
+            if (!cx->stack.pushInvokeArgs(cx, length, &args))
+                return false;
+
+            /* Push fval, obj, and aobj's elements as args. */
+            args.calleev() = fval;
+            args.thisv() = vp[2];
+
+            /* Steps 7-8. */
+            iter.forEachCanonicalActualArg(CopyTo(args.array()), 0, -1);
+        } else
+#endif
+        {
+            unsigned length = fp->numActualArgs();
+            JS_ASSERT(length <= StackSpace::ARGS_LENGTH_MAX);
+
+            if (!cx->stack.pushInvokeArgs(cx, length, &args))
+                return false;
+
+            /* Push fval, obj, and aobj's elements as args. */
+            args.calleev() = fval;
+            args.thisv() = vp[2];
+
+            /* Steps 7-8. */
+            fp->forEachUnaliasedActual(CopyTo(args.array()));
+        }
     } else {
         /* Step 3. */
         if (!vp[3].isObject()) {

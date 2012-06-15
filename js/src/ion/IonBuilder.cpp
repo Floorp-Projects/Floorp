@@ -47,7 +47,6 @@
 #include "IonSpewer.h"
 #include "frontend/BytecodeEmitter.h"
 #include "jsscriptinlines.h"
-#include "vm/ScopeObject-inl.h"
 
 #ifdef JS_THREADSAFE
 # include "prthread.h"
@@ -811,6 +810,9 @@ IonBuilder::inspectOpcode(JSOp op)
 
       case JSOP_TRUE:
         return pushConstant(BooleanValue(true));
+
+      case JSOP_ARGUMENTS:
+        return pushConstant(MagicValue(JS_OPTIMIZED_ARGUMENTS));
 
       case JSOP_NOTEARG:
         return jsop_notearg();
@@ -3046,8 +3048,14 @@ IonBuilder::jsop_funcall(uint32 argc)
 
     // If |Function.prototype.call| may be overridden, don't optimize callsite.
     RootedFunction native(cx, getSingleCallTarget(argc, pc));
-    if (!native || !native->isNative() || native->native() != &js_fun_call)
+    if (native && native->isNative()) {
+        if (native->native() == &js_fun_apply)
+            return abort("NYI: fun.apply with arguments.");
+        if (native->native() != &js_fun_call)
+            return makeCall(native, argc, false);
+    } else {
         return makeCall(native, argc, false);
+    }
 
     // Extract call target.
     types::TypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
@@ -4040,6 +4048,9 @@ IonBuilder::jsop_getelem()
     if (oracle->elementReadIsString(script, pc))
         return jsop_getelem_string();
 
+    if (oracle->elementReadMagicArguments(script, pc))
+        return jsop_arguments_getelem();
+
     MDefinition *rhs = current->pop();
     MDefinition *lhs = current->pop();
 
@@ -4267,6 +4278,9 @@ IonBuilder::jsop_setelem()
             return jsop_setelem_typed(arrayType);
     }
 
+    if (oracle->elementWriteMagicArguments(script, pc))
+        return jsop_arguments_setelem();
+
     MDefinition *value = current->pop();
     MDefinition *index = current->pop();
     MDefinition *object = current->pop();
@@ -4439,6 +4453,30 @@ IonBuilder::jsop_length_fastPath()
     return false;
 }
 
+bool
+IonBuilder::jsop_arguments_length()
+{
+    MDefinition *obj = current->pop();
+    return abort("NYI arguments.length");
+}
+
+bool
+IonBuilder::jsop_arguments_getelem()
+{
+    MDefinition *idx = current->pop();
+    MDefinition *obj = current->pop();
+    return abort("NYI arguments[]");
+}
+
+bool
+IonBuilder::jsop_arguments_setelem()
+{
+    MDefinition *val = current->pop();
+    MDefinition *idx = current->pop();
+    MDefinition *obj = current->pop();
+    return abort("NYI arguments[]=");
+}
+
 inline types::TypeSet *
 GetDefiniteSlot(JSContext *cx, types::TypeSet *types, JSAtom *atom)
 {
@@ -4479,6 +4517,12 @@ IonBuilder::jsop_not()
 bool
 IonBuilder::jsop_getprop(HandlePropertyName name)
 {
+    if (oracle->propertyReadMagicArguments(script, pc)) {
+        if (JSOp(*pc) == JSOP_LENGTH)
+            return jsop_arguments_length();
+        // Can also be a callee.
+    }
+
     MDefinition *obj = current->pop();
     MInstruction *ins;
 
