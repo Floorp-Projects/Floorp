@@ -298,6 +298,11 @@ MConstant::MConstant(const js::Value &vp)
 {
     setResultType(MIRTypeFromValue(vp));
     setMovable();
+
+    if (type() == MIRType_Int32) {
+        range()->setLower(value().toInt32());
+        range()->setUpper(value().toInt32());
+    }
 }
 
 HashNumber
@@ -1358,4 +1363,14 @@ MBoundsCheck::updateForReplacement(MDefinition *ins)
     setMinimum(newMinimum);
     setMaximum(newMaximum);
     return true;
+}
+
+void
+MBeta::printOpcode(FILE *fp)
+{
+    PrintOpcodeName(fp, op());
+    fprintf(fp, " ");
+    getOperand(0)->printName(fp);
+    fprintf(fp, " ");
+    comparison_.printRange(fp);
 }
