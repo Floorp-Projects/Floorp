@@ -225,35 +225,6 @@ struct nsFakeCharMessage {
   }
 };
 
-// Used in char processing
-struct nsModifierKeyState {
-  bool mIsShiftDown;
-  bool mIsControlDown;
-  bool mIsAltDown;
-  bool mIsWinDown;
-
-  bool mIsCapsLocked;
-  bool mIsNumLocked;
-  bool mIsScrollLocked;
-
-  nsModifierKeyState()
-  {
-    Update();
-  }
-  nsModifierKeyState(bool aIsShiftDown, bool aIsControlDown,
-                     bool aIsAltDown)
-  {
-    Update();
-    mIsShiftDown = aIsShiftDown;
-    mIsControlDown = aIsControlDown;
-    mIsAltDown = aIsAltDown;
-  }
-
-  void Update();
-
-  void InitInputEvent(nsInputEvent& aInputEvent) const;
-};
-
 // Used for synthesizing events
 struct KeyPair {
   PRUint8 mGeneral;
