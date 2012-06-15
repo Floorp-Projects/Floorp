@@ -2423,7 +2423,7 @@ Instruction::next()
         return ret + ph->size();
     } else if (instIsArtificialGuard(ret, &ph)) {
         return ret + 1 + ph->size();
-    } else if (instIsBNop(this)) {
+    } else if (instIsBNop(ret)) {
         return ret + 1;
     }
     return ret;
