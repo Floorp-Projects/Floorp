@@ -8641,7 +8641,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   NS_ASSERTION(mDocShell, "Must have docshell here");
 
   const bool checkForPopup = !nsContentUtils::IsCallerChrome() &&
-    !aDialog && !WindowExists(aName, !aCalledNoScript);
+    !IsPartOfApp() && !aDialog && !WindowExists(aName, !aCalledNoScript);
 
   // Note: it's very important that this be an nsXPIDLCString, since we want
   // .get() on it to return nsnull until we write stuff to it.  The window
