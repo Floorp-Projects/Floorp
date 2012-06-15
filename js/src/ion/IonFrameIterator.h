@@ -271,6 +271,7 @@ class InlineFrameIterator
     HeapPtr<JSFunction> callee_;
     HeapPtr<JSScript> script_;
     jsbytecode *pc_;
+    uint32 numActualArgs_;
 
   private:
     void findNextFrame();

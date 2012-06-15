@@ -441,12 +441,17 @@ class LCallGeneric : public LCallInstructionHelper<BOX_PIECES, 1, 2>
         return mir_->toCall();
     }
 
-    uint32 nargs() const {
-        JS_ASSERT(mir()->argc() >= 1);
-        return mir()->argc() - 1; // |this| is not a formal argument.
+    // The number of stack arguments is the max between the number of formal
+    // arguments and the number of actual arguments. The number of stack
+    // argument includes the |undefined| padding added in case of underflow.
+    // Does not include |this|.
+    uint32 numStackArgs() const {
+        JS_ASSERT(mir()->numStackArgs() >= 1);
+        return mir()->numStackArgs() - 1; // |this| is not a formal argument.
     }
-    uint32 bytecodeArgc() const {
-        return mir()->bytecodeArgc();
+    // Does not include |this|.
+    uint32 numActualArgs() const {
+        return mir()->numActualArgs();
     }
 
     bool hasSingleTarget() const {
@@ -499,10 +504,10 @@ class LCallNative : public LCallInstructionHelper<BOX_PIECES, 0, 4>
         return mir_->toCall();
     }
 
-    // TODO: Common this out with LCallGeneric.
-    uint32 nargs() const {
-        JS_ASSERT(mir()->argc() >= 1);
-        return mir()->argc() - 1; // |this| is not a formal argument.
+    // :TODO: Common this out with LCallGeneric.
+    uint32 numStackArgs() const {
+        JS_ASSERT(mir()->numStackArgs() >= 1);
+        return mir()->numStackArgs() - 1; // |this| is not a formal argument.
     }
 
     const LAllocation *getArgJSContextReg() {
@@ -542,9 +547,12 @@ class LCallConstructor : public LInstructionHelper<BOX_PIECES, 1, 0>
         return mir_->toCall();
     }
 
-    uint32 nargs() const {
-        JS_ASSERT(mir()->argc() >= 1);
-        return mir()->argc() - 1; // |this| is not a formal argument.
+    uint32 numStackArgs() const {
+        JS_ASSERT(mir()->numStackArgs() >= 1);
+        return mir()->numStackArgs() - 1; // |this| is not a formal argument.
+    }
+    uint32 numActualArgs() const {
+        return mir()->numActualArgs();
     }
     bool isCall() const {
         return true;

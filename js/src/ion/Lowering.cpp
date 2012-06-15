@@ -244,7 +244,7 @@ LIRGenerator::visitCall(MCall *call)
             return false;
     }
 
-    freeArguments(call->argc());
+    freeArguments(call->numStackArgs());
     return true;
 }
 

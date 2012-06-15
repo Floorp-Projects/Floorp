@@ -870,9 +870,8 @@ CheckFrame(StackFrame *fp)
         return false;
     }
 
-    if (fp->script()->needsArgsObj() || fp->script()->argumentsHasLocalBinding()) {
-        // Functions with arguments objects, or scripts that use arguments, are
-        // not supported yet.
+    if (fp->script()->needsArgsObj()) {
+        // Functions with arguments objects, are not supported yet.
         IonSpew(IonSpew_Abort, "frame has argsobj");
         return false;
     }
@@ -931,6 +930,12 @@ Compile(JSContext *cx, JSScript *script, js::StackFrame *fp, jsbytecode *osrPc)
 {
     JS_ASSERT(ion::IsEnabled(cx));
     JS_ASSERT_IF(osrPc != NULL, (JSOp)*osrPc == JSOP_LOOPENTRY);
+
+    // Skip if there is too much arguments.
+    if (fp->hasArgs() && fp->numActualArgs() > js_IonOptions.maxStackArgs) {
+        IonSpew(IonSpew_Abort, "Ignore compilation due huge number of arguments of %s:%d", script->filename, script->lineno);
+        return Method_Skipped;
+    }
 
     if (cx->compartment->debugMode()) {
         IonSpew(IonSpew_Abort, "debugging");
@@ -1058,25 +1063,35 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
 
     EnterIonCode enter = cx->compartment->ionCompartment()->enterJITInfallible();
 
-    int argc = 0;
-    Value *argv = NULL;
+    // maxArgc is the maximum of arguments between the number of actual
+    // arguments and the number of formal arguments. It accounts for |this|.
+    int maxArgc = 0;
+    Value *maxArgv = NULL;
+    int numActualArgs = 0;
 
     void *calleeToken;
     if (fp->isFunctionFrame()) {
-        // CountArgSlot include |this| and the |scopeChain|, -1 is used to
-        // discard the |scopeChain|.
-        argc = CountArgSlots(fp->fun()) - 1;
-        argv = fp->formals() - 1;
+        // CountArgSlot include |this| and the |scopeChain|.
+        maxArgc = CountArgSlots(fp->fun()) - 1; // -1 = discard |scopeChain|
+        maxArgv = fp->formals() - 1;            // -1 = include |this|
 
+        // Formal arguments are the argument corresponding to the function
+        // definition and actual arguments are corresponding to the call-site
+        // arguments.
+        numActualArgs = fp->numActualArgs();
+
+        // We do not need to handle underflow because formal arguments are pad
+        // with |undefined| values but we need to distinguish between the
         if (fp->hasOverflowArgs()) {
-            int formalArgc = argc;
-            Value *formalArgv = argv;
-            argc = fp->numActualArgs() + 1;
-            argv = fp->actuals() - 1;
+            int formalArgc = maxArgc;
+            Value *formalArgv = maxArgv;
+            maxArgc = numActualArgs + 1; // +1 = include |this|
+            maxArgv = fp->actuals() - 1; // -1 = include |this|
+
             // The beginning of the actual args is not updated, so we just copy
             // the formal args into the actual args to get a linear vector which
             // can be copied by generateEnterJit.
-            memcpy(argv, formalArgv, formalArgc * sizeof(Value));
+            memcpy(maxArgv, formalArgv, formalArgc * sizeof(Value));
         }
         calleeToken = CalleeToToken(&fp->callee());
     } else {
@@ -1086,7 +1101,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
     // Caller must construct |this| before invoking the Ion function.
     JS_ASSERT_IF(fp->isConstructing(), fp->functionThis().isObject());
 
-    Value result;
+    Value result = Int32Value(numActualArgs);
     {
         AssertCompartmentUnchanged pcc(cx);
         IonContext ictx(cx, NULL);
@@ -1094,7 +1109,7 @@ EnterIon(JSContext *cx, StackFrame *fp, void *jitcode)
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
 
         // Single transition point from Interpreter to Ion.
-        enter(jitcode, argc, argv, fp, calleeToken, &result);
+        enter(jitcode, maxArgc, maxArgv, fp, calleeToken, &result);
     }
 
     if (result.isMagic() && result.whyMagic() == JS_ION_BAILOUT) {
