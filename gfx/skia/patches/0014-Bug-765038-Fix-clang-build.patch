@@ -1,0 +1,29 @@
+# HG changeset patch
+# Parent 9ded7a9f94a863dfa1f3227d3013367f51b8b522
+# User Nicholas Cameron <ncameron@mozilla.com>
+Bug 765038; fix a Clang compilation bug in Skia; r=jwatt
+
+diff --git a/gfx/skia/src/sfnt/SkOTTable_head.h b/gfx/skia/src/sfnt/SkOTTable_head.h
+--- a/gfx/skia/src/sfnt/SkOTTable_head.h
++++ b/gfx/skia/src/sfnt/SkOTTable_head.h
+@@ -109,18 +109,18 @@ struct SkOTTableHead {
+         } raw;
+     } macStyle;
+     SK_OT_USHORT lowestRecPPEM;
+     struct FontDirectionHint {
+         SK_TYPED_ENUM(Value, SK_OT_SHORT,
+             ((FullyMixedDirectionalGlyphs, SkTEndian_SwapBE16(0)))
+             ((OnlyStronglyLTR, SkTEndian_SwapBE16(1)))
+             ((StronglyLTR, SkTEndian_SwapBE16(2)))
+-            ((OnlyStronglyRTL, static_cast<SK_OT_SHORT>(SkTEndian_SwapBE16(-1))))
+-            ((StronglyRTL, static_cast<SK_OT_SHORT>(SkTEndian_SwapBE16(-2))))
++            ((OnlyStronglyRTL, static_cast<SK_OT_SHORT>(SkTEndian_SwapBE16(static_cast<SK_OT_USHORT>(-1)))))
++            ((StronglyRTL, static_cast<SK_OT_SHORT>(SkTEndian_SwapBE16(static_cast<SK_OT_USHORT>(-2)))))
+             SK_SEQ_END,
+         (value)SK_SEQ_END)
+     } fontDirectionHint;
+     struct IndexToLocFormat {
+         SK_TYPED_ENUM(Value, SK_OT_SHORT,
+             ((ShortOffsets, SkTEndian_SwapBE16(0)))
+             ((LongOffsets, SkTEndian_SwapBE16(1)))
+             SK_SEQ_END,
