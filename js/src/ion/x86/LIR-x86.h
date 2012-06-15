@@ -84,8 +84,14 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
     MUnbox *mir() const {
         return mir_->toUnbox();
     }
+    const LAllocation *payload() {
+        return getOperand(1);
+    }
     const LAllocation *type() {
         return getOperand(1);
+    }
+    const LDefinition *output() {
+        return getDef(0);
     }
 };
 

@@ -1036,9 +1036,25 @@ CodeGeneratorARM::visitUnbox(LUnbox *unbox)
     // Note that for unbox, the type and payload indexes are switched on the
     // inputs.
     MUnbox *mir = unbox->mir();
+    Register type = ToRegister(unbox->type());
+
+    if (mir->type() == MIRType_ArgObj) {
+        Register payload = ToRegister(unbox->payload());
+        if (mir->fallible()) {
+            masm.ma_cmp(type, Imm32(JSVAL_TAG_MAGIC));
+            if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
+                return false;
+            masm.ma_cmp(payload, Imm32(JS_OPTIMIZED_ARGUMENTS));
+            if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
+            return false;
+        }
+
+        masm.move32(Imm32(0), ToRegister(unbox->output()));
+        return true;
+    }
+
     if (mir->fallible()) {
-        const LAllocation *type = unbox->type();
-        masm.ma_cmp(ToRegister(type), Imm32(MIRTypeToTag(mir->type())));
+        masm.ma_cmp(type, Imm32(MIRTypeToTag(mir->type())));
         if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
             return false;
     }

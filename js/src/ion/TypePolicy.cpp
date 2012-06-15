@@ -344,6 +344,25 @@ ObjectPolicy<Op>::staticAdjustInputs(MInstruction *ins)
 template bool ObjectPolicy<0>::staticAdjustInputs(MInstruction *ins);
 template bool ObjectPolicy<1>::staticAdjustInputs(MInstruction *ins);
 
+template <unsigned Op>
+bool
+ArgumentsPolicy<Op>::staticAdjustInputs(MInstruction *ins)
+{
+    MDefinition *in = ins->getOperand(Op);
+    if (in->type() == MIRType_ArgObj)
+        return true;
+
+    if (in->type() != MIRType_Value)
+        in = boxAt(ins, in);
+
+    MUnbox *replace = MUnbox::New(in, MIRType_ArgObj, MUnbox::Fallible);
+    ins->block()->insertBefore(ins, replace);
+    ins->replaceOperand(Op, replace);
+    return true;
+}
+
+template bool ArgumentsPolicy<0>::staticAdjustInputs(MInstruction *ins);
+
 bool
 CallPolicy::adjustInputs(MInstruction *ins)
 {

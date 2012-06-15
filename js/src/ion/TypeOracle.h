@@ -67,7 +67,8 @@ enum MIRType
     MIRType_Slots,      // A slots vector
     MIRType_Elements,   // An elements vector
     MIRType_UpvarSlots, // Flat closure upvar slots
-    MIRType_StackFrame  // StackFrame pointer for OSR.
+    MIRType_StackFrame, // StackFrame pointer for OSR.
+    MIRType_ArgObj      // Argument object (0 is used to mark lazy args).
 };
 
 class TypeOracle
@@ -370,6 +371,8 @@ StringFromMIRType(MIRType type)
       return "UpvarSlots";
     case MIRType_StackFrame:
       return "StackFrame";
+    case MIRType_ArgObj:
+      return "ArgumentsObject";
     default:
       JS_NOT_REACHED("Unknown MIRType.");
       return "";

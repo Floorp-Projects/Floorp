@@ -812,7 +812,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return pushConstant(BooleanValue(true));
 
       case JSOP_ARGUMENTS:
-        return pushConstant(MagicValue(JS_OPTIMIZED_ARGUMENTS));
+        return jsop_arguments();
 
       case JSOP_NOTEARG:
         return jsop_notearg();
@@ -4454,10 +4454,22 @@ IonBuilder::jsop_length_fastPath()
 }
 
 bool
+IonBuilder::jsop_arguments()
+{
+    MInstruction *ins = MLazyArguments::New();
+    current->add(ins);
+    current->push(ins);
+    return true;
+}
+
+bool
 IonBuilder::jsop_arguments_length()
 {
-    MDefinition *obj = current->pop();
-    return abort("NYI arguments.length");
+    MDefinition *args = current->pop();
+    MInstruction *ins = MArgumentsLength::New(args);
+    current->add(ins);
+    current->push(ins);
+    return true;
 }
 
 bool

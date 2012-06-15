@@ -2156,6 +2156,18 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd *lir)
 }
 
 bool
+CodeGenerator::visitArgumentsLength(LArgumentsLength *lir)
+{
+    // read number of actual arguments from the JS frame.
+    Register argc = ToRegister(lir->output());
+    Address ptr(StackPointer, masm.framePushed() + IonJSFrameLayout::offsetOfNumActualArgs());
+
+    JS_ASSERT(masm.framePushed() == frameSize());
+    masm.movePtr(ptr, argc);
+    return true;
+}
+
+bool
 CodeGenerator::generate()
 {
     JSContext *cx = gen->cx;

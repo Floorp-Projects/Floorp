@@ -82,6 +82,8 @@ class SnapshotWriter
     void addNullSlot();
     void addInt32Slot(int32 value);
     void addConstantPoolSlot(uint32 index);
+    void addArgObjSlot(const Register &reg);
+    void addArgObjSlot(int32 stackIndex);
 #if defined(JS_NUNBOX32)
     void addSlot(const Register &type, const Register &payload);
     void addSlot(const Register &type, int32 payloadStackIndex);
