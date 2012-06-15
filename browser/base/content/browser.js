@@ -1152,35 +1152,6 @@ function BrowserStartup() {
   gStartupRan = true;
 }
 
-function HandleAppCommandEvent(evt) {
-  evt.stopPropagation();
-  switch (evt.command) {
-  case "Back":
-    BrowserBack();
-    break;
-  case "Forward":
-    BrowserForward();
-    break;
-  case "Reload":
-    BrowserReloadSkipCache();
-    break;
-  case "Stop":
-    BrowserStop();
-    break;
-  case "Search":
-    BrowserSearch.webSearch();
-    break;
-  case "Bookmarks":
-    toggleSidebar('viewBookmarksSidebar');
-    break;
-  case "Home":
-    BrowserHome();
-    break;
-  default:
-    break;
-  }
-}
-
 function prepareForStartup() {
   gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
 
@@ -1816,6 +1787,35 @@ function initializeSanitizer()
     }
 
     gPrefService.setBoolPref("privacy.sanitize.migrateFx3Prefs", true);
+  }
+}
+
+function HandleAppCommandEvent(evt) {
+  evt.stopPropagation();
+  switch (evt.command) {
+  case "Back":
+    BrowserBack();
+    break;
+  case "Forward":
+    BrowserForward();
+    break;
+  case "Reload":
+    BrowserReloadSkipCache();
+    break;
+  case "Stop":
+    BrowserStop();
+    break;
+  case "Search":
+    BrowserSearch.webSearch();
+    break;
+  case "Bookmarks":
+    toggleSidebar('viewBookmarksSidebar');
+    break;
+  case "Home":
+    BrowserHome();
+    break;
+  default:
+    break;
   }
 }
 
