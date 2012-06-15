@@ -35,31 +35,6 @@ namespace widget {
 
 class KeyboardLayout;
 
-//  0 - Normal
-//  1 - Shift
-//  2 - Control
-//  3 - Control + Shift
-//  4 - Alt
-//  5 - Alt + Shift
-//  6 - Alt + Control (AltGr)
-//  7 - Alt + Control + Shift (AltGr + Shift)
-//  8 - CapsLock
-//  9 - CapsLock + Shift
-// 10 - CapsLock + Control
-// 11 - CapsLock + Control + Shift
-// 12 - CapsLock + Alt
-// 13 - CapsLock + Alt + Shift
-// 14 - CapsLock + Alt + Control (CapsLock + AltGr)
-// 15 - CapsLock + Alt + Control + Shift (CapsLock + AltGr + Shift)
-
-enum eKeyShiftFlags
-{
-  eShift    = 0x01,
-  eCtrl     = 0x02,
-  eAlt      = 0x04,
-  eCapsLock = 0x08
-};
-
 class ModifierKeyState {
 public:
   ModifierKeyState()
@@ -102,28 +77,6 @@ public:
     EnsureAltGr();
   }
 
-  void SetKeyShiftFlags(PRUint8 aKeyShiftFlags)
-  {
-    Unset(MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT |
-          MODIFIER_ALTGRAPH | MODIFIER_CAPSLOCK);
-    Modifiers modifiers = 0;
-    if (aKeyShiftFlags & eShift) {
-      modifiers |= MODIFIER_SHIFT;
-    }
-    if (aKeyShiftFlags & eCtrl) {
-      modifiers |= MODIFIER_CONTROL;
-    }
-    if (aKeyShiftFlags & eAlt) {
-      modifiers |= MODIFIER_ALT;
-    }
-    if (aKeyShiftFlags & eCapsLock) {
-      modifiers |= MODIFIER_CAPSLOCK;
-    }
-    if (modifiers) {
-      Set(modifiers);
-    }
-  }
-
   void InitInputEvent(nsInputEvent& aInputEvent) const;
 
   bool IsShift() const { return (mModifiers & MODIFIER_SHIFT) != 0; }
@@ -135,6 +88,8 @@ public:
   bool IsCapsLocked() const { return (mModifiers & MODIFIER_CAPSLOCK) != 0; }
   bool IsNumLocked() const { return (mModifiers & MODIFIER_NUMLOCK) != 0; }
   bool IsScrollLocked() const { return (mModifiers & MODIFIER_SCROLL) != 0; }
+
+  Modifiers GetModifiers() const { return mModifiers; }
 
 private:
   Modifiers mModifiers;
@@ -159,6 +114,75 @@ class DeadKeyTable;
 
 class VirtualKey
 {
+public:
+  //  0 - Normal
+  //  1 - Shift
+  //  2 - Control
+  //  3 - Control + Shift
+  //  4 - Alt
+  //  5 - Alt + Shift
+  //  6 - Alt + Control (AltGr)
+  //  7 - Alt + Control + Shift (AltGr + Shift)
+  //  8 - CapsLock
+  //  9 - CapsLock + Shift
+  // 10 - CapsLock + Control
+  // 11 - CapsLock + Control + Shift
+  // 12 - CapsLock + Alt
+  // 13 - CapsLock + Alt + Shift
+  // 14 - CapsLock + Alt + Control (CapsLock + AltGr)
+  // 15 - CapsLock + Alt + Control + Shift (CapsLock + AltGr + Shift)
+
+  enum ShiftStateFlag
+  {
+    STATE_SHIFT    = 0x01,
+    STATE_CONTROL  = 0x02,
+    STATE_ALT      = 0x04,
+    STATE_CAPSLOCK = 0x08
+  };
+
+  typedef PRUint8 ShiftState;
+
+  static ShiftState ModifiersToShiftState(Modifiers aModifiers)
+  {
+    ShiftState state = 0;
+    if (aModifiers & MODIFIER_SHIFT) {
+      state |= STATE_SHIFT;
+    }
+    if (aModifiers & MODIFIER_CONTROL) {
+      state |= STATE_CONTROL;
+    }
+    if (aModifiers & MODIFIER_ALT) {
+      state |= STATE_ALT;
+    }
+    if (aModifiers & MODIFIER_CAPSLOCK) {
+      state |= STATE_CAPSLOCK;
+    }
+    return state;
+  }
+
+  static Modifiers ShiftStateToModifiers(ShiftState aShiftState)
+  {
+    Modifiers modifiers = 0;
+    if (aShiftState & STATE_SHIFT) {
+      modifiers |= MODIFIER_SHIFT;
+    }
+    if (aShiftState & STATE_CONTROL) {
+      modifiers |= MODIFIER_CONTROL;
+    }
+    if (aShiftState & STATE_ALT) {
+      modifiers |= MODIFIER_ALT;
+    }
+    if (aShiftState & STATE_CAPSLOCK) {
+      modifiers |= MODIFIER_CAPSLOCK;
+    }
+    if ((modifiers & (MODIFIER_ALT | MODIFIER_CONTROL)) ==
+           (MODIFIER_ALT | MODIFIER_CONTROL)) {
+      modifiers |= MODIFIER_ALTGRAPH;
+    }
+    return modifiers;
+  }
+
+private:
   union KeyShiftState
   {
     struct
@@ -175,7 +199,7 @@ class VirtualKey
   KeyShiftState mShiftStates[16];
   PRUint16 mIsDeadKey;
 
-  void SetDeadKey(PRUint8 aShiftState, bool aIsDeadKey)
+  void SetDeadKey(ShiftState aShiftState, bool aIsDeadKey)
   {
     if (aIsDeadKey) {
       mIsDeadKey |= 1 << aShiftState;
@@ -185,28 +209,28 @@ class VirtualKey
   }
 
 public:
-  bool IsDeadKey(PRUint8 aShiftState) const
+  bool IsDeadKey(ShiftState aShiftState) const
   {
     return (mIsDeadKey & (1 << aShiftState)) != 0;
   }
 
-  void AttachDeadKeyTable(PRUint8 aShiftState,
+  void AttachDeadKeyTable(ShiftState aShiftState,
                           const DeadKeyTable* aDeadKeyTable)
   {
     mShiftStates[aShiftState].DeadKey.Table = aDeadKeyTable;
   }
 
-  void SetNormalChars(PRUint8 aShiftState, const PRUnichar* aChars,
+  void SetNormalChars(ShiftState aShiftState, const PRUnichar* aChars,
                       PRUint32 aNumOfChars);
-  void SetDeadChar(PRUint8 aShiftState, PRUnichar aDeadChar);
+  void SetDeadChar(ShiftState aShiftState, PRUnichar aDeadChar);
   const DeadKeyTable* MatchingDeadKeyTable(const DeadKeyEntry* aDeadKeyArray,
                                            PRUint32 aEntries) const;
-  inline PRUnichar GetCompositeChar(PRUint8 aShiftState,
+  inline PRUnichar GetCompositeChar(ShiftState aShiftState,
                                     PRUnichar aBaseChar) const;
-  PRUint32 GetNativeUniChars(PRUint8 aShiftState,
+  PRUint32 GetNativeUniChars(ShiftState aShiftState,
                              PRUnichar* aUniChars = nsnull) const;
-  PRUint32 GetUniChars(PRUint8 aShiftState, PRUnichar* aUniChars,
-                       PRUint8* aFinalShiftState) const;
+  PRUint32 GetUniChars(ShiftState aShiftState, PRUnichar* aUniChars,
+                       Modifiers* aFinalModifiers) const;
 };
 
 class NativeKey {
@@ -256,13 +280,14 @@ class KeyboardLayout
   VirtualKey mVirtualKeys[NS_NUM_OF_KEYS];
   DeadKeyTableListEntry* mDeadKeyTableListHead;
   PRInt32 mActiveDeadKey;                 // -1 = no active dead-key
-  PRUint8 mDeadKeyShiftState;
+  VirtualKey::ShiftState mDeadKeyShiftState;
   PRUnichar mChars[5];                    // Dead-key + up to 4 characters
-  PRUint8 mShiftStates[5];
+  Modifiers mModifiersOfChars[5];
   PRUint8 mNumOfChars;
 
-  static PRUint8 GetShiftState(const PBYTE aKbdState);
-  static void SetShiftState(PBYTE aKbdState, PRUint8 aShiftState);
+  static VirtualKey::ShiftState GetShiftState(const PBYTE aKbdState);
+  static void SetShiftState(PBYTE aKbdState,
+                            VirtualKey::ShiftState aShiftState);
   static inline PRInt32 GetKeyIndex(PRUint8 aVirtualKey);
   static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
                                    void* aData);
@@ -284,24 +309,20 @@ public:
   KeyboardLayout();
   ~KeyboardLayout();
 
-  /**
-   * GetShiftState() returns shift state for aModifierKeyState.
-   */
-  static PRUint8 GetShiftState(const ModifierKeyState& aModifierKeyState);
-
   static bool IsPrintableCharKey(PRUint8 aVirtualKey);
   static bool IsNumpadKey(PRUint8 aVirtualKey);
 
   /**
-   * IsDeadKey() returns true if aVirtualKey is a dead key with aShiftState.
+   * IsDeadKey() returns true if aVirtualKey is a dead key with aModKeyState.
    */
-  bool IsDeadKey(PRUint8 aVirtualKey, PRUint8 aShiftState) const;
+  bool IsDeadKey(PRUint8 aVirtualKey,
+                 const ModifierKeyState& aModKeyState) const;
 
   void LoadLayout(HKL aLayout);
   void OnKeyDown(PRUint8 aVirtualKey);
-  PRUint32 GetUniChars(PRUnichar* aUniChars, PRUint8* aShiftStates,
+  PRUint32 GetUniChars(PRUnichar* aUniChars, Modifiers* aModifiersOfUniChars,
                        PRUint32 aMaxChars) const;
-  PRUint32 GetUniCharsWithShiftState(PRUint8 aVirtualKey, PRUint8 aShiftStates,
+  PRUint32 GetUniCharsWithShiftState(PRUint8 aVirtualKey, Modifiers aModifiers,
                                      PRUnichar* aUniChars,
                                      PRUint32 aMaxChars) const;
   PRUint32 ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const;

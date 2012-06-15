@@ -6322,8 +6322,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       return noDefault;
   }
 
-  PRUint8 currentShiftState = KeyboardLayout::GetShiftState(aModKeyState);
-  bool isDeadKey = gKbdLayout.IsDeadKey(virtualKeyCode, currentShiftState);
+  bool isDeadKey = gKbdLayout.IsDeadKey(virtualKeyCode, aModKeyState);
   PRUint32 extraFlags = (noDefault ? NS_EVENT_FLAG_NO_DEFAULT : 0);
   MSG msg;
   BOOL gotMsg = aFakeCharMessage ||
@@ -6411,7 +6410,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     return PluginHasFocus() && noDefault;
   }
 
-  PRUint8 shiftStates[5];
+  widget::Modifiers modifiersOfChars[5];
   PRUnichar uniChars[5];
   PRUnichar shiftedChars[5] = {0, 0, 0, 0, 0};
   PRUnichar unshiftedChars[5] = {0, 0, 0, 0, 0};
@@ -6444,18 +6443,19 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     default:
       if (KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
         numOfUniChars = numOfShiftStates =
-          gKbdLayout.GetUniChars(uniChars, shiftStates,
+          gKbdLayout.GetUniChars(uniChars, modifiersOfChars,
                                  ArrayLength(uniChars));
       }
 
       if (aModKeyState.IsControl() ^ aModKeyState.IsAlt()) {
-        PRUint8 capsLockState = (::GetKeyState(VK_CAPITAL) & 1) ? eCapsLock : 0;
+        widget::Modifiers capsLockState =
+          aModKeyState.IsCapsLocked() ? MODIFIER_CAPSLOCK : 0;
         numOfUnshiftedChars =
           gKbdLayout.GetUniCharsWithShiftState(virtualKeyCode, capsLockState,
                        unshiftedChars, ArrayLength(unshiftedChars));
         numOfShiftedChars =
           gKbdLayout.GetUniCharsWithShiftState(virtualKeyCode,
-                       capsLockState | eShift,
+                       capsLockState | MODIFIER_SHIFT,
                        shiftedChars, ArrayLength(shiftedChars));
 
         // The current keyboard cannot input alphabets or numerics,
@@ -6494,11 +6494,6 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
         // unmodified characters. In such case, Ctrl is sometimes used for a
         // part of character inputting key combination like Shift.
         if (aModKeyState.IsControl()) {
-          PRUint8 currentState = eCtrl;
-          if (aModKeyState.IsShift()) {
-            currentState |= eShift;
-          }
-
           PRUint32 ch =
             aModKeyState.IsShift() ? shiftedLatinChar : unshiftedLatinChar;
           if (ch &&
@@ -6509,7 +6504,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
                                           numOfUnshiftedChars))) {
             numOfUniChars = numOfShiftStates = 1;
             uniChars[0] = ch;
-            shiftStates[0] = currentState;
+            modifiersOfChars[0] = aModKeyState.GetModifiers();
           }
         }
       }
@@ -6534,7 +6529,9 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
           // and base character does not produce a valid composite character
           // then both produced dead-key character and following base
           // character may have different modifier flags, too.
-          modKeyState.SetKeyShiftFlags(shiftStates[cnt - skipUniChars]);
+          modKeyState.Unset(MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT |
+                            MODIFIER_ALTGRAPH | MODIFIER_CAPSLOCK);
+          modKeyState.Set(modifiersOfChars[cnt - skipUniChars]);
         }
         uniChar = uniChars[cnt - skipUniChars];
       }
