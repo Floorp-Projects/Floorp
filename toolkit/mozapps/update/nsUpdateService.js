@@ -1602,6 +1602,8 @@ UpdateService.prototype = {
       // version.
       this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_ENABLED,
                                       "UPDATER_UPDATES_ENABLED");
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_AUTO,
+                                      "UPDATER_UPDATES_AUTOMATIC");
 
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
 
