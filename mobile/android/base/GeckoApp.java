@@ -98,21 +98,21 @@ abstract public class GeckoApp
     public Handler mMainHandler;
     private GeckoProfile mProfile;
     public static boolean sIsGeckoReady = false;
-    private int mOrientation;
+    public static int mOrientation;
 
     private GeckoConnectivityReceiver mConnectivityReceiver;
     private GeckoBatteryManager mBatteryReceiver;
     private PromptService mPromptService;
 
-    private FindInPageBar mFindInPageBar;
-    protected DoorHangerPopup mDoorHangerPopup;
-    protected FormAssistPopup mFormAssistPopup;
-    protected TabsPanel mTabsPanel;
+    public static DoorHangerPopup mDoorHangerPopup;
+    public static FormAssistPopup mFormAssistPopup;
+    public TabsPanel mTabsPanel;
     public Favicons mFavicons;
 
     private static LayerController mLayerController;
     private static GeckoLayerClient mLayerClient;
     private static AbsoluteLayout mPluginContainer;
+    private static FindInPageBar mFindInPageBar;
 
     private FullScreenHolder mFullScreenPluginContainer;
     private View mFullScreenPluginView;
@@ -923,11 +923,6 @@ abstract public class GeckoApp
     public void hideTabs() { }
 
     public boolean areTabsShown() { return false; }
-
-    public void hideFormAssistPopup() {
-        if (mFormAssistPopup != null)
-            mFormAssistPopup.hide();
-    }
 
     public void handleMessage(String event, JSONObject message) {
         Log.i(LOGTAG, "Got message: " + event);
@@ -2227,7 +2222,8 @@ abstract public class GeckoApp
 
         if (mOrientation != newConfig.orientation) {
             mOrientation = newConfig.orientation;
-            hideFormAssistPopup();
+            if (mFormAssistPopup != null)
+                mFormAssistPopup.hide();
             SiteIdentityPopup.getInstance().dismiss();
             refreshChrome();
         }
