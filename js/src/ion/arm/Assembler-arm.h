@@ -2032,13 +2032,13 @@ class DoubleEncoder {
     }
 };
 
-class DePooler {
+class AutoForbidPools {
     Assembler *masm_;
   public:
-    DePooler(Assembler *masm) : masm_(masm) {
+    AutoForbidPools(Assembler *masm) : masm_(masm) {
         masm_->enterNoPool();
     }
-    ~DePooler() {
+    ~AutoForbidPools() {
         masm_->leaveNoPool();
     }
 };

@@ -829,7 +829,7 @@ CodeGeneratorARM::visitTableSwitch(LTableSwitch *ins)
     } else {
         masm.ma_rsb(tempReg, Imm32(cases - 1), tempReg, SetCond);
     }
-    DePooler dp(&masm);
+    AutoForbidPools afp(&masm);
     masm.ma_ldr(DTRAddr(pc, DtrRegImmShift(tempReg, LSL, 2)), pc, Offset, Assembler::Unsigned);
     masm.ma_b(defaultcase);
     DeferredJumpTable *d = new DeferredJumpTable(ins, masm.nextOffset(), &masm);
