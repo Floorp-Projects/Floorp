@@ -73,6 +73,11 @@ public:
   virtual nsIAtom* DoGetID() const;
   virtual nsIAtom *GetIDAttributeName() const;
 
+  virtual Element* GetNameSpaceElement()
+  {
+    return nullptr;
+  }
+
 protected:
   nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
