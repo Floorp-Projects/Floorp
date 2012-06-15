@@ -79,6 +79,7 @@ IonCompartment::generateEnterJIT(JSContext *cx)
     masm.push(ebx);
     masm.push(esi);
     masm.push(edi);
+    masm.movl(esp, esi);
 
     // eax <- 8*argc, eax is now the offset betwen argv and the last
     masm.movl(Operand(ebp, ARG_ARGC), eax);
@@ -129,23 +130,28 @@ IonCompartment::generateEnterJIT(JSContext *cx)
         masm.bind(&footer);
     }
 
+
+    // Push the number of actual arguments.  |result| is used to store the
+    // actual number of arguments without adding an extra argument to the enter
+    // JIT.
+    masm.mov(Operand(ebp, ARG_RESULT), eax);
+    masm.unboxInt32(Address(eax, 0x0), eax);
+    masm.push(eax);
+
     // Push the callee token.
     masm.push(Operand(ebp, ARG_CALLEETOKEN));
-
-    // Save the stack size so we can remove arguments and alignment after the
-    // call.
-    masm.movl(Operand(ebp, ARG_ARGC), eax);
-    masm.shll(Imm32(3), eax);
-    masm.addl(eax, ecx);
-    masm.addl(Imm32(4), ecx);
 
     // Load the StackFrame address into the OsrFrameReg.
     // This address is also used for setting the constructing bit on all paths.
     masm.movl(Operand(ebp, ARG_STACKFRAME), OsrFrameReg);
 
+    /*****************************************************************
+    Push the number of bytes we've pushed so far on the stack and call
+    *****************************************************************/
     // Create a frame descriptor.
-    masm.makeFrameDescriptor(ecx, IonFrame_Entry);
-    masm.push(ecx);
+    masm.subl(esp, esi);
+    masm.makeFrameDescriptor(esi, IonFrame_Entry);
+    masm.push(esi);
 
     /***************************************************************
         Call passed-in code, get return value and fill in the
@@ -336,9 +342,12 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     JS_ASSERT(ArgumentsRectifierReg == esi);
 
     // Load the number of |undefined|s to push into %ecx.
-    masm.movl(Operand(esp, IonJSFrameLayout::offsetOfCalleeToken()), eax);
+    masm.movl(Operand(esp, IonRectifierFrameLayout::offsetOfCalleeToken()), eax);
     masm.movzwl(Operand(eax, offsetof(JSFunction, nargs)), ecx);
     masm.subl(esi, ecx);
+
+    // Copy the number of actual arguments.
+    masm.movl(Operand(esp, IonRectifierFrameLayout::offsetOfNumActualArgs()), edx);
 
     masm.moveValue(UndefinedValue(), ebx, edi);
 
@@ -358,12 +367,8 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     }
 
     // Get the topmost argument.
-    masm.movl(esi, edi);
-    masm.shll(Imm32(3), edi); // edi <- nargs * sizeof(Value);
-
-    masm.movl(ebp, ecx);
-    masm.addl(Imm32(sizeof(IonRectifierFrameLayout)), ecx);
-    masm.addl(edi, ecx);
+    BaseIndex b = BaseIndex(ebp, esi, TimesEight, sizeof(IonRectifierFrameLayout));
+    masm.lea(Operand(b), ecx);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
     {
@@ -376,10 +381,8 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
         masm.subl(Imm32(1), esi);
         masm.bind(&initialSkip);
 
-        masm.mov(Operand(ecx, sizeof(Value)/2), edx);
-        masm.push(edx);
-        masm.mov(Operand(ecx, 0x0), edx);
-        masm.push(edx);
+        masm.push(Operand(ecx, sizeof(Value)/2));
+        masm.push(Operand(ecx, 0x0));
 
         masm.testl(esi, esi);
         masm.j(Assembler::NonZero, &copyLoopTop);
@@ -390,6 +393,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.makeFrameDescriptor(ebp, IonFrame_Rectifier);
 
     // Construct IonJSFrameLayout.
+    masm.push(edx); // number of actual arguments
     masm.push(eax); // calleeToken
     masm.push(ebp); // descriptor
 
@@ -405,6 +409,7 @@ IonCompartment::generateArgumentsRectifier(JSContext *cx)
     masm.pop(ebp);            // ebp <- descriptor with FrameType.
     masm.shrl(Imm32(FRAMESIZE_SHIFT), ebp); // ebp <- descriptor.
     masm.pop(edi);            // Discard calleeToken.
+    masm.pop(edi);            // Discard number of actual arguments.
     masm.addl(ebp, esp);      // Discard pushed arguments.
 
     masm.ret();

@@ -459,10 +459,12 @@ CodeGenerator::visitCallNative(LCallNative *call)
 
     // Preload arguments into registers.
     masm.loadJSContext(argJSContextReg);
-    masm.move32(Imm32(call->nargs()), argUintNReg);
+    masm.move32(Imm32(call->numStackArgs()), argUintNReg);
     masm.movePtr(StackPointer, argVpReg);
 
-    // Construct exit frame.
+    masm.Push(argUintNReg);
+
+    // Construct native exit frame.
     uint32 safepointOffset = masm.buildFakeExitFrame(tempReg);
     masm.enterFakeExitFrame();
 
@@ -481,7 +483,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &exception);
 
     // Load the outparam vp[0] into output register(s).
-    masm.loadValue(Address(StackPointer, IonExitFrameLayout::SizeWithFooter()), JSReturnOperand);
+    masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
     masm.jump(&success);
 
     // Handle exception case.
@@ -494,8 +496,8 @@ CodeGenerator::visitCallNative(LCallNative *call)
     // The next instruction is removing the footer of the exit frame, so there
     // is no need for leaveFakeExitFrame.
 
-    // Move the StackPointer back to its original location, unwinding the exit frame.
-    masm.adjustStack(IonExitFrameLayout::SizeWithFooter() - unusedStack + sizeof(Value));
+    // Move the StackPointer back to its original location, unwinding the native exit frame.
+    masm.adjustStack(IonNativeExitFrameLayout::Size() - unusedStack);
     JS_ASSERT(masm.framePushed() == initialStack);
 
     return true;
@@ -512,7 +514,7 @@ CodeGenerator::emitCallInvokeFunction(LCallGeneric *call, uint32 unusedStack)
     masm.freeStack(unusedStack);
 
     pushArg(StackPointer);                    // argv.
-    pushArg(Imm32(call->bytecodeArgc()));     // argc.
+    pushArg(Imm32(call->numStackArgs()));     // argc.
     pushArg(ToRegister(call->getFunction())); // JSFunction *.
 
     if (!callVM(InvokeFunctionInfo, call))
@@ -595,6 +597,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Construct the IonFramePrefix.
     uint32 descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_JS);
+    masm.Push(Imm32(call->numActualArgs()));
     masm.Push(calleereg);
     masm.Push(Imm32(descriptor));
 
@@ -602,11 +605,11 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     if (call->hasSingleTarget()) {
         // Missing arguments must have been explicitly appended by the IonBuilder.
-        JS_ASSERT(call->getSingleTarget()->nargs <= call->nargs());
+        JS_ASSERT(call->getSingleTarget()->nargs <= call->numStackArgs());
     } else {
         // Check whether the provided arguments satisfy target argc.
         masm.load16ZeroExtend(Address(calleereg, offsetof(JSFunction, nargs)), nargsreg);
-        masm.cmp32(nargsreg, Imm32(call->nargs()));
+        masm.cmp32(nargsreg, Imm32(call->numStackArgs()));
         masm.j(Assembler::Above, &thunk);
     }
 
@@ -631,7 +634,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
             return false;
 
         JS_ASSERT(ArgumentsRectifierReg != objreg);
-        masm.move32(Imm32(call->nargs()), ArgumentsRectifierReg);
+        masm.move32(Imm32(call->numStackArgs()), ArgumentsRectifierReg);
         masm.call(argumentsRectifier);
         if (!markSafepoint(call))
             return false;
@@ -693,9 +696,9 @@ CodeGenerator::visitCallConstructor(LCallConstructor *call)
     // Nestle %esp up to the argument vector.
     masm.freeStack(unusedStack);
 
-    pushArg(StackPointer);          // argv.
-    pushArg(Imm32(call->nargs()));  // argc.
-    pushArg(calleereg);             // JSFunction *.
+    pushArg(StackPointer);                  // argv.
+    pushArg(Imm32(call->numActualArgs()));  // argc.
+    pushArg(calleereg);                     // JSFunction *.
 
     if (!callVM(InvokeConstructorFunctionInfo, call))
         return false;

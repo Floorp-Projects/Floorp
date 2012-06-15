@@ -51,7 +51,6 @@ class IonFramePrefix;
 class IonCommonFrameLayout
 {
     uint8 *returnAddress_;
-    void *padding;
     uintptr_t descriptor_;
 
     static const uintptr_t FrameTypeMask = (1 << FRAMETYPE_BITS) - 1;
@@ -94,6 +93,7 @@ class IonJSFrameLayout : public IonEntryFrameLayout
 {
   protected:
     void *calleeToken_;
+    uintptr_t numActualArgs_;
 
   public:
     void *calleeToken() const {
@@ -103,12 +103,19 @@ class IonJSFrameLayout : public IonEntryFrameLayout
     static size_t offsetOfCalleeToken() {
         return offsetof(IonJSFrameLayout, calleeToken_);
     }
+    static size_t offsetOfNumActualArgs() {
+        return offsetof(IonJSFrameLayout, numActualArgs_);
+    }
+
     void replaceCalleeToken(void *calleeToken) {
         calleeToken_ = calleeToken;
     }
 
     Value *argv() {
         return (Value *)(this + 1);
+    }
+    uintptr_t numActualArgs() const {
+        return numActualArgs_;
     }
 
     // Computes a reference to a slot, where a slot is a distance from the base
@@ -170,14 +177,13 @@ class IonOsrFrameLayout : public IonJSFrameLayout
     }
 };
 
+class IonNativeExitFrameLayout;
+
 // this is the frame layout when we are exiting ion code, and about to enter EABI code
 class IonExitFrameLayout : public IonCommonFrameLayout
 {
-    void *padding2;
-
     inline uint8 *top() {
-        uint8 *sp = reinterpret_cast<uint8 *>(this);
-        return sp + IonExitFrameLayout::Size();
+        return reinterpret_cast<uint8 *>(this + 1);
     }
 
   public:
@@ -200,10 +206,39 @@ class IonExitFrameLayout : public IonCommonFrameLayout
         JS_ASSERT(footer()->ionCode() != NULL);
         return top();
     }
-    inline Value *nativeVp() {
+    inline IonNativeExitFrameLayout *nativeExit() {
         // see CodeGenerator::visitCallNative
         JS_ASSERT(footer()->ionCode() == NULL);
-        return reinterpret_cast<Value *>(top());
+        return reinterpret_cast<IonNativeExitFrameLayout *>(footer());
+    }
+};
+
+// Cannot inherit implementation since we need to extend the top of
+// IonExitFrameLayout.
+class IonNativeExitFrameLayout
+{
+    IonExitFooterFrame footer_;
+    IonExitFrameLayout exit_;
+    uintptr_t argc_;
+
+    // We need to split the Value into 2 fields of 32 bits, otherwise the C++
+    // compiler may add some padding between the fields.
+    uint32_t loCalleeResult_;
+    uint32_t hiCalleeResult_;
+
+  public:
+    static inline size_t Size() {
+        return sizeof(IonNativeExitFrameLayout);
+    }
+
+    static size_t offsetOfResult() {
+        return offsetof(IonNativeExitFrameLayout, loCalleeResult_);
+    }
+    inline Value *vp() {
+        return reinterpret_cast<Value*>(&loCalleeResult_);
+    }
+    inline uintptr_t argc() const {
+        return argc_;
     }
 };
 

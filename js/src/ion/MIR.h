@@ -1128,19 +1128,19 @@ class MCall
     // Monomorphic cache of single target from TI, or NULL.
     CompilerRootFunction target_;
     // Original value of argc from the bytecode.
-    uint32 bytecodeArgc_;
+    uint32 numActualArgs_;
 
-    MCall(JSFunction *target, uint32 bytecodeArgc, bool construct)
+    MCall(JSFunction *target, uint32 numActualArgs, bool construct)
       : construct_(construct),
         target_(target),
-        bytecodeArgc_(bytecodeArgc)
+        numActualArgs_(numActualArgs)
     {
         setResultType(MIRType_Value);
     }
 
   public:
     INSTRUCTION_HEADER(Call);
-    static MCall *New(JSFunction *target, size_t argc, size_t bytecodeArgc, bool construct);
+    static MCall *New(JSFunction *target, size_t maxArgc, size_t numActualArgs, bool construct);
 
     void initPrepareCall(MDefinition *start) {
         JS_ASSERT(start->isPrepareCall());
@@ -1173,14 +1173,17 @@ class MCall
         return construct_;
     }
 
+    // The number of stack arguments is the max between the number of formal
+    // arguments and the number of actual arguments. The number of stack
+    // argument includes the |undefined| padding added in case of underflow.
     // Includes |this|.
-    uint32 argc() const {
+    uint32 numStackArgs() const {
         return numOperands() - NumNonArgumentOperands;
     }
 
-    // Includes |this|. Does not include any callsite-added Undefined values.
-    uint32 bytecodeArgc() const {
-        return bytecodeArgc_;
+    // Does not include |this|.
+    uint32 numActualArgs() const {
+        return numActualArgs_;
     }
 
     TypePolicy *typePolicy() {
@@ -4510,9 +4513,9 @@ class MResumePoint : public MNode
 {
   public:
     enum Mode {
-        ResumeAt,
-        ResumeAfter,
-        Outer
+        ResumeAt,    // Resume until before the current instruction
+        ResumeAfter, // Resume after the current instruction
+        Outer        // State before inlining.
     };
 
   private:
