@@ -1013,7 +1013,9 @@ JSObject::shadowingShapeChange(JSContext *cx, const Shape &shape)
 bool
 JSObject::clearParent(JSContext *cx)
 {
-    return setParent(cx, RootedObject(cx, this), RootedObject(cx));
+    Rooted<JSObject*> obj(cx, this);
+    Rooted<JSObject*> newParent(cx, NULL);
+    return setParent(cx, obj, newParent);
 }
 
 /* static */ bool
