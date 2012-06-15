@@ -135,6 +135,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitAbsI(LAbsI *lir);
     bool visitMathFunctionD(LMathFunctionD *ins);
     bool visitBinaryV(LBinaryV *lir);
+    bool visitCompareS(LCompareS *lir);
     bool visitCompareV(LCompareV *lir);
     bool visitIsNullOrUndefined(LIsNullOrUndefined *lir);
     bool visitIsNullOrUndefinedAndBranch(LIsNullOrUndefinedAndBranch *lir);
