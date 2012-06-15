@@ -114,6 +114,7 @@ struct AssemblerBuffer {
     AssemblerBuffer() : head(NULL), tail(NULL), m_oom(false), bufferSize(0) {}
   protected:
     typedef BufferSlice<SliceSize> Slice;
+    typedef AssemblerBuffer<SliceSize, Inst> AssemblerBuffer_;
     Slice *head;
     Slice *tail;
   public:
@@ -225,9 +226,24 @@ struct AssemblerBuffer {
         tail = tmp;
     }
 
+    class AssemblerBufferInstIterator {
+      private:
+        BufferOffset bo;
+        AssemblerBuffer_ *m_buffer;
+      public:
+        AssemblerBufferInstIterator(BufferOffset off, AssemblerBuffer_ *buff) : bo(off), m_buffer(buff) {}
+        Inst *next() {
+            Inst *i = m_buffer->getInst(bo);
+            bo = BufferOffset(bo.getOffset()+i->size());
+            return cur();
+        };
+        Inst *cur() {
+            return m_buffer->getInst(bo);
+        }
+    };
+
 };
 
 } // ion
 } // js
-
 #endif // __ion_assembler_buffer_h

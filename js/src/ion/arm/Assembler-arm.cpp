@@ -557,19 +557,25 @@ class RelocationIterator
         return offset_;
     }
 };
+
+template<class Iter>
 const uint32 *
-Assembler::getCF32Target(Instruction *jump)
+Assembler::getCF32Target(Iter *iter)
 {
-    if (jump->is<InstBranchImm>()) {
+    Instruction *inst1 = iter->cur();
+    Instruction *inst2 = iter->next();
+    Instruction *inst3 = iter->next();
+    Instruction *inst4 = iter->next();
+    if (inst1->is<InstBranchImm>()) {
         // see if we have a simple case, b #offset
         BOffImm imm;
-        InstBranchImm *jumpB = jump->as<InstBranchImm>();
+        InstBranchImm *jumpB = inst1->as<InstBranchImm>();
         jumpB->extractImm(&imm);
-        return imm.getDest(jump)->raw();
-    } else if (jump->is<InstMovW>() &&
-               jump->next()->is<InstMovT>() &&
-               (jump->next()->next()->is<InstBranchReg>() ||
-                jump->next()->next()->next()->is<InstBranchReg>())) {
+        return imm.getDest(inst1)->raw();
+    } else if (inst1->is<InstMovW>() &&
+               inst2->is<InstMovT>() &&
+               (inst3->is<InstBranchReg>() ||
+                inst4->is<InstBranchReg>())) {
         // see if we have the complex case,
         // movw r_temp, #imm1
         // movt r_temp, #imm2
@@ -584,12 +590,12 @@ Assembler::getCF32Target(Instruction *jump)
         Imm16 targ_top;
         Register temp;
 
-        InstMovW *bottom = jump->as<InstMovW>();
-        InstMovT *top = jump->next()->as<InstMovT>();
-        InstBranchReg * branch =
-            jump->next()->next()->is<InstBranchReg>() ?
-                jump->next()->next()->as<InstBranchReg>() :
-                jump->next()->next()->next()->as<InstBranchReg>();
+        InstMovW *bottom = inst1->as<InstMovW>();
+        InstMovT *top = inst2->as<InstMovT>();
+        InstBranchReg * realBranch =
+            inst3->is<InstBranchReg>() ?
+                inst3->as<InstBranchReg>() :
+                inst4->as<InstBranchReg>();
         // extract both the temp register and the bottom immediate
         bottom->extractImm(&targ_bot);
         bottom->extractDest(&temp);
@@ -598,10 +604,10 @@ Assembler::getCF32Target(Instruction *jump)
         // make sure they are being loaded intothe same register
         JS_ASSERT(top->checkDest(temp));
         // make sure we're branching to the same register.
-        JS_ASSERT(branch->checkDest(temp));
+        JS_ASSERT(realBranch->checkDest(temp));
         uint32 *dest = (uint32*) (targ_bot.decode() | (targ_top.decode() << 16));
         return dest;
-    } else if (jump->is<InstLDR>()) {
+    } else if (inst1->is<InstLDR>()) {
         JS_NOT_REACHED("ldr-based relocs NYI");
     }
     JS_NOT_REACHED("unsupported branch relocation");
@@ -611,16 +617,19 @@ Assembler::getCF32Target(Instruction *jump)
 uintptr_t
 Assembler::getPointer(uint8 *instPtr)
 {
-    Instruction *ptr = reinterpret_cast<Instruction*>(instPtr);
-    uintptr_t ret = (uintptr_t)getPtr32Target(ptr, NULL, NULL);
+    InstructionIterator iter((Instruction*)instPtr);
+    uintptr_t ret = (uintptr_t)getPtr32Target(&iter, NULL, NULL);
     return ret;
 }
 
+template<class Iter>
 const uint32 *
-Assembler::getPtr32Target(Instruction *load, Register *dest, RelocStyle *style)
+Assembler::getPtr32Target(Iter *start, Register *dest, RelocStyle *style)
 {
-    if (load->is<InstMovW>() &&
-        load->next()->is<InstMovT>()) {
+    Instruction *load1 = start->cur();
+    Instruction *load2 = start->next();
+    if (load1->is<InstMovW>() &&
+        load2->is<InstMovT>()) {
         // see if we have the complex case,
         // movw r_temp, #imm1
         // movt r_temp, #imm2
@@ -629,8 +638,8 @@ Assembler::getPtr32Target(Instruction *load, Register *dest, RelocStyle *style)
         Imm16 targ_top;
         Register temp;
 
-        InstMovW *bottom = load->as<InstMovW>();
-        InstMovT *top = load->next()->as<InstMovT>();
+        InstMovW *bottom = load1->as<InstMovW>();
+        InstMovT *top = load2->as<InstMovT>();
         // extract both the temp register and the bottom immediate
         bottom->extractImm(&targ_bot);
         bottom->extractDest(&temp);
@@ -649,8 +658,8 @@ Assembler::getPtr32Target(Instruction *load, Register *dest, RelocStyle *style)
     return NULL;
 }
 
-static inline IonCode *
-CodeFromJump(Instruction *jump)
+static IonCode *
+CodeFromJump(InstructionIterator *jump)
 {
     uint8 *target = (uint8 *)Assembler::getCF32Target(jump);
     return IonCode::FromExecutable(target);
@@ -661,9 +670,9 @@ Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReade
 {
     RelocationIterator iter(reader);
     while (iter.read()) {
-        IonCode *child = CodeFromJump((Instruction *) (code->raw() + iter.offset()));
+        InstructionIterator institer((Instruction *) (code->raw() + iter.offset()));
+        IonCode *child = CodeFromJump(&institer);
         MarkIonCodeUnbarriered(trc, &child, "rel32");
-        JS_ASSERT(child == CodeFromJump((Instruction *) (code->raw() + iter.offset())));
     };
 }
 
@@ -672,18 +681,19 @@ TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
 {
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
-        const void *ptr = js::ion::Assembler::getPtr32Target((Instruction*)(buffer + offset));
+        InstructionIterator iter((Instruction*)(buffer+offset));
+        const void *ptr = js::ion::Assembler::getPtr32Target(&iter);
         // No barrier needed since these are constants.
         gc::MarkThingOrValueUnbarriered(trc, reinterpret_cast<uintptr_t *>(&ptr), "immgcptr");
     }
 
 }
 static void
-TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer, CompactBufferReader &reader)
+TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer, js::Vector<BufferOffset, 0, SystemAllocPolicy> *locs)
 {
-    while (reader.more()) {
-        size_t offset = reader.readUnsigned();
-        const void *ptr = ion::Assembler::getPtr32Target((Instruction*)(buffer->getInst(BufferOffset(offset))));
+    for (int idx = 0; idx < locs->length(); idx++) {
+        ARMBuffer::AssemblerBufferInstIterator iter(BufferOffset((*locs)[idx]), buffer);
+        const void *ptr = ion::Assembler::getPtr32Target(&iter);
 
         // No barrier needed since these are constants.
         gc::MarkThingOrValueUnbarriered(trc, reinterpret_cast<uintptr_t *>(&ptr), "immgcptr");
@@ -722,8 +732,7 @@ Assembler::trace(JSTracer *trc)
         }
     }
     if (tmpDataRelocations_.length()) {
-        CompactBufferReader reader(dataRelocations_);
-        ::TraceDataRelocations(trc, &m_buffer, reader);
+        ::TraceDataRelocations(trc, &m_buffer, &tmpDataRelocations_);
     }
 }
 
@@ -2301,9 +2310,10 @@ void
 Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmWord newValue, ImmWord expectedValue)
 {
     Instruction *ptr = (Instruction *) label.raw();
+    InstructionIterator iter(ptr);
     Register dest;
     Assembler::RelocStyle rs;
-    const uint32 *val = getPtr32Target(ptr, &dest, &rs);
+    const uint32 *val = getPtr32Target(&iter, &dest, &rs);
     JS_ASSERT((uint32)val == expectedValue.value);
     reinterpret_cast<MacroAssemblerARM*>(dummy)->ma_movPatchable(Imm32(newValue.value), dest, Always, rs, ptr);
     JSC::ExecutableAllocator::cacheFlush(ptr, sizeof(uintptr_t)*2);
