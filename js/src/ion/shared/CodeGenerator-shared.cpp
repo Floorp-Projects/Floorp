@@ -129,7 +129,6 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
           case MIRType_Object:
           case MIRType_Boolean:
           case MIRType_Double:
-          case MIRType_Magic:
           {
             LAllocation *payload = snapshot->payloadOfSlot(i);
             JSValueType type = ValueTypeFromMIRType(mir->type());
@@ -152,6 +151,23 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
                         return false;
                     snapshots_.addConstantPoolSlot(index);
                 }
+            }
+            break;
+          }
+          case MIRType_ArgObj:
+          {
+            LAllocation *payload = snapshot->payloadOfSlot(i);
+            if (payload->isMemory()) {
+                snapshots_.addArgObjSlot(ToStackIndex(payload));
+            } else if (payload->isGeneralReg()) {
+                snapshots_.addArgObjSlot(ToRegister(payload));
+            } else {
+                MConstant *constant = mir->toConstant();
+                uint32 index;
+
+                if (!graph.addConstantToPool(constant, &index))
+                    return false;
+                snapshots_.addConstantPoolSlot(index);
             }
             break;
           }

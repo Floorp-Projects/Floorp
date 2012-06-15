@@ -2621,6 +2621,17 @@ class LIteratorEnd : public LInstructionHelper<0, 1, 2>
     }
 };
 
+// Read the number of actual arguments.
+class LArgumentsLength : public LInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(ArgumentsLength);
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
+};
+
 // Guard that a value is in a TypeSet.
 class LTypeBarrier : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 1>
 {

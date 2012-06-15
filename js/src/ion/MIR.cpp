@@ -294,8 +294,7 @@ MConstant::New(const Value &v)
 }
 
 MConstant::MConstant(const js::Value &vp)
-  : value_(vp),
-    constantPoolIndex_(0)
+  : value_(vp)
 {
     setResultType(MIRTypeFromValue(vp));
     setMovable();
@@ -344,8 +343,8 @@ MConstant::printOpcode(FILE *fp)
       case MIRType_String:
         fprintf(fp, "string %p", (void *)value().toString());
         break;
-      case MIRType_Magic:
-        fprintf(fp, "magic");
+      case MIRType_ArgObj:
+        fprintf(fp, "lazy arguments");
         break;
       default:
         JS_NOT_REACHED("unexpected type");

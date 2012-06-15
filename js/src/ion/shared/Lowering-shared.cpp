@@ -61,6 +61,8 @@ LIRGeneratorShared::visitConstant(MConstant *ins)
         return define(new LPointer(v.toString()), ins);
       case MIRType_Object:
         return define(new LPointer(&v.toObject()), ins);
+      case MIRType_Magic:
+        return define(new LInteger(v.whyMagic()), ins);
       default:
         // Constants of special types (undefined, null) should never flow into
         // here directly. Operations blindly consuming them require a Box.

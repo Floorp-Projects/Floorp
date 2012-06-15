@@ -340,6 +340,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_setelem_typed(int arrayType);
     bool jsop_length();
     bool jsop_length_fastPath();
+    bool jsop_arguments();
     bool jsop_arguments_length();
     bool jsop_arguments_getelem();
     bool jsop_arguments_setelem();
