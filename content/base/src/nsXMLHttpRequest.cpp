@@ -1076,14 +1076,14 @@ nsXMLHttpRequest::StaticAssertions()
     #_uc " should match")
 
   ASSERT_ENUM_EQUAL(_empty, DEFAULT);
-  ASSERT_ENUM_EQUAL(arraybuffer, ARRAYBUFFER);
-  ASSERT_ENUM_EQUAL(blob, BLOB);
-  ASSERT_ENUM_EQUAL(document, DOCUMENT);
-  ASSERT_ENUM_EQUAL(json, JSON);
-  ASSERT_ENUM_EQUAL(text, TEXT);
-  ASSERT_ENUM_EQUAL(moz_chunked_text, CHUNKED_TEXT);
-  ASSERT_ENUM_EQUAL(moz_chunked_arraybuffer, CHUNKED_ARRAYBUFFER);
-  ASSERT_ENUM_EQUAL(moz_blob, MOZ_BLOB);
+  ASSERT_ENUM_EQUAL(Arraybuffer, ARRAYBUFFER);
+  ASSERT_ENUM_EQUAL(Blob, BLOB);
+  ASSERT_ENUM_EQUAL(Document, DOCUMENT);
+  ASSERT_ENUM_EQUAL(Json, JSON);
+  ASSERT_ENUM_EQUAL(Text, TEXT);
+  ASSERT_ENUM_EQUAL(Moz_chunked_text, CHUNKED_TEXT);
+  ASSERT_ENUM_EQUAL(Moz_chunked_arraybuffer, CHUNKED_ARRAYBUFFER);
+  ASSERT_ENUM_EQUAL(Moz_blob, MOZ_BLOB);
 #undef ASSERT_ENUM_EQUAL
 }
 #endif
