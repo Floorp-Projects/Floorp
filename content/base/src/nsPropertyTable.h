@@ -177,6 +177,8 @@ class nsPropertyTable
 
   class PropertyList;
 
+  size_t SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const;
+
  private:
   NS_HIDDEN_(void) DestroyPropertyList();
   NS_HIDDEN_(PropertyList*) GetPropertyListFor(nsIAtom *aPropertyName) const;
