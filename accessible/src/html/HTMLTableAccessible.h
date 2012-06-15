@@ -106,6 +106,9 @@ public:
   virtual PRInt32 CellIndexAt(PRUint32 aRowIdx, PRUint32 aColIdx);
   virtual PRUint32 ColExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
   virtual PRUint32 RowExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
+  virtual bool IsColSelected(PRUint32 aColIdx);
+  virtual bool IsRowSelected(PRUint32 aRowIdx);
+  virtual bool IsCellSelected(PRUint32 aRowIdx, PRUint32 aColIdx);
   virtual void SelectCol(PRUint32 aColIdx);
   virtual void SelectRow(PRUint32 aRowIdx);
   virtual void UnselectCol(PRUint32 aColIdx);
@@ -116,7 +119,7 @@ public:
   virtual void Shutdown();
 
   // Accessible
-  virtual mozilla::a11y::TableAccessible* AsTable() { return this; }
+  virtual TableAccessible* AsTable() { return this; }
   virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual a11y::role NativeRole();
