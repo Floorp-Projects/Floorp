@@ -150,6 +150,12 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
             return true;
         }
 
+        // if this is a hover event just notify gecko, we don't have any interest in the java layer.
+        if (isHoverEvent(event)) {
+            mOnTouchListener.onTouch(mView, event);
+            return true;
+        }
+
         if (isDownEvent(event)) {
             // this is the start of a new block of events! whee!
             mHoldInQueue = mWaitForTouchListeners;
@@ -230,6 +236,11 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
     /* This function MUST be called on the UI thread. */
     public void setOnTouchListener(OnTouchListener onTouchListener) {
         mOnTouchListener = onTouchListener;
+    }
+
+    private boolean isHoverEvent(MotionEvent event) {
+        int action = (event.getAction() & MotionEvent.ACTION_MASK);
+        return (action == MotionEvent.ACTION_HOVER_ENTER || action == MotionEvent.ACTION_HOVER_MOVE || action == MotionEvent.ACTION_HOVER_EXIT);
     }
 
     private boolean isDownEvent(MotionEvent event) {
