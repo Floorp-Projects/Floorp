@@ -105,7 +105,8 @@ inline bool
 LookupProperty(JSContext *cx, HandleObject obj, PropertyName *name,
                JSObject **objp, JSProperty **propp)
 {
-    return LookupProperty(cx, obj, RootedId(cx, NameToId(name)), objp, propp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return LookupProperty(cx, obj, id, objp, propp);
 }
 
 extern JS_FRIEND_API(JSBool)
@@ -113,8 +114,16 @@ LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
               JSObject **objp, JSProperty **propp);
 
 extern JSBool
-DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const js::Value *value,
+DefineGeneric(JSContext *cx, HandleObject obj, HandleId id, const js::Value *value,
                JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
+
+inline JSBool
+DefineProperty(JSContext *cx, HandleObject obj, PropertyName *name, const js::Value *value,
+               JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
+{
+    Rooted<jsid> id(cx, NameToId(name));
+    return DefineGeneric(cx, obj, id, value, getter, setter, attrs);
+}
 
 extern JSBool
 DefineElement(JSContext *cx, HandleObject obj, uint32_t index, const js::Value *value,
@@ -149,7 +158,8 @@ inline bool
 SetPropertyHelper(JSContext *cx, HandleObject obj, PropertyName *name, unsigned defineHow,
                   Value *vp, JSBool strict)
 {
-    return SetPropertyHelper(cx, obj, RootedId(cx, NameToId(name)), defineHow, vp, strict);
+    Rooted<jsid> id(cx, NameToId(name));
+    return SetPropertyHelper(cx, obj, id, defineHow, vp, strict);
 }
 
 extern JSBool
@@ -1141,8 +1151,8 @@ DefineNativeProperty(JSContext *cx, HandleObject obj, PropertyName *name, const 
                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
                      unsigned flags, int shortid, unsigned defineHow = 0)
 {
-    return DefineNativeProperty(cx, obj, RootedId(cx, NameToId(name)),
-                                value, getter, setter, attrs, flags,
+    Rooted<jsid> id(cx, NameToId(name));
+    return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs, flags,
                                 shortid, defineHow);
 }
 
@@ -1157,7 +1167,8 @@ inline bool
 LookupPropertyWithFlags(JSContext *cx, HandleObject obj, PropertyName *name, unsigned flags,
                         JSObject **objp, JSProperty **propp)
 {
-    return LookupPropertyWithFlags(cx, obj, RootedId(cx, NameToId(name)), flags, objp, propp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return LookupPropertyWithFlags(cx, obj, id, flags, objp, propp);
 }
 
 /*
@@ -1221,11 +1232,11 @@ const unsigned JSGET_CACHE_RESULT = 1; // from a caching interpreter opcode
  * scope containing shape unlocked.
  */
 extern JSBool
-js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj, const js::Shape *shape, unsigned getHow,
-             js::Value *vp);
+js_NativeGet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> pobj,
+             const js::Shape *shape, unsigned getHow, js::Value *vp);
 
 extern JSBool
-js_NativeSet(JSContext *cx, JSObject *obj, const js::Shape *shape, bool added,
+js_NativeSet(JSContext *cx, js::Handle<JSObject*> obj, const js::Shape *shape, bool added,
              bool strict, js::Value *vp);
 
 namespace js {
@@ -1254,7 +1265,8 @@ GetMethod(JSContext *cx, HandleObject obj, HandleId id, unsigned getHow, Value *
 inline bool
 GetMethod(JSContext *cx, HandleObject obj, PropertyName *name, unsigned getHow, Value *vp)
 {
-    return GetMethod(cx, obj, RootedId(cx, NameToId(name)), getHow, vp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return GetMethod(cx, obj, id, getHow, vp);
 }
 
 /*
