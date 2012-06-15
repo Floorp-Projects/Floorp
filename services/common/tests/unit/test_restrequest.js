@@ -160,6 +160,36 @@ add_test(function test_get() {
 });
 
 /**
+ * Test HTTP GET with UTF-8 content, and custom Content-Type.
+ */
+add_test(function test_get_utf8() {
+  let response = "Hello World or Καλημέρα κόσμε or こんにちは 世界";
+  let contentType = "text/plain; charset=UTF-8";
+
+  let server = httpd_setup({"/resource": function(req, res) {
+    res.setStatusLine(req.httpVersion, 200, "OK");
+    res.setHeader("Content-Type", contentType);
+
+    let converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
+                    .createInstance(Ci.nsIConverterOutputStream);
+    converter.init(res.bodyOutputStream, "UTF-8", 0, 0x0000);
+    converter.writeString(response);
+    converter.close();
+  }});
+
+  let request = new RESTRequest(TEST_RESOURCE_URL);
+  request.get(function(error) {
+    do_check_eq(error, null);
+
+    do_check_eq(request.response.status, 200);
+    do_check_eq(request.response.body, response);
+    do_check_eq(request.response.headers["content-type"], contentType);
+
+    server.stop(run_next_test);
+  });
+});
+
+/**
  * Test HTTP PUT with a simple string argument and default Content-Type.
  */
 add_test(function test_put() {
