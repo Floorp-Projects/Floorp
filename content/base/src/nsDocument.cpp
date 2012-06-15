@@ -4419,12 +4419,6 @@ nsDocument::CreateComment(const nsAString& aData, nsIDOMComment** aReturn)
 {
   *aReturn = nsnull;
 
-  // Make sure the substring "--" is not present in aData.  Otherwise
-  // we'll create a document that can't be serialized.
-  if (FindInReadable(NS_LITERAL_STRING("--"), aData)) {
-    return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
-  }
-
   nsCOMPtr<nsIContent> comment;
   nsresult rv = NS_NewCommentNode(getter_AddRefs(comment), mNodeInfoManager);
 
