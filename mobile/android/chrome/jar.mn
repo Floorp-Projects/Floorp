@@ -25,8 +25,8 @@ chrome.jar:
   content/languages.properties         (content/languages.properties)
 * content/browser.xul                  (content/browser.xul)
 * content/browser.js                   (content/browser.js)
-* content/bindings.xml                 (content/bindings.xml)
   content/bindings/checkbox.xml        (content/bindings/checkbox.xml)
+  content/bindings/menulist.xml        (content/bindings/menulist.xml)
   content/bindings/settings.xml        (content/bindings/settings.xml)
   content/cursor.css                   (content/cursor.css)
 % content branding %content/branding/
