@@ -543,28 +543,33 @@ nsXPConnect::FinishTraverse()
     return NS_OK;
 }
 
+class nsXPConnectParticipant: public nsCycleCollectionParticipant
+{
+public:
+    static NS_METHOD RootImpl(void *n)
+    {
+        return NS_OK;
+    }
+    static NS_METHOD UnlinkImpl(void *n)
+    {
+        return NS_OK;
+    }
+    static NS_METHOD UnrootImpl(void *n)
+    {
+        return NS_OK;
+    }
+    static NS_METHOD TraverseImpl(nsXPConnectParticipant *that, void *n,
+                                  nsCycleCollectionTraversalCallback &cb);
+};
+
+static CCParticipantVTable<nsXPConnectParticipant>::Type XPConnect_cycleCollectorGlobal = {
+  NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(nsXPConnectParticipant)
+};
+
 nsCycleCollectionParticipant *
 nsXPConnect::GetParticipant()
 {
-    return this;
-}
-
-NS_IMETHODIMP
-nsXPConnect::Root(void *p)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::Unlink(void *p)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPConnect::Unroot(void *p)
-{
-    return NS_OK;
+    return XPConnect_cycleCollectorGlobal.GetParticipant();
 }
 
 JSBool
@@ -756,8 +761,9 @@ WrapperIsNotMainThreadOnly(XPCWrappedNative *wrapper)
     return NS_FAILED(CallQueryInterface(wrapper->Native(), &participant));
 }
 
-NS_IMETHODIMP
-nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
+NS_METHOD
+nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
+                                     nsCycleCollectionTraversalCallback &cb)
 {
     JSGCTraceKind traceKind = js_GetGCThingTraceKind(p);
     JSObject *obj = nsnull;
@@ -843,7 +849,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 
     TraversalTracer trc(cb);
 
-    JS_TracerInit(&trc, GetRuntime()->GetJSRuntime(), NoteJSChild);
+    JS_TracerInit(&trc, nsXPConnect::GetRuntimeInstance()->GetJSRuntime(), NoteJSChild);
     trc.eagerlyTraceWeakMaps = false;
     JS_TraceChildren(&trc, p, traceKind);
 
@@ -897,11 +903,11 @@ nsXPConnect::GetOutstandingRequests(JSContext* cx)
 class JSContextParticipant : public nsCycleCollectionParticipant
 {
 public:
-    NS_IMETHOD Root(void *n)
+    static NS_METHOD RootImpl(void *n)
     {
         return NS_OK;
     }
-    NS_IMETHOD Unlink(void *n)
+    static NS_METHOD UnlinkImpl(void *n)
     {
         JSContext *cx = static_cast<JSContext*>(n);
         JSAutoRequest ar(cx);
@@ -909,11 +915,12 @@ public:
         JS_SetGlobalObject(cx, NULL);
         return NS_OK;
     }
-    NS_IMETHOD Unroot(void *n)
+    static NS_METHOD UnrootImpl(void *n)
     {
         return NS_OK;
     }
-    NS_IMETHODIMP Traverse(void *n, nsCycleCollectionTraversalCallback &cb)
+    static NS_METHOD TraverseImpl(JSContextParticipant *that, void *n,
+                                  nsCycleCollectionTraversalCallback &cb)
     {
         JSContext *cx = static_cast<JSContext*>(n);
 
@@ -932,20 +939,22 @@ public:
     }
 };
 
-static JSContextParticipant JSContext_cycleCollectorGlobal;
+static CCParticipantVTable<JSContextParticipant>::Type JSContext_cycleCollectorGlobal = {
+  NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSContextParticipant)
+};
 
 // static
 nsCycleCollectionParticipant*
 nsXPConnect::JSContextParticipant()
 {
-    return &JSContext_cycleCollectorGlobal;
+    return JSContext_cycleCollectorGlobal.GetParticipant();
 }
 
 NS_IMETHODIMP_(void)
 nsXPConnect::NoteJSContext(JSContext *aJSContext,
                            nsCycleCollectionTraversalCallback &aCb)
 {
-    aCb.NoteNativeChild(aJSContext, &JSContext_cycleCollectorGlobal);
+    aCb.NoteNativeChild(aJSContext, JSContext_cycleCollectorGlobal.GetParticipant());
 }
 
 
