@@ -19,11 +19,6 @@ inline
 SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun,
                              FunctionBox *funbox)
   : context(cx),
-    bodyid(0),
-    blockidGen(0),
-    topStmt(NULL),
-    topScopeStmt(NULL),
-    blockChain(cx),
     fun_(cx, fun),
     funbox_(funbox),
     scopeChain_(cx, scopeChain),
@@ -35,13 +30,13 @@ SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fu
 }
 
 inline unsigned
-SharedContext::blockid()
+TreeContext::blockid()
 {
     return topStmt ? topStmt->blockid : bodyid;
 }
 
 inline bool
-SharedContext::atBodyLevel()
+TreeContext::atBodyLevel()
 {
     return !topStmt || (topStmt->flags & SIF_BODY_BLOCK);
 }
@@ -64,6 +59,11 @@ SharedContext::argumentsLocal() const
 inline
 TreeContext::TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel)
   : sc(sc),
+    bodyid(0),
+    blockidGen(0),
+    topStmt(NULL),
+    topScopeStmt(NULL),
+    blockChain(prs->context),
     staticLevel(staticLevel),
     parenDepth(0),
     yieldCount(0),
@@ -101,6 +101,80 @@ TreeContext::~TreeContext()
     JS_ASSERT(*parserTC == this);
     *parserTC = this->parent;
     sc->context->delete_(funcStmts);
+}
+
+template <class ContextT>
+void
+frontend::PushStatement(ContextT *ct, typename ContextT::StmtInfo *stmt, StmtType type)
+{
+    stmt->type = type;
+    stmt->flags = 0;
+    stmt->label = NULL;
+    stmt->blockObj = NULL;
+    stmt->down = ct->topStmt;
+    ct->topStmt = stmt;
+    if (STMT_LINKS_SCOPE(stmt)) {
+        stmt->downScope = ct->topScopeStmt;
+        ct->topScopeStmt = stmt;
+    } else {
+        stmt->downScope = NULL;
+    }
+}
+
+template <class ContextT>
+void
+frontend::FinishPushBlockScope(ContextT *ct, typename ContextT::StmtInfo *stmt,
+                               StaticBlockObject &blockObj)
+{
+    stmt->flags |= SIF_SCOPE;
+    blockObj.setEnclosingBlock(ct->blockChain);
+    stmt->downScope = ct->topScopeStmt;
+    ct->topScopeStmt = stmt;
+    ct->blockChain = &blockObj;
+    stmt->blockObj = &blockObj;
+}
+
+template <class ContextT>
+void
+frontend::FinishPopStatement(ContextT *ct)
+{
+    typename ContextT::StmtInfo *stmt = ct->topStmt;
+    ct->topStmt = stmt->down;
+    if (STMT_LINKS_SCOPE(stmt)) {
+        ct->topScopeStmt = stmt->downScope;
+        if (stmt->flags & SIF_SCOPE)
+            ct->blockChain = stmt->blockObj->enclosingBlock();
+    }
+}
+
+template <class ContextT>
+typename ContextT::StmtInfo *
+frontend::LexicalLookup(ContextT *ct, JSAtom *atom, int *slotp, typename ContextT::StmtInfo *stmt)
+{
+    if (!stmt)
+        stmt = ct->topScopeStmt;
+    for (; stmt; stmt = stmt->downScope) {
+        if (stmt->type == STMT_WITH)
+            break;
+
+        // Skip "maybe scope" statements that don't contain let bindings.
+        if (!(stmt->flags & SIF_SCOPE))
+            continue;
+
+        StaticBlockObject &blockObj = *stmt->blockObj;
+        const Shape *shape = blockObj.nativeLookup(ct->sc->context, AtomToId(atom));
+        if (shape) {
+            JS_ASSERT(shape->hasShortID());
+
+            if (slotp)
+                *slotp = blockObj.stackDepth() + shape->shortid();
+            return stmt;
+        }
+    }
+
+    if (slotp)
+        *slotp = -1;
+    return stmt;
 }
 
 } // namespace js
