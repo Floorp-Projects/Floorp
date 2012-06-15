@@ -235,7 +235,7 @@ struct BufferSliceTail : public BufferSlice<SliceSize> {
     BufferSliceTail *getNext() {
         return (BufferSliceTail *)this->next;
     }
-    BufferSliceTail() : data(NULL) {
+    BufferSliceTail() : data(NULL), isNatural(true) {
         memset(isBranch, 0, sizeof(isBranch));
     }
     void markNextAsBranch() {
@@ -844,8 +844,6 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             Asm::writePoolGuard(branch, this->getInst(branch), afterPool);
             markGuard();
             perforatedNode->isNatural = false;
-        } else {
-            perforatedNode->isNatural = true;
         }
 
         // We have a perforation.  Time to cut the instruction stream, patch in the pool
@@ -970,6 +968,8 @@ struct AssemblerBufferWithConstantPool : public AssemblerBuffer<SliceSize, Inst>
             BufferOffset afterPool = this->nextOffset();
             Asm::writePoolGuard(branch, this->getInst(branch), afterPool);
             markGuard();
+            if (perforatedNode != NULL)
+                perforatedNode->isNatural = false;
         }
         canNotPlacePool++;
     }
