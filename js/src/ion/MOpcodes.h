@@ -147,6 +147,7 @@ namespace ion {
     _(IteratorEnd)                                                          \
     _(StringLength)                                                         \
     _(ArgumentsLength)                                                      \
+    _(GetArgument)                                                          \
     _(Floor)                                                                \
     _(Round)                                                                \
     _(InstanceOf)                                                           \

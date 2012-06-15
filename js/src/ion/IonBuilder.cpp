@@ -823,6 +823,13 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_SETARG:
+        // To handle this case, we should spill the arguments to the space where
+        // actual arguments are stored. The tricky part is that if we add a MIR
+        // to wrap the spilling action, we don't want the spilling to be
+        // captured by the GETARG and by the resume point, only by
+        // MGetArgument.
+        if (info().hasArguments())
+            return abort("NYI: arguments & setarg.");
         current->setArg(GET_SLOTNO(pc));
         return true;
 
@@ -2707,6 +2714,10 @@ IonBuilder::jsop_notearg()
     MDefinition *def = current->pop();
     MPassArg *arg = MPassArg::New(def);
 
+    // We do not support giving the argument object as argument yet.
+    if (def->type() == MIRType_ArgObj)
+        return abort("NYI: escaping of the argument object.");
+
     current->add(arg);
     current->push(arg);
     return true;
@@ -3048,14 +3059,8 @@ IonBuilder::jsop_funcall(uint32 argc)
 
     // If |Function.prototype.call| may be overridden, don't optimize callsite.
     RootedFunction native(cx, getSingleCallTarget(argc, pc));
-    if (native && native->isNative()) {
-        if (native->native() == &js_fun_apply)
-            return abort("NYI: fun.apply with arguments.");
-        if (native->native() != &js_fun_call)
-            return makeCall(native, argc, false);
-    } else {
+    if (!native || !native->isNative() || native->native() != &js_fun_call)
         return makeCall(native, argc, false);
-    }
 
     // Extract call target.
     types::TypeSet *funTypes = oracle->getCallArg(script, argc, 0, pc);
@@ -4475,9 +4480,30 @@ IonBuilder::jsop_arguments_length()
 bool
 IonBuilder::jsop_arguments_getelem()
 {
+    types::TypeSet *barrier = oracle->propertyReadBarrier(script, pc);
+    types::TypeSet *types = oracle->propertyRead(script, pc);
+
     MDefinition *idx = current->pop();
-    MDefinition *obj = current->pop();
-    return abort("NYI arguments[]");
+    MDefinition *args = current->pop();
+
+    // To ensure that we are not looking above the number of actual arguments.
+    MArgumentsLength *length = MArgumentsLength::New(args);
+    current->add(length);
+
+    // Ensure idx is an integer.
+    MToInt32 *index = MToInt32::New(idx);
+    current->add(index);
+
+    // Bailouts if we read more than the number of actual arguments.
+    MBoundsCheck *check = MBoundsCheck::New(index, length);
+    current->add(check);
+
+    // Load the argument from the actual arguments.
+    MGetArgument *load = MGetArgument::New(index);
+    current->add(load);
+    current->push(load);
+
+    return pushTypeBarrier(load, types, barrier);
 }
 
 bool

@@ -96,6 +96,11 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     static size_t offsetOfNumActualArgs() {
         return offsetof(IonJSFrameLayout, numActualArgs_);
     }
+    static size_t offsetOfActualArgs() {
+        IonJSFrameLayout *base = NULL;
+        // +1 to skip |this|.
+        return reinterpret_cast<size_t>(&base->argv()[1]);
+    }
 
     Value *argv() {
         return (Value *)(this + 1);
