@@ -603,20 +603,6 @@ DynSHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
 NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 {
-  if (IsWin8OrLater()) {
-    OPENASINFO info;
-    info.pcszFile = L"http";
-    info.pcszClass = NULL;
-    info.oaifInFlags = OAIF_FORCE_REGISTRATION | 
-                       OAIF_URL_PROTOCOL |
-                       OAIF_REGISTER_EXT;
-    nsresult rv = DynSHOpenWithDialog(NULL, &info);
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool isDefaultBrowser = false;
-    return SUCCEEDED(IsDefaultBrowser(&isDefaultBrowser)) && 
-           isDefaultBrowser ? S_OK : NS_ERROR_FAILURE;
-  }
-
   nsAutoString appHelperPath;
   if (NS_FAILED(GetHelperPath(appHelperPath)))
     return NS_ERROR_FAILURE;
@@ -627,7 +613,21 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
     appHelperPath.AppendLiteral(" /SetAsDefaultAppUser");
   }
 
-  return LaunchHelper(appHelperPath);
+  nsresult rv = LaunchHelper(appHelperPath);
+  if (NS_SUCCEEDED(rv) && IsWin8OrLater()) {
+    OPENASINFO info;
+    info.pcszFile = L"http";
+    info.pcszClass = NULL;
+    info.oaifInFlags = OAIF_FORCE_REGISTRATION | 
+                       OAIF_URL_PROTOCOL |
+                       OAIF_REGISTER_EXT;
+    nsresult rv = DynSHOpenWithDialog(NULL, &info);
+    NS_ENSURE_SUCCESS(rv, rv);
+    bool isDefaultBrowser = false;
+    rv = NS_SUCCEEDED(IsDefaultBrowser(&isDefaultBrowser)) &&
+         isDefaultBrowser ? S_OK : NS_ERROR_FAILURE;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
