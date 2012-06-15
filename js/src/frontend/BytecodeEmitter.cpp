@@ -624,8 +624,11 @@ BackPatch(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t last, jsbytecode *targe
     return JS_TRUE;
 }
 
-JSBool
-frontend::PopStatementBCE(JSContext *cx, BytecodeEmitter *bce)
+// Like PopStatementTC(bce), also patch breaks and continues unless the top
+// statement info record represents a try-catch-finally suite. May fail if a
+// jump offset overflows.
+static JSBool
+PopStatementBCE(JSContext *cx, BytecodeEmitter *bce)
 {
     StmtInfo *stmt = bce->sc->topStmt;
     if (!STMT_IS_TRYING(stmt) &&

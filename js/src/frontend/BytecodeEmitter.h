@@ -221,14 +221,6 @@ ptrdiff_t
 EmitN(JSContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra);
 
 /*
- * Like PopStatementTC(bce), also patch breaks and continues unless the top
- * statement info record represents a try-catch-finally suite. May fail if a
- * jump offset overflows.
- */
-JSBool
-PopStatementBCE(JSContext *cx, BytecodeEmitter *bce);
-
-/*
  * Define and lookup a primitive jsval associated with the const named by atom.
  * DefineCompileTimeConstant analyzes the constant-folded initializer at pn
  * and saves the const's value in bce->constList, if it can be used at compile
