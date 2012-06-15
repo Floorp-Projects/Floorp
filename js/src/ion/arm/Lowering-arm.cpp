@@ -301,7 +301,7 @@ LIRGeneratorARM::lowerModI(MMod *mod)
         if (1 << shift == rhs) {
             LModPowTwoI *lir = new LModPowTwoI(useRegister(mod->lhs()), shift);
             return (assignSnapshot(lir) && define(lir, mod));
-        } else if (shift != 32 && (1 << (shift+1)) - 1 == rhs) {
+        } else if (shift < 31 && (1 << (shift+1)) - 1 == rhs) {
             LModMaskI *lir = new LModMaskI(useRegister(mod->lhs()), temp(LDefinition::GENERAL), shift+1);
             return (assignSnapshot(lir) && define(lir, mod));
         }
