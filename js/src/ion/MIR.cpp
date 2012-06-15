@@ -104,10 +104,8 @@ EvaluateConstantOperands(MBinaryInstruction *ins)
         ret = Int32Value(lhs.toInt32() >> (rhs.toInt32() & 0x1F));
         break;
       case MDefinition::Op_Ursh: {
-        if (lhs.toInt32() < 0 && rhs.toInt32() == 0)
-            return NULL;
         uint32 unsignedLhs = (uint32_t)lhs.toInt32();
-        ret = Int32Value(uint32(unsignedLhs >> (rhs.toInt32() & 0x1F)));
+        ret.setNumber(uint32(unsignedLhs >> (rhs.toInt32() & 0x1F)));
         break;
       }
       case MDefinition::Op_Add:
