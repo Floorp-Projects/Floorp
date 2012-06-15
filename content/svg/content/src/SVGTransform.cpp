@@ -125,7 +125,7 @@ nsresult
 SVGTransform::SetSkewX(float aAngle)
 {
   double ta = tan(aAngle*radPerDegree);
-  NS_ENSURE_FINITE(ta, NS_ERROR_DOM_SVG_INVALID_VALUE_ERR);
+  NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
   mType    = nsIDOMSVGTransform::SVG_TRANSFORM_SKEWX;
   mMatrix.Reset();
@@ -140,7 +140,7 @@ nsresult
 SVGTransform::SetSkewY(float aAngle)
 {
   double ta = tan(aAngle*radPerDegree);
-  NS_ENSURE_FINITE(ta, NS_ERROR_DOM_SVG_INVALID_VALUE_ERR);
+  NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
   mType    = nsIDOMSVGTransform::SVG_TRANSFORM_SKEWY;
   mMatrix.Reset();

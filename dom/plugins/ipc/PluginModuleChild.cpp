@@ -113,9 +113,9 @@ PluginModuleChild::PluginModuleChild()
 PluginModuleChild::~PluginModuleChild()
 {
     NS_ASSERTION(gInstance == this, "Something terribly wrong here!");
-    if (mLibrary) {
-        PR_UnloadLibrary(mLibrary);
-    }
+
+    // We don't unload the plugin library in case it uses atexit handlers or
+    // other similar hooks.
 
     DeinitGraphics();
 

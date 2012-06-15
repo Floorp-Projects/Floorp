@@ -11,6 +11,7 @@
 #include "nsIInputStream.h"
 #include "nsIZipReader.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
 
 // High word is S_IFREG, low word is DOS file attribute
 #define ZIP_ATTRS_FILE 0x80000000
@@ -22,7 +23,7 @@
 // Combine file type attributes with unix style permissions
 #define ZIP_ATTRS(p, a) ((p & 0xfff) << 16) | a
 
-class nsZipHeader : public nsIZipEntry
+class nsZipHeader MOZ_FINAL : public nsIZipEntry
 {
 public:
     NS_DECL_ISUPPORTS

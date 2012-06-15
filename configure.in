@@ -74,7 +74,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.18
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.12.1
+SQLITE_VERSION=3.7.13
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -3161,42 +3161,6 @@ else
              AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
 
 	LDFLAGS="$_SAVE_LDFLAGS"
-
-    dnl ========================================================
-    dnl = Check for freetype2 and its functionality
-    dnl ========================================================
-    PKG_CHECK_MODULES(FT2, freetype2 >= 6.1.0, _HAVE_FREETYPE2=1, _HAVE_FREETYPE2=)
-
-    if test "$_HAVE_FREETYPE2"; then
-    	_SAVE_LIBS="$LIBS"
-    	_SAVE_CFLAGS="$CFLAGS"
-    	LIBS="$LIBS $FT2_LIBS"
-    	CFLAGS="$CFLAGS $FT2_CFLAGS"
-
-        AC_CACHE_CHECK(for FT_Bitmap_Size.y_ppem,
-            ac_cv_member_FT_Bitmap_Size_y_ppem,
-            [AC_TRY_COMPILE([#include <ft2build.h>
-                             #include FT_FREETYPE_H],
-                            [FT_Bitmap_Size s;
-                             if (sizeof s.y_ppem) return 0;
-                             return 1],
-                            ac_cv_member_FT_Bitmap_Size_y_ppem=yes,
-                            ac_cv_member_FT_Bitmap_Size_y_ppem=no)])
-        if test "$ac_cv_member_FT_Bitmap_Size_y_ppem" = yes; then
-            HAVE_FT_BITMAP_SIZE_Y_PPEM=1
-        else
-            HAVE_FT_BITMAP_SIZE_Y_PPEM=0
-        fi
-        AC_DEFINE_UNQUOTED(HAVE_FT_BITMAP_SIZE_Y_PPEM,
-                           $HAVE_FT_BITMAP_SIZE_Y_PPEM,
-                           [FT_Bitmap_Size structure includes y_ppem field])
-
-        AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_Load_Sfnt_Table FT_Select_Size)
-
-    	LIBS="$_SAVE_LIBS"
-    	CFLAGS="$_SAVE_CFLAGS"
-    fi
-
 fi # $no_x
 
 AC_SUBST(XCFLAGS)
@@ -4567,6 +4531,7 @@ cairo-gtk2|cairo-gtk2-x11)
     TK_CFLAGS='$(MOZ_GTK2_CFLAGS)'
     TK_LIBS='$(MOZ_GTK2_LIBS)'
     AC_DEFINE(MOZ_WIDGET_GTK2)
+    AC_DEFINE(MOZ_WIDGET_GTK,2)
     MOZ_PDF_PRINTING=1
     MOZ_INSTRUMENT_EVENT_LOOP=1
     ;;
@@ -4739,7 +4704,7 @@ then
 
     if test -z "$QTDIR"; then
         PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL)
-        PKG_CHECK_MODULES(MOZ_QT5, QtWidgets QtMultimedia QtPrintSupport QtQuick1,
+        PKG_CHECK_MODULES(MOZ_QT5, QtWidgets QtMultimedia QtPrintSupport,
                       MOZ_ENABLE_QT5=1,
                       MOZ_ENABLE_QT5=)
         if test "$MOZ_ENABLE_QT5"; then
@@ -4766,12 +4731,9 @@ then
 
         # QtWidgets was introduced only in Qt5
         if test -d $QTDIR/include/QtWidgets; then
-            echo "Using qt5"
             MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtWidgets"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtMultimedia"
             MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtPrintSupport"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtQuick1"
-            MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtWidgets -lQtMultimedia -lQtPrintSupport -lQtQuick1"
+            MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtWidgets -lQtPrintSupport"
         fi
     fi
     if test -z "$HOST_MOC"; then
@@ -7013,7 +6975,7 @@ else
   MOZ_GLUE_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
   dnl On other Unix systems, where mozglue is a static library, jemalloc is
   dnl separated for the SDK, so we need to add it here.
-  if test "$MOZ_MEMORY" = 1; then
+  if test "$MOZ_MEMORY" = 1 -o \( "$LIBXUL_SDK" -a -f "$LIBXUL_SDK/lib/${LIB_PREFIX}memory.${LIB_SUFFIX}" \); then
     MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS "'$(call EXPAND_LIBNAME_PATH,memory,$(LIBXUL_DIST)/lib)'
   fi
   MOZ_GLUE_PROGRAM_LDFLAGS="$MOZ_GLUE_PROGRAM_LDFLAGS "'$(MKSHLIB_UNFORCE_ALL)'
@@ -7396,6 +7358,17 @@ MOZ_ARG_ENABLE_BOOL(functiontimer,
     NS_FUNCTION_TIMER= )
 if test -n "$NS_FUNCTION_TIMER"; then
     AC_DEFINE(NS_FUNCTION_TIMER)
+fi
+
+dnl ========================================================
+dnl = Enable runtime visual profiling logger
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(visual-event-tracer,
+[  --enable-visual-event-tracer   Enable visual event tracer instrumentation],
+    MOZ_VISUAL_EVENT_TRACER=1,
+    MOZ_VISUAL_EVENT_TRACER=)
+if test -n "$MOZ_VISUAL_EVENT_TRACER"; then
+    AC_DEFINE(MOZ_VISUAL_EVENT_TRACER)
 fi
 
 dnl ========================================================
@@ -7877,7 +7850,7 @@ dnl ========================================================
 dnl Graphics checks.
 dnl ========================================================
 
-if test "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
+if test "${OS_TARGET}" = "WINNT" -o "${OS_ARCH}" = "Darwin" -o "${MOZ_WIDGET_TOOLKIT}" = "android" -o "${MOZ_WIDGET_TOOLKIT}" = "gtk2"; then
 MOZ_ENABLE_SKIA=1
 else
 MOZ_ENABLE_SKIA=
@@ -7887,6 +7860,53 @@ MOZ_ARG_ENABLE_BOOL(skia,
 [  --enable-skia   Enable use of Skia],
 MOZ_ENABLE_SKIA=1,
 MOZ_ENABLE_SKIA=)
+
+if test "$USE_FC_FREETYPE"; then
+    if test "$COMPILE_ENVIRONMENT"; then
+        dnl ========================================================
+        dnl = Check for freetype2 and its functionality
+        dnl ========================================================
+        PKG_CHECK_MODULES(FT2, freetype2 >= 6.1.0, _HAVE_FREETYPE2=1, _HAVE_FREETYPE2=)
+
+        if test "$_HAVE_FREETYPE2"; then
+            _SAVE_LIBS="$LIBS"
+            _SAVE_CFLAGS="$CFLAGS"
+            LIBS="$LIBS $FT2_LIBS"
+            CFLAGS="$CFLAGS $FT2_CFLAGS"
+
+            AC_CACHE_CHECK(for FT_Bitmap_Size.y_ppem,
+                ac_cv_member_FT_Bitmap_Size_y_ppem,
+                [AC_TRY_COMPILE([#include <ft2build.h>
+                                 #include FT_FREETYPE_H],
+                                [FT_Bitmap_Size s;
+                                 if (sizeof s.y_ppem) return 0;
+                                 return 1],
+                                ac_cv_member_FT_Bitmap_Size_y_ppem=yes,
+                                ac_cv_member_FT_Bitmap_Size_y_ppem=no)])
+            if test "$ac_cv_member_FT_Bitmap_Size_y_ppem" = yes; then
+                HAVE_FT_BITMAP_SIZE_Y_PPEM=1
+            else
+                HAVE_FT_BITMAP_SIZE_Y_PPEM=0
+            fi
+            AC_DEFINE_UNQUOTED(HAVE_FT_BITMAP_SIZE_Y_PPEM,
+                               $HAVE_FT_BITMAP_SIZE_Y_PPEM,
+                               [FT_Bitmap_Size structure includes y_ppem field])
+
+            AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_Load_Sfnt_Table FT_Select_Size)
+
+            LIBS="$_SAVE_LIBS"
+            CFLAGS="$_SAVE_CFLAGS"
+        fi
+
+        _SAVE_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $FT2_CFLAGS $XCFLAGS"
+        MOZ_CHECK_HEADERS([fontconfig/fcfreetype.h], ,
+            [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)], [#include <fontconfig/fontconfig.h>])
+        CPPFLAGS="$_SAVE_CPPFLAGS"
+    else
+        AC_DEFINE(HAVE_FONTCONFIG_FCFREETYPE_H)
+    fi
+fi
 
 dnl ========================================================
 dnl Check for pixman and cairo
@@ -8671,18 +8691,6 @@ if test "$MOZ_GL_DEFAULT_PROVIDER" = "GLX"; then
     fi
 fi # MOZ_GL_DEFAULT_PROVIDER=GLX
 fi # COMPILE_ENVIRONMENT
-
-if test "$USE_FC_FREETYPE"; then
-    if test "$COMPILE_ENVIRONMENT"; then
-    	_SAVE_CPPFLAGS="$CPPFLAGS"
-    	CPPFLAGS="$CPPFLAGS $FT2_CFLAGS $XCFLAGS"
-        MOZ_CHECK_HEADERS([fontconfig/fcfreetype.h], ,
-            [AC_MSG_ERROR(Can't find header fontconfig/fcfreetype.h.)], [#include <fontconfig/fontconfig.h>])
-    	CPPFLAGS="$_SAVE_CPPFLAGS"
-    else
-        AC_DEFINE(HAVE_FONTCONFIG_FCFREETYPE_H)
-    fi
-fi
 
 dnl Set various defines and substitutions
 dnl ========================================================

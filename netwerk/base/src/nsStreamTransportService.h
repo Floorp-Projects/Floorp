@@ -7,10 +7,11 @@
 #include "nsIThreadPool.h"
 #include "nsIObserver.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
-class nsStreamTransportService : public nsIStreamTransportService
-                               , public nsIEventTarget 
-                               , public nsIObserver
+class nsStreamTransportService MOZ_FINAL : public nsIStreamTransportService
+                                         , public nsIEventTarget
+                                         , public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS

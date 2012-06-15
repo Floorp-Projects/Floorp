@@ -611,7 +611,9 @@ nsSSLIOLayerHelpers::getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key)
 }
 
 // Call this function to report a site that is possibly TLS intolerant.
-// This function will return true, if the given socket is currently using TLS.
+// This function will return true, if the given socket is currently using TLS,
+// and it's allowed to retry. Retrying only makes sense if an older
+// protocol is enabled.
 bool
 nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(nsNSSSocketInfo *socketInfo)
 {
@@ -630,6 +632,9 @@ nsSSLIOLayerHelpers::rememberPossibleTLSProblemSite(nsNSSSocketInfo *socketInfo)
   if (socketInfo->IsSSL3Enabled()) {
     // Add this site to the list of TLS intolerant sites.
     addIntolerantSite(key);
+  }
+  else {
+    return false; // doesn't make sense to retry
   }
   
   return socketInfo->IsTLSEnabled();

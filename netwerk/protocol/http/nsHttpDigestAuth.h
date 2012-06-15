@@ -11,6 +11,7 @@
 #include "nsICryptoHash.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 #define ALGO_SPECIFIED 0x01
 #define ALGO_MD5 0x02
@@ -26,7 +27,7 @@
 // nsHttpDigestAuth
 //-----------------------------------------------------------------------------
 
-class nsHttpDigestAuth : public nsIHttpAuthenticator
+class nsHttpDigestAuth MOZ_FINAL : public nsIHttpAuthenticator
 {
   public:
     NS_DECL_ISUPPORTS

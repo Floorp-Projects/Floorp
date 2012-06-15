@@ -127,7 +127,7 @@
 
   function checkSpecialReport(aName, aAmounts)
   {
-    ok(aAmounts.length == 1, aName + " has exactly 1 report");
+    ok(aAmounts.length == 1, aName + " has " + aAmounts.length + " report");
     let n = aAmounts[0];
     // Check the size is reasonable -- i.e. not ridiculously large or small.
     ok(n === kUnknown || (100 * 1000 <= n && n <= 10 * 1000 * 1000 * 1000),

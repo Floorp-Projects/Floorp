@@ -74,6 +74,8 @@ protected:
 NS_IMETHODIMP
 nsSoundPlayer::Run()
 {
+  PR_SetCurrentThreadName("Play Sound");
+
   NS_PRECONDITION(!mSoundName.IsEmpty(), "Sound name should not be empty");
   ::PlaySoundW(mSoundName.get(), NULL, SND_NODEFAULT | SND_ALIAS | SND_ASYNC);
   nsCOMPtr<nsIRunnable> releaser = new SoundReleaser(mSound);

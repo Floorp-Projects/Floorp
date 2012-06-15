@@ -443,6 +443,7 @@ nsStreamTransportService::Init()
     mPool->SetThreadLimit(4);
     mPool->SetIdleThreadLimit(1);
     mPool->SetIdleThreadTimeout(PR_SecondsToInterval(60));
+    mPool->SetName(NS_LITERAL_CSTRING("StreamTrans"));
 
     nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();

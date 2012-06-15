@@ -13,8 +13,9 @@
 
 
 #include "nsIIOUtil.h"
+#include "mozilla/Attributes.h"
 
-class nsIOUtil : public nsIIOUtil
+class nsIOUtil MOZ_FINAL : public nsIIOUtil
 {
 public:
   NS_DECL_ISUPPORTS

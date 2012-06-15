@@ -7,6 +7,7 @@ import hashlib
 import socket
 import os
 import re
+import StringIO
 
 class FileError(Exception):
   " Signifies an error which occurs while doing a file operation."
@@ -473,6 +474,33 @@ class DeviceManager:
     success: time in ms
     failure: None
     """
+
+  def recordLogcat(self):
+    """
+    external function
+    returns:
+    success: file is created in <testroot>/logcat.log
+    failure: 
+    """
+    #TODO: spawn this off in a separate thread/process so we can collect all the logcat information
+
+    # Right now this is just clearing the logcat so we can only see what happens after this call.
+    buf = StringIO.StringIO()
+    self.shell(['/system/bin/logcat', '-c'], buf)
+
+  def getLogcat(self):
+    """
+    external function
+    returns: data from the local file
+    success: file is in 'filename'
+    failure: None
+    """
+    buf = StringIO.StringIO()
+    if self.shell(["/system/bin/logcat", "-d", "dalvikvm:S", "ConnectivityService:S", "WifiMonitor:S", "WifiStateTracker:S", "wpa_supplicant:S", "NetworkStateTracker:S"], buf) != 0:
+      return None
+
+    return str(buf.getvalue()[0:-1]).rstrip().split('\r')
+
     
 class NetworkTools:
   def __init__(self):

@@ -4421,7 +4421,9 @@ var TabsProgressListener = {
         Components.isSuccessCode(aStatus) &&
         /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
       aBrowser.addEventListener("click", BrowserOnClick, false);
-      aBrowser.addEventListener("pagehide", function onPageHide() {
+      aBrowser.addEventListener("pagehide", function onPageHide(event) {
+        if (event.target.defaultView.frameElement)
+          return;
         aBrowser.removeEventListener("click", BrowserOnClick, false);
         aBrowser.removeEventListener("pagehide", onPageHide, true);
       }, true);

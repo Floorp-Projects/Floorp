@@ -17,6 +17,7 @@
 #include "nsISAXErrorHandler.h"
 #include "nsISAXLexicalHandler.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 
 #define NS_SAXXMLREADER_CONTRACTID "@mozilla.org/saxparser/xmlreader;1"
 #define NS_SAXXMLREADER_CLASSNAME "SAX XML Reader"
@@ -24,9 +25,9 @@
 { 0xab1da296, 0x6125, 0x40ba, \
 { 0x96, 0xd0, 0x47, 0xa8, 0x28, 0x2a, 0xe3, 0xdb} }
 
-class nsSAXXMLReader : public nsISAXXMLReader,
-                       public nsIExtendedExpatSink,
-                       public nsIContentSink
+class nsSAXXMLReader MOZ_FINAL : public nsISAXXMLReader,
+                                 public nsIExtendedExpatSink,
+                                 public nsIContentSink
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

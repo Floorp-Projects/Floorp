@@ -41,7 +41,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import android.text.InputType;
 
-public class PromptService implements OnClickListener, OnCancelListener, OnItemClickListener {
+public class PromptService implements OnClickListener, OnCancelListener, OnItemClickListener, GeckoEventResponder {
     private static final String LOGTAG = "GeckoPromptService";
 
     private PromptInput[] mInputs;
@@ -81,6 +81,8 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         mIconSize = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                                                    ICON_SIZE,
                                                    res.getDisplayMetrics());
+
+        GeckoAppShell.registerGeckoEventListener("Prompt:Show", this);
     }
 
     private class PromptButton {
@@ -172,7 +174,29 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         }
     }
 
-    public void Show(String aTitle, String aText, PromptButton[] aButtons, PromptListItem[] aMenuList, boolean aMultipleSelection) {
+    // GeckoEventListener implementation
+    public void handleMessage(String event, final JSONObject message) {
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                processMessage(message);
+            }
+        });
+    }
+
+    // GeckoEventResponder implementation
+    public String getResponse() {
+        // we only handle one kind of message in handleMessage, and this is the
+        // response we provide for that message
+        String promptServiceResult = "";
+        try {
+            promptServiceResult = waitForReturn();
+        } catch (InterruptedException e) {
+            Log.i(LOGTAG, "showing prompt ",  e);
+        }
+        return promptServiceResult;
+    }
+
+    public void show(String aTitle, String aText, PromptButton[] aButtons, PromptListItem[] aMenuList, boolean aMultipleSelection) {
         AlertDialog.Builder builder = new AlertDialog.Builder(GeckoApp.mAppContext);
         if (!aTitle.equals("")) {
             builder.setTitle(aTitle);
@@ -318,7 +342,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         } catch(Exception ex) { }
     }
 
-    public void processMessage(JSONObject geckoObject) {
+    private void processMessage(JSONObject geckoObject) {
         String title = "";
         try {
             title = geckoObject.getString("title");
@@ -358,7 +382,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         try {
             multiple = geckoObject.getBoolean("multiple");
         } catch(Exception ex) { }
-        this.Show(title, text, promptbuttons, menuitems, multiple);
+        show(title, text, promptbuttons, menuitems, multiple);
     }
 
     private String[] getStringArray(JSONObject aObject, String aName) {

@@ -146,3 +146,9 @@ GARBAGE += \
   webidlyacc.py \
   parser.out \
   $(NULL)
+
+# Make sure all binding header files are created during the export stage, so we
+# don't have issues with .cpp files being compiled before we've generated the
+# headers they depend on.  This is really only needed for the test files, since
+# the non-test headers are all exported above anyway.
+export:: $(binding_header_files)

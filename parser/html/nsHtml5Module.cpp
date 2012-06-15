@@ -16,6 +16,7 @@
 #include "nsIServiceManager.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 
@@ -85,7 +86,7 @@ nsHtml5Module::Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, n
   return parser->Initialize(aDoc, aURI, aContainer, aChannel);
 }
 
-class nsHtml5ParserThreadTerminator : public nsIObserver
+class nsHtml5ParserThreadTerminator MOZ_FINAL : public nsIObserver
 {
   public:
     NS_DECL_ISUPPORTS
@@ -114,7 +115,7 @@ nsHtml5Module::GetStreamParserThread()
 {
   if (sOffMainThread) {
     if (!sStreamParserThread) {
-      NS_NewThread(&sStreamParserThread);
+      NS_NewNamedThread("HTML5 Parser", &sStreamParserThread);
       NS_ASSERTION(sStreamParserThread, "Thread creation failed!");
       nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       NS_ASSERTION(os, "do_GetService failed");

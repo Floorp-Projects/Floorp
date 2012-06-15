@@ -235,7 +235,7 @@ NS_IMETHODIMP DOMSVGMatrix::RotateFromVector(float x, float y,
   NS_ENSURE_FINITE2(x, y, NS_ERROR_ILLEGAL_VALUE);
 
   if (x == 0.0 || y == 0.0)
-    return NS_ERROR_DOM_SVG_INVALID_VALUE_ERR;
+    return NS_ERROR_RANGE_ERR;
 
   NS_ADDREF(*_retval =
     new DOMSVGMatrix(gfxMatrix(Matrix()).Rotate(atan2(y, x))));
@@ -269,7 +269,7 @@ NS_IMETHODIMP DOMSVGMatrix::SkewX(float angle, nsIDOMSVGMatrix **_retval)
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
 
   double ta = tan( angle*radPerDegree );
-  NS_ENSURE_FINITE(ta, NS_ERROR_DOM_SVG_INVALID_VALUE_ERR);
+  NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
   const gfxMatrix& mx = Matrix();
   gfxMatrix skewMx(mx.xx, mx.yx,
@@ -286,7 +286,7 @@ NS_IMETHODIMP DOMSVGMatrix::SkewY(float angle, nsIDOMSVGMatrix **_retval)
   NS_ENSURE_FINITE(angle, NS_ERROR_ILLEGAL_VALUE);
 
   double ta = tan( angle*radPerDegree );
-  NS_ENSURE_FINITE(ta, NS_ERROR_DOM_SVG_INVALID_VALUE_ERR);
+  NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
   const gfxMatrix& mx = Matrix();
   gfxMatrix skewMx((float) (mx.xx + mx.xy*ta), (float) (mx.yx + mx.yy*ta),

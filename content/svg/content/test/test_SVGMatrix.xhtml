@@ -87,8 +87,8 @@ function testInverse()
     m.inverse();
     ok(false, "Failed to throw exception when inverting singular matrix");
   } catch (e) {
-    is(e.code, SVGException.SVG_MATRIX_NOT_INVERTABLE,
-      "Got unexpected exception " + e + ", expected SVG_MATRIX_NOT_INVERTABLE");
+    is(e.name, "InvalidStateError",
+      "Got unexpected exception " + e + ", expected InvalidStateError");
   }
 }
 
@@ -144,8 +144,8 @@ function testRotateFromVector()
     m.rotateFromVector(1, 0);
     ok(false, "Failed to throw exception with zero coord for rotateFromVector");
   } catch (e) {
-    is(e.code, SVGException.SVG_INVALID_VALUE_ERR,
-      "Got unexpected exception " + e + ", expected SVG_INVALID_VALUE_ERR");
+    is(e.name, "RangeError",
+      "Got unexpected exception " + e + ", expected TypeError");
   }
 
   // Test bad input (2)

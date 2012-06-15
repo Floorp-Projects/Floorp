@@ -656,7 +656,7 @@ class TokenStream
     class TokenBuf {
       public:
         TokenBuf(const jschar *buf, size_t length)
-          : base(buf), limit(buf + length), ptr(buf), ptrWhenPoisoned(NULL) { }
+          : base(buf), limit(buf + length), ptr(buf) { }
 
         bool hasRawChars() const {
             return ptr < limit;
@@ -708,13 +708,8 @@ class TokenStream
         }
 
 #ifdef DEBUG
-        /*
-         * Poison the TokenBuf so it cannot be accessed again.  There's one
-         * exception to this rule -- see findEOL() -- which is why
-         * ptrWhenPoisoned exists.
-         */
+        /* Poison the TokenBuf so it cannot be accessed again. */
         void poison() {
-            ptrWhenPoisoned = ptr;
             ptr = NULL;
         }
 #endif
@@ -723,13 +718,14 @@ class TokenStream
             return (c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR);
         }
 
-        const jschar *findEOL();
+        // Finds the next EOL, but stops once 'max' jschars have been scanned
+        // (*including* the starting jschar).
+        const jschar *findEOLMax(const jschar *p, size_t max);
 
       private:
         const jschar *base;             /* base of buffer */
         const jschar *limit;            /* limit for quick bounds check */
         const jschar *ptr;              /* next char to get */
-        const jschar *ptrWhenPoisoned;  /* |ptr| when poison() was called */
     };
 
     TokenKind getTokenInternal();     /* doesn't check for pushback or error flag. */

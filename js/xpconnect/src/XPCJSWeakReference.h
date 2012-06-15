@@ -7,8 +7,9 @@
 
 #include "xpcIJSWeakReference.h"
 #include "nsIWeakReference.h"
+#include "mozilla/Attributes.h"
 
-class xpcJSWeakReference : public xpcIJSWeakReference
+class xpcJSWeakReference MOZ_FINAL : public xpcIJSWeakReference
 {
 public:
     xpcJSWeakReference();

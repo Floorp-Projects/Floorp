@@ -17,6 +17,7 @@
 #include "nsIStorageStream.h"
 #include "nsIOutputStream.h"
 #include "nsMemory.h"
+#include "mozilla/Attributes.h"
 
 #define NS_STORAGESTREAM_CID                       \
 { /* 669a9795-6ff7-4ed4-9150-c34ce2971b63 */       \
@@ -31,8 +32,8 @@
 
 class nsSegmentedBuffer;
 
-class nsStorageStream : public nsIStorageStream,
-                        public nsIOutputStream
+class nsStorageStream MOZ_FINAL : public nsIStorageStream,
+                                  public nsIOutputStream
 {
 public:
     nsStorageStream();

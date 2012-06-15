@@ -1803,6 +1803,12 @@ DrawTargetD2D::FillGlyphsManual(ScaledFontDWrite *aFont,
 
   RECT bounds;
   hr = analysis->GetAlphaTextureBounds(DWRITE_TEXTURE_CLEARTYPE_3x1, &bounds);
+
+  if (bounds.bottom <= bounds.top || bounds.right <= bounds.left) {
+    // DWrite seems to do this sometimes. I'm not 100% sure why. See bug 758980.
+    gfxDebug() << "Empty alpha texture bounds! Falling back to regular drawing.";
+    return false;
+  }
   IntRect rectBounds(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
   IntRect surfBounds(IntPoint(0, 0), mSize);
 

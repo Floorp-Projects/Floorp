@@ -15,6 +15,7 @@ import android.hardware.*;
 import android.location.*;
 import android.util.FloatMath;
 import android.util.DisplayMetrics;
+import java.nio.ByteBuffer;
 
 import android.util.Log;
 
@@ -99,6 +100,8 @@ public class GeckoEvent {
     public short mScreenOrientation;
 
     public int mNativeWindow;
+
+    public ByteBuffer mBuffer;
 
     public GeckoEvent() {
         mType = NATIVE_POKE;

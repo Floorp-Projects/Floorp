@@ -342,7 +342,7 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
 
     // Tabs.OnTabsChangedListener implementation
 
-    public void onTabChanged(Tab tab, Tabs.TabEvents msg) {
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         if ((Tabs.getInstance().isSelectedTab(tab) && msg == Tabs.TabEvents.STOP) || msg == Tabs.TabEvents.SELECTED) {
             mWaitForTouchListeners = tab.getHasTouchListeners();
         }

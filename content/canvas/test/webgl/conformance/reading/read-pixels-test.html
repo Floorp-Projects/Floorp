@@ -19,6 +19,7 @@ found in the LICENSE file.
 <div id="console"></div>
 <script>
 description("Checks that ReadPixels works as expected.");
+testPassed("read-pixels-test start: " + (new Date().getTime()));
 
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("example");
@@ -180,6 +181,7 @@ function continueTestPart1() {
 }
 
 function continueTestPart2() {
+testPassed("read-pixels-test continueTestPart2: " + (new Date().getTime()));
   gl.viewport(0, 0, 1024, 1024);
   var program = wtu.setupTexturedQuad(gl);
   var loc = gl.getUniformLocation(program, "tex");
@@ -217,7 +219,16 @@ function continueTestPart2() {
   glErrorShouldBe(gl, gl.NO_ERROR, "there should be no GL errors");
 
   debug("");
-  finishTest();
+
+  // bug 763355: temporary logging of exceptions here to understand intermittent timeout
+  // in this test, apparently in this finishTest() call.
+  try {
+    testPassed("read-pixels-test calling finishTest: " + (new Date().getTime()));
+    finishTest();
+    testPassed("read-pixels-test after finishTest: " + (new Date().getTime()));
+  } catch(e) {
+    testFailed("finishTest generated exception: " + e);
+  }
 }
 </script>
 </body>

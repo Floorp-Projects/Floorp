@@ -7,8 +7,9 @@
 #define nsViewSourceHandler_h___
 
 #include "nsIProtocolHandler.h"
+#include "mozilla/Attributes.h"
 
-class nsViewSourceHandler : public nsIProtocolHandler
+class nsViewSourceHandler MOZ_FINAL : public nsIProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS

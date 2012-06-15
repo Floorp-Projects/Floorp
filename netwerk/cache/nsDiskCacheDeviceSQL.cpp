@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Util.h"
+#include "mozilla/Attributes.h"
 
 #include "nsCache.h"
 #include "nsDiskCache.h"
@@ -223,7 +224,7 @@ nsOfflineCacheEvictionFunction::Apply()
  * nsOfflineCacheDeviceInfo
  */
 
-class nsOfflineCacheDeviceInfo : public nsICacheDeviceInfo
+class nsOfflineCacheDeviceInfo MOZ_FINAL : public nsICacheDeviceInfo
 {
 public:
   NS_DECL_ISUPPORTS
@@ -299,7 +300,7 @@ nsOfflineCacheDeviceInfo::GetMaximumSize(PRUint32 *aMaximumSize)
  * nsOfflineCacheBinding
  */
 
-class nsOfflineCacheBinding : public nsISupports
+class nsOfflineCacheBinding MOZ_FINAL : public nsISupports
 {
 public:
   NS_DECL_ISUPPORTS
@@ -448,7 +449,7 @@ CreateCacheEntry(nsOfflineCacheDevice *device,
  * nsOfflineCacheEntryInfo
  */
 
-class nsOfflineCacheEntryInfo : public nsICacheEntryInfo
+class nsOfflineCacheEntryInfo MOZ_FINAL : public nsICacheEntryInfo
 {
 public:
   NS_DECL_ISUPPORTS

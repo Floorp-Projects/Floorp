@@ -18,6 +18,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "nsISocketTransportService.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Attributes.h"
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -357,10 +358,10 @@ private:
     // nsHalfOpenSocket is used to hold the state of an opening TCP socket
     // while we wait for it to establish and bind it to a connection
 
-    class nsHalfOpenSocket : public nsIOutputStreamCallback,
-                             public nsITransportEventSink,
-                             public nsIInterfaceRequestor,
-                             public nsITimerCallback
+    class nsHalfOpenSocket MOZ_FINAL : public nsIOutputStreamCallback,
+                                       public nsITransportEventSink,
+                                       public nsIInterfaceRequestor,
+                                       public nsITimerCallback
     {
     public:
         NS_DECL_ISUPPORTS

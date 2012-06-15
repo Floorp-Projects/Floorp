@@ -8,7 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 
 import org.mozilla.gecko.sync.Logger;
-import org.mozilla.gecko.sync.crypto.KeyBundle;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
 
 import android.accounts.AbstractAccountAuthenticator;
@@ -118,7 +118,7 @@ public class SyncAuthenticatorService extends Service {
 
         // Username after hashing.
         try {
-          String username = KeyBundle.usernameFromAccount(account.name);
+          String username = Utils.usernameFromAccount(account.name);
           Logger.pii(LOG_TAG, "Account " + account.name + " hashes to " + username);
           Logger.info(LOG_TAG, "Setting username. Null? " + (username == null));
           result.putString(Constants.OPTION_USERNAME, username);

@@ -2020,6 +2020,8 @@ DocAccessible::CacheChildrenInSubtree(Accessible* aRoot)
 void
 DocAccessible::UncacheChildrenInSubtree(Accessible* aRoot)
 {
+  aRoot->mFlags |= eIsNotInDocument;
+
   if (aRoot->IsElement())
     RemoveDependentIDsFor(aRoot);
 

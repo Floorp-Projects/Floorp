@@ -26,6 +26,7 @@
 #include "js/MemoryMetrics.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/Attributes.h"
 
 #include "nsJSPrincipals.h"
 
@@ -885,6 +886,8 @@ class AutoLockWatchdog {
 void
 XPCJSRuntime::WatchdogMain(void *arg)
 {
+    PR_SetCurrentThreadName("JS Watchdog");
+
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(arg);
 
     // Lock lasts until we return
@@ -1218,7 +1221,7 @@ GetJSUserCompartmentCount()
 // easily report them via telemetry, so we live with the small risk of
 // inconsistencies.
 NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSSystemCompartmentCount,
-    "js-compartments-system",
+    "js-compartments/system",
     KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,
     GetJSSystemCompartmentCount,
@@ -1228,7 +1231,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSSystemCompartmentCount,
     "but such cases should be rare.")
 
 NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
-    "js-compartments-user",
+    "js-compartments/user",
     KIND_OTHER,
     nsIMemoryReporter::UNITS_COUNT,
     GetJSUserCompartmentCount,
@@ -1618,7 +1621,7 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf, "js")
 
-class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
+class JSCompartmentsMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
   public:
     NS_DECL_ISUPPORTS
@@ -1661,7 +1664,7 @@ class JSCompartmentsMultiReporter : public nsIMemoryMultiReporter
         for (size_t i = 0; i < paths.length(); i++)
             // These ones don't need a description, hence the "".
             REPORT(nsCString(paths[i]),
-                   nsIMemoryReporter::KIND_SUMMARY,
+                   nsIMemoryReporter::KIND_OTHER,
                    nsIMemoryReporter::UNITS_COUNT,
                    1, "");
 
@@ -1698,7 +1701,7 @@ struct XPCJSRuntimeStats : public JS::RuntimeStats {
     }
 };
     
-class JSMemoryMultiReporter : public nsIMemoryMultiReporter
+class JSMemoryMultiReporter MOZ_FINAL : public nsIMemoryMultiReporter
 {
 public:
     NS_DECL_ISUPPORTS

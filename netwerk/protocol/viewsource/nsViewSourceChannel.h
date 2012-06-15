@@ -19,14 +19,15 @@
 #include "nsICachingChannel.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIUploadChannel.h"
+#include "mozilla/Attributes.h"
 
-class nsViewSourceChannel : public nsIViewSourceChannel,
-                            public nsIStreamListener,
-                            public nsIHttpChannel,
-                            public nsIHttpChannelInternal,
-                            public nsICachingChannel,
-                            public nsIApplicationCacheChannel,
-                            public nsIUploadChannel
+class nsViewSourceChannel MOZ_FINAL : public nsIViewSourceChannel,
+                                      public nsIStreamListener,
+                                      public nsIHttpChannel,
+                                      public nsIHttpChannelInternal,
+                                      public nsICachingChannel,
+                                      public nsIApplicationCacheChannel,
+                                      public nsIUploadChannel
 {
 
 public:

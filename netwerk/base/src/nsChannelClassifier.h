@@ -8,11 +8,12 @@
 #include "nsIURIClassifier.h"
 #include "nsIRunnable.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 class nsIChannel;
 
 
-class nsChannelClassifier : public nsIURIClassifierCallback
+class nsChannelClassifier MOZ_FINAL : public nsIURIClassifierCallback
 {
 public:
     nsChannelClassifier();

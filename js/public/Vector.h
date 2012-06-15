@@ -563,7 +563,12 @@ Vector<T,N,AP>::~Vector()
  */
 template <class T, size_t N, class AP>
 STATIC_POSTCONDITION(!return || newCap >= curLength + lengthInc)
+#ifdef DEBUG
+/* gcc (ARM, x86) compiler bug workaround - See bug 694694 */
+JS_NEVER_INLINE bool
+#else
 inline bool
+#endif
 Vector<T,N,AP>::calculateNewCapacity(size_t curLength, size_t lengthInc,
                                      size_t &newCap)
 {

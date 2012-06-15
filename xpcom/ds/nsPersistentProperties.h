@@ -11,11 +11,12 @@
 #include "plarena.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 #include "nsIUnicharInputStream.h"
 
 
-class nsPersistentProperties : public nsIPersistentProperties
+class nsPersistentProperties MOZ_FINAL : public nsIPersistentProperties
 {
 public:
   nsPersistentProperties();
@@ -39,7 +40,7 @@ protected:
   PLArenaPool mArena;
 };
 
-class nsPropertyElement : public nsIPropertyElement
+class nsPropertyElement MOZ_FINAL : public nsIPropertyElement
 {
 public:
   nsPropertyElement()

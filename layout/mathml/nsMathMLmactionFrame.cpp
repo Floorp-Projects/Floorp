@@ -32,10 +32,20 @@
 // <maction> -- bind actions to a subexpression - implementation
 //
 
-#define NS_MATHML_ACTION_TYPE_NONE         0
-#define NS_MATHML_ACTION_TYPE_TOGGLE       1
-#define NS_MATHML_ACTION_TYPE_STATUSLINE   2
-#define NS_MATHML_ACTION_TYPE_TOOLTIP      3 // unsupported
+enum nsMactionActionTypes {
+  NS_MATHML_ACTION_TYPE_CLASS_ERROR            = 0x10,
+  NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION    = 0x20,
+  NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION = 0x40,
+  NS_MATHML_ACTION_TYPE_CLASS_BITMASK          = 0xF0,
+
+  NS_MATHML_ACTION_TYPE_NONE       = NS_MATHML_ACTION_TYPE_CLASS_ERROR|0x01,
+
+  NS_MATHML_ACTION_TYPE_TOGGLE     = NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION|0x01,
+  NS_MATHML_ACTION_TYPE_UNKNOWN    = NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION|0x02,
+
+  NS_MATHML_ACTION_TYPE_STATUSLINE = NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION|0x01,
+  NS_MATHML_ACTION_TYPE_TOOLTIP    = NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION|0x02
+};
 
 
 // helper function to parse actiontype attribute
@@ -44,8 +54,10 @@ GetActionType(nsIContent* aContent)
 {
   nsAutoString value;
 
-  if (aContent)
-    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, value);
+  if (aContent) {
+    if (!aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, value))
+      return NS_MATHML_ACTION_TYPE_NONE; 
+  }
 
   if (value.EqualsLiteral("toggle"))
     return NS_MATHML_ACTION_TYPE_TOGGLE;
@@ -54,7 +66,7 @@ GetActionType(nsIContent* aContent)
   if (value.EqualsLiteral("tooltip"))
     return NS_MATHML_ACTION_TYPE_TOOLTIP;
 
-  return NS_MATHML_ACTION_TYPE_NONE;
+  return NS_MATHML_ACTION_TYPE_UNKNOWN;
 }
 
 nsIFrame*
@@ -135,8 +147,18 @@ nsMathMLmactionFrame::GetSelectedFrame()
   nsAutoString value;
   PRInt32 selection; 
 
-  // selection is applied only to toggle, return first child otherwise
-  if (NS_MATHML_ACTION_TYPE_TOGGLE != mActionType) {
+  if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) == 
+       NS_MATHML_ACTION_TYPE_CLASS_ERROR) {
+    // Mark mSelection as an error.
+    mSelection = -1;
+    mSelectedFrame = nsnull;
+    return mSelectedFrame;
+  }
+
+  // Selection is not applied to tooltip and statusline.
+  // Thereby return the first child.
+  if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) == 
+       NS_MATHML_ACTION_TYPE_CLASS_IGNORE_SELECTION) {
     // We don't touch mChildCount here. It's incorrect to assign it 1,
     // and it's inefficient to count the children. It's fine to leave
     // it be equal -1 because it's not used with other actiontypes.
@@ -157,8 +179,8 @@ nsMathMLmactionFrame::GetSelectedFrame()
 
   if (-1 != mChildCount) { // we have been in this function before...
     // cater for invalid user-supplied selection
-    if (selection > mChildCount || selection < 1) 
-      selection = 1;
+    if (selection > mChildCount || selection < 1)
+      selection = -1;
     // quick return if it is identical with our cache
     if (selection == mSelection) 
       return mSelectedFrame;
@@ -176,8 +198,8 @@ nsMathMLmactionFrame::GetSelectedFrame()
     childFrame = childFrame->GetNextSibling();
   }
   // cater for invalid user-supplied selection
-  if (selection > count || selection < 1) 
-    selection = 1;
+  if (selection > count || selection < 1)
+    selection = -1;
 
   mChildCount = count;
   mSelection = selection;
@@ -223,16 +245,14 @@ nsMathMLmactionFrame::AttributeChanged(PRInt32  aNameSpaceID,
     PRInt32 oldActionType = mActionType;
     mActionType = GetActionType(mContent);
 
-    // We have to initiate a reflow only when changing actiontype
-    // from toggle or to toggle.
-    if (oldActionType == NS_MATHML_ACTION_TYPE_TOGGLE || 
-          mActionType == NS_MATHML_ACTION_TYPE_TOGGLE) {
+    // Initiate a reflow when actiontype classes are different.
+    if ((oldActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) !=
+          (mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK)) {
       needsReflow = true;
     }
   } else if (aAttribute == nsGkAtoms::selection_) {
-    // When the selection attribute is changed we have to initiate a reflow
-    // only when actiontype is toggle.
-    if (NS_MATHML_ACTION_TYPE_TOGGLE == mActionType) {
+    if ((mActionType & NS_MATHML_ACTION_TYPE_CLASS_BITMASK) == 
+         NS_MATHML_ACTION_TYPE_CLASS_USE_SELECTION) {
       needsReflow = true;
     }
   } else {
@@ -256,6 +276,13 @@ nsMathMLmactionFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsRect&           aDirtyRect,
                                        const nsDisplayListSet& aLists)
 {
+  // Report an error if something wrong was found in this frame.
+  // We can't call nsDisplayMathMLError from here,
+  // so ask nsMathMLContainerFrame to do the work for us.
+  if (NS_MATHML_HAS_ERROR(mPresentationData.flags)) {
+    return nsMathMLContainerFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
+  }
+
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -309,10 +336,15 @@ nsMathMLmactionFrame::Place(nsRenderingContext& aRenderingContext,
                             bool                 aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
+  nsIFrame* childFrame = GetSelectedFrame();
+
+  if (mSelection == -1) {
+    return ReflowError(aRenderingContext, aDesiredSize);
+  }
+
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
   mBoundingMetrics = nsBoundingMetrics();
-  nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);
     if (aPlaceOrigin) {

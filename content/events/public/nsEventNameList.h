@@ -712,6 +712,10 @@ NON_IDL_EVENT(MozPressTapGesture,
               NS_SIMPLE_GESTURE_PRESSTAP,
               EventNameType_None,
               NS_SIMPLE_GESTURE_EVENT)
+NON_IDL_EVENT(MozEdgeUIGesture,
+              NS_SIMPLE_GESTURE_EDGEUI,
+              EventNameType_None,
+              NS_SIMPLE_GESTURE_EVENT)
 
 NON_IDL_EVENT(MozTouchDown,
               NS_MOZTOUCH_DOWN,

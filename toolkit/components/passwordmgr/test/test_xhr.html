@@ -20,7 +20,6 @@ Login Manager test: XHR prompt
 
 /** Test for Login Manager: XHR prompts. **/
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
 var pwmgr, login1, login2;
 
 function initLogins() {
@@ -73,8 +72,9 @@ function handleDialog(doc, testNum) {
         // Check that the dialog has the correct parent
         ok(doc.defaultView.opener, "dialog has opener");
         // Not using is() because its "expected" text doesn't deal
-        // with window objects very well 
-        ok(doc.defaultView.opener == window, "dialog's opener is correct");
+        // with window objects very well
+        // Disabled due to Bug 718543
+        // ok(doc.defaultView.opener == window, "dialog's opener is correct");
 
         break;
 

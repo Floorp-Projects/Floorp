@@ -97,10 +97,17 @@ private:
   void DrawTargetWillChange();
   void EnsureImage() const;
 
+  // We hold a weak reference to these two objects.
+  // The cycle is broken by DrawTargetWillChange
   DrawTargetCG *mDrawTarget;
   CGContextRef mCg;
+
   mutable CGImageRef mImage;
+
+  // mData can be owned by three different things:
+  // mImage, mCg or SourceSurfaceCGBitmapContext
   void *mData;
+
   int32_t mStride;
   IntSize mSize;
 };

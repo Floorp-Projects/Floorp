@@ -263,7 +263,7 @@ class DeviceManagerSUT(DeviceManager):
       if cwd:
         self.sendCmds(['execcwd %s %s' % (cwd, cmdline)], outputfile)
       else:
-        self.sendCmds(['exec %s' % cmdline], outputfile)
+        self.sendCmds(['exec su -c "%s"' % cmdline], outputfile)
     except AgentError:
       return None
 

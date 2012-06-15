@@ -47,7 +47,6 @@
   const NONHEAP = Ci.nsIMemoryReporter.KIND_NONHEAP;
   const HEAP    = Ci.nsIMemoryReporter.KIND_HEAP;
   const OTHER   = Ci.nsIMemoryReporter.KIND_OTHER;
-  const SUMMARY = Ci.nsIMemoryReporter.KIND_SUMMARY;
 
   const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
   const COUNT = Ci.nsIMemoryReporter.UNITS_COUNT;
@@ -72,8 +71,8 @@
     f("", "other2",             OTHER,   COUNT, 888),
 
     f("2nd", "explicit/c",      HEAP,    BYTES, 333 * MB),
-    f("2nd", "compartments/user/child-user-compartment",     SUMMARY, COUNT, 1),
-    f("2nd", "compartments/system/child-system-compartment", SUMMARY, COUNT, 1)
+    f("2nd", "compartments/user/child-user-compartment",     OTHER, COUNT, 1),
+    f("2nd", "compartments/system/child-system-compartment", OTHER, COUNT, 1)
   ];
 
   var fakeMultiReporters = [
@@ -91,7 +90,7 @@
     { name: "compartments",
       collectReports: function(aCbObj, aClosure) {
         function f(aP) {
-          aCbObj.callback("", aP, SUMMARY, COUNT, 1, "", aClosure);
+          aCbObj.callback("", aP, OTHER, COUNT, 1, "", aClosure);
         }
         f("compartments/user/http:\\\\foo.com\\");
         f("compartments/user/https:\\\\bar.com\\bar?baz");
@@ -110,7 +109,7 @@
     { name: "ghost-windows",
       collectReports: function(aCbObj, aClosure) {
         function f(aP) {
-          aCbObj.callback("", aP, SUMMARY, COUNT, 1, "", aClosure);
+          aCbObj.callback("", aP, OTHER, COUNT, 1, "", aClosure);
         }
         f("ghost-windows/https:\\\\very-long-url.com\\very-long\\oh-so-long\\really-quite-long.html?a=2&b=3&c=4&d=5&e=abcdefghijklmnopqrstuvwxyz&f=123456789123456789123456789");
         f("ghost-windows/http:\\\\foobar.com\\foo?bar#baz");

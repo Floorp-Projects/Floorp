@@ -12,6 +12,7 @@
 #include "nsNetCID.h"
 #include "prnetdb.h"
 #include "prio.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 
@@ -330,7 +331,7 @@ nsServerSocket::Close()
 
 namespace {
 
-class ServerSocketListenerProxy : public nsIServerSocketListener
+class ServerSocketListenerProxy MOZ_FINAL : public nsIServerSocketListener
 {
 public:
   ServerSocketListenerProxy(nsIServerSocketListener* aListener)

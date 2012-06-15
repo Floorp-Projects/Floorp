@@ -167,7 +167,6 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
 
         AdjustTransformForPattern(newMat, aTarget->GetTransform(), aPatternTransform);
 
-        newMat.Invert();
         double x, y;
         cairo_surface_get_device_offset(surf, &x, &y);
         newMat.Translate(-x, -y);
@@ -209,8 +208,6 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
 
         AdjustTransformForPattern(newMat, aTarget->GetTransform(), aPatternTransform);
 
-        newMat.Invert();
-
         mGfxPattern = new (mLinearGradientPattern.addr())
           LinearGradientPattern(Point(x1, y1), Point(x2, y2), mStops, newMat);
 
@@ -247,8 +244,6 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
         Matrix newMat = ToMatrix(matrix);
 
         AdjustTransformForPattern(newMat, aTarget->GetTransform(), aPatternTransform);
-
-        newMat.Invert();
 
         double x1, y1, x2, y2, r1, r2;
         cairo_pattern_get_radial_circles(mPattern, &x1, &y1, &r1, &x2, &y2, &r2);
@@ -417,12 +412,13 @@ gfxPattern::AdjustTransformForPattern(Matrix &aPatternTransform,
                                       const Matrix &aCurrentTransform,
                                       const Matrix *aOriginalTransform)
 {
+  aPatternTransform.Invert();
   if (!aOriginalTransform) {
     return;
   }
 
-  Matrix mat = *aOriginalTransform;
+  Matrix mat = aCurrentTransform;
   mat.Invert();
 
-  aPatternTransform = mat * aCurrentTransform * aPatternTransform;
+  aPatternTransform = aPatternTransform * *aOriginalTransform * mat;
 }

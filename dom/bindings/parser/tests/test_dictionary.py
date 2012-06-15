@@ -1,0 +1,97 @@
+import WebIDL
+
+def WebIDLTest(parser, harness):
+    parser.parse("""
+      dictionary Dict2 : Dict1 {
+        long child = 5;
+        Dict1 aaandAnother;
+      };
+      dictionary Dict1 {
+        long parent;
+        double otherParent;
+      };
+    """)
+    results = parser.finish()
+
+    dict1 = results[1];
+    dict2 = results[0];
+
+    harness.check(len(dict1.members), 2, "Dict1 has two members")
+    harness.check(len(dict2.members), 2, "Dict2 has four members")
+
+    harness.check(dict1.members[0].identifier.name, "otherParent",
+                  "'o' comes before 'p'")
+    harness.check(dict1.members[1].identifier.name, "parent",
+                  "'o' really comes before 'p'")
+    harness.check(dict2.members[0].identifier.name, "aaandAnother",
+                  "'a' comes before 'c'")
+    harness.check(dict2.members[1].identifier.name, "child",
+                  "'a' really comes before 'c'")
+
+    # Now reset our parser
+    parser = WebIDL.Parser()
+    threw = False
+    try:
+        parser.parse("""
+          dictionary Dict {
+            long prop = 5;
+            long prop;
+          };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow name duplication in a dictionary")
+
+    # Now reset our parser again
+    parser = WebIDL.Parser()
+    threw = False
+    try:
+        parser.parse("""
+          dictionary Dict1 : Dict2 {
+            long prop = 5;
+          };
+          dictionary Dict2 : Dict3 {
+            long prop2;
+          };
+          dictionary Dict3 {
+            double prop;
+          };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow name duplication in a dictionary and "
+               "its ancestor")
+
+    # More reset
+    parser = WebIDL.Parser()
+    threw = False
+    try:
+        parser.parse("""
+          interface Iface {};
+          dictionary Dict : Iface {
+            long prop;
+          };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow non-dictionary parents for dictionaries")
+
+    # Even more reset
+    parser = WebIDL.Parser()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary A : B {};
+            dictionary B : A {};
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow cycles in dictionary inheritance chains")

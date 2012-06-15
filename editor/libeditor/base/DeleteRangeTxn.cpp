@@ -5,9 +5,7 @@
 
 #include "DeleteRangeTxn.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMCharacterData.h"
 #include "nsIDOMNodeList.h"
-#include "nsISelection.h"
 #include "DeleteTextTxn.h"
 #include "DeleteElementTxn.h"
 #include "nsIContentIterator.h"
@@ -57,7 +55,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditAggregateTxn)
 
-NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, 
+NS_IMETHODIMP DeleteRangeTxn::Init(nsEditor *aEditor,
                                    nsIDOMRange *aRange,
                                    nsRangeUpdater *aRangeUpdater)
 {

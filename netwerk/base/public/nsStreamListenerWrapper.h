@@ -8,10 +8,11 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 #include "nsIRequestObserver.h"
+#include "mozilla/Attributes.h"
 
 // Wrapper class to make replacement of nsHttpChannel's listener
 // from JavaScript possible. It is workaround for bug 433711 and 682305.
-class nsStreamListenerWrapper : public nsIStreamListener
+class nsStreamListenerWrapper MOZ_FINAL : public nsIStreamListener
 {
 public:
   nsStreamListenerWrapper(nsIStreamListener *listener)

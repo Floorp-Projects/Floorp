@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsGfxCIID.h"
 
@@ -19,7 +20,7 @@
 // late enough; see bug 651498.)
 
 namespace {
-class GfxInitialization : public nsISupports {
+class GfxInitialization MOZ_FINAL : public nsISupports {
     NS_DECL_ISUPPORTS
 };
 

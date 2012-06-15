@@ -10,6 +10,7 @@
 
 #include "IPC/IPCMessageUtils.h"
 #include "mozilla/net/NeckoMessageUtils.h"
+#include "mozilla/Attributes.h"
 
 #include "nsMultiplexInputStream.h"
 #include "nsIMultiplexInputStream.h"
@@ -19,9 +20,9 @@
 #include "nsIIPCSerializable.h"
 #include "nsIClassInfoImpl.h"
 
-class nsMultiplexInputStream : public nsIMultiplexInputStream,
-                               public nsISeekableStream,
-                               public nsIIPCSerializable
+class nsMultiplexInputStream MOZ_FINAL : public nsIMultiplexInputStream,
+                                         public nsISeekableStream,
+                                         public nsIIPCSerializable
 {
 public:
     nsMultiplexInputStream();

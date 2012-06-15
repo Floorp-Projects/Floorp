@@ -243,18 +243,6 @@ public:
     { return GetAccessible(aNode); }
 
   /**
-   * Return true if the given accessible is in document.
-   */
-  bool IsInDocument(Accessible* aAccessible) const
-  {
-    Accessible* acc = aAccessible;
-    while (acc && !acc->IsPrimaryForNode())
-      acc = acc->Parent();
-
-    return acc ? mNodeToAccessibleMap.Get(acc->GetNode()) : false;
-  }
-
-  /**
    * Return the cached accessible by the given unique ID within this document.
    *
    * @note   the unique ID matches with the uniqueID() of nsAccessNode

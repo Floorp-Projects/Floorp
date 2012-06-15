@@ -10,7 +10,7 @@ import java.net.Socket;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 
-import android.util.Log;
+import org.mozilla.gecko.sync.Logger;
 
 import ch.boye.httpclientandroidlib.conn.ssl.SSLSocketFactory;
 import ch.boye.httpclientandroidlib.params.HttpParams;
@@ -52,8 +52,8 @@ public class TLSSocketFactory extends SSLSocketFactory {
       socket.setEnabledCipherSuites(cipherSuites);
     } catch (IllegalArgumentException e) {
       cipherSuites = socket.getSupportedCipherSuites();
-      Log.d(LOG_TAG, "Setting enabled cipher suites failed: " + e.getMessage());
-      Log.d(LOG_TAG, "Using " + cipherSuites.length + " supported suites.");
+      Logger.warn(LOG_TAG, "Setting enabled cipher suites failed: " + e.getMessage());
+      Logger.warn(LOG_TAG, "Using " + cipherSuites.length + " supported suites.");
       socket.setEnabledCipherSuites(cipherSuites);
     }
   }

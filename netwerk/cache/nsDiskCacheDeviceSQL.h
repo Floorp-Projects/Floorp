@@ -19,11 +19,12 @@
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsWeakReference.h"
+#include "mozilla/Attributes.h"
 
 class nsIURI;
 class nsOfflineCacheDevice;
 
-class nsApplicationCacheNamespace : public nsIApplicationCacheNamespace
+class nsApplicationCacheNamespace MOZ_FINAL : public nsIApplicationCacheNamespace
 {
 public:
   NS_DECL_ISUPPORTS
@@ -37,7 +38,7 @@ private:
   nsCString mData;
 };
 
-class nsOfflineCacheEvictionFunction : public mozIStorageFunction {
+class nsOfflineCacheEvictionFunction MOZ_FINAL : public mozIStorageFunction {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION

@@ -440,6 +440,9 @@ XRE_API(void,
         XRE_TelemetryAccumulate, (int aID, PRUint32 aSample))
 
 XRE_API(void,
+        XRE_StartupTimelineRecord, (int aEvent, PRTime aWhen))
+
+XRE_API(void,
         XRE_InitOmnijar, (nsIFile* greOmni,
                           nsIFile* appOmni))
 

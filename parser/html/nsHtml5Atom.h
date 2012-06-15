@@ -6,6 +6,7 @@
 #define nsHtml5Atom_h_
 
 #include "nsIAtom.h"
+#include "mozilla/Attributes.h"
 
 /**
  * A dynamic atom implementation meant for use within the nsHtml5Tokenizer and 
@@ -14,7 +15,7 @@
  *
  * Usage is documented in nsHtml5AtomTable and nsIAtom.
  */
-class nsHtml5Atom : public nsIAtom
+class nsHtml5Atom MOZ_FINAL : public nsIAtom
 {
   public:
     NS_DECL_ISUPPORTS

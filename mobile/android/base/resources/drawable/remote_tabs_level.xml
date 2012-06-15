@@ -5,7 +5,7 @@
 
 <level-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:maxLevel="1" android:drawable="@drawable/tab_close"/>
-    <item android:maxLevel="2" android:drawable="@drawable/tab_new"/>
+    <item android:maxLevel="1" android:drawable="@drawable/remote_tabs_off"/>
+    <item android:maxLevel="2" android:drawable="@drawable/remote_tabs_on"/>
 
 </level-list>

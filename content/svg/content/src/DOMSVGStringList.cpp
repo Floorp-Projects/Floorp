@@ -113,7 +113,7 @@ DOMSVGStringList::InsertItemBefore(const nsAString & newItem,
                                    nsAString & _retval)
 {
   if (newItem.IsEmpty()) { // takes care of DOMStringIsNull too
-    return NS_ERROR_DOM_SVG_INVALID_VALUE_ERR;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
   index = NS_MIN(index, InternalList().Length());
 
@@ -139,7 +139,7 @@ DOMSVGStringList::ReplaceItem(const nsAString & newItem,
                               nsAString & _retval)
 {
   if (newItem.IsEmpty()) { // takes care of DOMStringIsNull too
-    return NS_ERROR_DOM_SVG_INVALID_VALUE_ERR;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
   if (index >= InternalList().Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;

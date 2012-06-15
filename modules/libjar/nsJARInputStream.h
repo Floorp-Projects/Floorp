@@ -10,13 +10,14 @@
 #include "nsIInputStream.h"
 #include "nsJAR.h"
 #include "nsTArray.h"
+#include "mozilla/Attributes.h"
 
 /*-------------------------------------------------------------------------
  * Class nsJARInputStream declaration. This class defines the type of the
  * object returned by calls to nsJAR::GetInputStream(filename) for the
  * purpose of reading a file item out of a JAR file. 
  *------------------------------------------------------------------------*/
-class nsJARInputStream : public nsIInputStream
+class nsJARInputStream MOZ_FINAL : public nsIInputStream
 {
   public:
     nsJARInputStream() : 

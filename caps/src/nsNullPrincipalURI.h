@@ -15,14 +15,15 @@
 #include "nsISizeOf.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 // {51fcd543-3b52-41f7-b91b-6b54102236e6}
 #define NS_NULLPRINCIPALURI_IMPLEMENTATION_CID \
   {0x51fcd543, 0x3b52, 0x41f7, \
     {0xb9, 0x1b, 0x6b, 0x54, 0x10, 0x22, 0x36, 0xe6} }
 
-class nsNullPrincipalURI : public nsIURI
-                         , public nsISizeOf
+class nsNullPrincipalURI MOZ_FINAL : public nsIURI
+                                   , public nsISizeOf
 {
 public:
   NS_DECL_ISUPPORTS

@@ -1,0 +1,50 @@
+# Do not assign a test to multiple references. Chain the references instead.
+# See README.
+
+== test-template-001.xht references/test-template-001.xht
+
+# Module includes, alphabetical sans "CSS". Add/uncomment as necessary.
+
+## CSS Snapshot 2007
+
+# CSS2.1
+# include css2.1/reftest.list
+
+# Animations
+# include animations/reftest.list
+
+# Backgrounds and Borders Level 3
+# include background3/reftest.list
+
+# Fonts Level 3
+# include fonts3/reftest.list
+
+# Image Values and Replaced Content Level 3
+# include images3/reftest.list
+
+# Media Queries Level 3
+# include mediaqueries3/reftest.list
+
+# Multi-column Layout
+# include multicol/reftest.list
+
+# Selectors Level 3
+# include selectors3/reftest.list
+
+# Selectors Level 4
+# include selectors4/reftest.list
+
+# Text Level 3
+# include text3/reftest.list
+
+# Transforms
+# include transforms/reftest.list
+
+# Transitions
+# include transitions/reftest.list
+
+# User Interface Level 3
+# include ui3/reftest.list
+
+# Values and Units Level 3
+# include values/reftest.list
