@@ -96,6 +96,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     {
         if (!GetIonContext()->temp)
             alloc_.construct(GetIonContext()->cx);
+#ifdef JS_CPU_ARM
+        m_buffer.id = GetIonContext()->getNextAssemblerId();
+#endif
     }
 
     // This constructor should only be used when there is no IonContext active
@@ -106,6 +109,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     {
         ionContext_.construct(cx, (js::ion::TempAllocator *)NULL);
         alloc_.construct(cx);
+#ifdef JS_CPU_ARM
+        m_buffer.id = GetIonContext()->getNextAssemblerId();
+#endif
     }
 
     MoveResolver &moveResolver() {

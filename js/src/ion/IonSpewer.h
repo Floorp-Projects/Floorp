@@ -92,6 +92,7 @@ enum IonSpewChannel {
 
 // The IonSpewer is only available on debug builds.
 // None of the global functions have effect on non-debug builds.
+static const int NULL_ID = -1;
 
 #ifdef DEBUG
 
@@ -167,7 +168,7 @@ static inline void IonSpewHeader(IonSpewChannel channel)
 { }
 static inline bool IonSpewEnabled(IonSpewChannel channel)
 { return false; }
-static inline void IonSpewVA(IonSpewChannel, const char *fmt, va_list ap)
+static inline void IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap)
 { }
 
 static inline void EnableChannel(IonSpewChannel)

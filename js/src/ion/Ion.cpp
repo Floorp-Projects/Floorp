@@ -122,7 +122,8 @@ ion::GetIonContext()
 IonContext::IonContext(JSContext *cx, TempAllocator *temp)
   : cx(cx),
     temp(temp),
-    prev_(CurrentIonContext())
+    prev_(CurrentIonContext()),
+    assemblerCount_(0)
 {
     SetIonContext(this);
 }
