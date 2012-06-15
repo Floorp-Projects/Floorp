@@ -316,21 +316,6 @@ XULListboxAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-XULListboxAccessible::GetColumnDescription(PRInt32 aColumn,
-                                           nsAString& aDescription)
-{
-  aDescription.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XULListboxAccessible::GetRowDescription(PRInt32 aRow, nsAString& aDescription)
-{
-  aDescription.Truncate();
-  return NS_OK;
-}
-
 bool
 XULListboxAccessible::IsColSelected(PRUint32 aColIdx)
 {
