@@ -111,7 +111,7 @@ Accessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   *aInstancePtr = nsnull;
 
   if (aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {
-    *aInstancePtr = NS_CYCLE_COLLECTION_PARTICIPANT(Accessible);
+    *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(Accessible);
     return NS_OK;
   }
 

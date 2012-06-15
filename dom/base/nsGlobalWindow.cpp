@@ -539,7 +539,7 @@ nsTimeout::~nsTimeout()
   MOZ_COUNT_DTOR(nsTimeout);
 }
 
-NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsTimeout)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsTimeout)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mWindow,
@@ -1226,7 +1226,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   for (nsTimeout* timeout = tmp->FirstTimeout();
        tmp->IsTimeout(timeout);
        timeout = timeout->Next()) {
-    cb.NoteNativeChild(timeout, NS_CYCLE_COLLECTION_PARTICIPANT(nsTimeout));
+    cb.NoteNativeChild(timeout, &NS_CYCLE_COLLECTION_NAME(nsTimeout));
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLocalStorage)
