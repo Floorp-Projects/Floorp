@@ -351,7 +351,6 @@ CodeGeneratorARM::visitSubI(LSubI *ins)
     const LAllocation *lhs = ins->getOperand(0);
     const LAllocation *rhs = ins->getOperand(1);
     const LDefinition *dest = ins->getDef(0);
-
     if (rhs->isConstant()) {
         masm.ma_sub(ToRegister(lhs), Imm32(ToInt32(rhs)), ToRegister(dest), SetCond);
     } else {
@@ -372,6 +371,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
     MMul *mul = ins->mir();
 
     if (rhs->isConstant()) {
+        // Bailout when this condition is met.
         Assembler::Condition c = Assembler::Overflow;
         // Bailout on -0.0
         int32 constant = ToInt32(rhs);
@@ -384,10 +384,10 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
         // TODO: move these to ma_mul.
         switch (constant) {
           case -1:
-              masm.ma_rsb(ToRegister(lhs), Imm32(0), ToRegister(dest));
+            masm.ma_rsb(ToRegister(lhs), Imm32(0), ToRegister(dest), SetCond);
             break;
           case 0:
-              masm.ma_mov(Imm32(0), ToRegister(dest));
+            masm.ma_mov(Imm32(0), ToRegister(dest));
             return true; // escape overflow check;
           case 1:
             // nop
@@ -395,6 +395,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             return true; // escape overflow check;
           case 2:
             masm.ma_add(ToRegister(lhs), ToRegister(lhs), ToRegister(dest), SetCond);
+            // Overflow is handled later.
             break;
           default: {
             bool handled = false;
