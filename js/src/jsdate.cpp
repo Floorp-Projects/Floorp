@@ -2699,8 +2699,8 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     RootedId toUTCStringId(cx, NameToId(cx->runtime->atomState.toUTCStringAtom));
     RootedId toGMTStringId(cx, NameToId(cx->runtime->atomState.toGMTStringAtom));
     if (!baseops::GetProperty(cx, dateProto, toUTCStringId, &toUTCStringFun) ||
-        !baseops::DefineProperty(cx, dateProto, toGMTStringId, &toUTCStringFun,
-                                 JS_PropertyStub, JS_StrictPropertyStub, 0))
+        !baseops::DefineGeneric(cx, dateProto, toGMTStringId, &toUTCStringFun,
+                                JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
         return NULL;
     }

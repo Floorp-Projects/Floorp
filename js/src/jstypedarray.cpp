@@ -349,7 +349,8 @@ JSBool
 ArrayBufferObject::obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                       JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupGeneric(cx, obj, RootedId(cx, NameToId(name)), objp, propp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return obj_lookupGeneric(cx, obj, id, objp, propp);
 }
 
 JSBool
@@ -387,7 +388,8 @@ JSBool
 ArrayBufferObject::obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                                      JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), objp, propp);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return obj_lookupGeneric(cx, obj, id, objp, propp);
 }
 
 JSBool
@@ -402,7 +404,7 @@ ArrayBufferObject::obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId i
     RootedObject delegate(cx, DelegateObject(cx, obj));
     if (!delegate)
         return false;
-    return baseops::DefineProperty(cx, delegate, id, v, getter, setter, attrs);
+    return baseops::DefineGeneric(cx, delegate, id, v, getter, setter, attrs);
 }
 
 JSBool
@@ -410,7 +412,8 @@ ArrayBufferObject::obj_defineProperty(JSContext *cx, HandleObject obj,
                                       HandlePropertyName name, const Value *v,
                                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    return obj_defineGeneric(cx, obj, RootedId(cx, NameToId(name)), v, getter, setter, attrs);
+    Rooted<jsid> id(cx, NameToId(name));
+    return obj_defineGeneric(cx, obj, id, v, getter, setter, attrs);
 }
 
 JSBool
@@ -429,8 +432,8 @@ JSBool
 ArrayBufferObject::obj_defineSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, const Value *v,
                                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    return obj_defineGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)),
-                             v, getter, setter, attrs);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return obj_defineGeneric(cx, obj, id, v, getter, setter, attrs);
 }
 
 JSBool
@@ -474,7 +477,8 @@ ArrayBufferObject::obj_getProperty(JSContext *cx, HandleObject obj,
     nobj = DelegateObject(cx, nobj);
     if (!nobj)
         return false;
-    return baseops::GetProperty(cx, nobj, receiver, RootedId(cx, NameToId(name)), vp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return baseops::GetProperty(cx, nobj, receiver, id, vp);
 }
 
 JSBool
@@ -503,7 +507,8 @@ JSBool
 ArrayBufferObject::obj_getSpecial(JSContext *cx, HandleObject obj,
                                   HandleObject receiver, HandleSpecialId sid, Value *vp)
 {
-    return obj_getGeneric(cx, obj, receiver, RootedId(cx, SPECIALID_TO_JSID(sid)), vp);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return obj_getGeneric(cx, obj, receiver, id, vp);
 }
 
 JSBool
@@ -548,7 +553,8 @@ ArrayBufferObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id, 
                 obj->reportNotExtensible(cx);
                 return false;
             }
-            if (!SetProto(cx, obj, RootedObject(cx, vp->toObjectOrNull()), true)) {
+            Rooted<JSObject*> newProto(cx, vp->toObjectOrNull());
+            if (!SetProto(cx, obj, newProto, true)) {
                 // this can be caused for example by setting x.__proto__ = x
                 // restore delegate prototype chain
                 SetProto(cx, delegate, oldDelegateProto, true);
@@ -565,7 +571,8 @@ JSBool
 ArrayBufferObject::obj_setProperty(JSContext *cx, HandleObject obj,
                                    HandlePropertyName name, Value *vp, JSBool strict)
 {
-    return obj_setGeneric(cx, obj, RootedId(cx, NameToId(name)), vp, strict);
+    Rooted<jsid> id(cx, NameToId(name));
+    return obj_setGeneric(cx, obj, id, vp, strict);
 }
 
 JSBool
@@ -583,7 +590,8 @@ JSBool
 ArrayBufferObject::obj_setSpecial(JSContext *cx, HandleObject obj,
                                   HandleSpecialId sid, Value *vp, JSBool strict)
 {
-    return obj_setGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), vp, strict);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return obj_setGeneric(cx, obj, id, vp, strict);
 }
 
 JSBool
@@ -605,7 +613,8 @@ JSBool
 ArrayBufferObject::obj_getPropertyAttributes(JSContext *cx, HandleObject obj,
                                              HandlePropertyName name, unsigned *attrsp)
 {
-    return obj_getGenericAttributes(cx, obj, RootedId(cx, NameToId(name)), attrsp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return obj_getGenericAttributes(cx, obj, id, attrsp);
 }
 
 JSBool
@@ -622,7 +631,8 @@ JSBool
 ArrayBufferObject::obj_getSpecialAttributes(JSContext *cx, HandleObject obj,
                                             HandleSpecialId sid, unsigned *attrsp)
 {
-    return obj_getGenericAttributes(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), attrsp);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return obj_getGenericAttributes(cx, obj, id, attrsp);
 }
 
 JSBool
@@ -645,7 +655,8 @@ JSBool
 ArrayBufferObject::obj_setPropertyAttributes(JSContext *cx, HandleObject obj,
                                              HandlePropertyName name, unsigned *attrsp)
 {
-    return obj_setGenericAttributes(cx, obj, RootedId(cx, NameToId(name)), attrsp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return obj_setGenericAttributes(cx, obj, id, attrsp);
 }
 
 JSBool
@@ -662,7 +673,8 @@ JSBool
 ArrayBufferObject::obj_setSpecialAttributes(JSContext *cx, HandleObject obj,
                                             HandleSpecialId sid, unsigned *attrsp)
 {
-    return obj_setGenericAttributes(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), attrsp);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return obj_setGenericAttributes(cx, obj, id, attrsp);
 }
 
 JSBool
@@ -859,7 +871,8 @@ JSBool
 TypedArray::obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupGeneric(cx, obj, RootedId(cx, NameToId(name)), objp, propp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return obj_lookupGeneric(cx, obj, id, objp, propp);
 }
 
 JSBool
@@ -887,7 +900,8 @@ JSBool
 TypedArray::obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
                               JSObject **objp, JSProperty **propp)
 {
-    return obj_lookupGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), objp, propp);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return obj_lookupGeneric(cx, obj, id, objp, propp);
 }
 
 JSBool
@@ -916,7 +930,8 @@ TypedArray::obj_getElementAttributes(JSContext *cx, HandleObject obj, uint32_t i
 JSBool
 TypedArray::obj_getSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp)
 {
-    return obj_getGenericAttributes(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), attrsp);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return obj_getGenericAttributes(cx, obj, id, attrsp);
 }
 
 JSBool
@@ -1106,9 +1121,9 @@ class TypedArrayTemplate
         if (IsDefinitelyIndex(idval, &index))
             return obj_getElement(cx, obj, receiver, index, vp);
 
-        SpecialId sid;
-        if (ValueIsSpecial(obj, &idval, &sid, cx))
-            return obj_getSpecial(cx, obj, receiver, Rooted<SpecialId>(cx, sid), vp);
+        Rooted<SpecialId> sid(cx);
+        if (ValueIsSpecial(obj, &idval, sid.address(), cx))
+            return obj_getSpecial(cx, obj, receiver, sid, vp);
 
         JSAtom *atom = ToAtom(cx, idval);
         if (!atom)
@@ -1117,7 +1132,8 @@ class TypedArrayTemplate
         if (atom->isIndex(&index))
             return obj_getElement(cx, obj, receiver, index, vp);
 
-        return obj_getProperty(cx, obj, receiver, RootedPropertyName(cx, atom->asPropertyName()), vp);
+        Rooted<PropertyName*> name(cx, atom->asPropertyName());
+        return obj_getProperty(cx, obj, receiver, name, vp);
     }
 
     static JSBool
@@ -1235,7 +1251,8 @@ class TypedArrayTemplate
     static JSBool
     obj_setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict)
     {
-        return obj_setGeneric(cx, obj, RootedId(cx, NameToId(name)), vp, strict);
+        Rooted<jsid> id(cx, NameToId(name));
+        return obj_setGeneric(cx, obj, id, vp, strict);
     }
 
     static JSBool
@@ -1260,7 +1277,8 @@ class TypedArrayTemplate
     static JSBool
     obj_setSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict)
     {
-        return obj_setGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), vp, strict);
+        Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+        return obj_setGeneric(cx, obj, id, vp, strict);
     }
 
     static JSBool
@@ -1278,7 +1296,8 @@ class TypedArrayTemplate
     obj_defineProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value *v,
                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
     {
-        return obj_defineGeneric(cx, obj, RootedId(cx, NameToId(name)), v, getter, setter, attrs);
+        Rooted<jsid> id(cx, NameToId(name));
+        return obj_defineGeneric(cx, obj, id, v, getter, setter, attrs);
     }
 
     static JSBool
@@ -1293,7 +1312,8 @@ class TypedArrayTemplate
     obj_defineSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, const Value *v,
                       PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
     {
-        return obj_defineGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), v, getter, setter, attrs);
+        Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+        return obj_defineGeneric(cx, obj, id, v, getter, setter, attrs);
     }
 
     static JSBool
@@ -1537,7 +1557,8 @@ class TypedArrayTemplate
             }
         }
 
-        return fromBuffer(cx, dataObj, byteOffset, length, RootedObject(cx));
+        Rooted<JSObject*> proto(cx, NULL);
+        return fromBuffer(cx, dataObj, byteOffset, length, proto);
     }
 
     /* subarray(start[, end]) */
@@ -2893,15 +2914,19 @@ JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
       MOZ_ASSERT(nelements <= INT32_MAX);                                                    \
       return TypedArrayTemplate<NativeType>::fromLength(cx, nelements);                      \
   }                                                                                          \
-  JS_FRIEND_API(JSObject *) JS_New ## Name ## ArrayFromArray(JSContext *cx, JSObject *other) \
+  JS_FRIEND_API(JSObject *) JS_New ## Name ## ArrayFromArray(JSContext *cx, JSObject *other_)\
   {                                                                                          \
-      return TypedArrayTemplate<NativeType>::fromArray(cx, RootedObject(cx, other));      \
+      Rooted<JSObject*> other(cx, other_);                                                   \
+      return TypedArrayTemplate<NativeType>::fromArray(cx, other);                           \
   }                                                                                          \
   JS_FRIEND_API(JSObject *) JS_New ## Name ## ArrayWithBuffer(JSContext *cx,                 \
-                               JSObject *arrayBuffer, uint32_t byteoffset, int32_t length)   \
+                               JSObject *arrayBuffer_, uint32_t byteoffset, int32_t length)  \
   {                                                                                          \
       MOZ_ASSERT(byteoffset <= INT32_MAX);                                                   \
-      return TypedArrayTemplate<NativeType>::fromBuffer(cx, RootedObject(cx, arrayBuffer), byteoffset, length, RootedObject(cx)); \
+      Rooted<JSObject*> arrayBuffer(cx, arrayBuffer_);                                       \
+      Rooted<JSObject*> proto(cx, NULL);                                                     \
+      return TypedArrayTemplate<NativeType>::fromBuffer(cx, arrayBuffer, byteoffset, length, \
+                                                        proto);                              \
   }                                                                                          \
   JS_FRIEND_API(JSBool) JS_Is ## Name ## Array(JSObject *obj, JSContext *cx)                 \
   {                                                                                          \

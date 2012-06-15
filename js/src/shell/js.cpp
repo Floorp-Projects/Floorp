@@ -2782,7 +2782,8 @@ static JSBool
 resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags, JSObject **objp)
 {
     jsval v = JS_GetReservedSlot(obj, 0);
-    return CopyProperty(cx, obj, RootedObject(cx, JSVAL_TO_OBJECT(v)), id, flags, objp);
+    Rooted<JSObject*> vobj(cx, &v.toObject());
+    return CopyProperty(cx, obj, vobj, id, flags, objp);
 }
 
 static JSBool
@@ -2794,8 +2795,10 @@ resolver_enumerate(JSContext *cx, HandleObject obj)
     AutoIdArray ida(cx, JS_Enumerate(cx, referent));
     bool ok = !!ida;
     JSObject *ignore;
-    for (size_t i = 0; ok && i < ida.length(); i++)
-        ok = CopyProperty(cx, obj, referent, RootedId(cx, ida[i]), JSRESOLVE_QUALIFIED, &ignore);
+    for (size_t i = 0; ok && i < ida.length(); i++) {
+        Rooted<jsid> id(cx, ida[i]);
+        ok = CopyProperty(cx, obj, referent, id, JSRESOLVE_QUALIFIED, &ignore);
+    }
     return ok;
 }
 
@@ -3147,13 +3150,13 @@ Parent(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    JSObject *parent = JS_GetParent(JSVAL_TO_OBJECT(v));
+    Rooted<JSObject*> parent(cx, JS_GetParent(&v.toObject()));
     *vp = OBJECT_TO_JSVAL(parent);
 
     /* Outerize if necessary.  Embrace the ugliness! */
     if (parent) {
         if (JSObjectOp op = parent->getClass()->ext.outerObject)
-            *vp = OBJECT_TO_JSVAL(op(cx, RootedObject(cx, parent)));
+            *vp = OBJECT_TO_JSVAL(op(cx, parent));
     }
 
     return true;
