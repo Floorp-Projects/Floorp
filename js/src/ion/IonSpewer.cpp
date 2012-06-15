@@ -265,14 +265,38 @@ ion::CheckLogging()
 }
 
 void
-ion::IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap)
+ion::IonSpewStartVA(IonSpewChannel channel, const char *fmt, va_list ap)
 {
     if (!IonSpewEnabled(channel))
         return;
 
     IonSpewHeader(channel);
     vfprintf(stderr, fmt, ap);
+}
+
+void
+ion::IonSpewContVA(IonSpewChannel channel, const char *fmt, va_list ap)
+{
+    if (!IonSpewEnabled(channel))
+        return;
+
+    vfprintf(stderr, fmt, ap);
+}
+
+void
+ion::IonSpewFin(IonSpewChannel channel)
+{
+    if (!IonSpewEnabled(channel))
+        return;
+
     fprintf(stderr, "\n");
+}
+
+void
+ion::IonSpewVA(IonSpewChannel channel, const char *fmt, va_list ap)
+{
+    IonSpewStartVA(channel, fmt, ap);
+    IonSpewFin(channel);
 }
 
 void
@@ -281,6 +305,23 @@ ion::IonSpew(IonSpewChannel channel, const char *fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     IonSpewVA(channel, fmt, ap);
+    va_end(ap);
+}
+
+void
+ion::IonSpewStart(IonSpewChannel channel, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    IonSpewStartVA(channel, fmt, ap);
+    va_end(ap);
+}
+void
+ion::IonSpewCont(IonSpewChannel channel, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    IonSpewContVA(channel, fmt, ap);
     va_end(ap);
 }
 
