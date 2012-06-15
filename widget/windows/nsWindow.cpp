@@ -6410,6 +6410,25 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
       if (msg.message == WM_DEADCHAR) {
         return false;
       }
+#ifdef DEBUG
+      if (KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
+        nsPrintfCString log(
+          "virtualKeyCode=0x%02X, inputtingChar={ mChars=[ 0x%04X, 0x%04X, "
+          "0x%04X, 0x%04X, 0x%04X ], mLength=%d }, wParam=0x%04X",
+          virtualKeyCode, inputtingChars.mChars[0], inputtingChars.mChars[1],
+          inputtingChars.mChars[2], inputtingChars.mChars[3],
+          inputtingChars.mChars[4], inputtingChars.mLength, msg.wParam);
+        if (!inputtingChars.mLength) {
+          log.Insert("length is zero: ", 0);
+          NS_ERROR(log.get());
+          NS_ABORT();
+        } else if (inputtingChars.mChars[0] != msg.wParam) {
+          log.Insert("character mismatch: ", 0);
+          NS_ERROR(log.get());
+          NS_ABORT();
+        }
+      }
+#endif // #ifdef DEBUG
       return OnChar(msg, nativeKey, aModKeyState, nsnull, extraFlags);
     }
 
