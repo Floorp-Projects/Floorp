@@ -211,12 +211,13 @@ struct nsAlternativeCharCode; // defined in nsGUIEvent.h
 struct nsFakeCharMessage {
   UINT mCharCode;
   UINT mScanCode;
+  bool mIsDeadKey;
 
   MSG GetCharMessage(HWND aWnd)
   {
     MSG msg;
     msg.hwnd = aWnd;
-    msg.message = WM_CHAR;
+    msg.message = mIsDeadKey ? WM_DEADCHAR : WM_CHAR;
     msg.wParam = static_cast<WPARAM>(mCharCode);
     msg.lParam = static_cast<LPARAM>(mScanCode);
     msg.time = 0;
