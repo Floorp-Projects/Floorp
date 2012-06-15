@@ -58,6 +58,8 @@ JS_STATIC_ASSERT(1 << defaultShift == sizeof(jsval));
 class MacroAssemblerARM : public Assembler
 {
   public:
+    MacroAssemblerARM() {
+    }
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
