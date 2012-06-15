@@ -87,7 +87,7 @@ class nsDataObj : public IDataObject,
 {
   public: // construction, destruction
     nsDataObj(nsIURI *uri = nsnull);
-    ~nsDataObj();
+    virtual ~nsDataObj();
 
 	public: // IUnknown methods - see iunknown.h for documentation
 		STDMETHODIMP_(ULONG) AddRef        ();

@@ -8,8 +8,8 @@
 
 gfxReusableSurfaceWrapper::gfxReusableSurfaceWrapper(gfxImageSurface* aSurface)
   : mSurface(aSurface)
-  , mSurfaceData(aSurface->Data())
   , mFormat(aSurface->Format())
+  , mSurfaceData(aSurface->Data())
   , mReadCount(0)
 {
   MOZ_COUNT_CTOR(gfxReusableSurfaceWrapper);

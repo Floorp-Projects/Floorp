@@ -115,7 +115,7 @@ endif
 
 ifeq (WINNT,$(OS_TARGET))
 EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB) $(NSPR_LIBS)
-OS_LIBS += $(call EXPAND_LIBNAME,usp10)
+OS_LIBS += $(call EXPAND_LIBNAME,usp10 ole32)
 
 # OTS uses uncompress2() from libz, so we need to link with this
 ifdef MOZ_NATIVE_ZLIB

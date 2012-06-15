@@ -64,14 +64,18 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug691059.html \
 		test_bug745483.html \
 		file_bug758563.html \
+		test_bug764389.html \
 		file_nodelists.html \
 		file_bug706301.html \
 		file_exnstack.html \
 		file_expandosharing.html \
+		file_bug760131.html \
+		file_empty.html \
 		$(NULL)
 
 _CHROME_FILES	= \
 		test_bug361111.xul \
+		test_bug760131.html \
 		$(NULL)
 
 ifneq ($(OS_TARGET),Android)

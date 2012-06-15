@@ -148,8 +148,6 @@ struct SharedContext {
     const RootedObject scopeChain_; /* scope chain object for the script */
 
   public:
-    const unsigned  staticLevel;    /* static compilation unit nesting level */
-
     Bindings        bindings;       /* bindings in this code, including
                                        arguments if we're compiling a function */
     Bindings::AutoRooter bindingsRoot; /* root for stack allocated bindings. */
@@ -158,8 +156,7 @@ struct SharedContext {
 
     // If it's function code, fun must be non-NULL and scopeChain must be NULL.
     // If it's global code, fun and funbox must be NULL.
-    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox,
-                         unsigned staticLevel);
+    inline SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fun, FunctionBox *funbox);
 
     // In theory, |fun*| flags are only relevant if |inFunction()| is true.
     // However, we get and set in some cases where |inFunction()| is false,
@@ -218,6 +215,8 @@ struct Parser;
 struct TreeContext {                /* tree context for semantic checks */
     SharedContext   *sc;            /* context shared between parsing and bytecode generation */
 
+    const unsigned  staticLevel;    /* static compilation unit nesting level */
+
     uint32_t        parenDepth;     /* nesting depth of parens that might turn out
                                        to be generator expressions */
     uint32_t        yieldCount;     /* number of |yield| tokens encountered at
@@ -268,7 +267,7 @@ struct TreeContext {                /* tree context for semantic checks */
 
     void trace(JSTracer *trc);
 
-    inline TreeContext(Parser *prs, SharedContext *sc);
+    inline TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel);
     inline ~TreeContext();
 
     inline bool init();

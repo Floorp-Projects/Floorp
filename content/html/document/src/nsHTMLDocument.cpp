@@ -42,6 +42,7 @@
 #include "nsContentList.h"
 #include "nsDOMError.h"
 #include "nsIPrincipal.h"
+#include "nsJSPrincipals.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsAttrName.h"
 #include "nsNodeUtils.h"
@@ -1554,6 +1555,13 @@ nsHTMLDocument::Open(const nsAString& aContentTypeOrUrl,
   --mWriteLevel;
 
   SetReadyStateInternal(nsIDocument::READYSTATE_LOADING);
+
+  // After changing everything around, make sure that the principal on the
+  // document's compartment exactly matches NodePrincipal().
+  DebugOnly<JSObject*> wrapper = GetWrapperPreserveColor();
+  MOZ_ASSERT_IF(wrapper,
+                JS_GetCompartmentPrincipals(js::GetObjectCompartment(wrapper)) ==
+                nsJSPrincipals::get(NodePrincipal()));
 
   NS_ENSURE_SUCCESS(rv, rv);
   return CallQueryInterface(this, aReturn);

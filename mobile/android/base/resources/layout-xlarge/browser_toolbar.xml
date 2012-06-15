@@ -18,15 +18,14 @@
                      android:background="@drawable/tabs_button"
                      android:gravity="center_vertical"
                      android:src="@drawable/tabs_level"
-                     android:paddingTop="6dip"
-                     android:paddingLeft="12dip"
-                     android:paddingRight="44dip"/>
+                     android:paddingLeft="6dip"
+                     android:paddingRight="32dip"/>
 
         <TextSwitcher android:id="@+id/tabs_count"
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="52dip"
                      android:layout_height="wrap_content"
-                     android:layout_marginTop="6dp"
+                     android:layout_marginTop="8dp"
                      android:layout_alignLeft="@id/tabs"
                      android:gravity="center_horizontal"/>
 

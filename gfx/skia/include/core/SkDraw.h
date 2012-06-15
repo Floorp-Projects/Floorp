@@ -130,13 +130,14 @@ class SkGlyphCache;
 class SkTextToPathIter {
 public:
     SkTextToPathIter(const char text[], size_t length, const SkPaint& paint,
-                     bool applyStrokeAndPathEffects);
+                     bool applyStrokeAndPathEffects, bool useCanonicalTextSize = true);
     ~SkTextToPathIter();
 
     const SkPaint&  getPaint() const { return fPaint; }
     SkScalar        getPathScale() const { return fScale; }
 
     const SkPath*   next(SkScalar* xpos);   //!< returns nil when there are no more paths
+    bool            nextWithWhitespace(const SkPath** path, SkScalar* xpos);   //!< returns false when there are no more paths
 
 private:
     SkGlyphCache*   fCache;

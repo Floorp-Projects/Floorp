@@ -64,7 +64,7 @@ fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)||(azureQuartz&&/Mac\x20OS
 == evenodd-fill-3.html nonzero-fill-2.html
 
 == dash-sanity.html data:text/html,<body>Pass
-random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
+fuzzy-if(azureSkia,9,470) random-if(Android) == dash-1.html dash-1-ref.svg  # Bug 668412 (really is android-specific, not IPC-specific)
 
 == ctm-sanity.html data:text/html,<body>Pass
 fails == ctm-singular-sanity.html data:text/html,<body>Pass  # Bug 612033

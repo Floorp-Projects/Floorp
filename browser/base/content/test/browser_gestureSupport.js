@@ -45,6 +45,7 @@ let test_expectedType;
 let test_expectedDirection;
 let test_expectedDelta;
 let test_expectedModifiers;
+let test_expectedClickCount;
 
 function test_gestureListener(evt)
 {
@@ -75,6 +76,10 @@ function test_gestureListener(evt)
   is(evt.metaKey, (test_expectedModifiers & Components.interfaces.nsIDOMNSEvent.META_MASK) != 0,
      "evt.metaKey did not match expected value");
 
+  if (evt.type == "MozTapGesture") {
+    is(evt.clickCount, test_expectedClickCount, "evt.clickCount does not match");
+  }
+
   test_eventCount++;
 }
 
@@ -90,6 +95,24 @@ function test_helper1(type, direction, delta, modifiers)
 
   document.addEventListener(type, test_gestureListener, true);
   test_utils.sendSimpleGestureEvent(type, 20, 20, direction, delta, modifiers);
+  document.removeEventListener(type, test_gestureListener, true);
+
+  is(expectedEventCount, test_eventCount, "Event (" + type + ") was never received by event listener");
+}
+
+function test_clicks(type, clicks)
+{
+  // Setup the expected values
+  test_expectedType = type;
+  test_expectedDirection = 0;
+  test_expectedDelta = 0;
+  test_expectedModifiers = 0;
+  test_expectedClickCount = clicks;
+
+  let expectedEventCount = test_eventCount + 1;
+
+  document.addEventListener(type, test_gestureListener, true);
+  test_utils.sendSimpleGestureEvent(type, 20, 20, 0, 0, 0, clicks);
   document.removeEventListener(type, test_gestureListener, true);
 
   is(expectedEventCount, test_eventCount, "Event (" + type + ") was never received by event listener");
@@ -126,8 +149,13 @@ function test_TestEventListeners()
   e("MozRotateGesture", SimpleGestureEvent.ROTATION_CLOCKWISE, 33.0, 0);
   
   // Tap and presstap gesture events
-  e("MozTapGesture", 0, 0.0, 0);
-  e("MozPressTapGesture", 0, 0.0, 0);
+  test_clicks("MozTapGesture", 1);
+  test_clicks("MozTapGesture", 2);
+  test_clicks("MozTapGesture", 3);
+  test_clicks("MozPressTapGesture", 1);
+
+  // simple delivery test for edgeui gesture
+  e("MozEdgeUIGesture", 0, 0, 0);
 
   // event.shiftKey
   let modifier = Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
@@ -171,7 +199,7 @@ function test_helper2(type, direction, delta, altKey, ctrlKey, shiftKey, metaKey
                                  10, 10, 10, 10,
                                  ctrlKey, altKey, shiftKey, metaKey,
                                  1, window,
-                                 direction, delta);
+                                 direction, delta, 0);
     successful = true;
   }
   catch (ex) {

@@ -2179,6 +2179,12 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
       }
     }
   }
+
+  // Refresh the principal on the compartment.
+  nsPIDOMWindow* win = GetInnerWindow();
+  if (win) {
+    win->RefreshCompartmentPrincipal();
+  }
 }
 
 nsresult
@@ -8416,7 +8422,8 @@ NS_IMETHODIMP
 nsDocument::CreateTouchList(nsIVariant* aPoints,
                             nsIDOMTouchList** aRetVal)
 {
-  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
+  nsRefPtr<nsDOMTouchList> retval =
+    new nsDOMTouchList(static_cast<nsIDocument*>(this));
   if (aPoints) {
     PRUint16 type;
     aPoints->GetDataType(&type);

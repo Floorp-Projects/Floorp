@@ -43,7 +43,9 @@ public class TabsTray extends LinearLayout
 
     private GestureDetector mGestureDetector;
     private TabSwipeGestureListener mListener;
-    private static final int SWIPE_CLOSE_VELOCITY = 1000;
+    // Minimum velocity swipe that will close a tab, in inches/sec
+    private static final int SWIPE_CLOSE_VELOCITY = 5;
+    // Time to animate non-flicked tabs of screen, in milliseconds
     private static final int MAX_ANIMATION_TIME = 250;
     private static enum DragDirection {
         UNKNOWN,
@@ -282,6 +284,9 @@ public class TabsTray extends LinearLayout
                     tabs.closeTab(tab);
                 }
             });
+        } else if (x != 0 && mWaitingForClose) {
+          // if this asked us to close, but we were already doing it just bail out
+          return;
         }
         pa.start();
     }
@@ -371,9 +376,13 @@ public class TabsTray extends LinearLayout
             if (mView == null || Tabs.getInstance().getCount() == 1)
                 return false;
 
+            // velocityX is in pixels/sec. divide by pixels/inch to compare it with swipe velocity
             if (Math.abs(velocityX)/GeckoAppShell.getDpi() > SWIPE_CLOSE_VELOCITY) {
+                // is this is a swipe, we want to continue the row moving at the swipe velocity
                 float d = (velocityX > 0 ? 1 : -1) * mView.getWidth();
-                animateTo(mView, (int)d, (int)(d/velocityX));
+                // convert the velocity (px/sec) to ms by taking the distance
+                // multiply by 1000 to convert seconds to milliseconds
+                animateTo(mView, (int)d, (int)((d + mView.getScrollX())*1000/velocityX));
             }
 
             return false; 

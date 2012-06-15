@@ -119,7 +119,7 @@ StackFrame::copyFrameAndValues(JSContext *cx, T *vp, StackFrame *otherfp, U *oth
         *dst = *src;
 
     if (cx->compartment->debugMode())
-        cx->runtime->debugScopes->onGeneratorFrameChange(otherfp, this);
+        cx->runtime->debugScopes->onGeneratorFrameChange(otherfp, this, cx);
 }
 
 /* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
@@ -299,7 +299,7 @@ StackFrame::epilogue(JSContext *cx)
     }
 
     if (cx->compartment->debugMode())
-        cx->runtime->debugScopes->onPopCall(this);
+        cx->runtime->debugScopes->onPopCall(this, cx);
 
     Probes::exitJSFun(cx, fun(), script());
 

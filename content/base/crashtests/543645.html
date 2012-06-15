@@ -1,0 +1,14 @@
+<!doctype html>
+<body> <span></span> <script>
+function boom() {
+  var range = document.createRange();
+  range.setEnd(document.body.childNodes[2], 0);
+  window.addEventListener("DOMNodeInserted", f, true);
+  function f() {
+    window.removeEventListener("DOMNodeInserted", f, true);
+    range.deleteContents();
+  }
+  range.deleteContents();
+}
+window.addEventListener("load", boom, false);
+</script>

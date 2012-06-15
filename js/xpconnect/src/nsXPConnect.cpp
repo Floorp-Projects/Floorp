@@ -2619,7 +2619,6 @@ Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
     return true;
 }
 
-#ifdef DEBUG
 void
 DumpJSHeap(FILE* file)
 {
@@ -2631,7 +2630,6 @@ DumpJSHeap(FILE* file)
     }
     js::DumpHeapComplete(xpc->GetRuntime()->GetJSRuntime(), file);
 }
-#endif
 
 void
 SetLocationForGlobal(JSObject *global, const nsACString& location)
