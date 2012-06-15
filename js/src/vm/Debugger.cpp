@@ -840,7 +840,7 @@ Debugger::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Va
 
     /* Check that rv is {return: val} or {throw: val}. */
     JSContext *cx = ac.context;
-    JSObject *obj;
+    Rooted<JSObject*> obj(cx);
     const Shape *shape;
     jsid returnId = NameToId(cx->runtime->atomState.returnAtom);
     jsid throwId = NameToId(cx->runtime->atomState.throwAtom);
@@ -878,11 +878,13 @@ CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc,
 {
     rval->setUndefined();
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
+    if (!atom)
+        return false;
+
+    Rooted<jsid> id(cx, AtomToId(atom));
     Value fval;
-    return atom &&
-           GetMethod(cx, obj, RootedId(cx, AtomToId(atom)), 0, &fval) &&
-           (!js_IsCallable(fval) ||
-            Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
+    return GetMethod(cx, obj, id, 0, &fval) &&
+           (!js_IsCallable(fval) || Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
 }
 
 JSTrapStatus
@@ -1128,7 +1130,8 @@ Debugger::onTrap(JSContext *cx, Value *vp)
             if (!dbg->getScriptFrame(cx, fp, &argv[0]))
                 return dbg->handleUncaughtException(ac, vp, false);
             Value rv;
-            bool ok = CallMethodIfPresent(cx, RootedObject(cx, bp->handler), "hit", 1, argv, &rv);
+            Rooted<JSObject*> handler(cx, bp->handler);
+            bool ok = CallMethodIfPresent(cx, handler, "hit", 1, argv, &rv);
             JSTrapStatus st = dbg->parseResumptionValue(ac, ok, rv, vp, true);
             if (st != JSTRAP_CONTINUE)
                 return st;
@@ -2319,7 +2322,8 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     result->ensureDenseArrayInitializedLength(cx, 0, scripts.length());
 
     for (size_t i = 0; i < scripts.length(); i++) {
-        JSObject *scriptObject = dbg->wrapScript(cx, Rooted<JSScript*>(cx, scripts[i]));
+        JSObject *scriptObject =
+            dbg->wrapScript(cx, Handle<JSScript*>::fromMarkedLocation(&scripts[i]));
         if (!scriptObject)
             return false;
         result->setDenseArrayElement(i, ObjectValue(*scriptObject));
@@ -2537,11 +2541,13 @@ DebuggerScript_getChildScripts(JSContext *cx, unsigned argc, Value *vp)
          * It is not really a child script of this script, so skip it.
          */
         ObjectArray *objects = script->objects();
+        Rooted<JSScript*> script(cx);
         for (uint32_t i = script->savedCallerFun ? 1 : 0; i < objects->length; i++) {
             JSObject *obj = objects->vector[i];
             if (obj->isFunction()) {
                 JSFunction *fun = static_cast<JSFunction *>(obj);
-                JSObject *s = dbg->wrapScript(cx, Rooted<JSScript*>(cx, fun->script()));
+                script = fun->script();
+                JSObject *s = dbg->wrapScript(cx, script);
                 if (!s || !js_NewbornArrayPush(cx, result, ObjectValue(*s)))
                     return false;
             }
@@ -3208,7 +3214,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         SetReservedSlot(argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj));
 
         JS_ASSERT(fp->numActualArgs() <= 0x7fffffff);
-        int32_t fargc = int32_t(fp->numActualArgs());
+        unsigned fargc = fp->numActualArgs();
         if (!DefineNativeProperty(cx, argsobj, cx->runtime->atomState.lengthAtom,
                                   Int32Value(fargc), NULL, NULL,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
@@ -3216,12 +3222,16 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
             return false;
         }
 
-        for (int32_t i = 0; i < fargc; i++) {
+        Rooted<jsid> id(cx);
+        for (unsigned i = 0; i < fargc; i++) {
             RootedFunction getobj(cx);
             getobj = js_NewFunction(cx, NULL, DebuggerArguments_getArg, 0, 0, global, NULL,
                                     JSFunction::ExtendedFinalizeKind);
+            if (!getobj)
+                return false;
+            id = INT_TO_JSID(i);
             if (!getobj ||
-                !DefineNativeProperty(cx, argsobj, RootedId(cx, INT_TO_JSID(i)), UndefinedValue(),
+                !DefineNativeProperty(cx, argsobj, id, UndefinedValue(),
                                       JS_DATA_TO_FUNC_PTR(PropertyOp, getobj.reference()), NULL,
                                       JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER, 0, 0))
             {
@@ -3247,7 +3257,8 @@ DebuggerFrame_getScript(JSContext *cx, unsigned argc, Value *vp)
     if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
         JSFunction &callee = fp->callee();
         if (callee.isInterpreted()) {
-            scriptObject = debug->wrapScript(cx, Rooted<JSScript*>(cx, callee.script()));
+            Rooted<JSScript*> script(cx, callee.script());
+            scriptObject = debug->wrapScript(cx, script);
             if (!scriptObject)
                 return false;
         }
@@ -3256,8 +3267,8 @@ DebuggerFrame_getScript(JSContext *cx, unsigned argc, Value *vp)
          * We got eval, JS_Evaluate*, or JS_ExecuteScript non-function script
          * frames.
          */
-        JSScript *script = fp->script();
-        scriptObject = debug->wrapScript(cx, Rooted<JSScript*>(cx, script));
+        Rooted<JSScript*> script(cx, fp->script());
+        scriptObject = debug->wrapScript(cx, script);
         if (!scriptObject)
             return false;
     }
@@ -3447,7 +3458,8 @@ DebuggerFrameEval(JSContext *cx, unsigned argc, Value *vp, EvalBindingsMode mode
         }
         for (size_t i = 0; i < keys.length(); i++) {
             Value *valp = &values[i];
-            if (!bindingsobj->getGeneric(cx, bindingsobj, RootedId(cx, keys[i]), valp) ||
+            if (!bindingsobj->getGeneric(cx, bindingsobj,
+                                         Handle<jsid>::fromMarkedLocation(&keys[i]), valp) ||
                 !dbg->unwrapDebuggeeValue(cx, valp))
             {
                 return false;
@@ -3716,7 +3728,8 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    JSObject *scriptObject = dbg->wrapScript(cx, Rooted<JSScript*>(cx, fun->script()));
+    Rooted<JSScript*> script(cx, fun->script());
+    JSObject *scriptObject = dbg->wrapScript(cx, script);
     if (!scriptObject)
         return false;
 
@@ -3919,8 +3932,11 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         ErrorCopier ec(ac, dbg->toJSObject());
         for (size_t i = 0; i < n; i++) {
             bool dummy;
-            if (!DefineProperty(cx, obj, RootedId(cx, rewrappedIds[i]), rewrappedDescs[i], true, &dummy))
+            if (!DefineProperty(cx, obj, Handle<jsid>::fromMarkedLocation(&rewrappedIds[i]),
+                                rewrappedDescs[i], true, &dummy))
+            {
                 return false;
+            }
         }
     }
 
