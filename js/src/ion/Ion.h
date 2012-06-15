@@ -155,8 +155,11 @@ class IonContext
 
     JSContext *cx;
     TempAllocator *temp;
-
+    int getNextAssemblerId() {
+        return assemblerCount_++;
+    }
   private:
+    int assemblerCount_;
     IonContext *prev_;
 };
 

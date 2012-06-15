@@ -1286,7 +1286,7 @@ class Assembler
     // ends up in the register.
     template <class Iter>
     static const uint32 * getCF32Target(Iter *iter);
-    
+
     static uintptr_t getPointer(uint8 *);
     template <class Iter>
     static const uint32 * getPtr32Target(Iter *iter, Register *dest = NULL, RelocStyle *rs = NULL);

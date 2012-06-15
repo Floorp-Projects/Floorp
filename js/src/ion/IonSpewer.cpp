@@ -332,6 +332,7 @@ ion::IonSpewHeader(IonSpewChannel channel)
         return;
 
     fprintf(stderr, "[%s] ", ChannelNames[channel]);
+
 }
 
 bool
