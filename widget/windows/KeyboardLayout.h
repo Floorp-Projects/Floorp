@@ -209,6 +209,8 @@ private:
   }
 
 public:
+  static void FillKbdState(PBYTE aKbdState, const ShiftState aShiftState);
+
   bool IsDeadKey(ShiftState aShiftState) const
   {
     return (mIsDeadKey & (1 << aShiftState)) != 0;
@@ -285,9 +287,6 @@ class KeyboardLayout
   Modifiers mModifiersOfChars[5];
   PRUint8 mNumOfChars;
 
-  static VirtualKey::ShiftState GetShiftState(const PBYTE aKbdState);
-  static void SetShiftState(PBYTE aKbdState,
-                            VirtualKey::ShiftState aShiftState);
   static inline PRInt32 GetKeyIndex(PRUint8 aVirtualKey);
   static int CompareDeadKeyEntries(const void* aArg1, const void* aArg2,
                                    void* aData);
@@ -318,8 +317,16 @@ public:
   bool IsDeadKey(PRUint8 aVirtualKey,
                  const ModifierKeyState& aModKeyState) const;
 
+  /**
+   * OnKeyDown() must be called when actually widget receives WM_KEYDOWN
+   * message.  This method is stateful.  This saves current dead key state
+   * and computes current inputted character(s).
+   */
+  void OnKeyDown(PRUint8 aVirtualKey,
+                 const ModifierKeyState& aModKeyState);
+
   void LoadLayout(HKL aLayout);
-  void OnKeyDown(PRUint8 aVirtualKey);
+
   PRUint32 GetUniChars(PRUnichar* aUniChars, Modifiers* aModifiersOfUniChars,
                        PRUint32 aMaxChars) const;
   PRUint32 GetUniCharsWithShiftState(PRUint8 aVirtualKey, Modifiers aModifiers,
