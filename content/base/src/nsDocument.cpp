@@ -9608,6 +9608,14 @@ nsIDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
                                     &aWindowSizes->mLayoutPresContext);
   }
 
+  aWindowSizes->mPropertyTables +=
+    mPropertyTable.SizeOfExcludingThis(aWindowSizes->mMallocSizeOf);
+  for (PRUint32 i = 0, count = mExtraPropertyTables.Length();
+       i < count; ++i) {
+    aWindowSizes->mPropertyTables +=
+      mExtraPropertyTables[i]->SizeOfExcludingThis(aWindowSizes->mMallocSizeOf);
+  }
+
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
   // - many!
