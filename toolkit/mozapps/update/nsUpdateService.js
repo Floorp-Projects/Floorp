@@ -1604,6 +1604,10 @@ UpdateService.prototype = {
                                       "UPDATER_UPDATES_ENABLED");
       this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_AUTO,
                                       "UPDATER_UPDATES_AUTOMATIC");
+#ifdef XP_WIN
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ENABLED,
+                                      "UPDATER_SERVICE_ENABLED");
+#endif
 
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
 
