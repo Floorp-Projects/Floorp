@@ -433,6 +433,9 @@ class Assembler : public AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
+    void xorq(const Register &src, const Register &dest) {
+        masm.xorq_rr(src.code(), dest.code());
+    }
 
     void mov(ImmWord word, const Register &dest) {
         movq(word, dest);

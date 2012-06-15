@@ -195,6 +195,16 @@ class BoxPolicy : public BoxInputsPolicy
     }
 };
 
+template <unsigned Op>
+class ArgumentsPolicy : public BoxInputsPolicy
+{
+  public:
+    static bool staticAdjustInputs(MInstruction *ins);
+    bool adjustInputs(MInstruction *ins) {
+        return staticAdjustInputs(ins);
+    }
+};
+
 // Ignore the input, unless unspecialized, and then use BoxInputsPolicy.
 class SimplePolicy : public BoxInputsPolicy
 {
