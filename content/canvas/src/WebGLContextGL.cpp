@@ -3849,6 +3849,9 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
     if (width < 0 || height < 0)
         return ErrorInvalidValue("readPixels: negative size passed");
 
+    if (!pixels)
+        return ErrorInvalidValue("readPixels: null destination buffer");
+
     const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
     WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     WebGLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
