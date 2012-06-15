@@ -217,24 +217,14 @@ int main(int argc, char* argv[])
   // Don't change the order of these enumeration constants, the order matters
   // for reporting telemetry data.  If new values are added adjust the
   // STARTUP_USING_PRELOAD histogram.
-  enum PreloadReason { PRELOAD_NONE, PRELOAD_SERVICE, PRELOAD_IOCOUNT };
+  enum PreloadReason { PRELOAD_NONE, PRELOAD_SERVICE };
   PreloadReason preloadReason = PRELOAD_NONE;
 
-  // GetProcessIoCounters().ReadOperationCount seems to have little to
-  // do with actual read operations. It reports 0 or 1 at this stage
-  // in the program. Luckily 1 coincides with when prefetch is
-  // enabled. If Windows prefetch didn't happen we can do our own
-  // faster dll preloading.
-  // The MozillaMaintenance service issues a command to disable the
-  // prefetch by replacing all found .pf files with 0 byte read only
-  // files.
   IO_COUNTERS ioCounters;
   gotCounters = GetProcessIoCounters(GetCurrentProcess(), &ioCounters);
 
   if (IsPrefetchDisabledViaService()) {
     preloadReason = PRELOAD_SERVICE;
-  } else if ((gotCounters && !ioCounters.ReadOperationCount)) {
-    preloadReason = PRELOAD_IOCOUNT;
   }
 
   if (preloadReason != PRELOAD_NONE)
