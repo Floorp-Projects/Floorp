@@ -534,12 +534,6 @@ KeyboardLayout::IsPrintableCharKey(PRUint8 aVirtualKey)
 }
 
 bool
-KeyboardLayout::IsNumpadKey(PRUint8 aVirtualKey)
-{
-  return VK_NUMPAD0 <= aVirtualKey && aVirtualKey <= VK_DIVIDE;
-}
-
-bool
 KeyboardLayout::IsDeadKey(PRUint8 aVirtualKey,
                           const ModifierKeyState& aModKeyState) const
 {
@@ -724,11 +718,17 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 inline PRInt32
 KeyboardLayout::GetKeyIndex(PRUint8 aVirtualKey)
 {
-// Currently these 54 (NS_NUM_OF_KEYS) virtual keys are assumed
+// Currently these 68 (NS_NUM_OF_KEYS) virtual keys are assumed
 // to produce visible representation:
 // 0x20 - VK_SPACE          ' '
 // 0x30..0x39               '0'..'9'
 // 0x41..0x5A               'A'..'Z'
+// 0x60..0x69               '0'..'9' on numpad
+// 0x6A - VK_MULTIPLY       '*' on numpad
+// 0x6B - VK_ADD            '+' on numpad
+// 0x6D - VK_SUBTRACT       '-' on numpad
+// 0x6E - VK_DECIMAL        '.' on numpad
+// 0x6F - VK_DIVIDE         '/' on numpad
 // 0x6E - VK_DECIMAL        '.'
 // 0xBA - VK_OEM_1          ';:' for US
 // 0xBB - VK_OEM_PLUS       '+' any country
@@ -757,15 +757,15 @@ KeyboardLayout::GetKeyIndex(PRUint8 aVirtualKey)
      1,  2,  3,  4,  5,  6,  7,  8,  9, 10, -1, -1, -1, -1, -1, -1,   // 30
     -1, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,   // 40
     26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, -1, -1, -1, -1, -1,   // 50
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 37, -1,   // 60
+    37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, -1, 49, 50, 51,   // 60
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // 70
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // 80
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // 90
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // A0
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 38, 39, 40, 41, 42, 43,   // B0
-    44, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // C0
-    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 45, 46, 47, 48, 49,   // D0
-    -1, 50, 51, 52, 53, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // E0
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 52, 53, 54, 55, 56, 57,   // B0
+    58, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // C0
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 59, 60, 61, 62, 63,   // D0
+    -1, 64, 65, 66, 67, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   // E0
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1    // F0
   };
 

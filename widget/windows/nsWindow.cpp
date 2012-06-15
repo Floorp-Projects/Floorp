@@ -6386,9 +6386,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     return result;
   }
   else if (!aModKeyState.IsControl() && !aModKeyState.IsAlt() &&
-             (KeyboardLayout::IsPrintableCharKey(virtualKeyCode) ||
-              KeyboardLayout::IsNumpadKey(virtualKeyCode)))
-  {
+           KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
     // If this is simple KeyDown event but next message is not WM_CHAR,
     // this event may not input text, so we should ignore this event.
     // See bug 314130.
@@ -6404,101 +6402,67 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   PRUint32 shiftedLatinChar = 0;
   PRUint32 unshiftedLatinChar = 0;
 
-  switch (virtualKeyCode) {
-    // keys to be sent as characters
-    case VK_ADD:
-      inputtingChars.Clear();
-      inputtingChars.Append('+', aModKeyState.GetModifiers());
-      break;
-    case VK_SUBTRACT:
-      inputtingChars.Clear();
-      inputtingChars.Append('-', aModKeyState.GetModifiers());
-      break;
-    case VK_DIVIDE:
-      inputtingChars.Clear();
-      inputtingChars.Append('/', aModKeyState.GetModifiers());
-      break;
-    case VK_MULTIPLY:
-      inputtingChars.Clear();
-      inputtingChars.Append('*', aModKeyState.GetModifiers());
-      break;
-    case VK_NUMPAD0:
-    case VK_NUMPAD1:
-    case VK_NUMPAD2:
-    case VK_NUMPAD3:
-    case VK_NUMPAD4:
-    case VK_NUMPAD5:
-    case VK_NUMPAD6:
-    case VK_NUMPAD7:
-    case VK_NUMPAD8:
-    case VK_NUMPAD9:
-      inputtingChars.Clear();
-      inputtingChars.Append(virtualKeyCode - VK_NUMPAD0 + '0',
-                            aModKeyState.GetModifiers());
-      break;
-    default:
-      if (!KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
+  if (!KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
+    inputtingChars.Clear();
+  }
+
+  if (aModKeyState.IsControl() ^ aModKeyState.IsAlt()) {
+    widget::ModifierKeyState capsLockState(
+      aModKeyState.GetModifiers() & MODIFIER_CAPSLOCK);
+    unshiftedChars =
+      gKbdLayout.GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
+    capsLockState.Set(MODIFIER_SHIFT);
+    shiftedChars =
+      gKbdLayout.GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
+
+    // The current keyboard cannot input alphabets or numerics,
+    // we should append them for Shortcut/Access keys.
+    // E.g., for Cyrillic keyboard layout.
+    capsLockState.Unset(MODIFIER_SHIFT);
+    WidgetUtils::GetLatinCharCodeForKeyCode(DOMKeyCode,
+                                            capsLockState.GetModifiers(),
+                                            &unshiftedLatinChar,
+                                            &shiftedLatinChar);
+
+    // If the shiftedLatinChar isn't 0, the key code is NS_VK_[A-Z].
+    if (shiftedLatinChar) {
+      // If the produced characters of the key on current keyboard layout
+      // are same as computed Latin characters, we shouldn't append the
+      // Latin characters to alternativeCharCode.
+      if (unshiftedLatinChar == unshiftedChars.mChars[0] &&
+          shiftedLatinChar == shiftedChars.mChars[0]) {
+        shiftedLatinChar = unshiftedLatinChar = 0;
+      }
+    } else if (unshiftedLatinChar) {
+      // If the shiftedLatinChar is 0, the keyCode doesn't produce
+      // alphabet character.  At that time, the character may be produced
+      // with Shift key.  E.g., on French keyboard layout, NS_VK_PERCENT
+      // key produces LATIN SMALL LETTER U WITH GRAVE (U+00F9) without
+      // Shift key but with Shift key, it produces '%'.
+      // If the unshiftedLatinChar is produced by the key on current
+      // keyboard layout, we shouldn't append it to alternativeCharCode.
+      if (unshiftedLatinChar == unshiftedChars.mChars[0] ||
+          unshiftedLatinChar == shiftedChars.mChars[0]) {
+        unshiftedLatinChar = 0;
+      }
+    }
+
+    // If the charCode is not ASCII character, we should replace the
+    // charCode with ASCII character only when Ctrl is pressed.
+    // But don't replace the charCode when the charCode is not same as
+    // unmodified characters. In such case, Ctrl is sometimes used for a
+    // part of character inputting key combination like Shift.
+    if (aModKeyState.IsControl()) {
+      PRUint32 ch =
+        aModKeyState.IsShift() ? shiftedLatinChar : unshiftedLatinChar;
+      if (ch &&
+          (!inputtingChars.mLength ||
+           inputtingChars.UniCharsCaseInsensitiveEqual(
+             aModKeyState.IsShift() ? shiftedChars : unshiftedChars))) {
         inputtingChars.Clear();
+        inputtingChars.Append(ch, aModKeyState.GetModifiers());
       }
-
-      if (aModKeyState.IsControl() ^ aModKeyState.IsAlt()) {
-        widget::ModifierKeyState capsLockState(
-          aModKeyState.GetModifiers() & MODIFIER_CAPSLOCK);
-        unshiftedChars =
-          gKbdLayout.GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
-        capsLockState.Set(MODIFIER_SHIFT);
-        shiftedChars =
-          gKbdLayout.GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
-
-        // The current keyboard cannot input alphabets or numerics,
-        // we should append them for Shortcut/Access keys.
-        // E.g., for Cyrillic keyboard layout.
-        capsLockState.Unset(MODIFIER_SHIFT);
-        WidgetUtils::GetLatinCharCodeForKeyCode(DOMKeyCode,
-                                                capsLockState.GetModifiers(),
-                                                &unshiftedLatinChar,
-                                                &shiftedLatinChar);
-
-        // If the shiftedLatinChar isn't 0, the key code is NS_VK_[A-Z].
-        if (shiftedLatinChar) {
-          // If the produced characters of the key on current keyboard layout
-          // are same as computed Latin characters, we shouldn't append the
-          // Latin characters to alternativeCharCode.
-          if (unshiftedLatinChar == unshiftedChars.mChars[0] &&
-              shiftedLatinChar == shiftedChars.mChars[0]) {
-            shiftedLatinChar = unshiftedLatinChar = 0;
-          }
-        } else if (unshiftedLatinChar) {
-          // If the shiftedLatinChar is 0, the keyCode doesn't produce
-          // alphabet character.  At that time, the character may be produced
-          // with Shift key.  E.g., on French keyboard layout, NS_VK_PERCENT
-          // key produces LATIN SMALL LETTER U WITH GRAVE (U+00F9) without
-          // Shift key but with Shift key, it produces '%'.
-          // If the unshiftedLatinChar is produced by the key on current
-          // keyboard layout, we shouldn't append it to alternativeCharCode.
-          if (unshiftedLatinChar == unshiftedChars.mChars[0] ||
-              unshiftedLatinChar == shiftedChars.mChars[0]) {
-            unshiftedLatinChar = 0;
-          }
-        }
-
-        // If the charCode is not ASCII character, we should replace the
-        // charCode with ASCII character only when Ctrl is pressed.
-        // But don't replace the charCode when the charCode is not same as
-        // unmodified characters. In such case, Ctrl is sometimes used for a
-        // part of character inputting key combination like Shift.
-        if (aModKeyState.IsControl()) {
-          PRUint32 ch =
-            aModKeyState.IsShift() ? shiftedLatinChar : unshiftedLatinChar;
-          if (ch &&
-              (!inputtingChars.mLength ||
-               inputtingChars.UniCharsCaseInsensitiveEqual(
-                 aModKeyState.IsShift() ? shiftedChars : unshiftedChars))) {
-            inputtingChars.Clear();
-            inputtingChars.Append(ch, aModKeyState.GetModifiers());
-          }
-        }
-      }
+    }
   }
 
   if (inputtingChars.mLength ||
