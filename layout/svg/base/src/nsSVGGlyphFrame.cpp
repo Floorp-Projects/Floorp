@@ -366,10 +366,10 @@ nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
     return nsnull;
   }
 
-  nsRefPtr<gfxContext> context = MakeTmpCtx();
-  SetupGlobalTransform(context);
+  nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
+  SetupGlobalTransform(tmpCtx);
   CharacterIterator iter(this, true);
-  iter.SetInitialMatrix(context);
+  iter.SetInitialMatrix(tmpCtx);
 
   // The SVG 1.1 spec says that text is hit tested against the character cells
   // of the text, not the fill and stroke. See the section starting "For text
@@ -385,17 +385,17 @@ nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
     gfxTextRun::Metrics metrics =
     mTextRun->MeasureText(i, iter.ClusterLength(),
                           gfxFont::LOOSE_INK_EXTENTS, nsnull, nsnull);
-    iter.SetupForMetrics(context);
-    context->Rectangle(metrics.mBoundingBox);
+    iter.SetupForMetrics(tmpCtx);
+    tmpCtx->Rectangle(metrics.mBoundingBox);
   }
 
   gfxPoint userSpacePoint =
-    context->DeviceToUser(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
-                                   PresContext()->AppUnitsToGfxUnits(aPoint.y)));
+    tmpCtx->DeviceToUser(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
+                                  PresContext()->AppUnitsToGfxUnits(aPoint.y)));
 
   bool isHit = false;
   if (hitTestFlags & SVG_HIT_TEST_FILL || hitTestFlags & SVG_HIT_TEST_STROKE) {
-    isHit = context->PointInFill(userSpacePoint);
+    isHit = tmpCtx->PointInFill(userSpacePoint);
   }
 
   // If isHit is false, we may also want to fill and stroke the text to check
