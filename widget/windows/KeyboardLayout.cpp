@@ -14,6 +14,7 @@
 #include "nsQuickSort.h"
 #include "nsAlgorithm.h"
 #include "nsGUIEvent.h"
+#include "nsUnicharUtils.h"
 #include "WidgetUtils.h"
 #include "WinUtils.h"
 
@@ -152,6 +153,68 @@ ModifierKeyState::InitMouseEvent(nsInputEvent& aMouseEvent) const
 }
 
 /*****************************************************************************
+ * mozilla::widget::UniCharsAndModifiers
+ *****************************************************************************/
+
+void
+UniCharsAndModifiers::Append(PRUnichar aUniChar, Modifiers aModifiers)
+{
+  MOZ_ASSERT(mLength < 5);
+  mChars[mLength] = aUniChar;
+  mModifiers[mLength] = aModifiers;
+  mLength++;
+}
+
+void
+UniCharsAndModifiers::FillModifiers(Modifiers aModifiers)
+{
+  for (PRUint32 i = 0; i < mLength; i++) {
+    mModifiers[i] = aModifiers;
+  }
+}
+
+bool
+UniCharsAndModifiers::UniCharsEqual(const UniCharsAndModifiers& aOther) const
+{
+  if (mLength != aOther.mLength) {
+    return false;
+  }
+  return !memcmp(mChars, aOther.mChars, mLength * sizeof(PRUnichar));
+}
+
+bool
+UniCharsAndModifiers::UniCharsCaseInsensitiveEqual(
+                        const UniCharsAndModifiers& aOther) const
+{
+  if (mLength != aOther.mLength) {
+    return false;
+  }
+
+  nsCaseInsensitiveStringComparator comp;
+  return !comp(mChars, aOther.mChars, mLength, aOther.mLength);
+}
+
+UniCharsAndModifiers&
+UniCharsAndModifiers::operator+=(const UniCharsAndModifiers& aOther)
+{
+  PRUint32 copyCount = NS_MIN(aOther.mLength, 5 - mLength);
+  NS_ENSURE_TRUE(copyCount > 0, *this);
+  memcpy(&mChars[mLength], aOther.mChars, copyCount * sizeof(PRUnichar));
+  memcpy(&mModifiers[mLength], aOther.mModifiers,
+         copyCount * sizeof(Modifiers));
+  mLength += copyCount;
+  return *this;
+}
+
+UniCharsAndModifiers
+UniCharsAndModifiers::operator+(const UniCharsAndModifiers& aOther) const
+{
+  UniCharsAndModifiers result(*this);
+  result += aOther;
+  return result;
+}
+
+/*****************************************************************************
  * mozilla::widget::VirtualKey
  *****************************************************************************/
 
@@ -214,30 +277,20 @@ VirtualKey::SetDeadChar(ShiftState aShiftState, PRUnichar aDeadChar)
   mShiftStates[aShiftState].DeadKey.Table = nsnull;
 }
 
-PRUint32
-VirtualKey::GetUniChars(ShiftState aShiftState,
-                        PRUnichar* aUniChars,
-                        Modifiers* aFinalModifiers) const
+UniCharsAndModifiers
+VirtualKey::GetUniChars(ShiftState aShiftState) const
 {
-  *aFinalModifiers = ShiftStateToModifiers(aShiftState);
-  PRUint32 numOfChars = GetNativeUniChars(aShiftState, aUniChars);
+  UniCharsAndModifiers result = GetNativeUniChars(aShiftState);
 
   const ShiftState STATE_ALT_CONTROL = (STATE_ALT | STATE_CONTROL);
   if (!(aShiftState & STATE_ALT_CONTROL)) {
-    return numOfChars;
+    return result;
   }
 
-  PRUnichar unshiftedChars[5];
-  PRUint32 numOfUnshiftedChars =
-    GetNativeUniChars(aShiftState & ~STATE_ALT_CONTROL, unshiftedChars);
-
-  if (!numOfChars) {
-    if (!numOfUnshiftedChars) {
-      return 0;
-    }
-    memcpy(aUniChars, unshiftedChars,
-           numOfUnshiftedChars * sizeof(PRUnichar));
-    return numOfUnshiftedChars;
+  if (!result.mLength) {
+    result = GetNativeUniChars(aShiftState & ~STATE_ALT_CONTROL);
+    result.FillModifiers(ShiftStateToModifiers(aShiftState));
+    return result;
   }
 
   if ((aShiftState & STATE_ALT_CONTROL) == STATE_ALT_CONTROL) {
@@ -246,38 +299,42 @@ VirtualKey::GetUniChars(ShiftState aShiftState,
     // AltGr key is pressed. Because if we don't consume them, the input
     // events are ignored on nsEditor. (I.e., Users cannot input the
     // characters with this key combination.)
-    *aFinalModifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL);
-  } else if (!(numOfChars == numOfUnshiftedChars &&
-               !memcmp(aUniChars, unshiftedChars,
-                       numOfChars * sizeof(PRUnichar)))) {
+    Modifiers finalModifiers = ShiftStateToModifiers(aShiftState);
+    finalModifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL);
+    result.FillModifiers(finalModifiers);
+    return result;
+  }
+
+  UniCharsAndModifiers unmodifiedReslt =
+    GetNativeUniChars(aShiftState & ~STATE_ALT_CONTROL);
+  if (!result.UniCharsEqual(unmodifiedReslt)) {
     // Otherwise, we should consume the Alt key state and the Ctrl key state
     // only when the shifted chars and unshifted chars are different.
-    *aFinalModifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL);
+    Modifiers finalModifiers = ShiftStateToModifiers(aShiftState);
+    finalModifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL);
+    result.FillModifiers(finalModifiers);
   }
-  return numOfChars;
+  return result;
 }
 
 
-PRUint32
-VirtualKey::GetNativeUniChars(ShiftState aShiftState,
-                              PRUnichar* aUniChars) const
+UniCharsAndModifiers
+VirtualKey::GetNativeUniChars(ShiftState aShiftState) const
 {
+  UniCharsAndModifiers result;
+  Modifiers modifiers = ShiftStateToModifiers(aShiftState);
   if (IsDeadKey(aShiftState)) {
-    if (aUniChars) {
-      aUniChars[0] = mShiftStates[aShiftState].DeadKey.DeadChar;
-    }
-    return 1;
+    result.Append(mShiftStates[aShiftState].DeadKey.DeadChar, modifiers);
+    return result;
   }
 
   PRUint32 index;
   PRUint32 len = ArrayLength(mShiftStates[aShiftState].Normal.Chars);
   for (index = 0;
        index < len && mShiftStates[aShiftState].Normal.Chars[index]; index++) {
-    if (aUniChars) {
-      aUniChars[index] = mShiftStates[aShiftState].Normal.Chars[index];
-    }
+    result.Append(mShiftStates[aShiftState].Normal.Chars[index], modifiers);
   }
-  return index;
+  return result;
 }
 
 // static
@@ -495,15 +552,7 @@ KeyboardLayout::IsDeadKey(PRUint8 aVirtualKey,
            VirtualKey::ModifiersToShiftState(aModKeyState.GetModifiers()));
 }
 
-static void FillModifiers(Modifiers* aDest, const Modifiers aSrc,
-                          PRUint32 aCount)
-{
-  for (PRUint32 i = 0; i < aCount; i++) {
-    aDest[i] = aSrc;
-  }
-}
-
-void
+UniCharsAndModifiers
 KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey,
                           const ModifierKeyState& aModKeyState)
 {
@@ -512,8 +561,7 @@ KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey,
   if (virtualKeyIndex < 0) {
     // Does not produce any printable characters, but still preserves the
     // dead-key state.
-    mNumOfChars = 0;
-    return;
+    return UniCharsAndModifiers();
   }
 
   PRUint8 shiftState =
@@ -524,91 +572,63 @@ KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey,
       // Dead-key state activated. No characters generated.
       mActiveDeadKey = aVirtualKey;
       mDeadKeyShiftState = shiftState;
-      mNumOfChars = 0;
-      return;
+      return UniCharsAndModifiers();
     }
 
     // Dead-key followed by another dead-key. Reset dead-key state and
     // return both dead-key characters.
     PRInt32 activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-    mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState,
-                                                 mChars, mModifiersOfChars);
-    mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState, &mChars[1],
-                                              &mModifiersOfChars[1]);
-    mNumOfChars = 2;
+    UniCharsAndModifiers result =
+      mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState);
+    result += mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState);
     DeactivateDeadKeyState();
-    return;
+    return result;
   }
 
-  Modifiers finalModifiers;
-  PRUnichar uniChars[5];
-  PRUint32 numOfBaseChars =
-    mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState, uniChars,
-                                              &finalModifiers);
+  UniCharsAndModifiers baseChars =
+    mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState);
   if (mActiveDeadKey < 0) {
     // No dead-keys are active. Just return the produced characters.
-    memcpy(mChars, uniChars, numOfBaseChars * sizeof(PRUnichar));
-    FillModifiers(mModifiersOfChars, finalModifiers, numOfBaseChars);
-    mNumOfChars = numOfBaseChars;
-    return;
+    return baseChars;
   }
 
   // Dead-key was active. See if pressed base character does produce
   // valid composite character.
   PRInt32 activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-  PRUnichar compositeChar = (numOfBaseChars == 1 && uniChars[0]) ?
+  PRUnichar compositeChar = (baseChars.mLength == 1 && baseChars.mChars[0]) ?
     mVirtualKeys[activeDeadKeyIndex].GetCompositeChar(mDeadKeyShiftState,
-                                                      uniChars[0]) : 0;
+                                                      baseChars.mChars[0]) : 0;
   if (compositeChar) {
     // Active dead-key and base character does produce exactly one
     // composite character.
-    mChars[0] = compositeChar;
-    mModifiersOfChars[0] = finalModifiers;
-    mNumOfChars = 1;
-  } else {
-    // There is no valid dead-key and base character combination.
-    // Return dead-key character followed by base character.
-    mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState,
-                                                 mChars, mModifiersOfChars);
-    memcpy(&mChars[1], uniChars, numOfBaseChars * sizeof(PRUnichar));
-    FillModifiers(&mModifiersOfChars[1], finalModifiers, numOfBaseChars);
-    mNumOfChars = numOfBaseChars + 1;
+    UniCharsAndModifiers result;
+    result.Append(compositeChar, baseChars.mModifiers[0]);
+    DeactivateDeadKeyState();
+    return result;
   }
 
+  // There is no valid dead-key and base character combination.
+  // Return dead-key character followed by base character.
+  UniCharsAndModifiers result =
+    mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState);
+  result += baseChars;
   DeactivateDeadKeyState();
+
+  return result;
 }
 
-PRUint32
-KeyboardLayout::GetUniChars(PRUnichar* aUniChars,
-                            Modifiers* aModifiersOfUniChars,
-                            PRUint32 aMaxChars) const
+UniCharsAndModifiers
+KeyboardLayout::GetUniCharsAndModifiers(
+                  PRUint8 aVirtualKey,
+                  const ModifierKeyState& aModKeyState) const
 {
-  PRUint32 chars = NS_MIN<PRUint32>(mNumOfChars, aMaxChars);
-
-  memcpy(aUniChars, mChars, chars * sizeof(PRUnichar));
-  memcpy(aModifiersOfUniChars, mModifiersOfChars, chars * sizeof(Modifiers));
-
-  return chars;
-}
-
-PRUint32
-KeyboardLayout::GetUniCharsWithShiftState(PRUint8 aVirtualKey,
-                                          Modifiers aModifiers,
-                                          PRUnichar* aUniChars,
-                                          PRUint32 aMaxChars) const
-{
+  UniCharsAndModifiers result;
   PRInt32 key = GetKeyIndex(aVirtualKey);
   if (key < 0) {
-    return 0;
+    return result;
   }
-  Modifiers finalModifiers;
-  PRUnichar uniChars[5];
-  PRUint32 numOfBaseChars =
-    mVirtualKeys[key].GetUniChars(VirtualKey::ModifiersToShiftState(aModifiers),
-                                  uniChars, &finalModifiers);
-  PRUint32 chars = NS_MIN(numOfBaseChars, aMaxChars);
-  memcpy(aUniChars, uniChars, chars * sizeof(PRUnichar));
-  return chars;
+  return mVirtualKeys[key].
+    GetUniChars(VirtualKey::ModifiersToShiftState(aModKeyState.GetModifiers()));
 }
 
 void
@@ -631,7 +651,6 @@ KeyboardLayout::LoadLayout(HKL aLayout)
   PRUint16 shiftStatesWithBaseChars = 0;
 
   mActiveDeadKey = -1;
-  mNumOfChars = 0;
 
   ReleaseDeadKeyTables();
 
@@ -876,7 +895,8 @@ KeyboardLayout::GetDeadKeyCombinations(PRUint8 aDeadKey,
       PRInt32 vki = GetKeyIndex(virtualKey);
       // Dead-key can pair only with such key that produces exactly one base
       // character.
-      if (vki >= 0 && mVirtualKeys[vki].GetNativeUniChars(shiftState) == 1) {
+      if (vki >= 0 &&
+          mVirtualKeys[vki].GetNativeUniChars(shiftState).mLength == 1) {
         // Ensure dead-key is in active state, when it swallows entered
         // character and waits for the next pressed key.
         if (!deadKeyActive) {
@@ -1060,19 +1080,19 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
     {
       NS_ASSERTION(IsPrintableCharKey(aNativeKeyCode),
                    "The key must be printable");
-      PRUnichar uniChars[5];
-      PRUint32 numOfChars =
-        GetUniCharsWithShiftState(aNativeKeyCode, 0,
-                                  uniChars, ArrayLength(uniChars));
-      if (numOfChars != 1 || uniChars[0] < ' ' || uniChars[0] > 0x7F) {
-        numOfChars =
-          GetUniCharsWithShiftState(aNativeKeyCode, MODIFIER_SHIFT,
-                                    uniChars, ArrayLength(uniChars));
-        if (numOfChars != 1 || uniChars[0] < ' ' || uniChars[0] > 0x7F) {
+      ModifierKeyState modKeyState(0);
+      UniCharsAndModifiers uniChars =
+        GetUniCharsAndModifiers(aNativeKeyCode, modKeyState);
+      if (uniChars.mLength != 1 ||
+          uniChars.mChars[0] < ' ' || uniChars.mChars[0] > 0x7F) {
+        modKeyState.Set(MODIFIER_SHIFT);
+        uniChars = GetUniCharsAndModifiers(aNativeKeyCode, modKeyState);
+        if (uniChars.mLength != 1 ||
+            uniChars.mChars[0] < ' ' || uniChars.mChars[0] > 0x7F) {
           return 0;
         }
       }
-      return WidgetUtils::ComputeKeyCodeFromChar(uniChars[0]);
+      return WidgetUtils::ComputeKeyCodeFromChar(uniChars.mChars[0]);
     }
 
     // VK_PROCESSKEY means IME already consumed the key event.

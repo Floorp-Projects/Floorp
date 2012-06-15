@@ -94,7 +94,6 @@
 #include "nsThreadUtils.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsGkAtoms.h"
-#include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
@@ -6195,17 +6194,6 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   return true; // Handled
 }
 
-static bool
-StringCaseInsensitiveEquals(const PRUnichar* aChars1, const PRUint32 aNumChars1,
-                            const PRUnichar* aChars2, const PRUint32 aNumChars2)
-{
-  if (aNumChars1 != aNumChars2)
-    return false;
-
-  nsCaseInsensitiveStringComparator comp;
-  return comp(aChars1, aChars2, aNumChars1, aNumChars2) == 0;
-}
-
 /* static */
 bool nsWindow::IsRedirectedKeyDownMessage(const MSG &aMsg)
 {
@@ -6230,7 +6218,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 {
   NativeKey nativeKey(gKbdLayout, this, aMsg);
   UINT virtualKeyCode = nativeKey.GetOriginalVirtualKeyCode();
-  gKbdLayout.OnKeyDown(virtualKeyCode, aModKeyState);
+  UniCharsAndModifiers inputtingChars =
+    gKbdLayout.OnKeyDown(virtualKeyCode, aModKeyState);
 
   // Use only DOMKeyCode for XP processing.
   // Use virtualKeyCode for gKbdLayout and native processing.
@@ -6410,23 +6399,29 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     return PluginHasFocus() && noDefault;
   }
 
-  widget::Modifiers modifiersOfChars[5];
-  PRUnichar uniChars[5];
-  PRUnichar shiftedChars[5] = {0, 0, 0, 0, 0};
-  PRUnichar unshiftedChars[5] = {0, 0, 0, 0, 0};
+  UniCharsAndModifiers shiftedChars;
+  UniCharsAndModifiers unshiftedChars;
   PRUint32 shiftedLatinChar = 0;
   PRUint32 unshiftedLatinChar = 0;
-  PRUint32 numOfUniChars = 0;
-  PRUint32 numOfShiftedChars = 0;
-  PRUint32 numOfUnshiftedChars = 0;
-  PRUint32 numOfShiftStates = 0;
 
   switch (virtualKeyCode) {
     // keys to be sent as characters
-    case VK_ADD:       uniChars [0] = '+';  numOfUniChars = 1;  break;
-    case VK_SUBTRACT:  uniChars [0] = '-';  numOfUniChars = 1;  break;
-    case VK_DIVIDE:    uniChars [0] = '/';  numOfUniChars = 1;  break;
-    case VK_MULTIPLY:  uniChars [0] = '*';  numOfUniChars = 1;  break;
+    case VK_ADD:
+      inputtingChars.Clear();
+      inputtingChars.Append('+', aModKeyState.GetModifiers());
+      break;
+    case VK_SUBTRACT:
+      inputtingChars.Clear();
+      inputtingChars.Append('-', aModKeyState.GetModifiers());
+      break;
+    case VK_DIVIDE:
+      inputtingChars.Clear();
+      inputtingChars.Append('/', aModKeyState.GetModifiers());
+      break;
+    case VK_MULTIPLY:
+      inputtingChars.Clear();
+      inputtingChars.Append('*', aModKeyState.GetModifiers());
+      break;
     case VK_NUMPAD0:
     case VK_NUMPAD1:
     case VK_NUMPAD2:
@@ -6437,31 +6432,30 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     case VK_NUMPAD7:
     case VK_NUMPAD8:
     case VK_NUMPAD9:
-      uniChars [0] = virtualKeyCode - VK_NUMPAD0 + '0';
-      numOfUniChars = 1;
+      inputtingChars.Clear();
+      inputtingChars.Append(virtualKeyCode - VK_NUMPAD0 + '0',
+                            aModKeyState.GetModifiers());
       break;
     default:
-      if (KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
-        numOfUniChars = numOfShiftStates =
-          gKbdLayout.GetUniChars(uniChars, modifiersOfChars,
-                                 ArrayLength(uniChars));
+      if (!KeyboardLayout::IsPrintableCharKey(virtualKeyCode)) {
+        inputtingChars.Clear();
       }
 
       if (aModKeyState.IsControl() ^ aModKeyState.IsAlt()) {
-        widget::Modifiers capsLockState =
-          aModKeyState.IsCapsLocked() ? MODIFIER_CAPSLOCK : 0;
-        numOfUnshiftedChars =
-          gKbdLayout.GetUniCharsWithShiftState(virtualKeyCode, capsLockState,
-                       unshiftedChars, ArrayLength(unshiftedChars));
-        numOfShiftedChars =
-          gKbdLayout.GetUniCharsWithShiftState(virtualKeyCode,
-                       capsLockState | MODIFIER_SHIFT,
-                       shiftedChars, ArrayLength(shiftedChars));
+        widget::ModifierKeyState capsLockState(
+          aModKeyState.GetModifiers() & MODIFIER_CAPSLOCK);
+        unshiftedChars =
+          gKbdLayout.GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
+        capsLockState.Set(MODIFIER_SHIFT);
+        shiftedChars =
+          gKbdLayout.GetUniCharsAndModifiers(virtualKeyCode, capsLockState);
 
         // The current keyboard cannot input alphabets or numerics,
         // we should append them for Shortcut/Access keys.
         // E.g., for Cyrillic keyboard layout.
-        WidgetUtils::GetLatinCharCodeForKeyCode(DOMKeyCode, capsLockState,
+        capsLockState.Unset(MODIFIER_SHIFT);
+        WidgetUtils::GetLatinCharCodeForKeyCode(DOMKeyCode,
+                                                capsLockState.GetModifiers(),
                                                 &unshiftedLatinChar,
                                                 &shiftedLatinChar);
 
@@ -6470,8 +6464,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
           // If the produced characters of the key on current keyboard layout
           // are same as computed Latin characters, we shouldn't append the
           // Latin characters to alternativeCharCode.
-          if (unshiftedLatinChar == unshiftedChars[0] &&
-              shiftedLatinChar == shiftedChars[0]) {
+          if (unshiftedLatinChar == unshiftedChars.mChars[0] &&
+              shiftedLatinChar == shiftedChars.mChars[0]) {
             shiftedLatinChar = unshiftedLatinChar = 0;
           }
         } else if (unshiftedLatinChar) {
@@ -6482,8 +6476,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
           // Shift key but with Shift key, it produces '%'.
           // If the unshiftedLatinChar is produced by the key on current
           // keyboard layout, we shouldn't append it to alternativeCharCode.
-          if (unshiftedLatinChar == unshiftedChars[0] ||
-              unshiftedLatinChar == shiftedChars[0]) {
+          if (unshiftedLatinChar == unshiftedChars.mChars[0] ||
+              unshiftedLatinChar == shiftedChars.mChars[0]) {
             unshiftedLatinChar = 0;
           }
         }
@@ -6497,32 +6491,30 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
           PRUint32 ch =
             aModKeyState.IsShift() ? shiftedLatinChar : unshiftedLatinChar;
           if (ch &&
-              (numOfUniChars == 0 ||
-               StringCaseInsensitiveEquals(uniChars, numOfUniChars,
-                 aModKeyState.IsShift() ? shiftedChars : unshiftedChars,
-                 aModKeyState.IsShift() ? numOfShiftedChars :
-                                          numOfUnshiftedChars))) {
-            numOfUniChars = numOfShiftStates = 1;
-            uniChars[0] = ch;
-            modifiersOfChars[0] = aModKeyState.GetModifiers();
+              (!inputtingChars.mLength ||
+               inputtingChars.UniCharsCaseInsensitiveEqual(
+                 aModKeyState.IsShift() ? shiftedChars : unshiftedChars))) {
+            inputtingChars.Clear();
+            inputtingChars.Append(ch, aModKeyState.GetModifiers());
           }
         }
       }
   }
 
-  if (numOfUniChars > 0 || numOfShiftedChars > 0 || numOfUnshiftedChars > 0) {
-    PRUint32 num = NS_MAX(numOfUniChars,
-                          NS_MAX(numOfShiftedChars, numOfUnshiftedChars));
-    PRUint32 skipUniChars = num - numOfUniChars;
-    PRUint32 skipShiftedChars = num - numOfShiftedChars;
-    PRUint32 skipUnshiftedChars = num - numOfUnshiftedChars;
-    UINT keyCode = numOfUniChars == 0 ? DOMKeyCode : 0;
+  if (inputtingChars.mLength ||
+      shiftedChars.mLength || unshiftedChars.mLength) {
+    PRUint32 num = NS_MAX(inputtingChars.mLength,
+                          NS_MAX(shiftedChars.mLength, unshiftedChars.mLength));
+    PRUint32 skipUniChars = num - inputtingChars.mLength;
+    PRUint32 skipShiftedChars = num - shiftedChars.mLength;
+    PRUint32 skipUnshiftedChars = num - unshiftedChars.mLength;
+    UINT keyCode = !inputtingChars.mLength ? DOMKeyCode : 0;
     for (PRUint32 cnt = 0; cnt < num; cnt++) {
       PRUint16 uniChar, shiftedChar, unshiftedChar;
       uniChar = shiftedChar = unshiftedChar = 0;
       ModifierKeyState modKeyState(aModKeyState);
       if (skipUniChars <= cnt) {
-        if (cnt - skipUniChars  < numOfShiftStates) {
+        if (cnt - skipUniChars  < inputtingChars.mLength) {
           // If key in combination with Alt and/or Ctrl produces a different
           // character than without them then do not report these flags
           // because it is separate keyboard layout shift state. If dead-key
@@ -6531,14 +6523,14 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
           // character may have different modifier flags, too.
           modKeyState.Unset(MODIFIER_SHIFT | MODIFIER_CONTROL | MODIFIER_ALT |
                             MODIFIER_ALTGRAPH | MODIFIER_CAPSLOCK);
-          modKeyState.Set(modifiersOfChars[cnt - skipUniChars]);
+          modKeyState.Set(inputtingChars.mModifiers[cnt - skipUniChars]);
         }
-        uniChar = uniChars[cnt - skipUniChars];
+        uniChar = inputtingChars.mChars[cnt - skipUniChars];
       }
       if (skipShiftedChars <= cnt)
-        shiftedChar = shiftedChars[cnt - skipShiftedChars];
+        shiftedChar = shiftedChars.mChars[cnt - skipShiftedChars];
       if (skipUnshiftedChars <= cnt)
-        unshiftedChar = unshiftedChars[cnt - skipUnshiftedChars];
+        unshiftedChar = unshiftedChars.mChars[cnt - skipUnshiftedChars];
       nsAutoTArray<nsAlternativeCharCode, 5> altArray;
 
       if (shiftedChar || unshiftedChar) {
@@ -6565,8 +6557,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
           case VK_OEM_PERIOD: charForOEMKeyCode = '.'; break;
         }
         if (charForOEMKeyCode &&
-            charForOEMKeyCode != unshiftedChars[0] &&
-            charForOEMKeyCode != shiftedChars[0] &&
+            charForOEMKeyCode != unshiftedChars.mChars[0] &&
+            charForOEMKeyCode != shiftedChars.mChars[0] &&
             charForOEMKeyCode != unshiftedLatinChar &&
             charForOEMKeyCode != shiftedLatinChar) {
           nsAlternativeCharCode OEMChars(charForOEMKeyCode, charForOEMKeyCode);
