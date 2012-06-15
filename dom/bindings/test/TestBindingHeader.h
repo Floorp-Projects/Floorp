@@ -45,6 +45,14 @@ public:
   NS_DECL_ISUPPORTS
 };
 
+class TestNonWrapperCacheInterface : public nsISupports
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  virtual JSObject* WrapObject(JSContext* cx, JSObject* scope);
+};
+
 class TestInterface : public nsISupports,
                       public nsWrapperCache
 {
@@ -155,6 +163,13 @@ public:
   void PassOptionalSelf(const Optional<TestInterface*> &, ErrorResult&);
   void PassOptionalNonNullSelf(const Optional<NonNull<TestInterface> >&, ErrorResult&);
   void PassOptionalSelfWithDefault(TestInterface*, ErrorResult&);
+
+  already_AddRefed<TestNonWrapperCacheInterface> ReceiveNonWrapperCacheInterface(ErrorResult&);
+  already_AddRefed<TestNonWrapperCacheInterface> ReceiveNullableNonWrapperCacheInterface(ErrorResult&);
+  void ReceiveNonWrapperCacheInterfaceSequence(nsTArray<nsRefPtr<TestNonWrapperCacheInterface> >&, ErrorResult&);
+  void ReceiveNullableNonWrapperCacheInterfaceSequence(nsTArray<nsRefPtr<TestNonWrapperCacheInterface> >&, ErrorResult&);
+  void ReceiveNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&, ErrorResult&);
+  void ReceiveNullableNonWrapperCacheInterfaceNullableSequence(Nullable<nsTArray<nsRefPtr<TestNonWrapperCacheInterface> > >&, ErrorResult&);
 
   already_AddRefed<TestNonCastableInterface> ReceiveOther(ErrorResult&);
   already_AddRefed<TestNonCastableInterface> ReceiveNullableOther(ErrorResult&);
