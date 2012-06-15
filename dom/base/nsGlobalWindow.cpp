@@ -62,6 +62,7 @@
 #include "nsAutoJSValHolder.h"
 #include "nsDOMMediaQueryList.h"
 #include "mozilla/dom/workers/Workers.h"
+#include "nsJSPrincipals.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -1832,6 +1833,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (!JS_RefreshCrossCompartmentWrappers(cx, mJSObject)) {
       return NS_ERROR_FAILURE;
     }
+
+    // Inner windows are only reused for same-origin principals, but the principals
+    // don't necessarily match exactly. Update the principal on the compartment to
+    // match the new document.
+    // NB: We don't just call currentInner->RefreshCompartmentPrincipals() here
+    // because we haven't yet set its mDoc to aDocument.
+    JS_SetCompartmentPrincipals(js::GetObjectCompartment(currentInner->mJSObject),
+                                nsJSPrincipals::get(aDocument->NodePrincipal()));
   } else {
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
@@ -4270,6 +4279,15 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
                                        true, true, &defaultActionEnabled);
 
   return defaultActionEnabled;
+}
+
+void
+nsGlobalWindow::RefreshCompartmentPrincipal()
+{
+  FORWARD_TO_INNER(RefreshCompartmentPrincipal, (), /* void */ );
+
+  JS_SetCompartmentPrincipals(js::GetObjectCompartment(mJSObject),
+                              nsJSPrincipals::get(mDoc->NodePrincipal()));
 }
 
 static already_AddRefed<nsIDocShellTreeItem>
