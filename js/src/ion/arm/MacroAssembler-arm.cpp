@@ -2204,7 +2204,8 @@ MacroAssemblerARMCompat::boolValueToDouble(const ValueOperand &operand, const Fl
     VFPRegister d = VFPRegister(dest);
     ma_vimm(1.0, dest);
     ma_cmp(operand.payloadReg(), Imm32(0));
-    as_vsub(d, d, d, NotEqual);
+    // If the source is 0, then subtract the dest from itself, producing 0.
+    as_vsub(d, d, d, Equal);
 }
 
 void
