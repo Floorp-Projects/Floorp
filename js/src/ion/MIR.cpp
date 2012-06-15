@@ -992,6 +992,12 @@ MCompare::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
             return;
         }
 
+        if (lhs == MIRType_String && rhs == MIRType_String) {
+            // We don't yet want to optimize relational string compares.
+            specialization_ = MIRType_String;
+            return;
+        }
+
         if (IsNullOrUndefined(lhs)) {
             // Lowering expects the rhs to be null/undefined, so we have to
             // swap the operands. This is necessary since we may not know which
