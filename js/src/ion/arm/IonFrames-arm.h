@@ -110,6 +110,11 @@ class IonJSFrameLayout : public IonEntryFrameLayout
     void replaceCalleeToken(void *calleeToken) {
         calleeToken_ = calleeToken;
     }
+    static size_t offsetOfActualArgs() {
+        IonJSFrameLayout *base = NULL;
+        // +1 to skip |this|.
+        return reinterpret_cast<size_t>(&base->argv()[1]);
+    }
 
     Value *argv() {
         return (Value *)(this + 1);
