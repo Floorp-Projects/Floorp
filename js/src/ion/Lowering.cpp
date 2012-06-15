@@ -847,10 +847,18 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
         return assignSnapshot(lir) && define(lir, convert);
       }
 
+      case MIRType_String:
+        // Strings are complicated - we don't handle them yet.
+        IonSpew(IonSpew_Abort, "String to Int32 not supported yet.");
+        break;
+
+      case MIRType_Object:
+        // Objects might be effectful.
+        IonSpew(IonSpew_Abort, "Object to Int32 not supported yet.");
+        break;
+
       default:
         // Undefined coerces to NaN, not int32.
-        // Objects might be effectful.
-        // Strings are complicated - we don't handle them yet.
         JS_NOT_REACHED("unexpected type");
     }
 
@@ -1576,6 +1584,13 @@ LIRGenerator::visitArgumentsLength(MArgumentsLength *ins)
 {
     JS_ASSERT(ins->arguments()->type() == MIRType_ArgObj);
     return define(new LArgumentsLength(), ins);
+}
+
+bool
+LIRGenerator::visitGetArgument(MGetArgument *ins)
+{
+    LGetArgument *lir = new LGetArgument(useRegisterOrConstant(ins->index()));
+    return defineBox(lir, ins);
 }
 
 bool

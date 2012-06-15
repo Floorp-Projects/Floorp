@@ -160,6 +160,10 @@ class CompileInfo
         return firstStackSlot() + i;
     }
 
+    bool hasArguments() {
+        return script()->argumentsHasLocalBinding();
+    }
+
   private:
     JSScript *script_;
     JSFunction *fun_;
