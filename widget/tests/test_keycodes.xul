@@ -91,6 +91,7 @@ if (IS_MAC) {
     "US":0x409,
     "German":0x407,
     "Greek":0x408,
+    "Spanish":0x40a,
     "French":0x40c,
     "Swedish":0x41d,
     "Arabic":0x401,
@@ -248,13 +249,18 @@ function runKeyEventTests()
     var expectEventTypeList = [];
     if (aShouldDelivedEvent & SHOULD_DELIVER_KEYDOWN)
       expectEventTypeList.push("keydown");
-    if (aShouldDelivedEvent & SHOULD_DELIVER_KEYPRESS)
+    if (aShouldDelivedEvent & SHOULD_DELIVER_KEYPRESS) {
       expectEventTypeList.push("keypress");
+      for (var i = 1; i < aExpectGeckoChar.length; i++) {
+        expectEventTypeList.push("keypress");
+      }
+    }
     if (aShouldDelivedEvent & SHOULD_DELIVER_KEYUP)
       expectEventTypeList.push("keyup");
     is(eventList.length, expectEventTypeList.length, name + ", wrong number of key events");
 
     var longerLength = Math.max(eventList.length, expectEventTypeList.length);
+    var keypressCount = 0;
     for (var i = 0; i < longerLength; i++) {
       var firedEventType = i < eventList.length ? eventList[i].type : "";
       var expectEventType = i < expectEventTypeList.length ? expectEventTypeList[i] : "";
@@ -271,7 +277,7 @@ function runKeyEventTests()
         is(e.shiftKey, aEvent.shift || aEvent.shiftRight || 0, name + ", Shift mismatch");
 
         if (aExpectGeckoChar.length > 0 && e.type == "keypress") {
-          is(e.charCode, aExpectGeckoChar.charCodeAt(0), name + ", charcode");
+          is(e.charCode, aExpectGeckoChar.charCodeAt(keypressCount++), name + ", charcode");
           if (aExpectedGeckoKeyCode >= 0) {
             if (aExpectGeckoChar) {
               is(e.keyCode, 0, name + ", wrong keycode");
@@ -1761,9 +1767,9 @@ function runKeyEventTests()
     testKey({layout:"French", keyCode:187, shift:1, chars:"+"},
             nsIDOMKeyEvent.DOM_VK_EQUALS, "+", SHOULD_DELIVER_ALL);
     //testKey({layout:"French", keyCode:221, chars:""},
-    //        0, "", SHOULD_DELIVER_KEYDOWN_KEYUP); // Dead-key
+    //        nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_KEYDOWN_KEYUP); // Dead-key
     //testKey({layout:"French", keyCode:221, shift:1, chars:""},
-    //        0, "", SHOULD_DELIVER_KEYDOWN_KEYUP); // Dead-key
+    //        nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_ALL); // Dead-key
     testKey({layout:"French", keyCode:186, chars:"$"},
             nsIDOMKeyEvent.DOM_VK_DOLLAR, "$", SHOULD_DELIVER_ALL);
     testKey({layout:"French", keyCode:186, shift:1, chars:"\u00A3"},
@@ -1884,6 +1890,127 @@ function runKeyEventTests()
             nsIDOMKeyEvent.DOM_VK_PIPE, "|", SHOULD_DELIVER_ALL);
     testKey({layout:"Norwegian", keyCode:220, shift:1, chars:"\u00A7"},
             nsIDOMKeyEvent.DOM_VK_PIPE, "\u00A7", SHOULD_DELIVER_ALL);
+
+    // Dead keys on any layouts
+    testKey({layout:"French", keyCode:221, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:221, chars:"^^"},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "^^", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"French", keyCode:221, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:65, chars:"\u00E2"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00E2", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"French", keyCode:221, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:65, shift:1, chars:"\u00C2"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00C2", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"French", keyCode:221, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:81, chars:"^q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "^q", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"French", keyCode:221, shift:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:221, shift:1, chars:"\u00A8\u00A8"},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "\u00A8\u00A8", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"French", keyCode:221, shift:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:65, shift:1, chars:"\u00C4"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00C4", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"French", keyCode:221, shift:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:65, chars:"\u00E4"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00E4", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"French", keyCode:221, shift:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_CIRCUMFLEX, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"French", keyCode:81, shift:1, chars:"\u00A8Q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "\u00A8Q", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:186, chars:""},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:186, chars:"``"},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "``", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:186, chars:""},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:65, chars:"\u00E0"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00E0", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:186, chars:""},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:65, shift:1, chars:"\u00C0"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00C0", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:186, chars:""},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:81, chars:"`q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "`q", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:186, shift:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:186, shift:1, chars:"^^"},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "^^", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:186, shift:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:65, shift:1, chars:"\u00C2"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00C2", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:186, shift:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:65, chars:"\u00E2"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00E2", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:186, shift:1, chars:""},
+            nsIDOMKeyEvent.DOM_VK_BACK_QUOTE, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:81, shift:1, chars:"^Q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "^Q", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:222, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:222, chars:"\u00B4\u00B4"},
+            0, "\u00B4\u00B4", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:222, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:65, chars:"\u00E1"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00E1", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:222, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:65, shift:1, chars:"\u00C1"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00C1", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:222, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:81, chars:"\u00B4q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "\u00B4q", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:222, shift:1, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:222, shift:1, chars:"\u00A8\u00A8"},
+            0, "\u00A8\u00A8", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:222, shift:1, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:65, shift:1, chars:"\u00C4"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00C4", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:222, shift:1, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:65, chars:"\u00E4"},
+            nsIDOMKeyEvent.DOM_VK_A, "\u00E4", SHOULD_DELIVER_ALL);
+
+    testKey({layout:"Spanish", keyCode:222, shift:1, chars:""},
+            0, "", SHOULD_DELIVER_KEYDOWN_KEYUP);
+    testKey({layout:"Spanish", keyCode:81, shift:1, chars:"\u00A8Q"},
+            nsIDOMKeyEvent.DOM_VK_Q, "\u00A8Q", SHOULD_DELIVER_ALL);
   }
 
   document.removeEventListener("keydown",  onKeyEvent, false);

@@ -8,6 +8,7 @@
 
 #include "nscore.h"
 #include "nsEvent.h"
+#include "nsString.h"
 #include <windows.h>
 
 #define NS_NUM_OF_KEYS          68
@@ -135,6 +136,8 @@ struct UniCharsAndModifiers
 
   bool UniCharsEqual(const UniCharsAndModifiers& aOther) const;
   bool UniCharsCaseInsensitiveEqual(const UniCharsAndModifiers& aOther) const;
+
+  nsString ToString() const { return nsString(mChars, mLength); }
 };
 
 struct DeadKeyEntry;
@@ -305,6 +308,7 @@ class KeyboardLayout
   };
 
   HKL mKeyboardLayout;
+  HKL mPendingKeyboardLayout;
 
   VirtualKey mVirtualKeys[NS_NUM_OF_KEYS];
   DeadKeyTableListEntry* mDeadKeyTableListHead;
@@ -357,11 +361,18 @@ public:
   UniCharsAndModifiers OnKeyDown(PRUint8 aVirtualKey,
                                  const ModifierKeyState& aModKeyState);
 
-  void LoadLayout(HKL aLayout);
+  /**
+   * LoadLayout() loads the keyboard layout.  If aLoadLater is true,
+   * it will be done when OnKeyDown() is called.
+   */
+  void LoadLayout(HKL aLayout, bool aLoadLater = false);
 
   PRUint32 ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const;
 
-  HKL GetLayout() const { return mKeyboardLayout; }
+  HKL GetLayout() const
+  {
+    return mPendingKeyboardLayout ? mPendingKeyboardLayout : mKeyboardLayout;
+  }
 };
 
 } // namespace widget
