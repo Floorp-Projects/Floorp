@@ -234,6 +234,7 @@ function checkUpdateApplied() {
   // Now switch the application and its updated version
   gBackgroundUpdate = false;
   gSwitchApp = true;
+  gDisableReplaceFallback = true;
   exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for failure when " +
               "switching to the updated application");

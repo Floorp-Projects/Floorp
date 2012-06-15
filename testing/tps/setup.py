@@ -10,7 +10,7 @@ version = '0.2.40'
 deps = ['pulsebuildmonitor >= 0.62', 'MozillaPulse == 0.61', 
         'mozinfo == 0.3.1', 'mozprofile == 0.1t',
         'mozprocess == 0.1a', 'mozrunner == 3.0a', 'mozregression == 0.3',
-        'mozautolog >= 0.2.1']
+        'mozautolog >= 0.2.1', 'mozautoeslib == 0.1.1']
 
 # we only support python 2.6+ right now
 assert sys.version_info[0] == 2

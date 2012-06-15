@@ -254,12 +254,7 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, uint8_t *contents)
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &ArrayBufferObject::protoClass));
     if (!obj)
         return NULL;
-#ifdef JS_THREADSAFE
     JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT16_BACKGROUND);
-#else
-    JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT16);
-#endif
-
     JS_ASSERT(obj->getClass() == &ArrayBufferObject::protoClass);
 
     js::Shape *empty = EmptyShape::getInitialShape(cx, &ArrayBufferClass,
@@ -1397,11 +1392,7 @@ class TypedArrayTemplate
         RootedObject obj(cx, NewBuiltinClassInstance(cx, protoClass()));
         if (!obj)
             return NULL;
-#ifdef JS_THREADSAFE
         JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT8_BACKGROUND);
-#else
-        JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT8);
-#endif
 
         types::TypeObject *type;
         if (proto) {

@@ -11,9 +11,10 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Attributes.h"
 
-class nsDNSService : public nsPIDNSService
-                   , public nsIObserver
+class nsDNSService MOZ_FINAL : public nsPIDNSService
+                             , public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS

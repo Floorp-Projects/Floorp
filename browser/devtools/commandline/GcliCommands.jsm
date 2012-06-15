@@ -249,7 +249,7 @@ gcli.addCommand({
 gcli.addCommand({
   name: "edit",
   description: gcli.lookup("editDesc"),
-  manual: gcli.lookup("editManual"),
+  manual: gcli.lookup("editManual2"),
   params: [
      {
        name: 'resource',

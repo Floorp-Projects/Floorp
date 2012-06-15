@@ -195,6 +195,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
    */
   public static boolean forbiddenGUID(String recordGUID) {
     return recordGUID == null ||
+           "readinglist".equals(recordGUID) ||      // Temporary: Bug 762118
            "places".equals(recordGUID) ||
            "tags".equals(recordGUID);
   }
@@ -355,7 +356,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
         }
       }
 
-      if (Logger.logVerbose(LOG_TAG)) {
+      if (Logger.shouldLogVerbose(LOG_TAG)) {
         // Don't JSON-encode unless we're logging.
         Logger.trace(LOG_TAG, "Output child array: " + childArray.toJSONString());
       }
@@ -511,6 +512,11 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
     if (forbiddenGUID(bmk.guid)) {
       Logger.debug(LOG_TAG, "Ignoring forbidden record with guid: " + bmk.guid);
+      return true;
+    }
+
+    if ("readinglist".equals(bmk.parentID)) {      // Temporary: Bug 762118
+      Logger.debug(LOG_TAG,  "Ignoring reading list item with guid: " + bmk.guid);
       return true;
     }
 
@@ -709,7 +715,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
     if (parentName == null) {
       return;
     }
-    if (Logger.logVerbose(LOG_TAG)) {
+    if (Logger.shouldLogVerbose(LOG_TAG)) {
       Logger.trace(LOG_TAG, "Replacing parent name \"" + r.parentName + "\" with \"" + parentName + "\".");
     }
     r.parentName = parentName;
@@ -815,7 +821,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
 
     JSONArray childArray = bmk.children;
 
-    if (Logger.logVerbose(LOG_TAG)) {
+    if (Logger.shouldLogVerbose(LOG_TAG)) {
       Logger.trace(LOG_TAG, bmk.guid + " has children " + childArray.toJSONString());
     }
     parentToChildArray.put(bmk.guid, childArray);

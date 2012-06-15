@@ -143,6 +143,11 @@ function starttest(){
   noxray.b = 122;
   is(noxray_wrapper.b, 122, "Should be able to shadow.");
 
+  // Try setting file input values via an Xray wrapper.
+  SpecialPowers.wrap(document).title = "foo";
+  is(document.title, "foo", "Set property correctly on Xray-wrapped DOM object");
+  is(SpecialPowers.wrap(document).URI, document.URI, "Got property correctly on Xray-wrapped DOM object");
+
   info("\nProfile::SpecialPowersRunTime: " + (new Date() - startTime) + "\n");
   SimpleTest.finish();
 }

@@ -37,4 +37,9 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 endif
 
+# See bug 764192 for details on what we're investigating here.
+ifeq (,$(filter release esr,$(MOZ_UPDATE_CHANNEL)))
+DEFINES	+= -DMOZ_TEMP_INVESTIGATION
+endif
+
 include $(topsrcdir)/config/rules.mk

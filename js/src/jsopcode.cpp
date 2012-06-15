@@ -1864,14 +1864,14 @@ IsVarSlot(JSPrinter *jp, jsbytecode *pc, JSAtom **varAtom, int *localSlot)
 {
     if (JOF_OPTYPE(*pc) == JOF_SCOPECOORD) {
         *varAtom = ScopeCoordinateName(jp->sprinter.context->runtime, jp->script, pc);
-        LOCAL_ASSERT_RV(*varAtom, NULL);
+        LOCAL_ASSERT_RV(*varAtom, false);
         return true;
     }
 
     unsigned slot = GET_SLOTNO(pc);
     if (slot < jp->script->nfixed) {
         *varAtom = GetArgOrVarAtom(jp, jp->fun->nargs + slot);
-        LOCAL_ASSERT_RV(*varAtom, NULL);
+        LOCAL_ASSERT_RV(*varAtom, false);
         return true;
     }
 

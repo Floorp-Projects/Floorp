@@ -33,6 +33,7 @@
 #include "nsIConsoleService.h"
 #include "base/compiler_specific.h"
 #include "NullHttpTransaction.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla { namespace net {
  
@@ -5194,8 +5195,8 @@ nsHttpChannel::SetOfflineCacheToken(nsISupports *token)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-class nsHttpChannelCacheKey : public nsISupportsPRUint32,
-                              public nsISupportsCString
+class nsHttpChannelCacheKey MOZ_FINAL : public nsISupportsPRUint32,
+                                        public nsISupportsCString
 {
     NS_DECL_ISUPPORTS
 

@@ -62,6 +62,7 @@
 #include "nsAutoJSValHolder.h"
 #include "nsDOMMediaQueryList.h"
 #include "mozilla/dom/workers/Workers.h"
+#include "nsJSPrincipals.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -1832,6 +1833,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     if (!JS_RefreshCrossCompartmentWrappers(cx, mJSObject)) {
       return NS_ERROR_FAILURE;
     }
+
+    // Inner windows are only reused for same-origin principals, but the principals
+    // don't necessarily match exactly. Update the principal on the compartment to
+    // match the new document.
+    // NB: We don't just call currentInner->RefreshCompartmentPrincipals() here
+    // because we haven't yet set its mDoc to aDocument.
+    JS_SetCompartmentPrincipals(js::GetObjectCompartment(currentInner->mJSObject),
+                                nsJSPrincipals::get(aDocument->NodePrincipal()));
   } else {
     if (aState) {
       newInnerWindow = wsh->GetInnerWindow();
@@ -4270,6 +4279,15 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
                                        true, true, &defaultActionEnabled);
 
   return defaultActionEnabled;
+}
+
+void
+nsGlobalWindow::RefreshCompartmentPrincipal()
+{
+  FORWARD_TO_INNER(RefreshCompartmentPrincipal, (), /* void */ );
+
+  JS_SetCompartmentPrincipals(js::GetObjectCompartment(mJSObject),
+                              nsJSPrincipals::get(mDoc->NodePrincipal()));
 }
 
 static already_AddRefed<nsIDocShellTreeItem>
@@ -8293,6 +8311,12 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
       }
     }
   }
+  else if (aIID.Equals(NS_GET_IID(nsIDocShell))) {
+    FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
+
+    nsCOMPtr<nsIDocShell> docShell = mDocShell;
+    docShell.forget(aSink);
+  }
 #ifdef NS_PRINTING
   else if (aIID.Equals(NS_GET_IID(nsIWebBrowserPrint))) {
     FORWARD_TO_OUTER(GetInterface, (aIID, aSink), NS_ERROR_NOT_INITIALIZED);
@@ -8635,7 +8659,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   NS_ASSERTION(mDocShell, "Must have docshell here");
 
   const bool checkForPopup = !nsContentUtils::IsCallerChrome() &&
-    !aDialog && !WindowExists(aName, !aCalledNoScript);
+    !IsPartOfApp() && !aDialog && !WindowExists(aName, !aCalledNoScript);
 
   // Note: it's very important that this be an nsXPIDLCString, since we want
   // .get() on it to return nsnull until we write stuff to it.  The window
@@ -9321,8 +9345,6 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     PR_REMOVE_LINK(timeout);
 
     if (needsReinsertion) {
-      NS_ASSERTION(timeout->mTimer,
-                   "rescheduling interval timeout without a timer!");
       // Insert interval timeout onto list sorted in deadline order.
       // AddRefs timeout.
       InsertTimeoutIntoList(timeout);

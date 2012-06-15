@@ -11,9 +11,11 @@ using namespace mozilla::a11y;
 
 HTMLCanvasAccessible::
   HTMLCanvasAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  HyperTextAccessible(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
+
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLCanvasAccessible, HyperTextAccessible)
 
 role
 HTMLCanvasAccessible::NativeRole()

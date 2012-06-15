@@ -12,6 +12,7 @@
 #include "nsIVariant.h"
 #include "nsStringFwd.h"
 #include "xpt_struct.h"
+#include "mozilla/Attributes.h"
 
 class nsCycleCollectionTraversalCallback;
 
@@ -83,7 +84,7 @@ struct nsDiscriminatedUnion
  * use to help them do all the 'standard' nsIVariant data conversions.
  */
 
-class nsVariant : public nsIWritableVariant
+class nsVariant MOZ_FINAL : public nsIWritableVariant
 {
 public:
     NS_DECL_ISUPPORTS

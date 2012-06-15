@@ -20,15 +20,16 @@
 #include "plstr.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIIPCSerializable.h"
+#include "mozilla/Attributes.h"
 
 //-----------------------------------------------------------------------------
 // nsIStringInputStream implementation
 //-----------------------------------------------------------------------------
 
-class nsStringInputStream : public nsIStringInputStream
-                          , public nsISeekableStream
-                          , public nsISupportsCString
-                          , public nsIIPCSerializable
+class nsStringInputStream MOZ_FINAL : public nsIStringInputStream
+                                    , public nsISeekableStream
+                                    , public nsISupportsCString
+                                    , public nsIIPCSerializable
 {
 public:
     NS_DECL_ISUPPORTS

@@ -7,12 +7,13 @@
 
 #include "nsIOutputStream.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 /**
  * A base64 encoder. Usage: Instantiate class, write to it using
  * Write(), then call Finish() to get the base64-encoded data.
  */
-class nsBase64Encoder : public nsIOutputStream {
+class nsBase64Encoder MOZ_FINAL : public nsIOutputStream {
   public:
     nsBase64Encoder() {}
 

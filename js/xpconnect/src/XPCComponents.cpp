@@ -30,6 +30,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsPrincipal.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 using namespace js;
@@ -3048,7 +3049,7 @@ WrapForSandbox(JSContext *cx, bool wantXrays, jsval *vp)
 
 // Needed to distinguish multiple compartments with the same origin from each
 // other. The only thing we need out of identity objects are unique addresses.
-class Identity : public nsISupports
+class Identity MOZ_FINAL : public nsISupports
 {
     NS_DECL_ISUPPORTS
 };
@@ -3242,7 +3243,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
         XPCCallContext ccx(NATIVE_CALLER, cx);
         if (!ccx.IsValid())
             return NS_ERROR_XPC_UNEXPECTED;
-        
+
         {
           JSAutoEnterCompartment ac;
           if (!ac.enter(ccx, sandbox))
@@ -3253,7 +3254,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
           if (!scope)
               return NS_ERROR_XPC_UNEXPECTED;
 
-          if (options.wantComponents && 
+          if (options.wantComponents &&
               !nsXPCComponents::AttachComponentsObject(ccx, scope, sandbox))
               return NS_ERROR_XPC_UNEXPECTED;
 
@@ -3265,7 +3266,7 @@ xpc_CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandbo
             return NS_ERROR_XPC_UNEXPECTED;
 
         if (options.wantXHRConstructor &&
-            !JS_DefineFunction(cx, sandbox, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR)) 
+            !JS_DefineFunction(cx, sandbox, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR))
             return NS_ERROR_XPC_UNEXPECTED;
     }
 
@@ -3345,7 +3346,7 @@ GetPrincipalFromString(JSContext *cx, JSString *codebase, nsIPrincipal **princip
     return NS_OK;
 }
 
-// for sandbox constructor  the first argument can be a principal object or 
+// for sandbox constructor  the first argument can be a principal object or
 // a script object principal (Document, Window)
 nsresult
 GetPrincipalOrSOP(JSContext *cx, JSObject &from, nsISupports **out)
@@ -3361,12 +3362,12 @@ GetPrincipalOrSOP(JSContext *cx, JSObject &from, nsISupports **out)
                                     getter_AddRefs(wrapper));
 
     NS_ENSURE_TRUE(wrapper, NS_ERROR_INVALID_ARG);
-    
+
     if (nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryWrappedNative(wrapper)) {
         sop.forget(out);
         return NS_OK;
-    } 
-    
+    }
+
     nsCOMPtr<nsIPrincipal> principal = do_QueryWrappedNative(wrapper);
     principal.forget(out);
     NS_ENSURE_TRUE(*out, NS_ERROR_INVALID_ARG);
@@ -3374,7 +3375,7 @@ GetPrincipalOrSOP(JSContext *cx, JSObject &from, nsISupports **out)
     return NS_OK;
 }
 
-// the first parameter of the sandbox constructor might be an array of principals, either in string 
+// the first parameter of the sandbox constructor might be an array of principals, either in string
 // format or actual objects (see GetPrincipalOrSOP)
 nsresult
 GetExpandedPrincipal(JSContext *cx, JSObject &arrayObj, nsIExpandedPrincipal **out)
@@ -3402,7 +3403,7 @@ GetExpandedPrincipal(JSContext *cx, JSObject &arrayObj, nsIExpandedPrincipal **o
 
         if (!JS_GetElement(cx, &arrayObj, i, &allowed))
             return NS_ERROR_INVALID_ARG;
-        
+
         nsresult rv;
         nsCOMPtr<nsIPrincipal> principal;
         if (allowed.isString()) {
@@ -3411,7 +3412,7 @@ GetExpandedPrincipal(JSContext *cx, JSObject &arrayObj, nsIExpandedPrincipal **o
             NS_ENSURE_SUCCESS(rv, rv);
         } else if (allowed.isObject()) {
             // in case of object let's see if it's a Principal or a ScriptObjectPrincipal
-            nsCOMPtr<nsISupports> prinOrSop;  
+            nsCOMPtr<nsISupports> prinOrSop;
             rv = GetPrincipalOrSOP(cx, allowed.toObject(), getter_AddRefs(prinOrSop));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3419,10 +3420,10 @@ GetExpandedPrincipal(JSContext *cx, JSObject &arrayObj, nsIExpandedPrincipal **o
             principal = do_QueryInterface(prinOrSop);
             if (sop) {
                 principal = sop->GetPrincipal();
-            }                          
+            }
         }
         NS_ENSURE_TRUE(principal, NS_ERROR_INVALID_ARG);
- 
+
         // We do not allow ExpandedPrincipals to contain any system principals
         bool isSystem;
         rv = ssm->IsSystemPrincipal(principal, &isSystem);
@@ -3430,14 +3431,14 @@ GetExpandedPrincipal(JSContext *cx, JSObject &arrayObj, nsIExpandedPrincipal **o
         NS_ENSURE_FALSE(isSystem, NS_ERROR_INVALID_ARG);
         allowedDomains[i] = principal;
   }
-  
+
   nsCOMPtr<nsIExpandedPrincipal> result = new nsExpandedPrincipal(allowedDomains);
   result.forget(out);
   return NS_OK;
 }
 
 // helper that tries to get a property form the options object
-nsresult 
+nsresult
 GetPropFromOptions(JSContext *cx, JSObject &from, const char *name, jsval *prop, JSBool *found)
 {
     if (!JS_HasProperty(cx, &from, name, found))
@@ -3450,7 +3451,7 @@ GetPropFromOptions(JSContext *cx, JSObject &from, const char *name, jsval *prop,
 }
 
 // helper that tries to get a boolean property form the options object
-nsresult 
+nsresult
 GetBoolPropFromOptions(JSContext *cx, JSObject &from, const char *name, bool *prop)
 {
     MOZ_ASSERT(prop);
@@ -3470,7 +3471,7 @@ GetBoolPropFromOptions(JSContext *cx, JSObject &from, const char *name, bool *pr
 }
 
 // helper that tries to get an object property form the options object
-nsresult 
+nsresult
 GetObjPropFromOptions(JSContext *cx, JSObject &from, const char *name, JSObject **prop)
 {
     MOZ_ASSERT(prop);
@@ -3493,8 +3494,8 @@ GetObjPropFromOptions(JSContext *cx, JSObject &from, const char *name, JSObject 
 }
 
 // helper that tries to get a string property form the options object
-nsresult 
-GetStringPropFromOptions(JSContext *cx, JSObject &from, const char *name, nsCString &prop) 
+nsresult
+GetStringPropFromOptions(JSContext *cx, JSObject &from, const char *name, nsCString &prop)
 {
     jsval propVal;
     JSBool found;
@@ -3513,31 +3514,31 @@ GetStringPropFromOptions(JSContext *cx, JSObject &from, const char *name, nsCStr
 }
 
 // helper that parsing the sandbox options object (from) and sets the fields of the incoming options struct (options)
-nsresult 
-ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options) 
+nsresult
+ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
 {
     NS_ENSURE_TRUE(from.isObject(), NS_ERROR_INVALID_ARG);
     JSObject &optionsObject = from.toObject();
-    nsresult rv = GetObjPropFromOptions(cx, optionsObject, 
+    nsresult rv = GetObjPropFromOptions(cx, optionsObject,
                                         "sandboxPrototype", &options.proto);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = GetBoolPropFromOptions(cx, optionsObject, 
+    rv = GetBoolPropFromOptions(cx, optionsObject,
                                 "wantXrays", &options.wantXrays);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = GetBoolPropFromOptions(cx, optionsObject, 
+    rv = GetBoolPropFromOptions(cx, optionsObject,
                                 "wantComponents", &options.wantComponents);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = GetBoolPropFromOptions(cx, optionsObject, 
+    rv = GetBoolPropFromOptions(cx, optionsObject,
                                 "wantXHRConstructor", &options.wantXHRConstructor);
     NS_ENSURE_SUCCESS(rv, rv);
-    
-    rv = GetStringPropFromOptions(cx, optionsObject, 
+
+    rv = GetStringPropFromOptions(cx, optionsObject,
                                   "sandboxName", options.sandboxName);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     return NS_OK;
 }
 
@@ -3578,8 +3579,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     nsCOMPtr<nsIPrincipal> principal;
     nsCOMPtr<nsIExpandedPrincipal> expanded;
     nsCOMPtr<nsISupports> prinOrSop;
-    nsISupports *identity = nsnull;
-    
+
     if (argv[0].isString()) {
         rv = GetPrincipalFromString(cx, argv[0].toString(), getter_AddRefs(principal));
         prinOrSop = principal;
@@ -3587,7 +3587,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
         if (JS_IsArrayObject(cx, &argv[0].toObject())) {
             rv = GetExpandedPrincipal(cx, argv[0].toObject(), getter_AddRefs(expanded));
             prinOrSop = expanded;
-        } else { 
+        } else {
             rv = GetPrincipalOrSOP(cx, argv[0].toObject(), getter_AddRefs(prinOrSop));
         }
     } else {
@@ -3604,8 +3604,8 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
 
     // If there is no options object given, or no sandboxName property
     // specified, use the caller's filename as sandboxName.
-    if (options.sandboxName.IsEmpty() && 
-        NS_FAILED(GetSandboxNameFromStack(cx, options.sandboxName))) 
+    if (options.sandboxName.IsEmpty() &&
+        NS_FAILED(GetSandboxNameFromStack(cx, options.sandboxName)))
     {
         return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
     }
@@ -4036,7 +4036,7 @@ nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const JS::Value &aMap,
 {
     if (!aMap.isObject()) {
         aKeys->setUndefined();
-        return NS_OK; 
+        return NS_OK;
     }
     JSObject *objRet;
     if (!JS_NondeterministicGetWeakMapKeys(aCx, &aMap.toObject(), &objRet))

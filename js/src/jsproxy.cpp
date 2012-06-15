@@ -400,8 +400,10 @@ bool
 IndirectProxyHandler::defineProperty(JSContext *cx, JSObject *proxy, jsid id,
                                      PropertyDescriptor *desc)
 {
-    return JS_DefinePropertyById(cx, GetProxyTargetObject(proxy), id,
-                                 desc->value, desc->getter, desc->setter,
+    RootedObject obj(cx, GetProxyTargetObject(proxy));
+    return CheckDefineProperty(cx, obj, RootedId(cx, id), RootedValue(cx, desc->value),
+                               desc->getter, desc->setter, desc->attrs) &&
+           JS_DefinePropertyById(cx, obj, id, desc->value, desc->getter, desc->setter,
                                  desc->attrs);
 }
 
@@ -1192,7 +1194,7 @@ Proxy::fun_toString(JSContext *cx, JSObject *proxy, unsigned indent)
 bool
 Proxy::regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g)
 {
-    JS_CHECK_RECURSION(cx, return NULL);
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return GetProxyHandler(proxy)->regexp_toShared(cx, proxy, g);
 }
@@ -1200,7 +1202,7 @@ Proxy::regexp_toShared(JSContext *cx, JSObject *proxy, RegExpGuard *g)
 bool
 Proxy::defaultValue(JSContext *cx, JSObject *proxy, JSType hint, Value *vp)
 {
-    JS_CHECK_RECURSION(cx, return NULL);
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return GetProxyHandler(proxy)->defaultValue(cx, proxy, hint, vp);
 }
@@ -1208,7 +1210,7 @@ Proxy::defaultValue(JSContext *cx, JSObject *proxy, JSType hint, Value *vp)
 bool
 Proxy::iteratorNext(JSContext *cx, JSObject *proxy, Value *vp)
 {
-    JS_CHECK_RECURSION(cx, return NULL);
+    JS_CHECK_RECURSION(cx, return false);
     AutoPendingProxyOperation pending(cx, proxy);
     return GetProxyHandler(proxy)->iteratorNext(cx, proxy, vp);
 }

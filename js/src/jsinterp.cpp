@@ -727,7 +727,7 @@ js::UnwindScope(JSContext *cx, uint32_t stackDepth)
     StackFrame *fp = cx->fp();
     JS_ASSERT(stackDepth <= cx->regs().stackDepth());
 
-    for (ScopeIter si(fp); !si.done(); si = si.enclosing()) {
+    for (ScopeIter si(fp, cx); !si.done(); ++si) {
         switch (si.type()) {
           case ScopeIter::Block:
             if (si.staticBlock().stackDepth() < stackDepth)
@@ -941,7 +941,7 @@ js::AssertValidPropertyCacheHit(JSContext *cx,
     uint64_t sample = cx->runtime->gcNumber;
     PropertyCacheEntry savedEntry = *entry;
 
-    RootedPropertyName name(cx, GetNameFromBytecode(cx, pc, JSOp(*pc), js_CodeSpec[*pc]));
+    RootedPropertyName name(cx, GetNameFromBytecode(cx, pc, JSOp(*pc)));
     RootedObject start(cx, start_);
 
     JSObject *obj, *pobj;
@@ -1078,11 +1078,11 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
 
 # define DO_OP()            JS_BEGIN_MACRO                                    \
                                 CHECK_PCCOUNT_INTERRUPTS();                   \
-                                js::gc::MaybeVerifyBarriers(cx);              \
                                 JS_EXTENSION_(goto *jumpTable[op]);           \
                             JS_END_MACRO
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
                                 TypeCheckNextBytecode(cx, script, n, regs);   \
+                                js::gc::MaybeVerifyBarriers(cx);              \
                                 op = (JSOp) *(regs.pc += (n));                \
                                 DO_OP();                                      \
                             JS_END_MACRO

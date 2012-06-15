@@ -6,13 +6,13 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@;
 
-import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import android.view.MenuItem;
 
-public class App extends GeckoApp {
+public class App extends BrowserApp {
     public String getPackageName() {
 	return "@ANDROID_PACKAGE_NAME@";
     }

@@ -62,8 +62,8 @@ def run_tests(tests, verbose):
         harness.start()
         try:
             _test.WebIDLTest.__call__(WebIDL.Parser(), harness)
-        except:
-            print "TEST-UNEXPECTED-FAIL | Unhandled exception in test %s" % testpath
+        except Exception, ex:
+            print "TEST-UNEXPECTED-FAIL | Unhandled exception in test %s: %s" % (testpath, ex)
             traceback.print_exc()
         finally:
             harness.finish()

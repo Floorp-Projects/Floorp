@@ -10,6 +10,7 @@
 
 #include "xptcall.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
 
 class xptiInterfaceEntry;
 
@@ -38,7 +39,7 @@ public:
 
 #define SENTINEL_ENTRY(n) NS_IMETHOD Sentinel##n();
 
-class nsXPTCStubBase : public nsIXPTCStubBase
+class nsXPTCStubBase MOZ_FINAL : public nsIXPTCStubBase
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED

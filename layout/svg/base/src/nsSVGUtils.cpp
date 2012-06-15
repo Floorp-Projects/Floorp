@@ -485,8 +485,6 @@ nsSVGUtils::GetNearestViewportElement(nsIContent *aContent)
 static gfxMatrix
 GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
 {
-  nsIDocument* currentDoc = aElement->GetCurrentDoc();
-
   gfxMatrix matrix = aElement->PrependLocalTransformsTo(gfxMatrix(),
     aHaveRecursed ? nsSVGElement::eAllTransforms : nsSVGElement::eUserSpaceToParent);
   nsSVGElement *element = aElement;
@@ -511,18 +509,30 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
     // didn't find a nearestViewportElement
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }
+  if (element->Tag() != nsGkAtoms::svg) {
+    // Not a valid SVG fragment
+    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+  }
+  if (element == aElement && !aHaveRecursed) {
+    // We get here when getScreenCTM() is called on an outer-<svg>.
+    // Consistency with other elements would have us include only the
+    // eFromUserSpace transforms, but we include the eAllTransforms
+    // transforms in this case since that's what we've been doing for
+    // a while, and it keeps us consistent with WebKit and Opera (if not
+    // really with the ambiguous spec).
+    matrix = aElement->PrependLocalTransformsTo(gfxMatrix());
+  }
   if (!ancestor || !ancestor->IsElement()) {
     return matrix;
   }
   if (ancestor->IsSVG()) {
-    if (element->Tag() != nsGkAtoms::svg) {
-      return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
-    }
     return
       matrix * GetCTMInternal(static_cast<nsSVGElement*>(ancestor), true, true);
   }
+
   // XXX this does not take into account CSS transform, or that the non-SVG
   // content that we've hit may itself be inside an SVG foreignObject higher up
+  nsIDocument* currentDoc = aElement->GetCurrentDoc();
   float x = 0.0f, y = 0.0f;
   if (currentDoc && element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG)) {
     nsIPresShell *presShell = currentDoc->GetShell();
@@ -1353,8 +1363,8 @@ nsSVGUtils::TransformOuterSVGPointToChildFrame(nsPoint aPoint,
   canvasDevToFrameUserSpace.Invert();
   gfxPoint devPt = gfxPoint(aPoint.x, aPoint.y) /
     aPresContext->AppUnitsPerDevPixel();
-  gfxPoint userPt = canvasDevToFrameUserSpace.Transform(devPt).Round();
-  gfxPoint appPt = userPt * aPresContext->AppUnitsPerCSSPixel();
+  gfxPoint userPt = canvasDevToFrameUserSpace.Transform(devPt);
+  gfxPoint appPt = (userPt * aPresContext->AppUnitsPerCSSPixel()).Round();
   userPt.x = clamped(appPt.x, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
   userPt.y = clamped(appPt.y, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
   // now guaranteed to be safe:
@@ -1397,15 +1407,15 @@ nsSVGUtils::HitTestRect(const gfxMatrix &aMatrix,
                         float aRX, float aRY, float aRWidth, float aRHeight,
                         float aX, float aY)
 {
-  if (aMatrix.IsSingular()) {
+  gfxRect rect(aRX, aRY, aRWidth, aRHeight);
+  if (rect.IsEmpty() || aMatrix.IsSingular()) {
     return false;
   }
-  gfxContext ctx(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
-  ctx.SetMatrix(aMatrix);
-  ctx.NewPath();
-  ctx.Rectangle(gfxRect(aRX, aRY, aRWidth, aRHeight));
-  ctx.IdentityMatrix();
-  return ctx.PointInFill(gfxPoint(aX, aY));
+  gfxMatrix toRectSpace = aMatrix;
+  toRectSpace.Invert();
+  gfxPoint p = toRectSpace.Transform(gfxPoint(aX, aY));
+  return rect.x <= p.x && p.x <= rect.XMost() &&
+         rect.y <= p.y && p.y <= rect.YMost();
 }
 
 gfxRect
@@ -1508,10 +1518,9 @@ nsSVGUtils::SetClipRect(gfxContext *aContext,
   if (aCTM.IsSingular())
     return;
 
-  gfxMatrix oldMatrix = aContext->CurrentMatrix();
+  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(aContext);
   aContext->Multiply(aCTM);
   aContext->Clip(aRect);
-  aContext->SetMatrix(oldMatrix);
 }
 
 void

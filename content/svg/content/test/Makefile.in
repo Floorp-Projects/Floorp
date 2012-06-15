@@ -51,6 +51,7 @@ _TEST_FILES = \
 		test_pointAtLength.xhtml \
 		test_pointer-events.xhtml \
 		test_pointer-events-2.xhtml \
+		test_pointer-events-3.xhtml \
 		test_scientific.html \
 		scientific-helper.svg \
 		test_SVGAnimatedImageSMILDisabled.html \

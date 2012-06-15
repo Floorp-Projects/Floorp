@@ -6,7 +6,7 @@
 %include defines.inc
 
 html {
-  font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
+  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
   font-size: 24px;
   background: #FFFFFF;
   -moz-text-size-adjust: none;

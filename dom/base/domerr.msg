@@ -33,17 +33,17 @@ DOM4_MSG_DEF(DataCloneError, "The object could not be cloned.", NS_ERROR_DOM_DAT
 
 /* XXX Should be JavaScript native TypeError */
 DOM4_MSG_DEF(TypeError, "The method parameter is missing or invalid.", NS_ERROR_TYPE_ERR)
+DOM4_MSG_DEF(RangeError, "The method parameter is out of valid range.", NS_ERROR_RANGE_ERR)
 
-/* SVG DOM error codes from http://www.w3.org/TR/SVG11/svgdom.html */
+/* SVG DOM errors from http://www.w3.org/TR/SVG11/svgdom.html */
 
-DOM_MSG_DEF(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR, "Unknown or invalid type")
-DOM_MSG_DEF(NS_ERROR_DOM_SVG_INVALID_VALUE_ERR, "One of the parameters has an invalid value")
-DOM_MSG_DEF(NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE, "The matrix could not be computed")
+DOM4_MSG_DEF(TypeError, "Unknown or invalid type", NS_ERROR_DOM_SVG_WRONG_TYPE_ERR)
+DOM4_MSG_DEF(InvalidStateError, "The matrix could not be computed", NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE)
 
-/* DOM error codes from http://www.w3.org/TR/DOM-Level-3-XPath/ */
+/* XPath errors from http://www.w3.org/TR/DOM-Level-3-XPath/ */
 
-DOM_MSG_DEF(NS_ERROR_DOM_INVALID_EXPRESSION_ERR, "The expression is not a legal expression.")
-DOM_MSG_DEF(NS_ERROR_DOM_TYPE_ERR, "The expression cannot be converted to return the specified type.")
+DOM4_MSG_DEF(SyntaxError, "The expression is not a legal expression.", NS_ERROR_DOM_INVALID_EXPRESSION_ERR)
+DOM4_MSG_DEF(TypeError, "The expression cannot be converted to return the specified type.", NS_ERROR_DOM_TYPE_ERR)
 
 /* IndexedDB errors http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#exceptions */
 

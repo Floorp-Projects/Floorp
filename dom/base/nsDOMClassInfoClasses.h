@@ -283,7 +283,6 @@ DOMCI_CLASS(SVGAnimatedRect)
 DOMCI_CLASS(SVGAnimatedString)
 DOMCI_CLASS(SVGAnimatedTransformList)
 DOMCI_CLASS(SVGEvent)
-DOMCI_CLASS(SVGException)
 DOMCI_CLASS(SVGLength)
 DOMCI_CLASS(SVGLengthList)
 DOMCI_CLASS(SVGMatrix)
@@ -340,7 +339,6 @@ DOMCI_CLASS(XSLTProcessor)
 
 // DOM Level 3 XPath objects
 DOMCI_CLASS(XPathEvaluator)
-DOMCI_CLASS(XPathException)
 DOMCI_CLASS(XPathExpression)
 DOMCI_CLASS(XPathNSResolver)
 DOMCI_CLASS(XPathResult)
@@ -518,6 +516,9 @@ DOMCI_CLASS(MutationObserver)
 DOMCI_CLASS(MutationRecord)
 
 DOMCI_CLASS(MozSettingsEvent)
+DOMCI_CLASS(MozContactChangeEvent)
+
+DOMCI_CLASS(MozApplicationEvent)
 
 #ifdef MOZ_B2G_RIL
 DOMCI_CLASS(Telephony)
@@ -532,6 +533,7 @@ DOMCI_CLASS(BluetoothAdapter)
 
 DOMCI_CLASS(DOMError)
 DOMCI_CLASS(DOMRequest)
+DOMCI_CLASS(OpenWindowEventDetail)
 
 DOMCI_CLASS(DOMFileHandle)
 DOMCI_CLASS(FileRequest)

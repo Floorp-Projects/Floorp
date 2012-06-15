@@ -75,9 +75,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     private SuggestClient mSuggestClient;
     private AsyncTask<String, Void, ArrayList<String>> mSuggestTask;
 
-    private static String sSuggestEngine;
-    private static String sSuggestTemplate;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -230,63 +227,23 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.bookmarks_list));
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
 
-        if (sSuggestTemplate == null) {
-            loadSuggestClientFromPrefs();
-        } else {
-            loadSuggestClient();
-        }
-
         GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
-    }
-
-    private void loadSuggestClientFromPrefs() {
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                SharedPreferences prefs = getSearchPreferences();
-                sSuggestEngine = prefs.getString("suggestEngine", null);
-                sSuggestTemplate = prefs.getString("suggestTemplate", null);
-                if (sSuggestTemplate != null) {
-                    loadSuggestClient();
-                    mAwesomeTabs.setSuggestEngine(sSuggestEngine, null);
-                }
-            }
-        });
-    }
-
-    private void loadSuggestClient() {
-        mSuggestClient = new SuggestClient(GeckoApp.mAppContext, sSuggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
     }
 
     public void handleMessage(String event, JSONObject message) {
         try {
             if (event.equals("SearchEngines:Data")) {
-                final String suggestEngine = message.optString("suggestEngine");
-                final String suggestTemplate = message.optString("suggestTemplate");
-                if (!TextUtils.equals(suggestTemplate, sSuggestTemplate)) {
-                    saveSuggestEngineData(suggestEngine, suggestTemplate);
-                    sSuggestEngine = suggestEngine;
-                    sSuggestTemplate = suggestTemplate;
-                    loadSuggestClient();
-                }
+                final String suggestEngine =  message.isNull("suggestEngine") ? null : message.getString("suggestEngine");
+                final String suggestTemplate = message.isNull("suggestTemplate") ? null : message.getString("suggestTemplate");
+                if (suggestTemplate != null)
+                    mSuggestClient = new SuggestClient(GeckoApp.mAppContext, suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
                 mAwesomeTabs.setSearchEngines(suggestEngine, message.getJSONArray("searchEngines"));
             }
         } catch (Exception e) {
             // do nothing
             Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
         }
-    }
-
-    private void saveSuggestEngineData(final String suggestEngine, final String suggestTemplate) {
-        GeckoAppShell.getHandler().post(new Runnable() {
-            public void run() {
-                SharedPreferences prefs = getSearchPreferences();
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("suggestEngine", suggestEngine);
-                editor.putString("suggestTemplate", suggestTemplate);
-                editor.commit();
-            }
-        });
     }
 
     @Override
@@ -671,8 +628,12 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                     @Override
                     public void onPostExecute(Void result) {
                         int messageId = R.string.bookmark_removed;
-                        if (mInReadingList)
+                        if (mInReadingList) {
                             messageId = R.string.reading_list_removed;
+
+                            GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", url);
+                            GeckoAppShell.sendEventToGecko(e);
+                        }
 
                         Toast.makeText(AwesomeBar.this, messageId, Toast.LENGTH_SHORT).show();
                     }
@@ -761,9 +722,5 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         public void setOnKeyPreImeListener(OnKeyPreImeListener listener) {
             mOnKeyPreImeListener = listener;
         }
-    }
-
-    private SharedPreferences getSearchPreferences() {
-        return getSharedPreferences("search.prefs", MODE_PRIVATE);
     }
 }

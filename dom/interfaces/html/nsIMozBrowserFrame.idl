@@ -7,7 +7,9 @@
 
 #include "nsIDOMMozBrowserFrame.idl"
 
-[scriptable, uuid(076AD76C-2DF6-4760-B914-21D554F0A2B6)]
+interface nsITabParent;
+
+[scriptable, uuid(0acd92dd-2902-48ee-adcf-082d3bb3ec45)]
 interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
 {
   /**
@@ -18,4 +20,28 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
    * may have to pass various security checks.
    */
   readonly attribute boolean reallyIsBrowser;
+
+  /**
+   * Normally, a frame tries to create its frame loader when its src is
+   * modified, or its contentWindow is accessed.
+   *
+   * disallowCreateFrameLoader prevents the frame element from creating its
+   * frame loader (in the same way that not being inside a document prevents the
+   * creation of a frame loader).  allowCreateFrameLoader lifts this restriction.
+   *
+   * These methods are not re-entrant -- it is an error to call
+   * disallowCreateFrameLoader twice without first calling allowFrameLoader.
+   *
+   * It's also an error to call either method if we already have a frame loader.
+   */
+  void disallowCreateFrameLoader();
+  void allowCreateFrameLoader();
+
+  /**
+   * Create a remote (i.e., out-of-process) frame loader attached to the given
+   * tab parent.
+   *
+   * It is an error to call this method if we already have a frame loader.
+   */
+  void createRemoteFrameLoader(in nsITabParent aTabParent);
 };

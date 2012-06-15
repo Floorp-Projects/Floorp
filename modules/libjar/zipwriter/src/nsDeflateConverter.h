@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPipe.h"
 #include "zlib.h"
+#include "mozilla/Attributes.h"
 
 #define DEFLATECONVERTER_CLASSNAME "Deflate converter"
 #define DEFLATECONVERTER_CID { 0x461cd5dd, 0x73c6, 0x47a4, \
@@ -17,7 +18,7 @@
 
 #define ZIP_BUFLEN (4 * 1024 - 1)
 
-class nsDeflateConverter : public nsIStreamConverter
+class nsDeflateConverter MOZ_FINAL : public nsIStreamConverter
 {
 public:
     NS_DECL_ISUPPORTS

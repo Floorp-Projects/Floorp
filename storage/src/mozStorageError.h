@@ -9,11 +9,12 @@
 
 #include "mozIStorageError.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace storage {
 
-class Error : public mozIStorageError
+class Error MOZ_FINAL : public mozIStorageError
 {
 public:
   NS_DECL_ISUPPORTS

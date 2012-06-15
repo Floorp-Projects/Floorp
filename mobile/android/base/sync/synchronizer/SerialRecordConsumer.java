@@ -4,9 +4,8 @@
 
 package org.mozilla.gecko.sync.synchronizer;
 
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.domain.Record;
-
-import android.util.Log;
 
 /**
  * Consume records from a queue inside a RecordsChannel, storing them serially.
@@ -22,21 +21,6 @@ class SerialRecordConsumer extends RecordConsumer {
     this.delegate = delegate;
   }
 
-  private static void info(String message) {
-    System.out.println("INFO: " + message);
-    Log.i(LOG_TAG, message);
-  }
-
-  private static void warn(String message, Exception ex) {
-    System.out.println("WARN: " + message);
-    Log.w(LOG_TAG, message, ex);
-  }
-
-  private static void debug(String message) {
-    System.out.println("DEBUG: " + message);
-    Log.d(LOG_TAG, message);
-  }
-
   private Object monitor = new Object();
   @Override
   public void doNotify() {
@@ -47,7 +31,7 @@ class SerialRecordConsumer extends RecordConsumer {
 
   @Override
   public void queueFilled() {
-    debug("Queue filled.");
+    Logger.debug(LOG_TAG, "Queue filled.");
     synchronized (monitor) {
       this.stopEventually = true;
       monitor.notify();
@@ -56,7 +40,7 @@ class SerialRecordConsumer extends RecordConsumer {
 
   @Override
   public void halt() {
-    debug("Halting.");
+    Logger.debug(LOG_TAG, "Halting.");
     synchronized (monitor) {
       this.stopEventually = true;
       this.stopImmediately = true;
@@ -67,38 +51,38 @@ class SerialRecordConsumer extends RecordConsumer {
   private Object storeSerializer = new Object();
   @Override
   public void stored() {
-    debug("Record stored. Notifying.");
+    Logger.debug(LOG_TAG, "Record stored. Notifying.");
     synchronized (storeSerializer) {
-      debug("stored() took storeSerializer.");
+      Logger.debug(LOG_TAG, "stored() took storeSerializer.");
       counter++;
       storeSerializer.notify();
-      debug("stored() dropped storeSerializer.");
+      Logger.debug(LOG_TAG, "stored() dropped storeSerializer.");
     }
   }
   private void storeSerially(Record record) {
-    debug("New record to store.");
+    Logger.debug(LOG_TAG, "New record to store.");
     synchronized (storeSerializer) {
-      debug("storeSerially() took storeSerializer.");
-      debug("Storing...");
+      Logger.debug(LOG_TAG, "storeSerially() took storeSerializer.");
+      Logger.debug(LOG_TAG, "Storing...");
       try {
         this.delegate.store(record);
       } catch (Exception e) {
-        warn("Got exception in store. Not waiting.", e);
+        Logger.warn(LOG_TAG, "Got exception in store. Not waiting.", e);
         return;      // So we don't block for a stored() that never comes.
       }
       try {
-        debug("Waiting...");
+        Logger.debug(LOG_TAG, "Waiting...");
         storeSerializer.wait();
       } catch (InterruptedException e) {
         // TODO
       }
-      debug("storeSerially() dropped storeSerializer.");
+      Logger.debug(LOG_TAG, "storeSerially() dropped storeSerializer.");
     }
   }
 
   private void consumerIsDone() {
     long counterNow = this.counter;
-    info("Consumer is done. Processed " + counterNow + ((counterNow == 1) ? " record." : " records."));
+    Logger.info(LOG_TAG, "Consumer is done. Processed " + counterNow + ((counterNow == 1) ? " record." : " records."));
     delegate.consumerIsDone(stopImmediately);
   }
 
@@ -106,41 +90,41 @@ class SerialRecordConsumer extends RecordConsumer {
   public void run() {
     while (true) {
       synchronized (monitor) {
-        debug("run() took monitor.");
+        Logger.debug(LOG_TAG, "run() took monitor.");
         if (stopImmediately) {
-          debug("Stopping immediately. Clearing queue.");
+          Logger.debug(LOG_TAG, "Stopping immediately. Clearing queue.");
           delegate.getQueue().clear();
-          debug("Notifying consumer.");
+          Logger.debug(LOG_TAG, "Notifying consumer.");
           consumerIsDone();
           return;
         }
-        debug("run() dropped monitor.");
+        Logger.debug(LOG_TAG, "run() dropped monitor.");
       }
       // The queue is concurrent-safe.
       while (!delegate.getQueue().isEmpty()) {
-        debug("Grabbing record...");
+        Logger.debug(LOG_TAG, "Grabbing record...");
         Record record = delegate.getQueue().remove();
         // Block here, allowing us to process records
         // serially.
-        debug("Invoking storeSerially...");
+        Logger.debug(LOG_TAG, "Invoking storeSerially...");
         this.storeSerially(record);
-        debug("Done with record.");
+        Logger.debug(LOG_TAG, "Done with record.");
       }
       synchronized (monitor) {
-        debug("run() took monitor.");
+        Logger.debug(LOG_TAG, "run() took monitor.");
 
         if (stopEventually) {
-          debug("Done with records and told to stop. Notifying consumer.");
+          Logger.debug(LOG_TAG, "Done with records and told to stop. Notifying consumer.");
           consumerIsDone();
           return;
         }
         try {
-          debug("Not told to stop but no records. Waiting.");
+          Logger.debug(LOG_TAG, "Not told to stop but no records. Waiting.");
           monitor.wait(10000);
         } catch (InterruptedException e) {
           // TODO
         }
-        debug("run() dropped monitor.");
+        Logger.debug(LOG_TAG, "run() dropped monitor.");
       }
     }
   }

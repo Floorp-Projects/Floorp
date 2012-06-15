@@ -247,19 +247,16 @@ nsDOMExceptionProvider::GetException(nsresult result,
 
   switch (NS_ERROR_GET_MODULE(result))
   {
+    case NS_ERROR_MODULE_DOM:
     case NS_ERROR_MODULE_SVG:
-      return NS_NewSVGException(result, aDefaultException, _retval);
     case NS_ERROR_MODULE_DOM_XPATH:
-      return NS_NewXPathException(result, aDefaultException, _retval);
-    case NS_ERROR_MODULE_XPCONNECT:
-      return CreateXPConnectException(result, aDefaultException, _retval);
-    default:
-      MOZ_ASSERT(NS_ERROR_GET_MODULE(result) == NS_ERROR_MODULE_DOM ||
-          NS_ERROR_GET_MODULE(result) == NS_ERROR_MODULE_DOM_FILE ||
-          NS_ERROR_GET_MODULE(result) == NS_ERROR_MODULE_DOM_INDEXEDDB ||
-          NS_ERROR_GET_MODULE(result) == NS_ERROR_MODULE_DOM_FILEHANDLE,
-          "Trying to create an exception for the wrong error module.");
+    case NS_ERROR_MODULE_DOM_FILE:
+    case NS_ERROR_MODULE_DOM_INDEXEDDB:
+    case NS_ERROR_MODULE_DOM_FILEHANDLE:
       return NS_NewDOMException(result, aDefaultException, _retval);
+    default:
+      NS_WARNING("Trying to create an exception for the wrong error module.");
+      return NS_ERROR_FAILURE;
   }
   NS_NOTREACHED("Not reached");
   return NS_ERROR_UNEXPECTED;

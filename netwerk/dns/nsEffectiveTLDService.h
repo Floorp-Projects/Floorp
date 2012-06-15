@@ -8,6 +8,7 @@
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 class nsIIDNService;
 
@@ -76,7 +77,7 @@ private:
   const ETLDEntry* mData;
 };
 
-class nsEffectiveTLDService : public nsIEffectiveTLDService
+class nsEffectiveTLDService MOZ_FINAL : public nsIEffectiveTLDService
 {
 public:
   NS_DECL_ISUPPORTS

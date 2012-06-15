@@ -3,20 +3,17 @@
         <script>
             function check_wrapper(ok, wrapper, expected, note) {
                 netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-                var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+                var utils = SpecialPowers.DOMWindowUtils;
                 ok(utils.getClassName(wrapper) === expected, note);
             }
             function check_parent(ok, obj, expected, note) {
-                netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-                var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+                var utils = SpecialPowers.DOMWindowUtils;
                 ok(utils.getParent(obj) === expected, note);
             }
             function run_test(ok, xpcnw, sjow) {
                 // both wrappers should point to our window: XOW
                 check_wrapper(ok, ok, "Proxy", "functions are wrapped properly")
-                check_parent(ok, ok, window, "ok is parented correctly");
                 check_wrapper(ok, xpcnw, "Proxy", "XPCNWs are transformed correctly");
                 check_wrapper(ok, sjow, "Proxy", "SJOWs are transformed correctly");
 
@@ -29,6 +26,8 @@
 
                 // defprop2 = {}; disabled because the test doesn't work
             }
+
+            window.xhr = new XMLHttpRequest();
         </script>
     </head>
     <body>

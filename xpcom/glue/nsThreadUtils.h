@@ -21,7 +21,9 @@
 // appearing in xpcom_core and xpcomglue.  It may be unnecessary in the future
 // with better toolchain support.
 #ifdef MOZILLA_INTERNAL_API
+# define NS_SetThreadName NS_SetThreadName_P
 # define NS_NewThread NS_NewThread_P
+# define NS_NewNamedThread NS_NewNamedThread_P
 # define NS_GetCurrentThread NS_GetCurrentThread_P
 # define NS_GetMainThread NS_GetMainThread_P
 # define NS_IsMainThread NS_IsMainThread_P
@@ -35,6 +37,25 @@
 //-----------------------------------------------------------------------------
 // These methods are alternatives to the methods on nsIThreadManager, provided
 // for convenience.
+
+/**
+ * Set name of the target thread.  This operation is asynchronous.
+ */
+extern NS_COM_GLUE void
+NS_SetThreadName(nsIThread *thread, const nsACString &name);
+
+/**
+ * Static length version of the above function checking length of the
+ * name at compile time.
+ */
+template <size_t LEN>
+inline NS_COM_GLUE void
+NS_SetThreadName(nsIThread *thread, const char (&name)[LEN])
+{
+  MOZ_STATIC_ASSERT(LEN <= 16,
+                    "Thread name must be no more than 16 characters");
+  NS_SetThreadName(thread, nsDependentCString(name));
+}
 
 /**
  * Create a new thread, and optionally provide an initial event for the thread.
@@ -53,6 +74,21 @@ extern NS_COM_GLUE NS_METHOD
 NS_NewThread(nsIThread **result,
              nsIRunnable *initialEvent = nsnull,
              PRUint32 stackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
+
+/**
+ * Creates a named thread, otherwise the same as NS_NewThread
+ */
+template <size_t LEN>
+inline NS_METHOD
+NS_NewNamedThread(const char (&name)[LEN],
+                  nsIThread **result,
+                  nsIRunnable *initialEvent = nsnull,
+                  PRUint32 stackSize = nsIThreadManager::DEFAULT_STACK_SIZE)
+{
+    nsresult rv = NS_NewThread(result, initialEvent, stackSize);
+    NS_SetThreadName<LEN>(*result, name);
+    return rv;
+}
 
 /**
  * Get a reference to the current thread.
@@ -432,6 +468,30 @@ private:
   nsRevocableEventPtr& operator=(const nsRevocableEventPtr&);
 
   nsRefPtr<T> mEvent;
+};
+
+/**
+ * A simple helper to suffix thread pool name
+ * with incremental numbers.
+ */
+class nsThreadPoolNaming
+{
+public:
+  nsThreadPoolNaming() : mCounter(0) {}
+
+  /**
+   * Creates and sets next thread name as "<aPoolName> #<n>"
+   * on the specified thread.  If no thread is specified (aThread
+   * is null) then the name is synchronously set on the current thread.
+   */
+  void SetThreadPoolName(const nsACString & aPoolName,
+                         nsIThread * aThread = nsnull);
+
+private:
+  volatile PRUint32 mCounter;
+
+  nsThreadPoolNaming(const nsThreadPoolNaming &) MOZ_DELETE;
+  void operator=(const nsThreadPoolNaming &) MOZ_DELETE;
 };
 
 #endif  // nsThreadUtils_h__

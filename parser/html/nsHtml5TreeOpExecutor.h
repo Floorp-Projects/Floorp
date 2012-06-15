@@ -25,6 +25,7 @@
 #include "nsIURI.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
+#include "mozilla/LinkedList.h"
 
 class nsHtml5Parser;
 class nsHtml5TreeBuilder;
@@ -42,7 +43,8 @@ enum eHtml5FlushState {
 
 class nsHtml5TreeOpExecutor : public nsContentSink,
                               public nsIContentSink,
-                              public nsAHtml5TreeOpSink
+                              public nsAHtml5TreeOpSink,
+                              public mozilla::LinkedListElement<nsHtml5TreeOpExecutor>
 {
   friend class nsHtml5FlushLoopGuard;
 

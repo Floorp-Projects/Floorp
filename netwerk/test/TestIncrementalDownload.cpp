@@ -14,11 +14,12 @@
 #include "nsAutoPtr.h"
 #include "prprf.h"
 #include "prenv.h"
+#include "mozilla/Attributes.h"
 
 //-----------------------------------------------------------------------------
 
-class FetchObserver : public nsIRequestObserver
-                    , public nsIProgressEventSink
+class FetchObserver MOZ_FINAL : public nsIRequestObserver
+                              , public nsIProgressEventSink
 {
 public:
   NS_DECL_ISUPPORTS

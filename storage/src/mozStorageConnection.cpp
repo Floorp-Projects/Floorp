@@ -15,6 +15,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/Attributes.h"
 
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageCompletionCallback.h"
@@ -379,7 +380,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 //// Memory Reporting
 
-class StorageMemoryReporter : public nsIMemoryReporter
+class StorageMemoryReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
   NS_DECL_ISUPPORTS
@@ -561,6 +562,9 @@ Connection::getAsyncExecutionTarget()
       NS_WARNING("Failed to create async thread.");
       return nsnull;
     }
+    static nsThreadPoolNaming naming;
+    naming.SetThreadPoolName(NS_LITERAL_CSTRING("mozStorage"),
+                             mAsyncExecutionThread);
   }
 
   return mAsyncExecutionThread;

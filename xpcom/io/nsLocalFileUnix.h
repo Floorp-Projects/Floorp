@@ -19,6 +19,7 @@
 #include "nsReadableUtils.h"
 #include "nsIHashable.h"
 #include "nsIClassInfoImpl.h"
+#include "mozilla/Attributes.h"
 #ifdef MOZ_WIDGET_COCOA
 #include "nsILocalFileMac.h"
 #endif
@@ -74,7 +75,7 @@
 #endif
 
 
-class nsLocalFile :
+class nsLocalFile MOZ_FINAL :
 #ifdef MOZ_WIDGET_COCOA
                            public nsILocalFileMac,
 #else

@@ -79,7 +79,7 @@ public class SiteIdentityPopup extends PopupWindow {
         mInflated = true;
     }
 
-    public void show(int leftMargin) {
+    public void show(View v, int leftMargin) {
         Tab selectedTab = Tabs.getInstance().getSelectedTab();
         if (selectedTab == null) {
             Log.e(LOGTAG, "Selected tab is null");
@@ -154,6 +154,6 @@ public class SiteIdentityPopup extends PopupWindow {
         mArrow.setLayoutParams(newLayoutParams);
 
         // This will place the popup at the correct vertical position
-        showAsDropDown(GeckoApp.mBrowserToolbar.mSiteSecurity);
+        showAsDropDown(v);
     }
 }

@@ -11,14 +11,15 @@
 #include "nsReadableUtils.h"
 #include "nsISimpleEnumerator.h"
 #include "nsSupportsPrimitives.h"
+#include "mozilla/Attributes.h"
 
 //
 // nsStringEnumerator
 //
 
-class nsStringEnumerator : public nsIStringEnumerator,
-                           public nsIUTF8StringEnumerator,
-                           public nsISimpleEnumerator
+class nsStringEnumerator MOZ_FINAL : public nsIStringEnumerator,
+                                     public nsIUTF8StringEnumerator,
+                                     public nsISimpleEnumerator
 {
 public:
     nsStringEnumerator(const nsTArray<nsString>* aArray, bool aOwnsArray) :

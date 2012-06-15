@@ -7,6 +7,7 @@
 interface nsIDOMEventListener;
 interface nsIDOMDOMRequest;
 interface nsIDOMMozMobileConnectionInfo;
+interface nsIDOMMozMobileNetworkInfo;
 
 [scriptable, builtinclass, uuid(e7309c47-9a2e-4e12-84ab-f8f39214eaba)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
@@ -33,7 +34,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * Search for available networks.
    *
    * If successful, the request's onsuccess will be called, and the request's
-   * result will be an array of nsIDOMMozMobileOperatorInfo.
+   * result will be an array of nsIDOMMozMobileNetworkInfo.
    *
    * Otherwise, the request's onerror will be called, and the request's error
    * will be either 'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'.
@@ -186,7 +187,7 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   attribute nsIDOMEventListener onussdreceived;
 };
 
-[scriptable, uuid(f3bb0611-5e4a-46f1-a8f5-cf592b37596e)]
+[scriptable, uuid(46321d6e-bbce-4b7b-aa32-d17b6aa984fe)]
 interface nsIDOMMozMobileConnectionInfo : nsISupports
 {
   /**
@@ -209,9 +210,9 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
   readonly attribute bool roaming;
 
   /**
-   * Operator name.
+   * Network operator
    */
-  readonly attribute DOMString operator;
+  readonly attribute nsIDOMMozMobileNetworkInfo network;
 
   /**
    * Type of connection.
@@ -234,8 +235,8 @@ interface nsIDOMMozMobileConnectionInfo : nsISupports
 
 };
 
-[scriptable, uuid(79217f7a-4401-4d75-9654-3b28bba698c9)]
-interface nsIDOMMozMobileOperatorInfo : nsISupports
+[scriptable, uuid(3bd866c7-98a5-4ef4-a464-c22d8cc6b992)]
+interface nsIDOMMozMobileNetworkInfo: nsISupports
 {
   /**
    * Short name of the network operator

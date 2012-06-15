@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "domstubs.idl"
-#include "nsIArray.idl"
 #include "nsIDOMEvent.idl"
 #include "nsIDOMEventTarget.idl"
 
 interface nsIDOMDOMRequest;
+interface nsIArray;
 
 [scriptable, uuid(b70b84f1-7ac9-4a92-bc32-8b6a7eb7879e)]
 interface mozIDOMApplication  : nsISupports
@@ -18,16 +18,26 @@ interface mozIDOMApplication  : nsISupports
   readonly attribute DOMString origin;
   readonly attribute DOMString installOrigin;
   readonly attribute unsigned long installTime;
-  
+
   /* startPoint will be used when several launch_path exists for an app */
   nsIDOMDOMRequest launch([optional] in DOMString startPoint);
-  nsIDOMDOMRequest uninstall(); 
+  nsIDOMDOMRequest uninstall();
 };
 
-[scriptable, uuid(f1dd58d8-5211-46ce-8470-d54dde596725)]
-interface mozIDOMApplicationEvent : nsISupports
+[scriptable, builtinclass, uuid(8f2bfba8-f10e-4f63-a5e0-7a7056e1dbe6)]
+interface nsIDOMMozApplicationEvent : nsIDOMEvent
 {
   readonly attribute mozIDOMApplication application;
+
+  [noscript] void initMozApplicationEvent(in DOMString aType,
+                                          in boolean aCanBubble,
+                                          in boolean aCancelable,
+                                          in mozIDOMApplication aApplication);
+};
+
+dictionary MozApplicationEventInit : EventInit
+{
+  mozIDOMApplication application;
 };
 
 [scriptable, uuid(bd304874-d532-4e13-8034-544211445583)]

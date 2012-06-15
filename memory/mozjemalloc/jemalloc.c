@@ -935,7 +935,7 @@ typedef rb_tree(arena_chunk_t) arena_chunk_tree_t;
 
 typedef struct arena_run_s arena_run_t;
 struct arena_run_s {
-#ifdef MALLOC_DEBUG
+#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
 	uint32_t	magic;
 #  define ARENA_RUN_MAGIC 0x384adf93
 #endif
@@ -991,7 +991,7 @@ struct arena_bin_s {
 };
 
 struct arena_s {
-#ifdef MALLOC_DEBUG
+#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
 	uint32_t		magic;
 #  define ARENA_MAGIC 0x947d3d24
 #endif
@@ -1550,6 +1550,21 @@ void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
 } while (0)
 #else
 #define assert(e)
+#endif
+
+/* See bug 764192 for details on what we're hoping to see with these
+ * RELEASE_ASSERTs and the other code ifdef'ed by MOZ_TEMP_INVESTIGATION. */
+
+#include <mozilla/Assertions.h>
+
+#if defined(MOZ_TEMP_INVESTIGATION)
+#  define RELEASE_ASSERT(assertion) do {	\
+	if (!(assertion)) {			\
+		MOZ_CRASH();			\
+	}					\
+} while (0)
+#else
+#  define RELEASE_ASSERT(assertion) assert(assertion)
 #endif
 
 /******************************************************************************/
@@ -3192,7 +3207,7 @@ arena_run_reg_alloc(arena_run_t *run, arena_bin_t *bin)
 		}
 	}
 	/* Not reached. */
-	assert(0);
+	RELEASE_ASSERT(0);
 	return (NULL);
 }
 
@@ -3285,14 +3300,14 @@ arena_run_reg_dalloc(arena_run_t *run, arena_bin_t *bin, void *ptr, size_t size)
 		 */
 		regind = diff / size;
 	};
-	assert(diff == regind * size);
-	assert(regind < bin->nregs);
+	RELEASE_ASSERT(diff == regind * size);
+	RELEASE_ASSERT(regind < bin->nregs);
 
 	elm = regind >> (SIZEOF_INT_2POW + 3);
 	if (elm < run->regs_minelm)
 		run->regs_minelm = elm;
 	bit = regind - (elm << (SIZEOF_INT_2POW + 3));
-	assert((run->regs_mask[elm] & (1U << bit)) == 0);
+	RELEASE_ASSERT((run->regs_mask[elm] & (1U << bit)) == 0);
 	run->regs_mask[elm] |= (1U << bit);
 #undef SIZE_INV
 #undef SIZE_INV_SHIFT
@@ -3683,8 +3698,8 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(run);
 	run_ind = (size_t)(((uintptr_t)run - (uintptr_t)chunk)
 	    >> pagesize_2pow);
-	assert(run_ind >= arena_chunk_header_npages);
-	assert(run_ind < chunk_npages);
+	RELEASE_ASSERT(run_ind >= arena_chunk_header_npages);
+	RELEASE_ASSERT(run_ind < chunk_npages);
 	if ((chunk->map[run_ind].bits & CHUNK_MAP_LARGE) != 0)
 		size = chunk->map[run_ind].bits & ~pagesize_mask;
 	else
@@ -3696,7 +3711,7 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 		size_t i;
 
 		for (i = 0; i < run_pages; i++) {
-			assert((chunk->map[run_ind + i].bits & CHUNK_MAP_DIRTY)
+			RELEASE_ASSERT((chunk->map[run_ind + i].bits & CHUNK_MAP_DIRTY)
 			    == 0);
 			chunk->map[run_ind + i].bits = CHUNK_MAP_DIRTY;
 		}
@@ -3736,7 +3751,7 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 		size += nrun_size;
 		run_pages = size >> pagesize_2pow;
 
-		assert((chunk->map[run_ind+run_pages-1].bits & ~pagesize_mask)
+		RELEASE_ASSERT((chunk->map[run_ind+run_pages-1].bits & ~pagesize_mask)
 		    == nrun_size);
 		chunk->map[run_ind].bits = size | (chunk->map[run_ind].bits &
 		    pagesize_mask);
@@ -3761,7 +3776,7 @@ arena_run_dalloc(arena_t *arena, arena_run_t *run, bool dirty)
 		size += prun_size;
 		run_pages = size >> pagesize_2pow;
 
-		assert((chunk->map[run_ind].bits & ~pagesize_mask) ==
+		RELEASE_ASSERT((chunk->map[run_ind].bits & ~pagesize_mask) ==
 		    prun_size);
 		chunk->map[run_ind].bits = size | (chunk->map[run_ind].bits &
 		    pagesize_mask);
@@ -3876,7 +3891,7 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 	run->regs_minelm = 0;
 
 	run->nfree = bin->nregs;
-#ifdef MALLOC_DEBUG
+#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
 	run->magic = ARENA_RUN_MAGIC;
 #endif
 
@@ -3895,11 +3910,11 @@ arena_bin_malloc_easy(arena_t *arena, arena_bin_t *bin, arena_run_t *run)
 {
 	void *ret;
 
-	assert(run->magic == ARENA_RUN_MAGIC);
-	assert(run->nfree > 0);
+	RELEASE_ASSERT(run->magic == ARENA_RUN_MAGIC);
+	RELEASE_ASSERT(run->nfree > 0);
 
 	ret = arena_run_reg_alloc(run, bin);
-	assert(ret != NULL);
+	RELEASE_ASSERT(ret != NULL);
 	run->nfree--;
 
 	return (ret);
@@ -3913,8 +3928,8 @@ arena_bin_malloc_hard(arena_t *arena, arena_bin_t *bin)
 	bin->runcur = arena_bin_nonfull_run_get(arena, bin);
 	if (bin->runcur == NULL)
 		return (NULL);
-	assert(bin->runcur->magic == ARENA_RUN_MAGIC);
-	assert(bin->runcur->nfree > 0);
+	RELEASE_ASSERT(bin->runcur->magic == ARENA_RUN_MAGIC);
+	RELEASE_ASSERT(bin->runcur->nfree > 0);
 
 	return (arena_bin_malloc_easy(arena, bin, bin->runcur));
 }
@@ -4091,7 +4106,7 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 		bin = &arena->bins[ntbins + nqbins
 		    + (ffs((int)(size >> opt_small_max_2pow)) - 2)];
 	}
-	assert(size == bin->reg_size);
+	RELEASE_ASSERT(size == bin->reg_size);
 
 #ifdef MALLOC_BALANCE
 	arena_lock_balance(arena);
@@ -4125,6 +4140,12 @@ arena_malloc_small(arena_t *arena, size_t size, bool zero)
 #endif
 	} else
 		memset(ret, 0, size);
+
+#ifdef MOZ_TEMP_INVESTIGATION
+	if (size == 72) {
+		memset(ret, 0xe5, size);
+	}
+#endif
 
 	return (ret);
 }
@@ -4170,7 +4191,7 @@ arena_malloc(arena_t *arena, size_t size, bool zero)
 {
 
 	assert(arena != NULL);
-	assert(arena->magic == ARENA_MAGIC);
+	RELEASE_ASSERT(arena->magic == ARENA_MAGIC);
 	assert(size != 0);
 	assert(QUANTUM_CEILING(size) <= arena_maxclass);
 
@@ -4474,13 +4495,18 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	size_t size;
 
 	run = (arena_run_t *)(mapelm->bits & ~pagesize_mask);
-	assert(run->magic == ARENA_RUN_MAGIC);
+	RELEASE_ASSERT(run->magic == ARENA_RUN_MAGIC);
 	bin = run->bin;
 	size = bin->reg_size;
 
 #ifdef MALLOC_FILL
 	if (opt_junk)
 		memset(ptr, 0x5a, size);
+#endif
+#ifdef MOZ_TEMP_INVESTIGATION
+	if (size == 72) {
+		memset(ptr, 0x75, size);
+	}
 #endif
 
 	arena_run_reg_dalloc(run, bin, ptr, size);
@@ -4500,11 +4526,11 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 			 * run only contains one region, then it never gets
 			 * inserted into the non-full runs tree.
 			 */
-			assert(arena_run_tree_search(&bin->runs, run_mapelm) ==
-			    run_mapelm);
+			RELEASE_ASSERT(arena_run_tree_search(&bin->runs, run_mapelm) ==
+				run_mapelm);
 			arena_run_tree_remove(&bin->runs, run_mapelm);
 		}
-#ifdef MALLOC_DEBUG
+#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
 		run->magic = 0;
 #endif
 		VALGRIND_FREELIKE_BLOCK(run, 0);
@@ -4531,7 +4557,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 				    &runcur_chunk->map[runcur_pageind];
 
 				/* Insert runcur. */
-				assert(arena_run_tree_search(&bin->runs,
+				RELEASE_ASSERT(arena_run_tree_search(&bin->runs,
 				    runcur_mapelm) == NULL);
 				arena_run_tree_insert(&bin->runs,
 				    runcur_mapelm);
@@ -4543,7 +4569,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 			arena_chunk_map_t *run_mapelm =
 			    &chunk->map[run_pageind];
 
-			assert(arena_run_tree_search(&bin->runs, run_mapelm) ==
+			RELEASE_ASSERT(arena_run_tree_search(&bin->runs, run_mapelm) ==
 			    NULL);
 			arena_run_tree_insert(&bin->runs, run_mapelm);
 		}
@@ -4603,11 +4629,11 @@ arena_dalloc(void *ptr, size_t offset)
 	chunk = (arena_chunk_t *) ((uintptr_t)ptr - offset);
 	arena = chunk->arena;
 	assert(arena != NULL);
-	assert(arena->magic == ARENA_MAGIC);
+	RELEASE_ASSERT(arena->magic == ARENA_MAGIC);
 
 	pageind = offset >> pagesize_2pow;
 	mapelm = &chunk->map[pageind];
-	assert((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0);
+	RELEASE_ASSERT((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0);
 	if ((mapelm->bits & CHUNK_MAP_LARGE) == 0) {
 		/* Small allocation. */
 		malloc_spin_lock(&arena->lock);
@@ -4920,7 +4946,7 @@ arena_new(arena_t *arena)
 #endif
 	}
 
-#ifdef MALLOC_DEBUG
+#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
 	arena->magic = ARENA_MAGIC;
 #endif
 

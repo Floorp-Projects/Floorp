@@ -10,11 +10,12 @@
 #include "nsIOutputStream.h"
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 //-----------------------------------------------------------------------------
 
-class nsSyncStreamListener : public nsISyncStreamListener
-                           , public nsIInputStream
+class nsSyncStreamListener MOZ_FINAL : public nsISyncStreamListener
+                                     , public nsIInputStream
 {
 public:
     NS_DECL_ISUPPORTS

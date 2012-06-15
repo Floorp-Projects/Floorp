@@ -1,0 +1,137 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<title>dynamic maction 3</title>
+</head>
+
+<body>
+
+<p>
+<math>
+  <maction id="m1" actiontype="toggle">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m2" actiontype="toggle" selection="5">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m3" actiontype="toggle" selection="5">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m4" actiontype="toggle">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m5" actiontype="toggle" selection="5">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m6" actiontype="toggle">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m7">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m8" actiontype="unknown-action-type">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m9" selection="5">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m10" actiontype="unknown-action-type" selection="5">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m11" actiontype="statusline">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<p>
+<math>
+  <maction id="m12" actiontype="statusline" selection="5">
+    <mtext>--1--</mtext>
+    <mtext>--2--</mtext>
+  </maction>
+</math>
+</p>
+
+<script>
+  function doTest() {
+    document.getElementById("m1").setAttribute("selection", "5");
+    document.getElementById("m2").setAttribute("selection", "1");
+    document.getElementById("m3").setAttribute("actiontype", "statusline");
+    document.getElementById("m4").removeAttribute("actiontype");
+    document.getElementById("m5").setAttribute("actiontype", "unknown-action-type");
+    document.getElementById("m6").setAttribute("actiontype", "unknown-action-type");
+    document.getElementById("m7").setAttribute("actiontype", "toggle");
+    document.getElementById("m8").setAttribute("actiontype", "toggle");
+    document.getElementById("m9").setAttribute("actiontype", "statusline");
+    document.getElementById("m10").setAttribute("actiontype", "statusline");
+    document.getElementById("m11").setAttribute("selection", "5");
+    document.getElementById("m12").setAttribute("actiontype", "toggle");
+  
+    document.documentElement.removeAttribute('class');
+  }
+  window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+
+</body>
+</html>

@@ -8,9 +8,10 @@
 
 #include "nsIScriptableUnescapeHTML.h"
 #include "nsIParserUtils.h"
+#include "mozilla/Attributes.h"
 
-class nsParserUtils : public nsIScriptableUnescapeHTML,
-                      public nsIParserUtils
+class nsParserUtils MOZ_FINAL : public nsIScriptableUnescapeHTML,
+                                public nsIParserUtils
 {
 public:
   NS_DECL_ISUPPORTS

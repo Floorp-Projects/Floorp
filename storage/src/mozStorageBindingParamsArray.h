@@ -9,6 +9,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
+#include "mozilla/Attributes.h"
 
 #include "mozIStorageBindingParamsArray.h"
 
@@ -17,7 +18,7 @@ namespace storage {
 
 class StorageBaseStatementInternal;
 
-class BindingParamsArray : public mozIStorageBindingParamsArray
+class BindingParamsArray MOZ_FINAL : public mozIStorageBindingParamsArray
 {
   typedef nsTArray< nsCOMPtr<mozIStorageBindingParams> > array_type;
 

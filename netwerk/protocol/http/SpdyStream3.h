@@ -7,11 +7,12 @@
 #define mozilla_net_SpdyStream3_h
 
 #include "nsAHttpTransaction.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla { namespace net {
 
-class SpdyStream3 : public nsAHttpSegmentReader
-                  , public nsAHttpSegmentWriter
+class SpdyStream3 MOZ_FINAL : public nsAHttpSegmentReader
+                            , public nsAHttpSegmentWriter
 {
 public:
   NS_DECL_NSAHTTPSEGMENTREADER

@@ -1380,9 +1380,11 @@ JSCompartment::sweepInitialShapeTable()
             if (!IsShapeMarked(&shape) || (proto && !IsObjectMarked(&proto))) {
                 e.removeFront();
             } else {
+#ifdef DEBUG
                 DebugOnly<JSObject *> parent = shape->getObjectParent();
                 JS_ASSERT(!parent || IsObjectMarked(&parent));
                 JS_ASSERT(parent == shape->getObjectParent());
+#endif
                 InitialShapeEntry newKey(shape, proto);
                 e.rekeyFront(newKey.getLookup(), newKey);
             }

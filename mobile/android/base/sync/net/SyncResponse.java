@@ -11,10 +11,10 @@ import java.util.Scanner;
 
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.Utils;
 
-import android.util.Log;
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -120,7 +120,7 @@ public class SyncResponse {
       Header header = this.response.getFirstHeader(h);
       String value  = header.getValue();
       if (missingHeader(value)) {
-        Log.w(LOG_TAG, h + " header present but empty.");
+        Logger.warn(LOG_TAG, h + " header present but empty.");
         return -1;
       }
       return Integer.parseInt(value, 10);
@@ -139,7 +139,7 @@ public class SyncResponse {
     Header header = this.response.getFirstHeader(HEADER_RETRY_AFTER);
     String retryAfter = header.getValue();
     if (missingHeader(retryAfter)) {
-      Log.w(LOG_TAG, "Retry-After header present but empty.");
+      Logger.warn(LOG_TAG, "Retry-After header present but empty.");
       return -1;
     }
 
@@ -154,7 +154,7 @@ public class SyncResponse {
       final long now  = System.currentTimeMillis();
       return (int)((then - now) / 1000);     // Convert milliseconds to seconds.
     } catch (DateParseException e) {
-      Log.w(LOG_TAG, "Retry-After header neither integer nor date: " + retryAfter);
+      Logger.warn(LOG_TAG, "Retry-After header neither integer nor date: " + retryAfter);
       return -1;
     }
   }

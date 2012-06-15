@@ -34,10 +34,10 @@ function dial() {
   is(outgoing.number, number);
   is(outgoing.state, "dialing");
 
-  //is(outgoing, telephony.active); // bug 757587
-  //ok(telephony.calls === calls); // bug 757587
-  //is(calls.length, 1); // bug 757587
-  //is(calls[0], outgoing); // bug 757587
+  is(outgoing, telephony.active);
+  //ok(telephony.calls === calls); // bug 717414
+  is(telephony.calls.length, 1);
+  is(telephony.calls[0], outgoing);
 
   runEmulatorCmd("gsm list", function(result) {
     log("Call list is now: " + result);
@@ -57,7 +57,7 @@ function answer() {
     is(outgoing, event.call);
     is(outgoing.state, "connected");
 
-    //is(outgoing, telephony.active);  // bug 757587
+    is(outgoing, telephony.active);
 
     runEmulatorCmd("gsm list", function(result) {
       log("Call list is now: " + result);
@@ -79,7 +79,7 @@ function hangUp() {
     is(outgoing, event.call);
     is(outgoing.state, "disconnected");
 
-    //is(telephony.active, null);  // bug 757587
+    is(telephony.active, null);
     is(telephony.calls.length, 0);
 
     runEmulatorCmd("gsm list", function(result) {

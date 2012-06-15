@@ -1541,6 +1541,9 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetMozCurrentTransformInverse(JSContext* cx,
                                                           jsval* matrix)
 {
+    if (!EnsureSurface())
+        return NS_ERROR_FAILURE;
+
     gfxMatrix ctm = mThebes->CurrentMatrix();
 
     if (!mThebes->CurrentMatrix().IsSingular()) {
