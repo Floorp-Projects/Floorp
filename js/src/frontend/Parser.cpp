@@ -1040,16 +1040,6 @@ MatchOrInsertSemicolon(JSContext *cx, TokenStream *ts)
 }
 
 static bool
-EnterFunction(SharedContext *outersc, SharedContext *funsc)
-{
-    funsc->blockidGen = outersc->blockidGen;
-    if (!GenerateBlockId(funsc, funsc->bodyid))
-        return false;
-
-    return true;
-}
-
-static bool
 DeoptimizeUsesWithin(Definition *dn, const TokenPos &pos)
 {
     unsigned ndeoptimized = 0;
@@ -1541,7 +1531,8 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
     if (!funtc.init())
         return NULL;
 
-    if (!EnterFunction(outertc->sc, funtc.sc))
+    funsc.blockidGen = outertc->sc->blockidGen;
+    if (!GenerateBlockId(&funsc, funsc.bodyid))
         return NULL;
 
     if (outertc->sc->inStrictMode())
@@ -5392,8 +5383,9 @@ Parser::generatorExpr(ParseNode *kid)
         if (!gentc.init())
             return NULL;
 
-        if (!EnterFunction(outertc->sc, gentc.sc))
-            return NULL;
+        gensc.blockidGen = outertc->sc->blockidGen;
+        if (!GenerateBlockId(&gensc, gensc.bodyid))
+            return false;
 
         /*
          * We assume conservatively that any deoptimization flags in tc->sc
