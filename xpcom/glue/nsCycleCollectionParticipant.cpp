@@ -6,9 +6,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
-void
-nsScriptObjectTracer::NoteJSChild(void *aScriptThing, const char *name,
-                                  void *aClosure)
+static void
+NoteChild(void *aScriptThing, const char *name, void *aClosure)
 {
   nsCycleCollectionTraversalCallback *cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
@@ -16,8 +15,15 @@ nsScriptObjectTracer::NoteJSChild(void *aScriptThing, const char *name,
   cb->NoteJSChild(aScriptThing);
 }
 
+void
+nsScriptObjectTracer::TraverseScriptObjects(void *p,
+                                        nsCycleCollectionTraversalCallback &cb)
+{
+  Trace(p, NoteChild, &cb);
+}
+
 nsresult
-nsXPCOMCycleCollectionParticipant::RootImpl(void *p)
+nsXPCOMCycleCollectionParticipant::Root(void *p)
 {
     nsISupports *s = static_cast<nsISupports*>(p);
     NS_ADDREF(s);
@@ -25,13 +31,13 @@ nsXPCOMCycleCollectionParticipant::RootImpl(void *p)
 }
 
 nsresult
-nsXPCOMCycleCollectionParticipant::UnlinkImpl(void *p)
+nsXPCOMCycleCollectionParticipant::Unlink(void *p)
 {
   return NS_OK;
 }
 
 nsresult
-nsXPCOMCycleCollectionParticipant::UnrootImpl(void *p)
+nsXPCOMCycleCollectionParticipant::Unroot(void *p)
 {
     nsISupports *s = static_cast<nsISupports*>(p);
     NS_RELEASE(s);
@@ -39,21 +45,20 @@ nsXPCOMCycleCollectionParticipant::UnrootImpl(void *p)
 }
 
 nsresult
-nsXPCOMCycleCollectionParticipant::TraverseImpl
-    (nsXPCOMCycleCollectionParticipant* that, void *p,
-     nsCycleCollectionTraversalCallback &cb)
+nsXPCOMCycleCollectionParticipant::Traverse
+    (void *p, nsCycleCollectionTraversalCallback &cb)
 {
   return NS_OK;
 }
 
 void
-nsXPCOMCycleCollectionParticipant::UnmarkIfPurpleImpl(nsISupports *n)
+nsXPCOMCycleCollectionParticipant::UnmarkIfPurple(nsISupports *n)
 {
 }
 
 NS_IMETHODIMP_(void)
-nsXPCOMCycleCollectionParticipant::TraceImpl(void *p, TraceCallback cb,
-                                             void *closure)
+nsXPCOMCycleCollectionParticipant::Trace(void *p, TraceCallback cb,
+                                         void *closure)
 {
 }
 
