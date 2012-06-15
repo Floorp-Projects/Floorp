@@ -355,12 +355,24 @@ KeyboardLayout::IsNumpadKey(PRUint8 aVirtualKey)
   return VK_NUMPAD0 <= aVirtualKey && aVirtualKey <= VK_DIVIDE;
 }
 
+bool
+KeyboardLayout::IsDeadKey(PRUint8 aVirtualKey,
+                          PRUint8 aShiftState) const
+{
+  PRInt32 virtualKeyIndex = GetKeyIndex(aVirtualKey);
+  if (virtualKeyIndex < 0) {
+    return false;
+  }
+
+  return mVirtualKeys[virtualKeyIndex].IsDeadKey(aShiftState);
+}
+
 void
 KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
 {
-  mLastVirtualKeyIndex = GetKeyIndex(aVirtualKey);
+  PRInt32 virtualKeyIndex = GetKeyIndex(aVirtualKey);
 
-  if (mLastVirtualKeyIndex < 0) {
+  if (virtualKeyIndex < 0) {
     // Does not produce any printable characters, but still preserves the
     // dead-key state.
     mNumOfChars = 0;
@@ -372,13 +384,13 @@ KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
     return;
   }
 
-  mLastShiftState = GetShiftState(kbdState);
+  PRUint8 shiftState = GetShiftState(kbdState);
 
-  if (mVirtualKeys[mLastVirtualKeyIndex].IsDeadKey(mLastShiftState)) {
+  if (mVirtualKeys[virtualKeyIndex].IsDeadKey(shiftState)) {
     if (mActiveDeadKey < 0) {
       // Dead-key state activated. No characters generated.
       mActiveDeadKey = aVirtualKey;
-      mDeadKeyShiftState = mLastShiftState;
+      mDeadKeyShiftState = shiftState;
       mNumOfChars = 0;
       return;
     }
@@ -388,9 +400,8 @@ KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
     PRInt32 activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
     mVirtualKeys[activeDeadKeyIndex].GetUniChars(mDeadKeyShiftState,
                                                  mChars, mShiftStates);
-    mVirtualKeys[mLastVirtualKeyIndex].GetUniChars(mLastShiftState,
-                                                   &mChars[1],
-                                                   &mShiftStates[1]);
+    mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState, &mChars[1],
+                                              &mShiftStates[1]);
     mNumOfChars = 2;
     DeactivateDeadKeyState();
     return;
@@ -399,8 +410,8 @@ KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey)
   PRUint8 finalShiftState;
   PRUnichar uniChars[5];
   PRUint32 numOfBaseChars =
-    mVirtualKeys[mLastVirtualKeyIndex].GetUniChars(mLastShiftState, uniChars,
-                                                   &finalShiftState);
+    mVirtualKeys[virtualKeyIndex].GetUniChars(shiftState, uniChars,
+                                              &finalShiftState);
   if (mActiveDeadKey < 0) {
     // No dead-keys are active. Just return the produced characters.
     memcpy(mChars, uniChars, numOfBaseChars * sizeof(PRUnichar));
@@ -560,6 +571,19 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 }
 
 
+// static
+PRUint8
+KeyboardLayout::GetShiftState(const nsModifierKeyState& aModifierKeyState)
+{
+  bool isShift = !!aModifierKeyState.mIsShiftDown;
+  bool isCtrl  = !!aModifierKeyState.mIsControlDown;
+  bool isAlt   = !!aModifierKeyState.mIsAltDown;
+  bool isCaps  = !!aModifierKeyState.mIsCapsLocked;
+
+  return ((isCaps << 3) | (isAlt << 2) | (isCtrl << 1) | isShift);
+}
+
+// static
 PRUint8
 KeyboardLayout::GetShiftState(const PBYTE aKbdState)
 {
