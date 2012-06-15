@@ -1722,6 +1722,8 @@ abstract public class GeckoApp
             }
         }
 
+        BrowserDB.initialize(getProfile().getName());
+
         if (ACTION_UPDATE.equals(action) || args != null && args.contains("-alert update-app")) {
             Log.i(LOGTAG,"onCreate: Update request");
             checkAndLaunchUpdate();
