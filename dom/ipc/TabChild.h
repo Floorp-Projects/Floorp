@@ -42,6 +42,7 @@
 #include "nsIScriptContext.h"
 #include "nsWeakReference.h"
 #include "nsITabChild.h"
+#include "mozilla/Attributes.h"
 
 struct gfxMatrix;
 
@@ -115,7 +116,7 @@ public:
   TabChild* mTabChild;
 };
 
-class ContentListener : public nsIDOMEventListener
+class ContentListener MOZ_FINAL : public nsIDOMEventListener
 {
 public:
   ContentListener(TabChild* aTabChild) : mTabChild(aTabChild) {}

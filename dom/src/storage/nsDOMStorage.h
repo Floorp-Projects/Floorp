@@ -26,6 +26,7 @@
 #include "nsITimer.h"
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestor.h"
+#include "mozilla/Attributes.h"
 
 #include "nsDOMStorageDBWrapper.h"
 
@@ -68,9 +69,9 @@ public:
   nsRefPtr<nsDOMStorageItem> mItem;
 };
 
-class nsDOMStorageManager : public nsIDOMStorageManager
-                          , public nsIObserver
-                          , public nsSupportsWeakReference
+class nsDOMStorageManager MOZ_FINAL : public nsIDOMStorageManager
+                                    , public nsIObserver
+                                    , public nsSupportsWeakReference
 {
 public:
   // nsISupports
@@ -207,8 +208,8 @@ protected:
   bool mInPrivateBrowsing;
 };
 
-class DOMStorageImpl : public DOMStorageBase
-                     , public nsSupportsWeakReference
+class DOMStorageImpl MOZ_FINAL : public DOMStorageBase
+                               , public nsSupportsWeakReference
 {
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(DOMStorageImpl, nsIPrivacyTransitionObserver)
@@ -392,9 +393,9 @@ public:
   nsDOMStorage2* mEventBroadcaster;
 };
 
-class nsDOMStorage2 : public nsIDOMStorage,
-                      public nsPIDOMStorage,
-                      public nsIInterfaceRequestor
+class nsDOMStorage2 MOZ_FINAL : public nsIDOMStorage,
+                                public nsPIDOMStorage,
+                                public nsIInterfaceRequestor
 {
 public:
   // nsISupports
