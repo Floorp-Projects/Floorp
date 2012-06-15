@@ -1299,6 +1299,56 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 }
 
 bool
+CodeGenerator::visitCompareS(LCompareS *lir)
+{
+    JSOp op = lir->jsop();
+    Register left = ToRegister(lir->left());
+    Register right = ToRegister(lir->right());
+    Register output = ToRegister(lir->output());
+
+    typedef bool (*pf)(JSContext *, HandleString, HandleString, JSBool *);
+    static const VMFunction stringsEqualInfo = FunctionInfo<pf>(ion::StringsEqual<true>);
+    static const VMFunction stringsNotEqualInfo = FunctionInfo<pf>(ion::StringsEqual<false>);
+
+    OutOfLineCode *ool = NULL;
+    if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
+        ool = oolCallVM(stringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
+    } else {
+        JS_ASSERT(op == JSOP_NE || op == JSOP_STRICTNE);
+        ool = oolCallVM(stringsNotEqualInfo, lir, (ArgList(), left, right), StoreRegisterTo(output));
+    }
+
+    if (!ool)
+        return false;
+
+    Label notPointerEqual;
+    // Fast path for identical strings
+    masm.branchPtr(Assembler::NotEqual, left, right, &notPointerEqual);
+    masm.move32(Imm32(op == JSOP_EQ || op == JSOP_STRICTEQ), output);
+    masm.jmp(ool->rejoin());
+
+    masm.bind(&notPointerEqual);
+
+    // JSString::isAtom === (lengthAndFlags & ATOM_MASK == 0)
+    JS_STATIC_ASSERT(JSString::ATOM_FLAGS == 0);
+    Imm32 atomMask(JSString::ATOM_MASK);
+
+    // This optimization is only correct for atomized strings,
+    // so we need to jump to the ool path.
+    masm.branchTest32(Assembler::NonZero, Address(left, JSString::offsetOfLengthAndFlags()), 
+                      atomMask, ool->entry());
+
+    masm.branchTest32(Assembler::NonZero, Address(right, JSString::offsetOfLengthAndFlags()), 
+                      atomMask, ool->entry());
+
+    masm.cmpPtr(left, right);
+    emitSet(JSOpToCondition(op), output);
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
 CodeGenerator::visitCompareV(LCompareV *lir)
 {
     typedef bool (*pf)(JSContext *, const Value &, const Value &, JSBool *);
