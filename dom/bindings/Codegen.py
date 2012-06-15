@@ -2986,8 +2986,7 @@ class ClassMethod(ClassItem):
                          if self.bodyInHeader and self.templateArgs else ''
         args = ', '.join([str(a) for a in self.args])
         if self.bodyInHeader:
-            body = '  ' + self.getBody();
-            body = body.replace('\n', '\n  ').rstrip(' ')
+            body = CGIndenter(CGGeneric(self.getBody())).define()
             body = '\n{\n' + body + '\n}'
         else:
            body = ';'
@@ -3020,8 +3019,7 @@ ${name}(${args})${const}${body}
 
         args = ', '.join([str(a) for a in self.args])
 
-        body = '  ' + self.getBody()
-        body = body.replace('\n', '\n  ').rstrip(' ')
+        body = CGIndenter(CGGeneric(self.getBody())).define()
 
         return string.Template("""${templateClause}${decorators}${returnType}
 ${className}::${name}(${args})${const}
@@ -3166,13 +3164,10 @@ class CGClass(CGThing):
                         result = result + visibility + ':\n'
                         itemCount = 0
                     for member in list:
-                        if itemCount == 0:
-                            result = result + '  '
-                        else:
-                            result = result + separator + '  '
+                        if itemCount != 0:
+                            result = result + separator
                         declaration = member.declare(cgClass)
-                        declaration = declaration.replace('\n', '\n  ')
-                        declaration = declaration.rstrip(' ')
+                        declaration = CGIndenter(CGGeneric(declaration)).define()
                         result = result + declaration
                         itemCount = itemCount + 1
                     lastVisibility = visibility
@@ -3188,9 +3183,8 @@ class CGClass(CGThing):
                 declareMembers(self, memberList, lastVisibility, itemCount,
                                separator)
             if self.indent:
-                memberString = self.indent + memberString
-                memberString = memberString.replace('\n', '\n' + self.indent)
-                memberString = memberString.rstrip(' ')
+                memberString = CGIndenter(CGGeneric(memberString),
+                                          len(self.indent)).define()
             result = result + memberString
 
         result = result + self.indent + '};\n\n'
