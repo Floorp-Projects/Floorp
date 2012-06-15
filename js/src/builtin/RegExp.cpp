@@ -23,8 +23,8 @@ class RegExpMatchBuilder
     JSContext   * const cx;
     RootedObject array;
 
-    bool setProperty(JSAtom *name, Value v) {
-        return !!baseops::DefineProperty(cx, array, RootedId(cx, AtomToId(name)), &v,
+    bool setProperty(Handle<PropertyName*> name, Value v) {
+        return !!baseops::DefineProperty(cx, array, name, &v,
                                          JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE);
     }
 
@@ -38,12 +38,14 @@ class RegExpMatchBuilder
     }
 
     bool setIndex(int index) {
-        return setProperty(cx->runtime->atomState.indexAtom, Int32Value(index));
+        Rooted<PropertyName*> name(cx, cx->runtime->atomState.indexAtom);
+        return setProperty(name, Int32Value(index));
     }
 
     bool setInput(JSString *str) {
         JS_ASSERT(str);
-        return setProperty(cx->runtime->atomState.inputAtom, StringValue(str));
+        Rooted<PropertyName*> name(cx, cx->runtime->atomState.inputAtom);
+        return setProperty(name, StringValue(str));
     }
 };
 
@@ -194,8 +196,8 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
 {
     if (args.length() == 0) {
         RegExpStatics *res = cx->regExpStatics();
-        RegExpObject *reobj = builder.build(RootedAtom(cx, cx->runtime->emptyString),
-                                            res->getFlags());
+        Rooted<PropertyName*> empty(cx, cx->runtime->emptyString);
+        RegExpObject *reobj = builder.build(empty, res->getFlags());
         if (!reobj)
             return false;
         args.rval() = ObjectValue(*reobj);
@@ -242,7 +244,8 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         if (!sourceObj.getProperty(cx, cx->runtime->atomState.sourceAtom, &v))
             return false;
 
-        RegExpObject *reobj = builder.build(RootedAtom(cx, &v.toString()->asAtom()), flags);
+        Rooted<JSAtom*> sourceAtom(cx, &v.toString()->asAtom());
+        RegExpObject *reobj = builder.build(sourceAtom, flags);
         if (!reobj)
             return false;
 
@@ -462,7 +465,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj)
     proto->setPrivate(NULL);
 
     RegExpObjectBuilder builder(cx, &proto->asRegExp());
-    if (!builder.build(RootedAtom(cx, cx->runtime->emptyString), RegExpFlag(0)))
+    Rooted<PropertyName*> empty(cx, cx->runtime->emptyString);
+    if (!builder.build(empty, RegExpFlag(0)))
         return NULL;
 
     if (!DefinePropertiesAndBrand(cx, proto, NULL, regexp_methods))

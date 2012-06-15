@@ -4082,7 +4082,7 @@ nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
   // a wrapper for the foreign global. So we need to unwrap before getting the
   // parent, enter the compartment for the duration of the call, and wrap the
   // result.
-  JSObject *obj = JSVAL_TO_OBJECT(object);
+  JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(object));
   obj = js::UnwrapObject(obj);
   {
     JSAutoEnterCompartment ac;
@@ -4090,12 +4090,12 @@ nsXPCComponents_Utils::GetGlobalForObject(const JS::Value& object,
       return NS_ERROR_FAILURE;
     obj = JS_GetGlobalForObject(cx, obj);
   }
-  JS_WrapObject(cx, &obj);
+  JS_WrapObject(cx, obj.address());
   *retval = OBJECT_TO_JSVAL(obj);
 
   // Outerize if necessary.
   if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
-      *retval = OBJECT_TO_JSVAL(outerize(cx, JS::RootedObject(cx, obj)));
+      *retval = OBJECT_TO_JSVAL(outerize(cx, obj));
 
   return NS_OK;
 }

@@ -1745,7 +1745,8 @@ js::CloneScript(JSContext *cx, HandleScript src)
 
     for (unsigned i = 0; i < names.length(); ++i) {
         if (JSAtom *atom = names[i].maybeAtom) {
-            if (!bindings.add(cx, RootedAtom(cx, atom), names[i].kind))
+            Rooted<JSAtom*> root(cx, atom);
+            if (!bindings.add(cx, root, names[i].kind))
                 return NULL;
         } else {
             uint16_t _;

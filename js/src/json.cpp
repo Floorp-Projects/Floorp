@@ -280,7 +280,8 @@ PreprocessValue(JSContext *cx, JSObject *holder, KeyType key, Value *vp, Stringi
     if (vp->isObject()) {
         Value toJSON;
         RootedId id(cx, NameToId(cx->runtime->atomState.toJSONAtom));
-        if (!GetMethod(cx, RootedObject(cx, &vp->toObject()), id, 0, &toJSON))
+        Rooted<JSObject*> obj(cx, &vp->toObject());
+        if (!GetMethod(cx, obj, id, 0, &toJSON))
             return false;
 
         if (js_IsCallable(toJSON)) {
@@ -855,7 +856,8 @@ Revive(JSContext *cx, const Value &reviver, Value *vp)
     if (!obj->defineProperty(cx, cx->runtime->atomState.emptyAtom, *vp))
         return false;
 
-    return Walk(cx, obj, RootedId(cx, NameToId(cx->runtime->atomState.emptyAtom)), reviver, vp);
+    Rooted<jsid> id(cx, NameToId(cx->runtime->atomState.emptyAtom));
+    return Walk(cx, obj, id, reviver, vp);
 }
 
 namespace js {

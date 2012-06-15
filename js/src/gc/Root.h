@@ -96,7 +96,7 @@ class Handle
      * Construct a handle from an explicitly rooted location. This is the
      * normal way to create a handle, and normally happens implicitly.
      */
-    template <typename S> inline Handle(const Rooted<S> &root);
+    template <typename S> inline Handle(Rooted<S> &root);
 
     const T *address() const { return ptr; }
     T value() const { return *ptr; }
@@ -163,15 +163,6 @@ class Rooted
     Rooted(JSContext *cx) { init(cx, RootMethods<T>::initial()); }
     Rooted(JSContext *cx, T initial) { init(cx, initial); }
 
-    /*
-     * This method is only necessary due to an obscure C++98 requirement (that
-     * there be an accessible, usable copy constructor when passing a temporary
-     * to an implicitly-called constructor for use with a const-ref parameter).
-     * (Head spinning yet?)  We can remove this when we build the JS engine
-     * with -std=c++11.
-     */
-    operator Handle<T> () const { return Handle<T>(*this); }
-
     ~Rooted()
     {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
@@ -217,7 +208,7 @@ class Rooted
 
 template<typename T> template <typename S>
 inline
-Handle<T>::Handle(const Rooted<S> &root)
+Handle<T>::Handle(Rooted<S> &root)
 {
     testAssign<S>();
     ptr = reinterpret_cast<const T *>(root.address());
