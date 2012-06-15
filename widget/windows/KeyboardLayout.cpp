@@ -73,6 +73,87 @@ public:
 };
 
 
+/*****************************************************************************
+ * mozilla::widget::ModifierKeyState
+ *****************************************************************************/
+
+void
+ModifierKeyState::Update()
+{
+  mModifiers = 0;
+  if (IS_VK_DOWN(VK_SHIFT)) {
+    mModifiers |= MODIFIER_SHIFT;
+  }
+  if (IS_VK_DOWN(VK_CONTROL)) {
+    mModifiers |= MODIFIER_CONTROL;
+  }
+  if (IS_VK_DOWN(VK_MENU)) {
+    mModifiers |= MODIFIER_ALT;
+  }
+  if (IS_VK_DOWN(VK_LWIN) || IS_VK_DOWN(VK_RWIN)) {
+    mModifiers |= MODIFIER_WIN;
+  }
+  if (::GetKeyState(VK_CAPITAL) & 1) {
+    mModifiers |= MODIFIER_CAPSLOCK;
+  }
+  if (::GetKeyState(VK_NUMLOCK) & 1) {
+    mModifiers |= MODIFIER_NUMLOCK;
+  }
+  if (::GetKeyState(VK_SCROLL) & 1) {
+    mModifiers |= MODIFIER_SCROLL;
+  }
+
+  EnsureAltGr();
+}
+
+void
+ModifierKeyState::InitInputEvent(nsInputEvent& aInputEvent) const
+{
+  aInputEvent.modifiers = mModifiers;
+
+  switch(aInputEvent.eventStructType) {
+    case NS_MOUSE_EVENT:
+    case NS_MOUSE_SCROLL_EVENT:
+    case NS_DRAG_EVENT:
+    case NS_SIMPLE_GESTURE_EVENT:
+    case NS_MOZTOUCH_EVENT:
+      InitMouseEvent(aInputEvent);
+      break;
+  }
+}
+
+void
+ModifierKeyState::InitMouseEvent(nsInputEvent& aMouseEvent) const
+{
+  NS_ASSERTION(aMouseEvent.eventStructType == NS_MOUSE_EVENT ||
+               aMouseEvent.eventStructType == NS_MOUSE_SCROLL_EVENT ||
+               aMouseEvent.eventStructType == NS_DRAG_EVENT ||
+               aMouseEvent.eventStructType == NS_SIMPLE_GESTURE_EVENT ||
+               aMouseEvent.eventStructType == NS_MOZTOUCH_EVENT,
+               "called with non-mouse event");
+
+  nsMouseEvent_base& mouseEvent = static_cast<nsMouseEvent_base&>(aMouseEvent);
+  mouseEvent.buttons = 0;
+  if (::GetKeyState(VK_LBUTTON) < 0) {
+    mouseEvent.buttons |= nsMouseEvent::eLeftButtonFlag;
+  }
+  if (::GetKeyState(VK_RBUTTON) < 0) {
+    mouseEvent.buttons |= nsMouseEvent::eRightButtonFlag;
+  }
+  if (::GetKeyState(VK_MBUTTON) < 0) {
+    mouseEvent.buttons |= nsMouseEvent::eMiddleButtonFlag;
+  }
+  if (::GetKeyState(VK_XBUTTON1) < 0) {
+    mouseEvent.buttons |= nsMouseEvent::e4thButtonFlag;
+  }
+  if (::GetKeyState(VK_XBUTTON2) < 0) {
+    mouseEvent.buttons |= nsMouseEvent::e5thButtonFlag;
+  }
+}
+
+/*****************************************************************************
+ * mozilla::widget::VirtualKey
+ *****************************************************************************/
 
 inline PRUnichar
 VirtualKey::GetCompositeChar(PRUint8 aShiftState, PRUnichar aBaseChar) const
@@ -197,6 +278,10 @@ VirtualKey::GetNativeUniChars(PRUint8 aShiftState,
   }
   return index;
 }
+
+/*****************************************************************************
+ * mozilla::widget::NativeKey
+ *****************************************************************************/
 
 NativeKey::NativeKey(const KeyboardLayout& aKeyboardLayout,
                      nsWindow* aWindow,
@@ -327,6 +412,9 @@ NativeKey::GetKeyLocation() const
   }
 }
 
+/*****************************************************************************
+ * mozilla::widget::KeyboardLayout
+ *****************************************************************************/
 
 KeyboardLayout::KeyboardLayout() :
   mKeyboardLayout(0)
@@ -573,12 +661,12 @@ KeyboardLayout::LoadLayout(HKL aLayout)
 
 // static
 PRUint8
-KeyboardLayout::GetShiftState(const nsModifierKeyState& aModifierKeyState)
+KeyboardLayout::GetShiftState(const ModifierKeyState& aModifierKeyState)
 {
-  bool isShift = !!aModifierKeyState.mIsShiftDown;
-  bool isCtrl  = !!aModifierKeyState.mIsControlDown;
-  bool isAlt   = !!aModifierKeyState.mIsAltDown;
-  bool isCaps  = !!aModifierKeyState.mIsCapsLocked;
+  bool isShift = aModifierKeyState.IsShift();
+  bool isCtrl  = aModifierKeyState.IsControl();
+  bool isAlt   = aModifierKeyState.IsAlt();
+  bool isCaps  = aModifierKeyState.IsCapsLocked();
 
   return ((isCaps << 3) | (isAlt << 2) | (isCtrl << 1) | isShift);
 }
@@ -1016,6 +1104,10 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
              " there may be some new keycodes we have not known.");
   return 0;
 }
+
+/*****************************************************************************
+ * mozilla::widget::DeadKeyTable
+ *****************************************************************************/
 
 PRUnichar
 DeadKeyTable::GetCompositeChar(PRUnichar aBaseChar) const
