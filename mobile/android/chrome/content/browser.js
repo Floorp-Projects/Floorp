@@ -2639,12 +2639,14 @@ var BrowserEventHandler = {
       if (element) {
         try {
           let data = JSON.parse(aData);
+          let isClickable = ElementTouchHelper.isElementClickable(element);
 
-          this._sendMouseEvent("mousemove", element, data.x, data.y);
-          this._sendMouseEvent("mousedown", element, data.x, data.y);
-          this._sendMouseEvent("mouseup",   element, data.x, data.y);
+          var params = { movePoint: isClickable};
+          this._sendMouseEvent("mousemove", element, data.x, data.y, params);
+          this._sendMouseEvent("mousedown", element, data.x, data.y, params);
+          this._sendMouseEvent("mouseup",   element, data.x, data.y, params);
   
-          if (ElementTouchHelper.isElementClickable(element, null, false))
+          if (isClickable)
             Haptic.performSimpleAction(Haptic.LongPress);
         } catch(e) {
           Cu.reportError(e);
@@ -2760,19 +2762,17 @@ var BrowserEventHandler = {
     this.motionBuffer.push({ dx: dx, dy: dy, time: this.lastTime });
   },
 
-  _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY, aButton) {
+  _sendMouseEvent: function _sendMouseEvent(aName, aElement, aX, aY, aParams) {
     // the element can be out of the aX/aY point because of the touch radius
-    // if outside, we gracefully move the touch point to the center of the element
-    if (!(aElement instanceof HTMLHtmlElement)) {
+    // if outside, we gracefully move the touch point to the edge of the element
+    if (!(aElement instanceof HTMLHtmlElement) && aParams.movePoint) {
       let isTouchClick = true;
       let rects = ElementTouchHelper.getContentClientRects(aElement);
       for (let i = 0; i < rects.length; i++) {
         let rect = rects[i];
-        // We might be able to deal with fractional pixels, but mouse events won't.
-        // Deflate the bounds in by 1 pixel to deal with any fractional scroll offset issues.
         let inBounds =
-          (aX > rect.left + 1 && aX < (rect.left + rect.width - 1)) &&
-          (aY > rect.top + 1 && aY < (rect.top + rect.height - 1));
+          (aX> rect.left  && aX < (rect.left + rect.width)) &&
+          (aY > rect.top && aY < (rect.top + rect.height));
         if (inBounds) {
           isTouchClick = false;
           break;
@@ -2780,21 +2780,19 @@ var BrowserEventHandler = {
       }
 
       if (isTouchClick) {
-        let rect = {x: rects[0].left, y: rects[0].top, w: rects[0].width, h: rects[0].height};
-        if (rect.w == 0 && rect.h == 0)
+        let rect = rects[0];
+        if (rect.width == 0 && rect.height == 0)
           return;
 
-        let point = { x: rect.x + rect.w/2, y: rect.y + rect.h/2 };
-        aX = point.x;
-        aY = point.y;
+        aX = Math.min(rect.left + rect.width, Math.max(rect.left, aX));
+        aY = Math.min(rect.top + rect.height, Math.max(rect.top,  aY));
       }
     }
 
     let window = aElement.ownerDocument.defaultView;
     try {
       let cwu = window.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      aButton = aButton || 0;
-      cwu.sendMouseEventToWindow(aName, Math.round(aX), Math.round(aY), aButton, 1, 0, true);
+      cwu.sendMouseEventToWindow(aName, Math.round(aX), Math.round(aY), 0, 1, 0, true);
     } catch(e) {
       Cu.reportError(e);
     }
