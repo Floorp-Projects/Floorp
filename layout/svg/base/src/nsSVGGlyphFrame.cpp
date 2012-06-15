@@ -317,8 +317,7 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
   }
 
   if (renderMode != SVGAutoRenderState::NORMAL) {
-
-    gfxMatrix matrix = gfx->CurrentMatrix();
+    gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
     SetupGlobalTransform(gfx);
 
     CharacterIterator iter(this, true);
@@ -336,7 +335,6 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
       DrawCharacters(&iter, gfx, gfxFont::GLYPH_PATH);
     }
 
-    gfx->SetMatrix(matrix);
     return NS_OK;
   }
 
