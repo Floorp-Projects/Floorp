@@ -161,6 +161,31 @@ JS_GetCompartmentPrincipals(JSCompartment *compartment)
     return compartment->principals;
 }
 
+JS_FRIEND_API(void)
+JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals)
+{
+    // Short circuit if there's no change.
+    if (principals == compartment->principals)
+        return;
+
+    // Clear out the old principals, if any.
+    if (compartment->principals) {
+        JS_DropPrincipals(compartment->rt, compartment->principals);
+        compartment->principals = NULL;
+    }
+
+    // Set up the new principals.
+    if (principals) {
+        JS_HoldPrincipals(principals);
+        compartment->principals = principals;
+    }
+
+    // Any compartment with the trusted principals -- and there can be
+    // multiple -- is a system compartment.
+    JSPrincipals *trusted = compartment->rt->trustedPrincipals();
+    compartment->isSystemCompartment = principals && principals == trusted;
+}
+
 JS_FRIEND_API(JSBool)
 JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc)
 {
