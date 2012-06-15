@@ -1706,9 +1706,9 @@ Assembler::as_b(BOffImm off, Condition c, BufferOffset inst)
 }
 
 // blx can go to either an immediate or a register.
-// When blx'ing to a register, we change processor mode
+// When blx'ing to a register, we change processor state
 // depending on the low bit of the register
-// when blx'ing to an immediate, we *always* change processor mode.
+// when blx'ing to an immediate, we *always* change processor state.
 
 BufferOffset
 Assembler::as_blx(Register r, Condition c)
@@ -1717,7 +1717,7 @@ Assembler::as_blx(Register r, Condition c)
 }
 
 // bl can only branch to an pc-relative immediate offset
-// It cannot change the processor mode.
+// It cannot change the processor state.
 BufferOffset
 Assembler::as_bl(BOffImm off, Condition c)
 {
