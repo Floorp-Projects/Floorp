@@ -143,18 +143,20 @@ class LDivI : public LBinaryMath<2>
     }
 };
 
-class LModI : public LBinaryMath<2>
+class LModI : public LBinaryMath<3>
 {
   public:
     LIR_HEADER(ModI);
 
     LModI(const LAllocation &lhs, const LAllocation &rhs,
-          const LDefinition &temp1, const LDefinition &temp2)
+          const LDefinition &temp1, const LDefinition &temp2,
+          const LDefinition &callTemp)
     {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp1);
         setTemp(1, temp2);
+        setTemp(2, callTemp);
     }
 };
 
@@ -169,7 +171,7 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
         return shift_;
     }
 
-    LModPowTwoI(const LAllocation &lhs, int32 shift) 
+    LModPowTwoI(const LAllocation &lhs, int32 shift)
       : shift_(shift)
     {
         setOperand(0, lhs);
