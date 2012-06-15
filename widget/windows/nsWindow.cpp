@@ -6230,7 +6230,7 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
 {
   NativeKey nativeKey(gKbdLayout, this, aMsg);
   UINT virtualKeyCode = nativeKey.GetOriginalVirtualKeyCode();
-  gKbdLayout.OnKeyDown(virtualKeyCode);
+  gKbdLayout.OnKeyDown(virtualKeyCode, aModKeyState);
 
   // Use only DOMKeyCode for XP processing.
   // Use virtualKeyCode for gKbdLayout and native processing.
