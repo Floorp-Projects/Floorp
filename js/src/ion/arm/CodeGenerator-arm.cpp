@@ -493,7 +493,6 @@ CodeGeneratorARM::visitDivI(LDivI *ins)
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
     MDiv *mir = ins->mir();
-
     if (mir->canBeNegativeOverflow()) {
         // Prevent INT_MIN / -1;
         // The integer division will give INT_MIN, but we want -(double)INT_MIN.
@@ -541,7 +540,11 @@ CodeGeneratorARM::visitModI(LModI *ins)
     // Extract the registers from this instruction
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
-    // Prevent INT_MIN / -1;
+    Register callTemp = ToRegister(ins->getTemp(2));
+    // save the lhs in case we end up with a 0 that should be a -0.0 because lhs < 0.
+    JS_ASSERT(callTemp.code() > r3.code() && callTemp.code() < r12.code());
+    masm.ma_mov(lhs, callTemp);
+    // Prevent INT_MIN % -1;
     // The integer division will give INT_MIN, but we want -(double)INT_MIN.
     masm.ma_cmp(lhs, Imm32(INT_MIN)); // sets EQ if lhs == INT_MIN
     masm.ma_cmp(rhs, Imm32(-1), Assembler::Equal); // if EQ (LHS == INT_MIN), sets EQ if rhs == -1
@@ -568,6 +571,15 @@ CodeGeneratorARM::visitModI(LModI *ins)
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+    // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
+    Label join;
+    // See if X < 0
+    masm.ma_cmp(r1, Imm32(0));
+    masm.ma_b(&join, Assembler::NotEqual);
+    masm.ma_cmp(callTemp, Imm32(0));
+    if (!bailoutIf(Assembler::Signed, ins->snapshot()))
+        return false;
+    masm.bind(&join);
     return true;
 }
 
