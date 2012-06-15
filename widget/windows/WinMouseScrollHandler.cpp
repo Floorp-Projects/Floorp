@@ -11,6 +11,7 @@
 
 #include "WinMouseScrollHandler.h"
 #include "nsWindow.h"
+#include "KeyboardLayout.h"
 #include "WinUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMWindowUtils.h"
@@ -325,16 +326,16 @@ MouseScrollHandler::InitEvent(nsWindow* aWindow,
 }
 
 /* static */
-nsModifierKeyState
+ModifierKeyState
 MouseScrollHandler::GetModifierKeyState(UINT aMessage)
 {
-  nsModifierKeyState result;
+  ModifierKeyState result;
   // Assume the Control key is down if the Elantech touchpad has sent the
   // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
   // MouseScrollHandler::Device::Elantech::HandleKeyMessage().)
   if ((aMessage == MOZ_WM_MOUSEVWHEEL || aMessage == WM_MOUSEWHEEL) &&
-      !result.mIsControlDown) {
-    result.mIsControlDown = Device::Elantech::IsZooming();
+      !result.IsControl() && Device::Elantech::IsZooming()) {
+    result.Set(MODIFIER_CONTROL);
   }
   return result;
 }
@@ -362,7 +363,7 @@ MouseScrollHandler::ScrollTargetInfo
 MouseScrollHandler::GetScrollTargetInfo(
                       nsWindow* aWindow,
                       const EventInfo& aEventInfo,
-                      const nsModifierKeyState& aModifierKeyState)
+                      const ModifierKeyState& aModifierKeyState)
 {
   ScrollTargetInfo result;
   result.dispatchPixelScrollEvent = false;
@@ -688,7 +689,7 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindow* aWindow,
 
   mLastEventInfo.RecordEvent(eventInfo);
 
-  nsModifierKeyState modKeyState = GetModifierKeyState(aMessage);
+  ModifierKeyState modKeyState = GetModifierKeyState(aMessage);
 
   // Before dispatching line scroll event, we should get the current scroll
   // event target information for pixel scroll.
@@ -761,7 +762,7 @@ MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(nsWindow* aWindow,
 
   mIsWaitingInternalMessage = false;
 
-  nsModifierKeyState modKeyState = GetModifierKeyState(aMessage);
+  ModifierKeyState modKeyState = GetModifierKeyState(aMessage);
 
   nsMouseScrollEvent scrollEvent(true, NS_MOUSE_SCROLL, aWindow);
   scrollEvent.scrollFlags =
@@ -917,7 +918,7 @@ MouseScrollHandler::LastEventInfo::InitMouseScrollEvent(
                                      nsWindow* aWindow,
                                      nsMouseScrollEvent& aMouseScrollEvent,
                                      const ScrollTargetInfo& aScrollTargetInfo,
-                                     const nsModifierKeyState& aModKeyState)
+                                     const ModifierKeyState& aModKeyState)
 {
   NS_ABORT_IF_FALSE(aMouseScrollEvent.message == NS_MOUSE_SCROLL,
     "aMouseScrollEvent must be NS_MOUSE_SCROLL");
@@ -979,7 +980,7 @@ MouseScrollHandler::LastEventInfo::InitMousePixelScrollEvent(
                                      nsWindow* aWindow,
                                      nsMouseScrollEvent& aPixelScrollEvent,
                                      const ScrollTargetInfo& aScrollTargetInfo,
-                                     const nsModifierKeyState& aModKeyState)
+                                     const ModifierKeyState& aModKeyState)
 {
   NS_ABORT_IF_FALSE(aPixelScrollEvent.message == NS_MOUSE_PIXEL_SCROLL,
     "aPixelScrollEvent must be NS_MOUSE_PIXEL_SCROLL");
