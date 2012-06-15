@@ -1607,6 +1607,8 @@ UpdateService.prototype = {
 #ifdef XP_WIN
       this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ENABLED,
                                       "UPDATER_SERVICE_ENABLED");
+      this._sendIntPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ERRORS,
+                                     "UPDATER_SERVICE_ERRORS");
 #endif
 
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
@@ -1663,6 +1665,28 @@ UpdateService.prototype = {
       Components.utils.reportError(e);
     }
   },
+
+  /**
+   * Submit a telemetry ping with the int value of a pref for a histogram
+   *
+   * @param  pref
+   *         The preference to report
+   * @param histogram
+   *         The histogram ID to report to
+   */
+  _sendIntPrefTelemetryPing: function AUS__intTelemetryPing(pref, histogram) {
+    try {
+      // The getPref is already wrapped in a try/catch but we never
+      // want telemetry pings breaking app update so we just put it
+      // inside the try to be safe. 
+      let val = getPref("getIntPref", pref, 0);
+      Services.telemetry.getHistogramById(histogram).add(val);
+    } catch(e) {
+      // Don't allow any exception to be propagated.
+      Components.utils.reportError(e);
+    }
+  },
+
 
   /**
    * Submit the results of applying the update via telemetry.
