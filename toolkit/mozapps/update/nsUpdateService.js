@@ -329,6 +329,16 @@ function testWriteAccess(updateTestFile, createDirectory) {
 }
 
 XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpdates() {
+  function submitHasPermissionsTelemetryPing(val) {
+      try {
+        let h = Services.telemetry.getHistogramById("UPDATER_HAS_PERMISSIONS");
+        h.add(+val);
+      } catch(e) {
+        // Don't allow any exception to be propagated.
+        Components.utils.reportError(e);
+      }
+  } 
+
   try {
     var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
     LOG("gCanApplyUpdates - testing write access " + updateTestFile.path);
@@ -408,10 +418,12 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
   catch (e) {
      LOG("gCanApplyUpdates - unable to apply updates. Exception: " + e);
     // No write privileges to install directory
+    submitHasPermissionsTelemetryPing(false);
     return false;
   }
 
   LOG("gCanApplyUpdates - able to apply updates");
+  submitHasPermissionsTelemetryPing(true);
   return true;
 });
 
