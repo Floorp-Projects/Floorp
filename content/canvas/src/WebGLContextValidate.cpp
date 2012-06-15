@@ -311,6 +311,9 @@ bool WebGLContext::ValidateDrawModeEnum(WebGLenum mode, const char *info)
 
 bool WebGLContext::ValidateGLSLVariableName(const nsAString& name, const char *info)
 {
+    if (name.IsEmpty())
+        return false;
+
     const uint32_t maxSize = 256;
     if (name.Length() > maxSize) {
         ErrorInvalidValue("%s: identifier is %d characters long, exceeds the maximum allowed length of %d characters",
