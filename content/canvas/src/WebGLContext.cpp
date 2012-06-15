@@ -1312,6 +1312,12 @@ NS_INTERFACE_MAP_BEGIN(WebGLUniformLocation)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLUniformLocation)
 NS_INTERFACE_MAP_END
 
+JSObject*
+WebGLUniformLocation::WrapObject(JSContext *cx, JSObject *scope)
+{
+    return dom::WebGLUniformLocationBinding::Wrap(cx, scope, this);
+}
+
 NS_IMPL_ADDREF(WebGLShaderPrecisionFormat)
 NS_IMPL_RELEASE(WebGLShaderPrecisionFormat)
 

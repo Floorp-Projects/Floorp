@@ -1531,6 +1531,11 @@ for (uint32_t i = 0; i < length; ++i) {
 
         templateBody = ""
         if descriptor.castable:
+            if descriptor.prefable:
+                raise TypeError("We don't support prefable castable object "
+                                "arguments (like %s), because we don't know "
+                                "how to handle them being preffed off" %
+                                descriptor.interface.identifier.name)
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                         descriptor,
