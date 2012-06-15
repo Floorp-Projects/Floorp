@@ -9,6 +9,10 @@
 #include "unistd.h"
 #endif // defined(XP_UNIX)
 
+#if defined(XP_MACOSX) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#include "copyfile.h"
+#endif // defined(XP_MAC) || defined(__FreeBSD__) || defined(__OpenBSD__)
+
 #if defined(XP_WIN)
 #include <windows.h>
 #endif // defined(XP_WIN)
@@ -143,6 +147,15 @@ static dom::ConstantSpec gLibcProperties[] =
   INT_CONSTANT(SEEK_CUR),
   INT_CONSTANT(SEEK_END),
   INT_CONSTANT(SEEK_SET),
+
+  // copyfile
+#if defined(COPYFILE_DATA)
+  INT_CONSTANT(COPYFILE_DATA),
+  INT_CONSTANT(COPYFILE_EXCL),
+  INT_CONSTANT(COPYFILE_XATTR),
+  INT_CONSTANT(COPYFILE_STAT),
+  INT_CONSTANT(COPYFILE_ACL),
+#endif // defined(COPYFILE_DATA)
 
   // error values
   INT_CONSTANT(EACCES),
