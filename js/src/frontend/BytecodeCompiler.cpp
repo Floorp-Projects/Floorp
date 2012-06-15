@@ -104,6 +104,10 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     TreeContext tc(&parser, &sc, staticLevel);
     if (!tc.init())
         return NULL;
+    // Inline this->statements to emit as we go to save AST space. We must
+    // generate our script-body blockid since we aren't calling Statements.
+    if (!GenerateBlockId(&tc, tc.bodyid))
+        return NULL;
 
     bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
     GlobalObject *globalObject = needScriptGlobal ? GetCurrentGlobal(cx) : NULL;
@@ -153,13 +157,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
             bce.objectList.length++;
         }
     }
-
-    /*
-     * Inline this->statements to emit as we go to save AST space. We must
-     * generate our script-body blockid since we aren't calling Statements.
-     */
-    if (!GenerateBlockId(&sc, sc.bodyid))
-        return NULL;
 
     ParseNode *pn;
 #if JS_HAS_XML_SUPPORT
@@ -261,10 +258,14 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
 
     JS_ASSERT(fun);
     SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL);
+    funsc.bindings.transfer(bindings);
+    fun->setArgCount(funsc.bindings.numArgs());
 
     unsigned staticLevel = 0;
     TreeContext funtc(&parser, &funsc, staticLevel);
     if (!funtc.init())
+        return false;
+    if (!GenerateBlockId(&funtc, funtc.bodyid))
         return false;
 
     GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
@@ -279,11 +280,6 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     BytecodeEmitter funbce(/* parent = */ NULL, &parser, &funsc, script, nullCallerFrame,
                            /* hasGlobalScope = */ false, lineno);
     if (!funbce.init())
-        return false;
-
-    funsc.bindings.transfer(bindings);
-    fun->setArgCount(funsc.bindings.numArgs());
-    if (!GenerateBlockId(&funsc, funsc.bodyid))
         return false;
 
     /* FIXME: make Function format the source for a function definition. */
