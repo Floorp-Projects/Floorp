@@ -10,7 +10,7 @@
 #include "nsEvent.h"
 #include <windows.h>
 
-#define NS_NUM_OF_KEYS          54
+#define NS_NUM_OF_KEYS          68
 
 #define VK_OEM_1                0xBA   // ';:' for US
 #define VK_OEM_PLUS             0xBB   // '+' any country
@@ -333,7 +333,6 @@ public:
   ~KeyboardLayout();
 
   static bool IsPrintableCharKey(PRUint8 aVirtualKey);
-  static bool IsNumpadKey(PRUint8 aVirtualKey);
 
   /**
    * IsDeadKey() returns true if aVirtualKey is a dead key with aModKeyState.
