@@ -619,7 +619,13 @@ nsMIMEHeaderParamImpl::DoParameterInternal(const char *aHeaderValue,
     //   skip over whitespace, ';', whitespace.
 increment_str:      
     while (nsCRT::IsAsciiSpace(*str)) ++str;
-    if (*str == ';') ++str;
+    if (*str == ';') {
+      ++str;
+    } else {
+      // stop processing the header field; either we are done or the
+      // separator was missing
+      break;
+    }
     while (nsCRT::IsAsciiSpace(*str)) ++str;
   }
 

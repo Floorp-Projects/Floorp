@@ -11,6 +11,7 @@
 
 #include "nsStringFwd.h"
 #include "nsISerializationHelper.h"
+#include "mozilla/Attributes.h"
 
 class nsISerializable;
 class nsISupports;
@@ -27,7 +28,7 @@ nsresult NS_SerializeToString(nsISerializable* obj,
 nsresult NS_DeserializeObject(const nsCSubstring& str,
                               nsISupports** obj);
 
-class nsSerializationHelper : public nsISerializationHelper
+class nsSerializationHelper MOZ_FINAL : public nsISerializationHelper
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSISERIALIZATIONHELPER

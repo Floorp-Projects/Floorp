@@ -858,15 +858,21 @@ public class BrowserProvider extends ContentProvider {
 
             debug("Update images with NULL GUIDs");
             String[] columns = new String[] { Images._ID };
-            Cursor cursor = db.query(TABLE_IMAGES, columns, Images.GUID + " IS NULL", null, null ,null, null, null);
-            ContentValues values = new ContentValues();
-            if (cursor.moveToFirst()) {
-                do {
-                    values.put(Images.GUID, Utils.generateGuid());
-                    db.update(TABLE_IMAGES, values, Images._ID + " = ?", new String[] {
-                      cursor.getString(cursor.getColumnIndexOrThrow(Images._ID))
-                    });
-                } while (cursor.moveToNext());
+            Cursor cursor = null;
+            try {
+              cursor = db.query(TABLE_IMAGES, columns, Images.GUID + " IS NULL", null, null ,null, null, null);
+              ContentValues values = new ContentValues();
+              if (cursor.moveToFirst()) {
+                  do {
+                      values.put(Images.GUID, Utils.generateGuid());
+                      db.update(TABLE_IMAGES, values, Images._ID + " = ?", new String[] {
+                        cursor.getString(cursor.getColumnIndexOrThrow(Images._ID))
+                      });
+                  } while (cursor.moveToNext());
+              }
+            } finally {
+              if (cursor != null)
+                cursor.close();
             }
 
             migrateBookmarksTable(db);

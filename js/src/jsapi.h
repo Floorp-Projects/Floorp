@@ -673,6 +673,14 @@ ObjectValue(JSObject &obj)
 }
 
 static JS_ALWAYS_INLINE Value
+ObjectValueCrashOnTouch()
+{
+    Value v;
+    v.setObject(*reinterpret_cast<JSObject *>(0x42));
+    return v;
+}
+
+static JS_ALWAYS_INLINE Value
 MagicValue(JSWhyMagic why)
 {
     Value v;
@@ -2887,6 +2895,13 @@ class JS_PUBLIC_API(JSAutoEnterCompartment)
 
     bool entered() const { return state != STATE_UNENTERED; }
 
+    /*
+     * In general, consumers should try to avoid calling leave() explicitly,
+     * and defer to the destructor by scoping the JSAutoEnterCompartment
+     * appropriately. Sometimes, though, it's unavoidable.
+     */
+    void leave();
+
     ~JSAutoEnterCompartment();
 };
 
@@ -3348,7 +3363,7 @@ JSVAL_TRACE_KIND(jsval v)
  * kind argument is one of JSTRACE_OBJECT, JSTRACE_STRING or a tag denoting
  * internal implementation-specific traversal kind. In the latter case the only
  * operations on thing that the callback can do is to call JS_TraceChildren or
- * DEBUG-only JS_PrintTraceThingInfo.
+ * JS_GetTraceThingInfo.
  *
  * If eagerlyTraceWeakMaps is true, when we trace a WeakMap visit all
  * of its mappings.  This should be used in cases where the tracer
@@ -3478,14 +3493,14 @@ JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind);
 extern JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc);
 
-#ifdef DEBUG
-
 extern JS_PUBLIC_API(void)
-JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
-                       void *thing, JSGCTraceKind kind, JSBool includeDetails);
+JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
+                     void *thing, JSGCTraceKind kind, JSBool includeDetails);
 
 extern JS_PUBLIC_API(const char *)
 JS_GetTraceEdgeName(JSTracer *trc, char *buffer, int bufferSize);
+
+#ifdef DEBUG
 
 /*
  * DEBUG-only method to dump the object graph of heap-allocated things.

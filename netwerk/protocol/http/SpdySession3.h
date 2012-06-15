@@ -15,6 +15,7 @@
 #include "nsDeque.h"
 #include "nsHashKeys.h"
 #include "zlib.h"
+#include "mozilla/Attributes.h"
 
 class nsHttpConnection;
 class nsISocketTransport;
@@ -23,10 +24,10 @@ namespace mozilla { namespace net {
 
 class SpdyStream3;
 
-class SpdySession3 : public ASpdySession
-                   , public nsAHttpConnection
-                   , public nsAHttpSegmentReader
-                   , public nsAHttpSegmentWriter
+class SpdySession3 MOZ_FINAL : public ASpdySession
+                             , public nsAHttpConnection
+                             , public nsAHttpSegmentReader
+                             , public nsAHttpSegmentWriter
 {
 public:
   NS_DECL_ISUPPORTS

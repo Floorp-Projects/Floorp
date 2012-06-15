@@ -121,8 +121,8 @@ SamplerThread* SamplerThread::instance_ = NULL;
 Sampler::Sampler(int interval, bool profiling)
     : interval_(interval),
       profiling_(profiling),
-      active_(false),
       paused_(false),
+      active_(false),
       data_(new PlatformData) {
 }
 

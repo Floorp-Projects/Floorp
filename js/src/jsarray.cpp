@@ -2453,7 +2453,7 @@ array_pop_dense(JSContext *cx, HandleObject obj, CallArgs &args)
     uint32_t index = obj->getArrayLength();
     if (index == 0) {
         args.rval().setUndefined();
-        return JS_TRUE;
+        return true;
     }
 
     index--;
@@ -2461,17 +2461,24 @@ array_pop_dense(JSContext *cx, HandleObject obj, CallArgs &args)
     JSBool hole;
     RootedValue elt(cx);
     if (!GetElement(cx, obj, index, &hole, elt.address()))
-        return JS_FALSE;
+        return false;
 
     if (!hole && DeleteArrayElement(cx, obj, index, true) < 0)
-        return JS_FALSE;
-    if (obj->getDenseArrayInitializedLength() > index)
-        obj->setDenseArrayInitializedLength(index);
-
-    obj->setArrayLength(cx, index);
+        return false;
 
     args.rval() = elt;
-    return JS_TRUE;
+    
+    // obj may not be a dense array any more, e.g. if the element was a missing
+    // and a getter supplied by the prototype modified the object.
+    if (obj->isDenseArray()) {
+        if (obj->getDenseArrayInitializedLength() > index)
+            obj->setDenseArrayInitializedLength(index);
+
+        obj->setArrayLength(cx, index);
+        return true;
+    }
+    
+    return js_SetLengthProperty(cx, obj, index);
 }
 
 JSBool
@@ -3736,11 +3743,8 @@ static JS_ALWAYS_INLINE JSObject *
 NewArray(JSContext *cx, uint32_t length, JSObject *proto_)
 {
     gc::AllocKind kind = GuessArrayGCKind(length);
-
-#ifdef JS_THREADSAFE
     JS_ASSERT(CanBeFinalizedInBackground(kind, &ArrayClass));
     kind = GetBackgroundAllocKind(kind);
-#endif
 
     GlobalObject *parent_ = GetCurrentGlobal(cx);
 

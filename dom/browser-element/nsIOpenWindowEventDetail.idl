@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMNode;
+
+/**
+ * When we send a mozbrowseropenwindow event (an instance of CustomEvent), we
+ * use an instance of this interface as the event's detail.
+ */
+[scriptable, uuid(94377af6-956a-4adf-908b-363f7023ae1a)]
+interface nsIOpenWindowEventDetail : nsISupports
+{
+  readonly attribute AString url;
+  readonly attribute AString name;
+  readonly attribute AString features;
+  readonly attribute nsIDOMNode frameElement;
+};

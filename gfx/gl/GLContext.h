@@ -1464,6 +1464,7 @@ public:
                                                RectTriangles& aRects,
                                                bool aFlipY = false);
 
+
     /**
      * Known GL extensions that can be queried by
      * IsExtensionSupported.  The results of this are cached, and as
@@ -1495,6 +1496,9 @@ public:
         OES_standard_derivatives,
         EXT_texture_filter_anisotropic,
         EXT_texture_compression_s3tc,
+        EXT_texture_compression_dxt1,
+        ANGLE_texture_compression_dxt3,
+        ANGLE_texture_compression_dxt5,
         EXT_framebuffer_blit,
         ANGLE_framebuffer_blit,
         EXT_framebuffer_multisample,
@@ -1503,6 +1507,8 @@ public:
         ARB_robustness,
         EXT_robustness,
         ARB_sync,
+        OES_EGL_image,
+        OES_EGL_sync,
         Extensions_Max
     };
 
@@ -1526,21 +1532,55 @@ public:
     // MacOS X builds; see bug 584919.  We can replace this with one
     // later on.  This is handy to use in WebGL contexts as well,
     // so making it public.
-    template<size_t setlen>
+    template<size_t Size>
     struct ExtensionBitset {
         ExtensionBitset() {
-            for (size_t i = 0; i < setlen; ++i)
-                values[i] = false;
+            for (size_t i = 0; i < Size; ++i)
+                extensions[i] = false;
+        }
+
+        void Load(const char* extStr, const char** extList, bool verbose = false) {
+            char* exts = strdup(extStr);
+
+            if (verbose)
+                printf_stderr("Extensions: %s\n", exts);
+
+            char* cur = exts;
+            bool done = false;
+            while (!done) {
+                char* space = strchr(cur, ' ');
+                if (space) {
+                    *space = '\0';
+                } else {
+                    done = true;
+                }
+
+                for (int i = 0; extList[i]; ++i) {
+                    if (strcmp(cur, extList[i]) == 0) {
+                        if (verbose)
+                            printf_stderr("Found extension %s\n", cur);
+                        extensions[i] = 1;
+                    }
+                }
+
+                cur = space + 1;
+            }
+
+            free(exts);
         }
 
         bool& operator[](size_t index) {
-            NS_ASSERTION(index < setlen, "out of range");
-            return values[index];
+            MOZ_ASSERT(index < Size, "out of range");
+            return extensions[index];
         }
 
-        bool values[setlen];
+        bool extensions[Size];
     };
 
+protected:
+    ExtensionBitset<Extensions_Max> mAvailableExtensions;
+
+public:
     /**
      * Context reset constants.
      * These are used to determine who is guilty when a context reset
@@ -1682,8 +1722,6 @@ protected:
     GLuint mOffscreenColorRB;
     GLuint mOffscreenDepthRB;
     GLuint mOffscreenStencilRB;
-
-    ExtensionBitset<Extensions_Max> mAvailableExtensions;
 
     // Clear to transparent black, with 0 depth and stencil,
     // while preserving current ClearColor etc. values.
@@ -3004,6 +3042,14 @@ public:
      void GLAPIENTRY fGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values) {
          BEFORE_GL_CALL;
          mSymbols.fGetSynciv(sync, pname, bufSize, length, values);
+         AFTER_GL_CALL;
+     }
+
+     // OES_EGL_image (GLES)
+     void fImageTargetTexture2D(GLenum target, GLeglImage image)
+     {
+         BEFORE_GL_CALL;
+         mSymbols.fImageTargetTexture2D(target, image);
          AFTER_GL_CALL;
      }
 

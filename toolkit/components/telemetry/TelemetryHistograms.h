@@ -314,6 +314,13 @@ HISTOGRAM(PLACES_FRECENCY_CALC_TIME_MS, 1, 100, 10, EXPONENTIAL, "PLACES: Time t
  * Updater telemetry.
  */
 HISTOGRAM(UPDATER_STATUS_CODES, 1, 50, 51, LINEAR, "Updater: the status of the latest update performed")
+HISTOGRAM_BOOLEAN(UPDATER_UPDATES_ENABLED, "Updater: Whether or not updates are enabled")
+HISTOGRAM_BOOLEAN(UPDATER_UPDATES_AUTOMATIC, "Updater: Whether or not updates are automatic")
+HISTOGRAM_BOOLEAN(UPDATER_SERVICE_ENABLED, "Updater: Whether or not the MozillaMaintenance service is enabled")
+HISTOGRAM(UPDATER_SERVICE_ERRORS, 1, 30, 31, LINEAR, "Updater: The number of MozillaMaintenance service errors that have occurred")
+HISTOGRAM_BOOLEAN(UPDATER_SERVICE_INSTALLED, "Updater: Whether or not the MozillaMaintenance service is installed")
+HISTOGRAM_BOOLEAN(UPDATER_STAGE_ENABLED, "Updater: Whether or not staging updates are enabled")
+HISTOGRAM_BOOLEAN(UPDATER_HAS_PERMISSIONS, "Updater: Whether or not the updater has permissions")
 
 /**
  * Thunderbird-specific telemetry.

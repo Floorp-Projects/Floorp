@@ -936,7 +936,7 @@ public:
 
   NS_IMETHOD GetUri(nsIURI * *aRequestingURI)
   {
-    NS_ADDREF(*aRequestingURI = mURI);
+    NS_IF_ADDREF(*aRequestingURI = mURI);
     return NS_OK;
   }
 

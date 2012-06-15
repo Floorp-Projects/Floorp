@@ -5,10 +5,11 @@
 
 #include "nsIDirIndex.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 /* CID: {f6913e2e-1dd1-11b2-84be-f455dee342af} */
 
-class nsDirIndex : public nsIDirIndex {
+class nsDirIndex MOZ_FINAL : public nsIDirIndex {
 public:
     nsDirIndex();
     ~nsDirIndex();

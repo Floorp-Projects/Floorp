@@ -134,6 +134,7 @@ public class GeckoLayerClient implements GeckoEventResponder,
         GeckoEvent event = GeckoEvent.createSizeChangedEvent(mWindowSize.width, mWindowSize.height,
                                                              mScreenSize.width, mScreenSize.height);
         GeckoAppShell.sendEventToGecko(event);
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Window:Resize", ""));
     }
 
     public Bitmap getBitmap() {
@@ -349,16 +350,11 @@ public class GeckoLayerClient implements GeckoEventResponder,
       * is invoked on a frame, then this function will not be. For any given frame, this
       * function will be invoked before syncViewportInfo.
       */
-    public void setPageRect(float zoom, float pageLeft, float pageTop, float pageRight, float pageBottom,
-            float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
+    public void setPageRect(float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
         synchronized (mLayerController) {
-            // adjust the page dimensions to account for differences in zoom
-            // between the rendered content (which is what the compositor tells us)
-            // and our zoom level (which may have diverged).
-            RectF pageRect = new RectF(pageLeft, pageTop, pageRight, pageBottom);
             RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
             float ourZoom = mLayerController.getZoomFactor();
-            mLayerController.setPageRect(RectUtils.scale(pageRect, ourZoom / zoom), cssPageRect);
+            mLayerController.setPageRect(RectUtils.scale(cssPageRect, ourZoom), cssPageRect);
             // Here the page size of the document has changed, but the document being displayed
             // is still the same. Therefore, we don't need to send anything to browser.js; any
             // changes we need to make to the display port will get sent the next time we call

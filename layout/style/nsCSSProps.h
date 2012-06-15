@@ -338,7 +338,6 @@ public:
   static const PRInt32 kTextAnchorKTable[];
   static const PRInt32 kTextRenderingKTable[];
   static const PRInt32 kColorInterpolationKTable[];
-  static const PRInt32 kColumnFillKTable[];
   static const PRInt32 kBoxPropSourceKTable[];
   static const PRInt32 kBoxShadowTypeKTable[];
   static const PRInt32 kBoxSizingKTable[];

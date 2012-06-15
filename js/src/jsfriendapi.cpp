@@ -161,6 +161,31 @@ JS_GetCompartmentPrincipals(JSCompartment *compartment)
     return compartment->principals;
 }
 
+JS_FRIEND_API(void)
+JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals)
+{
+    // Short circuit if there's no change.
+    if (principals == compartment->principals)
+        return;
+
+    // Clear out the old principals, if any.
+    if (compartment->principals) {
+        JS_DropPrincipals(compartment->rt, compartment->principals);
+        compartment->principals = NULL;
+    }
+
+    // Set up the new principals.
+    if (principals) {
+        JS_HoldPrincipals(principals);
+        compartment->principals = principals;
+    }
+
+    // Any compartment with the trusted principals -- and there can be
+    // multiple -- is a system compartment.
+    JSPrincipals *trusted = compartment->rt->trustedPrincipals();
+    compartment->isSystemCompartment = principals && principals == trusted;
+}
+
 JS_FRIEND_API(JSBool)
 JS_WrapPropertyDescriptor(JSContext *cx, js::PropertyDescriptor *desc)
 {
@@ -499,6 +524,8 @@ js_DumpObject(JSObject *obj)
     obj->dump();
 }
 
+#endif
+
 struct DumpingChildInfo {
     void *node;
     JSGCTraceKind kind;
@@ -588,8 +615,8 @@ js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
 
     while (!dtrc.nodes.empty()) {
         DumpingChildInfo dci = dtrc.nodes.popCopy();
-        JS_PrintTraceThingInfo(dtrc.buffer, sizeof(dtrc.buffer),
-                               &dtrc, dci.node, dci.kind, JS_TRUE);
+        JS_GetTraceThingInfo(dtrc.buffer, sizeof(dtrc.buffer),
+                             &dtrc, dci.node, dci.kind, JS_TRUE);
         fprintf(fp, "%p %c %s\n", dci.node, MarkDescriptor(dci.node), dtrc.buffer);
         JS_TraceChildren(&dtrc, dci.node, dci.kind);
     }
@@ -597,8 +624,6 @@ js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
     dtrc.visited.finish();
     fflush(dtrc.output);
 }
-
-#endif
 
 namespace js {
 

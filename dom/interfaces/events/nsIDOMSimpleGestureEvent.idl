@@ -57,6 +57,10 @@
  * Client coordinates contain the center pivot point of the action.
  * (XXX Not implemented on Mac)
  *
+ * MozEdgeUIGesture - Generated when the user swipes the display to
+ * invoke edge ui.
+ * (XXX Win8 only)
+ *
  * Default behavior:
  *
  * Some operating systems support default behaviors for gesture events
@@ -65,7 +69,7 @@
  * consuming events.
  */
 
-[scriptable, builtinclass, uuid(2827efac-40c1-44af-82b9-3ad92f04d7ac)]
+[scriptable, builtinclass, uuid(5e2a88ce-5032-4758-8578-37c6d7f87d7b)]
 interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
 {
   /* Swipe direction constants */
@@ -113,6 +117,9 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
    */
   readonly attribute double delta;
 
+  /* Click count value for taps. */
+  readonly attribute unsigned long clickCount;
+
   void initSimpleGestureEvent(in DOMString typeArg,
                               in boolean canBubbleArg,
                               in boolean cancelableArg,
@@ -129,5 +136,6 @@ interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
                               in unsigned short buttonArg,
                               in nsIDOMEventTarget relatedTargetArg,
                               in unsigned long directionArg,
-                              in double deltaArg);
+                              in double deltaArg,
+                              in unsigned long clickCount);
 };

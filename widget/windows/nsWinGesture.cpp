@@ -390,6 +390,7 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam, nsS
       // Normally maps to "restore" from whatever you may have recently changed. A simple
       // double click.
       evt.message = NS_SIMPLE_GESTURE_TAP;
+      evt.clickCount = 1;
     }
     break;
 
@@ -397,6 +398,7 @@ nsWinGesture::ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam, nsS
     {
       // Two finger right click. Defaults to right click if it falls through.
       evt.message = NS_SIMPLE_GESTURE_PRESSTAP;
+      evt.clickCount = 1;
     }
     break;
   }

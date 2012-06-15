@@ -156,7 +156,7 @@ obj_setProto(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value 
 static bool
 MarkSharpObjects(JSContext *cx, HandleObject obj, JSIdArray **idap, JSSharpInfo *value)
 {
-    JS_CHECK_RECURSION(cx, return NULL);
+    JS_CHECK_RECURSION(cx, return false);
 
     JSIdArray *ida;
 
@@ -870,7 +870,7 @@ class EvalScriptGuard
     }
 
     void setNewScript(JSScript *script) {
-        /* NewScriptFromEmitter has already called js_CallNewScriptHook. */
+        /* JSScript::initFromEmitter has already called js_CallNewScriptHook. */
         JS_ASSERT(!script_ && script);
         script_ = script;
         script_->isActiveEval = true;
@@ -1436,6 +1436,17 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, ToObject(cx, &vp[1]));
     if (!obj)
         return JS_FALSE;
+    if (obj->isProxy()) {
+        // The vanilla getter lookup code below requires that the object is
+        // native. Handle proxies separately.
+        vp->setUndefined();
+        PropertyDescriptor desc;
+        if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
+            return JS_FALSE;
+        if ((desc.attrs & JSPROP_GETTER) && desc.getter)
+            *vp = CastAsObjectJsval(desc.getter);
+        return JS_TRUE;
+    }
     JSObject *pobj;
     JSProperty *prop;
     if (!obj->lookupGeneric(cx, id, &pobj, &prop))
@@ -1460,6 +1471,17 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, ToObject(cx, &vp[1]));
     if (!obj)
         return JS_FALSE;
+    if (obj->isProxy()) {
+        // The vanilla setter lookup code below requires that the object is
+        // native. Handle proxies separately.
+        vp->setUndefined();
+        PropertyDescriptor desc;
+        if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
+            return JS_FALSE;
+        if ((desc.attrs & JSPROP_SETTER) && desc.setter)
+            *vp = CastAsObjectJsval(desc.setter);
+        return JS_TRUE;
+    }
     JSObject *pobj;
     JSProperty *prop;
     if (!obj->lookupGeneric(cx, id, &pobj, &prop))
@@ -1879,6 +1901,50 @@ Reject(JSContext *cx, JSObject *obj, unsigned errorNumber, bool throwError, bool
 
     *rval = false;
     return JS_TRUE;
+}
+
+// See comments on CheckDefineProperty in jsobj.h.
+//
+// DefinePropertyOnObject has its own implementation of these checks.
+//
+bool
+js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
+                        PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
+{
+    if (!obj->isNative())
+        return true;
+
+    // ES5 8.12.9 Step 1. Even though we know obj is native, we use generic
+    // APIs for shorter, more readable code.
+    AutoPropertyDescriptorRooter desc(cx);
+    if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+        return false;
+
+    // This does not have to check obj->isExtensible() when !desc.obj (steps
+    // 2-3) because the low-level methods JSObject::{add,put}Property check
+    // for that.
+    if (desc.obj && (desc.attrs & JSPROP_PERMANENT)) {
+        // Steps 6-11, skipping step 10.a.ii. Prohibit redefining a permanent
+        // property with different metadata, except to make a writable property
+        // non-writable.
+        if (getter != desc.getter ||
+            setter != desc.setter ||
+            (attrs != desc.attrs && attrs != (desc.attrs | JSPROP_READONLY)))
+        {
+            return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
+        }
+
+        // Step 10.a.ii. Prohibit changing the value of a non-configurable,
+        // non-writable data property.
+        if ((desc.attrs & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_READONLY)) == JSPROP_READONLY) {
+            bool same;
+            if (!SameValue(cx, value, desc.value, &same))
+                return false;
+            if (!same)
+                return JSObject::reportReadOnly(cx, id);
+        }
+    }
+    return true;
 }
 
 static JSBool
@@ -2533,7 +2599,7 @@ JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
 
             last = cx->propertyTree().getChild(cx, last, self->numFixedSlots(), child);
             if (!last)
-                return NULL;
+                return false;
         }
 
         JS_ASSERT(self->lastProperty()->slotSpan() == last->slotSpan());
@@ -5162,8 +5228,8 @@ js::CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname)
                                         JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
 
-static bool
-ReportReadOnly(JSContext *cx, jsid id, unsigned report)
+bool
+JSObject::reportReadOnly(JSContext *cx, jsid id, unsigned report)
 {
     return js_ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
                                     JSDVG_IGNORE_STACK, IdToValue(id), NULL,
@@ -5232,9 +5298,9 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, unsigne
 
                 if (pd.attrs & JSPROP_READONLY) {
                     if (strict)
-                        return ReportReadOnly(cx, id, JSREPORT_ERROR);
+                        return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
                     if (cx->hasStrictOption())
-                        return ReportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+                        return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
                     return true;
                 }
             }
@@ -5276,9 +5342,9 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, unsigne
             if (!shape->writable()) {
                 /* Error in strict mode code, warn with strict option, otherwise do nothing. */
                 if (strict)
-                    return ReportReadOnly(cx, id, JSREPORT_ERROR);
+                    return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
                 if (cx->hasStrictOption())
-                    return ReportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+                    return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
                 return JS_TRUE;
             }
         }

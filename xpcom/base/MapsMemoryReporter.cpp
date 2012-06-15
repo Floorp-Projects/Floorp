@@ -91,19 +91,19 @@ void GetBasename(const nsCString &aPath, nsACString &aOut)
 }
 
 // MapsReporter::CollectReports uses this stuct to keep track of whether it's
-// seen a mapping under 'resident', 'pss', 'vsize', and 'swap'.
+// seen a mapping under 'rss', 'pss', 'size', and 'swap'.
 struct CategoriesSeen {
   CategoriesSeen() :
-    mSeenResident(false),
+    mSeenRss(false),
     mSeenPss(false),
-    mSeenVsize(false),
+    mSeenSize(false),
     mSeenSwap(false)
   {
   }
 
-  bool mSeenResident;
+  bool mSeenRss;
   bool mSeenPss;
-  bool mSeenVsize;
+  bool mSeenSize;
   bool mSeenSwap;
 };
 
@@ -195,14 +195,15 @@ MapsReporter::CollectReports(nsIMemoryMultiReporterCallback *aCb,
 
   fclose(f);
 
-  // For sure we should have created some node under 'resident' and
-  // 'vsize'; otherwise we're probably not reading smaps correctly.  If we
+  // For sure we should have created some node under 'rss' and
+  // 'size'; otherwise we're probably not reading smaps correctly.  If we
   // didn't create a node under 'swap', create one here so about:memory
   // knows to create an empty 'swap' tree;  it needs a 'total' child because
   // about:memory expects at least one report whose path begins with 'swap/'.
 
-  NS_ASSERTION(categoriesSeen.mSeenVsize, "Didn't create a vsize node?");
-  NS_ASSERTION(categoriesSeen.mSeenVsize, "Didn't create a resident node?");
+  NS_ASSERTION(categoriesSeen.mSeenSize, "Didn't create a size node?");
+  NS_ASSERTION(categoriesSeen.mSeenRss, "Didn't create a rss node?");
+  NS_ASSERTION(categoriesSeen.mSeenPss, "Didn't create a pss node?");
   if (!categoriesSeen.mSeenSwap) {
     nsresult rv;
     rv = aCb->Callback(NS_LITERAL_CSTRING(""),
@@ -474,12 +475,12 @@ MapsReporter::ParseMapBody(
 
   const char* category;
   if (strcmp(desc, "Size") == 0) {
-    category = "vsize";
-    aCategoriesSeen->mSeenVsize = true;
+    category = "size";
+    aCategoriesSeen->mSeenSize = true;
   }
   else if (strcmp(desc, "Rss") == 0) {
-    category = "resident";
-    aCategoriesSeen->mSeenResident = true;
+    category = "rss";
+    aCategoriesSeen->mSeenRss = true;
   }
   else if (strcmp(desc, "Pss") == 0) {
     category = "pss";

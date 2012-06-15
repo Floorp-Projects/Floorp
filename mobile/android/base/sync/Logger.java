@@ -4,162 +4,178 @@
 
 package org.mozilla.gecko.sync;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import org.mozilla.gecko.sync.log.writers.AndroidLevelCachingLogWriter;
+import org.mozilla.gecko.sync.log.writers.AndroidLogWriter;
+import org.mozilla.gecko.sync.log.writers.LogWriter;
+import org.mozilla.gecko.sync.log.writers.SingleTagLogWriter;
 
 import android.util.Log;
 
 /**
- * Logging helper class. Serializes all log operations (by synchronizing),
- * and caches log level settings.
- *
- * Ultimately this will also be a hook point for our own logging system.
- *
- * @author rnewman
- *
+ * Logging helper class. Serializes all log operations (by synchronizing).
  */
 public class Logger {
+  public static final String LOG_TAG = "Logger";
+
+  public static final String GLOBAL_LOG_TAG = "FxSync";
 
   // For extra debugging.
   public static boolean LOG_PERSONAL_INFORMATION = false;
 
-  // If true, log to System.out as well as using Android's Log.* calls.
-  public static boolean LOG_TO_STDOUT = false;
-
-  // I can't believe we have to implement this ourselves.
-  // These aren't synchronized (and neither are the setters) because
-  // the logging calls themselves are synchronized.
-  private static Map<String, Boolean> isErrorLoggable   = new IdentityHashMap<String, Boolean>();
-  private static Map<String, Boolean> isWarnLoggable    = new IdentityHashMap<String, Boolean>();
-  private static Map<String, Boolean> isInfoLoggable    = new IdentityHashMap<String, Boolean>();
-  private static Map<String, Boolean> isDebugLoggable   = new IdentityHashMap<String, Boolean>();
-  private static Map<String, Boolean> isVerboseLoggable = new IdentityHashMap<String, Boolean>();
+  /**
+   * Current set of writers logged to.
+   * <p>
+   * We want logging to be available while running tests, so we set initialize
+   * this set statically.
+   */
+  protected final static Set<LogWriter> logWriters = new LinkedHashSet<LogWriter>(Logger.defaultLogWriters());
 
   /**
-   * Empty the caches of log levels.
+   * Default set of log writers to log to.
    */
-  public static synchronized void refreshLogLevels() {
-    isErrorLoggable   = new IdentityHashMap<String, Boolean>();
-    isWarnLoggable    = new IdentityHashMap<String, Boolean>();
-    isInfoLoggable    = new IdentityHashMap<String, Boolean>();
-    isDebugLoggable   = new IdentityHashMap<String, Boolean>();
-    isVerboseLoggable = new IdentityHashMap<String, Boolean>();
+  protected final static Set<LogWriter> defaultLogWriters() {
+    final Set<LogWriter> defaultLogWriters = new LinkedHashSet<LogWriter>();
+    LogWriter log = new AndroidLogWriter();
+    LogWriter cache = new AndroidLevelCachingLogWriter(log);
+    LogWriter single = new SingleTagLogWriter(GLOBAL_LOG_TAG, cache);
+    defaultLogWriters.add(single);
+    return defaultLogWriters;
   }
 
-  private static boolean shouldLogError(String logTag) {
-    Boolean out = isErrorLoggable.get(logTag);
-    if (out != null) {
-      return out.booleanValue();
-    }
-    out = Log.isLoggable(logTag, Log.ERROR);
-    isErrorLoggable.put(logTag, out);
-    return out;
+  public static synchronized void startLoggingTo(LogWriter logWriter) {
+    logWriters.add(logWriter);
   }
 
-  private static boolean shouldLogWarn(String logTag) {
-    Boolean out = isWarnLoggable.get(logTag);
-    if (out != null) {
-      return out.booleanValue();
+  public static synchronized void stopLoggingTo(LogWriter logWriter) {
+    try {
+      logWriter.close();
+    } catch (Exception e) {
+      Log.e(LOG_TAG, "Got exception closing and removing LogWriter " + logWriter + ".", e);
     }
-    out = Log.isLoggable(logTag, Log.WARN);
-    isWarnLoggable.put(logTag, out);
-    return out;
+    logWriters.remove(logWriter);
   }
 
-  private static boolean shouldLogInfo(String logTag) {
-    Boolean out = isInfoLoggable.get(logTag);
-    if (out != null) {
-      return out.booleanValue();
+  public static synchronized void stopLoggingToAll() {
+    for (LogWriter logWriter : logWriters) {
+      try {
+        logWriter.close();
+      } catch (Exception e) {
+        Log.e(LOG_TAG, "Got exception closing and removing LogWriter " + logWriter + ".", e);
+      }
     }
-    out = Log.isLoggable(logTag, Log.INFO);
-    isInfoLoggable.put(logTag, out);
-    return out;
+    logWriters.clear();
   }
 
-  private static boolean shouldLogDebug(String logTag) {
-    Boolean out = isDebugLoggable.get(logTag);
-    if (out != null) {
-      return out.booleanValue();
-    }
-    out = Log.isLoggable(logTag, Log.DEBUG);
-    isDebugLoggable.put(logTag, out);
-    return out;
-  }
-
-  private static boolean shouldLogVerbose(String logTag) {
-    Boolean out = isVerboseLoggable.get(logTag);
-    if (out != null) {
-      return out.booleanValue();
-    }
-    out = Log.isLoggable(logTag, Log.VERBOSE);
-    isVerboseLoggable.put(logTag, out);
-    return out;
+  /**
+   * Write to only the default log writers.
+   */
+  public static synchronized void resetLogging() {
+    stopLoggingToAll();
+    logWriters.addAll(Logger.defaultLogWriters());
   }
 
   // Synchronized version for other classes to use.
-  public static synchronized boolean logVerbose(String logTag) {
-    return shouldLogVerbose(logTag);
-  }
-
-  private static void logToStdout(String... s) {
-    if (LOG_TO_STDOUT) {
-      for (String string : s) {
-        System.out.print(string);
+  public static synchronized boolean shouldLogVerbose(String logTag) {
+    for (LogWriter logWriter : logWriters) {
+      if (logWriter.shouldLogVerbose(logTag)) {
+        return true;
       }
-      System.out.println("");
     }
+    return false;
   }
 
   public static void error(String logTag, String message) {
     Logger.error(logTag, message, null);
   }
 
-  public static synchronized void error(String logTag, String message, Throwable error) {
-    logToStdout(logTag, " :: ERROR: ", message);
-    if (shouldLogError(logTag)) {
-      Log.e(logTag, message, error);
-    }
-  }
-
   public static void warn(String logTag, String message) {
     Logger.warn(logTag, message, null);
   }
 
-  public static synchronized void warn(String logTag, String message, Throwable error) {
-    logToStdout(logTag, " :: WARN: ", message);
-    if (shouldLogWarn(logTag)) {
-      Log.w(logTag, message, error);
-    }
-  }
-
-  public static synchronized void info(String logTag, String message) {
-    logToStdout(logTag, " :: INFO: ", message);
-    if (shouldLogInfo(logTag)) {
-      Log.i(logTag, message);
-    }
+  public static void info(String logTag, String message) {
+    Logger.info(logTag, message, null);
   }
 
   public static void debug(String logTag, String message) {
     Logger.debug(logTag, message, null);
   }
 
-  public static synchronized void debug(String logTag, String message, Throwable error) {
-    logToStdout(logTag, " :: DEBUG: ", message);
-    if (shouldLogDebug(logTag)) {
-      Log.d(logTag, message, error);
-    }
-  }
-
-  public static synchronized void trace(String logTag, String message) {
-    logToStdout(logTag, " :: TRACE: ", message);
-    if (shouldLogVerbose(logTag)) {
-      Log.v(logTag, message);
-    }
+  public static void trace(String logTag, String message) {
+    Logger.trace(logTag, message, null);
   }
 
   public static void pii(String logTag, String message) {
     if (LOG_PERSONAL_INFORMATION) {
       Logger.debug(logTag, "$$PII$$: " + message);
+    }
+  }
+
+  public static synchronized void error(String logTag, String message, Throwable error) {
+    Iterator<LogWriter> it = logWriters.iterator();
+    while (it.hasNext()) {
+      LogWriter writer = it.next();
+      try {
+        writer.error(logTag, message, error);
+      } catch (Exception e) {
+        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        it.remove();
+      }
+    }
+  }
+
+  public static synchronized void warn(String logTag, String message, Throwable error) {
+    Iterator<LogWriter> it = logWriters.iterator();
+    while (it.hasNext()) {
+      LogWriter writer = it.next();
+      try {
+        writer.warn(logTag, message, error);
+      } catch (Exception e) {
+        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        it.remove();
+      }
+    }
+  }
+
+  public static synchronized void info(String logTag, String message, Throwable error) {
+    Iterator<LogWriter> it = logWriters.iterator();
+    while (it.hasNext()) {
+      LogWriter writer = it.next();
+      try {
+        writer.info(logTag, message, error);
+      } catch (Exception e) {
+        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        it.remove();
+      }
+    }
+  }
+
+  public static synchronized void debug(String logTag, String message, Throwable error) {
+    Iterator<LogWriter> it = logWriters.iterator();
+    while (it.hasNext()) {
+      LogWriter writer = it.next();
+      try {
+        writer.debug(logTag, message, error);
+      } catch (Exception e) {
+        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        it.remove();
+      }
+    }
+  }
+
+  public static synchronized void trace(String logTag, String message, Throwable error) {
+    Iterator<LogWriter> it = logWriters.iterator();
+    while (it.hasNext()) {
+      LogWriter writer = it.next();
+      try {
+        writer.trace(logTag, message, error);
+      } catch (Exception e) {
+        Log.e(LOG_TAG, "Got exception logging; removing LogWriter " + writer + ".", e);
+        it.remove();
+      }
     }
   }
 }

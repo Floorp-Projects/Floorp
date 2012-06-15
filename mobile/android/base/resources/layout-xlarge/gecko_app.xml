@@ -13,7 +13,7 @@
                                 android:background="@drawable/tabs_tray_bg_repeat"/>
 
    <LinearLayout android:id="@+id/main_layout"
-                 style="@style/Screen">
+                 style="@style/Screen.Transparent">
  
         <include layout="@layout/browser_toolbar"/>
 

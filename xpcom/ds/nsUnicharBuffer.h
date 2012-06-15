@@ -7,8 +7,9 @@
 #define nsUnicharBuffer_h__
 
 #include "nsIUnicharBuffer.h"
+#include "mozilla/Attributes.h"
 
-class UnicharBufferImpl : public nsIUnicharBuffer {
+class UnicharBufferImpl MOZ_FINAL : public nsIUnicharBuffer {
 public:
   UnicharBufferImpl();
 

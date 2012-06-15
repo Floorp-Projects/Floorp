@@ -31,6 +31,7 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsIWebNavigation.h"
 #include "nsIJSContextStack.h"
+#include "mozilla/BrowserElementParent.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -836,6 +837,29 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
                                static_cast<nsIDocShellTreeOwner*>(this)),
                "Parent from wrong docshell tree?");
 #endif
+
+  // If aParent is inside an <iframe mozbrowser> and this isn't a request to
+  // open a modal-type window, we're going to create a new <iframe mozbrowser>
+  // and return its window here.
+  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
+  bool inBrowserFrame = false;
+  if (docshell) {
+    docshell->GetContainedInBrowserFrame(&inBrowserFrame);
+  }
+
+  if (inBrowserFrame &&
+      !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
+                        nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
+                        nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
+    bool openSucceeded =
+      BrowserElementParent::OpenWindowInProcess(aParent, aURI, aName,
+                                                aFeatures, aReturn);
+
+    // If OpenWindowInProcess failed (perhaps because the embedder blocked the
+    // popup), tell our caller not to proceed trying to create a new window
+    // through other means.
+    return openSucceeded ? NS_OK : NS_ERROR_ABORT;
+  }
 
   // Where should we open this?
   PRInt32 containerPref;

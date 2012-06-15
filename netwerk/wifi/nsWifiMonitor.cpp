@@ -111,7 +111,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
   return NS_OK;
 }
 
-class nsPassErrorToWifiListeners : public nsIRunnable
+class nsPassErrorToWifiListeners MOZ_FINAL : public nsIRunnable
 {
  public:
   NS_DECL_ISUPPORTS
@@ -144,6 +144,8 @@ NS_IMETHODIMP nsWifiMonitor::Run()
 {
   LOG(("@@@@@ wifi monitor run called\n"));
 
+  PR_SetCurrentThreadName("Wifi Monitor");
+
   nsresult rv = DoScan();
 
   if (mKeepGoing && NS_FAILED(rv)) {
@@ -169,7 +171,7 @@ NS_IMETHODIMP nsWifiMonitor::Run()
   return NS_OK;
 }
 
-class nsCallWifiListeners : public nsIRunnable
+class nsCallWifiListeners MOZ_FINAL : public nsIRunnable
 {
  public:
   NS_DECL_ISUPPORTS

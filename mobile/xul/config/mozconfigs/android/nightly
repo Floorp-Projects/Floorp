@@ -18,6 +18,7 @@ ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 
 export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1
+export MOZ_TELEMETRY_REPORTING=1
 
 ac_add_options --with-branding=mobile/xul/branding/nightly
 

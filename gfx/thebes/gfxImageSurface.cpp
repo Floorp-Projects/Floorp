@@ -9,6 +9,10 @@
 #include "gfxImageSurface.h"
 
 #include "cairo.h"
+#include "mozilla/gfx/2D.h"
+#include "gfx2DGlue.h"
+
+using namespace mozilla::gfx;
 
 gfxImageSurface::gfxImageSurface()
   : mSize(0, 0),
@@ -171,32 +175,75 @@ gfxImageSurface::ComputeStride(const gfxIntSize& aSize, gfxImageFormat aFormat)
     return stride;
 }
 
-bool
-gfxImageSurface::CopyFrom(gfxImageSurface *other)
+// helper function for the CopyFrom methods
+static void
+CopyForStride(unsigned char* aDest, unsigned char* aSrc, const gfxIntSize& aSize, long aDestStride, long aSrcStride)
 {
-    if (other->mSize != mSize)
-    {
-        return false;
-    }
-
-    if (other->mFormat != mFormat &&
-        !(other->mFormat == ImageFormatARGB32 && mFormat == ImageFormatRGB24) &&
-        !(other->mFormat == ImageFormatRGB24 && mFormat == ImageFormatARGB32))
-    {
-        return false;
-    }
-
-    if (other->mStride == mStride) {
-        memcpy (mData, other->mData, mStride * mSize.height);
+    if (aDestStride == aSrcStride) {
+        memcpy (aDest, aSrc, aSrcStride * aSize.height);
     } else {
-        int lineSize = NS_MIN(other->mStride, mStride);
-        for (int i = 0; i < mSize.height; i++) {
-            unsigned char *src = other->mData + other->mStride * i;
-            unsigned char *dst = mData + mStride * i;
+        int lineSize = NS_MIN(aDestStride, aSrcStride);
+        for (int i = 0; i < aSize.height; i++) {
+            unsigned char* src = aSrc + aSrcStride * i;
+            unsigned char* dst = aDest + aDestStride * i;
 
             memcpy (dst, src, lineSize);
         }
     }
+}
+
+// helper function for the CopyFrom methods
+static bool
+FormatsAreCompatible(gfxASurface::gfxImageFormat a1, gfxASurface::gfxImageFormat a2)
+{
+    if (a1 != a2 &&
+        !(a1 == gfxASurface::ImageFormatARGB32 &&
+          a2 == gfxASurface::ImageFormatRGB24) &&
+        !(a1 == gfxASurface::ImageFormatRGB24 &&
+          a2 == gfxASurface::ImageFormatARGB32)) {
+        return false;
+    }
+
+    return true;
+}
+
+bool
+gfxImageSurface::CopyFrom (SourceSurface *aSurface)
+{
+    mozilla::RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+
+    if (!data) {
+        return false;
+    }
+
+    gfxIntSize size(data->GetSize().width, data->GetSize().height);
+    if (size != mSize) {
+        return false;
+    }
+
+    if (!FormatsAreCompatible(SurfaceFormatToImageFormat(aSurface->GetFormat()),
+                              mFormat)) {
+        return false;
+    }
+
+    CopyForStride(mData, data->GetData(), size, mStride, data->Stride());
+
+    return true;
+}
+
+
+bool
+gfxImageSurface::CopyFrom(gfxImageSurface *other)
+{
+    if (other->mSize != mSize) {
+        return false;
+    }
+
+    if (!FormatsAreCompatible(other->mFormat, mFormat)) {
+        return false;
+    }
+
+    CopyForStride(mData, other->mData, mSize, mStride, other->mStride);
 
     return true;
 }

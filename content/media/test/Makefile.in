@@ -125,10 +125,6 @@ _TEST_FILES = \
 		$(NULL)
 
 # Bug 759221
-# These tests are not built on Android because they were failing when we
-# enabled these tests on Android. The intent is to re-enable them as soon
-# as possible, and/or switch to a cleaner way to manage known-to-fail tests.
-ifneq ($(OS_TARGET),Android)
 _TEST_FILES += \
 		test_autoplay_contentEditable.html \
 		test_buffered.html \
@@ -139,7 +135,6 @@ _TEST_FILES += \
 		test_playback.html \
 		test_seekLies.html \
 		$(NULL)
-endif
 
 # Don't run in suite
 ifndef MOZ_SUITE
@@ -249,10 +244,6 @@ _TEST_FILES += \
 		$(NULL)
 
 # Bug 759221
-# These tests are not built on Android because they were failing when we
-# enabled these tests on Android. The intent is to re-enable them as soon
-# as possible, and/or switch to a cleaner way to manage known-to-fail tests.
-ifneq ($(OS_TARGET),Android)
 _TEST_FILES += \
 		test_bug686137.html \
 		test_contentDuration1.html \
@@ -272,7 +263,6 @@ _TEST_FILES += \
 		test_framebuffer.html \
 		test_seekable2.html \
 		$(NULL)
-endif
 else
 _TEST_FILES += \
 		test_can_play_type_no_ogg.html \
@@ -296,17 +286,12 @@ _TEST_FILES += \
 
 
 # Bug 759221
-# These tests are not built on Android because they were failing when we
-# enabled these tests on Android. The intent is to re-enable them as soon
-# as possible, and/or switch to a cleaner way to manage known-to-fail tests.
-ifneq ($(OS_TARGET),Android)
 _TEST_FILES += \
 		test_fragment_play.html \
 		test_fragment_noplay.html \
 		test_wave_data_u8.html \
 		test_wave_data_s16.html \
 		$(NULL)
-endif
 else
 _TEST_FILES += \
 		test_can_play_type_no_wave.html \

@@ -1,7 +1,7 @@
 # CommandLineHandler.js
-component {6d69c782-40a3-469b-8bfd-3ee366105a4a} CommandLineHandler.js application=webapprt@mozilla.org
-contract @mozilla.org/webapprt/clh;1 {6d69c782-40a3-469b-8bfd-3ee366105a4a} application=webapprt@mozilla.org
-category command-line-handler x-default @mozilla.org/webapprt/clh;1 application=webapprt@mozilla.org
+component {6d69c782-40a3-469b-8bfd-3ee366105a4a} CommandLineHandler.js
+contract @mozilla.org/webapprt/clh;1 {6d69c782-40a3-469b-8bfd-3ee366105a4a}
+category command-line-handler x-default @mozilla.org/webapprt/clh;1
 
 # ContentPermission.js
 component {07ef5b2e-88fb-47bd-8cec-d3b0bef11ac4} ContentPermission.js
@@ -12,11 +12,11 @@ contract @mozilla.org/content-permission/prompt;1 {07ef5b2e-88fb-47bd-8cec-d3b0b
 # direct to the user's default browser, but we no longer use that heuristic.
 # It will come in handy when we implement support for trusted apps, however,
 # so we left it in (although it is disabled here).
-# component {75acd178-3d5a-48a7-bd92-fba383520ae6} ContentPolicy.js application=webapprt@mozilla.org
-# contract @mozilla.org/webapprt/content-policy;1 {75acd178-3d5a-48a7-bd92-fba383520ae6} application=webapprt@mozilla.org
-# category content-policy webapprt-content-policy @mozilla.org/webapprt/content-policy;1 application=webapprt@mozilla.org
+# component {75acd178-3d5a-48a7-bd92-fba383520ae6} ContentPolicy.js
+# contract @mozilla.org/webapprt/content-policy;1 {75acd178-3d5a-48a7-bd92-fba383520ae6}
+# category content-policy webapprt-content-policy @mozilla.org/webapprt/content-policy;1
 
 # DirectoryProvider.js
-component {e1799fda-4b2f-4457-b671-e0641d95698d} DirectoryProvider.js application=webapprt@mozilla.org
-contract @mozilla.org/webapprt/directory-provider;1 {e1799fda-4b2f-4457-b671-e0641d95698d} application=webapprt@mozilla.org
-category xpcom-directory-providers webapprt-directory-provider @mozilla.org/webapprt/directory-provider;1 application=webapprt@mozilla.org
+component {e1799fda-4b2f-4457-b671-e0641d95698d} DirectoryProvider.js
+contract @mozilla.org/webapprt/directory-provider;1 {e1799fda-4b2f-4457-b671-e0641d95698d}
+category xpcom-directory-providers webapprt-directory-provider @mozilla.org/webapprt/directory-provider;1

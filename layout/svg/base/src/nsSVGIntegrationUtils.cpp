@@ -250,7 +250,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   }
 
   gfxContext* gfx = aCtx->ThebesContext();
-  gfxMatrix savedCTM = gfx->CurrentMatrix();
+  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
 
   //SVGAutoRenderState autoRenderState(aCtx, SVGAutoRenderState::NORMAL);
 
@@ -286,7 +286,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
     nsIntRect r = (aDirtyRect - userSpaceRect.TopLeft()).ToOutsidePixels(appUnitsPerDevPixel);
     filterFrame->FilterPaint(aCtx, aEffectsFrame, &paint, &r);
   } else {
-    gfx->SetMatrix(savedCTM);
+    gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
     aInnerList->PaintForFrame(aBuilder, aCtx, aEffectsFrame,
                               nsDisplayList::PAINT_DEFAULT);
     aCtx->Translate(userSpaceRect.TopLeft());
@@ -298,7 +298,6 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   /* No more effects, we're done. */
   if (!complexEffects) {
-    gfx->SetMatrix(savedCTM);
     return;
   }
 
@@ -334,7 +333,6 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   }
 
   gfx->Restore();
-  gfx->SetMatrix(savedCTM);
 }
 
 gfxMatrix
@@ -420,7 +418,6 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   aContext->NewPath();
   aContext->Rectangle(aFillRect);
   aContext->Clip();
-  gfxMatrix savedMatrix(aContext->CurrentMatrix());
 
   aContext->Multiply(gfxMatrix(aTransform).Invert());
 
@@ -450,7 +447,6 @@ PaintFrameCallback::operator()(gfxContext* aContext,
                             nsLayoutUtils::PAINT_IN_TRANSFORM |
                             nsLayoutUtils::PAINT_ALL_CONTINUATIONS);
 
-  aContext->SetMatrix(savedMatrix);
   aContext->Restore();
 
   mFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);

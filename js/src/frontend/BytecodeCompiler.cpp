@@ -106,13 +106,21 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!parser.init())
         return NULL;
 
-    SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL, staticLevel);
+    SharedContext sc(cx, scopeChain, /* fun = */ NULL, /* funbox = */ NULL);
 
-    TreeContext tc(&parser, &sc);
+    TreeContext tc(&parser, &sc, staticLevel);
     if (!tc.init())
         return NULL;
 
-    BytecodeEmitter bce(&parser, &sc, lineno, noScriptRval, needScriptGlobal);
+    bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
+    GlobalObject *globalObject = needScriptGlobal ? GetCurrentGlobal(cx) : NULL;
+    Rooted<JSScript*> script(cx);
+    script = JSScript::Create(cx, savedCallerFun, principals, originPrincipals, compileAndGo,
+                              noScriptRval, globalObject, version, staticLevel);
+    if (!script)
+        return NULL;
+
+    BytecodeEmitter bce(&parser, &sc, script, lineno);
     if (!bce.init())
         return NULL;
 
@@ -131,10 +139,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)
         sc.setInStrictMode();
 
-#ifdef DEBUG
-    bool savedCallerFun;
-    savedCallerFun = false;
-#endif
     if (compileAndGo) {
         if (source) {
             /*
@@ -159,9 +163,6 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
             funbox->emitLink = bce.objectList.lastbox;
             bce.objectList.lastbox = funbox;
             bce.objectList.length++;
-#ifdef DEBUG
-            savedCallerFun = true;
-#endif
         }
     }
 
@@ -238,14 +239,8 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (Emit1(cx, &bce, JSOP_STOP) < 0)
         return NULL;
 
-    JS_ASSERT(bce.version() == version);
-
-    Rooted<JSScript*> script(cx);
-    script = JSScript::NewScriptFromEmitter(cx, &bce);
-    if (!script)
+    if (!script->fullyInitFromEmitter(cx, &bce))
         return NULL;
-
-    JS_ASSERT(script->savedCallerFun == savedCallerFun);
 
     if (!MarkInnerAndOuterFunctions(cx, script))
         return NULL;
@@ -264,20 +259,28 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
                               const char *filename, unsigned lineno, JSVersion version)
 {
     Parser parser(cx, principals, originPrincipals, chars, length, filename, lineno, version,
-                  /* cfp = */ NULL, /* foldConstants = */ true, /* compileAndGo = */ false);
+                  /* callerFrame = */ NULL, /* foldConstants = */ true,
+                  /* compileAndGo = */ false);
     if (!parser.init())
         return false;
 
     JS_ASSERT(fun);
-    SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL,
-                        /* staticLevel = */ 0);
+    SharedContext funsc(cx, /* scopeChain = */ NULL, fun, /* funbox = */ NULL);
 
-    TreeContext funtc(&parser, &funsc);
+    unsigned staticLevel = 0;
+    TreeContext funtc(&parser, &funsc, staticLevel);
     if (!funtc.init())
-        return NULL;
+        return false;
 
-    BytecodeEmitter funbce(&parser, &funsc, lineno,
-                           /* noScriptRval = */ false, /* needsScriptGlobal = */ false);
+    GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
+    Rooted<JSScript*> script(cx);
+    script = JSScript::Create(cx, /* savedCallerFun = */ false, principals, originPrincipals,
+                              /* compileAndGo = */ false, /* noScriptRval = */ false,
+                              globalObject, version, staticLevel);
+    if (!script)
+        return false;
+
+    BytecodeEmitter funbce(&parser, &funsc, script, lineno);
     if (!funbce.init())
         return false;
 

@@ -18,15 +18,14 @@
                      android:background="@drawable/tabs_button"
                      android:gravity="center_vertical"
                      android:src="@drawable/tabs_level"
-                     android:paddingTop="6dip"
-                     android:paddingLeft="12dip"
-                     android:paddingRight="44dip"/>
+                     android:paddingLeft="6dip"
+                     android:paddingRight="32dip"/>
 
         <TextSwitcher android:id="@+id/tabs_count"
                      style="@style/AddressBar.ImageButton"
                      android:layout_width="52dip"
                      android:layout_height="wrap_content"
-                     android:layout_marginTop="6dp"
+                     android:layout_marginTop="8dp"
                      android:layout_alignLeft="@id/tabs"
                      android:gravity="center_horizontal"/>
 
@@ -74,7 +73,7 @@
                      android:layout_alignLeft="@id/awesome_bar"
                      android:paddingLeft="22dp"
                      android:src="@drawable/ic_menu_forward"
-                     android:background="@drawable/action_bar_button"/>
+                     android:background="@drawable/address_bar_forward_button"/>
 
         <ImageButton android:id="@+id/back"
                      style="@style/AddressBar.ImageButton"

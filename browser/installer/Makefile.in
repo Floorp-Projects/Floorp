@@ -44,6 +44,14 @@ ifeq (gtk2, $(MOZ_WIDGET_TOOLKIT))
 DEFINES += -DMOZ_GTK2=1
 endif
 
+ifdef MOZ_NATIVE_NSPR
+DEFINES += -DMOZ_NATIVE_NSPR=1
+endif
+
+ifdef MOZ_NATIVE_NSS
+DEFINES += -DMOZ_NATIVE_NSS=1
+endif
+
 ifdef NSS_DISABLE_DBM
 DEFINES += -DNSS_DISABLE_DBM=1
 endif
@@ -147,4 +155,8 @@ endif
 installer:: removed-files
 ifdef INSTALLER_DIR
 	$(MAKE) -C $(INSTALLER_DIR)
+endif
+
+ifdef ENABLE_MARIONETTE
+DEFINES += -DENABLE_MARIONETTE=1
 endif

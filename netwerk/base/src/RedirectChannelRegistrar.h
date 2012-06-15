@@ -10,11 +10,12 @@
 #include "nsIChannel.h"
 #include "nsIParentChannel.h"
 #include "nsClassHashtable.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace net {
 
-class RedirectChannelRegistrar : public nsIRedirectChannelRegistrar
+class RedirectChannelRegistrar MOZ_FINAL : public nsIRedirectChannelRegistrar
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREDIRECTCHANNELREGISTRAR

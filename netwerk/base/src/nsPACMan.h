@@ -15,6 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "prclist.h"
+#include "mozilla/Attributes.h"
 
 /**
  * This class defines a callback interface used by AsyncGetProxyForURI.
@@ -38,9 +39,9 @@ public:
  * This class provides an abstraction layer above the PAC thread.  The methods
  * defined on this class are intended to be called on the main thread only.
  */
-class nsPACMan : public nsIStreamLoaderObserver
-               , public nsIInterfaceRequestor
-               , public nsIChannelEventSink
+class nsPACMan MOZ_FINAL : public nsIStreamLoaderObserver
+                         , public nsIInterfaceRequestor
+                         , public nsIChannelEventSink
 {
 public:
   NS_DECL_ISUPPORTS

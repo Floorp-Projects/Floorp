@@ -3641,7 +3641,7 @@ private:
 { 0x05bae29d, 0x8aef, 0x486d,                                                 \
   { 0x84, 0xaa, 0x53, 0xf4, 0x8f, 0x14, 0x68, 0x11 } }
 
-class nsXPCJSContextStackIterator : public nsIJSContextStackIterator
+class nsXPCJSContextStackIterator MOZ_FINAL : public nsIJSContextStackIterator
 {
 public:
     NS_DECL_ISUPPORTS

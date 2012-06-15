@@ -11,6 +11,19 @@
 namespace mozilla {
 namespace gl {
 
+// should match the order of EGLExtensions, and be null-terminated.
+static const char *sExtensionNames[] = {
+    "EGL_KHR_image_base",
+    "EGL_KHR_image_pixmap",
+    "EGL_KHR_gl_texture_2D_image",
+    "EGL_KHR_lock_surface",
+    "EGL_ANGLE_surface_d3d_texture_2d_share_handle",
+    "EGL_EXT_create_context_robustness",
+    "EGL_KHR_image",
+    "EGL_KHR_fence_sync",
+    nsnull
+};
+
 #if defined(ANDROID)
 
 static PRLibrary* LoadApitraceLibrary()
@@ -164,98 +177,139 @@ GLLibraryEGL::EnsureInitialized()
         mIsANGLE = true;
     }
     
-    const char *extensions = (const char*) fQueryString(mEGLDisplay, LOCAL_EGL_EXTENSIONS);
-    if (!extensions)
-        extensions = "";
+    InitExtensions();
 
-    printf_stderr("Extensions: %s 0x%02x\n", extensions, extensions[0]);
-    printf_stderr("Extensions length: %d\n", strlen(extensions));
+    GLLibraryLoader::PlatformLookupFunction lookupFunction =
+            (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
 
-    // note the extra space -- this ugliness tries to match
-    // EGL_KHR_image in the middle of the string, or right at the
-    // end.  It's a prefix for other extensions, so we have to do
-    // this...
-    bool hasKHRImage = false;
-    if (strstr(extensions, "EGL_KHR_image ") ||
-        (strlen(extensions) >= strlen("EGL_KHR_image") &&
-         strcmp(extensions+(strlen(extensions)-strlen("EGL_KHR_image")), "EGL_KHR_image")))
-    {
-        hasKHRImage = true;
-    }
-
-    if (strstr(extensions, "EGL_KHR_image_base")) {
-        mHave_EGL_KHR_image_base = true;
-    }
-        
-    if (strstr(extensions, "EGL_KHR_image_pixmap")) {
-        mHave_EGL_KHR_image_pixmap = true;
-        
-    }
-
-    if (strstr(extensions, "EGL_KHR_gl_texture_2D_image")) {
-        mHave_EGL_KHR_gl_texture_2D_image = true;
-    }
-
-    if (strstr(extensions, "EGL_KHR_lock_surface")) {
-        mHave_EGL_KHR_lock_surface = true;
-    }
-
-    if (hasKHRImage) {
-        GLLibraryLoader::SymLoadStruct khrSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fCreateImageKHR, { "eglCreateImageKHR", NULL } },
-            { (PRFuncPtr*) &mSymbols.fDestroyImageKHR, { "eglDestroyImageKHR", NULL } },
-            { (PRFuncPtr*) &mSymbols.fImageTargetTexture2DOES, { "glEGLImageTargetTexture2DOES", NULL } },
-            { NULL, { NULL } }
-        };
-
-        GLLibraryLoader::LoadSymbols(mEGLLibrary, &khrSymbols[0],
-                                         (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress);
-    }
-
-    if (mHave_EGL_KHR_lock_surface) {
+    if (IsExtensionSupported(KHR_lock_surface)) {
         GLLibraryLoader::SymLoadStruct lockSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fLockSurfaceKHR, { "eglLockSurfaceKHR", NULL } },
-            { (PRFuncPtr*) &mSymbols.fUnlockSurfaceKHR, { "eglUnlockSurfaceKHR", NULL } },
-            { NULL, { NULL } }
+            { (PRFuncPtr*) &mSymbols.fLockSurface,   { "eglLockSurfaceKHR",   nsnull } },
+            { (PRFuncPtr*) &mSymbols.fUnlockSurface, { "eglUnlockSurfaceKHR", nsnull } },
+            { nsnull, { nsnull } }
         };
 
-        GLLibraryLoader::LoadSymbols(mEGLLibrary, &lockSymbols[0],
-                                         (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress);
-        if (!mSymbols.fLockSurfaceKHR) {
-            mHave_EGL_KHR_lock_surface = false;
+        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
+                                                    &lockSymbols[0],
+                                                    lookupFunction);
+        if (!success) {
+            NS_ERROR("EGL supports KHR_lock_surface without exposing its functions!");
+
+            MarkExtensionUnsupported(KHR_lock_surface);
+
+            mSymbols.fLockSurface = nsnull;
+            mSymbols.fUnlockSurface = nsnull;
         }
     }
 
-    if (!mSymbols.fCreateImageKHR) {
-        mHave_EGL_KHR_image_base = false;
-        mHave_EGL_KHR_image_pixmap = false;
-        mHave_EGL_KHR_gl_texture_2D_image = false;
-    }
-
-    if (!mSymbols.fImageTargetTexture2DOES) {
-        mHave_EGL_KHR_gl_texture_2D_image = false;
-    }
-
-    if (strstr(extensions, "EGL_ANGLE_surface_d3d_texture_2d_share_handle")) {
+    if (IsExtensionSupported(ANGLE_surface_d3d_texture_2d_share_handle)) {
         GLLibraryLoader::SymLoadStruct d3dSymbols[] = {
-            { (PRFuncPtr*) &mSymbols.fQuerySurfacePointerANGLE, { "eglQuerySurfacePointerANGLE", NULL } },
-            { NULL, { NULL } }
+            { (PRFuncPtr*) &mSymbols.fQuerySurfacePointerANGLE, { "eglQuerySurfacePointerANGLE", nsnull } },
+            { nsnull, { nsnull } }
         };
 
-        GLLibraryLoader::LoadSymbols(mEGLLibrary, &d3dSymbols[0],
-                                         (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress);
-        if (mSymbols.fQuerySurfacePointerANGLE) {
-            mHave_EGL_ANGLE_surface_d3d_texture_2d_share_handle = true;
+        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
+                                                    &d3dSymbols[0],
+                                                    lookupFunction);
+        if (!success) {
+            NS_ERROR("EGL supports ANGLE_surface_d3d_texture_2d_share_handle without exposing its functions!");
+
+            MarkExtensionUnsupported(ANGLE_surface_d3d_texture_2d_share_handle);
+
+            mSymbols.fQuerySurfacePointerANGLE = nsnull;
         }
     }
 
-    if (strstr(extensions, "EGL_EXT_create_context_robustness")) {
-        mHasRobustness = true;
+    if (IsExtensionSupported(KHR_fence_sync)) {
+        GLLibraryLoader::SymLoadStruct syncSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCreateSync,     { "eglCreateSyncKHR",     nsnull } },
+            { (PRFuncPtr*) &mSymbols.fDestroySync,    { "eglDestroySyncKHR",    nsnull } },
+            { (PRFuncPtr*) &mSymbols.fClientWaitSync, { "eglClientWaitSyncKHR", nsnull } },
+            { (PRFuncPtr*) &mSymbols.fGetSyncAttrib,  { "eglGetSyncAttribKHR",  nsnull } },
+            { nsnull, { nsnull } }
+        };
+
+        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
+                                                    &syncSymbols[0],
+                                                    lookupFunction);
+        if (!success) {
+            NS_ERROR("EGL supports KHR_fence_sync without exposing its functions!");
+
+            MarkExtensionUnsupported(KHR_fence_sync);
+
+            mSymbols.fCreateSync = nsnull;
+            mSymbols.fDestroySync = nsnull;
+            mSymbols.fClientWaitSync = nsnull;
+            mSymbols.fGetSyncAttrib = nsnull;
+        }
     }
 
     mInitialized = true;
     reporter.SetSuccessful();
     return true;
+}
+
+void
+GLLibraryEGL::InitExtensions()
+{
+    const char *extensions = (const char*)fQueryString(mEGLDisplay, LOCAL_EGL_EXTENSIONS);
+
+    if (!extensions) {
+        NS_WARNING("Failed to load EGL extension list!");
+        return;
+    }
+
+#ifdef DEBUG
+    // If DEBUG, then be verbose the first time we're run.
+    static bool firstVerboseRun = true;
+#else
+    // Non-DEBUG, so never spew.
+    const bool firstVerboseRun = false;
+#endif
+
+    if (firstVerboseRun) {
+        printf_stderr("Extensions: %s 0x%02x\n", extensions, extensions[0]);
+        printf_stderr("Extensions length: %d\n", strlen(extensions));
+    }
+
+    mAvailableExtensions.Load(extensions, sExtensionNames, firstVerboseRun);
+
+#ifdef DEBUG
+    firstVerboseRun = false;
+#endif
+}
+
+void
+GLLibraryEGL::LoadConfigSensitiveSymbols()
+{
+    GLLibraryLoader::PlatformLookupFunction lookupFunction =
+            (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
+
+    if (IsExtensionSupported(KHR_image) || IsExtensionSupported(KHR_image_base)) {
+        GLLibraryLoader::SymLoadStruct imageSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fCreateImage,  { "eglCreateImageKHR",  nsnull } },
+            { (PRFuncPtr*) &mSymbols.fDestroyImage, { "eglDestroyImageKHR", nsnull } },
+            { (PRFuncPtr*) &mSymbols.fImageTargetTexture2DOES, { "glEGLImageTargetTexture2DOES", NULL } },
+            { nsnull, { nsnull } }
+        };
+
+        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
+                                                    &imageSymbols[0],
+                                                    lookupFunction);
+        if (!success) {
+            NS_ERROR("EGL supports KHR_image(_base) without exposing its functions!");
+
+            MarkExtensionUnsupported(KHR_image);
+            MarkExtensionUnsupported(KHR_image_base);
+            MarkExtensionUnsupported(KHR_image_pixmap);
+
+            mSymbols.fCreateImage = nsnull;
+            mSymbols.fDestroyImage = nsnull;
+            mSymbols.fImageTargetTexture2DOES = nsnull;
+        }
+    } else {
+        MarkExtensionUnsupported(KHR_image_pixmap);
+    }
 }
 
 void

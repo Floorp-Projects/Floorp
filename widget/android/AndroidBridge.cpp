@@ -88,7 +88,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jNotifyIME = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIME", "(II)V");
     jNotifyIMEEnabled = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEEnabled", "(ILjava/lang/String;Ljava/lang/String;Z)V");
     jNotifyIMEChange = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyIMEChange", "(Ljava/lang/String;III)V");
-    jNotifyScreenShot = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyScreenShot", "(Ljava/nio/ByteBuffer;IIIIII)V");
+    jNotifyScreenShot = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "notifyScreenShot", "(Ljava/nio/ByteBuffer;IIIIIIII)V");
     jAcknowledgeEventSync = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "acknowledgeEventSync", "()V");
 
     jEnableLocation = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "enableLocation", "(Z)V");
@@ -2048,13 +2048,13 @@ AndroidBridge::SetFirstPaintViewport(const nsIntPoint& aOffset, float aZoom, con
 }
 
 void
-AndroidBridge::SetPageRect(float aZoom, const nsIntRect& aPageRect, const gfx::Rect& aCssPageRect)
+AndroidBridge::SetPageRect(const gfx::Rect& aCssPageRect)
 {
     AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
         return;
 
-    client->SetPageRect(aZoom, aPageRect, aCssPageRect);
+    client->SetPageRect(aCssPageRect);
 }
 
 void
@@ -2369,9 +2369,13 @@ jobject JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(JNIEnv *env, jclass, jlong size);
 
 
-nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstW, PRInt32 dstH, PRInt32 tabId, float scale, PRInt32 token)
+nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt32 srcY, PRInt32 srcW, PRInt32 srcH, PRInt32 dstX, PRInt32 dstY, PRInt32 dstW, PRInt32 dstH, PRInt32 bufW, PRInt32 bufH, PRInt32 tabId, PRInt32 token, jobject buffer)
 {
     nsresult rv;
+    float scale = 1.0;
+ 
+    if (!buffer)
+        return NS_OK;
 
     // take a screenshot, as wide as possible, proportional to the destination size
     if (!srcW && !srcH) {
@@ -2432,21 +2436,18 @@ nsresult AndroidBridge::TakeScreenshot(nsIDOMWindow *window, PRInt32 srcX, PRInt
              nsPresContext::CSSPixelsToAppUnits(srcW / scale),
              nsPresContext::CSSPixelsToAppUnits(srcH / scale));
 
-    PRUint32 stride = dstW * 2;
-    PRUint32 bufferSize = dstH * stride;
-
-    jobject buffer = Java_org_mozilla_gecko_GeckoAppShell_allocateDirectBuffer(env, NULL, bufferSize);
-    if (!buffer)
-        return NS_OK;
+    PRUint32 stride = bufW * 2 /* 16 bpp */;
 
     void* data = env->GetDirectBufferAddress(buffer);
-    memset(data, 0, bufferSize);
-    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(dstW, dstH), stride, gfxASurface::ImageFormatRGB16_565);
+    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(bufW, bufH), stride, gfxASurface::ImageFormatRGB16_565);
     nsRefPtr<gfxContext> context = new gfxContext(surf);
+    gfxPoint pt(dstX, dstY);
+    context->Translate(pt);
     context->Scale(scale * dstW / srcW, scale * dstH / srcH);
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
     NS_ENSURE_SUCCESS(rv, rv);
-    env->CallStaticVoidMethod(AndroidBridge::Bridge()->mGeckoAppShellClass, AndroidBridge::Bridge()->jNotifyScreenShot, buffer, tabId, srcX * dstW / srcW , srcY * dstH / srcH, dstW, dstH, token);
+    env->CallStaticVoidMethod(AndroidBridge::Bridge()->mGeckoAppShellClass, AndroidBridge::Bridge()->jNotifyScreenShot, 
+                              buffer, tabId, dstX, dstY, dstX + dstW, dstY + dstH, bufW, bufH, token);
     return NS_OK;
 }
 

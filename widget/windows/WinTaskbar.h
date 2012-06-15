@@ -11,11 +11,12 @@
 #include <windows.h>
 #include <shobjidl.h>
 #include "nsIWinTaskbar.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace widget {
 
-class WinTaskbar : public nsIWinTaskbar
+class WinTaskbar MOZ_FINAL : public nsIWinTaskbar
 {
 public: 
   WinTaskbar();

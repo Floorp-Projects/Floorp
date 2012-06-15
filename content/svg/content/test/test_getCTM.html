@@ -32,6 +32,7 @@ function runTest()
   var inner = doc.getElementById("inner");
   var g1 = doc.getElementById("g1");
   var outer = doc.getElementById("outer");
+  var outer2 = doc.getElementById("outer2");
   var g2 = doc.getElementById("g2");
   var g3 = doc.getElementById("g3");
   var g4 = doc.getElementById("g4");
@@ -82,6 +83,9 @@ function runTest()
   // outer.farthestViewportElement == null (but actually == root)
   is((function(){try{return outer.getScreenCTM().e}catch(e){return e}})(), 46, "outer.getScreenCTM().e");
   is((function(){try{return outer.getScreenCTM().f}catch(e){return e}})(), 69, "outer.getScreenCTM().f");
+  // outer.farthestViewportElement == null (but actually == root)
+  is((function(){try{return outer2.getScreenCTM().e}catch(e){return e}})(), -19, "outer2.getScreenCTM().e");
+  is((function(){try{return outer2.getScreenCTM().f}catch(e){return e}})(), -8, "outer2.getScreenCTM().f");
   // g2.farthestViewportElement == outer (but actually == root)
   is((function(){try{return g2.getScreenCTM().e}catch(e){return e}})(), 646, "g2.getScreenCTM().e");
   is((function(){try{return g2.getScreenCTM().f}catch(e){return e}})(), 769, "g2.getScreenCTM().f");

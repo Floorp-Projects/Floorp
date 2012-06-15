@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsThreadUtils.h"
+#include "mozilla/Attributes.h"
 
 #ifdef MOZILLA_INTERNAL_API
 # include "nsThreadManager.h"
@@ -17,6 +18,9 @@
 #ifdef XP_WIN
 #include <windows.h>
 #endif
+
+#include <pratom.h>
+#include <prthread.h>
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
@@ -213,9 +217,75 @@ NS_ProcessNextEvent(nsIThread *thread, bool mayWait)
   return NS_SUCCEEDED(thread->ProcessNextEvent(mayWait, &val)) && val;
 }
 
+#ifndef XPCOM_GLUE_AVOID_NSPR
+
+namespace {
+
+class nsNameThreadRunnable MOZ_FINAL : public nsIRunnable
+{
+public:
+  nsNameThreadRunnable(const nsACString &name) : mName(name) { }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+protected:
+  const nsCString mName;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNameThreadRunnable, nsIRunnable)
+
+NS_IMETHODIMP
+nsNameThreadRunnable::Run()
+{
+  PR_SetCurrentThreadName(mName.BeginReading());
+  return NS_OK;
+}
+
+} // anonymous namespace
+
+void
+NS_SetThreadName(nsIThread *thread, const nsACString &name)
+{
+  if (!thread)
+    return;
+
+  thread->Dispatch(new nsNameThreadRunnable(name),
+                   nsIEventTarget::DISPATCH_NORMAL);
+}
+
+#else // !XPCOM_GLUE_AVOID_NSPR
+
+void
+NS_SetThreadName(nsIThread *thread, const nsACString &name)
+{
+  // No NSPR, no love.
+}
+
+#endif
+
 #ifdef MOZILLA_INTERNAL_API
 nsIThread *
 NS_GetCurrentThread() {
   return nsThreadManager::get()->GetCurrentThread();
 }
 #endif
+
+// nsThreadPoolNaming
+void
+nsThreadPoolNaming::SetThreadPoolName(const nsACString & aPoolName,
+                                      nsIThread * aThread)
+{
+  nsCString name(aPoolName);
+  name.Append(NS_LITERAL_CSTRING(" #"));
+  name.AppendInt(++mCounter, 10); // The counter is declared as volatile
+
+  if (aThread) {
+    // Set on the target thread
+    NS_SetThreadName(aThread, name);
+  }
+  else {
+    // Set on the current thread
+    PR_SetCurrentThreadName(name.BeginReading());
+  }
+}

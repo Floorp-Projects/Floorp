@@ -9,5 +9,6 @@
     <dimen name="local_tab_row_height">150dp</dimen>
     <dimen name="remote_tab_child_row_height">48dp</dimen>
     <dimen name="remote_tab_group_row_height">28dp</dimen>
+    <dimen name="tabs_counter_size">26sp</dimen>
 
 </resources>

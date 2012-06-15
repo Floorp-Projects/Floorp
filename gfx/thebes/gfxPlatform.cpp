@@ -55,6 +55,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
 #include "nsIGfxInfo.h"
 
@@ -92,8 +93,8 @@ static PRLogModuleInfo *sCmapDataLog = nsnull;
 
 /* Class to listen for pref changes so that chrome code can dynamically
    force sRGB as an output profile. See Bug #452125. */
-class SRGBOverrideObserver : public nsIObserver,
-                             public nsSupportsWeakReference
+class SRGBOverrideObserver MOZ_FINAL : public nsIObserver,
+                                       public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
@@ -134,7 +135,7 @@ static const char* kObservedPrefs[] = {
     nsnull
 };
 
-class FontPrefsObserver : public nsIObserver
+class FontPrefsObserver MOZ_FINAL : public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
@@ -558,13 +559,6 @@ gfxPlatform::GetScaledFontForFont(gfxFont *aFont)
   return scaledFont;
 }
 
-cairo_user_data_key_t kDrawSourceSurface;
-static void
-DataSourceSurfaceDestroy(void *dataSourceSurface)
-{
-  static_cast<DataSourceSurface*>(dataSourceSurface)->Release();
-}
-
 UserDataKey kThebesSurfaceKey;
 void
 DestroyThebesSurface(void *data)
@@ -604,11 +598,12 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
     IntSize size = data->GetSize();
     gfxASurface::gfxImageFormat format = OptimalFormatForContent(ContentForFormat(data->GetFormat()));
 
-    surf =
-      new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
-                          data->Stride(), format);
-
-    surf->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
+    // We need to make a copy here because data might change its data under us
+    nsRefPtr<gfxImageSurface> imageSurf = new gfxImageSurface(gfxIntSize(size.width, size.height), format, false);
+ 
+    bool resultOfCopy = imageSurf->CopyFrom(source);
+    NS_ASSERTION(resultOfCopy, "Failed to copy surface.");
+    surf = imageSurf;
   }
 
   // add a reference to be held by the drawTarget

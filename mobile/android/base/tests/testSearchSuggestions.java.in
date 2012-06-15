@@ -96,7 +96,7 @@ public class testSearchSuggestions extends BaseTest {
             // enable offline HTTP requests for testing
             final Field checkNetworkField = suggestClass.getDeclaredField("mCheckNetwork");
             checkNetworkField.setAccessible(true);
-            checkNetworkField.set(false, client);
+            checkNetworkField.setBoolean(client, false);
 
             // replace mSuggestClient with test client
             Class awesomeBarClass = classLoader.loadClass("org.mozilla.gecko.AwesomeBar");

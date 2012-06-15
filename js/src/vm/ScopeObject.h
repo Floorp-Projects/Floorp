@@ -44,6 +44,17 @@ ScopeCoordinateBlockChain(JSScript *script, jsbytecode *pc);
 extern PropertyName *
 ScopeCoordinateName(JSRuntime *rt, JSScript *script, jsbytecode *pc);
 
+/*
+ * The 'slot' of a ScopeCoordinate is relative to the scope object. Type
+ * inference and jit compilation are instead relative to frame values (even if
+ * these values are aliased and thus never accessed, the the index of the
+ * variable is used to refer to the jit/inference information). This function
+ * maps from the ScopeCoordinate space to the StackFrame variable space.
+ */
+enum FrameVarType { FrameVar_Local, FrameVar_Arg };
+extern FrameVarType
+ScopeCoordinateToFrameVar(JSScript *script, jsbytecode *pc, unsigned *index);
+
 /*****************************************************************************/
 
 /*
@@ -197,11 +208,7 @@ class WithObject : public NestedScopeObject
 
   public:
     static const unsigned RESERVED_SLOTS = 3;
-#ifdef JS_THREADSAFE
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
-#else
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
-#endif
 
     static WithObject *
     create(JSContext *cx, HandleObject proto, HandleObject enclosing, uint32_t depth);
@@ -217,11 +224,7 @@ class BlockObject : public NestedScopeObject
 {
   public:
     static const unsigned RESERVED_SLOTS = CALL_BLOCK_RESERVED_SLOTS;
-#ifdef JS_THREADSAFE
     static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4_BACKGROUND;
-#else
-    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT4;
-#endif
 
     /* Return the number of variables associated with this block. */
     inline uint32_t slotCount() const;
@@ -300,6 +303,8 @@ CloneStaticBlockObject(JSContext *cx, StaticBlockObject &srcBlock,
 
 /*****************************************************************************/
 
+class ScopeIterKey;
+
 /*
  * A scope iterator describes the active scopes enclosing the current point of
  * execution for a single frame, proceeding from inner to outer. Here, "frame"
@@ -315,39 +320,53 @@ CloneStaticBlockObject(JSContext *cx, StaticBlockObject &srcBlock,
  */
 class ScopeIter
 {
+    friend class ScopeIterKey;
+
   public:
     enum Type { Call, Block, With, StrictEvalScope };
 
   private:
     StackFrame *fp_;
-    JSObject *cur_;
-    StaticBlockObject *block_;
+    RootedObject cur_;
+    Rooted<StaticBlockObject *> block_;
     Type type_;
     bool hasScopeObject_;
 
     void settle();
 
+    /* ScopeIter does not have value semantics. */
+    ScopeIter(const ScopeIter &si) MOZ_DELETE;
+
   public:
     /* The default constructor leaves ScopeIter totally invalid */
-    explicit ScopeIter();
+    explicit ScopeIter(JSContext *cx
+                       JS_GUARD_OBJECT_NOTIFIER_PARAM);
+
+    /* Constructing from a copy of an existing ScopeIter. */
+    explicit ScopeIter(const ScopeIter &si, JSContext *cx
+                       JS_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /* Constructing from StackFrame places ScopeIter on the innermost scope. */
-    explicit ScopeIter(StackFrame *fp);
+    explicit ScopeIter(StackFrame *fp, JSContext *cx
+                       JS_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /*
      * Without a StackFrame, the resulting ScopeIter is done() with
      * enclosingScope() as given.
      */
-    explicit ScopeIter(JSObject &enclosingScope);
+    explicit ScopeIter(JSObject &enclosingScope, JSContext *cx
+                       JS_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /*
      * For the special case of generators, copy the given ScopeIter, with 'fp'
      * as the StackFrame instead of si.fp(). Not for general use.
      */
-    ScopeIter(ScopeIter si, StackFrame *fp);
+    ScopeIter(const ScopeIter &si, StackFrame *fp, JSContext *cx
+              JS_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /* Like ScopeIter(StackFrame *) except start at 'scope'. */
-    ScopeIter(StackFrame *fp, ScopeObject &scope);
+    ScopeIter(StackFrame *fp, ScopeObject &scope, JSContext *cx
+              JS_GUARD_OBJECT_NOTIFIER_PARAM);
 
     bool done() const { return !fp_; }
 
@@ -357,7 +376,7 @@ class ScopeIter
 
     /* If !done(): */
 
-    ScopeIter enclosing() const;
+    ScopeIter &operator++();
 
     StackFrame *fp() const { JS_ASSERT(!done()); return fp_; }
     Type type() const { JS_ASSERT(!done()); return type_; }
@@ -366,10 +385,29 @@ class ScopeIter
 
     StaticBlockObject &staticBlock() const { JS_ASSERT(type() == Block); return *block_; }
 
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class ScopeIterKey
+{
+    StackFrame *fp_;
+    JSObject *cur_;
+    StaticBlockObject *block_;
+    ScopeIter::Type type_;
+
+  public:
+    ScopeIterKey() : fp_(NULL), cur_(NULL), block_(NULL), type_() {}
+    ScopeIterKey(const ScopeIter &si)
+      : fp_(si.fp_), cur_(si.cur_), block_(si.block_), type_(si.type_)
+    {}
+
+    StackFrame *fp() const { return fp_; }
+    ScopeIter::Type type() const { return type_; }
+
     /* For use as hash policy */
-    typedef ScopeIter Lookup;
-    static HashNumber hash(ScopeIter si);
-    static bool match(ScopeIter si1, ScopeIter si2);
+    typedef ScopeIterKey Lookup;
+    static HashNumber hash(ScopeIterKey si);
+    static bool match(ScopeIterKey si1, ScopeIterKey si2);
 };
 
 /*****************************************************************************/
@@ -433,9 +471,9 @@ class DebugScopes
      * The map from live frames which have optimized-away scopes to the
      * corresponding debug scopes.
      */
-    typedef HashMap<ScopeIter,
+    typedef HashMap<ScopeIterKey,
                     ReadBarriered<DebugScopeObject>,
-                    ScopeIter,
+                    ScopeIterKey,
                     RuntimeAllocPolicy> MissingScopeMap;
     MissingScopeMap missingScopes;
 
@@ -463,8 +501,8 @@ class DebugScopes
     DebugScopeObject *hasDebugScope(JSContext *cx, ScopeObject &scope) const;
     bool addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &debugScope);
 
-    DebugScopeObject *hasDebugScope(JSContext *cx, ScopeIter si) const;
-    bool addDebugScope(JSContext *cx, ScopeIter si, DebugScopeObject &debugScope);
+    DebugScopeObject *hasDebugScope(JSContext *cx, const ScopeIter &si) const;
+    bool addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject &debugScope);
 
     bool updateLiveScopes(JSContext *cx);
     StackFrame *hasLiveFrame(ScopeObject &scope);
@@ -473,11 +511,11 @@ class DebugScopes
      * In debug-mode, these must be called whenever exiting a call/block or
      * when activating/yielding a generator.
      */
-    void onPopCall(StackFrame *fp);
+    void onPopCall(StackFrame *fp, JSContext *cx);
     void onPopBlock(JSContext *cx, StackFrame *fp);
     void onPopWith(StackFrame *fp);
     void onPopStrictEvalScope(StackFrame *fp);
-    void onGeneratorFrameChange(StackFrame *from, StackFrame *to);
+    void onGeneratorFrameChange(StackFrame *from, StackFrame *to, JSContext *cx);
     void onCompartmentLeaveDebugMode(JSCompartment *c);
 };
 

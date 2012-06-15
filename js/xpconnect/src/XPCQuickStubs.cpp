@@ -13,6 +13,7 @@
 #include "XPCInlines.h"
 #include "XPCQuickStubs.h"
 #include "XPCWrapper.h"
+#include "mozilla/dom/BindingUtils.h"
 
 using namespace mozilla;
 
@@ -695,20 +696,28 @@ getWrapper(JSContext *cx,
     *cur = nsnull;
     *tearoff = nsnull;
 
+    js::Class* clasp = js::GetObjectClass(obj);
+    if (dom::IsDOMClass(clasp) ||
+        dom::binding::instanceIsProxy(obj)) {
+        *cur = obj;
+
+        return NS_OK;
+    }
+
     // Handle tearoffs.
     //
     // If |obj| is of the tearoff class, that means we're dealing with a JS
     // object reflection of a particular interface (ie, |foo.nsIBar|). These
     // JS objects are parented to their wrapper, so we snag the tearoff object
     // along the way (if desired), and then set |obj| to its parent.
-    if (js::GetObjectClass(obj) == &XPC_WN_Tearoff_JSClass) {
+    if (clasp == &XPC_WN_Tearoff_JSClass) {
         *tearoff = (XPCWrappedNativeTearOff*) js::GetObjectPrivate(obj);
         obj = js::GetObjectParent(obj);
     }
 
     // If we've got a WN or slim wrapper, store things the way callers expect.
     // Otherwise, leave things null and return.
-    if (IS_WRAPPER_CLASS(js::GetObjectClass(obj))) {
+    if (IS_WRAPPER_CLASS(clasp)) {
         if (IS_WN_WRAPPER_OBJECT(obj))
             *wrapper = (XPCWrappedNative*) js::GetObjectPrivate(obj);
         else
@@ -741,14 +750,18 @@ castNative(JSContext *cx,
     } else if (cur) {
         nsISupports *native;
         QITableEntry *entries;
-        if (IS_SLIM_WRAPPER(cur)) {
+        js::Class* clasp = js::GetObjectClass(cur);
+        if (dom::IsDOMClass(clasp)) {
+            native = dom::UnwrapDOMObject<nsISupports>(cur);
+            entries = nsnull;
+        } else if (dom::binding::instanceIsProxy(cur)) {
+            native = static_cast<nsISupports*>(js::GetProxyPrivate(cur).toPrivate());
+            entries = nsnull;
+        } else if (IS_WRAPPER_CLASS(clasp) && IS_SLIM_WRAPPER_OBJECT(cur)) {
             native = static_cast<nsISupports*>(xpc_GetJSPrivate(cur));
             entries = GetOffsetsFromSlimWrapper(cur);
         } else {
-            NS_ABORT_IF_FALSE(mozilla::dom::binding::instanceIsProxy(cur),
-                              "what kind of wrapper is this?");
-            native = static_cast<nsISupports*>(js::GetProxyPrivate(cur).toPrivate());
-            entries = nsnull;
+            MOZ_NOT_REACHED("what kind of wrapper is this?");
         }
 
         if (NS_SUCCEEDED(getNative(native, entries, cur, iid, ppThis, pThisRef, vp))) {
@@ -827,13 +840,8 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     XPCWrappedNative *wrapper;
     XPCWrappedNativeTearOff *tearoff;
     JSObject *obj2;
-    if (mozilla::dom::binding::instanceIsProxy(src)) {
-        wrapper = nsnull;
-        obj2 = src;
-    } else {
-        rv = getWrapper(cx, src, &wrapper, &obj2, &tearoff);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = getWrapper(cx, src, &wrapper, &obj2, &tearoff);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (wrapper || obj2) {
         if (NS_FAILED(castNative(cx, wrapper, obj2, tearoff, iid, ppArg,

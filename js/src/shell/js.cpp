@@ -204,10 +204,11 @@ ReportException(JSContext *cx)
     }
 }
 
-class ToStringHelper {
+class ToStringHelper
+{
   public:
     ToStringHelper(JSContext *aCx, jsval v, bool aThrow = false)
-      : cx(aCx), mThrow(aThrow)
+      : cx(aCx)
     {
         mStr = JS_ValueToString(cx, v);
         if (!aThrow && !mStr)
@@ -227,7 +228,6 @@ class ToStringHelper {
   private:
     JSContext *cx;
     JSString *mStr;
-    bool mThrow;
     JSAutoByteString mBytes;
 };
 
@@ -2929,6 +2929,8 @@ KillWatchdog()
 static void
 WatchdogMain(void *arg)
 {
+    PR_SetCurrentThreadName("JS Watchdog");
+
     JSRuntime *rt = (JSRuntime *) arg;
 
     PR_Lock(gWatchdogLock);

@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=760131
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 760131</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=760131">Mozilla Bug 760131</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="frame"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 760131 **/
+
+var frame = document.getElementById("frame");
+function runTest()
+{
+  var win = frame.contentWindow;
+  win.wrappedJSObject.ok = ok;
+  var doc = win.document;
+  var empty = doc.createTouchList();
+  var event = doc.createEvent("touchevent");
+  event.initTouchEvent("touchstart", true, true, win, 0, false, false, false, false, empty, empty, empty);
+  doc.getElementById("target").dispatchEvent(event);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+frame.onload = runTest;
+frame.src = "http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug760131.html";
+
+</script>
+</pre>
+</body>
+</html>

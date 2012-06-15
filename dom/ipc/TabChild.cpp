@@ -1,5 +1,5 @@
 /* -*- Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 8; -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
+/* vim: set sw=2 sts=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -93,6 +93,7 @@ TabChild::TabChild(PRUint32 aChromeFlags)
   , mChromeFlags(aChromeFlags)
   , mOuterRect(0, 0, 0, 0)
   , mLastBackgroundColor(NS_RGB(255, 255, 255))
+  , mDidFakeShow(false)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -331,6 +332,28 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
 {
     *aReturn = nsnull;
 
+    // If aParent is inside an <iframe mozbrowser> and this isn't a request to
+    // open a modal-type window, we're going to create a new <iframe mozbrowser>
+    // and return its window here.
+    nsCOMPtr<nsIDocShell> docshell = do_GetInterface(aParent);
+    bool inBrowserFrame = false;
+    if (docshell) {
+      docshell->GetContainedInBrowserFrame(&inBrowserFrame);
+    }
+
+    if (inBrowserFrame &&
+        !(aChromeFlags & (nsIWebBrowserChrome::CHROME_MODAL |
+                          nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
+                          nsIWebBrowserChrome::CHROME_OPENAS_CHROME))) {
+
+      // Note that BrowserFrameProvideWindow may return NS_ERROR_ABORT if the
+      // open window call was canceled.  It's important that we pass this error
+      // code back to our caller.
+      return BrowserFrameProvideWindow(aParent, aURI, aName, aFeatures,
+                                       aWindowIsNew, aReturn);
+    }
+
+    // Otherwise, create a new top-level window.
     PBrowserChild* newChild;
     if (!CallCreateWindow(&newChild)) {
         return NS_ERROR_NOT_AVAILABLE;
@@ -341,6 +364,41 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
         do_GetInterface(static_cast<TabChild*>(newChild)->mWebNav);
     win.forget(aReturn);
     return NS_OK;
+}
+
+nsresult
+TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
+                                    nsIURI* aURI,
+                                    const nsAString& aName,
+                                    const nsACString& aFeatures,
+                                    bool* aWindowIsNew,
+                                    nsIDOMWindow** aReturn)
+{
+  *aReturn = nsnull;
+
+  nsRefPtr<TabChild> newChild =
+    static_cast<TabChild*>(Manager()->SendPBrowserConstructor(0));
+
+  nsCAutoString spec;
+  aURI->GetSpec(spec);
+
+  NS_ConvertUTF8toUTF16 url(spec);
+  nsString name(aName);
+  NS_ConvertUTF8toUTF16 features(aFeatures);
+  newChild->SendBrowserFrameOpenWindow(this, url, name,
+                                       features, aWindowIsNew);
+  if (!*aWindowIsNew) {
+    PBrowserChild::Send__delete__(newChild);
+    return NS_ERROR_ABORT;
+  }
+
+  // Unfortunately we don't get a window unless we've shown the frame.  That's
+  // pretty bogus; see bug 763602.
+  newChild->DoFakeShow();
+
+  nsCOMPtr<nsIDOMWindow> win = do_GetInterface(newChild->mWebNav);
+  win.forget(aReturn);
+  return NS_OK;
 }
 
 static nsInterfaceHashtable<nsPtrHashKey<PContentDialogChild>, nsIDialogParamBlock> gActiveDialogs;
@@ -483,9 +541,20 @@ TabChild::RecvLoadURL(const nsCString& uri)
     return true;
 }
 
+void
+TabChild::DoFakeShow()
+{
+  RecvShow(nsIntSize(0, 0));
+  mDidFakeShow = true;
+}
+
 bool
 TabChild::RecvShow(const nsIntSize& size)
 {
+    if (mDidFakeShow) {
+        return true;
+    }
+
     printf("[TabChild] SHOW (w,h)= (%d, %d)\n", size.width, size.height);
 
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mWebNav);

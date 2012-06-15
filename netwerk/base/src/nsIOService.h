@@ -27,6 +27,7 @@
 #include "nsINetworkLinkService.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsISpeculativeConnect.h"
+#include "mozilla/Attributes.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -40,11 +41,11 @@ static const char gScheme[][sizeof("resource")] =
 
 class nsIPrefBranch;
 
-class nsIOService : public nsIIOService2
-                  , public nsIObserver
-                  , public nsINetUtil
-                  , public nsISpeculativeConnect
-                  , public nsSupportsWeakReference
+class nsIOService MOZ_FINAL : public nsIIOService2
+                            , public nsIObserver
+                            , public nsINetUtil
+                            , public nsISpeculativeConnect
+                            , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
