@@ -200,6 +200,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitIteratorEnd(MIteratorEnd *ins);
     bool visitStringLength(MStringLength *ins);
     bool visitArgumentsLength(MArgumentsLength *ins);
+    bool visitGetArgument(MGetArgument *ins);
     bool visitThrow(MThrow *ins);
     bool visitInstanceOf(MInstanceOf *ins);
 };
