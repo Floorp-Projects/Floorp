@@ -469,7 +469,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         if (IsExtensionSupported(OES_EGL_image)) {
             SymLoadStruct imageSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fImageTargetTexture2D, { "glEGLImageTargetTexture2DOES", nsnull } },
+                { (PRFuncPtr*) &mSymbols.fImageTargetTexture2D, { "EGLImageTargetTexture2DOES", nsnull } },
                 { nsnull, { nsnull } },
             };
 
