@@ -2179,6 +2179,12 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
       }
     }
   }
+
+  // Refresh the principal on the compartment.
+  nsPIDOMWindow* win = GetInnerWindow();
+  if (win) {
+    win->RefreshCompartmentPrincipal();
+  }
 }
 
 nsresult
