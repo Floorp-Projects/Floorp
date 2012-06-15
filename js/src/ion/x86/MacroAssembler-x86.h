@@ -376,8 +376,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void cmpPtr(const Address &lhs, const ImmWord rhs) {
         cmpl(Operand(lhs), rhs);
     }
+    void cmpPtr(const Register &lhs, const Register &rhs) {
+        cmpl(lhs, rhs);
+    }
     void testPtr(const Register &lhs, const Register &rhs) {
-        return testl(lhs, rhs);
+        testl(lhs, rhs);
     }
 
     Condition testNegativeZero(const FloatRegister &reg, const Register &scratch);
