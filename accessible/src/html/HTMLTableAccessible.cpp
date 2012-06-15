@@ -972,18 +972,6 @@ HTMLTableAccessible::RowExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx)
   return rowExtent;
 }
 
-NS_IMETHODIMP
-HTMLTableAccessible::GetColumnDescription(PRInt32 aColumn, nsAString& _retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-HTMLTableAccessible::GetRowDescription(PRInt32 aRow, nsAString& _retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 bool
 HTMLTableAccessible::IsColSelected(PRUint32 aColIdx)
 {

@@ -165,35 +165,6 @@ ARIAGridAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::GetColumnDescription(PRInt32 aColumn,
-                                         nsAString& aDescription)
-{
-  aDescription.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG(IsValidColumn(aColumn));
-
-  // XXX: not implemented
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-ARIAGridAccessible::GetRowDescription(PRInt32 aRow, nsAString& aDescription)
-{
-  aDescription.Truncate();
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG(IsValidRow(aRow));
-
-  // XXX: not implemented
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 bool
 ARIAGridAccessible::IsColSelected(PRUint32 aColIdx)
 {

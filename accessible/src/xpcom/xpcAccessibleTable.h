@@ -34,6 +34,8 @@ public:
                              PRInt32* aColumnExtent);
   nsresult GetRowExtentAt(PRInt32 row, PRInt32 column,
                           PRInt32* aRowExtent);
+  nsresult GetColumnDescription(PRInt32 aColIdx, nsAString& aDescription);
+  nsresult GetRowDescription(PRInt32 aRowIdx, nsAString& aDescription);
   nsresult IsColumnSelected(PRInt32 aColIdx, bool* _retval);
   nsresult IsRowSelected(PRInt32 aRowIdx, bool* _retval);
   nsresult IsCellSelected(PRInt32 aRowIdx, PRInt32 aColIdx, bool* _retval);
@@ -67,8 +69,10 @@ protected:
     { return xpcAccessibleTable::GetColumnExtentAt(row, column, _retval); } \
   NS_SCRIPTABLE NS_IMETHOD GetRowExtentAt(PRInt32 row, PRInt32 column, PRInt32* _retval NS_OUTPARAM) \
     { return xpcAccessibleTable::GetRowExtentAt(row, column, _retval); } \
-  NS_SCRIPTABLE NS_IMETHOD GetColumnDescription(PRInt32 columnIndex, nsAString & _retval NS_OUTPARAM); \
-  NS_SCRIPTABLE NS_IMETHOD GetRowDescription(PRInt32 rowIndex, nsAString & _retval NS_OUTPARAM); \
+  NS_SCRIPTABLE NS_IMETHOD GetColumnDescription(PRInt32 columnIndex, nsAString& _retval NS_OUTPARAM) \
+    { return xpcAccessibleTable::GetColumnDescription(columnIndex, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRowDescription(PRInt32 rowIndex, nsAString& _retval NS_OUTPARAM) \
+    { return xpcAccessibleTable::GetRowDescription(rowIndex, _retval); } \
   NS_SCRIPTABLE NS_IMETHOD IsColumnSelected(PRInt32 colIdx, bool* _retval NS_OUTPARAM) \
     { return xpcAccessibleTable::IsColumnSelected(colIdx, _retval); } \
   NS_SCRIPTABLE NS_IMETHOD IsRowSelected(PRInt32 rowIdx, bool* _retval NS_OUTPARAM) \
