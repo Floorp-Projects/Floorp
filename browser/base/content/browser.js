@@ -1012,17 +1012,6 @@ var gBrowserInit = {
 
     window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
-    var webNavigation;
-    try {
-      webNavigation = getWebNavigation();
-      if (!webNavigation)
-        throw "no XBL binding for browser";
-    } catch (e) {
-      alert("Error launching browser window:" + e);
-      window.close(); // Give up.
-      return;
-    }
-
     messageManager.loadFrameScript("chrome://browser/content/content.js", true);
 
     // initialize observers and listeners
@@ -1054,8 +1043,8 @@ var gBrowserInit = {
     // window.
     // Wire up session and global history before any possible
     // progress notifications for back/forward button updating
-    webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                             .createInstance(Components.interfaces.nsISHistory);
+    gBrowser.webNavigation.sessionHistory = Cc["@mozilla.org/browser/shistory;1"].
+                                            createInstance(Ci.nsISHistory);
     Services.obs.addObserver(gBrowser.browsers[0], "browser:purge-session-history", false);
 
     // remove the disablehistory attribute so the browser cleans up, as
@@ -1905,14 +1894,9 @@ function BrowserHandleShiftBackspace()
   }
 }
 
-function BrowserStop()
-{
-  try {
-    const stopFlags = nsIWebNavigation.STOP_ALL;
-    getWebNavigation().stop(stopFlags);
-  }
-  catch(ex) {
-  }
+function BrowserStop() {
+  const stopFlags = nsIWebNavigation.STOP_ALL;
+  gBrowser.webNavigation.stop(stopFlags);
 }
 
 function BrowserReloadOrDuplicate(aEvent) {
@@ -2320,7 +2304,7 @@ function BrowserViewSourceOfDocument(aDocument)
   } catch(err) {
       // If nsIWebNavigation cannot be found, just get the one for the whole
       // window...
-      webNav = getWebNavigation();
+      webNav = gBrowser.webNavigation;
   }
   //
   // Get the 'PageDescriptor' for the current document. This allows the
@@ -2369,7 +2353,7 @@ function URLBarSetURI(aURI) {
   var valid = false;
 
   if (value == null) {
-    let uri = aURI || getWebNavigation().currentURI;
+    let uri = aURI || gBrowser.currentURI;
 
     // Replace initial page URIs with an empty string
     // only if there's no opener (bug 370555).
@@ -2714,11 +2698,7 @@ function onMozEnteredDomFullscreen(event) {
 
 function getWebNavigation()
 {
-  try {
-    return gBrowser.webNavigation;
-  } catch (e) {
-    return null;
-  }
+  return gBrowser.webNavigation;
 }
 
 function BrowserReloadWithFlags(reloadFlags) {
@@ -2728,7 +2708,7 @@ function BrowserReloadWithFlags(reloadFlags) {
    * back on using the web navigation's reload method.
    */
 
-  var webNav = getWebNavigation();
+  var webNav = gBrowser.webNavigation;
   try {
     var sh = webNav.sessionHistory;
     if (sh)
@@ -3361,7 +3341,7 @@ function FillHistoryMenu(aParent) {
       aParent.removeChild(children[i]);
   }
 
-  var webNav = getWebNavigation();
+  var webNav = gBrowser.webNavigation;
   var sessionHistory = webNav.sessionHistory;
 
   var count = sessionHistory.count;
@@ -5355,7 +5335,7 @@ function BrowserSetForcedCharacterSet(aCharset)
 {
   gBrowser.docShell.charset = aCharset;
   // Save the forced character-set
-  PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
+  PlacesUtils.history.setCharsetForURI(gBrowser.currentURI, aCharset);
   BrowserCharsetReload();
 }
 
