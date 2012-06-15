@@ -1055,7 +1055,7 @@ class Operand
 
 void
 PatchJump(CodeLocationJump &jump_, CodeLocationLabel label);
-
+class InstructionIterator;
 class Assembler;
 typedef js::ion::AssemblerBufferWithConstantPool<16, 4, Instruction, Assembler, 1> ARMBuffer;
 
@@ -1284,10 +1284,12 @@ class Assembler
     // Given the start of a Control Flow sequence, grab the value that is finally branched to
     // given the start of a function that loads an address into a register get the address that
     // ends up in the register.
-    static const uint32 * getCF32Target(Instruction *jump);
-
+    template <class Iter>
+    static const uint32 * getCF32Target(Iter *iter);
+    
     static uintptr_t getPointer(uint8 *);
-    static const uint32 * getPtr32Target(Instruction *load, Register *dest = NULL, RelocStyle *rs = NULL);
+    template <class Iter>
+    static const uint32 * getPtr32Target(Iter *iter, Register *dest = NULL, RelocStyle *rs = NULL);
 
     bool oom() const;
   private:
@@ -1751,6 +1753,7 @@ class Instruction
     // Sometimes, an api wants a uint32 (or a pointer to it) rather than
     // an instruction.  raw() just coerces this into a pointer to a uint32
     const uint32 *raw() const { return &data; }
+    uint32 size() const { return 4; }
 }; // Instruction
 
 // make sure that it is the right size
@@ -1937,6 +1940,21 @@ class InstCMP : public InstALU
   public:
     static bool isTHIS (const Instruction &i);
     static InstCMP *asTHIS (const Instruction &i);
+};
+
+
+class InstructionIterator {
+  private:
+    Instruction *i;
+  public:
+    InstructionIterator(Instruction *i_) : i(i_) {}
+    Instruction *next() {
+        i = i->next();
+        return cur();
+    }
+    Instruction *cur() const {
+        return i;
+    }
 };
 
 static const uint32 NumArgRegs = 4;
