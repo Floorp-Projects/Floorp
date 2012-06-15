@@ -705,33 +705,6 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
     }
 };
 
-class LCompareS : public LInstructionHelper<1, 2, 0>
-{
-    JSOp jsop_;
-
-  public:
-    LIR_HEADER(CompareS);
-    LCompareS(JSOp jsop, const LAllocation &left, const LAllocation &right)
-      : jsop_(jsop)
-    {
-        setOperand(0, left);
-        setOperand(1, right);
-    }
-
-    JSOp jsop() const {
-        return jsop_;
-    }
-    const LAllocation *left() {
-        return getOperand(0);
-    }
-    const LAllocation *right() {
-        return getOperand(1);
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
-};
-
 class LCompareV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
 {
     JSOp jsop_;

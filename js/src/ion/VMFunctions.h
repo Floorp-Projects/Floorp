@@ -415,9 +415,6 @@ bool LessThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *
 bool GreaterThan(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
 bool GreaterThanOrEqual(JSContext *cx, const Value &lhs, const Value &rhs, JSBool *res);
 
-template<bool Equal>
-bool StringsEqual(JSContext *cx, HandleString left, HandleString right, JSBool *res);
-
 bool ValueToBooleanComplement(JSContext *cx, const Value &input, JSBool *output);
 
 bool IteratorMore(JSContext *cx, HandleObject obj, JSBool *res);
