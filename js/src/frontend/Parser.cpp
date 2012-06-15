@@ -261,10 +261,8 @@ Parser::parse(JSObject *chain)
      *   protected from the GC by a root or a stack frame reference.
      */
     SharedContext globalsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL);
-    TreeContext globaltc(this, &globalsc, /* staticLevel = */ 0);
+    TreeContext globaltc(this, &globalsc, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!globaltc.init())
-        return NULL;
-    if (!GenerateBlockId(&globaltc, globaltc.bodyid))
         return NULL;
 
     ParseNode *pn = statements();
@@ -1542,11 +1540,8 @@ Parser::functionDef(HandlePropertyName funName, FunctionType type, FunctionSynta
 
     /* Initialize early for possible flags mutation via destructuringExpr. */
     SharedContext funsc(context, /* scopeChain = */ NULL, fun, funbox);
-    TreeContext funtc(this, &funsc, outertc->staticLevel + 1);
+    TreeContext funtc(this, &funsc, outertc->staticLevel + 1, outertc->blockidGen);
     if (!funtc.init())
-        return NULL;
-    funtc.blockidGen = outertc->blockidGen;
-    if (!GenerateBlockId(&funtc, funtc.bodyid))
         return NULL;
 
     if (outertc->sc->inStrictMode())
@@ -5393,12 +5388,9 @@ Parser::generatorExpr(ParseNode *kid)
             return NULL;
 
         SharedContext gensc(context, /* scopeChain = */ NULL, fun, funbox);
-        TreeContext gentc(this, &gensc, outertc->staticLevel + 1);
+        TreeContext gentc(this, &gensc, outertc->staticLevel + 1, outertc->blockidGen);
         if (!gentc.init())
             return NULL;
-        gentc.blockidGen = outertc->blockidGen;
-        if (!GenerateBlockId(&gentc, gentc.bodyid))
-            return false;
 
         /*
          * We assume conservatively that any deoptimization flags in tc->sc
@@ -6368,7 +6360,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
      * the one passed to us.
      */
     SharedContext xmlsc(context, chain, /* fun = */ NULL, /* funbox = */ NULL);
-    TreeContext xmltc(this, &xmlsc, /* staticLevel = */ 0);
+    TreeContext xmltc(this, &xmlsc, /* staticLevel = */ 0, /* bodyid = */ 0);
     if (!xmltc.init())
         return NULL;
     JS_ASSERT(!xmlsc.inStrictMode());
