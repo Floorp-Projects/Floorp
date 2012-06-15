@@ -319,6 +319,7 @@ HISTOGRAM_BOOLEAN(UPDATER_UPDATES_AUTOMATIC, "Updater: Whether or not updates ar
 HISTOGRAM_BOOLEAN(UPDATER_SERVICE_ENABLED, "Updater: Whether or not the MozillaMaintenance service is enabled")
 HISTOGRAM(UPDATER_SERVICE_ERRORS, 1, 30, 31, LINEAR, "Updater: The number of MozillaMaintenance service errors that have occurred")
 HISTOGRAM_BOOLEAN(UPDATER_SERVICE_INSTALLED, "Updater: Whether or not the MozillaMaintenance service is installed")
+HISTOGRAM_BOOLEAN(UPDATER_STAGE_ENABLED, "Updater: Whether or not staging updates are enabled")
 
 /**
  * Thunderbird-specific telemetry.
