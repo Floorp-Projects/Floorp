@@ -5653,10 +5653,26 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
                                    const nsAString& aCharacters,
                                    const nsAString& aUnmodifiedCharacters)
 {
+  UINT keyboardLayoutListCount = ::GetKeyboardLayoutList(0, NULL);
+  NS_ASSERTION(keyboardLayoutListCount > 0,
+               "One keyboard layout must be installed at least");
+  HKL keyboardLayoutListBuff[50];
+  HKL* keyboardLayoutList =
+    keyboardLayoutListCount < 50 ? keyboardLayoutListBuff :
+                                   new HKL[keyboardLayoutListCount];
+  keyboardLayoutListCount =
+    ::GetKeyboardLayoutList(keyboardLayoutListCount, keyboardLayoutList);
+  NS_ASSERTION(keyboardLayoutListCount > 0,
+               "Failed to get all keyboard layouts installed on the system");
+
   nsPrintfCString layoutName("%08x", aNativeKeyboardLayout);
   HKL loadedLayout = LoadKeyboardLayoutA(layoutName.get(), KLF_NOTELLSHELL);
-  if (loadedLayout == NULL)
+  if (loadedLayout == NULL) {
+    if (keyboardLayoutListBuff != keyboardLayoutList) {
+      delete [] keyboardLayoutList;
+    }
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // Setup clean key state and load desired layout
   BYTE originalKbdState[256];
@@ -5694,9 +5710,30 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
       lParam |= 0x1000000;
     }
     MSG msg = WinUtils::InitMSG(WM_KEYDOWN, key, lParam);
-    if (i == keySequence.Length() - 1 && aCharacters.Length() > 0) {
-      nsFakeCharMessage fakeMsg = { aCharacters.CharAt(0), scanCode };
-      OnKeyDown(msg, modKeyState, nsnull, &fakeMsg);
+    if (i == keySequence.Length() - 1) {
+      bool makeDeadCharMessage =
+        gKbdLayout.IsDeadKey(key, modKeyState) && aCharacters.IsEmpty();
+      nsAutoString chars(aCharacters);
+      if (makeDeadCharMessage) {
+        UniCharsAndModifiers deadChars =
+          gKbdLayout.GetUniCharsAndModifiers(key, modKeyState);
+        chars = deadChars.ToString();
+        NS_ASSERTION(chars.Length() == 1,
+                     "Dead char must be only one character");
+      }
+      if (chars.IsEmpty()) {
+        OnKeyDown(msg, modKeyState, nsnull, nsnull);
+      } else {
+        nsFakeCharMessage fakeMsg = { chars.CharAt(0), scanCode,
+                                      makeDeadCharMessage };
+        OnKeyDown(msg, modKeyState, nsnull, &fakeMsg);
+        for (PRUint32 j = 1; j < chars.Length(); j++) {
+          nsFakeCharMessage fakeMsg = { chars.CharAt(j), scanCode, false };
+          MSG msg = fakeMsg.GetCharMessage(mWnd);
+          NativeKey nativeKey(gKbdLayout, this, msg);
+          OnChar(msg, nativeKey, modKeyState, nsnull);
+        }
+      }
     } else {
       OnKeyDown(msg, modKeyState, nsnull, nsnull);
     }
@@ -5724,9 +5761,21 @@ nsWindow::SynthesizeNativeKeyEvent(PRInt32 aNativeKeyboardLayout,
 
   // Restore old key state and layout
   ::SetKeyboardState(originalKbdState);
-  gKbdLayout.LoadLayout(oldLayout);
+  gKbdLayout.LoadLayout(oldLayout, true);
 
-  UnloadKeyboardLayout(loadedLayout);
+  // Don't unload the layout if it's installed actually.
+  for (PRUint32 i = 0; i < keyboardLayoutListCount; i++) {
+    if (keyboardLayoutList[i] == loadedLayout) {
+      loadedLayout = 0;
+      break;
+    }
+  }
+  if (keyboardLayoutListBuff != keyboardLayoutList) {
+    delete [] keyboardLayoutList;
+  }
+  if (loadedLayout) {
+    ::UnloadKeyboardLayout(loadedLayout);
+  }
   return NS_OK;
 }
 
@@ -6358,6 +6407,9 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
             msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
     if (aFakeCharMessage) {
       MSG msg = aFakeCharMessage->GetCharMessage(mWnd);
+      if (msg.message == WM_DEADCHAR) {
+        return false;
+      }
       return OnChar(msg, nativeKey, aModKeyState, nsnull, extraFlags);
     }
 

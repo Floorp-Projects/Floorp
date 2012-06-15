@@ -513,7 +513,7 @@ NativeKey::GetKeyLocation() const
  *****************************************************************************/
 
 KeyboardLayout::KeyboardLayout() :
-  mKeyboardLayout(0)
+  mKeyboardLayout(0), mPendingKeyboardLayout(0)
 {
   mDeadKeyTableListHead = nsnull;
 
@@ -550,6 +550,10 @@ UniCharsAndModifiers
 KeyboardLayout::OnKeyDown(PRUint8 aVirtualKey,
                           const ModifierKeyState& aModKeyState)
 {
+  if (mPendingKeyboardLayout) {
+    LoadLayout(mPendingKeyboardLayout);
+  }
+
   PRInt32 virtualKeyIndex = GetKeyIndex(aVirtualKey);
 
   if (virtualKeyIndex < 0) {
@@ -626,8 +630,15 @@ KeyboardLayout::GetUniCharsAndModifiers(
 }
 
 void
-KeyboardLayout::LoadLayout(HKL aLayout)
+KeyboardLayout::LoadLayout(HKL aLayout, bool aLoadLater)
 {
+  if (aLoadLater) {
+    mPendingKeyboardLayout = aLayout;
+    return;
+  }
+
+  mPendingKeyboardLayout = 0;
+
   if (mKeyboardLayout == aLayout) {
     return;
   }
