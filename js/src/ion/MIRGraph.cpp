@@ -598,6 +598,14 @@ MBasicBlock::assertUsesAreNotWithin(MUseIterator use, MUseIterator end)
 }
 
 bool
+MBasicBlock::dominates(MBasicBlock *other)
+{
+    uint32 high = domIndex() + numDominated();
+    uint32 low  = domIndex();
+    return other->domIndex() >= low && other->domIndex() <= high;
+}
+
+bool
 MBasicBlock::setBackedge(MBasicBlock *pred)
 {
     // Predecessors must be finished, and at the correct stack depth.
