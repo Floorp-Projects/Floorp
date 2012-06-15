@@ -657,7 +657,7 @@ struct JSRuntime : js::RuntimeFriendFields
     js::Value           negativeInfinityValue;
     js::Value           positiveInfinityValue;
 
-    JSAtom              *emptyString;
+    js::PropertyName    *emptyString;
 
     /* List of active contexts sharing this runtime. */
     JSCList             contextList;

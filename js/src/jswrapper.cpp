@@ -177,17 +177,20 @@ DirectWrapper::hasOwn(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 }
 
 bool
-DirectWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, Value *vp)
+DirectWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receiver_, jsid id_, Value *vp)
 {
     vp->setUndefined(); // default result if we refuse to perform this action
-    GET(wrappedObject(wrapper)->getGeneric(cx, RootedObject(cx, receiver), RootedId(cx, id), vp));
+    Rooted<JSObject*> receiver(cx, receiver_);
+    Rooted<jsid> id(cx, id_);
+    GET(wrappedObject(wrapper)->getGeneric(cx, receiver, id, vp));
 }
 
 bool
-DirectWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
+DirectWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id_, bool strict,
                Value *vp)
 {
-    SET(wrappedObject(wrapper)->setGeneric(cx, RootedId(cx, id), vp, strict));
+    Rooted<jsid> id(cx, id_);
+    SET(wrappedObject(wrapper)->setGeneric(cx, id, vp, strict));
 }
 
 bool
@@ -203,7 +206,8 @@ DirectWrapper::iterate(JSContext *cx, JSObject *wrapper, unsigned flags, Value *
 {
     vp->setUndefined(); // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
-    GET(GetIterator(cx, RootedObject(cx, wrappedObject(wrapper)), flags, vp));
+    Rooted<JSObject*> wrapped(cx, wrappedObject(wrapper));
+    GET(GetIterator(cx, wrapped, flags, vp));
 }
 
 bool
@@ -415,7 +419,8 @@ ErrorCopier::~ErrorCopier()
         if (exc.isObject() && exc.toObject().isError() && exc.toObject().getPrivate()) {
             cx->clearPendingException();
             ac.leave();
-            JSObject *copyobj = js_CopyErrorObject(cx, RootedObject(cx, &exc.toObject()), scope);
+            Rooted<JSObject*> errObj(cx, &exc.toObject());
+            JSObject *copyobj = js_CopyErrorObject(cx, errObj, scope);
             if (copyobj)
                 cx->setPendingException(ObjectValue(*copyobj));
         }

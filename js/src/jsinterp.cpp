@@ -537,7 +537,8 @@ js::LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, bool *resu
 
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
                 JSBool res;
-                if (!eq(cx, RootedObject(cx, l), &rval, &res))
+                Rooted<JSObject*> lobj(cx, l);
+                if (!eq(cx, lobj, &rval, &res))
                     return false;
                 *result = !!res;
                 return true;
@@ -983,7 +984,8 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
             return true;
         }
     }
-    if (!js_IteratorMore(cx, RootedObject(cx, iterobj), rval))
+    Rooted<JSObject*> iobj(cx, iterobj);
+    if (!js_IteratorMore(cx, iobj, rval))
         return false;
     *cond = rval->isTrue();
     return true;
