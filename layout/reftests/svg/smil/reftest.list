@@ -78,6 +78,7 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 
 == anim-height-done-1a.svg anim-standard-ref.svg
 == anim-height-done-1b.svg anim-standard-ref.svg
+== anim-height-done-2.svg lime.svg
 == anim-height-interp-1.svg anim-height-interp-1-ref.svg
 == anim-height-interp-2.svg anim-height-interp-2-ref.svg
 == anim-height-interp-3.svg anim-height-interp-3-ref.svg
