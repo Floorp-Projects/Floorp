@@ -486,7 +486,7 @@ bool WebGLContext::ValidateTexFormatAndType(WebGLenum format, WebGLenum type, in
                                               uint32_t *texelSize, const char *info)
 {
     if (type == LOCAL_GL_UNSIGNED_BYTE ||
-        (IsExtensionEnabled(WebGL_OES_texture_float) && type == LOCAL_GL_FLOAT))
+        (IsExtensionEnabled(OES_texture_float) && type == LOCAL_GL_FLOAT))
     {
         if (jsArrayType != -1) {
             if ((type == LOCAL_GL_UNSIGNED_BYTE && jsArrayType != js::ArrayBufferView::TYPE_UINT8) ||
