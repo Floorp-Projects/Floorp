@@ -842,35 +842,33 @@ WebGLContext::MozGetUnderlyingParamString(PRUint32 pname, nsAString& retval)
 
 bool WebGLContext::IsExtensionSupported(WebGLExtensionID ei)
 {
-    bool isSupported;
+    bool isSupported = false;
 
     switch (ei) {
+        case WebGL_OES_standard_derivatives:
+        case WebGL_WEBGL_lose_context:
+            // We always support these extensions.
+            isSupported = true;
+            break;
         case WebGL_OES_texture_float:
             isSupported = gl->IsExtensionSupported(gl->IsGLES2() ? GLContext::OES_texture_float 
                                                                  : GLContext::ARB_texture_float);
-	    break;
-        case WebGL_OES_standard_derivatives:
-            // We always support this extension.
-            isSupported = true;
             break;
         case WebGL_EXT_texture_filter_anisotropic:
             isSupported = gl->IsExtensionSupported(GLContext::EXT_texture_filter_anisotropic);
             break;
-        case WebGL_WEBGL_lose_context:
-            // We always support this extension.
-            isSupported = true;
-            break;
         case WebGL_WEBGL_compressed_texture_s3tc:
             if (gl->IsExtensionSupported(GLContext::EXT_texture_compression_s3tc)) {
                 isSupported = true;
-            } else {
-                isSupported = gl->IsExtensionSupported(GLContext::EXT_texture_compression_dxt1) &&
-                              gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt3) &&
-                              gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt5);
+            } else if (gl->IsExtensionSupported(GLContext::EXT_texture_compression_dxt1) &&
+                       gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt3) &&
+                       gl->IsExtensionSupported(GLContext::ANGLE_texture_compression_dxt5))
+            {
+                isSupported = true;
             }
             break;
         default:
-            isSupported = false;
+            MOZ_ASSERT(false, "should not get there.");
     }
 
     return isSupported;
