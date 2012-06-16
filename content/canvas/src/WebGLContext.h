@@ -1156,19 +1156,23 @@ protected:
 
     // extensions
     enum WebGLExtensionID {
-        WebGL_OES_texture_float,
-        WebGL_OES_standard_derivatives,
-        WebGL_EXT_texture_filter_anisotropic,
-        WebGL_WEBGL_lose_context,
-        WebGL_WEBGL_compressed_texture_s3tc,
-        WebGLExtensionID_Max
+        OES_texture_float,
+        OES_standard_derivatives,
+        EXT_texture_filter_anisotropic,
+        WEBGL_lose_context,
+        WEBGL_compressed_texture_s3tc,
+        WebGLExtensionID_number_of_extensions,
+        WebGLExtensionID_unknown_extension
     };
-    nsAutoTArray<nsRefPtr<WebGLExtension>, WebGLExtensionID_Max> mEnabledExtensions;
-    bool IsExtensionEnabled(WebGLExtensionID ext) const {
-        NS_ABORT_IF_FALSE(ext >= 0 && ext < WebGLExtensionID_Max, "bogus index!");
-        return mEnabledExtensions[ext] != nsnull;
+    nsAutoTArray<nsRefPtr<WebGLExtension>, WebGLExtensionID_number_of_extensions> mExtensions;
+
+    // returns true if the extension has been enabled by calling getExtension.
+    bool IsExtensionEnabled(WebGLExtensionID ext) {
+        return mExtensions[ext];
     }
-    bool IsExtensionSupported(WebGLExtensionID ei);
+
+    // returns true if the extension is supported (as returned by getSupportedExtensions)
+    bool IsExtensionSupported(WebGLExtensionID ext);
 
     nsTArray<WebGLenum> mCompressedTextureFormats;
 
