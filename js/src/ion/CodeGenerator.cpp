@@ -2175,11 +2175,11 @@ CodeGenerator::visitGetArgument(LGetArgument *lir)
 
     if (index->isConstant()) {
         int32 i = index->toConstant()->toInt32();
-        Address argPtr(StackPointer, sizeof(Value*) * i + argvOffset);
+        Address argPtr(StackPointer, sizeof(Value) * i + argvOffset);
         masm.loadValue(argPtr, result);
     } else {
         Register i = ToRegister(index);
-        BaseIndex argPtr(StackPointer, i, ScaleFromShift(sizeof(Value*)), argvOffset);
+        BaseIndex argPtr(StackPointer, i, ScaleFromShift(sizeof(Value)), argvOffset);
         masm.loadValue(argPtr, result);
     }
     return true;
