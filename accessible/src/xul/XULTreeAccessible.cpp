@@ -611,6 +611,11 @@ XULTreeAccessible::TreeViewInvalidated(PRInt32 aStartRow, PRInt32 aEndRow,
   if (IsDefunct())
     return;
 
+  if (!mTreeView) {
+    ClearCache(mAccessibleCache);
+    return;
+  }
+
   PRInt32 endRow = aEndRow;
 
   nsresult rv;
