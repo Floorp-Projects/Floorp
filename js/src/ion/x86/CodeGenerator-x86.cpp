@@ -155,7 +155,7 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
     if (mir->type() == MIRType_ArgObj) {
         Register payload = ToRegister(unbox->payload());
         if (mir->fallible()) {
-            masm.cmpl(ToOperand(unbox->type()), Imm32(JSVAL_TAG_MAGIC));
+            masm.cmpl(ToOperand(unbox->type()), ImmTag(JSVAL_TAG_MAGIC));
             if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
                 return false;
             masm.cmpl(payload, Imm32(JS_OPTIMIZED_ARGUMENTS));
