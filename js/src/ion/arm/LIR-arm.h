@@ -85,7 +85,7 @@ class LUnbox : public LInstructionHelper<1, 2, 0>
         return mir_->toUnbox();
     }
     const LAllocation *payload() {
-        return getOperand(1);
+        return getOperand(0);
     }
     const LAllocation *type() {
         return getOperand(1);
