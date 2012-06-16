@@ -42,18 +42,31 @@ function tab1Reloaded(aEvent) {
   let hud1 = HUDService.getHudByWindow(tab1.linkedBrowser.contentWindow);
   let outputNode1 = hud1.outputNode;
 
-  let msg = "Found the iframe network request in tab1";
-  testLogEntry(outputNode1, TEST_IFRAME_URI, msg, true);
+  waitForSuccess({
+    name: "iframe network request displayed in tab1",
+    validatorFn: function()
+    {
+      let selector = ".webconsole-msg-url[value='" + TEST_IFRAME_URI +"']";
+      return outputNode1.querySelector(selector);
+    },
+    successFn: function()
+    {
+      let hud2 = HUDService.getHudByWindow(tab2.linkedBrowser.contentWindow);
+      let outputNode2 = hud2.outputNode;
 
-  let hud2 = HUDService.getHudByWindow(tab2.linkedBrowser.contentWindow);
-  let outputNode2 = hud2.outputNode;
+      isnot(outputNode1, outputNode2,
+            "the two HUD outputNodes must be different");
 
-  isnot(outputNode1, outputNode2,
-        "the two HUD outputNodes must be different");
+      let msg = "Didn't find the iframe network request in tab2";
+      testLogEntry(outputNode2, TEST_IFRAME_URI, msg, true, true);
 
-  msg = "Didn't find the iframe network request in tab2";
-  testLogEntry(outputNode2, TEST_IFRAME_URI, msg, true, true);
+      testEnd();
+    },
+    failureFn: testEnd,
+  });
+}
 
+function testEnd() {
   closeConsole(tab2, function() {
     gBrowser.removeTab(tab2);
     tab1 = tab2 = null;
