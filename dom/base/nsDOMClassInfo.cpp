@@ -182,7 +182,7 @@
 
 #ifdef MOZ_B2G_RIL
 #include "nsIWifi.h"
-#include "nsIWifiEvents.h"
+#include "nsIWifiEventInits.h"
 #endif
 
 // includes needed for the prototype chain interfaces

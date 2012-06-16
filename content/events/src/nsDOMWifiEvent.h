@@ -7,7 +7,7 @@
 #define nsDOMWifiEvent_h__
 
 #include "nsIWifi.h"
-#include "nsIWifiEvents.h"
+#include "nsIWifiEventInits.h"
 #include "nsDOMEvent.h"
 
 class nsDOMMozWifiStatusChangeEvent : public nsDOMEvent,
