@@ -26,7 +26,6 @@ CPPSRCS = \
   nsAccessNodeWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
   nsWinUtils.cpp \
-  CAccessibleText.cpp \
   CAccessibleEditableText.cpp \
   CAccessibleHyperlink.cpp \
   CAccessibleTable.cpp \
@@ -39,6 +38,7 @@ CPPSRCS = \
   ia2AccessibleImage.cpp \
   ia2AccessibleHypertext.cpp \
   ia2AccessibleRelation.cpp \
+  ia2AccessibleText.cpp \
   RootAccessibleWrap.cpp \
   TextLeafAccessibleWrap.cpp \
   $(NULL)
