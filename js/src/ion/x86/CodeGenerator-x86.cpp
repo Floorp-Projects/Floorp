@@ -162,9 +162,6 @@ CodeGeneratorX86::visitUnbox(LUnbox *unbox)
             if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
             return false;
         }
-
-        Register output = ToRegister(unbox->output());
-        masm.xorl(output, output);
         return true;
     }
 
