@@ -275,7 +275,7 @@ enum {
     /* Whether any objects this represents are not typed arrays. */
     OBJECT_FLAG_NON_TYPED_ARRAY       = 0x00040000,
 
-    /* Whether any represented script is considered uninlineable. */
+    /* Whether any represented script is considered uninlineable in JM. */
     OBJECT_FLAG_UNINLINEABLE          = 0x00080000,
 
     /* Whether any objects have an equality hook. */
