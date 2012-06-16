@@ -15,6 +15,9 @@
 #include "nsIWidget.h"
 #include "nsWindow.h"
 #include "nsClipboard.h"
+#include "KeyboardLayout.h"
+
+using namespace mozilla::widget;
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
@@ -169,7 +172,7 @@ nsNativeDragTarget::DispatchDragDropEvent(PRUint32 aEventType, POINTL aPT)
     event.refPoint.y = 0;
   }
 
-  nsModifierKeyState modifierKeyState;
+  ModifierKeyState modifierKeyState;
   modifierKeyState.InitInputEvent(event);
 
   event.inputSource = static_cast<nsBaseDragService*>(mDragService)->GetInputSource();

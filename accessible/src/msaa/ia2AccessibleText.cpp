@@ -5,19 +5,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CAccessibleText.h"
+#include "ia2AccessibleText.h"
 
 #include "Accessible2.h"
 #include "AccessibleText_i.c"
 
-#include "HyperTextAccessible.h"
+#include "HyperTextAccessibleWrap.h"
 
 #include "nsIPersistentProperties2.h"
 
 // IUnknown
 
 STDMETHODIMP
-CAccessibleText::QueryInterface(REFIID iid, void** ppv)
+ia2AccessibleText::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
@@ -37,10 +37,10 @@ CAccessibleText::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleText
 
 STDMETHODIMP
-CAccessibleText::addSelection(long aStartOffset, long aEndOffset)
+ia2AccessibleText::addSelection(long aStartOffset, long aEndOffset)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -52,8 +52,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_attributes(long aOffset, long *aStartOffset,
-                                long *aEndOffset, BSTR *aTextAttributes)
+ia2AccessibleText::get_attributes(long aOffset, long *aStartOffset,
+                                  long *aEndOffset, BSTR *aTextAttributes)
 {
 __try {
   if (!aStartOffset || !aEndOffset || !aTextAttributes)
@@ -63,7 +63,7 @@ __try {
   *aEndOffset = 0;
   *aTextAttributes = NULL;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -90,12 +90,12 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_caretOffset(long *aOffset)
+ia2AccessibleText::get_caretOffset(long *aOffset)
 {
 __try {
   *aOffset = -1;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -112,10 +112,10 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_characterExtents(long aOffset,
-                                      enum IA2CoordinateType aCoordType,
-                                      long *aX, long *aY,
-                                      long *aWidth, long *aHeight)
+ia2AccessibleText::get_characterExtents(long aOffset,
+                                        enum IA2CoordinateType aCoordType,
+                                        long *aX, long *aY,
+                                        long *aWidth, long *aHeight)
 {
 __try {
   *aX = 0;
@@ -123,7 +123,7 @@ __try {
   *aWidth = 0;
   *aHeight = 0;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -148,12 +148,12 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_nSelections(long *aNSelections)
+ia2AccessibleText::get_nSelections(long *aNSelections)
 {
 __try {
   *aNSelections = 0;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -170,14 +170,14 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_offsetAtPoint(long aX, long aY,
-                                   enum IA2CoordinateType aCoordType,
-                                   long *aOffset)
+ia2AccessibleText::get_offsetAtPoint(long aX, long aY,
+                                     enum IA2CoordinateType aCoordType,
+                                     long *aOffset)
 {
 __try {
   *aOffset = 0;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -198,14 +198,14 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_selection(long aSelectionIndex, long *aStartOffset,
-                               long *aEndOffset)
+ia2AccessibleText::get_selection(long aSelectionIndex, long *aStartOffset,
+                                 long *aEndOffset)
 {
 __try {
   *aStartOffset = 0;
   *aEndOffset = 0;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -224,12 +224,12 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
+ia2AccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
 {
 __try {
   *aText = NULL;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -249,17 +249,17 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_textBeforeOffset(long aOffset,
-                                      enum IA2TextBoundaryType aBoundaryType,
-                                      long *aStartOffset, long *aEndOffset,
-                                      BSTR *aText)
+ia2AccessibleText::get_textBeforeOffset(long aOffset,
+                                        enum IA2TextBoundaryType aBoundaryType,
+                                        long *aStartOffset, long *aEndOffset,
+                                        BSTR *aText)
 {
 __try {
   *aStartOffset = 0;
   *aEndOffset = 0;
   *aText = NULL;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -296,17 +296,17 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_textAfterOffset(long aOffset,
-                                     enum IA2TextBoundaryType aBoundaryType,
-                                     long *aStartOffset, long *aEndOffset,
-                                     BSTR *aText)
+ia2AccessibleText::get_textAfterOffset(long aOffset,
+                                       enum IA2TextBoundaryType aBoundaryType,
+                                       long *aStartOffset, long *aEndOffset,
+                                       BSTR *aText)
 {
 __try {
   *aStartOffset = 0;
   *aEndOffset = 0;
   *aText = NULL;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -343,17 +343,17 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_textAtOffset(long aOffset,
-                                  enum IA2TextBoundaryType aBoundaryType,
-                                  long *aStartOffset, long *aEndOffset,
-                                  BSTR *aText)
+ia2AccessibleText::get_textAtOffset(long aOffset,
+                                    enum IA2TextBoundaryType aBoundaryType,
+                                    long *aStartOffset, long *aEndOffset,
+                                    BSTR *aText)
 {
 __try {
   *aStartOffset = 0;
   *aEndOffset = 0;
   *aText = NULL;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -390,10 +390,10 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::removeSelection(long aSelectionIndex)
+ia2AccessibleText::removeSelection(long aSelectionIndex)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -405,10 +405,10 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::setCaretOffset(long aOffset)
+ia2AccessibleText::setCaretOffset(long aOffset)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -420,11 +420,11 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::setSelection(long aSelectionIndex, long aStartOffset,
-                              long aEndOffset)
+ia2AccessibleText::setSelection(long aSelectionIndex, long aStartOffset,
+                                long aEndOffset)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -437,12 +437,12 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_nCharacters(long *aNCharacters)
+ia2AccessibleText::get_nCharacters(long *aNCharacters)
 {
 __try {
   *aNCharacters = 0;
 
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -454,11 +454,11 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
-                                   enum IA2ScrollType aScrollType)
+ia2AccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
+                                     enum IA2ScrollType aScrollType)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -470,12 +470,12 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
-                                        enum IA2CoordinateType aCoordType,
-                                        long aX, long aY)
+ia2AccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
+                                          enum IA2CoordinateType aCoordType,
+                                          long aX, long aY)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -492,7 +492,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_newText(IA2TextSegment *aNewText)
+ia2AccessibleText::get_newText(IA2TextSegment *aNewText)
 {
 __try {
   return GetModifiedText(true, aNewText);
@@ -502,7 +502,7 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleText::get_oldText(IA2TextSegment *aOldText)
+ia2AccessibleText::get_oldText(IA2TextSegment *aOldText)
 {
 __try {
   return GetModifiedText(false, aOldText);
@@ -511,11 +511,11 @@ __try {
   return E_FAIL;
 }
 
-// CAccessibleText
+// ia2AccessibleText
 
 HRESULT
-CAccessibleText::GetModifiedText(bool aGetInsertedText,
-                                 IA2TextSegment *aText)
+ia2AccessibleText::GetModifiedText(bool aGetInsertedText,
+                                   IA2TextSegment *aText)
 {
   PRUint32 startOffset = 0, endOffset = 0;
   nsAutoString text;
@@ -536,7 +536,7 @@ CAccessibleText::GetModifiedText(bool aGetInsertedText,
 }
 
 AccessibleTextBoundary
-CAccessibleText::GetGeckoTextBoundary(enum IA2TextBoundaryType aBoundaryType)
+ia2AccessibleText::GetGeckoTextBoundary(enum IA2TextBoundaryType aBoundaryType)
 {
   switch (aBoundaryType) {
     case IA2_TEXT_BOUNDARY_CHAR:

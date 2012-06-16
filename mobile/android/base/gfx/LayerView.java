@@ -90,6 +90,11 @@ public class LayerView extends SurfaceView implements SurfaceHolder.Callback {
         return mTouchEventHandler.handleEvent(event);
     }
 
+    @Override
+    public boolean onHoverEvent(MotionEvent event) {
+        return mTouchEventHandler.handleEvent(event);
+    }
+
     public LayerController getController() { return mController; }
     public TouchEventHandler getTouchEventHandler() { return mTouchEventHandler; }
 

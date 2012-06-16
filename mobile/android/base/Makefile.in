@@ -63,6 +63,8 @@ FENNEC_JAVA_FILES = \
   GeckoThread.java \
   GlobalHistory.java \
   GeckoViewsFactory.java \
+  INIParser.java \
+  INISection.java \
   LinkPreference.java \
   LinkTextView.java \
   MenuItemActionBar.java \

@@ -3871,11 +3871,22 @@ dnl ========================================================
 dnl = Perform moving GC stack rooting analysis
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(root-analysis,
-[  --enable-root-analysis Enable moving GC stack root analysis],
+[  --enable-root-analysis  Enable moving GC stack root analysis],
     JSGC_ROOT_ANALYSIS=1,
     JSGC_ROOT_ANALYSIS= )
 if test -n "$JSGC_ROOT_ANALYSIS"; then
     AC_DEFINE(JSGC_ROOT_ANALYSIS)
+fi
+
+dnl ========================================================
+dnl = Use exact stack rooting for GC
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(exact-rooting,
+[  --enable-exact-rooting  Enable use of exact stack roots for GC],
+    JSGC_USE_EXACT_ROOTING=1,
+    JSGC_USE_EXACT_ROOTING= )
+if test -n "$JSGC_USE_EXACT_ROOTING"; then
+    AC_DEFINE(JSGC_USE_EXACT_ROOTING)
 fi
 
 dnl ========================================================
@@ -3974,7 +3985,7 @@ MOZ_ARG_ENABLE_BOOL(gczeal,
 [  --enable-gczeal         Enable zealous GCing],
     JS_GC_ZEAL=1,
     JS_GC_ZEAL= )
-if test -n "$JS_GC_ZEAL"; then
+if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
     AC_DEFINE(JS_GC_ZEAL)
 fi
 
@@ -4129,7 +4140,7 @@ dnl = E4X support (ECMA-357)
 dnl ========================================================
 JS_HAS_XML_SUPPORT=1
 MOZ_ARG_DISABLE_BOOL(e4x,
-[  --disable-e4x Disable JS support for XML (ECMA-357)],
+[  --disable-e4x           Disable JS support for XML (ECMA-357)],
     JS_HAS_XML_SUPPORT=0 )
 AC_DEFINE_UNQUOTED(JS_HAS_XML_SUPPORT, $JS_HAS_XML_SUPPORT)
 

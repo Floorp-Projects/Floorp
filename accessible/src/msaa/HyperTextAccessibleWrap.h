@@ -9,13 +9,12 @@
 #define mozilla_a11y_HyperTextAccessibleWrap_h__
 
 #include "HyperTextAccessible.h"
-#include "CAccessibleText.h"
-#include "CAccessibleEditableText.h"
+#include "ia2AccessibleEditableText.h"
 #include "ia2AccessibleHyperText.h"
 
 class HyperTextAccessibleWrap : public HyperTextAccessible,
                                 public ia2AccessibleHypertext,
-                                public CAccessibleEditableText
+                                public ia2AccessibleEditableText
 {
 public:
   HyperTextAccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :

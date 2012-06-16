@@ -102,6 +102,20 @@ interface TestInterface {
   void passOptionalNonNullSelf(optional TestInterface arg);
   void passOptionalSelfWithDefault(optional TestInterface? arg = null);
 
+  // Non-wrapper-cache interface types
+  [Creator]
+  TestNonWrapperCacheInterface receiveNonWrapperCacheInterface();
+  [Creator]
+  TestNonWrapperCacheInterface? receiveNullableNonWrapperCacheInterface();
+  [Creator]
+  sequence<TestNonWrapperCacheInterface> receiveNonWrapperCacheInterfaceSequence();
+  [Creator]
+  sequence<TestNonWrapperCacheInterface?> receiveNullableNonWrapperCacheInterfaceSequence();
+  [Creator]
+  sequence<TestNonWrapperCacheInterface>? receiveNonWrapperCacheInterfaceNullableSequence();
+  [Creator]
+  sequence<TestNonWrapperCacheInterface?>? receiveNullableNonWrapperCacheInterfaceNullableSequence();
+
   // Non-castable interface types
   TestNonCastableInterface receiveOther();
   TestNonCastableInterface? receiveNullableOther();
@@ -234,6 +248,9 @@ interface TestInterface {
   void passOptionalNullableDictionary(optional Dict? x);
   void passOtherDictionary(GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
+};
+
+interface TestNonWrapperCacheInterface {
 };
 
 interface ImplementedInterfaceParent {
