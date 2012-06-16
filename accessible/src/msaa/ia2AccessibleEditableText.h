@@ -13,7 +13,7 @@
 
 #include "AccessibleEditableText.h"
 
-class CAccessibleEditableText: public IAccessibleEditableText
+class ia2AccessibleEditableText: public IAccessibleEditableText
 {
 public:
 

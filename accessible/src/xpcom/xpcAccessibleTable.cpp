@@ -120,6 +120,89 @@ xpcAccessibleTable::GetRowExtentAt(PRInt32 aRowIdx, PRInt32 aColIdx,
 }
 
 nsresult
+xpcAccessibleTable::GetColumnDescription(PRInt32 aColIdx,
+                                         nsAString& aDescription)
+{
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aColIdx < 0 || static_cast<PRUint32>(aColIdx) >= mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  nsAutoString description;
+  mTable->ColDescription(aColIdx, description);
+  aDescription.Assign(description);
+
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetRowDescription(PRInt32 aRowIdx, nsAString& aDescription)
+{
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aRowIdx < 0 || static_cast<PRUint32>(aRowIdx) >= mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  nsAutoString description;
+  mTable->RowDescription(aRowIdx, description);
+  aDescription.Assign(description);
+
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::IsColumnSelected(PRInt32 aColIdx, bool* aIsSelected)
+{
+  NS_ENSURE_ARG_POINTER(aIsSelected);
+  *aIsSelected = false;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aColIdx < 0 || static_cast<PRUint32>(aColIdx) >= mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  *aIsSelected = mTable->IsColSelected(aColIdx);
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::IsRowSelected(PRInt32 aRowIdx, bool* aIsSelected)
+{
+  NS_ENSURE_ARG_POINTER(aIsSelected);
+  *aIsSelected = false;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aRowIdx < 0 || static_cast<PRUint32>(aRowIdx) >= mTable->RowCount())
+    return NS_ERROR_INVALID_ARG;
+
+  *aIsSelected = mTable->IsRowSelected(aRowIdx);
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::IsCellSelected(PRInt32 aRowIdx, PRInt32 aColIdx,
+                                   bool* aIsSelected)
+{
+  NS_ENSURE_ARG_POINTER(aIsSelected);
+  *aIsSelected = false;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aRowIdx < 0 || static_cast<PRUint32>(aRowIdx) >= mTable->RowCount() ||
+      aColIdx < 0 || static_cast<PRUint32>(aColIdx) >= mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  *aIsSelected = mTable->IsCellSelected(aRowIdx, aColIdx);
+  return NS_OK;
+}
+
+nsresult
 xpcAccessibleTable::GetSummary(nsAString& aSummary)
 {
   if (!mTable)

@@ -1234,7 +1234,7 @@ InspectorUI.prototype = {
 
   /**
    * Destroy the InspectorUI instance. This is called by the InspectorUI API
-   * "user", see BrowserShutdown() in browser.js.
+   * "user", see gBrowserInit.onUnload() in browser.js.
    */
   destroy: function IUI_destroy()
   {

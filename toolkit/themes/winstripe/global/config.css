@@ -54,7 +54,7 @@
 
 #exclam
 {
-%ifdef MOZ_WIDGET_GTK2
+%ifdef MOZ_WIDGET_GTK
   list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=dialog");
 %else
   list-style-image: url("chrome://global/skin/icons/warning-large.png");

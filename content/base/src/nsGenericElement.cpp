@@ -4098,7 +4098,9 @@ bool IsAllowedAsChild(nsIContent* aNewChild, nsINode* aParent,
     {
       // Note that for now we only allow nodes inside document fragments if
       // they're allowed inside elements.  If we ever change this to allow
-      // doctype nodes in document fragments, we'll need to update this code
+      // doctype nodes in document fragments, we'll need to update this code.
+      // Also, there's a version of this code in ReplaceOrInsertBefore.  If you
+      // change this code, change that too.
       if (!aParent->IsNodeOfType(nsINode::eDOCUMENT)) {
         // All good here
         return true;
@@ -4159,6 +4161,11 @@ nsresult
 nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
                                nsINode* aRefChild)
 {
+  // XXXbz I wish I could assert that nsContentUtils::IsSafeToRunScript() so we
+  // could rely on scriptblockers going out of scope to actually run XBL
+  // teardown, but various crud adds nodes under scriptblockers (e.g. native
+  // anonymous content).  The only good news is those insertions can't trigger
+  // the bad XBL cases.
   if (!aNewChild || (aReplace && !aRefChild)) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -4235,6 +4242,8 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     nodeToInsertBefore = nodeToInsertBefore->GetNextSibling();
   }
 
+  Maybe<nsAutoTArray<nsCOMPtr<nsIContent>, 50> > fragChildren;
+
   // Remove the new child from the old parent if one exists
   nsCOMPtr<nsINode> oldParent = newContent->GetNodeParent();
   if (oldParent) {
@@ -4254,7 +4263,8 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     // Scope for the mutation batch and scriptblocker, so they go away
     // while kungFuDeathGrip is still alive.
     {
-      mozAutoDocUpdate batch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, true);
+      mozAutoDocUpdate batch(newContent->GetCurrentDoc(),
+                             UPDATE_CONTENT_MODEL, true);
       nsAutoMutationBatch mb(oldParent, true, true);
       oldParent->RemoveChildAt(removeIndex, true);
       if (nsAutoMutationBatch::GetCurrentBatch() == &mb) {
@@ -4296,6 +4306,98 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
           nodeToInsertBefore = aRefChild->GetNextSibling();
         } else {
           nodeToInsertBefore = aRefChild;
+        }
+      }
+    }
+  } else if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    // Make sure to remove all the fragment's kids.  We need to do this before
+    // we start inserting anything, so we will run out XBL destructors and
+    // binding teardown (GOD, I HATE THESE THINGS) before we insert anything
+    // into the DOM.
+    PRUint32 count = newContent->GetChildCount();
+
+    fragChildren.construct();
+
+    // Copy the children into a separate array to avoid having to deal with
+    // mutations to the fragment later on here.
+    fragChildren.ref().SetCapacity(count);
+    for (nsIContent* child = newContent->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      NS_ASSERTION(child->GetCurrentDoc() == nsnull,
+                   "How did we get a child with a current doc?");
+      fragChildren.ref().AppendElement(child);
+    }
+
+    // Hold a strong ref to nodeToInsertBefore across the removals
+    nsCOMPtr<nsINode> kungFuDeathGrip = nodeToInsertBefore;
+
+    nsMutationGuard guard;
+
+    // Scope for the mutation batch and scriptblocker, so they go away
+    // while kungFuDeathGrip is still alive.
+    {
+      mozAutoDocUpdate batch(newContent->GetCurrentDoc(),
+                             UPDATE_CONTENT_MODEL, true);
+      nsAutoMutationBatch mb(newContent, false, true);
+
+      for (PRUint32 i = count; i > 0;) {
+        newContent->RemoveChildAt(--i, true);
+      }
+    }
+
+    // We expect |count| removals
+    if (guard.Mutated(count)) {
+      // XBL destructors, yuck.
+      
+      // Verify that nodeToInsertBefore, if non-null, is still our child.  If
+      // it's not, there's no way we can do this insert sanely; just bail out.
+      if (nodeToInsertBefore && nodeToInsertBefore->GetParent() != this) {
+        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      }
+
+      // Verify that all the things in fragChildren have no parent.
+      for (PRUint32 i = 0; i < count; ++i) {
+        if (fragChildren.ref().ElementAt(i)->GetParent()) {
+          return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+        }
+      }
+
+      // Note that unlike the single-element case above, none of our kids can
+      // be aRefChild, so we can always pass through aReplace in the
+      // IsAllowedAsChild checks below and don't have to worry about whether
+      // recomputing nodeToInsertBefore is OK.
+
+      // Verify that our aRefChild is still sensible
+      if (aRefChild && aRefChild->GetParent() != this) {
+        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+      }
+
+      // Recompute nodeToInsertBefore, just in case.
+      if (aReplace) {
+        nodeToInsertBefore = aRefChild->GetNextSibling();
+      } else {
+        nodeToInsertBefore = aRefChild;
+      }      
+
+      // And verify that newContent is still allowed as our child.  Sadly, we
+      // need to reimplement the relevant part of IsAllowedAsChild() because
+      // now our nodes are in an array and all.  If you change this code,
+      // change the code there.
+      if (IsNodeOfType(nsINode::eDOCUMENT)) {
+        bool sawElement = false;
+        for (PRUint32 i = 0; i < count; ++i) {
+          nsIContent* child = fragChildren.ref().ElementAt(i);
+          if (child->IsElement()) {
+            if (sawElement) {
+              // No good
+              return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+            }
+            sawElement = true;
+          }
+          if (!IsAllowedAsChild(child, this, aReplace, aRefChild)) {
+            return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+          }
         }
       }
     }
@@ -4349,34 +4451,13 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
 
   /*
    * Check if we're inserting a document fragment. If we are, we need
-   * to remove the children of the document fragment and add them
-   * individually (i.e. we don't add the actual document fragment).
+   * to actually add its children individually (i.e. we don't add the
+   * actual document fragment).
    */
   if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
-    PRUint32 count = newContent->GetChildCount();
-
+    PRUint32 count = fragChildren.ref().Length();
     if (!count) {
       return NS_OK;
-    }
-
-    // Copy the children into a separate array to avoid having to deal with
-    // mutations to the fragment while we're inserting.
-    nsAutoTArray<nsCOMPtr<nsIContent>, 50> fragChildren;
-    fragChildren.SetCapacity(count);
-    for (nsIContent* child = newContent->GetFirstChild();
-         child;
-         child = child->GetNextSibling()) {
-      NS_ASSERTION(child->GetCurrentDoc() == nsnull,
-                   "How did we get a child with a current doc?");
-      fragChildren.AppendElement(child);
-    }
-
-    // Remove the children from the fragment.
-    {
-      nsAutoMutationBatch mb(newContent, false, true);
-      for (PRUint32 i = count; i > 0;) {
-        newContent->RemoveChildAt(--i, true);
-      }
     }
 
     if (!aReplace) {
@@ -4392,14 +4473,14 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     bool appending =
       !IsNodeOfType(eDOCUMENT) && PRUint32(insPos) == GetChildCount();
     PRInt32 firstInsPos = insPos;
-    nsIContent* firstInsertedContent = fragChildren[0];
+    nsIContent* firstInsertedContent = fragChildren.ref().ElementAt(0);
 
     // Iterate through the fragment's children, and insert them in the new
     // parent
     for (PRUint32 i = 0; i < count; ++i, ++insPos) {
       // XXXbz how come no reparenting here?  That seems odd...
       // Insert the child.
-      res = InsertChildAt(fragChildren[i], insPos, !appending);
+      res = InsertChildAt(fragChildren.ref().ElementAt(i), insPos, !appending);
       if (NS_FAILED(res)) {
         // Make sure to notify on any children that we did succeed to insert
         if (appending && i != 0) {
@@ -4425,7 +4506,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       // Optimize for the case when there are no listeners
       if (nsContentUtils::
             HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-        nsGenericElement::FireNodeInserted(doc, this, fragChildren);
+        nsGenericElement::FireNodeInserted(doc, this, fragChildren.ref());
       }
     }
   }

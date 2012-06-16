@@ -1157,12 +1157,22 @@ abstract public class GeckoApp
                 accEvent.setEnabled(message.optBoolean("enabled", true));
                 accEvent.setChecked(message.optBoolean("checked"));
                 accEvent.setPassword(message.optBoolean("password"));
-                accEvent.setAddedCount(message.optInt("addedCount"));
-                accEvent.setRemovedCount(message.optInt("removedCount"));
-                accEvent.setFromIndex(message.optInt("fromIndex"));
-                accEvent.setItemCount(message.optInt("itemCount"));
-                accEvent.setCurrentItemIndex(message.optInt("currentItemIndex"));
+                accEvent.setAddedCount(message.optInt("addedCount", -1));
+                accEvent.setRemovedCount(message.optInt("removedCount", -1));
+                accEvent.setFromIndex(message.optInt("fromIndex", -1));
+                accEvent.setItemCount(message.optInt("itemCount", -1));
+                accEvent.setCurrentItemIndex(message.optInt("currentItemIndex", -1));
                 accEvent.setBeforeText(message.optString("beforeText"));
+                if (Build.VERSION.SDK_INT >= 14) { // Build.VERSION_CODES.ICE_CREAM_SANDWICH
+                    accEvent.setToIndex(message.optInt("toIndex", -1));
+                    accEvent.setScrollable(message.optBoolean("scrollable"));
+                    accEvent.setScrollX(message.optInt("scrollX", -1));
+                    accEvent.setScrollY(message.optInt("scrollY", -1));
+                }
+                if (Build.VERSION.SDK_INT >= 15) { // Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1
+                    AccessibilityCompat.setMaxScrollX(accEvent, message.optInt("maxScrollX", -1));
+                    AccessibilityCompat.setMaxScrollY(accEvent, message.optInt("maxScrollY", -1));
+                }
 
                 mMainHandler.post(new Runnable() {
                     public void run() {
@@ -1721,6 +1731,8 @@ abstract public class GeckoApp
                 mProfile = GeckoProfile.get(this, m.group(1));
             }
         }
+
+        BrowserDB.initialize(getProfile().getName());
 
         if (ACTION_UPDATE.equals(action) || args != null && args.contains("-alert update-app")) {
             Log.i(LOGTAG,"onCreate: Update request");
@@ -3113,5 +3125,46 @@ abstract public class GeckoApp
             }
         }
         return false;
+    }
+
+    // SDK version 15 accessibility methods retrieved through reflection.
+    private static class AccessibilityCompat {
+        private static boolean mInitialized = false;
+        private static Method mAccessibilityEvent_setMaxScrollX = null;
+        private static Method mAccessibilityEvent_setMaxScrollY = null;
+
+        private static void initialize () {
+            try {
+                mAccessibilityEvent_setMaxScrollX =
+                    AccessibilityEvent.class.getMethod("setMaxScrollX", int.class);
+                mAccessibilityEvent_setMaxScrollY =
+                    AccessibilityEvent.class.getMethod("setMaxScrollY", int.class);
+            } catch (NoSuchMethodException e) {
+                Log.e(LOGTAG, "Error initializing AccessibilityCompat: " + e);
+            }
+            mInitialized = true;
+        }
+
+        public static void setMaxScrollX (AccessibilityEvent event, int maxScrollX) {
+            if (!mInitialized)
+                initialize();
+            try {
+                if (mAccessibilityEvent_setMaxScrollX != null)
+                    mAccessibilityEvent_setMaxScrollX.invoke(event, maxScrollX);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error invoking AccessibilityEvent.setMaxScrollX: " + e);
+            }
+        }
+
+        public static void setMaxScrollY (AccessibilityEvent event, int maxScrollY) {
+            if (!mInitialized)
+                initialize();
+            try {
+                if (mAccessibilityEvent_setMaxScrollY != null)
+                    mAccessibilityEvent_setMaxScrollY.invoke(event, maxScrollY);
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error invoking AccessibilityEvent.setMaxScrollY: " + e);
+            }
+        }
     }
 }

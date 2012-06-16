@@ -1149,7 +1149,7 @@ function buildDownloadList(aForceBuild)
 
   // Take a quick break before we actually start building the list
   gBuilder = setTimeout(function() {
-    // Start building the list and select the first item
+    // Start building the list
     stepListBuilder(1);
 
     // We just tried to add a single item, so we probably need to enable

@@ -211,47 +211,19 @@ struct nsAlternativeCharCode; // defined in nsGUIEvent.h
 struct nsFakeCharMessage {
   UINT mCharCode;
   UINT mScanCode;
+  bool mIsDeadKey;
 
   MSG GetCharMessage(HWND aWnd)
   {
     MSG msg;
     msg.hwnd = aWnd;
-    msg.message = WM_CHAR;
+    msg.message = mIsDeadKey ? WM_DEADCHAR : WM_CHAR;
     msg.wParam = static_cast<WPARAM>(mCharCode);
     msg.lParam = static_cast<LPARAM>(mScanCode);
     msg.time = 0;
     msg.pt.x = msg.pt.y = 0;
     return msg;
   }
-};
-
-// Used in char processing
-struct nsModifierKeyState {
-  bool mIsShiftDown;
-  bool mIsControlDown;
-  bool mIsAltDown;
-  bool mIsWinDown;
-
-  bool mIsCapsLocked;
-  bool mIsNumLocked;
-  bool mIsScrollLocked;
-
-  nsModifierKeyState()
-  {
-    Update();
-  }
-  nsModifierKeyState(bool aIsShiftDown, bool aIsControlDown,
-                     bool aIsAltDown)
-  {
-    Update();
-    mIsShiftDown = aIsShiftDown;
-    mIsControlDown = aIsControlDown;
-    mIsAltDown = aIsAltDown;
-  }
-
-  void Update();
-
-  void InitInputEvent(nsInputEvent& aInputEvent) const;
 };
 
 // Used for synthesizing events

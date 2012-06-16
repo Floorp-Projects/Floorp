@@ -317,6 +317,9 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
   }
 
   if (renderMode != SVGAutoRenderState::NORMAL) {
+    NS_ABORT_IF_FALSE(renderMode == SVGAutoRenderState::CLIP ||
+                      renderMode == SVGAutoRenderState::CLIP_MASK,
+                      "Unknown render mode");
     gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
     SetupGlobalTransform(gfx);
 

@@ -62,7 +62,7 @@ class HashTableEntry {
         JS_ASSERT(isLive()); keyHash |= collisionBit;
     }
     void unsetCollision()         { keyHash &= ~sCollisionBit; }
-    bool hasCollision() const     { JS_ASSERT(isLive()); return keyHash & sCollisionBit; }
+    bool hasCollision() const     { return keyHash & sCollisionBit; }
     bool matchHash(HashNumber hn) { return (keyHash & ~sCollisionBit) == hn; }
     HashNumber getKeyHash() const { JS_ASSERT(!hasCollision()); return keyHash; }
 };
@@ -185,7 +185,7 @@ class HashTable : private AllocPolicy
         friend class HashTable;
 
         HashTable &table;
-        bool added;
+        bool rekeyed;
         bool removed;
 
         /* Not copyable. */
@@ -194,7 +194,7 @@ class HashTable : private AllocPolicy
 
       public:
         template<class Map> explicit
-        Enum(Map &map) : Range(map.all()), table(map.impl), added(false), removed(false) {}
+        Enum(Map &map) : Range(map.all()), table(map.impl), rekeyed(false), removed(false) {}
 
         /*
          * Removes the |front()| element from the table, leaving |front()|
@@ -224,7 +224,7 @@ class HashTable : private AllocPolicy
             HashPolicy::setKey(t, const_cast<Key &>(k));
             table.remove(*this->cur);
             table.putNewInfallible(l, t);
-            added = true;
+            rekeyed = true;
             this->validEntry = false;
         }
 
@@ -234,27 +234,10 @@ class HashTable : private AllocPolicy
 
         /* Potentially rehashes the table. */
         ~Enum() {
-            JS_ASSERT(!added);
+            if (rekeyed)
+                table.checkOverRemoved();
             if (removed)
                 table.checkUnderloaded();
-        }
-
-        /*
-         * Can be used to end the enumeration before the destructor. Unlike
-         * |~Enum()|, this can report OOM on resize, so must be called if
-         * |rekeyFront()| is used during enumeration.
-         */
-        bool endEnumeration() {
-            if (added) {
-                added = false;
-                if (table.checkOverloaded() == RehashFailed)
-                    return false;
-            }
-            if (removed) {
-                removed = false;
-                table.checkUnderloaded();
-            }
-            return true;
         }
     };
 
@@ -281,6 +264,7 @@ class HashTable : private AllocPolicy
         uint32_t        grows;          /* table expansions */
         uint32_t        shrinks;        /* table contractions */
         uint32_t        compresses;     /* table compressions */
+        uint32_t        rehashes;       /* tombstone decontaminations */
     } stats;
 #   define METER(x) x
 #else
@@ -601,6 +585,16 @@ class HashTable : private AllocPolicy
         return changeTableSize(deltaLog2);
     }
 
+    /* Infallibly rehash the table if we are overloaded with removals. */
+    void checkOverRemoved()
+    {
+        if (overloaded()) {
+            METER(stats.rehashes++);
+            rehashTable();
+            JS_ASSERT(!overloaded());
+        }
+    }
+
     void remove(Entry &e)
     {
         JS_ASSERT(table);
@@ -623,6 +617,52 @@ class HashTable : private AllocPolicy
             METER(stats.shrinks++);
             (void) changeTableSize(-1);
         }
+    }
+
+    /*
+     * This is identical to changeTableSize(currentSize), but without requiring
+     * a second table.  We do this by recycling the collision bits to tell us if
+     * the element is already inserted or still waiting to be inserted.  Since
+     * already-inserted elements win any conflicts, we get the same table as we
+     * would have gotten through random insertion order.
+     */
+    void rehashTable()
+    {
+        removedCount = 0;
+        for (size_t i = 0; i < capacity(); ++i)
+            table[i].unsetCollision();
+
+        for (size_t i = 0; i < capacity();) {
+            Entry *src = &table[i];
+
+            if (!src->isLive() || src->hasCollision()) {
+                ++i;
+                continue;
+            }
+
+            HashNumber keyHash = src->getKeyHash();
+            HashNumber h1 = hash1(keyHash, hashShift);
+            DoubleHash dh = hash2(keyHash, hashShift);
+            Entry *tgt = &table[h1];
+            while (true) {
+                if (!tgt->hasCollision()) {
+                    Swap(*src, *tgt);
+                    tgt->setCollision();
+                    break;
+                }
+
+                h1 = applyDoubleHash(h1, dh);
+                tgt = &table[h1];
+            }
+        }
+
+        /*
+         * TODO: this algorithm leaves collision bits on *all* elements, even if
+         * they are on no collision path. We have the option of setting the
+         * collision bits correctly on a subsequent pass or skipping the rehash
+         * unless we are totally filled with tombstones: benchmark to find out
+         * which approach is best.
+         */
     }
 
   public:
