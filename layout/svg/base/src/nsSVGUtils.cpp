@@ -580,20 +580,20 @@ nsSVGUtils::GetNearestSVGViewport(nsIFrame *aFrame)
 
 nsRect
 nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
-                                            const nsRect &aUnfilteredRect)
+                                            const nsRect &aPreFilterRect)
 {
   NS_ABORT_IF_FALSE(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT,
                     "Called on invalid frame type");
 
   nsSVGFilterFrame *filter = nsSVGEffects::GetFilterFrame(aFrame);
   if (!filter) {
-    return aUnfilteredRect;
+    return aPreFilterRect;
   }
 
   PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  nsIntRect unfilteredRect =
-    aUnfilteredRect.ToOutsidePixels(appUnitsPerDevPixel);
-  nsIntRect rect = filter->GetFilterBBox(aFrame, nsnull, &unfilteredRect);
+  nsIntRect preFilterRect =
+      aPreFilterRect.ToOutsidePixels(appUnitsPerDevPixel);
+  nsIntRect rect = filter->GetPostFilterBounds(aFrame, nsnull, &preFilterRect);
   nsRect r = rect.ToAppUnits(appUnitsPerDevPixel) - aFrame->GetPosition();
   return r;
 }
@@ -1240,7 +1240,8 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
   /* Paint the child */
   if (filterFrame) {
     SVGPaintCallback paintCallback;
-    filterFrame->FilterPaint(aContext, aFrame, &paintCallback, aDirtyRect);
+    filterFrame->PaintFilteredFrame(aContext, aFrame, &paintCallback,
+                                    aDirtyRect);
   } else {
     svgChildFrame->PaintSVG(aContext, aDirtyRect);
   }

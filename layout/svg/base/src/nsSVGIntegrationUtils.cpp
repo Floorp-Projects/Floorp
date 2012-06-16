@@ -100,7 +100,7 @@ nsSVGIntegrationUtils::ComputeFrameEffectsRect(nsIFrame* aFrame,
   // r is relative to user space
   PRUint32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
-  p = filterFrame->GetFilterBBox(firstFrame, &p);
+  p = filterFrame->GetPostFilterBounds(firstFrame, &p);
   r = p.ToAppUnits(appUnitsPerDevPixel);
   // Make it relative to aFrame again
   return r + userSpaceRect.TopLeft() - aFrame->GetOffsetTo(firstFrame);
@@ -137,7 +137,7 @@ nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(nsIFrame* aFrame,
   nsPoint offset = aFrame->GetOffsetTo(firstFrame) - userSpaceRect.TopLeft();
   nsRect r = aInvalidRect + offset;
   nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
-  p = filterFrame->GetInvalidationBBox(firstFrame, p);
+  p = filterFrame->GetPostFilterDirtyArea(firstFrame, p);
   r = p.ToAppUnits(appUnitsPerDevPixel);
   return r - offset;
 }
@@ -160,7 +160,7 @@ nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
   nsPoint offset = aFrame->GetOffsetTo(firstFrame) - userSpaceRect.TopLeft();
   nsRect r = aDamageRect + offset;
   nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
-  p = filterFrame->GetSourceForInvalidArea(firstFrame, p);
+  p = filterFrame->GetPreFilterNeededArea(firstFrame, p);
   r = p.ToAppUnits(appUnitsPerDevPixel);
   return r - offset;
 }
@@ -279,10 +279,11 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   /* Paint the child */
   if (filterFrame) {
-    RegularFramePaintCallback paint(aBuilder, aInnerList, aEffectsFrame,
-                                    userSpaceRect.TopLeft());
-    nsIntRect r = (aDirtyRect - userSpaceRect.TopLeft()).ToOutsidePixels(appUnitsPerDevPixel);
-    filterFrame->FilterPaint(aCtx, aEffectsFrame, &paint, &r);
+    RegularFramePaintCallback callback(aBuilder, aInnerList, aEffectsFrame,
+                                       userSpaceRect.TopLeft());
+    nsIntRect dirtyRect = (aDirtyRect - userSpaceRect.TopLeft())
+                            .ToOutsidePixels(appUnitsPerDevPixel);
+    filterFrame->PaintFilteredFrame(aCtx, aEffectsFrame, &callback, &dirtyRect);
   } else {
     gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
     aInnerList->PaintForFrame(aBuilder, aCtx, aEffectsFrame,
