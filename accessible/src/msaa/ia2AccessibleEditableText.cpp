@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CAccessibleEditableText.h"
+#include "ia2AccessibleEditableText.h"
 
 #include "AccessibleEditableText_i.c"
-#include "HyperTextAccessible.h"
+#include "HyperTextAccessibleWrap.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -16,7 +16,7 @@
 // IUnknown
 
 STDMETHODIMP
-CAccessibleEditableText::QueryInterface(REFIID iid, void** ppv)
+ia2AccessibleEditableText::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
 
@@ -35,10 +35,10 @@ CAccessibleEditableText::QueryInterface(REFIID iid, void** ppv)
 // IAccessibleEditableText
 
 STDMETHODIMP
-CAccessibleEditableText::copyText(long aStartOffset, long aEndOffset)
+ia2AccessibleEditableText::copyText(long aStartOffset, long aEndOffset)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -50,10 +50,10 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleEditableText::deleteText(long aStartOffset, long aEndOffset)
+ia2AccessibleEditableText::deleteText(long aStartOffset, long aEndOffset)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -65,10 +65,10 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleEditableText::insertText(long aOffset, BSTR *aText)
+ia2AccessibleEditableText::insertText(long aOffset, BSTR *aText)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -83,10 +83,10 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleEditableText::cutText(long aStartOffset, long aEndOffset)
+ia2AccessibleEditableText::cutText(long aStartOffset, long aEndOffset)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -98,10 +98,10 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleEditableText::pasteText(long aOffset)
+ia2AccessibleEditableText::pasteText(long aOffset)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -113,11 +113,11 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleEditableText::replaceText(long aStartOffset, long aEndOffset,
-                                     BSTR *aText)
+ia2AccessibleEditableText::replaceText(long aStartOffset, long aEndOffset,
+                                       BSTR *aText)
 {
 __try {
-  nsRefPtr<HyperTextAccessible> textAcc(do_QueryObject(this));
+  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -136,8 +136,8 @@ __try {
 }
 
 STDMETHODIMP
-CAccessibleEditableText::setAttributes(long aStartOffset, long aEndOffset,
-                                       BSTR *aAttributes)
+ia2AccessibleEditableText::setAttributes(long aStartOffset, long aEndOffset,
+                                         BSTR *aAttributes)
 {
 __try {
 
