@@ -1048,8 +1048,6 @@ CodeGeneratorARM::visitUnbox(LUnbox *unbox)
             if (!bailoutIf(Assembler::NotEqual, unbox->snapshot()))
             return false;
         }
-
-        masm.move32(Imm32(0), ToRegister(unbox->output()));
         return true;
     }
 
