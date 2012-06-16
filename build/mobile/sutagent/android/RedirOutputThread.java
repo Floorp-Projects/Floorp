@@ -20,6 +20,7 @@ public class RedirOutputThread extends Thread
 
     public RedirOutputThread(Process pProc, OutputStream out)
         {
+        super("RedirOutputThread");
         if (pProc != null)
             {
             this.pProc = pProc;
@@ -50,6 +51,13 @@ public class RedirOutputThread extends Thread
             {
             try
                 {
+                // If there's no output to collect, sleep for a while
+                // rather than checking again immediately, to avoid 
+                // using up cpu capacity in a tight loop.
+                if (sutOut.available() == 0 && sutErr.available() == 0)
+                    {
+                    Thread.sleep(50);
+                    }
                 if ((nBytesOut = sutOut.available()) > 0)
                     {
                     if (nBytesOut > buffer.length)
@@ -107,6 +115,10 @@ public class RedirOutputThread extends Thread
             catch (java.lang.IllegalArgumentException e)
                 {
                 // Bug 743766: InputStream.available() unexpectedly throws this sometimes
+                e.printStackTrace();
+                }
+            catch (InterruptedException e) 
+                {
                 e.printStackTrace();
                 }
             }

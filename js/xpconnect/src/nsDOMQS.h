@@ -13,12 +13,7 @@
 #include "nsHTMLVideoElement.h"
 #include "nsHTMLDocument.h"
 #include "nsICSSDeclaration.h"
-#include "nsIDOMWebGLRenderingContext.h"
 #include "nsSVGStylableElement.h"
-#include "WebGLContext.h"
-// WebGLContext pulls in windows.h, which defines random crap, so nuke
-// those defines.
-#include "qsWinUndefs.h"
 
 #define DEFINE_UNWRAP_CAST(_interface, _base, _bit)                           \
 template <>                                                                   \

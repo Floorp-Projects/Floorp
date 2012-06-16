@@ -245,7 +245,7 @@ function openWindow(parent, url, target, features, args, noExternalArgs) {
   }
 
   // Pass these as null to ensure that we always trigger the "single URL"
-  // behavior in browser.js's BrowserStartup (which handles the window
+  // behavior in browser.js's gBrowserInit.onLoad (which handles the window
   // arguments)
   argArray.AppendElement(null); // charset
   argArray.AppendElement(null); // referer

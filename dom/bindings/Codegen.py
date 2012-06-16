@@ -121,7 +121,7 @@ DOMJSClass Class = {
   %s
 };
 """ % (self.descriptor.interface.identifier.name,
-       ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.workers else 'JS_PropertyStub',
+       ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.workers and self.descriptor.wrapperCache else 'JS_PropertyStub',
        FINALIZE_HOOK_NAME, traceHook, prototypeChainString,
        str(self.descriptor.nativeIsISupports).lower(),
        nativeHooks)
@@ -518,20 +518,19 @@ class CGClassFinalizeHook(CGAbstractClassHook):
             return """  if (self) {
     self->%s(%s);
   }""" % (self.name, self.args[0].name)
+        clearWrapper = "self->ClearWrapper();\n  " if self.descriptor.wrapperCache else ""
         if self.descriptor.workers:
             release = "self->Release();"
         else:
             assert self.descriptor.nativeIsISupports
-            release = """
-  XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
+            release = """XPCJSRuntime *rt = nsXPConnect::GetRuntimeInstance();
   if (rt) {
     rt->DeferredRelease(reinterpret_cast<nsISupports*>(self));
   } else {
     NS_RELEASE(self);
   }"""
         return """
-  self->ClearWrapper();
-  %s""" % (release)
+  %s%s""" % (clearWrapper, release)
 
 class CGClassTraceHook(CGAbstractClassHook):
     """
@@ -1212,6 +1211,32 @@ class CGWrapMethod(CGAbstractMethod):
 
   return obj;""" % (CheckPref(self.descriptor, "global", "*aTriedToWrap", "NULL", "aObject"))
 
+class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
+    def __init__(self, descriptor):
+        # XXX can we wrap if we don't have an interface prototype object?
+        assert descriptor.interface.hasInterfacePrototypeObject()
+        args = [Argument('JSContext*', 'aCx'), Argument('JSObject*', 'aScope'),
+                Argument(descriptor.nativeType + '*', 'aObject')]
+        CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
+
+    def definition_body(self):
+        return """
+  JSObject* global = JS_GetGlobalForObject(aCx, aScope);
+  JSObject* proto = GetProtoObject(aCx, global, global);
+  if (!proto) {
+    return NULL;
+  }
+
+  JSObject* obj = JS_NewObject(aCx, &Class.mBase, proto, global);
+  if (!obj) {
+    return NULL;
+  }
+
+  js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
+  NS_ADDREF(aObject);
+
+  return obj;"""
+
 builtinNames = {
     IDLType.Tags.bool: 'bool',
     IDLType.Tags.int8: 'int8_t',
@@ -1506,6 +1531,11 @@ for (uint32_t i = 0; i < length; ++i) {
 
         templateBody = ""
         if descriptor.castable:
+            if descriptor.prefable:
+                raise TypeError("We don't support prefable castable object "
+                                "arguments (like %s), because we don't know "
+                                "how to handle them being preffed off" %
+                                descriptor.interface.identifier.name)
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                         descriptor,
@@ -1923,7 +1953,8 @@ class CGArgumentConverter(CGThing):
             self.replacementVariables,
             self.argcAndIndex).define()
 
-def getWrapTemplateForType(type, descriptorProvider, result, successCode):
+def getWrapTemplateForType(type, descriptorProvider, result, successCode,
+                           isCreator):
     """
     Reflect a C++ value stored in "result", of IDL type "type" into JS.  The
     "successCode" is the code to run once we have successfully done the
@@ -1981,7 +2012,8 @@ if (%s.IsNull()) {
 }
 %s""" % (result, CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define(),
          getWrapTemplateForType(type.inner, descriptorProvider,
-                                "%s.Value()" % result, successCode))
+                                "%s.Value()" % result, successCode,
+                                isCreator))
 
         # Now do non-nullable sequences.  We use setting the element
         # in the array as our succcess code because when we succeed in
@@ -1994,7 +2026,8 @@ if (%s.IsNull()) {
                                 "  return false;\n"
                                 "}"),
                 'jsvalRef': "tmp",
-                'jsvalPtr': "&tmp"
+                'jsvalPtr': "&tmp",
+                'isCreator': isCreator
                 }
             )
         innerTemplate = CGIndenter(CGGeneric(innerTemplate)).define()
@@ -2018,7 +2051,13 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             wrappingCode = ""
         if descriptor.castable and not type.unroll().inner.isExternal():
-            wrap = "WrapNewBindingObject(cx, ${obj}, %s, ${jsvalPtr})" % result
+            if descriptor.wrapperCache:
+                wrapMethod = "WrapNewBindingObject"
+            else:
+                if not isCreator:
+                    raise MethodNotCreatorError(descriptor.interface.identifier.name)
+                wrapMethod = "WrapNewBindingNonWrapperCachedObject"
+            wrap = "%s(cx, ${obj}, %s, ${jsvalPtr})" % (wrapMethod, result)
             # We don't support prefable stuff in workers.
             assert(not descriptor.prefable or not descriptor.workers)
             if not descriptor.prefable:
@@ -2088,7 +2127,8 @@ if (!%(resultStr)s) {
                 CGIndenter(CGGeneric(setValue("JSVAL_NULL"))).define() + "\n" +
                 "}\n" +
                 getWrapTemplateForType(type.inner, descriptorProvider,
-                                       "%s.Value()" % result, successCode))
+                                       "%s.Value()" % result, successCode,
+                                       isCreator))
     
     tag = type.tag()
     
@@ -2129,10 +2169,13 @@ def wrapForType(type, descriptorProvider, templateValues):
       * 'successCode' (optional): the code to run once we have successfully done
                                   the conversion, if not supplied 'return true;'
                                   will be used as the code
+      * 'isCreator' (optional): If true, we're wrapping for the return value of
+                                a [Creator] method.  Assumed false if not set.
     """
     wrap = getWrapTemplateForType(type, descriptorProvider,
                                   templateValues.get('result', 'result'),
-                                  templateValues.get('successCode', None))
+                                  templateValues.get('successCode', None),
+                                  templateValues.get('isCreator', False))
 
     defaultValues = {'obj': 'obj'}
     return string.Template(wrap).substitute(defaultValues, **templateValues)
@@ -2261,6 +2304,10 @@ class CGCallGenerator(CGThing):
     def define(self):
         return self.cgRoot.define()
 
+class MethodNotCreatorError(Exception):
+    def __init__(self, typename):
+        self.typename = typename
+
 class CGPerSignatureCall(CGThing):
     """
     This class handles the guts of generating code for a particular
@@ -2324,9 +2371,23 @@ class CGPerSignatureCall(CGThing):
         return not 'infallible' in self.extendedAttributes
 
     def wrap_return_value(self):
-        resultTemplateValues = {'jsvalRef': '*vp', 'jsvalPtr': 'vp'}
-        return wrapForType(self.returnType, self.descriptor,
-                           resultTemplateValues)
+        isCreator = self.idlNode.getExtendedAttribute("Creator") is not None
+        if isCreator:
+            # We better be returning addrefed things!
+            assert isResultAlreadyAddRefed(self.descriptor,
+                                           self.extendedAttributes)
+
+        resultTemplateValues = { 'jsvalRef': '*vp', 'jsvalPtr': 'vp',
+                                 'isCreator': isCreator}
+        try:
+            return wrapForType(self.returnType, self.descriptor,
+                               resultTemplateValues)
+        except MethodNotCreatorError, err:
+            assert not isCreator
+            raise TypeError("%s being returned from non-creator method or property %s.%s" %
+                            (err.typename,
+                             self.descriptor.interface.identifier.name,
+                             self.idlNode.identifier.name))
 
     def getErrorReport(self):
         return 'return ThrowMethodFailedWithDetails<%s>(cx, rv, "%s", "%s");'\
@@ -2842,7 +2903,7 @@ def getEnumValueName(value):
     if not re.match("^[a-z_]+$", value):
         raise SyntaxError('Enum value "' + value + '" contains characters '
                           'outside [a-z_]')
-    return value
+    return MakeNativeName(value)
 
 class CGEnum(CGThing):
     def __init__(self, enum):
@@ -2925,8 +2986,7 @@ class ClassMethod(ClassItem):
                          if self.bodyInHeader and self.templateArgs else ''
         args = ', '.join([str(a) for a in self.args])
         if self.bodyInHeader:
-            body = '  ' + self.getBody();
-            body = body.replace('\n', '\n  ').rstrip(' ')
+            body = CGIndenter(CGGeneric(self.getBody())).define()
             body = '\n{\n' + body + '\n}'
         else:
            body = ';'
@@ -2959,8 +3019,7 @@ ${name}(${args})${const}${body}
 
         args = ', '.join([str(a) for a in self.args])
 
-        body = '  ' + self.getBody()
-        body = body.replace('\n', '\n  ').rstrip(' ')
+        body = CGIndenter(CGGeneric(self.getBody())).define()
 
         return string.Template("""${templateClause}${decorators}${returnType}
 ${className}::${name}(${args})${const}
@@ -3105,13 +3164,10 @@ class CGClass(CGThing):
                         result = result + visibility + ':\n'
                         itemCount = 0
                     for member in list:
-                        if itemCount == 0:
-                            result = result + '  '
-                        else:
-                            result = result + separator + '  '
+                        if itemCount != 0:
+                            result = result + separator
                         declaration = member.declare(cgClass)
-                        declaration = declaration.replace('\n', '\n  ')
-                        declaration = declaration.rstrip(' ')
+                        declaration = CGIndenter(CGGeneric(declaration)).define()
                         result = result + declaration
                         itemCount = itemCount + 1
                     lastVisibility = visibility
@@ -3127,9 +3183,8 @@ class CGClass(CGThing):
                 declareMembers(self, memberList, lastVisibility, itemCount,
                                separator)
             if self.indent:
-                memberString = self.indent + memberString
-                memberString = memberString.replace('\n', '\n' + self.indent)
-                memberString = memberString.rstrip(' ')
+                memberString = CGIndenter(CGGeneric(memberString),
+                                          len(self.indent)).define()
             result = result + memberString
 
         result = result + self.indent + '};\n\n'
@@ -3331,7 +3386,7 @@ class CGDescriptor(CGThing):
                              a.isAttr() and not a.readonly])
 
         if descriptor.concrete:
-            if not descriptor.workers:
+            if not descriptor.workers and descriptor.wrapperCache:
                 cgThings.append(CGAddPropertyHook(descriptor))
 
             # Always have a finalize hook, regardless of whether the class wants a
@@ -3375,7 +3430,10 @@ class CGDescriptor(CGThing):
             cgThings.append(CGDefineDOMInterfaceMethod(descriptor))
 
         if descriptor.concrete:
-            cgThings.append(CGWrapMethod(descriptor))
+            if descriptor.wrapperCache:
+                cgThings.append(CGWrapMethod(descriptor))
+            else:
+                cgThings.append(CGWrapNonWrapperCacheMethod(descriptor))
 
         cgThings = CGList(cgThings)
         cgThings = CGWrapper(cgThings, post='\n')

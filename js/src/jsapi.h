@@ -5697,10 +5697,6 @@ JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp);
 
 /************************************************************************/
 
-#ifdef DEBUG
-#define JS_GC_ZEAL 1
-#endif
-
 #ifdef JS_GC_ZEAL
 #define JS_DEFAULT_ZEAL_FREQ 100
 

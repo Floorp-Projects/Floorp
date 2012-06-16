@@ -553,6 +553,11 @@ XULTreeAccessible::InvalidateCache(PRInt32 aRow, PRInt32 aCount)
   if (IsDefunct())
     return;
 
+  if (!mTreeView) {
+    ClearCache(mAccessibleCache);
+    return;
+  }
+
   // Do not invalidate the cache if rows have been inserted.
   if (aCount > 0)
     return;

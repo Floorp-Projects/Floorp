@@ -9,7 +9,7 @@ ifndef MOZ_PROFILE_GENERATE
 ifdef MOZ_SIGN_CMD
 ifeq (WINNT,$(OS_ARCH))
 MOZ_INTERNAL_SIGNING_FORMAT := signcode
-MOZ_EXTERNAL_SIGNING_FORMAT := signcode gpg
+MOZ_EXTERNAL_SIGNING_FORMAT := signcode
 SIGN_INCLUDES := \
   '*.dll' \
   '*.exe' \
@@ -24,11 +24,11 @@ endif # Windows
 
 ifeq (Darwin, $(OS_ARCH))
 MOZ_INTERNAL_SIGNING_FORMAT := dmg
-MOZ_EXTERNAL_SIGNING_FORMAT := gpg
+MOZ_EXTERNAL_SIGNING_FORMAT :=
 endif # Darwin
 
 ifeq (linux-gnu,$(TARGET_OS))
-MOZ_EXTERNAL_SIGNING_FORMAT := gpg
+MOZ_EXTERNAL_SIGNING_FORMAT :=
 endif # Linux
 endif # MOZ_SIGN_CMD
 
