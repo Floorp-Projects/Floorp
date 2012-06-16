@@ -1278,7 +1278,12 @@ GLContext::ChooseGLFormats(ContextFormat& aCF)
     GLFormats formats;
 
     if (aCF.alpha) {
-        formats.texColor = LOCAL_GL_RGBA;
+        if (mIsGLES2 && IsExtensionSupported(EXT_texture_format_BGRA8888)) {
+            formats.texColor = LOCAL_GL_BGRA;
+        } else {
+            formats.texColor = LOCAL_GL_RGBA;
+        }
+
         if (mIsGLES2 && !IsExtensionSupported(OES_rgb8_rgba8)) {
             formats.rbColor = LOCAL_GL_RGBA4;
             aCF.red = aCF.green = aCF.blue = aCF.alpha = 4;
