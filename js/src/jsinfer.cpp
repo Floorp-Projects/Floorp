@@ -3651,15 +3651,21 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_REST: {
         TypeSet *types = script->analysis()->bytecodeTypes(pc);
-        types->addSubset(cx, &pushed[0]);
         if (script->hasGlobal()) {
             TypeObject *rest = TypeScript::InitObject(cx, script, pc, JSProto_Array);
             if (!rest)
                 return false;
             types->addType(cx, Type::ObjectType(rest));
+
+            // Simulate setting a element.
+            TypeSet *propTypes = rest->getProperty(cx, JSID_VOID, true);
+            if (!propTypes)
+                return false;
+            propTypes->addType(cx, Type::UnknownType());
         } else {
             types->addType(cx, Type::UnknownType());
         }
+        types->addSubset(cx, &pushed[0]);
         break;
       }
 
