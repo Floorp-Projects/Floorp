@@ -511,12 +511,8 @@ TypeInferenceOracle::canEnterInlinedFunction(JSFunction *target)
     if (script->analysis()->usesScopeChain())
         return false;
 
-    // Create a watchdog on the type compile info, such as the compiled script
-    // would be discarded when type information of the inlined function will
-    // change.
-    if (types::TypeSet::HasObjectFlags(cx, target->getType(cx), types::OBJECT_FLAG_UNINLINEABLE))
-        return false;
-
+    // TI calls ObjectStateChange to trigger invalidation of the caller.
+    TypeSet::WatchObjectStateChange(cx, target->getType(cx));
     return true;
 }
 
