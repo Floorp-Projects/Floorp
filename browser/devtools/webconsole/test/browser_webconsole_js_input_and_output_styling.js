@@ -22,12 +22,6 @@ function testJSInputAndOutputStyling(hud) {
   jsterm.clearOutput();
   jsterm.execute("2 + 2");
 
-  let jsInputNode = jsterm.outputNode.querySelector(".hud-msg-node");
-  isnot(jsInputNode.textContent.indexOf("2 + 2"), -1,
-        "JS input node contains '2 + 2'");
-  ok(jsInputNode.classList.contains("webconsole-msg-input"),
-     "JS input node is of the CSS class 'webconsole-msg-input'");
-
   waitForSuccess({
     name: "jsterm output is displayed",
     validatorFn: function()
@@ -36,9 +30,16 @@ function testJSInputAndOutputStyling(hud) {
     },
     successFn: function()
     {
-      let node = jsterm.outputNode.querySelector(".webconsole-msg-output");
-      isnot(node.textContent.indexOf("4"), -1,
+      let jsInputNode = jsterm.outputNode.querySelector(".hud-msg-node");
+      isnot(jsInputNode.textContent.indexOf("2 + 2"), -1,
+            "JS input node contains '2 + 2'");
+      ok(jsInputNode.classList.contains("webconsole-msg-input"),
+         "JS input node is of the CSS class 'webconsole-msg-input'");
+
+      let output = jsterm.outputNode.querySelector(".webconsole-msg-output");
+      isnot(output.textContent.indexOf("4"), -1,
             "JS output node contains '4'");
+
       finishTest();
     },
     failureFn: finishTest,

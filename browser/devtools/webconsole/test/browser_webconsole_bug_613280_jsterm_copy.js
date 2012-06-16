@@ -10,15 +10,24 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 613280";
 
 function test() {
   addTab(TEST_URI);
-  browser.addEventListener("load", tabLoaded, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    openConsole(null, function(HUD) {
+      content.console.log("foobarBazBug613280");
+      waitForSuccess({
+        name: "a message is displayed",
+        validatorFn: function()
+        {
+          return HUD.outputNode.itemCount > 0;
+        },
+        successFn: performTest.bind(null, HUD),
+        failureFn: finishTest,
+      });
+    });
+  }, true);
 }
 
-function tabLoaded() {
-  browser.removeEventListener("load", tabLoaded, true);
-  openConsole();
-
-  let hudId = HUDService.getHudIdByWindow(content);
-  let HUD = HUDService.hudReferences[hudId];
+function performTest(HUD) {
   let input = HUD.jsterm.inputNode;
   let selection = getSelection();
   let contentSelection = browser.contentWindow.wrappedJSObject.getSelection();
@@ -63,6 +72,8 @@ function tabLoaded() {
   controller = top.document.commandDispatcher.
                getControllerForCommand("cmd_copy");
   is(controller.isCommandEnabled("cmd_copy"), true, "cmd_copy is enabled");
+
+  ok(HUD.outputNode.selectedItem, "we have a selected message");
 
   waitForClipboard(getExpectedClipboardText(HUD.outputNode.selectedItem),
     clipboard_setup, clipboard_copy_done, clipboard_copy_done);
