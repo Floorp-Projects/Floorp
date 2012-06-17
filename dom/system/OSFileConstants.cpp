@@ -9,9 +9,9 @@
 #include "unistd.h"
 #endif // defined(XP_UNIX)
 
-#if defined(XP_MACOSX) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#if defined(XP_MACOSX)
 #include "copyfile.h"
-#endif // defined(XP_MAC) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#endif // defined(XP_MACOSX)
 
 #if defined(XP_WIN)
 #include <windows.h>
