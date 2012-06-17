@@ -365,15 +365,10 @@ public:
 
     return NS_OK;
   }
-  NS_IMETHOD GetScriptableFlags(PRUint32 *aFlags)
+  virtual PRUint32 GetScriptableFlags()
   {
-    PRUint32 flags;
-    nsresult rv = nsDOMGenericSH::GetScriptableFlags(&flags);
-    if (NS_SUCCEEDED(rv)) {
-      *aFlags = flags | nsIXPCScriptable::WANT_POSTCREATE;
-    }
-
-    return rv;
+    return nsDOMGenericSH::GetScriptableFlags() |
+           nsIXPCScriptable::WANT_POSTCREATE;
   }
 #endif
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,

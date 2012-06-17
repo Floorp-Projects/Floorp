@@ -93,11 +93,7 @@ TestRunner._checkForHangs = function() {
     if ("SimpleTest" in win) {
       win.SimpleTest.ok(false, msg);
     } else if ("W3CTest" in win) {
-      win.W3CTest.report({
-        "message": msg,
-        "result": false,
-        "todo": false
-      });
+      win.W3CTest.logFailure(msg);
     }
   }
 
@@ -105,7 +101,7 @@ TestRunner._checkForHangs = function() {
     if ("SimpleTest" in win) {
       win.SimpleTest.finish();
     } else if ("W3CTest" in win) {
-      win.W3CTest.kill();
+      win.W3CTest.timeout();
     }
   }
 

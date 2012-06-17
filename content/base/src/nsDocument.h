@@ -682,8 +682,6 @@ public:
 
   // nsINode
   virtual bool IsNodeOfType(PRUint32 aFlags) const;
-  virtual PRUint16 NodeType();
-  virtual void NodeName(nsAString& aNodeName);
   virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
   virtual nsIContent * const * GetChildArray(PRUint32* aChildCount) const;
   virtual PRInt32 IndexOf(nsINode* aPossibleChild) const;
