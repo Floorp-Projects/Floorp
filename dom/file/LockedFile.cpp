@@ -533,7 +533,7 @@ LockedFile::SetLocation(JSContext* aCx,
     return NS_OK;
   }
 
-  PRUint64 location;
+  uint64_t location;
   if (!xpc::ValueToUint64(aCx, aLocation, &location)) {
     return NS_ERROR_TYPE_ERR;
   }
