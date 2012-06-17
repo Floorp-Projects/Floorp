@@ -1,0 +1,13 @@
+{
+  "Should throw TypeError for function \"function () {\n    localStorage.key();\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    localStorage.getItem();\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    localStorage.setItem();\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    localStorage.setItem(\"a\");\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    localStorage.removeItem();\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    sessionStorage.key();\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    sessionStorage.getItem();\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    sessionStorage.setItem();\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    sessionStorage.setItem(\"a\");\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    sessionStorage.removeItem();\n}\".": true,
+  "Should throw TypeError for function \"function () {\n    new StorageEvent;\n}\".": true
+}
