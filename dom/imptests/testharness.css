@@ -2,6 +2,23 @@ html {
     font-family:DejaVu Sans, Bitstream Vera Sans, Arial, Sans;
 }
 
+#log .warning,
+#log .warning a {
+  color: black;
+  background: yellow;
+}
+
+#log .error,
+#log .error a {
+  color: white;
+  background: red;
+}
+
+#log pre {
+  border: 1px solid black;
+  padding: 1em;
+}
+
 section#summary {
     margin-bottom:1em;
 }
@@ -20,6 +37,11 @@ table#results td:first-child {
 table#results th:last-child,
 table#results td:last-child {
     width:50%;
+}
+
+table#results.assertions th:last-child,
+table#results.assertions td:last-child {
+    width:35%;
 }
 
 table#results th {
