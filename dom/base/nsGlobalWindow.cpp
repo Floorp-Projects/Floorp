@@ -2056,9 +2056,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                            html_doc);
   }
 
-  if (aDocument) {
-    aDocument->SetScriptGlobalObject(newInnerWindow);
-  }
+  aDocument->SetScriptGlobalObject(newInnerWindow);
 
   if (!aState) {
     if (reUseInnerWindow) {
@@ -2074,8 +2072,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
       }
     } else {
-      rv = newInnerWindow->InnerSetNewDocument(aDocument);
-      NS_ENSURE_SUCCESS(rv, rv);
+      newInnerWindow->InnerSetNewDocument(aDocument);
 
       // Initialize DOM classes etc on the inner window.
       rv = mContext->InitClasses(newInnerWindow->mJSObject);
@@ -2155,14 +2152,14 @@ nsGlobalWindow::ClearStatus()
   SetDefaultStatus(EmptyString());
 }
 
-nsresult
+void
 nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 {
   NS_PRECONDITION(IsInnerWindow(), "Must only be called on inner windows");
+  MOZ_ASSERT(aDocument);
 
 #ifdef PR_LOGGING
-  if (aDocument && gDOMLeakPRLog &&
-      PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+  if (gDOMLeakPRLog && PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
     nsIURI *uri = aDocument->GetDocumentURI();
     nsCAutoString spec;
     if (uri)
@@ -2186,8 +2183,6 @@ nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 
   // Clear our mutation bitfield.
   mMutationBits = 0;
-
-  return NS_OK;
 }
 
 void
