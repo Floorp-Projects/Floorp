@@ -71,6 +71,7 @@ public class BookmarksTab extends AwesomeBarTab {
             mView = new ListView(mContext, null, R.style.AwesomeBarList);
             ((Activity)mContext).registerForContextMenu(mView);
             mView.setTag(TAG);
+            mView.setOnTouchListener(mListListener);
 
             // We need to add the header before we set the adapter, hence make it null
             mView.setAdapter(null);
