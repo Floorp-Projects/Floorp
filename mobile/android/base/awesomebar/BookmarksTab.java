@@ -23,9 +23,16 @@ import android.widget.LinearLayout;
 import android.os.SystemClock;
 import android.util.Pair;
 import android.widget.TabHost.TabContentFactory;
+import android.view.MenuInflater;
+import android.widget.TabHost;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+
+import org.json.JSONArray;
 
 import java.util.LinkedList;
 
+import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
@@ -94,7 +101,14 @@ public class BookmarksTab extends AwesomeBarTab {
     }
 
     public boolean onBackPressed() {
-        return false;
+        // If the soft keyboard is visible in the bookmarks or history tab, the user
+        // must have explictly brought it up, so we should try hiding it instead of
+        // exiting the activity or going up a bookmarks folder level.
+        ListView view = getListView();
+        if (hideSoftInput(view))
+            return true;
+
+        return moveToParentFolder();
     }
 
     protected BookmarksListAdapter getCursorAdapter() {
@@ -367,5 +381,53 @@ public class BookmarksTab extends AwesomeBarTab {
 
     public boolean isInReadingList() {
         return mInReadingList;
+    }
+
+    public ContextMenuSubject getSubject(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
+        ContextMenuSubject subject = null;
+
+        if (!(menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
+            Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
+            return subject;
+        }
+
+        ListView list = (ListView)view;
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+        Object selectedItem = list.getItemAtPosition(info.position);
+
+        if (!(selectedItem instanceof Cursor)) {
+            Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
+            return subject;
+        }
+
+        Cursor cursor = (Cursor) selectedItem;
+
+        // Don't show the context menu for folders
+        if (!(cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER)) {
+            String keyword = null;
+            int keywordCol = cursor.getColumnIndex(URLColumns.KEYWORD);
+            if (keywordCol != -1)
+                keyword = cursor.getString(keywordCol);
+
+            // Use the bookmark id for the Bookmarks tab and the history id for the Top Sites tab 
+            int id = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
+
+            subject = new ContextMenuSubject(id,
+                                            cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL)),
+                                            cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON)),
+                                            cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE)),
+                                            keyword);
+        }
+
+        if (subject == null)
+            return subject;
+
+        MenuInflater inflater = new MenuInflater(mContext);
+        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
+        
+        menu.findItem(R.id.remove_history).setVisible(false);
+        menu.setHeaderTitle(subject.title);
+
+        return subject;
     }
 }
