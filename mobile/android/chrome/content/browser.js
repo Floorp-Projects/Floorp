@@ -3011,7 +3011,7 @@ const ElementTouchHelper = {
     if (!aAllowBodyListeners && aElement && aElement.ownerDocument)
       stopNode = aElement.ownerDocument.body;
 
-    for (let elem = aElement; elem != stopNode; elem = elem.parentNode) {
+    for (let elem = aElement; elem && elem != stopNode; elem = elem.parentNode) {
       if (aUnclickableCache && aUnclickableCache.indexOf(elem) != -1)
         continue;
       if (this._hasMouseListener(elem))
