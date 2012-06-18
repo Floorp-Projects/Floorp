@@ -229,7 +229,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             }
         });
 
-        registerForContextMenu(mAwesomeTabs.findViewById(R.id.bookmarks_list));
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
 
         GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
@@ -456,6 +455,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, view, menuInfo);
         ListView list = (ListView) view;
+        boolean isBookmarksList = (list.getTag() == mAwesomeTabs.mBookmarksTab.getTag());
         mContextMenuSubject = null;
 
         if (list == findViewById(R.id.history_list)) {
@@ -499,7 +499,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             Cursor cursor = (Cursor) selectedItem;
 
             // Don't show the context menu for folders
-            if (!(list == findViewById(R.id.bookmarks_list) &&
+            if (!(isBookmarksList &&
                   cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER)) {
                 String keyword = null;
                 int keywordCol = cursor.getColumnIndex(URLColumns.KEYWORD);
@@ -507,8 +507,8 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
                     keyword = cursor.getString(keywordCol);
 
                 // Use the bookmark id for the Bookmarks tab and the history id for the Top Sites tab 
-                int id = (list == findViewById(R.id.bookmarks_list)) ? cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID)) :
-                                                                       cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
+                int id = (isBookmarksList) ? cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID)) :
+                                                   cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
 
                 mContextMenuSubject = new ContextMenuSubject(id,
                                                              cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL)),
@@ -524,7 +524,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.awesomebar_contextmenu, menu);
         
-        if (list != findViewById(R.id.bookmarks_list)) {
+        if (!isBookmarksList) {
             menu.findItem(R.id.remove_bookmark).setVisible(false);
             menu.findItem(R.id.edit_bookmark).setVisible(false);
 
