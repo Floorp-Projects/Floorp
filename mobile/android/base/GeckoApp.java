@@ -2687,7 +2687,7 @@ abstract public class GeckoApp
 
     @Override
     public void onBackPressed() {
-        if (mTabsPanel != null && mTabsPanel.isShown()) {
+        if (mTabsPanel != null && mTabsPanel.isShown() && !isTablet()) {
             mTabsPanel.hide();
             return;
         }
