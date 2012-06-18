@@ -5327,6 +5327,7 @@ var Telemetry = {
   prompt: function prompt() {
     let serverOwner = Services.prefs.getCharPref(this._PREF_TELEMETRY_SERVER_OWNER);
     let telemetryPrompted = null;
+    let self = this;
     try {
       telemetryPrompted = Services.prefs.getIntPref(this._PREF_TELEMETRY_PROMPTED);
     } catch (e) { /* Optional */ }
@@ -5343,15 +5344,15 @@ var Telemetry = {
       {
         label: Strings.browser.GetStringFromName("telemetry.optin.yes"),
         callback: function () {
-          Services.prefs.setIntPref(this._PREF_TELEMETRY_PROMPTED, this._TELEMETRY_PROMPT_REV);
-          Services.prefs.setBoolPref(this._PREF_TELEMETRY_ENABLED, true);
+          Services.prefs.setIntPref(self._PREF_TELEMETRY_PROMPTED, self._TELEMETRY_PROMPT_REV);
+          Services.prefs.setBoolPref(self._PREF_TELEMETRY_ENABLED, true);
         }
       },
       {
         label: Strings.browser.GetStringFromName("telemetry.optin.no"),
         callback: function () {
-          Services.prefs.setIntPref(this._PREF_TELEMETRY_PROMPTED, this._TELEMETRY_PROMPT_REV);
-          Services.prefs.setBoolPref(this._PREF_TELEMETRY_REJECTED, true);
+          Services.prefs.setIntPref(self._PREF_TELEMETRY_PROMPTED, self._TELEMETRY_PROMPT_REV);
+          Services.prefs.setBoolPref(self._PREF_TELEMETRY_REJECTED, true);
         }
       }
     ];
