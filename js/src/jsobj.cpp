@@ -1443,7 +1443,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
         PropertyDescriptor desc;
         if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
             return JS_FALSE;
-        if ((desc.attrs & JSPROP_GETTER) && desc.getter)
+        if (desc.obj && (desc.attrs & JSPROP_GETTER) && desc.getter)
             *vp = CastAsObjectJsval(desc.getter);
         return JS_TRUE;
     }
@@ -1478,7 +1478,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
         PropertyDescriptor desc;
         if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
             return JS_FALSE;
-        if ((desc.attrs & JSPROP_SETTER) && desc.setter)
+        if (desc.obj && (desc.attrs & JSPROP_SETTER) && desc.setter)
             *vp = CastAsObjectJsval(desc.setter);
         return JS_TRUE;
     }
