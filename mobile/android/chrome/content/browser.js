@@ -2728,6 +2728,17 @@ var BrowserEventHandler = {
       rect.w = bRect.width;
       rect.h = Math.min(bRect.width * viewport.cssHeight / viewport.cssWidth, bRect.height);
 
+      // if the block we're zooming to is really tall, and the user double-tapped
+      // more than a screenful of height from the top of it, then adjust the y-coordinate
+      // so that we center the actual point the user double-tapped upon. this prevents
+      // flying to the top of a page when double-tapping to zoom in (bug 761721).
+      // the 1.2 multiplier is just a little fuzz to compensate for bRect including horizontal
+      // margins but not vertical ones.
+      let cssTapY = viewport.cssY + data.y;
+      if ((bRect.height > rect.h) && (cssTapY > rect.y + (rect.h * 1.2))) {
+        rect.y = cssTapY - (rect.h / 2);
+      }
+
       sendMessageToJava({ gecko: rect });
     }
   },
