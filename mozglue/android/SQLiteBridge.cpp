@@ -69,6 +69,9 @@ static jmethodID jByteBufferAllocateDirect;
 static jmethodID jCursorConstructor;
 static jmethodID jCursorAddRow;
 
+static jobject sqliteInternalCall(JNIEnv* jenv, sqlite3 *db, jstring jQuery,
+                                  jobjectArray jParams, jlongArray jQueryRes);
+
 static void
 JNI_Setup(JNIEnv* jenv)
 {

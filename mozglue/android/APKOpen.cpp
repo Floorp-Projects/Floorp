@@ -327,9 +327,9 @@ static void * sqlite_handle = NULL;
 static void * nss_handle = NULL;
 static void * nspr_handle = NULL;
 static void * plc_handle = NULL;
-static bool simple_linker_initialized = false;
 
 #ifdef MOZ_OLD_LINKER
+static bool simple_linker_initialized = false;
 static time_t apk_mtime = 0;
 #ifdef DEBUG
 extern "C" int extractLibs = 1;
