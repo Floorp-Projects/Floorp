@@ -97,6 +97,8 @@ ExpandoObjectMatchesConsumer(JSContext *cx,
                              nsIPrincipal *consumerOrigin,
                              JSObject *exclusiveGlobal)
 {
+    MOZ_ASSERT(js::IsObjectInContextCompartment(expandoObject, cx));
+
     // First, compare the principals.
     nsIPrincipal *o = GetExpandoObjectPrincipal(expandoObject);
     bool equal;
@@ -117,6 +119,10 @@ ExpandoObjectMatchesConsumer(JSContext *cx,
                                         .toObjectOrNull();
     if (!owner && !exclusiveGlobal)
         return true;
+
+    // The exclusive global should always be wrapped in the target's compartment.
+    MOZ_ASSERT(!exclusiveGlobal || js::IsObjectInContextCompartment(exclusiveGlobal, cx));
+    MOZ_ASSERT(!owner || js::IsObjectInContextCompartment(owner, cx));
     return owner == exclusiveGlobal;
 }
 
@@ -124,6 +130,15 @@ JSObject *
 LookupExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
                     JSObject *exclusiveGlobal)
 {
+    // The expando object lives in the compartment of the target, so all our
+    // work needs to happen there.
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, target) ||
+        !JS_WrapObject(cx, &exclusiveGlobal))
+    {
+        return NULL;
+    }
+
     // Iterate through the chain, looking for a same-origin object.
     JSObject *head = GetExpandoChain(target);
     while (head) {
@@ -150,6 +165,10 @@ JSObject *
 AttachExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
                     JSObject *exclusiveGlobal)
 {
+    // Make sure the compartments are sane.
+    MOZ_ASSERT(js::IsObjectInContextCompartment(target, cx));
+    MOZ_ASSERT(!exclusiveGlobal || js::IsObjectInContextCompartment(exclusiveGlobal, cx));
+
     // We should only be used for WNs.
     MOZ_ASSERT(IS_WN_WRAPPER(target));
 
@@ -193,12 +212,22 @@ AttachExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
 JSObject *
 EnsureExpandoObject(JSContext *cx, JSObject *wrapper, JSObject *target)
 {
+    // Expando objects live in the target compartment.
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, target))
+        return false;
+
     JSObject *expandoObject = LookupExpandoObject(cx, target, wrapper);
     if (!expandoObject) {
         // If the object is a sandbox, we don't want it to share expandos with
         // anyone else, so we tag it with the sandbox global.
+        //
+        // NB: We first need to check the class, _then_ wrap for the target's
+        // compartment.
         JSObject *consumerGlobal = js::GetGlobalForObjectCrossCompartment(wrapper);
         bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
+        if (!JS_WrapObject(cx, &consumerGlobal))
+            return NULL;
         expandoObject = AttachExpandoObject(cx, target, ObjectPrincipal(wrapper),
                                             isSandbox ? consumerGlobal : nsnull);
     }
@@ -216,6 +245,8 @@ CloneExpandoChain(JSContext *cx, JSObject *dst, JSObject *src)
         JSObject *exclusive = JS_GetReservedSlot(oldHead,
                                                  JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL)
                                                 .toObjectOrNull();
+        if (!JS_WrapObject(cx, &exclusive))
+            return false;
         JSObject *newHead =
           AttachExpandoObject(cx, dst, GetExpandoObjectPrincipal(oldHead), exclusive);
         if (!JS_CopyPropertiesFrom(cx, newHead, oldHead))
