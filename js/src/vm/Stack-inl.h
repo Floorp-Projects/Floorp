@@ -252,10 +252,10 @@ StackFrame::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
 }
 
 inline Value &
-StackFrame::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
+StackFrame::unaliasedActual(unsigned i)
 {
     JS_ASSERT(i < numActualArgs());
-    JS_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
+    JS_ASSERT(!script()->formalIsAliased(i));
     return i < numFormalArgs() ? formals()[i] : actuals()[i];
 }
 
