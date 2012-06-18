@@ -223,8 +223,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             }
         });
 
-        registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
-
         GeckoAppShell.registerGeckoEventListener("SearchEngines:Data", this);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
     }
@@ -447,7 +445,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         boolean isBookmarksList = (list.getTag() == mAwesomeTabs.mBookmarksTab.getTag());
         mContextMenuSubject = null;
 
-        if (list == findViewById(R.id.history_list)) {
+        if (list.getTag() == mAwesomeTabs.mHistoryTab.getTag()) {
             if (!(menuInfo instanceof ExpandableListView.ExpandableListContextMenuInfo)) {
                 Log.e(LOGTAG, "menuInfo is not ExpandableListContextMenuInfo");
                 return;
