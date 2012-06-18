@@ -6,14 +6,32 @@
 #filter substitution
 package @ANDROID_PACKAGE_NAME@;
 
-import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import android.view.MenuItem;
+import android.util.Log;
+import android.os.Bundle;
+import android.content.Intent;
 
-public class App extends BrowserApp {
-    public int getLayout() { return R.layout.gecko_app; }
+public class WebApp extends GeckoApp {
+    protected int mWebAppIndex;
+    private static final String LOGTAG = "WebApp";
+
+    @Override
+    public int getLayout() { return R.layout.web_app; }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        Log.i("DEBUG", "xxx WebApp");
+        super.onCreate(savedInstanceState);
+
+        Bundle extras = getIntent().getExtras();
+        String title = extras != null ? extras.getString(Intent.EXTRA_SHORTCUT_NAME) : null;
+        setTitle(title != null ? title : "Web App");
+    }
 
     public String getPackageName() {
         return "@ANDROID_PACKAGE_NAME@";
@@ -21,10 +39,6 @@ public class App extends BrowserApp {
 
     public String getContentProcessName() {
         return "@MOZ_CHILD_PROCESS_NAME@";
-    }
-
-    protected String getDefaultProfileName() {
-      return "default";
     }
 
     public String getDefaultUAString() {
@@ -41,6 +55,17 @@ public class App extends BrowserApp {
         if ("t.co".equals(host))
             return "Redirector/@MOZ_APP_VERSION@ (Android; rv:@MOZ_APP_VERSION@)";
         return getDefaultUAString();
+    }
+
+    @Override
+    protected String getDefaultProfileName() {
+        String action = getIntent().getAction();
+        if (!action.startsWith(ACTION_WEBAPP_PREFIX)) {
+            Log.e(LOGTAG, "WebApp launch, but intent action is " + action + "!");
+            return null;
+        }
+
+        return "webapp" + action.substring(ACTION_WEBAPP_PREFIX.length());
     }
 
     @Override
