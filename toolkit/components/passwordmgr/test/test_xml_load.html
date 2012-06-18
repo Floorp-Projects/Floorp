@@ -19,18 +19,19 @@ Login Manager test: XML prompt
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: XML prompts. **/
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
 var pwmgr, login1, login2;
 
 function initLogins() {
-  pwmgr = Cc["@mozilla.org/login-manager;1"].
-          getService(Ci.nsILoginManager);
+  pwmgr = SpecialPowers.wrap(Components)
+                       .classes["@mozilla.org/login-manager;1"]
+                       .getService(Ci.nsILoginManager);
 
-  login1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
-  login2 = Cc["@mozilla.org/login-manager/loginInfo;1"].
-            createInstance(Ci.nsILoginInfo);
+  login1 = SpecialPowers.wrap(Components)
+                        .classes["@mozilla.org/login-manager/loginInfo;1"]
+                        .createInstance(Ci.nsILoginInfo);
+  login2 = SpecialPowers.wrap(Components)
+                        .classes["@mozilla.org/login-manager/loginInfo;1"]
+                        .createInstance(Ci.nsILoginInfo);
 
   login1.init("http://mochi.test:8888", null, "xml",
                "xmluser1", "xmlpass1", "", "");
@@ -50,7 +51,6 @@ function finishTest() {
 }
 
 function handleDialog(doc, testNum) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "handleDialog running for test " + testNum);
 
   var clickOK = true;
@@ -74,7 +74,8 @@ function handleDialog(doc, testNum) {
         ok(doc.defaultView.opener, "dialog has opener");
         // Not using is() because its "expected" text doesn't deal
         // with window objects very well 
-        ok(doc.defaultView.opener == window, "dialog's opener is correct");
+        // Disabled due to Bug 718543.
+        // ok(doc.defaultView.opener == window, "dialog's opener is correct");
 
         break;
 
@@ -102,7 +103,6 @@ function handleDialog(doc, testNum) {
 
 var newWin;
 function xmlLoad(responseDoc) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   ok(true, "xmlLoad running for test " + testNum);
 
   // The server echos back the user/pass it received.
@@ -167,8 +167,9 @@ initLogins();
 
 // clear plain HTTP auth sessions before the test, to allow
 // running them more than once.
-var authMgr = Components.classes['@mozilla.org/network/http-auth-manager;1']
-                        .getService(Components.interfaces.nsIHttpAuthManager);
+var authMgr = SpecialPowers.wrap(Components)
+                           .classes['@mozilla.org/network/http-auth-manager;1']
+                           .getService(Components.interfaces.nsIHttpAuthManager);
 authMgr.clearAll();
 
 // start the tests

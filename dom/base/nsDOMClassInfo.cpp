@@ -177,6 +177,13 @@
 #include "nsIDOMCloseEvent.h"
 #include "nsEventSource.h"
 #include "nsIDOMSettingsManager.h"
+#include "nsIDOMContactManager.h"
+#include "nsIDOMApplicationRegistry.h"
+
+#ifdef MOZ_B2G_RIL
+#include "nsIWifi.h"
+#include "nsIWifiEventInits.h"
+#endif
 
 // includes needed for the prototype chain interfaces
 #include "nsIDOMNavigator.h"
@@ -1532,7 +1539,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLRenderbuffer, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(WebGLUniformLocation, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(WebGLUniformLocation,
+                           nsNewDOMBindingNoWrapperCacheSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(WebGLShaderPrecisionFormat, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1635,8 +1643,16 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozSettingsEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MozContactChangeEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MozApplicationEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 #ifdef MOZ_B2G_RIL
+  NS_DEFINE_CLASSINFO_DATA(MozWifiStatusChangeEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MozWifiConnectionInfoEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Telephony, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TelephonyCall, nsEventTargetSH,
@@ -1709,11 +1725,17 @@ NS_DEFINE_EVENT_CTOR(HashChangeEvent)
 NS_DEFINE_EVENT_CTOR(PageTransitionEvent)
 NS_DEFINE_EVENT_CTOR(CloseEvent)
 NS_DEFINE_EVENT_CTOR(MozSettingsEvent)
+NS_DEFINE_EVENT_CTOR(MozContactChangeEvent)
+NS_DEFINE_EVENT_CTOR(MozApplicationEvent)
 NS_DEFINE_EVENT_CTOR(UIEvent)
 NS_DEFINE_EVENT_CTOR(MouseEvent)
 NS_DEFINE_EVENT_CTOR(DeviceLightEvent)
 NS_DEFINE_EVENT_CTOR(DeviceProximityEvent)
 NS_DEFINE_EVENT_CTOR(UserProximityEvent)
+#ifdef MOZ_B2G_RIL
+NS_DEFINE_EVENT_CTOR(MozWifiStatusChangeEvent)
+NS_DEFINE_EVENT_CTOR(MozWifiConnectionInfoEvent)
+#endif
 
 nsresult
 NS_DOMStorageEventCtor(nsISupports** aInstancePtrResult)
@@ -1753,12 +1775,18 @@ static const nsConstructorFuncMapData kConstructorFuncMap[] =
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(PageTransitionEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(CloseEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozSettingsEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozContactChangeEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozApplicationEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UIEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MouseEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(DeviceProximityEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(UserProximityEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(DeviceLightEvent)
   NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(StorageEvent)
+#ifdef MOZ_B2G_RIL
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiStatusChangeEvent)
+  NS_DEFINE_EVENT_CONSTRUCTOR_FUNC_DATA(MozWifiConnectionInfoEvent)
+#endif
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(MozSmsFilter, sms::SmsFilter::NewSmsFilter)
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(XMLHttpRequest, NS_XMLHttpRequestCtor)
 };
@@ -4474,9 +4502,29 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(MozSettingsEvent, nsIDOMMozSettingsEvent)
      DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozSettingsEvent)
      DOM_CLASSINFO_EVENT_MAP_ENTRIES
-   DOM_CLASSINFO_MAP_END
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozContactChangeEvent, nsIDOMMozContactChangeEvent)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozContactChangeEvent)
+     DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozApplicationEvent, nsIDOMMozApplicationEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozApplicationEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
 
 #ifdef MOZ_B2G_RIL
+  DOM_CLASSINFO_MAP_BEGIN(MozWifiStatusChangeEvent, nsIDOMMozWifiStatusChangeEvent)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozWifiStatusChangeEvent)
+     DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozWifiConnectionInfoEvent, nsIDOMMozWifiConnectionInfoEvent)
+     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozWifiConnectionInfoEvent)
+     DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(Telephony, nsIDOMTelephony)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTelephony)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
@@ -4729,12 +4777,11 @@ nsDOMClassInfo::GetClassName(char **aClassName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDOMClassInfo::GetScriptableFlags(PRUint32 *aFlags)
+// virtual
+PRUint32
+nsDOMClassInfo::GetScriptableFlags()
 {
-  *aFlags = mData->mScriptableFlags;
-
-  return NS_OK;
+  return mData->mScriptableFlags;
 }
 
 NS_IMETHODIMP
@@ -9075,9 +9122,10 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
 void
 nsHTMLDocumentSH::ReleaseDocument(JSFreeOp *fop, JSObject *obj)
 {
-  nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(obj);
-
-  NS_IF_RELEASE(doc);
+  nsIHTMLDocument *doc = static_cast<nsIHTMLDocument *>(JS_GetPrivate(obj));
+  if (doc) {
+    xpc::DeferredRelease(doc);
+  }
 }
 
 JSBool
@@ -9105,7 +9153,7 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
   JSObject *self;
   JS::Value callee = JS_CALLEE(cx, vp);
   if (callee.isObject() &&
-  	  JS_GetClass(&callee.toObject()) == &sHTMLDocumentAllClass) {
+      JS_GetClass(&callee.toObject()) == &sHTMLDocumentAllClass) {
     self = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
   } else {
     self = JS_THIS_OBJECT(cx, vp);
@@ -10877,6 +10925,16 @@ WebGLExtensionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsINode *node = webgl->GetParentObject();
 
   return WrapNativeParent(cx, globalObj, node, node, parentObj);
+}
+
+nsresult
+nsNewDOMBindingNoWrapperCacheSH::PreCreate(nsISupports *nativeObj,
+                                           JSContext *cx,
+                                           JSObject *globalObj,
+                                           JSObject **parentObj)
+{
+  // We don't allow this
+  return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP

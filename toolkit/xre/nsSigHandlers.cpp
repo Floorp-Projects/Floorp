@@ -101,12 +101,12 @@ child_ah_crap_handler(int signum)
 
 #endif // CRAWL_STACK_ON_SIGSEGV
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 // Need this include for version test below.
 #include <glib.h>
 #endif
 
-#if defined(MOZ_WIDGET_GTK2) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
+#if defined(MOZ_WIDGET_GTK) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
 
 static GLogFunc orig_log_func = NULL;
 
@@ -282,7 +282,7 @@ void InstallSignalHandlers(const char *ProgramName)
     }
 #endif //SOLARIS
 
-#if defined(MOZ_WIDGET_GTK2) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
+#if defined(MOZ_WIDGET_GTK) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
   const char *assertString = PR_GetEnv("XPCOM_DEBUG_BREAK");
   if (assertString &&
       (!strcmp(assertString, "suspend") ||

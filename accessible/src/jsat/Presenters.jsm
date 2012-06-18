@@ -304,7 +304,9 @@ AndroidPresenter.prototype = {
       type: 'Accessibility:Event',
       eventType: this.ANDROID_VIEW_TEXT_CHANGED,
       text: [aText],
-      fromIndex: aStart
+      fromIndex: aStart,
+      removedCount: 0,
+      addedCount: 0
     };
 
     if (aIsInserted) {

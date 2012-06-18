@@ -137,10 +137,6 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
   NS_ENSURE_ARG(aContextElement);
   *aReturn = nsnull;
 
-  nsresult rv;
-  nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIDOMDocument> domDocument;
   nsCOMPtr<nsIDOMNode> contextNode;
@@ -148,6 +144,8 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
   contextNode->GetOwnerDocument(getter_AddRefs(domDocument));
   document = do_QueryInterface(domDocument);
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
+
+  nsAutoScriptBlockerSuppressNodeRemoved autoBlocker;
 
   // stop scripts
   nsRefPtr<nsScriptLoader> loader;
@@ -183,51 +181,51 @@ nsParserUtils::ParseFragment(const nsAString& aFragment,
     }
   }
 
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIContent> fragment;
-    if (aIsXML) {
-      rv = nsContentUtils::ParseFragmentXML(aFragment,
-                                            document,
-                                            tagStack,
-                                            true,
-                                            aReturn);
-      fragment = do_QueryInterface(*aReturn);
-    } else {
-      NS_NewDocumentFragment(aReturn,
-                             document->NodeInfoManager());
-      fragment = do_QueryInterface(*aReturn);
-      rv = nsContentUtils::ParseFragmentHTML(aFragment,
-                                             fragment,
-                                             nsGkAtoms::body,
-                                             kNameSpaceID_XHTML,
-                                             false,
-                                             true);
-      // Now, set the base URI on all subtree roots.
-      if (aBaseURI) {
-        aBaseURI->GetSpec(spec);
-        nsAutoString spec16;
-        CopyUTF8toUTF16(spec, spec16);
-        nsIContent* node = fragment->GetFirstChild();
-        while (node) {
-          if (node->IsElement()) {
-            node->SetAttr(kNameSpaceID_XML,
-                          nsGkAtoms::base,
-                          nsGkAtoms::xml,
-                          spec16,
-                          false);
-          }
-          node = node->GetNextSibling();
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIContent> fragment;
+  if (aIsXML) {
+    rv = nsContentUtils::ParseFragmentXML(aFragment,
+                                          document,
+                                          tagStack,
+                                          true,
+                                          aReturn);
+    fragment = do_QueryInterface(*aReturn);
+  } else {
+    NS_NewDocumentFragment(aReturn,
+                           document->NodeInfoManager());
+    fragment = do_QueryInterface(*aReturn);
+    rv = nsContentUtils::ParseFragmentHTML(aFragment,
+                                           fragment,
+                                           nsGkAtoms::body,
+                                           kNameSpaceID_XHTML,
+                                           false,
+                                           true);
+    // Now, set the base URI on all subtree roots.
+    if (aBaseURI) {
+      aBaseURI->GetSpec(spec);
+      nsAutoString spec16;
+      CopyUTF8toUTF16(spec, spec16);
+      nsIContent* node = fragment->GetFirstChild();
+      while (node) {
+        if (node->IsElement()) {
+          node->SetAttr(kNameSpaceID_XML,
+                        nsGkAtoms::base,
+                        nsGkAtoms::xml,
+                        spec16,
+                        false);
         }
+        node = node->GetNextSibling();
       }
     }
-    if (fragment) {
-      nsTreeSanitizer sanitizer(aFlags);
-      sanitizer.Sanitize(fragment);
-    }
+  }
+  if (fragment) {
+    nsTreeSanitizer sanitizer(aFlags);
+    sanitizer.Sanitize(fragment);
   }
 
-  if (scripts_enabled)
-      loader->SetEnabled(true);
-  
+  if (scripts_enabled) {
+    loader->SetEnabled(true);
+  }
+
   return rv;
 }

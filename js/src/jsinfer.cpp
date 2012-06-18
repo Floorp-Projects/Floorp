@@ -3651,15 +3651,21 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_REST: {
         TypeSet *types = script->analysis()->bytecodeTypes(pc);
-        types->addSubset(cx, &pushed[0]);
         if (script->hasGlobal()) {
             TypeObject *rest = TypeScript::InitObject(cx, script, pc, JSProto_Array);
             if (!rest)
                 return false;
             types->addType(cx, Type::ObjectType(rest));
+
+            // Simulate setting a element.
+            TypeSet *propTypes = rest->getProperty(cx, JSID_VOID, true);
+            if (!propTypes)
+                return false;
+            propTypes->addType(cx, Type::UnknownType());
         } else {
             types->addType(cx, Type::UnknownType());
         }
+        types->addSubset(cx, &pushed[0]);
         break;
       }
 
@@ -5253,14 +5259,15 @@ NestingPrologue(JSContext *cx, StackFrame *fp)
         /*
          * Check the stack has no frames for this activation, any of its inner
          * functions or any of their transitive inner functions.
+         *
+         * Also, if the script has an extensible scope, then the arg/var array
+         * can be moved unexpectedly, so abort the optimization.
          */
-        if (!ClearActiveNesting(script)) {
+        if (!ClearActiveNesting(script) || script->funHasExtensibleScope) {
             script->reentrantOuterFunction = true;
             MarkTypeObjectFlags(cx, fp->fun(), OBJECT_FLAG_REENTRANT_FUNCTION);
         }
 
-        /* Extensibility guards in the frontend guarantee the slots won't move. */
-        JS_ASSERT(!script->funHasExtensibleScope);
         nesting->activeCall = &fp->callObj();
         nesting->argArray = Valueify(nesting->activeCall->argArray());
         nesting->varArray = Valueify(nesting->activeCall->varArray());

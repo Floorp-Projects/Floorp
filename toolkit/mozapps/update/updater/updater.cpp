@@ -2431,6 +2431,19 @@ int NS_main(int argc, NS_tchar **argv)
         useService = IsLocalFile(argv[0], isLocal) && isLocal;
       }
 
+      // If we have unprompted elevation we should NOT use the service
+      // for the update. Service updates happen with the SYSTEM account
+      // which has more privs than we need to update with.
+      // Windows 8 provides a user interface so users can configure this
+      // behavior and it can be configured in the registry in all Windows
+      // versions that support UAC.
+      if (useService) {
+        BOOL unpromptedElevation;
+        if (IsUnpromptedElevation(unpromptedElevation)) {
+          useService = !unpromptedElevation;
+        }
+      }
+
       // Make sure the service registry entries for the instsallation path
       // are available.  If not don't use the service.
       if (useService) {

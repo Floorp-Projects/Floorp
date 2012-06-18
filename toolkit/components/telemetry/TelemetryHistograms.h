@@ -85,7 +85,7 @@ HISTOGRAM(EARLY_GLUESTARTUP_READ_OPS, 1, 100, 12, LINEAR, "ProcessIoCounters.Rea
 HISTOGRAM(EARLY_GLUESTARTUP_READ_TRANSFER, 1, 50 * 1024, 12, EXPONENTIAL, "ProcessIoCounters.ReadTransferCount before glue startup (KB)")
 HISTOGRAM(GLUESTARTUP_READ_OPS, 1, 100, 12, LINEAR, "ProcessIoCounters.ReadOperationCount after glue startup")
 HISTOGRAM(GLUESTARTUP_READ_TRANSFER, 1, 50 * 1024, 12, EXPONENTIAL, "ProcessIoCounters.ReadTransferCount after glue startup (KB)")
-HISTOGRAM(STARTUP_USING_PRELOAD, 1, 2, 3, LINEAR, "Preload heuristic. 0: none, 1: preload from service, 2: preload from ioCounters.ReadOperationCount")
+HISTOGRAM(STARTUP_USING_PRELOAD_TRIAL, 1, 3, 4, LINEAR, "Preload heuristic. 0: prefetch, preload, 1: prefetch, no preload, 2: no prefetch, preload, 3: no prefetch, no preload")
 #elif defined(XP_UNIX)
 HISTOGRAM(EARLY_GLUESTARTUP_HARD_FAULTS, 1, 100, 12, LINEAR, "Hard faults count before glue startup")
 HISTOGRAM(GLUESTARTUP_HARD_FAULTS, 1, 500, 12, EXPONENTIAL, "Hard faults count after glue startup")
@@ -314,6 +314,13 @@ HISTOGRAM(PLACES_FRECENCY_CALC_TIME_MS, 1, 100, 10, EXPONENTIAL, "PLACES: Time t
  * Updater telemetry.
  */
 HISTOGRAM(UPDATER_STATUS_CODES, 1, 50, 51, LINEAR, "Updater: the status of the latest update performed")
+HISTOGRAM_BOOLEAN(UPDATER_UPDATES_ENABLED, "Updater: Whether or not updates are enabled")
+HISTOGRAM_BOOLEAN(UPDATER_UPDATES_AUTOMATIC, "Updater: Whether or not updates are automatic")
+HISTOGRAM_BOOLEAN(UPDATER_SERVICE_ENABLED, "Updater: Whether or not the MozillaMaintenance service is enabled")
+HISTOGRAM(UPDATER_SERVICE_ERRORS, 1, 30, 31, LINEAR, "Updater: The number of MozillaMaintenance service errors that have occurred")
+HISTOGRAM_BOOLEAN(UPDATER_SERVICE_INSTALLED, "Updater: Whether or not the MozillaMaintenance service is installed")
+HISTOGRAM_BOOLEAN(UPDATER_STAGE_ENABLED, "Updater: Whether or not staging updates are enabled")
+HISTOGRAM_BOOLEAN(UPDATER_HAS_PERMISSIONS, "Updater: Whether or not the updater has permissions")
 
 /**
  * Thunderbird-specific telemetry.

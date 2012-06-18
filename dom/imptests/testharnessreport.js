@@ -18,6 +18,13 @@ var W3CTest = {
   "tests": [],
 
   /**
+   * Number of unlogged passes, to stop buildbot from truncating the log.
+   * We will print a message every MAX_COLLAPSED_MESSAGES passes.
+   */
+  "collapsedMessages": 0,
+  "MAX_COLLAPSED_MESSAGES": 100,
+
+  /**
    * Reference to the TestRunner object in the parent frame.
    */
   "runner": parent === this ? null : parent.TestRunner || parent.wrappedJSObject.TestRunner,
@@ -44,10 +51,29 @@ var W3CTest = {
    */
   "_log": function(test) {
     var msg = this.prefixes[+test.todo][+test.result] + " | ";
-    if (this.runner.currentTestURL)
+    if (this.runner.currentTestURL) {
       msg += this.runner.currentTestURL;
+    }
     msg += " | " + test.message;
     this.runner[(test.result === !test.todo) ? "log" : "error"](msg);
+  },
+
+  /**
+   * Maybe logs a result, eliding up to MAX_COLLAPSED_MESSAGES consecutive
+   * passes.
+   */
+  "_maybeLog": function(test) {
+    var success = (test.result === !test.todo);
+    if (success && ++this.collapsedMessages < this.MAX_COLLAPSED_MESSAGES) {
+      return;
+    }
+    this._log({
+      "result": true,
+      "todo": false,
+      "message": "Elided " + this.collapsedMessages + " passes."
+    });
+    this.collapsedMessages = 0;
+    this._log(test);
   },
 
   /**
@@ -60,7 +86,7 @@ var W3CTest = {
    */
   "report": function(test) {
     this.tests.push(test);
-    this._log(test);
+    this._maybeLog(test);
   },
 
   /**
@@ -101,27 +127,51 @@ var W3CTest = {
         this.expectedFailures[url] === "error"
     });
     this.runner.testFinished(this.tests);
+  },
+
+  /**
+   * Log an unexpected failure. Intended to be used from harness code, not
+   * from tests.
+   */
+  "logFailure": function(message) {
+    this.report({
+      "message": message,
+      "result": false,
+      "todo": false
+    });
+  },
+
+  /**
+   * Timeout the current test. Intended to be used from harness code, not
+   * from tests.
+   */
+  "timeout": function() {
+    timeout();
   }
 };
 (function() {
-  if (!W3CTest.runner) {
-    return;
-  }
-  // Get expected fails.  If there aren't any, there will be a 404, which is
-  // fine.  Anything else is unexpected.
-  var request = new XMLHttpRequest();
-  request.open("GET", "/tests/dom/imptests/failures/" + W3CTest.getURL() + ".json", false);
-  request.send();
-  if (request.status === 200) {
-    W3CTest.expectedFailures = JSON.parse(request.responseText);
-  } else if (request.status !== 404) {
-    is(request.status, 404, "Request status neither 200 nor 404");
-  }
+  try {
+    if (!W3CTest.runner) {
+      return;
+    }
+    // Get expected fails.  If there aren't any, there will be a 404, which is
+    // fine.  Anything else is unexpected.
+    var request = new XMLHttpRequest();
+    request.open("GET", "/tests/dom/imptests/failures/" + W3CTest.getURL() + ".json", false);
+    request.send();
+    if (request.status === 200) {
+      W3CTest.expectedFailures = JSON.parse(request.responseText);
+    } else if (request.status !== 404) {
+      W3CTest.logFailure("Request status was " + request.status);
+    }
 
-  add_result_callback(W3CTest.result.bind(W3CTest));
-  add_completion_callback(W3CTest.finish.bind(W3CTest));
-  setup({
-    "output": false,
-    "timeout": 1000000,
-  });
+    add_result_callback(W3CTest.result.bind(W3CTest));
+    add_completion_callback(W3CTest.finish.bind(W3CTest));
+    setup({
+      "output": false,
+      "timeout": 1000000
+    });
+  } catch (e) {
+    W3CTest.logFailure("Unexpected exception: " + e);
+  }
 })();

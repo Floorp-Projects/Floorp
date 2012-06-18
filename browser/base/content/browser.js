@@ -976,181 +976,796 @@ let gGestureSupport = {
   },
 };
 
-function BrowserStartup() {
-  var uriToLoad = null;
+var gBrowserInit = {
+  onLoad: function() {
+    // window.arguments[0]: URI to load (string), or an nsISupportsArray of
+    //                      nsISupportsStrings to load, or a xul:tab of
+    //                      a tabbrowser, which will be replaced by this
+    //                      window (for this case, all other arguments are
+    //                      ignored).
+    //                 [1]: character set (string)
+    //                 [2]: referrer (nsIURI)
+    //                 [3]: postData (nsIInputStream)
+    //                 [4]: allowThirdPartyFixup (bool)
+    if ("arguments" in window && window.arguments[0])
+      var uriToLoad = window.arguments[0];
 
-  // window.arguments[0]: URI to load (string), or an nsISupportsArray of
-  //                      nsISupportsStrings to load, or a xul:tab of
-  //                      a tabbrowser, which will be replaced by this
-  //                      window (for this case, all other arguments are
-  //                      ignored).
-  //                 [1]: character set (string)
-  //                 [2]: referrer (nsIURI)
-  //                 [3]: postData (nsIInputStream)
-  //                 [4]: allowThirdPartyFixup (bool)
-  if ("arguments" in window && window.arguments[0])
-    uriToLoad = window.arguments[0];
+    var isLoadingBlank = isBlankPageURL(uriToLoad);
+    var mustLoadSidebar = false;
 
-  var isLoadingBlank = isBlankPageURL(uriToLoad);
-  var mustLoadSidebar = false;
+    gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
 
-  prepareForStartup();
+    gBrowser.addEventListener("PluginNotFound",     gPluginHandler, true);
+    gBrowser.addEventListener("PluginCrashed",      gPluginHandler, true);
+    gBrowser.addEventListener("PluginBlocklisted",  gPluginHandler, true);
+    gBrowser.addEventListener("PluginOutdated",     gPluginHandler, true);
+    gBrowser.addEventListener("PluginDisabled",     gPluginHandler, true);
+    gBrowser.addEventListener("PluginClickToPlay",  gPluginHandler, true);
+    gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
+#ifdef XP_MACOSX
+    gBrowser.addEventListener("npapi-carbon-event-model-failure", gPluginHandler, true);
+#endif
 
-  if (uriToLoad && uriToLoad != "about:blank") {
-    if (uriToLoad instanceof Ci.nsISupportsArray) {
-      let count = uriToLoad.Count();
-      let specs = [];
-      for (let i = 0; i < count; i++) {
-        let urisstring = uriToLoad.GetElementAt(i).QueryInterface(Ci.nsISupportsString);
-        specs.push(urisstring.data);
-      }
+    Services.obs.addObserver(gPluginHandler.pluginCrashed, "plugin-crashed", false);
 
-      // This function throws for certain malformed URIs, so use exception handling
-      // so that we don't disrupt startup
-      try {
-        gBrowser.loadTabs(specs, false, true);
-      } catch (e) {}
-    }
-    else if (uriToLoad instanceof XULElement) {
-      // swap the given tab with the default about:blank tab and then close
-      // the original tab in the other window.
+    window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
-      // Stop the about:blank load
-      gBrowser.stop();
-      // make sure it has a docshell
-      gBrowser.docShell;
+    messageManager.loadFrameScript("chrome://browser/content/content.js", true);
 
-      gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, uriToLoad);
-    }
-    else if (window.arguments.length >= 3) {
-      loadURI(uriToLoad, window.arguments[2], window.arguments[3] || null,
-              window.arguments[4] || false);
-      content.focus();
-    }
-    // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
-    // Such callers expect that window.arguments[0] is handled as a single URI.
-    else
-      loadOneOrMoreURIs(uriToLoad);
-  }
+    // initialize observers and listeners
+    // and give C++ access to gBrowser
+    gBrowser.init();
+    XULBrowserWindow.init();
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(nsIWebNavigation)
+          .QueryInterface(Ci.nsIDocShellTreeItem).treeOwner
+          .QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIXULWindow)
+          .XULBrowserWindow = window.XULBrowserWindow;
+    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
+      new nsBrowserAccess();
 
-  if (window.opener && !window.opener.closed) {
-    let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
-    // If the opener had a sidebar, open the same sidebar in our window.
-    // The opener can be the hidden window too, if we're coming from the state
-    // where no windows are open, and the hidden window has no sidebar box.
-    if (openerSidebarBox && !openerSidebarBox.hidden) {
-      let sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
-      let sidebarCmdElem = document.getElementById(sidebarCmd);
-
-      // dynamically generated sidebars will fail this check.
-      if (sidebarCmdElem) {
-        let sidebarBox = document.getElementById("sidebar-box");
-        let sidebarTitle = document.getElementById("sidebar-title");
-
-        sidebarTitle.setAttribute(
-          "value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
-        sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
-
-        sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
-        // Note: we're setting 'src' on sidebarBox, which is a <vbox>, not on
-        // the <browser id="sidebar">. This lets us delay the actual load until
-        // delayedStartup().
-        sidebarBox.setAttribute(
-          "src", window.opener.document.getElementById("sidebar").getAttribute("src"));
-        mustLoadSidebar = true;
-
-        sidebarBox.hidden = false;
-        document.getElementById("sidebar-splitter").hidden = false;
-        sidebarCmdElem.setAttribute("checked", "true");
+    // set default character set if provided
+    if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
+      if (window.arguments[1].indexOf("charset=") != -1) {
+        var arrayArgComponents = window.arguments[1].split("=");
+        if (arrayArgComponents) {
+          //we should "inherit" the charset menu setting in a new window
+          getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
+        }
       }
     }
-  }
-  else {
-    let box = document.getElementById("sidebar-box");
-    if (box.hasAttribute("sidebarcommand")) {
-      let commandID = box.getAttribute("sidebarcommand");
-      if (commandID) {
-        let command = document.getElementById(commandID);
-        if (command) {
+
+    // Manually hook up session and global history for the first browser
+    // so that we don't have to load global history before bringing up a
+    // window.
+    // Wire up session and global history before any possible
+    // progress notifications for back/forward button updating
+    gBrowser.webNavigation.sessionHistory = Cc["@mozilla.org/browser/shistory;1"].
+                                            createInstance(Ci.nsISHistory);
+    Services.obs.addObserver(gBrowser.browsers[0], "browser:purge-session-history", false);
+
+    // remove the disablehistory attribute so the browser cleans up, as
+    // though it had done this work itself
+    gBrowser.browsers[0].removeAttribute("disablehistory");
+
+    // enable global history
+    try {
+      gBrowser.docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
+    } catch(ex) {
+      Cu.reportError("Places database may be locked: " + ex);
+    }
+
+#ifdef MOZ_E10S_COMPAT
+    // Bug 666801 - WebProgress support for e10s
+#else
+    // hook up UI through progress listener
+    gBrowser.addProgressListener(window.XULBrowserWindow);
+    gBrowser.addTabsProgressListener(window.TabsProgressListener);
+#endif
+
+    // setup our common DOMLinkAdded listener
+    gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
+
+    // setup our MozApplicationManifest listener
+    gBrowser.addEventListener("MozApplicationManifest",
+                              OfflineApps, false);
+
+    // setup simple gestures support
+    gGestureSupport.init(true);
+
+
+    if (uriToLoad && uriToLoad != "about:blank") {
+      if (uriToLoad instanceof Ci.nsISupportsArray) {
+        let count = uriToLoad.Count();
+        let specs = [];
+        for (let i = 0; i < count; i++) {
+          let urisstring = uriToLoad.GetElementAt(i).QueryInterface(Ci.nsISupportsString);
+          specs.push(urisstring.data);
+        }
+
+        // This function throws for certain malformed URIs, so use exception handling
+        // so that we don't disrupt startup
+        try {
+          gBrowser.loadTabs(specs, false, true);
+        } catch (e) {}
+      }
+      else if (uriToLoad instanceof XULElement) {
+        // swap the given tab with the default about:blank tab and then close
+        // the original tab in the other window.
+
+        // Stop the about:blank load
+        gBrowser.stop();
+        // make sure it has a docshell
+        gBrowser.docShell;
+
+        gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, uriToLoad);
+      }
+      else if (window.arguments.length >= 3) {
+        loadURI(uriToLoad, window.arguments[2], window.arguments[3] || null,
+                window.arguments[4] || false);
+        content.focus();
+      }
+      // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
+      // Such callers expect that window.arguments[0] is handled as a single URI.
+      else
+        loadOneOrMoreURIs(uriToLoad);
+    }
+
+    if (window.opener && !window.opener.closed) {
+      let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
+      // If the opener had a sidebar, open the same sidebar in our window.
+      // The opener can be the hidden window too, if we're coming from the state
+      // where no windows are open, and the hidden window has no sidebar box.
+      if (openerSidebarBox && !openerSidebarBox.hidden) {
+        let sidebarCmd = openerSidebarBox.getAttribute("sidebarcommand");
+        let sidebarCmdElem = document.getElementById(sidebarCmd);
+
+        // dynamically generated sidebars will fail this check.
+        if (sidebarCmdElem) {
+          let sidebarBox = document.getElementById("sidebar-box");
+          let sidebarTitle = document.getElementById("sidebar-title");
+
+          sidebarTitle.setAttribute(
+            "value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
+          sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
+
+          sidebarBox.setAttribute("sidebarcommand", sidebarCmd);
+          // Note: we're setting 'src' on sidebarBox, which is a <vbox>, not on
+          // the <browser id="sidebar">. This lets us delay the actual load until
+          // delayedStartup().
+          sidebarBox.setAttribute(
+            "src", window.opener.document.getElementById("sidebar").getAttribute("src"));
           mustLoadSidebar = true;
-          box.hidden = false;
+
+          sidebarBox.hidden = false;
           document.getElementById("sidebar-splitter").hidden = false;
-          command.setAttribute("checked", "true");
-        }
-        else {
-          // Remove the |sidebarcommand| attribute, because the element it
-          // refers to no longer exists, so we should assume this sidebar
-          // panel has been uninstalled. (249883)
-          box.removeAttribute("sidebarcommand");
+          sidebarCmdElem.setAttribute("checked", "true");
         }
       }
-    }
-  }
-
-  // Certain kinds of automigration rely on this notification to complete their
-  // tasks BEFORE the browser window is shown.
-  Services.obs.notifyObservers(null, "browser-window-before-show", "");
-
-  // Set a sane starting width/height for all resolutions on new profiles.
-  if (!document.documentElement.hasAttribute("width")) {
-    let defaultWidth = 994;
-    let defaultHeight;
-    if (screen.availHeight <= 600) {
-      document.documentElement.setAttribute("sizemode", "maximized");
-      defaultWidth = 610;
-      defaultHeight = 450;
     }
     else {
-      // Create a narrower window for large or wide-aspect displays, to suggest
-      // side-by-side page view.
-      if (screen.availWidth >= 1600)
-        defaultWidth = (screen.availWidth / 2) - 20;
-      defaultHeight = screen.availHeight - 10;
+      let box = document.getElementById("sidebar-box");
+      if (box.hasAttribute("sidebarcommand")) {
+        let commandID = box.getAttribute("sidebarcommand");
+        if (commandID) {
+          let command = document.getElementById(commandID);
+          if (command) {
+            mustLoadSidebar = true;
+            box.hidden = false;
+            document.getElementById("sidebar-splitter").hidden = false;
+            command.setAttribute("checked", "true");
+          }
+          else {
+            // Remove the |sidebarcommand| attribute, because the element it
+            // refers to no longer exists, so we should assume this sidebar
+            // panel has been uninstalled. (249883)
+            box.removeAttribute("sidebarcommand");
+          }
+        }
+      }
+    }
+
+    // Certain kinds of automigration rely on this notification to complete their
+    // tasks BEFORE the browser window is shown.
+    Services.obs.notifyObservers(null, "browser-window-before-show", "");
+
+    // Set a sane starting width/height for all resolutions on new profiles.
+    if (!document.documentElement.hasAttribute("width")) {
+      let defaultWidth = 994;
+      let defaultHeight;
+      if (screen.availHeight <= 600) {
+        document.documentElement.setAttribute("sizemode", "maximized");
+        defaultWidth = 610;
+        defaultHeight = 450;
+      }
+      else {
+        // Create a narrower window for large or wide-aspect displays, to suggest
+        // side-by-side page view.
+        if (screen.availWidth >= 1600)
+          defaultWidth = (screen.availWidth / 2) - 20;
+        defaultHeight = screen.availHeight - 10;
 #ifdef MOZ_WIDGET_GTK2
-      // On X, we're not currently able to account for the size of the window
-      // border.  Use 28px as a guess (titlebar + bottom window border)
-      defaultHeight -= 28;
+        // On X, we're not currently able to account for the size of the window
+        // border.  Use 28px as a guess (titlebar + bottom window border)
+        defaultHeight -= 28;
 #endif
+      }
+      document.documentElement.setAttribute("width", defaultWidth);
+      document.documentElement.setAttribute("height", defaultHeight);
     }
-    document.documentElement.setAttribute("width", defaultWidth);
-    document.documentElement.setAttribute("height", defaultHeight);
-  }
 
-  if (!gShowPageResizers)
-    document.getElementById("status-bar").setAttribute("hideresizer", "true");
+    if (!gShowPageResizers)
+      document.getElementById("status-bar").setAttribute("hideresizer", "true");
 
-  if (!window.toolbar.visible) {
-    // adjust browser UI for popups
-    if (gURLBar) {
-      gURLBar.setAttribute("readonly", "true");
-      gURLBar.setAttribute("enablehistory", "false");
+    if (!window.toolbar.visible) {
+      // adjust browser UI for popups
+      if (gURLBar) {
+        gURLBar.setAttribute("readonly", "true");
+        gURLBar.setAttribute("enablehistory", "false");
+      }
+      goSetCommandEnabled("cmd_newNavigatorTab", false);
     }
-    goSetCommandEnabled("cmd_newNavigatorTab", false);
-  }
 
 #ifdef MENUBAR_CAN_AUTOHIDE
-  updateAppButtonDisplay();
+    updateAppButtonDisplay();
 #endif
 
-  CombinedStopReload.init();
+    // Misc. inits.
+    CombinedStopReload.init();
+    allTabs.readPref();
+    TabsOnTop.init();
+    BookmarksMenuButton.init();
+    TabsInTitlebar.init();
+    gPrivateBrowsingUI.init();
+    DownloadsButton.initializePlaceholder();
+    retrieveToolbarIconsizesFromTheme();
 
-  allTabs.readPref();
+    gDelayedStartupTimeoutId = setTimeout(this._delayedStartup.bind(this), 0, isLoadingBlank, mustLoadSidebar);
+    gStartupRan = true;
+  },
 
-  TabsOnTop.init();
+  _delayedStartup: function(isLoadingBlank, mustLoadSidebar) {
+    let tmp = {};
+    Cu.import("resource:///modules/TelemetryTimestamps.jsm", tmp);
+    let TelemetryTimestamps = tmp.TelemetryTimestamps;
+    TelemetryTimestamps.add("delayedStartupStarted");
+    gDelayedStartupTimeoutId = null;
 
-  BookmarksMenuButton.init();
+    Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-disabled", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-started", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
+    Services.obs.addObserver(gFormSubmitObserver, "invalidformsubmit", false);
 
-  TabsInTitlebar.init();
+    BrowserOffline.init();
+    OfflineApps.init();
+    IndexedDBPromptHelper.init();
+    gFormSubmitObserver.init();
+    AddonManager.addAddonListener(AddonsMgrListener);
 
-  gPrivateBrowsingUI.init();
+    gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
 
-  DownloadsButton.initializePlaceholder();
+    // Ensure login manager is up and running.
+    Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
 
-  retrieveToolbarIconsizesFromTheme();
+    if (mustLoadSidebar) {
+      let sidebar = document.getElementById("sidebar");
+      let sidebarBox = document.getElementById("sidebar-box");
+      sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
+    }
 
-  gDelayedStartupTimeoutId = setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
-  gStartupRan = true;
+    UpdateUrlbarSearchSplitterState();
+
+    if (isLoadingBlank && gURLBar && isElementVisible(gURLBar))
+      gURLBar.focus();
+    else
+      gBrowser.selectedBrowser.focus();
+
+    gNavToolbox.customizeDone = BrowserToolboxCustomizeDone;
+    gNavToolbox.customizeChange = BrowserToolboxCustomizeChange;
+
+    // Set up Sanitize Item
+    this._initializeSanitizer();
+
+    // Enable/Disable auto-hide tabbar
+    gBrowser.tabContainer.updateVisibility();
+
+    gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
+
+    var homeButton = document.getElementById("home-button");
+    gHomeButton.updateTooltip(homeButton);
+    gHomeButton.updatePersonalToolbarStyle(homeButton);
+
+    // BiDi UI
+    gBidiUI = isBidiEnabled();
+    if (gBidiUI) {
+      document.getElementById("documentDirection-separator").hidden = false;
+      document.getElementById("documentDirection-swap").hidden = false;
+      document.getElementById("textfieldDirection-separator").hidden = false;
+      document.getElementById("textfieldDirection-swap").hidden = false;
+    }
+
+    // Setup click-and-hold gestures access to the session history
+    // menus if global click-and-hold isn't turned on
+    if (!getBoolPref("ui.click_hold_context_menus", false))
+      SetClickAndHoldHandlers();
+
+    // Initialize the full zoom setting.
+    // We do this before the session restore service gets initialized so we can
+    // apply full zoom settings to tabs restored by the session restore service.
+    FullZoom.init();
+
+#ifdef MOZ_E10S_COMPAT
+    // Bug 666804 - NetworkPrioritizer support for e10s
+#else
+    let NP = {};
+    Cu.import("resource:///modules/NetworkPrioritizer.jsm", NP);
+    NP.trackBrowserWindow(window);
+#endif
+
+    // initialize the session-restore service (in case it's not already running)
+    try {
+      Cc["@mozilla.org/browser/sessionstore;1"]
+        .getService(Ci.nsISessionStore)
+        .init(window);
+    } catch (ex) {
+      dump("nsSessionStore could not be initialized: " + ex + "\n");
+    }
+
+    PlacesToolbarHelper.init();
+
+    ctrlTab.readPref();
+    gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
+    gPrefService.addObserver(allTabs.prefName, allTabs, false);
+
+    // Initialize the download manager some time after the app starts so that
+    // auto-resume downloads begin (such as after crashing or quitting with
+    // active downloads) and speeds up the first-load of the download manager UI.
+    // If the user manually opens the download manager before the timeout, the
+    // downloads will start right away, and getting the service again won't hurt.
+    setTimeout(function() {
+      gDownloadMgr = Cc["@mozilla.org/download-manager;1"].
+                     getService(Ci.nsIDownloadManager);
+
+#ifdef XP_WIN
+      if (Win7Features) {
+        let tempScope = {};
+        Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm",
+                  tempScope);
+        tempScope.DownloadTaskbarProgress.onBrowserWindowLoad(window);
+      }
+#endif
+    }, 10000);
+
+    // The object handling the downloads indicator is also initialized here in the
+    // delayed startup function, but the actual indicator element is not loaded
+    // unless there are downloads to be displayed.
+    DownloadsButton.initializeIndicator();
+
+#ifndef XP_MACOSX
+    updateEditUIVisibility();
+    let placesContext = document.getElementById("placesContext");
+    placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
+    placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
+#endif
+
+    gBrowser.mPanelContainer.addEventListener("InstallBrowserTheme", LightWeightThemeWebInstaller, false, true);
+    gBrowser.mPanelContainer.addEventListener("PreviewBrowserTheme", LightWeightThemeWebInstaller, false, true);
+    gBrowser.mPanelContainer.addEventListener("ResetBrowserThemePreview", LightWeightThemeWebInstaller, false, true);
+
+#ifdef MOZ_E10S_COMPAT
+    // Bug 666808 - AeroPeek support for e10s
+#else
+    if (Win7Features)
+      Win7Features.onOpenWindow();
+#endif
+
+   // called when we go into full screen, even if initiated by a web page script
+    window.addEventListener("fullscreen", onFullScreen, true);
+
+    // Called when we enter DOM full-screen mode. Note we can already be in browser
+    // full-screen mode when we enter DOM full-screen mode.
+    window.addEventListener("MozEnteredDomFullscreen", onMozEnteredDomFullscreen, true);
+
+    if (window.fullScreen)
+      onFullScreen();
+    if (document.mozFullScreen)
+      onMozEnteredDomFullscreen();
+
+#ifdef MOZ_SERVICES_SYNC
+    // initialize the sync UI
+    gSyncUI.init();
+#endif
+
+    gBrowserThumbnails.init();
+    TabView.init();
+
+    setUrlAndSearchBarWidthForConditionalForwardButton();
+    window.addEventListener("resize", function resizeHandler(event) {
+      if (event.target == window)
+        setUrlAndSearchBarWidthForConditionalForwardButton();
+    });
+
+    // Enable developer toolbar?
+    let devToolbarEnabled = gPrefService.getBoolPref("devtools.toolbar.enabled");
+    if (devToolbarEnabled) {
+      document.getElementById("menu_devToolbar").hidden = false;
+      document.getElementById("Tools:DevToolbar").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_devToolbar").hidden = false;
+#endif
+    }
+
+    // Enable Inspector?
+    let enabled = gPrefService.getBoolPref("devtools.inspector.enabled");
+    if (enabled) {
+      document.getElementById("menu_pageinspect").hidden = false;
+      document.getElementById("Tools:Inspect").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_pageInspect").hidden = false;
+#endif
+      document.getElementById("developer-toolbar-inspector").hidden = false;
+    }
+
+    // Enable Debugger?
+    let enabled = gPrefService.getBoolPref("devtools.debugger.enabled");
+    if (enabled) {
+      document.getElementById("menu_debugger").hidden = false;
+      document.getElementById("Tools:Debugger").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_debugger").hidden = false;
+#endif
+      document.getElementById("developer-toolbar-debugger").hidden = false;
+    }
+
+    // Enable Remote Debugger?
+    let enabled = gPrefService.getBoolPref("devtools.debugger.remote-enabled");
+    if (enabled) {
+      document.getElementById("menu_remoteDebugger").hidden = false;
+      document.getElementById("Tools:RemoteDebugger").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_remoteDebugger").hidden = false;
+#endif
+    }
+
+    // Enable Chrome Debugger?
+    let enabled = gPrefService.getBoolPref("devtools.chrome.enabled") &&
+                  gPrefService.getBoolPref("devtools.debugger.chrome-enabled") &&
+                  gPrefService.getBoolPref("devtools.debugger.remote-enabled");
+    if (enabled) {
+      document.getElementById("menu_chromeDebugger").hidden = false;
+      document.getElementById("Tools:ChromeDebugger").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_chromeDebugger").hidden = false;
+#endif
+    }
+
+    // Enable Error Console?
+    // XXX Temporarily always-enabled, see bug 601201
+    let consoleEnabled = true || gPrefService.getBoolPref("devtools.errorconsole.enabled");
+    if (consoleEnabled) {
+      document.getElementById("javascriptConsole").hidden = false;
+      document.getElementById("key_errorConsole").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_errorConsole").hidden = false;
+#endif
+    }
+
+    // Enable Scratchpad in the UI, if the preference allows this.
+    let scratchpadEnabled = gPrefService.getBoolPref(Scratchpad.prefEnabledName);
+    if (scratchpadEnabled) {
+      document.getElementById("menu_scratchpad").hidden = false;
+      document.getElementById("Tools:Scratchpad").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_scratchpad").hidden = false;
+#endif
+    }
+
+    // Enable Style Editor?
+    let styleEditorEnabled = gPrefService.getBoolPref(StyleEditor.prefEnabledName);
+    if (styleEditorEnabled) {
+      document.getElementById("menu_styleeditor").hidden = false;
+      document.getElementById("Tools:StyleEditor").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_styleeditor").hidden = false;
+#endif
+    }
+
+#ifdef MENUBAR_CAN_AUTOHIDE
+    // If the user (or the locale) hasn't enabled the top-level "Character
+    // Encoding" menu via the "browser.menu.showCharacterEncoding" preference,
+    // hide it.
+    if ("true" != gPrefService.getComplexValue("browser.menu.showCharacterEncoding",
+                                               Ci.nsIPrefLocalizedString).data)
+      document.getElementById("appmenu_charsetMenu").hidden = true;
+#endif
+
+    // Enable Responsive UI?
+    let responsiveUIEnabled = gPrefService.getBoolPref("devtools.responsiveUI.enabled");
+    if (responsiveUIEnabled) {
+      document.getElementById("menu_responsiveUI").hidden = false;
+      document.getElementById("Tools:ResponsiveUI").removeAttribute("disabled");
+#ifdef MENUBAR_CAN_AUTOHIDE
+      document.getElementById("appmenu_responsiveUI").hidden = false;
+#endif
+      document.getElementById("developer-toolbar-responsiveui").hidden = false;
+    }
+
+    let appMenuButton = document.getElementById("appmenu-button");
+    let appMenuPopup = document.getElementById("appmenu-popup");
+    if (appMenuButton && appMenuPopup) {
+      let appMenuOpening = null;
+      appMenuButton.addEventListener("mousedown", function(event) {
+        if (event.button == 0)
+          appMenuOpening = new Date();
+      }, false);
+      appMenuPopup.addEventListener("popupshown", function(event) {
+        if (event.target != appMenuPopup || !appMenuOpening)
+          return;
+        let duration = new Date() - appMenuOpening;
+        appMenuOpening = null;
+        Services.telemetry.getHistogramById("FX_APP_MENU_OPEN_MS").add(duration);
+      }, false);
+    }
+
+    window.addEventListener("mousemove", MousePosTracker, false);
+    window.addEventListener("dragover", MousePosTracker, false);
+
+    // End startup crash tracking after a delay to catch crashes while restoring
+    // tabs and to postpone saving the pref to disk.
+    try {
+      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
+                       getService(Ci.nsIAppStartup);
+      const startupCrashEndDelay = 30 * 1000;
+      setTimeout(appStartup.trackStartupCrashEnd, startupCrashEndDelay);
+    } catch (ex) {
+      Cu.reportError("Could not end startup crash tracking: " + ex);
+    }
+
+    Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
+    TelemetryTimestamps.add("delayedStartupFinished");
+  },
+
+  onUnload: function() {
+    // In certain scenarios it's possible for unload to be fired before onload,
+    // (e.g. if the window is being closed after browser.js loads but before the
+    // load completes). In that case, there's nothing to do here.
+    if (!gStartupRan)
+      return;
+
+    if (!__lookupGetter__("InspectorUI"))
+      InspectorUI.destroy();
+
+    // First clean up services initialized in gBrowserInit.onLoad (or those whose
+    // uninit methods don't depend on the services having been initialized).
+    allTabs.uninit();
+
+    CombinedStopReload.uninit();
+
+    gGestureSupport.init(false);
+
+    FullScreen.cleanup();
+
+    Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
+
+    try {
+      gBrowser.removeProgressListener(window.XULBrowserWindow);
+      gBrowser.removeTabsProgressListener(window.TabsProgressListener);
+    } catch (ex) {
+    }
+
+    PlacesStarButton.uninit();
+
+    gPrivateBrowsingUI.uninit();
+
+    TabsOnTop.uninit();
+
+    TabsInTitlebar.uninit();
+
+    var enumerator = Services.wm.getEnumerator(null);
+    enumerator.getNext();
+    if (!enumerator.hasMoreElements()) {
+      document.persist("sidebar-box", "sidebarcommand");
+      document.persist("sidebar-box", "width");
+      document.persist("sidebar-box", "src");
+      document.persist("sidebar-title", "value");
+    }
+
+    // Now either cancel delayedStartup, or clean up the services initialized from
+    // it.
+    if (gDelayedStartupTimeoutId) {
+      clearTimeout(gDelayedStartupTimeoutId);
+    } else {
+      if (Win7Features)
+        Win7Features.onCloseWindow();
+
+      gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
+      gPrefService.removeObserver(allTabs.prefName, allTabs);
+      ctrlTab.uninit();
+      TabView.uninit();
+      gBrowserThumbnails.uninit();
+      FullZoom.destroy();
+
+      Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
+      Services.obs.removeObserver(gXPInstallObserver, "addon-install-disabled");
+      Services.obs.removeObserver(gXPInstallObserver, "addon-install-started");
+      Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
+      Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
+      Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
+      Services.obs.removeObserver(gFormSubmitObserver, "invalidformsubmit");
+
+      try {
+        gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+
+      BrowserOffline.uninit();
+      OfflineApps.uninit();
+      IndexedDBPromptHelper.uninit();
+      AddonManager.removeAddonListener(AddonsMgrListener);
+    }
+
+    // Final window teardown, do this last.
+    window.XULBrowserWindow.destroy();
+    window.XULBrowserWindow = null;
+    window.QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIWebNavigation)
+          .QueryInterface(Ci.nsIDocShellTreeItem).treeOwner
+          .QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIXULWindow)
+          .XULBrowserWindow = null;
+    window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = null;
+  },
+
+#ifdef XP_MACOSX
+  // nonBrowserWindowStartup(), nonBrowserWindowDelayedStartup(), and
+  // nonBrowserWindowShutdown() are used for non-browser windows in
+  // macBrowserOverlay
+  nonBrowserWindowStartup: function() {
+    // Disable inappropriate commands / submenus
+    var disabledItems = ['Browser:SavePage',
+                         'Browser:SendLink', 'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain',
+                         'viewToolbarsMenu', 'viewSidebarMenuMenu', 'Browser:Reload',
+                         'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
+                         'viewHistorySidebar', 'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs',
+                         'View:PageInfo', 'Tasks:InspectPage', 'Browser:ToggleTabView', 'Browser:ToggleAddonBar'];
+    var element;
+
+    for (var id in disabledItems) {
+      element = document.getElementById(disabledItems[id]);
+      if (element)
+        element.setAttribute("disabled", "true");
+    }
+
+    // If no windows are active (i.e. we're the hidden window), disable the close, minimize
+    // and zoom menu commands as well
+    if (window.location.href == "chrome://browser/content/hiddenWindow.xul") {
+      var hiddenWindowDisabledItems = ['cmd_close', 'minimizeWindow', 'zoomWindow'];
+      for (var id in hiddenWindowDisabledItems) {
+        element = document.getElementById(hiddenWindowDisabledItems[id]);
+        if (element)
+          element.setAttribute("disabled", "true");
+      }
+
+      // also hide the window-list separator
+      element = document.getElementById("sep-window-list");
+      element.setAttribute("hidden", "true");
+
+      // Setup the dock menu.
+      let dockMenuElement = document.getElementById("menu_mac_dockmenu");
+      if (dockMenuElement != null) {
+        let nativeMenu = Cc["@mozilla.org/widget/standalonenativemenu;1"]
+                         .createInstance(Ci.nsIStandaloneNativeMenu);
+
+        try {
+          nativeMenu.init(dockMenuElement);
+
+          let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
+                            .getService(Ci.nsIMacDockSupport);
+          dockSupport.dockMenu = nativeMenu;
+        }
+        catch (e) {
+        }
+      }
+    }
+
+    gDelayedStartupTimeoutId = setTimeout(this.nonBrowserWindowDelayedStartup.bind(this), 0);
+  },
+
+  nonBrowserWindowDelayedStartup: function() {
+    gDelayedStartupTimeoutId = null;
+
+    // initialise the offline listener
+    BrowserOffline.init();
+
+    // Set up Sanitize Item
+    this._initializeSanitizer();
+
+    // initialize the private browsing UI
+    gPrivateBrowsingUI.init();
+
+#ifdef MOZ_SERVICES_SYNC
+    // initialize the sync UI
+    gSyncUI.init();
+#endif
+
+    gStartupRan = true;
+  },
+
+  nonBrowserWindowShutdown: function() {
+    // If nonBrowserWindowDelayedStartup hasn't run yet, we have no work to do -
+    // just cancel the pending timeout and return;
+    if (gDelayedStartupTimeoutId) {
+      clearTimeout(gDelayedStartupTimeoutId);
+      return;
+    }
+
+    BrowserOffline.uninit();
+
+    gPrivateBrowsingUI.uninit();
+  },
+#endif
+
+  _initializeSanitizer: function() {
+    const kDidSanitizeDomain = "privacy.sanitize.didShutdownSanitize";
+    if (gPrefService.prefHasUserValue(kDidSanitizeDomain)) {
+      gPrefService.clearUserPref(kDidSanitizeDomain);
+      // We need to persist this preference change, since we want to
+      // check it at next app start even if the browser exits abruptly
+      gPrefService.savePrefFile(null);
+    }
+
+    /**
+     * Migrate Firefox 3.0 privacy.item prefs under one of these conditions:
+     *
+     * a) User has customized any privacy.item prefs
+     * b) privacy.sanitize.sanitizeOnShutdown is set
+     */
+    if (!gPrefService.getBoolPref("privacy.sanitize.migrateFx3Prefs")) {
+      let itemBranch = gPrefService.getBranch("privacy.item.");
+      let itemArray = itemBranch.getChildList("");
+
+      // See if any privacy.item prefs are set
+      let doMigrate = itemArray.some(function (name) itemBranch.prefHasUserValue(name));
+      // Or if sanitizeOnShutdown is set
+      if (!doMigrate)
+        doMigrate = gPrefService.getBoolPref("privacy.sanitize.sanitizeOnShutdown");
+
+      if (doMigrate) {
+        let cpdBranch = gPrefService.getBranch("privacy.cpd.");
+        let clearOnShutdownBranch = gPrefService.getBranch("privacy.clearOnShutdown.");
+        itemArray.forEach(function (name) {
+          try {
+            // don't migrate password or offlineApps clearing in the CRH dialog since
+            // there's no UI for those anymore. They default to false. bug 497656
+            if (name != "passwords" && name != "offlineApps")
+              cpdBranch.setBoolPref(name, itemBranch.getBoolPref(name));
+            clearOnShutdownBranch.setBoolPref(name, itemBranch.getBoolPref(name));
+          }
+          catch(e) {
+            Cu.reportError("Exception thrown during privacy pref migration: " + e);
+          }
+        });
+      }
+
+      gPrefService.setBoolPref("privacy.sanitize.migrateFx3Prefs", true);
+    }
+  },
 }
+
+/* Legacy global init functions */
+var BrowserStartup        = gBrowserInit.onLoad.bind(gBrowserInit);
+var BrowserShutdown       = gBrowserInit.onUnload.bind(gBrowserInit);
+#ifdef XP_MACOSX
+var nonBrowserWindowStartup        = gBrowserInit.nonBrowserWindowStartup.bind(gBrowserInit);
+var nonBrowserWindowDelayedStartup = gBrowserInit.nonBrowserWindowDelayedStartup.bind(gBrowserInit);
+var nonBrowserWindowShutdown       = gBrowserInit.nonBrowserWindowShutdown.bind(gBrowserInit);
+#endif
+
 
 function HandleAppCommandEvent(evt) {
   evt.stopPropagation();
@@ -1178,644 +1793,6 @@ function HandleAppCommandEvent(evt) {
     break;
   default:
     break;
-  }
-}
-
-function prepareForStartup() {
-  gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
-
-  gBrowser.addEventListener("PluginNotFound",     gPluginHandler, true);
-  gBrowser.addEventListener("PluginCrashed",      gPluginHandler, true);
-  gBrowser.addEventListener("PluginBlocklisted",  gPluginHandler, true);
-  gBrowser.addEventListener("PluginOutdated",     gPluginHandler, true);
-  gBrowser.addEventListener("PluginDisabled",     gPluginHandler, true);
-  gBrowser.addEventListener("PluginClickToPlay",  gPluginHandler, true);
-  gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
-#ifdef XP_MACOSX
-  gBrowser.addEventListener("npapi-carbon-event-model-failure", gPluginHandler, true);
-#endif
-
-  Services.obs.addObserver(gPluginHandler.pluginCrashed, "plugin-crashed", false);
-
-  window.addEventListener("AppCommand", HandleAppCommandEvent, true);
-
-  var webNavigation;
-  try {
-    webNavigation = getWebNavigation();
-    if (!webNavigation)
-      throw "no XBL binding for browser";
-  } catch (e) {
-    alert("Error launching browser window:" + e);
-    window.close(); // Give up.
-    return;
-  }
-
-  messageManager.loadFrameScript("chrome://browser/content/content.js", true);
-
-  // initialize observers and listeners
-  // and give C++ access to gBrowser
-  gBrowser.init();
-  XULBrowserWindow.init();
-  window.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(nsIWebNavigation)
-        .QueryInterface(Ci.nsIDocShellTreeItem).treeOwner
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIXULWindow)
-        .XULBrowserWindow = window.XULBrowserWindow;
-  window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow =
-    new nsBrowserAccess();
-
-  // set default character set if provided
-  if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
-    if (window.arguments[1].indexOf("charset=") != -1) {
-      var arrayArgComponents = window.arguments[1].split("=");
-      if (arrayArgComponents) {
-        //we should "inherit" the charset menu setting in a new window
-        getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
-      }
-    }
-  }
-
-  // Manually hook up session and global history for the first browser
-  // so that we don't have to load global history before bringing up a
-  // window.
-  // Wire up session and global history before any possible
-  // progress notifications for back/forward button updating
-  webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                           .createInstance(Components.interfaces.nsISHistory);
-  Services.obs.addObserver(gBrowser.browsers[0], "browser:purge-session-history", false);
-
-  // remove the disablehistory attribute so the browser cleans up, as
-  // though it had done this work itself
-  gBrowser.browsers[0].removeAttribute("disablehistory");
-
-  // enable global history
-  try {
-    gBrowser.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
-  } catch(ex) {
-    Components.utils.reportError("Places database may be locked: " + ex);
-  }
-
-#ifdef MOZ_E10S_COMPAT
-  // Bug 666801 - WebProgress support for e10s
-#else
-  // hook up UI through progress listener
-  gBrowser.addProgressListener(window.XULBrowserWindow);
-  gBrowser.addTabsProgressListener(window.TabsProgressListener);
-#endif
-
-  // setup our common DOMLinkAdded listener
-  gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
-
-  // setup our MozApplicationManifest listener
-  gBrowser.addEventListener("MozApplicationManifest",
-                            OfflineApps, false);
-
-  // setup simple gestures support
-  gGestureSupport.init(true);
-}
-
-function delayedStartup(isLoadingBlank, mustLoadSidebar) {
-  let tmp = {};
-  Cu.import("resource:///modules/TelemetryTimestamps.jsm", tmp);
-  let TelemetryTimestamps = tmp.TelemetryTimestamps;
-  TelemetryTimestamps.add("delayedStartupStarted");
-  gDelayedStartupTimeoutId = null;
-
-  Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
-  Services.obs.addObserver(gXPInstallObserver, "addon-install-disabled", false);
-  Services.obs.addObserver(gXPInstallObserver, "addon-install-started", false);
-  Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
-  Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
-  Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
-  Services.obs.addObserver(gFormSubmitObserver, "invalidformsubmit", false);
-
-  BrowserOffline.init();
-  OfflineApps.init();
-  IndexedDBPromptHelper.init();
-  gFormSubmitObserver.init();
-  AddonManager.addAddonListener(AddonsMgrListener);
-
-  gBrowser.addEventListener("pageshow", function(evt) { setTimeout(pageShowEventHandlers, 0, evt); }, true);
-
-  // Ensure login manager is up and running.
-  Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-
-  if (mustLoadSidebar) {
-    let sidebar = document.getElementById("sidebar");
-    let sidebarBox = document.getElementById("sidebar-box");
-    sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
-  }
-
-  UpdateUrlbarSearchSplitterState();
-
-  if (isLoadingBlank && gURLBar && isElementVisible(gURLBar))
-    gURLBar.focus();
-  else
-    gBrowser.selectedBrowser.focus();
-
-  gNavToolbox.customizeDone = BrowserToolboxCustomizeDone;
-  gNavToolbox.customizeChange = BrowserToolboxCustomizeChange;
-
-  // Set up Sanitize Item
-  initializeSanitizer();
-
-  // Enable/Disable auto-hide tabbar
-  gBrowser.tabContainer.updateVisibility();
-
-  gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
-
-  var homeButton = document.getElementById("home-button");
-  gHomeButton.updateTooltip(homeButton);
-  gHomeButton.updatePersonalToolbarStyle(homeButton);
-
-  // BiDi UI
-  gBidiUI = isBidiEnabled();
-  if (gBidiUI) {
-    document.getElementById("documentDirection-separator").hidden = false;
-    document.getElementById("documentDirection-swap").hidden = false;
-    document.getElementById("textfieldDirection-separator").hidden = false;
-    document.getElementById("textfieldDirection-swap").hidden = false;
-  }
-
-  // Setup click-and-hold gestures access to the session history
-  // menus if global click-and-hold isn't turned on
-  if (!getBoolPref("ui.click_hold_context_menus", false))
-    SetClickAndHoldHandlers();
-
-  // Initialize the full zoom setting.
-  // We do this before the session restore service gets initialized so we can
-  // apply full zoom settings to tabs restored by the session restore service.
-  try {
-    FullZoom.init();
-  }
-  catch(ex) {
-    Components.utils.reportError("Failed to init content pref service:\n" + ex);
-  }
-
-#ifdef MOZ_E10S_COMPAT
-  // Bug 666804 - NetworkPrioritizer support for e10s
-#else
-  let NP = {};
-  Cu.import("resource:///modules/NetworkPrioritizer.jsm", NP);
-  NP.trackBrowserWindow(window);
-#endif
-
-  // initialize the session-restore service (in case it's not already running)
-  try {
-    Cc["@mozilla.org/browser/sessionstore;1"]
-      .getService(Ci.nsISessionStore)
-      .init(window);
-  } catch (ex) {
-    dump("nsSessionStore could not be initialized: " + ex + "\n");
-  }
-
-  PlacesToolbarHelper.init();
-
-  ctrlTab.readPref();
-  gPrefService.addObserver(ctrlTab.prefName, ctrlTab, false);
-  gPrefService.addObserver(allTabs.prefName, allTabs, false);
-
-  // Initialize the download manager some time after the app starts so that
-  // auto-resume downloads begin (such as after crashing or quitting with
-  // active downloads) and speeds up the first-load of the download manager UI.
-  // If the user manually opens the download manager before the timeout, the
-  // downloads will start right away, and getting the service again won't hurt.
-  setTimeout(function() {
-    gDownloadMgr = Cc["@mozilla.org/download-manager;1"].
-                   getService(Ci.nsIDownloadManager);
-
-#ifdef XP_WIN
-    if (Win7Features) {
-      let tempScope = {};
-      Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm",
-                tempScope);
-      tempScope.DownloadTaskbarProgress.onBrowserWindowLoad(window);
-    }
-#endif
-  }, 10000);
-
-  // The object handling the downloads indicator is also initialized here in the
-  // delayed startup function, but the actual indicator element is not loaded
-  // unless there are downloads to be displayed.
-  DownloadsButton.initializeIndicator();
-
-#ifndef XP_MACOSX
-  updateEditUIVisibility();
-  let placesContext = document.getElementById("placesContext");
-  placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
-  placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
-#endif
-
-  gBrowser.mPanelContainer.addEventListener("InstallBrowserTheme", LightWeightThemeWebInstaller, false, true);
-  gBrowser.mPanelContainer.addEventListener("PreviewBrowserTheme", LightWeightThemeWebInstaller, false, true);
-  gBrowser.mPanelContainer.addEventListener("ResetBrowserThemePreview", LightWeightThemeWebInstaller, false, true);
-
-#ifdef MOZ_E10S_COMPAT
-  // Bug 666808 - AeroPeek support for e10s
-#else
-  if (Win7Features)
-    Win7Features.onOpenWindow();
-#endif
-
-  // called when we go into full screen, even if it is
-  // initiated by a web page script
-  window.addEventListener("fullscreen", onFullScreen, true);
-
-  // Called when we enter DOM full-screen mode. Note we can already be in browser
-  // full-screen mode when we enter DOM full-screen mode.
-  window.addEventListener("MozEnteredDomFullscreen", onMozEnteredDomFullscreen, true);
-
-  if (window.fullScreen)
-    onFullScreen();
-  if (document.mozFullScreen)
-    onMozEnteredDomFullscreen();
-
-#ifdef MOZ_SERVICES_SYNC
-  // initialize the sync UI
-  gSyncUI.init();
-#endif
-
-  gBrowserThumbnails.init();
-  TabView.init();
-
-  setUrlAndSearchBarWidthForConditionalForwardButton();
-  window.addEventListener("resize", function resizeHandler(event) {
-    if (event.target == window)
-      setUrlAndSearchBarWidthForConditionalForwardButton();
-  });
-
-  // Enable developer toolbar?
-  let devToolbarEnabled = gPrefService.getBoolPref("devtools.toolbar.enabled");
-  if (devToolbarEnabled) {
-    document.getElementById("menu_devToolbar").hidden = false;
-    document.getElementById("Tools:DevToolbar").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_devToolbar").hidden = false;
-#endif
-  }
-
-  // Enable Inspector?
-  let enabled = gPrefService.getBoolPref("devtools.inspector.enabled");
-  if (enabled) {
-    document.getElementById("menu_pageinspect").hidden = false;
-    document.getElementById("Tools:Inspect").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_pageInspect").hidden = false;
-#endif
-    document.getElementById("developer-toolbar-inspector").hidden = false;
-  }
-
-  // Enable Debugger?
-  let enabled = gPrefService.getBoolPref("devtools.debugger.enabled");
-  if (enabled) {
-    document.getElementById("menu_debugger").hidden = false;
-    document.getElementById("Tools:Debugger").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_debugger").hidden = false;
-#endif
-    document.getElementById("developer-toolbar-debugger").hidden = false;
-  }
-
-  // Enable Remote Debugger?
-  let enabled = gPrefService.getBoolPref("devtools.debugger.remote-enabled");
-  if (enabled) {
-    document.getElementById("menu_remoteDebugger").hidden = false;
-    document.getElementById("Tools:RemoteDebugger").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_remoteDebugger").hidden = false;
-#endif
-  }
-
-  // Enable Chrome Debugger?
-  let enabled = gPrefService.getBoolPref("devtools.chrome.enabled") &&
-                gPrefService.getBoolPref("devtools.debugger.chrome-enabled") &&
-                gPrefService.getBoolPref("devtools.debugger.remote-enabled");
-  if (enabled) {
-    document.getElementById("menu_chromeDebugger").hidden = false;
-    document.getElementById("Tools:ChromeDebugger").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_chromeDebugger").hidden = false;
-#endif
-  }
-
-  // Enable Error Console?
-  // XXX Temporarily always-enabled, see bug 601201
-  let consoleEnabled = true || gPrefService.getBoolPref("devtools.errorconsole.enabled");
-  if (consoleEnabled) {
-    document.getElementById("javascriptConsole").hidden = false;
-    document.getElementById("key_errorConsole").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_errorConsole").hidden = false;
-#endif
-  }
-
-  // Enable Scratchpad in the UI, if the preference allows this.
-  let scratchpadEnabled = gPrefService.getBoolPref(Scratchpad.prefEnabledName);
-  if (scratchpadEnabled) {
-    document.getElementById("menu_scratchpad").hidden = false;
-    document.getElementById("Tools:Scratchpad").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_scratchpad").hidden = false;
-#endif
-  }
-
-  // Enable Style Editor?
-  let styleEditorEnabled = gPrefService.getBoolPref(StyleEditor.prefEnabledName);
-  if (styleEditorEnabled) {
-    document.getElementById("menu_styleeditor").hidden = false;
-    document.getElementById("Tools:StyleEditor").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_styleeditor").hidden = false;
-#endif
-  }
-
-#ifdef MENUBAR_CAN_AUTOHIDE
-  // If the user (or the locale) hasn't enabled the top-level "Character
-  // Encoding" menu via the "browser.menu.showCharacterEncoding" preference,
-  // hide it.
-  if ("true" != gPrefService.getComplexValue("browser.menu.showCharacterEncoding",
-                                             Ci.nsIPrefLocalizedString).data)
-    document.getElementById("appmenu_charsetMenu").hidden = true;
-#endif
-
-  // Enable Responsive UI?
-  let responsiveUIEnabled = gPrefService.getBoolPref("devtools.responsiveUI.enabled");
-  if (responsiveUIEnabled) {
-    document.getElementById("menu_responsiveUI").hidden = false;
-    document.getElementById("Tools:ResponsiveUI").removeAttribute("disabled");
-#ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_responsiveUI").hidden = false;
-#endif
-    document.getElementById("developer-toolbar-responsiveui").hidden = false;
-  }
-
-  let appMenuButton = document.getElementById("appmenu-button");
-  let appMenuPopup = document.getElementById("appmenu-popup");
-  if (appMenuButton && appMenuPopup) {
-    let appMenuOpening = null;
-    appMenuButton.addEventListener("mousedown", function(event) {
-      if (event.button == 0)
-        appMenuOpening = new Date();
-    }, false);
-    appMenuPopup.addEventListener("popupshown", function(event) {
-      if (event.target != appMenuPopup || !appMenuOpening)
-        return;
-      let duration = new Date() - appMenuOpening;
-      appMenuOpening = null;
-      Services.telemetry.getHistogramById("FX_APP_MENU_OPEN_MS").add(duration);
-    }, false);
-  }
-
-  window.addEventListener("mousemove", MousePosTracker, false);
-  window.addEventListener("dragover", MousePosTracker, false);
-
-  // End startup crash tracking after a delay to catch crashes while restoring
-  // tabs and to postpone saving the pref to disk.
-  try {
-    let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
-                     getService(Ci.nsIAppStartup);
-    const startupCrashEndDelay = 30 * 1000;
-    setTimeout(appStartup.trackStartupCrashEnd, startupCrashEndDelay);
-  } catch (ex) {
-    Cu.reportError("Could not end startup crash tracking: " + ex);
-  }
-
-  Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
-  TelemetryTimestamps.add("delayedStartupFinished");
-}
-
-function BrowserShutdown() {
-  // In certain scenarios it's possible for unload to be fired before onload,
-  // (e.g. if the window is being closed after browser.js loads but before the
-  // load completes). In that case, there's nothing to do here.
-  if (!gStartupRan)
-    return;
-
-  if (!__lookupGetter__("InspectorUI"))
-    InspectorUI.destroy();
-
-  // First clean up services initialized in BrowserStartup (or those whose
-  // uninit methods don't depend on the services having been initialized).
-  allTabs.uninit();
-
-  CombinedStopReload.uninit();
-
-  gGestureSupport.init(false);
-
-  FullScreen.cleanup();
-
-  Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
-
-  try {
-    gBrowser.removeProgressListener(window.XULBrowserWindow);
-    gBrowser.removeTabsProgressListener(window.TabsProgressListener);
-  } catch (ex) {
-  }
-
-  PlacesStarButton.uninit();
-
-  gPrivateBrowsingUI.uninit();
-
-  TabsOnTop.uninit();
-
-  TabsInTitlebar.uninit();
-
-  var enumerator = Services.wm.getEnumerator(null);
-  enumerator.getNext();
-  if (!enumerator.hasMoreElements()) {
-    document.persist("sidebar-box", "sidebarcommand");
-    document.persist("sidebar-box", "width");
-    document.persist("sidebar-box", "src");
-    document.persist("sidebar-title", "value");
-  }
-
-  // Now either cancel delayedStartup, or clean up the services initialized from
-  // it.
-  if (gDelayedStartupTimeoutId) {
-    clearTimeout(gDelayedStartupTimeoutId);
-  } else {
-    if (Win7Features)
-      Win7Features.onCloseWindow();
-
-    gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
-    gPrefService.removeObserver(allTabs.prefName, allTabs);
-    ctrlTab.uninit();
-    TabView.uninit();
-    gBrowserThumbnails.uninit();
-
-    try {
-      FullZoom.destroy();
-    }
-    catch(ex) {
-      Components.utils.reportError(ex);
-    }
-
-    Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
-    Services.obs.removeObserver(gXPInstallObserver, "addon-install-disabled");
-    Services.obs.removeObserver(gXPInstallObserver, "addon-install-started");
-    Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
-    Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
-    Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
-    Services.obs.removeObserver(gFormSubmitObserver, "invalidformsubmit");
-
-    try {
-      gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
-    } catch (ex) {
-      Components.utils.reportError(ex);
-    }
-
-    BrowserOffline.uninit();
-    OfflineApps.uninit();
-    IndexedDBPromptHelper.uninit();
-    AddonManager.removeAddonListener(AddonsMgrListener);
-  }
-
-  // Final window teardown, do this last.
-  window.XULBrowserWindow.destroy();
-  window.XULBrowserWindow = null;
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIWebNavigation)
-        .QueryInterface(Components.interfaces.nsIDocShellTreeItem).treeOwner
-        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIXULWindow)
-        .XULBrowserWindow = null;
-  window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = null;
-}
-
-#ifdef XP_MACOSX
-// nonBrowserWindowStartup(), nonBrowserWindowDelayedStartup(), and
-// nonBrowserWindowShutdown() are used for non-browser windows in
-// macBrowserOverlay
-function nonBrowserWindowStartup() {
-  // Disable inappropriate commands / submenus
-  var disabledItems = ['Browser:SavePage',
-                       'Browser:SendLink', 'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain',
-                       'viewToolbarsMenu', 'viewSidebarMenuMenu', 'Browser:Reload',
-                       'viewFullZoomMenu', 'pageStyleMenu', 'charsetMenu', 'View:PageSource', 'View:FullScreen',
-                       'viewHistorySidebar', 'Browser:AddBookmarkAs', 'Browser:BookmarkAllTabs',
-                       'View:PageInfo', 'Tasks:InspectPage', 'Browser:ToggleTabView', 'Browser:ToggleAddonBar'];
-  var element;
-
-  for (var id in disabledItems) {
-    element = document.getElementById(disabledItems[id]);
-    if (element)
-      element.setAttribute("disabled", "true");
-  }
-
-  // If no windows are active (i.e. we're the hidden window), disable the close, minimize
-  // and zoom menu commands as well
-  if (window.location.href == "chrome://browser/content/hiddenWindow.xul") {
-    var hiddenWindowDisabledItems = ['cmd_close', 'minimizeWindow', 'zoomWindow'];
-    for (var id in hiddenWindowDisabledItems) {
-      element = document.getElementById(hiddenWindowDisabledItems[id]);
-      if (element)
-        element.setAttribute("disabled", "true");
-    }
-
-    // also hide the window-list separator
-    element = document.getElementById("sep-window-list");
-    element.setAttribute("hidden", "true");
-
-    // Setup the dock menu.
-    let dockMenuElement = document.getElementById("menu_mac_dockmenu");
-    if (dockMenuElement != null) {
-      let nativeMenu = Cc["@mozilla.org/widget/standalonenativemenu;1"]
-                       .createInstance(Ci.nsIStandaloneNativeMenu);
-
-      try {
-        nativeMenu.init(dockMenuElement);
-
-        let dockSupport = Cc["@mozilla.org/widget/macdocksupport;1"]
-                          .getService(Ci.nsIMacDockSupport);
-        dockSupport.dockMenu = nativeMenu;
-      }
-      catch (e) {
-      }
-    }
-  }
-
-  gDelayedStartupTimeoutId = setTimeout(nonBrowserWindowDelayedStartup, 0);
-}
-
-function nonBrowserWindowDelayedStartup() {
-  gDelayedStartupTimeoutId = null;
-
-  // initialise the offline listener
-  BrowserOffline.init();
-
-  // Set up Sanitize Item
-  initializeSanitizer();
-
-  // initialize the private browsing UI
-  gPrivateBrowsingUI.init();
-
-#ifdef MOZ_SERVICES_SYNC
-  // initialize the sync UI
-  gSyncUI.init();
-#endif
-
-  gStartupRan = true;
-}
-
-function nonBrowserWindowShutdown() {
-  // If nonBrowserWindowDelayedStartup hasn't run yet, we have no work to do -
-  // just cancel the pending timeout and return;
-  if (gDelayedStartupTimeoutId) {
-    clearTimeout(gDelayedStartupTimeoutId);
-    return;
-  }
-
-  BrowserOffline.uninit();
-
-  gPrivateBrowsingUI.uninit();
-}
-#endif
-
-function initializeSanitizer()
-{
-  const kDidSanitizeDomain = "privacy.sanitize.didShutdownSanitize";
-  if (gPrefService.prefHasUserValue(kDidSanitizeDomain)) {
-    gPrefService.clearUserPref(kDidSanitizeDomain);
-    // We need to persist this preference change, since we want to
-    // check it at next app start even if the browser exits abruptly
-    gPrefService.savePrefFile(null);
-  }
-
-  /**
-   * Migrate Firefox 3.0 privacy.item prefs under one of these conditions:
-   *
-   * a) User has customized any privacy.item prefs
-   * b) privacy.sanitize.sanitizeOnShutdown is set
-   */
-  if (!gPrefService.getBoolPref("privacy.sanitize.migrateFx3Prefs")) {
-    let itemBranch = gPrefService.getBranch("privacy.item.");
-    let itemArray = itemBranch.getChildList("");
-
-    // See if any privacy.item prefs are set
-    let doMigrate = itemArray.some(function (name) itemBranch.prefHasUserValue(name));
-    // Or if sanitizeOnShutdown is set
-    if (!doMigrate)
-      doMigrate = gPrefService.getBoolPref("privacy.sanitize.sanitizeOnShutdown");
-
-    if (doMigrate) {
-      let cpdBranch = gPrefService.getBranch("privacy.cpd.");
-      let clearOnShutdownBranch = gPrefService.getBranch("privacy.clearOnShutdown.");
-      itemArray.forEach(function (name) {
-        try {
-          // don't migrate password or offlineApps clearing in the CRH dialog since
-          // there's no UI for those anymore. They default to false. bug 497656
-          if (name != "passwords" && name != "offlineApps")
-            cpdBranch.setBoolPref(name, itemBranch.getBoolPref(name));
-          clearOnShutdownBranch.setBoolPref(name, itemBranch.getBoolPref(name));
-        }
-        catch(e) {
-          Cu.reportError("Exception thrown during privacy pref migration: " + e);
-        }
-      });
-    }
-
-    gPrefService.setBoolPref("privacy.sanitize.migrateFx3Prefs", true);
   }
 }
 
@@ -1897,14 +1874,9 @@ function BrowserHandleShiftBackspace()
   }
 }
 
-function BrowserStop()
-{
-  try {
-    const stopFlags = nsIWebNavigation.STOP_ALL;
-    getWebNavigation().stop(stopFlags);
-  }
-  catch(ex) {
-  }
+function BrowserStop() {
+  const stopFlags = nsIWebNavigation.STOP_ALL;
+  gBrowser.webNavigation.stop(stopFlags);
 }
 
 function BrowserReloadOrDuplicate(aEvent) {
@@ -2047,7 +2019,7 @@ function delayedOpenWindow(chrome, flags, href, postData)
   // The other way to use setTimeout,
   // setTimeout(openDialog, 10, chrome, "_blank", flags, url),
   // doesn't work here.  The extra "magic" extra argument setTimeout adds to
-  // the callback function would confuse prepareForStartup() by making
+  // the callback function would confuse gBrowserInit.onLoad() by making
   // window.arguments[1] be an integer instead of null.
   setTimeout(function() { openDialog(chrome, "_blank", flags, href, null, null, postData); }, 10);
 }
@@ -2312,7 +2284,7 @@ function BrowserViewSourceOfDocument(aDocument)
   } catch(err) {
       // If nsIWebNavigation cannot be found, just get the one for the whole
       // window...
-      webNav = getWebNavigation();
+      webNav = gBrowser.webNavigation;
   }
   //
   // Get the 'PageDescriptor' for the current document. This allows the
@@ -2361,7 +2333,7 @@ function URLBarSetURI(aURI) {
   var valid = false;
 
   if (value == null) {
-    let uri = aURI || getWebNavigation().currentURI;
+    let uri = aURI || gBrowser.currentURI;
 
     // Replace initial page URIs with an empty string
     // only if there's no opener (bug 370555).
@@ -2706,11 +2678,7 @@ function onMozEnteredDomFullscreen(event) {
 
 function getWebNavigation()
 {
-  try {
-    return gBrowser.webNavigation;
-  } catch (e) {
-    return null;
-  }
+  return gBrowser.webNavigation;
 }
 
 function BrowserReloadWithFlags(reloadFlags) {
@@ -2720,7 +2688,7 @@ function BrowserReloadWithFlags(reloadFlags) {
    * back on using the web navigation's reload method.
    */
 
-  var webNav = getWebNavigation();
+  var webNav = gBrowser.webNavigation;
   try {
     var sh = webNav.sessionHistory;
     if (sh)
@@ -3353,7 +3321,7 @@ function FillHistoryMenu(aParent) {
       aParent.removeChild(children[i]);
   }
 
-  var webNav = getWebNavigation();
+  var webNav = gBrowser.webNavigation;
   var sessionHistory = webNav.sessionHistory;
 
   var count = sessionHistory.count;
@@ -4421,7 +4389,9 @@ var TabsProgressListener = {
         Components.isSuccessCode(aStatus) &&
         /^about:/.test(aWebProgress.DOMWindow.document.documentURI)) {
       aBrowser.addEventListener("click", BrowserOnClick, false);
-      aBrowser.addEventListener("pagehide", function onPageHide() {
+      aBrowser.addEventListener("pagehide", function onPageHide(event) {
+        if (event.target.defaultView.frameElement)
+          return;
         aBrowser.removeEventListener("click", BrowserOnClick, false);
         aBrowser.removeEventListener("pagehide", onPageHide, true);
       }, true);
@@ -4520,7 +4490,7 @@ nsBrowserAccess.prototype = {
       case Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW :
         // FIXME: Bug 408379. So how come this doesn't send the
         // referrer like the other loads do?
-        var url = aURI ? aURI.spec : BROWSER_NEW_TAB_URL;
+        var url = aURI ? aURI.spec : "about:blank";
         // Pass all params to openDialog to ensure that "url" isn't passed through
         // loadOneOrMoreURIs, which splits based on "|"
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url, null, null, null);
@@ -4553,7 +4523,7 @@ nsBrowserAccess.prototype = {
         let loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
         let referrer = aOpener ? makeURI(aOpener.location.href) : null;
 
-        let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : BROWSER_NEW_TAB_URL, {
+        let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : "about:blank", {
                                           referrerURI: referrer,
                                           fromExternal: isExternal,
                                           inBackground: loadInBackground});
@@ -4925,7 +4895,7 @@ function toggleSidebar(commandID, forceOpen) {
   sidebarTitle.value = title;
 
   // We set this attribute here in addition to setting it on the <browser>
-  // element itself, because the code in BrowserShutdown persists this
+  // element itself, because the code in gBrowserInit.onUnload persists this
   // attribute, not the "src" of the <browser id="sidebar">. The reason it
   // does that is that we want to delay sidebar load a bit when a browser
   // window opens. See delayedStartup().
@@ -5345,7 +5315,7 @@ function BrowserSetForcedCharacterSet(aCharset)
 {
   gBrowser.docShell.charset = aCharset;
   // Save the forced character-set
-  PlacesUtils.history.setCharsetForURI(getWebNavigation().currentURI, aCharset);
+  PlacesUtils.history.setCharsetForURI(gBrowser.currentURI, aCharset);
   BrowserCharsetReload();
 }
 

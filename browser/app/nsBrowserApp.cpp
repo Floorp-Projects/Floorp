@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <time.h>
 
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
@@ -90,6 +91,7 @@ XRE_FreeAppDataType XRE_FreeAppData;
 XRE_SetupDllBlocklistType XRE_SetupDllBlocklist;
 #endif
 XRE_TelemetryAccumulateType XRE_TelemetryAccumulate;
+XRE_StartupTimelineRecordType XRE_StartupTimelineRecord;
 XRE_mainType XRE_main;
 
 static const nsDynamicFunctionLoad kXULFuncs[] = {
@@ -100,6 +102,7 @@ static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_SetupDllBlocklist", (NSFuncPtr*) &XRE_SetupDllBlocklist },
 #endif
     { "XRE_TelemetryAccumulate", (NSFuncPtr*) &XRE_TelemetryAccumulate },
+    { "XRE_StartupTimelineRecord", (NSFuncPtr*) &XRE_StartupTimelineRecord },
     { "XRE_main", (NSFuncPtr*) &XRE_main },
     { nsnull, nsnull }
 };
@@ -189,8 +192,31 @@ bool IsPrefetchDisabledViaService()
 }
 #endif
 
+/* Local implementation of PR_Now, since the executable can't depend on NSPR */
+static PRTime _PR_Now()
+{
+#ifdef XP_WIN
+  MOZ_STATIC_ASSERT(sizeof(PRTime) == sizeof(FILETIME), "PRTime must have the same size as FILETIME");
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&ft);
+  PRTime now;
+  CopyMemory(&now, &ft, sizeof(PRTime));
+#ifdef __GNUC__
+  return (now - 116444736000000000LL) / 10LL;
+#else
+  return (now - 116444736000000000i64) / 10i64;
+#endif
+
+#else
+  struct timeval tm;
+  gettimeofday(&tm, 0);
+  return (((PRTime)tm.tv_sec * 1000000LL) + (PRTime)tm.tv_usec);
+#endif
+}
+
 int main(int argc, char* argv[])
 {
+  PRTime start = _PR_Now();
   char exePath[MAXPATHLEN];
 
 #ifdef XP_MACOSX
@@ -216,28 +242,34 @@ int main(int argc, char* argv[])
 #elif defined(XP_WIN)
   // Don't change the order of these enumeration constants, the order matters
   // for reporting telemetry data.  If new values are added adjust the
-  // STARTUP_USING_PRELOAD histogram.
-  enum PreloadReason { PRELOAD_NONE, PRELOAD_SERVICE, PRELOAD_IOCOUNT };
-  PreloadReason preloadReason = PRELOAD_NONE;
+  // STARTUP_USING_PRELOAD_TRIAL histogram.
+  enum PreloadType{ PREFETCH_PRELOAD,
+                    PREFETCH_NO_PRELOAD,
+                    NO_PREFETCH_PRELOAD,
+                    NO_PREFETCH_NO_PRELOAD };
+  PreloadType preloadType;
 
-  // GetProcessIoCounters().ReadOperationCount seems to have little to
-  // do with actual read operations. It reports 0 or 1 at this stage
-  // in the program. Luckily 1 coincides with when prefetch is
-  // enabled. If Windows prefetch didn't happen we can do our own
-  // faster dll preloading.
-  // The MozillaMaintenance service issues a command to disable the
-  // prefetch by replacing all found .pf files with 0 byte read only
-  // files.
   IO_COUNTERS ioCounters;
   gotCounters = GetProcessIoCounters(GetCurrentProcess(), &ioCounters);
 
+  srand(time(NULL));
+  bool shouldUsePreload = rand() % 2 == 0;
+
   if (IsPrefetchDisabledViaService()) {
-    preloadReason = PRELOAD_SERVICE;
-  } else if ((gotCounters && !ioCounters.ReadOperationCount)) {
-    preloadReason = PRELOAD_IOCOUNT;
+    if (shouldUsePreload) {
+      preloadType = NO_PREFETCH_PRELOAD;
+    }  else {
+      preloadType = NO_PREFETCH_NO_PRELOAD;
+    }
+  } else {
+    if (shouldUsePreload) {
+      preloadType = PREFETCH_PRELOAD;
+    }  else {
+      preloadType = PREFETCH_NO_PRELOAD;
+    }
   }
 
-  if (preloadReason != PRELOAD_NONE)
+  if (shouldUsePreload)
 #endif
   {
       XPCOMGlueEnablePreload();
@@ -257,13 +289,15 @@ int main(int argc, char* argv[])
     return 255;
   }
 
+  XRE_StartupTimelineRecord(mozilla::StartupTimeline::START, start);
+
 #ifdef XRE_HAS_DLL_BLOCKLIST
   XRE_SetupDllBlocklist();
 #endif
 
 #if defined(XP_WIN)
-  XRE_TelemetryAccumulate(mozilla::Telemetry::STARTUP_USING_PRELOAD,
-                          preloadReason);
+  XRE_TelemetryAccumulate(mozilla::Telemetry::STARTUP_USING_PRELOAD_TRIAL,
+                          preloadType);
 #endif
 
   if (gotCounters) {

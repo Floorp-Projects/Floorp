@@ -234,6 +234,13 @@ class MarionetteTestRunner(object):
     def post_to_autolog(self, elapsedtime):
         self.logger.info('posting results to autolog')
 
+        logfile = None
+        if self.emulator:
+            filename = os.path.join(os.path.abspath(self.logcat_dir),
+                                    "emulator-%d.log" % self.marionette.emulator.port)
+            if os.access(filename, os.F_OK):
+                logfile = filename
+
         # This is all autolog stuff.
         # See: https://wiki.mozilla.org/Auto-tools/Projects/Autolog
         from mozautolog import RESTfulAutologTestGroup
@@ -244,7 +251,8 @@ class MarionetteTestRunner(object):
             harness = 'marionette',
             server = self.es_server,
             restserver = self.rest_server,
-            machine = socket.gethostname())
+            machine = socket.gethostname(),
+            logfile = logfile)
 
         testgroup.set_primary_product(
             tree = 'b2g',

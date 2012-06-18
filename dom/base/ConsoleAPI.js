@@ -21,13 +21,16 @@ const DEFAULT_MAX_STACKTRACE_DEPTH = 200;
 
 // The console API methods are async and their action is executed later. This
 // delay tells how much later.
-const CALL_DELAY = 30; // milliseconds
+const CALL_DELAY = 15; // milliseconds
+
+// This constant tells how many messages to process in a single timer execution.
+const MESSAGES_IN_INTERVAL = 1500;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm");
 
-let nsITimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+let gTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
 function ConsoleAPI() {}
 ConsoleAPI.prototype = {
@@ -151,9 +154,6 @@ ConsoleAPI.prototype = {
 
     this._queuedCalls = [];
     this._destroyedWindows = [];
-    this._timerCallback = {
-      notify: this._timerCallbackNotify.bind(this),
-    };
 
     return contentObj;
   },
@@ -165,6 +165,7 @@ ConsoleAPI.prototype = {
       Services.obs.removeObserver(this, "inner-window-destroyed");
       this._destroyedWindows = [];
       this._queuedCalls = [];
+      gTimer = null;
     }
     else if (aTopic == "inner-window-destroyed") {
       let innerWindowID = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
@@ -196,8 +197,8 @@ ConsoleAPI.prototype = {
     this._queuedCalls.push([aMethod, aArguments, metaForCall]);
 
     if (!this._timerInitialized) {
-      nsITimer.initWithCallback(this._timerCallback, CALL_DELAY,
-                                Ci.nsITimer.TYPE_ONE_SHOT);
+      gTimer.initWithCallback(this._timerCallback.bind(this), CALL_DELAY,
+                              Ci.nsITimer.TYPE_REPEATING_SLACK);
       this._timerInitialized = true;
     }
   },
@@ -206,11 +207,16 @@ ConsoleAPI.prototype = {
    * Timer callback used to process each of the queued calls.
    * @private
    */
-  _timerCallbackNotify: function CA__timerCallbackNotify()
+  _timerCallback: function CA__timerCallback()
   {
-    this._timerInitialized = false;
-    this._queuedCalls.splice(0).forEach(this._processQueuedCall, this);
-    this._destroyedWindows = [];
+    this._queuedCalls.splice(0, MESSAGES_IN_INTERVAL)
+      .forEach(this._processQueuedCall, this);
+
+    if (!this._queuedCalls.length) {
+      this._timerInitialized = false;
+      this._destroyedWindows = [];
+      gTimer.cancel();
+    }
   },
 
   /**

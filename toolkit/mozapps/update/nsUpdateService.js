@@ -42,7 +42,7 @@ const PREF_APP_UPDATE_POSTUPDATE          = "app.update.postupdate";
 const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
-const PREF_APP_UPDATE_BACKGROUND          = "app.update.stage.enabled";
+const PREF_APP_UPDATE_STAGE_ENABLED       = "app.update.stage.enabled";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
@@ -329,6 +329,16 @@ function testWriteAccess(updateTestFile, createDirectory) {
 }
 
 XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpdates() {
+  function submitHasPermissionsTelemetryPing(val) {
+      try {
+        let h = Services.telemetry.getHistogramById("UPDATER_HAS_PERMISSIONS");
+        h.add(+val);
+      } catch(e) {
+        // Don't allow any exception to be propagated.
+        Components.utils.reportError(e);
+      }
+  } 
+
   try {
     var updateTestFile = getUpdateFile([FILE_PERMS_TEST]);
     LOG("gCanApplyUpdates - testing write access " + updateTestFile.path);
@@ -408,17 +418,19 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
   catch (e) {
      LOG("gCanApplyUpdates - unable to apply updates. Exception: " + e);
     // No write privileges to install directory
+    submitHasPermissionsTelemetryPing(false);
     return false;
   }
 
   LOG("gCanApplyUpdates - able to apply updates");
+  submitHasPermissionsTelemetryPing(true);
   return true;
 });
 
 XPCOMUtils.defineLazyGetter(this, "gCanStageUpdates", function aus_gCanStageUpdates() {
   // If background updates are disabled, then just bail out!
-  if (!getPref("getBoolPref", PREF_APP_UPDATE_BACKGROUND, false)) {
-    LOG("gCanStageUpdates - staging updates is disabled by preference " + PREF_APP_UPDATE_BACKGROUND);
+  if (!getPref("getBoolPref", PREF_APP_UPDATE_STAGE_ENABLED, false)) {
+    LOG("gCanStageUpdates - staging updates is disabled by preference " + PREF_APP_UPDATE_STAGE_ENABLED);
     return false;
   }
 
@@ -1592,8 +1604,29 @@ UpdateService.prototype = {
                    createInstance(Ci.nsIUpdatePrompt);
 
     update.state = status;
-    this._submitTelemetryPing(status);
+    this._sendStatusCodeTelemetryPing(status);
+
     if (status == STATE_SUCCEEDED) {
+      // Report telemetry that we want after each successful update.
+      // We do this only on successful updates so that we only get
+      // one report from each user for each version.  If a user cancels
+      // UAC for example, we don't want 2 reports from them on the same
+      // version.
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_ENABLED,
+                                      "UPDATER_UPDATES_ENABLED");
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_AUTO,
+                                      "UPDATER_UPDATES_AUTOMATIC");
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_STAGE_ENABLED,
+                                      "UPDATER_STAGE_ENABLED");
+
+#ifdef XP_WIN
+      this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ENABLED,
+                                      "UPDATER_SERVICE_ENABLED");
+      this._sendIntPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ERRORS,
+                                     "UPDATER_SERVICE_ERRORS");
+      this._sendServiceInstalledTelemetryPing();
+#endif
+
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
 
       // Update the patch's metadata.
@@ -1629,12 +1662,82 @@ UpdateService.prototype = {
   },
 
   /**
+   * Submit a telemetry ping with the boolean value of a pref for a histogram
+   *
+   * @param  pref
+   *         The preference to report
+   * @param  histogram
+   *         The histogram ID to report to
+   */
+  _sendBoolPrefTelemetryPing: function AUS__boolTelemetryPing(pref, histogram) {
+    try {
+      // The getPref is already wrapped in a try/catch but we never
+      // want telemetry pings breaking app update so we just put it
+      // inside the try to be safe. 
+      let val = getPref("getBoolPref", pref, false);
+      Services.telemetry.getHistogramById(histogram).add(+val);
+    } catch(e) {
+      // Don't allow any exception to be propagated.
+      Components.utils.reportError(e);
+    }
+  },
+
+#ifdef XP_WIN
+  /**
+   * Submit a telemetry ping with a boolean value which indicates if the service
+   * is installed.
+   */
+  _sendServiceInstalledTelemetryPing: function AUS__svcInstallTelemetryPing() {
+    let installed = 0;
+    try {
+      let wrk = Components.classes["@mozilla.org/windows-registry-key;1"]
+                .createInstance(Components.interfaces.nsIWindowsRegKey);
+      wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
+               "SOFTWARE\\Mozilla\\MaintenanceService",
+               wrk.ACCESS_READ | wrk.WOW64_64);
+      installed = wrk.readIntValue("Installed");
+      wrk.close();
+    } catch(e) {
+    }
+    try {
+      let h = Services.telemetry.getHistogramById("UPDATER_SERVICE_INSTALLED");
+      h.add(installed);
+    } catch(e) {
+      // Don't allow any exception to be propagated.
+      Components.utils.reportError(e);
+    }
+  },
+#endif
+
+  /**
+   * Submit a telemetry ping with the int value of a pref for a histogram
+   *
+   * @param  pref
+   *         The preference to report
+   * @param histogram
+   *         The histogram ID to report to
+   */
+  _sendIntPrefTelemetryPing: function AUS__intTelemetryPing(pref, histogram) {
+    try {
+      // The getPref is already wrapped in a try/catch but we never
+      // want telemetry pings breaking app update so we just put it
+      // inside the try to be safe. 
+      let val = getPref("getIntPref", pref, 0);
+      Services.telemetry.getHistogramById(histogram).add(val);
+    } catch(e) {
+      // Don't allow any exception to be propagated.
+      Components.utils.reportError(e);
+    }
+  },
+
+
+  /**
    * Submit the results of applying the update via telemetry.
    *
    * @param  status
    *         The status of the update as read from the update.status file
    */
-  _submitTelemetryPing: function AUS__submitTelemetryPing(status) {
+  _sendStatusCodeTelemetryPing: function AUS__statusTelemetryPing(status) {
     try {
       let parts = status.split(":");
       if ((parts.length == 1 && status != STATE_SUCCEEDED) ||
@@ -3125,7 +3228,7 @@ Downloader.prototype = {
         // download, since otherwise some kind of UI is already visible and
         // that UI will notify.
         if (this.background)
-          shouldShowPrompt = !getPref("getBoolPref", PREF_APP_UPDATE_BACKGROUND, false);
+          shouldShowPrompt = !getPref("getBoolPref", PREF_APP_UPDATE_STAGE_ENABLED, false);
 
         // Tell the updater.exe we're ready to apply.
         writeStatusFile(getUpdatesDir(), state);

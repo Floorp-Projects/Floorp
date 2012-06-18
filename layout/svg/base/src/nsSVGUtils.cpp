@@ -580,20 +580,20 @@ nsSVGUtils::GetNearestSVGViewport(nsIFrame *aFrame)
 
 nsRect
 nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
-                                            const nsRect &aUnfilteredRect)
+                                            const nsRect &aPreFilterRect)
 {
   NS_ABORT_IF_FALSE(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT,
                     "Called on invalid frame type");
 
   nsSVGFilterFrame *filter = nsSVGEffects::GetFilterFrame(aFrame);
   if (!filter) {
-    return aUnfilteredRect;
+    return aPreFilterRect;
   }
 
   PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  nsIntRect unfilteredRect =
-    aUnfilteredRect.ToOutsidePixels(appUnitsPerDevPixel);
-  nsIntRect rect = filter->GetFilterBBox(aFrame, nsnull, &unfilteredRect);
+  nsIntRect preFilterRect =
+      aPreFilterRect.ToOutsidePixels(appUnitsPerDevPixel);
+  nsIntRect rect = filter->GetPostFilterBounds(aFrame, nsnull, &preFilterRect);
   nsRect r = rect.ToAppUnits(appUnitsPerDevPixel) - aFrame->GetPosition();
   return r;
 }
@@ -1240,7 +1240,8 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
   /* Paint the child */
   if (filterFrame) {
     SVGPaintCallback paintCallback;
-    filterFrame->FilterPaint(aContext, aFrame, &paintCallback, aDirtyRect);
+    filterFrame->PaintFilteredFrame(aContext, aFrame, &paintCallback,
+                                    aDirtyRect);
   } else {
     svgChildFrame->PaintSVG(aContext, aDirtyRect);
   }
@@ -1407,15 +1408,15 @@ nsSVGUtils::HitTestRect(const gfxMatrix &aMatrix,
                         float aRX, float aRY, float aRWidth, float aRHeight,
                         float aX, float aY)
 {
-  if (aMatrix.IsSingular()) {
+  gfxRect rect(aRX, aRY, aRWidth, aRHeight);
+  if (rect.IsEmpty() || aMatrix.IsSingular()) {
     return false;
   }
-  gfxContext ctx(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
-  ctx.SetMatrix(aMatrix);
-  ctx.NewPath();
-  ctx.Rectangle(gfxRect(aRX, aRY, aRWidth, aRHeight));
-  ctx.IdentityMatrix();
-  return ctx.PointInFill(gfxPoint(aX, aY));
+  gfxMatrix toRectSpace = aMatrix;
+  toRectSpace.Invert();
+  gfxPoint p = toRectSpace.Transform(gfxPoint(aX, aY));
+  return rect.x <= p.x && p.x <= rect.XMost() &&
+         rect.y <= p.y && p.y <= rect.YMost();
 }
 
 gfxRect
@@ -1518,10 +1519,9 @@ nsSVGUtils::SetClipRect(gfxContext *aContext,
   if (aCTM.IsSingular())
     return;
 
-  gfxMatrix oldMatrix = aContext->CurrentMatrix();
+  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(aContext);
   aContext->Multiply(aCTM);
   aContext->Clip(aRect);
-  aContext->SetMatrix(oldMatrix);
 }
 
 void

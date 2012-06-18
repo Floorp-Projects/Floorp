@@ -4,6 +4,7 @@
 
 #ifdef mozilla_StartupTimeline_Event
 mozilla_StartupTimeline_Event(PROCESS_CREATION, "process")
+mozilla_StartupTimeline_Event(START, "start")
 mozilla_StartupTimeline_Event(MAIN, "main")
 // Record the beginning and end of startup crash detection to compare with crash stats to know whether
 // detection should be improved to start or end sooner.

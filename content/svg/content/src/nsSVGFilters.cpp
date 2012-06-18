@@ -3306,10 +3306,10 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance,
   InitSeed((PRInt32)seed);
 
   // XXXroc this makes absolutely no sense to me.
-  float filterX = instance->GetFilterRect().X();
-  float filterY = instance->GetFilterRect().Y();
-  float filterWidth = instance->GetFilterRect().Width();
-  float filterHeight = instance->GetFilterRect().Height();
+  float filterX = instance->GetFilterRegion().X();
+  float filterY = instance->GetFilterRegion().Y();
+  float filterWidth = instance->GetFilterRegion().Width();
+  float filterHeight = instance->GetFilterRegion().Height();
 
   bool doStitch = false;
   if (stitch == nsIDOMSVGFETurbulenceElement::SVG_STITCHTYPE_STITCH) {
