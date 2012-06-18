@@ -139,7 +139,7 @@
     <menubar id="viewSource-main-menubar">
 
       <menu id="menu_file" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
-        <menupopup id="filemenu-popup">
+        <menupopup id="menu_FilePopup">
           <menuitem key="key_savePage" command="cmd_savePage" id="menu_savePage"
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
           <menuitem command="cmd_pagesetup" id="menu_pageSetup"
