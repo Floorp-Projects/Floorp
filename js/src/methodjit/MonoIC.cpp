@@ -243,7 +243,6 @@ class EqualityCompiler : public BaseCompiler
         RegisterID tmp = ic.tempReg;
 
         /* JSString::isAtom === (lengthAndFlags & ATOM_MASK == 0) */
-        JS_STATIC_ASSERT(JSString::ATOM_FLAGS == 0);
         Imm32 atomMask(JSString::ATOM_MASK);
 
         masm.load32(Address(lvr.dataReg(), JSString::offsetOfLengthAndFlags()), tmp);
