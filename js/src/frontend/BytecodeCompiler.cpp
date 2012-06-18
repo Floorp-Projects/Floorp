@@ -34,13 +34,6 @@ MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script_)
         JSScript *outer = worklist.back();
         worklist.popBack();
 
-        /*
-         * If outer has an extensible scope, its slots may be resized which
-         * will invalidate nesting->varArray/argArray.
-         */
-        if (outer->funHasExtensibleScope)
-            continue;
-
         if (outer->hasObjects()) {
             ObjectArray *arr = outer->objects();
 
