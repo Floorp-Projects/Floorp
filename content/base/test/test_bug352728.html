@@ -112,7 +112,7 @@ function testPI(aTarget, aData, aShouldSucceed, aReason)
 testComment("Some text");
 testComment("Some text with a '-' in it");
 testComment("Some text with a '-' and a '-' and another '-'");
-testComment("Some text -- this shouldn't create a node!");
+testComment("Some text -- this should create a node!");
 testComment("<!-- This is an HTML comment -->");
 
 testCDATASection("Some text", true);
