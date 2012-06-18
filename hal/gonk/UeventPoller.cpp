@@ -68,7 +68,6 @@ private:
   MessageLoopForIO* mIOLoop;
   MessageLoopForIO::FileDescriptorWatcher mReadWatcher;
 
-  NetlinkEvent mNetlinkEvent;
   const static int kBuffsize = 64 * 1024;
   uint8_t mBuffer [kBuffsize];
 
@@ -155,8 +154,9 @@ NetlinkPoller::OnFileCanReadWithoutBlocking(int fd)
       // fatal error on netlink socket which should not happen
       _exit(1);
     }
-    mNetlinkEvent.decode(reinterpret_cast<char*>(mBuffer), ret);
-    mUeventObserverList.Broadcast(mNetlinkEvent);
+    NetlinkEvent netlinkEvent;
+    netlinkEvent.decode(reinterpret_cast<char*>(mBuffer), ret);
+    mUeventObserverList.Broadcast(netlinkEvent);
   }
 }
 
