@@ -269,6 +269,7 @@ function install(appURL, check, next) {
       [{
         status: "== \"success\"",
         installOrigin: "== " + installOrigin.quote(),
+        installTime: "!== undefined",
         origin: "== " + origin.quote(),
         manifestURL: "== " +  appURL.quote(),
         // |manifest| is not accessible to content, so js_traverse needs to
@@ -334,4 +335,3 @@ function check_event_listener_fired (next) {
   triggered = false;
   next();
 }
-
