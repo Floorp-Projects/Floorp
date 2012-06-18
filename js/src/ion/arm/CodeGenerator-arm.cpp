@@ -824,12 +824,8 @@ CodeGeneratorARM::visitTableSwitch(LTableSwitch *ins)
     int32 cases = mir->numCases();
     Register tempReg = ToRegister(temp);
     // Lower value with low value
-    if (mir->low() != 0) {
-        masm.ma_sub(tempReg, Imm32(mir->low()), tempReg, SetCond);
-        masm.ma_rsb(tempReg, Imm32(cases - 1), tempReg, SetCond, Assembler::Unsigned);
-    } else {
-        masm.ma_rsb(tempReg, Imm32(cases - 1), tempReg, SetCond);
-    }
+    masm.ma_sub(tempReg, Imm32(mir->low()), tempReg, SetCond);
+    masm.ma_rsb(tempReg, Imm32(cases - 1), tempReg, SetCond, Assembler::Unsigned);
     AutoForbidPools afp(&masm);
     masm.ma_ldr(DTRAddr(pc, DtrRegImmShift(tempReg, LSL, 2)), pc, Offset, Assembler::Unsigned);
     masm.ma_b(defaultcase);
