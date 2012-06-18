@@ -81,7 +81,13 @@ function unwrapIfWrapped(x) {
 };
 
 function isXrayWrapper(x) {
-  return /XrayWrapper/.exec(x.toString());
+  try {
+    return /XrayWrapper/.exec(x.toString());
+  } catch(e) {
+    // The toString() implementation could theoretically throw. But it never
+    // throws for Xray, so we can just assume non-xray in that case.
+    return false;
+  }
 }
 
 // We can't call apply() directy on Xray-wrapped functions, so we have to be
