@@ -3169,10 +3169,10 @@ DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
     if (unsigned(i) < fp->numActualArgs()) {
         if (unsigned(i) < fp->numFormalArgs() && fp->script()->formalLivesInCallObject(i))
             arg = fp->callObj().arg(i);
-        else if (fp->script()->argsObjAliasesFormals() && fp->hasArgsObj())
+        else if (fp->script()->argsObjAliasesFormals())
             arg = fp->argsObj().arg(i);
         else
-            arg = fp->unaliasedActual(i, DONT_CHECK_ALIASING);
+            arg = fp->unaliasedActual(i);
     } else {
         arg.setUndefined();
     }
