@@ -39,6 +39,7 @@ public:
   size_t mLayoutStyleSets;
   size_t mLayoutTextRuns;
   size_t mLayoutPresContext;
+  size_t mPropertyTables;
 };
 
 /**

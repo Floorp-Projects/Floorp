@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     class="reftest-wait"
+     onload="setTimeAndSnapshot(2, false)" width="0%" height="0%" viewBox="0 0 100 100" preserveAspectRatio="none">
+  <animate attributeName="height"
+           from="0%" to="100%" begin="0s" dur="2s" fill="freeze"/>
+  <animate attributeName="width"
+           from="0%" to="100%" begin="0s" dur="2s" fill="freeze"/>
+  <script xlink:href="smil-util.js" type="text/javascript"/>
+  <rect width="100" height="100" fill="lime"/>
+</svg>
+

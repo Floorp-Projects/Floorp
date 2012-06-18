@@ -51,7 +51,7 @@
 #include "nsISimpleEnumerator.h"
 #include "private/pprio.h"
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 #include "nsIGIOService.h"
 #include "nsIGnomeVFSService.h"
 #endif
@@ -1764,7 +1764,7 @@ nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
     nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
     nsCOMPtr<nsIGnomeVFSService> gnomevfs = do_GetService(NS_GNOMEVFSSERVICE_CONTRACTID);
     if (!giovfs && !gnomevfs)
@@ -1809,7 +1809,7 @@ nsLocalFile::Reveal()
 NS_IMETHODIMP
 nsLocalFile::Launch()
 {
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 #if (MOZ_PLATFORM_MAEMO==5)
     const PRInt32 kHILDON_SUCCESS = 1;
     DBusError err;

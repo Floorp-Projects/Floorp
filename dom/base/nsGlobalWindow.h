@@ -338,6 +338,7 @@ public:
   virtual NS_HIDDEN_(void) MaybeUpdateTouchState();
   virtual NS_HIDDEN_(void) UpdateTouchState();
   virtual NS_HIDDEN_(bool) DispatchCustomEvent(const char *aEventName);
+  virtual NS_HIDDEN_(void) RefreshCompartmentPrincipal();
   virtual NS_HIDDEN_(nsresult) SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
 
   // nsIDOMStorageIndexedDB
@@ -578,7 +579,9 @@ protected:
   JSObject *CallerGlobal();
   nsGlobalWindow *CallerInnerWindow();
 
-  nsresult InnerSetNewDocument(nsIDocument* aDocument);
+  // Only to be called on an inner window.
+  // aDocument must not be null.
+  void InnerSetNewDocument(nsIDocument* aDocument);
 
   nsresult DefineArgumentsProperty(nsIArray *aArguments);
 

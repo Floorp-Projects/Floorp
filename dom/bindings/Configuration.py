@@ -113,6 +113,11 @@ class Descriptor:
         self.nativeIsISupports = not self.workers
         self.customTrace = desc.get('customTrace', self.workers)
         self.customFinalize = desc.get('customFinalize', self.workers)
+        self.wrapperCache = self.workers or desc.get('wrapperCache', True)
+
+        if not self.wrapperCache and self.prefable:
+            raise TypeError("Descriptor for %s is prefable but not wrappercached" %
+                            self.interface.identifier.name)
 
         def make_name(name):
             return name + "_workers" if self.workers else name

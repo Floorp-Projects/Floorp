@@ -131,6 +131,27 @@ DeviceTabActor.prototype = {
     return this._contextPool;
   },
 
+  /**
+   * Add the specified breakpoint to the default actor pool connection, in order
+   * to be alive as long as the server is.
+   *
+   * @param BreakpointActor actor
+   *        The actor object.
+   */
+  addToBreakpointPool: function DTA_addToBreakpointPool(actor) {
+    this.conn.addActor(actor);
+  },
+
+  /**
+   * Remove the specified breakpint from the default actor pool.
+   *
+   * @param string actor
+   *        The actor ID.
+   */
+  removeFromBreakpointPool: function DTA_removeFromBreakpointPool(actor) {
+    this.conn.removeActor(actor);
+  },
+
   actorPrefix: 'tab',
 
   grip: function DTA_grip() {

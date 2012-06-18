@@ -13,9 +13,6 @@ ifdef ENABLE_MARIONETTE
     DIRS += components \
             atoms \
             $(NULL)
-  ifdef ENABLE_TESTS
-      DIRS += tests
-  endif
 endif
 
 include $(topsrcdir)/config/rules.mk

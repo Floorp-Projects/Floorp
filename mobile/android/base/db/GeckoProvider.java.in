@@ -153,7 +153,8 @@ public abstract class GeckoProvider extends ContentProvider {
 
     private SQLiteBridge getDatabaseForProfile(String profile) {
         if (TextUtils.isEmpty(profile)) {
-            profile = BrowserContract.DEFAULT_PROFILE;
+            profile = GeckoProfile.get(mContext).getName();
+            Log.d(mLogTag, "No profile provided, using '" + profile + "'");
         }
 
         SQLiteBridge db = null;

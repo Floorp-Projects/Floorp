@@ -1364,7 +1364,7 @@ void SkPaint::getPosTextPath(const void* textData, size_t length,
         return;
     }
 
-    SkTextToPathIter    iter(text, length, *this, false);
+    SkTextToPathIter    iter(text, length, *this, false, false);
     SkMatrix            matrix;
     SkPoint             prevPos;
     prevPos.set(0, 0);
@@ -1374,10 +1374,12 @@ void SkPaint::getPosTextPath(const void* textData, size_t length,
 
     unsigned int    i = 0;
     const SkPath*   iterPath;
-    while ((iterPath = iter.next(NULL)) != NULL) {
-        matrix.postTranslate(pos[i].fX - prevPos.fX, pos[i].fY - prevPos.fY);
-        path->addPath(*iterPath, matrix);
-        prevPos = pos[i];
+    while (iter.nextWithWhitespace(&iterPath, NULL)) {
+        if (iterPath) {
+            matrix.postTranslate(pos[i].fX - prevPos.fX, pos[i].fY - prevPos.fY);
+            path->addPath(*iterPath, matrix);
+            prevPos = pos[i];
+        }
         i++;
     }
 }
@@ -2123,7 +2125,8 @@ static bool has_thick_frame(const SkPaint& paint) {
 
 SkTextToPathIter::SkTextToPathIter( const char text[], size_t length,
                                     const SkPaint& paint,
-                                    bool applyStrokeAndPathEffects)
+                                    bool applyStrokeAndPathEffects,
+                                    bool useCanonicalTextSize)
                                     : fPaint(paint) {
     fGlyphCacheProc = paint.getMeasureCacheProc(SkPaint::kForward_TextBufferDirection,
                                                 true);
@@ -2136,7 +2139,7 @@ SkTextToPathIter::SkTextToPathIter( const char text[], size_t length,
     }
 
     // can't use our canonical size if we need to apply patheffects
-    if (fPaint.getPathEffect() == NULL) {
+    if (useCanonicalTextSize && fPaint.getPathEffect() == NULL) {
         fPaint.setTextSize(SkIntToScalar(SkPaint::kCanonicalTextSizeForPaths));
         fScale = paint.getTextSize() / SkPaint::kCanonicalTextSizeForPaths;
         if (has_thick_frame(fPaint)) {
@@ -2190,7 +2193,20 @@ SkTextToPathIter::~SkTextToPathIter() {
 }
 
 const SkPath* SkTextToPathIter::next(SkScalar* xpos) {
-    while (fText < fStop) {
+    const SkPath* result;
+    while (nextWithWhitespace(&result, xpos)) {
+        if (result) {
+            if (xpos) {
+                *xpos = fXPos;
+            }
+            return result;
+        }
+    }
+    return NULL;
+}
+
+bool SkTextToPathIter::nextWithWhitespace(const SkPath** path, SkScalar* xpos) {
+    if (fText < fStop) {
         const SkGlyph& glyph = fGlyphCacheProc(fCache, &fText);
 
         fXPos += SkScalarMul(SkFixedToScalar(fPrevAdvance + fAutoKern.adjust(glyph)), fScale);
@@ -2200,10 +2216,14 @@ const SkPath* SkTextToPathIter::next(SkScalar* xpos) {
             if (xpos) {
                 *xpos = fXPos;
             }
-            return fCache->findPath(glyph);
+            *path = fCache->findPath(glyph);
+            return true;
+        } else {
+            *path = NULL;
+            return true;
         }
     }
-    return NULL;
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

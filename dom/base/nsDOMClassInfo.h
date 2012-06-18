@@ -365,15 +365,10 @@ public:
 
     return NS_OK;
   }
-  NS_IMETHOD GetScriptableFlags(PRUint32 *aFlags)
+  virtual PRUint32 GetScriptableFlags()
   {
-    PRUint32 flags;
-    nsresult rv = nsDOMGenericSH::GetScriptableFlags(&flags);
-    if (NS_SUCCEEDED(rv)) {
-      *aFlags = flags | nsIXPCScriptable::WANT_POSTCREATE;
-    }
-
-    return rv;
+    return nsDOMGenericSH::GetScriptableFlags() |
+           nsIXPCScriptable::WANT_POSTCREATE;
   }
 #endif
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
@@ -486,6 +481,28 @@ public:
   }
 };
 
+// scriptable helper for new-binding objects without wrapper caches
+
+class nsNewDOMBindingNoWrapperCacheSH : public nsDOMGenericSH
+{
+protected:
+  nsNewDOMBindingNoWrapperCacheSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsNewDOMBindingNoWrapperCacheSH()
+  {
+  }
+
+public:
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj);
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsNewDOMBindingNoWrapperCacheSH(aData);
+  }
+};
 
 // DOM Node helper, this class deals with setting the parent for the
 // wrappers

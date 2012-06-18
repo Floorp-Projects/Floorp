@@ -31,14 +31,14 @@ nsSVGFilterInstance::GetPrimitiveNumber(PRUint8 aCtxType, float aValue) const
 
   switch (aCtxType) {
   case nsSVGUtils::X:
-    return value * mFilterSpaceSize.width / mFilterRect.Width();
+    return value * mFilterSpaceSize.width / mFilterRegion.Width();
   case nsSVGUtils::Y:
-    return value * mFilterSpaceSize.height / mFilterRect.Height();
+    return value * mFilterSpaceSize.height / mFilterRegion.Height();
   case nsSVGUtils::XY:
   default:
     return value * nsSVGUtils::ComputeNormalizedHypotenuse(
-                     mFilterSpaceSize.width / mFilterRect.Width(),
-                     mFilterSpaceSize.height / mFilterRect.Height());
+                     mFilterSpaceSize.width / mFilterRegion.Width(),
+                     mFilterSpaceSize.height / mFilterRegion.Height());
   }
 }
 
@@ -83,27 +83,27 @@ nsSVGFilterInstance::CreateImage()
 gfxRect
 nsSVGFilterInstance::UserSpaceToFilterSpace(const gfxRect& aRect) const
 {
-  gfxRect r = aRect - mFilterRect.TopLeft();
-  r.Scale(mFilterSpaceSize.width / mFilterRect.Width(),
-          mFilterSpaceSize.height / mFilterRect.Height());
+  gfxRect r = aRect - mFilterRegion.TopLeft();
+  r.Scale(mFilterSpaceSize.width / mFilterRegion.Width(),
+          mFilterSpaceSize.height / mFilterRegion.Height());
   return r;
 }
 
 gfxPoint
 nsSVGFilterInstance::FilterSpaceToUserSpace(const gfxPoint& aPt) const
 {
-  return gfxPoint(aPt.x * mFilterRect.Width() / mFilterSpaceSize.width + mFilterRect.X(),
-                  aPt.y * mFilterRect.Height() / mFilterSpaceSize.height + mFilterRect.Y());
+  return gfxPoint(aPt.x * mFilterRegion.Width() / mFilterSpaceSize.width + mFilterRegion.X(),
+                  aPt.y * mFilterRegion.Height() / mFilterSpaceSize.height + mFilterRegion.Y());
 }
 
 gfxMatrix
 nsSVGFilterInstance::GetUserSpaceToFilterSpaceTransform() const
 {
-  gfxFloat widthScale = mFilterSpaceSize.width / mFilterRect.Width();
-  gfxFloat heightScale = mFilterSpaceSize.height / mFilterRect.Height();
+  gfxFloat widthScale = mFilterSpaceSize.width / mFilterRegion.Width();
+  gfxFloat heightScale = mFilterSpaceSize.height / mFilterRegion.Height();
   return gfxMatrix(widthScale, 0.0f,
                    0.0f, heightScale,
-                   -mFilterRect.X() * widthScale, -mFilterRect.Y() * heightScale);
+                   -mFilterRegion.X() * widthScale, -mFilterRegion.Y() * heightScale);
 }
 
 void
@@ -277,7 +277,7 @@ nsSVGFilterInstance::ComputeNeededBoxes()
   // In the end, we need whatever the final filter primitive will draw that
   // intersects the destination dirty area.
   mPrimitives[mPrimitives.Length() - 1].mResultNeededBox.IntersectRect(
-    mPrimitives[mPrimitives.Length() - 1].mResultBoundingBox, mDirtyOutputRect);
+    mPrimitives[mPrimitives.Length() - 1].mResultBoundingBox, mPostFilterDirtyRect);
 
   for (PRInt32 i = mPrimitives.Length() - 1; i >= 0; --i) {
     PrimitiveInfo* info = &mPrimitives[i];
@@ -522,9 +522,9 @@ nsSVGFilterInstance::Render(gfxASurface** aOutput)
 }
 
 nsresult
-nsSVGFilterInstance::ComputeOutputDirtyRect(nsIntRect* aDirty)
+nsSVGFilterInstance::ComputePostFilterDirtyRect(nsIntRect* aPostFilterDirtyRect)
 {
-  *aDirty = nsIntRect();
+  *aPostFilterDirtyRect = nsIntRect();
 
   nsresult rv = BuildSources();
   if (NS_FAILED(rv))
@@ -541,12 +541,12 @@ nsSVGFilterInstance::ComputeOutputDirtyRect(nsIntRect* aDirty)
 
   ComputeResultBoundingBoxes();
 
-  mSourceColorAlpha.mResultChangeBox = mDirtyInputRect;
-  mSourceAlpha.mResultChangeBox = mDirtyInputRect;
+  mSourceColorAlpha.mResultChangeBox = mPreFilterDirtyRect;
+  mSourceAlpha.mResultChangeBox = mPreFilterDirtyRect;
   ComputeResultChangeBoxes();
 
   PrimitiveInfo* result = &mPrimitives[mPrimitives.Length() - 1];
-  *aDirty = result->mResultChangeBox;
+  *aPostFilterDirtyRect = result->mResultChangeBox;
   return NS_OK;
 }
 

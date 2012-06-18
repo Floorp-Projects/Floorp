@@ -870,7 +870,7 @@ class EvalScriptGuard
     }
 
     void setNewScript(JSScript *script) {
-        /* NewScriptFromEmitter has already called js_CallNewScriptHook. */
+        /* JSScript::initFromEmitter has already called js_CallNewScriptHook. */
         JS_ASSERT(!script_ && script);
         script_ = script;
         script_->isActiveEval = true;

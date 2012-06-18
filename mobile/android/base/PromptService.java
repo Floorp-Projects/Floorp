@@ -196,7 +196,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         return promptServiceResult;
     }
 
-    public void Show(String aTitle, String aText, PromptButton[] aButtons, PromptListItem[] aMenuList, boolean aMultipleSelection) {
+    public void show(String aTitle, String aText, PromptButton[] aButtons, PromptListItem[] aMenuList, boolean aMultipleSelection) {
         AlertDialog.Builder builder = new AlertDialog.Builder(GeckoApp.mAppContext);
         if (!aTitle.equals("")) {
             builder.setTitle(aTitle);
@@ -382,7 +382,7 @@ public class PromptService implements OnClickListener, OnCancelListener, OnItemC
         try {
             multiple = geckoObject.getBoolean("multiple");
         } catch(Exception ex) { }
-        this.Show(title, text, promptbuttons, menuitems, multiple);
+        show(title, text, promptbuttons, menuitems, multiple);
     }
 
     private String[] getStringArray(JSONObject aObject, String aName) {

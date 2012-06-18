@@ -45,34 +45,38 @@ public:
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
 
-  nsresult FilterPaint(nsRenderingContext *aContext,
-                       nsIFrame *aTarget, nsSVGFilterPaintCallback *aPaintCallback,
-                       const nsIntRect* aDirtyRect);
+  nsresult PaintFilteredFrame(nsRenderingContext *aContext,
+                              nsIFrame *aFilteredFrame,
+                              nsSVGFilterPaintCallback *aPaintCallback,
+                              const nsIntRect* aDirtyArea);
 
   /**
-   * Returns the area that could change when the given rect of the source changes.
-   * The rectangles are relative to the origin of the outer svg, if aTarget is SVG,
-   * relative to aTarget itself otherwise, in device pixels.
+   * Returns the post-filter area that could be dirtied when the given
+   * pre-filter area of aFilteredFrame changes. The rects are in device pixels,
+   * relative to the origin of the outer-<svg> if aFilteredFrame is SVG, or
+   * else relative to aFilteredFrame itself.
    */
-  nsIntRect GetInvalidationBBox(nsIFrame *aTarget, const nsIntRect& aRect);
+  nsIntRect GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
+                                   const nsIntRect& aPreFilterDirtyRect);
 
   /**
-   * Returns the area in device pixels that is needed from the source when
-   * the given area needs to be repainted.
-   * The rectangles are relative to the origin of the outer svg, if aTarget is SVG,
-   * relative to aTarget itself otherwise, in device pixels.
+   * Returns the pre-filter area that is needed from aFilteredFrame when the
+   * given post-filter area needs to be repainted. The rects are in device
+   * pixels, relative to the origin of the outer-<svg> if aFilteredFrame is
+   * SVG, or else relative to aFilteredFrame itself.
    */
-  nsIntRect GetSourceForInvalidArea(nsIFrame *aTarget, const nsIntRect& aRect);
+  nsIntRect GetPreFilterNeededArea(nsIFrame *aFilteredFrame,
+                                   const nsIntRect& aPostFilterDirtyRect);
 
   /**
-   * Returns the bounding box of the post-filter area of aTarget.
-   * The rectangles are relative to the origin of the outer svg, if aTarget is SVG,
-   * relative to aTarget itself otherwise, in device pixels.
+   * Returns the post-filter paint bounds of aFilteredFrame. The rects are in
+   * device pixels, relative to the origin of the outer-<svg> if aFilteredFrame
+   * is SVG, or else relative to aFilteredFrame itself.
    * @param aOverrideBBox overrides the normal bbox for the source, if non-null
    */
-  nsIntRect GetFilterBBox(nsIFrame *aTarget,
-                          const nsIntRect *aOverrideBBox = nsnull,
-                          const nsIntRect *aPreFilterBounds = nsnull);
+  nsIntRect GetPostFilterBounds(nsIFrame *aFilteredFrame,
+                                const nsIntRect *aOverrideBBox = nsnull,
+                                const nsIntRect *aPreFilterBounds = nsnull);
 
 #ifdef DEBUG
   NS_IMETHOD Init(nsIContent*      aContent,

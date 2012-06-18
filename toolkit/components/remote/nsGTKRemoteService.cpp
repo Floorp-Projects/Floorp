@@ -155,7 +155,11 @@ nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget,
 
   gtk_widget_add_events(widget, GDK_PROPERTY_CHANGE_MASK);
 
+#if (MOZ_WIDGET_GTK == 2)
   Window window = GDK_WINDOW_XWINDOW(widget->window);
+#else
+  Window window = gdk_x11_window_get_xid(gtk_widget_get_window(widget));
+#endif
   nsXRemoteService::HandleCommandsFor(window);
 
 }
@@ -168,8 +172,13 @@ nsGTKRemoteService::HandlePropertyChange(GtkWidget *aWidget,
   if (pevent->state == GDK_PROPERTY_NEW_VALUE) {
     Atom changedAtom = gdk_x11_atom_to_xatom(pevent->atom);
 
-    return HandleNewProperty(GDK_WINDOW_XWINDOW(pevent->window),
-                             GDK_DISPLAY(),
+#if (MOZ_WIDGET_GTK == 2)
+    XID window = GDK_WINDOW_XWINDOW(pevent->window);
+#else
+    XID window = gdk_x11_window_get_xid(gtk_widget_get_window(aWidget));
+#endif
+    return HandleNewProperty(window,
+                             GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
                              pevent->time, changedAtom, aThis);
   }
   return FALSE;

@@ -33,7 +33,7 @@ public:
   NS_DECL_OR_FORWARD_NSIACCESSIBLETABLE_WITH_XPCACCESSIBLETABLE
 
   // Accessible
-  virtual mozilla::a11y::TableAccessible* AsTable() { return this; }
+  virtual TableAccessible* AsTable() { return this; }
 
   // nsAccessNode
   virtual void Shutdown();
@@ -42,6 +42,9 @@ public:
   virtual PRUint32 ColCount();
   virtual PRUint32 RowCount();
   virtual Accessible* CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex);
+  virtual bool IsColSelected(PRUint32 aColIdx);
+  virtual bool IsRowSelected(PRUint32 aRowIdx);
+  virtual bool IsCellSelected(PRUint32 aRowIdx, PRUint32 aColIdx);
   virtual void SelectCol(PRUint32 aColIdx);
   virtual void SelectRow(PRUint32 aRowIdx);
   virtual void UnselectCol(PRUint32 aColIdx);

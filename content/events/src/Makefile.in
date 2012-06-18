@@ -66,10 +66,18 @@ CPPSRCS		= \
 		nsDOMHashChangeEvent.cpp \
 		nsDOMCloseEvent.cpp \
 		nsDOMSettingsEvent.cpp \
+		nsDOMContactChangeEvent.cpp \
 		nsDOMTouchEvent.cpp \
 		nsDOMCustomEvent.cpp \
 		nsDOMCompositionEvent.cpp \
+		nsDOMApplicationEvent.cpp \
 		$(NULL)
+
+ifdef MOZ_B2G_RIL
+CPPSRCS += \
+    nsDOMWifiEvent.cpp \
+    $(NULL)
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
@@ -85,11 +93,18 @@ LOCAL_INCLUDES	+= \
              -I$(srcdir)/../../xml/content/src \
              -I$(srcdir)/../../../dom/base \
              -I$(srcdir)/../../../dom/settings \
+             -I$(srcdir)/../../../dom/contacts \
              -I$(srcdir)/../../../dom/src/storage \
              -I$(srcdir)/../../../layout/generic \
              -I$(srcdir)/../../../layout/xul/base/src \
              -I$(srcdir)/../../../layout/xul/base/src/tree/src \
              $(NULL)
+
+ifdef MOZ_B2G_RIL
+LOCAL_INCLUDES += \
+              -I$(srcdir)/../../../dom/wifi \
+              $(NULL)
+endif
 
 DEFINES += -D_IMPL_NS_LAYOUT
 

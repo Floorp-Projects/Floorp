@@ -48,8 +48,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xfcc2db29, 0x03ba, 0x4eb3, \
-  { 0x96, 0xb8, 0xea, 0x0f, 0x6f, 0x1f, 0x61, 0x55 } }
+{ 0x41dd6a62, 0xda59, 0x46e5, \
+      { 0x9d, 0x74, 0x45, 0xf4, 0x49, 0x4e, 0x1a, 0x70 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -585,6 +585,12 @@ public:
    * Returns whether the default action should be performed.
    */
   virtual bool DispatchCustomEvent(const char *aEventName) = 0;
+
+  /**
+   * Notify the active inner window that the document principal may have changed
+   * and that the compartment principal needs to be updated.
+   */
+  virtual void RefreshCompartmentPrincipal() = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

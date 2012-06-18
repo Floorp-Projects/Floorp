@@ -41,6 +41,27 @@ void InitAndroidJavaWrappers(JNIEnv *jEnv);
  * handle it.
  */
 
+class RefCountedJavaObject {
+public:
+    RefCountedJavaObject(JNIEnv* env, jobject obj) : mRefCnt(0), mObject(env->NewGlobalRef(obj)) {}
+
+    ~RefCountedJavaObject();
+
+    PRInt32 AddRef() { return ++mRefCnt; }
+
+    PRInt32 Release() {
+        PRInt32 refcnt = --mRefCnt;
+        if (refcnt == 0)
+            delete this;
+        return refcnt;
+    }
+
+    jobject GetObject() { return mObject; }
+private:
+    PRInt32 mRefCnt;
+    jobject mObject;
+};
+
 class WrappedJavaObject {
 public:
     WrappedJavaObject() :
@@ -486,6 +507,9 @@ public:
         ACTION_OUTSIDE = 4,
         ACTION_POINTER_DOWN = 5,
         ACTION_POINTER_UP = 6,
+        ACTION_HOVER_MOVE = 7,
+        ACTION_HOVER_ENTER = 9,
+        ACTION_HOVER_EXIT = 10,
         ACTION_POINTER_ID_MASK = 0xff00,
         ACTION_POINTER_ID_SHIFT = 8,
         EDGE_TOP = 0x00000001,
@@ -576,6 +600,7 @@ public:
     double Bandwidth() { return mBandwidth; }
     bool CanBeMetered() { return mCanBeMetered; }
     short ScreenOrientation() { return mScreenOrientation; }
+    RefCountedJavaObject* ByteBuffer() { return mByteBuffer; }
 
 protected:
     int mAction;
@@ -600,6 +625,7 @@ protected:
     double mBandwidth;
     bool mCanBeMetered;
     short mScreenOrientation;
+    nsRefPtr<RefCountedJavaObject> mByteBuffer;
 
     void ReadIntArray(nsTArray<int> &aVals,
                       JNIEnv *jenv,
@@ -653,6 +679,7 @@ protected:
     static jfieldID jCanBeMeteredField;
 
     static jfieldID jScreenOrientationField;
+    static jfieldID jByteBufferField;
 
 public:
     enum {

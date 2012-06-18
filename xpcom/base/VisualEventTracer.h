@@ -178,10 +178,10 @@ public:
                const char * aName2 = 0 
                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mInstance(aInstance)
-    , mTypeOn(aTypeOn)
-    , mTypeOff(aTypeOff)
     , mName(aName)
     , mName2(aName2)
+    , mTypeOn(aTypeOn)
+    , mTypeOff(aTypeOff)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
