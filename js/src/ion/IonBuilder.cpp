@@ -2849,7 +2849,7 @@ class AutoAccumulateExits
 bool
 IonBuilder::makeInliningDecision(JSFunction *target)
 {
-    if (inliningDepth >= 2)
+    if (inliningDepth >= 3)
         return false;
 
     if (script->getUseCount() < js_IonOptions.usesBeforeInlining) {
