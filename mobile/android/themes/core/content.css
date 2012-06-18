@@ -338,5 +338,5 @@ video {
 }
 
 xul|menulist {
-  -moz-binding: url("chrome://browser/content/bindings.xml#menulist");
+  -moz-binding: url("chrome://browser/content/bindings/menulist.xml#menulist");
 }
