@@ -92,7 +92,8 @@ JSClass ExpandoObjectClass = {
 };
 
 bool
-ExpandoObjectMatchesConsumer(JSObject *expandoObject,
+ExpandoObjectMatchesConsumer(JSContext *cx,
+                             JSObject *expandoObject,
                              nsIPrincipal *consumerOrigin,
                              JSObject *exclusiveGlobal)
 {
@@ -120,13 +121,13 @@ ExpandoObjectMatchesConsumer(JSObject *expandoObject,
 }
 
 JSObject *
-LookupExpandoObject(JSObject *target, nsIPrincipal *origin,
+LookupExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
                     JSObject *exclusiveGlobal)
 {
     // Iterate through the chain, looking for a same-origin object.
     JSObject *head = GetExpandoChain(target);
     while (head) {
-        if (ExpandoObjectMatchesConsumer(head, origin, exclusiveGlobal))
+        if (ExpandoObjectMatchesConsumer(cx, head, origin, exclusiveGlobal))
             return head;
         head = JS_GetReservedSlot(head, JSSLOT_EXPANDO_NEXT).toObjectOrNull();
     }
@@ -137,11 +138,11 @@ LookupExpandoObject(JSObject *target, nsIPrincipal *origin,
 
 // Convenience method for the above.
 JSObject *
-LookupExpandoObject(JSObject *target, JSObject *consumer)
+LookupExpandoObject(JSContext *cx, JSObject *target, JSObject *consumer)
 {
     JSObject *consumerGlobal = js::GetGlobalForObjectCrossCompartment(consumer);
     bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
-    return LookupExpandoObject(target, ObjectPrincipal(consumer),
+    return LookupExpandoObject(cx, target, ObjectPrincipal(consumer),
                                isSandbox ? consumerGlobal : nsnull);
 }
 
@@ -153,7 +154,7 @@ AttachExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
     MOZ_ASSERT(IS_WN_WRAPPER(target));
 
     // No duplicates allowed.
-    MOZ_ASSERT(!LookupExpandoObject(target, origin, exclusiveGlobal));
+    MOZ_ASSERT(!LookupExpandoObject(cx, target, origin, exclusiveGlobal));
 
     // Create the expando object. We parent it directly to the target object.
     JSObject *expandoObject = JS_NewObjectWithGivenProto(cx, &ExpandoObjectClass,
@@ -192,7 +193,7 @@ AttachExpandoObject(JSContext *cx, JSObject *target, nsIPrincipal *origin,
 JSObject *
 EnsureExpandoObject(JSContext *cx, JSObject *wrapper, JSObject *target)
 {
-    JSObject *expandoObject = LookupExpandoObject(target, wrapper);
+    JSObject *expandoObject = LookupExpandoObject(cx, target, wrapper);
     if (!expandoObject) {
         // If the object is a sandbox, we don't want it to share expandos with
         // anyone else, so we tag it with the sandbox global.
@@ -797,7 +798,7 @@ XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, js::Wrapper &jsWra
 
     unsigned flags = (set ? JSRESOLVE_ASSIGNING : 0) | JSRESOLVE_QUALIFIED;
     JSObject *target = GetWrappedNativeObjectFromHolder(holder);
-    JSObject *expando = LookupExpandoObject(target, wrapper);
+    JSObject *expando = LookupExpandoObject(cx, target, wrapper);
 
     // Check for expando properties first. Note that the expando object lives
     // in the target compartment.
@@ -896,7 +897,7 @@ XPCWrappedNativeXrayTraits::delete_(JSContext *cx, JSObject *wrapper, jsid id, b
 {
     JSObject *holder = getHolderObject(wrapper);
     JSObject *target = GetWrappedNativeObjectFromHolder(holder);
-    JSObject *expando = LookupExpandoObject(target, wrapper);
+    JSObject *expando = LookupExpandoObject(cx, target, wrapper);
     JSAutoEnterCompartment ac;
     JSBool b = true;
     jsval v;
@@ -921,7 +922,7 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, JSObject *wrapper, uns
     // Enumerate expando properties first. Note that the expando object lives
     // in the target compartment.
     JSObject *target = GetWrappedNativeObjectFromHolder(holder);
-    JSObject *expando = LookupExpandoObject(target, wrapper);
+    JSObject *expando = LookupExpandoObject(cx, target, wrapper);
     if (expando) {
         JSAutoEnterCompartment ac;
         if (!ac.enter(cx, expando) ||
