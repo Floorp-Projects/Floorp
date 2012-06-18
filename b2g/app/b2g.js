@@ -402,7 +402,6 @@ pref("b2g.remote-js.port", 9999);
 
 // Handle hardware buttons in the b2g chrome package
 pref("b2g.keys.menu.enabled", true);
-pref("b2g.keys.search.enabled", false);
 
 // Screen timeout in seconds
 pref("power.screen.timeout", 60);
