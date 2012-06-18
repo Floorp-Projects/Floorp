@@ -76,7 +76,7 @@ function getSavedHistogramsFile(basename) {
 
 function telemetryObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(telemetryObserver, aTopic);
-  httpserver.registerPathHandler(PATH, checkPersistedHistogramsSync);
+  httpserver.registerPathHandler(PATH, checkHistogramsSync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms.dat");
   setupTestData();
 
@@ -218,19 +218,22 @@ function checkPayload(request, reason, successfulPings) {
 }
 
 function checkPersistedHistogramsSync(request, response) {
-  httpserver.registerPathHandler(PATH, checkHistogramsSync);
+  // Even though we have had two successful pings when this handler is
+  // run, we only had one successful ping when the histograms were
+  // saved.
   checkPayload(request, "saved-session", 1);
-}
-
-function checkHistogramsSync(request, response) {
-  checkPayload(request, "test-ping", 1);
 
   Services.obs.addObserver(runAsyncTestObserver, "telemetry-test-xhr-complete", false);
 }
 
+function checkHistogramsSync(request, response) {
+  httpserver.registerPathHandler(PATH, checkPersistedHistogramsSync);
+  checkPayload(request, "test-ping", 1);
+}
+
 function runAsyncTestObserver(aSubject, aTopic, aData) {
   Services.obs.removeObserver(runAsyncTestObserver, aTopic);
-  httpserver.registerPathHandler(PATH, checkPersistedHistogramsAsync);
+  httpserver.registerPathHandler(PATH, checkHistogramsAsync);
   let histogramsFile = getSavedHistogramsFile("saved-histograms2.dat");
 
   const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsIObserver);
@@ -248,16 +251,19 @@ function runAsyncTestObserver(aSubject, aTopic, aData) {
 }
 
 function checkPersistedHistogramsAsync(request, response) {
-  httpserver.registerPathHandler(PATH, checkHistogramsAsync);
-  checkPayload(request, "saved-session", 2);
+  // do not need the http server anymore
+  httpserver.stop(do_test_finished);
+  // Even though we have had four successful pings when this handler is
+  // run, we only had three successful pings when the histograms were
+  // saved.
+  checkPayload(request, "saved-session", 3);
+
+  gFinished = true;
 }
 
 function checkHistogramsAsync(request, response) {
-  // do not need the http server anymore
-  httpserver.stop(do_test_finished);
-  checkPayload(request, "test-ping", 2);
-
-  gFinished = true;
+  httpserver.registerPathHandler(PATH, checkPersistedHistogramsAsync);
+  checkPayload(request, "test-ping", 3);
 }
 
 // copied from toolkit/mozapps/extensions/test/xpcshell/head_addons.js

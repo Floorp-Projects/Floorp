@@ -100,7 +100,7 @@ nsSVGIntegrationUtils::ComputeFrameEffectsRect(nsIFrame* aFrame,
   // r is relative to user space
   PRUint32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
-  p = filterFrame->GetFilterBBox(firstFrame, &p);
+  p = filterFrame->GetPostFilterBounds(firstFrame, &p);
   r = p.ToAppUnits(appUnitsPerDevPixel);
   // Make it relative to aFrame again
   return r + userSpaceRect.TopLeft() - aFrame->GetOffsetTo(firstFrame);
@@ -137,7 +137,7 @@ nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(nsIFrame* aFrame,
   nsPoint offset = aFrame->GetOffsetTo(firstFrame) - userSpaceRect.TopLeft();
   nsRect r = aInvalidRect + offset;
   nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
-  p = filterFrame->GetInvalidationBBox(firstFrame, p);
+  p = filterFrame->GetPostFilterDirtyArea(firstFrame, p);
   r = p.ToAppUnits(appUnitsPerDevPixel);
   return r - offset;
 }
@@ -160,7 +160,7 @@ nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
   nsPoint offset = aFrame->GetOffsetTo(firstFrame) - userSpaceRect.TopLeft();
   nsRect r = aDamageRect + offset;
   nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
-  p = filterFrame->GetSourceForInvalidArea(firstFrame, p);
+  p = filterFrame->GetPreFilterNeededArea(firstFrame, p);
   r = p.ToAppUnits(appUnitsPerDevPixel);
   return r - offset;
 }
@@ -250,9 +250,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   }
 
   gfxContext* gfx = aCtx->ThebesContext();
-  gfxMatrix savedCTM = gfx->CurrentMatrix();
-
-  //SVGAutoRenderState autoRenderState(aCtx, SVGAutoRenderState::NORMAL);
+  gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
 
   nsRect userSpaceRect = GetNonSVGUserSpace(firstFrame) + aBuilder->ToReferenceFrame(firstFrame);
   PRInt32 appUnitsPerDevPixel = aEffectsFrame->PresContext()->AppUnitsPerDevPixel();
@@ -281,12 +279,13 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   /* Paint the child */
   if (filterFrame) {
-    RegularFramePaintCallback paint(aBuilder, aInnerList, aEffectsFrame,
-                                    userSpaceRect.TopLeft());
-    nsIntRect r = (aDirtyRect - userSpaceRect.TopLeft()).ToOutsidePixels(appUnitsPerDevPixel);
-    filterFrame->FilterPaint(aCtx, aEffectsFrame, &paint, &r);
+    RegularFramePaintCallback callback(aBuilder, aInnerList, aEffectsFrame,
+                                       userSpaceRect.TopLeft());
+    nsIntRect dirtyRect = (aDirtyRect - userSpaceRect.TopLeft())
+                            .ToOutsidePixels(appUnitsPerDevPixel);
+    filterFrame->PaintFilteredFrame(aCtx, aEffectsFrame, &callback, &dirtyRect);
   } else {
-    gfx->SetMatrix(savedCTM);
+    gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
     aInnerList->PaintForFrame(aBuilder, aCtx, aEffectsFrame,
                               nsDisplayList::PAINT_DEFAULT);
     aCtx->Translate(userSpaceRect.TopLeft());
@@ -298,7 +297,6 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   /* No more effects, we're done. */
   if (!complexEffects) {
-    gfx->SetMatrix(savedCTM);
     return;
   }
 
@@ -334,7 +332,6 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   }
 
   gfx->Restore();
-  gfx->SetMatrix(savedCTM);
 }
 
 gfxMatrix
@@ -420,7 +417,6 @@ PaintFrameCallback::operator()(gfxContext* aContext,
   aContext->NewPath();
   aContext->Rectangle(aFillRect);
   aContext->Clip();
-  gfxMatrix savedMatrix(aContext->CurrentMatrix());
 
   aContext->Multiply(gfxMatrix(aTransform).Invert());
 
@@ -450,7 +446,6 @@ PaintFrameCallback::operator()(gfxContext* aContext,
                             nsLayoutUtils::PAINT_IN_TRANSFORM |
                             nsLayoutUtils::PAINT_ALL_CONTINUATIONS);
 
-  aContext->SetMatrix(savedMatrix);
   aContext->Restore();
 
   mFrame->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);

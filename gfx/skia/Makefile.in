@@ -30,6 +30,8 @@ LOCAL_INCLUDES += \
 	-I$(srcdir)/include/utils/win \
 	-I$(srcdir)/include/views \
 	-I$(srcdir)/include/effects \
+	-I$(srcdir)/src/utils \
+	-I$(srcdir)/src/sfnt \
 	$(NULL)
 
 VPATH += \
@@ -39,6 +41,7 @@ VPATH += \
 	$(srcdir)/src/effects \
 	$(srcdir)/src/utils \
 	$(srcdir)/src/utils/mac \
+	$(srcdir)/src/sfnt \
 	$(NULL)
 
 EXPORTS_skia = \
@@ -234,6 +237,7 @@ CPPSRCS = \
 	SkOrderedReadBuffer.cpp \
 	SkOrderedWriteBuffer.cpp \
 	SkOSFile_stdio.cpp \
+	SkOTUtils.cpp \
 	SkPackBits.cpp \
 	SkPaint.cpp \
 	SkPath.cpp \
@@ -352,6 +356,7 @@ EXPORTS_skia += \
 	$(NULL)
 CPPSRCS += \
 	SkFontHost_win.cpp \
+	SkFontHost_tables.cpp \
 	SkFontHost_sandbox_none.cpp \
 	SkTime_win.cpp \
 	$(NULL)

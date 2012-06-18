@@ -119,7 +119,7 @@ SetWindowAppUserModelProp(nsIDOMWindow *aParent,
 ///////////////////////////////////////////////////////////////////////////////
 // default nsITaskbarPreviewController
 
-class DefaultController : public nsITaskbarPreviewController
+class DefaultController MOZ_FINAL : public nsITaskbarPreviewController
 {
   HWND mWnd;
 public:

@@ -469,9 +469,12 @@ function gc() {
 }
 
 function finishTest() {
+  testPassed("beginning of finishTest: " + (new Date().getTime()));
+
   successfullyParsed = true;
   var epilogue = document.createElement("script");
   epilogue.onload = function() {
+    testPassed("finishTest epilogue onload: " + (new Date().getTime()));
     if (window.nonKhronosFrameworkNotifyDone) {
       window.nonKhronosFrameworkNotifyDone();
     }
@@ -490,5 +493,6 @@ function finishTest() {
   }
   epilogue.src = basePath + "js-test-post.js";
   document.body.appendChild(epilogue);
+  testPassed("end of finishTest: " + (new Date().getTime()));
 }
 

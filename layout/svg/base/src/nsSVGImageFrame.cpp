@@ -465,12 +465,12 @@ nsSVGImageFrame::UpdateBounds()
     return;
   }
 
-  gfxContext context(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+  gfxContext tmpCtx(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
   gfxMatrix identity;
-  GeneratePath(&context, &identity);
+  GeneratePath(&tmpCtx, &identity);
 
-  gfxRect extent = context.GetUserPathExtent();
+  gfxRect extent = tmpCtx.GetUserPathExtent();
 
   if (!extent.IsEmpty()) {
     mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent, 

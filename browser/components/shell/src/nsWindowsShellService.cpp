@@ -201,7 +201,8 @@ static SETTING gDDESettings[] = {
 #include "updatehelper.h"
 #include "updatehelper.cpp"
 
-static const char kPrefetchClearedPref[] = "app.update.service.prefetchCleared";
+static const char *kPrefetchClearedPref =
+  "app.update.service.lastVersionPrefetchCleared";
 static nsCOMPtr<nsIThread> sThread;
 #endif
 
@@ -603,20 +604,6 @@ DynSHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
 NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
 {
-  if (IsWin8OrLater()) {
-    OPENASINFO info;
-    info.pcszFile = L"http";
-    info.pcszClass = NULL;
-    info.oaifInFlags = OAIF_FORCE_REGISTRATION | 
-                       OAIF_URL_PROTOCOL |
-                       OAIF_REGISTER_EXT;
-    nsresult rv = DynSHOpenWithDialog(NULL, &info);
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool isDefaultBrowser = false;
-    return SUCCEEDED(IsDefaultBrowser(&isDefaultBrowser)) && 
-           isDefaultBrowser ? S_OK : NS_ERROR_FAILURE;
-  }
-
   nsAutoString appHelperPath;
   if (NS_FAILED(GetHelperPath(appHelperPath)))
     return NS_ERROR_FAILURE;
@@ -627,7 +614,21 @@ nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes, bool aForAllUsers)
     appHelperPath.AppendLiteral(" /SetAsDefaultAppUser");
   }
 
-  return LaunchHelper(appHelperPath);
+  nsresult rv = LaunchHelper(appHelperPath);
+  if (NS_SUCCEEDED(rv) && IsWin8OrLater()) {
+    OPENASINFO info;
+    info.pcszFile = L"http";
+    info.pcszClass = NULL;
+    info.oaifInFlags = OAIF_FORCE_REGISTRATION | 
+                       OAIF_URL_PROTOCOL |
+                       OAIF_REGISTER_EXT;
+    nsresult rv = DynSHOpenWithDialog(NULL, &info);
+    NS_ENSURE_SUCCESS(rv, rv);
+    bool isDefaultBrowser = false;
+    rv = NS_SUCCEEDED(IsDefaultBrowser(&isDefaultBrowser)) &&
+         isDefaultBrowser ? S_OK : NS_ERROR_FAILURE;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1016,17 +1017,20 @@ nsWindowsShellService::nsWindowsShellService() :
   }
 
   // check to see if we have attempted to do the one time operation of clearing
-  // the prefetch.
-  bool prefetchCleared;
+  // the prefetch.  We do it once per version upgrade.
+  nsCString lastClearedVer;
   nsCOMPtr<nsIPrefBranch> prefBranch;
   nsCOMPtr<nsIPrefService> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs || 
       NS_FAILED(prefs->GetBranch(nsnull, getter_AddRefs(prefBranch))) ||
-      (NS_SUCCEEDED(prefBranch->GetBoolPref(kPrefetchClearedPref, 
-                                            &prefetchCleared)) &&
-       prefetchCleared)) {
-    return;
+      (NS_SUCCEEDED(prefBranch->GetCharPref(kPrefetchClearedPref, 
+                                            getter_Copies(lastClearedVer))))) {
+    // If the versions are the same, then bail out early.  We only want to clear
+    // once per version.
+    if (!strcmp(MOZ_APP_VERSION, lastClearedVer.get())) {
+      return;
+    }
   }
 
   // In a minute after startup is definitely complete, launch the
@@ -1097,7 +1101,7 @@ nsWindowsShellService::LaunchPrefetchClearCommand(nsITimer *aTimer, void*)
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
     if (NS_SUCCEEDED(prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)))) {
-      prefBranch->SetBoolPref(kPrefetchClearedPref, true);
+      prefBranch->SetCharPref(kPrefetchClearedPref, MOZ_APP_VERSION);
     }
   }
 

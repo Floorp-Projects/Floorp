@@ -98,6 +98,19 @@ function editorLoaded()
 
   is(editor.getText(), "code-editor", "Ctrl-Shift-Z (redo) works");
 
+  editor.undo();
+
+  EventUtils.synthesizeKey("VK_Y", {accelKey: true}, testWin);
+  if (Services.appinfo.OS == "WINNT" ||
+      Services.appinfo.OS == "Linux") {
+    is(editor.getText(), "code-editor",
+       "CTRL+Y does redo on Linux and Windows");
+  } else {
+    is(editor.getText(), "source-editor",
+       "CTRL+Y doesn't redo on machines other than Linux and Windows");
+    editor.setText("code-editor");
+  }
+
   // Test selection methods.
 
   editor.setSelection(0, 4);

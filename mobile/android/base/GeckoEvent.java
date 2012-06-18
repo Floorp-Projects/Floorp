@@ -23,6 +23,7 @@ import android.text.format.Time;
 import android.os.SystemClock;
 import java.lang.Math;
 import java.lang.System;
+import java.nio.ByteBuffer;
 
 import android.util.Log;
 
@@ -116,6 +117,8 @@ public class GeckoEvent {
 
     public short mScreenOrientation;
 
+    public ByteBuffer mBuffer;
+
     private GeckoEvent(int evType) {
         mType = evType;
     }
@@ -194,7 +197,10 @@ public class GeckoEvent {
             case MotionEvent.ACTION_POINTER_UP:
             case MotionEvent.ACTION_POINTER_DOWN:
             case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_MOVE: {
+            case MotionEvent.ACTION_MOVE:
+            case MotionEvent.ACTION_HOVER_ENTER:
+            case MotionEvent.ACTION_HOVER_MOVE:
+            case MotionEvent.ACTION_HOVER_EXIT: {
                 mCount = m.getPointerCount();
                 mPoints = new Point[mCount];
                 mPointIndicies = new int[mCount];
@@ -456,15 +462,17 @@ public class GeckoEvent {
         return event;
     }
 
-    public static GeckoEvent createScreenshotEvent(int tabId, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int token) {
+    public static GeckoEvent createScreenshotEvent(int tabId, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int bw, int bh, int token, ByteBuffer buffer) {
         GeckoEvent event = new GeckoEvent(SCREENSHOT);
-        event.mPoints = new Point[4];
+        event.mPoints = new Point[5];
         event.mPoints[0] = new Point(sx, sy);
         event.mPoints[1] = new Point(sw, sh);
         event.mPoints[2] = new Point(dx, dy);
         event.mPoints[3] = new Point(dw, dh);
+        event.mPoints[4] = new Point(bw, bh);
         event.mMetaState = tabId;
         event.mFlags = token;
+        event.mBuffer = buffer;
         return event;
     }
 

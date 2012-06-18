@@ -257,18 +257,18 @@ protected:
                                        DeleteElementTxn ** aTxn);
 
 
-  NS_IMETHOD CreateTxnForDeleteSelection(EDirection aAction,
-                                         EditAggregateTxn ** aTxn,
-                                         nsIDOMNode ** aNode,
-                                         PRInt32 *aOffset,
-                                         PRInt32 *aLength);
+  nsresult CreateTxnForDeleteSelection(EDirection aAction,
+                                       EditAggregateTxn** aTxn,
+                                       nsINode** aNode,
+                                       PRInt32* aOffset,
+                                       PRInt32* aLength);
 
-  NS_IMETHOD CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
-                                              EDirection aAction, 
-                                              EditAggregateTxn *aTxn,
-                                              nsIDOMNode ** aNode,
-                                              PRInt32 *aOffset,
-                                              PRInt32 *aLength);
+  nsresult CreateTxnForDeleteInsertionPoint(nsRange* aRange, 
+                                            EDirection aAction, 
+                                            EditAggregateTxn* aTxn,
+                                            nsINode** aNode,
+                                            PRInt32* aOffset,
+                                            PRInt32* aLength);
 
 
   /** create a transaction for inserting aStringToInsert into aTextNode
@@ -296,15 +296,15 @@ protected:
 
 //  NS_IMETHOD DeleteRange(nsIDOMRange *aRange);
 
-  NS_IMETHOD CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
-                                    PRUint32             aOffset,
-                                    PRUint32             aLength,
-                                    DeleteTextTxn      **aTxn);
+  nsresult CreateTxnForDeleteText(nsIDOMCharacterData* aElement,
+                                  PRUint32             aOffset,
+                                  PRUint32             aLength,
+                                  DeleteTextTxn**      aTxn);
 
-  nsresult CreateTxnForDeleteCharacter(nsIDOMCharacterData  *aData,
-                                       PRUint32              aOffset,
-                                       nsIEditor::EDirection aDirection,
-                                       DeleteTextTxn       **aTxn);
+  nsresult CreateTxnForDeleteCharacter(nsIDOMCharacterData* aData,
+                                       PRUint32             aOffset,
+                                       EDirection           aDirection,
+                                       DeleteTextTxn**      aTxn);
 	
   NS_IMETHOD CreateTxnForSplitNode(nsIDOMNode *aNode,
                                    PRUint32    aOffset,
