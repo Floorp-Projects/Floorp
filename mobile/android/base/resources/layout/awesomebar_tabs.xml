@@ -17,13 +17,7 @@
 
         <FrameLayout android:id="@android:id/tabcontent"
                      android:layout_width="fill_parent"
-                     android:layout_height="fill_parent">
-
-            <ExpandableListView android:id="@+id/history_list"
-                                style="@style/AwesomeBarList"
-                                android:groupIndicator="@android:color/transparent"/>
-
-        </FrameLayout>
+                     android:layout_height="fill_parent"/>
 
     </LinearLayout>
 
