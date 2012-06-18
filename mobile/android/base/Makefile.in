@@ -30,6 +30,7 @@ FENNEC_JAVA_FILES = \
   AwesomeBarTabs.java \
   awesomebar/AwesomeBarTab.java \
   awesomebar/AllPagesTab.java \
+  awesomebar/BookmarksTab.java \
   BrowserApp.java \
   BrowserToolbar.java \
   SyncPreference.java \
