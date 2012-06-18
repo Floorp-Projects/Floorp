@@ -115,16 +115,25 @@ extern "C" {
  * in release builds as well as debug builds.  But if the failure is one that
  * should be debugged and fixed, MOZ_ASSERT is generally preferable.
  */
-#ifdef WIN32
+#if defined(_MSC_VER)
+   /*
+    * On MSVC use the __debugbreak compiler intrinsic, which produces an inline
+    * (not nested in a system function) breakpoint.  This distinctively invokes
+    * Breakpad without requiring system library symbols on all stack-processing
+    * machines, as a nested breakpoint would require.  (Technically all Windows
+    * compilers would require this, but practically only MSVC matters.)
+    */
 #  ifdef __cplusplus
 #    define MOZ_CRASH() \
        do { \
+         __debugbreak(); \
          *((volatile int*) NULL) = 123; \
          ::exit(3); \
        } while (0)
 #  else
 #    define MOZ_CRASH() \
        do { \
+         __debugbreak(); \
          *((volatile int*) NULL) = 123; \
          exit(3); \
        } while (0)
