@@ -17,15 +17,23 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.ImageView;
 import android.widget.TabHost.TabContentFactory;
+import android.view.inputmethod.InputMethodManager;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+
+import org.json.JSONArray;
 
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.AwesomeBar.ContextMenuSubject;
 
 abstract public class AwesomeBarTab {
     abstract public String getTag();
     abstract public int getTitleStringId();
     abstract public void destroy();
     abstract public TabContentFactory getFactory();
+    abstract public boolean   onBackPressed();
+    abstract public ContextMenuSubject getSubject(ContextMenu menu, View view, ContextMenuInfo menuInfo);
 
     protected View.OnTouchListener mListListener;
     private AwesomeBarTabs.OnUrlOpenListener mListener;
@@ -115,5 +123,12 @@ abstract public class AwesomeBarTab {
         String url = cursor.getString(urlIndex);
 
         urlView.setText(url);
+    }
+
+    protected boolean hideSoftInput(View view) {
+        InputMethodManager imm =
+                (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        return imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }

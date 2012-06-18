@@ -61,9 +61,7 @@ public class AwesomeBarTabs extends TabHost {
     private OnUrlOpenListener mUrlOpenListener;
     private View.OnTouchListener mListTouchListener;
     
-    private AllPagesTab mAllPagesTab;
-    public BookmarksTab mBookmarksTab;
-    public HistoryTab mHistoryTab;
+    private AwesomeBarTab mTabs[];
 
     // FIXME: This value should probably come from a
     // prefs key (just like XUL-based fennec)
@@ -75,24 +73,30 @@ public class AwesomeBarTabs extends TabHost {
         public void onEditSuggestion(String suggestion);
     }
 
-    // This method checks to see if we're in a bookmark sub-folder. If we are,
-    // it will go up a level and return true. Otherwise it will return false.
-    public boolean onBackPressed() {
-        // If the soft keyboard is visible in the bookmarks or history tab, the user
-        // must have explictly brought it up, so we should try hiding it instead of
-        // exiting the activity or going up a bookmarks folder level.
-        if (getCurrentTabTag().equals(mBookmarksTab.getTag()) || getCurrentTabTag().equals(mHistoryTab.getTag())) {
-            View tabView = getCurrentTabView();
-            if (hideSoftInput(tabView))
-                return true;
+    private AwesomeBarTab getCurrentAwesomeBarTab() {
+        String tag = getCurrentTabTag();
+        return getAwesomeBarTabForTag(tag);
+    }
+
+    public AwesomeBarTab getAwesomeBarTabForView(View view) {
+        String tag = (String)view.getTag();
+        return getAwesomeBarTabForTag(tag);
+    }
+
+    public AwesomeBarTab getAwesomeBarTabForTag(String tag) {
+        for (AwesomeBarTab tab : mTabs) {
+            if (tag == tab.getTag()) {
+                return tab;
+            }
         }
+        return null;
+    }
 
-        // If we're not in the bookmarks tab, we have nothing to do. We should
-        // also return false if mBookmarksAdapter hasn't been initialized yet.
-        if (!getCurrentTabTag().equals(mBookmarksTab.getTag()))
-            return false;
-
-        return mBookmarksTab.moveToParentFolder();
+    public boolean onBackPressed() {
+        AwesomeBarTab tab = getCurrentAwesomeBarTab();
+        if (tab == null)
+             return false;
+        return tab.onBackPressed();
     }
 
     public AwesomeBarTabs(Context context, AttributeSet attrs) {
@@ -129,28 +133,27 @@ public class AwesomeBarTabs extends TabHost {
             }
         };
 
-        addAllPagesTab();
-        addBookmarksTab();
-        addHistoryTab();
+        mTabs = new AwesomeBarTab[] {
+            new AllPagesTab(mContext),
+            new BookmarksTab(mContext),
+            new HistoryTab(mContext)
+        };
+
+        for (AwesomeBarTab tab : mTabs) {
+            addAwesomeTab(tab);
+        }
 
         // Initialize "App Pages" list with no filter
         filter("");
     }
 
-    private TabSpec addAwesomeTab(String id, int titleId, TabHost.TabContentFactory factory) {
-        TabSpec tab = getTabSpec(id, titleId);
-        tab.setContent(factory);
-        addTab(tab);
-
-        return tab;
-    }
-
-    private TabSpec addAwesomeTab(String id, int titleId, int contentId) {
-        TabSpec tab = getTabSpec(id, titleId);
-        tab.setContent(contentId);
-        addTab(tab);
-
-        return tab;
+    private void addAwesomeTab(AwesomeBarTab tab) {
+        TabSpec tabspec = getTabSpec(tab.getTag(), tab.getTitleStringId());
+        tabspec.setContent(tab.getFactory());
+        addTab(tabspec);
+        tab.setListTouchListener(mListTouchListener);
+ 
+        return;
     }
 
     private TabSpec getTabSpec(String id, int titleId) {
@@ -170,42 +173,6 @@ public class AwesomeBarTabs extends TabHost {
         return tab;
     }
 
-    private void addAllPagesTab() {
-        Log.d(LOGTAG, "Creating All Pages tab");
-
-        mAllPagesTab = new AllPagesTab(mContext);
-        addAwesomeTab(mAllPagesTab.getTag(),
-                      mAllPagesTab.getTitleStringId(),
-                      mAllPagesTab.getFactory());
-        mAllPagesTab.setListTouchListener(mListTouchListener);
-    }
-
-    private void addBookmarksTab() {
-        Log.d(LOGTAG, "Creating Bookmarks tab");
-
-        mBookmarksTab = new BookmarksTab(mContext);
-        addAwesomeTab(mBookmarksTab.getTag(),
-                      mBookmarksTab.getTitleStringId(),
-                      mBookmarksTab.getFactory());
-        mBookmarksTab.setListTouchListener(mListTouchListener);
-
-        // Only load bookmark list when tab is actually used.
-        // See OnTabChangeListener above.
-    }
-
-    private void addHistoryTab() {
-        Log.d(LOGTAG, "Creating History tab");
-
-        mHistoryTab = new HistoryTab(mContext);
-        addAwesomeTab(mHistoryTab.getTag(),
-                      mHistoryTab.getTitleStringId(),
-                      mHistoryTab.getFactory());
-        mHistoryTab.setListTouchListener(mListTouchListener);
-
-        // Only load history list when tab is actually used.
-        // See OnTabChangeListener above.
-    }
-
     private boolean hideSoftInput(View view) {
         InputMethodManager imm =
                 (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -221,15 +188,27 @@ public class AwesomeBarTabs extends TabHost {
 
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
         mUrlOpenListener = listener;
-        mAllPagesTab.setUrlListener(listener);
-        mBookmarksTab.setUrlListener(listener);
-        mHistoryTab.setUrlListener(listener);
+        for (AwesomeBarTab tab : mTabs) {
+            tab.setUrlListener(listener);
+        }
     }
 
     public void destroy() {
-        mAllPagesTab.destroy();
-        mBookmarksTab.destroy();
-        mHistoryTab.destroy();
+        for (AwesomeBarTab tab : mTabs) {
+            tab.destroy();
+        }
+    }
+
+    public AllPagesTab getAllPagesTab() {
+        return (AllPagesTab)getAwesomeBarTabForTag("allPages");
+    }
+
+    public BookmarksTab getBookmarksTab() {
+        return (BookmarksTab)getAwesomeBarTabForTag("bookmarks");
+    }
+
+    public HistoryTab getHistoryTab() {
+        return (HistoryTab)getAwesomeBarTabForTag("history");
     }
 
     public void filter(String searchTerm) {
@@ -237,7 +216,8 @@ public class AwesomeBarTabs extends TabHost {
         setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
 
         // Ensure the 'All Pages' tab is selected
-        setCurrentTabByTag(mAllPagesTab.getTag());
+        AllPagesTab allPages = getAllPagesTab();
+        setCurrentTabByTag(allPages.getTag());
 
         // Restore normal focus behavior on tab host
         setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
@@ -247,7 +227,7 @@ public class AwesomeBarTabs extends TabHost {
         getTabWidget().setVisibility(tabsVisibility);
 
         // Perform the actual search
-        mAllPagesTab.filter(searchTerm);
+        allPages.filter(searchTerm);
     }
 
     /**
@@ -257,7 +237,7 @@ public class AwesomeBarTabs extends TabHost {
     public void setSuggestions(final ArrayList<String> suggestions) {
         GeckoAppShell.getMainHandler().post(new Runnable() {
             public void run() {
-                mAllPagesTab.setSuggestions(suggestions);
+                getAllPagesTab().setSuggestions(suggestions);
             }
         });
     }
@@ -268,12 +248,12 @@ public class AwesomeBarTabs extends TabHost {
     public void setSearchEngines(final String suggestEngineName, final JSONArray engines) {
         GeckoAppShell.getMainHandler().post(new Runnable() {
             public void run() {
-                mAllPagesTab.setSearchEngines(suggestEngineName, engines);
+                getAllPagesTab().setSearchEngines(suggestEngineName, engines);
             }
         });
     }
 
     public boolean isInReadingList() {
-        return mBookmarksTab.isInReadingList();
+        return getBookmarksTab().isInReadingList();
     }
 }

@@ -433,7 +433,7 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
         cancelAndFinish();
     }
 
-    private class ContextMenuSubject {
+    static public class ContextMenuSubject {
         public int id;
         public String url;
         public byte[] favicon;
@@ -453,87 +453,8 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, view, menuInfo);
         ListView list = (ListView) view;
-        boolean isBookmarksList = (list.getTag() == mAwesomeTabs.mBookmarksTab.getTag());
-        mContextMenuSubject = null;
-
-        if (list.getTag() == mAwesomeTabs.mHistoryTab.getTag()) {
-            if (!(menuInfo instanceof ExpandableListView.ExpandableListContextMenuInfo)) {
-                Log.e(LOGTAG, "menuInfo is not ExpandableListContextMenuInfo");
-                return;
-            }
-
-            ExpandableListView.ExpandableListContextMenuInfo info = (ExpandableListView.ExpandableListContextMenuInfo) menuInfo;
-            int childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
-            int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
-
-            // Check if long tap is on a header row
-            if (groupPosition < 0 || childPosition < 0)
-                return;
-
-            ExpandableListView exList = (ExpandableListView) list;
-
-            // The history list is backed by a SimpleExpandableListAdapter
-            @SuppressWarnings("rawtypes")
-            Map map = (Map) exList.getExpandableListAdapter().getChild(groupPosition, childPosition);
-            mContextMenuSubject = new ContextMenuSubject((Integer) map.get(Combined.HISTORY_ID),
-                                                         (String) map.get(URLColumns.URL),
-                                                         (byte[]) map.get(URLColumns.FAVICON),
-                                                         (String) map.get(URLColumns.TITLE),
-                                                         null);
-        } else {
-            if (!(menuInfo instanceof AdapterView.AdapterContextMenuInfo)) {
-                Log.e(LOGTAG, "menuInfo is not AdapterContextMenuInfo");
-                return;
-            }
-
-            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-            Object selectedItem = list.getItemAtPosition(info.position);
-
-            if (!(selectedItem instanceof Cursor)) {
-                Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
-                return;
-            }
-
-            Cursor cursor = (Cursor) selectedItem;
-
-            // Don't show the context menu for folders
-            if (!(isBookmarksList &&
-                  cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks.TYPE)) == Bookmarks.TYPE_FOLDER)) {
-                String keyword = null;
-                int keywordCol = cursor.getColumnIndex(URLColumns.KEYWORD);
-                if (keywordCol != -1)
-                    keyword = cursor.getString(keywordCol);
-
-                // Use the bookmark id for the Bookmarks tab and the history id for the Top Sites tab 
-                int id = (isBookmarksList) ? cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID)) :
-                                                   cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
-
-                mContextMenuSubject = new ContextMenuSubject(id,
-                                                             cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL)),
-                                                             cursor.getBlob(cursor.getColumnIndexOrThrow(URLColumns.FAVICON)),
-                                                             cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE)),
-                                                             keyword);
-            }
-        }
-
-        if (mContextMenuSubject == null)
-            return;
-
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.awesomebar_contextmenu, menu);
-        
-        if (!isBookmarksList) {
-            menu.findItem(R.id.remove_bookmark).setVisible(false);
-            menu.findItem(R.id.edit_bookmark).setVisible(false);
-
-            // Hide "Remove" item if there isn't a valid history ID
-            if (mContextMenuSubject.id < 0)
-                menu.findItem(R.id.remove_history).setVisible(false);
-        } else {
-            menu.findItem(R.id.remove_history).setVisible(false);
-        }
-
-        menu.setHeaderTitle(mContextMenuSubject.title);
+        AwesomeBarTab tab = mAwesomeTabs.getAwesomeBarTabForView(view);
+        mContextMenuSubject = tab.getSubject(menu, view, menuInfo);
     }
 
     @Override
