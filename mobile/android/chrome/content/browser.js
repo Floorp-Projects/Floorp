@@ -5125,12 +5125,14 @@ var WebappsUI = {
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-sync-install", false);
+    Services.obs.addObserver(this, "webapps-sync-uninstall", false);
   },
   
   uninit: function unint() {
     Services.obs.removeObserver(this, "webapps-ask-install");
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-sync-install");
+    Services.obs.removeObserver(this, "webapps-sync-uninstall");
   },
   
   observe: function observe(aSubject, aTopic, aData) {
@@ -5154,14 +5156,26 @@ var WebappsUI = {
             return;
           let manifest = new DOMApplicationManifest(aManifest, data.origin);
 
-          // Add a homescreen shortcut
-          this.createShortcut(manifest.name, manifest.fullLaunchPath(), manifest.iconURLForSize("64"), "webapp");
+          // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
+          // a unique ID for Android webapp allocation
+          this.makeBase64Icon(manifest.iconURLForSize("64"),
+                              function(icon) {
+                                sendMessageToJava({
+                                  gecko: {
+                                    type: "WebApps:Install",
+                                    name: manifest.name,
+                                    launchPath: manifest.fullLaunchPath(),
+                                    iconURL: icon,
+                                    uniqueURI: data.origin
+                                  }
+                                })});
 
           // Create a system notification allowing the user to launch the app
           let observer = {
             observe: function (aSubject, aTopic) {
-              if (aTopic == "alertclickcallback")
+              if (aTopic == "alertclickcallback") {
                 WebappsUI.openURL(manifest.fullLaunchPath(), aData.origin);
+              }
             }
           };
     
@@ -5169,6 +5183,14 @@ var WebappsUI = {
           let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
           alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", observer, "webapp");
         }).bind(this));
+        break;
+      case "webapps-sync-uninstall":
+        sendMessageToJava({
+          gecko: {
+            type: "WebApps:Uninstall",
+            uniqueURI: data.origin
+          }
+        });
         break;
     }
   },
@@ -5183,45 +5205,47 @@ var WebappsUI = {
   },
   
   openURL: function openURL(aURI, aOrigin) {
-    let uri = Services.io.newURI(aURI, null, null);
-    if (!uri)
-      return;
-
-    let bwin = window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow;
-    bwin.openURI(uri, null, Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB, Ci.nsIBrowserDOMWindow.OPEN_NEW);
+    sendMessageToJava({
+      gecko: {
+        type: "WebApps:Open",
+        uri: aURI,
+        origin: aOrigin
+      }
+    });
   },
 
-  createShortcut: function createShortcut(aTitle, aURL, aIconURL, aType) {
+  makeBase64Icon: function loadAndMakeBase64Icon(aIconURL, aCallbackFunction) {
     // The images are 64px, but Android will resize as needed.
     // Bigger is better than too small.
     const kIconSize = 64;
 
     let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
 
-    function _createShortcut() {
-      let icon = canvas.toDataURL("image/png", "");
+    canvas.width = canvas.height = kIconSize;
+    let ctx = canvas.getContext("2d");
+    let favicon = new Image();
+    favicon.onload = function() {
+      ctx.drawImage(favicon, 0, 0, kIconSize, kIconSize);
+      let base64icon = canvas.toDataURL("image/png", "");
       canvas = null;
+      aCallbackFunction.call(null, base64icon);
+    };
+    favicon.onerror = function() {
+      Cu.reportError("CreateShortcut: favicon image load error");
+    };
+  
+    favicon.src = aIconURL;
+  },
+
+  createShortcut: function createShortcut(aTitle, aURL, aIconURL, aType) {
+    this.makeBase64Icon(aIconURL, function _createShortcut(icon) {
       try {
         let shell = Cc["@mozilla.org/browser/shell-service;1"].createInstance(Ci.nsIShellService);
         shell.createShortcut(aTitle, aURL, icon, aType);
       } catch(e) {
         Cu.reportError(e);
       }
-    }
-
-    canvas.width = canvas.height = kIconSize;
-    let ctx = canvas.getContext("2d");
-
-    let favicon = new Image();
-    favicon.onload = function() {
-      ctx.drawImage(favicon, 0, 0, kIconSize, kIconSize);
-      _createShortcut();
-    }
-    favicon.onerror = function() {
-      Cu.reportError("CreateShortcut: favicon image load error");
-    }
-  
-    favicon.src = aIconURL;
+    });
   }
 }
 
