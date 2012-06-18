@@ -85,6 +85,8 @@ function subsetOf(resultObj, list) {
  */
 
 function uninstall(appURL, check, next) {
+  var found = false;
+  var finished = false;
   var pending = navigator.mozApps.getInstalled(); 
   pending.onsuccess = function () {
     var m = this.result;
@@ -99,30 +101,36 @@ function uninstall(appURL, check, next) {
           try {
             var secondUninstall = app.uninstall();
             secondUninstall.onsuccess = function(r) {
+              check(false, "mozApps allowed second uninstall without error");
               next();
             };
             secondUninstall.onerror = function(r) {
-              debug(secondUninstall.error.name);
-              debug(secondUninstall.error.manifestURL);
+              debug("Got second error: " + this.error.name);
+              check(
+                this.error.name == "NOT_INSTALLED",
+                "The second mozApps uninstall should return an error with the name " +
+                "NOT_INSTALLED, not " + this.error.name);
               next();
             };
           } 
           catch(e) {
-            check(e.message == "Not enough arguments \[mozIDOMApplicationRegistry.install\]", "install returned " + e.message);
+            check(false, "Unexpected error calling uninstall: " + e);
             next();
           }
         };
         pendingUninstall.onerror = function () {
-          check(false);
+          check(false, "Got error in uninstall: " + this.error.name);
           finished = true;
-          throw('Failed');
         };
       }
     }
-  }
+    if (! found) {
+      check(false, "Found no app with manifest URL: " + appURL);
+    }
+  };
   pending.onerror = function ()  {
     check(false, "Unexpected on error called in uninstall " );
-  }
+  };
 }
 
 /**
@@ -329,7 +337,6 @@ function debug(msg) {
     dump(msg + "\n");
   }
 }
-
 function check_event_listener_fired (next) {
   todo(triggered, "Event Listener fired");
   triggered = false;
