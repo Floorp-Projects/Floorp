@@ -223,7 +223,6 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             }
         });
 
-        registerForContextMenu(mAwesomeTabs.findViewById(R.id.all_pages_list));
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.bookmarks_list));
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
 
