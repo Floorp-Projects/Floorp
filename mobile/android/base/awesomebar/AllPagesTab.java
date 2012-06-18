@@ -54,6 +54,7 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 public class AllPagesTab extends AwesomeBarTab {
     public static final String LOGTAG = "ALL_PAGES";
     private static final String TAG = "allPages";
+    private String mSearchTerm;
     private SearchEngine mSuggestEngine;
     private ArrayList<SearchEngine> mSearchEngines;
     private ListView mView = null;
@@ -151,47 +152,49 @@ public class AllPagesTab extends AwesomeBarTab {
         public void onClick();
     }
 
-    private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
-        private String mSearchTerm;
+    private class AwesomeBarCursorItem implements AwesomeBarItem {
+        private Cursor mCursor;
 
+        public AwesomeBarCursorItem(Cursor cursor) {
+            mCursor = cursor;
+        }
+
+        public Cursor getCursor() {
+            return mCursor;
+        }
+
+        public void onClick() {
+            AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
+            if (listener == null)
+                return;
+
+            String url = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL));
+
+            int display = mCursor.getInt(mCursor.getColumnIndexOrThrow(Combined.DISPLAY));
+            if (display == Combined.DISPLAY_READER) {
+                url = getReaderForUrl(url);
+            }
+            listener.onUrlOpen(url);
+        }
+    }
+
+    private class AwesomeBarSearchEngineItem implements AwesomeBarItem {
+        private String mSearchEngine;
+
+        public AwesomeBarSearchEngineItem(String searchEngine) {
+            mSearchEngine = searchEngine;
+        }
+
+        public void onClick() {
+            AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
+            if (listener != null)
+                listener.onSearch(mSearchEngine, mSearchTerm);
+        }
+    }
+
+    private class AwesomeBarCursorAdapter extends SimpleCursorAdapter {
         private static final int ROW_SEARCH = 0;
         private static final int ROW_STANDARD = 1;
-
-        private class AwesomeBarCursorItem implements AwesomeBarItem {
-            private Cursor mCursor;
-
-            public AwesomeBarCursorItem(Cursor cursor) {
-                mCursor = cursor;
-            }
-
-            public void onClick() {
-                AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
-                if (listener == null)
-                    return;
-
-                String url = mCursor.getString(mCursor.getColumnIndexOrThrow(URLColumns.URL));
-
-                int display = mCursor.getInt(mCursor.getColumnIndexOrThrow(Combined.DISPLAY));
-                if (display == Combined.DISPLAY_READER) {
-                    url = getReaderForUrl(url);
-                }
-                listener.onUrlOpen(url);
-            }
-        }
-
-        private class AwesomeBarSearchEngineItem implements AwesomeBarItem {
-            private String mSearchEngine;
-
-            public AwesomeBarSearchEngineItem(String searchEngine) {
-                mSearchEngine = searchEngine;
-            }
-
-            public void onClick() {
-                AwesomeBarTabs.OnUrlOpenListener listener = getUrlListener();
-                if (listener != null)
-                    listener.onSearch(mSearchEngine, mSearchTerm);
-            }
-        }
 
         public AwesomeBarCursorAdapter(Context context) {
             super(context, -1, null, new String[] {}, new int[] {});
@@ -520,12 +523,12 @@ public class AllPagesTab extends AwesomeBarTab {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
         Object selectedItem = list.getItemAtPosition(info.position);
 
-        if (!(selectedItem instanceof Cursor)) {
-            Log.e(LOGTAG, "item at " + info.position + " is not a Cursor");
+        if (!(selectedItem instanceof AwesomeBarCursorItem)) {
+            Log.e(LOGTAG, "item at " + info.position + " is a search item");
             return subject;
         }
 
-        Cursor cursor = (Cursor) selectedItem;
+        Cursor cursor = ((AwesomeBarCursorItem) selectedItem).getCursor();
 
         // Don't show the context menu for folders
         String keyword = null;
