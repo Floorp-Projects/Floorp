@@ -128,6 +128,9 @@ InsideOutBoxView = {
 
 var EXPORTED_SYMBOLS = ["InsideOutBox"];
 
+const Cu = Components.utils;
+Cu.import("resource:///modules/devtools/LayoutHelpers.jsm");
+
 function InsideOutBox(aView, aBox)
 {
   this.view = aView;
@@ -212,7 +215,9 @@ InsideOutBox.prototype =
     if (makeBoxVisible) {
       this.openObjectBox(objectBox);
       if (scrollIntoView) {
-        objectBox.scrollIntoView(true);
+        // We want to center the label of the element, not the whole tag
+        // (which includes all of its children, and is vertically huge).
+        LayoutHelpers.scrollIntoViewIfNeeded(objectBox.firstElementChild);
       }
     }
     return objectBox;
