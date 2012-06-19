@@ -17,8 +17,9 @@
 #include "nsIScriptContext.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Attributes.h"
 
-class nsDOMEventListenerWrapper : public nsIDOMEventListener
+class nsDOMEventListenerWrapper MOZ_FINAL : public nsIDOMEventListener
 {
 public:
   nsDOMEventListenerWrapper(nsIDOMEventListener* aListener)

@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMSVGStringList.h"
 #include "nsSVGElement.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 
@@ -42,7 +43,7 @@ class SVGStringList;
  * them so it can return the same objects each time. It simply returns a new
  * string each time any given item is requested.
  */
-class DOMSVGStringList : public nsIDOMSVGStringList
+class DOMSVGStringList MOZ_FINAL : public nsIDOMSVGStringList
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

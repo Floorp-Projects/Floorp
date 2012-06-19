@@ -14,6 +14,7 @@
 #include "nsSVGElement.h"
 #include "nsTArray.h"
 #include "SVGPathData.h" // IWYU pragma: keep
+#include "mozilla/Attributes.h"
 
 class nsIDOMSVGPathSeg;
 
@@ -47,8 +48,8 @@ class SVGAnimatedPathSegList;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGPathSegList : public nsIDOMSVGPathSegList,
-                          public nsWrapperCache
+class DOMSVGPathSegList MOZ_FINAL : public nsIDOMSVGPathSegList,
+                                    public nsWrapperCache
 {
   friend class DOMSVGPathSeg;
 

@@ -20,8 +20,9 @@
 
 
 #include "nsIContentPolicy.h"
+#include "mozilla/Attributes.h"
 
-class nsNoDataProtocolContentPolicy : public nsIContentPolicy
+class nsNoDataProtocolContentPolicy MOZ_FINAL : public nsIContentPolicy
 {
 public:
   NS_DECL_ISUPPORTS

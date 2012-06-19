@@ -21,6 +21,7 @@
 #include "nsFrameMessageManager.h"
 #include "Layers.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/Attributes.h"
 
 class nsIURI;
 class nsSubDocumentFrame;
@@ -56,7 +57,7 @@ class QX11EmbedContainer;
  * Used to support asynchronous re-paints of content pixels; see
  * nsIContentView.
  */
-class nsContentView : public nsIContentView
+class nsContentView MOZ_FINAL : public nsIContentView
 {
 public:
   typedef mozilla::layers::FrameMetrics::ViewID ViewID;
@@ -133,8 +134,8 @@ private:
 };
 
 
-class nsFrameLoader : public nsIFrameLoader,
-                      public nsIContentViewManager
+class nsFrameLoader MOZ_FINAL : public nsIFrameLoader,
+                                public nsIContentViewManager
 {
   friend class AutoResetInShow;
   typedef mozilla::dom::PBrowserParent PBrowserParent;
