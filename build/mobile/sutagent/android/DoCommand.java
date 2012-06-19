@@ -308,7 +308,6 @@ public class DoCommand {
                     if (Argc > 2) {
                         try {
                             lOff = Long.parseLong(Argv[2].trim());
-                            System.out.println("offset = " + lOff);
                         } catch (NumberFormatException nfe) {
                             lOff = 0;
                             System.out.println("NumberFormatException: " + nfe.getMessage());
@@ -317,7 +316,6 @@ public class DoCommand {
                     if (Argc == 4) {
                         try {
                             lLen = Long.parseLong(Argv[3].trim());
-                            System.out.println("length = " + lLen);
                         } catch (NumberFormatException nfe) {
                             lLen = -1;
                             System.out.println("NumberFormatException: " + nfe.getMessage());
@@ -336,7 +334,6 @@ public class DoCommand {
                     try
                         {
                         lArg = Long.parseLong(Argv[2].trim());
-                        System.out.println("long l = " + lArg);
                         }
                     catch (NumberFormatException nfe)
                         {
@@ -1501,7 +1498,6 @@ private void CancelNotification()
             }
             catch (FileNotFoundException e) {
                 sRet += " file not found";
-                Log.d("SUT", "HashFile: "+e);
             }
             catch (IOException e) {
                 sRet += " io exception";
@@ -3500,7 +3496,6 @@ private void CancelNotification()
                     }
                 catch (IllegalThreadStateException itse) {
                     lcv++;
-                    Log.d("SUT", "StartPrg waited 10s for "+progArray[0]);
                     }
                 }
             }
@@ -3631,7 +3626,6 @@ private void CancelNotification()
                         }
                     catch (IllegalThreadStateException itse) {
                         lcv++;
-                        Log.d("SUT", "StartPrg2 waited 10s for "+theArgs[0]);
                         }
                     }
                 }
