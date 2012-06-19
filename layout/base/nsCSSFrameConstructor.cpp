@@ -12385,9 +12385,9 @@ nsCSSFrameConstructor::RecomputePosition(nsIFrame* aFrame)
     parentFrame->RemoveStateBits(~nsFrameState(0));
     parentFrame->AddStateBits(savedState);
 
-    NS_ASSERTION(parentSize.width != NS_INTRINSICSIZE &&
-                 parentSize.height != NS_INTRINSICSIZE,
-                 "parentSize should be valid");
+    NS_WARN_IF_FALSE(parentSize.width != NS_INTRINSICSIZE &&
+                     parentSize.height != NS_INTRINSICSIZE,
+                     "parentSize should be valid");
     parentReflowState.SetComputedWidth(NS_MAX(parentSize.width, 0));
     parentReflowState.SetComputedHeight(NS_MAX(parentSize.height, 0));
     parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
