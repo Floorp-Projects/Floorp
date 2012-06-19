@@ -392,7 +392,8 @@ public class GeckoInputConnection
             endComposition();
         }
 
-        return super.setComposingRegion(start, end);
+        Span newComposingRegion = Span.clamp(start, end, getEditable());
+        return super.setComposingRegion(newComposingRegion.start, newComposingRegion.end);
     }
 
     public String getComposingText() {
