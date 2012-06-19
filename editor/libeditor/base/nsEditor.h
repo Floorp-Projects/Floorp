@@ -41,7 +41,7 @@ class nsIPresShell;
 class ChangeAttributeTxn;
 class CreateElementTxn;
 class InsertElementTxn;
-class DeleteElementTxn;
+class DeleteNodeTxn;
 class InsertTextTxn;
 class DeleteTextTxn;
 class SplitElementTxn;
@@ -254,8 +254,7 @@ protected:
 
   /** create a transaction for removing aNode from its parent.
     */
-  nsresult CreateTxnForDeleteElement(nsINode* aNode,
-                                     DeleteElementTxn** aTxn);
+  nsresult CreateTxnForDeleteNode(nsINode* aNode, DeleteNodeTxn** aTxn);
 
 
   nsresult CreateTxnForDeleteSelection(EDirection aAction,
