@@ -186,7 +186,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         hitEnterAndWait();
     }
 
-    public final void verifyUrl(String url) {
+    protected final void verifyUrl(String url) {
         Activity awesomeBarActivity = clickOnAwesomeBar();
         Element urlbar = mDriver.findElement(awesomeBarActivity, "awesomebar_text");
         String urlbarText = null;
