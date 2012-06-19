@@ -13,6 +13,7 @@
 #include "nsIDOMSVGNumberList.h"
 #include "nsTArray.h"
 #include "SVGNumberList.h"
+#include "mozilla/Attributes.h"
 
 class nsSVGElement;
 
@@ -37,8 +38,8 @@ class DOMSVGNumber;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGNumberList : public nsIDOMSVGNumberList,
-                         public nsWrapperCache
+class DOMSVGNumberList MOZ_FINAL : public nsIDOMSVGNumberList,
+                                   public nsWrapperCache
 {
   friend class DOMSVGNumber;
 

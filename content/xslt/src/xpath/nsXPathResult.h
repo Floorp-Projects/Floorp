@@ -14,6 +14,7 @@
 #include "nsCOMArray.h"
 #include "nsWeakPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 
 // {662f2c9a-c7cd-4cab-9349-e733df5a838c}
 #define NS_IXPATHRESULT_IID \
@@ -35,9 +36,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPathResult, NS_IXPATHRESULT_IID)
 /**
  * A class for evaluating an XPath expression string
  */
-class nsXPathResult : public nsIDOMXPathResult,
-                      public nsStubMutationObserver,
-                      public nsIXPathResult
+class nsXPathResult MOZ_FINAL : public nsIDOMXPathResult,
+                                public nsStubMutationObserver,
+                                public nsIXPathResult
 {
 public:
     nsXPathResult();

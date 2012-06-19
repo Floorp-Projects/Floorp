@@ -31,6 +31,7 @@
 #include "nsJSUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Attributes.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -44,8 +45,8 @@ using namespace mozilla::dom;
 // ensure that the buffer underlying the stream we get
 // from NS_NewByteInputStream is held alive as long as the
 // stream is.  We do that by passing back this class instead.
-class DataOwnerAdapter : public nsIInputStream,
-                         public nsISeekableStream
+class DataOwnerAdapter MOZ_FINAL : public nsIInputStream,
+                                   public nsISeekableStream
 {
   typedef nsDOMMemoryFile::DataOwner DataOwner;
 public:
