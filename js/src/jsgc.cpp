@@ -4604,11 +4604,8 @@ MaybeVerifyBarriers(JSContext *cx, bool always)
 {
     JSRuntime *rt = cx->runtime;
 
-    if (rt->gcZeal() != ZealVerifierValue) {
-        if (rt->gcVerifyData)
-            EndVerifyBarriers(rt);
+    if (rt->gcZeal() != ZealVerifierValue)
         return;
-    }
 
     uint32_t freq = rt->gcZealFrequency;
 
