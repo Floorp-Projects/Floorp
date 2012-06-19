@@ -9,8 +9,9 @@
 #include "nsIPrivateTextRange.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
 
-class nsPrivateTextRange : public nsIPrivateTextRange 
+class nsPrivateTextRange MOZ_FINAL : public nsIPrivateTextRange
 {
 	NS_DECL_ISUPPORTS
 public:
@@ -31,7 +32,7 @@ protected:
 	nsTextRangeStyle mRangeStyle;
 };
 
-class nsPrivateTextRangeList: public nsIPrivateTextRangeList 
+class nsPrivateTextRangeList MOZ_FINAL : public nsIPrivateTextRangeList
 {
 	NS_DECL_ISUPPORTS
 public:

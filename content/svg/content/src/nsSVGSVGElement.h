@@ -18,6 +18,7 @@
 #include "nsSVGStylableElement.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "mozilla/Attributes.h"
 
 class nsIDOMSVGMatrix;
 class nsSMILTimeContainer;
@@ -59,7 +60,7 @@ public:
 
 private:
 
-  struct DOMVal : public nsIDOMSVGPoint {
+  struct DOMVal MOZ_FINAL : public nsIDOMSVGPoint {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMVal)
 

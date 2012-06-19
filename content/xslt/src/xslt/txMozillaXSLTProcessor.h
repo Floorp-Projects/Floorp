@@ -15,6 +15,7 @@
 #include "txNamespaceMap.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 
 class nsIDOMNode;
 class nsIPrincipal;
@@ -36,11 +37,11 @@ class txIGlobalParameter;
 /**
  * txMozillaXSLTProcessor is a front-end to the XSLT Processor.
  */
-class txMozillaXSLTProcessor : public nsIXSLTProcessor,
-                               public nsIXSLTProcessorPrivate,
-                               public nsIDocumentTransformer,
-                               public nsStubMutationObserver,
-                               public nsIJSNativeInitializer
+class txMozillaXSLTProcessor MOZ_FINAL : public nsIXSLTProcessor,
+                                         public nsIXSLTProcessorPrivate,
+                                         public nsIDocumentTransformer,
+                                         public nsStubMutationObserver,
+                                         public nsIJSNativeInitializer
 {
 public:
     /**

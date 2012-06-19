@@ -1169,8 +1169,7 @@ nsExternalResourceMap::ExternalResource::~ExternalResource()
 // If we ever have an nsIDocumentObserver notification for stylesheet title
 // changes, we could make this inherit from nsDOMStringList instead of
 // reimplementing nsIDOMDOMStringList.
-class nsDOMStyleSheetSetList : public nsIDOMDOMStringList
-                          
+class nsDOMStyleSheetSetList MOZ_FINAL : public nsIDOMDOMStringList
 {
 public:
   NS_DECL_ISUPPORTS
@@ -7687,7 +7686,7 @@ namespace {
  * Stub for LoadSheet(), since all we want is to get the sheet into
  * the CSSLoader's style cache
  */
-class StubCSSLoaderObserver : public nsICSSLoaderObserver {
+class StubCSSLoaderObserver MOZ_FINAL : public nsICSSLoaderObserver {
 public:
   NS_IMETHOD
   StyleSheetLoaded(nsCSSStyleSheet*, bool, nsresult)

@@ -11,6 +11,7 @@
 #include "nsRuleNetwork.h"
 #include "nsRDFQuery.h"
 #include "nsXULTemplateResultRDF.h"
+#include "mozilla/Attributes.h"
 
 class nsXULTemplateQueryProcessorRDF;
 class nsXULTemplateResultRDF;
@@ -18,7 +19,7 @@ class nsXULTemplateResultRDF;
 /**
  * An enumerator used to iterate over a set of results.
  */
-class nsXULTemplateResultSetRDF : public nsISimpleEnumerator
+class nsXULTemplateResultSetRDF MOZ_FINAL : public nsISimpleEnumerator
 {
 private:
     nsXULTemplateQueryProcessorRDF* mProcessor;
