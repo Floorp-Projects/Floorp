@@ -67,7 +67,7 @@ public class TabsPanel extends LinearLayout {
         addTab.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
                 GeckoApp.mAppContext.addTab();
-                hide();
+                GeckoApp.mAppContext.autoHideTabs();
             }
         });
 
