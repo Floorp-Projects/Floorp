@@ -613,61 +613,54 @@ nsEditor::GetSelection()
   return frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
 }
 
-NS_IMETHODIMP 
-nsEditor::DoTransaction(nsITransaction *aTxn)
+NS_IMETHODIMP
+nsEditor::DoTransaction(nsITransaction* aTxn)
 {
-#ifdef NS_DEBUG_EDITOR
-  if (gNoisy) { printf("Editor::DoTransaction ----------\n"); }
-#endif
+  if (mPlaceHolderBatch && !mPlaceHolderTxn) {
+    // it's pretty darn amazing how many different types of pointers this
+    // transaction goes through here.  I bet this is a record.
 
-  nsresult result = NS_OK;
-  
-  if (mPlaceHolderBatch && !mPlaceHolderTxn)
-  {
-    // it's pretty darn amazing how many different types of pointers
-    // this transaction goes through here.  I bet this is a record.
-    
     // We start off with an EditTxn since that's what the factory returns.
     nsRefPtr<EditTxn> editTxn = new PlaceholderTxn();
-    if (!editTxn) { return NS_ERROR_OUT_OF_MEMORY; }
 
-    // Then we QI to an nsIAbsorbingTransaction to get at placeholder functionality
+    // Then we QI to an nsIAbsorbingTransaction to get at placeholder
+    // functionality
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn;
-    editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
+    editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction),
+                            getter_AddRefs(plcTxn));
     // have to use line above instead of "plcTxn = do_QueryInterface(editTxn);"
     // due to our broken interface model for transactions.
 
     // save off weak reference to placeholder txn
     mPlaceHolderTxn = do_GetWeakReference(plcTxn);
     plcTxn->Init(mPlaceHolderName, mSelState, this);
-    mSelState = nsnull;  // placeholder txn took ownership of this pointer
+    // placeholder txn took ownership of this pointer
+    mSelState = nsnull;
 
-    // finally we QI to an nsITransaction since that's what DoTransaction() expects
+    // finally we QI to an nsITransaction since that's what DoTransaction()
+    // expects
     nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
-    DoTransaction(theTxn);  // we will recurse, but will not hit this case in the nested call
+    // we will recurse, but will not hit this case in the nested call
+    DoTransaction(theTxn);
 
-    if (mTxnMgr)
-    {
+    if (mTxnMgr) {
       nsCOMPtr<nsITransaction> topTxn;
-      result = mTxnMgr->PeekUndoStack(getter_AddRefs(topTxn));
-      NS_ENSURE_SUCCESS(result, result);
-      if (topTxn)
-      {
+      nsresult res = mTxnMgr->PeekUndoStack(getter_AddRefs(topTxn));
+      NS_ENSURE_SUCCESS(res, res);
+      if (topTxn) {
         plcTxn = do_QueryInterface(topTxn);
-        if (plcTxn)
-        {
-          // there is a palceholder transaction on top of the undo stack.  It is 
-          // either the one we just created, or an earlier one that we are now merging
-          // into.  From here on out remember this placeholder instead of the one
-          // we just created.
+        if (plcTxn) {
+          // there is a placeholder transaction on top of the undo stack.  It
+          // is either the one we just created, or an earlier one that we are
+          // now merging into.  From here on out remember this placeholder
+          // instead of the one we just created.
           mPlaceHolderTxn = do_GetWeakReference(plcTxn);
         }
       }
     }
   }
 
-  if (aTxn)
-  {  
+  if (aTxn) {
     // XXX: Why are we doing selection specific batching stuff here?
     // XXX: Most entry points into the editor have auto variables that
     // XXX: should trigger Begin/EndUpdateViewBatch() calls that will make
@@ -688,30 +681,28 @@ nsEditor::DoTransaction(nsITransaction *aTxn)
     // XXX: re-entry during initial reflow. - kin
 
     // get the selection and start a batch change
-    nsCOMPtr<nsISelection>selection;
-    result = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(result, result);
+    nsRefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
 
-    selPrivate->StartBatchChanges();
+    selection->StartBatchChanges();
 
+    nsresult res;
     if (mTxnMgr) {
-      result = mTxnMgr->DoTransaction(aTxn);
+      res = mTxnMgr->DoTransaction(aTxn);
+    } else {
+      res = aTxn->DoTransaction();
     }
-    else {
-      result = aTxn->DoTransaction();
-    }
-    if (NS_SUCCEEDED(result)) {
-      result = DoAfterDoTransaction(aTxn);
+    if (NS_SUCCEEDED(res)) {
+      res = DoAfterDoTransaction(aTxn);
     }
 
-    selPrivate->EndBatchChanges(); // no need to check result here, don't lose result of operation
+    // no need to check res here, don't lose result of operation
+    selection->EndBatchChanges();
+
+    NS_ENSURE_SUCCESS(res, res);
   }
- 
-  NS_ENSURE_SUCCESS(result, result);
 
-  return result;
+  return NS_OK;
 }
 
 
