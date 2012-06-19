@@ -25,10 +25,10 @@
 
       let lockedFile2;
 
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      let thread = Components.classes["@mozilla.org/thread-manager;1"]
-                             .getService()
-                             .currentThread;
+      let comp = SpecialPowers.wrap(Components);
+      let thread = comp.classes["@mozilla.org/thread-manager;1"]
+                       .getService(comp.interfaces.nsIThreadManager)
+                       .currentThread;
 
       let eventHasRun;
 
