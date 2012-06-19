@@ -30,7 +30,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransactionItem)
 
   virtual nsresult AddChild(nsTransactionItem *aTransactionItem);
-  virtual nsresult GetTransaction(nsITransaction **aTransaction);
+  already_AddRefed<nsITransaction> GetTransaction();
   virtual nsresult GetIsBatch(bool *aIsBatch);
   virtual nsresult GetNumberOfChildren(PRInt32 *aNumChildren);
   virtual nsresult GetChild(PRInt32 aIndex, nsTransactionItem **aChild);

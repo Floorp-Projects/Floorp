@@ -46,7 +46,7 @@ public:
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD HandleText(nsIDOMEvent* aTextEvent);
   NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent);
-  NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent);
+  void       HandleEndComposition(nsIDOMEvent* aCompositionEvent);
   NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent);
   NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return NS_OK; }
   NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent);
