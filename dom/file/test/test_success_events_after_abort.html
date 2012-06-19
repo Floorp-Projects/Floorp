@@ -44,14 +44,14 @@
       is(sawError, true, "Saw getMetadata() error");
 
       // Make sure the success event isn't queued somehow.
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      var thread = Components.classes["@mozilla.org/thread-manager;1"]
-                             .getService(Components.interfaces.nsIThreadManager)
-                             .currentThread;
+      let comp = SpecialPowers.wrap(Components);
+      var thread = comp.classes["@mozilla.org/thread-manager;1"]
+                       .getService(comp.interfaces.nsIThreadManager)
+                       .currentThread;
       while (thread.hasPendingEvents()) {
         thread.processNextEvent(false);
       }
-    }  
+    }
 
     finishTest();
     yield;
