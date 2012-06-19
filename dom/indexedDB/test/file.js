@@ -3,7 +3,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var manager = null;
 var bufferCache = [];
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
@@ -171,12 +170,9 @@ function grabFileUsageAndContinueHandler(usage, fileUsage)
 
 function getUsage(usageHandler)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  if (!manager) {
-    manager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"]
-              .getService(Components.interfaces.nsIIndexedDatabaseManager);
-  }
+  let comp = SpecialPowers.wrap(Components);
+  let idbManager = comp.classes["@mozilla.org/dom/indexeddb/manager;1"]
+                       .getService(comp.interfaces.nsIIndexedDatabaseManager);
 
   let uri = SpecialPowers.getDocumentURIObject(window.document);
   let callback = {
@@ -185,7 +181,7 @@ function getUsage(usageHandler)
     }
   };
 
-  manager.getUsageForURI(uri, callback);
+  idbManager.getUsageForURI(uri, callback);
 }
 
 function getUsageSync()
@@ -196,10 +192,10 @@ function getUsageSync()
     usage = aUsage;
   });
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  let thread = Components.classes["@mozilla.org/thread-manager;1"]
-                         .getService(Components.interfaces.nsIThreadManager)
-                         .currentThread;
+  let comp = SpecialPowers.wrap(Components);
+  let thread = comp.classes["@mozilla.org/thread-manager;1"]
+                   .getService(comp.interfaces.nsIThreadManager)
+                   .currentThread;
   while (!usage) {
     thread.processNextEvent(true);
   }

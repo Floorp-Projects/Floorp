@@ -145,7 +145,7 @@ class B2GRemoteAutomation(Automation):
     def restartB2G(self):
         self._devicemanager.checkCmd(['shell', 'stop', 'b2g'])
         # Wait for a bit to make sure B2G has completely shut down.
-        time.sleep(5)
+        time.sleep(10)
         self._devicemanager.checkCmd(['shell', 'start', 'b2g'])
         if self._is_emulator:
             self.marionette.emulator.wait_for_port()
@@ -192,7 +192,7 @@ class B2GRemoteAutomation(Automation):
         # Infrequently, gecko comes up before networking does, so wait a little
         # bit to give the network time to become available.
         # XXX:  need a more robust mechanism for this
-        time.sleep(20)
+        time.sleep(40)
 
         # Set up port forwarding again for Marionette, since any that
         # existed previously got wiped out by the reboot.
