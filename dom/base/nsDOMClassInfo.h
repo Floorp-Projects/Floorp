@@ -122,8 +122,6 @@ public:
     return new nsDOMClassInfo(aData);
   }
 
-  static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
-
   /*
    * The following two functions exist because of the way that Xray wrappers
    * work. In order to allow scriptable helpers to define non-IDL defined but

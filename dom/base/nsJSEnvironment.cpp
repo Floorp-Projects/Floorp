@@ -40,7 +40,6 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsIXULRuntime.h"
 
-#include "nsDOMClassInfo.h"
 #include "xpcpublic.h"
 
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
@@ -3700,7 +3699,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
   }
 
   // Don't know what this is. Bail.
-  nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
   return nsnull;
 }
 
@@ -3734,7 +3733,7 @@ NS_DOMWriteStructuredClone(JSContext* cx,
   }
 
   // Don't know what this is. Bail.
-  nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
   return JS_FALSE;
 }
 
@@ -3743,7 +3742,7 @@ NS_DOMStructuredCloneError(JSContext* cx,
                            uint32_t errorid)
 {
   // We don't currently support any extensions to structured cloning.
-  nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
+  xpc::Throw(cx, NS_ERROR_DOM_DATA_CLONE_ERR);
 }
 
 //static
