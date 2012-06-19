@@ -166,7 +166,7 @@ public:
       // 64bit address plus '0x' plus null terminator.
       char address[21];
       uint32_t addressSize =
-        JS_snprintf(address, sizeof(address), "0x%llx", aWorkerPrivate);
+        JS_snprintf(address, sizeof(address), "%p", aWorkerPrivate);
       if (addressSize != uint32_t(-1)) {
         mAddressString.Assign(address, addressSize);
       }
