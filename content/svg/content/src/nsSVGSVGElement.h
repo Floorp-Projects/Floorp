@@ -174,8 +174,6 @@ public:
  
   // nsSVGSVGElement methods:
   float GetLength(PRUint8 mCtxType);
-  // Copy our width or height to the target
-  void SyncWidthOrHeight(nsIAtom* aName, nsSVGElement *aTarget) const;
 
   // public helpers:
 
