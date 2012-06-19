@@ -987,7 +987,7 @@ abstract public class GeckoApp
                         handleDocumentStart(tabId, showProgress, uri);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         Log.i(LOGTAG, "Got a document stop");
-                        handleDocumentStop(tabId, success, uri);
+                        handleDocumentStop(tabId, success);
                     }
                 }
             } else if (event.equals("Content:LoadError")) {
@@ -1308,7 +1308,7 @@ abstract public class GeckoApp
         });
     }
 
-    void handleDocumentStop(int tabId, boolean success, final String uri) {
+    void handleDocumentStop(int tabId, boolean success) {
         final Tab tab = Tabs.getInstance().getTab(tabId);
         if (tab == null)
             return;
@@ -1320,9 +1320,11 @@ abstract public class GeckoApp
                 Tabs.getInstance().notifyListeners(tab, Tabs.TabEvents.STOP);
             }
         });
+
+        final String oldURL = tab.getURL();
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
-                if (!uri.equals(tab.getURL()))
+                if (!oldURL.equals(tab.getURL()))
                     return;
 
                 getAndProcessThumbnailForTab(tab);
