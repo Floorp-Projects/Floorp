@@ -76,7 +76,12 @@
 #include "nsWidgetsCID.h"
 #include "nsISupportsPrimitives.h"
 #include "mozilla/dom/sms/SmsParent.h"
+#include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "nsDebugImpl.h"
+
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
+#include "mozilla/Preferences.h"
 
 #include "IDBFactory.h"
 #include "IndexedDatabaseManager.h"
@@ -92,6 +97,7 @@ using namespace mozilla::net;
 using namespace mozilla::places;
 using mozilla::unused; // heh
 using base::KillProcess;
+using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::sms;
 using namespace mozilla::dom::indexedDB;
 
@@ -772,6 +778,19 @@ ContentParent::DeallocPBrowser(PBrowserParent* frame)
 {
   TabParent* parent = static_cast<TabParent*>(frame);
   NS_RELEASE(parent);
+  return true;
+}
+
+PDeviceStorageRequestParent*
+ContentParent::AllocPDeviceStorageRequest(const DeviceStorageParams& aParams)
+{
+  return new DeviceStorageRequestParent(aParams);
+}
+
+bool
+ContentParent::DeallocPDeviceStorageRequest(PDeviceStorageRequestParent* doomed)
+{
+  delete doomed;
   return true;
 }
 
