@@ -13,6 +13,7 @@ STL_FLAGS =
 
 CPP_UNIT_TESTS = \
   TestCheckedInt.cpp \
+  TestTypeTraits.cpp \
   $(NULL)
 
 # in order to prevent rules.mk from trying to link to libraries that are

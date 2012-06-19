@@ -27,8 +27,48 @@ class IsBaseOf
   private:
     static char test(Base* b);
     static int test(...);
+
   public:
-    static const bool value = (sizeof(test(static_cast<Derived*>(0))) == sizeof(char));
+    static const bool value =
+      sizeof(test(static_cast<Derived*>(0))) == sizeof(char);
+};
+
+/*
+ * IsConvertible determines whether a value of type From will implicitly convert
+ * to a value of type To.  For example:
+ *
+ *   struct A {};
+ *   struct B : public A {};
+ *   struct C {};
+ *
+ * mozilla::IsConvertible<A, A>::value is true;
+ * mozilla::IsConvertible<A*, A*>::value is true;
+ * mozilla::IsConvertible<B, A>::value is true;
+ * mozilla::IsConvertible<B*, A*>::value is true;
+ * mozilla::IsConvertible<C, A>::value is false;
+ * mozilla::IsConvertible<A, C>::value is false;
+ * mozilla::IsConvertible<A*, C*>::value is false;
+ * mozilla::IsConvertible<C*, A*>::value is false.
+ *
+ * For obscure reasons, you can't use IsConvertible when the types being tested
+ * are related through private inheritance, and you'll get a compile error if
+ * you try.  Just don't do it!
+ */
+template<typename From, typename To>
+struct IsConvertible
+{
+  private:
+    static From create();
+
+    template<typename From1, typename To1>
+    static char test(To to);
+
+    template<typename From1, typename To1>
+    static int test(...);
+
+  public:
+    static const bool value =
+      sizeof(test<From, To>(create())) == sizeof(char);
 };
 
 /*
