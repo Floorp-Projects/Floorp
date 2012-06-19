@@ -176,6 +176,7 @@ public:
                                            nsIDOMNode ** aNewNode);
 
   /* helper routines for node/parent manipulations */
+  nsresult DeleteNode(nsINode* aNode);
   nsresult ReplaceContainer(nsINode* inNode,
                             mozilla::dom::Element** outNode,
                             const nsAString& aNodeType,
@@ -251,10 +252,10 @@ protected:
                                        PRInt32      aOffset,
                                        InsertElementTxn ** aTxn);
 
-  /** create a transaction for removing aElement from its parent.
+  /** create a transaction for removing aNode from its parent.
     */
-  NS_IMETHOD CreateTxnForDeleteElement(nsIDOMNode * aElement,
-                                       DeleteElementTxn ** aTxn);
+  nsresult CreateTxnForDeleteElement(nsINode* aNode,
+                                     DeleteElementTxn** aTxn);
 
 
   nsresult CreateTxnForDeleteSelection(EDirection aAction,

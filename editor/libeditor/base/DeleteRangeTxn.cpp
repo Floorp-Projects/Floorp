@@ -161,7 +161,7 @@ DeleteRangeTxn::CreateTxnsToDeleteBetween(nsINode* aNode,
   nsresult res = NS_OK;
   for (PRInt32 i = aStartOffset; i < aEndOffset; ++i) {
     nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
-    res = txn->Init(mEditor, child->AsDOMNode(), mRangeUpdater);
+    res = txn->Init(mEditor, child, mRangeUpdater);
     if (NS_SUCCEEDED(res)) {
       AppendChild(txn);
     }
@@ -219,7 +219,7 @@ DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
 
     nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
 
-    res = txn->Init(mEditor, node->AsDOMNode(), mRangeUpdater);
+    res = txn->Init(mEditor, node, mRangeUpdater);
     NS_ENSURE_SUCCESS(res, res);
     AppendChild(txn);
 
