@@ -11,6 +11,7 @@
 #include "nsIStyleSheetService.h"
 #include "nsCOMArray.h"
 #include "nsIStyleSheet.h"
+#include "mozilla/Attributes.h"
 
 class nsISimpleEnumerator;
 class nsICategoryManager;
@@ -21,7 +22,7 @@ class nsICategoryManager;
 #define NS_STYLESHEETSERVICE_CONTRACTID \
   "@mozilla.org/content/style-sheet-service;1"
 
-class nsStyleSheetService : public nsIStyleSheetService
+class nsStyleSheetService MOZ_FINAL : public nsIStyleSheetService
 {
  public:
   nsStyleSheetService() NS_HIDDEN;

@@ -12,7 +12,6 @@
 #include "nsIAnonymousContentCreator.h"
 #include "nsICapturePicker.h"
 #include "nsCOMPtr.h"
-#include "mozilla/Attributes.h"
 
 class nsTextControlFrame;
 class nsIDOMDragEvent;
@@ -78,13 +77,14 @@ protected:
   
   class MouseListener;
   friend class MouseListener;
-  class MouseListener MOZ_FINAL : public nsIDOMEventListener {
+  class MouseListener : public nsIDOMEventListener {
   public:
     NS_DECL_ISUPPORTS
     
     MouseListener(nsFileControlFrame* aFrame)
      : mFrame(aFrame) 
     {}
+    virtual ~MouseListener() {}
 
     void ForgetFrame() {
       mFrame = nsnull;
