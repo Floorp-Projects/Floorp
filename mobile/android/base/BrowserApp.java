@@ -323,6 +323,14 @@ abstract public class BrowserApp extends GeckoApp
         mTabsPanel.hide();
     }
 
+    public boolean autoHideTabs() {
+        if (!isTablet() && areTabsShown()) {
+            hideTabs();
+            return true;
+        }
+        return false;
+    }
+
     public boolean areTabsShown() {
         return mTabsPanel.isShown();
     }

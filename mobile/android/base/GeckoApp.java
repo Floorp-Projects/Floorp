@@ -893,6 +893,15 @@ abstract public class GeckoApp
 
     public void hideTabs() { }
 
+    /**
+     * Close the tab UI indirectly (not as the result of a direct user
+     * action).  This does not force the UI to close; for example in Firefox
+     * tablet mode it will remain open unless the user explicitly closes it.
+     *
+     * @return True if the tab UI was hidden.
+     */
+    public boolean autoHideTabs() { return false; }
+
     public boolean areTabsShown() { return false; }
 
     public void handleMessage(String event, JSONObject message) {
@@ -2689,8 +2698,7 @@ abstract public class GeckoApp
 
     @Override
     public void onBackPressed() {
-        if (mTabsPanel != null && mTabsPanel.isShown() && !isTablet()) {
-            mTabsPanel.hide();
+        if (autoHideTabs()) {
             return;
         }
 
