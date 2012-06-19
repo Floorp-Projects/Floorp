@@ -1145,16 +1145,6 @@ nsSVGSVGElement::GetLength(PRUint8 aCtxType)
   return 0;
 }
 
-void
-nsSVGSVGElement::SyncWidthOrHeight(nsIAtom* aName, nsSVGElement *aTarget) const
-{
-  NS_ASSERTION(aName == nsGkAtoms::width || aName == nsGkAtoms::height,
-               "The clue is in the function name");
-
-  PRUint32 index = *sLengthInfo[WIDTH].mName == aName ? WIDTH : HEIGHT;
-  aTarget->SetLength(aName, mLengthAttributes[index]);
-}
-
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
