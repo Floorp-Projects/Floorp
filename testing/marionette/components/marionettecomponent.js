@@ -77,7 +77,7 @@ MarionetteComponent.prototype = {
         try {
           original = Services.prefs.getBoolPref(DEBUGGER_ENABLED_PREF);
         }
-        catch() { }
+        catch(e) { }
         Services.prefs.setBoolPref(DEBUGGER_ENABLED_PREF, true);
         // Always allow remote connections.
         DebuggerServer.initTransport(function () { return true; });
