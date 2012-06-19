@@ -17,12 +17,13 @@
 #include "mozilla/Preferences.h"
 #include "nsJSUtils.h"
 #include "DictionaryHelpers.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla::dom;
 
 #include "nsDirectoryServiceDefs.h"
 
-class DeviceStorageFile : public nsISupports {
+class DeviceStorageFile MOZ_FINAL : public nsISupports {
 public:
 
   nsCOMPtr<nsIFile> mFile;
