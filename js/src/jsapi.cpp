@@ -6652,6 +6652,9 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
         frequency = p ? atoi(p + 1) : JS_DEFAULT_ZEAL_FREQ;
     }
 
+    if (zeal == 0 && cx->runtime->gcVerifyData)
+        VerifyBarriers(cx->runtime);
+
     bool schedule = zeal >= js::gc::ZealAllocValue;
     cx->runtime->gcZeal_ = zeal;
     cx->runtime->gcZealFrequency = frequency;
