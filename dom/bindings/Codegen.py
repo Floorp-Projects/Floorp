@@ -1607,7 +1607,7 @@ for (uint32_t i = 0; i < length; ++i) {
         if type.isArrayBuffer():
             jsname = "ArrayBufferObject"
         elif type.isArrayBufferView():
-            jsname = "TypedArrayObject"
+            jsname = "ArrayBufferViewObject"
         else:
             jsname = type.name
 
