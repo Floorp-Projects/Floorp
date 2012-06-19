@@ -343,9 +343,6 @@ DeveloperToolbar.prototype._notify = function DT_notify(aTopic)
 DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
 {
   if (aEvent.type == "TabSelect" || aEvent.type == "load") {
-    this._chromeWindow.HUDConsoleUI.refreshCommand();
-    this._chromeWindow.DebuggerUI.refreshCommand();
-
     if (this.visible) {
       let contentDocument = this._chromeWindow.getBrowser().contentDocument;
 
