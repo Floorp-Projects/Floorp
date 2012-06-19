@@ -2679,7 +2679,7 @@ IonBuilder::jsop_pos()
     TypeOracle::Unary types = oracle->unaryOp(script, pc);
     if (IsNumberType(types.ival)) {
         // Already int32 or double.
-        JS_ASSERT(types.ival == types.rval);
+        JS_ASSERT(IsNumberType(types.rval));
         return true;
     }
 
