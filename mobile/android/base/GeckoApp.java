@@ -3024,6 +3024,8 @@ abstract public class GeckoApp
             public boolean onTouch(View view, MotionEvent event) {
                 if (event == null)
                     return true;
+                if (autoHideTabs())
+                    return true;
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createMotionEvent(event));
                 return true;
             }
