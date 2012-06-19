@@ -2081,28 +2081,29 @@ nsRange::InsertNode(nsIDOMNode* aNode)
     NS_ENSURE_SUCCESS(res, res);
   }
 
-  // We might need to update the end to include the new node (bug 433662)
+  // We might need to update the end to include the new node (bug 433662).
+  // Ideally we'd only do this if needed, but it's tricky to know when it's
+  // needed in advance (bug 765799).
   PRInt32 newOffset;
 
-  if (Collapsed()) {
-    if (referenceNode) {
-      newOffset = IndexOf(referenceNode);
-    } else {
-      PRUint32 length;
-      res = tChildList->GetLength(&length);
-      NS_ENSURE_SUCCESS(res, res);
-      newOffset = length;
-    }
-
-    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-    NS_ENSURE_STATE(node);
-    if (node->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
-      newOffset += node->GetChildCount();
-    } else {
-      newOffset++;
-    }
+  if (referenceNode) {
+    newOffset = IndexOf(referenceNode);
+  } else {
+    PRUint32 length;
+    res = tChildList->GetLength(&length);
+    NS_ENSURE_SUCCESS(res, res);
+    newOffset = length;
   }
 
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(node);
+  if (node->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+    newOffset += node->GetChildCount();
+  } else {
+    newOffset++;
+  }
+
+  // Now actually insert the node
   nsCOMPtr<nsIDOMNode> tResultNode;
   res = referenceParentNode->InsertBefore(aNode, referenceNode, getter_AddRefs(tResultNode));
   NS_ENSURE_SUCCESS(res, res);
