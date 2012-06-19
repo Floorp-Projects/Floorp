@@ -732,6 +732,7 @@ JSRuntime::JSRuntime()
     gcIsFull(false),
     gcTriggerReason(gcreason::NO_REASON),
     gcStrictCompartmentChecking(false),
+    gcDisableStrictProxyCheckingCount(0),
     gcIncrementalState(gc::NO_INCREMENTAL),
     gcLastMarkSlice(false),
     gcInterFrameGC(0),
