@@ -522,6 +522,14 @@ struct JSRuntime : js::RuntimeFriendFields
     bool                gcStrictCompartmentChecking;
 
     /*
+     * If this is 0, all cross-compartment proxies must be registered in the
+     * wrapper map. This checking must be disabled temporarily while creating
+     * new wrappers. When non-zero, this records the recursion depth of wrapper
+     * creation.
+     */
+    uintptr_t           gcDisableStrictProxyCheckingCount;
+
+    /*
      * The current incremental GC phase. During non-incremental GC, this is
      * always NO_INCREMENTAL.
      */
