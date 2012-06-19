@@ -482,10 +482,14 @@ static JSClass FinalizeCounterClass = {
 static JSBool
 MakeFinalizeObserver(JSContext *cx, unsigned argc, jsval *vp)
 {
-    JSObject *obj = JS_NewObjectWithGivenProto(cx, &FinalizeCounterClass, NULL,
-                                               JS_GetGlobalObject(cx));
+    JSObject *scope = JS_GetGlobalForScopeChain(cx);
+    if (!scope)
+        return false;
+
+    JSObject *obj = JS_NewObjectWithGivenProto(cx, &FinalizeCounterClass, NULL, scope);
     if (!obj)
         return false;
+
     *vp = OBJECT_TO_JSVAL(obj);
     return true;
 }
