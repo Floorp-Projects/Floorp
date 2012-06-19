@@ -251,6 +251,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/editor/libeditor/base \
 		   -I$(topsrcdir)/editor/libeditor/text \
 		   -I$(topsrcdir)/editor/libeditor/html \
+		   -I$(topsrcdir)/editor/txmgr/src \
 		   -I$(topsrcdir)/editor/txtsvc/src \
 		   -I$(topsrcdir)/editor/composer/src \
 		   -I$(topsrcdir)/js/xpconnect/src \

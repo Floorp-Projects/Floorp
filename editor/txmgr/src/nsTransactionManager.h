@@ -11,11 +11,11 @@
 #include "nsCOMArray.h"
 #include "nsITransactionListener.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsTransactionStack.h"
 
 class nsITransaction;
 class nsITransactionListener;
 class nsTransactionItem;
-class nsTransactionStack;
 
 /** implementation of a transaction manager object.
  *

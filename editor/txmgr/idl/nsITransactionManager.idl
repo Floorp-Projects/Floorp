@@ -20,7 +20,7 @@
  * This interface is implemented by an object that wants to
  * manage/track transactions.
  */
-[scriptable, uuid(58e330c2-7b48-11d2-98b9-00805f297d89)]
+[scriptable, builtinclass, uuid(58e330c2-7b48-11d2-98b9-00805f297d89)]
 interface nsITransactionManager : nsISupports
 {
   /**
