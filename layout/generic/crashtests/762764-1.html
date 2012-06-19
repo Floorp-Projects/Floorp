@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<script>
+
+function boom()
+{
+  document.documentElement.removeChild(document.body);
+  var newBody = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  document.documentElement.appendChild(newBody);
+  newBody.contentEditable = "true";
+  document.execCommand("inserthtml", false, "<textarea>a</textarea>");
+  document.execCommand("insertimage", false, "1.jpg");
+  try { document.execCommand("forwardDelete", false, null); } catch(e) { }
+  document.execCommand("inserthtml", false, "x<span><\/span>y");
+}
+
+</script>
+
+<body onload="boom();"></body>
