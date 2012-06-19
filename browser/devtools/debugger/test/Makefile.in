@@ -55,6 +55,7 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_displayName.js \
 	browser_dbg_iframes.js \
 	browser_dbg_pause-exceptions.js \
+	browser_dbg_multiple-windows.js \
 	head.js \
 	$(NULL)
 
