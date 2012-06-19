@@ -3,39 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
-
 #include "DeleteElementTxn.h"
-#include "nsSelectionState.h"
-#ifdef DEBUG
-#include "nsIDOMElement.h"
-#endif
-
-#ifdef DEBUG
-static bool gNoisy = false;
-#endif
+#include "nsSelectionState.h" // nsRangeUpdater
+#include "nsEditor.h"
 
 
 DeleteElementTxn::DeleteElementTxn()
-: EditTxn()
-,mElement()
-,mParent()
-,mRefNode()
-,mRangeUpdater(nsnull)
+  : EditTxn(), mNode(), mParent(), mRefNode(), mRangeUpdater(nsnull)
 {
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DeleteElementTxn)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DeleteElementTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mNode)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mParent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRefNode)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DeleteElementTxn, EditTxn)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mParent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRefNode)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -45,143 +32,84 @@ NS_IMPL_RELEASE_INHERITED(DeleteElementTxn, EditTxn)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteElementTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
-NS_IMETHODIMP DeleteElementTxn::Init(nsIEditor *aEditor,
-                                     nsIDOMNode *aElement,
-                                     nsRangeUpdater *aRangeUpdater)
+nsresult
+DeleteElementTxn::Init(nsEditor* aEditor, nsINode* aNode,
+                       nsRangeUpdater* aRangeUpdater)
 {
-  NS_ENSURE_TRUE(aEditor && aElement, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aEditor && aNode, NS_ERROR_NULL_POINTER);
   mEditor = aEditor;
-  mElement = do_QueryInterface(aElement);
-  nsresult result = mElement->GetParentNode(getter_AddRefs(mParent));
-  if (NS_FAILED(result)) { return result; }
+  mNode = aNode;
+  mParent = aNode->GetNodeParent();
 
-  // do nothing if the parent is read-only
-  if (mParent && !mEditor->IsModifiableNode(mParent)) {
-    return NS_ERROR_FAILURE;
-  }
+  // do nothing if the node has a parent and it's read-only
+  NS_ENSURE_TRUE(!mParent || mEditor->IsModifiableNode(mParent),
+                 NS_ERROR_FAILURE);
 
   mRangeUpdater = aRangeUpdater;
   return NS_OK;
 }
 
 
-NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
+NS_IMETHODIMP
+DeleteElementTxn::DoTransaction()
 {
-#ifdef DEBUG
-  if (gNoisy)
-  {
-    printf("%p Do Delete Element element = %p\n",
-           static_cast<void*>(this),
-           static_cast<void*>(mElement.get()));
+  NS_ENSURE_TRUE(mNode, NS_ERROR_NOT_INITIALIZED);
+
+  if (!mParent) {
+    // this is a no-op, there's no parent to delete mNode from
+    return NS_OK;
   }
-#endif
 
-  NS_ENSURE_TRUE(mElement, NS_ERROR_NOT_INITIALIZED);
+  // remember which child mNode was (by remembering which child was next);
+  // mRefNode can be null
+  mRefNode = mNode->GetNextSibling();
 
-  if (!mParent) { return NS_OK; }  // this is a no-op, there's no parent to delete mElement from
-
-#ifdef DEBUG
-  // begin debug output
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mElement);
-  nsAutoString elementTag(NS_LITERAL_STRING("text node"));
-  if (element)
-    element->GetTagName(elementTag);
-  nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(mParent);
-  nsAutoString parentElementTag(NS_LITERAL_STRING("text node"));
-  if (parentElement)
-    parentElement->GetTagName(parentElementTag);
-  char *c, *p;
-  c = ToNewCString(elementTag);
-  p = ToNewCString(parentElementTag);
-  if (c&&p)
-  {
-    if (gNoisy)
-      printf("  DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
-
-    NS_Free(c);
-    NS_Free(p);
+  // give range updater a chance.  SelAdjDeleteNode() needs to be called
+  // *before* we do the action, unlike some of the other nsRangeStore update
+  // methods.
+  if (mRangeUpdater) {
+    mRangeUpdater->SelAdjDeleteNode(mNode->AsDOMNode());
   }
-  // end debug output
-#endif
 
-  // remember which child mElement was (by remembering which child was next)
-  mElement->GetNextSibling(getter_AddRefs(mRefNode));  // can return null mRefNode
-
-  // give range updater a chance.  SelAdjDeleteNode() needs to be called *before*
-  // we do the action, unlike some of the other nsRangeStore update methods.
-  if (mRangeUpdater) 
-    mRangeUpdater->SelAdjDeleteNode(mElement);
-
-  nsCOMPtr<nsIDOMNode> resultNode;
-  return mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
+  return mParent->RemoveChild(mNode);
 }
 
-NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
+NS_IMETHODIMP
+DeleteElementTxn::UndoTransaction()
 {
-#ifdef DEBUG
-  if (gNoisy)
-  {
-    printf("%p Undo Delete Element element = %p, parent = %p\n",
-           static_cast<void*>(this),
-           static_cast<void*>(mElement.get()),
-           static_cast<void*>(mParent.get()));
+  if (!mParent) {
+    // this is a legal state, the txn is a no-op
+    return NS_OK;
   }
-#endif
-
-  if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
-  if (!mElement) { return NS_ERROR_NULL_POINTER; }
-
-#ifdef DEBUG
-  // begin debug output
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mElement);
-  nsAutoString elementTag(NS_LITERAL_STRING("text node"));
-  if (element)
-    element->GetTagName(elementTag);
-  nsCOMPtr<nsIDOMElement> parentElement = do_QueryInterface(mParent);
-  nsAutoString parentElementTag(NS_LITERAL_STRING("text node"));
-  if (parentElement)
-    parentElement->GetTagName(parentElementTag);
-  char *c, *p;
-  c = ToNewCString(elementTag);
-  p = ToNewCString(parentElementTag);
-  if (c&&p)
-  {
-    if (gNoisy)
-      printf("  DeleteElementTxn:  inserting child %s back into parent %s\n", c, p); 
-
-    NS_Free(c);
-    NS_Free(p);
+  if (!mNode) {
+    return NS_ERROR_NULL_POINTER;
   }
-  // end debug output
-#endif
 
-  nsCOMPtr<nsIDOMNode> resultNode;
-  return mParent->InsertBefore(mElement, mRefNode, getter_AddRefs(resultNode));
+  nsresult res;
+  mParent->InsertBefore(mNode, mRefNode, &res);
+  return res;
 }
 
-NS_IMETHODIMP DeleteElementTxn::RedoTransaction(void)
+NS_IMETHODIMP
+DeleteElementTxn::RedoTransaction()
 {
-#ifdef DEBUG
-  if (gNoisy)
-  {
-    printf("%p Redo Delete Element element = %p, parent = %p\n",
-           static_cast<void*>(this),
-           static_cast<void*>(mElement.get()),
-           static_cast<void*>(mParent.get()));
+  if (!mParent) {
+    // this is a legal state, the txn is a no-op
+    return NS_OK;
   }
-#endif
+  if (!mNode) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
-  if (!mElement) { return NS_ERROR_NULL_POINTER; }
+  if (mRangeUpdater) {
+    mRangeUpdater->SelAdjDeleteNode(mNode->AsDOMNode());
+  }
 
-  if (mRangeUpdater) 
-    mRangeUpdater->SelAdjDeleteNode(mElement);
-
-  nsCOMPtr<nsIDOMNode> resultNode;
-  return mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
+  return mParent->RemoveChild(mNode);
 }
 
-NS_IMETHODIMP DeleteElementTxn::GetTxnDescription(nsAString& aString)
+NS_IMETHODIMP
+DeleteElementTxn::GetTxnDescription(nsAString& aString)
 {
   aString.AssignLiteral("DeleteElementTxn");
   return NS_OK;
