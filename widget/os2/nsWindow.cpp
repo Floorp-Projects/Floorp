@@ -1837,8 +1837,11 @@ MRESULT nsWindow::ProcessMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
       OnDragDropMsg(msg, mp1, mp2, mresult);
       isDone = true;
       break;
-  }
 
+    case WM_QUERYCONVERTPOS:
+      isDone = OnQueryConvertPos(mp1, mresult);
+      break;
+  }
   // If an event handler signalled that we should consume the event,
   // return.  Otherwise, pass it on to the default wndproc.
   if (!isDone) {
@@ -2383,6 +2386,35 @@ bool nsWindow::OnTranslateAccelerator(PQMSG pQmsg)
   }
 
   return false;
+}
+bool nsWindow::OnQueryConvertPos(MPARAM mp1, MRESULT& mresult)
+{
+  PRECTL pCursorPos = (PRECTL)mp1;
+
+  nsIntPoint point(0, 0);
+
+  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
+  InitEvent(selection, &point);
+  DispatchWindowEvent(&selection);
+  if (!selection.mSucceeded)
+    return false;
+
+  nsQueryContentEvent caret(true, NS_QUERY_CARET_RECT, this);
+  caret.InitForQueryCaretRect(selection.mReply.mOffset);
+  InitEvent(caret, &point);
+  DispatchWindowEvent(&caret);
+  if (!caret.mSucceeded)
+    return false;
+
+  pCursorPos->xLeft = caret.mReply.mRect.x;
+  pCursorPos->yBottom = caret.mReply.mRect.y;
+  pCursorPos->xRight = pCursorPos->xLeft + caret.mReply.mRect.width;
+  pCursorPos->yTop = pCursorPos->yBottom + caret.mReply.mRect.height;
+  NS2PM(*pCursorPos);
+
+  mresult = (MRESULT)QCP_CONVERT;
+
+  return true;
 }
 
 //-----------------------------------------------------------------------------
