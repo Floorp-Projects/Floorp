@@ -125,11 +125,18 @@ public class TabsTray extends LinearLayout
             return;
         }
 
+        int index = Tabs.getInstance().getIndexOf(tab);
+        if (msg == Tabs.TabEvents.ADDED) {
+            mTabsAdapter.addTab(index, tab);
+            mTabsAdapter.notifyDataSetChanged();
+            return;
+        }
+
         int position = mTabsAdapter.getPositionForTab(tab);
         if (position == -1)
             return;
 
-        if (Tabs.getInstance().getIndexOf(tab) == -1) {
+        if (index == -1) {
             mWaitingForClose = false;
             mTabsAdapter.removeTab(tab);
             mTabsAdapter.notifyDataSetChanged();
@@ -211,6 +218,10 @@ public class TabsTray extends LinearLayout
                 return -1;
 
             return mTabs.indexOf(tab);
+        }
+
+        public void addTab(int index, Tab tab) {
+            mTabs.add(index, tab);
         }
 
         public void removeTab(Tab tab) {
