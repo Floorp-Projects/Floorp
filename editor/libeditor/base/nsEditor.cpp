@@ -55,7 +55,7 @@
 #include "ChangeAttributeTxn.h"
 #include "CreateElementTxn.h"
 #include "InsertElementTxn.h"
-#include "DeleteElementTxn.h"
+#include "DeleteNodeTxn.h"
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
 #include "DeleteRangeTxn.h"
@@ -1510,8 +1510,8 @@ nsEditor::DeleteNode(nsINode* aNode)
     mActionListeners[i]->WillDeleteNode(aNode->AsDOMNode());
   }
 
-  nsRefPtr<DeleteElementTxn> txn;
-  nsresult res = CreateTxnForDeleteElement(aNode, getter_AddRefs(txn));
+  nsRefPtr<DeleteNodeTxn> txn;
+  nsresult res = CreateTxnForDeleteNode(aNode, getter_AddRefs(txn));
   if (NS_SUCCEEDED(res))  {
     res = DoTransaction(txn);
   }
@@ -4597,11 +4597,11 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
 }
 
 nsresult
-nsEditor::CreateTxnForDeleteElement(nsINode* aNode, DeleteElementTxn** aTxn)
+nsEditor::CreateTxnForDeleteNode(nsINode* aNode, DeleteNodeTxn** aTxn)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
-  nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
+  nsRefPtr<DeleteNodeTxn> txn = new DeleteNodeTxn();
 
   nsresult res = txn->Init(this, aNode, &mRangeUpdater);
   NS_ENSURE_SUCCESS(res, res);
@@ -4799,8 +4799,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       aTxn->AppendChild(txn);
     } else {
       // priorNode is not chardata, so tell its parent to delete it
-      nsRefPtr<DeleteElementTxn> txn;
-      res = CreateTxnForDeleteElement(priorNode, getter_AddRefs(txn));
+      nsRefPtr<DeleteNodeTxn> txn;
+      res = CreateTxnForDeleteNode(priorNode, getter_AddRefs(txn));
       NS_ENSURE_SUCCESS(res, res);
 
       aTxn->AppendChild(txn);
@@ -4835,8 +4835,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       aTxn->AppendChild(txn);
     } else {
       // nextNode is not chardata, so tell its parent to delete it
-      nsRefPtr<DeleteElementTxn> txn;
-      res = CreateTxnForDeleteElement(nextNode, getter_AddRefs(txn));
+      nsRefPtr<DeleteNodeTxn> txn;
+      res = CreateTxnForDeleteNode(nextNode, getter_AddRefs(txn));
       NS_ENSURE_SUCCESS(res, res);
       aTxn->AppendChild(txn);
     }
@@ -4897,8 +4897,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       *aOffset = delTextTxn->GetOffset();
       *aLength = delTextTxn->GetNumCharsToDelete();
     } else {
-      nsRefPtr<DeleteElementTxn> delElementTxn;
-      res = CreateTxnForDeleteElement(selectedNode, getter_AddRefs(delElementTxn));
+      nsRefPtr<DeleteNodeTxn> delElementTxn;
+      res = CreateTxnForDeleteNode(selectedNode, getter_AddRefs(delElementTxn));
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_TRUE(delElementTxn, NS_ERROR_NULL_POINTER);
 

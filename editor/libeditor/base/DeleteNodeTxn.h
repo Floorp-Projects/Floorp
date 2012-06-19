@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DeleteElementTxn_h__
-#define DeleteElementTxn_h__
+#ifndef DeleteNodeTxn_h__
+#define DeleteNodeTxn_h__
 
 #include "EditTxn.h"
 
@@ -17,7 +17,7 @@ class nsEditor;
 /**
  * A transaction that deletes a single element
  */
-class DeleteElementTxn : public EditTxn
+class DeleteNodeTxn : public EditTxn
 {
 public:
   /** initialize the transaction.
@@ -26,10 +26,10 @@ public:
   nsresult Init(nsEditor* aEditor, nsINode* aNode,
                 nsRangeUpdater* aRangeUpdater);
 
-  DeleteElementTxn();
+  DeleteNodeTxn();
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteElementTxn, EditTxn)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteNodeTxn, EditTxn)
 
   NS_DECL_EDITTXN
 
