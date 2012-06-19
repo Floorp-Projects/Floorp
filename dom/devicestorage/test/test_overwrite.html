@@ -39,6 +39,7 @@ function deleteError(e) {
 
 function addOverwritingSuccess(e) {
   ok(false, "addOverwritingSuccess was called.");
+  devicestorage_cleanup();
 }
 
 function addOverwritingError(e) {
