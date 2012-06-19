@@ -2142,70 +2142,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   return NS_OK;
 }
 
-static nsresult
-CreateExceptionFromResult(JSContext *cx, nsresult aResult)
-{
-  nsCOMPtr<nsIExceptionService> xs =
-    do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
-  if (!xs) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIExceptionManager> xm;
-  nsresult rv = xs->GetCurrentExceptionManager(getter_AddRefs(xm));
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIException> exception;
-  rv = xm->GetExceptionFromProvider(aResult, 0, getter_AddRefs(exception));
-  if (NS_FAILED(rv) || !exception) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JS::Value jv;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  rv = WrapNative(cx, ::JS_GetGlobalObject(cx), exception,
-                  &NS_GET_IID(nsIException), false, &jv,
-                  getter_AddRefs(holder));
-  if (NS_FAILED(rv) || jv.isNull()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JSAutoEnterCompartment ac;
-
-  if (jv.isObject()) {
-    if (!ac.enter(cx, &jv.toObject())) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  JS_SetPendingException(cx, jv);
-  return NS_OK;
-}
-
-// static
-nsresult
-nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
-{
-  JSAutoRequest ar(cx);
-
-  if (NS_SUCCEEDED(CreateExceptionFromResult(cx, aResult))) {
-    return NS_OK;
-  }
-
-  // XXX This probably wants to be localized, but that can fail in ways that
-  // are hard to report correctly.
-  JSString *str =
-    JS_NewStringCopyZ(cx, "An error occurred throwing an exception");
-  if (!str) {
-    // JS_NewStringCopyZ reported the error for us.
-    return NS_OK; 
-  }
-  JS_SetPendingException(cx, STRING_TO_JSVAL(str));
-  return NS_OK;
-}
-
 // static
 bool
 nsDOMClassInfo::ObjectIsNativeWrapper(JSContext* cx, JSObject* obj)
@@ -7130,9 +7066,7 @@ LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
 {
   nsresult rv = LocationSetterGuts<Interface>(cx, obj, vp);
   if (NS_FAILED(rv)) {
-    if (!::JS_IsExceptionPending(cx)) {
-      nsDOMClassInfo::ThrowJSException(cx, rv);
-    }
+    xpc::Throw(cx, rv);
     return JS_FALSE;
   }
 
@@ -7805,9 +7739,7 @@ GetterShim(JSContext *cx, JSHandleObject obj, JSHandleId /* unused */, jsval *vp
 {
   nsresult rv = (*func)(cx, obj, vp);
   if (NS_FAILED(rv)) {
-    if (!::JS_IsExceptionPending(cx)) {
-      nsDOMClassInfo::ThrowJSException(cx, rv);
-    }
+    xpc::Throw(cx, rv);
     return JS_FALSE;
   }
 
@@ -8972,7 +8904,7 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
   }
 
   if (NS_FAILED(rv)) {
-    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_FAILURE);
+    xpc::Throw(cx, NS_ERROR_FAILURE);
 
     return JS_FALSE;
   }
@@ -9024,7 +8956,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
       rv = nodeList->GetLength(&length);
 
       if (NS_FAILED(rv)) {
-        nsDOMClassInfo::ThrowJSException(cx, rv);
+        xpc::Throw(cx, rv);
 
         return JS_FALSE;
       }
@@ -9040,7 +8972,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
       result = doc->GetDocumentAllResult(str, &cache, &rv);
 
       if (NS_FAILED(rv)) {
-        nsDOMClassInfo::ThrowJSException(cx, rv);
+        xpc::Throw(cx, rv);
 
         return JS_FALSE;
       }
@@ -9068,7 +9000,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
   if (result) {
     rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), result, cache, true, vp);
     if (NS_FAILED(rv)) {
-      nsDOMClassInfo::ThrowJSException(cx, rv);
+      xpc::Throw(cx, rv);
 
       return JS_FALSE;
     }
@@ -9160,7 +9092,7 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
     // XXX: Should throw NS_ERROR_XPC_NOT_ENOUGH_ARGS for argc < 1,
     // and create a new NS_ERROR_XPC_TOO_MANY_ARGS for argc > 1? IE
     // accepts nothing other than one arg.
-    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_INVALID_ARG);
+    xpc::Throw(cx, NS_ERROR_INVALID_ARG);
 
     return JS_FALSE;
   }
@@ -9254,7 +9186,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj
       nsresult rv;
       nsCOMPtr<nsIHTMLDocument> doc = do_QueryWrapper(cx, obj, &rv);
       if (NS_FAILED(rv)) {
-        nsDOMClassInfo::ThrowJSException(cx, rv);
+        xpc::Throw(cx, rv);
 
         return JS_FALSE;
       }
@@ -9332,7 +9264,7 @@ nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
                                static_cast<nsINodeList*>(tags), tags, true,
                                &v, getter_AddRefs(holder));
       if (NS_FAILED(rv)) {
-        nsDOMClassInfo::ThrowJSException(cx, rv);
+        xpc::Throw(cx, rv);
 
         return JS_FALSE;
       }
@@ -9432,7 +9364,7 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           // Insert the helper into our prototype chain. helper's prototype
           // is already obj's current prototype.
           if (!::JS_SetPrototype(cx, obj, helper)) {
-            nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+            xpc::Throw(cx, NS_ERROR_UNEXPECTED);
 
             return NS_ERROR_UNEXPECTED;
           }
