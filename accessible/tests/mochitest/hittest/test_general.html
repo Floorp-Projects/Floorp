@@ -6,23 +6,13 @@
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
           src="../layout.js"></script>
-  <script type="application/javascript"
-          src="../events.js"></script>
 
   <script type="application/javascript">
-    function doPreTest()
-    {
-      var imgMap = document.getElementById("imgmap");
-      waitForImageMap(imgMap, doTest);
-    }
-
     function doTest()
     {
       // Not specific case, child and deepchild testing.
@@ -64,23 +54,11 @@ if (!MAC) {
 
       testChildAtPoint("area", 1, 1, "area", "area");
 
-      var container = getAccessible("container");
-      var paragraph = getAccessible("paragraph");
-      var [tx, ty, tw, th] = getBounds(paragraph);
-      var [cx, cy, cw, ch] = getBounds(container);
-      // Test the point in the vertical center of the paragraph, between the two lines.
-      testChildAtPoint("container", tx - cx + 1, ty - cy + Math.round(tw/2), paragraph, paragraph.firstChild);
-
-      // Test image maps. Their children are not in the layout tree.
-      var theLetterA = getAccessible("imgmap").firstChild;
-      hitTest("imgmap", theLetterA, theLetterA);
-      hitTest("container", "imgmap", theLetterA);
-
       SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doPreTest);
+    addA11yLoadEvent(doTest);
   </script>
 </head>
 <body>
@@ -104,16 +82,5 @@ if (!MAC) {
   <div id="outofflow" style="width: 10px; height: 10px; position: absolute; left: 0px; top: 0px; background-color: yellow;">
   </div>
   <div id="area" style="width: 100px; height: 100px; background-color: blue;"></div>
-
-  <map name="atoz_map">
-    <area href="http://www.bbc.co.uk/radio4/atoz/index.shtml#a"
-          coords="0,0,15,15" alt="thelettera" shape="rect"/>
-  </map>
-
-  <div id="container">
-    <p id="paragraph" style="width: 5em; line-height: 3em;">Hello World</p>
-    <img id="imgmap" width="447" height="15" usemap="#atoz_map" src="../letters.gif"/>
-  </div>
-
 </body>
 </html>
