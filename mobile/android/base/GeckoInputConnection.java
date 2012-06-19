@@ -256,7 +256,16 @@ public class GeckoInputConnection
 
     @Override
     public CharSequence getTextBeforeCursor(int length, int flags) {
-        clampSelection();
+        // Avoid underrunning text buffer.
+        Span selection = clampSelection();
+        if (length > selection.start) {
+            length = selection.start;
+        }
+
+        if (length < 1) {
+            return "";
+        }
+
         return super.getTextBeforeCursor(length, flags);
     }
 
@@ -268,7 +277,17 @@ public class GeckoInputConnection
 
     @Override
     public CharSequence getTextAfterCursor(int length, int flags) {
-        clampSelection();
+        // Avoid overrunning text buffer.
+        Span selection = clampSelection();
+        int contentLength = getEditable().length();
+        if (selection.end + length > contentLength) {
+            length = contentLength - selection.end;
+        }
+
+        if (length < 1) {
+            return "";
+        }
+
         return super.getTextAfterCursor(length, flags);
     }
 
