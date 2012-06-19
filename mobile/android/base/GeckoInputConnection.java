@@ -334,19 +334,15 @@ public class GeckoInputConnection
         beginBatchEdit();
 
         // delete composing text set previously.
-        int a = getComposingSpanStart(content);
-        int b = getComposingSpanEnd(content);
+        int a;
+        int b;
 
-        if (DEBUG) Log.d(LOGTAG, "Composing span: " + a + " to " + b);
-
-        if (b < a) {
-            int tmp = a;
-            a = b;
-            b = tmp;
-        }
-
-        if (a != -1 && b != -1) {
+        Span composingSpan = getComposingSpan();
+        if (composingSpan != null) {
             removeComposingSpans(content);
+            a = composingSpan.start;
+            b = composingSpan.end;
+            composingSpan = null;
         } else {
             Span selection = clampSelection();
             a = selection.start;
@@ -420,19 +416,13 @@ public class GeckoInputConnection
         if (content == null) {
             return null;
         }
-        int a = getComposingSpanStart(content);
-        int b = getComposingSpanEnd(content);
 
-        if (a < 0 || b < 0)
-            return null;
-
-        if (b < a) {
-            int tmp = a;
-            a = b;
-            b = tmp;
+        Span composingSpan = getComposingSpan();
+        if (composingSpan == null || composingSpan.length == 0) {
+            return "";
         }
 
-        return TextUtils.substring(content, a, b);
+        return TextUtils.substring(content, composingSpan.start, composingSpan.end);
     }
 
     public boolean onKeyDel() {
@@ -522,16 +512,14 @@ public class GeckoInputConnection
                 super.setSelection(start, end);
 
                 // Check if the selection is inside composing span
-                int ca = getComposingSpanStart(content);
-                int cb = getComposingSpanEnd(content);
-                if (cb < ca) {
-                    int tmp = ca;
-                    ca = cb;
-                    cb = tmp;
-                }
-                if (start < ca || start > cb || end < ca || end > cb) {
-                    if (DEBUG) Log.d(LOGTAG, ". . . notifySelectionChange: removeComposingSpans");
-                    removeComposingSpans(content);
+                Span composingSpan = getComposingSpan();
+                if (composingSpan != null) {
+                    int ca = composingSpan.start;
+                    int cb = composingSpan.end;
+                    if (start < ca || start > cb || end < ca || end > cb) {
+                        if (DEBUG) Log.d(LOGTAG, ". . . notifySelectionChange: removeComposingSpans");
+                        removeComposingSpans(content);
+                    }
                 }
             }
         }
@@ -1130,6 +1118,23 @@ public class GeckoInputConnection
 
     protected final boolean hasCompositionString() {
         return mCompositionStart != NO_COMPOSITION_STRING;
+    }
+
+    private Span getComposingSpan() {
+        Editable content = getEditable();
+        int start = getComposingSpanStart(content);
+        int end = getComposingSpanEnd(content);
+
+        // Does the editable have a composing span?
+        if (start < 0 || end < 0) {
+            if (start != -1 || end != -1) {
+                throw new IndexOutOfBoundsException("Bad composing span (" + start + "," + end
+                                                     + "], contentLength=" + content.length());
+            }
+            return null;
+        }
+
+        return new Span(start, end, content);
     }
 
     private static final class Span {
