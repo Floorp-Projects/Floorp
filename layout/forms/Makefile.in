@@ -61,6 +61,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../content/html/content/src \
 		-I$(srcdir)/../../editor/libeditor/base \
 		-I$(srcdir)/../../editor/libeditor/text \
+		-I$(srcdir)/../../editor/txmgr/src \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

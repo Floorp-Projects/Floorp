@@ -121,6 +121,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../../dom/base \
 		-I$(srcdir)/../../../../editor/libeditor/base \
 		-I$(srcdir)/../../../../editor/libeditor/text \
+		-I$(srcdir)/../../../../editor/txmgr/src \
 		-I$(srcdir) \
 		-I$(topsrcdir)/xpcom/ds \
 		$(NULL)
