@@ -29,22 +29,40 @@ let EXPORTED_SYMBOLS = ["DebuggerUI"];
  */
 function DebuggerUI(aWindow) {
   this.chromeWindow = aWindow;
+  this.listenToTabs();
 }
 
 DebuggerUI.prototype = {
+  /**
+   * Update the status of tool's menuitems and buttons when
+   * the user switch tabs.
+   */
+  listenToTabs: function DUI_listenToTabs() {
+    let win = this.chromeWindow;
+    let tabs = win.gBrowser.tabContainer;
+
+    let bound_refreshCommand = this.refreshCommand.bind(this);
+    tabs.addEventListener("TabSelect", bound_refreshCommand, true);
+
+    win.addEventListener("unload", function onClose(aEvent) {
+      tabs.removeEventListener("TabSelect", bound_refreshCommand, true);
+      win.removeEventListener("unload", onClose, false);
+    }, false);
+  },
 
   /**
    * Called by the DebuggerPane to update the Debugger toggle switches with the
    * debugger state.
    */
   refreshCommand: function DUI_refreshCommand() {
-    let selectedTab = this.chromeWindow.getBrowser().selectedTab;
+    let scriptDebugger = this.getDebugger();
     let command = this.chromeWindow.document.getElementById("Tools:Debugger");
+    let selectedTab = this.chromeWindow.gBrowser.selectedTab;
 
-    if (this.getDebugger()) {
+    if (scriptDebugger && scriptDebugger.ownerTab === selectedTab) {
       command.setAttribute("checked", "true");
     } else {
-      command.removeAttribute("checked");
+      command.setAttribute("checked", "false");
     }
   },
 
