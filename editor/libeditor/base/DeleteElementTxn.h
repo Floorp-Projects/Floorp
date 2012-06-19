@@ -8,11 +8,11 @@
 
 #include "EditTxn.h"
 
-#include "nsIDOMNode.h"
-#include "nsIEditor.h"
+#include "nsIContent.h"
 #include "nsCOMPtr.h"
 
 class nsRangeUpdater;
+class nsEditor;
 
 /**
  * A transaction that deletes a single element
@@ -23,7 +23,8 @@ public:
   /** initialize the transaction.
     * @param aElement the node to delete
     */
-  NS_IMETHOD Init(nsIEditor *aEditor, nsIDOMNode *aElement, nsRangeUpdater *aRangeUpdater);
+  nsresult Init(nsEditor* aEditor, nsINode* aNode,
+                nsRangeUpdater* aRangeUpdater);
 
   DeleteElementTxn();
 
@@ -35,21 +36,21 @@ public:
   NS_IMETHOD RedoTransaction();
 
 protected:
-  
+
   /** the element to delete */
-  nsCOMPtr<nsIDOMNode> mElement;
+  nsCOMPtr<nsINode> mNode;
 
   /** parent of node to delete */
-  nsCOMPtr<nsIDOMNode> mParent;
+  nsCOMPtr<nsINode> mParent;
 
   /** next sibling to remember for undo/redo purposes */
-  nsCOMPtr<nsIDOMNode> mRefNode;
+  nsCOMPtr<nsIContent> mRefNode;
 
   /** the editor for this transaction */
-  nsIEditor* mEditor;
+  nsEditor* mEditor;
 
   /** range updater object */
-  nsRangeUpdater *mRangeUpdater;
+  nsRangeUpdater* mRangeUpdater;
 };
 
 #endif

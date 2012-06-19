@@ -1492,28 +1492,36 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
 }
 
 
-NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
+NS_IMETHODIMP
+nsEditor::DeleteNode(nsIDOMNode* aNode)
 {
-  PRInt32 i, offset;
-  nsCOMPtr<nsIDOMNode> parent;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(node);
+  return DeleteNode(node);
+}
+
+nsresult
+nsEditor::DeleteNode(nsINode* aNode)
+{
   nsAutoRules beginRulesSniffing(this, kOpCreateNode, nsIEditor::ePrevious);
 
   // save node location for selection updating code.
-  GetNodeLocation(aElement, address_of(parent), &offset);
-
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->WillDeleteNode(aElement);
-
-  nsRefPtr<DeleteElementTxn> txn;
-  nsresult result = CreateTxnForDeleteElement(aElement, getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);  
+  for (PRInt32 i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->WillDeleteNode(aNode->AsDOMNode());
   }
 
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->DidDeleteNode(aElement, result);
+  nsRefPtr<DeleteElementTxn> txn;
+  nsresult res = CreateTxnForDeleteElement(aNode, getter_AddRefs(txn));
+  if (NS_SUCCEEDED(res))  {
+    res = DoTransaction(txn);
+  }
 
-  return result;
+  for (PRInt32 i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->DidDeleteNode(aNode->AsDOMNode(), res);
+  }
+
+  NS_ENSURE_SUCCESS(res, res);
+  return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -4588,20 +4596,18 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
   return rv;
 }
 
-NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
-                                             DeleteElementTxn ** aTxn)
+nsresult
+nsEditor::CreateTxnForDeleteElement(nsINode* aNode, DeleteElementTxn** aTxn)
 {
-  NS_ENSURE_TRUE(aElement, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
   nsRefPtr<DeleteElementTxn> txn = new DeleteElementTxn();
 
-  nsresult rv = txn->Init(this, aElement, &mRangeUpdater);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
-  }
+  nsresult res = txn->Init(this, aNode, &mRangeUpdater);
+  NS_ENSURE_SUCCESS(res, res);
 
-  return rv;
+  txn.forget(aTxn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -4794,8 +4800,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     } else {
       // priorNode is not chardata, so tell its parent to delete it
       nsRefPtr<DeleteElementTxn> txn;
-      res = CreateTxnForDeleteElement(priorNode->AsDOMNode(),
-                                      getter_AddRefs(txn));
+      res = CreateTxnForDeleteElement(priorNode, getter_AddRefs(txn));
       NS_ENSURE_SUCCESS(res, res);
 
       aTxn->AppendChild(txn);
@@ -4831,8 +4836,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     } else {
       // nextNode is not chardata, so tell its parent to delete it
       nsRefPtr<DeleteElementTxn> txn;
-      res = CreateTxnForDeleteElement(nextNode->AsDOMNode(),
-                                      getter_AddRefs(txn));
+      res = CreateTxnForDeleteElement(nextNode, getter_AddRefs(txn));
       NS_ENSURE_SUCCESS(res, res);
       aTxn->AppendChild(txn);
     }
@@ -4894,8 +4898,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
       *aLength = delTextTxn->GetNumCharsToDelete();
     } else {
       nsRefPtr<DeleteElementTxn> delElementTxn;
-      res = CreateTxnForDeleteElement(selectedNode->AsDOMNode(),
-                                      getter_AddRefs(delElementTxn));
+      res = CreateTxnForDeleteElement(selectedNode, getter_AddRefs(delElementTxn));
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_TRUE(delElementTxn, NS_ERROR_NULL_POINTER);
 
