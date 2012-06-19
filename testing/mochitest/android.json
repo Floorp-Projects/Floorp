@@ -21,6 +21,7 @@
  "content/base/test/test_range_bounds.html": "",
  "content/base/test/test_reentrant_flush.html": "RANDOM",
  "content/base/test/test_sync_xhr_timer.xhtml": "RANDOM",
+ "content/base/test/test_text_wholeText.html": "RANDOM",
  "content/base/test/test_websocket.html": "",
  "content/base/test/test_websocket_basic.html": "",
  "content/base/test/test_websocket_hello.html": "",
