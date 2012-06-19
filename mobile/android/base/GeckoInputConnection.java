@@ -234,10 +234,12 @@ public class GeckoInputConnection
 
     @Override
     public boolean setSelection(int start, int end) {
-        GeckoAppShell.sendEventToGecko(
-            GeckoEvent.createIMEEvent(GeckoEvent.IME_SET_SELECTION, start, end - start));
-
-        return super.setSelection(start, end);
+        // Some IMEs call setSelection() with negative or stale indexes, so clamp them.
+        Span newSelection = Span.clamp(start, end, getEditable());
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createIMEEvent(GeckoEvent.IME_SET_SELECTION,
+                                                                 newSelection.start,
+                                                                 newSelection.length));
+        return super.setSelection(newSelection.start, newSelection.end);
     }
 
     @Override
