@@ -56,7 +56,7 @@ NotificationController::~NotificationController()
 NS_IMPL_ADDREF(NotificationController)
 NS_IMPL_RELEASE(NotificationController)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(NotificationController)
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(NotificationController)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(NotificationController)
   if (tmp->mDocument)
@@ -812,7 +812,7 @@ NotificationController::ContentInsertion::
   return haveToUpdate;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(NotificationController::ContentInsertion)
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(NotificationController::ContentInsertion)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(NotificationController::ContentInsertion)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContainer)
