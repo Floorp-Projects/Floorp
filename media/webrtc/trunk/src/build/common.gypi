@@ -42,7 +42,7 @@
     'enable_data_logging%': 0,
 
     # Disable these to not build components which can be externally provided.
-    'build_libjpeg%': 1,
+    'build_libjpeg%': 0,
     'build_libyuv%': 1,
 
     'conditions': [

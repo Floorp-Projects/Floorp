@@ -14,7 +14,7 @@
 
   # Test targets, excluded when building with Chromium.
   'conditions': [
-    ['build_with_chromium==0', {
+    ['build_with_chromium==0 and build_with_mozilla==0', {
       'includes': [
         'test/libvietest/libvietest.gypi',
         'test/auto_test/vie_auto_test.gypi',
