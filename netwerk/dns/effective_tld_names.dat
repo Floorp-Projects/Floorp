@@ -4089,6 +4089,11 @@ su
 // sv : http://www.svnet.org.sv/svpolicy.html
 *.sv
 
+// sx : http://en.wikipedia.org/wiki/.sx
+// Confirmed by registry <jcvignes@openregistry.com> 2012-05-31
+sx
+gov.sx
+
 // sy : http://en.wikipedia.org/wiki/.sy
 // see also: http://www.gobin.info/domainname/sy.doc
 sy
