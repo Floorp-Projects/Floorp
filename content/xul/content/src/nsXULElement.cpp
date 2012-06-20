@@ -756,7 +756,7 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
 
             if (!elem->mHoldsScriptObject) {
                 rv = nsContentUtils::HoldJSObjects(
-                    elem, &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+                    elem, NS_CYCLE_COLLECTION_PARTICIPANT(nsXULPrototypeNode));
                 NS_ENSURE_SUCCESS(rv, rv);
             }
 
@@ -3099,7 +3099,7 @@ nsXULPrototypeScript::Set(JSScript* aObject)
     }
 
     nsresult rv = nsContentUtils::HoldJSObjects(
-        this, &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
+        this, NS_CYCLE_COLLECTION_PARTICIPANT(nsXULPrototypeNode));
     if (NS_SUCCEEDED(rv)) {
         mScriptObject.mObject = aObject;
     }
