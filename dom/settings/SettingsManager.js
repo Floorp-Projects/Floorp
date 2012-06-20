@@ -57,6 +57,13 @@ SettingsLock.prototype = {
           for (let key in info.settings) {
             debug("key: " + key + ", val: " + JSON.stringify(info.settings[key]) + ", type: " + typeof(info.settings[key]));
 
+            let checkKeyRequest = store.get(key);
+            checkKeyRequest.onsuccess = function (event) {
+              if (!event.target.result) {
+                dump("MOZSETTINGS-SET-WARNING: " + key + " is not in the database. Please add it to build/settings.js\n");
+              }
+            }
+
             if(typeof(info.settings[key]) != 'object') {
               req = store.put({settingName: key, settingValue: info.settings[key]});
             } else {
@@ -72,7 +79,9 @@ SettingsLock.prototype = {
               lock._open = false;
             };
 
-            req.onerror = function() { Services.DOMRequest.fireError(request, 0) };
+            req.onerror = function() {
+              Services.DOMRequest.fireError(request, 0)
+            };
           }
           break;
         case "get":
@@ -83,6 +92,10 @@ SettingsLock.prototype = {
             debug("Request for '" + info.name + "' successful. " + 
                   "Record count: " + event.target.result.length);
             debug("result: " + JSON.stringify(event.target.result));
+
+            if (event.target.result.length == 0) {
+              dump("MOZSETTINGS-GET-WARNING: " + info.name + " is not in the database. Please add it to build/settings.js\n");
+            }
 
             let results = {
               __exposedProps__: {
