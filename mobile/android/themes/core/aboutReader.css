@@ -5,68 +5,88 @@
 %filter substitution
 %include defines.inc
 
+@font-face {
+  font-family: 'OpenSansRegular';
+  src: url('chrome://browser/skin/fonts/opensans-regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 html {
-  font-family: "Droid Serif",serif;
   -moz-text-size-adjust: none;
 }
 
 body {
+  font-family: "OpenSansRegular","Droid Sans",sans-serif;
   margin-top: 20px;
   margin-bottom: 20px;
+  background-repeat: repeat;
 }
 
 .light {
-  background: #ffffff;
+  background-image: url('chrome://browser/skin/images/reader-light-bg.png');
   color: #222222;
 }
 
 .dark {
-  background: #111111;
-  color: #ffffff;
+  background-image: url('chrome://browser/skin/images/reader-dark-bg.png');
+  color: #eeeeee;
 }
 
 .sepia {
-  background: #fffdf7;
-  color: #7a4d36;
+  background-image: url('chrome://browser/skin/images/reader-sepia-bg.png');
+  color: #332e20;
 }
 
 .header {
+  font-family: "Droid Serif",serif;
   width: 100%;
   text-align: center;
-  font-weight: bold;
   padding-top: 20px;
   padding-bottom: 20px;
-  border-bottom: 4px solid;
-  -moz-border-bottom-colors: #ff9100 #f27900;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #ff9400 #ee6700;
   display: none;
 }
 
-.font-size1 > .header {
-  font-size: 21px;
+.light > .header {
+  -moz-border-bottom-colors: #ff9400 #ee6700;
 }
 
-.font-size2 > .header {
+.dark > .header {
+  -moz-border-bottom-colors: #ff9400 #ee6700;
+}
+
+.sepia > .header {
+  -moz-border-bottom-colors: #c1531b #75391c;
+}
+
+.font-size1 > .header {
   font-size: 23px;
 }
 
-.font-size3 > .header {
+.font-size2 > .header {
   font-size: 25px;
 }
 
-.font-size4 > .header {
+.font-size3 > .header {
   font-size: 27px;
 }
 
-.font-size5 > .header {
+.font-size4 > .header {
   font-size: 29px;
 }
 
-.font-size6 > .header {
+.font-size5 > .header {
   font-size: 31px;
 }
 
-.font-size7 > .header {
+.font-size6 > .header {
   font-size: 33px;
+}
+
+.font-size7 > .header {
+  font-size: 35px;
 }
 
 .content {
@@ -75,32 +95,70 @@ body {
   display: none;
 }
 
+.content a {
+  text-decoration: underline;
+}
+
+.light > .content a,
+.light > .content a:visited,
+.light > .content a:hover,
+.light > .content a:active {
+  color: #ee6700;
+}
+
+.dark > .content a,
+.dark > .content a:visited,
+.dark > .content a:hover,
+.dark > .content a:active {
+  color: #ff9400;
+}
+
+.sepia > .content a,
+.sepia > .content a:visited,
+.sepia > .content a:hover,
+.sepia > .content a:active {
+  color: #c1531b;
+}
+
+.content * {
+  max-width: 100% !important;
+  overflow: scroll !important;
+}
+
+.content img {
+  height: auto !important;
+}
+
+.content pre {
+  overflow: scroll !important;
+}
+
 .font-size1 > .content {
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .font-size2 > .content {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .font-size3 > .content {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .font-size4 > .content {
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .font-size5 > .content {
-  font-size: 19px;
+  font-size: 18px;
 }
 
 .font-size6 > .content {
-  font-size: 21px;
+  font-size: 20px;
 }
 
 .font-size7 > .content {
-  font-size: 24px;
+  font-size: 22px;
 }
 
 .toolbar {
