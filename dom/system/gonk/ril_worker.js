@@ -1530,8 +1530,22 @@ let RIL = {
    */
   hangUp: function hangUp(options) {
     let call = this.currentCalls[options.callIndex];
-    if (call && call.state != CALL_STATE_HOLDING) {
-      Buf.simpleRequest(REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND);
+    if (!call) {
+      return;
+    }
+
+    switch (call.state) {
+      case CALL_STATE_ACTIVE:
+      case CALL_STATE_DIALING:
+      case CALL_STATE_ALERTING:
+        Buf.newParcel(REQUEST_HANGUP);
+        Buf.writeUint32(1);
+        Buf.writeUint32(options.callIndex);
+        Buf.sendParcel();
+        break;
+      case CALL_STATE_HOLDING:
+        Buf.simpleRequest(REQUEST_HANGUP_WAITING_OR_BACKGROUND);
+        break;
     }
   },
 
