@@ -646,10 +646,14 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       return null;
     }
 
-    Logger.debug(LOG_TAG, "Searching with record string " + recordString);
+    if (Logger.LOG_PERSONAL_INFORMATION) {
+      Logger.pii(LOG_TAG, "Searching with record string " + recordString);
+    } else {
+      Logger.debug(LOG_TAG, "Searching with record string.");
+    }
     String guid = getGuidForString(recordString);
     if (guid == null) {
-      Logger.debug(LOG_TAG, "findExistingRecord failed to find one for " + record.guid);
+      Logger.debug(LOG_TAG, "Failed to find existing record for " + record.guid);
       return null;
     }
 

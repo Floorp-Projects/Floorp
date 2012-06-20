@@ -646,70 +646,6 @@ frontend::DefineCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom 
     return JS_TRUE;
 }
 
-/*
- * The function sets vp to NO_CONSTANT when the atom does not corresponds to a
- * name defining a constant.
- */
-static JSBool
-LookupCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, Value *constp)
-{
-    /*
-     * Chase down the bce stack, but only until we reach the outermost bce.
-     * This enables propagating consts from top-level into switch cases in a
-     * function compiled along with the top-level script.
-     */
-    constp->setMagic(JS_NO_CONSTANT);
-    do {
-        if (bce->sc->inFunction() || bce->script->compileAndGo) {
-            /* XXX this will need revising if 'const' becomes block-scoped. */
-            StmtInfo *stmt = LexicalLookup(bce->sc, atom, NULL);
-            if (stmt)
-                return JS_TRUE;
-
-            if (BytecodeEmitter::ConstMap::Ptr p = bce->constMap.lookup(atom)) {
-                JS_ASSERT(!p->value.isMagic(JS_NO_CONSTANT));
-                *constp = p->value;
-                return JS_TRUE;
-            }
-
-            /*
-             * Try looking in the variable object for a direct property that
-             * is readonly and permanent.  We know such a property can't be
-             * shadowed by another property on obj's prototype chain, or a
-             * with object or catch variable; nor can prop's value be changed,
-             * nor can prop be deleted.
-             */
-            if (bce->sc->inFunction()) {
-                if (bce->sc->bindings.hasBinding(cx, atom))
-                    break;
-            } else {
-                JS_ASSERT(bce->script->compileAndGo);
-                JSObject *obj = bce->sc->scopeChain();
-
-                const Shape *shape = obj->nativeLookup(cx, AtomToId(atom));
-                if (shape) {
-                    /*
-                     * We're compiling code that will be executed immediately,
-                     * not re-executed against a different scope chain and/or
-                     * variable object.  Therefore we can get constant values
-                     * from our variable object here.
-                     */
-                    if (!shape->writable() && !shape->configurable() &&
-                        shape->hasDefaultGetter() && shape->hasSlot()) {
-                        *constp = obj->nativeGetSlot(shape->slot());
-                    }
-                }
-
-                if (shape)
-                    break;
-            }
-        }
-        bce = bce->parent;
-    } while (bce);
-
-    return JS_TRUE;
-}
-
 static bool
 EmitIndex32(JSContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
 {
@@ -2122,7 +2058,7 @@ MOZ_NEVER_INLINE static JSBool
 EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JSOp switchOp;
-    JSBool ok, hasDefault, constPropagated;
+    JSBool ok, hasDefault;
     ptrdiff_t top, off, defaultOffset;
     ParseNode *pn2, *pn3, *pn4;
     uint32_t caseCount, tableLength;
@@ -2130,13 +2066,13 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     int32_t i, low, high;
     int noteIndex;
     size_t switchSize, tableSize;
-    jsbytecode *pc, *savepc;
+    jsbytecode *pc;
     StmtInfo stmtInfo(cx);
 
     /* Try for most optimal, fall back if not dense ints, and per ECMAv2. */
     switchOp = JSOP_TABLESWITCH;
     ok = JS_TRUE;
-    hasDefault = constPropagated = JS_FALSE;
+    hasDefault = JS_FALSE;
     defaultOffset = -1;
 
     pn2 = pn->pn_right;
@@ -2239,32 +2175,6 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 constVal.setNull();
                 break;
               case PNK_NAME:
-                if (!pn4->maybeExpr()) {
-                    ok = LookupCompileTimeConstant(cx, bce, pn4->pn_atom, &constVal);
-                    if (!ok)
-                        goto release;
-                    if (!constVal.isMagic(JS_NO_CONSTANT)) {
-                        if (constVal.isObject()) {
-                            /*
-                             * XXX JSOP_LOOKUPSWITCH does not support const-
-                             * propagated object values, see bug 407186.
-                             */
-                            switchOp = JSOP_CONDSWITCH;
-                            continue;
-                        }
-                        if (constVal.isString()) {
-                            JSAtom *atom = js_AtomizeString(cx, constVal.toString());
-                            if (!atom) {
-                                ok = JS_FALSE;
-                                goto release;
-                            }
-                            constVal.setString(atom);
-                        }
-                        constPropagated = JS_TRUE;
-                        break;
-                    }
-                }
-                /* FALL THROUGH */
               default:
                 switchOp = JSOP_CONDSWITCH;
                 continue;
@@ -2486,51 +2396,6 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * simple, all switchOp cases exit that way.
          */
         MUST_FLOW_THROUGH("out");
-
-        if (constPropagated) {
-            /*
-             * Skip switchOp, as we are not setting jump offsets in the two
-             * for loops below.  We'll restore bce->next() from savepc after,
-             * unless there was an error.
-             */
-            savepc = bce->next();
-            bce->current->next = pc + 1;
-            if (switchOp == JSOP_TABLESWITCH) {
-                for (i = 0; i < (int)tableLength; i++) {
-                    pn3 = table[i];
-                    if (pn3 &&
-                        (pn4 = pn3->pn_left) != NULL &&
-                        pn4->isKind(PNK_NAME))
-                    {
-                        /* Note a propagated constant with the const's name. */
-                        JS_ASSERT(!pn4->maybeExpr());
-                        jsatomid index;
-                        if (!bce->makeAtomIndex(pn4->pn_atom, &index))
-                            goto bad;
-                        bce->current->next = pc;
-                        if (NewSrcNote2(cx, bce, SRC_LABEL, ptrdiff_t(index)) < 0)
-                            goto bad;
-                    }
-                    pc += JUMP_OFFSET_LEN;
-                }
-            } else {
-                for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-                    pn4 = pn3->pn_left;
-                    if (pn4 && pn4->isKind(PNK_NAME)) {
-                        /* Note a propagated constant with the const's name. */
-                        JS_ASSERT(!pn4->maybeExpr());
-                        jsatomid index;
-                        if (!bce->makeAtomIndex(pn4->pn_atom, &index))
-                            goto bad;
-                        bce->current->next = pc;
-                        if (NewSrcNote2(cx, bce, SRC_LABEL, ptrdiff_t(index)) < 0)
-                            goto bad;
-                    }
-                    pc += UINT32_INDEX_LEN + JUMP_OFFSET_LEN;
-                }
-            }
-            bce->current->next = savepc;
-        }
     }
 
     /* Emit code for each case's statements, copying pn_offset up to pn3. */

@@ -124,13 +124,12 @@ nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
 }
 
 nsGlobalNameStruct *
-nsScriptNameSpaceManager::AddToHash(PLDHashTable *aTable, const char *aKey,
+nsScriptNameSpaceManager::AddToHash(PLDHashTable *aTable, const nsAString *aKey,
                                     const PRUnichar **aClassName)
 {
-  NS_ConvertASCIItoUTF16 key(aKey);
   GlobalNameMapEntry *entry =
     static_cast<GlobalNameMapEntry *>
-               (PL_DHashTableOperate(aTable, &key, PL_DHASH_ADD));
+               (PL_DHashTableOperate(aTable, aKey, PL_DHASH_ADD));
 
   if (!entry) {
     return nsnull;
@@ -345,7 +344,8 @@ nsScriptNameSpaceManager::RegisterInterface(const char* aIfName,
   nsGlobalNameStruct *s = AddToHash(&mGlobalNames, aIfName);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
-  if (s->mType != nsGlobalNameStruct::eTypeNotInitialized) {
+  if (s->mType != nsGlobalNameStruct::eTypeNotInitialized &&
+      s->mType != nsGlobalNameStruct::eTypeNewDOMBinding) {
     *aFoundOld = true;
 
     return NS_OK;
@@ -534,6 +534,7 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
   }
 
   NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
+               s->mType == nsGlobalNameStruct::eTypeNewDOMBinding ||
                s->mType == nsGlobalNameStruct::eTypeInterface,
                "Whaaa, JS environment name clash!");
 
@@ -558,6 +559,7 @@ nsScriptNameSpaceManager::RegisterClassProto(const char *aClassName,
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   if (s->mType != nsGlobalNameStruct::eTypeNotInitialized &&
+      s->mType != nsGlobalNameStruct::eTypeNewDOMBinding &&
       s->mType != nsGlobalNameStruct::eTypeInterface) {
     *aFoundOld = true;
 
@@ -585,6 +587,7 @@ nsScriptNameSpaceManager::RegisterExternalClassName(const char *aClassName,
   }
 
   NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
+               s->mType == nsGlobalNameStruct::eTypeNewDOMBinding ||
                s->mType == nsGlobalNameStruct::eTypeInterface,
                "Whaaa, JS environment name clash!");
 
@@ -617,6 +620,7 @@ nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
 
   // XXX Should we bail out here?
   NS_ASSERTION(s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
+               s->mType == nsGlobalNameStruct::eTypeNewDOMBinding ||
                s->mType == nsGlobalNameStruct::eTypeExternalClassInfoCreator,
                "Someone tries to register classinfo data for a class that isn't new or external!");
 
@@ -708,7 +712,8 @@ nsScriptNameSpaceManager::AddCategoryEntryToHash(nsICategoryManager* aCategoryMa
       nsGlobalNameStruct *s = AddToHash(&mGlobalNames, categoryEntry.get());
       NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
-      if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
+      if (s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
+          s->mType == nsGlobalNameStruct::eTypeNewDOMBinding) {
         s->mAlias = new nsGlobalNameStruct::ConstructorAlias;
         s->mType = nsGlobalNameStruct::eTypeExternalConstructorAlias;
         s->mChromeOnly = false;
@@ -733,7 +738,8 @@ nsScriptNameSpaceManager::AddCategoryEntryToHash(nsICategoryManager* aCategoryMa
   nsGlobalNameStruct *s = AddToHash(table, categoryEntry.get());
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
-  if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
+  if (s->mType == nsGlobalNameStruct::eTypeNotInitialized ||
+      s->mType == nsGlobalNameStruct::eTypeNewDOMBinding) {
     s->mType = type;
     s->mCID = cid;
     s->mChromeOnly =
@@ -772,11 +778,14 @@ nsScriptNameSpaceManager::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void
-nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAString& aName,
+nsScriptNameSpaceManager::RegisterDefineDOMInterface(const nsAFlatString& aName,
     mozilla::dom::binding::DefineInterface aDefineDOMInterface)
 {
-  nsGlobalNameStruct* s = LookupNameInternal(aName);
+  nsGlobalNameStruct *s = AddToHash(&mGlobalNames, &aName);
   if (s) {
+    if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
+      s->mType = nsGlobalNameStruct::eTypeNewDOMBinding;
+    }
     s->mDefineDOMInterface = aDefineDOMInterface;
   }
 }
