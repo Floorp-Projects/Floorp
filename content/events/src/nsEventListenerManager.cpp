@@ -145,7 +145,7 @@ nsEventListenerManager::Shutdown()
   nsDOMEvent::Shutdown();
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventListenerManager)
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsEventListenerManager)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsEventListenerManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsEventListenerManager, Release)

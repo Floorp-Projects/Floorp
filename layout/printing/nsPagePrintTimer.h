@@ -10,13 +10,14 @@
 
 #include "nsIDocumentViewerPrint.h"
 #include "nsPrintObject.h"
+#include "mozilla/Attributes.h"
 
 class nsPrintEngine;
 
 //---------------------------------------------------
 //-- Page Timer Class
 //---------------------------------------------------
-class nsPagePrintTimer : public nsITimerCallback
+class nsPagePrintTimer MOZ_FINAL : public nsITimerCallback
 {
 public:
 
