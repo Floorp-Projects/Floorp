@@ -867,6 +867,10 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
         IonSpew(IonSpew_Abort, "Object to Int32 not supported yet.");
         break;
 
+      case MIRType_Undefined:
+        IonSpew(IonSpew_Abort, "Undefined coerces to NaN, not int32.");
+        break;
+
       default:
         // Undefined coerces to NaN, not int32.
         JS_NOT_REACHED("unexpected type");
