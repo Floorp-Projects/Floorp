@@ -1226,6 +1226,19 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)) {
     complexEffects = true;
     gfx->Save();
+    if (!(aFrame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+      // aFrame has a valid visual overflow rect, so clip to it before calling
+      // PushGroup() to minimize the size of the surfaces we'll composite:
+      gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
+      gfx->Multiply(GetCanvasTM(aFrame));
+      nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
+      if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry)) {
+        // Unlike containers, leaf frames do not include GetPosition() in
+        // GetCanvasTM().
+        overflowRect = overflowRect + aFrame->GetPosition();
+      }
+      aContext->IntersectClip(overflowRect);
+    }
     gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
   }
 
