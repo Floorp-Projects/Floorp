@@ -55,7 +55,7 @@ LIBS += \
 	$(NULL)
 
 ifdef MOZ_LINKER
-LIBS += $(MOZ_ZLIB_LIBS)
+LIBS += $(ZLIB_LIBS)
 endif
 
 ifndef MOZ_WINCONSOLE
