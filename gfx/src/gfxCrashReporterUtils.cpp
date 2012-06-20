@@ -55,7 +55,7 @@ class ScopedGfxFeatureReporter::AppNoteWritingRunnable : public nsRunnable {
 public:
   AppNoteWritingRunnable(char aStatusChar, const char *aFeature) :
     mStatusChar(aStatusChar), mFeature(aFeature) {}
-  virtual nsresult Run() { 
+  NS_IMETHOD Run() { 
     // LeakLog made me do this. Basically, I just wanted gFeaturesAlreadyReported to be a static nsTArray<nsCString>,
     // and LeakLog was complaining about leaks like this:
     //    leaked 1 instance of nsTArray_base with size 8 bytes
