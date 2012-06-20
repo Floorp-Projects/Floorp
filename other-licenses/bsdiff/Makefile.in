@@ -35,7 +35,7 @@ HOST_PROGRAM = mbsdiff$(BIN_SUFFIX)
 HOST_CSRCS = bsdiff.c
 
 ifdef MOZ_NATIVE_BZ2
-HOST_LIBS += $(BZ2_LIBS)
+HOST_LIBS += $(MOZ_BZ2_LIBS)
 else
 HOST_LIBS += $(DIST)/host/lib/$(LIB_PREFIX)hostbz2.$(LIB_SUFFIX)
 endif
@@ -48,4 +48,4 @@ LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/mozapps/update/updater
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(BZ2_CFLAGS)
+CXXFLAGS += $(MOZ_BZ2_CFLAGS)
