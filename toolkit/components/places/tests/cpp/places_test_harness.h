@@ -19,6 +19,7 @@
 #include "nsPIPlacesDatabase.h"
 #include "nsIObserver.h"
 #include "prinrval.h"
+#include "mozilla/Attributes.h"
 
 #define TOPIC_FRECENCY_UPDATED "places-frecency-updated"
 #define WAITFORTOPIC_TIMEOUT_SECONDS 5
@@ -95,7 +96,7 @@ void do_test_finished();
 /**
  * Spins current thread until a topic is received.
  */
-class WaitForTopicSpinner : public nsIObserver
+class WaitForTopicSpinner MOZ_FINAL : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -299,7 +300,7 @@ do_get_lastVisit(PRInt64 placeId, VisitRecord& result)
 static const char TOPIC_PROFILE_CHANGE[] = "profile-before-change";
 static const char TOPIC_PLACES_CONNECTION_CLOSED[] = "places-connection-closed";
 
-class WaitForConnectionClosed : public nsIObserver
+class WaitForConnectionClosed MOZ_FINAL : public nsIObserver
 {
   nsRefPtr<WaitForTopicSpinner> mSpinner;
 public:

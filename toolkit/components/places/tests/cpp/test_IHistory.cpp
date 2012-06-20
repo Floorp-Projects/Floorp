@@ -8,6 +8,7 @@
 #include "nsIBrowserHistory.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "mozilla/Attributes.h"
 
 #include "mock_Link.h"
 using namespace mozilla::dom;
@@ -46,7 +47,7 @@ new_test_uri()
   return testURI.forget();
 }
 
-class VisitURIObserver : public nsIObserver
+class VisitURIObserver MOZ_FINAL : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -282,7 +283,7 @@ namespace test_observer_topic_dispatched_helpers {
   #define URI_VISITED "visited"
   #define URI_NOT_VISITED "not visited"
   #define URI_VISITED_RESOLUTION_TOPIC "visited-status-resolution"
-  class statusObserver : public nsIObserver
+  class statusObserver MOZ_FINAL : public nsIObserver
   {
   public:
     NS_DECL_ISUPPORTS
