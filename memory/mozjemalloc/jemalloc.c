@@ -935,7 +935,7 @@ typedef rb_tree(arena_chunk_t) arena_chunk_tree_t;
 
 typedef struct arena_run_s arena_run_t;
 struct arena_run_s {
-#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
+#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 	uint32_t	magic;
 #  define ARENA_RUN_MAGIC 0x384adf93
 #endif
@@ -991,7 +991,7 @@ struct arena_bin_s {
 };
 
 struct arena_s {
-#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
+#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 	uint32_t		magic;
 #  define ARENA_MAGIC 0x947d3d24
 #endif
@@ -1552,12 +1552,9 @@ void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
 #define assert(e)
 #endif
 
-/* See bug 764192 for details on what we're hoping to see with these
- * RELEASE_ASSERTs and the other code ifdef'ed by MOZ_TEMP_INVESTIGATION. */
-
 #include <mozilla/Assertions.h>
 
-#if defined(MOZ_TEMP_INVESTIGATION)
+#if defined(MOZ_JEMALLOC_HARD_ASSERTS)
 #  define RELEASE_ASSERT(assertion) do {	\
 	if (!(assertion)) {			\
 		MOZ_CRASH();			\
@@ -3891,7 +3888,7 @@ arena_bin_nonfull_run_get(arena_t *arena, arena_bin_t *bin)
 	run->regs_minelm = 0;
 
 	run->nfree = bin->nregs;
-#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
+#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 	run->magic = ARENA_RUN_MAGIC;
 #endif
 
@@ -4530,7 +4527,7 @@ arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 				run_mapelm);
 			arena_run_tree_remove(&bin->runs, run_mapelm);
 		}
-#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
+#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 		run->magic = 0;
 #endif
 		VALGRIND_FREELIKE_BLOCK(run, 0);
@@ -4946,7 +4943,7 @@ arena_new(arena_t *arena)
 #endif
 	}
 
-#if defined(MALLOC_DEBUG) || defined(MOZ_TEMP_INVESTIGATION)
+#if defined(MALLOC_DEBUG) || defined(MOZ_JEMALLOC_HARD_ASSERTS)
 	arena->magic = ARENA_MAGIC;
 #endif
 
