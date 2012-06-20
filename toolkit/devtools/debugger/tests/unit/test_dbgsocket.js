@@ -27,7 +27,7 @@ function really_long() {
 
 function test_socket_conn()
 {
-  DebuggerServer.openListener(2929, true);
+  DebuggerServer.openListener(2929);
 
   let unicodeString = "(╯°□°）╯︵ ┻━┻";
   let transport = debuggerSocketConnect("127.0.0.1", 2929);

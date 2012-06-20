@@ -320,6 +320,8 @@ pref("devtools.debugger.log", false);
 // Disable remote debugging connections
 pref("devtools.debugger.remote-enabled", false);
 pref("devtools.debugger.remote-port", 6000);
+// Force debugger server binding on the loopback interface
+pref("devtools.debugger.force-local", true);
 
 // view source
 pref("view_source.syntax_highlight", true);
