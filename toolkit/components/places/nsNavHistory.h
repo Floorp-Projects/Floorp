@@ -29,6 +29,7 @@
 #include "nsNavHistoryResult.h"
 #include "nsNavHistoryQuery.h"
 #include "Database.h"
+#include "mozilla/Attributes.h"
 
 #define QUERYUPDATE_TIME 0
 #define QUERYUPDATE_SIMPLE 1
@@ -67,13 +68,13 @@ class nsIAutoCompleteController;
 
 // nsNavHistory
 
-class nsNavHistory : public nsSupportsWeakReference
-                   , public nsINavHistoryService
-                   , public nsIObserver
-                   , public nsIBrowserHistory
-                   , public nsPIPlacesDatabase
-                   , public nsPIPlacesHistoryListenersNotifier
-                   , public mozIStorageVacuumParticipant
+class nsNavHistory MOZ_FINAL : public nsSupportsWeakReference
+                             , public nsINavHistoryService
+                             , public nsIObserver
+                             , public nsIBrowserHistory
+                             , public nsPIPlacesDatabase
+                             , public nsPIPlacesHistoryListenersNotifier
+                             , public mozIStorageVacuumParticipant
 {
   friend class PlacesSQLQueryBuilder;
 
