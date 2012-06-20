@@ -5884,7 +5884,7 @@ let Reader = {
         let uri = Services.io.newURI(url, null, null);
 
         let readability = new Readability(uri, doc);
-        let article = readability.parse();
+        article = readability.parse();
 
         if (!article) {
           this.log("Failed to parse page");
