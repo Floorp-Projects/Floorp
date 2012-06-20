@@ -4053,7 +4053,10 @@ IonBuilder::jsop_getelem()
     if (oracle->elementReadIsString(script, pc))
         return jsop_getelem_string();
 
-    if (oracle->elementReadMagicArguments(script, pc))
+    LazyArgumentsType isArguments = oracle->elementReadMagicArguments(script, pc);
+    if (isArguments == MaybeArguments)
+        return abort("Type is not definitely lazy arguments.");
+    if (isArguments == DefinitelyArguments)
         return jsop_arguments_getelem();
 
     MDefinition *rhs = current->pop();
@@ -4283,7 +4286,10 @@ IonBuilder::jsop_setelem()
             return jsop_setelem_typed(arrayType);
     }
 
-    if (oracle->elementWriteMagicArguments(script, pc))
+    LazyArgumentsType isArguments = oracle->elementWriteMagicArguments(script, pc);
+    if (isArguments == MaybeArguments)
+        return abort("Type is not definitely lazy arguments.");
+    if (isArguments == DefinitelyArguments)
         return jsop_arguments_setelem();
 
     MDefinition *value = current->pop();
@@ -4555,7 +4561,11 @@ IonBuilder::jsop_not()
 bool
 IonBuilder::jsop_getprop(HandlePropertyName name)
 {
-    if (oracle->propertyReadMagicArguments(script, pc)) {
+
+    LazyArgumentsType isArguments = oracle->propertyReadMagicArguments(script, pc);
+    if (isArguments == MaybeArguments)
+        return abort("Type is not definitely lazy arguments.");
+    if (isArguments == DefinitelyArguments) {
         if (JSOp(*pc) == JSOP_LENGTH)
             return jsop_arguments_length();
         // Can also be a callee.
