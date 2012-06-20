@@ -2478,7 +2478,7 @@ malloc_rtree_new(unsigned bits)
 	height = bits / bits_per_level;
 	if (height * bits_per_level != bits)
 		height++;
-	assert(height * bits_per_level >= bits);
+	RELEASE_ASSERT(height * bits_per_level >= bits);
 
 	ret = (malloc_rtree_t*)base_calloc(1, sizeof(malloc_rtree_t) +
 	    (sizeof(unsigned) * (height - 1)));
@@ -2988,7 +2988,7 @@ choose_arena(void)
 
 	if (ret == NULL) {
 		ret = choose_arena_hard();
-		assert(ret != NULL);
+		RELEASE_ASSERT(ret != NULL);
 	}
 #else
 	if (isthreaded && narenas > 1) {
@@ -3034,7 +3034,7 @@ choose_arena(void)
 		ret = arenas[0];
 #endif
 
-	assert(ret != NULL);
+	RELEASE_ASSERT(ret != NULL);
 	return (ret);
 }
 
@@ -3600,7 +3600,7 @@ arena_purge(arena_t *arena)
 	} rb_foreach_end(arena_chunk_t, link_dirty, &arena->chunks_dirty, chunk)
 	assert(ndirty == arena->ndirty);
 #endif
-	assert(arena->ndirty > opt_dirty_max);
+	RELEASE_ASSERT(arena->ndirty > opt_dirty_max);
 
 #ifdef MALLOC_STATS
 	arena->stats.npurge++;
@@ -3617,10 +3617,10 @@ arena_purge(arena_t *arena)
 		bool madvised = false;
 #endif
 		chunk = arena_chunk_tree_dirty_last(&arena->chunks_dirty);
-		assert(chunk != NULL);
+		RELEASE_ASSERT(chunk != NULL);
 
 		for (i = chunk_npages - 1; chunk->ndirty > 0; i--) {
-			assert(i >= arena_chunk_header_npages);
+			RELEASE_ASSERT(i >= arena_chunk_header_npages);
 
 			if (chunk->map[i].bits & CHUNK_MAP_DIRTY) {
 #ifdef MALLOC_DECOMMIT
@@ -4396,14 +4396,14 @@ arena_salloc(const void *ptr)
 	chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
 	pageind = (((uintptr_t)ptr - (uintptr_t)chunk) >> pagesize_2pow);
 	mapbits = chunk->map[pageind].bits;
-	assert((mapbits & CHUNK_MAP_ALLOCATED) != 0);
+	RELEASE_ASSERT((mapbits & CHUNK_MAP_ALLOCATED) != 0);
 	if ((mapbits & CHUNK_MAP_LARGE) == 0) {
 		arena_run_t *run = (arena_run_t *)(mapbits & ~pagesize_mask);
-		assert(run->magic == ARENA_RUN_MAGIC);
+		RELEASE_ASSERT(run->magic == ARENA_RUN_MAGIC);
 		ret = run->bin->reg_size;
 	} else {
 		ret = mapbits & ~pagesize_mask;
-		assert(ret != 0);
+		RELEASE_ASSERT(ret != 0);
 	}
 
 	return (ret);
@@ -4431,7 +4431,7 @@ isalloc_validate(const void *ptr)
 		return (0);
 
 	if (chunk != ptr) {
-		assert(chunk->arena->magic == ARENA_MAGIC);
+		RELEASE_ASSERT(chunk->arena->magic == ARENA_MAGIC);
 		return (arena_salloc(ptr));
 	} else {
 		size_t ret;
@@ -4476,7 +4476,7 @@ isalloc(const void *ptr)
 		/* Extract from tree of huge allocations. */
 		key.addr = __DECONST(void *, ptr);
 		node = extent_tree_ad_search(&huge, &key);
-		assert(node != NULL);
+		RELEASE_ASSERT(node != NULL);
 
 		ret = node->size;
 
@@ -4689,7 +4689,7 @@ arena_ralloc_large_grow(arena_t *arena, arena_chunk_t *chunk, void *ptr,
 	size_t pageind = ((uintptr_t)ptr - (uintptr_t)chunk) >> pagesize_2pow;
 	size_t npages = oldsize >> pagesize_2pow;
 
-	assert(oldsize == (chunk->map[pageind].bits & ~pagesize_mask));
+	RELEASE_ASSERT(oldsize == (chunk->map[pageind].bits & ~pagesize_mask));
 
 	/* Try to extend the run. */
 	assert(size > oldsize);
@@ -4751,7 +4751,7 @@ arena_ralloc_large(void *ptr, size_t size, size_t oldsize)
 
 		chunk = (arena_chunk_t *)CHUNK_ADDR2BASE(ptr);
 		arena = chunk->arena;
-		assert(arena->magic == ARENA_MAGIC);
+		RELEASE_ASSERT(arena->magic == ARENA_MAGIC);
 
 		if (psize < oldsize) {
 #ifdef MALLOC_FILL
@@ -6746,7 +6746,7 @@ hard_purge_chunk(arena_chunk_t *chunk)
 		     npages++) {
 			/* Turn off the chunk's MADV_FREED bit and turn on its
 			 * DECOMMITTED bit. */
-			assert(!(chunk->map[i + npages].bits & CHUNK_MAP_DECOMMITTED));
+			RELEASE_ASSERT(!(chunk->map[i + npages].bits & CHUNK_MAP_DECOMMITTED));
 			chunk->map[i + npages].bits ^= CHUNK_MAP_MADVISED_OR_DECOMMITTED;
 		}
 
