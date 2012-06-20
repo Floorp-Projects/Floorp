@@ -214,7 +214,6 @@ MAKEFLAGS=-r
 # The source directory tree.
 srcdir := %(srcdir)s
 abs_srcdir := $(abspath $(srcdir))
-os_sep := %(os_sep)s
 
 # The name of the builddir.
 builddir_name ?= %(builddir)s
@@ -610,7 +609,6 @@ def StringToMakefileVariable(string):
   return re.sub('[ {}$]', '_', string)
 
 
-os_sep = os.sep
 srcdir_prefix = ''
 def Sourceify(path):
   """Convert a path to its source directory form."""
@@ -1970,15 +1968,13 @@ def GenerateOutput(target_list, target_dicts, data, params):
     default_configuration = 'Default'
 
   srcdir = '.'
-  global os_sep
-  os_sep = os.sep
   makefile_name = 'Makefile' + options.suffix
   makefile_path = os.path.join(options.toplevel_dir, makefile_name)
   if options.generator_output:
     global srcdir_prefix
     makefile_path = os.path.join(options.generator_output, makefile_path)
     srcdir = gyp.common.RelativePath(srcdir, options.generator_output)
-    srcdir_prefix = '$(srcdir)' + os.sep
+    srcdir_prefix = '$(srcdir)/'
 
   flock_command= 'flock'
   header_params = {
@@ -1990,7 +1986,6 @@ def GenerateOutput(target_list, target_dicts, data, params):
       'link_commands': LINK_COMMANDS_LINUX,
       'extra_commands': '',
       'srcdir': srcdir,
-      'os_sep': os.sep,
     }
   if flavor == 'mac':
     flock_command = './gyp-mac-tool flock'

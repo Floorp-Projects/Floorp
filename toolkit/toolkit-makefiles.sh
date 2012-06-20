@@ -1615,6 +1615,12 @@ if [ "$MOZ_SYDNEYAUDIO" ]; then
   "
 fi
 
+if [ "$MOZ_WEBRTC" ]; then
+ add_makefiles "
+   media/webrtc/Makefile
+ "
+fi
+
 if [ "$MOZ_SPEEX_RESAMPLER" ]; then
   add_makefiles "
     media/libspeex_resampler/Makefile
