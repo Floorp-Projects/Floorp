@@ -1329,7 +1329,7 @@ if [ "$MOZ_UPDATER" ]; then
     modules/libmar/src/Makefile
     modules/libmar/tool/Makefile
   "
-  if [ ! "$MOZ_NATIVE_BZ2" ]; then
+  if [ ! "$SYSTEM_BZ2" ]; then
     add_makefiles "
       modules/libbz2/Makefile
       modules/libbz2/src/Makefile
@@ -1464,14 +1464,14 @@ if [ "$MOZ_PSM" ]; then
   "
 fi
 
-if [ ! "$MOZ_NATIVE_JPEG" ]; then
+if [ ! "$SYSTEM_JPEG" ]; then
   add_makefiles "
     media/libjpeg/Makefile
     media/libjpeg/simd/Makefile
   "
 fi
 
-if [ ! "$MOZ_NATIVE_ZLIB" ]; then
+if [ ! "$SYSTEM_ZLIB" ]; then
   add_makefiles "
     modules/zlib/Makefile
     modules/zlib/src/Makefile
@@ -1484,7 +1484,7 @@ if [ "$MOZ_UPDATE_PACKAGING" ]; then
   "
 fi
 
-if [ ! "$MOZ_NATIVE_PNG" ]; then
+if [ ! "$SYSTEM_PNG" ]; then
   add_makefiles "
     media/libpng/Makefile
   "
