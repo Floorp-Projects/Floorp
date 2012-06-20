@@ -1208,6 +1208,7 @@ var NativeWindow = {
           let request = aElement.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
           return (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE));
         }
+        return false;
       }
     },
 
