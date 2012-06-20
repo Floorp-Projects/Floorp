@@ -132,10 +132,9 @@ registerCleanupFunction(function() {
   });
 });
 
-function log_exceptions(aCallback) {
+function log_exceptions(aCallback, ...aArgs) {
   try {
-    var args = Array.slice(arguments, 1);
-    return aCallback.apply(null, args);
+    return aCallback.apply(null, aArgs);
   }
   catch (e) {
     info("Exception thrown: " + e);
@@ -372,12 +371,11 @@ function wait_for_window_open(aCallback) {
   });
 }
 
-function get_string(aName) {
+function get_string(aName, ...aArgs) {
   var bundle = Services.strings.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
-  if (arguments.length == 1)
+  if (aArgs.length == 0)
     return bundle.GetStringFromName(aName);
-  var args = Array.slice(arguments, 1);
-  return bundle.formatStringFromName(aName, args, args.length);
+  return bundle.formatStringFromName(aName, aArgs, aArgs.length);
 }
 
 function formatDate(aDate) {
@@ -923,9 +921,7 @@ MockProvider.prototype = {
    *
    * @param aCallback Callback to eventually call
    */
-  _delayCallback: function MP_delayCallback(aCallback) {
-    var params = Array.splice(arguments, 1);
-
+  _delayCallback: function MP_delayCallback(aCallback, ...aArgs) {
     if (!this.useAsyncCallbacks) {
       aCallback.apply(null, params);
       return;
@@ -938,7 +934,7 @@ MockProvider.prototype = {
     var self = this;
     timer.initWithCallback(function() {
       self.callbackTimers.splice(pos, 1);
-      aCallback.apply(null, params);
+      aCallback.apply(null, aArgs);
     }, this.apiDelay, timer.TYPE_ONE_SHOT);
   }
 };

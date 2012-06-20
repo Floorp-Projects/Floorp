@@ -5280,13 +5280,12 @@ UpdateChecker.prototype = {
    * @param  aMethod
    *         The method to call on the listener
    */
-  callListener: function(aMethod) {
+  callListener: function(aMethod, ...aArgs) {
     if (!(aMethod in this.listener))
       return;
 
-    let args = Array.slice(arguments, 1);
     try {
-      this.listener[aMethod].apply(this.listener, args);
+      this.listener[aMethod].apply(this.listener, aArgs);
     }
     catch (e) {
       LOG("Exception calling UpdateListener method " + aMethod + ": " + e);
