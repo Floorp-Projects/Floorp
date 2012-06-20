@@ -3296,16 +3296,6 @@ JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
     return JS_TRUE;
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
-{
-    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    AssertNoGC(cx);
-    CHECK_REQUEST(cx);
-
-    return GlobalObject::create(cx, Valueify(clasp));
-}
-
 class AutoHoldCompartment {
   public:
     explicit AutoHoldCompartment(JSCompartment *compartment JS_GUARD_OBJECT_NOTIFIER_PARAM)
@@ -3328,6 +3318,8 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
+    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
+
     JSCompartment *compartment = NewCompartment(cx, principals);
     if (!compartment)
         return NULL;
@@ -3336,10 +3328,10 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
 
     JSCompartment *saved = cx->compartment;
     cx->setCompartment(compartment);
-    JSObject *obj = JS_NewGlobalObject(cx, clasp);
+    GlobalObject *global = GlobalObject::create(cx, Valueify(clasp));
     cx->setCompartment(saved);
 
-    return obj;
+    return global;
 }
 
 JS_PUBLIC_API(JSObject *)
