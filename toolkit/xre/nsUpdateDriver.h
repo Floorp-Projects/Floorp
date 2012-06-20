@@ -13,6 +13,7 @@
 #include "nsIThread.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 #endif
 
 class nsIFile;
@@ -59,7 +60,7 @@ NS_HIDDEN_(nsresult) ProcessUpdates(nsIFile *greDir, nsIFile *appDir,
 // updater application in the background for applying an update.
 // XXX ehsan this is living in this file in order to make use of the existing
 // stuff here, we might want to move it elsewhere in the future.
-class nsUpdateProcessor : public nsIUpdateProcessor
+class nsUpdateProcessor MOZ_FINAL : public nsIUpdateProcessor
 {
 public:
   nsUpdateProcessor();
