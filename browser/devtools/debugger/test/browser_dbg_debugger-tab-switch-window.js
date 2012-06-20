@@ -4,23 +4,26 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let gTab1, gTab2, gTab3, gTab4;
+let gInitialTab, gTab1, gTab2, gTab3, gTab4;
+let gInitialWindow, gSecondWindow;
 let gPane1, gPane2;
 let gNbox;
 
 /**
- * Tests that a debugger instance can't be opened in multiple tabs at once,
+ * Tests that a debugger instance can't be opened in multiple windows at once,
  * and that on such an attempt a notification is shown, which can either switch
  * to the old debugger instance, or close the old instance to open a new one.
  */
 
 function test() {
-  gNbox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
+  gInitialWindow = window;
+  gInitialTab = window.gBrowser.selectedTab;
+  gNbox = gInitialWindow.gBrowser.getNotificationBox(gInitialWindow.gBrowser.selectedBrowser);
 
-  testTab1(function() {
-    testTab2(function() {
-      testTab3(function() {
-        testTab4(function() {
+  testTab1_initialWindow(function() {
+    testTab2_secondWindow(function() {
+      testTab3_secondWindow(function() {
+        testTab4_secondWindow(function() {
           lastTest(function() {
             cleanup(function() {
               finish();
@@ -32,23 +35,23 @@ function test() {
   });
 }
 
-function testTab1(callback) {
+function testTab1_initialWindow(callback) {
   gTab1 = addTab(TAB1_URL, function() {
-    gBrowser.selectedTab = gTab1;
-    gNbox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
+    gInitialWindow.gBrowser.selectedTab = gTab1;
+    gNbox = gInitialWindow.gBrowser.getNotificationBox(gInitialWindow.gBrowser.selectedBrowser);
 
     is(gNbox.getNotificationWithValue("debugger-tab-switch"), null,
       "Shouldn't have a tab switch notification.");
-    ok(!DebuggerUI.getDebugger(),
+    ok(!gInitialWindow.DebuggerUI.getDebugger(),
       "Shouldn't have a debugger pane for this tab yet.");
 
     info("Toggling a debugger (1).");
 
-    gPane1 = DebuggerUI.toggleDebugger();
+    gPane1 = gInitialWindow.DebuggerUI.toggleDebugger();
     ok(gPane1, "toggleDebugger() should return a pane.");
     is(gPane1.ownerTab, gTab1, "Incorrect tab owner.");
 
-    is(DebuggerUI.getDebugger(), gPane1,
+    is(gInitialWindow.DebuggerUI.getDebugger(), gPane1,
       "getDebugger() should return the same pane as toggleDebugger().");
 
     wait_for_connect_and_resume(function dbgLoaded() {
@@ -56,18 +59,20 @@ function testTab1(callback) {
       executeSoon(function() {
         callback();
       });
-    });
-  });
+    }, gInitialWindow);
+  }, gInitialWindow);
 }
 
-function testTab2(callback) {
+function testTab2_secondWindow(callback) {
+  gSecondWindow = addWindow();
+
   gTab2 = addTab(TAB1_URL, function() {
-    gBrowser.selectedTab = gTab2;
-    gNbox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
+    gSecondWindow.gBrowser.selectedTab = gTab2;
+    gNbox = gSecondWindow.gBrowser.getNotificationBox(gSecondWindow.gBrowser.selectedBrowser);
 
     is(gNbox.getNotificationWithValue("debugger-tab-switch"), null,
       "Shouldn't have a tab switch notification yet.");
-    ok(DebuggerUI.getDebugger(),
+    ok(gSecondWindow.DebuggerUI.findDebugger(),
       "Should already have a debugger pane for another tab.");
 
     gNbox.addEventListener("AlertActive", function active() {
@@ -76,10 +81,10 @@ function testTab2(callback) {
         ok(gPane2, "toggleDebugger() should always return a pane.");
         is(gPane2.ownerTab, gTab1, "Incorrect tab owner.");
 
-        is(DebuggerUI.getDebugger(), gPane1,
-          "getDebugger() should return the same pane as the first call to toggleDebugger().");
-        is(DebuggerUI.getDebugger(), gPane2,
-          "getDebugger() should return the same pane as the second call to toggleDebugger().");
+        is(gSecondWindow.DebuggerUI.findDebugger(), gPane1,
+          "findDebugger() should return the same pane as the first call to toggleDebugger().");
+        is(gSecondWindow.DebuggerUI.findDebugger(), gPane2,
+          "findDebugger() should return the same pane as the second call to toggleDebugger().");
 
         info("Second debugger has not loaded.");
 
@@ -98,18 +103,18 @@ function testTab2(callback) {
 
     info("Toggling a debugger (2).");
 
-    gPane2 = DebuggerUI.toggleDebugger();
-  });
+    gPane2 = gSecondWindow.DebuggerUI.toggleDebugger();
+  }, gSecondWindow);
 }
 
-function testTab3(callback) {
+function testTab3_secondWindow(callback) {
   gTab3 = addTab(TAB1_URL, function() {
-    gBrowser.selectedTab = gTab3;
-    gNbox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
+    gSecondWindow.gBrowser.selectedTab = gTab3;
+    gNbox = gSecondWindow.gBrowser.getNotificationBox(gSecondWindow.gBrowser.selectedBrowser);
 
     is(gNbox.getNotificationWithValue("debugger-tab-switch"), null,
       "Shouldn't have a tab switch notification.");
-    ok(DebuggerUI.getDebugger(),
+    ok(gSecondWindow.DebuggerUI.findDebugger(),
       "Should already have a debugger pane for another tab.");
 
     gNbox.addEventListener("AlertActive", function active() {
@@ -118,10 +123,10 @@ function testTab3(callback) {
         ok(gPane2, "toggleDebugger() should always return a pane.");
         is(gPane2.ownerTab, gTab1, "Incorrect tab owner.");
 
-        is(DebuggerUI.getDebugger(), gPane1,
-          "getDebugger() should return the same pane as the first call to toggleDebugger().");
-        is(DebuggerUI.getDebugger(), gPane2,
-          "getDebugger() should return the same pane as the second call to toggleDebugger().");
+        is(gSecondWindow.DebuggerUI.findDebugger(), gPane1,
+          "findDebugger() should return the same pane as the first call to toggleDebugger().");
+        is(gSecondWindow.DebuggerUI.findDebugger(), gPane2,
+          "findDebugger() should return the same pane as the second call to toggleDebugger().");
 
         info("Second debugger has not loaded.");
 
@@ -129,8 +134,9 @@ function testTab3(callback) {
         ok(gNbox.currentNotification, "Should have a tab switch notification.");
         is(gNbox.currentNotification, notification, "Incorrect current notification.");
 
-        gBrowser.tabContainer.addEventListener("TabSelect", function tabSelect() {
-          gBrowser.tabContainer.removeEventListener("TabSelect", tabSelect, true);
+        gInitialWindow.gBrowser.selectedTab = gInitialTab;
+        gInitialWindow.gBrowser.tabContainer.addEventListener("TabSelect", function tabSelect() {
+          gInitialWindow.gBrowser.tabContainer.removeEventListener("TabSelect", tabSelect, true);
           executeSoon(function() {
             callback();
           });
@@ -138,28 +144,28 @@ function testTab3(callback) {
 
         let buttonSwitch = notification.querySelectorAll("button")[0];
         buttonSwitch.focus();
-        EventUtils.sendKey("SPACE");
+        EventUtils.sendKey("SPACE", gSecondWindow);
         info("The switch button on the notification was pressed.");
       });
     }, true);
 
     info("Toggling a debugger (3).");
 
-    gPane2 = DebuggerUI.toggleDebugger();
-  });
+    gPane2 = gSecondWindow.DebuggerUI.toggleDebugger();
+  }, gSecondWindow);
 }
 
-function testTab4(callback) {
-  is(gBrowser.selectedTab, gTab1,
+function testTab4_secondWindow(callback) {
+  is(gInitialWindow.gBrowser.selectedTab, gTab1,
     "Should've switched to the first debugged tab.");
 
   gTab4 = addTab(TAB1_URL, function() {
-    gBrowser.selectedTab = gTab4;
-    gNbox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
+    gSecondWindow.gBrowser.selectedTab = gTab4;
+    gNbox = gSecondWindow.gBrowser.getNotificationBox(gSecondWindow.gBrowser.selectedBrowser);
 
     is(gNbox.getNotificationWithValue("debugger-tab-switch"), null,
       "Shouldn't have a tab switch notification.");
-    ok(DebuggerUI.getDebugger(),
+    ok(gSecondWindow.DebuggerUI.findDebugger(),
       "Should already have a debugger pane for another tab.");
 
     gNbox.addEventListener("AlertActive", function active() {
@@ -168,10 +174,10 @@ function testTab4(callback) {
         ok(gPane2, "toggleDebugger() should always return a pane.");
         is(gPane2.ownerTab, gTab1, "Incorrect tab owner.");
 
-        is(DebuggerUI.getDebugger(), gPane1,
-          "getDebugger() should return the same pane as the first call to toggleDebugger().");
-        is(DebuggerUI.getDebugger(), gPane2,
-          "getDebugger() should return the same pane as the second call to toggleDebugger().");
+        is(gSecondWindow.DebuggerUI.findDebugger(), gPane1,
+          "findDebugger() should return the same pane as the first call to toggleDebugger().");
+        is(gSecondWindow.DebuggerUI.findDebugger(), gPane2,
+          "findDebugger() should return the same pane as the second call to toggleDebugger().");
 
         info("Second debugger has not loaded.");
 
@@ -181,27 +187,27 @@ function testTab4(callback) {
 
         let buttonOpen = notification.querySelectorAll("button")[1];
         buttonOpen.focus();
-        EventUtils.sendKey("SPACE");
+        EventUtils.sendKey("SPACE", gSecondWindow);
         info("The open button on the notification was pressed.");
 
         wait_for_connect_and_resume(function() {
           callback();
-        });
+        }, gSecondWindow);
       });
     }, true);
 
     info("Toggling a debugger (4).");
 
-    gPane2 = DebuggerUI.toggleDebugger();
-  });
+    gPane2 = gSecondWindow.DebuggerUI.toggleDebugger();
+  }, gSecondWindow);
 }
 
 function lastTest(callback) {
-  isnot(gBrowser.selectedTab, gTab1,
-    "Shouldn't have switched to the first debugged tab.");
-  is(gBrowser.selectedTab, gTab4,
+  is(gInitialWindow.gBrowser.selectedTab, gTab1,
+    "The initial window should continue having selected the first debugged tab.");
+  is(gSecondWindow.gBrowser.selectedTab, gTab4,
     "Should currently be in the fourth tab.");
-  is(DebuggerUI.getDebugger().ownerTab, gTab4,
+  is(gSecondWindow.DebuggerUI.findDebugger().ownerTab, gTab4,
     "The debugger should be open for the fourth tab.");
 
   is(gNbox.getNotificationWithValue("debugger-tab-switch"), null,
@@ -221,15 +227,18 @@ function cleanup(callback)
   gNbox = null;
 
   closeDebuggerAndFinish(false, function() {
-    removeTab(gTab1);
-    removeTab(gTab2);
-    removeTab(gTab3);
-    removeTab(gTab4);
+    removeTab(gTab1, gInitialWindow);
+    removeTab(gTab2, gSecondWindow);
+    removeTab(gTab3, gSecondWindow);
+    removeTab(gTab4, gSecondWindow);
+    gSecondWindow.close();
     gTab1 = null;
     gTab2 = null;
     gTab3 = null;
     gTab4 = null;
+    gInitialWindow = null;
+    gSecondWindow = null;
 
     callback();
-  });
+  }, gSecondWindow);
 }

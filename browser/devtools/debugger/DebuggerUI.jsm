@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let EXPORTED_SYMBOLS = ["DebuggerUI"];
 
 /**
- * Provides a simple mechanism of managing debugger instances per tab.
+ * Provides a simple mechanism of managing debugger instances.
  *
  * @param nsIDOMWindow aWindow
  *        The chrome window for which the DebuggerUI instance is created.
@@ -71,7 +71,7 @@ DebuggerUI.prototype = {
    * @return DebuggerPane if the debugger is started, null if it's stopped.
    */
   toggleDebugger: function DUI_toggleDebugger() {
-    let scriptDebugger = this.getDebugger();
+    let scriptDebugger = this.findDebugger();
     let selectedTab = this.chromeWindow.gBrowser.selectedTab;
 
     if (scriptDebugger) {
@@ -110,34 +110,55 @@ DebuggerUI.prototype = {
       chromeDebugger.close();
       return null;
     }
-    return new ChromeDebuggerProcess(this.chromeWindow, aOnClose, aOnRun, true);
+    return new ChromeDebuggerProcess(this, aOnClose, aOnRun);
+  },
+
+  /**
+   * Gets the script debugger in any open window.
+   *
+   * @return DebuggerPane | null
+   *         The script debugger instance if it exists, null otherwise.
+   */
+  findDebugger: function DUI_findDebugger() {
+    let enumerator = Services.wm.getEnumerator("navigator:browser");
+    while (enumerator.hasMoreElements()) {
+      let chromeWindow = enumerator.getNext().QueryInterface(Ci.nsIDOMWindow);
+      let scriptDebugger = chromeWindow.DebuggerUI.getDebugger();
+      if (scriptDebugger) {
+        return scriptDebugger;
+      }
+    }
+    return null;
   },
 
   /**
    * Get the current script debugger.
-   * @return DebuggerPane if a debugger exists for the tab, null otherwise.
+   *
+   * @return DebuggerPane | null
+   *         The script debugger instance if it exists, null otherwise.
    */
   getDebugger: function DUI_getDebugger() {
-    let win = this.chromeWindow;
-    return '_scriptDebugger' in win ? win._scriptDebugger : null;
+    return '_scriptDebugger' in this ? this._scriptDebugger : null;
   },
 
   /**
    * Get the remote debugger for the current chrome window.
-   * @return RemoteDebuggerWindow if a remote debugger exists, null otherwise.
+   *
+   * @return RemoteDebuggerWindow | null
+   *         The remote debugger instance if it exists, null otherwise.
    */
   getRemoteDebugger: function DUI_getRemoteDebugger() {
-    let win = this.chromeWindow;
-    return '_remoteDebugger' in win ? win._remoteDebugger : null;
+    return '_remoteDebugger' in this ? this._remoteDebugger : null;
   },
 
   /**
    * Get the chrome debugger for the current firefox instance.
-   * @return ChromeDebuggerProcess if a chrome debugger exists, null otherwise.
+   *
+   * @return ChromeDebuggerProcess | null
+   *         The chrome debugger instance if it exists, null otherwise.
    */
   getChromeDebugger: function DUI_getChromeDebugger() {
-    let win = this.chromeWindow;
-    return '_chromeDebugger' in win ? win._chromeDebugger : null;
+    return '_chromeDebugger' in this ? this._chromeDebugger : null;
   },
 
   /**
@@ -170,14 +191,17 @@ DebuggerUI.prototype = {
       label: L10N.getStr("confirmTabSwitch.buttonSwitch"),
       accessKey: L10N.getStr("confirmTabSwitch.buttonSwitch.accessKey"),
       callback: function DUI_notificationButtonSwitch() {
-        gBrowser.selectedTab = this.getDebugger().ownerTab;
+        let scriptDebugger = this.findDebugger();
+        let targetWindow = scriptDebugger.globalUI.chromeWindow;
+        targetWindow.gBrowser.selectedTab = scriptDebugger.ownerTab;
+        targetWindow.focus();
       }.bind(this)
     }, {
       id: "debugger.confirmTabSwitch.buttonOpen",
       label: L10N.getStr("confirmTabSwitch.buttonOpen"),
       accessKey: L10N.getStr("confirmTabSwitch.buttonOpen.accessKey"),
       callback: function DUI_notificationButtonOpen() {
-        this.getDebugger().close();
+        this.findDebugger().close();
         this.toggleDebugger();
       }.bind(this)
     }];
@@ -204,7 +228,7 @@ DebuggerUI.prototype = {
  *        The tab in which to create the debugger.
  */
 function DebuggerPane(aDebuggerUI, aTab) {
-  this._globalUI = aDebuggerUI;
+  this.globalUI = aDebuggerUI;
   this._win = aDebuggerUI.chromeWindow;
   this._tab = aTab;
 
@@ -229,7 +253,7 @@ DebuggerPane.prototype = {
    * Creates and initializes the widgets containing the debugger UI.
    */
   _create: function DP__create() {
-    this._win._scriptDebugger = this;
+    this.globalUI._scriptDebugger = this;
 
     let gBrowser = this._win.gBrowser;
     let ownerDocument = gBrowser.parentNode.ownerDocument;
@@ -260,7 +284,7 @@ DebuggerPane.prototype = {
     }, true);
 
     this._frame.setAttribute("src", DBG_XUL);
-    this._globalUI.refreshCommand();
+    this.globalUI.refreshCommand();
   },
 
   /**
@@ -271,10 +295,10 @@ DebuggerPane.prototype = {
    *        the panel successfully closes.
    */
   close: function DP_close(aCloseCallback) {
-    if (!this._win) {
+    if (!this.globalUI) {
       return;
     }
-    delete this._win._scriptDebugger;
+    delete this.globalUI._scriptDebugger;
     this._win = null;
     this._tab = null;
 
@@ -299,7 +323,8 @@ DebuggerPane.prototype = {
     this._frame = null;
     this._nbox = null;
 
-    this._globalUI.refreshCommand();
+    this.globalUI.refreshCommand();
+    this.globalUI = null;
   },
 
   /**
@@ -338,7 +363,7 @@ DebuggerPane.prototype = {
  *        The parent instance creating the new debugger.
  */
 function RemoteDebuggerWindow(aDebuggerUI) {
-  this._globalUI = aDebuggerUI;
+  this.globalUI = aDebuggerUI;
   this._win = aDebuggerUI.chromeWindow;
 
   this._create();
@@ -350,9 +375,9 @@ RemoteDebuggerWindow.prototype = {
    * Creates and initializes the widgets containing the remote debugger UI.
    */
   _create: function DP__create() {
-    this._win._remoteDebugger = this;
+    this.globalUI._remoteDebugger = this;
 
-    this._dbgwin = this._globalUI.chromeWindow.open(DBG_XUL,
+    this._dbgwin = this.globalUI.chromeWindow.open(DBG_XUL,
       L10N.getStr("remoteDebuggerWindowTitle"),
       "width=" + DebuggerPreferences.remoteWinWidth + "," +
       "height=" + DebuggerPreferences.remoteWinHeight + "," +
@@ -380,10 +405,11 @@ RemoteDebuggerWindow.prototype = {
    * Closes the remote debugger, along with the parent window if necessary.
    */
   close: function DP_close() {
-    if (!this._win) {
+    if (!this.globalUI) {
       return;
     }
-    delete this._win._remoteDebugger;
+    delete this.globalUI._remoteDebugger;
+    this.globalUI = null;
     this._win = null;
 
     this._dbgwin.close();
@@ -414,15 +440,16 @@ RemoteDebuggerWindow.prototype = {
 /**
  * Creates a process that will hold a chrome debugger.
  *
+ * @param DebuggerUI aDebuggerUI
+ *        The parent instance creating the new debugger.
  * @param function aOnClose
  *        Optional, a function called when the process exits.
  * @param function aOnRun
  *        Optional, a function called when the process starts running.
- * @param nsIDOMWindow aWindow
- *        The chrome window for which the debugger instance is created.
  */
-function ChromeDebuggerProcess(aWindow, aOnClose, aOnRun) {
-  this._win = aWindow;
+function ChromeDebuggerProcess(aDebuggerUI, aOnClose, aOnRun) {
+  this.globalUI = aDebuggerUI;
+  this._win = aDebuggerUI.chromeWindow;
   this._closeCallback = aOnClose;
   this._runCallback = aOnRun;
 
@@ -494,7 +521,7 @@ ChromeDebuggerProcess.prototype = {
    * Creates and initializes the profile & process for the remote debugger.
    */
   _create: function RDP__create() {
-    this._win._chromeDebugger = this;
+    this.globalUI._chromeDebugger = this;
 
     let file = FileUtils.getFile("CurProcD",
       [Services.appinfo.OS == "WINNT" ? "firefox.exe"
@@ -521,10 +548,11 @@ ChromeDebuggerProcess.prototype = {
    * Closes the remote debugger, removing the profile and killing the process.
    */
   close: function RDP_close() {
-    if (!this._win) {
+    if (!this.globalUI) {
       return;
     }
-    delete this._win._chromeDebugger;
+    delete this.globalUI._chromeDebugger;
+    this.globalUI = null;
     this._win = null;
 
     if (this._dbgProcess.isRunning) {
