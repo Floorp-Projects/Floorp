@@ -4664,6 +4664,10 @@ dnl
 dnl This does not change the $MAKEFILES variable.
 dnl
 echo $MAKEFILES | ${PERL} $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
+res="$?"
+if test "$res" != 0; then
+    exit $res
+fi
 . ./conftest.sh
 rm conftest.sh
 
