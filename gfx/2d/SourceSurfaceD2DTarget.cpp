@@ -6,6 +6,7 @@
 #include "SourceSurfaceD2DTarget.h"
 #include "Logging.h"
 #include "DrawTargetD2D.h"
+#include "Tools.h"
 
 #include <algorithm>
 
@@ -18,6 +19,7 @@ SourceSurfaceD2DTarget::SourceSurfaceD2DTarget(DrawTargetD2D* aDrawTarget,
   : mDrawTarget(aDrawTarget)
   , mTexture(aTexture)
   , mFormat(aFormat)
+  , mOwnsCopy(false)
 {
 }
 
@@ -26,6 +28,11 @@ SourceSurfaceD2DTarget::~SourceSurfaceD2DTarget()
   // We don't need to do anything special here to notify our mDrawTarget. It must
   // already have cleared its mSnapshot field, otherwise this object would
   // be kept alive.
+  if (mOwnsCopy) {
+    IntSize size = GetSize();
+
+    DrawTargetD2D::mVRAMUsageSS -= size.width * size.height * BytesPerPixel(mFormat);
+  }
 }
 
 IntSize
@@ -97,6 +104,9 @@ SourceSurfaceD2DTarget::DrawTargetWillChange()
   Factory::GetDirect3D10Device()->CopyResource(mTexture, oldTexture);
 
   mBitmap = NULL;
+
+  DrawTargetD2D::mVRAMUsageSS += desc.Width * desc.Height * BytesPerPixel(mFormat);
+  mOwnsCopy = true;
 
   // We now no longer depend on the source surface content remaining the same.
   MarkIndependent();

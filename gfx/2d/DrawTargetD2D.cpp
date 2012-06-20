@@ -55,6 +55,8 @@ struct Vertex {
 
 ID2D1Factory *DrawTargetD2D::mFactory;
 IDWriteFactory *DrawTargetD2D::mDWriteFactory;
+uint64_t DrawTargetD2D::mVRAMUsageDT;
+uint64_t DrawTargetD2D::mVRAMUsageSS;
 
 // Helper class to restore surface contents that was clipped out but may have
 // been altered by a drawing call.
@@ -161,20 +163,24 @@ DrawTargetD2D::~DrawTargetD2D()
     PopAllClips();
 
     mRT->EndDraw();
+
+    mVRAMUsageDT -= GetByteSize();
   }
   if (mTempRT) {
     mTempRT->EndDraw();
+
+    mVRAMUsageDT -= GetByteSize();
   }
 
   if (mSnapshot) {
     // We may hold the only reference. MarkIndependent will clear mSnapshot;
-	// keep the snapshot object alive so it doesn't get destroyed while
-	// MarkIndependent is running.
+    // keep the snapshot object alive so it doesn't get destroyed while
+    // MarkIndependent is running.
     RefPtr<SourceSurfaceD2DTarget> deathGrip = mSnapshot;
-	// mSnapshot can be treated as independent of this DrawTarget since we know
-	// this DrawTarget won't change again.
-	deathGrip->MarkIndependent();
-	// mSnapshot will be cleared now.
+    // mSnapshot can be treated as independent of this DrawTarget since we know
+    // this DrawTarget won't change again.
+    deathGrip->MarkIndependent();
+    // mSnapshot will be cleared now.
   }
 
   // Targets depending on us can break that dependency, since we're obviously not going to
@@ -1274,6 +1280,12 @@ DrawTargetD2D::InitD3D10Data()
 /*
  * Private helpers
  */
+uint32_t
+DrawTargetD2D::GetByteSize() const
+{
+  return mSize.width * mSize.height * BytesPerPixel(mFormat);
+}
+
 bool
 DrawTargetD2D::InitD2DRenderTarget()
 {
@@ -1292,6 +1304,8 @@ DrawTargetD2D::InitD2DRenderTarget()
   if (mFormat == FORMAT_B8G8R8X8) {
     mRT->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
   }
+
+  mVRAMUsageDT += GetByteSize();
 
   return InitD3D10Data();
 }
@@ -1440,6 +1454,8 @@ DrawTargetD2D::GetRTForOperation(CompositionOp aOperator, const Pattern &aPatter
   if (!mTempRT) {
     return mRT;
   }
+
+  mVRAMUsageDT += GetByteSize();
 
   mTempRT->BeginDraw();
 
