@@ -298,6 +298,13 @@ public:
           b.DefineProperty(sample, "frames", frames);
           b.ArrayPush(samples, sample);
           break;
+        case 'r':
+          {
+            if (sample) {
+              b.DefineProperty(sample, "responsiveness", entry.mTagFloat);
+            }
+          }
+          break;
         case 'c':
         case 'l':
           {
