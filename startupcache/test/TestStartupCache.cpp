@@ -389,7 +389,7 @@ int main(int argc, char** argv)
   };
   JSObject *glob = nsnull;
   if (use_js)
-    glob = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
+    glob = JS_NewGlobalObject(cx, &global_class, NULL);
   if (!glob)
     use_js = false;
   JSCrossCompartmentCall *compartment = nsnull;
