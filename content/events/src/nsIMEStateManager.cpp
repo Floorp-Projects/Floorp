@@ -34,6 +34,7 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsHTMLFormElement.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla::widget;
 
@@ -386,8 +387,8 @@ nsIMEStateManager::GetWidget(nsPresContext* aPresContext)
 // sTextStateObserver points to the currently active nsTextStateManager
 // sTextStateObserver is null if there is no focused editor
 
-class nsTextStateManager : public nsISelectionListener,
-                           public nsStubMutationObserver
+class nsTextStateManager MOZ_FINAL : public nsISelectionListener,
+                                     public nsStubMutationObserver
 {
 public:
   nsTextStateManager();

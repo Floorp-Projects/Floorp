@@ -24,6 +24,8 @@
 #include "xpcpublic.h"
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
+#include "XPCQuickStubs.h"
+#include "nsDOMQS.h"
 
 #include "mozilla/dom/RegisterBindings.h"
 
@@ -415,8 +417,7 @@
 #include "nsIDOMSVGZoomAndPan.h"
 #include "nsIDOMSVGZoomEvent.h"
 
-#include "nsIDOMCanvasRenderingContext2D.h"
-#include "nsIDOMWebGLRenderingContext.h"
+#include "nsICanvasRenderingContextInternal.h"
 
 #include "nsIImageDocument.h"
 
@@ -621,13 +622,21 @@ static const char kDOMStringBundleURL[] =
   // nothing
 #endif
 
-DOMCI_DATA(Crypto, void)
-DOMCI_DATA(CRMFObject, void)
-DOMCI_DATA(SmartCardEvent, void)
-DOMCI_DATA(ContentFrameMessageManager, void)
+/**
+ * To generate the bitmap for a class that we're sure doesn't implement any of
+ * the interfaces in DOMCI_CASTABLE_INTERFACES.
+ */
+#define DOMCI_DATA_NO_CLASS(_dom_class)                                       \
+const PRUint32 kDOMClassInfo_##_dom_class##_interfaces =                      \
+  0;
 
-DOMCI_DATA(DOMPrototype, void)
-DOMCI_DATA(DOMConstructor, void)
+DOMCI_DATA_NO_CLASS(Crypto)
+DOMCI_DATA_NO_CLASS(CRMFObject)
+DOMCI_DATA_NO_CLASS(SmartCardEvent)
+DOMCI_DATA_NO_CLASS(ContentFrameMessageManager)
+
+DOMCI_DATA_NO_CLASS(DOMPrototype)
+DOMCI_DATA_NO_CLASS(DOMConstructor)
 
 #define NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _name, _helper,            \
                                            _flags)                            \
@@ -690,6 +699,10 @@ public:
 };
 
 } // anonymous namespace
+
+typedef nsNewDOMBindingSH<nsICanvasRenderingContextInternal>
+  nsCanvasRenderingContextSH;
+
 
 // This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
 // classes their correct behavior when used through XPConnect. The
@@ -1317,7 +1330,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(HTMLCanvasElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContext2D, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContext2D,
+                           nsCanvasRenderingContextSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CanvasGradient, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -2002,8 +2016,7 @@ WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 // nsWrapperCache.
 static inline nsresult
 WrapNativeParent(JSContext *cx, JSObject *scope, nsISupports *native,
-                                        nsWrapperCache *nativeWrapperCache,
-                                        JSObject **parentObj)
+                 nsWrapperCache *nativeWrapperCache, JSObject **parentObj)
 {
   // In the common case, |native| is a wrapper cache with an existing wrapper
 #ifdef DEBUG
@@ -2031,6 +2044,14 @@ WrapNativeParent(JSContext *cx, JSObject *scope, nsISupports *native,
   NS_ENSURE_SUCCESS(rv, rv);
   *parentObj = JSVAL_TO_OBJECT(v);
   return NS_OK;
+}
+
+template<class P>
+static inline nsresult
+WrapNativeParent(JSContext *cx, JSObject *scope, P *parent,
+                 JSObject **parentObj)
+{
+  return WrapNativeParent(cx, scope, ToSupports(parent), parent, parentObj);
 }
 
 // Helper to handle torn-down inner windows.
@@ -2118,70 +2139,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sOnload_id,          cx, "onload");
   SET_JSID_TO_STRING(sOnerror_id,         cx, "onerror");
 
-  return NS_OK;
-}
-
-static nsresult
-CreateExceptionFromResult(JSContext *cx, nsresult aResult)
-{
-  nsCOMPtr<nsIExceptionService> xs =
-    do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
-  if (!xs) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIExceptionManager> xm;
-  nsresult rv = xs->GetCurrentExceptionManager(getter_AddRefs(xm));
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIException> exception;
-  rv = xm->GetExceptionFromProvider(aResult, 0, getter_AddRefs(exception));
-  if (NS_FAILED(rv) || !exception) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JS::Value jv;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  rv = WrapNative(cx, ::JS_GetGlobalObject(cx), exception,
-                  &NS_GET_IID(nsIException), false, &jv,
-                  getter_AddRefs(holder));
-  if (NS_FAILED(rv) || jv.isNull()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JSAutoEnterCompartment ac;
-
-  if (jv.isObject()) {
-    if (!ac.enter(cx, &jv.toObject())) {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  JS_SetPendingException(cx, jv);
-  return NS_OK;
-}
-
-// static
-nsresult
-nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
-{
-  JSAutoRequest ar(cx);
-
-  if (NS_SUCCEEDED(CreateExceptionFromResult(cx, aResult))) {
-    return NS_OK;
-  }
-
-  // XXX This probably wants to be localized, but that can fail in ways that
-  // are hard to report correctly.
-  JSString *str =
-    JS_NewStringCopyZ(cx, "An error occurred throwing an exception");
-  if (!str) {
-    // JS_NewStringCopyZ reported the error for us.
-    return NS_OK; 
-  }
-  JS_SetPendingException(cx, STRING_TO_JSVAL(str));
   return NS_OK;
 }
 
@@ -6751,6 +6708,34 @@ ResolvePrototype(nsIXPConnect *aXPConnect, nsGlobalWindow *aWin, JSContext *cx,
   return NS_OK;
 }
 
+static bool
+ConstructorEnabled(const nsGlobalNameStruct *aStruct, nsGlobalWindow *aWin)
+{
+  MOZ_ASSERT(aStruct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
+             aStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfo);
+
+  // Don't expose chrome only constructors to content windows.
+  if (aStruct->mChromeOnly &&
+      !nsContentUtils::IsSystemPrincipal(aWin->GetPrincipal())) {
+    return false;
+  }
+
+  // For now don't expose web sockets unless user has explicitly enabled them
+  if (aStruct->mDOMClassInfoID == eDOMClassInfo_WebSocket_id) {
+    if (!nsWebSocket::PrefEnabled()) {
+      return false;
+    }
+  }
+
+  // For now don't expose server events unless user has explicitly enabled them
+  if (aStruct->mDOMClassInfoID == eDOMClassInfo_EventSource_id) {
+    if (!nsEventSource::PrefEnabled()) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 // static
 nsresult
@@ -6785,19 +6770,30 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
     }
   }
 
-  if (name_struct->mType == nsGlobalNameStruct::eTypeInterface) {
-    // We're resolving a name of a DOM interface for which there is no
-    // direct DOM class, create a constructor object...
-
+  if (name_struct->mType == nsGlobalNameStruct::eTypeNewDOMBinding ||
+      name_struct->mType == nsGlobalNameStruct::eTypeInterface ||
+      name_struct->mType == nsGlobalNameStruct::eTypeClassProto ||
+      name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
     // Lookup new DOM bindings.
     mozilla::dom::binding::DefineInterface define =
       name_struct->mDefineDOMInterface;
-    if (define && mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
-      *did_resolve = NS_SUCCEEDED(rv);
+    if (define) {
+      if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor &&
+          !ConstructorEnabled(name_struct, aWin)) {
+        return NS_OK;
+      }
 
-      return rv;
+      if (mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
+        *did_resolve = NS_SUCCEEDED(rv);
+
+        return rv;
+      }
     }
+  }
 
+  if (name_struct->mType == nsGlobalNameStruct::eTypeInterface) {
+    // We're resolving a name of a DOM interface for which there is no
+    // direct DOM class, create a constructor object...
     nsRefPtr<nsDOMConstructor> constructor;
     rv = nsDOMConstructor::Create(class_name,
                                   nsnull,
@@ -6832,35 +6828,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
       name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
-    // Don't expose chrome only constructors to content windows.
-    if (name_struct->mChromeOnly &&
-        !nsContentUtils::IsSystemPrincipal(aWin->GetPrincipal())) {
+    if (!ConstructorEnabled(name_struct, aWin)) {
       return NS_OK;
-    }
-
-    // For now don't expose web sockets unless user has explicitly enabled them
-    if (name_struct->mDOMClassInfoID == eDOMClassInfo_WebSocket_id) {
-      if (!nsWebSocket::PrefEnabled()) {
-        return NS_OK;
-      }
-    }
-
-    // For now don't expose server events unless user has explicitly enabled them
-    if (name_struct->mDOMClassInfoID == eDOMClassInfo_EventSource_id) {
-      if (!nsEventSource::PrefEnabled()) {
-        return NS_OK;
-      }
-    }
-
-    // Lookup new DOM bindings.
-    if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-      mozilla::dom::binding::DefineInterface define =
-        name_struct->mDefineDOMInterface;
-      if (define && mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
-        *did_resolve = NS_SUCCEEDED(rv);
-
-        return rv;
-      }
     }
 
     // Create the XPConnect prototype for our classinfo, PostCreateProto will
@@ -6894,16 +6863,6 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassProto) {
     // We don't have a XPConnect prototype object, let ResolvePrototype create
     // one.
-
-    // Lookup new DOM bindings.
-    mozilla::dom::binding::DefineInterface define =
-      name_struct->mDefineDOMInterface;
-    if (define && mozilla::dom::binding::DefineConstructor(cx, obj, define, &rv)) {
-      *did_resolve = NS_SUCCEEDED(rv);
-
-      return rv;
-    }
-
     return ResolvePrototype(sXPConnect, aWin, cx, obj, class_name, nsnull,
                             name_struct, nameSpaceManager, nsnull, true,
                             did_resolve);
@@ -7107,9 +7066,7 @@ LocationSetter(JSContext *cx, JSHandleObject obj, JSHandleId id, JSBool strict,
 {
   nsresult rv = LocationSetterGuts<Interface>(cx, obj, vp);
   if (NS_FAILED(rv)) {
-    if (!::JS_IsExceptionPending(cx)) {
-      nsDOMClassInfo::ThrowJSException(cx, rv);
-    }
+    xpc::Throw(cx, rv);
     return JS_FALSE;
   }
 
@@ -7782,9 +7739,7 @@ GetterShim(JSContext *cx, JSHandleObject obj, JSHandleId /* unused */, jsval *vp
 {
   nsresult rv = (*func)(cx, obj, vp);
   if (NS_FAILED(rv)) {
-    if (!::JS_IsExceptionPending(cx)) {
-      nsDOMClassInfo::ThrowJSException(cx, rv);
-    }
+    xpc::Throw(cx, rv);
     return JS_FALSE;
   }
 
@@ -7974,8 +7929,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // to wrap here? But that's not always reachable, let's use
   // globalObj for now...
 
-  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, native_parent,
-                                 parentObj);
+  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return node->IsInNativeAnonymousSubtree() ?
@@ -8950,7 +8904,7 @@ nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
   }
 
   if (NS_FAILED(rv)) {
-    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_FAILURE);
+    xpc::Throw(cx, NS_ERROR_FAILURE);
 
     return JS_FALSE;
   }
@@ -9002,7 +8956,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
       rv = nodeList->GetLength(&length);
 
       if (NS_FAILED(rv)) {
-        nsDOMClassInfo::ThrowJSException(cx, rv);
+        xpc::Throw(cx, rv);
 
         return JS_FALSE;
       }
@@ -9018,7 +8972,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
       result = doc->GetDocumentAllResult(str, &cache, &rv);
 
       if (NS_FAILED(rv)) {
-        nsDOMClassInfo::ThrowJSException(cx, rv);
+        xpc::Throw(cx, rv);
 
         return JS_FALSE;
       }
@@ -9046,7 +9000,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
   if (result) {
     rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), result, cache, true, vp);
     if (NS_FAILED(rv)) {
-      nsDOMClassInfo::ThrowJSException(cx, rv);
+      xpc::Throw(cx, rv);
 
       return JS_FALSE;
     }
@@ -9138,7 +9092,7 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
     // XXX: Should throw NS_ERROR_XPC_NOT_ENOUGH_ARGS for argc < 1,
     // and create a new NS_ERROR_XPC_TOO_MANY_ARGS for argc > 1? IE
     // accepts nothing other than one arg.
-    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_INVALID_ARG);
+    xpc::Throw(cx, NS_ERROR_INVALID_ARG);
 
     return JS_FALSE;
   }
@@ -9232,7 +9186,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj
       nsresult rv;
       nsCOMPtr<nsIHTMLDocument> doc = do_QueryWrapper(cx, obj, &rv);
       if (NS_FAILED(rv)) {
-        nsDOMClassInfo::ThrowJSException(cx, rv);
+        xpc::Throw(cx, rv);
 
         return JS_FALSE;
       }
@@ -9310,7 +9264,7 @@ nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
                                static_cast<nsINodeList*>(tags), tags, true,
                                &v, getter_AddRefs(holder));
       if (NS_FAILED(rv)) {
-        nsDOMClassInfo::ThrowJSException(cx, rv);
+        xpc::Throw(cx, rv);
 
         return JS_FALSE;
       }
@@ -9410,7 +9364,7 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
           // Insert the helper into our prototype chain. helper's prototype
           // is already obj's current prototype.
           if (!::JS_SetPrototype(cx, obj, helper)) {
-            nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+            xpc::Throw(cx, NS_ERROR_UNEXPECTED);
 
             return NS_ERROR_UNEXPECTED;
           }
@@ -10310,7 +10264,7 @@ nsCSSStyleDeclSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   }
 
   nsresult rv =
-    WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
+    WrapNativeParent(cx, globalObj, native_parent, parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
@@ -10925,7 +10879,7 @@ WebGLExtensionSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   WebGLContext *webgl = ext->Context();
   nsINode *node = webgl->GetParentObject();
 
-  return WrapNativeParent(cx, globalObj, node, node, parentObj);
+  return WrapNativeParent(cx, globalObj, node, parentObj);
 }
 
 nsresult
@@ -10938,15 +10892,18 @@ nsNewDOMBindingNoWrapperCacheSH::PreCreate(nsISupports *nativeObj,
   return NS_ERROR_UNEXPECTED;
 }
 
+template<class T, class BaseType>
 NS_IMETHODIMP
-nsWebGLViewportHandlerSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                                    JSObject *globalObj, JSObject **parentObj)
+nsNewDOMBindingSH<T, BaseType>::PreCreate(nsISupports *nativeObj,
+                                          JSContext *cx,
+                                          JSObject *globalObj,
+                                          JSObject **parentObj)
 {
   *parentObj = globalObj;
 
-  WebGLContext *webgl = static_cast<WebGLContext*>(
-    static_cast<nsIDOMWebGLRenderingContext*>(nativeObj));
-  nsINode *node = webgl->GetParentObject();
-
-  return WrapNativeParent(cx, globalObj, node, node, parentObj);
+  T *native = static_cast<T*>(static_cast<BaseType*>(nativeObj));
+  if (!native->GetParentObject()) {
+    return NS_OK;
+  }
+  return WrapNativeParent(cx, globalObj, native->GetParentObject(), parentObj);
 }

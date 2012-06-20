@@ -108,7 +108,7 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
         mAwesomeBar = (Button) mLayout.findViewById(R.id.awesome_bar);
         mAwesomeBar.setOnClickListener(new Button.OnClickListener() {
             public void onClick(View v) {
-                GeckoApp.mAppContext.hideTabs();
+                GeckoApp.mAppContext.autoHideTabs();
                 onAwesomeBarSearch();
             }
         });

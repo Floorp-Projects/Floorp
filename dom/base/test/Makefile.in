@@ -15,6 +15,7 @@ TEST_FILES = \
   test_domrequest.html \
   test_gsp-standards.html \
   test_gsp-quirks.html \
+  test_nondomexception.html \
   $(NULL)
 
 libs:: $(TEST_FILES)

@@ -14,13 +14,14 @@
 #include "nsInterfaceHashtable.h"
 #include "nsIAtom.h"
 #include "nsStubDocumentObserver.h"
+#include "mozilla/Attributes.h"
 
 /*
  * The implementation of the XML Events Basic profile
  */
 
 class nsXMLEventsManager;
-class nsXMLEventsListener : public nsIDOMEventListener {
+class nsXMLEventsListener MOZ_FINAL : public nsIDOMEventListener {
 public:
   static bool InitXMLEventsListener(nsIDocument * aDocument, 
                                       nsXMLEventsManager * aManager, 
@@ -57,7 +58,7 @@ private:
   
 };
 
-class nsXMLEventsManager : public nsStubDocumentObserver {
+class nsXMLEventsManager MOZ_FINAL : public nsStubDocumentObserver {
 public:
   nsXMLEventsManager();
   ~nsXMLEventsManager();

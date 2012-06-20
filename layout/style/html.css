@@ -702,13 +702,14 @@ iframe:-moz-full-screen {
 }
 
 /* media elements */
-:-moz-any(video, audio) > xul|videocontrols {
+video > xul|videocontrols, audio > xul|videocontrols {
   display: -moz-box;
   -moz-box-orient: vertical;
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#videoControls");
 }
 
-:-moz-any(video, audio):not([controls]):not(:-moz-full-screen) > xul|videocontrols {
+video:not([controls]) > xul|videocontrols,
+audio:not([controls]) > xul|videocontrols {
   visibility: hidden;
 }
 

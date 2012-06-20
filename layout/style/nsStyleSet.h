@@ -24,6 +24,7 @@
 #include "nsIStyleRule.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
+#include "mozilla/Attributes.h"
 
 class nsIURI;
 class nsCSSFontFaceRule;
@@ -32,7 +33,7 @@ class nsRuleWalker;
 struct RuleProcessorData;
 struct TreeMatchContext;
 
-class nsEmptyStyleRule : public nsIStyleRule
+class nsEmptyStyleRule MOZ_FINAL : public nsIStyleRule
 {
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
@@ -41,7 +42,7 @@ class nsEmptyStyleRule : public nsIStyleRule
 #endif
 };
 
-class nsInitialStyleRule : public nsIStyleRule
+class nsInitialStyleRule MOZ_FINAL : public nsIStyleRule
 {
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);

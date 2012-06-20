@@ -18,6 +18,9 @@
 #include "nsXPCOMGlue.h"
 #include "nsXPCOMPrivate.h"     // for MAXPATHLEN and XPCOM_DLL
 #include "nsXULAppAPI.h"
+#include "mozilla/AppData.h"
+
+using namespace mozilla;
 
 XRE_GetFileFromPathType XRE_GetFileFromPath;
 XRE_CreateAppDataType XRE_CreateAppData;
@@ -40,19 +43,6 @@ namespace {
   char profile[MAXPATHLEN];
   int* pargc;
   char*** pargv;
-
-  // Copied from toolkit/xre/nsAppData.cpp.
-  void
-  SetAllocatedString(const char *&str, const char *newvalue)
-  {
-    NS_Free(const_cast<char*>(str));
-    if (newvalue) {
-      str = NS_strdup(newvalue);
-    }
-    else {
-      str = nsnull;
-    }
-  }
 
   nsresult
   joinPath(char* const dest,
