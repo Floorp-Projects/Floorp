@@ -1389,14 +1389,8 @@ JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
-    GlobalObject *global = target->getGlobalObjectOrNull();
-    if (!global) {
-        SwitchToCompartment sc(cx, target->compartment());
-        global = GlobalObject::create(cx, &dummy_class);
-        if (!global)
-            return NULL;
-    }
-    return JS_EnterCrossCompartmentCall(cx, global);
+    GlobalObject &global = target->compartment()->global();
+    return JS_EnterCrossCompartmentCall(cx, &global);
 }
 
 JS_PUBLIC_API(JSCrossCompartmentCall *)

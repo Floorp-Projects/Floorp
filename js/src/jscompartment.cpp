@@ -40,6 +40,7 @@ using namespace js::gc;
 JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),
     principals(NULL),
+    global_(NULL),
     needsBarrier_(false),
     gcState(NoGCScheduled),
     gcPreserveCode(false),
