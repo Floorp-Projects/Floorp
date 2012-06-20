@@ -50,18 +50,6 @@ MakeSchemaVersion(PRUint32 aMajorSchemaVersion,
 const PRInt32 kSQLiteSchemaVersion = PRInt32((kMajorSchemaVersion << 4) +
                                              kMinorSchemaVersion);
 
-inline
-PRUint32 GetMajorSchemaVersion(PRInt32 aSchemaVersion)
-{
-  return PRUint32(aSchemaVersion) >> 4;
-}
-
-inline
-PRUint32 GetMinorSchemaVersion(PRInt32 aSchemaVersion)
-{
-  return PRUint32(aSchemaVersion) & 0xF;
-}
-
 nsresult
 GetDatabaseFilename(const nsAString& aName,
                     nsAString& aDatabaseFilename)

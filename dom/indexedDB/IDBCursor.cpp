@@ -64,15 +64,6 @@ private:
   IndexedDBCursorRequestChild* mActor;
 };
 
-inline
-already_AddRefed<IDBRequest>
-GenerateRequest(IDBCursor* aCursor)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  IDBDatabase* database = aCursor->Transaction()->Database();
-  return IDBRequest::Create(aCursor, database, aCursor->Transaction());
-}
-
 } // anonymous namespace
 
 BEGIN_INDEXEDDB_NAMESPACE

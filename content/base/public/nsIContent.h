@@ -65,6 +65,7 @@ public:
   {
     NS_ASSERTION(mNodeInfo,
                  "No nsINodeInfo passed to nsIContent, PREPARE TO CRASH!!!");
+    SetNodeIsContent();
   }
 #endif // MOZILLA_INTERNAL_API
 

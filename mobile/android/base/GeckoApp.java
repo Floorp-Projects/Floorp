@@ -77,7 +77,7 @@ abstract public class GeckoApp
 
     public static final String ACTION_ALERT_CLICK   = "org.mozilla.gecko.ACTION_ALERT_CLICK";
     public static final String ACTION_ALERT_CLEAR   = "org.mozilla.gecko.ACTION_ALERT_CLEAR";
-    public static final String ACTION_WEBAPP        = "org.mozilla.gecko.WEBAPP";
+    public static final String ACTION_WEBAPP_PREFIX = "org.mozilla.gecko.WEBAPP";
     public static final String ACTION_DEBUG         = "org.mozilla.gecko.DEBUG";
     public static final String ACTION_BOOKMARK      = "org.mozilla.gecko.BOOKMARK";
     public static final String ACTION_LOAD          = "org.mozilla.gecko.LOAD";
@@ -133,6 +133,9 @@ abstract public class GeckoApp
     private AwesomebarResultHandler mAwesomebarResultHandler = new AwesomebarResultHandler();
     private CameraImageResultHandler mCameraImageResultHandler = new CameraImageResultHandler();
     private CameraVideoResultHandler mCameraVideoResultHandler = new CameraVideoResultHandler();
+
+    abstract public int getLayout();
+    abstract protected String getDefaultProfileName();
 
     public static boolean checkLaunchState(LaunchState checkState) {
         synchronized(sLaunchState) {
@@ -495,53 +498,25 @@ abstract public class GeckoApp
         if (aMenu == null)
             return false;
 
-        if (!sIsGeckoReady)
-            aMenu.findItem(R.id.settings).setEnabled(false);
+        int ids[] = {
+            R.id.reload,
+            R.id.settings,
+            R.id.bookmark,
+            R.id.forward,
+            R.id.save_as_pdf,
+            R.id.share,
+            R.id.char_encoding,
+            R.id.find_in_page,
+            R.id.addons,
+            R.id.downloads,
+            R.id.site_settings
+        };
 
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        MenuItem bookmark = aMenu.findItem(R.id.bookmark);
-        MenuItem forward = aMenu.findItem(R.id.forward);
-        MenuItem share = aMenu.findItem(R.id.share);
-        MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
-        MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
-        MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
-
-        if (tab == null || tab.getURL() == null) {
-            bookmark.setEnabled(false);
-            forward.setEnabled(false);
-            share.setEnabled(false);
-            saveAsPDF.setEnabled(false);
-            findInPage.setEnabled(false);
-            return true;
+        for (int id : ids) {
+            if (aMenu.findItem(id) == null)
+                continue;
+            aMenu.findItem(id).setVisible(false);
         }
-
-        bookmark.setEnabled(true);
-        bookmark.setCheckable(true);
-        
-        if (tab.isBookmark()) {
-            bookmark.setChecked(true);
-            bookmark.setIcon(R.drawable.ic_menu_bookmark_remove);
-        } else {
-            bookmark.setChecked(false);
-            bookmark.setIcon(R.drawable.ic_menu_bookmark_add);
-        }
-
-        forward.setEnabled(tab.canDoForward());
-
-        // Disable share menuitem for about:, chrome:, file:, and resource: URIs
-        String scheme = Uri.parse(tab.getURL()).getScheme();
-        share.setEnabled(!(scheme.equals("about") || scheme.equals("chrome") ||
-                           scheme.equals("file") || scheme.equals("resource")));
-
-        // Disable save as PDF for about:home and xul pages
-        saveAsPDF.setEnabled(!(tab.getURL().equals("about:home") ||
-                               tab.getContentType().equals("application/vnd.mozilla.xul+xml")));
-
-        // Disable find in page for about:home, since it won't work on Java content
-        if (!tab.getURL().equals("about:home"))
-            findInPage.setEnabled(true);
-
-        charEncoding.setVisible(GeckoPreferences.getCharEncodingState());
 
         return true;
     }
@@ -857,10 +832,6 @@ abstract public class GeckoApp
     }
 
     void handlePageShow(final int tabId) { }
-
-    private String getDefaultProfileName() {
-        return "default";
-    }
 
     void handleClearHistory() { }
 
@@ -1189,9 +1160,27 @@ abstract public class GeckoApp
                 updateAccessibilitySettings();
             } else if (event.equals("Shortcut:Remove")) {
                 final String url = message.getString("url");
+                final String origin = message.getString("origin");
                 final String title = message.getString("title");
                 final String type = message.getString("shortcutType");
-                GeckoAppShell.removeShortcut(title, url, type);
+                GeckoAppShell.removeShortcut(title, url, origin, type);
+            } else if (event.equals("WebApps:Open")) {
+                String url = message.getString("uri");
+                String origin = message.getString("origin");
+                Intent intent = GeckoAppShell.getWebAppIntent(url, origin, false);
+                if (intent == null)
+                    return;
+                Log.i(LOGTAG, "Open " + url + " (" + origin + ")");
+                startActivity(intent);
+            } else if (event.equals("WebApps:Install")) {
+                String name = message.getString("name");
+                String launchPath = message.getString("launchPath");
+                String iconURL = message.getString("iconURL");
+                String uniqueURI = message.getString("uniqueURI");
+                GeckoAppShell.createShortcut(name, launchPath, uniqueURI, iconURL, "webapp");
+            } else if (event.equals("WebApps:Uninstall")) {
+                String uniqueURI = message.getString("uniqueURI");
+                GeckoAppShell.uninstallWebApp(uniqueURI);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1698,7 +1687,7 @@ abstract public class GeckoApp
 
         mOrientation = getResources().getConfiguration().orientation;
 
-        setContentView(R.layout.gecko_app);
+        setContentView(getLayout());
 
         // setup gecko layout
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
@@ -1862,6 +1851,9 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Accessibility:Ready", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("Shortcut:Remove", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("WebApps:Open", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("WebApps:Install", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2065,10 +2057,10 @@ abstract public class GeckoApp
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
             Log.i(LOGTAG,"onNewIntent: " + uri);
         }
-        else if (ACTION_WEBAPP.equals(action)) {
+        else if (action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) {
             String uri = getURIFromIntent(intent);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createWebappLoadEvent(uri));
-            Log.i(LOGTAG,"Intent : WEBAPP - " + uri);
+            Log.i(LOGTAG,"Intent : WEBAPP (" + action + ") - " + uri);
         }
         else if (ACTION_BOOKMARK.equals(action)) {
             String uri = getURIFromIntent(intent);
@@ -2087,7 +2079,7 @@ abstract public class GeckoApp
             return uri;
 
         final String action = intent.getAction();
-        if (ACTION_WEBAPP.equals(action) || ACTION_BOOKMARK.equals(action)) {
+        if (action.startsWith(ACTION_WEBAPP_PREFIX) || ACTION_BOOKMARK.equals(action)) {
             uri = intent.getStringExtra("args");
             if (uri != null && uri.startsWith("--url=")) {
                 uri.replace("--url=", "");
@@ -2201,6 +2193,9 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("Accessibility:Event", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Accessibility:Ready", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("Shortcut:Remove", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("WebApps:Open", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("WebApps:Install", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
 
         if (mFavicons != null)
             mFavicons.close();
@@ -2692,7 +2687,7 @@ abstract public class GeckoApp
 
     @Override
     public void onBackPressed() {
-        if (mTabsPanel != null && mTabsPanel.isShown()) {
+        if (mTabsPanel != null && mTabsPanel.isShown() && !isTablet()) {
             mTabsPanel.hide();
             return;
         }
@@ -3118,7 +3113,7 @@ abstract public class GeckoApp
                     String title = tab.getTitle();
                     BitmapDrawable favicon = (BitmapDrawable)(tab.getFavicon());
                     if (url != null && title != null) {
-                        GeckoAppShell.createShortcut(title, url, favicon == null ? null : favicon.getBitmap(), "");
+                        GeckoAppShell.createShortcut(title, url, url, favicon == null ? null : favicon.getBitmap(), "");
                     }
                 }
                 return true;

@@ -105,22 +105,40 @@
 extern "C" {
 #endif
 
-#if defined(WIN32)
+/*
+ * MOZ_CRASH crashes the program, plain and simple, in a Breakpad-compatible
+ * way, in both debug and release builds.
+ *
+ * MOZ_CRASH is a good solution for "handling" failure cases when you're
+ * unwilling or unable to handle them more cleanly -- for OOM, for likely memory
+ * corruption, and so on.  It's also a good solution if you need safe behavior
+ * in release builds as well as debug builds.  But if the failure is one that
+ * should be debugged and fixed, MOZ_ASSERT is generally preferable.
+ */
+#if defined(_MSC_VER)
    /*
-    * We used to call DebugBreak() on Windows, but amazingly, it causes
-    * the MSVS 2010 debugger not to be able to recover a call stack.
+    * On MSVC use the __debugbreak compiler intrinsic, which produces an inline
+    * (not nested in a system function) breakpoint.  This distinctively invokes
+    * Breakpad without requiring system library symbols on all stack-processing
+    * machines, as a nested breakpoint would require.  (Technically all Windows
+    * compilers would require this, but practically only MSVC matters.)
     */
-#  define MOZ_CRASH() \
-     do { \
-       *((volatile int*) NULL) = 123; \
-       exit(3); \
-     } while (0)
-#elif defined(ANDROID)
-   /*
-    * On Android, raise(SIGABRT) is handled asynchronously. Seg fault now
-    * so we crash immediately and capture the current call stack. We need
-    * to specifically use the global namespace in the C++ case.
-    */
+#  ifdef __cplusplus
+#    define MOZ_CRASH() \
+       do { \
+         __debugbreak(); \
+         *((volatile int*) NULL) = 123; \
+         ::exit(3); \
+       } while (0)
+#  else
+#    define MOZ_CRASH() \
+       do { \
+         __debugbreak(); \
+         *((volatile int*) NULL) = 123; \
+         exit(3); \
+       } while (0)
+#  endif
+#else
 #  ifdef __cplusplus
 #    define MOZ_CRASH() \
        do { \
@@ -134,20 +152,18 @@ extern "C" {
          abort(); \
        } while (0)
 #  endif
-#else
-#  define MOZ_CRASH() \
-     do { \
-       *((volatile int*) NULL) = 123; \
-       raise(SIGABRT);  /* In case above statement gets nixed by the optimizer. */ \
-     } while (0)
 #endif
 
-
-extern MFBT_API(void)
-MOZ_Assert(const char* s, const char* file, int ln);
-
+/*
+ * Prints |s| as an assertion failure (using file and ln as the location of the
+ * assertion) to the standard debug-output channel.
+ *
+ * Usually you should use MOZ_ASSERT instead of this method.  This method is
+ * primarily for internal use in this header, and only secondarily for use in
+ * implementing release-build assertions.
+ */
 static MOZ_ALWAYS_INLINE void
-MOZ_OutputAssertMessage(const char* s, const char *file, int ln)
+MOZ_ReportAssertionFailure(const char* s, const char* file, int ln)
 {
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert",
@@ -199,7 +215,7 @@ MOZ_OutputAssertMessage(const char* s, const char *file, int ln)
 #  define MOZ_ASSERT_HELPER1(expr) \
      do { \
        if (!(expr)) { \
-         MOZ_OutputAssertMessage(#expr, __FILE__, __LINE__); \
+         MOZ_ReportAssertionFailure(#expr, __FILE__, __LINE__); \
          MOZ_CRASH(); \
        } \
      } while (0)
@@ -207,7 +223,7 @@ MOZ_OutputAssertMessage(const char* s, const char *file, int ln)
 #  define MOZ_ASSERT_HELPER2(expr, explain) \
      do { \
        if (!(expr)) { \
-         MOZ_OutputAssertMessage(#expr " (" explain ")", __FILE__, __LINE__); \
+         MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
          MOZ_CRASH(); \
        } \
      } while (0)
@@ -258,19 +274,38 @@ MOZ_OutputAssertMessage(const char* s, const char *file, int ln)
 #  define MOZ_ASSERT_IF(cond, expr)  do { } while (0)
 #endif
 
-/* MOZ_NOT_REACHED_MARKER() expands (in compilers which support it) to an
- * expression which states that it is undefined behavior for the compiler to
- * reach this point. Most code should probably use the higher level
- * MOZ_NOT_REACHED (which expands to this when appropriate).
+/*
+ * MOZ_NOT_REACHED_MARKER() expands to an expression which states that it is
+ * undefined behavior for execution to reach this point.  No guarantees are made
+ * about what will happen if this is reached at runtime.  Most code should
+ * probably use the higher level MOZ_NOT_REACHED, which uses this when
+ * appropriate.
  */
 #if defined(__clang__)
 #  define MOZ_NOT_REACHED_MARKER() __builtin_unreachable()
 #elif defined(__GNUC__)
+   /*
+    * __builtin_unreachable() was implemented in gcc 4.5.  If we don't have
+    * that, call a noreturn function; abort() will do nicely.  Qualify the call
+    * in C++ in case there's another abort() visible in local scope.
+    */
 #  if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5)
 #    define MOZ_NOT_REACHED_MARKER() __builtin_unreachable()
+#  else
+#    ifdef __cplusplus
+#      define MOZ_NOT_REACHED_MARKER() ::abort()
+#    else
+#      define MOZ_NOT_REACHED_MARKER() abort()
+#    endif
 #  endif
 #elif defined(_MSC_VER)
 #  define MOZ_NOT_REACHED_MARKER() __assume(0)
+#else
+#  ifdef __cplusplus
+#    define MOZ_NOT_REACHED_MARKER() ::abort()
+#  else
+#    define MOZ_NOT_REACHED_MARKER() abort()
+#  endif
 #endif
 
 /*
@@ -290,39 +325,14 @@ MOZ_OutputAssertMessage(const char* s, const char *file, int ln)
  *       MOZ_NOT_REACHED("boolean literal that's not true or false?");
  *   }
  */
-#if defined(MOZ_NOT_REACHED_MARKER)
-#  if defined(DEBUG)
-#    define MOZ_NOT_REACHED(reason)  do { \
-                                       MOZ_Assert(reason, __FILE__, __LINE__); \
-                                       MOZ_NOT_REACHED_MARKER();        \
-                                     } while (0)
-#  else
-#    define MOZ_NOT_REACHED(reason)  MOZ_NOT_REACHED_MARKER()
-#  endif
+#if defined(DEBUG)
+#  define MOZ_NOT_REACHED(reason) \
+     do { \
+       MOZ_ASSERT(false, reason); \
+       MOZ_NOT_REACHED_MARKER(); \
+     } while (0)
 #else
-#  if defined(__GNUC__)
-     /*
-      * On older versions of gcc we need to call a noreturn function to mark the
-      * code as unreachable. Since what we want is an unreachable version of
-      * MOZ_Assert, we use an asm label
-      * (http://gcc.gnu.org/onlinedocs/gcc-4.6.2/gcc/Asm-Labels.html) to create
-      * a new declaration to the same symbol. MOZ_ASSERT_NR should only be
-      * used via this macro, as it is a very specific hack to older versions of
-      * gcc.
-      */
-#    define MOZ_GETASMPREFIX2(X) #X
-#    define MOZ_GETASMPREFIX(X) MOZ_GETASMPREFIX2(X)
-#    define MOZ_ASMPREFIX MOZ_GETASMPREFIX(__USER_LABEL_PREFIX__)
-     extern MOZ_NORETURN MFBT_API(void)
-     MOZ_ASSERT_NR(const char* s, const char* file, int ln) \
-       asm (MOZ_ASMPREFIX "MOZ_Assert");
-
-#    define MOZ_NOT_REACHED(reason)    MOZ_ASSERT_NR(reason, __FILE__, __LINE__)
-#  elif defined(DEBUG)
-#    define MOZ_NOT_REACHED(reason)    MOZ_Assert(reason, __FILE__, __LINE__)
-#  else
-#    define MOZ_NOT_REACHED(reason)    ((void)0)
-#  endif
+#  define MOZ_NOT_REACHED(reason)  MOZ_NOT_REACHED_MARKER()
 #endif
 
 /*

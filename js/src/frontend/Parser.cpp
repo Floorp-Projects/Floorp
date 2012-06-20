@@ -6617,9 +6617,6 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
 
       case TOK_LB:
       {
-        JSBool matched;
-        unsigned index;
-
         pn = ListNode::create(PNK_RB, this);
         if (!pn)
             return NULL;
@@ -6629,11 +6626,16 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
 #if JS_HAS_GENERATORS
         pn->pn_blockid = tc->sc->blockidGen;
 #endif
-
-        matched = tokenStream.matchToken(TOK_RB, TSF_OPERAND);
-        if (!matched) {
+        if (tokenStream.matchToken(TOK_RB, TSF_OPERAND)) {
+            /*
+             * Mark empty arrays as non-constant, since we cannot easily
+             * determine their type.
+             */
+            pn->pn_xflags |= PNX_NONCONST;
+        } else {
             bool spread = false;
-            for (index = 0; ; index++) {
+            unsigned index = 0;
+            for (; ; index++) {
                 if (index == StackSpace::ARGS_LENGTH_MAX) {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARRAY_INIT_TOO_BIG);
                     return NULL;
