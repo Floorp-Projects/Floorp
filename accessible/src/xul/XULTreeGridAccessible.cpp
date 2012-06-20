@@ -56,70 +56,33 @@ XULTreeGridAccessible::RowCount()
   return rowCount >= 0 ? rowCount : 0;
 }
 
-NS_IMETHODIMP
-XULTreeGridAccessible::GetSelectedCellCount(PRUint32* aCount)
+PRUint32
+XULTreeGridAccessible::SelectedCellCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
-  PRUint32 selectedrowCount = 0;
-  nsresult rv = GetSelectedRowCount(&selectedrowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 columnCount = 0;
-  rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aCount = selectedrowCount * columnCount;
-  return NS_OK;
+  return SelectedRowCount() * ColCount();
 }
 
-NS_IMETHODIMP
-XULTreeGridAccessible::GetSelectedColumnCount(PRUint32* aCount)
+PRUint32
+XULTreeGridAccessible::SelectedColCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   // If all the row has been selected, then all the columns are selected,
   // because we can't select a column alone.
 
-  PRInt32 rowCount = 0;
-  nsresult rv = GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 selectedRowCount = 0;
+  nsresult rv = GetSelectionCount(&selectedRowCount);
+  NS_ENSURE_SUCCESS(rv, 0);
 
-  PRInt32 selectedrowCount = 0;
-  rv = GetSelectionCount(&selectedrowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (rowCount == selectedrowCount) {
-    PRInt32 columnCount = 0;
-    rv = GetColumnCount(&columnCount);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *aCount = columnCount;
-  }
-
-  return NS_OK;
+  return selectedRowCount > 0 && selectedRowCount == RowCount() ? ColCount() : 0;
 }
 
-NS_IMETHODIMP
-XULTreeGridAccessible::GetSelectedRowCount(PRUint32* aCount)
+PRUint32
+XULTreeGridAccessible::SelectedRowCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
+  PRInt32 selectedRowCount = 0;
+  nsresult rv = GetSelectionCount(&selectedRowCount);
+  NS_ENSURE_SUCCESS(rv, 0);
 
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  PRInt32 selectedrowCount = 0;
-  nsresult rv = GetSelectionCount(&selectedrowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aCount = selectedrowCount;
-  return NS_OK;
+  return selectedRowCount >= 0 ? selectedRowCount : 0;
 }
 
 NS_IMETHODIMP

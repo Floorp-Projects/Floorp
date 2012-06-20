@@ -38,6 +38,9 @@ public:
   virtual bool IsColSelected(PRUint32 aColIdx);
   virtual bool IsRowSelected(PRUint32 aRowIdx);
   virtual bool IsCellSelected(PRUint32 aRowIdx, PRUint32 aColIdx);
+  virtual PRUint32 SelectedCellCount();
+  virtual PRUint32 SelectedColCount();
+  virtual PRUint32 SelectedRowCount();
   virtual void SelectRow(PRUint32 aRowIdx);
   virtual void UnselectRow(PRUint32 aRowIdx);
 
