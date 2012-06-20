@@ -6,10 +6,6 @@
 %include downloads.css
 %undef WINSTRIPE_AERO
 
-#downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent > .panel-inner-arrowcontent {
-  padding: 0;
-}
-
 @media (-moz-windows-default-theme) {
   #downloadsPanel[hasdownloads] > #downloadsHistory {
     background-color: #f1f5fb;

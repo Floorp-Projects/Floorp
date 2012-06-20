@@ -5,6 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIDOMMozMobileConnectionInfo;
+interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMDOMRequest;
 interface nsIDOMWindow;
 
@@ -18,8 +19,12 @@ interface nsIMobileConnectionProvider : nsISupports
   readonly attribute DOMString cardState;
   readonly attribute nsIDOMMozMobileConnectionInfo voiceConnectionInfo;
   readonly attribute nsIDOMMozMobileConnectionInfo dataConnectionInfo;
+  readonly attribute DOMString networkSelectionMode;
 
   nsIDOMDOMRequest getNetworks(in nsIDOMWindow window);
+  nsIDOMDOMRequest selectNetwork(in nsIDOMWindow window, in nsIDOMMozMobileNetworkInfo network);
+  nsIDOMDOMRequest selectNetworkAutomatically(in nsIDOMWindow window);
+
   nsIDOMDOMRequest getCardLock(in nsIDOMWindow window, in DOMString lockType);
   nsIDOMDOMRequest unlockCardLock(in nsIDOMWindow window, in jsval info);
   nsIDOMDOMRequest setCardLock(in nsIDOMWindow window, in jsval info);

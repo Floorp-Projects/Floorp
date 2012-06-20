@@ -595,9 +595,8 @@ protected:
      * Gets the pres shell from either the canvas element or the doc shell
      */
     nsIPresShell *GetPresShell() {
-      nsCOMPtr<nsIContent> content = do_QueryObject(mCanvasElement);
-      if (content) {
-        return content->OwnerDoc()->GetShell();
+      if (mCanvasElement) {
+        return mCanvasElement->OwnerDoc()->GetShell();
       }
       if (mDocShell) {
         nsCOMPtr<nsIPresShell> shell;
@@ -772,7 +771,8 @@ DOMCI_DATA(CanvasRenderingContext2D, nsCanvasRenderingContext2D)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCanvasRenderingContext2D)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports,
+                                   nsICanvasRenderingContextInternal)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CanvasRenderingContext2D)
 NS_INTERFACE_MAP_END
 
@@ -1177,10 +1177,9 @@ nsCanvasRenderingContext2D::EnsureSurface()
         gfxASurface::gfxImageFormat format = GetImageFormat();
 
         if (!PR_GetEnv("MOZ_CANVAS_IMAGE_SURFACE")) {
-            nsCOMPtr<nsIContent> content = do_QueryObject(mCanvasElement);
             nsIDocument* ownerDoc = nsnull;
-            if (content)
-                ownerDoc = content->OwnerDoc();
+            if (mCanvasElement)
+                ownerDoc = mCanvasElement->OwnerDoc();
             nsRefPtr<LayerManager> layerManager = nsnull;
 
             if (ownerDoc)

@@ -634,6 +634,11 @@ class IDLDictionary(IDLObjectWithScope):
 
         for member in self.members:
             member.resolve(self)
+            if not member.type.isComplete():
+                type = member.type.complete(scope)
+                assert not isinstance(type, IDLUnresolvedType)
+                assert not isinstance(type.name, IDLUnresolvedIdentifier)
+                member.type = type
 
         # Members of a dictionary are sorted in lexicographic order
         self.members.sort(cmp=cmp, key=lambda x: x.identifier.name)

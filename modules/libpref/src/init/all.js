@@ -253,10 +253,6 @@ pref("accessibility.browsewithcaret_shortcut.enabled", true);
 pref("accessibility.tabfocus", 7);
 pref("accessibility.tabfocus_applies_to_xul", false);
 
-// Forcibly disable a11y on win32, even if something attempts
-// to enable it.
-pref("accessibility.win32.force_disabled", false);
-
 // On OS X, we follow the "Click in the scrollbar to:" system preference
 // unless this preference was set manually
 pref("ui.scrollToClick", 0);
@@ -265,6 +261,19 @@ pref("ui.scrollToClick", 0);
 // Only on mac tabfocus is expected to handle UI widgets as well as web content
 pref("accessibility.tabfocus_applies_to_xul", true);
 #endif
+
+// We want the ability to forcibly disable platform a11y, because
+// some non-a11y-related components attempt to bring it up.  See bug
+// 538530 for details about Windows; we have a pref here that allows it
+// to be disabled for performance and testing resons.
+// See bug 761589 for the crossplatform aspect.
+//
+// This pref is checked only once, and the browser needs a restart to
+// pick up any changes.
+//
+// Values are -1 always on. 1 always off, 0 is auto as some platform perform
+// further checks.
+pref("accessibility.force_disabled", 0);
 
 pref("focusmanager.testmode", false);
 

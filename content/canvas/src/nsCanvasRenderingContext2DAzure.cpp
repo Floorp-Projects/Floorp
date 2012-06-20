@@ -89,6 +89,8 @@
 #include "mozilla/ipc/PDocumentRendererParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
+#include "nsCCUncollectableMarker.h"
+#include "nsWrapperCacheInlines.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -364,7 +366,8 @@ static const Float SIGMA_MAX = 100;
  **/
 class nsCanvasRenderingContext2DAzure :
   public nsIDOMCanvasRenderingContext2D,
-  public nsICanvasRenderingContextInternal
+  public nsICanvasRenderingContextInternal,
+  public nsWrapperCache
 {
 public:
   nsCanvasRenderingContext2DAzure();
@@ -405,7 +408,8 @@ public:
   // nsISupports interface + CC
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsCanvasRenderingContext2DAzure, nsIDOMCanvasRenderingContext2D)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(
+    nsCanvasRenderingContext2DAzure, nsIDOMCanvasRenderingContext2D)
 
   // nsIDOMCanvasRenderingContext2D interface
   NS_DECL_NSIDOMCANVASRENDERINGCONTEXT2D
@@ -586,9 +590,8 @@ protected:
     * Gets the pres shell from either the canvas element or the doc shell
     */
   nsIPresShell *GetPresShell() {
-    nsCOMPtr<nsIContent> content = do_QueryObject(mCanvasElement);
-    if (content) {
-      return content->OwnerDoc()->GetShell();
+    if (mCanvasElement) {
+      return mCanvasElement->OwnerDoc()->GetShell();
     }
     if (mDocShell) {
       nsCOMPtr<nsIPresShell> shell;
@@ -938,18 +941,46 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCanvasRenderingContext2DAzure)
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCanvasRenderingContext2DAzure)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCanvasRenderingContext2DAzure)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCanvasElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsCanvasRenderingContext2DAzure)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCanvasRenderingContext2DAzure)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mCanvasElement, nsINode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsCanvasRenderingContext2DAzure)
+ if (nsCCUncollectableMarker::sGeneration && tmp->IsBlack()) {
+    nsGenericElement* canvasElement = tmp->mCanvasElement;
+    if (canvasElement) {
+      if (canvasElement->IsPurple()) {
+        canvasElement->RemovePurple();
+      }
+      nsGenericElement::MarkNodeChildren(canvasElement);
+    }
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsCanvasRenderingContext2DAzure)
+  return nsCCUncollectableMarker::sGeneration && tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsCanvasRenderingContext2DAzure)
+  return nsCCUncollectableMarker::sGeneration && tmp->IsBlack();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 // XXX
 // DOMCI_DATA(CanvasRenderingContext2D, nsCanvasRenderingContext2DAzure)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCanvasRenderingContext2DAzure)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMCanvasRenderingContext2D)
   NS_INTERFACE_MAP_ENTRY(nsICanvasRenderingContextInternal)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCanvasRenderingContext2D)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports,
+                                   nsICanvasRenderingContextInternal)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CanvasRenderingContext2D)
 NS_INTERFACE_MAP_END
 
@@ -1241,10 +1272,9 @@ nsCanvasRenderingContext2DAzure::SetDimensions(PRInt32 width, PRInt32 height)
   if (size.width <= 0xFFFF && size.height <= 0xFFFF &&
       size.width >= 0 && size.height >= 0) {
     SurfaceFormat format = GetSurfaceFormat();
-    nsCOMPtr<nsIContent> content = do_QueryObject(mCanvasElement);
     nsIDocument* ownerDoc = nsnull;
-    if (content) {
-      ownerDoc = content->OwnerDoc();
+    if (mCanvasElement) {
+      ownerDoc = mCanvasElement->OwnerDoc();
     }
 
     nsRefPtr<LayerManager> layerManager = nsnull;

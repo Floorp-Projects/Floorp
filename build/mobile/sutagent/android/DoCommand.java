@@ -169,6 +169,7 @@ public class DoCommand {
         TZGET ("tzget"),
         TZSET ("tzset"),
         ADB ("adb"),
+        CHMOD ("chmod"),
         UNKNOWN ("unknown");
 
         private final String theCmd;
@@ -730,6 +731,13 @@ public class DoCommand {
 
             case ZIP:
                 strReturn = Zip(Argv[1], (Argc == 3 ? Argv[2] : ""));
+                break;
+
+            case CHMOD:
+                if (Argc == 2)
+                    strReturn = ChmodDir(Argv[1]);
+                else
+                    strReturn = sErrorPrefix + "Wrong number of arguments for chmod command!";
                 break;
 
             case HELP:
@@ -1910,14 +1918,6 @@ private void CancelNotification()
             if (dstFile != null) {
                 dstFile.flush();
                 dstFile.close();
-                // set the new file's permissions to rwxrwxrwx, if possible
-                Process pProc = Runtime.getRuntime().exec("chmod 777 "+sTmpFileName);
-                RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
-                outThrd.start();
-                try {
-                    outThrd.join(5000);
-                } catch (InterruptedException e) {
-                }
             }
 
             if (lRead == lSize)    {
@@ -2258,18 +2258,6 @@ private void CancelNotification()
             File dir = new File(sTmpDir);
 
             if (dir.mkdirs()) {
-                // set the new dir's permissions to rwxrwxrwx, if possible
-                try {
-                    Process pProc = Runtime.getRuntime().exec("chmod 777 "+sTmpDir);
-                    RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
-                    outThrd.start();
-                    try {
-                        outThrd.join(5000);
-                    } catch (InterruptedException e) {
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 sRet = sDir + " successfully created";
             }
         }
@@ -3672,6 +3660,63 @@ private void CancelNotification()
         return (sRet);
         }
 
+    public String ChmodDir(String sDir)
+        {
+        String sRet = "";
+        int nFiles = 0;
+        String sSubDir = null;
+        String sTmpDir = fixFileName(sDir);
+
+        File dir = new File(sTmpDir);
+
+        if (dir.isDirectory()) {
+            sRet = "Changing permissions for " + sTmpDir;
+
+            File [] files = dir.listFiles();
+            if (files != null) {
+                if ((nFiles = files.length) > 0) {
+                    for (int lcv = 0; lcv < nFiles; lcv++) {
+                        if (files[lcv].isDirectory()) {
+                            sSubDir = files[lcv].getAbsolutePath();
+                            sRet += "\n" + ChmodDir(sSubDir);
+                        }
+                        else {
+                            // set the new file's permissions to rwxrwxrwx, if possible
+                            try {
+                                Process pProc = Runtime.getRuntime().exec("chmod 777 "+files[lcv]);
+                                RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
+                                outThrd.start();
+                                outThrd.join(5000);
+                                sRet += "\n\tchmod " + files[lcv].getName() + " ok";
+                            } catch (InterruptedException e) {
+                                sRet += "\n\ttimeout waiting for chmod " + files[lcv].getName();
+                            } catch (IOException e) {
+                                sRet += "\n\tunable to chmod " + files[lcv].getName();
+                            }
+                        }
+                    }
+                }
+                else
+                    sRet += "\n\t<empty>";
+                }
+            }
+
+        // set the new directory's (or file's) permissions to rwxrwxrwx, if possible
+        try {
+            Process pProc = Runtime.getRuntime().exec("chmod 777 "+sTmpDir);
+            RedirOutputThread outThrd = new RedirOutputThread(pProc, null);
+            outThrd.start();
+            outThrd.join(5000);
+            sRet += "\n\tchmod " + sTmpDir + " ok";
+        } catch (InterruptedException e) {
+            sRet += "\n\ttimeout waiting for chmod " + sTmpDir;
+        } catch (IOException e) {
+            sRet += "\n\tunable to chmod " + sTmpDir;
+        }
+
+        return(sRet);
+        }
+
     private String PrintUsage()
         {
         String sRet =
@@ -3706,6 +3751,7 @@ private void CancelNotification()
             "mkdr directory               - create directory\n" +
             "dirw directory               - tests whether the directory is writable\n" +
             "isdir directory              - test whether the directory exists\n" +
+            "chmod directory|file         - change permissions of directory and contents (or file) to 777\n" +
             "stat processid               - stat process\n" +
             "dead processid               - print whether the process is alive or hung\n" +
             "mems                         - dump memory stats\n" +

@@ -95,7 +95,7 @@ nsTransactionStack::DoTraverse(nsCycleCollectionTraversalCallback &cb)
       static_cast<nsTransactionItem*>(mQue.ObjectAt(i));
     if (item) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "transaction stack mQue[i]");
-      cb.NoteNativeChild(item, &NS_CYCLE_COLLECTION_NAME(nsTransactionItem));
+      cb.NoteNativeChild(item, NS_CYCLE_COLLECTION_PARTICIPANT(nsTransactionItem));
     }
   }
 }

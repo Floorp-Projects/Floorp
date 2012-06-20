@@ -15,6 +15,7 @@
 #include "nsSVGLength2.h"
 #include "nsSVGViewBox.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
+#include "mozilla/Attributes.h"
 
 class nsSVGOrientType
 {
@@ -46,7 +47,7 @@ private:
   nsSVGEnumValue mAnimVal;
   nsSVGEnumValue mBaseVal;
 
-  struct DOMAnimatedEnum : public nsIDOMSVGAnimatedEnumeration
+  struct DOMAnimatedEnum MOZ_FINAL : public nsIDOMSVGAnimatedEnumeration
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedEnum)

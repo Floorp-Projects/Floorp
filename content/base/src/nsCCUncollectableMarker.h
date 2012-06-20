@@ -5,10 +5,11 @@
 
 #include "nsIObserver.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 
 struct JSTracer;
 
-class nsCCUncollectableMarker : public nsIObserver
+class nsCCUncollectableMarker MOZ_FINAL : public nsIObserver
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
