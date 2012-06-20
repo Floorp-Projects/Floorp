@@ -138,6 +138,7 @@
       ['OS=="win"', {
         'defines': [
           'WEBRTC_WIN',
+	  'WEBRTC_EXPORT',
         ],
         # TODO(andrew): enable all warnings when possible.
         # 4389: Signed/unsigned mismatch.
