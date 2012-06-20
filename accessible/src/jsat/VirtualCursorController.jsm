@@ -11,8 +11,8 @@ const Cr = Components.results;
 
 var EXPORTED_SYMBOLS = ['VirtualCursorController'];
 
+Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
 
 var gAccRetrieval = Cc['@mozilla.org/accessibleRetrieval;1'].
   getService(Ci.nsIAccessibleRetrieval);
@@ -419,17 +419,9 @@ var VirtualCursorController = {
     this.chromeWin.document.removeEventListener('keypress', this, true);
   },
 
-  _getBrowserApp: function _getBrowserApp() {
-    switch (Services.appinfo.OS) {
-      case 'Android':
-        return this.chromeWin.BrowserApp;
-      default:
-        return this.chromeWin.gBrowser;
-    }
-  },
-
   handleEvent: function handleEvent(aEvent) {
-    let document = this._getBrowserApp().selectedBrowser.contentDocument;
+    let document = Utils.getBrowserApp(this.chromeWin).
+      selectedBrowser.contentDocument;
     let target = aEvent.target;
 
     switch (aEvent.keyCode) {
@@ -487,7 +479,7 @@ var VirtualCursorController = {
             target.blur();
         }
 
-        if (Services.appinfo.OS == 'Android')
+        if (Utils.OS == 'Android')
           // Return focus to native Android browser chrome.
           Cc['@mozilla.org/android/bridge;1'].
             getService(Ci.nsIAndroidBridge).handleGeckoMessage(
