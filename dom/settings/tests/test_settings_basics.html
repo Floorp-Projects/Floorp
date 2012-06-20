@@ -101,6 +101,16 @@ var steps = [
     req2.onerror = onFailure;
   },
   function() {
+    ok(true, "Get unknown key");
+    var lock = mozSettings.getLock();
+    req = lock.get("abc.def");
+    req.onsuccess = function() {
+      is(req.result["abc.def"], undefined, "no result");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
     ok(true, "adding onsettingchange");
     navigator.mozSettings.onsettingchange = onsettingschangeWithNext;
     var lock = mozSettings.getLock();
