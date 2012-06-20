@@ -45,7 +45,7 @@ public:
   virtual void GetUUID(nsAString&);
 
   virtual MediaEngineVideoOptions GetOptions();
-  virtual already_AddRefed<nsDOMMediaStream> Allocate();
+  virtual nsresult Allocate();
 
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
@@ -75,7 +75,7 @@ public:
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
 
-  virtual already_AddRefed<nsDOMMediaStream> Allocate();
+  virtual nsresult Allocate();
 
   virtual nsresult Deallocate();
   virtual nsresult Start(SourceMediaStream*, TrackID);
