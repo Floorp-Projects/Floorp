@@ -72,10 +72,11 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                        \
  : public nsXPCOMCycleCollectionParticipant                                 \
 {                                                                           \
 public:                                                                     \
-  NS_IMETHOD Unlink(void *p);                                               \
-  NS_IMETHOD Traverse(void *p,                                              \
-                      nsCycleCollectionTraversalCallback &cb);              \
-  NS_IMETHOD_(void) UnmarkIfPurple(nsISupports *p)                          \
+  static NS_METHOD UnlinkImpl(void *p);                                     \
+  static NS_METHOD TraverseImpl(NS_CYCLE_COLLECTION_INNERCLASS *that,       \
+                                void *p,                                    \
+                                nsCycleCollectionTraversalCallback &cb);    \
+  static NS_METHOD_(void) UnmarkIfPurpleImpl(nsISupports *p)                \
   {                                                                         \
     Downcast(p)->UnmarkIfPurple();                                          \
   }                                                                         \
@@ -263,14 +264,14 @@ _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
   if (aIID.Equals(IsPartOfAggregated() ?                                    \
                   NS_GET_IID(nsCycleCollectionParticipant) :                \
                   NS_GET_IID(nsAggregatedCycleCollectionParticipant)))      \
-    foundInterface = & NS_CYCLE_COLLECTION_NAME(_class);                    \
+    foundInterface = NS_CYCLE_COLLECTION_PARTICIPANT(_class);               \
   else
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_AGGREGATED(_class)          \
-  NS_IMETHODIMP                                                             \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                           \
-                         (void *p,                                          \
-                          nsCycleCollectionTraversalCallback &cb)           \
+  NS_METHOD                                                                 \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraverseImpl                       \
+                         (NS_CYCLE_COLLECTION_CLASSNAME(_class) *that,      \
+                          void *p, nsCycleCollectionTraversalCallback &cb)  \
   {                                                                         \
     nsISupports *s = static_cast<nsISupports*>(p);                          \
     NS_ASSERTION(CheckForRightISupports(s),                                 \

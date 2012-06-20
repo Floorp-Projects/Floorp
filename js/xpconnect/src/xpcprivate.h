@@ -478,7 +478,6 @@ class nsXPConnect : public nsIXPConnect,
                     public nsIThreadObserver,
                     public nsSupportsWeakReference,
                     public nsCycleCollectionJSRuntime,
-                    public nsCycleCollectionParticipant,
                     public nsIJSRuntimeService,
                     public nsIThreadJSContextStack,
                     public nsIJSEngineTelemetryStats
@@ -538,13 +537,6 @@ public:
 
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
     nsresult GetInfoForName(const char * name, nsIInterfaceInfo** info);
-
-    // nsCycleCollectionParticipant
-    NS_IMETHOD Root(void *p);
-    NS_IMETHOD Unlink(void *p);
-    NS_IMETHOD Unroot(void *p);
-    NS_IMETHOD Traverse(void *p,
-                        nsCycleCollectionTraversalCallback &cb);
 
     // nsCycleCollectionLanguageRuntime
     virtual bool NotifyLeaveMainThread();
@@ -2555,9 +2547,9 @@ public:
     {
       NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(XPCWrappedNative,
                                                     XPCWrappedNative)
-      NS_IMETHOD Root(void *p) { return NS_OK; }
-      NS_IMETHOD Unlink(void *p);
-      NS_IMETHOD Unroot(void *p) { return NS_OK; }
+      static NS_METHOD RootImpl(void *p) { return NS_OK; }
+      static NS_METHOD UnlinkImpl(void *p);
+      static NS_METHOD UnrootImpl(void *p) { return NS_OK; }
     };
     NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
     NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(XPCWrappedNative)
