@@ -19,6 +19,7 @@
 #include "mozIStoragePendingStatement.h"
 #include "mozIStorageError.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Attributes.h"
 
 static int gTotalTests = 0;
 static int gPassedTests = 0;
@@ -106,8 +107,8 @@ getDatabase()
 }
 
 
-class AsyncStatementSpinner : public mozIStorageStatementCallback
-                            , public mozIStorageCompletionCallback
+class AsyncStatementSpinner MOZ_FINAL : public mozIStorageStatementCallback
+                                      , public mozIStorageCompletionCallback
 {
 public:
   NS_DECL_ISUPPORTS
