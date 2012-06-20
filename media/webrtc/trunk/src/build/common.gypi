@@ -67,7 +67,7 @@
       }, {
         # Settings for the standalone (not-in-Chromium) build.
 
-        'include_pulse_audio%': 1,
+        'include_pulse_audio%': 0,
 
         'include_internal_audio_device%': 1,
 
