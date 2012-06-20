@@ -203,7 +203,7 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp
      */
     RootedValue value(cx);
     return baseops::DeleteGeneric(cx, obj, id, value.address(), false) &&
-           baseops::DefineGeneric(cx, obj, id, vp, NULL, NULL, JSPROP_ENUMERATE);
+           baseops::DefineProperty(cx, obj, id, vp, NULL, NULL, JSPROP_ENUMERATE);
 }
 
 static JSBool
@@ -233,7 +233,7 @@ args_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     }
 
     Value undef = UndefinedValue();
-    if (!baseops::DefineGeneric(cx, argsobj, id, &undef, ArgGetter, ArgSetter, attrs))
+    if (!baseops::DefineProperty(cx, argsobj, id, &undef, ArgGetter, ArgSetter, attrs))
         return JS_FALSE;
 
     *objp = argsobj;
@@ -282,8 +282,7 @@ NormalArgumentsObject::optimizedGetElem(JSContext *cx, StackFrame *fp, const Val
     if (!proto)
         return false;
 
-    Rooted<jsid> root(cx, id);
-    return proto->getGeneric(cx, root, vp);
+    return proto->getGeneric(cx, RootedId(cx, id), vp);
 }
 
 static JSBool
@@ -397,7 +396,7 @@ strictargs_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     }
 
     Value undef = UndefinedValue();
-    if (!baseops::DefineGeneric(cx, argsobj, id, &undef, getter, setter, attrs))
+    if (!baseops::DefineProperty(cx, argsobj, id, &undef, getter, setter, attrs))
         return false;
 
     *objp = argsobj;

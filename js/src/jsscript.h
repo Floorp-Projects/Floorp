@@ -175,8 +175,7 @@ class Bindings
     }
     bool addDestructuring(JSContext *cx, uint16_t *slotp) {
         *slotp = nargs;
-        Rooted<JSAtom*> atom(cx, NULL);
-        return add(cx, atom, ARGUMENT);
+        return add(cx, RootedAtom(cx), ARGUMENT);
     }
 
     void noteDup() { hasDup_ = true; }

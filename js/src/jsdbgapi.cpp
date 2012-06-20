@@ -783,8 +783,7 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, Shape *shape, JSPropertyDesc *pd)
         lastException = cx->getPendingException();
     cx->clearPendingException();
 
-    Rooted<jsid> id(cx, shape->propid());
-    if (!baseops::GetProperty(cx, obj, id, &pd->value)) {
+    if (!baseops::GetProperty(cx, obj, RootedId(cx, shape->propid()), &pd->value)) {
         if (!cx->isExceptionPending()) {
             pd->flags = JSPD_ERROR;
             pd->value = JSVAL_VOID;
