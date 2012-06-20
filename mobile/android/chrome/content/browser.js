@@ -2270,6 +2270,20 @@ Tab.prototype = {
           }
         });
 
+        // Once document is fully loaded, we can do a readability check to
+        // possibly enable reader mode for this page
+        Reader.checkTabReadability(this.id, function(isReadable) {
+          if (!isReadable)
+            return;
+
+          sendMessageToJava({
+            gecko: {
+              type: "Content:ReaderEnabled",
+              tabID: this.id
+            }
+          });
+        }.bind(this));
+
         // Attach a listener to watch for "click" events bubbling up from error
         // pages and other similar page. This lets us fix bugs like 401575 which
         // require error page UI to do privileged things, without letting error
@@ -5900,6 +5914,35 @@ let Reader = {
     } catch (e) {
       this.log("Error parsing document from tab: " + e);
       callback(null);
+    }
+  },
+
+  checkTabReadability: function Reader_checkTabReadability(tabId, callback) {
+    try {
+      this.log("checkTabReadability: " + tabId);
+
+      let tab = BrowserApp.getTabForId(tabId);
+      let url = tab.browser.contentWindow.location.href;
+
+      // First, try to find a cached parsed article in the DB
+      this.getArticleFromCache(url, function(article) {
+        if (article) {
+          this.log("Page found in cache, page is definitely readable");
+          callback(true);
+          return;
+        }
+
+        // FIXME: Make the readability check not require a separate copy
+        // of the document by making the operation fully non-destructive.
+        let doc = tab.browser.contentWindow.document.cloneNode(true);
+        let uri = Services.io.newURI(url, null, null);
+
+        let readability = new Readability(uri, doc);
+        callback(readability.check());
+      }.bind(this));
+    } catch (e) {
+      this.log("Error checking tab readability: " + e);
+      callback(false);
     }
   },
 
