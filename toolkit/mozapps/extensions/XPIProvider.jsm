@@ -4223,6 +4223,10 @@ var XPIDatabase = {
     delete this.dbfileExists;
     return this.dbfileExists = this.dbfile.exists();
   },
+  set dbfileExists(aValue) {
+    delete this.dbfileExists;
+    return this.dbfileExists = aValue;
+  },
 
   /**
    * Begins a new transaction in the database. Transactions may be nested. Data
@@ -4365,9 +4369,16 @@ var XPIDatabase = {
           this.connection = Services.storage.openSpecialDatabase("memory");
         }
       }
-      else if (Prefs.getIntPref(PREF_DB_SCHEMA, 0) == 0) {
-        // Only migrate data from the RDF if we haven't done it before
-        migrateData = this.getMigrateDataFromRDF();
+      else {
+        let dbSchema = 0;
+        try {
+          dbSchema = Services.prefs.getIntPref(PREF_DB_SCHEMA);
+        } catch (e) {}
+
+        if (dbSchema == 0) {
+          // Only migrate data from the RDF if we haven't done it before
+          migrateData = this.getMigrateDataFromRDF();
+        }
       }
 
       // At this point the database should be completely empty
@@ -4852,7 +4863,7 @@ var XPIDatabase = {
         return addon;
     }
 
-    let addon = new DBAddonInternal();
+    let addon = new XPIProvider.DBAddonInternal();
     addon._internal_id = aRow.internal_id;
     addon._installLocation = XPIProvider.installLocationsByName[aRow.location];
     addon._descriptor = aRow.descriptor;
@@ -5041,7 +5052,7 @@ var XPIDatabase = {
       }
     }
 
-    let addon = new DBAddonInternal();
+    let addon = new XPIProvider.DBAddonInternal();
     addon._internal_id = internal_id;
     let location = aRow.getResultByName("location");
     addon._installLocation = XPIProvider.installLocationsByName[location];
@@ -5215,7 +5226,7 @@ var XPIDatabase = {
     let stmt = this.getStatement("getAddonsByType");
 
     stmt.params.type = aType;
-    return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];;
+    return [this.makeAddonFromRow(row) for each (row in resultRows(stmt))];
   },
 
   /**
@@ -5647,7 +5658,12 @@ var XPIDatabase = {
     // when a lightweight theme is applied for example)
     text += "\r\n[ThemeDirs]\r\n";
 
-    if (Prefs.getBoolPref(PREF_EM_DSS_ENABLED)) {
+    let dssEnabled = false;
+    try {
+      dssEnabled = Services.prefs.getBoolPref(PREF_EM_DSS_ENABLED);
+    } catch (e) {}
+
+    if (dssEnabled) {
       stmt = this.getStatement("getThemes");
     }
     else {
@@ -7414,6 +7430,9 @@ DBAddonInternal.prototype = {
 }
 
 DBAddonInternal.prototype.__proto__ = AddonInternal.prototype;
+// Make it accessible to XPIDatabase.
+XPIProvider.DBAddonInternal = DBAddonInternal;
+
 
 /**
  * Creates an AddonWrapper for an AddonInternal.
