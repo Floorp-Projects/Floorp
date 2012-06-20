@@ -3314,7 +3314,7 @@ class AutoHoldCompartment {
 };
 
 JS_PUBLIC_API(JSObject *)
-JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals)
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals)
 {
     AssertNoGC(cx);
     CHECK_REQUEST(cx);

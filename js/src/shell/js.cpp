@@ -2557,7 +2557,7 @@ static JSClass sandbox_class = {
 static JSObject *
 NewSandbox(JSContext *cx, bool lazy)
 {
-    RootedObject obj(cx, JS_NewCompartmentAndGlobalObject(cx, &sandbox_class, NULL));
+    RootedObject obj(cx, JS_NewGlobalObject(cx, &sandbox_class, NULL));
     if (!obj)
         return NULL;
 
@@ -4554,7 +4554,7 @@ DestroyContext(JSContext *cx, bool withGC)
 static JSObject *
 NewGlobalObject(JSContext *cx)
 {
-    RootedObject glob(cx, JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL));
+    RootedObject glob(cx, JS_NewGlobalObject(cx, &global_class, NULL));
     if (!glob)
         return NULL;
 
