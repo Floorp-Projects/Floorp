@@ -2952,11 +2952,9 @@ RemoveNamesFromArray(GLContext *aOrigin, GLsizei aCount, GLuint *aNames, nsTArra
         if (name == 0)
             continue;
 
-        bool found = false;
         for (PRUint32 i = 0; i < aArray.Length(); ++i) {
             if (aArray[i].name == name) {
                 aArray.RemoveElementAt(i);
-                found = true;
                 break;
             }
         }
