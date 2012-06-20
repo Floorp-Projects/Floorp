@@ -10,6 +10,7 @@
  */
 
 #include "nsISample.h"
+#include "mozilla/Attributes.h"
 
 /**
  * SampleImpl is an implementation of the nsISample interface.  In XPCOM,
@@ -28,7 +29,7 @@
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
 
 
-class nsSampleImpl : public nsISample
+class nsSampleImpl MOZ_FINAL : public nsISample
 {
 public:
     nsSampleImpl();
