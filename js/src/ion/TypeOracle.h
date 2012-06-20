@@ -71,6 +71,12 @@ enum MIRType
     MIRType_ArgObj      // Argument object (0 is used to mark lazy args).
 };
 
+enum LazyArgumentsType {
+    MaybeArguments = 0,
+    DefinitelyArguments,
+    NotArguments
+};
+
 class TypeOracle
 {
   public:
@@ -187,14 +193,14 @@ class TypeOracle
         return MIRType_Value;
     }
 
-    virtual bool propertyReadMagicArguments(JSScript *script, jsbytecode *pc) {
-        return false;
+    virtual LazyArgumentsType propertyReadMagicArguments(JSScript *script, jsbytecode *pc) {
+        return MaybeArguments;
     }
-    virtual bool elementReadMagicArguments(JSScript *script, jsbytecode *pc) {
-        return false;
+    virtual LazyArgumentsType elementReadMagicArguments(JSScript *script, jsbytecode *pc) {
+        return MaybeArguments;
     }
-    virtual bool elementWriteMagicArguments(JSScript *script, jsbytecode *pc) {
-        return false;
+    virtual LazyArgumentsType elementWriteMagicArguments(JSScript *script, jsbytecode *pc) {
+        return MaybeArguments;
     }
 };
 
@@ -274,9 +280,9 @@ class TypeInferenceOracle : public TypeOracle
     bool canEnterInlinedFunction(JSFunction *callee);
     MIRType aliasedVarType(JSScript *script, jsbytecode *pc);
 
-    bool propertyReadMagicArguments(JSScript *script, jsbytecode *pc);
-    bool elementReadMagicArguments(JSScript *script, jsbytecode *pc);
-    bool elementWriteMagicArguments(JSScript *script, jsbytecode *pc);
+    LazyArgumentsType propertyReadMagicArguments(JSScript *script, jsbytecode *pc);
+    LazyArgumentsType elementReadMagicArguments(JSScript *script, jsbytecode *pc);
+    LazyArgumentsType elementWriteMagicArguments(JSScript *script, jsbytecode *pc);
 };
 
 static inline MIRType
