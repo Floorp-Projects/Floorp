@@ -1014,10 +1014,44 @@ nsImageLoadingContent::PreparePendingRequest()
   return mPendingRequest;
 }
 
+namespace {
+
+class ImageRequestAutoLock
+{
+public:
+  ImageRequestAutoLock(imgIRequest* aRequest)
+    : mRequest(aRequest)
+  {
+    if (mRequest) {
+      mRequest->LockImage();
+    }
+  }
+
+  ~ImageRequestAutoLock()
+  {
+    if (mRequest) {
+      mRequest->UnlockImage();
+    }
+  }
+
+private:
+  nsCOMPtr<imgIRequest> mRequest;
+};
+
+} // anonymous namespace
+
 void
 nsImageLoadingContent::MakePendingRequestCurrent()
 {
   MOZ_ASSERT(mPendingRequest);
+
+  // Lock mCurrentRequest for the duration of this method.  We do this because
+  // PrepareCurrentRequest() might unlock mCurrentRequest.  If mCurrentRequest
+  // and mPendingRequest are both requests for the same image, unlocking
+  // mCurrentRequest before we lock mPendingRequest can cause the lock count
+  // to go to 0 and the image to be discarded!
+  ImageRequestAutoLock autoLock(mCurrentRequest);
+
   PrepareCurrentRequest() = mPendingRequest;
   mPendingRequest = nsnull;
   mCurrentRequestNeedsResetAnimation = mPendingRequestNeedsResetAnimation;
