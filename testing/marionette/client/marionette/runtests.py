@@ -377,7 +377,7 @@ class MarionetteTestRunner(object):
         if suite.countTestCases():
             results = MarionetteTextTestRunner(verbosity=3).run(suite)
             self.failed += len(results.failures) + len(results.errors)
-            if results.perfdata:
+            if results.perfdata and options.perf:
                 self.perfrequest.add_datazilla_result(results.perfdata)
             if hasattr(results, 'skipped'):
                 self.todo += len(results.skipped) + len(results.expectedFailures)
