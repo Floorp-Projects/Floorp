@@ -97,16 +97,14 @@ RegExpObjectBuilder::clone(Handle<RegExpObject *> other, Handle<RegExpObject *> 
     RegExpFlag staticsFlags = res->getFlags();
     if ((origFlags & staticsFlags) != staticsFlags) {
         RegExpFlag newFlags = RegExpFlag(origFlags | staticsFlags);
-        Rooted<JSAtom *> source(cx, other->getSource());
-        return build(source, newFlags);
+        return build(Rooted<JSAtom *>(cx, other->getSource()), newFlags);
     }
 
     RegExpGuard g;
     if (!other->getShared(cx, &g))
         return NULL;
 
-    Rooted<JSAtom *> source(cx, other->getSource());
-    return build(source, *g);
+    return build(RootedAtom(cx, other->getSource()), *g);
 }
 
 /* MatchPairs */
@@ -620,12 +618,14 @@ RegExpCompartment::get(JSContext *cx, JSAtom *atom, JSString *opt, RegExpGuard *
 /* Functions */
 
 JSObject *
-js::CloneRegExpObject(JSContext *cx, JSObject *obj_, JSObject *proto_)
+js::CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
 {
+    JS_ASSERT(obj->isRegExp());
+    JS_ASSERT(proto->isRegExp());
+
     RegExpObjectBuilder builder(cx);
-    Rooted<RegExpObject*> regex(cx, &obj_->asRegExp());
-    Rooted<RegExpObject*> proto(cx, &proto_->asRegExp());
-    return builder.clone(regex, proto);
+    return builder.clone(Rooted<RegExpObject*>(cx, &obj->asRegExp()),
+                         Rooted<RegExpObject*>(cx, &proto->asRegExp()));
 }
 
 bool

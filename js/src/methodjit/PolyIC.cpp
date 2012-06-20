@@ -1665,7 +1665,7 @@ class ScopeNameCompiler : public PICStubCompiler
     bool retrieve(Value *vp, PICInfo::Kind kind)
     {
         JSObject *obj = getprop.obj;
-        Rooted<JSObject*> holder(cx, getprop.holder);
+        JSObject *holder = getprop.holder;
         const JSProperty *prop = getprop.prop;
 
         if (!prop) {
@@ -1690,7 +1690,7 @@ class ScopeNameCompiler : public PICStubCompiler
         }
 
         const Shape *shape = getprop.shape;
-        Rooted<JSObject*> normalized(cx, obj);
+        JSObject *normalized = obj;
         if (obj->isWith() && !shape->hasDefaultGetter())
             normalized = &obj->asWith().object();
         NATIVE_GET(cx, normalized, holder, shape, 0, vp, return false);
@@ -2437,8 +2437,7 @@ GetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid i
     disable(f, "generated typed array stub");
 
     // Fetch the value as expected of Lookup_Cacheable for GetElement.
-    Rooted<jsid> idRoot(cx, id);
-    if (!obj->getGeneric(cx, idRoot, vp))
+    if (!obj->getGeneric(cx, RootedId(cx, id), vp))
         return Lookup_Error;
 
     return Lookup_Cacheable;
@@ -2505,11 +2504,11 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     }
 #endif
 
-    Rooted<jsid> id(cx);
+    jsid id;
     if (idval.isInt32() && INT_FITS_IN_JSID(idval.toInt32())) {
         id = INT_TO_JSID(idval.toInt32());
     } else {
-        if (!InternNonIntElementId(cx, obj, idval, id.address()))
+        if (!InternNonIntElementId(cx, obj, idval, &id))
             THROW();
     }
 
@@ -2528,7 +2527,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         }
     }
 
-    if (!obj->getGeneric(cx, id, &f.regs.sp[-2]))
+    if (!obj->getGeneric(cx, RootedId(cx, id), &f.regs.sp[-2]))
         THROW();
 
 #if JS_HAS_NO_SUCH_METHOD
