@@ -21,11 +21,15 @@
         'include',
         '<(webrtc_root)',
         '<(webrtc_root)/common_video/interface',
+# added for mozilla for use_system_libjpeg
+        '$(DIST)/include',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
           'include',
           '<(webrtc_root)/common_video/interface',
+# added for mozilla for use_system_libjpeg
+        '$(builddir)/../../../../../../dist/include',
         ],
       },
       'conditions': [
