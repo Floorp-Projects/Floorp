@@ -121,6 +121,7 @@ public:
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
   bool Init(ID3D10Texture2D *aTexture, SurfaceFormat aFormat);
   bool InitD3D10Data();
+  uint32_t GetByteSize() const;
 
   static ID2D1Factory *factory();
   static TemporaryRef<ID2D1StrokeStyle> CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions);
@@ -131,6 +132,10 @@ public:
     stream << "DrawTargetD2D(" << this << ")";
     return stream.str();
   }
+
+  static uint64_t mVRAMUsageDT;
+  static uint64_t mVRAMUsageSS;
+
 private:
   friend class AutoSaveRestoreClippedOut;
   friend class SourceSurfaceD2DTarget;

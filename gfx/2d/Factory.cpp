@@ -381,5 +381,17 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
   return NULL;
 }
 
+uint64_t
+Factory::GetD2DVRAMUsageDrawTarget()
+{
+  return DrawTargetD2D::mVRAMUsageDT;
+}
+
+uint64_t
+Factory::GetD2DVRAMUsageSourceSurface()
+{
+  return DrawTargetD2D::mVRAMUsageSS;
+}
+
 }
 }
