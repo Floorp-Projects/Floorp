@@ -20,6 +20,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsAutoPtr.h"
+#include "mozilla/Attributes.h"
 
 #define NS_ITESTSERVICE_IID \
   {0x127b5253, 0x37b1, 0x43c7, \
@@ -32,7 +33,8 @@ class NS_NO_VTABLE nsITestService : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITestService, NS_ITESTSERVICE_IID)
 
-class nsTestService : public nsITestService, public nsSupportsWeakReference
+class nsTestService MOZ_FINAL : public nsITestService,
+                                public nsSupportsWeakReference
 {
   public:
     NS_DECL_ISUPPORTS

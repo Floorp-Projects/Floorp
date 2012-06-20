@@ -14,6 +14,7 @@
 #include "prinrval.h"
 #include "prmon.h"
 #include "prthread.h"
+#include "mozilla/Attributes.h"
 
 #include "mozilla/ReentrantMonitor.h"
 using namespace mozilla;
@@ -44,7 +45,7 @@ static bool gAllThreadsShutDown = false;
   PR_END_MACRO
 #endif
 
-class Listener : public nsIThreadPoolListener
+class Listener MOZ_FINAL : public nsIThreadPoolListener
 {
 public:
   NS_DECL_ISUPPORTS
