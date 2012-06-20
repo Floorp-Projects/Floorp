@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var root = document.documentElement;
+  while (root.firstChild) {
+    root.removeChild(root.firstChild);
+  }
+
+  var space = document.createTextNode(" ");
+  var body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  root.contentEditable = "true";
+  root.focus();
+  document.execCommand("contentReadOnly", false, null);
+  root.appendChild(body);
+  root.contentEditable = "false";
+  root.appendChild(space);
+  root.removeChild(body);
+  root.contentEditable = "true";
+
+  window.getSelection().removeAllRanges();
+  var r1 = document.createRange();
+  r1.setStart(root, 0);
+  r1.setEnd(root, 0);
+  window.getSelection().addRange(r1);
+  looseText = document.createTextNode("c");
+  var r2 = document.createRange();
+  r2.setStart(looseText, 0);
+  r2.setEnd(looseText, 0);
+  window.getSelection().addRange(r2);
+
+  document.execCommand("forwardDelete", false, null);
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
