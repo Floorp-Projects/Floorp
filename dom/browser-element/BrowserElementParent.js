@@ -146,7 +146,6 @@ function BrowserElementParent(frameLoader) {
   addMessageListener("titlechange", this._fireEventFromMsg);
   addMessageListener("iconchange", this._fireEventFromMsg);
   addMessageListener("close", this._fireEventFromMsg);
-  addMessageListener("securitychange", this._fireEventFromMsg);
   addMessageListener("get-mozapp-manifest-url", this._sendMozAppManifestURL);
   addMessageListener("keyevent", this._fireKeyEvent);
   addMessageListener("showmodalprompt", this._handleShowModalPrompt);
@@ -160,7 +159,7 @@ function BrowserElementParent(frameLoader) {
   defineMethod('getScreenshot', this._getScreenshot);
   defineMethod('setVisible', this._setVisible);
 
-  this._mm.loadFrameScript("chrome://global/content/BrowserElementChild.js",
+  self._mm.loadFrameScript("chrome://global/content/BrowserElementChild.js",
                            /* allowDelayedLoad = */ true);
 }
 
