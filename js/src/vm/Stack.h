@@ -591,7 +591,7 @@ class StackFrame
 
     bool hasArgs() const { return isNonEvalFunctionFrame(); }
     inline Value &unaliasedFormal(unsigned i, MaybeCheckAliasing = CHECK_ALIASING);
-    inline Value &unaliasedActual(unsigned i);
+    inline Value &unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING);
     template <class Op> inline void forEachUnaliasedActual(Op op);
 
     inline unsigned numFormalArgs() const;
@@ -1011,9 +1011,22 @@ class StackFrame
         return !!(flags_ & CONSTRUCTING);
     }
 
+    /*
+     * These two queries should not be used in general: the presence/absence of
+     * the call/args object is determined by the static(ish) properties of the
+     * JSFunction/JSScript. These queries should only be performed when probing
+     * a stack frame that may be in the middle of the prologue (during which
+     * time the call/args object are created).
+     */
+
     bool hasCallObj() const {
         JS_ASSERT(isStrictEvalFrame() || fun()->isHeavyweight());
         return flags_ & HAS_CALL_OBJ;
+    }
+
+    bool hasArgsObj() const {
+        JS_ASSERT(script()->needsArgsObj());
+        return flags_ & HAS_ARGS_OBJ;
     }
 
     /*
