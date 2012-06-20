@@ -3966,6 +3966,7 @@ net.sd
 org.sd
 edu.sd
 med.sd
+tv.sd
 gov.sd
 info.sd
 
@@ -4326,14 +4327,16 @@ zt.ua
 co.ua
 pp.ua
 
-// ug : http://www.registry.co.ug/
+// ug : https://www.registry.co.ug/
 ug
 co.ug
+or.ug
 ac.ug
 sc.ug
 go.ug
 ne.ug
-or.ug
+com.ug
+org.ug
 
 // uk : http://en.wikipedia.org/wiki/.uk
 *.uk
@@ -4599,11 +4602,12 @@ paroch.k12.ma.us
 // uy : http://www.antel.com.uy/
 *.uy
 
-// uz : http://www.reg.uz/registerr.html
-// are there other 2nd level tlds ?
+// uz : http://www.reg.uz/
 uz
-com.uz
 co.uz
+com.uz
+net.uz
+org.uz
 
 // va : http://en.wikipedia.org/wiki/.va
 va
