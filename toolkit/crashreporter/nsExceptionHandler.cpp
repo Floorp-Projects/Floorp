@@ -1358,22 +1358,15 @@ SetRestartArgs(int argc, char** argv)
   int i;
   nsCAutoString envVar;
   char *env;
+  char *argv0 = getenv("MOZ_APP_LAUNCHER");
   for (i = 0; i < argc; i++) {
     envVar = "MOZ_CRASHREPORTER_RESTART_ARG_";
     envVar.AppendInt(i);
     envVar += "=";
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
-    // we'd like to run the script around the binary
-    // instead of the binary itself, so remove the -bin
-    // if it exists on the first argument
-    int arg_len = 0;
-    if (i == 0 &&
-        (arg_len = strlen(argv[i])) > 4 &&
-        strcmp(argv[i] + arg_len - 4, "-bin") == 0) {
-      envVar.Append(argv[i], arg_len - 4);
-    } else
-#endif
-    {
+    if (argv0 && i == 0) {
+      // Is there a request to suppress default binary launcher?
+      envVar += argv0;
+    } else {
       envVar += argv[i];
     }
 
