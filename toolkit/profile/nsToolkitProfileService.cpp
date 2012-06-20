@@ -37,10 +37,11 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 
-class nsToolkitProfile : public nsIToolkitProfile
+class nsToolkitProfile MOZ_FINAL : public nsIToolkitProfile
 {
 public:
     NS_DECL_ISUPPORTS
@@ -68,7 +69,7 @@ private:
     bool                       mForExternalApp;
 };
 
-class nsToolkitProfileLock : public nsIProfileLock
+class nsToolkitProfileLock MOZ_FINAL : public nsIProfileLock
 {
 public:
     NS_DECL_ISUPPORTS
@@ -89,14 +90,14 @@ private:
     nsProfileLock mLock;
 };
 
-class nsToolkitProfileFactory : public nsIFactory
+class nsToolkitProfileFactory MOZ_FINAL : public nsIFactory
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFACTORY
 };
 
-class nsToolkitProfileService : public nsIToolkitProfileService
+class nsToolkitProfileService MOZ_FINAL : public nsIToolkitProfileService
 {
 public:
     NS_DECL_ISUPPORTS
@@ -142,7 +143,7 @@ private:
 
     static nsToolkitProfileService *gService;
 
-    class ProfileEnumerator : public nsISimpleEnumerator
+    class ProfileEnumerator MOZ_FINAL : public nsISimpleEnumerator
     {
     public:
         NS_DECL_ISUPPORTS
