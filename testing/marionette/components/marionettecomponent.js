@@ -75,7 +75,7 @@ MarionetteComponent.prototype = {
         Services.prefs.setBoolPref('devtools.debugger.remote-enabled', true);
         // Always allow remote connections.
         DebuggerServer.initTransport(function () { return true; });
-        DebuggerServer.openListener(port, true);
+        DebuggerServer.openListener(port);
       }
       catch(e) {
         this.logger.error('exception: ' + e.name + ', ' + e.message);
