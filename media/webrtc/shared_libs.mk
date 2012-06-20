@@ -4,11 +4,6 @@
 
 # shared libs for webrtc
 SHARED_LIBRARY_LIBS += \
-  $(call EXPAND_LIBNAME_PATH,jingle,$(DEPTH)/media/webrtc/trunk/third_party/libjingle/libjingle_libjingle) \
-  $(call EXPAND_LIBNAME_PATH,srtp,$(DEPTH)/media/webrtc/trunk/third_party/libsrtp/libsrtp_libsrtp) \
-  $(call EXPAND_LIBNAME_PATH,jingle_p2p,$(DEPTH)/media/webrtc/trunk/third_party/libjingle/libjingle_libjingle_p2p) \
-  $(call EXPAND_LIBNAME_PATH,jingle_app,$(DEPTH)/media/webrtc/trunk/third_party/libjingle/libjingle_libjingle_app) \
-  $(call EXPAND_LIBNAME_PATH,jsoncpp,$(DEPTH)/media/webrtc/trunk/third_party/jsoncpp/jsoncpp_jsoncpp) \
   $(call EXPAND_LIBNAME_PATH,video_capture_module,$(DEPTH)/media/webrtc/trunk/src/modules/modules_video_capture_module) \
   $(call EXPAND_LIBNAME_PATH,webrtc_utility,$(DEPTH)/media/webrtc/trunk/src/modules/modules_webrtc_utility) \
   $(call EXPAND_LIBNAME_PATH,audio_coding_module,$(DEPTH)/media/webrtc/trunk/src/modules/modules_audio_coding_module) \
@@ -46,13 +41,5 @@ SHARED_LIBRARY_LIBS += \
   $(call EXPAND_LIBNAME_PATH,agc,$(DEPTH)/media/webrtc/trunk/src/modules/modules_agc) \
   $(call EXPAND_LIBNAME_PATH,ns,$(DEPTH)/media/webrtc/trunk/src/modules/modules_ns) \
   $(call EXPAND_LIBNAME_PATH,yuv,$(DEPTH)/media/webrtc/trunk/third_party/libyuv/libyuv_libyuv) \
-        $(call EXPAND_LIBNAME_PATH,expat,$(DEPTH)/media/webrtc/trunk/third_party/expat/expat_expat) \
   $(call EXPAND_LIBNAME_PATH,webrtc_jpeg,$(DEPTH)/media/webrtc/trunk/src/common_video/common_video_webrtc_jpeg) \
   $(NULL)
-
-ifneq ($(OS_TARGET),WINNT)
-SHARED_LIBRARY_LIBS += \
-  $(call EXPAND_LIBNAME_PATH,sipcc,$(DEPTH)/media/webrtc/signaling/signaling_sipcc) \
-  $(call EXPAND_LIBNAME_PATH,ecc,$(DEPTH)/media/webrtc/signaling/signaling_ecc) \
-  $(NULL)
-endif

@@ -30,7 +30,15 @@
           'message': 'Generating scream',
         }, ],
         'dependencies': [
-	  'third_party/libjingle/libjingle.gyp:libjingle_app',
+# allow building without libjingle
+#	  'third_party/libjingle/libjingle.gyp:libjingle_app',
+          'src/modules/modules.gyp:audio_device',
+          'src/modules/modules.gyp:video_capture_module',
+          'src/modules/modules.gyp:video_render_module',
+          'src/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+          'src/video_engine/video_engine.gyp:video_engine_core',
+          'src/voice_engine/voice_engine.gyp:voice_engine_core',
+#          '<(DEPTH)/third_party/libsrtp/libsrtp.gyp:libsrtp',
         ],
       }, ],
     ],

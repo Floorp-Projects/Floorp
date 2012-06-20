@@ -41,7 +41,7 @@
 
   # Test targets, excluded when building with Chromium.
   'conditions': [
-    ['build_with_chromium==0', {
+    ['build_with_chromium==0 and build_with_mozilla==0', {
       'includes': [
         'audio_coding/codecs/iSAC/isac_test.gypi',
         'audio_coding/codecs/iSAC/isacfix_test.gypi',
