@@ -29,6 +29,8 @@ _CHROME_FILES	= \
 		test_bug335375.xul \
 		overlay1_bug335375.xul \
 		overlay2_bug335375.xul \
+		test_bug757137.xul \
+		window_bug757137.xul \
 		$(NULL)
 
 libs:: $(_CHROME_FILES)
