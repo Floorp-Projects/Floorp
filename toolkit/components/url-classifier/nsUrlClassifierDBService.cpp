@@ -41,6 +41,7 @@
 #include "prprf.h"
 #include "prnetdb.h"
 #include "zlib.h"
+#include "mozilla/Attributes.h"
 
 // Needed to interpert mozIStorageConnection::GetLastError
 #include <sqlite3.h>
@@ -3825,8 +3826,8 @@ nsUrlClassifierDBServiceWorker::MaybeCreateTables(mozIStorageConnection* connect
 // and handles any necessary partial hash expansions before calling
 // the client callback.
 
-class nsUrlClassifierLookupCallback : public nsIUrlClassifierLookupCallback
-                                    , public nsIUrlClassifierHashCompleterCallback
+class nsUrlClassifierLookupCallback MOZ_FINAL : public nsIUrlClassifierLookupCallback
+                                              , public nsIUrlClassifierHashCompleterCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -4034,7 +4035,7 @@ nsUrlClassifierLookupCallback::HandleResults()
 // Helper class for nsIURIClassifier implementation, translates table names
 // to nsIURIClassifier enums.
 
-class nsUrlClassifierClassifyCallback : public nsIUrlClassifierCallback
+class nsUrlClassifierClassifyCallback MOZ_FINAL : public nsIUrlClassifierCallback
 {
 public:
   NS_DECL_ISUPPORTS
