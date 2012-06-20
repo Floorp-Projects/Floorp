@@ -8,6 +8,9 @@
 # e.g. win32/de/Firefox Setup 3.0.1.exe
 # the latter format is triggered with MOZ_PKG_PRETTYNAMES=1
 
+ifndef PACKAGE_NAME_MK_INCLUDED
+PACKAGE_NAME_MK_INCLUDED := 1
+
 ifndef MOZ_PKG_VERSION
 MOZ_PKG_VERSION = $(MOZ_APP_VERSION)
 endif
@@ -145,3 +148,5 @@ MOZ_SOURCESTAMP_FILE = $(DIST)/$(PKG_PATH)/$(MOZ_SOURCESTAMP_FILE_BASENAME).txt
 
 # JavaScript Shell
 PKG_JSSHELL = $(DIST)/jsshell-$(MOZ_PKG_PLATFORM).zip
+
+endif # PACKAGE_NAME_MK_INCLUDED
