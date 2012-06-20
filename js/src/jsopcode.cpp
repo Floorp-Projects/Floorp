@@ -5455,7 +5455,7 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, unsigned len,
 
     for (unsigned i = 0; i < initialStackDepth; i++) {
         if (!PushStr(&ss, "", JSOP_NOP))
-            return NULL;
+            return false;
     }
 
     /* Call recursive subroutine to do the hard work. */
