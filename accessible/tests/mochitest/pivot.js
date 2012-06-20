@@ -86,9 +86,8 @@ function VCChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets)
     }
 
     var position = aDocAcc.virtualCursor.position;
-
-    var idMatches = position.DOMNode.id == aIdOrNameOrAcc;
-    var nameMatches = position.name == aIdOrNameOrAcc;
+    var idMatches = position && position.DOMNode.id == aIdOrNameOrAcc;
+    var nameMatches = position && position.name == aIdOrNameOrAcc;
     var accMatches = position == aIdOrNameOrAcc;
 
     SimpleTest.ok(idMatches || nameMatches || accMatches, "id or name matches",
@@ -170,26 +169,70 @@ function setVCRangeInvoker(aDocAcc, aTextAccessible, aTextOffsets)
  * @param aDocAcc          [in] document that manages the virtual cursor
  * @param aPivotMoveMethod [in] method to test (ie. "moveNext", "moveFirst", etc.)
  * @param aRule            [in] traversal rule object
- * @param aIdOrNameOrAcc   [in] id, accessivle or accessible name to expect
+ * @param aIdOrNameOrAcc   [in] id, accessible or accessible name to expect
  *                         virtual cursor to land on after performing move method.
+ *                         false if no move is expected.
  */
 function setVCPosInvoker(aDocAcc, aPivotMoveMethod, aRule, aIdOrNameOrAcc)
 {
+  var expectMove = (aIdOrNameOrAcc != false);
   this.invoke = function virtualCursorChangedInvoker_invoke()
   {
     VCChangedChecker.
       storePreviousPosAndOffset(aDocAcc.virtualCursor);
     var moved = aDocAcc.virtualCursor[aPivotMoveMethod](aRule);
-    SimpleTest.ok((aIdOrNameOrAcc && moved) || (!aIdOrNameOrAcc && !moved),
+    SimpleTest.ok((expectMove && moved) || (!expectMove && !moved),
                   "moved pivot");
   };
 
   this.getID = function setVCPosInvoker_getID()
   {
-    return "Do " + (aIdOrNameOrAcc ? "" : "no-op ") + aPivotMoveMethod;
+    return "Do " + (expectMove ? "" : "no-op ") + aPivotMoveMethod;
   };
 
-  if (aIdOrNameOrAcc) {
+  if (expectMove) {
+    this.eventSeq = [ new VCChangedChecker(aDocAcc, aIdOrNameOrAcc) ];
+  } else {
+    this.eventSeq = [];
+    this.unexpectedEventSeq = [
+      new invokerChecker(EVENT_VIRTUALCURSOR_CHANGED, aDocAcc)
+    ];
+  }
+}
+
+/**
+ * Move the pivot to the position under the point.
+ *
+ * @param aDocAcc        [in] document that manages the virtual cursor
+ * @param aX             [in] screen x coordinate
+ * @param aY             [in] screen y coordinate
+ * @param aIgnoreNoMatch [in] don't unset position if no object was found at
+ *                       point.
+ * @param aRule          [in] traversal rule object
+ * @param aIdOrNameOrAcc [in] id, accessible or accessible name to expect
+ *                       virtual cursor to land on after performing move method.
+ *                       false if no move is expected.
+ */
+function moveVCCoordInvoker(aDocAcc, aX, aY, aIgnoreNoMatch,
+                            aRule, aIdOrNameOrAcc)
+{
+  var expectMove = (aIdOrNameOrAcc != false);
+  this.invoke = function virtualCursorChangedInvoker_invoke()
+  {
+    VCChangedChecker.
+      storePreviousPosAndOffset(aDocAcc.virtualCursor);
+    var moved = aDocAcc.virtualCursor.moveToPoint(aRule, aX, aY,
+                                                  aIgnoreNoMatch);
+    SimpleTest.ok((expectMove && moved) || (!expectMove && !moved),
+                  "moved pivot");
+  };
+
+  this.getID = function setVCPosInvoker_getID()
+  {
+    return "Do " + (expectMove ? "" : "no-op ") + "moveToPoint " + aIdOrNameOrAcc;
+  };
+
+  if (expectMove) {
     this.eventSeq = [ new VCChangedChecker(aDocAcc, aIdOrNameOrAcc) ];
   } else {
     this.eventSeq = [];
@@ -220,7 +263,7 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aSequence)
   }
 
   // No further more matches for given rule, expect no virtual cursor changes.
-  aQueue.push(new setVCPosInvoker(aDocAcc, "moveNext", aRule, null));
+  aQueue.push(new setVCPosInvoker(aDocAcc, "moveNext", aRule, false));
 
   for (var i = aSequence.length-2; i >= 0; i--) {
     var invoker =
@@ -229,18 +272,18 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aSequence)
   }
 
   // No previous more matches for given rule, expect no virtual cursor changes.
-  aQueue.push(new setVCPosInvoker(aDocAcc, "movePrevious", aRule, null));
+  aQueue.push(new setVCPosInvoker(aDocAcc, "movePrevious", aRule, false));
 
   aQueue.push(new setVCPosInvoker(aDocAcc, "moveLast", aRule,
                                   aSequence[aSequence.length - 1]));
 
   // No further more matches for given rule, expect no virtual cursor changes.
-  aQueue.push(new setVCPosInvoker(aDocAcc, "moveNext", aRule, null));
+  aQueue.push(new setVCPosInvoker(aDocAcc, "moveNext", aRule, false));
 
   aQueue.push(new setVCPosInvoker(aDocAcc, "moveFirst", aRule, aSequence[0]));
 
   // No previous more matches for given rule, expect no virtual cursor changes.
-  aQueue.push(new setVCPosInvoker(aDocAcc, "movePrevious", aRule, null));
+  aQueue.push(new setVCPosInvoker(aDocAcc, "movePrevious", aRule, false));
 }
 
 /**
