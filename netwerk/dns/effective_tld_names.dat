@@ -4159,9 +4159,16 @@ tk
 tl
 gov.tl
 
-// tm : http://www.nic.tm/rules.html
-// list of 2nd level tlds ?
+// tm : http://www.nic.tm/local.html
 tm
+com.tm
+co.tm
+org.tm
+net.tm
+nom.tm
+gov.tm
+mil.tm
+edu.tm
 
 // tn : http://en.wikipedia.org/wiki/.tn
 // http://whois.ati.tn/
