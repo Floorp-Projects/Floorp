@@ -262,7 +262,7 @@ WebappsApplication.prototype = {
         Services.DOMRequest.fireSuccess(req, msg.origin);
         break;
       case "Webapps:Uninstall:Return:KO":
-        Services.DOMRequest.fireError(req, msg.origin);
+        Services.DOMRequest.fireError(req, "NOT_INSTALLED");
         break;
     }
     this.removeRequest(msg.requestID);

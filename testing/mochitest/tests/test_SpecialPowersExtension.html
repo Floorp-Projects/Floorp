@@ -8,7 +8,7 @@
 <body onload="starttest();">
 
 <div id="content" style="display: none">
-  
+  <canvas id="testcanvas" width="200" height="200">
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -127,6 +127,17 @@ function starttest(){
   }
   var WrappedConstructor = SpecialPowers.wrap(TestConstructor);
   is((new WrappedConstructor()).foo, 2, "JS constructors work properly when wrapped");
+
+  // Try messing around with QuickStubbed getters/setters and make sure the wrapper deals.
+  var ctx = SpecialPowers.wrap(document).getElementById('testcanvas').getContext('2d');
+  var pixels = ctx.getImageData(0,0,1,1);
+  try {
+    pixels.data;
+    ok(true, "Didn't throw getting quickstubbed accessor prop from proto");
+  }
+  catch (e) {
+    ok(false, "Threw while getting quickstubbed accessor prop from proto");
+  }
 
   // Check functions that return null.
   var returnsNull = function() { return null; }

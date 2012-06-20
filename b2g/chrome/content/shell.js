@@ -69,8 +69,6 @@ function addPermissions(urls) {
 }
 
 var shell = {
-  isDebug: false,
-
   get contentBrowser() {
     delete this.contentBrowser;
     return this.contentBrowser = document.getElementById('homescreen');
@@ -134,6 +132,14 @@ var shell = {
 
     WebappsHelper.init();
 
+    // XXX could factor out into a settings->pref map.  Not worth it yet.
+    SettingsListener.observe("debug.fps.enabled", false, function(value) {
+      Services.prefs.setBoolPref("layers.acceleration.draw-fps", value);
+    });
+    SettingsListener.observe("debug.paint-flashing.enabled", false, function(value) {
+      Services.prefs.setBoolPref("nglayout.debug.paint_flashing", value);
+    });
+
     let browser = this.contentBrowser;
     browser.homePage = homeURL;
     browser.goHome();
@@ -154,18 +160,6 @@ var shell = {
 #ifndef MOZ_WIDGET_GONK
     delete Services.audioManager;
 #endif
-  },
-
-  toggleDebug: function shell_toggleDebug() {
-    this.isDebug = !this.isDebug;
-
-    if (this.isDebug) {
-      Services.prefs.setBoolPref("layers.acceleration.draw-fps", true);
-      Services.prefs.setBoolPref("nglayout.debug.paint_flashing", true);
-    } else {
-      Services.prefs.setBoolPref("layers.acceleration.draw-fps", false);
-      Services.prefs.setBoolPref("nglayout.debug.paint_flashing", false);
-    }
   },
  
   changeVolume: function shell_changeVolume(delta) {
@@ -209,11 +203,6 @@ var shell = {
         // to the content, let's react on some of the keyup events.
         if (evt.type == 'keyup' && evt.eventPhase == evt.BUBBLING_PHASE) {
           switch (evt.keyCode) {
-            case evt.DOM_VK_F5:
-              if (Services.prefs.getBoolPref('b2g.keys.search.enabled'))
-                this.toggleDebug();
-              break;
-  
             case evt.DOM_VK_PAGE_DOWN:
               this.changeVolume(-1);
               break;

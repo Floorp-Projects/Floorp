@@ -9,6 +9,7 @@
 #define js_utility_h__
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -65,6 +66,9 @@ JS_BEGIN_EXTERN_C
 
 #define JS_STATIC_ASSERT(cond)           MOZ_STATIC_ASSERT(cond, "JS_STATIC_ASSERT")
 #define JS_STATIC_ASSERT_IF(cond, expr)  MOZ_STATIC_ASSERT_IF(cond, expr, "JS_STATIC_ASSERT_IF")
+
+extern MOZ_NORETURN JS_PUBLIC_API(void)
+JS_Assert(const char *s, const char *file, int ln);
 
 /*
  * Abort the process in a non-graceful manner. This will cause a core file,

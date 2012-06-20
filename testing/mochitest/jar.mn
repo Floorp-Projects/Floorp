@@ -6,7 +6,6 @@ mochikit.jar:
   content/chrome-harness.js (chrome-harness.js)
   content/harness-overlay.xul (harness-overlay.xul)
   content/harness.xul (harness.xul)
-  content/mozprefs.js (mozprefs.js)
   content/redirect.html (redirect.html)
   content/server.js (server.js)
   content/dynamic/getMyDirectory.sjs (dynamic/getMyDirectory.sjs)

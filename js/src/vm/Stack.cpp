@@ -606,12 +606,32 @@ StackSpace::markFrameValues(JSTracer *trc, StackFrame *fp, Value *slotsEnd, jsby
          * Will this slot be synced by the JIT? If not, replace with a dummy
          * value with the same type tag.
          */
-        if (!analysis->trackSlot(slot) || analysis->liveness(slot).live(offset))
+        if (!analysis->trackSlot(slot) || analysis->liveness(slot).live(offset)) {
             gc::MarkValueRoot(trc, vp, "vm_stack");
-        else if (vp->isObject())
-            *vp = ObjectValue(fp->scopeChain()->global());
-        else if (vp->isString())
-            *vp = StringValue(trc->runtime->atomState.nullAtom);
+        } else if (vp->isDouble()) {
+            *vp = DoubleValue(0.0);
+        } else {
+            /*
+             * It's possible that *vp may not be a valid Value. For example, it
+             * may be tagged as a NullValue but the low bits may be nonzero so
+             * that isNull() returns false. This can cause problems later on
+             * when marking the value. Extracting the type in this way and then
+             * overwriting the value circumvents the problem.
+             */
+            JSValueType type = vp->extractNonDoubleType();
+            if (type == JSVAL_TYPE_INT32)
+                *vp = Int32Value(0);
+            else if (type == JSVAL_TYPE_UNDEFINED)
+                *vp = UndefinedValue();
+            else if (type == JSVAL_TYPE_BOOLEAN)
+                *vp = BooleanValue(false);
+            else if (type == JSVAL_TYPE_STRING)
+                *vp = StringValue(trc->runtime->atomState.nullAtom);
+            else if (type == JSVAL_TYPE_NULL)
+                *vp = NullValue();
+            else if (type == JSVAL_TYPE_OBJECT)
+                *vp = ObjectValue(fp->scopeChain()->global());
+        }
     }
 
     gc::MarkValueRootRange(trc, fixedEnd, slotsEnd, "vm_stack");
@@ -1208,9 +1228,9 @@ CrashIfInvalidSlot(StackFrame *fp, Value *vp)
 {
     Value *slots = (Value *)(fp + 1);
     if (vp < slots || vp >= slots + fp->script()->nslots) {
-        JS_ASSERT(false && "About to dereference invalid slot");
-        *(int *)0xbad = 0;  // show up nicely in crash-stats
-        MOZ_Assert("About to dereference invalid slot", __FILE__, __LINE__);
+        MOZ_ASSERT(false, "About to dereference invalid slot");
+        *(volatile int *)0xbad = 0;  // show up nicely in crash-stats
+        MOZ_CRASH();
     }
 }
 

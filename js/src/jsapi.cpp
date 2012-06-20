@@ -732,6 +732,7 @@ JSRuntime::JSRuntime()
     gcIsFull(false),
     gcTriggerReason(gcreason::NO_REASON),
     gcStrictCompartmentChecking(false),
+    gcDisableStrictProxyCheckingCount(0),
     gcIncrementalState(gc::NO_INCREMENTAL),
     gcLastMarkSlice(false),
     gcInterFrameGC(0),
@@ -6625,7 +6626,7 @@ JS_AbortIfWrongThread(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
     if (!rt->onOwnerThread())
-        MOZ_Assert("rt->onOwnerThread()", __FILE__, __LINE__);
+        MOZ_CRASH();
 #endif
 }
 
@@ -6651,6 +6652,9 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
         zeal = atoi(env);
         frequency = p ? atoi(p + 1) : JS_DEFAULT_ZEAL_FREQ;
     }
+
+    if (zeal == 0 && cx->runtime->gcVerifyData)
+        VerifyBarriers(cx->runtime);
 
     bool schedule = zeal >= js::gc::ZealAllocValue;
     cx->runtime->gcZeal_ = zeal;
