@@ -5,9 +5,6 @@
 
 # A netscape style .mk file for autoconf builds
 
-INCLUDED_AUTOCONF_MK = 1
-USE_AUTOCONF 	= 1
-MOZILLA_CLIENT	= 1
 target          = @target@
 ac_configure_args = @ac_configure_args@
 MOZILLA_VERSION = @MOZILLA_VERSION@
@@ -27,15 +24,7 @@ libdir		= @libdir@
 datadir		= @datadir@
 mandir		= @mandir@
 
-installdir	= $(libdir)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)
-sdkdir		= $(libdir)/$(MOZ_APP_NAME)-devel-$(MOZ_APP_VERSION)
-
 TOP_DIST	= @TOP_DIST@
-ifneq (,$(filter /%,$(TOP_DIST)))
-DIST		= $(TOP_DIST)
-else
-DIST		= $(DEPTH)/$(TOP_DIST)
-endif
 
 MOZ_JS_LIBS		   = @MOZ_JS_LIBS@
 
@@ -67,8 +56,6 @@ ENABLE_TESTS	= @ENABLE_TESTS@
 
 TAR=@TAR@
 
-RM = rm -f
-
 # The MOZ_UI_LOCALE var is used to build a particular locale. Do *not*
 # use the var to change any binary files. Do *not* use this var unless you
 # write rules for the "clean-locale" and "locale" targets.
@@ -94,17 +81,16 @@ MOZ_NATIVE_NSPR = @MOZ_NATIVE_NSPR@
 
 CROSS_COMPILE   = @CROSS_COMPILE@
 
-OS_CPPFLAGS	= @CPPFLAGS@
-OS_CFLAGS	= $(OS_CPPFLAGS) @CFLAGS@
-OS_CXXFLAGS	= $(OS_CPPFLAGS) @CXXFLAGS@
-OS_LDFLAGS	= @LDFLAGS@
+OS_CPPFLAGS	= @OS_CPPFLAGS@
+OS_CFLAGS	= @OS_CFLAGS@
+OS_CXXFLAGS	= @OS_CXXFLAGS@
+OS_LDFLAGS	= @OS_LDFLAGS@
 
-OS_COMPILE_CFLAGS = $(OS_CPPFLAGS) @COMPILE_CFLAGS@
-OS_COMPILE_CXXFLAGS = $(OS_CPPFLAGS) @COMPILE_CXXFLAGS@
+OS_COMPILE_CFLAGS = @OS_COMPILE_CFLAGS@
+OS_COMPILE_CXXFLAGS = @OS_COMPILE_CXXFLAGS@
 
-OS_INCLUDES	= $(NSPR_CFLAGS)
-OS_LIBS		= @LIBS@
-ACDEFINES	= @MOZ_DEFINES@
+OS_LIBS		= @OS_LIBS@
+ACDEFINES	= @ACDEFINES@
 
 WARNINGS_AS_ERRORS = @WARNINGS_AS_ERRORS@
 FAIL_ON_WARNINGS = @FAIL_ON_WARNINGS@
@@ -142,10 +128,7 @@ _MSC_VER	= @_MSC_VER@
 
 DLL_PREFIX	= @DLL_PREFIX@
 LIB_PREFIX	= @LIB_PREFIX@
-# We do magic with OBJ_SUFFIX in config.mk, the following ensures we don't
-# manually use it before config.mk inclusion
-OBJ_SUFFIX	= $(error config/config.mk needs to be included before using OBJ_SUFFIX)
-_OBJ_SUFFIX	= @OBJ_SUFFIX@
+OBJ_SUFFIX	= @OBJ_SUFFIX@
 LIB_SUFFIX	= @LIB_SUFFIX@
 DLL_SUFFIX	= @DLL_SUFFIX@
 BIN_SUFFIX	= @BIN_SUFFIX@
@@ -201,7 +184,7 @@ RANLIB		= @RANLIB@
 XARGS		= @XARGS@
 STRIP		= @STRIP@
 DOXYGEN		= @DOXYGEN@
-PBBUILD_BIN	= @PBBUILD@
+PBBUILD_BIN	= @PBBUILD_BIN@
 SDP		= @SDP@
 NSINSTALL_BIN	= @NSINSTALL_BIN@
 
@@ -236,12 +219,9 @@ DLL_SUFFIX              = @DLL_SUFFIX@
 
 NO_LD_ARCHIVE_FLAGS     = @NO_LD_ARCHIVE_FLAGS@
 
-MOZ_TOOLKIT_REGISTRY_CFLAGS = \
-	$(TK_CFLAGS)
+MOZ_NATIVE_MAKEDEPEND	= @MOZ_NATIVE_MAKEDEPEND@
 
-MOZ_NATIVE_MAKEDEPEND	= @SYSTEM_MAKEDEPEND@
-
-export CL_INCLUDES_PREFIX = @CL_INCLUDES_PREFIX@
+CL_INCLUDES_PREFIX = @CL_INCLUDES_PREFIX@
 
 MOZ_AUTO_DEPS	= @MOZ_AUTO_DEPS@
 COMPILER_DEPEND = @COMPILER_DEPEND@
@@ -304,15 +284,4 @@ MOZ_METRO	= @MOZ_METRO@
 
 MOZ_ASAN = @MOZ_ASAN@
 
-# We only want to do the pymake sanity on Windows, other os's can cope
-ifeq ($(HOST_OS_ARCH),WINNT)
-# Ensure invariants between GNU Make and pymake
-# Checked here since we want the sane error in a file that
-# actually can be found regardless of path-style.
-ifeq (_:,$(.PYMAKE)_$(findstring :,$(srcdir)))
-$(error Windows-style srcdir being used with GNU make. Did you mean to run $(topsrcdir)/build/pymake/make.py instead? [see-also: https://developer.mozilla.org/en/Gmake_vs._Pymake])
-endif
-ifeq (1_a,$(.PYMAKE)_$(firstword a$(subst /, ,$(srcdir))))
-$(error MSYS-style srcdir being used with Pymake. Did you mean to run GNU Make instead? [see-also: https://developer.mozilla.org/en/Gmake_vs._Pymake])
-endif
-endif # WINNT
+include $(topsrcdir)/config/baseconfig.mk

@@ -219,14 +219,14 @@ ifndef MOZ_BUILD_PROJECTS
 # Building a single project, OBJDIR is usable.
 	set -e; \
 	for mkfile in $(MOZ_PREFLIGHT_ALL); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight_all topsrcdir=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
 	done
 else
 # OBJDIR refers to the project-specific OBJDIR, which is not available at
 # this point when building multiple projects.  Only MOZ_OBJDIR is available.
 	set -e; \
 	for mkfile in $(MOZ_PREFLIGHT_ALL); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight_all TOPSRCDIR=$(TOPSRCDIR) MOZ_OBJDIR=$(MOZ_OBJDIR) MOZ_BUILD_PROJECTS="$(MOZ_BUILD_PROJECTS)"; \
+	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight_all topsrcdir=$(TOPSRCDIR) MOZ_OBJDIR=$(MOZ_OBJDIR) MOZ_BUILD_PROJECTS="$(MOZ_BUILD_PROJECTS)"; \
 	done
 endif
 endif
@@ -338,7 +338,7 @@ realbuild alldep preflight::
 ifdef MOZ_PREFLIGHT
 	set -e; \
 	for mkfile in $(MOZ_PREFLIGHT); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile preflight topsrcdir=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
 	done
 endif
 
@@ -362,7 +362,7 @@ realbuild alldep postflight::
 ifdef MOZ_POSTFLIGHT
 	set -e; \
 	for mkfile in $(MOZ_POSTFLIGHT); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight topsrcdir=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
 	done
 endif
 
@@ -379,14 +379,14 @@ ifndef MOZ_BUILD_PROJECTS
 # Building a single project, OBJDIR is usable.
 	set -e; \
 	for mkfile in $(MOZ_POSTFLIGHT_ALL); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight_all TOPSRCDIR=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
+	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight_all topsrcdir=$(TOPSRCDIR) OBJDIR=$(OBJDIR) MOZ_OBJDIR=$(MOZ_OBJDIR); \
 	done
 else
 # OBJDIR refers to the project-specific OBJDIR, which is not available at
 # this point when building multiple projects.  Only MOZ_OBJDIR is available.
 	set -e; \
 	for mkfile in $(MOZ_POSTFLIGHT_ALL); do \
-	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight_all TOPSRCDIR=$(TOPSRCDIR) MOZ_OBJDIR=$(MOZ_OBJDIR) MOZ_BUILD_PROJECTS="$(MOZ_BUILD_PROJECTS)"; \
+	  $(MAKE) -f $(TOPSRCDIR)/$$mkfile postflight_all topsrcdir=$(TOPSRCDIR) MOZ_OBJDIR=$(MOZ_OBJDIR) MOZ_BUILD_PROJECTS="$(MOZ_BUILD_PROJECTS)"; \
 	done
 endif
 endif

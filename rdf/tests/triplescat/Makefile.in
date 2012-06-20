@@ -27,4 +27,4 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
+CXXFLAGS += $(TK_CFLAGS)
