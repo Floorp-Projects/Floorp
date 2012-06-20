@@ -70,7 +70,7 @@ var ObjectTraversalRule =
 /**
  * A checker for virtual cursor changed events.
  */
-function VCChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets)
+function VCChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets, aPivotMoveMethod)
 {
   this.__proto__ = new invokerChecker(EVENT_VIRTUALCURSOR_CHANGED, aDocAcc);
 
@@ -84,6 +84,11 @@ function VCChangedChecker(aDocAcc, aIdOrNameOrAcc, aTextOffsets)
     } catch (e) {
       SimpleTest.ok(false, "Does not support correct interface: " + e);
     }
+
+    SimpleTest.is(
+      event.reason,
+      VCChangedChecker.methodReasonMap[aPivotMoveMethod],
+      'wrong move reason');
 
     var position = aDocAcc.virtualCursor.position;
     var idMatches = position && position.DOMNode.id == aIdOrNameOrAcc;
@@ -132,6 +137,15 @@ VCChangedChecker.getPreviousPosAndOffset =
   return VCChangedChecker.prevPosAndOffset[aPivot];
 };
 
+VCChangedChecker.methodReasonMap = {
+  'moveNext': nsIAccessiblePivot.REASON_NEXT,
+  'movePrevious': nsIAccessiblePivot.REASON_PREV,
+  'moveFirst': nsIAccessiblePivot.REASON_FIRST,
+  'moveLast': nsIAccessiblePivot.REASON_LAST,
+  'setTextRange': nsIAccessiblePivot.REASON_TEXT,
+  'moveToPoint': nsIAccessiblePivot.REASON_POINT
+};
+
 /**
  * Set a text range in the pivot and wait for virtual cursor change event.
  *
@@ -159,7 +173,7 @@ function setVCRangeInvoker(aDocAcc, aTextAccessible, aTextOffsets)
   };
 
   this.eventSeq = [
-    new VCChangedChecker(aDocAcc, aTextAccessible, aTextOffsets)
+    new VCChangedChecker(aDocAcc, aTextAccessible, aTextOffsets, "setTextRange")
   ];
 }
 
@@ -191,7 +205,9 @@ function setVCPosInvoker(aDocAcc, aPivotMoveMethod, aRule, aIdOrNameOrAcc)
   };
 
   if (expectMove) {
-    this.eventSeq = [ new VCChangedChecker(aDocAcc, aIdOrNameOrAcc) ];
+    this.eventSeq = [
+      new VCChangedChecker(aDocAcc, aIdOrNameOrAcc, null, aPivotMoveMethod)
+    ];
   } else {
     this.eventSeq = [];
     this.unexpectedEventSeq = [
@@ -233,7 +249,9 @@ function moveVCCoordInvoker(aDocAcc, aX, aY, aIgnoreNoMatch,
   };
 
   if (expectMove) {
-    this.eventSeq = [ new VCChangedChecker(aDocAcc, aIdOrNameOrAcc) ];
+    this.eventSeq = [
+      new VCChangedChecker(aDocAcc, aIdOrNameOrAcc, null, 'moveToPoint')
+    ];
   } else {
     this.eventSeq = [];
     this.unexpectedEventSeq = [

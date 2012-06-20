@@ -559,4 +559,9 @@ interface nsIAccessibleVirtualCursorChangeEvent : nsISupports
    * Previous end offset of pivot. -1 if none.
    */
   readonly attribute long oldEndOffset;
+
+  /**
+   * Reason for virtual cursor move.
+   */
+  readonly attribute short reason;
 };
