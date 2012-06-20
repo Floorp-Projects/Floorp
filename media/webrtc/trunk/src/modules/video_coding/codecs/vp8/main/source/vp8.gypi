@@ -30,16 +30,38 @@
             'WEBRTC_LIBVPX_VERSION=960' # Bali
           ],
         },{
-          'dependencies': [
-            '<(webrtc_root)/../third_party/libvpx/libvpx.gyp:libvpx',
-          ],
-          'defines': [
-            'WEBRTC_LIBVPX_VERSION=971' # Cayuga
-          ],
-          'sources': [
-            'temporal_layers.h',
-            'temporal_layers.cc',
-          ],
+          'conditions': [
+             ['build_with_mozilla==1', {
+               'dependencies': [
+#                 '<(webrtc_root)/../third_party/libvpx/libvpx.gyp:libvpx_include',
+               ],
+               'include_dirs': [
+                 '$(DIST)/include',
+               ],
+               'defines': [
+                 # This must be updated to match mozilla's version of libvpx
+                 'WEBRTC_LIBVPX_VERSION=971',
+                 'WEBRTC_LIBVPX_TEMPORAL_LAYERS=0'
+               ],
+               'link_settings': {
+                 'libraries': [
+                    '$(LIBVPX_OBJ)/libvpx.a',
+                 ],
+               },
+             },{
+               'dependencies': [
+                 '<(webrtc_root)/../third_party/libvpx/libvpx.gyp:libvpx',
+               ],
+               'defines': [
+                 'WEBRTC_LIBVPX_VERSION=971', # Cayuga
+                 'WEBRTC_LIBVPX_TEMPORAL_LAYERS=1'
+               ],
+               'sources': [
+                 'temporal_layers.h',
+                 'temporal_layers.cc',
+               ],
+             }],
+           ],
         }],
       ],
       'direct_dependent_settings': {

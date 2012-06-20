@@ -12,7 +12,32 @@
     'peerconnection_sample': 'third_party/libjingle/source/talk/examples/peerconnection',
   },  
 
+  # for mozilla, we want to force stuff to build but we don't want peerconnection_client or server
+  # for unknown reasons, 'target' must be outside of conditions.  And don't try to build a dummy
+  # executable...
   'targets': [
+  {
+    'conditions': [
+      ['build_with_mozilla==1', {
+        'target_name': 'dummy',
+        'type': 'none',
+        'actions': [
+	{
+          'action_name': 'dummy',
+	  'action': [
+	     'echo ARGHHHHHHHHHHHHHHHHHHHH',
+          ],
+          'message': 'Generating scream',
+        }, ],
+        'dependencies': [
+	  'third_party/libjingle/libjingle.gyp:libjingle_app',
+        ],
+      }, ],
+    ],
+  }, ],
+  'conditions': [
+    ['build_with_mozilla==0', {
+    'targets': [
     {
       'target_name': 'peerconnection_server',
       'type': 'executable',
@@ -28,8 +53,7 @@
       'include_dirs': [
         'third_party/libjingle/source',
       ],
-    },
-  ],
+     }, ],
   'conditions': [
     ['OS=="win"', {
       'targets': [
@@ -109,5 +133,6 @@
       ],  # targets
     }, ],  # OS="linux"
   ],
-
+    }, ],
+  ],
 }
