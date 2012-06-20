@@ -2229,7 +2229,7 @@ let RIL = {
         // Call is no longer reported by the radio. Remove from our map and
         // send disconnected state change.
         delete this.currentCalls[currentCall.callIndex];
-        this._handleDisconnectedCall(currentCall);
+        this.getFailCauseCode(currentCall);
       }
     }
 
@@ -2875,9 +2875,28 @@ RIL[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length
   }
 
   let failCause = Buf.readUint32();
-  options.type = "callError";
-  options.error = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];
-  this.sendDOMMessage(options);
+  switch (failCause) {
+    case CALL_FAIL_NORMAL:
+      this._handleDisconnectedCall(options);
+      break;
+    case CALL_FAIL_BUSY:
+      options.state = CALL_STATE_BUSY;
+      this._handleChangedCallState(options);
+      this._handleDisconnectedCall(options);
+      break;
+    case CALL_FAIL_UNOBTAINABLE_NUMBER:
+    case CALL_FAIL_CONGESTION:
+    case CALL_FAIL_ACM_LIMIT_EXCEEDED:
+    case CALL_FAIL_CALL_BARRED:
+    case CALL_FAIL_FDN_BLOCKED:
+    case CALL_FAIL_IMSI_UNKNOWN_IN_VLR:
+    case CALL_FAIL_IMEI_NOT_ACCEPTED:
+    case CALL_FAIL_ERROR_UNSPECIFIED:
+      options.type = "callError";
+      options.error = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[failCause];
+      this.sendDOMMessage(options);
+      break;
+  }
 };
 RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options) {
   if (options.rilRequestError) {

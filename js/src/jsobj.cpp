@@ -3179,8 +3179,8 @@ JSObject::deleteByValue(JSContext *cx, const Value &property, Value *rval, bool 
 
     RootedObject self(cx, this);
 
-    JSAtom *name;
-    if (!js_ValueToAtom(cx, propval, &name))
+    JSAtom *name = ToAtom(cx, propval);
+    if (!name)
         return false;
 
     if (name->isIndex(&index))
