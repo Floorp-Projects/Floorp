@@ -1,11 +1,17 @@
 
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Created on Mon Apr 23 20:03:29 2012 from UCD data files with version info:
+ * Derived from the Unicode Character Database by genUnicodePropertyData.pl
+ *
+ * For Unicode terms of use, see http://www.unicode.org/terms_of_use.html
+ */
+
+/*
+ * Created on Mon Jun 11 21:04:54 2012 from UCD data files with version info:
  *
 
 # Date: 2012-01-26, 22:03:00 GMT [KW]
