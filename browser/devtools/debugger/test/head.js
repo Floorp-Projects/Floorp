@@ -33,11 +33,26 @@ if (!DebuggerServer.initialized) {
 
 waitForExplicitFinish();
 
-function addTab(aURL, aOnload)
+function addWindow()
 {
-  gBrowser.selectedTab = gBrowser.addTab(aURL);
+  let windowReference = window.open();
+  let chromeWindow = windowReference
+    .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation)
+    .QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem
+    .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
 
-  let tab = gBrowser.selectedTab;
+  return chromeWindow;
+}
+
+function addTab(aURL, aOnload, aWindow)
+{
+  let targetWindow = aWindow || window;
+  let targetBrowser = targetWindow.gBrowser;
+
+  targetWindow.focus();
+  targetBrowser.selectedTab = targetBrowser.addTab(aURL);
+
+  let tab = targetBrowser.selectedTab;
   if (aOnload) {
     let handler = function() {
       if (tab.linkedBrowser.currentURI.spec == aURL) {
@@ -51,11 +66,17 @@ function addTab(aURL, aOnload)
   return tab;
 }
 
-function removeTab(aTab) {
-  gBrowser.removeTab(aTab);
+function removeTab(aTab, aWindow) {
+  let targetWindow = aWindow || window;
+  let targetBrowser = targetWindow.gBrowser;
+
+  targetBrowser.removeTab(aTab);
 }
 
-function closeDebuggerAndFinish(aRemoteFlag, aCallback) {
+function closeDebuggerAndFinish(aRemoteFlag, aCallback, aWindow) {
+  let targetWindow = aWindow || window;
+  let debuggerUI = targetWindow.DebuggerUI;
+
   let debuggerClosed = false;
   let debuggerDisconnected = false;
 
@@ -67,19 +88,19 @@ function closeDebuggerAndFinish(aRemoteFlag, aCallback) {
     }
   }
 
-  DebuggerUI.chromeWindow.addEventListener("Debugger:Shutdown", function cleanup() {
-    DebuggerUI.chromeWindow.removeEventListener("Debugger:Shutdown", cleanup, false);
+  debuggerUI.chromeWindow.addEventListener("Debugger:Shutdown", function cleanup() {
+    debuggerUI.chromeWindow.removeEventListener("Debugger:Shutdown", cleanup, false);
     debuggerDisconnected = true;
     _maybeFinish();
   }, false);
   if (!aRemoteFlag) {
-    DebuggerUI.getDebugger().close(function() {
+    debuggerUI.getDebugger().close(function() {
       debuggerClosed = true;
       _maybeFinish();
     });
   } else {
     debuggerClosed = true;
-    DebuggerUI.getRemoteDebugger().close();
+    debuggerUI.getRemoteDebugger().close();
   }
 }
 
@@ -132,10 +153,13 @@ function debug_tab_pane(aURL, aOnDebugging)
   });
 }
 
-function wait_for_connect_and_resume(aOnDebugging)
+function wait_for_connect_and_resume(aOnDebugging, aWindow)
 {
-  window.document.addEventListener("Debugger:Connecting", function dbgConnected(aEvent) {
-    window.document.removeEventListener("Debugger:Connecting", dbgConnected, true);
+  let targetWindow = aWindow || window;
+  let targetDocument = targetWindow.document;
+
+  targetDocument.addEventListener("Debugger:Connecting", function dbgConnected(aEvent) {
+    targetDocument.removeEventListener("Debugger:Connecting", dbgConnected, true);
 
     // Wait for the initial resume...
     aEvent.target.ownerDocument.defaultView.gClient.addOneTimeListener("resumed", function() {
