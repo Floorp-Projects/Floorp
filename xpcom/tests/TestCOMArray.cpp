@@ -6,6 +6,7 @@
 
 #include "TestHarness.h"
 #include "nsCOMArray.h"
+#include "mozilla/Attributes.h"
 
 // {9e70a320-be02-11d1-8031-006008159b5a}
 #define NS_IFOO_IID \
@@ -23,7 +24,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 
-class Foo : public IFoo {
+class Foo MOZ_FINAL : public IFoo {
 public:
 
   Foo(PRInt32 aID);
@@ -73,7 +74,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IBar, NS_IBAR_IID)
 
-class Bar : public IBar {
+class Bar MOZ_FINAL : public IBar {
 public:
 
   explicit Bar(nsCOMArray<IBar>& aArray);
