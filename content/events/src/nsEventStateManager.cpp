@@ -4001,6 +4001,37 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
   mFirstMouseOverEventElement = nsnull;
 }
 
+// Returns the center point of the window's inner content area.
+// This is in widget coordinates, i.e. relative to the widget's top
+// left corner, not in screen coordinates.
+static nsIntPoint
+GetWindowInnerRectCenter(nsPIDOMWindow* aWindow,
+                         nsIWidget* aWidget,
+                         nsPresContext* aContext)
+{
+  NS_ENSURE_TRUE(aWindow && aWidget && aContext, nsIntPoint(0,0));
+
+  float cssInnerX = 0.0;
+  aWindow->GetMozInnerScreenX(&cssInnerX);
+  PRInt32 innerX = PRInt32(NS_round(aContext->CSSPixelsToDevPixels(cssInnerX)));
+
+  float cssInnerY = 0.0;
+  aWindow->GetMozInnerScreenY(&cssInnerY);
+  PRInt32 innerY = PRInt32(NS_round(aContext->CSSPixelsToDevPixels(cssInnerY)));
+ 
+  PRInt32 innerWidth = 0;
+  aWindow->GetInnerWidth(&innerWidth);
+
+  PRInt32 innerHeight = 0;
+  aWindow->GetInnerHeight(&innerHeight);
+ 
+  nsIntRect screen;
+  aWidget->GetScreenBounds(screen);
+
+  return nsIntPoint(innerX - screen.x + innerWidth / 2,
+                    innerY - screen.y + innerHeight / 2);
+}
+
 void
 nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
 {
@@ -4015,24 +4046,24 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
   case NS_MOUSE_MOVE:
     {
       if (sIsPointerLocked && aEvent->widget) {
-        // Perform mouse lock by recentering the mouse directly, then remembering the deltas.
-        nsIntRect bounds;
-        aEvent->widget->GetScreenBounds(bounds);
-        aEvent->lastRefPoint = GetMouseCoords(bounds);
-
-        // refPoint should not be the centre on mousemove
-        if (aEvent->refPoint.x == aEvent->lastRefPoint.x &&
-            aEvent->refPoint.y == aEvent->lastRefPoint.y) {
-          aEvent->refPoint = sLastRefPoint;
-        } else {
-          aEvent->widget->SynthesizeNativeMouseMove(aEvent->lastRefPoint);
+        // Perform mouse lock by recentering the mouse directly, and storing
+        // the refpoints so movement deltas can be calculated.
+        nsIntPoint center = GetWindowInnerRectCenter(mDocument->GetWindow(),
+                                                     aEvent->widget,
+                                                     mPresContext);
+        aEvent->lastRefPoint = center;
+        if (aEvent->refPoint != center) {
+          // This mouse move doesn't finish at the center of the widget,
+          // dispatch a synthetic mouse move to return the mouse back to
+          // the center.
+          aEvent->widget->SynthesizeNativeMouseMove(center);
         }
       } else {
-        aEvent->lastRefPoint = nsIntPoint(sLastRefPoint.x, sLastRefPoint.y);
+        aEvent->lastRefPoint = sLastRefPoint;
       }
 
       // Update the last known refPoint with the current refPoint.
-      sLastRefPoint = nsIntPoint(aEvent->refPoint.x, aEvent->refPoint.y);
+      sLastRefPoint = aEvent->refPoint;
 
       // Get the target content target (mousemove target == mouseover target)
       nsCOMPtr<nsIContent> targetElement = GetEventTargetContent(aEvent);
@@ -4089,11 +4120,14 @@ nsEventStateManager::SetPointerLock(nsIWidget* aWidget,
 
   if (sIsPointerLocked) {
     // Store the last known ref point so we can reposition the pointer after unlock.
-    mPreLockPoint = sLastRefPoint + sLastScreenOffset;
+    mPreLockPoint = sLastRefPoint;
 
-    nsIntRect bounds;
-    aWidget->GetScreenBounds(bounds);
-    sLastRefPoint = GetMouseCoords(bounds);
+    // Fire a synthetic mouse move to ensure event state is updated. We first
+    // set the mouse to the center of the window, so that the mouse event
+    // doesn't report any movement.
+    sLastRefPoint = GetWindowInnerRectCenter(aElement->OwnerDoc()->GetWindow(),
+                                             aWidget,
+                                             mPresContext);
     aWidget->SynthesizeNativeMouseMove(sLastRefPoint);
 
     // Retarget all events to this element via capture.
@@ -4104,8 +4138,12 @@ nsEventStateManager::SetPointerLock(nsIWidget* aWidget,
       dragService->Suppress();
     }
   } else {
-    // Unlocking, so return pointer to the original position
-    aWidget->SynthesizeNativeMouseMove(sLastScreenPoint);
+    // Unlocking, so return pointer to the original position by firing a
+    // synthetic mouse event. We first reset sLastRefPoint to its
+    // pre-pointerlock position, so that the synthetic mouse event reports
+    // no movement.
+    sLastRefPoint = mPreLockPoint;
+    aWidget->SynthesizeNativeMouseMove(mPreLockPoint);
 
     // Don't retarget events to this element any more.
     nsIPresShell::SetCapturingContent(nsnull, CAPTURE_POINTERLOCK);
@@ -4115,31 +4153,6 @@ nsEventStateManager::SetPointerLock(nsIWidget* aWidget,
       dragService->Unsuppress();
     }
   }
-}
-
-nsIntPoint
-nsEventStateManager::GetMouseCoords(nsIntRect aBounds)
-{
-  NS_ASSERTION(sIsPointerLocked, "GetMouseCoords when not pointer locked!");
-
-  nsCOMPtr<nsIDocument> pointerLockedDoc =
-    do_QueryReferent(nsEventStateManager::sPointerLockedDoc);
-  if (!pointerLockedDoc) {
-    NS_WARNING("GetMouseCoords(): No Document");
-    return nsIntPoint(0, 0);
-  }
-
-  nsCOMPtr<nsPIDOMWindow> domWin = pointerLockedDoc->GetInnerWindow();
-  if (!domWin) {
-    NS_WARNING("GetMouseCoords(): No Window");
-    return nsIntPoint(0, 0);
-  }
-
-  int innerHeight;
-  domWin->GetInnerHeight(&innerHeight);
-
-  return nsIntPoint((aBounds.width / 2) + aBounds.x,
-                    (innerHeight / 2) + (aBounds.y + (aBounds.height - innerHeight)));
 }
 
 void
