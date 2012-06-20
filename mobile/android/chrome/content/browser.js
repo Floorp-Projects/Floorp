@@ -5535,11 +5535,11 @@ var WebappsUI = {
           let observer = {
             observe: function (aSubject, aTopic) {
               if (aTopic == "alertclickcallback") {
-                WebappsUI.openURL(manifest.fullLaunchPath(), aData.origin);
+                WebappsUI.openURL(manifest.fullLaunchPath(), data.origin);
               }
             }
           };
-    
+
           let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
           let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
           alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", observer, "webapp");
