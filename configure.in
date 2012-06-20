@@ -54,7 +54,7 @@ dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
 MOZPNG=10509
-MOZZLIB=0x1230
+MOZZLIB=1.2.3
 NSPR_VERSION=4
 NSS_VERSION=3
 
@@ -219,7 +219,6 @@ if test -n "$gonkdir" ; then
     AC_DEFINE(HAVE_PTHREADS)
     CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
-    ZLIB_DIR=yes
     direct_nspr_config=1
 else
     MOZ_ANDROID_NDK
@@ -4057,7 +4056,7 @@ if test "$SYSTEM_JPEG" = 1; then
                      #error "Insufficient JPEG library version ($MOZJPEG required)."
                      #endif ],
                    SYSTEM_JPEG=1,
-                   [SYSTEM_JPEG= JPEG_CFLAGS= JPEG_LIBS=])
+                   AC_MSG_ERROR([Insufficient JPEG library version for --with-system-jpeg]))
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -4090,14 +4089,15 @@ else
 fi
 if test "$SYSTEM_ZLIB" = 1; then
     LIBS="$ZLIB_LIBS $LIBS"
+    MOZZLIBNUM=`echo $MOZZLIB | awk -F. '{printf "0x%x\n", ((($1 * 16 + $2) * 16) + $3) * 16 + $4}'`
     AC_TRY_COMPILE([ #include <stdio.h>
                      #include <string.h>
                      #include <zlib.h> ],
-                   [ #if ZLIB_VERNUM < $MOZZLIB
-                     #error "Insufficient zlib version ($MOZZLIB required)."
+                   [ #if ZLIB_VERNUM < $MOZZLIBNUM
+                     #error "Insufficient zlib version ($MOZZLIBNUM required)."
                      #endif ],
                    SYSTEM_ZLIB=1,
-                   [SYSTEM_ZLIB= ZLIB_CFLAGS= ZLIB_LIBS=])
+                   AC_MSG_ERROR([Insufficient zlib version for --with-system-zlib ($MOZZLIB required)]))
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
