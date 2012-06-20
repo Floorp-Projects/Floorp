@@ -112,7 +112,7 @@
   <string name="site_settings_clear">&site_settings_clear;</string>
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>
 
-  <string name="add_to_reading_list">&add_to_reading_list;</string>
+  <string name="reading_list">&reading_list;</string>
   <string name="reading_list_added">&reading_list_added;</string>
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_failed">&reading_list_failed;</string>
