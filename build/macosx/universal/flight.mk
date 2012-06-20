@@ -66,14 +66,14 @@ postflight_all:
 	      $(DIST_ARCH_2)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(APP_CONTENTS)/*.chk
 # The only difference betewen the two trees now should be the
 # about:buildconfig page.  Fix it up.
-	$(TOPSRCDIR)/build/macosx/universal/fix-buildconfig $(FIX_MODE) \
+	$(topsrcdir)/build/macosx/universal/fix-buildconfig $(FIX_MODE) \
 	  $(DIST_ARCH_1)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG) \
 	  $(DIST_ARCH_2)/$(MOZ_PKG_APPNAME)/$(APPNAME)/$(BUILDCONFIG)
 	mkdir -p $(DIST_UNI)/$(MOZ_PKG_APPNAME)
 	rm -f $(DIST_ARCH_2)/universal
 	ln -s $(DIST_UNI) $(DIST_ARCH_2)/universal
 	rm -rf $(DIST_UNI)/$(MOZ_PKG_APPNAME)/$(APPNAME)
-	$(TOPSRCDIR)/build/macosx/universal/unify \
+	$(topsrcdir)/build/macosx/universal/unify \
           --unify-with-sort "\.manifest$$" \
           --unify-with-sort "components\.list$$" \
 	  $(DIST_ARCH_1)/$(MOZ_PKG_APPNAME)/$(APPNAME) \
@@ -94,7 +94,7 @@ ifdef ENABLE_TESTS
              $(DIST_ARCH_2)/test-package-stage/mochitest/;              \
            cp $(DIST_ARCH_1)/test-package-stage/reftest/automation.py   \
              $(DIST_ARCH_2)/test-package-stage/reftest/;                \
-           $(TOPSRCDIR)/build/macosx/universal/unify                 \
+           $(topsrcdir)/build/macosx/universal/unify                 \
              --unify-with-sort "all-test-dirs\.list$$"               \
              $(DIST_ARCH_1)/test-package-stage                          \
              $(DIST_ARCH_2)/test-package-stage                          \
