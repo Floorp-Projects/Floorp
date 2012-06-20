@@ -66,7 +66,13 @@ BrowserElementChild.prototype = {
     docShell.QueryInterface(Ci.nsIWebProgress)
             .addProgressListener(this._progressListener,
                                  Ci.nsIWebProgress.NOTIFY_LOCATION |
+                                 Ci.nsIWebProgress.NOTIFY_SECURITY |
                                  Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+
+    // This is necessary to get security web progress notifications.
+    var securityUI = Cc['@mozilla.org/secure_browser_ui;1']
+                       .createInstance(Ci.nsISecureBrowserUI);
+    securityUI.init(content);
 
     // A mozbrowser iframe contained inside a mozapp iframe should return false
     // for nsWindowUtils::IsPartOfApp (unless the mozbrowser iframe is itself
@@ -372,10 +378,35 @@ BrowserElementChild.prototype = {
       }
     },
 
+    onSecurityChange: function(webProgress, request, state) {
+      if (webProgress != docShell) {
+        return;
+      }
+
+      var stateDesc;
+      if (state & Ci.nsIWebProgressListener.STATE_IS_SECURE) {
+        stateDesc = 'secure';
+      }
+      else if (state & Ci.nsIWebProgressListener.STATE_IS_BROKEN) {
+        stateDesc = 'broken';
+      }
+      else if (state & Ci.nsIWebProgressListener.STATE_IS_INSECURE) {
+        stateDesc = 'insecure';
+      }
+      else {
+        debug("Unexpected securitychange state!");
+        stateDesc = '???';
+      }
+
+      // XXX Until bug 764496 is fixed, this will always return false.
+      var isEV = !!(state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL);
+
+      sendAsyncMsg('securitychange', {state: stateDesc, extendedValidation: isEV});
+    },
+
     onStatusChange: function(webProgress, request, status, message) {},
     onProgressChange: function(webProgress, request, curSelfProgress,
                                maxSelfProgress, curTotalProgress, maxTotalProgress) {},
-    onSecurityChange: function(webProgress, request, aState) {}
   },
 };
 
