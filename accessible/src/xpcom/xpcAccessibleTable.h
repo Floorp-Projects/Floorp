@@ -39,6 +39,9 @@ public:
   nsresult IsColumnSelected(PRInt32 aColIdx, bool* _retval);
   nsresult IsRowSelected(PRInt32 aRowIdx, bool* _retval);
   nsresult IsCellSelected(PRInt32 aRowIdx, PRInt32 aColIdx, bool* _retval);
+  nsresult GetSelectedCellCount(PRUint32* aSelectedCellCount);
+  nsresult GetSelectedColumnCount(PRUint32* aSelectedColumnCount);
+  nsresult GetSelectedRowCount(PRUint32* aSelectedRowCount);
   nsresult SelectColumn(PRInt32 aColIdx);
   nsresult SelectRow(PRInt32 aRowIdx);
   nsresult UnselectColumn(PRInt32 aColIdx);
@@ -79,9 +82,12 @@ protected:
     { return xpcAccessibleTable::IsRowSelected(rowIdx, _retval); } \
   NS_SCRIPTABLE NS_IMETHOD IsCellSelected(PRInt32 rowIdx, PRInt32 colIdx, bool* _retval NS_OUTPARAM) \
     { return xpcAccessibleTable::IsCellSelected(rowIdx, colIdx, _retval); } \
-  NS_SCRIPTABLE NS_IMETHOD GetSelectedCellCount(PRUint32 *aSelectedCellCount); \
-  NS_SCRIPTABLE NS_IMETHOD GetSelectedColumnCount(PRUint32 *aSelectedColumnCount); \
-  NS_SCRIPTABLE NS_IMETHOD GetSelectedRowCount(PRUint32 *aSelectedRowCount); \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedCellCount(PRUint32* aSelectedCellCount) \
+    { return xpcAccessibleTable::GetSelectedCellCount(aSelectedCellCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedColumnCount(PRUint32* aSelectedColumnCount) \
+    { return xpcAccessibleTable::GetSelectedColumnCount(aSelectedColumnCount); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedRowCount(PRUint32* aSelectedRowCount) \
+    { return xpcAccessibleTable::GetSelectedRowCount(aSelectedRowCount); } \
   NS_SCRIPTABLE NS_IMETHOD GetSelectedCells(nsIArray * *aSelectedCells); \
   NS_SCRIPTABLE NS_IMETHOD GetSelectedCellIndices(PRUint32 *cellsArraySize NS_OUTPARAM, PRInt32 **cellsArray NS_OUTPARAM); \
   NS_SCRIPTABLE NS_IMETHOD GetSelectedColumnIndices(PRUint32 *rowsArraySize NS_OUTPARAM, PRInt32 **rowsArray NS_OUTPARAM); \
