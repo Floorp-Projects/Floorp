@@ -442,7 +442,7 @@ ChromeDebuggerProcess.prototype = {
       DebuggerServer.addBrowserActors();
     }
     DebuggerServer.closeListener();
-    DebuggerServer.openListener(DebuggerPreferences.remotePort, false);
+    DebuggerServer.openListener(DebuggerPreferences.remotePort);
   },
 
   /**
