@@ -29,7 +29,7 @@ include svg-integration/reftest.list
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
 == clipPath-advanced-01.svg pass.svg
-== clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),1,2) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
 == clipPath-basic-01.svg pass.svg
 == clipPath-basic-02.svg pass.svg
 == clipPath-basic-03.svg pass.svg
