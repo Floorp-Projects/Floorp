@@ -261,6 +261,16 @@ nsHttpHandler::Init()
         mAppVersion.AssignLiteral(MOZ_APP_UA_VERSION);
     }
 
+    mSessionStartTime = NowInSeconds();
+
+    rv = mAuthCache.Init();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = InitConnectionMgr();
+    if (NS_FAILED(rv)) return rv;
+
+    mProductSub.AssignLiteral(MOZILLA_UAVERSION);
+
 #if DEBUG
     // dump user agent prefs
     LOG(("> legacy-app-name = %s\n", mLegacyAppName.get()));
@@ -275,16 +285,6 @@ nsHttpHandler::Init()
     LOG(("> compat-firefox = %s\n", mCompatFirefox.get()));
     LOG(("> user-agent = %s\n", UserAgent().get()));
 #endif
-
-    mSessionStartTime = NowInSeconds();
-
-    rv = mAuthCache.Init();
-    if (NS_FAILED(rv)) return rv;
-
-    rv = InitConnectionMgr();
-    if (NS_FAILED(rv)) return rv;
-
-    mProductSub.AssignLiteral(MOZILLA_UAVERSION);
 
     // Startup the http category
     // Bring alive the objects in the http-protocol-startup category
