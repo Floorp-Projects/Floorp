@@ -42,3 +42,5 @@ function f13(a, b=4, ...rest) {
     function b() { }
 }
 assertEq(f13.toString(), "function f13(a, b = 4, ...rest) {\n    return b;\n\n    function b() {\n    }\n\n}");
+function f14(x = let (y) 42, ...rest)  {}
+assertEq(f14.toString(), "function f14(x = let (y) 42, ...rest) {\n}");
