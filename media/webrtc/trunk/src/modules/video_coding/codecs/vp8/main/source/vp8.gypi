@@ -82,7 +82,7 @@
   ], # targets
   # Exclude the test target when building with chromium.
   'conditions': [   
-    ['build_with_chromium==0', {
+    ['build_with_chromium==0 and build_with_mozilla==0', {
       'targets': [
         {
           'target_name': 'vp8_test',
