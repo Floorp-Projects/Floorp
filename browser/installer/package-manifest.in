@@ -453,9 +453,6 @@
 @BINPATH@/components/Weave.js
 @BINPATH@/components/Aitc.js
 #endif
-#ifdef MOZ_SERVICES_NOTIFICATIONS
-@BINPATH@/components/NotificationsComponents.manifest
-#endif
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
 @BINPATH@/components/messageWakeupService.js
