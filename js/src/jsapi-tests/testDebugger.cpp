@@ -150,7 +150,7 @@ END_TEST(testDebugger_throwHook)
 BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 {
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JSObject *debuggee = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
+    JSObject *debuggee = JS_NewGlobalObject(cx, getGlobalClass(), NULL);
     CHECK(debuggee);
 
     {
@@ -193,7 +193,7 @@ BEGIN_TEST(testDebugger_newScriptHook)
     // Test that top-level indirect eval fires the newScript hook.
     CHECK(JS_DefineDebuggerObject(cx, global));
     JSObject *g;
-    g = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
+    g = JS_NewGlobalObject(cx, getGlobalClass(), NULL);
     CHECK(g);
     {
         JSAutoEnterCompartment ae;
