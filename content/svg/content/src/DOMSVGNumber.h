@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsTArray.h"
+#include "mozilla/Attributes.h"
 
 class nsSVGElement;
 
@@ -40,7 +41,7 @@ namespace mozilla {
  *
  * See the comment in DOMSVGLength.h (yes, LENGTH), which applies here too.
  */
-class DOMSVGNumber : public nsIDOMSVGNumber
+class DOMSVGNumber MOZ_FINAL : public nsIDOMSVGNumber
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGNUMBER_IID)

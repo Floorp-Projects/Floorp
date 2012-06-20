@@ -1880,15 +1880,14 @@ OpenDatabaseHelper::StartSetVersion()
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   NS_ASSERTION(mgr, "This should never be null!");
 
-  rv = mgr->AcquireExclusiveAccess(mDatabase, helper,
-            &VersionChangeEventsRunnable::QueueVersionChange<SetVersionHelper>,
+  rv = mgr->AcquireExclusiveAccess(mDatabase, mDatabase->Origin(), helper,
+             &VersionChangeEventsRunnable::QueueVersionChange<SetVersionHelper>,
                                    helper);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   // The SetVersionHelper is responsible for dispatching us back to the
   // main thread again and changing the state to eSetVersionCompleted.
   mState = eSetVersionPending;
-
   return NS_OK;
 }
 
@@ -1910,8 +1909,8 @@ OpenDatabaseHelper::StartDelete()
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   NS_ASSERTION(mgr, "This should never be null!");
 
-  rv = mgr->AcquireExclusiveAccess(mDatabase, helper,
-        &VersionChangeEventsRunnable::QueueVersionChange<DeleteDatabaseHelper>,
+  rv = mgr->AcquireExclusiveAccess(mDatabase, mDatabase->Origin(), helper,
+         &VersionChangeEventsRunnable::QueueVersionChange<DeleteDatabaseHelper>,
                                    helper);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
@@ -2136,7 +2135,7 @@ OpenDatabaseHelper::NotifySetVersionFinished()
   NS_ASSERTION(mState = eSetVersionPending, "How did we get here?");
 
   mState = eSetVersionCompleted;
-  
+
   // Dispatch ourself back to the main thread
   return NS_DispatchToCurrentThread(this);
 }

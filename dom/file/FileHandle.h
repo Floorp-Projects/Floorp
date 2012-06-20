@@ -11,6 +11,7 @@
 
 #include "nsIDOMFileHandle.h"
 #include "nsIFile.h"
+#include "nsIFileStorage.h"
 
 #include "nsDOMEventTargetHelper.h"
 

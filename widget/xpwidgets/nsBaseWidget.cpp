@@ -26,6 +26,7 @@
 #include "npapi.h"
 #include "base/thread.h"
 #include "prenv.h"
+#include "mozilla/Attributes.h"
 
 #ifdef DEBUG
 #include "nsIObserver.h"
@@ -1489,7 +1490,7 @@ static void debug_SetCachedBoolPref(const char * aPrefName,bool aValue)
 }
 
 //////////////////////////////////////////////////////////////
-class Debug_PrefObserver : public nsIObserver {
+class Debug_PrefObserver MOZ_FINAL : public nsIObserver {
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
