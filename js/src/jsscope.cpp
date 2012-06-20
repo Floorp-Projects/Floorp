@@ -1207,31 +1207,6 @@ Bindings::setExtensibleParents(JSContext *cx)
     return true;
 }
 
-bool
-Bindings::setParent(JSContext *cx, JSObject *obj_)
-{
-    RootedObject obj(cx, obj_);
-
-    /*
-     * This may be invoked on GC heap allocated bindings, in which case this
-     * is pointing to an internal value of a JSScript that can't itself be
-     * relocated. The script itself will be rooted, and will not be moved, so
-     * mark the stack value as non-relocatable for the stack root analysis.
-     */
-    Bindings *self = this;
-    SkipRoot root(cx, &self);
-
-    if (!ensureShape(cx))
-        return false;
-
-    /* This is only used for Block objects, which have a NULL proto. */
-    Shape *newShape = Shape::setObjectParent(cx, obj, NULL, self->lastBinding);
-    if (!newShape)
-        return false;
-    self->lastBinding = newShape;
-    return true;
-}
-
 inline
 InitialShapeEntry::InitialShapeEntry() : shape(NULL), proto(NULL)
 {
