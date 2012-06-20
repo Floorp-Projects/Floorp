@@ -4120,8 +4120,7 @@ tel
 tf
 
 // tg : http://en.wikipedia.org/wiki/.tg
-// http://www.nic.tg/nictg/index.php implies no reserved 2nd-level domains,
-// although this contradicts wikipedia.
+// http://www.nic.tg/
 tg
 
 // th : http://en.wikipedia.org/wiki/.th
