@@ -310,7 +310,12 @@
       <method name="filterElement">
         <parameter name="aRow" />
         <body><![CDATA[
-          if (this.stringMatchesFilters(aRow.getAttribute("msg"), this.mFilter)) {
+          let anyMatch = ["msg", "href", "line", "code"].some(function (key) {
+            return (aRow.hasAttribute(key) && 
+                    this.stringMatchesFilters(aRow.getAttribute(key), this.mFilter));
+          }, this);
+
+          if (anyMatch) {
             aRow.classList.remove("filtered-by-string")
           } else {
             aRow.classList.add("filtered-by-string")

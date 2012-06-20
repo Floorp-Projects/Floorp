@@ -87,6 +87,7 @@
 #include "rdf.h"
 #include "nsIControllers.h"
 #include "nsAttrValueOrString.h"
+#include "mozilla/Attributes.h"
 
 // The XUL doc interface
 #include "nsIDOMXULDocument.h"
@@ -106,7 +107,7 @@ namespace css = mozilla::css;
 /**
  * A tearoff class for nsXULElement to implement nsIScriptEventHandlerOwner.
  */
-class nsScriptEventHandlerOwnerTearoff : public nsIScriptEventHandlerOwner
+class nsScriptEventHandlerOwnerTearoff MOZ_FINAL : public nsIScriptEventHandlerOwner
 {
 public:
     nsScriptEventHandlerOwnerTearoff(nsXULElement* aElement)
@@ -145,8 +146,8 @@ PRUint32             nsXULPrototypeAttribute::gNumCacheSets;
 PRUint32             nsXULPrototypeAttribute::gNumCacheFills;
 #endif
 
-class nsXULElementTearoff : public nsIDOMElementCSSInlineStyle,
-                            public nsIFrameLoaderOwner
+class nsXULElementTearoff MOZ_FINAL : public nsIDOMElementCSSInlineStyle,
+                                      public nsIFrameLoaderOwner
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

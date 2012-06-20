@@ -11,11 +11,12 @@
 #include "nsITreeColumns.h"
 #include "nsITimer.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/Attributes.h"
 
 class nsITreeBoxObject;
 struct nsTreeRange;
 
-class nsTreeSelection : public nsINativeTreeSelection
+class nsTreeSelection MOZ_FINAL : public nsINativeTreeSelection
 {
 public:
   nsTreeSelection(nsITreeBoxObject* aTree);

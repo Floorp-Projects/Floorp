@@ -119,6 +119,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
               if (file.endswith(".so")):
                 self.device.pushFile(os.path.join(root, file), self.remoteBinDir)
 
+        self.device.chmodDir(self.remoteBinDir)
+
     def setupTestDir(self):
         xpcDir = os.path.join(self.options.objdir, "_tests/xpcshell")
         self.device.pushDir(xpcDir, self.remoteScriptsDir)
