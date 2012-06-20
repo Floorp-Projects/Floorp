@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
@@ -42,6 +43,7 @@ public class Tabs implements GeckoEventListener {
         GeckoAppShell.registerGeckoEventListener("Session:RestoreBegin", this);
         GeckoAppShell.registerGeckoEventListener("Session:RestoreEnd", this);
         GeckoAppShell.registerGeckoEventListener("Reader:Added", this);
+        GeckoAppShell.registerGeckoEventListener("Reader:Share", this);
     }
 
     public int getCount() {
@@ -263,6 +265,12 @@ public class Tabs implements GeckoEventListener {
                 final String title = message.getString("title");
                 final String url = message.getString("url");
                 handleReaderAdded(success, title, url);
+            } else if (event.equals("Reader:Share")) {
+                final String title = message.getString("title");
+                final String url = message.getString("url");
+
+                GeckoAppShell.openUriExternal(url, "text/plain", "", "",
+                                              Intent.ACTION_SEND, title);
             }
         } catch (Exception e) { 
             Log.i(LOGTAG, "handleMessage throws " + e + " for message: " + event);
