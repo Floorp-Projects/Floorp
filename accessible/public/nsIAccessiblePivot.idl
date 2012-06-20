@@ -123,6 +123,20 @@ interface nsIAccessiblePivot : nsISupports
   boolean movePreviousByText(in TextBoundaryType aBoundary);
 
   /**
+   * Move pivot to given coordinate in screen pixels.
+   *
+   * @param aRule          [in]  raversal rule to use.
+   * @param aX             [in]  screen's x coordinate
+   * @param aY             [in]  screen's y coordinate
+   * @param aIgnoreNoMatch [in]  don't unset position if no object was found at
+   *                       point.
+   * @return true on success, false if the pivot has not been moved.
+   */
+  boolean moveToPoint(in nsIAccessibleTraversalRule aRule,
+                      in long aX, in long aY,
+                      in boolean aIgnoreNoMatch);
+
+  /**
    * Add an observer for pivot changes.
    *
    * @param aObserver [in] the observer object to be notified of pivot changes.

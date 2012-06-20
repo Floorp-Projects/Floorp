@@ -305,6 +305,51 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary, bool* aResult)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsAccessiblePivot::MoveToPoint(nsIAccessibleTraversalRule* aRule,
+                               PRInt32 aX, PRInt32 aY, bool aIgnoreNoMatch,
+                               bool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_ENSURE_ARG_POINTER(aRule);
+
+  *aResult = false;
+
+  if (mRoot && mRoot->IsDefunct())
+    return NS_ERROR_NOT_IN_TREE;
+
+  RuleCache cache(aRule);
+  Accessible* match = nsnull;
+  Accessible* child = mRoot->ChildAtPoint(aX, aY, Accessible::eDeepestChild);
+  while (child && mRoot != child) {
+    PRUint16 filtered = nsIAccessibleTraversalRule::FILTER_IGNORE;
+    nsresult rv = cache.ApplyFilter(child, &filtered);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Ignore any matching nodes that were below this one
+    if (filtered & nsIAccessibleTraversalRule::FILTER_IGNORE_SUBTREE)
+      match = nsnull;
+
+    // Match if no node below this is a match
+    if ((filtered & nsIAccessibleTraversalRule::FILTER_MATCH) && !match) {
+      PRInt32 childX, childY, childWidth, childHeight;
+      child->GetBounds(&childX, &childY, &childWidth, &childHeight);
+      // Double-check child's bounds since the deepest child may have been out
+      // of bounds. This assures we don't return a false positive.
+      if (aX >= childX && aX < childX + childWidth &&
+          aY >= childY && aY < childY + childHeight)
+        match = child;
+    }
+
+    child = child->Parent();
+  }
+
+  if (match || !aIgnoreNoMatch)
+    *aResult = MovePivotInternal(match);
+
+  return NS_OK;
+}
+
 // Observer functions
 
 NS_IMETHODIMP
