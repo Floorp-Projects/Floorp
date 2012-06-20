@@ -98,6 +98,11 @@ Cell.prototype = {
    * Handles all cell events.
    */
   handleEvent: function Cell_handleEvent(aEvent) {
+    // We're not responding to external drag/drop events 
+    // when our parent window is in private browsing mode.
+    if (inPrivateBrowsingMode && !gDrag.draggedSite)
+      return;
+    
     if (aEvent.type != "dragexit" && !gDrag.isValid(aEvent))
       return;
 

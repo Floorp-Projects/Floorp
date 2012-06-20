@@ -22,6 +22,19 @@ let {
   blockedLinks: gBlockedLinks
 } = NewTabUtils;
 
+let chromeWin = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIDocShellTreeItem)
+                      .rootTreeItem
+                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindow)
+                      .wrappedJSObject;
+
+let inPrivateBrowsingMode = false;
+
+if ("gPrivateBrowsingUI" in chromeWin)
+  inPrivateBrowsingMode = chromeWin.gPrivateBrowsingUI.privateWindow;
+
 XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
   return Services.strings.
     createBundle("chrome://browser/locale/newTab.properties");
