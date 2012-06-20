@@ -1203,7 +1203,7 @@ public:
 
     mProxy->mInnerChannelId++;
 
-    nsresult rv = mProxy->mXHR->Send(variant, cx);
+    nsresult rv = mProxy->mXHR->Send(variant);
 
     if (NS_SUCCEEDED(rv)) {
       mProxy->mOutstandingSendCount++;
