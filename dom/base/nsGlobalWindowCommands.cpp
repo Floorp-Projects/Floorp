@@ -27,6 +27,7 @@
 #include "nsFocusManager.h"
 #include "nsCopySupport.h"
 #include "nsGUIEvent.h"
+#include "mozilla/Attributes.h"
 
 #include "nsIClipboardDragDropHooks.h"
 #include "nsIClipboardDragDropHookList.h"
@@ -90,6 +91,7 @@ const char * const sSelectBottomString = "cmd_selectBottom";
 class nsSelectionCommandsBase : public nsIControllerCommand
 {
 public:
+  virtual ~nsSelectionCommandsBase() {}
 
   NS_DECL_ISUPPORTS
   NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandContext, bool *_retval NS_OUTPARAM);
@@ -321,7 +323,7 @@ nsSelectCommand::DoCommand(const char *aCommandName, nsISupports *aCommandContex
 #pragma mark -
 #endif
 
-class nsClipboardCommand : public nsIControllerCommand
+class nsClipboardCommand MOZ_FINAL : public nsIControllerCommand
 {
 public:
 
@@ -388,6 +390,7 @@ nsClipboardCommand::DoCommandParams(const char *aCommandName, nsICommandParams* 
 class nsSelectionCommand : public nsIControllerCommand
 {
 public:
+  virtual ~nsSelectionCommand() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLERCOMMAND
@@ -486,12 +489,12 @@ nsSelectionCommand::GetContentViewerEditFromContext(nsISupports *aContext,
 #endif
 
 #define NS_DECL_CLIPBOARD_COMMAND(_cmd)                                                     \
-class _cmd : public nsSelectionCommand                                                  \
+class _cmd : public nsSelectionCommand                                                      \
 {                                                                                           \
 protected:                                                                                  \
                                                                                             \
   virtual nsresult    IsClipboardCommandEnabled(const char* aCommandName,                   \
-                                  nsIContentViewerEdit* aEdit, bool *outCmdEnabled);      \
+                                  nsIContentViewerEdit* aEdit, bool *outCmdEnabled);        \
   virtual nsresult    DoClipboardCommand(const char* aCommandName,                          \
                                   nsIContentViewerEdit* aEdit, nsICommandParams* aParams);  \
   /* no member variables, please, we're stateless! */                                       \
@@ -591,14 +594,11 @@ nsClipboardGetContentsCommand::DoClipboardCommand(const char *aCommandName, nsIC
   return aParams->SetStringValue("result", contents);
 }
 
-
-#if 0
-#pragma mark -
-#endif
-
+#if 0   // Remove unless needed again, bug 204777
 class nsWebNavigationBaseCommand : public nsIControllerCommand
 {
 public:
+  virtual ~nsWebNavigationBaseCommand() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLERCOMMAND
@@ -613,7 +613,6 @@ protected:
   // no member variables, please, we're stateless!
 };
 
-#if 0   // Remove unless needed again, bug 204777
 class nsGoForwardCommand : public nsWebNavigationBaseCommand
 {
 protected:
@@ -631,7 +630,6 @@ protected:
   virtual nsresult    DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation);
   // no member variables, please, we're stateless!
 };
-#endif
 
 /*---------------------------------------------------------------------------
 
@@ -691,11 +689,6 @@ nsWebNavigationBaseCommand::GetWebNavigationFromContext(nsISupports *aContext, n
   return (*aWebNavigation) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-#if 0
-#pragma mark -
-#endif
-
-#if 0   // Remove unless needed again, bug 204777
 nsresult
 nsGoForwardCommand::IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, bool *outCmdEnabled)
 {
@@ -730,7 +723,7 @@ nsGoBackCommand::DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWe
 
 ----------------------------------------------------------------------------*/
 
-class nsClipboardDragDropHookCommand : public nsIControllerCommand
+class nsClipboardDragDropHookCommand MOZ_FINAL : public nsIControllerCommand
 {
 public:
 

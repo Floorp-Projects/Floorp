@@ -72,6 +72,7 @@
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "mozilla/Preferences.h"
 #include "nsLocation.h"
+#include "mozilla/Attributes.h"
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"
@@ -9768,7 +9769,7 @@ nsHTMLPluginObjElementSH::GetPluginInstanceIfSafe(nsIXPConnectWrappedNative *wra
   return objlc->GetPluginInstance(_result);
 }
 
-class nsPluginProtoChainInstallRunner : public nsIRunnable
+class nsPluginProtoChainInstallRunner MOZ_FINAL : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS

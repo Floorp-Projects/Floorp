@@ -377,14 +377,8 @@ inline __attribute__ ((unused)) void MUST_FLOW_THROUGH(const char *label) {}
 #endif
 #ifdef JS_CRASH_DIAGNOSTICS
 # define JS_POISON(p, val, size) memset((p), (val), (size))
-# define JS_OPT_ASSERT(expr)                                                  \
-    ((expr) ? (void)0 : MOZ_Assert(#expr, __FILE__, __LINE__))
-# define JS_OPT_ASSERT_IF(cond, expr)                                         \
-    ((!(cond) || (expr)) ? (void)0 : MOZ_Assert(#expr, __FILE__, __LINE__))
 #else
 # define JS_POISON(p, val, size) ((void) 0)
-# define JS_OPT_ASSERT(expr) ((void) 0)
-# define JS_OPT_ASSERT_IF(cond, expr) ((void) 0)
 #endif
 
 /* Basic stats */

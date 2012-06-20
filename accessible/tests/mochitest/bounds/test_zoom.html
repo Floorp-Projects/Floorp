@@ -15,11 +15,21 @@
   <script type="application/javascript"
           src="../role.js"></script>
   <script type="application/javascript"
+          src="../events.js"></script>
+  <script type="application/javascript"
           src="../layout.js"></script>
   <script type="application/javascript"
           src="../browser.js"></script>
 
   <script type="application/javascript">
+    //gA11yEventDumpToConsole = true;
+    function doPreTest()
+    {
+      var tabDocument = currentTabDocument();
+      var imgMap = tabDocument.getElementById("imgmap");
+      waitForImageMap(imgMap, doTest);
+    }
+
     function doTest()
     {
       // Bug 746176: Failure of this whole test file on OS X.
@@ -35,7 +45,6 @@
       var p2 = tabDocument.getElementById("p2");
 
       var imgMap = tabDocument.getElementById("imgmap");
-      ensureImageMapTree(imgMap);
       var imgMapAcc = getAccessible(imgMap);
       var area = imgMapAcc.firstChild;
 
@@ -65,10 +74,11 @@
     url += "</body></html>";
 
     SimpleTest.waitForExplicitFinish();
-    openBrowserWindow(doTest,
+    openBrowserWindow(doPreTest,
                       url,
                       { left: 0, top: 0, width: 600, height: 600 });
   </script>
+
 </head>
 <body>
 

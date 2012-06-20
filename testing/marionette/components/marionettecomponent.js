@@ -6,6 +6,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const MARIONETTE_CONTRACTID = "@mozilla.org/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
+const DEBUGGER_ENABLED_PREF = 'devtools.debugger.remote-enabled';
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -72,10 +73,16 @@ MarionetteComponent.prototype = {
         DebuggerServer.addActors('chrome://marionette/content/marionette-actors.js');
         // This pref is required for the remote debugger to open a socket,
         // so force it to true.  See bug 761252.
-        Services.prefs.setBoolPref('devtools.debugger.remote-enabled', true);
+        let original = false;
+        try {
+          original = Services.prefs.getBoolPref(DEBUGGER_ENABLED_PREF);
+        }
+        catch(e) { }
+        Services.prefs.setBoolPref(DEBUGGER_ENABLED_PREF, true);
         // Always allow remote connections.
         DebuggerServer.initTransport(function () { return true; });
         DebuggerServer.openListener(port, true);
+        Services.prefs.setBoolPref(DEBUGGER_ENABLED_PREF, original);
       }
       catch(e) {
         this.logger.error('exception: ' + e.name + ', ' + e.message);

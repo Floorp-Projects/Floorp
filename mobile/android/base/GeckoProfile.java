@@ -17,6 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Enumeration;
 import android.content.Context;
 import android.os.Build;
@@ -45,6 +46,9 @@ public final class GeckoProfile {
     }
 
     public static GeckoProfile get(Context context) {
+        if (context instanceof GeckoApp)
+            return get(context, ((GeckoApp)context).getDefaultProfileName());
+
         return get(context, "");
     }
 
@@ -96,6 +100,10 @@ public final class GeckoProfile {
             }
             return mozDir;
         }
+    }
+
+    public static boolean removeProfile(Context context, String profileName) {
+        return new GeckoProfile(context, profileName).remove();
     }
 
     private GeckoProfile(Context context, String profileName) {
@@ -207,6 +215,59 @@ public final class GeckoProfile {
             return sb.toString();
         } finally {
             fr.close();
+        }
+    }
+
+    private boolean remove() {
+        try {
+            File mozillaDir = ensureMozillaDirectory(mContext);
+            mDir = findProfileDir(mozillaDir);
+            if (mDir == null)
+                return false;
+
+            INIParser parser = getProfilesINI(mContext);
+
+            Hashtable<String, INISection> sections = parser.getSections();
+            for (Enumeration<INISection> e = sections.elements(); e.hasMoreElements();) {
+                INISection section = e.nextElement();
+                String name = section.getStringProperty("Name");
+
+                if (name == null || !name.equals(mName))
+                    continue;
+
+                if (section.getName().startsWith("Profile")) {
+                    // ok, we have stupid Profile#-named things.  Rename backwards.
+                    try {
+                        int sectionNumber = Integer.parseInt(section.getName().substring("Profile".length()));
+                        String curSection = "Profile" + sectionNumber;
+                        String nextSection = "Profile" + (sectionNumber+1);
+
+                        sections.remove(curSection);
+
+                        while (sections.containsKey(nextSection)) {
+                            parser.renameSection(nextSection, curSection);
+                            sectionNumber++;
+                            
+                            curSection = nextSection;
+                            nextSection = "Profile" + (sectionNumber+1);
+                        }
+                    } catch (NumberFormatException nex) {
+                        // uhm, malformed Profile thing; we can't do much.
+                        Log.e(LOGTAG, "Malformed section name in profiles.ini: " + section.getName());
+                        return false;
+                    }
+                } else {
+                    // this really shouldn't be the case, but handle it anyway
+                    parser.removeSection(mName);
+                    return true;
+                }
+            }
+
+            parser.write();
+            return true;
+        } catch (IOException ex) {
+            Log.w(LOGTAG, "Failed to remove profile " + mName + ":\n" + ex);
+            return false;
         }
     }
 

@@ -95,6 +95,17 @@ AccessCheck::isChrome(JSCompartment *compartment)
     return NS_SUCCEEDED(ssm->IsSystemPrincipal(principal, &privileged)) && privileged;
 }
 
+bool
+AccessCheck::callerIsChrome()
+{
+    nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+    if (!ssm)
+        return false;
+    bool subjectIsSystem;
+    nsresult rv = ssm->SubjectPrincipalIsSystem(&subjectIsSystem);
+    return NS_SUCCEEDED(rv) && subjectIsSystem;
+}
+
 nsIPrincipal *
 AccessCheck::getPrincipal(JSCompartment *compartment)
 {
@@ -434,6 +445,12 @@ PermitIfUniversalXPConnect(JSContext *cx, jsid id, Wrapper::Action act,
     if (!ssm) {
         return false;
     }
+
+    // Double-check that the subject principal according to CAPS is a content
+    // principal rather than the system principal. If it isn't, this check is
+    // meaningless.
+    MOZ_ASSERT(!AccessCheck::callerIsChrome());
+
     bool privileged;
     if (NS_SUCCEEDED(ssm->IsCapabilityEnabled("UniversalXPConnect", &privileged)) &&
         privileged) {
@@ -462,10 +479,17 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
 
     jsid exposedPropsId = GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS);
 
-    JSBool found = false;
+    // We need to enter the wrappee's compartment to look at __exposedProps__,
+    // but we need to be in the wrapper's compartment to check UniversalXPConnect.
+    //
+    // Unfortunately, |cx| can be in either compartment when we call ::check. :-(
     JSAutoEnterCompartment ac;
-    if (!ac.enter(cx, wrappedObject) ||
-        !JS_HasPropertyById(cx, wrappedObject, exposedPropsId, &found))
+    JSAutoEnterCompartment wrapperAC;
+    if (!ac.enter(cx, wrappedObject))
+        return false;
+
+    JSBool found = false;
+    if (!JS_HasPropertyById(cx, wrappedObject, exposedPropsId, &found))
         return false;
 
     // Always permit access to "length" and indexed properties of arrays.
@@ -478,13 +502,14 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
 
     // If no __exposedProps__ existed, deny access.
     if (!found) {
+        // Everything below here needs to be done in the wrapper's compartment.
+        if (!wrapperAC.enter(cx, wrapper))
+            return false;
+
         // For now, only do this on functions.
         if (!JS_ObjectIsFunction(cx, wrappedObject)) {
 
             // This little loop hole will go away soon! See bug 553102.
-            JSAutoEnterCompartment innerAc;
-            if (!innerAc.enter(cx, wrapper))
-                return false;
             nsCOMPtr<nsPIDOMWindow> win =
                 do_QueryInterface(nsJSUtils::GetStaticScriptGlobal(cx, wrapper));
             if (win) {
@@ -513,7 +538,8 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
         return false;
 
     if (exposedProps.isNullOrUndefined()) {
-        return PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
+        return wrapperAC.enter(cx, wrapper) &&
+               PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
     }
 
     if (!exposedProps.isObject()) {
@@ -530,7 +556,8 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
         return false; // Error
     }
     if (desc.obj == NULL || !(desc.attrs & JSPROP_ENUMERATE)) {
-        return PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
+        return wrapperAC.enter(cx, wrapper) &&
+               PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
     }
 
     if (!JSVAL_IS_STRING(desc.value)) {
@@ -575,7 +602,8 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapper, jsid id, Wrapper:
 
     if ((act == Wrapper::SET && !(access & WRITE)) ||
         (act != Wrapper::SET && !(access & READ))) {
-        return PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
+        return wrapperAC.enter(cx, wrapper) &&
+               PermitIfUniversalXPConnect(cx, id, act, perm); // Deny
     }
 
     perm = PermitPropertyAccess;

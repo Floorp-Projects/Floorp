@@ -322,10 +322,8 @@ types::TypeFailure(JSContext *cx, const char *fmt, ...)
     /* Dump type state, even if INFERFLAGS is unset. */
     cx->compartment->types.print(cx, true);
 
-    /* Always active, even in release builds */
-    MOZ_Assert(msgbuf, __FILE__, __LINE__);
-
-    *((volatile int *)NULL) = 0;  /* Should never be reached */
+    MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
+    MOZ_CRASH();
 }
 
 /////////////////////////////////////////////////////////////////////

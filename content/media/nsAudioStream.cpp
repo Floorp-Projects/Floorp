@@ -23,7 +23,6 @@ using namespace mozilla::dom;
 extern "C" {
 #include "sydneyaudio/sydney_audio.h"
 }
-#include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
 
@@ -43,8 +42,6 @@ using namespace mozilla;
 #if defined(ANDROID)
 #define REMOTE_AUDIO 1
 #endif
-
-using mozilla::TimeStamp;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gAudioStreamLog = nsnull;
@@ -285,12 +282,9 @@ class AudioShutdownEvent : public nsRunnable
 #define PREF_CUBEB_LATENCY "media.cubeb_latency_ms"
 
 static mozilla::Mutex* gAudioPrefsLock = nsnull;
-static double gVolumeScale = 1.0;
-static bool gUseCubeb = false;
-
-// Arbitrary default stream latency.  The higher this value, the longer stream
-// volume changes will take to become audible.
-static PRUint32 gCubebLatency = 100;
+static double gVolumeScale;
+static bool gUseCubeb;
+static PRUint32 gCubebLatency;
 
 static int PrefChanged(const char* aPref, void* aClosure)
 {
@@ -308,7 +302,10 @@ static int PrefChanged(const char* aPref, void* aClosure)
     mozilla::MutexAutoLock lock(*gAudioPrefsLock);
     gUseCubeb = value;
   } else if (strcmp(aPref, PREF_CUBEB_LATENCY) == 0) {
-    PRUint32 value = Preferences::GetUint(aPref);
+    // Arbitrary default stream latency of 100ms.  The higher this
+    // value, the longer stream volume changes will take to become
+    // audible.
+    PRUint32 value = Preferences::GetUint(aPref, 100);
     mozilla::MutexAutoLock lock(*gAudioPrefsLock);
     gCubebLatency = NS_MIN<PRUint32>(NS_MAX<PRUint32>(value, 20), 1000);
   }
@@ -359,6 +356,8 @@ void nsAudioStream::InitLibrary()
 #if defined(MOZ_CUBEB)
   PrefChanged(PREF_USE_CUBEB, nsnull);
   Preferences::RegisterCallback(PrefChanged, PREF_USE_CUBEB);
+  PrefChanged(PREF_CUBEB_LATENCY, nsnull);
+  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
 #endif
 }
 
