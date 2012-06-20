@@ -534,7 +534,6 @@ public:
   void FireContextClick ( ) ;
 
   void SetPointerLock(nsIWidget* aWidget, nsIContent* aElement) ;
-  nsIntPoint GetMouseCoords(nsIntRect aBounds);
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
 };
 
