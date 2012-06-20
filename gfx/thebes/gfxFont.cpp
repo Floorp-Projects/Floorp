@@ -2184,16 +2184,14 @@ gfxFont::GetShapedWord(gfxContext *aContext,
         return nsnull;
     }
     gfxShapedWord *sw = entry->mShapedWord;
-    Telemetry::Accumulate(Telemetry::WORD_CACHE_LOOKUP_LEN, aLength);
-    Telemetry::Accumulate(Telemetry::WORD_CACHE_LOOKUP_SCRIPT, aRunScript);
 
     if (sw) {
         sw->ResetAge();
-        Telemetry::Accumulate(Telemetry::WORD_CACHE_HIT_LEN, aLength);
-        Telemetry::Accumulate(Telemetry::WORD_CACHE_HIT_SCRIPT, aRunScript);
+        Telemetry::Accumulate(Telemetry::WORD_CACHE_HITS, aLength);
         return sw;
     }
 
+    Telemetry::Accumulate(Telemetry::WORD_CACHE_MISSES, aLength);
     sw = entry->mShapedWord = gfxShapedWord::Create(aText, aLength,
                                                     aRunScript,
                                                     aAppUnitsPerDevUnit,
