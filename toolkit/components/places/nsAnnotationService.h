@@ -15,10 +15,11 @@
 #include "nsToolkitCompsCID.h"
 #include "Database.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
-class nsAnnotationService : public nsIAnnotationService
-                          , public nsIObserver
-                          , public nsSupportsWeakReference
+class nsAnnotationService MOZ_FINAL : public nsIAnnotationService
+                                    , public nsIObserver
+                                    , public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
