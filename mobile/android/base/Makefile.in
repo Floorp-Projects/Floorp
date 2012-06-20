@@ -265,7 +265,6 @@ RES_LAYOUT = \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
   res/layout/site_identity_popup.xml \
-  res/layout/reader_popup.xml \
   res/layout/remote_tabs.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
