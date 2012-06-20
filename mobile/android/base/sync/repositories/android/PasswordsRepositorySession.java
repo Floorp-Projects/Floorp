@@ -538,7 +538,7 @@ public class PasswordsRepositorySession extends
         Record r = deleted ? deletedPasswordRecordFromCursor(cursor) : passwordRecordFromCursor(cursor);
         if (r != null) {
           if (filter == null || !filter.excludeRecord(r)) {
-            Logger.debug(LOG_TAG, "Fetched record " + r);
+            Logger.debug(LOG_TAG, "Processing record " + r.guid);
             delegate.onFetchedRecord(r);
           } else {
             Logger.debug(LOG_TAG, "Skipping filtered record " + r.guid);
