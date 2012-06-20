@@ -130,12 +130,17 @@ typedef char XML_LChar;
 
 /* xmltok.h */
 #define XmlParseXmlDecl MOZ_XmlParseXmlDecl
+#define XmlParseXmlDeclNS MOZ_XmlParseXmlDeclNS
 #define XmlInitEncoding MOZ_XmlInitEncoding
+#define XmlInitEncodingNS MOZ_XmlInitEncodingNS
 #define XmlGetUtf8InternalEncoding MOZ_XmlGetUtf8InternalEncoding
 #define XmlGetUtf16InternalEncoding MOZ_XmlGetUtf16InternalEncoding
+#define XmlGetUtf8InternalEncodingNS MOZ_XmlGetUtf8InternalEncodingNS
+#define XmlGetUtf16InternalEncodingNS MOZ_XmlGetUtf16InternalEncodingNS
 #define XmlUtf8Encode MOZ_XmlUtf8Encode
 #define XmlUtf16Encode MOZ_XmlUtf16Encode
 #define XmlSizeOfUnknownEncoding MOZ_XmlSizeOfUnknownEncoding
 #define XmlInitUnknownEncoding MOZ_XmlInitUnknownEncoding
+#define XmlInitUnknownEncodingNS MOZ_XmlInitUnknownEncodingNS
 
 #endif /* __expat_config_h__ */
