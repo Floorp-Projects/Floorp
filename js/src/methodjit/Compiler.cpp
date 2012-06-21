@@ -4822,29 +4822,27 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
     bool testObject;
     JSObject *singleton =
         (*PC == JSOP_GETPROP || *PC == JSOP_CALLPROP) ? pushedSingleton(0) : NULL;
-    if (singleton && singleton->isFunction() && !hasTypeBarriers(PC)) {
-        Rooted<jsid> id(cx, NameToId(name));
-        if (testSingletonPropertyTypes(top, id, &testObject)) {
-            if (testObject) {
-                Jump notObject = frame.testObject(Assembler::NotEqual, top);
-                stubcc.linkExit(notObject, Uses(1));
-                stubcc.leave();
-                stubcc.masm.move(ImmPtr(name), Registers::ArgReg1);
-                OOL_STUBCALL(stubs::GetProp, REJOIN_FALLTHROUGH);
-                testPushedType(REJOIN_FALLTHROUGH, -1);
-            }
-
-            frame.pop();
-            frame.push(ObjectValue(*singleton));
-
-            if (script->hasScriptCounts && cx->typeInferenceEnabled())
-                bumpPropCount(PC, PCCounts::PROP_STATIC);
-
-            if (testObject)
-                stubcc.rejoin(Changes(1));
-
-            return true;
+    if (singleton && singleton->isFunction() && !hasTypeBarriers(PC) &&
+        testSingletonPropertyTypes(top, RootedId(cx, NameToId(name)), &testObject)) {
+        if (testObject) {
+            Jump notObject = frame.testObject(Assembler::NotEqual, top);
+            stubcc.linkExit(notObject, Uses(1));
+            stubcc.leave();
+            stubcc.masm.move(ImmPtr(name), Registers::ArgReg1);
+            OOL_STUBCALL(stubs::GetProp, REJOIN_FALLTHROUGH);
+            testPushedType(REJOIN_FALLTHROUGH, -1);
         }
+
+        frame.pop();
+        frame.push(ObjectValue(*singleton));
+
+        if (script->hasScriptCounts && cx->typeInferenceEnabled())
+            bumpPropCount(PC, PCCounts::PROP_STATIC);
+
+        if (testObject)
+            stubcc.rejoin(Changes(1));
+
+        return true;
     }
 
     /* Check if this is a property access we can make a loop invariant entry for. */
@@ -5121,8 +5119,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, HandleId id, bool *t
             JS_ASSERT_IF(top->isTypeKnown(), top->isType(JSVAL_TYPE_OBJECT));
             types::TypeObject *object = types->getTypeObject(0);
             if (object && object->proto) {
-                Rooted<JSObject*> proto(cx, object->proto);
-                if (!testSingletonProperty(proto, id))
+                if (!testSingletonProperty(RootedObject(cx, object->proto), id))
                     return false;
                 types->addFreeze(cx);
 
@@ -5199,13 +5196,12 @@ mjit::Compiler::jsop_getprop_dispatch(PropertyName *name)
         if (ownTypes->isOwnProperty(cx, object, false))
             return false;
 
-        Rooted<JSObject*> proto(cx, object->proto);
-        if (!testSingletonProperty(proto, id))
+        if (!testSingletonProperty(RootedObject(cx, object->proto), id))
             return false;
 
-        if (proto->getType(cx)->unknownProperties())
+        if (object->proto->getType(cx)->unknownProperties())
             return false;
-        types::TypeSet *protoTypes = proto->type()->getProperty(cx, id, false);
+        types::TypeSet *protoTypes = object->proto->type()->getProperty(cx, id, false);
         if (!protoTypes)
             return false;
         JSObject *singleton = protoTypes->getSingleton(cx);
@@ -6259,12 +6255,9 @@ mjit::Compiler::jsop_getgname(uint32_t index)
 
     /* Optimize singletons like Math for JSOP_CALLPROP. */
     JSObject *obj = pushedSingleton(0);
-    if (obj && !hasTypeBarriers(PC)) {
-        Rooted<jsid> id(cx, NameToId(name));
-        if (testSingletonProperty(globalObj, id)) {
-            frame.push(ObjectValue(*obj));
-            return true;
-        }
+    if (obj && !hasTypeBarriers(PC) && testSingletonProperty(globalObj, RootedId(cx, NameToId(name)))) {
+        frame.push(ObjectValue(*obj));
+        return true;
     }
 
     jsid id = NameToId(name);

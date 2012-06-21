@@ -2655,11 +2655,11 @@ mjit::Compiler::jsop_initprop()
 
     JSObject *holder;
     JSProperty *prop = NULL;
-    Rooted<jsid> id(cx, NameToId(name));
 #ifdef DEBUG
     bool res =
 #endif
-    LookupPropertyWithFlags(cx, baseobj, id, JSRESOLVE_QUALIFIED, &holder, &prop);
+    LookupPropertyWithFlags(cx, baseobj, RootedId(cx, NameToId(name)),
+                            JSRESOLVE_QUALIFIED, &holder, &prop);
     JS_ASSERT(res && prop && holder == baseobj);
 
     RegisterID objReg = frame.copyDataIntoReg(obj);

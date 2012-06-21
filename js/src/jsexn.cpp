@@ -269,8 +269,7 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
             if (checkAccess && i.isNonEvalFunctionFrame()) {
                 Value v = NullValue();
                 RootedId callerid(cx, NameToId(cx->runtime->atomState.callerAtom));
-                Rooted<JSObject*> obj(cx, i.callee());
-                if (!checkAccess(cx, obj, callerid, JSACC_READ, &v))
+                if (!checkAccess(cx, RootedObject(cx, i.callee()), callerid, JSACC_READ, &v))
                     break;
             }
 
