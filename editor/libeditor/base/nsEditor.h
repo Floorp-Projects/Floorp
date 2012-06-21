@@ -314,8 +314,15 @@ protected:
                                   nsIDOMNode  *aRightNode,
                                   JoinElementTxn **aTxn);
 
-  NS_IMETHOD DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, 
-                                                   PRInt32& offsetOfNewNode);
+  /**
+   * This method first deletes the selection, if it's not collapsed.  Then if
+   * the selection lies in a CharacterData node, it splits it.  If the
+   * selection is at this point collapsed in a CharacterData node, it's
+   * adjusted to be collapsed right before or after the node instead (which is
+   * always possible, since the node was split).
+   */
+  nsresult DeleteSelectionAndPrepareToCreateNode();
+
 
   // called after a transaction is done successfully
   NS_IMETHOD DoAfterDoTransaction(nsITransaction *aTxn);
