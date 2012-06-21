@@ -549,8 +549,8 @@ nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
 nsresult
 nsXMLHttpRequest::InitParameters(JSContext* aCx, const jsval* aParams)
 {
-  XMLHttpRequestParameters* params = new XMLHttpRequestParameters();
-  nsresult rv = params->Init(aCx, aParams);
+  XMLHttpRequestParameters params;
+  nsresult rv = params.Init(aCx, aParams);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Check for permissions.
@@ -571,8 +571,8 @@ nsXMLHttpRequest::InitParameters(JSContext* aCx, const jsval* aParams)
     }
   }
 
-  mIsAnon = params->mozAnon;
-  mIsSystem = params->mozSystem;
+  mIsAnon = params.mozAnon;
+  mIsSystem = params.mozSystem;
 
   return NS_OK;
 }
