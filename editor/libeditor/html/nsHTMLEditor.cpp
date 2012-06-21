@@ -1720,9 +1720,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
         NS_ENSURE_SUCCESS(res, res);
       }
 
-      nsCOMPtr<nsIDOMNode> tempNode;
-      PRInt32 tempOffset;
-      nsresult result = DeleteSelectionAndPrepareToCreateNode(tempNode,tempOffset);
+      nsresult result = DeleteSelectionAndPrepareToCreateNode();
       NS_ENSURE_SUCCESS(result, result);
     }
 
