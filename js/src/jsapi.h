@@ -1165,6 +1165,8 @@ class AutoVectorRooter : protected AutoGCRooter
     T &operator[](size_t i) { return vector[i]; }
     const T &operator[](size_t i) const { return vector[i]; }
 
+    JS::Handle<T> handleAt(size_t i) const { return JS::Handle<T>::fromMarkedLocation(&vector[i]); }
+
     const T *begin() const { return vector.begin(); }
     T *begin() { return vector.begin(); }
 
