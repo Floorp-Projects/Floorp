@@ -3742,11 +3742,6 @@ public:
         {XPCWrappedNative* old = mResolvingWrapper;
          mResolvingWrapper = w; return old;}
 
-    // Forward to the runtime for now. This will go away entirely soon.
-    XPCJSContextStack* GetJSContextStack() {
-        return nsXPConnect::GetXPConnect()->GetRuntime()->GetJSContextStack();
-    }
-
     void Cleanup();
     void ReleaseNatives();
 

@@ -3828,14 +3828,11 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     if (jsVersion != JSVERSION_DEFAULT)
         JS_SetVersion(sandcx->GetJSContext(), jsVersion);
 
-    XPCPerThreadData *data = XPCPerThreadData::GetData(cx);
-    XPCJSContextStack *stack = nsnull;
-    if (data && (stack = data->GetJSContextStack())) {
-        if (!stack->Push(sandcx->GetJSContext())) {
-            JS_ReportError(cx,
-                           "Unable to initialize XPConnect with the sandbox context");
-            return NS_ERROR_FAILURE;
-        }
+    XPCJSContextStack *stack = XPCJSRuntime::Get()->GetJSContextStack();
+    MOZ_ASSERT(stack);
+    if (!stack->Push(sandcx->GetJSContext())) {
+        JS_ReportError(cx, "Unable to initialize XPConnect with the sandbox context");
+        return NS_ERROR_FAILURE;
     }
 
     rv = NS_OK;
