@@ -52,10 +52,25 @@ using namespace js::ion;
 namespace js {
 namespace ion {
 
+static inline bool
+ShouldMonitorReturnType(JSFunction *fun)
+{
+    return fun->isInterpreted() &&
+           (!fun->script()->hasAnalysis() ||
+            !fun->script()->analysis()->ranInference());
+}
+
 bool
 InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval)
 {
     Value fval = ObjectValue(*fun);
+
+    // TI will return false for monitorReturnTypes, meaning there is no
+    // TypeBarrier or Monitor instruction following this. However, we need to
+    // explicitly monitor if the callee has not been analyzed yet. We special
+    // case this to avoid the cost of ion::GetPcScript if we must take this
+    // path frequently.
+    bool needsMonitor = ShouldMonitorReturnType(fun);
 
     // Data in the argument vector is arranged for a JIT -> JIT call.
     Value thisv = argv[0];
@@ -63,7 +78,7 @@ InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *
 
     // Run the function in the interpreter.
     bool ok = Invoke(cx, thisv, fval, argc, argvWithoutThis, rval);
-    if (ok)
+    if (ok && needsMonitor)
         types::TypeScript::Monitor(cx, *rval);
 
     return ok;
@@ -74,11 +89,14 @@ InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *ar
 {
     Value fval = ObjectValue(*fun);
 
+    // See the comment in InvokeFunction.
+    bool needsMonitor = ShouldMonitorReturnType(fun);
+
     // Data in the argument vector is arranged for a JIT -> JIT call.
     Value *argvWithoutThis = argv + 1;
 
     bool ok = InvokeConstructor(cx, fval, argc, argvWithoutThis, rval);
-    if (ok)
+    if (ok && needsMonitor)
         types::TypeScript::Monitor(cx, *rval);
 
     return ok;
