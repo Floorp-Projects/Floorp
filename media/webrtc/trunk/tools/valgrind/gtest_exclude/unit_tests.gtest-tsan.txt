@@ -1,0 +1,6 @@
+# This test has a possible data race detected by the TSAN bot
+# see http://crbug.com/46840
+ProfileManagerTest.CreateAndUseTwoProfiles
+
+# Crashing - http://crbug.com/84536
+HttpBridgeTest.*

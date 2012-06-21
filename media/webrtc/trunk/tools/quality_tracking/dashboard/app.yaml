@@ -1,0 +1,24 @@
+application: webrtc-dashboard
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: false
+
+handlers:
+# Serve stylesheets statically.
+- url: /stylesheets
+  static_dir: stylesheets
+# This magic file is here to prove to the Google Account Domain Management
+# that we own this domain. It needs to stay there so the domain management
+# doesn't get suspicious.
+- url: /google403c95edcde16425.html
+  static_files: static/google403c95edcde16425.html
+  upload: static/google403c95edcde16425.html
+
+# Note: tests should be disabled in production.
+# - url: /test.*
+#  script: gaeunit.py
+
+# Redirect all other requests to our dynamic handlers.
+- url: /.*
+  script: main.app
