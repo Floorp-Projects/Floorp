@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=760735
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Screen Orientation API</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=760735">Screen Orientation API</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Tests for Screen Orientation API **/
+
+// Screen Orientation API testing is problematic in that not every platform
+// supports orientation-locking, and locking requires running in full-screen.
+// So for now, only negative/sanity testing is done here, as that works globally.
+
+function unexpectedEvent(event) {
+  ok(false, "No unexpected orientation change events received");
+}
+
+window.screen.addEventListener("mozorientationchange", unexpectedEvent);
+try {
+  const allowedOrientations = ["portrait-primary", "portrait-secondary",
+                               "landscape-primary", "landscape-secondary"];
+
+  var initialOrientation = window.screen.mozOrientation;
+
+  // Sanity tests
+  isnot(allowedOrientations.indexOf(initialOrientation), -1,
+        "mozOrientation is valid (value=" + initialOrientation + ")");
+
+  // Negative tests
+  ok(!window.screen.mozLockOrientation("Foobar-Bazbam"), "Cannot lock to an invalid string");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
+
+  ok(!window.screen.mozLockOrientation(""), "Cannot lock to an empty string");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
+
+  ok(!window.screen.mozLockOrientation(42), "Cannot lock to a number");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
+
+  ok(!window.screen.mozLockOrientation(undefined), "Cannot lock to undefined");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
+
+  ok(!window.screen.mozLockOrientation(null), "Cannot lock to null");
+  is(window.screen.mozOrientation, initialOrientation, "Orientation is unchanged");
+}
+finally {
+  window.screen.removeEventListener("mozorientationchange", unexpectedEvent);
+}
+</script>
+</pre>
+</body>
+</html>
