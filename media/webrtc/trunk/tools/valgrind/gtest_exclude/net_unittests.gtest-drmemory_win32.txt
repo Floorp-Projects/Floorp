@@ -1,0 +1,29 @@
+# See http://crbug.com/82391
+URLRequestTestHTTP.HTTPSToHTTPRedirectNoRefererTest
+
+# Dr. Memory hits an assertion:
+# http://code.google.com/p/drmemory/issues/detail?id=422
+HttpAuthTest.*
+HttpAuthHandlerFactoryTest.*
+X509CertificateTest.*
+
+# Too many uninits and too slow. TODO(timurrrr): investigate uninits
+ProxyResolverV8Test.*
+
+# Slow
+CookieMonsterTest.GarbageCollectionTriggers
+
+# Hangs only when built in release mode.
+# http://crbug.com/105762
+ClientSocketPoolBaseTest.DisableCleanupTimer
+
+# Flaky, see http://crbug.com/108422
+SSLClientSocketTest.ConnectMismatched
+
+##############################################################################
+# TODO(rnk): The exclusions below should only apply to the full mode
+# DrMemory bot.
+
+# Hits DCHECK failure due to 100ms delayed task in socket_test_util.cc, see
+# http://crbug.com/110793 and http://crbug.com/95007
+SpdyHttpStreamTest.*
