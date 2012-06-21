@@ -137,7 +137,7 @@ class CGPrototypeJSClass(CGThing):
     def define(self):
         return """
 static JSClass PrototypeClass = {
-  "%s Prototype", 0,
+  "%sPrototype", 0,
   JS_PropertyStub,       /* addProperty */
   JS_PropertyStub,       /* delProperty */
   JS_PropertyStub,       /* getProperty */
