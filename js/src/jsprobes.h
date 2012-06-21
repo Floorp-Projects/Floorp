@@ -92,10 +92,10 @@ bool callTrackingActive(JSContext *);
 bool wantNativeAddressInfo(JSContext *);
 
 /* Entering a JS function */
-bool enterJSFun(JSContext *, JSFunction *, JSScript *, int counter = 1);
+bool enterScript(JSContext *, JSScript *, JSFunction *, StackFrame *);
 
 /* About to leave a JS function */
-bool exitJSFun(JSContext *, JSFunction *, JSScript *, int counter = 0);
+bool exitScript(JSContext *, JSScript *, JSFunction *, StackFrame *);
 
 /* Executing a script */
 bool startExecution(JSContext *cx, JSScript *script);
@@ -303,8 +303,8 @@ void
 discardExecutableRegion(void *start, size_t size);
 
 /*
- * Internal: DTrace-specific functions to be called during Probes::enterJSFun
- * and Probes::exitJSFun. These will not be inlined, but the argument
+ * Internal: DTrace-specific functions to be called during Probes::enterScript
+ * and Probes::exitScript. These will not be inlined, but the argument
  * marshalling required for these probe points is expensive enough that it
  * shouldn't really matter.
  */
@@ -380,43 +380,53 @@ Probes::wantNativeAddressInfo(JSContext *cx)
 }
 
 inline bool
-Probes::enterJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter)
+Probes::enterScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
+                    StackFrame *fp)
 {
     bool ok = true;
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
-        DTraceEnterJSFun(cx, fun, script);
+        DTraceEnterJSFun(cx, maybeFun, script);
 #endif
 #ifdef MOZ_TRACE_JSCALLS
-    cx->doFunctionCallback(fun, script, counter);
+    cx->doFunctionCallback(maybeFun, script, 1);
 #endif
 #ifdef MOZ_ETW
-    if (ProfilingActive && !ETWEnterJSFun(cx, fun, script, counter))
+    if (ProfilingActive && !ETWEnterJSFun(cx, maybeFun, script, 1))
         ok = false;
 #endif
+
+    JSRuntime *rt = cx->runtime;
+    if (rt->spsProfiler.enabled()) {
+        rt->spsProfiler.enter(cx, script, maybeFun);
+        JS_ASSERT_IF(!fp->isGeneratorFrame(), !fp->hasPushedSPSFrame());
+        fp->setPushedSPSFrame();
+    }
 
     return ok;
 }
 
 inline bool
-Probes::exitJSFun(JSContext *cx, JSFunction *fun, JSScript *script, int counter)
+Probes::exitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
+                   StackFrame *fp)
 {
     bool ok = true;
 
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
-        DTraceExitJSFun(cx, fun, script);
+        DTraceExitJSFun(cx, maybeFun, script);
 #endif
 #ifdef MOZ_TRACE_JSCALLS
-    if (counter > 0)
-        counter = -counter;
-    cx->doFunctionCallback(fun, script, counter);
+    cx->doFunctionCallback(maybeFun, script, 0);
 #endif
 #ifdef MOZ_ETW
-    if (ProfilingActive && !ETWExitJSFun(cx, fun, script, counter))
+    if (ProfilingActive && !ETWExitJSFun(cx, maybeFun, script, 0))
         ok = false;
 #endif
 
+    JSRuntime *rt = cx->runtime;
+    if (rt->spsProfiler.enabled() && fp->hasPushedSPSFrame())
+        rt->spsProfiler.exit(cx, script, maybeFun);
     return ok;
 }
 
@@ -765,25 +775,6 @@ Probes::stopExecution(JSContext *cx, JSScript *script)
 
     return ok;
 }
-
-struct AutoFunctionCallProbe {
-    JSContext * const cx;
-    JSFunction *fun;
-    JSScript *script;
-    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
-
-    AutoFunctionCallProbe(JSContext *cx, JSFunction *fun, JSScript *script
-                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : cx(cx), fun(fun), script(script)
-    {
-        JS_GUARD_OBJECT_NOTIFIER_INIT;
-        Probes::enterJSFun(cx, fun, script);
-    }
-
-    ~AutoFunctionCallProbe() {
-        Probes::exitJSFun(cx, fun, script);
-    }
-};
 
 } /* namespace js */
 

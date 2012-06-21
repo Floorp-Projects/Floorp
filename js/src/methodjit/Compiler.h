@@ -637,6 +637,9 @@ private:
     void dispatchCall(VoidPtrStubUInt32 stub, uint32_t argc);
     void interruptCheckHelper();
     void recompileCheckHelper();
+    CompileStatus methodEntryHelper();
+    CompileStatus profilingPushHelper();
+    void profilingPopHelper();
     void emitUncachedCall(uint32_t argc, bool callingNew);
     void checkCallApplySpeculation(uint32_t argc, FrameEntry *origCallee, FrameEntry *origThis,
                                    MaybeRegisterID origCalleeType, RegisterID origCalleeData,
