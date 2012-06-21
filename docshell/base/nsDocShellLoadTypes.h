@@ -60,6 +60,7 @@ enum LoadType {
     LOAD_STOP_CONTENT = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_STOP_CONTENT),
     LOAD_STOP_CONTENT_AND_REPLACE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_STOP_CONTENT | nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
     LOAD_PUSHSTATE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_PUSHSTATE, nsIWebNavigation::LOAD_FLAGS_NONE),
+    LOAD_REPLACE_BYPASS_CACHE = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL, nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY | nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE),
     /**
      * Load type for an error page. These loads are never triggered by users of
      * Docshell. Instead, Docshell triggers the load itself when a
@@ -91,6 +92,7 @@ static inline bool IsValidLoadType(PRUint32 aLoadType)
     case LOAD_STOP_CONTENT:
     case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_PUSHSTATE:
+    case LOAD_REPLACE_BYPASS_CACHE:
     case LOAD_ERROR_PAGE:
         return true;
     }
