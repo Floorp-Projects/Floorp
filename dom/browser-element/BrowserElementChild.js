@@ -111,6 +111,8 @@ BrowserElementChild.prototype = {
 
     addMsgListener("get-screenshot", this._recvGetScreenshot);
     addMsgListener("set-visible", this._recvSetVisible);
+    addMsgListener("get-can-go-back", this._recvCanGoBack);
+    addMsgListener("get-can-go-forward", this._recvCanGoForward);
     addMsgListener("unblock-modal-prompt", this._recvStopWaiting);
 
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
@@ -320,7 +322,7 @@ BrowserElementChild.prototype = {
                    content.innerHeight, "rgb(255,255,255)");
     sendAsyncMsg('got-screenshot', {
       id: data.json.id,
-      screenshot: canvas.toDataURL("image/png")
+      rv: canvas.toDataURL("image/png")
     });
   },
 
@@ -329,6 +331,22 @@ BrowserElementChild.prototype = {
     if (docShell.isActive !== data.json.visible) {
       docShell.isActive = data.json.visible;
     }
+  },
+
+  _recvCanGoBack: function(data) {
+    var webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+    sendAsyncMsg('got-can-go-back', {
+      id: data.json.id,
+      rv: webNav.canGoBack
+    });
+  },
+
+  _recvCanGoForward: function(data) {
+    var webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+    sendAsyncMsg('got-can-go-forward', {
+      id: data.json.id,
+      rv: webNav.canGoForward
+    });
   },
 
   _keyEventHandler: function(e) {
