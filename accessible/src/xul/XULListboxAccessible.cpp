@@ -316,30 +316,9 @@ XULListboxAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-XULListboxAccessible::GetColumnDescription(PRInt32 aColumn,
-                                           nsAString& aDescription)
+bool
+XULListboxAccessible::IsColSelected(PRUint32 aColIdx)
 {
-  aDescription.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XULListboxAccessible::GetRowDescription(PRInt32 aRow, nsAString& aDescription)
-{
-  aDescription.Truncate();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XULListboxAccessible::IsColumnSelected(PRInt32 aColumn, bool* aIsSelected)
-{
-  NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = false;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
@@ -347,42 +326,32 @@ XULListboxAccessible::IsColumnSelected(PRInt32 aColumn, bool* aIsSelected)
 
   PRInt32 selectedrowCount = 0;
   nsresult rv = control->GetSelectedCount(&selectedrowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, false);
 
-  PRInt32 rowCount = 0;
-  rv = GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aIsSelected = (selectedrowCount == rowCount);
-  return NS_OK;
+  return selectedrowCount == RowCount();
 }
 
-NS_IMETHODIMP
-XULListboxAccessible::IsRowSelected(PRInt32 aRow, bool* aIsSelected)
+bool
+XULListboxAccessible::IsRowSelected(PRUint32 aRowIdx)
 {
-  NS_ENSURE_ARG_POINTER(aIsSelected);
-  *aIsSelected = false;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMXULSelectControlElement> control =
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULSelectControlElement.");
 
   nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
-  control->GetItemAtIndex(aRow, getter_AddRefs(item));
-  NS_ENSURE_TRUE(item, NS_ERROR_INVALID_ARG);
+  nsresult rv = control->GetItemAtIndex(aRowIdx, getter_AddRefs(item));
+  NS_ENSURE_SUCCESS(rv, false);
 
-  return item->GetSelected(aIsSelected);
+  bool isSelected = false;
+  item->GetSelected(&isSelected);
+  return isSelected;
 }
 
-NS_IMETHODIMP
-XULListboxAccessible::IsCellSelected(PRInt32 aRowIndex, PRInt32 aColumnIndex,
-                                     bool* aIsSelected)
+bool
+XULListboxAccessible::IsCellSelected(PRUint32 aRowIdx, PRUint32 aColIdx)
 {
-  return IsRowSelected(aRowIndex, aIsSelected);
+  return IsRowSelected(aRowIdx);
 }
 
 NS_IMETHODIMP

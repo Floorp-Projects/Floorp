@@ -12,8 +12,6 @@
   <script type="text/javascript;version=1.7">
   function testSteps()
   {
-    const maxLocation = 18446744073709552000;
-
     var testString = "Lorem ipsum his ponderum delicatissimi ne, at noster dolores urbanitas pro, cibo elaboraret no his. Ea dicunt maiorum usu. Ad appareat facilisis mediocritatem eos. Tale graeci mentitum in eos, hinc insolens at nam. Graecis nominavi aliquyam eu vix. Id solet assentior sadipscing pro. Et per atqui graecis, usu quot viris repudiandae ei, mollis evertitur an nam. At nam dolor ignota, liber labore omnesque ea mei, has movet voluptaria in. Vel an impetus omittantur. Vim movet option salutandi ex, ne mei ignota corrumpit. Mucius comprehensam id per. Est ea putant maiestatis.";
     for (let i = 0; i < 5; i++) {
       testString += testString;
@@ -38,7 +36,7 @@
       is(lockedFile.location, location, "Correct location");
 
       request = lockedFile.append(testString);
-      is(lockedFile.location, maxLocation, "Correct location");
+      ok(lockedFile.location === null, "Correct location");
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
@@ -53,7 +51,7 @@
       ok(resultString == testString, "Correct string data");
 
       request = lockedFile.append(testBuffer);
-      is(lockedFile.location, maxLocation, "Correct location");
+      ok(lockedFile.location === null, "Correct location");
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
@@ -68,7 +66,7 @@
       ok(compareBuffers(resultBuffer, testBuffer), "Correct array buffer data");
 
       request = lockedFile.append(testBlob);
-      is(lockedFile.location, maxLocation, "Correct location");
+      ok(lockedFile.location === null, "Correct location");
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 

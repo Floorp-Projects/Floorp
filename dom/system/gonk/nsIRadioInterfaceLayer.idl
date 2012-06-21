@@ -148,7 +148,81 @@ interface nsIRILContentHelper : nsIMobileConnectionProvider
   attribute bool speakerEnabled;
 };
 
-[scriptable, uuid(fa923335-4cbd-40d7-8d4a-5689a6db2b6d)]
+[scriptable, uuid(fd9e8b38-b839-4d56-8482-3bf1f5c8f2ee)]
+interface nsIICCRecords : nsISupports
+{
+  /**
+   * Mobile Subscriber ISDN Number
+   */
+  readonly attribute DOMString msisdn;
+
+  /**
+   * Administrative Data
+   */
+  readonly attribute jsval ad;
+
+  /**
+   * International Mobile Subscriber Identity
+   */
+  readonly attribute DOMString imsi;
+
+  /**
+   * Mobile Country Code
+   */
+  readonly attribute unsigned short mcc;
+
+  /**
+   * Mobile Network Code
+   */
+  readonly attribute unsigned short mnc;
+
+  /**
+   * USIM Service Table
+   */
+  readonly attribute jsval ust;
+
+  /**
+   * Abbreviated dialling numbers
+   */
+  readonly attribute jsval adn;
+
+  /**
+   * Fixed Dialling Numbers
+   */
+  readonly attribute jsval fdn;
+};
+
+[scriptable, uuid(1b47459d-d0bc-4e91-8509-cc106054b9ee)]
+interface nsICellLocation : nsISupports
+{
+  /**
+   * Location Area Code
+   */
+  readonly attribute unsigned short lac;
+
+  /**
+   * Cell Identity
+   */
+  readonly attribute unsigned long cid;
+};
+
+[scriptable, uuid(a6f6977e-f4ee-42b4-ae79-798c8c47c360)]
+interface nsIRilContext : nsISupports
+{
+  readonly attribute DOMString radioState;
+
+  readonly attribute DOMString cardState;
+
+  readonly attribute nsIICCRecords icc;
+
+  readonly attribute nsICellLocation cell;
+
+  readonly attribute nsIDOMMozMobileConnectionInfo voice;
+
+  readonly attribute nsIDOMMozMobileConnectionInfo data;
+};
+
+[scriptable, uuid(92bea0af-8d75-4592-87d0-1cab88e36904)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -176,7 +250,7 @@ interface nsIRadioInterfaceLayer : nsISupports
    */
   void setRadioEnabled(in bool value);
 
-  readonly attribute jsval radioState;
+  readonly attribute nsIRilContext rilContext;
 
   /**
    * PDP APIs

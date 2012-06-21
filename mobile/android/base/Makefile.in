@@ -63,6 +63,8 @@ FENNEC_JAVA_FILES = \
   GeckoThread.java \
   GlobalHistory.java \
   GeckoViewsFactory.java \
+  INIParser.java \
+  INISection.java \
   LinkPreference.java \
   LinkTextView.java \
   MenuItemActionBar.java \
@@ -86,6 +88,7 @@ FENNEC_JAVA_FILES = \
   TabsTray.java \
   TabsAccessor.java \
   Telemetry.java \
+  WebAppAllocator.java \
   gfx/BitmapUtils.java \
   gfx/BufferedCairoImage.java \
   gfx/CairoGLInfo.java \
@@ -136,6 +139,8 @@ endif
 
 FENNEC_PP_JAVA_FILES = \
   App.java \
+  WebApp.java \
+  WebApps.java \
   GeckoActivity.java \
   LauncherShortcuts.java \
   NotificationHandler.java \
@@ -249,6 +254,7 @@ RES_LAYOUT = \
   res/layout/doorhanger.xml \
   res/layout/find_in_page_content.xml \
   res/layout/gecko_app.xml \
+  res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
   res/layout/menu_item.xml \
@@ -265,6 +271,7 @@ RES_LAYOUT = \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_counter.xml \
   res/layout/tabs_panel.xml \
+  res/layout/tabs_panel_toolbar.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
@@ -286,7 +293,7 @@ RES_LAYOUT_XLARGE = \
   res/layout-xlarge/gecko_app.xml \
   res/layout-xlarge/remote_tabs_child.xml \
   res/layout-xlarge/remote_tabs_group.xml \
-  res/layout-xlarge/tabs_panel.xml \
+  res/layout-xlarge/tabs_panel_toolbar.xml \
   res/layout-xlarge/tabs_row.xml \
   $(NULL)
 
@@ -295,7 +302,7 @@ RES_LAYOUT_SW600DP = \
   res/layout-sw600dp/gecko_app.xml \
   res/layout-sw600dp/remote_tabs_child.xml \
   res/layout-sw600dp/remote_tabs_group.xml \
-  res/layout-sw600dp/tabs_panel.xml \
+  res/layout-sw600dp/tabs_panel_toolbar.xml \
   res/layout-sw600dp/tabs_row.xml \
   $(NULL)
 
@@ -991,11 +998,29 @@ android-preqs = \
   Makefile.in \
   $(call mkdir_deps,db,sync/repositories/android) \
   $(SYNC_MANIFEST_FRAGMENTS) \
+  WebAppManifestFragment.xml.in \
+  WebAppsFragments.java \
   $(NULL)
 
 $(android-tgts): % : %.in $(android-preqs)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
+             $(AUTOMATION_PPARGS) -DOBJDIR="`pwd`" $(DEFINES) $(ACDEFINES) $< > $@
+
+# Add a predefined number of WebApp<num> classes to the WebApps class.
+# These are used so that each webapp can launch in its own process
+# Keep this number in sync with the max web apps in WebAppAllocator.java
+NUM_WEB_APPS=10
+WebAppManifestFragment.xml.in: WebAppManifestFragment.xml.frag
+	@rm -f $@
+	@for n in `$(PYTHON) -c "for x in range($(NUM_WEB_APPS)): print x"`; do \
+		cat $< | sed s,@APPNUM@,$$n,g >> $@ ; \
+	done
+
+WebAppsFragments.java: WebAppsFragment.java.frag
+	@rm -f $@
+	@for n in `$(PYTHON) -c "for x in range($(NUM_WEB_APPS)): print x"`; do \
+		cat $< | sed s,@APPNUM@,$$n,g >> $@ ; \
+	done
 
 res/drawable/icon.png: $(MOZ_APP_ICON)
 	$(NSINSTALL) -D res/drawable

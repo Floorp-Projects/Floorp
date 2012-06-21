@@ -18,12 +18,16 @@ const FILE_UPDATER_INI_BAK = "updater.ini.bak";
 // Number of milliseconds for each do_timeout call.
 const CHECK_TIMEOUT_MILLI = 1000;
 
+// How many of CHECK_TIMEOUT_MILLI to wait before we abort the test.
+const MAX_TIMEOUT_RUNS = 300;
+
 // Maximum number of milliseconds the process that is launched can run before
 // the test will try to kill it.
 const APP_TIMER_TIMEOUT = 15000;
 
 let gAppTimer;
 let gProcess;
+let gTimeoutRuns = 0;
 
 function run_test() {
   do_test_pending();
@@ -236,19 +240,26 @@ function getUpdateTestDir() {
  * the test.
  */
 function checkUpdateFinished() {
+  gTimeoutRuns++;
   // Don't proceed until the update.log has been created.
   let log = getUpdatesDir();
   log.append("0");
   log.append(FILE_UPDATE_LOG);
   if (!log.exists()) {
-    do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates log to be created");
+    else
+      do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
     return;
   }
 
   // Don't proceed until the update status is no longer pending or applying.
   let status = readStatusFile();
   if (status == STATE_PENDING || status == STATE_APPLYING) {
-    do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS)
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whilst waiting for updates status to not be pending or applying");
+    else
+      do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateFinished);
     return;
   }
 

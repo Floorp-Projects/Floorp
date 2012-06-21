@@ -24,14 +24,6 @@ const PRUnichar kEmbeddedObjectChar = 0xfffc;
 const PRUnichar kImaginaryEmbeddedObjectChar = ' ';
 const PRUnichar kForcedNewLineChar = '\n';
 
-#define NS_HYPERTEXTACCESSIBLE_IMPL_CID                 \
-{  /* 245f3bc9-224f-4839-a92e-95239705f30b */           \
-  0x245f3bc9,                                           \
-  0x224f,                                               \
-  0x4839,                                               \
-  { 0xa9, 0x2e, 0x95, 0x23, 0x97, 0x05, 0xf3, 0x0b }    \
-}
-
 /**
   * Special Accessible that knows how contain both text and embedded objects
   */
@@ -48,7 +40,6 @@ public:
   NS_DECL_NSIACCESSIBLETEXT
   NS_DECL_NSIACCESSIBLEHYPERTEXT
   NS_DECL_NSIACCESSIBLEEDITABLETEXT
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_HYPERTEXTACCESSIBLE_IMPL_CID)
 
   // Accessible
   virtual PRInt32 GetLevelInternal();
@@ -409,9 +400,6 @@ private:
    */
   nsTArray<PRUint32> mOffsets;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(HyperTextAccessible,
-                              NS_HYPERTEXTACCESSIBLE_IMPL_CID)
 
 
 ////////////////////////////////////////////////////////////////////////////////

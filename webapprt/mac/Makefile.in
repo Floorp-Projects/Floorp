@@ -22,11 +22,6 @@ CMMSRCS = webapprt.mm
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
 
-# mozglue uses mfbt's Assertions.cpp, which provides MOZ_ASSERT, which lots
-# of code in libxpcom uses, so we have to do the same.
-VPATH += $(topsrcdir)/mfbt
-CPPSRCS = Assertions.cpp
-
 LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build

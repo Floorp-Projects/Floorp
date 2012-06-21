@@ -177,6 +177,11 @@ CollectWindowReports(nsGlobalWindow *aWindow,
          "Memory used by the comment nodes in a window's DOM.");
   aWindowTotalSizes->mDOMCommentNodes += windowSizes.mDOMCommentNodes;
 
+  REPORT("/property-tables",
+         windowSizes.mPropertyTables,
+         "Memory used for the property tables within a window.");
+  aWindowTotalSizes->mPropertyTables += windowSizes.mPropertyTables;
+
   REPORT("/style-sheets", windowSizes.mStyleSheets,
          "Memory used by style sheets within a window.");
   aWindowTotalSizes->mStyleSheets += windowSizes.mStyleSheets;
@@ -327,6 +332,11 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryMultiReporterCallback* aCb,
   REPORT("window-objects/dom/comment-nodes", windowTotalSizes.mDOMCommentNodes,
          "Memory used for DOM comment nodes within windows. "
          "This is the sum of all windows' 'dom/comment-nodes' numbers.");
+
+  REPORT("window-objects/property-tables",
+         windowTotalSizes.mPropertyTables,
+         "Memory used for property tables within windows. "
+         "This is the sum of all windows' 'property-tables' numbers.");
 
   REPORT("window-objects/style-sheets", windowTotalSizes.mStyleSheets, 
          "Memory used for style sheets within windows. "

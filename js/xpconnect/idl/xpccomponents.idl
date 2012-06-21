@@ -288,6 +288,14 @@ interface nsIXPCComponents_Utils : nsISupports
     /*
      * To be called from JS only.
      *
+     * Returns an array created in |vobj|'s compartment.
+     */
+    [implicit_jscontext]
+    jsval createArrayIn(in jsval vobj);
+
+    /*
+     * To be called from JS only.
+     *
      * Ensures that all functions come from vobj's scope (and aren't cross
      * compartment wrappers).
      */

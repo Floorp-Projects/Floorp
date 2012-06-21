@@ -707,6 +707,9 @@ TextAttrsMgr::TextPosTextAttr::
       nsAccUtils::SetAccAttr(aAttributes, nsGkAtoms::textPosition,
                              NS_LITERAL_STRING("super"));
       break;
+
+    case eTextPosNone:
+      break;
   }
 }
 
@@ -754,6 +757,19 @@ TextAttrsMgr::TextPosTextAttr::
          eTextPosSuper :
          (coordValue < 0 ? eTextPosSub : eTextPosBaseline);
     }
+
+    case eStyleUnit_Null:
+    case eStyleUnit_Normal:
+    case eStyleUnit_Auto:
+    case eStyleUnit_None:
+    case eStyleUnit_Factor:
+    case eStyleUnit_Degree:
+    case eStyleUnit_Grad:
+    case eStyleUnit_Radian:
+    case eStyleUnit_Turn:
+    case eStyleUnit_Integer:
+    case eStyleUnit_Calc:
+      break;
   }
 
   const nsIContent* content = aFrame->GetContent();

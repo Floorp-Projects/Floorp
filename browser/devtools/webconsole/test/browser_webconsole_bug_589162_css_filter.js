@@ -14,27 +14,33 @@ const TEST_URI = "data:text/html;charset=utf-8,<div style='font-size:3em;" +
 
 function onContentLoaded()
 {
-  browser.removeEventListener("load", arguments.callee, true);
+  browser.removeEventListener("load", onContentLoaded, true);
 
   let HUD = HUDService.getHudByWindow(content);
   let hudId = HUD.hudId;
   let outputNode = HUD.outputNode;
 
-  let msg = "the unknown CSS property warning is displayed";
-  testLogEntry(outputNode, "foobarCssParser", msg, true);
+  HUD.jsterm.clearOutput();
 
-  HUDService.setFilterState(hudId, "cssparser", false);
+  waitForSuccess({
+    name: "css error displayed",
+    validatorFn: function()
+    {
+      return outputNode.textContent.indexOf("foobarCssParser") > -1;
+    },
+    successFn: function()
+    {
+      HUDService.setFilterState(hudId, "cssparser", false);
 
-  executeSoon(
-    function (){
       let msg = "the unknown CSS property warning is not displayed, " +
                 "after filtering";
       testLogEntry(outputNode, "foobarCssParser", msg, true, true);
 
       HUDService.setFilterState(hudId, "cssparser", true);
       finishTest();
-    }
-  );
+    },
+    failureFn: finishTest,
+  });
 }
 
 /**
@@ -44,8 +50,8 @@ function onContentLoaded()
 function test()
 {
   addTab(TEST_URI);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee, true);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
 
     openConsole();
     browser.addEventListener("load", onContentLoaded, true);

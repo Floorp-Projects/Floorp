@@ -12,6 +12,7 @@
 #include "nsIScriptContext.h"
 #include "nsCOMPtr.h"
 #include "nsDOMEventTargetHelper.h"
+#include "mozilla/Attributes.h"
 
 class nsIDocShell;
 class nsDeviceContext;
@@ -44,7 +45,7 @@ protected:
   mozilla::dom::ScreenOrientation mOrientation;
 
 private:
-  class FullScreenEventListener : public nsIDOMEventListener
+  class FullScreenEventListener MOZ_FINAL : public nsIDOMEventListener
   {
   public:
     FullScreenEventListener() {};

@@ -20,6 +20,7 @@
 
 class JSString;
 class JSDependentString;
+class JSUndependedString;
 class JSExtensibleString;
 class JSExternalString;
 class JSLinearString;
@@ -83,35 +84,37 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  * arrange them into a hierarchy of operations/invariants and represent this
  * hierarchy in C++ with classes:
  *
- * C++ type                     operations+fields / invariants+properties
+ * C++ type                      operations+fields / invariants+properties
  *
- * JSString (abstract)          getCharsZ, getChars, length / -
+ * JSString (abstract)           getCharsZ, getChars, length / -
  *  | \
- *  | JSRope                    leftChild, rightChild / -
+ *  | JSRope                     leftChild, rightChild / -
  *  |
- * JSLinearString (abstract)    chars / not null-terminated
+ * JSLinearString (abstract)     chars / might be null-terminated
  *  | \
- *  | JSDependentString         base / -
+ *  | JSDependentString          base / -
  *  |
- * JSFlatString (abstract)      chars / null-terminated
+ * JSFlatString (abstract)       - / null-terminated
  *  | \
- *  | JSExtensibleString        capacity / no external pointers into char array
+ *  | JSExtensibleString         capacity / no external pointers into char array
  *  |
- * JSFixedString                - / may have external pointers into char array
- *  | \  \
- *  |  \ JSExternalString       - / char array memory managed by embedding
- *  |   \
- *  |   JSInlineString          - / chars stored in header
- *  |     | \
- *  |     | JSShortString       - / header is fat
- *  |     |        |
- * JSAtom |        |            - / string equality === pointer equality
- *  | \   |        |
- *  | JSInlineAtom |            - / atomized JSInlineString
- *  |       \      |
- *  |       JSShortAtom         - / atomized JSShortString
+ * JSFixedString                 - / may have external pointers into char array
+ *  | \  \  \
+ *  |  \  \ JSUndependedString   - / original dependent base
+ *  |   \  \
+ *  |    \ JSExternalString      - / char array memory managed by embedding
+ *  |     \
+ *  |     JSInlineString         - / chars stored in header
+ *  |      | \
+ *  |      | JSShortString       - / header is fat
+ *  |      |        |
+ * JSAtom  |        |            - / string equality === pointer equality
+ *  | \    |        |
+ *  | JSInlineAtom  |            - / atomized JSInlineString
+ *  |      \        |
+ *  |      JSShortAtom           - / atomized JSShortString
  *  |
- * js::PropertyName             - / chars don't contain an index (uint32_t)
+ * js::PropertyName              - / chars don't contain an index (uint32_t)
  *
  * Classes marked with (abstract) above are not literally C++ Abstract Base
  * Classes (since there are no virtual functions, pure or not, in this
@@ -142,7 +145,7 @@ class JSString : public js::gc::Cell
             jschar                 inlineStorage[NUM_INLINE_CHARS]; /* JS(Inline|Short)String */
             struct {
                 union {
-                    JSLinearString *base;               /* JSDependentString */
+                    JSLinearString *base;               /* JS(Dependent|Undepended)String */
                     JSString       *right;              /* JSRope */
                     size_t         capacity;            /* JSFlatString (extensible) */
                     const JSStringFinalizer *externalFinalizer;/* JSExternalString */
@@ -157,10 +160,6 @@ class JSString : public js::gc::Cell
 
   public:
     /* Flags exposed only for jits */
-
-    static const size_t LENGTH_SHIFT      = 4;
-    static const size_t FLAGS_MASK        = JS_BITMASK(LENGTH_SHIFT);
-    static const size_t MAX_LENGTH        = JS_BIT(32 - LENGTH_SHIFT) - 1;
 
     /*
      * The low LENGTH_SHIFT bits of lengthAndFlags are used to encode the type
@@ -182,41 +181,40 @@ class JSString : public js::gc::Cell
      *   string       instance   subtype
      *   type         encoding   predicate
      *
-     *   String       -          true
      *   Rope         0001       xxx1
      *   Linear       -          xxx0
-     *   Dependent    0010       xx1x
-     *   Flat         -          xx00
-     *   Extensible   1100       1100
-     *   Fixed        0100       isFlat && !isExtensible
-     *   Inline       0100       isFixed && (u1.chars == inlineStorage || isShort)
-     *   Short        0100       xxxx && header in FINALIZE_SHORT_STRING arena
-     *   External     0100       xxxx && header in FINALIZE_EXTERNAL_STRING arena
+     *   Dependent    0010       0010
+     *   Flat         -          isLinear && !isDependent
+     *   Extensible   0100       0100
+     *   Fixed        0110       isFlat && !isExtensible
+     *   Inline       0110       isFixed && (u1.chars == inlineStorage || isShort)
+     *   Short        0110       header in FINALIZE_SHORT_STRING arena
+     *   External     0110       header in FINALIZE_EXTERNAL_STRING arena
+     *   Undepended   1010       1010
      *   Atom         1000       x000
      *   InlineAtom   1000       1000 && is Inline
      *   ShortAtom    1000       1000 && is Short
      *   StaticAtom   0000       0000
      */
 
-    static const size_t ROPE_BIT          = JS_BIT(0);
+    static const size_t LENGTH_SHIFT          = 4;
+    static const size_t FLAGS_MASK            = JS_BITMASK(LENGTH_SHIFT);
 
-    static const size_t LINEAR_MASK       = JS_BITMASK(1);
-    static const size_t LINEAR_FLAGS      = 0x0;
+    static const size_t ROPE_BIT              = JS_BIT(0);
 
-    static const size_t DEPENDENT_BIT     = JS_BIT(1);
+    static const size_t DEPENDENT_FLAGS       = JS_BIT(1);
+    static const size_t EXTENSIBLE_FLAGS      = JS_BIT(2);
+    static const size_t FIXED_FLAGS           = JS_BIT(1) | JS_BIT(2);
+    static const size_t UNDEPENDED_FLAGS      = JS_BIT(1) | JS_BIT(3);
 
-    static const size_t FLAT_MASK         = JS_BITMASK(2);
-    static const size_t FLAT_FLAGS        = 0x0;
+    static const size_t ATOM_MASK             = JS_BITMASK(3);
+    static const size_t NON_STATIC_ATOM_FLAGS = JS_BIT(3);
 
-    static const size_t FIXED_FLAGS       = JS_BIT(2);
-
-    static const size_t ATOM_MASK         = JS_BITMASK(3);
-    static const size_t ATOM_FLAGS        = 0x0;
-
-    static const size_t EXTENSIBLE_FLAGS  = JS_BIT(2) | JS_BIT(3);
-    static const size_t NON_STATIC_ATOM   = JS_BIT(3);
+    static const size_t MAX_LENGTH            = JS_BIT(32 - LENGTH_SHIFT) - 1;
 
     size_t buildLengthAndFlags(size_t length, size_t flags) {
+        JS_ASSERT(length <= MAX_LENGTH);
+        JS_ASSERT(flags <= FLAGS_MASK);
         return (length << LENGTH_SHIFT) | flags;
     }
 
@@ -288,7 +286,7 @@ class JSString : public js::gc::Cell
 
     JS_ALWAYS_INLINE
     bool isLinear() const {
-        return (d.lengthAndFlags & LINEAR_MASK) == LINEAR_FLAGS;
+        return !(d.lengthAndFlags & ROPE_BIT);
     }
 
     JS_ALWAYS_INLINE
@@ -299,9 +297,7 @@ class JSString : public js::gc::Cell
 
     JS_ALWAYS_INLINE
     bool isDependent() const {
-        bool dependent = d.lengthAndFlags & DEPENDENT_BIT;
-        JS_ASSERT_IF(dependent, (d.lengthAndFlags & FLAGS_MASK) == DEPENDENT_BIT);
-        return dependent;
+        return (d.lengthAndFlags & FLAGS_MASK) == DEPENDENT_FLAGS;
     }
 
     JS_ALWAYS_INLINE
@@ -312,7 +308,7 @@ class JSString : public js::gc::Cell
 
     JS_ALWAYS_INLINE
     bool isFlat() const {
-        return (d.lengthAndFlags & FLAT_MASK) == FLAT_FLAGS;
+        return isLinear() && !isDependent();
     }
 
     JS_ALWAYS_INLINE
@@ -352,10 +348,13 @@ class JSString : public js::gc::Cell
     }
 
     JS_ALWAYS_INLINE
+    bool isUndepended() const {
+        return (d.lengthAndFlags & FLAGS_MASK) == UNDEPENDED_FLAGS;
+    }
+
+    JS_ALWAYS_INLINE
     bool isAtom() const {
-        bool atomized = (d.lengthAndFlags & ATOM_MASK) == ATOM_FLAGS;
-        JS_ASSERT_IF(atomized, isFlat());
-        return atomized;
+        return !(d.lengthAndFlags & ATOM_MASK);
     }
 
     JS_ALWAYS_INLINE
@@ -363,6 +362,20 @@ class JSString : public js::gc::Cell
         JS_ASSERT(isAtom());
         return *(JSAtom *)this;
     }
+
+    /* Only called by the GC for dependent or undepended strings. */
+
+    inline bool hasBase() const {
+        JS_STATIC_ASSERT((DEPENDENT_FLAGS | JS_BIT(3)) == UNDEPENDED_FLAGS);
+        return (d.lengthAndFlags & JS_BITMASK(3)) == DEPENDENT_FLAGS;
+    }
+
+    inline JSLinearString *base() const {
+        JS_ASSERT(hasBase());
+        return d.s.u2.base;
+    }
+
+    inline void markBase(JSTracer *trc);
 
     /* Only called by the GC for strings with the FINALIZE_STRING kind. */
 
@@ -463,26 +476,12 @@ class JSDependentString : public JSLinearString
   public:
     static inline JSDependentString *new_(JSContext *cx, JSLinearString *base,
                                           const jschar *chars, size_t length);
-
-    JSLinearString *base() const {
-        JS_ASSERT(JSString::isDependent());
-        return d.s.u2.base;
-    }
-
-    inline void markChildren(JSTracer *trc);
 };
 
 JS_STATIC_ASSERT(sizeof(JSDependentString) == sizeof(JSString));
 
 class JSFlatString : public JSLinearString
 {
-    friend class JSRope;
-    void morphExtensibleIntoDependent(JSLinearString *base) {
-        JS_ASSERT(!js::IsPoisonedPtr(base));
-        d.lengthAndFlags = buildLengthAndFlags(length(), DEPENDENT_BIT);
-        d.s.u2.base = base;
-    }
-
     /* Vacuous and therefore unimplemented. */
     JSFlatString *ensureFlat(JSContext *cx) MOZ_DELETE;
     bool isFlat() const MOZ_DELETE;
@@ -640,6 +639,17 @@ class JSExternalString : public JSFixedString
 
 JS_STATIC_ASSERT(sizeof(JSExternalString) == sizeof(JSString));
 
+class JSUndependedString : public JSFixedString
+{
+    /*
+     * JSUndependedString is not explicitly used and is only present for
+     * consistency. See JSDependentString::undepend for how a JSDependentString
+     * gets morphed into a JSUndependedString.
+     */
+};
+
+JS_STATIC_ASSERT(sizeof(JSUndependedString) == sizeof(JSString));
+
 class JSAtom : public JSFixedString
 {
     /* Vacuous and therefore unimplemented. */
@@ -658,10 +668,6 @@ class JSAtom : public JSFixedString
 };
 
 JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
-
-namespace js {
-typedef HeapPtr<JSAtom> HeapPtrAtom;
-}
 
 class JSInlineAtom : public JSInlineString /*, JSAtom */
 {
@@ -766,6 +772,8 @@ NameToId(PropertyName *name)
     return NON_INTEGER_ATOM_TO_JSID(name);
 }
 
+typedef HeapPtr<JSAtom> HeapPtrAtom;
+
 } /* namespace js */
 
 /* Avoid requiring vm/String-inl.h just to call getChars. */
@@ -809,12 +817,8 @@ JSString::ensureFixed(JSContext *cx)
 {
     if (!ensureFlat(cx))
         return NULL;
-    if (isExtensible()) {
-        JS_ASSERT((d.lengthAndFlags & FLAT_MASK) == 0);
-        JS_STATIC_ASSERT(EXTENSIBLE_FLAGS == (JS_BIT(2) | JS_BIT(3)));
-        JS_STATIC_ASSERT(FIXED_FLAGS == JS_BIT(2));
-        d.lengthAndFlags ^= JS_BIT(3);
-    }
+    if (isExtensible())
+        d.lengthAndFlags = buildLengthAndFlags(length(), FIXED_FLAGS);
     return &asFixed();
 }
 

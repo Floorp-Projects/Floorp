@@ -1,0 +1,96 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>File Handle Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    for each (let fileStorage in fileStorages) {
+      let request = getFileHandle(fileStorage.key, "test.txt");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let fileHandle = event.target.result;
+      fileHandle.onerror = errorHandler;
+
+      let lockedFile = fileHandle.open("readwrite");
+      is(lockedFile.location, 0, "Correct location");
+
+      lockedFile.location = 100000;
+      is(lockedFile.location, 100000, "Correct location");
+
+      lockedFile.location = null;
+      ok(lockedFile.location === null, "Correct location");
+
+      try {
+        lockedFile.readAsArrayBuffer(1);
+        ok(false, "Should have thrown!");
+      }
+      catch (e) {
+        ok(e instanceof DOMException, "Got exception.");
+        is(e.name, "InvalidStateError", "Good error.");
+        is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
+      }
+
+      try {
+        lockedFile.readAsText(1);
+        ok(false, "Should have thrown!");
+      }
+      catch (e) {
+        ok(e instanceof DOMException, "Got exception.");
+        is(e.name, "InvalidStateError", "Good error.");
+        is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
+      }
+
+      try {
+        lockedFile.write({});
+        ok(false, "Should have thrown!");
+      }
+      catch (e) {
+        ok(e instanceof DOMException, "Got exception.");
+        is(e.name, "InvalidStateError", "Good error.");
+        is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
+      }
+
+      request = lockedFile.append("foo");
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(lockedFile.location === null, "Correct location");
+
+      try {
+        lockedFile.truncate();
+        ok(false, "Should have thrown!");
+      }
+      catch (e) {
+        ok(e instanceof DOMException, "Got exception.");
+        is(e.name, "InvalidStateError", "Good error.");
+        is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
+      }
+
+      request = lockedFile.truncate(0);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(lockedFile.location, 0, "Correct location");
+    }
+
+    finishTest();
+    yield;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

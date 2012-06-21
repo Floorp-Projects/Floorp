@@ -1,4 +1,4 @@
 component {54ae32f8-1dd2-11b2-a209-df7c505370f8} nsFilePicker.js
-#ifndef MOZ_WIDGET_GTK2
+#ifndef MOZ_WIDGET_GTK
 contract @mozilla.org/filepicker;1 {54ae32f8-1dd2-11b2-a209-df7c505370f8}
 #endif

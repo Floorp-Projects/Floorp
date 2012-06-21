@@ -437,9 +437,11 @@ public class GeckoAppShell
     }
 
     public static void runGecko(String apkPath, String args, String url, String type, int restoreMode) {
+        WebAppAllocator.getInstance();
+
         Looper.prepare();
         sGeckoHandler = new Handler();
-        
+
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
 
@@ -726,34 +728,70 @@ public class GeckoAppShell
         Log.w(LOGTAG, "Killing via System.exit()");
         System.exit(0);
     }
+
     static void scheduleRestart() {
         Log.i(LOGTAG, "scheduling restart");
         gRestartScheduled = true;
     }
 
-    // "Installs" an application by creating a shortcut
-    static void createShortcut(String aTitle, String aURI, String aIconData, String aType) {
-        byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
-        createShortcut(aTitle, aURI, bitmap, aType);
+    public static Intent getWebAppIntent(String aURI, String aUniqueURI, boolean forInstall) {
+        int index;
+
+        if (forInstall)
+            index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI);
+        else
+            index = WebAppAllocator.getInstance(GeckoApp.mAppContext).getIndexForApp(aUniqueURI);
+
+        if (index == -1)
+            return null;
+
+        Intent intent = new Intent();
+        intent.setAction(GeckoApp.ACTION_WEBAPP_PREFIX + index);
+        intent.setData(Uri.parse(aURI));
+        intent.setClassName(GeckoApp.mAppContext, GeckoApp.mAppContext.getPackageName() + ".WebApps$WebApp" + index);
+        return intent;
     }
 
-    public static void createShortcut(final String aTitle, final String aURI, final Bitmap aIcon, final String aType) {
+    // "Installs" an application by creating a shortcut
+    // This is the entry point from AndroidBridge.h
+    static void createShortcut(String aTitle, String aURI, String aIconData, String aType) {
+        if ("webapp".equals(aType)) {
+            Log.e(LOGTAG, "createShortcut with no unique URI should not be used for aType = webapp!");
+        }
+
+        byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+        createShortcut(aTitle, aURI, aURI, bitmap, aType);
+    }
+
+    // internal, for non-webapps
+    static void createShortcut(String aTitle, String aURI, Bitmap aBitmap, String aType) {
+        createShortcut(aTitle, aURI, aURI, aBitmap, aType);
+    }
+
+    // internal, for webapps
+    static void createShortcut(String aTitle, String aURI, String aUniqueURI, String aIconData, String aType) {
+        byte[] raw = Base64.decode(aIconData.substring(22), Base64.DEFAULT);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+        createShortcut(aTitle, aURI, aUniqueURI, bitmap, aType);
+    }
+
+    public static void createShortcut(final String aTitle, final String aURI, final String aUniqueURI,
+                                      final Bitmap aIcon, final String aType)
+    {
         getHandler().post(new Runnable() {
             public void run() {
-                Log.w(LOGTAG, "createShortcut for " + aURI + " [" + aTitle + "] > " + aType);
-        
                 // the intent to be launched by the shortcut
-                Intent shortcutIntent = new Intent();
+                Intent shortcutIntent;
                 if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-                    shortcutIntent.setAction(GeckoApp.ACTION_WEBAPP);
-                    shortcutIntent.setData(Uri.parse(aURI));
+                    shortcutIntent = getWebAppIntent(aURI, aUniqueURI, true);
                 } else {
+                    shortcutIntent = new Intent();
                     shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
                     shortcutIntent.setData(Uri.parse(aURI));
+                    shortcutIntent.setClassName(GeckoApp.mAppContext,
+                                                GeckoApp.mAppContext.getPackageName() + ".App");
                 }
-                shortcutIntent.setClassName(GeckoApp.mAppContext,
-                                            GeckoApp.mAppContext.getPackageName() + ".App");
         
                 Intent intent = new Intent();
                 intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
@@ -773,20 +811,26 @@ public class GeckoAppShell
     }
 
     public static void removeShortcut(final String aTitle, final String aURI, final String aType) {
+        removeShortcut(aTitle, aURI, null, aType);
+    }
+
+    public static void removeShortcut(final String aTitle, final String aURI, final String aUniqueURI, final String aType) {
         getHandler().post(new Runnable() {
             public void run() {
-                Log.w(LOGTAG, "removeShortcut for " + aURI + " [" + aTitle + "] > " + aType);
-        
                 // the intent to be launched by the shortcut
-                Intent shortcutIntent = new Intent();
+                Intent shortcutIntent;
                 if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-                    shortcutIntent.setAction(GeckoApp.ACTION_WEBAPP);
+                    int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI);
+                    shortcutIntent = getWebAppIntent(aURI, aUniqueURI, false);
+                    if (shortcutIntent == null)
+                        return;
                 } else {
+                    shortcutIntent = new Intent();
                     shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
+                    shortcutIntent.setClassName(GeckoApp.mAppContext,
+                                                GeckoApp.mAppContext.getPackageName() + ".App");
+                    shortcutIntent.setData(Uri.parse(aURI));
                 }
-                shortcutIntent.setData(Uri.parse(aURI));
-                shortcutIntent.setClassName(GeckoApp.mAppContext,
-                                            GeckoApp.mAppContext.getPackageName() + ".App");
         
                 Intent intent = new Intent();
                 intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
@@ -797,6 +841,39 @@ public class GeckoAppShell
 
                 intent.setAction("com.android.launcher.action.UNINSTALL_SHORTCUT");
                 GeckoApp.mAppContext.sendBroadcast(intent);
+            }
+        });
+    }
+
+    public static void uninstallWebApp(final String uniqueURI) {
+        // On uninstall, we need to do a couple of things:
+        //   1. nuke the running app process.
+        //   2. nuke the profile that was assigned to that webapp
+        getHandler().post(new Runnable() {
+            public void run() {
+                int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).releaseIndexForApp(uniqueURI);
+
+                // if -1, nothing to do; we didn't think it was installed anyway
+                if (index == -1)
+                    return;
+
+                // kill the app if it's running
+                String targetProcessName = GeckoApp.mAppContext.getPackageName();
+                targetProcessName = targetProcessName + ":" + targetProcessName + ".WebApp" + index;
+
+                ActivityManager am = (ActivityManager) GeckoApp.mAppContext.getSystemService(Context.ACTIVITY_SERVICE);
+                List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+                if (procs != null) {
+                    for (ActivityManager.RunningAppProcessInfo proc : procs) {
+                        if (proc.processName.equals(targetProcessName)) {
+                            android.os.Process.killProcess(proc.pid);
+                            break;
+                        }
+                    }
+                }
+
+                // then nuke the profile
+                GeckoProfile.removeProfile(GeckoApp.mAppContext, "webapp" + index);
             }
         });
     }
@@ -1512,7 +1589,7 @@ public class GeckoAppShell
                                      int x, int y,
                                      int w, int h,
                                      boolean isFullScreen)
-{
+    {
         ImmutableViewportMetrics pluginViewport;
 
         Log.i(LOGTAG, "addPluginView:" + view + " @ x:" + x + " y:" + y + " w:" + w + " h:" + h + " fullscreen: " + isFullScreen);
@@ -2346,11 +2423,7 @@ class ScreenshotHandler {
                     }
                     case GeckoAppShell.SCREENSHOT_THUMBNAIL:
                     {
-                        if (Tabs.getInstance().isSelectedTab(tab)) {
-                            Bitmap b = tab.getThumbnailBitmap();
-                            b.copyPixelsFromBuffer(data);
-                            GeckoApp.mAppContext.processThumbnail(tab, b, null);
-                        }
+                        GeckoApp.mAppContext.handleThumbnailData(tab, data);
                         break;
                     }
                 }

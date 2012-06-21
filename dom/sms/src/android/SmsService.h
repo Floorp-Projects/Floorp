@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 namespace sms {
 
-class SmsService : public nsISmsService
+class SmsService MOZ_FINAL : public nsISmsService
 {
 public:
   NS_DECL_ISUPPORTS

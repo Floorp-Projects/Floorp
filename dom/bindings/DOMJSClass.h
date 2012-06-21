@@ -85,6 +85,14 @@ struct DOMJSClass
   JSClass* ToJSClass() { return &mBase; }
 };
 
+inline bool
+HasProtoOrIfaceArray(JSObject* global)
+{
+  MOZ_ASSERT(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL);
+  // This can be undefined if we GC while creating the global
+  return !js::GetReservedSlot(global, DOM_PROTOTYPE_SLOT).isUndefined();
+}
+
 inline JSObject**
 GetProtoOrIfaceArray(JSObject* global)
 {

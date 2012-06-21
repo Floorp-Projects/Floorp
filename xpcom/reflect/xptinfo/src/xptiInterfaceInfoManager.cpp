@@ -13,6 +13,7 @@
 #include "mozilla/FunctionTimer.h"
 #include "nsDirectoryService.h"
 #include "mozilla/FileUtils.h"
+#include "nsIMemoryReporter.h"
 
 using namespace mozilla;
 
@@ -24,6 +25,41 @@ static xptiInterfaceInfoManager* gInterfaceInfoManager = nsnull;
 #ifdef DEBUG
 static int gCallCount = 0;
 #endif
+
+
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(XPTMallocSizeOf, "xpti-working-set")
+
+size_t
+xptiInterfaceInfoManager::SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf)
+{
+    size_t n = aMallocSizeOf(this);
+    ReentrantMonitorAutoEnter monitor(mWorkingSet.mTableReentrantMonitor);
+    // The entries themselves are allocated out of an arena accounted
+    // for elsewhere, so don't measure them
+    n += mWorkingSet.mIIDTable.SizeOfExcludingThis(NULL, XPTMallocSizeOf);
+    n += mWorkingSet.mNameTable.SizeOfExcludingThis(NULL, XPTMallocSizeOf);
+    return n;
+}
+
+// static
+PRInt64
+xptiInterfaceInfoManager::GetXPTIWorkingSetSize()
+{
+    size_t n = XPT_SizeOfArena(gXPTIStructArena, XPTMallocSizeOf);
+
+    if (gInterfaceInfoManager) {
+        n += gInterfaceInfoManager->SizeOfIncludingThis(XPTMallocSizeOf);
+    }
+
+    return n;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(xptiWorkingSet,
+                             "explicit/xpti-working-set",
+                             KIND_HEAP,
+                             UNITS_BYTES,
+                             xptiInterfaceInfoManager::GetXPTIWorkingSetSize,
+                             "Memory used by the XPCOM typelib system.")
 
 // static
 xptiInterfaceInfoManager*
@@ -50,6 +86,7 @@ xptiInterfaceInfoManager::xptiInterfaceInfoManager()
         mAdditionalManagersLock(
             "xptiInterfaceInfoManager.mAdditionalManagersLock")
 {
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(xptiWorkingSet));
 }
 
 xptiInterfaceInfoManager::~xptiInterfaceInfoManager()

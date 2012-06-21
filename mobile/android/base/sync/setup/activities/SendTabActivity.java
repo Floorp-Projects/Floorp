@@ -5,11 +5,13 @@ import java.util.List;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandRunner;
+import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.setup.Constants;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -54,12 +56,12 @@ public class SendTabActivity extends Activity {
     enableSend(false);
   }
 
-  private void registerDisplayURICommand() {
+  private static void registerDisplayURICommand() {
     final CommandProcessor processor = CommandProcessor.getProcessor();
     processor.registerCommand("displayURI", new CommandRunner(3) {
       @Override
-      public void executeCommand(List<String> args) {
-        CommandProcessor.displayURI(args, getApplicationContext());
+      public void executeCommand(final GlobalSession session, List<String> args) {
+        CommandProcessor.displayURI(args, session.getContext());
       }
     });
   }

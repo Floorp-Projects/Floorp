@@ -52,7 +52,7 @@ public:
     void OnDraw(mozilla::AndroidGeckoEvent *ae);
     bool OnMultitouchEvent(mozilla::AndroidGeckoEvent *ae);
     void OnGestureEvent(mozilla::AndroidGeckoEvent *ae);
-    void OnMotionEvent(mozilla::AndroidGeckoEvent *ae);
+    void OnMouseEvent(mozilla::AndroidGeckoEvent *ae);
     void OnKeyEvent(mozilla::AndroidGeckoEvent *ae);
     void OnIMEEvent(mozilla::AndroidGeckoEvent *ae);
 

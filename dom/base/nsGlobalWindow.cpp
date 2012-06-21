@@ -63,6 +63,7 @@
 #include "nsDOMMediaQueryList.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "nsJSPrincipals.h"
+#include "mozilla/Attributes.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -414,7 +415,7 @@ static const char sPopStatePrefStr[] = "browser.history.allowPopState";
 /**
  * An object implementing the window.URL property.
  */
-class nsDOMMozURLProperty : public nsIDOMMozURLProperty
+class nsDOMMozURLProperty MOZ_FINAL : public nsIDOMMozURLProperty
 {
 public:
   nsDOMMozURLProperty(nsGlobalWindow* aWindow)
@@ -494,7 +495,7 @@ nsDOMMozURLProperty::RevokeObjectURL(const nsAString& aURL)
  * An indirect observer object that means we don't have to implement nsIObserver
  * on nsGlobalWindow, where any script could see it.
  */
-class nsGlobalWindowObserver : public nsIObserver {
+class nsGlobalWindowObserver MOZ_FINAL : public nsIObserver {
 public:
   nsGlobalWindowObserver(nsGlobalWindow* aWindow) : mWindow(aWindow) {}
   NS_DECL_ISUPPORTS
@@ -539,7 +540,7 @@ nsTimeout::~nsTimeout()
   MOZ_COUNT_DTOR(nsTimeout);
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsTimeout)
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_NATIVE_0(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsTimeout)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mWindow,
@@ -1226,7 +1227,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   for (nsTimeout* timeout = tmp->FirstTimeout();
        tmp->IsTimeout(timeout);
        timeout = timeout->Next()) {
-    cb.NoteNativeChild(timeout, &NS_CYCLE_COLLECTION_NAME(nsTimeout));
+    cb.NoteNativeChild(timeout, NS_CYCLE_COLLECTION_PARTICIPANT(nsTimeout));
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLocalStorage)
@@ -1537,7 +1538,7 @@ nsGlobalWindow::GetPopupControlState() const
 #define WINDOWSTATEHOLDER_IID \
 {0x0b917c3e, 0xbd50, 0x4683, {0xaf, 0xc9, 0xc7, 0x81, 0x07, 0xae, 0x33, 0x26}}
 
-class WindowStateHolder : public nsISupports
+class WindowStateHolder MOZ_FINAL : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(WINDOWSTATEHOLDER_IID)
@@ -2056,9 +2057,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                            html_doc);
   }
 
-  if (aDocument) {
-    aDocument->SetScriptGlobalObject(newInnerWindow);
-  }
+  aDocument->SetScriptGlobalObject(newInnerWindow);
 
   if (!aState) {
     if (reUseInnerWindow) {
@@ -2074,8 +2073,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         ::JS_DeleteProperty(cx, currentInner->mJSObject, "document");
       }
     } else {
-      rv = newInnerWindow->InnerSetNewDocument(aDocument);
-      NS_ENSURE_SUCCESS(rv, rv);
+      newInnerWindow->InnerSetNewDocument(aDocument);
 
       // Initialize DOM classes etc on the inner window.
       rv = mContext->InitClasses(newInnerWindow->mJSObject);
@@ -2155,14 +2153,14 @@ nsGlobalWindow::ClearStatus()
   SetDefaultStatus(EmptyString());
 }
 
-nsresult
+void
 nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 {
   NS_PRECONDITION(IsInnerWindow(), "Must only be called on inner windows");
+  MOZ_ASSERT(aDocument);
 
 #ifdef PR_LOGGING
-  if (aDocument && gDOMLeakPRLog &&
-      PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
+  if (gDOMLeakPRLog && PR_LOG_TEST(gDOMLeakPRLog, PR_LOG_DEBUG)) {
     nsIURI *uri = aDocument->GetDocumentURI();
     nsCAutoString spec;
     if (uri)
@@ -2186,8 +2184,6 @@ nsGlobalWindow::InnerSetNewDocument(nsIDocument* aDocument)
 
   // Clear our mutation bitfield.
   mMutationBits = 0;
-
-  return NS_OK;
 }
 
 void

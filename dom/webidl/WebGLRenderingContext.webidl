@@ -48,7 +48,8 @@ interface WebGLShader;
 
 interface WebGLTexture;
 
-interface WebGLUniformLocation;
+interface WebGLUniformLocation {
+};
 
 interface WebGLActiveInfo;
 
@@ -589,6 +590,7 @@ interface WebGLRenderingContext {
 
     any getUniform(WebGLProgram? program, WebGLUniformLocation? location);
 
+    [Creator]
     WebGLUniformLocation? getUniformLocation(WebGLProgram? program, DOMString name);
 
     any getVertexAttrib(unsigned long index, unsigned long pname);

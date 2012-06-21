@@ -375,13 +375,6 @@ public:
   mozilla::dom::Element* AsElement();
 
   /**
-   * Return whether the node is a content node
-   */
-  bool IsContent() const {
-    return IsNodeOfType(eCONTENT);
-  }
-
-  /**
    * Return this node as nsIContent.  Should only be used for nodes for which
    * IsContent() is true.  This is defined inline in nsIContent.h.
    */
@@ -481,6 +474,75 @@ public:
   const nsString& LocalName() const
   {
     return mNodeInfo->LocalName();
+  }
+
+  /**
+   * Get the namespace that this element's tag is defined in
+   * @return the namespace
+   */
+  PRInt32 GetNameSpaceID() const
+  {
+    return mNodeInfo->NamespaceID();
+  }
+
+  /**
+   * Get the tag for this element. This will always return a non-null atom
+   * pointer (as implied by the naming of the method).  For elements this is
+   * the non-namespaced tag, and for other nodes it's something like "#text",
+   * "#comment", "#document", etc.
+   */
+  nsIAtom* Tag() const
+  {
+    return mNodeInfo->NameAtom();
+  }
+
+  /**
+   * Get the NodeInfo for this element
+   * @return the nodes node info
+   */
+  nsINodeInfo* NodeInfo() const
+  {
+    return mNodeInfo;
+  }
+
+  bool IsInNamespace(PRInt32 aNamespace) const
+  {
+    return mNodeInfo->NamespaceID() == aNamespace;
+  }
+
+  bool IsHTML() const
+  {
+    return IsInNamespace(kNameSpaceID_XHTML);
+  }
+
+  bool IsHTML(nsIAtom* aTag) const
+  {
+    return mNodeInfo->Equals(aTag, kNameSpaceID_XHTML);
+  }
+
+  bool IsSVG() const
+  {
+    return IsInNamespace(kNameSpaceID_SVG);
+  }
+
+  bool IsSVG(nsIAtom* aTag) const
+  {
+    return mNodeInfo->Equals(aTag, kNameSpaceID_SVG);
+  }
+
+  bool IsXUL() const
+  {
+    return IsInNamespace(kNameSpaceID_XUL);
+  }
+
+  bool IsMathML() const
+  {
+    return IsInNamespace(kNameSpaceID_MathML);
+  }
+
+  bool IsMathML(nsIAtom* aTag) const
+  {
+    return mNodeInfo->Equals(aTag, kNameSpaceID_MathML);
   }
 
   nsINode*
@@ -1282,6 +1344,8 @@ private:
     ElementHasPointerLock,
     // Set if the node may have DOMMutationObserver attached to it.
     NodeMayHaveDOMMutationObserver,
+    // Set if node is Content
+    NodeIsContent,
     // Guard value
     BooleanFlagCount
   };
@@ -1311,6 +1375,7 @@ public:
     { return GetBoolFlag(NodeHasRenderingObservers); }
   void SetHasRenderingObservers(bool aValue)
     { SetBoolFlag(NodeHasRenderingObservers, aValue); }
+  bool IsContent() const { return GetBoolFlag(NodeIsContent); }
   bool HasID() const { return GetBoolFlag(ElementHasID); }
   bool MayHaveStyle() const { return GetBoolFlag(ElementMayHaveStyle); }
   bool HasName() const { return GetBoolFlag(ElementHasName); }
@@ -1349,6 +1414,7 @@ public:
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetInDocument() { SetBoolFlag(IsInDocument); }
+  void SetNodeIsContent() { SetBoolFlag(NodeIsContent); }
   void ClearInDocument() { ClearBoolFlag(IsInDocument); }
   void SetIsElement() { SetBoolFlag(NodeIsElement); }
   void ClearIsElement() { ClearBoolFlag(NodeIsElement); }

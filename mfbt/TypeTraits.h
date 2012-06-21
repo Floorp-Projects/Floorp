@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* Template-based metaprogramming and type-testing facilities. */
+
 #ifndef mozilla_TypeTraits_h_
 #define mozilla_TypeTraits_h_
-
-/* Template-based metaprogramming and type-testing facilities. */
 
 namespace mozilla {
 
@@ -21,14 +21,14 @@ namespace mozilla {
  * mozilla::IsBaseOf<A, B>::value is true;
  * mozilla::IsBaseOf<A, C>::value is false;
  */
-template <class Base, class Derived>
+template<class Base, class Derived>
 class IsBaseOf
 {
   private:
-    static char Test(Base *);
-    static int Test(...);
+    static char test(Base* b);
+    static int test(...);
   public:
-    static const bool value = (sizeof(Test(static_cast<Derived *>(0))) == sizeof(char));
+    static const bool value = (sizeof(test(static_cast<Derived*>(0))) == sizeof(char));
 };
 
 /*
@@ -37,13 +37,13 @@ class IsBaseOf
  * mozilla::Conditional<true, A, B>::Type is A;
  * mozilla::Conditional<false, A, B>::Type is B;
  */
-template <bool condition, class A, class B>
+template<bool condition, class A, class B>
 struct Conditional
 {
     typedef A Type;
 };
 
-template <class A, class B>
+template<class A, class B>
 struct Conditional<false, A, B>
 {
     typedef B Type;

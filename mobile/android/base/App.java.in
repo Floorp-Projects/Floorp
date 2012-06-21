@@ -13,12 +13,18 @@ import org.mozilla.gecko.R;
 import android.view.MenuItem;
 
 public class App extends BrowserApp {
+    public int getLayout() { return R.layout.gecko_app; }
+
     public String getPackageName() {
-	return "@ANDROID_PACKAGE_NAME@";
+        return "@ANDROID_PACKAGE_NAME@";
     }
 
     public String getContentProcessName() {
         return "@MOZ_CHILD_PROCESS_NAME@";
+    }
+
+    protected String getDefaultProfileName() {
+      return "default";
     }
 
     public String getDefaultUAString() {

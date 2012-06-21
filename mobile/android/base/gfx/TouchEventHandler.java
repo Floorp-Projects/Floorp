@@ -60,7 +60,6 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
     private final GestureDetector mGestureDetector;
     private final SimpleScaleGestureDetector mScaleGestureDetector;
     private final PanZoomController mPanZoomController;
-    private final GestureDetector.OnDoubleTapListener mDoubleTapListener;
 
     // the queue of events that we are holding on to while waiting for a preventDefault
     // notification
@@ -135,8 +134,7 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
         mListenerTimeoutProcessor = new ListenerTimeoutProcessor();
         mDispatchEvents = true;
 
-        mDoubleTapListener = controller.getDoubleTapListener();
-        setDoubleTapEnabled(true);
+        mGestureDetector.setOnDoubleTapListener(controller.getDoubleTapListener());
 
         Tabs.registerOnTabsChangedListener(this);
     }
@@ -147,6 +145,12 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
         // and be done with it, no extra work needed.
         if (mOnTouchListener == null) {
             dispatchEvent(event);
+            return true;
+        }
+
+        // if this is a hover event just notify gecko, we don't have any interest in the java layer.
+        if (isHoverEvent(event)) {
+            mOnTouchListener.onTouch(mView, event);
             return true;
         }
 
@@ -218,11 +222,6 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
     }
 
     /* This function MUST be called on the UI thread. */
-    public void setDoubleTapEnabled(boolean aValue) {
-        mGestureDetector.setOnDoubleTapListener(aValue ? mDoubleTapListener : null);
-    }
-
-    /* This function MUST be called on the UI thread. */
     public void setWaitForTouchListeners(boolean aValue) {
         mWaitForTouchListeners = aValue;
     }
@@ -230,6 +229,11 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
     /* This function MUST be called on the UI thread. */
     public void setOnTouchListener(OnTouchListener onTouchListener) {
         mOnTouchListener = onTouchListener;
+    }
+
+    private boolean isHoverEvent(MotionEvent event) {
+        int action = (event.getAction() & MotionEvent.ACTION_MASK);
+        return (action == MotionEvent.ACTION_HOVER_ENTER || action == MotionEvent.ACTION_HOVER_MOVE || action == MotionEvent.ACTION_HOVER_EXIT);
     }
 
     private boolean isDownEvent(MotionEvent event) {
@@ -247,16 +251,7 @@ public final class TouchEventHandler implements Tabs.OnTabsChangedListener {
      */
     private void dispatchEvent(MotionEvent event) {
         if (mGestureDetector.onTouchEvent(event)) {
-            // An up/cancel event should get passed to both detectors, in
-            // case it comes from a pointer the scale detector is tracking.
-            switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                case MotionEvent.ACTION_POINTER_UP:
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_CANCEL:
-                    break;
-                default:
-                    return;
-            }
+            return;
         }
         mScaleGestureDetector.onTouchEvent(event);
         if (mScaleGestureDetector.isInProgress()) {

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Line breaks between white spaces</title>
+<style>
+div {
+  width: 0px;
+  border: 1px solid blue;
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+<table>
+<tr><th>U+0009</th><td><div>&#x0009;&#x0009;</div></td></tr>
+<tr><th>U+000D</th><td><div>&#x000D;&#x000D;</div></td></tr>
+<tr><th>U+0020</th><td><div>&#x0020;&#x0020;</div></td></tr>
+<tr><th>U+2000</th><td><div>&#x2000;&#x2000;</div></td></tr>
+<tr><th>U+2001</th><td><div>&#x2000;&#x2001;</div></td></tr>
+<tr><th>U+2002</th><td><div>&#x2000;&#x2002;</div></td></tr>
+<tr><th>U+2003</th><td><div>&#x2000;&#x2003;</div></td></tr>
+<tr><th>U+2004</th><td><div>&#x2000;&#x2004;</div></td></tr>
+<tr><th>U+2005</th><td><div>&#x2000;&#x2005;</div></td></tr>
+<tr><th>U+2006</th><td><div>&#x2000;&#x2006;</div></td></tr>
+<tr><th>U+2008</th><td><div>&#x2000;&#x2008;</div></td></tr>
+<tr><th>U+2009</th><td><div>&#x2000;&#x2009;</div></td></tr>
+<tr><th>U+200A</th><td><div>&#x2000;&#x200A;</div></td></tr>
+<tr><th>U+200B</th><td><div>&#x2000;&#x200B;</div></td></tr>
+<tr><th>U+3000</th><td><div>&#x3000;<br>&#x3000;</div></td></tr>
+</table>
+</body>
+</html>

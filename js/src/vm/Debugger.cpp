@@ -712,9 +712,9 @@ Debugger::unwrapDebuggeeValue(JSContext *cx, Value *vp)
         }
 
         Value owner = dobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
-        if (owner.toObjectOrNull() != object) {
+        if (owner.isUndefined() || &owner.toObject() != object) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 owner.isNull()
+                                 owner.isUndefined()
                                  ? JSMSG_DEBUG_OBJECT_PROTO
                                  : JSMSG_DEBUG_OBJECT_WRONG_OWNER);
             return false;
@@ -3814,7 +3814,7 @@ DebuggerObject_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
     for (size_t i = 0, len = keys.length(); i < len; i++) {
          jsid id = keys[i];
          if (JSID_IS_INT(id)) {
-             JSString *str = js_IntToString(cx, JSID_TO_INT(id));
+             JSString *str = Int32ToString(cx, JSID_TO_INT(id));
              if (!str)
                  return false;
              vals[i].setString(str);
@@ -4516,7 +4516,8 @@ JS_DefineDebuggerObject(JSContext *cx, JSObject *obj_)
         debugProto(cx),
         frameProto(cx),
         scriptProto(cx),
-        objectProto(cx);
+        objectProto(cx),
+        envProto(cx);
 
     objProto = obj->asGlobal().getOrCreateObjectPrototype(cx);
     if (!objProto)
@@ -4551,7 +4552,7 @@ JS_DefineDebuggerObject(JSContext *cx, JSObject *obj_)
     if (!objectProto)
         return false;
 
-    JSObject *envProto = js_InitClass(cx, debugCtor, objProto, &DebuggerEnv_class,
+    envProto = js_InitClass(cx, debugCtor, objProto, &DebuggerEnv_class,
                                       DebuggerEnv_construct, 0,
                                       DebuggerEnv_properties, DebuggerEnv_methods,
                                       NULL, NULL);

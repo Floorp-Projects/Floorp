@@ -41,8 +41,6 @@
 
 /************************************************************************/
 
-#define JS_Assert MOZ_Assert
-
 #ifdef __cplusplus
 namespace JS {
 
@@ -5699,10 +5697,6 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewObjectForConstructor(JSContext *cx, JSClass *clasp, const jsval *vp);
 
 /************************************************************************/
-
-#ifdef DEBUG
-#define JS_GC_ZEAL 1
-#endif
 
 #ifdef JS_GC_ZEAL
 #define JS_DEFAULT_ZEAL_FREQ 100

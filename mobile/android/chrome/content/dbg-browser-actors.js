@@ -205,6 +205,27 @@ BrowserTabActor.prototype = {
   _contextPool: null,
   get contextActorPool() { return this._contextPool; },
 
+  /**
+   * Add the specified breakpoint to the default actor pool connection, in order
+   * to be alive as long as the server is.
+   *
+   * @param BreakpointActor aActor
+   *        The actor object.
+   */
+  addToBreakpointPool: function BTA_addToBreakpointPool(aActor) {
+    this.conn.addActor(aActor);
+  },
+
+  /**
+   * Remove the specified breakpint from the default actor pool.
+   *
+   * @param string aActor
+   *        The actor ID.
+   */
+  removeFromBreakpointPool: function BTA_removeFromBreakpointPool(aActor) {
+    this.conn.removeActor(aActor);
+  },
+
   actorPrefix: "tab",
 
   grip: function BTA_grip() {
