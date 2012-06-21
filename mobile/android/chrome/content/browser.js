@@ -1393,8 +1393,8 @@ var SelectionHandler = {
   // Units in pixels
   HANDLE_WIDTH: 35,
   HANDLE_HEIGHT: 64,
-  HANDLE_VERTICAL_MARGIN: 4,
   HANDLE_PADDING: 20,
+  HANDLE_VERTICAL_OFFSET: 10,
 
   init: function sh_init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
@@ -1533,15 +1533,17 @@ var SelectionHandler = {
   // Positions the caret using a fake mouse click
   _sendStartMouseEvents: function sh_sendStartMouseEvents(cwu) {
     let start = this._start.getBoundingClientRect();
-    cwu.sendMouseEventToWindow("mousedown", start.right - this.HANDLE_PADDING, start.top - this.HANDLE_VERTICAL_MARGIN, 0, 0, 0, true);
-    cwu.sendMouseEventToWindow("mouseup", start.right - this.HANDLE_PADDING, start.top - this.HANDLE_VERTICAL_MARGIN, 0, 0, 0, true);
+    // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
+    cwu.sendMouseEventToWindow("mousedown", start.right - this.HANDLE_PADDING, start.top - 1, 0, 0, 0, true);
+    cwu.sendMouseEventToWindow("mouseup", start.right - this.HANDLE_PADDING, start.top - 1, 0, 0, 0, true);
   },
 
   // Selects text between the carat at the start and an end point using a fake shift+click
   _sendEndMouseEvents: function sh_sendEndMouseEvents(cwu) {
     let end = this._end.getBoundingClientRect();
-    cwu.sendMouseEventToWindow("mousedown", end.left + this.HANDLE_PADDING, end.top - this.HANDLE_VERTICAL_MARGIN, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
-    cwu.sendMouseEventToWindow("mouseup", end.left + this.HANDLE_PADDING, end.top - this.HANDLE_VERTICAL_MARGIN, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+    // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
+    cwu.sendMouseEventToWindow("mousedown", end.left + this.HANDLE_PADDING, end.top - 1, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+    cwu.sendMouseEventToWindow("mouseup", end.left + this.HANDLE_PADDING, end.top - 1, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
   },
 
   // aX/aY are in top-level window browser coordinates
@@ -1628,10 +1630,10 @@ var SelectionHandler = {
   // handle elements to ensure the handles point exactly at the ends of the selection.
   positionHandles: function sh_positionHandles() {
     this._start.style.left = (this.cache.start.x + this.cache.offset.x - this.HANDLE_WIDTH - this.HANDLE_PADDING) + "px";
-    this._start.style.top = (this.cache.start.y + this.cache.offset.y - this.HANDLE_VERTICAL_MARGIN - this.HANDLE_PADDING) + "px";
+    this._start.style.top = (this.cache.start.y + this.cache.offset.y - this.HANDLE_VERTICAL_OFFSET) + "px";
 
     this._end.style.left = (this.cache.end.x + this.cache.offset.x - this.HANDLE_PADDING) + "px";
-    this._end.style.top = (this.cache.end.y + this.cache.offset.y - this.HANDLE_VERTICAL_MARGIN - this.HANDLE_PADDING) + "px";
+    this._end.style.top = (this.cache.end.y + this.cache.offset.y - this.HANDLE_VERTICAL_OFFSET) + "px";
   },
 
   showHandles: function sh_showHandles() {
