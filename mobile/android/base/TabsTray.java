@@ -134,6 +134,10 @@ public class TabsTray extends LinearLayout
 
         int index = Tabs.getInstance().getIndexOf(tab);
         if (msg == Tabs.TabEvents.ADDED) {
+            if (index == -1) // If the tab has already been removed, do nothing.
+                return;
+            if (index > mTabsAdapter.getCount())
+                index = mTabsAdapter.getCount();
             mTabsAdapter.addTab(index, tab);
             mTabsAdapter.notifyDataSetChanged();
             return;
