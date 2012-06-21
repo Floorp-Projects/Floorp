@@ -1771,16 +1771,18 @@ for (uint32_t i = 0; i < length; ++i) {
         if type.nullable():
             typeName = CGDictionary.makeDictionaryName(type.inner.inner,
                                                        descriptorProvider.workers)
-            declType = CGGeneric("Nullable<%s>" % typeName)
-            selfRef = "${declName}.Value()"
+            actualTypeName = "Nullable<%s>" % typeName
+            selfRef = "const_cast<%s&>(${declName}).SetValue()" % actualTypeName
         else:
             typeName = CGDictionary.makeDictionaryName(type.inner,
                                                        descriptorProvider.workers)
-            declType = CGGeneric(typeName)
+            actualTypeName = typeName
             selfRef = "${declName}"
+
+        declType = CGGeneric(actualTypeName)
+
         # If we're optional or a member of something else, the const
         # will come from the Optional or our container.
-        mutableTypeName = declType
         if not isOptional and not isMember:
             declType = CGWrapper(declType, pre="const ")
             selfRef = "const_cast<%s&>(%s)" % (typeName, selfRef)
@@ -1790,7 +1792,7 @@ for (uint32_t i = 0; i < length; ++i) {
                                       "}" % selfRef,
                                       isDefinitelyObject, type,
                                       ("const_cast<%s&>(${declName}).SetNull()" %
-                                       mutableTypeName.define()),
+                                       actualTypeName),
                                       descriptorProvider.workers, None)
 
         return (template, declType, None, isOptional)
