@@ -265,7 +265,6 @@ RES_LAYOUT = \
   res/layout/site_setting_title.xml \
   res/layout/setup_screen.xml \
   res/layout/site_identity_popup.xml \
-  res/layout/reader_popup.xml \
   res/layout/remote_tabs.xml \
   res/layout/remote_tabs_child.xml \
   res/layout/remote_tabs_group.xml \
@@ -382,6 +381,8 @@ RES_DRAWABLE_BASE = \
   res/drawable/ic_menu_reload.png \
   res/drawable/ic_menu_save_as_pdf.png \
   res/drawable/ic_menu_share.png \
+  res/drawable/ic_menu_reading_list_add.png \
+  res/drawable/ic_menu_reading_list_remove.png \
   res/drawable/ic_menu_forward.png \
   res/drawable/remote_tabs_off.png \
   res/drawable/remote_tabs_on.png \
@@ -462,6 +463,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/ic_menu_reload.png \
   res/drawable-hdpi/ic_menu_save_as_pdf.png \
   res/drawable-hdpi/ic_menu_share.png \
+  res/drawable-hdpi/ic_menu_reading_list_add.png \
+  res/drawable-hdpi/ic_menu_reading_list_remove.png \
   res/drawable-hdpi/ic_menu_forward.png \
   res/drawable-hdpi/remote_tabs_off.png \
   res/drawable-hdpi/remote_tabs_on.png \
@@ -510,6 +513,8 @@ RES_DRAWABLE_MDPI_V11 = \
   res/drawable-mdpi-v11/ic_menu_reload.png \
   res/drawable-mdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-mdpi-v11/ic_menu_share.png \
+  res/drawable-mdpi-v11/ic_menu_reading_list_add.png \
+  res/drawable-mdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-mdpi-v11/ic_menu_forward.png \
   res/drawable-mdpi-v11/menu.png \
   res/drawable-mdpi-v11/menu_panel_bg.9.png \
@@ -532,6 +537,8 @@ RES_DRAWABLE_HDPI_V11 = \
   res/drawable-hdpi-v11/ic_menu_reload.png \
   res/drawable-hdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-hdpi-v11/ic_menu_share.png \
+  res/drawable-hdpi-v11/ic_menu_reading_list_add.png \
+  res/drawable-hdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-hdpi-v11/ic_menu_forward.png \
   res/drawable-hdpi-v11/menu.png \
   res/drawable-hdpi-v11/menu_panel_bg.9.png \
@@ -571,6 +578,8 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/ic_menu_reload.png \
   res/drawable-xhdpi-v11/ic_menu_save_as_pdf.png \
   res/drawable-xhdpi-v11/ic_menu_share.png \
+  res/drawable-xhdpi-v11/ic_menu_reading_list_add.png \
+  res/drawable-xhdpi-v11/ic_menu_reading_list_remove.png \
   res/drawable-xhdpi-v11/remote_tabs_off.png \
   res/drawable-xhdpi-v11/remote_tabs_on.png \
   res/drawable-xhdpi-v11/tab_new.png \

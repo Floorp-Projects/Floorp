@@ -155,7 +155,7 @@ nsDOMDeviceStorage::SetRootFileForType(const nsAString& aType, const PRInt32 aIn
   if (aType.Equals(NS_LITERAL_STRING("pictures"))) {
 #ifdef MOZ_WIDGET_GONK
     if (aIndex == 0) {
-      NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/Pictures"), false, getter_AddRefs(f));
+      NS_NewLocalFile(NS_LITERAL_STRING("/sdcard/DCIM"), false, getter_AddRefs(f));
     }
 #elif defined (MOZ_WIDGET_COCOA)
     if (aIndex == 0) {

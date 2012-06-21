@@ -2086,12 +2086,18 @@ SpdySession3::OnWriteSegment(char *buf,
     *countWritten = count;
 
     if (mFlatHTTPResponseHeaders.Length() == mFlatHTTPResponseHeadersOut) {
-      // Now ready to process data frames.
       if (mDataPending) {
+        // Now ready to process data frames - pop PROCESING_DATA_FRAME back onto
+        // the stack because receipt of that first data frame triggered the
+        // response header processing
         mDataPending = false;
         ChangeDownstreamState(PROCESSING_DATA_FRAME);
       }
-      else {
+      else if (!mInputFrameDataLast) {
+        // If more frames are expected in this stream, then reset the state so they can be
+        // handled. Otherwise (e.g. a 0 length response with the fin on the SYN_REPLY)
+        // stay in PROCESSING_COMPLETE_HEADERS state so the SetNeedsCleanup() code above can
+        // cleanup the stream.
         ResetDownstreamState();
       }
     }

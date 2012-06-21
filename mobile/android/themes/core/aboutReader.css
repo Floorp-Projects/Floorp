@@ -5,33 +5,474 @@
 %filter substitution
 %include defines.inc
 
+@font-face {
+  font-family: 'OpenSansRegular';
+  src: url('chrome://browser/skin/fonts/opensans-regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 html {
-  font-family: Roboto,"Droid Sans",helvetica,arial,clean,sans-serif;
-  font-size: 24px;
-  background: #FFFFFF;
   -moz-text-size-adjust: none;
 }
 
 body {
-  margin: 20px;
+  font-family: "OpenSansRegular","Droid Sans",sans-serif;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  background-repeat: repeat;
+}
+
+.light {
+  background-image: url('chrome://browser/skin/images/reader-light-bg.png');
+  color: #222222;
+}
+
+.dark {
+  background-image: url('chrome://browser/skin/images/reader-dark-bg.png');
+  color: #eeeeee;
+}
+
+.sepia {
+  background-image: url('chrome://browser/skin/images/reader-sepia-bg.png');
+  color: #332e20;
 }
 
 .header {
+  font-family: "Droid Serif",serif;
   width: 100%;
-  color: black;
   text-align: center;
-  font-size: 30px;
-  font-weight: bold;
-  padding-top: 30px;
-  padding-bottom: 30px;
-  border-bottom: 4px solid;
-  -moz-border-bottom-colors: #ff9100 #f27900;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #ff9400 #ee6700;
   display: none;
 }
 
+.light > .header {
+  -moz-border-bottom-colors: #ff9400 #ee6700;
+}
+
+.dark > .header {
+  -moz-border-bottom-colors: #ff9400 #ee6700;
+}
+
+.sepia > .header {
+  -moz-border-bottom-colors: #c1531b #75391c;
+}
+
+.font-size1 > .header {
+  font-size: 23px;
+}
+
+.font-size2 > .header {
+  font-size: 25px;
+}
+
+.font-size3 > .header {
+  font-size: 27px;
+}
+
+.font-size4 > .header {
+  font-size: 29px;
+}
+
+.font-size5 > .header {
+  font-size: 31px;
+}
+
+.font-size6 > .header {
+  font-size: 33px;
+}
+
+.font-size7 > .header {
+  font-size: 35px;
+}
+
 .content {
-  font-family: "Droid Serif",serif;
-  padding-top: 30px;
-  padding-bottom: 30px;
+  padding-top: 20px;
+  padding-bottom: 20px;
   display: none;
+}
+
+.content a {
+  text-decoration: underline;
+}
+
+.light > .content a,
+.light > .content a:visited,
+.light > .content a:hover,
+.light > .content a:active {
+  color: #ee6700;
+}
+
+.dark > .content a,
+.dark > .content a:visited,
+.dark > .content a:hover,
+.dark > .content a:active {
+  color: #ff9400;
+}
+
+.sepia > .content a,
+.sepia > .content a:visited,
+.sepia > .content a:hover,
+.sepia > .content a:active {
+  color: #c1531b;
+}
+
+.content * {
+  max-width: 100% !important;
+  overflow: scroll !important;
+}
+
+.content img {
+  height: auto !important;
+}
+
+.content pre {
+  overflow: scroll !important;
+}
+
+.font-size1 > .content {
+  font-size: 10px;
+}
+
+.font-size2 > .content {
+  font-size: 12px;
+}
+
+.font-size3 > .content {
+  font-size: 14px;
+}
+
+.font-size4 > .content {
+  font-size: 16px;
+}
+
+.font-size5 > .content {
+  font-size: 18px;
+}
+
+.font-size6 > .content {
+  font-size: 20px;
+}
+
+.font-size7 > .content {
+  font-size: 22px;
+}
+
+.toolbar {
+  font-family: "Droid Sans",helvetica,arial,clean,sans-serif;
+  display: block;
+  position: fixed;
+  width: 100%;
+  bottom: 0px;
+  left: 0px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background-repeat: repeat;
+}
+
+.toolbar-hidden {
+  display: none;
+}
+
+.toolbar > * {
+  float: right;
+}
+
+.button {
+  color: white;
+  display: block;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.button:active {
+  background-color: rgba(170, 170, 170, 1.0);
+}
+
+.dropdown {
+  text-align: center;
+  display: inline-block;
+}
+
+.dropdown li {
+  margin: 0px;
+  padding: 0px;
+}
+
+.dropdown-toggle {
+  margin: 0px;
+  padding: 0px;
+}
+
+.dropdown-popup {
+  text-align: left;
+  position: absolute;
+  left: 0px;
+  z-index: 1000;
+  float: left;
+  background: #dde2e7;
+  margin-top: 12px;
+  margin-bottom: 10px;
+  padding-top: 4px;
+  padding-bottom: 8px;
+  font-size: 14px;
+  box-shadow: 0px -1px 12px #333;
+}
+
+.dropdown-popup > hr {
+  width: 100%;
+  height: 0px;
+  border: 0px;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid white;
+  margin: 10px 0px 10px 0px;
+  float: left;
+}
+
+.open > .dropdown-popup {
+  margin-top: 0px;
+  bottom: 100%;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  width: 28px;
+  height: 10px;
+  bottom: -10px;
+  background-image: url('chrome://browser/skin/images/reader-dropdown-arrow.png');
+  background-position: center;
+  display: block;
+}
+
+.segmented-button {
+  list-style: none;
+  margin: 0;
+  padding: 5px;
+  white-space: nowrap;
+}
+
+.segmented-button > li {
+  display: inline-block;
+  padding: 1px 5px;
+  border-left: 1px solid #ccc;
+}
+
+.segmented-button > li:first-child {
+  border-left: 0px;
+}
+
+.segmented-button > li > a,
+.segmented-button > li > a:hover
+.segmented-button > li > a:visited {
+  display: block;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: black;
+  border-radius: 4px;
+}
+
+.segmented-button > li > a:active,
+.segmented-button > li.selected > a {
+  background: #ccc;
+}
+
+.step-control {
+  width: 100%;
+  padding: 0px;
+}
+
+.step-control > h1 {
+  font-size: 16px;
+  font-weight: normal;
+  color: black;
+  margin: 0px;
+  margin-top: 12px;
+  margin-left: 10px;
+  float: left;
+}
+
+.step-control > .button {
+  float: right;
+  text-align: center;
+  width: 56px;
+  height: 43px;
+  background-size: 20px;
+}
+
+.step-control > .plus-button {
+  background-image: url('chrome://browser/skin/images/reader-plus-icon-mdpi.png');
+  border-left: 1px solid #ccc;
+  margin-right: 4px;
+}
+
+.step-control > .minus-button {
+  background-image: url('chrome://browser/skin/images/reader-minus-icon-mdpi.png');
+}
+
+@media screen and (orientation: portrait) {
+  .button {
+    width: 48px;
+    height: 48px;
+    background-size: 30px 24px
+  }
+
+  .toolbar {
+    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-port-mdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-port-mdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-port-mdpi.png');
+  }
+}
+
+@media screen and (orientation: landscape) {
+  .button {
+    width: 40px;
+    height: 40px;
+    background-size: 24px 20px
+  }
+
+  .toolbar {
+    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-land-mdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-land-mdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-land-mdpi.png');
+  }
+}
+
+@media screen and (min-width: 960px) {
+  .button {
+    width: 56px;
+    height: 56px;
+    background-size: 36px 28px
+  }
+
+  .toolbar {
+    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-xlarge-mdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-xlarge-mdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-xlarge-mdpi.png');
+  }
+}
+
+@media screen and (min-resolution: 200dpi) {
+  .step-control > .plus-button {
+    background-image: url('chrome://browser/skin/images/reader-plus-icon-hdpi.png');
+  }
+
+  .step-control > .minus-button {
+    background-image: url('chrome://browser/skin/images/reader-minus-icon-hdpi.png');
+  }
+}
+
+@media screen and (min-resolution: 300dpi) {
+  .step-control > .plus-button {
+    background-image: url('chrome://browser/skin/images/reader-plus-icon-xhdpi.png');
+  }
+
+  .step-control > .minus-button {
+    background-image: url('chrome://browser/skin/images/reader-minus-icon-xhdpi.png');
+  }
+}
+
+@media screen and (orientation: portrait) and (min-resolution: 200dpi) {
+  .toolbar {
+    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-port-hdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-port-hdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-port-hdpi.png');
+  }
+}
+
+@media screen and (orientation: landscape) and (min-resolution: 200dpi) {
+  .toolbar {
+    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-land-hdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-land-hdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-land-hdpi.png');
+  }
+}
+
+@media screen and (orientation: portrait) and (min-resolution: 300dpi) {
+  .toolbar {
+    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-port-xhdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-port-xhdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-port-xhdpi.png');
+  }
+}
+
+@media screen and (orientation: landscape) and (min-resolution: 300dpi) {
+  .toolbar {
+    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-land-xhdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-land-xhdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-land-xhdpi.png');
+  }
+}
+
+@media screen and (min-width: 960px) and (min-resolution: 200dpi) {
+  .toolbar {
+    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-xlarge-hdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-xlarge-hdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-xlarge-hdpi.png');
+  }
+}
+
+@media screen and (min-width: 960px) and (min-resolution: 300dpi) {
+  .toolbar {
+    background-image: url('chrome://browser/skin/images/reader-toolbar-bg-xlarge-xhdpi.png');
+  }
+
+  .share-button {
+    background-image: url('chrome://browser/skin/images/reader-share-icon-xlarge-xhdpi.png');
+  }
+
+  .style-button {
+    background-image: url('chrome://browser/skin/images/reader-style-icon-xlarge-xhdpi.png');
+  }
 }

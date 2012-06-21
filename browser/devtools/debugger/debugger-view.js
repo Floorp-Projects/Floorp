@@ -136,6 +136,7 @@ RemoteDebuggerPrompt.prototype = {
 function ScriptsView() {
   this._onScriptsChange = this._onScriptsChange.bind(this);
   this._onScriptsSearch = this._onScriptsSearch.bind(this);
+  this._onScriptsKeyUp = this._onScriptsKeyUp.bind(this);
 }
 
 ScriptsView.prototype = {
@@ -388,6 +389,29 @@ ScriptsView.prototype = {
   },
 
   /**
+   * Gets the entered file, line and token entered in the searchbox.
+   *
+   * @return array
+   *         A [file, line, token] array.
+   */
+  _getSearchboxInfo: function DVS__getSearchboxInfo() {
+    let rawValue = this._searchbox.value.toLowerCase();
+
+    let rawLength = rawValue.length;
+    let lastColon = rawValue.lastIndexOf(":");
+    let lastAt = rawValue.lastIndexOf("#");
+
+    let fileEnd = lastColon != -1 ? lastColon : lastAt != -1 ? lastAt : rawLength;
+    let lineEnd = lastAt != -1 ? lastAt : rawLength;
+
+    let file = rawValue.slice(0, fileEnd);
+    let line = window.parseInt(rawValue.slice(fileEnd + 1, lineEnd)) || -1;
+    let token = rawValue.slice(lineEnd + 1);
+
+    return [file, line, token];
+  },
+
+  /**
    * The click listener for the scripts container.
    */
   _onScriptsChange: function DVS__onScriptsChange() {
@@ -402,18 +426,7 @@ ScriptsView.prototype = {
   _onScriptsSearch: function DVS__onScriptsSearch(e) {
     let editor = DebuggerView.editor;
     let scripts = this._scripts;
-    let rawValue = this._searchbox.value.toLowerCase();
-
-    let rawLength = rawValue.length;
-    let lastColon = rawValue.lastIndexOf(":");
-    let lastAt = rawValue.lastIndexOf("#");
-
-    let fileEnd = lastColon != -1 ? lastColon : lastAt != -1 ? lastAt : rawLength;
-    let lineEnd = lastAt != -1 ? lastAt : rawLength;
-
-    let file = rawValue.slice(0, fileEnd);
-    let line = window.parseInt(rawValue.slice(fileEnd + 1, lineEnd)) || -1;
-    let token = rawValue.slice(lineEnd + 1);
+    let [file, line, token] = this._getSearchboxInfo();
 
     // Presume we won't find anything.
     scripts.selectedItem = this._preferredScript;
@@ -426,9 +439,9 @@ ScriptsView.prototype = {
     } else {
       for (let i = 0, l = scripts.itemCount, found = false; i < l; i++) {
         let item = scripts.getItemAtIndex(i);
-        let target = item.value.toLowerCase();
+        let target = item.label.toLowerCase();
 
-        // Search is not case sensitive, and is tied to the url not the label.
+        // Search is not case sensitive, and is tied to the label not the url.
         if (target.match(file)) {
           item.hidden = false;
 
@@ -449,8 +462,7 @@ ScriptsView.prototype = {
     if (token) {
       let offset = editor.find(token, { ignoreCase: true });
       if (offset > -1) {
-        editor.setCaretPosition(0);
-        editor.setCaretOffset(offset);
+        editor.setSelection(offset, offset + token.length)
       }
     }
   },
@@ -465,11 +477,11 @@ ScriptsView.prototype = {
     }
 
     if (e.keyCode === e.DOM_VK_RETURN || e.keyCode === e.DOM_VK_ENTER) {
+      let token = this._getSearchboxInfo()[2];
       let editor = DebuggerView.editor;
       let offset = editor.findNext(true);
       if (offset > -1) {
-        editor.setCaretPosition(0);
-        editor.setCaretOffset(offset);
+        editor.setSelection(offset, offset + token.length)
       }
     }
   },

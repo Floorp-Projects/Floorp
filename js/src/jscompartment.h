@@ -391,6 +391,10 @@ class js::AutoDebugModeGC
     explicit AutoDebugModeGC(JSRuntime *rt) : rt(rt), needGC(false) {}
 
     ~AutoDebugModeGC() {
+        // Under some circumstances (say, in the midst of an animation),
+        // the garbage collector may try to retain JIT code and analyses.
+        // The DEBUG_MODE_GC reason forces the collector to always throw
+        // everything away, as required for debug mode transitions.
         if (needGC)
             GC(rt, GC_NORMAL, gcreason::DEBUG_MODE_GC);
     }
