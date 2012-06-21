@@ -2775,7 +2775,8 @@ END_CASE(JSOP_ARGUMENTS)
 
 BEGIN_CASE(JSOP_REST)
 {
-    JSObject *rest = regs.fp()->createRestParameter(cx);
+    RootedObject &rest = rootObject0;
+    rest = regs.fp()->createRestParameter(cx);
     if (!rest)
         goto error;
     PUSH_COPY(ObjectValue(*rest));
@@ -3096,7 +3097,7 @@ BEGIN_CASE(JSOP_NEWINIT)
     uint8_t i = GET_UINT8(regs.pc);
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
-    JSObject *obj;
+    RootedObject &obj = rootObject0;
     if (i == JSProto_Array) {
         obj = NewDenseEmptyArray(cx);
     } else {
@@ -3116,7 +3117,8 @@ END_CASE(JSOP_NEWINIT)
 BEGIN_CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
-    JSObject *obj = NewDenseAllocatedArray(cx, count);
+    RootedObject &obj = rootObject0;
+    obj = NewDenseAllocatedArray(cx, count);
     if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
 

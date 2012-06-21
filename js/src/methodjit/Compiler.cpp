@@ -54,7 +54,7 @@ static const size_t USES_BEFORE_INLINING = 10000;
 mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
                          unsigned chunkIndex, bool isConstructing)
   : BaseCompiler(cx),
-    outerScript(outerScript),
+    outerScript(cx, outerScript),
     chunkIndex(chunkIndex),
     isConstructing(isConstructing),
     outerChunk(outerJIT()->chunkDescriptor(chunkIndex)),
@@ -128,7 +128,7 @@ mjit::Compiler::compile()
 }
 
 CompileStatus
-mjit::Compiler::checkAnalysis(JSScript *script)
+mjit::Compiler::checkAnalysis(HandleScript script)
 {
     if (script->hasClearedGlobal()) {
         JaegerSpew(JSpew_Abort, "script has a cleared global\n");
@@ -157,7 +157,7 @@ mjit::Compiler::checkAnalysis(JSScript *script)
 }
 
 CompileStatus
-mjit::Compiler::addInlineFrame(JSScript *script, uint32_t depth,
+mjit::Compiler::addInlineFrame(HandleScript script, uint32_t depth,
                                uint32_t parent, jsbytecode *parentpc)
 {
     JS_ASSERT(inlining());
@@ -269,7 +269,7 @@ mjit::Compiler::scanInlineCalls(uint32_t index, uint32_t depth)
                 okay = false;
                 break;
             }
-            JSScript *script = fun->script();
+            RootedScript script(cx, fun->script());
 
             /*
              * Don't inline calls to scripts which haven't been analyzed.
@@ -357,7 +357,7 @@ mjit::Compiler::scanInlineCalls(uint32_t index, uint32_t depth)
                 continue;
 
             JSFunction *fun = obj->toFunction();
-            JSScript *script = fun->script();
+            RootedScript script(cx, fun->script());
 
             CompileStatus status = addInlineFrame(script, nextDepth, index, pc);
             if (status != Compile_Okay)
@@ -4415,7 +4415,7 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
     for (unsigned i = 0; i < inlineCallees.length(); i++) {
         if (entrySnapshot)
             frame.restoreFromSnapshot(entrySnapshot);
-
+        
         JSScript *script = inlineCallees[i];
         CompileStatus status;
 

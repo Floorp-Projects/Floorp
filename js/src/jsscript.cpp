@@ -1076,8 +1076,9 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 JSScript *
 JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
                  JSPrincipals *originPrincipals, bool compileAndGo, bool noScriptRval,
-                 GlobalObject *globalObject, JSVersion version, unsigned staticLevel)
+                 GlobalObject *globalObject_, JSVersion version, unsigned staticLevel)
 {
+    Rooted<GlobalObject*> globalObject(cx, globalObject_);
     JSScript *script = js_NewGCScript(cx);
     if (!script)
         return NULL;
@@ -1336,7 +1337,7 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
 
     script->bindings.transfer(&bce->sc->bindings);
 
-    JSFunction *fun = NULL;
+    RootedFunction fun(cx, NULL);
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
 

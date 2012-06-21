@@ -2560,10 +2560,9 @@ JSObject::getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it)
 bool
 JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
 {
+    RootedObject self(cx, this);
     assertSameCompartment(cx, this);
     JS_ASSERT(it == SEAL || it == FREEZE);
-
-    RootedObject self(cx, this);
 
     if (isExtensible() && !preventExtensions(cx))
         return false;
@@ -2770,13 +2769,13 @@ JSFunctionSpec object_static_methods[] = {
 JSBool
 js_Object(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *obj;
+    RootedObject obj(cx);
     if (argc == 0) {
         /* Trigger logic below to construct a blank object. */
         obj = NULL;
     } else {
         /* If argv[0] is null or undefined, obj comes back null. */
-        if (!js_ValueToObjectOrNull(cx, vp[2], &obj))
+        if (!js_ValueToObjectOrNull(cx, vp[2], obj.address()))
             return JS_FALSE;
     }
     if (!obj) {
@@ -2787,7 +2786,7 @@ js_Object(JSContext *cx, unsigned argc, Value *vp)
         if (!obj)
             return JS_FALSE;
         jsbytecode *pc;
-        JSScript *script = cx->stack.currentScript(&pc);
+        RootedScript script(cx, cx->stack.currentScript(&pc));
         if (script) {
             /* Try to specialize the type of the object to the scripted call site. */
             if (!types::SetInitializerObjectType(cx, script, pc, obj))
