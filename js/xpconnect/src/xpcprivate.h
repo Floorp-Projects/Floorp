@@ -3734,12 +3734,6 @@ public:
         return false;
     }
 
-    // These go away soon.
-    XPCCallContext*  GetCallContext() const
-        {return XPCJSRuntime::Get()->GetCallContext();}
-    XPCCallContext*  SetCallContext(XPCCallContext* ccx)
-        {return XPCJSRuntime::Get()->SetCallContext(ccx);}
-
     jsid GetResolveName() const {return mResolveName;}
     jsid SetResolveName(jsid name)
         {jsid old = mResolveName; mResolveName = name; return old;}

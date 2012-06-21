@@ -123,8 +123,8 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
     mXPCContext = XPCContext::GetXPCContext(mJSContext);
     mPrevCallerLanguage = mXPCContext->SetCallingLangType(mCallerLanguage);
 
-    // hook into call context chain for our thread
-    mPrevCallContext = mThreadData->SetCallContext(this);
+    // hook into call context chain.
+    mPrevCallContext = XPCJSRuntime::Get()->SetCallContext(this);
 
     // We only need to addref xpconnect once so only do it if this is the first
     // context in the chain.
@@ -301,12 +301,8 @@ XPCCallContext::~XPCCallContext()
     if (mXPCContext) {
         mXPCContext->SetCallingLangType(mPrevCallerLanguage);
 
-#ifdef DEBUG
-        XPCCallContext* old = mThreadData->SetCallContext(mPrevCallContext);
+        DebugOnly<XPCCallContext*> old = XPCJSRuntime::Get()->SetCallContext(mPrevCallContext);
         NS_ASSERTION(old == this, "bad pop from per thread data");
-#else
-        (void) mThreadData->SetCallContext(mPrevCallContext);
-#endif
 
         shouldReleaseXPC = mPrevCallContext == nsnull;
     }
