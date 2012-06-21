@@ -14,6 +14,7 @@
 #include "nsSVGElement.h"
 #include "nsTArray.h"
 #include "SVGPointList.h" // IWYU pragma: keep
+#include "mozilla/Attributes.h"
 
 class nsIDOMSVGPoint;
 
@@ -47,8 +48,8 @@ class SVGAnimatedPointList;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGPointList : public nsIDOMSVGPointList,
-                        public nsWrapperCache
+class DOMSVGPointList MOZ_FINAL : public nsIDOMSVGPointList,
+                                  public nsWrapperCache
 {
   friend class DOMSVGPoint;
 

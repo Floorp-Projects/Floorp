@@ -62,9 +62,7 @@ TEST_FILES = \
   test_transaction_lifetimes.js \
   test_transaction_lifetimes_nested.js \
   test_transaction_ordering.js \
-  test_writer_starvation.js \
   $(NULL)
-
 
 libs:: $(TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

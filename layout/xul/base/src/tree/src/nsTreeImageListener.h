@@ -11,9 +11,10 @@
 #include "nsITreeColumns.h"
 #include "nsStubImageDecoderObserver.h"
 #include "nsTreeBodyFrame.h"
+#include "mozilla/Attributes.h"
 
 // This class handles image load observation.
-class nsTreeImageListener : public nsStubImageDecoderObserver
+class nsTreeImageListener MOZ_FINAL : public nsStubImageDecoderObserver
 {
 public:
   nsTreeImageListener(nsTreeBodyFrame *aTreeFrame);

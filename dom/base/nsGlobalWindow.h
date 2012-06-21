@@ -579,7 +579,9 @@ protected:
   JSObject *CallerGlobal();
   nsGlobalWindow *CallerInnerWindow();
 
-  nsresult InnerSetNewDocument(nsIDocument* aDocument);
+  // Only to be called on an inner window.
+  // aDocument must not be null.
+  void InnerSetNewDocument(nsIDocument* aDocument);
 
   nsresult DefineArgumentsProperty(nsIArray *aArguments);
 

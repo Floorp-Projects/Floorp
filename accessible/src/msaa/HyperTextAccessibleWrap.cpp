@@ -15,7 +15,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(HyperTextAccessibleWrap,
 IMPL_IUNKNOWN_INHERITED2(HyperTextAccessibleWrap,
                          AccessibleWrap,
                          ia2AccessibleHypertext,
-                         CAccessibleEditableText);
+                         ia2AccessibleEditableText);
 
 nsresult
 HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)

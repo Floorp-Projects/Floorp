@@ -14,6 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
 
   <script type="application/javascript"
           src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
 
   <script type="application/javascript">
     var gParagraphAcc;
@@ -39,6 +41,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       is(linkAcc.getAnchor(0).name, aName, "Wrong name for " + aID + "!");
     }
 
+    //gA11yEventDumpToConsole = true;
+    function doPreTest()
+    {
+      var imgMap = document.getElementById("imgmap");
+      waitForImageMap(imgMap, doTest);
+    }
+
     function doTest()
     {
       // Test link count
@@ -55,7 +64,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
       testThis("InvalidAriaHyperlink", 63, 2, "Invalid link");
 
       // image map, but not its link children. They are not part of hypertext.
-      ensureImageMapTree("imgmap");
       testThis("imgmap", 76, 3, "b");
 
       // empty hyperlink
@@ -98,8 +106,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yLoadEvent(doPreTest);
   </script>
+
 </head>
 <body>
 

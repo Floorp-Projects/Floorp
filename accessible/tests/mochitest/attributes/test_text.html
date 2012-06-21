@@ -307,6 +307,24 @@
       attrs = {};
       testTextAttrs(ID, 123, attrs, defAttrs, 122, 130);
 
+      attrs = {
+        "text-line-through-style": "solid",
+        "text-line-through-color": gComputedStyle.color
+      };
+      testTextAttrs(ID, 131, attrs, defAttrs, 130, 143);
+
+      attrs = {};
+      testTextAttrs(ID, 144, attrs, defAttrs, 143, 151);
+
+      attrs = {
+        "text-line-through-style": "solid",
+        "text-line-through-color": gComputedStyle.color
+      };
+      testTextAttrs(ID, 152, attrs, defAttrs, 151, 164);
+
+      attrs = {};
+      testTextAttrs(ID, 165, attrs, defAttrs, 164, 172);
+
       //////////////////////////////////////////////////////////////////////////
       // area10, different single style spans in non-styled paragraph
       ID = "area10";
@@ -621,6 +639,8 @@
     <span style="font-family: monospace;">Different font</span> normal
     <span style="text-decoration: underline;">underlined</span> normal
     <span style="text-decoration: line-through;">strikethrough</span> normal
+    <s>strikethrough</s> normal
+    <strike>strikethrough</strike> normal
   </p>
 
   <p id="area10">Normal

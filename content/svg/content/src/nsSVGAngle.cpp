@@ -14,6 +14,7 @@
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
 #include "nsSMILValue.h"
 #include "SVGOrientSMILType.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 
@@ -25,7 +26,7 @@ using namespace mozilla;
  * any DOMSVGAngle passed in. Perhaps this is wrong and inconsistent with
  * other parts of SVG, but it's how the code works for now.
  */
-class DOMSVGAngle : public nsIDOMSVGAngle
+class DOMSVGAngle MOZ_FINAL : public nsIDOMSVGAngle
 {
 public:
   NS_DECL_ISUPPORTS

@@ -44,7 +44,7 @@ xpc_OkToHandOutWrapper(nsWrapperCache *cache)
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(void *p)
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::UnlinkImpl(void *p)
 {
     XPCWrappedNative *tmp = static_cast<XPCWrappedNative*>(p);
     tmp->ExpireWrapper();
@@ -52,8 +52,9 @@ NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Unlink(void *p)
 }
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::Traverse(void *p,
-                                                          nsCycleCollectionTraversalCallback &cb)
+NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative)::TraverseImpl
+   (NS_CYCLE_COLLECTION_CLASSNAME(XPCWrappedNative) *that, void *p,
+    nsCycleCollectionTraversalCallback &cb)
 {
     XPCWrappedNative *tmp = static_cast<XPCWrappedNative*>(p);
     if (!tmp->IsValid())
@@ -1012,11 +1013,7 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
     if (classInfoHelper) {
         nsCOMPtr<nsIXPCScriptable> helper =
           dont_AddRef(static_cast<nsIXPCScriptable*>(classInfoHelper));
-        uint32_t flags;
-        nsresult rv = classInfoHelper->GetScriptableFlags(&flags);
-        if (NS_FAILED(rv))
-            flags = 0;
-
+        uint32_t flags = classInfoHelper->GetScriptableFlags();
         sciProto.SetCallback(helper.forget());
         sciProto.SetFlags(flags);
         sciProto.SetInterfacesBitmap(classInfoHelper->GetInterfacesBitmap());
@@ -1030,11 +1027,7 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
     if (NS_SUCCEEDED(rv) && possibleHelper) {
         nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(possibleHelper));
         if (helper) {
-            uint32_t flags;
-            rv = helper->GetScriptableFlags(&flags);
-            if (NS_FAILED(rv))
-                flags = 0;
-
+            uint32_t flags = helper->GetScriptableFlags();
             sciProto.SetCallback(helper.forget());
             sciProto.SetFlags(flags);
         }
@@ -1061,11 +1054,7 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
     // Do the same for the wrapper specific scriptable
     nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(obj));
     if (helper) {
-        uint32_t flags;
-        nsresult rv = helper->GetScriptableFlags(&flags);
-        if (NS_FAILED(rv))
-            flags = 0;
-
+        uint32_t flags = helper->GetScriptableFlags();
         sciWrapper.SetCallback(helper.forget());
         sciWrapper.SetFlags(flags);
 
@@ -3824,12 +3813,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     nsISupports *identityObj = aHelper.GetCanonical();
     nsXPCClassInfo *classInfoHelper = aHelper.GetXPCClassInfo();
 
-    uint32_t flagsInt;
-    nsresult rv = classInfoHelper->GetScriptableFlags(&flagsInt);
-    if (NS_FAILED(rv))
-        flagsInt = 0;
-
-    XPCNativeScriptableFlags flags(flagsInt);
+    XPCNativeScriptableFlags flags(classInfoHelper->GetScriptableFlags());
 
     NS_ASSERTION(flags.DontAskInstanceForScriptable(),
                  "Not supported for cached wrappers!");
@@ -3843,7 +3827,7 @@ ConstructSlimWrapper(XPCCallContext &ccx,
     }
 
     JSObject* plannedParent = parent;
-    rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
+    nsresult rv = classInfoHelper->PreCreate(identityObj, ccx, parent, &parent);
     if (rv != NS_SUCCESS_ALLOW_SLIM_WRAPPERS) {
         SLIM_LOG_NOT_CREATED(ccx, identityObj, "PreCreate hook refused");
 

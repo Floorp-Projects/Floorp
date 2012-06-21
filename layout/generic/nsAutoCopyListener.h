@@ -8,8 +8,9 @@
 
 #include "nsISelectionListener.h"
 #include "nsISelectionPrivate.h"
+#include "mozilla/Attributes.h"
 
-class nsAutoCopyListener : public nsISelectionListener
+class nsAutoCopyListener MOZ_FINAL : public nsISelectionListener
 {
 public:
   NS_DECL_ISUPPORTS

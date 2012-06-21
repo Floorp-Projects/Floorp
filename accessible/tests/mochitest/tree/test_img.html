@@ -14,8 +14,17 @@
           src="../common.js"></script>
   <script type="application/javascript"
           src="../role.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
 
   <script type="application/javascript">
+    //gA11yEventDumpToConsole = true;
+    function doPreTest()
+    {
+      var imgMap = document.getElementById("imgmap");
+      waitForImageMap(imgMap, doTest);
+    }
+
     function doTest()
     {
       // image map
@@ -33,7 +42,6 @@
         ]
       };
 
-      ensureImageMapTree("imgmap");
       testAccessibleTree("imgmap", accTree);
 
       // img
@@ -48,8 +56,9 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yLoadEvent(doPreTest);
   </script>
+
 </head>
 <body>
 

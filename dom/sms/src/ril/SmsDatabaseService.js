@@ -349,7 +349,7 @@ SmsDatabaseService.prototype = {
   saveReceivedMessage: function saveReceivedMessage(sender, body, date) {
     let message = {delivery:  DELIVERY_RECEIVED,
                    sender:    sender,
-                   receiver:  this.mRIL.radioState.msisdn, 
+                   receiver:  this.mRIL.rilContext.icc.msisdn, 
                    body:      body,
                    timestamp: date,
                    read:      FILTER_READ_UNREAD};
@@ -358,7 +358,7 @@ SmsDatabaseService.prototype = {
 
   saveSentMessage: function saveSentMessage(receiver, body, date) {
     let message = {delivery:  DELIVERY_SENT,
-                   sender:    this.mRIL.radioState.msisdn,
+                   sender:    this.mRIL.rilContext.icc.msisdn,
                    receiver:  receiver,
                    body:      body,
                    timestamp: date,

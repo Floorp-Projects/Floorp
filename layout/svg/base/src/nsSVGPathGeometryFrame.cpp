@@ -461,6 +461,9 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext)
   GeneratePath(gfx);
 
   if (renderMode != SVGAutoRenderState::NORMAL) {
+    NS_ABORT_IF_FALSE(renderMode == SVGAutoRenderState::CLIP ||
+                      renderMode == SVGAutoRenderState::CLIP_MASK,
+                      "Unknown render mode");
     gfx->Restore();
 
     if (GetClipRule() == NS_STYLE_FILL_RULE_EVENODD)

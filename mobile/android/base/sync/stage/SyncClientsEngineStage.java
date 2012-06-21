@@ -398,7 +398,7 @@ public class SyncClientsEngineStage implements GlobalSyncStage {
     CommandProcessor processor = CommandProcessor.getProcessor();
 
     for (Object o : commands) {
-      processor.processCommand(new ExtendedJSONObject((JSONObject) o));
+      processor.processCommand(session, new ExtendedJSONObject((JSONObject) o));
     }
   }
 

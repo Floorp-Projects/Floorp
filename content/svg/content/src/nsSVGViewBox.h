@@ -14,6 +14,7 @@
 #include "nsIDOMSVGRect.h"
 #include "nsISMILAttr.h"
 #include "nsSVGElement.h"
+#include "mozilla/Attributes.h"
 
 class nsISMILAnimationElement;
 class nsSMILValue;
@@ -78,7 +79,7 @@ private:
   nsAutoPtr<nsSVGViewBoxRect> mAnimVal;
   bool mHasBaseVal;
 
-  struct DOMBaseVal : public nsIDOMSVGRect
+  struct DOMBaseVal MOZ_FINAL : public nsIDOMSVGRect
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMBaseVal)
@@ -104,7 +105,7 @@ private:
     NS_IMETHOD SetHeight(float aHeight);
   };
 
-  struct DOMAnimVal : public nsIDOMSVGRect
+  struct DOMAnimVal MOZ_FINAL : public nsIDOMSVGRect
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimVal)
@@ -153,7 +154,7 @@ private:
   };
 
 public:
-  struct DOMAnimatedRect : public nsIDOMSVGAnimatedRect
+  struct DOMAnimatedRect MOZ_FINAL : public nsIDOMSVGAnimatedRect
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedRect)

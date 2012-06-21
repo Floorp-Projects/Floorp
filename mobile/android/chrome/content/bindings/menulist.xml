@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="menulist" display="xul:box" extends="chrome://global/content/bindings/menulist.xml#menulist">
+    <handlers>
+      <handler event="mousedown" phase="capturing">
+        <![CDATA[
+          // Stop the normal menupopup from appearing
+          event.stopPropagation();
+        ]]>
+      </handler>
+
+      <handler event="click" button="0">
+        <![CDATA[
+          if (this.disabled || this.itemCount == 0)
+            return;
+
+          this.focus();
+          SelectHelper.handleClick(this);
+        ]]>
+      </handler>
+
+      <handler event="command" phase="capturing">
+        <![CDATA[
+          // The dropmark (button) fires a command event too. Don't forward that.
+          // Just forward the menuitem command events, which the toolkit version does.
+          if (event.target.parentNode.parentNode != this)
+            event.stopPropagation();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>

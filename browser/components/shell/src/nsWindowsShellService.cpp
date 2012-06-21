@@ -201,7 +201,8 @@ static SETTING gDDESettings[] = {
 #include "updatehelper.h"
 #include "updatehelper.cpp"
 
-static const char kPrefetchClearedPref[] = "app.update.service.prefetchCleared";
+static const char *kPrefetchClearedPref =
+  "app.update.service.lastVersionPrefetchCleared";
 static nsCOMPtr<nsIThread> sThread;
 #endif
 
@@ -1016,17 +1017,20 @@ nsWindowsShellService::nsWindowsShellService() :
   }
 
   // check to see if we have attempted to do the one time operation of clearing
-  // the prefetch.
-  bool prefetchCleared;
+  // the prefetch.  We do it once per version upgrade.
+  nsCString lastClearedVer;
   nsCOMPtr<nsIPrefBranch> prefBranch;
   nsCOMPtr<nsIPrefService> prefs =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (!prefs || 
       NS_FAILED(prefs->GetBranch(nsnull, getter_AddRefs(prefBranch))) ||
-      (NS_SUCCEEDED(prefBranch->GetBoolPref(kPrefetchClearedPref, 
-                                            &prefetchCleared)) &&
-       prefetchCleared)) {
-    return;
+      (NS_SUCCEEDED(prefBranch->GetCharPref(kPrefetchClearedPref, 
+                                            getter_Copies(lastClearedVer))))) {
+    // If the versions are the same, then bail out early.  We only want to clear
+    // once per version.
+    if (!strcmp(MOZ_APP_VERSION, lastClearedVer.get())) {
+      return;
+    }
   }
 
   // In a minute after startup is definitely complete, launch the
@@ -1097,7 +1101,7 @@ nsWindowsShellService::LaunchPrefetchClearCommand(nsITimer *aTimer, void*)
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs) {
     if (NS_SUCCEEDED(prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)))) {
-      prefBranch->SetBoolPref(kPrefetchClearedPref, true);
+      prefBranch->SetCharPref(kPrefetchClearedPref, MOZ_APP_VERSION);
     }
   }
 

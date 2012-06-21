@@ -13,12 +13,14 @@
 namespace mozilla {
 namespace a11y {
 
+// Mac a11y whitelisting
 static bool sA11yShouldBeEnabled = false;
 
 bool
 ShouldA11yBeEnabled()
 {
-  return sA11yShouldBeEnabled;
+  EPlatformDisabledState disabledState = PlatformDisabledState();
+  return (disabledState == ePlatformIsForceEnabled) || ((disabledState == ePlatformIsEnabled) && sA11yShouldBeEnabled);
 }
 
 }

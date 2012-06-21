@@ -50,25 +50,9 @@ function doTest()
 
   is(accTable.selectedRowCount, 1, "no cells selected");
 
-  var columnDescription;
-  works = true;
-  try{
-    columnDescription = accTable.getColumnDescription(1);
-  }
-  catch (e) {
-    works = false;
-  }
-  todo(works, "columnDescription should not throw");
+  var columnDescription = accTable.getColumnDescription(1);
+  var rowDescription = accTable.getRowDescription(1);
 
-  var rowDescription;
-  works = true;
-  try {
-    rowDescription = accTable.getRowDescription(1);
-  }
-  catch (e) {
-    works = false;
-  }
-  todo(works, "rowDescription should not throw");
   SimpleTest.finish();
 }
 SimpleTest.waitForExplicitFinish();
@@ -78,6 +62,12 @@ addA11yLoadEvent(doTest);
  <body >
 
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=410052">Mozilla Bug 410052</a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=760878"
+     title="decomtaminate Get Row / Column Description() on accessible tables">
+    Mozilla Bug 760878
+  </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">

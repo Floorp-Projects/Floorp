@@ -15,8 +15,8 @@
 #include "nsIStyleSheet.h"
 #include "nsIStyleRuleProcessor.h"
 
-class nsHTMLCSSStyleSheet : public nsIStyleSheet,
-                            public nsIStyleRuleProcessor {
+class nsHTMLCSSStyleSheet MOZ_FINAL : public nsIStyleSheet,
+                                      public nsIStyleRuleProcessor {
 public:
   nsHTMLCSSStyleSheet();
 

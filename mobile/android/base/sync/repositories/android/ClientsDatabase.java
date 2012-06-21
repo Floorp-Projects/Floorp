@@ -19,7 +19,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
 
   // Database Specifications.
   protected static final String DB_NAME = "clients_database";
-  protected static final int SCHEMA_VERSION = 1;
+  protected static final int SCHEMA_VERSION = 2;
 
   // Clients Table.
   public static final String TBL_CLIENTS      = "clients";
@@ -48,15 +48,18 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
   public ClientsDatabase(Context context) {
     super(context, DB_NAME, null, SCHEMA_VERSION);
     this.queryHelper = new RepoUtils.QueryHelper(context, null, LOG_TAG);
+    Logger.debug(LOG_TAG, "ClientsDatabase instantiated.");
   }
 
   @Override
   public void onCreate(SQLiteDatabase db) {
+    Logger.debug(LOG_TAG, "ClientsDatabase.onCreate().");
     createClientsTable(db);
     createCommandsTable(db);
   }
 
   public static void createClientsTable(SQLiteDatabase db) {
+    Logger.debug(LOG_TAG, "ClientsDatabase.createClientsTable().");
     String createClientsTableSql = "CREATE TABLE " + TBL_CLIENTS + " ("
         + COL_ACCOUNT_GUID + " TEXT, "
         + COL_PROFILE + " TEXT, "
@@ -67,6 +70,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
   }
 
   public static void createCommandsTable(SQLiteDatabase db) {
+    Logger.debug(LOG_TAG, "ClientsDatabase.createCommandsTable().");
     String createCommandsTableSql = "CREATE TABLE " + TBL_COMMANDS + " ("
         + COL_ACCOUNT_GUID + " TEXT, "
         + COL_COMMAND + " TEXT, "
@@ -78,6 +82,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
 
   @Override
   public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    Logger.debug(LOG_TAG, "ClientsDatabase.onUpgrade().");
     // For now we'll just drop and recreate the tables.
     db.execSQL("DROP TABLE IF EXISTS " + TBL_CLIENTS);
     db.execSQL("DROP TABLE IF EXISTS " + TBL_COMMANDS);

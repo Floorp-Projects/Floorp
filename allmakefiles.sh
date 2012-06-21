@@ -117,7 +117,6 @@ if [ "$ENABLE_MARIONETTE" ]; then
   add_makefiles "
     testing/marionette/Makefile
     testing/marionette/components/Makefile
-    testing/marionette/tests/Makefile
   "
 fi
 

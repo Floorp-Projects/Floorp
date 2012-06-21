@@ -1144,7 +1144,7 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
     PRUint16 maxConns;
     PRUint16 maxPersistConns;
 
-    if (ci->UsingHttpProxy() && !ci->UsingSSL()) {
+    if (ci->UsingHttpProxy() && !ci->UsingConnect()) {
         maxConns = mMaxConnsPerProxy;
         maxPersistConns = mMaxPersistConnsPerProxy;
     }

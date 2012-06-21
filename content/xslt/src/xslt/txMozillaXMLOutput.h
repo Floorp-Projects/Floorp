@@ -13,6 +13,7 @@
 #include "nsCOMArray.h"
 #include "nsICSSLoaderObserver.h"
 #include "txStack.h"
+#include "mozilla/Attributes.h"
 
 class nsIContent;
 class nsIDOMDocument;
@@ -26,8 +27,8 @@ class nsNodeInfoManager;
 class nsIDocument;
 class nsINode;
 
-class txTransformNotifier : public nsIScriptLoaderObserver,
-                            public nsICSSLoaderObserver
+class txTransformNotifier MOZ_FINAL : public nsIScriptLoaderObserver,
+                                      public nsICSSLoaderObserver
 {
 public:
     txTransformNotifier();

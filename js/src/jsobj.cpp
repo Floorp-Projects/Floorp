@@ -1443,7 +1443,7 @@ obj_lookupGetter(JSContext *cx, unsigned argc, Value *vp)
         PropertyDescriptor desc;
         if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
             return JS_FALSE;
-        if ((desc.attrs & JSPROP_GETTER) && desc.getter)
+        if (desc.obj && (desc.attrs & JSPROP_GETTER) && desc.getter)
             *vp = CastAsObjectJsval(desc.getter);
         return JS_TRUE;
     }
@@ -1478,7 +1478,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
         PropertyDescriptor desc;
         if (!Proxy::getPropertyDescriptor(cx, obj, id, false, &desc))
             return JS_FALSE;
-        if ((desc.attrs & JSPROP_SETTER) && desc.setter)
+        if (desc.obj && (desc.attrs & JSPROP_SETTER) && desc.setter)
             *vp = CastAsObjectJsval(desc.setter);
         return JS_TRUE;
     }
@@ -1711,7 +1711,7 @@ obj_keys(JSContext *cx, unsigned argc, Value *vp)
         if (JSID_IS_STRING(id)) {
             vals.infallibleAppend(StringValue(JSID_TO_STRING(id)));
         } else if (JSID_IS_INT(id)) {
-            JSString *str = js_IntToString(cx, JSID_TO_INT(id));
+            JSString *str = Int32ToString(cx, JSID_TO_INT(id));
             if (!str)
                 return false;
             vals.infallibleAppend(StringValue(str));
@@ -2495,7 +2495,7 @@ obj_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
     for (size_t i = 0, len = keys.length(); i < len; i++) {
          jsid id = keys[i];
          if (JSID_IS_INT(id)) {
-             JSString *str = js_IntToString(cx, JSID_TO_INT(id));
+             JSString *str = Int32ToString(cx, JSID_TO_INT(id));
              if (!str)
                  return false;
              vals[i].setString(str);
@@ -3179,8 +3179,8 @@ JSObject::deleteByValue(JSContext *cx, const Value &property, Value *rval, bool 
 
     RootedObject self(cx, this);
 
-    JSAtom *name;
-    if (!js_ValueToAtom(cx, propval, &name))
+    JSAtom *name = ToAtom(cx, propval);
+    if (!name)
         return false;
 
     if (name->isIndex(&index))

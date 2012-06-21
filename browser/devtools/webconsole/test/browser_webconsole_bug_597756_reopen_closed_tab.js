@@ -29,26 +29,29 @@ function tabReloaded(aEvent) {
   let HUD = HUDService.hudReferences[hudId];
   ok(HUD, "Web Console is open");
 
-  isnot(HUD.outputNode.textContent.indexOf("fooBug597756_error"), -1,
-    "error message must be in console output");
+  waitForSuccess({
+    name: "error message displayed",
+    validatorFn: function() {
+      return HUD.outputNode.textContent.indexOf("fooBug597756_error") > -1;
+    },
+    successFn: function() {
+      if (newTabIsOpen) {
+        finishTest();
+        return;
+      }
+      closeConsole(gBrowser.selectedTab, function() {
+        gBrowser.removeCurrentTab();
 
-  executeSoon(function() {
-    if (newTabIsOpen) {
-      executeSoon(finishTest);
-      return;
-    }
+        let newTab = gBrowser.addTab();
+        gBrowser.selectedTab = newTab;
 
-    closeConsole(gBrowser.selectedTab, function() {
-      gBrowser.removeCurrentTab();
-
-      let newTab = gBrowser.addTab();
-      gBrowser.selectedTab = newTab;
-
-      newTabIsOpen = true;
-      gBrowser.selectedBrowser.addEventListener("load", tabLoaded, true);
-      expectUncaughtException();
-      content.location = TEST_URI;
-    });
+        newTabIsOpen = true;
+        gBrowser.selectedBrowser.addEventListener("load", tabLoaded, true);
+        expectUncaughtException();
+        content.location = TEST_URI;
+      });
+    },
+    failureFn: finishTest,
   });
 }
 

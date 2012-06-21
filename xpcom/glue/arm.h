@@ -73,6 +73,12 @@
 #    endif
 #  endif
 
+  // When using -mfpu=neon, gcc generates neon instructions.
+
+#  if defined(__ARM_NEON__)
+#    define MOZILLA_PRESUME_NEON 1
+#  endif
+
   // Currently we only have CPU detection for Linux via /proc/cpuinfo
 #  if defined(__linux__) || defined(ANDROID)
 #    define MOZILLA_ARM_HAVE_CPUID_DETECTION 1
@@ -81,9 +87,8 @@
 #elif defined(_MSC_VER) && defined(_M_ARM)
 
 #  define MOZILLA_ARM_HAVE_CPUID_DETECTION 1
-  // I don't know how to do arch detection at compile time for MSVC, so assume
-  // the worst for now.
-#  define MOZILLA_ARM_ARCH 3
+  // _M_ARM on MSVC has current cpu architecture.
+#  define MOZILLA_ARM_ARCH _M_ARM
 
   // MSVC only allows external asm for ARM, so we don't have to rely on
   // compiler support.

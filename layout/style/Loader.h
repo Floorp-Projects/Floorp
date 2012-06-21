@@ -18,6 +18,7 @@
 #include "nsTArray.h"
 #include "nsTObserverArray.h"
 #include "nsURIHashKey.h"
+#include "mozilla/Attributes.h"
 
 class nsIAtom;
 class nsICSSLoaderObserver;
@@ -106,7 +107,7 @@ enum StyleSheetState {
   eSheetComplete
 };
 
-class Loader {
+class Loader MOZ_FINAL {
 public:
   Loader();
   Loader(nsIDocument*);

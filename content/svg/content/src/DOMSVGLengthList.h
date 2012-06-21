@@ -13,6 +13,7 @@
 #include "nsIDOMSVGLengthList.h"
 #include "nsTArray.h"
 #include "SVGLengthList.h"
+#include "mozilla/Attributes.h"
 
 class nsIDOMSVGLength;
 class nsSVGElement;
@@ -38,8 +39,8 @@ class DOMSVGLength;
  *
  * Our DOM items are created lazily on demand as and when script requests them.
  */
-class DOMSVGLengthList : public nsIDOMSVGLengthList,
-                         public nsWrapperCache
+class DOMSVGLengthList MOZ_FINAL : public nsIDOMSVGLengthList,
+                                   public nsWrapperCache
 {
   friend class DOMSVGLength;
 

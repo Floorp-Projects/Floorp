@@ -1439,3 +1439,10 @@ nsTextControlFrame::RestoreState(nsPresState* aState)
   Properties().Set(ContentScrollPos(), new nsPoint(aState->GetScrollState()));
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTextControlFrame::PeekOffset(nsPeekOffsetStruct *aPos)
+{
+  return NS_ERROR_FAILURE;
+}
+

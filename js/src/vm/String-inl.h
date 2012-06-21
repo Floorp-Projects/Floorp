@@ -106,7 +106,7 @@ JS_ALWAYS_INLINE void
 JSDependentString::init(JSLinearString *base, const jschar *chars, size_t length)
 {
     JS_ASSERT(!js::IsPoisonedPtr(base));
-    d.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_BIT);
+    d.lengthAndFlags = buildLengthAndFlags(length, DEPENDENT_FLAGS);
     d.u1.chars = chars;
     d.s.u2.base = base;
     JSString::writeBarrierPost(d.s.u2.base, &d.s.u2.base);
@@ -140,8 +140,9 @@ JSDependentString::new_(JSContext *cx, JSLinearString *base_, const jschar *char
 }
 
 inline void
-JSDependentString::markChildren(JSTracer *trc)
+JSString::markBase(JSTracer *trc)
 {
+    JS_ASSERT(hasBase());
     js::gc::MarkStringUnbarriered(trc, &d.s.u2.base, "base");
 }
 
@@ -184,9 +185,7 @@ JSFixedString::new_(JSContext *cx, const jschar *chars, size_t length)
 JS_ALWAYS_INLINE JSAtom *
 JSFixedString::morphAtomizedStringIntoAtom()
 {
-    JS_ASSERT((d.lengthAndFlags & FLAGS_MASK) == JS_BIT(2));
-    JS_STATIC_ASSERT(NON_STATIC_ATOM == JS_BIT(3));
-    d.lengthAndFlags ^= (JS_BIT(2) | JS_BIT(3));
+    d.lengthAndFlags = buildLengthAndFlags(length(), NON_STATIC_ATOM_FLAGS);
     return &asAtom();
 }
 

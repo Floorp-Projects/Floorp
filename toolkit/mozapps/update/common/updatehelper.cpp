@@ -648,3 +648,56 @@ IsLocalFile(LPCWSTR file, BOOL &isLocal)
   isLocal = GetDriveTypeW(rootPath) == DRIVE_FIXED;
   return TRUE;
 }
+
+
+/**
+ * Determines the DWORD value of a registry key value
+ *
+ * @param key       The base key to where the value name exists
+ * @param valueName The name of the value
+ * @param retValue  Out parameter which will hold the value
+ * @return TRUE on success
+*/
+static BOOL
+GetDWORDValue(HKEY key, LPCWSTR valueName, DWORD &retValue)
+{
+  DWORD regDWORDValueSize = sizeof(DWORD);
+  LONG retCode = RegQueryValueExW(key, valueName, 0, NULL, 
+                                  reinterpret_cast<LPBYTE>(&retValue),
+                                  &regDWORDValueSize);
+  return ERROR_SUCCESS == retCode;
+}
+
+/**
+ * Determines if the the system's elevation type allows
+ * unprmopted elevation.  This may not 100% reflect reality since
+ * a reboot is necessary to change the UAC level.
+ *
+ * @param isUnpromptedElevation Out parameter which specifies if unprompted
+ *                              elevation is allowed.
+ * @return TRUE if the value was obtained successfully.
+*/
+BOOL
+IsUnpromptedElevation(BOOL &isUnpromptedElevation)
+{
+  LPCWSTR UACBaseRegKey =
+    L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System";
+  HKEY baseKey;
+  LONG retCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+                               UACBaseRegKey, 0,
+                               KEY_READ, &baseKey);
+  if (retCode != ERROR_SUCCESS) {
+    return FALSE;
+  } 
+
+  DWORD enabled, consent, secureDesktop;
+  BOOL success = GetDWORDValue(baseKey, L"EnableLUA", enabled);
+  success = success && 
+            GetDWORDValue(baseKey, L"ConsentPromptBehaviorAdmin", consent);
+  success = success &&
+            GetDWORDValue(baseKey, L"PromptOnSecureDesktop", secureDesktop);
+  isUnpromptedElevation = enabled && !consent && !secureDesktop;
+
+  RegCloseKey(baseKey);
+  return success;
+}

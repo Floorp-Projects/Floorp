@@ -173,6 +173,7 @@ struct IndexUpdateInfo
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   IndexUpdateInfo();
+  IndexUpdateInfo(const IndexUpdateInfo& aOther);
   ~IndexUpdateInfo();
 #endif
 

@@ -161,7 +161,25 @@ private:
 class NS_STACK_CLASS SVGAutoRenderState
 {
 public:
-  enum RenderMode { NORMAL, CLIP, CLIP_MASK };
+  enum RenderMode {
+    /**
+     * Used to inform SVG frames that they should paint as normal.
+     */
+    NORMAL, 
+    /** 
+     * Used to inform SVG frames when they are painting as the child of a
+     * simple clipPath. In this case they should only draw their basic geometry
+     * as a path. They should not fill, stroke, or paint anything else.
+     */
+    CLIP, 
+    /** 
+     * Used to inform SVG frames when they are painting as the child of a
+     * complex clipPath that requires the use of a clip mask. In this case they
+     * should only draw their basic geometry as a path and then fill it using
+     * fully opaque white. They should not stroke, or paint anything else.
+     */
+    CLIP_MASK 
+  };
 
   SVGAutoRenderState(nsRenderingContext *aContext, RenderMode aMode);
   ~SVGAutoRenderState();

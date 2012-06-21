@@ -6,8 +6,11 @@
 #include "nsIDOMDOMRequest.idl"
 #include "nsIDOMEvent.idl"
 
+interface nsIVariant;
+
 [scriptable, uuid(abb936bc-ba81-4c23-8dfa-3e5d96557044)]
-interface nsIWifi : nsISupports {
+interface nsIWifi : nsISupports
+{
     /**
      * Shutdown the wifi system.
      */
@@ -15,7 +18,8 @@ interface nsIWifi : nsISupports {
 };
 
 [scriptable, uuid(e3d5a7d7-6abd-4ac2-83dc-5315ec08a1c3)]
-interface nsIDOMWifiManager : nsISupports {
+interface nsIDOMWifiManager : nsISupports
+{
     /**
      * TODO Remove in favor of a settings API.
      * Activates or disactivates wifi.
@@ -77,14 +81,14 @@ interface nsIDOMWifiManager : nsISupports {
 
     /**
      * A connectionInformation object with the same information found in an
-     * nsIDOMWifiConnectionInfoEvent (but without the network).
+     * nsIDOMMozWifiConnectionInfoEvent (but without the network).
      * If we are not currently connected to a network, this will be null.
      */
     readonly attribute jsval connectionInformation;
 
     /**
      * State notification listeners. These all take an
-     * nsIDOMWifiStatusChangeEvent with the new status and a network (which
+     * nsIDOMMozWifiStatusChangeEvent with the new status and a network (which
      * may be null).
      *
      * The possible statuses are:
@@ -100,36 +104,44 @@ interface nsIDOMWifiManager : nsISupports {
      *                   disconnected for any reason (transition: connected ->
      *                   disconnected).
      */
-             attribute nsIDOMEventListener onstatuschange;
+    attribute nsIDOMEventListener onstatuschange;
 
     /**
      * An event listener that is called with information about the signal
      * strength and link speed every 5 seconds.
      */
-             attribute nsIDOMEventListener connectionInfoUpdate;
+    attribute nsIDOMEventListener connectionInfoUpdate;
 };
 
-[scriptable, builtinclass, uuid(5b8eaf12-08fb-4cba-b641-4d0b6aac3505)]
-interface nsIDOMWifiStatusChangeEvent : nsIDOMEvent {
+[scriptable, builtinclass, uuid(ba1dab70-b70d-11e1-afa6-0800200c9a66)]
+interface nsIDOMMozWifiStatusChangeEvent : nsIDOMEvent
+{
     /**
      * Network object with a SSID field describing the network affected by
      * this change. This might be null.
      */
-    readonly attribute jsval network;
+    readonly attribute nsIVariant network;
 
     /**
      * String describing the current status of the wifi manager. See above for
      * the possible values.
      */
-    readonly attribute string status;
+    readonly attribute DOMString status;
+
+    [noscript] void initMozWifiStatusChangeEvent(in DOMString aType,
+                                                 in boolean aCanBubble,
+                                                 in boolean aCancelable,
+                                                 in nsIVariant aNetwork,
+                                                 in DOMString status);
 };
 
-[scriptable, builtinclass, uuid(effa623e-d758-4543-8d42-58334db64f8a)]
-interface nsIDOMWifiConnectionInfoEvent : nsIDOMEvent {
+[scriptable, builtinclass, uuid(b383e950-b70d-11e1-afa6-0800200c9a66)]
+interface nsIDOMMozWifiConnectionInfoEvent : nsIDOMEvent
+{
     /**
      * Network object with an SSID field.
      */
-    readonly attribute jsval network;
+    readonly attribute nsIVariant network;
 
     /**
      * Strength of the signal to network, in dBm between -55 and -100 dBm.
@@ -142,7 +154,15 @@ interface nsIDOMWifiConnectionInfoEvent : nsIDOMEvent {
     readonly attribute short relSignalStrength;
 
     /**
-     * Link spead in Mb/s.
+     * Link speed in Mb/s.
      */
     readonly attribute long linkSpeed;
+
+    [noscript] void initMozWifiConnectionInfoEvent(in DOMString aType,
+                                                   in boolean aCanBubble,
+                                                   in boolean aCancelable,
+                                                   in nsIVariant aNetwork,
+                                                   in short signalStrength,
+                                                   in short relSignalStrength,
+                                                   in long linkSpeed);
 };

@@ -22,14 +22,14 @@ panel[type="arrow"] {
 
 panel[type="arrow"][side="top"],
 panel[type="arrow"][side="bottom"] {
-  margin-left: -23px;
-  margin-right: -23px;
+  margin-left: -16px;
+  margin-right: -16px;
 }
 
 panel[type="arrow"][side="left"],
 panel[type="arrow"][side="right"] {
-  margin-top: -23px;
-  margin-bottom: -23px;
+  margin-top: -16px;
+  margin-bottom: -16px;
 }
 
 .panel-arrowcontent {

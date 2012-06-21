@@ -8,8 +8,10 @@
 #define mozilla_dom_indexeddb_fileinfo_h__
 
 #include "IndexedDatabase.h"
+
 #include "nsAtomicRefcnt.h"
 #include "nsThreadUtils.h"
+
 #include "FileManager.h"
 #include "IndexedDatabaseManager.h"
 

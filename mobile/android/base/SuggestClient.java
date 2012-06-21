@@ -15,6 +15,7 @@ import android.util.Log;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -71,14 +72,24 @@ public class SuggestClient {
 
             URL url = new URL(suggestUri);
             String json = null;
-            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            HttpURLConnection urlConnection = null;
+            InputStream in = null;
             try {
+                urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setConnectTimeout(mTimeout);
                 urlConnection.setRequestProperty("User-Agent", USER_AGENT);
-                InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+                in = new BufferedInputStream(urlConnection.getInputStream());
                 json = convertStreamToString(in);
             } finally {
-                urlConnection.disconnect();
+                if (urlConnection != null)
+                    urlConnection.disconnect();
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        Log.e(LOGTAG, "error", e);
+                    }
+                }
             }
 
             if (json != null) {
@@ -98,12 +109,10 @@ public class SuggestClient {
                     }
                 }
             } else {
-                Log.d(LOGTAG, "Suggestion query failed");
+                Log.e(LOGTAG, "Suggestion query failed");
             }
-        } catch (InterruptedIOException e) {
-            Log.d(LOGTAG, "Suggestion query interrupted");
         } catch (Exception e) {
-            Log.w(LOGTAG, "Error", e);
+            Log.e(LOGTAG, "Error", e);
         }
         return suggestions;
     }

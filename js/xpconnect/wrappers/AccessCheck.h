@@ -17,6 +17,7 @@ class AccessCheck {
   public:
     static bool isSameOrigin(JSCompartment *a, JSCompartment *b);
     static bool isChrome(JSCompartment *compartment);
+    static bool callerIsChrome();
     static nsIPrincipal *getPrincipal(JSCompartment *compartment);
     static bool isCrossOriginAccessPermitted(JSContext *cx, JSObject *obj, jsid id,
                                              js::Wrapper::Action act);

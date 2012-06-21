@@ -1182,6 +1182,17 @@ class DeviceManagerSUT(DeviceManager):
 
     return True
 
+  # external function
+  # returns:
+  #  success: True
+  #  failure: False
+  def chmodDir(self, remoteDir):
+    try:
+      self.runCmds(["chmod "+remoteDir])
+    except AgentError:
+      return False
+    return True
+
 gCallbackData = ''
 
 class myServer(SocketServer.TCPServer):

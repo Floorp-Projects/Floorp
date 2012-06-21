@@ -51,6 +51,12 @@ public class SimpleScaleGestureDetector {
     public void onTouchEvent(MotionEvent event) {
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
         case MotionEvent.ACTION_DOWN:
+            // If we get ACTION_DOWN while still tracking any pointers,
+            // something is wrong.  Cancel the current gesture and start over.
+            if (getPointersDown() > 0)
+                onTouchEnd(event);
+            onTouchStart(event);
+            break;
         case MotionEvent.ACTION_POINTER_DOWN:
             onTouchStart(event);
             break;
@@ -99,7 +105,10 @@ public class SimpleScaleGestureDetector {
     private void onTouchEnd(MotionEvent event) {
         mLastEventTime = event.getEventTime();
 
-        boolean isCancel = (event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_CANCEL;
+        int action = event.getAction() & MotionEvent.ACTION_MASK;
+        boolean isCancel = (action == MotionEvent.ACTION_CANCEL ||
+                            action == MotionEvent.ACTION_DOWN);
+
         int id = event.getPointerId(getActionIndex(event));
         ListIterator<PointerInfo> iterator = mPointerInfo.listIterator();
         while (iterator.hasNext()) {

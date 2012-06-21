@@ -139,7 +139,7 @@ foreach $ac_file (@makefiles) {
   }
 
   open (INFILE, "<$ac_file_in")
-    or ( warn "can't read $ac_file_in: No such file or directory\n" and next);
+    or ( die "can't read $ac_file_in: No such file or directory\n");
   open (OUTFILE, ">$ac_file")
     or ( warn "Unable to create $ac_file\n" and next);
 

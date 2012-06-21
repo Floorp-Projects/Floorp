@@ -4,20 +4,23 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "jsscope.h"
+
+#include "jscntxt.h"
 #include "jsnum.h"
-#include "MonoIC.h"
-#include "StubCalls.h"
-#include "StubCalls-inl.h"
+#include "jsobj.h"
+#include "jsscope.h"
+
 #include "assembler/assembler/LinkBuffer.h"
 #include "assembler/assembler/MacroAssembler.h"
 #include "assembler/assembler/CodeLocation.h"
+
 #include "methodjit/CodeGenIncludes.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/ICRepatcher.h"
+#include "methodjit/InlineFrameAssembler.h"
+#include "methodjit/MonoIC.h"
 #include "methodjit/PolyIC.h"
-#include "InlineFrameAssembler.h"
-#include "jsobj.h"
+#include "methodjit/StubCalls.h"
 
 #include "builtin/RegExp.h"
 
@@ -25,6 +28,8 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
+
+#include "methodjit/StubCalls-inl.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -243,7 +248,6 @@ class EqualityCompiler : public BaseCompiler
         RegisterID tmp = ic.tempReg;
 
         /* JSString::isAtom === (lengthAndFlags & ATOM_MASK == 0) */
-        JS_STATIC_ASSERT(JSString::ATOM_FLAGS == 0);
         Imm32 atomMask(JSString::ATOM_MASK);
 
         masm.load32(Address(lvr.dataReg(), JSString::offsetOfLengthAndFlags()), tmp);
@@ -1093,8 +1097,13 @@ ic::SplatApplyArgs(VMFrame &f)
     }
 
     int delta = length - 1;
-    if (delta > 0 && !BumpStack(f, delta))
-        THROWV(false);
+    if (delta > 0) {
+        if (!BumpStack(f, delta))
+            THROWV(false);
+
+        MakeRangeGCSafe(f.regs.sp, delta);
+    }
+
     f.regs.sp += delta;
 
     /* Steps 7-8. */

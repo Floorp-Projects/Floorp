@@ -13,7 +13,7 @@ public abstract class CommandRunner {
     this.argCount = argCount;
   }
 
-  public abstract void executeCommand(List<String> args);
+  public abstract void executeCommand(GlobalSession session, List<String> args);
 
   public boolean argumentsAreValid(List<String> args) {
     return args != null &&

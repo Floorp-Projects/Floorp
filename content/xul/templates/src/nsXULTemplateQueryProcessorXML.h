@@ -21,6 +21,7 @@
 #include "nsXMLBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIXMLHttpRequest.h"
+#include "mozilla/Attributes.h"
 
 class nsXULTemplateQueryProcessorXML;
 
@@ -28,7 +29,7 @@ class nsXULTemplateQueryProcessorXML;
   {0x0358d692, 0xccce, 0x4a97, \
     { 0xb2, 0x51, 0xba, 0x8f, 0x17, 0x0f, 0x3b, 0x6f }}
  
-class nsXMLQuery : public nsISupports
+class nsXMLQuery MOZ_FINAL : public nsISupports
 {
   public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXMLQUERY_IID)
@@ -79,7 +80,7 @@ class nsXMLQuery : public nsISupports
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXMLQuery, NS_IXMLQUERY_IID)
 
-class nsXULTemplateResultSetXML : public nsISimpleEnumerator
+class nsXULTemplateResultSetXML MOZ_FINAL : public nsISimpleEnumerator
 {
 private:
 
@@ -113,8 +114,8 @@ public:
     {}
 };
 
-class nsXULTemplateQueryProcessorXML : public nsIXULTemplateQueryProcessor,
-                                       public nsIDOMEventListener
+class nsXULTemplateQueryProcessorXML MOZ_FINAL : public nsIXULTemplateQueryProcessor,
+                                                 public nsIDOMEventListener
 {
 public:
 

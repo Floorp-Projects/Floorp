@@ -23,6 +23,8 @@ class CommonTestCase(unittest.TestCase):
 
     def __init__(self, methodName):
         unittest.TestCase.__init__(self, methodName)
+        self.loglines = None
+        self.perfdata = None
 
     def kill_gaia_app(self, url):
         self.marionette.execute_script("""
@@ -89,13 +91,12 @@ whitelist_prefs.forEach(function (pref) {
     def setUp(self):
         if self.marionette.session is None:
             self.marionette.start_session()
-        self.loglines = None
-        self.perfdata = None
 
     def tearDown(self):
         if self.marionette.session is not None:
+            self.loglines = self.marionette.get_logs()
+            self.perfdata = self.marionette.get_perf_data()
             self.marionette.delete_session()
-
 
 class MarionetteTestCase(CommonTestCase):
 
@@ -174,11 +175,6 @@ class MarionetteJSTestCase(CommonTestCase):
         try:
             results = self.marionette.execute_js_script(js, args)
 
-            self.loglines = self.marionette.get_logs()
-            self.perfdata = self.marionette.get_perf_data()
-            print "in marionette_test"
-            print self.perfdata
-
             if launch_app:
                 self.kill_gaia_app(launch_app)
 
@@ -200,8 +196,6 @@ class MarionetteJSTestCase(CommonTestCase):
             if not self.perfdata:
                 self.assertTrue(results['passed'] + results['failed'] > 0,
                                 'no tests run')
-            if self.marionette.session is not None:
-                self.marionette.delete_session()
 
         except ScriptTimeoutException:
             if 'timeout' in self.jsFile:

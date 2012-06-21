@@ -40,7 +40,7 @@ SQLITE_WRAPPER_INT(sqlite3_last_insert_rowid)
 
 void setup_sqlite_functions(void *sqlite_handle)
 {
-#define GETFUNC(name) f_ ## name = (name ## _t) __wrap_dlsym(sqlite_handle, #name)
+#define GETFUNC(name) f_ ## name = (name ## _t) (uintptr_t) __wrap_dlsym(sqlite_handle, #name)
   GETFUNC(sqlite3_open);
   GETFUNC(sqlite3_errmsg);
   GETFUNC(sqlite3_prepare_v2);
@@ -68,6 +68,9 @@ static jclass cursorClass;
 static jmethodID jByteBufferAllocateDirect;
 static jmethodID jCursorConstructor;
 static jmethodID jCursorAddRow;
+
+static jobject sqliteInternalCall(JNIEnv* jenv, sqlite3 *db, jstring jQuery,
+                                  jobjectArray jParams, jlongArray jQueryRes);
 
 static void
 JNI_Setup(JNIEnv* jenv)

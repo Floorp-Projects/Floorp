@@ -78,6 +78,7 @@ EXPORTS		= \
                 nsGTKToolkit.h \
 		nsIImageToPixbuf.h \
 		mozcontainer.h \
+		gtk2compat.h \
 		$(NULL)
 
 ifdef NATIVE_THEME_SUPPORT

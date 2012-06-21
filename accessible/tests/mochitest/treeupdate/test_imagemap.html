@@ -324,8 +324,6 @@
         map.appendChild(area);
 
         this.containerNode.appendChild(map);
-
-        ensureImageMapTree(aImageID);
       }
 
       this.finalCheck = function insertMap_finalCheck()
@@ -381,6 +379,11 @@
     }
 
     gA11yEventDumpToConsole = true;
+    function doPreTest()
+    {
+      var imgMap = document.getElementById("imgmap");
+      waitForImageMap(imgMap, doTest);
+    }
 
     var gQueue = null;
     function doTest()
@@ -400,8 +403,9 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    addA11yLoadEvent(doPreTest);
   </script>
+
 </head>
 <body>
 

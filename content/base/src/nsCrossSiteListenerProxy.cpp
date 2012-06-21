@@ -809,9 +809,9 @@ nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel, bool aAllowDataURI)
 
 // Class used as streamlistener and notification callback when
 // doing the initial OPTIONS request for a CORS check
-class nsCORSPreflightListener : public nsIStreamListener,
-                                public nsIInterfaceRequestor,
-                                public nsIChannelEventSink
+class nsCORSPreflightListener MOZ_FINAL : public nsIStreamListener,
+                                          public nsIInterfaceRequestor,
+                                          public nsIChannelEventSink
 {
 public:
   nsCORSPreflightListener(nsIChannel* aOuterChannel,

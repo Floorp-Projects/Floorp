@@ -48,7 +48,7 @@ setup_nss_functions(void *nss_handle,
     LOG("Missing handle\n");
     return FAILURE;
   }
-#define GETFUNC(name) f_ ## name = (name ## _t) __wrap_dlsym(nss_handle, #name); \
+#define GETFUNC(name) f_ ## name = (name ## _t) (uintptr_t) __wrap_dlsym(nss_handle, #name); \
                       if (!f_ ##name) return FAILURE;
   GETFUNC(NSS_Initialize);
   GETFUNC(NSS_Shutdown);
@@ -59,13 +59,13 @@ setup_nss_functions(void *nss_handle,
   GETFUNC(PK11_InitPin);
   GETFUNC(SECITEM_ZfreeItem);
 #undef GETFUNC
-#define NSPRFUNC(name) f_ ## name = (name ## _t) __wrap_dlsym(nspr_handle, #name); \
+#define NSPRFUNC(name) f_ ## name = (name ## _t) (uintptr_t) __wrap_dlsym(nspr_handle, #name); \
                        if (!f_ ##name) return FAILURE;
   NSPRFUNC(PR_ErrorToString);
   NSPRFUNC(PR_GetError);
   NSPRFUNC(PR_Free);
 #undef NSPRFUNC
-#define PLCFUNC(name) f_ ## name = (name ## _t) __wrap_dlsym(plc_handle, #name); \
+#define PLCFUNC(name) f_ ## name = (name ## _t) (uintptr_t) __wrap_dlsym(plc_handle, #name); \
                       if (!f_ ##name) return FAILURE;
   PLCFUNC(PL_Base64Encode);
   PLCFUNC(PL_Base64Decode);

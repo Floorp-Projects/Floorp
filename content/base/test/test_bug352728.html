@@ -44,7 +44,7 @@ function testCharacterData(aNode, aText)
   is(aNode.namespaceURI, null, "Check namespaceURI");
 }
 
-function testComment(aText, aShouldSucceed)
+function testComment(aText)
 {
   try {
     var comment = document.createComment(aText);
@@ -58,18 +58,8 @@ function testComment(aText, aShouldSucceed)
     testCharacterData(comment, aText);
     is(comment.nodeName, "#comment", "Check nodeName");
     is(comment.nodeType, Node.COMMENT_NODE, "Check nodeType");
-
-    if (!aShouldSucceed) {
-      ok(0, "Invalid comment creation",
-         "Shouldn't create comment with embedded \"--\"");
-    }
   } catch (e) {
-    if (aShouldSucceed) {
-      ok(0, "Correct functioning of comment stuff", "something broke: " + e);
-    } else {
-      is(e.name, "InvalidCharacterError", "Check exception");
-      is(e.code, DOMException.INVALID_CHARACTER_ERR, "Check exception code");
-    }
+    ok(0, "Correct functioning of comment stuff", "something broke: " + e);
   }
 }
 
@@ -119,11 +109,11 @@ function testPI(aTarget, aData, aShouldSucceed, aReason)
   }
 }
 
-testComment("Some text", true);
-testComment("Some text with a '-' in it", true);
-testComment("Some text with a '-' and a '-' and another '-'", true);
-testComment("Some text -- this shouldn't create a node!", false);
-testComment("<!-- This is an HTML comment -->", false);
+testComment("Some text");
+testComment("Some text with a '-' in it");
+testComment("Some text with a '-' and a '-' and another '-'");
+testComment("Some text -- this should create a node!");
+testComment("<!-- This is an HTML comment -->");
 
 testCDATASection("Some text", true);
 testCDATASection("Some text with a '?' in it", true);

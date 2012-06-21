@@ -31,15 +31,50 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 
   /**
+   * The selection mode of the voice and data networks.
+   *
+   * Possible values: null (unknown), 'automatic', 'manual'
+   */
+  readonly attribute DOMString networkSelectionMode;
+
+  /**
    * Search for available networks.
    *
    * If successful, the request's onsuccess will be called, and the request's
    * result will be an array of nsIDOMMozMobileNetworkInfo.
    *
    * Otherwise, the request's onerror will be called, and the request's error
-   * will be either 'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'.
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * or 'GenericFailure'.
    */
   nsIDOMDOMRequest getNetworks();
+
+  /**
+   * Manually selects the passed in network, overriding the radio's current
+   * selection.
+   *
+   * If successful, the request's onsuccess will be called.
+   * Note: If the network was actually changed by this request,
+   * the 'voicechange' and 'datachange' events will also be fired.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest selectNetwork(in nsIDOMMozMobileNetworkInfo network);
+
+  /**
+   * Tell the radio to automatically select a network.
+   *
+   * If successful, the request's onsuccess will be called.
+   * Note: If the network was actually changed by this request, the
+   * 'voicechange' and 'datachange' events will also be fired.
+   *
+   * Otherwise, the request's onerror will be called, and the request's error
+   * will be either 'RadioNotAvailable', 'RequestNotSupported',
+   * 'IllegalSIMorME', or 'GenericFailure'
+   */
+  nsIDOMDOMRequest selectNetworkAutomatically();
 
   /**
    * Find out about the status of an ICC lock (e.g. the PIN lock).

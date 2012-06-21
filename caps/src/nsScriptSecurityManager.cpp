@@ -59,6 +59,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/StandardInteger.h"
+#include "mozilla/ClearOnShutdown.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3144,7 +3145,7 @@ nsresult nsScriptSecurityManager::Init()
     return NS_OK;
 }
 
-static nsScriptSecurityManager *gScriptSecMan = nsnull;
+static nsRefPtr<nsScriptSecurityManager> gScriptSecMan;
 
 jsid nsScriptSecurityManager::sEnabledID   = JSID_VOID;
 
@@ -3156,7 +3157,6 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void)
     if(mDefaultPolicy)
         mDefaultPolicy->Drop();
     delete mCapabilities;
-    gScriptSecMan = nsnull;
 }
 
 void
@@ -3180,14 +3180,12 @@ nsScriptSecurityManager::GetScriptSecurityManager()
 {
     if (!gScriptSecMan)
     {
-        nsScriptSecurityManager* ssManager = new nsScriptSecurityManager();
-        if (!ssManager)
-            return nsnull;
+        nsRefPtr<nsScriptSecurityManager> ssManager = new nsScriptSecurityManager();
+
         nsresult rv;
         rv = ssManager->Init();
         NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to initialize nsScriptSecurityManager");
         if (NS_FAILED(rv)) {
-            delete ssManager;
             return nsnull;
         }
  
@@ -3195,10 +3193,10 @@ nsScriptSecurityManager::GetScriptSecurityManager()
                                                    nsIXPCSecurityManager::HOOK_ALL);
         if (NS_FAILED(rv)) {
             NS_WARNING("Failed to install xpconnect security manager!");
-            delete ssManager;
             return nsnull;
         }
 
+        ClearOnShutdown(&gScriptSecMan);
         gScriptSecMan = ssManager;
     }
     return gScriptSecMan;

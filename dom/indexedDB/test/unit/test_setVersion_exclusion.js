@@ -17,6 +17,7 @@ function testSteps()
   let request2 = mozIndexedDB.open(name, 2);
   request2.onerror = errorHandler;
   request2.onupgradeneeded = unexpectedSuccessHandler;
+  request2.onsuccess = unexpectedSuccessHandler;
 
   let event = yield;
   is(event.type, "upgradeneeded", "Expect an upgradeneeded event");
@@ -41,9 +42,11 @@ function testSteps()
     is(e.code, DOMException.INVALID_STATE_ERR, "Expect an INVALID_STATE_ERR");
   }
 
+  request.onupgradeneeded = unexpectedSuccessHandler;
   request.transaction.oncomplete = grabEventAndContinueHandler;
 
-  yield;
+  event = yield;
+  is(event.type, "complete", "Got complete event");
 
   // The database is still not fully open here.
   try {
@@ -57,7 +60,9 @@ function testSteps()
 
   request.onsuccess = grabEventAndContinueHandler;
 
-  yield;
+  event = yield;
+  is(event.type, "success", "Expect a success event");
+  is(event.target.result, db, "Same database");
 
   db.onversionchange = function() {
     ok(true, "next setVersion was unblocked appropriately");
@@ -71,10 +76,22 @@ function testSteps()
     ok(false, "Transactions should be allowed now!");
   }
 
-  request2.onupgradeneeded = null;
+  request.onsuccess = unexpectedSuccessHandler;
+  request2.onupgradeneeded = grabEventAndContinueHandler;
+
+  event = yield;
+  is(event.type, "upgradeneeded", "Expect an upgradeneeded event");
+
+  db = event.target.result;
+  is(db.version, 2, "Database has correct version");
+
+  request2.onupgradeneeded = unexpectedSuccessHandler;
   request2.onsuccess = grabEventAndContinueHandler;
 
-  yield;
+  event = yield;
+  is(event.type, "success", "Expect a success event");
+  is(event.target.result, db, "Same database");
+  is(db.version, 2, "Database has correct version");
 
   finishTest();
   yield;

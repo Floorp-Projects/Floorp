@@ -554,6 +554,9 @@ class IDLInterface(IDLObjectWithScope):
                                                      allowForbidden=True)
 
                 method = IDLMethod(self.location, identifier, retType, args)
+                # Constructors are always Creators and never have any
+                # other extended attributes.
+                method.addExtendedAttributes(["Creator"])
                 method.resolve(self)
 
             self._extendedAttrDict[identifier] = attrlist if len(attrlist) else True
@@ -631,6 +634,11 @@ class IDLDictionary(IDLObjectWithScope):
 
         for member in self.members:
             member.resolve(self)
+            if not member.type.isComplete():
+                type = member.type.complete(scope)
+                assert not isinstance(type, IDLUnresolvedType)
+                assert not isinstance(type.name, IDLUnresolvedIdentifier)
+                member.type = type
 
         # Members of a dictionary are sorted in lexicographic order
         self.members.sort(cmp=cmp, key=lambda x: x.identifier.name)

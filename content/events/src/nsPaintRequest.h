@@ -11,8 +11,9 @@
 #include "nsPresContext.h"
 #include "nsIDOMEvent.h"
 #include "dombindings.h"
+#include "mozilla/Attributes.h"
 
-class nsPaintRequest : public nsIDOMPaintRequest
+class nsPaintRequest MOZ_FINAL : public nsIDOMPaintRequest
 {
 public:
   NS_DECL_ISUPPORTS

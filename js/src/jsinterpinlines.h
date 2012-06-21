@@ -645,8 +645,8 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
             if (!obj->getSpecial(cx, obj, special, res))
                 return false;
         } else {
-            JSAtom *name;
-            if (!js_ValueToAtom(cx, *res, &name))
+            JSAtom *name = ToAtom(cx, *res);
+            if (!name)
                 return false;
 
             if (name->isIndex(&index)) {

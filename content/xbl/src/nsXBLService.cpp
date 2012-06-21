@@ -53,6 +53,7 @@
 #include "nsIDOMEventListener.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 
@@ -182,7 +183,8 @@ static const PRInt32 kInitialSize = sizeof(nsXBLBindingRequest) * kNumElements;
 // nsXBLStreamListener, a helper class used for 
 // asynchronous parsing of URLs
 /* Header file */
-class nsXBLStreamListener : public nsIStreamListener, public nsIDOMEventListener
+class nsXBLStreamListener MOZ_FINAL : public nsIStreamListener,
+                                      public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS

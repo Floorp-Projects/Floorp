@@ -41,6 +41,7 @@ struct nsGlobalNameStruct
 
   enum nametype {
     eTypeNotInitialized,
+    eTypeNewDOMBinding,
     eTypeInterface,
     eTypeProperty,
     eTypeNavigatorProperty,
@@ -62,7 +63,7 @@ struct nsGlobalNameStruct
     nsIID mIID; // eTypeInterface, eTypeClassProto
     nsExternalDOMClassInfoData* mData; // eTypeExternalClassInfo
     ConstructorAlias* mAlias; // eTypeExternalConstructorAlias
-    nsCID mCID; // All other types...
+    nsCID mCID; // All other types except eTypeNewDOMBinding
   };
 
   // For new style DOM bindings.
@@ -137,7 +138,7 @@ public:
 
   nsGlobalNameStruct* GetConstructorProto(const nsGlobalNameStruct* aStruct);
 
-  void RegisterDefineDOMInterface(const nsAString& aName,
+  void RegisterDefineDOMInterface(const nsAFlatString& aName,
     mozilla::dom::binding::DefineInterface aDefineDOMInterface);
 
 private:
@@ -145,8 +146,14 @@ private:
   // that aKey will be mapped to. If mType in the returned
   // nsGlobalNameStruct is != eTypeNotInitialized, an entry for aKey
   // already existed.
-  nsGlobalNameStruct *AddToHash(PLDHashTable *aTable, const char *aKey,
+  nsGlobalNameStruct *AddToHash(PLDHashTable *aTable, const nsAString *aKey,
                                 const PRUnichar **aClassName = nsnull);
+  nsGlobalNameStruct *AddToHash(PLDHashTable *aTable, const char *aKey,
+                                const PRUnichar **aClassName = nsnull)
+  {
+    NS_ConvertASCIItoUTF16 key(aKey);
+    return AddToHash(aTable, &key, aClassName);
+  }
 
   nsresult FillHash(nsICategoryManager *aCategoryManager,
                     const char *aCategory);

@@ -56,6 +56,7 @@ function onLoad(aEvent) {
           type: "Shortcut:Remove",
           title: manifest.name,
           url: manifest.fullLaunchPath(),
+          origin: aTarget.app.origin,
           shortcutType: "webapp"
         }
       });

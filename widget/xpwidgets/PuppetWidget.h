@@ -20,6 +20,7 @@
 #include "nsIScreenManager.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
+#include "mozilla/Attributes.h"
 
 class gfxASurface;
 
@@ -220,7 +221,7 @@ public:
     NS_IMETHOD SetRotation(PRUint32  aRotation) MOZ_OVERRIDE;
 };
 
-class PuppetScreenManager : public nsIScreenManager
+class PuppetScreenManager MOZ_FINAL : public nsIScreenManager
 {
 public:
     PuppetScreenManager();

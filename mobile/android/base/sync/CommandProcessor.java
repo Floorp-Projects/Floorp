@@ -24,6 +24,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
+/**
+ * Process commands received from Sync clients.
+ * <p>
+ * We need a command processor at two different times:
+ * <ol>
+ * <li>We execute commands during the "clients" engine stage of a Sync. Each
+ * command takes a <code>GlobalSession</code> instance as a parameter.</li>
+ * <li>We queue commands to be executed or propagated to other Sync clients
+ * during an activity completely unrelated to a sync (such as
+ * <code>SendTabActivity</code>.)</li>
+ * </ol>
+ * To provide a processor for both these time frames, we maintain a static
+ * long-lived singleton.
+ */
 public class CommandProcessor {
   private static final String LOG_TAG = "Command";
   private static AtomicInteger currentId = new AtomicInteger();
@@ -31,6 +45,11 @@ public class CommandProcessor {
 
   private final static CommandProcessor processor = new CommandProcessor();
 
+  /**
+   * Get the global singleton command processor.
+   *
+   * @return the singleton processor.
+   */
   public static CommandProcessor getProcessor() {
     return processor;
   }
@@ -66,11 +85,30 @@ public class CommandProcessor {
     }
   }
 
+  /**
+   * Register a command.
+   * <p>
+   * Any existing registration is overwritten.
+   *
+   * @param commandType
+   *          the name of the command, i.e., "displayURI".
+   * @param command
+   *          the <code>CommandRunner</code> instance that should handle the
+   *          command.
+   */
   public void registerCommand(String commandType, CommandRunner command) {
     commands.put(commandType, command);
   }
 
-  public void processCommand(ExtendedJSONObject unparsedCommand) {
+  /**
+   * Process a command in the context of the given global session.
+   *
+   * @param session
+   *          the <code>GlobalSession</code> instance currently executing.
+   * @param unparsedCommand
+   *          command as a <code>ExtendedJSONObject</code> instance.
+   */
+  public void processCommand(final GlobalSession session, ExtendedJSONObject unparsedCommand) {
     Command command = parseCommand(unparsedCommand);
     if (command == null) {
       Logger.debug(LOG_TAG, "Invalid command: " + unparsedCommand + " will not be processed.");
@@ -83,7 +121,7 @@ public class CommandProcessor {
       return;
     }
 
-    executableCommand.executeCommand(command.getArgsList());
+    executableCommand.executeCommand(session, command.getArgsList());
   }
 
   /**

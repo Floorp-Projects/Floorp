@@ -1862,6 +1862,8 @@ GetLocal(SprintStack *ss, int i)
 static bool
 IsVarSlot(JSPrinter *jp, jsbytecode *pc, JSAtom **varAtom, int *localSlot)
 {
+    *localSlot = -1;
+
     if (JOF_OPTYPE(*pc) == JOF_SCOPECOORD) {
         *varAtom = ScopeCoordinateName(jp->sprinter.context->runtime, jp->script, pc);
         LOCAL_ASSERT_RV(*varAtom, false);

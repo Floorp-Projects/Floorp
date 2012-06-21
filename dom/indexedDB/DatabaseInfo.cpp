@@ -105,6 +105,16 @@ ObjectStoreInfo::~ObjectStoreInfo()
 }
 
 IndexUpdateInfo::IndexUpdateInfo()
+: indexId(0),
+  indexUnique(false)
+{
+  MOZ_COUNT_CTOR(IndexUpdateInfo);
+}
+
+IndexUpdateInfo::IndexUpdateInfo(const IndexUpdateInfo& aOther)
+: indexId(aOther.indexId),
+  indexUnique(aOther.indexUnique),
+  value(aOther.value)
 {
   MOZ_COUNT_CTOR(IndexUpdateInfo);
 }
@@ -113,6 +123,7 @@ IndexUpdateInfo::~IndexUpdateInfo()
 {
   MOZ_COUNT_DTOR(IndexUpdateInfo);
 }
+
 #endif /* NS_BUILD_REFCNT_LOGGING */
 
 // static

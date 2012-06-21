@@ -57,7 +57,21 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
   public static final String LOG_TAG = "BrowserRepoSession";
 
   protected AndroidBrowserRepositoryDataAccessor dbHelper;
-  private HashMap<String, String> recordToGuid;
+
+  /**
+   * In order to reconcile the "same record" with two *different* GUIDs (for
+   * example, the same bookmark created by two different clients), we maintain a
+   * mapping for each local record from a "record string" to
+   * "local record GUID".
+   * <p>
+   * The "record string" above is a "record identifying unique key" produced by
+   * <code>buildRecordString</code>.
+   * <p>
+   * Since we hash each "record string", this map may produce a false positive.
+   * In this case, we search the database for a matching record explicitly using
+   * <code>findByRecordString</code>.
+   */
+  protected HashMap<Integer, String> recordToGuid;
 
   public AndroidBrowserRepositorySession(Repository repository) {
     super(repository);
@@ -156,6 +170,13 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     super.finish(delegate);
   }
 
+  /**
+   * Produce a "record string" (record identifying unique key).
+   *
+   * @param record
+   *          the <code>Record</code> to identify.
+   * @return a <code>String</code> instance.
+   */
   protected abstract String buildRecordString(Record record);
 
   protected void checkDatabase() throws ProfileDatabaseException, NullCursorException {
@@ -625,27 +646,45 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       return null;
     }
 
-    Logger.debug(LOG_TAG, "Searching with record string " + recordString);
-    String guid = getRecordToGuidMap().get(recordString);
+    if (Logger.LOG_PERSONAL_INFORMATION) {
+      Logger.pii(LOG_TAG, "Searching with record string " + recordString);
+    } else {
+      Logger.debug(LOG_TAG, "Searching with record string.");
+    }
+    String guid = getGuidForString(recordString);
     if (guid == null) {
-      Logger.debug(LOG_TAG, "findExistingRecord failed to find one for " + record.guid);
+      Logger.debug(LOG_TAG, "Failed to find existing record for " + record.guid);
       return null;
     }
 
-    Logger.debug(LOG_TAG, "Found one. Returning computed record.");
-    return retrieveByGUIDDuringStore(guid);
+    // Our map contained a match, but it could be a false positive. Since
+    // computed record string is supposed to be a unique key, we can easily
+    // verify our positive.
+    Logger.debug(LOG_TAG, "Found one. Checking stored record.");
+    Record stored = retrieveByGUIDDuringStore(guid);
+    String storedRecordString = buildRecordString(record);
+    if (recordString.equals(storedRecordString)) {
+      Logger.debug(LOG_TAG, "Existing record matches incoming record.  Returning existing record.");
+      return stored;
+    }
+
+    // Oh no, we got a false positive! (This should be *very* rare --
+    // essentially, we got a hash collision.) Search the DB for this record
+    // explicitly by hand.
+    Logger.debug(LOG_TAG, "Existing record does not match incoming record.  Trying to find record by record string.");
+    return findByRecordString(recordString);
   }
 
-  public HashMap<String, String> getRecordToGuidMap() throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
+  protected String getGuidForString(String recordString) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
     if (recordToGuid == null) {
       createRecordToGuidMap();
     }
-    return recordToGuid;
+    return recordToGuid.get(new Integer(recordString.hashCode()));
   }
 
-  private void createRecordToGuidMap() throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
+  protected void createRecordToGuidMap() throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
     Logger.info(LOG_TAG, "BEGIN: creating record -> GUID map.");
-    recordToGuid = new HashMap<String, String>();
+    recordToGuid = new HashMap<Integer, String>();
 
     // TODO: we should be able to do this entire thing with string concatenations within SQL.
     // Also consider whether it's better to fetch and process every record in the DB into
@@ -660,7 +699,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
         if (record != null) {
           final String recordString = buildRecordString(record);
           if (recordString != null) {
-            recordToGuid.put(recordString, record.guid);
+            recordToGuid.put(new Integer(recordString.hashCode()), record.guid);
           }
         }
         cur.moveToNext();
@@ -671,6 +710,45 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     Logger.info(LOG_TAG, "END: creating record -> GUID map.");
   }
 
+  /**
+   * Search the local database for a record with the same "record string".
+   * <p>
+   * We expect to do this only in the unlikely event of a hash
+   * collision, so we iterate the database completely.  Since we want
+   * to include information about the parents of bookmarks, it is
+   * difficult to do better purely using the
+   * <code>ContentProvider</code> interface.
+   *
+   * @param recordString
+   *          the "record string" to search for; must be n
+   * @return a <code>Record</code> with the same "record string", or
+   *         <code>null</code> if none is present.
+   * @throws ParentNotFoundException
+   * @throws NullCursorException
+   * @throws NoGuidForIdException
+   */
+  protected Record findByRecordString(String recordString) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
+    Cursor cur = dbHelper.fetchAll();
+    try {
+      if (!cur.moveToFirst()) {
+        return null;
+      }
+      while (!cur.isAfterLast()) {
+        Record record = retrieveDuringStore(cur);
+        if (record != null) {
+          final String storedRecordString = buildRecordString(record);
+          if (recordString.equals(storedRecordString)) {
+            return record;
+          }
+        }
+        cur.moveToNext();
+      }
+      return null;
+    } finally {
+      cur.close();
+    }
+  }
+
   public void putRecordToGuidMap(String recordString, String guid) throws NoGuidForIdException, NullCursorException, ParentNotFoundException {
     if (recordString == null) {
       return;
@@ -679,7 +757,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     if (recordToGuid == null) {
       createRecordToGuidMap();
     }
-    recordToGuid.put(recordString, guid);
+    recordToGuid.put(new Integer(recordString.hashCode()), guid);
   }
 
   protected abstract Record prepareRecord(Record record);

@@ -13,6 +13,7 @@
 #include "nsISMILAttr.h"
 #include "nsMathUtils.h"
 #include "nsSVGElement.h"
+#include "mozilla/Attributes.h"
 
 class nsISMILAnimationElement;
 class nsSMILValue;
@@ -61,7 +62,7 @@ private:
   bool mIsBaseSet;
 
 public:
-  struct DOMAnimatedNumber : public nsIDOMSVGAnimatedNumber
+  struct DOMAnimatedNumber MOZ_FINAL : public nsIDOMSVGAnimatedNumber
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedNumber)

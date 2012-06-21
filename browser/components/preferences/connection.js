@@ -27,8 +27,15 @@ var gConnectionsDialog = {
         var backupPortPref = document.getElementById("network.proxy.backup." + proxyPrefs[i] + "_port");
         backupServerURLPref.value = proxyServerURLPref.value;
         backupPortPref.value = proxyPortPref.value;
-        proxyServerURLPref.value = httpProxyURLPref.value;
-        proxyPortPref.value = httpProxyPortPref.value;
+        // SOCKS: not a protocol: set value to empty/0 while shareProxies is on
+        if (proxyPrefs[i] == "socks") {
+          proxyServerURLPref.value = "";
+          proxyPortPref.value = 0;
+        } else {
+          // protocols get HTTP proxy's values 
+          proxyServerURLPref.value = httpProxyURLPref.value;
+          proxyPortPref.value = httpProxyPortPref.value;
+        }
       }
     }
     
@@ -134,6 +141,10 @@ var gConnectionsDialog = {
   {
     var shareProxiesPref = document.getElementById("network.proxy.share_proxy_settings");
     if (shareProxiesPref.value) {
+      // during shareProxiesPref SOCKS values are empty
+      if (aProtocol == 'socks') {
+        return aIsPort ? 0 : "";
+      }
       var pref = document.getElementById("network.proxy.http" + (aIsPort ? "_port" : ""));    
       return pref.value;
     }

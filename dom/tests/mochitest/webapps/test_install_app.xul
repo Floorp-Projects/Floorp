@@ -17,7 +17,9 @@
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=741549"
-     target="_blank">Mozilla Bug 741549</a>
+     target="_blank">Mozilla Bug 741549</a> <br />
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=734294"
+     target="_blank">Mozilla Bug 734294</a>
   </body>
 
 <script> 
@@ -57,6 +59,7 @@ function install_super_crazy(next)  {
 }
 
 function get_self_returns_nothing(next) {
+  debug("in " + arguments.callee.name);
   mozAppscb(navigator.mozApps.getSelf(), 
             [{ status: "== \"success\""}], 
             ok, 
@@ -64,6 +67,7 @@ function get_self_returns_nothing(next) {
 }
 
 function install_wild_crazy(next) {
+  debug("in " + arguments.callee.name);
   var appURL = SERVERS['wild_crazy'];
   install(appURL, ok, function() { 
      getInstalled([appURL], ok, next);
@@ -72,8 +76,9 @@ function install_wild_crazy(next) {
 }
 
 function uninstall_wild_crazy(next)  {
+  debug("in " + arguments.callee.name);
   var appURL = SERVERS['wild_crazy'];
-  uninstall(appURL, function() { 
+  uninstall(appURL, ok, function() {
     mozAppscb(navigator.mozApps.getInstalled(),
            [{ status: "== \"success\""}],
            ok, 
@@ -84,4 +89,3 @@ function uninstall_wild_crazy(next)  {
 </script> 
 
 </window>
-

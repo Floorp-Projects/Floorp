@@ -189,6 +189,7 @@ class CompositionNotifySink
 {
 public:
   virtual void DidComposite() = 0;
+  virtual ~CompositionNotifySink() {}
 };
 
 /**

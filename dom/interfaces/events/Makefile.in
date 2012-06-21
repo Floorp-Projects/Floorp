@@ -57,6 +57,7 @@ XPIDLSRCS =					\
 	nsIDOMHashChangeEvent.idl		\
 	nsIDOMCustomEvent.idl			\
 	nsIDOMCompositionEvent.idl		\
+	nsIWifiEventInits.idl \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -12,6 +12,7 @@ import java.util.*;
 import org.json.*;
 
 import org.mozilla.gecko.*;
+import org.mozilla.gecko.WebAppAllocator;
 
 import android.os.*;
 import android.content.*;
@@ -72,9 +73,11 @@ public class LauncherShortcuts extends Activity {
             JSONObject manifest = (JSONObject) new JSONTokener(manifestJson).nextValue();
             uri += manifest.getString("launch_path");
         } catch (JSONException e) { }
-        
-        Intent shortcutintent = new Intent("org.mozilla.gecko.WEBAPP");
-        shortcutintent.setClass(this, App.class);
+
+        WebAppAllocator allocator = WebAppAllocator.getInstance(this);
+        int index = allocator.findAndAllocateIndex(uri);
+        Intent shortcutintent = new Intent(GeckoApp.ACTION_WEBAPP_PREFIX + index);
+        shortcutintent.setClassName(this, GeckoApp.mAppContext.getPackageName() + ".WebApps$WebApp" + index);
         shortcutintent.putExtra("args", "--webapp=" + uri);
 
         Intent intent = new Intent();

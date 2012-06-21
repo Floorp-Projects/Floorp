@@ -17,6 +17,7 @@
 #include "nsAutoPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Services.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -50,38 +51,51 @@ ObserverToDestroyFeaturesAlreadyReported::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+class ScopedGfxFeatureReporter::AppNoteWritingRunnable : public nsRunnable {
+public:
+  AppNoteWritingRunnable(char aStatusChar, const char *aFeature) :
+    mStatusChar(aStatusChar), mFeature(aFeature) {}
+  NS_IMETHOD Run() { 
+    // LeakLog made me do this. Basically, I just wanted gFeaturesAlreadyReported to be a static nsTArray<nsCString>,
+    // and LeakLog was complaining about leaks like this:
+    //    leaked 1 instance of nsTArray_base with size 8 bytes
+    //    leaked 7 instances of nsStringBuffer with size 8 bytes each (56 bytes total)
+    // So this is a work-around using a pointer, and using a nsIObserver to deallocate on xpcom shutdown.
+    // Yay for fighting bloat.
+    if (!gFeaturesAlreadyReported) {
+      nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+      if (!observerService)
+        return NS_OK;
+      nsRefPtr<ObserverToDestroyFeaturesAlreadyReported> observer = new ObserverToDestroyFeaturesAlreadyReported;
+      nsresult rv = observerService->AddObserver(observer, "xpcom-shutdown", false);
+      if (NS_FAILED(rv)) {
+        observer = nsnull;
+        return NS_OK;
+      }
+      gFeaturesAlreadyReported = new nsTArray<nsCString>;
+    }
+
+    nsCAutoString featureString;
+    featureString.AppendPrintf("%s%c ",
+                               mFeature,
+                               mStatusChar);
+
+    if (!gFeaturesAlreadyReported->Contains(featureString)) {
+      gFeaturesAlreadyReported->AppendElement(featureString);
+      CrashReporter::AppendAppNotesToCrashReport(featureString);
+    }
+    return NS_OK;
+  }
+private:
+  char mStatusChar;
+  const char *mFeature;
+};
 
 void
 ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
 {
-  // LeakLog made me do this. Basically, I just wanted gFeaturesAlreadyReported to be a static nsTArray<nsCString>,
-  // and LeakLog was complaining about leaks like this:
-  //    leaked 1 instance of nsTArray_base with size 8 bytes
-  //    leaked 7 instances of nsStringBuffer with size 8 bytes each (56 bytes total)
-  // So this is a work-around using a pointer, and using a nsIObserver to deallocate on xpcom shutdown.
-  // Yay for fighting bloat.
-  if (!gFeaturesAlreadyReported) {
-    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
-    if (!observerService)
-      return;
-    nsRefPtr<ObserverToDestroyFeaturesAlreadyReported> observer = new ObserverToDestroyFeaturesAlreadyReported;
-    nsresult rv = observerService->AddObserver(observer, "xpcom-shutdown", false);
-    if (NS_FAILED(rv)) {
-      observer = nsnull;
-      return;
-    }
-    gFeaturesAlreadyReported = new nsTArray<nsCString>;
-  }
-
-  nsCAutoString featureString;
-  featureString.AppendPrintf("%s%c ",
-                             mFeature,
-                             statusChar);
-
-  if (!gFeaturesAlreadyReported->Contains(featureString)) {
-    gFeaturesAlreadyReported->AppendElement(featureString);
-    CrashReporter::AppendAppNotesToCrashReport(featureString);
-  }
+  nsCOMPtr<nsIRunnable> r = new AppNoteWritingRunnable(statusChar, mFeature);
+  NS_DispatchToMainThread(r.get(), NS_DISPATCH_NORMAL);
 }
 
 } // end namespace mozilla

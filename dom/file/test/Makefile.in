@@ -16,6 +16,7 @@ TEST_FILES = \
   helpers.js \
   test_append_read_data.html \
   test_getFileId.html \
+  test_location.html \
   test_lockedfile_lifetimes.html \
   test_lockedfile_lifetimes_nested.html \
   test_lockedfile_ordering.html \

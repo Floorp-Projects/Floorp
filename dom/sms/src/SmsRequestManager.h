@@ -10,12 +10,13 @@
 #include "nsCOMArray.h"
 #include "SmsRequest.h"
 #include "nsISmsRequestManager.h"
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 namespace dom {
 namespace sms {
 
-class SmsRequestManager : nsISmsRequestManager
+class SmsRequestManager MOZ_FINAL : nsISmsRequestManager
 {
 public:
   NS_DECL_ISUPPORTS

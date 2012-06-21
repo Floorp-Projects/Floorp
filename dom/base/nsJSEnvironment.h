@@ -17,6 +17,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIXPConnect.h"
 #include "nsIArray.h"
+#include "mozilla/Attributes.h"
 
 class nsIXPConnectJSObjectHolder;
 class nsRootedJSValueArray;
@@ -286,7 +287,7 @@ private:
 
 class nsIJSRuntimeService;
 
-class nsJSRuntime : public nsIScriptRuntime
+class nsJSRuntime MOZ_FINAL : public nsIScriptRuntime
 {
 public:
   // let people who can see us use our runtime for convenience.

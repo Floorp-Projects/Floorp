@@ -16,11 +16,6 @@
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
-
-#downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {
-  /* Avoid that the arrow overlaps the selection on first item */
-  padding-top: 5px;
-}
 %endif
 
 #downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {

@@ -5778,8 +5778,8 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     name = atom->asPropertyName();
                 }
             } else if (propExpr->isKind(PNK_NUMBER)) {
-                JSAtom *atom;
-                if (!js_ValueToAtom(context, NumberValue(propExpr->pn_dval), &atom))
+                JSAtom *atom = ToAtom(context, NumberValue(propExpr->pn_dval));
+                if (!atom)
                     return NULL;
                 if (!atom->isIndex(&index))
                     name = atom->asPropertyName();
@@ -6617,9 +6617,6 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
 
       case TOK_LB:
       {
-        JSBool matched;
-        unsigned index;
-
         pn = ListNode::create(PNK_RB, this);
         if (!pn)
             return NULL;
@@ -6629,11 +6626,16 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
 #if JS_HAS_GENERATORS
         pn->pn_blockid = tc->sc->blockidGen;
 #endif
-
-        matched = tokenStream.matchToken(TOK_RB, TSF_OPERAND);
-        if (!matched) {
+        if (tokenStream.matchToken(TOK_RB, TSF_OPERAND)) {
+            /*
+             * Mark empty arrays as non-constant, since we cannot easily
+             * determine their type.
+             */
+            pn->pn_xflags |= PNX_NONCONST;
+        } else {
             bool spread = false;
-            for (index = 0; ; index++) {
+            unsigned index = 0;
+            for (; ; index++) {
                 if (index == StackSpace::ARGS_LENGTH_MAX) {
                     reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARRAY_INIT_TOO_BIG);
                     return NULL;
@@ -6787,7 +6789,8 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                 if (!pn3)
                     return NULL;
                 pn3->pn_dval = tokenStream.currentToken().number();
-                if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
+                atom = ToAtom(context, DoubleValue(pn3->pn_dval));
+                if (!atom)
                     return NULL;
                 break;
               case TOK_NAME:
@@ -6820,7 +6823,8 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                             if (!pn3)
                                 return NULL;
                             pn3->pn_dval = index;
-                            if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
+                            atom = ToAtom(context, DoubleValue(pn3->pn_dval));
+                            if (!atom)
                                 return NULL;
                         } else {
                             pn3 = NameNode::create(PNK_STRING, atom, this, this->tc->sc);
@@ -6832,7 +6836,8 @@ Parser::primaryExpr(TokenKind tt, bool afterDoubleDot)
                         if (!pn3)
                             return NULL;
                         pn3->pn_dval = tokenStream.currentToken().number();
-                        if (!js_ValueToAtom(context, DoubleValue(pn3->pn_dval), &atom))
+                        atom = ToAtom(context, DoubleValue(pn3->pn_dval));
+                        if (!atom)
                             return NULL;
                     } else {
                         tokenStream.ungetToken();

@@ -26,6 +26,7 @@
 #include "mozilla/Util.h"
 
 #include "nsAppRunner.h"
+#include "mozilla/AppData.h"
 #include "nsUpdateDriver.h"
 #include "ProfileReset.h"
 
@@ -211,7 +212,7 @@ static int    gQtOnlyArgc;
 static char **gQtOnlyArgv;
 #endif
 
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
 #if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) \
   || defined(NS_TRACE_MALLOC)
 #define CLEANUP_MEMORY 1
@@ -2509,7 +2510,7 @@ public:
 };
 #endif
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 #include "prlink.h"
 typedef void (*_g_set_application_name_fn)(const gchar *application_name);
 typedef void (*_gtk_window_set_auto_startup_notification_fn)(gboolean setting);
@@ -2706,7 +2707,7 @@ public:
 #ifdef MOZ_ENABLE_XREMOTE
     , mDisableRemote(false)
 #endif
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
     , mGdkDisplay(nsnull)
 #endif
   {};
@@ -2747,7 +2748,7 @@ public:
   bool mDisableRemote;
 #endif
 
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
   GdkDisplay* mGdkDisplay;
 #endif
 };
@@ -3162,7 +3163,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     return 1;
   *aExitFlag = false;
 
-#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_ENABLE_XREMOTE)
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_ENABLE_XREMOTE)
   // Stash DESKTOP_STARTUP_ID in malloc'ed memory because gtk_init will clear it.
 #define HAVE_DESKTOP_STARTUP_ID
   const char* desktopStartupIDEnv = PR_GetEnv("DESKTOP_STARTUP_ID");
@@ -3202,13 +3203,15 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   }
   gQtOnlyArgv[gQtOnlyArgc] = nsnull;
 #endif
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
   // setup for private colormap.  Ideally we'd like to do this
   // in nsAppShell::Create, but we need to get in before gtk
   // has been initialized to make sure everything is running
   // consistently.
+#if (MOZ_WIDGET_GTK == 2)
   if (CheckArg("install"))
     gdk_rgb_set_install(TRUE);
+#endif
 
   // Initialize GTK here for splash.
 
@@ -3281,7 +3284,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     XInitThreads();
   }
 #endif
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
   mGdkDisplay = gdk_display_open(display_name);
   if (!mGdkDisplay) {
     PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
@@ -3302,8 +3305,10 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     _gtk_window_set_auto_startup_notification(false);
   }
 
+#if (MOZ_WIDGET_GTK == 2)
   gtk_widget_set_default_colormap(gdk_rgb_get_colormap());
-#endif /* MOZ_WIDGET_GTK2 */
+#endif /* (MOZ_WIDGET_GTK == 2) */
+#endif /* defined(MOZ_WIDGET_GTK) */
 #ifdef MOZ_X11
   // Do this after initializing GDK, or GDK will install its own handler.
   InstallX11ErrorHandler();
@@ -3324,7 +3329,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
     return 1;
   }
 
-#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
+#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK)
   // DESKTOP_STARTUP_ID is cleared now,
   // we recover it in case we need a restart.
   if (!mDesktopStartupID.IsEmpty()) {
@@ -3709,7 +3714,7 @@ XREMain::XRE_mainRun()
     rv = appStartup->CreateHiddenWindow();
     NS_ENSURE_SUCCESS(rv, 1);
 
-#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
+#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK)
     nsGTKToolkit* toolkit = nsGTKToolkit::GetToolkit();
     if (toolkit && !mDesktopStartupID.IsEmpty()) {
       toolkit->SetDesktopStartupID(mDesktopStartupID);
@@ -3819,7 +3824,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   ScopedLogging log;
 
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
 #ifdef MOZ_MEMORY
   // Disable the slice allocator, since jemalloc already uses similar layout
   // algorithms, and using a sub-allocator tends to increase fragmentation.
@@ -3898,7 +3903,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     SaveFileToEnvIfUnset("XRE_PROFILE_LOCAL_PATH", mProfLD);
     SaveWordToEnvIfUnset("XRE_PROFILE_NAME", mProfileName);
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
     MOZ_gdk_display_close(mGdkDisplay);
 #endif
 
@@ -3911,7 +3916,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     return rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
   }
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
   // gdk_display_close also calls gdk_display_manager_set_default_display
   // appropriately when necessary.
   MOZ_gdk_display_close(mGdkDisplay);

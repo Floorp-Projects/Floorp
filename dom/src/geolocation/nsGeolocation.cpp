@@ -39,6 +39,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Attributes.h"
 
 #include <math.h>
 
@@ -144,7 +145,7 @@ private:
 // nsDOMGeoPositionError
 ////////////////////////////////////////////////////
 
-class nsDOMGeoPositionError : public nsIDOMGeoPositionError
+class nsDOMGeoPositionError MOZ_FINAL : public nsIDOMGeoPositionError
 {
 public:
   NS_DECL_ISUPPORTS

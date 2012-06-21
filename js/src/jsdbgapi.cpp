@@ -1422,7 +1422,7 @@ static JSFunctionSpec profiling_functions[] = {
     JS_FN("stopCallgrind",  StopCallgrind,        0,0),
     JS_FN("dumpCallgrind",  DumpCallgrind,        1,0),
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //ef MOZ_VTUNE
     JS_FN("startVtune",     js_StartVtune,        1,0),
     JS_FN("stopVtune",      js_StopVtune,         0,0),
     JS_FN("pauseVtune",     js_PauseVtune,        0,0),
@@ -1477,7 +1477,7 @@ js_DumpCallgrind(const char *outfile)
 
 #endif /* MOZ_CALLGRIND */
 
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
 #include <VTuneApi.h>
 
 static const char *vtuneErrorMessages[] = {

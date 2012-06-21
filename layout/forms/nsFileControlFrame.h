@@ -84,6 +84,7 @@ protected:
     MouseListener(nsFileControlFrame* aFrame)
      : mFrame(aFrame) 
     {}
+    virtual ~MouseListener() {}
 
     void ForgetFrame() {
       mFrame = nsnull;

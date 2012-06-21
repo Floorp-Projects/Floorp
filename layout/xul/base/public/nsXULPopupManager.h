@@ -22,6 +22,7 @@
 #include "nsIReflowCallback.h"
 #include "nsThreadUtils.h"
 #include "nsStyleConsts.h"
+#include "mozilla/Attributes.h"
 
 // X.h defines KeyPress
 #ifdef KeyPress
@@ -268,10 +269,10 @@ private:
   CloseMenuMode mCloseMenuMode;
 };
 
-class nsXULPopupManager : public nsIDOMEventListener,
-                          public nsIRollupListener,
-                          public nsITimerCallback,
-                          public nsIObserver
+class nsXULPopupManager MOZ_FINAL : public nsIDOMEventListener,
+                                    public nsIRollupListener,
+                                    public nsITimerCallback,
+                                    public nsIObserver
 {
 
 public:

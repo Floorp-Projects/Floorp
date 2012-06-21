@@ -26,6 +26,17 @@ namespace a11y {
  */
 FocusManager* FocusMgr();
 
+enum EPlatformDisabledState {
+  ePlatformIsForceEnabled = -1,
+  ePlatformIsEnabled = 0,
+  ePlatformIsDisabled = 1
+};
+
+/**
+ * Return the platform disabled state.
+ */
+EPlatformDisabledState PlatformDisabledState();
+
 #ifdef MOZ_ACCESSIBILITY_ATK
 /**
  * Perform initialization that should be done as soon as possible, in order

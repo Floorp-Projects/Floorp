@@ -12,13 +12,14 @@
 #include "nsIObserver.h"
 
 #include "nsClassHashtable.h"
+#include "mozilla/Attributes.h"
 
 #include "mozilla/dom/file/FileHelper.h"
 #include "mozilla/dom/file/LockedFile.h"
 
 BEGIN_FILE_NAMESPACE
 
-class FileService : public nsIObserver
+class FileService MOZ_FINAL : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -63,7 +64,7 @@ public:
   }
 
 private:
-  class LockedFileQueue : public FileHelperListener
+  class LockedFileQueue MOZ_FINAL : public FileHelperListener
   {
     friend class FileService;
 

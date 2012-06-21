@@ -14,6 +14,7 @@
 #include "nsIDOMSVGPresAspectRatio.h"
 #include "nsISMILAttr.h"
 #include "nsSVGElement.h"
+#include "mozilla/Attributes.h"
 
 class nsISMILAnimationElement;
 class nsSMILValue;
@@ -147,7 +148,7 @@ private:
                         nsSVGElement* aSVGElement);
 
 public:
-  struct DOMBaseVal : public nsIDOMSVGPreserveAspectRatio
+  struct DOMBaseVal MOZ_FINAL : public nsIDOMSVGPreserveAspectRatio
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMBaseVal)
@@ -169,7 +170,7 @@ public:
       { return mVal->SetBaseMeetOrSlice(aMeetOrSlice, mSVGElement); }
   };
 
-  struct DOMAnimVal : public nsIDOMSVGPreserveAspectRatio
+  struct DOMAnimVal MOZ_FINAL : public nsIDOMSVGPreserveAspectRatio
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimVal)
@@ -201,7 +202,7 @@ public:
       { return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR; }
   };
 
-  struct DOMAnimPAspectRatio : public nsIDOMSVGAnimatedPreserveAspectRatio
+  struct DOMAnimPAspectRatio MOZ_FINAL : public nsIDOMSVGAnimatedPreserveAspectRatio
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimPAspectRatio)
@@ -222,7 +223,7 @@ public:
       { return mVal->ToDOMAnimVal(aAnimVal, mSVGElement); }
   };
 
-  struct SMILPreserveAspectRatio : public nsISMILAttr
+  struct SMILPreserveAspectRatio MOZ_FINAL : public nsISMILAttr
   {
   public:
     SMILPreserveAspectRatio(SVGAnimatedPreserveAspectRatio* aVal,

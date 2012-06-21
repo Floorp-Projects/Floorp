@@ -9,6 +9,7 @@
 #include "nsDOMFile.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 
@@ -141,8 +142,8 @@ protected:
   PRUint64 mDataBufferLen;
 };
 
-class nsDOMBlobBuilder : public nsIDOMMozBlobBuilder,
-                         public nsIJSNativeInitializer
+class nsDOMBlobBuilder MOZ_FINAL : public nsIDOMMozBlobBuilder,
+                                   public nsIJSNativeInitializer
 {
 public:
   nsDOMBlobBuilder()

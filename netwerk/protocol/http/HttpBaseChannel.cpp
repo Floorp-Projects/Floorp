@@ -130,7 +130,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
 
   rv = gHttpHandler->
       AddStandardRequestHeaders(&mRequestHead.Headers(), aCaps,
-                                !mConnectionInfo->UsingSSL() &&
+                                !mConnectionInfo->UsingConnect() &&
                                 mConnectionInfo->UsingHttpProxy());
 
   return rv;

@@ -31,6 +31,7 @@
 #include "nsCrossSiteListenerProxy.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMEventTargetHelper.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla;
 
@@ -638,7 +639,7 @@ nsEventSource::OnStopRequest(nsIRequest *aRequest,
  * Simple helper class that just forwards the redirect callback back
  * to the nsEventSource.
  */
-class AsyncVerifyRedirectCallbackFwr : public nsIAsyncVerifyRedirectCallback
+class AsyncVerifyRedirectCallbackFwr MOZ_FINAL : public nsIAsyncVerifyRedirectCallback
 {
 public:
   AsyncVerifyRedirectCallbackFwr(nsEventSource* aEventsource)

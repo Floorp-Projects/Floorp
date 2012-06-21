@@ -11,7 +11,7 @@ function testSteps()
   const description = "My Test Database";
 
   let request = mozIndexedDB.open(name, 1, description);
-  request.onerror = grabEventAndContinueHandler;
+  request.onerror = errorHandler;
   request.onsuccess = unexpectedSuccessHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
@@ -38,7 +38,11 @@ function testSteps()
   is(db.version, 1, "Correct version");
   is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
 
+  request.onerror = grabEventAndContinueHandler;
+  request.onupgradeneeded = unexpectedSuccessHandler;
+
   event = yield;
+
   is(event.type, "error", "Got request error event");
   is(event.target, request, "Right target");
   is(event.target.transaction, null, "No transaction");
@@ -46,19 +50,27 @@ function testSteps()
   event.preventDefault();
 
   request = mozIndexedDB.open(name, 1, description);
-  request.onerror = grabEventAndContinueHandler;
+  request.onerror = errorHandler;
   request.onsuccess = unexpectedSuccessHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield;
+  event = yield;
+
+  is(event.type, "upgradeneeded", "Got upgradeneeded event");
 
   let db2 = event.target.result;
-  
+
   isnot(db, db2, "Should give a different db instance");
   is(db2.version, 1, "Correct version");
   is(db2.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
   request.onsuccess = grabEventAndContinueHandler;
-  yield;
+  request.onupgradeneeded = unexpectedSuccessHandler;
+  event = yield;
+
+  is(event.target.result, db2, "Correct target");
+  is(event.type, "success", "Got success event");
+  is(db2.version, 1, "Correct version");
+  is(db2.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
   finishTest();
   yield;

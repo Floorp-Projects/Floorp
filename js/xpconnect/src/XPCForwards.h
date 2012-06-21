@@ -47,7 +47,6 @@ class NativeSetMap;
 class IID2ThisTranslatorMap;
 class XPCNativeScriptableSharedMap;
 class XPCWrappedNativeProtoMap;
-class WrappedNative2WrapperMap;
 class JSObject2JSObjectMap;
 
 class nsXPCComponents;

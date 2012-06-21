@@ -8,7 +8,6 @@ xulrunner/Makefile
 xulrunner/app/Makefile
 xulrunner/app/profile/Makefile
 xulrunner/app/profile/chrome/Makefile
-xulrunner/app/profile/extensions/Makefile
 xulrunner/examples/Makefile
 xulrunner/examples/simple/Makefile
 xulrunner/examples/simple/components/Makefile
@@ -22,12 +21,6 @@ xulrunner/installer/Makefile
 if [ "$MAKENSISU" ]; then
   add_makefiles "
     xulrunner/installer/windows/Makefile
-  "
-fi
-
-if [ "$OS_ARCH" = "Darwin" ]; then
-  add_makefiles "
-    xulrunner/installer/mac/Makefile
   "
 fi
 

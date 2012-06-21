@@ -11,7 +11,6 @@
 #include "jsapi.h"
 
 #include "nsCollationCID.h"
-#include "nsDOMClassInfo.h"
 #include "nsJSUtils.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
@@ -19,6 +18,8 @@
 #include "nsICollation.h"
 #include "nsIServiceManager.h"
 #include "nsUnicharUtils.h"
+
+#include "xpcpublic.h"
 
 /**
  * JS locale callbacks implemented by XPCOM modules.  This
@@ -208,7 +209,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
     }
 
     if (!str) {
-      nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_OUT_OF_MEMORY);
+      xpc::Throw(cx, NS_ERROR_OUT_OF_MEMORY);
       return false;
     }
 
@@ -240,7 +241,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
       }
 
       if (NS_FAILED(rv)) {
-        nsDOMClassInfo::ThrowJSException(cx, rv);
+        xpc::Throw(cx, rv);
 
         return false;
       }
@@ -256,7 +257,7 @@ struct XPCLocaleCallbacks : public JSLocaleCallbacks
                                    depStr1, depStr2, &result);
 
     if (NS_FAILED(rv)) {
-      nsDOMClassInfo::ThrowJSException(cx, rv);
+      xpc::Throw(cx, rv);
 
       return false;
     }

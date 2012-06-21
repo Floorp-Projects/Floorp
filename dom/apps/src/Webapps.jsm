@@ -181,7 +181,7 @@ let DOMApplicationRegistry = {
     }
 
     let appObject = this._cloneAppObject(app);
-    appObject.installTime = (new Date()).getTime();
+    appObject.installTime = app.installTime = Date.now();
     let appNote = JSON.stringify(appObject);
     appNote.id = id;
 

@@ -737,6 +737,7 @@ JSRuntime::JSRuntime()
     gcIsFull(false),
     gcTriggerReason(gcreason::NO_REASON),
     gcStrictCompartmentChecking(false),
+    gcDisableStrictProxyCheckingCount(0),
     gcIncrementalState(gc::NO_INCREMENTAL),
     gcLastMarkSlice(false),
     gcInterFrameGC(0),
@@ -6647,7 +6648,7 @@ JS_AbortIfWrongThread(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
     if (!rt->onOwnerThread())
-        MOZ_Assert("rt->onOwnerThread()", __FILE__, __LINE__);
+        MOZ_CRASH();
 #endif
 }
 
@@ -6665,12 +6666,17 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
                    "  2: GC every F allocations (default: 100)\n"
                    "  3: GC when the window paints (browser only)\n"
                    "  4: Verify write barriers between instructions\n"
-                   "  5: Verify write barriers between paints\n");
+                   "  5: Verify write barriers between paints\n"
+                   "  6: Verify stack rooting (ignoring XML and Reflect)\n"
+                   "  7: Verify stack rooting (all roots)\n");
         }
         const char *p = strchr(env, ',');
         zeal = atoi(env);
         frequency = p ? atoi(p + 1) : JS_DEFAULT_ZEAL_FREQ;
     }
+
+    if (zeal == 0 && cx->runtime->gcVerifyData)
+        VerifyBarriers(cx->runtime);
 
     bool schedule = zeal >= js::gc::ZealAllocValue;
     cx->runtime->gcZeal_ = zeal;

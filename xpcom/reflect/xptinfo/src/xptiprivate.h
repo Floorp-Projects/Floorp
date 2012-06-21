@@ -423,6 +423,10 @@ public:
 
     xptiInterfaceEntry* GetInterfaceEntryForIID(const nsIID *iid);
 
+    size_t SizeOfIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+
+    static PRInt64 GetXPTIWorkingSetSize();
+
 private:
     xptiInterfaceInfoManager();
     ~xptiInterfaceInfoManager();

@@ -175,7 +175,7 @@ NetworkManager.prototype = {
         break;
       }
     }
-    if (this.active && (oldActive != this.active)) {
+    if (this.active) {
       this.setDefaultRouteAndDNS(oldActive);
     }
   },
@@ -185,7 +185,7 @@ NetworkManager.prototype = {
     let options = {
       cmd: this.active.dhcp ? "runDHCPAndSetDefaultRouteAndDNS" : "setDefaultRouteAndDNS",
       ifname: this.active.name,
-      oldIfname: oldInterface ? oldInterface.name : null
+      oldIfname: (oldInterface && oldInterface != this.active) ? oldInterface.name : null
     };
     this.worker.postMessage(options);
   },

@@ -10,6 +10,7 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Attributes.h"
 
 class nsITransferable;
 
@@ -20,8 +21,8 @@ class nsITransferable;
 // nsIClipboard::SetData implementation before starting to use the
 // nsITransferable object in any way.
 
-class nsClipboardPrivacyHandler : public nsIObserver,
-                                  public nsSupportsWeakReference
+class nsClipboardPrivacyHandler MOZ_FINAL : public nsIObserver,
+                                            public nsSupportsWeakReference
 {
 
 public:

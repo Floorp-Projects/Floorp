@@ -45,6 +45,7 @@
 
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/Attributes.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gCspPRLog;
@@ -57,7 +58,7 @@ using namespace mozilla::dom;
 // Per-request data structure
 //////////////////////////////////////////////////////////////
 
-class nsScriptLoadRequest : public nsISupports {
+class nsScriptLoadRequest MOZ_FINAL : public nsISupports {
 public:
   nsScriptLoadRequest(nsIScriptElement* aElement,
                       PRUint32 aVersion,
