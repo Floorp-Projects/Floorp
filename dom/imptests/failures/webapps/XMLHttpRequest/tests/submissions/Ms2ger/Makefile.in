@@ -1,0 +1,20 @@
+DEPTH = ../../../../../../../..
+
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+relativesrcdir = dom/imptests/failures/webapps/XMLHttpRequest/tests/submissions/Ms2ger
+
+DIRS = \
+  $(NULL)
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_TESTS = \
+  test_interfaces.html.json \
+  test_setrequestheader-invalid-arguments.htm.json \
+  $(NULL)
+
+libs:: $(_TESTS)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
