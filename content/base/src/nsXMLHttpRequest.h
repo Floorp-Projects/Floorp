@@ -182,7 +182,7 @@ public:
   static already_AddRefed<nsXMLHttpRequest>
   Constructor(JSContext* aCx,
               nsISupports* aGlobal,
-              const mozilla::dom::Optional<jsval>& aParams,
+              const mozilla::dom::Nullable<mozilla::dom::MozXMLHttpRequestParameters>& aParams,
               ErrorResult& aRv)
   {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
@@ -194,12 +194,9 @@ public:
 
     nsRefPtr<nsXMLHttpRequest> req = new nsXMLHttpRequest();
     req->Construct(principal->GetPrincipal(), window);
-    if (aParams.WasPassed()) {
-      nsresult rv = req->InitParameters(aCx, &aParams.Value());
-      if (NS_FAILED(rv)) {
-        aRv.Throw(rv);
-        return req.forget();
-      }
+    if (!aParams.IsNull()) {
+      const mozilla::dom::MozXMLHttpRequestParameters& params = aParams.Value();
+      req->InitParameters(params.mozAnon, params.mozSystem);
     }
     return req.forget();
   }
@@ -217,6 +214,7 @@ public:
 
   // Initialize XMLHttpRequestParameter object.
   nsresult InitParameters(JSContext* aCx, const jsval* aParams);
+  void InitParameters(bool aAnon, bool aSystem);
 
   NS_DECL_ISUPPORTS_INHERITED
 
