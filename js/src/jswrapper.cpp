@@ -452,7 +452,7 @@ CrossCompartmentWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
     PIERCE(cx, wrapper, set ? SET : GET,
            call.destination->wrapId(cx, &id),
            DirectWrapper::getPropertyDescriptor(cx, wrapper, id, set, desc),
-           call.origin->wrap(cx, desc));
+           cx->compartment->wrap(cx, desc));
 }
 
 bool
@@ -462,7 +462,7 @@ CrossCompartmentWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapp
     PIERCE(cx, wrapper, set ? SET : GET,
            call.destination->wrapId(cx, &id),
            DirectWrapper::getOwnPropertyDescriptor(cx, wrapper, id, set, desc),
-           call.origin->wrap(cx, desc));
+           cx->compartment->wrap(cx, desc));
 }
 
 bool
@@ -481,7 +481,7 @@ CrossCompartmentWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper, A
     PIERCE(cx, wrapper, GET,
            NOTHING,
            DirectWrapper::getOwnPropertyNames(cx, wrapper, props),
-           call.origin->wrap(cx, props));
+           cx->compartment->wrap(cx, props));
 }
 
 bool
@@ -499,7 +499,7 @@ CrossCompartmentWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVecto
     PIERCE(cx, wrapper, GET,
            NOTHING,
            DirectWrapper::enumerate(cx, wrapper, props),
-           call.origin->wrap(cx, props));
+           cx->compartment->wrap(cx, props));
 }
 
 bool
@@ -526,7 +526,7 @@ CrossCompartmentWrapper::get(JSContext *cx, JSObject *wrapper, JSObject *receive
     PIERCE(cx, wrapper, GET,
            call.destination->wrap(cx, &receiver) && call.destination->wrapId(cx, &id),
            DirectWrapper::get(cx, wrapper, receiver, id, vp),
-           call.origin->wrap(cx, vp));
+           cx->compartment->wrap(cx, vp));
 }
 
 bool
@@ -550,7 +550,7 @@ CrossCompartmentWrapper::keys(JSContext *cx, JSObject *wrapper, AutoIdVector &pr
     PIERCE(cx, wrapper, GET,
            NOTHING,
            DirectWrapper::keys(cx, wrapper, props),
-           call.origin->wrap(cx, props));
+           cx->compartment->wrap(cx, props));
 }
 
 /*
@@ -628,7 +628,7 @@ CrossCompartmentWrapper::iterate(JSContext *cx, JSObject *wrapper, unsigned flag
     PIERCE(cx, wrapper, GET,
            NOTHING,
            DirectWrapper::iterate(cx, wrapper, flags, vp),
-           CanReify(vp) ? Reify(cx, call.origin, vp) : call.origin->wrap(cx, vp));
+           CanReify(vp) ? Reify(cx, cx->compartment, vp) : cx->compartment->wrap(cx, vp));
 }
 
 bool
@@ -652,7 +652,7 @@ CrossCompartmentWrapper::call(JSContext *cx, JSObject *wrapper_, unsigned argc, 
         return false;
 
     call.leave();
-    return call.origin->wrap(cx, vp);
+    return cx->compartment->wrap(cx, vp);
 }
 
 bool
@@ -673,7 +673,7 @@ CrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper_, unsigned a
         return false;
 
     call.leave();
-    return call.origin->wrap(cx, rval);
+    return cx->compartment->wrap(cx, rval);
 }
 
 extern JSBool
@@ -712,7 +712,7 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *cla
     srcArgs.rval() = dstArgs.rval();
     dstArgs.pop();
     call.leave();
-    return call.origin->wrap(cx, &srcArgs.rval());
+    return cx->compartment->wrap(cx, &srcArgs.rval());
 }
 
 bool
@@ -740,7 +740,7 @@ CrossCompartmentWrapper::obj_toString(JSContext *cx, JSObject *wrapper)
         return NULL;
 
     call.leave();
-    if (!call.origin->wrap(cx, &str))
+    if (!cx->compartment->wrap(cx, &str))
         return NULL;
     return str;
 }
@@ -757,7 +757,7 @@ CrossCompartmentWrapper::fun_toString(JSContext *cx, JSObject *wrapper, unsigned
         return NULL;
 
     call.leave();
-    if (!call.origin->wrap(cx, &str))
+    if (!cx->compartment->wrap(cx, &str))
         return NULL;
     return str;
 }
@@ -773,7 +773,7 @@ CrossCompartmentWrapper::defaultValue(JSContext *cx, JSObject *wrapper, JSType h
         return false;
 
     call.leave();
-    return call.origin->wrap(cx, vp);
+    return cx->compartment->wrap(cx, vp);
 }
 
 bool
@@ -782,7 +782,7 @@ CrossCompartmentWrapper::iteratorNext(JSContext *cx, JSObject *wrapper, Value *v
     PIERCE(cx, wrapper, GET,
            NOTHING,
            IndirectProxyHandler::iteratorNext(cx, wrapper, vp),
-           call.origin->wrap(cx, vp));
+           cx->compartment->wrap(cx, vp));
 }
 
 CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
