@@ -48,7 +48,7 @@ public class TabsTray extends LinearLayout
     // Time to animate non-flicked tabs of screen, in milliseconds
     private static final int MAX_ANIMATION_TIME = 250;
     // Extra weight given to detecting vertical swipes over horizontal ones
-    private static final float SWIPE_VERTICAL_WEIGHT = 1.5;
+    private static final float SWIPE_VERTICAL_WEIGHT = 1.5f;
     private static enum DragDirection {
         UNKNOWN,
         HORIZONTAL,
