@@ -240,8 +240,7 @@ XPCPerThreadData* XPCPerThreadData::gThreads        = nsnull;
 XPCPerThreadData *XPCPerThreadData::sMainThreadData = nsnull;
 void *            XPCPerThreadData::sMainJSThread   = nsnull;
 
-XPCPerThreadData::XPCPerThreadData()
-    :   mJSContextStack(new XPCJSContextStack()),
+XPCPerThreadData::XPCPerThreadData() :
         mNextThread(nsnull),
         mCallContext(nsnull),
         mResolveName(JSID_VOID),
@@ -268,8 +267,6 @@ XPCPerThreadData::Cleanup()
     MOZ_ASSERT(!mAutoRoots);
     NS_IF_RELEASE(mExceptionManager);
     NS_IF_RELEASE(mException);
-    delete mJSContextStack;
-    mJSContextStack = nsnull;
 
     if (mCallContext)
         mCallContext->SystemIsBeingShutDown();
@@ -402,31 +399,12 @@ XPCPerThreadData::CleanupAllThreads()
     // to copy out the data that needs to be cleaned up *outside* of
     // the lock. Yuk!
 
-    XPCJSContextStack** stacks = nsnull;
-    int count = 0;
-    int i;
-
     if (gLock) {
         MutexAutoLock lock(*gLock);
 
-        for (XPCPerThreadData* cur = gThreads; cur; cur = cur->mNextThread)
-            count++;
-
-        stacks = (XPCJSContextStack**) new XPCJSContextStack*[count] ;
-        if (stacks) {
-            i = 0;
-            for (XPCPerThreadData* cur = gThreads; cur; cur = cur->mNextThread) {
-                stacks[i++] = cur->mJSContextStack;
-                cur->mJSContextStack = nsnull;
-                cur->Cleanup();
-            }
+        for (XPCPerThreadData* cur = gThreads; cur; cur = cur->mNextThread) {
+            cur->Cleanup();
         }
-    }
-
-    if (stacks) {
-        for (i = 0; i < count; i++)
-            delete stacks[i];
-        delete [] stacks;
     }
 
     if (gTLSIndex != BAD_TLS_INDEX)

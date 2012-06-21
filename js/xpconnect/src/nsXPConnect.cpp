@@ -105,6 +105,11 @@ nsXPConnect::~nsXPConnect()
     }
 
     XPCPerThreadData::CleanupAllThreads();
+
+    // This needs to happen exactly here, otherwise we leak at shutdown. I don't
+    // know why. :-(
+    mRuntime->DestroyJSContextStack();
+
     mShuttingDown = true;
     if (cx) {
         // XXX Call even if |mRuntime| null?

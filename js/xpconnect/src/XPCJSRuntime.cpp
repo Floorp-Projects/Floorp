@@ -987,6 +987,12 @@ DetachedWrappedNativeProtoShutdownMarker(JSDHashTable *table, JSDHashEntryHdr *h
     return JS_DHASH_NEXT;
 }
 
+void XPCJSRuntime::DestroyJSContextStack()
+{
+    delete mJSContextStack;
+    mJSContextStack = nsnull;
+}
+
 void XPCJSRuntime::SystemIsBeingShutDown()
 {
     DOM_ClearInterfaces();
@@ -1936,6 +1942,7 @@ bool PreserveWrapper(JSContext *cx, JSObject *obj)
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
    mJSRuntime(nsnull),
+   mJSContextStack(new XPCJSContextStack()),
    mJSCycleCollectionContext(nsnull),
    mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_SIZE)),
    mWrappedJSClassMap(IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_SIZE)),
