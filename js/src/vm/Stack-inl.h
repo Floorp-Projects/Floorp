@@ -114,6 +114,9 @@ StackFrame::initInlineFrame(JSFunction *fun, StackFrame *prevfp, jsbytecode *pre
     flags_ = StackFrame::FUNCTION;
     exec.fun = fun;
     resetInlinePrev(prevfp, prevpc);
+
+    if (prevfp->hasPushedSPSFrame())
+        setPushedSPSFrame();
 }
 
 inline void
