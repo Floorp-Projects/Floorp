@@ -231,8 +231,8 @@ JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj_, const JSFunctionSpecWi
             return false;
 
         RootedFunction fun(cx);
-        Rooted<jsid> id(cx, AtomToId(atom));
-        fun = js_DefineFunction(cx, obj, id, fs->call, fs->nargs, fs->flags);
+        fun = js_DefineFunction(cx, obj, RootedId(cx, AtomToId(atom)),
+                                fs->call, fs->nargs, fs->flags);
         if (!fun)
             return false;
 
@@ -338,8 +338,9 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *obj_, const char *name, 
     JSAtom *atom = js_Atomize(cx, name, strlen(name));
     if (!atom)
         return NULL;
-    Rooted<jsid> id(cx, AtomToId(atom));
-    return js_DefineFunction(cx, obj, id, call, nargs, attrs, JSFunction::ExtendedFinalizeKind);
+    return js_DefineFunction(cx, obj, RootedId(cx, AtomToId(atom)),
+                             call, nargs, attrs,
+                             JSFunction::ExtendedFinalizeKind);
 }
 
 JS_FRIEND_API(JSFunction *)

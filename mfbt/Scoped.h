@@ -35,11 +35,11 @@
  * Note that the RAII classes defined in this header do _not_ perform any form
  * of reference-counting or garbage-collection. These classes have exactly two
  * behaviors:
- *
  * - if |forget()| has not been called, the resource is always deallocated at
  *   the end of the scope;
  * - if |forget()| has been called, any control on the resource is unbound
  *   and the resource is not deallocated by the class.
+ *
  *
  * Extension:
  *
@@ -51,8 +51,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-
-namespace mozilla {
 
 /*
  * Scoped is a helper to create RAII wrappers
@@ -161,9 +159,9 @@ class Scoped
  */
 #define SCOPED_TEMPLATE(name, Traits)                          \
 template<typename Type>                                        \
-struct name : public mozilla::Scoped<Traits<Type> >            \
+struct name : public Scoped<Traits<Type> >                     \
 {                                                              \
-    typedef mozilla::Scoped<Traits<Type> > Super;              \
+    typedef Scoped<Traits<Type> > Super;                       \
     typedef typename Super::Resource Resource;                 \
     name& operator=(Resource ptr) {                            \
       Super::operator=(ptr);                                   \
@@ -222,7 +220,5 @@ struct ScopedDeleteArrayTraits : public ScopedFreePtrTraits<T>
     static void release(T* ptr) { delete [] ptr; }
 };
 SCOPED_TEMPLATE(ScopedDeleteArray, ScopedDeleteArrayTraits)
-
-} /* namespace mozilla */
 
 #endif // mozilla_Scoped_h_

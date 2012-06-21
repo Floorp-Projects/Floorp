@@ -428,13 +428,15 @@ ThisToStringForStringProto(JSContext *cx, CallReceiver call)
 
     if (call.thisv().isObject()) {
         RootedObject obj(cx, &call.thisv().toObject());
-        if (obj->isString()) {
-            Rooted<jsid> id(cx, NameToId(cx->runtime->atomState.toStringAtom));
-            if (ClassMethodIsNative(cx, obj, &StringClass, id, js_str_toString)) {
-                JSString *str = obj->asString().unbox();
-                call.thisv().setString(str);
-                return str;
-            }
+        if (obj->isString() &&
+            ClassMethodIsNative(cx, obj,
+                                &StringClass,
+                                RootedId(cx, NameToId(cx->runtime->atomState.toStringAtom)),
+                                js_str_toString))
+        {
+            JSString *str = obj->asString().unbox();
+            call.thisv().setString(str);
+            return str;
         }
     } else if (call.thisv().isNullOrUndefined()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CONVERT_TO,
@@ -1982,7 +1984,7 @@ BuildFlatReplacement(JSContext *cx, HandleString textstr, HandleString repstr,
                         return false;
                 }
             } else {
-                if (!builder.append(str))
+                if (!builder.append(RootedString(cx, str)))
                     return false;
             }
             pos += str->length();
@@ -3063,9 +3065,8 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
 
-    Rooted<JSString*> empty(cx, cx->runtime->emptyString);
     RootedObject proto(cx, global->createBlankPrototype(cx, &StringClass));
-    if (!proto || !proto->asString().init(cx, empty))
+    if (!proto || !proto->asString().init(cx, RootedString(cx, cx->runtime->emptyString)))
         return NULL;
 
     /* Now create the String function. */
@@ -3285,8 +3286,7 @@ js_ValueToSource(JSContext *cx, const Value &v)
     Value rval = NullValue();
     Value fval;
     RootedId id(cx, NameToId(cx->runtime->atomState.toSourceAtom));
-    Rooted<JSObject*> obj(cx, &v.toObject());
-    if (!GetMethod(cx, obj, id, 0, &fval))
+    if (!GetMethod(cx, RootedObject(cx, &v.toObject()), id, 0, &fval))
         return NULL;
     if (js_IsCallable(fval)) {
         if (!Invoke(cx, v, fval, 0, NULL, &rval))

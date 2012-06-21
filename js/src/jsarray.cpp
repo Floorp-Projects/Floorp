@@ -716,8 +716,7 @@ static JSBool
 array_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp,
                      JSProperty **propp)
 {
-    Rooted<jsid> id(cx, NameToId(name));
-    return array_lookupGeneric(cx, obj, id, objp, propp);
+    return array_lookupGeneric(cx, obj, RootedId(cx, NameToId(name)), objp, propp);
 }
 
 static JSBool
@@ -745,8 +744,7 @@ static JSBool
 array_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp,
                     JSProperty **propp)
 {
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return array_lookupGeneric(cx, obj, id, objp, propp);
+    return array_lookupGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), objp, propp);
 }
 
 JSBool
@@ -777,10 +775,8 @@ array_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver, Handle
         return true;
     }
 
-    if (!obj->isDenseArray()) {
-        Rooted<jsid> id(cx, NameToId(name));
-        return baseops::GetProperty(cx, obj, receiver, id, vp);
-    }
+    if (!obj->isDenseArray())
+        return baseops::GetProperty(cx, obj, receiver, RootedId(cx, NameToId(name)), vp);
 
     JSObject *proto = obj->getProto();
     if (!proto) {
@@ -825,8 +821,7 @@ array_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleS
         return true;
     }
 
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return baseops::GetProperty(cx, obj, receiver, id, vp);
+    return baseops::GetProperty(cx, obj, receiver, RootedId(cx, SPECIALID_TO_JSID(sid)), vp);
 }
 
 static JSBool
@@ -838,9 +833,9 @@ array_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleI
     if (IsDefinitelyIndex(idval, &index))
         return array_getElement(cx, obj, receiver, index, vp);
 
-    Rooted<SpecialId> sid(cx);
-    if (ValueIsSpecial(obj, &idval, sid.address(), cx))
-        return array_getSpecial(cx, obj, receiver, sid, vp);
+    SpecialId sid;
+    if (ValueIsSpecial(obj, &idval, &sid, cx))
+        return array_getSpecial(cx, obj, receiver, Rooted<SpecialId>(cx, sid), vp);
 
     JSAtom *atom = ToAtom(cx, idval);
     if (!atom)
@@ -849,8 +844,7 @@ array_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleI
     if (atom->isIndex(&index))
         return array_getElement(cx, obj, receiver, index, vp);
 
-    Rooted<PropertyName*> name(cx, atom->asPropertyName());
-    return array_getProperty(cx, obj, receiver, name, vp);
+    return array_getProperty(cx, obj, receiver, RootedPropertyName(cx, atom->asPropertyName()), vp);
 }
 
 static JSBool
@@ -910,8 +904,7 @@ array_setGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool
 static JSBool
 array_setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict)
 {
-    Rooted<jsid> id(cx, NameToId(name));
-    return array_setGeneric(cx, obj, id, vp, strict);
+    return array_setGeneric(cx, obj, RootedId(cx, NameToId(name)), vp, strict);
 }
 
 static JSBool
@@ -956,8 +949,7 @@ array_setElement(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSB
 static JSBool
 array_setSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict)
 {
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return array_setGeneric(cx, obj, id, vp, strict);
+    return array_setGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), vp, strict);
 }
 
 JSBool
@@ -990,7 +982,7 @@ array_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, const Value *v
         return JS_TRUE;
 
     if (!obj->isDenseArray())
-        return baseops::DefineGeneric(cx, obj, id, value, getter, setter, attrs);
+        return baseops::DefineProperty(cx, obj, id, value, getter, setter, attrs);
 
     do {
         uint32_t i = 0;       // init to shut GCC up
@@ -1016,15 +1008,14 @@ array_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, const Value *v
 
     if (!JSObject::makeDenseArraySlow(cx, obj))
         return false;
-    return baseops::DefineGeneric(cx, obj, id, value, getter, setter, attrs);
+    return baseops::DefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
 static JSBool
 array_defineProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, const Value *value,
                      JSPropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    Rooted<jsid> id(cx, NameToId(name));
-    return array_defineGeneric(cx, obj, id, value, getter, setter, attrs);
+    return array_defineGeneric(cx, obj, RootedId(cx, NameToId(name)), value, getter, setter, attrs);
 }
 
 namespace js {
@@ -1072,8 +1063,8 @@ static JSBool
 array_defineSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, const Value *value,
                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return array_defineGeneric(cx, obj, id, value, getter, setter, attrs);
+    return array_defineGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)),
+                               value, getter, setter, attrs);
 }
 
 static JSBool
@@ -1164,7 +1155,7 @@ array_deleteElement(JSContext *cx, HandleObject obj, uint32_t index, Value *rval
         obj->setDenseArrayElement(index, MagicValue(JS_ARRAY_HOLE));
     }
 
-    if (!js_SuppressDeletedElement(cx, obj, index))
+    if (!js_SuppressDeletedElement(cx, RootedObject(cx, obj), index))
         return false;
 
     rval->setBoolean(true);
@@ -1713,8 +1704,7 @@ array_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
      *  Passing comma here as the separator. Need a way to get a
      *  locale-specific version.
      */
-    Rooted<JSString*> none(cx, NULL);
-    return array_toString_sub(cx, obj, JS_TRUE, none, args);
+    return array_toString_sub(cx, obj, JS_TRUE, RootedString(cx), args);
 }
 
 static inline bool
@@ -2395,7 +2385,7 @@ NewbornArrayPushImpl(JSContext *cx, HandleObject obj, const Value &v)
         /* This can happen in one evil case. See bug 630377. */
         RootedId id(cx);
         return IndexToId(cx, length, id.address()) &&
-               baseops::DefineGeneric(cx, obj, id, &v, NULL, NULL, JSPROP_ENUMERATE);
+               baseops::DefineProperty(cx, obj, id, &v, NULL, NULL, JSPROP_ENUMERATE);
     }
 
     JS_ASSERT(obj->isDenseArray());
