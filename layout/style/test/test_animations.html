@@ -826,6 +826,82 @@ done_div();
 
 // Tested in tests for sections 3.1 and 3.5.
 
+new_div("-moz-animation: anim2 ease-in 10s infinite");
+div.style.MozAnimationDirection = "normal";
+is(cs.marginRight, "0px", "animation-direction test 1 (normal) at 0s");
+div.style.MozAnimationDirection = "reverse";
+is(cs.marginRight, "100px", "animation-direction test 1 (reverse) at 0s");
+div.style.MozAnimationDirection = "alternate";
+is(cs.marginRight, "0px", "animation-direction test 1 (alternate) at 0s");
+div.style.MozAnimationDirection = "alternate-reverse";
+is(cs.marginRight, "100px", "animation-direction test 1 (alternate-reverse) at 0s");
+advance_clock(2000);
+div.style.MozAnimationDirection = "normal";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
+          "animation-direction test 1 (normal) at 2s");
+div.style.MozAnimationDirection = "reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
+          "animation-direction test 1 (reverse) at 2s");
+div.style.MozAnimationDirection = "alternate";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
+          "animation-direction test 1 (alternate) at 2s");
+div.style.MozAnimationDirection = "alternate-reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
+          "animation-direction test 1 (alternate-reverse) at 2s");
+advance_clock(5000);
+div.style.MozAnimationDirection = "normal";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.7), 0.01,
+          "animation-direction test 1 (normal) at 7s");
+div.style.MozAnimationDirection = "reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.3), 0.01,
+          "animation-direction test 1 (reverse) at 7s");
+div.style.MozAnimationDirection = "alternate";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.7), 0.01,
+          "animation-direction test 1 (alternate) at 7s");
+div.style.MozAnimationDirection = "alternate-reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.3), 0.01,
+          "animation-direction test 1 (alternate-reverse) at 7s");
+advance_clock(5000);
+div.style.MozAnimationDirection = "normal";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
+          "animation-direction test 1 (normal) at 12s");
+div.style.MozAnimationDirection = "reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
+          "animation-direction test 1 (reverse) at 12s");
+div.style.MozAnimationDirection = "alternate";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
+          "animation-direction test 1 (alternate) at 12s");
+div.style.MozAnimationDirection = "alternate-reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
+          "animation-direction test 1 (alternate-reverse) at 12s");
+advance_clock(10000);
+div.style.MozAnimationDirection = "normal";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
+          "animation-direction test 1 (normal) at 22s");
+div.style.MozAnimationDirection = "reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
+          "animation-direction test 1 (reverse) at 22s");
+div.style.MozAnimationDirection = "alternate";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
+          "animation-direction test 1 (alternate) at 22s");
+div.style.MozAnimationDirection = "alternate-reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
+          "animation-direction test 1 (alternate-reverse) at 22s");
+advance_clock(30000);
+div.style.MozAnimationDirection = "normal";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
+          "animation-direction test 1 (normal) at 52s");
+div.style.MozAnimationDirection = "reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
+          "animation-direction test 1 (reverse) at 52s");
+div.style.MozAnimationDirection = "alternate";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
+          "animation-direction test 1 (alternate) at 52s");
+div.style.MozAnimationDirection = "alternate-reverse";
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.2), 0.01,
+          "animation-direction test 1 (alternate-reverse) at 52s");
+done_div();
+
 /*
  * css3-animations:  3.7. The 'animation-play-state' Property
  * http://dev.w3.org/csswg/css3-animations/#the-animation-play-state-property-

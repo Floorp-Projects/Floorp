@@ -221,8 +221,22 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       }
       double positionInIteration =
         currentIterationCount - double(whichIteration);
-      if (anim.mDirection == NS_STYLE_ANIMATION_DIRECTION_ALTERNATE &&
-          (whichIteration & 1) == 1) {
+      bool thisIterationReverse = false;
+      switch (anim.mDirection) {
+        case NS_STYLE_ANIMATION_DIRECTION_NORMAL:
+          thisIterationReverse = false;
+          break;
+        case NS_STYLE_ANIMATION_DIRECTION_REVERSE:
+          thisIterationReverse = true;
+          break;
+        case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE:
+          thisIterationReverse = (whichIteration & 1) == 1;
+          break;
+        case NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE:
+          thisIterationReverse = (whichIteration & 1) == 0;
+          break;
+      }
+      if (thisIterationReverse) {
         positionInIteration = 1.0 - positionInIteration;
       }
 
