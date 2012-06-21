@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIMacWebAppUtils;
+
+/**
+ * Allow MozApps API to locate and manipulate natively installed apps
+ */
+
+[scriptable, uuid(e9096367-ddd9-45e4-b762-49c0c18b7119)]
+interface nsIMacWebAppUtils : nsISupports {
+  /**
+   * Find the path for an app with the given signature.
+   */
+  AString pathForAppWithIdentifier(in AString bundleIdentifier);
+
+};

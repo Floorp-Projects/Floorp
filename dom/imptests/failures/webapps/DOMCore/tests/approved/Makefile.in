@@ -1,0 +1,30 @@
+DEPTH = ../../../../../../..
+
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+relativesrcdir = dom/imptests/failures/webapps/DOMCore/tests/approved
+
+DIRS = \
+  $(NULL)
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_TESTS = \
+  test_Range-cloneContents.html.json \
+  test_Range-cloneRange.html.json \
+  test_Range-collapse.html.json \
+  test_Range-commonAncestorContainer.html.json \
+  test_Range-compareBoundaryPoints.html.json \
+  test_Range-comparePoint.html.json \
+  test_Range-deleteContents.html.json \
+  test_Range-extractContents.html.json \
+  test_Range-intersectsNode.html.json \
+  test_Range-isPointInRange.html.json \
+  test_Range-set.html.json \
+  test_interfaces.html.json \
+  $(NULL)
+
+libs:: $(_TESTS)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

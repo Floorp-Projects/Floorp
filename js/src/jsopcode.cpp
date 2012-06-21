@@ -5421,7 +5421,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, int nb)
 
 static JSBool
 DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, unsigned len,
-              unsigned pcdepth)
+              unsigned pcdepth, unsigned initialStackDepth = 0)
 {
     JSContext *cx = jp->sprinter.context;
 
@@ -5453,6 +5453,11 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, unsigned len,
         }
     }
 
+    for (unsigned i = 0; i < initialStackDepth; i++) {
+        if (!PushStr(&ss, "", JSOP_NOP))
+            return false;
+    }
+
     /* Call recursive subroutine to do the hard work. */
     JSScript *oldscript = jp->script;
     jp->script = script;
@@ -5460,11 +5465,11 @@ DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, unsigned len,
     jp->script = oldscript;
 
     /* If the given code didn't empty the stack, do it now. */
-    if (ok && ss.top) {
+    if (ok && ss.top - initialStackDepth) {
         const char *last;
         do {
             last = ss.sprinter.stringAt(PopOff(&ss, JSOP_POP));
-        } while (ss.top > pcdepth);
+        } while (ss.top - initialStackDepth > pcdepth);
         js_printf(jp, "%s", last);
     }
 
@@ -5661,7 +5666,7 @@ js_DecompileFunction(JSPrinter *jp)
                 jsbytecode *caseend = defbegin + ((i < nformal - 1) ? TABLE_OFF(i - defstart + 1) : deflen);
 #undef TABLE_OFF
                 unsigned exprlength = caseend - casestart - js_CodeSpec[JSOP_POP].length;
-                if (!DecompileCode(jp, script, casestart, exprlength, 0))
+                if (!DecompileCode(jp, script, casestart, exprlength, 0, fun->hasRest()))
                     return JS_FALSE;
             } else if (!QuoteString(&jp->sprinter, param, 0)) {
                 ok = JS_FALSE;

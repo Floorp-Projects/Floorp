@@ -40,57 +40,10 @@ FORCE_SHARED_LIB = 1
 
 EXTRA_DSO_LDOPTS = $(LIBS_DIR)
 
-# Must be included before any libraries that might depend on it
-ifdef MOZ_GLUE_LDFLAGS
-DEPENDENT_LIBS_LIST += $(DLL_PREFIX)mozglue$(DLL_SUFFIX)
-endif
-
-# Must be included before the rest of the libraries in DEPENDENT_LIBS_LIST
-# so that apps have a chance of getting their stuff in before xul.
-# It is ok for this file not to exist
--include $(topsrcdir)/$(MOZ_BUILD_APP)/extradependlibs.mk
-
-DEPENDENT_LIBS_LIST += \
-	$(DLL_PREFIX)nspr4$(DLL_SUFFIX) \
-	$(DLL_PREFIX)plc4$(DLL_SUFFIX) \
-	$(DLL_PREFIX)plds4$(DLL_SUFFIX) \
-	$(DLL_PREFIX)mozalloc$(DLL_SUFFIX) \
-	$(NULL)
-
-ifndef MOZ_NATIVE_SQLITE
-ifeq ($(OS_TARGET),OS2)
-DEPENDENT_LIBS_LIST += mozsqlt3.dll
-else
-DEPENDENT_LIBS_LIST += $(DLL_PREFIX)mozsqlite3$(DLL_SUFFIX)
-endif
-endif
-
-DEPENDENT_LIBS_LIST += \
-	$(DLL_PREFIX)nssutil3$(DLL_SUFFIX) \
-	$(DLL_PREFIX)softokn3$(DLL_SUFFIX) \
-	$(DLL_PREFIX)nss3$(DLL_SUFFIX) \
-	$(DLL_PREFIX)ssl3$(DLL_SUFFIX) \
-	$(DLL_PREFIX)smime3$(DLL_SUFFIX) \
-	$(NULL)
-
-ifeq (WINNT,$(OS_TARGET))
-DEPENDENT_LIBS_LIBS += $(DLL_PREFIX)gkmedias$(DLL_SUFFIX)
-endif
-
-ifdef JS_SHARED_LIBRARY
-DEPENDENT_LIBS_LIST += $(DLL_PREFIX)mozjs$(DLL_SUFFIX)
-endif
-
-ifdef MOZ_JPROF
-DEPENDENT_LIBS_LIST += $(DLL_PREFIX)jprof$(DLL_SUFFIX)
-endif
-
 ifeq (bundle,$(MOZ_FS_LAYOUT))
 EXTRA_DSO_LDOPTS += $(DIST)/bin/XUL
-DEPENDENT_LIBS_LIST += XUL
 else
 EXTRA_DSO_LIBS = xul
-DEPENDENT_LIBS_LIST += $(DLL_PREFIX)xul$(DLL_SUFFIX)
 endif
 
 EXTRA_DSO_LDOPTS +=				\
@@ -103,6 +56,5 @@ include $(topsrcdir)/config/rules.mk
 
 libs:: $(FINAL_TARGET)/dependentlibs.list
 
-$(FINAL_TARGET)/dependentlibs.list: Makefile.in $(DEPTH)/config/autoconf.mk
-	$(EXIT_ON_ERROR) \
-	( $(foreach dlib,$(DEPENDENT_LIBS_LIST),echo $(dlib);) ) > $@
+$(FINAL_TARGET)/dependentlibs.list: dependentlibs.py $(SHARED_LIBRARY) $(wildcard $(if $(wildcard $(FINAL_TARGET)/dependentlibs.list),$(addprefix $(FINAL_TARGET)/,$(shell cat $(FINAL_TARGET)/dependentlibs.list))))
+	$(PYTHON) $< $(SHARED_LIBRARY) -L $(FINAL_TARGET) > $@

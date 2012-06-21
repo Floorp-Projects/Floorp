@@ -195,8 +195,19 @@ public:
 
   static bool IsRemoteTarget(nsIContent* aTarget);
 
+  // Holds the point in screen coords that a mouse event was dispatched to,
+  // before we went into pointer lock mode. This is constantly updated while
+  // the pointer is not locked, but we don't update it while the pointer is
+  // locked. This is used by nsDOMEvent::GetScreenCoords() to make mouse
+  // events' screen coord appear frozen at the last mouse position while
+  // the pointer is locked.
   static nsIntPoint sLastScreenPoint;
+
+  // Holds the point in client coords of the last mouse event. Used by
+  // nsDOMEvent::GetClientCoords() to make mouse events' client coords appear
+  // frozen at the last mouse position while the pointer is locked.
   static nsIntPoint sLastClientPoint;
+
   static bool sIsPointerLocked;
   static nsWeakPtr sPointerLockedElement;
   static nsWeakPtr sPointerLockedDoc;
@@ -453,7 +464,9 @@ private:
 
   PRInt32     mLockCursor;
 
-  // Point when mouse was locked, used to reposition after unlocking.
+  // Last mouse event refPoint (the offset from the widget's origin in
+  // device pixels) when mouse was locked, used to restore mouse position
+  // after unlocking.
   nsIntPoint  mPreLockPoint;
 
   nsWeakFrame mCurrentTarget;
@@ -461,8 +474,10 @@ private:
   nsWeakFrame mLastMouseOverFrame;
   nsCOMPtr<nsIContent> mLastMouseOverElement;
   static nsWeakFrame sLastDragOverFrame;
+
+  // Stores the refPoint (the offset from the widget's origin in device
+  // pixels) of the last mouse event.
   static nsIntPoint sLastRefPoint;
-  static nsIntPoint sLastScreenOffset;
 
   // member variables for the d&d gesture state machine
   nsIntPoint mGestureDownPoint; // screen coordinates
@@ -534,7 +549,6 @@ public:
   void FireContextClick ( ) ;
 
   void SetPointerLock(nsIWidget* aWidget, nsIContent* aElement) ;
-  nsIntPoint GetMouseCoords(nsIntRect aBounds);
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
 };
 

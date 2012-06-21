@@ -1213,6 +1213,16 @@ NS_METHOD nsCocoaWindow::MakeFullScreen(bool aFullScreen)
   if (mFullScreen == aFullScreen) {
     return NS_OK;
   }
+
+  // If we're using native fullscreen mode and our native window is invisible,
+  // our attempt to go into fullscreen mode will fail with an assertion in
+  // system code, without [WindowDelegate windowDidFailToEnterFullScreen:]
+  // ever getting called.  To pre-empt this we bail here.  See bug 752294.
+  if (mUsesNativeFullScreen && aFullScreen && ![mWindow isVisible]) {
+    EnteredFullScreen(false);
+    return NS_OK;
+  }
+
   mInFullScreenTransition = true;
 
   if (mUsesNativeFullScreen) {

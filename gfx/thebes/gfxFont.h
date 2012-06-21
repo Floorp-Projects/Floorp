@@ -2974,7 +2974,8 @@ public:
 
         return static_cast<gfxFont*>(mFonts[i]);
     }
-    virtual PRUint32 FontListLength() const {
+
+    PRUint32 FontListLength() const {
         return mFonts.Length();
     }
 

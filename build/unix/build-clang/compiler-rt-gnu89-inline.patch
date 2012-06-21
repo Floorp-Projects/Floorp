@@ -1,0 +1,10 @@
+Index: make/config.mk
+===================================================================
+--- make/config.mk	(revision 157958)
++++ make/config.mk	(working copy)
+@@ -43,4 +43,4 @@
+ ###
+ # Common compiler options
+ COMMON_CXXFLAGS=-fno-exceptions -fPIC -funwind-tables -I${ProjSrcRoot}/lib
+-COMMON_CFLAGS=-fPIC
++COMMON_CFLAGS=-fPIC -fgnu89-inline

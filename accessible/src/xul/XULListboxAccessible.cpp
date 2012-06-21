@@ -354,12 +354,9 @@ XULListboxAccessible::IsCellSelected(PRUint32 aRowIdx, PRUint32 aColIdx)
   return IsRowSelected(aRowIdx);
 }
 
-NS_IMETHODIMP
-XULListboxAccessible::GetSelectedCellCount(PRUint32* aCount)
+PRUint32
+XULListboxAccessible::SelectedCellCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
@@ -368,76 +365,43 @@ XULListboxAccessible::GetSelectedCellCount(PRUint32* aCount)
   nsCOMPtr<nsIDOMNodeList> selectedItems;
   control->GetSelectedItems(getter_AddRefs(selectedItems));
   if (!selectedItems)
-    return NS_OK;
+    return 0;
 
   PRUint32 selectedItemsCount = 0;
   nsresult rv = selectedItems->GetLength(&selectedItemsCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, 0);
 
-  if (!selectedItemsCount)
-    return NS_OK;
-
-  PRInt32 columnCount = 0;
-  rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aCount = selectedItemsCount * columnCount;
-  return NS_OK;
+  return selectedItemsCount * ColCount();
 }
 
-NS_IMETHODIMP
-XULListboxAccessible::GetSelectedColumnCount(PRUint32* aCount)
+PRUint32
+XULListboxAccessible::SelectedColCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  PRInt32 selectedrowCount = 0;
-  nsresult rv = control->GetSelectedCount(&selectedrowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 selectedRowCount = 0;
+  nsresult rv = control->GetSelectedCount(&selectedRowCount);
+  NS_ENSURE_SUCCESS(rv, 0);
 
-  PRInt32 rowCount = 0;
-  rv = GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (selectedrowCount != rowCount)
-    return NS_OK;
-
-  PRInt32 columnCount = 0;
-  rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aCount = columnCount;
-  return NS_OK;
+  return selectedRowCount > 0 && selectedRowCount == RowCount() ? ColCount() : 0;
 }
 
-NS_IMETHODIMP
-XULListboxAccessible::GetSelectedRowCount(PRUint32* aCount)
+PRUint32
+XULListboxAccessible::SelectedRowCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> control =
     do_QueryInterface(mContent);
   NS_ASSERTION(control,
                "Doesn't implement nsIDOMXULMultiSelectControlElement.");
 
-  PRInt32 selectedrowCount = 0;
-  nsresult rv = control->GetSelectedCount(&selectedrowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 selectedRowCount = 0;
+  nsresult rv = control->GetSelectedCount(&selectedRowCount);
+  NS_ENSURE_SUCCESS(rv, 0);
 
-  *aCount = selectedrowCount;
-  return NS_OK;
+  return selectedRowCount >= 0 ? selectedRowCount : 0;
 }
 
 NS_IMETHODIMP

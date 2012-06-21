@@ -297,10 +297,14 @@ class AtomDecls
 
         AtomDeclNode *node = doh.header();
         AtomDeclNode *newHead = node->next;
-        if (newHead)
-            p.value() = DefnOrHeader(newHead);
-        else
+        if (newHead) {
+            if (newHead->next)
+                p.value() = DefnOrHeader(newHead);
+            else
+                p.value() = DefnOrHeader(newHead->defn);
+        } else {
             map->remove(p);
+        }
     }
 
     AtomDOHMap::Range all() {

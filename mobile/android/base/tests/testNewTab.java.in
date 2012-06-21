@@ -3,62 +3,137 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Activity;
+import android.view.View;
 
+/* A simple test that creates 2 new tabs and checks that the tab count increases. */
 public class testNewTab extends BaseTest {
+    private static final int MAX_WAIT_MS = 3000;
+    private Element tabCount = null;
+    private Element tabs = null;
+    private Element addTab = null;
+    private Element closeTab = null;
+    private int tabCountInt = 0;
+
     public void testNewTab() {
         setTestType("mochitest");
+
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
-        String tabCountText = null;
-        String urlbarText = null;
-        Activity activity = null;
-        Element urlbar = null;
 
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
-        // Add one tab
-        Element tabs = mDriver.findElement(getActivity(), "tabs");
-        if (tabs != null) {
-            activity = getActivityFromClick(tabs);
-            urlbar = mDriver.findElement(activity, "awesomebar_text");
-            mActions.sendKeys(url);
-            if (urlbar != null) {
-                urlbarText = urlbar.getText();
+        Activity activity = getActivity();
+        tabCount = mDriver.findElement(activity, "tabs_count");
+        tabs = mDriver.findElement(activity, "tabs");
+        addTab = mDriver.findElement(activity, "add_tab");
+        closeTab = mDriver.findElement(activity, "close");
+        mAsserter.ok(tabCount != null &&
+                     tabs != null &&
+                     addTab != null &&
+                     closeTab != null,
+                     "Checking elements", "all elements present");
+
+        int expectedTabCount = 1;
+        String tabCountText = tabCount.getText();
+        tabCountInt = Integer.parseInt(tabCountText);
+        mAsserter.is(tabCountInt, expectedTabCount, "Initial number of tabs correct");
+
+        addTab(url);
+        expectedTabCount++;
+        tabCountText = tabCount.getText();
+        tabCountInt = Integer.parseInt(tabCountText);
+        mAsserter.is(tabCountInt, expectedTabCount, "Number of tabs increased");
+
+        addTab(url2);
+        expectedTabCount++;
+        tabCountText = tabCount.getText();
+        tabCountInt = Integer.parseInt(tabCountText);
+        mAsserter.is(tabCountInt, expectedTabCount, "Number of tabs increased");
+
+        // cleanup: close all opened tabs
+        closeTabs();
+    }
+
+    private void addTab(String url) {
+        final int addTabId = addTab.getId();
+
+        boolean clicked = tabs.click();
+        if (!clicked) {
+            mAsserter.ok(clicked != false, "checking that tabs clicked", "tabs element clicked");
+        }
+
+        // wait for addTab to appear (this is usually immediate)
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+                View addTabView = getActivity().findViewById(addTabId);
+                if (addTabView == null) {
+                    return false;
+                }
+                return true;
             }
+        }, MAX_WAIT_MS);
+        if (!success) {
+            mAsserter.ok(success != false, "waiting for add tab view", "add tab view available");
         }
-        mAsserter.is(urlbarText, url, "Awesomebar url is fine");
+
+        clicked = addTab.click();
+        if (!clicked) {
+            mAsserter.ok(clicked != false, "checking that add_tab clicked", "add_tab element clicked");
+        }
+        // must pause before sending keys, until awesome bar is displayed; waiting for known text is simple
+        mSolo.waitForText("History");
+
+        // cannot use loadUrl(): getText fails because we are using a different urlbar
+        mActions.sendKeys(url);
         hitEnterAndWait();
+    }
 
-        // See tab count
-        Element tabCount = mDriver.findElement(getActivity(), "tabs_count");
-        if (tabCount != null) {
-            tabCountText = tabCount.getText();
+    private void closeTabs() {
+        final int closeTabId = closeTab.getId();
+        String tabCountText = null;
+
+        // open tabs panel
+        boolean clicked = tabs.click();
+        if (!clicked) {
+            mAsserter.ok(clicked != false, "checking that tabs clicked", "tabs element clicked");
         }
-        mAsserter.is(tabCountText, "2", "Number of tabs has increased");
 
-        // Click tab list
-        activity = getActivityFromClick(tabs);
-        Element addTab = mDriver.findElement(activity, "add_tab");
-        
-        // Add another tab. The new tab has its own awesome bar activity, so it
-        // is important to use the new activity to fetch the awesome bar text.
-        urlbarText = null;
-        if (addTab != null) {
-            activity = getActivityFromClick(addTab);
-            mActions.sendKeys(url2);
-            urlbar = mDriver.findElement(activity, "awesomebar_text");
-            if (urlbar != null) {
-                urlbarText = urlbar.getText();
+        // wait for closeTab to appear (this is usually immediate)
+        boolean success = waitForTest(new BooleanTest() {
+            public boolean test() {
+                View closeTabView = getActivity().findViewById(closeTabId);
+                if (closeTabView == null) {
+                    return false;
+                }
+                return true;
             }
+        }, MAX_WAIT_MS);
+        if (!success) {
+            mAsserter.ok(success != false, "waiting for close tab view", "close tab view available");
         }
-        mAsserter.is(urlbarText, url2, "URL is still fine");
 
-        hitEnterAndWait();
-        // Check tab count another time.
-        tabCountText = null;
-        if (tabCount != null) {
-            tabCountText = tabCount.getText();
+        // close tabs until only one remains
+        tabCountText = tabCount.getText();
+        tabCountInt = Integer.parseInt(tabCountText);
+        while (tabCountInt > 1) {
+            clicked = closeTab.click();
+            if (!clicked) {
+                mAsserter.ok(clicked != false, "checking that close_tab clicked", "close_tab element clicked");
+            }
+
+            success = waitForTest(new BooleanTest() {
+                public boolean test() {
+                    String newTabCountText = tabCount.getText();
+                    int newTabCount = Integer.parseInt(newTabCountText);
+                    if (newTabCount < tabCountInt) {
+                        tabCountInt = newTabCount;
+                        return true;
+                    }
+                    return false;
+                }
+            }, MAX_WAIT_MS);
+            mAsserter.ok(success, "Checking tab closed", "number of tabs now "+tabCountInt);
         }
-        mAsserter.is(tabCountText, "3", "Number of tabs has increased");
     }
 }
+

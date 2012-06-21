@@ -22,6 +22,10 @@
           gecko:icon="@drawable/ic_menu_share"
           gecko:title="@string/share" /> 
     
+    <item gecko:id="@+id/reading_list"
+          gecko:icon="@drawable/ic_menu_reading_list_add"
+          gecko:title="@string/reading_list" />
+
     <item gecko:id="@+id/save_as_pdf"
           gecko:icon="@drawable/ic_menu_save_as_pdf"
           gecko:title="@string/save_as_pdf" />
