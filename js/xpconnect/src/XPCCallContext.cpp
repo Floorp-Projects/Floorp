@@ -22,7 +22,6 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                jsval *rval      /* = nsnull    */)
     :   mState(INIT_FAILED),
         mXPC(nsXPConnect::GetXPConnect()),
-        mThreadData(nsnull),
         mXPCContext(nsnull),
         mJSContext(cx),
         mContextPopRequired(false),
@@ -42,7 +41,6 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                XPCWrappedNativeTearOff* tearOff)
     :   mState(INIT_FAILED),
         mXPC(nsXPConnect::GetXPConnect()),
-        mThreadData(nsnull),
         mXPCContext(nsnull),
         mJSContext(cx),
         mContextPopRequired(false),
@@ -69,11 +67,6 @@ XPCCallContext::Init(XPCContext::LangType callerLanguage,
                      jsval *rval)
 {
     if (!mXPC)
-        return;
-
-    mThreadData = XPCPerThreadData::GetData(mJSContext);
-
-    if (!mThreadData)
         return;
 
     XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
@@ -283,7 +276,6 @@ XPCCallContext::SystemIsBeingShutDown()
     // can be making this call on one thread for call contexts on another
     // thread.
     NS_WARNING("Shutting Down XPConnect even through there is a live XPCCallContext");
-    mThreadData = nsnull;
     mXPCContext = nsnull;
     mState = SYSTEM_SHUTDOWN;
     if (mPrevCallContext)
