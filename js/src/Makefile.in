@@ -720,9 +720,9 @@ NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
 ifdef MOZ_VTUNE
-CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
-EXTRA_DSO_LDOPTS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
-LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
+#CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
+#EXTRA_DSO_LDOPTS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
+#LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
 
 ifdef MOZ_ETW

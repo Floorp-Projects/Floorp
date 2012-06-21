@@ -1110,7 +1110,7 @@ JS_StartProfiling(const char *profileName)
         ok = JS_FALSE;
     }
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
     if (!js_StartVtune(profileName))
         ok = JS_FALSE;
 #endif
@@ -1128,7 +1128,7 @@ JS_StopProfiling(const char *profileName)
 #if defined(MOZ_SHARK) && defined(__APPLE__)
     Shark::Stop();
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
     if (!js_StopVtune())
         ok = JS_FALSE;
 #endif
@@ -1161,7 +1161,7 @@ ControlProfilers(bool toState)
             ok = JS_FALSE;
         }
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
         if (! js_ResumeVtune())
             ok = JS_FALSE;
 #endif
@@ -1175,7 +1175,7 @@ ControlProfilers(bool toState)
             ok = JS_FALSE;
         }
 #endif
-#ifdef MOZ_VTUNE
+#if 0 //def MOZ_VTUNE
         if (! js_PauseVtune())
             ok = JS_FALSE;
 #endif
