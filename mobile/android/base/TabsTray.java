@@ -328,11 +328,12 @@ public class TabsTray extends LinearLayout
 
                 // if the user was dragging horizontally, check to see if we should close the tab
                 if (dir == DragDirection.HORIZONTAL) {
-    
                     int finalPos = 0;
-                    if ((start.x > mList.getWidth()/2 && e.getX() < mList.getWidth()/2)) {
+                    // if the swipe started on the left and ended in the right 1/4 of the tray
+                    // or vice versa, close the tab
+                    if ((start.x > mList.getWidth() / 2 && e.getX() < mList.getWidth() / 4)) {
                         finalPos = -1 * mView.getWidth();
-                    } else if (start.x < mList.getWidth()/2 && e.getX() > mList.getWidth()/2) {
+                    } else if (start.x < mList.getWidth() / 2 && e.getX() > mList.getWidth() * (3 / 4)) {
                         finalPos = mView.getWidth();
                     }
     
