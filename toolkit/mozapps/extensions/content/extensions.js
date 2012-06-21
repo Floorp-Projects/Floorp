@@ -283,8 +283,8 @@ var gEventManager = {
      "onUninstalled", "onInstalled", "onOperationCancelled",
      "onUpdateAvailable", "onUpdateFinished", "onCompatibilityUpdateAvailable",
      "onPropertyChanged"].forEach(function(aEvent) {
-      self[aEvent] = function() {
-        self.delegateAddonEvent(aEvent, Array.splice(arguments, 0));
+      self[aEvent] = function(...aArgs) {
+        self.delegateAddonEvent(aEvent, aArgs);
       };
     });
 
@@ -292,8 +292,8 @@ var gEventManager = {
      "onDownloadProgress", "onDownloadCancelled", "onInstallStarted",
      "onInstallEnded", "onInstallFailed", "onInstallCancelled",
      "onExternalInstall"].forEach(function(aEvent) {
-      self[aEvent] = function() {
-        self.delegateInstallEvent(aEvent, Array.splice(arguments, 0));
+      self[aEvent] = function(...aArgs) {
+        self.delegateInstallEvent(aEvent, aArgs);
       };
     });
 

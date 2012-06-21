@@ -549,32 +549,40 @@ nsXMLHttpRequest::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
 nsresult
 nsXMLHttpRequest::InitParameters(JSContext* aCx, const jsval* aParams)
 {
-  XMLHttpRequestParameters* params = new XMLHttpRequestParameters();
-  nsresult rv = params->Init(aCx, aParams);
+  XMLHttpRequestParameters params;
+  nsresult rv = params.Init(aCx, aParams);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  InitParameters(params.mozAnon, params.mozSystem);
+  return NS_OK;
+}
+
+void
+nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
+{
   // Check for permissions.
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetOwner());
-  NS_ENSURE_TRUE(window && window->GetDocShell(), NS_OK);
+  if (!window || !window->GetDocShell()) {
+    return;
+  }
 
   // Chrome is always allowed access, so do the permission check only
   // for non-chrome pages.
   if (!nsContentUtils::IsCallerChrome()) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(window->GetExtantDocument());
-    NS_ENSURE_TRUE(doc, NS_OK);
+    if (!doc) {
+      return;
+    }
 
     nsCOMPtr<nsIURI> uri;
     doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
-
     if (!nsContentUtils::URIIsChromeOrInPref(uri, "dom.systemXHR.whitelist")) {
-      return NS_OK;
+      return;
     }
   }
 
-  mIsAnon = params->mozAnon;
-  mIsSystem = params->mozSystem;
-
-  return NS_OK;
+  mIsAnon = aAnon;
+  mIsSystem = aSystem;
 }
 
 void
