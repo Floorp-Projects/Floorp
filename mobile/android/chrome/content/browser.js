@@ -1451,16 +1451,12 @@ var SelectionHandler = {
     }
 
     // Find the selected text rect and send it back so the handles can position correctly
-    if (selection.rangeCount == 0)
-      return;
-
-    let range = selection.getRangeAt(0);
-    if (!range)
+    if (selection.rangeCount == 0 || !selection.getRangeAt(0))
       return;
 
     // Initialize the cache
     this.cache = {};
-    this.updateCacheFromRange(range);
+    this.updateCacheForSelection();
     this.updateCacheOffset();
 
     // Cache the selected text since the selection might be gone by the time we get the "end" message
@@ -1520,21 +1516,9 @@ var SelectionHandler = {
     let end = this._end.getBoundingClientRect();
     cwu.sendMouseEventToWindow("mousedown", end.left + this.HANDLE_PADDING, end.top - this.HANDLE_VERTICAL_MARGIN, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
     cwu.sendMouseEventToWindow("mouseup", end.left + this.HANDLE_PADDING, end.top - this.HANDLE_VERTICAL_MARGIN, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
-  },
 
-  finishMoveSelection: function sh_finishMoveSelection(aIsStartHandle) {
-    // Cache the selected text since the selection might be gone by the time we get the "end" message
-    let selection = this._view.getSelection();
-    this.selectedText = selection.toString().trim();
-
-    // Update the cache to match the new selection range
-    let range = selection.getRangeAt(0);
-
-    this.updateCacheFromRange(range);
-    this.updateCacheOffset();
-
-    // Adjust the handles to be in the correct spot relative to the text selection
-    this.positionHandles();
+    // Update the cached selection area
+    this.updateCacheForSelection();
   },
 
   // aX/aY are in top-level window browser coordinates
@@ -1570,12 +1554,14 @@ var SelectionHandler = {
     this.cache = null;
   },
 
-  updateCacheFromRange: function sh_updateCacheFromRange(aRange) {
-    let rects = aRange.getClientRects();
+  updateCacheForSelection: function sh_updateCacheForSelection() {
+    let range = this._view.getSelection().getRangeAt(0);
+
+    let rects = range.getClientRects();
     this.cache.start = { x: rects[0].left, y: rects[0].bottom };
     this.cache.end = { x: rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
 
-    this.cache.rect = aRange.getBoundingClientRect();
+    this.cache.rect = range.getBoundingClientRect();
   },
 
   updateCacheOffset: function sh_updateCacheOffset() {
@@ -1682,8 +1668,12 @@ var SelectionHandler = {
         this._touchId = null;
         this._touchDelta = null;
 
-        // Update the cached values after the dragging action is over
-        this.finishMoveSelection(isStartHandle);
+        // Update the cached selected text
+        let selection = this._view.getSelection();
+        this.selectedText = selection.toString().trim();
+
+        // Adjust the handles to be in the correct spot relative to the text selection
+        this.positionHandles();
         break;
 
       case "touchmove":
