@@ -462,7 +462,6 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
                 NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
                 return rv;
             }
-            DEBUG_CheckWrapperThreadSafety(wrapper);
             *resultWrapper = wrapper.forget().get();
             return NS_OK;
         }
@@ -569,7 +568,6 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
                 NS_ASSERTION(NS_FAILED(rv), "returning NS_OK on failure");
                 return rv;
             }
-            DEBUG_CheckWrapperThreadSafety(wrapper);
             *resultWrapper = wrapper.forget().get();
             return NS_OK;
         }
@@ -873,9 +871,6 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
       mFlatJSObject(INVALID_OBJECT), // non-null to pass IsValid() test
       mScriptableInfo(nsnull),
       mWrapperWord(0)
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-    , mThread(PR_GetCurrentThread())
-#endif
 {
     mIdentity = aIdentity.get();
 
@@ -895,9 +890,6 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
       mFlatJSObject(INVALID_OBJECT), // non-null to pass IsValid() test
       mScriptableInfo(nsnull),
       mWrapperWord(0)
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-    , mThread(PR_GetCurrentThread())
-#endif
 {
     mIdentity = aIdentity.get();
 
@@ -1207,16 +1199,6 @@ XPCWrappedNative::FinishInit(XPCCallContext &ccx)
                                                          mFlatJSObject))) {
         return false;
     }
-
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-    NS_ASSERTION(mThread, "Should have been set at construction time!");
-
-    if (HasProto() && GetProto()->ClassIsMainThreadOnly() && !NS_IsMainThread()) {
-        DEBUG_ReportWrapperThreadSafetyError(ccx,
-                                             "MainThread only wrapper created on the wrong thread", this);
-        return false;
-    }
-#endif
 
     // A hack for bug 517665, increase the probability for GC.
     JS_updateMallocCounter(ccx.GetJSContext(), 2 * sizeof(XPCWrappedNative));
@@ -3672,56 +3654,6 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
                 }
             }
         }
-    }
-}
-#endif
-
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-void DEBUG_ReportWrapperThreadSafetyError(XPCCallContext& ccx,
-                                          const char* msg,
-                                          const XPCWrappedNative* wrapper)
-{
-    XPCPerThreadData* tls = ccx.GetThreadData();
-    if (1 != tls->IncrementWrappedNativeThreadsafetyReportDepth())
-        return;
-
-    printf("---------------------------------------------------------------\n");
-    printf("!!!!! XPConnect wrapper thread use error...\n");
-
-    char* wrapperDump = wrapper->ToString(ccx);
-    if (wrapperDump) {
-        printf("  %s\n  wrapper: %s\n", msg, wrapperDump);
-        JS_smprintf_free(wrapperDump);
-    } else
-        printf("  %s\n  wrapper @ 0x%p\n", msg, (void *)wrapper);
-
-    printf("  JS call stack...\n");
-    xpc_DumpJSStack(ccx, true, true, true);
-    printf("---------------------------------------------------------------\n");
-
-    tls->ClearWrappedNativeThreadsafetyReportDepth();
-}
-
-void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper)
-{
-    XPCWrappedNativeProto* proto = wrapper->GetProto();
-    if (proto && proto->ClassIsThreadSafe())
-        return;
-
-    if (proto && proto->ClassIsMainThreadOnly()) {
-        // NS_IsMainThread is safe to call even after we've started shutting
-        // down.
-        if (!NS_IsMainThread()) {
-            XPCCallContext ccx(NATIVE_CALLER);
-            DEBUG_ReportWrapperThreadSafetyError(ccx,
-                                                 "Main Thread Only wrapper accessed on another thread", wrapper);
-        }
-    } else if (PR_GetCurrentThread() != wrapper->mThread) {
-        XPCCallContext ccx(NATIVE_CALLER);
-        DEBUG_ReportWrapperThreadSafetyError(ccx,
-                                             "XPConnect WrappedNative is being accessed on multiple threads but "
-                                             "the underlying native xpcom object does not have a "
-                                             "nsIClassInfo with the 'THREADSAFE' flag set", wrapper);
     }
 }
 #endif
