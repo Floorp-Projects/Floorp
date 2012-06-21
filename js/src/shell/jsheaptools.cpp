@@ -552,8 +552,7 @@ FindReferences(JSContext *cx, unsigned argc, jsval *vp)
 
     /* Given the reversed map, find the referents of target. */
     ReferenceFinder finder(cx, reverser);
-    Rooted<JSObject*> targetObj(cx, &target.toObject());
-    JSObject *references = finder.findReferences(targetObj);
+    JSObject *references = finder.findReferences(RootedObject(cx, &target.toObject()));
     if (!references)
         return false;
 

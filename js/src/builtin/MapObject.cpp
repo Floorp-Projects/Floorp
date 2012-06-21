@@ -155,8 +155,8 @@ JSFunctionSpec MapObject::methods[] = {
 JSObject *
 MapObject::initClass(JSContext *cx, JSObject *obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
-    return InitClass(cx, global, &class_, JSProto_Map, construct, methods);
+    return InitClass(cx, Rooted<GlobalObject*>(cx, &obj->asGlobal()),
+                     &class_, JSProto_Map, construct, methods);
 }
 
 void
@@ -348,8 +348,8 @@ JSFunctionSpec SetObject::methods[] = {
 JSObject *
 SetObject::initClass(JSContext *cx, JSObject *obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->asGlobal());
-    return InitClass(cx, global, &class_, JSProto_Set, construct, methods);
+    return InitClass(cx, Rooted<GlobalObject*>(cx, &obj->asGlobal()),
+                     &class_, JSProto_Set, construct, methods);
 }
 
 void
