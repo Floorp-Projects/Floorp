@@ -211,22 +211,7 @@ IsCallerChrome(JSContext* cx)
     nsresult rv;
 
     nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (XPCPerThreadData::IsMainThread(cx)) {
-        secMan = XPCWrapper::GetSecurityManager();
-    } else {
-        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-        if (!xpc)
-            return false;
-
-        nsCOMPtr<nsIXPCSecurityManager> xpcSecMan;
-        PRUint16 flags = 0;
-        rv = xpc->GetSecurityManagerForJSContext(cx, getter_AddRefs(xpcSecMan),
-                                                 &flags);
-        if (NS_FAILED(rv) || !xpcSecMan)
-            return false;
-
-        secMan = do_QueryInterface(xpcSecMan);
-    }
+    secMan = XPCWrapper::GetSecurityManager();
 
     if (!secMan)
         return false;
