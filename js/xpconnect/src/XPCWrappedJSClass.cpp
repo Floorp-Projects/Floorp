@@ -213,8 +213,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     // whether or not a content object is capable of implementing the
     // interface (i.e. whether the interface is scriptable) and most content
     // objects don't have QI implementations anyway. Also see bug 503926.
-    if (XPCPerThreadData::IsMainThread(ccx) &&
-        !xpc::AccessCheck::isChrome(js::GetObjectCompartment(jsobj))) {
+    if (!xpc::AccessCheck::isChrome(js::GetObjectCompartment(jsobj))) {
         return nsnull;
     }
 
@@ -681,9 +680,6 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         // UniversalXPConnect type check.
 
         *aInstancePtr = nsnull;
-
-        if (!XPCPerThreadData::IsMainThread(ccx.GetJSContext()))
-            return NS_NOINTERFACE;
 
         nsXPConnect *xpc = nsXPConnect::GetXPConnect();
         nsCOMPtr<nsIScriptSecurityManager> secMan =
@@ -1184,7 +1180,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     xpcc->SetException(nsnull);
     XPCJSRuntime::Get()->SetPendingException(nsnull);
 
-    if (XPCPerThreadData::IsMainThread(ccx)) {
+    // This scoping is necessary due to the gotos here. Ugh.
+    {
         // TODO Remove me in favor of security wrappers.
         nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
         if (ssm) {
