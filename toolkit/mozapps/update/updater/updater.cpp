@@ -750,7 +750,7 @@ static int rename_file(const NS_tchar *spath, const NS_tchar *dpath,
     if (allowDirs && !S_ISDIR(spathInfo.st_mode)) {
       LOG(("rename_file: path present, but not a file: " LOG_S ", err: %d\n",
            spath, errno));
-      return UNEXPECTED_ERROR;
+      return UNEXPECTED_FILE_OPERATION_ERROR;
     } else {
       LOG(("rename_file: proceeding to rename the directory\n"));
     }
@@ -937,7 +937,7 @@ RemoveFile::Prepare()
 
   if (!S_ISREG(fileInfo.st_mode)) {
     LOG(("path present, but not a file: " LOG_S "\n", mFile));
-    return UNEXPECTED_ERROR;
+    return UNEXPECTED_FILE_OPERATION_ERROR;
   }
 
   NS_tchar *slash = (NS_tchar *) NS_tstrrchr(mFile, NS_T('/'));
@@ -1046,7 +1046,7 @@ RemoveDir::Prepare()
 
   if (!S_ISDIR(dirInfo.st_mode)) {
     LOG(("path present, but not a directory: " LOG_S "\n", mDir));
-    return UNEXPECTED_ERROR;
+    return UNEXPECTED_FILE_OPERATION_ERROR;
   }
 
   rv = NS_taccess(mDir, W_OK);
@@ -1238,7 +1238,7 @@ PatchFile::LoadSourceFile(FILE* ofile)
   if (PRUint32(os.st_size) != header.slen) {
     LOG(("LoadSourceFile: destination file size %d does not match expected size %d\n",
          PRUint32(os.st_size), header.slen));
-    return UNEXPECTED_ERROR;
+    return UNEXPECTED_FILE_OPERATION_ERROR;
   }
 
   buf = (unsigned char *) malloc(header.slen);
@@ -2938,7 +2938,7 @@ ActionList::Prepare()
   // actually done. See bug 327140.
   if (mCount == 0) {
     LOG(("empty action list\n"));
-    return UNEXPECTED_ERROR;
+    return UNEXPECTED_MAR_ERROR;
   }
 
   Action *a = mFirst;
@@ -3098,7 +3098,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
   if (!dir) {
     LOG(("add_dir_entries error on opendir: " LOG_S ", err: %d\n", searchpath,
          errno));
-    return UNEXPECTED_ERROR;
+    return UNEXPECTED_FILE_OPERATION_ERROR;
   }
 
   while (readdir_r(dir, (dirent *)&ent_buf, &ent) == 0 && ent) {
@@ -3112,7 +3112,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
     int test = stat64(foundpath, &st_buf);
     if (test) {
       closedir(dir);
-      return UNEXPECTED_ERROR;
+      return UNEXPECTED_FILE_OPERATION_ERROR;
     }
     if (S_ISDIR(st_buf.st_mode)) {
       NS_tsnprintf(foundpath, sizeof(foundpath)/sizeof(foundpath[0]),
@@ -3185,7 +3185,7 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
   if (!(ftsdir = fts_open(pathargv,
                           FTS_PHYSICAL | FTS_NOSTAT | FTS_XDEV | FTS_NOCHDIR,
                           NULL)))
-    return UNEXPECTED_ERROR;
+    return UNEXPECTED_FILE_OPERATION_ERROR;
 
   while ((ftsdirEntry = fts_read(ftsdir)) != NULL) {
     NS_tchar foundpath[MAXPATHLEN];
@@ -3249,13 +3249,13 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
         // Fall through
 
       case FTS_ERR:
-        rv = UNEXPECTED_ERROR;
+        rv = UNEXPECTED_FILE_OPERATION_ERROR;
         LOG(("add_dir_entries: fts_read() error: " LOG_S ", err: %d\n",
              ftsdirEntry->fts_path, ftsdirEntry->fts_errno));
         break;
 
       case FTS_DC:
-        rv = UNEXPECTED_ERROR;
+        rv = UNEXPECTED_FILE_OPERATION_ERROR;
         LOG(("add_dir_entries: fts_read() returned FT_DC: " LOG_S "\n",
              ftsdirEntry->fts_path));
         break;
