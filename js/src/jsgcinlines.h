@@ -420,6 +420,11 @@ NewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
 
     JS_ASSERT_IF(t && comp->needsBarrier(),
                  static_cast<T *>(t)->arenaHeader()->allocatedDuringIncremental);
+
+#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
+    if (cx->runtime->gcVerifyPostData && IsNurseryAllocable(kind) && !IsAtomsCompartment(comp))
+        comp->gcNursery.insertPointer(t);
+#endif
     return static_cast<T *>(t);
 }
 
@@ -442,6 +447,12 @@ TryNewGCThing(JSContext *cx, js::gc::AllocKind kind, size_t thingSize)
     void *t = cx->compartment->arenas.allocateFromFreeList(kind, thingSize);
     JS_ASSERT_IF(t && cx->compartment->needsBarrier(),
                  static_cast<T *>(t)->arenaHeader()->allocatedDuringIncremental);
+
+#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
+    JSCompartment *comp = cx->compartment;
+    if (cx->runtime->gcVerifyPostData && IsNurseryAllocable(kind) && !IsAtomsCompartment(comp))
+        comp->gcNursery.insertPointer(t);
+#endif
     return static_cast<T *>(t);
 }
 
