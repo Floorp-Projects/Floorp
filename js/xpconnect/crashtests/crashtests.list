@@ -39,4 +39,5 @@ load 720305-1.html
 load 723465.html
 load 751995.html
 asserts(0-1) load 752038.html # We may hit bug 645229 here.
+asserts(1) load 753162.html # We hit bug 675518 or bug 680086 here.
 load 754311.html

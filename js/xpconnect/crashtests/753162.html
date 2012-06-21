@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var frameDoc = document.getElementById("f").contentDocument;
+  frameDoc.write("2");
+  var f = function(event) {
+    frameDoc.removeEventListener("DOMAttrModified", f, false);
+    Math.sin(2.10);
+    frameDoc.write("4");
+  };
+  frameDoc.addEventListener("DOMAttrModified", f, false);
+  frameDoc.write("<html d>");
+}
+
+</script>
+</head>
+
+<body onload="boom();"><iframe id="f" src="data:text/html,1"></iframe></body>
+</html>
