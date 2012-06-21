@@ -24,6 +24,7 @@ import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.animation.TranslateAnimation;
+import android.view.inputmethod.InputMethodManager;
 import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -327,10 +328,15 @@ public class BrowserToolbar implements ViewSwitcher.ViewFactory,
     }
 
     private void toggleTabs() {
-        if (GeckoApp.mAppContext.areTabsShown())
+        if (GeckoApp.mAppContext.areTabsShown()) {
             GeckoApp.mAppContext.hideTabs();
-        else
+        } else {
+            // hide the virtual keyboard
+            InputMethodManager imm =
+                    (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(mTabs.getWindowToken(), 0);
             GeckoApp.mAppContext.showLocalTabs();
+        }
     }
 
     public void updateTabCountAndAnimate(int count) {
