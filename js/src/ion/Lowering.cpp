@@ -955,8 +955,14 @@ LIRGenerator::visitRegExp(MRegExp *ins)
 bool
 LIRGenerator::visitLambda(MLambda *ins)
 {
+    if (ins->fun()->hasSingletonType()) {
+        // This function is only executed once, so we don't bother inlining it.
+        LLambdaForSingleton *lir = new LLambdaForSingleton(useRegister(ins->scopeChain()));
+        return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    }
+
     LLambda *lir = new LLambda(useRegister(ins->scopeChain()));
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

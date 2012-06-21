@@ -219,7 +219,7 @@ CodeGenerator::visitRegExp(LRegExp *lir)
 }
 
 bool
-CodeGenerator::visitLambda(LLambda *lir)
+CodeGenerator::visitLambdaForSingleton(LLambdaForSingleton *lir)
 {
     typedef JSObject *(*pf)(JSContext *, HandleFunction, HandleObject);
     static const VMFunction Info = FunctionInfo<pf>(js::Lambda);
@@ -227,6 +227,60 @@ CodeGenerator::visitLambda(LLambda *lir)
     pushArg(ToRegister(lir->scopeChain()));
     pushArg(ImmGCPtr(lir->mir()->fun()));
     return callVM(Info, lir);
+}
+
+bool
+CodeGenerator::visitLambda(LLambda *lir)
+{
+    Register scopeChain = ToRegister(lir->scopeChain());
+    Register output = ToRegister(lir->output());
+    RootedFunction fun(gen->cx, lir->mir()->fun());
+
+    typedef JSObject *(*pf)(JSContext *, HandleFunction, HandleObject);
+    static const VMFunction Info = FunctionInfo<pf>(js::Lambda);
+
+    OutOfLineCode *ool = oolCallVM(Info, lir, (ArgList(), ImmGCPtr(fun), scopeChain),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    JS_ASSERT(gen->cx->compartment == fun->compartment());
+    JS_ASSERT(!fun->hasSingletonType());
+
+    // Because of compartment-per-global and compile'n'go, the Function prototype,
+    // first non-scope object on the scope chain, and global object, are all
+    // invariant. We can thus use CloneFunctionObject with the global object to get
+    // a bogus clone and use that as our template object.
+    RootedObject parent(gen->cx, &fun->global());
+    RootedFunction clone(gen->cx, CloneFunctionObject(gen->cx, fun, parent));
+    if (!clone)
+        return false;
+
+    JS_ASSERT(clone->getAllocKind() != JSFunction::ExtendedFinalizeKind);
+    JS_ASSERT(clone->isInterpreted());
+
+    masm.getNewObject(gen->cx, output, clone, ool->entry());
+
+    // Initialize nargs and flags. We do this with a single uint32 to avoid
+    // 16-bit writes.
+    union {
+        struct S {
+            uint16_t nargs;
+            uint16_t flags;
+        } s;
+        uint32_t word;
+    } u;
+    u.s.nargs = fun->nargs;
+    u.s.flags = fun->flags & ~JSFUN_EXTENDED;
+
+    JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
+    masm.store32(Imm32(u.word), Address(output, offsetof(JSFunction, nargs)));
+    masm.storePtr(ImmGCPtr(clone->script()), Address(output, JSFunction::offsetOfNativeOrScript()));
+    masm.storePtr(scopeChain, Address(output, JSFunction::offsetOfEnvironment()));
+    masm.storePtr(ImmGCPtr(clone->atom), Address(output, offsetof(JSFunction, atom)));
+
+    masm.bind(ool->rejoin());
+    return true;
 }
 
 bool

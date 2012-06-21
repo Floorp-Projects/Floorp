@@ -1440,17 +1440,36 @@ class LRegExp : public LCallInstructionHelper<1, 0, 0>
     }
 };
 
-class LLambda : public LCallInstructionHelper<1, 1, 0>
+class LLambdaForSingleton : public LCallInstructionHelper<1, 1, 0>
 {
   public:
-    LIR_HEADER(Lambda);
+    LIR_HEADER(LambdaForSingleton);
 
-    LLambda(const LAllocation &scopeChain)
+    LLambdaForSingleton(const LAllocation &scopeChain)
     {
         setOperand(0, scopeChain);
     }
     const LAllocation *scopeChain() {
         return getOperand(0);
+    }
+    const MLambda *mir() const {
+        return mir_->toLambda();
+    }
+};
+
+class LLambda : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(Lambda);
+
+    LLambda(const LAllocation &scopeChain) {
+        setOperand(0, scopeChain);
+    }
+    const LAllocation *scopeChain() {
+        return getOperand(0);
+    }
+    const LDefinition *output() {
+        return getDef(0);
     }
     const MLambda *mir() const {
         return mir_->toLambda();
