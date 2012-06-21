@@ -976,7 +976,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
 
         /* cleanup and set failed even if we can't build an exception */
         if (!xpc_exception) {
-            ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
+            XPCJSRuntime::Get()->SetPendingException(nsnull); // XXX necessary?
         }
     }
 
@@ -1103,7 +1103,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             // Whether or not it passes the 'reportable' test, it might
             // still be an error and we have to do the right thing here...
             if (NS_FAILED(e_result)) {
-                ccx.GetThreadData()->SetException(xpc_exception);
+                XPCJSRuntime::Get()->SetPendingException(xpc_exception);
                 return e_result;
             }
         }
@@ -1182,7 +1182,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
     xpcc->SetPendingResult(pending_result);
     xpcc->SetException(nsnull);
-    ccx.GetThreadData()->SetException(nsnull);
+    XPCJSRuntime::Get()->SetPendingException(nsnull);
 
     if (XPCPerThreadData::IsMainThread(ccx)) {
         // TODO Remove me in favor of security wrappers.
@@ -1509,7 +1509,7 @@ pre_call_clean_up:
         return CheckForException(ccx, name, GetInterfaceName(), forceReport);
     }
 
-    ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
+    XPCJSRuntime::Get()->SetPendingException(nsnull); // XXX necessary?
 
     // convert out args and result
     // NOTE: this is the total number of native params, not just the args

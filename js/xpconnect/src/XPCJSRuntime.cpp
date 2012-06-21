@@ -1969,7 +1969,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mWatchdogWakeup(nsnull),
    mWatchdogThread(nsnull),
    mWatchdogHibernating(false),
-   mLastActiveTime(-1)
+   mLastActiveTime(-1),
+   mExceptionManagerNotAvailable(false)
 {
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
     DEBUG_WrappedNativeHashtable =

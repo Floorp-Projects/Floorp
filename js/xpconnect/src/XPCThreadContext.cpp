@@ -244,9 +244,6 @@ XPCPerThreadData::XPCPerThreadData() :
         mNextThread(nsnull),
         mResolveName(JSID_VOID),
         mResolvingWrapper(nsnull),
-        mExceptionManager(nsnull),
-        mException(nsnull),
-        mExceptionManagerNotAvailable(false),
         mAutoRoots(nsnull)
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
       , mWrappedNativeThreadsafetyReportDepth(0)
@@ -264,8 +261,6 @@ void
 XPCPerThreadData::Cleanup()
 {
     MOZ_ASSERT(!mAutoRoots);
-    NS_IF_RELEASE(mExceptionManager);
-    NS_IF_RELEASE(mException);
 }
 
 XPCPerThreadData::~XPCPerThreadData()
