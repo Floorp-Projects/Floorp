@@ -1,0 +1,89 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>XMLHttpRequest IDL tests</title>
+<div id=log></div>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src=/resources/WebIDLParser.js></script>
+<script src=/resources/idlharness.js></script>
+<script type=text/plain>
+[NoInterfaceObject]
+interface XMLHttpRequestEventTarget : EventTarget {
+  // event handlers
+  [TreatNonCallableAsNull] attribute Function? onloadstart;
+  [TreatNonCallableAsNull] attribute Function? onprogress;
+  [TreatNonCallableAsNull] attribute Function? onabort;
+  [TreatNonCallableAsNull] attribute Function? onerror;
+  [TreatNonCallableAsNull] attribute Function? onload;
+  [TreatNonCallableAsNull] attribute Function? ontimeout;
+  [TreatNonCallableAsNull] attribute Function? onloadend;
+};
+
+interface XMLHttpRequestUpload : XMLHttpRequestEventTarget {
+
+};
+
+/*
+enum XMLHttpRequestResponseType {
+  "",
+  "arraybuffer",
+  "blob",
+  "document",
+  "json",
+  "text"
+};
+*/
+
+[Constructor]
+interface XMLHttpRequest : XMLHttpRequestEventTarget {
+  // event handler
+  [TreatNonCallableAsNull] attribute Function? onreadystatechange;
+
+  // states
+  const unsigned short UNSENT = 0;
+  const unsigned short OPENED = 1;
+  const unsigned short HEADERS_RECEIVED = 2;
+  const unsigned short LOADING = 3;
+  const unsigned short DONE = 4;
+  readonly attribute unsigned short readyState;
+
+  // request
+  void open(DOMString method, DOMString url, optional boolean async/* = true*/, optional DOMString? user, optional DOMString? password);
+  void setRequestHeader(DOMString header, DOMString value);
+           attribute unsigned long timeout;
+           attribute boolean withCredentials;
+  readonly attribute XMLHttpRequestUpload upload;
+  void send(optional (ArrayBufferView or Blob or Document or DOMString or FormData)? data/* = null*/);
+  void abort();
+
+  // response
+  readonly attribute unsigned short status;
+  readonly attribute DOMString statusText;
+  DOMString? getResponseHeader(DOMString header);
+  DOMString getAllResponseHeaders();
+  void overrideMimeType(DOMString mime);
+/*           attribute XMLHttpRequestResponseType responseType; */
+  readonly attribute any response;
+  readonly attribute DOMString responseText;
+  readonly attribute Document? responseXML;
+};
+
+[Constructor,
+ Constructor(HTMLFormElement form)]
+interface FormData {
+  void append(DOMString name, Blob value, optional DOMString filename);
+  void append(DOMString name, DOMString value);
+};
+</script>
+<script>
+"use strict";
+var form = document.createElement("form");
+var idlArray = new IdlArray();
+idlArray.add_idls(document.querySelector("script[type=text\\/plain]").textContent);
+idlArray.add_objects({
+	XMLHttpRequest: ['new XMLHttpRequest()'],
+	XMLHttpRequestUpload: ['(new XMLHttpRequest()).upload'],
+	FormData: ['new FormData()', 'new FormData(form)']
+});
+idlArray.test();
+</script>
