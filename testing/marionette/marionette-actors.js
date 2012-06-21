@@ -443,7 +443,7 @@ MarionetteDriverActor.prototype = {
       args = this.curBrowser.elementManager.convertWrappedArguments(args, aWindow);
     }
     catch(e) {
-      this.sendError(e.message, e.num, e.stack);
+      this.sendError(e.message, e.code, e.stack);
       return;
     }
 
@@ -918,7 +918,7 @@ MarionetteDriverActor.prototype = {
         this.sendOk();
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
       }
     }
     else {
@@ -941,7 +941,7 @@ MarionetteDriverActor.prototype = {
         id = this.curBrowser.elementManager.find(this.getCurrentWindow(),aRequest, notify, false);
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
         return;
       }
     }
@@ -965,7 +965,7 @@ MarionetteDriverActor.prototype = {
         id = this.curBrowser.elementManager.find(this.getCurrentWindow(), aRequest, notify, true);
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
         return;
       }
     }
@@ -990,7 +990,7 @@ MarionetteDriverActor.prototype = {
         this.sendOk();
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
       }
     }
     else {
@@ -1013,7 +1013,7 @@ MarionetteDriverActor.prototype = {
         this.sendResponse(utils.getElementAttribute(el, aRequest.name));
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
       }
     }
     else {
@@ -1039,7 +1039,7 @@ MarionetteDriverActor.prototype = {
         this.sendResponse(lines);
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
       }
     }
     else {
@@ -1061,7 +1061,7 @@ MarionetteDriverActor.prototype = {
         this.sendResponse(utils.isElementDisplayed(el));
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
       }
     }
     else {
@@ -1089,7 +1089,7 @@ MarionetteDriverActor.prototype = {
         }
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
       }
     }
     else {
@@ -1120,7 +1120,7 @@ MarionetteDriverActor.prototype = {
         }
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
       }
     }
     else {
@@ -1145,7 +1145,7 @@ MarionetteDriverActor.prototype = {
         this.sendOk();
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
       }
     }
     else {
@@ -1174,7 +1174,7 @@ MarionetteDriverActor.prototype = {
         this.sendOk();
       }
       catch (e) {
-        this.sendError(e.message, e.num, e.stack);
+        this.sendError(e.message, e.code, e.stack);
       }
     }
     else {
@@ -1262,7 +1262,7 @@ MarionetteDriverActor.prototype = {
       cb(message.result);
     }
     catch(e) {
-      this.sendError(e.message, e.num, e.stack);
+      this.sendError(e.message, e.code, e.stack);
       return;
     }
   },
