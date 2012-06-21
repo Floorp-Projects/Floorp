@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout android:layout_width="fill_parent"
+                  android:layout_height="fill_parent"
+                  android:background="@drawable/tabs_tray_bg_repeat">
+
+        <ImageButton android:id="@+id/add_tab"
+                     android:layout_width="@dimen/browser_toolbar_height"
+                     android:layout_height="@dimen/browser_toolbar_height"
+                     android:paddingTop="15dip"
+                     android:paddingBottom="15dip"
+                     android:paddingLeft="20dip"
+                     android:paddingRight="20dip"
+                     android:src="@drawable/tab_new"
+                     android:contentDescription="@string/new_tab"
+                     android:background="@drawable/action_bar_button"/>
+
+        <ImageButton android:id="@+id/remote_tabs"
+                     android:layout_width="@dimen/browser_toolbar_height"
+                     android:layout_height="@dimen/browser_toolbar_height"
+                     android:paddingTop="15dip"
+                     android:paddingBottom="15dip"
+                     android:paddingLeft="20dip"
+                     android:paddingRight="20dip"
+                     android:src="@drawable/remote_tabs_level"
+                     android:contentDescription="@string/remote_tabs"
+                     android:background="@drawable/action_bar_button"
+                     android:visibility="gone"/>
+
+        <TextView android:id="@+id/title"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:visibility="gone"/>
+
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="fill_parent"
+                  android:layout_height="2dp"
+                  android:layout_alignParentBottom="true"
+                  android:background="@drawable/tabs_tray_list_divider"/>
+
+</merge>

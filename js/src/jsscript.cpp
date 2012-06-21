@@ -1137,7 +1137,7 @@ JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
     // never trigger.  Oh well.
     if (staticLevel > UINT16_MAX) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_TOO_DEEP, js_function_str);
-        return false;
+        return NULL;
     }
     script->staticLevel = uint16_t(staticLevel);
 

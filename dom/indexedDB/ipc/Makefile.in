@@ -31,18 +31,14 @@ LOCAL_INCLUDES += \
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
-# Test is disabled for the moment to investigate OS X 10.7 crash.
-#
-#TEST_FILES = \
-#  test_ipc.html \
-#  $(NULL)
+TEST_FILES = \
+  test_ipc.html \
+  $(NULL)
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
-# Test is disabled for the moment to investigate OS X 10.7 crash.
-#
-#libs:: $(TEST_FILES)
-#	$(INSTALL) $(foreach f,$^,"$f") \
-#    $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+libs:: $(TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") \
+    $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

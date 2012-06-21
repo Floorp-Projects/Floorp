@@ -7,8 +7,9 @@
 
 #include "nsIDOMDeviceMotionEvent.h"
 #include "nsDOMEvent.h"
+#include "mozilla/Attributes.h"
 
-class nsDOMDeviceRotationRate : public nsIDOMDeviceRotationRate
+class nsDOMDeviceRotationRate MOZ_FINAL : public nsIDOMDeviceRotationRate
 {
 public:
   NS_DECL_ISUPPORTS
@@ -23,7 +24,7 @@ protected:
   double mAlpha, mBeta, mGamma;
 };
 
-class nsDOMDeviceAcceleration : public nsIDOMDeviceAcceleration
+class nsDOMDeviceAcceleration MOZ_FINAL : public nsIDOMDeviceAcceleration
 {
 public:
   NS_DECL_ISUPPORTS
@@ -38,8 +39,8 @@ protected:
   double mX, mY, mZ;
 };
 
-class nsDOMDeviceMotionEvent : public nsDOMEvent,
-                               public nsIDOMDeviceMotionEvent
+class nsDOMDeviceMotionEvent MOZ_FINAL : public nsDOMEvent,
+                                         public nsIDOMDeviceMotionEvent
 {
 public:
 

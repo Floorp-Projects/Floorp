@@ -292,12 +292,21 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void refreshChrome() {
-        if (Build.VERSION.SDK_INT >= 11) {
-            mBrowserToolbar.requestLayout();
+        // Only ICS phones use a smaller action-bar in landscape mode.
+        if (Build.VERSION.SDK_INT >= 14 && !isTablet()) {
+            int index = mMainLayout.indexOfChild(mBrowserToolbar.getLayout());
+            mMainLayout.removeViewAt(index);
+
+            LinearLayout actionBar = (LinearLayout) LayoutInflater.from(mAppContext).inflate(R.layout.browser_toolbar, null);
+            actionBar.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT,
+                                                                    (int) mAppContext.getResources().getDimension(R.dimen.browser_toolbar_height)));
+            mMainLayout.addView(actionBar, index);
+            mBrowserToolbar.from(actionBar);
             mBrowserToolbar.refresh();
-            invalidateOptionsMenu();
-            mTabsPanel.refresh();
         }
+
+        invalidateOptionsMenu();
+        mTabsPanel.refresh();
     }
 
     void addTab() {
@@ -321,6 +330,14 @@ abstract public class BrowserApp extends GeckoApp
 
     public void hideTabs() {
         mTabsPanel.hide();
+    }
+
+    public boolean autoHideTabs() {
+        if (!isTablet() && areTabsShown()) {
+            hideTabs();
+            return true;
+        }
+        return false;
     }
 
     public boolean areTabsShown() {

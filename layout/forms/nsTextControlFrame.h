@@ -155,6 +155,8 @@ public:
 
   nsresult GetText(nsString& aText);
 
+  NS_IMETHOD PeekOffset(nsPeekOffsetStruct *aPos);
+
   NS_DECL_QUERYFRAME
 
   // Temp reference to scriptrunner

@@ -16,10 +16,11 @@
 #include "txXPathTreeWalker.h"
 #include "xptcall.h"
 #include "txXPathObjectAdaptor.h"
+#include "mozilla/Attributes.h"
 
 NS_IMPL_ISUPPORTS1(txXPathObjectAdaptor, txIXPathObject)
 
-class txFunctionEvaluationContext : public txIFunctionEvaluationContext
+class txFunctionEvaluationContext MOZ_FINAL : public txIFunctionEvaluationContext
 {
 public:
     txFunctionEvaluationContext(txIEvalContext *aContext, nsISupports *aState);

@@ -4,8 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <svg xmlns="http://www.w3.org/2000/svg"
-     width="17"
-     height="34">
-  <path d="M 17,0 L 0,17 17,34 z"
+     width="10"
+     height="20">
+  <path d="M 10,0 L 0,10 10,20 z"
         fill="-moz-Dialog"/>
 </svg>
