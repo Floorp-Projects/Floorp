@@ -53,12 +53,24 @@ static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 static NS_DEFINE_CID(kStreamTransportServiceCID,
                      NS_STREAMTRANSPORTSERVICE_CID);
 
+enum CacheDisposition {
+    kCacheHit = 1,
+    kCacheHitViaReval = 2,
+    kCacheMissedViaReval = 3,
+    kCacheMissed = 4
+};
+
 const mozilla::Telemetry::ID UNKNOWN_DEVICE
     = static_cast<mozilla::Telemetry::ID>(0);
 void
 AccumulateCacheHitTelemetry(mozilla::Telemetry::ID deviceHistogram,
-                            PRUint32 hitOrMiss)
+                            CacheDisposition hitOrMiss)
 {
+    // If we had a cache hit, or we revalidated an entry, then we should know
+    // the device for the entry already. But, sometimes this assertion fails!
+    // (Bug 769497).
+    // MOZ_ASSERT(deviceHistogram != UNKNOWN_DEVICE || hitOrMiss == kCacheMissed);
+
     mozilla::Telemetry::Accumulate(
             mozilla::Telemetry::HTTP_CACHE_DISPOSITION_2, hitOrMiss);
     if (deviceHistogram != UNKNOWN_DEVICE) {
@@ -1309,7 +1321,7 @@ nsHttpChannel::ProcessResponse()
         break;
     }
 
-    PRUint32 cacheDisposition;
+    CacheDisposition cacheDisposition;
     if (!mDidReval)
         cacheDisposition = kCacheMissed;
     else if (successfulReval)
@@ -1317,8 +1329,7 @@ nsHttpChannel::ProcessResponse()
     else
         cacheDisposition = kCacheMissedViaReval;
 
-    AccumulateCacheHitTelemetry(mCacheEntry ? mCacheEntryDeviceTelemetryID
-                                            : UNKNOWN_DEVICE,
+    AccumulateCacheHitTelemetry(mCacheEntryDeviceTelemetryID,
                                 cacheDisposition);
 
     return rv;
@@ -2887,11 +2898,7 @@ HttpCacheQuery::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
     mCacheAccess = access;
     mStatus = status;
 
-    nsresult rv = CheckCache();
-    if (NS_FAILED(rv))
-        NS_WARNING("cache check failed");
-
-    if (mCachedContentIsValid) {
+    if (mCacheEntry) {
         char* cacheDeviceID = nsnull;
         mCacheEntry->GetDeviceID(&cacheDeviceID);
         if (cacheDeviceID) {
@@ -2909,8 +2916,16 @@ HttpCacheQuery::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
             }
 
             delete cacheDeviceID;
+        } else {
+            // If we can read from the entry, it must have a device, but
+            // sometimes we don't (Bug 769497).
+            // MOZ_ASSERT(!(mCacheAccess & nsICache::ACCESS_READ));
         }
     }
+
+    nsresult rv = CheckCache();
+    if (NS_FAILED(rv))
+        NS_WARNING("cache check failed");
 
     rv = NS_DispatchToMainThread(this);
     return rv;
