@@ -429,7 +429,7 @@ nsXPCJSContextStackIterator::Reset(nsIJSContextStack *aStack)
     XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
     if (!data)
         return NS_ERROR_FAILURE;
-    mStack = data->GetJSContextStack()->GetStack();
+    mStack = XPCJSRuntime::Get()->GetJSContextStack()->GetStack();
     if (mStack->IsEmpty())
         mStack = nsnull;
     else

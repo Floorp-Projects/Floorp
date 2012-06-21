@@ -1049,8 +1049,7 @@ xpc_qsVariantToJsval(XPCLazyCallContext &lccx,
 void
 xpc_qsAssertContextOK(JSContext *cx)
 {
-    XPCPerThreadData *thread = XPCPerThreadData::GetData(cx);
-    XPCJSContextStack* stack = thread->GetJSContextStack();
+    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
 
     JSContext *topJSContext = stack->Peek();
 

@@ -2067,8 +2067,7 @@ nsXPConnect::ReleaseJSContext(JSContext * aJSContext, bool noGC)
         }
         // else continue on and synchronously destroy the JSContext ...
 
-        NS_ASSERTION(!tls->GetJSContextStack() ||
-                     !tls->GetJSContextStack()->
+        NS_ASSERTION(!XPCJSRuntime::Get()->GetJSContextStack()->
                      DEBUG_StackHasJSContext(aJSContext),
                      "JSContext still in threadjscontextstack!");
     }
@@ -2358,14 +2357,7 @@ nsXPConnect::GetCount(PRInt32 *aCount)
 {
     MOZ_ASSERT(aCount);
 
-    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
-
-    if (!data) {
-        *aCount = 0;
-        return NS_ERROR_FAILURE;
-    }
-
-    *aCount = data->GetJSContextStack()->Count();
+    *aCount = XPCJSRuntime::Get()->GetJSContextStack()->Count();
     return NS_OK;
 }
 
@@ -2375,14 +2367,7 @@ nsXPConnect::Peek(JSContext * *_retval)
 {
     MOZ_ASSERT(_retval);
 
-    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
-
-    if (!data) {
-        *_retval = nsnull;
-        return NS_ERROR_FAILURE;
-    }
-
-    *_retval = xpc_UnmarkGrayContext(data->GetJSContextStack()->Peek());
+    *_retval = xpc_UnmarkGrayContext(XPCJSRuntime::Get()->GetJSContextStack()->Peek());
     return NS_OK;
 }
 
@@ -2468,15 +2453,7 @@ xpc_ActivateDebugMode()
 NS_IMETHODIMP
 nsXPConnect::Pop(JSContext * *_retval)
 {
-    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
-
-    if (!data) {
-        if (_retval)
-            *_retval = NULL;
-        return NS_ERROR_FAILURE;
-    }
-
-    JSContext *cx = data->GetJSContextStack()->Pop();
+    JSContext *cx = XPCJSRuntime::Get()->GetJSContextStack()->Pop();
     if (_retval)
         *_retval = xpc_UnmarkGrayContext(cx);
     return NS_OK;
@@ -2486,13 +2463,9 @@ nsXPConnect::Pop(JSContext * *_retval)
 NS_IMETHODIMP
 nsXPConnect::Push(JSContext * cx)
 {
-    XPCPerThreadData* data = XPCPerThreadData::GetData(cx);
-
-    if (!data)
-        return NS_ERROR_FAILURE;
-
      if (gDebugMode != gDesiredDebugMode && NS_IsMainThread()) {
-         const InfallibleTArray<XPCJSContextInfo>* stack = data->GetJSContextStack()->GetStack();
+         const InfallibleTArray<XPCJSContextInfo>* stack =
+             XPCJSRuntime::Get()->GetJSContextStack()->GetStack();
          if (!gDesiredDebugMode) {
              /* Turn off debug mode immediately, even if JS code is currently running */
              CheckForDebugMode(mRuntime->GetJSRuntime());
@@ -2510,20 +2483,14 @@ nsXPConnect::Push(JSContext * cx)
          }
      }
 
-     return data->GetJSContextStack()->Push(cx) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+     return XPCJSRuntime::Get()->GetJSContextStack()->Push(cx) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 /* virtual */
 JSContext*
 nsXPConnect::GetSafeJSContext()
 {
-    XPCPerThreadData *data = XPCPerThreadData::GetData(NULL);
-
-    if (!data) {
-        return NULL;
-    }
-
-    return data->GetJSContextStack()->GetSafeJSContext();
+    return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContext();
 }
 
 nsIPrincipal*
