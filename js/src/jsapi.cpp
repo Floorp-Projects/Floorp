@@ -5171,7 +5171,7 @@ CompileUCFunctionForPrincipalsCommon(JSContext *cx, JSObject *obj_,
             return NULL;
     }
 
-    Bindings bindings(cx);
+    Bindings bindings;
     for (unsigned i = 0; i < nargs; i++) {
         uint16_t dummy;
         RootedAtom argAtom(cx, js_Atomize(cx, argnames[i], strlen(argnames[i])));
