@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/indexedDB/DatabaseInfo.h"
 #include "mozilla/dom/indexedDB/Key.h"
+#include "mozilla/dom/indexedDB/KeyPath.h"
 #include "mozilla/dom/indexedDB/IDBCursor.h"
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
 
@@ -36,6 +37,36 @@ struct ParamTraits<mozilla::dom::indexedDB::Key>
 };
 
 template <>
+struct ParamTraits<mozilla::dom::indexedDB::KeyPath::KeyPathType> :
+  public EnumSerializer<mozilla::dom::indexedDB::KeyPath::KeyPathType,
+                        mozilla::dom::indexedDB::KeyPath::NONEXISTENT,
+                        mozilla::dom::indexedDB::KeyPath::ENDGUARD>
+{ };
+
+template <>
+struct ParamTraits<mozilla::dom::indexedDB::KeyPath>
+{
+  typedef mozilla::dom::indexedDB::KeyPath paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mType);
+    WriteParam(aMsg, aParam.mStrings);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mType) &&
+           ReadParam(aMsg, aIter, &aResult->mStrings);
+  }
+
+  static void Log(const paramType& aParam, std::wstring* aLog)
+  {
+    LogParam(aParam.mStrings, aLog);
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::dom::indexedDB::IDBCursor::Direction> :
   public EnumSerializer<mozilla::dom::indexedDB::IDBCursor::Direction,
                         mozilla::dom::indexedDB::IDBCursor::NEXT,
@@ -59,7 +90,6 @@ struct ParamTraits<mozilla::dom::indexedDB::IndexInfo>
     WriteParam(aMsg, aParam.name);
     WriteParam(aMsg, aParam.id);
     WriteParam(aMsg, aParam.keyPath);
-    WriteParam(aMsg, aParam.keyPathArray);
     WriteParam(aMsg, aParam.unique);
     WriteParam(aMsg, aParam.multiEntry);
   }
@@ -69,7 +99,6 @@ struct ParamTraits<mozilla::dom::indexedDB::IndexInfo>
     return ReadParam(aMsg, aIter, &aResult->name) &&
            ReadParam(aMsg, aIter, &aResult->id) &&
            ReadParam(aMsg, aIter, &aResult->keyPath) &&
-           ReadParam(aMsg, aIter, &aResult->keyPathArray) &&
            ReadParam(aMsg, aIter, &aResult->unique) &&
            ReadParam(aMsg, aIter, &aResult->multiEntry);
   }
@@ -79,7 +108,6 @@ struct ParamTraits<mozilla::dom::indexedDB::IndexInfo>
     LogParam(aParam.name, aLog);
     LogParam(aParam.id, aLog);
     LogParam(aParam.keyPath, aLog);
-    LogParam(aParam.keyPathArray, aLog);
     LogParam(aParam.unique, aLog);
     LogParam(aParam.multiEntry, aLog);
   }
@@ -95,7 +123,6 @@ struct ParamTraits<mozilla::dom::indexedDB::ObjectStoreInfoGuts>
     WriteParam(aMsg, aParam.name);
     WriteParam(aMsg, aParam.id);
     WriteParam(aMsg, aParam.keyPath);
-    WriteParam(aMsg, aParam.keyPathArray);
     WriteParam(aMsg, aParam.autoIncrement);
     WriteParam(aMsg, aParam.indexes);
   }
@@ -105,7 +132,6 @@ struct ParamTraits<mozilla::dom::indexedDB::ObjectStoreInfoGuts>
     return ReadParam(aMsg, aIter, &aResult->name) &&
            ReadParam(aMsg, aIter, &aResult->id) &&
            ReadParam(aMsg, aIter, &aResult->keyPath) &&
-           ReadParam(aMsg, aIter, &aResult->keyPathArray) &&
            ReadParam(aMsg, aIter, &aResult->autoIncrement) &&
            ReadParam(aMsg, aIter, &aResult->indexes);
   }
@@ -115,7 +141,6 @@ struct ParamTraits<mozilla::dom::indexedDB::ObjectStoreInfoGuts>
     LogParam(aParam.name, aLog);
     LogParam(aParam.id, aLog);
     LogParam(aParam.keyPath, aLog);
-    LogParam(aParam.keyPathArray, aLog);
     LogParam(aParam.autoIncrement, aLog);
     LogParam(aParam.indexes, aLog);
   }

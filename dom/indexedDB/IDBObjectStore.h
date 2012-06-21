@@ -15,6 +15,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 #include "mozilla/dom/indexedDB/IDBTransaction.h"
+#include "mozilla/dom/indexedDB/KeyPath.h"
 
 class nsIScriptContext;
 class nsPIDOMWindow;
@@ -49,13 +50,9 @@ public:
          nsIAtom* aDatabaseId,
          bool aCreating);
 
-  static bool
-  IsValidKeyPath(JSContext* aCx, const nsAString& aKeyPath);
-
   static nsresult
   AppendIndexUpdateInfo(PRInt64 aIndexID,
-                        const nsAString& aKeyPath,
-                        const nsTArray<nsString>& aKeyPathArray,
+                        const KeyPath& aKeyPath,
                         bool aUnique,
                         bool aMultiEntry,
                         JSContext* aCx,
@@ -127,24 +124,14 @@ public:
     return mId;
   }
 
-  const nsString& KeyPath() const
+  const KeyPath& GetKeyPath() const
   {
     return mKeyPath;
   }
 
-  const bool HasKeyPath() const
+  const bool HasValidKeyPath() const
   {
-    return !mKeyPath.IsVoid() || !mKeyPathArray.IsEmpty();
-  }
-
-  bool UsesKeyPathArray() const
-  {
-    return !mKeyPathArray.IsEmpty();
-  }
-  
-  const nsTArray<nsString>& KeyPathArray() const
-  {
-    return mKeyPathArray;
+    return mKeyPath.IsValid();
   }
 
   IDBTransaction* Transaction()
@@ -186,7 +173,6 @@ public:
 
   nsresult
   CreateIndexInternal(const IndexInfo& aInfo,
-                      nsTArray<nsString>& aKeyPathArray,
                       IDBIndex** _retval);
 
   nsresult
@@ -226,6 +212,8 @@ public:
                             const SerializedStructuredCloneReadInfo& aCloneInfo,
                             IDBCursor** _retval);
 
+  static JSClass sDummyPropJSClass;
+
 protected:
   IDBObjectStore();
   ~IDBObjectStore();
@@ -249,8 +237,7 @@ private:
 
   PRInt64 mId;
   nsString mName;
-  nsString mKeyPath;
-  nsTArray<nsString> mKeyPathArray;
+  KeyPath mKeyPath;
   bool mAutoIncrement;
   nsCOMPtr<nsIAtom> mDatabaseId;
   nsRefPtr<ObjectStoreInfo> mInfo;

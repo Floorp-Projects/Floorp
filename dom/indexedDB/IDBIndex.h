@@ -8,6 +8,7 @@
 #define mozilla_dom_indexeddb_idbindex_h__
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
+#include "mozilla/dom/indexedDB/KeyPath.h"
 
 #include "nsIIDBIndex.h"
 
@@ -67,19 +68,9 @@ public:
     return mMultiEntry;
   }
 
-  const nsString& KeyPath() const
+  const KeyPath& GetKeyPath() const
   {
     return mKeyPath;
-  }
-
-  bool UsesKeyPathArray() const
-  {
-    return !mKeyPathArray.IsEmpty();
-  }
-  
-  const nsTArray<nsString>& KeyPathArray() const
-  {
-    return mKeyPathArray;
   }
 
   void
@@ -157,8 +148,7 @@ private:
 
   PRInt64 mId;
   nsString mName;
-  nsString mKeyPath;
-  nsTArray<nsString> mKeyPathArray;
+  KeyPath mKeyPath;
 
   IndexedDBIndexChild* mActorChild;
   IndexedDBIndexParent* mActorParent;
