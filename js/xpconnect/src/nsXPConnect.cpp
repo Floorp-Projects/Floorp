@@ -1028,10 +1028,8 @@ nsXPConnect::InitClasses(JSContext * aJSContext, JSObject * aGlobalJSObj)
     if (!nsXPCComponents::AttachComponentsObject(ccx, scope, aGlobalJSObj))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    if (XPCPerThreadData::IsMainThread(ccx)) {
-        if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, aGlobalJSObj))
-            return UnexpectedFailure(NS_ERROR_FAILURE);
-    }
+    if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, aGlobalJSObj))
+        return UnexpectedFailure(NS_ERROR_FAILURE);
 
     return NS_OK;
 }
@@ -1218,10 +1216,8 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
         if (!nsXPCComponents::AttachComponentsObject(ccx, wrappedGlobal->GetScope(), global))
             return UnexpectedFailure(NS_ERROR_FAILURE);
 
-        if (XPCPerThreadData::IsMainThread(ccx)) {
-            if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, global))
-                return UnexpectedFailure(NS_ERROR_FAILURE);
-        }
+        if (!XPCNativeWrapper::AttachNewConstructorObject(ccx, global))
+            return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 
     // Stuff coming through this path always ends up as a DOM global.

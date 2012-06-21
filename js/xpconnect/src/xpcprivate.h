@@ -3771,9 +3771,6 @@ public:
     static void ShutDown()
         {sMainJSThread = nsnull; sMainThreadData = nsnull;}
 
-    static bool IsMainThread(JSContext *cx)
-        { return js::GetOwnerThread(cx) == sMainJSThread; }
-
 private:
     XPCPerThreadData();
     static XPCPerThreadData* GetDataImpl(JSContext *cx);

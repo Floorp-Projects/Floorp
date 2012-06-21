@@ -1513,10 +1513,9 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCCallContext& ccx,
     // ReparentWrapperIfFound is really only meant to be called from DOM code
     // which must happen only on the main thread. Bail if we're on some other
     // thread or have a non-main-thread-only wrapper.
-    if (!XPCPerThreadData::IsMainThread(ccx) ||
-        (wrapper &&
-         wrapper->GetProto() &&
-         !wrapper->GetProto()->ClassIsMainThreadOnly())) {
+    if (wrapper &&
+        wrapper->GetProto() &&
+        !wrapper->GetProto()->ClassIsMainThreadOnly()) {
         return NS_ERROR_FAILURE;
     }
 
@@ -2674,12 +2673,7 @@ CallMethodHelper::QueryInterfaceFastPath() const
 
     nsresult invokeResult;
     nsISupports* qiresult = nsnull;
-    if (XPCPerThreadData::IsMainThread(mCallContext)) {
-        invokeResult = mCallee->QueryInterface(*iid, (void**) &qiresult);
-    } else {
-        JSAutoSuspendRequest suspended(mCallContext);
-        invokeResult = mCallee->QueryInterface(*iid, (void**) &qiresult);
-    }
+    invokeResult = mCallee->QueryInterface(*iid, (void**) &qiresult);
 
     mCallContext.GetXPCContext()->SetLastResult(invokeResult);
 
@@ -3092,10 +3086,6 @@ CallMethodHelper::Invoke()
     PRUint32 argc = mDispatchParams.Length();
     nsXPTCVariant* argv = mDispatchParams.Elements();
 
-    if (XPCPerThreadData::IsMainThread(mCallContext))
-        return NS_InvokeByIndex(mCallee, mVTableIndex, argc, argv);
-
-    JSAutoSuspendRequest suspended(mCallContext);
     return NS_InvokeByIndex(mCallee, mVTableIndex, argc, argv);
 }
 
