@@ -1,0 +1,24 @@
+# These huge tests are flaky and sometimes crash the following tests.
+# See http://crbug.com/50346
+DiskCacheEntryTest.*HugeSparse*
+
+# SPDY tests tend to crash on both Mac and Windows.
+# See http://crbug.com/51144
+Spdy/SpdyNetworkTransactionTest.SocketWriteReturnsZero*
+# See http://crbug.com/50918
+Spdy/SpdyNetworkTransactionTest.CancelledTransactionSendRst*
+# See http://crbug.com/51087
+Spdy*
+
+# See http://crbug.com/44570
+HttpNetworkTransactionTest.StopsReading204
+# See http://crbug.com/51145
+HttpNetworkTransactionTest.Incomplete100ThenEOF
+HttpNetworkTransactionTest.UseAlternateProtocolForNpnSpdyWithExistingSpdySession
+HttpNetworkTransactionTest.KeepAliveConnectionEOF
+
+# Crashes silently, see http://crbug.com/76911
+URLRequestTest.FileTest
+
+# http://crbug.com/92439
+OriginBoundCertServiceTest.*

@@ -1,0 +1,141 @@
+############################
+# Chromium
+
+{
+  Benign race durung InitializeClock
+  ThreadSanitizer:Race
+  ...
+  fun:*InitializeClock*
+}
+
+{
+  bug_62560
+  ThreadSanitizer:Race
+  ...
+  fun:_initterm
+  fun:doexit
+}
+
+############################
+# Reports on the guts of Windows
+{
+  UuidCreate
+  ThreadSanitizer:Race
+  ...
+  fun:UuidCreate
+}
+
+{
+  ILFindLastID
+  ThreadSanitizer:Race
+  ...
+  fun:ILFindLastID
+}
+
+{
+  RpcServerUnregisterIf
+  ThreadSanitizer:Race
+  ...
+  fun:RpcServerUnregisterIf
+}
+
+# http://code.google.com/p/data-race-test/issues/detail?id=45
+{
+  accessing an invalid lock in unnamedImageEntryPoint
+  ThreadSanitizer:InvalidLock
+  fun:unnamedImageEntryPoint
+}
+{
+  accessing an invalid lock in CoFreeAllLibraries
+  ThreadSanitizer:InvalidLock
+  fun:CoFreeAllLibraries
+}
+{
+  accessing an invalid lock under exit/doexit
+  ThreadSanitizer:InvalidLock
+  fun:*~Lock*
+  ...
+  fun:doexit
+  fun:exit
+}
+{
+  bug_81793a
+  ThreadSanitizer:Race
+  ...
+  fun:NetTestSuite::InitializeTestThread
+}
+{
+  bug_81793b
+  ThreadSanitizer:Race
+  ...
+  fun:MessageLoop::CalculateDelayedRuntime
+  fun:MessageLoop::Post*Task
+}
+{
+  bug_93932a
+  ThreadSanitizer:Race
+  fun:avcodec_default_release_buffer 
+  fun:ff_mpeg4video_split
+}
+{
+  bug_93932b
+  ThreadSanitizer:Race
+  ...
+  fun:ff_mpeg4video_split
+  fun:avcodec_close
+  fun:media::FFmpegVideoDecoder::ReleaseFFmpegResources
+}
+{
+  bug_93932d
+  ThreadSanitizer:Race
+  fun:memcpy
+  fun:media::CopyPlane
+}
+{
+  bug_93932e
+  ThreadSanitizer:Race
+  ...
+  fun:ff_thread_finish_setup
+  fun:ptw32_threadStart@4
+}
+{
+  bug_93932f
+  ThreadSanitizer:Race
+  ...
+  fun:ff_vp3_h_loop_filter_c
+  ...
+  fun:ff_thread_flush
+  fun:media::FFmpegVideoDecoder::Flush
+}
+{
+  bug_110514_a
+  ThreadSanitizer:Race
+  fun:memset
+  fun:_malloc_dbg
+  ...
+  fun:??2@YAPAXIABU_DebugHeapTag_t@std@@PADH@Z
+  fun:??0?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAE@XZ
+}
+{
+  bug_110514_b
+  ThreadSanitizer:Race
+  fun:memset
+  fun:_malloc_dbg
+  ...
+  fun:??2@YAPAXIABU_DebugHeapTag_t@std@@PADH@Z
+  fun:?_Init@ios_base@std@@IAEXXZ
+}
+{
+  bug_110514_c
+  ThreadSanitizer:Race
+  fun:memset
+  fun:_free_dbg
+  ...
+  fun:??3@YAXPAX@Z
+  fun:??_V@YAXPAX@Z
+  fun:scoped_array::reset
+  fun:media::DataBuffer::DataBuffer
+  ...
+  fun:media::FFmpegAudioDecoder::DoDecodeBuffer
+}
+

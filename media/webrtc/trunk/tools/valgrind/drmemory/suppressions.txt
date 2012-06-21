@@ -1,0 +1,287 @@
+# This file contains suppressions for the Dr.Memory tool, see
+# http://dev.chromium.org/developers/how-tos/using-drmemory
+#
+# This file contains suppressions for the DrMemroy reports happening
+# in the 'light' mode (a.k.a. drmemory_light) as well as in the 'full' mode.
+# Please use suppressions_full.txt for all the reports that can happen only
+# in the full mode (drmemory_full),
+
+############################
+# Known reports on the third party we have no control over.
+
+# Reports from Sophos antivirus
+UNADDRESSABLE ACCESS
+name=Sophos UNADDR
+...
+sophos*.dll!*
+
+UNINITIALIZED READ
+name=Sophos UNINIT
+...
+sophos*.dll!*
+
+LEAK
+name=Sophos LEAK
+...
+sophos*.dll!*
+
+############################
+# Suppress some false reports due to bugs in Dr.Memory like wrong analysis
+# assumptions or unhandled syscalls
+
+# Please note: the following suppressions were written in the abscense of
+# private symbols so may need to be updated when we switch to auto-loading PDBs
+
+UNADDRESSABLE ACCESS
+name=http://code.google.com/p/drmemory/issues/detail?id=12 UNADDR
+...
+SHELL32.dll!SHFileOperation*
+
+UNADDRESSABLE ACCESS
+name=http://code.google.com/p/drmemory/issues/detail?id=40 UNADDR
+...
+WINSPOOL.DRV!*
+
+INVALID HEAP ARGUMENT
+name=http://code.google.com/p/drmemory/issues/detail?id=40 INVALID HEAP
+...
+WINSPOOL.DRV!*
+
+UNADDRESSABLE ACCESS
+name=http://code.google.com/p/drmemory/issues/detail?id=59
+...
+*!SetEnvironmentVariable*
+
+UNADDRESSABLE ACCESS
+name=http://code.google.com/p/drmemory/issues/detail?id=68 (UNADDR 1)
+...
+MSWSOCK.dll!WSPStartup
+
+UNADDRESSABLE ACCESS
+name=http://code.google.com/p/drmemory/issues/detail?id=68 (UNADDR 2)
+...
+ntdll.dll!RtlValidateUnicodeString
+
+############################
+# TODO(timurrrr): investigate these
+UNADDRESSABLE ACCESS
+name=TODO SHParseDisplayName
+...
+*!SHParseDisplayName
+
+UNADDRESSABLE ACCESS
+name=TODO GetCanonicalPathInfo
+...
+*!GetCanonicalPathInfo*
+
+UNADDRESSABLE ACCESS
+name=TODO CreateDC
+...
+GDI32.dll!CreateDC*
+
+# This one looks interesting
+INVALID HEAP ARGUMENT
+name=TODO ExitProcess
+...
+KERNEL32.dll!ExitProcess
+
+INVALID HEAP ARGUMENT
+name=http://crbug.com/103365 (a)
+ppapi_tests.dll!*
+...
+ppapi_tests.dll!*
+*!base::internal::RunnableAdapter<*>::Run
+
+INVALID HEAP ARGUMENT
+name=http://crbug.com/103365 (b)
+ppapi_tests.dll!*
+...
+ppapi_tests.dll!*
+*!PP_RunCompletionCallback
+...
+*!base::internal::RunnableAdapter<*>::Run
+
+INVALID HEAP ARGUMENT
+name=http://crbug.com/107567 intentional mismatch in _DebugHeapDelete, no frame
+*!std::numpunct<*>::_Tidy
+*!std::numpunct<*>::~numpunct<*>
+
+############################
+# Intentional errors in Chromium tests (ToolsSanityTests)
+LEAK
+name=sanity test 01 (memory leak)
+base_unittests.exe!operator new
+base_unittests.exe!operator new[]
+base_unittests.exe!base::ToolsSanityTest_MemoryLeak_Test::TestBody
+
+# "..." is needed due to http://code.google.com/p/drmemory/issues/detail?id=666
+UNADDRESSABLE ACCESS
+name=sanity test 02 (malloc/read left)
+base_unittests.exe!*ReadValueOutOfArrayBoundsLeft
+...
+base_unittests.exe!base::ToolsSanityTest_AccessesToMallocMemory_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=sanity test 03 (malloc/read right)
+base_unittests.exe!*ReadValueOutOfArrayBoundsRight
+base_unittests.exe!*MakeSomeErrors
+base_unittests.exe!base::ToolsSanityTest_AccessesToMallocMemory_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=sanity test 04 (malloc/write left)
+base_unittests.exe!*WriteValueOutOfArrayBoundsLeft
+base_unittests.exe!*MakeSomeErrors
+base_unittests.exe!base::ToolsSanityTest_AccessesToMallocMemory_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=sanity test 05 (malloc/write right)
+base_unittests.exe!*WriteValueOutOfArrayBoundsRight
+base_unittests.exe!*MakeSomeErrors
+base_unittests.exe!base::ToolsSanityTest_AccessesToMallocMemory_Test::TestBody
+
+# "..." is needed due to http://code.google.com/p/drmemory/issues/detail?id=666
+UNADDRESSABLE ACCESS
+name=sanity test 06 (new/read left)
+base_unittests.exe!*ReadValueOutOfArrayBoundsLeft
+...
+base_unittests.exe!base::ToolsSanityTest_AccessesToNewMemory_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=sanity test 07 (new/read right)
+base_unittests.exe!*ReadValueOutOfArrayBoundsRight
+base_unittests.exe!*MakeSomeErrors
+base_unittests.exe!base::ToolsSanityTest_AccessesToNewMemory_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=sanity test 08 (new/write left)
+base_unittests.exe!*WriteValueOutOfArrayBoundsLeft
+base_unittests.exe!*MakeSomeErrors
+base_unittests.exe!base::ToolsSanityTest_AccessesToNewMemory_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=sanity test 09 (new/write right)
+base_unittests.exe!*WriteValueOutOfArrayBoundsRight
+base_unittests.exe!*MakeSomeErrors
+base_unittests.exe!base::ToolsSanityTest_AccessesToNewMemory_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=sanity test 10 (write after free)
+base_unittests.exe!base::ToolsSanityTest_AccessesToMallocMemory_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=sanity test 11 (write after delete)
+base_unittests.exe!base::ToolsSanityTest_AccessesToNewMemory_Test::TestBody
+
+INVALID HEAP ARGUMENT
+name=sanity test 12 (array deleted without [])
+base_unittests.exe!base::ToolsSanityTest_ArrayDeletedWithoutBraces_Test::TestBody
+
+INVALID HEAP ARGUMENT
+name=sanity test 13 (single element deleted with [])
+base_unittests.exe!base::ToolsSanityTest_SingleElementDeletedWithBraces_Test::TestBody
+
+UNINITIALIZED READ
+name=sanity test 14 (malloc/read uninit)
+base_unittests.exe!*ReadUninitializedValue
+base_unittests.exe!*MakeSomeErrors
+base_unittests.exe!base::ToolsSanityTest_AccessesToMallocMemory_Test::TestBody
+
+UNINITIALIZED READ
+name=sanity test 15 (new/read uninit)
+base_unittests.exe!*ReadUninitializedValue
+base_unittests.exe!*MakeSomeErrors
+base_unittests.exe!base::ToolsSanityTest_AccessesToNewMemory_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=AboutHandler::AboutCrash deliberate crash
+# TODO(bruening): switch to annotation once have support for that
+chrome.dll!AboutHandler::AboutCrash
+
+UNADDRESSABLE ACCESS
+name=RendererCrashTest.Crash deliberate crash
+# function is small, little risk for false negative in rest of it
+# TODO(bruening): switch to annotation once have support for that
+chrome.dll!HandleRendererErrorTestParameters
+
+UNADDRESSABLE ACCESS
+name=NPAPITesterBase.NoHangIfInitCrashes deliberate crash
+# function is small, little risk for false negative in rest of it
+# TODO(bruening): switch to annotation once have support for that
+npapi_test_plugin.dll!NPAPIClient::PluginClient::Initialize
+
+# Deliberate NULL deref to crash the child process
+UNADDRESSABLE ACCESS
+name=CrashingChildProcess deliberate crash
+*!CrashingChildProcess
+
+UNADDRESSABLE ACCESS
+name=::Crasher::Run deliberate crash
+*!`anonymous namespace'::Crasher::Run
+
+############################
+# Benign issues in Chromium
+
+WARNING
+name=http://crbug.com/72463 - prefetches in generated MemCopy
+instruction=prefetch*
+<not in a module>
+chrome.dll!v8::internal::CopyChars*
+
+UNADDRESSABLE ACCESS
+name=http://code.google.com/p/drmemory/issues/detail?id=582 bizarre cl-generated read-beyond-TOS
+instruction=mov    0xfffffffc(%esp) -> %eax
+chrome.dll!WebCore::RenderStyle::resetBorder*
+
+INVALID HEAP ARGUMENT
+name=http://crbug.com/101537
+*!scoped_ptr<_TOKEN_USER>*
+
+INVALID HEAP ARGUMENT
+name=http://crbug.com/101717 (1)
+*!scoped_ptr<_TOKEN_DEFAULT_DACL>*
+
+INVALID HEAP ARGUMENT
+name=http://crbug.com/101717 (2)
+*!sandbox::PolicyBase::~PolicyBase
+
+INVALID HEAP ARGUMENT
+name=http://crbug.com/101717 (3)
+*!scoped_ptr<_UNICODE_STRING>::~scoped_ptr<_UNICODE_STRING>
+*!sandbox::GetHandleName
+
+INVALID HEAP ARGUMENT
+name=http://crbug.com/101717 (4)
+*!scoped_ptr<_OBJECT_NAME_INFORMATION>::~scoped_ptr<_OBJECT_NAME_INFORMATION>
+*!sandbox::GetPathFromHandle
+
+############################
+# Real issues in Chromium
+
+UNADDRESSABLE ACCESS
+name=http://crbug.com/88213
+*!base::win::ObjectWatcher::StopWatching
+*!base::win::ObjectWatcher::WillDestroyCurrentMessageLoop
+*!MessageLoop::~MessageLoop
+
+UNADDRESSABLE ACCESS
+name=http://crbug.com/96010
+*!TestingProfile::FinishInit
+*!TestingProfile::TestingProfile
+*!BrowserAboutHandlerTest_WillHandleBrowserAboutURL_Test::TestBody
+
+UNADDRESSABLE ACCESS
+name=http://crbug.com/106522
+npapi_test_plugin.dll!NPAPIClient::PluginTest::id
+npapi_test_plugin.dll!NPAPIClient::ExecuteGetJavascriptUrlTest::TimerProc
+
+UNADDRESSABLE ACCESS
+name=http://crbug.com/110642
+*!PrefsTabHelper::RegisterUserPrefs
+*!browser::RegisterUserPrefs
+*!TestingProfile::CreateTestingPrefService
+*!TestingProfile::GetPrefs
+*!ProfileKeyedServiceFactory::RegisterUserPrefsOnProfile
+*!ProfileDependencyManager::CreateProfileServices
+
+# Empty line at EOF - workaround for
+# http://code.google.com/p/drmemory/issues/detail?id=41

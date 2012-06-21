@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_width="fill_parent"
+	android:layout_height="fill_parent" android:layout_gravity="right"
+	android:orientation="vertical"
+	      xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<TextView android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/tvTitle"
+		  android:textStyle="bold"
+		  android:textSize="24dip"
+		  android:text="@string/gSettings">
+	</TextView>
+	<TextView android:id="@+id/TextView03"
+		  android:layout_width="wrap_content"
+		  android:layout_height="wrap_content">
+	</TextView>
+	<LinearLayout android:id="@+id/LinearLayout02"
+		      android:layout_height="wrap_content"
+		      android:layout_width="fill_parent">
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbVideoReceive"
+		  android:text="@string/enableVideoReceive">
+	</CheckBox>
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbVideoSend"
+		  android:text="@string/enableVideoSend">
+	</CheckBox>
+	</LinearLayout>
+	
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbVoice"
+		  android:text="@string/enableVoice">
+	</CheckBox>
+		
+	<TextView android:id="@+id/TextView02"
+		  android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:text="@string/remoteIp">
+	</TextView>
+	<EditText android:layout_height="wrap_content"
+		  android:layout_width="fill_parent"
+		  android:id="@+id/etRemoteIp" >
+	</EditText>
+	
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbLoopback"
+		  android:text="@string/loopback">
+	</CheckBox>
+</LinearLayout>

@@ -1,0 +1,38 @@
+# This file lists the functions, object files and source files
+# which should be ignored (i.e. not instrumented) by ThreadSanitizer on Mac OS.
+# At the moment the Chromium binaries' debug info is not available to
+# ThreadSanitizer, so we have to define fun:* rules for Mac OS complementing
+# the src:* rules defined for Linux.
+
+# we ignore the Security libraries for now since
+# their instrumentation is very slow.
+# TODO(timurrrr): investigate whether we need to instrument them
+obj:*/Security*
+obj:*/libcrypto*
+# SensitiveAllocator::free is a part of the Security framework.
+# It calls bzero (0xffff0633) which can't be resolved and thus should be
+# ignored recursively.
+fun_r:*SensitiveAllocator*free*
+
+# The CFBag and CFDictionary operators should be thread-safe, but they are not
+# annotated properly.
+# TODO(glider): replace all the CoreFoundation suppressions with ignores.
+fun_r:CFBag*
+fun_r:CFDictionary*
+fun_r:CFBasicDictionary*
+#fun_r:CFBasicHash*
+
+# see crbug.com/46138
+fun_r:__CFRunLoopDeallocate
+
+fun_r:__CFRunLoopRemoveAllSources
+fun_r:__CFFinalizeRunLoop
+
+# _cthread_fork_child() is called in the child process after the fork syscall.
+# This function cleans up the cthread data structures created in the parent,
+# so ThreadSanitizer might consider it racey.
+fun_r:_cthread_fork_child
+
+# False reports on Snow Leopard.
+fun_r: _pthread_exit
+fun_r: _dispatch_queue_drain

@@ -1,0 +1,276 @@
+# Hangs on mac at exit, during final valgrind leak checking? (valgrind bug?)
+ErrorPageTest.DNSError_GoBack2Forward2
+# Flakily hangs on Mac
+ErrorPageTest.IFrameDNSError_GoBack
+# Hung several times locally on mac
+ErrorPageTest.DNSError_GoBack1
+# Hung one each on the mac bots
+AutomatedUITestBase.CloseBrowserWindow
+AutomatedUITestBase.DuplicateTab
+AutomatedUITestBase.OpenBrowserWindow
+ErrorPageTest.DNSError_GoBack2
+ResourceDispatcherTest.CrossSiteNavigationErrorPage
+TabRestoreUITest.RestoreCrossSiteWithExistingSiteInstance
+# Hung 7 times on the mac bots!
+ResourceDispatcherTest.SyncXMLHttpRequest_DuringUnload
+# Hung 4 times on the mac bots!
+TabRestoreUITest.BasicRestoreFromClosedWindow
+# All these hung multiple times on the mac bots:
+BrowserTest.OtherRedirectsDontForkProcess
+DownloadTest.ContentDisposition
+DownloadTest.DownloadMimeType
+DownloadTest.IncognitoDownload
+DownloadTest.NoDownload
+DownloadTest.PerWindowShelf
+ErrorPageTest.IFrameDNSError_GoBackAndForward
+
+# Following tests fail on valgrind.
+# See http://crbug.com/30366.
+BrowserEncodingTest.TestEncodingAutoDetect
+# See http://crbug.com/29598.
+DOMStorageTest.LocalStorageLayoutTests
+# See http://crbug.com/30367.
+NewTabUITest.NTPHasThumbnails
+# http://crbug.com/69040
+ErrorPageTest.Page404
+
+# Appears to time out on valgrind.
+# http://crbug.com/32818
+VisibleBrowserTest.WindowOpenClose
+
+# See http://crbug.com/30661 and http://crbug.com/27447.
+LayoutPluginTester.NPObjectReleasedOnDestruction
+LayoutPluginTester.NPObjectSetException
+LayoutPluginTester.SelfDeletePluginGetUrl
+LayoutPluginTester.SelfDeletePluginInvoke
+LayoutPluginTester.UnloadNoCrash
+NPAPIIncognitoTester.PrivateEnabled
+NPAPITesterBase.Arguments
+NPAPITesterBase.GetJavaScriptURL
+NPAPITesterBase.GetJavaScriptURL2
+NPAPITesterBase.GetURL
+NPAPITesterBase.GetURLRedirectNotification
+NPAPITesterBase.ManyPlugins
+NPAPITesterBase.NPObjectIdentity
+NPAPITesterBase.NPObjectProxy
+NPAPITesterBase.PluginThreadAsyncCall
+NPAPITesterBase.PrivateDisabled
+NPAPITesterBase.ScheduleTimer
+NPAPITesterBase.SelfDeletePluginGetUrl
+NPAPITesterBase.SelfDeletePluginInvoke
+NPAPIVisiblePluginTester.ClickToPlay
+NPAPIVisiblePluginTester.GetURLRequestFailWrite
+NPAPIVisiblePluginTester.MultipleInstancesSyncCalls
+NPAPIVisiblePluginTester.OpenPopupWindowWithPlugin
+NPAPIVisiblePluginTester.PluginConvertPointTest
+NPAPIVisiblePluginTester.PluginReferrerTest
+NPAPIVisiblePluginTester.SelfDeletePluginInNewStream
+NPAPIVisiblePluginTester.SelfDeletePluginInvokeInSynchronousPaint
+
+# Possible timing related failure triggered only on mac valgrind bots.
+# http://crbug.com/39401
+BookmarksUITest.BookmarksLoaded
+BookmarksUITest.ShouldRedirectToExtension
+
+# See http://crbug.com/40587
+BookmarksUITest.CommandAgainGoesBackToBookmarksTab
+
+# See http://crbug.com/45564
+ChromeMainTest.AppLaunch
+
+# See http://crbug.com/46783
+SessionHistoryTest.LocationReplace
+SessionHistoryTest.FragmentBackForward
+
+# UNIMPLEMENTED reached, see http://crbug.com/51387
+AutomatedUITestBase.CloseTab
+
+# See http://crbug.com/57717
+ResourceDispatcherTest.CrossSiteFailedRequest
+ResourceDispatcherTest.RespectNoSniffDirective
+
+# Valgrind internal error: received SIGSEGV. http://crbug.com/51716
+AutomatedUITestBase.FindInPage
+AutomatedUITestBase.IncognitoWindow
+AutomatedUITestBase.Navigate
+AutomatedUITestBase.OpenNewTab
+AutomatedUITestBase.ShowDownloads
+AutomationProxySnapshotTest.LargeSnapshot
+AutomationProxyTest.AcceleratorDownloads
+AutomationProxyTest.AcceleratorExtensions
+AutomationProxyTest.AcceleratorHistory
+AutomationProxyTest.ActivateTab
+AutomationProxyTest.BlockedPopupTest
+AutomationProxyTest.Cookies
+AutomationProxyTest.GetActiveTabIndex
+AutomationProxyTest.GetBrowserWindow
+AutomationProxyTest.GetBrowserWindowCount
+AutomationProxyTest.GetCurrentURL
+AutomationProxyTest.GoBackForward
+AutomationProxyTest.NavigateToURLAsync
+AutomationProxyTest2.GetActiveTabIndex
+AutomationProxyTest2.GetTabTitle
+AutomationProxyTest4.NumberValueIsEchoedByDomAutomationController
+AutomationProxyTest4.StringValueIsEchoedByDomAutomationController
+AutomationProxyTest5.TestLifetimeOfDomAutomationController
+DOMStorageTest.EventLayoutTests
+DOMStorageTest.SessionStorageLayoutTests
+ErrorPageTest.IFrameDNSError_Basic
+ExtensionProxyUITest.EnableDisable
+HistoryTester.ConsiderSlowRedirectAsUserInitiated
+HistoryTester.VerifyHistoryLength3
+HostRulesTest.TestMap
+IFrameTest.Crash
+IFrameTest.InEmptyFrame
+LoginPromptTest.SupplyRedundantAuths
+LoginPromptTest.TestCancelAuth
+MetricsServiceTest.CrashRenderers
+PreferenceServiceTest.PreservedWindowPlacementIsLoaded
+RedirectTest.Server
+RedirectTest.ServerReference
+RepostFormWarningTest.TestDoubleReload
+ResourceDispatcherTest.ContentDispositionEmpty
+ResourceDispatcherTest.ContentDispositionInline
+ResourceDispatcherTest.SniffNoContentTypeNoData
+ResourceDispatcherTest.SyncXMLHttpRequest
+SearchProviderTest.TestIsSearchProviderInstalledWithException
+SecurityTest.DisallowFileUrlUniversalAccessTest
+SessionHistoryTest.BasicBackForward
+SessionHistoryTest.LocationChangeInSubframe
+ShowModalDialogTest.BasicTest
+V8BenchmarkTest.Perf
+ViewSourceTest.DoesBrowserConsumeViewSourcePrefix
+WorkerFileSystemTest.FileEntryToURISync
+WorkerFileSystemTest.FileFromFileEntry
+WorkerFileSystemTest.FileFromFileEntrySync
+WorkerFileSystemTest.FileWriterSyncTruncateExtend
+WorkerFileSystemTest.FileWriterTruncateExtend
+WorkerFileSystemTest.Temporary
+
+# Valgrind dies on bszB assertion, see http://crbug.com/58145
+AutomatedUITestBase.Home
+AutomationProxyTest.GetTabCount
+AutomationProxyTest3.FrameDocumentCanBeAccessed
+DromaeoTest.DOMCorePerf
+LoginPromptTest.CancelRedundantAuths
+MetricsServiceTest.CloseRenderersNormally
+ResourceDispatcherTest.DoNotSniffHTMLFromImageGIF
+SunSpiderTest.Perf
+
+# Valgrind dies on arena assertion, see http://crbug.com/58146
+LoginPromptTest.TestTwoAuths
+UILayoutTest.MediaUILayoutTest
+
+# Can't load a nib under Valgrind, see http://crbug.com/58124
+ImagesTest.AnimatedGIFs
+
+# Valgrind dies on assertion, see http://crbug.com/58146
+DomStorageEmptyDatabaseTest.NonEmptyDirAfterSet
+
+# Valgrind fails, see http://crbug.com/79827
+DomStorageEmptyDatabaseTest.EmptyDirAfterClear
+DomStorageEmptyDatabaseTest.EmptyDirAfterGet
+
+# Hangs; See http://crbug.com/58569
+SearchProviderTest.TestIsSearchProviderInstalled
+
+# Times out, see http://crbug.com/50297
+DOMStorageTest.RootLayoutTests
+
+# Hangs, see http://crbug.com/63514
+ErrorPageTest.Page404_GoBack
+
+# Hangs, see http://crbug.com/66414
+# > connect /var/tmp/ChromeTestingInterface: Connection refused
+NamedInterfaceTest.BasicNamedInterface
+
+# Fails to start the browser, see http://crbug.com/75249
+AppModeTest.EnableAppModeTest
+AutomationProxySnapshotTest.ContentLargerThanView
+AutomationProxyTest.AcceleratorNewTab
+AutomationProxyTest.GetTab
+AutomationProxyTest.NavigateToURL
+BookmarksUITest.CommandOpensBookmarksTab
+BookmarksUITest.TwoCommandsOneTab
+ExtensionProxyUITest.NoSuchExtension
+ExtensionProxyUITest.Uninstall
+HistoryTester.VerifyHistoryLength1
+HistoryTester.VerifyHistoryLength2
+RedirectTest.ClientServerServer
+DomCheckerTest.File
+OptionsUITest.LoadOptionsByURL
+PreferenceServiceTest.PreservedWindowPlacementIsMigrated
+RedirectTest.Client
+RedirectTest.ClientFragments
+ResourceDispatcherTest.CrossSiteNavigationNonBuffered
+ResourceDispatcherTest.CrossSiteNoUnloadOn204
+ResourceDispatcherTest.CrossSiteOnunloadCookie
+ResourceDispatcherTest.CrossOriginRedirectBlocked
+ResourceDispatcherTest.SniffHTMLWithNoContentType
+WorkerFileSystemTest.Persistent
+WorkerFileSystemTest.SyncTemporary
+
+# Fails with valgrind assertion, see http://crbug.com/75396
+ViewSourceTest.ViewSourceInMenuEnabledOnANormalPage
+
+# Fails, see http://crbug.com/79803
+RepostFormWarningTest.TestLoginAfterRepost
+
+# Fails, see http://crbug.com/79831
+WorkerFileSystemTest.SyncOperations
+WorkerFileSystemTest.FileWriterSyncWriteOverlapped
+WorkerFileSystemTest.AsyncOperations
+
+# Fails, see http://crbug.com/81657
+AutomationProxyVisibleTest.AppendTab
+
+# NavigateToURL fails, see http://crbug.com/81658
+BrowserEncodingTest.TestEncodingAliasMapping
+LoginPromptTest.TestBasicAuth
+LoginPromptTest.TestDigestAuth
+ResourceDispatcherTest.DoNotSniffHTMLFromTextPlain
+
+# Timing out, see http://crbug.com/83565
+NPAPIAutomationEnabledTest.LoadAllBlockedPlugins
+
+# Flaky on valgrind test. See http://crbug.com/84257.
+AutomatedUITestBase.RestoreTab
+AutomationProxyTest4.BooleanValueIsEchoedByDomAutomationController
+
+# http://crbug.com/88068
+LocaleTestsHe.TestStart
+
+# http://crbug.com/88238
+NewTabUITest.ChromeHangInNTP
+
+# http://crbug.com/88244
+RunInBackgroundTest.RunInBackgroundBasicTest
+
+# Flakiness leading to leak reports. http://crbug.com/31739
+SessionHistoryTest.BasicBackForward
+
+# http://crbug.com/91163
+AutomatedUITestBase.OpenCloseBrowserWindowWithAccelerator
+
+# http://crbug.com/92177
+CustomHandlerMailStartupTest.CustomHandlerMailStartup
+CustomHandlerWebcalStartupTest.CustomHandlerWebcalStartup
+
+# Crash when loading plugin. http://crbug.com/99828
+OutOfProcessPPAPITest.Crypto
+PPAPITest.Crypto
+
+# Fails intermittently. http://crbug.com/104534.
+PrintPreviewUITest.PrintCommands
+
+# PPAPI and OutOfProcessPPAPPI tests fail on Mac WebKit.
+# Doing a blanket exclusion for all of them.
+PPAPITest.*
+OutOfProcessPPAPITest.*
+
+# Crashes intermittently.
+LoadtimesExtensionBindingsUITest.LoadTimesSameAfterClientInDocNavigation
+LoadtimesExtensionBindingsUITest.LoadTimesSameAfterUserInDocNavigation
+
+# crbug.com/110612
+IndexedDBUILayoutTest.LayoutTests

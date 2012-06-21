@@ -1,0 +1,21 @@
+# These test fail due to mmap Valgrind failures, see http://crbug.com/66677
+CollectedCookiesTest.DoubleDisplay
+CollectedCookiesTest.NavigateAway
+InfoBarsUITest.TestInfoBarsCloseOnNewTheme
+FastShutdown.SlowTermination
+MouseLeaveTest.TestOnMouseOut
+NotificationsPermissionTest.TestNoUserGestureInfobar
+NotificationsPermissionTest.TestUserGestureInfobar
+
+# These test fail due to timeout or limited buildslave support;
+# http://crbug.com/67301
+BrowserFocusTest.InterstitialFocus
+BrowserFocusTest.FindFocusTest
+BrowserFocusTest.FocusTraversalOnInterstitial
+
+# Don't run FAILS_ tests under Valgrind/TSan, see http://crbug.com/67959
+# NB: Don't use FAILS_ or it will be turned into *.* by chrome_tests.py :)
+*.FAILS*
+
+# Fails under Valgrind, see http://crbug.com/68068
+DevToolsSanityTest.TestPauseWhenScriptIsRunning

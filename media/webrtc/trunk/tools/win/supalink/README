@@ -1,0 +1,17 @@
+Linker shim that enables the use of "Use Library Dependency Inputs" on
+large exe/dlls via Visual Studio.
+
+That flag is required to enable useful incremental linking, however, with a
+large number of objects in components, the linker fails with:
+
+...RSP00002E45885644.rsp : fatal error LNK1170: line in command file contains 131071 or more characters
+
+This seems to be that the IDE team didn't talk to the linker team; the
+response file can handle long commands, just all the files can't be on
+*one* line which is what the IDE generates.
+
+So, this program simply replaces link.exe, fixes the response file, and
+then shells to the original linker. Ridiculous? Yes. Faster links? Yes.
+
+Compile/install with install_supalink.py. Run from cmd.exe as Administrator,
+and make sure to run vsvars32.bat first.

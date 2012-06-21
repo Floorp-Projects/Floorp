@@ -1,0 +1,38 @@
+# Tools has its own dependencies, separate from the production code.
+# Use http rather than https; the latter can cause problems for users behind
+# proxies.
+
+vars = {
+  "chromium_trunk" : "http://src.chromium.org/svn/trunk",
+}
+
+deps = {
+  # Used by quality_tracking.
+  "tools/third_party/gaeunit":
+    "http://code.google.com/p/gaeunit.git@e16d5bd4",
+
+  # Used by quality_tracking.
+  "tools/third_party/oauth2":
+    "http://github.com/simplegeo/python-oauth2.git@a83f4a29",
+
+  # Chromium buildbot scripts needs to be at the same level as our scripts.
+  "tools/continuous_build/build":
+    Var("chromium_trunk") + "/tools/build",
+
+  # Chromium buildbot scripts needs their own depot_tools.
+  "tools/continuous_build/depot_tools":
+    Var("chromium_trunk") + "/tools/depot_tools",
+
+  # Used by tools/quality_tracking/dashboard and tools/python_charts.
+  "tools/third_party/google-visualization-python":
+     "http://google-visualization-python.googlecode.com/svn/trunk/@15",
+}
+
+hooks = [
+  {
+    # Update slave buildbot.tac to include WebRTC slave_utils import.
+    "pattern": ".",
+    "action": ["python", "tools/add_webrtc_slave_utils.py"],
+  },
+]
+
