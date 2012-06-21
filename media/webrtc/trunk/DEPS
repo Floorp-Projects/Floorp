@@ -1,0 +1,132 @@
+vars = {
+  # Use this googlecode_url variable only if there is an internal mirror for it.
+  # If you do not know, use the full path while defining your new deps entry.
+  "googlecode_url": "http://%s.googlecode.com/svn",
+  "chromium_trunk" : "http://src.chromium.org/svn/trunk",
+  "chromium_revision": "120526",
+  "webrtc_revision": "2047",
+  "libjingle_revision": "132",
+}
+
+# NOTE: Prefer revision numbers to tags for svn deps. Use http rather than
+# https; the latter can cause problems for users behind proxies.
+deps = {
+  # WebRTC deps.
+  "trunk/src":
+    (Var("googlecode_url") % "webrtc") + "/trunk/src@" + Var("webrtc_revision"),
+
+  "trunk/tools":
+    (Var("googlecode_url") % "webrtc") + "/trunk/tools@" + Var("webrtc_revision"),
+
+  "trunk/test":
+    (Var("googlecode_url") % "webrtc") + "/trunk/test@" + Var("webrtc_revision"),
+
+  "trunk/third_party/google-gflags":
+    (Var("googlecode_url") % "webrtc") + "/trunk/third_party/google-gflags@" + Var("webrtc_revision"),
+
+  "trunk/third_party/libvpx":
+    (Var("googlecode_url") % "webrtc") + "/trunk/third_party/libvpx@" + Var("webrtc_revision"),
+
+  "trunk/build":
+    Var("chromium_trunk") + "/src/build@" + Var("chromium_revision"),
+
+  "trunk/testing":
+    Var("chromium_trunk") + "/src/testing@" + Var("chromium_revision"),
+
+  "trunk/testing/gtest":
+    (Var("googlecode_url") % "googletest") + "/trunk@573",
+
+  "trunk/testing/gmock":
+    (Var("googlecode_url") % "googlemock") + "/trunk@386",
+
+  "trunk/tools/gyp":
+    (Var("googlecode_url") % "gyp") + "/trunk@1187",
+
+  # Needed by build/common.gypi.
+  "trunk/tools/win/supalink":
+    Var("chromium_trunk") + "/src/tools/win/supalink@" + Var("chromium_revision"),
+
+  "trunk/tools/clang/scripts":
+    Var("chromium_trunk") + "/src/tools/clang/scripts@" + Var("chromium_revision"),
+
+  "trunk/tools/python":
+    Var("chromium_trunk") + "/src/tools/python@" + Var("chromium_revision"),
+
+  "trunk/tools/valgrind":
+    Var("chromium_trunk") + "/src/tools/valgrind@" + Var("chromium_revision"),
+
+  "trunk/third_party/protobuf/":
+    Var("chromium_trunk") + "/src/third_party/protobuf@" + Var("chromium_revision"),
+
+  "trunk/third_party/libvpx/source/libvpx":
+    "http://git.chromium.org/webm/libvpx.git@e479379a",
+
+  "trunk/third_party/libjpeg_turbo/":
+    Var("chromium_trunk") + "/deps/third_party/libjpeg_turbo@119959",
+
+  "trunk/third_party/libjpeg/":
+    Var("chromium_trunk") + "/src/third_party/libjpeg@" + Var("chromium_revision"),
+
+  "trunk/third_party/yasm/":
+    Var("chromium_trunk") + "/src/third_party/yasm@" + Var("chromium_revision"),
+
+  "trunk/third_party/expat/":
+    Var("chromium_trunk") + "/src/third_party/expat@" + Var("chromium_revision"),
+
+  "trunk/third_party/google-gflags/src":
+    (Var("googlecode_url") % "google-gflags") + "/trunk/src@45",
+
+  "trunk/third_party/yasm/source/patched-yasm":
+    Var("chromium_trunk") + "/deps/third_party/yasm/patched-yasm@73761",
+
+  # Used by libjpeg-turbo
+  "trunk/third_party/yasm/binaries":
+    Var("chromium_trunk") + "/deps/third_party/yasm/binaries@74228",
+
+  # TODO(andrew): roll to 164 after fixing:
+  # http://code.google.com/p/webrtc/issues/detail?id=267
+  "trunk/third_party/libyuv":
+    (Var("googlecode_url") % "libyuv") + "/trunk@121",
+
+  # libjingle deps.
+  "trunk/third_party/libjingle/source":
+    (Var("googlecode_url") % "libjingle") + "/trunk/@" + Var("libjingle_revision"),
+
+  "trunk/third_party/libsrtp/":
+    Var("chromium_trunk") + "/deps/third_party/libsrtp@119742",
+
+  "trunk/third_party/jsoncpp/":
+    Var("chromium_trunk") + "/src/third_party/jsoncpp@" + Var("chromium_revision"),
+
+  "trunk/third_party/jsoncpp/source":
+    "http://jsoncpp.svn.sourceforge.net/svnroot/jsoncpp/trunk/jsoncpp@248",
+}
+
+deps_os = {
+  "win": {
+    "trunk/third_party/cygwin/":
+      Var("chromium_trunk") + "/deps/third_party/cygwin@66844",
+  }
+}
+
+hooks = [
+  {
+    # Create a supplement.gypi file under trunk/.  This file will be picked up
+    # by gyp and we use it to set Chromium related variables (inside_chromium_build)
+    # to 0 and enable the standalone build.
+    "pattern": ".",
+    "action": ["python", "trunk/tools/create_supplement_gypi.py", "trunk/src/supplement.gypi"],
+  },
+  {
+    # Pull clang on mac. If nothing changed, or on non-mac platforms, this takes
+    # zero seconds to run. If something changed, it downloads a prebuilt clang.
+    "pattern": ".",
+    "action": ["python", "trunk/tools/clang/scripts/update.py", "--mac-only"],
+  },
+  {
+    # A change to a .gyp, .gypi, or to GYP itself should run the generator.
+    "pattern": ".",
+    "action": ["python", "trunk/build/gyp_chromium", "--depth=trunk", "trunk/peerconnection.gyp"],
+  },
+]
+

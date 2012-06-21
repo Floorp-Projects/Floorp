@@ -21,6 +21,120 @@
 
 // ----------------------------------------------------------------------
 
+/**
+ * This class is used to get the pre-effects visual overflow rect of a frame,
+ * or, in the case of a frame with continuations, to collect the union of the
+ * pre-effects visual overflow rects of all the continuations. The result is
+ * relative to the origin (top left corner of the border box) of the frame, or,
+ * if the frame has continuations, the origin of the  _first_ continuation.
+ */
+class PreEffectsVisualOverflowCollector : public nsLayoutUtils::BoxCallback
+{
+public:
+  /**
+   * If the pre-effects visual overflow rect of the frame being examined
+   * happens to be known, it can be passed in as aCurrentFrame and its
+   * pre-effects visual overflow rect can be passed in as
+   * aCurrentFrameOverflowArea. This is just an optimization to save a
+   * frame property lookup - these arguments are optional.
+   */
+  PreEffectsVisualOverflowCollector(nsIFrame* aFirstContinuation,
+                                    nsIFrame* aCurrentFrame,
+                                    const nsRect& aCurrentFrameOverflowArea)
+    : mFirstContinuation(aFirstContinuation)
+    , mCurrentFrame(aCurrentFrame)
+    , mCurrentFrameOverflowArea(aCurrentFrameOverflowArea)
+  {
+    NS_ASSERTION(!mFirstContinuation->GetPrevContinuation(),
+                 "We want the first continuation here");
+  }
+
+  virtual void AddBox(nsIFrame* aFrame) {
+    nsRect overflow = (aFrame == mCurrentFrame) ?
+      mCurrentFrameOverflowArea : GetPreEffectsVisualOverflowRect(aFrame);
+    mResult.UnionRect(mResult, overflow + aFrame->GetOffsetTo(mFirstContinuation));
+  }
+
+  nsRect GetResult() const {
+    return mResult;
+  }
+
+private:
+
+  static nsRect GetPreEffectsVisualOverflowRect(nsIFrame* aFrame) {
+    nsRect* r = static_cast<nsRect*>
+      (aFrame->Properties().Get(nsIFrame::PreEffectsBBoxProperty()));
+    if (r) {
+      return *r;
+    }
+    // Despite the fact that we're invoked for frames with SVG effects applied,
+    // we can actually get here. All continuations and special siblings of a
+    // frame with SVG effects applied will have the PreEffectsBBoxProperty
+    // property set on them. Therefore, the frames that are passed to us will
+    // always have that property set...well, with one exception. If the frames
+    // for an element with SVG effects applied have been subject to an "IB
+    // split", then the block frame(s) that caused the split will have been
+    // wrapped in anonymous, inline-block, nsBlockFrames of pseudo-type
+    // nsCSSAnonBoxes::mozAnonymousBlock. These "special sibling" anonymous
+    // blocks will have the PreEffectsBBoxProperty property set on them, but
+    // they will never be passed to us. Instead, we'll be passed the block
+    // children that they wrap, which don't have the PreEffectsBBoxProperty
+    // property set on them. This is actually okay. What we care about is
+    // collecting the _pre_ effects visual overflow rects of the frames to
+    // which the SVG effects have been applied. Since the IB split results in
+    // any overflow rect adjustments for transforms, effects, etc. taking
+    // place on the anonymous block wrappers, the wrapped children are left
+    // with their overflow rects unaffected. In other words, calling
+    // GetVisualOverflowRect() on the children will return their pre-effects
+    // visual overflow rects, just as we need.
+    //
+    // A couple of tests that demonstrate the IB split and cause us to get here
+    // are:
+    //
+    //  * reftests/svg/svg-integration/clipPath-html-06.xhtml
+    //  * reftests/svg/svg-integration/clipPath-html-06-extref.xhtml
+    //
+    // If we ever got passed a frame with the PreTransformOverflowAreasProperty
+    // property set, that would be bad, since then our GetVisualOverflowRect()
+    // call would give us the post-effects, and post-transform, overflow rect.
+    //
+    NS_ASSERTION(aFrame->GetParent()->GetStyleContext()->GetPseudo() ==
+                   nsCSSAnonBoxes::mozAnonymousBlock,
+                 "How did we getting here, then?");
+    NS_ASSERTION(!aFrame->Properties().Get(
+                   aFrame->PreTransformOverflowAreasProperty()),
+                 "GetVisualOverflowRect() won't return the pre-effects rect!");
+    return aFrame->GetVisualOverflowRect();
+  }
+
+  nsIFrame*     mFirstContinuation;
+  nsIFrame*     mCurrentFrame;
+  const nsRect& mCurrentFrameOverflowArea;
+  nsRect        mResult;
+};
+
+/**
+ * Gets the union of the pre-effects visual overflow rects of all of a frame's
+ * continuations, in "user space".
+ */
+static nsRect
+GetPreEffectsVisualOverflowUnion(nsIFrame* aFirstContinuation,
+                                 nsIFrame* aCurrentFrame,
+                                 const nsRect& aCurrentFramePreEffectsOverflow,
+                                 const nsPoint& aFirstContinuationToUserSpace)
+{
+  NS_ASSERTION(!aFirstContinuation->GetPrevContinuation(),
+               "Need first continuation here");
+  PreEffectsVisualOverflowCollector collector(aFirstContinuation,
+                                              aCurrentFrame,
+                                              aCurrentFramePreEffectsOverflow);
+  // Compute union of all overflow areas relative to aFirstContinuation:
+  nsLayoutUtils::GetAllInFlowBoxes(aFirstContinuation, &collector);
+  // Return the result in user space:
+  return collector.GetResult() + aFirstContinuationToUserSpace;
+}
+
+
 bool
 nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
 {
@@ -69,54 +183,28 @@ nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(nsIFrame* aNonSVGFrame)
                  presContext->AppUnitsToFloatCSSPixels(r.height));
 }
 
-static nsRect
-GetPreEffectsOverflowRect(nsIFrame* aFrame)
+gfxRect
+nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
 {
-  nsRect* r = static_cast<nsRect*>
-    (aFrame->Properties().Get(nsIFrame::PreEffectsBBoxProperty()));
-  if (r)
-    return *r;
-  return aFrame->GetVisualOverflowRect();
-}
-
-struct BBoxCollector : public nsLayoutUtils::BoxCallback {
-  nsIFrame*     mReferenceFrame;
-  nsIFrame*     mCurrentFrame;
-  const nsRect& mCurrentFrameOverflowArea;
-  nsRect        mResult;
-
-  BBoxCollector(nsIFrame* aReferenceFrame, nsIFrame* aCurrentFrame,
-                const nsRect& aCurrentFrameOverflowArea)
-    : mReferenceFrame(aReferenceFrame), mCurrentFrame(aCurrentFrame),
-      mCurrentFrameOverflowArea(aCurrentFrameOverflowArea) {}
-
-  virtual void AddBox(nsIFrame* aFrame) {
-    nsRect overflow = aFrame == mCurrentFrame ? mCurrentFrameOverflowArea
-        : GetPreEffectsOverflowRect(aFrame);
-    mResult.UnionRect(mResult, overflow + aFrame->GetOffsetTo(mReferenceFrame));
-  }
-};
-
-static nsRect
-GetSVGBBox(nsIFrame* aFirstContinuation,
-           nsIFrame* aCurrentFrame,
-           const nsRect& aCurrentFramesPreEffectsOverflow,
-           const nsPoint& aFirstContinuationToUserSpace)
-{
-  NS_ASSERTION(!aFirstContinuation->GetPrevContinuation(),
-               "Need first continuation here");
-  // Compute union of all overflow areas relative to aFirstContinuation:
-  BBoxCollector collector(aFirstContinuation, aCurrentFrame,
-                          aCurrentFramesPreEffectsOverflow);
-  nsLayoutUtils::GetAllInFlowBoxes(aFirstContinuation, &collector);
-  // Get it into "user space" for non-SVG frames
-  return collector.mResult + aFirstContinuationToUserSpace;
+  NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
+               "SVG frames should not get here");
+  nsIFrame* firstFrame =
+    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(aNonSVGFrame);
+  // 'r' is in "user space":
+  nsRect r = GetPreEffectsVisualOverflowUnion(firstFrame, nsnull, nsRect(),
+                                              GetOffsetToUserSpace(firstFrame));
+  return nsLayoutUtils::RectToGfxRect(r,
+           aNonSVGFrame->PresContext()->AppUnitsPerCSSPixel());
 }
 
 nsRect
-nsSVGIntegrationUtils::ComputeFrameEffectsRect(nsIFrame* aFrame,
-                                               const nsRect& aOverflowRect)
+  nsSVGIntegrationUtils::
+    ComputePostEffectsVisualOverflowRect(nsIFrame* aFrame,
+                                         const nsRect& aPreEffectsOverflowRect)
 {
+  NS_ASSERTION(!(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT),
+                 "Don't call this on SVG child frames");
+
   nsIFrame* firstFrame =
     nsLayoutUtils::GetFirstContinuationOrSpecialSibling(aFrame);
   nsSVGEffects::EffectProperties effectProperties =
@@ -124,25 +212,48 @@ nsSVGIntegrationUtils::ComputeFrameEffectsRect(nsIFrame* aFrame,
   nsSVGFilterFrame *filterFrame = effectProperties.mFilter ?
     effectProperties.mFilter->GetFilterFrame() : nsnull;
   if (!filterFrame)
-    return aOverflowRect;
+    return aPreEffectsOverflowRect;
 
-  // XXX this isn't really right. We can't compute the correct filter
-  // bbox until all aFrame's continuations have been reflowed.
-  // but then it's too late to set the overflow areas for the earlier frames.
-  nsPoint firstFrameToUserSpace = GetOffsetToUserSpace(firstFrame);
-  nsRect r = GetSVGBBox(firstFrame, aFrame, aOverflowRect,
-                        firstFrameToUserSpace);
-  // r is relative to user space
+  // XXX Since we're called during reflow, this is broken for frames with
+  // continuations. When we're called for a frame with continuations, we're
+  // called for each continuation in turn as they're reflowed. However, it
+  // isn't until the last continuation is reflowed that the following
+  // GetOffsetToUserSpace() and GetPreEffectsVisualOverflowUnion() calls will
+  // obtain valid border boxes for all the continuations. As a result, we'll
+  // end up returning bogus post-filter visual overflow rects for all the prior
+  // continuations. Unfortunately, by the time the last continuation is
+  // reflowed, it's too late to go back and set and propagate the overflow
+  // rects on the previous continuations.
+  //
+  // XXXjwatt It seems like the only reason we pass an override bbox to
+  // GetPostFilterBounds instead of just letting the filter code call into our
+  // GetSVGBBoxForNonSVGFrame method is as a slight optimization so
+  // GetPreEffectsVisualOverflowUnion won't have to look up the
+  // aPreEffectsOverflowRect that we have to hand. The bbox we provide is
+  // the same as the bbox it would otherwise get - well, almost. We do round it
+  // out to pixel boundaries, but does that matter? If so, it would have been
+  // nice to have a comment here explaining why (and should
+  // GetSVGBBoxForNonSVGFrame also round out?). If not, it doesn't look like
+  // the extra code complexity is worth it to me.
   PRUint32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  nsIntRect p = r.ToOutsidePixels(appUnitsPerDevPixel);
-  p = filterFrame->GetPostFilterBounds(firstFrame, &p);
-  r = p.ToAppUnits(appUnitsPerDevPixel);
-  // Make it relative to aFrame again
-  return r - (aFrame->GetOffsetTo(firstFrame) + firstFrameToUserSpace);
+  nsPoint firstFrameToUserSpace = GetOffsetToUserSpace(firstFrame);
+  // overrideBBox is in "user space", in dev pixels:
+  nsIntRect overrideBBox =
+    GetPreEffectsVisualOverflowUnion(firstFrame, aFrame,
+                                     aPreEffectsOverflowRect,
+                                     firstFrameToUserSpace).
+      ToOutsidePixels(appUnitsPerDevPixel);
+
+  nsRect overflowRect =
+    filterFrame->GetPostFilterBounds(firstFrame, &overrideBBox).
+                   ToAppUnits(appUnitsPerDevPixel);
+
+  // Return overflowRect relative to aFrame, rather than "user space":
+  return overflowRect - (aFrame->GetOffsetTo(firstFrame) + firstFrameToUserSpace);
 }
 
 nsRect
-nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(nsIFrame* aFrame,
+nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
                                                       const nsRect& aInvalidRect)
 {
   // Don't bother calling GetEffectProperties; the filter property should
@@ -256,17 +367,6 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   NS_ASSERTION(!svgChildFrame, "Should never be called on an SVG frame");
 #endif
 
-  float opacity = aEffectsFrame->GetStyleDisplay()->mOpacity;
-  if (opacity == 0.0f)
-    return;
-
-  /* Properties are added lazily and may have been removed by a restyle,
-     so make sure all applicable ones are set again. */
-  nsIFrame* firstFrame =
-    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(aEffectsFrame);
-  nsSVGEffects::EffectProperties effectProperties =
-    nsSVGEffects::GetEffectProperties(firstFrame);
-
   /* SVG defines the following rendering model:
    *
    *  1. Render geometry
@@ -281,17 +381,27 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
    * + Merge opacity and masking if both used together.
    */
 
+  float opacity = aEffectsFrame->GetStyleDisplay()->mOpacity;
+  if (opacity == 0.0f) {
+    return;
+  }
+
+  /* Properties are added lazily and may have been removed by a restyle,
+     so make sure all applicable ones are set again. */
+  nsIFrame* firstFrame =
+    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(aEffectsFrame);
+  nsSVGEffects::EffectProperties effectProperties =
+    nsSVGEffects::GetEffectProperties(firstFrame);
+
   bool isOK = true;
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
   nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
   nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
+  if (!isOK) {
+    return; // Some resource is missing. We shouldn't paint anything.
+  }
 
   bool isTrivialClip = clipPathFrame ? clipPathFrame->IsTrivial() : true;
-
-  if (!isOK) {
-    // Some resource is missing. We shouldn't paint anything.
-    return;
-  }
 
   gfxContext* gfx = aCtx->ThebesContext();
   gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
@@ -304,7 +414,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
                      ToAppUnits(appUnitsPerDevPixel);
   aCtx->Translate(offset);
 
-  gfxMatrix matrix = GetInitialMatrix(aEffectsFrame);
+  gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(aEffectsFrame);
 
   bool complexEffects = false;
   /* Check if we need to do additional operations on this child's
@@ -321,7 +431,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
    */
   if (clipPathFrame && isTrivialClip) {
     gfx->Save();
-    clipPathFrame->ClipPaint(aCtx, aEffectsFrame, matrix);
+    clipPathFrame->ClipPaint(aCtx, aEffectsFrame, cssPxToDevPxMatrix);
   }
 
   /* Paint the child */
@@ -351,13 +461,13 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 
   nsRefPtr<gfxPattern> maskSurface =
     maskFrame ? maskFrame->ComputeMaskAlpha(aCtx, aEffectsFrame,
-                                            matrix, opacity) : nsnull;
+                                            cssPxToDevPxMatrix, opacity) : nsnull;
 
   nsRefPtr<gfxPattern> clipMaskSurface;
   if (clipPathFrame && !isTrivialClip) {
     gfx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
 
-    nsresult rv = clipPathFrame->ClipPaint(aCtx, aEffectsFrame, matrix);
+    nsresult rv = clipPathFrame->ClipPaint(aCtx, aEffectsFrame, cssPxToDevPxMatrix);
     clipMaskSurface = gfx->PopGroup();
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
@@ -382,7 +492,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 }
 
 gfxMatrix
-nsSVGIntegrationUtils::GetInitialMatrix(nsIFrame* aNonSVGFrame)
+nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame)
 {
   NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
                "SVG frames should not get here");
@@ -393,20 +503,6 @@ nsSVGIntegrationUtils::GetInitialMatrix(nsIFrame* aNonSVGFrame)
   return gfxMatrix(devPxPerCSSPx, 0.0,
                    0.0, devPxPerCSSPx,
                    0.0, 0.0);
-}
-
-gfxRect
-nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
-{
-  NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
-               "SVG frames should not get here");
-  nsIFrame* firstFrame =
-    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(aNonSVGFrame);
-  // 'r' is in "user space":
-  nsRect r = GetSVGBBox(firstFrame, nsnull, nsRect(),
-                        GetOffsetToUserSpace(firstFrame));
-  return nsLayoutUtils::RectToGfxRect(r,
-           aNonSVGFrame->PresContext()->AppUnitsPerCSSPixel());
 }
 
 class PaintFrameCallback : public gfxDrawingCallback {

@@ -1,0 +1,12 @@
+# Fails on Valgrind/Mac, see http://crbug.com/43972
+ConditionVariableTest.LargeFastTaskTest
+
+# Fails on Valgrind/Mac due to missing syscall wrapper
+# for the symlink() syscall.  See http://crbug.com/44001
+FileUtilTest.NormalizeFilePathSymlinks
+
+# Fails on Valgrind/Mac, see http://crbug.com/53196
+CancellationFlagTest.SetOnDifferentThreadDeathTest
+
+# Fails on Valgrind/Mac, see http://crbug.com/93722
+ProcessUtilTest.MacTerminateOnHeapCorruption
