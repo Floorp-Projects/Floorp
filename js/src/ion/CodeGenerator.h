@@ -96,6 +96,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitInteger(LInteger *lir);
     bool visitRegExp(LRegExp *lir);
     bool visitLambda(LLambda *lir);
+    bool visitLambdaForSingleton(LLambdaForSingleton *lir);
     bool visitPointer(LPointer *lir);
     bool visitSlots(LSlots *lir);
     bool visitStoreSlotV(LStoreSlotV *store);

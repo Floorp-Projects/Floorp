@@ -113,6 +113,7 @@
     _(OsrScopeChain)                \
     _(RegExp)                       \
     _(Lambda)                       \
+    _(LambdaForSingleton)           \
     _(ImplicitThis)                 \
     _(Slots)                        \
     _(Elements)                     \
