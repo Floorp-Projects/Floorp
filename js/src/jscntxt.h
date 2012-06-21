@@ -1072,6 +1072,10 @@ struct JSContext : js::ContextFriendFields
     /* True if generating an error, to prevent runaway recursion. */
     bool                generatingError;
 
+#ifdef DEBUG
+    bool                rootingUnnecessary;
+#endif
+
     /* GC heap compartment. */
     JSCompartment       *compartment;
 

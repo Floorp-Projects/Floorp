@@ -4240,6 +4240,19 @@ JS::CheckStackRoots(JSContext *cx)
     if (rt->gcZeal_ == ZealStackRootingSafeValue && !rt->gcExactScanningEnabled)
         return;
 
+    // If this assertion fails, it means that an AssertRootingUnnecessary was
+    // placed around code that could trigger GC, and is therefore wrong. The
+    // AssertRootingUnnecessary should be removed and the code it was guarding
+    // should be modified to properly root any gcthings, and very possibly any
+    // code calling that function should also be modified if it was improperly
+    // assuming that GC could not happen at all within the called function.
+    // (The latter may not apply if the AssertRootingUnnecessary only protected
+    // a portion of a function, so the callers were already assuming that GC
+    // could happen.)
+    JS_ASSERT(!cx->rootingUnnecessary);
+
+        return;
+
     AutoCopyFreeListToArenas copy(rt);
 
     JSTracer checker;
