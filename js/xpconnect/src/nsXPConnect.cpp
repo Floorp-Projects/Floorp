@@ -1863,14 +1863,8 @@ nsXPConnect::GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNati
 {
     NS_ASSERTION(aCurrentNativeCallContext, "bad param");
 
-    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
-    if (data) {
-        *aCurrentNativeCallContext = data->GetCallContext();
-        return NS_OK;
-    }
-    //else...
-    *aCurrentNativeCallContext = nsnull;
-    return UnexpectedFailure(NS_ERROR_FAILURE);
+    *aCurrentNativeCallContext = XPCJSRuntime::Get()->GetCallContext();
+    return NS_OK;
 }
 
 /* attribute nsIException PendingException; */
@@ -2045,32 +2039,29 @@ NS_IMETHODIMP
 nsXPConnect::ReleaseJSContext(JSContext * aJSContext, bool noGC)
 {
     NS_ASSERTION(aJSContext, "bad param");
-    XPCPerThreadData* tls = XPCPerThreadData::GetData(aJSContext);
-    if (tls) {
-        XPCCallContext* ccx = nsnull;
-        for (XPCCallContext* cur = tls->GetCallContext();
-             cur;
-             cur = cur->GetPrevCallContext()) {
-            if (cur->GetJSContext() == aJSContext) {
-                ccx = cur;
-                // Keep looping to find the deepest matching call context.
-            }
+    XPCCallContext* ccx = nsnull;
+    for (XPCCallContext* cur = GetRuntime()->GetCallContext();
+         cur;
+         cur = cur->GetPrevCallContext()) {
+        if (cur->GetJSContext() == aJSContext) {
+            ccx = cur;
+            // Keep looping to find the deepest matching call context.
         }
-
-        if (ccx) {
-#ifdef DEBUG_xpc_hacker
-            printf("!xpc - deferring destruction of JSContext @ %p\n",
-                   (void *)aJSContext);
-#endif
-            ccx->SetDestroyJSContextInDestructor(true);
-            return NS_OK;
-        }
-        // else continue on and synchronously destroy the JSContext ...
-
-        NS_ASSERTION(!XPCJSRuntime::Get()->GetJSContextStack()->
-                     DEBUG_StackHasJSContext(aJSContext),
-                     "JSContext still in threadjscontextstack!");
     }
+
+    if (ccx) {
+#ifdef DEBUG_xpc_hacker
+        printf("!xpc - deferring destruction of JSContext @ %p\n",
+               (void *)aJSContext);
+#endif
+        ccx->SetDestroyJSContextInDestructor(true);
+        return NS_OK;
+    }
+    // else continue on and synchronously destroy the JSContext ...
+
+    NS_ASSERTION(!XPCJSRuntime::Get()->GetJSContextStack()->
+                 DEBUG_StackHasJSContext(aJSContext),
+                 "JSContext still in threadjscontextstack!");
 
     if (noGC)
         JS_DestroyContextNoGC(aJSContext);
@@ -2558,7 +2549,7 @@ nsXPConnect::HoldObject(JSContext *aJSContext, JSObject *aObject,
 NS_IMETHODIMP_(void)
 nsXPConnect::GetCaller(JSContext **aJSContext, JSObject **aObj)
 {
-    XPCCallContext *ccx = XPCPerThreadData::GetData(nsnull)->GetCallContext();
+    XPCCallContext *ccx = XPCJSRuntime::Get()->GetCallContext();
     *aJSContext = ccx->GetJSContext();
 
     // Set to the caller in XPC_WN_Helper_{Call,Construct}
