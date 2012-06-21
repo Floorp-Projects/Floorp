@@ -666,6 +666,15 @@ public:
     XPCCallContext*  SetCallContext(XPCCallContext* ccx)
         {XPCCallContext* old = mCallContext; mCallContext = ccx; return old;}
 
+    jsid GetResolveName() const {return mResolveName;}
+    jsid SetResolveName(jsid name)
+        {jsid old = mResolveName; mResolveName = name; return old;}
+
+    XPCWrappedNative* GetResolvingWrapper() const {return mResolvingWrapper;}
+    XPCWrappedNative* SetResolvingWrapper(XPCWrappedNative* w)
+        {XPCWrappedNative* old = mResolvingWrapper;
+         mResolvingWrapper = w; return old;}
+
     JSObject2WrappedJSMap*     GetWrappedJSMap()        const
         {return mWrappedJSMap;}
 
@@ -879,6 +888,8 @@ private:
     JSContext*               mJSCycleCollectionContext;
     XPCCallContext*          mCallContext;
     AutoMarkingPtr*          mAutoRoots;
+    jsid                     mResolveName;
+    XPCWrappedNative*        mResolvingWrapper;
     JSObject2WrappedJSMap*   mWrappedJSMap;
     IID2WrappedJSClassMap*   mWrappedJSClassMap;
     IID2NativeInterfaceMap*  mIID2NativeInterfaceMap;
@@ -3739,15 +3750,6 @@ public:
 
     ~XPCPerThreadData();
 
-    jsid GetResolveName() const {return mResolveName;}
-    jsid SetResolveName(jsid name)
-        {jsid old = mResolveName; mResolveName = name; return old;}
-
-    XPCWrappedNative* GetResolvingWrapper() const {return mResolvingWrapper;}
-    XPCWrappedNative* SetResolvingWrapper(XPCWrappedNative* w)
-        {XPCWrappedNative* old = mResolvingWrapper;
-         mResolvingWrapper = w; return old;}
-
     void Cleanup();
     void ReleaseNatives();
 
@@ -3777,8 +3779,6 @@ private:
 
 private:
     XPCPerThreadData*    mNextThread;
-    jsid                 mResolveName;
-    XPCWrappedNative*    mResolvingWrapper;
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     uint32_t             mWrappedNativeThreadsafetyReportDepth;
@@ -3977,9 +3977,8 @@ class NS_STACK_CLASS AutoResolveName
 {
 public:
     AutoResolveName(XPCCallContext& ccx, jsid name
-                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-        : mTLS(ccx.GetThreadData()),
-          mOld(mTLS->SetResolveName(name)),
+                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
+          mOld(XPCJSRuntime::Get()->SetResolveName(name)),
           mCheck(name) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -3988,12 +3987,11 @@ public:
 #ifdef DEBUG
             jsid old =
 #endif
-            mTLS->SetResolveName(mOld);
+            XPCJSRuntime::Get()->SetResolveName(mOld);
             NS_ASSERTION(old == mCheck, "Bad Nesting!");
         }
 
 private:
-    XPCPerThreadData* mTLS;
     jsid mOld;
     jsid mCheck;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
