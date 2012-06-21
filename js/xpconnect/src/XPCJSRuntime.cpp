@@ -1126,8 +1126,6 @@ XPCJSRuntime::~XPCJSRuntime()
         fprintf(stderr, "nJRSI: destroyed runtime %p\n", (void *)mJSRuntime);
 #endif
     }
-
-    XPCPerThreadData::ShutDown();
 }
 
 static void

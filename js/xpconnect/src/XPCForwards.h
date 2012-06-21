@@ -16,7 +16,6 @@ class XPCJSRuntime;
 class XPCContext;
 class XPCCallContext;
 
-class XPCPerThreadData;
 class XPCJSThrower;
 class XPCJSStack;
 
