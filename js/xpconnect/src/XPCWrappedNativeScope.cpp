@@ -583,7 +583,9 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
     }
     gScopes = nsnull;
 
-    // Walk the unified dying list and call shutdown on all wrappers and protos
+    // We're forcibly killing scopes, rather than allowing them to go away
+    // when they're ready. As such, we need to do some cleanup before they
+    // can safely be destroyed.
 
     for (cur = gDyingScopes; cur; cur = cur->mNext) {
         // Give the Components object a chance to try to clean up.
@@ -598,6 +600,18 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
                 Enumerate(WrappedNativeProtoShutdownEnumerator,  &data);
         cur->mWrappedNativeMap->
                 Enumerate(WrappedNativeShutdownEnumerator,  &data);
+
+        // Since we're not gating the scope destruction on the finalization
+        // of the JS global in this case, it might stick around. And if it
+        // gets later on (or otherwise triggers an access to the scope), we'll
+        // crash. Null it out.
+        JSObject *global = cur->mGlobalJSObject;
+        if (global &&
+            js::GetObjectClass(global)->flags & JSCLASS_XPCONNECT_GLOBAL)
+        {
+            JS_SetReservedSlot(global, JSCLASS_GLOBAL_SLOT_COUNT,
+                               PRIVATE_TO_JSVAL(nsnull));
+        }
     }
 
     // Now it is safe to kill all the scopes.
