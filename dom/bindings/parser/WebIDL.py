@@ -426,6 +426,13 @@ class IDLInterface(IDLObjectWithScope):
         for iface in self.implementedInterfaces:
             iface.finish(scope)
 
+        cycleInGraph = self.findInterfaceLoopPoint(self)
+        if cycleInGraph:
+            raise WebIDLError("Interface %s has itself as ancestor or "
+                              "implemented interface" % self.identifier.name,
+                              self.location,
+                              extraLocation=cycleInGraph.location)
+
         # Now resolve() and finish() our members before importing the
         # ones from our implemented interfaces.
 
@@ -593,6 +600,26 @@ class IDLInterface(IDLObjectWithScope):
             temp |= iface.getConsequentialInterfaces()
 
         return consequentialInterfaces | temp
+
+    def findInterfaceLoopPoint(self, otherInterface):
+        """
+        Finds an interface, amongst our ancestors and consequential interfaces,
+        that inherits from otherInterface or implements otherInterface
+        directly.  If there is no such interface, returns None.
+        """
+        if self.parent:
+            if self.parent == otherInterface:
+                return self
+            loopPoint = self.parent.findInterfaceLoopPoint(otherInterface)
+            if loopPoint:
+                return loopPoint
+        if otherInterface in self.implementedInterfaces:
+            return self
+        for iface in self.implementedInterfaces:
+            loopPoint = iface.findInterfaceLoopPoint(otherInterface)
+            if loopPoint:
+                return loopPoint
+        return None
 
 class IDLDictionary(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):
