@@ -662,6 +662,10 @@ public:
 
     JSContext*     GetJSCycleCollectionContext();
 
+    XPCCallContext*  GetCallContext() const {return mCallContext;}
+    XPCCallContext*  SetCallContext(XPCCallContext* ccx)
+        {XPCCallContext* old = mCallContext; mCallContext = ccx; return old;}
+
     JSObject2WrappedJSMap*     GetWrappedJSMap()        const
         {return mWrappedJSMap;}
 
@@ -826,6 +830,7 @@ private:
     JSRuntime*               mJSRuntime;
     XPCJSContextStack*       mJSContextStack;
     JSContext*               mJSCycleCollectionContext;
+    XPCCallContext*          mCallContext;
     JSObject2WrappedJSMap*   mWrappedJSMap;
     IID2WrappedJSClassMap*   mWrappedJSClassMap;
     IID2NativeInterfaceMap*  mIID2NativeInterfaceMap;
@@ -3729,9 +3734,11 @@ public:
         return false;
     }
 
-    XPCCallContext*  GetCallContext() const {return mCallContext;}
+    // These go away soon.
+    XPCCallContext*  GetCallContext() const
+        {return XPCJSRuntime::Get()->GetCallContext();}
     XPCCallContext*  SetCallContext(XPCCallContext* ccx)
-        {XPCCallContext* old = mCallContext; mCallContext = ccx; return old;}
+        {return XPCJSRuntime::Get()->SetCallContext(ccx);}
 
     jsid GetResolveName() const {return mResolveName;}
     jsid SetResolveName(jsid name)
@@ -3778,7 +3785,6 @@ private:
 
 private:
     XPCPerThreadData*    mNextThread;
-    XPCCallContext*      mCallContext;
     jsid                 mResolveName;
     XPCWrappedNative*    mResolvingWrapper;
 
