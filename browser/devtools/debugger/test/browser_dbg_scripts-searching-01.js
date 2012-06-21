@@ -45,6 +45,8 @@ function test()
 }
 
 function testScriptSearching() {
+  var token;
+
   gDebugger.DebuggerController.activeThread.resume(function() {
     gEditor = gDebugger.DebuggerView.editor;
     gScripts = gDebugger.DebuggerView.Scripts;
@@ -56,103 +58,107 @@ function testScriptSearching() {
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line.");
 
-    write("#debugger");
+    token = "debugger";
+    write("#" + token);
     ok(gEditor.getCaretPosition().line == 2 &&
-       gEditor.getCaretPosition().col == 44,
+       gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (1)");
 
     EventUtils.sendKey("RETURN");
     ok(gEditor.getCaretPosition().line == 8 &&
-       gEditor.getCaretPosition().col == 2,
+       gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (2)");
 
     EventUtils.sendKey("ENTER");
     ok(gEditor.getCaretPosition().line == 12 &&
-       gEditor.getCaretPosition().col == 8,
+       gEditor.getCaretPosition().col == 8 + token.length,
       "The editor didn't jump to the correct token. (3)");
 
     EventUtils.sendKey("ENTER");
     ok(gEditor.getCaretPosition().line == 19 &&
-       gEditor.getCaretPosition().col == 4,
+       gEditor.getCaretPosition().col == 4 + token.length,
       "The editor didn't jump to the correct token. (4)");
 
     EventUtils.sendKey("RETURN");
     ok(gEditor.getCaretPosition().line == 2 &&
-       gEditor.getCaretPosition().col == 44,
+       gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (5)");
 
 
-    write(":bogus#debugger;");
+    token = "debugger;";
+    write(":bogus#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
-       gEditor.getCaretPosition().col == 2,
+       gEditor.getCaretPosition().col == 2 + token.length,
+      "The editor didn't jump to the correct token. (6)");
+
+    write(":13#" + token);
+    ok(gEditor.getCaretPosition().line == 8 &&
+       gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (7)");
 
-    write(":13#debugger;");
+    write(":#" + token);
     ok(gEditor.getCaretPosition().line == 8 &&
-       gEditor.getCaretPosition().col == 2,
-      "The editor didn't jump to the correct token. (7)");
-
-    write(":#debugger;");
-    ok(gEditor.getCaretPosition().line == 8 &&
-       gEditor.getCaretPosition().col == 2,
+       gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (8)");
 
-    write("::#debugger;");
+    write("::#" + token.length);
     ok(gEditor.getCaretPosition().line == 8 &&
-       gEditor.getCaretPosition().col == 2,
+       gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (9)");
 
-    write(":::#debugger;");
+    write(":::#" + token.length);
     ok(gEditor.getCaretPosition().line == 8 &&
-       gEditor.getCaretPosition().col == 2,
+       gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (10)");
 
 
     write(":i am not a number");
     ok(gEditor.getCaretPosition().line == 8 &&
-       gEditor.getCaretPosition().col == 2,
+       gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't remain at the correct token. (11)");
 
     write("#__i do not exist__");
     ok(gEditor.getCaretPosition().line == 8 &&
-       gEditor.getCaretPosition().col == 2,
+       gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't remain at the correct token. (12)");
 
 
+    token = "debugger";
     write(":1:2:3:a:b:c:::12");
     ok(gEditor.getCaretPosition().line == 11 &&
        gEditor.getCaretPosition().col == 0,
       "The editor didn't jump to the correct line. (13)");
 
-    write("#don't#find#me#instead#find#debugger");
+    write("#don't#find#me#instead#find#" + token);
     ok(gEditor.getCaretPosition().line == 2 &&
-       gEditor.getCaretPosition().col == 44,
+       gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (14)");
+
 
     EventUtils.sendKey("RETURN");
     ok(gEditor.getCaretPosition().line == 8 &&
-       gEditor.getCaretPosition().col == 2,
+       gEditor.getCaretPosition().col == 2 + token.length,
       "The editor didn't jump to the correct token. (15)");
 
     EventUtils.sendKey("ENTER");
     ok(gEditor.getCaretPosition().line == 12 &&
-       gEditor.getCaretPosition().col == 8,
+       gEditor.getCaretPosition().col == 8 + token.length,
       "The editor didn't jump to the correct token. (16)");
 
     EventUtils.sendKey("RETURN");
     ok(gEditor.getCaretPosition().line == 19 &&
-       gEditor.getCaretPosition().col == 4,
+       gEditor.getCaretPosition().col == 4 + token.length,
       "The editor didn't jump to the correct token. (17)");
 
     EventUtils.sendKey("ENTER");
     ok(gEditor.getCaretPosition().line == 2 &&
-       gEditor.getCaretPosition().col == 44,
+       gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't jump to the correct token. (18)");
 
 
     clear();
     ok(gEditor.getCaretPosition().line == 2 &&
-       gEditor.getCaretPosition().col == 44,
+       gEditor.getCaretPosition().col == 44 + token.length,
       "The editor didn't remain at the correct token. (19)");
     is(gScripts.visibleItemsCount, 1,
       "Not all the scripts are shown after the search. (20)");
@@ -172,7 +178,7 @@ function write(text) {
   for (let i = 0; i < text.length; i++) {
     EventUtils.sendChar(text[i]);
   }
-  dump("editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
+  info("Editor caret position: " + gEditor.getCaretPosition().toSource() + "\n");
 }
 
 registerCleanupFunction(function() {

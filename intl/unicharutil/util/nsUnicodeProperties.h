@@ -11,8 +11,8 @@
 #include "nsIUGenCategory.h"
 #include "nsUnicodeScriptCodes.h"
 
-nsCharProps1 GetCharProps1(PRUint32 aCh);
-nsCharProps2 GetCharProps2(PRUint32 aCh);
+const nsCharProps1& GetCharProps1(PRUint32 aCh);
+const nsCharProps2& GetCharProps2(PRUint32 aCh);
 
 namespace mozilla {
 

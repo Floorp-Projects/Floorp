@@ -18,6 +18,7 @@
 #include "nsToolkitCompsCID.h"
 #include "nsICryptoHash.h"
 #include "nsICryptoHMAC.h"
+#include "mozilla/Attributes.h"
 
 // The hash length for a domain key.
 #define DOMAIN_LENGTH 4
@@ -33,9 +34,9 @@ class nsIThread;
 
 // This is a proxy class that just creates a background thread and delagates
 // calls to the background thread.
-class nsUrlClassifierDBService : public nsIUrlClassifierDBService,
-                                 public nsIURIClassifier,
-                                 public nsIObserver
+class nsUrlClassifierDBService MOZ_FINAL : public nsIUrlClassifierDBService,
+                                           public nsIURIClassifier,
+                                           public nsIObserver
 {
 public:
   // This is thread safe. It throws an exception if the thread is busy.

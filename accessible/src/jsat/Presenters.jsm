@@ -9,8 +9,8 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/accessibility/UtteranceGenerator.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
 
 var EXPORTED_SYMBOLS = ['VisualPresenter',
                         'AndroidPresenter',
@@ -153,7 +153,7 @@ VisualPresenter.prototype = {
         Ci.nsIAccessibleScrollType.SCROLL_TYPE_ANYWHERE);
       this._highlight(aContext.accessible);
     } catch (e) {
-      dump('Error getting bounds: ' + e);
+      Logger.error('Failed to get bounds: ' + e);
       return;
     }
   },
@@ -175,10 +175,7 @@ VisualPresenter.prototype = {
   },
 
   _highlight: function _highlight(aObject) {
-    let vp = (Services.appinfo.OS == 'Android') ?
-      this.chromeWin.BrowserApp.selectedTab.getViewport() :
-      { zoom: 1.0, offsetY: 0 };
-
+    let vp = Utils.getViewport(this.chromeWin) || { zoom: 1.0, offsetY: 0 };
     let bounds = this._getBounds(aObject, vp.zoom);
 
     // First hide it to avoid flickering when changing the style.
@@ -239,7 +236,7 @@ AndroidPresenter.prototype = {
 
     let output = [];
     aContext.newAncestry.forEach(
-      function (acc) {
+      function(acc) {
         output.push.apply(output, UtteranceGenerator.genForObject(acc));
       }
     );
@@ -248,7 +245,7 @@ AndroidPresenter.prototype = {
                       UtteranceGenerator.genForObject(aContext.accessible));
 
     aContext.subtreePreorder.forEach(
-      function (acc) {
+      function(acc) {
         output.push.apply(output, UtteranceGenerator.genForObject(acc));
       }
     );
@@ -339,7 +336,7 @@ DummyAndroidPresenter.prototype = {
   __proto__: AndroidPresenter.prototype,
 
   sendMessageToJava: function DummyAndroidPresenter_sendMessageToJava(aMsg) {
-    dump(JSON.stringify(aMsg, null, 2) + '\n');
+    Logger.debug('Android event:\n' + JSON.stringify(aMsg, null, 2));
   }
 };
 

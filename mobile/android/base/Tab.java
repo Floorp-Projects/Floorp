@@ -51,6 +51,7 @@ public final class Tab {
     private int mParentId;
     private boolean mExternal;
     private boolean mBookmark;
+    private boolean mReadingListItem;
     private HashMap<String, DoorHanger> mDoorHangers;
     private long mFaviconLoadId;
     private String mDocumentURI;
@@ -89,6 +90,7 @@ public final class Tab {
         mHistoryIndex = -1;
         mHistorySize = 0;
         mBookmark = false;
+        mReadingListItem = false;
         mDoorHangers = new HashMap<String, DoorHanger>();
         mFaviconLoadId = 0;
         mDocumentURI = "";
@@ -100,6 +102,7 @@ public final class Tab {
         mContentObserver = new ContentObserver(GeckoAppShell.getHandler()) {
             public void onChange(boolean selfChange) {
                 updateBookmark();
+                updateReadingListItem();
             }
         };
         BrowserDB.registerBookmarkObserver(mContentResolver, mContentObserver);
@@ -234,6 +237,10 @@ public final class Tab {
         return mBookmark;
     }
 
+    public boolean isReadingListItem() {
+        return mReadingListItem;
+    }
+
     public boolean isExternal() {
         return mExternal;
     }
@@ -243,6 +250,7 @@ public final class Tab {
             mUrl = url;
             Log.i(LOGTAG, "Updated url: " + url + " for tab with id: " + mId);
             updateBookmark();
+            updateReadingListItem();
             updateHistory(mUrl, mTitle);
         }
     }
@@ -390,6 +398,21 @@ public final class Tab {
         });
     }
 
+    private void updateReadingListItem() {
+        final String url = getURL();
+        if (url == null)
+            return;
+
+        GeckoBackgroundThread.getHandler().post(new Runnable() {
+            public void run() {
+                boolean readingListItem = BrowserDB.isReadingListItem(mContentResolver, url);
+                if (url.equals(getURL())) {
+                    mReadingListItem = readingListItem;
+                }
+            }
+        });
+    }
+
     public void addBookmark() {
         GeckoAppShell.getHandler().post(new Runnable() {
             public void run() {
@@ -420,6 +443,28 @@ public final class Tab {
 
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Add", String.valueOf(getId()));
         GeckoAppShell.sendEventToGecko(e);
+    }
+
+    public void removeFromReadingList() {
+        if (!mReaderEnabled)
+            return;
+
+        GeckoAppShell.getHandler().post(new Runnable() {
+            public void run() {
+                String url = getURL();
+                if (url == null)
+                    return;
+
+                BrowserDB.removeReadingListItemWithURL(mContentResolver, url);
+
+                GeckoApp.mAppContext.mMainHandler.post(new Runnable() {
+                    public void run() {
+                        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", getURL());
+                        GeckoAppShell.sendEventToGecko(e);
+                    }
+                });
+            }
+        });
     }
 
     public void readerMode() {

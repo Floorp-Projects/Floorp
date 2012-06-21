@@ -4,7 +4,7 @@
 <head>
   <title></title>
   <meta content="text/html; charset=UTF-8" http-equiv="content-type">
-  <meta name="viewport" content="width=480; initial-scale=.6667; user-scalable=0" />
+  <meta name="viewport" content="width=device-width; user-scalable=0" />
 
   <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
   <link rel="stylesheet" href="chrome://browser/skin/aboutReader.css" type="text/css"/>
@@ -16,6 +16,20 @@
 
   <div id="reader-content" class="content">
   </div>
+
+  <ul id="reader-toolbar" class="toolbar">
+    <a id="share-button" class="button share-button" href="#"></a>
+    <li class="dropdown">
+      <a class="dropdown-toggle button style-button" href="#"></a>
+      <div class="dropdown-popup">
+        <ul id="color-scheme-buttons" class="segmented-button"></ul>
+        <hr></hr>
+        <div id="font-size-control" class="step-control"></div>
+        <hr></hr>
+        <div id="margin-size-control" class="step-control"></div>
+      </div>
+    </li>
+  </ul>
 
   <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutReader.js">
   </script>
