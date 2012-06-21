@@ -3801,14 +3801,14 @@ nsImageRenderer::ComputeUnscaledDimensions(const nsSize& aBgPositioningArea,
           size = aBgPositioningArea;
         } else {
           // The intrinsic image size for a generic nsIFrame paint server is
-          // the frame's bbox size rounded to device pixels.
+          // the union of the border-box rects of all of its continuations,
+          // rounded to device pixels.
           PRInt32 appUnitsPerDevPixel =
             mForFrame->PresContext()->AppUnitsPerDevPixel();
-          nsRect rect =
-            nsSVGIntegrationUtils::GetNonSVGUserSpace(mPaintServerFrame);
-          nsRect rectSize = rect - rect.TopLeft();
-          nsIntRect rounded = rectSize.ToNearestPixels(appUnitsPerDevPixel);
-          size = rounded.ToAppUnits(appUnitsPerDevPixel).Size();
+          size =
+            nsSVGIntegrationUtils::GetContinuationUnionSize(mPaintServerFrame).
+              ToNearestPixels(appUnitsPerDevPixel).
+              ToAppUnits(appUnitsPerDevPixel);
         }
       } else {
         NS_ASSERTION(mImageElementSurface.mSurface, "Surface should be ready.");

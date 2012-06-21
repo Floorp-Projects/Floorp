@@ -43,7 +43,7 @@ nsTransactionItem::Release() {
   return mRefCnt;
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsTransactionItem)
+NS_IMPL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransactionItem)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsTransactionItem)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTransaction)

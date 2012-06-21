@@ -13,15 +13,22 @@ function test() {
 function tabLoaded() {
   browser.removeEventListener("load", tabLoaded, true);
 
-  openConsole(null, function() {
-    browser.addEventListener("load", tabReloaded, true);
+  openConsole(null, function(hud) {
     content.location.reload();
+
+    waitForSuccess({
+      name: "stacktrace message",
+      validatorFn: function()
+      {
+        return hud.outputNode.querySelector(".hud-log");
+      },
+      successFn: performChecks,
+      failureFn: finishTest,
+    });
   });
 }
 
-function tabReloaded() {
-  browser.removeEventListener("load", tabReloaded, true);
-
+function performChecks() {
   // The expected stack trace object.
   let stacktrace = [
     { filename: TEST_URI, lineNumber: 9, functionName: null, language: 2 },

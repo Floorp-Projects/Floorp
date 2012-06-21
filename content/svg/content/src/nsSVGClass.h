@@ -12,6 +12,7 @@
 #include "nsIDOMSVGAnimatedString.h"
 #include "nsISMILAttr.h"
 #include "nsString.h"
+#include "mozilla/Attributes.h"
 
 class nsSVGStylableElement;
 
@@ -43,7 +44,7 @@ private:
   nsAutoPtr<nsString> mAnimVal;
 
 public:
-  struct DOMAnimatedString : public nsIDOMSVGAnimatedString
+  struct DOMAnimatedString MOZ_FINAL : public nsIDOMSVGAnimatedString
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS(DOMAnimatedString)

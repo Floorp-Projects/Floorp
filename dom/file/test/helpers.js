@@ -76,48 +76,18 @@ ExpectError.prototype = {
 
 function addPermission(type, allow, url)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  let uri;
-  if (url) {
-    uri = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService)
-                    .newURI(url, null, null);
+  if (!url) {
+    url = window.document;
   }
-  else {
-    uri = SpecialPowers.getDocumentURIObject(window.document);
-  }
-
-  let permission;
-  if (allow) {
-    permission = Components.interfaces.nsIPermissionManager.ALLOW_ACTION;
-  }
-  else {
-    permission = Components.interfaces.nsIPermissionManager.DENY_ACTION;
-  }
-
-  Components.classes["@mozilla.org/permissionmanager;1"]
-            .getService(Components.interfaces.nsIPermissionManager)
-            .add(uri, type, permission);
+  SpecialPowers.addPermission(type, allow, url);
 }
 
-function removePermission(permission, url)
+function removePermission(type, url)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  let uri;
-  if (url) {
-    uri = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Components.interfaces.nsIIOService)
-                    .newURI(url, null, null);
+  if (!url) {
+    url = window.document;
   }
-  else {
-    uri = SpecialPowers.getDocumentURIObject(window.document);
-  }
-
-  Components.classes["@mozilla.org/permissionmanager;1"]
-            .getService(Components.interfaces.nsIPermissionManager)
-            .remove(uri.host, permission);
+  SpecialPowers.removePermission(type, url);
 }
 
 function allowIndexedDB(url)

@@ -47,7 +47,7 @@ StyleInfo::TextIndent(nsAString& aValue)
   const nsStyleCoord& styleCoord =
     mStyleContext->GetStyleText()->mTextIndent;
 
-  nscoord coordVal;
+  nscoord coordVal = 0;
   switch (styleCoord.GetUnit()) {
     case eStyleUnit_Coord:
       coordVal = styleCoord.GetCoordValue();
@@ -62,6 +62,20 @@ StyleInfo::TextIndent(nsAString& aValue)
                                            styleCoord.GetPercentValue());
       break;
     }
+
+    case eStyleUnit_Null:
+    case eStyleUnit_Normal:
+    case eStyleUnit_Auto:
+    case eStyleUnit_None:
+    case eStyleUnit_Factor:
+    case eStyleUnit_Degree:
+    case eStyleUnit_Grad:
+    case eStyleUnit_Radian:
+    case eStyleUnit_Turn:
+    case eStyleUnit_Integer:
+    case eStyleUnit_Enumerated:
+    case eStyleUnit_Calc:
+      break;
   }
 
   aValue.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(coordVal));

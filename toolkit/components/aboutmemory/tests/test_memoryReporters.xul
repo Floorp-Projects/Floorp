@@ -83,7 +83,7 @@
       isXptiWorkingSetPresent = true;
     } else if (aPath.search(/^explicit\/atom-table$/) >= 0) {
       isAtomTablePresent = true;
-    } else if (aPath === "compartments\/system\/[System Principal], this-is-a-sandbox-name") {
+    } else if (/\[System Principal\].*this-is-a-sandbox-name/.test(aPath)) {
       // A system compartment with a location (such as a sandbox) should
       // show that location.
       isSandboxLocationShown = true;

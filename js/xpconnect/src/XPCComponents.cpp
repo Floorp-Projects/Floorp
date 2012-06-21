@@ -3542,9 +3542,13 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
     return NS_OK;
 }
 
-nsresult
-GetSandboxNameFromStack(JSContext *cx, nsCString &sandboxName)
+static nsresult
+AssembleSandboxMemoryReporterName(JSContext *cx, nsCString &sandboxName)
 {
+    // Use a default name when the caller did not provide a sandboxName.
+    if (sandboxName.IsEmpty())
+        sandboxName = NS_LITERAL_CSTRING("[anonymous sandbox]");
+
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
     NS_ENSURE_TRUE(xpc, NS_ERROR_XPC_UNEXPECTED);
 
@@ -3557,8 +3561,19 @@ GetSandboxNameFromStack(JSContext *cx, nsCString &sandboxName)
     nsCOMPtr<nsIStackFrame> frame;
     xpc->GetCurrentJSStack(getter_AddRefs(frame));
 
-    if (frame)
-        frame->GetFilename(getter_Copies(sandboxName));
+    // Append the caller's location information.
+    if (frame) {
+        nsCString location;
+        PRInt32 lineNumber = 0;
+        frame->GetFilename(getter_Copies(location));
+        frame->GetLineNumber(&lineNumber);
+        
+        sandboxName.AppendLiteral(" (from: ");
+        sandboxName.Append(location);
+        sandboxName.AppendLiteral(":");
+        sandboxName.AppendInt(lineNumber);
+        sandboxName.AppendLiteral(")");
+    }
 
     return NS_OK;
 }
@@ -3602,13 +3617,8 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     if (argc > 1 && NS_FAILED(ParseOptionsObject(cx, argv[1], options)))
         return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
 
-    // If there is no options object given, or no sandboxName property
-    // specified, use the caller's filename as sandboxName.
-    if (options.sandboxName.IsEmpty() &&
-        NS_FAILED(GetSandboxNameFromStack(cx, options.sandboxName)))
-    {
+    if (NS_FAILED(AssembleSandboxMemoryReporterName(cx, options.sandboxName)))
         return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
-    }
 
     rv = xpc_CreateSandboxObject(cx, vp, prinOrSop, options);
 
@@ -4109,6 +4119,35 @@ nsXPCComponents_Utils::CreateObjectIn(const jsval &vobj, JSContext *cx, jsval *r
             return NS_ERROR_FAILURE;
 
         obj = JS_NewObject(cx, nsnull, nsnull, scope);
+        if (!obj)
+            return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_WrapObject(cx, &obj))
+        return NS_ERROR_FAILURE;
+    *rval = OBJECT_TO_JSVAL(obj);
+    return NS_OK;
+}
+
+/* jsval createObjectIn(in jsval vobj); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateArrayIn(const jsval &vobj, JSContext *cx, jsval *rval)
+{
+    if (!cx)
+        return NS_ERROR_FAILURE;
+
+    // first argument must be an object
+    if (JSVAL_IS_PRIMITIVE(vobj))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    JSObject *scope = js::UnwrapObject(JSVAL_TO_OBJECT(vobj));
+    JSObject *obj;
+    {
+        JSAutoEnterCompartment ac;
+        if (!ac.enter(cx, scope))
+            return NS_ERROR_FAILURE;
+
+        obj =  JS_NewArrayObject(cx, 0, NULL);
         if (!obj)
             return NS_ERROR_FAILURE;
     }

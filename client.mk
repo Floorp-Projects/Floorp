@@ -95,10 +95,15 @@ MOZCONFIG_LOADER := build/autoconf/mozconfig2client-mk
 MOZCONFIG_FINDER := build/autoconf/mozconfig-find 
 MOZCONFIG_MODULES := build/unix/uniq.pl
 
-run_for_side_effects := \
-  $(shell $(TOPSRCDIR)/$(MOZCONFIG_LOADER) $(TOPSRCDIR) $(TOPSRCDIR)/.mozconfig.mk > $(TOPSRCDIR)/.mozconfig.out)
+define CR
 
-include $(TOPSRCDIR)/.mozconfig.mk
+
+endef
+
+# As $(shell) doesn't preserve newlines, use sed to replace them with an
+# unlikely sequence (||), which is then replaced back to newlines by make
+# before evaluation.
+$(eval $(subst ||,$(CR),$(shell $(TOPSRCDIR)/$(MOZCONFIG_LOADER) $(TOPSRCDIR) 2> $(TOPSRCDIR)/.mozconfig.out | sed 's/$$/||/')))
 
 ifndef MOZ_OBJDIR
   MOZ_OBJDIR = obj-$(CONFIG_GUESS)
@@ -293,7 +298,7 @@ configure-preqs = \
   save-mozconfig \
   $(NULL)
 
-save-mozconfig:
+save-mozconfig: $(FOUND_MOZCONFIG)
 	-cp $(FOUND_MOZCONFIG) $(OBJDIR)/.mozconfig
 
 configure:: $(configure-preqs)

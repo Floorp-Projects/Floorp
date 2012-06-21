@@ -2423,7 +2423,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
             return JS::Int32Value(i);
         }
         case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
-            if (mEnabledExtensions[WebGL_OES_standard_derivatives]) {
+            if (IsExtensionEnabled(OES_standard_derivatives)) {
                 GLint i = 0;
                 gl->fGetIntegerv(pname, &i);
                 return JS::Int32Value(i);
@@ -2470,7 +2470,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
 
 // float
         case LOCAL_GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT:
-            if (mEnabledExtensions[WebGL_EXT_texture_filter_anisotropic]) {
+            if (IsExtensionEnabled(EXT_texture_filter_anisotropic)) {
                 GLfloat f = 0.f;
                 gl->fGetFloatv(pname, &f);
                 return JS::DoubleValue(f);
@@ -3114,7 +3114,7 @@ void WebGLContext::TexParameter_base(WebGLenum target, WebGLenum pname,
             }
             break;
         case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
-            if (mEnabledExtensions[WebGL_EXT_texture_filter_anisotropic]) {
+            if (IsExtensionEnabled(EXT_texture_filter_anisotropic)) {
                 if (floatParamPtr && floatParam < 1.f)
                     paramValueInvalid = true;
                 else if (intParamPtr && intParam < 1)
@@ -3198,7 +3198,7 @@ WebGLContext::GetTexParameter(WebGLenum target, WebGLenum pname)
             return JS::NumberValue(uint32_t(i));
         }
         case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
-            if (mEnabledExtensions[WebGL_EXT_texture_filter_anisotropic]) {
+            if (IsExtensionEnabled(EXT_texture_filter_anisotropic)) {
                 GLfloat f = 0.f;
                 gl->fGetTexParameterfv(target, pname, &f);
                 return JS::DoubleValue(f);
@@ -3529,7 +3529,7 @@ WebGLContext::Hint(WebGLenum target, WebGLenum mode)
             isValid = true;
             break;
         case LOCAL_GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
-            if (mEnabledExtensions[WebGL_OES_standard_derivatives]) 
+            if (IsExtensionEnabled(OES_standard_derivatives))
                 isValid = true;
             break;
     }
@@ -3848,6 +3848,9 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
 
     if (width < 0 || height < 0)
         return ErrorInvalidValue("readPixels: negative size passed");
+
+    if (!pixels)
+        return ErrorInvalidValue("readPixels: null destination buffer");
 
     const WebGLRectangleObject *framebufferRect = FramebufferRectangleObject();
     WebGLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
@@ -4915,7 +4918,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
         resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
         resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
         resources.MaxDrawBuffers = 1;
-        if (mEnabledExtensions[WebGL_OES_standard_derivatives])
+        if (IsExtensionEnabled(OES_standard_derivatives))
             resources.OES_standard_derivatives = 1;
 
         // We're storing an actual instance of StripComments because, if we don't, the 

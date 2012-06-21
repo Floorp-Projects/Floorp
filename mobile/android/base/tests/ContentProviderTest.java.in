@@ -224,7 +224,7 @@ abstract class ContentProviderTest extends AndroidTestCase {
             Method getDatabasePath =
                     mProviderClass.getDeclaredMethod("getDatabasePath", String.class, boolean.class);
 
-            String defaultProfile = (String) mProviderContract.getField("DEFAULT_PROFILE").get(null);
+            String defaultProfile = "default";
             databaseName = (String) getDatabasePath.invoke(mProvider, defaultProfile, true /* is test */);
         } catch (Exception e) {}
 

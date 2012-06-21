@@ -27,6 +27,19 @@ function testSelectionWhenMovingBetweenBoxes(hud) {
   jsterm.execute("3 + 4");
   jsterm.execute("5 + 6");
 
+  waitForSuccess({
+    name: "execution results displayed",
+    validatorFn: function()
+    {
+      return hud.outputNode.textContent.indexOf("5 + 6") > -1 &&
+             hud.outputNode.textContent.indexOf("11") > -1;
+    },
+    successFn: performTestsAfterOutput.bind(null, hud),
+    failureFn: finishTest,
+  });
+}
+
+function performTestsAfterOutput(hud) {
   let outputNode = hud.outputNode;
 
   ok(outputNode.childNodes.length >= 3, "the output node has children after " +
@@ -67,4 +80,3 @@ function testSelectionWhenMovingBetweenBoxes(hud) {
 
   finishTest();
 }
-

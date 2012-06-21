@@ -1079,6 +1079,8 @@ const int ZealAllocValue = 2;
 const int ZealFrameGCValue = 3;
 const int ZealVerifierValue = 4;
 const int ZealFrameVerifierValue = 5;
+const int ZealStackRootingSafeValue = 6;
+const int ZealStackRootingValue = 7;
 
 #ifdef JS_GC_ZEAL
 

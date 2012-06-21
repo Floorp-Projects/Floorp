@@ -10,6 +10,7 @@
 
 #include "nsIStructuredCloneContainer.h"
 #include "jsapi.h"
+#include "mozilla/Attributes.h"
 
 #define NS_STRUCTUREDCLONECONTAINER_CLASSNAME "nsStructuredCloneContainer"
 #define NS_STRUCTUREDCLONECONTAINER_CONTRACTID \
@@ -22,7 +23,7 @@
   {0xb8, 0x5f, 0x13, 0xce, 0xd8, 0x89, 0xee, 0xec} \
 }
 
-class nsStructuredCloneContainer : public nsIStructuredCloneContainer
+class nsStructuredCloneContainer MOZ_FINAL : public nsIStructuredCloneContainer
 {
   public:
     nsStructuredCloneContainer();

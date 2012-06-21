@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 import urllib
+import traceback
 
 sys.path.insert(0, os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0]))))
 
@@ -148,7 +149,7 @@ class B2GOptions(MochitestOptions):
         options.sslPort = tempSSL
         options.httpPort = tempPort
 
-        return options 
+        return options
 
 
 class ProfileConfigParser(ConfigParser.RawConfigParser):
@@ -296,7 +297,8 @@ class B2GMochitest(Mochitest):
         options.profilePath = remoteProfilePath
 
     def stopWebServer(self, options):
-        self.server.stop()
+        if hasattr(self, 'server'):
+            self.server.stop()
 
     def buildProfile(self, options):
         if self.localProfile:
@@ -437,6 +439,7 @@ def main():
         retVal = mochitest.runTests(options)
     except:
         print "TEST-UNEXPECTED-FAIL | %s | Exception caught while running tests." % sys.exc_info()[1]
+        traceback.print_exc()
         mochitest.stopWebServer(options)
         mochitest.stopWebSocketServer(options)
         try:

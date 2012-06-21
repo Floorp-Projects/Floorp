@@ -135,6 +135,8 @@ policies and contribution forms [3].
  */
 "use strict";
 (function(){
+var interfaces = {};
+
 /// IdlArray ///
 //Entry point
 window.IdlArray = function()
@@ -220,6 +222,10 @@ IdlArray.prototype.internal_add_idls = function(parsed_idls)
             break;
 
         case "typedef":
+            //TODO
+            break;
+
+        case "enum":
             //TODO
             break;
 
@@ -569,12 +575,10 @@ IdlException.prototype.test_self = function()
         //ECMA-262 section 15.3.5.3, unless otherwise specified."
         //TODO
         //"Its [[Class]] internal property is “Function”."
-        //String() and {}.toString.call() should be equivalent, since nothing
-        //defines a stringifier.
+        //String() returns something implementation-dependent, because it calls
+        //Function#toString.
         assert_equals({}.toString.call(window[this.name]), "[object Function]",
                       "{}.toString.call(" + this.name + ")");
-        assert_equals(String(window[this.name]), "[object Function]",
-                      "String(" + this.name + ")");
 
         //TODO: Test 4.9.1.1. Exception interface object [[Call]] method (which
         //does not match browsers: //http://www.w3.org/Bugs/Public/show_bug.cgi?id=14885)
@@ -862,6 +866,7 @@ function IdlInterface(obj)
     this.extAttrs = obj.extAttrs ? obj.extAttrs : [];
     this.members = obj.members ? obj.members.map(function(m){return new IdlInterfaceMember(m)}) : [];
     this.inheritance = obj.inheritance ? obj.inheritance : [];
+    interfaces[this.name] = this;
 }
 
 //@}
@@ -926,12 +931,10 @@ IdlInterface.prototype.test_self = function()
         //ECMA-262 section 15.3.5.3, unless otherwise specified."
         //TODO
         //"Its [[Class]] internal property is “Function”."
-        //String() and {}.toString.call() should be equivalent, since nothing
-        //defines a stringifier.
+        //String() returns something implementation-dependent, because it calls
+        //Function#toString.
         assert_equals({}.toString.call(window[this.name]), "[object Function]",
                       "{}.toString.call(" + this.name + ")");
-        assert_equals(String(window[this.name]), "[object Function]",
-                      "String(" + this.name + ")");
 
         if (!this.has_extended_attribute("Constructor"))
         {
@@ -970,7 +973,7 @@ IdlInterface.prototype.test_self = function()
             //support multiple operations with the same identifier).
             var expected_length = this.extAttrs
                 .filter(function(attr) { return attr.name == "Constructor" })
-                .map(function(attr) { return attr.arguments.length })
+                .map(function(attr) { return attr.arguments ? attr.arguments.length : 0 })
                 .reduce(function(m, n) { return Math.max(m, n) });
             assert_own_property(window[this.name], "length");
             assert_equals(window[this.name].length, expected_length, "wrong value for " + this.name + ".length");
@@ -1015,19 +1018,21 @@ IdlInterface.prototype.test_self = function()
         //"Otherwise, A does inherit from another interface. The value of
         //the internal [[Prototype]] property of A is the interface
         //prototype object for the inherited interface."
-        var inherit_interface;
-        if (this.inheritance.length)
+        var inherit_interface = (function()
         {
-            inherit_interface = this.inheritance[0];
-        }
-        else if (this.has_extended_attribute("ArrayClass"))
-        {
-            inherit_interface = "Array";
-        }
-        else
-        {
-            inherit_interface = "Object";
-        }
+            for (var i = 0; i < this.inheritance.length; ++i)
+            {
+                if (!interfaces[this.inheritance[i]].has_extended_attribute("NoInterfaceObject"))
+                {
+                    return this.inheritance[i];
+                }
+            }
+            if (this.has_extended_attribute("ArrayClass"))
+            {
+                return "Array";
+            }
+            return "Object";
+        }).bind(this)();
         assert_own_property(window, inherit_interface,
                             'should inherit from ' + inherit_interface + ', but window has no such property');
         assert_own_property(window[inherit_interface], "prototype",
@@ -1041,9 +1046,9 @@ IdlInterface.prototype.test_self = function()
         //String() and {}.toString.call() should be equivalent, since nothing
         //defines a stringifier.
         assert_equals({}.toString.call(window[this.name].prototype), "[object " + this.name + "Prototype]",
-                      "{}.toString.call(" + this.name + ")");
+                      "{}.toString.call(" + this.name + ".prototype)");
         assert_equals(String(window[this.name].prototype), "[object " + this.name + "Prototype]",
-                      "String(" + this.name + ")");
+                      "String(" + this.name + ".prototype)");
     }.bind(this), this.name + " interface: existence and properties of interface prototype object");
 
     test(function()
@@ -1189,9 +1194,12 @@ IdlInterface.prototype.test_members = function()
                 //". . .
                 //"Return the maximum argument list length of the functions
                 //in the entries of S."
+                //TODO: Does this work for overloads?
                 assert_equals(window[this.name].prototype[member.name].length, member.arguments.length,
                     "property has wrong .length");
-            }.bind(this), this.name + " interface: operation " + member.name);
+            }.bind(this), this.name + " interface: operation " + member.name +
+            "(" + member.arguments.map(function(m) { return m.type.idlType; }) +
+            ")");
         }
         //TODO: check more member types, like stringifier
     }
@@ -1319,19 +1327,25 @@ IdlInterface.prototype.test_interface_of = function(desc, obj, exception, expect
                     // Attributes are accessor properties, so they might
                     // legitimately throw an exception rather than returning
                     // anything.
+                    var property, thrown = false;
                     try
                     {
-                        this.array.assert_type_is(obj[member.name], member.idlType);
+                        property = obj[member.name];
                     }
                     catch (e)
                     {
+                        thrown = true;
+                    }
+                    if (!thrown)
+                    {
+                        this.array.assert_type_is(property, member.idlType);
                     }
                 }
                 if (member.type == "operation")
                 {
                     assert_equals(typeof obj[member.name], "function");
                 }
-            }.bind(this), this.name + " interface: " + desc + ' must inherit property "' + member.name + '" with the proper type');
+            }.bind(this), this.name + " interface: " + desc + ' must inherit property "' + member.name + '" with the proper type (' + i + ')');
         }
         //TODO: This is wrong if there are multiple operations with the same
         //identifier.
@@ -1357,7 +1371,9 @@ IdlInterface.prototype.test_interface_of = function(desc, obj, exception, expect
 
                     args.push(create_suitable_object(member.arguments[i].type));
                 }
-            }.bind(this), this.name + " interface: calling " + member.name + "() on " + desc + " with too few arguments must throw TypeError");
+            }.bind(this), this.name + " interface: calling " + member.name +
+            "(" + member.arguments.map(function(m) { return m.type.idlType; }) +
+            ") on " + desc + " with too few arguments must throw TypeError");
         }
     }
 }

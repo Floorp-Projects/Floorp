@@ -18,11 +18,7 @@
 #include "nsIIDNService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "prprf.h"
-#include "mozIStorageService.h"
-#include "mozIStorageStatement.h"
-#include "mozIStorageConnection.h"
-#include "mozStorageHelper.h"
-#include "mozStorageCID.h"
+#include "mozilla/storage.h"
 #include "nsXULAppAPI.h"
 
 static nsPermissionManager *gPermissionManager = nsnull;
@@ -106,6 +102,115 @@ nsHostEntry::nsHostEntry(const nsHostEntry& toCopy)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+/**
+ * Simple callback used by |AsyncClose| to trigger a treatment once
+ * the database is closed.
+ *
+ * Note: Beware that, if you hold onto a |CloseDatabaseListener| from a
+ * |nsPermissionManager|, this will create a cycle.
+ *
+ * Note: Once the callback has been called this DeleteFromMozHostListener cannot
+ * be reused.
+ */
+class CloseDatabaseListener : public mozIStorageCompletionCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGECOMPLETIONCALLBACK
+  /**
+   * @param aManager The owning manager.
+   * @param aRebuildOnSuccess If |true|, reinitialize the database once
+   * it has been closed. Otherwise, do nothing such.
+   */
+  CloseDatabaseListener(nsPermissionManager* aManager,
+                        bool aRebuildOnSuccess);
+
+protected:
+  nsRefPtr<nsPermissionManager> mManager;
+  bool mRebuildOnSuccess;
+};
+
+NS_IMPL_ISUPPORTS1(CloseDatabaseListener, mozIStorageCompletionCallback)
+
+CloseDatabaseListener::CloseDatabaseListener(nsPermissionManager* aManager,
+                                             bool aRebuildOnSuccess)
+  : mManager(aManager)
+  , mRebuildOnSuccess(aRebuildOnSuccess)
+{
+}
+
+NS_IMETHODIMP
+CloseDatabaseListener::Complete()
+{
+  // Help breaking cycles
+  nsRefPtr<nsPermissionManager> manager = mManager.forget();
+  if (mRebuildOnSuccess && !manager->mIsShuttingDown) {
+    return manager->InitDB(true);
+  }
+  return NS_OK;
+}
+
+
+/**
+ * Simple callback used by |RemoveAllInternal| to trigger closing
+ * the database and reinitializing it.
+ *
+ * Note: Beware that, if you hold onto a |DeleteFromMozHostListener| from a
+ * |nsPermissionManager|, this will create a cycle.
+ *
+ * Note: Once the callback has been called this DeleteFromMozHostListener cannot
+ * be reused.
+ */
+class DeleteFromMozHostListener : public mozIStorageStatementCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGESTATEMENTCALLBACK
+
+  /**
+   * @param aManager The owning manager.
+   */
+  DeleteFromMozHostListener(nsPermissionManager* aManager);
+
+protected:
+  nsRefPtr<nsPermissionManager> mManager;
+};
+
+NS_IMPL_ISUPPORTS1(DeleteFromMozHostListener, mozIStorageStatementCallback)
+
+DeleteFromMozHostListener::
+DeleteFromMozHostListener(nsPermissionManager* aManager)
+  : mManager(aManager)
+{
+}
+
+NS_IMETHODIMP DeleteFromMozHostListener::HandleResult(mozIStorageResultSet *)
+{
+  MOZ_NOT_REACHED("Should not get any results");
+  return NS_OK;
+}
+
+NS_IMETHODIMP DeleteFromMozHostListener::HandleError(mozIStorageError *)
+{
+  // Errors are handled in |HandleCompletion|
+  return NS_OK;
+}
+
+NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(PRUint16 aReason)
+{
+  // Help breaking cycles
+  nsRefPtr<nsPermissionManager> manager = mManager.forget();
+
+  if (aReason == REASON_ERROR) {
+    manager->CloseDB(true);
+  }
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsPermissionManager Implementation
 
 static const char kPermissionsFileName[] = "permissions.sqlite";
@@ -119,6 +224,7 @@ NS_IMPL_ISUPPORTS3(nsPermissionManager, nsIPermissionManager, nsIObserver, nsISu
 
 nsPermissionManager::nsPermissionManager()
  : mLargestID(0)
+ , mIsShuttingDown(false)
 {
 }
 
@@ -578,39 +684,53 @@ NS_IMETHODIMP
 nsPermissionManager::RemoveAll()
 {
   ENSURE_NOT_CHILD_PROCESS;
-
-  nsresult rv = RemoveAllInternal();
-  NotifyObservers(nsnull, NS_LITERAL_STRING("cleared").get());
-  return rv;
+  return RemoveAllInternal(true);
 }
 
 void
-nsPermissionManager::CloseDB()
+nsPermissionManager::CloseDB(bool aRebuildOnSuccess)
 {
   // Null the statements, this will finalize them.
   mStmtInsert = nsnull;
   mStmtDelete = nsnull;
   mStmtUpdate = nsnull;
   if (mDBConn) {
-    mozilla::DebugOnly<nsresult> rv = mDBConn->Close();
+    mozIStorageCompletionCallback* cb = new CloseDatabaseListener(this,
+           aRebuildOnSuccess);
+    mozilla::DebugOnly<nsresult> rv = mDBConn->AsyncClose(cb);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    mDBConn = nsnull;
+    mDBConn = nsnull; // Avoid race conditions
   }
 }
 
 nsresult
-nsPermissionManager::RemoveAllInternal()
+nsPermissionManager::RemoveAllInternal(bool aNotifyObservers)
 {
+  // Remove from memory and notify immediately. Since the in-memory
+  // database is authoritative, we do not need confirmation from the
+  // on-disk database to notify observers.
   RemoveAllFromMemory();
+  if (aNotifyObservers) {
+    NotifyObservers(nsnull, NS_LITERAL_STRING("cleared").get());
+  }
 
   // clear the db
   if (mDBConn) {
-    nsresult rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM moz_hosts"));
-    if (NS_FAILED(rv)) {
-      CloseDB();
-      rv = InitDB(true);
-      return rv;
+    nsCOMPtr<mozIStorageAsyncStatement> removeStmt;
+    nsresult rv = mDBConn->
+      CreateAsyncStatement(NS_LITERAL_CSTRING(
+         "DELETE FROM moz_hosts"
+      ), getter_AddRefs(removeStmt));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (!removeStmt) {
+      return NS_ERROR_UNEXPECTED;
     }
+    nsCOMPtr<mozIStoragePendingStatement> pending;
+    mozIStorageStatementCallback* cb = new DeleteFromMozHostListener(this);
+    rv = removeStmt->ExecuteAsync(cb, getter_AddRefs(pending));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    return rv;
   }
 
   return NS_OK;
@@ -761,13 +881,14 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
     // or is going away because the application is shutting down.
+    mIsShuttingDown = true;
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
-      // clear the permissions file
-      RemoveAllInternal();
+      // Clear the permissions file and close the db asynchronously
+      RemoveAllInternal(false);
     } else {
       RemoveAllFromMemory();
+      CloseDB(false);
     }
-    CloseDB();
   }
   else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location

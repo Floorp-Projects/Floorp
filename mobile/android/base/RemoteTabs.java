@@ -65,8 +65,8 @@ public class RemoteTabs extends LinearLayout
     public void hide() {
     }
 
-    void hideTabs() {
-        GeckoApp.mAppContext.hideTabs();
+    void autoHideTabs() {
+        GeckoApp.mAppContext.autoHideTabs();
     }
 
     @Override
@@ -79,7 +79,7 @@ public class RemoteTabs extends LinearLayout
     public boolean onChildClick(ExpandableListView parent, View view, int groupPosition, int childPosition, long id) {
         HashMap <String, String> tab = mTabsList.get(groupPosition).get(childPosition);
         if (tab == null) {
-            hideTabs();
+            autoHideTabs();
             return true;
         }
 
@@ -95,7 +95,7 @@ public class RemoteTabs extends LinearLayout
 
         Log.d(LOGTAG, "Sending message to Gecko: " + SystemClock.uptimeMillis() + " - Tab:Add");
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tab:Add", args.toString()));
-        hideTabs();
+        autoHideTabs();
         return true;
     }
 
@@ -103,7 +103,7 @@ public class RemoteTabs extends LinearLayout
     public void onQueryTabsComplete(List<TabsAccessor.RemoteTab> remoteTabsList) {
         ArrayList<TabsAccessor.RemoteTab> remoteTabs = new ArrayList<TabsAccessor.RemoteTab> (remoteTabsList);
         if (remoteTabs == null || remoteTabs.size() == 0) {
-            hideTabs();
+            autoHideTabs();
             return;
         }
         

@@ -17,6 +17,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  virtual ~nsFrameIterator() {}
+
   virtual void First();
   virtual void Next();
   virtual nsIFrame* CurrentItem();

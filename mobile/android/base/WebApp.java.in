@@ -1,0 +1,89 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#filter substitution
+package @ANDROID_PACKAGE_NAME@;
+
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.R;
+import android.view.MenuItem;
+import android.util.Log;
+import android.os.Bundle;
+import android.content.Intent;
+
+public class WebApp extends GeckoApp {
+    protected int mWebAppIndex;
+    private static final String LOGTAG = "WebApp";
+
+    @Override
+    public int getLayout() { return R.layout.web_app; }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        Log.i("DEBUG", "xxx WebApp");
+        super.onCreate(savedInstanceState);
+
+        Bundle extras = getIntent().getExtras();
+        String title = extras != null ? extras.getString(Intent.EXTRA_SHORTCUT_NAME) : null;
+        setTitle(title != null ? title : "Web App");
+    }
+
+    public String getPackageName() {
+        return "@ANDROID_PACKAGE_NAME@";
+    }
+
+    public String getContentProcessName() {
+        return "@MOZ_CHILD_PROCESS_NAME@";
+    }
+
+    public String getDefaultUAString() {
+        String deviceType = "Mobile";
+        if (GeckoAppShell.isTablet())
+            deviceType = "Tablet";
+        return "Mozilla/5.0 (Android; " + deviceType + "; rv:@MOZ_APP_VERSION@) Gecko/@MOZ_APP_VERSION@ Firefox/@MOZ_APP_VERSION@";
+    }
+
+    public String getUAStringForHost(String host) {
+        // With our standard UA String, we get a 200 response code and 
+        // client-side redirect from t.co. This bot-like UA gives us a 
+        // 301 response code
+        if ("t.co".equals(host))
+            return "Redirector/@MOZ_APP_VERSION@ (Android; rv:@MOZ_APP_VERSION@)";
+        return getDefaultUAString();
+    }
+
+    @Override
+    protected String getDefaultProfileName() {
+        String action = getIntent().getAction();
+        if (!action.startsWith(ACTION_WEBAPP_PREFIX)) {
+            Log.e(LOGTAG, "WebApp launch, but intent action is " + action + "!");
+            return null;
+        }
+
+        return "webapp" + action.substring(ACTION_WEBAPP_PREFIX.length());
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+#ifdef MOZ_PROFILING
+        if (item.getItemId() == R.id.toggle_profiling) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ToggleProfiling", null));
+            return true;
+        }
+#endif
+        return super.onOptionsItemSelected(item);
+    }
+
+#ifdef MOZ_LINKER_EXTRACT
+    @Override
+    public boolean linkerExtract() {
+        return true;
+    }
+#endif
+};
+

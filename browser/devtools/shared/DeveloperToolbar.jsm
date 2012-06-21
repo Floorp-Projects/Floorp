@@ -8,6 +8,9 @@ const EXPORTED_SYMBOLS = [ "DeveloperToolbar" ];
 
 const NS_XHTML = "http://www.w3.org/1999/xhtml";
 
+const WEBCONSOLE_CONTENT_SCRIPT_URL =
+  "chrome://browser/content/devtools/HUDService-content.js";
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -36,6 +39,10 @@ function DeveloperToolbar(aChromeWindow, aToolbarElement)
   this._lastState = NOTIFICATIONS.HIDE;
   this._pendingShowCallback = undefined;
   this._pendingHide = false;
+  this._errorsCount = {};
+  this._webConsoleButton = this._doc
+                           .getElementById("developer-toolbar-webconsole");
+  this._webConsoleButtonLabel = this._webConsoleButton.label;
 }
 
 /**
@@ -58,12 +65,27 @@ const NOTIFICATIONS = {
  */
 DeveloperToolbar.prototype.NOTIFICATIONS = NOTIFICATIONS;
 
+DeveloperToolbar.prototype._contentMessageListeners =
+  ["WebConsole:CachedMessages", "WebConsole:PageError"];
+
 /**
  * Is the toolbar open?
  */
 Object.defineProperty(DeveloperToolbar.prototype, 'visible', {
   get: function DT_visible() {
     return !this._element.hidden;
+  },
+  enumerable: true
+});
+
+var _gSequenceId = 0;
+
+/**
+ * Getter for a unique ID.
+ */
+Object.defineProperty(DeveloperToolbar.prototype, 'sequenceId', {
+  get: function DT_visible() {
+    return _gSequenceId++;
   },
   enumerable: true
 });
@@ -99,6 +121,8 @@ DeveloperToolbar.prototype.show = function DT_show(aCallback)
   if (this._lastState != NOTIFICATIONS.HIDE) {
     return;
   }
+
+  Services.prefs.setBoolPref("devtools.toolbar.visible", true);
 
   this._notify(NOTIFICATIONS.LOAD);
   this._pendingShowCallback = aCallback;
@@ -152,8 +176,12 @@ DeveloperToolbar.prototype._onload = function DT_onload()
   this.display.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
 
   this._chromeWindow.getBrowser().tabContainer.addEventListener("TabSelect", this, false);
+  this._chromeWindow.getBrowser().tabContainer.addEventListener("TabClose", this, false);
   this._chromeWindow.getBrowser().addEventListener("load", this, true);
+  this._chromeWindow.getBrowser().addEventListener("beforeunload", this, true);
   this._chromeWindow.addEventListener("resize", this, false);
+
+  this._initErrorsCount(this._chromeWindow.getBrowser().selectedTab);
 
   this._element.hidden = false;
   this._input.focus();
@@ -179,6 +207,67 @@ DeveloperToolbar.prototype._onload = function DT_onload()
 };
 
 /**
+ * Initialize the listeners needed for tracking the number of errors for a given
+ * tab.
+ *
+ * @private
+ * @param nsIDOMNode aTab the xul:tab for which you want to track the number of
+ * errors.
+ */
+DeveloperToolbar.prototype._initErrorsCount = function DT__initErrorsCount(aTab)
+{
+  let tabId = aTab.linkedPanel;
+  if (tabId in this._errorsCount) {
+    this._updateErrorsCount();
+    return;
+  }
+
+  let messageManager = aTab.linkedBrowser.messageManager;
+  messageManager.loadFrameScript(WEBCONSOLE_CONTENT_SCRIPT_URL, true);
+
+  this._errorsCount[tabId] = 0;
+
+  this._contentMessageListeners.forEach(function(aName) {
+    messageManager.addMessageListener(aName, this);
+  }, this);
+
+  let message = {
+    features: ["PageError"],
+    cachedMessages: ["PageError"],
+  };
+
+  this.sendMessageToTab(aTab, "WebConsole:Init", message);
+  this._updateErrorsCount();
+};
+
+/**
+ * Stop the listeners needed for tracking the number of errors for a given
+ * tab.
+ *
+ * @private
+ * @param nsIDOMNode aTab the xul:tab for which you want to stop tracking the
+ * number of errors.
+ */
+DeveloperToolbar.prototype._stopErrorsCount = function DT__stopErrorsCount(aTab)
+{
+  let tabId = aTab.linkedPanel;
+  if (!(tabId in this._errorsCount)) {
+    this._updateErrorsCount();
+    return;
+  }
+
+  this.sendMessageToTab(aTab, "WebConsole:Destroy", {});
+
+  let messageManager = aTab.linkedBrowser.messageManager;
+  this._contentMessageListeners.forEach(function(aName) {
+    messageManager.removeMessageListener(aName, this);
+  }, this);
+
+  delete this._errorsCount[tabId];
+  this._updateErrorsCount();
+};
+
+/**
  * Hide the developer toolbar.
  */
 DeveloperToolbar.prototype.hide = function DT_hide()
@@ -194,6 +283,8 @@ DeveloperToolbar.prototype.hide = function DT_hide()
 
   this._element.hidden = true;
 
+  Services.prefs.setBoolPref("devtools.toolbar.visible", false);
+
   this._doc.getElementById("Tools:DevToolbar").setAttribute("checked", "false");
   this.destroy();
 
@@ -207,6 +298,11 @@ DeveloperToolbar.prototype.destroy = function DT_destroy()
 {
   this._chromeWindow.getBrowser().tabContainer.removeEventListener("TabSelect", this, false);
   this._chromeWindow.getBrowser().removeEventListener("load", this, true); 
+  this._chromeWindow.getBrowser().removeEventListener("beforeunload", this, true);
+  this._chromeWindow.removeEventListener("resize", this, false);
+
+  let tabs = this._chromeWindow.getBrowser().tabs;
+  Array.prototype.forEach.call(tabs, this._stopErrorsCount, this);
 
   this.display.onVisibilityChange.remove(this.outputPanel._visibilityChanged, this.outputPanel);
   this.display.onVisibilityChange.remove(this.tooltipPanel._visibilityChanged, this.tooltipPanel);
@@ -261,10 +357,147 @@ DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
           contentDocument: contentDocument
         },
       });
+
+      if (aEvent.type == "TabSelect") {
+        this._initErrorsCount(aEvent.target);
+      }
     }
   }
   else if (aEvent.type == "resize") {
     this.outputPanel._resize();
+  }
+  else if (aEvent.type == "TabClose") {
+    this._stopErrorsCount(aEvent.target);
+  }
+  else if (aEvent.type == "beforeunload") {
+    this._onPageBeforeUnload(aEvent);
+  }
+};
+
+/**
+ * The handler of messages received from the nsIMessageManager.
+ *
+ * @param object aMessage the message received from the content process.
+ */
+DeveloperToolbar.prototype.receiveMessage = function DT_receiveMessage(aMessage)
+{
+  if (!aMessage.json || !(aMessage.json.hudId in this._errorsCount)) {
+    return;
+  }
+
+  let tabId = aMessage.json.hudId;
+  let errors = this._errorsCount[tabId];
+
+  switch (aMessage.name) {
+    case "WebConsole:PageError":
+      this._onPageError(tabId, aMessage.json.pageError);
+      break;
+    case "WebConsole:CachedMessages":
+      aMessage.json.messages.forEach(this._onPageError.bind(this, tabId));
+      break;
+  }
+
+  if (errors != this._errorsCount[tabId]) {
+    this._updateErrorsCount(tabId);
+  }
+};
+
+/**
+ * Send a message to the content process using the nsIMessageManager of the
+ * given tab.
+ *
+ * @param nsIDOMNode aTab the tab you want to send a message to.
+ * @param string aName the name of the message you want to send.
+ * @param object aMessage the message to send.
+ */
+DeveloperToolbar.prototype.sendMessageToTab =
+function DT_sendMessageToTab(aTab, aName, aMessage)
+{
+  let tabId = aTab.linkedPanel;
+  aMessage.hudId = tabId;
+  if (!("id" in aMessage)) {
+    aMessage.id = "DevToolbar-" + this.sequenceId;
+  }
+
+  aTab.linkedBrowser.messageManager.sendAsyncMessage(aName, aMessage);
+};
+
+/**
+ * Process a "WebConsole:PageError" message received from the given tab. This
+ * method counts the JavaScript exceptions received.
+ *
+ * @private
+ * @param string aTabId the ID of the tab from where the page error comes.
+ * @param object aPageError the page error object received from the content
+ * process.
+ */
+DeveloperToolbar.prototype._onPageError =
+function DT__onPageError(aTabId, aPageError)
+{
+  if (aPageError.category == "CSS Parser" ||
+      aPageError.category == "CSS Loader" ||
+      (aPageError.flags & aPageError.warningFlag) ||
+      (aPageError.flags & aPageError.strictFlag)) {
+    return; // just a CSS or JS warning
+  }
+
+  this._errorsCount[aTabId]++;
+};
+
+/**
+ * The |beforeunload| event handler. This function resets the errors count when
+ * a different page starts loading.
+ *
+ * @private
+ * @param nsIDOMEvent aEvent the beforeunload DOM event.
+ */
+DeveloperToolbar.prototype._onPageBeforeUnload =
+function DT__onPageBeforeUnload(aEvent)
+{
+  let window = aEvent.target.defaultView;
+  if (window.top !== window) {
+    return;
+  }
+
+  let tabs = this._chromeWindow.getBrowser().tabs;
+  Array.prototype.some.call(tabs, function(aTab) {
+    if (aTab.linkedBrowser.contentWindow === window) {
+      let tabId = aTab.linkedPanel;
+      if (tabId in this._errorsCount) {
+        this._errorsCount[tabId] = 0;
+        this._updateErrorsCount(tabId);
+      }
+      return true;
+    }
+    return false;
+  }, this);
+};
+
+/**
+ * Update the page errors count displayed in the Web Console button for the
+ * currently selected tab.
+ *
+ * @private
+ * @param string [aChangedTabId] Optional. The tab ID that had its page errors
+ * count changed. If this is provided and it doesn't match the currently
+ * selected tab, then the button is not updated.
+ */
+DeveloperToolbar.prototype._updateErrorsCount =
+function DT__updateErrorsCount(aChangedTabId)
+{
+  let tabId = this._chromeWindow.getBrowser().selectedTab.linkedPanel;
+  if (aChangedTabId && tabId != aChangedTabId) {
+    return;
+  }
+
+  let errors = this._errorsCount[tabId];
+
+  if (errors) {
+    this._webConsoleButton.label =
+      this._webConsoleButtonLabel + " (" + errors + ")";
+  }
+  else {
+    this._webConsoleButton.label = this._webConsoleButtonLabel;
   }
 };
 

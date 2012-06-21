@@ -501,6 +501,14 @@ class DeviceManager:
 
     return str(buf.getvalue()[0:-1]).rstrip().split('\r')
 
+  @abstractmethod
+  def chmodDir(self, remoteDir):
+    """
+    external function
+    returns:
+    success: True
+    failure: False
+    """
     
 class NetworkTools:
   def __init__(self):

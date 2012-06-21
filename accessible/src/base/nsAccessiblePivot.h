@@ -44,10 +44,11 @@ private:
   void operator = (const nsAccessiblePivot&) MOZ_DELETE;
 
   /*
-   * Notify all observers on a pivot change.
+   * Notify all observers on a pivot change. Return true if it has changed and
+   * observers have been notified.
    */
-  void NotifyPivotChanged(Accessible* aOldAccessible,
-                          PRInt32 aOldStart, PRInt32 aOldEnd);
+  bool NotifyOfPivotChange(Accessible* aOldAccessible,
+                           PRInt32 aOldStart, PRInt32 aOldEnd);
 
   /*
    * Check to see that the given accessible is in the pivot's subtree.
@@ -72,9 +73,9 @@ private:
                              nsresult* aResult);
 
   /*
-   * Update the pivot, and notify observers.
+   * Update the pivot, and notify observers. Return true if it moved.
    */
-  void MovePivotInternal(Accessible* aPosition);
+  bool MovePivotInternal(Accessible* aPosition);
 
   /*
    * The root accessible.

@@ -62,20 +62,22 @@ extern "C" {
 }
 
 typedef int mozglueresult;
+typedef int64_t MOZTime;
 
 enum StartupEvent {
 #define mozilla_StartupTimeline_Event(ev, z) ev,
 #include "StartupTimeline.h"
 #undef mozilla_StartupTimeline_Event
+  MAX_STARTUP_EVENT_ID
 };
 
 using namespace mozilla;
 
-static uint64_t *sStartupTimeline;
-
-void StartupTimeline_Record(StartupEvent ev, struct timeval *tm)
+static MOZTime MOZ_Now()
 {
-  sStartupTimeline[ev] = (((uint64_t)tm->tv_sec * 1000000LL) + (uint64_t)tm->tv_usec);
+  struct timeval tm;
+  gettimeofday(&tm, 0);
+  return (((MOZTime)tm.tv_sec * 1000000LL) + (MOZTime)tm.tv_usec);
 }
 
 static struct mapping_info * lib_mapping = NULL;
@@ -327,9 +329,9 @@ static void * sqlite_handle = NULL;
 static void * nss_handle = NULL;
 static void * nspr_handle = NULL;
 static void * plc_handle = NULL;
-static bool simple_linker_initialized = false;
 
 #ifdef MOZ_OLD_LINKER
+static bool simple_linker_initialized = false;
 static time_t apk_mtime = 0;
 #ifdef DEBUG
 extern "C" int extractLibs = 1;
@@ -668,8 +670,7 @@ loadGeckoLibs(const char *apkName)
     apk_mtime = status.st_mtime;
 #endif
 
-  struct timeval t0, t1;
-  gettimeofday(&t0, 0);
+  MOZTime t0 = MOZ_Now();
   struct rusage usage1;
   getrusage(RUSAGE_THREAD, &usage1);
   
@@ -704,7 +705,7 @@ loadGeckoLibs(const char *apkName)
     return FAILURE;
   }
 
-#define GETFUNC(name) f_ ## name = (name ## _t) __wrap_dlsym(xul_handle, "Java_org_mozilla_gecko_GeckoAppShell_" #name)
+#define GETFUNC(name) f_ ## name = (name ## _t) (uintptr_t) __wrap_dlsym(xul_handle, "Java_org_mozilla_gecko_GeckoAppShell_" #name)
   GETFUNC(nativeInit);
   GETFUNC(notifyGeckoOfEvent);
   GETFUNC(processNextNativeEvent);
@@ -741,18 +742,18 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(onFullScreenPluginHidden);
   GETFUNC(getNextMessageFromQueue);
 #undef GETFUNC
-  sStartupTimeline = (uint64_t *)__wrap_dlsym(xul_handle, "_ZN7mozilla15StartupTimeline16sStartupTimelineE");
-  gettimeofday(&t1, 0);
+  void (*XRE_StartupTimelineRecord)(int, MOZTime) = (void (*)(int, MOZTime)) __wrap_dlsym(xul_handle, "XRE_StartupTimelineRecord");
+  MOZTime t1 = MOZ_Now();
   struct rusage usage2;
   getrusage(RUSAGE_THREAD, &usage2);
   __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %ldms total, %ldms user, %ldms system, %ld faults",
-                      (t1.tv_sec - t0.tv_sec)*1000 + (t1.tv_usec - t0.tv_usec)/1000, 
+                      (t1 - t0) / 1000,
                       (usage2.ru_utime.tv_sec - usage1.ru_utime.tv_sec)*1000 + (usage2.ru_utime.tv_usec - usage1.ru_utime.tv_usec)/1000,
                       (usage2.ru_stime.tv_sec - usage1.ru_stime.tv_sec)*1000 + (usage2.ru_stime.tv_usec - usage1.ru_stime.tv_usec)/1000,
                       usage2.ru_majflt-usage1.ru_majflt);
 
-  StartupTimeline_Record(LINKER_INITIALIZED, &t0);
-  StartupTimeline_Record(LIBRARIES_LOADED, &t1);
+  XRE_StartupTimelineRecord(LINKER_INITIALIZED, t0);
+  XRE_StartupTimelineRecord(LIBRARIES_LOADED, t1);
   return SUCCESS;
 }
 
@@ -957,7 +958,7 @@ typedef void (*GeckoStart_t)(void *, const nsXREAppData *);
 extern "C" NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_nativeRun(JNIEnv *jenv, jclass jc, jstring jargs)
 {
-  GeckoStart_t GeckoStart = (GeckoStart_t) __wrap_dlsym(xul_handle, "GeckoStart");
+  GeckoStart_t GeckoStart = (GeckoStart_t) (uintptr_t) __wrap_dlsym(xul_handle, "GeckoStart");
   if (GeckoStart == NULL)
     return;
   // XXX: java doesn't give us true UTF8, we should figure out something
@@ -1004,9 +1005,9 @@ ChildProcessInit(int argc, char* argv[])
   typedef GeckoProcessType (*XRE_StringToChildProcessType_t)(char*);
   typedef mozglueresult (*XRE_InitChildProcess_t)(int, char**, GeckoProcessType);
   XRE_StringToChildProcessType_t fXRE_StringToChildProcessType =
-    (XRE_StringToChildProcessType_t)__wrap_dlsym(xul_handle, "XRE_StringToChildProcessType");
+    (XRE_StringToChildProcessType_t) (uintptr_t) __wrap_dlsym(xul_handle, "XRE_StringToChildProcessType");
   XRE_InitChildProcess_t fXRE_InitChildProcess =
-    (XRE_InitChildProcess_t)__wrap_dlsym(xul_handle, "XRE_InitChildProcess");
+    (XRE_InitChildProcess_t) (uintptr_t) __wrap_dlsym(xul_handle, "XRE_InitChildProcess");
 
   GeckoProcessType proctype = fXRE_StringToChildProcessType(argv[--argc]);
 
