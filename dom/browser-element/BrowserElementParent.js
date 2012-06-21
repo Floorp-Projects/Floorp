@@ -164,6 +164,8 @@ function BrowserElementParent(frameLoader) {
 
   // Define methods on the frame element.
   defineMethod('setVisible', this._setVisible);
+  defineMethod('goBack', this._goBack);
+  defineMethod('goForward', this._goForward);
   defineDOMRequestMethod('getScreenshot', 'get-screenshot');
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
@@ -306,6 +308,14 @@ BrowserElementParent.prototype = {
 
   _setVisible: function(visible) {
     this._sendAsyncMsg('set-visible', {visible: visible});
+  },
+
+  _goBack: function() {
+    this._sendAsyncMsg('go-back');
+  },
+
+  _goForward: function() {
+    this._sendAsyncMsg('go-forward');
   },
 
   _fireKeyEvent: function(data) {
