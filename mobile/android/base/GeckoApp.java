@@ -653,6 +653,19 @@ abstract public class GeckoApp
             case R.id.share:
                 shareCurrentUrl();
                 return true;
+            case R.id.reading_list:
+                tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    if (item.isChecked()) {
+                        tab.removeFromReadingList();
+                        item.setIcon(R.drawable.ic_menu_reading_list_add);
+                        Toast.makeText(this, R.string.reading_list_removed, Toast.LENGTH_SHORT).show();
+                    } else {
+                        tab.addToReadingList();
+                        item.setIcon(R.drawable.ic_menu_reading_list_remove);
+                    }
+                }
+                return true;
             case R.id.reload:
                 tab = Tabs.getInstance().getSelectedTab();
                 if (tab != null)

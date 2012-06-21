@@ -17,6 +17,7 @@ include $(topsrcdir)/config/rules.mk
 # process.  Default is OOP.
 
 _TEST_FILES = \
+		file_empty_script.js \
 		file_empty.html \
 		file_focus.html \
 		browserElementTestHelpers.js \
@@ -54,6 +55,9 @@ _TEST_FILES = \
 		browserElement_OpenWindowRejected.js \
 		test_browserElement_inproc_OpenWindowRejected.html \
 		file_browserElement_OpenWindowRejected.html \
+		browserElement_SecurityChange.js \
+		test_browserElement_inproc_SecurityChange.html \
+		file_browserElement_SecurityChange.html \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081).
@@ -73,6 +77,7 @@ _TEST_FILES += \
 		test_browserElement_oop_Close.html \
 		test_browserElement_oop_OpenWindow.html \
 		test_browserElement_oop_OpenWindowRejected.html \
+		test_browserElement_oop_SecurityChange.html \
 		$(NULL)
 endif
 

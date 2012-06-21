@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+  <html:iframe id="f" mozbrowser="true"
+               src="data:text/html;charset=utf-8,%3C!DOCTYPE html>Hi" />
+</window>

@@ -55,6 +55,8 @@ struct Vertex {
 
 ID2D1Factory *DrawTargetD2D::mFactory;
 IDWriteFactory *DrawTargetD2D::mDWriteFactory;
+uint64_t DrawTargetD2D::mVRAMUsageDT;
+uint64_t DrawTargetD2D::mVRAMUsageSS;
 
 // Helper class to restore surface contents that was clipped out but may have
 // been altered by a drawing call.
@@ -150,7 +152,8 @@ private:
 };
 
 DrawTargetD2D::DrawTargetD2D()
-  : mClipsArePushed(false)
+  : mCurrentCachedLayer(0)
+  , mClipsArePushed(false)
   , mPrivateData(NULL)
 {
 }
@@ -161,20 +164,31 @@ DrawTargetD2D::~DrawTargetD2D()
     PopAllClips();
 
     mRT->EndDraw();
+
+    mVRAMUsageDT -= GetByteSize();
   }
   if (mTempRT) {
     mTempRT->EndDraw();
+
+    mVRAMUsageDT -= GetByteSize();
   }
 
   if (mSnapshot) {
     // We may hold the only reference. MarkIndependent will clear mSnapshot;
-	// keep the snapshot object alive so it doesn't get destroyed while
-	// MarkIndependent is running.
+    // keep the snapshot object alive so it doesn't get destroyed while
+    // MarkIndependent is running.
     RefPtr<SourceSurfaceD2DTarget> deathGrip = mSnapshot;
-	// mSnapshot can be treated as independent of this DrawTarget since we know
-	// this DrawTarget won't change again.
-	deathGrip->MarkIndependent();
-	// mSnapshot will be cleared now.
+    // mSnapshot can be treated as independent of this DrawTarget since we know
+    // this DrawTarget won't change again.
+    deathGrip->MarkIndependent();
+    // mSnapshot will be cleared now.
+  }
+
+  for (int i = 0; i < kLayerCacheSize; i++) {
+    if (mCachedLayers[i]) {
+      mCachedLayers[i] = NULL;
+      mVRAMUsageDT -= GetByteSize();
+    }
   }
 
   // Targets depending on us can break that dependency, since we're obviously not going to
@@ -908,7 +922,9 @@ DrawTargetD2D::Mask(const Pattern &aSource,
   RefPtr<ID2D1Brush> maskBrush = CreateBrushForPattern(aMask, 1.0f);
 
   RefPtr<ID2D1Layer> layer;
-  rt->CreateLayer(byRef(layer));
+
+  layer = GetCachedLayer();
+
   rt->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), NULL,
                                       D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
                                       D2D1::IdentityMatrix(),
@@ -920,7 +936,7 @@ DrawTargetD2D::Mask(const Pattern &aSource,
   mat.Invert();
   
   rt->FillRectangle(D2DRect(mat.TransformBounds(rect)), brush);
-  rt->PopLayer();
+  PopCachedLayer(rt);
 
   FinalizeRTForOperation(aOptions.mCompositionOp, aSource, Rect(0, 0, (Float)mSize.width, (Float)mSize.height));
 }
@@ -942,12 +958,10 @@ DrawTargetD2D::PushClip(const Path *aPath)
   clip.mTransform = D2DMatrix(mTransform);
   clip.mPath = pathD2D;
   
-  RefPtr<ID2D1Layer> layer;
   pathD2D->mGeometry->GetBounds(clip.mTransform, &clip.mBounds);
+  
+  clip.mLayer = GetCachedLayer();
 
-  mRT->CreateLayer( byRef(layer));
-
-  clip.mLayer = layer;
   mPushedClips.push_back(clip);
 
   // The transform of clips is relative to the world matrix, since we use the total
@@ -965,7 +979,7 @@ DrawTargetD2D::PushClip(const Path *aPath)
     mRT->PushLayer(D2D1::LayerParameters(D2D1::InfiniteRect(), pathD2D->mGeometry,
                                          D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
                                          clip.mTransform, 1.0f, NULL,
-                                         options), layer);
+                                         options), clip.mLayer);
   }
 }
 
@@ -1009,7 +1023,7 @@ DrawTargetD2D::PopClip()
   mCurrentClippedGeometry = NULL;
   if (mClipsArePushed) {
     if (mPushedClips.back().mLayer) {
-      mRT->PopLayer();
+      PopCachedLayer(mRT);
     } else {
       mRT->PopAxisAlignedClip();
     }
@@ -1274,6 +1288,38 @@ DrawTargetD2D::InitD3D10Data()
 /*
  * Private helpers
  */
+uint32_t
+DrawTargetD2D::GetByteSize() const
+{
+  return mSize.width * mSize.height * BytesPerPixel(mFormat);
+}
+
+TemporaryRef<ID2D1Layer>
+DrawTargetD2D::GetCachedLayer()
+{
+  RefPtr<ID2D1Layer> layer;
+
+  if (mCurrentCachedLayer < 5) {
+    if (!mCachedLayers[mCurrentCachedLayer]) {
+      mRT->CreateLayer(byRef(mCachedLayers[mCurrentCachedLayer]));
+      mVRAMUsageDT += GetByteSize();
+    }
+    layer = mCachedLayers[mCurrentCachedLayer];
+  } else {
+    mRT->CreateLayer(byRef(layer));
+  }
+
+  mCurrentCachedLayer++;
+  return layer;
+}
+
+void
+DrawTargetD2D::PopCachedLayer(ID2D1RenderTarget *aRT)
+{
+  aRT->PopLayer();
+  mCurrentCachedLayer--;
+}
+
 bool
 DrawTargetD2D::InitD2DRenderTarget()
 {
@@ -1292,6 +1338,8 @@ DrawTargetD2D::InitD2DRenderTarget()
   if (mFormat == FORMAT_B8G8R8X8) {
     mRT->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
   }
+
+  mVRAMUsageDT += GetByteSize();
 
   return InitD3D10Data();
 }
@@ -1440,6 +1488,8 @@ DrawTargetD2D::GetRTForOperation(CompositionOp aOperator, const Pattern &aPatter
   if (!mTempRT) {
     return mRT;
   }
+
+  mVRAMUsageDT += GetByteSize();
 
   mTempRT->BeginDraw();
 

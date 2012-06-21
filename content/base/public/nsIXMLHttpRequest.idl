@@ -249,7 +249,7 @@ interface nsIXMLHttpRequest : nsISupports
    *             Type header via the setRequestHeader method before
    *             calling send.
    */
-  [implicit_jscontext] void   send([optional] in nsIVariant body);
+  void   send([optional] in nsIVariant body);
 
   /**
    * A variant of the send() method used to send binary data.
@@ -258,7 +258,7 @@ interface nsIXMLHttpRequest : nsISupports
    *             converted to a single-byte string by truncation (i.e., the
    *             high-order byte of each character will be discarded).
    */
-  [implicit_jscontext] void   sendAsBinary(in DOMString body);
+  void   sendAsBinary(in DOMString body);
 
   /**
    * Sets a HTTP request header for HTTP requests. You must call open

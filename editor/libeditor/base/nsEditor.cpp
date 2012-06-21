@@ -4919,9 +4919,9 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
     } else if (aAction == eNext) {
       selectedNode = GetNextNode(node, offset, true);
     }
-    NS_ENSURE_STATE(selectedNode);
 
-    while (selectedNode->IsNodeOfType(nsINode::eDATA_NODE) &&
+    while (selectedNode &&
+           selectedNode->IsNodeOfType(nsINode::eDATA_NODE) &&
            !selectedNode->Length()) {
       // Can't delete an empty chardata node (bug 762183)
       if (aAction == ePrevious) {
@@ -4930,6 +4930,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
         selectedNode = GetNextNode(selectedNode, true);
       }
     }
+    NS_ENSURE_STATE(selectedNode);
 
     nsCOMPtr<nsIDOMCharacterData> selectedNodeAsCharData =
       do_QueryInterface(selectedNode);

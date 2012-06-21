@@ -17,11 +17,10 @@
      if(event.data == "getSelf") {
        var origin = getOrigin(appURL);
        mozAppscb(navigator.mozApps.getSelf(),
-                 [{ status: '== "success"',
-                    installOrigin: '== "chrome://mochitests"',
+                 [{ installOrigin: '== "chrome://mochitests"',
                     origin: "== " + origin.quote(),
                     manifestURL: "== " +  appURL.quote()
-                 }], check, next);
+                 }], "success", check, next);
       }
       else if(event.data == "uninstall") {
         var pending = navigator.mozApps.getSelf();
@@ -51,21 +50,17 @@
           getInstalled([appURL], check, next);
         }
         mozAppscb(navigator.mozApps.getInstalled(),
-                  [{ status: '== "success"'}],
-                  check, next);
+                  [{}], "success", check, next);
       } 
       else if(event.data == "mgmt.getAll") {
         var hostname = window.location.hostname;
         debug(hostname);
         if (hostname != "http://example.com") {
           mozAppscb(navigator.mozApps.mgmt.getAll(),
-                    [{ status: '== "error"',
-                       name: '== "DENIED"'
-                    }], check, next);
+                    [{ name: '== "DENIED"' }], "error", check, next);
         } else {
           mozAppscb(navigator.mozApps.mgmt.getAll(),
-                    [{ status: '== "success"'}],
-                    check, next);
+                    [{}], "success", check, next);
         }
       }
       else if(event.data == "mgmt.event_error") {
@@ -89,8 +84,7 @@
 
         } else {
           mozAppscb(navigator.mozApps.mgmt.getAll(),
-                    [{ status: '== "success"'}], 
-                    check, next);
+                    [{}], "success", check, next);
         }
       }
    }

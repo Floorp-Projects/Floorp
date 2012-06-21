@@ -15,6 +15,7 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_createRemote.js \
 	browser_dbg_createChrome.js \
 	browser_dbg_debugger-tab-switch.js \
+	browser_dbg_debugger-tab-switch-window.js \
 	browser_dbg_debuggerstatement.js \
 	browser_dbg_listtabs.js \
 	browser_dbg_tabactor-01.js \
@@ -55,6 +56,8 @@ _BROWSER_TEST_FILES = \
 	browser_dbg_displayName.js \
 	browser_dbg_iframes.js \
 	browser_dbg_pause-exceptions.js \
+	browser_dbg_multiple-windows.js \
+	browser_dbg_menustatus.js \
 	head.js \
 	$(NULL)
 
