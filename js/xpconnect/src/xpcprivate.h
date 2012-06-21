@@ -1108,7 +1108,6 @@ public:
 
     inline nsXPConnect*                 GetXPConnect() const ;
     inline XPCJSRuntime*                GetRuntime() const ;
-    inline XPCPerThreadData*            GetThreadData() const ;
     inline XPCContext*                  GetXPCContext() const ;
     inline JSContext*                   GetJSContext() const ;
     inline JSBool                       GetContextPopRequired() const ;
@@ -1231,7 +1230,6 @@ private:
 
     nsXPConnect*                    mXPC;
 
-    XPCPerThreadData*               mThreadData;
     XPCContext*                     mXPCContext;
     JSContext*                      mJSContext;
     JSBool                          mContextPopRequired;
