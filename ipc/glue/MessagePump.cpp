@@ -109,6 +109,9 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
     if (!keep_running_)
       break;
 
+    if (did_work)
+      continue;
+
     // This will either sleep or process an event.
     NS_ProcessNextEvent(mThread, true);
   }
