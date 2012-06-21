@@ -205,7 +205,6 @@
 #ifdef DEBUG
 #define XPC_DETECT_LEADING_UPPERCASE_ACCESS_ERRORS
 #endif
-#define XPC_CHECK_WRAPPER_THREADSAFETY
 
 #if defined(DEBUG_xpc_hacker)
 #define XPC_DUMP_AT_SHUTDOWN
@@ -238,15 +237,6 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
                                  XPCWrappedNativeProto* proto);
 #else
 #define DEBUG_ReportShadowedMembers(set, wrapper, proto) ((void)0)
-#endif
-
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-void DEBUG_ReportWrapperThreadSafetyError(XPCCallContext& ccx,
-                                          const char* msg,
-                                          const XPCWrappedNative* wrapper);
-void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper);
-#else
-#define DEBUG_CheckWrapperThreadSafety(w) ((void)0)
 #endif
 
 /***************************************************************************/
@@ -3004,12 +2994,6 @@ private:
     XPCNativeScriptableInfo*     mScriptableInfo;
     XPCWrappedNativeTearOffChunk mFirstChunk;
     intptr_t                     mWrapperWord;
-
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-public:
-    // Don't want to overload _mOwningThread
-    PRThread*                    mThread;
-#endif
 };
 
 /***************************************************************************
@@ -3763,13 +3747,6 @@ public:
     static void InitStatics()
         { gLock = nsnull; gThreads = nsnull; gTLSIndex = BAD_TLS_INDEX; }
 
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-    uint32_t  IncrementWrappedNativeThreadsafetyReportDepth()
-        {return ++mWrappedNativeThreadsafetyReportDepth;}
-    void      ClearWrappedNativeThreadsafetyReportDepth()
-        {mWrappedNativeThreadsafetyReportDepth = 0;}
-#endif
-
     static void ShutDown()
         {sMainJSThread = nsnull; sMainThreadData = nsnull;}
 
@@ -3780,9 +3757,6 @@ private:
 private:
     XPCPerThreadData*    mNextThread;
 
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-    uint32_t             mWrappedNativeThreadsafetyReportDepth;
-#endif
     PRThread*            mThread;
 
     static Mutex*            gLock;
