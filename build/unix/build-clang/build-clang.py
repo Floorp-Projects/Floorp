@@ -46,8 +46,7 @@ def with_env(env, f):
 
 def build_tar_package(tar, name, base, directory):
     name = os.path.realpath(name)
-    run_in(base, [tar, "-cjf", name, "--mtime=2012-01-01", "--owner=root",
-                  directory])
+    run_in(base, [tar, "-cjf", name, "--owner=root", directory])
 
 def svn_co(url, directory, revision):
     check_run(["svn", "co", "-r", revision, url, directory])
@@ -74,7 +73,7 @@ def build_one_stage_aux(stage_dir, is_stage_one):
     os.mkdir(stage_dir)
 
     build_dir = stage_dir + "/build"
-    inst_dir = stage_dir + "/inst"
+    inst_dir = stage_dir + "/clang"
 
     configure_opts = ["--enable-optimized",
                       "--prefix=%s" % inst_dir,
@@ -112,4 +111,4 @@ build_one_stage({"CC"  : stage1_inst_dir + "/bin/clang -static-libgcc -fgnu89-in
                  "CXX" : stage1_inst_dir + "/bin/clang++ -static-libgcc -static-libstdc++"},
                 stage2_dir, False)
 
-build_tar_package("/bin/tar", "clang.tar.bz2", stage3_dir, "clang")
+build_tar_package("/bin/tar", "clang.tar.bz2", stage2_dir, "clang")
