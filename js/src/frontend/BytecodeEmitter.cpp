@@ -5921,6 +5921,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 CheckTypeSet(cx, bce, JSOP_REST);
                 if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
                     return false;
+                if (!BindNameToSlot(cx, bce, rest))
+                    return JS_FALSE;
                 if (!EmitVarOp(cx, rest, JSOP_SETARG, bce))
                     return false;
                 if (Emit1(cx, bce, JSOP_POP) < 0)
