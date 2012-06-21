@@ -647,6 +647,7 @@ private:
 // So, xpconnect can only be used on one JSRuntime within the process.
 
 // no virtuals. no refcounting.
+class XPCJSContextStack;
 class XPCJSRuntime
 {
 public:
@@ -654,6 +655,10 @@ public:
 
     JSRuntime*     GetJSRuntime() const {return mJSRuntime;}
     nsXPConnect*   GetXPConnect() const {return mXPConnect;}
+
+    XPCJSContextStack* GetJSContextStack() {return mJSContextStack;}
+    void DestroyJSContextStack();
+
     JSContext*     GetJSCycleCollectionContext();
 
     JSObject2WrappedJSMap*     GetWrappedJSMap()        const
@@ -818,6 +823,7 @@ private:
 
     nsXPConnect*             mXPConnect;
     JSRuntime*               mJSRuntime;
+    XPCJSContextStack*       mJSContextStack;
     JSContext*               mJSCycleCollectionContext;
     JSObject2WrappedJSMap*   mWrappedJSMap;
     IID2WrappedJSClassMap*   mWrappedJSClassMap;
@@ -3722,8 +3728,6 @@ public:
         return false;
     }
 
-    XPCJSContextStack* GetJSContextStack() {return mJSContextStack;}
-
     XPCCallContext*  GetCallContext() const {return mCallContext;}
     XPCCallContext*  SetCallContext(XPCCallContext* ccx)
         {XPCCallContext* old = mCallContext; mCallContext = ccx; return old;}
@@ -3737,10 +3741,15 @@ public:
         {XPCWrappedNative* old = mResolvingWrapper;
          mResolvingWrapper = w; return old;}
 
+    // Forward to the runtime for now. This will go away entirely soon.
+    XPCJSContextStack* GetJSContextStack() {
+        return nsXPConnect::GetXPConnect()->GetRuntime()->GetJSContextStack();
+    }
+
     void Cleanup();
     void ReleaseNatives();
 
-    bool IsValid() const {return mJSContextStack != nsnull;}
+    bool IsValid() const { return true; }
 
     static Mutex* GetLock() {return gLock;}
     // Must be called with the threads locked.
@@ -3772,7 +3781,6 @@ private:
     static XPCPerThreadData* GetDataImpl(JSContext *cx);
 
 private:
-    XPCJSContextStack*   mJSContextStack;
     XPCPerThreadData*    mNextThread;
     XPCCallContext*      mCallContext;
     jsid                 mResolveName;
