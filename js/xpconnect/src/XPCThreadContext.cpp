@@ -243,8 +243,7 @@ void *            XPCPerThreadData::sMainJSThread   = nsnull;
 XPCPerThreadData::XPCPerThreadData() :
         mNextThread(nsnull),
         mResolveName(JSID_VOID),
-        mResolvingWrapper(nsnull),
-        mAutoRoots(nsnull)
+        mResolvingWrapper(nsnull)
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
       , mWrappedNativeThreadsafetyReportDepth(0)
 #endif
@@ -260,7 +259,6 @@ XPCPerThreadData::XPCPerThreadData() :
 void
 XPCPerThreadData::Cleanup()
 {
-    MOZ_ASSERT(!mAutoRoots);
 }
 
 XPCPerThreadData::~XPCPerThreadData()
@@ -304,31 +302,6 @@ xpc_ThreadDataDtorCB(void* ptr)
 {
     XPCPerThreadData* data = (XPCPerThreadData*) ptr;
     delete data;
-}
-
-void XPCPerThreadData::TraceJS(JSTracer *trc)
-{
-#ifdef XPC_TRACK_AUTOMARKINGPTR_STATS
-    {
-        static int maxLength = 0;
-        int length = 0;
-        for (AutoMarkingPtr* p = mAutoRoots; p; p = p->GetNext())
-            length++;
-        if (length > maxLength)
-            maxLength = length;
-        printf("XPC gc on thread %x with %d AutoMarkingPtrs (%d max so far)\n",
-               this, length, maxLength);
-    }
-#endif
-
-    if (mAutoRoots)
-        mAutoRoots->TraceJSAll(trc);
-}
-
-void XPCPerThreadData::MarkAutoRootsAfterJSFinalize()
-{
-    if (mAutoRoots)
-        mAutoRoots->MarkAfterJSFinalizeAll();
 }
 
 // static
