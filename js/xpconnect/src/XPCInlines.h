@@ -54,13 +54,6 @@ XPCCallContext::GetRuntime() const
     return mXPCContext->GetRuntime();
 }
 
-inline XPCPerThreadData*
-XPCCallContext::GetThreadData() const
-{
-    CHECK_STATE(HAVE_CONTEXT);
-    return mThreadData;
-}
-
 inline XPCContext*
 XPCCallContext::GetXPCContext() const
 {
