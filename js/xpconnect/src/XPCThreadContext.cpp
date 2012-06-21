@@ -242,9 +242,6 @@ void *            XPCPerThreadData::sMainJSThread   = nsnull;
 
 XPCPerThreadData::XPCPerThreadData() :
         mNextThread(nsnull)
-#ifdef XPC_CHECK_WRAPPER_THREADSAFETY
-      , mWrappedNativeThreadsafetyReportDepth(0)
-#endif
 {
     MOZ_COUNT_CTOR(xpcPerThreadData);
     if (gLock) {
