@@ -1364,7 +1364,7 @@ class TypedArrayTemplate
                     return NULL;
             } else {
                 jsbytecode *pc;
-                JSScript *script = cx->stack.currentScript(&pc);
+                RootedScript script(cx, cx->stack.currentScript(&pc));
                 if (script) {
                     if (!types::SetInitializerObjectType(cx, script, pc, obj))
                         return NULL;

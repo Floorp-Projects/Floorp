@@ -30,6 +30,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "gc/Root.h"
 #include "js/TemplateLib.h"
 #include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
@@ -665,23 +666,25 @@ JSObject::setSingletonType(JSContext *cx)
     if (!cx->typeInferenceEnabled())
         return true;
 
+    JS::Rooted<JSObject*> self(cx, this);
     JS_ASSERT(!hasLazyType());
-    JS_ASSERT_IF(getProto(), type() == getProto()->getNewType(cx, NULL));
+    JS_ASSERT_IF(self->getProto(), self->type() == self->getProto()->getNewType(cx, NULL));
 
-    js::types::TypeObject *type = cx->compartment->getLazyType(cx, getProto());
+    js::types::TypeObject *type = cx->compartment->getLazyType(cx, self->getProto());
     if (!type)
         return false;
 
-    type_ = type;
+    self->type_ = type;
     return true;
 }
 
 inline js::types::TypeObject *
 JSObject::getType(JSContext *cx)
 {
-    if (hasLazyType())
-        makeLazyType(cx);
-    return type_;
+    JS::RootedObject self(cx, this);
+    if (self->hasLazyType())
+        self->makeLazyType(cx);
+    return self->type_;
 }
 
 inline bool

@@ -1211,8 +1211,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
     JS_ASSERT(sizeof(FunctionExtended) <= gc::Arena::thingSize(JSFunction::ExtendedFinalizeKind));
 
     RootedAtom atom(cx, atom_);
-
-    JSFunction *fun;
+    RootedFunction fun(cx);
 
     if (funobj) {
         JS_ASSERT(funobj->isFunction());

@@ -163,7 +163,7 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
                 return NULL;
         } else {
             jsbytecode *pc;
-            JSScript *script = cx->stack.currentScript(&pc);
+            RootedScript script(cx, cx->stack.currentScript(&pc));
             if (script) {
                 if (!types::SetInitializerObjectType(cx, script, pc, obj))
                     return NULL;
