@@ -4377,25 +4377,25 @@ NS_IMETHODIMP
 nsEditor::DeleteSelectionAndCreateNode(const nsAString& aTag,
                                            nsIDOMNode ** aNewNode)
 {
-  nsCOMPtr<nsIDOMNode> parentSelectedNode;
-  PRInt32 offsetOfNewNode;
-  nsresult result = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode,
-                                                          offsetOfNewNode);
+  nsresult result = DeleteSelectionAndPrepareToCreateNode();
   NS_ENSURE_SUCCESS(result, result);
 
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsINode> node = selection->GetAnchorNode();
+  PRInt32 offset = selection->GetAnchorOffset();
+
   nsCOMPtr<nsIDOMNode> newNode;
-  result = CreateNode(aTag, parentSelectedNode, offsetOfNewNode,
+  result = CreateNode(aTag, node->AsDOMNode(), offset,
                       getter_AddRefs(newNode));
-  // XXX: ERROR_HANDLING  check result, and make sure aNewNode is set correctly in success/failure cases
+  // XXX: ERROR_HANDLING  check result, and make sure aNewNode is set correctly
+  // in success/failure cases
   *aNewNode = newNode;
   NS_IF_ADDREF(*aNewNode);
 
   // we want the selection to be just after the new node
-  nsCOMPtr<nsISelection> selection;
-  result = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(result, result);
-  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  return selection->Collapse(parentSelectedNode, offsetOfNewNode+1);
+  return selection->Collapse(node, offset + 1);
 }
 
 
@@ -4442,86 +4442,55 @@ nsEditor::IsIMEComposing() {
   return mIsIMEComposing;
 }
 
-NS_IMETHODIMP
-nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode)
+nsresult
+nsEditor::DeleteSelectionAndPrepareToCreateNode()
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsISelection> selection;
-  result = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(result, result);
+  nsresult res;
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   if (!selection->Collapsed()) {
-    result = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
-    if (NS_FAILED(result)) {
-      return result;
-    }
-    // get the new selection
-    result = GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(result)) {
-      return result;
-    }
+    res = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
+    NS_ENSURE_SUCCESS(res, res);
 
-    nsCOMPtr<nsIDOMNode> selectedNode;
-    selection->GetAnchorNode(getter_AddRefs(selectedNode));
-    // no selection is ok.
-    // if there is a selection, it must be collapsed
-    if (selectedNode && !selection->Collapsed()) {
-      result = selection->CollapseToEnd();
-      NS_ENSURE_SUCCESS(result, result);
+    MOZ_ASSERT(selection->Collapsed(),
+               "Selection not collapsed after delete");
+  }
+
+  // If the selection is a chardata node, split it if necessary and compute
+  // where to put the new node
+  nsCOMPtr<nsINode> node = selection->GetAnchorNode();
+  MOZ_ASSERT(node, "Selection has no ranges in it");
+
+  if (node && node->IsNodeOfType(nsINode::eDATA_NODE)) {
+    NS_ASSERTION(node->GetNodeParent(),
+                 "It's impossible to insert into chardata with no parent -- "
+                 "fix the caller");
+    NS_ENSURE_STATE(node->GetNodeParent());
+
+    PRInt32 offset = selection->GetAnchorOffset();
+
+    if (offset == 0) {
+      res = selection->Collapse(node->GetNodeParent(),
+                                node->GetNodeParent()->IndexOf(node));
+      MOZ_ASSERT(NS_SUCCEEDED(res));
+      NS_ENSURE_SUCCESS(res, res);
+    } else if (offset == (PRInt32)node->Length()) {
+      res = selection->Collapse(node->GetNodeParent(),
+                                node->GetNodeParent()->IndexOf(node) + 1);
+      MOZ_ASSERT(NS_SUCCEEDED(res));
+      NS_ENSURE_SUCCESS(res, res);
+    } else {
+      nsCOMPtr<nsIDOMNode> tmp;
+      res = SplitNode(node->AsDOMNode(), offset, getter_AddRefs(tmp));
+      NS_ENSURE_SUCCESS(res, res);
+      res = selection->Collapse(node->GetNodeParent(),
+                                node->GetNodeParent()->IndexOf(node));
+      MOZ_ASSERT(NS_SUCCEEDED(res));
+      NS_ENSURE_SUCCESS(res, res);
     }
   }
-  // split the selected node
-  PRInt32 offsetOfSelectedNode;
-  result = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
-  if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offsetOfSelectedNode)) && parentSelectedNode)
-  {
-    nsCOMPtr<nsIDOMNode> selectedNode;
-    PRUint32 selectedNodeContentCount=0;
-    nsCOMPtr<nsIDOMCharacterData>selectedParentNodeAsText;
-    selectedParentNodeAsText = do_QueryInterface(parentSelectedNode);
-
-    offsetOfNewNode = offsetOfSelectedNode;
-    
-    /* if the selection is a text node, split the text node if necessary
-       and compute where to put the new node
-    */
-    if (selectedParentNodeAsText) 
-    { 
-      PRInt32 indexOfTextNodeInParent;
-      selectedNode = do_QueryInterface(parentSelectedNode);
-      selectedNode->GetParentNode(getter_AddRefs(parentSelectedNode));
-      selectedParentNodeAsText->GetLength(&selectedNodeContentCount);
-      GetChildOffset(selectedNode, parentSelectedNode, indexOfTextNodeInParent);
-
-      if ((offsetOfSelectedNode!=0) && (((PRUint32)offsetOfSelectedNode)!=selectedNodeContentCount))
-      {
-        nsCOMPtr<nsIDOMNode> newSiblingNode;
-        result = SplitNode(selectedNode, offsetOfSelectedNode, getter_AddRefs(newSiblingNode));
-        // now get the node's offset in its parent, and insert the new tag there
-        if (NS_SUCCEEDED(result)) {
-          result = GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
-        }
-      }
-      else 
-      { // determine where to insert the new node
-        if (0==offsetOfSelectedNode) {
-          offsetOfNewNode = indexOfTextNodeInParent; // insert new node as previous sibling to selection parent
-        }
-        else {                 // insert new node as last child
-          GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
-          offsetOfNewNode++;    // offsets are 0-based, and we need the index of the new node
-        }
-      }
-    }
-    // Here's where the new node was inserted
-  }
-#ifdef DEBUG
-  else {
-    printf("InsertLineBreak into an empty document is not yet supported\n");
-  }
-#endif
-  return result;
+  return NS_OK;
 }
 
 
