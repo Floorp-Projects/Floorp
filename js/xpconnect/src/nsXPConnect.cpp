@@ -99,12 +99,8 @@ nsXPConnect::~nsXPConnect()
         // Create our own JSContext rather than an XPCCallContext, since
         // otherwise we will create a new safe JS context and attach a
         // components object that won't get GCed.
-        // And do this before calling CleanupAllThreads, so that we
-        // don't create an extra xpcPerThreadData.
         cx = JS_NewContext(mRuntime->GetJSRuntime(), 8192);
     }
-
-    XPCPerThreadData::CleanupAllThreads();
 
     // This needs to happen exactly here, otherwise we leak at shutdown. I don't
     // know why. :-(
