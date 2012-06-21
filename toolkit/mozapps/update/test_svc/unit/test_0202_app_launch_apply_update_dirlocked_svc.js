@@ -27,11 +27,15 @@ const FILE_UPDATER_INI_BAK = "updater.ini.bak";
 // Number of milliseconds for each do_timeout call.
 const CHECK_TIMEOUT_MILLI = 1000;
 
+// How many of CHECK_TIMEOUT_MILLI to wait before we abort the test.
+const MAX_TIMEOUT_RUNS = 300;
+
 // Maximum number of milliseconds the process that is launched can run before
 // the test will try to kill it.
 const APP_TIMER_TIMEOUT = 15000;
 
 let gActiveUpdate;
+let gTimeoutRuns = 0;
 
 // Override getUpdatesRootDir on Mac because we need to apply the update
 // inside the bundle directory.
@@ -300,7 +304,10 @@ function getUpdateTestDir() {
 function checkUpdateApplied() {
   // Don't proceed until the update has failed, and reset to pending.
   if (gUpdateManager.activeUpdate.state != STATE_PENDING) {
-    do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateApplied);
+    if (++gTimeoutRuns > MAX_TIMEOUT_RUNS)
+      do_throw("Exceeded MAX_TIMEOUT_RUNS whist waiting for pending state to finish");
+    else
+      do_timeout(CHECK_TIMEOUT_MILLI, checkUpdateApplied);
     return;
   }
 

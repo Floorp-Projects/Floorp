@@ -26,7 +26,8 @@ import os
 import re
 import shutil
 import textwrap
-from subprocess import call, Popen, PIPE, STDOUT
+import fnmatch
+import subprocess
 from optparse import OptionParser
 
 # Utility classes
@@ -228,7 +229,7 @@ class SVNFileInfo(VCSFileInfo):
         return self.file
 
 def read_output(*args):
-    (stdout, _) = Popen(args=args, stdout=PIPE).communicate()
+    (stdout, _) = subprocess.Popen(args=args, stdout=subprocess.PIPE).communicate()
     return stdout.rstrip()
 
 class HGRepoInfo:
@@ -390,7 +391,12 @@ class Dumper:
     ProcessDir.  Instead, call GetPlatformSpecificDumper to
     get an instance of a subclass."""
     def __init__(self, dump_syms, symbol_path,
-                 archs=None, srcdirs=None, copy_debug=False, vcsinfo=False, srcsrv=False):
+                 archs=None,
+                 srcdirs=None,
+                 copy_debug=False,
+                 vcsinfo=False,
+                 srcsrv=False,
+                 exclude=[]):
         # popen likes absolute paths, at least on windows
         self.dump_syms = os.path.abspath(dump_syms)
         self.symbol_path = symbol_path
@@ -406,10 +412,11 @@ class Dumper:
         self.copy_debug = copy_debug
         self.vcsinfo = vcsinfo
         self.srcsrv = srcsrv
+        self.exclude = exclude[:]
 
     # subclasses override this
     def ShouldProcess(self, file):
-        return False
+        return not any(fnmatch.fnmatch(os.path.basename(file), exclude) for exclude in self.exclude)
 
     # and can override this
     def ShouldSkipDir(self, dir):
@@ -464,15 +471,17 @@ class Dumper:
         """Dump symbols from this file into a symbol file, stored
         in the proper directory structure in  |symbol_path|."""
         print >> sys.stderr, "Processing file: %s" % file
+        sys.stderr.flush()
         result = False
         sourceFileStream = ''
         # tries to get the vcs root from the .mozconfig first - if it's not set
         # the tinderbox vcs path will be assigned further down
         vcs_root = os.environ.get("SRCSRV_ROOT")
-        for arch in self.archs:
+        for arch_num, arch in enumerate(self.archs):
             try:
-                cmd = os.popen("%s %s %s" % (self.dump_syms, arch, file), "r")
-                module_line = cmd.next()
+                proc = subprocess.Popen([self.dump_syms] + arch.split() + [file],
+                                        stdout=subprocess.PIPE)
+                module_line = proc.stdout.next()
                 if module_line.startswith("MODULE"):
                     # MODULE os cpu guid debug_file
                     (guid, debug_file) = (module_line.split())[3:5]
@@ -491,17 +500,17 @@ class Dumper:
                     f = open(full_path, "w")
                     f.write(module_line)
                     # now process the rest of the output
-                    for line in cmd:
+                    for line in proc.stdout:
                         if line.startswith("FILE"):
                             # FILE index filename
-                            (x, index, filename) = line.split(None, 2)
+                            (x, index, filename) = line.rstrip().split(None, 2)
                             if sys.platform == "sunos5":
                                 for srcdir in self.srcdirs:
                                     start = filename.find(self.srcdir)
                                     if start != -1:
                                         filename = filename[start:]
                                         break
-                            filename = self.FixFilenameCase(filename.rstrip())
+                            filename = self.FixFilenameCase(filename)
                             sourcepath = filename
                             if self.vcsinfo:
                                 (filename, rootname) = GetVCSFilename(filename, self.srcdirs)
@@ -520,14 +529,15 @@ class Dumper:
                             # we want to return true only if at least one line is not a MODULE or FILE line
                             result = True
                     f.close()
-                    cmd.close()
+                    proc.wait()
                     # we output relative paths so callers can get a list of what
                     # was generated
                     print rel_path
                     if self.srcsrv and vcs_root:
                         # add source server indexing to the pdb file
                         self.SourceServerIndexing(file, guid, sourceFileStream, vcs_root)
-                    if self.copy_debug:
+                    # only copy debug the first time if we have multiple architectures
+                    if self.copy_debug and arch_num == 0:
                         self.CopyDebug(file, debug_file, guid)
             except StopIteration:
                 pass
@@ -545,6 +555,8 @@ class Dumper_Win32(Dumper):
     def ShouldProcess(self, file):
         """This function will allow processing of pdb files that have dll
         or exe files with the same base name next to them."""
+        if not Dumper.ShouldProcess(self, file):
+            return False
         if file.endswith(".pdb"):
             (path,ext) = os.path.splitext(file)
             if os.path.isfile(path + ".exe") or os.path.isfile(path + ".dll"):
@@ -584,8 +596,10 @@ class Dumper_Win32(Dumper):
         # try compressing it
         compressed_file = os.path.splitext(full_path)[0] + ".pd_"
         # ignore makecab's output
-        success = call(["makecab.exe", "/D", "CompressionType=LZX", "/D", "CompressionMemory=21",
-                       full_path, compressed_file], stdout=open("NUL:","w"), stderr=STDOUT)
+        success = subprocess.call(["makecab.exe", "/D", "CompressionType=LZX", "/D",
+                                   "CompressionMemory=21",
+                                   full_path, compressed_file],
+                                  stdout=open("NUL:","w"), stderr=subprocess.STDOUT)
         if success == 0 and os.path.exists(compressed_file):
             os.unlink(full_path)
             print os.path.splitext(rel_path)[0] + ".pd_"
@@ -602,9 +616,9 @@ class Dumper_Win32(Dumper):
         if self.copy_debug:
             pdbstr_path = os.environ.get("PDBSTR_PATH")
             pdbstr = os.path.normpath(pdbstr_path)
-            call([pdbstr, "-w", "-p:" + os.path.basename(debug_file),
-                  "-i:" + os.path.basename(streamFilename), "-s:srcsrv"],
-                 cwd=os.path.dirname(stream_output_path))
+            subprocess.call([pdbstr, "-w", "-p:" + os.path.basename(debug_file),
+                             "-i:" + os.path.basename(streamFilename), "-s:srcsrv"],
+                            cwd=os.path.dirname(stream_output_path))
             # clean up all the .stream files when done
             os.remove(stream_output_path)
         return result
@@ -616,6 +630,8 @@ class Dumper_Linux(Dumper):
         executable, or end with the .so extension, and additionally
         file(1) reports as being ELF files.  It expects to find the file
         command in PATH."""
+        if not Dumper.ShouldProcess(self, file):
+            return False
         if file.endswith(".so") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("ELF")
         return False
@@ -625,8 +641,8 @@ class Dumper_Linux(Dumper):
         # .gnu_debuglink section to the object, so the debugger can
         # actually load our debug info later.
         file_dbg = file + ".dbg"
-        if call([self.objcopy, '--only-keep-debug', file, file_dbg]) == 0 and \
-           call([self.objcopy, '--add-gnu-debuglink=%s' % file_dbg, file]) == 0:
+        if subprocess.call([self.objcopy, '--only-keep-debug', file, file_dbg]) == 0 and \
+           subprocess.call([self.objcopy, '--add-gnu-debuglink=%s' % file_dbg, file]) == 0:
             rel_path = os.path.join(debug_file,
                                     guid,
                                     debug_file + ".dbg")
@@ -654,6 +670,8 @@ class Dumper_Solaris(Dumper):
         executable, or end with the .so extension, and additionally
         file(1) reports as being ELF files.  It expects to find the file
         command in PATH."""
+        if not Dumper.ShouldProcess(self, file):
+            return False
         if file.endswith(".so") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("ELF")
         return False
@@ -664,6 +682,8 @@ class Dumper_Mac(Dumper):
         executable, or end with the .dylib extension, and additionally
         file(1) reports as being Mach-O files.  It expects to find the file
         command in PATH."""
+        if not Dumper.ShouldProcess(self, file):
+            return False
         if file.endswith(".dylib") or os.access(file, os.X_OK):
             return self.RunFileCommand(file).startswith("Mach-O")
         return False
@@ -685,8 +705,8 @@ class Dumper_Mac(Dumper):
         if os.path.exists(dsymbundle):
             shutil.rmtree(dsymbundle)
         # dsymutil takes --arch=foo instead of -a foo like everything else
-        os.system("dsymutil %s %s >/dev/null" % (' '.join([a.replace('-a ', '--arch=') for a in self.archs]),
-                                      file))
+        subprocess.call(["dsymutil"] + [a.replace('-a ', '--arch=') for a in self.archs if a]
+                        + [file])
         if not os.path.exists(dsymbundle):
             # dsymutil won't produce a .dSYM for files without symbols
             return False
@@ -712,9 +732,9 @@ class Dumper_Mac(Dumper):
                                 os.path.basename(file) + ".tar.bz2")
         full_path = os.path.abspath(os.path.join(self.symbol_path,
                                                   rel_path))
-        success = call(["tar", "cjf", full_path, os.path.basename(file)],
-                       cwd=os.path.dirname(file),
-                       stdout=open("/dev/null","w"), stderr=STDOUT)
+        success = subprocess.call(["tar", "cjf", full_path, os.path.basename(file)],
+                                  cwd=os.path.dirname(file),
+                                  stdout=open("/dev/null","w"), stderr=subprocess.STDOUT)
         if success == 0 and os.path.exists(full_path):
             print rel_path
 
@@ -736,6 +756,9 @@ def main():
     parser.add_option("-i", "--source-index",
                       action="store_true", dest="srcsrv", default=False,
                       help="Add source index information to debug files, making them suitable for use in a source server.")
+    parser.add_option("-x", "--exclude",
+                      action="append", dest="exclude", default=[], metavar="PATTERN",
+                      help="Skip processing files matching PATTERN.")
     (options, args) = parser.parse_args()
     
     #check to see if the pdbstr.exe exists
@@ -755,7 +778,8 @@ def main():
                                        archs=options.archs,
                                        srcdirs=options.srcdir,
                                        vcsinfo=options.vcsinfo,
-                                       srcsrv=options.srcsrv)
+                                       srcsrv=options.srcsrv,
+                                       exclude=options.exclude)
     for arg in args[2:]:
         dumper.Process(arg)
 

@@ -18,8 +18,9 @@
 #include "nsITreeColumns.h"
 #endif
 #include "nsWeakPtr.h"
+#include "mozilla/Attributes.h"
 
-class nsXULTooltipListener : public nsIDOMEventListener
+class nsXULTooltipListener MOZ_FINAL : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS

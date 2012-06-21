@@ -37,9 +37,11 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 endif
 
-# See bug 764192 for details on what we're investigating here.
+# For non release/esr builds, enable (some) fatal jemalloc assertions.  This
+# helps us catch memory errors.  See bug 764192 for details on what
+# MOZ_TEMP_INVESTIGATION is for.
 ifeq (,$(filter release esr,$(MOZ_UPDATE_CHANNEL)))
-DEFINES	+= -DMOZ_TEMP_INVESTIGATION
+DEFINES	+= -DMOZ_JEMALLOC_HARD_ASSERTS -DMOZ_TEMP_INVESTIGATION
 endif
 
 include $(topsrcdir)/config/rules.mk

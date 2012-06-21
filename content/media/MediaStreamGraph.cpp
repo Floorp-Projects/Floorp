@@ -17,6 +17,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "prlog.h"
 #include "VideoUtils.h"
+#include "mozilla/Attributes.h"
 
 using namespace mozilla::layers;
 
@@ -1469,7 +1470,7 @@ public:
   }
 };
 
-class MediaStreamGraphShutdownObserver : public nsIObserver
+class MediaStreamGraphShutdownObserver MOZ_FINAL : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS

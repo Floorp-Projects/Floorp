@@ -31,7 +31,6 @@
 #include "js/MemoryMetrics.h"
 #include "nsAlgorithm.h"
 #include "nsContentUtils.h"
-#include "nsDOMClassInfo.h"
 #include "nsDOMJSUtils.h"
 #include "nsGUIEvent.h"
 #include "nsJSEnvironment.h"
@@ -166,7 +165,7 @@ public:
       // 64bit address plus '0x' plus null terminator.
       char address[21];
       uint32_t addressSize =
-        JS_snprintf(address, sizeof(address), "0x%llx", aWorkerPrivate);
+        JS_snprintf(address, sizeof(address), "%p", aWorkerPrivate);
       if (addressSize != uint32_t(-1)) {
         mAddressString.Assign(address, addressSize);
       }
@@ -2479,7 +2478,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
     // First check to make sure the caller has permission to make a
     // ChromeWorker if they called the ChromeWorker constructor.
     if (aIsChromeWorker && !isChrome) {
-      nsDOMClassInfo::ThrowJSException(aCx, NS_ERROR_DOM_SECURITY_ERR);
+      xpc::Throw(aCx, NS_ERROR_DOM_SECURITY_ERR);
       return nsnull;
     }
 
@@ -2508,7 +2507,7 @@ WorkerPrivate::Create(JSContext* aCx, JSObject* aObj, WorkerPrivate* aParent,
       if (!window ||
           (globalWindow != window &&
            !nsContentUtils::CanCallerAccess(window))) {
-        nsDOMClassInfo::ThrowJSException(aCx, NS_ERROR_DOM_SECURITY_ERR);
+        xpc::Throw(aCx, NS_ERROR_DOM_SECURITY_ERR);
         return nsnull;
       }
 

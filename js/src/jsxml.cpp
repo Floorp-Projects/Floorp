@@ -761,7 +761,8 @@ QNameHelper(JSContext *cx, int argc, jsval *argv, jsval *rval)
     } else if (argc < 0) {
         name = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
     } else {
-        if (!js_ValueToAtom(cx, nameval, &name))
+        name = ToAtom(cx, nameval);
+        if (!name)
             return false;
     }
 
@@ -2828,7 +2829,8 @@ ToAttributeName(JSContext *cx, jsval v)
 
     JSAtom *name;
     if (JSVAL_IS_STRING(v)) {
-        if (!js_ValueToAtom(cx, v, &name))
+        name = ToAtom(cx, v);
+        if (!name)
             return NULL;
         uri = prefix = cx->runtime->emptyString;
     } else {
@@ -2852,7 +2854,8 @@ ToAttributeName(JSContext *cx, jsval v)
             if (clasp == &AnyNameClass) {
                 name = cx->runtime->atomState.starAtom;
             } else {
-                if (!js_ValueToAtom(cx, v, &name))
+                name = ToAtom(cx, v);
+                if (!name)
                     return NULL;
             }
             uri = prefix = cx->runtime->emptyString;
@@ -6705,7 +6708,8 @@ xml_setLocalName(JSContext *cx, unsigned argc, jsval *vp)
         if (!JSVAL_IS_PRIMITIVE(name) && JSVAL_TO_OBJECT(name)->isQName()) {
             namestr = JSVAL_TO_OBJECT(name)->getQNameLocalName();
         } else {
-            if (!js_ValueToAtom(cx, name, &namestr))
+            namestr = ToAtom(cx, name);
+            if (!namestr)
                 return false;
         }
     }

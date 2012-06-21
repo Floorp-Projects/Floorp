@@ -15,6 +15,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsMediaCache.h"
+#include "mozilla/Attributes.h"
 
 // For HTTP seeking, if number of bytes needing to be
 // seeked forward is less than this value then a read is
@@ -390,9 +391,9 @@ public:
   virtual bool    IsSuspendedByCache(MediaResource** aActiveResource);
   virtual bool    IsSuspended();
 
-  class Listener : public nsIStreamListener,
-                   public nsIInterfaceRequestor,
-                   public nsIChannelEventSink
+  class Listener MOZ_FINAL : public nsIStreamListener,
+                             public nsIInterfaceRequestor,
+                             public nsIChannelEventSink
   {
   public:
     Listener(ChannelMediaResource* aResource) : mResource(aResource) {}

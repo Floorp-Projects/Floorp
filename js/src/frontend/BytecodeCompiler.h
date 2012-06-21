@@ -13,12 +13,6 @@
 namespace js {
 namespace frontend {
 
-bool
-CompileFunctionBody(JSContext *cx, JSFunction *fun,
-                    JSPrincipals *principals, JSPrincipals *originPrincipals,
-                    Bindings *bindings, const jschar *chars, size_t length,
-                    const char *filename, unsigned lineno, JSVersion version);
-
 JSScript *
 CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
               JSPrincipals *principals, JSPrincipals *originPrincipals,
@@ -26,6 +20,12 @@ CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
               const jschar *chars, size_t length,
               const char *filename, unsigned lineno, JSVersion version,
               JSString *source = NULL, unsigned staticLevel = 0);
+
+bool
+CompileFunctionBody(JSContext *cx, JSFunction *fun,
+                    JSPrincipals *principals, JSPrincipals *originPrincipals,
+                    Bindings *bindings, const jschar *chars, size_t length,
+                    const char *filename, unsigned lineno, JSVersion version);
 
 } /* namespace frontend */
 } /* namespace js */
