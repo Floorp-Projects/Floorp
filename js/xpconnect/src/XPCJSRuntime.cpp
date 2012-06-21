@@ -1936,6 +1936,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mJSCycleCollectionContext(nsnull),
    mCallContext(nsnull),
    mAutoRoots(nsnull),
+   mResolveName(JSID_VOID),
+   mResolvingWrapper(nsnull),
    mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_SIZE)),
    mWrappedJSClassMap(IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_SIZE)),
    mIID2NativeInterfaceMap(IID2NativeInterfaceMap::newMap(XPC_NATIVE_INTERFACE_MAP_SIZE)),

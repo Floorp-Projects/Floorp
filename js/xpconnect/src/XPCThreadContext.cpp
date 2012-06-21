@@ -241,9 +241,7 @@ XPCPerThreadData *XPCPerThreadData::sMainThreadData = nsnull;
 void *            XPCPerThreadData::sMainJSThread   = nsnull;
 
 XPCPerThreadData::XPCPerThreadData() :
-        mNextThread(nsnull),
-        mResolveName(JSID_VOID),
-        mResolvingWrapper(nsnull)
+        mNextThread(nsnull)
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
       , mWrappedNativeThreadsafetyReportDepth(0)
 #endif
