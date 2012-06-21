@@ -2756,6 +2756,7 @@ int NS_main(int argc, NS_tchar **argv)
       // multiple times before giving up.
       const int max_retries = 10;
       int retries = 1;
+      DWORD lastWriteError = 0;
       do {
         // By opening a file handle wihout FILE_SHARE_READ to the callback
         // executable, the OS will prevent launching the process while it is
@@ -2768,10 +2769,10 @@ int NS_main(int argc, NS_tchar **argv)
         if (callbackFile != INVALID_HANDLE_VALUE)
           break;
 
-        DWORD lastError = GetLastError();
+        lastWriteError = GetLastError();
         LOG(("NS_main: callback app open attempt %d failed. " \
              "File: " LOG_S ". Last error: %d\n", retries,
-             targetPath, lastError));
+             targetPath, lastWriteError));
 
         Sleep(100);
       } while (++retries <= max_retries);
@@ -2782,7 +2783,13 @@ int NS_main(int argc, NS_tchar **argv)
         LOG(("NS_main: file in use - failed to exclusively open executable " \
              "file: " LOG_S "\n", argv[callbackIndex]));
         LogFinish();
-        WriteStatusFile(WRITE_ERROR);
+        if (ERROR_ACCESS_DENIED == lastWriteError) {
+          WriteStatusFile(WRITE_ERROR_ACCESS_DENIED);
+        } else if (ERROR_SHARING_VIOLATION == lastWriteError) {
+          WriteStatusFile(WRITE_ERROR_SHARING_VIOLATION);
+        } else {
+          WriteStatusFile(WRITE_ERROR_CALLBACK_APP);
+        }
         NS_tremove(gCallbackBackupPath);
         EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
         LaunchCallbackApp(argv[4],
