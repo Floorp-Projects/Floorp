@@ -101,11 +101,14 @@ const browserElementTestHelpers = {
   'origOOPByDefaultPref': null,
   'origPageThumbsEnabledPref': null,
 
-  // Two basically-empty pages from two different domains you can load.
+  // Some basically-empty pages from different domains you can load.
   'emptyPage1': 'http://example.com' +
                 window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) +
                 '/file_empty.html',
   'emptyPage2': 'http://example.org' +
+                window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) +
+                '/file_empty.html',
+  'emptyPage3': 'http://test1.example.org' +
                 window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) +
                 '/file_empty.html',
   'focusPage': 'http://example.org' +
