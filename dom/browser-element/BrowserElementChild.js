@@ -113,6 +113,8 @@ BrowserElementChild.prototype = {
     addMsgListener("set-visible", this._recvSetVisible);
     addMsgListener("get-can-go-back", this._recvCanGoBack);
     addMsgListener("get-can-go-forward", this._recvCanGoForward);
+    addMsgListener("go-back", this._recvGoBack);
+    addMsgListener("go-forward", this._recvGoForward);
     addMsgListener("unblock-modal-prompt", this._recvStopWaiting);
 
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
@@ -347,6 +349,22 @@ BrowserElementChild.prototype = {
       id: data.json.id,
       rv: webNav.canGoForward
     });
+  },
+
+  _recvGoBack: function(data) {
+    try {
+      docShell.QueryInterface(Ci.nsIWebNavigation).goBack();
+    } catch(e) {
+      // Silently swallow errors; these happen when we can't go back.
+    }
+  },
+
+  _recvGoForward: function(data) {
+    try {
+      docShell.QueryInterface(Ci.nsIWebNavigation).goForward();
+    } catch(e) {
+      // Silently swallow errors; these happen when we can't go forward.
+    }
   },
 
   _keyEventHandler: function(e) {
