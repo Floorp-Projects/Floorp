@@ -302,20 +302,9 @@ void XPCJSRuntime::TraceBlackJS(JSTracer* trc, void* data)
     // Skip this part if XPConnect is shutting down. We get into
     // bad locking problems with the thread iteration otherwise.
     if (!self->GetXPConnect()->IsShuttingDown()) {
-        Mutex* threadLock = XPCPerThreadData::GetLock();
-        if (threadLock)
-        { // scoped lock
-            MutexAutoLock lock(*threadLock);
-
-            XPCPerThreadData* iterp = nsnull;
-            XPCPerThreadData* thread;
-
-            while (nsnull != (thread =
-                              XPCPerThreadData::IterateThreads(&iterp))) {
-                // Trace those AutoMarkingPtr lists!
-                thread->TraceJS(trc);
-            }
-        }
+        // Trace those AutoMarkingPtr lists!
+        if (AutoMarkingPtr *roots = Get()->mAutoRoots)
+            roots->TraceJSAll(trc);
     }
 
     {
@@ -709,29 +698,27 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, JSBool is
                     XPCPerThreadData* iterp = nsnull;
                     XPCPerThreadData* thread;
 
-                    while (nsnull != (thread =
-                                      XPCPerThreadData::IterateThreads(&iterp))) {
-                        // Mark those AutoMarkingPtr lists!
-                        thread->MarkAutoRootsAfterJSFinalize();
+                    // Mark those AutoMarkingPtr lists!
+                    if (AutoMarkingPtr *roots = Get()->mAutoRoots)
+                        roots->MarkAfterJSFinalizeAll();
 
-                        XPCCallContext* ccxp = XPCJSRuntime::Get()->GetCallContext();
-                        while (ccxp) {
-                            // Deal with the strictness of callcontext that
-                            // complains if you ask for a set when
-                            // it is in a state where the set could not
-                            // possibly be valid.
-                            if (ccxp->CanGetSet()) {
-                                XPCNativeSet* set = ccxp->GetSet();
-                                if (set)
-                                    set->Mark();
-                            }
-                            if (ccxp->CanGetInterface()) {
-                                XPCNativeInterface* iface = ccxp->GetInterface();
-                                if (iface)
-                                    iface->Mark();
-                            }
-                            ccxp = ccxp->GetPrevCallContext();
+                    XPCCallContext* ccxp = XPCJSRuntime::Get()->GetCallContext();
+                    while (ccxp) {
+                        // Deal with the strictness of callcontext that
+                        // complains if you ask for a set when
+                        // it is in a state where the set could not
+                        // possibly be valid.
+                        if (ccxp->CanGetSet()) {
+                            XPCNativeSet* set = ccxp->GetSet();
+                            if (set)
+                                set->Mark();
                         }
+                        if (ccxp->CanGetInterface()) {
+                            XPCNativeInterface* iface = ccxp->GetInterface();
+                            if (iface)
+                                iface->Mark();
+                        }
+                        ccxp = ccxp->GetPrevCallContext();
                     }
                 }
             }
@@ -1948,6 +1935,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mJSContextStack(new XPCJSContextStack()),
    mJSCycleCollectionContext(nsnull),
    mCallContext(nsnull),
+   mAutoRoots(nsnull),
    mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_SIZE)),
    mWrappedJSClassMap(IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_SIZE)),
    mIID2NativeInterfaceMap(IID2NativeInterfaceMap::newMap(XPC_NATIVE_INTERFACE_MAP_SIZE)),

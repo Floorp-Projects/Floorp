@@ -855,6 +855,8 @@ public:
 
     size_t SizeOfIncludingThis(nsMallocSizeOfFun mallocSizeOf);
 
+    AutoMarkingPtr**  GetAutoRootsAdr() {return &mAutoRoots;}
+
 private:
     XPCJSRuntime(); // no implementation
     XPCJSRuntime(nsXPConnect* aXPConnect);
@@ -876,6 +878,7 @@ private:
     XPCJSContextStack*       mJSContextStack;
     JSContext*               mJSCycleCollectionContext;
     XPCCallContext*          mCallContext;
+    AutoMarkingPtr*          mAutoRoots;
     JSObject2WrappedJSMap*   mWrappedJSMap;
     IID2WrappedJSClassMap*   mWrappedJSClassMap;
     IID2NativeInterfaceMap*  mIID2NativeInterfaceMap;
@@ -3754,10 +3757,6 @@ public:
     // Must be called with the threads locked.
     static XPCPerThreadData* IterateThreads(XPCPerThreadData** iteratorp);
 
-    AutoMarkingPtr**  GetAutoRootsAdr() {return &mAutoRoots;}
-
-    void TraceJS(JSTracer* trc);
-    void MarkAutoRootsAfterJSFinalize();
 
     static void InitStatics()
         { gLock = nsnull; gThreads = nsnull; gTLSIndex = BAD_TLS_INDEX; }
@@ -3783,8 +3782,6 @@ private:
     XPCPerThreadData*    mNextThread;
     jsid                 mResolveName;
     XPCWrappedNative*    mResolvingWrapper;
-
-    AutoMarkingPtr*      mAutoRoots;
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     uint32_t             mWrappedNativeThreadsafetyReportDepth;
@@ -4035,7 +4032,7 @@ class AutoMarkingPtr
 {
   public:
     AutoMarkingPtr(XPCCallContext& ccx) {
-        mRoot = ccx.GetThreadData()->GetAutoRootsAdr();
+        mRoot = XPCJSRuntime::Get()->GetAutoRootsAdr();
         mNext = *mRoot;
         *mRoot = this;
     }
