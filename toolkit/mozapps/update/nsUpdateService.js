@@ -126,6 +126,10 @@ const SERVICE_UPDATER_NOT_FIXED_DRIVE      = 31;
 const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
 
+const WRITE_ERROR_ACCESS_DENIED     = 35;
+const WRITE_ERROR_SHARING_VIOLATION = 36;
+const WRITE_ERROR_CALLBACK_APP      = 37;
+
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
 const BACKGROUNDCHECK_MULTIPLE_FAILURES = 110;
@@ -973,7 +977,10 @@ function readStringFromFile(file) {
 
 function handleUpdateFailure(update, errorCode) {
   update.errorCode = parseInt(errorCode);
-  if (update.errorCode == WRITE_ERROR) {
+  if (update.errorCode == WRITE_ERROR || 
+      update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
+      update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
+      update.errorCode == WRITE_ERROR_CALLBACK_APP) {
     Cc["@mozilla.org/updates/update-prompt;1"].
       createInstance(Ci.nsIUpdatePrompt).
       showUpdateError(update);
@@ -3476,7 +3483,11 @@ UpdatePrompt.prototype = {
       return;
 
     // In some cases, we want to just show a simple alert dialog:
-    if (update.state == STATE_FAILED && update.errorCode == WRITE_ERROR) {
+    if (update.state == STATE_FAILED &&
+        (update.errorCode == WRITE_ERROR ||
+         update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
+         update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
+         update.errorCode == WRITE_ERROR_CALLBACK_APP)) {
       var title = gUpdateBundle.GetStringFromName("updaterIOErrorTitle");
       var text = gUpdateBundle.formatStringFromName("updaterIOErrorMsg",
                                                     [Services.appinfo.name,

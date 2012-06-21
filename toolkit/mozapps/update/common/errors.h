@@ -53,6 +53,9 @@
 #define SERVICE_INSTALLDIR_ERROR 33
 
 #define NO_INSTALLDIR_ERROR 34
+#define WRITE_ERROR_ACCESS_DENIED 35
+#define WRITE_ERROR_SHARING_VIOLATION 36
+#define WRITE_ERROR_CALLBACK_APP 37
 
 // The following error codes are only used by updater.exe
 // when a fallback key exists and XPCShell tests are being run.
