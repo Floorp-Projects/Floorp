@@ -123,10 +123,8 @@ var DebuggerServer = {
    *
    * @param aPort int
    *        The port to listen on.
-   * @param aLocalOnly bool
-   *        If true, server will listen on the loopback device.
    */
-  openListener: function DH_openListener(aPort, aLocalOnly) {
+  openListener: function DH_openListener(aPort) {
     if (!Services.prefs.getBoolPref("devtools.debugger.remote-enabled")) {
       return false;
     }
@@ -136,8 +134,14 @@ var DebuggerServer = {
       throw "Debugging listener already open.";
     }
 
+    let localOnly = false;
+    // A preference setting can force binding on the loopback interface.
+    if (Services.prefs.getBoolPref("devtools.debugger.force-local")) {
+      localOnly = true;
+    }
+
     try {
-      let socket = new ServerSocket(aPort, aLocalOnly, 4);
+      let socket = new ServerSocket(aPort, localOnly, 4);
       socket.asyncListen(this);
       this._listener = socket;
     } catch (e) {

@@ -137,7 +137,7 @@ class CGPrototypeJSClass(CGThing):
     def define(self):
         return """
 static JSClass PrototypeClass = {
-  "%s Prototype", 0,
+  "%sPrototype", 0,
   JS_PropertyStub,       /* addProperty */
   JS_PropertyStub,       /* delProperty */
   JS_PropertyStub,       /* getProperty */
@@ -1342,7 +1342,8 @@ ${target} = tmp.forget();""").substitute(self.substitution)
 def getJSToNativeConversionTemplate(type, descriptorProvider, failureCode=None,
                                     isDefinitelyObject=False,
                                     isMember=False,
-                                    isOptional=False):
+                                    isOptional=False,
+                                    invalidEnumValueFatal=True):
     """
     Get a template for converting a JS value to a native object based on the
     given type and descriptor.  If failureCode is given, then we're actually
@@ -1717,12 +1718,17 @@ for (uint32_t i = 0; i < length; ++i) {
         return (
             "{\n"
             "  bool ok;\n"
-            "  ${declName} = static_cast<%(enumtype)s>(FindEnumStringIndex(cx, ${val}, %(values)s, &ok));\n"
+            "  int index = FindEnumStringIndex(cx, ${val}, %(values)s, &ok);\n"
             "  if (!ok) {\n"
             "    return false;\n"
             "  }\n"
+            "  if (index < 0) {\n"
+            "    return %(failureCode)s;\n"
+            "  }\n"
+            "  ${declName} = static_cast<%(enumtype)s>(index);\n"
             "}" % { "enumtype" : enum,
-                      "values" : enum + "Values::strings" },
+                      "values" : enum + "Values::strings",
+                 "failureCode" : "Throw<false>(cx, NS_ERROR_XPC_BAD_CONVERT_JS)" if invalidEnumValueFatal else "true" },
             CGGeneric(enum), None, isOptional)
 
     if type.isCallback():
@@ -1765,16 +1771,18 @@ for (uint32_t i = 0; i < length; ++i) {
         if type.nullable():
             typeName = CGDictionary.makeDictionaryName(type.inner.inner,
                                                        descriptorProvider.workers)
-            declType = CGGeneric("Nullable<%s>" % typeName)
-            selfRef = "${declName}.Value()"
+            actualTypeName = "Nullable<%s>" % typeName
+            selfRef = "const_cast<%s&>(${declName}).SetValue()" % actualTypeName
         else:
             typeName = CGDictionary.makeDictionaryName(type.inner,
                                                        descriptorProvider.workers)
-            declType = CGGeneric(typeName)
+            actualTypeName = typeName
             selfRef = "${declName}"
+
+        declType = CGGeneric(actualTypeName)
+
         # If we're optional or a member of something else, the const
         # will come from the Optional or our container.
-        mutableTypeName = declType
         if not isOptional and not isMember:
             declType = CGWrapper(declType, pre="const ")
             selfRef = "const_cast<%s&>(%s)" % (typeName, selfRef)
@@ -1784,7 +1792,7 @@ for (uint32_t i = 0; i < length; ++i) {
                                       "}" % selfRef,
                                       isDefinitelyObject, type,
                                       ("const_cast<%s&>(${declName}).SetNull()" %
-                                       mutableTypeName.define()),
+                                       actualTypeName),
                                       descriptorProvider.workers, None)
 
         return (template, declType, None, isOptional)
@@ -1920,7 +1928,8 @@ class CGArgumentConverter(CGThing):
     argument list, and the argv and argc strings and generates code to
     unwrap the argument to the right native type.
     """
-    def __init__(self, argument, index, argv, argc, descriptorProvider):
+    def __init__(self, argument, index, argv, argc, descriptorProvider,
+                 invalidEnumValueFatal=True):
         CGThing.__init__(self)
         self.argument = argument
         # XXXbz should optional jsval args get JSVAL_VOID? What about
@@ -1953,12 +1962,14 @@ class CGArgumentConverter(CGThing):
             self.argcAndIndex = replacer
         else:
             self.argcAndIndex = None
+        self.invalidEnumValueFatal = invalidEnumValueFatal
 
     def define(self):
         return instantiateJSToNativeConversionTemplate(
             getJSToNativeConversionTemplate(self.argument.type,
                                             self.descriptorProvider,
-                                            isOptional=(self.argcAndIndex is not None)),
+                                            isOptional=(self.argcAndIndex is not None),
+                                            invalidEnumValueFatal=self.invalidEnumValueFatal),
             self.replacementVariables,
             self.argcAndIndex).define()
 
@@ -2359,7 +2370,8 @@ class CGPerSignatureCall(CGThing):
         else:
             cgThings = []
         cgThings.extend([CGArgumentConverter(arguments[i], i, self.getArgv(),
-                                             self.getArgc(), self.descriptor) for
+                                             self.getArgc(), self.descriptor,
+                                             invalidEnumValueFatal=not setter) for
                          i in range(argConversionStartsAt, self.argCount)])
 
         cgThings.append(CGCallGenerator(
