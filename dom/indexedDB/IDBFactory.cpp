@@ -237,33 +237,17 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     PRInt32 columnType;
     nsresult rv = stmt->GetTypeOfIndex(2, &columnType);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (columnType == mozIStorageStatement::VALUE_TYPE_NULL) {
-      info->keyPath.SetIsVoid(true);
-    }
-    else {
+
+    // NB: We don't have to handle the NULL case, since that is the default
+    // for a new KeyPath.
+    if (columnType != mozIStorageStatement::VALUE_TYPE_NULL) {
       NS_ASSERTION(columnType == mozIStorageStatement::VALUE_TYPE_TEXT,
                    "Should be a string");
-      nsString keyPath;
-      rv = stmt->GetString(2, keyPath);
+      nsString keyPathSerialization;
+      rv = stmt->GetString(2, keyPathSerialization);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (!keyPath.IsEmpty() && keyPath.First() == ',') {
-        // We use a comma in the beginning to indicate that it's an array of
-        // key paths. This is to be able to tell a string-keypath from an
-        // array-keypath which contains only one item.
-        nsCharSeparatedTokenizerTemplate<IgnoreWhitespace>
-          tokenizer(keyPath, ',');
-        tokenizer.nextToken();
-        while (tokenizer.hasMoreTokens()) {
-          info->keyPathArray.AppendElement(tokenizer.nextToken());
-        }
-        NS_ASSERTION(!info->keyPathArray.IsEmpty(),
-                     "Should have at least one keypath");
-      }
-      else {
-        info->keyPath = keyPath;
-      }
-
+      info->keyPath = KeyPath::DeserializeFromString(keyPathSerialization);
     }
 
     info->nextAutoIncrementId = stmt->AsInt64(3);
@@ -310,26 +294,12 @@ IDBFactory::LoadDatabaseInformation(mozIStorageConnection* aConnection,
     rv = stmt->GetString(2, indexInfo->name);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsString keyPath;
-    rv = stmt->GetString(3, keyPath);
+    nsString keyPathSerialization;
+    rv = stmt->GetString(3, keyPathSerialization);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!keyPath.IsEmpty() && keyPath.First() == ',') {
-      // We use a comma in the beginning to indicate that it's an array of
-      // key paths. This is to be able to tell a string-keypath from an
-      // array-keypath which contains only one item.
-      nsCharSeparatedTokenizerTemplate<IgnoreWhitespace>
-        tokenizer(keyPath, ',');
-      tokenizer.nextToken();
-      while (tokenizer.hasMoreTokens()) {
-        indexInfo->keyPathArray.AppendElement(tokenizer.nextToken());
-      }
-      NS_ASSERTION(!indexInfo->keyPathArray.IsEmpty(),
-                   "Should have at least one keypath");
-    }
-    else {
-      indexInfo->keyPath = keyPath;
-    }
 
+    // XXX bent wants to assert here
+    indexInfo->keyPath = KeyPath::DeserializeFromString(keyPathSerialization);
     indexInfo->unique = !!stmt->AsInt32(4);
     indexInfo->multiEntry = !!stmt->AsInt32(5);
   }

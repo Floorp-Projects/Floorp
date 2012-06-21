@@ -10,6 +10,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "mozilla/dom/indexedDB/Key.h"
+#include "mozilla/dom/indexedDB/KeyPath.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
 
 #include "nsRefPtrHashtable.h"
@@ -91,7 +92,7 @@ struct IndexInfo
   ~IndexInfo();
 #else
   IndexInfo()
-  : id(LL_MININT), unique(false), multiEntry(false) { }
+  : id(LL_MININT), keyPath(0), unique(false), multiEntry(false) { }
 #endif
 
   bool operator==(const IndexInfo& aOther) const
@@ -99,7 +100,6 @@ struct IndexInfo
     return this->name == aOther.name &&
            this->id == aOther.id &&
            this->keyPath == aOther.keyPath &&
-           this->keyPathArray == aOther.keyPathArray &&
            this->unique == aOther.unique &&
            this->multiEntry == aOther.multiEntry;
   };
@@ -107,8 +107,7 @@ struct IndexInfo
   // Make sure to update ipc/SerializationHelpers.h when changing members here!
   nsString name;
   PRInt64 id;
-  nsString keyPath;
-  nsTArray<nsString> keyPathArray;
+  KeyPath keyPath;
   bool unique;
   bool multiEntry;
 };
@@ -116,7 +115,7 @@ struct IndexInfo
 struct ObjectStoreInfoGuts
 {
   ObjectStoreInfoGuts()
-  : id(0), autoIncrement(false)
+  : id(0), keyPath(0), autoIncrement(false)
   { }
 
   bool operator==(const ObjectStoreInfoGuts& aOther) const
@@ -130,8 +129,7 @@ struct ObjectStoreInfoGuts
   // Constant members, can be gotten on any thread
   nsString name;
   PRInt64 id;
-  nsString keyPath;
-  nsTArray<nsString> keyPathArray;
+  KeyPath keyPath;
   bool autoIncrement;
 
   // Main-thread only members. This must *not* be touced on the database thread
