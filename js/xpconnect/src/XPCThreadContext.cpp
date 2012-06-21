@@ -242,7 +242,6 @@ void *            XPCPerThreadData::sMainJSThread   = nsnull;
 
 XPCPerThreadData::XPCPerThreadData() :
         mNextThread(nsnull),
-        mCallContext(nsnull),
         mResolveName(JSID_VOID),
         mResolvingWrapper(nsnull),
         mExceptionManager(nsnull),
@@ -267,9 +266,6 @@ XPCPerThreadData::Cleanup()
     MOZ_ASSERT(!mAutoRoots);
     NS_IF_RELEASE(mExceptionManager);
     NS_IF_RELEASE(mException);
-
-    if (mCallContext)
-        mCallContext->SystemIsBeingShutDown();
 }
 
 XPCPerThreadData::~XPCPerThreadData()

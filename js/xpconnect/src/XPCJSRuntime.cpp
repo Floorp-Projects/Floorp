@@ -1036,6 +1036,9 @@ XPCJSRuntime::~XPCJSRuntime()
     if (mJSCycleCollectionContext)
         JS_DestroyContextNoGC(mJSCycleCollectionContext);
 
+    if (mCallContext)
+        mCallContext->SystemIsBeingShutDown();
+
 #ifdef XPC_DUMP_AT_SHUTDOWN
     {
     // count the total JSContexts in use
@@ -1944,6 +1947,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mJSRuntime(nsnull),
    mJSContextStack(new XPCJSContextStack()),
    mJSCycleCollectionContext(nsnull),
+   mCallContext(nsnull),
    mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_SIZE)),
    mWrappedJSClassMap(IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_SIZE)),
    mIID2NativeInterfaceMap(IID2NativeInterfaceMap::newMap(XPC_NATIVE_INTERFACE_MAP_SIZE)),
