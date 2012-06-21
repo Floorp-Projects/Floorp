@@ -208,6 +208,7 @@ var BrowserApp = {
     WebappsUI.init();
     RemoteDebugger.init();
     Reader.init();
+    UserAgent.init();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.init();
 #endif
@@ -359,6 +360,7 @@ var BrowserApp = {
     WebappsUI.uninit();
     RemoteDebugger.uninit();
     Reader.uninit();
+    UserAgent.uninit();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.uninit();
 #endif
@@ -1697,6 +1699,57 @@ var SelectionHandler = {
   }
 };
 
+
+var UserAgent = {
+  init: function ua_init() {
+    Services.obs.addObserver(this, "http-on-modify-request", false);
+  },
+
+  uninit: function ua_uninit() {
+    Services.obs.removeObserver(this, "http-on-modify-request");
+  },
+
+  getRequestLoadContext: function ua_getRequestLoadContext(aRequest) {
+    if (aRequest && aRequest.notificationCallbacks) {
+      try {
+        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    if (aRequest && aRequest.loadGroup && aRequest.loadGroup.notificationCallbacks) {
+      try {
+        return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    return null;
+  },
+
+  getWindowForRequest: function ua_getWindowForRequest(aRequest) {
+    let loadContext = this.getRequestLoadContext(aRequest);
+    if (loadContext)
+      return loadContext.associatedWindow;
+    return null;
+  },
+
+  observe: function ua_observe(aSubject, aTopic, aData) {
+    if (!(aSubject instanceof Ci.nsIHttpChannel))
+      return;
+
+    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+    let channelWindow = this.getWindowForRequest(channel);
+    if (BrowserApp.getBrowserForWindow(channelWindow)) {
+      if (channel.URI.host.indexOf("youtube") != -1) {
+        let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
+#expand let version = "__MOZ_APP_VERSION__";
+        ua += " Fennec/" + version;
+        channel.setRequestHeader("User-Agent", ua, false);
+      }
+    }
+  }
+};
+
+
 function nsBrowserAccess() {
 }
 
@@ -2803,29 +2856,6 @@ Tab.prototype = {
     if (md && md.maxZoom)
       zoom = Math.min(zoom, md.maxZoom);
     return zoom;
-  },
-
-  getRequestLoadContext: function(aRequest) {
-    if (aRequest && aRequest.notificationCallbacks) {
-      try {
-        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
-      } catch (ex) { }
-    }
-
-    if (aRequest && aRequest.loadGroup && aRequest.loadGroup.notificationCallbacks) {
-      try {
-        return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
-      } catch (ex) { }
-    }
-
-    return null;
-  },
-
-  getWindowForRequest: function(aRequest) {
-    let loadContext = this.getRequestLoadContext(aRequest);
-    if (loadContext)
-      return loadContext.associatedWindow;
-    return null;
   },
 
   observe: function(aSubject, aTopic, aData) {
