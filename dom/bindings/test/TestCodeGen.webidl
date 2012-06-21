@@ -297,6 +297,7 @@ DiamondBranch1A implements DiamondImplements;
 DiamondBranch1B implements DiamondImplements;
 
 dictionary Dict : ParentDict {
+  TestEnum someEnum;
   long x;
   long a;
   long b = 8;
