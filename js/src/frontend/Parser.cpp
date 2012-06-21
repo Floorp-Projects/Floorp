@@ -157,7 +157,7 @@ FunctionBox::FunctionBox(ObjectBox* traceListHead, JSObject *obj, ParseNode *fn,
     siblings(tc->functionList),
     kids(NULL),
     parent(tc->sc->inFunction() ? tc->sc->funbox() : NULL),
-    bindings(tc->sc->context),
+    bindings(),
     level(tc->staticLevel),
     ndefaults(0),
     inLoop(false),
@@ -495,7 +495,7 @@ CheckStrictParameters(JSContext *cx, Parser *parser)
     if (!parameters.init(sc->bindings.numArgs()))
         return false;
 
-    /* Start with lastVariable(), not lastArgument(), for destructuring. */
+    // Start with lastVariable(), not the last argument, for destructuring.
     for (Shape::Range r = sc->bindings.lastVariable(); !r.empty(); r.popFront()) {
         jsid id = r.front().propid();
         if (!JSID_IS_ATOM(id))
@@ -1238,7 +1238,7 @@ LeaveFunction(ParseNode *fn, Parser *parser, PropertyName *funName = NULL,
 
     }
 
-    funbox->bindings.transfer(funtc->sc->context, &funtc->sc->bindings);
+    funbox->bindings.transfer(&funtc->sc->bindings);
 
     return true;
 }
