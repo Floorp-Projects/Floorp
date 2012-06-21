@@ -49,6 +49,7 @@ let RILQUIRKS_DATACALLSTATE_DOWN_IS_UP = false;
 let RILQUIRKS_V5_LEGACY = true;
 let RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = false;
 let RILQUIRKS_MODEM_DEFAULTS_TO_EMERGENCY_MODE = false;
+let RILQUIRKS_DATACALLSTATE_NO_SUGGESTEDRETRYTIME = false;
 
 /**
  * This object contains helpers buffering incoming data & deconstructing it
@@ -708,6 +709,12 @@ let RIL = {
         }
         break;
       case "Qualcomm RIL 1.0":
+        let product_model = libcutils.property_get("ro.product.model");
+        if (DEBUG) debug("Detected product model " + product_model);
+        if (product_model == "otoro1") {
+          if (DEBUG) debug("Enabling RILQUIRKS_DATACALLSTATE_NO_SUGGESTEDRETRYTIME.");
+          RILQUIRKS_DATACALLSTATE_NO_SUGGESTEDRETRYTIME = true;
+        }
         if (DEBUG) {
           debug("Detected Qualcomm RIL 1.0, " +
                 "disabling RILQUIRKS_V5_LEGACY and " +
@@ -3266,7 +3273,9 @@ RIL.readDataCall_v6 = function readDataCall_v6(obj) {
     obj = {};
   }
   obj.status = Buf.readUint32();  // DATACALL_FAIL_*
-  obj.suggestedRetryTime = Buf.readUint32();
+  if (!RILQUIRKS_DATACALLSTATE_NO_SUGGESTEDRETRYTIME) {
+    obj.suggestedRetryTime = Buf.readUint32();
+  }
   obj.cid = Buf.readUint32().toString();
   obj.active = Buf.readUint32();  // DATACALL_ACTIVE_*
   obj.type = Buf.readString();
@@ -3497,7 +3506,7 @@ RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CH
     this.getDataCallList();
     return;
   }
-  this[REQUEST_GET_DATA_CALL_LIST](length, {rilRequestError: ERROR_SUCCESS});
+  this[REQUEST_DATA_CALL_LIST](length, {rilRequestError: ERROR_SUCCESS});
 };
 RIL[UNSOLICITED_SUPP_SVC_NOTIFICATION] = null;
 RIL[UNSOLICITED_STK_SESSION_END] = null;
