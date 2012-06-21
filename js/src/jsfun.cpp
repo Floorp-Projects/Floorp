@@ -1005,7 +1005,7 @@ Function(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Bindings bindings(cx);
+    Bindings bindings;
     Bindings::AutoRooter bindingsRoot(cx, &bindings);
 
     bool hasRest = false;

@@ -275,7 +275,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!funbce.init())
         return false;
 
-    funsc.bindings.transfer(cx, bindings);
+    funsc.bindings.transfer(bindings);
     fun->setArgCount(funsc.bindings.numArgs());
     if (!GenerateBlockId(&funsc, funsc.bodyid))
         return false;
