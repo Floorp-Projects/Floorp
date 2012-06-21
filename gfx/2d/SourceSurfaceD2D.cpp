@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SourceSurfaceD2D.h"
+#include "DrawTargetD2D.h"
 #include "Logging.h"
+#include "Tools.h"
 
 namespace mozilla {
 namespace gfx {
@@ -15,6 +17,9 @@ SourceSurfaceD2D::SourceSurfaceD2D()
 
 SourceSurfaceD2D::~SourceSurfaceD2D()
 {
+  if (mBitmap) {
+    DrawTargetD2D::mVRAMUsageSS -= GetByteSize();
+  }
 }
 
 IntSize
@@ -62,6 +67,8 @@ SourceSurfaceD2D::InitFromData(unsigned char *aData,
     return false;
   }
 
+  DrawTargetD2D::mVRAMUsageSS += GetByteSize();
+
   return true;
 }
 
@@ -96,7 +103,15 @@ SourceSurfaceD2D::InitFromTexture(ID3D10Texture2D *aTexture,
     return false;
   }
 
+  DrawTargetD2D::mVRAMUsageSS += GetByteSize();
+
   return true;
+}
+
+uint32_t
+SourceSurfaceD2D::GetByteSize() const
+{
+  return mSize.width * mSize.height * BytesPerPixel(mFormat);
 }
 
 }

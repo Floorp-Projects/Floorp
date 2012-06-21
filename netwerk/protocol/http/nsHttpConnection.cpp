@@ -1365,6 +1365,20 @@ nsHttpConnection::OnSocketReadable()
     bool again = true;
 
     do {
+        if (!mProxyConnectInProgress && !mNPNComplete) {
+            // Unless we are setting up a tunnel via CONNECT, prevent reading
+            // from the socket until the results of NPN
+            // negotiation are known (which is determined from the write path).
+            // If the server speaks SPDY it is likely the readable data here is
+            // a spdy settings frame and without NPN it would be misinterpreted
+            // as HTTP/*
+
+            LOG(("nsHttpConnection::OnSocketReadable %p return due to inactive "
+                 "tunnel setup but incomplete NPN state\n", this));
+            rv = NS_OK;
+            break;
+        }
+
         rv = mTransaction->WriteSegments(this, nsIOService::gDefaultSegmentSize, &n);
         if (NS_FAILED(rv)) {
             // if the transaction didn't want to take any more data, then

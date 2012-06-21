@@ -15,13 +15,32 @@ XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
   return Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
 });
 
+// Makes sure that we expose correctly chrome JS objects to content.
+function wrapObjectIn(aObject, aCtxt) {
+  let res = Cu.createObjectIn(aCtxt);
+  let propList = { };
+  for (let prop in aObject) {
+    propList[prop] = {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: (typeof(aObject[prop]) == "object") ? wrapObjectIn(aObject[prop], aCtxt)
+                                                 : aObject[prop]
+    }
+  }
+  Object.defineProperties(res, propList);
+  Cu.makeObjectPropsNormal(res);
+  return res;
+};
+
 function convertAppsArray(aApps, aWindow) {
-  let apps = new Array();
+  let apps = Cu.createArrayIn(aWindow);
   for (let i = 0; i < aApps.length; i++) {
     let app = aApps[i];
     apps.push(new WebappsApplication(aWindow, app.origin, app.manifest, app.manifestURL, 
                                      app.receipts, app.installOrigin, app.installTime));
   }
+
   return apps;
 }
 
@@ -183,8 +202,8 @@ WebappsRegistry.prototype = {
   */
 function WebappsApplication(aWindow, aOrigin, aManifest, aManifestURL, aReceipts, aInstallOrigin, aInstallTime) {
   this._origin = aOrigin;
-  this._manifest = aManifest;
   this._manifestURL = aManifestURL;
+  this._manifest = wrapObjectIn(aManifest, aWindow);
   this._receipts = aReceipts;
   this._installOrigin = aInstallOrigin;
   this._installTime = aInstallTime;

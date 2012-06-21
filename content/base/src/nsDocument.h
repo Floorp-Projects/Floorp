@@ -1257,9 +1257,12 @@ private:
   static void ClearPendingPointerLockRequest(bool aDispatchErrorEvents);
 
   /**
-   * Find the (non-anonymous) element in this document that contains the
-   * content (possibly in a subdocument) associated with aFrame. Returns null
-   * if there is no such element.
+   * Find the (non-anonymous) content in this document for aFrame. It will
+   * be aFrame's content node if that content is in this document and not
+   * anonymous. Otherwise, when aFrame is in a subdocument, we use the frame
+   * element containing the subdocument containing aFrame, and/or find the
+   * nearest non-anonymous ancestor in this document.
+   * Returns null if there is no such element.
    */
   nsIContent* GetContentInThisDocument(nsIFrame* aFrame) const;
 

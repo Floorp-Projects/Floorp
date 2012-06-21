@@ -1,0 +1,161 @@
+<!doctype html>
+<title>Range.cloneRange() and document.createRange() tests</title>
+<link rel=author title="Aryeh Gregor" href=ayg@aryeh.name>
+<div id=log></div>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script src=common.js></script>
+<script>
+"use strict";
+
+function testCloneRange(rangeEndpoints) {
+	var range;
+	if (rangeEndpoints == "detached") {
+		range = document.createRange();
+		range.detach();
+		assert_throws("INVALID_STATE_ERR", function() {
+			range.cloneRange();
+		}, "Detached Range must throw INVALID_STATE_ERR on .cloneRange()");
+		return;
+	}
+
+	// Have to account for Ranges involving Documents!  We could just create
+	// the Range from the current document unconditionally, but some browsers
+	// (WebKit) don't implement setStart() and setEnd() per spec and will throw
+	// spurious exceptions at the time of this writing.  No need to mask other
+	// bugs.
+	var ownerDoc = rangeEndpoints[0].nodeType == Node.DOCUMENT_NODE
+		? rangeEndpoints[0]
+		: rangeEndpoints[0].ownerDocument;
+	range = ownerDoc.createRange();
+	// Here we throw in some createRange() tests, because why not.  Have to
+	// test it someplace.
+	assert_equals(range.startContainer, ownerDoc,
+		"doc.createRange() must create Range whose startContainer is doc");
+	assert_equals(range.endContainer, ownerDoc,
+		"doc.createRange() must create Range whose endContainer is doc");
+	assert_equals(range.startOffset, 0,
+		"doc.createRange() must create Range whose startOffset is 0");
+	assert_equals(range.endOffset, 0,
+		"doc.createRange() must create Range whose endOffset is 0");
+
+	range.setStart(rangeEndpoints[0], rangeEndpoints[1]);
+	range.setEnd(rangeEndpoints[2], rangeEndpoints[3]);
+
+	// Make sure we bail out now if setStart or setEnd are buggy, so it doesn't
+	// create misleading failures later.
+	assert_equals(range.startContainer, rangeEndpoints[0],
+		"Sanity check on setStart()");
+	assert_equals(range.startOffset, rangeEndpoints[1],
+		"Sanity check on setStart()");
+	assert_equals(range.endContainer, rangeEndpoints[2],
+		"Sanity check on setEnd()");
+	assert_equals(range.endOffset, rangeEndpoints[3],
+		"Sanity check on setEnd()");
+
+	var clonedRange = range.cloneRange();
+
+	assert_equals(clonedRange.startContainer, range.startContainer,
+		"startContainers must be equal after cloneRange()");
+	assert_equals(clonedRange.startOffset, range.startOffset,
+		"startOffsets must be equal after cloneRange()");
+	assert_equals(clonedRange.endContainer, range.endContainer,
+		"endContainers must be equal after cloneRange()");
+	assert_equals(clonedRange.endOffset, range.endOffset,
+		"endOffsets must be equal after cloneRange()");
+
+	// Make sure that modifying one doesn't affect the other.
+	var testNode1 = ownerDoc.createTextNode("testing");
+	var testNode2 = ownerDoc.createTextNode("testing with different length");
+
+	range.setStart(testNode1, 1);
+	range.setEnd(testNode1, 2);
+	assert_equals(clonedRange.startContainer, rangeEndpoints[0],
+		"Modifying a Range must not modify its clone's startContainer");
+	assert_equals(clonedRange.startOffset, rangeEndpoints[1],
+		"Modifying a Range must not modify its clone's startOffset");
+	assert_equals(clonedRange.endContainer, rangeEndpoints[2],
+		"Modifying a Range must not modify its clone's endContainer");
+	assert_equals(clonedRange.endOffset, rangeEndpoints[3],
+		"Modifying a Range must not modify its clone's endOffset");
+
+	clonedRange.setStart(testNode2, 3);
+	clonedRange.setStart(testNode2, 4);
+
+	assert_equals(range.startContainer, testNode1,
+		"Modifying a clone must not modify the original Range's startContainer");
+	assert_equals(range.startOffset, 1,
+		"Modifying a clone must not modify the original Range's startOffset");
+	assert_equals(range.endContainer, testNode1,
+		"Modifying a clone must not modify the original Range's endContainer");
+	assert_equals(range.endOffset, 2,
+		"Modifying a clone must not modify the original Range's endOffset");
+}
+
+var ranges = [
+	// Various ranges within the text node children of different paragraphs.
+	"[paras[0].firstChild, 0, paras[0].firstChild, 0]",
+	"[paras[0].firstChild, 0, paras[0].firstChild, 1]",
+	"[paras[0].firstChild, 2, paras[0].firstChild, 8]",
+	"[paras[0].firstChild, 2, paras[0].firstChild, 9]",
+	"[paras[1].firstChild, 0, paras[1].firstChild, 0]",
+	"[paras[1].firstChild, 0, paras[1].firstChild, 1]",
+	"[paras[1].firstChild, 2, paras[1].firstChild, 8]",
+	"[paras[1].firstChild, 2, paras[1].firstChild, 9]",
+	"[detachedPara1.firstChild, 0, detachedPara1.firstChild, 0]",
+	"[detachedPara1.firstChild, 0, detachedPara1.firstChild, 1]",
+	"[detachedPara1.firstChild, 2, detachedPara1.firstChild, 8]",
+	"[foreignPara1.firstChild, 0, foreignPara1.firstChild, 0]",
+	"[foreignPara1.firstChild, 0, foreignPara1.firstChild, 1]",
+	"[foreignPara1.firstChild, 2, foreignPara1.firstChild, 8]",
+	// Now try testing some elements, not just text nodes.
+	"[document.documentElement, 0, document.documentElement, 1]",
+	"[document.head, 1, document.head, 1]",
+	"[document.body, 4, document.body, 5]",
+	"[foreignDoc.documentElement, 0, foreignDoc.documentElement, 1]",
+	"[foreignDoc.head, 1, foreignDoc.head, 1]",
+	"[foreignDoc.body, 0, foreignDoc.body, 0]",
+	"[paras[0], 0, paras[0], 0]",
+	"[paras[0], 0, paras[0], 1]",
+	"[detachedPara1, 0, detachedPara1, 0]",
+	"[detachedPara1, 0, detachedPara1, 1]",
+	// Now try some ranges that span elements.
+	"[paras[0].firstChild, 0, paras[1].firstChild, 0]",
+	"[paras[0].firstChild, 0, paras[1].firstChild, 8]",
+	"[paras[0].firstChild, 3, paras[3], 1]",
+	// How about something that spans a node and its descendant?
+	"[paras[0], 0, paras[0].firstChild, 7]",
+	"[testDiv, 2, paras[4], 1]",
+	"[testDiv, 1, paras[2].firstChild, 5]",
+	"[foreignDoc.documentElement, 1, foreignDoc.body, 0]",
+	// Then a few silly things just for good measure.  (Well, document probably
+	// isn't entirely silly.)
+	"[document, 0, document, 1]",
+	"[foreignDoc, 0, foreignDoc, 0]",
+	"[xmlDoc, 0, xmlDoc, 0]",
+	"[detachedTextNode, 0, detachedTextNode, 8]",
+	"[foreignTextNode, 7, foreignTextNode, 7]",
+	"[foreignTextNode, 0, foreignTextNode, 8]",
+	"[xmlTextNode, 7, xmlTextNode, 7]",
+	"[xmlTextNode, 0, xmlTextNode, 8]",
+	"[comment, 5, comment, 5]",
+	"[foreignComment, 4, foreignComment, 4]",
+	"[xmlComment, 2, xmlComment, 6]",
+	"[docfrag, 0, docfrag, 0]",
+	"[foreignDocfrag, 0, foreignDocfrag, 0]",
+	"[xmlDocfrag, 0, xmlDocfrag, 0]",
+	// Magic keyword!
+	'"detached"'
+];
+
+var tests = [];
+for (var i = 0; i < ranges.length; i++) {
+	tests.push([
+		"Range " + i + " " + ranges[i],
+		eval(ranges[i])
+	]);
+}
+generate_tests(testCloneRange, tests);
+
+testDiv.style.display = "none";
+</script>

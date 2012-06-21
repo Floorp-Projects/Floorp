@@ -79,7 +79,6 @@ xul|thumb {
 }
 
 /* -moz-touch-enabled? media elements */
-video > xul|videocontrols,
-audio > xul|videocontrols {
+:-moz-any(video, audio) > xul|videocontrols {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
 }

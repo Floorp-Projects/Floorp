@@ -37,7 +37,8 @@ function setUp(next) {
 function verify_no_apps(next)  {
   debug("in " + arguments.callee.name);
   mozAppscb(navigator.mozApps.mgmt.getAll(), 
-            [{ status: "== \"success\""}], 
+            [{}],
+            "success",
             ok,
             next);
 }
@@ -45,7 +46,8 @@ function verify_no_apps(next)  {
 function get_installed_returns_nothing(next) {
   debug("in " + arguments.callee.name);
   mozAppscb(navigator.mozApps.getInstalled(), 
-            [{ status: "== \"success\""}], 
+            [{}],
+            "success",
             ok,
             next);
 }
@@ -61,7 +63,8 @@ function install_super_crazy(next)  {
 function get_self_returns_nothing(next) {
   debug("in " + arguments.callee.name);
   mozAppscb(navigator.mozApps.getSelf(), 
-            [{ status: "== \"success\""}], 
+            [{}],
+            "success",
             ok, 
             next);
 }
@@ -80,7 +83,8 @@ function uninstall_wild_crazy(next)  {
   var appURL = SERVERS['wild_crazy'];
   uninstall(appURL, ok, function() {
     mozAppscb(navigator.mozApps.getInstalled(),
-           [{ status: "== \"success\""}],
+           [{}],
+           "success",
            ok, 
            next);
   });

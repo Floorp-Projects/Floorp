@@ -56,8 +56,8 @@ volatile PRIntervalTime gTimestamp = PR_INTERVAL_NO_WAIT;
 // Main thread ID used in reporting chrome hangs under Windows
 static HANDLE winMainThreadHandle = NULL;
 
-// Default timeout for reporting chrome hangs to Telemetry (10 seconds)
-static const PRInt32 DEFAULT_CHROME_HANG_INTERVAL = 10;
+// Default timeout for reporting chrome hangs to Telemetry (5 seconds)
+static const PRInt32 DEFAULT_CHROME_HANG_INTERVAL = 5;
 #endif
 
 // PrefChangedFunc

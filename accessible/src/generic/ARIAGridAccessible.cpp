@@ -219,24 +219,17 @@ ARIAGridAccessible::IsCellSelected(PRUint32 aRowIdx, PRUint32 aColIdx)
   return true;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::GetSelectedCellCount(PRUint32* aCount)
+PRUint32
+ARIAGridAccessible::SelectedCellCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  PRInt32 colCount = 0;
-  GetColumnCount(&colCount);
+  PRUint32 count = 0, colCount = ColCount();
 
   AccIterator rowIter(this, filters::GetRow);
-
   Accessible* row = nsnull;
+
   while ((row = rowIter.Next())) {
     if (nsAccUtils::IsARIASelected(row)) {
-      (*aCount) += colCount;
+      count += colCount;
       continue;
     }
 
@@ -245,34 +238,32 @@ ARIAGridAccessible::GetSelectedCellCount(PRUint32* aCount)
 
     while ((cell = cellIter.Next())) {
       if (nsAccUtils::IsARIASelected(cell))
-        (*aCount)++;
+        count++;
     }
   }
 
-  return NS_OK;
+  return count;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::GetSelectedColumnCount(PRUint32* aCount)
+PRUint32
+ARIAGridAccessible::SelectedColCount()
 {
-  return GetSelectedColumnsArray(aCount);
+  PRUint32 colCount = 0;
+  GetSelectedColumnsArray(&colCount);
+  return colCount;
 }
 
-NS_IMETHODIMP
-ARIAGridAccessible::GetSelectedRowCount(PRUint32* aCount)
+PRUint32
+ARIAGridAccessible::SelectedRowCount()
 {
-  NS_ENSURE_ARG_POINTER(aCount);
-  *aCount = 0;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
+  PRUint32 count = 0;
 
   AccIterator rowIter(this, filters::GetRow);
-
   Accessible* row = nsnull;
+
   while ((row = rowIter.Next())) {
     if (nsAccUtils::IsARIASelected(row)) {
-      (*aCount)++;
+      count++;
       continue;
     }
 
@@ -290,10 +281,10 @@ ARIAGridAccessible::GetSelectedRowCount(PRUint32* aCount)
     } while ((cell = cellIter.Next()));
 
     if (isRowSelected)
-      (*aCount)++;
+      count++;
   }
 
-  return NS_OK;
+  return count;
 }
 
 NS_IMETHODIMP

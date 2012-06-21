@@ -622,6 +622,7 @@ $versionInfo
 
 #ifndef NS_UNICODE_SCRIPT_CODES
 #define NS_UNICODE_SCRIPT_CODES
+
 __END
 
 print DATA_TABLES "static const PRUint32 sScriptCodeToTag[] = {\n";
@@ -640,12 +641,14 @@ for (my $i = 0; $i < scalar @offsets; ++$i) {
 }
 print DATA_TABLES "};\n\n";
 
+print HEADER "#pragma pack(1)\n\n";
+
 sub sprintCharProps1
 {
   my $usv = shift;
   return sprintf("{%d,%d,%d}, ", $mirror[$usv], $hangul[$usv], $combining[$usv]);
 }
-&genTables("CharProp1", "struct nsCharProps1 {\n  unsigned char  mMirrorOffsetIndex:5;\n  unsigned char mHangulType:3;\n  unsigned char mCombiningClass:8;\n};",
+&genTables("CharProp1", "struct nsCharProps1 {\n  unsigned char mMirrorOffsetIndex:5;\n  unsigned char mHangulType:3;\n  unsigned char mCombiningClass:8;\n};",
            "nsCharProps1", 11, 5, \&sprintCharProps1, 1, 2, 1);
 
 sub sprintCharProps2
@@ -657,6 +660,8 @@ sub sprintCharProps2
 }
 &genTables("CharProp2", "struct nsCharProps2 {\n  unsigned char mScriptCode:8;\n  unsigned char mEAW:3;\n  unsigned char mCategory:5;\n  unsigned char mBidiCategory:5;\n  unsigned char mXidmod:4;\n  signed char mNumericValue:5;\n  unsigned char mHanVariant:2;\n};",
            "nsCharProps2", 11, 5, \&sprintCharProps2, 16, 4, 1);
+
+print HEADER "#pragma pack()\n\n";
 
 sub sprintHanVariants
 {

@@ -7,6 +7,7 @@
 #include "nsISupports.idl"
 
 typedef short TextBoundaryType;
+typedef short PivotMoveReason;
 
 interface nsIAccessible;
 interface nsIAccessibleText;
@@ -26,6 +27,14 @@ interface nsIAccessiblePivot : nsISupports
   const TextBoundaryType WORD_BOUNDARY = 1;
   const TextBoundaryType LINE_BOUNDARY = 2;
   const TextBoundaryType ATTRIBUTE_RANGE_BOUNDARY = 3;
+
+  const PivotMoveReason REASON_NONE = 0;
+  const PivotMoveReason REASON_NEXT = 1;
+  const PivotMoveReason REASON_PREV = 2;
+  const PivotMoveReason REASON_FIRST = 3;
+  const PivotMoveReason REASON_LAST = 4;
+  const PivotMoveReason REASON_TEXT = 5;
+  const PivotMoveReason REASON_POINT = 6;
 
   /**
    * The accessible the pivot is currently pointed at.
@@ -123,6 +132,20 @@ interface nsIAccessiblePivot : nsISupports
   boolean movePreviousByText(in TextBoundaryType aBoundary);
 
   /**
+   * Move pivot to given coordinate in screen pixels.
+   *
+   * @param aRule          [in]  raversal rule to use.
+   * @param aX             [in]  screen's x coordinate
+   * @param aY             [in]  screen's y coordinate
+   * @param aIgnoreNoMatch [in]  don't unset position if no object was found at
+   *                       point.
+   * @return true on success, false if the pivot has not been moved.
+   */
+  boolean moveToPoint(in nsIAccessibleTraversalRule aRule,
+                      in long aX, in long aY,
+                      in boolean aIgnoreNoMatch);
+
+  /**
    * Add an observer for pivot changes.
    *
    * @param aObserver [in] the observer object to be notified of pivot changes.
@@ -150,10 +173,12 @@ interface nsIAccessiblePivotObserver : nsISupports
    * @param aOldAccessible [in] the old pivot position before the change, or null.
    * @param aOldStart      [in] the old start offset, or -1.
    * @param aOldEnd        [in] the old end offset, or -1.
+   * @param aReason        [in] the reason for the pivot change.
    */
   void onPivotChanged(in nsIAccessiblePivot aPivot,
                       in nsIAccessible aOldAccessible,
-                      in long aOldStart, in long aOldEnd);
+                      in long aOldStart, in long aOldEnd,
+                      in PivotMoveReason aReason);
 };
 
 [scriptable, uuid(307d98b6-dba9-49cf-ba17-ef8b053044eb)]

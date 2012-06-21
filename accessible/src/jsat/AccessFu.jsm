@@ -13,6 +13,7 @@ var EXPORTED_SYMBOLS = ['AccessFu'];
 
 Cu.import('resource://gre/modules/Services.jsm');
 
+Cu.import('resource://gre/modules/accessibility/Utils.jsm');
 Cu.import('resource://gre/modules/accessibility/Presenters.jsm');
 Cu.import('resource://gre/modules/accessibility/VirtualCursorController.jsm');
 
@@ -34,7 +35,7 @@ var AccessFu = {
       // XXX: only supports attaching to one window now.
       throw new Error('Only one window could be attached to AccessFu');
 
-    dump('[AccessFu] attach\n');
+    Logger.info('attach');
     this.chromeWin = aWindow;
     this.presenters = [];
 
@@ -43,7 +44,7 @@ var AccessFu = {
     this.prefsBranch.addObserver('activate', this, false);
     this.prefsBranch.addObserver('explorebytouch', this, false);
 
-    if (Services.appinfo.OS == 'Android')
+    if (Utils.OS == 'Android')
       Services.obs.addObserver(this, 'Accessibility:Settings', false);
 
     this._processPreferences();
@@ -58,11 +59,11 @@ var AccessFu = {
       return;
     this._enabled = true;
 
-    dump('[AccessFu] enable\n');
+    Logger.info('enable');
     this.addPresenter(new VisualPresenter());
 
     // Implicitly add the Android presenter on Android.
-    if (Services.appinfo.OS == 'Android')
+    if (Utils.OS == 'Android')
       this.addPresenter(new AndroidPresenter());
 
     VirtualCursorController.attach(this.chromeWin);
@@ -83,7 +84,7 @@ var AccessFu = {
       return;
     this._enabled = false;
 
-    dump('[AccessFu] disable\n');
+    Logger.info('disable');
 
     this.presenters.forEach(function(p) { p.detach(); });
     this.presenters = [];
@@ -113,7 +114,7 @@ var AccessFu = {
     } catch (x) {
     }
 
-    if (Services.appinfo.OS == 'Android') {
+    if (Utils.OS == 'Android') {
       if (accessPref == ACCESSFU_AUTO) {
         Cc['@mozilla.org/android/bridge;1'].
           getService(Ci.nsIAndroidBridge).handleGeckoMessage(
@@ -128,8 +129,7 @@ var AccessFu = {
       this._disable();
 
     VirtualCursorController.exploreByTouch = ebtPref == ACCESSFU_ENABLE;
-    dump('[AccessFu] Explore by touch: ' +
-          VirtualCursorController.exploreByTouch + '\n');
+    Logger.info('Explore by touch:', VirtualCursorController.exploreByTouch);
   },
 
   addPresenter: function addPresenter(presenter) {
@@ -160,7 +160,11 @@ var AccessFu = {
         // If it has, than we will need to send a 'loading' message along with
         // the usual 'newdoc' to presenters.
         this._pendingDocuments[browser] = true;
-        this.presenters.forEach(function(p) { p.tabStateChanged(null, 'newtab'); });
+        this.presenters.forEach(
+          function(p) {
+            p.tabStateChanged(null, 'newtab');
+          }
+        );
         break;
       }
       case 'DOMActivate':
@@ -205,13 +209,17 @@ var AccessFu = {
           event = aSubject.QueryInterface(Ci.nsIAccessibleEvent);
           this._handleAccEvent(event);
         } catch (ex) {
-          dump('[AccessFu] ' + ex + '\n');
+          Logger.error(ex);
           return;
         }
     }
   },
 
   _handleAccEvent: function _handleAccEvent(aEvent) {
+    if (Logger.logLevel <= Logger.DEBUG)
+      Logger.debug(Logger.eventToString(aEvent),
+                   Logger.accessibleToString(aEvent.accessible));
+
     switch (aEvent.eventType) {
       case Ci.nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED:
         {
@@ -267,8 +275,8 @@ var AccessFu = {
               // in a BUSY state (i.e. loading), and inform presenters.
               // We need to do this because a state change event will not be
               // fired when an object is created with the BUSY state.
-              // If this is not a new tab, don't bother because we sent 'loading'
-              // when the previous doc changed its state to BUSY.
+              // If this is not a new tab, don't bother because we sent
+              // 'loading' when the previous doc changed its state to BUSY.
               let state = {};
               docAcc.getState(state, {});
               if (state.value & Ci.nsIAccessibleStates.STATE_BUSY &&
@@ -322,22 +330,23 @@ var AccessFu = {
           // XXX support live regions as well.
           let event = aEvent.QueryInterface(Ci.nsIAccessibleTextChangeEvent);
           let isInserted = event.isInserted();
-          let textIface = aEvent.accessible.QueryInterface(Ci.nsIAccessibleText);
+          let txtIface = aEvent.accessible.QueryInterface(Ci.nsIAccessibleText);
 
           let text = '';
           try {
-            text = textIface.
+            text = txtIface.
               getText(0, Ci.nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT);
           } catch (x) {
             // XXX we might have gotten an exception with of a
             // zero-length text. If we did, ignore it (bug #749810).
-            if (textIface.characterCount)
+            if (txtIface.characterCount)
               throw x;
           }
 
           this.presenters.forEach(
             function(p) {
-              p.textChanged(isInserted, event.start, event.length, text, event.modifiedText);
+              p.textChanged(isInserted, event.start, event.length,
+                            text, event.modifiedText);
             }
           );
         }
@@ -391,7 +400,7 @@ var AccessFu = {
     if (!location)
       return false;
 
-    return location.protocol != "about:";
+    return location.protocol != 'about:';
   },
 
   // A hash of documents that don't yet have an accessible tree.

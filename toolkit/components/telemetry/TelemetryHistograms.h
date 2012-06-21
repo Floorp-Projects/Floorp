@@ -114,13 +114,11 @@ HISTOGRAM(SYSTEM_FONT_FALLBACK_SCRIPT, 1, 110, 111, LINEAR, "System font fallbac
 HISTOGRAM(STARTUP_CACHE_AGE_HOURS, 1, 3000, 20, EXPONENTIAL, "Startup cache age (hours)")
 
 /**
- * Word cache - one count for overall lookups, the other for the number of times a word is found
+ * Word cache - one count cache hits, another for misses
  * Note: range and number of buckets must match
  */
-HISTOGRAM(WORD_CACHE_LOOKUP_LEN, 1, 256, 30, EXPONENTIAL, "Word cache lookup (chars)")
-HISTOGRAM(WORD_CACHE_HIT_LEN, 1, 256, 30, EXPONENTIAL, "Word cache hit (chars)")
-HISTOGRAM(WORD_CACHE_LOOKUP_SCRIPT, 1, 110, 111, LINEAR, "Word cache lookup (script)")
-HISTOGRAM(WORD_CACHE_HIT_SCRIPT, 1, 110, 111, LINEAR, "Word cache hit (script)")
+HISTOGRAM(WORD_CACHE_HITS, 1, 256, 30, EXPONENTIAL, "Word cache hits (chars)")
+HISTOGRAM(WORD_CACHE_MISSES, 1, 256, 30, EXPONENTIAL, "Word cache misses (chars)")
 
 HISTOGRAM_BOOLEAN(FONT_CACHE_HIT, "font cache hit")
 HISTOGRAM_BOOLEAN(BAD_FALLBACK_FONT, "system fallback font can't be used")

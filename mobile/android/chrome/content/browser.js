@@ -208,6 +208,7 @@ var BrowserApp = {
     WebappsUI.init();
     RemoteDebugger.init();
     Reader.init();
+    UserAgent.init();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.init();
 #endif
@@ -359,6 +360,7 @@ var BrowserApp = {
     WebappsUI.uninit();
     RemoteDebugger.uninit();
     Reader.uninit();
+    UserAgent.uninit();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.uninit();
 #endif
@@ -1208,6 +1210,7 @@ var NativeWindow = {
           let request = aElement.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
           return (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE));
         }
+        return false;
       }
     },
 
@@ -1695,6 +1698,57 @@ var SelectionHandler = {
     }
   }
 };
+
+
+var UserAgent = {
+  init: function ua_init() {
+    Services.obs.addObserver(this, "http-on-modify-request", false);
+  },
+
+  uninit: function ua_uninit() {
+    Services.obs.removeObserver(this, "http-on-modify-request");
+  },
+
+  getRequestLoadContext: function ua_getRequestLoadContext(aRequest) {
+    if (aRequest && aRequest.notificationCallbacks) {
+      try {
+        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    if (aRequest && aRequest.loadGroup && aRequest.loadGroup.notificationCallbacks) {
+      try {
+        return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    return null;
+  },
+
+  getWindowForRequest: function ua_getWindowForRequest(aRequest) {
+    let loadContext = this.getRequestLoadContext(aRequest);
+    if (loadContext)
+      return loadContext.associatedWindow;
+    return null;
+  },
+
+  observe: function ua_observe(aSubject, aTopic, aData) {
+    if (!(aSubject instanceof Ci.nsIHttpChannel))
+      return;
+
+    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+    let channelWindow = this.getWindowForRequest(channel);
+    if (BrowserApp.getBrowserForWindow(channelWindow)) {
+      if (channel.URI.host.indexOf("youtube") != -1) {
+        let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
+#expand let version = "__MOZ_APP_VERSION__";
+        ua += " Fennec/" + version;
+        channel.setRequestHeader("User-Agent", ua, false);
+      }
+    }
+  }
+};
+
 
 function nsBrowserAccess() {
 }
@@ -2270,6 +2324,20 @@ Tab.prototype = {
           }
         });
 
+        // Once document is fully loaded, we can do a readability check to
+        // possibly enable reader mode for this page
+        Reader.checkTabReadability(this.id, function(isReadable) {
+          if (!isReadable)
+            return;
+
+          sendMessageToJava({
+            gecko: {
+              type: "Content:ReaderEnabled",
+              tabID: this.id
+            }
+          });
+        }.bind(this));
+
         // Attach a listener to watch for "click" events bubbling up from error
         // pages and other similar page. This lets us fix bugs like 401575 which
         // require error page UI to do privileged things, without letting error
@@ -2788,29 +2856,6 @@ Tab.prototype = {
     if (md && md.maxZoom)
       zoom = Math.min(zoom, md.maxZoom);
     return zoom;
-  },
-
-  getRequestLoadContext: function(aRequest) {
-    if (aRequest && aRequest.notificationCallbacks) {
-      try {
-        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
-      } catch (ex) { }
-    }
-
-    if (aRequest && aRequest.loadGroup && aRequest.loadGroup.notificationCallbacks) {
-      try {
-        return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
-      } catch (ex) { }
-    }
-
-    return null;
-  },
-
-  getWindowForRequest: function(aRequest) {
-    let loadContext = this.getRequestLoadContext(aRequest);
-    if (loadContext)
-      return loadContext.associatedWindow;
-    return null;
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -5520,11 +5565,11 @@ var WebappsUI = {
           let observer = {
             observe: function (aSubject, aTopic) {
               if (aTopic == "alertclickcallback") {
-                WebappsUI.openURL(manifest.fullLaunchPath(), aData.origin);
+                WebappsUI.openURL(manifest.fullLaunchPath(), data.origin);
               }
             }
           };
-    
+
           let message = Strings.browser.GetStringFromName("webapps.alertSuccess");
           let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
           alerts.showAlertNotification("drawable://alert_app", manifest.name, message, true, "", observer, "webapp");
@@ -5672,7 +5717,7 @@ var RemoteDebugger = {
       }
 
       let port = this._getPort();
-      DebuggerServer.openListener(port, false);
+      DebuggerServer.openListener(port);
       dump("Remote debugger listening on port " + port);
     } catch(e) {
       dump("Remote debugger didn't start: " + e);
@@ -5884,7 +5929,7 @@ let Reader = {
         let uri = Services.io.newURI(url, null, null);
 
         let readability = new Readability(uri, doc);
-        let article = readability.parse();
+        article = readability.parse();
 
         if (!article) {
           this.log("Failed to parse page");
@@ -5900,6 +5945,35 @@ let Reader = {
     } catch (e) {
       this.log("Error parsing document from tab: " + e);
       callback(null);
+    }
+  },
+
+  checkTabReadability: function Reader_checkTabReadability(tabId, callback) {
+    try {
+      this.log("checkTabReadability: " + tabId);
+
+      let tab = BrowserApp.getTabForId(tabId);
+      let url = tab.browser.contentWindow.location.href;
+
+      // First, try to find a cached parsed article in the DB
+      this.getArticleFromCache(url, function(article) {
+        if (article) {
+          this.log("Page found in cache, page is definitely readable");
+          callback(true);
+          return;
+        }
+
+        // FIXME: Make the readability check not require a separate copy
+        // of the document by making the operation fully non-destructive.
+        let doc = tab.browser.contentWindow.document.cloneNode(true);
+        let uri = Services.io.newURI(url, null, null);
+
+        let readability = new Readability(uri, doc);
+        callback(readability.check());
+      }.bind(this));
+    } catch (e) {
+      this.log("Error checking tab readability: " + e);
+      callback(false);
     }
   },
 

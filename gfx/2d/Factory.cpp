@@ -352,6 +352,18 @@ Factory::CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams)
   return options;
 }
 
+uint64_t
+Factory::GetD2DVRAMUsageDrawTarget()
+{
+  return DrawTargetD2D::mVRAMUsageDT;
+}
+
+uint64_t
+Factory::GetD2DVRAMUsageSourceSurface()
+{
+  return DrawTargetD2D::mVRAMUsageSS;
+}
+
 #endif // XP_WIN
 
 TemporaryRef<DrawTarget>

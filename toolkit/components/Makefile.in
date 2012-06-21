@@ -35,6 +35,7 @@ PARALLEL_DIRS += \
   places \
   prompts \
   reflect \
+  social \
   startup \
   statusfilter \
   telemetry \

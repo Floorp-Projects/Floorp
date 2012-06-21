@@ -52,6 +52,7 @@ private:
   DrawTargetD2D* mDrawTarget;
   mutable RefPtr<ID3D10Texture2D> mTexture;
   SurfaceFormat mFormat;
+  bool mOwnsCopy;
 };
 
 class DataSourceSurfaceD2DTarget : public DataSourceSurface
