@@ -319,7 +319,7 @@ bool IsCTypesGlobal(JSObject* obj);
 
 JSCTypesCallbacks* GetCallbacks(JSObject* obj);
 
-JSBool InitTypeClasses(JSContext* cx, JSObject* parent);
+JSBool InitTypeClasses(JSContext* cx, JSHandleObject parent);
 
 JSBool ConvertToJS(JSContext* cx, JSObject* typeObj, JSObject* dataObj,
   void* data, bool wantPrimitive, bool ownResult, jsval* result);
@@ -327,7 +327,7 @@ JSBool ConvertToJS(JSContext* cx, JSObject* typeObj, JSObject* dataObj,
 JSBool ImplicitConvert(JSContext* cx, jsval val, JSObject* targetType,
   void* buffer, bool isArgument, bool* freePointer);
 
-JSBool ExplicitConvert(JSContext* cx, jsval val, JSObject* targetType,
+JSBool ExplicitConvert(JSContext* cx, jsval val, JSHandleObject targetType,
   void* buffer);
 
 /*******************************************************************************
@@ -443,7 +443,7 @@ namespace CType {
   bool IsSizeDefined(JSObject* obj);
   size_t GetAlignment(JSObject* obj);
   ffi_type* GetFFIType(JSContext* cx, JSObject* obj);
-  JSString* GetName(JSContext* cx, JSObject* obj);
+  JSString* GetName(JSContext* cx, JSHandleObject obj);
   JSObject* GetProtoFromCtor(JSObject* obj, CTypeProtoSlot slot);
   JSObject* GetProtoFromType(JSObject* obj, CTypeProtoSlot slot);
   JSCTypesCallbacks* GetCallbacksFromType(JSObject* obj);

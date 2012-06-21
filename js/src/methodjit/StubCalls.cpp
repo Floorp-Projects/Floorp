@@ -863,7 +863,7 @@ stubs::Neg(VMFrame &f)
 void JS_FASTCALL
 stubs::NewInitArray(VMFrame &f, uint32_t count)
 {
-    JSObject *obj = NewDenseAllocatedArray(f.cx, count);
+    RootedObject obj(f.cx, NewDenseAllocatedArray(f.cx, count));
     if (!obj)
         THROW();
 
@@ -871,7 +871,8 @@ stubs::NewInitArray(VMFrame &f, uint32_t count)
     if (type) {
         obj->setType(type);
     } else {
-        if (!SetInitializerObjectType(f.cx, f.script(), f.pc(), obj))
+        RootedScript script(f.cx, f.script());
+        if (!SetInitializerObjectType(f.cx, script, f.pc(), obj))
             THROW();
     }
 
@@ -884,8 +885,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     JSContext *cx = f.cx;
     TypeObject *type = (TypeObject *) f.scratch;
 
-    JSObject *obj;
-
+    RootedObject obj(cx);
     if (baseobj) {
         Rooted<JSObject*> base(cx, baseobj);
         obj = CopyInitializerObject(cx, base);
@@ -900,7 +900,8 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     if (type) {
         obj->setType(type);
     } else {
-        if (!SetInitializerObjectType(cx, f.script(), f.pc(), obj))
+        RootedScript script(f.cx, f.script());
+        if (!SetInitializerObjectType(cx, script, f.pc(), obj))
             THROW();
     }
 

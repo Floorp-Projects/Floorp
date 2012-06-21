@@ -161,8 +161,8 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
     /* Create |Function| so it and |Function.prototype| can be installed. */
     RootedFunction functionCtor(cx);
     {
-        JSObject *ctor =
-            NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self);
+        // Note that ctor is rooted purely for the JS_ASSERT at the end
+        RootedObject ctor(cx, NewObjectWithGivenProto(cx, &FunctionClass, functionProto, self));
         if (!ctor)
             return NULL;
         functionCtor = js_NewFunction(cx, ctor, Function, 1, JSFUN_CONSTRUCTOR, self,
@@ -380,7 +380,7 @@ CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &glo
     JS_ASSERT(clasp != &ObjectClass);
     JS_ASSERT(clasp != &FunctionClass);
 
-    JSObject *blankProto = NewObjectWithGivenProto(cx, clasp, &proto, &global);
+    RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global));
     if (!blankProto || !blankProto->setSingletonType(cx))
         return NULL;
 
@@ -390,11 +390,12 @@ CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &glo
 JSObject *
 GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
 {
+    Rooted<GlobalObject*> self(cx, this);
     JSObject *objectProto = getOrCreateObjectPrototype(cx);
     if (!objectProto)
         return NULL;
 
-    return CreateBlankProto(cx, clasp, *objectProto, *this);
+    return CreateBlankProto(cx, clasp, *objectProto, *self.reference());
 }
 
 JSObject *

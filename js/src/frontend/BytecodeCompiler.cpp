@@ -22,12 +22,12 @@ using namespace js;
 using namespace js::frontend;
 
 bool
-MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script_)
+MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script)
 {
-    Rooted<JSScript*> script(cx, script_);
+    AssertRootingUnnecessary safe(cx);
 
     Vector<JSScript *, 16> worklist(cx);
-    if (!worklist.append(script.reference()))
+    if (!worklist.append(script))
         return false;
 
     while (worklist.length()) {
@@ -66,14 +66,16 @@ MarkInnerAndOuterFunctions(JSContext *cx, JSScript* script_)
 }
 
 JSScript *
-frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
+frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *callerFrame,
                         JSPrincipals *principals, JSPrincipals *originPrincipals,
                         bool compileAndGo, bool noScriptRval, bool needScriptGlobal,
                         const jschar *chars, size_t length,
                         const char *filename, unsigned lineno, JSVersion version,
-                        JSString *source /* = NULL */,
+                        JSString *source_ /* = NULL */,
                         unsigned staticLevel /* = 0 */)
 {
+    RootedString source(cx, source_);
+
     class ProbesManager
     {
         const char* filename;
@@ -114,7 +116,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         return NULL;
 
     // We can specialize a bit for the given scope chain if that scope chain is the global object.
-    JSObject *globalScope = scopeChain && scopeChain == &scopeChain->global() ? scopeChain : NULL;
+    JSObject *globalScope = scopeChain && scopeChain == &scopeChain->global() ? (JSObject*) scopeChain : NULL;
     JS_ASSERT_IF(globalScope, globalScope->isNative());
     JS_ASSERT_IF(globalScope, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalScope->getClass()));
 
@@ -242,7 +244,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
 // Compile a JS function body, which might appear as the value of an event
 // handler attribute in an HTML <INPUT> tag, or in a Function() constructor.
 bool
-frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
+frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun,
                               JSPrincipals *principals, JSPrincipals *originPrincipals,
                               Bindings *bindings, const jschar *chars, size_t length,
                               const char *filename, unsigned lineno, JSVersion version)
