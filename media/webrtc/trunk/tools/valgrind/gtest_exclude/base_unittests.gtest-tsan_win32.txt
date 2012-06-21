@@ -1,0 +1,20 @@
+# Occasionally fails under TSan, see http://crbug.com/54229
+ProcessUtilTest.CalcFreeMemory
+
+# This file is copied from Valgrind-on-Wine filter
+# TODO(timurrrr): include/investigate the listed tests one-by-one
+EtwTraceControllerTest.EnableDisable
+EtwTraceConsumer*Test.*
+EtwTraceProvider*Test.*
+JSONReaderTest.Reading
+TimeTicks.*
+WMIUtilTest.*
+
+# Too slow under TSan
+ConditionVariableTest.LargeFastTaskTest
+
+# Fails under TSan: http://crbug.com/93843
+MessageLoopTest.RecursiveDenial3
+
+# Times out on Win7, slow on Vista: http://crbug.com/106531
+TraceEventTestFixture.DataCapturedManyThreads

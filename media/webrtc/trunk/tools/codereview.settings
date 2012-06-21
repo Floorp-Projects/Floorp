@@ -1,0 +1,9 @@
+# This file is used by gcl to get repository specific information.
+CODE_REVIEW_SERVER: webrtc-codereview.appspot.com
+#CC_LIST:
+#VIEW_VC:
+#STATUS:
+TRY_ON_UPLOAD: False
+#TRYSERVER_SVN_URL:
+#GITCL_PREUPLOAD:
+#GITCL_PREDCOMMIT:
