@@ -47,29 +47,25 @@ function no_args(next)  {
 function parse_error(next)  {
   debug("in " + arguments.callee.name);  
   mozAppscb(navigator.mozApps.install(SERVERS['json_syntax_error'], null), 
-          [{ status: "== \"error\"",
-            name: "== \"MANIFEST_PARSE_ERROR\""}], ok, next);
+          [{ name: "== \"MANIFEST_PARSE_ERROR\"" }], "error", ok, next);
 }
 
 function invalid_manifest(next) {
   debug("in " + arguments.callee.name);
   mozAppscb(navigator.mozApps.install(SERVERS['missing_required_field'], null),
-          [{ status: "== \"error\"",
-            name: "== \"INVALID_MANIFEST\""}], ok, next);
+          [{ name: "== \"INVALID_MANIFEST\"" }], "error", ok, next);
 }
 
 function permission_denied(next) {
   debug("in " + arguments.callee.name);
   mozAppscb(navigator.mozApps.install(SERVERS['no_delegated_install'], null),
-          [{ status: "== \"error\"",
-            name: "== \"DENIED\""}], todo, next);
+          [{ name: "== \"DENIED\"" }], "error", todo, next);
 }
 
 function invalid_content(next) {
   debug("in " + arguments.callee.name);
   mozAppscb(navigator.mozApps.install(SERVERS['bad_content_type'], null),
-          [{ status: "== \"error\"",
-             name: "== \"INVALID_MANIFEST\""}], todo, next);
+          [{ name: "== \"INVALID_MANIFEST\"" }], "error", todo, next);
 }
 
 function mgmt_api_errors(next) {

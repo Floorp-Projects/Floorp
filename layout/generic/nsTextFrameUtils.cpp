@@ -68,11 +68,10 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, PRUint32 aLength,
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();
-        if (ch == '\t') {
-          flags |= TEXT_HAS_TAB;
-        } else if (ch != ' ' && ch != '\n') {
-          // we already know it's not a tab from the previous check
+        if (ch > ' ') {
           lastCharArabic = IS_ARABIC_CHAR(ch);
+        } else if (ch == '\t') {
+          flags |= TEXT_HAS_TAB;
         }
         *aOutput++ = ch;
       }

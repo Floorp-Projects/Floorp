@@ -724,3 +724,12 @@ pref("network.manage-offline-status", true);
 
 // increase the timeout clamp for background tabs to 15 minutes
 pref("dom.min_background_timeout_value", 900000);
+
+// The default of font size in reader (1-7)
+pref("reader.font_size", 4);
+
+// The default of margin size in reader (5%-25%)
+pref("reader.margin_size", 5);
+
+// The default color scheme in reader (light, dark, sepia)
+pref("reader.color_scheme", "light");

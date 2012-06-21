@@ -852,6 +852,9 @@ public:
   static TemporaryRef<GlyphRenderingOptions>
     CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams);
 
+  static uint64_t GetD2DVRAMUsageDrawTarget();
+  static uint64_t GetD2DVRAMUsageSourceSurface();
+
 private:
   static ID3D10Device1 *mD3D10Device;
 #endif

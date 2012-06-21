@@ -15,6 +15,7 @@
   <script type="application/javascript" src="../role.js"></script>
   <script type="application/javascript" src="../states.js"></script>
   <script type="application/javascript" src="../pivot.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
 
   <script type="application/javascript">
     var gBrowserWnd = null;
@@ -75,6 +76,22 @@
 
       gQueue.push(new removeVCRootInvoker(
         doc.getElementById('links')));
+
+      var [x, y] = getBounds(getAccessible(doc.getElementById('heading-1-1')));
+      gQueue.push(new moveVCCoordInvoker(docAcc, x + 1, y + 1, true,
+                                         HeadersTraversalRule, 'heading-1-1'));
+
+      // Already on the point, so we should not get a move event.
+      gQueue.push(new moveVCCoordInvoker(docAcc, x + 1, y + 1, true,
+                                         HeadersTraversalRule, false));
+
+      // Attempting a coordinate outside any header, should not move.
+      gQueue.push(new moveVCCoordInvoker(docAcc, x - 1, y - 1, true,
+                                         HeadersTraversalRule, false));
+
+      // Attempting a coordinate outside any header, should move to null
+      gQueue.push(new moveVCCoordInvoker(docAcc, x - 1, y - 1, false,
+                                         HeadersTraversalRule, null));
 
       gQueue.invoke();
     }

@@ -2,6 +2,7 @@ Makefile.in
 Makefile
 autoconf.mk.in
 autoconf.mk
+baseconfig.mk
 check-sync-dirs.py
 static-checking-config.mk
 nsinstall

@@ -3966,6 +3966,7 @@ net.sd
 org.sd
 edu.sd
 med.sd
+tv.sd
 gov.sd
 info.sd
 
@@ -4013,7 +4014,7 @@ x.se
 y.se
 z.se
 
-// sg : http://www.nic.net.sg/sub_policies_agreement/2ld.html
+// sg : http://www.nic.net.sg/page/registration-policies-procedures-and-guidelines
 sg
 com.sg
 net.sg
@@ -4088,6 +4089,11 @@ su
 // sv : http://www.svnet.org.sv/svpolicy.html
 *.sv
 
+// sx : http://en.wikipedia.org/wiki/.sx
+// Confirmed by registry <jcvignes@openregistry.com> 2012-05-31
+sx
+gov.sx
+
 // sy : http://en.wikipedia.org/wiki/.sy
 // see also: http://www.gobin.info/domainname/sy.doc
 sy
@@ -4119,8 +4125,7 @@ tel
 tf
 
 // tg : http://en.wikipedia.org/wiki/.tg
-// http://www.nic.tg/nictg/index.php implies no reserved 2nd-level domains,
-// although this contradicts wikipedia.
+// http://www.nic.tg/
 tg
 
 // th : http://en.wikipedia.org/wiki/.th
@@ -4134,7 +4139,7 @@ mi.th
 net.th
 or.th
 
-// tj : http://www.nic.tj/policy.htm
+// tj : http://www.nic.tj/policy.html
 tj
 ac.tj
 biz.tj
@@ -4159,9 +4164,16 @@ tk
 tl
 gov.tl
 
-// tm : http://www.nic.tm/rules.html
-// list of 2nd level tlds ?
+// tm : http://www.nic.tm/local.html
 tm
+com.tm
+co.tm
+org.tm
+net.tm
+nom.tm
+gov.tm
+mil.tm
+edu.tm
 
 // tn : http://en.wikipedia.org/wiki/.tn
 // http://whois.ati.tn/
@@ -4319,14 +4331,16 @@ zt.ua
 co.ua
 pp.ua
 
-// ug : http://www.registry.co.ug/
+// ug : https://www.registry.co.ug/
 ug
 co.ug
+or.ug
 ac.ug
 sc.ug
 go.ug
 ne.ug
-or.ug
+com.ug
+org.ug
 
 // uk : http://en.wikipedia.org/wiki/.uk
 *.uk
@@ -4592,11 +4606,12 @@ paroch.k12.ma.us
 // uy : http://www.antel.com.uy/
 *.uy
 
-// uz : http://www.reg.uz/registerr.html
-// are there other 2nd level tlds ?
+// uz : http://www.reg.uz/
 uz
-com.uz
 co.uz
+com.uz
+net.uz
+org.uz
 
 // va : http://en.wikipedia.org/wiki/.va
 va
@@ -4670,7 +4685,7 @@ yt
 // <URL>
 
 // xn--mgbaam7a8h ("Emerat" Arabic) : AE
-//http://nic.ae/english/arabicdomain/rules.jsp
+// http://nic.ae/english/arabicdomain/rules.jsp
 امارات
 
 // xn--54b7fta0cc ("Bangla" Bangla) : BD  
@@ -4734,9 +4749,9 @@ yt
 // xn--mgba3a4fra ("Iran" Arabic) : IR  
 ايران
 
-//xn--mgbayh7gpa ("al-Ordon" Arabic) JO
-//National Information Technology Center (NITC) 
-//Royal Scientific Society, Al-Jubeiha
+// xn--mgbayh7gpa ("al-Ordon" Arabic) : JO
+// National Information Technology Center (NITC) 
+// Royal Scientific Society, Al-Jubeiha
 الاردن
 
 // xn--3e0b707e ("Republic of Korea" Hangul) : KR  

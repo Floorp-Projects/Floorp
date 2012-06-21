@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+  <div id="content" style="display: none"/>
+</body>
+
+<script>
+var Ci = Components.interfaces;
+var chromeWindowInterface = Ci.nsIDOMChromeWindow;
+
+SimpleTest.waitForExplicitFinish();
+
+// Force off out-of-process mozbrowser because we need to grab its
+// |window| synchronously from here.  Out-of-process docshell creation
+// for mozbrowser haves entirely differently.
+// XXX why doesn't pushPrefEnv() work here?
+var ipcTabsWereDisabled;
+try {
+  ipcTabsWereDisabled = SpecialPowers.getBoolPref("dom.ipc.tabs.disabled");
+} catch (e) {
+  ipcTabsWereDisabled = undefined;
+}
+SpecialPowers.setBoolPref("dom.ipc.tabs.disabled", true);
+
+var otherWindow = window.open("window_bug757137.xul", "", "chrome");
+ok(chromeWindowInterface !== null, 'nsIDOMChromeWindow interface is defined');
+var otherChromeWindow = null;
+try {
+  otherChromeWindow = otherWindow.QueryInterface(chromeWindowInterface);
+} catch(e) {
+  ok(false, 'exception when QI to ChromeWindow');
+}
+ok(otherChromeWindow !== null, 'XUL window should QI to ChromeWindow');
+
+otherWindow.onload = function () {
+  var w = otherWindow.document.getElementById('f').contentWindow;
+  ok(w !== null, 'got the |window| for a mozbrowser iframe');
+  var chromeWindow = null;
+  try {
+    var chromeWindow = w.QueryInterface(chromeWindowInterface);
+  } catch(e) { }
+  ok(chromeWindow === null, 'mozbrowser iframe should not get ChromeWindow');
+
+  otherWindow.close();
+  SimpleTest.waitForFocus(function() {
+    if (ipcTabsWereDisabled !== undefined) {
+      SpecialPowers.setBoolPref("dom.ipc.tabs.disabled", ipcTabsWereDisabled);
+    } else {
+      SpecialPowers.clearUserPref("dom.ipc.tabs.disabled");
+    }
+    SimpleTest.finish();
+  });
+};
+</script>
+
+</window>

@@ -179,3 +179,16 @@
   -moz-transform: none;
 }
 
+/* Error description formatting */
+.errorLabel {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  color: #bbb;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+  padding: 0 10px;
+  text-align: center;
+}

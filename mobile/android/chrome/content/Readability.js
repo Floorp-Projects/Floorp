@@ -42,6 +42,7 @@ Readability.prototype = {
   FLAG_STRIP_UNLIKELYS: 0x1,
   FLAG_WEIGHT_CLASSES: 0x2,
   FLAG_CLEAN_CONDITIONALLY: 0x4,
+  FLAG_READABILITY_CHECK: 0x8,
 
   // The maximum number of pages to loop through before we call
   // it quits and just show a link.
@@ -149,6 +150,9 @@ Readability.prototype = {
    * @return void
    **/
   _prepDocument: function() {
+    if (this._flagIsActive(this.FLAG_READABILITY_CHECK))
+      return;
+
     let doc = this._doc;
 
     // In some cases a body element can't be found (if the HTML is
@@ -332,6 +336,7 @@ Readability.prototype = {
   _grabArticle: function(page) {
     let doc = this._doc;
     let stripUnlikelyCandidates = this._flagIsActive(this.FLAG_STRIP_UNLIKELYS);
+    let isChecking = this._flagIsActive(this.FLAG_READABILITY_CHECK);
     let isPaging = (page !== null ? true: false);
 
     page = page ? page : this._doc.body;
@@ -468,6 +473,13 @@ Readability.prototype = {
     // If we still have no top candidate, just use the body as a last resort.
     // We also have to copy the body node so it is something we can modify.
     if (topCandidate === null || topCandidate.tagName === "BODY") {
+      // If we couldn't find a candidate for article content at this point,
+      // it's very unlikely to be a convertible page, just bail the check.
+      if (isChecking) {
+        dump('No top candidate found, failed readability check');
+        return null;
+      }
+
       topCandidate = doc.createElement("DIV");
       topCandidate.innerHTML = page.innerHTML;
 
@@ -475,6 +487,12 @@ Readability.prototype = {
       page.appendChild(topCandidate);
 
       this._initializeNode(topCandidate);
+    } else if (isChecking) {
+      dump('Found a top candidate, passed readability check');
+
+      // Just return a non-null value, no need to post-process the article content
+      // as we're just checking for readability.
+      return {};
     }
 
     // Now that we have the top candidate, look through its siblings for content
@@ -585,6 +603,9 @@ Readability.prototype = {
    * @param Element
   **/
   _removeScripts: function(doc) {
+    if (this._flagIsActive(this.FLAG_READABILITY_CHECK))
+      return;
+
     let scripts = doc.getElementsByTagName('script');
     for (let i = scripts.length - 1; i >= 0; i -= 1) {
       scripts[i].nodeValue="";
@@ -1236,10 +1257,8 @@ Readability.prototype = {
     if ((uri.prePath + "/") === uri.spec)
       return null;
 
-    let doc = this._doc;
-
     // Remove script tags from the document.
-    this._removeScripts(doc);
+    this._removeScripts(this._doc);
 
     // FIXME: Disabled multi-page article support for now as it
     // needs more work on infrastructure.
@@ -1253,21 +1272,17 @@ Readability.prototype = {
 
     this._prepDocument();
 
-    // Build readability's DOM tree.
-    let innerDiv = doc.createElement("DIV");
     let articleTitle = this._getArticleTitle();
     let articleContent = this._grabArticle();
 
     if (!articleContent)
       return null;
 
-    innerDiv.appendChild(articleTitle);
-    innerDiv.appendChild(articleContent);
-
-    // Clear the old HTML, insert the new content.
-    doc.body.innerHTML = "";
-    doc.body.insertBefore(innerDiv, doc.body.firstChild);
-    doc.body.removeAttribute('style');
+    // If we're simply checking whether the document is convertible
+    // or not, we don't need to do any post-processing on the article
+    // content, just return a non-null value (see check() method)
+    if (this._flagIsActive(this.FLAG_READABILITY_CHECK))
+      return {};
 
     this._postProcessContent(articleContent);
 
@@ -1281,5 +1296,13 @@ Readability.prototype = {
 
     return { title: this._getInnerText(articleTitle),
              content: articleContent.innerHTML };
+  },
+
+  check: function() {
+    // Set proper flags for parsing document in readability check mode
+    this._flags = this.FLAG_READABILITY_CHECK |
+                  this.FLAG_STRIP_UNLIKELYS;
+
+    return (this.parse() != null);
   }
 };

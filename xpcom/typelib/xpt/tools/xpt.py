@@ -1067,7 +1067,7 @@ class Typelib(object):
         expected_size = None
         if isinstance(input_file, basestring):
             filename = input_file
-            with open(input_file, "r+b") as f:
+            with open(input_file, "rb") as f:
                 st = os.fstat(f.fileno())
                 data = f.read(st.st_size)
                 expected_size = st.st_size

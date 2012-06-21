@@ -203,6 +203,45 @@ xpcAccessibleTable::IsCellSelected(PRInt32 aRowIdx, PRInt32 aColIdx,
 }
 
 nsresult
+xpcAccessibleTable::GetSelectedCellCount(PRUint32* aSelectedCellCount)
+{
+  NS_ENSURE_ARG_POINTER(aSelectedCellCount);
+  *aSelectedCellCount = 0;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  *aSelectedCellCount = mTable->SelectedCellCount();
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetSelectedColumnCount(PRUint32* aSelectedColumnCount)
+{
+  NS_ENSURE_ARG_POINTER(aSelectedColumnCount);
+  *aSelectedColumnCount = 0;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  *aSelectedColumnCount = mTable->SelectedColCount();
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetSelectedRowCount(PRUint32* aSelectedRowCount)
+{
+  NS_ENSURE_ARG_POINTER(aSelectedRowCount);
+  *aSelectedRowCount = 0;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  *aSelectedRowCount = mTable->SelectedRowCount();
+  return NS_OK;
+}
+
+nsresult
 xpcAccessibleTable::GetSummary(nsAString& aSummary)
 {
   if (!mTable)
