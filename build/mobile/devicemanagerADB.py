@@ -168,7 +168,6 @@ class DeviceManagerADB(DeviceManager):
         self.checkCmd(["push", os.path.realpath(localname), destname])
       if (self.isDir(destname)):
         destname = destname + "/" + os.path.basename(localname)
-      self.chmodDir(destname)
       return True
     except:
       return False
@@ -184,8 +183,6 @@ class DeviceManagerADB(DeviceManager):
         return None
       if 'file exists' in result.lower():
         return name
-
-      self.chmodDir(name)
       return name
     except:
       return None
@@ -253,7 +250,6 @@ class DeviceManagerADB(DeviceManager):
             targetDir = targetDir + dir
             if (not self.dirExists(targetDir)):
               self.mkDir(targetDir)
-      self.checkCmdAs(["shell", "chmod", "777", remoteDir])
       return remoteDir
     except:
       print "pushing " + localDir + " to " + remoteDir + " failed"
@@ -752,20 +748,26 @@ class DeviceManagerADB(DeviceManager):
       args.insert(2, self.packageName)
     return self.checkCmd(args)
 
+  # external function
+  # returns:
+  #  success: True
+  #  failure: False
   def chmodDir(self, remoteDir):
     if (self.isDir(remoteDir)):
       files = self.listFiles(remoteDir.strip())
       for f in files:
-        if (self.isDir(remoteDir.strip() + "/" + f.strip())):
-          self.chmodDir(remoteDir.strip() + "/" + f.strip())
+        remoteEntry = remoteDir.strip() + "/" + f.strip()
+        if (self.isDir(remoteEntry)):
+          self.chmodDir(remoteEntry)
         else:
-          self.checkCmdAs(["shell", "chmod", "777", remoteDir.strip()])
-          print "chmod " + remoteDir.strip()
+          self.checkCmdAs(["shell", "chmod", "777", remoteEntry])
+          print "chmod " + remoteEntry
       self.checkCmdAs(["shell", "chmod", "777", remoteDir])
       print "chmod " + remoteDir
     else:
       self.checkCmdAs(["shell", "chmod", "777", remoteDir.strip()])
       print "chmod " + remoteDir.strip()
+    return True
 
   def verifyADB(self):
     # Check to see if adb itself can be executed.

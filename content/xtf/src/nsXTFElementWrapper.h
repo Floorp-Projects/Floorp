@@ -10,6 +10,7 @@
 #include "nsXMLElement.h"
 #include "nsIXTFAttributeHandler.h"
 #include "nsIXTFElement.h"
+#include "mozilla/Attributes.h"
 
 typedef nsXMLElement nsXTFElementWrapperBase;
 class nsXTFClassInfo;
@@ -166,7 +167,7 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXTFElementWrapper, NS_XTFELEMENTWRAPPER_IID)
 
-class nsXTFClassInfo : public nsXPCClassInfo
+class nsXTFClassInfo MOZ_FINAL : public nsXPCClassInfo
 {
 public:
   nsXTFClassInfo(nsXTFElementWrapper* aWrapper) : mWrapper(aWrapper) {}

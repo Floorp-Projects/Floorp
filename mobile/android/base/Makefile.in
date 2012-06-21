@@ -271,6 +271,7 @@ RES_LAYOUT = \
   res/layout/remote_tabs_group.xml \
   res/layout/tabs_counter.xml \
   res/layout/tabs_panel.xml \
+  res/layout/tabs_panel_toolbar.xml \
   res/layout/tabs_row.xml \
   res/layout/tabs_tray.xml \
   res/layout/list_item_header.xml \
@@ -292,7 +293,7 @@ RES_LAYOUT_XLARGE = \
   res/layout-xlarge/gecko_app.xml \
   res/layout-xlarge/remote_tabs_child.xml \
   res/layout-xlarge/remote_tabs_group.xml \
-  res/layout-xlarge/tabs_panel.xml \
+  res/layout-xlarge/tabs_panel_toolbar.xml \
   res/layout-xlarge/tabs_row.xml \
   $(NULL)
 
@@ -301,7 +302,7 @@ RES_LAYOUT_SW600DP = \
   res/layout-sw600dp/gecko_app.xml \
   res/layout-sw600dp/remote_tabs_child.xml \
   res/layout-sw600dp/remote_tabs_group.xml \
-  res/layout-sw600dp/tabs_panel.xml \
+  res/layout-sw600dp/tabs_panel_toolbar.xml \
   res/layout-sw600dp/tabs_row.xml \
   $(NULL)
 

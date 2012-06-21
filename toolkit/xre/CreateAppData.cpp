@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -5,84 +6,10 @@
 #include "nsXULAppAPI.h"
 #include "nsINIParser.h"
 #include "nsIFile.h"
-#include "nsAppRunner.h"
-#include "nsCRTGlue.h"
 #include "nsAutoPtr.h"
+#include "mozilla/AppData.h"
 
-void
-SetAllocatedString(const char *&str, const char *newvalue)
-{
-  NS_Free(const_cast<char*>(str));
-  if (newvalue) {
-    str = NS_strdup(newvalue);
-  }
-  else {
-    str = nsnull;
-  }
-}
-
-void
-SetAllocatedString(const char *&str, const nsACString &newvalue)
-{
-  NS_Free(const_cast<char*>(str));
-  if (newvalue.IsEmpty()) {
-    str = nsnull;
-  }
-  else {
-    str = ToNewCString(newvalue);
-  }
-}
-
-ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
-{
-  Zero();
-
-  this->size = aAppData->size;
-
-  SetAllocatedString(this->vendor, aAppData->vendor);
-  SetAllocatedString(this->name, aAppData->name);
-  SetAllocatedString(this->version, aAppData->version);
-  SetAllocatedString(this->buildID, aAppData->buildID);
-  SetAllocatedString(this->ID, aAppData->ID);
-  SetAllocatedString(this->copyright, aAppData->copyright);
-  SetAllocatedString(this->profile, aAppData->profile);
-  SetStrongPtr(this->directory, aAppData->directory);
-  this->flags = aAppData->flags;
-
-  if (aAppData->size > offsetof(nsXREAppData, xreDirectory)) {
-    SetStrongPtr(this->xreDirectory, aAppData->xreDirectory);
-    SetAllocatedString(this->minVersion, aAppData->minVersion);
-    SetAllocatedString(this->maxVersion, aAppData->maxVersion);
-  }
-
-  if (aAppData->size > offsetof(nsXREAppData, crashReporterURL)) {
-    SetAllocatedString(this->crashReporterURL, aAppData->crashReporterURL);
-  }
-
-  if (aAppData->size > offsetof(nsXREAppData, UAName)) {
-    SetAllocatedString(this->UAName, aAppData->UAName);
-  }
-}
-
-ScopedAppData::~ScopedAppData()
-{
-  SetAllocatedString(this->vendor, nsnull);
-  SetAllocatedString(this->name, nsnull);
-  SetAllocatedString(this->version, nsnull);
-  SetAllocatedString(this->buildID, nsnull);
-  SetAllocatedString(this->ID, nsnull);
-  SetAllocatedString(this->copyright, nsnull);
-  SetAllocatedString(this->profile, nsnull);
-
-  NS_IF_RELEASE(this->directory);
-
-  SetStrongPtr(this->xreDirectory, (nsIFile*) nsnull);
-  SetAllocatedString(this->minVersion, nsnull);
-  SetAllocatedString(this->maxVersion, nsnull);
-
-  SetAllocatedString(this->crashReporterURL, nsnull);
-  SetAllocatedString(this->UAName, nsnull);
-}
+using namespace mozilla;
 
 nsresult
 XRE_CreateAppData(nsIFile* aINIFile, nsXREAppData **aAppData)
@@ -103,9 +30,7 @@ XRE_CreateAppData(nsIFile* aINIFile, nsXREAppData **aAppData)
     if (NS_FAILED(rv))
       return rv;
 
-    rv = CallQueryInterface(appDir, &data->directory);
-    if (NS_FAILED(rv))
-      return rv;
+    appDir.forget(&data->directory);
   }
 
   *aAppData = data.forget();

@@ -171,6 +171,16 @@ MobileConnection::GetData(nsIDOMMozMobileConnectionInfo** data)
 }
 
 NS_IMETHODIMP
+MobileConnection::GetNetworkSelectionMode(nsAString& networkSelectionMode)
+{
+  if (!mProvider) {
+    networkSelectionMode.SetIsVoid(true);
+    return NS_OK;
+  }
+  return mProvider->GetNetworkSelectionMode(networkSelectionMode);
+}
+
+NS_IMETHODIMP
 MobileConnection::GetNetworks(nsIDOMDOMRequest** request)
 {
   *request = nsnull;
@@ -180,6 +190,30 @@ MobileConnection::GetNetworks(nsIDOMDOMRequest** request)
   }
 
   return mProvider->GetNetworks(GetOwner(), request);
+}
+
+NS_IMETHODIMP
+MobileConnection::SelectNetwork(nsIDOMMozMobileNetworkInfo* network, nsIDOMDOMRequest** request)
+{
+  *request = nsnull;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SelectNetwork(GetOwner(), network, request);
+}
+
+NS_IMETHODIMP
+MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** request)
+{
+  *request = nsnull;
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SelectNetworkAutomatically(GetOwner(), request);
 }
 
 NS_IMETHODIMP

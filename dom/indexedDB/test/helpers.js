@@ -10,9 +10,39 @@ function executeSoon(aFun)
   SimpleTest.executeSoon(aFun);
 }
 
+function clearAllDatabases(callback) {
+  function runCallback() {
+    SimpleTest.executeSoon(function () { callback(); });
+  }
+
+  if (!SpecialPowers.isMainProcess()) {
+    runCallback();
+    return;
+  }
+
+  let comp = SpecialPowers.wrap(Components);
+
+  let idbManager =
+    comp.classes["@mozilla.org/dom/indexeddb/manager;1"]
+        .getService(comp.interfaces.nsIIndexedDatabaseManager);
+
+  let uri = SpecialPowers.getDocumentURIObject(document);
+
+  idbManager.clearDatabasesForURI(uri);
+  idbManager.getUsageForURI(uri, function(uri, usage, fileUsage) {
+    if (usage) {
+      throw new Error("getUsageForURI returned non-zero usage after " +
+                      "clearing all databases!");
+    }
+    runCallback();
+  });
+}
+
 if (!window.runTest) {
   window.runTest = function(limitedQuota)
   {
+    SimpleTest.waitForExplicitFinish();
+
     allowIndexedDB();
     if (limitedQuota) {
       denyUnlimitedQuota();
@@ -21,8 +51,7 @@ if (!window.runTest) {
       allowUnlimitedQuota();
     }
 
-    SimpleTest.waitForExplicitFinish();
-    testGenerator.next();
+    clearAllDatabases(function () { testGenerator.next(); });
   }
 }
 
@@ -33,7 +62,7 @@ function finishTest()
 
   SimpleTest.executeSoon(function() {
     testGenerator.close();
-    SimpleTest.finish();
+    clearAllDatabases(function() { SimpleTest.finish(); });
   });
 }
 
