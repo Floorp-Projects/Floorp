@@ -2814,9 +2814,6 @@ pref("middlemouse.contentLoadURL", true);
 pref("middlemouse.openNewWindow", true);
 pref("middlemouse.scrollbarPosition", true);
 
-// Clipboard behavior
-pref("clipboard.autocopy", true);
-
 pref("browser.urlbar.clickSelectsAll", false);
 
 // Tab focus model bit field:
