@@ -2159,10 +2159,7 @@ nsGenericElement::GetScrollHeight()
 
   nsIScrollableFrame* sf = GetScrollFrame();
   if (!sf) {
-    nsRect rcFrame;
-    nsCOMPtr<nsIContent> parent;
-    GetOffsetRect(rcFrame, getter_AddRefs(parent));
-    return rcFrame.height;
+    return GetPaddingRectSize().height;
   }
 
   nscoord height = sf->GetScrollRange().height + sf->GetScrollPortRect().height;
@@ -2185,10 +2182,7 @@ nsGenericElement::GetScrollWidth()
 
   nsIScrollableFrame* sf = GetScrollFrame();
   if (!sf) {
-    nsRect rcFrame;
-    nsCOMPtr<nsIContent> parent;
-    GetOffsetRect(rcFrame, getter_AddRefs(parent));
-    return rcFrame.width;
+    return GetPaddingRectSize().width;
   }
 
   nscoord width = sf->GetScrollRange().width + sf->GetScrollPortRect().width;
