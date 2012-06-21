@@ -2395,7 +2395,7 @@ CallMethodHelper::Call()
 {
     mCallContext.SetRetVal(JSVAL_VOID);
 
-    mCallContext.GetThreadData()->SetException(nsnull);
+    XPCJSRuntime::Get()->SetPendingException(nsnull);
     mCallContext.GetXPCContext()->SetLastResult(NS_ERROR_UNEXPECTED);
 
     if (mVTableIndex == 0) {

@@ -1867,32 +1867,6 @@ nsXPConnect::GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNati
     return NS_OK;
 }
 
-/* attribute nsIException PendingException; */
-NS_IMETHODIMP
-nsXPConnect::GetPendingException(nsIException * *aPendingException)
-{
-    NS_ASSERTION(aPendingException, "bad param");
-
-    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
-    if (!data) {
-        *aPendingException = nsnull;
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-    }
-
-    return data->GetException(aPendingException);
-}
-
-NS_IMETHODIMP
-nsXPConnect::SetPendingException(nsIException * aPendingException)
-{
-    XPCPerThreadData* data = XPCPerThreadData::GetData(nsnull);
-    if (!data)
-        return UnexpectedFailure(NS_ERROR_FAILURE);
-
-    data->SetException(aPendingException);
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsXPConnect::SyncJSContexts(void)
 {
