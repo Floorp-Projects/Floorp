@@ -689,6 +689,12 @@ let RIL = {
         // call state.
         let model_id = libcutils.property_get("ril.model_id");
         if (DEBUG) debug("Detected RIL model " + model_id);
+        if (!model_id) {
+          // On some RIL models, the RIL has to be "warmed up" for us to read this property.
+          // It apparently isn't warmed up yet, going to try again later.
+          if (DEBUG) debug("Could not detect correct model_id. Going to try later.");
+          return;
+        }
         if (model_id == "I9100") {
           if (DEBUG) {
             debug("Detected I9100, enabling " +
