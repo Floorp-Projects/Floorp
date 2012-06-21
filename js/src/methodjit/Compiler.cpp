@@ -1180,17 +1180,11 @@ mjit::Compiler::generatePrologue()
         }
     }
 
-    if (debugMode()) {
-        prepareStubCall(Uses(0));
-        INLINE_STUBCALL(stubs::ScriptDebugPrologue, REJOIN_RESUME);
-    } else if (Probes::callTrackingActive(cx)) {
-        prepareStubCall(Uses(0));
-        INLINE_STUBCALL(stubs::ScriptProbeOnlyPrologue, REJOIN_RESUME);
-    }
+    CompileStatus status = methodEntryHelper();
+    if (status == Compile_Okay)
+        recompileCheckHelper();
 
-    recompileCheckHelper();
-
-    return Compile_Okay;
+    return status;
 }
 
 void
@@ -3746,7 +3740,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     /* Only the top of the stack can be returned. */
     JS_ASSERT_IF(fe, fe == frame.peek(-1));
 
-    if (debugMode() || Probes::callTrackingActive(cx)) {
+    if (debugMode()) {
         /* If the return value isn't in the frame's rval slot, move it there. */
         if (fe) {
             frame.storeTo(fe, Address(JSFrameReg, StackFrame::offsetOfReturnValue()), true);
@@ -3767,6 +3761,14 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     }
 
     if (a != outer) {
+        JS_ASSERT(!debugMode());
+        if (Probes::callTrackingActive(cx)) {
+            prepareStubCall(Uses(0));
+            INLINE_STUBCALL(stubs::ScriptProbeOnlyEpilogue, REJOIN_RESUME);
+        } else {
+            profilingPopHelper();
+        }
+
         /*
          * Returning from an inlined script. The checks we do for inlineability
          * and recompilation triggered by args object construction ensure that
@@ -3806,8 +3808,17 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     if (debugMode()) {
         prepareStubCall(Uses(0));
         INLINE_STUBCALL(stubs::Epilogue, REJOIN_NONE);
-    } else if (script->function() && script->nesting()) {
-        masm.sub32(Imm32(1), AbsoluteAddress(&script->nesting()->activeFrames));
+    } else {
+        if (Probes::callTrackingActive(cx)) {
+            prepareStubCall(Uses(0));
+            INLINE_STUBCALL(stubs::ScriptProbeOnlyEpilogue, REJOIN_RESUME);
+        } else {
+            profilingPopHelper();
+        }
+
+        if (script->function() && script->nesting()) {
+            masm.sub32(Imm32(1), AbsoluteAddress(&script->nesting()->activeFrames));
+        }
     }
 
     emitReturnValue(&masm, fe);
@@ -3897,6 +3908,73 @@ mjit::Compiler::recompileCheckHelper()
 
     OOL_STUBCALL(stubs::RecompileForInline, REJOIN_RESUME);
     stubcc.rejoin(Changes(0));
+}
+
+CompileStatus
+mjit::Compiler::methodEntryHelper()
+{
+    if (debugMode()) {
+        prepareStubCall(Uses(0));
+        INLINE_STUBCALL(stubs::ScriptDebugPrologue, REJOIN_RESUME);
+    } else if (Probes::callTrackingActive(cx)) {
+        prepareStubCall(Uses(0));
+        INLINE_STUBCALL(stubs::ScriptProbeOnlyPrologue, REJOIN_RESUME);
+    } else {
+        return profilingPushHelper();
+    }
+    return Compile_Okay;
+}
+
+CompileStatus
+mjit::Compiler::profilingPushHelper()
+{
+    SPSProfiler *p = &cx->runtime->spsProfiler;
+    if (!p->enabled())
+        return Compile_Okay;
+    /* If allocation fails, make sure no PopHelper() is emitted */
+    const char *str = p->profileString(cx, script, script->function());
+    if (str == NULL)
+        return Compile_Error;
+
+    /* Check if there's still space on the stack */
+    RegisterID size = frame.allocReg();
+    RegisterID base = frame.allocReg();
+    masm.load32(p->size(), size);
+    Jump j = masm.branch32(Assembler::GreaterThanOrEqual, size,
+                           Imm32(p->maxSize()));
+
+    /* With room, store our string onto the stack */
+    masm.move(ImmPtr(p->stack()), base);
+    JS_STATIC_ASSERT(sizeof(ProfileEntry) == 2 * sizeof(void*));
+    masm.lshift32(Imm32(sizeof(void*) == 4 ? 3 : 4), size);
+    masm.addPtr(size, base);
+
+    masm.storePtr(ImmPtr(str), Address(base, offsetof(ProfileEntry, string)));
+    masm.storePtr(ImmPtr(NULL), Address(base, offsetof(ProfileEntry, sp)));
+
+    frame.freeReg(base);
+    frame.freeReg(size);
+
+    /* Always increment the stack size (paired with a decrement below) */
+    j.linkTo(masm.label(), &masm);
+    masm.add32(Imm32(1), AbsoluteAddress(p->size()));
+
+    /* Set the flags that we've pushed information onto the SPS stack */
+    RegisterID reg = frame.allocReg();
+    masm.load32(FrameFlagsAddress(), reg);
+    masm.or32(Imm32(StackFrame::HAS_PUSHED_SPS_FRAME), reg);
+    masm.store32(reg, FrameFlagsAddress());
+    frame.freeReg(reg);
+
+    return Compile_Okay;
+}
+
+void
+mjit::Compiler::profilingPopHelper()
+{
+    if (!cx->runtime->spsProfiler.enabled())
+        return;
+    masm.sub32(Imm32(1), AbsoluteAddress(cx->runtime->spsProfiler.size()));
 }
 
 void
@@ -4462,7 +4540,10 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
 
         markUndefinedLocals();
 
-        status = generateMethod();
+        status = methodEntryHelper();
+        if (status == Compile_Okay)
+            status = generateMethod();
+
         if (status != Compile_Okay) {
             popActiveFrame();
             if (status == Compile_Abort) {
