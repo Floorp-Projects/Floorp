@@ -652,6 +652,7 @@ class XPCJSRuntime
 {
 public:
     static XPCJSRuntime* newXPCJSRuntime(nsXPConnect* aXPConnect);
+    static XPCJSRuntime* Get() { return nsXPConnect::GetXPConnect()->GetRuntime(); }
 
     JSRuntime*     GetJSRuntime() const {return mJSRuntime;}
     nsXPConnect*   GetXPConnect() const {return mXPConnect;}
