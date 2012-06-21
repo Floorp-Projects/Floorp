@@ -1,0 +1,18 @@
+{
+  "XMLHttpRequest interface constructor": true,
+  "XMLHttpRequest interface: calling open(DOMString,DOMString,boolean,DOMString,DOMString) on new XMLHttpRequest() with too few arguments must throw TypeError": true,
+  "XMLHttpRequest interface: calling setRequestHeader(DOMString,DOMString) on new XMLHttpRequest() with too few arguments must throw TypeError": true,
+  "XMLHttpRequest interface: calling getResponseHeader(DOMString) on new XMLHttpRequest() with too few arguments must throw TypeError": true,
+  "XMLHttpRequest interface: calling overrideMimeType(DOMString) on new XMLHttpRequest() with too few arguments must throw TypeError": true,
+  "FormData interface: existence and properties of interface object": true,
+  "FormData interface constructor": true,
+  "FormData interface: existence and properties of interface prototype object": true,
+  "FormData interface: existence and properties of interface prototype object's \"constructor\" property": true,
+  "FormData interface: operation append(DOMString,Blob,DOMString)": true,
+  "Stringification of new FormData()": "debug",
+  "FormData interface: calling append(DOMString,Blob,DOMString) on new FormData() with too few arguments must throw TypeError": true,
+  "FormData interface: calling append(DOMString,DOMString) on new FormData() with too few arguments must throw TypeError": true,
+  "Stringification of new FormData(form)": "debug",
+  "FormData interface: calling append(DOMString,Blob,DOMString) on new FormData(form) with too few arguments must throw TypeError": true,
+  "FormData interface: calling append(DOMString,DOMString) on new FormData(form) with too few arguments must throw TypeError": true
+}

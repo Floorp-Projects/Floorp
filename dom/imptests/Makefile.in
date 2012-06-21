@@ -11,10 +11,12 @@ relativesrcdir = dom/imported-tests
 DIRS = \
   failures/editing/conformancetest \
   failures/editing/selecttest \
-  failures/webapps/WebStorage/tests/submissions/Ms2ger \
-  failures/webapps/WebStorage/tests/submissions/Infraware \
-  failures/webapps/DOMCore/tests/submissions/Opera \
   failures/html/tests/submission/Opera/microdata \
+  failures/webapps/DOMCore/tests/approved \
+  failures/webapps/DOMCore/tests/submissions/Opera \
+  failures/webapps/WebStorage/tests/submissions/Infraware \
+  failures/webapps/WebStorage/tests/submissions/Ms2ger \
+  failures/webapps/XMLHttpRequest/tests/submissions/Ms2ger \
   $(NULL)
 
 include $(srcdir)/editing.mk

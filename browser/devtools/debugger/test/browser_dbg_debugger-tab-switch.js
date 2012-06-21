@@ -8,6 +8,12 @@ let gTab1, gTab2, gTab3, gTab4;
 let gPane1, gPane2;
 let gNbox;
 
+/**
+ * Tests that a debugger instance can't be opened in multiple tabs at once,
+ * and that on such an attempt a notification is shown, which can either switch
+ * to the old debugger instance, or close the old instance to open a new one.
+ */
+
 function test() {
   gNbox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
 
@@ -50,7 +56,7 @@ function testTab1(callback) {
       executeSoon(function() {
         callback();
       });
-    }, true);
+    });
   });
 }
 
@@ -208,8 +214,8 @@ function lastTest(callback) {
   });
 }
 
-function cleanup(callback) {
-
+function cleanup(callback)
+{
   gPane1 = null;
   gPane2 = null;
   gNbox = null;
