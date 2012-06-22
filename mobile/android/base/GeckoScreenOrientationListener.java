@@ -157,7 +157,7 @@ public class GeckoScreenOrientationListener
   }
 
   public void unlockScreenOrientation() {
-    GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+    GeckoApp.mAppContext.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
     updateScreenOrientation();
   }
 }
