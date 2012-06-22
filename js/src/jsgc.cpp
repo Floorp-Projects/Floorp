@@ -3840,7 +3840,8 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 #ifdef JS_GC_ZEAL
     bool restartVerify = rt->gcVerifyData &&
                          rt->gcZeal() == ZealVerifierValue &&
-                         reason != gcreason::CC_FORCED;
+                         reason != gcreason::CC_FORCED &&
+                         rt->hasContexts();
 
     struct AutoVerifyBarriers {
         JSRuntime *runtime;
