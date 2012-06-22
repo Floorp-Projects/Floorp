@@ -42,10 +42,10 @@ let WebappsInstaller = {
       shell.install();
     } catch (ex) {
       Cu.reportError("Error installing app: " + ex);
-      return false;
+      return null;
     }
 
-    return true;
+    return shell;
   }
 }
 
@@ -107,12 +107,16 @@ function NativeApp(aData) {
   }
   this.shortDescription = sanitize(shortDesc);
 
+  this.appcacheDefined = (app.manifest.appcache_path != undefined);
+
   this.manifest = app.manifest;
 
-  this.profileFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  // The app registry is the Firefox profile from which the app
+  // was installed.
+  this.registryFolder = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
   this.webappJson = {
-    "registryDir": this.profileFolder.path,
+    "registryDir": this.registryFolder.path,
     "app": app
   };
 
@@ -170,6 +174,7 @@ WinNativeApp.prototype = {
       this._createConfigFiles();
       this._createShortcutFiles();
       this._writeSystemKeys();
+      this._createAppProfile();
     } catch (ex) {
       this._removeInstallation();
       throw(ex);
@@ -278,6 +283,20 @@ WinNativeApp.prototype = {
   _createDirectoryStructure: function() {
     this.installDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
     this.uninstallDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  },
+
+  /**
+   * Creates the profile to be used for this app.
+   */
+  _createAppProfile: function() {
+    if (!this.appcacheDefined)
+      return;
+
+    let profSvc = Cc["@mozilla.org/toolkit/profile-service;1"]
+                    .getService(Ci.nsIToolkitProfileService);
+
+    this.appProfile = profSvc.createDefaultProfileForApp(this.installDir.leafName,
+                                                         null, null);
   },
 
   /**
@@ -495,6 +514,7 @@ MacNativeApp.prototype = {
       this._createDirectoryStructure();
       this._copyPrebuiltFiles();
       this._createConfigFiles();
+      this._createAppProfile();
     } catch (ex) {
       this._removeInstallation(false);
       throw(ex);
@@ -531,6 +551,17 @@ MacNativeApp.prototype = {
     this.contentsDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
     this.macOSDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
     this.resourcesDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  },
+
+  _createAppProfile: function() {
+    if (!this.appcacheDefined)
+      return;
+
+    let profSvc = Cc["@mozilla.org/toolkit/profile-service;1"]
+                    .getService(Ci.nsIToolkitProfileService);
+
+    this.appProfile = profSvc.createDefaultProfileForApp(this.appProfileDir.leafName,
+                                                         null, null);
   },
 
   _copyPrebuiltFiles: function() {
@@ -695,6 +726,7 @@ LinuxNativeApp.prototype = {
       this._createDirectoryStructure();
       this._copyPrebuiltFiles();
       this._createConfigFiles();
+      this._createAppProfile();
     } catch (ex) {
       this._removeInstallation();
       throw(ex);
@@ -722,6 +754,17 @@ LinuxNativeApp.prototype = {
     let webapprtPre = this.runtimeFolder.clone();
     webapprtPre.append(this.webapprt.leafName);
     webapprtPre.copyTo(this.installDir, this.webapprt.leafName);
+  },
+
+  _createAppProfile: function() {
+    if (!this.appcacheDefined)
+      return;
+
+    let profSvc = Cc["@mozilla.org/toolkit/profile-service;1"]
+                    .getService(Ci.nsIToolkitProfileService);
+
+    return profSvc.createDefaultProfileForApp(this.installDir.leafName,
+                                              null, null);
   },
 
   _createConfigFiles: function() {
