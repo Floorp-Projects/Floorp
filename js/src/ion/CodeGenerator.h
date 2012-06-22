@@ -186,7 +186,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool emitInstanceOf(LInstruction *ins, Register rhs);
     bool visitInstanceOfO(LInstanceOfO *ins);
     bool visitInstanceOfV(LInstanceOfV *ins);
-    bool visitGuardObject(LGuardObject *lir);
 
     bool visitCheckOverRecursed(LCheckOverRecursed *lir);
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);

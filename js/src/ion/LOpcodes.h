@@ -123,7 +123,6 @@
     _(StoreSlotT)                   \
     _(GuardShape)                   \
     _(GuardClass)                   \
-    _(GuardObject)                  \
     _(TypeBarrier)                  \
     _(MonitorTypes)                 \
     _(InitializedLength)            \

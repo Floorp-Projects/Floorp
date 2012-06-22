@@ -2942,14 +2942,6 @@ CodeGenerator::visitBitOpV(LBitOpV *lir)
     return false;
 }
 
-bool
-CodeGenerator::visitGuardObject(LGuardObject *lir)
-{
-    // The input is already a known object from MGuardObject's TypePolicy.
-    // The output is defined to be the input. Nothing to do.
-    return true;
-}
-
 class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator>
 {
     LTypeOfV *ins_;

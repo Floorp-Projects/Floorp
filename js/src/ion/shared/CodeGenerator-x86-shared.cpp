@@ -569,9 +569,9 @@ CodeGeneratorX86Shared::visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool)
 {
     LMulI *ins = ool->ins();
     Register result = ToRegister(ins->output());
-    Register lhsCopy = ToRegister(ins->lhsCopy());
+    Operand lhsCopy = ToOperand(ins->lhsCopy());
     Operand rhs = ToOperand(ins->rhs());
-    JS_ASSERT(lhsCopy != result);
+    JS_ASSERT_IF(lhsCopy.kind() == Operand::REG, lhsCopy.reg() != result.code());
 
     // Result is -0 if lhs or rhs is negative.
     masm.movl(lhsCopy, result);
