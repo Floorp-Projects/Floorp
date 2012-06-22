@@ -584,7 +584,7 @@ stack[anonid=browserStack][responsivemode] {
 }
 
 stack[anonid=browserStack][responsivemode] {
-  -moz-transition-properties: min-width, max-width, min-height, max-height;
+  -moz-transition-property: min-width, max-width, min-height, max-height;
 }
 
 stack[anonid=browserStack][responsivemode][notransition] {
