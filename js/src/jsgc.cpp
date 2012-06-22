@@ -2493,7 +2493,8 @@ MaybeGC(JSContext *cx)
     JSCompartment *comp = cx->compartment;
     if (comp->gcBytes > 8192 &&
         comp->gcBytes >= 3 * (comp->gcTriggerBytes / 4) &&
-        rt->gcIncrementalState == NO_INCREMENTAL)
+        rt->gcIncrementalState == NO_INCREMENTAL &&
+        !rt->gcHelperThread.sweeping())
     {
         PrepareCompartmentForGC(comp);
         GCSlice(rt, GC_NORMAL, gcreason::MAYBEGC);
