@@ -36,7 +36,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIIDBINDEX
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(IDBIndex)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBIndex)
 
   static already_AddRefed<IDBIndex>
   Create(IDBObjectStore* aObjectStore,
@@ -149,12 +149,14 @@ private:
   PRInt64 mId;
   nsString mName;
   KeyPath mKeyPath;
+  JS::Value mCachedKeyPath;
 
   IndexedDBIndexChild* mActorChild;
   IndexedDBIndexParent* mActorParent;
 
   bool mUnique;
   bool mMultiEntry;
+  bool mRooted;
 };
 
 END_INDEXEDDB_NAMESPACE
