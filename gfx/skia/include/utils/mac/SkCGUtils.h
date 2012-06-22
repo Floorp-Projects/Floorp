@@ -44,8 +44,6 @@ static inline CGImageRef SkCreateCGImageRef(const SkBitmap& bm) {
  */
 void SkCGDrawBitmap(CGContextRef, const SkBitmap&, float x, float y);
 
-bool SkPDFDocumentToBitmap(SkStream* stream, SkBitmap* output);
-
 /**
  *  Return a provider that wraps the specified stream. It will become an
  *  owner of the stream, so the caller must still manage its ownership.
