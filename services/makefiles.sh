@@ -5,6 +5,7 @@
 
 add_makefiles "
   services/Makefile
+  services/aitc/Makefile
   services/common/Makefile
   services/crypto/Makefile
   services/crypto/component/Makefile
@@ -15,6 +16,7 @@ add_makefiles "
 
 if [ "$ENABLE_TESTS" ]; then
   add_makefiles "
+    services/aitc/tests/Makefile
     services/common/tests/Makefile
     services/crypto/tests/Makefile
     services/notifications/tests/Makefile
