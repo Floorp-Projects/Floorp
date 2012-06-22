@@ -169,9 +169,6 @@ function BrowserElementParent(frameLoader) {
   defineDOMRequestMethod('getScreenshot', 'get-screenshot');
   defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
   defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
-
-  this._mm.loadFrameScript("chrome://global/content/BrowserElementChild.js",
-                           /* allowDelayedLoad = */ true);
 }
 
 BrowserElementParent.prototype = {
