@@ -450,6 +450,13 @@ class IDLInterface(IDLObjectWithScope):
                                        self.parent.identifier.name),
                                       self.location,
                                       extraLocations=[self.parent.location])
+            elif self.parent.isCallback():
+                raise WebIDLError("Non-callback interface %s inheriting from "
+                                  "callback interface %s" %
+                                  (self.identifier.name,
+                                   self.parent.identifier.name),
+                                  self.location,
+                                  extraLocations=[self.parent.location])
 
         for iface in self.implementedInterfaces:
             iface.finish(scope)
