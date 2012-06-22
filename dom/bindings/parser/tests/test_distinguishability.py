@@ -76,3 +76,57 @@ def WebIDLTest(parser, harness):
                           distinguishable,
                           "Type %s should %sbe distinguishable from type %s" %
                           (type2, "" if distinguishable else "not ", type1))
+
+    parser = parser.reset()
+    parser.parse("""
+      interface Dummy {};
+      interface TestIface {
+        void method(long arg1, TestIface arg2);
+        void method(long arg1, long arg2);
+        void method(long arg1, Dummy arg2);
+        void method(DOMString arg1, DOMString arg2, DOMString arg3);
+      };
+    """)
+    results = parser.finish()
+    harness.check(len(results[1].members), 1,
+                  "Should look like we have one method")
+    harness.check(len(results[1].members[0].signatures()), 4,
+                  "Should have foid signatures")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface Dummy {};
+          interface TestIface {
+            void method(long arg1, TestIface arg2);
+            void method(long arg1, long arg2);
+            void method(any arg1,  Dummy arg2);
+            void method(DOMString arg1, DOMString arg2, DOMString arg3);
+          };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Should throw when args before the distinguishing arg are not "
+               "all the same type")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+          interface Dummy {};
+          interface TestIface {
+            void method(long arg1, TestIface arg2);
+            void method(long arg1, long arg2);
+            void method(any arg1,  DOMString arg2);
+            void method(DOMString arg1, DOMString arg2, DOMString arg3);
+          };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should throw when there is no distinguishing index")
