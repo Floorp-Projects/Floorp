@@ -4,6 +4,14 @@
 
 "use strict";
 
+/* static functions */
+const DEBUG = false;
+
+function debug(aStr) {
+  if (DEBUG)
+    dump("AlarmsManager: " + aStr + "\n");
+}
+
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -17,6 +25,7 @@ const nsIClassInfo             = Ci.nsIClassInfo;
 
 function AlarmsManager()
 {
+  debug("Constructor");
 }
 
 AlarmsManager.prototype = {
@@ -34,19 +43,90 @@ AlarmsManager.prototype = {
                                       flags: nsIClassInfo.DOM_OBJECT }),
 
   add: function add(aDate, aRespectTimezone, aData) {
-    return null;
+    debug("add()");
+
+    let isIgnoreTimezone = true;
+    switch (aRespectTimezone) {
+      case "honorTimezone":
+        isIgnoreTimezone = false;
+        break;
+
+      case "ignoreTimezone":
+        isIgnoreTimezone = true;
+        break;
+
+      default:
+        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        break;
+    }
+
+    let request = this.createRequest();
+    this._cpmm.sendAsyncMessage(
+      "AlarmsManager:Add", 
+      { requestID: this.getRequestId(request), date: aDate, ignoreTimezone: isIgnoreTimezone, data: aData }
+    );
+    return request;
   },
 
   remove: function remove(aId) {
-    return;
+    debug("remove()");
+
+    return this._cpmm.sendSyncMessage(
+      "AlarmsManager:Remove", 
+      { id: aId }
+    );
   },
 
   getAll: function getAll() {
-    return null;
+    debug("getAll()");
+
+    let request = this.createRequest();
+    this._cpmm.sendAsyncMessage(
+      "AlarmsManager:GetAll", 
+      { requestID: this.getRequestId(request) }
+    );
+    return request;
   },
+
+  receiveMessage: function receiveMessage(aMessage) {
+    debug("receiveMessage(): " + aMessage.name);
+
+    let json = aMessage.json;
+    let request = this.getRequest(json.requestID);
+
+    if (!request) {
+      debug("No request stored! " + json.requestID);
+      return;
+    }
+
+    switch (aMessage.name) {
+      case "AlarmsManager:Add:Return:OK":
+        Services.DOMRequest.fireSuccess(request, json.id);
+        break;
+
+      case "AlarmsManager:GetAll:Return:OK":
+        Services.DOMRequest.fireSuccess(request, json.alarms);
+        break;
+
+      case "AlarmsManager:Add:Return:KO":
+        Services.DOMRequest.fireError(request, json.errorMsg);
+        break;
+
+      case "AlarmsManager:GetAll:Return:KO":
+        Services.DOMRequest.fireError(request, json.errorMsg);
+        break;
+
+      default:
+        debug("Wrong message: " + aMessage.name);
+        break;
+    }
+    this.removeRequest(json.requestID);
+   },
 
   // nsIDOMGlobalPropertyInitializer implementation
   init: function init(aWindow) {
+    debug("init()");
+
     // Set navigator.mozAlarms to null.
     if (!Services.prefs.getBoolPref("dom.mozAlarms.enabled"))
       return null;
@@ -63,12 +143,16 @@ AlarmsManager.prototype = {
     if (!this.hasPrivileges)
       return null;
 
+    this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncMessageSender);
+
     // Add the valid messages to be listened.
-    this.initHelper(aWindow, []);
+    this.initHelper(aWindow, ["AlarmsManager:Add:Return:OK", "AlarmsManager:Add:Return:KO", 
+                              "AlarmsManager:GetAll:Return:OK", "AlarmsManager:GetAll:Return:KO"]);
   },
 
   // Called from DOMRequestIpcHelper.
   uninit: function uninit() {
+    debug("uninit()");
   },
 }
 
