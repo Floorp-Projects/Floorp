@@ -46,6 +46,7 @@
            type="arrow"
            orient="vertical"
            level="top"
+           consumeoutsideclicks="true"
            onpopupshown="DownloadsPanel.onPopupShown(event);"
            onpopuphidden="DownloadsPanel.onPopupHidden(event);">
       <!-- The following popup menu should be a child of the panel element,

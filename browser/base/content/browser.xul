@@ -137,6 +137,7 @@
            footertype="promobox"
            orient="vertical"
            ignorekeys="true"
+           consumeoutsideclicks="true"
            hidden="true"
            onpopupshown="StarUI.panelShown(event);"
            aria-labelledby="editBookmarkPanelTitle">
@@ -259,6 +260,7 @@
            type="arrow"
            hidden="true"
            noautofocus="true"
+           consumeoutsideclicks="true"
            onpopupshown="gIdentityHandler.onPopupShown(event);"
            level="top">
       <hbox id="identity-popup-container" align="top">
