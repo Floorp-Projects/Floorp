@@ -815,6 +815,8 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       UpdateTypeMismatchValidityState();
     } else if (aName == nsGkAtoms::max) {
       UpdateRangeOverflowValidityState();
+    } else if (aName == nsGkAtoms::min) {
+      UpdateRangeUnderflowValidityState();
     }
 
     UpdateState(aNotify);
@@ -3800,6 +3802,30 @@ nsHTMLInputElement::IsRangeOverflow() const
   return value > max;
 }
 
+bool
+nsHTMLInputElement::IsRangeUnderflow() const
+{
+  nsAutoString minStr;
+  if (!DoesMinMaxApply() ||
+      !GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr)) {
+    return false;
+  }
+
+  PRInt32 ec;
+  double min = minStr.ToDouble(&ec);
+  if (NS_FAILED(ec)) {
+    return false;
+  }
+
+  double value = GetValueAsDouble();
+  // value can be NaN when value="".
+  if (value != value) {
+    return false;
+  }
+
+  return value < min;
+}
+
 void
 nsHTMLInputElement::UpdateTooLongValidityState()
 {
@@ -3885,6 +3911,12 @@ nsHTMLInputElement::UpdateRangeOverflowValidityState()
 }
 
 void
+nsHTMLInputElement::UpdateRangeUnderflowValidityState()
+{
+  SetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW, IsRangeUnderflow());
+}
+
+void
 nsHTMLInputElement::UpdateAllValidityStates(bool aNotify)
 {
   bool validBefore = IsValid();
@@ -3893,6 +3925,7 @@ nsHTMLInputElement::UpdateAllValidityStates(bool aNotify)
   UpdateTypeMismatchValidityState();
   UpdatePatternMismatchValidityState();
   UpdateRangeOverflowValidityState();
+  UpdateRangeUnderflowValidityState();
 
   if (validBefore != IsValid()) {
     UpdateState(aNotify);
@@ -4016,6 +4049,26 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       const PRUnichar* params[] = { maxStr.get() };
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                  "FormValidationRangeOverflow",
+                                                 params, message);
+      aValidationMessage = message;
+      break;
+    }
+    case VALIDITY_STATE_RANGE_UNDERFLOW:
+    {
+      nsXPIDLString message;
+      nsAutoString minStr;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+
+      // We want to show the double as parsed so we parse it and change minStr.
+      PRInt32 ec;
+      double min = minStr.ToDouble(&ec);
+      NS_ASSERTION(NS_SUCCEEDED(ec), "min must be a number at this point!");
+      minStr.Truncate();
+      minStr.AppendFloat(min);
+
+      const PRUnichar* params[] = { minStr.get() };
+      rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                 "FormValidationRangeUnderflow",
                                                  params, message);
       aValidationMessage = message;
       break;
