@@ -833,9 +833,9 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     if (!mProxyConnectStream)
         HandleAlternateProtocol(responseHead);
 
-    // if we're doing an SSL proxy connect, then we need to check whether or not
-    // the connect was successful.  if so, then we have to reset the transaction
-    // and step-up the socket connection to SSL. finally, we have to wake up the
+    // If we're doing a proxy connect, we need to check whether or not
+    // it was successful.  If so, we have to reset the transaction and step-up
+    // the socket connection if using SSL. Finally, we have to wake up the
     // socket write request.
     if (mProxyConnectStream) {
         NS_ABORT_IF_FALSE(!mUsingSpdyVersion,
@@ -860,7 +860,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         else {
             LOG(("proxy CONNECT failed! ssl=%s\n",
                  mConnInfo->UsingSSL() ? "true" :"false"));
-            mTransaction->SetSSLConnectFailed();
+            mTransaction->SetProxyConnectFailed();
         }
     }
     
@@ -1199,8 +1199,8 @@ nsHttpConnection::OnSocketWritable()
     do {
         mSocketOutCondition = NS_OK;
 
-        // if we're doing an SSL proxy connect, then we need to bypass calling
-        // into the transaction.
+        // If we're doing a proxy connect, then we need to bypass calling into
+        // the transaction.
         //
         // NOTE: this code path can't be shared since the transaction doesn't
         // implement nsIInputStream.  doing so is not worth the added cost of
