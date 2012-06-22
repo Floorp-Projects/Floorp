@@ -1564,11 +1564,11 @@ for (uint32_t i = 0; i < length; ++i) {
         elif descriptor.workers:
             templateBody += "${declName} = &${val}.toObject();"
         else:
-            # External interface.  We always have a holder for these,
-            # because we don't actually know whether we have to addref
-            # when unwrapping or not.  So we just pass an
-            # getter_AddRefs(nsRefPtr) to XPConnect and if we'll need
-            # a release it'll put a non-null pointer in there.
+            # Either external, or new-binding non-castable.  We always have a
+            # holder for these, because we don't actually know whether we have
+            # to addref when unwrapping or not.  So we just pass an
+            # getter_AddRefs(nsRefPtr) to XPConnect and if we'll need a release
+            # it'll put a non-null pointer in there.
             if forceOwningType:
                 # Don't return a holderType in this case; our declName
                 # will just own stuff.
