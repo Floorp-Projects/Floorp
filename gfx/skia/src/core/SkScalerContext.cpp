@@ -341,34 +341,6 @@ SK_ERROR:
     glyph->fMaskFormat = fRec.fMaskFormat;
 }
 
-static bool isLCD(const SkScalerContext::Rec& rec) {
-    return SkMask::kLCD16_Format == rec.fMaskFormat ||
-           SkMask::kLCD32_Format == rec.fMaskFormat;
-}
-
-static uint16_t a8_to_rgb565(unsigned a8) {
-    return SkPackRGB16(a8 >> 3, a8 >> 2, a8 >> 3);
-}
-
-static void copyToLCD16(const SkBitmap& src, const SkMask& dst) {
-    SkASSERT(SkBitmap::kA8_Config == src.config());
-    SkASSERT(SkMask::kLCD16_Format == dst.fFormat);
-
-    const int width = dst.fBounds.width();
-    const int height = dst.fBounds.height();
-    const uint8_t* srcP = src.getAddr8(0, 0);
-    size_t srcRB = src.rowBytes();
-    uint16_t* dstP = (uint16_t*)dst.fImage;
-    size_t dstRB = dst.fRowBytes;
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            dstP[x] = a8_to_rgb565(srcP[x]);
-        }
-        srcP += srcRB;
-        dstP = (uint16_t*)((char*)dstP + dstRB);
-    }
-}
-
 #define SK_FREETYPE_LCD_LERP    160
 
 static int lerp(int start, int end) {
