@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=765590
+-->
+<head>
+  <title>Test for Bug 765590</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    @namespace svg "http://www.w3.org/2000/svg";
+  </style>
+</head>
+<body>
+  <script>
+    var styleElement = document.getElementsByTagName("style")[0]
+    var rule = styleElement.sheet.cssRules[0];
+    is(rule.type, 10, "rule type should be equal 10")
+    is(CSSRule.NAMESPACE_RULE, 10, "NAMESPACE_RULE should be equal to 10")
+  </script>
+</body>

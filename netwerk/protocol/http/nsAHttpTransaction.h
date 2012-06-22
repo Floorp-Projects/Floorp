@@ -105,6 +105,11 @@ public:
     // dynamic_cast<nsHttpPipeline *>(this).. i.e. it can be nsnull for
     // non pipeline implementations of nsAHttpTransaction
     virtual nsHttpPipeline *QueryPipeline() { return nsnull; }
+
+    // equivalent to !!dynamic_cast<NullHttpTransaction *>(this)
+    // A null transaction is expected to return BASE_STREAM_CLOSED on all of
+    // its IO functions all the time.
+    virtual bool IsNullTransaction() { return false; }
     
     // Every transaction is classified into one of the types below. When using
     // HTTP pipelines, only transactions with the same type appear on the same

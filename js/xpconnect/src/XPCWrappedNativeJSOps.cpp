@@ -1297,11 +1297,6 @@ private:
 JSObject*
 XPC_WN_JSOp_ThisObject(JSContext *cx, JSHandleObject obj)
 {
-    // None of the wrappers we could potentially hand out are threadsafe so
-    // just hand out the given object.
-    if (!XPCPerThreadData::IsMainThread(cx))
-        return obj;
-
     return JS_ObjectToOuterObject(cx, obj);
 }
 

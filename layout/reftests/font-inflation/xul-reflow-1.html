@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<title>Testcase, bug 764354</title>
+<style>
+#outer {
+  display: -moz-box;
+  overflow: hidden;
+  -moz-box-orient: vertical;
+  width: 300px;
+  height: 100px;
+  background: yellow; color: black;
+}
+.inner {
+  background: aqua; color: black;
+  text-align: center;
+}
+</style>
+
+<div id="outer">
+  <div class="inner">Text</div>
+  <div class="inner">Text</div>
+</div>

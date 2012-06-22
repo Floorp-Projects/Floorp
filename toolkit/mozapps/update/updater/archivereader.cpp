@@ -312,12 +312,12 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
 
   memset(&strm, 0, sizeof(strm));
   if (BZ2_bzDecompressInit(&strm, 0, 0) != BZ_OK)
-    return UNEXPECTED_ERROR;
+    return UNEXPECTED_BZIP_ERROR;
 
   offset = 0;
   for (;;) {
     if (!item->length) {
-      ret = UNEXPECTED_ERROR;
+      ret = UNEXPECTED_MAR_ERROR;
       break;
     }
 
@@ -335,7 +335,7 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
 
     ret = BZ2_bzDecompress(&strm);
     if (ret != BZ_OK && ret != BZ_STREAM_END) {
-      ret = UNEXPECTED_ERROR;
+      ret = UNEXPECTED_BZIP_ERROR;
       break;
     }
 
