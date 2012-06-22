@@ -20,6 +20,14 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "BindingUtils.h"
+
+// Used to provide information on the OS
+
+#include "nsIXULRuntime.h"
+#include "nsXPCOMCIDInternal.h"
+#include "nsServiceManagerUtils.h"
+#include "nsString.h"
+
 #include "OSFileConstants.h"
 
 /**
@@ -320,6 +328,28 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     return false;
   }
 #endif // defined(XP_WIN)
+  JSObject *objSys;
+  if (!(objSys = GetOrCreateObjectProperty(cx, objConstants, "Sys"))) {
+    return false;
+  }
+
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService(XULRUNTIME_SERVICE_CONTRACTID);
+  if (runtime) {
+    nsCAutoString os;
+    nsresult rv = runtime->GetOS(os);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    JSString* strVersion = JS_NewStringCopyZ(cx, os.get());
+    if (!strVersion) {
+      return false;
+    }
+
+    jsval valVersion = STRING_TO_JSVAL(strVersion);
+    if (!JS_SetProperty(cx, objSys, "Version", &valVersion)) {
+      return false;
+    }
+  }
+
   return true;
 }
 

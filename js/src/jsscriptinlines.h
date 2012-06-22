@@ -24,12 +24,12 @@
 namespace js {
 
 inline
-Bindings::Bindings(JSContext *cx)
+Bindings::Bindings()
     : lastBinding(NULL), nargs(0), nvars(0), hasDup_(false)
 {}
 
 inline void
-Bindings::transfer(JSContext *cx, Bindings *bindings)
+Bindings::transfer(Bindings *bindings)
 {
     JS_ASSERT(!lastBinding);
     JS_ASSERT(!bindings->lastBinding || !bindings->lastBinding->inDictionary());
@@ -38,15 +38,6 @@ Bindings::transfer(JSContext *cx, Bindings *bindings)
 #ifdef DEBUG
     bindings->lastBinding = NULL;
 #endif
-}
-
-inline void
-Bindings::clone(JSContext *cx, Bindings *bindings)
-{
-    JS_ASSERT(!lastBinding);
-    JS_ASSERT(!bindings->lastBinding || !bindings->lastBinding->inDictionary());
-
-    *this = *bindings;
 }
 
 Shape *

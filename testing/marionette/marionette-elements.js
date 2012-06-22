@@ -27,7 +27,7 @@ let XPATH = "xpath";
 
 function ElementException(msg, num, stack) {
   this.message = msg;
-  this.num = num;
+  this.code = num;
   this.stack = stack;
 }
 

@@ -441,7 +441,9 @@ nsCSSProps::OtherNameFor(nsCSSProperty aProperty)
 
 const PRInt32 nsCSSProps::kAnimationDirectionKTable[] = {
   eCSSKeyword_normal, NS_STYLE_ANIMATION_DIRECTION_NORMAL,
+  eCSSKeyword_reverse, NS_STYLE_ANIMATION_DIRECTION_REVERSE,
   eCSSKeyword_alternate, NS_STYLE_ANIMATION_DIRECTION_ALTERNATE,
+  eCSSKeyword_alternate_reverse, NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE,
   eCSSKeyword_UNKNOWN,-1
 };
 

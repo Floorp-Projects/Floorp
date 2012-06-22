@@ -90,21 +90,14 @@ class Bindings
 
     inline Shape *initialShape(JSContext *cx) const;
   public:
-    inline Bindings(JSContext *cx);
+    inline Bindings();
 
     /*
      * Transfers ownership of bindings data from bindings into this fresh
      * Bindings instance. Once such a transfer occurs, the old bindings must
      * not be used again.
      */
-    inline void transfer(JSContext *cx, Bindings *bindings);
-
-    /*
-     * Clones bindings data from bindings, which must be immutable, into this
-     * fresh Bindings instance. A Bindings instance may be cloned multiple
-     * times.
-     */
-    inline void clone(JSContext *cx, Bindings *bindings);
+    inline void transfer(Bindings *bindings);
 
     uint16_t numArgs() const { return nargs; }
     uint16_t numVars() const { return nvars; }
@@ -175,7 +168,8 @@ class Bindings
     }
     bool addDestructuring(JSContext *cx, uint16_t *slotp) {
         *slotp = nargs;
-        return add(cx, RootedAtom(cx), ARGUMENT);
+        Rooted<JSAtom*> atom(cx, NULL);
+        return add(cx, atom, ARGUMENT);
     }
 
     void noteDup() { hasDup_ = true; }
@@ -206,22 +200,14 @@ class Bindings
     bool getLocalNameArray(JSContext *cx, BindingNames *namesp);
 
     /*
-     * Protect stored bindings from mutation.  Subsequent attempts to add
-     * bindings will copy the existing bindings before adding to them, allowing
-     * the original bindings to be safely shared.
-     */
-    void makeImmutable();
-
-    /*
-     * These methods provide direct access to the shape path normally
-     * encapsulated by js::Bindings. These methods may be used to make a
+     * This method provides direct access to the shape path normally
+     * encapsulated by js::Bindings. This method may be used to make a
      * Shape::Range for iterating over the relevant shapes from youngest to
      * oldest (i.e., last or right-most to first or left-most in source order).
      *
      * Sometimes iteration order must be from oldest to youngest, however. For
      * such cases, use js::Bindings::getLocalNameArray.
      */
-    const js::Shape *lastArgument() const;
     const js::Shape *lastVariable() const;
 
     void trace(JSTracer *trc);

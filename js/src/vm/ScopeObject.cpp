@@ -119,7 +119,8 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
      */
     if (&enclosing->global() != obj->getParent()) {
         JS_ASSERT(obj->getParent() == NULL);
-        if (!JSObject::setParent(cx, obj, RootedObject(cx, &enclosing->global())))
+        Rooted<GlobalObject*> global(cx, &enclosing->global());
+        if (!JSObject::setParent(cx, obj, global))
             return NULL;
     }
 
@@ -158,7 +159,8 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
     }
 
     RootedScript script(cx, fp->script());
-    CallObject *callobj = create(cx, script, scopeChain, RootedFunction(cx, &fp->callee()));
+    Rooted<JSFunction*> callee(cx, &fp->callee());
+    CallObject *callobj = create(cx, script, scopeChain, callee);
     if (!callobj)
         return NULL;
 
@@ -212,7 +214,8 @@ CallObject::createForStrictEval(JSContext *cx, StackFrame *fp)
     JS_ASSERT(cx->fp() == fp);
     JS_ASSERT(cx->regs().pc == fp->script()->code);
 
-    return create(cx, fp->script(), fp->scopeChain(), RootedFunction(cx));
+    Rooted<JSFunction*> callee(cx, NULL);
+    return create(cx, fp->script(), fp->scopeChain(), callee);
 }
 
 JSBool
@@ -303,8 +306,8 @@ DeclEnvObject::create(JSContext *cx, StackFrame *fp)
         return NULL;
 
 
-    if (!DefineNativeProperty(cx, obj, RootedId(cx, AtomToId(fp->fun()->atom)),
-                              ObjectValue(fp->callee()), NULL, NULL,
+    Rooted<jsid> id(cx, AtomToId(fp->fun()->atom));
+    if (!DefineNativeProperty(cx, obj, id, ObjectValue(fp->callee()), NULL, NULL,
                               JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY,
                               0, 0)) {
         return NULL;
@@ -354,7 +357,8 @@ with_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp
 static JSBool
 with_LookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp, JSProperty **propp)
 {
-    return with_LookupGeneric(cx, obj, RootedId(cx, NameToId(name)), objp, propp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return with_LookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
@@ -370,7 +374,8 @@ with_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **o
 static JSBool
 with_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp, JSProperty **propp)
 {
-    return with_LookupGeneric(cx, obj, RootedId(cx, SPECIALID_TO_JSID(sid)), objp, propp);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return with_LookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
@@ -382,7 +387,8 @@ with_GetGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId
 static JSBool
 with_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandlePropertyName name, Value *vp)
 {
-    return with_GetGeneric(cx, obj, receiver, RootedId(cx, NameToId(name)), vp);
+    Rooted<jsid> id(cx, NameToId(name));
+    return with_GetGeneric(cx, obj, receiver, id, vp);
 }
 
 static JSBool
@@ -397,7 +403,8 @@ with_GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t
 static JSBool
 with_GetSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid, Value *vp)
 {
-    return with_GetGeneric(cx, obj, receiver, RootedId(cx, SPECIALID_TO_JSID(sid)), vp);
+    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
+    return with_GetGeneric(cx, obj, receiver, id, vp);
 }
 
 static JSBool
@@ -587,7 +594,8 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Stac
     /* Set the parent if necessary, as for call objects. */
     if (&fp->global() != obj->getParent()) {
         JS_ASSERT(obj->getParent() == NULL);
-        if (!JSObject::setParent(cx, obj, RootedObject(cx, &fp->global())))
+        Rooted<GlobalObject*> global(cx, &fp->global());
+        if (!JSObject::setParent(cx, obj, global))
             return NULL;
     }
 
@@ -1325,18 +1333,21 @@ class DebugScopeProxy : public BaseProxyHandler
         if (handleUnaliasedAccess(cx, scope, id, GET, vp))
             return true;
 
-        return scope.getGeneric(cx, RootedObject(cx, &scope), RootedId(cx, id), vp);
+        Rooted<ScopeObject*> scopeObj(cx, &scope);
+        Rooted<jsid> idRoot(cx, id);
+        return scope.getGeneric(cx, scopeObj, idRoot, vp);
     }
 
-    bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, bool strict,
+    bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id_, bool strict,
                      Value *vp) MOZ_OVERRIDE
     {
         ScopeObject &scope = proxy->asDebugScope().scope();
 
-        if (handleUnaliasedAccess(cx, scope, id, SET, vp))
+        if (handleUnaliasedAccess(cx, scope, id_, SET, vp))
             return true;
 
-        return scope.setGeneric(cx, RootedId(cx, id), vp, strict);
+        Rooted<jsid> id(cx, id_);
+        return scope.setGeneric(cx, id, vp, strict);
     }
 
     bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc) MOZ_OVERRIDE

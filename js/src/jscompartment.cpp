@@ -167,7 +167,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     /* Unwrap incoming objects. */
     if (vp->isObject()) {
-        JSObject *obj = &vp->toObject();
+        Rooted<JSObject*> obj(cx, &vp->toObject());
 
         if (obj->compartment() == this)
             return WrapForSameCompartment(cx, obj, vp);
@@ -194,7 +194,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
 #ifdef DEBUG
         {
-            JSObject *outer = GetOuterObject(cx, RootedObject(cx, obj));
+            JSObject *outer = GetOuterObject(cx, obj);
             JS_ASSERT(outer && outer == obj);
         }
 #endif

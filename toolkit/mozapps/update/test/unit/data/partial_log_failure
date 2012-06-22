@@ -182,5 +182,5 @@ FINISH REMOVEFILE a/b/3/3text1
 backup_restore: backup file doesn't exist: a/b/3/3text1.moz-backup
 FINISH REMOVEFILE a/b/3/3text0
 backup_restore: backup file doesn't exist: a/b/3/3text0.moz-backup
-failed: 8
+failed: 42
 calling QuitProgressUI
