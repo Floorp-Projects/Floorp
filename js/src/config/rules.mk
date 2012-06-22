@@ -286,7 +286,7 @@ endif
 
 ifndef MOZ_AUTO_DEPS
 ifneq (,$(OBJS)$(XPIDLSRCS)$(SIMPLE_PROGRAMS))
-MDDEPFILES		= $(addprefix $(MDDEPDIR)/,$(OBJS:.$(OBJ_SUFFIX)=.pp))
+MDDEPFILES		= $(addprefix $(MDDEPDIR)/,$(OBJS:=.pp))
 ifndef NO_GEN_XPT
 MDDEPFILES		+= $(addprefix $(MDDEPDIR)/,$(XPIDLSRCS:.idl=.h.pp) $(XPIDLSRCS:.idl=.xpt.pp))
 endif
