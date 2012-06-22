@@ -351,6 +351,9 @@ class IDLExternalInterface(IDLObjectWithIdentifier):
     def isInterface(self):
         return True
 
+    def isConsequential(self):
+        return False
+
     def addExtendedAttributes(self, attrs):
         assert len(attrs) == 0
 
@@ -368,6 +371,7 @@ class IDLInterface(IDLObjectWithScope):
         self._finished = False
         self.members = list(members) # clone the list
         self.implementedInterfaces = set()
+        self._consequential = False
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -459,6 +463,8 @@ class IDLInterface(IDLObjectWithScope):
         for iface in sorted(self.getConsequentialInterfaces(),
                             cmp=cmp,
                             key=lambda x: x.identifier.name):
+            # Flag the interface as being someone's consequential interface
+            iface.setConsequential()
             additionalMembers = iface.originalMembers;
             for additionalMember in additionalMembers:
                 for member in self.members:
@@ -506,6 +512,12 @@ class IDLInterface(IDLObjectWithScope):
 
     def isExternal(self):
         return False
+
+    def setConsequential(self):
+        self._consequential = True
+
+    def isConsequential(self):
+        return self._consequential
 
     def setCallback(self, value):
         self._callback = value
