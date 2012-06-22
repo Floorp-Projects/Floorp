@@ -746,6 +746,7 @@ JSRuntime::JSRuntime()
     gcZealFrequency(0),
     gcNextScheduled(0),
     gcDeterministicOnly(false),
+    gcIncrementalLimit(0),
 #endif
     gcCallback(NULL),
     gcSliceCallback(NULL),
@@ -6671,7 +6672,10 @@ JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
                    "  4: Verify write barriers between instructions\n"
                    "  5: Verify write barriers between paints\n"
                    "  6: Verify stack rooting (ignoring XML and Reflect)\n"
-                   "  7: Verify stack rooting (all roots)\n");
+                   "  7: Verify stack rooting (all roots)\n"
+                   "  8: Incremental GC in two slices: 1) mark roots 2) finish collection\n"
+                   "  9: Incremental GC in two slices: 1) mark all 2) new marking and finish\n"
+                   " 10: Incremental GC in multiple slices\n");
         }
         const char *p = strchr(env, ',');
         zeal = atoi(env);
