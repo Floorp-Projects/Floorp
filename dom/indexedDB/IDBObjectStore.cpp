@@ -1310,6 +1310,8 @@ IDBObjectStore::ConvertFileIdsToArray(const nsAString& aFileIds,
 IDBObjectStore::IDBObjectStore()
 : mId(LL_MININT),
   mKeyPath(0),
+  mCachedKeyPath(JSVAL_VOID),
+  mRooted(false),
   mAutoIncrement(false),
   mActorChild(nsnull),
   mActorParent(nsnull)
@@ -1325,6 +1327,10 @@ IDBObjectStore::~IDBObjectStore()
     NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
     mActorChild->Send__delete__(mActorChild);
     NS_ASSERTION(!mActorChild, "Should have cleared in Send__delete__!");
+  }
+
+  if (mRooted) {
+    NS_DROP_JS_OBJECTS(this, IDBObjectStore);
   }
 }
 
@@ -1750,7 +1756,12 @@ IDBObjectStore::IndexInternal(const nsAString& aName,
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBObjectStore)
 
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBObjectStore)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCachedKeyPath)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBObjectStore)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
                                                        nsIDOMEventTarget)
 
@@ -1764,6 +1775,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBObjectStore)
   // Don't unlink mTransaction!
 
   tmp->mCreatedIndexes.Clear();
+
+  tmp->mCachedKeyPath = JSVAL_VOID;
+
+  if (tmp->mRooted) {
+    NS_DROP_JS_OBJECTS(tmp, IDBObjectStore);
+    tmp->mRooted = false;
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBObjectStore)
@@ -1792,7 +1810,21 @@ IDBObjectStore::GetKeyPath(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  return GetKeyPath().ToJSVal(aCx, aVal);
+  if (!JSVAL_IS_VOID(mCachedKeyPath)) {
+    *aVal = mCachedKeyPath;
+    return NS_OK;
+  }
+
+  nsresult rv = GetKeyPath().ToJSVal(aCx, &mCachedKeyPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (JSVAL_IS_GCTHING(mCachedKeyPath)) {
+    NS_HOLD_JS_OBJECTS(this, IDBObjectStore);
+    mRooted = true;
+  }
+
+  *aVal = mCachedKeyPath;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

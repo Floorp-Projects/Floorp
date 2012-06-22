@@ -11,6 +11,7 @@
 #include "nsIIDBKeyRange.h"
 #include "nsIJSContextStack.h"
 
+#include "nsContentUtils.h"
 #include "nsDOMClassInfoID.h"
 #include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
@@ -396,8 +397,10 @@ IDBIndex::IDBIndex()
   mActorChild(nsnull),
   mActorParent(nsnull),
   mKeyPath(0),
+  mCachedKeyPath(JSVAL_VOID),
   mUnique(false),
-  mMultiEntry(false)
+  mMultiEntry(false),
+  mRooted(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -406,6 +409,11 @@ IDBIndex::~IDBIndex()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mActorParent, "Actor parent owns us, how can we be dying?!");
+
+  if (mRooted) {
+    NS_DROP_JS_OBJECTS(this, IDBIndex);
+  }
+
   if (mActorChild) {
     NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
     mActorChild->Send__delete__(mActorChild);
@@ -650,12 +658,24 @@ IDBIndex::OpenCursorFromChildProcess(
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBIndex)
 
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBIndex)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCachedKeyPath)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBIndex)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mObjectStore)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBIndex)
   // Don't unlink mObjectStore!
+
+  tmp->mCachedKeyPath = JSVAL_VOID;
+
+  if (tmp->mRooted) {
+    NS_DROP_JS_OBJECTS(tmp, IDBIndex);
+    tmp->mRooted = false;
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBIndex)
@@ -692,7 +712,21 @@ IDBIndex::GetKeyPath(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  return GetKeyPath().ToJSVal(aCx, aVal);
+  if (!JSVAL_IS_VOID(mCachedKeyPath)) {
+    *aVal = mCachedKeyPath;
+    return NS_OK;
+  }
+
+  nsresult rv = GetKeyPath().ToJSVal(aCx, &mCachedKeyPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (JSVAL_IS_GCTHING(mCachedKeyPath)) {
+    NS_HOLD_JS_OBJECTS(this, IDBIndex);
+    mRooted = true;
+  }
+
+  *aVal = mCachedKeyPath;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
