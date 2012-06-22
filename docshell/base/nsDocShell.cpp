@@ -8810,9 +8810,7 @@ nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument)
         inheritedFromCurrent = true;
     }
 
-    // Browser frames don't inherit their principal from their parent.  This
-    // makes them more like top-level windows.
-    if (!document && !mIsBrowserFrame) {
+    if (!document) {
         nsCOMPtr<nsIDocShellTreeItem> parentItem;
         GetSameTypeParent(getter_AddRefs(parentItem));
         if (parentItem) {
