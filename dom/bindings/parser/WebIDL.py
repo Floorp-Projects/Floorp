@@ -442,14 +442,6 @@ class IDLInterface(IDLObjectWithScope):
                                        self.parent.identifier.name),
                                       self.location,
                                       extraLocations=[self.parent.location])
-                if len(self.parent.getConsequentialInterfaces()) != 0:
-                    raise WebIDLError("Callback interface %s inheriting from "
-                                      "interface %s which has consequential "
-                                      "interfaces" %
-                                      (self.identifier.name,
-                                       self.parent.identifier.name),
-                                      self.location,
-                                      extraLocations=[self.parent.location])
             elif self.parent.isCallback():
                 raise WebIDLError("Non-callback interface %s inheriting from "
                                   "callback interface %s" %
@@ -467,6 +459,13 @@ class IDLInterface(IDLObjectWithScope):
                               "implemented interface" % self.identifier.name,
                               self.location,
                               extraLocations=[cycleInGraph.location])
+
+        if self.isCallback():
+            # "implements" should have made sure we have no
+            # consequential interfaces.
+            assert len(self.getConsequentialInterfaces()) == 0
+            # And that we're not consequential.
+            assert not self.isConsequential()
 
         # Now resolve() and finish() our members before importing the
         # ones from our implemented interfaces.
@@ -2107,6 +2106,25 @@ class IDLImplementsStatement(IDLObject):
         assert(isinstance(self.implementee, IDLIdentifierPlaceholder))
         implementor = self.implementor.finish(scope)
         implementee = self.implementee.finish(scope)
+        # NOTE: we depend on not setting self.implementor and
+        # self.implementor here to keep track of the original
+        # locations.
+        if not isinstance(implementor, IDLInterface):
+            raise WebIDLError("Left-hand side of 'implements' is not an "
+                              "interface",
+                              self.implementor.location)
+        if implementor.isCallback():
+            raise WebIDLError("Left-hand side of 'implements' is a callback "
+                              "interface",
+                              self.implementor.location)
+        if not isinstance(implementee, IDLInterface):
+            raise WebIDLError("Right-hand side of 'implements' is not an "
+                              "interface",
+                              self.implementee.location)
+        if implementee.isCallback():
+            raise WebIDLError("Right-hand side of 'implements' is a callback "
+                              "interface",
+                              self.implementee.location)
         implementor.addImplementedInterface(implementee)
 
     def validate(self):
