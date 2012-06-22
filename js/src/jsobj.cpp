@@ -2815,8 +2815,10 @@ NewObject(JSContext *cx, Class *clasp, types::TypeObject *type_, JSObject *paren
         return NULL;
 
     JSObject *obj = JSObject::create(cx, kind, shape, type, slots);
-    if (!obj)
+    if (!obj) {
+        cx->free_(slots);
         return NULL;
+    }
 
     /*
      * This will cancel an already-running incremental GC from doing any more
