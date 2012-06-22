@@ -199,10 +199,8 @@ CodeGeneratorX86::visitDouble(LDouble *ins)
     } dpun;
     dpun.d = v.toDouble();
 
-    if (dpun.u == 0) {
-        masm.xorpd(ToFloatRegister(out), ToFloatRegister(out));
+    if (masm.maybeInlineDouble(dpun.u, ToFloatRegister(out)))
         return true;
-    }
 
     DeferredDouble *d = new DeferredDouble(cindex->index());
     if (!deferredDoubles_.append(d))
