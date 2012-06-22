@@ -42,7 +42,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIIDBOBJECTSTORE
 
-  NS_DECL_CYCLE_COLLECTION_CLASS(IDBObjectStore)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBObjectStore)
 
   static already_AddRefed<IDBObjectStore>
   Create(IDBTransaction* aTransaction,
@@ -238,6 +238,8 @@ private:
   PRInt64 mId;
   nsString mName;
   KeyPath mKeyPath;
+  JS::Value mCachedKeyPath;
+  bool mRooted;
   bool mAutoIncrement;
   nsCOMPtr<nsIAtom> mDatabaseId;
   nsRefPtr<ObjectStoreInfo> mInfo;
