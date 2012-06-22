@@ -697,8 +697,6 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     masm.bind(&rejoin);
 
-    masm.checkStackAlignment();
-
     // Finally call the function in objreg.
     masm.callIon(objreg);
     if (!markSafepoint(call))
