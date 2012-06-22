@@ -52,3 +52,124 @@ def WebIDLTest(parser, harness):
                   "Member has the right QName")
     harness.check(derived.members[1].identifier.QName(), "::QNameDerived::bar",
                   "Member has the right QName")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A : B {};
+            interface B : A {};
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow cycles in interface inheritance chains")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A : C {};
+            interface C : B {};
+            interface B : A {};
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow indirect cycles in interface inheritance chains")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A {};
+            interface B {};
+            A implements B;
+            B implements A;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow cycles via implements")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A {};
+            interface C {};
+            interface B {};
+            A implements C;
+            C implements B;
+            B implements A;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow indirect cycles via implements")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A : B {};
+            interface B {};
+            B implements A;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow inheriting from an interface that implements us")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A : B {};
+            interface B {};
+            interface C {};
+            B implements C;
+            C implements A;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow inheriting from an interface that indirectly implements us")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A : B {};
+            interface B : C {};
+            interface C {};
+            C implements A;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow indirectly inheriting from an interface that implements us")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A : B {};
+            interface B : C {};
+            interface C {};
+            interface D {};
+            C implements D;
+            D implements A;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow indirectly inheriting from an interface that indirectly implements us")

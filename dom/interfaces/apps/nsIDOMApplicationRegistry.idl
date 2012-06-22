@@ -9,15 +9,34 @@
 interface nsIDOMDOMRequest;
 interface nsIArray;
 
-[scriptable, uuid(b70b84f1-7ac9-4a92-bc32-8b6a7eb7879e)]
+[scriptable, uuid(9583b825-46b1-4e8f-bb48-9fed660a95e6)]
 interface mozIDOMApplication  : nsISupports
 {
   readonly attribute jsval manifest;
   readonly attribute DOMString manifestURL;
-  readonly attribute nsIArray receipts; /* an array of strings */
+  readonly attribute jsval receipts; /* an array of strings */
   readonly attribute DOMString origin;
   readonly attribute DOMString installOrigin;
-  readonly attribute unsigned long installTime;
+  readonly attribute unsigned long long installTime;
+
+  /* 
+   * The current progress when downloading an offline cache.
+   */
+  readonly attribute double progress;
+
+  /*
+   * The application status :
+   * "installed"   : The app is in the registry, but we have no offline cache.
+   * "downlading"  : We are downloading the offline cache.
+   * "cached"      : We are done with the offline cache download.
+   * "cache-error" : An error occured while downloading the offline-cache.
+   */
+  readonly attribute DOMString status;
+
+  /*
+   * fires a nsIDOMApplicationEvent when a change in appcache download or status happens
+   */
+  attribute nsIDOMEventListener onprogress;
 
   /* startPoint will be used when several launch_path exists for an app */
   nsIDOMDOMRequest launch([optional] in DOMString startPoint);
