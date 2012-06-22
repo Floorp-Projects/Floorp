@@ -1065,12 +1065,14 @@ IonCacheName::attach(JSContext *cx, HandleObject scopeChain, HandleObject holder
         exitOffset.fixup(&masm);
 
     CodeLocationJump rejoinJump(code, rejoinOffset);
-    CodeLocationJump exitJump(code, exitOffset);
     CodeLocationJump lastJump_ = lastJump();
     PatchJump(lastJump_, CodeLocationLabel(code));
     PatchJump(rejoinJump, rejoinLabel());
-    PatchJump(exitJump, cacheLabel());
-    updateLastJump(exitJump);
+    if (failures.bound()) {
+        CodeLocationJump exitJump(code, exitOffset);
+        PatchJump(exitJump, cacheLabel());
+        updateLastJump(exitJump);
+    }
 
     IonSpew(IonSpew_InlineCaches, "Generated NAME stub at %p", code->raw());
     return true;
