@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Non-Permitted Application for Alarm API</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
+  SpecialPowers.removePermission("alarms", document);
+
+  // mozAlarms is intalled on all platforms except Android for the moment.
+  if (navigator.appVersion.indexOf("Android") != -1) {
+    ok(!('mozAlarms' in navigator), "navigator.mozAlarms should not exist");
+  } else {
+    ok('mozAlarms' in navigator, "navigator.mozAlarms should exist");
+    is(navigator.mozAlarms, null, "navigator.mozAlarms should return null");
+  }
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>
