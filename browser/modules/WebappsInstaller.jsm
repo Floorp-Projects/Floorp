@@ -129,8 +129,8 @@ function NativeApp(aData) {
  *
  * The Windows installation process will generate the following files:
  *
- * ${FolderName} = app-origin;protocol;port
- *                 e.g.: subdomain.example.com;http;-1
+ * ${FolderName} = protocol;app-origin[;port]
+ *                 e.g.: subdomain.example.com;http;85
  *
  * %APPDATA%/${FolderName}
  *   - webapp.ini
@@ -196,8 +196,8 @@ WinNativeApp.prototype = {
     }
 
     // The ${InstallDir} format is as follows:
-    //  host of the app origin + ";" +
     //  protocol
+    //  + ";" + host of the app origin
     //  + ";" + port (only if port is not default)
     this.installDir = Services.dirsvc.get("AppData", Ci.nsIFile);
     let installDirLeaf = this.launchURI.scheme
