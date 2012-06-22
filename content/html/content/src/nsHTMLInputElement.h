@@ -216,10 +216,12 @@ public:
   bool     IsValueMissing() const;
   bool     HasTypeMismatch() const;
   bool     HasPatternMismatch() const;
+  bool     IsRangeOverflow() const;
   void     UpdateTooLongValidityState();
   void     UpdateValueMissingValidityState();
   void     UpdateTypeMismatchValidityState();
   void     UpdatePatternMismatchValidityState();
+  void     UpdateRangeOverflowValidityState();
   void     UpdateAllValidityStates(bool aNotify);
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
@@ -464,6 +466,11 @@ protected:
   bool DoesPatternApply() const;
 
   /**
+   * Returns if the min and max attributes apply for the current type.
+   */
+  bool DoesMinMaxApply() const;
+
+  /**
    * Returns if the maxlength attribute applies for the current type.
    */
   bool MaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }
@@ -532,6 +539,14 @@ protected:
    * @return the radio group container if the element has one, null otherwise.
    */
   nsIRadioGroupContainer* GetRadioGroupContainer() const;
+
+  /**
+   * Returns the input element's value as a double-precision float.
+   * Returns NaN if the current element's value is not a floating point number.
+   *
+   * @return the input element's value as a double-precision float.
+   */
+  double GetValueAsDouble() const;
 
   nsCOMPtr<nsIControllers> mControllers;
 
