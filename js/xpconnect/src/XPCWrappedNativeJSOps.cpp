@@ -656,7 +656,7 @@ MarkWrappedNative(JSTracer *trc, JSObject *obj)
         if (wrapper->IsValid())
             wrapper->TraceInside(trc);
     } else if (obj2) {
-        TraceInsideSlimWrapper(obj2);
+        TraceInsideSlimWrapper(trc, obj2);
     }
 }
 
