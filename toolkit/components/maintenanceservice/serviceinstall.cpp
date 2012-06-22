@@ -161,6 +161,61 @@ UpdateServiceDescription(SC_HANDLE serviceHandle)
 }
 
 /**
+ * Determines if the MozillaMaintenance service path needs to be updated
+ * and fixes it if it is wrong.
+ *
+ * @param service            A handle to the service to fix.
+ * @param currentServicePath The current (possibly wrong) path that is used.
+ * @param wasFixNeeded       Out parameter set to TRUE if a fix was needed.
+ * @return TRUE if the service path is now correct.
+*/
+BOOL
+FixServicePath(SC_HANDLE service,
+               LPCWSTR currentServicePath,
+               BOOL &servicePathWasWrong)
+{
+  // When we originally upgraded the MozillaMaintenance service we
+  // would uninstall the service on each upgrade.  This had an
+  // intermittent error which could cause the service to use the file
+  // maintenanceservice_tmp.exe as the install path.  Only a small number
+  // of Nightly users would be affected by this, but we check for this
+  // state here and fix the user if they are affected.
+  bool doesServiceHaveCorrectPath =
+    !wcsstr(currentServicePath, L"maintenanceservice_tmp.exe");
+  if (doesServiceHaveCorrectPath) {
+    LOG(("The MozillaMaintenance service path is correct.\n"));
+    servicePathWasWrong = FALSE;
+    return TRUE;
+  }
+  LOG(("The MozillaMaintenance path is NOT correct.\n"));
+  servicePathWasWrong = TRUE;
+
+  WCHAR fixedPath[MAX_PATH + 1] = { L'\0' };
+  wcsncpy(fixedPath, currentServicePath, MAX_PATH);
+  PathUnquoteSpacesW(fixedPath);
+  if (!PathRemoveFileSpecW(fixedPath)) {
+    LOG(("Couldn't remove file spec. (%d)\n", GetLastError()));
+    return FALSE;
+  }
+  if (!PathAppendSafe(fixedPath, L"maintenanceservice.exe")) {
+    LOG(("Couldn't append file spec. (%d)\n", GetLastError()));
+    return FALSE;
+  }
+  PathQuoteSpacesW(fixedPath);
+
+
+  if (!ChangeServiceConfigW(service, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE,
+                            SERVICE_NO_CHANGE, fixedPath, NULL, NULL, NULL,
+                            NULL, NULL, NULL)) {
+    LOG(("Could not fix service path. (%d)\n", GetLastError()));
+    return FALSE;
+  }
+
+  LOG(("Fixed service path to: %ls.\n", fixedPath));
+  return TRUE;
+}
+
+/**
  * Installs or upgrades the SVC_NAME service.
  * If an existing service is already installed, we replace it with the
  * currently running process.
@@ -233,6 +288,30 @@ SvcInstall(SvcInstallAction action)
     QUERY_SERVICE_CONFIGW &serviceConfig = 
       *reinterpret_cast<QUERY_SERVICE_CONFIGW*>(serviceConfigBuffer.get());
 
+    // Check if we need to fix the service path
+    BOOL servicePathWasWrong;
+    static BOOL alreadyCheckedFixServicePath = FALSE;
+    if (!alreadyCheckedFixServicePath) {
+      if (!FixServicePath(schService, serviceConfig.lpBinaryPathName,
+                          servicePathWasWrong)) {
+        LOG(("Could not fix service path. This should never happen. (%d)\n",
+              GetLastError()));
+        // True is returned because the service is pointing to
+        // maintenanceservice_tmp.exe so it actually was upgraded to the
+        // newest installed service.
+        return TRUE;
+      } else if (servicePathWasWrong) {
+        // Now that the path is fixed we should re-attempt the install.
+        // This current process' image path is maintenanceservice_tmp.exe.
+        // The service used to point to maintenanceservice_tmp.exe.
+        // The service was just fixed to point to maintenanceservice.exe.
+        // Re-attempting an install from scratch will work as normal.
+        alreadyCheckedFixServicePath = TRUE;
+        LOG(("Restarting install action: %d\n", action));
+        return SvcInstall(action);
+      }
+    }
+
     // Ensure the service path is not quoted. We own this memory and know it to
     // be large enough for the quoted path, so it is large enough for the
     // unquoted path.  This function cannot fail.
@@ -275,7 +354,7 @@ SvcInstall(SvcInstallAction action)
 
       if (!wcscmp(newServiceBinaryPath, serviceConfig.lpBinaryPathName)) {
         LOG(("File is already in the correct location, no action needed for "
-             "upgrade.\n"));
+             "upgrade.  The path is: \"%ls\"\n", newServiceBinaryPath));
         return TRUE;
       }
 
