@@ -235,7 +235,8 @@ nsSVGFilterProperty::GetFilterFrame()
 static void
 InvalidateAllContinuations(nsIFrame* aFrame)
 {
-  for (nsIFrame* f = aFrame; f; f = f->GetNextContinuation()) {
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
     f->InvalidateOverflowRect();
   }
 }
