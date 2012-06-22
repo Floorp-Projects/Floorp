@@ -25,6 +25,10 @@ EXTRA_COMPONENTS =       \
   AlarmsManager.manifest \
   $(NULL)
 
+EXTRA_JS_MODULES = \
+  AlarmDB.jsm      \
+  $(NULL)
+
 XPIDLSRCS =               \
   nsIDOMAlarmsManager.idl \
   nsIAlarmHalService.idl  \
