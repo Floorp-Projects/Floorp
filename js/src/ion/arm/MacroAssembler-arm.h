@@ -799,11 +799,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadValue(Operand dest, ValueOperand val) {
         loadValue(dest.toAddress(), val);
     }
-    void loadValue(Register base, Register index, ValueOperand val);
+    void loadValue(Register base, Register index, ValueOperand val, Imm32 of);
     void loadValue(const BaseIndex &addr, ValueOperand val) {
-        // Harder cases not handled yet.
-        JS_ASSERT(addr.offset == 0);
-        loadValue(addr.base, addr.index, val);
+        loadValue(addr.base, addr.index, val, Imm32(addr.offset));
     }
     void tagValue(JSValueType type, Register payload, ValueOperand dest);
 
