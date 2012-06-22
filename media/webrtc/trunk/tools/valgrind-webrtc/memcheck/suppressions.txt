@@ -1,0 +1,30 @@
+# There are four kinds of suppressions in this file.
+# 1. third party stuff we have no control over
+#
+# 2. intentional unit test errors, or stuff that is somehow a false positive
+# in our own code, or stuff that is so trivial it's not worth fixing
+#
+# 3. Suppressions for real WebRTC bugs that are not yet fixed.
+# These should all be in WebRTC's bug tracking system.
+# Periodically we should sweep this file and the bug tracker clean by
+# running overnight and removing outdated bugs/suppressions.
+#
+# 4. issues that happen only on Google workstations.
+#-----------------------------------------------------------------------
+
+
+
+# 1. third party stuff we have no control over
+
+#-----------------------------------------------------------------------
+# 2. intentional unit test errors, or stuff that is somehow a false positive
+# in our own code, or stuff that is so trivial it's not worth fixing
+
+#-----------------------------------------------------------------------
+# 3. Suppressions for real chromium bugs that are not yet fixed.
+# These should all be in WebRTC's bug tracking system.
+
+
+#-----------------------------------------------------------------------
+# 4. These only occur on our Google workstations
+

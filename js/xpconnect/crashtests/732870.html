@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+
+function boom()
+{
+  var frameDoc = document.getElementById("f").contentDocument;
+  var elem = frameDoc.documentElement;
+  elem.dataset;
+  document.adoptNode(elem);
+  frameDoc.write("0");
+  frameDoc.close();
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<iframe id="f" src="data:text/html,1"></iframe>
+</body>
+</html>

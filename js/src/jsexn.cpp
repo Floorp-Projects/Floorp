@@ -265,17 +265,20 @@ InitExnPrivate(JSContext *cx, HandleObject exnObject, HandleString message,
             if (checkAccess && i.isNonEvalFunctionFrame()) {
                 Value v = NullValue();
                 RootedId callerid(cx, NameToId(cx->runtime->atomState.callerAtom));
-                if (!checkAccess(cx, RootedObject(cx, i.callee()), callerid, JSACC_READ, &v))
+                Rooted<JSObject*> obj(cx, i.callee());
+                if (!checkAccess(cx, obj, callerid, JSACC_READ, &v))
                     break;
             }
 
             if (!frames.growBy(1))
                 return false;
             JSStackTraceStackElem &frame = frames.back();
-            if (i.isNonEvalFunctionFrame())
-                frame.funName = i.callee()->atom ? i.callee()->atom : cx->runtime->emptyString;
-            else
+            if (i.isNonEvalFunctionFrame()) {
+                JSAtom *atom = i.callee()->atom ? i.callee()->atom : cx->runtime->emptyString;
+                frame.funName = atom;
+            } else {
                 frame.funName = NULL;
+            }
             const char *cfilename = i.script()->filename;
             if (!cfilename)
                 cfilename = "";

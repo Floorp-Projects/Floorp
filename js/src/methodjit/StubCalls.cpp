@@ -52,10 +52,10 @@ using namespace js::types;
 using namespace JSC;
 
 void JS_FASTCALL
-stubs::BindName(VMFrame &f, PropertyName *name)
+stubs::BindName(VMFrame &f, PropertyName *name_)
 {
-    JSObject *obj = FindIdentifierBase(f.cx, f.fp()->scopeChain(),
-                                       RootedPropertyName(f.cx, name));
+    Rooted<PropertyName*> name(f.cx, name_);
+    JSObject *obj = FindIdentifierBase(f.cx, f.fp()->scopeChain(), name);
     if (!obj)
         THROW();
     f.regs.sp[0].setObject(*obj);
@@ -505,7 +505,8 @@ StubEqualityOp(VMFrame &f)
             JSObject *l = &lval.toObject(), *r = &rval.toObject();
             if (JSEqualityOp eq = l->getClass()->ext.equality) {
                 JSBool equal;
-                if (!eq(cx, RootedObject(cx, l), &rval, &equal))
+                Rooted<JSObject*> lobj(cx, l);
+                if (!eq(cx, lobj, &rval, &equal))
                     return false;
                 cond = !!equal == EQ;
             } else {
@@ -886,7 +887,8 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     JSObject *obj;
 
     if (baseobj) {
-        obj = CopyInitializerObject(cx, RootedObject(cx, baseobj));
+        Rooted<JSObject*> base(cx, baseobj);
+        obj = CopyInitializerObject(cx, base);
     } else {
         gc::AllocKind kind = GuessObjectGCKind(0);
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
@@ -1065,8 +1067,8 @@ stubs::IterMore(VMFrame &f)
     JS_ASSERT(f.regs.sp[-1].isObject());
 
     Value v;
-    JSObject *iterobj = &f.regs.sp[-1].toObject();
-    if (!js_IteratorMore(f.cx, RootedObject(f.cx, iterobj), &v))
+    Rooted<JSObject*> iterobj(f.cx, &f.regs.sp[-1].toObject());
+    if (!js_IteratorMore(f.cx, iterobj, &v))
         THROWV(JS_FALSE);
 
     return v.toBoolean();
@@ -1400,9 +1402,8 @@ stubs::DefVarOrConst(VMFrame &f, PropertyName *dn)
     if (JSOp(*f.regs.pc) == JSOP_DEFCONST)
         attrs |= JSPROP_READONLY;
 
-    JSObject &obj = f.fp()->varObj();
-
-    if (!DefVarOrConstOperation(f.cx, RootedObject(f.cx, &obj), dn, attrs))
+    Rooted<JSObject*> varobj(f.cx, &f.fp()->varObj());
+    if (!DefVarOrConstOperation(f.cx, varobj, dn, attrs))
         THROW();
 }
 

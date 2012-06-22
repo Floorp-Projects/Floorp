@@ -405,6 +405,12 @@ extractFile(const char * path, Zip::Stream &s)
 }
 #endif
 
+template <typename T> inline void
+xul_dlsym(const char *symbolName, T *value)
+{
+  *value = (T) (uintptr_t) __wrap_dlsym(xul_handle, symbolName);
+}
+
 #if defined(MOZ_CRASHREPORTER) || defined(MOZ_OLD_LINKER)
 static void
 extractLib(Zip::Stream &s, void * dest)
@@ -547,7 +553,6 @@ static void * mozload(const char * path, Zip *zip)
     return handle;
   }
 
-  bool skipLibCache = false;
   int fd;
   void * buf = NULL;
   uint32_t lib_size = s.GetUncompressedSize();
@@ -705,7 +710,7 @@ loadGeckoLibs(const char *apkName)
     return FAILURE;
   }
 
-#define GETFUNC(name) f_ ## name = (name ## _t) (uintptr_t) __wrap_dlsym(xul_handle, "Java_org_mozilla_gecko_GeckoAppShell_" #name)
+#define GETFUNC(name) xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_" #name, &f_ ## name)
   GETFUNC(nativeInit);
   GETFUNC(notifyGeckoOfEvent);
   GETFUNC(processNextNativeEvent);
@@ -742,11 +747,15 @@ loadGeckoLibs(const char *apkName)
   GETFUNC(onFullScreenPluginHidden);
   GETFUNC(getNextMessageFromQueue);
 #undef GETFUNC
-  void (*XRE_StartupTimelineRecord)(int, MOZTime) = (void (*)(int, MOZTime)) __wrap_dlsym(xul_handle, "XRE_StartupTimelineRecord");
+
+  void (*XRE_StartupTimelineRecord)(int, MOZTime);
+  xul_dlsym("XRE_StartupTimelineRecord", &XRE_StartupTimelineRecord);
+
   MOZTime t1 = MOZ_Now();
   struct rusage usage2;
   getrusage(RUSAGE_THREAD, &usage2);
-  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %ldms total, %ldms user, %ldms system, %ld faults",
+
+  __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Loaded libs in %lldms total, %ldms user, %ldms system, %ld faults",
                       (t1 - t0) / 1000,
                       (usage2.ru_utime.tv_sec - usage1.ru_utime.tv_sec)*1000 + (usage2.ru_utime.tv_usec - usage1.ru_utime.tv_usec)/1000,
                       (usage2.ru_stime.tv_sec - usage1.ru_stime.tv_sec)*1000 + (usage2.ru_stime.tv_usec - usage1.ru_stime.tv_usec)/1000,
@@ -958,7 +967,8 @@ typedef void (*GeckoStart_t)(void *, const nsXREAppData *);
 extern "C" NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_nativeRun(JNIEnv *jenv, jclass jc, jstring jargs)
 {
-  GeckoStart_t GeckoStart = (GeckoStart_t) (uintptr_t) __wrap_dlsym(xul_handle, "GeckoStart");
+  GeckoStart_t GeckoStart;
+  xul_dlsym("GeckoStart", &GeckoStart);
   if (GeckoStart == NULL)
     return;
   // XXX: java doesn't give us true UTF8, we should figure out something
@@ -1002,12 +1012,11 @@ ChildProcessInit(int argc, char* argv[])
   // don't pass the last arg - it's only recognized by the lib cache
   argc--;
 
-  typedef GeckoProcessType (*XRE_StringToChildProcessType_t)(char*);
-  typedef mozglueresult (*XRE_InitChildProcess_t)(int, char**, GeckoProcessType);
-  XRE_StringToChildProcessType_t fXRE_StringToChildProcessType =
-    (XRE_StringToChildProcessType_t) (uintptr_t) __wrap_dlsym(xul_handle, "XRE_StringToChildProcessType");
-  XRE_InitChildProcess_t fXRE_InitChildProcess =
-    (XRE_InitChildProcess_t) (uintptr_t) __wrap_dlsym(xul_handle, "XRE_InitChildProcess");
+  GeckoProcessType (*fXRE_StringToChildProcessType)(char*);
+  xul_dlsym("XRE_StringToChildProcessType", &fXRE_StringToChildProcessType);
+
+  mozglueresult (*fXRE_InitChildProcess)(int, char**, GeckoProcessType);
+  xul_dlsym("XRE_InitChildProcess", &fXRE_InitChildProcess);
 
   GeckoProcessType proctype = fXRE_StringToChildProcessType(argv[--argc]);
 

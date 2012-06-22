@@ -40,6 +40,7 @@ EXTRA_PP_COMPONENTS = \
 
 EXTRA_JS_MODULES = \
   WebappRT.jsm \
+  WebappsHandler.jsm \
   $(NULL)
 
 PREF_JS_EXPORTS = $(srcdir)/prefs.js \

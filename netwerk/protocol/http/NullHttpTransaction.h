@@ -36,6 +36,9 @@ public:
 
   nsHttpConnectionInfo *ConnectionInfo() { return mConnectionInfo; }
 
+  // An overload of nsAHttpTransaction::IsNullTransaction()
+  bool IsNullTransaction() { return true; }
+
 private:
 
   nsresult mStatus;

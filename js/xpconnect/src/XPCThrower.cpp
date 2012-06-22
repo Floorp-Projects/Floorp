@@ -44,15 +44,11 @@ Throw(JSContext *cx, nsresult rv)
 JSBool
 XPCThrower::CheckForPendingException(nsresult result, JSContext *cx)
 {
-    nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if (!xpc)
-        return false;
-
     nsCOMPtr<nsIException> e;
-    xpc->GetPendingException(getter_AddRefs(e));
+    XPCJSRuntime::Get()->GetPendingException(getter_AddRefs(e));
     if (!e)
         return false;
-    xpc->SetPendingException(nsnull);
+    XPCJSRuntime::Get()->SetPendingException(nsnull);
 
     nsresult e_result;
     if (NS_FAILED(e->GetResult(&e_result)) || e_result != result)
@@ -184,22 +180,21 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
     nsCOMPtr<nsIException> finalException;
     nsCOMPtr<nsIException> defaultException;
     nsXPCException::NewException(sz, rv, nsnull, nsnull, getter_AddRefs(defaultException));
-    XPCPerThreadData* tls = XPCPerThreadData::GetData(cx);
-    if (tls) {
-        nsIExceptionManager * exceptionManager = tls->GetExceptionManager();
-        if (exceptionManager) {
-           // Ask the provider for the exception, if there is no provider
-           // we expect it to set e to null
-            exceptionManager->GetExceptionFromProvider(rv,
-                                                       defaultException,
-                                                       getter_AddRefs(finalException));
-            // We should get at least the defaultException back,
-            // but just in case
-            if (finalException == nsnull) {
-                finalException = defaultException;
-            }
+
+    nsIExceptionManager * exceptionManager = XPCJSRuntime::Get()->GetExceptionManager();
+    if (exceptionManager) {
+        // Ask the provider for the exception, if there is no provider
+        // we expect it to set e to null
+        exceptionManager->GetExceptionFromProvider(rv,
+                                                   defaultException,
+                                                   getter_AddRefs(finalException));
+        // We should get at least the defaultException back,
+        // but just in case
+        if (finalException == nsnull) {
+            finalException = defaultException;
         }
     }
+
     // XXX Should we put the following test and call to JS_ReportOutOfMemory
     // inside this test?
     if (finalException)
@@ -216,22 +211,7 @@ IsCallerChrome(JSContext* cx)
     nsresult rv;
 
     nsCOMPtr<nsIScriptSecurityManager> secMan;
-    if (XPCPerThreadData::IsMainThread(cx)) {
-        secMan = XPCWrapper::GetSecurityManager();
-    } else {
-        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-        if (!xpc)
-            return false;
-
-        nsCOMPtr<nsIXPCSecurityManager> xpcSecMan;
-        PRUint16 flags = 0;
-        rv = xpc->GetSecurityManagerForJSContext(cx, getter_AddRefs(xpcSecMan),
-                                                 &flags);
-        if (NS_FAILED(rv) || !xpcSecMan)
-            return false;
-
-        secMan = do_QueryInterface(xpcSecMan);
-    }
+    secMan = XPCWrapper::GetSecurityManager();
 
     if (!secMan)
         return false;
