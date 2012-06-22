@@ -218,12 +218,14 @@ public:
   bool     HasPatternMismatch() const;
   bool     IsRangeOverflow() const;
   bool     IsRangeUnderflow() const;
+  bool     HasStepMismatch() const;
   void     UpdateTooLongValidityState();
   void     UpdateValueMissingValidityState();
   void     UpdateTypeMismatchValidityState();
   void     UpdatePatternMismatchValidityState();
   void     UpdateRangeOverflowValidityState();
   void     UpdateRangeUnderflowValidityState();
+  void     UpdateStepMismatchValidityState();
   void     UpdateAllValidityStates(bool aNotify);
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
@@ -473,6 +475,11 @@ protected:
   bool DoesMinMaxApply() const;
 
   /**
+   * Returns if the step attribute apply for the current type.
+   */
+  bool DoesStepApply() const { return DoesMinMaxApply(); }
+
+  /**
    * Returns if the maxlength attribute applies for the current type.
    */
   bool MaxLengthApplies() const { return IsSingleLineTextControl(false, mType); }
@@ -555,6 +562,14 @@ protected:
    */
   void UpdateHasRange();
 
+  /**
+   * Returns the current step value.
+   * Returns kStepAny if the current step is "any" string.
+   *
+   * @return the current step value.
+   */
+  double GetStep() const;
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /*
@@ -599,6 +614,11 @@ protected:
    * where type= "text", "email", "search", "tel", "url" or "password".
    */
   nsString mFocusedValue;  
+
+  // Default step base value when a type do not have specific one.
+  static const double kDefaultStepBase;
+  // Float alue returned by GetStep() when the step attribute is set to 'any'.
+  static const double kStepAny;
 
   /**
    * The type of this input (<input type=...>) as an integer.

@@ -149,6 +149,9 @@ static const nsAttrValue::EnumTable kInputAutocompleteTable[] = {
 // Default autocomplete value is "".
 static const nsAttrValue::EnumTable* kInputDefaultAutocomplete = &kInputAutocompleteTable[0];
 
+const double nsHTMLInputElement::kDefaultStepBase = 0;
+const double nsHTMLInputElement::kStepAny = 0;
+
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
   0xdc3b3d14,                                      \
@@ -820,6 +823,9 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     } else if (aName == nsGkAtoms::min) {
       UpdateHasRange();
       UpdateRangeUnderflowValidityState();
+      UpdateStepMismatchValidityState();
+    } else if (aName == nsGkAtoms::step) {
+      UpdateStepMismatchValidityState();
     }
 
     UpdateState(aNotify);
@@ -3664,6 +3670,39 @@ nsHTMLInputElement::DoesMinMaxApply() const
   }
 }
 
+double
+nsHTMLInputElement::GetStep() const
+{
+  NS_ASSERTION(mType == NS_FORM_INPUT_NUMBER,
+               "We can't be there if type!=number!");
+
+  // NOTE: should be defaultStep * defaultStepScaleFactor,
+  // which is 1 for type=number.
+  double step = 1;
+
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::step)) {
+    nsAutoString stepStr;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::step, stepStr);
+
+    if (stepStr.LowerCaseEqualsLiteral("any")) {
+      // The element can't suffer from step mismatch if there is no step.
+      return kStepAny;
+    }
+
+    PRInt32 ec;
+    // NOTE: should be multiplied by defaultStepScaleFactor,
+    // which is 1 for type=number.
+    step = stepStr.ToDouble(&ec);
+    if (NS_FAILED(ec) || step <= 0) {
+      // NOTE: we should use defaultStep * defaultStepScaleFactor,
+      // which is 1 for type=number.
+      step = 1;
+    }
+  }
+
+  return step;
+}
+
 // nsIConstraintValidation
 
 NS_IMETHODIMP
@@ -3840,6 +3879,41 @@ nsHTMLInputElement::IsRangeUnderflow() const
   return value < min;
 }
 
+bool
+nsHTMLInputElement::HasStepMismatch() const
+{
+  if (!DoesStepApply()) {
+    return false;
+  }
+
+  double value = GetValueAsDouble();
+  if (value != value) {
+    // The element can't suffer from step mismatch if it's value isn't a number.
+    return false;
+  }
+
+  double step = GetStep();
+  if (step == kStepAny) {
+    return false;
+  }
+
+  double stepBase = kDefaultStepBase;
+
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::min)) {
+    nsAutoString minStr;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+
+    PRInt32 ec;
+    stepBase = minStr.ToDouble(&ec);
+    if (NS_FAILED(ec)) {
+      stepBase = kDefaultStepBase;
+    }
+  }
+
+  // Value has to be an integral multiple of step.
+  return fmod(value - stepBase, step) != 0;
+}
+
 void
 nsHTMLInputElement::UpdateTooLongValidityState()
 {
@@ -3931,6 +4005,12 @@ nsHTMLInputElement::UpdateRangeUnderflowValidityState()
 }
 
 void
+nsHTMLInputElement::UpdateStepMismatchValidityState()
+{
+  SetValidityState(VALIDITY_STATE_STEP_MISMATCH, HasStepMismatch());
+}
+
+void
 nsHTMLInputElement::UpdateAllValidityStates(bool aNotify)
 {
   bool validBefore = IsValid();
@@ -3940,6 +4020,7 @@ nsHTMLInputElement::UpdateAllValidityStates(bool aNotify)
   UpdatePatternMismatchValidityState();
   UpdateRangeOverflowValidityState();
   UpdateRangeUnderflowValidityState();
+  UpdateStepMismatchValidityState();
 
   if (validBefore != IsValid()) {
     UpdateState(aNotify);
@@ -4084,6 +4165,55 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
       rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
                                                  "FormValidationRangeUnderflow",
                                                  params, message);
+      aValidationMessage = message;
+      break;
+    }
+    case VALIDITY_STATE_STEP_MISMATCH:
+    {
+      nsXPIDLString message;
+
+      double value = GetValueAsDouble();
+      NS_ASSERTION(value == value, "The element can't suffer from a step "
+                                   "mismatch if its value is NaN");
+
+      double step = GetStep();
+      NS_ASSERTION(step != kStepAny, "The element can't suffer from a step "
+                                     "mismatch if @step is 'any'");
+
+      PRInt32 ec;
+      nsAutoString minStr;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
+      double min = minStr.ToDouble(&ec);
+      if (NS_FAILED(ec)) {
+        min = 0.f;
+      }
+
+      double valueLow = value - fmod(value - min, step);
+      double valueHigh = value + step - fmod(value - min, step);
+
+      nsAutoString maxStr;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
+      double max = maxStr.ToDouble(&ec);
+
+      if (NS_FAILED(ec) || valueHigh <= max) {
+        nsAutoString valueLowStr, valueHighStr;
+        valueLowStr.AppendFloat(valueLow);
+        valueHighStr.AppendFloat(valueHigh);
+
+        const PRUnichar* params[] = { valueLowStr.get(), valueHighStr.get() };
+        rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                   "FormValidationStepMismatch",
+                                                   params, message);
+      } else {
+        nsAutoString valueLowStr;
+        valueLowStr.AppendFloat(valueLow);
+
+        const PRUnichar* params[] = { valueLowStr.get() };
+        rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                   "FormValidationStepMismatchWithoutMax",
+                                                   params, message);
+      }
+
       aValidationMessage = message;
       break;
     }

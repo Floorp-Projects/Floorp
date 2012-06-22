@@ -44,6 +44,7 @@ _TEST_FILES = \
 		test_meter_pseudo-classes.html \
 		test_max_attribute.html \
 		test_min_attribute.html \
+		test_step_attribute.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
