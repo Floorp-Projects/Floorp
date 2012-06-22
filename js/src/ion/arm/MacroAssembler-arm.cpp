@@ -1411,19 +1411,19 @@ MacroAssemblerARMCompat::freeStack(uint32 amount)
 void
 MacroAssemblerARMCompat::add32(Imm32 imm, Register dest)
 {
-    ma_add(imm, dest);
+    ma_add(imm, dest, SetCond);
 }
 
 void
 MacroAssemblerARMCompat::sub32(Imm32 imm, Register dest)
 {
-    ma_sub(imm, dest);
+    ma_sub(imm, dest, SetCond);
 }
 
 void
 MacroAssemblerARMCompat::and32(Imm32 imm, Register dest)
 {
-    ma_and(imm, dest);
+    ma_and(imm, dest, SetCond);
 }
 
 void
