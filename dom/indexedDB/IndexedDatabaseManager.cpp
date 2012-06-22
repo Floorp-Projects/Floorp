@@ -214,8 +214,10 @@ IndexedDatabaseManager::GetOrCreate()
 
     if (sIsMainProcess) {
       nsCOMPtr<nsIFile> dbBaseDirectory;
-      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                  getter_AddRefs(dbBaseDirectory));
+      rv = NS_GetSpecialDirectory(NS_APP_INDEXEDDB_PARENT_DIR, getter_AddRefs(dbBaseDirectory));
+      if (NS_FAILED(rv)) {
+          rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(dbBaseDirectory));
+      }
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       rv = dbBaseDirectory->Append(NS_LITERAL_STRING("indexedDB"));

@@ -3707,17 +3707,26 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // Some scrolling devices supports pixel scrolling, e.g. a Macbook
-  // touchpad or a Mighty Mouse. On those devices, [event deviceDeltaX/Y]
-  // contains the amount of pixels to scroll. 
+  // touchpad or a Mighty Mouse. On those devices, [theEvent deviceDeltaX/Y]
+  // contains the amount of pixels to scroll. Since Lion this has changed 
+  // to [theEvent scrollingDeltaX/Y].
   if (inAxis & nsMouseScrollEvent::kIsVertical) {
     scrollDelta       = -[theEvent deltaY];
     if (checkPixels && (scrollDelta == 0 || scrollDelta != floor(scrollDelta))) {
-      scrollDeltaPixels = -[theEvent deviceDeltaY];
+      if ([theEvent respondsToSelector:@selector(scrollingDeltaY)]) {
+        scrollDeltaPixels = -[theEvent scrollingDeltaY];
+      } else {
+        scrollDeltaPixels = -[theEvent deviceDeltaY];
+      }
     }
   } else if (inAxis & nsMouseScrollEvent::kIsHorizontal) {
     scrollDelta       = -[theEvent deltaX];
     if (checkPixels && (scrollDelta == 0 || scrollDelta != floor(scrollDelta))) {
-      scrollDeltaPixels = -[theEvent deviceDeltaX];
+      if ([theEvent respondsToSelector:@selector(scrollingDeltaX)]) {
+        scrollDeltaPixels = -[theEvent scrollingDeltaX];
+      } else {
+        scrollDeltaPixels = -[theEvent deviceDeltaX];
+      }
     }
   } else {
     return; // caller screwed up

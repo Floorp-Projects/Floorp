@@ -143,6 +143,21 @@ ShGetInfoLog
 ShCompile
 ShGetInfo
 ShConstructCompiler
+#ifdef MOZ_WEBRTC
+#ifdef HAVE_64BIT_OS
+?GetInterface@ViERender@webrtc@@SAPEAV12@PEAVVideoEngine@2@@Z
+?GetInterface@ViECapture@webrtc@@SAPEAV12@PEAVVideoEngine@2@@Z
+?GetInterface@ViEBase@webrtc@@SAPEAV12@PEAVVideoEngine@2@@Z
+?Create@VideoEngine@webrtc@@SAPEAV12@XZ
+?Delete@VideoEngine@webrtc@@SA_NAEAPEAV12@@Z
+#else
+?GetInterface@ViERender@webrtc@@SAPAV12@PAVVideoEngine@2@@Z
+?GetInterface@ViECapture@webrtc@@SAPAV12@PAVVideoEngine@2@@Z
+?GetInterface@ViEBase@webrtc@@SAPAV12@PAVVideoEngine@2@@Z
+?Create@VideoEngine@webrtc@@SAPAV12@XZ
+?Delete@VideoEngine@webrtc@@SA_NAAPAV12@@Z
+#endif
+#endif
 ShGetActiveAttrib
 ShGetActiveUniform
 #ifndef MOZ_NATIVE_PNG

@@ -1,0 +1,10 @@
+This is a simple program which can feed raw video data into a V4L2 sink, such as
+the v4l2loopback driver. See the .c file for implementation notes and how to run
+the program.
+
+You will require the gstreamer developer package and the "bad" plugin set for
+gstreamer. The easiest way to get this is to run
+
+sudo apt-get install gstreamer0.10-plugins-bad libgstreamer0.10-dev
+
+Then just build using make in this directory.

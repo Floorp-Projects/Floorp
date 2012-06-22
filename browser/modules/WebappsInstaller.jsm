@@ -116,7 +116,7 @@ function NativeApp(aData) {
     "app": app
   };
 
-  this.processFolder = Services.dirsvc.get("CurProcD", Ci.nsIFile);
+  this.runtimeFolder = Services.dirsvc.get("GreD", Ci.nsIFile);
 }
 
 #ifdef XP_WIN
@@ -284,11 +284,11 @@ WinNativeApp.prototype = {
    * Copy the pre-built files into their destination folders.
    */
   _copyPrebuiltFiles: function() {
-    let webapprt = this.processFolder.clone();
+    let webapprt = this.runtimeFolder.clone();
     webapprt.append("webapprt-stub.exe");
     webapprt.copyTo(this.installDir, this.appNameAsFilename + ".exe");
 
-    let uninstaller = this.processFolder.clone();
+    let uninstaller = this.runtimeFolder.clone();
     uninstaller.append("webapp-uninstaller.exe");
     uninstaller.copyTo(this.uninstallDir, this.uninstallerFile.leafName);
   },
@@ -313,7 +313,7 @@ WinNativeApp.prototype = {
     writer.setString("Webapp", "Name", this.appName);
     writer.setString("Webapp", "Profile", this.installDir.leafName);
     writer.setString("Webapp", "Executable", this.appNameAsFilename);
-    writer.setString("WebappRT", "InstallDir", this.processFolder.path);
+    writer.setString("WebappRT", "InstallDir", this.runtimeFolder.path);
     writer.writeFile(null, Ci.nsIINIParserWriter.WRITE_UTF16);
 
     // ${UninstallDir}/shortcuts_log.ini
@@ -534,7 +534,7 @@ MacNativeApp.prototype = {
   },
 
   _copyPrebuiltFiles: function() {
-    let webapprt = this.processFolder.clone();
+    let webapprt = this.runtimeFolder.clone();
     webapprt.append("webapprt-stub");
     webapprt.copyTo(this.macOSDir, "webapprt");
   },
@@ -719,7 +719,7 @@ LinuxNativeApp.prototype = {
   },
 
   _copyPrebuiltFiles: function() {
-    let webapprtPre = this.processFolder.clone();
+    let webapprtPre = this.runtimeFolder.clone();
     webapprtPre.append(this.webapprt.leafName);
     webapprtPre.copyTo(this.installDir, this.webapprt.leafName);
   },
@@ -740,7 +740,7 @@ LinuxNativeApp.prototype = {
     let writer = factory.createINIParser(webappINI).QueryInterface(Ci.nsIINIParserWriter);
     writer.setString("Webapp", "Name", this.appName);
     writer.setString("Webapp", "Profile", this.uniqueName);
-    writer.setString("WebappRT", "InstallDir", this.processFolder.path);
+    writer.setString("WebappRT", "InstallDir", this.runtimeFolder.path);
     writer.writeFile();
 
     // $XDG_DATA_HOME/applications/owa-<webappuniquename>.desktop

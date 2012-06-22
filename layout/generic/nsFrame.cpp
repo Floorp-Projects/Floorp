@@ -4655,7 +4655,7 @@ nsIFrame::InvalidateInternal(const nsRect& aDamageRect, nscoord aX, nscoord aY,
 {
   nsSVGEffects::InvalidateDirectRenderingObservers(this);
   if (nsSVGIntegrationUtils::UsingEffectsForFrame(this)) {
-    nsRect r = nsSVGIntegrationUtils::GetInvalidAreaForChangedSource(this,
+    nsRect r = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(this,
             aDamageRect + nsPoint(aX, aY));
     /* Rectangle is now in our own local space, so aX and aY are effectively
      * zero.  Thus we'll pretend that the entire time this was in our own
@@ -4924,7 +4924,7 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame, bool* aAnyOutlineOrEffects,
       aFrame->Properties().
         Set(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
     }
-    r = nsSVGIntegrationUtils::ComputeFrameEffectsRect(aFrame, r);
+    r = nsSVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(aFrame, r);
   }
 
   return r;

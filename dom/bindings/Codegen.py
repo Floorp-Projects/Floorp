@@ -2118,7 +2118,8 @@ if (!%(resultStr)s) {
         "resultStr" : result + "_str",
         "strings" : type.inner.identifier.name + "Values::strings" } + setValue("JS::StringValue(%s_str)" % result)
 
-    if type.isCallback() and not type.isInterface():
+    if type.isCallback():
+        assert not type.isInterface()
         # XXXbz we're going to assume that callback types are always
         # nullable and always have [TreatNonCallableAsNull] for now.
         # See comments in WrapNewBindingObject explaining why we need
@@ -2622,8 +2623,7 @@ class CGMethodCall(CGThing):
             interfacesSigs = [
                 s for s in possibleSignatures
                 if (s[1][distinguishingIndex].type.isObject() or
-                    (s[1][distinguishingIndex].type.isInterface() and
-                     not s[1][distinguishingIndex].type.isCallback())) ]
+                    s[1][distinguishingIndex].type.isNonCallbackInterface()) ]
             # There might be more than one of these; we need to check
             # which ones we unwrap to.
             
@@ -2692,6 +2692,7 @@ class CGMethodCall(CGThing):
             pickFirstSignature("%s.isObject() && !IsPlatformObject(cx, &%s.toObject())" %
                                (distinguishingArg, distinguishingArg),
                                lambda s: (s[1][distinguishingIndex].type.isCallback() or
+                                          s[1][distinguishingIndex].type.isCallbackInterface() or
                                           s[1][distinguishingIndex].type.isDictionary() or
                                           s[1][distinguishingIndex].type.isObject()))
 

@@ -111,7 +111,7 @@ const STATE_FAILED          = "failed";
 
 // From updater/errors.h:
 const WRITE_ERROR        = 7;
-const UNEXPECTED_ERROR   = 8;
+// const UNEXPECTED_ERROR   = 8; // Replaced with errors 38-42
 const ELEVATION_CANCELED = 9;
 
 // Windows service specific errors
@@ -125,6 +125,15 @@ const SERVICE_STILL_APPLYING_ON_FAILURE    = 30;
 const SERVICE_UPDATER_NOT_FIXED_DRIVE      = 31;
 const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
+
+const WRITE_ERROR_ACCESS_DENIED       = 35;
+const WRITE_ERROR_SHARING_VIOLATION   = 36;
+const WRITE_ERROR_CALLBACK_APP        = 37;
+const INVALID_UPDATER_STATUS_CODE     = 38;
+const UNEXPECTED_BZIP_ERROR           = 39;
+const UNEXPECTED_MAR_ERROR            = 40;
+const UNEXPECTED_BSPATCH_ERROR        = 41;
+const UNEXPECTED_FILE_OPERATION_ERROR = 42;
 
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
@@ -973,7 +982,10 @@ function readStringFromFile(file) {
 
 function handleUpdateFailure(update, errorCode) {
   update.errorCode = parseInt(errorCode);
-  if (update.errorCode == WRITE_ERROR) {
+  if (update.errorCode == WRITE_ERROR || 
+      update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
+      update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
+      update.errorCode == WRITE_ERROR_CALLBACK_APP) {
     Cc["@mozilla.org/updates/update-prompt;1"].
       createInstance(Ci.nsIUpdatePrompt).
       showUpdateError(update);
@@ -1747,7 +1759,7 @@ UpdateService.prototype = {
       }
       let result = 0; // 0 means success
       if (parts.length > 1) {
-        result = parseInt(parts[1]) || UNEXPECTED_ERROR;
+        result = parseInt(parts[1]) || INVALID_UPDATER_STATUS_CODE;
       }
       Services.telemetry.getHistogramById("UPDATER_STATUS_CODES").add(result);
     } catch(e) {
@@ -3476,7 +3488,11 @@ UpdatePrompt.prototype = {
       return;
 
     // In some cases, we want to just show a simple alert dialog:
-    if (update.state == STATE_FAILED && update.errorCode == WRITE_ERROR) {
+    if (update.state == STATE_FAILED &&
+        (update.errorCode == WRITE_ERROR ||
+         update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
+         update.errorCode == WRITE_ERROR_SHARING_VIOLATION ||
+         update.errorCode == WRITE_ERROR_CALLBACK_APP)) {
       var title = gUpdateBundle.GetStringFromName("updaterIOErrorTitle");
       var text = gUpdateBundle.formatStringFromName("updaterIOErrorMsg",
                                                     [Services.appinfo.name,

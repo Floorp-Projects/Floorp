@@ -23,6 +23,10 @@ CommandLineHandler.prototype = {
                            "_blank",
                            "chrome,dialog=no,resizable,scrollbars",
                            []);
+
+    // Initialize window-independent handling of webapps- notifications
+    Cu.import("resource://webapprt/modules/WebappsHandler.jsm");
+    WebappsHandler.init();
   },
 
   helpInfo : "",

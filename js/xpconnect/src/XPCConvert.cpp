@@ -996,8 +996,7 @@ XPCConvert::NativeInterface2JSObject(XPCLazyCallContext& lccx,
     // XPCWrappedNative as-is here.
     flat = wrapper->GetFlatJSObject();
     jsval v = OBJECT_TO_JSVAL(flat);
-    if (!XPCPerThreadData::IsMainThread(lccx.GetJSContext()) ||
-        !allowNativeWrapper) {
+    if (!allowNativeWrapper) {
         *d = v;
         if (dest)
             *dest = strongWrapper.forget().get();
