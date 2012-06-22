@@ -2445,6 +2445,8 @@ public:
             if (mScriptableInfo)
                 mScriptableInfo->Mark();
         }
+
+        GetScope()->TraceSelf(trc);
     }
 
     void TraceJS(JSTracer *trc) {
@@ -2835,6 +2837,8 @@ public:
         }
         if (HasProto())
             GetProto()->TraceJS(trc);
+        else
+            GetScope()->TraceSelf(trc);
         JSObject* wrapper = GetWrapperPreserveColor();
         if (wrapper)
             JS_CALL_OBJECT_TRACER(trc, wrapper, "XPCWrappedNative::mWrapper");

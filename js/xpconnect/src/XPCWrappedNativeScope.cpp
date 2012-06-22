@@ -319,11 +319,8 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
                              uint32_t number, void *arg)
 {
     XPCWrappedNative* wrapper = ((Native2WrappedNativeMap::Entry*)hdr)->value;
-    if (wrapper->HasExternalReference() && !wrapper->IsWrapperExpired()) {
-        JSTracer* trc = (JSTracer *)arg;
-        JS_CALL_OBJECT_TRACER(trc, wrapper->GetFlatJSObjectPreserveColor(),
-                              "XPCWrappedNative::mFlatJSObject");
-    }
+    if (wrapper->HasExternalReference() && !wrapper->IsWrapperExpired())
+        wrapper->TraceSelf((JSTracer *)arg);
 
     return JS_DHASH_NEXT;
 }
