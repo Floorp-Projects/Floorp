@@ -171,6 +171,7 @@ if test -n "$gonkdir" ; then
     ANDROID_NDK="${ANDROID_SOURCE}/ndk"
 
     dnl set up compilers
+    TOOLCHAIN_PREFIX="$gonk_toolchain_prefix"
     AS="$gonk_toolchain_prefix"as
     CC="$gonk_toolchain_prefix"gcc
     CXX="$gonk_toolchain_prefix"g++
@@ -8320,6 +8321,7 @@ AC_SUBST(MOZ_FEEDS)
 AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_WEBGL)
 AC_SUBST(MOZ_HELP_VIEWER)
+AC_SUBST(TOOLCHAIN_PREFIX)
 
 AC_SUBST(JAVA)
 AC_SUBST(JAVAC)
