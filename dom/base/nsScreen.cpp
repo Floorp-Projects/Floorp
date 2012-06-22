@@ -67,6 +67,16 @@ void
 nsScreen::Reset()
 {
   hal::UnlockScreenOrientation();
+
+  if (mEventListener) {
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+    if (target) {
+      target->RemoveSystemEventListener(NS_LITERAL_STRING("mozfullscreenchange"),
+                                        mEventListener, true);
+    }
+
+    mEventListener = nsnull;
+  }
 }
 
 nsScreen::~nsScreen()
