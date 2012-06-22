@@ -217,11 +217,13 @@ public:
   bool     HasTypeMismatch() const;
   bool     HasPatternMismatch() const;
   bool     IsRangeOverflow() const;
+  bool     IsRangeUnderflow() const;
   void     UpdateTooLongValidityState();
   void     UpdateValueMissingValidityState();
   void     UpdateTypeMismatchValidityState();
   void     UpdatePatternMismatchValidityState();
   void     UpdateRangeOverflowValidityState();
+  void     UpdateRangeUnderflowValidityState();
   void     UpdateAllValidityStates(bool aNotify);
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
