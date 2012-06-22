@@ -444,15 +444,10 @@ nsFrameLoader::ReallyStartLoadingInternal()
   mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-  if (!OwnerIsBrowserFrame()) {
-    // We'll use our principal, not that of the document loaded inside us.
-    // This is very important; needed to prevent XSS attacks on documents
-    // loaded in subframes!
-    //
-    // (For <iframe mozbrowser>, don't set an owner; it's as though the iframe
-    // is a top-level window.)
-    loadInfo->SetOwner(mOwnerContent->NodePrincipal());
-  }
+  // We'll use our principal, not that of the document loaded inside us.  This
+  // is very important; needed to prevent XSS attacks on documents loaded in
+  // subframes!
+  loadInfo->SetOwner(mOwnerContent->NodePrincipal());
 
   nsCOMPtr<nsIURI> referrer;
   rv = mOwnerContent->NodePrincipal()->GetURI(getter_AddRefs(referrer));

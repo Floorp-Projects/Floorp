@@ -48,9 +48,6 @@ _TEST_FILES = \
 		test_browserElement_inproc_PromptConfirm.html \
 		browserElement_Close.js \
 		test_browserElement_inproc_Close.html \
-		browserElement_CloseFromOpener.js \
-		test_browserElement_inproc_CloseFromOpener.html \
-		file_browserElement_CloseFromOpener.html \
 		browserElement_OpenWindow.js \
 		test_browserElement_inproc_OpenWindow.html \
 		file_browserElement_Open1.html \
@@ -62,8 +59,6 @@ _TEST_FILES = \
 		test_browserElement_inproc_SecurityChange.html \
 		file_browserElement_SecurityChange.html \
 		browserElement_BackForward.js \
-		browserElement_Principal.js \
-		test_browserElement_inproc_Principal.html \
 		$(NULL)
 
 # OOP tests don't work on Windows (bug 763081).
@@ -83,12 +78,10 @@ _TEST_FILES += \
 		test_browserElement_oop_PromptCheck.html \
 		test_browserElement_oop_PromptConfirm.html \
 		test_browserElement_oop_Close.html \
-		test_browserElement_oop_CloseFromOpener.html \
 		test_browserElement_oop_OpenWindow.html \
 		test_browserElement_oop_OpenWindowRejected.html \
 		test_browserElement_oop_SecurityChange.html \
 		test_browserElement_oop_BackForward.html \
-		test_browserElement_oop_Principal.html \
 		$(NULL)
 endif
 
