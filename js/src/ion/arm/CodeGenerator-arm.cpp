@@ -414,7 +414,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
                     // (1<<C1) | (1<<C2), which can be computed using an add and a shift
                     uint32 shift_rest;
                     JS_FLOOR_LOG2(shift_rest, rest);
-                    if ((1 << shift_rest) == rest) {
+                    if ((1u << shift_rest) == rest) {
                         masm.as_add(ToRegister(dest), src, lsl(src, shift-shift_rest));
                         if (shift_rest != 0)
                             masm.ma_lsl(Imm32(shift_rest), ToRegister(dest), ToRegister(dest));

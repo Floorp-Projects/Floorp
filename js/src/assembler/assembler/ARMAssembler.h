@@ -1283,7 +1283,6 @@ namespace JSC {
         static char const * nameCC(Condition cc)
         {
             ASSERT(cc <= AL);
-            ASSERT(cc >= 0);
             ASSERT((cc & 0x0fffffff) == 0);
 
             uint32_t    ccIndex = cc >> 28;

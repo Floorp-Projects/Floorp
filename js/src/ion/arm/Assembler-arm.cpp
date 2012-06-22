@@ -482,13 +482,13 @@ Assembler::finish()
         jumps_[i].fixOffset(m_buffer);
     }
 
-    for (int i = 0; i < tmpDataRelocations_.length(); i++) {
+    for (unsigned int i = 0; i < tmpDataRelocations_.length(); i++) {
         int offset = tmpDataRelocations_[i].getOffset();
         int real_offset = offset + m_buffer.poolSizeBefore(offset);
         dataRelocations_.writeUnsigned(real_offset);
     }
 
-    for (int i = 0; i < tmpJumpRelocations_.length(); i++) {
+    for (unsigned int i = 0; i < tmpJumpRelocations_.length(); i++) {
         int offset = tmpJumpRelocations_[i].getOffset();
         int real_offset = offset + m_buffer.poolSizeBefore(offset);
         jumpRelocations_.writeUnsigned(real_offset);
@@ -691,7 +691,7 @@ TraceDataRelocations(JSTracer *trc, uint8 *buffer, CompactBufferReader &reader)
 static void
 TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer, js::Vector<BufferOffset, 0, SystemAllocPolicy> *locs)
 {
-    for (int idx = 0; idx < locs->length(); idx++) {
+    for (unsigned int idx = 0; idx < locs->length(); idx++) {
         BufferOffset bo = (*locs)[idx];
         ARMBuffer::AssemblerBufferInstIterator iter(bo, buffer);
         const void *ptr = ion::Assembler::getPtr32Target(&iter);
@@ -762,7 +762,6 @@ void
 Assembler::processCodeLabels(IonCode *code)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
-        CodeLabel *label = codeLabels_[i];
         //Bind(code, label->dest(), code->raw() + label->src()->offset());
         JS_NOT_REACHED("dead code?");
     }
@@ -1436,7 +1435,7 @@ class PoolHintData {
         cond = cond_ >> 28;
         JS_ASSERT(cond == cond_ >> 28);
         loadType = lt;
-        ONES = 0xffffffff;
+        ONES = 0xfu;
         destReg = destReg_.code();
     }
     void init(uint32 index_, Assembler::Condition cond_, LoadType lt, const VFPRegister &destReg_) {
@@ -1445,7 +1444,7 @@ class PoolHintData {
         cond = cond_ >> 28;
         JS_ASSERT(cond == cond_ >> 28);
         loadType = lt;
-        ONES = 0xffffffff;
+        ONES = 0xfu;
         destReg = destReg_.code();
     }
     Assembler::Condition getCond() {
@@ -1678,7 +1677,6 @@ Assembler::as_b(Label *l, Condition c)
     m_buffer.markNextAsBranch();
     if (l->bound()) {
         BufferOffset ret = as_nop();
-        Instruction *i = editSrc(ret);
         as_b(BufferOffset(l).diffB<BOffImm>(ret), c, ret);
         return ret;
     } else {
@@ -2415,7 +2413,6 @@ bool instIsArtificialGuard(Instruction *inst, const PoolHeader **ph)
 Instruction *
 Instruction::next()
 {
-    Assembler::Condition c;
     Instruction *ret = this+1;
     const PoolHeader *ph;
     // If this is a guard, and the next instruction is a header, always work around the pool
