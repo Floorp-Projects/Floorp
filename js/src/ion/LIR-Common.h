@@ -2755,27 +2755,6 @@ class LGuardClass : public LInstructionHelper<0, 1, 1>
     }
 };
 
-// Guard that a value is an Object.
-// The MIR already has a TypePolicy, so by the time this LInstruction is
-// reached, the input is already a known-object.
-// Therefore, this class merely passes through the input.
-class LGuardObject : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(GuardObject);
-
-    LGuardObject(const LAllocation &in) {
-        setOperand(0, in);
-    }
-
-    const LAllocation *input() {
-        return getOperand(0);
-    }
-    const LDefinition *output() {
-        return getDef(0);
-    }
-};
-
 class MPhi;
 
 // Phi is a pseudo-instruction that emits no code, and is an annotation for the

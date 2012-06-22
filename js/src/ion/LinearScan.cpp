@@ -580,6 +580,18 @@ LinearScanAllocator::buildLivenessInfo()
                         from = inputOf(*ins);
                     }
 
+                    if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
+                        // MUST_REUSE_INPUT is implemented by allocating an output
+                        // register and moving the input to it. Register hints are
+                        // used to avoid unnecessary moves. We give the input an
+                        // LUse::ANY policy to avoid allocating a register for the
+                        // input.
+                        LUse *inputUse = ins->getOperand(def->getReusedInput())->toUse();
+                        JS_ASSERT(inputUse->policy() == LUse::REGISTER);
+                        JS_ASSERT(inputUse->usedAtStart());
+                        *inputUse = LUse(inputUse->virtualRegister(), LUse::ANY, /* usedAtStart = */ true);
+                    }
+
                     LiveInterval *interval = vregs[def].getInterval(0);
                     interval->setFrom(from);
 
@@ -1076,14 +1088,6 @@ LinearScanAllocator::reifyAllocations()
                 def->setOutput(*interval->getAllocation());
 
                 spillFrom = interval->getAllocation();
-            }
-            if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
-                LAllocation *alloc = reg->ins()->getOperand(def->getReusedInput());
-                LAllocation *origAlloc = LAllocation::New(*alloc);
-
-                *alloc = *interval->getAllocation();
-                if (!moveInputAlloc(inputOf(reg->ins()), origAlloc, alloc))
-                    return false;
             }
 
             if (reg->mustSpillAtDefinition() && !reg->ins()->isPhi() &&
