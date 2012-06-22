@@ -367,7 +367,7 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 
     XPCAutoLock lock(mMapLock);
 
-    XPCWrappedNativeScope::TraceJS(trc, this);
+    XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(trc, this);
 
     for (XPCRootSetElem *e = mVariantRoots; e ; e = e->GetNextRoot())
         static_cast<XPCTraceableVariant*>(e)->TraceJS(trc);

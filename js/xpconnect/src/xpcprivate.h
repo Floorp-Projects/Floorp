@@ -1626,7 +1626,7 @@ public:
     SystemIsBeingShutDown();
 
     static void
-    TraceJS(JSTracer* trc, XPCJSRuntime* rt);
+    TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntime* rt);
 
     void TraceSelf(JSTracer *trc) {
         JSObject *obj = GetGlobalJSObjectPreserveColor();
