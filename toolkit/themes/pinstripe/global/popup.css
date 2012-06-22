@@ -28,6 +28,32 @@ panel[type="arrow"] {
   -moz-transition: opacity 300ms;
 }
 
+.panel-arrowcontainer[panelopen] {
+  -moz-transition-duration: 250ms;
+  -moz-transition-property: opacity, -moz-transform;
+  -moz-transition-timing-function: ease-out;
+}
+
+.panel-arrowcontainer:not([panelopen]) {
+  opacity: 0;
+}
+
+.panel-arrowcontainer:not([panelopen])[side="top"] {
+  -moz-transform: translateY(-20px);
+}
+
+.panel-arrowcontainer:not([panelopen])[side="bottom"] {
+  -moz-transform: translateY(20px);
+}
+
+.panel-arrowcontainer:not([panelopen])[side="left"] {
+  -moz-transform: translateX(-20px);
+}
+
+.panel-arrowcontainer:not([panelopen])[side="right"] {
+  -moz-transform: translateX(20px);
+}
+
 panel[type="arrow"][side="top"],
 panel[type="arrow"][side="bottom"] {
   margin-left: -26px;
