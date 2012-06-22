@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_width="fill_parent"
+	android:layout_height="fill_parent" android:orientation="vertical" 
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<TextView android:layout_width="wrap_content" 
+	android:layout_height="wrap_content"
+	android:textStyle="bold" 
+	android:textSize="24dip" 
+	android:text="Stats">
+	</TextView>
+	
+	<TextView android:id="@+id/TextView03"
+		  android:layout_width="wrap_content"
+		  android:layout_height="wrap_content">
+	</TextView>
+	
+	<TextView android:layout_height="wrap_content"
+		  android:layout_width="fill_parent"
+		  android:id="@+id/tvLocalIp"
+		  android:textStyle="bold">
+	</TextView>
+	
+	<TextView android:id="@+id/TextView03"
+		  android:layout_width="wrap_content"
+		  android:layout_height="wrap_content">
+	</TextView>
+	
+	<TextView android:layout_height="wrap_content"
+		  android:layout_width="fill_parent"
+		  android:id="@+id/tvFrameRateI"
+		  android:textStyle="bold">
+	</TextView>
+	<TextView android:layout_height="wrap_content"
+		  android:layout_width="fill_parent"
+		  android:id="@+id/tvBitRateI"
+		  android:textStyle="bold">
+	</TextView>
+	<TextView android:layout_height="wrap_content"
+		  android:layout_width="fill_parent"
+		  android:id="@+id/tvPacketLoss"
+		  android:textStyle="bold">
+	</TextView>
+	
+	<TextView android:id="@+id/TextView03"
+		  android:layout_width="wrap_content"
+		  android:layout_height="wrap_content">
+	</TextView>
+	
+	<TextView android:layout_height="wrap_content"
+		  android:layout_width="fill_parent"
+		  android:id="@+id/tvFrameRateO"
+		  android:textStyle="bold">
+	</TextView>
+	<TextView android:layout_height="wrap_content"
+		  android:layout_width="fill_parent"
+		  android:id="@+id/tvBitRateO"
+		  android:textStyle="bold">
+	</TextView>
+</LinearLayout>

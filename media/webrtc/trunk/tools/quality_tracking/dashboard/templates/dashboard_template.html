@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+    "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <!--
+  Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+
+  Use of this source code is governed by a BSD-style license
+  that can be found in the LICENSE file in the root of the source
+  tree. An additional intellectual property rights grant can be found
+  in the file PATENTS.  All contributing project authors may
+  be found in the AUTHORS file in the root of the source tree.
+
+  Template file to be used to generate the WebRTC dashboard.
+  -->
+  <head>
+    <title>WebRTC Coverage Dashboard</title>
+    <meta http-equiv="refresh" content="60">
+    <link href="http://code.google.com/css/codesite.pack.04102009.css"
+          rel="stylesheet" type="text/css">
+    <link href="stylesheets/stylesheet.css"
+          rel="stylesheet" type="text/css">
+
+    <script src="https://www.google.com/jsapi" type="text/javascript"></script>
+    <script type="text/javascript">
+      google.load('visualization', '1', {packages:['table', 'corechart']});
+
+      google.setOnLoadCallback(drawTable);
+      function drawTable() {
+        /* Build data tables and views */
+        {% comment %}
+          Disable Django auto-escaping here since that will mess up our
+          coverage table JSON data otherwise.
+        {% endcomment %}
+        {% autoescape off %}
+        var small_medium_coverage_data_table =
+          new google.visualization.DataTable(
+              {{ small_medium_coverage_json_data }});
+        var large_coverage_data_table =
+          new google.visualization.DataTable(
+              {{ large_coverage_json_data }});
+        {% endautoescape %}
+
+        /* Display tables and charts */
+        var small_medium_coverage_chart = new google.visualization.LineChart(
+          document.getElementById('table_div_small_medium_coverage'));
+        small_medium_coverage_chart.draw(small_medium_coverage_data_table, {
+          colors: ['blue', 'red', 'black'],
+          vAxis: {title: 'Coverage (%)'},
+          hAxis: {title: 'Date'},
+          width: 1200, height: 300,
+        });
+
+        var large_coverage_chart = new google.visualization.LineChart(
+          document.getElementById('table_div_large_coverage'));
+        large_coverage_chart.draw(large_coverage_data_table, {
+          colors: ['blue', 'red', 'black'],
+          vAxis: {title: 'Coverage (%)'},
+          hAxis: {title: 'Date'},
+          width: 1200, height: 300,
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <h1>WebRTC Quality Dashboard</h1>
+    <h2>Current Build Status</h2>
+    <div>(as of {{ last_updated_at }} UTC)</div>
+    <table>
+      <tr>
+      {% for entry in build_status_data %}
+        <th class="status_cell">{{ entry.bot_name }}</th>
+      {% endfor %}
+      </tr>
+      <tr>
+      {% for entry in build_status_data %}
+        <td title="Last built revision {{ entry.revision }}"
+            class="status_cell status_{{entry.status}}">
+          {{entry.status}}
+        </td>
+      {% endfor %}
+      </tr>
+    </table>
+    <p></p>
+
+    <h2>Last Known Good Revision (LKGR)</h2>
+    <div class="last_known_good_revision">
+      {% if lkgr  %}
+        <a href="http://code.google.com/p/webrtc/source/detail?r={{ lkgr }}">
+          {{ lkgr }}</a>
+      {% else %}
+        ????
+      {% endif %}
+    </div>
+
+    <h2>Code Coverage History (Small / Medium Tests)</h2>
+    <div id="table_div_small_medium_coverage"></div>
+    <h2>Code Coverage History (Large Tests)</h2>
+    <div id="table_div_large_coverage"></div>
+  </body>
+</html>

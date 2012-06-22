@@ -426,6 +426,13 @@ class IDLInterface(IDLObjectWithScope):
         for iface in self.implementedInterfaces:
             iface.finish(scope)
 
+        cycleInGraph = self.findInterfaceLoopPoint(self)
+        if cycleInGraph:
+            raise WebIDLError("Interface %s has itself as ancestor or "
+                              "implemented interface" % self.identifier.name,
+                              self.location,
+                              extraLocation=cycleInGraph.location)
+
         # Now resolve() and finish() our members before importing the
         # ones from our implemented interfaces.
 
@@ -594,6 +601,26 @@ class IDLInterface(IDLObjectWithScope):
 
         return consequentialInterfaces | temp
 
+    def findInterfaceLoopPoint(self, otherInterface):
+        """
+        Finds an interface, amongst our ancestors and consequential interfaces,
+        that inherits from otherInterface or implements otherInterface
+        directly.  If there is no such interface, returns None.
+        """
+        if self.parent:
+            if self.parent == otherInterface:
+                return self
+            loopPoint = self.parent.findInterfaceLoopPoint(otherInterface)
+            if loopPoint:
+                return loopPoint
+        if otherInterface in self.implementedInterfaces:
+            return self
+        for iface in self.implementedInterfaces:
+            loopPoint = iface.findInterfaceLoopPoint(otherInterface)
+            if loopPoint:
+                return loopPoint
+        return None
+
 class IDLDictionary(IDLObjectWithScope):
     def __init__(self, location, parentScope, name, parent, members):
         assert isinstance(parentScope, IDLScope)
@@ -761,6 +788,12 @@ class IDLType(IDLObject):
     def isTypedArray(self):
         return False
 
+    def isCallbackInterface(self):
+        return False
+
+    def isNonCallbackInterface(self):
+        return False
+
     def isGeckoInterface(self):
         """ Returns a boolean indicating whether this type is an 'interface'
             type that is implemented in Gecko. At the moment, this returns
@@ -908,6 +941,12 @@ class IDLNullableType(IDLType):
     def isInterface(self):
         return self.inner.isInterface()
 
+    def isCallbackInterface(self):
+        return self.inner.isCallbackInterface()
+
+    def isNonCallbackInterface(self):
+        return self.inner.isNonCallbackInterface()
+
     def isEnum(self):
         return self.inner.isEnum()
 
@@ -998,7 +1037,7 @@ class IDLSequenceType(IDLType):
     def isDistinguishableFrom(self, other):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isDictionary() or other.isDate() or
-                (other.isInterface() and not other.isCallback()))
+                other.isNonCallbackInterface())
 
 class IDLArrayType(IDLType):
     def __init__(self, location, parameterType):
@@ -1071,7 +1110,7 @@ class IDLArrayType(IDLType):
     def isDistinguishableFrom(self, other):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
                 other.isDictionary() or other.isDate() or
-                (other.isInterface() and not other.isCallback()))
+                other.isNonCallbackInterface())
 
 class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
     def __init__(self, location, innerType, name):
@@ -1123,6 +1162,12 @@ class IDLTypedefType(IDLType, IDLObjectWithIdentifier):
 
     def isInterface(self):
         return self.inner.isInterface()
+
+    def isCallbackInterface(self):
+        return self.inner.isCallbackInterface()
+
+    def isNonCallbackInterface(self):
+        return self.inner.isNonCallbackInterface()
 
     def resolve(self, parentScope):
         assert isinstance(parentScope, IDLScope)
@@ -1177,6 +1222,12 @@ class IDLWrapperType(IDLType):
         return isinstance(self.inner, IDLInterface) or \
                isinstance(self.inner, IDLExternalInterface)
 
+    def isCallbackInterface(self):
+        return self.isInterface() and self.inner.isCallback()
+
+    def isNonCallbackInterface(self):
+        return self.isInterface() and not self.inner.isCallback()
+
     def isEnum(self):
         return isinstance(self.inner, IDLEnum)
 
@@ -1198,7 +1249,7 @@ class IDLWrapperType(IDLType):
             assert False
 
     def isDistinguishableFrom(self, other):
-        assert self.isInterface() or self.isEnum()
+        assert self.isInterface() or self.isEnum() or self.isDictionary()
         if self.isEnum():
             return (other.isInterface() or other.isObject() or
                     other.isCallback() or other.isDictionary() or
@@ -1206,15 +1257,20 @@ class IDLWrapperType(IDLType):
                     other.isDate())
         if other.isPrimitive() or other.isString() or other.isEnum():
             return True
+        if self.isDictionary():
+            return (other.isNonCallbackInterface() or other.isSequence() or
+                    other.isArray() or other.isDate())
+
+        assert self.isInterface()
         # XXXbz need to check that the interfaces can't be implemented
         # by the same object
         if other.isInterface():
             return (self != other and
-                    (not self.isCallback() or not other.isCallback()))
-        if other.isDictionary() or other.isCallback():
-            return not self.isCallback()
-        if other.isSequence() or other.isArray():
-            return not self.isCallback()
+                    (self.isNonCallbackInterface() or
+                     other.isNonCallbackInterface()))
+        if (other.isDictionary() or other.isCallback() or
+            other.isSequence() or other.isArray()):
+            return self.isNonCallbackInterface()
 
 class IDLBuiltinType(IDLType):
 
@@ -1314,6 +1370,10 @@ class IDLBuiltinType(IDLType):
                self.isArrayBufferView() or \
                self.isTypedArray()
 
+    def isNonCallbackInterface(self):
+        # All the interfaces we can be are non-callback
+        return self.isInterface()
+
     def isFloat(self):
         return self._typeTag == IDLBuiltinType.Types.float or \
                self._typeTag == IDLBuiltinType.Types.double
@@ -1347,7 +1407,7 @@ class IDLBuiltinType(IDLType):
                 other.isSequence() or other.isArray() or other.isDate() or
                 (other.isInterface() and (
                  # ArrayBuffer is distinguishable from everything
-                 # that's not an ArrayBuffer
+                 # that's not an ArrayBuffer or a callback interface
                  (self.isArrayBuffer() and not other.isArrayBuffer()) or
                  # ArrayBufferView is distinguishable from everything
                  # that's not an ArrayBufferView or typed array.
@@ -1681,8 +1741,7 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
 
     def isDistinguishableFrom(self, other):
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                (other.isInterface() and not other.isCallback()) or
-                other.isDate())
+                other.isNonCallbackInterface() or other.isDate())
 
 class IDLMethod(IDLInterfaceMember, IDLScope):
 

@@ -1,0 +1,2 @@
+# Flaky and sometimes hangs under Valgrind, see http://crbug.com/103774
+JingleSessionTest.TestSpeed

@@ -1,0 +1,27 @@
+##################################################
+# known Dr. Memory bugs:
+
+# http://code.google.com/p/drmemory/issues/detail?id=318
+AudioRendererHostTest.*
+
+##################################################
+# un-analyzed Dr. Memory bugs:
+
+# http://code.google.com/p/drmemory/issues/detail?id=548
+DownloadManagerTest.StartDownload
+
+##################################################
+# Chromium bugs:
+
+# times out on the bot
+# http://crbug.com/87887
+VideoCaptureHostTest.*
+
+# crashes due to use-after-free's, http://crbug.com/90980
+FirefoxImporterTest.Firefox*NSS3Decryptor
+
+# fails http://crbug.com/92144
+ServiceProcessStateTest.ForceShutdown
+
+# fails sporadically: http://crbug.com/108205
+MultiProcessLockTest.RecursiveLock

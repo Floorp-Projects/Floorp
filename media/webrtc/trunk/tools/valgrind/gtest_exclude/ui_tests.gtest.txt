@@ -1,0 +1,151 @@
+# Don't run FLAKY or FAILS ui tests under Valgrind.
+# They tend to generate way too many flaky Valgrind reports.
+*FLAKY_*
+*FAILS_*
+
+# Takes too long to valgrind, causes timeouts
+BrowserTest.ThirtyFourTabs
+# FIXME: these tests hang frequently in valgrind
+SessionRestoreUITest.*
+# Buggy test; see http://crbug.com/6522
+DownloadTest.UnknownSize
+# Flakily hang on Linux, Mac. See http://crbug.com/46643 and
+# http://crbug.com/29598.
+ErrorPageTest.DNSError_GoBack2AndForward
+ErrorPageTest.DNSError_GoBack2Forward2
+ErrorPageTest.DNSError_GoBack1
+ErrorPageTest.DNSError_GoBack2
+
+# Flaky timeout on Linux; see http://crbug.com/46781
+UnloadTest.*
+
+# Don't run reference tests under Valgrind
+# On the Mac, they don't have symbols, even, so suppressions don't work
+# They probably don't have ThreadSanitizer annotations TODO(timurrrr): check
+*ReferenceTest.Perf
+
+# Dromaeo's reference tests are split up into multiple *Perf sections.
+DromaeoReferenceTest.*
+
+# This test hangs under valgrind
+# See http://crbug.com/27764
+NewTabUITest.HomePageLink
+
+# Hangs frequently under valgrind on Mac
+# See http://crbug.com/29208
+TabRestoreUITest.*
+
+# Running these tests under valgrind and produces errors about "valgrind didn't
+# finish writing 2 files" since the tests kill the browser process (which is
+# actually the valgrind wrapper) in the middle of execution.
+# See http://crbug.com/25176
+ProcessSingletonLinuxTest.NotifyOtherProcessFailure
+ProcessSingletonLinuxTest.NotifyOtherProcessDifferingHost
+ProcessSingletonLinuxTest.NotifyOtherProcessOrCreate_DifferingHost
+
+# These tests fail under valgrind.
+# See http://crbug.com/29579
+AutomationProxyTest.NavigateToURLWithTimeout1
+AutomationProxyTest.NavigateToURLWithTimeout2
+# See http://crbug.com/29586
+NewTabUITest.ChromeInternalLoadsNTP
+# See http://crbug.com/38575
+WorkerTest.*
+# See http://crbug.com/42205
+DownloadTest.*
+# See http://crbug.com/45792
+DefaultPluginUITest.DefaultPluginLoadTest
+# See http://crbug.com/46643
+ErrorPageTest.DNSError_Basic
+# See http://crbug.com/59659
+NewTabUITest.NTPHasLoginName
+# See http://crbug.com/30367
+NewTabUITest.UpdateUserPrefsVersion
+
+# Mac: See http://crbug.com/30661, Linux/CrOS: http://crbug.com/49576.
+LayoutPluginTester.NPObjectReleasedOnDestruction
+LayoutPluginTester.NPObjectSetException
+
+# This doesn't pass under valgrind, because the valgrind helper prevents us
+# from properly SIGTERMing the browser process.
+# See http://crbug.com/42105
+BrowserTest.SessionEnd
+
+# Fails flakily, http://crbug.com/70323
+AutomatedUITestBase.ShowBookmarkBar
+
+# Fail, see http://crbug.com/75250
+NewTabUITest.AboutHangInNTP
+NewTabUITest.ChromeHangInNTP
+NewTabUIProcessPerTabTest.NavBeforeNTPCommits
+
+# Video decoding under valgrind is really slow, see http://crbug.com/53825
+MediaTest.VideoBear*
+
+# Flakily times out, http://crbug.com/85865
+AppCacheUITest.AppCacheLayoutTests_NoPHP
+
+# Flakily times out, http://crbug.com/85866
+MetricsServiceTest.CloseRenderersNormally
+
+# Fails flakily, http://crbug.com/46783
+SessionHistoryTest.FrameBackForward
+SessionHistoryTest.JavascriptHistory
+
+# Fails flakily, http://crbug.com/86783
+ResourceDispatcherTest.CrossSiteImmediateLoadOnunloadCookie
+
+# http://crbug.com/88244
+NoStartupWindowTest.NoStartupWindowBasicTest
+
+# http://crbug.com/89173
+FastShutdown.SlowTermination
+
+# Out-of-process PPAPI tests fail on buildbots http://crbug.com/89961
+OutOfProcessPPAPITest.Instance
+OutOfProcessPPAPITest.CursorControl
+OutOfProcessPPAPITest.PostMessage*
+
+# Failing, may not be related to the tests above. http://crbug.com/109336
+OutOfProcessPPAPITest.View_PageHideShow
+
+# NaCl ui_tests fail on buildbots http://crbug.com/104517
+PPAPINaClTest*
+
+# Flakily times out, http://crbug.com/92527
+NamedInterfaceTest.BasicNamedInterface
+
+# These tests fail due to timeouts and hang the UI test runner,
+# http://crbug.com/61579
+LocaleTestsDa.TestStart
+LocaleTestsHe.TestStart
+LocaleTestsZhTw.TestStart
+
+# Times out flakily, http://crbug.com/96312
+AutomatedUITestBase.CloseBrowserWindow
+AutomatedUITestBase.CloseTab
+AutomatedUITestBase.OpenCloseBrowserWindowWithAccelerator
+
+# Times out flakily, http://crbug.com/96313
+AutomatedUITestBase.DuplicateTab
+
+# Flaky failure on Linux/ChromeOS, http://crbug.com/96553
+GuestModeOptionsUITest.LoadOptionsByURL
+OptionsUITest.LoadOptionsByURL
+
+# Flaky failure on Linux/ChromeOS, http://crbug.com/100031
+IFrameTest.InEmptyFrame
+
+# Fails consistently on ChromeOS, http://crbug.com/104938
+WidgetOwnershipTest.Ownership_ViewsNativeWidgetOwnsWidget
+WidgetOwnershipTest.Ownership_ViewsNativeWidgetOwnsWidget_NativeDestroy
+
+# Leaks in audio tests http://crbug.com/106036
+PPAPITest.Audio_*
+OutOfProcessPPAPITest.Audio_*
+
+# Started failing since r114924 http://crbug.com/108014
+OutOfProcessPPAPITest.InputEvent
+
+# Fails on valgrind bots http://crbug.com/96767
+OutOfProcessPPAPITest.FlashFullscreen

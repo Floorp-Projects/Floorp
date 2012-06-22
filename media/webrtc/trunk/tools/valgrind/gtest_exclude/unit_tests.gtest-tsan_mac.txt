@@ -1,0 +1,5 @@
+# http://crbug.com/26214
+ExtensionTest.InitFromValueInvalid
+
+# http://crbug.com/38503
+TabRestoreServiceTest.DontPersistPostData

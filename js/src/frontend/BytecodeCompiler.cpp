@@ -95,7 +95,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
     Parser parser(cx, principals, originPrincipals, chars, length, filename, lineno, version,
-                  callerFrame, /* foldConstants = */ true, compileAndGo);
+                  /* foldConstants = */ true, compileAndGo);
     if (!parser.init())
         return NULL;
 
@@ -113,20 +113,15 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     if (!script)
         return NULL;
 
-    BytecodeEmitter bce(&parser, &sc, script, lineno);
+    // We can specialize a bit for the given scope chain if that scope chain is the global object.
+    JSObject *globalScope = scopeChain && scopeChain == &scopeChain->global() ? scopeChain : NULL;
+    JS_ASSERT_IF(globalScope, globalScope->isNative());
+    JS_ASSERT_IF(globalScope, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalScope->getClass()));
+
+    BytecodeEmitter bce(/* parent = */ NULL, &parser, &sc, script, callerFrame, !!globalScope,
+                        lineno);
     if (!bce.init())
         return NULL;
-
-    // We can specialize a bit for the given scope chain if that scope chain is the global object.
-    JSObject *globalObj = scopeChain && scopeChain == &scopeChain->global()
-                          ? &scopeChain->global()
-                          : NULL;
-
-    JS_ASSERT_IF(globalObj, globalObj->isNative());
-    JS_ASSERT_IF(globalObj, JSCLASS_HAS_GLOBAL_FLAG_AND_SLOTS(globalObj->getClass()));
-
-    GlobalScope globalScope(cx, globalObj);
-    bce.globalScope = &globalScope;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
     if (callerFrame && callerFrame->isScriptFrame() && callerFrame->script()->strictModeCode)
@@ -192,10 +187,10 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         if (inDirectivePrologue && !parser.recognizeDirectivePrologue(pn, &inDirectivePrologue))
             return NULL;
 
-        if (!FoldConstants(cx, pn, bce.parser))
+        if (!FoldConstants(cx, pn, &parser))
             return NULL;
 
-        if (!AnalyzeFunctions(bce.parser))
+        if (!AnalyzeFunctions(&parser, callerFrame))
             return NULL;
         tc.functionList = NULL;
 
@@ -206,7 +201,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         if (!pn->isKind(PNK_SEMI) || !pn->pn_kid || !pn->pn_kid->isXMLItem())
             onlyXML = false;
 #endif
-        bce.parser->freeTree(pn);
+        parser.freeTree(pn);
     }
 
 #if JS_HAS_XML_SUPPORT
@@ -222,8 +217,18 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
     }
 #endif
 
-    if (!parser.checkForArgumentsAndRest())
-        return NULL;
+    // It's an error to use |arguments| in a function that has a rest parameter.
+    if (callerFrame && callerFrame->isFunctionFrame() && callerFrame->fun()->hasRest()) {
+        PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
+        for (AtomDefnRange r = tc.lexdeps->all(); !r.empty(); r.popFront()) {
+            if (r.front().key() == arguments) {
+                parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARGUMENTS_AND_REST);
+                return NULL;
+            }
+        }
+        // We're not in a function context, so we don't expect any bindings.
+        JS_ASSERT(sc.bindings.lookup(cx, arguments, NULL) == NONE);
+    }
 
     /*
      * Nowadays the threaded interpreter needs a stop instruction, so we
@@ -250,8 +255,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
                               const char *filename, unsigned lineno, JSVersion version)
 {
     Parser parser(cx, principals, originPrincipals, chars, length, filename, lineno, version,
-                  /* callerFrame = */ NULL, /* foldConstants = */ true,
-                  /* compileAndGo = */ false);
+                  /* foldConstants = */ true, /* compileAndGo = */ false);
     if (!parser.init())
         return false;
 
@@ -271,11 +275,13 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!script)
         return false;
 
-    BytecodeEmitter funbce(&parser, &funsc, script, lineno);
+    StackFrame *nullCallerFrame = NULL;
+    BytecodeEmitter funbce(/* parent = */ NULL, &parser, &funsc, script, nullCallerFrame,
+                           /* hasGlobalScope = */ false, lineno);
     if (!funbce.init())
         return false;
 
-    funsc.bindings.transfer(cx, bindings);
+    funsc.bindings.transfer(bindings);
     fun->setArgCount(funsc.bindings.numArgs());
     if (!GenerateBlockId(&funsc, funsc.bodyid))
         return false;
@@ -328,7 +334,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
     if (!FoldConstants(cx, pn, &parser))
         return false;
 
-    if (!AnalyzeFunctions(&parser))
+    if (!AnalyzeFunctions(&parser, nullCallerFrame))
         return false;
 
     if (fn->pn_body) {

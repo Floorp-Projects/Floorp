@@ -495,7 +495,7 @@ case "$target" in
         AC_LANG_RESTORE
 
         changequote(,)
-        _MSVC_VER_FILTER='s|.* ([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
+        _MSVC_VER_FILTER='s|.*[^!-~]([0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?).*|\1|p'
         changequote([,])
 
         # Determine compiler version
@@ -522,18 +522,22 @@ case "$target" in
             fi
 
             _CC_SUITE=8
+            _MSVS_VERSION=2005
             AC_DEFINE(_CRT_SECURE_NO_DEPRECATE)
             AC_DEFINE(_CRT_NONSTDC_NO_DEPRECATE)
         elif test "$_CC_MAJOR_VERSION" = "15"; then
             _CC_SUITE=9
+            _MSVS_VERSION=2008
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         elif test "$_CC_MAJOR_VERSION" = "16"; then
             _CC_SUITE=10
+            _MSVS_VERSION=2010
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         elif test "$_CC_MAJOR_VERSION" = "17"; then
             _CC_SUITE=11
+            _MSVS_VERSION=2011
             AC_DEFINE(_CRT_SECURE_NO_WARNINGS)
             AC_DEFINE(_CRT_NONSTDC_NO_WARNINGS)
         else
@@ -567,7 +571,7 @@ case "$target" in
         fi
 
         changequote(,)
-        _MSMT_VER_FILTER='s|.* \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
+        _MSMT_VER_FILTER='s|.*[^!-~]\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
         changequote([,])
         MSMANIFEST_TOOL_VERSION=`echo ${MSMT_TOOL}|sed -ne "$_MSMT_VER_FILTER"`
         if test -z "$MSMANIFEST_TOOL_VERSION"; then
@@ -4250,9 +4254,12 @@ MOZ_WAVE=1
 MOZ_MEDIA=
 MOZ_OPUS=1
 MOZ_WEBM=1
+MOZ_WEBRTC=
+MOZ_WEBRTC_SIGNALING=
 MOZ_MEDIA_PLUGINS=
 MOZ_MEDIA_NAVIGATOR=
 MOZ_OMX_PLUGIN=
+MOZ_VP8=
 MOZ_VP8_ERROR_CONCEALMENT=
 MOZ_VP8_ENCODER=
 VPX_AS=
@@ -5272,6 +5279,25 @@ if test "$NS_PRINTING"; then
 fi
 
 dnl ========================================================
+dnl = Enable WebRTC code
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(webrtc,
+[  --enable-webrtc        Enable support for WebRTC],
+    MOZ_WEBRTC=1,
+    MOZ_WEBRTC=)
+
+if test -n "$MOZ_WEBRTC"; then
+    AC_DEFINE(MOZ_WEBRTC)
+    MOZ_MEDIA=1
+    MOZ_RAW=1
+    MOZ_VP8=1
+    MOZ_VP8_ENCODER=1
+    MOZ_VP8_ERROR_CONCEALMENT=1
+fi
+
+AC_SUBST(MOZ_WEBRTC)
+
+dnl ========================================================
 dnl = Enable Raw Codecs
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(raw,
@@ -5346,6 +5372,11 @@ MOZ_ARG_DISABLE_BOOL(webm,
     MOZ_WEBM=,
     MOZ_WEBM=1)
 
+if test -n "$MOZ_WEBM"; then
+    AC_DEFINE(MOZ_WEBM)
+    MOZ_VP8=1
+fi;
+
 dnl ========================================================
 dnl = Disable media plugin support
 dnl ========================================================
@@ -5397,8 +5428,8 @@ MOZ_ARG_WITH_BOOL(system-libvpx,
 MOZ_LIBVPX_INCLUDES=
 MOZ_LIBVPX_LIBS=
 
-if test -n "$MOZ_WEBM"; then
-    AC_DEFINE(MOZ_WEBM)
+if test -n "$MOZ_VP8"; then
+    AC_DEFINE(MOZ_VP8)
     if test -n "$MOZ_VP8_ERROR_CONCEALMENT" ; then
         AC_DEFINE(MOZ_VP8_ERROR_CONCEALMENT)
     fi
@@ -5425,7 +5456,7 @@ AC_SUBST(MOZ_NATIVE_LIBVPX)
 AC_SUBST(MOZ_LIBVPX_INCLUDES)
 AC_SUBST(MOZ_LIBVPX_LIBS)
 
-if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
+if test "$MOZ_WEBM"; then
     MOZ_SYDNEYAUDIO=1
     MOZ_CUBEB=1
     MOZ_MEDIA=1
@@ -5437,7 +5468,9 @@ if test -n "$MOZ_WEBM" -a -z "$MOZ_NATIVE_LIBVPX"; then
         MOZ_VORBIS=1
     ;;
     esac
+fi
 
+if test -n "$MOZ_VP8" -a -z "$MOZ_NATIVE_LIBVPX"; then
 
     dnl Detect if we can use an assembler to compile optimized assembly for libvpx.
     dnl We currently require yasm on all x86 platforms and require yasm 1.1.0 on Win32.
@@ -8588,6 +8621,7 @@ AC_SUBST(MOZ_MEDIA_PLUGINS)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VP8_ERROR_CONCEALMENT)
 AC_SUBST(MOZ_VP8_ENCODER)
+AC_SUBST(MOZ_VP8)
 AC_SUBST(MOZ_OGG)
 AC_SUBST(MOZ_ALSA_LIBS)
 AC_SUBST(MOZ_ALSA_CFLAGS)
@@ -8864,6 +8898,52 @@ echo $MAKEFILES > unallmakefiles
 mv -f config/autoconf.mk config/autoconf.mk.orig 2> /dev/null
 
 AC_OUTPUT($MAKEFILES)
+
+# Generate Makefiles for WebRTC directly from .gyp files
+if test "${OS_TARGET}" = "WINNT"; then
+   if test "$HAVE_64BIT_OS"; then
+      OS_BITS=64
+   else
+      OS_BITS=32
+   fi
+   EXTRA_GYP_DEFINES="-D MSVS_VERSION=${_MSVS_VERSION} -D MSVS_OS_BITS=${OS_BITS}"
+fi
+
+if test -n "$MOZ_WEBRTC"; then
+   AC_MSG_RESULT("generating WebRTC Makefiles...")
+
+   GYP_WEBRTC_OPTIONS="--format=mozmake -D build_with_mozilla=1 -D enable_protobuf=0 -D include_internal_video_render=0 ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
+
+   $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
+     $GYP_WEBRTC_OPTIONS \
+     --generator-output=${_objdir}/media/webrtc/trunk \
+     ${srcdir}/media/webrtc/trunk/peerconnection.gyp
+   if test "$?" != 0; then
+      AC_MSG_ERROR([failed to generate WebRTC Makefiles])
+   fi
+
+   # XXX disable until we land the tranche with signaling
+   if test -n "$MOZ_WEBRTC_SIGNALING"; then
+     AC_MSG_RESULT("generating WebRTC/Signaling Makefiles...")
+     $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
+       $GYP_WEBRTC_OPTIONS \
+       --generator-output=${_objdir}/media/webrtc/signaling \
+       ${srcdir}/media/webrtc/signaling/signaling.gyp
+     if test "$?" != 0; then
+        AC_MSG_ERROR([failed to generate WebRTC/Signaling Makefiles])
+     fi
+   fi
+
+   AC_MSG_RESULT("generating gtest Makefiles...")
+   # Ok to pass some extra -D's that are ignored here
+   $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
+     $GYP_WEBRTC_OPTIONS \
+     --generator-output=${_objdir}/media/webrtc/trunk/testing/ \
+     ${srcdir}/media/webrtc/trunk/testing/gtest.gyp
+   if test "$?" != 0; then
+      AC_MSG_ERROR([failed to generate gtest Makefiles])
+   fi
+fi
 
 # Populate the virtualenv
 AC_MSG_RESULT([Populating Python virtualenv])

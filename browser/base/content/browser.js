@@ -1400,7 +1400,7 @@ var gBrowserInit = {
 
       // Show the toolbar if it was previously visible
       if (gPrefService.getBoolPref("devtools.toolbar.visible")) {
-        this.DeveloperToolbar.show();
+        DeveloperToolbar.show();
       }
     }
 

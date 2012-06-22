@@ -1059,3 +1059,5 @@ gst/gst.h
 gst/app/gstappsink.h
 gst/app/gstappsrc.h
 gst/video/video.h
+sys/msg.h
+sys/ipc.h

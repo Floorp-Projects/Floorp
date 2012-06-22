@@ -56,6 +56,8 @@ space :=$(nullstr) # EOL
 
 core_winabspath = $(firstword $(subst /, ,$(call core_abspath,$(1)))):$(subst $(space),,$(patsubst %,\\%,$(wordlist 2,$(words $(subst /, ,$(call core_abspath,$(1)))), $(strip $(subst /, ,$(call core_abspath,$(1)))))))
 
+RM = rm -f
+
 # LIBXUL_DIST is not defined under js/src, thus we make it mean DIST there.
 LIBXUL_DIST ?= $(DIST)
 

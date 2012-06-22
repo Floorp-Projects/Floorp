@@ -1,0 +1,8 @@
+# Way too slow under Valgrind at the moment; http://crbug.com/9177
+BMPImageDecoderTest.ChunkedDecodingSlow
+BMPImageDecoderTest.DecodingSlow
+# hangs; see http://crbug.com/16945
+MediaLeakTest.VideoBear
+MediaLeakTest.ManyVideoBear
+# hangs; see http://crbug.com/22134
+WebFrameTest.GetFullHtmlOfPage

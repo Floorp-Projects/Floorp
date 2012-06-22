@@ -1,0 +1,11 @@
+# WebSocketTest tests are extraordinary slow under ThreadSanitizer,
+# (see http://crbug.com/25392)
+# TODO(glider): investigate this.
+WebSocketTest.*
+
+# Strange reports from __NSThread__main__ appeared with the new TSan binaries
+# See http://crbug.com/38926
+DirectoryLister*
+
+# Looks like http://crbug.com/78536 depends on this test.
+CookieMonsterTest.GarbageCollectionTriggers

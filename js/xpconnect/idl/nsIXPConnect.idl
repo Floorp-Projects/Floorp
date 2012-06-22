@@ -374,7 +374,7 @@ enum nsGCType {
 };
 %}
 
-[uuid(1239b432-b835-4d28-9dc0-53063cb7f60f)]
+[uuid(26efd266-3e33-4dc9-8233-e13bb8d9c452)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -561,8 +561,6 @@ interface nsIXPConnect : nsISupports
 
     readonly attribute nsIStackFrame                CurrentJSStack;
     readonly attribute nsAXPCNativeCallContextPtr   CurrentNativeCallContext;
-    /* pass nsnull to clear pending exception */
-             attribute nsIException                 PendingException;
 
     void debugDump(in short depth);
     void debugDumpObject(in nsISupports aCOMObj, in short depth);

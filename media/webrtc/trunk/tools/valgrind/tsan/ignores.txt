@@ -1,0 +1,161 @@
+# This file lists the functions, object files and source files
+# which should be ignored (i.e. not instrumented) by ThreadSanitizer.
+# See http://code.google.com/p/data-race-test/wiki/ThreadSanitizerIgnores.
+
+# ignore these libraries
+obj:*/libfreetype*
+obj:*/libdbus*
+
+# we ignore the whole NSS library for now since
+# its instrumentation is very slow.
+# TODO(timurrrr): investigate whether we need to instrument it
+obj:*/libnss*
+obj:*/nss/*
+
+# ignore pulseaudio - We don't have symbols there and it can be slow otherwise
+obj:*/libpulse*.so*
+
+# ignore this standard stuff
+fun:clone
+fun:fork
+fun:pthread_*
+fun_r:_pthread_exit
+fun_r:_pthread_free_pthread_onstack
+fun_r:random_r
+fun_r:random
+fun_r:rand
+fun_r:srand
+fun:__new_exitfn
+fun:_dl_*
+fun:__dl_*
+fun:*_setjmp*
+
+# dark magic with 'errno' here.
+fun:sys_*
+
+# ignore libc's printf functions
+fun_r:_IO_*
+fun:fwrite
+fun:fflush
+
+# False reports on std::string internals, see
+# http://code.google.com/p/data-race-test/issues/detail?id=40
+fun:*_M_mutateE*
+fun_r:*_M_set_length_and_sharable*
+fun:*_M_is_leaked*
+fun:*_M_is_shared*
+fun:*_M_set_leaked*
+fun:*_M_set_sharable*
+
+# Don't instrument intercepts
+src:*ts_valgrind_intercepts.c
+
+##################################################################
+# Don't instrument synchronization code
+src:*base/threading/thread_local_storage*
+src:*base/stats_counters*
+src:*base/synchronization/condition_variable*
+src:*base/synchronization/lock*
+src:*base/synchronization/waitable_event*
+
+# Don't instrument code dealing with atomics (base::subtle)
+fun:*base*subtle*Release_Store*
+fun:*base*subtle*NoBarrier_CompareAndSwap*
+# Keep some mangling so we don't match NoBarrier_AtomicIncrement
+fun:*base*subtle23Barrier_AtomicIncrement*
+
+# Don't instrument tcmalloc
+src:*/tcmalloc/*
+
+# This function is heavy in net_unittests
+fun_r:*disk_cache*BackendImpl*CheckAllEntries*
+
+# V8 is a hot-spot under ThreadSanitizer.
+# Lots of tiny functions there...
+# TODO(timurrrr):
+# Can we miss data races on V8 objects due to non thread-safe API calls
+# if we don't instrument v8::internals?
+fun_r:*v8*internal*
+
+# unibrow namespace contains lots of tiny unicode conversion functions.
+fun_hist:*unibrow*
+
+# Histogram has tiny functions that can be called frequently
+fun_hist:*Histogram*
+
+# TODO(timurrrr): SKIA - needs separate testing?
+# SKIA unittest is single-threaded...
+# SKIA uses un-annotated atomic refcount and other sync stuff
+# some functions are HEAVY like png, jpeg decoding
+src:*third_party/skia*
+
+# WebKit hotspot
+fun:*png_write*
+
+# This function generates 25% of memory accesses in net_unittests
+fun:*icu_4_2*UnicodeSet*add*
+
+# SQLite has lots of tiny functions and produce too many segments on some tests.
+# See http://crbug.com/56511
+fun_hist:*sqlite*
+
+# There's some weird failure test going on in this tiny test function in sqlite
+fun_r:threadLockingTest
+
+# Ignore accesses below GetCurrentThreadIdentifier.
+# There is a benign race which is hard to suppress properly,
+# see http://crbug.com/44580
+fun_r:*BrowserThread*GetCurrentThreadIdentifier*
+
+# BrowserThread accesses MessageLoop::current() in ::CurrentlyOn.
+# We can't use suppressions to hide these reports since the concurrent stack
+# is simply "base::Thread::ThreadMain"
+# See http://crbug.com/63678
+fun_r:*BrowserThread*CurrentlyOn*
+
+# zlib is smarter than we are, see http://www.zlib.net/zlib_faq.html#faq36
+fun_r:inflate
+# zlib-related reports, not investigated yet. See http://crbug.com/70932
+fun_r:*remoting*CompressorZlib*Process*
+
+# X11 reads the _XErrorFunction callback in a racey way, see
+# http://crbug.com/65278
+fun:XSetErrorHandler
+
+fun:*IPC*Logging*Enable*
+fun:*IPC*Logging*Disable*
+
+# TSan doesn't support lockf and hence shared memory locks in this function;
+# http://crbug.com/45083
+fun_r:*base*StatsTable*AddCounter*
+
+# TSan doesn't understand internal libc locks, see http://crbug.com/71435
+fun_r:mbsrtowcs
+
+# gethostbyname2_r is thread-safe, however ThreadSanitizer reports races inside it and
+# (sometimes) in __nss_* functions below it.
+# This may be related to
+# https://bugs.launchpad.net/ubuntu/+source/glibc/+bug/59449
+fun_r:gethostbyname2_r*
+
+# TODO(timurrrr): remove this when TSan is updated past r3232
+fun_r:gaih_inet
+
+# Strange reports below _IO_getline, every time in "Concurrent access".
+# Probably the reports are there since we're missing the libc internal locks
+fun_r:_IO_getline*
+
+# A benign race in glib on something called "contention_counter". 
+fun:g_slice_alloc
+
+# A benign race in glibc on "random_time_bits".
+fun:__gen_tempname
+
+# The sqlite cache is racing against a few different stacktraces,
+# so let's ignore it recursively. See http://crbug.com/84094
+fun_r:pcache1Fetch
+
+# "Suppress" a data race in TraceLog::GetCategory which has
+# fun:MessageLoop::RunTask at the top of the "current" stack which we don't want
+# to suppress. See http://crbug.com/98926
+fun:*base*debug*TraceLog*GetCategoryInternal*

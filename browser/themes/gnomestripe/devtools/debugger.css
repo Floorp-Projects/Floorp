@@ -168,6 +168,16 @@
   opacity: 0.5;
 }
 
+#element-tooltip > label {
+  margin: 0 2px 0 2px;
+}
+
+#element-tooltip > label[non-enumerable],
+#element-tooltip > label[non-configurable],
+#element-tooltip > label[non-writable]{
+  text-decoration: line-through;
+}
+
 /**
  * Property values colors
  */

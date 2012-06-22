@@ -280,6 +280,9 @@ LogShellLoadType(nsIDocShell* aDocShell)
     case LOAD_PUSHSTATE:
       printf("load pushstate; ");
       break;
+    case LOAD_REPLACE_BYPASS_CACHE:
+      printf("replace bypass cache; ");
+      break;
     case LOAD_ERROR_PAGE:
       printf("error page;");
       break;

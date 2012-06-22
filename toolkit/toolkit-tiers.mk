@@ -126,6 +126,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifdef MOZ_WEBRTC
+tier_platform_dirs += \
+  media/webrtc \
+  $(NULL)
+endif
+
 ifdef MOZ_SPEEX_RESAMPLER
 tier_platform_dirs += \
 		media/libspeex_resampler \

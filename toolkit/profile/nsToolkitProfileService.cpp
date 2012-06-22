@@ -382,12 +382,8 @@ nsToolkitProfileService::Init()
     rv = gDirServiceProvider->GetUserLocalDataDirectory(getter_AddRefs(mTempData));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIFile> listFile;
-    rv = mAppData->Clone(getter_AddRefs(listFile));
+    rv = mAppData->Clone(getter_AddRefs(mListFile));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    mListFile = do_QueryInterface(listFile);
-    NS_ENSURE_TRUE(listFile, NS_ERROR_NO_INTERFACE);
 
     rv = mListFile->AppendNative(NS_LITERAL_CSTRING("profiles.ini"));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -399,7 +395,7 @@ nsToolkitProfileService::Init()
     }
 
     PRInt64 size;
-    rv = listFile->GetFileSize(&size);
+    rv = mListFile->GetFileSize(&size);
     if (NS_FAILED(rv) || !size) {
         return NS_OK;
     }
@@ -727,14 +723,10 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
 
     nsCAutoString dirName;
     if (!rootDir) {
-        nsCOMPtr<nsIFile> file;
-        rv = gDirServiceProvider->GetUserProfilesRootDir(getter_AddRefs(file),
+        rv = gDirServiceProvider->GetUserProfilesRootDir(getter_AddRefs(rootDir),
                                                          aProfileName, aAppName,
                                                          aVendorName);
         NS_ENSURE_SUCCESS(rv, rv);
-
-        rootDir = do_QueryInterface(file);
-        NS_ENSURE_TRUE(rootDir, NS_ERROR_UNEXPECTED);
 
         dirName = aName;
         SaltProfileName(dirName);
@@ -753,15 +745,11 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
             localDir = aRootDir;
         }
         else {
-            nsCOMPtr<nsIFile> file;
-            rv = gDirServiceProvider->GetUserProfilesLocalDir(getter_AddRefs(file),
+            rv = gDirServiceProvider->GetUserProfilesLocalDir(getter_AddRefs(localDir),
                                                               aProfileName,
                                                               aAppName,
                                                               aVendorName);
             NS_ENSURE_SUCCESS(rv, rv);
-
-            localDir = do_QueryInterface(file);
-            NS_ENSURE_TRUE(localDir, NS_ERROR_UNEXPECTED);
 
             // use same salting
             if (NS_IsNativeUTF8()) {

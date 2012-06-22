@@ -65,8 +65,13 @@ ifdef MOZ_WEBM
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/media/libnestegg/src/$(LIB_PREFIX)nestegg.$(LIB_SUFFIX) \
 	$(NULL)
+endif
+
+ifdef MOZ_VP8
 ifndef MOZ_NATIVE_LIBVPX
-SHARED_LIBRARY_LIBS 	+= $(DEPTH)/media/libvpx/$(LIB_PREFIX)vpx.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS 	+= \
+	$(DEPTH)/media/libvpx/$(LIB_PREFIX)vpx.$(LIB_SUFFIX) \
+	$(NULL)
 endif
 endif
 
@@ -108,7 +113,11 @@ SHARED_LIBRARY_LIBS 	+= \
 SHARED_LIBRARY_LIBS 	+= \
 	$(DEPTH)/gfx/2d/$(LIB_PREFIX)gfx2d.$(LIB_SUFFIX) \
 	$(NULL)
-  
+
+ifdef MOZ_WEBRTC
+include $(topsrcdir)/media/webrtc/shared_libs.mk
+endif
+
 ifdef MOZ_ENABLE_SKIA
 SHARED_LIBRARY_LIBS += $(MOZ_SKIA_LIBS)
 endif
@@ -119,6 +128,13 @@ OS_LIBS += $(call EXPAND_LIBNAME,usp10 ole32)
 
 # OTS uses uncompress2() from libz, so we need to link with this
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
+
+ifdef MOZ_WEBRTC
+EXTRA_DSO_LDOPTS += \
+  -LIBPATH:"$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)" \
+  $(NULL)
+OS_LIBS += $(call EXPAND_LIBNAME,secur32 crypt32 iphlpapi strmiids dmoguids wmcodecdspuuid amstrmid msdmo wininet)
+endif
 
 DEFFILE = symbols.def
 endif

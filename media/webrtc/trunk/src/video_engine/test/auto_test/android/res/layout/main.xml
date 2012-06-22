@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	     android:layout_width="fill_parent"
+	     android:layout_height="fill_parent">
+  <RelativeLayout
+     android:layout_width="fill_parent"
+     android:layout_height="fill_parent">
+    <LinearLayout 
+       android:id="@+id/RemoteView"
+       android:layout_width="fill_parent"
+       android:layout_height="fill_parent"
+       android:layout_weight="1">
+      <!-- log instead of video
+           <ImageView
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent" 
+              android:scaleType="fitXY"
+              android:src="@drawable/logo" /> -->
+
+    </LinearLayout>
+    <LinearLayout 
+       android:id="@+id/LocalView"
+       android:layout_width="120dip"
+       android:layout_height="120dip"
+       android:layout_weight="1">
+      <!-- <ImageView
+       	      android:layout_width="fill_parent"
+       	      android:layout_height="fill_parent" 
+       	      android:scaleType="fitXY"
+       	      android:src="@drawable/logo" /> -->
+    </LinearLayout>
+    <LinearLayout
+       android:orientation="horizontal"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_alignParentBottom="true">
+      <LinearLayout
+	 android:orientation="vertical"
+	 android:layout_width="fill_parent"
+	 android:layout_height="wrap_content"
+	 android:layout_alignParentBottom="true">
+	<Spinner
+	   android:id="@+id/testSpinner"
+	   android:layout_width="wrap_content"
+	   android:layout_height="wrap_content"
+	   android:prompt="@string/SpinnerTitle"
+	   />
+	<Spinner
+	   android:id="@+id/subtestSpinner"
+	   android:layout_width="wrap_content"
+	   android:layout_height="wrap_content"
+	   android:prompt="@string/SpinnerSubtest"
+	   />
+	<Button
+	   android:text="@string/run_button"
+	   android:id="@+id/Button01"
+	   android:layout_width="wrap_content"
+	   android:layout_height="wrap_content">
+	</Button>
+      </LinearLayout>
+
+    </LinearLayout>
+  </RelativeLayout>
+</FrameLayout>

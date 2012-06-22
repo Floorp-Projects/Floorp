@@ -17,8 +17,6 @@ const DEBUG = RIL.DEBUG_RIL;
 
 const RADIOINTERFACELAYER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
-const DATACALLINFO_CID =
-  Components.ID("{ef474cd9-94f7-4c05-a31b-29b9de8a10d2}");
 
 const nsIAudioManager = Ci.nsIAudioManager;
 const nsIRadioInterfaceLayer = Ci.nsIRadioInterfaceLayer;
@@ -129,20 +127,6 @@ XPCOMUtils.defineLazyGetter(this, "gAudioManager", function getAudioManager() {
     return FakeAudioManager;
   }
 });
-
-
-function DataCallInfo(state, cid, apn) {
-  this.callState = state;
-  this.cid = cid;
-  this.apn = apn;
-}
-DataCallInfo.protoptype = {
-  classID:      DATACALLINFO_CID,
-  classInfo:    XPCOMUtils.generateCI({classID: DATACALLINFO_CID,
-                                       classDescription: "DataCallInfo",
-                                       interfaces: [Ci.nsIDataCallInfo]}),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDataCallInfo]),
-};
 
 
 function RadioInterfaceLayer() {
@@ -485,8 +469,7 @@ RadioInterfaceLayer.prototype = {
       voiceInfo.type = null;
       voiceInfo.signalStrength = null;
       voiceInfo.relSignalStrength = null;
-      ppmm.sendAsyncMessage("RIL:VoiceThis.RadioState.VoiceChanged",
-                            voiceInfo);
+      ppmm.sendAsyncMessage("RIL:VoiceInfoChanged", voiceInfo);
       return;
     }
 
@@ -532,6 +515,23 @@ RadioInterfaceLayer.prototype = {
   },
 
   updateDataConnection: function updateDataConnection(state) {
+    let data = this.rilContext.data;
+    if (!state || state.regState == RIL.NETWORK_CREG_STATE_UNKNOWN) {
+      data.connected = false;
+      data.emergencyCallsOnly = false;
+      data.roaming = false;
+      data.network = null;
+      data.type = null;
+      data.signalStrength = null;
+      data.relSignalStrength = null;
+      ppmm.sendAsyncMessage("RIL:DataInfoChanged", data);
+      return;
+    }
+    data.roaming =
+      (state.regState == RIL.NETWORK_CREG_STATE_REGISTERED_ROAMING);
+    data.type = RIL.GECKO_RADIO_TECH[state.radioTech] || null;
+    ppmm.sendAsyncMessage("RIL:DataInfoChanged", data);
+
     if (!this._isDataEnabled()) {
       return false;
     }
@@ -548,9 +548,6 @@ RadioInterfaceLayer.prototype = {
       // RILNetworkInterface will ignore this if it's already connected.
       RILNetworkInterface.connect();
     }
-    //TODO need to keep track of some of the state information, and then
-    // notify the content when state changes (connected, technology
-    // changes, etc.). This should be done in RILNetworkInterface.
     return false;
   },
 
@@ -876,22 +873,23 @@ RadioInterfaceLayer.prototype = {
    * Handle data call state changes.
    */
   handleDataCallState: function handleDataCallState(datacall) {
+    let data = this.rilContext.data;
+
+    if (datacall.ifname) {
+      data.connected = (datacall.state == RIL.GECKO_NETWORK_STATE_CONNECTED);
+      ppmm.sendAsyncMessage("RIL:DataInfoChanged", data);    
+    }
+
     this._deliverDataCallCallback("dataCallStateChanged",
-                                  [datacall.cid, datacall.ifname, datacall.state]);
+                                  [datacall]);
   },
 
   /**
    * Handle data call list.
    */
   handleDataCallList: function handleDataCallList(message) {
-    let datacalls = [];
-    for each (let datacall in message.datacalls) {
-      datacalls.push(new DataCallInfo(datacall.state,
-                                      datacall.cid,
-                                      datacall.apn));
-    }
     this._deliverDataCallCallback("receiveDataCallList",
-                                  [datacalls, datacalls.length]);
+                                  [message.datacalls, message.datacalls.length]);
   },
 
   /**
@@ -1695,14 +1693,14 @@ let RILNetworkInterface = {
 
   // nsIRILDataCallback
 
-  dataCallStateChanged: function dataCallStateChanged(cid, interfaceName, callState) {
-    debug("Data call ID: " + cid + ", interface name: " + interfaceName);
+  dataCallStateChanged: function dataCallStateChanged(datacall) {
+    debug("Data call ID: " + datacall.cid + ", interface name: " + datacall.ifname);
     if (this.connecting &&
-        (callState == RIL.GECKO_NETWORK_STATE_CONNECTING ||
-         callState == RIL.GECKO_NETWORK_STATE_CONNECTED)) {
+        (datacall.state == RIL.GECKO_NETWORK_STATE_CONNECTING ||
+         datacall.state == RIL.GECKO_NETWORK_STATE_CONNECTED)) {
       this.connecting = false;
-      this.cid = cid;
-      this.name = interfaceName;
+      this.cid = datacall.cid;
+      this.name = datacall.ifname;
       if (!this.registeredAsNetworkInterface) {
         let networkManager = Cc["@mozilla.org/network/manager;1"]
                                .getService(Ci.nsINetworkManager);
@@ -1710,14 +1708,14 @@ let RILNetworkInterface = {
         this.registeredAsNetworkInterface = true;
       }
     }
-    if (this.cid != cid) {
+    if (this.cid != datacall.cid) {
       return;
     }
-    if (this.state == callState) {
+    if (this.state == datacall.state) {
       return;
     }
 
-    this.state = callState;
+    this.state = datacall.state;
     Services.obs.notifyObservers(this,
                                  kNetworkInterfaceStateChangedTopic,
                                  null);

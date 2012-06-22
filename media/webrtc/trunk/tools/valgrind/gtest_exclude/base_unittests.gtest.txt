@@ -1,0 +1,22 @@
+# This test currently times out in valgrind, see http://crbug.com/9194
+WatchdogTest.AlarmTest
+
+# These tests occassionally hangs under Valgrind on Mac. valgrind-darwin r9573
+# Revisit with better valgrind.
+# Valgrind bug: https://bugs.kde.org/show_bug.cgi?id=189661
+TimerTest.RepeatingTimer
+TimerTest.RepeatingTimer_Cancel
+
+# Crashes occasionally, see http://crbug.com/7477
+ObserverListThreadSafeTest.CrossThreadObserver
+ObserverListThreadSafeTest.CrossThreadNotifications
+
+# Hangs sometimes on linux, see http://crbug.com/22138
+ClipboardTest.*
+
+# These tests trigger a CHECK so they will leak memory.  They don't test
+# anything else, so just disable them on valgrind. Bug 28179.
+OutOfMemoryDeathTest.*
+
+# Flaky under Valgrind, see http://crbug.com/55517
+PlatformFile.TouchGetInfoPlatformFile

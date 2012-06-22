@@ -1,0 +1,34 @@
+# Don't run FLAKY ui tests under TSan - they tend to hang the ui test runner
+*FLAKY_*
+
+# These tests hang under ThreadSanitizer on x64 bot,
+# see http://crbug.com/28115
+TabRestoreUITest.*
+
+# These tests fail due to timeouts under TSan, http://crbug.com/32529
+ChromeMainTest.SecondLaunch
+ChromeMainTest.ReuseBrowserInstanceWhenOpeningFile
+ResourceDispatcherTest.CrossSiteOnunloadCookie
+ResourceDispatcherTest.CrossSiteNavigationErrorPage
+NewTabUITest.NTPHasThumbnails
+UnloadTest.CrossSiteInfiniteUnloadSync
+
+# ErrorPageTest hang flakily, see http://crbug.com/46643
+ErrorPageTest.DNSError_Basic
+ErrorPageTest.DNSError_GoBack1
+ErrorPageTest.DNSError_GoBack2
+
+# Fail flakily only under TSan, see http://crbug.com/103020
+DOMStorageTest.LocalStorageLayoutTests
+DOMStorageTest.RootLayoutTests
+DOMStorageTest.SessionStorageLayoutTests
+
+# Flaky under TSan and natively, see http://crbug.com/103707
+NPAPITesterBase.GetJavaScriptURL
+NPAPITesterBase.NPObjectIdentity
+NPAPITesterBase.NPObjectProxy
+NPAPITesterBase.PluginThreadAsyncCall
+NPAPITesterBase.ScheduleTimer
+NPAPIVisiblePluginTester.DeletePluginInDeallocate
+NPAPIVisiblePluginTester.GetURLRequestFailWrite
+NPAPIVisiblePluginTester.PluginReferrerTest

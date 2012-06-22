@@ -1,0 +1,2 @@
+# See crbug.com/46639
+AutomatedUITestBase.SelectTab

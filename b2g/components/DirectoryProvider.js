@@ -22,7 +22,7 @@ DirectoryProvider.prototype = {
 
   getFile: function dp_getFile(prop, persistent) {
 #ifdef MOZ_WIDGET_GONK
-    let localProps = ["cachePDir", "webappsDir", "PrefD"];
+    let localProps = ["cachePDir", "webappsDir", "PrefD", "indexedDBPDir"];
     if (localProps.indexOf(prop) != -1) {
       prop.persistent = true;
       let file = Cc["@mozilla.org/file/local;1"]
@@ -37,4 +37,3 @@ DirectoryProvider.prototype = {
 };
 
 const NSGetFactory = XPCOMUtils.generateNSGetFactory([DirectoryProvider]);
-

@@ -87,13 +87,14 @@ public:
 };
 
 
-TabChild::TabChild(PRUint32 aChromeFlags)
+TabChild::TabChild(PRUint32 aChromeFlags, bool aIsBrowserFrame)
   : mRemoteFrame(nsnull)
   , mTabChildGlobal(nsnull)
   , mChromeFlags(aChromeFlags)
   , mOuterRect(0, 0, 0, 0)
   , mLastBackgroundColor(NS_RGB(255, 255, 255))
   , mDidFakeShow(false)
+  , mIsBrowserFrame(aIsBrowserFrame)
 {
     printf("creating %d!\n", NS_IsMainThread());
 }
@@ -377,7 +378,9 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
   *aReturn = nsnull;
 
   nsRefPtr<TabChild> newChild =
-    static_cast<TabChild*>(Manager()->SendPBrowserConstructor(0));
+    static_cast<TabChild*>(Manager()->SendPBrowserConstructor(
+      /* aChromeFlags = */ 0,
+      /* aIsBrowserFrame = */ true));
 
   nsCAutoString spec;
   aURI->GetSpec(spec);
@@ -948,6 +951,13 @@ TabChild::InitTabChildGlobal()
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);
   NS_ENSURE_TRUE(root, false);
   root->SetParentTarget(scope);
+
+  // Initialize the child side of the browser element machinery, if appropriate.
+  if (mIsBrowserFrame) {
+    RecvLoadRemoteScript(
+      NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js"));
+  }
+
   return true;
 }
 

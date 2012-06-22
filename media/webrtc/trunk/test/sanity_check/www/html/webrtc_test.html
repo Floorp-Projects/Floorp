@@ -1,0 +1,650 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+
+<!--
+Copyright (c) 2012 The WebRTC project authors. All Rights Reserved.
+
+Use of this source code is governed by a BSD-style license
+that can be found in the LICENSE file in the root of the source
+tree. An additional intellectual property rights grant can be found
+in the file PATENTS. All contributing project authors may
+be found in the AUTHORS file in the root of the source tree.
+-->
+
+<html>
+
+<head>
+<title>WebRTC Test</title>
+
+<style type="text/css">
+body, input, button, select, table {
+  font-family:"Lucida Grande", "Lucida Sans", Verdana, Arial, sans-serif;
+  font-size: 13 px;
+}
+body, input:enable, button:enable, select:enable, table {
+  color: rgb(51, 51, 51);
+}
+h1 {font-size: 40 px;}
+</style>
+
+<script type="text/javascript">
+
+// TODO(henrikg): Catch more exceptions
+
+var server;
+var myId = -1;
+var myName;
+var remoteId = -1;
+var remoteName;
+var request = null;
+var hangingGet = null;
+var pc = null;
+var localStream = null;
+var disconnecting = false;
+var callState = 0; // 0 - Not started, 1 - Call ongoing
+var startupAction = "";
+var autoCallName = "";
+var autoCallTries = 0;
+
+
+// General
+
+function parseUrlParameters() {
+  window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,
+    function(m, key, value) {
+      // Some specific parameters.
+      if ((key == "autoconnect") && (value == "yes")) {
+        startupAction = "connect";
+      } else if (key == "autocall") {
+        startupAction = "call";
+        autoCallName = unescape(value);
+      // The rest are set to elements with corresponding id.
+      } else {
+        document.getElementById(key).value = unescape(value);
+      }
+    });
+}
+
+function trace(txt) {
+  var elem = document.getElementById("debug");
+  elem.innerHTML += txt + "<br>";
+}
+
+function trace_warning(txt) {
+  var wtxt = "<b>" + txt + "</b>";
+  trace(wtxt);
+}
+
+function trace_exception(e, txt) {
+  var etxt = "<b>" + txt + "</b> (" + e.name + " / " + e.message + ")";
+  trace(etxt);
+}
+
+function setCallState(state) {
+  trace("Changing call state: " + callState + " -> " + state);
+  callState = state;
+}
+
+function checkPeerConnection() {
+  if (!pc) {
+    trace_warning("No PeerConnection object exists");
+    return 0;
+  }
+  return 1;
+}
+
+
+// Local stream generation
+
+function gotStream(s) {
+  var url = webkitURL.createObjectURL(s);
+  document.getElementById("localView").src = url;
+  trace("User has granted access to local media. url = " + url);
+  localStream = s;
+  if (startupAction == "connect" || startupAction == "call")
+    connect();
+}
+
+function gotStreamFailed(error) {
+  alert("Failed to get access to local media. Error code was " + error.code +
+    ".");
+  trace_warning("Failed to get access to local media. Error code was " +
+    error.code);
+}
+
+function getUserMedia() {
+  try {
+    navigator.webkitGetUserMedia("video,audio", gotStream, gotStreamFailed);
+    trace("Requested access to local media");
+  } catch (e) {
+    trace_exception(e, "getUserMedia error");
+  }
+}
+
+
+// Peer list and remote peer handling
+
+function peerExists(id) {
+  try {
+    var peerList = document.getElementById("peers");
+    for (var i = 0; i < peerList.length; i++) {
+      if (parseInt(peerList.options[i].value) == id)
+        return true;
+    }
+  } catch (e) {
+    trace_exception(e, "Error searching for peer");
+  }
+  return false;
+}
+
+function addPeer(id, pname) {
+  try {
+    var peerList = document.getElementById("peers");
+    var option = document.createElement("option");
+    option.text = pname;
+    option.value = id;
+    peerList.add(option, null);
+  } catch (e) {
+    trace_exception(e, "Error adding peer");
+  }
+}
+
+function removePeer(id) {
+  try {
+    var peerList = document.getElementById("peers");
+    for (var i = 0; i < peerList.length; i++) {
+      if (parseInt(peerList.options[i].value) == id) {
+        peerList.remove(i);
+        break;
+      }
+    }
+  } catch (e) {
+    trace_exception(e, "Error removing peer");
+  }
+}
+
+function clearPeerList() {
+  var peerList = document.getElementById("peers");
+  while (peerList.length > 0)
+    peerList.remove(0);
+}
+
+function setSelectedPeer(id) {
+  try {
+    var peerList = document.getElementById("peers");
+    for (var i = 0; i < peerList.length; i++) {
+      if (parseInt(peerList.options[i].value) == id) {
+        peerList.options[i].selected = true;
+        return true;
+      }
+    }
+  } catch (e) {
+    trace_exception(e, "Error setting selected peer");
+  }
+  return false;
+}
+
+function getPeerName(id) {
+  try {
+    var peerList = document.getElementById("peers");
+    for (var i = 0; i < peerList.length; i++) {
+      if (parseInt(peerList.options[i].value) == id) {
+        return peerList.options[i].text;
+      }
+    }
+  } catch (e) {
+    trace_exception(e, "Error finding peer name");
+    return;
+  }
+  return;
+}
+
+function getPeerId(peer_name) {
+  try {
+    var peerList = document.getElementById("peers");
+    for (var i = 0; i < peerList.length; i++) {
+      if (peerList.options[i].text == peer_name) {
+        return parseInt(peerList.options[i].value);
+      }
+    }
+  } catch (e) {
+    trace_exception(e, "Error finding peer ID");
+    return -1;
+  }
+  return -1;
+}
+
+function storeRemoteInfo() {
+  try {
+    var peerList = document.getElementById("peers");
+    if (peerList.selectedIndex < 0) {
+      alert("Please select a peer.");
+      return false;
+    } else
+      remoteId = parseInt(peerList.options[peerList.selectedIndex].value);
+      remoteName = peerList.options[peerList.selectedIndex].text;
+  } catch (e) {
+    trace_exception(e, "Error storing remote peer info");
+    return false;
+  }
+  return true;
+}
+
+
+// Call control
+
+function createPeerConnection() {
+  if (pc) {
+    trace_warning("PeerConnection object already exists");
+  }
+  trace("Creating PeerConnection object");
+  try {
+    pc = new webkitDeprecatedPeerConnection("STUN stun.l.google.com:19302",
+      onSignalingMessage);
+  pc.onaddstream = onAddStream;
+  pc.onremovestream = onRemoveStream;
+  } catch (e) {
+    trace_exception(e, "Create PeerConnection error");
+  }
+}
+
+function doCall() {
+  if (!storeRemoteInfo())
+    return;
+  document.getElementById("call").disabled = true;
+  document.getElementById("peers").disabled = true;
+  createPeerConnection();
+  trace("Adding stream");
+  pc.addStream(localStream);
+  document.getElementById("hangup").disabled = false;
+  setCallState(1);
+}
+
+function hangUp() {
+  document.getElementById("hangup").disabled = true;
+  trace("Sending BYE to " + remoteName + " (ID " + remoteId + ")");
+  sendToPeer(remoteId, "BYE");
+  closeCall();
+}
+
+function closeCall() {
+  trace("Stopping showing remote stream");
+  document.getElementById("remoteView").src = "dummy";
+  if (pc) {
+    trace("Stopping call [pc.close()]");
+    pc.close();
+    pc = null;
+  } else
+    trace("No pc object to close");
+  remoteId = -1;
+  document.getElementById("call").disabled = false;
+  document.getElementById("peers").disabled = false;
+  setCallState(0);
+}
+
+function autoCall() {
+  var peer_id = getPeerId(autoCallName);
+  if (peer_id < 0) {
+    // Retry a couple of times before giving up.
+    if (autoCallTries < 3)
+      window.setTimeout(autoCall, ++autoCallTries * 1000);
+    else
+      trace_warning("Could not find a peer with name " + autoCallName +
+          ", giving up");
+    return;
+  }
+  setSelectedPeer(peer_id);
+  doCall(0);
+}
+
+
+// PeerConnection callbacks
+
+function onAddStream(e) {
+  var stream = e.stream;
+  var url = webkitURL.createObjectURL(stream);
+  document.getElementById("remoteView").src = url;
+  trace("Started showing remote stream. url = " + url);
+}
+
+function onRemoveStream(e) {
+  // Currently if we get this callback, call has ended.
+  document.getElementById("remoteView").src = "";
+  trace("Stopped showing remote stream");
+}
+
+function onSignalingMessage(msg) {
+  trace("Sending message to " + remoteName + " (ID " + remoteId + "):\n" + msg);
+  sendToPeer(remoteId, msg);
+}
+
+// TODO(henrikg): Add callbacks onconnecting, onopen and onstatechange.
+
+
+// Server interaction
+
+function handleServerNotification(data) {
+  trace("Server notification: " + data);
+  var parsed = data.split(",");
+  if (parseInt(parsed[2]) == 1) { // New peer
+    var peerId = parseInt(parsed[1]);
+    if (!peerExists(peerId)) {
+      var peerList = document.getElementById("peers");
+      if (peerList.length == 1 && peerList.options[0].value == -1)
+        clearPeerList();
+      addPeer(peerId, parsed[0]);
+      document.getElementById("peers").disabled = false;
+      document.getElementById("call").disabled = false;
+    }
+  } else if (parseInt(parsed[2]) == 0) { // Removed peer
+    removePeer(parseInt(parsed[1]));
+    if (document.getElementById("peers").length == 0) {
+      document.getElementById("peers").disabled = true;
+      addPeer(-1, "No other peer connected");
+    }
+  }
+}
+
+function handlePeerMessage(peer_id, msg) {
+  var peerName = getPeerName(peer_id);
+  if (peerName == undefined) {
+    trace_warning("Received message from unknown peer (ID " + peer_id +
+      "), ignoring message:");
+    trace(msg);
+    return;
+  }
+  trace("Received message from " + peerName + " (ID " + peer_id + "):\n" + msg);
+  // Assuming we receive the message from the peer we want to communicate with.
+  // TODO(henrikg): Only accept messages from peer we communicate with with if
+  // call is ongoing.
+  if (msg.search("BYE") == 0) {
+    // Other side has hung up.
+    document.getElementById("hangup").disabled = true;
+    closeCall()
+  } else {
+    if (!pc) {
+      // Other side is calling us, startup
+      if (!setSelectedPeer(peer_id)) {
+        trace_warning("Recevied message from unknown peer, ignoring");
+        return;
+      }
+      if (!storeRemoteInfo())
+        return;
+      document.getElementById("call").disabled = true;
+      document.getElementById("peers").disabled = true;
+      createPeerConnection();
+      try {
+        pc.processSignalingMessage(msg);
+      } catch (e) {
+        trace_exception(e, "Process signaling message error");
+      }
+      trace("Adding stream");
+      pc.addStream(localStream);
+      document.getElementById("hangup").disabled = false;
+    } else {
+      try {
+        pc.processSignalingMessage(msg);
+      } catch (e) {
+        trace_exception(e, "Process signaling message error");
+      }
+    }
+  }
+}
+
+function getIntHeader(r, name) {
+  var val = r.getResponseHeader(name);
+  trace("header value: " + val);
+  return val != null && val.length ? parseInt(val) : -1;
+}
+
+function hangingGetCallback() {
+  try {
+    if (hangingGet.readyState != 4 || disconnecting)
+      return;
+    if (hangingGet.status != 200) {
+      trace_warning("server error, status: " + hangingGet.status + ", text: " +
+        hangingGet.statusText);
+      disconnect();
+    } else {
+      var peer_id = getIntHeader(hangingGet, "Pragma");
+      if (peer_id == myId) {
+        handleServerNotification(hangingGet.responseText);
+      } else {
+        handlePeerMessage(peer_id, hangingGet.responseText);
+      }
+    }
+
+    if (hangingGet) {
+      hangingGet.abort();
+      hangingGet = null;
+    }
+
+    if (myId != -1)
+      window.setTimeout(startHangingGet, 0);
+  } catch (e) {
+    trace_exception(e, "Hanging get error");
+  }
+}
+
+function onHangingGetTimeout() {
+  trace("hanging get timeout. issuing again");
+  hangingGet.abort();
+  hangingGet = null;
+  if (myId != -1)
+    window.setTimeout(startHangingGet, 0);
+}
+
+function startHangingGet() {
+  try {
+    hangingGet = new XMLHttpRequest();
+    hangingGet.onreadystatechange = hangingGetCallback;
+    hangingGet.ontimeout = onHangingGetTimeout;
+    hangingGet.open("GET", server + "/wait?peer_id=" + myId, true);
+    hangingGet.send();
+  } catch (e) {
+    trace_exception(e, "Start hanging get error");
+  }
+}
+
+function sendToPeer(peer_id, data) {
+  if (myId == -1) {
+    alert("Not connected.");
+    return;
+  }
+  if (peer_id == myId) {
+    alert("Can't send a message to oneself.");
+    return;
+  }
+  var r = new XMLHttpRequest();
+  r.open("POST", server + "/message?peer_id=" + myId + "&to=" + peer_id, false);
+  r.setRequestHeader("Content-Type", "text/plain");
+  r.send(data);
+  r = null;
+}
+
+function signInCallback() {
+  try {
+    if (request.readyState == 4) {
+      if (request.status == 200) {
+        var peers = request.responseText.split("\n");
+        myId = parseInt(peers[0].split(",")[1]);
+        trace("My id: " + myId);
+        clearPeerList();
+        var added = 0;
+        for (var i = 1; i < peers.length; ++i) {
+          if (peers[i].length > 0) {
+            trace("Peer " + i + ": " + peers[i]);
+            var parsed = peers[i].split(",");
+            addPeer(parseInt(parsed[1]), parsed[0]);
+            ++added;
+          }
+        }
+        if (added == 0)
+          addPeer(-1, "No other peer connected");
+        else {
+          document.getElementById("peers").disabled = false;
+          document.getElementById("call").disabled = false;
+        }
+        startHangingGet();
+        request = null;
+        document.getElementById("connect").disabled = true;
+        document.getElementById("disconnect").disabled = false;
+        if (startupAction == "call") {
+          startupAction = "";
+          window.setTimeout(autoCall, 1000);
+        }
+      }
+    }
+  } catch (e) {
+    trace_exception(e, "Sign in error");
+    document.getElementById("connect").disabled = false;
+  }
+}
+
+function signIn() {
+  try {
+    request = new XMLHttpRequest();
+    request.onreadystatechange = signInCallback;
+    request.open("GET", server + "/sign_in?" + myName, true);
+    request.send();
+  } catch (e) {
+    trace_exception(e, "Start sign in error");
+    document.getElementById("connect").disabled = false;
+  }
+}
+
+function connect() {
+  myName = document.getElementById("name").value.toLowerCase();
+  server = document.getElementById("server").value.toLowerCase();
+  if (myName.length == 0) {
+    alert("I need a name please.");
+    document.getElementById("local").focus();
+  } else {
+    // TODO(henrikg): Disable connect button here, but we need a timeout and
+    // check if we have connected, if so enable it again.
+    signIn();
+  }
+}
+
+function disconnect() {
+  if (callState == 1)
+    hangUp();
+
+  disconnecting = true;
+
+  if (request) {
+    request.abort();
+    request = null;
+  }
+
+  if (hangingGet) {
+    hangingGet.abort();
+    hangingGet = null;
+  }
+
+  if (myId != -1) {
+    request = new XMLHttpRequest();
+    request.open("GET", server + "/sign_out?peer_id=" + myId, false);
+    request.send();
+    request = null;
+    myId = -1;
+  }
+
+  clearPeerList();
+  addPeer(-1, "Not connected");
+  document.getElementById("connect").disabled = false;
+  document.getElementById("disconnect").disabled = true;
+  document.getElementById("peers").disabled = true;
+  document.getElementById("call").disabled = true;
+
+  disconnecting = false;
+}
+
+
+// Window event handling
+
+window.onload = function() {
+  if (navigator.webkitGetUserMedia) {
+    document.getElementById('testApp').hidden = false;
+    parseUrlParameters();
+    getUserMedia();
+  } else {
+    document.getElementById('errorText').hidden = false;
+  }
+}
+
+window.onbeforeunload = disconnect;
+
+</script>
+</head>
+
+<body>
+<h1>WebRTC</h1>
+<section id="errorText" hidden="true">
+Could not detect WebRTC support.<p>
+You must have WebRTC enabled Chrome browser to use this test page. The browser
+must be started with the --enable-media-stream command line flag. For more
+information, please see
+<a href="https://sites.google.com/site/webrtc/blog/webrtcnowavailableinthechromedevchannel">
+this blog post</a>.
+</section>
+
+<section id="testApp" hidden="true">
+<table border="0">
+<tr>
+ <td>Local Preview</td>
+ <td>Remote Video</td>
+</tr>
+<tr>
+ <td>
+  <video width="320" height="240" id="localView" autoplay="autoplay"></video>
+ </td>
+ <td>
+  <video width="640" height="480" id="remoteView" autoplay="autoplay"></video>
+ </td>
+</tr>
+</table>
+
+<table border="0">
+<tr>
+ <td valign="top">
+  <table border="0" cellpaddning="0" cellspacing="0">
+  <tr>
+   <td>Server:</td>
+   <td>
+    <input type="text" id="server" size="30" value="http://localhost:8888"/>
+   </td>
+  </tr>
+  <tr>
+   <td>Name:</td><td><input type="text" id="name" size="30" value="name"/></td>
+  </tr>
+  </table>
+ </td>
+ <td valign="top">
+  <button id="connect" onclick="connect();">Connect</button><br>
+  <button id="disconnect" onclick="disconnect();" disabled="true">Disconnect
+  </button>
+ </td>
+ <td>&nbsp;&nbsp;&nbsp;</td>
+ <td valign="top">
+  Connected peers:<br>
+  <select id="peers" size="5" disabled="true">
+   <option value="-1">Not connected</option>
+  </select>
+  </td>
+ <td valign="top">
+  <!--input type="text" id="peer_id" size="3" value="1"/><br-->
+  <button id="call" onclick="doCall();" disabled="true">Call</button><br>
+  <button id="hangup" onclick="hangUp();" disabled="true">Hang up</button><br>
+ </td>
+</tr>
+</table>
+
+<button onclick="document.getElementById('debug').innerHTML='';">Clear log
+</button>
+<pre id="debug"></pre>
+</section>
+
+</body>
+
+</html>
+

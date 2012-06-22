@@ -65,8 +65,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
-		other_values: [ "alternate", "normal, alternate", "alternate, normal", "normal, normal", "normal, normal, normal" ],
-		invalid_values: [ "normal normal", "inherit, normal" ]
+		other_values: [ "alternate", "normal, alternate", "alternate, normal", "normal, normal", "normal, normal, normal", "reverse", "alternate-reverse", "normal, reverse, alternate-reverse, alternate" ],
+		invalid_values: [ "normal normal", "inherit, normal", "reverse-alternate" ]
 	},
 	"-moz-animation-duration": {
 		domProp: "MozAnimationDuration",

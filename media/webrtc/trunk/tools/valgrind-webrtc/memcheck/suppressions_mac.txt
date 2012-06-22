@@ -1,0 +1,323 @@
+# There are three kinds of suppressions in this file:
+# 1. Third party stuff we have no control over.
+#
+# 2. Intentional unit test errors, stuff that is somehow a false positive
+# in our own code, or stuff that is so trivial it's not worth fixing.
+#
+# 3. Suppressions for real WebRTC bugs that are not yet fixed.
+# These should all be in WebRTC's bug tracking system.
+# Periodically we should sweep this file and the bug tracker clean by
+# running overnight and removing outdated bugs/suppressions.
+#-----------------------------------------------------------------------
+
+# 1. Third party stuff we have no control over.
+{
+   FIXME mac kevent libevent probably needs valgrind hooks
+   Memcheck:Param
+   kevent(changelist)
+   fun:kevent
+   fun:event_base_new
+}
+{
+   # CoreAudio leak.  See http://crbug.com/9351
+   bug_9351
+   Memcheck:Leak
+   ...
+   fun:_ZN12HALCADClient19AddPropertyListenerEmPK26AudioObjectPropertyAddressPFlmmS2_PvES3_
+   fun:_ZN16HALDefaultDevice22InstallServerListenersEv
+   fun:_ZN16HALDefaultDevice10InitializeEv
+   fun:_ZN9HALSystem16CheckOutInstanceEv
+}
+{
+   # Mac test_shell_tests.  See http://crbug.com/11134
+   # Doesn't happen on bots, but happens like crazy on the smo
+   # test machine 'caliban'.  Don't delete just because it
+   # doesn't happen on the bots.
+   bug_11134
+   Memcheck:Uninitialized
+   fun:vCMMVectorConvert8BitRGBToRGB
+   fun:_ZNK15CMMConvRGBToRGB7ConvertER8CMM8BitsP14CMMRuntimeInfomm
+}
+{
+   # Mac system library bug?  See http://crbug.com/11327
+   bug_11327
+   Memcheck:Uninitialized
+   fun:_ZN19AudioConverterChain5ResetEv
+   fun:AudioConverterReset
+   obj:/System/Library/Components/CoreAudio.component/Contents/MacOS/CoreAudio
+}
+{
+   # Mac system library bug?  See http://crbug.com/11327
+   bug_11327b
+   Memcheck:Uninitialized
+   fun:AUNetSendEntry
+   fun:AUNetSendEntry
+   obj:/System/Library/Components/CoreAudio.component/Contents/MacOS/CoreAudio
+}
+{
+   # Filed with Apple as rdar://6915060; see http://crbug.com/11270
+   bug_11270
+   Memcheck:Leak
+   fun:calloc
+   fun:CMSSetLabCLUT
+}
+{
+   # Mac leak in CMOpenOrNewAccess in unit_tests PlatformCanvas_SkLayer_Test,
+   # ToolbarControllerTest_FocusLocation_Test. See http://crbug.com/11333.
+   bug_11333
+   Memcheck:Leak
+   fun:malloc
+   fun:stdSmartNewPtr
+   fun:stdSmartNewHandle
+   fun:IOCreateAndOpen
+   fun:ScratchInit
+   fun:CMOpenOrNewAccess
+}
+{
+   # suddenly very common as of 6 aug 2009
+   bug_11333b
+   Memcheck:Leak
+   fun:malloc
+   fun:stdSmartNewPtr
+   fun:stdSmartNewHandle
+   fun:IOCreateAndOpen
+   fun:ScratchInit
+   fun:CMNewAccessFromAnother
+}
+{
+   # Tiny one-time leak, widely seen by valgind users; everyone suppresses this.
+   # See related discussion at http://gcc.gnu.org/bugzilla/show_bug.cgi?id=39366
+   plugin_bundle_global_leak
+   Memcheck:Leak
+   fun:malloc
+   fun:__cxa_get_globals
+   fun:__cxa_allocate_exception
+   fun:_ZN4dyld4loadEPKcRKNS_11LoadContextE
+   fun:dlopen
+   fun:dlopen
+   fun:_CFBundleDlfcnCheckLoaded
+}
+{
+   bug_18215
+   Memcheck:Uninitialized
+   fun:_DPSNextEvent
+   fun:-[NSApplication nextEventMatchingMask:untilDate:inMode:dequeue:]
+   fun:-[NSApplication run]
+}
+{
+   bug_18223
+   Memcheck:Uninitialized
+   fun:_ZNK8Security12UnixPlusPlus17StaticForkMonitorclEv
+   fun:_ZN12ocspdGlobals10serverPortEv
+}
+{
+   # Filed with Apple as rdar://7255382
+   bug_20459a
+   Memcheck:Leak
+   ...
+   fun:_CFRuntimeCreateInstance
+   fun:CFRunLoopSourceCreate
+   fun:CFMachPortCreateRunLoopSource
+   fun:_ZN8Security12MachPlusPlus10CFAutoPort6enableEv
+   fun:_ZN8Security14SecurityServer14ThreadNotifierC2Ev
+}
+{
+   # Also filed with Apple as rdar://7255382
+   bug_20459b
+   Memcheck:Leak
+   fun:malloc_zone_malloc
+   fun:_CFRuntimeCreateInstance
+   fun:__CFArrayInit
+   fun:CFArrayCreateMutableCopy
+   fun:_ZN8Security12KeychainCore5Trust8evaluateEv
+}
+# See description of bug_20653a/b in suppressions.txt.
+{
+   bug_20653a_mac
+   Memcheck:Param
+   write(buf)
+   fun:write$UNIX2003
+   fun:pager_write_pagelist
+}
+{
+   bug_20653b_mac
+   Memcheck:Param
+   write(buf)
+   fun:write$UNIX2003
+   ...
+   fun:pager_write
+}
+
+# See http://www.openradar.me/8287193
+{
+   Invalid redzone accesses in DKeyHas8Words
+   Memcheck:Unaddressable
+   fun:DKeyHas8Words
+}
+
+# See https://bugs.kde.org/show_bug.cgi?id=188572
+# This suppression is missing in Valgrind on Mac 10.6
+# TODO(glider): remove it once it arrives in the trunk.
+{
+   Unavoidable leak in setenv()
+   Memcheck:Leak
+   fun:malloc_zone_malloc
+   fun:__setenv
+   fun:setenv$UNIX2003
+}
+{
+   # Reported to Apple as rdar://6915429
+   bug_12525
+   Memcheck:Leak
+   ...
+   fun:-[CIContextImpl render:toBitmap:rowBytes:bounds:format:colorSpace:]
+}
+{
+   bug_69436
+   Memcheck:Leak
+   ...
+   fun:-[CIKernel initWithCString:noCopy:]
+   ...
+   fun:-[NSPopUpButtonCell _drawIndicatorWithFrame:inView:]
+}
+{
+   # Capturer on Mac uses OpenGL driver, which triggers several warnings.
+   # The check has to be quite generic, as different hardware graphics cards
+   # will cause different sets of warnings.
+   bug_75037
+   Memcheck:Uninitialized
+   ...
+   fun:_ZN8remoting*CapturerMac*
+}
+{
+   # See also http://openradar.appspot.com/radar?id=1235407
+   bug_77063
+   Memcheck:Free
+   fun:_ZdlPv
+   fun:_ZN15THFSPlusCatalogD2Ev
+   fun:_ZN5TNode10SetCatalogEP15THFSPlusCatalog
+   fun:_ZN15TMountPointList9AddVolumeEsb
+   fun:_ZN15TMountPointList4FindEsPN5TNode12StPopulatingE
+   fun:_ZN15TMountPointList20SupportsInvisibleBitEsPN5TNode12StPopulatingEb
+   fun:_ZNK21THFSPlusPropertyStore4OpenEbb
+   fun:_ZNK21THFSPlusPropertyStore13GetPropertiesEb
+   fun:_ZN16TFSCopyOperation22GetSourcePropertyStoreERK11THFSPlusRef
+   fun:_ZN16TFSCopyOperation13DoMoveToTrashERK11THFSPlusRef
+   fun:_ZN16TFSCopyOperation3RunEv
+   fun:_FSOperation
+   fun:_FSOperateOnObjectSync
+   fun:FSMoveObjectToTrashSync
+   fun:_Z9TrashFuncRK8FilePath
+}
+{
+   # See also http://openradar.appspot.com/radar?id=1169404
+   bug_79533a
+   Memcheck:Uninitialized
+   ...
+   fun:_Z*19cssm_DataAbortQuery17cssm_dl_db_handlel
+   fun:CSSM_DL_DataAbortQuery
+   fun:_ZN11SSDLSession14DataAbortQueryEll
+   fun:_Z*19cssm_DataAbortQuery17cssm_dl_db_handlel
+   fun:CSSM_DL_DataAbortQuery
+   fun:tpDbFindIssuerCrl
+   fun:tpVerifyCertGroupWithCrls
+}
+{
+   # See also http://openradar.appspot.com/radar?id=1169404
+   bug_79533b
+   Memcheck:Uninitialized
+   ...
+   fun:_Z*19cssm_DataAbortQuery17cssm_dl_db_handlel
+   fun:CSSM_DL_DataAbortQuery
+   fun:_ZN11SSDLSession14DataAbortQueryEll
+   fun:_Z*19cssm_DataAbortQuery17cssm_dl_db_handlel
+   fun:CSSM_DL_DataAbortQuery
+   fun:tpDbFindIssuerCrl
+   fun:tpVerifyCertGroupWithCrls
+}
+{
+   bug_85213_a
+   Memcheck:Leak
+   ...
+   fun:_CFBundleCopyDirectoryContentsAtPath
+}
+{
+   bug_85213_b
+   Memcheck:Leak
+   ...
+   fun:_CFBundleCopyInfoDictionaryInDirectoryWithVersion
+}
+{
+   bug_85213_c
+   Memcheck:Leak
+   ...
+   fun:_CFBundleURLLooksLikeBundleVersion
+}
+{
+   bug_85213_d
+   Memcheck:Leak
+   ...
+   fun:_CFBundleCreate
+   fun:_ZN6webkit5npapi9PluginLib17ReadWebPluginInfoERK8FilePathPNS0_13WebPluginInfoE
+}
+{
+   bug_85213_e
+   Memcheck:Leak
+   ...
+   fun:CFBundlePreflightExecutable
+   fun:_ZN6webkit5npapi9PluginLib17ReadWebPluginInfoERK8FilePathPNS0_13WebPluginInfoE
+}
+{
+   bug_85213_f
+   Memcheck:Leak
+   ...
+   fun:CFBundleGetPackageInfo
+   fun:_ZN6webkit5npapi9PluginLib17ReadWebPluginInfoERK8FilePathPNS0_13WebPluginInfoE
+}
+{
+   bug_86927
+   Memcheck:Leak
+   fun:malloc
+   fun:CGSMapShmem
+   fun:CGSResolveShmemReference
+   fun:CGSScoreboard
+   fun:initCGDisplayState
+   fun:initCGDisplayMappings
+   fun:cgsInit
+   fun:pthread_once
+   fun:CGSInitialize
+   fun:CGSServerOperationState
+   fun:+[NSThemeFrame initialize]
+   fun:_class_initialize
+}
+{
+   # QTKit leak. See http://crbug.com/100772 and rdar://10319535.
+   bug_100772
+   Memcheck:Leak
+   fun:calloc
+   fun:QTMLCreateMutex
+   fun:WarholCreateGlobals
+   fun:INIT_QuickTimeLibInternal
+   fun:pthread_once
+   fun:INIT_QuickTimeLib
+   fun:EnterMovies_priv
+   fun:EnterMovies
+   fun:TundraUnitInputFromTSFileEntry
+   fun:TundraUnitVDIGInputEntry
+   fun:TundraUnitCreateFromDescription
+   fun:+[QTCaptureVDIGDevice _refreshDevices]
+   fun:+[QTCaptureVDIGDevice devicesWithIOType:]
+   fun:+[QTCaptureDevice devicesWithIOType:]
+   fun:+[QTCaptureDevice inputDevices]
+   fun:+[QTCaptureDevice inputDevicesWithMediaType:]
+   fun:+[VideoCaptureDeviceQTKit deviceNames]
+   fun:_ZN5media18VideoCaptureDevice14GetDeviceNamesEPSt4listINS0_4NameESaIS2_EE
+   fun:_ZN5media21VideoCaptureDeviceMac4InitEv
+   fun:_ZN5media18VideoCaptureDevice6CreateERKNS0_4NameE
+   fun:_ZN5media45VideoCaptureDeviceTest_OpenInvalidDevice_Test8TestBodyEv
+}
+
+# 2. Intentional unit test errors, stuff that is somehow a false positive
+# in our own code, or stuff that is so trivial it's not worth fixing.
+
+# 3. Suppressions for real WebRTC bugs that are not yet fixed.

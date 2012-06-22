@@ -71,9 +71,8 @@ function testElement(element)
     clientHeight = paddingTop + height + paddingBottom - scrollbarHeight;
   }
   else {
-    // XXXndeakin note that Mozilla adds borders here, although the spec does not
-    scrollWidth = paddingLeft + width + paddingRight + borderLeft + borderRight;
-    scrollHeight = paddingTop + height + paddingBottom + borderTop + borderBottom;
+    scrollWidth = paddingLeft + width + paddingRight;
+    scrollHeight = paddingTop + height + paddingBottom;
     clientWidth = paddingLeft + width + paddingRight;
     clientHeight = paddingTop + height + paddingBottom;
   }

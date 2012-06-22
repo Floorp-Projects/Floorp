@@ -1,0 +1,22 @@
+# These tests fail under valgrind.
+# See http://crbug.com/29583.
+ChromeMainTest.AppLaunch
+# See http://crbug.com/29585.
+MetricsServiceTest.CrashRenderers
+# See http://crbug.com/40584
+ExtensionProxyUITest.*
+# 4GB of RAM is not enough. See http://crbug.com/42921
+ResourceDispatcherTest.CrossSiteAfterCrash
+NewTabUITest.NTPHasThumbnails
+# http://crbug.com/45574   Unhappy on ChromeOS valgrind
+LayoutPluginTester.UnloadNoCrash
+# Fails on chromeos. http://crbug.com/84294.
+PPAPITest.Transport
+# Leaking memory due to flakiness. http://crbug.com/77442
+WorkerFileSystemTest.ResolveURLHttpTests
+# Leaking memory due to flakiness. http://crbug.com/31739
+SessionHistoryTest.BasicBackForward
+# Times out on CrOS pretty often. http://crbug.com/92535
+AutomatedUITestBase.FindInPage
+# Fails consistently. http://crbug.com/97107
+RunInBackgroundTest.RunInBackgroundBasicTest

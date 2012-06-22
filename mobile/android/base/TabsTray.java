@@ -47,6 +47,8 @@ public class TabsTray extends LinearLayout
     private static final int SWIPE_CLOSE_VELOCITY = 5;
     // Time to animate non-flicked tabs of screen, in milliseconds
     private static final int MAX_ANIMATION_TIME = 250;
+    // Extra weight given to detecting vertical swipes over horizontal ones
+    private static final float SWIPE_VERTICAL_WEIGHT = 1.5f;
     private static enum DragDirection {
         UNKNOWN,
         HORIZONTAL,
@@ -76,6 +78,11 @@ public class TabsTray extends LinearLayout
                     case MotionEvent.ACTION_UP:
                       mListener.onTouchEnd(event);
                 }
+
+                // the simple gesture detector doesn't actually call our methods for every touch event
+                // if we're horizontally scrolling we should always return true to prevent scrolling the list
+                if (mListener.getDirection() == DragDirection.HORIZONTAL)
+                    result = true;
 
                 return result;
             }
@@ -127,6 +134,10 @@ public class TabsTray extends LinearLayout
 
         int index = Tabs.getInstance().getIndexOf(tab);
         if (msg == Tabs.TabEvents.ADDED) {
+            if (index == -1) // If the tab has already been removed, do nothing.
+                return;
+            if (index > mTabsAdapter.getCount())
+                index = mTabsAdapter.getCount();
             mTabsAdapter.addTab(index, tab);
             mTabsAdapter.notifyDataSetChanged();
             return;
@@ -312,6 +323,10 @@ public class TabsTray extends LinearLayout
             mList = v;
         }
 
+        public DragDirection getDirection() {
+            return dir;
+        }
+
         @Override
         public boolean onDown(MotionEvent e) {
             mView = findViewAt((int)e.getX(), (int)e.getY());
@@ -328,11 +343,12 @@ public class TabsTray extends LinearLayout
 
                 // if the user was dragging horizontally, check to see if we should close the tab
                 if (dir == DragDirection.HORIZONTAL) {
-    
                     int finalPos = 0;
-                    if ((start.x > mList.getWidth()/2 && e.getX() < mList.getWidth()/2)) {
+                    // if the swipe started on the left and ended in the right 1/4 of the tray
+                    // or vice versa, close the tab
+                    if ((start.x > mList.getWidth() / 2 && e.getX() < mList.getWidth() / 4)) {
                         finalPos = -1 * mView.getWidth();
-                    } else if (start.x < mList.getWidth()/2 && e.getX() > mList.getWidth()/2) {
+                    } else if (start.x < mList.getWidth() / 2 && e.getX() > mList.getWidth() * (3 / 4)) {
                         finalPos = mView.getWidth();
                     }
     
@@ -366,7 +382,9 @@ public class TabsTray extends LinearLayout
             }
 
             if (dir == DragDirection.UNKNOWN) {
-                if (Math.abs(distanceX) > Math.abs(distanceY)) {
+                // check if this scroll is more horizontal than vertical. Weight vertical drags a little higher
+                // by using a multiplier
+                if (Math.abs(distanceX) > Math.abs(distanceY) * SWIPE_VERTICAL_WEIGHT) {
                     dir = DragDirection.HORIZONTAL;
                 } else {
                     dir = DragDirection.VERTICAL;
@@ -388,7 +406,9 @@ public class TabsTray extends LinearLayout
                 return false;
 
             // velocityX is in pixels/sec. divide by pixels/inch to compare it with swipe velocity
-            if (Math.abs(velocityX)/GeckoAppShell.getDpi() > SWIPE_CLOSE_VELOCITY) {
+            // also make sure that the swipe is in a mostly horizontal direction
+            if (Math.abs(velocityX) > Math.abs(velocityY * SWIPE_VERTICAL_WEIGHT) &&
+                Math.abs(velocityX)/GeckoAppShell.getDpi() > SWIPE_CLOSE_VELOCITY) {
                 // is this is a swipe, we want to continue the row moving at the swipe velocity
                 float d = (velocityX > 0 ? 1 : -1) * mView.getWidth();
                 // convert the velocity (px/sec) to ms by taking the distance

@@ -213,8 +213,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     // whether or not a content object is capable of implementing the
     // interface (i.e. whether the interface is scriptable) and most content
     // objects don't have QI implementations anyway. Also see bug 503926.
-    if (XPCPerThreadData::IsMainThread(ccx) &&
-        !xpc::AccessCheck::isChrome(js::GetObjectCompartment(jsobj))) {
+    if (!xpc::AccessCheck::isChrome(js::GetObjectCompartment(jsobj))) {
         return nsnull;
     }
 
@@ -495,8 +494,7 @@ static JSContext *
 GetContextFromObject(JSObject *obj)
 {
     // Don't stomp over a running context.
-    XPCJSContextStack* stack =
-        XPCPerThreadData::GetData(nsnull)->GetJSContextStack();
+    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
 
     if (stack && stack->Peek())
         return nsnull;
@@ -682,9 +680,6 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         // UniversalXPConnect type check.
 
         *aInstancePtr = nsnull;
-
-        if (!XPCPerThreadData::IsMainThread(ccx.GetJSContext()))
-            return NS_NOINTERFACE;
 
         nsXPConnect *xpc = nsXPConnect::GetXPConnect();
         nsCOMPtr<nsIScriptSecurityManager> secMan =
@@ -977,7 +972,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
 
         /* cleanup and set failed even if we can't build an exception */
         if (!xpc_exception) {
-            ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
+            XPCJSRuntime::Get()->SetPendingException(nsnull); // XXX necessary?
         }
     }
 
@@ -1104,7 +1099,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             // Whether or not it passes the 'reportable' test, it might
             // still be an error and we have to do the right thing here...
             if (NS_FAILED(e_result)) {
-                ccx.GetThreadData()->SetException(xpc_exception);
+                XPCJSRuntime::Get()->SetPendingException(xpc_exception);
                 return e_result;
             }
         }
@@ -1183,9 +1178,10 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
     xpcc->SetPendingResult(pending_result);
     xpcc->SetException(nsnull);
-    ccx.GetThreadData()->SetException(nsnull);
+    XPCJSRuntime::Get()->SetPendingException(nsnull);
 
-    if (XPCPerThreadData::IsMainThread(ccx)) {
+    // This scoping is necessary due to the gotos here. Ugh.
+    {
         // TODO Remove me in favor of security wrappers.
         nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
         if (ssm) {
@@ -1510,7 +1506,7 @@ pre_call_clean_up:
         return CheckForException(ccx, name, GetInterfaceName(), forceReport);
     }
 
-    ccx.GetThreadData()->SetException(nsnull); // XXX necessary?
+    XPCJSRuntime::Get()->SetPendingException(nsnull); // XXX necessary?
 
     // convert out args and result
     // NOTE: this is the total number of native params, not just the args

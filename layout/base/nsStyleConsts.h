@@ -209,7 +209,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 
 // See nsStyleDisplay
 #define NS_STYLE_ANIMATION_DIRECTION_NORMAL       0
-#define NS_STYLE_ANIMATION_DIRECTION_ALTERNATE    1
+#define NS_STYLE_ANIMATION_DIRECTION_REVERSE      1
+#define NS_STYLE_ANIMATION_DIRECTION_ALTERNATE    2
+#define NS_STYLE_ANIMATION_DIRECTION_ALTERNATE_REVERSE    3
 
 // See nsStyleDisplay
 #define NS_STYLE_ANIMATION_FILL_MODE_NONE         0

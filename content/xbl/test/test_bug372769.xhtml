@@ -116,8 +116,9 @@ addLoadEvent(function() {
   is(found, true, "Enumeration is broken");
 
   is(d.four, 9, "Shouldn't have rerun field six");
-  is(d.five, 5, "Should have run field 7");
+  is(d.five, 11, "Shouldn't have run field 7");
   is(d.seven, 7, "Should be 7")
+  is(d.five, 5, "Should have run field 7");
 
   d = $("display2");
   is(typeof(d.eight), "undefined", "Recursive resolve should bail out");

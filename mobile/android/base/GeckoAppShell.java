@@ -2250,6 +2250,13 @@ class ScreenshotHandler {
         }
 
         void addRectToRepaint(float top, float left, float bottom, float right) {
+            if (sDisableScreenshot || sCheckerboardPageRect == null) {
+                // if screenshotting is disabled just ignore the rect to repaint.
+                // if sCheckerboardPageRect is null, we haven't done a full-page
+                // screenshot yet (or screenshotWholePage failed for some reason),
+                // so ignore partial updates.
+                return;
+            }
             synchronized(this) {
                 ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
                 mDirtyTop = Math.max(sCheckerboardPageRect.top, Math.min(top, mDirtyTop));
