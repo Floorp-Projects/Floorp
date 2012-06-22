@@ -99,7 +99,7 @@ LIRGeneratorX86Shared::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 {
     // Note: lhs is used twice, so that we can restore the original value for the
     // negative zero check.
-    LMulI *lir = new LMulI(useRegisterAtStart(lhs), useOrConstant(rhs), useRegister(lhs));
+    LMulI *lir = new LMulI(useRegisterAtStart(lhs), useOrConstant(rhs), use(lhs));
     if (mul->fallible() && !assignSnapshot(lir))
         return false;
     return defineReuseInput(lir, mul, 0);
