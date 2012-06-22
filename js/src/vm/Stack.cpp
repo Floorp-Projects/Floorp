@@ -826,6 +826,7 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
                           MaybeExtend extend, bool *pushedSeg, JSCompartment *dest)
 {
     Value *firstUnused = space().firstUnused();
+    FrameRegs *regs = cx->maybeRegs();
 
 #ifdef JS_METHODJIT
     /*
@@ -841,7 +842,6 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
      * this to deny potential invalidation, which would read from
      * runtime->ionTop.
      */
-    FrameRegs *regs = cx->maybeRegs();
     if (regs && report != DONT_REPORT_ERROR) {
         JSFunction *fun = NULL;
         if (InlinedSite *site = regs->inlined()) {
@@ -1022,6 +1022,7 @@ ContextStack::pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thi
     return true;
 }
 
+#ifdef JS_ION
 bool
 ContextStack::pushBailoutArgs(JSContext *cx, const ion::IonBailoutIterator &it, InvokeArgsGuard *iag)
 {
@@ -1046,6 +1047,7 @@ ContextStack::pushBailoutFrame(JSContext *cx, const ion::IonBailoutIterator &it,
     JSFunction *fun = it.callee();
     return pushInvokeFrame(cx, DONT_REPORT_ERROR, args, fun, INITIAL_NONE, bfg);
 }
+#endif
 
 bool
 ContextStack::pushDummyFrame(JSContext *cx, JSCompartment *dest, JSObject &scopeChain, DummyFrameGuard *dfg)
@@ -1542,10 +1544,12 @@ StackIter::operator++()
       case IMPLICIT_NATIVE:
         state_ = SCRIPTED;
         break;
-#ifdef JS_ION
       case ION:
+#ifdef JS_ION      
         popIonFrame();
         break;
+#else
+        JS_NOT_REACHED("Unexpected state");
 #endif
     }
     return *this;
@@ -1570,7 +1574,11 @@ StackIter::isFunctionFrame() const
       case SCRIPTED:
         return fp()->isFunctionFrame();
       case ION:
+#ifdef  JS_ION    
         return ionInlineFrames_.isFunctionFrame();
+#else
+        break;
+#endif
       case NATIVE:
       case IMPLICIT_NATIVE:
         return false;
@@ -1622,7 +1630,12 @@ StackIter::isConstructing() const
         JS_NOT_REACHED("Unexpected state");
         return false;
       case ION:
+#ifdef JS_ION      
         return ionInlineFrames_.isConstructing();
+#else
+        JS_NOT_REACHED("Unexpected state");
+        return false;
+#endif        
       case SCRIPTED:
       case NATIVE:
       case IMPLICIT_NATIVE:
@@ -1641,10 +1654,14 @@ StackIter::callee() const
         JS_ASSERT(isFunctionFrame());
         return &fp()->callee();
       case ION:
+#ifdef JS_ION      
         if (ionFrames_.isScripted())
             return ionInlineFrames_.callee();
         JS_ASSERT(ionFrames_.isNative());
         return ionFrames_.callee();
+#else
+        break;
+#endif        
       case NATIVE:
       case IMPLICIT_NATIVE:
         return nativeArgs().callee().toFunction();
@@ -1663,7 +1680,11 @@ StackIter::calleev() const
         JS_ASSERT(isFunctionFrame());
         return fp()->calleev();
       case ION:
+#ifdef JS_ION
         return ObjectValue(*callee());
+#else
+        break;
+#endif
       case NATIVE:
       case IMPLICIT_NATIVE:
         return nativeArgs().calleev();
@@ -1682,7 +1703,11 @@ StackIter::numActualArgs() const
         JS_ASSERT(isFunctionFrame());
         return fp()->numActualArgs();
       case ION:
+#ifdef JS_ION
         return ionInlineFrames_.numActualArgs();
+#else
+        break;
+#endif
       case NATIVE:
       case IMPLICIT_NATIVE:
         return nativeArgs().length();
@@ -1698,7 +1723,11 @@ StackIter::thisv() const
       case DONE:
         break;
       case ION:
+#ifdef JS_ION
         return ObjectValue(*ionInlineFrames_.thisObject());
+#else
+        break;
+#endif        
       case SCRIPTED:
       case NATIVE:
       case IMPLICIT_NATIVE:

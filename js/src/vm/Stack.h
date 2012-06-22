@@ -1876,8 +1876,11 @@ class StackIter
 
     bool isScript() const {
         JS_ASSERT(!done());
-        return state_ == SCRIPTED ||
-               (state_ == ION && ionFrames_.isScripted());
+#ifdef JS_ION
+        if (state_ == ION)
+            return ionFrames_.isScripted();
+#endif
+        return state_ == SCRIPTED;
     }
     bool isIon() const {
         JS_ASSERT(!done());
@@ -1889,8 +1892,11 @@ class StackIter
     }
     bool isNativeCall() const {
         JS_ASSERT(!done());
-        return state_ == NATIVE || state_ == IMPLICIT_NATIVE ||
-               (state_ == ION && ionFrames_.isNative());
+#ifdef JS_ION
+        if (state_ == ION)
+            return ionFrames_.isNative();
+#endif
+        return state_ == NATIVE || state_ == IMPLICIT_NATIVE;
     }
 
     bool isFunctionFrame() const;

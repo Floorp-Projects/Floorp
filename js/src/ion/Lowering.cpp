@@ -1660,7 +1660,7 @@ SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint
     }
     fprintf(IonSpewFile, "\n");
 
-    fprintf(IonSpewFile, "    pc: %p (script: %p, offset: %d)\n",
+    fprintf(IonSpewFile, "    pc: %p (script: %p, offset: %lu)\n",
             (void *)resumePoint->pc(),
             (void *)resumePoint->block()->info().script(),
             resumePoint->pc() - resumePoint->block()->info().script()->code);
