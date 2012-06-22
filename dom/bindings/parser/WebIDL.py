@@ -2107,7 +2107,7 @@ class IDLImplementsStatement(IDLObject):
         implementor = self.implementor.finish(scope)
         implementee = self.implementee.finish(scope)
         # NOTE: we depend on not setting self.implementor and
-        # self.implementor here to keep track of the original
+        # self.implementee here to keep track of the original
         # locations.
         if not isinstance(implementor, IDLInterface):
             raise WebIDLError("Left-hand side of 'implements' is not an "
