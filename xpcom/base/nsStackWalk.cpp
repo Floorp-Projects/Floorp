@@ -439,7 +439,8 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
              void *aClosure, uintptr_t aThread)
 {
     MOZ_ASSERT(gCriticalAddress.mInit);
-    HANDLE myProcess, myThread;
+    static HANDLE myProcess = NULL;
+    HANDLE myThread;
     DWORD walkerReturn;
     struct WalkStackData data;
 
@@ -456,13 +457,15 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     }
 
     // Have to duplicate handle to get a real handle.
-    if (!::DuplicateHandle(::GetCurrentProcess(),
-                           ::GetCurrentProcess(),
-                           ::GetCurrentProcess(),
-                           &myProcess,
-                           PROCESS_ALL_ACCESS, FALSE, 0)) {
-        PrintError("DuplicateHandle (process)");
-        return NS_ERROR_FAILURE;
+    if (!myProcess) {
+        if (!::DuplicateHandle(::GetCurrentProcess(),
+                               ::GetCurrentProcess(),
+                               ::GetCurrentProcess(),
+                               &myProcess,
+                               PROCESS_ALL_ACCESS, FALSE, 0)) {
+            PrintError("DuplicateHandle (process)");
+            return NS_ERROR_FAILURE;
+        }
     }
     if (!::DuplicateHandle(::GetCurrentProcess(),
                            targetThread,
@@ -470,7 +473,6 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
                            &myThread,
                            THREAD_ALL_ACCESS, FALSE, 0)) {
         PrintError("DuplicateHandle (thread)");
-        ::CloseHandle(myProcess);
         return NS_ERROR_FAILURE;
     }
 
@@ -514,7 +516,6 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     }
 
     ::CloseHandle(myThread);
-    ::CloseHandle(myProcess);
 
     for (PRUint32 i = 0; i < data.pc_count; ++i)
         (*aCallback)(data.pcs[i], aClosure);
