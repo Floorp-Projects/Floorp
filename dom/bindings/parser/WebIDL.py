@@ -372,6 +372,10 @@ class IDLInterface(IDLObjectWithScope):
         self.members = list(members) # clone the list
         self.implementedInterfaces = set()
         self._consequential = False
+        # self.interfacesBasedOnSelf is the set of interfaces that inherit from
+        # self or have self as a consequential interface, including self itself.
+        # Used for distinguishability checking.
+        self.interfacesBasedOnSelf = set([self])
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -423,9 +427,24 @@ class IDLInterface(IDLObjectWithScope):
 
             # Callbacks must not inherit from non-callbacks or inherit from
             # anything that has consequential interfaces.
+            # XXXbz Can non-callbacks inherit from callbacks?  Spec issue pending.
+            # XXXbz Can callbacks have consequential interfaces?  Spec issue pending
             if self.isCallback():
-                assert(self.parent.isCallback())
-                assert(len(self.parent.getConsequentialInterfaces()) == 0)
+                if not self.parent.isCallback():
+                    raise WebIDLError("Callback interface %s inheriting from "
+                                      "non-callback interface %s" %
+                                      (self.identifier.name,
+                                       self.parent.identifier.name),
+                                      self.location,
+                                      extraLocation=self.parent.location)
+                if len(self.parent.getConsequentialInterfaces()) != 0:
+                    raise WebIDLError("Callback interface %s inheriting from "
+                                      "interface %s which has consequential "
+                                      "interfaces" %
+                                      (self.identifier.name,
+                                       self.parent.identifier.name),
+                                      self.location,
+                                      extraLocation=self.parent.location)
 
         for iface in self.implementedInterfaces:
             iface.finish(scope)
@@ -464,7 +483,7 @@ class IDLInterface(IDLObjectWithScope):
                             cmp=cmp,
                             key=lambda x: x.identifier.name):
             # Flag the interface as being someone's consequential interface
-            iface.setConsequential()
+            iface.setIsConsequentialInterfaceOf(self)
             additionalMembers = iface.originalMembers;
             for additionalMember in additionalMembers:
                 for member in self.members:
@@ -475,6 +494,11 @@ class IDLInterface(IDLObjectWithScope):
                             additionalMember.location,
                             extraLocation=member.location)
             self.members.extend(additionalMembers)
+
+        for ancestor in self.getInheritedInterfaces():
+            ancestor.interfacesBasedOnSelf.add(self)
+            for ancestorConsequential in ancestor.getConsequentialInterfaces():
+                ancestorConsequential.interfacesBasedOnSelf.add(self)
 
         # Ensure that there's at most one of each {named,indexed}
         # {getter,setter,creator,deleter}.
@@ -513,8 +537,9 @@ class IDLInterface(IDLObjectWithScope):
     def isExternal(self):
         return False
 
-    def setConsequential(self):
+    def setIsConsequentialInterfaceOf(self, other):
         self._consequential = True
+        self.interfacesBasedOnSelf.add(other)
 
     def isConsequential(self):
         return self._consequential
@@ -1277,7 +1302,14 @@ class IDLWrapperType(IDLType):
         # XXXbz need to check that the interfaces can't be implemented
         # by the same object
         if other.isInterface():
-            return (self != other and
+            if other.isSpiderMonkeyInterface():
+                # Just let |other| handle things
+                return other.isDistinguishableFrom(self)
+            assert self.isGeckoInterface() and other.isGeckoInterface()
+            if self.inner.isExternal() or other.unroll().inner.isExternal():
+                return self != other
+            return (len(self.inner.interfacesBasedOnSelf &
+                        other.unroll().inner.interfacesBasedOnSelf) == 0 and
                     (self.isNonCallbackInterface() or
                      other.isNonCallbackInterface()))
         if (other.isDictionary() or other.isCallback() or
