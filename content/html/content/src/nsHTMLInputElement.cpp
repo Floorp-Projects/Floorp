@@ -90,6 +90,8 @@
 
 #include "nsIIDNService.h"
 
+#include <limits>
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -811,6 +813,8 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       UpdatePatternMismatchValidityState();
     } else if (aName == nsGkAtoms::multiple) {
       UpdateTypeMismatchValidityState();
+    } else if (aName == nsGkAtoms::max) {
+      UpdateRangeOverflowValidityState();
     }
 
     UpdateState(aNotify);
@@ -973,6 +977,20 @@ nsHTMLInputElement::IsValueEmpty() const
   GetValueInternal(value);
 
   return value.IsEmpty();
+}
+
+double
+nsHTMLInputElement::GetValueAsDouble() const
+{
+  double doubleValue;
+  nsAutoString stringValue;
+  PRInt32 ec;
+
+  GetValueInternal(stringValue);
+  doubleValue = stringValue.ToDouble(&ec);
+
+  return NS_FAILED(ec) ? std::numeric_limits<double>::quiet_NaN()
+                       : doubleValue;
 }
 
 NS_IMETHODIMP 
@@ -3593,6 +3611,42 @@ nsHTMLInputElement::DoesPatternApply() const
   return IsSingleLineTextControl(false);
 }
 
+bool
+nsHTMLInputElement::DoesMinMaxApply() const
+{
+  switch (mType)
+  {
+    case NS_FORM_INPUT_NUMBER:
+    // TODO:
+    // case NS_FORM_INPUT_RANGE:
+    // All date/time types.
+      return true;
+#ifdef DEBUG
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_SUBMIT:
+    case NS_FORM_INPUT_IMAGE:
+    case NS_FORM_INPUT_BUTTON:
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_RADIO:
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_FILE:
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_SEARCH:
+    case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_EMAIL:
+    case NS_FORM_INPUT_URL:
+      return false;
+    default:
+      NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
+      return false;
+#else // DEBUG
+    default:
+      return false;
+#endif // DEBUG
+  }
+}
+
 // nsIConstraintValidation
 
 NS_IMETHODIMP
@@ -3721,6 +3775,30 @@ nsHTMLInputElement::HasPatternMismatch() const
   return !nsContentUtils::IsPatternMatching(value, pattern, doc);
 }
 
+bool
+nsHTMLInputElement::IsRangeOverflow() const
+{
+  nsAutoString maxStr;
+  if (!DoesMinMaxApply() ||
+      !GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr)) {
+    return false;
+  }
+
+  PRInt32 ec;
+  double max = maxStr.ToDouble(&ec);
+  if (NS_FAILED(ec)) {
+    return false;
+  }
+
+  double value = GetValueAsDouble();
+  // value can be NaN when value="".
+  if (value != value) {
+    return false;
+  }
+
+  return value > max;
+}
+
 void
 nsHTMLInputElement::UpdateTooLongValidityState()
 {
@@ -3800,6 +3878,12 @@ nsHTMLInputElement::UpdatePatternMismatchValidityState()
 }
 
 void
+nsHTMLInputElement::UpdateRangeOverflowValidityState()
+{
+  SetValidityState(VALIDITY_STATE_RANGE_OVERFLOW, IsRangeOverflow());
+}
+
+void
 nsHTMLInputElement::UpdateAllValidityStates(bool aNotify)
 {
   bool validBefore = IsValid();
@@ -3807,6 +3891,7 @@ nsHTMLInputElement::UpdateAllValidityStates(bool aNotify)
   UpdateValueMissingValidityState();
   UpdateTypeMismatchValidityState();
   UpdatePatternMismatchValidityState();
+  UpdateRangeOverflowValidityState();
 
   if (validBefore != IsValid()) {
     UpdateState(aNotify);
@@ -3911,6 +3996,26 @@ nsHTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
                                                    "FormValidationPatternMismatchWithTitle",
                                                    params, message);
       }
+      aValidationMessage = message;
+      break;
+    }
+    case VALIDITY_STATE_RANGE_OVERFLOW:
+    {
+      nsXPIDLString message;
+      nsAutoString maxStr;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
+
+      // We want to show the double as parsed so we parse it and change maxStr.
+      PRInt32 ec;
+      double max = maxStr.ToDouble(&ec);
+      NS_ASSERTION(NS_SUCCEEDED(ec), "max must be a number at this point!");
+      maxStr.Truncate();
+      maxStr.AppendFloat(max);
+
+      const PRUnichar* params[] = { maxStr.get() };
+      rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                 "FormValidationRangeOverflow",
+                                                 params, message);
       aValidationMessage = message;
       break;
     }
