@@ -327,7 +327,7 @@ WrappedNativeJSGCThingTracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
 
 // static
 void
-XPCWrappedNativeScope::TraceJS(JSTracer* trc, XPCJSRuntime* rt)
+XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntime* rt)
 {
     // FIXME The lock may not be necessary during tracing as that serializes
     // access to JS runtime. See bug 380139.
