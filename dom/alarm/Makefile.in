@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH       = ../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE              = dom
+XPIDL_MODULE        = dom_alarm
+LIBRARY_NAME        = domalarm_s
+LIBXUL_LIBRARY      = 1
+
+include $(topsrcdir)/dom/dom-config.mk
+
+EXTRA_COMPONENTS =       \
+  AlarmsManager.js       \
+  AlarmsManager.manifest \
+  $(NULL)
+
+XPIDLSRCS =               \
+  nsIDOMAlarmsManager.idl \
+  $(NULL)
+
+ifdef ENABLE_TESTS
+DIRS += test
+endif
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/config/rules.mk
