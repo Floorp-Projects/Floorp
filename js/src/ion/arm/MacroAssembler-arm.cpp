@@ -2365,22 +2365,13 @@ MacroAssemblerARMCompat::storeValue(ValueOperand val, Register base, Register in
 }
 
 void
-MacroAssemblerARMCompat::loadValue(Register base, Register index, ValueOperand val)
+MacroAssemblerARMCompat::loadValue(Register base, Register index, ValueOperand val, Imm32 off)
 {
-    if (isValueDTRDCandidate(val)) {
-        ma_lsl(Imm32(TimesEight), index, ScratchRegister);
-        ma_ldrd(EDtrAddr(base, EDtrOffReg(ScratchRegister)), val.payloadReg(), val.typeReg());
-    } else {
-        // The ideal case is the base is dead so the sequence:
-        // ldr val.payloadReg(), [base, index LSL shift]!
-        // ldr val.typeReg(), [base, #4]
-        // only clobbers dead registers
-        // Sadly, this information is not available, so the scratch register is necessary.
-        ma_alu(base, lsl(index, TimesEight), ScratchRegister, op_add);
 
-        // This case is handled by a simpler function.
-        loadValue(Address(ScratchRegister, 0), val);
-    }
+    ma_alu(base, lsl(index, TimesEight), ScratchRegister, op_add);
+
+    // This case is handled by a simpler function.
+    loadValue(Address(ScratchRegister, off.value), val);
 }
 
 void
