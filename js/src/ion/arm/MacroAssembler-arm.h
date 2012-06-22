@@ -510,7 +510,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
 
     void neg32(const Register &reg) {
-        ma_rsb(reg, Imm32(0), reg);
+        ma_neg(reg, reg, SetCond);
     }
     void test32(const Register &lhs, const Register &rhs) {
         ma_tst(lhs, rhs);
