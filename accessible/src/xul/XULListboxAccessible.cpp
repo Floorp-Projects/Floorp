@@ -266,56 +266,6 @@ XULListboxAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
   return row->GetChildAt(aColumnIndex);
 }
 
-NS_IMETHODIMP
-XULListboxAccessible::GetColumnIndexAt(PRInt32 aIndex, PRInt32* aColumn)
-{
-  NS_ENSURE_ARG_POINTER(aColumn);
-  *aColumn = -1;
-
-  PRInt32 columnCount = 0;
-  nsresult rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aColumn = aIndex % columnCount;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XULListboxAccessible::GetRowIndexAt(PRInt32 aIndex, PRInt32* aRow)
-{
-  NS_ENSURE_ARG_POINTER(aRow);
-  *aRow = -1;
-
-  PRInt32 columnCount = 0;
-  nsresult rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aRow = aIndex / columnCount;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XULListboxAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
-                                               PRInt32* aRowIndex,
-                                               PRInt32* aColumnIndex)
-{
-  NS_ENSURE_ARG_POINTER(aRowIndex);
-  *aRowIndex = -1;
-  NS_ENSURE_ARG_POINTER(aColumnIndex);
-  *aColumnIndex = -1;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  PRInt32 columnCount = 0;
-  nsresult rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aColumnIndex = aCellIndex % columnCount;
-  *aRowIndex = aCellIndex / columnCount;
-  return NS_OK;
-}
-
 bool
 XULListboxAccessible::IsColSelected(PRUint32 aColIdx)
 {
