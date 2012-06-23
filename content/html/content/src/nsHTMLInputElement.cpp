@@ -87,6 +87,7 @@
 
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Util.h" // DebugOnly
+#include "mozilla/Preferences.h"
 
 #include "nsIIDNService.h"
 
@@ -2661,6 +2662,11 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
       bool success = aResult.ParseEnumValue(aValue, kInputTypeTable, false);
       if (success) {
         newType = aResult.GetEnumValue();
+        if (newType == NS_FORM_INPUT_NUMBER && 
+          !Preferences::GetBool("dom.experimental_forms", false)) {
+          newType = kInputDefaultType->value;
+          aResult.SetTo(newType, &aValue);
+        }
       } else {
         newType = kInputDefaultType->value;
       }

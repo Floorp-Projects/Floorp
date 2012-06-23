@@ -131,6 +131,8 @@ function checkSanitizing(element)
   }
 }
 
+var pref = SpecialPowers.getBoolPref("dom.experimental_forms");
+SpecialPowers.setBoolPref("dom.experimental_forms", true);
 for each (type in inputTypes) {
   var form = document.forms[0];
   var element = document.createElement("input");
@@ -165,6 +167,8 @@ for each (type in todoTypes) {
 
   form.removeChild(element);
 }
+
+SpecialPowers.setBoolPref("dom.experimental_forms", pref);
 
 </script>
 </pre>

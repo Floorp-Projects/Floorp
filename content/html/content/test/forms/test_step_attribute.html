@@ -78,6 +78,8 @@ function checkValidity(aElement, aValidity, aApply)
      (aElement.wil && aValidity) ? ":invalid shouldn't apply" : "valid should apply");
 }
 
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 for each (var data in types) {
   input.type = data[0];
   var apply = data[1];
@@ -247,6 +249,9 @@ for each (var data in types) {
   input.removeAttribute('step');
   input.value = '';
 }
+
+SimpleTest.finish();
+});
 
 </script>
 </pre>
