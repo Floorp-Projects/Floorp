@@ -1170,6 +1170,8 @@ public:
   bool Contains(const nsINode* aOther) const;
   nsresult Contains(nsIDOMNode* aOther, bool* aReturn);
 
+  bool UnoptimizableCCNode() const;
+
 private:
 
   nsIContent* GetNextNodeImpl(const nsINode* aRoot,
