@@ -1358,7 +1358,6 @@ var NativeWindow = {
 var SelectionHandler = {
   // Keeps track of data about the dimensions of the selection
   cache: null,
-  selectedText: "",
 
   // The window that holds the selection (can be a sub-frame)
   get _view() {
@@ -1425,9 +1424,6 @@ var SelectionHandler = {
     this._view = aElement.ownerDocument.defaultView;
     this._isRTL = (this._view.getComputedStyle(aElement, "").direction == "rtl");
 
-    // Clear out the text cache
-    this.selectedText = "";
-
     // Remove any previous selected or created ranges. Tapping anywhere on a
     // page will create an empty range.
     let selection = this._view.getSelection();
@@ -1457,23 +1453,16 @@ var SelectionHandler = {
       return;
     }
 
-    // Find the selected text rect and send it back so the handles can position correctly
-    if (selection.rangeCount == 0 || !selection.getRangeAt(0))
+    // If there isn't an appropriate selection, bail
+    if (!selection.rangeCount || !selection.getRangeAt(0) || !selection.toString().trim().length) {
+      selection.collapseToStart();
       return;
+    }
 
     // Initialize the cache
     this.cache = {};
     this.updateCacheForSelection();
     this.updateCacheOffset();
-
-    // Cache the selected text since the selection might be gone by the time we get the "end" message
-    this.selectedText = selection.toString().trim();
-
-    // If the range didn't have any text, let's bail
-    if (!this.selectedText.length) {
-      selection.collapseToStart();
-      return;
-    }
 
     this.showHandles();
   },
@@ -1588,29 +1577,39 @@ var SelectionHandler = {
   // aX/aY are in top-level window browser coordinates
   endSelection: function sh_endSelection(aX, aY) {
     this.hideHandles();
-    this._view.getSelection().removeAllRanges();
 
-    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
-    let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
-    if (!element)
-      element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
+    let selectedText = "";
+    if (this._view) {
+      let selection = this._view.getSelection();
+      if (selection) {
+        selectedText = selection.toString().trim();
+        selection.removeAllRanges();
+      }
+    }
 
-    // Only try copying text if the tap happens in the same view
-    if (element.ownerDocument.defaultView == this._view) {
-      let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      let scrollX = {}, scrollY = {};
-      cwu.getScrollXY(false, scrollX, scrollY);
+    // Only try copying text if there's text to copy!
+    if (selectedText.length) {
+      let contentWindow = BrowserApp.selectedBrowser.contentWindow;
+      let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
+      if (!element)
+        element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
 
-      // aX/aY already accounts for the top-level scroll, add that back from the cache.offset values
-      let pointInSelection = (aX - this.cache.offset.x + scrollX.value > this.cache.rect.left &&
-                              aX - this.cache.offset.x + scrollX.value < this.cache.rect.right) &&
-                             (aY - this.cache.offset.y + scrollY.value > this.cache.rect.top &&
-                              aY - this.cache.offset.y + scrollY.value < this.cache.rect.bottom);
+      // Only try copying text if the tap happens in the same view
+      if (element.ownerDocument.defaultView == this._view) {
+        let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        let scrollX = {}, scrollY = {};
+        cwu.getScrollXY(false, scrollX, scrollY);
 
-      if (pointInSelection && this.selectedText.length) {
-        let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-        clipboard.copyString(this.selectedText);
-        NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
+        // aX/aY already accounts for the top-level scroll, add that back from the cache.offset values
+        let pointInSelection = (aX - this.cache.offset.x + scrollX.value > this.cache.rect.left &&
+                                aX - this.cache.offset.x + scrollX.value < this.cache.rect.right) &&
+                               (aY - this.cache.offset.y + scrollY.value > this.cache.rect.top &&
+                                aY - this.cache.offset.y + scrollY.value < this.cache.rect.bottom);
+        if (pointInSelection) {
+          let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+          clipboard.copyString(selectedText);
+          NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
+        }
       }
     }
 
@@ -1745,10 +1744,6 @@ var SelectionHandler = {
 
         this._touchId = null;
         this._touchDelta = null;
-
-        // Update the cached selected text
-        let selection = this._view.getSelection();
-        this.selectedText = selection.toString().trim();
 
         // Adjust the handles to be in the correct spot relative to the text selection
         this.positionHandles();
