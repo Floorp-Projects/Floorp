@@ -335,7 +335,6 @@ nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint)
       if (!weakFrame.IsAlive()) {
         return;
       }
-      MOZ_ASSERT(!mDelayedShowDropDown);
     }
   } else {
     mFocused = nsnull;
@@ -449,6 +448,29 @@ nsComboboxControlFrame::ShowList(bool aShowList)
   return weakFrame.IsAlive();
 }
 
+class nsResizeDropdownAtFinalPosition : public nsIReflowCallback
+{
+public:
+  nsResizeDropdownAtFinalPosition(nsComboboxControlFrame* aFrame)
+    : mFrame(aFrame) {}
+
+  virtual bool ReflowFinished()
+  {
+    if (mFrame.IsAlive()) {
+      static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())->
+        AbsolutelyPositionDropDown();
+    }
+    return false;
+  }
+
+  virtual void ReflowCallbackCanceled()
+  {
+    delete this;
+  }
+
+  nsWeakFrame mFrame;
+};
+
 nsresult
 nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext, 
                                        const nsHTMLReflowState& aReflowState)
@@ -542,49 +564,149 @@ nsComboboxControlFrame::GetCSSTransformTranslation()
   return translation;
 }
 
-void
-nsComboboxControlFrame::AbsolutelyPositionDropDown()
+class nsAsyncRollup : public nsRunnable
 {
-   // Position the dropdown list. It is positioned below the display frame if there is enough
-   // room on the screen to display the entire list. Otherwise it is placed above the display
-   // frame.
+public:
+  nsAsyncRollup(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
+  NS_IMETHODIMP Run()
+  {
+    if (mFrame.IsAlive()) {
+      static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())
+        ->RollupFromList();
+    }
+    return NS_OK;
+  }
+  nsWeakFrame mFrame;
+};
 
-   // Note: As first glance, it appears that you could simply get the absolute bounding box for the
-   // dropdown list by first getting its view, then getting the view's nsIWidget, then asking the nsIWidget
-   // for it's AbsoluteBounds. The problem with this approach, is that the dropdown lists y location can
-   // change based on whether the dropdown is placed below or above the display frame.
-   // The approach, taken here is to get use the absolute position of the display frame and use it's location
-   // to determine if the dropdown will go offscreen.
+class nsAsyncResize : public nsRunnable
+{
+public:
+  nsAsyncResize(nsComboboxControlFrame* aFrame) : mFrame(aFrame) {}
+  NS_IMETHODIMP Run()
+  {
+    if (mFrame.IsAlive()) {
+      nsComboboxControlFrame* combo =
+        static_cast<nsComboboxControlFrame*>(mFrame.GetFrame());
+      static_cast<nsListControlFrame*>(combo->mDropdownFrame)->
+        SetSuppressScrollbarUpdate(true);
+      nsCOMPtr<nsIPresShell> shell = mFrame->PresContext()->PresShell();
+      shell->FrameNeedsReflow(combo->mDropdownFrame, nsIPresShell::eResize,
+                              NS_FRAME_IS_DIRTY);
+      shell->FlushPendingNotifications(Flush_Layout);
+      if (mFrame.IsAlive()) {
+        combo = static_cast<nsComboboxControlFrame*>(mFrame.GetFrame());
+        static_cast<nsListControlFrame*>(combo->mDropdownFrame)->
+          SetSuppressScrollbarUpdate(false);
+        if (combo->mDelayedShowDropDown) {
+          combo->ShowDropDown(true);
+        }
+      }
+    }
+    return NS_OK;
+  }
+  nsWeakFrame mFrame;
+};
+
+void
+nsComboboxControlFrame::GetAvailableDropdownSpace(nscoord* aAbove,
+                                                  nscoord* aBelow,
+                                                  nsPoint* aTranslation)
+{
+  // Note: As first glance, it appears that you could simply get the absolute
+  // bounding box for the dropdown list by first getting its view, then getting
+  // the view's nsIWidget, then asking the nsIWidget for its AbsoluteBounds.
+  // The problem with this approach, is that the dropdown lists y location can
+  // change based on whether the dropdown is placed below or above the display
+  // frame.  The approach, taken here is to get the absolute position of the
+  // display frame and use its location to determine if the dropdown will go
+  // offscreen.
 
   // Normal frame geometry (eg GetOffsetTo, mRect) doesn't include transforms.
   // In the special case that our transform is only a 2D translation we
   // introduce this hack so that the dropdown will show up in the right place.
-  nsPoint translation = GetCSSTransformTranslation();
-
-   // Use the height calculated for the area frame so it includes both
-   // the display and button heights.
-  nscoord dropdownYOffset = GetRect().height;
-  nsSize dropdownSize = mDropdownFrame->GetSize();
-
+  *aTranslation = GetCSSTransformTranslation();
+  *aAbove = 0;
+  *aBelow = 0;
+  
+  nsRect thisScreenRect = GetScreenRectInAppUnits();
   nsRect screen = nsFormControlFrame::GetUsableScreenRect(PresContext());
+  nscoord dropdownY = thisScreenRect.YMost() + aTranslation->y;
 
-  // Check to see if the drop-down list will go offscreen
-  if ((GetScreenRectInAppUnits() + translation).YMost() + dropdownSize.height > screen.YMost()) {
-    // move the dropdown list up
-    dropdownYOffset = - (dropdownSize.height);
+  nscoord minY;
+  if (!PresContext()->IsChrome()) {
+    nsIFrame* root = PresContext()->PresShell()->GetRootFrame();
+    minY = root->GetScreenRectInAppUnits().y;
+    if (dropdownY < root->GetScreenRectInAppUnits().y) {
+      // Don't allow the drop-down to be placed above the top of the root frame.
+      return;
+    }
+  } else {
+    minY = screen.y;
+  }
+  
+  nscoord below = screen.YMost() - dropdownY;
+  nscoord above = thisScreenRect.y + aTranslation->y - minY;
+
+  // If the difference between the space above and below is less
+  // than a row-height, then we favor the space below.
+  if (above >= below) {
+    nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
+    nscoord rowHeight = lcf->GetHeightOfARow();
+    if (above < below + rowHeight) {
+      above -= rowHeight;
+    }
   }
 
-  nsPoint dropdownPosition;
-  const nsStyleVisibility* vis = GetStyleVisibility();
-  if (vis->mDirection == NS_STYLE_DIRECTION_RTL) {
+  *aBelow = below;
+  *aAbove = above;
+}
+
+nsComboboxControlFrame::DropDownPositionState
+nsComboboxControlFrame::AbsolutelyPositionDropDown()
+{
+  nsPoint translation;
+  nscoord above, below;
+  GetAvailableDropdownSpace(&above, &below, &translation);
+  if (above <= 0 && below <= 0) {
+    // Hide the view immediately to minimize flicker.
+    nsIView* view = mDropdownFrame->GetView();
+    view->GetViewManager()->SetViewVisibility(view, nsViewVisibility_kHide);
+    NS_DispatchToCurrentThread(new nsAsyncRollup(this));
+    return eDropDownPositionSuppressed;
+  }
+
+  nsSize dropdownSize = mDropdownFrame->GetSize();
+  nscoord height = NS_MAX(above, below);
+  nsListControlFrame* lcf = static_cast<nsListControlFrame*>(mDropdownFrame);
+  if (height < dropdownSize.height) {
+    if (lcf->GetNumDisplayRows() > 1) {
+      // The drop-down doesn't fit and currently shows more than 1 row -
+      // schedule a resize to show fewer rows.
+      NS_DispatchToCurrentThread(new nsAsyncResize(this));
+      return eDropDownPositionPendingResize;
+    }
+  } else if (height > (dropdownSize.height + lcf->GetHeightOfARow() * 1.5) &&
+             lcf->GetDropdownCanGrow()) {
+    // The drop-down fits but there is room for at least 1.5 more rows -
+    // schedule a resize to show more rows if it has more rows to show.
+    // (1.5 rows for good measure to avoid any rounding issues that would
+    // lead to a loop of reflow requests)
+    NS_DispatchToCurrentThread(new nsAsyncResize(this));
+    return eDropDownPositionPendingResize;
+  }
+
+  // Position the drop-down below if there is room, otherwise place it
+  // on the side that has more room.
+  bool b = dropdownSize.height <= below || below >= above;
+  nsPoint dropdownPosition(0, b ? GetRect().height : -dropdownSize.height);
+  if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
     // Align the right edge of the drop-down with the right edge of the control.
     dropdownPosition.x = GetRect().width - dropdownSize.width;
-  } else {
-    dropdownPosition.x = 0;
   }
-  dropdownPosition.y = dropdownYOffset; 
-
   mDropdownFrame->SetPosition(dropdownPosition + translation);
+  nsContainerFrame::PositionFrameView(mDropdownFrame);
+  return eDropDownPositionFinal;
 }
 
 //----------------------------------------------------------
@@ -712,6 +834,8 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
   // First reflow our dropdown so that we know how tall we should be.
   ReflowDropdown(aPresContext, aReflowState);
+  nsIReflowCallback* cb = new nsResizeDropdownAtFinalPosition(this);
+  aPresContext->PresShell()->PostReflowCallback(cb);
 
   // Get the width of the vertical scrollbar.  That will be the width of the
   // dropdown button.
@@ -802,16 +926,19 @@ nsComboboxControlFrame::ShowDropDown(bool aDoDropDown)
 {
   mDelayedShowDropDown = false;
   nsEventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
+  if (aDoDropDown && eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
     return;
   }
 
   if (!mDroppedDown && aDoDropDown) {
     if (mFocused == this) {
-      if (mListControlFrame) {
-        mListControlFrame->SyncViewWithFrame();
+      DropDownPositionState state = AbsolutelyPositionDropDown();
+      if (state == eDropDownPositionFinal) {
+        ShowList(aDoDropDown); // might destroy us
+      } else if (state == eDropDownPositionPendingResize) {
+        // Delay until after the resize reflow, see nsAsyncResize.
+        mDelayedShowDropDown = true;
       }
-      ShowList(aDoDropDown); // might destroy us
     } else {
       // Delay until we get focus, see SetFocus().
       mDelayedShowDropDown = true;

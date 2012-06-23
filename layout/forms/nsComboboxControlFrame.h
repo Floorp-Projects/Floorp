@@ -137,7 +137,16 @@ public:
    * @note This method might destroy |this|.
    */
   virtual void RollupFromList();
-  virtual void AbsolutelyPositionDropDown();
+
+  /**
+   * Return the available space above and below this frame for
+   * placing the drop-down list, and the current 2D translation.
+   * Note that either or both can be less than or equal to zero,
+   * if both are then the drop-down should be closed.
+   */
+  void GetAvailableDropdownSpace(nscoord* aAbove,
+                                 nscoord* aBelow,
+                                 nsPoint* aTranslation);
   virtual PRInt32 GetIndexOfDisplayArea();
   /**
    * @note This method might destroy |this|.
@@ -184,17 +193,27 @@ public:
   static bool ToolkitHasNativePopup();
 
 protected:
+  friend class RedisplayTextEvent;
+  friend class nsAsyncResize;
+  friend class nsResizeDropdownAtFinalPosition;
 
   // Utilities
   nsresult ReflowDropdown(nsPresContext*          aPresContext, 
                           const nsHTMLReflowState& aReflowState);
 
+  enum DropDownPositionState {
+    // can't show the dropdown at its current position
+    eDropDownPositionSuppressed,
+    // a resize reflow is pending, don't show it yet
+    eDropDownPositionPendingResize,
+    // the dropdown has its final size and position and can be displayed here
+    eDropDownPositionFinal
+  };
+  DropDownPositionState AbsolutelyPositionDropDown();
+
   // Helper for GetMinWidth/GetPrefWidth
   nscoord GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
                             nsLayoutUtils::IntrinsicWidthType aType);
-protected:
-  class RedisplayTextEvent;
-  friend class RedisplayTextEvent;
 
   class RedisplayTextEvent : public nsRunnable {
   public:
