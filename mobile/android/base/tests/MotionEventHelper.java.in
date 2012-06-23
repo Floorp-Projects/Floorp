@@ -34,15 +34,23 @@ class MotionEventHelper {
     }
 
     public long move(long downTime, float x, float y) {
+        return move(downTime, SystemClock.uptimeMillis(), x, y);
+    }
+
+    public long move(long downTime, long moveTime, float x, float y) {
         Log.d(LOGTAG, "Triggering move to (" + x + "," + y + ")");
-        MotionEvent event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
+        MotionEvent event = MotionEvent.obtain(downTime, moveTime, MotionEvent.ACTION_MOVE, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
         mInstrumentation.sendPointerSync(event);
         return downTime;
     }
 
     public long up(long downTime, float x, float y) {
+        return up(downTime, SystemClock.uptimeMillis(), x, y);
+    }
+
+    public long up(long downTime, long upTime, float x, float y) {
         Log.d(LOGTAG, "Triggering up at (" + x + "," + y + ")");
-        MotionEvent event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
+        MotionEvent event = MotionEvent.obtain(downTime, upTime, MotionEvent.ACTION_UP, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
         mInstrumentation.sendPointerSync(event);
         return -1L;
     }
@@ -95,9 +103,8 @@ class MotionEventHelper {
         Thread t = new Thread() {
             public void run() {
                 long downTime = down(startX, startY);
-                MotionEvent event = MotionEvent.obtain(downTime, downTime + time, MotionEvent.ACTION_MOVE, endX, endY, 0);
-                mInstrumentation.sendPointerSync(event);
-                downTime = up(downTime, endX, endY);
+                downTime = move(downTime, downTime + time, endX, endY);
+                downTime = up(downTime, downTime + time, endX, endY);
             }
         };
         t.start();
