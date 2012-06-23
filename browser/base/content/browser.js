@@ -7145,6 +7145,9 @@ let gPrivateBrowsingUI = {
    * and the setter should only be used in tests.
    */
   get privateWindow() {
+    if (!gBrowser)
+      return false;
+
     return gBrowser.docShell.QueryInterface(Ci.nsILoadContext)
                             .usePrivateBrowsing;
   }
