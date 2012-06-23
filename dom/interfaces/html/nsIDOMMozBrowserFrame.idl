@@ -16,22 +16,12 @@ interface nsIDOMMozBrowserFrame : nsISupports
    * The mozbrowser attribute has no effect unless the <iframe> or <frame>
    * element is contained in a document privileged to create browser frames.
    *
-   * An <iframe> or <frame> element in a privileged document with the
-   * mozbrowser attribute emits mozBrowserPropertyChange events when various
-   * things happen inside the frame.
+   * An <iframe> or <frame> element in a privileged document with the mozbrowser
+   * attribute emits a variety of events when various things happen inside the
+   * frame.
    *
-   * The mozBrowserPropertyChangeEvent object has two properties:
-   *
-   *   property: The property which changed
-   *   value:    The property's new value
-   *
-   * Currently, the |property| field may take on the following values:
-   *
-   *   'location': The content window's location changed. |value| gives the new
-   *               URI.
-   *
-   *   'loading':  The content window started loading a new page (|value| ==
-   *               'start') or finished loading (|value| == 'stop').
+   * This will be documented eventually, but for more information at the moment,
+   * see dom/browser-element/BrowserElement{Child,Parent}.js.
    *
    */
   attribute boolean mozbrowser;
