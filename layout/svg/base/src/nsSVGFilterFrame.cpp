@@ -68,7 +68,7 @@ public:
                        nsSVGFilterPaintCallback *aPaint,
                        const nsIntRect *aPostFilterDirtyRect,
                        const nsIntRect *aPreFilterDirtyRect,
-                       const nsIntRect *aOverrideSourceBBox,
+                       const gfxRect *aOverrideBBox,
                        const gfxMatrix *aOverrideUserToDeviceSpace = nsnull);
   ~nsAutoFilterInstance() {}
 
@@ -85,7 +85,7 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
                                            nsSVGFilterPaintCallback *aPaint,
                                            const nsIntRect *aPostFilterDirtyRect,
                                            const nsIntRect *aPreFilterDirtyRect,
-                                           const nsIntRect *aOverrideSourceBBox,
+                                           const gfxRect *aOverrideBBox,
                                            const gfxMatrix *aOverrideUserToDeviceSpace)
 {
   const nsSVGFilterElement *filter = aFilterFrame->GetFilterContent();
@@ -95,13 +95,7 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   PRUint16 primitiveUnits =
     aFilterFrame->GetEnumValue(nsSVGFilterElement::PRIMITIVEUNITS);
 
-  gfxRect bbox;
-  if (aOverrideSourceBBox) {
-    bbox = gfxRect(aOverrideSourceBBox->x, aOverrideSourceBBox->y,
-                   aOverrideSourceBBox->width, aOverrideSourceBBox->height);
-  } else {
-    bbox = nsSVGUtils::GetBBox(aTarget);
-  }
+  gfxRect bbox = aOverrideBBox ? *aOverrideBBox : nsSVGUtils::GetBBox(aTarget);
 
   // Get the filter region (in the filtered element's user space):
 
@@ -207,11 +201,12 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   if (svgTarget) {
     if (aOverrideUserToDeviceSpace) {
       // If aOverrideUserToDeviceSpace is specified, it is a simple
-      // CSS-px-to-dev-px transform passed by nsSVGFilterFrame::GetFilterBBox()
-      // when requesting the filter expansion of the overflow rects in frame
-      // space. In this case GetCoveredRegion() is not what we want since it is
-      // in outer-<svg> space, GetFilterBBox passes in the pre-filter bounds of
-      // the frame in frame space for us to use instead.
+      // CSS-px-to-dev-px transform passed by nsSVGFilterFrame::
+      // GetPostFilterBounds() when requesting the filter expansion of the
+      // overflow rects in frame space. In this case GetCoveredRegion() is not
+      // what we want since it is in outer-<svg> space, so GetPostFilterBounds
+      // passes in the pre-filter bounds of the frame in frame space for us to
+      // use instead.
       NS_ASSERTION(aPreFilterDirtyRect, "Who passed aOverrideUserToDeviceSpace?");
       targetBoundsDeviceSpace = *aPreFilterDirtyRect;
     } else {
@@ -466,7 +461,7 @@ nsSVGFilterFrame::GetPreFilterNeededArea(nsIFrame *aFilteredFrame,
 
 nsIntRect
 nsSVGFilterFrame::GetPostFilterBounds(nsIFrame *aFilteredFrame,
-                                      const nsIntRect *aOverrideBBox,
+                                      const gfxRect *aOverrideBBox,
                                       const nsIntRect *aPreFilterBounds)
 {
   bool overrideCTM = false;
