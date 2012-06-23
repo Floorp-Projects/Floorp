@@ -382,7 +382,7 @@ AitcManager.prototype = {
         this._client.remoteInstall(record.app, _clientCallback);
         break;
       case "uninstall":
-        record.app.deleted = true;
+        record.app.hidden = true;
         this._client.remoteUninstall(record.app, _clientCallback);
         break;
       default:
