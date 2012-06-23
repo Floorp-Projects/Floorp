@@ -509,13 +509,15 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         as_b(label);
     }
 
-    void neg32(const Register &reg) {
+    void neg32(Register reg) {
         ma_neg(reg, reg, SetCond);
     }
-    void test32(const Register &lhs, const Register &rhs) {
+    void test32(Register lhs, Register rhs) {
         ma_tst(lhs, rhs);
     }
-
+    void testPtr(Register lhs, Register rhs) {
+        test32(lhs, rhs);
+    }
 
     // Returns the register containing the type tag.
     Register splitTagForTest(const ValueOperand &value) {

@@ -356,10 +356,26 @@ InterruptCheck(JSContext *cx)
     return !!js_HandleExecutionInterrupt(cx);
 }
 
-JSObject *
-NewCallObject(JSContext *cx, HandleObject scopeObj, HandleFunction callee)
+HeapSlot *
+NewSlots(JSRuntime *rt, unsigned nslots)
 {
-    return CallObject::create(cx, callee->script(), scopeObj, callee);
+    JS_STATIC_ASSERT(sizeof(Value) == sizeof(HeapSlot));
+
+    Value *slots = reinterpret_cast<Value *>(rt->malloc_(nslots * sizeof(Value)));
+    if (!slots)
+        return NULL;
+
+    for (unsigned i = 0; i < nslots; i++)
+        slots[i] = UndefinedValue();
+
+    return reinterpret_cast<HeapSlot *>(slots);
+}
+
+JSObject *
+NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
+              HandleObject global)
+{
+    return CallObject::create(cx, shape, type, slots, global);
 }
 
 } // namespace ion

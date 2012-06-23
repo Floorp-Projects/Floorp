@@ -129,6 +129,17 @@ LIRGenerator::visitDefVar(MDefVar *ins)
 }
 
 bool
+LIRGenerator::visitNewSlots(MNewSlots *ins)
+{
+    // No safepoint needed, since we don't pass a cx.
+    LNewSlots *lir = new LNewSlots(tempFixed(CallTempReg0), tempFixed(CallTempReg1),
+                                   tempFixed(CallTempReg2));
+    if (!assignSnapshot(lir))
+        return false;
+    return defineVMReturn(lir, ins);
+}
+
+bool
 LIRGenerator::visitNewArray(MNewArray *ins)
 {
     LNewArray *lir = new LNewArray();
@@ -145,14 +156,31 @@ LIRGenerator::visitNewObject(MNewObject *ins)
 bool
 LIRGenerator::visitNewCallObject(MNewCallObject *ins)
 {
-    JS_ASSERT(ins->scopeObj()->type() == MIRType_Object);
-    JS_ASSERT(ins->callee()->type() == MIRType_Object);
+    bool isCall = ins->templateObj()->lastProperty()->extensibleParents();
 
-    LNewCallObject *lir = new LNewCallObject(useRegister(ins->scopeObj()),
-                                             useRegister(ins->callee()));
-    if (ins->templateObj())
-        return define(lir, ins) && assignSafepoint(lir, ins);
-    return defineVMReturn(lir, ins) && assignSafepoint(lir, ins);
+    LAllocation slots;
+    if (ins->slots()->type() == MIRType_Slots) {
+        if (isCall)
+            slots = useFixed(ins->slots(), CallTempReg2);
+        else
+            slots = useRegister(ins->slots());
+    } else {
+        slots = LConstantIndex::Bogus();
+    }
+
+    LNewCallObject *lir = new LNewCallObject(slots);
+    if (isCall) {
+        if (!defineVMReturn(lir, ins))
+            return false;
+    } else {
+        if (!define(lir, ins))
+            return false;
+    }
+    if (!assignSafepoint(lir, ins))
+        return false;
+
+    JS_ASSERT(isCall == lir->isCall());
+    return true;
 }
 
 bool
@@ -1660,10 +1688,10 @@ SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint
     }
     fprintf(IonSpewFile, "\n");
 
-    fprintf(IonSpewFile, "    pc: %p (script: %p, offset: %lu)\n",
+    fprintf(IonSpewFile, "    pc: %p (script: %p, offset: %d)\n",
             (void *)resumePoint->pc(),
             (void *)resumePoint->block()->info().script(),
-            resumePoint->pc() - resumePoint->block()->info().script()->code);
+            int(resumePoint->pc() - resumePoint->block()->info().script()->code));
 
     for (size_t i = 0; i < resumePoint->numOperands(); i++) {
         MDefinition *in = resumePoint->getOperand(i);

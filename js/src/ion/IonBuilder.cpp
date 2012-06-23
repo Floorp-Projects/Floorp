@@ -2927,7 +2927,7 @@ IonBuilder::copyFormalIntoCallObj(MDefinition *callObj, MDefinition *slots, unsi
 {
     // Note that in the case of using dynamic slots, RESERVED_SLOTS == numFixedSlots.
     MDefinition *param = current->getSlot(info().argSlot(formal));
-    if (slots)
+    if (slots->type() == MIRType_Slots)
         current->add(MStoreSlot::New(slots, formal, param));
     else
         current->add(MStoreFixedSlot::New(callObj, CallObject::RESERVED_SLOTS + formal, param));
@@ -2936,36 +2936,52 @@ IonBuilder::copyFormalIntoCallObj(MDefinition *callObj, MDefinition *slots, unsi
 MInstruction *
 IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
 {
-    bool hasDynamicSlots = script->bindings.lastShape()->numFixedSlots() <=
-                           ScopeObject::CALL_BLOCK_RESERVED_SLOTS;
-
+    // Create a template CallObject that we'll use to generate inline object
+    // creation.
     RootedObject templateObj(cx);
-    if (!hasDynamicSlots && !script->bindings.extensibleParents()) {
-        // Create a template CallObject so we can inline its creation.
+    {
         RootedShape shape(cx, script->bindings.callObjectShape(cx));
         if (!shape)
             return NULL;
+
         RootedTypeObject type(cx, cx->compartment->getEmptyType(cx));
         if (!type)
             return NULL;
         gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
 
-        templateObj = JSObject::create(cx, kind, shape, type, NULL);
-        if (!templateObj)
+        HeapSlot *slots;
+        if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
             return NULL;
+
+        templateObj = JSObject::create(cx, kind, shape, type, slots);
+        if (!templateObj) {
+            cx->free_(slots);
+            return NULL;
+        }
     }
 
-    MInstruction *callObj = MNewCallObject::New(templateObj, scope, callee);
+    // If the CallObject needs dynamic slots, allocate those now.
+    MInstruction *slots;
+    if (templateObj->hasDynamicSlots()) {
+        size_t nslots = JSObject::dynamicSlotsCount(templateObj->lastProperty()->numFixedSlots(),
+                                                    templateObj->lastProperty()->slotSpan());
+        slots = MNewSlots::New(nslots);
+    } else {
+        slots = MConstant::New(NullValue());
+    }
+    current->add(slots);
+
+    // Allocate the actual object. It is important that no intervening
+    // instructions could potentially bailout, thus leaking the dynamic slots
+    // pointer.
+    MInstruction *callObj = MNewCallObject::New(templateObj, slots);
     current->add(callObj);
 
-    // CallObject slots are either entirely fixed, or entirely dynamic. If
-    // dynamic, load the slots pointer ahead of time.
-    MInstruction *slots = NULL;
-    if (hasDynamicSlots) {
-        slots = MSlots::New(callObj);
-        current->add(slots);
-    }
+    // Initialize the object's reserved slots.
+    current->add(MStoreFixedSlot::New(callObj, CallObject::calleeSlot(), callee));
+    current->add(MStoreFixedSlot::New(callObj, CallObject::enclosingScopeSlot(), scope));
 
+    // Initialize argument slots.
     if (script->bindingsAccessedDynamically) {
         for (unsigned slot = 0; slot < info().fun()->nargs; slot++)
             copyFormalIntoCallObj(callObj, slots, slot);

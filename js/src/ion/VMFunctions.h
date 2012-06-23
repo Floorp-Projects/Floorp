@@ -102,13 +102,15 @@ struct VMFunction
     // NULL before discarding its value.
     DataType returnType;
 
+    // Note: a maximum of seven root types is supported.
     enum RootType {
         RootNone = 0,
         RootObject,
         RootString,
         RootPropertyName,
         RootFunction,
-        RootValue
+        RootValue,
+        RootCell
     };
 
     // Contains an combination of enumerated types used by the gc for marking
@@ -129,7 +131,7 @@ struct VMFunction
     }
 
     RootType argRootType(uint32 explicitArg) const {
-        return RootType((argumentRootTypes >> (4 * explicitArg)) & 15);
+        return RootType((argumentRootTypes >> (3 * explicitArg)) & 7);
     }
 
     // Return the stack size consumed by explicit arguments.
@@ -235,6 +237,12 @@ template <> struct TypeToArgProperties<HandleFunction> {
 template <> struct TypeToArgProperties<HandleValue> {
     static const uint32 result = TypeToArgProperties<Value>::result | VMFunction::ByRef;
 };
+template <> struct TypeToArgProperties<HandleShape> {
+    static const uint32 result = TypeToArgProperties<Shape *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<HandleTypeObject> {
+    static const uint32 result = TypeToArgProperties<types::TypeObject *>::result | VMFunction::ByRef;
+};
 
 // Convert argument types to root types used by the gc, see MarkIonExitFrame.
 template <class T> struct TypeToRootType {
@@ -255,6 +263,12 @@ template <> struct TypeToRootType<HandleFunction> {
 template <> struct TypeToRootType<HandleValue> {
     static const uint32 result = VMFunction::RootValue;
 };
+template <> struct TypeToRootType<HandleShape> {
+    static const uint32 result = VMFunction::RootCell;
+};
+template <> struct TypeToRootType<HandleTypeObject> {
+    static const uint32 result = VMFunction::RootCell;
+};
 
 template <class> struct OutParamToDataType { static const DataType result = Type_Void; };
 template <> struct OutParamToDataType<Value *> { static const DataType result = Type_Value; };
@@ -270,7 +284,7 @@ template <> struct OutParamToDataType<uint32_t *> { static const DataType result
 #define COMPUTE_INDEX(NbArg) NbArg
 #define COMPUTE_OUTPARAM_RESULT(NbArg) OutParamToDataType<A ## NbArg>::result
 #define COMPUTE_ARG_PROP(NbArg) (TypeToArgProperties<A ## NbArg>::result << (2 * (NbArg - 1)))
-#define COMPUTE_ARG_ROOT(NbArg) (uint64(TypeToRootType<A ## NbArg>::result) << (4 * (NbArg - 1)))
+#define COMPUTE_ARG_ROOT(NbArg) (uint64(TypeToRootType<A ## NbArg>::result) << (3 * (NbArg - 1)))
 #define SEP_OR(_) |
 #define NOTHING(_)
 
@@ -435,7 +449,9 @@ bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Handl
 
 bool InterruptCheck(JSContext *cx);
 
-JSObject *NewCallObject(JSContext *cx, HandleObject scopeObj, HandleFunction callee);
+HeapSlot *NewSlots(JSRuntime *rt, unsigned nslots);
+JSObject *NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
+                        HandleObject global);
 
 } // namespace ion
 } // namespace js

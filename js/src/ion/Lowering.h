@@ -111,6 +111,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitParameter(MParameter *param);
     bool visitCallee(MCallee *callee);
     bool visitGoto(MGoto *ins);
+    bool visitNewSlots(MNewSlots *ins);
     bool visitNewArray(MNewArray *ins);
     bool visitNewObject(MNewObject *ins);
     bool visitNewCallObject(MNewCallObject *ins);

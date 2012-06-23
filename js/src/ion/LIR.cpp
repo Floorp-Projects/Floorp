@@ -385,6 +385,6 @@ LTestVAndBranch::ifFalse()
 bool
 LNewCallObject::isCall() const
 {
-    return !mir()->templateObj();
+    return mir()->templateObj()->lastProperty()->extensibleParents();
 }
 
