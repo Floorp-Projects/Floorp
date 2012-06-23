@@ -584,10 +584,22 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     } else {
       nscoord bp = aReflowState.mComputedBorderPadding.TopBottom();
       nscoord availableHeight = NS_MAX(above, below) - bp;
-      nscoord height = NS_MIN(visibleHeight, availableHeight);
-      PRInt32 rows = height / heightOfARow;
-      mNumDisplayRows = clamped(rows, 1, kMaxDropDownRows);
-      nscoord newHeight = mNumDisplayRows * heightOfARow;
+      nscoord newHeight;
+      PRInt32 rows;
+      if (visibleHeight <= availableHeight) {
+        // The dropdown fits in the available height.
+        rows = GetNumberOfOptions();
+        mNumDisplayRows = clamped(rows, 1, kMaxDropDownRows);
+        if (mNumDisplayRows == rows) {
+          newHeight = visibleHeight;  // use the exact height
+        } else {
+          newHeight = mNumDisplayRows * heightOfARow; // approximate
+        }
+      } else {
+        rows = availableHeight / heightOfARow;
+        mNumDisplayRows = clamped(rows, 1, kMaxDropDownRows);
+        newHeight = mNumDisplayRows * heightOfARow; // approximate
+      }
       state.SetComputedHeight(newHeight);
       mDropdownCanGrow = visibleHeight - newHeight >= heightOfARow &&
                          mNumDisplayRows != kMaxDropDownRows;
