@@ -15,7 +15,9 @@ let gSyncUI = {
          "weave:ui:login:error",
          "weave:ui:sync:error",
          "weave:ui:sync:finish",
-         "weave:ui:clear-error"],
+         "weave:ui:clear-error",
+         "weave:engine:clients:display-uri",
+  ],
 
   _unloaded: false,
 
@@ -395,6 +397,21 @@ let gSyncUI = {
     this.updateUI();
   },
 
+  /**
+   * Observer called when display URI command is received.
+   */
+  onDisplayURI: function onDisplayURI(data) {
+    if (!gBrowser) {
+      return;
+    }
+
+    try {
+      gBrowser.addTab(data.wrappedJSObject.object.uri);
+    } catch (ex) {
+      Cu.reportError("Error displaying tab received by Sync: " + ex);
+    }
+  },
+
   observe: function SUI_observe(subject, topic, data) {
     if (this._unloaded) {
       Cu.reportError("SyncUI observer called after unload: " + topic);
@@ -443,6 +460,9 @@ let gSyncUI = {
         break;
       case "weave:ui:clear-error":
         this.clearError();
+        break;
+      case "weave:engine:clients:display-uri":
+        this.onDisplayURI(subject);
         break;
     }
   },
