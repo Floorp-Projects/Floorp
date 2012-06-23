@@ -477,8 +477,15 @@ public:
    */
   static gfxMatrix GetCanvasTM(nsIFrame* aFrame);
 
-  /*
-   * Tells child frames that something that might affect them has changed
+  /**
+   * Notify the descendants of aFrame of a change to one of their ancestors
+   * that might affect them.
+   *
+   * If the changed ancestor renders and needs to be invalidated, it should
+   * call nsSVGUtils::InvalidateAndScheduleBoundsUpdate or
+   * nsSVGUtils::InvalidateBounds _before_ calling this method. That makes it
+   * cheaper when descendants schedule their own bounds update because the code
+   * that walks up the parent chain marking dirty bits can stop earlier.
    */
   static void
   NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags);
