@@ -57,4 +57,4 @@ include $(topsrcdir)/config/rules.mk
 libs:: $(FINAL_TARGET)/dependentlibs.list
 
 $(FINAL_TARGET)/dependentlibs.list: dependentlibs.py $(SHARED_LIBRARY) $(wildcard $(if $(wildcard $(FINAL_TARGET)/dependentlibs.list),$(addprefix $(FINAL_TARGET)/,$(shell cat $(FINAL_TARGET)/dependentlibs.list))))
-	$(PYTHON) $< $(SHARED_LIBRARY) -L $(FINAL_TARGET) > $@
+	$(PYTHON) $< $(SHARED_LIBRARY) -L $(FINAL_TARGET) $(if $(TOOLCHAIN_PREFIX),$(addprefix -p ,$(TOOLCHAIN_PREFIX))) > $@

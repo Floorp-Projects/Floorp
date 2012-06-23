@@ -71,3 +71,7 @@ libs:: $(_TEST_FILES)
 check::
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON_PATH) $(PLY_INCLUDE) \
 	  $(srcdir)/../parser/runtests.py
+
+check-interactive:
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON_PATH) $(PLY_INCLUDE) \
+	  $(srcdir)/../parser/runtests.py -q

@@ -1382,6 +1382,13 @@ bool nsMenuPopupFrame::ConsumeOutsideClicks()
   if (mConsumeRollupEvent != nsIPopupBoxObject::ROLLUP_DEFAULT)
     return (mConsumeRollupEvent == nsIPopupBoxObject::ROLLUP_CONSUME);
 
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::consumeoutsideclicks,
+                            nsGkAtoms::_true, eCaseMatters))
+    return true;
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::consumeoutsideclicks,
+                            nsGkAtoms::_false, eCaseMatters))
+    return false;
+
   nsCOMPtr<nsIContent> parentContent = mContent->GetParent();
   if (parentContent) {
     nsINodeInfo *ni = parentContent->NodeInfo();

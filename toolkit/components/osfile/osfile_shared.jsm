@@ -295,6 +295,19 @@
                 projectValue);
 
      /**
+      * A C integer (64-bits).
+      */
+     Types.int64_t =
+       new Type("int64_t",
+                ctypes.int64_t,
+                projectLargeInt);
+
+     Types.uint64_t =
+       new Type("uint64_t",
+                ctypes.uint64_t,
+                projectLargeUInt);
+
+     /**
       * A C integer.
       * Size depends on the platform.
       */

@@ -1334,6 +1334,7 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
     SetThemeRegion();
   }
+  NotifyRollupGeometryChange(sRollupListener);
   return NS_OK;
 }
 
@@ -1371,6 +1372,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
   if (aRepaint)
     Invalidate();
 
+  NotifyRollupGeometryChange(sRollupListener);
   return NS_OK;
 }
 
@@ -1410,6 +1412,7 @@ NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeig
   if (aRepaint)
     Invalidate();
 
+  NotifyRollupGeometryChange(sRollupListener);
   return NS_OK;
 }
 

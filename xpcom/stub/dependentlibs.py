@@ -12,6 +12,8 @@ import re
 import subprocess
 import sys
 
+TOOLCHAIN_PREFIX = ''
+
 def dependentlibs_dumpbin(lib):
     '''Returns the list of dependencies declared in the given DLL'''
     proc = subprocess.Popen(['dumpbin', '-imports', lib], stdout = subprocess.PIPE)
@@ -26,7 +28,7 @@ def dependentlibs_dumpbin(lib):
 
 def dependentlibs_readelf(lib):
     '''Returns the list of dependencies declared in the given ELF .so'''
-    proc = subprocess.Popen(['readelf', '-d', lib], stdout = subprocess.PIPE)
+    proc = subprocess.Popen([TOOLCHAIN_PREFIX + 'readelf', '-d', lib], stdout = subprocess.PIPE)
     deps = []
     for line in proc.stdout:
         # Each line has the following format:
@@ -84,7 +86,11 @@ def dependentlibs(lib, libpaths, func):
 def main():
     parser = OptionParser()
     parser.add_option("-L", dest="libpaths", action="append", metavar="PATH", help="Add the given path to the library search path")
+    parser.add_option("-p", dest="toolchain_prefix", metavar="PREFIX", help="Use the given prefix to readelf")
     (options, args) = parser.parse_args()
+    if options.toolchain_prefix:
+        global TOOLCHAIN_PREFIX
+        TOOLCHAIN_PREFIX = options.toolchain_prefix
     lib = args[0]
     ext = os.path.splitext(lib)[1]
     if ext == '.dll':

@@ -5,9 +5,9 @@ def WebIDLTest(parser, harness):
         interface TestOverloads {
           void basic();
           void basic(long arg1);
-          boolean abitharder(unsigned long foo);
+          boolean abitharder(TestOverloads foo);
           boolean abitharder(boolean foo);
-          void abitharder(long? foo);
+          void abitharder(ArrayBuffer? foo);
         };
     """)
 

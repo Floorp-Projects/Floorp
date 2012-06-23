@@ -32,7 +32,6 @@ browser.jar:
         skin/classic/browser/identity-icons-generic.png
         skin/classic/browser/identity-icons-https.png
         skin/classic/browser/identity-icons-https-ev.png
-        skin/classic/browser/identity-icons-https-mixed.png
         skin/classic/browser/keyhole-forward-mask.svg
         skin/classic/browser/KUI-background.png
         skin/classic/browser/KUI-close.png
@@ -230,7 +229,6 @@ browser.jar:
         skin/classic/aero/browser/identity-icons-generic.png
         skin/classic/aero/browser/identity-icons-https.png
         skin/classic/aero/browser/identity-icons-https-ev.png
-        skin/classic/aero/browser/identity-icons-https-mixed.png
         skin/classic/aero/browser/keyhole-forward-mask.svg
         skin/classic/aero/browser/KUI-background.png
         skin/classic/aero/browser/KUI-close.png

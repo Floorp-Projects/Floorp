@@ -7,26 +7,26 @@
 #ifndef mozilla_tabs_TabParent_h
 #define mozilla_tabs_TabParent_h
 
+#include "base/basictypes.h"
+
+#include "jsapi.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContentDialogParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
-
-#include "jsapi.h"
 #include "nsCOMPtr.h"
-#include "nsITabParent.h"
-#include "nsIBrowserDOMWindow.h"
-#include "nsWeakReference.h"
-#include "nsIDialogParamBlock.h"
 #include "nsIAuthPromptProvider.h"
+#include "nsIBrowserDOMWindow.h"
+#include "nsIDialogParamBlock.h"
 #include "nsISecureBrowserUI.h"
+#include "nsITabParent.h"
+#include "nsWeakReference.h"
 
-class nsFrameLoader;
-class nsIURI;
-class nsIDOMElement;
 struct gfxMatrix;
-
 struct JSContext;
 struct JSObject;
+class nsFrameLoader;
+class nsIDOMElement;
+class nsIURI;
 
 namespace mozilla {
 namespace dom {
@@ -154,6 +154,10 @@ public:
     bool SendCompositionEvent(nsCompositionEvent& event);
     bool SendTextEvent(nsTextEvent& event);
     bool SendSelectionEvent(nsSelectionEvent& event);
+
+    static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
+    static TabParent* GetFrom(nsIContent* aContent);
+
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,

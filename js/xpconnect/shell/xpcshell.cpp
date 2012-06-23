@@ -1188,20 +1188,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'd':
             xpc_ActivateDebugMode();
             break;
-        case 'P':
-            if (JS_GetClass(JS_GetPrototype(obj)) != &global_class) {
-                JSObject *gobj;
-
-                if (!JS_DeepFreezeObject(cx, obj))
-                    return false;
-                gobj = JS_NewGlobalObject(cx, &global_class);
-                if (!gobj || !JS_SplicePrototype(cx, gobj, obj))
-                    return false;
-                JS_SetParent(cx, gobj, NULL);
-                JS_SetGlobalObject(cx, gobj);
-                obj = gobj;
-            }
-            break;
         case 'f':
             if (++i == argc) {
                 return usage();

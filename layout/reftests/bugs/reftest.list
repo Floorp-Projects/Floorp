@@ -1622,8 +1622,8 @@ HTTP(..) != 615121-2.html 615121-2-notref.html
 == 617242-1.html 617242-1-ref.html
 != 618071.html 618071-notref.html
 == 619117-1.html 619117-1-ref.html
-skip-if(Android) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html # XXX update reference case after bug 541270 is fixed
-skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html # XXX update reference case after bug 541270 is fixed
+skip-if(Android) HTTP(..) == 621253-1-externalFilter.html 621253-1-ref.html
+skip-if(Android) == 621253-1-internalFilter.html 621253-1-ref.html
 HTTP(..) == 621253-2-externalFilter.html 621253-2-ref.html
 == 621253-2-internalFilter.html 621253-2-ref.html
 fails-if(Android) HTTP(..) == 619511-1.html 619511-1-ref.html

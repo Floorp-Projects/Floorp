@@ -261,6 +261,10 @@ static dom::ConstantSpec gWinProperties[] =
   // SetFilePointer error constant
   INT_CONSTANT(INVALID_SET_FILE_POINTER),
 
+  // MoveFile flags
+  INT_CONSTANT(MOVEFILE_COPY_ALLOWED),
+  INT_CONSTANT(MOVEFILE_REPLACE_EXISTING),
+
   // Errors
   INT_CONSTANT(ERROR_FILE_EXISTS),
   INT_CONSTANT(ERROR_FILE_NOT_FOUND),

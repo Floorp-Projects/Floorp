@@ -2312,7 +2312,6 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
   rv = io2->NewChannelFromURIWithProxyFlags(
               localURI,
               mURI,
-              nsIProtocolProxyService::RESOLVE_PREFER_SOCKS_PROXY |
               nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
               nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
               getter_AddRefs(localChannel));

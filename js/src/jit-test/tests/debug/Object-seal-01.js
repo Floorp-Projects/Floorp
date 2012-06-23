@@ -61,4 +61,3 @@ test("Object.create(null, {x: {value: 3}, y: {get: Math.min}})");
 test("[]");
 test("[,,,,,]");
 test("[0, 1, 2]");
-test("newGlobal('same-compartment')");

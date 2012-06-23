@@ -69,13 +69,16 @@ public:
                                    const nsIntRect& aPostFilterDirtyRect);
 
   /**
-   * Returns the post-filter paint bounds of aFilteredFrame. The rects are in
-   * device pixels, relative to the origin of the outer-<svg> if aFilteredFrame
-   * is SVG, or else relative to aFilteredFrame itself.
-   * @param aOverrideBBox overrides the normal bbox for the source, if non-null
+   * Returns the post-filter paint bounds of aFilteredFrame. The rects are
+   * relative to the origin of the outer-<svg> if aFilteredFrame is SVG, or
+   * else relative to aFilteredFrame itself.
+   * @param aOverrideBBox A user space rect that should be used as
+   *   aFilteredFrame's bbox, if non-null.
+   * @param aPreFilterBounds The pre-filter visual overflow rect of
+   *   aFilteredFrame in device pixels, if non-null.
    */
   nsIntRect GetPostFilterBounds(nsIFrame *aFilteredFrame,
-                                const nsIntRect *aOverrideBBox = nsnull,
+                                const gfxRect *aOverrideBBox = nsnull,
                                 const nsIntRect *aPreFilterBounds = nsnull);
 
 #ifdef DEBUG

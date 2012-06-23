@@ -546,7 +546,7 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
     mBounds.x = pos.x();
     mBounds.y = pos.y();
 
-
+    NotifyRollupGeometryChange(gRollupListener);
     return NS_OK;
 }
 
@@ -3011,6 +3011,7 @@ nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint)
         DispatchResizeEvent(rect, status);
     }
 
+    NotifyRollupGeometryChange(gRollupListener);
     return NS_OK;
 }
 
@@ -3074,6 +3075,7 @@ nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     if (aRepaint)
         mWidget->update();
 
+    NotifyRollupGeometryChange(gRollupListener);
     return NS_OK;
 }
 
