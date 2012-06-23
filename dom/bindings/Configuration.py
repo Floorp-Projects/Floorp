@@ -131,7 +131,7 @@ class Descriptor(DescriptorProvider):
         self.hasInstanceInterface = desc.get('hasInstanceInterface', None)
 
         headerDefault = self.nativeType
-        headerDefault = headerDefault.split("::")[-1] + ".h"
+        headerDefault = headerDefault.replace("::", "/") + ".h"
         self.headerFile = desc.get('headerFile', headerDefault)
 
         castableDefault = not self.interface.isCallback()

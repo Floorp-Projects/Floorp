@@ -32,8 +32,8 @@ for (var i = 0; i < N; i++) {
     var obj = xarr[i];
     for (j = 0; j < M; j++) {
         assertEq(obj instanceof Debugger.Object, true);
-        g2arr[i].eval("x = x.__proto__ = {};");
-        obj = obj.proto;
+        g2arr[i].eval("x = x.prop = {};");
+        obj = obj.getOwnPropertyDescriptor("prop").value;;
         assertEq("seen" in obj, false);
         obj.seen = true;
         gc();

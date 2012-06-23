@@ -1069,6 +1069,9 @@ const int ZealVerifierValue = 4;
 const int ZealFrameVerifierValue = 5;
 const int ZealStackRootingSafeValue = 6;
 const int ZealStackRootingValue = 7;
+const int ZealIncrementalRootsThenFinish = 8;
+const int ZealIncrementalMarkAllThenFinish = 9;
+const int ZealIncrementalMultipleSlices = 10;
 
 #ifdef JS_GC_ZEAL
 

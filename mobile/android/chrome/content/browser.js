@@ -1535,17 +1535,39 @@ var SelectionHandler = {
   // Positions the caret using a fake mouse click
   _sendStartMouseEvents: function sh_sendStartMouseEvents(cwu) {
     let start = this._start.getBoundingClientRect();
+    let x = start.right - this.HANDLE_PADDING;
     // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
-    cwu.sendMouseEventToWindow("mousedown", start.right - this.HANDLE_PADDING, start.top - 1, 0, 0, 0, true);
-    cwu.sendMouseEventToWindow("mouseup", start.right - this.HANDLE_PADDING, start.top - 1, 0, 0, 0, true);
+    let y = start.top - 1;
+
+    if (!this._shouldSendMouseEvent(x, y))
+      return;
+
+    cwu.sendMouseEventToWindow("mousedown", x, y, 0, 0, 0, true);
+    cwu.sendMouseEventToWindow("mouseup", x, y, 0, 0, 0, true);
   },
 
   // Selects text between the carat at the start and an end point using a fake shift+click
   _sendEndMouseEvents: function sh_sendEndMouseEvents(cwu) {
     let end = this._end.getBoundingClientRect();
+    let x = end.left + this.HANDLE_PADDING;
     // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
-    cwu.sendMouseEventToWindow("mousedown", end.left + this.HANDLE_PADDING, end.top - 1, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
-    cwu.sendMouseEventToWindow("mouseup", end.left + this.HANDLE_PADDING, end.top - 1, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+    let y = end.top - 1;
+
+    if (!this._shouldSendMouseEvent(x, y))
+      return;
+
+    cwu.sendMouseEventToWindow("mousedown", x, y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+    cwu.sendMouseEventToWindow("mouseup", x, y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+  },
+
+  _shouldSendMouseEvent: function sh_shouldSendMouseEvent(x, y) {
+    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
+    let element = ElementTouchHelper.elementFromPoint(contentWindow, x, y);
+    if (!element)
+      element = ElementTouchHelper.anyElementFromPoint(contentWindow, x, y);
+
+    // Don't send mouse events to the other handle
+    return !(element instanceof Ci.nsIDOMHTMLHtmlElement);
   },
 
   // aX/aY are in top-level window browser coordinates
@@ -1729,15 +1751,25 @@ var SelectionHandler = {
 
 
 var UserAgent = {
+  DESKTOP_UA: null,
+
   init: function ua_init() {
+    Services.obs.addObserver(this, "DesktopMode:Change", false);
     Services.obs.addObserver(this, "http-on-modify-request", false);
+
+    // See https://developer.mozilla.org/en/Gecko_user_agent_string_reference
+    this.DESKTOP_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
+                        .getService(Ci.nsIHttpProtocolHandler).userAgent
+                        .replace(/Android; [a-zA-Z]+/, "X11; Linux x86_64")
+                        .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
   },
 
   uninit: function ua_uninit() {
+    Services.obs.removeObserver(this, "DesktopMode:Change");
     Services.obs.removeObserver(this, "http-on-modify-request");
   },
 
-  getRequestLoadContext: function ua_getRequestLoadContext(aRequest) {
+  _getRequestLoadContext: function ua_getRequestLoadContext(aRequest) {
     if (aRequest && aRequest.notificationCallbacks) {
       try {
         return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
@@ -1753,25 +1785,42 @@ var UserAgent = {
     return null;
   },
 
-  getWindowForRequest: function ua_getWindowForRequest(aRequest) {
-    let loadContext = this.getRequestLoadContext(aRequest);
+  _getWindowForRequest: function ua_getWindowForRequest(aRequest) {
+    let loadContext = this._getRequestLoadContext(aRequest);
     if (loadContext)
       return loadContext.associatedWindow;
     return null;
   },
 
   observe: function ua_observe(aSubject, aTopic, aData) {
-    if (!(aSubject instanceof Ci.nsIHttpChannel))
-      return;
+    switch (aTopic) {
+      case "DesktopMode:Change": {
+        let args = JSON.parse(aData);
+        let tab = BrowserApp.getTabForId(args.tabId);
+        if (tab != null)
+          tab.reloadWithMode(args.desktopMode);
+        break;
+      }
+      case "http-on-modify-request": {
+        let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+        let channelWindow = this._getWindowForRequest(channel);
+        let tab = BrowserApp.getTabForWindow(channelWindow);
+        if (tab == null)
+          break;
 
-    let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
-    let channelWindow = this.getWindowForRequest(channel);
-    if (BrowserApp.getBrowserForWindow(channelWindow)) {
-      if (channel.URI.host.indexOf("youtube") != -1) {
-        let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
+        // Send XUL UA to YouTube; temporary hack to make videos play
+        if (channel.URI.host.indexOf("youtube") != -1) {
+          let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
 #expand let version = "__MOZ_APP_VERSION__";
-        ua += " Fennec/" + version;
-        channel.setRequestHeader("User-Agent", ua, false);
+          ua += " Fennec/" + version;
+          channel.setRequestHeader("User-Agent", ua, false);
+        }
+
+        // Send desktop UA if "Request Desktop Site" is enabled
+        if (tab.desktopMode && (channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI))
+          channel.setRequestHeader("User-Agent", this.DESKTOP_UA, false);
+
+        break;
       }
     }
   }
@@ -1895,6 +1944,8 @@ function Tab(aURL, aParams) {
   this.pluginDoorhangerTimeout = null;
   this.shouldShowPluginDoorhanger = true;
   this.clickToPlayPluginsActivated = false;
+  this.desktopMode = false;
+  this.originalURI = null;
 }
 
 Tab.prototype = {
@@ -1985,6 +2036,53 @@ Tab.prototype = {
         dump("Handled load error: " + e)
       }
     }
+  },
+
+  /** 
+   * Reloads the tab with the desktop mode setting.
+   */
+  reloadWithMode: function (aDesktopMode) {
+    // Set desktop mode for tab and send change to Java
+    if (this.desktopMode != aDesktopMode) {
+      this.desktopMode = aDesktopMode;
+      sendMessageToJava({
+        gecko: {
+          type: "DesktopMode:Changed",
+          desktopMode: aDesktopMode,
+          tabId: this.id
+        }
+      });
+    }
+
+    // Only reload the page for http/https schemes
+    let currentURI = this.browser.currentURI;
+    if (!currentURI.schemeIs("http") && !currentURI.schemeIs("https"))
+      return;
+
+    let url = currentURI.spec;
+    let flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+    if (this.originalURI && !this.originalURI.equals(currentURI)) {
+      // We were redirected; reload the original URL
+      url = this.originalURI.spec;
+      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
+    } else {
+      // Many sites use mobile-specific URLs, such as:
+      //   http://m.yahoo.com
+      //   http://www.google.com/m
+      // If the user clicks "Request Desktop Site" while on a mobile site, it
+      // will appear to do nothing since the mobile URL is still being
+      // requested. To address this, we do the following:
+      //   1) Remove the path from the URL (http://www.google.com/m?q=query -> http://www.google.com)
+      //   2) If a host subdomain is "m", remove it (http://en.m.wikipedia.org -> http://en.wikipedia.org)
+      // This means the user is sent to site's home page, but this is better
+      // than the setting having no effect at all.
+      if (aDesktopMode)
+        url = currentURI.prePath.replace(/([\/\.])m\./g, "$1");
+      else
+        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
+    }
+
+    this.browser.docShell.loadURI(url, flags, null, null, null);
   },
 
   destroy: function() {
@@ -2590,7 +2688,11 @@ Tab.prototype = {
       let success = false; 
       let uri = "";
       try {
-        uri = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI.spec;
+        // Remember original URI for UA changes on redirected pages
+        this.originalURI = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI;
+
+        if (this.originalURI != null)
+          uri = this.originalURI.spec;
       } catch (e) { }
       try {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;

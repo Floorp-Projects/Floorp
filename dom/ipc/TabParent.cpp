@@ -523,6 +523,27 @@ TabParent::SendSelectionEvent(nsSelectionEvent& event)
   return PBrowserParent::SendSelectionEvent(event);
 }
 
+/*static*/ TabParent*
+TabParent::GetFrom(nsFrameLoader* aFrameLoader)
+{
+  if (!aFrameLoader) {
+    return nsnull;
+  }
+  PBrowserParent* remoteBrowser = aFrameLoader->GetRemoteBrowser();
+  return static_cast<TabParent*>(remoteBrowser);
+}
+
+/*static*/ TabParent*
+TabParent::GetFrom(nsIContent* aContent)
+{
+  nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(aContent);
+  if (!loaderOwner) {
+    return nsnull;
+  }
+  nsRefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
+  return GetFrom(frameLoader);
+}
+
 bool
 TabParent::RecvEndIMEComposition(const bool& aCancel,
                                  nsString* aComposition)
