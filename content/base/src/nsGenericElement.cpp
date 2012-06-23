@@ -135,37 +135,6 @@ PRInt32 nsIContent::sTabFocusModel = eTabFocus_any;
 bool nsIContent::sTabFocusModelAppliesToXUL = false;
 PRUint32 nsMutationGuard::sMutationCount = 0;
 
-static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext)
-{
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
-  bool isEditable;
-  if (!editorDocShell ||
-      NS_FAILED(editorDocShell->GetEditable(&isEditable)) || !isEditable)
-    return nsnull;
-
-  nsCOMPtr<nsIEditor> editor;
-  editorDocShell->GetEditor(getter_AddRefs(editor));
-  return editor;
-}
-
-static
-bool UnoptimizableCCNode(nsINode* aNode)
-{
-  const PtrBits problematicFlags = (NODE_IS_ANONYMOUS |
-                                    NODE_IS_IN_ANONYMOUS_SUBTREE |
-                                    NODE_IS_NATIVE_ANONYMOUS_ROOT |
-                                    NODE_MAY_BE_IN_BINDING_MNGR |
-                                    NODE_IS_INSERTION_PARENT);
-  return aNode->HasFlag(problematicFlags) ||
-         aNode->NodeType() == nsIDOMNode::ATTRIBUTE_NODE ||
-         // For strange cases like xbl:content/xbl:children
-         (aNode->IsElement() &&
-          aNode->AsElement()->IsInNamespace(kNameSpaceID_XBL));
-}
-
-//----------------------------------------------------------------------
-
 nsEventStates
 Element::IntrinsicState() const
 {
@@ -403,7 +372,7 @@ nsIContent::GetDesiredIMEState()
   if (!pc) {
     return IMEState(IMEState::DISABLED);
   }
-  nsIEditor* editor = GetHTMLEditor(pc);
+  nsIEditor* editor = nsContentUtils::GetHTMLEditor(pc);
   nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(editor);
   if (!imeEditor) {
     return IMEState(IMEState::DISABLED);
@@ -2882,7 +2851,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   }
 
   // Unlink child content (and unbind our subtree).
-  if (UnoptimizableCCNode(tmp) || !nsCCUncollectableMarker::sGeneration) {
+  if (tmp->UnoptimizableCCNode() || !nsCCUncollectableMarker::sGeneration) {
     PRUint32 childCount = tmp->mAttrsAndChildren.ChildCount();
     if (childCount) {
       // Don't allow script to run while we're unbinding everything.
@@ -2969,13 +2938,13 @@ FindOptimizableSubtreeRoot(nsINode* aNode)
 {
   nsINode* p;
   while ((p = aNode->GetNodeParent())) {
-    if (UnoptimizableCCNode(aNode)) {
+    if (aNode->UnoptimizableCCNode()) {
       return nsnull;
     }
     aNode = p;
   }
   
-  if (UnoptimizableCCNode(aNode)) {
+  if (aNode->UnoptimizableCCNode()) {
     return nsnull;
   }
   return aNode;
@@ -3016,7 +2985,7 @@ nsGenericElement::CanSkipInCC(nsINode* aNode)
 
   // Bail out early if aNode is somewhere in anonymous content,
   // or otherwise unusual.
-  if (UnoptimizableCCNode(aNode)) {
+  if (aNode->UnoptimizableCCNode()) {
     return false;
   }
 
@@ -3175,7 +3144,7 @@ nsGenericElement::CanSkip(nsINode* aNode, bool aRemovingAllowed)
     return false;
   }
 
-  bool unoptimizable = UnoptimizableCCNode(aNode);
+  bool unoptimizable = aNode->UnoptimizableCCNode();
   nsIDocument* currentDoc = aNode->GetCurrentDoc();
   if (currentDoc &&
       nsCCUncollectableMarker::InGeneration(currentDoc->GetMarkedCCGeneration()) &&

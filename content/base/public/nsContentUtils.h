@@ -2046,7 +2046,9 @@ public:
                                         Element* aRoot,
                                         PRInt32& aOutStartOffset,
                                         PRInt32& aOutEndOffset);
-  
+
+  static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext);
+
 private:
   static bool InitializeEventTable();
 
