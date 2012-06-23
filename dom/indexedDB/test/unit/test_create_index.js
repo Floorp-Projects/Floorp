@@ -24,7 +24,7 @@ function testSteps()
   let request = mozIndexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  request.onsucess = unexpectedSuccessHandler;
+  request.onsuccess = unexpectedSuccessHandler;
   let event = yield;
   let db = event.target.result;
 
