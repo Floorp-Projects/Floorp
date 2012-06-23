@@ -30,6 +30,10 @@ public:
                      nsIAccessible** aCell);
   nsresult GetCellIndexAt(PRInt32 aRowIndex, PRInt32 aColumnIndex,
                           PRInt32* aCellIndex);
+  nsresult GetColumnIndexAt(PRInt32 aCellIndex, PRInt32* aColumnIndex);
+  nsresult GetRowIndexAt(PRInt32 aCellIndex, PRInt32* aRowIndex);
+  nsresult GetRowAndColumnIndicesAt(PRInt32 aCellIndex, PRInt32* aRowIndex,
+                                    PRInt32* aColumnIndex);
   nsresult GetColumnExtentAt(PRInt32 row, PRInt32 column,
                              PRInt32* aColumnExtent);
   nsresult GetRowExtentAt(PRInt32 row, PRInt32 column,
@@ -71,9 +75,12 @@ protected:
     { return xpcAccessibleTable::GetCellAt(rowIndex, columnIndex, _retval); } \
   NS_SCRIPTABLE NS_IMETHOD GetCellIndexAt(PRInt32 rowIndex, PRInt32 columnIndex, PRInt32 *_retval NS_OUTPARAM) \
     { return xpcAccessibleTable::GetCellIndexAt(rowIndex, columnIndex, _retval); } \
-  NS_SCRIPTABLE NS_IMETHOD GetColumnIndexAt(PRInt32 cellIndex, PRInt32 *_retval NS_OUTPARAM); \
-  NS_SCRIPTABLE NS_IMETHOD GetRowIndexAt(PRInt32 cellIndex, PRInt32 *_retval NS_OUTPARAM); \
-  NS_SCRIPTABLE NS_IMETHOD GetRowAndColumnIndicesAt(PRInt32 cellIndex, PRInt32 *rowIndex NS_OUTPARAM, PRInt32 *columnIndex NS_OUTPARAM); \
+  NS_SCRIPTABLE NS_IMETHOD GetColumnIndexAt(PRInt32 cellIndex, PRInt32 *_retval NS_OUTPARAM) \
+    { return xpcAccessibleTable::GetColumnIndexAt(cellIndex, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRowIndexAt(PRInt32 cellIndex, PRInt32 *_retval NS_OUTPARAM) \
+    { return xpcAccessibleTable::GetRowIndexAt(cellIndex, _retval); } \
+  NS_SCRIPTABLE NS_IMETHOD GetRowAndColumnIndicesAt(PRInt32 cellIndex, PRInt32 *rowIndex NS_OUTPARAM, PRInt32 *columnIndex NS_OUTPARAM) \
+    { return xpcAccessibleTable::GetRowAndColumnIndicesAt(cellIndex, rowIndex, columnIndex); } \
   NS_SCRIPTABLE NS_IMETHOD GetColumnExtentAt(PRInt32 row, PRInt32 column, PRInt32* _retval NS_OUTPARAM) \
     { return xpcAccessibleTable::GetColumnExtentAt(row, column, _retval); } \
   NS_SCRIPTABLE NS_IMETHOD GetRowExtentAt(PRInt32 row, PRInt32 column, PRInt32* _retval NS_OUTPARAM) \

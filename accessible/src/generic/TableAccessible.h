@@ -57,18 +57,25 @@ public:
   /**
    * Return the column index of the cell with the given index.
    */
-  virtual PRInt32 ColIndexAt(PRUint32 aCellIdx) { return -1; }
+  virtual PRInt32 ColIndexAt(PRUint32 aCellIdx) 
+    { return aCellIdx % ColCount(); }
 
   /**
    * Return the row index of the cell with the given index.
    */
-  virtual PRInt32 RowIndexAt(PRUint32 aCellIdx) { return -1; }
+  virtual PRInt32 RowIndexAt(PRUint32 aCellIdx) 
+    { return aCellIdx / ColCount(); }
 
   /**
    * Get the row and column indices for the cell at the given index.
    */
   virtual void RowAndColIndicesAt(PRUint32 aCellIdx, PRInt32* aRowIdx,
-                                  PRInt32* aColIdx) {}
+                                  PRInt32* aColIdx) 
+    { 
+      PRUint32 colCount = ColCount();
+      *aRowIdx = aCellIdx / colCount;
+      *aColIdx = aCellIdx % colCount;
+    }
 
   /**
    * Return the number of columns occupied by the cell at the given row and
