@@ -104,8 +104,6 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
 
-  bool updateBounds = false;
-
   if (aFlags & COORD_CONTEXT_CHANGED) {
 
     nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(mContent);
