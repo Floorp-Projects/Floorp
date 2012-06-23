@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1339191265000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1340295852000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -27,8 +27,10 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i47" id="youtube@youtube2.com">
-                        </emItem>
+      <emItem  blockID="i107" os="WINNT" id="{ABDE892B-13A8-4d1b-88E6-365A6E755758}">
+                        <versionRange  minVersion="0" maxVersion="15.0.4" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i88" id="anttoolbar@ant.com">
                         <versionRange  minVersion="2.4.6.4" maxVersion="2.4.6.4" severity="1">
                     </versionRange>
@@ -69,6 +71,10 @@
                     </versionRange>
                   </emItem>
       <emItem  blockID="i92" id="play5@vide04flash.com">
+                        <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i108" id="{28bfb930-7620-11e1-b0c4-0800200c9a66}">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
@@ -228,13 +234,8 @@
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
                   </emItem>
-      <emItem  blockID="i87" os="WINNT" id="afurladvisor@anchorfree.com">
-                        <versionRange  minVersion="0" maxVersion="*">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="13.0a1" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                  </emItem>
+      <emItem  blockID="i47" id="youtube@youtube2.com">
+                        </emItem>
       <emItem  blockID="i22" id="ShopperReports@ShopperReports.com">
                         <versionRange  minVersion="3.1.22.0" maxVersion="3.1.22.0">
                     </versionRange>
@@ -320,6 +321,10 @@
                   </emItem>
       <emItem  blockID="i77" id="{fa277cfc-1d75-4949-a1f9-4ac8e41b2dfd}">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i106" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
+                        <versionRange  minVersion="0" maxVersion="15.0.4" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i11" id="yslow@yahoo-inc.com">
