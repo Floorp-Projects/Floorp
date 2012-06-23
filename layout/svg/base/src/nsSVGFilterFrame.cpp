@@ -371,14 +371,14 @@ nsSVGFilterFrame::AttributeChanged(PRInt32  aNameSpaceID,
        aAttribute == nsGkAtoms::filterRes ||
        aAttribute == nsGkAtoms::filterUnits ||
        aAttribute == nsGkAtoms::primitiveUnits)) {
-    nsSVGEffects::InvalidateRenderingObservers(this);
+    nsSVGEffects::InvalidateDirectRenderingObservers(this);
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
     Properties().Delete(nsSVGEffects::HrefProperty());
     mNoHRefURI = false;
     // And update whoever references us
-    nsSVGEffects::InvalidateRenderingObservers(this);
+    nsSVGEffects::InvalidateDirectRenderingObservers(this);
   }
   return nsSVGFilterFrameBase::AttributeChanged(aNameSpaceID,
                                                 aAttribute, aModType);
