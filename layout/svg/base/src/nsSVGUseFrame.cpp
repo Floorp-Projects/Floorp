@@ -116,31 +116,37 @@ nsSVGUseFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                 nsIAtom*        aAttribute,
                                 PRInt32         aModType)
 {
+  nsSVGUseElement *useElement = static_cast<nsSVGUseElement*>(mContent);
+
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::x ||
         aAttribute == nsGkAtoms::y) {
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nsnull;
-    
+      nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
       nsSVGUtils::NotifyChildrenOfSVGChange(this, TRANSFORM_CHANGED);
     } else if (aAttribute == nsGkAtoms::width ||
                aAttribute == nsGkAtoms::height) {
-      static_cast<nsSVGUseElement*>(mContent)->SyncWidthOrHeight(aAttribute);
-
-      if (mHasValidDimensions != 
-          static_cast<nsSVGUseElement*>(mContent)->HasValidDimensions()) {
-
+      bool invalidate = false;
+      if (mHasValidDimensions != useElement->HasValidDimensions()) {
         mHasValidDimensions = !mHasValidDimensions;
+        invalidate = true;
+      }
+      if (useElement->OurWidthAndHeightAreUsed()) {
+        invalidate = true;
+        useElement->SyncWidthOrHeight(aAttribute);
+      }
+      if (invalidate) {
         nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
       }
     }
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
     // we're changing our nature, clear out the clone information
-    nsSVGUseElement *use = static_cast<nsSVGUseElement*>(mContent);
-    use->mOriginal = nsnull;
-    use->UnlinkSource();
-    use->TriggerReclone();
+    nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
+    useElement->mOriginal = nsnull;
+    useElement->UnlinkSource();
+    useElement->TriggerReclone();
   }
 
   return nsSVGUseFrameBase::AttributeChanged(aNameSpaceID,
@@ -191,6 +197,13 @@ nsSVGUseFrame::NotifySVGChanged(PRUint32 aFlags)
     if (use->mLengthAttributes[nsSVGUseElement::X].IsPercentage() ||
         use->mLengthAttributes[nsSVGUseElement::Y].IsPercentage()) {
       aFlags |= TRANSFORM_CHANGED;
+      // Ancestor changes can't affect how we render from the perspective of
+      // any rendering observers that we may have, so we don't need to
+      // invalidate them. We also don't need to invalidate ourself, since our
+      // changed ancestor will have invalidated its entire area, which includes
+      // our area.
+      // For perf reasons we call this before calling NotifySVGChanged() below.
+      nsSVGUtils::ScheduleBoundsUpdate(this);
     }
   }
 
