@@ -278,19 +278,18 @@ static PRInt32 gReflowInx = -1;
 //------------------------------------------------------
 
 nsComboboxControlFrame::nsComboboxControlFrame(nsStyleContext* aContext)
-  : nsBlockFrame(aContext),
-    mDisplayWidth(0)
+  : nsBlockFrame(aContext)
+  , mDisplayFrame(nsnull)
+  , mButtonFrame(nsnull)
+  , mDropdownFrame(nsnull)
+  , mListControlFrame(nsnull)
+  , mDisplayWidth(0)
+  , mRecentSelectedIndex(NS_SKIP_NOTIFY_INDEX)
+  , mDisplayedIndex(-1)
+  , mDroppedDown(false)
+  , mInRedisplayText(false)
+  , mDelayedShowDropDown(false)
 {
-  mListControlFrame            = nsnull;
-  mDroppedDown                 = false;
-  mDisplayFrame                = nsnull;
-  mButtonFrame                 = nsnull;
-  mDropdownFrame               = nsnull;
-
-  mInRedisplayText = false;
-
-  mRecentSelectedIndex = NS_SKIP_NOTIFY_INDEX;
-
   REFLOW_COUNTER_INIT()
 }
 
@@ -324,15 +323,23 @@ nsComboboxControlFrame::CreateAccessible()
 }
 #endif
 
-void 
+void
 nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
   nsWeakFrame weakFrame(this);
   if (aOn) {
     nsListControlFrame::ComboboxFocusSet();
     mFocused = this;
+    if (mDelayedShowDropDown) {
+      ShowDropDown(true); // might destroy us
+      if (!weakFrame.IsAlive()) {
+        return;
+      }
+      MOZ_ASSERT(!mDelayedShowDropDown);
+    }
   } else {
     mFocused = nsnull;
+    mDelayedShowDropDown = false;
     if (mDroppedDown) {
       mListControlFrame->ComboboxFinish(mDisplayedIndex); // might destroy us
       if (!weakFrame.IsAlive()) {
@@ -793,16 +800,22 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 void
 nsComboboxControlFrame::ShowDropDown(bool aDoDropDown) 
 {
+  mDelayedShowDropDown = false;
   nsEventStates eventStates = mContent->AsElement()->State();
   if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
     return;
   }
 
   if (!mDroppedDown && aDoDropDown) {
-    if (mListControlFrame) {
-      mListControlFrame->SyncViewWithFrame();
+    if (mFocused == this) {
+      if (mListControlFrame) {
+        mListControlFrame->SyncViewWithFrame();
+      }
+      ShowList(aDoDropDown); // might destroy us
+    } else {
+      // Delay until we get focus, see SetFocus().
+      mDelayedShowDropDown = true;
     }
-    ShowList(aDoDropDown); // might destroy us
   } else if (mDroppedDown && !aDoDropDown) {
     ShowList(aDoDropDown); // might destroy us
   }
