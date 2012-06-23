@@ -726,25 +726,6 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate)
   }
 }
 
-static void
-MarkDirtyBitsOnDescendants(nsIFrame *aFrame)
-{
-  NS_ABORT_IF_FALSE(aFrame->IsFrameOfType(nsIFrame::eSVG),
-                    "Passed bad frame!");
-
-  nsIFrame* kid = aFrame->GetFirstPrincipalChild();
-  while (kid) {
-    nsISVGChildFrame* svgkid = do_QueryFrame(kid);
-    if (svgkid &&
-        !(kid->GetStateBits() &
-          (NS_STATE_SVG_NONDISPLAY_CHILD | NS_FRAME_IS_DIRTY))) {
-      MarkDirtyBitsOnDescendants(kid);
-      kid->AddStateBits(NS_FRAME_IS_DIRTY);
-    }
-    kid = kid->GetNextSibling();
-  }
-}
-
 void
 nsSVGUtils::ScheduleBoundsUpdate(nsIFrame *aFrame)
 {
@@ -772,10 +753,6 @@ nsSVGUtils::ScheduleBoundsUpdate(nsIFrame *aFrame)
     // hasn't yet had its initial reflow.
     return;
   }
-
-  // XXXSDL once we store bounds on containers, we will not need to
-  // mark our descendants dirty.
-  MarkDirtyBitsOnDescendants(aFrame);
 
   nsSVGOuterSVGFrame *outerSVGFrame = nsnull;
 
