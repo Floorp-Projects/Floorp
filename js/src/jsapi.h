@@ -3932,10 +3932,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewGlobalObject(JSContext *cx, JSClass *clasp);
-
-extern JS_PUBLIC_API(JSObject *)
-JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals);
+JS_NewGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *principals);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);

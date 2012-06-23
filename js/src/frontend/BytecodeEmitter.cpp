@@ -822,7 +822,6 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
      */
     ScopeCoordinate sc;
     if (JOF_OPTYPE(pn->getOp()) == JOF_QARG) {
-        JS_ASSERT(bce->sc->funIsHeavyweight());
         sc.hops = ClonedBlockDepth(bce);
         sc.slot = bce->sc->bindings.argToSlot(pn->pn_cookie.slot());
     } else {

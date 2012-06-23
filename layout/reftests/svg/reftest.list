@@ -304,5 +304,5 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspa
 
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
 == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in-ref.xhtml
-fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml # Bug 541270
+== svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out-ref.xhtml
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg
