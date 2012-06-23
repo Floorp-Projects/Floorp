@@ -97,7 +97,7 @@ AitcClient.prototype = {
 
     app.name = "Uninstalled"; // Bug 760262
     let record = this._makeRemoteApp(app);
-    record.deleted = true;
+    record.hidden = true;
     this._putApp(record, cb);
   },
 
@@ -235,8 +235,8 @@ AitcClient.prototype = {
       manifestURL:    app.manifestPath,
       receipts:       app.receipts
     };
-    if ("deleted" in app) {
-      record.deleted = app.deleted;
+    if ("hidden" in app) {
+      record.hidden = app.hidden;
     }
     return record;
   },
