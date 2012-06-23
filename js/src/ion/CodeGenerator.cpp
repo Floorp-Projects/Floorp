@@ -961,6 +961,29 @@ CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
 }
 
 bool
+CodeGenerator::visitNewSlots(LNewSlots *lir)
+{
+    Register temp1 = ToRegister(lir->temp1());
+    Register temp2 = ToRegister(lir->temp2());
+    Register temp3 = ToRegister(lir->temp3());
+    Register output = ToRegister(lir->output());
+
+    masm.mov(ImmWord(gen->cx->runtime), temp1);
+    masm.mov(Imm32(lir->mir()->nslots()), temp2);
+
+    masm.setupUnalignedABICall(2, temp3);
+    masm.passABIArg(temp1);
+    masm.passABIArg(temp2);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NewSlots));
+
+    masm.testPtr(output, output);
+    if (!bailoutIf(Assembler::Zero, lir->snapshot()))
+        return false;
+
+    return true;
+}
+
+bool
 CodeGenerator::visitNewArray(LNewArray *lir)
 {
     Register objReg = ToRegister(lir->output());
@@ -1086,41 +1109,46 @@ bool
 CodeGenerator::visitNewCallObject(LNewCallObject *lir)
 {
     Register obj = ToRegister(lir->output());
-    Register scopeObj = ToRegister(lir->scopeObj());
-    Register callee = ToRegister(lir->callee());
 
-    typedef JSObject *(*pf)(JSContext *, HandleObject, HandleFunction);
+    typedef JSObject *(*pf)(JSContext *, HandleShape, HandleTypeObject, HeapSlot *, HandleObject);
     static const VMFunction NewCallObjectInfo = FunctionInfo<pf>(NewCallObject);
 
-    if (lir->mir()->templateObj()) {
-        // If we have a template object, we can inline call object creation.
-        OutOfLineCode *ool = oolCallVM(NewCallObjectInfo, lir, (ArgList(), scopeObj, callee),
-                                       StoreRegisterTo(obj));
-        if (!ool)
-            return false;
-
-        RootedObject templateObj(gen->cx, lir->mir()->templateObj());
-        masm.getNewObject(gen->cx, obj, templateObj, ool->entry());
-
-        // Initialize the scope and callee slots. No write barriers are needed
-        // here because we're overwriting UndefinedValue(), however, we may need
-        // generational barriers later.
-        Address scopeSlot(obj, ScopeObject::offsetOfEnclosingScope());
-        masm.storeValue(JSVAL_TYPE_OBJECT, scopeObj, scopeSlot);
-
-        Address calleeSlot(obj, CallObject::offsetOfCallee());
-        masm.storeValue(JSVAL_TYPE_OBJECT, callee, calleeSlot);
-
-        masm.bind(ool->rejoin());
-    } else {
-        // Otherwise, perform a normal call.
-        pushArg(callee);
-        pushArg(scopeObj);
-
-        if (!callVM(NewCallObjectInfo, lir))
-            return false;
+    RootedObject templateObj(gen->cx, lir->mir()->templateObj());
+    if (lir->isCall()) {
+        pushArg(ImmGCPtr(&templateObj->global()));
+        if (lir->slots()->isRegister())
+            pushArg(ToRegister(lir->slots()));
+        else
+            pushArg(ImmWord((void *)NULL));
+        pushArg(ImmGCPtr(templateObj->type()));
+        pushArg(ImmGCPtr(templateObj->lastProperty()));
+        return callVM(NewCallObjectInfo, lir);
     }
 
+    // If we have a template object, we can inline call object creation.
+    OutOfLineCode *ool;
+    if (lir->slots()->isRegister()) {
+        ool = oolCallVM(NewCallObjectInfo, lir,
+                        (ArgList(), ImmGCPtr(templateObj->lastProperty()),
+                                    ImmGCPtr(templateObj->type()),
+                                    ToRegister(lir->slots()),
+                                    ImmGCPtr(&templateObj->global())),
+                        StoreRegisterTo(obj));
+    } else {
+        ool = oolCallVM(NewCallObjectInfo, lir,
+                        (ArgList(), ImmGCPtr(templateObj->lastProperty()),
+                                    ImmGCPtr(templateObj->type()),
+                                    ImmWord((void *)NULL),
+                                    ImmGCPtr(&templateObj->global())),
+                        StoreRegisterTo(obj));
+    }
+    if (!ool)
+        return false;
+
+    masm.getNewObject(gen->cx, obj, templateObj, ool->entry());
+    if (lir->slots()->isRegister())
+        masm.storePtr(ToRegister(lir->slots()), Address(obj, JSObject::offsetOfSlots()));
+    masm.bind(ool->rejoin());
     return true;
 }
 

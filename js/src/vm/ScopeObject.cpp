@@ -82,6 +82,47 @@ js::ScopeCoordinateToFrameVar(JSScript *script, jsbytecode *pc, unsigned *index)
 /*****************************************************************************/
 
 /*
+ * Construct a bare-bones call object given a shape, type, and slots pointer.
+ * The call object must be further initialized to be usable.
+ */
+CallObject *
+CallObject::create(JSContext *cx, HandleShape shape, HandleTypeObject type, HeapSlot *slots,
+                   HandleObject global)
+{
+    gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+    JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
+    kind = gc::GetBackgroundAllocKind(kind);
+
+    RootedObject obj(cx, JSObject::create(cx, kind, shape, type, slots));
+    if (!obj)
+        return NULL;
+
+    /*
+     * Update the parent for bindings associated with non-compileAndGo scripts,
+     * whose call objects do not have a consistent global variable and need
+     * to be updated dynamically.
+     */
+    if (global != obj->getParent()) {
+        JS_ASSERT(obj->getParent() == NULL);
+        if (!JSObject::setParent(cx, obj, global))
+            return NULL;
+    }
+
+    /*
+     * If |bindings| is for a function that has extensible parents, that means
+     * its Call should have its own shape; see BaseShape::extensibleParents.
+     */
+    if (obj->lastProperty()->extensibleParents()) {
+        if (!obj->generateOwnShape(cx))
+            return NULL;
+    }
+
+    JS_ASSERT(obj->isDelegate());
+
+    return &obj->asCall();
+}
+
+/*
  * Construct a call object for the given bindings.  If this is a call object
  * for a function invocation, callee should be the function being called.
  * Otherwise it must be a call object for eval of strict mode code, and callee
@@ -95,10 +136,6 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
     if (shape == NULL)
         return NULL;
 
-    gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-    JS_ASSERT(CanBeFinalizedInBackground(kind, &CallClass));
-    kind = gc::GetBackgroundAllocKind(kind);
-
     RootedTypeObject type(cx);
     type = cx->compartment->getEmptyType(cx);
     if (!type)
@@ -108,35 +145,13 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
     if (!PreallocateObjectDynamicSlots(cx, shape, &slots))
         return NULL;
 
-    RootedObject obj(cx, JSObject::create(cx, kind, shape, type, slots));
+    RootedObject global(cx, &enclosing->global());
+    RootedObject obj(cx, CallObject::create(cx, shape, type, slots, global));
     if (!obj)
         return NULL;
 
-    /*
-     * Update the parent for bindings associated with non-compileAndGo scripts,
-     * whose call objects do not have a consistent global variable and need
-     * to be updated dynamically.
-     */
-    if (&enclosing->global() != obj->getParent()) {
-        JS_ASSERT(obj->getParent() == NULL);
-        Rooted<GlobalObject*> global(cx, &enclosing->global());
-        if (!JSObject::setParent(cx, obj, global))
-            return NULL;
-    }
-
     obj->asScope().setEnclosingScope(enclosing);
     obj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
-
-    /*
-     * If |bindings| is for a function that has extensible parents, that means
-     * its Call should have its own shape; see BaseShape::extensibleParents.
-     */
-    if (obj->lastProperty()->extensibleParents()) {
-        if (!obj->generateOwnShape(cx))
-            return NULL;
-    }
-
-    JS_ASSERT(obj->isDelegate());
 
     return &obj->asCall();
 }

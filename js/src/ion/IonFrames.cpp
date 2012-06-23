@@ -540,6 +540,9 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
           case VMFunction::RootValue:
             gc::MarkValueRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
             break;
+          case VMFunction::RootCell:
+            gc::MarkThingOrValueRoot(trc, reinterpret_cast<uintptr_t *>(argBase), "ion-vm-args");
+            break;
         }
 
         switch (f->argProperties(explicitArg)) {
