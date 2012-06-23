@@ -42,6 +42,12 @@ public:
   nsresult GetSelectedCellCount(PRUint32* aSelectedCellCount);
   nsresult GetSelectedColumnCount(PRUint32* aSelectedColumnCount);
   nsresult GetSelectedRowCount(PRUint32* aSelectedRowCount);
+  nsresult GetSelectedCellIndices(PRUint32* aCellsArraySize,
+                                  PRInt32** aCellsArray);
+  nsresult GetSelectedColumnIndices(PRUint32* aColsArraySize,
+                                    PRInt32** aColsArray);
+  nsresult GetSelectedRowIndices(PRUint32* aRowsArraySize,
+                                 PRInt32** aRowsArray);
   nsresult SelectColumn(PRInt32 aColIdx);
   nsresult SelectRow(PRInt32 aRowIdx);
   nsresult UnselectColumn(PRInt32 aColIdx);
@@ -89,9 +95,15 @@ protected:
   NS_SCRIPTABLE NS_IMETHOD GetSelectedRowCount(PRUint32* aSelectedRowCount) \
     { return xpcAccessibleTable::GetSelectedRowCount(aSelectedRowCount); } \
   NS_SCRIPTABLE NS_IMETHOD GetSelectedCells(nsIArray * *aSelectedCells); \
-  NS_SCRIPTABLE NS_IMETHOD GetSelectedCellIndices(PRUint32 *cellsArraySize NS_OUTPARAM, PRInt32 **cellsArray NS_OUTPARAM); \
-  NS_SCRIPTABLE NS_IMETHOD GetSelectedColumnIndices(PRUint32 *rowsArraySize NS_OUTPARAM, PRInt32 **rowsArray NS_OUTPARAM); \
-  NS_SCRIPTABLE NS_IMETHOD GetSelectedRowIndices(PRUint32 *rowsArraySize NS_OUTPARAM, PRInt32 **rowsArray NS_OUTPARAM); \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedCellIndices(PRUint32* cellsArraySize NS_OUTPARAM, \
+                                                  PRInt32** cellsArray NS_OUTPARAM) \
+    { return xpcAccessibleTable::GetSelectedCellIndices(cellsArraySize, cellsArray); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedColumnIndices(PRUint32* colsArraySize NS_OUTPARAM, \
+                                                    PRInt32** colsArray NS_OUTPARAM) \
+    { return xpcAccessibleTable::GetSelectedColumnIndices(colsArraySize, colsArray); } \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedRowIndices(PRUint32* rowsArraySize NS_OUTPARAM, \
+                                                 PRInt32** rowsArray NS_OUTPARAM) \
+    { return xpcAccessibleTable::GetSelectedRowIndices(rowsArraySize, rowsArray); } \
   NS_SCRIPTABLE NS_IMETHOD SelectRow(PRInt32 aRowIdx) \
     { return xpcAccessibleTable::SelectRow(aRowIdx); } \
   NS_SCRIPTABLE NS_IMETHOD SelectColumn(PRInt32 aColIdx) \

@@ -129,136 +129,36 @@ XULTreeGridAccessible::GetSelectedCells(nsIArray** aCells)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-XULTreeGridAccessible::GetSelectedCellIndices(PRUint32* aCellsCount,
-                                              PRInt32** aCells)
+void
+XULTreeGridAccessible::SelectedCellIndices(nsTArray<PRUint32>* aCells)
 {
-  NS_ENSURE_ARG_POINTER(aCellsCount);
-  *aCellsCount = 0;
-  NS_ENSURE_ARG_POINTER(aCells);
-  *aCells = nsnull;
+  PRUint32 colCount = ColCount(), rowCount = RowCount();
 
-  if (!mTreeView)
-    return NS_OK;
-
-  PRInt32 selectedrowCount = 0;
-  nsresult rv = GetSelectionCount(&selectedrowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 columnCount = 0;
-  rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 selectedCellCount = selectedrowCount * columnCount;
-  PRInt32* outArray = static_cast<PRInt32*>(
-    nsMemory::Alloc(selectedCellCount * sizeof(PRInt32)));
-  NS_ENSURE_TRUE(outArray, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsITreeSelection> selection;
-  rv = mTreeView->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 rowCount = 0;
-  rv = GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool isSelected;
-  for (PRInt32 rowIdx = 0, arrayIdx = 0; rowIdx < rowCount; rowIdx++) {
-    selection->IsSelected(rowIdx, &isSelected);
-    if (isSelected) {
-      for (PRInt32 colIdx = 0; colIdx < columnCount; colIdx++)
-        outArray[arrayIdx++] = rowIdx * columnCount + colIdx;
-    }
-  }
-
-  *aCellsCount = selectedCellCount;
-  *aCells = outArray;
-  return NS_OK;
+  for (PRUint32 rowIdx = 0; rowIdx < rowCount; rowIdx++)
+    if (IsRowSelected(rowIdx))
+      for (PRUint32 colIdx = 0; colIdx < colCount; colIdx++)
+        aCells->AppendElement(rowIdx * colCount + colIdx);
 }
 
-NS_IMETHODIMP
-XULTreeGridAccessible::GetSelectedColumnIndices(PRUint32* acolumnCount,
-                                                PRInt32** aColumns)
+void
+XULTreeGridAccessible::SelectedColIndices(nsTArray<PRUint32>* aCols)
 {
-  NS_ENSURE_ARG_POINTER(acolumnCount);
-  *acolumnCount = 0;
-  NS_ENSURE_ARG_POINTER(aColumns);
-  *aColumns = nsnull;
+  if (RowCount() != SelectedRowCount())
+    return;
 
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  // If all the row has been selected, then all the columns are selected.
-  // Because we can't select a column alone.
-
-  PRInt32 rowCount = 0;
-  nsresult rv = GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 selectedrowCount = 0;
-  rv = GetSelectionCount(&selectedrowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (rowCount != selectedrowCount)
-    return NS_OK;
-
-  PRInt32 columnCount = 0;
-  rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32* outArray = static_cast<PRInt32*>(
-    nsMemory::Alloc(columnCount * sizeof(PRInt32)));
-  NS_ENSURE_TRUE(outArray, NS_ERROR_OUT_OF_MEMORY);
-
-  for (PRInt32 colIdx = 0; colIdx < columnCount; colIdx++)
-    outArray[colIdx] = colIdx;
-
-  *acolumnCount = columnCount;
-  *aColumns = outArray;
-  return NS_OK;
+  PRUint32 colCount = ColCount();
+  aCols->SetCapacity(colCount);
+  for (PRUint32 colIdx = 0; colIdx < colCount; colIdx++)
+    aCols->AppendElement(colIdx);
 }
 
-NS_IMETHODIMP
-XULTreeGridAccessible::GetSelectedRowIndices(PRUint32* arowCount,
-                                             PRInt32** aRows)
+void
+XULTreeGridAccessible::SelectedRowIndices(nsTArray<PRUint32>* aRows)
 {
-  NS_ENSURE_ARG_POINTER(arowCount);
-  *arowCount = 0;
-  NS_ENSURE_ARG_POINTER(aRows);
-  *aRows = nsnull;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  if (!mTreeView)
-    return NS_OK;
-
-  PRInt32 selectedrowCount = 0;
-  nsresult rv = GetSelectionCount(&selectedrowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32* outArray = static_cast<PRInt32*>(
-    nsMemory::Alloc(selectedrowCount * sizeof(PRInt32)));
-  NS_ENSURE_TRUE(outArray, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsITreeSelection> selection;
-  rv = mTreeView->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 rowCount = 0;
-  rv = GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool isSelected;
-  for (PRInt32 rowIdx = 0, arrayIdx = 0; rowIdx < rowCount; rowIdx++) {
-    selection->IsSelected(rowIdx, &isSelected);
-    if (isSelected)
-      outArray[arrayIdx++] = rowIdx;
-  }
-
-  *arowCount = selectedrowCount;
-  *aRows = outArray;
-  return NS_OK;
+  PRUint32 rowCount = RowCount();
+  for (PRUint32 rowIdx = 0; rowIdx < rowCount; rowIdx++)
+    if (IsRowSelected(rowIdx))
+      aRows->AppendElement(rowIdx);
 }
 
 Accessible*

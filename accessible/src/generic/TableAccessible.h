@@ -130,14 +130,19 @@ public:
   virtual void SelectedCells(nsTArray<Accessible*>* aCells) {}
 
   /**
+   * Get the set of selected cell indices.
+   */
+  virtual void SelectedCellIndices(nsTArray<PRUint32>* aCells) = 0;
+
+  /**
    * Get the set of selected column indices.
    */
-  virtual void SelectedColIndices(nsTArray<PRUint32>* aCols) {}
+  virtual void SelectedColIndices(nsTArray<PRUint32>* aCols) = 0;
 
   /**
    * Get the set of selected row indices.
    */
-  virtual void SelectedRowIndices(nsTArray<PRUint32>* aRows) {}
+  virtual void SelectedRowIndices(nsTArray<PRUint32>* aRows) = 0;
 
   /**
    * Select the given column unselecting any other selected columns.

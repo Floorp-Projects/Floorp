@@ -660,158 +660,52 @@ HTMLTableAccessible::GetSelectedCells(nsIArray** aCells)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLTableAccessible::GetSelectedCellIndices(PRUint32* aNumCells,
-                                            PRInt32** aCells)
+void
+HTMLTableAccessible::SelectedCellIndices(nsTArray<PRUint32>* aCells)
 {
-  NS_ENSURE_ARG_POINTER(aNumCells);
-  *aNumCells = 0;
-  NS_ENSURE_ARG_POINTER(aCells);
-  *aCells = nsnull;
-
-  PRInt32 rowCount = 0;
-  nsresult rv = GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRInt32 columnCount = 0;
-  rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsITableLayout *tableLayout = GetTableLayout();
-  NS_ENSURE_STATE(tableLayout);
+  if (!tableLayout)
+    return;
+
+  PRUint32 rowCount = RowCount(), colCount = ColCount();
 
   nsCOMPtr<nsIDOMElement> domElement;
   PRInt32 startRowIndex = 0, startColIndex = 0,
     rowSpan, colSpan, actualRowSpan, actualColSpan;
   bool isSelected = false;
 
-  PRInt32 cellsCount = columnCount * rowCount;
-  nsAutoArrayPtr<bool> states(new bool[cellsCount]);
-  NS_ENSURE_TRUE(states, NS_ERROR_OUT_OF_MEMORY);
+  for (PRUint32 rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+    for (PRUint32 colIdx = 0; colIdx < colCount; colIdx++) {
+      nsresult rv = tableLayout->GetCellDataAt(rowIdx, colIdx,
+                                               *getter_AddRefs(domElement),
+                                               startRowIndex, startColIndex,
+                                               rowSpan, colSpan,
+                                               actualRowSpan, actualColSpan,
+                                               isSelected);
 
-  PRInt32 rowIndex, index;
-  for (rowIndex = 0, index = 0; rowIndex < rowCount; rowIndex++) {
-    PRInt32 columnIndex;
-    for (columnIndex = 0; columnIndex < columnCount; columnIndex++, index++) {
-      rv = tableLayout->GetCellDataAt(rowIndex, columnIndex,
-                                      *getter_AddRefs(domElement),
-                                      startRowIndex, startColIndex,
-                                      rowSpan, colSpan,
-                                      actualRowSpan, actualColSpan,
-                                      isSelected);
-
-      if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
-          startColIndex == columnIndex && isSelected) {
-        states[index] = true;
-        (*aNumCells)++;
-      } else {
-        states[index] = false;
-      }
+      if (NS_SUCCEEDED(rv) && startRowIndex == rowIdx &&
+          startColIndex == colIdx && isSelected)
+        aCells->AppendElement(CellIndexAt(rowIdx, colIdx));
     }
   }
-
-  PRInt32 *cellsArray =
-    static_cast<PRInt32*>(nsMemory::Alloc((*aNumCells) * sizeof(PRInt32)));
-  NS_ENSURE_TRUE(cellsArray, NS_ERROR_OUT_OF_MEMORY);
-
-  PRInt32 curr = 0;
-  for (rowIndex = 0, index = 0; rowIndex < rowCount; rowIndex++) {
-    PRInt32 columnIndex;
-    for (columnIndex = 0; columnIndex < columnCount; columnIndex++, index++) {
-      if (states[index]) {
-        PRInt32 cellIndex = -1;
-        GetCellIndexAt(rowIndex, columnIndex, &cellIndex);
-        cellsArray[curr++] = cellIndex;
-      }
-    }
-  }
-
-  *aCells = cellsArray;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLTableAccessible::GetSelectedColumnIndices(PRUint32* aNumColumns,
-                                              PRInt32** aColumns)
+void
+HTMLTableAccessible::SelectedColIndices(nsTArray<PRUint32>* aCols)
 {
-  nsresult rv = NS_OK;
-
-  PRInt32 columnCount;
-  rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool *states = new bool[columnCount];
-  NS_ENSURE_TRUE(states, NS_ERROR_OUT_OF_MEMORY);
-
-  *aNumColumns = 0;
-  PRInt32 index;
-  for (index = 0; index < columnCount; index++) {
-    rv = IsColumnSelected(index, &states[index]);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (states[index]) {
-      (*aNumColumns)++;
-    }
-  }
-
-  PRInt32 *outArray = (PRInt32 *)nsMemory::Alloc((*aNumColumns) * sizeof(PRInt32));
-  if (!outArray) {
-    delete []states;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  PRInt32 curr = 0;
-  for (index = 0; index < columnCount; index++) {
-    if (states[index]) {
-      outArray[curr++] = index;
-    }
-  }
-
-  delete []states;
-  *aColumns = outArray;
-  return rv;
+  PRUint32 colCount = ColCount();
+  for (PRUint32 colIdx = 0; colIdx < colCount; colIdx++)
+    if (IsColSelected(colIdx))
+      aCols->AppendElement(colIdx);
 }
 
-NS_IMETHODIMP
-HTMLTableAccessible::GetSelectedRowIndices(PRUint32* aNumRows,
-                                           PRInt32** aRows)
+void
+HTMLTableAccessible::SelectedRowIndices(nsTArray<PRUint32>* aRows)
 {
-  nsresult rv = NS_OK;
-
-  PRInt32 rowCount;
-  rv = GetRowCount(&rowCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool *states = new bool[rowCount];
-  NS_ENSURE_TRUE(states, NS_ERROR_OUT_OF_MEMORY);
-
-  *aNumRows = 0;
-  PRInt32 index;
-  for (index = 0; index < rowCount; index++) {
-    rv = IsRowSelected(index, &states[index]);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (states[index]) {
-      (*aNumRows)++;
-    }
-  }
-
-  PRInt32 *outArray = (PRInt32 *)nsMemory::Alloc((*aNumRows) * sizeof(PRInt32));
-  if (!outArray) {
-    delete []states;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  PRInt32 curr = 0;
-  for (index = 0; index < rowCount; index++) {
-    if (states[index]) {
-      outArray[curr++] = index;
-    }
-  }
-
-  delete []states;
-  *aRows = outArray;
-  return rv;
+  PRUint32 rowCount = RowCount();
+  for (PRUint32 rowIdx = 0; rowIdx < rowCount; rowIdx++)
+    if (IsRowSelected(rowIdx))
+      aRows->AppendElement(rowIdx);
 }
 
 Accessible*
