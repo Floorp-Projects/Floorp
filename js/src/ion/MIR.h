@@ -4529,12 +4529,36 @@ class MMonitorTypes : public MUnaryInstruction
     }
 };
 
-class MNewCallObject : public MBinaryInstruction
+class MNewSlots : public MNullaryInstruction
+{
+    unsigned nslots_;
+
+    MNewSlots(unsigned nslots)
+      : nslots_(nslots)
+    {
+        setResultType(MIRType_Slots);
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewSlots);
+
+    static MNewSlots *New(unsigned nslots) {
+        return new MNewSlots(nslots);
+    }
+    unsigned nslots() const {
+        return nslots_;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+class MNewCallObject : public MUnaryInstruction
 {
     CompilerRootObject templateObj_;
 
-    MNewCallObject(HandleObject templateObj, MDefinition *scopeObj, MDefinition *callee)
-      : MBinaryInstruction(scopeObj, callee),
+    MNewCallObject(HandleObject templateObj, MDefinition *slots)
+      : MUnaryInstruction(slots),
         templateObj_(templateObj)
     {
         setResultType(MIRType_Object);
@@ -4543,17 +4567,12 @@ class MNewCallObject : public MBinaryInstruction
   public:
     INSTRUCTION_HEADER(NewCallObject);
 
-    static MNewCallObject *New(HandleObject templateObj, MDefinition *scopeObj,
-                               MDefinition *callee)
-    {
-        return new MNewCallObject(templateObj, scopeObj, callee);
+    static MNewCallObject *New(HandleObject templateObj, MDefinition *slots) {
+        return new MNewCallObject(templateObj, slots);
     }
 
-    MDefinition *scopeObj() {
+    MDefinition *slots() {
         return getOperand(0);
-    }
-    MDefinition *callee() {
-        return getOperand(1);
     }
     JSObject *templateObj() {
         return templateObj_;

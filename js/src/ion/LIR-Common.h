@@ -225,6 +225,36 @@ class LGoto : public LInstructionHelper<0, 0, 0>
     }
 };
 
+class LNewSlots : public LCallInstructionHelper<1, 0, 3>
+{
+  public:
+    LIR_HEADER(NewSlots);
+
+    LNewSlots(const LDefinition &temp1, const LDefinition &temp2,
+              const LDefinition &temp3) {
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+    }
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
+    const LDefinition *temp1() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+    const LDefinition *temp3() {
+        return getTemp(2);
+    }
+
+    MNewSlots *mir() const {
+        return mir_->toNewSlots();
+    }
+};
+
 class LNewArray : public LInstructionHelper<1, 0, 0>
 {
   public:
@@ -253,14 +283,23 @@ class LNewObject : public LInstructionHelper<1, 0, 0>
     }
 };
 
-class LNewCallObject : public LInstructionHelper<1, 2, 0>
+// Allocates a new CallObject. The inputs are:
+//      slots: either a reg representing a HeapSlot *, or a placeholder
+//             meaning that no slots pointer is needed.
+//
+// This instruction generates two possible instruction sets:
+//   (1) If the call object is extensible, this is a callVM to create the
+//       call object.
+//   (2) Otherwise, an inline allocation of the call object is attempted.
+//
+class LNewCallObject : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(NewCallObject);
 
-    LNewCallObject(const LAllocation &scopeObj, const LAllocation &callee) {
-        setOperand(0, scopeObj);
-        setOperand(1, callee);
+    LNewCallObject(const LAllocation &slots)
+    {
+        setOperand(0, slots);
     }
 
     bool isCall() const;
@@ -268,11 +307,8 @@ class LNewCallObject : public LInstructionHelper<1, 2, 0>
     const LDefinition *output() {
         return getDef(0);
     }
-    const LAllocation *scopeObj() {
-        return getOperand(0); 
-    }
-    const LAllocation *callee() {
-        return getOperand(1); 
+    const LAllocation *slots() {
+        return getOperand(0);
     }
     MNewCallObject *mir() const {
         return mir_->toNewCallObject();
