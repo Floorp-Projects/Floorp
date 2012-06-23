@@ -191,8 +191,13 @@ nsSVGSwitchFrame::UpdateBounds()
   mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
               NS_FRAME_HAS_DIRTY_CHILDREN);
 
-  // XXXSDL Make Invalidate() call nsSVGUtils::InvalidateBounds(this)
-  // so that we invalidate under FinishAndStoreOverflow().
+  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    // We only invalidate if our outer-<svg> has already had its
+    // initial reflow (since if it hasn't, its entire area will be
+    // invalidated when it gets that initial reflow):
+    // XXXSDL Let FinishAndStoreOverflow do this.
+    nsSVGUtils::InvalidateBounds(this, true);
+  }
 }
 
 SVGBBox

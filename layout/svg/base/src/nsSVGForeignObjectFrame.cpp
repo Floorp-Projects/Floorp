@@ -425,7 +425,9 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
   }
 
   if (aFlags & TRANSFORM_CHANGED) {
-    needNewBounds = true; // needed if it was _our_ transform that changed
+    if (mCanvasTM && mCanvasTM->IsSingular()) {
+      needNewBounds = true; // old bounds are bogus
+    }
     needNewCanvasTM = true;
     // In an ideal world we would reflow when our CTM changes. This is because
     // glyph metrics do not necessarily scale uniformly with change in scale
@@ -436,9 +438,13 @@ nsSVGForeignObjectFrame::NotifySVGChanged(PRUint32 aFlags)
     // reflow.
   }
 
-  if (needNewBounds &&
-      !(aFlags & DO_NOT_NOTIFY_RENDERING_OBSERVERS)) {
-    nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
+  if (needNewBounds) {
+    // Ancestor changes can't affect how we render from the perspective of
+    // any rendering observers that we may have, so we don't need to
+    // invalidate them. We also don't need to invalidate ourself, since our
+    // changed ancestor will have invalidated its entire area, which includes
+    // our area.
+    nsSVGUtils::ScheduleBoundsUpdate(this);
   }
 
   // If we're called while the PresShell is handling reflow events then we
