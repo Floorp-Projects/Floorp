@@ -3487,19 +3487,6 @@ SweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool *startBackgroundSweep)
         c->setGCLastBytes(c->gcBytes, c->gcMallocAndFreeBytes, gckind);
 }
 
-static void
-NonIncrementalMark(JSRuntime *rt, JSGCInvocationKind gckind)
-{
-    JS_ASSERT(rt->gcIncrementalState == NO_INCREMENTAL);
-    BeginMarkPhase(rt);
-    {
-        gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK);
-        SliceBudget budget;
-        rt->gcMarker.drainMarkStack(budget);
-    }
-    EndMarkPhase(rt);
-}
-
 /*
  * This class should be used by any code that needs to exclusive access to the
  * heap in order to trace through it...
@@ -3654,11 +3641,22 @@ class AutoCopyFreeListToArenas {
 };
 
 static void
-IncrementalMarkSlice(JSRuntime *rt, int64_t budget, JSGCInvocationKind gckind, bool *shouldSweep)
+IncrementalMarkSlice(JSRuntime *rt, int64_t budget, gcreason::Reason reason, bool *shouldSweep)
 {
     AutoGCSlice slice(rt);
 
     gc::State initialState = rt->gcIncrementalState;
+
+    *shouldSweep = false;
+
+    int zeal = 0;
+#ifdef JS_GC_ZEAL
+    if (reason == gcreason::DEBUG_GC) {
+        // Do the collection type specified by zeal mode only if the collection
+        // was triggered by RunDebugGC().
+        zeal = rt->gcZeal();
+    }
+#endif
 
     if (rt->gcIncrementalState == NO_INCREMENTAL) {
         rt->gcIncrementalState = MARK_ROOTS;
@@ -3668,9 +3666,11 @@ IncrementalMarkSlice(JSRuntime *rt, int64_t budget, JSGCInvocationKind gckind, b
     if (rt->gcIncrementalState == MARK_ROOTS) {
         BeginMarkPhase(rt);
         rt->gcIncrementalState = MARK;
+
+        if (zeal == ZealIncrementalRootsThenFinish)
+            return;
     }
 
-    *shouldSweep = false;
     if (rt->gcIncrementalState == MARK) {
         SliceBudget sliceBudget(budget);
 
@@ -3695,7 +3695,11 @@ IncrementalMarkSlice(JSRuntime *rt, int64_t budget, JSGCInvocationKind gckind, b
         }
         if (finished) {
             JS_ASSERT(rt->gcMarker.isDrained());
-            if (initialState == MARK && !rt->gcLastMarkSlice && budget != SliceBudget::Unlimited) {
+
+            if (!rt->gcLastMarkSlice &&
+                ((initialState == MARK && budget != SliceBudget::Unlimited) ||
+                 zeal == ZealIncrementalMarkAllThenFinish))
+            {
                 rt->gcLastMarkSlice = true;
             } else {
                 EndMarkPhase(rt);
@@ -3796,7 +3800,7 @@ BudgetIncrementalGC(JSRuntime *rt, int64_t *budget)
  * the marking implementation.
  */
 static JS_NEVER_INLINE void
-GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gckind)
+GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gckind, gcreason::Reason reason)
 {
 #ifdef DEBUG
     for (CompartmentsIter c(rt); !c.done(); c.next())
@@ -3834,17 +3838,13 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
             /* If non-incremental GC was requested, reset incremental GC. */
             ResetIncrementalGC(rt, "requested");
             rt->gcStats.nonincremental("requested");
+            budget = SliceBudget::Unlimited;
         } else {
             BudgetIncrementalGC(rt, &budget);
         }
 
         bool shouldSweep;
-        if (budget == SliceBudget::Unlimited && rt->gcIncrementalState == NO_INCREMENTAL) {
-            NonIncrementalMark(rt, gckind);
-            shouldSweep = true;
-        } else {
-            IncrementalMarkSlice(rt, budget, gckind, &shouldSweep);
-        }
+        IncrementalMarkSlice(rt, budget, reason, &shouldSweep);
 
 #ifdef DEBUG
         if (rt->gcIncrementalState == NO_INCREMENTAL) {
@@ -3903,7 +3903,8 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 #ifdef JS_GC_ZEAL
     bool restartVerify = rt->gcVerifyData &&
                          rt->gcZeal() == ZealVerifierValue &&
-                         reason != gcreason::CC_FORCED;
+                         reason != gcreason::CC_FORCED &&
+                         rt->hasContexts();
 
     struct AutoVerifyBarriers {
         JSRuntime *runtime;
@@ -3954,7 +3955,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
         }
 
         rt->gcPoke = false;
-        GCCycle(rt, incremental, budget, gckind);
+        GCCycle(rt, incremental, budget, gckind, reason);
 
         if (rt->gcIncrementalState == NO_INCREMENTAL) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_GC_END);
@@ -4186,8 +4187,32 @@ void
 RunDebugGC(JSContext *cx)
 {
 #ifdef JS_GC_ZEAL
+    JSRuntime *rt = cx->runtime;
     PrepareForDebugGC(cx->runtime);
-    RunLastDitchGC(cx, gcreason::DEBUG_GC);
+
+    int type = rt->gcZeal();
+    if (type == ZealIncrementalRootsThenFinish ||
+        type == ZealIncrementalMarkAllThenFinish ||
+        type == ZealIncrementalMultipleSlices)
+    {
+        int64_t budget;
+        if (type == ZealIncrementalMultipleSlices) {
+            // Start with a small slice limit and double it every slice. This ensure that we get
+            // multiple slices, and collection runs to completion.
+            if (rt->gcIncrementalState == NO_INCREMENTAL)
+                rt->gcIncrementalLimit = rt->gcZealFrequency / 2;
+            else
+                rt->gcIncrementalLimit *= 2;
+            budget = SliceBudget::WorkBudget(rt->gcIncrementalLimit);
+        } else {
+            // This triggers incremental GC but is actually ignored by IncrementalMarkSlice.
+            budget = SliceBudget::Unlimited;
+        }
+        Collect(rt, true, budget, GC_NORMAL, gcreason::DEBUG_GC);
+    } else {
+        Collect(rt, false, SliceBudget::Unlimited, GC_NORMAL, gcreason::DEBUG_GC);
+    }
+
 #endif
 }
 
