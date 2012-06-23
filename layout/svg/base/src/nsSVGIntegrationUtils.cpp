@@ -247,20 +247,21 @@ nsRect
     return aPreEffectsOverflowRect;
 
   // Create an override bbox - see comment above:
-  PRUint32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   nsPoint firstFrameToUserSpace = GetOffsetToUserSpace(firstFrame);
-  // overrideBBox is in "user space", in dev pixels:
+  // overrideBBox is in "user space", in _CSS_ pixels:
   // XXX Why are we rounding out to pixel boundaries? We don't do that in
   // GetSVGBBoxForNonSVGFrame, and it doesn't appear to be necessary.
-  nsIntRect overrideBBox =
-    GetPreEffectsVisualOverflowUnion(firstFrame, aFrame,
-                                     aPreEffectsOverflowRect,
-                                     firstFrameToUserSpace).
-      ToOutsidePixels(appUnitsPerDevPixel);
+  gfxRect overrideBBox =
+    nsLayoutUtils::RectToGfxRect(
+      GetPreEffectsVisualOverflowUnion(firstFrame, aFrame,
+                                       aPreEffectsOverflowRect,
+                                       firstFrameToUserSpace),
+      aFrame->PresContext()->AppUnitsPerCSSPixel());
+  overrideBBox.RoundOut();
 
   nsRect overflowRect =
     filterFrame->GetPostFilterBounds(firstFrame, &overrideBBox).
-                   ToAppUnits(appUnitsPerDevPixel);
+                   ToAppUnits(aFrame->PresContext()->AppUnitsPerDevPixel());
 
   // Return overflowRect relative to aFrame, rather than "user space":
   return overflowRect - (aFrame->GetOffsetTo(firstFrame) + firstFrameToUserSpace);
