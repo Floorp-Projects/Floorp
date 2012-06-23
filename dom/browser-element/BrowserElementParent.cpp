@@ -170,12 +170,23 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
 {
   *aReturnWindow = NULL;
 
+  // If we call window.open from an <iframe> inside an <iframe mozbrowser>,
+  // it's as though the top-level document inside the <iframe mozbrowser>
+  // called window.open.  (Indeed, in the OOP case, the inner <iframe> lives
+  // out-of-process, so we couldn't touch it if we tried.)
+  //
+  // GetScriptableTop gets us the <iframe mozbrowser>'s window; we'll use its
+  // frame element, rather than aOpenerWindow's frame element, as our "opener
+  // frame element" below.
+  nsCOMPtr<nsIDOMWindow> topWindow;
+  aOpenerWindow->GetScriptableTop(getter_AddRefs(topWindow));
+
   nsCOMPtr<nsIDOMElement> openerFrameDOMElement;
-  aOpenerWindow->GetFrameElement(getter_AddRefs(openerFrameDOMElement));
+  topWindow->GetFrameElement(getter_AddRefs(openerFrameDOMElement));
   NS_ENSURE_TRUE(openerFrameDOMElement, false);
 
-  nsCOMPtr<nsINode> openerFrameNode = do_QueryInterface(openerFrameDOMElement);
-  nsRefPtr<Element> openerFrameElement = openerFrameNode->AsElement();
+  nsCOMPtr<Element> openerFrameElement =
+    do_QueryInterface(openerFrameDOMElement);
 
   nsRefPtr<nsHTMLIFrameElement> popupFrameElement =
     CreateIframe(openerFrameElement);
