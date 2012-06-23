@@ -42,6 +42,10 @@ _TEST_FILES = \
 		test_browserElement_inproc_KeyEvents.html \
 		browserElement_Alert.js \
 		test_browserElement_inproc_Alert.html \
+		browserElement_AlertInFrame.js \
+		test_browserElement_inproc_AlertInFrame.html \
+		file_browserElement_AlertInFrame.html \
+		file_browserElement_AlertInFrame_Inner.html \
 		browserElement_PromptCheck.js \
 		test_browserElement_inproc_PromptCheck.html \
 		browserElement_PromptConfirm.js \
@@ -75,6 +79,7 @@ _TEST_FILES += \
 		test_browserElement_oop_SetVisible.html \
 		test_browserElement_oop_KeyEvents.html \
 		test_browserElement_oop_Alert.html \
+		test_browserElement_oop_AlertInFrame.html \
 		test_browserElement_oop_PromptCheck.html \
 		test_browserElement_oop_PromptConfirm.html \
 		test_browserElement_oop_Close.html \
