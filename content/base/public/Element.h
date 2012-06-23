@@ -265,4 +265,10 @@ inline mozilla::dom::Element* nsINode::AsElement()
   return static_cast<mozilla::dom::Element*>(this);
 }
 
+inline const mozilla::dom::Element* nsINode::AsElement() const
+{
+  MOZ_ASSERT(IsElement());
+  return static_cast<const mozilla::dom::Element*>(this);
+}
+
 #endif // mozilla_dom_Element_h__

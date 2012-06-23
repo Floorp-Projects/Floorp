@@ -373,6 +373,7 @@ public:
    * for which IsElement() is true.  This is defined inline in Element.h.
    */
   mozilla::dom::Element* AsElement();
+  const mozilla::dom::Element* AsElement() const;
 
   /**
    * Return this node as nsIContent.  Should only be used for nodes for which
