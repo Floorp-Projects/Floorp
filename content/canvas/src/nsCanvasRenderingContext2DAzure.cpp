@@ -357,6 +357,7 @@ NS_INTERFACE_MAP_BEGIN(nsTextMetricsAzure)
 NS_INTERFACE_MAP_END
 
 struct nsCanvasBidiProcessorAzure;
+class CanvasRenderingContext2DUserDataAzure;
 
 // Cap sigma to avoid overly large temp surfaces.
 static const Float SIGMA_MAX = 100;
@@ -422,6 +423,8 @@ public:
   
   nsresult LineTo(const Point& aPoint);
   nsresult BezierTo(const Point& aCP1, const Point& aCP2, const Point& aCP3);
+
+  friend class CanvasRenderingContext2DUserDataAzure;
 
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
@@ -503,6 +506,8 @@ protected:
   bool mResetLayer;
   // This is needed for drawing in drawAsyncXULElement
   bool mIPC;
+
+  nsTArray<CanvasRenderingContext2DUserDataAzure*> mUserDatas;
 
   // If mCanvasElement is not provided, then a docshell is
   nsCOMPtr<nsIDocShell> mDocShell;
@@ -935,6 +940,40 @@ protected:
   friend struct nsCanvasBidiProcessorAzure;
 };
 
+class CanvasRenderingContext2DUserDataAzure : public LayerUserData {
+public:
+    CanvasRenderingContext2DUserDataAzure(nsCanvasRenderingContext2DAzure *aContext)
+    : mContext(aContext)
+  {
+    aContext->mUserDatas.AppendElement(this);
+  }
+  ~CanvasRenderingContext2DUserDataAzure()
+  {
+    if (mContext) {
+      mContext->mUserDatas.RemoveElement(this);
+    }
+  }
+  static void DidTransactionCallback(void* aData)
+  {
+      CanvasRenderingContext2DUserDataAzure* self =
+      static_cast<CanvasRenderingContext2DUserDataAzure*>(aData);
+    if (self->mContext) {
+      self->mContext->MarkContextClean();
+    }
+  }
+  bool IsForContext(nsCanvasRenderingContext2DAzure *aContext)
+  {
+    return mContext == aContext;
+  }
+  void Forget()
+  {
+    mContext = nsnull;
+  }
+
+private:
+  nsCanvasRenderingContext2DAzure *mContext;
+};
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCanvasRenderingContext2DAzure)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCanvasRenderingContext2DAzure)
 
@@ -1029,6 +1068,10 @@ nsCanvasRenderingContext2DAzure::nsCanvasRenderingContext2DAzure()
 nsCanvasRenderingContext2DAzure::~nsCanvasRenderingContext2DAzure()
 {
   Reset();
+  // Drop references from all CanvasRenderingContext2DUserDataAzure to this context
+  for (PRUint32 i = 0; i < mUserDatas.Length(); ++i) {
+    mUserDatas[i]->Forget();
+  }
   sNumLivingContexts--;
   if (!sNumLivingContexts) {
     delete[] sUnpremultiplyTable;
@@ -4399,19 +4442,6 @@ nsCanvasRenderingContext2DAzure::SetMozImageSmoothingEnabled(bool val)
 
 static PRUint8 g2DContextLayerUserData;
 
-class CanvasRenderingContext2DUserData : public LayerUserData {
-public:
-  CanvasRenderingContext2DUserData(nsHTMLCanvasElement *aContent)
-    : mContent(aContent) {}
-  static void DidTransactionCallback(void* aData)
-  {
-    static_cast<CanvasRenderingContext2DUserData*>(aData)->mContent->MarkContextClean();
-  }
-
-private:
-  nsRefPtr<nsHTMLCanvasElement> mContent;
-};
-
 already_AddRefed<CanvasLayer>
 nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                            CanvasLayer *aOldLayer,
@@ -4425,18 +4455,22 @@ nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     mTarget->Flush();
   }
 
-  if (!mResetLayer && aOldLayer &&
-      aOldLayer->HasUserData(&g2DContextLayerUserData)) {
+  if (!mResetLayer && aOldLayer) {
+      CanvasRenderingContext2DUserDataAzure* userData =
+      static_cast<CanvasRenderingContext2DUserDataAzure*>(
+        aOldLayer->GetUserData(&g2DContextLayerUserData));
+    if (userData && userData->IsForContext(this)) {
       NS_ADDREF(aOldLayer);
       return aOldLayer;
+    }
   }
 
   nsRefPtr<CanvasLayer> canvasLayer = aManager->CreateCanvasLayer();
   if (!canvasLayer) {
-      NS_WARNING("CreateCanvasLayer returned null!");
-      return nsnull;
+    NS_WARNING("CreateCanvasLayer returned null!");
+    return nsnull;
   }
-  CanvasRenderingContext2DUserData *userData = nsnull;
+  CanvasRenderingContext2DUserDataAzure *userData = nsnull;
   if (aBuilder->IsPaintingToWindow()) {
     // Make the layer tell us whenever a transaction finishes (including
     // the current transaction), so we can clear our invalidation state and
@@ -4450,9 +4484,9 @@ nsCanvasRenderingContext2DAzure::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     // releasing the reference to the element.
     // The userData will receive DidTransactionCallbacks, which flush the
     // the invalidation state to indicate that the canvas is up to date.
-    userData = new CanvasRenderingContext2DUserData(mCanvasElement);
+    userData = new CanvasRenderingContext2DUserDataAzure(this);
     canvasLayer->SetDidTransactionCallback(
-            CanvasRenderingContext2DUserData::DidTransactionCallback, userData);
+            CanvasRenderingContext2DUserDataAzure::DidTransactionCallback, userData);
   }
   canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
 

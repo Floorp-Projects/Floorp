@@ -494,7 +494,6 @@
           return root[select](q, resolver);
         } catch(e){
           if ( e.message.indexOf("ERR") > -1 ||
-              (e.name == "NamespaceError" && e.code == DOMException.NAMESPACE_ERR) ||
               (e.name == "SyntaxError" && e.code == DOMException.SYNTAX_ERR) )
             throw e;
         }
@@ -549,7 +548,7 @@
               results = query(q, resolver);
             } catch(e) {
               pass = (e.message === "bad ERROR" ||
-                      (e.name == "NamespaceError" && e.code == DOMException.NAMESPACE_ERR));
+                      (e.name == "SyntaxError" && e.code == DOMException.SYNTAX_ERR));
             }
 
             assert( pass, type + ": " + name + " Bad Resolver #" + (i+1) + " (" + nq + ")" + 

@@ -50,11 +50,9 @@
  *   -> more than 1 pass?
  *      |- for each corner
  *         |- clip to DoCornerClipSubPath
- *         |- PushGroup
  *         |- for each side adjacent to corner
  *            |- clip to DoSideClipSubPath
  *            |- DrawBorderSides with one side
- *         |- PopGroup
  *      |- for each side
  *         |- DoSideClipWithoutCornersSubPath
  *         |- DrawDashedSide || DrawBorderSides with one side
@@ -1636,18 +1634,16 @@ nsCSSBorderRenderer::DrawBorders()
         // but we weren't able to render just a solid block for the corner.
         DrawBorderSides(sideBits);
       } else {
-        // Sides are different.  We need to draw using OPERATOR_ADD to
-        // get correct color blending behaviour at the seam.  We need
+        // Sides are different.  We could draw using OPERATOR_ADD to
+        // get correct color blending behaviour at the seam.  We'd need
         // to do it in an offscreen surface to ensure that we're
         // always compositing on transparent black.  If the colors
         // don't have transparency and the current destination surface
         // has an alpha channel, we could just clear the region and
         // avoid the temporary, but that situation doesn't happen all
         // that often in practice (we double buffer to no-alpha
-        // surfaces).
-
-        mContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
-        mContext->SetOperator(gfxContext::OPERATOR_ADD);
+        // surfaces). We choose just to seam though, as the performance
+        // advantages outway the modest easthetic improvement.
 
         for (int cornerSide = 0; cornerSide < 2; cornerSide++) {
           mozilla::css::Side side = mozilla::css::Side(sides[cornerSide]);
@@ -1665,10 +1661,6 @@ nsCSSBorderRenderer::DrawBorders()
 
           mContext->Restore();
         }
-
-        mContext->PopGroupToSource();
-        mContext->SetOperator(gfxContext::OPERATOR_OVER);
-        mContext->Paint();
       }
 
       mContext->Restore();

@@ -331,6 +331,7 @@ private:
     nsXPIDLCString mAppName;
     nsXPIDLCString mAppVersion;
     nsCString      mCompatFirefox;
+    bool           mCompatFirefoxEnabled;
     nsXPIDLCString mCompatDevice;
 
     nsCString      mUserAgent;
