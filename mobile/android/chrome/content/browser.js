@@ -1358,6 +1358,7 @@ var NativeWindow = {
 var SelectionHandler = {
   // Keeps track of data about the dimensions of the selection
   cache: null,
+  _active: false,
 
   // The window that holds the selection (can be a sub-frame)
   get _view() {
@@ -1410,14 +1411,14 @@ var SelectionHandler = {
   observe: function sh_observe(aSubject, aTopic, aData) {
     let data = JSON.parse(aData);
 
-    if (this._view)
+    if (this._active)
       this.endSelection(data.x, data.y);
   },
 
   // aX/aY are in top-level window browser coordinates
   startSelection: function sh_startSelection(aElement, aX, aY) {
     // Clear out any existing selection
-    if (this._view)
+    if (this._active)
       this.endSelection(0, 0);
 
     // Get the element's view
@@ -1465,6 +1466,7 @@ var SelectionHandler = {
     this.updateCacheOffset();
 
     this.showHandles();
+    this._active = true;
   },
 
   // aX/aY are in top-level window browser coordinates
@@ -1616,6 +1618,7 @@ var SelectionHandler = {
     this._isRTL = false;
     this._view = null;
     this.cache = null;
+    this._active = false;
   },
 
   // Returns true if the selection has been reversed. Takes optional aIsStartHandle
