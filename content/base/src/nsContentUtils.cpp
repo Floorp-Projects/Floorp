@@ -6250,6 +6250,12 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
     return false;
   }
 
+  // If the subdocument lives in another process, the frame is
+  // tabbable.
+  if (nsEventStateManager::IsRemoteTarget(aContent)) {
+    return true;
+  }
+
   // XXXbz should this use OwnerDoc() for GetSubDocumentFor?
   // sXBL/XBL2 issue!
   nsIDocument* subDoc = doc->GetSubDocumentFor(aContent);
