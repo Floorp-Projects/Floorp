@@ -290,6 +290,22 @@ private:
   // IndexedDatabaseManager that the job has been completed.
   class AsyncUsageRunnable MOZ_FINAL : public nsIRunnable
   {
+    enum CallbackState {
+      // Not yet run.
+      Pending = 0,
+
+      // Running on the main thread in the callback for OpenAllowed.
+      OpenAllowed,
+
+      // Running on the IO thread.
+      IO,
+
+      // Running on the main thread after all work is done.
+      Complete,
+
+      // Running on the main thread after skipping the work
+      Shortcut
+    };
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIRUNNABLE
@@ -301,6 +317,25 @@ private:
     // Sets the canceled flag so that the callback is never called.
     void Cancel();
 
+    void AdvanceState()
+    {
+      switch (mCallbackState) {
+        case Pending:
+          mCallbackState = OpenAllowed;
+          return;
+        case OpenAllowed:
+          mCallbackState = IO;
+          return;
+        case IO:
+          mCallbackState = Complete;
+          return;
+        default:
+          NS_NOTREACHED("Can't advance past Complete!");
+      }
+    }
+
+    nsresult TakeShortcut();
+
     // Run calls the RunInternal method and makes sure that we always dispatch
     // to the main thread in case of an error.
     inline nsresult RunInternal();
@@ -310,10 +345,12 @@ private:
 
     nsCOMPtr<nsIURI> mURI;
     nsCString mOrigin;
+
     nsCOMPtr<nsIIndexedDatabaseUsageCallback> mCallback;
     PRUint64 mUsage;
     PRUint64 mFileUsage;
     PRInt32 mCanceled;
+    CallbackState mCallbackState;
   };
 
   // Called when AsyncUsageRunnable has finished its Run() method.
