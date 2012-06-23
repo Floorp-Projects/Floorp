@@ -139,7 +139,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
 /* virtual */ void
 nsSVGMaskFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
-  nsSVGEffects::InvalidateRenderingObservers(this);
+  nsSVGEffects::InvalidateDirectRenderingObservers(this);
   nsSVGMaskFrameBase::DidSetStyleContext(aOldStyleContext);
 }
 
@@ -155,7 +155,7 @@ nsSVGMaskFrame::AttributeChanged(PRInt32  aNameSpaceID,
        aAttribute == nsGkAtoms::height||
        aAttribute == nsGkAtoms::maskUnits ||
        aAttribute == nsGkAtoms::maskContentUnits)) {
-    nsSVGEffects::InvalidateRenderingObservers(this);
+    nsSVGEffects::InvalidateDirectRenderingObservers(this);
   }
 
   return nsSVGMaskFrameBase::AttributeChanged(aNameSpaceID,
