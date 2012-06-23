@@ -115,7 +115,7 @@ NS_IMPL_ISUPPORTS1(nsComboButtonListener,
                    nsIDOMEventListener)
 
 // static class data member for Bug 32920
-nsComboboxControlFrame * nsComboboxControlFrame::mFocused = nsnull;
+nsComboboxControlFrame* nsComboboxControlFrame::sFocused = nsnull;
 
 nsIFrame*
 NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aStateFlags)
@@ -329,7 +329,7 @@ nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint)
   nsWeakFrame weakFrame(this);
   if (aOn) {
     nsListControlFrame::ComboboxFocusSet();
-    mFocused = this;
+    sFocused = this;
     if (mDelayedShowDropDown) {
       ShowDropDown(true); // might destroy us
       if (!weakFrame.IsAlive()) {
@@ -337,7 +337,7 @@ nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint)
       }
     }
   } else {
-    mFocused = nsnull;
+    sFocused = nsnull;
     mDelayedShowDropDown = false;
     if (mDroppedDown) {
       mListControlFrame->ComboboxFinish(mDisplayedIndex); // might destroy us
@@ -628,7 +628,7 @@ nsComboboxControlFrame::GetAvailableDropdownSpace(nscoord* aAbove,
                                                   nscoord* aBelow,
                                                   nsPoint* aTranslation)
 {
-  // Note: As first glance, it appears that you could simply get the absolute
+  // Note: At first glance, it appears that you could simply get the absolute
   // bounding box for the dropdown list by first getting its view, then getting
   // the view's nsIWidget, then asking the nsIWidget for its AbsoluteBounds.
   // The problem with this approach, is that the dropdown lists y location can
@@ -968,7 +968,7 @@ nsComboboxControlFrame::ShowDropDown(bool aDoDropDown)
   }
 
   if (!mDroppedDown && aDoDropDown) {
-    if (mFocused == this) {
+    if (sFocused == this) {
       DropDownPositionState state = AbsolutelyPositionDropDown();
       if (state == eDropDownPositionFinal) {
         ShowList(aDoDropDown); // might destroy us
@@ -1612,7 +1612,7 @@ void nsComboboxControlFrame::PaintFocus(nsRenderingContext& aRenderingContext,
 {
   /* Do we need to do anything? */
   nsEventStates eventStates = mContent->AsElement()->State();
-  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) || mFocused != this)
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) || sFocused != this)
     return;
 
   aRenderingContext.PushState();
