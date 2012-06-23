@@ -30,6 +30,7 @@ XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
     // by finalization of the JSObject (or explicitly if Init fails).
 
     MOZ_COUNT_CTOR(XPCWrappedNativeProto);
+    MOZ_ASSERT(mScope);
 
 #ifdef DEBUG
     PR_ATOMIC_INCREMENT(&gDEBUG_LiveProtoCount);

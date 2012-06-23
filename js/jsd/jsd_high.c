@@ -108,7 +108,7 @@ _newJSDContext(JSRuntime*         jsrt,
     JS_BeginRequest(jsdc->dumbContext);
     JS_SetOptions(jsdc->dumbContext, JS_GetOptions(jsdc->dumbContext));
 
-    jsdc->glob = JS_NewCompartmentAndGlobalObject(jsdc->dumbContext, &global_class, NULL);
+    jsdc->glob = JS_NewGlobalObject(jsdc->dumbContext, &global_class, NULL);
 
     if( ! jsdc->glob )
         goto label_newJSDContext_failure;

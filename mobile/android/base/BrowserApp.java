@@ -574,6 +574,7 @@ abstract public class BrowserApp extends GeckoApp
         MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
         MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
         MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
+        MenuItem desktopMode = aMenu.findItem(R.id.desktop_mode);
 
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
@@ -608,6 +609,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         forward.setEnabled(tab.canDoForward());
+        desktopMode.setChecked(tab.getDesktopMode());
 
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
         String scheme = Uri.parse(tab.getURL()).getScheme();

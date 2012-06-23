@@ -197,6 +197,38 @@ nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
            aNonSVGFrame->PresContext()->AppUnitsPerCSSPixel());
 }
 
+// XXX Since we're called during reflow, this method is broken for frames with
+// continuations. When we're called for a frame with continuations, we're
+// called for each continuation in turn as it's reflowed. However, it isn't
+// until the last continuation is reflowed that this method's
+// GetOffsetToUserSpace() and GetPreEffectsVisualOverflowUnion() calls will
+// obtain valid border boxes for all the continuations. As a result, we'll
+// end up returning bogus post-filter visual overflow rects for all the prior
+// continuations. Unfortunately, by the time the last continuation is
+// reflowed, it's too late to go back and set and propagate the overflow
+// rects on the previous continuations.
+//
+// The reason that we need to pass an override bbox to
+// GetPreEffectsVisualOverflowUnion rather than just letting it call into our
+// GetSVGBBoxForNonSVGFrame method is because we get called by
+// ComputeOutlineAndEffectsRect when it has been called with
+// aStoreRectProperties set to false. In this case the pre-effects visual
+// overflow rect that it has been passed may be different to that stored on
+// aFrame, resulting in a different bbox.
+//
+// XXXjwatt The pre-effects visual overflow rect passed to
+// ComputeOutlineAndEffectsRect won't include continuation overflows, so
+// for frames with continuation the following filter analysis will likely end
+// up being carried out with a bbox created as if the frame didn't have
+// continuations.
+//
+// XXXjwatt Using aPreEffectsOverflowRect to create the bbox isn't really right
+// for SVG frames, since for SVG frames the SVG spec defines the bbox to be
+// something quite different to the pre-effects visual overflow rect. However,
+// we're essentially calculating an invalidation area here, and using the
+// pre-effects overflow rect will actually overestimate that area which, while
+// being a bit wasteful, isn't otherwise a problem.
+//
 nsRect
   nsSVGIntegrationUtils::
     ComputePostEffectsVisualOverflowRect(nsIFrame* aFrame,
@@ -214,39 +246,22 @@ nsRect
   if (!filterFrame)
     return aPreEffectsOverflowRect;
 
-  // XXX Since we're called during reflow, this is broken for frames with
-  // continuations. When we're called for a frame with continuations, we're
-  // called for each continuation in turn as they're reflowed. However, it
-  // isn't until the last continuation is reflowed that the following
-  // GetOffsetToUserSpace() and GetPreEffectsVisualOverflowUnion() calls will
-  // obtain valid border boxes for all the continuations. As a result, we'll
-  // end up returning bogus post-filter visual overflow rects for all the prior
-  // continuations. Unfortunately, by the time the last continuation is
-  // reflowed, it's too late to go back and set and propagate the overflow
-  // rects on the previous continuations.
-  //
-  // XXXjwatt It seems like the only reason we pass an override bbox to
-  // GetPostFilterBounds instead of just letting the filter code call into our
-  // GetSVGBBoxForNonSVGFrame method is as a slight optimization so
-  // GetPreEffectsVisualOverflowUnion won't have to look up the
-  // aPreEffectsOverflowRect that we have to hand. The bbox we provide is
-  // the same as the bbox it would otherwise get - well, almost. We do round it
-  // out to pixel boundaries, but does that matter? If so, it would have been
-  // nice to have a comment here explaining why (and should
-  // GetSVGBBoxForNonSVGFrame also round out?). If not, it doesn't look like
-  // the extra code complexity is worth it to me.
-  PRUint32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+  // Create an override bbox - see comment above:
   nsPoint firstFrameToUserSpace = GetOffsetToUserSpace(firstFrame);
-  // overrideBBox is in "user space", in dev pixels:
-  nsIntRect overrideBBox =
-    GetPreEffectsVisualOverflowUnion(firstFrame, aFrame,
-                                     aPreEffectsOverflowRect,
-                                     firstFrameToUserSpace).
-      ToOutsidePixels(appUnitsPerDevPixel);
+  // overrideBBox is in "user space", in _CSS_ pixels:
+  // XXX Why are we rounding out to pixel boundaries? We don't do that in
+  // GetSVGBBoxForNonSVGFrame, and it doesn't appear to be necessary.
+  gfxRect overrideBBox =
+    nsLayoutUtils::RectToGfxRect(
+      GetPreEffectsVisualOverflowUnion(firstFrame, aFrame,
+                                       aPreEffectsOverflowRect,
+                                       firstFrameToUserSpace),
+      aFrame->PresContext()->AppUnitsPerCSSPixel());
+  overrideBBox.RoundOut();
 
   nsRect overflowRect =
     filterFrame->GetPostFilterBounds(firstFrame, &overrideBBox).
-                   ToAppUnits(appUnitsPerDevPixel);
+                   ToAppUnits(aFrame->PresContext()->AppUnitsPerDevPixel());
 
   // Return overflowRect relative to aFrame, rather than "user space":
   return overflowRect - (aFrame->GetOffsetTo(firstFrame) + firstFrameToUserSpace);
