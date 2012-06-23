@@ -173,15 +173,16 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
 #include "nsDOMMutationObserver.h"
-
-#include "nsWrapperCacheInlines.h"
 #include "nsIDOMDocumentType.h"
 #include "nsCharSeparatedTokenizer.h"
-
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionObserver.h"
 #include "nsIPlatformCharset.h"
+#include "nsIEditor.h"
+#include "nsIEditorDocShell.h"
 #include "mozilla/Attributes.h"
+
+#include "nsWrapperCacheInlines.h"
 
 extern "C" int MOZ_XMLTranslateEntity(const char* ptr, const char* end,
                                       const char** next, PRUnichar* result);
@@ -6916,4 +6917,19 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   // Make sure aOutStartOffset <= aOutEndOffset.
   aOutStartOffset = NS_MIN(anchorOffset, focusOffset);
   aOutEndOffset = NS_MAX(anchorOffset, focusOffset);
+}
+
+nsIEditor*
+nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
+{
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
+  bool isEditable;
+  if (!editorDocShell ||
+      NS_FAILED(editorDocShell->GetEditable(&isEditable)) || !isEditable)
+    return nsnull;
+
+  nsCOMPtr<nsIEditor> editor;
+  editorDocShell->GetEditor(getter_AddRefs(editor));
+  return editor;
 }

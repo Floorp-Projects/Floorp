@@ -232,20 +232,6 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
   return nsnull;
 }
 
-static nsIEditor* GetHTMLEditor(nsPresContext* aPresContext)
-{
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
-  bool isEditable;
-  if (!editorDocShell ||
-      NS_FAILED(editorDocShell->GetEditable(&isEditable)) || !isEditable)
-    return nsnull;
-
-  nsCOMPtr<nsIEditor> editor;
-  editorDocShell->GetEditor(getter_AddRefs(editor));
-  return editor;
-}
-
 static nsIContent* GetRootForContentSubtree(nsIContent* aContent)
 {
   NS_ENSURE_TRUE(aContent, nsnull);
@@ -283,7 +269,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
 
   nsPresContext* presContext = aPresShell->GetPresContext();
   if (presContext) {
-    nsIEditor* editor = GetHTMLEditor(presContext);
+    nsIEditor* editor = nsContentUtils::GetHTMLEditor(presContext);
     if (editor) {
       // This node is in HTML editor.
       nsIDocument* doc = GetCurrentDoc();
@@ -1132,19 +1118,19 @@ nsINode::Trace(nsINode *tmp, TraceCallback cb, void *closure)
 }
 
 
-static
-bool UnoptimizableCCNode(nsINode* aNode)
+bool
+nsINode::UnoptimizableCCNode() const
 {
   const PtrBits problematicFlags = (NODE_IS_ANONYMOUS |
                                     NODE_IS_IN_ANONYMOUS_SUBTREE |
                                     NODE_IS_NATIVE_ANONYMOUS_ROOT |
                                     NODE_MAY_BE_IN_BINDING_MNGR |
                                     NODE_IS_INSERTION_PARENT);
-  return aNode->HasFlag(problematicFlags) ||
-         aNode->NodeType() == nsIDOMNode::ATTRIBUTE_NODE ||
+  return HasFlag(problematicFlags) ||
+         NodeType() == nsIDOMNode::ATTRIBUTE_NODE ||
          // For strange cases like xbl:content/xbl:children
-         (aNode->IsElement() &&
-          aNode->AsElement()->IsInNamespace(kNameSpaceID_XBL));
+         (IsElement() &&
+          AsElement()->IsInNamespace(kNameSpaceID_XBL));
 }
 
 /* static */
@@ -1164,7 +1150,7 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
         return false;
       }
 
-      if (!UnoptimizableCCNode(tmp)) {
+      if (!tmp->UnoptimizableCCNode()) {
         // If we're in a black document, return early.
         if ((currentDoc && currentDoc->IsBlack())) {
           return false;
@@ -1172,7 +1158,7 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
         // If we're not in anonymous content and we have a black parent,
         // return early.
         nsIContent* parent = tmp->GetParent();
-        if (parent && !UnoptimizableCCNode(parent) && parent->IsBlack()) {
+        if (parent && !parent->UnoptimizableCCNode() && parent->IsBlack()) {
           NS_ABORT_IF_FALSE(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
           return false;
         }
