@@ -1371,6 +1371,8 @@ var SelectionHandler = {
     this._viewRef = Cu.getWeakReference(aView);
   },
 
+  _isRTL: false,
+
   // The DIV elements for the start/end handles
   get _start() {
     if (this._startRef)
@@ -1421,6 +1423,7 @@ var SelectionHandler = {
 
     // Get the element's view
     this._view = aElement.ownerDocument.defaultView;
+    this._isRTL = (this._view.getComputedStyle(aElement, "").direction == "rtl");
 
     // Clear out the text cache
     this.selectedText = "";
@@ -1445,7 +1448,9 @@ var SelectionHandler = {
 
       // Select the word nearest the caret
       selectionController.wordMove(false, false);
-      selectionController.wordMove(true, true);
+
+      // Move forward in LTR, backward in RTL
+      selectionController.wordMove(!this._isRTL, true);
     } catch(e) {
       // If we couldn't select the word at the given point, bail
       Cu.reportError("Error selecting word: " + e);
@@ -1505,12 +1510,23 @@ var SelectionHandler = {
     // Send mouse events to the top-level window
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
-    // If we're moving the start handle, we need to re-position the carat
-    if (aIsStartHandle)
-      this._sendStartMouseEvents(cwu);
+    // The handles work the same on both LTR and RTL pages, but the underlying selection
+    // works differently, so we need to reverse how we send mouse events on RTL pages.
+    if (this._isRTL) {
+      // Position the caret at the end handle using a fake mouse click
+      if (!aIsStartHandle)
+        this._sendEndMouseEvents(cwu, false);
 
-    // We always need to fire events for the end to move the selection
-    this._sendEndMouseEvents(cwu);
+      // Selects text between the carat and the start handle using a fake shift+click
+      this._sendStartMouseEvents(cwu, true);
+    } else {
+      // Position the caret at the start handle using a fake mouse click
+      if (aIsStartHandle)
+        this._sendStartMouseEvents(cwu, false);
+
+      // Selects text between the carat and the end handle using a fake shift+click
+      this._sendEndMouseEvents(cwu, true);
+    }
 
     // Update the cached selection area after firing the mouse events
     let selectionReversed = this.updateCacheForSelection(aIsStartHandle);
@@ -1527,47 +1543,46 @@ var SelectionHandler = {
       this._end = oldStart;
 
       // Re-send mouse events to update the selection corresponding to the new handles
-      this._sendStartMouseEvents(cwu);
-      this._sendEndMouseEvents(cwu);
+      if (this._isRTL) {
+        this._sendEndMouseEvents(cwu, false);
+        this._sendStartMouseEvents(cwu, true);
+      } else {
+        this._sendStartMouseEvents(cwu, false);
+        this._sendEndMouseEvents(cwu, true);
+      }
     }
   },
 
-  // Positions the caret using a fake mouse click
-  _sendStartMouseEvents: function sh_sendStartMouseEvents(cwu) {
+  _sendStartMouseEvents: function sh_sendStartMouseEvents(cwu, useShift) {
     let start = this._start.getBoundingClientRect();
     let x = start.right - this.HANDLE_PADDING;
     // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
     let y = start.top - 1;
 
-    if (!this._shouldSendMouseEvent(x, y))
-      return;
-
-    cwu.sendMouseEventToWindow("mousedown", x, y, 0, 0, 0, true);
-    cwu.sendMouseEventToWindow("mouseup", x, y, 0, 0, 0, true);
+    this._sendMouseEvents(cwu, useShift, x, y);
   },
 
-  // Selects text between the carat at the start and an end point using a fake shift+click
-  _sendEndMouseEvents: function sh_sendEndMouseEvents(cwu) {
+  _sendEndMouseEvents: function sh_sendEndMouseEvents(cwu, useShift) {
     let end = this._end.getBoundingClientRect();
     let x = end.left + this.HANDLE_PADDING;
     // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
     let y = end.top - 1;
 
-    if (!this._shouldSendMouseEvent(x, y))
-      return;
-
-    cwu.sendMouseEventToWindow("mousedown", x, y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
-    cwu.sendMouseEventToWindow("mouseup", x, y, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+    this._sendMouseEvents(cwu, useShift, x, y);
   },
 
-  _shouldSendMouseEvent: function sh_shouldSendMouseEvent(x, y) {
+  _sendMouseEvents: function sh_sendMouseEvents(cwu, useShift, x, y) {
     let contentWindow = BrowserApp.selectedBrowser.contentWindow;
     let element = ElementTouchHelper.elementFromPoint(contentWindow, x, y);
     if (!element)
       element = ElementTouchHelper.anyElementFromPoint(contentWindow, x, y);
 
     // Don't send mouse events to the other handle
-    return !(element instanceof Ci.nsIDOMHTMLHtmlElement);
+    if (element instanceof Ci.nsIDOMHTMLHtmlElement)
+      return;
+
+    cwu.sendMouseEventToWindow("mousedown", x, y, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
+    cwu.sendMouseEventToWindow("mouseup", x, y, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
   },
 
   // aX/aY are in top-level window browser coordinates
@@ -1599,6 +1614,7 @@ var SelectionHandler = {
       }
     }
 
+    this._isRTL = false;
     this._view = null;
     this.cache = null;
   },
