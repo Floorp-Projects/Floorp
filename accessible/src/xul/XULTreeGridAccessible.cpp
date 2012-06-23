@@ -180,57 +180,6 @@ XULTreeGridAccessible::CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex)
   return rowAcc->GetCellAccessible(column);
 }
 
-NS_IMETHODIMP
-XULTreeGridAccessible::GetColumnIndexAt(PRInt32 aCellIndex,
-                                        PRInt32* aColumnIndex)
-{
-  NS_ENSURE_ARG_POINTER(aColumnIndex);
-  *aColumnIndex = -1;
-
-  PRInt32 columnCount = 0;
-  nsresult rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aColumnIndex = aCellIndex % columnCount;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XULTreeGridAccessible::GetRowIndexAt(PRInt32 aCellIndex, PRInt32* aRowIndex)
-{
-  NS_ENSURE_ARG_POINTER(aRowIndex);
-  *aRowIndex = -1;
-
-  PRInt32 columnCount;
-  nsresult rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aRowIndex = aCellIndex / columnCount;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XULTreeGridAccessible::GetRowAndColumnIndicesAt(PRInt32 aCellIndex,
-                                                PRInt32* aRowIndex,
-                                                PRInt32* aColumnIndex)
-{
-  NS_ENSURE_ARG_POINTER(aRowIndex);
-  *aRowIndex = -1;
-  NS_ENSURE_ARG_POINTER(aColumnIndex);
-  *aColumnIndex = -1;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  PRInt32 columnCount = 0;
-  nsresult rv = GetColumnCount(&columnCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aColumnIndex = aCellIndex % columnCount;
-  *aRowIndex = aCellIndex / columnCount;
-  return NS_OK;
-}
-
 void
 XULTreeGridAccessible::ColDescription(PRUint32 aColIdx, nsString& aDescription)
 {
