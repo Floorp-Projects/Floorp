@@ -448,24 +448,39 @@ nsComboboxControlFrame::ShowList(bool aShowList)
   return weakFrame.IsAlive();
 }
 
-class nsResizeDropdownAtFinalPosition : public nsIReflowCallback
+class nsResizeDropdownAtFinalPosition
+  : public nsIReflowCallback, public nsRunnable
 {
 public:
   nsResizeDropdownAtFinalPosition(nsComboboxControlFrame* aFrame)
-    : mFrame(aFrame) {}
+    : mFrame(aFrame)
+  {
+    MOZ_COUNT_CTOR(nsResizeDropdownAtFinalPosition);
+  }
+  ~nsResizeDropdownAtFinalPosition()
+  {
+    MOZ_COUNT_DTOR(nsResizeDropdownAtFinalPosition);
+  }
 
   virtual bool ReflowFinished()
   {
-    if (mFrame.IsAlive()) {
-      static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())->
-        AbsolutelyPositionDropDown();
-    }
+    Run();
+    NS_RELEASE_THIS();
     return false;
   }
 
   virtual void ReflowCallbackCanceled()
   {
-    delete this;
+    NS_RELEASE_THIS();
+  }
+
+  NS_IMETHODIMP Run()
+  {
+    if (mFrame.IsAlive()) {
+      static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())->
+        AbsolutelyPositionDropDown();
+    }
+    return NS_OK;
   }
 
   nsWeakFrame mFrame;
@@ -709,6 +724,23 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   return eDropDownPositionFinal;
 }
 
+void
+nsComboboxControlFrame::NotifyGeometryChange()
+{
+  // We don't need to resize if we're not dropped down since ShowDropDown
+  // does that, or if we're dirty then the reflow callback does it,
+  // or if we have a delayed ShowDropDown pending.
+  if (IsDroppedDown() &&
+      !(GetStateBits() & NS_FRAME_IS_DIRTY) &&
+      !mDelayedShowDropDown) {
+    // Async because we're likely in a middle of a scroll here so
+    // frame/view positions are in flux.
+    nsRefPtr<nsResizeDropdownAtFinalPosition> resize =
+      new nsResizeDropdownAtFinalPosition(this);
+    NS_DispatchToCurrentThread(resize);
+  }
+}
+
 //----------------------------------------------------------
 // 
 //----------------------------------------------------------
@@ -834,8 +866,13 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 
   // First reflow our dropdown so that we know how tall we should be.
   ReflowDropdown(aPresContext, aReflowState);
-  nsIReflowCallback* cb = new nsResizeDropdownAtFinalPosition(this);
-  aPresContext->PresShell()->PostReflowCallback(cb);
+  nsRefPtr<nsResizeDropdownAtFinalPosition> resize =
+    new nsResizeDropdownAtFinalPosition(this);
+  if (NS_SUCCEEDED(aPresContext->PresShell()->PostReflowCallback(resize))) {
+    // The reflow callback queue doesn't AddRef so we keep it alive until
+    // it's released in its ReflowFinished / ReflowCallbackCanceled.
+    resize.forget();
+  }
 
   // Get the width of the vertical scrollbar.  That will be the width of the
   // dropdown button.
