@@ -318,6 +318,63 @@ xpcAccessibleTable::GetSelectedRowIndices(PRUint32* aRowsArraySize,
   return NS_OK;
 }
 
+nsresult 
+xpcAccessibleTable::GetColumnIndexAt(PRInt32 aCellIdx, PRInt32* aColIdx)
+{
+  NS_ENSURE_ARG_POINTER(aColIdx);
+  *aColIdx = -1;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aCellIdx < 0 
+      || static_cast<PRUint32>(aCellIdx) 
+      >= mTable->RowCount() * mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  *aColIdx = mTable->ColIndexAt(aCellIdx);
+  return NS_OK;
+}
+
+nsresult 
+xpcAccessibleTable::GetRowIndexAt(PRInt32 aCellIdx, PRInt32* aRowIdx)
+{
+  NS_ENSURE_ARG_POINTER(aRowIdx);
+  *aRowIdx = -1;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aCellIdx < 0 
+      || static_cast<PRUint32>(aCellIdx) 
+      >= mTable->RowCount() * mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  *aRowIdx = mTable->RowIndexAt(aCellIdx);
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetRowAndColumnIndicesAt(PRInt32 aCellIdx, PRInt32* aRowIdx,
+                                             PRInt32* aColIdx)
+{
+  NS_ENSURE_ARG_POINTER(aRowIdx);
+  *aRowIdx = -1;
+  NS_ENSURE_ARG_POINTER(aColIdx);
+  *aColIdx = -1;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aCellIdx < 0 
+      || static_cast<PRUint32>(aCellIdx) 
+      >= mTable->RowCount() * mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  mTable->RowAndColIndicesAt(aCellIdx, aRowIdx, aColIdx);
+  return NS_OK;  
+}
+
 nsresult
 xpcAccessibleTable::GetSummary(nsAString& aSummary)
 {

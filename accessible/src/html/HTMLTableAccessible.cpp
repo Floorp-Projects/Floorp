@@ -737,60 +737,38 @@ HTMLTableAccessible::CellIndexAt(PRUint32 aRowIdx, PRUint32 aColIdx)
   return index;
 }
 
-NS_IMETHODIMP
-HTMLTableAccessible::GetColumnIndexAt(PRInt32 aIndex, PRInt32* aColumn)
+PRInt32
+HTMLTableAccessible::ColIndexAt(PRUint32 aCellIdx)
 {
-  NS_ENSURE_ARG_POINTER(aColumn);
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsITableLayout *tableLayout = GetTableLayout();
-  NS_ENSURE_STATE(tableLayout);
-
-  PRInt32 row;
-  nsresult rv = tableLayout->GetRowAndColumnByIndex(aIndex, &row, aColumn);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return (row == -1 || *aColumn == -1) ? NS_ERROR_INVALID_ARG : NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLTableAccessible::GetRowIndexAt(PRInt32 aIndex, PRInt32* aRow)
-{
-  NS_ENSURE_ARG_POINTER(aRow);
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
-  nsITableLayout *tableLayout = GetTableLayout();
-  NS_ENSURE_STATE(tableLayout);
-
-  PRInt32 column;
-  nsresult rv = tableLayout->GetRowAndColumnByIndex(aIndex, aRow, &column);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return (*aRow == -1 || column == -1) ? NS_ERROR_INVALID_ARG : NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLTableAccessible::GetRowAndColumnIndicesAt(PRInt32 aIndex,
-                                              PRInt32* aRowIdx,
-                                              PRInt32* aColumnIdx)
-{
-  NS_ENSURE_ARG_POINTER(aRowIdx);
-  *aRowIdx = -1;
-  NS_ENSURE_ARG_POINTER(aColumnIdx);
-  *aColumnIdx = -1;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
-
   nsITableLayout* tableLayout = GetTableLayout();
-  if (tableLayout)
-    tableLayout->GetRowAndColumnByIndex(aIndex, aRowIdx, aColumnIdx);
+  if (!tableLayout) 
+    return -1;
 
-  return (*aRowIdx == -1 || *aColumnIdx == -1) ? NS_ERROR_INVALID_ARG : NS_OK;
+  PRInt32 rowIdx = -1, colIdx = -1;
+  tableLayout->GetRowAndColumnByIndex(aCellIdx, &rowIdx, &colIdx);
+  return colIdx;
+}
+
+PRInt32
+HTMLTableAccessible::RowIndexAt(PRUint32 aCellIdx)
+{
+  nsITableLayout* tableLayout = GetTableLayout();
+  if (!tableLayout) 
+    return -1;
+
+  PRInt32 rowIdx = -1, colIdx = -1;
+  tableLayout->GetRowAndColumnByIndex(aCellIdx, &rowIdx, &colIdx);
+  return rowIdx;
+}
+
+void
+HTMLTableAccessible::RowAndColIndicesAt(PRUint32 aCellIdx, PRInt32* aRowIdx,
+                                        PRInt32* aColIdx)
+{
+  nsITableLayout* tableLayout = GetTableLayout();
+
+  if (tableLayout)
+    tableLayout->GetRowAndColumnByIndex(aCellIdx, aRowIdx, aColIdx);
 }
 
 PRUint32
