@@ -336,10 +336,16 @@ function checkStepUpForNumber()
   }
 }
 
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
+
 checkPresence();
 checkAvailability();
 checkStepDownForNumber();
 checkStepUpForNumber();
+
+SimpleTest.finish();
+});
 
 </script>
 </pre>
