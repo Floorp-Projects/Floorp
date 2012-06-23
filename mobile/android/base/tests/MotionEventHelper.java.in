@@ -93,8 +93,13 @@ class MotionEventHelper {
     }
 
     public Thread flingAsync(final float startX, final float startY, final float endX, final float endY, final float velocity) {
-        float dx = endX - startX;
-        float dy = endY - startY;
+        // note that the first move after the touch-down is used to get over the panning threshold, and
+        // is basically cancelled out. this means we need to generate (at least) two move events, with
+        // the last move event hitting the target velocity. to do this we just slice the total distance
+        // in half, assuming the first half will get us over the panning threshold and the second half
+        // will trigger the fling.
+        final float dx = (endX - startX) / 2;
+        final float dy = (endY - startY) / 2;
         float distance = FloatMath.sqrt((dx * dx) + (dy * dy));
         final long time = (long)(distance / velocity);
         if (time <= 0) {
@@ -103,7 +108,8 @@ class MotionEventHelper {
         Thread t = new Thread() {
             public void run() {
                 long downTime = down(startX, startY);
-                downTime = move(downTime, downTime + time, endX, endY);
+                downTime = move(downTime, downTime + time, startX + dx, startY + dy);
+                downTime = move(downTime, downTime + time + time, endX, endY);
                 downTime = up(downTime, downTime + time, endX, endY);
             }
         };
