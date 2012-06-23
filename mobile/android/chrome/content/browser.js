@@ -1419,7 +1419,7 @@ var SelectionHandler = {
   startSelection: function sh_startSelection(aElement, aX, aY) {
     // Clear out any existing selection
     if (this._active)
-      this.endSelection(0, 0);
+      this.endSelection();
 
     // Get the element's view
     this._view = aElement.ownerDocument.defaultView;
@@ -1590,7 +1590,7 @@ var SelectionHandler = {
     }
 
     // Only try copying text if there's text to copy!
-    if (selectedText.length) {
+    if (arguments.length == 2 && selectedText.length) {
       let contentWindow = BrowserApp.selectedBrowser.contentWindow;
       let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
       if (!element)
@@ -1685,7 +1685,7 @@ var SelectionHandler = {
 
     if (!this._start || !this._end) {
       Cu.reportError("SelectionHandler.showHandles: Couldn't find anonymous handle elements");
-      this.endSelection(0, 0);
+      this.endSelection();
       return;
     }
 
@@ -1765,7 +1765,7 @@ var SelectionHandler = {
         break;
 
       case "pagehide":
-        this.endSelection(0, 0);
+        this.endSelection();
         break;
     }
   }
