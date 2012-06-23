@@ -35,9 +35,10 @@
 # "cert=nickname" tells the pgo server to use a particular certificate
 # for this host. The certificate is referenced by its nickname that must
 # not contain any spaces. The certificate  key files (PKCS12 modules)
-# for custom certification are loaded from build/pgo/ssltunnel/certs
+# for custom certification are loaded from build/pgo/certs
 # directory. When new certificate is added to this dir pgo/ssltunnel
-# must be builded then.
+# must be built then. This is only necessary for cases where we really do
+# want specific certs.
 #
 # "redir=hostname" tells the pgo server is only used for https://
 # hosts while processing the CONNECT tunnel request. It responds
@@ -161,3 +162,40 @@ http://bug704464-1.example.com:80        privileged
 http://bug704464-2.example.com:80        privileged
 http://bug704464-3.example.com:80        privileged
 http://bug702292.example.com:80          privileged
+
+# W3C hosts.
+# See http://www.w3.org/wiki/Testing/Requirements#The_Web_test_server_must_be_available_through_different_domain_names
+http://w3c-test.org:80
+http://w3c-test.org:81
+http://w3c-test.org:82
+http://w3c-test.org:83
+http://www.w3c-test.org:80
+http://www.w3c-test.org:81
+http://www.w3c-test.org:82
+http://www.w3c-test.org:83
+http://www1.w3c-test.org:80
+http://www1.w3c-test.org:81
+http://www1.w3c-test.org:82
+http://www1.w3c-test.org:83
+http://www2.w3c-test.org:80
+http://www2.w3c-test.org:81
+http://www2.w3c-test.org:82
+http://www2.w3c-test.org:83
+# http://天気の良い日.w3c-test.org
+http://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:80
+http://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:81
+http://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:82
+http://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:83
+# http://élève.w3c-test.org
+http://xn--lve-6lad.w3c-test.org:80
+http://xn--lve-6lad.w3c-test.org:81
+http://xn--lve-6lad.w3c-test.org:82
+http://xn--lve-6lad.w3c-test.org:83
+# HTTPS versions of the above
+https://w3c-test.org:443
+https://www.w3c-test.org:443
+https://www1.w3c-test.org:443
+https://www2.w3c-test.org:443
+https://xn--n8j6ds53lwwkrqhv28a.w3c-test.org:443
+https://xn--lve-6lad.w3c-test.org:443
+http://test.w3.org:80
