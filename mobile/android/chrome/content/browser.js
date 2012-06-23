@@ -1699,6 +1699,8 @@ var SelectionHandler = {
 
     this._start.addEventListener("touchstart", this, true);
     this._end.addEventListener("touchstart", this, true);
+
+    this._view.addEventListener("pagehide", this, false);
   },
 
   hideHandles: function sh_hideHandles() {
@@ -1716,6 +1718,8 @@ var SelectionHandler = {
 
     this._start = null;
     this._end = null;
+
+    this._view.removeEventListener("pagehide", this, false);
   },
 
   _touchId: null,
@@ -1758,6 +1762,10 @@ var SelectionHandler = {
         // Adjust the touch to account for what part of the handle the user first touched
         this.moveSelection(isStartHandle, touch.clientX - this._touchDelta.x,
                                           touch.clientY - this._touchDelta.y);
+        break;
+
+      case "pagehide":
+        this.endSelection(0, 0);
         break;
     }
   }
