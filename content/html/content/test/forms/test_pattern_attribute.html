@@ -266,6 +266,8 @@ var invalidTypes = Array('checkbox', 'radio', 'file', 'number');
 //       'range', and 'color' do not accept the @pattern too but are not
 //       implemented yet.
 
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", true]]}, function() {
 for each (type in validTypes) {
   input.type = type;
   completeValidityCheck(input, false);
@@ -281,6 +283,9 @@ for each (type in invalidTypes) {
   input.type = type;
   completeValidityCheck(input, true);
 }
+
+SimpleTest.finish();
+});
 
 </script>
 </pre>
