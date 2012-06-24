@@ -287,6 +287,7 @@ private:
         OP2_XORPD_VpdWpd    = 0x57,
         OP2_MOVD_VdEd       = 0x6E,
         OP2_PSRLDQ_Vd       = 0x73,
+        OP2_PCMPEQW         = 0x75,
         OP2_MOVD_EdVd       = 0x7E,
         OP2_JCC_rel32       = 0x80,
         OP_SETCC            = 0x90,
@@ -675,7 +676,7 @@ public:
 
     void fstp_m(int offset, RegisterID base)
     {
-	m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FSTP, base, offset);
+	   m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FSTP, base, offset);
     }
 
     void negl_r(RegisterID dst)
@@ -2049,6 +2050,15 @@ public:
 
     // SSE operations:
 
+    void pcmpeqw_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "pcmpeqw    %s, %s\n", MAYBE_PAD,
+                       nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PCMPEQW, (RegisterID)dst, (RegisterID)src); /* right order ? */
+    }
+
     void addsd_rr(XMMRegisterID src, XMMRegisterID dst)
     {
         js::JaegerSpew(js::JSpew_Insns,
@@ -2185,10 +2195,30 @@ public:
     void psrldq_rr(XMMRegisterID dest, int shift)
     {
         js::JaegerSpew(js::JSpew_Insns,
-                       IPFX "pslldq     %s, %d\n", MAYBE_PAD,
+                       IPFX "psrldq     %s, %d\n", MAYBE_PAD,
                        nameFPReg(dest), shift);
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)3, (RegisterID)dest);
+        m_formatter.immediate8(shift);
+    }
+
+    void psllq_rr(XMMRegisterID dest, int shift)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "psllq     %s, %d\n", MAYBE_PAD,
+                       nameFPReg(dest), shift);
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)6, (RegisterID)dest);
+        m_formatter.immediate8(shift);
+    }
+
+    void psrlq_rr(XMMRegisterID dest, int shift)
+    {
+        js::JaegerSpew(js::JSpew_Insns,
+                       IPFX "psrlq     %s, %d\n", MAYBE_PAD,
+                       nameFPReg(dest), shift);
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.twoByteOp(OP2_PSRLDQ_Vd, (RegisterID)2, (RegisterID)dest);
         m_formatter.immediate8(shift);
     }
 

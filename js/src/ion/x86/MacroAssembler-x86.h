@@ -542,7 +542,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Note: this function clobbers the source register.
     void boxDouble(const FloatRegister &src, const ValueOperand &dest) {
         movd(src, dest.payloadReg());
-        psrlq(Imm32(4), src);
+        psrldq(Imm32(4), src);
         movd(src, dest.typeReg());
     }
     void unboxInt32(const ValueOperand &src, const Register &dest) {
