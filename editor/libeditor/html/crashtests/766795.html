@@ -1,0 +1,21 @@
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var fragEl = document.createElement("span");
+  fragEl.setAttribute("contenteditable", "true");
+  fragEl.setAttribute("style", "position: absolute;");
+
+  var frag = document.createDocumentFragment();
+  frag.appendChild(fragEl);
+
+  window.getSelection().selectAllChildren(fragEl);
+}
+
+</script>
+</head>
+
+<body contenteditable="true" onload="boom();"></body>
+</html>

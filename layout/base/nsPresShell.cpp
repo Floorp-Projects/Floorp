@@ -4080,9 +4080,10 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
     oldNextSibling = nsnull;
   }
   
-  if (aContainer)
+  if (aContainer && aContainer->IsElement()) {
     mFrameConstructor->RestyleForRemove(aContainer->AsElement(), aChild,
                                         oldNextSibling);
+  }
 
   bool didReconstruct;
   mFrameConstructor->ContentRemoved(aContainer, aChild, oldNextSibling,
