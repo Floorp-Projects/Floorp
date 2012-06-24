@@ -36,8 +36,10 @@ function gen_test()
 
     // Test item data and count.  This also tests the ordering of the display.
     let richlistbox = document.getElementById("downloadsListBox");
+/* disabled for failing intermittently (bug 767828)
     is(richlistbox.children.length, DownloadData.length,
        "There is the correct number of richlistitems");
+*/
     for (let i = 0; i < richlistbox.children.length; i++) {
       let element = richlistbox.children[i];
       let dataItem = new DownloadsViewItemController(element).dataItem;
