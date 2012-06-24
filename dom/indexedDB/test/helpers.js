@@ -62,7 +62,8 @@ function finishTest()
 
   SimpleTest.executeSoon(function() {
     testGenerator.close();
-    clearAllDatabases(function() { SimpleTest.finish(); });
+    //clearAllDatabases(function() { SimpleTest.finish(); });
+    SimpleTest.finish();
   });
 }
 
