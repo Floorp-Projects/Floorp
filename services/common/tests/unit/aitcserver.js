@@ -38,7 +38,7 @@ AITCServer10User.prototype = {
     modifiedAt:    true,
     receipts:      true,
     name:          true,
-    hidden:        true,
+    deleted:       true,
   },
 
   requiredAppProperties: [
