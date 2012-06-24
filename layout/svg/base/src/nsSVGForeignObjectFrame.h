@@ -93,9 +93,9 @@ protected:
   // Returns GetCanvasTM followed by a scale from CSS px to Dev px. Used for
   // painting, because children expect to paint to device space, not userspace.
   gfxMatrix GetCanvasTMForChildren();
-  void InvalidateDirtyRect(nsSVGOuterSVGFrame* aOuter,
-                           const nsRect& aRect, PRUint32 aFlags);
-  void FlushDirtyRegion(PRUint32 aFlags);
+  void InvalidateDirtyRect(const nsRect& aRect, PRUint32 aFlags,
+                           bool aDuringReflowSVG);
+  void FlushDirtyRegion(PRUint32 aFlags, bool aDuringReflowSVG);
 
   // If width or height is less than or equal to zero we must disable rendering
   bool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
