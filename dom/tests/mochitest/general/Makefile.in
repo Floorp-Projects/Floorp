@@ -46,6 +46,7 @@ _TEST_FILES = \
 		file_clonewrapper.html \
 		file_moving_nodeList.html \
 		test_performance_now.html \
+		test_interfaces.html \
 		$(NULL)
 
 _CHROME_FILES = \

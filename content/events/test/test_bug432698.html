@@ -41,6 +41,9 @@ function sendMouseEvent(t, elem) {
   synthesizeMouse(elem, r.width / 2, r.height / 2, {type: t});
 }
 
+var expectedMouseEnterTargets = [];
+var expectedMouseLeaveTargets = [];
+
 function runTests() {
   outer = document.getElementById("outertest");
   middle = document.getElementById("middletest");
@@ -60,6 +63,7 @@ function runTests() {
   checkRelatedTarget = true;
   expectedRelatedEnter = outside;
   expectedRelatedLeave = inner;
+  expectedMouseEnterTargets = ["outertest", "middletest", "innertest"];
   sendMouseEvent("mousemove", inner);
   is(mouseentercount, 3, "Unexpected mouseenter event count!");
   is(mouseovercount, 1, "Unexpected mouseover event count!");
@@ -67,6 +71,7 @@ function runTests() {
   is(mouseleavecount, 0, "Unexpected mouseleave event count!");
   expectedRelatedEnter = inner;
   expectedRelatedLeave = outside;
+  expectedMouseLeaveTargets = ["innertest", "middletest", "outertest"];
   sendMouseEvent("mousemove", outside);
   is(mouseentercount, 3, "Unexpected mouseenter event count!");
   is(mouseovercount, 1, "Unexpected mouseover event count!");
@@ -132,6 +137,10 @@ function runTests() {
 function menter(evt) {
   ++mouseentercount;
   evt.stopPropagation();
+  if (expectedMouseEnterTargets.length) {
+    var t = expectedMouseEnterTargets.shift();
+    is(evt.target.id, t, "Wrong event target!");
+  }
   is(evt.bubbles, false, evt.type + " should not bubble!");
   is(evt.cancelable, false, evt.type + " is not cancelable!");
   is(evt.target, evt.currentTarget, "Wrong event target!");
@@ -145,6 +154,10 @@ function menter(evt) {
 function mleave(evt) {
   ++mouseleavecount;
   evt.stopPropagation();
+  if (expectedMouseLeaveTargets.length) {
+    var t = expectedMouseLeaveTargets.shift();
+    is(evt.target.id, t, "Wrong event target!");
+  }
   is(evt.bubbles, false, evt.type + " should not bubble!");
   is(evt.cancelable, false, evt.type + " is not cancelable!");
   is(evt.target, evt.currentTarget, "Wrong event target!");
