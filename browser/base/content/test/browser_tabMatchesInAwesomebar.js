@@ -247,7 +247,7 @@ function ensure_opentabs_match_db(aCallback) {
     for (let i = 0; i < browserWin.gBrowser.tabContainer.childElementCount; i++) {
       let browser = browserWin.gBrowser.getBrowserAtIndex(i);
       let url = browser.currentURI.spec;
-      if (url == "about:blank")
+      if (browserWin.isBlankPageURL(url))
         continue;
       if (!(url in tabs))
         tabs[url] = 1;
