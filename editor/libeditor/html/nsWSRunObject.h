@@ -179,8 +179,8 @@ class NS_STACK_CLASS nsWSRunObject
     {
       nsCOMPtr<nsIDOMNode> mStartNode;  // node where ws run starts
       nsCOMPtr<nsIDOMNode> mEndNode;    // node where ws run ends
-      PRInt16 mStartOffset;             // offset where ws run starts
-      PRInt16 mEndOffset;               // offset where ws run ends
+      PRInt32 mStartOffset;             // offset where ws run starts
+      PRInt32 mEndOffset;               // offset where ws run ends
       PRInt16 mType, mLeftType, mRightType;  // type of ws, and what is to left and right of it
       WSFragment *mLeft, *mRight;            // other ws runs to left or right.  may be null.
 
@@ -239,7 +239,7 @@ class NS_STACK_CLASS nsWSRunObject
                                nsIDOMNode *aBlockParent, 
                                nsCOMPtr<nsIDOMNode> *aPriorNode);
     nsresult GetPreviousWSNode(nsIDOMNode *aStartNode,
-                               PRInt16      aOffset, 
+                               PRInt32      aOffset,
                                nsIDOMNode  *aBlockParent, 
                                nsCOMPtr<nsIDOMNode> *aPriorNode);
     nsresult GetPreviousWSNode(DOMPoint aPoint,
@@ -249,7 +249,7 @@ class NS_STACK_CLASS nsWSRunObject
                            nsIDOMNode *aBlockParent, 
                            nsCOMPtr<nsIDOMNode> *aNextNode);
     nsresult GetNextWSNode(nsIDOMNode *aStartNode,
-                           PRInt16     aOffset, 
+                           PRInt32     aOffset,
                            nsIDOMNode *aBlockParent, 
                            nsCOMPtr<nsIDOMNode> *aNextNode);
     nsresult GetNextWSNode(DOMPoint aPoint,
