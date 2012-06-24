@@ -441,7 +441,7 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 {
     return fp->isConstructing() && cx->typeInferenceEnabled() &&
            fp->prev() && fp->prev()->isScriptFrame() &&
-           UseNewType(cx, fp->prev()->script(), fp->prev()->pcQuadratic(cx->stack, fp));
+           UseNewType(cx, fp->prev()->script(), fp->prevpc());
 }
 
 /////////////////////////////////////////////////////////////////////
