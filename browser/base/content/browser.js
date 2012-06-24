@@ -6707,10 +6707,6 @@ var gIdentityHandler = {
     // the popup is actually needed
     this._identityPopup.hidden = false;
 
-    // Tell the popup to consume dismiss clicks, to avoid bug 395314
-    this._identityPopup.popupBoxObject
-        .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
-
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
 
