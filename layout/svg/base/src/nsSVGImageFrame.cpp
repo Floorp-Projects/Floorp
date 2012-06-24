@@ -468,7 +468,7 @@ nsSVGImageFrame::UpdateBounds()
   gfxContext tmpCtx(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
   gfxMatrix identity;
-  GeneratePath(&tmpCtx, &identity);
+  GeneratePath(&tmpCtx, identity);
 
   gfxRect extent = tmpCtx.GetUserPathExtent();
 
