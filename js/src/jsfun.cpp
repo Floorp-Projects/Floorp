@@ -128,7 +128,7 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
          * to recover its callee object.
          */
         InlinedSite *inlined;
-        jsbytecode *prevpc = fp->prev()->pcQuadratic(cx->stack, fp, &inlined);
+        jsbytecode *prevpc = fp->prevpc(&inlined);
         if (inlined) {
             mjit::JITChunk *chunk = fp->prev()->jit()->chunk(prevpc);
             JSFunction *fun = chunk->inlineFrames()[inlined->inlineIndex].fun;
