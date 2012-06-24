@@ -3596,6 +3596,36 @@ nsHTMLEditor::IsModifiableNode(nsINode *aNode)
   return !aNode || aNode->IsEditable();
 }
 
+NS_IMETHODIMP
+nsHTMLEditor::GetIsSelectionEditable(bool* aIsSelectionEditable)
+{
+  MOZ_ASSERT(aIsSelectionEditable);
+
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+
+  // Per the editing spec as of June 2012: we have to have a selection whose
+  // start and end nodes are editable, and which share an ancestor editing
+  // host.  (Bug 766387.)
+  *aIsSelectionEditable = selection->GetRangeCount() &&
+                          selection->GetAnchorNode()->IsEditable() &&
+                          selection->GetFocusNode()->IsEditable();
+
+  if (*aIsSelectionEditable) {
+    nsINode* commonAncestor =
+      selection->GetAnchorFocusRange()->GetCommonAncestor();
+    while (commonAncestor && !commonAncestor->IsEditable()) {
+      commonAncestor = commonAncestor->GetNodeParent();
+    }
+    if (!commonAncestor) {
+      // No editable common ancestor
+      *aIsSelectionEditable = false;
+    }
+  }
+
+  return NS_OK;
+}
+
 static nsresult
 SetSelectionAroundHeadChildren(nsISelection* aSelection,
                                nsIWeakReference* aDocWeak)
