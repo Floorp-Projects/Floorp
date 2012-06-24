@@ -231,7 +231,7 @@ Recompiler::expandInlineFrames(JSCompartment *compartment,
      */
     compartment->types.frameExpansions++;
 
-    jsbytecode *pc = next ? next->prevpc(NULL) : f->regs.pc;
+    jsbytecode *pc = next ? next->prevpc() : f->regs.pc;
     JITChunk *chunk = fp->jit()->chunk(pc);
 
     /*
