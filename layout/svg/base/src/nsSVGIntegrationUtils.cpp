@@ -509,8 +509,6 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
 gfxMatrix
 nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame)
 {
-  NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
-               "SVG frames should not get here");
   PRInt32 appUnitsPerDevPixel = aNonSVGFrame->PresContext()->AppUnitsPerDevPixel();
   float devPxPerCSSPx =
     1 / nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPixel);
