@@ -563,7 +563,6 @@
                             key="key_scratchpad"
                             command="Tools:Scratchpad"/>
                   <menuitem id="menu_styleeditor"
-                            type="checkbox"
                             hidden="true"
                             label="&styleeditor.label;"
                             accesskey="&styleeditor.accesskey;"

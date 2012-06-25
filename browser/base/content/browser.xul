@@ -1043,11 +1043,11 @@
                          class="devtools-toolbarbutton"
                          hidden="true"
                          command="Tools:Inspect"/>
-          <toolbarbutton id="developer-toolbar-styleeditor"
-                         label="&styleeditor.label;"
+          <toolbarbutton id="developer-toolbar-responsiveui"
+                         label="&responsiveDesignTool.label;"
                          class="devtools-toolbarbutton"
                          hidden="true"
-                         command="Tools:StyleEditor"/>
+                         command="Tools:ResponsiveUI"/>
           <toolbarbutton id="developer-toolbar-debugger"
                          label="&scriptsButton.label;"
                          class="devtools-toolbarbutton"
