@@ -12,7 +12,9 @@ XPCOMUtils.defineLazyGetter(this, "BROWSER_NEW_TAB_URL", function () {
   const TOPIC = "private-browsing-transition-complete";
 
   function getNewTabPageURL() {
-    if (("gPrivateBrowsingUI" in window) && gPrivateBrowsingUI.privateWindow)
+    if (("gPrivateBrowsingUI" in window) &&
+        gPrivateBrowsingUI.privateWindow &&
+        !gPrivateBrowsingUI.autoStarted)
       return "about:privatebrowsing";
     else
       return Services.prefs.getCharPref(PREF) || "about:blank";
