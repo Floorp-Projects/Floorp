@@ -206,7 +206,7 @@ nsHTMLEntities::UnicodeToEntity(PRInt32 aUnicode)
   return entry->node->mStr;
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #include <stdio.h>
 
 class nsTestEntityTable {
