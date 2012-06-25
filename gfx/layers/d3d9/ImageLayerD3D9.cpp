@@ -372,6 +372,11 @@ ImageLayerD3D9::RenderLayer()
   if (image->GetFormat() == Image::CAIRO_SURFACE ||
       image->GetFormat() == Image::REMOTE_IMAGE_BITMAP)
   {
+    NS_ASSERTION(image->GetFormat() != Image::CAIRO_SURFACE ||
+                 !static_cast<CairoImage*>(image)->mSurface ||
+                 static_cast<CairoImage*>(image)->mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,
+                 "Image layer has alpha image");
+
     bool hasAlpha = false;
     nsRefPtr<IDirect3DTexture9> texture = GetTexture(image, hasAlpha);
 
