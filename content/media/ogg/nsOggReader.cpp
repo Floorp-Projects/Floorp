@@ -780,7 +780,9 @@ PRInt64 nsOggReader::RangeEndTime(PRInt64 aStartOffset,
   // we've previously encountered before, we'll either backoff again if we
   // haven't found an end time yet, or return the last end time found.
   const int step = 5000;
+  const int maxOggPageSize = 65306;
   PRInt64 readStartOffset = aEndOffset;
+  PRInt64 readLimitOffset = aEndOffset;
   PRInt64 readHead = aEndOffset;
   PRInt64 endTime = -1;
   PRUint32 checksumAfterSeek = 0;
@@ -802,6 +804,12 @@ PRInt64 nsOggReader::RangeEndTime(PRInt64 aStartOffset,
         checksumAfterSeek = 0;
         ogg_sync_reset(&sync.mState);
         readStartOffset = NS_MAX(static_cast<PRInt64>(0), readStartOffset - step);
+        // There's no point reading more than the maximum size of
+        // an Ogg page into data we've previously scanned. Any data
+        // between readLimitOffset and aEndOffset must be garbage
+        // and we can ignore it thereafter.
+        readLimitOffset = NS_MIN(readLimitOffset,
+                                 readStartOffset + maxOggPageSize);
         readHead = NS_MAX(aStartOffset, readStartOffset);
       }
 
@@ -827,6 +835,9 @@ PRInt64 nsOggReader::RangeEndTime(PRInt64 aStartOffset,
         NS_ENSURE_SUCCESS(res, -1);
       }
       readHead += bytesRead;
+      if (readHead > readLimitOffset) {
+        mustBackOff = true;
+      }
 
       // Update the synchronisation layer with the number
       // of bytes written to the buffer
