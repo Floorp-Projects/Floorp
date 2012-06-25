@@ -345,12 +345,12 @@ nsHttpPipeline::Classification()
 }
 
 void
-nsHttpPipeline::SetSSLConnectFailed()
+nsHttpPipeline::SetProxyConnectFailed()
 {
     nsAHttpTransaction *trans = Request(0);
 
     if (trans)
-        trans->SetSSLConnectFailed();
+        trans->SetProxyConnectFailed();
 }
 
 nsHttpRequestHead *
@@ -647,7 +647,7 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
     trans = Response(0);
     // This code deals with the establishment of a CONNECT tunnel through
     // an HTTP proxy. It allows the connection to do the CONNECT/200
-    // HTTP transaction to establish an SSL tunnel as a precursor to the
+    // HTTP transaction to establish a tunnel as a precursor to the
     // actual pipeline of regular HTTP transactions.
     if (!trans && mRequestQ.Length() &&
         mConnection->IsProxyConnectInProgress()) {

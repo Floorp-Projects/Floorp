@@ -152,7 +152,7 @@ NullHttpTransaction::TakeSubTransactions(
 }
 
 void
-NullHttpTransaction::SetSSLConnectFailed()
+NullHttpTransaction::SetProxyConnectFailed()
 {
 }
 

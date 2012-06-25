@@ -172,8 +172,7 @@ private:
     nsresult AsyncProcessRedirection(PRUint32 httpStatus);
     nsresult ContinueProcessRedirection(nsresult);
     nsresult ContinueProcessRedirectionAfterFallback(nsresult);
-    bool     ShouldSSLProxyResponseContinue(PRUint32 httpStatus);
-    nsresult ProcessFailedSSLConnect(PRUint32 httpStatus);
+    nsresult ProcessFailedProxyConnect(PRUint32 httpStatus);
     nsresult ProcessFallback(bool *waitingForRedirectCallback);
     nsresult ContinueProcessFallback(nsresult);
     void     HandleAsyncAbort();
