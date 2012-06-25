@@ -19,6 +19,7 @@ body {
   width: 100%;
   padding: 6px 9px;
   display: -moz-box;
+  vertical-align: top;
 }
 
 body[dir=rtl] > #header {
