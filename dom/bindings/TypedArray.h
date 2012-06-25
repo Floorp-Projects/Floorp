@@ -44,7 +44,15 @@ struct TypedArray : public TypedArray_base<T,U,GetData,GetLength> {
   {}
   
   static inline JSObject*
-  Create(JSContext* cx, uint32_t length, T* data = NULL) {
+  Create(JSContext* cx, nsWrapperCache* creator, uint32_t length,
+         T* data = NULL) {
+    JSObject* creatorWrapper;
+    JSAutoEnterCompartment ac;
+    if (creator && (creatorWrapper = creator->GetWrapperPreserveColor())) {
+      if (!ac.enter(cx, creatorWrapper)) {
+        return NULL;
+      }
+    }
     JSObject* obj = CreateNew(cx, length);
     if (!obj) {
       return NULL;
