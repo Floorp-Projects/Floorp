@@ -701,6 +701,12 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
     aFrame = aFrame->GetParent();
   }
 
+  if (!aFrame) {
+    // We seem to be able to get here, even though SVG frames are never created
+    // without an ancestor nsSVGOuterSVGFrame. See bug 767996.
+    return;
+  }
+
   NS_ASSERTION(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG,
                "SVG frames must always have an nsSVGOuterSVGFrame ancestor!");
   invalidArea.MoveBy(aFrame->GetContentRect().TopLeft() - aFrame->GetPosition());
