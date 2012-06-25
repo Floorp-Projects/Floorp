@@ -910,9 +910,6 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
     return nsnull;
   }
 
-  NS_ASSERTION(surface->GetContentType() != gfxASurface::CONTENT_ALPHA,
-               "Image layer has alpha image");
-
   nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
   if (!pat) {
     return nsnull;
@@ -2624,8 +2621,7 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     return;
   }
 
-  nsRefPtr<gfxASurface> surface;
-  AutoLockImage autoLock(mContainer, getter_AddRefs(surface));
+  AutoLockImage autoLock(mContainer);
 
   Image *image = autoLock.GetImage();
 
@@ -2695,16 +2691,11 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
     DestroyBackBuffer();
     mBufferIsOpaque = isOpaque;
 
-    gfxASurface::gfxContentType type = gfxASurface::CONTENT_COLOR_ALPHA;
-    if (surface) {
-      type = surface->GetContentType();
-    }
-    if (type != gfxASurface::CONTENT_ALPHA &&
-        isOpaque) {
-      type = gfxASurface::CONTENT_COLOR;
-    }
-
-    if (!BasicManager()->AllocBuffer(mSize, type, &mBackBuffer))
+    if (!BasicManager()->AllocBuffer(
+          mSize,
+          isOpaque ?
+            gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
+          &mBackBuffer))
       NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
   }
 

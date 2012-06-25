@@ -20,83 +20,73 @@
 namespace mozilla {
 namespace layers {
 
-static inline _D3DFORMAT
-D3dFormatForGfxFormat(gfxImageFormat aFormat)
-{
-  if (aFormat == gfxASurface::ImageFormatA8) {
-    return D3DFMT_A8;
-  }
-
-  return D3DFMT_A8R8G8B8;
-}
-
 static already_AddRefed<IDirect3DTexture9>
 DataToTexture(IDirect3DDevice9 *aDevice,
               unsigned char *aData,
               int aStride,
-              const gfxIntSize &aSize,
-              _D3DFORMAT aFormat)
+              const gfxIntSize &aSize)
 {
   nsRefPtr<IDirect3DTexture9> texture;
   nsRefPtr<IDirect3DDevice9Ex> deviceEx;
   aDevice->QueryInterface(IID_IDirect3DDevice9Ex,
                           (void**)getter_AddRefs(deviceEx));
 
-  nsRefPtr<IDirect3DSurface9> surface;
-  D3DLOCKED_RECT lockedRect;
   if (deviceEx) {
     // D3D9Ex doesn't support managed textures. We could use dynamic textures
     // here but since Images are immutable that probably isn't such a great
     // idea.
     if (FAILED(aDevice->
                CreateTexture(aSize.width, aSize.height,
-                             1, 0, aFormat, D3DPOOL_DEFAULT,
+                             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT,
                              getter_AddRefs(texture), NULL)))
     {
       return NULL;
     }
 
-    nsRefPtr<IDirect3DTexture9> tmpTexture;
+    nsRefPtr<IDirect3DSurface9> surface;
     if (FAILED(aDevice->
-               CreateTexture(aSize.width, aSize.height,
-                             1, 0, aFormat, D3DPOOL_SYSTEMMEM,
-                             getter_AddRefs(tmpTexture), NULL)))
+               CreateOffscreenPlainSurface(aSize.width,
+                                           aSize.height,
+                                           D3DFMT_A8R8G8B8,
+                                           D3DPOOL_SYSTEMMEM,
+                                           getter_AddRefs(surface),
+                                           NULL)))
     {
       return NULL;
     }
 
-    tmpTexture->GetSurfaceLevel(0, getter_AddRefs(surface));
+    D3DLOCKED_RECT lockedRect;
     surface->LockRect(&lockedRect, NULL, 0);
-    NS_ASSERTION(lockedRect.pBits, "Could not lock surface");
-  } else {
-    if (FAILED(aDevice->
-               CreateTexture(aSize.width, aSize.height,
-                             1, 0, aFormat, D3DPOOL_MANAGED,
-                             getter_AddRefs(texture), NULL)))
-    {
-      return NULL;
+    for (int y = 0; y < aSize.height; y++) {
+      memcpy((char*)lockedRect.pBits + lockedRect.Pitch * y,
+             aData + aStride * y,
+             aSize.width * 4);
     }
-
-    /* lock the entire texture */
-    texture->LockRect(0, &lockedRect, NULL, 0);
-  }
-
-  PRUint32 width = aSize.width;
-  if (aFormat == D3DFMT_A8R8G8B8) {
-    width *= 4;
-  }
-  for (int y = 0; y < aSize.height; y++) {
-    memcpy((char*)lockedRect.pBits + lockedRect.Pitch * y,
-            aData + aStride * y,
-            width);
-  }
-
-  if (deviceEx) {
     surface->UnlockRect();
     nsRefPtr<IDirect3DSurface9> dstSurface;
     texture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
     aDevice->UpdateSurface(surface, NULL, dstSurface, NULL);
   } else {
+    if (FAILED(aDevice->
+               CreateTexture(aSize.width, aSize.height,
+                             1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED,
+                             getter_AddRefs(texture), NULL)))
+    {
+      return NULL;
+    }
+
+    D3DLOCKED_RECT lockrect;
+    /* lock the entire texture */
+    texture->LockRect(0, &lockrect, NULL, 0);
+
+    // copy over data. If we don't need to do any swaping we can
+    // use memcpy
+    for (int y = 0; y < aSize.height; y++) {
+      memcpy((char*)lockrect.pBits + lockrect.Pitch * y,
+             aData + aStride * y,
+             aSize.width * 4);
+    }
+
     texture->UnlockRect(0);
   }
 
@@ -121,8 +111,7 @@ SurfaceToTexture(IDirect3DDevice9 *aDevice,
     context->Paint();
   }
 
-  return DataToTexture(aDevice, imageSurface->Data(), imageSurface->Stride(),
-                       aSize, D3dFormatForGfxFormat(imageSurface->Format()));
+  return DataToTexture(aDevice, imageSurface->Data(), imageSurface->Stride(), aSize);
 }
 
 static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
@@ -305,7 +294,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
       
     if (!aImage->GetBackendData(LayerManager::LAYERS_D3D9)) {
       nsAutoPtr<TextureD3D9BackendData> dat(new TextureD3D9BackendData());
-      dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize, D3DFMT_A8R8G8B8);
+      dat->mTexture = DataToTexture(device(), remoteImage->mData, remoteImage->mStride, remoteImage->mSize);
       if (dat->mTexture) {
         aImage->SetBackendData(LayerManager::LAYERS_D3D9, dat.forget());
       }
@@ -372,11 +361,6 @@ ImageLayerD3D9::RenderLayer()
   if (image->GetFormat() == Image::CAIRO_SURFACE ||
       image->GetFormat() == Image::REMOTE_IMAGE_BITMAP)
   {
-    NS_ASSERTION(image->GetFormat() != Image::CAIRO_SURFACE ||
-                 !static_cast<CairoImage*>(image)->mSurface ||
-                 static_cast<CairoImage*>(image)->mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,
-                 "Image layer has alpha image");
-
     bool hasAlpha = false;
     nsRefPtr<IDirect3DTexture9> texture = GetTexture(image, hasAlpha);
 

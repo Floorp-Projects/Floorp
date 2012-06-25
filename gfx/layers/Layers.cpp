@@ -181,12 +181,6 @@ LayerManager::CreateOptimalSurface(const gfxIntSize &aSize,
     CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFormat));
 }
 
-already_AddRefed<gfxASurface>
-LayerManager::CreateOptimalMaskSurface(const gfxIntSize &aSize)
-{
-  return CreateOptimalSurface(aSize, gfxASurface::ImageFormatA8);
-}
-
 TemporaryRef<DrawTarget>
 LayerManager::CreateDrawTarget(const IntSize &aSize,
                                SurfaceFormat aFormat)
@@ -382,6 +376,8 @@ Layer::ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurf
     gfxMatrix maskTranslation;
     bool maskIs2D = mMaskLayer->GetTransform().CanDraw2D(&maskTranslation);
     NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
+    NS_ASSERTION(maskTranslation.HasOnlyIntegerTranslation(),
+                 "Mask layer has invalid transform.");
 #endif
     mMaskLayer->mEffectiveTransform.PreMultiply(mMaskLayer->GetTransform());
   }

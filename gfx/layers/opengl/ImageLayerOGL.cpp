@@ -271,9 +271,6 @@ ImageLayerOGL::RenderLayer(int,
       return;
     }
 
-    NS_ASSERTION(cairoImage->mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,
-                 "Image layer has alpha image");
-
     CairoOGLBackendData *data =
       static_cast<CairoOGLBackendData*>(cairoImage->GetBackendData(LayerManager::LAYERS_OPENGL));
 
@@ -597,9 +594,6 @@ ImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
     cairoImage->GetBackendData(LayerManager::LAYERS_OPENGL));
 
   if (!data) {
-    NS_ASSERTION(cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_ALPHA,
-                 "OpenGL mask layers must be backed by alpha surfaces");
-
     // allocate a new texture and save the details in the backend data
     data = new CairoOGLBackendData;
     data->mTextureSize = CalculatePOTSize(cairoImage->mSize, gl());
@@ -781,9 +775,6 @@ ShadowImageLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   mOGLManager->MakeCurrent();
 
   if (mTexImage) {
-    NS_ASSERTION(mTexImage->GetContentType() != gfxASurface::CONTENT_ALPHA,
-                 "Image layer has alpha image");
-
     ShaderProgramOGL *colorProgram =
       mOGLManager->GetProgram(mTexImage->GetShaderProgramType(), GetMaskLayer());
 
@@ -853,9 +844,6 @@ ShadowImageLayerOGL::LoadAsTexture(GLuint aTextureUnit, gfxIntSize* aSize)
   }
 
   mTexImage->BindTextureAndApplyFilter(aTextureUnit);
-
-  NS_ASSERTION(mTexImage->GetContentType() == gfxASurface::CONTENT_ALPHA,
-               "OpenGL mask layers must be backed by alpha surfaces");
 
   // We're assuming that the gl backend won't cheat and use NPOT
   // textures when glContext says it can't (which seems to happen
