@@ -10,5 +10,5 @@ SYNC_RES_DRAWABLE := mobile/android/base/resources/drawable/desktop.png mobile/a
 SYNC_RES_DRAWABLE_LDPI := mobile/android/base/resources/drawable-ldpi/sync_fx_icon.png mobile/android/base/resources/drawable-ldpi/sync_ic_launcher.png
 SYNC_RES_DRAWABLE_MDPI := mobile/android/base/resources/drawable-mdpi/sync_fx_icon.png mobile/android/base/resources/drawable-mdpi/sync_ic_launcher.png
 SYNC_RES_DRAWABLE_HDPI := mobile/android/base/resources/drawable-hdpi/sync_fx_icon.png mobile/android/base/resources/drawable-hdpi/sync_ic_launcher.png
-SYNC_RES_LAYOUT := res/layout/sync_account.xml res/layout/sync_custom_popup.xml res/layout/sync_list_item.xml res/layout/sync_redirect_to_setup.xml res/layout/sync_send_tab.xml res/layout/sync_setup.xml res/layout/sync_setup_failure.xml res/layout/sync_setup_jpake_waiting.xml res/layout/sync_setup_nointernet.xml res/layout/sync_setup_pair.xml res/layout/sync_setup_success.xml res/layout/sync_stub.xml
+SYNC_RES_LAYOUT := res/layout/sync_account.xml res/layout/sync_list_item.xml res/layout/sync_redirect_to_setup.xml res/layout/sync_send_tab.xml res/layout/sync_setup.xml res/layout/sync_setup_failure.xml res/layout/sync_setup_jpake_waiting.xml res/layout/sync_setup_nointernet.xml res/layout/sync_setup_pair.xml res/layout/sync_setup_success.xml res/layout/sync_stub.xml
 SYNC_RES_VALUES := res/values/sync_styles.xml
