@@ -164,9 +164,9 @@ UpdateServiceDescription(SC_HANDLE serviceHandle)
  * Determines if the MozillaMaintenance service path needs to be updated
  * and fixes it if it is wrong.
  *
- * @param service            A handle to the service to fix.
- * @param currentServicePath The current (possibly wrong) path that is used.
- * @param wasFixNeeded       Out parameter set to TRUE if a fix was needed.
+ * @param service             A handle to the service to fix.
+ * @param currentServicePath  The current (possibly wrong) path that is used.
+ * @param servicePathWasWrong Out parameter set to TRUE if a fix was needed.
  * @return TRUE if the service path is now correct.
 */
 BOOL
