@@ -975,8 +975,7 @@ AdjustBlockSlot(JSContext *cx, BytecodeEmitter *bce, int slot)
     if (bce->sc->inFunction()) {
         slot += bce->sc->bindings.numVars();
         if ((unsigned) slot >= SLOTNO_LIMIT) {
-            ReportCompileErrorNumber(cx, bce->tokenStream(), NULL, JSREPORT_ERROR,
-                                     JSMSG_TOO_MANY_LOCALS);
+            bce->reportError(NULL, JSMSG_TOO_MANY_LOCALS);
             slot = -1;
         }
     }
@@ -1179,7 +1178,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             if (bce->sc->needStrictChecks()) {
                 JSAutoByteString name;
                 if (!js_AtomToPrintableString(cx, atom, &name) ||
-                    !ReportStrictModeError(cx, bce->tokenStream(), pn, JSMSG_READ_ONLY, name.ptr()))
+                    !bce->reportStrictModeError(pn, JSMSG_READ_ONLY, name.ptr()))
                 {
                     return false;
                 }
@@ -1562,6 +1561,37 @@ BytecodeEmitter::needsImplicitThis()
             return true;
     }
     return false;
+}
+
+bool
+BytecodeEmitter::reportError(ParseNode *pn, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool result = tokenStream()->reportCompileErrorNumberVA(pn, JSREPORT_ERROR, errorNumber, args);
+    va_end(args);
+    return result;
+}
+
+bool
+BytecodeEmitter::reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool result = tokenStream()->reportCompileErrorNumberVA(pn, JSREPORT_STRICT | JSREPORT_WARNING,
+                                                            errorNumber, args);
+    va_end(args);
+    return result;
+}
+
+bool
+BytecodeEmitter::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool result = tokenStream()->reportStrictModeErrorNumberVA(pn, errorNumber, args);
+    va_end(args);
+    return result;
 }
 
 static JSBool
@@ -2854,8 +2884,7 @@ EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
                 unsigned pickDistance = (unsigned)((bce->stackDepth + 1) - depthBefore);
                 if (pickDistance > 0) {
                     if (pickDistance > UINT8_MAX) {
-                        ReportCompileErrorNumber(cx, bce->tokenStream(), pn3, JSREPORT_ERROR,
-                                                 JSMSG_TOO_MANY_LOCALS);
+                        bce->reportError(pn3, JSMSG_TOO_MANY_LOCALS);
                         return JS_FALSE;
                     }
                     if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)pickDistance) < 0)
@@ -2996,8 +3025,7 @@ EmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp,
     depth = limit = (unsigned) bce->stackDepth;
     for (pn = rhs->pn_head; pn; pn = pn->pn_next) {
         if (limit == JS_BIT(16)) {
-            ReportCompileErrorNumber(cx, bce->tokenStream(), rhs, JSREPORT_ERROR,
-                                     JSMSG_ARRAY_INIT_TOO_BIG);
+            bce->reportError(rhs, JSMSG_ARRAY_INIT_TOO_BIG);
             return JS_FALSE;
         }
 
@@ -3491,8 +3519,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
       case PNK_NAME:
         if (lhs->isConst()) {
             if (!rhs) {
-                ReportCompileErrorNumber(cx, bce->tokenStream(), lhs, JSREPORT_ERROR,
-                                         JSMSG_BAD_FOR_LEFTSIDE);
+                bce->reportError(lhs, JSMSG_BAD_FOR_LEFTSIDE);
                 return false;
             }
             break;
@@ -5104,11 +5131,8 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     } else if (!pn->isDirectivePrologueMember()) {
         /* Don't complain about directive prologue members; just don't emit their code. */
         bce->current->currentLine = pn2->pn_pos.begin.lineno;
-        if (!ReportCompileErrorNumber(cx, bce->tokenStream(), pn2,
-                                      JSREPORT_WARNING | JSREPORT_STRICT, JSMSG_USELESS_EXPR))
-        {
+        if (!bce->reportStrictWarning(pn2, JSMSG_USELESS_EXPR))
             return false;
-        }
     }
 
     return true;
@@ -5545,8 +5569,7 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
 #if JS_HAS_DESTRUCTURING_SHORTHAND
     if (pn->pn_xflags & PNX_DESTRUCT) {
-        ReportCompileErrorNumber(cx, bce->tokenStream(), pn, JSREPORT_ERROR,
-                                 JSMSG_BAD_OBJECT_INIT);
+        bce->reportError(pn, JSMSG_BAD_OBJECT_INIT);
         return false;
     }
 #endif
