@@ -229,6 +229,11 @@ AndroidPresenter.prototype = {
   ANDROID_VIEW_FOCUSED: 0x08,
   ANDROID_VIEW_TEXT_CHANGED: 0x10,
   ANDROID_WINDOW_STATE_CHANGED: 0x20,
+  ANDROID_VIEW_SCROLLED: 0x1000,
+
+  attach: function AndroidPresenter_attach(aWindow) {
+    this.chromeWin = aWindow;
+  },
 
   pivotChanged: function AndroidPresenter_pivotChanged(aContext) {
     if (!aContext.accessible)
@@ -317,6 +322,24 @@ AndroidPresenter.prototype = {
     }
 
     this.sendMessageToJava({gecko: androidEvent});
+  },
+
+  viewportChanged: function AndroidPresenter_viewportChanged() {
+    if (Utils.AndroidSdkVersion < 14)
+      return;
+
+    let win = Utils.getBrowserApp(this.chromeWin).selectedBrowser.contentWindow;
+    this.sendMessageToJava({
+      gecko: {
+        type: 'Accessibility:Event',
+        eventType: this.ANDROID_VIEW_SCROLLED,
+        text: [],
+        scrollX: win.scrollX,
+        scrollY: win.scrollY,
+        maxScrollX: win.scrollMaxX,
+        maxScrollY: win.scrollMaxY
+      }
+    });
   },
 
   sendMessageToJava: function AndroidPresenter_sendMessageTojava(aMessage) {
