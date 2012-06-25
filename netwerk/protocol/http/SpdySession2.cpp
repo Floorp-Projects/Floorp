@@ -2161,9 +2161,9 @@ SpdySession2::GetSecurityCallbacks(nsIInterfaceRequestor **,
 }
 
 void
-SpdySession2::SetProxyConnectFailed()
+SpdySession2::SetSSLConnectFailed()
 {
-  NS_ABORT_IF_FALSE(false, "SpdySession2::SetProxyConnectFailed()");
+  NS_ABORT_IF_FALSE(false, "SpdySession2::SetSSLConnectFailed()");
 }
 
 bool

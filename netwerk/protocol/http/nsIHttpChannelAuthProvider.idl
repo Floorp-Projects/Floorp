@@ -40,8 +40,8 @@ interface nsIHttpChannelAuthProvider : nsICancelable
    *
    * @param httpStatus
    *        the http status received.
-   * @param proxyConnectFailed
-   *        if attempt to create CONNECT tunnel via proxy failed.
+   * @param sslConnectFailed
+   *        if the last ssl tunnel connection attempt was or not successful.
    * @param callback
    *        the callback to be called when it returns NS_ERROR_IN_PROGRESS.
    *        The implementation must hold a weak reference.
@@ -54,7 +54,7 @@ interface nsIHttpChannelAuthProvider : nsICancelable
    *                               until disconnect be called.
    */
   void processAuthentication(in unsigned long httpStatus,
-                             in boolean proxyConnectFailed);
+                             in boolean sslConnectFailed);
 
   /**
    * Add credentials from the http auth cache.
