@@ -44,7 +44,7 @@ toolkit.jar:
   skin/classic/global/resizer.css
   skin/classic/global/richlistbox.css
   skin/classic/global/scrollbars.css                                 (nativescrollbars.css)
-* skin/classic/global/scale.css
+  skin/classic/global/scale.css
   skin/classic/global/scrollbox.css
   skin/classic/global/spinbuttons.css
   skin/classic/global/splitter.css
