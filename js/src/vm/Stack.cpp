@@ -813,6 +813,48 @@ ContextStack::containsSlow(const StackFrame *target) const
 }
 
 /*
+ * The only calls made by inlined methodjit frames can be to other JIT
+ * frames associated with the same VMFrame. If we try to Invoke(),
+ * Execute() or so forth, any topmost inline frame will need to be
+ * expanded (along with other inline frames in the compartment).
+ * To avoid pathological behavior here, make sure to mark any topmost
+ * function as uninlineable, which will expand inline frames if there are
+ * any and prevent the function from being inlined in the future.
+ *
+ * Note: When called from pushBailoutFrame, error = DONT_REPORT_ERROR. Use
+ * this to deny potential invalidation, which would read from
+ * runtime->ionTop.
+ */
+static void
+MarkJaegerUninlineable(JSContext *cx, MaybeReportError report)
+{
+    FrameRegs *regs = cx->maybeRegs();
+    JS_ASSERT_IF(cx->hasfp(), !cx->regs().inlined());
+
+    if (!regs || report == DONT_REPORT_ERROR)
+        return;
+
+    JSFunction *fun = NULL;
+
+    if (InlinedSite *site = regs->inlined()) {
+        mjit::JITChunk *chunk = regs->fp()->jit()->chunk(regs->pc);
+        fun = chunk->inlineFrames()[site->inlineIndex].fun;
+    } else {
+        StackFrame *fp = regs->fp();
+        if (fp->isFunctionFrame()) {
+            JSFunction *f = fp->fun();
+            if (f->isInterpreted())
+                fun = f;
+        }
+    }
+
+    if (fun) {
+        fun->script()->uninlineable = true;
+        types::MarkTypeObjectFlags(cx, fun, types::OBJECT_FLAG_UNINLINEABLE);
+    }
+}
+
+/*
  * This helper function brings the ContextStack to the top of the thread stack
  * (so that it can be extended to push a frame and/or arguments) by potentially
  * pushing a StackSegment. The 'pushedSeg' outparam indicates whether such a
@@ -826,42 +868,15 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
                           MaybeExtend extend, bool *pushedSeg, JSCompartment *dest)
 {
     Value *firstUnused = space().firstUnused();
-    FrameRegs *regs = cx->maybeRegs();
 
 #ifdef JS_METHODJIT
-    /*
-     * The only calls made by inlined methodjit frames can be to other JIT
-     * frames associated with the same VMFrame. If we try to Invoke(),
-     * Execute() or so forth, any topmost inline frame will need to be
-     * expanded (along with other inline frames in the compartment).
-     * To avoid pathological behavior here, make sure to mark any topmost
-     * function as uninlineable, which will expand inline frames if there are
-     * any and prevent the function from being inlined in the future.
-     *
-     * Note: When called from pushBailoutFrame, error = DONT_REPORT_ERROR. Use
-     * this to deny potential invalidation, which would read from
-     * runtime->ionTop.
-     */
-    if (regs && report != DONT_REPORT_ERROR) {
-        JSFunction *fun = NULL;
-        if (InlinedSite *site = regs->inlined()) {
-            mjit::JITChunk *chunk = regs->fp()->jit()->chunk(regs->pc);
-            fun = chunk->inlineFrames()[site->inlineIndex].fun;
-        } else {
-            StackFrame *fp = regs->fp();
-            if (fp->isFunctionFrame()) {
-                JSFunction *f = fp->fun();
-                if (f->isInterpreted())
-                    fun = f;
-            }
-        }
-
-        if (fun) {
-            fun->script()->uninlineable = true;
-            types::MarkTypeObjectFlags(cx, fun, types::OBJECT_FLAG_UNINLINEABLE);
-        }
+# ifdef JS_ION
+    // Don't mark uninlineable if called from invokeFunction().
+    if (!cx->runtime->ionTop)
+# endif
+    {
+        MarkJaegerUninlineable(cx, report);
     }
-    JS_ASSERT_IF(cx->hasfp(), !cx->regs().inlined());
 #endif
 
     if (onTop() && extend) {
@@ -873,6 +888,7 @@ ContextStack::ensureOnTop(JSContext *cx, MaybeReportError report, unsigned nvars
     if (!space().ensureSpace(cx, report, firstUnused, VALUES_PER_STACK_SEGMENT + nvars, dest))
         return NULL;
 
+    FrameRegs *regs;
     CallArgsList *calls;
     if (seg_ && extend) {
         regs = seg_->maybeRegs();
