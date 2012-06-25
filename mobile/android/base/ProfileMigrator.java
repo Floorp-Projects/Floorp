@@ -13,7 +13,6 @@ import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.Passwords;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
-import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.sqlite.SQLiteBridge;
 import org.mozilla.gecko.sqlite.SQLiteBridgeException;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
@@ -73,7 +72,6 @@ public class ProfileMigrator {
     private Runnable mLongOperationStartCallback;
     private boolean mLongOperationStartRun;
     private Runnable mLongOperationStopCallback;
-    private LocalBrowserDB mDB;
 
     // Default number of history entries to migrate in one run.
     private static final int DEFAULT_HISTORY_MIGRATE_COUNT = 2000;
@@ -711,15 +709,32 @@ public class ProfileMigrator {
         public PlacesRunnable(File profileDir, int limit) {
             mProfileDir = profileDir;
             mMaxEntries = limit;
-            mDB = new LocalBrowserDB(GeckoProfile.get(mContext).getName());
+        }
+
+        protected Uri getBookmarksUri() {
+            Uri.Builder uriBuilder = Bookmarks.CONTENT_URI.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1");
+            return uriBuilder.build();
+        }
+
+        protected Uri getHistoryUri() {
+            Uri.Builder uriBuilder = History.CONTENT_URI.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1");
+            return uriBuilder.build();
+
+        }
+
+        protected Uri getImagesUri() {
+            Uri.Builder uriBuilder = Images.CONTENT_URI.buildUpon()
+                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1");
+            return uriBuilder.build();
         }
 
         private long getFolderId(String guid) {
             Cursor c = null;
 
             try {
-                // Uses default profile
-                c = mCr.query(Bookmarks.CONTENT_URI,
+                c = mCr.query(getBookmarksUri(),
                               new String[] { Bookmarks._ID },
                               Bookmarks.GUID + " = ?",
                               new String [] { guid },
@@ -807,7 +822,72 @@ public class ProfileMigrator {
 
         protected void updateBrowserHistory(String url, String title,
                                             long date, int visits) {
-            mDB.updateHistoryInBatch(mCr, mOperations, url, title, date, visits);
+            Cursor cursor = null;
+
+            try {
+                final String[] projection = new String[] {
+                    History._ID,
+                    History.VISITS,
+                    History.DATE_LAST_VISITED
+                };
+
+                cursor = mCr.query(getHistoryUri(),
+                                   projection,
+                                   History.URL + " = ?",
+                                   new String[] { url },
+                                   null);
+
+                ContentValues values = new ContentValues();
+                ContentProviderOperation.Builder builder = null;
+                // Restore deleted record if possible
+                values.put(History.IS_DELETED, 0);
+
+                if (cursor.moveToFirst()) {
+                    int visitsCol = cursor.getColumnIndexOrThrow(History.VISITS);
+                    int dateCol = cursor.getColumnIndexOrThrow(History.DATE_LAST_VISITED);
+                    int oldVisits = cursor.getInt(visitsCol);
+                    long oldDate = cursor.getLong(dateCol);
+
+                    values.put(History.VISITS, oldVisits + visits);
+                    if (title != null) {
+                        values.put(History.TITLE, title);
+                    }
+                    // Only update last visited if newer.
+                    if (date > oldDate) {
+                        values.put(History.DATE_LAST_VISITED, date);
+                    }
+
+                    int idCol = cursor.getColumnIndexOrThrow(History._ID);
+                    // We use default profile anyway
+                    Uri historyUri = ContentUris.withAppendedId(getHistoryUri(),
+                                                                cursor.getLong(idCol));
+
+                    // Update
+                    builder = ContentProviderOperation.newUpdate(historyUri);
+                    // URL should be unique and we should hit it
+                    builder.withExpectedCount(1);
+                    builder.withValues(values);
+                } else {
+                    values.put(History.URL, url);
+                    values.put(History.VISITS, visits);
+                    if (title != null) {
+                        values.put(History.TITLE, title);
+                    } else {
+                        values.put(History.TITLE, url);
+                    }
+                    values.put(History.DATE_LAST_VISITED, date);
+
+                    // Insert
+                    builder = ContentProviderOperation.newInsert(getHistoryUri());
+                    builder.withValues(values);
+                }
+
+                // Queue the operation
+                mOperations.add(builder.build());
+            } finally {
+                if (cursor != null)
+                    cursor.close();
+            }
         }
 
         protected BitmapDrawable decodeImageData(byte[] data) {
@@ -835,21 +915,57 @@ public class ProfileMigrator {
                 }
             }
             try {
-                byte[] newData = null;
+                ContentValues values = new ContentValues();
 
                 // Recompress decoded images to PNG.
                 if (image != null) {
                     Bitmap bitmap = image.getBitmap();
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                    newData = stream.toByteArray();
+                    values.put(Images.FAVICON, stream.toByteArray());
                 } else {
                     // PNG images can be passed directly. Well, aside
                     // from having to convert them into a byte[].
-                    newData = data;
+                    values.put(Images.FAVICON, data);
                 }
 
-                mDB.updateFaviconInBatch(mCr, mOperations, url, faviconUrl, faviconGuid, newData);
+                values.put(Images.URL, url);
+                values.put(Images.FAVICON_URL, faviconUrl);
+                // Restore deleted record if possible
+                values.put(Images.IS_DELETED, 0);
+                if (faviconGuid != null) {
+                    values.put(Images.GUID, faviconGuid);
+                }
+
+                Cursor cursor = null;
+                ContentProviderOperation.Builder builder = null;
+                try {
+                    cursor = mCr.query(getImagesUri(),
+                                       null,
+                                       Images.URL + " = ?",
+                                       new String[] { url },
+                                       null);
+
+                    if (cursor != null && cursor.moveToFirst()) {
+                        // Update
+                        builder = ContentProviderOperation.newUpdate(getImagesUri());
+                        // URL should be unique and we should hit it
+                        builder.withExpectedCount(1);
+                        builder.withValues(values);
+                        builder.withSelection(Images.URL + " = ?",
+                                              new String[] { url });
+                    } else {
+                        // Insert
+                        builder = ContentProviderOperation.newInsert(getImagesUri());
+                        builder.withValues(values);
+                    }
+                } finally {
+                    if (cursor != null)
+                        cursor.close();
+                }
+
+                // Queue the operation
+                mOperations.add(builder.build());
             } catch (SQLException e) {
                 Log.i(LOGTAG, "Migrating favicon failed: " + mime + " URL: " + url
                       + " error:" + e.getMessage());
@@ -965,17 +1081,81 @@ public class ProfileMigrator {
                                    long parent, long added,
                                    long modified, long position,
                                    String keyword, int type) {
-            // Translate the parent pointer if needed
+            ContentValues values = new ContentValues();
+            if (title == null && url != null) {
+                title = url;
+            }
+            if (title != null) {
+                values.put(Bookmarks.TITLE, title);
+            }
+            if (url != null) {
+                values.put(Bookmarks.URL, url);
+            }
+            if (guid != null) {
+                values.put(SyncColumns.GUID, guid);
+            }
+            if (keyword != null) {
+                values.put(Bookmarks.KEYWORD, keyword);
+            }
+            values.put(SyncColumns.DATE_CREATED, added);
+            values.put(SyncColumns.DATE_MODIFIED, modified);
+            values.put(Bookmarks.POSITION, position);
+            // Restore deleted record if possible
+            values.put(Bookmarks.IS_DELETED, 0);
             if (mRerootMap.containsKey(parent)) {
                 parent = mRerootMap.get(parent);
             }
+            values.put(Bookmarks.PARENT, parent);
+
             // The bookmark can only be one of three valid types
-            int newtype = (type == PLACES_TYPE_BOOKMARK ? Bookmarks.TYPE_BOOKMARK :
-                           type == PLACES_TYPE_FOLDER ? Bookmarks.TYPE_FOLDER :
-                           Bookmarks.TYPE_SEPARATOR);
-            mDB.updateBookmarkInBatch(mCr, mOperations,
-                                      url, title, guid, parent, added,
-                                      modified, position, keyword, newtype);
+            values.put(Bookmarks.TYPE, type == PLACES_TYPE_BOOKMARK ? Bookmarks.TYPE_BOOKMARK :
+                                       type == PLACES_TYPE_FOLDER ? Bookmarks.TYPE_FOLDER :
+                                       Bookmarks.TYPE_SEPARATOR);
+
+            Cursor cursor = null;
+            ContentProviderOperation.Builder builder = null;
+
+            if (url != null) {
+                try {
+                    final String[] projection = new String[] {
+                        Bookmarks._ID,
+                        Bookmarks.URL
+                    };
+
+                    // Check if the boomark exists
+                    cursor = mCr.query(getBookmarksUri(),
+                                       projection,
+                                       Bookmarks.URL + " = ?",
+                                       new String[] { url },
+                                       null);
+
+                    if (cursor.moveToFirst()) {
+                        int idCol = cursor.getColumnIndexOrThrow(Bookmarks._ID);
+                        // We use default profile anyway
+                        Uri bookmarkUri = ContentUris.withAppendedId(getBookmarksUri(),
+                                                                     cursor.getLong(idCol));
+                        // Update
+                        builder = ContentProviderOperation.newUpdate(bookmarkUri);
+                        // URL should be unique and we should hit it
+                        builder.withExpectedCount(1);
+                        builder.withValues(values);
+                    } else {
+                        // Insert
+                        builder = ContentProviderOperation.newInsert(getBookmarksUri());
+                        builder.withValues(values);
+                    }
+                } finally {
+                    if (cursor != null)
+                        cursor.close();
+                }
+            } else {
+                // Insert
+                builder = ContentProviderOperation.newInsert(getBookmarksUri());
+                builder.withValues(values);
+            }
+
+            // Queue the operation
+            mOperations.add(builder.build());
         }
 
         protected void migrateBookmarks(SQLiteBridge db) {
