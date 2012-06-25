@@ -369,7 +369,9 @@ DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
     }
   }
   else if (aEvent.type == "resize") {
-    this.outputPanel._resize();
+    if (this._lastState != NOTIFICATIONS.SHOW) {
+      this.outputPanel._resize();
+    }
   }
   else if (aEvent.type == "TabClose") {
     this._stopErrorsCount(aEvent.target);
