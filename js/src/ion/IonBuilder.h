@@ -108,7 +108,7 @@ class IonBuilder : public MIRGenerator
 
         State state;            // Current state of this control structure.
         jsbytecode *stopAt;     // Bytecode at which to stop the processing loop.
-        
+
         // For if structures, this contains branch information.
         union {
             struct {
@@ -386,6 +386,17 @@ class IonBuilder : public MIRGenerator
     bool jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inlineBuilder);
     bool inlineScriptedCall(JSFunction *target, uint32 argc);
     bool makeInliningDecision(JSFunction *target);
+
+    bool jsop_call_fun_barrier(HandleFunction target, uint32 argc, 
+                               bool constructing,
+							   types::TypeSet *types,
+                               types::TypeSet *barrier);
+    bool makeCallBarrier(HandleFunction target, uint32 argc, bool constructing,
+                         types::TypeSet *types, types::TypeSet *barrier);
+
+    inline bool TestCommonPropFunc(JSContext *cx, types::TypeSet *types,
+                                   HandleId id, JSFunction **funcp, 
+                                   bool isGetter);
 
   public:
     // A builder is inextricably tied to a particular script.

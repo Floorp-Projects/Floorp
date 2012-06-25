@@ -512,6 +512,9 @@ struct TypeResult
     {}
 };
 
+/* Is this a reasonable PC to be doing inlining on? */
+inline bool isInlinableCall(jsbytecode *pc);
+
 /*
  * Type barriers overview.
  *
