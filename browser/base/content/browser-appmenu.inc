@@ -187,7 +187,6 @@
                     command="Tools:Scratchpad"/>
           <menuitem id="appmenu_styleeditor"
                     hidden="true"
-                    type="checkbox"
                     label="&styleeditor.label;"
                     key="key_styleeditor"
                     command="Tools:StyleEditor"/>
