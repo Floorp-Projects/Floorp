@@ -31,17 +31,6 @@ public:
 
     already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                          gfxASurface::gfxContentType contentType);
-    virtual already_AddRefed<gfxASurface>
-      CreateOffscreenImageSurface(const gfxIntSize& aSize,
-                                  gfxASurface::gfxContentType aContentType)
-    {
-        nsRefPtr<gfxASurface> surface = CreateOffscreenSurface(aSize, aContentType);
-#ifdef DEBUG
-        nsRefPtr<gfxImageSurface> imageSurface = surface->GetAsImageSurface();
-        NS_ASSERTION(imageSurface, "Surface cannot be converted to a gfxImageSurface");
-#endif
-        return surface.forget();
-    }
     
     already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
                                                 gfxASurface::gfxImageFormat format);

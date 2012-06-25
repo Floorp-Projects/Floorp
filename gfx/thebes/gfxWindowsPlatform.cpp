@@ -709,25 +709,7 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 
     NS_IF_ADDREF(surf);
 
-    return surf.forget();
-}
-
-already_AddRefed<gfxASurface>
-gfxWindowsPlatform::CreateOffscreenImageSurface(const gfxIntSize& aSize,
-                                                gfxASurface::gfxContentType aContentType)
-{
-#ifdef CAIRO_HAS_D2D_SURFACE
-    if (mRenderMode == RENDER_DIRECT2D) {
-        return new gfxImageSurface(aSize, OptimalFormatForContent(aContentType));
-    }
-#endif
-
-    nsRefPtr<gfxASurface> surface = CreateOffscreenSurface(aSize, aContentType);
-#ifdef DEBUG
-    nsRefPtr<gfxImageSurface> imageSurface = surface->GetAsImageSurface();
-    NS_ASSERTION(imageSurface, "Surface cannot be converted to a gfxImageSurface");
-#endif
-    return surface;
+    return surf;
 }
 
 RefPtr<ScaledFont>
