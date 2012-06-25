@@ -53,21 +53,6 @@ protected:
   /** p1 in the range */
   nsRefPtr<nsRange> mRange;
 
-  /** p1 in the range */
-  nsCOMPtr<nsINode> mStartParent;
-
-  /** p1 offset */
-  PRInt32 mStartOffset;
-
-  /** p2 in the range */
-  nsCOMPtr<nsINode> mEndParent;
-
-  /** the closest common parent of p1 and p2 */
-  nsCOMPtr<nsINode> mCommonParent;
-
-  /** p2 offset */
-  PRInt32 mEndOffset;
-
   /** the editor for this transaction */
   nsEditor* mEditor;
 
