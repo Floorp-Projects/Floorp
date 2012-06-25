@@ -857,11 +857,17 @@ CommitHelper::Run()
 
     if (!mAbortCode) {
       NS_NAMED_LITERAL_CSTRING(release, "COMMIT TRANSACTION");
-      if (NS_SUCCEEDED(mConnection->ExecuteSimpleSQL(release))) {
+      nsresult rv = mConnection->ExecuteSimpleSQL(release);
+      if (NS_SUCCEEDED(rv)) {
         if (mUpdateFileRefcountFunction) {
           mUpdateFileRefcountFunction->UpdateFileInfos();
         }
         CommitAutoIncrementCounts();
+      }
+      else if (rv == NS_ERROR_FILE_NO_DEVICE_SPACE) {
+        // mozstorage translates SQLITE_FULL to NS_ERROR_FILE_NO_DEVICE_SPACE,
+        // which we know better as NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR.
+        mAbortCode = NS_ERROR_DOM_INDEXEDDB_QUOTA_ERR;
       }
       else {
         mAbortCode = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
