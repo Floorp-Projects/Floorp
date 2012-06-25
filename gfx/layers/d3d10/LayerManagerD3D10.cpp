@@ -431,6 +431,14 @@ LayerManagerD3D10::CreateOptimalSurface(const gfxIntSize &aSize,
   return surface.forget();
 }
 
+
+already_AddRefed<gfxASurface>
+LayerManagerD3D10::CreateOptimalMaskSurface(const gfxIntSize &aSize)
+{
+  return CreateOptimalSurface(aSize, gfxASurface::ImageFormatARGB32);
+}
+
+
 TemporaryRef<DrawTarget>
 LayerManagerD3D10::CreateDrawTarget(const IntSize &aSize,
                                     SurfaceFormat aFormat)
