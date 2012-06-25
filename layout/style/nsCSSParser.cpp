@@ -592,7 +592,7 @@ protected:
 
   /* Find and return the namespace ID associated with aPrefix.
      If aPrefix has not been declared in an @namespace rule, returns
-     kNameSpaceID_Unknown and sets mFoundUnresolvablePrefix to true. */
+     kNameSpaceID_Unknown. */
   PRInt32 GetNamespaceIdForPrefix(const nsString& aPrefix);
 
   /* Find the correct default namespace, and set it on aSelector. */
@@ -651,10 +651,6 @@ protected:
   // This flag is set when parsing a non-box shorthand; it's used to not apply
   // some quirks during shorthand parsing
   bool          mParsingCompoundProperty : 1;
-
-  // GetNamespaceIdForPrefix will set mFoundUnresolvablePrefix to true
-  // when it encounters a prefix that is not mapped to a namespace.
-  bool          mFoundUnresolvablePrefix : 1;
 
 #ifdef DEBUG
   bool mScannerInited : 1;
@@ -740,8 +736,7 @@ CSSParserImpl::CSSParserImpl()
     mNavQuirkMode(false),
     mUnsafeRulesEnabled(false),
     mHTMLMediaMode(false),
-    mParsingCompoundProperty(false),
-    mFoundUnresolvablePrefix(false)
+    mParsingCompoundProperty(false)
 #ifdef DEBUG
     , mScannerInited(false)
 #endif
@@ -1193,12 +1188,7 @@ CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
 
   AssertInitialState();
 
-  // This is the only place that cares about mFoundUnresolvablePrefix,
-  // so this is the only place that bothers clearing it.
-  mFoundUnresolvablePrefix = false;
-
   bool success = ParseSelectorList(*aSelectorList, PRUnichar(0));
-  bool prefixErr = mFoundUnresolvablePrefix;
 
   // We deliberately do not call OUTPUT_ERROR here, because all our
   // callers map a failure return to a JS exception, and if that JS
@@ -1217,8 +1207,6 @@ CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
   }
 
   NS_ASSERTION(!*aSelectorList, "Shouldn't have list!");
-  if (prefixErr)
-    return NS_ERROR_DOM_NAMESPACE_ERR;
 
   return NS_ERROR_DOM_SYNTAX_ERR;
 }
@@ -9250,7 +9238,6 @@ CSSParserImpl::GetNamespaceIdForPrefix(const nsString& aPrefix)
       aPrefix.get()
     };
     REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
-    mFoundUnresolvablePrefix = true;
   }
 
   return nameSpaceID;

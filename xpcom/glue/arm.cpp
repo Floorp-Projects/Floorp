@@ -157,8 +157,8 @@ static bool
 check_neon(void)
 {
   return (arm_cpu_flags & MOZILLA_HAS_NEON_FLAG) != 0;
-#    endif
 }
+#    endif
 
 #  endif // defined(__linux__) || defined(ANDROID)
 

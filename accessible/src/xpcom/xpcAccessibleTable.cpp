@@ -9,6 +9,8 @@
 #include "Accessible.h"
 #include "TableAccessible.h"
 
+static const PRUint32 XPC_TABLE_DEFAULT_SIZE = 40;
+
 nsresult
 xpcAccessibleTable::GetCaption(nsIAccessible** aCaption)
 {
@@ -242,6 +244,138 @@ xpcAccessibleTable::GetSelectedRowCount(PRUint32* aSelectedRowCount)
 }
 
 nsresult
+xpcAccessibleTable::GetSelectedCellIndices(PRUint32* aCellsArraySize,
+                                           PRInt32** aCellsArray)
+{
+  NS_ENSURE_ARG_POINTER(aCellsArraySize);
+  *aCellsArraySize = 0;
+
+  NS_ENSURE_ARG_POINTER(aCellsArray);
+  *aCellsArray = 0;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  nsAutoTArray<PRUint32, XPC_TABLE_DEFAULT_SIZE> cellsArray;
+  mTable->SelectedCellIndices(&cellsArray);
+
+  *aCellsArraySize = cellsArray.Length();
+  *aCellsArray = static_cast<PRInt32*>
+    (moz_xmalloc(*aCellsArraySize * sizeof(PRInt32)));
+  memcpy(*aCellsArray, cellsArray.Elements(),
+    *aCellsArraySize * sizeof(PRInt32));
+
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetSelectedColumnIndices(PRUint32* aColsArraySize,
+                                             PRInt32** aColsArray)
+{
+  NS_ENSURE_ARG_POINTER(aColsArraySize);
+  *aColsArraySize = 0;
+
+  NS_ENSURE_ARG_POINTER(aColsArray);
+  *aColsArray = 0;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  nsAutoTArray<PRUint32, XPC_TABLE_DEFAULT_SIZE> colsArray;
+  mTable->SelectedColIndices(&colsArray);
+
+  *aColsArraySize = colsArray.Length();
+  *aColsArray = static_cast<PRInt32*>
+    (moz_xmalloc(*aColsArraySize * sizeof(PRInt32)));
+  memcpy(*aColsArray, colsArray.Elements(),
+    *aColsArraySize * sizeof(PRInt32));
+
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetSelectedRowIndices(PRUint32* aRowsArraySize,
+                                          PRInt32** aRowsArray)
+{
+  NS_ENSURE_ARG_POINTER(aRowsArraySize);
+  *aRowsArraySize = 0;
+
+  NS_ENSURE_ARG_POINTER(aRowsArray);
+  *aRowsArray = 0;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  nsAutoTArray<PRUint32, XPC_TABLE_DEFAULT_SIZE> rowsArray;
+  mTable->SelectedRowIndices(&rowsArray);
+
+  *aRowsArraySize = rowsArray.Length();
+  *aRowsArray = static_cast<PRInt32*>
+    (moz_xmalloc(*aRowsArraySize * sizeof(PRInt32)));
+  memcpy(*aRowsArray, rowsArray.Elements(),
+    *aRowsArraySize * sizeof(PRInt32));
+
+  return NS_OK;
+}
+
+nsresult 
+xpcAccessibleTable::GetColumnIndexAt(PRInt32 aCellIdx, PRInt32* aColIdx)
+{
+  NS_ENSURE_ARG_POINTER(aColIdx);
+  *aColIdx = -1;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aCellIdx < 0 
+      || static_cast<PRUint32>(aCellIdx) 
+      >= mTable->RowCount() * mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  *aColIdx = mTable->ColIndexAt(aCellIdx);
+  return NS_OK;
+}
+
+nsresult 
+xpcAccessibleTable::GetRowIndexAt(PRInt32 aCellIdx, PRInt32* aRowIdx)
+{
+  NS_ENSURE_ARG_POINTER(aRowIdx);
+  *aRowIdx = -1;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aCellIdx < 0 
+      || static_cast<PRUint32>(aCellIdx) 
+      >= mTable->RowCount() * mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  *aRowIdx = mTable->RowIndexAt(aCellIdx);
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetRowAndColumnIndicesAt(PRInt32 aCellIdx, PRInt32* aRowIdx,
+                                             PRInt32* aColIdx)
+{
+  NS_ENSURE_ARG_POINTER(aRowIdx);
+  *aRowIdx = -1;
+  NS_ENSURE_ARG_POINTER(aColIdx);
+  *aColIdx = -1;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  if (aCellIdx < 0 
+      || static_cast<PRUint32>(aCellIdx) 
+      >= mTable->RowCount() * mTable->ColCount())
+    return NS_ERROR_INVALID_ARG;
+
+  mTable->RowAndColIndicesAt(aCellIdx, aRowIdx, aColIdx);
+  return NS_OK;  
+}
+
+nsresult
 xpcAccessibleTable::GetSummary(nsAString& aSummary)
 {
   if (!mTable)
@@ -298,7 +432,7 @@ xpcAccessibleTable::UnselectColumn(PRInt32 aColIdx)
   if (!mTable)
     return NS_ERROR_FAILURE;
 
-  if (aColIdx < 0 || aColIdx >= mTable->ColCount())
+  if (aColIdx < 0 || static_cast<PRUint32>(aColIdx) >= mTable->ColCount())
     return NS_ERROR_INVALID_ARG;
 
   mTable->UnselectCol(aColIdx);
@@ -311,7 +445,7 @@ xpcAccessibleTable::UnselectRow(PRInt32 aRowIdx)
   if (!mTable)
     return NS_ERROR_FAILURE;
 
-  if (aRowIdx < 0 || aRowIdx >= mTable->RowCount())
+  if (aRowIdx < 0 || static_cast<PRUint32>(aRowIdx) >= mTable->RowCount())
     return NS_ERROR_INVALID_ARG;
 
   mTable->UnselectRow(aRowIdx);

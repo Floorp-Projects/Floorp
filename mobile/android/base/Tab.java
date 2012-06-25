@@ -69,6 +69,7 @@ public final class Tab {
     private int mState;
     private ByteBuffer mThumbnailBuffer;
     private Bitmap mThumbnailBitmap;
+    private boolean mDesktopMode;
 
     public static final int STATE_DELAYED = 0;
     public static final int STATE_LOADING = 1;
@@ -660,5 +661,13 @@ public final class Tab {
         int g = Integer.parseInt(matcher.group(2));
         int b = Integer.parseInt(matcher.group(3));
         return Color.rgb(r, g, b);
+    }
+
+    public void setDesktopMode(boolean enabled) {
+        mDesktopMode = enabled;
+    }
+
+    public boolean getDesktopMode() {
+        return mDesktopMode;
     }
 }

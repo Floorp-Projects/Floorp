@@ -102,6 +102,12 @@ protected:
   virtual LengthAttributesInfo GetLengthInfo();
   virtual StringAttributesInfo GetStringInfo();
 
+  /**
+   * Returns true if our width and height should be used, or false if they
+   * should be ignored. As per the spec, this depends on the type of the
+   * element that we're referencing.
+   */
+  bool OurWidthAndHeightAreUsed() const;
   void SyncWidthOrHeight(nsIAtom *aName);
   void LookupHref();
   void TriggerReclone();

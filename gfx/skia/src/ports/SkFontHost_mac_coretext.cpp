@@ -80,10 +80,6 @@ static CGFloat CGRectGetWidth_inline(const CGRect& rect) {
     return rect.size.width;
 }
 
-static CGFloat CGRectGetHeight(const CGRect& rect) {
-    return rect.size.height;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 static void sk_memset_rect32(uint32_t* ptr, uint32_t value, size_t width,
@@ -130,6 +126,7 @@ static void sk_memset_rect32(uint32_t* ptr, uint32_t value, size_t width,
     }
 }
 
+#if 0
 // Potentially this should be made (1) public (2) optimized when width is small.
 // Also might want 16 and 32 bit version
 //
@@ -142,6 +139,7 @@ static void sk_memset_rect(void* ptr, U8CPU byte, size_t width, size_t height,
         height -= 1;
     }
 }
+#endif
 
 #include <sys/utsname.h>
 
@@ -253,13 +251,6 @@ static CGAffineTransform MatrixToCGAffineTransform(const SkMatrix& matrix,
                                  ScalarToCG(matrix[SkMatrix::kMScaleY]) * sy,
                                  ScalarToCG(matrix[SkMatrix::kMTransX]) * sx,
                                  ScalarToCG(matrix[SkMatrix::kMTransY]) * sy);
-}
-
-static void CGAffineTransformToMatrix(const CGAffineTransform& xform, SkMatrix* matrix) {
-    matrix->setAll(
-                   CGToScalar(xform.a), CGToScalar(xform.c), CGToScalar(xform.tx),
-                   CGToScalar(xform.b), CGToScalar(xform.d), CGToScalar(xform.ty),
-                   0, 0, SK_Scalar1);
 }
 
 static SkScalar getFontScale(CGFontRef cgFont) {
@@ -1080,6 +1071,7 @@ static const uint8_t* getInverseTable(bool isWhite) {
     return isWhite ? gWhiteTable : gTable;
 }
 
+#ifdef SK_USE_COLOR_LUMINANCE
 static const uint8_t* getGammaTable(U8CPU luminance) {
     static uint8_t gGammaTables[4][256];
     static bool gInited;
@@ -1102,7 +1094,9 @@ static const uint8_t* getGammaTable(U8CPU luminance) {
     SkASSERT(0 == (luminance >> 8));
     return gGammaTables[luminance >> 6];
 }
+#endif
 
+#ifndef SK_USE_COLOR_LUMINANCE
 static void invertGammaMask(bool isWhite, CGRGBPixel rgb[], int width,
                             int height, size_t rb) {
     const uint8_t* table = getInverseTable(isWhite);
@@ -1117,6 +1111,7 @@ static void invertGammaMask(bool isWhite, CGRGBPixel rgb[], int width,
         rgb = (CGRGBPixel*)((char*)rgb + rb);
     }
 }
+#endif
 
 static void cgpixels_to_bits(uint8_t dst[], const CGRGBPixel src[], int count) {
     while (count > 0) {
@@ -1131,6 +1126,7 @@ static void cgpixels_to_bits(uint8_t dst[], const CGRGBPixel src[], int count) {
     }
 }
 
+#ifdef SK_USE_COLOR_LUMINANCE
 static int lerpScale(int dst, int src, int scale) {
     return dst + (scale * (src - dst) >> 23);
 }
@@ -1152,16 +1148,9 @@ static CGRGBPixel lerpPixel(CGRGBPixel dst, CGRGBPixel src,
 
 static void lerpPixels(CGRGBPixel dst[], const CGRGBPixel src[], int width,
                        int height, int rowBytes, int lumBits) {
-#ifdef SK_USE_COLOR_LUMINANCE
     int scaleR = (1 << 23) * SkColorGetR(lumBits) / 0xFF;
     int scaleG = (1 << 23) * SkColorGetG(lumBits) / 0xFF;
     int scaleB = (1 << 23) * SkColorGetB(lumBits) / 0xFF;
-#else
-    int scale = (1 << 23) * lumBits / SkScalerContext::kLuminance_Max;
-    int scaleR = scale;
-    int scaleG = scale;
-    int scaleB = scale;
-#endif
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -1173,6 +1162,7 @@ static void lerpPixels(CGRGBPixel dst[], const CGRGBPixel src[], int width,
         dst = (CGRGBPixel*)((char*)dst + rowBytes);
     }
 }
+#endif
 
 #if 1
 static inline int r32_to_16(int x) { return SkR32ToR16(x); }
@@ -1217,12 +1207,11 @@ static inline uint32_t rgb_to_lcd32(CGRGBPixel rgb) {
 
 void SkScalerContext_Mac::generateImage(const SkGlyph& glyph) {
     CGGlyph cgGlyph = (CGGlyph) glyph.getGlyphID(fBaseGlyphCount);
-
     const bool isLCD = isLCDFormat(glyph.fMaskFormat);
+#ifdef SK_USE_COLOR_LUMINANCE
     const bool isBW = SkMask::kBW_Format == glyph.fMaskFormat;
     const bool isA8 = !isLCD && !isBW;
-    
-#ifdef SK_USE_COLOR_LUMINANCE
+
     unsigned lumBits = fRec.getLuminanceColor();
     uint32_t xorMask = 0;
 

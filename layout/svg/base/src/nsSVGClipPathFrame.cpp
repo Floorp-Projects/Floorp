@@ -283,6 +283,7 @@ nsSVGClipPathFrame::AttributeChanged(PRInt32         aNameSpaceID,
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::transform) {
+      nsSVGEffects::InvalidateDirectRenderingObservers(this);
       nsSVGUtils::NotifyChildrenOfSVGChange(this,
                                             nsISVGChildFrame::TRANSFORM_CHANGED);
     }

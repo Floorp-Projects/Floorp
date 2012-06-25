@@ -65,12 +65,14 @@ NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned sta
 static JSBool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
-BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScript*> script,
+BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, SharedContext *sc,
+                                 HandleScript script, StackFrame *callerFrame, bool hasGlobalScope,
                                  unsigned lineno)
   : sc(sc),
-    parent(NULL),
+    parent(parent),
     script(sc->context, script),
     parser(parser),
+    callerFrame(callerFrame),
     atomIndices(sc->context),
     stackDepth(0), maxStackDepth(0),
     ntrynotes(0), lastTryNode(NULL),
@@ -78,13 +80,14 @@ BytecodeEmitter::BytecodeEmitter(Parser *parser, SharedContext *sc, Handle<JSScr
     emitLevel(0),
     constMap(sc->context),
     constList(sc->context),
-    globalScope(NULL),
     closedArgs(sc->context),
     closedVars(sc->context),
     typesetCount(0),
     hasSingletons(false),
-    inForInit(false)
+    inForInit(false),
+    hasGlobalScope(hasGlobalScope)
 {
+    JS_ASSERT_IF(callerFrame, callerFrame->isScriptFrame());
     memset(&prolog, 0, sizeof prolog);
     memset(&main, 0, sizeof main);
     current = &main;
@@ -819,7 +822,6 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
      */
     ScopeCoordinate sc;
     if (JOF_OPTYPE(pn->getOp()) == JOF_QARG) {
-        JS_ASSERT(bce->sc->funIsHeavyweight());
         sc.hops = ClonedBlockDepth(bce);
         sc.slot = bce->sc->bindings.argToSlot(pn->pn_cookie.slot());
     } else {
@@ -1068,7 +1070,7 @@ static bool
 TryConvertToGname(BytecodeEmitter *bce, ParseNode *pn, JSOp *op)
 {
     if (bce->script->compileAndGo &&
-        bce->globalScope->globalObj &&
+        bce->hasGlobalScope &&
         !bce->sc->funMightAliasLocals() &&
         !pn->isDeoptimized() &&
         !bce->sc->inStrictMode()) {
@@ -1164,7 +1166,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         break;
       case JSOP_DELNAME:
         if (dn_kind != Definition::UNKNOWN) {
-            if (bce->parser->callerFrame && dn->isTopLevel())
+            if (bce->callerFrame && dn->isTopLevel())
                 JS_ASSERT(bce->script->compileAndGo);
             else
                 pn->setOp(JSOP_FALSE);
@@ -1187,7 +1189,7 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     }
 
     if (cookie.isFree()) {
-        StackFrame *caller = bce->parser->callerFrame;
+        StackFrame *caller = bce->callerFrame;
         if (caller) {
             JS_ASSERT(bce->script->compileAndGo);
 
@@ -4723,24 +4725,28 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         sc.cxFlags = funbox->cxFlags;
         if (bce->sc->funMightAliasLocals())
             sc.setFunMightAliasLocals();  // inherit funMightAliasLocals from parent
-        sc.bindings.transfer(cx, &funbox->bindings);
+        sc.bindings.transfer(&funbox->bindings);
 
-        // Inherit various things (principals, version, etc) from the parent.
+        // Inherit most things (principals, version, etc) from the parent.
         GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
         Rooted<JSScript*> script(cx);
         Rooted<JSScript*> parent(cx, bce->script);
-        script = JSScript::Create(cx, parent->savedCallerFun, parent->principals,
-                                  parent->originPrincipals, parent->compileAndGo,
-                                  /* noScriptRval = */ false, globalObject,
-                                  parent->getVersion(), parent->staticLevel + 1);
+        script = JSScript::Create(cx,
+                                  /* savedCallerFun = */ false,
+                                  parent->principals,
+                                  parent->originPrincipals,
+                                  parent->compileAndGo,
+                                  /* noScriptRval = */ false,
+                                  globalObject,
+                                  parent->getVersion(),
+                                  parent->staticLevel + 1);
         if (!script)
             return false;
 
-        BytecodeEmitter bce2(bce->parser, &sc, script, pn->pn_pos.begin.lineno);
+        BytecodeEmitter bce2(bce, bce->parser, &sc, script, bce->callerFrame, bce->hasGlobalScope,
+                             pn->pn_pos.begin.lineno);
         if (!bce2.init())
             return false;
-        bce2.parent = bce;
-        bce2.globalScope = bce->globalScope;
 
         /* We measured the max scope depth when we parsed the function. */
         if (!EmitFunctionScript(cx, &bce2, pn->pn_body))
@@ -5614,8 +5620,8 @@ EmitObject(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             if (obj) {
                 JS_ASSERT(!obj->inDictionaryMode());
-                if (!DefineNativeProperty(cx, obj, RootedId(cx, AtomToId(pn3->pn_atom)),
-                                          UndefinedValue(), NULL, NULL,
+                Rooted<jsid> id(cx, AtomToId(pn3->pn_atom));
+                if (!DefineNativeProperty(cx, obj, id, UndefinedValue(), NULL, NULL,
                                           JSPROP_ENUMERATE, 0, 0))
                 {
                     return false;
@@ -5914,6 +5920,8 @@ frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 CheckTypeSet(cx, bce, JSOP_REST);
                 if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
                     return false;
+                if (!BindNameToSlot(cx, bce, rest))
+                    return JS_FALSE;
                 if (!EmitVarOp(cx, rest, JSOP_SETARG, bce))
                     return false;
                 if (Emit1(cx, bce, JSOP_POP) < 0)

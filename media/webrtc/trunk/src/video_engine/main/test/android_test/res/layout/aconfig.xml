@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:layout_width="fill_parent"
+	android:layout_height="fill_parent" android:orientation="vertical" 
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<TextView android:layout_width="wrap_content" 
+	android:layout_height="wrap_content"
+	android:textStyle="bold" 
+	android:textSize="24dip" 
+	android:text="Audio Settings"></TextView>
+	<TextView android:id="@+id/TextView03"
+		  android:layout_width="wrap_content"
+		  android:layout_height="wrap_content">
+	</TextView>
+	<TextView android:id="@+id/TextView01"
+		  android:layout_height="wrap_content"
+		  android:layout_gravity="bottom"
+		  android:layout_width="wrap_content"
+		  android:text="@string/codecType">
+	</TextView>
+	<Spinner android:layout_height="wrap_content"
+		 android:layout_width="fill_parent"
+		 android:id="@+id/spVoiceCodecType">
+	</Spinner>
+		
+	<LinearLayout android:id="@+id/LinearLayout02"
+		      android:layout_height="wrap_content"
+		      android:layout_width="fill_parent">	
+	<TextView android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:text="@string/aTxPort">
+	</TextView>
+	<EditText android:layout_height="wrap_content"
+		  android:layout_width="wrap_content"
+		  android:id="@+id/etATxPort">
+	</EditText>
+	<TextView android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:text="@string/aRxPort">
+	</TextView>
+	<EditText android:layout_height="wrap_content"
+		  android:layout_width="wrap_content"
+		  android:id="@+id/etARxPort" >
+	</EditText>		
+	</LinearLayout>		
+	
+	<LinearLayout android:id="@+id/LinearLayout02"
+		      android:layout_height="wrap_content"
+		      android:layout_width="fill_parent">
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbSpeaker"
+		  android:text="@string/speaker">
+	</CheckBox>
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbAutoGainControl"
+		  android:text="@string/AutoGainControl">
+	</CheckBox>	
+	</LinearLayout>
+	
+	<LinearLayout android:id="@+id/LinearLayout02"
+		      android:layout_height="wrap_content"
+		      android:layout_width="fill_parent">
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbAECM"
+		  android:text="@string/AECM">
+	</CheckBox>
+	</LinearLayout>
+	
+	<LinearLayout android:id="@+id/LinearLayout03"
+		      android:layout_height="wrap_content"
+		      android:layout_width="fill_parent">
+	<CheckBox android:layout_width="wrap_content"
+		  android:layout_height="wrap_content"
+		  android:id="@+id/cbNoiseSuppression"
+		  android:text="@string/NoiseSuppression">
+	</CheckBox>
+	</LinearLayout>	
+	
+</LinearLayout>

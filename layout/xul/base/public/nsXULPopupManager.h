@@ -290,6 +290,7 @@ public:
   virtual bool ShouldRollupOnMouseWheelEvent();
   virtual bool ShouldRollupOnMouseActivate();
   virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain);
+  virtual void NotifyGeometryChange() {}
 
   static nsXULPopupManager* sInstance;
 

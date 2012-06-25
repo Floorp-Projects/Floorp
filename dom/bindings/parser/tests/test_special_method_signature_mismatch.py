@@ -100,20 +100,6 @@ def WebIDLTest(parser, harness):
     threw = False
     try:
         parser.parse("""
-            interface SpecialMethodSignatureMismatch8 {
-              deleter void foo(unsigned long index);
-            };
-        """)
-
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Should have thrown.")
-
-    threw = False
-    try:
-        parser.parse("""
             interface SpecialMethodSignatureMismatch9 {
               deleter boolean foo(unsigned long index, boolean extraArg);
             };
@@ -184,20 +170,6 @@ def WebIDLTest(parser, harness):
     threw = False
     try:
         parser.parse("""
-            interface SpecialMethodSignatureMismatch14 {
-              setter void foo(unsigned long index, long long value);
-            };
-        """)
-
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Should have thrown.")
-
-    threw = False
-    try:
-        parser.parse("""
             interface SpecialMethodSignatureMismatch15 {
               setter boolean foo(unsigned long index, boolean value, long long extraArg);
             };
@@ -254,36 +226,8 @@ def WebIDLTest(parser, harness):
     threw = False
     try:
         parser.parse("""
-            interface SpecialMethodSignatureMismatch19 {
-              setter boolean foo(unsigned long index, long long value);
-            };
-        """)
-
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Should have thrown.")
-
-    threw = False
-    try:
-        parser.parse("""
             interface SpecialMethodSignatureMismatch20 {
               creator long long foo(long index, long long value);
-            };
-        """)
-
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Should have thrown.")
-
-    threw = False
-    try:
-        parser.parse("""
-            interface SpecialMethodSignatureMismatch21 {
-              creator void foo(unsigned long index, long long value);
             };
         """)
 
@@ -340,20 +284,6 @@ def WebIDLTest(parser, harness):
         parser.parse("""
             interface SpecialMethodSignatureMismatch25 {
               creator boolean foo();
-            };
-        """)
-
-        results = parser.finish()
-    except:
-        threw = True
-
-    harness.ok(threw, "Should have thrown.")
-
-    threw = False
-    try:
-        parser.parse("""
-            interface SpecialMethodSignatureMismatch26 {
-              creator boolean foo(unsigned long index, long long value);
             };
         """)
 

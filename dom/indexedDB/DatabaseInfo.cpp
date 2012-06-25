@@ -70,6 +70,7 @@ ObjectStoreInfo::ObjectStoreInfo(ObjectStoreInfo& aOther)
 
 IndexInfo::IndexInfo()
 : id(LL_MININT),
+  keyPath(0),
   unique(false),
   multiEntry(false)
 {
@@ -80,7 +81,6 @@ IndexInfo::IndexInfo(const IndexInfo& aOther)
 : name(aOther.name),
   id(aOther.id),
   keyPath(aOther.keyPath),
-  keyPathArray(aOther.keyPathArray),
   unique(aOther.unique),
   multiEntry(aOther.multiEntry)
 {

@@ -23,7 +23,7 @@ struct nsSize;
  * Integration of SVG effects (clipPath clipping, masking and filters) into
  * regular display list based painting and hit-testing.
  */
-class nsSVGIntegrationUtils
+class nsSVGIntegrationUtils MOZ_FINAL
 {
 public:
   /**
@@ -78,25 +78,48 @@ public:
   GetSVGCoordContextForNonSVGFrame(nsIFrame* aNonSVGFrame);
 
   /**
-   * Adjust overflow rect for effects.
-   * XXX this is a problem. We really need to compute the effects rect for
-   * a whole chain of frames for a given element at once. but we have no
-   * way to do this effectively with Gecko's current reflow architecture.
-   * See http://groups.google.com/group/mozilla.dev.tech.layout/msg/6b179066f3051f65
+   * SVG effects such as SVG filters, masking and clipPath may require an SVG
+   * "bbox" for the element they're being applied to in order to make decisions
+   * about positioning, and to resolve various lengths against. This method
+   * provides the "bbox" for non-SVG frames. The bbox returned is in CSS px
+   * units, and is the union of all aNonSVGFrame's continuations' overflow
+   * areas, relative to the top-left of the union of all aNonSVGFrame's
+   * continuations' border box rects.
    */
-  static nsRect
-  ComputeFrameEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect);
+  static gfxRect
+  GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame);
+
   /**
-   * Adjust the frame's invalidation area to cover effects
+   * Used to adjust a frame's pre-effects visual overflow rect to take account
+   * of SVG effects.
+   *
+   * XXX This method will not do the right thing for frames with continuations.
+   * It really needs all the continuations to have been reflowed before being
+   * called, but we currently call it on each continuation as its overflow
+   * rects are set during the reflow of each particular continuation. Gecko's
+   * current reflow architecture does not allow us to set the overflow rects
+   * for a whole chain of continuations for a given element at the point when
+   * the last continuation is reflowed. See:
+   * http://groups.google.com/group/mozilla.dev.tech.layout/msg/6b179066f3051f65
    */
   static nsRect
-  GetInvalidAreaForChangedSource(nsIFrame* aFrame, const nsRect& aInvalidRect);
+  ComputePostEffectsVisualOverflowRect(nsIFrame* aFrame,
+                                       const nsRect& aPreEffectsOverflowRect);
+
+  /**
+   * Used to adjust the area of a frame that needs to be invalidated to take
+   * account of SVG effects.
+   */
+  static nsRect
+  AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame, const nsRect& aInvalidRect);
+
   /**
    * Figure out which area of the source is needed given an area to
    * repaint
    */
   static nsRect
   GetRequiredSourceForInvalidArea(nsIFrame* aFrame, const nsRect& aDamageRect);
+
   /**
    * Returns true if the given point is not clipped out by effects.
    * @param aPt in appunits relative to aFrame
@@ -115,23 +138,14 @@ public:
                          nsDisplayListBuilder* aBuilder,
                          nsDisplayList* aInnerList);
 
+  /**
+   * SVG frames expect to paint in SVG user units, which are equal to CSS px
+   * units. This method provides a transform matrix to multiply onto a
+   * gfxContext's current transform to convert the context's current units from
+   * its usual dev pixels to SVG user units/CSS px to keep the SVG code happy.
+   */
   static gfxMatrix
-  GetInitialMatrix(nsIFrame* aNonSVGFrame);
-  /**
-   * Returns aNonSVGFrame's rect in CSS pixel units. This is the union
-   * of all its continuations' rectangles. The top-left is always 0,0
-   * since "user space" origin for non-SVG frames is the top-left of the
-   * union of all the continuations' rectangles.
-   */
-  static gfxRect
-  GetSVGRectForNonSVGFrame(nsIFrame* aNonSVGFrame);
-  /**
-   * Returns aNonSVGFrame's bounding box in CSS units. This is the union
-   * of all its continuations' overflow areas, relative to the top-left
-   * of all the continuations' rectangles.
-   */
-  static gfxRect
-  GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame);
+  GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame);
 
   /**
    * @param aRenderingContext the target rendering context in which the paint

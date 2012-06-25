@@ -150,7 +150,7 @@ END_TEST(testDebugger_throwHook)
 BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 {
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JSObject *debuggee = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
+    JSObject *debuggee = JS_NewGlobalObject(cx, getGlobalClass(), NULL);
     CHECK(debuggee);
 
     {
@@ -192,51 +192,36 @@ BEGIN_TEST(testDebugger_newScriptHook)
 {
     // Test that top-level indirect eval fires the newScript hook.
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JSObject *g1, *g2;
-    g1 = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
-    CHECK(g1);
+    JSObject *g;
+    g = JS_NewGlobalObject(cx, getGlobalClass(), NULL);
+    CHECK(g);
     {
         JSAutoEnterCompartment ae;
-        CHECK(ae.enter(cx, g1));
-        CHECK(JS_InitStandardClasses(cx, g1));
-        g2 = JS_NewGlobalObject(cx, getGlobalClass());
-        CHECK(g2);
-        CHECK(JS_InitStandardClasses(cx, g2));
+        CHECK(ae.enter(cx, g));
+        CHECK(JS_InitStandardClasses(cx, g));
     }
 
-    JSObject *g1Wrapper = g1;
-    CHECK(JS_WrapObject(cx, &g1Wrapper));
-    jsval v = OBJECT_TO_JSVAL(g1Wrapper);
-    CHECK(JS_SetProperty(cx, global, "g1", &v));
+    JSObject *gWrapper = g;
+    CHECK(JS_WrapObject(cx, &gWrapper));
+    jsval v = OBJECT_TO_JSVAL(gWrapper);
+    CHECK(JS_SetProperty(cx, global, "g", &v));
 
-    JSObject *g2Wrapper = g2;
-    CHECK(JS_WrapObject(cx, &g2Wrapper));
-    v = OBJECT_TO_JSVAL(g2Wrapper);
-    CHECK(JS_SetProperty(cx, global, "g2", &v));
-
-    EXEC("var dbg = Debugger(g1);\n"
+    EXEC("var dbg = Debugger(g);\n"
          "var hits = 0;\n"
          "dbg.onNewScript = function (s) {\n"
          "    hits += Number(s instanceof Debugger.Script);\n"
          "};\n");
 
-    // Since g1 is a debuggee and g2 is not, g1.eval should trigger newScript
-    // and g2.eval should not, regardless of what scope object we use to enter
-    // the compartment.
+    // Since g is a debuggee, g.eval should trigger newScript, regardless of
+    // what scope object we use to enter the compartment.
     //
-    // (Not all scripts are permanently associated with specific global
-    // objects, but eval scripts are, so we deliver them only to debuggers that
-    // are watching that particular global.)
+    // Scripts are associated with the global where they're compiled, so we
+    // deliver them only to debuggers that are watching that particular global.
     //
-    bool ok = true;
-    ok = ok && testIndirectEval(g1, g1, "Math.abs(0)", 1);
-    ok = ok && testIndirectEval(g2, g1, "Math.abs(1)", 1);
-    ok = ok && testIndirectEval(g1, g2, "Math.abs(-1)", 0);
-    ok = ok && testIndirectEval(g2, g2, "Math.abs(-2)", 0);
-    return ok;
+    return testIndirectEval(g, "Math.abs(0)");
 }
 
-bool testIndirectEval(JSObject *scope, JSObject *g, const char *code, int expectedHits)
+bool testIndirectEval(JSObject *scope, const char *code)
 {
     EXEC("hits = 0;");
 
@@ -247,12 +232,12 @@ bool testIndirectEval(JSObject *scope, JSObject *g, const char *code, int expect
         CHECK(codestr);
         jsval argv[1] = { STRING_TO_JSVAL(codestr) };
         jsval v;
-        CHECK(JS_CallFunctionName(cx, g, "eval", 1, argv, &v));
+        CHECK(JS_CallFunctionName(cx, scope, "eval", 1, argv, &v));
     }
 
     jsval hitsv;
     EVAL("hits", &hitsv);
-    CHECK_SAME(hitsv, INT_TO_JSVAL(expectedHits));
+    CHECK_SAME(hitsv, INT_TO_JSVAL(1));
     return true;
 }
 END_TEST(testDebugger_newScriptHook)

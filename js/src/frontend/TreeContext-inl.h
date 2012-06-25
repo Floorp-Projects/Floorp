@@ -27,7 +27,7 @@ SharedContext::SharedContext(JSContext *cx, JSObject *scopeChain, JSFunction *fu
     fun_(cx, fun),
     funbox_(funbox),
     scopeChain_(cx, scopeChain),
-    bindings(cx),
+    bindings(),
     bindingsRoot(cx, &bindings),
     cxFlags(cx)
 {

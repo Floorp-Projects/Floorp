@@ -2239,8 +2239,8 @@ class ScreenshotHandler {
                 float height = bottom - top;
                 scheduleCheckerboardScreenshotEvent(tab.getId(), 
                                                     (int)left, (int)top, (int)width, (int)height, 
-                                                    (int)(sLastCheckerboardWidthRatio * left), 
-                                                    (int)(sLastCheckerboardHeightRatio * top),
+                                                    (int)(sLastCheckerboardWidthRatio * (left - viewport.cssPageRectLeft)),
+                                                    (int)(sLastCheckerboardHeightRatio * (top - viewport.cssPageRectTop)),
                                                     (int)(sLastCheckerboardWidthRatio * width),
                                                     (int)(sLastCheckerboardHeightRatio * height),
                                                     sCheckerboardBufferWidth, sCheckerboardBufferHeight);
@@ -2250,6 +2250,13 @@ class ScreenshotHandler {
         }
 
         void addRectToRepaint(float top, float left, float bottom, float right) {
+            if (sDisableScreenshot || sCheckerboardPageRect == null) {
+                // if screenshotting is disabled just ignore the rect to repaint.
+                // if sCheckerboardPageRect is null, we haven't done a full-page
+                // screenshot yet (or screenshotWholePage failed for some reason),
+                // so ignore partial updates.
+                return;
+            }
             synchronized(this) {
                 ImmutableViewportMetrics viewport = GeckoApp.mAppContext.getLayerController().getViewportMetrics();
                 mDirtyTop = Math.max(sCheckerboardPageRect.top, Math.min(top, mDirtyTop));
