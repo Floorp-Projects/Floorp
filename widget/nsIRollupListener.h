@@ -45,6 +45,11 @@ class nsIRollupListener {
    * the same number of widgets added to aWidgetChain.
    */
   virtual PRUint32 GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain) = 0;
+
+  /**
+   * Notify the RollupListener that the widget did a Move or Resize.
+   */
+  virtual void NotifyGeometryChange() = 0;
 };
 
 #endif /* __nsIRollupListener_h__ */

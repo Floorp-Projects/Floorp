@@ -1,3 +1,6 @@
+def firstArgType(method):
+    return method.signatures()[0][1][0].type
+
 def WebIDLTest(parser, harness):
     parser.parse("""
       dictionary Dict {

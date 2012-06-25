@@ -2239,8 +2239,8 @@ class ScreenshotHandler {
                 float height = bottom - top;
                 scheduleCheckerboardScreenshotEvent(tab.getId(), 
                                                     (int)left, (int)top, (int)width, (int)height, 
-                                                    (int)(sLastCheckerboardWidthRatio * left), 
-                                                    (int)(sLastCheckerboardHeightRatio * top),
+                                                    (int)(sLastCheckerboardWidthRatio * (left - viewport.cssPageRectLeft)),
+                                                    (int)(sLastCheckerboardHeightRatio * (top - viewport.cssPageRectTop)),
                                                     (int)(sLastCheckerboardWidthRatio * width),
                                                     (int)(sLastCheckerboardHeightRatio * height),
                                                     sCheckerboardBufferWidth, sCheckerboardBufferHeight);

@@ -159,7 +159,12 @@ function compareHistograms(h1, h2) {
 
 function test_histogramFrom() {
   // Test one histogram of each type.
-  let names = ["CYCLE_COLLECTOR", "GC_REASON", "GC_RESET", "TELEMETRY_TEST_FLAG"];
+  let names = [
+      "CYCLE_COLLECTOR",      // EXPONENTIAL
+      "GC_REASON_2",          // LINEAR
+      "GC_RESET",             // BOOLEAN
+      "TELEMETRY_TEST_FLAG"   // FLAG
+  ];
 
   for each (let name in names) {
     let [min, max, bucket_count] = [1, INT_MAX - 1, 10]
