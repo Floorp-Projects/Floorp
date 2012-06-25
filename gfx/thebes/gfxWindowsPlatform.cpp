@@ -709,7 +709,7 @@ gfxWindowsPlatform::CreateOffscreenSurface(const gfxIntSize& size,
 
     NS_IF_ADDREF(surf);
 
-    return surf;
+    return surf.forget();
 }
 
 already_AddRefed<gfxASurface>
