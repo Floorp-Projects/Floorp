@@ -40,7 +40,7 @@ public:
         nsRefPtr<gfxImageSurface> imageSurface = surface->GetAsImageSurface();
         NS_ASSERTION(imageSurface, "Surface cannot be converted to a gfxImageSurface");
 #endif
-        return surface;
+        return surface.forget();
     }
     
     already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
