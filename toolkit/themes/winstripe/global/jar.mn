@@ -14,7 +14,7 @@ toolkit.jar:
         skin/classic/global/aboutSupport.css
         skin/classic/global/appPicker.css
         skin/classic/global/arrow.css
-*       skin/classic/global/autocomplete.css
+        skin/classic/global/autocomplete.css
         skin/classic/global/button.css
         skin/classic/global/checkbox.css
         skin/classic/global/colorpicker.css
@@ -48,7 +48,7 @@ toolkit.jar:
         skin/classic/global/radio.css
         skin/classic/global/resizer.css
         skin/classic/global/richlistbox.css
-*       skin/classic/global/scale.css
+        skin/classic/global/scale.css
         skin/classic/global/scrollbars.css                       (xulscrollbars.css)
         skin/classic/global/scrollbox.css
         skin/classic/global/spinbuttons.css
@@ -56,7 +56,7 @@ toolkit.jar:
         skin/classic/global/tabbox.css
         skin/classic/global/tabprompts.css
         skin/classic/global/textbox.css
-*       skin/classic/global/toolbar.css
+        skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
         skin/classic/global/TopLevelImageDocument.css
         skin/classic/global/TopLevelVideoDocument.css
@@ -190,7 +190,7 @@ toolkit.jar:
         skin/classic/aero/global/aboutSupport.css
         skin/classic/aero/global/appPicker.css
         skin/classic/aero/global/arrow.css
-*       skin/classic/aero/global/autocomplete.css
+        skin/classic/aero/global/autocomplete.css
         skin/classic/aero/global/button.css
         skin/classic/aero/global/checkbox.css
         skin/classic/aero/global/colorpicker.css
@@ -224,7 +224,7 @@ toolkit.jar:
         skin/classic/aero/global/radio.css
         skin/classic/aero/global/resizer.css
         skin/classic/aero/global/richlistbox.css
-*       skin/classic/aero/global/scale.css
+        skin/classic/aero/global/scale.css
         skin/classic/aero/global/scrollbars.css                          (xulscrollbars.css)
         skin/classic/aero/global/scrollbox.css
         skin/classic/aero/global/spinbuttons.css
@@ -232,7 +232,7 @@ toolkit.jar:
         skin/classic/aero/global/tabbox.css
         skin/classic/aero/global/tabprompts.css
 *       skin/classic/aero/global/textbox.css                             (textbox-aero.css)
-*       skin/classic/aero/global/toolbar.css
+        skin/classic/aero/global/toolbar.css
 *       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
         skin/classic/aero/global/TopLevelImageDocument.css
         skin/classic/aero/global/TopLevelVideoDocument.css
