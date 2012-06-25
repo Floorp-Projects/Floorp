@@ -1426,7 +1426,7 @@ HeadsUpDisplay.prototype = {
     aRemoteMessages.forEach(function(aMessage) {
       switch (aMessage._type) {
         case "PageError": {
-          let category = this.categoryForScriptError(aMessage.category);
+          let category = this.categoryForScriptError(aMessage);
           this.outputMessage(category, this.reportPageError,
                              [category, aMessage]);
           break;
