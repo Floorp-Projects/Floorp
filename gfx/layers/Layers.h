@@ -422,12 +422,21 @@ public:
   virtual LayersBackend GetBackendType() = 0;
  
   /**
-   * Creates a layer which is optimized for inter-operating with this layer
+   * Creates a surface which is optimized for inter-operating with this layer
    * manager.
    */
   virtual already_AddRefed<gfxASurface>
     CreateOptimalSurface(const gfxIntSize &aSize,
                          gfxASurface::gfxImageFormat imageFormat);
+ 
+  /**
+   * Creates a surface for alpha masks which is optimized for inter-operating
+   * with this layer manager. In contrast to CreateOptimalSurface, this surface
+   * is optimised for drawing alpha only and we assume that drawing the mask
+   * is fairly simple.
+   */
+  virtual already_AddRefed<gfxASurface>
+    CreateOptimalMaskSurface(const gfxIntSize &aSize);
 
   /**
    * Creates a DrawTarget which is optimized for inter-operating with this
@@ -693,8 +702,7 @@ public:
     if (aMaskLayer) {
       gfxMatrix maskTransform;
       bool maskIs2D = aMaskLayer->GetTransform().CanDraw2D(&maskTransform);
-      NS_ASSERTION(maskIs2D && maskTransform.HasOnlyIntegerTranslation(),
-                   "Mask layer has invalid transform.");
+      NS_ASSERTION(maskIs2D, "Mask layer has invalid transform.");
     }
 #endif
 
