@@ -266,17 +266,14 @@ let MigratorPrototype = {
                           getService(Ci.nsIObserver);
         browserGlue.observe(null, TOPIC_WILL_IMPORT_BOOKMARKS, "");
 
-        let bookmarksHTMLFile = Services.dirsvc.get("BMarks", Ci.nsIFile);
-        if (bookmarksHTMLFile.exists()) {
-          // Note doMigrate doesn't care about the success value of the
-          // callback.
-          BookmarkHTMLUtils.importFromURL(
-            NetUtil.newURI(bookmarksHTMLFile).spec, true, function(a) {
-              browserGlue.observe(null, TOPIC_DID_IMPORT_BOOKMARKS, "");
-              doMigrate();
-            });
-          return;
-        }
+        // Note doMigrate doesn't care about the success value of the
+        // callback.
+        BookmarkHTMLUtils.importFromURL(
+          "resource:///defaults/profile/bookmarks.html", true, function(a) {
+            browserGlue.observe(null, TOPIC_DID_IMPORT_BOOKMARKS, "");
+            doMigrate();
+          });
+        return;
       }
     }
     doMigrate();

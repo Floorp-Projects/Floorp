@@ -52,7 +52,6 @@ def WebIDLTest(parser, harness):
         harness.ok(isinstance(method, WebIDL.IDLMethod), "Expect an IDLMethod")
 
         harness.check(str(attr.type), t, "Expect an ArrayBuffer type")
-        print type(attr.type)
         harness.ok(attr.type.isSpiderMonkeyInterface(), "Should test as a js interface")
 
         (retType, arguments) = method.signatures()[0]

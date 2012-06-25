@@ -4208,7 +4208,7 @@ MOZ_ARG_DISABLE_BOOL(md,
    fi])
 if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
-  _DEPEND_CFLAGS='$(filter-out %/.pp,-MD -MF $(MDDEPDIR)/$(basename $(@F)).pp)'
+  _DEPEND_CFLAGS='$(filter-out %/.pp,-MD -MF $(MDDEPDIR)/$(@F).pp)'
   dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
   if test "$SOLARIS_SUNPRO_CC"; then
     _DEPEND_CFLAGS=
@@ -4539,8 +4539,10 @@ elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
 fi
 
 AC_ARG_ENABLE(threadsafe,
-              [  --enable-threadsafe     Enable support for multiple threads.],
-              [AC_DEFINE(JS_THREADSAFE)],)
+    [  --enable-threadsafe     Enable support for multiple threads.],
+    [if test "x$enableval" = "xyes"; then
+        AC_DEFINE(JS_THREADSAFE)
+    fi],)
 
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)

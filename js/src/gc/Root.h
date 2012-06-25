@@ -16,9 +16,6 @@
 
 #include "js/Utility.h"
 
-
-#ifdef __cplusplus
-
 namespace js {
 namespace gc {
 struct Cell;
