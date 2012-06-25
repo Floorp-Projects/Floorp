@@ -451,7 +451,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
   if (!aDataFlavor || !mDataObject || !_retval)
     return NS_ERROR_FAILURE;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (strcmp(aDataFlavor, kTextMime) == 0)
     NS_WARNING("DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD");
 #endif

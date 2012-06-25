@@ -946,7 +946,7 @@ nsComboboxControlFrame::GetType() const
   return nsGkAtoms::comboboxControlFrame; 
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 NS_IMETHODIMP
 nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 {
