@@ -18,6 +18,8 @@ window.addEventListener('ContentStart', function() {
     .getInterface(Components.interfaces.nsIDOMWindowUtils);
   let hostDPI = windowUtils.displayDPI;
 
+  let DEFAULT_SCREEN = "320x480";
+
   // This is a somewhat random selection of named screens.
   // Add more to this list when we support more hardware.
   // Data from: http://en.wikipedia.org/wiki/List_of_displays_by_pixel_density
@@ -62,9 +64,9 @@ window.addEventListener('ContentStart', function() {
   try {
     screenarg = args.handleFlagWithParam('screen', false);
 
-    // If there isn't one, we don't need to do anything
+    // If there isn't one, use the default screen
     if (screenarg === null)
-      return;
+      screenarg = DEFAULT_SCREEN;
 
     // With no value, tell the user how to use it
     if (screenarg == '')
