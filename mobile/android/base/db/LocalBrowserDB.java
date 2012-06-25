@@ -787,14 +787,36 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         // Update or insert
         ContentProviderOperation.Builder builder =
             ContentProviderOperation.newUpdate(bookmarkUri);
-        // Bookmarks are defined by their URL and Folder.
-        builder.withSelection(Bookmarks.URL + " = ? AND "
-                              + Bookmarks.PARENT + " = ? AND "
-                              + Bookmarks.PARENT + " != ?",
-                              new String[] { url,
-                                             Long.toString(parent),
-                                             String.valueOf(Bookmarks.FIXED_READING_LIST_ID)
-                              });
+        if (url != null) {
+            // Bookmarks are defined by their URL and Folder.
+            builder.withSelection(Bookmarks.URL + " = ? AND "
+                                  + Bookmarks.PARENT + " = ? AND "
+                                  + Bookmarks.PARENT + " != ?",
+                                  new String[] { url,
+                                                 Long.toString(parent),
+                                                 String.valueOf(Bookmarks.FIXED_READING_LIST_ID)
+                                  });
+        } else if (title != null) {
+            // Or their title and parent folder. (Folders!)
+            builder.withSelection(Bookmarks.TITLE + " = ? AND "
+                                  + Bookmarks.PARENT + " = ? AND "
+                                  + Bookmarks.PARENT + " != ?",
+                                  new String[] { title,
+                                                 Long.toString(parent),
+                                                 String.valueOf(Bookmarks.FIXED_READING_LIST_ID)
+                                  });
+        } else if (type == Bookmarks.TYPE_SEPARATOR) {
+            // Or their their position (seperators)
+            builder.withSelection(Bookmarks.POSITION + " = ? AND "
+                                  + Bookmarks.PARENT + " = ? AND "
+                                  + Bookmarks.PARENT + " != ?",
+                                  new String[] { Long.toString(position),
+                                                 Long.toString(parent),
+                                                 String.valueOf(Bookmarks.FIXED_READING_LIST_ID)
+                                  });
+        } else {
+            Log.e(LOGTAG, "Bookmark entry without url or title and not a seperator, not added.");
+        }
         builder.withValues(values);
 
         // Queue the operation
