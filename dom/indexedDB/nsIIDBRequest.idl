@@ -5,13 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIDOMDOMError.idl"
 
+interface nsIDOMDOMError;
 interface nsIDOMEventListener;
 interface nsIIDBTransaction;
 
 /**
- * IDBReqeust interface.  See
+ * IDBRequest interface.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
  * information.
  */

@@ -61,8 +61,10 @@
       is(db.version, 1, "Correct version");
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
-      event.target.transaction.oncomplete = unexpectedSuccessHandler;
-      event.target.transaction.onabort = grabEventAndContinueHandler;
+      let trans = event.target.transaction;
+
+      trans.oncomplete = unexpectedSuccessHandler;
+      trans.onabort = grabEventAndContinueHandler;
 
       let objectStore = db.createObjectStore("foo");
 
@@ -84,10 +86,12 @@
       is(event.type, "abort", "Got a transaction abort event");
       is(db.version, 1, "Correct version");
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
+      is(trans.error.name, "ConstraintError", "Right error");
+      ok(trans.error === request.error, "Object identity holds");
 
       event = yield;
       is(event.type, "error", "Got request error event");
-      is(event.target.error.name, "AbortError", "Right error");
+      is(event.target.error.name, "ConstraintError", "Right error");
 
       let request = mozIndexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
