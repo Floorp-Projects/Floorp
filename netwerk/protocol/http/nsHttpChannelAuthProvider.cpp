@@ -68,11 +68,11 @@ nsHttpChannelAuthProvider::Init(nsIHttpAuthenticableChannel *channel)
 
 NS_IMETHODIMP
 nsHttpChannelAuthProvider::ProcessAuthentication(PRUint32 httpStatus,
-                                                 bool     ProxyConnectFailed)
+                                                 bool     SSLConnectFailed)
 {
     LOG(("nsHttpChannelAuthProvider::ProcessAuthentication "
-         "[this=%p channel=%p code=%u ProxyConnectFailed=%d]\n",
-         this, mAuthChannel, httpStatus, ProxyConnectFailed));
+         "[this=%p channel=%p code=%u SSLConnectFailed=%d]\n",
+         this, mAuthChannel, httpStatus, SSLConnectFailed));
 
     NS_ASSERTION(mAuthChannel, "Channel not initialized");
 
@@ -113,7 +113,7 @@ nsHttpChannelAuthProvider::ProcessAuthentication(PRUint32 httpStatus,
             LOG(("rejecting 407 when proxy server not configured!\n"));
             return NS_ERROR_UNEXPECTED;
         }
-        if (!ProxyConnectFailed) {
+        if (UsingSSL() && !SSLConnectFailed) {
             // we need to verify that this challenge came from the proxy
             // server itself, and not some server on the other side of the
             // SSL tunnel.
