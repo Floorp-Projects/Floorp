@@ -331,7 +331,7 @@ Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,bool aIgnor
         PRUnichar c2 = PRUnichar((unsigned char)*s2++);
         
         if (c1 != c2) {
-#ifdef NS_DEBUG
+#ifdef DEBUG
           // we won't warn on c1>=128 (the 2-byte value) because often
           // it is just fine to compare an constant, ascii value (i.e. "body")
           // against some non-ascii value (i.e. a unicode string that

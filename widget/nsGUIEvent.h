@@ -997,7 +997,7 @@ public:
     }
   }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   ~nsMouseEvent() {
     NS_WARN_IF_FALSE(message != NS_CONTEXTMENU ||
                      button ==

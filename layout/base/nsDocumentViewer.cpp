@@ -159,7 +159,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 using namespace mozilla;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 
 #undef NOISY_VIEWER
 #else
@@ -437,9 +437,9 @@ protected:
   float                            mPrintPreviewZoom;
 #endif // NS_PRINT_PREVIEW
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   FILE* mDebugFile;
-#endif // NS_DEBUG
+#endif // DEBUG
 #endif // NS_PRINTING
 
   /* character set member data */
@@ -522,7 +522,7 @@ void DocumentViewerImpl::PrepareToStartLoad()
 #endif
   }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   mDebugFile = nsnull;
 #endif
 
@@ -2603,7 +2603,7 @@ DocumentViewerImpl::Print(bool              aSilent,
 #ifdef NS_PRINTING
   nsCOMPtr<nsIPrintSettings> printSettings;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   nsresult rv = NS_ERROR_FAILURE;
 
   mDebugFile = aDebugFile;
@@ -3622,7 +3622,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
                                   float(mDeviceContext->AppUnitsPerCSSInch()) /
                                   float(mDeviceContext->AppUnitsPerDevPixel()) /
                                   mPageZoom,
-#ifdef NS_DEBUG
+#ifdef DEBUG
                                   mDebugFile
 #else
                                   nsnull
@@ -3689,7 +3689,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
                                   float(mDeviceContext->AppUnitsPerCSSInch()) /
                                   float(mDeviceContext->AppUnitsPerDevPixel()) /
                                   mPageZoom,
-#ifdef NS_DEBUG
+#ifdef DEBUG
                                   mDebugFile
 #else
                                   nsnull

@@ -1214,7 +1214,7 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
       nsRefPtr<nsCSSStyleSheet> sheet;
       mCSSLoader->LoadSheetSync(uri, true, true, getter_AddRefs(sheet));
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
       nsCAutoString uriStr;
       uri->GetSpec(uriStr);
       printf("Loading catalog stylesheet: %s ... %s\n", uriStr.get(), sheet.get() ? "Done" : "Failed");
