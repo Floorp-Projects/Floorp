@@ -1051,7 +1051,7 @@
                          hidden="true"
                          command="Tools:ResponsiveUI"/>
           <toolbarbutton id="developer-toolbar-debugger"
-                         label="&scriptsButton.label;"
+                         label="&debuggerMenu.label2;"
                          class="devtools-toolbarbutton"
                          hidden="true"
                          command="Tools:Debugger"/>
