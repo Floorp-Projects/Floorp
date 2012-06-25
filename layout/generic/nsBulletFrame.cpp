@@ -1277,11 +1277,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     if (status & imgIRequest::STATUS_SIZE_AVAILABLE &&
         !(status & imgIRequest::STATUS_ERROR)) {
       // auto size the image
-      mComputedSize.width = mIntrinsicSize.width;
-      mComputedSize.height = mIntrinsicSize.height;
-
-      aMetrics.width = mComputedSize.width;
-      aMetrics.ascent = aMetrics.height = mComputedSize.height;
+      aMetrics.width = mIntrinsicSize.width;
+      aMetrics.ascent = aMetrics.height = mIntrinsicSize.height;
 
       AddStateBits(BULLET_FRAME_IMAGE_LOADING);
 

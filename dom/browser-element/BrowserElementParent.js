@@ -120,8 +120,8 @@ BrowserElementParentFactory.prototype = {
 
 function BrowserElementParent(frameLoader) {
   debug("Creating new BrowserElementParent object for " + frameLoader);
-  this._screenshotListeners = {};
-  this._screenshotReqCounter = 0;
+  this._domRequestCounter = 0;
+  this._pendingDOMRequests = {};
 
   this._frameElement = frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerElement;
   if (!this._frameElement) {
@@ -150,18 +150,25 @@ function BrowserElementParent(frameLoader) {
   addMessageListener("get-mozapp-manifest-url", this._sendMozAppManifestURL);
   addMessageListener("keyevent", this._fireKeyEvent);
   addMessageListener("showmodalprompt", this._handleShowModalPrompt);
-  addMessageListener('got-screenshot', this._recvGotScreenshot);
+  addMessageListener('got-screenshot', this._gotDOMRequestResult);
+  addMessageListener('got-can-go-back', this._gotDOMRequestResult);
+  addMessageListener('got-can-go-forward', this._gotDOMRequestResult);
 
   function defineMethod(name, fn) {
     XPCNativeWrapper.unwrap(self._frameElement)[name] = fn.bind(self);
   }
 
-  // Define methods on the frame element.
-  defineMethod('getScreenshot', this._getScreenshot);
-  defineMethod('setVisible', this._setVisible);
+  function defineDOMRequestMethod(domName, msgName) {
+    XPCNativeWrapper.unwrap(self._frameElement)[domName] = self._sendDOMRequest.bind(self, msgName);
+  }
 
-  this._mm.loadFrameScript("chrome://global/content/BrowserElementChild.js",
-                           /* allowDelayedLoad = */ true);
+  // Define methods on the frame element.
+  defineMethod('setVisible', this._setVisible);
+  defineMethod('goBack', this._goBack);
+  defineMethod('goForward', this._goForward);
+  defineDOMRequestMethod('getScreenshot', 'get-screenshot');
+  defineDOMRequestMethod('getCanGoBack', 'get-can-go-back');
+  defineDOMRequestMethod('getCanGoForward', 'get-can-go-forward');
 }
 
 BrowserElementParent.prototype = {
@@ -265,23 +272,47 @@ BrowserElementParent.prototype = {
     return this._frameElement.getAttribute('mozapp');
   },
 
-
-  _getScreenshot: function() {
-    let id = 'req_' + this._screenshotReqCounter++;
+  /**
+   * Kick off a DOMRequest in the child process.
+   *
+   * We'll fire an event called |msgName| on the child process, passing along
+   * an object with a single field, id, containing the ID of this request.
+   *
+   * We expect the child to pass the ID back to us upon completion of the
+   * request; see _gotDOMRequestResult.
+   */
+  _sendDOMRequest: function(msgName) {
+    let id = 'req_' + this._domRequestCounter++;
     let req = Services.DOMRequest.createRequest(this._window);
-    this._screenshotListeners[id] = req;
-    this._sendAsyncMsg('get-screenshot', {id: id});
+    this._pendingDOMRequests[id] = req;
+    this._sendAsyncMsg(msgName, {id: id});
     return req;
   },
 
-  _recvGotScreenshot: function(data) {
-    var req = this._screenshotListeners[data.json.id];
-    delete this._screenshotListeners[data.json.id];
-    Services.DOMRequest.fireSuccess(req, data.json.screenshot);
+  /**
+   * Called when the child process finishes handling a DOMRequest.  We expect
+   * data.json to have two fields:
+   *
+   *  - id: the ID of the DOM request (see _sendDOMRequest), and
+   *  - rv: the request's return value.
+   *
+   */
+  _gotDOMRequestResult: function(data) {
+    let req = this._pendingDOMRequests[data.json.id];
+    delete this._pendingDOMRequests[data.json.id];
+    Services.DOMRequest.fireSuccess(req, data.json.rv);
   },
 
   _setVisible: function(visible) {
     this._sendAsyncMsg('set-visible', {visible: visible});
+  },
+
+  _goBack: function() {
+    this._sendAsyncMsg('go-back');
+  },
+
+  _goForward: function() {
+    this._sendAsyncMsg('go-forward');
   },
 
   _fireKeyEvent: function(data) {

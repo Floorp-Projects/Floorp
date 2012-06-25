@@ -356,9 +356,9 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
 }
 
 TabParent*
-ContentParent::CreateTab(PRUint32 aChromeFlags)
+ContentParent::CreateTab(PRUint32 aChromeFlags, bool aIsBrowserFrame)
 {
-  return static_cast<TabParent*>(SendPBrowserConstructor(aChromeFlags));
+  return static_cast<TabParent*>(SendPBrowserConstructor(aChromeFlags, aIsBrowserFrame));
 }
 
 TestShellParent*
@@ -698,7 +698,7 @@ ContentParent::Observe(nsISupports* aSubject,
 }
 
 PBrowserParent*
-ContentParent::AllocPBrowser(const PRUint32& aChromeFlags)
+ContentParent::AllocPBrowser(const PRUint32& aChromeFlags, const bool& aIsBrowserFrame)
 {
   TabParent* parent = new TabParent();
   if (parent){

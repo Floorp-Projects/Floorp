@@ -208,6 +208,7 @@ var BrowserApp = {
     WebappsUI.init();
     RemoteDebugger.init();
     Reader.init();
+    UserAgent.init();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.init();
 #endif
@@ -359,6 +360,7 @@ var BrowserApp = {
     WebappsUI.uninit();
     RemoteDebugger.uninit();
     Reader.uninit();
+    UserAgent.uninit();
 #ifdef MOZ_TELEMETRY_REPORTING
     Telemetry.uninit();
 #endif
@@ -1356,7 +1358,7 @@ var NativeWindow = {
 var SelectionHandler = {
   // Keeps track of data about the dimensions of the selection
   cache: null,
-  selectedText: "",
+  _active: false,
 
   // The window that holds the selection (can be a sub-frame)
   get _view() {
@@ -1368,6 +1370,8 @@ var SelectionHandler = {
   set _view(aView) {
     this._viewRef = Cu.getWeakReference(aView);
   },
+
+  _isRTL: false,
 
   // The DIV elements for the start/end handles
   get _start() {
@@ -1393,8 +1397,8 @@ var SelectionHandler = {
   // Units in pixels
   HANDLE_WIDTH: 35,
   HANDLE_HEIGHT: 64,
-  HANDLE_VERTICAL_MARGIN: 4,
   HANDLE_PADDING: 20,
+  HANDLE_VERTICAL_OFFSET: 10,
 
   init: function sh_init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
@@ -1407,21 +1411,19 @@ var SelectionHandler = {
   observe: function sh_observe(aSubject, aTopic, aData) {
     let data = JSON.parse(aData);
 
-    if (this._view)
+    if (this._active)
       this.endSelection(data.x, data.y);
   },
 
   // aX/aY are in top-level window browser coordinates
   startSelection: function sh_startSelection(aElement, aX, aY) {
     // Clear out any existing selection
-    if (this._view)
-      this.endSelection(0, 0);
+    if (this._active)
+      this.endSelection();
 
     // Get the element's view
     this._view = aElement.ownerDocument.defaultView;
-
-    // Clear out the text cache
-    this.selectedText = "";
+    this._isRTL = (this._view.getComputedStyle(aElement, "").direction == "rtl");
 
     // Remove any previous selected or created ranges. Tapping anywhere on a
     // page will create an empty range.
@@ -1443,36 +1445,28 @@ var SelectionHandler = {
 
       // Select the word nearest the caret
       selectionController.wordMove(false, false);
-      selectionController.wordMove(true, true);
+
+      // Move forward in LTR, backward in RTL
+      selectionController.wordMove(!this._isRTL, true);
     } catch(e) {
       // If we couldn't select the word at the given point, bail
       Cu.reportError("Error selecting word: " + e);
       return;
     }
 
-    // Find the selected text rect and send it back so the handles can position correctly
-    if (selection.rangeCount == 0)
-      return;
-
-    let range = selection.getRangeAt(0);
-    if (!range)
-      return;
-
-    // Initialize the cache
-    this.cache = {};
-    this.updateCacheFromRange(range);
-    this.updateCacheOffset();
-
-    // Cache the selected text since the selection might be gone by the time we get the "end" message
-    this.selectedText = selection.toString().trim();
-
-    // If the range didn't have any text, let's bail
-    if (!this.selectedText.length) {
+    // If there isn't an appropriate selection, bail
+    if (!selection.rangeCount || !selection.getRangeAt(0) || !selection.toString().trim().length) {
       selection.collapseToStart();
       return;
     }
 
+    // Initialize the cache
+    this.cache = {};
+    this.updateCacheForSelection();
+    this.updateCacheOffset();
+
     this.showHandles();
+    this._active = true;
   },
 
   // aX/aY are in top-level window browser coordinates
@@ -1504,78 +1498,150 @@ var SelectionHandler = {
       this._end.style.top = aY + this.cache.offset.y + "px";
     }
 
-    //XXX bug 765057: Reverse text selection handles if necessary
-
     // Send mouse events to the top-level window
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
-    if (aIsStartHandle) {
-      // If we're moving the start handle, we need to re-position the caret using a fake mouse click
-      let start = this._start.getBoundingClientRect();
-      cwu.sendMouseEventToWindow("mousedown", start.right - this.HANDLE_PADDING, start.top - this.HANDLE_VERTICAL_MARGIN, 0, 0, 0, true);
-      cwu.sendMouseEventToWindow("mouseup", start.right - this.HANDLE_PADDING, start.top - this.HANDLE_VERTICAL_MARGIN, 0, 0, 0, true);
+    // The handles work the same on both LTR and RTL pages, but the underlying selection
+    // works differently, so we need to reverse how we send mouse events on RTL pages.
+    if (this._isRTL) {
+      // Position the caret at the end handle using a fake mouse click
+      if (!aIsStartHandle)
+        this._sendEndMouseEvents(cwu, false);
+
+      // Selects text between the carat and the start handle using a fake shift+click
+      this._sendStartMouseEvents(cwu, true);
+    } else {
+      // Position the caret at the start handle using a fake mouse click
+      if (aIsStartHandle)
+        this._sendStartMouseEvents(cwu, false);
+
+      // Selects text between the carat and the end handle using a fake shift+click
+      this._sendEndMouseEvents(cwu, true);
     }
 
-    // Send a shift+click to select text between the carat at the start and an end point
-    let end = this._end.getBoundingClientRect();
-    cwu.sendMouseEventToWindow("mousedown", end.left + this.HANDLE_PADDING, end.top - this.HANDLE_VERTICAL_MARGIN, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
-    cwu.sendMouseEventToWindow("mouseup", end.left + this.HANDLE_PADDING, end.top - this.HANDLE_VERTICAL_MARGIN, 0, 1, Ci.nsIDOMNSEvent.SHIFT_MASK, true);
+    // Update the cached selection area after firing the mouse events
+    let selectionReversed = this.updateCacheForSelection(aIsStartHandle);
+
+    // Reverse the handles if necessary
+    if (selectionReversed) {
+      let oldStart = this._start;
+      let oldEnd = this._end;
+
+      oldStart.setAttribute("anonid", "selection-handle-end");
+      oldEnd.setAttribute("anonid", "selection-handle-start");
+
+      this._start = oldEnd;
+      this._end = oldStart;
+
+      // Re-send mouse events to update the selection corresponding to the new handles
+      if (this._isRTL) {
+        this._sendEndMouseEvents(cwu, false);
+        this._sendStartMouseEvents(cwu, true);
+      } else {
+        this._sendStartMouseEvents(cwu, false);
+        this._sendEndMouseEvents(cwu, true);
+      }
+    }
   },
 
-  finishMoveSelection: function sh_finishMoveSelection(aIsStartHandle) {
-    // Cache the selected text since the selection might be gone by the time we get the "end" message
-    let selection = this._view.getSelection();
-    this.selectedText = selection.toString().trim();
+  _sendStartMouseEvents: function sh_sendStartMouseEvents(cwu, useShift) {
+    let start = this._start.getBoundingClientRect();
+    let x = start.right - this.HANDLE_PADDING;
+    // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
+    let y = start.top - 1;
 
-    // Update the cache to match the new selection range
-    let range = selection.getRangeAt(0);
+    this._sendMouseEvents(cwu, useShift, x, y);
+  },
 
-    this.updateCacheFromRange(range);
-    this.updateCacheOffset();
+  _sendEndMouseEvents: function sh_sendEndMouseEvents(cwu, useShift) {
+    let end = this._end.getBoundingClientRect();
+    let x = end.left + this.HANDLE_PADDING;
+    // Send mouse events 1px above handle to avoid hitting the handle div (bad things happen in that case)
+    let y = end.top - 1;
 
-    // Adjust the handles to be in the correct spot relative to the text selection
-    this.positionHandles();
+    this._sendMouseEvents(cwu, useShift, x, y);
+  },
+
+  _sendMouseEvents: function sh_sendMouseEvents(cwu, useShift, x, y) {
+    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
+    let element = ElementTouchHelper.elementFromPoint(contentWindow, x, y);
+    if (!element)
+      element = ElementTouchHelper.anyElementFromPoint(contentWindow, x, y);
+
+    // Don't send mouse events to the other handle
+    if (element instanceof Ci.nsIDOMHTMLHtmlElement)
+      return;
+
+    cwu.sendMouseEventToWindow("mousedown", x, y, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
+    cwu.sendMouseEventToWindow("mouseup", x, y, 0, 0, useShift ? Ci.nsIDOMNSEvent.SHIFT_MASK : 0, true);
   },
 
   // aX/aY are in top-level window browser coordinates
   endSelection: function sh_endSelection(aX, aY) {
     this.hideHandles();
-    this._view.getSelection().removeAllRanges();
 
-    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
-    let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
-    if (!element)
-      element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
-
-    // Only try copying text if the tap happens in the same view
-    if (element.ownerDocument.defaultView == this._view) {
-      let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      let scrollX = {}, scrollY = {};
-      cwu.getScrollXY(false, scrollX, scrollY);
-
-      // aX/aY already accounts for the top-level scroll, add that back from the cache.offset values
-      let pointInSelection = (aX - this.cache.offset.x + scrollX.value > this.cache.rect.left &&
-                              aX - this.cache.offset.x + scrollX.value < this.cache.rect.right) &&
-                             (aY - this.cache.offset.y + scrollY.value > this.cache.rect.top &&
-                              aY - this.cache.offset.y + scrollY.value < this.cache.rect.bottom);
-
-      if (pointInSelection && this.selectedText.length) {
-        let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-        clipboard.copyString(this.selectedText);
-        NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
+    let selectedText = "";
+    if (this._view) {
+      let selection = this._view.getSelection();
+      if (selection) {
+        selectedText = selection.toString().trim();
+        selection.removeAllRanges();
       }
     }
 
+    // Only try copying text if there's text to copy!
+    if (arguments.length == 2 && selectedText.length) {
+      let contentWindow = BrowserApp.selectedBrowser.contentWindow;
+      let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
+      if (!element)
+        element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
+
+      // Only try copying text if the tap happens in the same view
+      if (element.ownerDocument.defaultView == this._view) {
+        let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+        let scrollX = {}, scrollY = {};
+        cwu.getScrollXY(false, scrollX, scrollY);
+
+        // aX/aY already accounts for the top-level scroll, add that back from the cache.offset values
+        let pointInSelection = (aX - this.cache.offset.x + scrollX.value > this.cache.rect.left &&
+                                aX - this.cache.offset.x + scrollX.value < this.cache.rect.right) &&
+                               (aY - this.cache.offset.y + scrollY.value > this.cache.rect.top &&
+                                aY - this.cache.offset.y + scrollY.value < this.cache.rect.bottom);
+        if (pointInSelection) {
+          let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+          clipboard.copyString(selectedText);
+          NativeWindow.toast.show(Strings.browser.GetStringFromName("selectionHelper.textCopied"), "short");
+        }
+      }
+    }
+
+    this._isRTL = false;
     this._view = null;
     this.cache = null;
+    this._active = false;
   },
 
-  updateCacheFromRange: function sh_updateCacheFromRange(aRange) {
-    let rects = aRange.getClientRects();
-    this.cache.start = { x: rects[0].left, y: rects[0].bottom };
-    this.cache.end = { x: rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
+  // Returns true if the selection has been reversed. Takes optional aIsStartHandle
+  // param to decide whether the selection has been reversed.
+  updateCacheForSelection: function sh_updateCacheForSelection(aIsStartHandle) {
+    let range = this._view.getSelection().getRangeAt(0);
+    this.cache.rect = range.getBoundingClientRect();
 
-    this.cache.rect = aRange.getBoundingClientRect();
+    let rects = range.getClientRects();
+    let start = { x: rects[0].left, y: rects[0].bottom };
+    let end = { x: rects[rects.length - 1].right, y: rects[rects.length - 1].bottom };
+
+    let selectionReversed = false;
+    if (this.cache.start) {
+      // If the end moved past the old end, but we're dragging the start handle, then that handle should become the end handle (and vice versa)
+      selectionReversed = (aIsStartHandle && (end.y > this.cache.end.y || (end.y == this.cache.end.y && end.x > this.cache.end.x))) ||
+                          (!aIsStartHandle && (start.y < this.cache.start.y || (start.y == this.cache.start.y && start.x < this.cache.start.x)));
+    }
+
+    this.cache.start = start;
+    this.cache.end = end;
+
+    return selectionReversed;
   },
 
   updateCacheOffset: function sh_updateCacheOffset() {
@@ -1606,10 +1672,10 @@ var SelectionHandler = {
   // handle elements to ensure the handles point exactly at the ends of the selection.
   positionHandles: function sh_positionHandles() {
     this._start.style.left = (this.cache.start.x + this.cache.offset.x - this.HANDLE_WIDTH - this.HANDLE_PADDING) + "px";
-    this._start.style.top = (this.cache.start.y + this.cache.offset.y - this.HANDLE_VERTICAL_MARGIN - this.HANDLE_PADDING) + "px";
+    this._start.style.top = (this.cache.start.y + this.cache.offset.y - this.HANDLE_VERTICAL_OFFSET) + "px";
 
     this._end.style.left = (this.cache.end.x + this.cache.offset.x - this.HANDLE_PADDING) + "px";
-    this._end.style.top = (this.cache.end.y + this.cache.offset.y - this.HANDLE_VERTICAL_MARGIN - this.HANDLE_PADDING) + "px";
+    this._end.style.top = (this.cache.end.y + this.cache.offset.y - this.HANDLE_VERTICAL_OFFSET) + "px";
   },
 
   showHandles: function sh_showHandles() {
@@ -1619,7 +1685,7 @@ var SelectionHandler = {
 
     if (!this._start || !this._end) {
       Cu.reportError("SelectionHandler.showHandles: Couldn't find anonymous handle elements");
-      this.endSelection(0, 0);
+      this.endSelection();
       return;
     }
 
@@ -1633,6 +1699,8 @@ var SelectionHandler = {
 
     this._start.addEventListener("touchstart", this, true);
     this._end.addEventListener("touchstart", this, true);
+
+    this._view.addEventListener("pagehide", this, false);
   },
 
   hideHandles: function sh_hideHandles() {
@@ -1650,6 +1718,8 @@ var SelectionHandler = {
 
     this._start = null;
     this._end = null;
+
+    this._view.removeEventListener("pagehide", this, false);
   },
 
   _touchId: null,
@@ -1682,8 +1752,8 @@ var SelectionHandler = {
         this._touchId = null;
         this._touchDelta = null;
 
-        // Update the cached values after the dragging action is over
-        this.finishMoveSelection(isStartHandle);
+        // Adjust the handles to be in the correct spot relative to the text selection
+        this.positionHandles();
         break;
 
       case "touchmove":
@@ -1693,9 +1763,91 @@ var SelectionHandler = {
         this.moveSelection(isStartHandle, touch.clientX - this._touchDelta.x,
                                           touch.clientY - this._touchDelta.y);
         break;
+
+      case "pagehide":
+        this.endSelection();
+        break;
     }
   }
 };
+
+
+var UserAgent = {
+  DESKTOP_UA: null,
+
+  init: function ua_init() {
+    Services.obs.addObserver(this, "DesktopMode:Change", false);
+    Services.obs.addObserver(this, "http-on-modify-request", false);
+
+    // See https://developer.mozilla.org/en/Gecko_user_agent_string_reference
+    this.DESKTOP_UA = Cc["@mozilla.org/network/protocol;1?name=http"]
+                        .getService(Ci.nsIHttpProtocolHandler).userAgent
+                        .replace(/Android; [a-zA-Z]+/, "X11; Linux x86_64")
+                        .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
+  },
+
+  uninit: function ua_uninit() {
+    Services.obs.removeObserver(this, "DesktopMode:Change");
+    Services.obs.removeObserver(this, "http-on-modify-request");
+  },
+
+  _getRequestLoadContext: function ua_getRequestLoadContext(aRequest) {
+    if (aRequest && aRequest.notificationCallbacks) {
+      try {
+        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    if (aRequest && aRequest.loadGroup && aRequest.loadGroup.notificationCallbacks) {
+      try {
+        return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
+      } catch (ex) { }
+    }
+
+    return null;
+  },
+
+  _getWindowForRequest: function ua_getWindowForRequest(aRequest) {
+    let loadContext = this._getRequestLoadContext(aRequest);
+    if (loadContext)
+      return loadContext.associatedWindow;
+    return null;
+  },
+
+  observe: function ua_observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "DesktopMode:Change": {
+        let args = JSON.parse(aData);
+        let tab = BrowserApp.getTabForId(args.tabId);
+        if (tab != null)
+          tab.reloadWithMode(args.desktopMode);
+        break;
+      }
+      case "http-on-modify-request": {
+        let channel = aSubject.QueryInterface(Ci.nsIHttpChannel);
+        let channelWindow = this._getWindowForRequest(channel);
+        let tab = BrowserApp.getTabForWindow(channelWindow);
+        if (tab == null)
+          break;
+
+        // Send XUL UA to YouTube; temporary hack to make videos play
+        if (channel.URI.host.indexOf("youtube") != -1) {
+          let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
+#expand let version = "__MOZ_APP_VERSION__";
+          ua += " Fennec/" + version;
+          channel.setRequestHeader("User-Agent", ua, false);
+        }
+
+        // Send desktop UA if "Request Desktop Site" is enabled
+        if (tab.desktopMode && (channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI))
+          channel.setRequestHeader("User-Agent", this.DESKTOP_UA, false);
+
+        break;
+      }
+    }
+  }
+};
+
 
 function nsBrowserAccess() {
 }
@@ -1814,6 +1966,8 @@ function Tab(aURL, aParams) {
   this.pluginDoorhangerTimeout = null;
   this.shouldShowPluginDoorhanger = true;
   this.clickToPlayPluginsActivated = false;
+  this.desktopMode = false;
+  this.originalURI = null;
 }
 
 Tab.prototype = {
@@ -1904,6 +2058,53 @@ Tab.prototype = {
         dump("Handled load error: " + e)
       }
     }
+  },
+
+  /** 
+   * Reloads the tab with the desktop mode setting.
+   */
+  reloadWithMode: function (aDesktopMode) {
+    // Set desktop mode for tab and send change to Java
+    if (this.desktopMode != aDesktopMode) {
+      this.desktopMode = aDesktopMode;
+      sendMessageToJava({
+        gecko: {
+          type: "DesktopMode:Changed",
+          desktopMode: aDesktopMode,
+          tabId: this.id
+        }
+      });
+    }
+
+    // Only reload the page for http/https schemes
+    let currentURI = this.browser.currentURI;
+    if (!currentURI.schemeIs("http") && !currentURI.schemeIs("https"))
+      return;
+
+    let url = currentURI.spec;
+    let flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+    if (this.originalURI && !this.originalURI.equals(currentURI)) {
+      // We were redirected; reload the original URL
+      url = this.originalURI.spec;
+      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
+    } else {
+      // Many sites use mobile-specific URLs, such as:
+      //   http://m.yahoo.com
+      //   http://www.google.com/m
+      // If the user clicks "Request Desktop Site" while on a mobile site, it
+      // will appear to do nothing since the mobile URL is still being
+      // requested. To address this, we do the following:
+      //   1) Remove the path from the URL (http://www.google.com/m?q=query -> http://www.google.com)
+      //   2) If a host subdomain is "m", remove it (http://en.m.wikipedia.org -> http://en.wikipedia.org)
+      // This means the user is sent to site's home page, but this is better
+      // than the setting having no effect at all.
+      if (aDesktopMode)
+        url = currentURI.prePath.replace(/([\/\.])m\./g, "$1");
+      else
+        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
+    }
+
+    this.browser.docShell.loadURI(url, flags, null, null, null);
   },
 
   destroy: function() {
@@ -2509,7 +2710,11 @@ Tab.prototype = {
       let success = false; 
       let uri = "";
       try {
-        uri = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI.spec;
+        // Remember original URI for UA changes on redirected pages
+        this.originalURI = aRequest.QueryInterface(Components.interfaces.nsIChannel).originalURI;
+
+        if (this.originalURI != null)
+          uri = this.originalURI.spec;
       } catch (e) { }
       try {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
@@ -2803,29 +3008,6 @@ Tab.prototype = {
     if (md && md.maxZoom)
       zoom = Math.min(zoom, md.maxZoom);
     return zoom;
-  },
-
-  getRequestLoadContext: function(aRequest) {
-    if (aRequest && aRequest.notificationCallbacks) {
-      try {
-        return aRequest.notificationCallbacks.getInterface(Ci.nsILoadContext);
-      } catch (ex) { }
-    }
-
-    if (aRequest && aRequest.loadGroup && aRequest.loadGroup.notificationCallbacks) {
-      try {
-        return aRequest.loadGroup.notificationCallbacks.getInterface(Ci.nsILoadContext);
-      } catch (ex) { }
-    }
-
-    return null;
-  },
-
-  getWindowForRequest: function(aRequest) {
-    let loadContext = this.getRequestLoadContext(aRequest);
-    if (loadContext)
-      return loadContext.associatedWindow;
-    return null;
   },
 
   observe: function(aSubject, aTopic, aData) {

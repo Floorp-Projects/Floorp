@@ -97,7 +97,7 @@ nsresult
 XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
                              XPCJSStackFrame** stack)
 {
-    static const unsigned MAX_FRAMES = 3000;
+    static const unsigned MAX_FRAMES = 100;
     unsigned numFrames = 0;
 
     nsRefPtr<XPCJSStackFrame> first = new XPCJSStackFrame();

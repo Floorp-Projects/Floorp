@@ -62,30 +62,25 @@ interface nsIRILTelephonyCallback : nsISupports
                    in AString error);
 };
 
-[scriptable, uuid(66a55943-e63b-4731-aece-9c04bfc14019)]
+[scriptable, uuid(8a711703-1ee5-4675-9d9a-0b188e944cfe)]
 interface nsIRILDataCallInfo : nsISupports
 {
-  readonly attribute unsigned long callState;
+  readonly attribute unsigned long state;
   readonly attribute AString cid;
   readonly attribute AString apn;
+  readonly attribute AString ifname;
 };
 
-[scriptable, uuid(cea91bcb-3cfb-42bb-8638-dae89e8870fc)]
+[scriptable, uuid(5bcac053-c245-46f0-bb45-d0039bfb89f5)]
 interface nsIRILDataCallback : nsISupports
 {
   /**
    * Notified when a data call changes state.
    *
-   * @param cid
-   *        The CID of the data call.
-   * @param interfaceName
-   *        Name of the associated network interface.
-   * @param dataState
-   *        One of the nsIRadioInterfaceLayer::DATACALL_STATE_* values.
+   * @param dataCall
+   *        A nsIRILDataCallInfo object.
    */
-  void dataCallStateChanged(in AString cid,
-                            in AString interfaceName,
-                            in unsigned short callState);
+  void dataCallStateChanged(in nsIRILDataCallInfo dataCall);
 
   /**
    * Called when nsIRadioInterfaceLayer is asked to enumerate the current

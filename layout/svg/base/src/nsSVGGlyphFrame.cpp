@@ -506,11 +506,14 @@ nsSVGGlyphFrame::NotifySVGChanged(PRUint32 aFlags)
   NS_ABORT_IF_FALSE(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
                     "Invalidation logic may need adjusting");
 
-  // XXXjwatt: seems to me that this could change the glyph metrics,
-  // in which case we should call NotifyGlyphMetricsChange instead.
-  if (!(aFlags & DO_NOT_NOTIFY_RENDERING_OBSERVERS)) {
-    nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
-  }
+  // Ancestor changes can't affect how we render from the perspective of
+  // any rendering observers that we may have, so we don't need to
+  // invalidate them. We also don't need to invalidate ourself, since our
+  // changed ancestor will have invalidated its entire area, which includes
+  // our area.
+  // XXXjwatt: seems to me that our ancestor's change could change our glyph
+  // metrics, in which case we should call NotifyGlyphMetricsChange instead.
+  nsSVGUtils::ScheduleBoundsUpdate(this);
 
   if (aFlags & TRANSFORM_CHANGED) {
     ClearTextRun();

@@ -62,7 +62,8 @@ function finishTest()
 
   SimpleTest.executeSoon(function() {
     testGenerator.close();
-    clearAllDatabases(function() { SimpleTest.finish(); });
+    //clearAllDatabases(function() { SimpleTest.finish(); });
+    SimpleTest.finish();
   });
 }
 
@@ -111,17 +112,20 @@ function unexpectedSuccessHandler()
   finishTest();
 }
 
-function ExpectError(name)
+function ExpectError(name, preventDefault)
 {
   this._name = name;
+  this._preventDefault = preventDefault;
 }
 ExpectError.prototype = {
   handleEvent: function(event)
   {
     is(event.type, "error", "Got an error event");
     is(event.target.error.name, this._name, "Expected error was thrown.");
-    event.preventDefault();
-    event.stopPropagation();
+    if (this._preventDefault) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     grabEventAndContinueHandler(event);
   }
 };

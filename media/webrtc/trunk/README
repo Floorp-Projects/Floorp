@@ -1,0 +1,12 @@
+This folder can be used to pull together the chromium version of webrtc
+and libjingle, and build the peerconnection sample client and server. This will
+check out a new repository in which you can build peerconnection_server.
+
+Steps:
+1) Create a new directory for the new repository (outside the webrtc repo):
+   mkdir peerconnection
+   cd peerconnection
+2) gclient config --name trunk http://webrtc.googlecode.com/svn/trunk/peerconnection
+3) gclient sync
+4) cd trunk
+5) make peerconnection_server peerconnection_client

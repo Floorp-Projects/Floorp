@@ -103,9 +103,16 @@ NSPoint nsCocoaUtils::EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow
 
 BOOL nsCocoaUtils::IsMomentumScrollEvent(NSEvent* aEvent)
 {
-  return [aEvent type] == NSScrollWheel &&
-         [aEvent respondsToSelector:@selector(_scrollPhase)] &&
-         [aEvent _scrollPhase] != 0;
+  if ([aEvent type] != NSScrollWheel)
+    return NO;
+    
+  if ([aEvent respondsToSelector:@selector(momentumPhase)])
+    return ([aEvent momentumPhase] & NSEventPhaseChanged) != 0;
+    
+  if ([aEvent respondsToSelector:@selector(_scrollPhase)])
+    return [aEvent _scrollPhase] != 0;
+    
+  return NO;
 }
 
 void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide, NSScreen* aScreen)

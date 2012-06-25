@@ -35,7 +35,7 @@ CustomMethod(JSContext *cx, unsigned argc, Value *vp)
 BEGIN_TEST(test_CallNonGenericMethodOnProxy)
 {
   // Create the first global object and compartment
-  JSObject *globalA = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
+  JSObject *globalA = JS_NewGlobalObject(cx, getGlobalClass(), NULL);
   CHECK(globalA);
 
   JSObject *customA = JS_NewObject(cx, &CustomClass, NULL, NULL);
@@ -51,7 +51,7 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
 
   // Now create the second global object and compartment...
   {
-    JSObject *globalB = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
+    JSObject *globalB = JS_NewGlobalObject(cx, getGlobalClass(), NULL);
     CHECK(globalB);
 
     // ...and enter it.

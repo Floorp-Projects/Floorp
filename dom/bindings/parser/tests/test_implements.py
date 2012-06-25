@@ -115,7 +115,7 @@ def WebIDLTest(parser, harness):
 
     # Reset the parser so we can actually find things where we expect
     # them in the list
-    parser = WebIDL.Parser()
+    parser = parser.reset()
 
     # Diamonds should be allowed
     threw = False
@@ -141,3 +141,76 @@ def WebIDLTest(parser, harness):
     harness.check(len(results[6].members), 1, "S should have one member")
     harness.check(results[6].members[0].identifier.name, "x",
                   "S's member should be 'x'")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface TestInterface {
+            };
+            callback interface TestCallbackInterface {
+            };
+            TestInterface implements TestCallbackInterface;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Should not allow callback interfaces on the right-hand side "
+               "of 'implements'")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface TestInterface {
+            };
+            callback interface TestCallbackInterface {
+            };
+            TestCallbackInterface implements TestInterface;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Should not allow callback interfaces on the left-hand side of "
+               "'implements'")
+    
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface TestInterface {
+            };
+            dictionary Dict {
+            };
+            Dict implements TestInterface;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Should not allow non-interfaces on the left-hand side "
+               "of 'implements'")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface TestInterface {
+            };
+            dictionary Dict {
+            };
+            TestInterface implements Dict;
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw,
+               "Should not allow non-interfaces on the right-hand side "
+               "of 'implements'")
+

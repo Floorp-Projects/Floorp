@@ -108,23 +108,34 @@ nsSVGInnerSVGFrame::NotifySVGChanged(PRUint32 aFlags)
 
     nsSVGSVGElement *svg = static_cast<nsSVGSVGElement*>(mContent);
 
+    bool xOrYIsPercentage =
+      svg->mLengthAttributes[nsSVGSVGElement::X].IsPercentage() ||
+      svg->mLengthAttributes[nsSVGSVGElement::Y].IsPercentage();
+    bool widthOrHeightIsPercentage =
+      svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() ||
+      svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage();
+
+    if (xOrYIsPercentage || widthOrHeightIsPercentage) {
+      // Ancestor changes can't affect how we render from the perspective of
+      // any rendering observers that we may have, so we don't need to
+      // invalidate them. We also don't need to invalidate ourself, since our
+      // changed ancestor will have invalidated its entire area, which includes
+      // our area.
+      // For perf reasons we call this before calling NotifySVGChanged() below.
+      nsSVGUtils::ScheduleBoundsUpdate(this);
+    }
+
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y', or if we have a percentage 'width' or 'height' AND
     // a 'viewBox'.
 
     if (!(aFlags & TRANSFORM_CHANGED) &&
-        (svg->mLengthAttributes[nsSVGSVGElement::X].IsPercentage() ||
-         svg->mLengthAttributes[nsSVGSVGElement::Y].IsPercentage() ||
-         (svg->HasViewBox() &&
-          (svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() ||
-           svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage())))) {
-    
+        (xOrYIsPercentage ||
+         (widthOrHeightIsPercentage && svg->HasViewBox()))) {
       aFlags |= TRANSFORM_CHANGED;
     }
 
-    if (svg->HasViewBox() ||
-        (!svg->mLengthAttributes[nsSVGSVGElement::WIDTH].IsPercentage() &&
-         !svg->mLengthAttributes[nsSVGSVGElement::HEIGHT].IsPercentage())) {
+    if (svg->HasViewBox() || !widthOrHeightIsPercentage) {
       // Remove COORD_CONTEXT_CHANGED, since we establish the coordinate
       // context for our descendants and this notification won't change its
       // dimensions:
@@ -155,6 +166,7 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
 
     if (aAttribute == nsGkAtoms::width ||
         aAttribute == nsGkAtoms::height) {
+      nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
 
       if (content->HasViewBoxOrSyntheticViewBox()) {
         // make sure our cached transform matrix gets (lazily) updated
@@ -177,6 +189,8 @@ nsSVGInnerSVGFrame::AttributeChanged(PRInt32  aNameSpaceID,
                aAttribute == nsGkAtoms::y) {
       // make sure our cached transform matrix gets (lazily) updated
       mCanvasTM = nsnull;
+
+      nsSVGUtils::InvalidateAndScheduleBoundsUpdate(this);
 
       nsSVGUtils::NotifyChildrenOfSVGChange(
           this, aAttribute == nsGkAtoms::viewBox ?

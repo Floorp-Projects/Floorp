@@ -14,7 +14,6 @@
 #include "jsfriendapi.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/storage.h"
-#include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMFile.h"
@@ -25,7 +24,6 @@
 #include "nsThreadUtils.h"
 #include "snappy/snappy.h"
 #include "test_quota.h"
-#include "xpcpublic.h"
 
 #include "AsyncConnectionHelper.h"
 #include "FileStream.h"
@@ -37,6 +35,7 @@
 #include "IDBTransaction.h"
 #include "DatabaseInfo.h"
 #include "DictionaryHelpers.h"
+#include "KeyPath.h"
 
 #include "ipc/IndexedDBChild.h"
 #include "ipc/IndexedDBParent.h"
@@ -49,6 +48,13 @@ USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::dom::indexedDB::ipc;
 
 namespace {
+
+inline
+bool
+IgnoreNothing(PRUnichar c)
+{
+  return false;
+}
 
 class ObjectStoreHelper : public AsyncConnectionHelper
 {
@@ -495,7 +501,7 @@ class ThreadLocalJSRuntime
 
     JSAutoRequest ar(mContext);
 
-    mGlobal = JS_NewCompartmentAndGlobalObject(mContext, &sGlobalClass, NULL);
+    mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, NULL);
     NS_ENSURE_TRUE(mGlobal, NS_ERROR_OUT_OF_MEMORY);
 
     JS_SetGlobalObject(mContext, mGlobal);
@@ -543,96 +549,6 @@ JSClass ThreadLocalJSRuntime::sGlobalClass = {
 };
 
 inline
-bool
-IgnoreWhitespace(PRUnichar c)
-{
-  return false;
-}
-
-typedef nsCharSeparatedTokenizerTemplate<IgnoreWhitespace> KeyPathTokenizer;
-
-inline
-nsresult
-GetJSValFromKeyPath(JSContext* aCx,
-                    jsval aVal,
-                    const nsAString& aKeyPath,
-                    jsval& aKey)
-{
-  NS_ASSERTION(aCx, "Null pointer!");
-  // aVal can be primitive iff the key path is empty.
-  NS_ASSERTION(IDBObjectStore::IsValidKeyPath(aCx, aKeyPath),
-               "This will explode!");
-
-  KeyPathTokenizer tokenizer(aKeyPath, '.');
-
-  jsval intermediate = aVal;
-  while (tokenizer.hasMoreTokens()) {
-    const nsDependentSubstring& token = tokenizer.nextToken();
-
-    NS_ASSERTION(!token.IsEmpty(), "Should be a valid keypath");
-
-    const jschar* keyPathChars = token.BeginReading();
-    const size_t keyPathLen = token.Length();
-
-    if (JSVAL_IS_PRIMITIVE(intermediate)) {
-      intermediate = JSVAL_VOID;
-      break;
-    }
-
-    JSBool ok = JS_GetUCProperty(aCx, JSVAL_TO_OBJECT(intermediate),
-                                 keyPathChars, keyPathLen, &intermediate);
-    NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
-  
-  aKey = intermediate;
-  return NS_OK;
-}
-
-inline
-nsresult
-GetKeyFromValue(JSContext* aCx,
-                jsval aVal,
-                const nsAString& aKeyPath,
-                Key& aKey)
-{
-  jsval key;
-  nsresult rv = GetJSValFromKeyPath(aCx, aVal, aKeyPath, key);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (NS_FAILED(aKey.SetFromJSVal(aCx, key))) {
-    aKey.Unset();
-  }
-
-  return NS_OK;
-}
-
-inline
-nsresult
-GetKeyFromValue(JSContext* aCx,
-                jsval aVal,
-                const nsTArray<nsString>& aKeyPathArray,
-                Key& aKey)
-{
-  NS_ASSERTION(!aKeyPathArray.IsEmpty(),
-               "Should not use empty keyPath array");
-  for (PRUint32 i = 0; i < aKeyPathArray.Length(); ++i) {
-    jsval key;
-    nsresult rv = GetJSValFromKeyPath(aCx, aVal, aKeyPathArray[i], key);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (NS_FAILED(aKey.AppendArrayItem(aCx, i == 0, key))) {
-      NS_ASSERTION(aKey.IsUnset(), "Encoding error should unset");
-      return NS_OK;
-    }
-  }
-
-  aKey.FinishArray();
-
-  return NS_OK;
-}
-
-
-inline
 already_AddRefed<IDBRequest>
 GenerateRequest(IDBObjectStore* aObjectStore)
 {
@@ -642,15 +558,38 @@ GenerateRequest(IDBObjectStore* aObjectStore)
                             aObjectStore->Transaction());
 }
 
-JSClass gDummyPropClass = {
+struct GetAddInfoClosure
+{
+  IDBObjectStore* mThis;
+  StructuredCloneWriteInfo& mCloneWriteInfo;
+  jsval mValue;
+};
+
+nsresult
+GetAddInfoCallback(JSContext* aCx, void* aClosure)
+{
+  GetAddInfoClosure* data = static_cast<GetAddInfoClosure*>(aClosure);
+
+  data->mCloneWriteInfo.mOffsetToKeyProp = 0;
+  data->mCloneWriteInfo.mTransaction = data->mThis->Transaction();
+
+  if (!IDBObjectStore::SerializeValue(aCx, data->mCloneWriteInfo,
+                                      data->mValue)) {
+    return NS_ERROR_DOM_DATA_CLONE_ERR;
+  }
+
+  return NS_OK;
+}
+
+} // anonymous namespace
+
+JSClass IDBObjectStore::sDummyPropJSClass = {
   "dummy", 0,
   JS_PropertyStub,  JS_PropertyStub,
   JS_PropertyStub,  JS_StrictPropertyStub,
   JS_EnumerateStub, JS_ResolveStub,
   JS_ConvertStub
 };
-
-} // anonymous namespace
 
 // static
 already_AddRefed<IDBObjectStore>
@@ -667,7 +606,6 @@ IDBObjectStore::Create(IDBTransaction* aTransaction,
   objectStore->mName = aStoreInfo->name;
   objectStore->mId = aStoreInfo->id;
   objectStore->mKeyPath = aStoreInfo->keyPath;
-  objectStore->mKeyPathArray = aStoreInfo->keyPathArray;
   objectStore->mAutoIncrement = aStoreInfo->autoIncrement;
   objectStore->mDatabaseId = aDatabaseId;
   objectStore->mInfo = aStoreInfo;
@@ -699,51 +637,10 @@ IDBObjectStore::Create(IDBTransaction* aTransaction,
 }
 
 // static
-bool
-IDBObjectStore::IsValidKeyPath(JSContext* aCx,
-                               const nsAString& aKeyPath)
-{
-  NS_ASSERTION(!aKeyPath.IsVoid(), "What?");
-
-  KeyPathTokenizer tokenizer(aKeyPath, '.');
-
-  while (tokenizer.hasMoreTokens()) {
-    nsString token(tokenizer.nextToken());
-
-    if (!token.Length()) {
-      return false;
-    }
-
-    jsval stringVal;
-    if (!xpc::StringToJsval(aCx, token, &stringVal)) {
-      return false;
-    }
-
-    NS_ASSERTION(JSVAL_IS_STRING(stringVal), "This should never happen");
-    JSString* str = JSVAL_TO_STRING(stringVal);
-
-    JSBool isIdentifier = JS_FALSE;
-    if (!JS_IsIdentifier(aCx, str, &isIdentifier) || !isIdentifier) {
-      return false;
-    }
-  }
-
-  // If the very last character was a '.', the tokenizer won't give us an empty
-  // token, but the keyPath is still invalid.
-  if (!aKeyPath.IsEmpty() &&
-      aKeyPath.CharAt(aKeyPath.Length() - 1) == '.') {
-    return false;
-  }
-
-  return true;
-}
-
-// static
 nsresult
 IDBObjectStore::AppendIndexUpdateInfo(
                                     PRInt64 aIndexID,
-                                    const nsAString& aKeyPath,
-                                    const nsTArray<nsString>& aKeyPathArray,
+                                    const KeyPath& aKeyPath,
                                     bool aUnique,
                                     bool aMultiEntry,
                                     JSContext* aCx,
@@ -751,28 +648,36 @@ IDBObjectStore::AppendIndexUpdateInfo(
                                     nsTArray<IndexUpdateInfo>& aUpdateInfoArray)
 {
   nsresult rv;
-  if (!aKeyPathArray.IsEmpty()) {
-    Key arrayKey;
-    rv = GetKeyFromValue(aCx, aVal, aKeyPathArray, arrayKey);
-    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!arrayKey.IsUnset()) {
-      IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
-      updateInfo->indexId = aIndexID;
-      updateInfo->indexUnique = aUnique;
-      updateInfo->value = arrayKey;
+  if (!aMultiEntry) {
+    Key key;
+    rv = aKeyPath.ExtractKey(aCx, aVal, key);
+
+    // If an index's keypath doesn't match an object, we ignore that object.
+    if (rv == NS_ERROR_DOM_INDEXEDDB_DATA_ERR || key.IsUnset()) {
+      return NS_OK;
     }
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    IndexUpdateInfo* updateInfo = aUpdateInfoArray.AppendElement();
+    updateInfo->indexId = aIndexID;
+    updateInfo->indexUnique = aUnique;
+    updateInfo->value = key;
 
     return NS_OK;
   }
 
-  jsval key;
-  rv = GetJSValFromKeyPath(aCx, aVal, aKeyPath, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  JS::Value val;
+  if (NS_FAILED(aKeyPath.ExtractKeyAsJSVal(aCx, aVal, &val))) {
+    return NS_OK;
+  }
 
-  if (aMultiEntry && !JSVAL_IS_PRIMITIVE(key) &&
-      JS_IsArrayObject(aCx, JSVAL_TO_OBJECT(key))) {
-    JSObject* array = JSVAL_TO_OBJECT(key);
+  if (!JSVAL_IS_PRIMITIVE(val) &&
+      JS_IsArrayObject(aCx, JSVAL_TO_OBJECT(val))) {
+    JSObject* array = JSVAL_TO_OBJECT(val);
     uint32_t arrayLength;
     if (!JS_GetArrayLength(aCx, array, &arrayLength)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
@@ -799,7 +704,7 @@ IDBObjectStore::AppendIndexUpdateInfo(
   }
   else {
     Key value;
-    if (NS_FAILED(value.SetFromJSVal(aCx, key)) ||
+    if (NS_FAILED(value.SetFromJSVal(aCx, val)) ||
         value.IsUnset()) {
       // Not a value we can do anything with, ignore it.
       return NS_OK;
@@ -1234,7 +1139,7 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
   StructuredCloneWriteInfo* cloneWriteInfo =
     reinterpret_cast<StructuredCloneWriteInfo*>(aClosure);
 
-  if (JS_GetClass(aObj) == &gDummyPropClass) {
+  if (JS_GetClass(aObj) == &sDummyPropJSClass) {
     NS_ASSERTION(cloneWriteInfo->mOffsetToKeyProp == 0,
                  "We should not have been here before!");
     cloneWriteInfo->mOffsetToKeyProp = js_GetSCOffset(aWriter);
@@ -1384,7 +1289,7 @@ nsresult
 IDBObjectStore::ConvertFileIdsToArray(const nsAString& aFileIds,
                                       nsTArray<PRInt64>& aResult)
 {
-  nsCharSeparatedTokenizerTemplate<IgnoreWhitespace> tokenizer(aFileIds, ' ');
+  nsCharSeparatedTokenizerTemplate<IgnoreNothing> tokenizer(aFileIds, ' ');
 
   while (tokenizer.hasMoreTokens()) {
     nsString token(tokenizer.nextToken());
@@ -1404,6 +1309,9 @@ IDBObjectStore::ConvertFileIdsToArray(const nsAString& aFileIds,
 
 IDBObjectStore::IDBObjectStore()
 : mId(LL_MININT),
+  mKeyPath(0),
+  mCachedKeyPath(JSVAL_VOID),
+  mRooted(false),
   mAutoIncrement(false),
   mActorChild(nsnull),
   mActorParent(nsnull)
@@ -1420,6 +1328,10 @@ IDBObjectStore::~IDBObjectStore()
     mActorChild->Send__delete__(mActorChild);
     NS_ASSERTION(!mActorChild, "Should have cleared in Send__delete__!");
   }
+
+  if (mRooted) {
+    NS_DROP_JS_OBJECTS(this, IDBObjectStore);
+  }
 }
 
 nsresult
@@ -1434,13 +1346,13 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
 
   // Return DATA_ERR if a key was passed in and this objectStore uses inline
   // keys.
-  if (!JSVAL_IS_VOID(aKeyVal) && HasKeyPath()) {
+  if (!JSVAL_IS_VOID(aKeyVal) && HasValidKeyPath()) {
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
   JSAutoRequest ar(aCx);
 
-  if (!HasKeyPath()) {
+  if (!HasValidKeyPath()) {
     // Out-of-line keys must be passed in.
     rv = aKey.SetFromJSVal(aCx, aKeyVal);
     if (NS_FAILED(rv)) {
@@ -1448,15 +1360,10 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
     }
   }
   else if (!mAutoIncrement) {
-    // Inline keys live on the object. Make sure that the value passed in is an
-    // object.
-    if (UsesKeyPathArray()) {
-      rv = GetKeyFromValue(aCx, aValue, mKeyPathArray, aKey);
+    rv = GetKeyPath().ExtractKey(aCx, aValue, aKey);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-    else {
-      rv = GetKeyFromValue(aCx, aValue, mKeyPath, aKey);
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Return DATA_ERR if no key was specified this isn't an autoIncrement
@@ -1472,136 +1379,24 @@ IDBObjectStore::GetAddInfo(JSContext* aCx,
     const IndexInfo& indexInfo = mInfo->indexes[indexesIndex];
 
     rv = AppendIndexUpdateInfo(indexInfo.id, indexInfo.keyPath,
-                               indexInfo.keyPathArray, indexInfo.unique,
-                               indexInfo.multiEntry, aCx, aValue,
-                               aUpdateInfoArray);
+                               indexInfo.unique, indexInfo.multiEntry, aCx,
+                               aValue, aUpdateInfoArray);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsString targetObjectPropName;
   JSObject* targetObject = nsnull;
 
-  rv = NS_OK;
-  if (mAutoIncrement && HasKeyPath()) {
+  GetAddInfoClosure data = {this, aCloneWriteInfo, aValue};
+
+  if (mAutoIncrement && HasValidKeyPath()) {
     NS_ASSERTION(aKey.IsUnset(), "Shouldn't have gotten the key yet!");
 
-    if (JSVAL_IS_PRIMITIVE(aValue)) {
-      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-    }
-
-    KeyPathTokenizer tokenizer(mKeyPath, '.');
-    NS_ASSERTION(tokenizer.hasMoreTokens(),
-                 "Shouldn't have empty keypath and autoincrement");
-
-    JSObject* obj = JSVAL_TO_OBJECT(aValue);
-    while (tokenizer.hasMoreTokens()) {
-      const nsDependentSubstring& token = tokenizer.nextToken();
-  
-      NS_ASSERTION(!token.IsEmpty(), "Should be a valid keypath");
-  
-      const jschar* keyPathChars = token.BeginReading();
-      const size_t keyPathLen = token.Length();
-  
-      JSBool hasProp;
-      if (!targetObject) {
-        // We're still walking the chain of existing objects
-
-        JSBool ok = JS_HasUCProperty(aCx, obj, keyPathChars, keyPathLen,
-                                     &hasProp);
-        NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-        if (hasProp) {
-          // Get if the property exists...
-          jsval intermediate;
-          JSBool ok = JS_GetUCProperty(aCx, obj, keyPathChars, keyPathLen,
-                                       &intermediate);
-          NS_ENSURE_TRUE(ok, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-          if (tokenizer.hasMoreTokens()) {
-            // ...and walk to it if there are more steps...
-            if (JSVAL_IS_PRIMITIVE(intermediate)) {
-              return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-            }
-            obj = JSVAL_TO_OBJECT(intermediate);
-          }
-          else {
-            // ...otherwise use it as key
-            aKey.SetFromJSVal(aCx, intermediate);
-            if (aKey.IsUnset()) {
-              return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-            }
-          }
-        }
-        else {
-          // If the property doesn't exist, fall into below path of starting
-          // to define properties
-          targetObject = obj;
-          targetObjectPropName = token;
-        }
-      }
-
-      if (targetObject) {
-        // We have started inserting new objects or are about to just insert
-        // the first one.
-        if (tokenizer.hasMoreTokens()) {
-          // If we're not at the end, we need to add a dummy object to the
-          // chain.
-          JSObject* dummy = JS_NewObject(aCx, nsnull, nsnull, nsnull);
-          if (!dummy) {
-            rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-            break;
-          }
-  
-          if (!JS_DefineUCProperty(aCx, obj, token.BeginReading(),
-                                   token.Length(),
-                                   OBJECT_TO_JSVAL(dummy), nsnull, nsnull,
-                                   JSPROP_ENUMERATE)) {
-            rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-            break;
-          }
-  
-          obj = dummy;
-        }
-        else {
-          JSObject* dummy = JS_NewObject(aCx, &gDummyPropClass, nsnull, nsnull);
-          if (!dummy) {
-            rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-            break;
-          }
-  
-          if (!JS_DefineUCProperty(aCx, obj, token.BeginReading(),
-                                   token.Length(), OBJECT_TO_JSVAL(dummy),
-                                   nsnull, nsnull, JSPROP_ENUMERATE)) {
-            rv = NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-            break;
-          }
-        }
-      }
-    }
+    rv = GetKeyPath().ExtractOrCreateKey(aCx, aValue, aKey,
+                                         &GetAddInfoCallback, &data);
   }
-
-  aCloneWriteInfo.mOffsetToKeyProp = 0;
-  aCloneWriteInfo.mTransaction = mTransaction;
-
-  // We guard on rv being a success because we need to run the property
-  // deletion code below even if we should not be serializing the value
-  if (NS_SUCCEEDED(rv) && 
-      !IDBObjectStore::SerializeValue(aCx, aCloneWriteInfo, aValue)) {
-    rv = NS_ERROR_DOM_DATA_CLONE_ERR;
-  }
-
-  if (targetObject) {
-    // If this fails, we lose, and the web page sees a magical property
-    // appear on the object :-(
-    jsval succeeded;
-    if (!JS_DeleteUCProperty2(aCx, targetObject,
-                              targetObjectPropName.get(),
-                              targetObjectPropName.Length(), &succeeded)) {
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-    NS_ASSERTION(JSVAL_IS_BOOLEAN(succeeded), "Wtf?");
-    NS_ENSURE_TRUE(JSVAL_TO_BOOLEAN(succeeded),
-                   NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  else {
+    rv = GetAddInfoCallback(aCx, &data);
   }
 
   return rv;
@@ -1880,7 +1675,6 @@ IDBObjectStore::OpenCursorFromChildProcess(
 
 nsresult
 IDBObjectStore::CreateIndexInternal(const IndexInfo& aInfo,
-                                    nsTArray<nsString>& aKeyPathArray,
                                     IDBIndex** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -1890,7 +1684,6 @@ IDBObjectStore::CreateIndexInternal(const IndexInfo& aInfo,
   indexInfo->name = aInfo.name;
   indexInfo->id = aInfo.id;
   indexInfo->keyPath = aInfo.keyPath;
-  indexInfo->keyPathArray.SwapElements(aKeyPathArray);
   indexInfo->unique = aInfo.unique;
   indexInfo->multiEntry = aInfo.multiEntry;
 
@@ -1963,7 +1756,12 @@ IDBObjectStore::IndexInternal(const nsAString& aName,
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBObjectStore)
 
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBObjectStore)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mCachedKeyPath)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBObjectStore)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mTransaction,
                                                        nsIDOMEventTarget)
 
@@ -1977,6 +1775,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBObjectStore)
   // Don't unlink mTransaction!
 
   tmp->mCreatedIndexes.Clear();
+
+  tmp->mCachedKeyPath = JSVAL_VOID;
+
+  if (tmp->mRooted) {
+    NS_DROP_JS_OBJECTS(tmp, IDBObjectStore);
+    tmp->mRooted = false;
+  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IDBObjectStore)
@@ -2005,33 +1810,20 @@ IDBObjectStore::GetKeyPath(JSContext* aCx,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (UsesKeyPathArray()) {
-    JSObject* array = JS_NewArrayObject(aCx, mKeyPathArray.Length(), nsnull);
-    if (!array) {
-      NS_WARNING("Failed to make array!");
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-
-    for (PRUint32 i = 0; i < mKeyPathArray.Length(); ++i) {
-      jsval val;
-      nsString tmp(mKeyPathArray[i]);
-      if (!xpc::StringToJsval(aCx, tmp, &val)) {
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      }
-
-      if (!JS_SetElement(aCx, array, i, &val)) {
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      }
-    }
-
-    *aVal = OBJECT_TO_JSVAL(array);
+  if (!JSVAL_IS_VOID(mCachedKeyPath)) {
+    *aVal = mCachedKeyPath;
+    return NS_OK;
   }
-  else {
-    nsString tmp(mKeyPath);
-    if (!xpc::StringToJsval(aCx, tmp, aVal)) {
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
+
+  nsresult rv = GetKeyPath().ToJSVal(aCx, &mCachedKeyPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (JSVAL_IS_GCTHING(mCachedKeyPath)) {
+    NS_HOLD_JS_OBJECTS(this, IDBObjectStore);
+    mRooted = true;
   }
+
+  *aVal = mCachedKeyPath;
   return NS_OK;
 }
 
@@ -2276,59 +2068,10 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
 {
   NS_PRECONDITION(NS_IsMainThread(), "Wrong thread!");
 
-  // Get KeyPath
-  nsString keyPath;
-  nsTArray<nsString> keyPathArray;
-
-  // See if this is a JS array.
-  if (!JSVAL_IS_PRIMITIVE(aKeyPath) &&
-      JS_IsArrayObject(aCx, JSVAL_TO_OBJECT(aKeyPath))) {
-
-    JSObject* obj = JSVAL_TO_OBJECT(aKeyPath);
-
-    uint32_t length;
-    if (!JS_GetArrayLength(aCx, obj, &length)) {
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-
-    if (!length) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-
-    keyPathArray.SetCapacity(length);
-
-    for (uint32_t index = 0; index < length; index++) {
-      jsval val;
-      JSString* jsstr;
-      nsDependentJSString str;
-      if (!JS_GetElement(aCx, obj, index, &val) ||
-          !(jsstr = JS_ValueToString(aCx, val)) ||
-          !str.init(aCx, jsstr)) {
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      }
-
-      if (!IsValidKeyPath(aCx, str)) {
-        return NS_ERROR_DOM_SYNTAX_ERR;
-      }
-
-      keyPathArray.AppendElement(str);
-    }
-
-    NS_ASSERTION(!keyPathArray.IsEmpty(), "This shouldn't have happened!");
-  }
-  else {
-    JSString* jsstr;
-    nsDependentJSString str;
-    if (!(jsstr = JS_ValueToString(aCx, aKeyPath)) ||
-        !str.init(aCx, jsstr)) {
-      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-    }
-
-    if (!IsValidKeyPath(aCx, str)) {
-      return NS_ERROR_DOM_SYNTAX_ERR;
-    }
-
-    keyPath = str;
+  KeyPath keyPath(0);
+  if (NS_FAILED(KeyPath::Parse(aCx, aKeyPath, &keyPath)) ||
+      !keyPath.IsValid()) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
   // Check name and current mode
@@ -2374,7 +2117,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
     }
   }
 
-  if (params.multiEntry && !keyPathArray.IsEmpty()) {
+  if (params.multiEntry && keyPath.IsArray()) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
@@ -2389,7 +2132,7 @@ IDBObjectStore::CreateIndex(const nsAString& aName,
   info.multiEntry = params.multiEntry;
 
   nsRefPtr<IDBIndex> index;
-  rv = CreateIndexInternal(info, keyPathArray, getter_AddRefs(index));
+  rv = CreateIndexInternal(info, getter_AddRefs(index));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2602,7 +2345,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv;
   bool keyUnset = mKey.IsUnset();
   PRInt64 osid = mObjectStore->Id();
-  const nsString& keyPath = mObjectStore->KeyPath();
+  const KeyPath& keyPath = mObjectStore->GetKeyPath();
 
   // The "|| keyUnset" here is mostly a debugging tool. If a key isn't
   // specified we should never have a collision and so it shouldn't matter
@@ -2641,7 +2384,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       autoIncrementNum = floor(mKey.ToFloat());
     }
 
-    if (keyUnset && !keyPath.IsEmpty()) {
+    if (keyUnset && keyPath.IsValid()) {
       // Special case where someone put an object into an autoIncrement'ing
       // objectStore with no key in its keyPath set. We needed to figure out
       // which row id we would get above before we could set that properly.
@@ -3458,25 +3201,11 @@ CreateIndexHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mIndex->Name());
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  if (mIndex->UsesKeyPathArray()) {
-    // We use a comma in the beginning to indicate that it's an array of
-    // key paths. This is to be able to tell a string-keypath from an
-    // array-keypath which contains only one item.
-    // It also makes serializing easier :-)
-    nsAutoString keyPath;
-    const nsTArray<nsString>& keyPaths = mIndex->KeyPathArray();
-    for (PRUint32 i = 0; i < keyPaths.Length(); ++i) {
-      keyPath.Append(NS_LITERAL_STRING(",") + keyPaths[i]);
-    }
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
-                                keyPath);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
-  else {
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
-                                mIndex->KeyPath());
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  }
+  nsAutoString keyPathSerialization;
+  mIndex->GetKeyPath().SerializeToString(keyPathSerialization);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"),
+                              keyPathSerialization);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("unique"),
                              mIndex->IsUnique() ? 1 : 0);
@@ -3579,8 +3308,7 @@ CreateIndexHelper::InsertDataFromObjectStore(mozIStorageConnection* aConnection)
 
     nsTArray<IndexUpdateInfo> updateInfo;
     rv = IDBObjectStore::AppendIndexUpdateInfo(mIndex->Id(),
-                                               mIndex->KeyPath(),
-                                               mIndex->KeyPathArray(),
+                                               mIndex->GetKeyPath(),
                                                mIndex->IsUnique(),
                                                mIndex->IsMultiEntry(),
                                                tlsEntry->Context(),

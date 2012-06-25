@@ -19,7 +19,7 @@
 #define PARSE_ERROR 5
 #define READ_ERROR 6
 #define WRITE_ERROR 7
-#define UNEXPECTED_ERROR 8
+// #define UNEXPECTED_ERROR 8 // Replaced with errors 38-42
 #define ELEVATION_CANCELED 9
 #define READ_STRINGS_MEM_ERROR 10
 #define ARCHIVE_READER_MEM_ERROR 11
@@ -53,6 +53,14 @@
 #define SERVICE_INSTALLDIR_ERROR 33
 
 #define NO_INSTALLDIR_ERROR 34
+#define WRITE_ERROR_ACCESS_DENIED 35
+#define WRITE_ERROR_SHARING_VIOLATION 36
+#define WRITE_ERROR_CALLBACK_APP 37
+#define INVALID_UPDATER_STATUS_CODE 38
+#define UNEXPECTED_BZIP_ERROR 39
+#define UNEXPECTED_MAR_ERROR 40
+#define UNEXPECTED_BSPATCH_ERROR 41
+#define UNEXPECTED_FILE_OPERATION_ERROR 42
 
 // The following error codes are only used by updater.exe
 // when a fallback key exists and XPCShell tests are being run.

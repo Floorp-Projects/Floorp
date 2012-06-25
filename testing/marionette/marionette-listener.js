@@ -343,7 +343,7 @@ function executeScript(msg, directInject) {
           msg.json.args, curWindow);
       }
       catch(e) {
-        sendError(e.message, e.num, e.stack);
+        sendError(e.message, e.code, e.stack);
         return;
       }
 
@@ -446,7 +446,7 @@ function executeWithCallback(msg, timeout) {
         msg.json.args, curWindow);
     }
     catch(e) {
-      sendError(e.message, e.num, e.stack);
+      sendError(e.message, e.code, e.stack);
       return;
     }
 
@@ -479,7 +479,7 @@ function setSearchTimeout(msg) {
     elementManager.setSearchTimeout(msg.json.value);
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
     return;
   }
   sendOk();
@@ -545,7 +545,7 @@ function findElementContent(msg) {
     id = elementManager.find(curWindow, msg.json, notify, false);
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -559,7 +559,7 @@ function findElementsContent(msg) {
     id = elementManager.find(curWindow, msg.json, notify, true);
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -574,7 +574,7 @@ function clickElement(msg) {
     sendOk();
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -587,7 +587,7 @@ function getElementAttribute(msg) {
     sendResponse({value: utils.getElementAttribute(el, msg.json.name)});
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -600,7 +600,7 @@ function getElementText(msg) {
     sendResponse({value: utils.getElementText(el)});
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -613,7 +613,7 @@ function isElementDisplayed(msg) {
     sendResponse({value: utils.isElementDisplayed(el)});
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -626,7 +626,7 @@ function isElementEnabled(msg) {
     sendResponse({value: utils.isElementEnabled(el)});
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -639,7 +639,7 @@ function isElementSelected(msg) {
     sendResponse({value: utils.isElementSelected(el)});
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -653,7 +653,7 @@ function sendKeysToElement(msg) {
     sendOk();
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -667,7 +667,7 @@ function clearElement(msg) {
     sendOk();
   }
   catch (e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
   }
 }
 
@@ -759,7 +759,7 @@ function emulatorCmdResult(msg) {
     cb(message.result);
   }
   catch(e) {
-    sendError(e.message, e.num, e.stack);
+    sendError(e.message, e.code, e.stack);
     return;
   }
 }

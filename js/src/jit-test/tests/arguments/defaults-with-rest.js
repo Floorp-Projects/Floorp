@@ -17,3 +17,8 @@ function f3(a=rest, ...rest) {
     assertEqArray(rest, [2, 3, 4]);
 }
 f3(1, 2, 3, 4);
+function f4(a=42, ...f)  {
+    assertEq(typeof f, "function");
+    function f() {}
+}
+f4()

@@ -38,6 +38,7 @@ CPPSRCS = \
   IDBWrapperCache.cpp \
   IndexedDatabaseManager.cpp \
   Key.cpp \
+  KeyPath.cpp \
   OpenDatabaseHelper.cpp \
   TransactionThreadPool.cpp \
   $(NULL)
@@ -58,6 +59,7 @@ EXPORTS_mozilla/dom/indexedDB = \
   IndexedDatabase.h \
   IndexedDatabaseManager.h \
   Key.h \
+  KeyPath.h \
   FileManager.h \
   FileInfo.h \
   $(NULL)

@@ -43,7 +43,7 @@ load 538062-1.xhtml
 load 570624-1.html
 load 498698-1.html
 asserts(1) load 578604-1.html # bug 584564
-asserts(3-5) load 590302-1.xhtml # bug 584564
+asserts(4-7) load 590302-1.xhtml # bug 584564
 load 626014.xhtml
 load 639733.xhtml
 asserts(0-1) load 669767.html

@@ -698,6 +698,19 @@ abstract public class GeckoApp
             case R.id.find_in_page:
                 mFindInPageBar.show();
                 return true;
+            case R.id.desktop_mode:
+                Tab selectedTab = Tabs.getInstance().getSelectedTab();
+                if (selectedTab == null)
+                    return true;
+                JSONObject args = new JSONObject();
+                try {
+                    args.put("desktopMode", !item.isChecked());
+                    args.put("tabId", selectedTab.getId());
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "error building json arguments");
+                }
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("DesktopMode:Change", args.toString()));
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -1215,6 +1228,20 @@ abstract public class GeckoApp
             } else if (event.equals("WebApps:Uninstall")) {
                 String uniqueURI = message.getString("uniqueURI");
                 GeckoAppShell.uninstallWebApp(uniqueURI);
+            } else if (event.equals("DesktopMode:Changed")) {
+                int tabId = message.getInt("tabId");
+                boolean desktopMode = message.getBoolean("desktopMode");
+                final Tab tab = Tabs.getInstance().getTab(tabId);
+                if (tab == null)
+                    return;
+
+                tab.setDesktopMode(desktopMode);
+                mMainHandler.post(new Runnable() {
+                    public void run() {
+                        if (tab == Tabs.getInstance().getSelectedTab())
+                            invalidateOptionsMenu();
+                    }
+                });
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1890,6 +1917,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("WebApps:Open", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("WebApps:Install", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2232,6 +2260,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Open", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Install", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
 
         if (mFavicons != null)
             mFavicons.close();

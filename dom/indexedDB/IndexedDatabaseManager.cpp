@@ -214,8 +214,10 @@ IndexedDatabaseManager::GetOrCreate()
 
     if (sIsMainProcess) {
       nsCOMPtr<nsIFile> dbBaseDirectory;
-      rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                  getter_AddRefs(dbBaseDirectory));
+      rv = NS_GetSpecialDirectory(NS_APP_INDEXEDDB_PARENT_DIR, getter_AddRefs(dbBaseDirectory));
+      if (NS_FAILED(rv)) {
+          rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(dbBaseDirectory));
+      }
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       rv = dbBaseDirectory->Append(NS_LITERAL_STRING("indexedDB"));
@@ -1161,22 +1163,14 @@ IndexedDatabaseManager::GetUsageForURI(
   // Non-standard URIs can't create databases anyway so fire the callback
   // immediately.
   if (origin.EqualsLiteral("null")) {
-    rv = NS_DispatchToCurrentThread(runnable);
-    NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
+    return runnable->TakeShortcut();
   }
 
-  // See if we're currently clearing the databases for this origin. If so then
-  // we pretend that we've already deleted everything.
-  if (IsClearOriginPending(origin)) {
-    rv = NS_DispatchToCurrentThread(runnable);
-    NS_ENSURE_SUCCESS(rv, rv);
-    return NS_OK;
-  }
-
-  // Otherwise dispatch to the IO thread to actually compute the usage.
-  rv = mIOThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  // Otherwise put the computation runnable in the queue.
+  rv = WaitForOpenAllowed(origin, nsnull, runnable);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  runnable->AdvanceState();
 
   return NS_OK;
 }
@@ -1477,7 +1471,8 @@ IndexedDatabaseManager::AsyncUsageRunnable::AsyncUsageRunnable(
   mCallback(aCallback),
   mUsage(0),
   mFileUsage(0),
-  mCanceled(0)
+  mCanceled(0),
+  mCallbackState(Pending)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aURI, "Null pointer!");
@@ -1507,49 +1502,101 @@ IncrementUsage(PRUint64* aUsage, PRUint64 aDelta)
 }
 
 nsresult
+IndexedDatabaseManager::AsyncUsageRunnable::TakeShortcut()
+{
+  NS_ASSERTION(mCallbackState == Pending, "Huh?");
+
+  nsresult rv = NS_DispatchToCurrentThread(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mCallbackState = Shortcut;
+  return NS_OK;
+}
+
+nsresult
 IndexedDatabaseManager::AsyncUsageRunnable::RunInternal()
 {
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get();
   NS_ASSERTION(mgr, "This should never fail!");
 
-  if (NS_IsMainThread()) {
-    // Call the callback unless we were canceled.
-    if (!mCanceled) {
-      PRUint64 usage = mUsage;
-      IncrementUsage(&usage, mFileUsage);
-      mCallback->OnUsageResult(mURI, usage, mFileUsage);
-    }
-
-    // Clean up.
-    mURI = nsnull;
-    mCallback = nsnull;
-
-    // And tell the IndexedDatabaseManager that we're done.
-    mgr->OnUsageCheckComplete(this);
-
-    return NS_OK;
-  }
-
   if (mCanceled) {
     return NS_OK;
   }
 
-  // Get the directory that contains all the database files we care about.
-  nsCOMPtr<nsIFile> directory;
-  nsresult rv = mgr->GetDirectoryForOrigin(mOrigin, getter_AddRefs(directory));
-  NS_ENSURE_SUCCESS(rv, rv);
+  switch (mCallbackState) {
+    case Pending: {
+      NS_NOTREACHED("Should never get here without being dispatched!");
+      return NS_ERROR_UNEXPECTED;
+    }
 
-  bool exists;
-  rv = directory->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
+    case OpenAllowed: {
+      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  // If the directory exists then enumerate all the files inside, adding up the
-  // sizes to get the final usage statistic.
-  if (exists && !mCanceled) {
-    rv = GetUsageForDirectory(directory, &mUsage);
-    NS_ENSURE_SUCCESS(rv, rv);
+      AdvanceState();
+
+      if (NS_FAILED(mgr->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL))) {
+        NS_WARNING("Failed to dispatch to the IO thread!");
+      }
+
+      return NS_OK;
+    }
+
+    case IO: {
+      NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+      AdvanceState();
+
+      // Get the directory that contains all the database files we care about.
+      nsCOMPtr<nsIFile> directory;
+      nsresult rv = mgr->GetDirectoryForOrigin(mOrigin, getter_AddRefs(directory));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      bool exists;
+      rv = directory->Exists(&exists);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // If the directory exists then enumerate all the files inside, adding up the
+      // sizes to get the final usage statistic.
+      if (exists && !mCanceled) {
+        rv = GetUsageForDirectory(directory, &mUsage);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Run dispatches us back to the main thread.
+      return NS_OK;
+    }
+
+    case Complete: // Fall through
+    case Shortcut: {
+      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+      // Call the callback unless we were canceled.
+      if (!mCanceled) {
+        PRUint64 usage = mUsage;
+        IncrementUsage(&usage, mFileUsage);
+        mCallback->OnUsageResult(mURI, usage, mFileUsage);
+      }
+
+      // Clean up.
+      mURI = nsnull;
+      mCallback = nsnull;
+
+      // And tell the IndexedDatabaseManager that we're done.
+      mgr->OnUsageCheckComplete(this);
+      if (mCallbackState == Complete) {
+        mgr->AllowNextSynchronizedOp(mOrigin, nsnull);
+      }
+
+      return NS_OK;
+    }
+
+    default:
+      NS_ERROR("Unknown state value!");
+      return NS_ERROR_UNEXPECTED;
   }
-  return NS_OK;
+
+  NS_NOTREACHED("Should never get here!");
+  return NS_ERROR_UNEXPECTED;
 }
 
 nsresult
@@ -1625,7 +1672,6 @@ IndexedDatabaseManager::AsyncUsageRunnable::Run()
     }
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 

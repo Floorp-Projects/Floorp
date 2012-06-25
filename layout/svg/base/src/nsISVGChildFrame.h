@@ -80,6 +80,15 @@ public:
     COORD_CONTEXT_CHANGED = 0x04,
     FULL_ZOOM_CHANGED     = 0x08
   };
+  /**
+   * This is called on a frame when there has been a change to one of its
+   * ancestors that might affect the frame too. SVGChangedFlags are passed
+   * to indicate what changed.
+   *
+   * Implementations do not need to invalidate, since the caller will 
+   * invalidate the entire area of the ancestor that changed. However, they
+   * may need to update their bounds.
+   */
   virtual void NotifySVGChanged(PRUint32 aFlags)=0;
 
   /**

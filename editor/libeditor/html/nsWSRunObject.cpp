@@ -1171,7 +1171,7 @@ nsWSRunObject::GetPreviousWSNode(DOMPoint aPoint,
 
 nsresult 
 nsWSRunObject::GetPreviousWSNode(nsIDOMNode *aStartNode,
-                                 PRInt16 aOffset, 
+                                 PRInt32 aOffset,
                                  nsIDOMNode *aBlockParent, 
                                  nsCOMPtr<nsIDOMNode> *aPriorNode)
 {
@@ -1279,7 +1279,7 @@ nsWSRunObject::GetNextWSNode(DOMPoint aPoint,
 
 nsresult 
 nsWSRunObject::GetNextWSNode(nsIDOMNode *aStartNode,
-                             PRInt16 aOffset, 
+                             PRInt32 aOffset,
                              nsIDOMNode *aBlockParent, 
                              nsCOMPtr<nsIDOMNode> *aNextNode)
 {

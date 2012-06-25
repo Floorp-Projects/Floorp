@@ -355,7 +355,7 @@ xul|menulist {
   min-height: 64px;
   width: 35px;
   height: 64px;
-  padding: 20px; /* Add padding to make touch target larger */
+  padding: 0 20px 20px 20px; /* Add padding to make touch target larger */
   margin: 0;
   background-repeat: no-repeat;
   background-position: center;
