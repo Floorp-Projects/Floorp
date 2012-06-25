@@ -314,9 +314,6 @@ public:
                                       GLenum aWrapMode = LOCAL_GL_REPEAT,
                                       bool aFlipped = false);
 
-  virtual gfxASurface::gfxImageFormat MaskImageFormat() 
-  { return gfxASurface::ImageFormatARGB32; }
-
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "OGL"; }
 #endif // MOZ_LAYERS_HAVE_LOG
