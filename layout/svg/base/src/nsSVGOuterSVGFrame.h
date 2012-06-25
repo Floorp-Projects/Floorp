@@ -111,17 +111,13 @@ public:
    */
   bool VerticalScrollbarNotNeeded() const;
 
-#ifdef DEBUG
   bool IsCallingUpdateBounds() const {
     return mCallingUpdateBounds;
   }
-#endif
 
 protected:
 
-#ifdef DEBUG
   bool mCallingUpdateBounds;
-#endif
 
   /* Returns true if our content is the document element and our document is
    * embedded in an HTML 'object', 'embed' or 'applet' element. Set

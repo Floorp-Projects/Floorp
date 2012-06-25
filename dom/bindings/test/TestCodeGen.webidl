@@ -238,6 +238,23 @@ interface TestInterface {
   object receiveObject();
   object? receiveNullableObject();
 
+  // Union types
+  void passUnion((object or long) arg);
+  void passUnionWithNullable((object? or long) arg);
+  void passNullableUnion((object or long)? arg);
+  void passOptionalUnion(optional (object or long) arg);
+  void passOptionalNullableUnion(optional (object or long)? arg);
+  void passOptionalNullableUnionWithDefaultValue(optional (object or long)? arg = null);
+  //void passUnionWithInterfaces((TestInterface or TestExternalInterface) arg);
+  //void passUnionWithInterfacesAndNullable((TestInterface? or TestExternalInterface) arg);
+  //void passUnionWithSequence((sequence<object> or long) arg);
+  void passUnionWithArrayBuffer((ArrayBuffer or long) arg);
+  void passUnionWithString((DOMString or object) arg);
+  //void passUnionWithEnum((TestEnum or object) arg);
+  void passUnionWithCallback((TestCallback or long) arg);
+  void passUnionWithObject((object or long) arg);
+  //void passUnionWithDict((Dict or long) arg);
+
   // binaryNames tests
   void methodRenamedFrom();
   void methodRenamedFrom(byte argument);
@@ -297,6 +314,7 @@ DiamondBranch1A implements DiamondImplements;
 DiamondBranch1B implements DiamondImplements;
 
 dictionary Dict : ParentDict {
+  TestEnum someEnum;
   long x;
   long a;
   long b = 8;

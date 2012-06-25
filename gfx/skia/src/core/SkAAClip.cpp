@@ -251,7 +251,7 @@ static void count_left_right_zeros(const uint8_t* row, int width,
     *riteZ = zeros;
 }
 
-#ifdef SK_DEBUG
+#if 0
 static void test_count_left_right_zeros() {
     static bool gOnce;
     if (gOnce) {
@@ -1324,12 +1324,6 @@ typedef void (*RowProc)(SkAAClip::Builder&, int bottom,
                         const uint8_t* rowA, const SkIRect& rectA,
                         const uint8_t* rowB, const SkIRect& rectB);
 
-static void sectRowProc(SkAAClip::Builder& builder, int bottom,
-                        const uint8_t* rowA, const SkIRect& rectA,
-                        const uint8_t* rowB, const SkIRect& rectB) {
-    
-}
-
 typedef U8CPU (*AlphaProc)(U8CPU alphaA, U8CPU alphaB);
 
 static U8CPU sectAlphaProc(U8CPU alphaA, U8CPU alphaB) {
@@ -1432,21 +1426,6 @@ static void adjust_row(RowIter& iter, int& leftA, int& riteA, int rite) {
         leftA = iter.left();
         riteA = iter.right();
     }
-}
-
-static bool intersect(int& min, int& max, int boundsMin, int boundsMax) {
-    SkASSERT(min < max);
-    SkASSERT(boundsMin < boundsMax);
-    if (min >= boundsMax || max <= boundsMin) {
-        return false;
-    }
-    if (min < boundsMin) {
-        min = boundsMin;
-    }
-    if (max > boundsMax) {
-        max = boundsMax;
-    }
-    return true;
 }
 
 static void operatorX(SkAAClip::Builder& builder, int lastY,
@@ -1975,8 +1954,8 @@ static inline uint16_t mergeOne(uint16_t value, unsigned alpha) {
     unsigned g = SkGetPackedG16(value);
     unsigned b = SkGetPackedB16(value);
     return SkPackRGB16(SkMulDiv255Round(r, alpha),
-                       SkMulDiv255Round(r, alpha),
-                       SkMulDiv255Round(r, alpha));
+                       SkMulDiv255Round(g, alpha),
+                       SkMulDiv255Round(b, alpha));
 }
 static inline SkPMColor mergeOne(SkPMColor value, unsigned alpha) {
     unsigned a = SkGetPackedA32(value);
@@ -1992,7 +1971,6 @@ static inline SkPMColor mergeOne(SkPMColor value, unsigned alpha) {
 template <typename T> void mergeT(const T* SK_RESTRICT src, int srcN,
                                  const uint8_t* SK_RESTRICT row, int rowN,
                                  T* SK_RESTRICT dst) {
-    SkDEBUGCODE(int accumulated = 0;)
     for (;;) {
         SkASSERT(rowN > 0);
         SkASSERT(srcN > 0);

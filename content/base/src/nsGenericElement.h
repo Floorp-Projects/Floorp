@@ -777,6 +777,13 @@ protected:
    */
   virtual void GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent);
 
+  /**
+   * Retrieve the size of the padding rect of this element.
+   *
+   * @param aSize the size of the padding rect
+   */
+  nsIntSize GetPaddingRectSize();
+
   nsIFrame* GetStyledFrame();
 
   virtual mozilla::dom::Element* GetNameSpaceElement()

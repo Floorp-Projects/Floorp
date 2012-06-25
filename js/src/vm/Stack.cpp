@@ -93,30 +93,37 @@ StackFrame::initDummyFrame(JSContext *cx, JSObject &chain)
     scopeChain_ = &chain;
 }
 
-template <class T, class U, StackFrame::TriggerPostBarriers doPostBarrier>
+template <StackFrame::TriggerPostBarriers doPostBarrier>
 void
-StackFrame::copyFrameAndValues(JSContext *cx, T *vp, StackFrame *otherfp, U *othervp, Value *othersp)
+StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
+                               const Value *othervp, Value *othersp)
 {
-    JS_ASSERT((U *)vp == (U *)this - ((U *)otherfp - othervp));
-    JS_ASSERT((Value *)othervp == otherfp->generatorArgsSnapshotBegin());
+    JS_ASSERT(vp == (Value *)this - ((Value *)otherfp - othervp));
+    JS_ASSERT(othervp == otherfp->generatorArgsSnapshotBegin());
     JS_ASSERT(othersp >= otherfp->slots());
     JS_ASSERT(othersp <= otherfp->generatorSlotsSnapshotBegin() + otherfp->script()->nslots);
-    JS_ASSERT((T *)this - vp == (U *)otherfp - othervp);
+    JS_ASSERT((Value *)this - vp == (Value *)otherfp - othervp);
 
     /* Copy args, StackFrame, and slots. */
-    U *srcend = (U *)otherfp->generatorArgsSnapshotEnd();
-    T *dst = vp;
-    for (U *src = othervp; src < srcend; src++, dst++)
+    const Value *srcend = otherfp->generatorArgsSnapshotEnd();
+    Value *dst = vp;
+    for (const Value *src = othervp; src < srcend; src++, dst++) {
         *dst = *src;
+        if (doPostBarrier)
+            HeapValue::writeBarrierPost(*dst, dst);
+    }
 
     *this = *otherfp;
     if (doPostBarrier)
         writeBarrierPost();
 
-    srcend = (U *)othersp;
-    dst = (T *)slots();
-    for (U *src = (U *)otherfp->slots(); src < srcend; src++, dst++)
+    srcend = othersp;
+    dst = slots();
+    for (const Value *src = otherfp->slots(); src < srcend; src++, dst++) {
         *dst = *src;
+        if (doPostBarrier)
+            HeapValue::writeBarrierPost(*dst, dst);
+    }
 
     if (cx->compartment->debugMode())
         cx->runtime->debugScopes->onGeneratorFrameChange(otherfp, this, cx);
@@ -124,11 +131,11 @@ StackFrame::copyFrameAndValues(JSContext *cx, T *vp, StackFrame *otherfp, U *oth
 
 /* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
 template
-void StackFrame::copyFrameAndValues<Value, HeapValue, StackFrame::NoPostBarrier>(
-                                    JSContext *, Value *, StackFrame *, HeapValue *, Value *);
+void StackFrame::copyFrameAndValues<StackFrame::NoPostBarrier>(
+                                    JSContext *, Value *, StackFrame *, const Value *, Value *);
 template
-void StackFrame::copyFrameAndValues<HeapValue, Value, StackFrame::DoPostBarrier>(
-                                    JSContext *, HeapValue *, StackFrame *, Value *, Value *);
+void StackFrame::copyFrameAndValues<StackFrame::DoPostBarrier>(
+                                    JSContext *, Value *, StackFrame *, const Value *, Value *);
 
 void
 StackFrame::writeBarrierPost()
@@ -191,26 +198,28 @@ StackFrame::prevpcSlow(InlinedSite **pinlined)
 }
 
 jsbytecode *
-StackFrame::pcQuadratic(const ContextStack &stack, StackFrame *next, InlinedSite **pinlined)
+StackFrame::pcQuadratic(const ContextStack &stack, size_t maxDepth)
 {
-    JS_ASSERT_IF(next, next->prev() == this);
-
     StackSegment &seg = stack.space().containingSegment(this);
     FrameRegs &regs = seg.regs();
 
     /*
      * This isn't just an optimization; seg->computeNextFrame(fp) is only
-     * defined if fp != seg->currentFrame.
+     * defined if fp != seg->regs->fp.
      */
-    if (regs.fp() == this) {
-        if (pinlined)
-            *pinlined = regs.inlined();
+    if (regs.fp() == this)
         return regs.pc;
-    }
 
-    if (!next)
-        next = seg.computeNextFrame(this);
-    return next->prevpc(pinlined);
+    /*
+     * To compute fp's pc, we need the next frame (where next->prev == fp).
+     * This requires a linear search which we allow the caller to limit (in
+     * cases where we do not have a hard requirement to find the correct pc).
+     */
+    if (StackFrame *next = seg.computeNextFrame(this, maxDepth))
+        return next->prevpc();
+
+    /* If we hit the limit, just return the beginning of the script. */
+    return regs.fp()->script()->code;
 }
 
 bool
@@ -421,15 +430,18 @@ StackSegment::contains(const CallArgsList *call) const
 }
 
 StackFrame *
-StackSegment::computeNextFrame(const StackFrame *f) const
+StackSegment::computeNextFrame(const StackFrame *f, size_t maxDepth) const
 {
     JS_ASSERT(contains(f) && f != fp());
 
     StackFrame *next = fp();
-    StackFrame *prev;
-    while ((prev = next->prev()) != f)
-        next = prev;
-    return next;
+    for (size_t i = 0; i <= maxDepth; ++i) {
+        if (next->prev() == f)
+            return next;
+        next = next->prev();
+    }
+
+    return NULL;
 }
 
 Value *
@@ -1072,8 +1084,8 @@ ContextStack::pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrame
     JSObject::writeBarrierPre(gen->obj);
 
     /* Copy from the generator's floating frame to the stack. */
-    stackfp->copyFrameAndValues<Value, HeapValue, StackFrame::NoPostBarrier>(
-                                cx, stackvp, gen->fp, genvp, gen->regs.sp);
+    stackfp->copyFrameAndValues<StackFrame::NoPostBarrier>(cx, stackvp, gen->fp,
+                                                           Valueify(genvp), gen->regs.sp);
     stackfp->resetGeneratorPrev(cx);
     gfg->regs_.rebaseFromTo(gen->regs, *stackfp);
 
@@ -1096,9 +1108,15 @@ ContextStack::popGeneratorFrame(const GeneratorFrameGuard &gfg)
 
     /* Copy from the stack to the generator's floating frame. */
     if (stackfp->isYielding()) {
+        /*
+         * Assert that the frame is not markable so that we don't need an
+         * incremental write barrier when updating the generator's saved slots.
+         */
+        JS_ASSERT(!GeneratorHasMarkableFrame(gen));
+
         gen->regs.rebaseFromTo(stackRegs, *gen->fp);
-        gen->fp->copyFrameAndValues<HeapValue, Value, StackFrame::DoPostBarrier>(
-                                    cx_, genvp, stackfp, stackvp, stackRegs.sp);
+        gen->fp->copyFrameAndValues<StackFrame::DoPostBarrier>(cx_, (Value *)genvp, stackfp,
+                                                               stackvp, stackRegs.sp);
     }
 
     /* ~FrameGuard/popFrame will finish the popping. */

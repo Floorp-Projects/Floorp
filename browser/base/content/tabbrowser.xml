@@ -3051,13 +3051,13 @@
           if (doPosition) {
             this.setAttribute("positionpinnedtabs", "true");
 
-            let scrollButtonWidth = this.mTabstrip._scrollButtonDown.scrollWidth;
+            let scrollButtonWidth = this.mTabstrip._scrollButtonDown.getBoundingClientRect().width;
             let paddingStart = this.mTabstrip.scrollboxPaddingStart;
             let width = 0;
 
             for (let i = numPinned - 1; i >= 0; i--) {
               let tab = this.childNodes[i];
-              width += tab.scrollWidth;
+              width += tab.getBoundingClientRect().width;
               tab.style.MozMarginStart = - (width + scrollButtonWidth + paddingStart) + "px";
             }
 

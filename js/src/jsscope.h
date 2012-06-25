@@ -780,6 +780,16 @@ struct Shape : public js::gc::Cell
         return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) != 0;
     }
 
+    PropDesc::Writability writability() const {
+        return (attrs & JSPROP_READONLY) ? PropDesc::NonWritable : PropDesc::Writable;
+    }
+    PropDesc::Enumerability enumerability() const {
+        return (attrs & JSPROP_ENUMERATE) ? PropDesc::Enumerable : PropDesc::NonEnumerable;
+    }
+    PropDesc::Configurability configurability() const {
+        return (attrs & JSPROP_PERMANENT) ? PropDesc::NonConfigurable : PropDesc::Configurable;
+    }
+
     /*
      * For ES5 compatibility, we allow properties with PropertyOp-flavored
      * setters to be shadowed when set. The "own" property thereby created in

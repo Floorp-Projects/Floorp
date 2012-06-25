@@ -1197,8 +1197,7 @@ NameSpaceRule::Clone() const
 NS_IMETHODIMP
 NameSpaceRule::GetType(PRUint16* aType)
 {
-  // XXX What should really happen here?
-  *aType = nsIDOMCSSRule::UNKNOWN_RULE;
+  *aType = nsIDOMCSSRule::NAMESPACE_RULE;
   return NS_OK;
 }
 

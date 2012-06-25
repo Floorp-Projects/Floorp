@@ -373,6 +373,7 @@ public:
    * for which IsElement() is true.  This is defined inline in Element.h.
    */
   mozilla::dom::Element* AsElement();
+  const mozilla::dom::Element* AsElement() const;
 
   /**
    * Return this node as nsIContent.  Should only be used for nodes for which
@@ -477,15 +478,6 @@ public:
   }
 
   /**
-   * Get the namespace that this element's tag is defined in
-   * @return the namespace
-   */
-  PRInt32 GetNameSpaceID() const
-  {
-    return mNodeInfo->NamespaceID();
-  }
-
-  /**
    * Get the tag for this element. This will always return a non-null atom
    * pointer (as implied by the naming of the method).  For elements this is
    * the non-namespaced tag, and for other nodes it's something like "#text",
@@ -494,55 +486,6 @@ public:
   nsIAtom* Tag() const
   {
     return mNodeInfo->NameAtom();
-  }
-
-  /**
-   * Get the NodeInfo for this element
-   * @return the nodes node info
-   */
-  nsINodeInfo* NodeInfo() const
-  {
-    return mNodeInfo;
-  }
-
-  bool IsInNamespace(PRInt32 aNamespace) const
-  {
-    return mNodeInfo->NamespaceID() == aNamespace;
-  }
-
-  bool IsHTML() const
-  {
-    return IsInNamespace(kNameSpaceID_XHTML);
-  }
-
-  bool IsHTML(nsIAtom* aTag) const
-  {
-    return mNodeInfo->Equals(aTag, kNameSpaceID_XHTML);
-  }
-
-  bool IsSVG() const
-  {
-    return IsInNamespace(kNameSpaceID_SVG);
-  }
-
-  bool IsSVG(nsIAtom* aTag) const
-  {
-    return mNodeInfo->Equals(aTag, kNameSpaceID_SVG);
-  }
-
-  bool IsXUL() const
-  {
-    return IsInNamespace(kNameSpaceID_XUL);
-  }
-
-  bool IsMathML() const
-  {
-    return IsInNamespace(kNameSpaceID_MathML);
-  }
-
-  bool IsMathML(nsIAtom* aTag) const
-  {
-    return mNodeInfo->Equals(aTag, kNameSpaceID_MathML);
   }
 
   nsINode*
@@ -1226,6 +1169,8 @@ public:
    */
   bool Contains(const nsINode* aOther) const;
   nsresult Contains(nsIDOMNode* aOther, bool* aReturn);
+
+  bool UnoptimizableCCNode() const;
 
 private:
 

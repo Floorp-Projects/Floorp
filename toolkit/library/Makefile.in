@@ -453,7 +453,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += \
   -framework SystemConfiguration \
-  -framework QuickTime \
+  -framework QTKit \
   -framework IOKit \
   -F/System/Library/PrivateFrameworks -framework CoreUI \
   $(TK_LIBS) \
@@ -470,6 +470,7 @@ OS_LIBS += \
   -framework IOKit \
   -framework Foundation \
   -framework AppKit \
+  -framework Security \
   $(NULL)
 endif
 endif

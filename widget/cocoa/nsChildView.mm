@@ -838,6 +838,7 @@ NS_IMETHODIMP nsChildView::Move(PRInt32 aX, PRInt32 aY)
   if (mVisible)
     [mView setNeedsDisplay:YES];
 
+  NotifyRollupGeometryChange(gRollupListener);
   ReportMoveEvent();
 
   return NS_OK;
@@ -862,6 +863,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aWidth, PRInt32 aHeight, bool aRepaint
   if (mVisible && aRepaint)
     [mView setNeedsDisplay:YES];
 
+  NotifyRollupGeometryChange(gRollupListener);
   ReportSizeEvent();
 
   return NS_OK;
@@ -894,6 +896,7 @@ NS_IMETHODIMP nsChildView::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
   if (mVisible && aRepaint)
     [mView setNeedsDisplay:YES];
 
+  NotifyRollupGeometryChange(gRollupListener);
   if (isMoving) {
     ReportMoveEvent();
     if (mOnDestroyCalled)
@@ -3707,17 +3710,26 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // Some scrolling devices supports pixel scrolling, e.g. a Macbook
-  // touchpad or a Mighty Mouse. On those devices, [event deviceDeltaX/Y]
-  // contains the amount of pixels to scroll. 
+  // touchpad or a Mighty Mouse. On those devices, [theEvent deviceDeltaX/Y]
+  // contains the amount of pixels to scroll. Since Lion this has changed 
+  // to [theEvent scrollingDeltaX/Y].
   if (inAxis & nsMouseScrollEvent::kIsVertical) {
     scrollDelta       = -[theEvent deltaY];
     if (checkPixels && (scrollDelta == 0 || scrollDelta != floor(scrollDelta))) {
-      scrollDeltaPixels = -[theEvent deviceDeltaY];
+      if ([theEvent respondsToSelector:@selector(scrollingDeltaY)]) {
+        scrollDeltaPixels = -[theEvent scrollingDeltaY];
+      } else {
+        scrollDeltaPixels = -[theEvent deviceDeltaY];
+      }
     }
   } else if (inAxis & nsMouseScrollEvent::kIsHorizontal) {
     scrollDelta       = -[theEvent deltaX];
     if (checkPixels && (scrollDelta == 0 || scrollDelta != floor(scrollDelta))) {
-      scrollDeltaPixels = -[theEvent deviceDeltaX];
+      if ([theEvent respondsToSelector:@selector(scrollingDeltaX)]) {
+        scrollDeltaPixels = -[theEvent scrollingDeltaX];
+      } else {
+        scrollDeltaPixels = -[theEvent deviceDeltaX];
+      }
     }
   } else {
     return; // caller screwed up

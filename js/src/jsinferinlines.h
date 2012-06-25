@@ -440,7 +440,7 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 {
     return fp->isConstructing() && cx->typeInferenceEnabled() &&
            fp->prev() && fp->prev()->isScriptFrame() &&
-           UseNewType(cx, fp->prev()->script(), fp->prev()->pcQuadratic(cx->stack, fp));
+           UseNewType(cx, fp->prev()->script(), fp->prevpc());
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1427,6 +1427,7 @@ JSScript::ensureHasTypes(JSContext *cx)
 inline bool
 JSScript::ensureRanAnalysis(JSContext *cx, JSObject *scope)
 {
+    js::analyze::AutoEnterAnalysis aea(cx->compartment);
     JSScript *self = this;
     JS::SkipRoot root(cx, &self);
 

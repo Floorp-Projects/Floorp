@@ -104,6 +104,10 @@ public:
   virtual PRUint32 RowCount();
   virtual Accessible* CellAt(PRUint32 aRowIndex, PRUint32 aColumnIndex);
   virtual PRInt32 CellIndexAt(PRUint32 aRowIdx, PRUint32 aColIdx);
+  virtual PRInt32 ColIndexAt(PRUint32 aCellIdx);
+  virtual PRInt32 RowIndexAt(PRUint32 aCellIdx);
+  virtual void RowAndColIndicesAt(PRUint32 aCellIdx, PRInt32* aRowIdx,
+                                  PRInt32* aColIdx);
   virtual PRUint32 ColExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
   virtual PRUint32 RowExtentAt(PRUint32 aRowIdx, PRUint32 aColIdx);
   virtual bool IsColSelected(PRUint32 aColIdx);
@@ -112,6 +116,9 @@ public:
   virtual PRUint32 SelectedCellCount();
   virtual PRUint32 SelectedColCount();
   virtual PRUint32 SelectedRowCount();
+  virtual void SelectedCellIndices(nsTArray<PRUint32>* aCells);
+  virtual void SelectedColIndices(nsTArray<PRUint32>* aCols);
+  virtual void SelectedRowIndices(nsTArray<PRUint32>* aRows);
   virtual void SelectCol(PRUint32 aColIdx);
   virtual void SelectRow(PRUint32 aRowIdx);
   virtual void UnselectCol(PRUint32 aColIdx);

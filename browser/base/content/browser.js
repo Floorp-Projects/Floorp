@@ -1400,7 +1400,7 @@ var gBrowserInit = {
 
       // Show the toolbar if it was previously visible
       if (gPrefService.getBoolPref("devtools.toolbar.visible")) {
-        this.DeveloperToolbar.show();
+        DeveloperToolbar.show();
       }
     }
 
@@ -6707,10 +6707,6 @@ var gIdentityHandler = {
     // the popup is actually needed
     this._identityPopup.hidden = false;
 
-    // Tell the popup to consume dismiss clicks, to avoid bug 395314
-    this._identityPopup.popupBoxObject
-        .setConsumeRollupEvent(Ci.nsIPopupBoxObject.ROLLUP_CONSUME);
-
     // Update the popup strings
     this.setPopupMessages(this._identityBox.className);
 
@@ -7145,6 +7141,9 @@ let gPrivateBrowsingUI = {
    * and the setter should only be used in tests.
    */
   get privateWindow() {
+    if (!gBrowser)
+      return false;
+
     return gBrowser.docShell.QueryInterface(Ci.nsILoadContext)
                             .usePrivateBrowsing;
   }

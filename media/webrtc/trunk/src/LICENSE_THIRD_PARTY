@@ -1,0 +1,27 @@
+This source tree contains third party source code which is governed by third 
+party licenses. This file contains references to files which are under other 
+licenses than the one provided in the LICENSE file in the root of the source
+tree.
+
+Files governed by third party licenses:
+common_audio/signal_processing/spl_sqrt_floor.c
+common_audio/signal_processing/spl_sqrt_floor.s
+modules/audio_coding/codecs/G711/main/source/g711.h
+modules/audio_coding/codecs/G711/main/source/g711.c
+modules/audio_coding/codecs/G722/main/source/g722_decode.h
+modules/audio_coding/codecs/G722/main/source/g722_decode.c
+modules/audio_coding/codecs/G722/main/source/g722_encode.h
+modules/audio_coding/codecs/G722/main/source/g722_encode.c
+modules/audio_coding/codecs/iSAC/main/source/fft.c
+modules/audio_device/main/source/Mac/portaudio/pa_memorybarrier.h
+modules/audio_device/main/source/Mac/portaudio/pa_ringbuffer.h
+modules/audio_device/main/source/Mac/portaudio/pa_ringbuffer.c
+modules/audio_processing/utility/fft4g.c
+modules/audio_processing/aec/aec_rdft.c
+system_wrappers/interface/fix_interlocked_exchange_pointer_windows.h
+system_wrappers/interface/scoped_ptr.h
+system_wrappers/interface/scoped_refptr.h
+system_wrappers/source/condition_variable_windows.cc
+system_wrappers/source/spreadsortlib/constants.hpp
+system_wrappers/source/spreadsortlib/spreadsort.hpp
+system_wrappers/source/thread_windows_set_name.h

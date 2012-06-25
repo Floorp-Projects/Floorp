@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -313,6 +313,13 @@ struct JSGenerator
 
 extern JSObject *
 js_NewGenerator(JSContext *cx);
+
+namespace js {
+
+bool
+GeneratorHasMarkableFrame(JSGenerator *gen);
+
+} /* namespace js */
 #endif
 
 extern JSObject *

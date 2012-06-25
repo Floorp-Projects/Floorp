@@ -40,12 +40,14 @@ using namespace js::gc;
 JSCompartment::JSCompartment(JSRuntime *rt)
   : rt(rt),
     principals(NULL),
+    global_(NULL),
     needsBarrier_(false),
     gcState(NoGCScheduled),
     gcPreserveCode(false),
     gcBytes(0),
     gcTriggerBytes(0),
     hold(false),
+    isSystemCompartment(false),
     lastCodeRelease(0),
     typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     data(NULL),
@@ -167,7 +169,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     /* Unwrap incoming objects. */
     if (vp->isObject()) {
-        JSObject *obj = &vp->toObject();
+        Rooted<JSObject*> obj(cx, &vp->toObject());
 
         if (obj->compartment() == this)
             return WrapForSameCompartment(cx, obj, vp);
@@ -194,7 +196,7 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
 #ifdef DEBUG
         {
-            JSObject *outer = GetOuterObject(cx, RootedObject(cx, obj));
+            JSObject *outer = GetOuterObject(cx, obj);
             JS_ASSERT(outer && outer == obj);
         }
 #endif

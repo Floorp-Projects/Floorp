@@ -15,6 +15,7 @@
 #include "nsSVGFilterElement.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"
+#include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 
 nsIFrame*
@@ -25,6 +26,10 @@ NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGFilterFrame)
 
+/**
+ * Returns the entire filter size if aDeviceRect is null, or if
+ * the result is too large to be stored in an nsIntRect.
+ */
 static nsIntRect
 MapDeviceRectToFilterSpace(const gfxMatrix& aMatrix,
                            const gfxIntSize& aFilterSize,
@@ -68,7 +73,7 @@ public:
                        nsSVGFilterPaintCallback *aPaint,
                        const nsIntRect *aPostFilterDirtyRect,
                        const nsIntRect *aPreFilterDirtyRect,
-                       const nsIntRect *aOverrideSourceBBox,
+                       const gfxRect *aOverrideBBox,
                        const gfxMatrix *aOverrideUserToDeviceSpace = nsnull);
   ~nsAutoFilterInstance() {}
 
@@ -85,7 +90,7 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
                                            nsSVGFilterPaintCallback *aPaint,
                                            const nsIntRect *aPostFilterDirtyRect,
                                            const nsIntRect *aPreFilterDirtyRect,
-                                           const nsIntRect *aOverrideSourceBBox,
+                                           const gfxRect *aOverrideBBox,
                                            const gfxMatrix *aOverrideUserToDeviceSpace)
 {
   const nsSVGFilterElement *filter = aFilterFrame->GetFilterContent();
@@ -95,13 +100,7 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   PRUint16 primitiveUnits =
     aFilterFrame->GetEnumValue(nsSVGFilterElement::PRIMITIVEUNITS);
 
-  gfxRect bbox;
-  if (aOverrideSourceBBox) {
-    bbox = gfxRect(aOverrideSourceBBox->x, aOverrideSourceBBox->y,
-                   aOverrideSourceBBox->width, aOverrideSourceBBox->height);
-  } else {
-    bbox = nsSVGUtils::GetBBox(aTarget);
-  }
+  gfxRect bbox = aOverrideBBox ? *aOverrideBBox : nsSVGUtils::GetBBox(aTarget);
 
   // Get the filter region (in the filtered element's user space):
 
@@ -207,11 +206,12 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   if (svgTarget) {
     if (aOverrideUserToDeviceSpace) {
       // If aOverrideUserToDeviceSpace is specified, it is a simple
-      // CSS-px-to-dev-px transform passed by nsSVGFilterFrame::GetFilterBBox()
-      // when requesting the filter expansion of the overflow rects in frame
-      // space. In this case GetCoveredRegion() is not what we want since it is
-      // in outer-<svg> space, GetFilterBBox passes in the pre-filter bounds of
-      // the frame in frame space for us to use instead.
+      // CSS-px-to-dev-px transform passed by nsSVGFilterFrame::
+      // GetPostFilterBounds() when requesting the filter expansion of the
+      // overflow rects in frame space. In this case GetCoveredRegion() is not
+      // what we want since it is in outer-<svg> space, so GetPostFilterBounds
+      // passes in the pre-filter bounds of the frame in frame space for us to
+      // use instead.
       NS_ASSERTION(aPreFilterDirtyRect, "Who passed aOverrideUserToDeviceSpace?");
       targetBoundsDeviceSpace = *aPreFilterDirtyRect;
     } else {
@@ -371,14 +371,14 @@ nsSVGFilterFrame::AttributeChanged(PRInt32  aNameSpaceID,
        aAttribute == nsGkAtoms::filterRes ||
        aAttribute == nsGkAtoms::filterUnits ||
        aAttribute == nsGkAtoms::primitiveUnits)) {
-    nsSVGEffects::InvalidateRenderingObservers(this);
+    nsSVGEffects::InvalidateDirectRenderingObservers(this);
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
     Properties().Delete(nsSVGEffects::HrefProperty());
     mNoHRefURI = false;
     // And update whoever references us
-    nsSVGEffects::InvalidateRenderingObservers(this);
+    nsSVGEffects::InvalidateDirectRenderingObservers(this);
   }
   return nsSVGFilterFrameBase::AttributeChanged(aNameSpaceID,
                                                 aAttribute, aModType);
@@ -404,6 +404,10 @@ nsSVGFilterFrame::PaintFilteredFrame(nsRenderingContext *aContext,
   return rv;
 }
 
+/**
+ * Returns NS_ERROR_FAILURE if the result is too large to be stored
+ * in an nsIntRect.
+ */
 static nsresult
 TransformFilterSpaceToDeviceSpace(nsSVGFilterInstance *aInstance,
                                   nsIntRect *aRect)
@@ -423,8 +427,21 @@ nsIntRect
 nsSVGFilterFrame::GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
                                          const nsIntRect& aPreFilterDirtyRect)
 {
+  bool overrideCTM = false;
+  gfxMatrix ctm;
+
+  if (aFilteredFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
+    // In the case of this method we want to input a rect that is relative to
+    // aFilteredFrame and get back a rect that is relative to aFilteredFrame.
+    // To do that we need to provide an override canvanTM to prevent the filter
+    // code from calling GetCanvasTM and using that TM as normal.
+    overrideCTM = true;
+    ctm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFilteredFrame);
+  }
+
   nsAutoFilterInstance instance(aFilteredFrame, this, nsnull, nsnull,
-                                &aPreFilterDirtyRect, nsnull);
+                                &aPreFilterDirtyRect, nsnull,
+                                overrideCTM ? &ctm : nsnull);
   if (!instance.get())
     return nsIntRect();
 
@@ -466,7 +483,7 @@ nsSVGFilterFrame::GetPreFilterNeededArea(nsIFrame *aFilteredFrame,
 
 nsIntRect
 nsSVGFilterFrame::GetPostFilterBounds(nsIFrame *aFilteredFrame,
-                                      const nsIntRect *aOverrideBBox,
+                                      const gfxRect *aOverrideBBox,
                                       const nsIntRect *aPreFilterBounds)
 {
   bool overrideCTM = false;
@@ -478,11 +495,7 @@ nsSVGFilterFrame::GetPostFilterBounds(nsIFrame *aFilteredFrame,
     // rect relative to aTarget itself. For that we need to prevent the filter
     // code using GetCanvasTM().
     overrideCTM = true;
-    PRInt32 appUnitsPerDevPixel =
-      aFilteredFrame->PresContext()->AppUnitsPerDevPixel();
-    float devPxPerCSSPx =
-      1 / nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPixel);
-    ctm.Scale(devPxPerCSSPx, devPxPerCSSPx);
+    ctm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aFilteredFrame);
   }
 
   nsAutoFilterInstance instance(aFilteredFrame, this, nsnull, nsnull,

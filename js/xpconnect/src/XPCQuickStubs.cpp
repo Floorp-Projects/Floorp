@@ -1049,15 +1049,11 @@ xpc_qsVariantToJsval(XPCLazyCallContext &lccx,
 void
 xpc_qsAssertContextOK(JSContext *cx)
 {
-    XPCPerThreadData *thread = XPCPerThreadData::GetData(cx);
-    XPCJSContextStack* stack = thread->GetJSContextStack();
+    XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
 
     JSContext *topJSContext = stack->Peek();
 
     // This is what we're actually trying to assert here.
     NS_ASSERTION(cx == topJSContext, "wrong context on XPCJSContextStack!");
-
-    NS_ASSERTION(XPCPerThreadData::IsMainThread(cx),
-                 "XPConnect quick stub called on non-main thread");
 }
 #endif

@@ -6,7 +6,7 @@
 #ifndef nsTextControlFrame_h___
 #define nsTextControlFrame_h___
 
-#include "nsStackFrame.h"
+#include "nsContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
@@ -32,7 +32,7 @@ class Element;
 }
 }
 
-class nsTextControlFrame : public nsStackFrame,
+class nsTextControlFrame : public nsContainerFrame,
                            public nsIAnonymousContentCreator,
                            public nsITextControlFrame,
                            public nsIStatefulFrame
@@ -54,6 +54,8 @@ public:
   }
 
   virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext);
+  virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext);
+
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
@@ -64,13 +66,10 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState);
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState);
-  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState);
   virtual bool IsCollapsed();
 
-  DECL_DO_GLOBAL_REFLOW_COUNT_DSP(nsTextControlFrame, nsStackFrame)
+  DECL_DO_GLOBAL_REFLOW_COUNT_DSP(nsTextControlFrame, nsContainerFrame)
 
   virtual bool IsLeaf() const;
   
@@ -90,7 +89,7 @@ public:
   {
     // nsStackFrame is already both of these, but that's somewhat bogus,
     // and we really mean it.
-    return nsStackFrame::IsFrameOfType(aFlags &
+    return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
@@ -163,6 +162,15 @@ public:
   // We could make these auto-Revoking via the "delete" entry for safety
   NS_DECLARE_FRAME_PROPERTY(TextControlInitializer, nsnull)
 
+protected:
+  /**
+   * Launch the reflow on the child frames - see nsTextControlFrame::Reflow()
+   */
+  void ReflowTextControlChild(nsIFrame*                aFrame,
+                              nsPresContext*           aPresContext,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus,
+                              nsHTMLReflowMetrics& aParentDesiredSize);
 
 public: //for methods who access nsTextControlFrame directly
   void SetValueChanged(bool aValueChanged);

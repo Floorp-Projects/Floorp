@@ -86,4 +86,6 @@
 #define NS_APP_INSTALL_CLEANUP_DIR              "XPIClnupD"  //location of xpicleanup.dat xpicleanup.exe 
 
 #define NS_APP_STORAGE_50_FILE                  "UStor" // sqlite database used as mozStorage profile db
+
+#define NS_APP_INDEXEDDB_PARENT_DIR             "indexedDBPDir"
 #endif

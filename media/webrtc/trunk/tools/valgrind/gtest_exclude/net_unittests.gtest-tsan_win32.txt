@@ -1,0 +1,43 @@
+# These tests fail due to unknown reasons
+# TODO(timurrrr): investigate
+CookieMonsterTest.TestLastAccess
+SpdyNetwork*Error*
+SpdyNetwork*Get*
+SpdyNetworkTransactionTest.SynReplyHeadersVary
+X509CertificateTest.UnoSoftCertParsing
+URLRequestTest.DoNotSaveCookies
+URLRequestTest.QuitTest
+
+# See http://crbug.com/46647
+DiskCacheBackendTest.*
+
+# See http://crbug.com/53304
+URLRequestTest.*
+
+# See http://crbug.com/47836
+ClientSocketPoolBaseTest.CancelPendingSocketAtSocketLimit
+
+# See http://crbug.com/51145
+HttpNetworkTransactionTest.*
+HttpNetworkLayerTest.GET
+
+# Single-threaded and relatively slow - no reason to test
+# See http://crbug.com/59642
+CookieMonsterTest.GarbageCollectionTriggers
+
+# Fail for unknown reason; see http://crbug.com/67599
+CertVerifierTest.*
+X509CertificateTest.IntermediateCARequireExplicitPolicy
+
+# Time out, see http://crbug.com/68482
+SSLServerSocketTest.*
+X509CertificateTest.TestKnownRoot
+
+# See http://crbug.com/102330
+SSLClientSocketTest.*
+
+# See http://crbug.com/104805
+HostResolverImplTest.OnlyAbortExistingRequestsOnIPAddressChange
+
+# See http://crbug.com/50346
+DiskCacheEntryTest.*

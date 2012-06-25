@@ -1,0 +1,6 @@
+# This test tries to record fake audio in real-time.
+# This appears to be too sensitive to slowdown, see http://crbug.com/49497
+FakeAudioInputTest.BasicCallbacks
+# This test started timing out with chromium r120151
+# See http://crbug.com/112418
+PipelineIntegrationTest.ChunkDemuxerAbortRead_VideoOnly

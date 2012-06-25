@@ -49,33 +49,6 @@ public:
   virtual void RemoveNativeRootAccessible(Accessible* aRootAccessible) = 0;
 
   /**
-   * Notification used to update the accessible tree when new content is
-   * inserted.
-   */
-  virtual void ContentRangeInserted(nsIPresShell* aPresShell,
-                                    nsIContent* aContainer,
-                                    nsIContent* aStartChild,
-                                    nsIContent* aEndChild) = 0;
-
-  /**
-   * Notification used to update the accessible tree when content is removed.
-   */
-  virtual void ContentRemoved(nsIPresShell* aPresShell, nsIContent* aContainer,
-                              nsIContent* aChild) = 0;
-
-  /**
-   * Notify accessibility that anchor jump has been accomplished to the given
-   * target. Used by layout.
-   */
-  virtual void NotifyOfAnchorJumpTo(nsIContent *aTarget) = 0;
-
-  /**
-   * Notify the accessibility service that the given presshell is
-   * being destroyed.
-   */
-  virtual void PresShellDestroyed(nsIPresShell *aPresShell) = 0;
-
-  /**
    * Fire accessible event of the given type for the given target.
    *
    * @param aEvent   [in] accessible event type

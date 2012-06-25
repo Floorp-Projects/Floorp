@@ -26,6 +26,7 @@ interface nsIDOMCSSRule : nsISupports
   const unsigned short      PAGE_RULE                      = 6;
   const unsigned short      MOZ_KEYFRAMES_RULE             = 7;
   const unsigned short      MOZ_KEYFRAME_RULE              = 8;
+  const unsigned short      NAMESPACE_RULE                 = 10;
 
   readonly attribute unsigned short      type;
            attribute DOMString           cssText;

@@ -500,7 +500,10 @@ class TokenStream
     bool isEOF() const { return !!(flags & TSF_EOF); }
     bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
-    bool reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned errorNumber, va_list ap);
+    // Return false if we should stop compiling, either because (a) we issued
+    // an error message, or (b) something went wrong, such as an OOM.
+    bool reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned errorNumber,
+                                    va_list ap);
 
   private:
     static JSAtom *atomize(JSContext *cx, CharBuffer &cb);
