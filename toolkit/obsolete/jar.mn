@@ -5,7 +5,7 @@
 toolkit.jar:
 +  content/global/globalOverlay.xul             (content/globalOverlay.xul)
 *+ content/global/dialogOverlay.xul             (content/dialogOverlay.xul)
-*+ content/global/dialogOverlay.js              (content/dialogOverlay.js)
+   content/global/dialogOverlay.js              (content/dialogOverlay.js)
    content/global/inlineSpellCheckUI.js         (content/inlineSpellCheckUI.js)
 +  content/global/nsClipboard.js                (content/nsClipboard.js)
 +  content/global/nsUserSettings.js             (content/nsUserSettings.js)
