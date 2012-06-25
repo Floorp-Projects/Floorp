@@ -910,6 +910,9 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
     return nsnull;
   }
 
+  NS_ASSERTION(surface->GetContentType() != gfxASurface::CONTENT_ALPHA,
+               "Image layer has alpha image");
+
   nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
   if (!pat) {
     return nsnull;
