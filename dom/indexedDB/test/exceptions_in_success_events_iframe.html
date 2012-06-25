@@ -96,11 +96,13 @@
       event = yield;
 
       is(event.type, "abort", "Got transaction abort event");
+      is(event.target.error, null, "Got null error object");
 
       event = yield;
 
       is(event.type, "error", "Got IDBOpenDBRequest error event");
       is(event.target, openrequest, "Right event target");
+      is(event.target.error.name, "AbortError", "Right error name");
 
       finishTest();
       yield;

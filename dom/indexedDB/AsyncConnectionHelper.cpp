@@ -471,7 +471,7 @@ AsyncConnectionHelper::OnError()
     if (doDefault &&
         mTransaction &&
         mTransaction->IsOpen() &&
-        NS_FAILED(mTransaction->Abort())) {
+        NS_FAILED(mTransaction->Abort(mRequest))) {
       NS_WARNING("Failed to abort transaction!");
     }
   }

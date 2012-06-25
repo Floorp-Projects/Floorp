@@ -17,7 +17,7 @@
           setTimeout(testFinishedCallback, 0, "complete");
         }
         transaction.onabort = function(event) {
-          setTimeout(testFinishedCallback, 0, "abort");
+          setTimeout(testFinishedCallback, 0, "abort " + event.target.error.name);
         }
 
         let objectStore = transaction.objectStore("foo");

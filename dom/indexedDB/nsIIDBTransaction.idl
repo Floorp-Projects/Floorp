@@ -11,19 +11,22 @@ interface nsIIDBObjectStore;
 interface nsIIDBRequest;
 interface nsIIDBDatabase;
 interface nsIDOMDOMStringList;
+interface nsIDOMDOMError;
 
 /**
  * IDBDTransaction interface.  See
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBTransaction
  * for more information.
  */
-[scriptable, builtinclass, uuid(e4927c76-4f1f-4d7d-80ad-8186e1677da6)]
+[scriptable, builtinclass, uuid(79f73099-02ff-416d-9754-5a315e29ee4f)]
 interface nsIIDBTransaction : nsISupports
 {
   readonly attribute nsIIDBDatabase db;
 
   // "readonly", "readwrite" or "versionchange"
   readonly attribute DOMString mode;
+
+  readonly attribute nsIDOMDOMError error;
 
   readonly attribute nsIDOMDOMStringList objectStoreNames;
 

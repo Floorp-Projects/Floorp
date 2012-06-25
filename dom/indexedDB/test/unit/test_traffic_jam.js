@@ -69,7 +69,7 @@ function testSteps()
   is(event.target, requests[2], "fired at the right request");
   event.target.result.close();
 
-  requests[3].onerror = new ExpectError("VersionError");
+  requests[3].onerror = new ExpectError("VersionError", true);
 
   event = yield;
 
