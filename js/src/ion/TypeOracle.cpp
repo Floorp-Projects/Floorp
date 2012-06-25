@@ -490,7 +490,7 @@ TypeInferenceOracle::getCallReturn(JSScript *script, jsbytecode *pc)
 bool
 TypeInferenceOracle::canInlineCall(JSScript *caller, jsbytecode *pc)
 {
-    JS_ASSERT(JSOp(*pc) == JSOP_CALL || JSOp(*pc) == JSOP_FUNCALL || JSOp(*pc) == JSOP_FUNAPPLY);
+    JS_ASSERT(types::IsInlinableCall(pc));
 
     Bytecode *code = caller->analysis()->maybeCode(pc);
     if (code->monitoredTypes || code->monitoredTypesReturn || caller->analysis()->typeBarriers(cx, pc))
