@@ -17,11 +17,6 @@ using namespace mozilla;
 DeleteRangeTxn::DeleteRangeTxn()
   : EditAggregateTxn(),
     mRange(),
-    mStartParent(),
-    mStartOffset(0),
-    mEndParent(),
-    mCommonParent(),
-    mEndOffset(0),
     mEditor(nsnull),
     mRangeUpdater(nsnull)
 {
@@ -32,17 +27,11 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DeleteRangeTxn)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DeleteRangeTxn,
                                                 EditAggregateTxn)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRange)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mStartParent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mEndParent)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCommonParent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DeleteRangeTxn,
                                                   EditAggregateTxn)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mRange, nsIDOMRange)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStartParent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mEndParent)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCommonParent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTxn)
@@ -56,18 +45,15 @@ DeleteRangeTxn::Init(nsEditor* aEditor,
   MOZ_ASSERT(aEditor && aRange);
 
   mEditor = aEditor;
-  mRange = aRange;
+  mRange = aRange->CloneRange();
   mRangeUpdater = aRangeUpdater;
 
-  mStartParent = aRange->GetStartParent();
-  mStartOffset = aRange->StartOffset();
-  mEndParent = aRange->GetEndParent();
-  mEndOffset = aRange->EndOffset();
-  mCommonParent = aRange->GetCommonAncestor();
-
-  NS_ENSURE_TRUE(mEditor->IsModifiableNode(mStartParent), NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mEditor->IsModifiableNode(mEndParent), NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mEditor->IsModifiableNode(mCommonParent), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mEditor->IsModifiableNode(mRange->GetStartParent()),
+                 NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mEditor->IsModifiableNode(mRange->GetEndParent()),
+                 NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mEditor->IsModifiableNode(mRange->GetCommonAncestor()),
+                 NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -75,27 +61,30 @@ DeleteRangeTxn::Init(nsEditor* aEditor,
 NS_IMETHODIMP
 DeleteRangeTxn::DoTransaction()
 {
-  MOZ_ASSERT(mStartParent && mEndParent && mCommonParent && mEditor);
-  // Maybe the parent got smaller since Init() (bug 766845)
-  MOZ_ASSERT((PRUint32)mEndOffset <= mEndParent->Length());
-
+  MOZ_ASSERT(mRange && mEditor);
   nsresult res;
-  // build the child transactions
 
-  if (mStartParent == mEndParent) {
+  // build the child transactions
+  nsCOMPtr<nsINode> startParent = mRange->GetStartParent();
+  PRInt32 startOffset = mRange->StartOffset();
+  nsCOMPtr<nsINode> endParent = mRange->GetEndParent();
+  PRInt32 endOffset = mRange->EndOffset();
+  MOZ_ASSERT(startParent && endParent);
+
+  if (startParent == endParent) {
     // the selection begins and ends in the same node
-    res = CreateTxnsToDeleteBetween(mStartParent, mStartOffset, mEndOffset);
+    res = CreateTxnsToDeleteBetween(startParent, startOffset, endOffset);
     NS_ENSURE_SUCCESS(res, res);
   } else {
     // the selection ends in a different node from where it started.  delete
     // the relevant content in the start node
-    res = CreateTxnsToDeleteContent(mStartParent, mStartOffset, nsIEditor::eNext);
+    res = CreateTxnsToDeleteContent(startParent, startOffset, nsIEditor::eNext);
     NS_ENSURE_SUCCESS(res, res);
     // delete the intervening nodes
     res = CreateTxnsToDeleteNodesBetween();
     NS_ENSURE_SUCCESS(res, res);
     // delete the relevant content in the end node
-    res = CreateTxnsToDeleteContent(mEndParent, mEndOffset, nsIEditor::ePrevious);
+    res = CreateTxnsToDeleteContent(endParent, endOffset, nsIEditor::ePrevious);
     NS_ENSURE_SUCCESS(res, res);
   }
 
@@ -109,7 +98,7 @@ DeleteRangeTxn::DoTransaction()
   if (bAdjustSelection) {
     nsRefPtr<Selection> selection = mEditor->GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    res = selection->Collapse(mStartParent, mStartOffset);
+    res = selection->Collapse(startParent, startOffset);
     NS_ENSURE_SUCCESS(res, res);
   }
   // else do nothing - dom range gravity will adjust selection
@@ -120,7 +109,7 @@ DeleteRangeTxn::DoTransaction()
 NS_IMETHODIMP
 DeleteRangeTxn::UndoTransaction()
 {
-  MOZ_ASSERT(mStartParent && mEndParent && mCommonParent && mEditor);
+  MOZ_ASSERT(mRange && mEditor);
 
   return EditAggregateTxn::UndoTransaction();
 }
@@ -128,7 +117,7 @@ DeleteRangeTxn::UndoTransaction()
 NS_IMETHODIMP
 DeleteRangeTxn::RedoTransaction()
 {
-  MOZ_ASSERT(mStartParent && mEndParent && mCommonParent && mEditor);
+  MOZ_ASSERT(mRange && mEditor);
 
   return EditAggregateTxn::RedoTransaction();
 }
