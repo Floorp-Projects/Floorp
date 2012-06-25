@@ -26,10 +26,10 @@ nsProfiler::nsProfiler()
 
 
 NS_IMETHODIMP
-nsProfiler::StartProfiler(PRUint32 aEntries, PRUint32 aInterval,
+nsProfiler::StartProfiler(PRUint32 aInterval, PRUint32 aEntries,
                           const char** aFeatures, PRUint32 aFeatureCount)
 {
-  SAMPLER_START(aEntries, aInterval, aFeatures, aFeatureCount);
+  SAMPLER_START(aInterval, aEntries, aFeatures, aFeatureCount);
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
   mozilla::InitEventTracing();
 #endif
