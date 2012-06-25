@@ -87,8 +87,6 @@ public:
     mThebesLayerItems.Init();
   }
 
-  static void Shutdown();
-
   void Init(nsDisplayListBuilder* aBuilder);
 
   /**
