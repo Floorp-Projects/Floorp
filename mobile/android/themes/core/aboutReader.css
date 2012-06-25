@@ -133,6 +133,13 @@ body {
   overflow: scroll !important;
 }
 
+.content blockquote {
+  margin: 0px !important;
+  padding: 0px !important;
+  border: 0px !important;
+  padding-left: 23px !important;
+}
+
 .font-size1 > .content {
   font-size: 10px;
 }
@@ -240,10 +247,11 @@ body {
 
 .dropdown-arrow {
   position: absolute;
-  width: 28px;
-  height: 10px;
-  bottom: -10px;
-  background-image: url('chrome://browser/skin/images/reader-dropdown-arrow.png');
+  width: 40px;
+  height: 18px;
+  bottom: -18px;
+  background-image: url('chrome://browser/skin/images/reader-dropdown-arrow-mdpi.png');
+  background-size: 40px 18px;
   background-position: center;
   display: block;
 }
@@ -374,6 +382,10 @@ body {
 }
 
 @media screen and (min-resolution: 200dpi) {
+  .dropdown-arrow {
+    background-image: url('chrome://browser/skin/images/reader-dropdown-arrow-hdpi.png');
+  }
+
   .step-control > .plus-button {
     background-image: url('chrome://browser/skin/images/reader-plus-icon-hdpi.png');
   }
@@ -384,6 +396,10 @@ body {
 }
 
 @media screen and (min-resolution: 300dpi) {
+  .dropdown-arrow {
+    background-image: url('chrome://browser/skin/images/reader-dropdown-arrow-xhdpi.png');
+  }
+
   .step-control > .plus-button {
     background-image: url('chrome://browser/skin/images/reader-plus-icon-xhdpi.png');
   }

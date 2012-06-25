@@ -122,6 +122,20 @@ struct JSCompartment
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
 
+  private:
+    js::GlobalObject             *global_;
+  public:
+    js::GlobalObject &global() const {
+        JS_ASSERT(global_->compartment() == this);
+        return *global_;
+    }
+
+    void initGlobal(js::GlobalObject &global) {
+        JS_ASSERT(!global_);
+        global_ = &global;
+    }
+
+  public:
     js::gc::ArenaLists           arenas;
 
   private:

@@ -870,35 +870,6 @@ typedef void (*LinearShadeProc)(TileProc proc, SkFixed dx, SkFixed fx,
                                 SkPMColor* dstC, const SkPMColor* cache,
                                 int toggle, int count);
 
-// This function is deprecated, and will be replaced by 
-// shadeSpan_linear_vertical_lerp() once Chrome has been weaned off of it.
-void shadeSpan_linear_vertical(TileProc proc, SkFixed dx, SkFixed fx,
-                               SkPMColor* SK_RESTRICT dstC,
-                               const SkPMColor* SK_RESTRICT cache,
-                               int toggle, int count) {
-    if (proc == clamp_tileproc) {
-        // Read out clamp values from beginning/end of the cache. No need to lerp
-        // or dither
-        if (fx < 0) {
-            sk_memset32(dstC, cache[-1], count);
-            return;
-        } else if (fx > 0xFFFF) {
-            sk_memset32(dstC, cache[Gradient_Shader::kCache32Count * 2], count);
-            return;
-        }
-    }
-
-    // We're a vertical gradient, so no change in a span.
-    // If colors change sharply across the gradient, dithering is
-    // insufficient (it subsamples the color space) and we need to lerp.
-    unsigned fullIndex = proc(fx);
-    unsigned fi = fullIndex >> (16 - Gradient_Shader::kCache32Bits);
-    sk_memset32_dither(dstC,
-            cache[toggle + fi],
-            cache[(toggle ^ Gradient_Shader::kDitherStride32) + fi],
-            count);
-}
-
 // Linear interpolation (lerp) is unnecessary if there are no sharp
 // discontinuities in the gradient - which must be true if there are
 // only 2 colors - but it's cheap.
@@ -2136,6 +2107,8 @@ private:
     const SkPoint fCenter;
 };
 
+#ifndef SK_SCALAR_IS_FLOAT 
+
 #ifdef COMPUTE_SWEEP_TABLE
 #define PI  3.14159265
 static bool gSweepTableReady;
@@ -2173,10 +2146,13 @@ static const uint8_t gSweepTable[] = {
 static const uint8_t* build_sweep_table() { return gSweepTable; }
 #endif
 
+#endif
+
 // divide numer/denom, with a bias of 6bits. Assumes numer <= denom
 // and denom != 0. Since our table is 6bits big (+1), this is a nice fit.
 // Same as (but faster than) SkFixedDiv(numer, denom) >> 10
 
+#ifndef SK_SCALAR_IS_FLOAT
 //unsigned div_64(int numer, int denom);
 static unsigned div_64(int numer, int denom) {
     SkASSERT(numer <= denom);
@@ -2299,6 +2275,7 @@ static unsigned atan_0_90(SkFixed y, SkFixed x) {
     SkASSERT(result <= 63);
     return result;
 }
+#endif
 
 //  returns angle in a circle [0..2PI) -> [0..255]
 #ifdef SK_SCALAR_IS_FLOAT

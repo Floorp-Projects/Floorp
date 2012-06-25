@@ -224,8 +224,13 @@ class CompartmentChecker
     JSCompartment *compartment;
 
   public:
-    explicit CompartmentChecker(JSContext *cx) : context(cx), compartment(cx->compartment) {
-        check(cx->hasfp() ? JS_GetGlobalForScopeChain(cx) : cx->globalObject);
+    explicit CompartmentChecker(JSContext *cx)
+      : context(cx), compartment(cx->compartment)
+    {
+        if (cx->compartment) {
+            GlobalObject *global = GetGlobalForScopeChain(cx);
+            JS_ASSERT(cx->compartment->global() == *global);
+        }
     }
 
     /*

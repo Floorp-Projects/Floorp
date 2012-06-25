@@ -96,6 +96,7 @@ nsDOMKeyboardEvent::GetCharCode(PRUint32* aCharCode)
     *aCharCode = ((nsKeyEvent*)mEvent)->charCode;
     break;
   default:
+    *aCharCode = 0;
     break;
   }
   return NS_OK;

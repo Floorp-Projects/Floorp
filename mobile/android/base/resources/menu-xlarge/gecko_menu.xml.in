@@ -36,6 +36,10 @@
     <item gecko:id="@+id/find_in_page"
           gecko:title="@string/find_in_page" />
 
+    <item gecko:id="@+id/desktop_mode"
+          gecko:title="@string/desktop_mode"
+          gecko:checkable="true" />
+    
     <item gecko:id="@+id/site_settings"
           gecko:icon="@drawable/ic_menu_clear_site_settings"
           gecko:title="@string/site_settings_title" />

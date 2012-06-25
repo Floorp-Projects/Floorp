@@ -4023,9 +4023,13 @@ gov.sg
 edu.sg
 per.sg
 
-// sh : http://www.nic.sh/rules.html
-// list of 2nd level domains ?
+// sh : http://www.nic.sh/registrar.html
 sh
+com.sh
+net.sh
+gov.sh
+org.sh
+mil.sh
 
 // si : http://en.wikipedia.org/wiki/.si
 si

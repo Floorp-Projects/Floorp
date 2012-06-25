@@ -236,6 +236,13 @@ class StatisticsSerializer
     }
 };
 
+/*
+ * If this fails, then you can either delete this assertion and allow all
+ * larger-numbered reasons to pile up in the last telemetry bucket, or switch
+ * to GC_REASON_3 and bump the max value.
+ */
+JS_STATIC_ASSERT(gcreason::NUM_TELEMETRY_REASONS >= gcreason::NUM_REASONS);
+
 static const char *
 ExplainReason(gcreason::Reason reason)
 {

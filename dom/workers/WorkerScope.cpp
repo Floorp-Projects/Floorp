@@ -909,8 +909,8 @@ CreateDedicatedWorkerGlobalScope(JSContext* aCx)
   JS_ASSERT(worker);
 
   JSObject* global =
-    JS_NewCompartmentAndGlobalObject(aCx, DedicatedWorkerGlobalScope::Class(),
-                                     GetWorkerPrincipal());
+    JS_NewGlobalObject(aCx, DedicatedWorkerGlobalScope::Class(),
+                       GetWorkerPrincipal());
   if (!global) {
     return NULL;
   }

@@ -25,6 +25,7 @@ const PREFS_WHITELIST = [
   "browser.history_expire_",
   "browser.link.open_newwindow",
   "browser.places.",
+  "browser.privatebrowsing.",
   "browser.search.context.loadInBackground",
   "browser.search.log",
   "browser.search.openintab",

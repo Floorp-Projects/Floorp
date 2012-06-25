@@ -58,6 +58,10 @@ try {
     Services.perms.add(uri, "offline-app",
                        Ci.nsIPermissionManager.ALLOW_ACTION);
 
+    Services.perms.add(uri, "indexedDB", Ci.nsIPermissionManager.ALLOW_ACTION);
+    Services.perms.add(uri, "indexedDB-unlimited",
+                       Ci.nsIPermissionManager.ALLOW_ACTION);
+
     // Now that we've set the appropriate permissions, twiddle the firstrun flag
     // so we don't try to do so again.
     Services.prefs.setBoolPref("webapprt.firstrun", true);

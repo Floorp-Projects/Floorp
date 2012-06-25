@@ -367,7 +367,7 @@ void XPCJSRuntime::TraceXPConnectRoots(JSTracer *trc)
 
     XPCAutoLock lock(mMapLock);
 
-    XPCWrappedNativeScope::TraceJS(trc, this);
+    XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(trc, this);
 
     for (XPCRootSetElem *e = mVariantRoots; e ; e = e->GetNextRoot())
         static_cast<XPCTraceableVariant*>(e)->TraceJS(trc);
@@ -1857,7 +1857,7 @@ AccumulateTelemetryCallback(int id, uint32_t sample)
 {
     switch (id) {
       case JS_TELEMETRY_GC_REASON:
-        Telemetry::Accumulate(Telemetry::GC_REASON, sample);
+        Telemetry::Accumulate(Telemetry::GC_REASON_2, sample);
         break;
       case JS_TELEMETRY_GC_IS_COMPARTMENTAL:
         Telemetry::Accumulate(Telemetry::GC_IS_COMPARTMENTAL, sample);

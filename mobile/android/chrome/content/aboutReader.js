@@ -59,7 +59,7 @@ let AboutReader = {
     this._setupSegmentedButton("color-scheme-buttons", colorSchemeOptions, colorScheme, this._setColorScheme.bind(this));
     this._setColorScheme(colorScheme);
 
-    let fontTitle = gStrings.GetStringFromName("aboutReader.fontTitle");
+    let fontTitle = gStrings.GetStringFromName("aboutReader.textTitle");
     this._setupStepControl("font-size-control", fontTitle, this._onFontSizeChange.bind(this));
     this._fontSize = 0;
     this._setFontSize(Services.prefs.getIntPref("reader.font_size"));

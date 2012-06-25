@@ -42,7 +42,6 @@
 // the code has been proven robust.
 #define kMaxCount 1000
 
-#define DEBUG
 #ifdef DEBUG
 //------------------------------------------------------------------------------
 // Debugging support

@@ -34,15 +34,23 @@ class MotionEventHelper {
     }
 
     public long move(long downTime, float x, float y) {
+        return move(downTime, SystemClock.uptimeMillis(), x, y);
+    }
+
+    public long move(long downTime, long moveTime, float x, float y) {
         Log.d(LOGTAG, "Triggering move to (" + x + "," + y + ")");
-        MotionEvent event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
+        MotionEvent event = MotionEvent.obtain(downTime, moveTime, MotionEvent.ACTION_MOVE, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
         mInstrumentation.sendPointerSync(event);
         return downTime;
     }
 
     public long up(long downTime, float x, float y) {
+        return up(downTime, SystemClock.uptimeMillis(), x, y);
+    }
+
+    public long up(long downTime, long upTime, float x, float y) {
         Log.d(LOGTAG, "Triggering up at (" + x + "," + y + ")");
-        MotionEvent event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
+        MotionEvent event = MotionEvent.obtain(downTime, upTime, MotionEvent.ACTION_UP, mSurfaceOffsetX + x, mSurfaceOffsetY + y, 0);
         mInstrumentation.sendPointerSync(event);
         return -1L;
     }
@@ -85,8 +93,13 @@ class MotionEventHelper {
     }
 
     public Thread flingAsync(final float startX, final float startY, final float endX, final float endY, final float velocity) {
-        float dx = endX - startX;
-        float dy = endY - startY;
+        // note that the first move after the touch-down is used to get over the panning threshold, and
+        // is basically cancelled out. this means we need to generate (at least) two move events, with
+        // the last move event hitting the target velocity. to do this we just slice the total distance
+        // in half, assuming the first half will get us over the panning threshold and the second half
+        // will trigger the fling.
+        final float dx = (endX - startX) / 2;
+        final float dy = (endY - startY) / 2;
         float distance = FloatMath.sqrt((dx * dx) + (dy * dy));
         final long time = (long)(distance / velocity);
         if (time <= 0) {
@@ -95,9 +108,9 @@ class MotionEventHelper {
         Thread t = new Thread() {
             public void run() {
                 long downTime = down(startX, startY);
-                MotionEvent event = MotionEvent.obtain(downTime, downTime + time, MotionEvent.ACTION_MOVE, endX, endY, 0);
-                mInstrumentation.sendPointerSync(event);
-                downTime = up(downTime, endX, endY);
+                downTime = move(downTime, downTime + time, startX + dx, startY + dy);
+                downTime = move(downTime, downTime + time + time, endX, endY);
+                downTime = up(downTime, downTime + time, endX, endY);
             }
         };
         t.start();

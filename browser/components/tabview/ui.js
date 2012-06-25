@@ -250,9 +250,6 @@ let UI = {
       let event = document.createEvent("Events");
       event.initEvent("tabviewframeinitialized", true, false);
       dispatchEvent(event);
-
-      // XXX this can be removed when bug 731868 is fixed
-      event = null;
     } catch(e) {
       Utils.log(e);
     } finally {

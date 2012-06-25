@@ -549,6 +549,7 @@ MediaStreamGraphImpl::FinishStream(MediaStream* aStream)
 {
   if (aStream->mFinished)
     return;
+  printf("MediaStreamGraphImpl::FinishStream\n");
   LOG(PR_LOG_DEBUG, ("MediaStream %p will finish", aStream));
   aStream->mFinished = true;
   // Force at least one more iteration of the control loop, since we rely
