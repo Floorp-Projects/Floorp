@@ -10,7 +10,6 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.R;
 
-import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentProviderResult;
 import android.content.ContentProviderOperation;
@@ -36,13 +35,18 @@ class AndroidImport implements Runnable {
     private ArrayList<ContentProviderOperation> mOperations;
     private ContentResolver mCr;
     private LocalBrowserDB mDB;
+    private boolean mImportBookmarks;
+    private boolean mImportHistory;
 
-    public AndroidImport(Context context, Runnable onDoneRunnable) {
+    public AndroidImport(Context context, Runnable onDoneRunnable,
+                         boolean doBookmarks, boolean doHistory) {
         mContext = context;
         mOnDoneRunnable = onDoneRunnable;
         mOperations = new ArrayList<ContentProviderOperation>();
         mCr = mContext.getContentResolver();
         mDB = new LocalBrowserDB(GeckoProfile.get(context).getName());
+        mImportBookmarks = doBookmarks;
+        mImportHistory = doHistory;
     }
 
     public void mergeBookmarks() {
@@ -134,8 +138,12 @@ class AndroidImport implements Runnable {
 
     @Override
     public void run() {
-        mergeBookmarks();
-        mergeHistory();
+        if (mImportBookmarks) {
+            mergeBookmarks();
+        }
+        if (mImportHistory) {
+            mergeHistory();
+        }
 
         mOnDoneRunnable.run();
     }
