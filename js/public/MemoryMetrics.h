@@ -163,8 +163,7 @@ struct RuntimeStats
     RuntimeStats(JSMallocSizeOfFun mallocSizeOf)
       : runtime()
       , gcHeapChunkTotal(0)
-      , gcHeapChunkCleanDecommitted(0)
-      , gcHeapChunkDirtyDecommitted(0)
+      , gcHeapDecommittedArenas(0)
       , gcHeapUnusedChunks(0)
       , gcHeapUnusedArenas(0)
       , gcHeapUnusedGcThings(0)
@@ -184,8 +183,7 @@ struct RuntimeStats
     //
     // - rtStats.gcHeapChunkTotal
     //   - decommitted bytes
-    //     - rtStats.gcHeapChunkCleanDecommitted (decommitted arenas in empty chunks)
-    //     - rtStats.gcHeapChunkDirtyDecommitted (decommitted arenas in non-empty chunks)
+    //     - rtStats.gcHeapDecommittedArenas (decommitted arenas in non-empty chunks)
     //   - unused bytes
     //     - rtStats.gcHeapUnusedChunks (empty chunks)
     //     - rtStats.gcHeapUnusedArenas (empty arenas within non-empty chunks)
@@ -194,10 +192,14 @@ struct RuntimeStats
     //     - rtStats.gcHeapChunkAdmin
     //     - rtStats.total.gcHeapArenaAdmin
     //     - rtStats.gcHeapGcThings (in-use GC things)
+    //
+    // It's possible that some arenas in empty chunks may be decommitted, but
+    // we don't count those under rtStats.gcHeapDecommittedArenas because (a)
+    // it's rare, and (b) this means that rtStats.gcHeapUnusedChunks is a
+    // multiple of the chunk size, which is good.
 
     size_t gcHeapChunkTotal;
-    size_t gcHeapChunkCleanDecommitted;
-    size_t gcHeapChunkDirtyDecommitted;
+    size_t gcHeapDecommittedArenas;
     size_t gcHeapUnusedChunks;
     size_t gcHeapUnusedArenas;
     size_t gcHeapUnusedGcThings;
