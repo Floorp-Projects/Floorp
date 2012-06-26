@@ -1574,10 +1574,12 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                     "empty chunks, which will soon be released unless claimed "
                     "for new allocations.");
 
-    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/decommitted"),
-                    rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
-                    "Memory in the address space of the garbage-collected "
-                    "JavaScript heap that is currently returned to the OS.");
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/decommitted-arenas"),
+                    rtStats.gcHeapDecommittedArenas,
+                    "Memory on the garbage-collected JavaScript heap, "
+                    "in arenas in non-empty chunks, that is returned to the OS. "
+                    "This means it takes up address space but no physical "
+                    "memory or swap space.");
 
     REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/chunk-admin"),
                     rtStats.gcHeapChunkAdmin,
@@ -1729,10 +1731,10 @@ public:
 
         // Report the numbers for memory outside of compartments.
 
-        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/gc-heap/decommitted"),
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/gc-heap/decommitted-arenas"),
                      nsIMemoryReporter::KIND_OTHER,
-                     rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
-                     "The same as 'explicit/js/gc-heap/decommitted'.");
+                     rtStats.gcHeapDecommittedArenas,
+                     "The same as 'explicit/js/gc-heap/decommitted-arenas'.");
 
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/gc-heap/unused-chunks"),
                      nsIMemoryReporter::KIND_OTHER,

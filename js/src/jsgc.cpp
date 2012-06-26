@@ -523,22 +523,6 @@ ChunkPool::expireAndFree(JSRuntime *rt, bool releaseAll)
     FreeChunkList(expire(rt, releaseAll));
 }
 
-JS_FRIEND_API(int64_t)
-ChunkPool::countCleanDecommittedArenas(JSRuntime *rt)
-{
-    JS_ASSERT(this == &rt->gcChunkPool);
-
-    int64_t numDecommitted = 0;
-    Chunk *chunk = emptyChunkListHead;
-    while (chunk) {
-        for (uint32_t i = 0; i < ArenasPerChunk; ++i)
-            if (chunk->decommittedArenas.get(i))
-                ++numDecommitted;
-        chunk = chunk->info.next;
-    }
-    return numDecommitted;
-}
-
 /* static */ Chunk *
 Chunk::allocate(JSRuntime *rt)
 {
