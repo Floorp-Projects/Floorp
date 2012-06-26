@@ -499,10 +499,7 @@ IDBTransaction::AbortWithCode(nsresult aAbortCode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  // We can't use IsOpen here since we need it to be possible to call Abort()
-  // even from outside of transaction callbacks.
-  if (mReadyState != IDBTransaction::INITIAL &&
-      mReadyState != IDBTransaction::LOADING) {
+  if (IsFinished()) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -683,7 +680,7 @@ IDBTransaction::ObjectStoreInternal(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!IsOpen()) {
+  if (IsFinished()) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
@@ -819,6 +816,10 @@ CommitHelper::Run()
     }
     NS_ENSURE_TRUE(event, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
+    if (mListener) {
+      mListener->NotifyTransactionPreComplete(mTransaction);
+    }
+
     bool dummy;
     if (NS_FAILED(mTransaction->DispatchEvent(event, &dummy))) {
       NS_WARNING("Dispatch failed!");
@@ -828,9 +829,8 @@ CommitHelper::Run()
     mTransaction->mFiredCompleteOrAbort = true;
 #endif
 
-    // Tell the listener (if we have one) that we're done
     if (mListener) {
-      mListener->NotifyTransactionComplete(mTransaction);
+      mListener->NotifyTransactionPostComplete(mTransaction);
     }
 
     mTransaction = nsnull;
