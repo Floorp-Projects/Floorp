@@ -1228,7 +1228,7 @@ abstract public class GeckoApp
                 String launchPath = message.getString("launchPath");
                 String iconURL = message.getString("iconURL");
                 String uniqueURI = message.getString("uniqueURI");
-                GeckoAppShell.createShortcut(name, launchPath, uniqueURI, iconURL, "webapp");
+                GeckoAppShell.installWebApp(name, launchPath, uniqueURI, iconURL);
             } else if (event.equals("WebApps:Uninstall")) {
                 String uniqueURI = message.getString("uniqueURI");
                 GeckoAppShell.uninstallWebApp(uniqueURI);
