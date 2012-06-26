@@ -64,6 +64,7 @@ EXPORTS_mozilla = \
 
 CPPSRCS		= \
 		FrameLayerBuilder.cpp \
+		MaskLayerImageCache.cpp \
 		FramePropertyTable.cpp \
 		RestyleTracker.cpp \
 		nsCSSColorUtils.cpp \

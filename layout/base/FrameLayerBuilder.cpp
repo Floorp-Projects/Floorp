@@ -16,6 +16,7 @@
 #include "gfxUtils.h"
 #include "nsImageFrame.h"
 #include "nsRenderingContext.h"
+#include "MaskLayerImageCache.h"
 
 #include "mozilla/Preferences.h"
 #include "sampler.h"
@@ -58,6 +59,18 @@ public:
 };
 
 namespace {
+
+// a global cache of image containers used for mask layers
+static MaskLayerImageCache* gMaskLayerImageCache = nsnull;
+
+static inline MaskLayerImageCache* GetMaskLayerImageCache()
+{
+  if (!gMaskLayerImageCache) {
+    gMaskLayerImageCache = new MaskLayerImageCache();
+  }
+
+  return gMaskLayerImageCache;
+}
 
 class RefCountedRegion : public RefCounted<RefCountedRegion> {
 public:
@@ -479,11 +492,22 @@ public:
  */
 struct MaskLayerUserData : public LayerUserData
 {
+  MaskLayerUserData() : mImageKey(nsnull) {}
+
+  bool
+  operator== (const MaskLayerUserData& aOther) const
+  {
+    return mRoundedClipRects == aOther.mRoundedClipRects &&
+           mScaleX == aOther.mScaleX &&
+           mScaleY == aOther.mScaleY;
+  }
+
+  nsRefPtr<const MaskLayerImageCache::MaskLayerImageKey> mImageKey;
   // properties of the mask layer; the mask layer may be re-used if these
   // remain unchanged.
   nsTArray<FrameLayerBuilder::Clip::RoundedRect> mRoundedClipRects;
-  gfx3DMatrix mTransform;
-  nsIntRect mBounds;
+  // scale from the masked layer which is applied to the mask
+  float mScaleX, mScaleY;
 };
 
 /**
@@ -537,6 +561,16 @@ ThebesDisplayItemLayerUserData* GetThebesDisplayItemLayerUserData(Layer* aLayer)
 }
 
 } // anonymous namespace
+
+
+/* static */ void
+FrameLayerBuilder::Shutdown()
+{
+  if (gMaskLayerImageCache) {
+    delete gMaskLayerImageCache;
+    gMaskLayerImageCache = nsnull;
+  }
+}
 
 void
 FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder)
@@ -648,6 +682,8 @@ FrameLayerBuilder::DidEndTransaction(LayerManager* aManager)
       RemoveThebesItemsForLayerSubtree(root);
     }
   }
+
+  GetMaskLayerImageCache()->Sweep();
 }
 
 void
@@ -890,7 +926,7 @@ ContainerState::CreateOrRecycleMaskImageLayerFor(Layer* aLayer)
   nsRefPtr<ImageLayer> result = mRecycledMaskImageLayers.Get(aLayer);
   if (result) {
     mRecycledMaskImageLayers.Remove(aLayer);
-    // if we use clip on mask layers, null it out here
+    // XXX if we use clip on mask layers, null it out here
   } else {
     // Create a new layer
     result = mManager->CreateImageLayer();
@@ -2669,7 +2705,6 @@ FrameLayerBuilder::Clip::AddRoundedRectPathTo(gfxContext* aContext,
   gfxRect clip = nsLayoutUtils::RectToGfxRect(aRoundRect.mRect, A2D);
   clip.Round();
   clip.Condition();
-  // REVIEW: This might make clip empty.  Is that OK?
 
   aContext->NewPath();
   aContext->RoundedRectangle(clip, pixelRadii);
@@ -2785,125 +2820,130 @@ FrameLayerBuilder::Clip::RemoveRoundedCorners()
   mRoundedClipRects.Clear();
 }
 
-/**
- * Compares the first aEnd entries in a1 and a2, returning true if they are all
- * equal. If there are less than aEnd entries in either a1 or a2, then there
- * must be the same number of entries in a1 and a2 and they must all be equal.
- */
-template<class T> bool
-ArrayRangeEquals(const nsTArray<T>& a1, const nsTArray<T>& a2, PRUint32 aEnd)
+gfxRect
+CalculateBounds(nsTArray<FrameLayerBuilder::Clip::RoundedRect> aRects, PRInt32 A2D)
 {
-  if ((a1.Length() <= aEnd ||
-       a2.Length() <= aEnd) &&
-      a1.Length() != a2.Length()) {
-    return false;
-  }
-
-  PRUint32 end = NS_MIN<PRUint32>(aEnd, a1.Length());
-  for (PRUint32 i = 0; i < end; ++i) {
-    if (a1[i] != a2[i])
-      return false;
-  }
-
-  return true;
+  nsRect bounds = aRects[0].mRect;
+  for (PRUint32 i = 1; i < aRects.Length(); ++i) {
+    bounds.UnionRect(bounds, aRects[i].mRect);
+   }
+ 
+  return nsLayoutUtils::RectToGfxRect(bounds, A2D);
 }
-
+ 
 void
 ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aClip,
                                PRUint32 aRoundedRectClipCount) 
 {
-  nsIntRect boundingRect = aLayer->GetEffectiveVisibleRegion().GetBounds();
   // don't build an unnecessary mask
+  nsIntRect layerBounds = aLayer->GetVisibleRegion().GetBounds();
   if (aClip.mRoundedClipRects.IsEmpty() ||
       aRoundedRectClipCount <= 0 ||
-      boundingRect.IsEmpty()) {
+      layerBounds.IsEmpty()) {
     return;
   }
-
-  const gfx3DMatrix& layerTransform = aLayer->GetTransform();
-  NS_ASSERTION(layerTransform.CanDraw2D() || aLayer->AsContainerLayer(),
-               "Only container layers may have 3D transforms.");
 
   // check if we can re-use the mask layer
   nsRefPtr<ImageLayer> maskLayer =  CreateOrRecycleMaskImageLayerFor(aLayer);
   MaskLayerUserData* userData = GetMaskLayerUserData(maskLayer);
-  if (ArrayRangeEquals(userData->mRoundedClipRects,
-                       aClip.mRoundedClipRects,
-                       aRoundedRectClipCount) &&
-      userData->mRoundedClipRects.Length() <= aRoundedRectClipCount &&
-      layerTransform == userData->mTransform &&
-      boundingRect == userData->mBounds) {
+
+  MaskLayerUserData newData;
+  newData.mRoundedClipRects.AppendElements(aClip.mRoundedClipRects);
+  if (aRoundedRectClipCount < newData.mRoundedClipRects.Length()) {
+    newData.mRoundedClipRects.TruncateLength(aRoundedRectClipCount);
+  }
+  newData.mScaleX = mParameters.mXScale;
+  newData.mScaleY = mParameters.mYScale;
+
+  if (*userData == newData) {
     aLayer->SetMaskLayer(maskLayer);
     return;
   }
+ 
+  // calculate a more precise bounding rect
+  const PRInt32 A2D = mContainerFrame->PresContext()->AppUnitsPerDevPixel();
+  gfxRect boundingRect = CalculateBounds(newData.mRoundedClipRects, A2D);
+  boundingRect.Scale(mParameters.mXScale, mParameters.mYScale);
 
-  // transform the bounds of the mask layer so that we are consistently in the
-  // masked layer's parent's coord space
-  gfxRect transformedBoundRect = layerTransform.TransformBounds(boundingRect);
-  transformedBoundRect.RoundOut();
-  if (!gfxUtils::GfxRectToIntRect(transformedBoundRect, &boundingRect)) {
-    NS_WARNING(
-      "Could not create mask layer: bounding rectangle could not be constructed.");
-    return;
-  }
-  
   PRUint32 maxSize = mManager->GetMaxTextureSize();
   NS_ASSERTION(maxSize > 0, "Invalid max texture size");
   nsIntSize surfaceSize(NS_MIN<PRInt32>(boundingRect.Width(), maxSize),
                         NS_MIN<PRInt32>(boundingRect.Height(), maxSize));
 
-  nsRefPtr<gfxASurface> surface =
-    aLayer->Manager()->CreateOptimalSurface(surfaceSize,
-                                            aLayer->Manager()->MaskImageFormat());
+  // maskTransform is applied to the clip when it is painted into the mask (as a
+  // component of imageTransform), and its inverse used when the mask is used for
+  // masking.
+  // It is the transform from the masked layer's space to mask space
+  gfxMatrix maskTransform;
+  maskTransform.Scale(float(surfaceSize.width)/float(boundingRect.Width()),
+                      float(surfaceSize.height)/float(boundingRect.Height()));
+  maskTransform.Translate(-boundingRect.TopLeft());
+  // imageTransform is only used when the clip is painted to the mask
+  gfxMatrix imageTransform = maskTransform;
+  imageTransform.Scale(mParameters.mXScale, mParameters.mYScale);
 
-  // fail if we can't get the right surface
-  if (!surface || surface->CairoStatus()) {
-    NS_WARNING("Could not create surface for mask layer.");
-    return;
+  // copy and transform the rounded rects
+  nsTArray<MaskLayerImageCache::PixelRoundedRect> roundedRects;
+  for (PRUint32 i = 0; i < newData.mRoundedClipRects.Length(); ++i) {
+    roundedRects.AppendElement(
+      MaskLayerImageCache::PixelRoundedRect(newData.mRoundedClipRects[i],
+                                            mContainerFrame->PresContext()));
+    roundedRects[i].ScaleAndTranslate(imageTransform);
   }
+ 
+  // check to see if we can reuse a mask image
+  const MaskLayerImageCache::MaskLayerImageKey* key =
+    new MaskLayerImageCache::MaskLayerImageKey(roundedRects);
+  const MaskLayerImageCache::MaskLayerImageKey* lookupKey = key;
 
-  nsRefPtr<gfxContext> context = new gfxContext(surface);
+  nsRefPtr<ImageContainer> container =
+    GetMaskLayerImageCache()->FindImageFor(&lookupKey);
 
-  gfxMatrix visRgnTranslation;
-  visRgnTranslation.Scale(float(surfaceSize.width)/float(boundingRect.Width()),
-                          float(surfaceSize.height)/float(boundingRect.Height()));
-  visRgnTranslation.Translate(-boundingRect.TopLeft());
-  context->Multiply(visRgnTranslation);
+  if (container) {
+    // track the returned key for the mask image
+    delete key;
+    key = lookupKey;
+  } else {
+    // no existing mask image, so build a new one
+    nsRefPtr<gfxASurface> surface =
+      aLayer->Manager()->CreateOptimalMaskSurface(surfaceSize);
 
-  gfxMatrix scale;
-  scale.Scale(mParameters.mXScale, mParameters.mYScale);
-  context->Multiply(scale);
+    // fail if we can't get the right surface
+    if (!surface || surface->CairoStatus()) {
+      NS_WARNING("Could not create surface for mask layer.");
+      return;
+    }
 
-  // useful for debugging, make masked areas semi-opaque
-  //context->SetColor(gfxRGBA(0, 0, 0, 0.3));
-  //context->Paint();
+    nsRefPtr<gfxContext> context = new gfxContext(surface);
+    context->Multiply(imageTransform);
 
-  // paint the clipping rects with alpha to create the mask
-  context->SetColor(gfxRGBA(0, 0, 0, 1));  PRInt32 A2D = mContainerFrame->PresContext()->AppUnitsPerDevPixel();
-  aClip.DrawRoundedRectsTo(context, A2D, 0, aRoundedRectClipCount);
+    // paint the clipping rects with alpha to create the mask
+    context->SetColor(gfxRGBA(1, 1, 1, 1));
+    aClip.DrawRoundedRectsTo(context, A2D, 0, aRoundedRectClipCount);
 
-  // build the image and container
-  nsRefPtr<ImageContainer> container = aLayer->Manager()->CreateImageContainer();
-  NS_ASSERTION(container, "Could not create image container for mask layer.");
-  static const Image::Format format = Image::CAIRO_SURFACE;
-  nsRefPtr<Image> image = container->CreateImage(&format, 1);
-  NS_ASSERTION(image, "Could not create image container for mask layer.");
-  CairoImage::Data data;
-  data.mSurface = surface;
-  data.mSize = surfaceSize;
-  static_cast<CairoImage*>(image.get())->SetData(data);
-  container->SetCurrentImage(image);
+    // build the image and container
+    container = aLayer->Manager()->CreateImageContainer();
+    NS_ASSERTION(container, "Could not create image container for mask layer.");
+    static const Image::Format format = Image::CAIRO_SURFACE;
+    nsRefPtr<Image> image = container->CreateImage(&format, 1);
+    NS_ASSERTION(image, "Could not create image container for mask layer.");
+    CairoImage::Data data;
+    data.mSurface = surface;
+    data.mSize = surfaceSize;
+    static_cast<CairoImage*>(image.get())->SetData(data);
+    container->SetCurrentImage(image);
+
+    GetMaskLayerImageCache()->PutImage(key, container);
+  }
 
   maskLayer->SetContainer(container);
-  maskLayer->SetTransform(gfx3DMatrix::From2D(visRgnTranslation.Invert()));
-  maskLayer->SetVisibleRegion(boundingRect);
+  maskLayer->SetTransform(gfx3DMatrix::From2D(maskTransform.Invert()));
+
   // save the details of the clip in user data
-  userData->mRoundedClipRects = aClip.mRoundedClipRects;
-  if (aRoundedRectClipCount < userData->mRoundedClipRects.Length()) {
-    userData->mRoundedClipRects.TruncateLength(aRoundedRectClipCount);
-  }
-  userData->mTransform = aLayer->GetTransform();
-  userData->mBounds = aLayer->GetEffectiveVisibleRegion().GetBounds();
+  userData->mScaleX = newData.mScaleX;
+  userData->mScaleY = newData.mScaleY;
+  userData->mRoundedClipRects.SwapElements(newData.mRoundedClipRects);
+  userData->mImageKey = key;
 
   aLayer->SetMaskLayer(maskLayer);
   return;

@@ -37,7 +37,7 @@ CToken::CToken(PRInt32 aTag) {
   mUseCount=1;
   NS_LOG_ADDREF(this, 1, "CToken", sizeof(*this));
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   ++TokenCount;
 #endif
 }

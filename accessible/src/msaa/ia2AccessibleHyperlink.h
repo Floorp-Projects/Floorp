@@ -13,8 +13,8 @@
 #include "ia2AccessibleAction.h"
 #include "AccessibleHyperlink.h"
 
-class CAccessibleHyperlink: public ia2AccessibleAction,
-                            public IAccessibleHyperlink
+class ia2AccessibleHyperlink : public ia2AccessibleAction,
+                               public IAccessibleHyperlink
 {
 public:
 

@@ -155,7 +155,7 @@ public:
                                         nsIStatefulFrame::SpecialStateID aID =
                                                       nsIStatefulFrame::eNoID);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   /**
    * DEBUG ONLY method to verify integrity of style tree versus frame tree
    */

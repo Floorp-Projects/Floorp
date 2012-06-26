@@ -28,6 +28,16 @@ panel[type="arrow"] {
   -moz-transition: opacity 300ms;
 }
 
+.panel-arrowcontainer[panelopen] {
+  -moz-transition-duration: 250ms;
+  -moz-transition-property: opacity;
+  -moz-transition-timing-function: ease-out;
+}
+
+.panel-arrowcontainer:not([panelopen]) {
+  opacity: 0;
+}
+
 panel[type="arrow"][side="top"],
 panel[type="arrow"][side="bottom"] {
   margin-left: -26px;

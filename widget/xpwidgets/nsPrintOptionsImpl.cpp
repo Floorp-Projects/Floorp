@@ -904,7 +904,7 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName,
   NS_ENSURE_ARG_POINTER(aPrintSettings);
   NS_ENSURE_ARG_POINTER(aPrinterName);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   nsXPIDLString printerName;
   aPrintSettings->GetPrinterName(getter_Copies(printerName));
   if (!printerName.Equals(aPrinterName)) {

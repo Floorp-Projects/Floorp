@@ -140,7 +140,7 @@ static void RefreshContentFrames(nsPresContext* aPresContext, nsIContent * aStar
 
 // Formerly the nsIFrameDebug interface
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static bool gShowFrameBorders = false;
 
 void nsFrame::ShowFrameBorders(bool aEnable)
@@ -1607,7 +1607,7 @@ BuildDisplayListWithOverflowClip(nsDisplayListBuilder* aBuilder, nsIFrame* aFram
   return aFrame->OverflowClip(aBuilder, set, aSet, aClipRect, aClipRadii);
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static void PaintDebugBorder(nsIFrame* aFrame, nsRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt) {
   nsRect r(aPt, aFrame->GetSize());
@@ -1873,7 +1873,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // The element's outline items need to all come before any child outline
   // items.
   set.Outlines()->SortByContentOrder(aBuilder, GetContent());
-#ifdef NS_DEBUG
+#ifdef DEBUG
   DisplayDebugBorders(aBuilder, this, set);
 #endif
   resultList.AppendToTop(set.Outlines());
@@ -2101,7 +2101,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         rv = aBuilder->DisplayCaret(child, dirty, aLists.Content());
       }
     }
-#ifdef NS_DEBUG
+#ifdef DEBUG
     DisplayDebugBorders(aBuilder, child, aLists);
 #endif
     return rv;
@@ -2157,7 +2157,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     list.AppendToTop(pseudoStack.Content());
     list.AppendToTop(pseudoStack.Outlines());
     extraPositionedDescendants.AppendToTop(pseudoStack.PositionedDescendants());
-#ifdef NS_DEBUG
+#ifdef DEBUG
     DisplayDebugBorders(aBuilder, child, aLists);
 #endif
   }
@@ -5001,6 +5001,14 @@ nsIFrame::GetVisualOverflowRectRelativeToSelf() const
   return GetVisualOverflowRect();
 }
 
+nsRect
+nsIFrame::GetPreEffectsVisualOverflowRect() const
+{
+  nsRect* r = static_cast<nsRect*>
+    (Properties().Get(nsIFrame::PreEffectsBBoxProperty()));
+  return r ? *r : GetVisualOverflowRectRelativeToSelf();
+}
+
 /* virtual */ bool
 nsFrame::UpdateOverflow()
 {
@@ -5208,7 +5216,7 @@ nsIFrame::GetContainingBlock() const
   return GetNearestBlockContainer(GetParent());
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 
 PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 {
@@ -5460,7 +5468,7 @@ nsIFrame::GetConstFrameSelection() const
   return PresContext()->PresShell()->ConstFrameSelection();
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 NS_IMETHODIMP
 nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
 {
@@ -8035,7 +8043,7 @@ nsFrame::GetBoxName(nsAutoString& aName)
 }
 #endif
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static void
 GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
            char* aResult)

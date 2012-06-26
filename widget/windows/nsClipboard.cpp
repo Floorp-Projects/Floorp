@@ -930,7 +930,7 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(const char** aFlavorList,
     return NS_OK;
 
   for (PRUint32 i = 0;i < aLength; ++i) {
-#ifdef NS_DEBUG
+#ifdef DEBUG
     if (strcmp(aFlavorList[i], kTextMime) == 0)
       NS_WARNING ( "DO NOT USE THE text/plain DATA FLAVOR ANY MORE. USE text/unicode INSTEAD" );
 #endif

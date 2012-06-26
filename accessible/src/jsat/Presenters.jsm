@@ -39,8 +39,10 @@ Presenter.prototype = {
    * The virtual cursor's position changed.
    * @param {PresenterContext} aContext the context object for the new pivot
    *   position.
+   * @param {int} aReason the reason for the pivot change.
+   *   See nsIAccessiblePivot.
    */
-  pivotChanged: function pivotChanged(aContext) {},
+  pivotChanged: function pivotChanged(aContext, aReason) {},
 
   /**
    * An object's action has been invoked.
@@ -140,7 +142,7 @@ VisualPresenter.prototype = {
       this._highlight(this._currentObject);
   },
 
-  pivotChanged: function VisualPresenter_pivotChanged(aContext) {
+  pivotChanged: function VisualPresenter_pivotChanged(aContext, aReason) {
     this._currentObject = aContext.accessible;
 
     if (!aContext.accessible) {
@@ -159,7 +161,7 @@ VisualPresenter.prototype = {
   },
 
   tabSelected: function VisualPresenter_tabSelected(aDocContext, aVCContext) {
-    this.pivotChanged(aVCContext);
+    this.pivotChanged(aVCContext, Ci.nsIAccessiblePivot.REASON_NONE);
   },
 
   tabStateChanged: function VisualPresenter_tabStateChanged(aDocObj,
@@ -229,17 +231,53 @@ AndroidPresenter.prototype = {
   ANDROID_VIEW_FOCUSED: 0x08,
   ANDROID_VIEW_TEXT_CHANGED: 0x10,
   ANDROID_WINDOW_STATE_CHANGED: 0x20,
+  ANDROID_VIEW_HOVER_ENTER: 0x80,
+  ANDROID_VIEW_HOVER_EXIT: 0x100,
+  ANDROID_VIEW_SCROLLED: 0x1000,
 
-  pivotChanged: function AndroidPresenter_pivotChanged(aContext) {
+  attach: function AndroidPresenter_attach(aWindow) {
+    this.chromeWin = aWindow;
+  },
+
+  pivotChanged: function AndroidPresenter_pivotChanged(aContext, aReason) {
     if (!aContext.accessible)
       return;
 
+    let isExploreByTouch = (aReason == Ci.nsIAccessiblePivot.REASON_POINT &&
+                            Utils.AndroidSdkVersion >= 14);
+
+    if (isExploreByTouch) {
+      // This isn't really used by TalkBack so this is a half-hearted attempt
+      // for now.
+      this.sendMessageToJava({
+         gecko: {
+           type: 'Accessibility:Event',
+           eventType: this.ANDROID_VIEW_HOVER_EXIT,
+           text: []
+         }
+      });
+    }
+
     let output = [];
-    aContext.newAncestry.forEach(
-      function(acc) {
-        output.push.apply(output, UtteranceGenerator.genForObject(acc));
+
+    if (isExploreByTouch) {
+      // Just provide the parent for some context, no need to utter the entire
+      // ancestry change since it doesn't make sense in spatial navigation.
+      for (var i = aContext.newAncestry.length - 1; i >= 0; i--) {
+        let utter = UtteranceGenerator.genForObject(aContext.newAncestry[i]);
+        if (utter.length) {
+          output.push.apply(output, utter);
+          break;
+        }
       }
-    );
+    } else {
+      // Utter the entire context change in linear navigation.
+      aContext.newAncestry.forEach(
+        function(acc) {
+          output.push.apply(output, UtteranceGenerator.genForObject(acc));
+        }
+      );
+    }
 
     output.push.apply(output,
                       UtteranceGenerator.genForObject(aContext.accessible));
@@ -253,7 +291,9 @@ AndroidPresenter.prototype = {
     this.sendMessageToJava({
       gecko: {
         type: 'Accessibility:Event',
-        eventType: this.ANDROID_VIEW_FOCUSED,
+        eventType: isExploreByTouch ?
+          this.ANDROID_VIEW_HOVER_ENTER :
+          this.ANDROID_VIEW_FOCUSED,
         text: output
       }
     });
@@ -271,7 +311,7 @@ AndroidPresenter.prototype = {
 
   tabSelected: function AndroidPresenter_tabSelected(aDocContext, aVCContext) {
     // Send a pivot change message with the full context utterance for this doc.
-    this.pivotChanged(aVCContext);
+    this.pivotChanged(aVCContext, Ci.nsIAccessiblePivot.REASON_NONE);
   },
 
   tabStateChanged: function AndroidPresenter_tabStateChanged(aDocObj,
@@ -317,6 +357,24 @@ AndroidPresenter.prototype = {
     }
 
     this.sendMessageToJava({gecko: androidEvent});
+  },
+
+  viewportChanged: function AndroidPresenter_viewportChanged() {
+    if (Utils.AndroidSdkVersion < 14)
+      return;
+
+    let win = Utils.getBrowserApp(this.chromeWin).selectedBrowser.contentWindow;
+    this.sendMessageToJava({
+      gecko: {
+        type: 'Accessibility:Event',
+        eventType: this.ANDROID_VIEW_SCROLLED,
+        text: [],
+        scrollX: win.scrollX,
+        scrollY: win.scrollY,
+        maxScrollX: win.scrollMaxX,
+        maxScrollY: win.scrollMaxY
+      }
+    });
   },
 
   sendMessageToJava: function AndroidPresenter_sendMessageTojava(aMessage) {

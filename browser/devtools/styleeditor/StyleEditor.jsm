@@ -5,7 +5,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["StyleEditor", "StyleEditorFlags"];
+const EXPORTED_SYMBOLS = ["StyleEditor", "StyleEditorFlags", "StyleEditorManager"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -1159,4 +1159,134 @@ function setupBracketCompletion(aSourceEditor)
     // and rewind caret
     aSourceEditor.setCaretOffset(aSourceEditor.getCaretOffset() - 1);
   }, false);
+}
+
+/**
+  * Manage the different editors instances.
+  */
+
+function StyleEditorManager(aWindow) {
+  this.chromeWindow = aWindow;
+  this.listenToTabs();
+  this.editors = new WeakMap();
+}
+
+StyleEditorManager.prototype = {
+
+  /**
+   * Get the editor for a specific content window.
+   */
+  getEditorForWindow: function SEM_getEditorForWindow(aContentWindow) {
+    return this.editors.get(aContentWindow);
+  },
+
+  /**
+   * Focus the editor and select a stylesheet.
+   *
+   * @param {CSSStyleSheet} [aSelectedStyleSheet] default Stylesheet.
+   * @param {Number} [aLine] Line to which the caret should be moved (one-indexed).
+   * @param {Number} [aCol] Column to which the caret should be moved (one-indexed).
+   */
+  selectEditor: function SEM_selectEditor(aWindow, aSelectedStyleSheet, aLine, aCol) {
+    if (aSelectedStyleSheet) {
+      aWindow.styleEditorChrome.selectStyleSheet(aSelectedStyleSheet, aLine, aCol);
+    }
+    aWindow.focus();
+  },
+
+  /**
+   * Open a new editor.
+   *
+   * @param {Window} content window.
+   * @param {CSSStyleSheet} [aSelectedStyleSheet] default Stylesheet.
+   * @param {Number} [aLine] Line to which the caret should be moved (one-indexed).
+   * @param {Number} [aCol] Column to which the caret should be moved (one-indexed).
+   */
+  newEditor: function SEM_newEditor(aContentWindow, aSelectedStyleSheet, aLine, aCol) {
+    const CHROME_URL = "chrome://browser/content/styleeditor.xul";
+    const CHROME_WINDOW_FLAGS = "chrome,centerscreen,resizable,dialog=no";
+
+    let args = {
+      contentWindow: aContentWindow,
+      selectedStyleSheet: aSelectedStyleSheet,
+      line: aLine,
+      col: aCol
+    };
+    args.wrappedJSObject = args;
+    let chromeWindow = Services.ww.openWindow(null, CHROME_URL, "_blank",
+                                              CHROME_WINDOW_FLAGS, args);
+
+    chromeWindow.onunload = function() {
+      if (chromeWindow.location == CHROME_URL) {
+        // not about:blank being unloaded
+        this.unregisterEditor(aContentWindow);
+      }
+    }.bind(this);
+    chromeWindow.focus();
+
+    this.editors.set(aContentWindow, chromeWindow);
+
+    this.refreshCommand();
+
+    return chromeWindow;
+  },
+
+  /**
+   * Toggle an editor.
+   *
+   * @param {Window} associated content window.
+   */
+  toggleEditor: function SEM_toggleEditor(aContentWindow) {
+    let editor = this.getEditorForWindow(aContentWindow);
+    if (editor) {
+      editor.close();
+    } else {
+      this.newEditor(aContentWindow);
+    }
+  },
+
+  /**
+   * Close an editor.
+   *
+   * @param {Window} associated content window.
+   */
+  unregisterEditor: function SEM_unregisterEditor(aContentWindow) {
+    let chromeWindow = this.editors.get(aContentWindow);
+    if (chromeWindow) {
+      chromeWindow.close();
+    }
+    this.editors.delete(aContentWindow);
+    this.refreshCommand();
+  },
+
+  /**
+   * Update the status of tool's menuitems and buttons.
+   */
+  refreshCommand: function SEM_refreshCommand() {
+    let contentWindow = this.chromeWindow.gBrowser.contentWindow;
+    let command = this.chromeWindow.document.getElementById("Tools:StyleEditor");
+
+    let win = this.getEditorForWindow(contentWindow);
+    if (win) {
+      command.setAttribute("checked", "true");
+    } else {
+      command.setAttribute("checked", "false");
+    }
+  },
+
+  /**
+   * Trigger refreshCommand when needed.
+   */
+  listenToTabs: function SEM_listenToTabs() {
+    let win = this.chromeWindow;
+    let tabs = win.gBrowser.tabContainer;
+
+    let bound_refreshCommand = this.refreshCommand.bind(this);
+    tabs.addEventListener("TabSelect", bound_refreshCommand, true);
+
+    win.addEventListener("unload", function onClose(aEvent) {
+      tabs.removeEventListener("TabSelect", bound_refreshCommand, true);
+      win.removeEventListener("unload", onClose, false);
+    }, false);
+  },
 }
