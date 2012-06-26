@@ -4786,7 +4786,7 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
             if (top->isConstant()) {
                 JSObject *obj = &top->getValue().toObject();
-                uint32_t length = TypedArray::getLength(obj);
+                uint32_t length = TypedArray::length(obj);
                 frame.pop();
                 frame.push(Int32Value(length));
                 return true;
