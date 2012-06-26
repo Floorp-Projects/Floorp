@@ -8,8 +8,11 @@
 
 interface nsIInputStream;
 interface imgIContainer;
+interface imgILoader;
+interface imgICache;
+interface nsIDOMDocument;
 
-[scriptable, uuid(8e16f39e-7012-46bd-aa22-2a7a3265608f)]
+[scriptable, uuid(53dd1cbe-cb9f-4d9e-8104-1ab72851c88e)]
 interface imgITools : nsISupports
 {
     /**
@@ -70,6 +73,26 @@ interface imgITools : nsISupports
                                      in long aWidth,
                                      in long aHeight,
                                      [optional] in AString outputOptions);
+
+    /**
+     * getImgLoaderForDocument
+     * Retrieve an image loader that reflects the privacy status of the given
+     * document.
+     *
+     * @param doc
+     *        A document. Must not be null.
+     */
+    imgILoader getImgLoaderForDocument(in nsIDOMDocument doc);
+
+    /**
+     * getImgLoaderForDocument
+     * Retrieve an image cache that reflects the privacy status of the given
+     * document.
+     *
+     * @param doc
+     *        A document. Must not be null.
+     */
+    imgICache getImgCacheForDocument(in nsIDOMDocument doc);
 
     /**
      * encodeCroppedImage

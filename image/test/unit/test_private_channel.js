@@ -11,7 +11,9 @@ load('image_load_helpers.js');
 var gHits = 0;
 
 var gIoService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);  
-var gLoader = Cc["@mozilla.org/image/loader;1"].getService(Ci.imgILoader);
+var gPublicLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
+var gPrivateLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
+gPrivateLoader.QueryInterface(Ci.imgICache).respectPrivacyNotifications();
 
 function imageHandler(metadata, response) {
   gHits++;
@@ -55,7 +57,8 @@ function setup_chan(path, isPrivate, callback) {
   var listener = new ImageListener(null, callback);
   listeners.push(listener);
   var outlistener = {};
-  requests.push(gLoader.loadImageWithChannel(chan, listener, null, outlistener));
+  var loader = isPrivate ? gPrivateLoader : gPublicLoader;
+  requests.push(loader.loadImageWithChannel(chan, listener, null, outlistener));
   channelListener.outputListener = outlistener.value;
   listener.synchronous = false;
 }
@@ -65,12 +68,12 @@ function loadImage(isPrivate, callback) {
   var uri = gIoService.newURI(gImgPath, null, null);
   var loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
   loadGroup.notificationCallbacks = new NotificationCallbacks(isPrivate);
-  requests.push(gLoader.loadImage(uri, null, null, null, loadGroup, listener, null, 0, null, null, null));
+  var loader = isPrivate ? gPrivateLoader : gPublicLoader;
+  requests.push(loader.loadImage(uri, null, null, null, loadGroup, listener, null, 0, null, null, null));
   listener.synchronous = false;  
 }
 
 function run_loadImage_tests() {
-  clearAllImageCaches();
   let cs = Cc["@mozilla.org/network/cache-service;1"].getService(Ci.nsICacheService);
   cs.evictEntries(Ci.nsICache.STORE_ANYWHERE);
 
@@ -80,21 +83,14 @@ function run_loadImage_tests() {
       loadImage(true, function() {
         loadImage(true, function() {
           do_check_eq(gHits, 2);
-          do_test_finished();
+          server.stop(do_test_finished);
         });
       });
     });
   });
 }
 
-function clearAllImageCaches() {
-  gLoader.QueryInterface(Ci.imgICache);
-  gLoader.clearCache(false, false);
-  gLoader.clearCache(false, true);
-}
-
 function run_test() {
-  clearAllImageCaches();
   do_test_pending();
  
   // We create a public channel that loads an image, then an identical
