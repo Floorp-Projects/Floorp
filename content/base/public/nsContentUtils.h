@@ -482,13 +482,6 @@ public:
     return sIOService;
   }
 
-  static imgILoader* GetImgLoader()
-  {
-    if (!sImgLoaderInitialized)
-      InitImgLoader();
-    return sImgLoader;
-  }
-
 #ifdef MOZ_XTF
   static nsIXTFService* GetXTFService();
 #endif
@@ -664,9 +657,16 @@ public:
                             imgIRequest** aRequest);
 
   /**
+   * Obtain an image loader that respects the given document/channel's privacy status.
+   * Null document/channel arguments return the public image loader.
+   */
+  static imgILoader* GetImgLoaderForDocument(nsIDocument* aDoc);
+  static imgILoader* GetImgLoaderForChannel(nsIChannel* aChannel);
+
+  /**
    * Returns whether the given URI is in the image cache.
    */
-  static bool IsImageInCache(nsIURI* aURI);
+  static bool IsImageInCache(nsIURI* aURI, nsIDocument* aDocument);
 
   /**
    * Method to get an imgIContainer from an image loading content
@@ -2160,9 +2160,11 @@ private:
   static bool sImgLoaderInitialized;
   static void InitImgLoader();
 
-  // The following two members are initialized lazily
+  // The following four members are initialized lazily
   static imgILoader* sImgLoader;
+  static imgILoader* sPrivateImgLoader;
   static imgICache* sImgCache;
+  static imgICache* sPrivateImgCache;
 
   static nsIConsoleService* sConsoleService;
 

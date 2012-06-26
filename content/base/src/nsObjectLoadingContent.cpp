@@ -477,7 +477,7 @@ URIEquals(nsIURI *a, nsIURI *b)
 static bool
 IsSupportedImage(const nsCString& aMimeType)
 {
-  imgILoader* loader = nsContentUtils::GetImgLoader();
+  nsCOMPtr<imgILoader> loader = nsContentUtils::GetImgLoaderForChannel(nullptr);
   if (!loader) {
     return false;
   }
