@@ -16,7 +16,13 @@
   function testInt64NonFinite(arg) {
     // We can use a WebGLRenderingContext to test conversion to 64-bit signed
     // ints edge cases.
-    var gl = $("c").getContext("experimental-webgl");
+    try {
+      var gl = $("c").getContext("experimental-webgl");
+    } catch (ex) {
+      // No WebGL support on MacOS 10.5.  Just skip this test
+      todo(false, "WebGL not supported");
+      return;
+    }
     is(gl.getError(), 0, "Should not start in an error state");
 
     var b = gl.createBuffer();
