@@ -29,6 +29,7 @@
 #include "gfxImageSurface.h"
 #include "imgIContainer.h"
 #include "nsCocoaUtils.h"
+#include "nsContentUtils.h"
 
 static const uint32_t kIconWidth = 16;
 static const uint32_t kIconHeight = 16;
@@ -278,10 +279,8 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   nsCOMPtr<nsILoadGroup> loadGroup = document->GetDocumentLoadGroup();
   if (!loadGroup) return NS_ERROR_FAILURE;
 
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<imgILoader> loader = do_GetService("@mozilla.org/image/loader;1",
-                                              &rv);
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<imgILoader> loader = nsContentUtils::GetImgLoaderForDocument(document);
+  if (!loader) return NS_ERROR_FAILURE;
 
   if (!mSetIcon) {
     // Set a completely transparent 16x16 image as the icon on this menu item
@@ -306,9 +305,9 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 
   // Passing in null for channelPolicy here since nsMenuItemIconX::LoadIcon is
   // not exposed to web content
-  rv = loader->LoadImage(aIconURI, nullptr, nullptr, nullptr, loadGroup, this,
-                         nullptr, nsIRequest::LOAD_NORMAL, nullptr, nullptr,
-                         nullptr, getter_AddRefs(mIconRequest));
+  nsresult rv = loader->LoadImage(aIconURI, nullptr, nullptr, nullptr, loadGroup, this,
+                                   nullptr, nsIRequest::LOAD_NORMAL, nullptr, nullptr,
+                                   nullptr, getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 
   // We need to request the icon be decoded (bug 573583, bug 705516).

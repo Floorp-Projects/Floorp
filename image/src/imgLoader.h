@@ -27,16 +27,19 @@
 #include "prlock.h"
 #endif
 
+class imgLoader;
 class imgRequest;
 class imgRequestProxy;
 class imgIRequest;
 class imgIDecoderObserver;
 class nsILoadGroup;
+class imgCacheExpirationTracker;
+class imgMemoryReporter;
 
 class imgCacheEntry
 {
 public:
-  imgCacheEntry(imgRequest *request, bool aForcePrincipalCheck);
+  imgCacheEntry(imgLoader* loader, imgRequest *request, bool aForcePrincipalCheck);
   ~imgCacheEntry();
 
   nsrefcnt AddRef()
@@ -130,6 +133,11 @@ public:
     return mForcePrincipalCheck;
   }
 
+  imgLoader* Loader() const
+  {
+    return mLoader;
+  }
+
 private: // methods
   friend class imgLoader;
   friend class imgCacheQueue;
@@ -148,6 +156,7 @@ private: // data
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 
+  imgLoader* mLoader;
   nsRefPtr<imgRequest> mRequest;
   uint32_t mDataSize;
   int32_t mTouchedTime;
@@ -219,18 +228,19 @@ public:
 
   static nsresult GetMimeTypeFromContent(const char* aContents, uint32_t aLength, nsACString& aContentType);
 
+  static void GlobalInit(); // for use by the factory
   static void Shutdown(); // for use by the factory
 
-  static nsresult ClearChromeImageCache();
-  static nsresult ClearImageCache();
-  static void MinimizeCaches();
+  nsresult ClearChromeImageCache();
+  nsresult ClearImageCache();
+  void MinimizeCaches();
 
-  static nsresult InitCache();
+  nsresult InitCache();
 
-  static bool RemoveFromCache(nsIURI *aKey);
-  static bool RemoveFromCache(imgCacheEntry *entry);
+  bool RemoveFromCache(nsIURI *aKey);
+  bool RemoveFromCache(imgCacheEntry *entry);
 
-  static bool PutIntoCache(nsIURI *key, imgCacheEntry *entry);
+  bool PutIntoCache(nsIURI *key, imgCacheEntry *entry);
 
   // Returns true if we should prefer evicting cache entry |two| over cache
   // entry |one|.
@@ -256,7 +266,7 @@ public:
     return oneweight < twoweight;
   }
 
-  static void VerifyCacheSizes();
+  void VerifyCacheSizes();
 
   // The image loader maintains a hash table of all imgCacheEntries. However,
   // only some of them will be evicted from the cache: those who have no
@@ -269,8 +279,8 @@ public:
   // HasObservers(). The request's cache entry will be re-set before this
   // happens, by calling imgRequest::SetCacheEntry() when an entry with no
   // observers is re-requested.
-  static bool SetHasNoProxies(nsIURI *key, imgCacheEntry *entry);
-  static bool SetHasProxies(nsIURI *key);
+  bool SetHasNoProxies(nsIURI *key, imgCacheEntry *entry);
+  bool SetHasProxies(nsIURI *key);
 
 private: // methods
 
@@ -307,27 +317,32 @@ private: // methods
 
   typedef nsRefPtrHashtable<nsCStringHashKey, imgCacheEntry> imgCacheTable;
 
-  static nsresult EvictEntries(imgCacheTable &aCacheToClear);
-  static nsresult EvictEntries(imgCacheQueue &aQueueToClear);
+  nsresult EvictEntries(imgCacheTable &aCacheToClear);
+  nsresult EvictEntries(imgCacheQueue &aQueueToClear);
 
-  static imgCacheTable &GetCache(nsIURI *aURI);
-  static imgCacheQueue &GetCacheQueue(nsIURI *aURI);
-  static void CacheEntriesChanged(nsIURI *aURI, int32_t sizediff = 0);
-  static void CheckCacheLimits(imgCacheTable &cache, imgCacheQueue &queue);
+  imgCacheTable &GetCache(nsIURI *aURI);
+  imgCacheQueue &GetCacheQueue(nsIURI *aURI);
+  void CacheEntriesChanged(nsIURI *aURI, PRInt32 sizediff = 0);
+  void CheckCacheLimits(imgCacheTable &cache, imgCacheQueue &queue);
 
 private: // data
   friend class imgCacheEntry;
   friend class imgMemoryReporter;
 
-  static imgCacheTable sCache;
-  static imgCacheQueue sCacheQueue;
+  imgCacheTable mCache;
+  imgCacheQueue mCacheQueue;
 
-  static imgCacheTable sChromeCache;
-  static imgCacheQueue sChromeCacheQueue;
+  imgCacheTable mChromeCache;
+  imgCacheQueue mChromeCacheQueue;
+
   static double sCacheTimeWeight;
   static uint32_t sCacheMaxSize;
+  static imgMemoryReporter* sMemReporter;
 
   nsCString mAcceptHeader;
+
+  nsAutoPtr<imgCacheExpirationTracker> mCacheTracker;
+  bool mRespectPrivacy;
 };
 
 
@@ -395,8 +410,8 @@ class imgCacheValidator : public nsIStreamListener,
                           public nsIAsyncVerifyRedirectCallback
 {
 public:
-  imgCacheValidator(nsProgressNotificationProxy* progress, imgRequest *request,
-                    void *aContext, bool forcePrincipalCheckForCacheEntry);
+  imgCacheValidator(nsProgressNotificationProxy* progress, imgLoader* loader,
+                    imgRequest *request, void *aContext, bool forcePrincipalCheckForCacheEntry);
   virtual ~imgCacheValidator();
 
   void AddProxy(imgRequestProxy *aProxy);
@@ -422,7 +437,7 @@ private:
 
   void *mContext;
 
-  static imgLoader sImgLoader;
+  imgLoader* mImgLoader;
 };
 
 #endif  // imgLoader_h__
