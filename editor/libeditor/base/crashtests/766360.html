@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var r = document.createRange();
+  r.setEnd(document.createTextNode("x"), 0);
+  window.getSelection().addRange(r);
+  document.execCommand("inserthtml", false, "y");
+}
+
+</script>
+</head>
+
+<body contenteditable="true" onload="boom();"></body>
+</html>

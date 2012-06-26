@@ -613,7 +613,7 @@ static const char kDOMStringBundleURL[] =
   (nsIClassInfo::MAIN_THREAD_ONLY | nsIClassInfo::DOM_OBJECT)
 
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #define NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                \
     eDOMClassInfo_##_class##_id,
 #else
@@ -4535,7 +4535,7 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMLockedFile)
   DOM_CLASSINFO_MAP_END
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   {
     PRUint32 i = ArrayLength(sClassInfoData);
 
@@ -5876,7 +5876,7 @@ DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
       }
       default:
       {
-#ifdef NS_DEBUG
+#ifdef DEBUG
         NS_ERROR("Non-numeric constant found in interface.");
 #endif
         continue;

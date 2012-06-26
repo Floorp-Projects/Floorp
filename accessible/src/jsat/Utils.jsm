@@ -48,6 +48,10 @@ var Utils = {
     }
   },
 
+  getCurrentContentDoc: function getCurrentContentDoc(aWindow) {
+    return this.getBrowserApp(aWindow).selectedBrowser.contentDocument;
+  },
+
   getViewport: function getViewport(aWindow) {
     switch (this.OS) {
       case 'Android':

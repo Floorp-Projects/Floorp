@@ -156,6 +156,17 @@ public:
     virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
                                                                  gfxASurface::gfxContentType contentType) = 0;
 
+    /**
+     * Create an offscreen surface of the given dimensions and image format which
+     * can be converted to a gfxImageSurface without copying. If we can provide
+     * a platform-hosted surface, then we will return that instead of an actual
+     * gfxImageSurface.
+     * Sub-classes should override this method if CreateOffscreenSurface returns a
+     * surface which implements GetAsImageSurface
+     */
+    virtual already_AddRefed<gfxASurface>
+      CreateOffscreenImageSurface(const gfxIntSize& aSize,
+                                  gfxASurface::gfxContentType aContentType);
 
     virtual already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
                                                         gfxASurface::gfxImageFormat format);
