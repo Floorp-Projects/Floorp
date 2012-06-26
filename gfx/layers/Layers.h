@@ -430,12 +430,6 @@ public:
                          gfxASurface::gfxImageFormat imageFormat);
 
   /**
-   * Which image format to use as an alpha mask with this layer manager.
-   */
-  virtual gfxASurface::gfxImageFormat MaskImageFormat() 
-  { return gfxASurface::ImageFormatA8; }
-
-  /**
    * Creates a DrawTarget which is optimized for inter-operating with this
    * layermanager.
    */
