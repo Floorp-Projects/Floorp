@@ -1463,7 +1463,6 @@ var SelectionHandler = {
     // Initialize the cache
     this.cache = {};
     this.updateCacheForSelection();
-    this.updateCacheOffset();
 
     this.showHandles();
     this._active = true;
@@ -1471,11 +1470,10 @@ var SelectionHandler = {
 
   // aX/aY are in top-level window browser coordinates
   moveSelection: function sh_moveSelection(aIsStartHandle, aX, aY) {
-    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
-    
     /* XXX bug 765367: Because the handles are in the document, the element
        will always be the handle the user touched. These checks are disabled
        until we can figure out a way to get the element under the handle.
+    let contentWindow = BrowserApp.selectedBrowser.contentWindow;
     let element = ElementTouchHelper.elementFromPoint(contentWindow, aX, aY);
     if (!element)
       element = ElementTouchHelper.anyElementFromPoint(contentWindow, aX, aY);
@@ -1491,15 +1489,14 @@ var SelectionHandler = {
 
     // Update the handle position as it's dragged
     if (aIsStartHandle) {
-      this._start.style.left = aX + this.cache.offset.x + "px";
-      this._start.style.top = aY + this.cache.offset.y + "px";
+      this._start.style.left = aX + this._view.scrollX + "px";
+      this._start.style.top = aY + this._view.scrollY + "px";
     } else {
-      this._end.style.left = aX + this.cache.offset.x + "px";
-      this._end.style.top = aY + this.cache.offset.y + "px";
+      this._end.style.left = aX + this._view.scrollX + "px";
+      this._end.style.top = aY + this._view.scrollY + "px";
     }
 
-    // Send mouse events to the top-level window
-    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
     // The handles work the same on both LTR and RTL pages, but the underlying selection
     // works differently, so we need to reverse how we send mouse events on RTL pages.
@@ -1598,15 +1595,11 @@ var SelectionHandler = {
 
       // Only try copying text if the tap happens in the same view
       if (element.ownerDocument.defaultView == this._view) {
-        let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-        let scrollX = {}, scrollY = {};
-        cwu.getScrollXY(false, scrollX, scrollY);
-
-        // aX/aY already accounts for the top-level scroll, add that back from the cache.offset values
-        let pointInSelection = (aX - this.cache.offset.x + scrollX.value > this.cache.rect.left &&
-                                aX - this.cache.offset.x + scrollX.value < this.cache.rect.right) &&
-                               (aY - this.cache.offset.y + scrollY.value > this.cache.rect.top &&
-                                aY - this.cache.offset.y + scrollY.value < this.cache.rect.bottom);
+        let offset = this._getViewOffset();
+        let pointInSelection = (aX - offset.x > this.cache.rect.left  &&
+                                aX - offset.x < this.cache.rect.right) &&
+                               (aY - offset.y > this.cache.rect.top &&
+                                aY - offset.y < this.cache.rect.bottom);
         if (pointInSelection) {
           let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
           clipboard.copyString(selectedText);
@@ -1619,6 +1612,22 @@ var SelectionHandler = {
     this._view = null;
     this.cache = null;
     this._active = false;
+  },
+
+  _getViewOffset: function sh_getViewOffset() {
+    let offset = { x: 0, y: 0 };
+    let win = this._view;
+
+    // Recursively look through frames to compute the total position offset.
+    while (win.frameElement) {
+      let rect = win.frameElement.getBoundingClientRect();
+      offset.x += rect.left;
+      offset.y += rect.top;
+
+      win = win.parent;
+    }
+
+    return offset;
   },
 
   // Returns true if the selection has been reversed. Takes optional aIsStartHandle
@@ -1644,38 +1653,14 @@ var SelectionHandler = {
     return selectionReversed;
   },
 
-  updateCacheOffset: function sh_updateCacheOffset() {
-    let offset = { x: 0, y: 0 };
-    let cwu = null, scrollX = {}, scrollY = {};
-    let win = this._view;
-
-    // Recursively look through frames to compute the total scroll offset. This is
-    // necessary for positioning the handles correctly.
-    while (win) {
-      cwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      cwu.getScrollXY(false, scrollX, scrollY);
-
-      offset.x += scrollX.value;
-      offset.y += scrollY.value;
-
-      // Break if there are no more frames to process
-      if (!win.frameElement)
-        break;
-
-      win = win.frameElement.contentWindow;
-    }
-
-    this.cache.offset = offset;
-  },
-
   // Adjust start/end positions to account for scroll, and account for the dimensions of the
   // handle elements to ensure the handles point exactly at the ends of the selection.
   positionHandles: function sh_positionHandles() {
-    this._start.style.left = (this.cache.start.x + this.cache.offset.x - this.HANDLE_WIDTH - this.HANDLE_PADDING) + "px";
-    this._start.style.top = (this.cache.start.y + this.cache.offset.y - this.HANDLE_VERTICAL_OFFSET) + "px";
+    this._start.style.left = (this.cache.start.x + this._view.scrollX - this.HANDLE_WIDTH - this.HANDLE_PADDING) + "px";
+    this._start.style.top = (this.cache.start.y + this._view.scrollY - this.HANDLE_VERTICAL_OFFSET) + "px";
 
-    this._end.style.left = (this.cache.end.x + this.cache.offset.x - this.HANDLE_PADDING) + "px";
-    this._end.style.top = (this.cache.end.y + this.cache.offset.y - this.HANDLE_VERTICAL_OFFSET) + "px";
+    this._end.style.left = (this.cache.end.x + this._view.scrollX - this.HANDLE_PADDING) + "px";
+    this._end.style.top = (this.cache.end.y + this._view.scrollY - this.HANDLE_VERTICAL_OFFSET) + "px";
   },
 
   showHandles: function sh_showHandles() {
@@ -1731,9 +1716,6 @@ var SelectionHandler = {
     switch (aEvent.type) {
       case "touchstart":
         aEvent.preventDefault();
-
-        // Update the offset in case we scrolled between touches
-        this.updateCacheOffset();
 
         let touch = aEvent.changedTouches[0];
         this._touchId = touch.identifier;
