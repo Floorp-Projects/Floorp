@@ -125,6 +125,9 @@ static void EnsureBlockDisplay(PRUint8& display)
   case NS_STYLE_DISPLAY_TABLE :
   case NS_STYLE_DISPLAY_BLOCK :
   case NS_STYLE_DISPLAY_LIST_ITEM :
+#ifdef MOZ_FLEXBOX
+  case NS_STYLE_DISPLAY_FLEX :
+#endif // MOZ_FLEXBOX
     // do not muck with these at all - already blocks
     // This is equivalent to nsStyleDisplay::IsBlockOutside.  (XXX Maybe we
     // should just call that?)
@@ -136,6 +139,13 @@ static void EnsureBlockDisplay(PRUint8& display)
     // make inline tables into tables
     display = NS_STYLE_DISPLAY_TABLE;
     break;
+
+#ifdef MOZ_FLEXBOX
+  case NS_STYLE_DISPLAY_INLINE_FLEX:
+    // make inline flex containers into flex containers
+    display = NS_STYLE_DISPLAY_FLEX;
+    break;
+#endif // MOZ_FLEXBOX
 
   default :
     // make it a block
