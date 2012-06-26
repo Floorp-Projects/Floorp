@@ -1320,6 +1320,9 @@ class MCompare
     INSTRUCTION_HEADER(Compare);
     static MCompare *New(MDefinition *left, MDefinition *right, JSOp op);
 
+    bool tryFold(bool *result);
+    MDefinition *foldsTo(bool useValueNumbers);
+
     void infer(JSContext *cx, const TypeOracle::BinaryTypes &b);
     MIRType specialization() const {
         return specialization_;
