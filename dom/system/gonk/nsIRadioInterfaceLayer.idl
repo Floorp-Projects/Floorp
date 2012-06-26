@@ -65,6 +65,10 @@ interface nsIRILTelephonyCallback : nsISupports
 [scriptable, uuid(8a711703-1ee5-4675-9d9a-0b188e944cfe)]
 interface nsIRILDataCallInfo : nsISupports
 {
+  /**
+   * Current data call state, one of the
+   * nsINetworkInterface::NETWORK_STATE_* constants.
+   */
   readonly attribute unsigned long state;
   readonly attribute AString cid;
   readonly attribute AString apn;
@@ -217,7 +221,7 @@ interface nsIRilContext : nsISupports
   readonly attribute nsIDOMMozMobileConnectionInfo data;
 };
 
-[scriptable, uuid(92bea0af-8d75-4592-87d0-1cab88e36904)]
+[scriptable, uuid(8b649965-6687-46a8-88fa-a5495ce90735)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -232,13 +236,6 @@ interface nsIRadioInterfaceLayer : nsISupports
   const unsigned short CALL_STATE_DISCONNECTING = 9;
   const unsigned short CALL_STATE_DISCONNECTED = 10;
   const unsigned short CALL_STATE_INCOMING = 11;
-
-  // Keep consistent with GECKO_DATACALL_STATE_* values in ril_consts.js
-  const unsigned short DATACALL_STATE_UNKNOWN = 0;
-  const unsigned short DATACALL_STATE_CONNECTING = 1;
-  const unsigned short DATACALL_STATE_CONNECTED = 2;
-  const unsigned short DATACALL_STATE_DISCONNECTING = 3;
-  const unsigned short DATACALL_STATE_DISCONNECTED = 4;
 
   /**
    * Activates or deactivates radio power.

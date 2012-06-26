@@ -110,7 +110,7 @@ nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent)
     mPresentationData.flags |= NS_MATHML_RTL;
   }
 
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+#if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
 
@@ -390,7 +390,7 @@ nsCSSMapping {
   const char*    cssProperty;
 };
 
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+#if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
 class nsDisplayMathMLBoundingMetrics : public nsDisplayItem {
 public:
   nsDisplayMathMLBoundingMetrics(nsDisplayListBuilder* aBuilder,

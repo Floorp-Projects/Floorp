@@ -224,7 +224,7 @@ public:
                          bool        aIsBottomRight = false);
 
   /** dump a representation of the cell map to stdout for debugging */
-#ifdef NS_DEBUG
+#ifdef DEBUG
   void Dump(char* aString = nsnull) const;
 #endif
 
@@ -436,7 +436,7 @@ public:
   typedef nsTArray<CellData*> CellDataArray;
 
   /** dump a representation of the cell map to stdout for debugging */
-#ifdef NS_DEBUG
+#ifdef DEBUG
   void Dump(bool aIsBorderCollapse) const;
 #endif
 

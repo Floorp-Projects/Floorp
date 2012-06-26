@@ -452,11 +452,26 @@ SizeOfAtomTableEntryExcludingThis(PLDHashEntryHdr *aHdr,
   return entry->mAtom->SizeOfIncludingThis(aMallocSizeOf);
 }
 
-size_t NS_SizeOfAtomTableIncludingThis(nsMallocSizeOfFun aMallocSizeOf) {
+static size_t
+SizeOfStaticAtomTableEntryExcludingThis(const nsAString& aKey,
+                                        nsIAtom* const& aData,
+                                        nsMallocSizeOfFun aMallocSizeOf,
+                                        void* aArg)
+{
+  return aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
+size_t
+NS_SizeOfAtomTablesIncludingThis(nsMallocSizeOfFun aMallocSizeOf) {
+  size_t n = 0;
   if (gAtomTable.ops) {
-      return PL_DHashTableSizeOfExcludingThis(&gAtomTable,
-                                              SizeOfAtomTableEntryExcludingThis,
-                                              aMallocSizeOf);
+      n += PL_DHashTableSizeOfExcludingThis(&gAtomTable,
+                                            SizeOfAtomTableEntryExcludingThis,
+                                            aMallocSizeOf);
+  }
+  if (gStaticAtomTable) {
+    n += gStaticAtomTable->SizeOfIncludingThis(SizeOfStaticAtomTableEntryExcludingThis,
+                                               aMallocSizeOf);
   }
   return 0;
 }
