@@ -290,16 +290,20 @@ IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
             if (arg1Type == MIRType_Int32) {
                 MDefinition *argv1 = current->peek(-1)->toPassArg()->getArgument();
                 if (argv1->isConstant()) {
-                    int32 arg = argv1->toConstant()->value().toInt32();
-                    if (!discardCall(argc, argv, current))
-                        return InliningStatus_Error;
-                    types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
-                    MNewArray *ins = new MNewArray(arg, type, MNewArray::NewArray_Unallocating);
-                    current->add(ins);
-                    current->push(ins);
-                    if (!resumeAfter(ins))
-                        return InliningStatus_Error;
-                    return InliningStatus_Inlined;
+                    uint32 arg = argv1->toConstant()->value().toInt32();
+                    // Negative arguments generate a RangeError, which is not
+                    // handled by the inline path.
+                    if (arg < JSObject::NELEMENTS_LIMIT) {
+                        if (!discardCall(argc, argv, current))
+                            return InliningStatus_Error;
+                        types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
+                        MNewArray *ins = new MNewArray(arg, type, MNewArray::NewArray_Unallocating);
+                        current->add(ins);
+                        current->push(ins);
+                        if (!resumeAfter(ins))
+                            return InliningStatus_Error;
+                        return InliningStatus_Inlined;
+                    }
                 }
             }
         }
