@@ -1924,7 +1924,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
 
     Value v;
     if (cached) {
-        if (!GetPropertyOperation(f.cx, f.pc(), f.regs.sp[-1], &v))
+        if (!GetPropertyOperation(f.cx, f.script(), f.pc(), f.regs.sp[-1], &v))
             THROW();
     } else {
         if (!obj->getProperty(f.cx, name, &v))
