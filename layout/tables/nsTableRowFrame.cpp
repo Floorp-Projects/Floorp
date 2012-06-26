@@ -607,11 +607,33 @@ nsTableRowFrame::CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
   PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(*aCellFrame);
   
   switch (position->mHeight.GetUnit()) {
-    case eStyleUnit_Coord:
-      specifiedHeight = position->mHeight.GetCoordValue();
+    case eStyleUnit_Coord: {
+      nscoord outsideBoxSizing = 0;
+      // In quirks mode, table cell width should be content-box, but height
+      // should be border-box.
+      // Because of this historic anomaly, we do not use quirk.css
+      // (since we can't specify one value of box-sizing for width and another
+      // for height)
+      if (PresContext()->CompatibilityMode() != eCompatibility_NavQuirks) {
+        switch (position->mBoxSizing) {
+          case NS_STYLE_BOX_SIZING_CONTENT:
+            outsideBoxSizing = aCellFrame->GetUsedBorderAndPadding().TopBottom();
+            break;
+          case NS_STYLE_BOX_SIZING_PADDING:
+            outsideBoxSizing = aCellFrame->GetUsedBorder().TopBottom();
+            break;
+          default:
+            // NS_STYLE_BOX_SIZING_BORDER
+            break;
+        }
+      }
+
+      specifiedHeight = position->mHeight.GetCoordValue() + outsideBoxSizing;
+
       if (1 == rowSpan) 
         SetFixedHeight(specifiedHeight);
       break;
+    }
     case eStyleUnit_Percent: {
       if (1 == rowSpan) 
         SetPctHeight(position->mHeight.GetPercentValue());
