@@ -234,20 +234,10 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
                  "We don't handle correct positioning of fixed frames with "
                  "scrollbars in odd positions");
 
-    // If a scroll position clamping scroll-port size has been set, layout
-    // fixed position elements to this size instead of the computed size.
-    nscoord width = reflowState.ComputedWidth();
-    nscoord height = reflowState.ComputedHeight();
-    if (aPresContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
-      nsSize size = aPresContext->PresShell()->
-        GetScrollPositionClampingScrollPortSize();
-      width = size.width;
-      height = size.height;
-    }
-
     // Just reflow all the fixed-pos frames.
     rv = GetAbsoluteContainingBlock()->Reflow(this, aPresContext, reflowState, aStatus,
-                                              width, height,
+                                              reflowState.ComputedWidth(),
+                                              reflowState.ComputedHeight(),
                                               false, true, true, // XXX could be optimized
                                               &aDesiredSize.mOverflowAreas);
   }

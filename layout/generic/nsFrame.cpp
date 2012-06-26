@@ -2168,16 +2168,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.
     if (!list.IsEmpty()) {
-      // Make sure the root of a fixed position frame sub-tree gets the
-      // correct displaylist item type.
-      nsDisplayItem* item;
-      if (!child->GetParent()->GetParent() &&
-          disp->mPosition == NS_STYLE_POSITION_FIXED) {
-        item = new (aBuilder) nsDisplayFixedPosition(aBuilder, child, &list);
-      } else {
-        item = new (aBuilder) nsDisplayWrapList(aBuilder, child, &list);
-      }
-      rv = aLists.PositionedDescendants()->AppendNewToTop(item);
+      rv = aLists.PositionedDescendants()->AppendNewToTop(new (aBuilder)
+          nsDisplayWrapList(aBuilder, child, &list));
       NS_ENSURE_SUCCESS(rv, rv);
     }
   } else if (disp->IsFloating()) {

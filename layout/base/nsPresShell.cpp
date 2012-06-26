@@ -8965,23 +8965,9 @@ PresShell::SizeOfTextRuns(nsMallocSizeOfFun aMallocSizeOf) const
 void
 nsIPresShell::SetScrollPositionClampingScrollPortSize(nscoord aWidth, nscoord aHeight)
 {
-  if (!mScrollPositionClampingScrollPortSizeSet ||
-      mScrollPositionClampingScrollPortSize.width != aWidth ||
-      mScrollPositionClampingScrollPortSize.height != aHeight) {
-    mScrollPositionClampingScrollPortSizeSet = true;
-    mScrollPositionClampingScrollPortSize.width = aWidth;
-    mScrollPositionClampingScrollPortSize.height = aHeight;
-
-    // Reflow fixed position children.
-    nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
-    if (rootFrame) {
-      const nsFrameList& childList = rootFrame->GetChildList(nsIFrame::kFixedList);
-      for (nsIFrame* child = childList.FirstChild(); child;
-           child = child->GetNextSibling()) {
-        FrameNeedsReflow(child, eResize, NS_FRAME_IS_DIRTY);
-      }
-    }
-  }
+  mScrollPositionClampingScrollPortSizeSet = true;
+  mScrollPositionClampingScrollPortSize.width = aWidth;
+  mScrollPositionClampingScrollPortSize.height = aHeight;
 }
 
 void
