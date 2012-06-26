@@ -3164,7 +3164,6 @@ EndMarkPhase(JSRuntime *rt)
      * cycle collector from collecting some dead objects.
      */
     if (foundBlackGray) {
-        JS_ASSERT(false);
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
             if (!c->isCollecting())
                 c->arenas.unmarkAll();
