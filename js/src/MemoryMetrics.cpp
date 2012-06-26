@@ -72,12 +72,10 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
 static void
 StatsChunkCallback(JSRuntime *rt, void *data, gc::Chunk *chunk)
 {
-    // Nb: This function is only called for dirty chunks, which is why we
-    // increment gcHeapChunkDirtyDecommitted.
     RuntimeStats *rtStats = static_cast<RuntimeStats *>(data);
     for (size_t i = 0; i < gc::ArenasPerChunk; i++)
         if (chunk->decommittedArenas.get(i))
-            rtStats->gcHeapChunkDirtyDecommitted += gc::ArenaSize;
+            rtStats->gcHeapDecommittedArenas += gc::ArenaSize;
 }
 
 static void
@@ -188,14 +186,10 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
     rtStats->gcHeapChunkTotal =
         size_t(JS_GetGCParameter(rt, JSGC_TOTAL_CHUNKS)) * gc::ChunkSize;
 
-    rtStats->gcHeapChunkCleanDecommitted =
-        rt->gcChunkPool.countCleanDecommittedArenas(rt) * gc::ArenaSize;
-
     rtStats->gcHeapUnusedChunks =
-        size_t(JS_GetGCParameter(rt, JSGC_UNUSED_CHUNKS)) * gc::ChunkSize -
-        rtStats->gcHeapChunkCleanDecommitted;
+        size_t(JS_GetGCParameter(rt, JSGC_UNUSED_CHUNKS)) * gc::ChunkSize;
 
-    // This just computes rtStats->gcHeapChunkDirtyDecommitted.
+    // This just computes rtStats->gcHeapDecommittedArenas.
     IterateChunks(rt, rtStats, StatsChunkCallback);
 
     // Take the per-compartment measurements.
@@ -223,8 +217,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
     // |gcHeapUnusedArenas| is the only thing left.  Compute it in terms of
     // all the others.  See the comment in RuntimeStats for explanation.
     rtStats->gcHeapUnusedArenas = rtStats->gcHeapChunkTotal -
-                                  rtStats->gcHeapChunkCleanDecommitted -
-                                  rtStats->gcHeapChunkDirtyDecommitted -
+                                  rtStats->gcHeapDecommittedArenas -
                                   rtStats->gcHeapUnusedChunks -
                                   rtStats->totals.gcHeapUnusedGcThings -
                                   rtStats->gcHeapChunkAdmin -
