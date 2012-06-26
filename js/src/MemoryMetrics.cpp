@@ -68,7 +68,7 @@ StatsArenaCallback(JSRuntime *rt, void *data, gc::Arena *arena,
     // unused space like this:  arenaUnused = maxArenaUnused - arenaUsed.
     // We do this by setting arenaUnused to maxArenaUnused here, and then
     // subtracting thingSize for every used cell, in StatsCellCallback().
-    rtStats->currCompartmentStats->gcHeapArenaUnused += allocationSpace;
+    rtStats->currCompartmentStats->gcHeapUnusedGcThings += allocationSpace;
 }
 
 static void
@@ -148,7 +148,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 #endif
     }
     // Yes, this is a subtraction:  see StatsArenaCallback() for details.
-    cStats->gcHeapArenaUnused -= thingSize;
+    cStats->gcHeapUnusedGcThings -= thingSize;
 }
 
 JS_PUBLIC_API(bool)
@@ -159,7 +159,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
 
     rtStats->gcHeapChunkCleanDecommitted =
         rt->gcChunkPool.countCleanDecommittedArenas(rt) * gc::ArenaSize;
-    rtStats->gcHeapChunkCleanUnused =
+    rtStats->gcHeapUnusedChunks =
         size_t(JS_GetGCParameter(rt, JSGC_UNUSED_CHUNKS)) * gc::ChunkSize -
         rtStats->gcHeapChunkCleanDecommitted;
     rtStats->gcHeapChunkTotal =
@@ -173,10 +173,10 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
 
     // This is initialized to all bytes stored in used chunks, and then we
     // subtract used space from it each time around the loop.
-    rtStats->gcHeapChunkDirtyUnused = rtStats->gcHeapChunkTotal -
-                                      rtStats->gcHeapChunkCleanUnused -
-                                      rtStats->gcHeapChunkCleanDecommitted -
-                                      rtStats->gcHeapChunkDirtyDecommitted;
+    rtStats->gcHeapUnusedArenas = rtStats->gcHeapChunkTotal -
+                                  rtStats->gcHeapUnusedChunks -
+                                  rtStats->gcHeapChunkCleanDecommitted -
+                                  rtStats->gcHeapChunkDirtyDecommitted;
 
     rtStats->totalMjit = rtStats->runtime.mjitCode;
 
@@ -186,7 +186,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
         CompartmentStats &cStats = rtStats->compartmentStatsVector[index];
 
         size_t used = cStats.gcHeapArenaAdmin +
-                      cStats.gcHeapArenaUnused +
+                      cStats.gcHeapUnusedGcThings +
                       cStats.gcHeapObjectsNonFunction +
                       cStats.gcHeapObjectsFunction +
                       cStats.gcHeapStrings +
@@ -199,8 +199,8 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
 #endif
                       cStats.gcHeapTypeObjects;
 
-        rtStats->gcHeapChunkDirtyUnused -= used;
-        rtStats->gcHeapArenaUnused += cStats.gcHeapArenaUnused;
+        rtStats->gcHeapUnusedArenas -= used;
+        rtStats->gcHeapUnusedGcThings += cStats.gcHeapUnusedGcThings;
         rtStats->totalObjects += cStats.gcHeapObjectsNonFunction +
                                  cStats.gcHeapObjectsFunction +
                                  cStats.objectSlots +
@@ -224,17 +224,16 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
         rtStats->totalAnalysisTemp  += cStats.typeInferenceSizes.temporary;
     }
 
-    size_t numDirtyChunks = (rtStats->gcHeapChunkTotal -
-                             rtStats->gcHeapChunkCleanUnused) /
-                            gc::ChunkSize;
+    size_t numDirtyChunks =
+        (rtStats->gcHeapChunkTotal - rtStats->gcHeapUnusedChunks) / gc::ChunkSize;
     size_t perChunkAdmin =
         sizeof(gc::Chunk) - (sizeof(gc::Arena) * gc::ArenasPerChunk);
     rtStats->gcHeapChunkAdmin = numDirtyChunks * perChunkAdmin;
-    rtStats->gcHeapChunkDirtyUnused -= rtStats->gcHeapChunkAdmin;
+    rtStats->gcHeapUnusedArenas -= rtStats->gcHeapChunkAdmin;
 
-    rtStats->gcHeapUnused = rtStats->gcHeapChunkDirtyUnused +
-                            rtStats->gcHeapChunkCleanUnused +
-                            rtStats->gcHeapArenaUnused;
+    rtStats->gcHeapUnused = rtStats->gcHeapUnusedArenas +
+                            rtStats->gcHeapUnusedChunks +
+                            rtStats->gcHeapUnusedGcThings;
 
     rtStats->gcHeapCommitted = rtStats->gcHeapChunkTotal -
                                rtStats->gcHeapChunkCleanDecommitted -

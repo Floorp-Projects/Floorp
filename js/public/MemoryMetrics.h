@@ -80,7 +80,7 @@ struct CompartmentStats
 
     void   *extra;
     size_t gcHeapArenaAdmin;
-    size_t gcHeapArenaUnused;
+    size_t gcHeapUnusedGcThings;
 
     size_t gcHeapObjectsNonFunction;
     size_t gcHeapObjectsFunction;
@@ -116,11 +116,11 @@ struct RuntimeStats
       , gcHeapChunkTotal(0)
       , gcHeapCommitted(0)
       , gcHeapUnused(0)
-      , gcHeapChunkCleanUnused(0)
-      , gcHeapChunkDirtyUnused(0)
+      , gcHeapUnusedChunks(0)
+      , gcHeapUnusedArenas(0)
       , gcHeapChunkCleanDecommitted(0)
       , gcHeapChunkDirtyDecommitted(0)
-      , gcHeapArenaUnused(0)
+      , gcHeapUnusedGcThings(0)
       , gcHeapChunkAdmin(0)
       , totalObjects(0)
       , totalShapes(0)
@@ -139,11 +139,11 @@ struct RuntimeStats
     size_t gcHeapChunkTotal;
     size_t gcHeapCommitted;
     size_t gcHeapUnused;
-    size_t gcHeapChunkCleanUnused;
-    size_t gcHeapChunkDirtyUnused;
+    size_t gcHeapUnusedChunks;
+    size_t gcHeapUnusedArenas;
     size_t gcHeapChunkCleanDecommitted;
     size_t gcHeapChunkDirtyDecommitted;
-    size_t gcHeapArenaUnused;
+    size_t gcHeapUnusedGcThings;
     size_t gcHeapChunkAdmin;
     size_t totalObjects;
     size_t totalShapes;
