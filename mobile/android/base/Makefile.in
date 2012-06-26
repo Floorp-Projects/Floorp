@@ -291,6 +291,7 @@ RES_LAYOUT_LAND_V14 = \
 
 RES_LAYOUT_XLARGE = \
   res/layout-xlarge/browser_toolbar.xml \
+  res/layout-xlarge/doorhangerpopup.xml \
   res/layout-xlarge/gecko_app.xml \
   res/layout-xlarge/remote_tabs_child.xml \
   res/layout-xlarge/remote_tabs_group.xml \
@@ -300,6 +301,7 @@ RES_LAYOUT_XLARGE = \
 
 RES_LAYOUT_SW600DP = \
   res/layout-sw600dp/browser_toolbar.xml \
+  res/layout-sw600dp/doorhangerpopup.xml \
   res/layout-sw600dp/gecko_app.xml \
   res/layout-sw600dp/remote_tabs_child.xml \
   res/layout-sw600dp/remote_tabs_group.xml \
