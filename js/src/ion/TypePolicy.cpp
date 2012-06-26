@@ -143,11 +143,7 @@ ComparePolicy::adjustInputs(MInstruction *def)
         return BoxInputsPolicy::adjustInputs(def);
 
     if (IsNullOrUndefined(specialization_)) {
-        // The first operand is the value we want to test against null or
-        // undefined.
-        MDefinition *op = def->getOperand(0);
-        if (op->type() != MIRType_Value)
-            def->replaceOperand(0, boxAt(def, op));
+        // Nothing to do, lowering handles all types.
         return true;
     }
 

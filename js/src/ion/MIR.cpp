@@ -1225,6 +1225,55 @@ MClampToUint8::foldsTo(bool useValueNumbers)
     return this;
 }
 
+bool
+MCompare::tryFold(bool *result)
+{
+    JSOp op = jsop();
+
+    if (IsNullOrUndefined(specialization())) {
+        JS_ASSERT(op == JSOP_EQ || op == JSOP_STRICTEQ ||
+                  op == JSOP_NE || op == JSOP_STRICTNE);
+
+        // The LHS is the value we want to test against null or undefined.
+        switch (lhs()->type()) {
+          case MIRType_Value:
+            return false;
+          case MIRType_Undefined:
+          case MIRType_Null:
+            if (lhs()->type() == specialization()) {
+                // Both sides have the same type, null or undefined.
+                *result = (op == JSOP_EQ || op == JSOP_STRICTEQ);
+            } else {
+                // One side is null, the other side is undefined. The result is only
+                // true for loose equality.
+                *result = (op == JSOP_EQ || op == JSOP_STRICTNE);
+            }
+            return true;
+          case MIRType_Int32:
+          case MIRType_Double:
+          case MIRType_String:
+          case MIRType_Object:
+          case MIRType_Boolean:
+            *result = (op == JSOP_NE || op == JSOP_STRICTNE);
+            return true;
+          default:
+            JS_NOT_REACHED("Unexpected type");
+            return false;
+        }
+    }
+
+    return false;
+}
+
+MDefinition *
+MCompare::foldsTo(bool useValueNumbers)
+{
+    bool result;
+    if (tryFold(&result))
+        return MConstant::New(BooleanValue(result));
+    return this;
+}
+
 MDefinition *
 MNot::foldsTo(bool useValueNumbers)
 {

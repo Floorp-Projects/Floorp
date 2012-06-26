@@ -321,6 +321,11 @@ LIRGenerator::visitTest(MTest *test)
         MDefinition *left = comp->getOperand(0);
         MDefinition *right = comp->getOperand(1);
 
+        // Try to fold the comparison so that we don't have to handle all cases.
+        bool result;
+        if (comp->tryFold(&result))
+            return add(new LGoto(result ? ifTrue : ifFalse));
+
         if (comp->specialization() == MIRType_Int32 || comp->specialization() == MIRType_Object) {
             JSOp op = ReorderComparison(comp->jsop(), &left, &right);
             LAllocation rhs = comp->specialization() == MIRType_Object
@@ -338,7 +343,7 @@ LIRGenerator::visitTest(MTest *test)
         // first operand.
         if (IsNullOrUndefined(comp->specialization())) {
             LIsNullOrUndefinedAndBranch *lir = new LIsNullOrUndefinedAndBranch(ifTrue, ifFalse);
-            if (!useBox(lir, LIsNullOrUndefinedAndBranch::Value, comp->getOperand(0)))
+            if (!useBox(lir, LIsNullOrUndefinedAndBranch::Value, left))
                 return false;
             return add(lir, comp);
         }
@@ -378,6 +383,11 @@ LIRGenerator::visitCompare(MCompare *comp)
     MDefinition *right = comp->getOperand(1);
 
     if (comp->specialization() != MIRType_None) {
+        // Try to fold the comparison so that we don't have to handle all cases.
+        bool result;
+        if (comp->tryFold(&result))
+            return define(new LInteger(result), comp);
+
         // Move below the emitAtUses call if we ever implement
         // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
         // make sense and avoids confusion.
