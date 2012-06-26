@@ -361,7 +361,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
 
   if (!cellSelectionMode)
   {
-    rv = DeleteSelectionAndPrepareToCreateNode(parentNode, offsetOfNewNode);
+    rv = DeleteSelectionAndPrepareToCreateNode();
     NS_ENSURE_SUCCESS(rv, rv);
 
     // pasting does not inherit local inline styles

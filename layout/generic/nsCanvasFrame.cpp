@@ -116,7 +116,7 @@ nsCanvasFrame::AppendFrames(ChildListID     aListID,
   // Insert the new frames
   NS_ASSERTION(aFrameList.FirstChild() == aFrameList.LastChild(),
                "Only one principal child frame allowed");
-#ifdef NS_DEBUG
+#ifdef DEBUG
   nsFrame::VerifyDirtyBitSet(aFrameList);
 #endif
   mFrames.AppendFrames(nsnull, aFrameList);

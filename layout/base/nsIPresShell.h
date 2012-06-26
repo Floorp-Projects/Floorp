@@ -1015,7 +1015,7 @@ public:
 #endif
   }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   nsIFrame* GetDrawEventTargetFrame() { return mDrawEventTargetFrame; }
 #endif
 
@@ -1324,7 +1324,7 @@ protected:
   nsFrameManagerBase*       mFrameManager;
   nsWeakPtr                 mForwardingContainer;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   nsIFrame*                 mDrawEventTargetFrame;
   // Ensure that every allocation from the PresArena is eventually freed.
   PRUint32                  mPresArenaAllocCount;

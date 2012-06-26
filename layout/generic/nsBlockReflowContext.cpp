@@ -22,7 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsLayoutUtils.h"
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #undef  NOISY_MAX_ELEMENT_SIZE
 #undef   REALLY_NOISY_MAX_ELEMENT_SIZE
 #undef  NOISY_VERTICAL_MARGINS
