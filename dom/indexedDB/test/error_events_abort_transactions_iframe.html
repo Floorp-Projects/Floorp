@@ -71,6 +71,7 @@
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
       ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
 
+      let originalRequest = request;
       request = objectStore.add({}, 1);
       request.onsuccess = grabEventAndContinueHandler;
       request.onerror = errorHandler;
@@ -88,10 +89,13 @@
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
       is(trans.error.name, "ConstraintError", "Right error");
       ok(trans.error === request.error, "Object identity holds");
+      is(originalRequest.transaction, trans, "request.transaction should still be set");
 
       event = yield;
       is(event.type, "error", "Got request error event");
+      is(event.target, originalRequest, "error event has right target");
       is(event.target.error.name, "ConstraintError", "Right error");
+      is(originalRequest.transaction, null, "request.transaction should now be null");
 
       let request = mozIndexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;

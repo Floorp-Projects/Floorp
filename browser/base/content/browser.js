@@ -1477,6 +1477,7 @@ var gBrowserInit = {
 #ifdef MENUBAR_CAN_AUTOHIDE
       document.getElementById("appmenu_styleeditor").hidden = false;
 #endif
+      document.getElementById("developer-toolbar-styleeditor").hidden = false;
     }
 
 #ifdef MENUBAR_CAN_AUTOHIDE
@@ -1496,7 +1497,6 @@ var gBrowserInit = {
 #ifdef MENUBAR_CAN_AUTOHIDE
       document.getElementById("appmenu_responsiveUI").hidden = false;
 #endif
-      document.getElementById("developer-toolbar-responsiveui").hidden = false;
     }
 
     let appMenuButton = document.getElementById("appmenu-button");
@@ -7370,39 +7370,28 @@ var StyleEditor = {
    */
   openChrome: function SE_openChrome(aSelectedStyleSheet, aLine, aCol)
   {
-    const CHROME_URL = "chrome://browser/content/styleeditor.xul";
-    const CHROME_WINDOW_TYPE = "Tools:StyleEditor";
-    const CHROME_WINDOW_FLAGS = "chrome,centerscreen,resizable,dialog=no";
-
-    // focus currently open Style Editor window for this document, if any
     let contentWindow = gBrowser.selectedBrowser.contentWindow;
-    let contentWindowID = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-      getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-    let enumerator = Services.wm.getEnumerator(CHROME_WINDOW_TYPE);
-    while (enumerator.hasMoreElements()) {
-      var win = enumerator.getNext();
-      if (win.styleEditorChrome.contentWindowID == contentWindowID) {
-        if (aSelectedStyleSheet) {
-          win.styleEditorChrome.selectStyleSheet(aSelectedStyleSheet, aLine, aCol);
-        }
-        win.focus();
-        return win;
-      }
+    let win = this.StyleEditorManager.getEditorForWindow(contentWindow);
+    if (win) {
+      this.StyleEditorManager.selectEditor(win);
+      return win;
+    } else {
+      return this.StyleEditorManager.newEditor(contentWindow,
+                                               aSelectedStyleSheet, aLine, aCol);
     }
+  },
 
-    let args = {
-      contentWindow: contentWindow,
-      selectedStyleSheet: aSelectedStyleSheet,
-      line: aLine,
-      col: aCol
-    };
-    args.wrappedJSObject = args;
-    let chromeWindow = Services.ww.openWindow(null, CHROME_URL, "_blank",
-                                              CHROME_WINDOW_FLAGS, args);
-    chromeWindow.focus();
-    return chromeWindow;
+  toggle: function SE_toggle()
+  {
+    this.StyleEditorManager.toggleEditor(gBrowser.contentWindow);
   }
 };
+
+XPCOMUtils.defineLazyGetter(StyleEditor, "StyleEditorManager", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/devtools/StyleEditor.jsm", tmp);
+  return new tmp.StyleEditorManager(window);
+});
 
 
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
