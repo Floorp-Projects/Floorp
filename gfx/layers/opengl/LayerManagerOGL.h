@@ -142,6 +142,9 @@ public:
   virtual LayersBackend GetBackendType() { return LAYERS_OPENGL; }
   virtual void GetBackendName(nsAString& name) { name.AssignLiteral("OpenGL"); }
 
+  virtual already_AddRefed<gfxASurface>
+    CreateOptimalMaskSurface(const gfxIntSize &aSize);
+
   /**
    * Helper methods.
    */
