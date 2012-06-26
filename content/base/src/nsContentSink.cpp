@@ -120,7 +120,7 @@ nsContentSink::nsContentSink()
   NS_ASSERTION(mInNotification == 0, "What?");
   NS_ASSERTION(!mDeferredLayoutStart, "What?");
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (!gContentSinkLogModuleInfo) {
     gContentSinkLogModuleInfo = PR_NewLogModule("nscontentsink");
   }
@@ -925,7 +925,7 @@ nsContentSink::SelectDocAppCache(nsIApplicationCache *aLoadApplicationCache,
       // The http manifest attribute URI is equal to the manifest URI of
       // the cache the document was loaded from - associate the document with
       // that cache and invoke the cache update process.
-#ifdef NS_DEBUG
+#ifdef DEBUG
       nsCAutoString docURISpec, clientID;
       mDocumentURI->GetAsciiSpec(docURISpec);
       aLoadApplicationCache->GetClientID(clientID);
@@ -979,7 +979,7 @@ nsContentSink::SelectDocAppCacheNoManifest(nsIApplicationCache *aLoadApplication
     NS_ASSERTION(applicationCacheDocument,
                  "mDocument must implement nsIApplicationCacheContainer.");
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
     nsCAutoString docURISpec, clientID;
     mDocumentURI->GetAsciiSpec(docURISpec);
     aLoadApplicationCache->GetClientID(clientID);

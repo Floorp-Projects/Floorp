@@ -2992,7 +2992,7 @@ private:
   bool SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
   nsPoint GetOffsetToCrossDoc(const nsIFrame* aOther, const PRInt32 aAPD) const;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 public:
   // Formerly nsIFrameDebug
   NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const = 0;

@@ -781,7 +781,7 @@ protected:
   // Remove and return the pushed floats list.
   nsFrameList* RemovePushedFloats();
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   void VerifyLines(bool aFinalCheckOK);
   void VerifyOverflowSituation();
   PRInt32 GetDepth() const;

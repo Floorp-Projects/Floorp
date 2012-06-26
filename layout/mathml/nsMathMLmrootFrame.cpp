@@ -104,7 +104,7 @@ nsMathMLmrootFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     rv = DisplayBar(aBuilder, this, mBarRect, aLists);
     NS_ENSURE_SUCCESS(rv, rv);
 
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+#if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
     nsRect rect;
     mSqrChar.GetRect(rect);
