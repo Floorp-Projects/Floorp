@@ -376,7 +376,7 @@ Layer::ComputeEffectiveTransformForMaskLayer(const gfx3DMatrix& aTransformToSurf
     gfxMatrix maskTranslation;
     bool maskIs2D = mMaskLayer->GetTransform().CanDraw2D(&maskTranslation);
     NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
-    NS_ASSERTION(maskTranslation.HasOnlyIntegerTranslation(),
+    NS_ASSERTION(!maskTranslation.HasNonTranslation(),
                  "Mask layer has invalid transform.");
 #endif
     mMaskLayer->mEffectiveTransform.PreMultiply(mMaskLayer->GetTransform());
