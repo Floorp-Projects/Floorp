@@ -741,9 +741,8 @@ CodeGenerator::visitCallConstructor(LCallConstructor *call)
     uint32 callargslot = call->argslot();
     uint32 unusedStack = StackOffsetOfPassedArg(callargslot);
 
-    typedef bool (*pf)(JSContext *, JSFunction *, uint32, Value *, Value *);
-    static const VMFunction InvokeConstructorFunctionInfo =
-        FunctionInfo<pf>(InvokeConstructorFunction);
+    typedef bool (*pf)(JSContext *, JSObject *, uint32, Value *, Value *);
+    static const VMFunction InvokeConstructorInfo = FunctionInfo<pf>(ion::InvokeConstructor);
 
     // Nestle %esp up to the argument vector.
     masm.freeStack(unusedStack);
@@ -752,7 +751,7 @@ CodeGenerator::visitCallConstructor(LCallConstructor *call)
     pushArg(Imm32(call->numActualArgs()));  // argc.
     pushArg(calleereg);                     // JSFunction *.
 
-    if (!callVM(InvokeConstructorFunctionInfo, call))
+    if (!callVM(InvokeConstructorInfo, call))
         return false;
 
     // Un-nestle %esp from the argument vector. No prefix was pushed.
