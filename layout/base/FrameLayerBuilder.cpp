@@ -2906,8 +2906,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   } else {
     // no existing mask image, so build a new one
     nsRefPtr<gfxASurface> surface =
-      aLayer->Manager()->CreateOptimalSurface(surfaceSize,
-                                              gfxASurface::ImageFormatARGB32);
+      aLayer->Manager()->CreateOptimalMaskSurface(surfaceSize);
 
     // fail if we can't get the right surface
     if (!surface || surface->CairoStatus()) {
@@ -2919,7 +2918,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
     context->Multiply(imageTransform);
 
     // paint the clipping rects with alpha to create the mask
-    context->SetColor(gfxRGBA(0, 0, 0, 1));
+    context->SetColor(gfxRGBA(1, 1, 1, 1));
     aClip.DrawRoundedRectsTo(context, A2D, 0, aRoundedRectClipCount);
 
     // build the image and container
@@ -2945,7 +2944,6 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const FrameLayerBuilder::Clip& aCl
   userData->mScaleY = newData.mScaleY;
   userData->mRoundedClipRects.SwapElements(newData.mRoundedClipRects);
   userData->mImageKey = key;
-  key->AddRef();
 
   aLayer->SetMaskLayer(maskLayer);
   return;
