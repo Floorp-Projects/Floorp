@@ -105,6 +105,10 @@ let DOMApplicationRegistry = {
   },
 
   receiveMessage: function(aMessage) {
+    // nsIPrefBranch throws if pref does not exist, faster to simply write
+    // the pref instead of first checking if it is false.
+    Services.prefs.setBoolPref("dom.mozApps.used", true);
+
     let msg = aMessage.json;
 
     switch (aMessage.name) {
