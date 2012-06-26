@@ -468,9 +468,6 @@ class TypeSet
     /* Get the single value which can appear in this type set, otherwise NULL. */
     JSObject *getSingleton(JSContext *cx, bool freeze = true);
 
-    /* Whether all objects in this set are parented to a particular global. */
-    bool hasGlobalObject(JSContext *cx, JSObject *global);
-
     inline void clearObjects();
 
     /*

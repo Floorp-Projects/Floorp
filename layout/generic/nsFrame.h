@@ -32,7 +32,7 @@
 
 #define NS_FRAME_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #define NS_FRAME_LOG(_bit,_args)                                \
   PR_BEGIN_MACRO                                                \
     if (NS_FRAME_LOG_TEST(nsFrame::GetLogModuleInfo(),_bit)) {  \
@@ -44,7 +44,7 @@
 #endif
 
 // XXX Need to rework this so that logging is free when it's off
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #define NS_FRAME_TRACE_IN(_method) Trace(_method, true)
 
 #define NS_FRAME_TRACE_OUT(_method) Trace(_method, false)
@@ -390,7 +390,7 @@ public:
   virtual const void* GetStyleDataExternal(nsStyleStructID aSID) const;
 
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   /**
    * Tracing method that writes a method enter/exit routine to the
    * nspr log using the nsIFrame log module. The tracing is only
@@ -629,7 +629,7 @@ private:
 
   virtual nsILineIterator* GetLineIterator();
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 public:
   // Formerly the nsIFrameDebug interface
 

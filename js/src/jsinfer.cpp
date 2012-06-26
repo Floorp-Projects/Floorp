@@ -1794,63 +1794,6 @@ TypeSet::getSingleton(JSContext *cx, bool freeze)
     return obj;
 }
 
-static inline bool
-TypeHasGlobal(Type type, JSObject *global)
-{
-    if (type.isUnknown() || type.isAnyObject())
-        return false;
-
-    if (type.isSingleObject())
-        return &type.singleObject()->global() == global;
-
-    if (type.isTypeObject())
-        return type.typeObject()->getGlobal() == global;
-
-    JS_ASSERT(type.isPrimitive());
-    return true;
-}
-
-class TypeConstraintFreezeGlobal : public TypeConstraint
-{
-public:
-    RecompileInfo info;
-    JSObject *global;
-
-    TypeConstraintFreezeGlobal(RecompileInfo info, JSObject *global)
-        : TypeConstraint("freezeGlobal"), info(info), global(global)
-    {
-        JS_ASSERT(global);
-    }
-
-    void newType(JSContext *cx, TypeSet *source, Type type)
-    {
-        if (!global || TypeHasGlobal(type, global))
-            return;
-
-        global = NULL;
-        cx->compartment->types.addPendingRecompile(cx, info);
-    }
-};
-
-bool
-TypeSet::hasGlobalObject(JSContext *cx, JSObject *global)
-{
-    if (unknownObject())
-        return false;
-
-    unsigned count = getObjectCount();
-    for (unsigned i = 0; i < count; i++) {
-        TypeObjectKey *object = getObject(i);
-        if (object && !TypeHasGlobal(Type::ObjectType(object), global))
-            return false;
-    }
-
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeGlobal>(
-              cx->compartment->types.compiledInfo, global), false);
-
-    return true;
-}
-
 bool
 TypeSet::needsBarrier(JSContext *cx)
 {

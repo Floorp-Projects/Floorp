@@ -5596,6 +5596,9 @@ if test -n "$MOZ_CUBEB"; then
     *-mingw*)
         AC_DEFINE(MOZ_CUBEB)
         ;;
+    *-darwin*)
+        AC_DEFINE(MOZ_CUBEB)
+        ;;
     *-openbsd*)
         AC_DEFINE(MOZ_CUBEB)
         ;;

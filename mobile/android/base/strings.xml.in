@@ -70,6 +70,7 @@
   <string name="pref_category_general">&pref_category_general;</string>
   <string name="pref_category_privacy">&pref_category_privacy;</string>
   <string name="pref_category_content">&pref_category_content;</string>
+  <string name="pref_category_importexport">&pref_category_importexport;</string>
   <string name="pref_about_firefox">&pref_about_firefox;</string>
   <string name="pref_do_not_track">&pref_do_not_track;</string>
   <string name="pref_telemetry">&pref_telemetry;</string>
@@ -94,6 +95,7 @@
   <string name="pref_font_size_xlarge">&pref_font_size_xlarge;</string>
   <string name="pref_sync">&pref_sync;</string>
   <string name="pref_search_suggestions">&pref_search_suggestions;</string>
+  <string name="pref_import_android">&pref_import_android;</string>
 
   <string name="reload">&reload;</string>
   <string name="forward">&forward;</string>
@@ -177,4 +179,12 @@
   <!-- Site identity popup -->
   <string name="identity_connected_to">&identity_connected_to;</string>
   <string name="identity_run_by">&identity_run_by;</string>
+
+  <!-- Bookmark import/export -->
+  <string name="bookmarkhistory_button_import">&bookmarkhistory_button_import;</string>
+  <string name="bookmarkhistory_import_both">&bookmarkhistory_import_both;</string>
+  <string name="bookmarkhistory_import_bookmarks">&bookmarkhistory_import_bookmarks;</string>
+  <string name="bookmarkhistory_import_history">&bookmarkhistory_import_history;</string>
+  <string name="bookmarkhistory_import_wait">&bookmarkhistory_import_wait;</string>
+
 </resources>

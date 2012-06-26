@@ -37,7 +37,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "mozilla/dom/Element.h"
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #undef NOISY
 #else
 #undef NOISY
@@ -87,7 +87,7 @@ nsContainerFrame::SetInitialChildList(ChildListID  aListID,
     NS_NOTREACHED("unknown frame list");
     result = NS_ERROR_INVALID_ARG;
   } else {
-#ifdef NS_DEBUG
+#ifdef DEBUG
     nsFrame::VerifyDirtyBitSet(aChildList);
 #endif
     mFrames.SetFrames(aChildList);
@@ -1715,7 +1715,7 @@ nsOverflowContinuationTracker::Finish(nsIFrame* aChild)
 /////////////////////////////////////////////////////////////////////////////
 // Debugging
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 NS_IMETHODIMP
 nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
 {

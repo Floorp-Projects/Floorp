@@ -310,6 +310,8 @@ public:
   NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode *aNode);
   virtual bool IsModifiableNode(nsINode *aNode);
 
+  NS_IMETHOD GetIsSelectionEditable(bool* aIsSelectionEditable);
+
   NS_IMETHOD SelectAll();
 
   NS_IMETHOD GetRootElement(nsIDOMElement **aRootElement);
