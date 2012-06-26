@@ -22,7 +22,7 @@ const PREFS = new Preferences("services.aitc.browserid.");
  * generation goodness. See bug 753238.
  */
 function BrowserIDService() {
-  this._log = Log4Moz.repository.getLogger("Services.BrowserID");
+  this._log = Log4Moz.repository.getLogger("Service.AITC.BrowserID");
   this._log.level = Log4Moz.Level[PREFS.get("log")];
 }
 BrowserIDService.prototype = {

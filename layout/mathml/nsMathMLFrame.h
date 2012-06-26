@@ -351,7 +351,7 @@ public:
                 nscoord&             aAxisHeight);
 
 protected:
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+#if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
   nsresult DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
                                   nsIFrame* aFrame, const nsPoint& aPt,
                                   const nsBoundingMetrics& aMetrics,

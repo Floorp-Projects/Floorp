@@ -632,7 +632,7 @@ class nsLineList_iterator {
 
     typedef nsLineLink                  link_type;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
     nsLineList_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
 #else
     // Auto generated default constructor OK.
@@ -791,7 +791,7 @@ class nsLineList_reverse_iterator {
 
     typedef nsLineLink                  link_type;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
     nsLineList_reverse_iterator() { memset(&mCurrent, 0xcd, sizeof(mCurrent)); }
 #else
     // Auto generated default constructor OK.

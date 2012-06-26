@@ -574,6 +574,7 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLam
             if (pn->isArity(PN_LIST)) {
                 ParseNode **pnp = &pn->pn_head;
                 JS_ASSERT(*pnp == pn1);
+                uint32_t orig = pn->pn_count;
                 do {
                     Truthiness t = Boolish(pn1);
                     if (t == Unknown) {
@@ -609,6 +610,12 @@ js::FoldConstants(JSContext *cx, ParseNode *pn, Parser *parser, bool inGenexpLam
                 } else if (pn->pn_count == 1) {
                     pn->become(pn1);
                     parser->freeTree(pn1);
+                } else if (orig != pn->pn_count) {
+                    // Adjust list tail.
+                    pn2 = pn1->pn_next;
+                    for (; pn1; pn2 = pn1, pn1 = pn1->pn_next)
+                        ;
+                    pn->pn_tail = &pn2->pn_next;
                 }
             } else {
                 Truthiness t = Boolish(pn1);

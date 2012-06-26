@@ -9,7 +9,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsReadableUtils.h"
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static bool gNoisy = false;
 #endif
 
@@ -55,7 +55,7 @@ NS_IMETHODIMP InsertElementTxn::Init(nsIDOMNode *aNode,
 
 NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy) 
   { 
     nsCOMPtr<nsIContent>nodeAsContent = do_QueryInterface(mNode);
@@ -116,7 +116,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
 
 NS_IMETHODIMP InsertElementTxn::UndoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("%p Undo Insert Element of %p into parent %p at offset %d\n",

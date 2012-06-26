@@ -71,7 +71,7 @@ struct nsDOMClassInfoData
   PRUint32 mInterfacesBitmap;
   bool mChromeOnly;
   bool mDisabled;
-#ifdef NS_DEBUG
+#ifdef DEBUG
   PRUint32 mDebugID;
 #endif
 };

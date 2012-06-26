@@ -1420,47 +1420,13 @@ public class BrowserProvider extends ContentProvider {
     public Uri insertInTransaction(Uri uri, ContentValues values) {
         trace("Calling insert in transaction on URI: " + uri);
 
-        final SQLiteDatabase db = getWritableDatabase(uri);
         int match = URI_MATCHER.match(uri);
         long id = -1;
 
         switch (match) {
             case BOOKMARKS: {
                 trace("Insert on BOOKMARKS: " + uri);
-
-                // Generate values if not specified. Don't overwrite
-                // if specified by caller.
-                long now = System.currentTimeMillis();
-                if (!values.containsKey(Bookmarks.DATE_CREATED)) {
-                    values.put(Bookmarks.DATE_CREATED, now);
-                }
-
-                if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
-                    values.put(Bookmarks.DATE_MODIFIED, now);
-                }
-
-                if (!values.containsKey(Bookmarks.GUID)) {
-                  values.put(Bookmarks.GUID, Utils.generateGuid());
-                }
-
-                if (!values.containsKey(Bookmarks.POSITION)) {
-                    debug("Inserting bookmark with no position for URI");
-                    values.put(Bookmarks.POSITION, Long.toString(Long.MIN_VALUE));
-                }
-
-                String url = values.getAsString(Bookmarks.URL);
-                ContentValues imageValues = extractImageValues(values, url);
-                Integer type = values.getAsInteger(Bookmarks.TYPE);
-
-                if ((type == null || type != Bookmarks.TYPE_FOLDER)
-                        && imageValues != null && !TextUtils.isEmpty(url)) {
-                    debug("Inserting bookmark image for URL: " + url);
-                    updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
-                            new String[] { url });
-                }
-
-                debug("Inserting bookmark in database with URL: " + url);
-                id = db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.TITLE, values);
+                id = insertBookmark(uri, values);
                 break;
             }
 
@@ -1483,6 +1449,7 @@ public class BrowserProvider extends ContentProvider {
                 String url = values.getAsString(Images.URL);
 
                 debug("Inserting image in database with URL: " + url);
+                final SQLiteDatabase db = getWritableDatabase(uri);
                 id = db.insertOrThrow(TABLE_IMAGES, Images.URL, values);
                 break;
             }
@@ -1566,7 +1533,10 @@ public class BrowserProvider extends ContentProvider {
                 // fall through
             case BOOKMARKS: {
                 debug("Updating bookmark: " + uri);
-                updated = updateBookmarks(uri, values, selection, selectionArgs);
+                if (shouldUpdateOrInsert(uri))
+                    updated = updateOrInsertBookmark(uri, values, selection, selectionArgs);
+                else
+                    updated = updateBookmarks(uri, values, selection, selectionArgs);
                 break;
             }
 
@@ -1594,8 +1564,12 @@ public class BrowserProvider extends ContentProvider {
                 if (TextUtils.isEmpty(url))
                     throw new IllegalArgumentException("Images.URL is required");
 
-                updated = updateExistingImage(uri, values, Images.URL + " = ?",
-                        new String[] { url });
+                if (shouldUpdateOrInsert(uri))
+                    updated = updateOrInsertImage(uri, values, Images.URL + " = ?",
+                                                  new String[] { url });
+                else
+                    updated = updateExistingImage(uri, values, Images.URL + " = ?",
+                                                  new String[] { url });
 
                 break;
             }
@@ -1961,6 +1935,57 @@ public class BrowserProvider extends ContentProvider {
                        " FROM " + TABLE_BOOKMARKS +
                        " WHERE " + selection + " )";
         return getWritableDatabase(uri).update(TABLE_BOOKMARKS, values, where, selectionArgs);
+    }
+
+    long insertBookmark(Uri uri, ContentValues values) {
+        // Generate values if not specified. Don't overwrite
+        // if specified by caller.
+        long now = System.currentTimeMillis();
+        if (!values.containsKey(Bookmarks.DATE_CREATED)) {
+            values.put(Bookmarks.DATE_CREATED, now);
+        }
+
+        if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
+            values.put(Bookmarks.DATE_MODIFIED, now);
+        }
+
+        if (!values.containsKey(Bookmarks.GUID)) {
+            values.put(Bookmarks.GUID, Utils.generateGuid());
+        }
+
+        if (!values.containsKey(Bookmarks.POSITION)) {
+            debug("Inserting bookmark with no position for URI");
+            values.put(Bookmarks.POSITION,
+                       Long.toString(BrowserContract.Bookmarks.DEFAULT_POSITION));
+        }
+
+        String url = values.getAsString(Bookmarks.URL);
+        ContentValues imageValues = extractImageValues(values, url);
+        Integer type = values.getAsInteger(Bookmarks.TYPE);
+
+        if ((type == null || type != Bookmarks.TYPE_FOLDER)
+            && imageValues != null && !TextUtils.isEmpty(url)) {
+            debug("Inserting bookmark image for URL: " + url);
+            updateOrInsertImage(uri, imageValues, Images.URL + " = ?",
+                                new String[] { url });
+        }
+
+        debug("Inserting bookmark in database with URL: " + url);
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        return db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.TITLE, values);
+    }
+
+
+    int updateOrInsertBookmark(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs) {
+        int updated = updateBookmarks(uri, values, selection, selectionArgs);
+        if (updated > 0)
+            return updated;
+
+        insertBookmark(uri, values);
+
+        // Return 0 if we added a new row
+        return 0;
     }
 
     int updateBookmarks(Uri uri, ContentValues values, String selection,

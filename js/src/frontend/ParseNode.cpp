@@ -76,6 +76,26 @@ ParseNode::clear()
     pn_parens = false;
 }
 
+#ifdef DEBUG
+void
+ParseNode::checkListConsistency()
+{
+    JS_ASSERT(isArity(PN_LIST));
+    ParseNode **tail;
+    uint32_t count = 0;
+    if (pn_head) {
+        ParseNode *pn, *last;
+        for (pn = last = pn_head; pn; last = pn, pn = pn->pn_next, count++)
+            ;
+        tail = &last->pn_next;
+    } else {
+        tail = &pn_head;
+    }
+    JS_ASSERT(pn_tail == tail);
+    JS_ASSERT(pn_count == count);
+}
+#endif
+
 bool
 FunctionBox::inAnyDynamicScope() const
 {
@@ -202,6 +222,7 @@ PushNodeChildren(ParseNode *pn, NodeStack *stack)
         return !pn->isUsed() && !pn->isDefn();
 
       case PN_LIST:
+        pn->checkListConsistency();
         stack->pushList(pn);
         break;
       case PN_TERNARY:

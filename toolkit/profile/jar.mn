@@ -5,5 +5,5 @@
 toolkit.jar:
 * content/mozapps/profile/createProfileWizard.js  (content/createProfileWizard.js)
 * content/mozapps/profile/createProfileWizard.xul (content/createProfileWizard.xul)
-* content/mozapps/profile/profileSelection.js     (content/profileSelection.js)
-* content/mozapps/profile/profileSelection.xul    (content/profileSelection.xul)
+  content/mozapps/profile/profileSelection.js     (content/profileSelection.js)
+  content/mozapps/profile/profileSelection.xul    (content/profileSelection.xul)

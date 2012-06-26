@@ -244,6 +244,25 @@ public:
                                     void*             userArg);
 
   /**
+   * Measure the size of the table's entry storage and the table itself.
+   * If |sizeOfEntryExcludingThis| is non-nsnull, measure the size of things
+   * pointed to by entries.
+   *
+   * @param    sizeOfEntryExcludingThis
+   *           the <code>SizeOfEntryExcludingThisFun</code> function to call
+   * @param    mallocSizeOf the function used to meeasure heap-allocated blocks
+   * @param    userArg a point to pass to the
+   *           <code>SizeOfEntryExcludingThisFun</code> function
+   * @return   the summed size of the entries, the table, and the table's storage
+   */
+  size_t SizeOfIncludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
+                             nsMallocSizeOfFun mallocSizeOf, void *userArg = nsnull)
+  {
+    return mallocSizeOf(this) + this->SizeOfExcludingThis(sizeOfEntryExcludingThis,
+                                                          mallocSizeOf, userArg);
+  }
+
+  /**
    * Measure the size of the table's entry storage, and if
    * |sizeOfEntryExcludingThis| is non-nsnull, measure the size of things pointed
    * to by entries.

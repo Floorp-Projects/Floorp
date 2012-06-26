@@ -8,11 +8,11 @@
 
 #include "DeleteElementTxn.h"
 #include "nsSelectionState.h"
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #include "nsIDOMElement.h"
 #endif
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static bool gNoisy = false;
 #endif
 
@@ -67,7 +67,7 @@ NS_IMETHODIMP DeleteElementTxn::Init(nsIEditor *aEditor,
 
 NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("%p Do Delete Element element = %p\n",
@@ -80,7 +80,7 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 
   if (!mParent) { return NS_OK; }  // this is a no-op, there's no parent to delete mElement from
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   // begin debug output
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mElement);
   nsAutoString elementTag(NS_LITERAL_STRING("text node"));
@@ -118,7 +118,7 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 
 NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("%p Undo Delete Element element = %p, parent = %p\n",
@@ -131,7 +131,7 @@ NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
   if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
   if (!mElement) { return NS_ERROR_NULL_POINTER; }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   // begin debug output
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mElement);
   nsAutoString elementTag(NS_LITERAL_STRING("text node"));
@@ -161,7 +161,7 @@ NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
 
 NS_IMETHODIMP DeleteElementTxn::RedoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("%p Redo Delete Element element = %p, parent = %p\n",

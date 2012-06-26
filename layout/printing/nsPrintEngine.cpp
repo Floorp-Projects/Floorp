@@ -138,7 +138,7 @@ using namespace mozilla::dom;
 
 #ifdef PR_LOGGING
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 // PR_LOGGING is force to always be on (even in release builds)
 // but we only want some of it on,
 //#define EXTENDED_DEBUG_PRINTING 
@@ -549,7 +549,7 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
 
   nsScriptSuppressor scriptSuppressor(this);
   if (!aIsPrintPreview) {
-#ifdef NS_DEBUG
+#ifdef DEBUG
     mPrt->mDebugFilePtr = mDebugFile;
 #endif
 
@@ -2222,7 +2222,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
 
     // mPrt->mDebugFilePtr this is onlu non-null when compiled for debugging
     if (nsnull != mPrt->mDebugFilePtr) {
-#ifdef NS_DEBUG
+#ifdef DEBUG
       // output the regression test
       nsIFrame* root = poPresShell->FrameManager()->GetRootFrame();
       root->DumpRegressionData(poPresContext, mPrt->mDebugFilePtr, 0);

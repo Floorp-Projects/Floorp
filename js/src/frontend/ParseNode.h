@@ -923,6 +923,12 @@ struct ParseNode {
         pn_count++;
     }
 
+    void checkListConsistency()
+#ifndef DEBUG
+    {}
+#endif
+    ;
+
     bool getConstantValue(JSContext *cx, bool strictChecks, Value *vp);
     inline bool isConstant();
 

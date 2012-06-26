@@ -4,10 +4,10 @@
 
 toolkit.jar:
 % content mozapps %content/mozapps/
-* content/mozapps/downloads/helperApps.js                       (content/helperApps.js)
+  content/mozapps/downloads/helperApps.js                       (content/helperApps.js)
 * content/mozapps/downloads/unknownContentType.xul              (content/unknownContentType.xul)
 * content/mozapps/downloads/downloads.xul                       (content/downloads.xul)
 * content/mozapps/downloads/downloads.js                        (content/downloads.js)
-* content/mozapps/downloads/DownloadProgressListener.js         (content/DownloadProgressListener.js)
+  content/mozapps/downloads/DownloadProgressListener.js         (content/DownloadProgressListener.js)
   content/mozapps/downloads/downloads.css                       (content/downloads.css)
-* content/mozapps/downloads/download.xml                        (content/download.xml)
+  content/mozapps/downloads/download.xml                        (content/download.xml)

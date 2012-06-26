@@ -179,7 +179,7 @@ nsParser::~nsParser()
 void
 nsParser::Initialize(bool aConstructor)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (!gDumpContent) {
     gDumpContent = PR_GetEnv("PARSER_DUMP_CONTENT") != nsnull;
   }
@@ -212,7 +212,7 @@ nsParser::Initialize(bool aConstructor)
 void
 nsParser::Cleanup()
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gDumpContent) {
     if (mSink) {
       // Sink (HTMLContentSink at this time) supports nsIDebugDumpContent

@@ -13,7 +13,7 @@
 #include "plstr.h"
 
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 class nsFrameUtil : public nsIFrameUtil {
 public:
   nsFrameUtil();

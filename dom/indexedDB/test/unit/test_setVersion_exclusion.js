@@ -48,14 +48,11 @@ function testSteps()
   event = yield;
   is(event.type, "complete", "Got complete event");
 
-  // The database is still not fully open here.
   try {
     db.transaction("foo");
-    ok(false, "Transactions should be disallowed now!");
+    ok(true, "Transactions should be allowed now!");
   } catch (e) {
-    ok(e instanceof DOMException, "Expect a DOMException");
-    is(e.name, "InvalidStateError", "Expect an InvalidStateError");
-    is(e.code, DOMException.INVALID_STATE_ERR, "Expect an INVALID_STATE_ERR");
+    ok(false, "Transactions should be allowed now!");
   }
 
   request.onsuccess = grabEventAndContinueHandler;

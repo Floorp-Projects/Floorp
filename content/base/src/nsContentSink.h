@@ -52,7 +52,7 @@ class Loader;
 }
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 
 extern PRLogModuleInfo* gContentSinkLogModuleInfo;
 

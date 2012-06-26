@@ -8,7 +8,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static bool gNoisy = false;
 #endif
 
@@ -56,7 +56,7 @@ NS_IMETHODIMP JoinElementTxn::Init(nsEditor   *aEditor,
 // After DoTransaction() and RedoTransaction(), the left node is removed from the content tree and right node remains.
 NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("%p Do Join of %p and %p\n",
@@ -108,7 +108,7 @@ NS_IMETHODIMP JoinElementTxn::DoTransaction(void)
 //     and re-inserted mLeft?
 NS_IMETHODIMP JoinElementTxn::UndoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("%p Undo Join, right node = %p\n",

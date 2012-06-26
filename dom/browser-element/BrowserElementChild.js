@@ -94,6 +94,12 @@ BrowserElementChild.prototype = {
       windowUtils.setIsApp(false);
     }
 
+    // A cache of the menuitem dom objects keyed by the id we generate
+    // and pass to the embedder
+    this._ctxHandlers = {};
+    // Counter of contextmenu events fired
+    this._ctxCounter = 0;
+
     addEventListener('DOMTitleChanged',
                      this._titleChangedHandler.bind(this),
                      /* useCapture = */ true,
@@ -116,6 +122,7 @@ BrowserElementChild.prototype = {
     addMsgListener("go-back", this._recvGoBack);
     addMsgListener("go-forward", this._recvGoForward);
     addMsgListener("unblock-modal-prompt", this._recvStopWaiting);
+    addMsgListener("fire-ctx-callback", this._recvFireCtxCallback);
 
     let els = Cc["@mozilla.org/eventlistenerservice;1"]
                 .getService(Ci.nsIEventListenerService);
@@ -133,6 +140,9 @@ BrowserElementChild.prototype = {
                                /* useCapture = */ true);
     els.addSystemEventListener(global, 'DOMWindowClose',
                                this._closeHandler.bind(this),
+                               /* useCapture = */ false);
+    els.addSystemEventListener(global, 'contextmenu',
+                               this._contextmenuHandler.bind(this),
                                /* useCapture = */ false);
   },
 
@@ -312,6 +322,61 @@ BrowserElementChild.prototype = {
     e.preventDefault();
   },
 
+  _contextmenuHandler: function(e) {
+    debug("Got contextmenu");
+
+    if (e.defaultPrevented) {
+      return;
+    }
+
+    e.preventDefault();
+
+    this._ctxCounter++;
+    this._ctxHandlers = {};
+
+    var elem = e.target;
+    var menuData = {systemTargets: [], contextmenu: null};
+    var ctxMenuId = null;
+
+    while (elem && elem.hasAttribute) {
+      var ctxData = this._getSystemCtxMenuData(elem);
+      if (ctxData) {
+        menuData.systemTargets.push({
+          nodeName: elem.nodeName,
+          data: ctxData
+        });
+      }
+
+      if (!ctxMenuId && elem.hasAttribute('contextmenu')) {
+        ctxMenuId = elem.getAttribute('contextmenu');
+      }
+      elem = elem.parentNode;
+    }
+
+    if (ctxMenuId) {
+      var menu = e.target.ownerDocument.getElementById(ctxMenuId);
+      if (menu) {
+        menuData.contextmenu = this._buildMenuObj(menu, '');
+      }
+    }
+    sendAsyncMsg('contextmenu', menuData);
+  },
+
+  _getSystemCtxMenuData: function(elem) {
+    if ((elem instanceof Ci.nsIDOMHTMLAnchorElement && elem.href) ||
+        (elem instanceof Ci.nsIDOMHTMLAreaElement && elem.href)) {
+      return elem.href;
+    }
+    if (elem instanceof Ci.nsIImageLoadingContent && elem.currentURI) {
+      return elem.currentURI.spec;
+    }
+    if ((elem instanceof Ci.nsIDOMHTMLMediaElement) ||
+        (elem instanceof Ci.nsIDOMHTMLImageElement)) {
+      return elem.currentSrc || elem.src;
+    }
+    return false;
+  },
+
   _recvGetScreenshot: function(data) {
     debug("Received getScreenshot message: (" + data.json.id + ")");
     var canvas = content.document
@@ -326,6 +391,42 @@ BrowserElementChild.prototype = {
       id: data.json.id,
       rv: canvas.toDataURL("image/png")
     });
+  },
+
+  _recvFireCtxCallback: function(data) {
+    debug("Received fireCtxCallback message: (" + data.json.menuitem + ")");
+    // We silently ignore if the embedder uses an incorrect id in the callback
+    if (data.json.menuitem in this._ctxHandlers) {
+      this._ctxHandlers[data.json.menuitem].click();
+      this._ctxHandlers = {};
+    } else {
+      debug("Ignored invalid contextmenu invokation");
+    }
+  },
+
+  _buildMenuObj: function(menu, idPrefix) {
+    function maybeCopyAttribute(src, target, attribute) {
+      if (src.getAttribute(attribute)) {
+        target[attribute] = src.getAttribute(attribute);
+      }
+    }
+
+    var menuObj = {type: 'menu', items: []};
+    maybeCopyAttribute(menu, menuObj, 'label');
+
+    for (var i = 0, child; child = menu.children[i++];) {
+      if (child.nodeName === 'MENU') {
+        menuObj.items.push(this._buildMenuObj(child, idPrefix + i + '_'));
+      } else if (child.nodeName === 'MENUITEM') {
+        var id = this._ctxCounter + '_' + idPrefix + i;
+        var menuitem = {id: id, type: 'menuitem'};
+        maybeCopyAttribute(child, menuitem, 'label');
+        maybeCopyAttribute(child, menuitem, 'icon');
+        this._ctxHandlers[id] = child;
+        menuObj.items.push(menuitem);
+      }
+    }
+    return menuObj;
   },
 
   _recvSetVisible: function(data) {

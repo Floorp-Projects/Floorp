@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-*+ content/global/commonDialog.js             (content/commonDialog.js)
+   content/global/commonDialog.js             (content/commonDialog.js)
 *+ content/global/commonDialog.xul            (content/commonDialog.xul)
    content/global/commonDialog.css            (content/commonDialog.css)
-+  content/global/selectDialog.js             (content/selectDialog.js)
-+  content/global/selectDialog.xul            (content/selectDialog.xul)
-*  content/global/tabprompts.css              (content/tabprompts.css)
+   content/global/selectDialog.js             (content/selectDialog.js)
+   content/global/selectDialog.xul            (content/selectDialog.xul)
+   content/global/tabprompts.css              (content/tabprompts.css)
 *+ content/global/tabprompts.xml              (content/tabprompts.xml)

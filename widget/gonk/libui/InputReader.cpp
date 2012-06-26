@@ -1206,9 +1206,7 @@ TouchButtonAccumulator::TouchButtonAccumulator() :
 }
 
 void TouchButtonAccumulator::configure(InputDevice* device) {
-    // Some input devices return erroneous information to us,
-    // which lead to have only hovering pointer ids.
-    //mHaveBtnTouch = device->hasKey(BTN_TOUCH);
+    mHaveBtnTouch = device->hasKey(BTN_TOUCH);
 }
 
 void TouchButtonAccumulator::reset(InputDevice* device) {

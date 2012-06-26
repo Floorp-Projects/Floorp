@@ -46,7 +46,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
       return MakeFrameName(NS_LITERAL_STRING("Deck"), aResult);

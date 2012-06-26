@@ -500,10 +500,18 @@ class TokenStream
     bool isEOF() const { return !!(flags & TSF_EOF); }
     bool hasOctalCharacterEscape() const { return flags & TSF_OCTAL_CHAR; }
 
-    // Return false if we should stop compiling, either because (a) we issued
-    // an error message, or (b) something went wrong, such as an OOM.
+    // TokenStream-specific error reporters.
+    bool reportError(unsigned errorNumber, ...);
+    bool reportWarning(unsigned errorNumber, ...);
+    bool reportStrictWarning(unsigned errorNumber, ...);
+    bool reportStrictModeError(unsigned errorNumber, ...);
+
+    // General-purpose error reporters.  You should avoid calling these
+    // directly, and instead use the more succinct alternatives (e.g.
+    // reportError()) in TokenStream, Parser, and BytecodeEmitter.
     bool reportCompileErrorNumberVA(ParseNode *pn, unsigned flags, unsigned errorNumber,
-                                    va_list ap);
+                                    va_list args);
+    bool reportStrictModeErrorNumberVA(ParseNode *pn, unsigned errorNumber, va_list args);
 
   private:
     static JSAtom *atomize(JSContext *cx, CharBuffer &cb);
@@ -829,22 +837,6 @@ IsIdentifier(JSLinearString *str);
  * message have const jschar* type, not const char*.
  */
 #define JSREPORT_UC 0x100
-
-/*
- * Report a compile-time error by its number. Return true for a warning, false
- * for an error. When pn is not null, use it to report error's location.
- * Otherwise use ts, which must not be null.
- */
-bool
-ReportCompileErrorNumber(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned flags,
-                         unsigned errorNumber, ...);
-
-/*
- * Report a condition that should elicit a warning with JSOPTION_STRICT,
- * or an error if the current context is handling strict mode code.
- */
-bool
-ReportStrictModeError(JSContext *cx, TokenStream *ts, ParseNode *pn, unsigned errorNumber, ...);
 
 } /* namespace js */
 

@@ -32,13 +32,24 @@ SimpleTest.waitForFocus(runTests);
 
 var gBlock1, gBlock2;
 
-function IsCommandEnabled(command, alwaysEnabled) {
+var alwaysEnabledCommands = [
+  "contentReadOnly",
+  "copy",
+  "enableInlineTableEditing",
+  "enableObjectResizing",
+  "insertBrOnReturn",
+  "selectAll",
+  "styleWithCSS",
+];
+
+function IsCommandEnabled(command) {
   var enabled;
 
   // non-editable div: should return false unless alwaysEnabled
   window.getSelection().selectAllChildren(gBlock1);
   enabled = document.queryCommandEnabled(command);
-  is(enabled, alwaysEnabled, "'" + command + "' should not be enabled on a non-editable block.");
+  is(enabled, alwaysEnabledCommands.indexOf(command) != -1,
+     "'" + command + "' should not be enabled on a non-editable block.");
 
   // editable div: should return true
   window.getSelection().selectAllChildren(gBlock2);
@@ -67,15 +78,15 @@ function runTests() {
   ];
   document.execCommand("styleWithCSS", false, false);
   for (i = 0; i < commands.length; i++)
-    IsCommandEnabled(commands[i], commands[i] == "selectAll");
+    IsCommandEnabled(commands[i]);
   document.execCommand("styleWithCSS", false, true);
   for (i = 0; i < commands.length; i++)
-    IsCommandEnabled(commands[i], commands[i] == "selectAll");
+    IsCommandEnabled(commands[i]);
 
   // Mozilla-specific stuff
   commands = ["enableInlineTableEditing", "enableObjectResizing", "insertBrOnReturn"];
   for (i = 0; i < commands.length; i++)
-    IsCommandEnabled(commands[i], false);
+    IsCommandEnabled(commands[i]);
 
   // cut/copy/paste -- SpecialPowers required
   SpecialPowers.setCharPref("capability.policy.policynames",                      "allowclipboard");
@@ -84,7 +95,7 @@ function runTests() {
   SpecialPowers.setCharPref("capability.policy.allowclipboard.Clipboard.paste",   "allAccess");
   commands = ["cut", "paste", "copy"];
   for (i = 0; i < commands.length; i++) {
-    IsCommandEnabled(commands[i], commands[i] == "copy");
+    IsCommandEnabled(commands[i]);
     document.execCommand(commands[i], false, false);
   }
   SpecialPowers.clearUserPref("capability.policy.policynames");
@@ -97,7 +108,7 @@ function runTests() {
   //  * there's nothing to redo if we haven't undone something first
   commands = ["delete", "undo", "redo"];
   for (i = 0; i < commands.length; i++) {
-    IsCommandEnabled(commands[i], false);
+    IsCommandEnabled(commands[i]);
     document.execCommand(commands[i], false, false);
   }
 

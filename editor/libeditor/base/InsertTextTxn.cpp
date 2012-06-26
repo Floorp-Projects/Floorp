@@ -8,7 +8,7 @@
 #include "nsISelection.h"
 #include "EditAggregateTxn.h"
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static bool gNoisy = false;
 #endif
 
@@ -62,7 +62,7 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
 
 NS_IMETHODIMP InsertTextTxn::DoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("Do Insert Text element = %p\n",
@@ -98,7 +98,7 @@ NS_IMETHODIMP InsertTextTxn::DoTransaction(void)
 
 NS_IMETHODIMP InsertTextTxn::UndoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("Undo Insert Text element = %p\n",
@@ -133,7 +133,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, bool *aDidMerge
         otherInsTxn->GetData(otherData);
         mStringToInsert += otherData;
         *aDidMerge = true;
-#ifdef NS_DEBUG
+#ifdef DEBUG
         if (gNoisy)
         {
           printf("InsertTextTxn assimilated %p\n",

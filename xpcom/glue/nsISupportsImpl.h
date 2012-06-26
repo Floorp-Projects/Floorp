@@ -33,7 +33,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
 
-#if defined(NS_DEBUG) && !defined(XPCOM_GLUE_AVOID_NSPR)
+#if defined(DEBUG) && !defined(XPCOM_GLUE_AVOID_NSPR)
 
 class nsAutoOwningThread {
 public:
@@ -58,13 +58,13 @@ private:
     } \
   } while (0)
 
-#else // !NS_DEBUG
+#else // !DEBUG
 
 #define NS_DECL_OWNINGTHREAD            /* nothing */
 #define NS_ASSERT_OWNINGTHREAD(_class)  ((void)0)
 #define NS_ASSERT_OWNINGTHREAD_AND_NOT_CCTHREAD(_class)  ((void)0)
 
-#endif // NS_DEBUG
+#endif // DEBUG
 
 #define NS_CCAR_REFCNT_BIT 1
 #define NS_CCAR_REFCNT_TO_TAGGED(rc_) \

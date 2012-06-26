@@ -456,7 +456,7 @@ void nsDTDContext::Push(nsCParserNode* aNode,
                         nsEntryStack* aStyleStack, 
                         bool aRefCntNode) {
   if(aNode) {
-#ifdef  NS_DEBUG
+#ifdef  DEBUG
     eHTMLTags theTag = (eHTMLTags)aNode->GetNodeType();
     int size = mStack.mCount;
     if (size < eMaxTags)
@@ -468,7 +468,7 @@ void nsDTDContext::Push(nsCParserNode* aNode,
 
 void nsDTDContext::PushTag(eHTMLTags aTag)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (mStack.mCount < eMaxTags) {
     mXTags[mStack.mCount] = aTag;
   }
@@ -482,7 +482,7 @@ nsDTDContext::PopEntry()
 {
   PRInt32 theSize = mStack.mCount;
   if(0<theSize) {
-#ifdef  NS_DEBUG
+#ifdef  DEBUG
     if (theSize <= eMaxTags)
       mXTags[theSize-1]=eHTMLTag_unknown;
 #endif
@@ -494,7 +494,7 @@ nsDTDContext::PopEntry()
 void nsDTDContext::PushEntry(nsTagEntry* aEntry, 
                              bool aRefCntNode)
 {
-#ifdef  NS_DEBUG
+#ifdef  DEBUG
     int size=mStack.mCount;
     if(size< eMaxTags && aEntry)
       mXTags[size]=aEntry->mTag;
@@ -514,7 +514,7 @@ nsDTDContext::MoveEntries(nsDTDContext& aDest,
   if (aCount > 0 && mStack.mCount >= aCount) {
     while (aCount) {
       aDest.PushEntry(&mStack.mEntries[--mStack.mCount], false);
-#ifdef  NS_DEBUG
+#ifdef  DEBUG
       if (mStack.mCount < eMaxTags) {
         mXTags[mStack.mCount] = eHTMLTag_unknown;
       }
@@ -535,7 +535,7 @@ nsCParserNode* nsDTDContext::Pop(nsEntryStack *&aChildStyleStack) {
 
   if(0<theSize) {
 
-#ifdef  NS_DEBUG
+#ifdef  DEBUG
     if ((theSize>0) && (theSize <= eMaxTags))
       mXTags[theSize-1]=eHTMLTag_unknown;
 #endif
@@ -774,7 +774,7 @@ nsTokenAllocator::nsTokenAllocator() {
 
   mArenaPool.Init("TokenPool", kTokenBuckets, kNumTokenBuckets, kInitialTokenPoolSize);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   int i=0;
   for(i=0;i<eToken_last-1;++i) {
     mTotals[i]=0;
@@ -819,7 +819,7 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
 
   CToken* result=0;
 
-#ifdef  NS_DEBUG
+#ifdef  DEBUG
     mTotals[aType-1]++;
 #endif
   switch(aType){
@@ -856,7 +856,7 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
 
   CToken* result=0;
 
-#ifdef  NS_DEBUG
+#ifdef  DEBUG
     mTotals[aType-1]++;
 #endif
   switch(aType){

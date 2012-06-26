@@ -3,5 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-*+ content/global/config.xul              (content/config.xul) 
-*+ content/global/config.js               (content/config.js) 
+   content/global/config.xul              (content/config.xul)
+   content/global/config.js               (content/config.js)

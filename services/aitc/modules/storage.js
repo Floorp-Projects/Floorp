@@ -257,11 +257,11 @@ AitcStorageImpl.prototype = {
    *  2. Put all local apps in a dictionary of origin->app.
    *  3. Mark all local apps as "to be deleted".
    *  4. Go through each remote app:
-   *    4a. If remote app is not marked as deleted, remove from the "to be
+   *    4a. If remote app is not marked as hidden, remove from the "to be
    *        deleted" set.
-   *    4b. If remote app is marked as deleted, but isn't present locally,
+   *    4b. If remote app is marked as hidden, but isn't present locally,
    *        process the next remote app.
-   *    4c. If remote app is not marked as deleted and isn't present locally,
+   *    4c. If remote app is not marked as hidden and isn't present locally,
    *        add to the "to be installed" set.
    *  5. For each app either in the "to be installed" or "to be deleted" set,
    *     apply the changes locally. For apps to be installed, we must also
@@ -275,7 +275,7 @@ AitcStorageImpl.prototype = {
     // If remoteApps is empty, do nothing. The correct thing to do is to
     // delete all local apps, but we'll play it safe for now since we are
     // marking apps as deleted anyway. In a subsequent version (when the
-    // deleted flag is no longer in use), this check can be removed.
+    // hidden flag is no longer in use), this check can be removed.
     if (!Object.keys(remoteApps).length) {
       this._log.warn("Empty set of remote apps to _processApps, returning");
       callback();
@@ -294,12 +294,12 @@ AitcStorageImpl.prototype = {
     for each (let app in remoteApps) {
       // Don't delete apps that are both local & remote.
       let origin = app.origin;
-      if (!app.deleted) {
+      if (!app.hidden) {
         delete toDelete[origin];
       }
 
-      // A remote app that was deleted, but also isn't present locally is NOP.
-      if (app.deleted && !localApps[origin]) {
+      // A remote app that was hidden, but also isn't present locally is NOP.
+      if (app.hidden && !localApps[origin]) {
         continue;
       }
 
@@ -320,10 +320,10 @@ AitcStorageImpl.prototype = {
       }
     }
 
-    // Uninstalls only need the ID & deleted flag.
+    // Uninstalls only need the ID & hidden flag.
     let toUninstall = [];
     for (let origin in toDelete) {
-      toUninstall.push({id: toDelete[origin].id, deleted: true});
+      toUninstall.push({id: toDelete[origin].id, hidden: true});
     }
 
     // Apply uninstalls first, we do not need to fetch manifests.

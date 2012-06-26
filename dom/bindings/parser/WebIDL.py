@@ -2370,11 +2370,14 @@ class Tokenizer(object):
                         lexpos=self.lexer.lexpos,
                         filename = self.filename))
 
-    def __init__(self, outputdir):
-        self.lexer = lex.lex(object=self,
-                             outputdir=outputdir,
-                             lextab='webidllex',
-                             reflags=re.DOTALL)
+    def __init__(self, outputdir, lexer=None):
+        if lexer:
+            self.lexer = lexer
+        else:
+            self.lexer = lex.lex(object=self,
+                                 outputdir=outputdir,
+                                 lextab='webidllex',
+                                 reflags=re.DOTALL)
 
 class Parser(Tokenizer):
     def getLocation(self, p, i):
@@ -3459,11 +3462,13 @@ class Parser(Tokenizer):
         else:
             raise WebIDLError("invalid syntax", Location(self.lexer, p.lineno, p.lexpos, self._filename))
 
-    def __init__(self, outputdir=''):
-        Tokenizer.__init__(self, outputdir)
+    def __init__(self, outputdir='', lexer=None):
+        Tokenizer.__init__(self, outputdir, lexer)
         self.parser = yacc.yacc(module=self,
                                 outputdir=outputdir,
-                                tabmodule='webidlyacc')
+                                tabmodule='webidlyacc',
+                                errorlog=yacc.NullLogger(),
+                                picklefile='WebIDLGrammar.pkl')
         self._globalScope = IDLScope(BuiltinLocation("<Global Scope>"), None, None)
         self._installBuiltins(self._globalScope)
         self._productions = []
@@ -3535,7 +3540,7 @@ class Parser(Tokenizer):
         return result
 
     def reset(self):
-        return Parser()
+        return Parser(lexer=self.lexer)
 
     # Builtin IDL defined by WebIDL
     _builtins = """

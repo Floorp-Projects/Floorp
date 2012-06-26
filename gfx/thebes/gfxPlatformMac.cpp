@@ -100,6 +100,19 @@ gfxPlatformMac::CreateOffscreenSurface(const gfxIntSize& size,
 }
 
 already_AddRefed<gfxASurface>
+gfxPlatformMac::CreateOffscreenImageSurface(const gfxIntSize& aSize,
+                                            gfxASurface::gfxContentType aContentType)
+{
+    nsRefPtr<gfxASurface> surface = CreateOffscreenSurface(aSize, aContentType);
+#ifdef DEBUG
+    nsRefPtr<gfxImageSurface> imageSurface = surface->GetAsImageSurface();
+    NS_ASSERTION(imageSurface, "Surface cannot be converted to a gfxImageSurface");
+#endif
+    return surface.forget();
+}
+
+
+already_AddRefed<gfxASurface>
 gfxPlatformMac::OptimizeImage(gfxImageSurface *aSurface,
                               gfxASurface::gfxImageFormat format)
 {

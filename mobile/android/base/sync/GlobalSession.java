@@ -162,6 +162,11 @@ public class GlobalSession implements CredentialsSource, PrefsSource, HttpRespon
 
     registerCommands();
     prepareStages();
+    Collection<String> knownStageNames = new HashSet<String>();
+    for (Stage stage : Stage.getNamedStages()) {
+      knownStageNames.add(stage.getRepositoryName());
+    }
+    config.stagesToSync = Utils.getStagesToSyncFromBundle(knownStageNames, extras);
 
     // TODO: data-driven plan for the sync, referring to prepareStages.
   }

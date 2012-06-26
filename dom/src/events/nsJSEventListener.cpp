@@ -24,7 +24,7 @@
 #include "xpcpublic.h"
 #include "nsJSEnvironment.h"
 #include "nsDOMJSUtils.h"
-#ifdef NS_DEBUG
+#ifdef DEBUG
 
 #include "nspr.h" // PR_fprintf
 
@@ -174,7 +174,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   // mContext is the same context which event listener manager pushes
   // to JS context stack.
-#ifdef NS_DEBUG
+#ifdef DEBUG
   JSContext* cx = nsnull;
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");

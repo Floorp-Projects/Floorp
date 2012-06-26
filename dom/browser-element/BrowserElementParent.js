@@ -140,6 +140,7 @@ function BrowserElementParent(frameLoader) {
   }
 
   addMessageListener("hello", this._recvHello);
+  addMessageListener("contextmenu", this._fireCtxMenuEvent);
   addMessageListener("locationchange", this._fireEventFromMsg);
   addMessageListener("loadstart", this._fireEventFromMsg);
   addMessageListener("loadend", this._fireEventFromMsg);
@@ -185,6 +186,25 @@ BrowserElementParent.prototype = {
 
   _recvHello: function(data) {
     debug("recvHello");
+  },
+
+  _fireCtxMenuEvent: function(data) {
+    let evtName = data.name.substring('browser-element-api:'.length);
+    let detail = data.json;
+
+    debug('fireCtxMenuEventFromMsg: ' + evtName + ' ' + detail);
+    let evt = this._createEvent(evtName, detail);
+
+    if (detail.contextmenu) {
+      var self = this;
+      XPCNativeWrapper.unwrap(evt.detail).contextMenuItemSelected = function(id) {
+        self._sendAsyncMsg('fire-ctx-callback', {menuitem: id});
+      };
+    }
+    // The embedder may have default actions on context menu events, so
+    // we fire a context menu event even if the child didn't define a
+    // custom context menu
+    this._frameElement.dispatchEvent(evt);
   },
 
   /**

@@ -192,7 +192,7 @@ NS_IMPL_SETTER_STR(_class::Set##_postfix, _member)
  * @param _classiiddef The name of the #define symbol that defines the IID
  * for the class (e.g. NS_ISUPPORTS_IID)
  */
-#if defined(NS_DEBUG)
+#if defined(DEBUG)
 #define NS_VERIFY_THREADSAFE_INTERFACE(_iface)                                \
  if (NULL != (_iface)) {                                                      \
    nsISupports* tmp;                                                          \

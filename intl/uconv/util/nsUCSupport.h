@@ -21,7 +21,7 @@ inline bool WillOverrun(PRUnichar* aDest, PRUnichar* aDestEnd, PRUint32 aLength)
 }
 #define CHECK_OVERRUN(dest, destEnd, length) (WillOverrun(dest, destEnd, length))
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 // {7AFC9F0A-CFE1-44ea-A755-E3B86AB1226E}
 #define NS_IBASICDECODER_IID \
 { 0x7afc9f0a, 0xcfe1, 0x44ea, { 0xa7, 0x55, 0xe3, 0xb8, 0x6a, 0xb1, 0x22, 0x6e } }
@@ -65,7 +65,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIBasicEncoder, NS_IBASICENCODER_IID)
  * @author  Catalin Rotaru [CATA]
  */
 class nsBasicDecoderSupport : public nsIUnicodeDecoder
-#ifdef NS_DEBUG
+#ifdef DEBUG
                               ,public nsIBasicDecoder
 #endif
 {
@@ -270,7 +270,7 @@ protected:
 // Class nsBasicEncoder [declaration]
 
 class nsBasicEncoder : public nsIUnicodeEncoder
-#ifdef NS_DEBUG
+#ifdef DEBUG
                        ,public nsIBasicEncoder
 #endif
 {

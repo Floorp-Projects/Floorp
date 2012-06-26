@@ -48,7 +48,7 @@ protected:
    * The default implementation does nothing.
    *
    * @param aBrightness The current brightness level to set. If this is
-   *                    nsIScreen_MOZILLA_2_0_BRANCH::BRIGHTNESS_LEVELS
+   *                    nsIScreen::BRIGHTNESS_LEVELS
    *                    (an impossible value for a brightness level to be),
    *                    then that signifies that there is no current
    *                    minimum brightness level, and the screen can shut off.

@@ -49,7 +49,7 @@ ViewportFrame::SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList)
 {
   // See which child list to add the frames to
-#ifdef NS_DEBUG
+#ifdef DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
 #endif
   return nsContainerFrame::SetInitialChildList(aListID, aChildList);

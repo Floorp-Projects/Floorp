@@ -191,6 +191,10 @@ ImageLayerD3D10::RenderLayer()
   if (image->GetFormat() == Image::CAIRO_SURFACE || image->GetFormat() == Image::REMOTE_IMAGE_BITMAP ||
       image->GetFormat() == Image::REMOTE_IMAGE_DXGI_TEXTURE)
   {
+    NS_ASSERTION(image->GetFormat() != Image::CAIRO_SURFACE ||
+                 !static_cast<CairoImage*>(image)->mSurface ||
+                 static_cast<CairoImage*>(image)->mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,
+                 "Image layer has alpha image");
     bool hasAlpha = false;
 
     nsRefPtr<ID3D10ShaderResourceView> srView = GetImageSRView(image, hasAlpha, getter_AddRefs(keyedMutex));

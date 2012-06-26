@@ -129,7 +129,7 @@ GetValueAt(nsIFrame*                      aTableOrRowFrame,
          : valueList->mArray[count-1];
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static bool
 IsTable(PRUint8 aDisplay)
 {

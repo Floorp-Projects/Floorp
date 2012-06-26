@@ -6,6 +6,7 @@ package org.mozilla.gecko.sync;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -195,7 +196,19 @@ public class SyncConfiguration implements CredentialsSource {
    * Copied from latest downloaded meta/global record and used to generate a
    * fresh meta/global record for upload.
    */
-  public Set<String>     enabledEngineNames;
+  public Set<String> enabledEngineNames;
+
+  /**
+   * Names of stages to sync <it>this sync</it>, or <code>null</code> to sync
+   * all known stages.
+   * <p>
+   * Generated <it>each sync</it> from extras bundle passed to
+   * <code>SyncAdapter.onPerformSync</code> and not persisted.
+   * <p>
+   * Not synchronized! Set this exactly once per global session and don't modify
+   * it -- especially not from multiple threads.
+   */
+  public Collection<String> stagesToSync;
 
   // Fields that maintain a reference to a SharedPreferences instance, used for
   // persistence.

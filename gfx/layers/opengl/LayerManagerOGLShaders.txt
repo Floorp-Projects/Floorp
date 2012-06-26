@@ -176,12 +176,12 @@ uniform sampler2D uMaskTexture;
 @end
 
 @define FRAGMENT_CALC_MASK<Mask>
-  float mask = texture2D(uMaskTexture, vMaskCoord).a;
+  float mask = texture2D(uMaskTexture, vMaskCoord).r;
 @end
 
 @define FRAGMENT_CALC_MASK<Mask3D>
   vec2 maskCoords = vMaskCoord.xy / vMaskCoord.z;
-  float mask = texture2D(uMaskTexture, maskCoords).a;
+  float mask = texture2D(uMaskTexture, maskCoords).r;
 @end
 
 // Solid color rendering.

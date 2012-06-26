@@ -19,7 +19,7 @@
 
 #include "nsXPIDLString.h"
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 #include <stdio.h>
 #endif
 

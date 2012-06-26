@@ -212,7 +212,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
      * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
      */
     if (pn && onlyXML && !callerFrame) {
-        parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_XML_WHOLE_PROGRAM);
+        parser.reportError(NULL, JSMSG_XML_WHOLE_PROGRAM);
         return NULL;
     }
 #endif
@@ -222,7 +222,7 @@ frontend::CompileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
         PropertyName *arguments = cx->runtime->atomState.argumentsAtom;
         for (AtomDefnRange r = tc.lexdeps->all(); !r.empty(); r.popFront()) {
             if (r.front().key() == arguments) {
-                parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARGUMENTS_AND_REST);
+                parser.reportError(NULL, JSMSG_ARGUMENTS_AND_REST);
                 return NULL;
             }
         }
@@ -327,7 +327,7 @@ frontend::CompileFunctionBody(JSContext *cx, JSFunction *fun,
         return false;
 
     if (!parser.tokenStream.matchToken(TOK_EOF)) {
-        parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
+        parser.reportError(NULL, JSMSG_SYNTAX_ERROR);
         return false;
     }
 

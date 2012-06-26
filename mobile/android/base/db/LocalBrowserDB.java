@@ -7,6 +7,7 @@ package org.mozilla.gecko.db;
 
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
+import java.util.Collection;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.History;
@@ -14,11 +15,14 @@ import org.mozilla.gecko.db.BrowserContract.ImageColumns;
 import org.mozilla.gecko.db.BrowserContract.Images;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
+import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.DBUtils;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.ContentProviderResult;
+import android.content.ContentProviderOperation;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
@@ -110,6 +114,24 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     private Uri appendProfile(Uri uri) {
         return uri.buildUpon().appendQueryParameter(BrowserContract.PARAM_PROFILE, mProfile).build();
+    }
+
+    private Uri getAllBookmarksUri() {
+        Uri.Builder uriBuilder = mBookmarksUriWithProfile.buildUpon()
+            .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1");
+        return uriBuilder.build();
+    }
+
+    private Uri getAllHistoryUri() {
+        Uri.Builder uriBuilder = mHistoryUriWithProfile.buildUpon()
+            .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1");
+        return uriBuilder.build();
+    }
+
+    private Uri getAllImagesUri() {
+        Uri.Builder uriBuilder = mImagesUriWithProfile.buildUpon()
+            .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1");
+        return uriBuilder.build();
     }
 
     private Cursor filterAllSites(ContentResolver cr, String[] projection, CharSequence constraint,
@@ -380,7 +402,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         // This method is about normal bookmarks, not the Reading List
         int count = 0;
         try {
-            Cursor c = cr.query(mBookmarksUriWithProfile,
+            Cursor c = cr.query(bookmarksUriWithLimit(1),
                                 new String[] { Bookmarks._ID },
                                 Bookmarks.URL + " = ? AND " +
                                 Bookmarks.PARENT + " != ?",
@@ -393,7 +415,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             Log.e(LOGTAG, "NullPointerException in isBookmark for " + uri);
         }
 
-        return (count == 1);
+        return (count > 0);
     }
 
     public boolean isReadingListItem(ContentResolver cr, String uri) {
@@ -656,6 +678,177 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         c.close();
 
         return b;
+    }
+
+    // Utility function for updating existing history using batch operations
+    public void updateHistoryInBatch(ContentResolver cr,
+                                     Collection<ContentProviderOperation> operations,
+                                     String url, String title,
+                                     long date, int visits) {
+        Cursor cursor = null;
+
+        try {
+            final String[] projection = new String[] {
+                History._ID,
+                History.VISITS,
+                History.DATE_LAST_VISITED
+            };
+
+            // We need to get the old visit count.
+            cursor = cr.query(getAllHistoryUri(),
+                              projection,
+                              History.URL + " = ?",
+                              new String[] { url },
+                              null);
+
+            ContentValues values = new ContentValues();
+
+            // Restore deleted record if possible
+            values.put(History.IS_DELETED, 0);
+
+            if (cursor.moveToFirst()) {
+                int visitsCol = cursor.getColumnIndexOrThrow(History.VISITS);
+                int dateCol = cursor.getColumnIndexOrThrow(History.DATE_LAST_VISITED);
+                int oldVisits = cursor.getInt(visitsCol);
+                long oldDate = cursor.getLong(dateCol);
+                values.put(History.VISITS, oldVisits + visits);
+                // Only update last visited if newer.
+                if (date > oldDate) {
+                    values.put(History.DATE_LAST_VISITED, date);
+                }
+            } else {
+                values.put(History.VISITS, 1);
+                values.put(History.DATE_LAST_VISITED, date);
+            }
+            if (title != null) {
+                values.put(History.TITLE, title);
+            }
+            values.put(History.URL, url);
+
+            Uri historyUri = getAllHistoryUri().buildUpon().
+                appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build();
+
+            // Update or insert
+            ContentProviderOperation.Builder builder =
+                ContentProviderOperation.newUpdate(historyUri);
+            builder.withSelection(History.URL + " = ?", new String[] { url });
+            builder.withValues(values);
+
+            // Queue the operation
+            operations.add(builder.build());
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+    }
+
+    public void updateBookmarkInBatch(ContentResolver cr,
+                                      Collection<ContentProviderOperation> operations,
+                                      String url, String title, String guid,
+                                      long parent, long added,
+                                      long modified, long position,
+                                      String keyword, int type) {
+        ContentValues values = new ContentValues();
+        if (title == null && url != null) {
+            title = url;
+        }
+        if (title != null) {
+            values.put(Bookmarks.TITLE, title);
+        }
+        if (url != null) {
+            values.put(Bookmarks.URL, url);
+        }
+        if (guid != null) {
+            values.put(SyncColumns.GUID, guid);
+        }
+        if (keyword != null) {
+            values.put(Bookmarks.KEYWORD, keyword);
+        }
+        if (added > 0) {
+            values.put(SyncColumns.DATE_CREATED, added);
+        }
+        if (modified > 0) {
+            values.put(SyncColumns.DATE_MODIFIED, modified);
+        }
+        values.put(Bookmarks.POSITION, position);
+        // Restore deleted record if possible
+        values.put(Bookmarks.IS_DELETED, 0);
+
+        // This assumes no "real" folder has a negative ID. Only
+        // things like the reading list folder do.
+        if (parent < 0) {
+            parent = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
+        }
+        values.put(Bookmarks.PARENT, parent);
+        values.put(Bookmarks.TYPE, type);
+
+        Uri bookmarkUri = getAllBookmarksUri().buildUpon().
+            appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build();
+        // Update or insert
+        ContentProviderOperation.Builder builder =
+            ContentProviderOperation.newUpdate(bookmarkUri);
+        if (url != null) {
+            // Bookmarks are defined by their URL and Folder.
+            builder.withSelection(Bookmarks.URL + " = ? AND "
+                                  + Bookmarks.PARENT + " = ? AND "
+                                  + Bookmarks.PARENT + " != ?",
+                                  new String[] { url,
+                                                 Long.toString(parent),
+                                                 String.valueOf(Bookmarks.FIXED_READING_LIST_ID)
+                                  });
+        } else if (title != null) {
+            // Or their title and parent folder. (Folders!)
+            builder.withSelection(Bookmarks.TITLE + " = ? AND "
+                                  + Bookmarks.PARENT + " = ? AND "
+                                  + Bookmarks.PARENT + " != ?",
+                                  new String[] { title,
+                                                 Long.toString(parent),
+                                                 String.valueOf(Bookmarks.FIXED_READING_LIST_ID)
+                                  });
+        } else if (type == Bookmarks.TYPE_SEPARATOR) {
+            // Or their their position (seperators)
+            builder.withSelection(Bookmarks.POSITION + " = ? AND "
+                                  + Bookmarks.PARENT + " = ? AND "
+                                  + Bookmarks.PARENT + " != ?",
+                                  new String[] { Long.toString(position),
+                                                 Long.toString(parent),
+                                                 String.valueOf(Bookmarks.FIXED_READING_LIST_ID)
+                                  });
+        } else {
+            Log.e(LOGTAG, "Bookmark entry without url or title and not a seperator, not added.");
+        }
+        builder.withValues(values);
+
+        // Queue the operation
+        operations.add(builder.build());
+    }
+
+    public void updateFaviconInBatch(ContentResolver cr,
+                                     Collection<ContentProviderOperation> operations,
+                                     String url, String faviconUrl,
+                                     String faviconGuid, byte[] data) {
+        ContentValues values = new ContentValues();
+        values.put(Images.FAVICON, data);
+        values.put(Images.URL, url);
+        if (faviconUrl != null) {
+            values.put(Images.FAVICON_URL, faviconUrl);
+        }
+        // Restore deleted record if possible
+        values.put(Images.IS_DELETED, 0);
+        if (faviconGuid != null) {
+            values.put(Images.GUID, faviconGuid);
+        }
+
+        // Update or insert
+        Uri imagesUri = getAllImagesUri().buildUpon().
+            appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build();
+        // Update or insert
+        ContentProviderOperation.Builder builder =
+            ContentProviderOperation.newUpdate(imagesUri);
+        builder.withValues(values);
+        builder.withSelection(Images.URL + " = ?", new String[] { url });
+        // Queue the operation
+        operations.add(builder.build());
     }
 
     // This wrapper adds a fake "Desktop Bookmarks" folder entry to the

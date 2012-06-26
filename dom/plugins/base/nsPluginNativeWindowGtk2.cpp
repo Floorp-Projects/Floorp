@@ -219,7 +219,7 @@ void nsPluginNativeWindowGtk2::SetAllocation() {
 nsresult nsPluginNativeWindowGtk2::CreateXtWindow() {
   NS_ASSERTION(!mSocketWidget,"Already created a socket widget!");
 
-#ifdef NS_DEBUG      
+#ifdef DEBUG      
   printf("About to create new xtbin of %i X %i from %p...\n",
          width, height, (void*)window);
 #endif
@@ -235,11 +235,11 @@ nsresult nsPluginNativeWindowGtk2::CreateXtWindow() {
 
   gtk_widget_set_size_request(mSocketWidget, width, height);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   printf("About to show xtbin(%p)...\n", (void*)mSocketWidget); fflush(NULL);
 #endif
   gtk_widget_show(mSocketWidget);
-#ifdef NS_DEBUG
+#ifdef DEBUG
   printf("completed gtk_widget_show(%p)\n", (void*)mSocketWidget); fflush(NULL);
 #endif
 

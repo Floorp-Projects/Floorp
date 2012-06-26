@@ -1,0 +1,14 @@
+[
+{
+"size": 47, 
+"digest": "2005a41fe97a5e00997063705f39d42b6a43b1cf7ba306cbc7b1513de34cdcd050fc6326efa2107f19ba0cc67914745dbf13154fa748010a93cf072481ef4aaa", 
+"algorithm": "sha512", 
+"filename": "setup.sh"
+}, 
+{
+"size": 63015959, 
+"digest": "e0ac132a77b052d6494d4bf02f17aba475138ffcff07a5f92f17f45b1d5f27b7b0cea36c29473965271e60910af82ffd4989df94c10d24794d1bf8362bcb785b", 
+"algorithm": "sha512", 
+"filename": "clang.tar.bz2"
+}
+]

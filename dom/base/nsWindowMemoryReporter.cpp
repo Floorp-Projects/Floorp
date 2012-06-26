@@ -236,9 +236,9 @@ CollectWindowReports(nsGlobalWindow *aWindow,
       REPORT("/layout/frames/" # classname, frameSize,                  \
              "Memory used by frames of "                                \
              "type " #classname " within a window.");                   \
-      aWindowTotalSizes->mArenaStats.FRAME_ID_STAT_FIELD(classname)     \
-        += frameSize;                                                   \
     }                                                                   \
+    aWindowTotalSizes->mArenaStats.FRAME_ID_STAT_FIELD(classname)       \
+      += frameSize;                                                     \
   }
 #include "nsFrameIdList.h"
 #undef FRAME_ID

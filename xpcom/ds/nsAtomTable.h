@@ -11,6 +11,6 @@
 
 void NS_PurgeAtomTable();
 
-size_t NS_SizeOfAtomTableIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
+size_t NS_SizeOfAtomTablesIncludingThis(nsMallocSizeOfFun aMallocSizeOf);
 
 #endif // nsAtomTable_h__

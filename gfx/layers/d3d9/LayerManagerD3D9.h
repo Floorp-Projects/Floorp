@@ -170,9 +170,6 @@ public:
       mDefaultDeviceManager = nsnull;
   }
 
-  virtual gfxASurface::gfxImageFormat MaskImageFormat() 
-  { return gfxASurface::ImageFormatARGB32; }
-
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char* Name() const { return "D3D9"; }
 #endif // MOZ_LAYERS_HAVE_LOG

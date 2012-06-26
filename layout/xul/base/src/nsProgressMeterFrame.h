@@ -32,7 +32,7 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 

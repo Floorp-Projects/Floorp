@@ -31,7 +31,7 @@ public:
   friend nsIFrame* NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
                                           nsStyleContext* aContext);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
       return MakeFrameName(NS_LITERAL_STRING("nsGridRowLeaf"), aResult);

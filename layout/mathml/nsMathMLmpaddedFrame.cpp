@@ -174,7 +174,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   // floatValue = 1, to cater for cases such as width="height", but that wouldn't
   // be in line with the spec which requires an explicit number
   if (number.IsEmpty()) {
-#ifdef NS_DEBUG
+#ifdef DEBUG
     printf("mpadded: attribute with bad numeric value: %s\n",
             NS_LossyConvertUTF16toASCII(aString).get());
 #endif
@@ -249,7 +249,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   }
 
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   printf("mpadded: attribute with bad numeric value: %s\n",
           NS_LossyConvertUTF16toASCII(aString).get());
 #endif

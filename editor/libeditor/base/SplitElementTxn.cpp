@@ -9,7 +9,7 @@
 #include "nsISelection.h"
 #include "nsIDOMCharacterData.h"
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static bool gNoisy = false;
 #endif
 
@@ -52,7 +52,7 @@ NS_IMETHODIMP SplitElementTxn::Init(nsEditor   *aEditor,
 
 NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("%p Do Split of node %p offset %d\n",
@@ -72,7 +72,7 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
   NS_ENSURE_TRUE(mNewLeftNode, NS_ERROR_NULL_POINTER);
   mEditor->MarkNodeDirty(mExistingRightNode);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy)
   {
     printf("  created left node = %p\n",
@@ -108,7 +108,7 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
 
 NS_IMETHODIMP SplitElementTxn::UndoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy) { 
     printf("%p Undo Split of existing node %p and new node %p offset %d\n",
            static_cast<void*>(this),
@@ -125,7 +125,7 @@ NS_IMETHODIMP SplitElementTxn::UndoTransaction(void)
 
   // this assumes Do inserted the new node in front of the prior existing node
   nsresult result = mEditor->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, false);
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy) 
   { 
     printf("** after join left child node %p into right node %p\n",
@@ -156,7 +156,7 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy) { 
     printf("%p Redo Split of existing node %p and new node %p offset %d\n",
            static_cast<void*>(this),
@@ -174,7 +174,7 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   if (rightNodeAsText)
   {
     result = rightNodeAsText->DeleteData(0, mOffset);
-#ifdef NS_DEBUG
+#ifdef DEBUG
     if (gNoisy) 
     { 
       printf("** after delete of text in right text node %p offset %d\n",
@@ -199,7 +199,7 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
       if (NS_SUCCEEDED(result)) 
       {
         result = mNewLeftNode->AppendChild(child, getter_AddRefs(resultNode));
-#ifdef NS_DEBUG
+#ifdef DEBUG
         if (gNoisy) 
         { 
           printf("** move child node %p from right node %p to left node %p\n",
@@ -215,7 +215,7 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   }
   // second, re-insert the left node into the tree 
   result = mParent->InsertBefore(mNewLeftNode, mExistingRightNode, getter_AddRefs(resultNode));
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy) 
   { 
     printf("** reinsert left child node %p before right node %p\n",

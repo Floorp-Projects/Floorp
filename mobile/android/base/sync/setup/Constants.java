@@ -18,6 +18,24 @@ public class Constants {
   public static final String NUM_CLIENTS          = "account.numClients";
   public static final String DATA_ENABLE_ON_UPGRADE = "data.enableOnUpgrade";
 
+  /**
+   * Key in sync extras bundle specifying stages to sync this sync session.
+   * <p>
+   * Corresponding value should be a String JSON-encoding an object, the keys of
+   * which are the stage names to sync. For example:
+   * <code>"{ \"stageToSync\": 0 }"</code>.
+   */
+  public static final String EXTRAS_KEY_STAGES_TO_SYNC = "sync";
+
+  /**
+   * Key in sync extras bundle specifying stages to skip this sync session.
+   * <p>
+   * Corresponding value should be a String JSON-encoding an object, the keys of
+   * which are the stage names to skip. For example:
+   * <code>"{ \"stageToSkip\": 0 }"</code>.
+   */
+  public static final String EXTRAS_KEY_STAGES_TO_SKIP = "skip";
+
   // Constants for Activities.
   public static final String INTENT_EXTRA_IS_SETUP = "isSetup";
   public static final String INTENT_EXTRA_IS_PAIR  = "isPair";

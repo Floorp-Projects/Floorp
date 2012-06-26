@@ -291,21 +291,5 @@
   "Command outdent, value \"\": input event, uncanceled":true,
   "Command outdent, value \"quasit\": beforeinput event, canceled":true,
   "Command outdent, value \"quasit\": beforeinput event, uncanceled":true,
-  "Command outdent, value \"quasit\": input event, uncanceled":true,
-  "Command redo, value \"\": beforeinput event, canceled":true,
-  "Command redo, value \"\": input event, canceled":true,
-  "Command redo, value \"\": beforeinput event, uncanceled":true,
-  "Command redo, value \"\": input event, uncanceled":true,
-  "Command redo, value \"quasit\": beforeinput event, canceled":true,
-  "Command redo, value \"quasit\": input event, canceled":true,
-  "Command redo, value \"quasit\": beforeinput event, uncanceled":true,
-  "Command redo, value \"quasit\": input event, uncanceled":true,
-  "Command undo, value \"\": beforeinput event, canceled":true,
-  "Command undo, value \"\": input event, canceled":true,
-  "Command undo, value \"\": beforeinput event, uncanceled":true,
-  "Command undo, value \"\": input event, uncanceled":true,
-  "Command undo, value \"quasit\": beforeinput event, canceled":true,
-  "Command undo, value \"quasit\": input event, canceled":true,
-  "Command undo, value \"quasit\": beforeinput event, uncanceled":true,
-  "Command undo, value \"quasit\": input event, uncanceled":true
+  "Command outdent, value \"quasit\": input event, uncanceled":true
 }

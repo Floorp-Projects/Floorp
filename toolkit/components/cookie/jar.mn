@@ -5,4 +5,4 @@
 toolkit.jar:
 % content cookie %content/cookie/
   content/cookie/cookieAcceptDialog.xul          (content/cookieAcceptDialog.xul)
-* content/cookie/cookieAcceptDialog.js           (content/cookieAcceptDialog.js)
+  content/cookie/cookieAcceptDialog.js           (content/cookieAcceptDialog.js)

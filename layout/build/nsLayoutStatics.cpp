@@ -309,6 +309,7 @@ nsLayoutStatics::Shutdown()
   nsXBLWindowKeyHandler::ShutDown();
   nsXBLService::Shutdown();
   nsAutoCopyListener::Shutdown();
+  FrameLayerBuilder::Shutdown();
 
 #ifdef MOZ_MEDIA_PLUGINS
   nsMediaPluginHost::Shutdown();  

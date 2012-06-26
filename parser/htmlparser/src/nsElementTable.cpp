@@ -1374,7 +1374,7 @@ const nsHTMLElement gHTMLElements[] = {
   }
 };
 
-#ifdef NS_DEBUG  
+#ifdef DEBUG  
 void CheckElementTable() {
   for (eHTMLTags t = eHTMLTag_unknown; t <= eHTMLTag_userdefined; t = eHTMLTags(t + 1)) {
     NS_ASSERTION(gHTMLElements[t].mTagID == t, "gHTMLElements entries does match tag list.");

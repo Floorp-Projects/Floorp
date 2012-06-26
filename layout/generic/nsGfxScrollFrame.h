@@ -525,7 +525,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
   
-#ifdef NS_DEBUG
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
@@ -778,7 +778,7 @@ public:
     return nsBoxFrame::IsFrameOfType(aFlags);
   }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 

@@ -27,7 +27,7 @@ class nsGridRowGroupFrame : public nsBoxFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
       return MakeFrameName(NS_LITERAL_STRING("nsGridRowGroup"), aResult);
