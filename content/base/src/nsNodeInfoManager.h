@@ -28,15 +28,14 @@ class nsIDOMNamedNodeMap;
 class nsXULPrototypeDocument;
 class nsBindingManager;
 
-class nsNodeInfoManager
+class nsNodeInfoManager : public nsISupports
 {
 public:
   nsNodeInfoManager();
   ~nsNodeInfoManager();
 
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsNodeInfoManager)
-
-  NS_INLINE_DECL_REFCOUNTING(nsNodeInfoManager)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsNodeInfoManager)
 
   /**
    * Initialize the nodeinfo manager with a document.
