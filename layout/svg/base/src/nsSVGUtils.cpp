@@ -591,12 +591,8 @@ nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
     return aPreFilterRect;
   }
 
-  PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  nsIntRect preFilterRect =
-      aPreFilterRect.ToOutsidePixels(appUnitsPerDevPixel);
-  nsIntRect rect = filter->GetPostFilterBounds(aFrame, nsnull, &preFilterRect);
-  nsRect r = rect.ToAppUnits(appUnitsPerDevPixel) - aFrame->GetPosition();
-  return r;
+  return filter->GetPostFilterBounds(aFrame, nsnull, &aPreFilterRect) -
+           aFrame->GetPosition();
 }
 
 bool
@@ -658,7 +654,6 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
     aFrame = aFrame->GetParent();
   }
 
-  PRInt32 appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   PRInt32 appUnitsPerCSSPx = aFrame->PresContext()->AppUnitsPerCSSPixel();
 
   while (aFrame) {
@@ -689,9 +684,7 @@ nsSVGUtils::InvalidateBounds(nsIFrame *aFrame, bool aDuringUpdate,
     nsSVGFilterFrame *filterFrame = nsSVGEffects::GetFilterFrame(aFrame);
     if (filterFrame) {
       invalidArea =
-        filterFrame->GetPostFilterDirtyArea(aFrame,
-                            invalidArea.ToOutsidePixels(appUnitsPerDevPixel)).
-          ToAppUnits(appUnitsPerDevPixel);
+        filterFrame->GetPostFilterDirtyArea(aFrame, invalidArea);
     }
     if (aFrame->IsTransformed()) {
       invalidArea =
@@ -1041,6 +1034,21 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame)
   return static_cast<nsSVGGeometryFrame*>(aFrame)->GetCanvasTM();
 }
 
+gfxMatrix
+nsSVGUtils::GetUserToCanvasTM(nsIFrame *aFrame)
+{
+  nsISVGChildFrame* svgFrame = do_QueryFrame(aFrame);
+  NS_ASSERTION(svgFrame, "bad frame");
+
+  gfxMatrix tm;
+  if (svgFrame) {
+    nsSVGElement *content = static_cast<nsSVGElement*>(aFrame->GetContent());
+    tm = content->PrependLocalTransformsTo(GetCanvasTM(aFrame->GetParent()),
+                                           nsSVGElement::eUserSpaceToParent);
+  }
+  return tm;
+}
+
 void 
 nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, PRUint32 aFlags)
 {
@@ -1218,9 +1226,28 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
 
   /* Paint the child */
   if (filterFrame) {
+    nsRect* dirtyRect = nsnull;
+    nsRect tmpDirtyRect;
+    if (aDirtyRect) {
+      // aDirtyRect is in outer-<svg> device pixels, but the filter code needs
+      // it in frame space.
+      gfxMatrix userToDeviceSpace = GetUserToCanvasTM(aFrame);
+      if (userToDeviceSpace.IsSingular()) {
+        return;
+      }
+      gfxMatrix deviceToUserSpace = userToDeviceSpace;
+      deviceToUserSpace.Invert();
+      gfxRect dirtyBounds = deviceToUserSpace.TransformBounds(
+                              gfxRect(aDirtyRect->x, aDirtyRect->y,
+                                      aDirtyRect->width, aDirtyRect->height));
+      tmpDirtyRect =
+        nsLayoutUtils::RoundGfxRectToAppRect(
+          dirtyBounds, aFrame->PresContext()->AppUnitsPerCSSPixel()) -
+        aFrame->GetPosition();
+      dirtyRect = &tmpDirtyRect;
+    }
     SVGPaintCallback paintCallback;
-    filterFrame->PaintFilteredFrame(aContext, aFrame, &paintCallback,
-                                    aDirtyRect);
+    filterFrame->PaintFilteredFrame(aContext, aFrame, &paintCallback, dirtyRect);
   } else {
     svgChildFrame->PaintSVG(aContext, aDirtyRect);
   }
