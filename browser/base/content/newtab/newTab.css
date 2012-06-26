@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:root {
-  -moz-user-focus: normal;
-}
-
 input[type=button] {
   cursor: pointer;
 }
@@ -15,6 +11,7 @@ input[type=button] {
   display: -moz-box;
   position: relative;
   -moz-box-flex: 1;
+  -moz-user-focus: normal;
 }
 
 #newtab-scrollbox:not([page-disabled]) {
