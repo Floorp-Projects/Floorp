@@ -5790,7 +5790,7 @@ var WebappsUI = {
 
           // Add a homescreen shortcut -- we can't use createShortcut, since we need to pass
           // a unique ID for Android webapp allocation
-          this.makeBase64Icon(manifest.iconURLForSize("64"),
+          this.makeBase64Icon(this.getBiggestIcon(manifest.icons),
                               function(icon) {
                                 sendMessageToJava({
                                   gecko: {
@@ -5826,7 +5826,18 @@ var WebappsUI = {
         break;
     }
   },
+
+  getBiggestIcon: function getBiggestIcon(aIcons) {
+    if (!aIcons)
+      return "chrome://browser/skin/images/default-app-icon.png";
   
+    let iconSizes = Object.keys(aIcons);
+    if (iconSizes.length == 0)
+      return "chrome://browser/skin/images/default-app-icon.png";
+    iconSizes.sort(function(a, b) a - b);
+    return aIcons[iconSizes.pop()];
+  }
+
   doInstall: function doInstall(aData) {
     let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
     let name = manifest.name ? manifest.name : manifest.fullLaunchPath();

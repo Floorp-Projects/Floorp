@@ -32,6 +32,7 @@ chrome.jar:
   skin/images/checkbox_unchecked.png          (images/checkbox_unchecked.png)
   skin/images/checkbox_unchecked_disabled.png (images/checkbox_unchecked_disabled.png)
   skin/images/checkbox_unchecked_pressed.png  (images/checkbox_unchecked_pressed.png)
+  skin/images/default-app-icon.png          (images/default-app-icon.png)
   skin/images/dropmarker.svg                (images/dropmarker.svg)
   skin/images/errorpage-warning.png         (images/errorpage-warning.png)
   skin/images/errorpage-warning.png         (images/errorpage-warning.png)
