@@ -1297,18 +1297,12 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
 {
     size_t gcTotal = 0, gcHeapSundries = 0, otherSundries = 0;
 
-    CREPORT_GC_BYTES(MakePath(pathPrefix, cStats, "gc-heap/arena/headers"),
-                     cStats.gcHeapArenaHeaders,
+    CREPORT_GC_BYTES(MakePath(pathPrefix, cStats, "gc-heap/arena-admin"),
+                     cStats.gcHeapArenaAdmin,
                      "Memory on the compartment's garbage-collected JavaScript "
-                     "heap, within arenas, that is used to hold internal "
-                     "bookkeeping information.");
-
-    CREPORT_GC_BYTES(MakePath(pathPrefix, cStats, "gc-heap/arena/padding"),
-                     cStats.gcHeapArenaPadding,
-                     "Memory on the compartment's garbage-collected JavaScript "
-                     "heap, within arenas, that is unused and present only so "
-                     "that other data is aligned. This constitutes internal "
-                     "fragmentation.");
+                     "heap, within arenas, that is used (a) to hold internal "
+                     "bookkeeping information, and (b) to provide padding to "
+                     "align GC things.");
 
     CREPORT_GC_BYTES(MakePath(pathPrefix, cStats, "gc-heap/arena/unused"),
                      cStats.gcHeapArenaUnused,

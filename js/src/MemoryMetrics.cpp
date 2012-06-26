@@ -58,10 +58,12 @@ StatsArenaCallback(JSRuntime *rt, void *data, gc::Arena *arena,
 {
     RuntimeStats *rtStats = static_cast<RuntimeStats *>(data);
 
-    rtStats->currCompartmentStats->gcHeapArenaHeaders += sizeof(gc::ArenaHeader);
+    // The admin space includes (a) the header and (b) the padding between the
+    // end of the header and the start of the first GC thing.
     size_t allocationSpace = arena->thingsSpan(thingSize);
-    rtStats->currCompartmentStats->gcHeapArenaPadding +=
-        gc::ArenaSize - allocationSpace - sizeof(gc::ArenaHeader);
+    rtStats->currCompartmentStats->gcHeapArenaAdmin +=
+        gc::ArenaSize - allocationSpace;
+
     // We don't call the callback on unused things.  So we compute the
     // unused space like this:  arenaUnused = maxArenaUnused - arenaUsed.
     // We do this by setting arenaUnused to maxArenaUnused here, and then
@@ -183,8 +185,7 @@ CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats)
          index++) {
         CompartmentStats &cStats = rtStats->compartmentStatsVector[index];
 
-        size_t used = cStats.gcHeapArenaHeaders +
-                      cStats.gcHeapArenaPadding +
+        size_t used = cStats.gcHeapArenaAdmin +
                       cStats.gcHeapArenaUnused +
                       cStats.gcHeapObjectsNonFunction +
                       cStats.gcHeapObjectsFunction +
