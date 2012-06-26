@@ -29,6 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "DebuggerServer", function() {
 
 // Lazily-loaded browser scripts:
 [
+  ["HelperApps", "chrome://browser/content/HelperApps.js"],
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
   ["Readability", "chrome://browser/content/Readability.js"],
 ].forEach(function (aScript) {
@@ -1899,18 +1900,31 @@ var UserAgent = {
         if (tab == null)
           break;
 
-        // Send XUL UA to YouTube; temporary hack to make videos play
-        if (channel.URI.host.indexOf("youtube") != -1) {
-          let ua = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).userAgent;
-#expand let version = "__MOZ_APP_VERSION__";
-          ua += " Fennec/" + version;
-          channel.setRequestHeader("User-Agent", ua, false);
+        let apps = HelperApps.getAppsForUri(channel.URI);
+        if (apps.length > 0) {
+          let message = apps.length == 1 ? Strings.browser.formatStringFromName("helperapps.openWithApp", [apps[0].name], 1) :
+                                           Strings.browser.GetStringFromName("helperapps.openWithList");
+          let buttons = [{
+              label: Strings.browser.GetStringFromName("helperapps.open"),
+              callback: function() {
+                aSubject.QueryInterface(Ci.nsIRequest).cancel(Components.results.NS_ERROR_ABORT);
+                HelperApps.openUriInApp(channel.URI);
+              }
+            },
+            {
+              label: Strings.browser.GetStringFromName("helperapps.cancel"),
+              callback: function() { }
+          }];
+          // Persist this over page loads. Pages that expect to open in helper apps often redirect
+          // Youtube redirects twice, so I've forced this to two for now
+          let options = { persistence: 2 };
+          let name = "helperapps-" + (apps.length > 1 ? "list" : apps[0].name);
+          NativeWindow.doorhanger.show(message, name, buttons, self.id, options);
         }
 
         // Send desktop UA if "Request Desktop Site" is enabled
         if (tab.desktopMode && (channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI))
           channel.setRequestHeader("User-Agent", this.DESKTOP_UA, false);
-
         break;
       }
     }
@@ -5123,7 +5137,7 @@ var PermissionsHelper = {
           // If we implement a two-line UI, we will need to pass the label and
           // value individually and let java handle the formatting
           let setting = Strings.browser.formatStringFromName("siteSettings.labelToValue",
-                                                             [ label, valueString ], 2)
+                                                             [ label, valueString ], 2);
           permissions.push({
             type: type,
             setting: setting
