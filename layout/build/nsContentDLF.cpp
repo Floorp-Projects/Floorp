@@ -481,7 +481,7 @@ nsContentDLF::CreateXULDocument(const char* aCommand,
 }
 
 bool nsContentDLF::IsImageContentType(const char* aContentType) {
-  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
+  nsCOMPtr<imgILoader> loader(do_CreateInstance("@mozilla.org/image/loader;1"));
   bool isDecoderAvailable = false;
   loader->SupportImageWithMimeType(aContentType, &isDecoderAvailable);
   return isDecoderAvailable;

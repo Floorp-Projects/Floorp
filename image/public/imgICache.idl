@@ -17,7 +17,7 @@ interface nsIProperties;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(f1b74aae-5661-4753-a21c-66dd644afebc)]
+[scriptable, uuid(b06e0fa5-d6e2-4fa3-8fc0-7775aed96522)]
 interface imgICache : nsISupports
 {
   /**
@@ -49,4 +49,11 @@ interface imgICache : nsISupports
    * @returns NULL if the URL was not found in the cache
    */
   nsIProperties findEntryProperties(in nsIURI uri);
+
+  /**
+   * Make this cache instance respect private browsing notifications. This entails clearing
+   * the chrome and content caches whenever the last-pb-context-exited notification is
+   * observed.
+   */
+  void respectPrivacyNotifications();
 };
