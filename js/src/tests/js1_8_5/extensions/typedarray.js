@@ -447,6 +447,11 @@ function test()
     check(function () isProxy(alien_buffer));
     check(function () isProxy(view)); // the real test
 
+    // cross-compartment property access
+    check(function () alien_buffer.byteLength == 7);
+    check(function () alien_view.byteLength == 7);
+    check(function () view.byteLength == 7);
+
     // typed array protos should be equal
     simple = new Int8Array(12);
     check(function () Object.getPrototypeOf(view) == Object.getPrototypeOf(simple));

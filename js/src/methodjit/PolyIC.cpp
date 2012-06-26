@@ -2399,15 +2399,15 @@ GetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, const Value &v, jsid i
                  : Int32Key::FromRegister(idRemat.dataReg());
 
     if (!masm.supportsFloatingPoint() &&
-        (TypedArray::getType(obj) == TypedArray::TYPE_FLOAT32 ||
-         TypedArray::getType(obj) == TypedArray::TYPE_FLOAT64 ||
-         TypedArray::getType(obj) == TypedArray::TYPE_UINT32))
+        (TypedArray::type(obj) == TypedArray::TYPE_FLOAT32 ||
+         TypedArray::type(obj) == TypedArray::TYPE_FLOAT64 ||
+         TypedArray::type(obj) == TypedArray::TYPE_UINT32))
     {
         return disable(f, "fpu not supported");
     }
 
     MaybeRegisterID tempReg;
-    masm.loadFromTypedArray(TypedArray::getType(obj), objReg, key, typeReg, objReg, tempReg);
+    masm.loadFromTypedArray(TypedArray::type(obj), objReg, key, typeReg, objReg, tempReg);
 
     Jump done = masm.jump();
 
@@ -2713,8 +2713,8 @@ SetElementIC::attachTypedArray(VMFrame &f, JSObject *obj, int32_t key)
     masm.loadPtr(Address(objReg, TypedArray::dataOffset()), objReg);
 
     if (!masm.supportsFloatingPoint() &&
-        (TypedArray::getType(obj) == TypedArray::TYPE_FLOAT32 ||
-         TypedArray::getType(obj) == TypedArray::TYPE_FLOAT64))
+        (TypedArray::type(obj) == TypedArray::TYPE_FLOAT32 ||
+         TypedArray::type(obj) == TypedArray::TYPE_FLOAT64))
     {
         return disable(f, "fpu not supported");
     }
