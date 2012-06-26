@@ -1429,8 +1429,8 @@ mjit::Compiler::jsop_setelem_typed(int atype)
         frame.pinReg(objReg);
     } else if (obj->isConstant()) {
         JSObject *array = &obj->getValue().toObject();
-        int32_t length = (int32_t) TypedArray::getLength(array);
-        void *data = TypedArray::getDataOffset(array);
+        int32_t length = (int32_t) TypedArray::length(array);
+        void *data = TypedArray::viewData(array);
 
         objReg = frame.allocReg();
 
@@ -2029,8 +2029,8 @@ mjit::Compiler::jsop_getelem_typed(int atype)
         frame.pinReg(objReg);
     } else if (obj->isConstant()) {
         JSObject *array = &obj->getValue().toObject();
-        int32_t length = (int32_t) TypedArray::getLength(array);
-        void *data = TypedArray::getDataOffset(array);
+        int32_t length = (int32_t) TypedArray::length(array);
+        void *data = TypedArray::viewData(array);
 
         objReg = frame.allocReg();
 
