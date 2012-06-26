@@ -412,7 +412,7 @@ class AutoDetectInvalidation
 };
 
 bool InvokeFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
-bool InvokeConstructorFunction(JSContext *cx, JSFunction *fun, uint32 argc, Value *argv, Value *rval);
+bool InvokeConstructor(JSContext *cx, JSObject *obj, uint32 argc, Value *argv, Value *rval);
 bool ReportOverRecursed(JSContext *cx);
 
 bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
