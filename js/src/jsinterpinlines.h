@@ -166,7 +166,8 @@ GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, HandleI
 }
 
 inline bool
-GetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, Value *vp)
+GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc,
+                     const Value &lval, Value *vp)
 {
     JS_ASSERT(vp != &lval);
 
@@ -320,7 +321,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
 }
 
 inline bool
-NameOperation(JSContext *cx, jsbytecode *pc, Value *vp)
+NameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
 {
     RootedObject obj(cx, cx->stack.currentScriptedScopeChain());
 
