@@ -7131,10 +7131,6 @@ let gPrivateBrowsingUI = {
       !this.privateBrowsingEnabled;
   },
 
-  get autoStarted() {
-    return this._privateBrowsingService.autoStarted;
-  },
-
   get privateBrowsingEnabled() {
     return this._privateBrowsingService.privateBrowsingEnabled;
   },
