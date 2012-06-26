@@ -609,3 +609,15 @@ nsTransferable::FlavorsTransferableCanExport(nsISupportsArray **_retval)
 
   return NS_OK;
 } // FlavorsTransferableCanExport
+
+NS_IMETHODIMP
+nsTransferable::GetIsPrivateData(bool *aIsPrivateData)
+{
+  MOZ_ASSERT(mInitialized);
+
+  NS_ENSURE_ARG_POINTER(aIsPrivateData);
+
+  *aIsPrivateData = mPrivateData;
+
+  return NS_OK;
+}
