@@ -509,6 +509,7 @@ abstract public class GeckoApp
             R.id.find_in_page,
             R.id.addons,
             R.id.downloads,
+            R.id.apps,
             R.id.site_settings
         };
 
@@ -691,6 +692,9 @@ abstract public class GeckoApp
                 return true;
             case R.id.downloads:
                 loadUrlInTab("about:downloads");
+                return true;
+            case R.id.apps:
+                loadUrlInTab("about:apps");
                 return true;
             case R.id.char_encoding:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
