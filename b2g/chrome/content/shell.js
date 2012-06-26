@@ -111,6 +111,12 @@ var shell = {
     browserFrame.setAttribute('src', "data:text/html;charset=utf-8,%3C!DOCTYPE html>%3Cbody style='background:black;");
     document.getElementById('shell').appendChild(browserFrame);
 
+    browserFrame.contentWindow
+                .QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIWebNavigation)
+                .sessionHistory = Cc["@mozilla.org/browser/shistory;1"]
+                                    .createInstance(Ci.nsISHistory);
+
     ['keydown', 'keypress', 'keyup'].forEach((function listenKey(type) {
       window.addEventListener(type, this, false, true);
       window.addEventListener(type, this, true, true);
