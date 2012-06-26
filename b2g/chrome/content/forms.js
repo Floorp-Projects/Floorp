@@ -71,9 +71,20 @@ let FormAssistant = {
         if (evt.target != target || this.isKeyboardOpened)
           return;
 
-        if (!(evt.target instanceof HTMLInputElement  ||
-              evt.target instanceof HTMLTextAreaElement))
+        let ignore = {
+          button: true,
+          checkbox: true,
+          file: true,
+          radio: true,
+          reset: true,
+          submit: true
+        };
+    
+        if ((target instanceof HTMLInputElement && ignore[target.type]) ||
+            !(target instanceof HTMLInputElement ||
+              target instanceof HTMLTextAreaElement)) {
           return;
+        }
 
         this.isKeyboardOpened = this.tryShowIme(evt.target);
         break;

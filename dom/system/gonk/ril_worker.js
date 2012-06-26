@@ -1756,7 +1756,7 @@ let RIL = {
    *        String containing PDP type to request. ("IP", "IPV6", ...)
    */
   setupDataCall: function setupDataCall(options) {
-    let token = Buf.newParcel(REQUEST_SETUP_DATA_CALL);
+    let token = Buf.newParcel(REQUEST_SETUP_DATA_CALL, options);
     Buf.writeUint32(7);
     Buf.writeString(options.radioTech.toString());
     Buf.writeString(DATACALL_PROFILE_DEFAULT.toString());
@@ -3297,41 +3297,43 @@ RIL[REQUEST_QUERY_CLIP] = null;
 RIL[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
 
 RIL.readDataCall_v5 = function readDataCall_v5() {
-  return {
-    cid: Buf.readUint32().toString(),
-    active: Buf.readUint32(), // DATACALL_ACTIVE_*
-    type: Buf.readString(),
-    apn: Buf.readString(),
-    address: Buf.readString()
-  };
+  if (!options) {
+    options = {};
+  }
+  cid = Buf.readUint32().toString();
+  active = Buf.readUint32(); // DATACALL_ACTIVE_*
+  type = Buf.readString();
+  apn = Buf.readString();
+  address = Buf.readString();
+  return options;
 };
 
-RIL.readDataCall_v6 = function readDataCall_v6(obj) {
-  if (!obj) {
-    obj = {};
+RIL.readDataCall_v6 = function readDataCall_v6(options) {
+  if (!options) {
+    options = {};
   }
-  obj.status = Buf.readUint32();  // DATACALL_FAIL_*
+  options.status = Buf.readUint32();  // DATACALL_FAIL_*
   if (!RILQUIRKS_DATACALLSTATE_NO_SUGGESTEDRETRYTIME) {
-    obj.suggestedRetryTime = Buf.readUint32();
+    options.suggestedRetryTime = Buf.readUint32();
   }
-  obj.cid = Buf.readUint32().toString();
-  obj.active = Buf.readUint32();  // DATACALL_ACTIVE_*
-  obj.type = Buf.readString();
-  obj.ifname = Buf.readString();
-  obj.ipaddr = Buf.readString();
-  obj.dns = Buf.readString();
-  obj.gw = Buf.readString();
-  if (obj.dns) {
-    obj.dns = obj.dns.split(" ");
+  options.cid = Buf.readUint32().toString();
+  options.active = Buf.readUint32();  // DATACALL_ACTIVE_*
+  options.type = Buf.readString();
+  options.ifname = Buf.readString();
+  options.ipaddr = Buf.readString();
+  options.dns = Buf.readString();
+  options.gw = Buf.readString();
+  if (options.dns) {
+    options.dns = options.dns.split(" ");
   }
   //TODO for now we only support one address and gateway
-  if (obj.ipaddr) {
-    obj.ipaddr = obj.ipaddr.split(" ")[0];
+  if (options.ipaddr) {
+    options.ipaddr = options.ipaddr.split(" ")[0];
   }
-  if (obj.gw) {
-    obj.gw = obj.gw.split(" ")[0];
+  if (options.gw) {
+    options.gw = options.gw.split(" ")[0];
   }
-  return obj;
+  return options;
 };
 
 RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length, options) {
@@ -3354,9 +3356,9 @@ RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length, options) {
   for (let i = 0; i < num; i++) {
     let datacall;
     if (version < 6) {
-      datacall = this.readDataCall_v5();
+      datacall = this.readDataCall_v5(options);
     } else {
-      datacall = this.readDataCall_v6();
+      datacall = this.readDataCall_v6(options);
     }
     datacalls[datacall.cid] = datacall;
   }

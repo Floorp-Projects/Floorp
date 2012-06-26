@@ -84,4 +84,14 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/pref_category_importexport">
+
+      <org.mozilla.gecko.AndroidImportPreference
+          android:title="@string/pref_import_android"
+          android:positiveButtonText="@string/bookmarkhistory_button_import"
+          android:negativeButtonText="@string/button_cancel"
+          android:persistent="false" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

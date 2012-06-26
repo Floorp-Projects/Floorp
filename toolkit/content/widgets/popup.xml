@@ -306,7 +306,8 @@
 
   <binding id="arrowpanel" extends="chrome://global/content/bindings/popup.xml#panel">
     <content flip="both" side="top" position="bottomcenter topleft">
-      <xul:box anonid="container" class="panel-arrowcontainer" flex="1">
+      <xul:box anonid="container" class="panel-arrowcontainer" flex="1"
+               xbl:inherits="side,panelopen">
         <xul:box anonid="arrowbox" class="panel-arrowbox">
           <xul:image anonid="arrow" class="panel-arrow"/>
         </xul:box>
@@ -320,7 +321,7 @@
       <field name="_fadeTimer">null</field>
     </implementation>
     <handlers>
-      <handler event="popupshowing">
+      <handler event="popupshowing" phase="target">
       <![CDATA[
         var container = document.getAnonymousElementByAttribute(this, "anonid", "container");
         var arrowbox = document.getAnonymousElementByAttribute(this, "anonid", "arrowbox");
@@ -456,12 +457,27 @@
       </handler>
       <handler event="transitionend" phase="target">
       <![CDATA[
-        if (event.propertyName == "opacity") {
+        if (event.propertyName == "opacity" &&
+            event.originalTarget == this) {
           this.hidePopup();
           this.style.removeProperty("opacity");
         }
       ]]>
       </handler>
+      <handler event="popupshown" phase="target">
+        this.setAttribute("panelopen", "true");
+      </handler>
+      <handler event="popuphidden" phase="target"><![CDATA[
+        this.removeAttribute("panelopen");
+
+        if (this.state == "closed") {
+          // Destroy the widget to prevent the current state from being rendered
+          // briefly when the panel reopens.
+          this.hidden = true;
+          this.clientHeight; // flush layout
+          this.hidden = false;
+        }
+      ]]></handler>
     </handlers>
   </binding>
 

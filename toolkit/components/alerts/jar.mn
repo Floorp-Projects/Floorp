@@ -3,5 +3,5 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-* content/global/alerts/alert.xul (resources/content/alert.xul)
-* content/global/alerts/alert.js  (resources/content/alert.js)
+  content/global/alerts/alert.xul (resources/content/alert.xul)
+  content/global/alerts/alert.js  (resources/content/alert.js)
