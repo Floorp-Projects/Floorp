@@ -211,7 +211,7 @@ let PinnedLinks = {
     this.unpin(aLink);
 
     this.links[aIndex] = aLink;
-    Storage.set("pinnedLinks", this.links);
+    this.save();
   },
 
   /**
@@ -222,8 +222,15 @@ let PinnedLinks = {
     let index = this._indexOfLink(aLink);
     if (index != -1) {
       this.links[index] = null;
-      Storage.set("pinnedLinks", this.links);
+      this.save();
     }
+  },
+
+  /**
+   * Saves the current list of pinned links.
+   */
+  save: function PinnedLinks_save() {
+    Storage.set("pinnedLinks", this.links);
   },
 
   /**
@@ -284,11 +291,10 @@ let BlockedLinks = {
    */
   block: function BlockedLinks_block(aLink) {
     this.links[aLink.url] = 1;
+    this.save();
 
     // Make sure we unpin blocked links.
     PinnedLinks.unpin(aLink);
-
-    Storage.set("blockedLinks", this.links);
   },
 
   /**
@@ -296,8 +302,17 @@ let BlockedLinks = {
    * @param aLink The link to unblock.
    */
   unblock: function BlockedLinks_unblock(aLink) {
-    if (this.isBlocked(aLink))
+    if (this.isBlocked(aLink)) {
       delete this.links[aLink.url];
+      this.save();
+    }
+  },
+
+  /**
+   * Saves the current list of blocked links.
+   */
+  save: function BlockedLinks_save() {
+    Storage.set("blockedLinks", this.links);
   },
 
   /**
