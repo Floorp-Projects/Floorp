@@ -403,23 +403,23 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, jsval v)
 bool
 JSStructuredCloneWriter::writeTypedArray(JSObject *arr)
 {
-    if (!out.writePair(ArrayTypeToTag(TypedArray::getType(arr)), TypedArray::getLength(arr)))
+    if (!out.writePair(ArrayTypeToTag(TypedArray::type(arr)), TypedArray::length(arr)))
         return false;
 
-    switch (TypedArray::getType(arr)) {
+    switch (TypedArray::type(arr)) {
     case TypedArray::TYPE_INT8:
     case TypedArray::TYPE_UINT8:
     case TypedArray::TYPE_UINT8_CLAMPED:
-        return out.writeArray((const uint8_t *) TypedArray::getDataOffset(arr), TypedArray::getLength(arr));
+        return out.writeArray((const uint8_t *) TypedArray::viewData(arr), TypedArray::length(arr));
     case TypedArray::TYPE_INT16:
     case TypedArray::TYPE_UINT16:
-        return out.writeArray((const uint16_t *) TypedArray::getDataOffset(arr), TypedArray::getLength(arr));
+        return out.writeArray((const uint16_t *) TypedArray::viewData(arr), TypedArray::length(arr));
     case TypedArray::TYPE_INT32:
     case TypedArray::TYPE_UINT32:
     case TypedArray::TYPE_FLOAT32:
-        return out.writeArray((const uint32_t *) TypedArray::getDataOffset(arr), TypedArray::getLength(arr));
+        return out.writeArray((const uint32_t *) TypedArray::viewData(arr), TypedArray::length(arr));
     case TypedArray::TYPE_FLOAT64:
-        return out.writeArray((const uint64_t *) TypedArray::getDataOffset(arr), TypedArray::getLength(arr));
+        return out.writeArray((const uint64_t *) TypedArray::viewData(arr), TypedArray::length(arr));
     default:
         JS_NOT_REACHED("unknown TypedArray type");
         return false;
@@ -719,7 +719,7 @@ JSStructuredCloneReader::readTypedArray(uint32_t tag, uint32_t nelems, Value *vp
         return false;
     vp->setObject(*obj);
 
-    JS_ASSERT(TypedArray::getLength(obj) == nelems);
+    JS_ASSERT(TypedArray::length(obj) == nelems);
     switch (tag) {
       case SCTAG_TYPED_ARRAY_INT8:
         return in.readArray((uint8_t*) JS_GetInt8ArrayData(obj, context()), nelems);
