@@ -1215,7 +1215,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSUserCompartmentCount,
 
 // The REPORT* macros do an unconditional report.  The CREPORT* macros are for
 // compartments;  they aggregate any entries smaller than SUNDRIES_THRESHOLD
-// into "gc-heap-sundries" and "other-sundries" entries for the compartment.
+// into "gc-heap/sundries" and "other-sundries" entries for the compartment.
 
 static const size_t SUNDRIES_THRESHOLD = 8192;
 
@@ -1550,23 +1550,23 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                  "small and all the same size, so they're not worth reporting "
                  "on a per-compartment basis.");
 
-    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-unused-arenas"),
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/unused-arenas"),
                     rtStats.gcHeapUnusedArenas,
                     "Memory on the garbage-collected JavaScript heap taken by "
                     "empty arenas within non-empty chunks.");
 
-    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-unused-chunks"),
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/unused-chunks"),
                     rtStats.gcHeapUnusedChunks,
                     "Memory on the garbage-collected JavaScript heap taken by "
                     "empty chunks, which will soon be released unless claimed "
                     "for new allocations.");
 
-    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-decommitted"),
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/decommitted"),
                     rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
                     "Memory in the address space of the garbage-collected "
                     "JavaScript heap that is currently returned to the OS.");
 
-    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-chunk-admin"),
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap/chunk-admin"),
                     rtStats.gcHeapChunkAdmin,
                     "Memory on the garbage-collected JavaScript heap, within "
                     "chunks, that is used to hold internal bookkeeping "
@@ -1692,31 +1692,31 @@ public:
             xpcrt->SizeOfIncludingThis(JsMallocSizeOf) +
             XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JsMallocSizeOf);
 
-        NS_NAMED_LITERAL_CSTRING(pathPrefix, "explicit/js/");
+        NS_NAMED_LITERAL_CSTRING(explicitJs, "explicit/js/");
 
         // This is the second step (see above).  First we report stuff in the
         // "explicit" tree, then we report other stuff.
 
         nsresult rv =
-            xpc::ReportJSRuntimeExplicitTreeStats(rtStats, pathPrefix, cb,
+            xpc::ReportJSRuntimeExplicitTreeStats(rtStats, explicitJs, cb,
                                                   closure);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("xpconnect"),
+        REPORT_BYTES(explicitJs + NS_LITERAL_CSTRING("xpconnect"),
                      nsIMemoryReporter::KIND_HEAP, xpconnect,
                      "Memory used by XPConnect.");
 
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused-arenas"),
                      nsIMemoryReporter::KIND_OTHER,
                      rtStats.gcHeapUnusedArenas,
-                     "The same as 'explicit/js/gc-heap-unused-arenas'. "
+                     "The same as 'explicit/js/gc-heap/unused-arenas'. "
                      "Shown here for easy comparison with other 'js-gc' "
                      "reporters.");
 
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused-chunks"),
                      nsIMemoryReporter::KIND_OTHER,
                      rtStats.gcHeapUnusedChunks,
-                     "The same as 'explicit/js/gc-heap-unused-chunks'.  "
+                     "The same as 'explicit/js/gc-heap/unused-chunks'.  "
                      "Shown here for easy comparison with other 'js-gc' "
                      "reporters.");
 
@@ -1765,7 +1765,7 @@ public:
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-decommitted"),
                      nsIMemoryReporter::KIND_OTHER,
                      rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
-                     "The same as 'explicit/js/gc-heap-decommitted'.  Shown "
+                     "The same as 'explicit/js/gc-heap/decommitted'.  Shown "
                      "here for easy comparison with other 'js-gc' reporters.");
 
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-objects"),
