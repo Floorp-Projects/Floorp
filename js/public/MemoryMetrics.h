@@ -79,8 +79,7 @@ struct CompartmentStats
     }
 
     void   *extra;
-    size_t gcHeapArenaHeaders;
-    size_t gcHeapArenaPadding;
+    size_t gcHeapArenaAdmin;
     size_t gcHeapArenaUnused;
 
     size_t gcHeapObjectsNonFunction;
