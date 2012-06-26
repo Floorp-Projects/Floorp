@@ -1304,11 +1304,11 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                      "bookkeeping information, and (b) to provide padding to "
                      "align GC things.");
 
-    CREPORT_GC_BYTES(MakePath(pathPrefix, cStats, "gc-heap/arena/unused"),
-                     cStats.gcHeapArenaUnused,
+    CREPORT_GC_BYTES(MakePath(pathPrefix, cStats, "gc-heap/unused-gc-things"),
+                     cStats.gcHeapUnusedGcThings,
                      "Memory on the compartment's garbage-collected JavaScript "
-                     "heap, within arenas, that could be holding useful data "
-                     "but currently isn't.");
+                     "heap taken by empty GC thing slots within non-empty "
+                     "arenas.");
 
     CREPORT_GC_BYTES(MakePath(pathPrefix, cStats, "gc-heap/objects/non-function"),
                      cStats.gcHeapObjectsNonFunction,
@@ -1550,21 +1550,16 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                  "small and all the same size, so they're not worth reporting "
                  "on a per-compartment basis.");
 
-    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-chunk-dirty-unused"),
-                    rtStats.gcHeapChunkDirtyUnused,
-                    "Memory on the garbage-collected JavaScript heap, within "
-                    "chunks with at least one allocated GC thing, that could "
-                    "be holding useful data but currently isn't.  Memory here "
-                    "is mutually exclusive with memory reported under "
-                    "'explicit/js/gc-heap-decommitted'.");
-
-    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-chunk-clean-unused"),
-                    rtStats.gcHeapChunkCleanUnused,
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-unused-arenas"),
+                    rtStats.gcHeapUnusedArenas,
                     "Memory on the garbage-collected JavaScript heap taken by "
-                    "completely empty chunks, that soon will be released "
-                    "unless claimed for new allocations.  Memory here is "
-                    "mutually exclusive with memory reported under "
-                    "'explicit/js/gc-heap-decommitted'.");
+                    "empty arenas within non-empty chunks.");
+
+    REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-unused-chunks"),
+                    rtStats.gcHeapUnusedChunks,
+                    "Memory on the garbage-collected JavaScript heap taken by "
+                    "empty chunks, which will soon be released unless claimed "
+                    "for new allocations.");
 
     REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-decommitted"),
                     rtStats.gcHeapChunkCleanDecommitted + rtStats.gcHeapChunkDirtyDecommitted,
@@ -1711,35 +1706,35 @@ public:
                      nsIMemoryReporter::KIND_HEAP, xpconnect,
                      "Memory used by XPConnect.");
 
-        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-chunk-dirty-unused"),
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused-arenas"),
                      nsIMemoryReporter::KIND_OTHER,
-                     rtStats.gcHeapChunkDirtyUnused,
-                     "The same as 'explicit/js/gc-heap-chunk-dirty-unused'. "
+                     rtStats.gcHeapUnusedArenas,
+                     "The same as 'explicit/js/gc-heap-unused-arenas'. "
                      "Shown here for easy comparison with other 'js-gc' "
                      "reporters.");
 
-        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-chunk-clean-unused"),
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused-chunks"),
                      nsIMemoryReporter::KIND_OTHER,
-                     rtStats.gcHeapChunkCleanUnused,
-                     "The same as 'explicit/js/gc-heap-chunk-clean-unused'.  "
+                     rtStats.gcHeapUnusedChunks,
+                     "The same as 'explicit/js/gc-heap-unused-chunks'.  "
                      "Shown here for easy comparison with other 'js-gc' "
                      "reporters.");
 
-        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-arena-unused"),
+        REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-unused-gc-things"),
                      nsIMemoryReporter::KIND_OTHER,
-                     rtStats.gcHeapArenaUnused,
+                     rtStats.gcHeapUnusedGcThings,
                      "Memory on the main JSRuntime's garbage-collected "
-                     "JavaScript heap, within arenas, that could be holding "
-                     "useful data but currently isn't. This is the sum of all "
-                     "compartments' 'gc-heap/arena-unused' numbers.");
+                     "JavaScript heap taken by empty GC thing slots within "
+                     "non-empty arenas. This is the sum of all compartments' "
+                     "'gc-heap/unused-gc-things' numbers.");
 
         REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed-unused"),
                      nsIMemoryReporter::KIND_OTHER,
                      rtStats.gcHeapUnused,
                      "Amount of the GC heap that's committed, but that is "
                      "neither part of an active allocation nor being used for "
-                     "bookkeeping.  Equal to 'gc-heap-chunk-dirty-unused' + "
-                     "'gc-heap-chunk-clean-unused' + 'gc-heap-arena-unused'.");
+                     "bookkeeping.  Equal to 'gc-heap-unused-chunks' + "
+                     "'gc-heap-unused-arenas' + 'gc-heap-unused-gc-things'.");
 
         // Why 10000x?  100x because it's a percentage, and another 100x
         // because nsIMemoryReporter requires that for UNITS_PERCENTAGE
