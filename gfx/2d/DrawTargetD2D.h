@@ -207,6 +207,9 @@ private:
   RefPtr<ID2D1PathGeometry> mCurrentClippedGeometry;
   mutable RefPtr<ID2D1RenderTarget> mRT;
 
+  // We store this to prevent excessive SetTextRenderingParams calls.
+  RefPtr<IDWriteRenderingParams> mTextRenderingParams;
+
   // Temporary texture and render target used for supporting alternative operators.
   RefPtr<ID3D10Texture2D> mTempTexture;
   RefPtr<ID3D10RenderTargetView> mRTView;
