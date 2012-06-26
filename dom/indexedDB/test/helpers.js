@@ -7,7 +7,17 @@ var testGenerator = testSteps();
 
 function executeSoon(aFun)
 {
-  SimpleTest.executeSoon(aFun);
+  let comp = SpecialPowers.wrap(Components);
+
+  let thread = comp.classes["@mozilla.org/thread-manager;1"]
+                   .getService(comp.interfaces.nsIThreadManager)
+                   .mainThread;
+
+  thread.dispatch({
+    run: function() {
+      aFun();
+    }
+  }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
 }
 
 function clearAllDatabases(callback) {
