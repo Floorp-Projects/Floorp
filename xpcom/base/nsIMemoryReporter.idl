@@ -45,8 +45,8 @@ interface nsISimpleEnumerator;
  *   OTHER, units COUNT, an amount of 1, and a description that's an empty
  *   string.
  *
- * - All other reports must have kind OTHER, and a description that is a
- *   sentence.
+ * - All other reports are unconstrained except that they must have a
+ *   description that is a sentence.
  */
 [scriptable, uuid(b2c39f65-1799-4b92-a806-ab3cf6af3cfa)]
 interface nsIMemoryReporter : nsISupports
@@ -114,6 +114,9 @@ interface nsIMemoryReporter : nsISupports
    *
    *  - OTHER: reporters which don't fit into either of these categories.
    *    They can have any units.
+   *
+   * The kind only matters for reporters in the "explicit" tree;
+   * aboutMemory.js uses it to calculate "heap-unclassified".
    */
   const PRInt32 KIND_NONHEAP = 0;
   const PRInt32 KIND_HEAP    = 1;

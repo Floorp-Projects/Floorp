@@ -140,7 +140,6 @@ var shell = {
     addPermissions(domains.split(","));
 
     CustomEventManager.init();
-
     WebappsHelper.init();
 
     // XXX could factor out into a settings->pref map.  Not worth it yet.
@@ -216,7 +215,7 @@ var shell = {
             case evt.DOM_VK_PAGE_DOWN:
               this.changeVolume(-1);
               break;
-  
+
             case evt.DOM_VK_PAGE_UP:
               this.changeVolume(1);
               break;
@@ -249,6 +248,9 @@ var shell = {
         }
         break;
       case 'mozbrowserloadstart':
+        if (content.document.location == 'about:blank')
+          return;
+
         this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
 
         let chromeWindow = window.QueryInterface(Ci.nsIDOMChromeWindow);
