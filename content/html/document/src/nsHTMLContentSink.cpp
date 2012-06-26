@@ -85,7 +85,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static PRLogModuleInfo* gSinkLogModuleInfo;
 
 #define SINK_TRACE_NODE(_bit, _msg, _tag, _sp, _obj) \
@@ -188,7 +188,7 @@ protected:
   already_AddRefed<nsGenericHTMLElement>
   CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   void SinkTraceNode(PRUint32 aBit,
                      const char* aMsg,
                      const nsHTMLTag aTag,
@@ -243,7 +243,7 @@ protected:
   
   bool IsMonolithicContainer(nsHTMLTag aTag);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   void ForceReflow();
 #endif
 };
@@ -313,7 +313,7 @@ private:
 
 //----------------------------------------------------------------------
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 void
 HTMLContentSink::SinkTraceNode(PRUint32 aBit,
                                const char* aMsg,
@@ -582,7 +582,7 @@ SinkContext::DidAddContent(nsIContent* aContent)
       mStack[mStackPos - 1].mContent->GetChildCount()) {
     nsIContent* parent = mStack[mStackPos - 1].mContent;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
     // Tracing code
     nsIParserService *parserService = nsContentUtils::GetParserService();
     if (parserService) {
@@ -757,7 +757,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
     // notification
 
     if (mStack[mStackPos].mNumFlushed < content->GetChildCount()) {
-#ifdef NS_DEBUG
+#ifdef DEBUG
       {
         // Tracing code
         SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
@@ -1068,7 +1068,7 @@ SinkContext::FlushTags()
       childCount = content->GetChildCount();
 
       if (!flushed && (mStack[stackPos].mNumFlushed < childCount)) {
-#ifdef NS_DEBUG
+#ifdef DEBUG
         {
           // Tracing code
           SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_REFLOW,
@@ -1242,7 +1242,7 @@ HTMLContentSink::HTMLContentSink()
   // Note: operator new zeros our memory
 
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (!gSinkLogModuleInfo) {
     gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");
   }
@@ -1426,7 +1426,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mCurrentContext->Begin(eHTMLTag_html, mRoot, 0, -1);
   mContextStack.AppendElement(mCurrentContext);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   nsCAutoString spec;
   (void)aURI->GetSpec(spec);
   SINK_TRACE(gSinkLogModuleInfo, SINK_TRACE_CALLS,

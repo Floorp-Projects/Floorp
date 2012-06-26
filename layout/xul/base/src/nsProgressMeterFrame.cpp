@@ -140,7 +140,7 @@ nsProgressMeterFrame::AttributeChanged(PRInt32 aNameSpaceID,
   return NS_OK;
 }
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 NS_IMETHODIMP
 nsProgressMeterFrame::GetFrameName(nsAString& aResult) const
 {

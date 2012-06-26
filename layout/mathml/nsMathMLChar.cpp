@@ -228,7 +228,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
   // Load glyph properties if this is the first time we have been here
   if (mState == NS_TABLE_STATE_EMPTY) {
     nsresult rv = LoadProperties(mFontName[0], mGlyphProperties);
-#ifdef NS_DEBUG
+#ifdef DEBUG
     nsCAutoString uriStr;
     uriStr.AssignLiteral("resource://gre/res/fonts/mathfont");
     LossyAppendUTF16toASCII(mFontName[0], uriStr);
@@ -1906,7 +1906,7 @@ private:
   bool          mIsSelected;
 };
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 class nsDisplayMathMLCharDebug : public nsDisplayItem {
 public:
   nsDisplayMathMLCharDebug(nsDisplayListBuilder* aBuilder,
@@ -1984,7 +1984,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
     //else
     //  our container frame will take care of painting its background
 
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+#if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
     // for visual debug
     rv = aLists.BorderBackground()->AppendToTop(new (aBuilder)
         nsDisplayMathMLCharDebug(aBuilder, aForFrame, mRect));

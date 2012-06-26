@@ -23,6 +23,8 @@ SYNC_PP_RES_XML=res/xml/sync_syncadapter.xml res/xml/sync_options.xml
 FENNEC_JAVA_FILES = \
   AboutHomeContent.java \
   AboutHomeSection.java \
+  AndroidImport.java \
+  AndroidImportPreference.java \
   AlertNotification.java \
   AwesomeBar.java \
   AwesomeBarTabs.java \

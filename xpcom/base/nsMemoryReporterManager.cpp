@@ -517,7 +517,7 @@ NS_FALLIBLE_MEMORY_REPORTER_IMPLEMENT(Explicit,
 NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(AtomTableMallocSizeOf, "atom-table")
 
 static PRInt64 GetAtomTableSize() {
-  return NS_SizeOfAtomTableIncludingThis(AtomTableMallocSizeOf);
+  return NS_SizeOfAtomTablesIncludingThis(AtomTableMallocSizeOf);
 }
 
 // Why is this here?  At first glance, you'd think it could be defined and
@@ -526,11 +526,11 @@ static PRInt64 GetAtomTableSize() {
 // and that happens before XPCOM components are initialized, which means the
 // NS_RegisterMemoryReporter call fails.  So instead we do it here.
 NS_MEMORY_REPORTER_IMPLEMENT(AtomTable,
-    "explicit/atom-table",
+    "explicit/atom-tables",
     KIND_HEAP,
     UNITS_BYTES,
     GetAtomTableSize,
-    "Memory used by the atoms table.")
+    "Memory used by the dynamic and static atoms tables.")
 
 /**
  ** nsMemoryReporterManager implementation

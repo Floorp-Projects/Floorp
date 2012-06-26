@@ -77,7 +77,7 @@ public:
   virtual already_AddRefed<Accessible> CreateAccessible();
 #endif
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
     aResult.AssignLiteral("nsTextControlFrame");

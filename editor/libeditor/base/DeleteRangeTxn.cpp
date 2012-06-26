@@ -16,7 +16,7 @@
 
 using namespace mozilla;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
 static bool gNoisy = false;
 #endif
 
@@ -110,7 +110,7 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsEditor *aEditor,
 
 NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy) { printf("Do Delete Range\n"); }
 #endif
 
@@ -171,7 +171,7 @@ NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
 
 NS_IMETHODIMP DeleteRangeTxn::UndoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy) { printf("Undo Delete Range\n"); }
 #endif
 
@@ -182,7 +182,7 @@ NS_IMETHODIMP DeleteRangeTxn::UndoTransaction(void)
 
 NS_IMETHODIMP DeleteRangeTxn::RedoTransaction(void)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (gNoisy) { printf("Redo Delete Range\n"); }
 #endif
 
