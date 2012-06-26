@@ -49,7 +49,6 @@ static nsWindow *gFocusedWindow = nsnull;
 static android::FramebufferNativeWindow *gNativeWindow = nsnull;
 static bool sFramebufferOpen;
 static bool sUsingOMTC;
-static bool sScreenInitialized;
 static nsRefPtr<gfxASurface> sOMTCSurface;
 static pthread_t sFramebufferWatchThread;
 
@@ -121,7 +120,7 @@ static void *frameBufferWatcher(void *) {
 
 nsWindow::nsWindow()
 {
-    if (!sScreenInitialized) {
+    if (!sGLContext && !sFramebufferOpen && !sUsingOMTC) {
         // workaround Bug 725143
         hal::SetScreenEnabled(true);
 
@@ -133,19 +132,34 @@ nsWindow::nsWindow()
 
         sUsingOMTC = UseOffMainThreadCompositing();
 
-        if (sUsingOMTC) {
-          sOMTCSurface = new gfxImageSurface(gfxIntSize(1, 1),
-                                             gfxASurface::ImageFormatRGB24);
-        }
-
         // We (apparently) don't have a way to tell if allocating the
         // fbs succeeded or failed.
         gNativeWindow = new android::FramebufferNativeWindow();
+        if (sUsingOMTC) {
+            nsIntSize screenSize;
+            bool gotFB = Framebuffer::GetSize(&screenSize);
+            MOZ_ASSERT(gotFB);
+            gScreenBounds = nsIntRect(nsIntPoint(0, 0), screenSize);
 
-        nsIntSize screenSize;
-        bool gotFB = Framebuffer::GetSize(&screenSize);
-        MOZ_ASSERT(gotFB);
-        gScreenBounds = nsIntRect(nsIntPoint(0, 0), screenSize);
+            sOMTCSurface = new gfxImageSurface(gfxIntSize(1, 1),
+                gfxASurface::ImageFormatRGB24);
+        } else {
+            sGLContext = GLContextProvider::CreateForWindow(this);
+            // CreateForWindow sets up gScreenBounds
+            if (!sGLContext) {
+                LOG("Failed to create GL context for fb, trying /dev/graphics/fb0");
+
+                // We can't delete gNativeWindow.
+
+                nsIntSize screenSize;
+                sFramebufferOpen = Framebuffer::Open(&screenSize);
+                gScreenBounds = nsIntRect(nsIntPoint(0, 0), screenSize);
+                if (!sFramebufferOpen) {
+                    LOG("Failed to mmap fb(?!?), aborting ...");
+                    NS_RUNTIMEABORT("Can't open GL context and can't fall back on /dev/graphics/fb0 ...");
+                }
+            }
+        }
 
         char propValue[PROPERTY_VALUE_MAX];
         property_get("ro.sf.hwrotation", propValue, "0");
@@ -166,8 +180,6 @@ nsWindow::nsWindow()
             break;
         }
         sVirtualBounds = gScreenBounds;
-
-        sScreenInitialized = true;
 
         nsAppShell::NotifyScreenInitialized();
     }
@@ -480,17 +492,6 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
     if (mLayerManager)
         return mLayerManager;
 
-      // Set mUseAcceleratedRendering here to make it consistent with
-      // nsBaseWidget::GetLayerManager
-    mUseAcceleratedRendering = GetShouldAccelerate();
-    if (!mUseAcceleratedRendering) {
-        sFramebufferOpen = Framebuffer::Open();
-        if (!sFramebufferOpen) {
-            LOG("Failed to mmap fb(?!?), aborting ...");
-            NS_RUNTIMEABORT("Can't open GL context and can't fall back on /dev/graphics/fb0 ...");
-        }
-    }
-
     nsWindow *topWindow = sTopWindows[0];
 
     if (!topWindow) {
@@ -504,21 +505,17 @@ nsWindow::GetLayerManager(PLayersChild* aShadowManager,
             return mLayerManager;
     }
 
-    DebugOnly<nsIntRect> fbBounds = gScreenBounds;
-    sGLContext = GLContextProvider::CreateForWindow(this);
-    MOZ_ASSERT(fbBounds == gScreenBounds);
     if (sGLContext) {
         nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
 
-        if (layerManager->Initialize(sGLContext)) {
+        if (layerManager->Initialize(sGLContext))
             mLayerManager = layerManager;
-            return mLayerManager;
-        } else {
+        else
             LOG("Could not create OGL LayerManager");
-        }
+    } else {
+        MOZ_ASSERT(sFramebufferOpen);
+        mLayerManager = new BasicShadowLayerManager(this);
     }
-
-    mLayerManager = new BasicShadowLayerManager(this);
 
     return mLayerManager;
 }
