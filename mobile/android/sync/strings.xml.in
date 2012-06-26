@@ -35,6 +35,8 @@
   <string name="sync_button_tryagain">&sync.button.tryagain.label;</string>
   <string name="sync_button_manual">&sync.button.manual.label;</string>
   <string name="sync_subtitle_nointernet">&sync.subtitle.nointernet.label;</string>
+  <string name="sync_subtitle_failaccount">&sync.subtitle.failaccount.label;</string>
+  <string name="sync_subtitle_failmultiple">&sync.subtitle.failmultiple.label;</string>
   
   <!-- Setup Success -->
   <string name="sync_title_success">&sync.title.success.label;</string>
