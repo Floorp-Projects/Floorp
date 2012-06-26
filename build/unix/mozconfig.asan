@@ -1,6 +1,6 @@
-# Use Clang r155417
-export CC="/tools/clang-3.0/bin/clang -fgnu89-inline"
-export CXX="/tools/clang-3.0/bin/clang++"
+# Use Clang as specified in manifest
+export CC="$topsrcdir/clang/bin/clang -fgnu89-inline"
+export CXX="$topsrcdir/clang/bin/clang++"
 
 # Mandatory flags for ASan
 export ASANFLAGS="-faddress-sanitizer -Dxmalloc=myxmalloc -fPIC"
