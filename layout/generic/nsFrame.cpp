@@ -5001,6 +5001,14 @@ nsIFrame::GetVisualOverflowRectRelativeToSelf() const
   return GetVisualOverflowRect();
 }
 
+nsRect
+nsIFrame::GetPreEffectsVisualOverflowRect() const
+{
+  nsRect* r = static_cast<nsRect*>
+    (Properties().Get(nsIFrame::PreEffectsBBoxProperty()));
+  return r ? *r : GetVisualOverflowRectRelativeToSelf();
+}
+
 /* virtual */ bool
 nsFrame::UpdateOverflow()
 {
