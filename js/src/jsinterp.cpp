@@ -169,7 +169,8 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, Value *vp)
     TypeScript::MonitorUnknown(cx);
 
     if (value.reference().isPrimitive()) {
-        *vp = value;
+        if (!value.reference().isUndefined())
+            *vp = value;
     } else {
 #if JS_HAS_XML_SUPPORT
         /* Extract the function name from function::name qname. */
