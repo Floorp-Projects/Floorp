@@ -105,6 +105,7 @@
   <string name="num_tabs">&num_tabs;</string>
   <string name="addons">&addons;</string>
   <string name="downloads">&downloads;</string>
+  <string name="apps">&apps;</string>
   <string name="char_encoding">&char_encoding;</string>
   <!-- This string only appears in developer builds, which
        is why it is not localizable. -->
