@@ -424,7 +424,12 @@ ion::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut)
         // monitor the result, since the bailout happens before the MMonitorTypes
         // instruction is executed.
         jsbytecode *pc = activation->bailout()->bailoutPc();
-        if (js_CodeSpec[*pc].format & JOF_TYPESET) {
+
+        // If this is not a ResumeAfter bailout, there's nothing to monitor,
+        // we will redo the op in the interpreter.
+        bool isResumeAfter = GetNextPc(pc) == cx->regs().pc;
+
+        if ((js_CodeSpec[*pc].format & JOF_TYPESET) && isResumeAfter) {
             JS_ASSERT(retval == BAILOUT_RETURN_OK);
             return BAILOUT_RETURN_MONITOR;
         }
