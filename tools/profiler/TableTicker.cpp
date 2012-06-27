@@ -586,7 +586,7 @@ typedef struct {
 } PCArray;
 
 static
-void StackWalkCallback(void* aPC, void* aClosure)
+void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 {
   PCArray* array = static_cast<PCArray*>(aClosure);
   if (array->count >= array->size) {
@@ -610,7 +610,7 @@ void TableTicker::doBacktrace(ThreadProfile &aProfile, TickSample* aSample)
   };
 
   // Start with the current function.
-  StackWalkCallback(aSample->pc, &array);
+  StackWalkCallback(aSample->pc, aSample->sp, &array);
 
 #ifdef XP_MACOSX
   pthread_t pt = GetProfiledThread(platform_data());
