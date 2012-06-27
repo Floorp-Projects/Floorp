@@ -8251,6 +8251,18 @@ if test "$MOZ_PLACES"; then
   AC_DEFINE(MOZ_PLACES)
 fi
 
+dnl Build Apps in the Cloud (AITC) if required
+AC_SUBST(MOZ_SERVICES_AITC)
+if test -n "$MOZ_SERVICES_AITC"; then
+  AC_DEFINE(MOZ_SERVICES_AITC)
+fi
+
+dnl Build Notifications if required
+AC_SUBST(MOZ_SERVICES_NOTIFICATIONS)
+if test -n "$MOZ_SERVICES_NOTIFICATIONS"; then
+  AC_DEFINE(MOZ_SERVICES_NOTIFICATIONS)
+fi
+
 dnl Build Sync Services if required
 AC_SUBST(MOZ_SERVICES_SYNC)
 if test -n "$MOZ_SERVICES_SYNC"; then
