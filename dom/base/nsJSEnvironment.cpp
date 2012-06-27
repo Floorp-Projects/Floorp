@@ -2953,10 +2953,34 @@ nsJSContext::ShrinkGCBuffersNow()
   JS_ShrinkGCBuffers(nsJSRuntime::sRuntime);
 }
 
+// Return true if any JSContext has a "global object" with a gray
+// parent. The intent is to look for JS Object windows. We don't merge
+// system compartments, so we don't use them to trigger merging CCs.
+static bool
+AnyGrayGlobalParent()
+{
+  if (!nsJSRuntime::sRuntime) {
+    return false;
+  }
+  JSContext *iter = nsnull;
+  JSContext *cx;
+  while ((cx = JS_ContextIterator(nsJSRuntime::sRuntime, &iter))) {
+    if (JSObject *global = JS_GetGlobalObject(cx)) {
+      if (JSObject *parent = js::GetObjectParent(global)) {
+        if (js::GCThingIsMarkedGray(parent) &&
+            !js::IsSystemCompartment(js::GetGCThingCompartment(parent))) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 static bool
 DoMergingCC(bool aForced)
 {
-  return false;
+  return !aForced && AnyGrayGlobalParent();
 }
 
 //static
