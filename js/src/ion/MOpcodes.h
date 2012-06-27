@@ -55,7 +55,6 @@ namespace ion {
     _(Test)                                                                 \
     _(Compare)                                                              \
     _(Phi)                                                                  \
-    _(Beta)                                                                 \
     _(OsrValue)                                                             \
     _(OsrScopeChain)                                                        \
     _(CheckOverRecursed)                                                    \
