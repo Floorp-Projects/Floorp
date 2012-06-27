@@ -1040,7 +1040,8 @@ struct nsCycleCollector
     nsPurpleBufferEntry* Suspect2(nsISupports *n);
     bool Forget2(nsPurpleBufferEntry *e);
 
-    void Collect(nsCycleCollectorResults *aResults,
+    void Collect(bool aMergeCompartments,
+                 nsCycleCollectorResults *aResults,
                  PRUint32 aTryCollections,
                  nsICycleCollectorListener *aListener);
 
@@ -1051,7 +1052,7 @@ struct nsCycleCollector
     void CleanupAfterCollection();
 
     // Start and finish an individual collection.
-    bool BeginCollection(nsICycleCollectorListener *aListener);
+    bool BeginCollection(bool aMergeCompartments, nsICycleCollectorListener *aListener);
     bool FinishCollection(nsICycleCollectorListener *aListener);
 
     PRUint32 SuspectedCount();
@@ -1577,13 +1578,16 @@ private:
     PLDHashTable mPtrToNodeMap;
     PtrInfo *mCurrPi;
     nsCycleCollectionParticipant *mJSParticipant;
+    nsCycleCollectionParticipant *mJSCompParticipant;
     nsCString mNextEdgeName;
     nsICycleCollectorListener *mListener;
+    bool mMergeCompartments;
 
 public:
     GCGraphBuilder(GCGraph &aGraph,
                    nsCycleCollectionJSRuntime *aJSRuntime,
-                   nsICycleCollectorListener *aListener);
+                   nsICycleCollectorListener *aListener,
+                   bool aMergeCompartments);
     ~GCGraphBuilder();
     bool Initialized();
 
@@ -1650,16 +1654,30 @@ private:
         }
         ++childPi->mInternalRefs;
     }
+
+    JSCompartment *MergeCompartment(void *gcthing) {
+        if (!mMergeCompartments) {
+            return nsnull;
+        }
+        JSCompartment *comp = js::GetGCThingCompartment(gcthing);
+        if (js::IsSystemCompartment(comp)) {
+            return nsnull;
+        }
+        return comp;
+    }
 };
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
                                nsCycleCollectionJSRuntime *aJSRuntime,
-                               nsICycleCollectorListener *aListener)
+                               nsICycleCollectorListener *aListener,
+                               bool aMergeCompartments)
     : mNodeBuilder(aGraph.mNodes),
       mEdgeBuilder(aGraph.mEdges),
       mWeakMaps(aGraph.mWeakMaps),
       mJSParticipant(nsnull),
-      mListener(aListener)
+      mJSCompParticipant(xpc_JSCompartmentParticipant()),
+      mListener(aListener),
+      mMergeCompartments(aMergeCompartments)
 {
     if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nsnull,
                            sizeof(PtrToNodeEntry), 32768))
@@ -1684,6 +1702,8 @@ GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
     }
 
     mFlags |= flags;
+
+    mMergeCompartments = mMergeCompartments && NS_LIKELY(!WantAllTraces());
 }
 
 GCGraphBuilder::~GCGraphBuilder()
@@ -1769,7 +1789,11 @@ GCGraphBuilder::NoteXPCOMRoot(nsISupports *root)
 NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteJSRoot(void *root)
 {
-    NoteRoot(root, mJSParticipant);
+    if (JSCompartment *comp = MergeCompartment(root)) {
+        NoteRoot(comp, mJSCompParticipant);
+    } else {
+        NoteRoot(root, mJSParticipant);
+    }
 }
 
 NS_IMETHODIMP_(void)
@@ -1864,7 +1888,11 @@ GCGraphBuilder::NoteJSChild(void *child)
     }
 
     if (xpc_GCThingIsGrayCCThing(child) || NS_UNLIKELY(WantAllTraces())) {
-        NoteChild(child, mJSParticipant, edgeName);
+        if (JSCompartment *comp = MergeCompartment(child)) {
+            NoteChild(comp, mJSCompParticipant, edgeName);
+        } else {
+            NoteChild(child, mJSParticipant, edgeName);
+        }
     }
 }
 
@@ -1884,7 +1912,11 @@ GCGraphBuilder::AddWeakMapNode(void *node)
     if (!xpc_GCThingIsGrayCCThing(node) && !WantAllTraces())
         return nsnull;
 
-    return AddNode(node, mJSParticipant);
+    if (JSCompartment *comp = MergeCompartment(node)) {
+        return AddNode(comp, mJSCompParticipant);
+    } else {
+        return AddNode(node, mJSParticipant);
+    }
 }
 
 NS_IMETHODIMP_(void)
@@ -2678,7 +2710,8 @@ nsCycleCollector::CleanupAfterCollection()
 }
 
 void
-nsCycleCollector::Collect(nsCycleCollectorResults *aResults,
+nsCycleCollector::Collect(bool aMergeCompartments,
+                          nsCycleCollectorResults *aResults,
                           PRUint32 aTryCollections,
                           nsICycleCollectorListener *aListener)
 {
@@ -2693,7 +2726,7 @@ nsCycleCollector::Collect(nsCycleCollectorResults *aResults,
         GCIfNeeded(true);
         if (aListener && NS_FAILED(aListener->Begin()))
             aListener = nsnull;
-        if (!(BeginCollection(aListener) &&
+        if (!(BeginCollection(aMergeCompartments, aListener) &&
               FinishCollection(aListener)))
             break;
 
@@ -2704,7 +2737,8 @@ nsCycleCollector::Collect(nsCycleCollectorResults *aResults,
 }
 
 bool
-nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
+nsCycleCollector::BeginCollection(bool aMergeCompartments,
+                                  nsICycleCollectorListener *aListener)
 {
     // aListener should be Begin()'d before this
     TimeLog timeLog;
@@ -2712,7 +2746,7 @@ nsCycleCollector::BeginCollection(nsICycleCollectorListener *aListener)
     if (mParams.mDoNothing)
         return false;
 
-    GCGraphBuilder builder(mGraph, mJSRuntime, aListener);
+    GCGraphBuilder builder(mGraph, mJSRuntime, aListener, aMergeCompartments);
     if (!builder.Initialized())
         return false;
 
@@ -2858,10 +2892,10 @@ nsCycleCollector::Shutdown()
     if (mParams.mLogGraphs) {
         listener = new nsCycleCollectorLogger();
     }
-    Collect(nsnull, SHUTDOWN_COLLECTIONS(mParams), listener);
+    Collect(false, nsnull, SHUTDOWN_COLLECTIONS(mParams), listener);
 
 #ifdef DEBUG_CC
-    GCGraphBuilder builder(mGraph, mJSRuntime, nsnull);
+    GCGraphBuilder builder(mGraph, mJSRuntime, nsnull, false);
     mScanInProgress = true;
     SelectPurple(builder);
     mScanInProgress = false;
@@ -3011,6 +3045,7 @@ class nsCycleCollectorRunner : public nsRunnable
     bool mRunning;
     bool mShutdown;
     bool mCollected;
+    bool mMergeCompartments;
 
 public:
     NS_IMETHOD Run()
@@ -3045,7 +3080,7 @@ public:
             }
 
             mCollector->mJSRuntime->NotifyEnterCycleCollectionThread();
-            mCollected = mCollector->BeginCollection(mListener);
+            mCollected = mCollector->BeginCollection(mMergeCompartments, mListener);
             mCollector->mJSRuntime->NotifyLeaveCycleCollectionThread();
 
             mReply.Notify();
@@ -3062,12 +3097,14 @@ public:
           mReply(mLock, "cycle collector reply condvar"),
           mRunning(false),
           mShutdown(false),
-          mCollected(false)
+          mCollected(false),
+          mMergeCompartments(false)
     {
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     }
 
-    void Collect(nsCycleCollectorResults *aResults,
+    void Collect(bool aMergeCompartments,
+                 nsCycleCollectorResults *aResults,
                  nsICycleCollectorListener *aListener)
     {
         NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -3093,13 +3130,14 @@ public:
         if (aListener && NS_FAILED(aListener->Begin()))
             aListener = nsnull;
         mListener = aListener;
+        mMergeCompartments = aMergeCompartments;
 
         if (mCollector->mJSRuntime->NotifyLeaveMainThread()) {
             mRequest.Notify();
             mReply.Wait();
             mCollector->mJSRuntime->NotifyEnterMainThread();
         } else {
-            mCollected = mCollector->BeginCollection(mListener);
+            mCollected = mCollector->BeginCollection(aMergeCompartments, mListener);
         }
 
         mListener = nsnull;
@@ -3182,7 +3220,8 @@ nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes)
 }
 
 void
-nsCycleCollector_collect(nsCycleCollectorResults *aResults,
+nsCycleCollector_collect(bool aMergeCompartments,
+                         nsCycleCollectorResults *aResults,
                          nsICycleCollectorListener *aListener)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -3193,9 +3232,9 @@ nsCycleCollector_collect(nsCycleCollectorResults *aResults,
     }
 
     if (sCollectorRunner) {
-        sCollectorRunner->Collect(aResults, listener);
+        sCollectorRunner->Collect(aMergeCompartments, aResults, listener);
     } else if (sCollector) {
-        sCollector->Collect(aResults, 1, listener);
+        sCollector->Collect(aMergeCompartments, aResults, 1, listener);
     }
 }
 

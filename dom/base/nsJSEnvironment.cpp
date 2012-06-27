@@ -2989,7 +2989,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   }
 
   nsCycleCollectorResults ccResults;
-  nsCycleCollector_collect(&ccResults, aListener);
+  nsCycleCollector_collect(false, &ccResults, aListener);
   sCCollectedWaitingForGC += ccResults.mFreedRefCounted + ccResults.mFreedGCed;
 
   // If we collected a substantial amount of cycles, poke the GC since more objects
