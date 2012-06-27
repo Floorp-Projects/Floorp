@@ -308,8 +308,8 @@ public class GeckoInputConnection
         Span selection = Span.clamp(currentStart, currentEnd, content);
 
         if (selection.start != currentStart || selection.end != currentEnd) {
-            Log.e(LOGTAG, "CLAMPING BOGUS SELECTION (" + currentStart + ", " + currentEnd
-                          + "] -> (" + selection.start + ", " + selection.end + "]",
+            Log.e(LOGTAG, "CLAMPING BOGUS SELECTION [" + currentStart + ", " + currentEnd
+                          + ") -> [" + selection.start + ", " + selection.end + ")",
                           new AssertionError());
             super.setSelection(selection.start, selection.end);
         }
@@ -505,7 +505,7 @@ public class GeckoInputConnection
             if (start != a || end != b) {
                 if (DEBUG) {
                     Log.d(LOGTAG, String.format(
-                          ". . . notifySelectionChange: current editable selection: [%d, %d]",
+                          ". . . notifySelectionChange: current editable selection: [%d, %d)",
                           a, b));
                 }
 
@@ -1134,8 +1134,8 @@ public class GeckoInputConnection
         // Does the editable have a composing span?
         if (start < 0 || end < 0) {
             if (start != -1 || end != -1) {
-                throw new IndexOutOfBoundsException("Bad composing span (" + start + "," + end
-                                                     + "], contentLength=" + content.length());
+                throw new IndexOutOfBoundsException("Bad composing span [" + start + "," + end
+                                                     + "), contentLength=" + content.length());
             }
             return null;
         }
