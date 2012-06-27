@@ -662,13 +662,6 @@
             popup.setAttribute("width", width > 100 ? width : 100);
 
             var yOffset = outerRect.bottom - innerRect.bottom;
-
-            // setConsumeRollupEvent() before we call openPopup(), 
-            // see bug #404438 for more details
-            popup.popupBoxObject.setConsumeRollupEvent(
-              this.consumeRollupEvent ? 
-                Ci.nsIPopupBoxObject.ROLLUP_CONSUME : 
-                Ci.nsIPopupBoxObject.ROLLUP_NO_CONSUME);
             popup.openPopup(this.inputField, "after_start", 0, yOffset, false, false);
           }
         ]]></body>

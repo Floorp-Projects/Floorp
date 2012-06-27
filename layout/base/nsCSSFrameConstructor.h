@@ -916,6 +916,20 @@ private:
       // iterator must not be done when this is called.
       inline bool SkipItemsWantingParentType(ParentType aParentType);
 
+#ifdef MOZ_FLEXBOX
+      // Skip over non-replaced inline frames and positioned frames.
+      // Return whether the iterator is done after doing that.
+      // The iterator must not be done when this is called.
+      inline bool SkipItemsThatNeedAnonFlexItem(
+        const nsFrameConstructorState& aState);
+
+      // Skip to the first frame that is a non-replaced inline or is
+      // positioned.  Return whether the iterator is done after doing that.
+      // The iterator must not be done when this is called.
+      inline bool SkipItemsThatDontNeedAnonFlexItem(
+        const nsFrameConstructorState& aState);
+#endif // MOZ_FLEXBOX
+
       // Skip over whitespace.  Return whether the iterator is done after doing
       // that.  The iterator must not be done, and must be pointing to a
       // whitespace item when this is called.
@@ -1030,6 +1044,12 @@ private:
       return FCDATA_DESIRED_PARENT_TYPE(mFCData->mBits);
     }
 
+    // Indicates whether (when in a flexbox container) this item needs to be
+    // wrapped in an anonymous block.
+#ifdef MOZ_FLEXBOX
+    bool NeedsAnonFlexItem(const nsFrameConstructorState& aState);
+#endif // MOZ_FLEXBOX
+
     // Don't call this unless the frametree really depends on the answer!
     // Especially so for generated content, where we don't want to reframe
     // things.
@@ -1096,6 +1116,19 @@ private:
   private:
     FrameConstructionItem(const FrameConstructionItem& aOther) MOZ_DELETE; /* not implemented */
   };
+
+  /**
+   * Function to create the anonymous flex items that we need.
+   * aParentFrame _must_ be a nsFlexContainerFrame -- the caller is responsible
+   * for checking this.
+   * @param aItems the child frame construction items before pseudo creation
+   * @param aParentFrame the flex container frame
+   */
+#ifdef MOZ_FLEXBOX
+  void CreateNeededAnonFlexItems(nsFrameConstructorState& aState,
+                                    FrameConstructionItemList& aItems,
+                                    nsIFrame* aParentFrame);
+#endif // MOZ_FLEXBOX
 
   /**
    * Function to create the table pseudo items we need.
