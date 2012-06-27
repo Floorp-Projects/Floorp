@@ -1414,20 +1414,24 @@ class TypedArrayTemplate
             return NULL;
         JS_ASSERT(obj->getAllocKind() == gc::FINALIZE_OBJECT8_BACKGROUND);
 
-        types::TypeObject *type;
         if (proto) {
-            type = proto->getNewType(cx);
-        } else {
-            /*
-             * Specialize the type of the object on the current scripted location,
-             * and mark the type as definitely a typed array.
-             */
-            JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(protoClass());
-            type = types::GetTypeCallerInitObject(cx, key);
+            types::TypeObject *type = proto->getNewType(cx);
             if (!type)
                 return NULL;
+            obj->setType(type);
+        } else if (cx->typeInferenceEnabled()) {
+            if (len * sizeof(NativeType) >= TypedArray::SINGLETON_TYPE_BYTE_LENGTH) {
+                if (!obj->setSingletonType(cx))
+                    return NULL;
+            } else {
+                jsbytecode *pc;
+                JSScript *script = cx->stack.currentScript(&pc);
+                if (script) {
+                    if (!types::SetInitializerObjectType(cx, script, pc, obj))
+                        return NULL;
+                }
+            }
         }
-        obj->setType(type);
 
         obj->setSlot(FIELD_TYPE, Int32Value(ArrayTypeID()));
         obj->setSlot(FIELD_BUFFER, ObjectValue(*bufobj));
