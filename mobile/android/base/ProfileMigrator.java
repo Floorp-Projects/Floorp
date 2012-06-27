@@ -326,6 +326,14 @@ public class ProfileMigrator {
                                            false);
     }
 
+    // Only to be used for testing. Allows forcing Migration to rerun.
+    public void resetMigration() {
+        SharedPreferences.Editor editor = getPreferences().edit();
+        editor.putBoolean(PREFS_MIGRATE_BOOKMARKS_DONE, false);
+        editor.putBoolean(PREFS_MIGRATE_HISTORY_DONE, false);
+        editor.commit();
+    }
+
     // Has migration run before?
     protected boolean hasMigrationRun() {
         return areBookmarksMigrated()
