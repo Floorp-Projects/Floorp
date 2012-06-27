@@ -42,6 +42,7 @@ public class GeckoPreferences
     private ArrayList<String> mPreferencesList;
     private PreferenceScreen mPreferenceScreen;
     private static boolean sIsCharEncodingEnabled = false;
+    private static final String NON_PREF_PREFIX = "android.not_a_preference.";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +106,15 @@ public class GeckoPreferences
                 initGroups((PreferenceGroup)pref);
             else {
                 pref.setOnPreferenceChangeListener(this);
-                if (pref.getKey() != null)
+
+                // Some Preference UI elements are not actually preferences,
+                // but they require a key to work correctly. For example,
+                // "Clear private data" requires a key for its state to be
+                // saved when the orientation changes. It uses the
+                // "android.not_a_preference.privacy.clear" key - which doesn't
+                // exist in Gecko - to satisfy this requirement.
+                String key = pref.getKey();
+                if (key != null && !key.startsWith(NON_PREF_PREFIX))
                     mPreferencesList.add(pref.getKey());
             }
         }
