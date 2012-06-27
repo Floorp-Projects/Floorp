@@ -4075,6 +4075,29 @@ IterateCells(JSRuntime *rt, JSCompartment *compartment, AllocKind thingKind,
     }
 }
 
+void
+IterateGrayObjects(JSCompartment *compartment, GCThingCallback *cellCallback, void *data)
+{
+    JS_ASSERT(compartment);
+    JSRuntime *rt = compartment->rt;
+    JS_ASSERT(!rt->gcRunning);
+
+    AutoLockGC lock(rt);
+    AutoHeapSession session(rt);
+    rt->gcHelperThread.waitBackgroundSweepEnd();
+    AutoUnlockGC unlock(rt);
+
+    AutoCopyFreeListToArenas copy(rt);
+
+    for (size_t finalizeKind = 0; finalizeKind <= FINALIZE_OBJECT_LAST; finalizeKind++) {
+        for (CellIterUnderGC i(compartment, AllocKind(finalizeKind)); !i.done(); i.next()) {
+            Cell *cell = i.getCell();
+            if (cell->isMarked(GRAY))
+                cellCallback(data, cell);
+        }
+    }
+}
+
 namespace gc {
 
 JSCompartment *

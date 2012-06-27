@@ -465,6 +465,23 @@ js::GCThingIsMarkedGray(void *thing)
     return reinterpret_cast<gc::Cell *>(thing)->isMarked(gc::GRAY);
 }
 
+JS_FRIEND_API(JSCompartment*)
+js::GetGCThingCompartment(void *thing)
+{
+    JS_ASSERT(thing);
+    return reinterpret_cast<gc::Cell *>(thing)->compartment();
+}
+
+JS_FRIEND_API(void)
+js::VisitGrayWrapperTargets(JSCompartment *comp, GCThingCallback *callback, void *closure)
+{
+    for (WrapperMap::Enum e(comp->crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        gc::Cell *thing = e.front().key.wrapped;
+        if (thing->isMarked(gc::GRAY))
+            callback(closure, thing);
+    }
+}
+
 JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback)
 {
