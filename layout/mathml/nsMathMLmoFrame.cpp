@@ -339,14 +339,24 @@ nsMathMLmoFrame::ProcessOperatorData()
     mFlags &= ~NS_MATHML_OPERATOR_FORM; // clear the old form bits
     mFlags |= form;
 
-    // lookup the operator dictionary
-    float lspace = 0.0f;
-    float rspace = 0.0f;
-    nsAutoString data;
-    mMathMLChar.GetData(data);
-    bool found = nsMathMLOperators::LookupOperator(data, form, &mFlags, &lspace, &rspace);
-    if (found && (lspace || rspace)) {
-      // cache the default values of lspace & rspace that we get from the dictionary.
+    // Use the default value suggested by the MathML REC.
+    // http://www.w3.org/TR/MathML/chapter3.html#presm.mo.attrs
+    // thickmathspace = 5/18em
+    float lspace = 5.0/18.0;
+    float rspace = 5.0/18.0;
+    if (NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags)) {
+      // mMathMLChar has been reset in ProcessTextData so we can not find it
+      // in the operator dictionary. The operator dictionary always uses
+      // lspace = rspace = 0 for invisible operators.
+      lspace = rspace = 0.0;
+    } else {
+      // lookup the operator dictionary
+      nsAutoString data;
+      mMathMLChar.GetData(data);
+      nsMathMLOperators::LookupOperator(data, form, &mFlags, &lspace, &rspace);
+    }
+    if (lspace || rspace) {
+      // Cache the default values of lspace and rspace.
       // since these values are relative to the 'em' unit, convert to twips now
       nscoord em;
       nsRefPtr<nsFontMetrics> fm;

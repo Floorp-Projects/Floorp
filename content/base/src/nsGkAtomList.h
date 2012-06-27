@@ -1684,6 +1684,7 @@ GK_ATOM(comboboxControlFrame, "ComboboxControlFrame")
 GK_ATOM(comboboxDisplayFrame, "ComboboxDisplayFrame")
 GK_ATOM(deckFrame, "DeckFrame")
 GK_ATOM(fieldSetFrame, "FieldSetFrame")
+GK_ATOM(flexContainerFrame, "FlexContainerFrame")
 GK_ATOM(formControlFrame, "FormControlFrame") // radio or checkbox
 GK_ATOM(frameSetFrame, "FrameSetFrame")
 GK_ATOM(gfxButtonControlFrame, "gfxButtonControlFrame")

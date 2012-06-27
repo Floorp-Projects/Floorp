@@ -5926,11 +5926,18 @@ static const IDBConstant sIDBConstants[] = {
 static JSBool
 IDBConstantGetter(JSContext *cx, JSHandleObject obj, JSHandleId id, jsval* vp)
 {
-  MOZ_ASSERT(JSID_IS_INT(id));
-  
-  int8_t index = JSID_TO_INT(id);
-  
-  MOZ_ASSERT((uint8_t)index < mozilla::ArrayLength(sIDBConstants));
+  JSString *idstr = JSID_TO_STRING(id);
+  unsigned index;
+  for (index = 0; index < mozilla::ArrayLength(sIDBConstants); index++) {
+    JSBool match;
+    if (!JS_StringEqualsAscii(cx, idstr, sIDBConstants[index].name, &match)) {
+      return JS_FALSE;
+    }
+    if (match) {
+      break;
+    }
+  }
+  MOZ_ASSERT(index < mozilla::ArrayLength(sIDBConstants));
 
   const IDBConstant& c = sIDBConstants[index];
 
@@ -6015,9 +6022,9 @@ DefineIDBInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
       continue;
     }
 
-    if (!::JS_DefinePropertyWithTinyId(cx, obj, c.name, i, JSVAL_VOID,
-                                       IDBConstantGetter, nsnull,
-                                       JSPROP_ENUMERATE)) {
+    if (!JS_DefineProperty(cx, obj, c.name, JSVAL_VOID,
+                           IDBConstantGetter, nsnull,
+                           JSPROP_ENUMERATE)) {
       return NS_ERROR_UNEXPECTED;
     }
   }

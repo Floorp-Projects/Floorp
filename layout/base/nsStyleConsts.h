@@ -392,6 +392,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_DISPLAY_POPUP                  27
 #define NS_STYLE_DISPLAY_GROUPBOX               28
 #endif
+#ifdef MOZ_FLEXBOX
+#define NS_STYLE_DISPLAY_FLEX                   29
+#define NS_STYLE_DISPLAY_INLINE_FLEX            30
+#endif // MOZ_FLEXBOX
 
 // See nsStyleDisplay
 #define NS_STYLE_FLOAT_NONE                     0
