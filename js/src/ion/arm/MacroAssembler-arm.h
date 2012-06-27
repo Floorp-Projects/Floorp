@@ -419,7 +419,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void mov(ImmWord imm, Register dest) {
         ma_mov(Imm32(imm.value), dest);
     }
-
     void mov(Register src, Address dest) {
         JS_NOT_REACHED("NYI-IC");
     }
