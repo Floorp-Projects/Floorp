@@ -5,7 +5,9 @@
 const EXPORTED_SYMBOLS = ["SocialService"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/SocialProvider.jsm");
 
 const MANIFEST_PREFS = Services.prefs.getBranch("social.manifest.");
 
@@ -19,7 +21,7 @@ const SocialService = {
       }
       catch (err) {}
       if (manifest && typeof(manifest) == "object") {
-        memo[manifest.origin] = Object.create(manifest);
+        memo[manifest.origin] = new SocialProvider(manifest);
       }
       return memo;
     }, {}, this);

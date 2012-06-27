@@ -5,8 +5,9 @@
 function run_test() {
   let manifests = [0, 1, 2].map(function (i) {
     return {
-      origin: "http://example" + i + ".com",
       name: "provider " + i,
+      workerURL: "http://example" + i + ".com/worker.js",
+      origin: "http://example" + i + ".com"
     };
   });
   manifests.forEach(function (manifest) {
@@ -26,8 +27,9 @@ function test(manifests, next) {
     let manifest = manifests[i];
     let provider = yield SocialService.getProvider(manifest.origin, next);
     do_check_neq(provider, null);
-    do_check_eq(provider.origin, manifest.origin);
     do_check_eq(provider.name, manifest.name);
+    do_check_eq(provider.workerURL, manifest.workerURL);
+    do_check_eq(provider.origin, manifest.origin);
   }
   do_check_eq((yield SocialService.getProvider("bogus", next)), null);
 }
