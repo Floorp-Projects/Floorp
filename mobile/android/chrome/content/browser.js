@@ -783,6 +783,7 @@ var BrowserApp = {
   sanitize: function (aItems) {
     let sanitizer = new Sanitizer();
     let json = JSON.parse(aItems);
+    let success = true;
 
     for (let key in json) {
       if (!json[key])
@@ -792,8 +793,16 @@ var BrowserApp = {
         sanitizer.clearItem(key);
       } catch (e) {
         dump("sanitize error: " + e);
+        success = false;
       }
     }
+
+    sendMessageToJava({
+      gecko: {
+        type: "Sanitize:Finished",
+        success: success
+      }
+    });
   },
 
   scrollToFocusedInput: function(aBrowser) {
