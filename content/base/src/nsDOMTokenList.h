@@ -24,7 +24,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMTokenList)
   NS_DECL_NSIDOMDOMTOKENLIST
 
-  nsDOMTokenList(nsGenericElement* aElement, nsIAtom* aAttrAtom);
+  nsDOMTokenList(mozilla::dom::FragmentOrElement* aElement, nsIAtom* aAttrAtom);
 
   void DropReference();
 
@@ -50,7 +50,7 @@ protected:
   void AddInternal(const nsAttrValue* aAttr, const nsAString& aToken);
   void RemoveInternal(const nsAttrValue* aAttr, const nsAString& aToken);
 
-  nsGenericElement* mElement;
+  mozilla::dom::FragmentOrElement* mElement;
   nsCOMPtr<nsIAtom> mAttrAtom;
 };
 
