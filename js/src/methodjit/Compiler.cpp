@@ -4784,6 +4784,13 @@ mjit::Compiler::jsop_getprop(PropertyName *name, JSValueType knownType,
          * The typed array length always fits in an int32.
          */
         if (!types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_TYPED_ARRAY)) {
+            if (top->isConstant()) {
+                JSObject *obj = &top->getValue().toObject();
+                uint32_t length = TypedArray::getLength(obj);
+                frame.pop();
+                frame.push(Int32Value(length));
+                return true;
+            }
             bool isObject = top->isTypeKnown();
             if (!isObject) {
                 Jump notObject = frame.testObject(Assembler::NotEqual, top);
@@ -6684,14 +6691,15 @@ mjit::Compiler::jsop_newinit()
         stubArg = (void *) baseobj;
     }
 
+    JSProtoKey key = isArray ? JSProto_Array : JSProto_Object;
+
     /*
      * Don't bake in types for non-compileAndGo scripts, or at initializers
      * producing objects with singleton types.
      */
     RootedTypeObject type(cx);
-    if (globalObj && !types::UseNewTypeForInitializer(cx, script, PC)) {
-        type = types::TypeScript::InitObject(cx, script, PC,
-                                             isArray ? JSProto_Array : JSProto_Object);
+    if (globalObj && !types::UseNewTypeForInitializer(cx, script, PC, key)) {
+        type = types::TypeScript::InitObject(cx, script, PC, key);
         if (!type)
             return false;
     }

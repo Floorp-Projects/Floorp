@@ -251,6 +251,12 @@ struct TypedArray {
         return slotWidth(getType(obj));
     }
 
+    /*
+     * Byte length above which created typed arrays and data views will have
+     * singleton types regardless of the context in which they are created.
+     */
+    static const uint32_t SINGLETON_TYPE_BYTE_LENGTH = 1024 * 1024 * 10;
+
     static int lengthOffset();
     static int dataOffset();
 };
