@@ -36,6 +36,11 @@ public class testMigration extends ContentProviderTest {
     private static final String ASSET_SUFFIX = ".zip";
     private static final String DB_NAME = "places.sqlite";
 
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     private File extractAsset(String dbName) {
         File oldDbLocation = null;
         boolean foundFile = false;
@@ -94,8 +99,6 @@ public class testMigration extends ContentProviderTest {
     }
 
     public void testMigration() {
-        setTestType("mochitest");
-
         Context context = (Context)getActivity();
 
         File oldDbLocation = extractAsset(DB_NAME);

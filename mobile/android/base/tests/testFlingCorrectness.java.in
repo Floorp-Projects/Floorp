@@ -11,8 +11,12 @@ import android.app.Instrumentation;
  * - Fling the page downwards so we get back to the top and verify.
  */
 public class testFlingCorrectness extends PixelTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testFlingCorrectness() {
-        setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
 
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
