@@ -6,8 +6,12 @@ import android.app.Activity;
 import android.util.Log;
 
 public class testAboutPage extends BaseTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testAboutPage() {
-        setTestType("mochitest");
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         // Load the about: page

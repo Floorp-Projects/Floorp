@@ -3,7 +3,7 @@ package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
 
-class PixelTest extends BaseTest {
+abstract class PixelTest extends BaseTest {
     private static final long PAINT_CLEAR_DELAY = 1000; // milliseconds
 
     protected final PaintedSurface loadAndPaint(String url) {
