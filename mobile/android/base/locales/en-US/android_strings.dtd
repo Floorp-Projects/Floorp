@@ -47,6 +47,10 @@
 
 <!ENTITY reload "Reload">
 <!ENTITY forward "Forward">
+<!ENTITY menu "Menu">
+<!ENTITY back "Back">
+<!ENTITY stop "Stop">
+<!ENTITY site_security "Site Security">
 
 <!ENTITY close_tab "Close Tab">
 <!ENTITY new_tab "New Tab">
@@ -92,6 +96,7 @@
 
 <!ENTITY addons "Add-ons">
 <!ENTITY downloads "Downloads">
+<!ENTITY apps "Apps">
 <!ENTITY char_encoding "Character Encoding">
 
 <!ENTITY share "Share">

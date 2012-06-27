@@ -343,7 +343,7 @@
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:button class="box-inherit button-menubutton-button"
                   anonid="button" flex="1" allowevents="true"
-                  xbl:inherits="disabled,crop,image,label,accessKey,command,
+                  xbl:inherits="disabled,crop,image,label,accesskey,command,
                                 buttonover,buttondown,align,dir,pack,orient">
         <children/>
       </xul:button>
