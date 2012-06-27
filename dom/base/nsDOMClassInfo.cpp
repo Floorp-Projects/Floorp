@@ -534,7 +534,6 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 
 #undef None // something included above defines this preprocessor symbol, maybe Xlib headers
 #include "WebGLContext.h"
-#include "nsICanvasRenderingContextInternal.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -4590,10 +4589,6 @@ nsDOMClassInfo::Init()
 
   // Non-proxy bindings
   mozilla::dom::Register(nameSpaceManager);
-
-  if (!AzureCanvasEnabled()) {
-    nameSpaceManager->RegisterDefineDOMInterface(NS_LITERAL_STRING("CanvasRenderingContext2D"), NULL);
-  }
 
   sIsInitialized = true;
 

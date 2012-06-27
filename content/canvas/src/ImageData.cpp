@@ -8,7 +8,6 @@
 
 #include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
-#include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 
 #include "jsapi.h"
 
