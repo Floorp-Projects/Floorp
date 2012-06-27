@@ -77,7 +77,6 @@ INCLUDES	+= \
 		-I$(srcdir)/../../../layout/generic \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../html/content/src \
-		-I$(srcdir)/../../../js/xpconnect/src \
 		-I$(srcdir)/../../../dom/base \
 		$(NULL)
 
