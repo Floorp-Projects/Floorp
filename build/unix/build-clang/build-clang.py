@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-llvm_revision = "158160"
+llvm_revision = "159219"
 moz_version = "moz0"
 
 ##############################################
@@ -96,10 +96,7 @@ if not os.path.exists(source_dir):
            compiler_rt_source_dir, llvm_revision)
     os.symlink("../../clang", llvm_source_dir + "/tools/clang")
     os.symlink("../../compiler-rt", llvm_source_dir + "/projects/compiler-rt")
-    if isDarwin:
-        patch("clang-no-ios.patch", 0, clang_source_dir)
-        patch("compiler-rt-no-ios.patch", 0, compiler_rt_source_dir)
-    else:
+    if not isDarwin:
         patch("old-ld-hack.patch", 1, llvm_source_dir)
         patch("compiler-rt-gnu89-inline.patch", 0, compiler_rt_source_dir)
 
