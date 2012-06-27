@@ -143,6 +143,14 @@ public final class GeckoProfile {
         return mDir;
     }
 
+    public File getFile(String aFile) {
+        File f = getDir();
+        if (f == null)
+            return null;
+
+        return new File(f, aFile);
+    }
+
     public File getFilesDir() {
         return mContext.getFilesDir();
     }

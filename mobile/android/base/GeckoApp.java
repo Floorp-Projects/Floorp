@@ -509,6 +509,7 @@ abstract public class GeckoApp
             R.id.find_in_page,
             R.id.addons,
             R.id.downloads,
+            R.id.apps,
             R.id.site_settings
         };
 
@@ -691,6 +692,9 @@ abstract public class GeckoApp
                 return true;
             case R.id.downloads:
                 loadUrlInTab("about:downloads");
+                return true;
+            case R.id.apps:
+                loadUrlInTab("about:apps");
                 return true;
             case R.id.char_encoding:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
@@ -1224,7 +1228,7 @@ abstract public class GeckoApp
                 String launchPath = message.getString("launchPath");
                 String iconURL = message.getString("iconURL");
                 String uniqueURI = message.getString("uniqueURI");
-                GeckoAppShell.createShortcut(name, launchPath, uniqueURI, iconURL, "webapp");
+                GeckoAppShell.installWebApp(name, launchPath, uniqueURI, iconURL);
             } else if (event.equals("WebApps:Uninstall")) {
                 String uniqueURI = message.getString("uniqueURI");
                 GeckoAppShell.uninstallWebApp(uniqueURI);

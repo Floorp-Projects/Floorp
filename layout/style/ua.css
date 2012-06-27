@@ -165,6 +165,12 @@
   height: 100%;
 }
 
+*|*::-moz-anonymous-flex-item {
+  /* Anonymous blocks that wrap contiguous runs of inline non-replaced
+   * content inside of a flex container. */
+  display: block;
+}
+
 *|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
   /* Collection of pages in print/print preview. Visual styles may only appear
    * in print preview. */
