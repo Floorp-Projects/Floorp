@@ -10,7 +10,10 @@ import android.content.Context;
 import android.content.ContentProviderResult;
 import android.content.ContentProviderOperation;
 import android.content.OperationApplicationException;
+import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.content.pm.ApplicationInfo;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Build;
 import android.net.Uri;
@@ -33,33 +36,60 @@ import java.util.HashMap;
  * will not affect or be affected by any UI-related code. This is basically
  * a heavily adapted port of Android's ProviderTestCase2 to work on Mozilla's
  * infrastructure.
+ *
+ * For some tests, we need to have access to UI parts, or at least launch
+ * the activity so the assets with test data become available, which requires
+ * that we derive this test from BaseTest and consequently pull in some more
+ * UI code than we'd ideally want. Furthermore, we need to pass the
+ * Activity and not the instrumentation Context for the UI part to find some
+ * of its required resources.
+ * Similarly, we need to pass the Activity instead of the Instrumentation
+ * Context down to some of our users (still wrapped in the Delegating Provider)
+ * because they will stop working correctly if we do not. A typical problem
+ * is that databases used in the ContentProvider will be attempted to be
+ * opened twice.
  */
-abstract class ContentProviderTest extends AndroidTestCase {
+abstract class ContentProviderTest extends BaseTest {
     protected ContentProvider mProvider;
     protected MockContentResolver mResolver;
-    protected Assert mAsserter;
     protected ClassLoader mClassLoader;
     protected ArrayList<Runnable> mTests;
     protected Class mProviderClass;
     protected Class mProviderContract;
     protected String mProviderAuthority;
     protected IsolatedContext mProviderContext;
-    protected String mLogFile;
 
     private class ContentProviderMockContext extends MockContext {
         @Override
         public Resources getResources() {
-            return getContext().getResources();
+            // We will fail to find some resources if we don't point
+            // at the original activity.
+            return ((Context)getActivity()).getResources();
+        }
+
+        @Override
+        public String getPackageResourcePath() {
+            return getInstrumentation().getContext().getPackageResourcePath();
         }
 
         @Override
         public File getDir(String name, int mode) {
-            return getContext().getDir(this.getClass().getSimpleName() + "_" + name, mode);
+            return getInstrumentation().getContext().getDir(this.getClass().getSimpleName() + "_" + name, mode);
         }
 
         @Override
         public Context getApplicationContext() {
             return this;
+        }
+
+        @Override
+        public SharedPreferences getSharedPreferences(String name, int mode) {
+            return getInstrumentation().getContext().getSharedPreferences(name, mode);
+        }
+
+        @Override
+        public ApplicationInfo getApplicationInfo() {
+            return getInstrumentation().getContext().getApplicationInfo();
         }
     }
 
@@ -139,7 +169,7 @@ abstract class ContentProviderTest extends AndroidTestCase {
         RenamingDelegatingContext targetContextWrapper =
                 new RenamingDelegatingContext(
                     new ContentProviderMockContext(),
-                    getContext(),
+                    (Context)getActivity(),
                     filenamePrefix);
 
         mProviderContext = new IsolatedContext(mResolver, targetContextWrapper);
@@ -151,12 +181,6 @@ abstract class ContentProviderTest extends AndroidTestCase {
         mProvider.attachInfo(mProviderContext, null);
 
         mResolver.addProvider(mProviderAuthority, mProvider);
-    }
-
-    private void loadRobotiumConfig() {
-        String configFile = FennecNativeDriver.getFile("/mnt/sdcard/robotium.config");
-        HashMap config = FennecNativeDriver.convertTextToTable(configFile);
-        mLogFile = (String) config.get("logfile");
     }
 
     public Uri getContentUri(String className) throws Exception {
@@ -188,17 +212,6 @@ abstract class ContentProviderTest extends AndroidTestCase {
         mAsserter.setTestName(this.getClass().getName() + " - " + testName);
     }
 
-    public void setTestType(String type) {
-        if (type.equals("talos")) {
-            mAsserter = new FennecTalosAssert();
-        } else {
-            mAsserter = new FennecMochitestAssert();
-        }
-
-        mAsserter.setLogFile(mLogFile);
-        mAsserter.setTestName(this.getClass().getName());
-    }
-
     public void setUp() throws Exception {
         throw new Exception("You should call setUp(providerClassName, authorityUriField) instead");
     }
@@ -206,10 +219,9 @@ abstract class ContentProviderTest extends AndroidTestCase {
     public void setUp(String providerClassName, String authorityUriField) throws Exception {
         super.setUp();
 
-        mClassLoader = getContext().getClassLoader();
+        mClassLoader = getInstrumentation().getContext().getClassLoader();
         mTests = new ArrayList<Runnable>();
 
-        loadRobotiumConfig();
         setUpProviderClassAndAuthority(providerClassName, authorityUriField);
         setUpContentProvider();
     }
@@ -232,5 +244,9 @@ abstract class ContentProviderTest extends AndroidTestCase {
             mProviderContext.deleteDatabase(databaseName);
 
         super.tearDown();
+    }
+
+    public AssetManager getAssetManager()  {
+        return getInstrumentation().getContext().getAssets();
     }
 }
