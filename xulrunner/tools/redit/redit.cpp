@@ -93,7 +93,7 @@ namespace {
     }
   };
 
-  typedef Scoped<ScopedResourceUpdateTraits> ScopedResourceUpdate;
+  typedef mozilla::Scoped<ScopedResourceUpdateTraits> ScopedResourceUpdate;
 };
 
 #ifdef __MINGW32__
