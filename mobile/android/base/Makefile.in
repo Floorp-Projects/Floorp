@@ -71,6 +71,7 @@ FENNEC_JAVA_FILES = \
   LinkTextView.java \
   MenuItemActionBar.java \
   MenuItemDefault.java \
+  MultiChoicePreference.java \
   NSSBridge.java \
   PropertyAnimator.java \
   ProfileMigrator.java \
