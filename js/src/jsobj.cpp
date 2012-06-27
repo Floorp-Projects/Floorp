@@ -5768,13 +5768,6 @@ CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
         *attrsp = JSPROP_PERMANENT;
         break;
 
-      case JSACC_PARENT:
-        JS_ASSERT(!writing);
-        pobj = obj;
-        vp->setObject(*obj->getParent());
-        *attrsp = JSPROP_READONLY | JSPROP_PERMANENT;
-        break;
-
       default:
         if (!obj->lookupGeneric(cx, id, pobj.address(), &prop))
             return JS_FALSE;
