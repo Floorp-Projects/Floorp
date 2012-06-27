@@ -313,27 +313,35 @@ Translate2D(gfx3DMatrix& aTransform, const gfxPoint& aOffset)
 }
 
 void
-CompositorParent::TranslateFixedLayers(Layer* aLayer,
-                                       const gfxPoint& aTranslation)
+CompositorParent::TransformFixedLayers(Layer* aLayer,
+                                       const gfxPoint& aTranslation,
+                                       const gfxPoint& aScaleDiff)
 {
   if (aLayer->GetIsFixedPosition() &&
       !aLayer->GetParent()->GetIsFixedPosition()) {
+    // When a scale has been applied to a layer, it focuses around (0,0).
+    // The anchor position is used here as a scale focus point (assuming that
+    // aScaleDiff has already been applied) to re-focus the scale.
+    const gfxPoint& anchor = aLayer->GetFixedPositionAnchor();
+    gfxPoint translation(aTranslation.x - (anchor.x - anchor.x / aScaleDiff.x),
+                         aTranslation.y - (anchor.y - anchor.y / aScaleDiff.y));
+
     gfx3DMatrix layerTransform = aLayer->GetTransform();
-    Translate2D(layerTransform, aTranslation);
+    Translate2D(layerTransform, translation);
     ShadowLayer* shadow = aLayer->AsShadowLayer();
     shadow->SetShadowTransform(layerTransform);
 
     const nsIntRect* clipRect = aLayer->GetClipRect();
     if (clipRect) {
       nsIntRect transformedClipRect(*clipRect);
-      transformedClipRect.MoveBy(aTranslation.x, aTranslation.y);
+      transformedClipRect.MoveBy(translation.x, translation.y);
       shadow->SetShadowClipRect(&transformedClipRect);
     }
   }
 
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
-    TranslateFixedLayers(child, aTranslation);
+    TransformFixedLayers(child, aTranslation, aScaleDiff);
   }
 }
 
@@ -411,16 +419,30 @@ CompositorParent::TransformShadowTree()
   ViewTransform treeTransform(-scrollCompensation, mXScale, mYScale);
   shadow->SetShadowTransform(gfx3DMatrix(treeTransform) * currentTransform);
 
-  // Alter the scroll offset so that fixed position layers remain within
-  // the page area.
-  float offsetX = mScrollOffset.x / tempScaleDiffX;
-  float offsetY = mScrollOffset.y / tempScaleDiffY;
-  offsetX = NS_MAX((float)mContentRect.x, NS_MIN(offsetX, (float)(mContentRect.XMost() - mWidgetSize.width)));
-  offsetY = NS_MAX((float)mContentRect.y, NS_MIN(offsetY, (float)(mContentRect.YMost() - mWidgetSize.height)));
-  gfxPoint reverseViewTranslation(offsetX - metricsScrollOffset.x,
-                                  offsetY - metricsScrollOffset.y);
+  // Translate fixed position layers so that they stay in the correct position
+  // when mScrollOffset and metricsScrollOffset differ.
+  gfxPoint scaleDiff(tempScaleDiffX, tempScaleDiffY);
+  gfxPoint offset(clamped(mScrollOffset.x / tempScaleDiffX, mContentRect.x / tempScaleDiffX,
+                          (mContentRect.XMost() - mWidgetSize.width / tempScaleDiffX)) -
+                  metricsScrollOffset.x,
+                  clamped(mScrollOffset.y / tempScaleDiffY, mContentRect.y / tempScaleDiffY,
+                          (mContentRect.YMost() - mWidgetSize.height / tempScaleDiffY)) -
+                  metricsScrollOffset.y);
 
-  TranslateFixedLayers(layer, reverseViewTranslation);
+  // If the contents can fit entirely within the widget area on a particular
+  // dimenson, we need to translate and scale so that the fixed layers remain
+  // within the page boundaries.
+  if (mContentRect.width * tempScaleDiffX < mWidgetSize.width) {
+    offset.x = -metricsScrollOffset.x;
+    scaleDiff.x = NS_MIN(1.0f, mWidgetSize.width / (float)mContentRect.width);
+  }
+
+  if (mContentRect.height * tempScaleDiffY < mWidgetSize.height) {
+    offset.y = -metricsScrollOffset.y;
+    scaleDiff.y = NS_MIN(1.0f, mWidgetSize.height / (float)mContentRect.height);
+  }
+
+  TransformFixedLayers(layer, offset, scaleDiff);
 }
 
 void
