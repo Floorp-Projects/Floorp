@@ -239,10 +239,9 @@ public:
     JSObject *sample = NULL;
     JSObject *frames = NULL;
 
-    int oldReadPos = mReadPos;
-    while (mReadPos != mLastFlushPos) {
-      ProfileEntry entry = mEntries[mReadPos];
-      mReadPos = (mReadPos + 1) % mEntrySize;
+    int readPos = mReadPos;
+    while (readPos != mLastFlushPos) {
+      ProfileEntry entry = mEntries[readPos];
       switch (entry.mTagName) {
         case 's':
           sample = b.CreateObject();
@@ -267,8 +266,8 @@ public:
             }
           }
       }
+      readPos = (readPos + 1) % mEntrySize;
     }
-    mReadPos = oldReadPos;
 
     return profile;
   }
@@ -766,6 +765,9 @@ const char** mozilla_sampler_get_features()
 void mozilla_sampler_start(int aProfileEntries, int aInterval,
                            const char** aFeatures, uint32_t aFeatureCount)
 {
+  if (!stack_key_initialized)
+    mozilla_sampler_init();
+
   ProfileStack *stack = tlsStack.get();
   if (!stack) {
     ASSERT(false);
@@ -782,6 +784,9 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
 
 void mozilla_sampler_stop()
 {
+  if (!stack_key_initialized)
+    mozilla_sampler_init();
+
   TableTicker *t = tlsTicker.get();
   if (!t) {
     return;
@@ -794,6 +799,9 @@ void mozilla_sampler_stop()
 
 bool mozilla_sampler_is_active()
 {
+  if (!stack_key_initialized)
+    mozilla_sampler_init();
+
   TableTicker *t = tlsTicker.get();
   if (!t) {
     return false;
