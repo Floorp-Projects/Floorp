@@ -8,8 +8,6 @@ srcdir    = @srcdir@
 VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-USE_RCS_MK=1
-include $(topsrcdir)/config/makefiles/makeutils.mk
 
 PREF_JS_EXPORTS = $(srcdir)/b2g.js
 
@@ -57,9 +55,15 @@ DEFINES += \
   -DMOZ_UPDATER=$(MOZ_UPDATER) \
   $(NULL)
 
-source_repo := $(call getSourceRepo,$(srcdir)/..)
-ifneq (,$(filter http%,$(source_repo)))
-  DEFINES += -DMOZ_SOURCE_REPO="$(source_repo)"
+# strip a trailing slash from the repo URL because it's not always present,
+# and we want to construct a working URL in buildconfig.html
+# make+shell+sed = awful
+_dollar=$$
+SOURCE_REPO := $(shell cd $(srcdir)/.. && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
+# extra sanity check for old versions of hg
+# that don't support showconfig
+ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
+DEFINES += -DMOZ_SOURCE_REPO="$(SOURCE_REPO)"
 endif
 
 ifeq ($(OS_ARCH),WINNT)
