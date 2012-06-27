@@ -1712,26 +1712,6 @@ EmitElemOpBase(JSContext *cx, BytecodeEmitter *bce, JSOp op)
 }
 
 static bool
-EmitSpecialPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
-{
-    /*
-     * Special case for obj.__proto__ to deoptimize away from fast paths in the
-     * interpreter and trace recorder, which skip dense array instances by
-     * going up to Array.prototype before looking up the property name.
-     */
-    if (op == JSOP_CALLELEM && Emit1(cx, bce, JSOP_DUP) < 0)
-        return false;
-
-    jsatomid index;
-    if (!bce->makeAtomIndex(pn->pn_atom, &index))
-        return false;
-    if (!EmitIndex32(cx, JSOP_QNAMEPART, index, bce))
-        return false;
-
-    return EmitElemOpBase(cx, bce, op);
-}
-
-static bool
 EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce,
            JSBool callContext)
 {
@@ -1782,13 +1762,8 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce,
             if (NewSrcNote2(cx, bce, SRC_PCBASE, bce->offset() - pndown->pn_offset) < 0)
                 return false;
 
-            /* Special case deoptimization on __proto__, as above. */
-            if (pndot->isArity(PN_NAME) && pndot->pn_atom == cx->runtime->atomState.protoAtom) {
-                if (!EmitSpecialPropOp(cx, pndot, JSOP_GETELEM, bce))
-                    return false;
-            } else if (!EmitAtomOp(cx, pndot, pndot->getOp(), bce)) {
+            if (!EmitAtomOp(cx, pndot, pndot->getOp(), bce))
                 return false;
-            }
 
             /* Reverse the pn_expr link again. */
             pnup = pndot->pn_expr;
@@ -3466,20 +3441,14 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
                     return false;
             }
             break;
-          case PNK_DOT:
+          case PNK_DOT: {
             if (Emit1(cx, bce, JSOP_DUP) < 0)
                 return false;
-            if (lhs->pn_atom == cx->runtime->atomState.protoAtom) {
-                if (!EmitIndex32(cx, JSOP_QNAMEPART, atomIndex, bce))
-                    return false;
-                if (!EmitElemOpBase(cx, bce, JSOP_GETELEM))
-                    return false;
-            } else {
-                bool isLength = (lhs->pn_atom == cx->runtime->atomState.lengthAtom);
-                if (!EmitIndex32(cx, isLength ? JSOP_LENGTH : JSOP_GETPROP, atomIndex, bce))
-                    return false;
-            }
+            bool isLength = (lhs->pn_atom == cx->runtime->atomState.lengthAtom);
+            if (!EmitIndex32(cx, isLength ? JSOP_LENGTH : JSOP_GETPROP, atomIndex, bce))
+                return false;
             break;
+          }
           case PNK_LB:
           case PNK_LP:
 #if JS_HAS_XML_SUPPORT
