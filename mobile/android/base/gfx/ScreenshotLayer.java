@@ -27,6 +27,7 @@ import java.nio.FloatBuffer;
 
 public class ScreenshotLayer extends SingleTileLayer {
     private static final int SCREENSHOT_SIZE_LIMIT = 1048576;
+    private static final int BYTES_FOR_16BPP = 2;
     private ScreenshotImage mImage;
     // Size of the image buffer
     private IntSize mBufferSize;
@@ -85,7 +86,7 @@ public class ScreenshotLayer extends SingleTileLayer {
     public static ScreenshotLayer create(Bitmap bitmap) {
         IntSize size = new IntSize(bitmap.getWidth(), bitmap.getHeight());
         // allocate a buffer that can hold our max screenshot size
-        ByteBuffer buffer = GeckoAppShell.allocateDirectBuffer(SCREENSHOT_SIZE_LIMIT * 2);
+        ByteBuffer buffer = GeckoAppShell.allocateDirectBuffer(SCREENSHOT_SIZE_LIMIT * BYTES_FOR_16BPP);
         // construct the screenshot layer
         ScreenshotLayer sl =  new ScreenshotLayer(new ScreenshotImage(buffer, size.width, size.height, CairoImage.FORMAT_RGB16_565), size);
         // paint the passed in bitmap into the buffer
@@ -131,8 +132,11 @@ public class ScreenshotLayer extends SingleTileLayer {
         }
 
         void copyBuffer(ByteBuffer src, ByteBuffer dst, Rect rect, int stride) {
-            int start = rect.left + rect.top * stride;
-            int end = Math.min(Math.min(rect.right + (rect.bottom - 1) * stride, src.capacity()), dst.limit());
+            int start = (rect.top * stride) + (rect.left * BYTES_FOR_16BPP);
+            int end = ((rect.bottom - 1) * stride) + (rect.right * BYTES_FOR_16BPP);
+            // clamp stuff just to be safe
+            start = Math.max(0, Math.min(dst.limit(), Math.min(src.limit(), start)));
+            end = Math.max(start, Math.min(dst.limit(), Math.min(src.capacity(), end)));
             dst.position(start);
             src.position(start).limit(end);
             dst.put(src);
@@ -141,7 +145,7 @@ public class ScreenshotLayer extends SingleTileLayer {
         synchronized void setBitmap(ByteBuffer data, int width, int height, int format, Rect rect) {
             mSize = new IntSize(width, height);
             mFormat = format;
-            copyBuffer(data.asReadOnlyBuffer(), mBuffer.duplicate(), rect, width * 2);
+            copyBuffer(data.asReadOnlyBuffer(), mBuffer.duplicate(), rect, width * BYTES_FOR_16BPP);
         }
 
         synchronized void setBitmap(Bitmap bitmap, int width, int height, int format) {
