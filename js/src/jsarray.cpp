@@ -772,11 +772,6 @@ array_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver, Handle
         return true;
     }
 
-    if (name == cx->runtime->atomState.protoAtom) {
-        vp->setObjectOrNull(obj->getProto());
-        return true;
-    }
-
     if (!obj->isDenseArray()) {
         Rooted<jsid> id(cx, NameToId(name));
         return baseops::GetProperty(cx, obj, receiver, id, vp);
