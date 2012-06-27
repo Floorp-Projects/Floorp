@@ -8,12 +8,7 @@ assertEq(o.byteLength, 1); // should be no assertion here
 
 o = {};
 o.__proto__ = new Int32Array(1);
-try {
-    o.buffer.byteLength;
-} catch (ex) {
-    // o is not a platform object
-    assertEq(ex instanceof TypeError, true);
-}
+assertEq(o.buffer.byteLength, 4); // should be no assertion here
 
 F = function () {};
 F.prototype = new Int32Array(1);
