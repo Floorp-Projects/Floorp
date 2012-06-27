@@ -3148,7 +3148,7 @@ IonBuilder::jsop_call_fun_barrier(HandleFunction target, uint32 argc,
     // Attempt to inline native and scripted functions.
     if (inliningEnabled() && target) {
         if (target->isNative()) {
-            switch (inlineNativeCall(target, argc, constructing)) {
+            switch (inlineNativeCall(target->native(), argc, constructing)) {
               case InliningStatus_Inlined:
                 return true;
               case InliningStatus_Error:
