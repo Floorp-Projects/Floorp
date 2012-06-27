@@ -17,6 +17,14 @@
 #include "mozilla/StackWalk.h"
 #include "JSObjectBuilder.h"
 
+// Meta
+#include "nsXPCOM.h"
+#include "nsXPCOMCID.h"
+#include "nsIHttpProtocolHandler.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIXULRuntime.h"
+#include "nsIXULAppInfo.h"
+
 // we eventually want to make this runtime switchable
 #if defined(MOZ_PROFILING) && (defined(XP_UNIX) && !defined(XP_MACOSX))
  #ifndef ANDROID
@@ -377,6 +385,7 @@ class TableTicker: public Sampler {
   }
 
   JSObject *ToJSObject(JSContext *aCx);
+  JSObject *GetMetaJSObject(JSObjectBuilder& b);
 
 private:
   // Not implemented on platforms which do not support backtracing
@@ -457,6 +466,59 @@ void TableTicker::HandleSaveRequest()
   NS_DispatchToMainThread(runnable);
 }
 
+JSObject* TableTicker::GetMetaJSObject(JSObjectBuilder& b)
+{
+  JSObject *meta = b.CreateObject();
+
+  b.DefineProperty(meta, "version", 2);
+  b.DefineProperty(meta, "interval", interval());
+  b.DefineProperty(meta, "stackwalk", mUseStackWalk);
+  b.DefineProperty(meta, "jank", mJankOnly);
+  b.DefineProperty(meta, "processType", XRE_GetProcessType());
+
+  nsresult res;
+  nsCOMPtr<nsIHttpProtocolHandler> http = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
+  if (!NS_FAILED(res)) {
+    nsCAutoString string;
+
+    res = http->GetPlatform(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "platform", string.Data());
+
+    res = http->GetOscpu(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "oscpu", string.Data());
+
+    res = http->GetMisc(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "misc", string.Data());
+  }
+
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+  if (runtime) {
+    nsCAutoString string;
+
+    res = runtime->GetXPCOMABI(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "abi", string.Data());
+
+    res = runtime->GetWidgetToolkit(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "toolkit", string.Data());
+  }
+
+  nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
+  if (appInfo) {
+    nsCAutoString string;
+
+    res = appInfo->GetName(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "product", string.Data());
+  }
+
+  return meta;
+}
+
 JSObject* TableTicker::ToJSObject(JSContext *aCx)
 {
   JSObjectBuilder b(aCx);
@@ -464,7 +526,8 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
   JSObject *profile = b.CreateObject();
 
   // Put meta data
-  // TODO: List things like feature, version number, profile time start/end
+  JSObject *meta = GetMetaJSObject(b);
+  b.DefineProperty(profile, "meta", meta);
 
   // Lists the samples for each ThreadProfile
   JSObject *threads = b.CreateArray();
