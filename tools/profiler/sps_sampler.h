@@ -155,7 +155,7 @@ class NS_STACK_CLASS SamplerStackFrameRAII {
 public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
   SamplerStackFrameRAII(const char *aInfo) {
-    mHandle = mozilla_sampler_call_enter(aInfo);
+    mHandle = mozilla_sampler_call_enter(aInfo, this, false);
   }
   ~SamplerStackFrameRAII() {
     mozilla_sampler_call_exit(mHandle);
