@@ -18,7 +18,6 @@
 #include "CodeGenIncludes.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
-#include "jstypedarrayinlines.h"
 
 namespace js {
 namespace mjit {
