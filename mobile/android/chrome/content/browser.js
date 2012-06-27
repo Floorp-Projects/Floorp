@@ -5836,7 +5836,7 @@ var WebappsUI = {
       return "chrome://browser/skin/images/default-app-icon.png";
     iconSizes.sort(function(a, b) a - b);
     return aIcons[iconSizes.pop()];
-  }
+  },
 
   doInstall: function doInstall(aData) {
     let manifest = new DOMApplicationManifest(aData.app.manifest, aData.app.origin);
