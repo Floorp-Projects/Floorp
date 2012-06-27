@@ -207,6 +207,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       static bool fixedPositionLayersEnabled = getenv("MOZ_ENABLE_FIXED_POSITION_LAYERS") != 0;
       if (fixedPositionLayersEnabled) {
         layer->SetIsFixedPosition(common.isFixedPosition());
+        layer->SetFixedPositionAnchor(common.fixedPositionAnchor());
       }
       if (PLayerParent* maskLayer = common.maskLayerParent()) {
         layer->SetMaskLayer(cast(maskLayer)->AsLayer());
