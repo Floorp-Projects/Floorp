@@ -9,12 +9,11 @@
  * utility methods for subclasses, and so forth.
  */
 
-#ifndef nsGenericElement_h___
-#define nsGenericElement_h___
+#ifndef FragmentOrElement_h___
+#define FragmentOrElement_h___
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
@@ -58,7 +57,6 @@ struct nsRect;
 
 typedef PRUptrdiff PtrBits;
 
-#if 0
 /**
  * Class that implements the nsIDOMNodeList interface (a list of children of
  * the content), by holding a reference to the content and delegating GetLength
@@ -103,7 +101,7 @@ private:
 };
 
 /**
- * A tearoff class for nsGenericElement to implement additional interfaces
+ * A tearoff class for FragmentOrElement to implement additional interfaces
  */
 class nsNode3Tearoff : public nsIDOMXPathNSResolver
 {
@@ -178,7 +176,7 @@ private:
 };
 
 /**
- * A tearoff class for nsGenericElement to implement NodeSelector
+ * A tearoff class for FragmentOrElement to implement NodeSelector
  */
 class nsNodeSelectorTearoff MOZ_FINAL : public nsIDOMNodeSelector
 {
@@ -203,21 +201,22 @@ private:
 // Forward declare to allow being a friend
 class nsTouchEventReceiverTearoff;
 class nsInlineEventHandlersTearoff;
-#endif
 
 /**
  * A generic base class for DOM elements, implementing many nsIContent,
  * nsIDOMNode and nsIDOMElement methods.
  */
-class nsGenericElement : public mozilla::dom::FragmentOrElement
+namespace mozilla {
+namespace dom {
+
+class FragmentOrElement : public mozilla::dom::Element
 {
 public:
-  nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo);
-#if 0
-  virtual ~nsGenericElement();
+  FragmentOrElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  virtual ~FragmentOrElement();
 
-  friend class nsTouchEventReceiverTearoff;
-  friend class nsInlineEventHandlersTearoff;
+  friend class ::nsTouchEventReceiverTearoff;
+  friend class ::nsInlineEventHandlersTearoff;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -369,18 +368,14 @@ public:
   {
     return FindAttributeDependence(aAttribute, aMaps, N);
   }
-#endif
 
 private:
-#if 0
   static bool
   FindAttributeDependence(const nsIAtom* aAttribute,
                           const MappedAttributeEntry* const aMaps[],
                           PRUint32 aMapCount);
-#endif
 
 public:
-#if 0
   // nsIDOMNode method implementation
   NS_IMETHOD GetNodeName(nsAString& aNodeName);
   NS_IMETHOD GetLocalName(nsAString& aLocalName);
@@ -590,7 +585,7 @@ public:
    */
   virtual nsAttrInfo GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const;
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsGenericElement)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(FragmentOrElement)
 
   virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
   {
@@ -649,10 +644,8 @@ public:
    * but if not should have been parsed via ParseCORSValue).
    */
   static mozilla::CORSMode AttrValueToCORSMode(const nsAttrValue* aValue);
-#endif
 
 protected:
-#if 0
   /*
    * Named-bools for use with SetAttrAndNotify to make call sites easier to
    * read.
@@ -731,7 +724,7 @@ protected:
                                     nsresult* aRetval);
 
   /**
-   * Hook that is called by nsGenericElement::SetAttr to allow subclasses to
+   * Hook that is called by FragmentOrElement::SetAttr to allow subclasses to
    * deal with attribute sets.  This will only be called after we verify that
    * we're actually doing an attr set and will be called before
    * AttributeWillChange and before ParseAttribute and hence before we've set
@@ -754,7 +747,7 @@ protected:
   }
 
   /**
-   * Hook that is called by nsGenericElement::SetAttr to allow subclasses to
+   * Hook that is called by FragmentOrElement::SetAttr to allow subclasses to
    * deal with attribute sets.  This will only be called after we have called
    * SetAndTakeAttr and AttributeChanged (that is, after we have actually set
    * the attr).  It will always be called under a scriptblocker.
@@ -784,7 +777,7 @@ protected:
    * Copy attributes and state to another element
    * @param aDest the object to copy to
    */
-  nsresult CopyInnerTo(nsGenericElement* aDest);
+  nsresult CopyInnerTo(FragmentOrElement* aDest);
 
   /**
    * Internal hook for converting an attribute name-string to an atomized name
@@ -817,10 +810,8 @@ protected:
   nsresult GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
                                       const nsAString& aLocalName,
                                       nsIDOMAttr** aReturn);
-#endif
 
 public:
-#if 0
   // Because of a bug in MS C++ compiler nsDOMSlots must be declared public,
   // otherwise nsXULElement::nsXULSlots doesn't compile.
   /**
@@ -866,14 +857,14 @@ public:
 
     /**
      * An object implementing nsIDOMNamedNodeMap for this content (attributes)
-     * @see nsGenericElement::GetAttributes
+     * @see FragmentOrElement::GetAttributes
      */
     nsRefPtr<nsDOMAttributeMap> mAttributeMap;
 
     union {
       /**
       * The nearest enclosing content node with a binding that created us.
-      * @see nsGenericElement::GetBindingParent
+      * @see FragmentOrElement::GetBindingParent
       */
       nsIContent* mBindingParent;  // [Weak]
 
@@ -893,10 +884,8 @@ public:
      */
     nsRefPtr<nsDOMTokenList> mClassList;
   };
-#endif
 
 protected:
-#if 0
   // Override from nsINode
   virtual nsINode::nsSlots* CreateSlots();
 
@@ -980,15 +969,13 @@ protected:
    */
   virtual void GetLinkTarget(nsAString& aTarget);
 
-  friend class ContentUnbinder;
+  friend class ::ContentUnbinder;
   /**
    * Array containing all attributes and children for this element
    */
   nsAttrAndChildArray mAttrsAndChildren;
-#endif
 
 private:
-#if 0
   /**
    * Get this element's client area rect in app units.
    * @return the frame's client area
@@ -998,10 +985,11 @@ private:
   nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr);
 
   nsContentList* GetChildrenList();
-#endif
 };
 
-#if 0
+} // namespace dom
+} // namespace mozilla
+
 /**
  * Macros to implement Clone(). _elementName is the class for which to implement
  * Clone.
@@ -1090,12 +1078,12 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsTouchEventReceiverTearoff)
 
-  nsTouchEventReceiverTearoff(nsGenericElement *aElement) : mElement(aElement)
+  nsTouchEventReceiverTearoff(mozilla::dom::FragmentOrElement *aElement) : mElement(aElement)
   {
   }
 
 private:
-  nsRefPtr<nsGenericElement> mElement;
+  nsRefPtr<mozilla::dom::FragmentOrElement> mElement;
 };
 
 /**
@@ -1110,16 +1098,16 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsInlineEventHandlersTearoff)
 
-  nsInlineEventHandlersTearoff(nsGenericElement *aElement) : mElement(aElement)
+  nsInlineEventHandlersTearoff(mozilla::dom::FragmentOrElement *aElement) : mElement(aElement)
   {
   }
 
 private:
-  nsRefPtr<nsGenericElement> mElement;
+  nsRefPtr<mozilla::dom::FragmentOrElement> mElement;
 };
 
 #define NS_ELEMENT_INTERFACE_TABLE_TO_MAP_SEGUE                               \
-    rv = nsGenericElement::QueryInterface(aIID, aInstancePtr);                \
+    rv = FragmentOrElement::QueryInterface(aIID, aInstancePtr);                \
     if (NS_SUCCEEDED(rv))                                                     \
       return rv;                                                              \
                                                                               \
@@ -1136,6 +1124,5 @@ private:
                                                                               \
     return NS_OK;                                                             \
   }
-#endif
 
-#endif /* nsGenericElement_h___ */
+#endif /* FragmentOrElement_h___ */
