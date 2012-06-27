@@ -2518,6 +2518,12 @@ public:
     
     int64_t MemoryUsage() const {
         int64_t pixels = int64_t(Width()) * int64_t(Height());
+
+        // If there is no defined format, we're not taking up any memory
+        if (!mInternalFormatForGL) {
+            return 0;
+        }
+
         switch (mInternalFormatForGL) {
             case LOCAL_GL_STENCIL_INDEX8:
                 return pixels;
