@@ -1116,6 +1116,9 @@ ReleaseAllJITCode(FreeOp *fop, JSCompartment *c, bool resetUseCounts);
 void
 ReleaseAllJITCode(FreeOp *fop, bool resetUseCounts);
 
+void
+PurgeJITCaches(JSCompartment *c);
+
 } /* namespace js */
 
 #endif /* jsgc_h___ */
