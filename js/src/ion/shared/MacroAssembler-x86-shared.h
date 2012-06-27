@@ -323,6 +323,43 @@ class MacroAssemblerX86Shared : public Assembler
         bind(&done);
     }
 
+    bool maybeInlineDouble(uint64_t u, const FloatRegister &dest) {
+        // This implements parts of "13.4 Generating constants" of 
+        // "2. Optimizing subroutines in assembly language" by Agner Fog.
+        switch (u) {
+          case 0ULL:
+            xorpd(dest, dest);
+            break;
+          case 0x3fe0000000000000ULL: // 0.5
+            pcmpeqw(dest, dest);
+            psllq(Imm32(55), dest);
+            psrlq(Imm32(2), dest);
+            break;
+          case 0x3ff0000000000000ULL: // 1.0
+            pcmpeqw(dest, dest);
+            psllq(Imm32(54), dest);
+            psrlq(Imm32(2), dest);
+            break;
+          case 0x3ff8000000000000ULL: // 1.5
+            pcmpeqw(dest, dest);
+            psllq(Imm32(53), dest);
+            psrlq(Imm32(2), dest);
+            break;
+          case 0x4000000000000000ULL: // 2.0
+            pcmpeqw(dest, dest);
+            psllq(Imm32(63), dest);
+            psrlq(Imm32(1), dest);
+            break;
+          case 0xc000000000000000ULL: // -2.0
+            pcmpeqw(dest, dest);
+            psllq(Imm32(62), dest);
+            break;
+          default:
+            return false;
+        }
+        return true;
+    }
+
     // Emit a JMP that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
     CodeOffsetLabel toggledJump(Label *label) {
         CodeOffsetLabel offset(size());
