@@ -44,7 +44,6 @@
  *          application is responding to the event loop. Lower is better.
  * 't' - Elapse time since recording started.
  *
- * NOTE: File format is planned to be extended to include a dictionary to reduce size.
  */
 
 #ifndef SAMPLER_H
