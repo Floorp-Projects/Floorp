@@ -377,11 +377,33 @@ class IonBuilder : public MIRGenerator
         InliningStatus_Inlined
     };
 
+    // Inlining helpers.
     bool discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
     bool discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb);
-    InliningStatus inlineNativeCall(JSFunction *target, uint32 argc, bool constructing);
-    InliningStatus inlineMathFunction(MMathFunction::Function function, MIRType argType,
-                                      MIRType returnType);
+    types::TypeSet *getInlineReturnTypeSet();
+    MIRType getInlineReturnType();
+    types::TypeSet *getInlineArgTypeSet(uint32 argc, uint32 arg);
+    MIRType getInlineArgType(uint32 argc, uint32 arg);
+
+    // Array natives.
+    InliningStatus inlineArray(uint32 argc, bool constructing);
+    InliningStatus inlineArrayPopShift(MArrayPopShift::Mode mode, uint32 argc, bool constructing);
+    InliningStatus inlineArrayPush(uint32 argc, bool constructing);
+
+    // Math natives.
+    InliningStatus inlineMathAbs(uint32 argc, bool constructing);
+    InliningStatus inlineMathFloor(uint32 argc, bool constructing);
+    InliningStatus inlineMathRound(uint32 argc, bool constructing);
+    InliningStatus inlineMathSqrt(uint32 argc, bool constructing);
+    InliningStatus inlineMathFunction(MMathFunction::Function function, uint32 argc,
+                                      bool constructing);
+
+    // String natives.
+    InliningStatus inlineStrCharCodeAt(uint32 argc, bool constructing);
+    InliningStatus inlineStrFromCharCode(uint32 argc, bool constructing);
+    InliningStatus inlineStrCharAt(uint32 argc, bool constructing);
+
+    InliningStatus inlineNativeCall(JSNative native, uint32 argc, bool constructing);
 
     bool jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inlineBuilder);
     bool inlineScriptedCall(JSFunction *target, uint32 argc);
