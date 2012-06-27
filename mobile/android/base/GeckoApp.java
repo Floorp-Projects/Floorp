@@ -1389,7 +1389,8 @@ abstract public class GeckoApp
         final String oldURL = tab.getURL();
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
-                if (!oldURL.equals(tab.getURL()))
+                // tab.getURL() may return null
+                if (!TextUtils.equals(oldURL, tab.getURL()))
                     return;
 
                 getAndProcessThumbnailForTab(tab);
