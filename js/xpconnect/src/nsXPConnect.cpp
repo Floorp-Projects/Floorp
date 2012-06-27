@@ -681,10 +681,9 @@ struct TraversalTracer : public JSTracer
 };
 
 static void
-NoteJSChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
+NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
-    void *thing = *thingp;
 
     // Don't traverse non-gray objects, unless we want all traces.
     if (!xpc_IsGrayGCThing(thing) && !tracer->cb.WantAllTraces())
@@ -816,13 +815,19 @@ DescribeGCThing(bool isMarked, void *p, JSGCTraceKind traceKind,
     }
 }
 
+static void
+NoteJSChildTracerShim(JSTracer *trc, void **thingp, JSGCTraceKind kind)
+{
+    NoteJSChild(trc, *thingp, kind);
+}
+
 static inline void
 NoteGCThingJSChildren(JSRuntime *rt, void *p, JSGCTraceKind traceKind,
                       nsCycleCollectionTraversalCallback &cb)
 {
     MOZ_ASSERT(rt);
     TraversalTracer trc(cb);
-    JS_TracerInit(&trc, rt, NoteJSChild);
+    JS_TracerInit(&trc, rt, NoteJSChildTracerShim);
     trc.eagerlyTraceWeakMaps = false;
     JS_TraceChildren(&trc, p, traceKind);
 }
