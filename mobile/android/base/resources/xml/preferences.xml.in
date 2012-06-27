@@ -42,7 +42,9 @@
 
     <PreferenceCategory android:title="@string/pref_category_privacy">
 
+        <!-- keys prefixed with "android.not_a_preference." are not synced with Gecko -->
         <org.mozilla.gecko.PrivateDataPreference android:title="@string/pref_clear_private_data"
+                                                 android:key="android.not_a_preference.privacy.clear"
                                                  android:persistent="true"
                                                  android:positiveButtonText="@string/button_clear_data"
                                                  gecko:entries="@array/pref_private_data_entries"
