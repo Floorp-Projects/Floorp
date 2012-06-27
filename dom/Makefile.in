@@ -75,6 +75,7 @@ ifdef MOZ_B2G_RIL
 PARALLEL_DIRS += \
   telephony \
   wifi \
+  icc \
   $(NULL)
 endif
 
