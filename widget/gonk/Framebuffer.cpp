@@ -39,6 +39,7 @@ static struct fb_var_screeninfo sVi;
 static size_t sActiveBuffer;
 typedef vector<nsRefPtr<gfxImageSurface> > BufferVector;
 BufferVector* sBuffers;
+static gfxIntSize *sScreenSize = nsnull;
 
 BufferVector& Buffers() { return *sBuffers; }
 
@@ -57,7 +58,7 @@ SetGraphicsMode()
 }
 
 bool
-Open(nsIntSize* aScreenSize)
+Open()
 {
     if (0 <= sFd)
         return true;
@@ -98,28 +99,32 @@ Open(nsIntSize* aScreenSize)
     // hard-coded numbers here.
     gfxASurface::gfxImageFormat format = gfxASurface::ImageFormatRGB16_565;
     int bytesPerPixel = gfxASurface::BytePerPixelFromFormat(format);
-    gfxIntSize size(sVi.xres, sVi.yres);
-    long stride = size.width * bytesPerPixel;
-    size_t numFrameBytes = stride * size.height;
+    if (!sScreenSize) {
+        sScreenSize = new gfxIntSize(sVi.xres, sVi.yres);
+    }
+    long stride = sScreenSize->width * bytesPerPixel;
+    size_t numFrameBytes = stride * sScreenSize->height;
 
     sBuffers = new BufferVector(2);
     unsigned char* data = static_cast<unsigned char*>(mem);
     for (size_t i = 0; i < 2; ++i, data += numFrameBytes) {
       memset(data, 0, numFrameBytes);
-      Buffers()[i] = new gfxImageSurface(data, size, stride, format);
+      Buffers()[i] = new gfxImageSurface(data, *sScreenSize, stride, format);
     }
 
     // Clear the framebuffer to a known state.
     Present(nsIntRect());
 
-    *aScreenSize = size;
     return true;
 }
 
 bool
 GetSize(nsIntSize *aScreenSize) {
-    if (0 <= sFd)
+    // If the framebuffer has been opened, we should always have the size.
+    if (0 <= sFd || sScreenSize) {
+        *aScreenSize = *sScreenSize;
         return true;
+    }
 
     ScopedClose fd(open("/dev/graphics/fb0", O_RDWR));
     if (0 > fd.get()) {
@@ -132,7 +137,8 @@ GetSize(nsIntSize *aScreenSize) {
         return false;
     }
 
-    *aScreenSize = gfxIntSize(sVi.xres, sVi.yres);
+    sScreenSize = new gfxIntSize(sVi.xres, sVi.yres);
+    *aScreenSize = *sScreenSize;
     return true;
 }
 
@@ -145,6 +151,8 @@ Close()
     munmap(Buffers()[0]->Data(), sMappedSize);
     delete sBuffers;
     sBuffers = NULL;
+    delete sScreenSize;
+    sScreenSize = NULL;
 
     close(sFd);
     sFd = -1;

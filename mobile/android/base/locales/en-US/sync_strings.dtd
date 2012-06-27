@@ -41,6 +41,8 @@
 <!ENTITY sync.button.tryagain.label 'Try again'>
 <!ENTITY sync.button.manual.label 'Manual Setup'>
 <!ENTITY sync.subtitle.nointernet.label 'No internet connection available.'>
+<!ENTITY sync.subtitle.failaccount.label 'Account creation on your device failed.'>
+<!ENTITY sync.subtitle.failmultiple.label 'Do you have more than one Firefox installed? Currently, &syncBrand.fullName.label; only supports one Firefox installation at a time. Please uninstall other instances to use &syncBrand.shortName.label;.'>
   
 <!-- Setup Success -->
 <!ENTITY sync.title.success.label 'Setup Complete'>

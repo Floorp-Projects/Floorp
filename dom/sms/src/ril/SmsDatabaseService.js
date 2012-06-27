@@ -347,9 +347,11 @@ SmsDatabaseService.prototype = {
    */
 
   saveReceivedMessage: function saveReceivedMessage(sender, body, date) {
+    let receiver = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
+
     let message = {delivery:  DELIVERY_RECEIVED,
                    sender:    sender,
-                   receiver:  this.mRIL.rilContext.icc.msisdn, 
+                   receiver:  receiver,
                    body:      body,
                    timestamp: date,
                    read:      FILTER_READ_UNREAD};
@@ -357,8 +359,10 @@ SmsDatabaseService.prototype = {
   },
 
   saveSentMessage: function saveSentMessage(receiver, body, date) {
+    let sender = this.mRIL.rilContext.icc ? this.mRIL.rilContext.icc.msisdn : null;
+
     let message = {delivery:  DELIVERY_SENT,
-                   sender:    this.mRIL.rilContext.icc.msisdn,
+                   sender:    sender,
                    receiver:  receiver,
                    body:      body,
                    timestamp: date,
