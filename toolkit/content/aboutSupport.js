@@ -95,6 +95,7 @@ window.onload = function () {
   populateExtensionsSection();
   populateGraphicsSection();
   populateJavaScriptSection();
+  populateAccessibilitySection();
   populateLibVersionsSection();
 }
 
@@ -402,6 +403,20 @@ function populateJavaScriptSection() {
         .getInterface(Ci.nsIDOMWindowUtils)
         .isIncrementalGCEnabled();
   document.getElementById("javascript-incremental-gc").textContent = enabled ? "1" : "0";
+}
+
+function populateAccessibilitySection() {
+  var active;
+  try {
+    active = Components.manager.QueryInterface(Ci.nsIServiceManager)
+      .isServiceInstantiatedByContractID(
+        "@mozilla.org/accessibilityService;1",
+        Ci.nsISupports);
+  } catch (ex) {
+    active = false;
+  }
+
+  document.getElementById("a11y-activated").textContent = active ? "1" : "0";
 }
 
 function getPrefValue(aName) {
