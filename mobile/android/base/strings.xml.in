@@ -190,6 +190,10 @@
   <string name="identity_connected_to">&identity_connected_to;</string>
   <string name="identity_run_by">&identity_run_by;</string>
 
+  <!-- Clear private data -->
+  <string name="private_data_success">&private_data_success;</string>
+  <string name="private_data_fail">&private_data_fail;</string>
+
   <!-- Bookmark import/export -->
   <string name="bookmarkhistory_button_import">&bookmarkhistory_button_import;</string>
   <string name="bookmarkhistory_import_both">&bookmarkhistory_import_both;</string>
