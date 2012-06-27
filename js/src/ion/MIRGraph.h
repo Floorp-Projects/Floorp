@@ -109,8 +109,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
                                              MBasicBlock *pred, jsbytecode *entryPc);
     static MBasicBlock *NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred);
 
-    bool dominates(MBasicBlock *other);
-
     void setId(uint32 id) {
         id_ = id;
     }
@@ -227,14 +225,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     uint32 numPredecessors() const {
         return predecessors_.length();
     }
-
-    uint32 domIndex() const {
-        return domIndex_;
-    }
-    void setDomIndex(uint32 d) {
-        domIndex_ = d;
-    }
-
     MBasicBlock *getPredecessor(uint32 i) const {
         return predecessors_[i];
     }
@@ -446,7 +436,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MControlInstruction *lastIns_;
     jsbytecode *pc_;
     uint32 id_;
-    uint32 domIndex_; // Index in the dominator tree.
     LBlock *lir_;
     MStart *start_;
     MResumePoint *entryResumePoint_;
