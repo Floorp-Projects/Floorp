@@ -351,6 +351,8 @@ Range::update(const Range *other)
     return changed;
 }
 
+typedef Vector <MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
+
 static inline bool
 AddToWorklist(MDefinitionVector &worklist, MDefinition *def)
 {
@@ -374,7 +376,7 @@ bool
 RangeAnalysis::analyze()
 {
     IonSpew(IonSpew_Range, "Doing range propagation");
-    MDefinitionVector worklist;
+    Vector <MDefinition *, 8, IonAllocPolicy> worklist;
 
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
         for (MDefinitionIterator iter(*block); iter; iter++) {
