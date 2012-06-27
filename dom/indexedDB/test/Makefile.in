@@ -51,6 +51,7 @@ TEST_FILES = \
   test_file_os_delete.html \
   test_file_put_get_object.html \
   test_file_put_get_values.html \
+  test_file_replace.html \
   test_file_resurrection_delete.html \
   test_file_resurrection_transaction_abort.html \
   test_file_sharing.html \

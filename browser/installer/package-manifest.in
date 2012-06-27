@@ -447,11 +447,16 @@
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/nsPrompter.manifest
 @BINPATH@/components/nsPrompter.js
+#ifdef MOZ_SERVICES_AITC
+@BINPATH@/components/AitcComponents.manifest
+@BINPATH@/components/Aitc.js
+#endif
+#ifdef MOZ_SERVICES_NOTIFICATIONS
+@BINPATH@/components/NotificationsComponents.manifest
+#endif
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/components/SyncComponents.manifest
-@BINPATH@/components/AitcComponents.manifest
 @BINPATH@/components/Weave.js
-@BINPATH@/components/Aitc.js
 #endif
 @BINPATH@/components/TelemetryPing.js
 @BINPATH@/components/TelemetryPing.manifest
@@ -532,9 +537,14 @@
 ; All the pref files must be part of base to prevent migration bugs
 @BINPATH@/@PREF_DIR@/firefox.js
 @BINPATH@/@PREF_DIR@/firefox-branding.js
+#ifdef MOZ_SERVICES_AITC
+@BINPATH@/@PREF_DIR@/services-aitc.js
+#endif
+#ifdef MOZ_SERVICES_NOTIFICATIONS
+@BINPATH@/@PREF_DIR@/services-notifications.js
+#endif
 #ifdef MOZ_SERVICES_SYNC
 @BINPATH@/@PREF_DIR@/services-sync.js
-@BINPATH@/@PREF_DIR@/services-aitc.js
 #endif
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
