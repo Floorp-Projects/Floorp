@@ -11,7 +11,7 @@
 #define nsDOMAttributeMap_h___
 
 #include "nsIDOMNamedNodeMap.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsRefPtrHashtable.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMNode.h"

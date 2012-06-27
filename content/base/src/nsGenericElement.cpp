@@ -135,6 +135,7 @@ NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
 PRInt32 nsIContent::sTabFocusModel = eTabFocus_any;
 bool nsIContent::sTabFocusModelAppliesToXUL = false;
 PRUint32 nsMutationGuard::sMutationCount = 0;
+#endif
 
 nsEventStates
 Element::IntrinsicState() const
@@ -311,6 +312,7 @@ Element::ClearStyleStateLocks()
   NotifyStyleStateChange(locks);
 }
 
+#if 0
 nsIContent*
 nsIContent::FindFirstNonNativeAnonymous() const
 {
@@ -628,6 +630,7 @@ nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 {
   return mNode->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
 }
+#endif
 
 nsIContent*
 nsGenericElement::GetFirstElementChild()
@@ -774,6 +777,7 @@ nsGenericElement::GetNextElementSibling(nsIDOMElement** aResult)
   return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
 
+#if 0
 nsContentList*
 nsGenericElement::GetChildrenList()
 {
@@ -787,6 +791,7 @@ nsGenericElement::GetChildrenList()
 
   return slots->mChildrenList;
 }
+#endif
 
 nsDOMTokenList*
 nsGenericElement::GetClassList(nsresult *aResult)
@@ -1189,6 +1194,7 @@ nsGenericElement::GetClientRects(nsIDOMClientRectList** aResult)
 //----------------------------------------------------------------------
 
 
+#if 0
 NS_IMPL_ISUPPORTS1(nsNodeWeakReference,
                    nsIWeakReference)
 
@@ -1347,7 +1353,7 @@ nsGenericElement::nsDOMSlots::Unlink(bool aIsXUL)
 #endif
 
 nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : FragmentOrElement(aNodeInfo)
+  : Element(aNodeInfo)
 {
 }
 
@@ -1482,6 +1488,7 @@ nsGenericElement::IsSupported(const nsAString& aFeature,
 {
   return InternalIsSupported(this, aFeature, aVersion, aReturn);
 }
+#endif
 
 NS_IMETHODIMP
 nsGenericElement::HasAttributes(bool* aReturn)
@@ -1512,6 +1519,7 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
   return NS_OK;
 }
 
+#if 0
 nsresult
 nsGenericElement::HasChildNodes(bool* aReturn)
 {
@@ -1519,6 +1527,7 @@ nsGenericElement::HasChildNodes(bool* aReturn)
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsGenericElement::GetTagName(nsAString& aTagName)
@@ -2221,6 +2230,7 @@ nsGenericElement::UnbindFromTree(bool aDeep, bool aNullParent)
   nsNodeUtils::ParentChainChanged(this);
 }
 
+#if 0
 already_AddRefed<nsINodeList>
 nsGenericElement::GetChildren(PRUint32 aFilter)
 {
@@ -2431,6 +2441,7 @@ nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
   return NS_OK;
 }
+#endif
 
 nsICSSDeclaration*
 nsGenericElement::GetSMILOverrideStyle()
@@ -2496,6 +2507,7 @@ nsGenericElement::SetInlineStyleRule(css::StyleRule* aStyleRule,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#if 0
 NS_IMETHODIMP_(bool)
 nsGenericElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
@@ -3512,6 +3524,7 @@ nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 //----------------------------------------------------------------------
+#if 0
 nsresult
 nsGenericElement::LeaveLink(nsPresContext* aPresContext)
 {
@@ -3548,6 +3561,7 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
                                   defer, !nsContentUtils::IsChromeDoc(ownerDoc));
   return NS_OK;
 }
+#endif
 
 
 //----------------------------------------------------------------------
@@ -3574,6 +3588,7 @@ nsGenericElement::CopyInnerTo(nsGenericElement* aDst)
 
   return NS_OK;
 }
+#endif
 
 bool
 nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID,
@@ -3830,6 +3845,7 @@ nsGenericElement::SetMappedAttribute(nsIDocument* aDocument,
   return false;
 }
 
+#if 0
 nsEventListenerManager*
 nsGenericElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
                                                  bool* aDefer)
@@ -3837,6 +3853,7 @@ nsGenericElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
   *aDefer = true;
   return GetListenerManager(true);
 }
+#endif
 
 nsGenericElement::nsAttrInfo
 nsGenericElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const
@@ -4037,6 +4054,7 @@ nsGenericElement::GetAttrCount() const
   return mAttrsAndChildren.AttrCount();
 }
 
+#if 0
 const nsTextFragment*
 nsGenericElement::GetText()
 {
@@ -4084,6 +4102,7 @@ nsGenericElement::AppendTextTo(nsAString& aResult)
   // to depend on this appending nothing.
   NS_NOTREACHED("called nsGenericElement::TextLength");
 }
+#endif
 
 #ifdef DEBUG
 void
@@ -4239,6 +4258,7 @@ nsGenericElement::DumpContent(FILE* out, PRInt32 aIndent,
 }
 #endif
 
+#if 0
 PRUint32
 nsGenericElement::GetChildCount() const
 {
@@ -4482,6 +4502,7 @@ nsGenericElement::GetLinkTarget(nsAString& aTarget)
 {
   aTarget.Truncate();
 }
+#endif
 
 // NOTE: The aPresContext pointer is NOT addrefed.
 // *aSelectorList might be null even if NS_OK is returned; this
@@ -4523,6 +4544,7 @@ ParseSelectorList(nsINode* aNode,
 // Actually find elements matching aSelectorList (which must not be
 // null) and which are descendants of aRoot and put them in aList.  If
 // onlyFirstMatch, then stop once the first one is found.
+#if 0
 template<bool onlyFirstMatch, class T>
 inline static nsresult FindMatchingElements(nsINode* aRoot,
                                             const nsAString& aSelector,
@@ -4639,6 +4661,7 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
   
   return FindMatchingElements<false>(aRoot, aSelector, *contentList);
 }
+#endif
 
 
 bool
@@ -4673,6 +4696,7 @@ nsGenericElement::MozMatchesSelector(const nsAString& aSelector, bool* aReturn)
   return rv;
 }
 
+#if 0
 size_t
 nsGenericElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
@@ -4721,6 +4745,7 @@ nsGenericElement::AttrValueToCORSMode(const nsAttrValue* aValue)
 
   return CORSMode(aValue->GetEnumValue());
 }
+#endif
 
 NS_IMETHODIMP
 nsGenericElement::GetOnmouseenter(JSContext* cx, JS::Value* vp)
@@ -4804,4 +4829,3 @@ nsresult nsGenericElement::MozRequestFullScreen()
 
   return NS_OK;
 }
-#endif

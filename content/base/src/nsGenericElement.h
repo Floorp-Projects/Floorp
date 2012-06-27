@@ -209,7 +209,7 @@ class nsInlineEventHandlersTearoff;
  * A generic base class for DOM elements, implementing many nsIContent,
  * nsIDOMNode and nsIDOMElement methods.
  */
-class nsGenericElement : public mozilla::dom::FragmentOrElement
+class nsGenericElement : public mozilla::dom::Element
 {
 public:
   nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo);
@@ -241,6 +241,7 @@ public:
   NS_IMETHOD SetTextContent(const nsAString& aTextContent);
 
   // nsIContent interface methods
+#endif
   virtual void UpdateEditableState(bool aNotify);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -248,9 +249,11 @@ public:
                               bool aCompileEventHandlers);
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true);
+#if 0
   virtual already_AddRefed<nsINodeList> GetChildren(PRUint32 aFilter);
   virtual nsIAtom *GetClassAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
+#endif
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
   {
@@ -299,6 +302,7 @@ public:
                              bool aNotify);
   virtual const nsAttrName* GetAttrNameAt(PRUint32 aIndex) const;
   virtual PRUint32 GetAttrCount() const;
+#if 0
   virtual const nsTextFragment *GetText();
   virtual PRUint32 TextLength() const;
   virtual nsresult SetText(const PRUnichar* aBuffer, PRUint32 aLength,
@@ -318,6 +322,7 @@ public:
 
   virtual void DestroyContent();
   virtual void SaveSubtreeState();
+#endif
 
   virtual nsISMILAttr* GetAnimatedAttr(PRInt32 /*aNamespaceID*/, nsIAtom* /*aName*/)
   {
@@ -339,12 +344,15 @@ public:
   void ListAttributes(FILE* out) const;
 #endif
 
+#if 0
   virtual const nsAttrValue* DoGetClasses() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
+#endif
   virtual mozilla::css::StyleRule* GetInlineStyleRule();
   virtual nsresult SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule,
                                       const nsAString* aSerialized,
                                       bool aNotify);
+#if 0
   NS_IMETHOD_(bool)
     IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
@@ -387,12 +395,16 @@ public:
   NS_IMETHOD GetNodeValue(nsAString& aNodeValue);
   NS_IMETHOD SetNodeValue(const nsAString& aNodeValue);
   NS_IMETHOD GetNodeType(PRUint16* aNodeType);
+#endif
   NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+#if 0
   NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI);
   NS_IMETHOD GetPrefix(nsAString& aPrefix);
   NS_IMETHOD IsSupported(const nsAString& aFeature,
                          const nsAString& aVersion, bool* aReturn);
+#endif
   NS_IMETHOD HasAttributes(bool* aHasAttributes);
+#if 0
   NS_IMETHOD HasChildNodes(bool* aHasChildNodes);
   nsresult InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                         nsIDOMNode** aReturn)
@@ -412,10 +424,12 @@ public:
   {
     return InsertBefore(aNewChild, nullptr, aReturn);
   }
+#endif
 
   // nsIDOMElement method implementation
   NS_DECL_NSIDOMELEMENT
 
+#if 0
   nsresult CloneNode(bool aDeep, PRUint8 aOptionalArgc, nsIDOMNode **aResult)
   {
     if (!aOptionalArgc) {
@@ -550,6 +564,7 @@ public:
   virtual void RecompileScriptEventListeners()
   {
   }
+#endif
 
   PRInt32 GetScrollTop();
   PRInt32 GetScrollLeft();
@@ -590,6 +605,7 @@ public:
    */
   virtual nsAttrInfo GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const;
 
+#if 0
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsGenericElement)
 
   virtual void NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
@@ -663,6 +679,7 @@ protected:
   static const bool kDontNotifyDocumentObservers = false;
   static const bool kCallAfterSetAttr            = true;
   static const bool kDontCallAfterSetAttr        = false;
+#endif
 
   /**
    * Set attribute and (if needed) notify documentobservers and fire off
@@ -746,6 +763,7 @@ protected:
    */
   // Note that this is inlined so that when subclasses call it it gets
   // inlined.  Those calls don't go through a vtable.
+#if 0
   virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                  const nsAttrValueOrString* aValue,
                                  bool aNotify)
@@ -790,6 +808,7 @@ protected:
    * Internal hook for converting an attribute name-string to an atomized name
    */
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
+#endif
 
   /**
    * Retrieve the rectangle for the offsetX properties, which
@@ -817,7 +836,6 @@ protected:
   nsresult GetAttributeNodeNSInternal(const nsAString& aNamespaceURI,
                                       const nsAString& aLocalName,
                                       nsIDOMAttr** aReturn);
-#endif
 
 public:
 #if 0
@@ -917,6 +935,7 @@ protected:
     OwnerDoc()->UnregisterFreezableElement(this);
   }
 
+#endif
   /**
    * Add/remove this element to the documents id cache
    */
@@ -941,6 +960,7 @@ protected:
       }
     }
   }
+#if 0
 
   /**
    * Functions to carry out event default actions for links of all types
@@ -988,7 +1008,6 @@ protected:
 #endif
 
 private:
-#if 0
   /**
    * Get this element's client area rect in app units.
    * @return the frame's client area
@@ -997,6 +1016,7 @@ private:
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr);
 
+#if 0
   nsContentList* GetChildrenList();
 #endif
 };

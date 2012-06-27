@@ -135,6 +135,7 @@ PRInt32 nsIContent::sTabFocusModel = eTabFocus_any;
 bool nsIContent::sTabFocusModelAppliesToXUL = false;
 PRUint32 nsMutationGuard::sMutationCount = 0;
 
+#if 0
 nsEventStates
 Element::IntrinsicState() const
 {
@@ -309,6 +310,7 @@ Element::ClearStyleStateLocks()
 
   NotifyStyleStateChange(locks);
 }
+#endif
 
 nsIContent*
 nsIContent::FindFirstNonNativeAnonymous() const
@@ -628,6 +630,7 @@ nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
   return mNode->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
 }
 
+#if 0
 nsIContent*
 FragmentOrElement::GetFirstElementChild()
 {
@@ -772,6 +775,7 @@ FragmentOrElement::GetNextElementSibling(nsIDOMElement** aResult)
 
   return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
+#endif
 
 nsContentList*
 FragmentOrElement::GetChildrenList()
@@ -787,6 +791,7 @@ FragmentOrElement::GetChildrenList()
   return slots->mChildrenList;
 }
 
+#if 0
 nsDOMTokenList*
 FragmentOrElement::GetClassList(nsresult *aResult)
 {
@@ -1183,6 +1188,7 @@ FragmentOrElement::GetClientRects(nsIDOMClientRectList** aResult)
   *aResult = rectList.forget().get();
   return NS_OK;
 }
+#endif
 
 
 //----------------------------------------------------------------------
@@ -1345,7 +1351,7 @@ FragmentOrElement::nsDOMSlots::Unlink(bool aIsXUL)
 }
 
 FragmentOrElement::FragmentOrElement(already_AddRefed<nsINodeInfo> aNodeInfo)
-  : Element(aNodeInfo)
+  : nsIContent(aNodeInfo)
 {
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE ||
                     (mNodeInfo->NodeType() ==
@@ -1488,6 +1494,7 @@ FragmentOrElement::IsSupported(const nsAString& aFeature,
   return InternalIsSupported(this, aFeature, aVersion, aReturn);
 }
 
+#if 0
 NS_IMETHODIMP
 FragmentOrElement::HasAttributes(bool* aReturn)
 {
@@ -1516,6 +1523,7 @@ FragmentOrElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 
   return NS_OK;
 }
+#endif
 
 nsresult
 FragmentOrElement::HasChildNodes(bool* aReturn)
@@ -1525,6 +1533,7 @@ FragmentOrElement::HasChildNodes(bool* aReturn)
   return NS_OK;
 }
 
+#if 0
 NS_IMETHODIMP
 FragmentOrElement::GetTagName(nsAString& aTagName)
 {
@@ -2225,6 +2234,7 @@ FragmentOrElement::UnbindFromTree(bool aDeep, bool aNullParent)
 
   nsNodeUtils::ParentChainChanged(this);
 }
+#endif
 
 already_AddRefed<nsINodeList>
 FragmentOrElement::GetChildren(PRUint32 aFilter)
@@ -2437,6 +2447,7 @@ FragmentOrElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   return NS_OK;
 }
 
+#if 0
 nsICSSDeclaration*
 FragmentOrElement::GetSMILOverrideStyle()
 {
@@ -2500,6 +2511,7 @@ FragmentOrElement::SetInlineStyleRule(css::StyleRule* aStyleRule,
   NS_NOTYETIMPLEMENTED("FragmentOrElement::SetInlineStyleRule");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+#endif
 
 NS_IMETHODIMP_(bool)
 FragmentOrElement::IsAttributeMapped(const nsIAtom* aAttribute) const
@@ -3580,6 +3592,7 @@ FragmentOrElement::CopyInnerTo(FragmentOrElement* aDst)
   return NS_OK;
 }
 
+#if 0
 bool
 FragmentOrElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID,
                                         nsIAtom* aName,
@@ -3834,6 +3847,7 @@ FragmentOrElement::SetMappedAttribute(nsIDocument* aDocument,
   *aRetval = NS_OK;
   return false;
 }
+#endif
 
 nsEventListenerManager*
 FragmentOrElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
@@ -3843,6 +3857,7 @@ FragmentOrElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
   return GetListenerManager(true);
 }
 
+#if 0
 FragmentOrElement::nsAttrInfo
 FragmentOrElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const
 {
@@ -4041,6 +4056,7 @@ FragmentOrElement::GetAttrCount() const
 {
   return mAttrsAndChildren.AttrCount();
 }
+#endif
 
 const nsTextFragment*
 FragmentOrElement::GetText()
@@ -4090,6 +4106,7 @@ FragmentOrElement::AppendTextTo(nsAString& aResult)
   NS_NOTREACHED("called FragmentOrElement::TextLength");
 }
 
+#if 0
 #ifdef DEBUG
 void
 FragmentOrElement::ListAttributes(FILE* out) const
@@ -4242,6 +4259,7 @@ FragmentOrElement::DumpContent(FILE* out, PRInt32 aIndent,
 
   if(aIndent) fputs("\n", out);
 }
+#endif
 #endif
 
 PRUint32
@@ -4646,6 +4664,7 @@ FragmentOrElement::doQuerySelectorAll(nsINode* aRoot,
 }
 
 
+#if 0
 bool
 FragmentOrElement::MozMatchesSelector(const nsAString& aSelector, nsresult* aResult)
 {
@@ -4677,11 +4696,12 @@ FragmentOrElement::MozMatchesSelector(const nsAString& aSelector, bool* aReturn)
 
   return rv;
 }
+#endif
 
 size_t
 FragmentOrElement::SizeOfExcludingThis(nsMallocSizeOfFun aMallocSizeOf) const
 {
-  return Element::SizeOfExcludingThis(aMallocSizeOf) +
+  return nsIContent::SizeOfExcludingThis(aMallocSizeOf) +
          mAttrsAndChildren.SizeOfExcludingThis(aMallocSizeOf);
 }
 
@@ -4727,6 +4747,7 @@ FragmentOrElement::AttrValueToCORSMode(const nsAttrValue* aValue)
   return CORSMode(aValue->GetEnumValue());
 }
 
+#if 0
 NS_IMETHODIMP
 FragmentOrElement::GetOnmouseenter(JSContext* cx, JS::Value* vp)
 {
@@ -4809,4 +4830,4 @@ nsresult FragmentOrElement::MozRequestFullScreen()
 
   return NS_OK;
 }
-
+#endif
