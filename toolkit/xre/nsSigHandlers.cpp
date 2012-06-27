@@ -56,7 +56,7 @@ static const int kClientChannelFd = 3;
 
 extern "C" {
 
-static void PrintStackFrame(void *aPC, void *aClosure)
+static void PrintStackFrame(void *aPC, void *aSP, void *aClosure)
 {
   char buf[1024];
   nsCodeAddressDetails details;

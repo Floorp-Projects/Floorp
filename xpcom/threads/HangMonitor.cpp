@@ -106,7 +106,7 @@ Crash()
 
 #ifdef REPORT_CHROME_HANGS
 static void
-ChromeStackWalker(void *aPC, void *aClosure)
+ChromeStackWalker(void *aPC, void *aSP, void *aClosure)
 {
   MOZ_ASSERT(aClosure);
   Telemetry::HangStack *callStack =
