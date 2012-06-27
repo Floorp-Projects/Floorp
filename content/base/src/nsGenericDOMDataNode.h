@@ -309,6 +309,11 @@ protected:
   nsTextFragment mText;
 
 public:
+  virtual bool OwnedOnlyByTheDOMTree()
+  {
+    return GetParent() && mRefCnt.get() == 1;
+  }
+
   virtual bool IsPurple()
   {
     return mRefCnt.IsPurple();
