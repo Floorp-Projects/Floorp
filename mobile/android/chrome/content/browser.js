@@ -1268,7 +1268,6 @@ var NativeWindow = {
 
       // only send the contextmenu event to content if we are planning to show a context menu (i.e. not on every long tap)
       if (this.menuitems) {
-        BrowserEventHandler.blockClick = true;
         let event = rootElement.ownerDocument.createEvent("MouseEvent");
         event.initMouseEvent("contextmenu", true, true, content,
                              0, aX, aY, aX, aY, false, false, false, false,
