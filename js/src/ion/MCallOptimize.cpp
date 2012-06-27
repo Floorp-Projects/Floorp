@@ -48,20 +48,63 @@
 namespace js {
 namespace ion {
 
+IonBuilder::InliningStatus
+IonBuilder::inlineNativeCall(JSNative native, uint32 argc, bool constructing)
+{
+    // Array natives.
+    if (native == js_Array)
+        return inlineArray(argc, constructing);
+    if (native == js::array_pop)
+        return inlineArrayPopShift(MArrayPopShift::Pop, argc, constructing);
+    if (native == js::array_shift)
+        return inlineArrayPopShift(MArrayPopShift::Shift, argc, constructing);
+    if (native == js::array_push)
+        return inlineArrayPush(argc, constructing);
+
+    // Math natives.
+    if (native == js_math_abs)
+        return inlineMathAbs(argc, constructing);
+    if (native == js_math_floor)
+        return inlineMathFloor(argc, constructing);
+    if (native == js_math_round)
+        return inlineMathRound(argc, constructing);
+    if (native == js_math_sqrt)
+        return inlineMathSqrt(argc, constructing);
+    if (native == js::math_sin)
+        return inlineMathFunction(MMathFunction::Sin, argc, constructing);
+    if (native == js::math_cos)
+        return inlineMathFunction(MMathFunction::Cos, argc, constructing);
+    if (native == js::math_tan)
+        return inlineMathFunction(MMathFunction::Tan, argc, constructing);
+    if (native == js::math_log)
+        return inlineMathFunction(MMathFunction::Log, argc, constructing);
+
+    // String natives.
+    if (native == js_str_charCodeAt)
+        return inlineStrCharCodeAt(argc, constructing);
+    if (native == js::str_fromCharCode)
+        return inlineStrFromCharCode(argc, constructing);
+    if (native == js_str_charAt)
+        return inlineStrCharAt(argc, constructing);
+
+    return InliningStatus_NotInlined;
+}
+
 bool
 IonBuilder::discardCallArgs(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
 {
     if (!argv.resizeUninitialized(argc + 1))
         return false;
 
-    // Bytecode order: Function, This, Arg0, Arg1, ..., ArgN, Call.
-    // Copy PassArg arguments from ArgN to This.
     for (int32 i = argc; i >= 0; i--) {
+        // Unwrap each MPassArg, replacing it with its contents.
         MPassArg *passArg = bb->pop()->toPassArg();
         MBasicBlock *block = passArg->block();
         MDefinition *wrapped = passArg->getArgument();
         passArg->replaceAllUsesWith(wrapped);
         block->discard(passArg);
+
+        // Remember contents in vector.
         argv[i] = wrapped;
     }
 
@@ -74,23 +117,56 @@ IonBuilder::discardCall(uint32 argc, MDefinitionVector &argv, MBasicBlock *bb)
     if (!discardCallArgs(argc, argv, bb))
         return false;
 
-    // Function MDefinition instruction implicitly consumed by inlining.
+    // Function MDefinition implicitly consumed by inlining.
     bb->pop();
-
     return true;
 }
 
-IonBuilder::InliningStatus
-IonBuilder::inlineMathFunction(MMathFunction::Function function, MIRType argType, MIRType returnType)
+types::TypeSet*
+IonBuilder::getInlineReturnTypeSet()
 {
-    if (!IsNumberType(argType))
+    types::TypeSet *barrier;
+    types::TypeSet *returnTypes = oracle->returnTypeSet(script, pc, &barrier);
+
+    JS_ASSERT(returnTypes);
+    return returnTypes;
+}
+
+MIRType
+IonBuilder::getInlineReturnType()
+{
+    types::TypeSet *returnTypes = getInlineReturnTypeSet();
+    return MIRTypeFromValueType(returnTypes->getKnownTypeTag(cx));
+}
+
+types::TypeSet*
+IonBuilder::getInlineArgTypeSet(uint32 argc, uint32 arg)
+{
+    types::TypeSet *argTypes = oracle->getCallArg(script, argc, arg, pc);
+    JS_ASSERT(argTypes);
+    return argTypes;
+}
+
+MIRType
+IonBuilder::getInlineArgType(uint32 argc, uint32 arg)
+{
+    types::TypeSet *argTypes = getInlineArgTypeSet(argc, arg);
+    return MIRTypeFromValueType(argTypes->getKnownTypeTag(cx));
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathFunction(MMathFunction::Function function, uint32 argc, bool constructing)
+{
+    if (argc != 1 || constructing)
         return InliningStatus_NotInlined;
 
-    if (returnType != MIRType_Double)
+    if (getInlineReturnType() != MIRType_Double)
+        return InliningStatus_NotInlined;
+    if (!IsNumberType(getInlineArgType(argc, 1)))
         return InliningStatus_NotInlined;
 
     MDefinitionVector argv;
-    if (!discardCall(/* argc = */ 1, argv, current))
+    if (!discardCall(argc, argv, current))
         return InliningStatus_Error;
 
     MMathFunction *ins = MMathFunction::New(argv[1], function);
@@ -100,235 +176,316 @@ IonBuilder::inlineMathFunction(MMathFunction::Function function, MIRType argType
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineNativeCall(JSFunction *target, uint32 argc, bool constructing)
+IonBuilder::inlineArray(uint32 argc, bool constructing)
 {
-    JSNative native = target->native();
-
-    // Currently constructing is only possible with Array()
-    if (constructing && native != js_Array)
+    // Multiple arguments imply array initialization, not just construction.
+    if (argc >= 2)
         return InliningStatus_NotInlined;
 
-    /* Check if there is a match for the current native function */
+    uint32_t initLength = 0;
 
-    types::TypeSet *barrier;
-    types::TypeSet *returnTypes = oracle->returnTypeSet(script, pc, &barrier);
-    MIRType returnType = MIRTypeFromValueType(returnTypes->getKnownTypeTag(cx));
+    // A single integer argument denotes initial length.
+    if (argc == 1) {
+        if (getInlineArgType(argc, 1) != MIRType_Int32)
+            return InliningStatus_NotInlined;
+        MDefinition *arg = current->peek(-1)->toPassArg()->getArgument();
+        if (!arg->isConstant())
+            return InliningStatus_NotInlined;
 
-    types::TypeSet *thisTypes = oracle->getCallArg(script, argc, 0, pc);
-    MIRType thisType = MIRTypeFromValueType(thisTypes->getKnownTypeTag(cx));
-    MDefinitionVector argv;
-
-    if (argc == 0) {
-        if (native == js_Array) {
-            if (!discardCall(argc, argv, current))
-                return InliningStatus_Error;
-            types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
-            MNewArray *ins = new MNewArray(0, type, MNewArray::NewArray_Unallocating);
-            current->add(ins);
-            current->push(ins);
-            if (!resumeAfter(ins))
-                return InliningStatus_Error;
-            return InliningStatus_Inlined;
-        }
-
-        if ((native == js::array_pop || native == js::array_shift) && thisType == MIRType_Object) {
-            // Only handle pop/shift on dense arrays which have never been used
-            // in an iterator --- when popping elements we don't account for
-            // suppressing deleted properties in active iterators.
-            //
-            // Constraints propagating properties directly into the result
-            // type set are generated by TypeConstraintCall during inference.
-            if (!thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY |
-                                           types::OBJECT_FLAG_ITERATED) &&
-                !types::ArrayPrototypeHasIndexedProperty(cx, script))
-            {
-                bool needsHoleCheck = thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
-                bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
-                MArrayPopShift::Mode mode = (native == js::array_pop) ? MArrayPopShift::Pop : MArrayPopShift::Shift;
-                JSValueType knownType = returnTypes->getKnownTypeTag(cx);
-                if (knownType == JSVAL_TYPE_UNDEFINED || knownType == JSVAL_TYPE_NULL)
-                    return InliningStatus_NotInlined;
-                MIRType resultType = MIRTypeFromValueType(knownType);
-                if (!discardCall(argc, argv, current))
-                    return InliningStatus_Error;
-                MArrayPopShift *ins = MArrayPopShift::New(argv[0], mode, needsHoleCheck, maybeUndefined);
-                current->add(ins);
-                current->push(ins);
-                ins->setResultType(resultType);
-                if (!resumeAfter(ins))
-                    return InliningStatus_Error;
-                return InliningStatus_Inlined;
-            }
-        }
-
-        return InliningStatus_NotInlined;
+        // Negative lengths generate a RangeError, unhandled by the inline path.
+        initLength = arg->toConstant()->value().toInt32();
+        if (initLength >= JSObject::NELEMENTS_LIMIT)
+            return InliningStatus_NotInlined;
     }
 
-    types::TypeSet *arg1Types = oracle->getCallArg(script, argc, 1, pc);
-    MIRType arg1Type = MIRTypeFromValueType(arg1Types->getKnownTypeTag(cx));
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
 
-    if (argc == 1) {
-        if (native == js_math_abs) {
-            // argThis == MPassArg(MConstant(Math))
-            if ((arg1Type == MIRType_Double || arg1Type == MIRType_Int32) &&
-                arg1Type == returnType) {
-                if (!discardCall(argc, argv, current))
-                    return InliningStatus_Error;
-                MAbs *ins = MAbs::New(argv[1], returnType);
-                current->add(ins);
-                current->push(ins);
-                return InliningStatus_Inlined;
-            }
-        }
-        if (native == js_math_sqrt) {
-            // argThis == MPassArg(MConstant(Math))
-            if ((arg1Type == MIRType_Double || arg1Type == MIRType_Int32) &&
-                returnType == MIRType_Double) {
-                if (!discardCall(argc, argv, current))
-                    return InliningStatus_Error;
-                MSqrt *ins = MSqrt::New(argv[1]);
-                current->add(ins);
-                current->push(ins);
-                return InliningStatus_Inlined;
-            }
-        }
-        if (native == js::math_log)
-            return inlineMathFunction(MMathFunction::Log, arg1Type, returnType);
-        if (native == js::math_sin)
-            return inlineMathFunction(MMathFunction::Sin, arg1Type, returnType);
-        if (native == js::math_cos)
-            return inlineMathFunction(MMathFunction::Cos, arg1Type, returnType);
-        if (native == js::math_tan)
-            return inlineMathFunction(MMathFunction::Tan, arg1Type, returnType);
-        if (native == js_math_floor) {
-            // argThis == MPassArg(MConstant(Math))
-            if (arg1Type == MIRType_Double && returnType == MIRType_Int32) {
-                if (!discardCall(argc, argv, current))
-                    return InliningStatus_Error;
-                MFloor *ins = new MFloor(argv[1]);
-                current->add(ins);
-                current->push(ins);
-                return InliningStatus_Inlined;
-            }
-            if (arg1Type == MIRType_Int32 && returnType == MIRType_Int32) {
-                // i == Math.floor(i)
-                if (!discardCall(argc, argv, current))
-                    return InliningStatus_Error;
-                current->push(argv[1]);
-                return InliningStatus_Inlined;
-            }
-        }
-        if (native == js_math_round) {
-            // argThis == MPassArg(MConstant(Math))
-            if (arg1Type == MIRType_Double && returnType == MIRType_Int32) {
-                if (!discardCall(argc, argv, current))
-                    return InliningStatus_Error;
-                MRound *ins = new MRound(argv[1]);
-                current->add(ins);
-                current->push(ins);
-                return InliningStatus_Inlined;
-            }
-            if (arg1Type == MIRType_Int32 && returnType == MIRType_Int32) {
-                // i == Math.round(i)
-                if (!discardCall(argc, argv, current))
-                    return InliningStatus_Error;
-                current->push(argv[1]);
-                return InliningStatus_Inlined;
-            }
-        }
-        // TODO: js_math_ceil
+    types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
+    MNewArray *ins = new MNewArray(initLength, type, MNewArray::NewArray_Unallocating);
+    current->add(ins);
+    current->push(ins);
 
-        // Compile any of the 3 because  charAt = fromCharCode . charCodeAt
-        if (native == js_str_charCodeAt || native == js_str_charAt ||
-            native == js::str_fromCharCode) {
+    if (!resumeAfter(ins))
+        return InliningStatus_Error;
+    return InliningStatus_Inlined;
+}
 
-            if (native == js_str_charCodeAt) {
-                if (returnType != MIRType_Int32 || thisType != MIRType_String ||
-                    arg1Type != MIRType_Int32) {
-                    return InliningStatus_NotInlined;
-                }
-            }
-
-            if (native == js_str_charAt) {
-                if (returnType != MIRType_String || thisType != MIRType_String ||
-                    arg1Type != MIRType_Int32) {
-                    return InliningStatus_NotInlined;
-                }
-            }
-
-            if (native == js::str_fromCharCode) {
-                // argThis == MPassArg(MConstant(String))
-                if (returnType != MIRType_String || arg1Type != MIRType_Int32)
-                    return InliningStatus_NotInlined;
-            }
-
-            if (!discardCall(argc, argv, current))
-                return InliningStatus_Error;
-            MDefinition *str = argv[0];
-            MDefinition *indexOrCode = argv[1];
-            MInstruction *ins = MToInt32::New(indexOrCode);
-            current->add(ins);
-            indexOrCode = ins;
-
-            if (native == js_str_charCodeAt || native == js_str_charAt) {
-                MStringLength *length = MStringLength::New(str);
-                MBoundsCheck *boundsCheck = MBoundsCheck::New(indexOrCode, length);
-                current->add(length);
-                current->add(boundsCheck);
-                ins = MCharCodeAt::New(str, indexOrCode);
-                current->add(ins);
-                indexOrCode = ins;
-            }
-            if (native == js::str_fromCharCode || native == js_str_charAt) {
-                ins = MFromCharCode::New(indexOrCode);
-                current->add(ins);
-            }
-            current->push(ins);
-            return InliningStatus_Inlined;
-        }
-        if (native == js_Array) {
-            if (arg1Type == MIRType_Int32) {
-                MDefinition *argv1 = current->peek(-1)->toPassArg()->getArgument();
-                if (argv1->isConstant()) {
-                    uint32 arg = argv1->toConstant()->value().toInt32();
-                    // Negative arguments generate a RangeError, which is not
-                    // handled by the inline path.
-                    if (arg < JSObject::NELEMENTS_LIMIT) {
-                        if (!discardCall(argc, argv, current))
-                            return InliningStatus_Error;
-                        types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
-                        MNewArray *ins = new MNewArray(arg, type, MNewArray::NewArray_Unallocating);
-                        current->add(ins);
-                        current->push(ins);
-                        if (!resumeAfter(ins))
-                            return InliningStatus_Error;
-                        return InliningStatus_Inlined;
-                    }
-                }
-            }
-        }
-        if (native == js::array_push) {
-            // Constraints propagating properties into the 'this' object are
-            // generated by TypeConstraintCall during inference.
-            if (thisType == MIRType_Object && returnType == MIRType_Int32 &&
-                !thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
-                !types::ArrayPrototypeHasIndexedProperty(cx, script))
-            {
-                if (!discardCall(argc, argv, current))
-                    return InliningStatus_Error;
-                MArrayPush *ins = MArrayPush::New(argv[0], argv[1]);
-                current->add(ins);
-                current->push(ins);
-                if (!resumeAfter(ins))
-                    return InliningStatus_Error;
-                return InliningStatus_Inlined;
-            }
-        }
-
+IonBuilder::InliningStatus
+IonBuilder::inlineArrayPopShift(MArrayPopShift::Mode mode, uint32 argc, bool constructing)
+{
+    if (constructing)
         return InliningStatus_NotInlined;
+
+    MIRType returnType = getInlineReturnType();
+    if (returnType == MIRType_Undefined || returnType == MIRType_Null)
+        return InliningStatus_NotInlined;
+    if (getInlineArgType(argc, 0) != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    // Pop and shift are only handled for dense arrays that have never been
+    // used in an iterator: popping elements does not account for suppressing
+    // deleted properties in active iterators.
+    //
+    // Inference's TypeConstraintCall generates the constraints that propagate
+    // properties directly into the result type set.
+    types::TypeObjectFlags unhandledFlags =
+        types::OBJECT_FLAG_NON_DENSE_ARRAY | types::OBJECT_FLAG_ITERATED;
+
+    types::TypeSet *thisTypes = getInlineArgTypeSet(argc, 0);
+    if (thisTypes->hasObjectFlags(cx, unhandledFlags))
+        return InliningStatus_NotInlined;
+    if (types::ArrayPrototypeHasIndexedProperty(cx, script))
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    types::TypeSet *returnTypes = getInlineReturnTypeSet();
+    bool needsHoleCheck = thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+    bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
+
+    MArrayPopShift *ins = MArrayPopShift::New(argv[0], mode, needsHoleCheck, maybeUndefined);
+    current->add(ins);
+    current->push(ins);
+    ins->setResultType(returnType);
+
+    if (!resumeAfter(ins))
+        return InliningStatus_Error;
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineArrayPush(uint32 argc, bool constructing)
+{
+    if (argc != 1 || constructing)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+    if (getInlineArgType(argc, 0) != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    // Inference's TypeConstraintCall generates the constraints that propagate
+    // properties directly into the result type set.
+    types::TypeSet *thisTypes = getInlineArgTypeSet(argc, 0);
+    if (thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY))
+        return InliningStatus_NotInlined;
+    if (types::ArrayPrototypeHasIndexedProperty(cx, script))
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    MArrayPush *ins = MArrayPush::New(argv[0], argv[1]);
+    current->add(ins);
+    current->push(ins);
+
+    if (!resumeAfter(ins))
+        return InliningStatus_Error;
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathAbs(uint32 argc, bool constructing)
+{
+    if (argc != 1 || constructing)
+        return InliningStatus_NotInlined;
+
+    MIRType returnType = getInlineReturnType();
+    MIRType argType = getInlineArgType(argc, 1);
+    if (argType != MIRType_Int32 && argType != MIRType_Double)
+        return InliningStatus_NotInlined;
+    if (argType != returnType)
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    MAbs *ins = MAbs::New(argv[1], returnType);
+    current->add(ins);
+    current->push(ins);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathFloor(uint32 argc, bool constructing)
+{  
+    if (argc != 1 || constructing)
+        return InliningStatus_NotInlined;
+
+    MIRType argType = getInlineArgType(argc, 1);
+    if (getInlineReturnType() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    // Math.floor(int(x)) == int(x)
+    if (argType == MIRType_Int32) {
+        MDefinitionVector argv;
+        if (!discardCall(argc, argv, current))
+            return InliningStatus_Error;
+        current->push(argv[1]);
+        return InliningStatus_Inlined;
+    }
+
+    if (argType == MIRType_Double) {
+        MDefinitionVector argv;
+        if (!discardCall(argc, argv, current))
+            return InliningStatus_Error;
+        MFloor *ins = new MFloor(argv[1]);
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
     }
 
     return InliningStatus_NotInlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathRound(uint32 argc, bool constructing)
+{
+    if (argc != 1 || constructing)
+        return InliningStatus_NotInlined;
+
+    MIRType returnType = getInlineReturnType();
+    MIRType argType = getInlineArgType(argc, 1);
+
+    // Math.round(int(x)) == int(x)
+    if (argType == MIRType_Int32 && returnType == MIRType_Int32) {
+        MDefinitionVector argv;
+        if (!discardCall(argc, argv, current))
+            return InliningStatus_Error;
+        current->push(argv[1]);
+        return InliningStatus_Inlined;
+    }
+
+    if (argType == MIRType_Double && returnType == MIRType_Int32) {
+        MDefinitionVector argv;
+        if (!discardCall(argc, argv, current))
+            return InliningStatus_Error;
+        MRound *ins = new MRound(argv[1]);
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
+    return InliningStatus_NotInlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathSqrt(uint32 argc, bool constructing)
+{
+    if (argc != 1 || constructing)
+        return InliningStatus_NotInlined;
+
+    MIRType argType = getInlineArgType(argc, 1);
+    if (getInlineReturnType() != MIRType_Double)
+        return InliningStatus_NotInlined;
+    if (argType != MIRType_Double && argType != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    MSqrt *sqrt = MSqrt::New(argv[1]);
+    current->add(sqrt);
+    current->push(sqrt);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineStrCharCodeAt(uint32 argc, bool constructing)
+{
+    if (argc != 1 || constructing)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_Int32)
+        return InliningStatus_NotInlined;
+    if (getInlineArgType(argc, 0) != MIRType_String)
+        return InliningStatus_NotInlined;
+    if (getInlineArgType(argc, 1) != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    MToInt32 *index = MToInt32::New(argv[1]);
+    current->add(index);
+
+    MStringLength *length = MStringLength::New(argv[0]);
+    current->add(length);
+    MBoundsCheck *boundsCheck = MBoundsCheck::New(index, length);
+    current->add(boundsCheck);
+
+    MCharCodeAt *charCode = MCharCodeAt::New(argv[0], index);
+    current->add(charCode);
+    current->push(charCode);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineStrFromCharCode(uint32 argc, bool constructing)
+{
+    if (argc != 1 || constructing)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_String)
+        return InliningStatus_NotInlined;
+    if (getInlineArgType(argc, 1) != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    MToInt32 *charCode = MToInt32::New(argv[1]);
+    current->add(charCode);
+
+    MFromCharCode *string = MFromCharCode::New(charCode);
+    current->add(string);
+    current->push(string);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineStrCharAt(uint32 argc, bool constructing)
+{
+    if (argc != 1 || constructing)
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_String)
+        return InliningStatus_NotInlined;
+    if (getInlineArgType(argc, 0) != MIRType_String)
+        return InliningStatus_NotInlined;
+    if (getInlineArgType(argc, 1) != MIRType_Int32)
+        return InliningStatus_NotInlined;
+
+    MDefinitionVector argv;
+    if (!discardCall(argc, argv, current))
+        return InliningStatus_Error;
+
+    MToInt32 *index = MToInt32::New(argv[1]);
+    current->add(index);
+
+    MStringLength *length = MStringLength::New(argv[0]);
+    current->add(length);
+    MBoundsCheck *boundsCheck = MBoundsCheck::New(index, length);
+    current->add(boundsCheck);
+
+    // String.charAt(x) = String.fromCharCode(String.charCodeAt(x))
+    MCharCodeAt *charCode = MCharCodeAt::New(argv[0], index);
+    current->add(charCode);
+
+    MFromCharCode *string = MFromCharCode::New(charCode);
+    current->add(string);
+    current->push(string);
+    return InliningStatus_Inlined;
 }
 
 } // namespace ion
