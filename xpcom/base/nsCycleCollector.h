@@ -41,7 +41,8 @@ void nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes = false);
 void nsCycleCollector_logPurpleRemoval(void* aObject);
 #endif
 
-void nsCycleCollector_collect(nsCycleCollectorResults *aResults,
+void nsCycleCollector_collect(bool aMergeCompartments,
+                              nsCycleCollectorResults *aResults,
                               nsICycleCollectorListener *aListener);
 PRUint32 nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdownThreads();
