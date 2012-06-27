@@ -2637,6 +2637,112 @@ SetLocationForGlobal(JSObject *global, nsIURI *locationURI)
 
 } // namespace xpc
 
+static void
+NoteJSChildGrayWrapperShim(void *data, void *thing)
+{
+    TraversalTracer *trc = static_cast<TraversalTracer*>(data);
+    NoteJSChild(trc, thing, js_GetGCThingTraceKind(thing));
+}
+
+static void
+TraverseObjectShim(void *data, void *thing)
+{
+    nsCycleCollectionTraversalCallback *cb =
+        static_cast<nsCycleCollectionTraversalCallback*>(data);
+
+    MOZ_ASSERT(js_GetGCThingTraceKind(thing) == JSTRACE_OBJECT);
+    TraverseGCThing(TRAVERSE_CPP, thing, JSTRACE_OBJECT, *cb);
+}
+
+/*
+ * The cycle collection participant for a JSCompartment is intended to produce the same
+ * results as if all of the gray GCthings in a compartment were merged into a single node,
+ * except for self-edges. This avoids the overhead of representing all of the GCthings in
+ * the compartment in the cycle collector graph, which should be much faster if many of
+ * the GCthings in the compartment are gray.
+ *
+ * Compartment merging should not always be used, because it is a conservative
+ * approximation of the true cycle collector graph that can incorrectly identify some
+ * garbage objects as being live. For instance, consider two cycles that pass through a
+ * compartment, where one is garbage and the other is live. If we merge the entire
+ * compartment, the cycle collector will think that both are alive.
+ *
+ * We don't have to worry about losing track of a garbage cycle, because any such garbage
+ * cycle incorrectly identified as live must contain at least one C++ to JS edge, and
+ * XPConnect will always add the C++ object to the CC graph. (This is in contrast to pure
+ * C++ garbage cycles, which must always be properly identified, because we clear the
+ * purple buffer during every CC, which may contain the last reference to a garbage
+ * cycle.)
+ */
+class JSCompartmentParticipant : public nsCycleCollectionParticipant
+{
+public:
+    static NS_METHOD TraverseImpl(JSCompartmentParticipant *that, void *p,
+                                  nsCycleCollectionTraversalCallback &cb)
+    {
+        MOZ_ASSERT(!cb.WantAllTraces());
+        JSCompartment *c = static_cast<JSCompartment*>(p);
+
+        /*
+         * We treat the compartment as being gray. We handle non-gray GCthings in the
+         * compartment by not reporting their children to the CC. The black-gray invariant
+         * ensures that any JS children will also be non-gray, and thus don't need to be
+         * added to the graph. For C++ children, not representing the edge from the
+         * non-gray JS GCthings to the C++ object will keep the child alive.
+         *
+         * We don't allow compartment merging in a WantAllTraces CC, because then these
+         * assumptions don't hold.
+         */
+        cb.DescribeGCedNode(false, sizeof(js::shadow::Object), "JS Compartment");
+
+        /*
+         * Every JS child of everything in the compartment is either in the compartment
+         * or is a cross-compartment wrapper. In the former case, we don't need to
+         * represent these edges in the CC graph because JS objects are not ref counted.
+         * In the latter case, the JS engine keeps a map of these wrappers, which we
+         * iterate over.
+         */
+        TraversalTracer trc(cb);
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+        JS_TracerInit(&trc, rt, NoteJSChildTracerShim);
+        trc.eagerlyTraceWeakMaps = false;
+        js::VisitGrayWrapperTargets(c, NoteJSChildGrayWrapperShim, &trc);
+
+        /*
+         * To find C++ children of things in the compartment, we scan every JS Object in
+         * the compartment. Only JS Objects can have C++ children.
+         */
+        js::IterateGrayObjects(c, TraverseObjectShim, &cb);
+
+        return NS_OK;
+    }
+
+    static NS_METHOD RootImpl(void *p)
+    {
+        return NS_OK;
+    }
+    
+    static NS_METHOD UnlinkImpl(void *p)
+    {
+        return NS_OK;
+    }
+
+    static NS_METHOD UnrootImpl(void *p)
+    {
+        return NS_OK;
+    }
+};
+
+static CCParticipantVTable<JSCompartmentParticipant>::Type JSCompartment_cycleCollectorGlobal = {
+    NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSCompartmentParticipant)
+};
+
+nsCycleCollectionParticipant *
+xpc_JSCompartmentParticipant()
+{
+    return JSCompartment_cycleCollectorGlobal.GetParticipant();
+}
+
 NS_IMETHODIMP
 nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)
 {
