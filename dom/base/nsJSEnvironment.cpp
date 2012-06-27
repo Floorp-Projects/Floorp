@@ -2953,6 +2953,12 @@ nsJSContext::ShrinkGCBuffersNow()
   JS_ShrinkGCBuffers(nsJSRuntime::sRuntime);
 }
 
+static bool
+DoMergingCC()
+{
+  return false;
+}
+
 //Static
 void
 nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
@@ -2988,8 +2994,10 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     ++sCleanupsSinceLastGC;
   }
 
+  bool mergingCC = DoMergingCC();
+
   nsCycleCollectorResults ccResults;
-  nsCycleCollector_collect(false, &ccResults, aListener);
+  nsCycleCollector_collect(mergingCC, &ccResults, aListener);
   sCCollectedWaitingForGC += ccResults.mFreedRefCounted + ccResults.mFreedGCed;
 
   // If we collected a substantial amount of cycles, poke the GC since more objects
@@ -3017,13 +3025,18 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       sFirstCollectionTime = now;
     }
 
+    nsCString mergeMsg;
+    if (mergingCC) {
+      mergeMsg.AssignLiteral(" merged");
+    }
+
     nsCString gcMsg;
     if (ccResults.mForcedGC) {
       gcMsg.AssignLiteral(", forced a GC");
     }
 
     NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
-      NS_LL("CC(T+%.1f) duration: %llums, suspected: %lu, visited: %lu RCed and %lu GCed, collected: %lu RCed and %lu GCed (%lu waiting for GC)%s\n")
+      NS_LL("CC(T+%.1f) duration: %llums, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu waiting for GC)%s\n")
       NS_LL("ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, removed: %lu"));
     nsString msg;
     PRUint32 cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
@@ -3031,7 +3044,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       ? 0 : sMinForgetSkippableTime;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
                                         (now - start) / PR_USEC_PER_MSEC, suspected,
-                                        ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
+                                        ccResults.mVisitedRefCounted, ccResults.mVisitedGCed, mergeMsg.get(),
                                         ccResults.mFreedRefCounted, ccResults.mFreedGCed,
                                         sCCollectedWaitingForGC, gcMsg.get(),
                                         sForgetSkippableBeforeCC,
