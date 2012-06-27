@@ -1427,6 +1427,22 @@ mjit::Compiler::jsop_setelem_typed(int atype)
         FrameEntry *slotsFe = loop->invariantArraySlots(objv);
         objReg = frame.tempRegForData(slotsFe);
         frame.pinReg(objReg);
+    } else if (obj->isConstant()) {
+        JSObject *array = &obj->getValue().toObject();
+        int32_t length = (int32_t) TypedArray::getLength(array);
+        void *data = TypedArray::getDataOffset(array);
+
+        objReg = frame.allocReg();
+
+        if (key.isConstant()) {
+            if (key.index() >= length)
+                stubcc.linkExit(masm.jump(), Uses(2));
+        } else {
+            Jump lengthGuard = masm.branch32(Assembler::AboveOrEqual, key.reg(), Imm32(length));
+            stubcc.linkExit(lengthGuard, Uses(2));
+        }
+
+        masm.move(ImmPtr(data), objReg);
     } else {
         objReg = frame.copyDataIntoReg(obj);
 
@@ -1519,8 +1535,6 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         return true;
     }
 
-    frame.forgetMismatchedObject(obj);
-
     // If the object is definitely a dense array or a typed array we can generate
     // code directly without using an inline cache.
     if (cx->typeInferenceEnabled()) {
@@ -1545,6 +1559,8 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
         }
 #endif
     }
+
+    frame.forgetMismatchedObject(obj);
 
     if (id->isType(JSVAL_TYPE_DOUBLE) || !globalObj) {
         jsop_setelem_slow();
@@ -2011,6 +2027,22 @@ mjit::Compiler::jsop_getelem_typed(int atype)
         FrameEntry *slotsFe = loop->invariantArraySlots(objv);
         objReg = frame.tempRegForData(slotsFe);
         frame.pinReg(objReg);
+    } else if (obj->isConstant()) {
+        JSObject *array = &obj->getValue().toObject();
+        int32_t length = (int32_t) TypedArray::getLength(array);
+        void *data = TypedArray::getDataOffset(array);
+
+        objReg = frame.allocReg();
+
+        if (key.isConstant()) {
+            if (key.index() >= length)
+                stubcc.linkExit(masm.jump(), Uses(2));
+        } else {
+            Jump lengthGuard = masm.branch32(Assembler::AboveOrEqual, key.reg(), Imm32(length));
+            stubcc.linkExit(lengthGuard, Uses(2));
+        }
+
+        masm.move(ImmPtr(data), objReg);
     } else {
         objReg = frame.copyDataIntoReg(obj);
 
