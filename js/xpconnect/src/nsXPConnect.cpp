@@ -820,6 +820,7 @@ static inline void
 NoteGCThingJSChildren(JSRuntime *rt, void *p, JSGCTraceKind traceKind,
                       nsCycleCollectionTraversalCallback &cb)
 {
+    MOZ_ASSERT(rt);
     TraversalTracer trc(cb);
     JS_TracerInit(&trc, rt, NoteJSChild);
     trc.eagerlyTraceWeakMaps = false;
@@ -861,11 +862,16 @@ NoteGCThingXPCOMChildren(js::Class *clasp, JSObject *obj,
     }
 }
 
-NS_METHOD
-nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
-                                     nsCycleCollectionTraversalCallback &cb)
+enum TraverseSelect {
+    TRAVERSE_CPP,
+    TRAVERSE_FULL
+};
+
+static void
+TraverseGCThing(TraverseSelect ts, void *p, JSGCTraceKind traceKind,
+                nsCycleCollectionTraversalCallback &cb)
 {
-    JSGCTraceKind traceKind = js_GetGCThingTraceKind(p);
+    MOZ_ASSERT(traceKind == js_GetGCThingTraceKind(p));
     JSObject *obj = nsnull;
     js::Class *clasp = nsnull;
 
@@ -895,23 +901,31 @@ nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
 
     bool isMarked = markJSObject || !xpc_IsGrayGCThing(p);
 
-    DescribeGCThing(isMarked, p, traceKind, cb);
+    if (ts == TRAVERSE_FULL)
+        DescribeGCThing(isMarked, p, traceKind, cb);
 
     // If this object is alive, then all of its children are alive. For JS objects,
     // the black-gray invariant ensures the children are also marked black. For C++
     // objects, the ref count from this object will keep them alive. Thus we don't
     // need to trace our children, unless we are debugging using WantAllTraces.
     if (isMarked && !cb.WantAllTraces())
-        return NS_OK;
+        return;
 
-    NoteGCThingJSChildren(nsXPConnect::GetRuntimeInstance()->GetJSRuntime(),
-                          p, traceKind, cb);
-
+    if (ts == TRAVERSE_FULL)
+        NoteGCThingJSChildren(nsXPConnect::GetRuntimeInstance()->GetJSRuntime(),
+                              p, traceKind, cb);
+ 
     if (traceKind != JSTRACE_OBJECT || dontTraverse)
-        return NS_OK;
+        return;
 
     NoteGCThingXPCOMChildren(clasp, obj, cb);
+}
 
+NS_METHOD
+nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
+                                     nsCycleCollectionTraversalCallback &cb)
+{
+    TraverseGCThing(TRAVERSE_FULL, p, js_GetGCThingTraceKind(p), cb);
     return NS_OK;
 }
 
