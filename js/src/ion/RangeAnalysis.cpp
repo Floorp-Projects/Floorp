@@ -8,36 +8,36 @@
 
 #include "Ion.h"
 #include "IonSpewer.h"
-#include "EdgeCaseAnalysis.h"
+#include "RangeAnalysis.h"
 #include "MIR.h"
 #include "MIRGraph.h"
 
 using namespace js;
 using namespace js::ion;
 
-EdgeCaseAnalysis::EdgeCaseAnalysis(MIRGraph &graph)
+RangeAnalysis::RangeAnalysis(MIRGraph &graph)
   : graph(graph)
 {
 }
 
 bool
-EdgeCaseAnalysis::analyzeLate()
+RangeAnalysis::analyzeLate()
 {
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         for (MDefinitionIterator iter(*block); iter; iter++)
-            iter->analyzeEdgeCasesForward();
+            iter->analyzeRangeForward();
     }
 
     for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
         for (MInstructionReverseIterator riter(block->rbegin()); riter != block->rend(); riter++)
-            riter->analyzeEdgeCasesBackward();
+            riter->analyzeRangeBackward();
     }
 
     return true;
 }
 
 bool
-EdgeCaseAnalysis::analyzeEarly()
+RangeAnalysis::analyzeEarly()
 {
 
     for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
@@ -49,7 +49,7 @@ EdgeCaseAnalysis::analyzeEarly()
 }
 
 bool
-EdgeCaseAnalysis::AllUsesTruncate(MInstruction *m)
+RangeAnalysis::AllUsesTruncate(MInstruction *m)
 {
     for (MUseIterator use = m->usesBegin(); use != m->usesEnd(); use++) {
         if (use->node()->isResumePoint())
