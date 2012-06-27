@@ -108,25 +108,16 @@ CodeGeneratorX64::visitOsrValue(LOsrValue *value)
     return true;
 }
 
-static inline JSValueShiftedTag
-MIRTypeToShiftedTag(MIRType type)
-{
-    JS_ASSERT(type != MIRType_Double && type >= MIRType_Boolean);
-    return (JSValueShiftedTag) JSVAL_TYPE_TO_SHIFTED_TAG(ValueTypeFromMIRType(type));
-}
-
 bool
 CodeGeneratorX64::visitBox(LBox *box)
 {
     const LAllocation *in = box->getOperand(0);
     const LDefinition *result = box->getDef(0);
 
-    if (box->type() != MIRType_Double) {
-        JSValueShiftedTag tag = MIRTypeToShiftedTag(box->type());
-        masm.boxValue(tag, ToOperand(in), ToRegister(result));
-    } else {
+    if (box->type() != MIRType_Double)
+        masm.boxValue(ValueTypeFromMIRType(box->type()), ToOperand(in), ToRegister(result));
+    else
         masm.movqsd(ToFloatRegister(in), ToRegister(result));
-    }
     return true;
 }
 
@@ -265,8 +256,8 @@ CodeGeneratorX64::storeUnboxedValue(const LAllocation *value, MIRType valueType,
         masm.moveValue(*value->toConstant(), ScratchReg);
         masm.movq(ScratchReg, dest);
     } else {
-        JSValueShiftedTag tag = MIRTypeToShiftedTag(valueType);
-        masm.boxValue(tag, ToOperand(value), ScratchReg);
+        JSValueType type = ValueTypeFromMIRType(valueType);
+        masm.boxValue(type, ToOperand(value), ScratchReg);
         masm.movq(ScratchReg, dest);
     }
 }
