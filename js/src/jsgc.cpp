@@ -4541,6 +4541,7 @@ StartVerifyBarriers(JSRuntime *rt)
     rt->gcIncrementalState = MARK;
     rt->gcMarker.start(rt);
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        PurgeJITCaches(c);
         c->setNeedsBarrier(true);
         c->arenas.prepareForIncrementalGC(rt);
     }
@@ -4626,6 +4627,7 @@ EndVerifyBarriers(JSRuntime *rt)
         if (!c->needsBarrier())
             compartmentCreated = true;
 
+        PurgeJITCaches(c);
         c->setNeedsBarrier(false);
     }
 
@@ -4822,6 +4824,27 @@ PurgePCCounts(JSContext *cx)
     JS_ASSERT(!rt->profilingScripts);
 
     ReleaseScriptCounts(rt->defaultFreeOp());
+}
+
+void
+PurgeJITCaches(JSCompartment *c)
+{
+    for (CellIterUnderGC i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
+        JSScript *script = i.get<JSScript>();
+
+        /* Discard JM caches. */
+        for (int constructing = 0; constructing <= 1; constructing++) {
+            for (int barriers = 0; barriers <= 1; barriers++) {
+                mjit::JITScript *jit = script->getJIT((bool) constructing, (bool) barriers);
+                if (jit)
+                    jit->purgeCaches();
+            }
+        }
+
+        /* Discard Ion caches. */
+        if (script->hasIonScript())
+            script->ion->purgeCaches();
+    }
 }
 
 } /* namespace js */
