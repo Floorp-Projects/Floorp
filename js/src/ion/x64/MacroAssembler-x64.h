@@ -704,9 +704,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             double d;
         } pun;
         pun.d = d;
-        if (pun.u == 0) {
-            xorpd(dest, dest);
-        } else {
+        if (!maybeInlineDouble(pun.u, dest)) {
             movq(ImmWord(pun.u), ScratchReg);
             movqsd(ScratchReg, dest);
         }

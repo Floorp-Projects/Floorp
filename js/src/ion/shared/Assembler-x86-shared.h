@@ -1007,8 +1007,14 @@ class AssemblerX86Shared
             JS_NOT_REACHED("unexpected operand kind");
         }
     }
-    void psrlq(Imm32 shift, const FloatRegister &dest) {
+    void psrldq(Imm32 shift, const FloatRegister &dest) {
         masm.psrldq_rr(dest.code(), shift.value);
+    }
+    void psllq(Imm32 shift, const FloatRegister &dest) {
+        masm.psllq_rr(dest.code(), shift.value);
+    }
+    void psrlq(Imm32 shift, const FloatRegister &dest) {
+        masm.psrlq_rr(dest.code(), shift.value);
     }
 
     void cvtsi2sd(const Operand &src, const FloatRegister &dest) {
@@ -1042,6 +1048,9 @@ class AssemblerX86Shared
     void ucomisd(const FloatRegister &lhs, const FloatRegister &rhs) {
         masm.ucomisd_rr(rhs.code(), lhs.code());
     }
+    void pcmpeqw(const FloatRegister &lhs, const FloatRegister &rhs) {
+        masm.pcmpeqw_rr(rhs.code(), lhs.code());
+    }    
     void movd(const Register &src, const FloatRegister &dest) {
         masm.movd_rr(src.code(), dest.code());
     }
