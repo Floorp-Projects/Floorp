@@ -547,6 +547,8 @@ public:
   PRInt32 GetScrollLeft();
   PRInt32 GetScrollHeight();
   PRInt32 GetScrollWidth();
+  PRInt32 GetScrollLeftMax();
+  PRInt32 GetScrollTopMax();
   PRInt32 GetClientTop()
   {
     return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().y);

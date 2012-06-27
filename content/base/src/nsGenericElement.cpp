@@ -1045,6 +1045,44 @@ nsGenericElement::GetScrollWidth(PRInt32 *aScrollWidth)
   return NS_OK;
 }
 
+PRInt32
+nsGenericElement::GetScrollLeftMax()
+{
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (!sf) {
+    return 0;
+  }
+
+  return nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().XMost());
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetScrollLeftMax(PRInt32 *aScrollLeftMax)
+{
+  *aScrollLeftMax = GetScrollLeftMax();
+
+  return NS_OK;
+}
+
+PRInt32
+nsGenericElement::GetScrollTopMax()
+{
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (!sf) {
+    return 0;
+  }
+
+  return nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().YMost());
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetScrollTopMax(PRInt32 *aScrollTopMax)
+{
+  *aScrollTopMax = GetScrollTopMax();
+
+  return NS_OK;
+}
+
 nsRect
 nsGenericElement::GetClientAreaRect()
 {
