@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_Element_h__
 #define mozilla_dom_Element_h__
 
-#include "nsIContent.h"
+#include "mozilla/dom/FragmentOrElement.h"
 #include "nsEventStates.h"
 
 class nsEventStateManager;
@@ -60,12 +60,12 @@ class Link;
 { 0xc6c049a1, 0x96e8, 0x4580, \
   { 0xa6, 0x93, 0xb9, 0x5f, 0x53, 0xbe, 0xe8, 0x1c } }
 
-class Element : public nsIContent
+class Element : public FragmentOrElement
 {
 public:
 #ifdef MOZILLA_INTERNAL_API
   Element(already_AddRefed<nsINodeInfo> aNodeInfo) :
-    nsIContent(aNodeInfo),
+    FragmentOrElement(aNodeInfo),
     mState(NS_EVENT_STATE_MOZ_READONLY)
   {}
 #endif // MOZILLA_INTERNAL_API
