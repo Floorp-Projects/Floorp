@@ -1741,14 +1741,6 @@ EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce,
     JS_ASSERT(pn->isArity(PN_NAME));
     pn2 = pn->maybeExpr();
 
-    /* Special case deoptimization for __proto__. */
-    if ((op == JSOP_GETPROP || op == JSOP_CALLPROP) &&
-        pn->pn_atom == cx->runtime->atomState.protoAtom) {
-        if (pn2 && !EmitTree(cx, bce, pn2))
-            return false;
-        return EmitSpecialPropOp(cx, pn, callContext ? JSOP_CALLELEM : JSOP_GETELEM, bce);
-    }
-
     if (callContext) {
         JS_ASSERT(pn->isKind(PNK_DOT));
         JS_ASSERT(op == JSOP_GETPROP);
