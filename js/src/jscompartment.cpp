@@ -480,22 +480,7 @@ JSCompartment::discardJitCode(FreeOp *fop)
     mjit::ClearAllFrames(this);
 
     if (isPreservingCode()) {
-        for (CellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
-            JSScript *script = i.get<JSScript>();
-
-            /* Discard JM caches. */
-            for (int constructing = 0; constructing <= 1; constructing++) {
-                for (int barriers = 0; barriers <= 1; barriers++) {
-                    mjit::JITScript *jit = script->getJIT((bool) constructing, (bool) barriers);
-                    if (jit)
-                        jit->purgeCaches();
-                }
-            }
-
-            /* Discard Ion caches. */
-            if (script->hasIonScript())
-                script->ion->purgeCaches();
-        }
+        PurgeJITCaches(this);
     } else {
 # ifdef JS_ION
         /* Only mark OSI points if code is being discarded. */
