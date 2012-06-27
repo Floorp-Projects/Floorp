@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import android.text.TextWatcher;
 import android.text.TextUtils;
 import android.content.DialogInterface;
@@ -47,6 +48,7 @@ public class GeckoPreferences
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
         GeckoAppShell.registerGeckoEventListener("Preferences:Data", this);
+        GeckoAppShell.registerGeckoEventListener("Sanitize:Finished", this);
    }
 
    @Override
@@ -64,6 +66,7 @@ public class GeckoPreferences
     protected void onDestroy() {
         super.onDestroy();
         GeckoAppShell.unregisterGeckoEventListener("Preferences:Data", this);
+        GeckoAppShell.unregisterGeckoEventListener("Sanitize:Finished", this);
     }
 
     public void handleMessage(String event, JSONObject message) {
@@ -71,6 +74,15 @@ public class GeckoPreferences
             if (event.equals("Preferences:Data")) {
                 JSONArray jsonPrefs = message.getJSONArray("preferences");
                 refresh(jsonPrefs);
+            } else if (event.equals("Sanitize:Finished")) {
+                boolean success = message.getBoolean("success");
+                final int stringRes = success ? R.string.private_data_success : R.string.private_data_fail;
+                final Context context = this;
+                GeckoAppShell.getMainHandler().post(new Runnable () {
+                    public void run() {
+                        Toast.makeText(context, stringRes, Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
