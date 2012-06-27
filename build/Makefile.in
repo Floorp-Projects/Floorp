@@ -9,8 +9,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-USE_RCS_MK=1
-include $(topsrcdir)/config/makefiles/makeutils.mk
 
 MODULE = build
 
@@ -68,9 +66,10 @@ ifdef MOZ_SOURCE_STAMP
 DEFINES += -DMOZ_SOURCE_STAMP="$(MOZ_SOURCE_STAMP)"
 endif
 
-source_repo := $(call getSourceRepo,$(topsrcdir)/$(MOZ_BUILD_APP)/..)
-ifneq (,$(source_repo))
-  DEFINES += -DMOZ_SOURCE_REPO="$(source_repo)"
+_dollar=$$
+SOURCE_REPO := $(shell cd $(topsrcdir)/$(MOZ_BUILD_APP)/.. && hg showconfig paths.default 2>/dev/null | head -n1 | sed -e "s/^ssh:/http:/" -e "s/\/$(_dollar)//" )
+ifdef SOURCE_REPO
+DEFINES += -DMOZ_SOURCE_REPO="$(SOURCE_REPO)"
 endif
 
 DEFINES += \

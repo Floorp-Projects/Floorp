@@ -11,8 +11,6 @@ srcdir    = @srcdir@
 VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-USE_RCS_MK=1
-include $(topsrcdir)/config/makefiles/makeutils.mk
 
 milestone_txt = $(topsrcdir)/config/milestone.txt
 
@@ -224,13 +222,20 @@ ifdef MOZ_SOURCE_STAMP
 
   INIARGS = --sourcestamp=$(MOZ_SOURCE_STAMP)
 
+  # strip a trailing slash from the repo URL because it's not always present,
+  # and we want to construct a working URL in buildconfig.html
+  SOURCE_REPO := $(firstword $(shell hg --repository $(topsrcdir) showconfig paths.default 2>/dev/null))
+  SOURCE_REPO := $(strip $(SOURCE_REPO))
+  SOURCE_REPO := $(patsubst ssh://%,http://%,$(SOURCE_REPO))
+  SOURCE_REPO := $(patsubst %/,%,$(SOURCE_REPO))
+
   # command set should change based on revision control use.
   # warn for now in case (git, bzr, ...) is in use.
-  source_repo := $(call getSourceRepo)
+  $(call warnIfEmpty,SOURCE_REPO) 
 
   # extra sanity check for old versions of hg, no showconfig support
-  ifneq (,$(filter http%,$(source_repo)))
-    INIARGS += --sourcerepo=$(source_repo)
+  ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
+    INIARGS += --sourcerepo=$(SOURCE_REPO)
   endif
 
 endif # MOZ_SOURCE_STAMP
