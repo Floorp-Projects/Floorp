@@ -68,7 +68,7 @@ protected:
   virtual bool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
                                 const nsAString& aValue, nsAttrValue& aResult);
 
-  friend class mozilla::dom::FragmentOrElement;
+  friend class nsGenericElement;
 
   /**
    * Create the style struct from the style attr.  Used when an element is

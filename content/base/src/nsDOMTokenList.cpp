@@ -17,7 +17,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsDOMTokenList::nsDOMTokenList(FragmentOrElement *aElement, nsIAtom* aAttrAtom)
+nsDOMTokenList::nsDOMTokenList(nsGenericElement* aElement, nsIAtom* aAttrAtom)
   : mElement(aElement),
     mAttrAtom(aAttrAtom)
 {
