@@ -2954,15 +2954,16 @@ nsJSContext::ShrinkGCBuffersNow()
 }
 
 static bool
-DoMergingCC()
+DoMergingCC(bool aForced)
 {
   return false;
 }
 
-//Static
+//static
 void
 nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
-                             PRInt32 aExtraForgetSkippableCalls)
+                             PRInt32 aExtraForgetSkippableCalls,
+                             bool aForced)
 {
   if (!NS_IsMainThread()) {
     return;
@@ -2994,7 +2995,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     ++sCleanupsSinceLastGC;
   }
 
-  bool mergingCC = DoMergingCC();
+  bool mergingCC = DoMergingCC(aForced);
 
   nsCycleCollectorResults ccResults;
   nsCycleCollector_collect(mergingCC, &ccResults, aListener);
@@ -3197,7 +3198,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
     } else {
       // We are in the final timer fire and still meet the conditions for
       // triggering a CC.
-      nsJSContext::CycleCollectNow();
+      nsJSContext::CycleCollectNow(nsnull, 0, false);
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
     // Only do a forget skippable if there are more than a few new objects.
