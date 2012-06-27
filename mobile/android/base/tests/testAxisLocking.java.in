@@ -13,8 +13,12 @@ import android.app.Instrumentation;
  * - Verify that the 45-degree angle was not thrown out and it dragged diagonally
  */
 public class testAxisLocking extends PixelTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testAxisLocking() {
-        setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
 
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());

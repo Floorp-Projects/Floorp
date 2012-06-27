@@ -9,9 +9,12 @@ import @ANDROID_PACKAGE_NAME@.*;
  * that fennec draws at.
  */
 public class testPan extends PixelTest {
+    @Override
+    protected int getTestType() {
+        return TEST_TALOS;
+    }
 
     public void testPan() {
-        setTestType("talos");
         String url = getAbsoluteUrl("/startup_test/fennecmark/wikipedia.html");
 
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();

@@ -58,6 +58,11 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     private String mHistoryThumbnailCol;
     private String mHistoryLastVisitedCol;
 
+    @Override
+    protected int getTestType() {
+        return TEST_TALOS;
+    }
+
     private void loadFilterMethod() throws Exception {
         Class browserDBClass = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
 
@@ -232,8 +237,6 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     }
 
     public void testBrowserProviderPerf() throws Exception {
-        setTestType("talos");
-
         initializeBrowserProvider();
 
         loadMobileFolderId();
