@@ -277,7 +277,7 @@ CPPSRCS +=	MIR.cpp \
 		MCallOptimize.cpp \
 		MIRGraph.cpp \
 		MoveResolver.cpp \
-		EdgeCaseAnalysis.cpp \
+		RangeAnalysis.cpp \
 		Snapshots.cpp \
 		Safepoints.cpp \
 		TypeOracle.cpp \

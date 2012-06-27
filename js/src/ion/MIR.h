@@ -328,8 +328,8 @@ class MDefinition : public MNode
     }
     bool congruentIfOperandsEqual(MDefinition * const &ins) const;
     virtual MDefinition *foldsTo(bool useValueNumbers);
-    virtual void analyzeEdgeCasesForward();
-    virtual void analyzeEdgeCasesBackward();
+    virtual void analyzeRangeForward();
+    virtual void analyzeRangeBackward();
     virtual void analyzeTruncateBackward();
 
     MNode::Kind kind() const {
@@ -1630,7 +1630,7 @@ class MToInt32 : public MUnaryInstruction
     MDefinition *foldsTo(bool useValueNumbers);
 
     // this only has backwards information flow.
-    void analyzeEdgeCasesBackward();
+    void analyzeRangeBackward();
 
     bool canBeNegativeZero() {
         return canBeNegativeZero_;
@@ -2218,8 +2218,8 @@ class MMul : public MBinaryArithInstruction
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
-    void analyzeEdgeCasesForward();
-    void analyzeEdgeCasesBackward();
+    void analyzeRangeForward();
+    void analyzeRangeBackward();
 
     double getIdentity() {
         return 1;
@@ -2263,8 +2263,8 @@ class MDiv : public MBinaryArithInstruction
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
-    void analyzeEdgeCasesForward();
-    void analyzeEdgeCasesBackward();
+    void analyzeRangeForward();
+    void analyzeRangeBackward();
     void analyzeTruncateBackward();
 
     double getIdentity() {
