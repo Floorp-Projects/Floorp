@@ -119,28 +119,10 @@ var gViewSourceUtils = {
           webBrowserPersist.progressListener = this.viewSourceProgressListener;
           webBrowserPersist.saveURI(uri, null, null, null, null, file);
 
-          let fromPrivateWindow = false;
-          if (aDocument) {
-            try {
-              fromPrivateWindow =
-                aDocument.defaultView
-                         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                         .getInterface(Components.interfaces.nsIWebNavigation)
-                         .QueryInterface(Components.interfaces.nsILoadContext)
-                         .usePrivateBrowsing;
-            } catch (e) {
-            }
-          }
-
-          let helperService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
-                                        .getService(Components.interfaces.nsPIExternalAppLauncher);
-          if (fromPrivateWindow) {
-            // register the file to be deleted when possible
-            helperService.deleteTemporaryPrivateFileWhenPossible(file);
-          } else {
-            // register the file to be deleted on app exit
-            helperService.deleteTemporaryFileOnExit(file);
-          }
+          // register the file to be deleted on app exit
+          Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
+                    .getService(Components.interfaces.nsPIExternalAppLauncher)
+                    .deleteTemporaryFileOnExit(file);
         } else {
           // we'll use nsIWebPageDescriptor to get the source because it may
           // not have to refetch the file from the server
@@ -282,22 +264,10 @@ var gViewSourceUtils = {
           coStream.close();
           foStream.close();
 
-          let fromPrivateWindow =
-            this.data.doc.defaultView
-                         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                         .getInterface(Components.interfaces.nsIWebNavigation)
-                         .QueryInterface(Components.interfaces.nsILoadContext)
-                         .usePrivateBrowsing;
-
-          let helperService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
-                              .getService(Components.interfaces.nsPIExternalAppLauncher);
-          if (fromPrivateWindow) {
-            // register the file to be deleted when possible
-            helperService.deleteTemporaryPrivateFileWhenPossible(this.file);
-          } else {
-            // register the file to be deleted on app exit
-            helperService.deleteTemporaryFileOnExit(this.file);
-          }
+          // register the file to be deleted on app exit
+          Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
+                    .getService(Components.interfaces.nsPIExternalAppLauncher)
+                    .deleteTemporaryFileOnExit(this.file);
         }
 
         var editorArgs = gViewSourceUtils.buildEditorArgs(this.file.path,
