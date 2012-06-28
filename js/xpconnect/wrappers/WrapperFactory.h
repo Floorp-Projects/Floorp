@@ -90,7 +90,7 @@ class WrapperFactory {
     static JSObject *WrapComponentsObject(JSContext *cx, JSObject *obj);
 };
 
-extern js::Wrapper WaiveXrayWrapperWrapper;
+extern js::DirectWrapper WaiveXrayWrapperWrapper;
 
 }
 

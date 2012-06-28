@@ -731,6 +731,15 @@ public:
    */
   void SetIsFixedPosition(bool aFixedPosition) { mIsFixedPosition = aFixedPosition; }
 
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * If a layer is "fixed position", this determines which point on the layer
+   * is considered the "anchor" point, that is, the point which remains in the
+   * same position when compositing the layer tree with a transformation
+   * (such as when asynchronously scrolling and zooming).
+   */
+  void SetFixedPositionAnchor(const gfxPoint& aAnchor) { mAnchor = aAnchor; }
+
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nsnull; }
@@ -743,6 +752,7 @@ public:
   virtual Layer* GetLastChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
+  gfxPoint GetFixedPositionAnchor() { return mAnchor; }
   Layer* GetMaskLayer() { return mMaskLayer; }
 
   /**
@@ -992,6 +1002,7 @@ protected:
   bool mUseClipRect;
   bool mUseTileSourceRect;
   bool mIsFixedPosition;
+  gfxPoint mAnchor;
   DebugOnly<PRUint32> mDebugColorIndex;
 };
 

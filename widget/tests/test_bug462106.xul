@@ -29,12 +29,19 @@ const Ci = Components.interfaces;
 function copy(str) {
   Cc["@mozilla.org/widget/clipboardhelper;1"].
   getService(Ci.nsIClipboardHelper).
-  copyString(str);
+  copyString(str, document);
+}
+
+function getLoadContext() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
 }
 
 function paste() {
   let trans = Cc["@mozilla.org/widget/transferable;1"].
               createInstance(Ci.nsITransferable);
+  trans.init(getLoadContext());
   trans.addDataFlavor("text/unicode");
   let clip = Cc["@mozilla.org/widget/clipboard;1"].
              getService(Ci.nsIClipboard);

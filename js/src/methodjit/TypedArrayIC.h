@@ -96,12 +96,12 @@ ConstantFoldForIntArray(JSContext *cx, JSObject *tarray, ValueRemat *vr)
 
     int32_t i32 = 0;
     if (v.isDouble()) {
-        i32 = (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
+        i32 = (TypedArray::type(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
               ? ClampDoubleToUint8(v.toDouble())
               : ToInt32(v.toDouble());
     } else if (v.isInt32()) {
         i32 = v.toInt32();
-        if (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
+        if (TypedArray::type(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
             i32 = ClampIntForUint8Array(i32);
     } else if (v.isBoolean()) {
         i32 = v.toBoolean() ? 1 : 0;
@@ -149,7 +149,7 @@ GenConversionForIntArray(Assembler &masm, JSObject *tarray, const ValueRemat &vr
 
         typedef int32_t (JS_FASTCALL *Int32CxVp)(JSContext *, Value *);
         Int32CxVp stub;
-        if (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
+        if (TypedArray::type(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
             stub = stubs::ConvertToTypedInt<true>;
         else
             stub = stubs::ConvertToTypedInt<false>;
@@ -165,7 +165,7 @@ GenConversionForIntArray(Assembler &masm, JSObject *tarray, const ValueRemat &vr
     }
 
     // Performing clamping, if needed.
-    if (TypedArray::getType(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
+    if (TypedArray::type(tarray) == js::TypedArray::TYPE_UINT8_CLAMPED)
         masm.clampInt32ToUint8(vr.dataReg());
 }
 
@@ -241,7 +241,7 @@ GenConversionForFloatArray(Assembler &masm, JSObject *tarray, const ValueRemat &
     if (skip2.isSet())
         skip2.get().linkTo(masm.label(), &masm);
 
-    if (TypedArray::getType(tarray) == js::TypedArray::TYPE_FLOAT32)
+    if (TypedArray::type(tarray) == js::TypedArray::TYPE_FLOAT32)
         masm.convertDoubleToFloat(destReg, destReg);
 }
 
@@ -252,7 +252,7 @@ StoreToTypedArray(JSContext *cx, Assembler &masm, JSObject *tarray, T address,
 {
     ValueRemat vr = vrIn;
 
-    uint32_t type = TypedArray::getType(tarray);
+    uint32_t type = TypedArray::type(tarray);
     switch (type) {
       case js::TypedArray::TYPE_INT8:
       case js::TypedArray::TYPE_UINT8:

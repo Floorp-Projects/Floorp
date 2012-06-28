@@ -654,6 +654,7 @@ var gContiguousSelectionTreeHelper = {
               createInstance(Ci.nsISupportsArray);
     var trans = Cc["@mozilla.org/widget/transferable;1"].
                 createInstance(Ci.nsITransferable);
+    trans.init(null);
     trans.setTransferData('dummy-flavor', null, 0);
     arr.AppendElement(trans);
     var reg = Cc["@mozilla.org/gfx/region;1"].

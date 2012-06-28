@@ -492,13 +492,6 @@ BrowserGlue.prototype = {
     if (!aQuitType)
       aQuitType = "quit";
 
-    // Never show a prompt inside private browsing mode
-    var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
-                            getService(Ci.nsIPrivateBrowsingService).
-                            privateBrowsingEnabled;
-    if (inPrivateBrowsing)
-      return;
-
     var showPrompt = false;
     var mostRecentBrowserWindow;
 
@@ -529,6 +522,12 @@ BrowserGlue.prototype = {
       aCancelQuit.data = !mostRecentBrowserWindow.gBrowser.warnAboutClosingTabs(true);
       return;
     }
+
+    var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
+                            getService(Ci.nsIPrivateBrowsingService).
+                            privateBrowsingEnabled;
+    if (inPrivateBrowsing)
+      return;
 
     if (!showPrompt)
       return;

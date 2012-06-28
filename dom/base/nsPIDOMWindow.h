@@ -592,6 +592,13 @@ public:
    */
   virtual void RefreshCompartmentPrincipal() = 0;
 
+  /**
+   * Returns if the window is part of an application.
+   * It will check for the window app state and its parents until a window has
+   * an app state different from |TriState_Unknown|.
+   */
+  virtual bool IsPartOfApp() = 0;
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer

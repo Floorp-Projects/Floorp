@@ -8,6 +8,9 @@ DEPTH       = ../..
 topsrcdir	  = @top_srcdir@
 srcdir      = @srcdir@
 VPATH       = $(srcdir)
+relativesrcdir = tools/profiler
+
+XPCSHELL_TESTS = tests
 
 include $(DEPTH)/config/autoconf.mk
 

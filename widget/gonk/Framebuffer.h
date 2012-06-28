@@ -26,16 +26,17 @@ namespace Framebuffer {
 //  Present();
 //
 
-// Return true if the fbdev was successfully opened, along with the
-// dimensions of the screen.  If this fails, the result of all further
-// calls is undefined.  Open() is idempotent.
-bool Open(nsIntSize* aScreenSize);
+// Return true if the fbdev was successfully opened.  If this fails, 
+// the result of all further calls is undefined.  Open() is idempotent.
+bool Open();
 
 // After Close(), the result of all further calls is undefined.
 // Close() is idempotent, and Open() can be called again after
 // Close().
 void Close();
 
+// Return true if the fbdev was successfully opened or the size was
+// already cached.
 bool GetSize(nsIntSize *aScreenSize);
 
 // Return the buffer to be drawn into, that will be the next frame.

@@ -95,6 +95,9 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIXULDocument.h"
 #endif
+#ifdef MOZ_FLEXBOX
+#include "nsFlexContainerFrame.h"
+#endif
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -329,6 +332,16 @@ static PRInt32 FFWC_recursions=0;
 static PRInt32 FFWC_nextInFlows=0;
 #endif
 
+#ifdef MOZ_FLEXBOX
+// Returns true if aFrame is an anonymous flex item
+static inline bool
+IsAnonymousFlexItem(const nsIFrame* aFrame)
+{
+  const nsIAtom* pseudoType = aFrame->GetStyleContext()->GetPseudo();
+  return pseudoType == nsCSSAnonBoxes::anonymousFlexItem;
+}
+#endif // MOZ_FLEXBOX
+
 static inline nsIFrame*
 GetFieldSetBlockFrame(nsIFrame* aFieldsetFrame)
 {
@@ -363,6 +376,20 @@ static bool
 IsInlineFrame(const nsIFrame* aFrame)
 {
   return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
+}
+
+/**
+ * Returns true iff aFrame explicitly prevents its descendants from floating
+ * (at least, down to the level of descendants which themselves are
+ * float-containing blocks -- those will manage the floating status of any
+ * lower-level descendents inside them, of course).
+ */
+static bool
+ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame)
+{
+  return aFrame->IsFrameOfType(nsIFrame::eMathML) ||
+    aFrame->IsBoxFrame() ||
+    aFrame->GetType() == nsGkAtoms::flexContainerFrame;
 }
 
 /**
@@ -3684,6 +3711,14 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     }
 
     if (bits & FCDATA_USE_CHILD_ITEMS) {
+      NS_ASSERTION(!ShouldSuppressFloatingOfDescendants(newFrame),
+                   "uh oh -- this frame is supposed to _suppress_ floats, but "
+                   "we're about to push it as a float containing block...");
+
+      nsFrameConstructorSaveState floatSaveState;
+      if (newFrame->IsFloatContainingBlock()) {
+        aState.PushFloatContainingBlock(newFrame, floatSaveState);
+      }
       rv = ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
                                        childItems);
     } else {
@@ -4331,6 +4366,12 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     { NS_STYLE_DISPLAY_INLINE,
       FULL_CTOR_FCDATA(FCDATA_IS_INLINE | FCDATA_IS_LINE_PARTICIPANT,
                        &nsCSSFrameConstructor::ConstructInline) },
+#ifdef MOZ_FLEXBOX
+    { NS_STYLE_DISPLAY_FLEX,
+      FCDATA_DECL(0, NS_NewFlexContainerFrame) },
+    { NS_STYLE_DISPLAY_INLINE_FLEX,
+      FCDATA_DECL(0, NS_NewFlexContainerFrame) },
+#endif // MOZ_FLEXBOX
     { NS_STYLE_DISPLAY_TABLE,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
     { NS_STYLE_DISPLAY_INLINE_TABLE,
@@ -5510,8 +5551,8 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
   // frames, because they don't seem to be able to deal.
   // The logic here needs to match the logic in ProcessChildren()
   for (nsIFrame* containingBlock = aFrame;
-       containingBlock && !containingBlock->IsFrameOfType(nsIFrame::eMathML) &&
-       !containingBlock->IsBoxFrame();
+       containingBlock &&
+         !ShouldSuppressFloatingOfDescendants(containingBlock);
        containingBlock = containingBlock->GetParent()) {
     if (containingBlock->IsFloatContainingBlock()) {
       return containingBlock;
@@ -8945,6 +8986,55 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     return true;
   }
 
+#ifdef MOZ_FLEXBOX
+  // Might need to reconstruct things if the removed frame's nextSibling is an
+  // anonymous flex item.  The removed frame might've been what divided two
+  // runs of inline content into two anonymous flex items, which would now
+  // need to be merged.
+  // NOTE: It's fine that we've advanced nextSibling past whitespace (up above);
+  // we're only interested in anonymous flex items here, and those can never
+  // be adjacent to whitespace, since they absorb contiguous runs of inline
+  // non-replaced content (including whitespace).
+  if (nextSibling && IsAnonymousFlexItem(nextSibling)) {
+    NS_ABORT_IF_FALSE(parent->GetType() == nsGkAtoms::flexContainerFrame,
+                      "anonymous flex items should only exist as children "
+                      "of flex container frames");
+#ifdef DEBUG
+    if (gNoisyContentUpdates) {
+      printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
+             "frame=");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(" has an anonymous flex item as its next sibling\n");
+    }
+#endif // DEBUG
+    // Recreate frames for the flex container (the removed frame's parent)
+    *aResult = RecreateFramesForContent(parent->GetContent(), true);
+    return true;
+  }
+
+  // Might need to reconstruct things if the removed frame's nextSibling is
+  // null and its parent is an anonymous flex item. (This might be the last
+  // remaining child of that anonymous flex item, which can then go away.)
+  if (!nextSibling && IsAnonymousFlexItem(parent)) {
+    NS_ABORT_IF_FALSE(parent->GetParent() &&
+                      parent->GetParent()->GetType() == nsGkAtoms::flexContainerFrame,
+                      "anonymous flex items should only exist as children "
+                      "of flex container frames");
+#ifdef DEBUG
+    if (gNoisyContentUpdates) {
+      printf("nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval: "
+             "frame=");
+      nsFrame::ListTag(stdout, aFrame);
+      printf(" has an anonymous flex item as its parent\n");
+    }
+#endif // DEBUG
+    // Recreate frames for the flex container (the removed frame's grandparent)
+    *aResult = RecreateFramesForContent(parent->GetParent()->GetContent(),
+                                        true);
+    return true;
+  }
+#endif // MOZ_FLEXBOX
+
 #ifdef MOZ_XUL
   if (aFrame->GetType() == nsGkAtoms::popupSetFrame) {
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
@@ -9217,6 +9307,116 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
   }
 };
 
+#ifdef MOZ_FLEXBOX
+void
+nsCSSFrameConstructor::CreateNeededAnonFlexItems(
+  nsFrameConstructorState& aState,
+  FrameConstructionItemList& aItems,
+  nsIFrame* aParentFrame)
+{
+  NS_ABORT_IF_FALSE(aParentFrame->GetType() == nsGkAtoms::flexContainerFrame,
+                    "Should only be called for items in a flex container frame");
+  if (aItems.IsEmpty()) {
+    return;
+  }
+
+  FCItemIterator iter(aItems);
+  do {
+    // Advance iter past children that don't want to be wrapped
+    if (iter.SkipItemsThatDontNeedAnonFlexItem(aState)) {
+      // Hit the end of the items without finding any remaining children that
+      // need to be wrapped. We're finished!
+      return;
+    }
+
+    // If our next potentially-wrappable child is whitespace, then see if
+    // there's anything wrappable immediately after it. If not, we just drop
+    // the whitespace and move on. (We're not supposed to create any anonymous
+    // flex items that _only_ contain whitespace).
+    if (iter.item().IsWhitespace(aState)) {
+      FCItemIterator afterWhitespaceIter(iter);
+      bool hitEnd = afterWhitespaceIter.SkipWhitespace(aState);
+      bool nextChildNeedsAnonFlexItem =
+        !hitEnd && afterWhitespaceIter.item().NeedsAnonFlexItem(aState);
+
+      if (!nextChildNeedsAnonFlexItem) {
+        // There's nothing after the whitespace that we need to wrap, so we
+        // just drop this run of whitespace.
+        iter.DeleteItemsTo(afterWhitespaceIter);
+        if (hitEnd) {
+          // Nothing left to do -- we're finished!
+          return;
+        }
+        // else, we have a next child and it does not want to be wrapped.  So,
+        // we jump back to the beginning of the loop to skip over that child
+        // (and anything else non-wrappable after it)
+        NS_ABORT_IF_FALSE(!iter.IsDone() &&
+                          !iter.item().NeedsAnonFlexItem(aState),
+                          "hitEnd and/or nextChildNeedsAnonFlexItem lied");
+        continue;
+      }
+    }
+
+    // Now |iter| points to the first child that needs to be wrapped in an
+    // anonymous flex item. Now we see how many children after it also want
+    // to be wrapped in an anonymous flex item.
+    FCItemIterator endIter(iter); // iterator to find the end of the group
+    endIter.SkipItemsThatNeedAnonFlexItem(aState);
+
+    NS_ASSERTION(iter != endIter,
+                 "Should've had at least one wrappable child to seek past");
+
+    // Now, we create the anonymous flex item to contain the children
+    // between |iter| and |endIter|.
+    nsIAtom* pseudoType = nsCSSAnonBoxes::anonymousFlexItem;
+    nsStyleContext* parentStyle = aParentFrame->GetStyleContext();
+    nsIContent* parentContent = aParentFrame->GetContent();
+    nsRefPtr<nsStyleContext> wrapperStyle =
+      mPresShell->StyleSet()->ResolveAnonymousBoxStyle(pseudoType, parentStyle);
+
+    static const FrameConstructionData sBlockFormattingContextFCData =
+      FCDATA_DECL(FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS,
+                  NS_NewBlockFormattingContext);
+
+    FrameConstructionItem* newItem =
+      new FrameConstructionItem(&sBlockFormattingContextFCData,
+                                // Use the content of our parent frame
+                                parentContent,
+                                // Lie about the tag; it doesn't matter anyway
+                                pseudoType,
+                                iter.item().mNameSpaceID,
+                                // no pending binding
+                                nsnull,
+                                wrapperStyle.forget(),
+                                true);
+
+    newItem->mIsAllInline = newItem->mHasInlineEnds =
+      newItem->mStyleContext->GetStyleDisplay()->IsInlineOutside();
+    newItem->mIsBlock = !newItem->mIsAllInline;
+
+    NS_ABORT_IF_FALSE(!newItem->mIsAllInline && newItem->mIsBlock,
+                      "expecting anonymous flex items to be block-level "
+                      "(this will make a difference when we encounter "
+                      "'flex-align: baseline')");
+
+    // Anonymous flex items induce line boundaries around their
+    // contents.
+    newItem->mChildItems.SetLineBoundaryAtStart(true);
+    newItem->mChildItems.SetLineBoundaryAtEnd(true);
+    // The parent of the items in aItems is also the parent of the items
+    // in mChildItems
+    newItem->mChildItems.SetParentHasNoXBLChildren(
+      aItems.ParentHasNoXBLChildren());
+
+    // Eat up all items between |iter| and |endIter| and put them in our
+    // wrapper. This advances |iter| to point to |endIter|.
+    iter.AppendItemsToList(endIter, newItem->mChildItems);
+
+    iter.InsertItem(newItem);
+  } while (!iter.IsDone());
+}
+#endif // MOZ_FLEXBOX
+
 /*
  * This function works as follows: we walk through the child list (aItems) and
  * find items that cannot have aParentFrame as their parent.  We wrap
@@ -9437,6 +9637,12 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
 
   CreateNeededTablePseudos(aState, aItems, aParentFrame);
 
+#ifdef MOZ_FLEXBOX
+  if (aParentFrame->GetType() == nsGkAtoms::flexContainerFrame) {
+    CreateNeededAnonFlexItems(aState, aItems, aParentFrame);
+  }
+#endif // MOZ_FLEXBOX
+
 #ifdef DEBUG
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
     NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
@@ -9486,8 +9692,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 
   // The logic here needs to match the logic in GetFloatContainingBlock()
   nsFrameConstructorSaveState floatSaveState;
-  if (aFrame->IsFrameOfType(nsIFrame::eMathML) ||
-      aFrame->IsBoxFrame()) {
+  if (ShouldSuppressFloatingOfDescendants(aFrame)) {
     aState.PushFloatContainingBlock(nsnull, floatSaveState);
   } else if (aFrame->IsFloatContainingBlock()) {
     aState.PushFloatContainingBlock(aFrame, floatSaveState);
@@ -10978,7 +11183,67 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
   nsIFrame* nextSibling = ::GetInsertNextSibling(aFrame, aPrevSibling);
 
-  // Situation #2 is a case when table pseudo-frames don't work out right
+#ifdef MOZ_FLEXBOX
+  // Situation #2 is a flex container frame into which we're inserting new
+  // inline non-replaced children, adjacent to an existing anonymous flex item.
+  if (aFrame->GetType() == nsGkAtoms::flexContainerFrame) {
+    FCItemIterator iter(aItems);
+
+    // Check if we're adding to-be-wrapped content right *after* an existing
+    // anonymous flex item (which would need to absorb this content).
+    if (aPrevSibling && IsAnonymousFlexItem(aPrevSibling) &&
+        iter.item().NeedsAnonFlexItem(aState)) {
+      RecreateFramesForContent(aFrame->GetContent(), true);
+      return true;
+    }
+
+    // Check if we're adding to-be-wrapped content right *before* an existing
+    // anonymous flex item (which would need to absorb this content).
+    if (nextSibling && IsAnonymousFlexItem(nextSibling)) {
+      // Jump to the last entry in the list
+      iter.SetToEnd();
+      iter.Prev();
+      if (iter.item().NeedsAnonFlexItem(aState)) {
+        RecreateFramesForContent(aFrame->GetContent(), true);
+        return true;
+      }
+    }
+  }
+
+  // Situation #3 is an anonymous flex item that's getting new children who
+  // don't want to be wrapped.
+  if (IsAnonymousFlexItem(aFrame)) {
+    nsIFrame* flexContainerFrame = aFrame->GetParent();
+    NS_ABORT_IF_FALSE(flexContainerFrame &&
+                      flexContainerFrame->GetType() == nsGkAtoms::flexContainerFrame,
+                      "anonymous flex items should only exist as children "
+                      "of flex container frames");
+
+    // We need to push a null float containing block to be sure that
+    // "NeedsAnonFlexItem" will know we're not honoring floats for this
+    // inserted content. (In particular, this is necessary in order for
+    // NeedsAnonFlexItem's "GetGeometricParent" call to return the correct
+    // result.) We're not honoring floats on this content because it has the
+    // _flex container_ as its parent in the content tree.
+    nsFrameConstructorSaveState floatSaveState;
+    aState.PushFloatContainingBlock(nsnull, floatSaveState);
+
+    FCItemIterator iter(aItems);
+    // Skip over things that _do_ need an anonymous flex item, because
+    // they're perfectly happy to go here -- they won't cause a reframe.
+    if (!iter.SkipItemsThatNeedAnonFlexItem(aState)) {
+      // We hit something that _doesn't_ need an anonymous flex item!
+      // Rebuild the flex container to bust it out.
+      RecreateFramesForContent(flexContainerFrame->GetContent(), true);
+      return true;
+    }
+
+    // If we get here, then everything in |aItems| needs to be wrapped in
+    // an anonymous flex item.  That's where it's already going - good!
+  }
+#endif // MOZ_FLEXBOX
+
+  // Situation #4 is a case when table pseudo-frames don't work out right
   ParentType parentType = GetParentType(aFrame);
   // If all the kids want a parent of the type that aFrame is, then we're all
   // set to go.  Indeed, there won't be any table pseudo-frames created between
@@ -11810,6 +12075,59 @@ Iterator::SkipItemsWantingParentType(ParentType aParentType)
   return false;
 }
 
+#ifdef MOZ_FLEXBOX
+bool
+nsCSSFrameConstructor::FrameConstructionItem::
+  NeedsAnonFlexItem(const nsFrameConstructorState& aState)
+{
+  if (mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) {
+    // This will be an inline non-replaced box.
+    return true;
+  }
+
+  if (!(mFCData->mBits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
+      aState.GetGeometricParent(mStyleContext->GetStyleDisplay(), nsnull)) {
+    // We're abspos or fixedpos, which means we'll spawn a placeholder which
+    // we'll need to wrap in an anonymous flex item.  So, we just treat
+    // _this_ frame as if _it_ needs to be wrapped in an anonymous flex item,
+    // and then when we spawn the placeholder, it'll end up in the right spot.
+    return true;
+  }
+
+  return false;
+}
+
+inline bool
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::SkipItemsThatNeedAnonFlexItem(
+  const nsFrameConstructorState& aState)
+{
+  NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
+  while (item().NeedsAnonFlexItem(aState)) {
+    Next();
+    if (IsDone()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+inline bool
+nsCSSFrameConstructor::FrameConstructionItemList::
+Iterator::SkipItemsThatDontNeedAnonFlexItem(
+  const nsFrameConstructorState& aState)
+{
+  NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
+  while (!(item().NeedsAnonFlexItem(aState))) {
+    Next();
+    if (IsDone()) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif // MOZ_FLEXBOX
+
 inline bool
 nsCSSFrameConstructor::FrameConstructionItemList::
 Iterator::SkipWhitespace(nsFrameConstructorState& aState)
@@ -11916,6 +12234,13 @@ Iterator::DeleteItemsTo(const Iterator& aEnd)
 bool
 nsCSSFrameConstructor::RecomputePosition(nsIFrame* aFrame)
 {
+  // Don't process position changes on table frames, since we already handle
+  // the dynamic position change on the outer table frame, and the reflow-based
+  // fallback code path also ignores positions on inner table frames.
+  if (aFrame->GetType() == nsGkAtoms::tableFrame) {
+    return true;
+  }
+
   const nsStyleDisplay* display = aFrame->GetStyleDisplay();
   // Changes to the offsets of a non-positioned element can safely be ignored.
   if (display->mPosition == NS_STYLE_POSITION_STATIC) {

@@ -347,6 +347,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * Cannot be accessed from unprivileged context (not content-accessible)
    * Will throw a DOM security error if called without UniversalXPConnect
    * privileges.
+   *
+   * When you use this for tests, use the constants defined in NativeKeyCodes.js
    */
   void sendNativeKeyEvent(in long aNativeKeyboardLayout,
                           in long aNativeKeyCode,

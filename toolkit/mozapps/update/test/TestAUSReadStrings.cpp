@@ -14,6 +14,8 @@
   #define NS_tsnprintf _snwprintf
   #define NS_T(str) L ## str
   #define PATH_SEPARATOR_CHAR L'\\'
+  // On Windows, argv[0] can also have forward slashes instead
+  #define ALT_PATH_SEPARATOR_CHAR L'/'
 #else
   #include <unistd.h>
   #define NS_main main
@@ -96,6 +98,11 @@ int NS_main(int argc, NS_tchar **argv)
   StringTable testStrings;
 
   NS_tchar *slash = NS_tstrrchr(argv[0], PATH_SEPARATOR_CHAR);
+#ifdef ALT_PATH_SEPARATOR_CHAR
+  NS_tchar *altslash = NS_tstrrchr(argv[0], ALT_PATH_SEPARATOR_CHAR);
+  slash = (slash > altslash) ? slash : altslash;
+#endif // ALT_PATH_SEPARATOR_CHAR
+
   if (!slash) {
     fail("%s | unable to find platform specific path separator (check 1)", TEST_NAME);
     return 20;

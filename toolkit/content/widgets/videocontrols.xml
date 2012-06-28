@@ -422,8 +422,10 @@
                         // because of bug 718107: switching to fullscreen may
                         // cause the bindings to detach and reattach, hence
                         // unsetting the attribute.
-                        if (!this.isAudioOnly && !this.video.mozHasAudio)
+                        if (!this.isAudioOnly && !this.video.mozHasAudio) {
                           this.muteButton.setAttribute("noAudio", "true");
+                          this.muteButton.setAttribute("disabled", "true");
+                        }
                     }
 
                     if (this.isAudioOnly)
@@ -544,6 +546,7 @@
                             this.showDuration(Math.round(this.video.duration * 1000));
                             if (!this.isAudioOnly && !this.video.mozHasAudio) {
                               this.muteButton.setAttribute("noAudio", "true");
+                              this.muteButton.setAttribute("disabled", "true");
                             }
                             break;
                         case "loadeddata":
@@ -818,6 +821,9 @@
                 },
 
                 onVolumeMouseInOut : function (event) {
+                    if (this.isVideoWithoutAudioTrack()) {
+                        return;
+                    }
                     // Ignore events caused by transitions between mute button and volumeStack,
                     // or between nodes inside these two elements.
                     if (this.isEventWithin(event, this.muteButton, this.volumeStack))
@@ -983,7 +989,16 @@
                     // script was controlling video playback.
                 },
 
+                isVideoWithoutAudioTrack : function() {
+                  return this.video.readyState >= this.video.HAVE_METADATA &&
+                         !this.isAudioOnly &&
+                         !this.video.mozHasAudio;
+                },
+               
                 toggleMute : function () {
+                    if (this.isVideoWithoutAudioTrack()) {
+                        return;
+                    }
                     this.video.muted = !this.video.muted;
 
                     // We'll handle style changes in the event listener for
@@ -1399,7 +1414,7 @@
                     addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
 
-                    if (!this.isAudioOnly && this.video.mozHasAudio) {
+                    if (!this.isAudioOnly) {
                       addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
                       addListener(this.muteButton, "mouseout", this.onVolumeMouseInOut);
                       addListener(this.volumeStack, "mouseover", this.onVolumeMouseInOut);

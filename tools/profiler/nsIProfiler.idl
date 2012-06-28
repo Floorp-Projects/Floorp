@@ -8,7 +8,7 @@
 [scriptable, uuid(e388fded-1321-41af-a988-861a2bc5cfc3)]
 interface nsIProfiler : nsISupports
 {
-  void StartProfiler(in PRUint32 aInterval, in PRUint32 aEntries,
+  void StartProfiler(in PRUint32 aEntries, in PRUint32 aInterval,
                       [array, size_is(aFeatureCount)] in string aFeatures,
                       in PRUint32 aFeatureCount);
   void StopProfiler();

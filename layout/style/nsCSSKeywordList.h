@@ -74,6 +74,9 @@ CSS_KEY(-moz-ethiopic-halehame-ti-et, _moz_ethiopic_halehame_ti_et)
 CSS_KEY(-moz-field, _moz_field)
 CSS_KEY(-moz-fieldtext, _moz_fieldtext)
 CSS_KEY(-moz-fit-content, _moz_fit_content)
+#ifdef MOZ_FLEXBOX
+CSS_KEY(-moz-flex, _moz_flex)
+#endif // MOZ_FLEXBOX
 CSS_KEY(-moz-grabbing, _moz_grabbing)
 CSS_KEY(-moz-grab, _moz_grab)
 CSS_KEY(-moz-grid-group, _moz_grid_group)
@@ -92,6 +95,9 @@ CSS_KEY(-moz-image-rect, _moz_image_rect)
 CSS_KEY(-moz-info, _moz_info)
 CSS_KEY(-moz-initial, _moz_initial)
 CSS_KEY(-moz-inline-box, _moz_inline_box)
+#ifdef MOZ_FLEXBOX
+CSS_KEY(-moz-inline-flex, _moz_inline_flex)
+#endif // MOZ_FLEXBOX
 CSS_KEY(-moz-inline-grid, _moz_inline_grid)
 CSS_KEY(-moz-inline-stack, _moz_inline_stack)
 CSS_KEY(-moz-isolate, _moz_isolate)

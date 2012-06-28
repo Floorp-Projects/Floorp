@@ -1437,7 +1437,7 @@ DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosi
 ScopeObject &
 DebugScopeObject::scope() const
 {
-    return Wrapper::wrappedObject(this)->asScope();
+    return GetProxyTargetObject(this)->asScope();
 }
 
 JSObject &

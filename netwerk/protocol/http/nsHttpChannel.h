@@ -223,7 +223,6 @@ private:
     nsresult UpdateExpirationTime();
     nsresult CheckCache();
     bool ShouldUpdateOfflineCacheEntry();
-    nsresult StartBufferingCachedEntity(bool usingSSL);
     nsresult ReadFromCache(bool alreadyMarkedValid);
     void     CloseCacheEntry(bool doomOnFailure);
     void     CloseOfflineCacheEntry();
@@ -294,8 +293,8 @@ private:
     // cache specific data
     nsRefPtr<HttpCacheQuery>          mCacheQuery;
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
-    // We must close mCacheAsyncInputStream explicitly to avoid leaks.
-    AutoClose<nsIAsyncInputStream>    mCacheAsyncInputStream;
+    // We must close mCacheInputStream explicitly to avoid leaks.
+    AutoClose<nsIInputStream>         mCacheInputStream;
     nsRefPtr<nsInputStreamPump>       mCachePump;
     nsAutoPtr<nsHttpResponseHead>     mCachedResponseHead;
     nsCOMPtr<nsISupports>             mCachedSecurityInfo;
@@ -310,6 +309,7 @@ private:
 
     nsCOMPtr<nsICacheEntryDescriptor> mOfflineCacheEntry;
     nsCacheAccessMode                 mOfflineCacheAccess;
+    PRUint32                          mOfflineCacheLastModifiedTime;
     nsCString                         mOfflineCacheClientID;
 
     nsCOMPtr<nsIFile>                 mProfileDirectory;

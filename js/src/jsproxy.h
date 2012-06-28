@@ -13,12 +13,36 @@
 
 namespace js {
 
+class Wrapper;
+
 /* Base class for all C++ proxy handlers. */
 class JS_FRIEND_API(BaseProxyHandler) {
     void *mFamily;
   public:
     explicit BaseProxyHandler(void *family);
     virtual ~BaseProxyHandler();
+
+    inline void *family() {
+        return mFamily;
+    };
+
+    virtual bool isOuterWindow() {
+        return false;
+    }
+
+    /*
+     * The function Wrapper::wrapperHandler takes a pointer to a
+     * BaseProxyHandler and returns a pointer to a Wrapper if and only if the
+     * BaseProxyHandler is a wrapper handler (otherwise, it returns NULL).
+     *
+     * Unfortunately, we can't inherit Wrapper from BaseProxyHandler, since that
+     * would create a dreaded diamond, and we can't use dynamic_cast to cast
+     * BaseProxyHandler to Wrapper, since that would require us to compile with
+     * run-time type information. Hence the need for this virtual function.
+     */
+    virtual Wrapper *toWrapper() {
+        return NULL;
+    }
 
     /* ES5 Harmony fundamental proxy traps. */
     virtual bool getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, bool set,
@@ -55,14 +79,6 @@ class JS_FRIEND_API(BaseProxyHandler) {
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
     virtual bool getElementIfPresent(JSContext *cx, JSObject *obj, JSObject *receiver,
                                      uint32_t index, Value *vp, bool *present);
-
-    virtual bool isOuterWindow() {
-        return false;
-    }
-
-    inline void *family() {
-        return mFamily;
-    }
 };
 
 class JS_PUBLIC_API(IndirectProxyHandler) : public BaseProxyHandler {

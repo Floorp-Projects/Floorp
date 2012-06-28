@@ -997,7 +997,14 @@ let RIL = {
   },
 
   getIMSI: function getIMSI() {
-    Buf.simpleRequest(REQUEST_GET_IMSI);
+    if (RILQUIRKS_V5_LEGACY) {
+      Buf.simpleRequest(REQUEST_GET_IMSI);
+      return;
+    }
+    let token = Buf.newParcel(REQUEST_GET_IMSI);
+    Buf.writeUint32(1);
+    Buf.writeString(null);
+    Buf.sendParcel();
   },
 
   /**

@@ -1,0 +1,325 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+import android.app.Activity;
+import android.content.ContentValues;
+import android.content.ContentResolver;
+import android.content.res.AssetManager;
+import android.database.Cursor;
+import android.content.Context;
+import android.net.Uri;
+import android.provider.Browser;
+import android.util.Log;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.ClassLoader;
+import java.lang.reflect.Method;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+/**
+ * Tests the profile migration. Unpacks an old database, moves
+ * it to the profile, then call the BrowserProvider Control URI
+ * to launch a migration and check the results.
+ */
+public class testMigration extends ContentProviderTest {
+    // Big files are zipped to allow us to manually extract them,
+    // the APK extractor will fail >1Mb.
+    private static final String ASSET_SUFFIX = ".zip";
+    private static final String DB_NAME = "places.sqlite";
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    private File extractAsset(String dbName) {
+        File oldDbLocation = null;
+        boolean foundFile = false;
+        String fullAssetName = dbName + ASSET_SUFFIX;
+
+        AssetManager assets = getAssetManager();
+        try {
+            String[] assetList = assets.list("");
+            String assetString = "";
+            for (String file: assetList) {
+                assetString = assetString.concat(file);
+                assetString = assetString.concat(" ");
+                if (file.equals(fullAssetName)) {
+                    foundFile = true;
+                }
+            }
+            mAsserter.is(foundFile, true, fullAssetName + " found in assets: " + assetString);
+        } catch (IOException e) {
+            String stackTrace = Log.getStackTraceString(e);
+            mAsserter.is(false, true, "Error getting asset dir: " + stackTrace);
+        }
+
+        // Extract the old places database from assets
+        // and write it out in the profile directory
+        try {
+            InputStream profData = assets.open(fullAssetName);
+            File profile = new File(mProfile);
+            oldDbLocation = new File(profile, dbName);
+            OutputStream out = new FileOutputStream(oldDbLocation);
+
+            ZipInputStream zis = new ZipInputStream(new BufferedInputStream(profData));
+            try {
+                ZipEntry ze;
+                while ((ze = zis.getNextEntry()) != null) {
+                    byte[] buffer = new byte[1024];
+                    int count;
+                    while ((count = zis.read(buffer)) != -1) {
+                        out.write(buffer, 0, count);
+                    }
+                    String fileName = ze.getName();
+                    mAsserter.is(fileName, DB_NAME, "Filename match: " + fileName);
+                }
+            } finally {
+                zis.close();
+            }
+
+            profData.close();
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            String stackTrace = Log.getStackTraceString(e);
+            mAsserter.is(false, true, "Error getting profile data: " + stackTrace);
+        }
+
+        return oldDbLocation;
+    }
+
+    public void testMigration() {
+        Context context = (Context)getActivity();
+
+        File oldDbLocation = extractAsset(DB_NAME);
+        mAsserter.is(oldDbLocation.exists(), true, "OK old file exists: "
+                     + oldDbLocation.toString());
+
+        // Set up BrowserDB
+        try {
+            Class browserDBClass =
+                mClassLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+            Method initializeMethod =
+                browserDBClass.getDeclaredMethod("initialize", String.class);
+            initializeMethod.invoke(null, "default");
+        } catch (Exception ex) {
+            mAsserter.is(true, false, "Error setting up BrowserDB: "
+                         + ex.getMessage());
+            return;
+        }
+
+        // Use reflection to look up the ProfileMigrator things we need
+        // access to (constructor, launch), as well as BrowserContract.Control.
+        Method launchPlacesTest;
+        Constructor constructor;
+        Class pmClass;
+
+        try {
+            pmClass = mClassLoader.loadClass("org.mozilla.gecko.ProfileMigrator");
+            launchPlacesTest = pmClass.getMethod("launchPlacesTest", File.class);
+            constructor = pmClass.getConstructor(Context.class, ContentResolver.class);
+        } catch(ClassNotFoundException ex) {
+            mAsserter.is(false, true, "Error getting class: " + ex.getMessage());
+            return;
+        } catch (java.lang.NoSuchMethodException ex) {
+            mAsserter.is(true, false, "Unable to find method: " + ex.getMessage());
+            return;
+        }
+
+        Object pm = null;
+        try {
+            // Construct ProfileMigrator object
+            pm = constructor.newInstance(context, mResolver);
+        } catch (Exception ex) {
+            mAsserter.is(true, false, "Error instantiating ProfileMigrator instance: "
+                         + ex.getMessage());
+            return;
+        }
+
+        // Reset history entries from previous tests
+        clearHistory();
+
+        // Launch the Profile Migration
+        try {
+            launchPlacesTest.invoke(pm, new File(mProfile));
+        } catch (Exception ex) {
+            String stackTrace = Log.getStackTraceString(ex);
+            mAsserter.is(true, false, "Unable to invoke launchPlacesTest:" + stackTrace);
+            return;
+        }
+
+        // Run the tests to see if that worked
+        testViaContentProvider();
+        testViaBrowserDB();
+
+        mAsserter.is(oldDbLocation.exists(), false, "OK old file gone now");
+    }
+
+    public void clearHistory() {
+        Method clearHistory = null;
+
+        try {
+            Class browserDB =
+                mClassLoader.loadClass("org.mozilla.gecko.db.BrowserDB");
+            clearHistory =
+                browserDB.getMethod("clearHistory", ContentResolver.class);
+        } catch (java.lang.ClassNotFoundException ex) {
+            mAsserter.is(true, false, "Unable to find class");
+            return;
+        } catch (java.lang.NoSuchMethodException ex) {
+            mAsserter.is(true, false, "Unable to find method");
+            return;
+        }
+
+        try {
+            clearHistory.invoke(null, mResolver);
+        } catch (Exception ex) {
+            String stackTrace = Log.getStackTraceString(ex);
+            mAsserter.is(true, false, "Exception clearing history:" + stackTrace);
+        }
+    }
+
+    // stolen from testBookmarks
+    public void testViaBrowserDB() {
+        Method isBookmarked = null;
+        Method getAllVisitedHistory = null;
+        Constructor constructor = null;
+
+        try {
+            Class localBrowserDB =
+                mClassLoader.loadClass("org.mozilla.gecko.db.LocalBrowserDB");
+            isBookmarked =
+                localBrowserDB.getMethod("isBookmark", ContentResolver.class, String.class);
+            getAllVisitedHistory =
+                localBrowserDB.getMethod("getAllVisitedHistory", ContentResolver.class);
+            constructor = localBrowserDB.getConstructor(String.class);
+        } catch (java.lang.ClassNotFoundException ex) {
+            mAsserter.is(true, false, "Unable to find class");
+            return;
+        } catch (java.lang.NoSuchMethodException ex) {
+            mAsserter.is(true, false, "Unable to find method:" + ex.getMessage());
+            return;
+        }
+
+        Object db = null;
+        try {
+            String defaultProfile = "default";
+            db = constructor.newInstance(defaultProfile);
+        } catch (Exception ex) {
+            mAsserter.is(true, false, "Error instantiating LocalBrowserDB instance: "
+                         + ex.getMessage());
+            return;
+        }
+
+        final String[] knownBookmarks = new String[] {
+            "http://www.androidpolice.com/",
+            "https://developer.mozilla.org/En/Mozilla_Coding_Style_Guide",
+            "http://planet.mozilla.org/",
+            "http://www.crockford.com/",
+            "https://wiki.mozilla.org/Mobile/Fennec/Android"
+        };
+        final String ABOUT_HOME_URL = "about:home";
+
+        for (String url: knownBookmarks) {
+            try {
+                // Check for some bookmarks we know must exist
+                boolean isbookmark =
+                    (Boolean)isBookmarked.invoke(db,
+                                                 mResolver,
+                                                 url);
+                mAsserter.is(isbookmark, true, "Expected page is bookmarked: " + url);
+            } catch (Exception ex) {
+                mAsserter.is(true, false, "Exception checking bookmark existence");
+                ex.printStackTrace();
+                return;
+            }
+        }
+
+        // Check the amount of history, this should match the following on the
+        // database in assets:
+        // SELECT COUNT(DISTINCT(url)) FROM moz_historyvisits
+        // JOIN moz_places ON moz_historyvisits.place_id = moz_places.id
+        final int PLACES_KNOWN_HISTORY_URLS = 184;
+        try {
+            Cursor cursor =
+                (Cursor)getAllVisitedHistory.invoke(db,
+                                                    mResolver);
+            int historyCount = cursor.getCount();
+            cursor.close();
+            mAsserter.is(historyCount, PLACES_KNOWN_HISTORY_URLS,
+                         "History count " + historyCount +
+                         ", expected was " + PLACES_KNOWN_HISTORY_URLS);
+        } catch (Exception ex) {
+            mAsserter.is(true, false, "Exception checking history count");
+            ex.printStackTrace();
+        }
+    }
+
+    public void testViaContentProvider() {
+        String ensureHistory;
+        String ensureBookmarks;
+
+        Uri controlUri;
+        try {
+            Class browserContract =
+                mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract");
+            Class browserContractControl =
+                mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract$Control");
+            controlUri = (Uri)browserContractControl.getField("CONTENT_URI").get(null);
+            String profilePath = (String)browserContract.getField("PARAM_PROFILE_PATH").get(null);
+            Uri.Builder builder = controlUri.buildUpon();
+            controlUri = builder.build();
+            ensureHistory =
+                (String)browserContractControl.getField("ENSURE_HISTORY_MIGRATED").get(null);
+            ensureBookmarks =
+                (String)browserContractControl.getField("ENSURE_BOOKMARKS_MIGRATED").get(null);
+        } catch (Exception ex) {
+            mAsserter.is(true, false, "Reflection error getting Control Uri");
+            ex.printStackTrace();
+            return;
+        }
+
+        Cursor c = mResolver.query(controlUri,
+                                   new String[] { ensureHistory,
+                                                  ensureBookmarks },
+                                   null,
+                                   null,
+                                   null);
+
+        int historyMigrated = 0;
+        int bookmarksMigrated = 0;
+
+        if (c.moveToFirst()) {
+            historyMigrated = c.getInt(0);
+            bookmarksMigrated = c.getInt(1);
+        }
+        c.close();
+
+        mAsserter.is(historyMigrated, 1, "History migrated");
+        mAsserter.is(bookmarksMigrated, 1, "Bookmarks migrated");
+    }
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp("@ANDROID_PACKAGE_NAME@.db.BrowserProvider", "AUTHORITY");
+    }
+
+    public void tearDown() throws Exception {
+      // remove the database file
+      File profile = new File(mProfile);
+      File db = new File(profile, DB_NAME);
+      db.delete();
+
+      super.tearDown();
+    }
+}
