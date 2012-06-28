@@ -31,13 +31,6 @@ namespace xpc {
 // we know to not apply an X-ray wrapper.
 DirectWrapper WaiveXrayWrapperWrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 
-// Objects that haven't been explicitly waived, but have been exposed
-// to chrome don't want a CrossOriginWrapper, since that deeply-waives
-// but need the transparent behavior of a CrossOriginWrapper. The
-// NoWaiverWrapper is like a CrossOriginWrapper that can also hand out
-// XrayWrappers as return values.
-NoWaiverWrapper NoWaiverWrapper::singleton(0);
-
 // When objects for which we waived the X-ray wrapper cross into
 // chrome, we wrap them into a special cross-compartment wrapper
 // that transitively extends the waiver to all properties we get
@@ -341,7 +334,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                     usingXray = true;
                     wrapper = &Xray::singleton;
                 } else {
-                    wrapper = &NoWaiverWrapper::singleton;
+                    wrapper = &CrossCompartmentWrapper::singleton;
                 }
             }
         }
