@@ -218,7 +218,47 @@
        LOG("Projected as a regular number");
        return projectValue;
      };
+     exports.OS.Shared.projectValue = projectValue;
 
+
+
+     /**
+      * Get the appropriate type for an unsigned int of the given size.
+      *
+      * This function is useful to define types such as |mode_t| whose
+      * actual width depends on the OS/platform.
+      *
+      * @param {number} size The number of bytes requested.
+      */
+     Types.uintn_t = function uintn_t(size) {
+       switch (size) {
+       case 1: return Types.uint8_t;
+       case 2: return Types.uint16_t;
+       case 4: return Types.uint32_t;
+       case 8: return Types.uint64_t;
+       default:
+         throw new Error("Cannot represent unsigned integers of " + size + " bytes");
+       }
+     };
+
+     /**
+      * Get the appropriate type for an signed int of the given size.
+      *
+      * This function is useful to define types such as |mode_t| whose
+      * actual width depends on the OS/platform.
+      *
+      * @param {number} size The number of bytes requested.
+      */
+     Types.intn_t = function intn_t(size) {
+       switch (size) {
+       case 1: return Types.int8_t;
+       case 2: return Types.int16_t;
+       case 4: return Types.int32_t;
+       case 8: return Types.int64_t;
+       default:
+         throw new Error("Cannot represent integers of " + size + " bytes");
+       }
+     };
 
      /**
       * Actual implementation of common C types.
@@ -280,6 +320,34 @@
                 projector(ctypes.unsigned_int, false));
 
      /**
+      * A C integer (8-bits).
+      */
+     Types.int8_t =
+       new Type("int8_t",
+                ctypes.int8_t,
+                projectValue);
+
+     Types.uint8_t =
+       new Type("uint8_t",
+                ctypes.uint8_t,
+                projectValue);
+
+     /**
+      * A C integer (16-bits).
+      *
+      * Also known as WORD under Windows.
+      */
+     Types.int16_t =
+       new Type("int16_t",
+                ctypes.int16_t,
+                projectValue);
+
+     Types.uint16_t =
+       new Type("uint16_t",
+                ctypes.uint16_t,
+                projectValue);
+
+     /**
       * A C integer (32-bits).
       *
       * Also known as DWORD under Windows.
@@ -326,15 +394,6 @@
                 function projectBool(x) {
                   return !!(x.value);
                 });
-
-     /**
-      * A file access mode
-      * Implemented as a C integer.
-      */
-     Types.mode_t =
-       new Type("mode_t",
-                ctypes.int,
-                projector(ctypes.int, true));
 
      /**
       * A user identifier.
