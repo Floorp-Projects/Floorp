@@ -2437,10 +2437,11 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
 
     if (!fp)
     {
-        // No script code on stack. We don't have enough information and have
-        // to allow execution.
-        *result = true;
-
+        // No script code on stack. Allow access if and only if the subject
+        // principal is system.
+        nsresult ignored;
+        nsIPrincipal *subjectPrin = doGetSubjectPrincipal(&ignored);
+        *result = (!subjectPrin || subjectPrin == mSystemPrincipal);
         return NS_OK;
     }
 
