@@ -440,16 +440,16 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
 //----------------------------------------------------------------------
 // container methods
 
-class nsDisplaySVG : public nsDisplayItem {
+class nsDisplayOuterSVG : public nsDisplayItem {
 public:
-  nsDisplaySVG(nsDisplayListBuilder* aBuilder,
-               nsSVGOuterSVGFrame* aFrame) :
+  nsDisplayOuterSVG(nsDisplayListBuilder* aBuilder,
+                    nsSVGOuterSVGFrame* aFrame) :
     nsDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplaySVG);
+    MOZ_COUNT_CTOR(nsDisplayOuterSVG);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplaySVG() {
-    MOZ_COUNT_DTOR(nsDisplaySVG);
+  virtual ~nsDisplayOuterSVG() {
+    MOZ_COUNT_DTOR(nsDisplayOuterSVG);
   }
 #endif
 
@@ -457,12 +457,12 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx);
-  NS_DISPLAY_DECL_NAME("SVGEventReceiver", TYPE_SVG_EVENT_RECEIVER)
+  NS_DISPLAY_DECL_NAME("SVGOuterSVG", TYPE_SVG_OUTER_SVG)
 };
 
 void
-nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                      HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
+nsDisplayOuterSVG::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                           HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
 {
   nsSVGOuterSVGFrame *outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
   nsRect rectAtOrigin = aRect - ToReferenceFrame();
@@ -482,8 +482,8 @@ nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
 }
 
 void
-nsDisplaySVG::Paint(nsDisplayListBuilder* aBuilder,
-                    nsRenderingContext* aContext)
+nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
+                         nsRenderingContext* aContext)
 {
   nsSVGOuterSVGFrame *frame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
 
@@ -625,7 +625,7 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayList replacedContent;
 
   rv = replacedContent.AppendNewToTop(
-      new (aBuilder) nsDisplaySVG(aBuilder, this));
+      new (aBuilder) nsDisplayOuterSVG(aBuilder, this));
   NS_ENSURE_SUCCESS(rv, rv);
 
   WrapReplacedContentForBorderRadius(aBuilder, &replacedContent, aLists);
