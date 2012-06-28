@@ -919,10 +919,6 @@ pref("network.websocket.max-connections", 200);
 // (i.e. wss://) websockets.
 pref("network.websocket.allowInsecureFromHTTPS", false);
 
-// by default we delay websocket reconnects to same host/port if previous
-// connection failed, per RFC 6455 section 7.2.3 
-pref("network.websocket.delay-failed-reconnects", true);
-
 // </ws>
 
 // Server-Sent Events
