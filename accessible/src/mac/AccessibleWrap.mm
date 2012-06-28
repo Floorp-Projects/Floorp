@@ -59,6 +59,9 @@ AccessibleWrap::GetNativeType ()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
+  if (IsXULDeck())
+    return [mozPaneAccessible class];
+  
   roles::Role role = Role();
   switch (role) {
     case roles::PUSHBUTTON:
@@ -81,7 +84,7 @@ AccessibleWrap::GetNativeType ()
 
     case roles::PAGETABLIST:
       return [mozTabsAccessible class];
-      
+
     case roles::ENTRY:
     case roles::STATICTEXT:
     case roles::CAPTION:
