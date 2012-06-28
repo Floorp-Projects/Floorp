@@ -37,7 +37,11 @@
 #include "mozilla/FunctionTimer.h"
 #include "mozilla/Telemetry.h"
 
+#include "sqlite3.h"
+#include "mozilla/storage.h"
+
 using namespace mozilla;
+using namespace mozilla::storage;
 
 static const char OFFLINE_CACHE_DEVICE_ID[] = { "offline" };
 
@@ -100,10 +104,10 @@ class EvictionObserver
     : mDB(db), mEvictionFunction(evictionFunction)
     {
       mDB->ExecuteSimpleSQL(
-          NS_LITERAL_CSTRING("CREATE TEMP TRIGGER cache_on_delete AFTER DELETE"
+          NS_LITERAL_CSTRING("CREATE TEMP TRIGGER cache_on_delete BEFORE DELETE"
                              " ON moz_cache FOR EACH ROW BEGIN SELECT"
                              " cache_eviction_observer("
-                             "  OLD.key, OLD.generation);"
+                             "  OLD.ClientID, OLD.key, OLD.generation);"
                              " END;"));
       mEvictionFunction->Reset();
     }
@@ -181,11 +185,21 @@ nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, ns
   PRUint32 numEntries;
   nsresult rv = values->GetNumEntries(&numEntries);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(numEntries == 2, "unexpected number of arguments");
+  NS_ASSERTION(numEntries == 3, "unexpected number of arguments");
 
   PRUint32 valueLen;
-  const char *key = values->AsSharedUTF8String(0, &valueLen);
-  int generation  = values->AsInt32(1);
+  const char *clientID = values->AsSharedUTF8String(0, &valueLen);
+  const char *key = values->AsSharedUTF8String(1, &valueLen);
+  nsCAutoString fullKey(clientID);
+  fullKey.AppendLiteral(":");
+  fullKey.Append(key);
+  int generation  = values->AsInt32(2);
+
+  // If the key is currently locked, refuse to delete this row.
+  if (mDevice->IsLocked(fullKey)) {
+    NS_ADDREF(*_retval = new IntegerVariant(SQLITE_IGNORE));
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIFile> file;
   rv = GetCacheDataFile(mDevice->CacheDirectory(), key,
@@ -434,6 +448,10 @@ CreateCacheEntry(nsOfflineCacheDevice *device,
                  const nsOfflineCacheRecord &rec)
 {
   nsCacheEntry *entry;
+
+  if (device->IsLocked(*fullKey)) {
+      return nsnull;
+  }
   
   nsresult rv = nsCacheEntry::Create(fullKey->get(), // XXX enable sharing
                                      nsICache::STREAM_BASED,
@@ -1115,7 +1133,7 @@ nsOfflineCacheDevice::Init()
   mEvictionFunction = new nsOfflineCacheEvictionFunction(this);
   if (!mEvictionFunction) return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 2, mEvictionFunction);
+  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 3, mEvictionFunction);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create all (most) of our statements up front
@@ -1176,6 +1194,8 @@ nsOfflineCacheDevice::InitActiveCaches()
   mActiveCachesByGroup.Init();
 
   mActiveCaches.Init(5);
+
+  mLockedEntries.Init(64);
 
   AutoResetStatement statement(mStatement_EnumerateGroups);
 
@@ -1364,6 +1384,9 @@ nsOfflineCacheDevice::FindEntry(nsCString *fullKey, bool *collision)
       delete entry;
       return nsnull;
     }
+
+    // lock the entry
+    Lock(*fullKey);
   }
 
   return entry;
@@ -1397,6 +1420,9 @@ nsOfflineCacheDevice::DeactivateEntry(nsCacheEntry *entry)
 
     UpdateEntry(entry);
   }
+
+  // Unlock the entry
+  Unlock(*entry->Key());
 
   delete entry;
 
@@ -1464,6 +1490,10 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
   NS_ASSERTION(!hasRows, "INSERT should not result in output");
 
   entry->SetData(binding);
+
+  // lock the entry
+  Lock(*entry->Key());
+
   return NS_OK;
 }
 
@@ -1477,8 +1507,10 @@ nsOfflineCacheDevice::DoomEntry(nsCacheEntry *entry)
 
   // We can go ahead and delete the corresponding row in our table,
   // but we must not delete the file on disk until we are deactivated.
+  // In another word, the file should be deleted if the entry had been
+  // deactivated.
   
-  DeleteEntry(entry, false);
+  DeleteEntry(entry, !entry->IsActive());
 }
 
 nsresult
@@ -2001,7 +2033,6 @@ nsresult
 nsOfflineCacheDevice::GetGroups(PRUint32 *count,
                                  char ***keys)
 {
-
   LOG(("nsOfflineCacheDevice::GetGroups"));
 
   return RunSimpleQuery(mStatement_EnumerateGroups, 0, count, keys);
@@ -2011,10 +2042,27 @@ nsresult
 nsOfflineCacheDevice::GetGroupsTimeOrdered(PRUint32 *count,
 					   char ***keys)
 {
-
   LOG(("nsOfflineCacheDevice::GetGroupsTimeOrder"));
 
   return RunSimpleQuery(mStatement_EnumerateGroupsTimeOrder, 0, count, keys);
+}
+
+bool
+nsOfflineCacheDevice::IsLocked(const nsACString &key)
+{
+  return mLockedEntries.GetEntry(key);
+}
+
+void
+nsOfflineCacheDevice::Lock(const nsACString &key)
+{
+  mLockedEntries.PutEntry(key);
+}
+
+void
+nsOfflineCacheDevice::Unlock(const nsACString &key)
+{
+  mLockedEntries.RemoveEntry(key);
 }
 
 nsresult
