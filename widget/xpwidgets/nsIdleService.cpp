@@ -178,6 +178,10 @@ nsIdleServiceDaily::~nsIdleServiceDaily()
 void
 nsIdleServiceDaily::DailyCallback(nsITimer* aTimer, void* aClosure)
 {
+#ifdef ANDROID
+  __android_log_print(ANDROID_LOG_INFO, "IdleService", "DailyCallback running, registering Idle observer");
+#endif
+
   nsIdleServiceDaily* me = static_cast<nsIdleServiceDaily*>(aClosure);
 
   // The one thing we do every day is to start waiting for the user to "have
