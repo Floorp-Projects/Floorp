@@ -30,7 +30,6 @@
 #include "nsIDragService.h"
 #include "nsIDOMUIEvent.h"
 #include "nsCopySupport.h"
-#include "nsITransferable.h"
 
 // Misc
 #include "nsEditorUtils.h"
@@ -50,6 +49,10 @@ NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transfera
 
   // Get the nsITransferable interface for getting the data from the clipboard
   if (transferable) {
+    nsCOMPtr<nsIDocument> destdoc = GetDocument();
+    nsILoadContext* loadContext = destdoc ? destdoc->GetLoadContext() : nsnull;
+    (*transferable)->Init(loadContext);
+
     (*transferable)->AddDataFlavor(kUnicodeMime);
     (*transferable)->AddDataFlavor(kMozTextInternal);
   };

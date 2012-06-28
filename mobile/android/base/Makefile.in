@@ -30,7 +30,6 @@ FENNEC_JAVA_FILES = \
   AwesomeBarTabs.java \
   BrowserApp.java \
   BrowserToolbar.java \
-  ConfirmPreference.java \
   SyncPreference.java \
   db/AndroidBrowserDB.java \
   db/BrowserDB.java \
@@ -71,7 +70,9 @@ FENNEC_JAVA_FILES = \
   LinkTextView.java \
   MenuItemActionBar.java \
   MenuItemDefault.java \
+  MultiChoicePreference.java \
   NSSBridge.java \
+  PrivateDataPreference.java \
   PropertyAnimator.java \
   ProfileMigrator.java \
   PromptService.java \

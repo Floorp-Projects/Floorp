@@ -2786,10 +2786,13 @@ js_Object(JSContext *cx, unsigned argc, Value *vp)
         obj = NewBuiltinClassInstance(cx, &ObjectClass, kind);
         if (!obj)
             return JS_FALSE;
-        TypeObject *type = GetTypeCallerInitObject(cx, JSProto_Object);
-        if (!type)
-            return JS_FALSE;
-        obj->setType(type);
+        jsbytecode *pc;
+        JSScript *script = cx->stack.currentScript(&pc);
+        if (script) {
+            /* Try to specialize the type of the object to the scripted call site. */
+            if (!types::SetInitializerObjectType(cx, script, pc, obj))
+                return JS_FALSE;
+        }
     }
     vp->setObject(*obj);
     return JS_TRUE;

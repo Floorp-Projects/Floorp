@@ -32,7 +32,7 @@ SimpleTest.waitForFocus(function() {
 
   SimpleTest.waitForClipboard(kExpectedValue,
     function() {
-      SpecialPowers.copyString(kValue);
+      SpecialPowers.copyString(kValue, document);
     },
     function() {
       synthesizeKey("V", {accelKey: true});

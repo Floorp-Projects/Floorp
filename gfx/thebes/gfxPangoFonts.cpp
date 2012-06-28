@@ -15,7 +15,7 @@
 #include "nsTArray.h"
 
 #include "gfxContext.h"
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 #include "gfxPlatformGtk.h"
 #endif
 #ifdef MOZ_WIDGET_QT
@@ -44,7 +44,7 @@
 #include <pango/pango-modules.h>
 #include <pango/pangofc-fontmap.h>
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 #include <gdk/gdk.h>
 #endif
 
@@ -950,7 +950,7 @@ gfx_pango_fc_font_get_coverage(PangoFont *font, PangoLanguage *lang)
 static PRInt32
 GetDPI()
 {
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
     return gfxPlatformGtk::GetDPI();
 #elif defined(MOZ_WIDGET_QT)
     return gfxQtPlatform::GetDPI();
@@ -1731,7 +1731,7 @@ gfx_pango_font_map_class_init(gfxPangoFontMapClass *klass)
     // dynamically respond to changes in the screen cairo_font_options_t.
 }
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 static void ApplyGdkScreenFontOptions(FcPattern *aPattern);
 #endif
 
@@ -1768,7 +1768,7 @@ PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
        cairo_ft_font_options_substitute(options, aPattern);
        cairo_font_options_destroy(options);
 #endif
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
        ApplyGdkScreenFontOptions(aPattern);
 #endif
     }
@@ -3145,7 +3145,7 @@ GuessPangoLanguage(nsIAtom *aLanguage)
     return pango_language_from_string(lang.get());
 }
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 /***************************************************************************
  *
  * This function must be last in the file because it uses the system cairo

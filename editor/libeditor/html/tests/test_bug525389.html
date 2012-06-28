@@ -12,6 +12,12 @@
   var Cc = Components.classes;
   var Ci = Components.interfaces;
 
+function getLoadContext() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
+}
+
 function runTest() {
   var pasteCount = 0;
   var pasteFunc = function (event) { pasteCount++; };
@@ -49,6 +55,7 @@ function runTest() {
   function getTransferableFromClipboard(asHTML) {
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+    trans.init(getLoadContext());
     if (asHTML) {
       trans.addDataFlavor("text/html");
     } else {
@@ -88,6 +95,7 @@ function runTest() {
 
     // Create the transferable.
     var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);  
+    trans.init(getLoadContext());
 
     // Add the data to the transferable.
     if (asHTML) {

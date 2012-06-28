@@ -2363,7 +2363,7 @@ class ScreenshotHandler {
     static void scheduleCheckerboardScreenshotEvent(int tabId, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int bw, int bh) {
         float totalSize = sw * sh;
         int numSlices = (int) Math.ceil(totalSize / 100000);
-        if (numSlices == 0)
+        if (numSlices == 0 || dw == 0 || dh == 0)
             return;
         int srcSliceSize = (int) Math.ceil(sh / numSlices);
         int dstSliceSize = (int) Math.ceil(dh / numSlices);

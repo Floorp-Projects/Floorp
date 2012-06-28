@@ -29,10 +29,9 @@ class ArrayBufferObject : public JSObject
 {
   public:
     static Class protoClass;
-    static JSPropertySpec jsprops[];
     static JSFunctionSpec jsfuncs[];
 
-    static JSBool prop_getByteLength(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+    static JSBool byteLengthGetter(JSContext *cx, unsigned argc, Value *vp);
 
     static JSBool fun_slice(JSContext *cx, unsigned argc, Value *vp);
 
@@ -189,13 +188,6 @@ struct TypedArray {
     // fo constructing new objects
     static Class protoClasses[TYPE_MAX];
 
-    static JSPropertySpec jsprops[];
-
-    static JSBool prop_getBuffer(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-    static JSBool prop_getByteOffset(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-    static JSBool prop_getByteLength(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-    static JSBool prop_getLength(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-
     static JSBool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                     JSObject **objp, JSProperty **propp);
     static JSBool obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
@@ -215,41 +207,31 @@ struct TypedArray {
     static JSBool obj_setElementAttributes(JSContext *cx, HandleObject obj, uint32_t index, unsigned *attrsp);
     static JSBool obj_setSpecialAttributes(JSContext *cx, HandleObject obj, HandleSpecialId sid, unsigned *attrsp);
 
-    static uint32_t getLength(JSObject *obj);
-    static uint32_t getByteOffset(JSObject *obj);
-    static uint32_t getByteLength(JSObject *obj);
-    static uint32_t getType(JSObject *obj);
-    static ArrayBufferObject * getBuffer(JSObject *obj);
-    static void * getDataOffset(JSObject *obj);
+    static inline Value bufferValue(JSObject *obj);
+    static inline Value byteOffsetValue(JSObject *obj);
+    static inline Value byteLengthValue(JSObject *obj);
+    static inline Value lengthValue(JSObject *obj);
+
+    static inline ArrayBufferObject * buffer(JSObject *obj);
+    static inline uint32_t byteOffset(JSObject *obj);
+    static inline uint32_t byteLength(JSObject *obj);
+    static inline uint32_t length(JSObject *obj);
+
+    static inline uint32_t type(JSObject *obj);
+    static inline void * viewData(JSObject *obj);
 
   public:
     static bool
     isArrayIndex(JSContext *cx, JSObject *obj, jsid id, uint32_t *ip = NULL);
 
-    static inline uint32_t slotWidth(int atype) {
-        switch (atype) {
-          case js::TypedArray::TYPE_INT8:
-          case js::TypedArray::TYPE_UINT8:
-          case js::TypedArray::TYPE_UINT8_CLAMPED:
-            return 1;
-          case js::TypedArray::TYPE_INT16:
-          case js::TypedArray::TYPE_UINT16:
-            return 2;
-          case js::TypedArray::TYPE_INT32:
-          case js::TypedArray::TYPE_UINT32:
-          case js::TypedArray::TYPE_FLOAT32:
-            return 4;
-          case js::TypedArray::TYPE_FLOAT64:
-            return 8;
-          default:
-            JS_NOT_REACHED("invalid typed array type");
-            return 0;
-        }
-    }
+    static inline uint32_t slotWidth(int atype);
+    static inline int slotWidth(JSObject *obj);
 
-    static inline int slotWidth(JSObject *obj) {
-        return slotWidth(getType(obj));
-    }
+    /*
+     * Byte length above which created typed arrays and data views will have
+     * singleton types regardless of the context in which they are created.
+     */
+    static const uint32_t SINGLETON_TYPE_BYTE_LENGTH = 1024 * 1024 * 10;
 
     static int lengthOffset();
     static int dataOffset();
@@ -292,9 +274,9 @@ class DataViewObject : public JSObject
   public:
     static const size_t RESERVED_SLOTS  = 3;
 
-    static JSBool prop_getBuffer(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-    static JSBool prop_getByteOffset(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-    static JSBool prop_getByteLength(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
+    static inline Value bufferValue(DataViewObject &view);
+    static inline Value byteOffsetValue(DataViewObject &view);
+    static inline Value byteLengthValue(DataViewObject &view);
 
     static JSBool class_constructor(JSContext *cx, unsigned argc, Value *vp);
     static JSBool constructWithProto(JSContext *cx, unsigned argc, Value *vp);
@@ -325,14 +307,13 @@ class DataViewObject : public JSObject
     inline JSObject & arrayBuffer();
     inline void *dataPointer();
     inline bool hasBuffer() const;
-    static JSObject *initClass(JSContext *cx, GlobalObject *global);
+    static JSObject *initClass(JSContext *cx);
     bool getDataPointer(JSContext *cx, CallArgs args, size_t typeSize, uint8_t **data);
     template<typename NativeType>
     bool read(JSContext *cx, CallArgs &args, NativeType *val, const char *method);
     template<typename NativeType>
     bool write(JSContext *cx, CallArgs &args, const char *method);
   private:
-    static JSPropertySpec jsprops[];
     static JSFunctionSpec jsfuncs[];
 };
 

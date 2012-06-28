@@ -12234,6 +12234,13 @@ Iterator::DeleteItemsTo(const Iterator& aEnd)
 bool
 nsCSSFrameConstructor::RecomputePosition(nsIFrame* aFrame)
 {
+  // Don't process position changes on table frames, since we already handle
+  // the dynamic position change on the outer table frame, and the reflow-based
+  // fallback code path also ignores positions on inner table frames.
+  if (aFrame->GetType() == nsGkAtoms::tableFrame) {
+    return true;
+  }
+
   const nsStyleDisplay* display = aFrame->GetStyleDisplay();
   // Changes to the offsets of a non-positioned element can safely be ignored.
   if (display->mPosition == NS_STYLE_POSITION_STATIC) {

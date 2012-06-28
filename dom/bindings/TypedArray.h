@@ -44,7 +44,15 @@ struct TypedArray : public TypedArray_base<T,U,GetData,GetLength> {
   {}
   
   static inline JSObject*
-  Create(JSContext* cx, uint32_t length, T* data = NULL) {
+  Create(JSContext* cx, nsWrapperCache* creator, uint32_t length,
+         T* data = NULL) {
+    JSObject* creatorWrapper;
+    JSAutoEnterCompartment ac;
+    if (creator && (creatorWrapper = creator->GetWrapperPreserveColor())) {
+      if (!ac.enter(cx, creatorWrapper)) {
+        return NULL;
+      }
+    }
     JSObject* obj = CreateNew(cx, length);
     if (!obj) {
       return NULL;
@@ -64,7 +72,7 @@ typedef TypedArray<uint8_t, uint8_t, JS_GetUint8ArrayData,
                    JS_GetTypedArrayLength, JS_NewUint8Array>
         Uint8Array;
 typedef TypedArray<uint8_t, uint8_t, JS_GetUint8ClampedArrayData,
-                   JS_GetTypedArrayLength, JS_NewUint8Array>
+                   JS_GetTypedArrayLength, JS_NewUint8ClampedArray>
         Uint8ClampedArray;
 typedef TypedArray<int16_t, int16_t, JS_GetInt16ArrayData,
                    JS_GetTypedArrayLength, JS_NewInt16Array>

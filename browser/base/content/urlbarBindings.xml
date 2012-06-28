@@ -550,7 +550,7 @@
 
             Cc["@mozilla.org/widget/clipboardhelper;1"]
               .getService(Ci.nsIClipboardHelper)
-              .copyString(val);
+              .copyString(val, document);
           },
           supportsCommand: function(aCommand) {
             switch (aCommand) {
@@ -751,7 +751,7 @@
 
         Cc["@mozilla.org/widget/clipboardhelper;1"]
           .getService(Ci.nsIClipboardHelper)
-          .copyStringToClipboard(val, Ci.nsIClipboard.kSelectionClipboard);
+          .copyStringToClipboard(val, document, Ci.nsIClipboard.kSelectionClipboard);
       ]]></handler>
     </handlers>
 

@@ -591,16 +591,15 @@ window.addEventListener('ContentStart', function(evt) {
   });
 })();
 
-// This is the backend for Gaia's screenshot feature.
-// Gaia requests a screenshot by sending a mozContentEvent with
-// detail.type set to 'save-screenshot'.  Then we take a screenshot
-// save it in device storage (external) and send a mozChromeEvent with
-// detail.type set to 'saved-screenshot' and detail.filename set to
-// the filename.
+// This is the backend for Gaia's screenshot feature.  Gaia requests a
+// screenshot by sending a mozContentEvent with detail.type set to
+// 'take-screenshot'.  Then we take a screenshot and send a
+// mozChromeEvent with detail.type set to 'take-screenshot-success'
+// and detail.file set to the an image/png blob
 window.addEventListener('ContentStart', function ss_onContentStart() {
   let content = shell.contentBrowser.contentWindow;
   content.addEventListener('mozContentEvent', function ss_onMozContentEvent(e) {
-    if (e.detail.type !== 'save-screenshot')
+    if (e.detail.type !== 'take-screenshot')
       return;
 
     try {
@@ -619,44 +618,14 @@ window.addEventListener('ContentStart', function ss_onContentStart() {
       context.drawWindow(window, 0, 0, width, height,
                          'rgb(255,255,255)', flags);
 
-      var filename = 'screenshots/' +
-        new Date().toISOString().slice(0,-5).replace(/[:T]/g, '-') +
-        '.png';
-
-      var file = canvas.mozGetAsFile(filename, 'image/png');
-      var storage = navigator.getDeviceStorage('pictures')[0];
-      if (!storage) { // If we don't have an SD card to save to, send an error
-        shell.sendEvent(content, 'mozChromeEvent', {
-          type: 'save-screenshot-no-card'
-        });
-        return;
-      }
-
-      var saveRequest = storage.addNamed(file, filename);
-      saveRequest.onsuccess = function ss_onsuccess() {
-        try {
-          shell.sendEvent(content, 'mozChromeEvent', {
-            type: 'save-screenshot-success',
-            filename: filename
-          });
-        } catch(e) {
-          dump('exception in onsuccess ' + e + '\n');
-        }
-      };
-      saveRequest.onerror = function ss_onerror() {
-        try {
-          shell.sendEvent(content, 'mozChromeEvent', {
-            type: 'save-screenshot-error',
-            error: saveRequest.error.name
-          });
-        } catch(e) {
-          dump('exception in onerror ' + e + '\n');
-        }
-      };
-    } catch(e) {
-      dump('exception while saving screenshot: ' + e + '\n');
       shell.sendEvent(content, 'mozChromeEvent', {
-        type: 'save-screenshot-error',
+          type: 'take-screenshot-success',
+          file: canvas.mozGetAsFile('screenshot', 'image/png')
+      });
+    } catch (e) {
+      dump('exception while creating screenshot: ' + e + '\n');
+      shell.sendEvent(content, 'mozChromeEvent', {
+        type: 'take-screenshot-error',
         error: String(e)
       });
     }

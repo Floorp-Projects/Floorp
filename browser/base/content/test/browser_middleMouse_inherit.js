@@ -25,7 +25,7 @@ function test() {
       function() {
         Components.classes["@mozilla.org/widget/clipboardhelper;1"]
                   .getService(Components.interfaces.nsIClipboardHelper)
-                  .copyString(url);
+                  .copyString(url, document);
       },
       function () {
         // Middle click on the content area
