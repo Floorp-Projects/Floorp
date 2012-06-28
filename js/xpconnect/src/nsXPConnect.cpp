@@ -681,10 +681,9 @@ struct TraversalTracer : public JSTracer
 };
 
 static void
-NoteJSChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
+NoteJSChild(JSTracer *trc, void *thing, JSGCTraceKind kind)
 {
     TraversalTracer *tracer = static_cast<TraversalTracer*>(trc);
-    void *thing = *thingp;
 
     // Don't traverse non-gray objects, unless we want all traces.
     if (!xpc_IsGrayGCThing(thing) && !tracer->cb.WantAllTraces())
@@ -816,12 +815,19 @@ DescribeGCThing(bool isMarked, void *p, JSGCTraceKind traceKind,
     }
 }
 
+static void
+NoteJSChildTracerShim(JSTracer *trc, void **thingp, JSGCTraceKind kind)
+{
+    NoteJSChild(trc, *thingp, kind);
+}
+
 static inline void
 NoteGCThingJSChildren(JSRuntime *rt, void *p, JSGCTraceKind traceKind,
                       nsCycleCollectionTraversalCallback &cb)
 {
+    MOZ_ASSERT(rt);
     TraversalTracer trc(cb);
-    JS_TracerInit(&trc, rt, NoteJSChild);
+    JS_TracerInit(&trc, rt, NoteJSChildTracerShim);
     trc.eagerlyTraceWeakMaps = false;
     JS_TraceChildren(&trc, p, traceKind);
 }
@@ -861,11 +867,16 @@ NoteGCThingXPCOMChildren(js::Class *clasp, JSObject *obj,
     }
 }
 
-NS_METHOD
-nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
-                                     nsCycleCollectionTraversalCallback &cb)
+enum TraverseSelect {
+    TRAVERSE_CPP,
+    TRAVERSE_FULL
+};
+
+static void
+TraverseGCThing(TraverseSelect ts, void *p, JSGCTraceKind traceKind,
+                nsCycleCollectionTraversalCallback &cb)
 {
-    JSGCTraceKind traceKind = js_GetGCThingTraceKind(p);
+    MOZ_ASSERT(traceKind == js_GetGCThingTraceKind(p));
     JSObject *obj = nsnull;
     js::Class *clasp = nsnull;
 
@@ -895,23 +906,31 @@ nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
 
     bool isMarked = markJSObject || !xpc_IsGrayGCThing(p);
 
-    DescribeGCThing(isMarked, p, traceKind, cb);
+    if (ts == TRAVERSE_FULL)
+        DescribeGCThing(isMarked, p, traceKind, cb);
 
     // If this object is alive, then all of its children are alive. For JS objects,
     // the black-gray invariant ensures the children are also marked black. For C++
     // objects, the ref count from this object will keep them alive. Thus we don't
     // need to trace our children, unless we are debugging using WantAllTraces.
     if (isMarked && !cb.WantAllTraces())
-        return NS_OK;
+        return;
 
-    NoteGCThingJSChildren(nsXPConnect::GetRuntimeInstance()->GetJSRuntime(),
-                          p, traceKind, cb);
-
+    if (ts == TRAVERSE_FULL)
+        NoteGCThingJSChildren(nsXPConnect::GetRuntimeInstance()->GetJSRuntime(),
+                              p, traceKind, cb);
+ 
     if (traceKind != JSTRACE_OBJECT || dontTraverse)
-        return NS_OK;
+        return;
 
     NoteGCThingXPCOMChildren(clasp, obj, cb);
+}
 
+NS_METHOD
+nsXPConnectParticipant::TraverseImpl(nsXPConnectParticipant *that, void *p,
+                                     nsCycleCollectionTraversalCallback &cb)
+{
+    TraverseGCThing(TRAVERSE_FULL, p, js_GetGCThingTraceKind(p), cb);
     return NS_OK;
 }
 
@@ -2617,6 +2636,112 @@ SetLocationForGlobal(JSObject *global, nsIURI *locationURI)
 }
 
 } // namespace xpc
+
+static void
+NoteJSChildGrayWrapperShim(void *data, void *thing)
+{
+    TraversalTracer *trc = static_cast<TraversalTracer*>(data);
+    NoteJSChild(trc, thing, js_GetGCThingTraceKind(thing));
+}
+
+static void
+TraverseObjectShim(void *data, void *thing)
+{
+    nsCycleCollectionTraversalCallback *cb =
+        static_cast<nsCycleCollectionTraversalCallback*>(data);
+
+    MOZ_ASSERT(js_GetGCThingTraceKind(thing) == JSTRACE_OBJECT);
+    TraverseGCThing(TRAVERSE_CPP, thing, JSTRACE_OBJECT, *cb);
+}
+
+/*
+ * The cycle collection participant for a JSCompartment is intended to produce the same
+ * results as if all of the gray GCthings in a compartment were merged into a single node,
+ * except for self-edges. This avoids the overhead of representing all of the GCthings in
+ * the compartment in the cycle collector graph, which should be much faster if many of
+ * the GCthings in the compartment are gray.
+ *
+ * Compartment merging should not always be used, because it is a conservative
+ * approximation of the true cycle collector graph that can incorrectly identify some
+ * garbage objects as being live. For instance, consider two cycles that pass through a
+ * compartment, where one is garbage and the other is live. If we merge the entire
+ * compartment, the cycle collector will think that both are alive.
+ *
+ * We don't have to worry about losing track of a garbage cycle, because any such garbage
+ * cycle incorrectly identified as live must contain at least one C++ to JS edge, and
+ * XPConnect will always add the C++ object to the CC graph. (This is in contrast to pure
+ * C++ garbage cycles, which must always be properly identified, because we clear the
+ * purple buffer during every CC, which may contain the last reference to a garbage
+ * cycle.)
+ */
+class JSCompartmentParticipant : public nsCycleCollectionParticipant
+{
+public:
+    static NS_METHOD TraverseImpl(JSCompartmentParticipant *that, void *p,
+                                  nsCycleCollectionTraversalCallback &cb)
+    {
+        MOZ_ASSERT(!cb.WantAllTraces());
+        JSCompartment *c = static_cast<JSCompartment*>(p);
+
+        /*
+         * We treat the compartment as being gray. We handle non-gray GCthings in the
+         * compartment by not reporting their children to the CC. The black-gray invariant
+         * ensures that any JS children will also be non-gray, and thus don't need to be
+         * added to the graph. For C++ children, not representing the edge from the
+         * non-gray JS GCthings to the C++ object will keep the child alive.
+         *
+         * We don't allow compartment merging in a WantAllTraces CC, because then these
+         * assumptions don't hold.
+         */
+        cb.DescribeGCedNode(false, sizeof(js::shadow::Object), "JS Compartment");
+
+        /*
+         * Every JS child of everything in the compartment is either in the compartment
+         * or is a cross-compartment wrapper. In the former case, we don't need to
+         * represent these edges in the CC graph because JS objects are not ref counted.
+         * In the latter case, the JS engine keeps a map of these wrappers, which we
+         * iterate over.
+         */
+        TraversalTracer trc(cb);
+        JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+        JS_TracerInit(&trc, rt, NoteJSChildTracerShim);
+        trc.eagerlyTraceWeakMaps = false;
+        js::VisitGrayWrapperTargets(c, NoteJSChildGrayWrapperShim, &trc);
+
+        /*
+         * To find C++ children of things in the compartment, we scan every JS Object in
+         * the compartment. Only JS Objects can have C++ children.
+         */
+        js::IterateGrayObjects(c, TraverseObjectShim, &cb);
+
+        return NS_OK;
+    }
+
+    static NS_METHOD RootImpl(void *p)
+    {
+        return NS_OK;
+    }
+    
+    static NS_METHOD UnlinkImpl(void *p)
+    {
+        return NS_OK;
+    }
+
+    static NS_METHOD UnrootImpl(void *p)
+    {
+        return NS_OK;
+    }
+};
+
+static CCParticipantVTable<JSCompartmentParticipant>::Type JSCompartment_cycleCollectorGlobal = {
+    NS_IMPL_CYCLE_COLLECTION_NATIVE_VTABLE(JSCompartmentParticipant)
+};
+
+nsCycleCollectionParticipant *
+xpc_JSCompartmentParticipant()
+{
+    return JSCompartment_cycleCollectorGlobal.GetParticipant();
+}
 
 NS_IMETHODIMP
 nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)

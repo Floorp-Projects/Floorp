@@ -4,8 +4,12 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 public class testCheck2 extends PixelTest {
+    @Override
+    protected int getTestType() {
+        return TEST_TALOS;
+    }
+
     public void testCheck2() {
-        setTestType("talos");
         String url = getAbsoluteUrl("/startup_test/fennecmark/cnn/cnn.com/index.html");
 
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();

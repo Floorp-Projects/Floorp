@@ -509,6 +509,7 @@ abstract public class GeckoApp
             R.id.find_in_page,
             R.id.addons,
             R.id.downloads,
+            R.id.apps,
             R.id.site_settings
         };
 
@@ -691,6 +692,9 @@ abstract public class GeckoApp
                 return true;
             case R.id.downloads:
                 loadUrlInTab("about:downloads");
+                return true;
+            case R.id.apps:
+                loadUrlInTab("about:apps");
                 return true;
             case R.id.char_encoding:
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("CharEncoding:Get", null));
@@ -1224,7 +1228,7 @@ abstract public class GeckoApp
                 String launchPath = message.getString("launchPath");
                 String iconURL = message.getString("iconURL");
                 String uniqueURI = message.getString("uniqueURI");
-                GeckoAppShell.createShortcut(name, launchPath, uniqueURI, iconURL, "webapp");
+                GeckoAppShell.installWebApp(name, launchPath, uniqueURI, iconURL);
             } else if (event.equals("WebApps:Uninstall")) {
                 String uniqueURI = message.getString("uniqueURI");
                 GeckoAppShell.uninstallWebApp(uniqueURI);
@@ -1242,6 +1246,9 @@ abstract public class GeckoApp
                             invalidateOptionsMenu();
                     }
                 });
+            } else if (event.equals("Share:Text")) {
+                String text = message.getString("text");
+                GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
@@ -1385,7 +1392,8 @@ abstract public class GeckoApp
         final String oldURL = tab.getURL();
         GeckoAppShell.getHandler().postDelayed(new Runnable() {
             public void run() {
-                if (!oldURL.equals(tab.getURL()))
+                // tab.getURL() may return null
+                if (!TextUtils.equals(oldURL, tab.getURL()))
                     return;
 
                 getAndProcessThumbnailForTab(tab);
@@ -1918,6 +1926,7 @@ abstract public class GeckoApp
         GeckoAppShell.registerGeckoEventListener("WebApps:Install", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.registerGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
+        GeckoAppShell.registerGeckoEventListener("Share:Text", GeckoApp.mAppContext);
 
         if (SmsManager.getInstance() != null) {
           SmsManager.getInstance().start();
@@ -2261,6 +2270,7 @@ abstract public class GeckoApp
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Install", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("WebApps:Uninstall", GeckoApp.mAppContext);
         GeckoAppShell.unregisterGeckoEventListener("DesktopMode:Changed", GeckoApp.mAppContext);
+        GeckoAppShell.unregisterGeckoEventListener("Share:Text", GeckoApp.mAppContext);
 
         if (mFavicons != null)
             mFavicons.close();

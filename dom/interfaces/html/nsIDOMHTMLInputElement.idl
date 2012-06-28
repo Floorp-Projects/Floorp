@@ -20,7 +20,7 @@ interface nsIDOMValidityState;
   * http://www.whatwg.org/specs/web-apps/current-work/
   */
 
-[scriptable, uuid(05FEDF7E-3050-4143-AB97-B994F3CC9329)]
+[scriptable, uuid(ac2e2b14-b987-452c-a071-5823b2406b85)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
@@ -40,6 +40,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 
   readonly attribute nsIDOMFileList        files;
 
+           attribute unsigned long height;
            attribute boolean               indeterminate;
 
   readonly attribute nsIDOMHTMLElement     list;
@@ -56,6 +57,7 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute DOMString             align;
 
            attribute unsigned long         size;
+           attribute unsigned long width;
            attribute DOMString             src;
 
            attribute DOMString             type;

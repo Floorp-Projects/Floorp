@@ -17,6 +17,14 @@
 #include "mozilla/StackWalk.h"
 #include "JSObjectBuilder.h"
 
+// Meta
+#include "nsXPCOM.h"
+#include "nsXPCOMCID.h"
+#include "nsIHttpProtocolHandler.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIXULRuntime.h"
+#include "nsIXULAppInfo.h"
+
 // we eventually want to make this runtime switchable
 #if defined(MOZ_PROFILING) && (defined(XP_UNIX) && !defined(XP_MACOSX))
  #ifndef ANDROID
@@ -68,6 +76,7 @@ using namespace mozilla;
  #define snprintf _snprintf
 #endif
 
+static const int DYNAMIC_MAX_STRING = 512;
 
 mozilla::ThreadLocal<ProfileStack *> tlsStack;
 mozilla::ThreadLocal<TableTicker *> tlsTicker;
@@ -121,6 +130,7 @@ private:
   friend class ThreadProfile;
   union {
     const char* mTagData;
+    char mTagChars[sizeof(void*)];
     void* mTagPtr;
     double mTagFloat;
     Address mTagAddress;
@@ -226,6 +236,30 @@ public:
     mWritePos = mLastFlushPos;
   }
 
+  char* processDynamicTag(int readPos, int* tagsConsumed, char* tagBuff)
+  {
+    int readAheadPos = (readPos + 1) % mEntrySize;
+    int tagBuffPos = 0;
+
+    // Read the string stored in mTagData until the null character is seen
+    bool seenNullByte = false;
+    while (readAheadPos != mLastFlushPos && !seenNullByte) {
+      (*tagsConsumed)++;
+      ProfileEntry readAheadEntry = mEntries[readAheadPos];
+      for (size_t pos = 0; pos < sizeof(void*); pos++) {
+        tagBuff[tagBuffPos] = readAheadEntry.mTagChars[pos];
+        if (tagBuff[tagBuffPos] == '\0' || tagBuffPos == DYNAMIC_MAX_STRING-2) {
+          seenNullByte = true;
+          break;
+        }
+        tagBuffPos++;
+      }
+      if (!seenNullByte)
+        readAheadPos = (readAheadPos + 1) % mEntrySize;
+    }
+    return tagBuff;
+  }
+
   friend std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile);
 
   JSObject *ToJSObject(JSContext *aCx)
@@ -239,14 +273,27 @@ public:
     JSObject *sample = NULL;
     JSObject *frames = NULL;
 
-    int oldReadPos = mReadPos;
-    while (mReadPos != mLastFlushPos) {
-      ProfileEntry entry = mEntries[mReadPos];
-      mReadPos = (mReadPos + 1) % mEntrySize;
+    int readPos = mReadPos;
+    while (readPos != mLastFlushPos) {
+      // Number of tag consumed
+      int incBy = 1;
+      ProfileEntry entry = mEntries[readPos];
+
+      // Read ahead to the next tag, if it's a 'd' tag process it now
+      const char* tagStringData = entry.mTagData;
+      int readAheadPos = (readPos + 1) % mEntrySize;
+      char tagBuff[DYNAMIC_MAX_STRING];
+      // Make sure the string is always null terminated if it fills up DYNAMIC_MAX_STRING-2
+      tagBuff[DYNAMIC_MAX_STRING-1] = '\0';
+
+      if (readAheadPos != mLastFlushPos && mEntries[readAheadPos].mTagName == 'd') {
+        tagStringData = processDynamicTag(readPos, &incBy, tagBuff);
+      }
+
       switch (entry.mTagName) {
         case 's':
           sample = b.CreateObject();
-          b.DefineProperty(sample, "name", (const char*)entry.mTagData);
+          b.DefineProperty(sample, "name", tagStringData);
           frames = b.CreateArray();
           b.DefineProperty(sample, "frames", frames);
           b.ArrayPush(samples, sample);
@@ -256,19 +303,22 @@ public:
           {
             if (sample) {
               JSObject *frame = b.CreateObject();
-              char tagBuff[1024];
-              // Bug 753041
-              // We need a double cast here to tell GCC that we don't want to sign
-              // extend 32-bit addresses starting with 0xFXXXXXX.
-              unsigned long long pc = (unsigned long long)(uintptr_t)entry.mTagPtr;
-              snprintf(tagBuff, 1024, "%#llx", pc);
-              b.DefineProperty(frame, "location", tagBuff);
+              if (entry.mTagName == 'l') {
+                // Bug 753041
+                // We need a double cast here to tell GCC that we don't want to sign
+                // extend 32-bit addresses starting with 0xFXXXXXX.
+                unsigned long long pc = (unsigned long long)(uintptr_t)entry.mTagPtr;
+                snprintf(tagBuff, DYNAMIC_MAX_STRING, "%#llx", pc);
+                b.DefineProperty(frame, "location", tagBuff);
+              } else {
+                b.DefineProperty(frame, "location", tagStringData);
+              }
               b.ArrayPush(frames, frame);
             }
           }
       }
+      readPos = (readPos + incBy) % mEntrySize;
     }
-    mReadPos = oldReadPos;
 
     return profile;
   }
@@ -335,6 +385,7 @@ class TableTicker: public Sampler {
   }
 
   JSObject *ToJSObject(JSContext *aCx);
+  JSObject *GetMetaJSObject(JSObjectBuilder& b);
 
 private:
   // Not implemented on platforms which do not support backtracing
@@ -415,6 +466,59 @@ void TableTicker::HandleSaveRequest()
   NS_DispatchToMainThread(runnable);
 }
 
+JSObject* TableTicker::GetMetaJSObject(JSObjectBuilder& b)
+{
+  JSObject *meta = b.CreateObject();
+
+  b.DefineProperty(meta, "version", 2);
+  b.DefineProperty(meta, "interval", interval());
+  b.DefineProperty(meta, "stackwalk", mUseStackWalk);
+  b.DefineProperty(meta, "jank", mJankOnly);
+  b.DefineProperty(meta, "processType", XRE_GetProcessType());
+
+  nsresult res;
+  nsCOMPtr<nsIHttpProtocolHandler> http = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
+  if (!NS_FAILED(res)) {
+    nsCAutoString string;
+
+    res = http->GetPlatform(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "platform", string.Data());
+
+    res = http->GetOscpu(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "oscpu", string.Data());
+
+    res = http->GetMisc(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "misc", string.Data());
+  }
+
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+  if (runtime) {
+    nsCAutoString string;
+
+    res = runtime->GetXPCOMABI(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "abi", string.Data());
+
+    res = runtime->GetWidgetToolkit(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "toolkit", string.Data());
+  }
+
+  nsCOMPtr<nsIXULAppInfo> appInfo = do_GetService("@mozilla.org/xre/app-info;1");
+  if (appInfo) {
+    nsCAutoString string;
+
+    res = appInfo->GetName(string);
+    if (!NS_FAILED(res))
+      b.DefineProperty(meta, "product", string.Data());
+  }
+
+  return meta;
+}
+
 JSObject* TableTicker::ToJSObject(JSContext *aCx)
 {
   JSObjectBuilder b(aCx);
@@ -422,7 +526,8 @@ JSObject* TableTicker::ToJSObject(JSContext *aCx)
   JSObject *profile = b.CreateObject();
 
   // Put meta data
-  // TODO: List things like feature, version number, profile time start/end
+  JSObject *meta = GetMetaJSObject(b);
+  b.DefineProperty(profile, "meta", meta);
 
   // Lists the samples for each ThreadProfile
   JSObject *threads = b.CreateArray();
@@ -561,11 +666,30 @@ void doSampleStackTrace(ProfileStack *aStack, ThreadProfile &aProfile, TickSampl
   // Sample
   // 's' tag denotes the start of a sample block
   // followed by 0 or more 'c' tags.
+  aProfile.addTag(ProfileEntry('s', "(root)"));
   for (mozilla::sig_safe_t i = 0; i < aStack->mStackPointer; i++) {
-    if (i == 0) {
-      aProfile.addTag(ProfileEntry('s', aStack->mStack[i]));
+    // First entry has tagName 's' (start)
+    // Check for magic pointer bit 1 to indicate copy
+    const char* sampleLabel = aStack->mStack[i].mLabel;
+    if (aStack->mStack[i].isCopyLabel()) {
+      // Store the string using 1 or more 'd' (dynamic) tags
+      // that will happen to the preceding tag
+
+      aProfile.addTag(ProfileEntry('c', ""));
+      // Add one to store the null termination
+      size_t strLen = strlen(sampleLabel) + 1;
+      for (size_t j = 0; j < strLen;) {
+        // Store as many characters in the void* as the platform allows
+        char text[sizeof(void*)];
+        for (size_t pos = 0; pos < sizeof(void*) && j+pos < strLen; pos++) {
+          text[pos] = sampleLabel[j+pos];
+        }
+        j += sizeof(void*);
+        // Take '*((void**)(&text[0]))' to pass the char[] as a single void*
+        aProfile.addTag(ProfileEntry('d', *((void**)(&text[0]))));
+      }
     } else {
-      aProfile.addTag(ProfileEntry('c', aStack->mStack[i]));
+      aProfile.addTag(ProfileEntry('c', sampleLabel));
     }
   }
 #ifdef ENABLE_SPS_LEAF_DATA
@@ -658,6 +782,8 @@ std::ostream& operator<<(std::ostream& stream, const ProfileEntry& entry)
     unsigned long long pc = (unsigned long long)(uintptr_t)entry.mTagPtr;
     snprintf(tagBuff, 1024, "l-%#llx\n", pc);
     stream << tagBuff;
+  } else if (entry.mTagName == 'd') {
+    // TODO implement 'd' tag for text profile
   } else {
     stream << entry.mTagName << "-" << entry.mTagData << "\n";
   }
@@ -766,6 +892,9 @@ const char** mozilla_sampler_get_features()
 void mozilla_sampler_start(int aProfileEntries, int aInterval,
                            const char** aFeatures, uint32_t aFeatureCount)
 {
+  if (!stack_key_initialized)
+    mozilla_sampler_init();
+
   ProfileStack *stack = tlsStack.get();
   if (!stack) {
     ASSERT(false);
@@ -782,6 +911,9 @@ void mozilla_sampler_start(int aProfileEntries, int aInterval,
 
 void mozilla_sampler_stop()
 {
+  if (!stack_key_initialized)
+    mozilla_sampler_init();
+
   TableTicker *t = tlsTicker.get();
   if (!t) {
     return;
@@ -794,6 +926,9 @@ void mozilla_sampler_stop()
 
 bool mozilla_sampler_is_active()
 {
+  if (!stack_key_initialized)
+    mozilla_sampler_init();
+
   TableTicker *t = tlsTicker.get();
   if (!t) {
     return false;

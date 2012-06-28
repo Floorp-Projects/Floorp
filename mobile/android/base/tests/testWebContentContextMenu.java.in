@@ -6,8 +6,12 @@ import android.app.Activity;
 import android.util.DisplayMetrics;
 
 public class testWebContentContextMenu extends BaseTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testWebContentContextMenu() {
-        setTestType("mochitest");
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         DisplayMetrics dm = new DisplayMetrics();

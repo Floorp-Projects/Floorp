@@ -156,6 +156,12 @@ interface nsIDOMElement : nsIDOMNode
    */
   readonly attribute long             clientHeight;
 
+  /* The maximum offset that the element can be scrolled to
+     (i.e., the value that scrollLeft/scrollTop would be clamped to if they were
+     set to arbitrarily large values. */
+  readonly attribute long             scrollLeftMax;
+  readonly attribute long             scrollTopMax;
+
 
   // Selectors API
   /**

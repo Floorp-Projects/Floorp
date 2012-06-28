@@ -109,7 +109,7 @@ function runTest() {
     gACTimer = Date.now();
     Components.classes["@mozilla.org/widget/clipboardhelper;1"]
       .getService(Components.interfaces.nsIClipboardHelper)
-      .copyStringToClipboard(SEARCH_STRING, Components.interfaces.nsIClipboard.kGlobalClipboard);
+      .copyStringToClipboard(SEARCH_STRING, document, Components.interfaces.nsIClipboard.kGlobalClipboard);
   }, cbCallback, cbCallback);
 }
 ]]>

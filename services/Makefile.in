@@ -10,8 +10,18 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+PARALLEL_DIRS += common crypto
+
+ifdef MOZ_SERVICES_AITC
+PARALLEL_DIRS += aitc
+endif
+
+ifdef MOZ_SERVICES_NOTIFICATIONS
+PARALLEL_DIRS += notifications
+endif
+
 ifdef MOZ_SERVICES_SYNC
-PARALLEL_DIRS += aitc common crypto sync
+PARALLEL_DIRS += sync
 endif
 
 include $(topsrcdir)/config/rules.mk

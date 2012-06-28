@@ -256,6 +256,15 @@ TraceWeakMaps(WeakMapTracer *trc);
 extern JS_FRIEND_API(bool)
 GCThingIsMarkedGray(void *thing);
 
+extern JS_FRIEND_API(JSCompartment*)
+GetGCThingCompartment(void *thing);
+
+typedef void
+(GCThingCallback)(void *closure, void *gcthing);
+
+extern JS_FRIEND_API(void)
+VisitGrayWrapperTargets(JSCompartment *comp, GCThingCallback *callback, void *closure);
+
 /*
  * Shadow declarations of JS internal structures, for access by inline access
  * functions below. Do not use these structures in any other way. When adding
@@ -593,7 +602,8 @@ SizeOfJSContext();
     D(DOM_WORKER)                               \
     D(INTER_SLICE_GC)                           \
     D(REFRESH_FRAME)                            \
-    D(FULL_GC_TIMER)
+    D(FULL_GC_TIMER)                            \
+    D(SHUTDOWN_CC)
 
 namespace gcreason {
 

@@ -26,8 +26,12 @@ public class testSearchSuggestions extends BaseTest {
     private static final String TEST_QUERY = "foo barz";
     private static final String SUGGESTION_TEMPLATE = "/robocop/robocop_suggestions.sjs?query=__searchTerms__";
 
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testSearchSuggestions() {
-        setTestType("mochitest");
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         // Map of expected values. See robocop_suggestions.sjs.

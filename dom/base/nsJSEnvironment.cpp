@@ -2952,10 +2952,70 @@ nsJSContext::ShrinkGCBuffersNow()
   JS_ShrinkGCBuffers(nsJSRuntime::sRuntime);
 }
 
-//Static
+// Return true if any JSContext has a "global object" with a gray
+// parent. The intent is to look for JS Object windows. We don't merge
+// system compartments, so we don't use them to trigger merging CCs.
+static bool
+AnyGrayGlobalParent()
+{
+  if (!nsJSRuntime::sRuntime) {
+    return false;
+  }
+  JSContext *iter = nsnull;
+  JSContext *cx;
+  while ((cx = JS_ContextIterator(nsJSRuntime::sRuntime, &iter))) {
+    if (JSObject *global = JS_GetGlobalObject(cx)) {
+      if (JSObject *parent = js::GetObjectParent(global)) {
+        if (js::GCThingIsMarkedGray(parent) &&
+            !js::IsSystemCompartment(js::GetGCThingCompartment(parent))) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+static bool
+DoMergingCC(bool aForced)
+{
+  // Don't merge too many times in a row, and do at least a minimum
+  // number of unmerged CCs in a row.
+  static const PRInt32 kMinConsecutiveUnmerged = 3;
+  static const PRInt32 kMaxConsecutiveMerged = 3;
+
+  static PRInt32 sUnmergedNeeded = 0;
+  static PRInt32 sMergedInARow = 0;
+
+  MOZ_ASSERT(0 <= sUnmergedNeeded <= kMinConsecutiveUnmerged);
+  MOZ_ASSERT(0 <= sMergedInARow <= kMaxConsecutiveMerged);
+
+  if (sMergedInARow == kMaxConsecutiveMerged) {
+    MOZ_ASSERT(sUnmergedNeeded == 0);
+    sUnmergedNeeded = kMinConsecutiveUnmerged;
+  }
+
+  if (sUnmergedNeeded > 0) {
+    sUnmergedNeeded--;
+    sMergedInARow = 0;
+    return false;
+  }
+
+  if (!aForced && AnyGrayGlobalParent()) {
+    sMergedInARow++;
+    return true;
+  } else {
+    sMergedInARow = 0;
+    return false;
+  }
+
+}
+
+//static
 void
 nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
-                             PRInt32 aExtraForgetSkippableCalls)
+                             PRInt32 aExtraForgetSkippableCalls,
+                             bool aForced)
 {
   if (!NS_IsMainThread()) {
     return;
@@ -2987,8 +3047,10 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
     ++sCleanupsSinceLastGC;
   }
 
+  bool mergingCC = DoMergingCC(aForced);
+
   nsCycleCollectorResults ccResults;
-  nsCycleCollector_collect(&ccResults, aListener);
+  nsCycleCollector_collect(mergingCC, &ccResults, aListener);
   sCCollectedWaitingForGC += ccResults.mFreedRefCounted + ccResults.mFreedGCed;
 
   // If we collected a substantial amount of cycles, poke the GC since more objects
@@ -3016,13 +3078,18 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       sFirstCollectionTime = now;
     }
 
+    nsCString mergeMsg;
+    if (mergingCC) {
+      mergeMsg.AssignLiteral(" merged");
+    }
+
     nsCString gcMsg;
     if (ccResults.mForcedGC) {
       gcMsg.AssignLiteral(", forced a GC");
     }
 
     NS_NAMED_MULTILINE_LITERAL_STRING(kFmt,
-      NS_LL("CC(T+%.1f) duration: %llums, suspected: %lu, visited: %lu RCed and %lu GCed, collected: %lu RCed and %lu GCed (%lu waiting for GC)%s\n")
+      NS_LL("CC(T+%.1f) duration: %llums, suspected: %lu, visited: %lu RCed and %lu%s GCed, collected: %lu RCed and %lu GCed (%lu waiting for GC)%s\n")
       NS_LL("ForgetSkippable %lu times before CC, min: %lu ms, max: %lu ms, avg: %lu ms, total: %lu ms, removed: %lu"));
     nsString msg;
     PRUint32 cleanups = sForgetSkippableBeforeCC ? sForgetSkippableBeforeCC : 1;
@@ -3030,7 +3097,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
       ? 0 : sMinForgetSkippableTime;
     msg.Adopt(nsTextFormatter::smprintf(kFmt.get(), double(delta) / PR_USEC_PER_SEC,
                                         (now - start) / PR_USEC_PER_MSEC, suspected,
-                                        ccResults.mVisitedRefCounted, ccResults.mVisitedGCed,
+                                        ccResults.mVisitedRefCounted, ccResults.mVisitedGCed, mergeMsg.get(),
                                         ccResults.mFreedRefCounted, ccResults.mFreedGCed,
                                         sCCollectedWaitingForGC, gcMsg.get(),
                                         sForgetSkippableBeforeCC,
@@ -3183,7 +3250,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
     } else {
       // We are in the final timer fire and still meet the conditions for
       // triggering a CC.
-      nsJSContext::CycleCollectNow();
+      nsJSContext::CycleCollectNow(nsnull, 0, false);
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
     // Only do a forget skippable if there are more than a few new objects.
