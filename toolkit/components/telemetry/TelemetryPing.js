@@ -65,6 +65,8 @@ const IDLE_TIMEOUT_SECONDS = 5 * 60;
 
 var gLastMemoryPoll = null;
 
+let gWasDebuggerAttached = false;
+
 function getLocale() {
   return Cc["@mozilla.org/chrome/chrome-registry;1"].
          getService(Ci.nsIXULChromeRegistry).
@@ -120,6 +122,12 @@ function getSimpleMeasurements() {
   }
 
   ret.startupInterrupted = new Number(Services.startup.interrupted);
+
+  // Update debuggerAttached flag
+  let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+  let isDebuggerAttached = debugService.isDebuggerAttached;
+  gWasDebuggerAttached = gWasDebuggerAttached || isDebuggerAttached;
+  ret.debuggerAttached = new Number(gWasDebuggerAttached);
 
   ret.js = Cc["@mozilla.org/js/xpc/XPConnect;1"]
            .getService(Ci.nsIJSEngineTelemetryStats)
@@ -776,6 +784,9 @@ TelemetryPing.prototype = {
     case "sessionstore-windows-restored":
       Services.obs.removeObserver(this, "sessionstore-windows-restored");
       this._hasWindowRestoredObserver = false;
+      // Check whether debugger was attached during startup
+      let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
+      gWasDebuggerAttached = debugService.isDebuggerAttached;
       // fall through
     case "test-gather-startup":
       this.gatherStartupInformation();
