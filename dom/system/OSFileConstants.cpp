@@ -362,7 +362,7 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     }
 
     jsval valVersion = STRING_TO_JSVAL(strVersion);
-    if (!JS_SetProperty(cx, objSys, "Version", &valVersion)) {
+    if (!JS_SetProperty(cx, objSys, "Name", &valVersion)) {
       return false;
     }
   }
