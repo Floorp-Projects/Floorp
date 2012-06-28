@@ -10,9 +10,11 @@
 #include "nsAutoRef.h"
 #include "nsTArray.h"
 
+#if (MOZ_WIDGET_GTK == 2)
 extern "C" {
     typedef struct _GdkDrawable GdkDrawable;
 }
+#endif
 
 class gfxFontconfigUtils;
 #ifndef MOZ_PANGO
@@ -90,9 +92,11 @@ public:
     FT_Library GetFTLibrary();
 #endif
 
+#if (MOZ_WIDGET_GTK == 2)
     static void SetGdkDrawable(gfxASurface *target,
                                GdkDrawable *drawable);
     static GdkDrawable *GetGdkDrawable(gfxASurface *target);
+#endif
 
     static PRInt32 GetDPI();
 
