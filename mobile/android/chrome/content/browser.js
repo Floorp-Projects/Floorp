@@ -1428,17 +1428,31 @@ var SelectionHandler = {
 
   init: function sh_init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
+    Services.obs.addObserver(this, "Window:Resize", false);
   },
 
   uninit: function sh_uninit() {
     Services.obs.removeObserver(this, "Gesture:SingleTap", false);
+    Services.obs.removeObserver(this, "Window:Resize", false);
   },
 
   observe: function sh_observe(aSubject, aTopic, aData) {
-    let data = JSON.parse(aData);
+    switch (aTopic) {
+      case "Gesture:SingleTap": {
+        if (!this._active)
+          return;
 
-    if (this._active)
-      this.endSelection(data.x, data.y);
+        let data = JSON.parse(aData);
+        this.endSelection(data.x, data.y);
+        break;
+      }
+      case "Window:Resize": {
+        // Knowing when the page is done drawing is hard, so let's just cancel
+        // the selection when the window changes. We should fix this later.
+        this.endSelection();
+        break;
+      }
+    }
   },
 
   notifySelectionChanged: function sh_notifySelectionChanged(aDoc, aSel, aReason) {
