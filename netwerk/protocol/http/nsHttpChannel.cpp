@@ -2140,8 +2140,15 @@ nsHttpChannel::ProcessNotModified()
         return NS_ERROR_FAILURE;
     }
 
-    NS_ENSURE_TRUE(mCachedResponseHead, NS_ERROR_NOT_INITIALIZED);
-    NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_INITIALIZED);
+    if (!mDidReval) {
+        LOG(("Server returned a 304 response even though we did not send a "
+             "conditional request"));
+        return NS_ERROR_FAILURE;
+    }
+
+    MOZ_ASSERT(mCachedResponseHead);
+    MOZ_ASSERT(mCacheEntry);
+    NS_ENSURE_TRUE(mCachedResponseHead && mCacheEntry, NS_ERROR_UNEXPECTED);
 
     // If the 304 response contains a Last-Modified different than the
     // one in our cache that is pretty suspicious and is, in at least the
@@ -2915,7 +2922,16 @@ HttpCacheQuery::CheckCache()
 
     LOG(("HttpCacheQuery::CheckCache enter [channel=%p entry=%p access=%d]",
         mChannel.get(), mCacheEntry.get(), mCacheAccess));
-    
+
+    // Remember the request is a custom conditional request so that we can
+    // process any 304 response correctly.
+    mCustomConditionalRequest =
+        mRequestHead.PeekHeader(nsHttp::If_Modified_Since) ||
+        mRequestHead.PeekHeader(nsHttp::If_None_Match) ||
+        mRequestHead.PeekHeader(nsHttp::If_Unmodified_Since) ||
+        mRequestHead.PeekHeader(nsHttp::If_Match) ||
+        mRequestHead.PeekHeader(nsHttp::If_Range);
+
     // Be pessimistic: assume the cache entry has no useful data.
     mCachedContentIsValid = false;
 
@@ -2982,13 +2998,6 @@ HttpCacheQuery::CheckCache()
         }
         return rv;
     }
-
-    mCustomConditionalRequest =
-        mRequestHead.PeekHeader(nsHttp::If_Modified_Since) ||
-        mRequestHead.PeekHeader(nsHttp::If_None_Match) ||
-        mRequestHead.PeekHeader(nsHttp::If_Unmodified_Since) ||
-        mRequestHead.PeekHeader(nsHttp::If_Match) ||
-        mRequestHead.PeekHeader(nsHttp::If_Range);
 
     if (method != nsHttp::Head && !isCachedRedirect) {
         // If the cached content-length is set and it does not match the data
