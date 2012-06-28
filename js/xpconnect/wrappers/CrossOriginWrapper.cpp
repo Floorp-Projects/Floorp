@@ -15,15 +15,7 @@
 
 namespace xpc {
 
-NoWaiverWrapper::NoWaiverWrapper(unsigned flags) : js::CrossCompartmentWrapper(flags)
-{
-}
-
-NoWaiverWrapper::~NoWaiverWrapper()
-{
-}
-
-CrossOriginWrapper::CrossOriginWrapper(unsigned flags) : NoWaiverWrapper(flags)
+CrossOriginWrapper::CrossOriginWrapper(unsigned flags) : js::CrossCompartmentWrapper(flags)
 {
 }
 
@@ -68,18 +60,6 @@ CrossOriginWrapper::construct(JSContext *cx, JSObject *wrapper,
 {
     return CrossCompartmentWrapper::construct(cx, wrapper, argc, argv, rval) &&
            WrapperFactory::WaiveXrayAndWrap(cx, rval);
-}
-
-bool
-NoWaiverWrapper::enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp)
-{
-    *bp = true; // always allowed
-    return true;
-}
-
-void
-NoWaiverWrapper::leave(JSContext *cx, JSObject *wrapper)
-{
 }
 
 }
