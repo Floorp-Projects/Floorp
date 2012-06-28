@@ -4541,6 +4541,7 @@ StartVerifyBarriers(JSRuntime *rt)
     rt->gcIncrementalState = MARK;
     rt->gcMarker.start(rt);
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        mjit::ClearAllFrames(c);
         PurgeJITCaches(c);
         c->setNeedsBarrier(true);
         c->arenas.prepareForIncrementalGC(rt);
