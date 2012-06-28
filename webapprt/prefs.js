@@ -27,5 +27,8 @@ pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/3/%APP_ID
 pref("extensions.blocklist.detailsURL", "https://www.mozilla.com/%LOCALE%/blocklist/");
 pref("extensions.blocklist.itemURL", "https://addons.mozilla.org/%LOCALE%/%APP%/blocked/%blockID%");
 
+pref("full-screen-api.enabled", true);
+
+
 // Enable smooth scrolling
 pref("general.smoothScroll", true);
