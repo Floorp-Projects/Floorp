@@ -1446,6 +1446,21 @@ PrependChild(nsIDOMNode* aParent, nsIDOMNode* aChild)
   return aParent->InsertBefore(aChild, first, getter_AddRefs(tmpNode));
 }
 
+// Helper function for CutContents, making sure that the current node wasn't
+// removed by mutation events (bug 766426)
+static bool
+ValidateCurrentNode(nsRange* aRange, RangeSubtreeIterator& aIter)
+{
+  bool before, after;
+  nsCOMPtr<nsIDOMNode> domNode = aIter.GetCurrentNode();
+  nsCOMPtr<nsINode> node = do_QueryInterface(domNode);
+  MOZ_ASSERT(node);
+
+  nsresult res = nsRange::CompareNodeToRange(node, aRange, &before, &after);
+
+  return NS_SUCCEEDED(res) && !before && !after;
+}
+
 nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
 { 
   if (aFragment) {
@@ -1573,8 +1588,11 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
               nodeToResult = clone;
             }
 
+            nsMutationGuard guard;
             rv = charData->DeleteData(startOffset, endOffset - startOffset);
             NS_ENSURE_SUCCESS(rv, rv);
+            NS_ENSURE_STATE(!guard.Mutated(0) ||
+                            ValidateCurrentNode(this, iter));
           }
 
           handled = true;
@@ -1588,9 +1606,12 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
 
           if (dataLength >= (PRUint32)startOffset)
           {
+            nsMutationGuard guard;
             nsCOMPtr<nsIDOMCharacterData> cutNode;
             rv = SplitDataNode(charData, startOffset, getter_AddRefs(cutNode));
             NS_ENSURE_SUCCESS(rv, rv);
+            NS_ENSURE_STATE(!guard.Mutated(1) ||
+                            ValidateCurrentNode(this, iter));
             nodeToResult = cutNode;
           }
 
@@ -1603,6 +1624,7 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
 
         if (endOffset >= 0)
         {
+          nsMutationGuard guard;
           nsCOMPtr<nsIDOMCharacterData> cutNode;
           /* The Range spec clearly states clones get cut and original nodes
              remain behind, so use false as the last parameter.
@@ -1610,6 +1632,8 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
           rv = SplitDataNode(charData, endOffset, getter_AddRefs(cutNode),
                              false);
           NS_ENSURE_SUCCESS(rv, rv);
+          NS_ENSURE_STATE(!guard.Mutated(1) ||
+                          ValidateCurrentNode(this, iter));
           nodeToResult = cutNode;
         }
 
@@ -1681,12 +1705,20 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
+      nsMutationGuard guard;
+      nsCOMPtr<nsIDOMNode> parent;
+      nodeToResult->GetParentNode(getter_AddRefs(parent));
       rv = closestAncestor ? PrependChild(closestAncestor, nodeToResult)
                            : PrependChild(commonCloneAncestor, nodeToResult);
       NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_STATE(!guard.Mutated(parent ? 2 : 1) ||
+                      ValidateCurrentNode(this, iter));
     } else if (nodeToResult) {
+      nsMutationGuard guard;
       rv = RemoveNode(nodeToResult);
       NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_STATE(!guard.Mutated(1) ||
+                      ValidateCurrentNode(this, iter));
     }
 
     if (!iter.IsDone() && retval) {
