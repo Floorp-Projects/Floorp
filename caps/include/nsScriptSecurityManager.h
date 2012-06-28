@@ -553,17 +553,6 @@ private:
     PrintPolicyDB();
 #endif
 
-    struct ContextPrincipal {
-        ContextPrincipal(ContextPrincipal *next, JSContext *cx,
-                         JSStackFrame *fp, nsIPrincipal *principal)
-            : mNext(next), mCx(cx), mFp(fp), mPrincipal(principal) {}
-
-        ContextPrincipal *mNext;
-        JSContext *mCx;
-        JSStackFrame *mFp;
-        nsCOMPtr<nsIPrincipal> mPrincipal;
-    };
-
     // JS strings we need to clean up on shutdown
     static jsid sEnabledID;
 
@@ -576,7 +565,6 @@ private:
 
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     nsCOMPtr<nsIPrincipal> mSystemCertificate;
-    ContextPrincipal *mContextPrincipals;
     nsInterfaceHashtable<PrincipalKey, nsIPrincipal> mPrincipals;
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;
