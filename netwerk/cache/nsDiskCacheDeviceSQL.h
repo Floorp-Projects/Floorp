@@ -161,6 +161,10 @@ public:
   nsresult                GetGroupsTimeOrdered(PRUint32 *count,
                                                char ***keys);
 
+  bool                    IsLocked(const nsACString &key);
+  void                    Lock(const nsACString &key);
+  void                    Unlock(const nsACString &key);
+
   /**
    * Preference accessors
    */
@@ -263,6 +267,7 @@ private:
   nsInterfaceHashtable<nsCStringHashKey, nsIWeakReference> mCaches;
   nsClassHashtable<nsCStringHashKey, nsCString> mActiveCachesByGroup;
   nsTHashtable<nsCStringHashKey> mActiveCaches;
+  nsTHashtable<nsCStringHashKey> mLockedEntries;
 
   nsCOMPtr<nsIThread> mInitThread;
 };
