@@ -546,7 +546,7 @@ ArrayBufferObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id, 
 
         RootedObject oldDelegateProto(cx, delegate->getProto());
 
-        if (!baseops::SetPropertyHelper(cx, delegate, id, 0, vp, strict))
+        if (!baseops::SetPropertyHelper(cx, delegate, delegate, id, 0, vp, strict))
             return false;
 
         if (delegate->getProto() != oldDelegateProto) {
@@ -567,7 +567,7 @@ ArrayBufferObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id, 
         return true;
     }
 
-    return baseops::SetPropertyHelper(cx, delegate, id, 0, vp, strict);
+    return baseops::SetPropertyHelper(cx, delegate, obj, id, 0, vp, strict);
 }
 
 JSBool
@@ -586,7 +586,7 @@ ArrayBufferObject::obj_setElement(JSContext *cx, HandleObject obj,
     if (!delegate)
         return false;
 
-    return baseops::SetElementHelper(cx, delegate, index, 0, vp, strict);
+    return baseops::SetElementHelper(cx, delegate, obj, index, 0, vp, strict);
 }
 
 JSBool
