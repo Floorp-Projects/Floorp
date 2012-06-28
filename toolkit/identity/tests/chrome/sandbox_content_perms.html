@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+  <head>
+    <meta charset="utf-8">
+    <title>Page testing content in the Sandbox can't escape</title>
+    <script type="application/javascript;version=1.8">
+      const TEST_BASE = "http://mochi.test:8888/chrome/toolkit/identity/tests/chrome/"
+      const Ci = Components.interfaces;
+
+      function expectException(aFunc) {
+        try {
+          aFunc();
+        } catch (ex) {
+          return true;
+        }
+        return false;
+      }
+
+      // Build an object with test results (true = pass)
+      let results = {
+        windowTop: window.top == window,
+
+        qiWindow: expectException(function() {
+          let isForced = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDOMWindowUtils)
+                               .docCharsetIsForced;
+        }),
+
+        ccAccess: Components.classes == null,
+      };
+
+      let resultsJSON = JSON.stringify(results);
+
+      // Send the results to the mochitest server so the test file can retrieve them.
+      let stateURL = TEST_BASE + "sandbox_content.sjs"
+      let xhr = new XMLHttpRequest();
+      xhr.open("GET", stateURL + "?" + encodeURIComponent(resultsJSON), true);
+      xhr.onload = function() {
+        if (xhr.status != 200) {
+          dump("Failed sending results\n");
+        }
+      };
+      xhr.send();
+
+    </script>
+  </head>
+
+  <body>
+
+  </body>
+</html>

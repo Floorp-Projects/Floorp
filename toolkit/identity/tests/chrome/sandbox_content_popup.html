@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+<meta charset="utf-8">
+<title>Page creating an popup inside the Sandbox</title>
+
+<script>
+
+var strWindowFeatures = "menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes";
+
+var uri = "data:text/html,";
+uri += encodeURI("<body onload='setTimeout(window.close, 1000)'>");
+
+var win = window.open(uri, "sandbox_popup", strWindowFeatures);
+
+</script>
+
+</head>
+
+<body>
+
+</body>
+</html>
