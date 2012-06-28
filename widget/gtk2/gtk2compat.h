@@ -116,6 +116,12 @@ gtk_widget_set_window(GtkWidget *widget, GdkWindow *window)
 {
   widget->window = window;
 }
+
+static inline gboolean
+gtk_widget_is_toplevel(GtkWidget *widget)
+{
+  return GTK_WIDGET_TOPLEVEL(widget);
+}
 #endif
 
 #if !GTK_CHECK_VERSION(2, 20, 0)
