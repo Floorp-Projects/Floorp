@@ -126,7 +126,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     template <typename T>
     void storeValue(JSValueType type, Register reg, const T &dest) {
-        boxValue(type, Operand(reg), ScratchReg);
+        boxValue(type, reg, ScratchReg);
         movq(ScratchReg, Operand(dest));
     }
     template <typename T>
@@ -170,7 +170,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         push(ImmWord(jv.asBits));
     }
     void pushValue(JSValueType type, Register reg) {
-        boxValue(type, Operand(reg), ScratchReg);
+        boxValue(type, reg, ScratchReg);
         push(ScratchReg);
     }
 
@@ -185,17 +185,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void moveValue(const Value &src, const ValueOperand &dest) {
         moveValue(src, dest.valueReg());
     }
-    void boxValue(JSValueType type, const Operand &src, const Register &dest) {
+    void boxValue(JSValueType type, Register src, Register dest) {
         JSValueShiftedTag tag = (JSValueShiftedTag)JSVAL_TYPE_TO_SHIFTED_TAG(type);
         movq(ImmShiftedTag(tag), dest);
 
         // Integers must be treated specially, since the top 32 bits of the
         // register may be filled, we can't clobber the tag bits. This can
         // happen when instructions automatically sign-extend their result.
+        // To account for this, we clear the top bits of the register, which
+        // is safe since those bits aren't required.
         if (type == JSVAL_TYPE_INT32 || type == JSVAL_TYPE_BOOLEAN)
-            orl(src, dest);
-        else
-            orq(src, dest);
+            movl(src, src);
+        orq(src, dest);
     }
 
     Condition testUndefined(Condition cond, Register tag) {
