@@ -411,25 +411,29 @@ with_GetSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSp
 static JSBool
 with_SetGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool strict)
 {
-    return obj->asWith().object().setGeneric(cx, id, vp, strict);
+    Rooted<JSObject*> actual(cx, &obj->asWith().object());
+    return actual->setGeneric(cx, actual, id, vp, strict);
 }
 
 static JSBool
 with_SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Value *vp, JSBool strict)
 {
-    return obj->asWith().object().setProperty(cx, name, vp, strict);
+    Rooted<JSObject*> actual(cx, &obj->asWith().object());
+    return actual->setProperty(cx, actual, name, vp, strict);
 }
 
 static JSBool
 with_SetElement(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSBool strict)
 {
-    return obj->asWith().object().setElement(cx, index, vp, strict);
+    Rooted<JSObject*> actual(cx, &obj->asWith().object());
+    return actual->setElement(cx, actual, index, vp, strict);
 }
 
 static JSBool
 with_SetSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, Value *vp, JSBool strict)
 {
-    return obj->asWith().object().setSpecial(cx, sid, vp, strict);
+    Rooted<JSObject*> actual(cx, &obj->asWith().object());
+    return actual->setSpecial(cx, actual, sid, vp, strict);
 }
 
 static JSBool
@@ -1342,13 +1346,13 @@ class DebugScopeProxy : public BaseProxyHandler
     bool set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id_, bool strict,
                      Value *vp) MOZ_OVERRIDE
     {
-        ScopeObject &scope = proxy->asDebugScope().scope();
+        Rooted<ScopeObject*> scope(cx, &proxy->asDebugScope().scope());
 
-        if (handleUnaliasedAccess(cx, scope, id_, SET, vp))
+        if (handleUnaliasedAccess(cx, *scope, id_, SET, vp))
             return true;
 
         Rooted<jsid> id(cx, id_);
-        return scope.setGeneric(cx, id, vp, strict);
+        return scope->setGeneric(cx, scope, id, vp, strict);
     }
 
     bool defineProperty(JSContext *cx, JSObject *proxy, jsid id, PropertyDescriptor *desc) MOZ_OVERRIDE
