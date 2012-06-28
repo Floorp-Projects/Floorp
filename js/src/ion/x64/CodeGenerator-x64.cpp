@@ -115,7 +115,7 @@ CodeGeneratorX64::visitBox(LBox *box)
     const LDefinition *result = box->getDef(0);
 
     if (box->type() != MIRType_Double)
-        masm.boxValue(ValueTypeFromMIRType(box->type()), ToOperand(in), ToRegister(result));
+        masm.boxValue(ValueTypeFromMIRType(box->type()), ToRegister(in), ToRegister(result));
     else
         masm.movqsd(ToFloatRegister(in), ToRegister(result));
     return true;
@@ -257,7 +257,7 @@ CodeGeneratorX64::storeUnboxedValue(const LAllocation *value, MIRType valueType,
         masm.movq(ScratchReg, dest);
     } else {
         JSValueType type = ValueTypeFromMIRType(valueType);
-        masm.boxValue(type, ToOperand(value), ScratchReg);
+        masm.boxValue(type, ToRegister(value), ScratchReg);
         masm.movq(ScratchReg, dest);
     }
 }
