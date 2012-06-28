@@ -3332,7 +3332,7 @@ IonBuilder::jsop_newarray(uint32 count)
     JS_ASSERT(script->hasGlobal());
 
     types::TypeObject *type = NULL;
-    if (!types::UseNewTypeForInitializer(cx, script, pc)) {
+    if (!types::UseNewTypeForInitializer(cx, script, pc, JSProto_Array)) {
         type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
         if (!type)
             return false;
@@ -3353,7 +3353,7 @@ IonBuilder::jsop_newobject(HandleObject baseObj)
     JS_ASSERT(script->hasGlobal());
 
     types::TypeObject *type = NULL;
-    if (!types::UseNewTypeForInitializer(cx, script, pc)) {
+    if (!types::UseNewTypeForInitializer(cx, script, pc, JSProto_Object)) {
         type = types::TypeScript::InitObject(cx, script, pc, JSProto_Object);
         if (!type)
             return false;
