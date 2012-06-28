@@ -4762,6 +4762,11 @@ nsGenericElement::MozRequestPointerLock()
 static const char*
 GetFullScreenError(nsIDocument* aDoc)
 {
+  nsCOMPtr<nsPIDOMWindow> win = aDoc->GetWindow();
+  if (win && win->IsPartOfApp()) {
+    return nsnull;
+  }
+
   if (!nsContentUtils::IsRequestFullScreenAllowed()) {
     return "FullScreenDeniedNotInputDriven";
   }
