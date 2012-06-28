@@ -513,6 +513,7 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "CallEvent.h"
 #include "nsIDOMVoicemail.h"
 #include "nsIDOMVoicemailEvent.h"
+#include "nsIDOMIccManager.h"
 #endif
 
 #ifdef MOZ_B2G_BT
@@ -1679,6 +1680,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MozVoicemail, nsEventTargetSH,
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozVoicemailEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MozIccManager, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
@@ -4486,6 +4489,12 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozVoicemailEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
   DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozIccManager, nsIDOMMozIccManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozIccManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
 #endif
 
 #ifdef MOZ_B2G_BT
