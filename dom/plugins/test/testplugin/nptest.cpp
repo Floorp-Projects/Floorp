@@ -3221,7 +3221,7 @@ hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount,
   return true;
 }
 
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
 bool
 getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
                  NPVariant* result)
