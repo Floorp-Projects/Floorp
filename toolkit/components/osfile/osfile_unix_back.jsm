@@ -139,11 +139,16 @@
          new Type("string",
                   ctypes.char.ptr);
 
-
        // Note: support for strings in js-ctypes is very limited.
        // Once bug 552551 has progressed, we should extend this
        // type using ctypes.readString/ctypes.writeString
 
+       /**
+        * Type |mode_t|
+        */
+       Types.mode_t = Object.create(
+         Types.intn_t(OS.Constants.libc.OSFILE_SIZEOF_MODE_T),
+         {name: {value: "mode_t"}});
 
        // Declare libc functions as functions of |OS.Unix.File|
 
