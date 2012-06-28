@@ -151,20 +151,20 @@ extern JSBool
 GetPropertyDefault(JSContext *cx, HandleObject obj, HandleId id, const Value &def, Value *vp);
 
 extern JSBool
-SetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, unsigned defineHow,
-                  Value *vp, JSBool strict);
+SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+                  unsigned defineHow, Value *vp, JSBool strict);
 
 inline bool
-SetPropertyHelper(JSContext *cx, HandleObject obj, PropertyName *name, unsigned defineHow,
-                  Value *vp, JSBool strict)
+SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receiver, PropertyName *name,
+                  unsigned defineHow, Value *vp, JSBool strict)
 {
     Rooted<jsid> id(cx, NameToId(name));
-    return SetPropertyHelper(cx, obj, id, defineHow, vp, strict);
+    return SetPropertyHelper(cx, obj, receiver, id, defineHow, vp, strict);
 }
 
 extern JSBool
-SetElementHelper(JSContext *cx, HandleObject obj, uint32_t index, unsigned defineHow,
-                 Value *vp, JSBool strict);
+SetElementHelper(JSContext *cx, HandleObject obj, HandleObject Receiver, uint32_t index,
+                 unsigned defineHow, Value *vp, JSBool strict);
 
 extern JSType
 TypeOf(JSContext *cx, HandleObject obj);
@@ -825,10 +825,14 @@ struct JSObject : public js::ObjectImpl
     inline JSBool getElement(JSContext *cx, uint32_t index, js::Value *vp);
     inline JSBool getSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp);
 
-    inline JSBool setGeneric(JSContext *cx, js::HandleId id, js::Value *vp, JSBool strict);
-    inline JSBool setProperty(JSContext *cx, js::PropertyName *name, js::Value *vp, JSBool strict);
-    inline JSBool setElement(JSContext *cx, uint32_t index, js::Value *vp, JSBool strict);
-    inline JSBool setSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp, JSBool strict);
+    inline JSBool setGeneric(JSContext *cx, js::Handle<JSObject*> receiver, js::HandleId id,
+                             js::Value *vp, JSBool strict);
+    inline JSBool setProperty(JSContext *cx, js::Handle<JSObject*> receiver,
+                              js::PropertyName *name, js::Value *vp, JSBool strict);
+    inline JSBool setElement(JSContext *cx, js::Handle<JSObject*> receiver, uint32_t index,
+                             js::Value *vp, JSBool strict);
+    inline JSBool setSpecial(JSContext *cx, js::Handle<JSObject*> receiver, js::SpecialId sid,
+                             js::Value *vp, JSBool strict);
 
     JSBool nonNativeSetProperty(JSContext *cx, js::HandleId id, js::Value *vp, JSBool strict);
     JSBool nonNativeSetElement(JSContext *cx, uint32_t index, js::Value *vp, JSBool strict);
@@ -1236,8 +1240,8 @@ js_NativeGet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> pob
              const js::Shape *shape, unsigned getHow, js::Value *vp);
 
 extern JSBool
-js_NativeSet(JSContext *cx, js::Handle<JSObject*> obj, const js::Shape *shape, bool added,
-             bool strict, js::Value *vp);
+js_NativeSet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> receiver,
+             const js::Shape *shape, bool added, bool strict, js::Value *vp);
 
 namespace js {
 

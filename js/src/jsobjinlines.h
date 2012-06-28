@@ -91,35 +91,39 @@ JSObject::thisObject(JSContext *cx)
 }
 
 inline JSBool
-JSObject::setGeneric(JSContext *cx, js::HandleId id, js::Value *vp, JSBool strict)
+JSObject::setGeneric(JSContext *cx, js::Handle<JSObject*> receiver, js::HandleId id, js::Value *vp,
+                     JSBool strict)
 {
     if (getOps()->setGeneric)
         return nonNativeSetProperty(cx, id, vp, strict);
     js::Rooted<JSObject*> obj(cx, this);
-    return js::baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+    return js::baseops::SetPropertyHelper(cx, obj, receiver, id, 0, vp, strict);
 }
 
 inline JSBool
-JSObject::setProperty(JSContext *cx, js::PropertyName *name, js::Value *vp, JSBool strict)
+JSObject::setProperty(JSContext *cx, js::Handle<JSObject*> receiver, js::PropertyName *name,
+                      js::Value *vp, JSBool strict)
 {
     js::Rooted<jsid> id(cx, js::NameToId(name));
-    return setGeneric(cx, id, vp, strict);
+    return setGeneric(cx, receiver, id, vp, strict);
 }
 
 inline JSBool
-JSObject::setElement(JSContext *cx, uint32_t index, js::Value *vp, JSBool strict)
+JSObject::setElement(JSContext *cx, js::Handle<JSObject*> receiver, uint32_t index, js::Value *vp,
+                     JSBool strict)
 {
     if (getOps()->setElement)
         return nonNativeSetElement(cx, index, vp, strict);
     js::Rooted<JSObject*> obj(cx, this);
-    return js::baseops::SetElementHelper(cx, obj, index, 0, vp, strict);
+    return js::baseops::SetElementHelper(cx, obj, receiver, index, 0, vp, strict);
 }
 
 inline JSBool
-JSObject::setSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp, JSBool strict)
+JSObject::setSpecial(JSContext *cx, js::HandleObject receiver, js::SpecialId sid, js::Value *vp,
+                     JSBool strict)
 {
     js::Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return setGeneric(cx, id, vp, strict);
+    return setGeneric(cx, receiver, id, vp, strict);
 }
 
 inline JSBool

@@ -4161,25 +4161,28 @@ JS_GetMethod(JSContext *cx, JSObject *obj, const char *name, JSObject **objp, js
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id_, jsval *vp)
+JS_SetPropertyById(JSContext *cx, JSObject *objArg, jsid id_, jsval *vp)
 {
     RootedId id(cx, id_);
+    Rooted<JSObject*> obj(cx, objArg);
 
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return obj->setGeneric(cx, id, vp, false);
+    return obj->setGeneric(cx, obj, id, vp, false);
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetElement(JSContext *cx, JSObject *obj, uint32_t index, jsval *vp)
+JS_SetElement(JSContext *cx, JSObject *obj_, uint32_t index, jsval *vp)
 {
+    RootedObject obj(cx, obj_);
+
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, *vp);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-    return obj->setElement(cx, index, vp, false);
+    return obj->setElement(cx, obj, index, vp, false);
 }
 
 JS_PUBLIC_API(JSBool)

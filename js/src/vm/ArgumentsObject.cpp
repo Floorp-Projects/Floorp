@@ -316,7 +316,7 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Val
      */
     RootedValue value(cx);
     return baseops::DeleteGeneric(cx, argsobj, id, value.address(), strict) &&
-           baseops::SetPropertyHelper(cx, argsobj, id, 0, vp, strict);
+           baseops::SetPropertyHelper(cx, argsobj, argsobj, id, 0, vp, strict);
 }
 
 static JSBool

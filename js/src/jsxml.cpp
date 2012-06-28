@@ -4217,7 +4217,7 @@ PutProperty(JSContext *cx, HandleObject obj_, HandleId id_, JSBool strict, jsval
         if (!nameqn)
             goto bad;
         if (!JSID_IS_VOID(funid)) {
-            ok = baseops::SetPropertyHelper(cx, obj, funid, 0, vp, false);
+            ok = baseops::SetPropertyHelper(cx, obj, obj, funid, 0, vp, false);
             goto out;
         }
         nameobj = nameqn;
@@ -6068,7 +6068,7 @@ FindInScopeNamespaces(JSContext *cx, JSXML *xml, JSXMLArray<JSObject> *nsarray)
 static bool
 NamespacesToJSArray(JSContext *cx, JSXMLArray<JSObject> *array, jsval *rval)
 {
-    JSObject *arrayobj = NewDenseEmptyArray(cx);
+    Rooted<JSObject*> arrayobj(cx, NewDenseEmptyArray(cx));
     if (!arrayobj)
         return false;
     *rval = OBJECT_TO_JSVAL(arrayobj);
@@ -6079,7 +6079,7 @@ NamespacesToJSArray(JSContext *cx, JSXMLArray<JSObject> *array, jsval *rval)
         if (!ns)
             continue;
         tvr.set(ObjectValue(*ns));
-        if (!arrayobj->setElement(cx, i, tvr.addr(), false))
+        if (!arrayobj->setElement(cx, arrayobj, i, tvr.addr(), false))
             return false;
     }
     return true;
