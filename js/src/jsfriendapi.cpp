@@ -452,7 +452,9 @@ JS_GetE4XObjectsCreated(JSContext *)
     return sE4XObjectsCreated;
 }
 
+namespace js {
 extern size_t sSetProtoCalled;
+}
 
 JS_FRIEND_API(size_t)
 JS_SetProtoCalled(JSContext *)
