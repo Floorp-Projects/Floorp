@@ -2415,7 +2415,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
     rval = regs.sp[-3];
-    if (!obj->setGeneric(cx, id, rval.address(), script->strictModeCode))
+    if (!obj->setGeneric(cx, obj, id, rval.address(), script->strictModeCode))
         goto error;
     regs.sp -= 3;
 }
@@ -2965,7 +2965,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, name, rval.address(), script->strictModeCode))
+        if (!parent->setProperty(cx, parent, name, rval.address(), script->strictModeCode))
             goto error;
     } while (false);
 }
@@ -3172,7 +3172,7 @@ BEGIN_CASE(JSOP_INITPROP)
     id = NameToId(name);
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !baseops::SetPropertyHelper(cx, obj, id, 0, &rval, script->strictModeCode)
+        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, script->strictModeCode)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;
@@ -3491,11 +3491,11 @@ BEGIN_CASE(JSOP_SETXMLNAME)
 {
     JS_ASSERT(!script->strictModeCode);
 
-    JSObject *obj = &regs.sp[-3].toObject();
+    Rooted<JSObject*> obj(cx, &regs.sp[-3].toObject());
     Value rval = regs.sp[-1];
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
-    if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
+    if (!obj->setGeneric(cx, obj, id, &rval, script->strictModeCode))
         goto error;
     rval = regs.sp[-1];
     regs.sp -= 2;

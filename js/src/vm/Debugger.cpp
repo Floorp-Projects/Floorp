@@ -4490,7 +4490,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
         }
 
         /* Just set the property. */
-        if (!env->setGeneric(cx, id, v.address(), true))
+        if (!env->setGeneric(cx, env, id, v.address(), true))
             return false;
     }
 

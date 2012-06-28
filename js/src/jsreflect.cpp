@@ -641,7 +641,7 @@ NodeBuilder::newArray(NodeVector &elts, Value *dst)
         js_ReportAllocationOverflow(cx);
         return false;
     }
-    JSObject *array = NewDenseAllocatedArray(cx, uint32_t(len));
+    Rooted<JSObject*> array(cx, NewDenseAllocatedArray(cx, uint32_t(len)));
     if (!array)
         return false;
 
@@ -654,7 +654,7 @@ NodeBuilder::newArray(NodeVector &elts, Value *dst)
         if (val.isMagic(JS_SERIALIZE_NO_NODE))
             continue;
 
-        if (!array->setElement(cx, i, &val, false))
+        if (!array->setElement(cx, array, i, &val, false))
             return false;
     }
 

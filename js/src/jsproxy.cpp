@@ -569,11 +569,12 @@ DirectProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver_,
 }
 
 bool
-DirectProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver,
+DirectProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiverArg,
                         jsid id_, bool strict, Value *vp)
 {
     RootedId id(cx, id_);
-    return GetProxyTargetObject(proxy)->setGeneric(cx, id, vp, strict);
+    Rooted<JSObject*> receiver(cx, receiverArg);
+    return GetProxyTargetObject(proxy)->setGeneric(cx, receiver, id, vp, strict);
 }
 
 bool

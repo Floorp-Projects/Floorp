@@ -486,7 +486,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, const Value &v)
     JS_ASSERT(!JSID_IS_VOID(id));
 
     RootedValue tmp(cx, v);
-    return obj->setGeneric(cx, id, tmp.address(), true);
+    return obj->setGeneric(cx, obj, id, tmp.address(), true);
 }
 
 /*
@@ -549,12 +549,13 @@ SetOrDeleteArrayElement(JSContext *cx, HandleObject obj, double index,
 }
 
 JSBool
-js_SetLengthProperty(JSContext *cx, JSObject *obj, double length)
+js_SetLengthProperty(JSContext *cx, JSObject *objArg, double length)
 {
     Value v = NumberValue(length);
 
     /* We don't support read-only array length yet. */
-    return obj->setProperty(cx, cx->runtime->atomState.lengthAtom, &v, false);
+    Rooted<JSObject*> obj(cx, objArg);
+    return obj->setProperty(cx, obj, cx->runtime->atomState.lengthAtom, &v, false);
 }
 
 /*
@@ -874,7 +875,7 @@ array_setGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool
         return array_length_setter(cx, obj, id, strict, vp);
 
     if (!obj->isDenseArray())
-        return baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+        return baseops::SetPropertyHelper(cx, obj, obj, id, 0, vp, strict);
 
     do {
         uint32_t i;
@@ -899,7 +900,7 @@ array_setGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool
 
     if (!JSObject::makeDenseArraySlow(cx, obj))
         return false;
-    return baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+    return baseops::SetPropertyHelper(cx, obj, obj, id, 0, vp, strict);
 }
 
 static JSBool
@@ -917,7 +918,7 @@ array_setElement(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSB
         return false;
 
     if (!obj->isDenseArray())
-        return baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+        return baseops::SetPropertyHelper(cx, obj, obj, id, 0, vp, strict);
 
     do {
         /*
@@ -945,7 +946,7 @@ array_setElement(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSB
 
     if (!JSObject::makeDenseArraySlow(cx, obj))
         return false;
-    return baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+    return baseops::SetPropertyHelper(cx, obj, obj, id, 0, vp, strict);
 }
 
 static JSBool
@@ -1798,7 +1799,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     do {
         value = *vector++;
         if (!ValueToId(cx, idval, id.address()) ||
-            !obj->setGeneric(cx, id, value.address(), true)) {
+            !obj->setGeneric(cx, obj, id, value.address(), true)) {
             return false;
         }
         idval.getDoubleRef() += 1;
