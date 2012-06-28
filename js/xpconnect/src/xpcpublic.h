@@ -341,6 +341,9 @@ Throw(JSContext *cx, nsresult rv);
 
 } // namespace xpc
 
+nsCycleCollectionParticipant *
+xpc_JSCompartmentParticipant();
+
 namespace mozilla {
 namespace dom {
 namespace binding {

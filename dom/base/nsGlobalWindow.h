@@ -340,6 +340,7 @@ public:
   virtual NS_HIDDEN_(bool) DispatchCustomEvent(const char *aEventName);
   virtual NS_HIDDEN_(void) RefreshCompartmentPrincipal();
   virtual NS_HIDDEN_(nsresult) SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust);
+  virtual NS_HIDDEN_(bool) IsPartOfApp();
 
   // nsIDOMStorageIndexedDB
   NS_DECL_NSIDOMSTORAGEINDEXEDDB
@@ -544,13 +545,6 @@ public:
 
   void AddEventTargetObject(nsDOMEventTargetHelper* aObject);
   void RemoveEventTargetObject(nsDOMEventTargetHelper* aObject);
-
-  /**
-   * Returns if the window is part of an application.
-   * It will check for the window app state and its parents until a window has
-   * an app state different from |TriState_Unknown|.
-   */
-  bool IsPartOfApp();
 
 protected:
   friend class HashchangeCallback;

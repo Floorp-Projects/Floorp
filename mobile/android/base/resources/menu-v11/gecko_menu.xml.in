@@ -47,6 +47,9 @@
     <item gecko:id="@+id/downloads"
           gecko:title="@string/downloads"/>
 
+    <item gecko:id="@+id/apps"
+          gecko:title="@string/apps"/>
+
     <item gecko:id="@+id/char_encoding"
           gecko:visible="false"
           gecko:title="@string/char_encoding"/>

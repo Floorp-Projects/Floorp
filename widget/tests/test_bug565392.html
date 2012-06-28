@@ -28,9 +28,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565392
   var clipboard = Cc["@mozilla.org/widget/clipboard;1"]
                     .getService(Ci.nsIClipboard);
   
+  function getLoadContext() {
+    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIWebNavigation)
+                 .QueryInterface(Ci.nsILoadContext);
+  }
+
   function getTransferableFile(file) {
     var transferable = Cc['@mozilla.org/widget/transferable;1']
                          .createInstance(Ci.nsITransferable);
+    transferable.init(getLoadContext());
     transferable.setTransferData("application/x-moz-file", file, 0);
     return transferable;
   }
@@ -42,6 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=565392
   function getClipboardData(mime) {
     var transferable = Cc['@mozilla.org/widget/transferable;1']
                          .createInstance(Ci.nsITransferable);
+    transferable.init(getLoadContext());
     transferable.addDataFlavor(mime);
     clipboard.getData(transferable, 1);
     var data = {};

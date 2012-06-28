@@ -12,6 +12,7 @@ include protocol PRenderFrame;
 include "gfxipc/ShadowLayerUtils.h";
 
 using gfx3DMatrix;
+using gfxPoint;
 using gfxRGBA;
 using nsIntPoint;
 using nsIntRect;
@@ -85,6 +86,7 @@ struct CommonLayerAttributes {
   bool useClipRect;
   nsIntRect clipRect;
   bool isFixedPosition;
+  gfxPoint fixedPositionAnchor;
   nullable PLayer maskLayer;
 };
 

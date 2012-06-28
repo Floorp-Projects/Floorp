@@ -17,29 +17,56 @@ namespace js {
 
 class DummyFrameGuard;
 
-/* Base class that just implements no-op forwarding methods for fundamental
- * traps. This is meant to be used as a base class for ProxyHandlers that
- * want transparent forwarding behavior but don't want to use the derived
- * traps and other baggage of js::Wrapper.
- */
-class JS_FRIEND_API(AbstractWrapper) : public IndirectProxyHandler
+/* Base class for all C++ wrappers. */
+class JS_FRIEND_API(Wrapper)
 {
     unsigned mFlags;
+
   public:
-    unsigned flags() const { return mFlags; }
+    enum Action {
+        GET,
+        SET,
+        CALL,
+        PUNCTURE
+    };
 
-    explicit AbstractWrapper(unsigned flags);
+    enum Flags {
+        CROSS_COMPARTMENT = 1 << 0,
+        LAST_USED_FLAG = CROSS_COMPARTMENT
+    };
 
-    /* ES5 Harmony fundamental wrapper traps. */
-    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set,
-                                       PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper, jsid id, bool set,
-                                          PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
-                                PropertyDescriptor *desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
-    virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
-    virtual bool enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props) MOZ_OVERRIDE;
+    typedef enum {
+        PermitObjectAccess,
+        PermitPropertyAccess,
+        DenyAccess
+    } Permission;
+
+    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto,
+                         JSObject *parent, Wrapper *handler);
+
+    static Wrapper *wrapperHandler(const JSObject *wrapper);
+
+    static JSObject *wrappedObject(const JSObject *wrapper);
+
+    explicit Wrapper(unsigned flags);
+
+    unsigned flags() const {
+        return mFlags;
+    }
+
+    /*
+     * The function Wrapper::New takes a pointer to a Wrapper as the handler
+     * object. It then passes it on to the function NewProxyObject, which
+     * expects a pointer to a BaseProxyHandler as the handler object. We don't
+     * want to change Wrapper::New to take a pointer to a BaseProxyHandler,
+     * because that would allow the creation of wrappers with non-wrapper
+     * handlers. Unfortunately, we can't inherit Wrapper from BaseProxyHandler,
+     * since that would create a dreaded diamond, and we can't use dynamic_cast
+     * to cast Wrapper to BaseProxyHandler, since that would require us to
+     * compile with run time type information. Hence the need for this virtual
+     * function.
+     */
+    virtual BaseProxyHandler *toBaseProxyHandler() = 0;
 
     /* Policy enforcement traps.
      *
@@ -52,7 +79,8 @@ class JS_FRIEND_API(AbstractWrapper) : public IndirectProxyHandler
      * the approved action.
      *
      * The |act| parameter to enter() specifies the action being performed. GET,
-     * SET, and CALL are self-explanatory, but PUNCTURE requires more explanation:
+     * SET, and CALL are self-explanatory, but PUNCTURE requires more
+     * explanation:
      *
      * GET and SET allow for a very fine-grained security membrane, through
      * which access can be granted or denied on a per-property, per-object, and
@@ -68,22 +96,56 @@ class JS_FRIEND_API(AbstractWrapper) : public IndirectProxyHandler
      * permission, and thus should generally be denied for security wrappers
      * except under very special circumstances. When |act| is PUNCTURE, |id|
      * should be JSID_VOID.
-     * */
-    enum Action { GET, SET, CALL, PUNCTURE };
-    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act, bool *bp);
-    virtual void leave(JSContext *cx, JSObject *wrapper);
+     */
+    virtual bool enter(JSContext *cx, JSObject *wrapper, jsid id, Action act,
+                       bool *bp);
 
-    static JSObject *wrappedObject(const JSObject *wrapper);
-    static AbstractWrapper *wrapperHandler(const JSObject *wrapper);
+    virtual void leave(JSContext *cx, JSObject *wrapper);
 };
 
-/* No-op wrapper handler base class. */
+/*
+ * AbstractWrappers forward their fundamental traps to the wrapped object, and
+ * implement their derived traps in terms of the fundamental traps.
+ */
+class JS_FRIEND_API(AbstractWrapper) : public Wrapper,
+                                       public IndirectProxyHandler
+{
+  public:
+    explicit AbstractWrapper(unsigned flags);
+
+    virtual BaseProxyHandler* toBaseProxyHandler() {
+        return this;
+    }
+
+    virtual Wrapper *toWrapper() {
+        return this;
+    }
+
+    /* ES5 Harmony fundamental wrapper traps. */
+    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
+                                       jsid id, bool set,
+                                       PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper,
+                                          jsid id, bool set,
+                                          PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+                                PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
+                                     AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id,
+                         bool *bp) MOZ_OVERRIDE;
+    virtual bool enumerate(JSContext *cx, JSObject *wrapper,
+                           AutoIdVector &props) MOZ_OVERRIDE;
+};
+
+/*
+ * DirectWrappers forward both their fundamental and derived traps to the
+ * wrapped object.
+ */
 class JS_FRIEND_API(DirectWrapper) : public AbstractWrapper
 {
   public:
     explicit DirectWrapper(unsigned flags);
-
-    typedef enum { PermitObjectAccess, PermitPropertyAccess, DenyAccess } Permission;
 
     virtual ~DirectWrapper();
 
@@ -104,29 +166,10 @@ class JS_FRIEND_API(DirectWrapper) : public AbstractWrapper
     virtual JSString *obj_toString(JSContext *cx, JSObject *wrapper) MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent) MOZ_OVERRIDE;
 
-    using AbstractWrapper::Action;
-
     static DirectWrapper singleton;
-
-    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
-                         DirectWrapper *handler);
-
-    using AbstractWrapper::wrappedObject;
-    using AbstractWrapper::wrapperHandler;
-
-    enum {
-        CROSS_COMPARTMENT = 1 << 0,
-        LAST_USED_FLAG = CROSS_COMPARTMENT
-    };
 
     static void *getWrapperFamily();
 };
-
-/* 
- * This typedef is only here to avoid code churn in xpconnect. It will be
- * removed as soon as the Wrapper base class lands.
- */
-typedef DirectWrapper Wrapper;
 
 /* Base class for all cross compartment wrapper handlers. */
 class JS_FRIEND_API(CrossCompartmentWrapper) : public DirectWrapper

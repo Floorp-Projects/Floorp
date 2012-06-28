@@ -5803,13 +5803,13 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     size_t tableSize = (size_t)(JUMP_OFFSET_LEN * (3 + ndefaults));
     if (EmitN(cx, bce, JSOP_TABLESWITCH, tableSize) < 0)
         return false;
-    jsbytecode *pc = bce->code(top + JUMP_OFFSET_LEN);
+    ptrdiff_t jumpoff = top + JUMP_OFFSET_LEN;
     JS_ASSERT(nformal >= ndefaults);
     uint16_t defstart = nformal - ndefaults;
-    SET_JUMP_OFFSET(pc, defstart);
-    pc += JUMP_OFFSET_LEN;
-    SET_JUMP_OFFSET(pc, nformal - 1);
-    pc += JUMP_OFFSET_LEN;
+    SET_JUMP_OFFSET(bce->code(jumpoff), defstart);
+    jumpoff += JUMP_OFFSET_LEN;
+    SET_JUMP_OFFSET(bce->code(jumpoff), nformal - 1);
+    jumpoff += JUMP_OFFSET_LEN;
 
     // Fill body of switch, which sets defaults where needed.
     unsigned i;
@@ -5817,8 +5817,8 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     for (arg = pn->pn_head, i = 0; arg != pnlast; arg = arg->pn_next, i++) {
         if (!(arg->pn_dflags & PND_DEFAULT))
             continue;
-        SET_JUMP_OFFSET(pc, bce->offset() - top);
-        pc += JUMP_OFFSET_LEN;
+        SET_JUMP_OFFSET(bce->code(jumpoff), bce->offset() - top);
+        jumpoff += JUMP_OFFSET_LEN;
         ParseNode *expr;
         if (arg->isKind(PNK_NAME)) {
             expr = arg->expr();
@@ -5857,7 +5857,7 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
     }
-    JS_ASSERT(pc == bce->code(top + tableSize));
+    JS_ASSERT(jumpoff == top + ptrdiff_t(tableSize));
     SET_JUMP_OFFSET(bce->code(top), bce->offset() - top);
     return true;
 }

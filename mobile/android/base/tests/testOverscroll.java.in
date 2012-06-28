@@ -11,8 +11,12 @@ import android.app.Instrumentation;
  * - Drag page rightwards by 100 pixels into overscroll, verify it snaps back.
  */
 public class testOverscroll extends PixelTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testOverscroll() {
-        setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
 
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());

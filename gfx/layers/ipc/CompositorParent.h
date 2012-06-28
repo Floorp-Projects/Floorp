@@ -107,10 +107,15 @@ private:
   Layer* GetPrimaryScrollableLayer();
 
   /**
-   * Recursively applies the given translation to all fixed position layers
-   * that aren't children of other fixed position layers.
+   * Recursively applies the given translation to all top-level fixed position
+   * layers that are descendants of the given layer.
+   * aScaleDiff is considered to be the scale transformation applied when
+   * displaying the layers, and is used to make sure the anchor points of
+   * fixed position layers remain in the same position.
    */
-  void TranslateFixedLayers(Layer* aLayer, const gfxPoint& aTranslation);
+  void TransformFixedLayers(Layer* aLayer,
+                            const gfxPoint& aTranslation,
+                            const gfxPoint& aScaleDiff);
 
   nsRefPtr<LayerManager> mLayerManager;
   nsIWidget* mWidget;

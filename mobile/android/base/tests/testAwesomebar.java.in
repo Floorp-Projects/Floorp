@@ -4,9 +4,12 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 public class testAwesomebar extends BaseTest {
-    public void testAwesomebar() {
-        setTestType("mochitest");
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
 
+    public void testAwesomebar() {
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");

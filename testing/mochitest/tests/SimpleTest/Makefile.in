@@ -22,6 +22,7 @@ _SIMPLETEST_FILES =	MozillaLogger.js \
 			specialpowersAPI.js \
 			SpecialPowersObserverAPI.js \
 			MockObjects.js \
+			NativeKeyCodes.js \
 			$(DEPTH)/docshell/test/chrome/docshell_helpers.js \
 			$(NULL)
 

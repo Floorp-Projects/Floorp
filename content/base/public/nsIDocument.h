@@ -35,6 +35,7 @@
 #include "nsEventStates.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIBFCacheEntry.h"
+#include "nsILoadContext.h"
 
 class nsIContent;
 class nsPresContext;
@@ -885,6 +886,19 @@ public:
       CallQueryReferent(mDocumentContainer.get(), &container);
 
     return container;
+  }
+
+  /**
+   * Get the container's load context for this document.
+   */
+  nsILoadContext* GetLoadContext() const
+  {
+    nsCOMPtr<nsISupports> container = GetContainer();
+    if (container) {
+      nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
+      return loadContext;
+    }
+    return nsnull;
   }
 
   /**

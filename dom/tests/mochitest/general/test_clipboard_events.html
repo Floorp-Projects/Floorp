@@ -74,10 +74,17 @@ window.onfocus = function()
 SimpleTest.waitForExplicitFinish();
 window.focus();
 
+function getLoadContext() {
+  return window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+               .getInterface(Components.interfaces.nsIWebNavigation)
+               .QueryInterface(Components.interfaces.nsILoadContext);
+}
+
 function getClipboardText() {
   var trans = Components.classes["@mozilla.org/widget/transferable;1"]
     .createInstance();
   trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+  trans.init(getLoadContext());
   trans.addDataFlavor("text/unicode");
   
   var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]

@@ -5,8 +5,12 @@ import @ANDROID_PACKAGE_NAME@.*;
 import android.app.Instrumentation;
 
 public class test_bug720538 extends PixelTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void test_bug720538() {
-        setTestType("mochitest");
         String url = getAbsoluteUrl("/robocop/test_bug720538.html");
 
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();

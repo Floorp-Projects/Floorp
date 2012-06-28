@@ -1,12 +1,6 @@
 do_load_httpd_js();
 var httpserver = new nsHttpServer();
 
-function getCacheService()
-{
-    return Components.classes["@mozilla.org/network/cache-service;1"]
-           .getService(Components.interfaces.nsICacheService);
-}
-
 function setupChannel(suffix)
 {
     var ios =
@@ -29,8 +23,7 @@ function run_test()
     httpserver.start(4444);
 
     // clear cache
-    getCacheService().
-        evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
+    evict_cache_entries();
 
     // load first time
     var channel = setupChannel("/redirect1");

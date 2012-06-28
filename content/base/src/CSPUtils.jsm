@@ -52,27 +52,27 @@ var gPrefObserver = {
 };
 
 
-function CSPWarning(aMsg, aSource, aScriptSample, aLineNum) {
+function CSPWarning(aMsg, aWindowID, aSource, aScriptSample, aLineNum) {
   var textMessage = 'CSP WARN:  ' + aMsg + "\n";
 
   var consoleMsg = Components.classes["@mozilla.org/scripterror;1"]
                     .createInstance(Components.interfaces.nsIScriptError);
-  consoleMsg.init(textMessage, aSource, aScriptSample, aLineNum, 0,
+  consoleMsg.initWithWindowID(textMessage, aSource, aScriptSample, aLineNum, 0,
                   Components.interfaces.nsIScriptError.warningFlag,
-                  "Content Security Policy");
+                  "Content Security Policy", aWindowID);
   Components.classes["@mozilla.org/consoleservice;1"]
                     .getService(Components.interfaces.nsIConsoleService)
                     .logMessage(consoleMsg);
 }
 
-function CSPError(aMsg) {
+function CSPError(aMsg, aWindowID) {
   var textMessage = 'CSP ERROR:  ' + aMsg + "\n";
 
   var consoleMsg = Components.classes["@mozilla.org/scripterror;1"]
                     .createInstance(Components.interfaces.nsIScriptError);
-  consoleMsg.init(textMessage, null, null, 0, 0,
+  consoleMsg.initWithWindowID(textMessage, null, null, 0, 0,
                   Components.interfaces.nsIScriptError.errorFlag,
-                  "Content Security Policy");
+                  "Content Security Policy", aWindowID);
   Components.classes["@mozilla.org/consoleservice;1"]
                     .getService(Components.interfaces.nsIConsoleService)
                     .logMessage(consoleMsg);

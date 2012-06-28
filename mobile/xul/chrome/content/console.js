@@ -263,7 +263,7 @@ let ConsoleView = {
   onConsoleBoxKeyPress: function cv_onConsoleBoxKeyPress(aEvent) {
     if ((aEvent.charCode == 99 || aEvent.charCode == 67) && aEvent.ctrlKey && this._list && this._list.selectedItem) {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-      clipboard.copyString(this._list.selectedItem.getAttribute("msg"));
+      clipboard.copyString(this._list.selectedItem.getAttribute("msg"), document);
     }
   },
 

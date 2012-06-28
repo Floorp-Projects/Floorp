@@ -2317,7 +2317,7 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   nsIDOMElement* dragImage = aDataTransfer->GetDragImage(&imageX, &imageY);
 
   nsCOMPtr<nsISupportsArray> transArray;
-  aDataTransfer->GetTransferables(getter_AddRefs(transArray));
+  aDataTransfer->GetTransferables(getter_AddRefs(transArray), dragTarget);
   if (!transArray)
     return false;
 

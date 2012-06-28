@@ -547,6 +547,8 @@ public:
   PRInt32 GetScrollLeft();
   PRInt32 GetScrollHeight();
   PRInt32 GetScrollWidth();
+  PRInt32 GetScrollLeftMax();
+  PRInt32 GetScrollTopMax();
   PRInt32 GetClientTop()
   {
     return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().y);
@@ -591,6 +593,16 @@ public:
    */
   void FireNodeRemovedForChildren();
 
+  virtual bool OwnedOnlyByTheDOMTree()
+  {
+    PRUint32 rc = mRefCnt.get();
+    if (GetParent()) {
+      --rc;
+    }
+    rc -= mAttrsAndChildren.ChildCount();
+    return rc == 0;
+  }
+
   virtual bool IsPurple()
   {
     return mRefCnt.IsPurple();
@@ -601,6 +613,7 @@ public:
     mRefCnt.RemovePurple();
   }
 
+  static void ClearContentUnbinder();
   static bool CanSkip(nsINode* aNode, bool aRemovingAllowed);
   static bool CanSkipInCC(nsINode* aNode);
   static bool CanSkipThis(nsINode* aNode);

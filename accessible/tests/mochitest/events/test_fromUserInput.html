@@ -68,7 +68,7 @@
         var selection = window.getSelection();
         var range = document.createRange();
         range.setStart(this.textNode, aStart);
-        range.setEnd(this.textNode, aEnd-1);
+        range.setEnd(this.textNode, aEnd);
         selection.addRange(range);
 
         synthesizeKey("VK_DELETE", {});

@@ -566,7 +566,7 @@ CssHtmlTree.prototype = {
 
     // Remove any MDN link titles
     text = text.replace(CssHtmlTree.HELP_LINK_TITLE, "");
-    clipboardHelper.copyString(text);
+    clipboardHelper.copyString(text, this.doc);
 
     if (aEvent) {
       aEvent.preventDefault();
@@ -596,7 +596,7 @@ CssHtmlTree.prototype = {
       let name = node.querySelector(".property-name").textContent;
       let value = node.querySelector(".property-value").textContent;
 
-      clipboardHelper.copyString(name + ": " + value + ";");
+      clipboardHelper.copyString(name + ": " + value + ";", this.doc);
     }
   },
 
@@ -621,7 +621,7 @@ CssHtmlTree.prototype = {
     }
     if (node) {
       node = node.querySelector(".property-name");
-      clipboardHelper.copyString(node.textContent);
+      clipboardHelper.copyString(node.textContent, this.doc);
     }
   },
 
@@ -646,7 +646,7 @@ CssHtmlTree.prototype = {
     }
     if (node) {
       node = node.querySelector(".property-value");
-      clipboardHelper.copyString(node.textContent);
+      clipboardHelper.copyString(node.textContent, this.doc);
     }
   },
 

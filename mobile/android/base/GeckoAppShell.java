@@ -845,6 +845,35 @@ public class GeckoAppShell
         });
     }
 
+    public static void installWebApp(String aTitle, String aURI, String aUniqueURI, String aIconURL) {
+        int index = WebAppAllocator.getInstance(GeckoApp.mAppContext).findAndAllocateIndex(aUniqueURI);
+        GeckoProfile profile = GeckoProfile.get(GeckoApp.mAppContext, "webapp" + index);
+        File prefs = profile.getFile("prefs.js");
+
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in = GeckoApp.mAppContext.getResources().openRawResource(R.raw.webapp_prefs_js);
+            out = new FileOutputStream(prefs);
+            byte buf[]=new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+        } catch(FileNotFoundException ex) {
+        } catch(IOException ex) {
+        } finally {
+            try {
+                if (out != null)
+                    out.close();
+                if (in != null)
+                    in.close();
+            } catch(IOException ex) {
+            }
+        }
+        createShortcut(aTitle, aURI, aUniqueURI, aIconURL, "webapp");
+    }
+
     public static void uninstallWebApp(final String uniqueURI) {
         // On uninstall, we need to do a couple of things:
         //   1. nuke the running app process.
@@ -2334,7 +2363,7 @@ class ScreenshotHandler {
     static void scheduleCheckerboardScreenshotEvent(int tabId, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh, int bw, int bh) {
         float totalSize = sw * sh;
         int numSlices = (int) Math.ceil(totalSize / 100000);
-        if (numSlices == 0)
+        if (numSlices == 0 || dw == 0 || dh == 0)
             return;
         int srcSliceSize = (int) Math.ceil(sh / numSlices);
         int dstSliceSize = (int) Math.ceil(dh / numSlices);

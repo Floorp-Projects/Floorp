@@ -268,6 +268,13 @@ public class ProfileMigrator {
         mLongOperationStopCallback = null;
     }
 
+    public ProfileMigrator(Context context, ContentResolver contentResolver) {
+        mContext = context;
+        mCr = contentResolver;
+        mLongOperationStartCallback = null;
+        mLongOperationStopCallback = null;
+    }
+
     // Define callbacks to run if the operation will take a while.
     // Stop callback is only run if there was a start callback that was run.
     public void setLongOperationCallbacks(Runnable start,
@@ -275,6 +282,11 @@ public class ProfileMigrator {
         mLongOperationStartCallback = start;
         mLongOperationStopCallback = stop;
         mLongOperationStartRun = false;
+    }
+
+    public void launchPlacesTest(File profileDir) {
+        resetMigration();
+        launchPlaces(profileDir, DEFAULT_HISTORY_MIGRATE_COUNT);
     }
 
     public void launchPlaces(File profileDir) {
@@ -324,6 +336,15 @@ public class ProfileMigrator {
     public boolean isProfileMoved() {
         return getPreferences().getBoolean(PREFS_MIGRATE_MOVE_PROFILE_DONE,
                                            false);
+    }
+
+    // Only to be used for testing. Allows forcing Migration to rerun.
+    private void resetMigration() {
+        SharedPreferences.Editor editor = getPreferences().edit();
+        editor.putBoolean(PREFS_MIGRATE_BOOKMARKS_DONE, false);
+        editor.putBoolean(PREFS_MIGRATE_HISTORY_DONE, false);
+        editor.putInt(PREFS_MIGRATE_HISTORY_COUNT, 0);
+        editor.commit();
     }
 
     // Has migration run before?

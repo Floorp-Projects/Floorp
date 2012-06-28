@@ -2447,7 +2447,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
         case LOCAL_GL_COMPRESSED_TEXTURE_FORMATS:
         {
             uint32_t length = mCompressedTextureFormats.Length();
-            JSObject* obj = Uint32Array::Create(cx, length, mCompressedTextureFormats.Elements());
+            JSObject* obj = Uint32Array::Create(cx, this, length, mCompressedTextureFormats.Elements());
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -2524,7 +2524,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
         {
             GLfloat fv[2] = { 0 };
             gl->fGetFloatv(pname, fv);
-            JSObject* obj = Float32Array::Create(cx, 2, fv);
+            JSObject* obj = Float32Array::Create(cx, this, 2, fv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -2536,7 +2536,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
         {
             GLfloat fv[4] = { 0 };
             gl->fGetFloatv(pname, fv);
-            JSObject* obj = Float32Array::Create(cx, 4, fv);
+            JSObject* obj = Float32Array::Create(cx, this, 4, fv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -2547,7 +2547,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
         {
             GLint iv[2] = { 0 };
             gl->fGetIntegerv(pname, iv);
-            JSObject* obj = Int32Array::Create(cx, 2, iv);
+            JSObject* obj = Int32Array::Create(cx, this, 2, iv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -2559,7 +2559,7 @@ WebGLContext::GetParameter(JSContext* cx, WebGLenum pname, ErrorResult& rv)
         {
             GLint iv[4] = { 0 };
             gl->fGetIntegerv(pname, iv);
-            JSObject* obj = Int32Array::Create(cx, 4, iv);
+            JSObject* obj = Int32Array::Create(cx, this, 4, iv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
@@ -3323,7 +3323,7 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
         if (unitSize == 1) {
             return JS::DoubleValue(fv[0]);
         } else {
-            JSObject* obj = Float32Array::Create(cx, unitSize, fv);
+            JSObject* obj = Float32Array::Create(cx, this, unitSize, fv);
             if (!obj) {
                 rv.Throw(NS_ERROR_OUT_OF_MEMORY);
             }
@@ -3335,7 +3335,7 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
         if (unitSize == 1) {
             return JS::Int32Value(iv[0]);
         } else {
-            JSObject* obj = Int32Array::Create(cx, unitSize, iv);
+            JSObject* obj = Int32Array::Create(cx, this, unitSize, iv);
             if (!obj) {
                 rv.Throw(NS_ERROR_OUT_OF_MEMORY);
             }
@@ -3462,7 +3462,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
                 vec[2] = mVertexAttrib0Vector[2];
                 vec[3] = mVertexAttrib0Vector[3];
             }
-            JSObject* obj = Float32Array::Create(cx, 4, vec);
+            JSObject* obj = Float32Array::Create(cx, this, 4, vec);
             if (!obj) {
                 rv.Throw(NS_ERROR_OUT_OF_MEMORY);
             }

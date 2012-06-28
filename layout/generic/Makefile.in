@@ -93,6 +93,12 @@ CPPSRCS		= \
 		nsViewportFrame.cpp \
 		$(NULL)
 
+ifdef MOZ_FLEXBOX
+CPPSRCS		+= \
+		nsFlexContainerFrame.cpp \
+		$(NULL)
+endif
+
 ifdef MOZ_MEDIA
 CPPSRCS		+= \
 		nsVideoFrame.cpp \

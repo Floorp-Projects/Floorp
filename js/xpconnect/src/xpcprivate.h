@@ -2836,7 +2836,7 @@ public:
                 mScriptableInfo->Mark();
         }
         if (HasProto())
-            GetProto()->TraceJS(trc);
+            GetProto()->TraceSelf(trc);
         else
             GetScope()->TraceSelf(trc);
         JSObject* wrapper = GetWrapperPreserveColor();
