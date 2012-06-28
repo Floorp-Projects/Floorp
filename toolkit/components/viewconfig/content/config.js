@@ -543,17 +543,17 @@ function updateContextMenu()
 function copyPref()
 {
   var pref = gPrefView[view.selection.currentIndex];
-  gClipboardHelper.copyString(pref.prefCol + ';' + pref.valueCol);
+  gClipboardHelper.copyString(pref.prefCol + ';' + pref.valueCol, document);
 }
 
 function copyName()
 {
-  gClipboardHelper.copyString(gPrefView[view.selection.currentIndex].prefCol);
+  gClipboardHelper.copyString(gPrefView[view.selection.currentIndex].prefCol, document);
 }
 
 function copyValue()
 {
-  gClipboardHelper.copyString(gPrefView[view.selection.currentIndex].valueCol);
+  gClipboardHelper.copyString(gPrefView[view.selection.currentIndex].valueCol, document);
 }
 
 function ModifySelected()

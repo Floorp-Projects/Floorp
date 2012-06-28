@@ -14,11 +14,19 @@
 </body>
 
 <script type="application/javascript">
+function getLoadContext() {
+  const Ci = Components.interfaces;
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
+}
+
 var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
                           .getService(Components.interfaces.nsIClipboard);
 
 var transferable = Components.classes['@mozilla.org/widget/transferable;1']
                              .createInstance(Components.interfaces.nsITransferable);
+transferable.init(getLoadContext());
 
 transferable.addDataFlavor("text/unicode");
 transferable.setTransferData("text/unicode", document, 4);

@@ -30,8 +30,12 @@ public class testBookmark extends BaseTest  {
         "https://addons.mozilla.org/en-US/android/"
     };
 
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testBookmark() {
-        setTestType("mochitest");
         BOOKMARK_URL = getAbsoluteUrl(BOOKMARK_URL);
 
         mClassLoader = getActivity().getApplicationContext().getClassLoader();

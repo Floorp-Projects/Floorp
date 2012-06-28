@@ -19,6 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=596333
 <script type="application/javascript">
 
 /** Test for Bug 596333 **/
+const Ci = Components.interfaces;
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() SimpleTest.executeSoon(runTest));
@@ -26,7 +27,6 @@ addLoadEvent(function() SimpleTest.executeSoon(runTest));
 var gMisspeltWords;
 
 function getEditor() {
-  var Ci = Components.interfaces;
   return document.getElementById("edit")
                  .QueryInterface(Ci.nsIDOMNSEditableElement)
                  .editor;
@@ -51,12 +51,19 @@ function append(str) {
   }
 }
 
+function getLoadContext() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
+}
+
 function paste(str) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var edit = document.getElementById("edit");
   var Cc = Components.classes, Ci = Components.interfaces;
   var trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(Ci.nsITransferable);
+  trans.init(getLoadContext());
   var s = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
   s.data = str;
   trans.setTransferData("text/unicode", s, str.length * 2);

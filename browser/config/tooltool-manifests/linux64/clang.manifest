@@ -1,14 +1,15 @@
 [
+{"clang_version": "r159219"},
 {
-"size": 47, 
-"digest": "2005a41fe97a5e00997063705f39d42b6a43b1cf7ba306cbc7b1513de34cdcd050fc6326efa2107f19ba0cc67914745dbf13154fa748010a93cf072481ef4aaa", 
-"algorithm": "sha512", 
+"size": 47,
+"digest": "2005a41fe97a5e00997063705f39d42b6a43b1cf7ba306cbc7b1513de34cdcd050fc6326efa2107f19ba0cc67914745dbf13154fa748010a93cf072481ef4aaa",
+"algorithm": "sha512",
 "filename": "setup.sh"
-}, 
+},
 {
-"size": 71534797, 
-"digest": "66bd11bea6e1f07090e9e03c833e107088097605611fd455e80b280ce2b71ca71ff9841a66614f62da162469b222b5eefd5535373b199c60fd485959889b5dcb", 
-"algorithm": "sha512", 
+"size": 72267837,
+"digest": "15d0f9e3f1c897d06a7808edb931cdd23d82b38d271454e52740e23bd890338e204857bc87bfe3dde242fa62b38e01f15c19b814cab55e84874f0c6c5b4187e8",
+"algorithm": "sha512",
 "filename": "clang.tar.bz2"
 }
 ]

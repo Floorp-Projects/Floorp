@@ -28,6 +28,9 @@
 
 #include "cairo.h"
 #include <gtk/gtk.h>
+#if (MOZ_WIDGET_GTK == 2)
+#include "gtk2compat.h"
+#endif
 
 #include "gfxImageSurface.h"
 #ifdef MOZ_X11
@@ -66,11 +69,6 @@ static FT_Library gPlatformFTLibrary = NULL;
 #endif
 
 static cairo_user_data_key_t cairo_gdk_drawable_key;
-static void do_gdk_drawable_unref (void *data)
-{
-    GdkDrawable *d = (GdkDrawable*) data;
-    g_object_unref (d);
-}
 
 #ifdef MOZ_X11
     bool gfxPlatformGtk::sUseXRender = true;
@@ -475,7 +473,7 @@ gfxPlatformGtk::GetOffscreenFormat()
 {
     // Make sure there is a screen
     GdkScreen *screen = gdk_screen_get_default();
-    if (screen && gdk_visual_get_system()->depth == 16) {
+    if (screen && gdk_visual_get_depth(gdk_visual_get_system()) == 16) {
         return gfxASurface::ImageFormatRGB16_565;
     }
 
@@ -490,7 +488,7 @@ gfxPlatformGtk::GetPlatformCMSOutputProfile()
     const char ICC_PROFILE_ATOM_NAME[] = "_ICC_PROFILE";
 
     Atom edidAtom, iccAtom;
-    Display *dpy = GDK_DISPLAY();
+    Display *dpy = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
     Window root = gdk_x11_get_default_root_xwindow();
 
     Atom retAtom;
@@ -690,7 +688,7 @@ gfxPlatformGtk::SetPrefFontEntries(const nsCString& aKey, nsTArray<nsRefPtr<gfxF
 }
 #endif
 
-
+#if (MOZ_WIDGET_GTK == 2)
 void
 gfxPlatformGtk::SetGdkDrawable(gfxASurface *target,
                                GdkDrawable *drawable)
@@ -703,7 +701,7 @@ gfxPlatformGtk::SetGdkDrawable(gfxASurface *target,
     cairo_surface_set_user_data (target->CairoSurface(),
                                  &cairo_gdk_drawable_key,
                                  drawable,
-                                 do_gdk_drawable_unref);
+                                 g_object_unref);
 }
 
 GdkDrawable *
@@ -735,6 +733,7 @@ gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
 
     return NULL;
 }
+#endif
 
 RefPtr<ScaledFont>
 gfxPlatformGtk::GetScaledFontForFont(gfxFont *aFont)
