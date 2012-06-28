@@ -1062,12 +1062,6 @@ js_HasOwnProperty(JSContext *cx, js::LookupGenericOp lookup, js::HandleObject ob
 extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, js::HandleObject obj, js::HandleId id, js::Value *vp);
 
-#if JS_HAS_OBJ_PROTO_PROP
-extern JSPropertySpec object_props[];
-#else
-#define object_props NULL
-#endif
-
 extern JSFunctionSpec object_methods[];
 extern JSFunctionSpec object_static_methods[];
 
