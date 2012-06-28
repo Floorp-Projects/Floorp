@@ -2879,13 +2879,8 @@ nsDownload::OpenWithApplication()
 
     // Even if we are unable to get this service we return the result
     // of LaunchWithFile() which makes more sense.
-    if (appLauncher) {
-      if (nsDownloadManager::gDownloadManagerService->mInPrivateBrowsing) {
-        (void)appLauncher->DeleteTemporaryPrivateFileWhenPossible(target);
-      } else {
-        (void)appLauncher->DeleteTemporaryFileOnExit(target);
-      }
-    }
+    if (appLauncher)
+      (void)appLauncher->DeleteTemporaryFileOnExit(target);
   }
 
   return retVal;
