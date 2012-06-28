@@ -306,7 +306,7 @@ private:
     void InitQuirksModes(const nsCString& aMimeType);
     bool InitGraphics();
     void DeinitGraphics();
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
     static gboolean DetectNestedEventLoop(gpointer data);
     static gboolean ProcessBrowserEvents(gpointer data);
 
@@ -340,7 +340,7 @@ private:
     NPPluginFuncs mFunctions;
     NPSavedData mSavedData;
 
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
     // If a plugin spins a nested glib event loop in response to a
     // synchronous IPC message from the browser, the loop might break
     // only after the browser responds to a request sent by the

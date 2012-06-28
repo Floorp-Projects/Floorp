@@ -17,8 +17,12 @@
 
 #include "mozilla/ipc/SyncChannel.h"
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>
+#if (MOZ_WIDGET_GTK == 3)
+#include <gtk/gtkx.h>
+#endif
+#include "gtk2compat.h"
 #endif
 
 #include "nsIFile.h"
@@ -90,7 +94,7 @@ PluginModuleChild::PluginModuleChild()
   , mInitializeFunc(0)
 #if defined(OS_WIN) || defined(OS_MACOSX)
   , mGetEntryPointsFunc(0)
-#elif defined(MOZ_WIDGET_GTK2)
+#elif defined(MOZ_WIDGET_GTK)
   , mNestedLoopTimerId(0)
 #elif defined(MOZ_WIDGET_QT)
   , mNestedLoopTimerObject(0)
@@ -229,7 +233,7 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
     return true;
 }
 
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
 typedef void (*GObjectDisposeFn)(GObject*);
 typedef gboolean (*GtkWidgetScrollEventFn)(GtkWidget*, GdkEventScroll*);
 typedef void (*GtkPlugEmbeddedFn)(GtkPlug*);
@@ -269,16 +273,16 @@ wrap_gtk_plug_dispose(GObject* object) {
 static gboolean
 gtk_plug_scroll_event(GtkWidget *widget, GdkEventScroll *gdk_event)
 {
-    if (!GTK_WIDGET_TOPLEVEL(widget)) // in same process as its GtkSocket
+    if (!gtk_widget_is_toplevel(widget)) // in same process as its GtkSocket
         return FALSE; // event not handled; propagate to GtkSocket
 
-    GdkWindow* socket_window = GTK_PLUG(widget)->socket_window;
+    GdkWindow* socket_window = gtk_plug_get_socket_window(GTK_PLUG(widget));
     if (!socket_window)
         return FALSE;
 
     // Propagate the event to the embedder.
-    GdkScreen* screen = gdk_drawable_get_screen(socket_window);
-    GdkWindow* plug_window = widget->window;
+    GdkScreen* screen = gdk_window_get_screen(socket_window);
+    GdkWindow* plug_window = gtk_widget_get_window(widget);
     GdkWindow* event_window = gdk_event->window;
     gint x = gdk_event->x;
     gint y = gdk_event->y;
@@ -324,9 +328,9 @@ gtk_plug_scroll_event(GtkWidget *widget, GdkEventScroll *gdk_event)
 
     memset(&xevent, 0, sizeof(xevent));
     xevent.xbutton.type = ButtonPress;
-    xevent.xbutton.window = GDK_WINDOW_XWINDOW(socket_window);
-    xevent.xbutton.root = GDK_WINDOW_XWINDOW(gdk_screen_get_root_window(screen));
-    xevent.xbutton.subwindow = GDK_WINDOW_XWINDOW(plug_window);
+    xevent.xbutton.window = gdk_x11_window_get_xid(socket_window);
+    xevent.xbutton.root = gdk_x11_window_get_xid(gdk_screen_get_root_window(screen));
+    xevent.xbutton.subwindow = gdk_x11_window_get_xid(plug_window);
     xevent.xbutton.time = gdk_event->time;
     xevent.xbutton.x = x;
     xevent.xbutton.y = y;
@@ -354,7 +358,7 @@ gtk_plug_scroll_event(GtkWidget *widget, GdkEventScroll *gdk_event)
 
 static void
 wrap_gtk_plug_embedded(GtkPlug* plug) {
-    GdkWindow* socket_window = plug->socket_window;
+    GdkWindow* socket_window = gtk_plug_get_socket_window(plug);
     if (socket_window) {
         if (gtk_check_version(2,18,7) != NULL // older
             && g_object_get_data(G_OBJECT(socket_window),
@@ -497,7 +501,7 @@ PluginModuleChild::ShouldContinueFromReplyTimeout()
 bool
 PluginModuleChild::InitGraphics()
 {
-#if defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_WIDGET_GTK)
     // Work around plugins that don't interact well with GDK
     // client-side windows.
     PR_SetEnv("GDK_NATIVE_WINDOWS=1");
@@ -1072,7 +1076,7 @@ _getvalue(NPP aNPP,
     switch (aVariable) {
         // Copied from nsNPAPIPlugin.cpp
         case NPNVToolkit:
-#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
             *static_cast<NPNToolkitType*>(aValue) = NPNVGtk2;
             return NPERR_NO_ERROR;
 #endif
