@@ -63,18 +63,6 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-static inline mozAccessible* 
-GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSNULL;
-
-  mozAccessible *native = nil;
-  anAccessible->GetNativeInterface ((void**)&native);
-  return native;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
-}
-
 #pragma mark -
 
 @implementation mozAccessible
