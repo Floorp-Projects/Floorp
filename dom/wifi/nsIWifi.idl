@@ -17,7 +17,7 @@ interface nsIWifi : nsISupports
     void shutdown();
 };
 
-[scriptable, uuid(e3d5a7d7-6abd-4ac2-83dc-5315ec08a1c3)]
+[scriptable, uuid(eda793cd-0bb3-475e-9223-0e778856ebd1)]
 interface nsIDOMWifiManager : nsISupports
 {
     /**
@@ -111,6 +111,13 @@ interface nsIDOMWifiManager : nsISupports
      * strength and link speed every 5 seconds.
      */
     attribute nsIDOMEventListener connectionInfoUpdate;
+
+    /**
+     * These two events fire when the wifi system is brought online or taken
+     * offline.
+     */
+    attribute nsIDOMEventListener onenabled;
+    attribute nsIDOMEventListener ondisabled;
 };
 
 [scriptable, builtinclass, uuid(ba1dab70-b70d-11e1-afa6-0800200c9a66)]
