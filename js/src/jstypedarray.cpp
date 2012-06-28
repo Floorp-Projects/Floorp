@@ -550,49 +550,6 @@ ArrayBufferObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id, 
     if (!delegate)
         return false;
 
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.protoAtom)) {
-        // setting __proto__ = null
-        // effectively removes the prototype chain.
-        // any attempt to set __proto__ on native
-        // objects after setting them to null makes
-        // __proto__ just a plain property.
-        // the following code simulates this behaviour on arrays.
-        //
-        // we first attempt to set the prototype on
-        // the delegate which is a native object
-        // so that existing code handles the case
-        // of treating it as special or plain.
-        // if the delegate's prototype has now changed
-        // then we change our prototype too.
-        //
-        // otherwise __proto__ was a plain property
-        // and we don't modify our prototype chain
-        // since obj_getProperty will fetch it as a plain
-        // property from the delegate.
-
-        RootedObject oldDelegateProto(cx, delegate->getProto());
-
-        if (!baseops::SetPropertyHelper(cx, delegate, delegate, id, 0, vp, strict))
-            return false;
-
-        if (delegate->getProto() != oldDelegateProto) {
-            // actual __proto__ was set and not a plain property called
-            // __proto__
-            if (!obj->isExtensible()) {
-                obj->reportNotExtensible(cx);
-                return false;
-            }
-            Rooted<JSObject*> newProto(cx, vp->toObjectOrNull());
-            if (!SetProto(cx, obj, newProto, true)) {
-                // this can be caused for example by setting x.__proto__ = x
-                // restore delegate prototype chain
-                SetProto(cx, delegate, oldDelegateProto, true);
-                return false;
-            }
-        }
-        return true;
-    }
-
     return baseops::SetPropertyHelper(cx, delegate, obj, id, 0, vp, strict);
 }
 

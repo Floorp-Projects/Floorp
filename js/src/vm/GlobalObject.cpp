@@ -10,6 +10,7 @@
 #include "jscntxt.h"
 #include "jsdate.h"
 #include "jsexn.h"
+#include "jsfriendapi.h"
 #include "jsmath.h"
 #include "json.h"
 #include "jsweakmap.h"
@@ -18,10 +19,10 @@
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeEmitter.h"
-#include "vm/GlobalObject-inl.h"
 
 #include "jsobjinlines.h"
 
+#include "vm/GlobalObject-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 
@@ -56,6 +57,121 @@ ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
 }
 
 namespace js {
+
+static bool
+TestProtoGetterThis(const Value &v)
+{
+    return !v.isNullOrUndefined();
+}
+
+static bool
+ProtoGetterImpl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(TestProtoGetterThis(args.thisv()));
+
+    const Value &thisv = args.thisv();
+    if (thisv.isPrimitive() && !BoxNonStrictThis(cx, args))
+        return false;
+
+    unsigned dummy;
+    Rooted<JSObject*> obj(cx, &args.thisv().toObject());
+    Rooted<jsid> nid(cx, NameToId(cx->runtime->atomState.protoAtom));
+    Rooted<Value> v(cx);
+    if (!CheckAccess(cx, obj, nid, JSACC_PROTO, v.address(), &dummy))
+        return false;
+
+    args.rval() = v;
+    return true;
+}
+
+static JSBool
+ProtoGetter(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, TestProtoGetterThis, ProtoGetterImpl, args);
+}
+
+size_t sSetProtoCalled = 0;
+
+static bool
+TestProtoSetterThis(const Value &v)
+{
+    if (v.isNullOrUndefined())
+        return false;
+
+    /* These will work as if on a boxed primitive; dumb, but whatever. */
+    if (!v.isObject())
+        return true;
+
+    /* Otherwise, only accept non-proxies. */
+    return !v.toObject().isProxy();
+}
+
+static bool
+ProtoSetterImpl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(TestProtoSetterThis(args.thisv()));
+
+    const Value &thisv = args.thisv();
+    if (thisv.isPrimitive()) {
+        JS_ASSERT(!thisv.isNullOrUndefined());
+
+        // Mutating a boxed primitive's [[Prototype]] has no side effects.
+        args.rval() = UndefinedValue();
+        return true;
+    }
+
+    if (!cx->runningWithTrustedPrincipals())
+        ++sSetProtoCalled;
+
+    Rooted<JSObject*> obj(cx, &args.thisv().toObject());
+
+    /* ES5 8.6.2 forbids changing [[Prototype]] if not [[Extensible]]. */
+    if (!obj->isExtensible()) {
+        obj->reportNotExtensible(cx);
+        return false;
+    }
+
+    /*
+     * Disallow mutating the [[Prototype]] of a proxy that wasn't simply
+     * wrapping some other object.  Also disallow it on ArrayBuffer objects,
+     * which due to their complicated delegate-object shenanigans can't easily
+     * have a mutable [[Prototype]].
+     */
+    if (obj->isProxy() || obj->isArrayBuffer()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Object", "__proto__ setter",
+                             obj->isProxy() ? "Proxy" : "ArrayBuffer");
+        return false;
+    }
+
+    /* Do nothing if __proto__ isn't being set to an object or null. */
+    if (args.length() == 0 || !args[0].isObjectOrNull()) {
+        args.rval() = UndefinedValue();
+        return true;
+    }
+
+    Rooted<JSObject*> newProto(cx, args[0].toObjectOrNull());
+
+    unsigned dummy;
+    Rooted<jsid> nid(cx, NameToId(cx->runtime->atomState.protoAtom));
+    Rooted<Value> v(cx);
+    if (!CheckAccess(cx, obj, nid, JSAccessMode(JSACC_PROTO | JSACC_WRITE), v.address(), &dummy))
+        return false;
+
+    if (!SetProto(cx, obj, newProto, true))
+        return false;
+
+    args.rval() = UndefinedValue();
+    return true;
+}
+
+static JSBool
+ProtoSetter(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, TestProtoSetterThis, ProtoSetterImpl, args);
+}
 
 JSObject *
 GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
@@ -184,8 +300,36 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
      * primordial values have.
      */
     if (!LinkConstructorAndPrototype(cx, objectCtor, objectProto) ||
-        !DefinePropertiesAndBrand(cx, objectProto, object_props, object_methods) ||
-        !DefinePropertiesAndBrand(cx, objectCtor, NULL, object_static_methods) ||
+        !DefinePropertiesAndBrand(cx, objectProto, NULL, object_methods))
+    {
+        return NULL;
+    }
+
+    /*
+     * Add an Object.prototype.__proto__ accessor property to implement that
+     * extension (if it's actually enabled).  Cache the getter for this
+     * function so that cross-compartment [[Prototype]]-getting is implemented
+     * in one place.
+     */
+    Rooted<JSFunction*> getter(cx, js_NewFunction(cx, NULL, ProtoGetter, 0, 0, self, NULL));
+    if (!getter)
+        return NULL;
+#if JS_HAS_OBJ_PROTO_PROP
+    Rooted<JSFunction*> setter(cx, js_NewFunction(cx, NULL, ProtoSetter, 0, 0, self, NULL));
+    if (!setter)
+        return NULL;
+    if (!objectProto->defineProperty(cx, cx->runtime->atomState.protoAtom, UndefinedValue(),
+                                     JS_DATA_TO_FUNC_PTR(PropertyOp, getter.get()),
+                                     JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setter.get()),
+                                     JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED))
+    {
+        return NULL;
+    }
+#endif /* JS_HAS_OBJ_PROTO_PROP */
+    self->setProtoGetter(getter);
+
+
+    if (!DefinePropertiesAndBrand(cx, objectCtor, NULL, object_static_methods) ||
         !LinkConstructorAndPrototype(cx, functionCtor, functionProto) ||
         !DefinePropertiesAndBrand(cx, functionProto, NULL, function_methods) ||
         !DefinePropertiesAndBrand(cx, functionCtor, NULL, NULL))
@@ -315,14 +459,15 @@ GlobalObject::clear(JSContext *cx)
     setSlot(RUNTIME_CODEGEN_ENABLED, UndefinedValue());
 
     /*
-     * Clear all slots storing function values, in case throwing trying to
-     * execute a script for this global must reinitialize standard classes.
-     * See bug 470150.
+     * Clear all slots storing values in case throwing trying to execute a
+     * script for this global must reinitialize standard classes.  See
+     * bug 470150.
      */
     setSlot(BOOLEAN_VALUEOF, UndefinedValue());
     setSlot(EVAL, UndefinedValue());
     setSlot(CREATE_DATAVIEW_FOR_THIS, UndefinedValue());
     setSlot(THROWTYPEERROR, UndefinedValue());
+    setSlot(PROTO_GETTER, UndefinedValue());
 
     /*
      * Mark global as cleared. If we try to execute any compile-and-go
@@ -420,11 +565,14 @@ LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_)
 }
 
 bool
-DefinePropertiesAndBrand(JSContext *cx, JSObject *obj_, JSPropertySpec *ps, JSFunctionSpec *fs)
+DefinePropertiesAndBrand(JSContext *cx, JSObject *obj_,
+                         const JSPropertySpec *ps, const JSFunctionSpec *fs)
 {
     RootedObject obj(cx, obj_);
 
-    if ((ps && !JS_DefineProperties(cx, obj, ps)) || (fs && !JS_DefineFunctions(cx, obj, fs)))
+    if (ps && !JS_DefineProperties(cx, obj, const_cast<JSPropertySpec*>(ps)))
+        return false;
+    if (fs && !JS_DefineFunctions(cx, obj, const_cast<JSFunctionSpec*>(fs)))
         return false;
     return true;
 }

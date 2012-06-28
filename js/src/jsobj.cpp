@@ -103,60 +103,6 @@ JS_ObjectToOuterObject(JSContext *cx, JSObject *obj_)
     return GetOuterObject(cx, obj);
 }
 
-#if JS_HAS_OBJ_PROTO_PROP
-
-static JSBool
-obj_getProto(JSContext *cx, HandleObject obj, HandleId id, Value *vp);
-
-static JSBool
-obj_setProto(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
-
-JSPropertySpec object_props[] = {
-    {js_proto_str, 0, JSPROP_PERMANENT|JSPROP_SHARED, obj_getProto, obj_setProto},
-    {0,0,0,0,0}
-};
-
-static JSBool
-obj_getProto(JSContext *cx, HandleObject obj, HandleId id, Value *vp)
-{
-    /* Let CheckAccess get the slot's value, based on the access mode. */
-    unsigned attrs;
-    RootedId nid(cx, NameToId(cx->runtime->atomState.protoAtom));
-    return CheckAccess(cx, obj, nid, JSACC_PROTO, vp, &attrs);
-}
-
-size_t sSetProtoCalled = 0;
-
-static JSBool
-obj_setProto(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp)
-{
-    if (!cx->runningWithTrustedPrincipals())
-        ++sSetProtoCalled;
-
-    /* ECMAScript 5 8.6.2 forbids changing [[Prototype]] if not [[Extensible]]. */
-    if (!obj->isExtensible()) {
-        obj->reportNotExtensible(cx);
-        return false;
-    }
-
-    if (!vp->isObjectOrNull())
-        return true;
-
-    RootedObject pobj(cx, vp->toObjectOrNull());
-    unsigned attrs;
-    RootedId nid(cx, NameToId(cx->runtime->atomState.protoAtom));
-    if (!CheckAccess(cx, obj, nid, JSAccessMode(JSACC_PROTO|JSACC_WRITE), vp, &attrs))
-        return false;
-
-    return SetProto(cx, obj, pobj, true);
-}
-
-#else  /* !JS_HAS_OBJ_PROTO_PROP */
-
-#define object_props NULL
-
-#endif /* !JS_HAS_OBJ_PROTO_PROP */
-
 static bool
 MarkSharpObjects(JSContext *cx, HandleObject obj, JSIdArray **idap, JSSharpInfo *value)
 {
@@ -1057,28 +1003,43 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif /* OLD_GETTER_SETTER_METHODS */
 
+/* ES5 15.2.3.2. */
 JSBool
 obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 {
-    if (argc == 0) {
-        js_ReportMissingArg(cx, *vp, 0);
-        return JS_FALSE;
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    /* Step 1. */
+    if (args.length() == 0) {
+        js_ReportMissingArg(cx, args.calleev(), 0);
+        return false;
     }
 
-    if (vp[2].isPrimitive()) {
+    if (args[0].isPrimitive()) {
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, vp[2], NULL);
         if (!bytes)
-            return JS_FALSE;
+            return false;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_UNEXPECTED_TYPE, bytes, "not an object");
         JS_free(cx, bytes);
-        return JS_FALSE;
+        return false;
     }
 
-    JSObject *obj = &vp[2].toObject();
-    unsigned attrs;
-    RootedId nid(cx, NameToId(cx->runtime->atomState.protoAtom));
-    return CheckAccess(cx, obj, nid, JSACC_PROTO, vp, &attrs);
+    /* Step 2. */
+
+    /*
+     * Implement [[Prototype]]-getting -- particularly across compartment
+     * boundaries -- by calling a cached __proto__ getter function.
+     */
+    InvokeArgsGuard nested;
+    if (!cx->stack.pushInvokeArgs(cx, 0, &nested))
+        return false;
+    nested.calleev() = cx->global()->protoGetter();
+    nested.thisv() = args[0];
+    if (!Invoke(cx, nested))
+        return false;
+    args.rval() = nested.rval();
+    return true;
 }
 
 namespace js {
