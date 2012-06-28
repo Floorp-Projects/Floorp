@@ -2380,9 +2380,15 @@ nsIPrincipal*
 nsScriptSecurityManager::GetSubjectPrincipal(JSContext *cx,
                                              nsresult* rv)
 {
-    NS_PRECONDITION(rv, "Null out param");
-    JSStackFrame *fp;
-    return GetPrincipalAndFrame(cx, &fp, rv);
+    *rv = NS_OK;
+    JSCompartment *compartment = js::GetContextCompartment(cx);
+
+    // The context should always be in a compartment, either one it has entered
+    // or the one associated with its global.
+    MOZ_ASSERT(!!compartment);
+
+    JSPrincipals *principals = JS_GetCompartmentPrincipals(compartment);
+    return nsJSPrincipals::get(principals);
 }
 
 NS_IMETHODIMP
