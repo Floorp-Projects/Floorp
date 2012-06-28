@@ -879,6 +879,8 @@ MarkExactStackRoots(JSTracer *trc)
                         MarkStringRoot(trc, (JSString **)addr, "exact stackroot string");
                     } else if (i == THING_ROOT_ID) {
                         MarkIdRoot(trc, (jsid *)addr, "exact stackroot id");
+                    } else if (i == THING_ROOT_PROPERTY_ID) {
+                        MarkIdRoot(trc, ((PropertyId *)addr)->asId(), "exact stackroot property id");
                     } else if (i == THING_ROOT_VALUE) {
                         MarkValueRoot(trc, (Value *)addr, "exact stackroot value");
                     } else if (i == THING_ROOT_SHAPE) {
@@ -3164,7 +3166,6 @@ EndMarkPhase(JSRuntime *rt)
      * cycle collector from collecting some dead objects.
      */
     if (foundBlackGray) {
-        JS_ASSERT(false);
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
             if (!c->isCollecting())
                 c->arenas.unmarkAll();
@@ -3799,13 +3800,15 @@ static bool
 ShouldCleanUpEverything(JSRuntime *rt, gcreason::Reason reason)
 {
     // During shutdown, we must clean everything up, for the sake of leak
-    // detection. When a runtime has no contexts, or we're doing a forced GC,
-    // those are strong indications that we're shutting down.
+    // detection. When a runtime has no contexts, or we're doing a GC before a
+    // shutdown CC, those are strong indications that we're shutting down.
     //
     // DEBUG_MODE_GC indicates we're discarding code because the debug mode
     // has changed; debug mode affects the results of bytecode analysis, so
     // we need to clear everything away.
-    return !rt->hasContexts() || reason == gcreason::CC_FORCED || reason == gcreason::DEBUG_MODE_GC;
+    return !rt->hasContexts() ||
+           reason == gcreason::SHUTDOWN_CC ||
+           reason == gcreason::DEBUG_MODE_GC;
 }
 
 static void
@@ -3824,7 +3827,7 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 #ifdef JS_GC_ZEAL
     bool restartVerify = rt->gcVerifyData &&
                          rt->gcZeal() == ZealVerifierValue &&
-                         reason != gcreason::CC_FORCED &&
+                         reason != gcreason::SHUTDOWN_CC &&
                          rt->hasContexts();
 
     struct AutoVerifyBarriers {
@@ -4068,6 +4071,29 @@ IterateCells(JSRuntime *rt, JSCompartment *compartment, AllocKind thingKind,
         for (CompartmentsIter c(rt); !c.done(); c.next()) {
             for (CellIterUnderGC i(c, thingKind); !i.done(); i.next())
                 cellCallback(rt, data, i.getCell(), traceKind, thingSize);
+        }
+    }
+}
+
+void
+IterateGrayObjects(JSCompartment *compartment, GCThingCallback *cellCallback, void *data)
+{
+    JS_ASSERT(compartment);
+    JSRuntime *rt = compartment->rt;
+    JS_ASSERT(!rt->gcRunning);
+
+    AutoLockGC lock(rt);
+    AutoHeapSession session(rt);
+    rt->gcHelperThread.waitBackgroundSweepEnd();
+    AutoUnlockGC unlock(rt);
+
+    AutoCopyFreeListToArenas copy(rt);
+
+    for (size_t finalizeKind = 0; finalizeKind <= FINALIZE_OBJECT_LAST; finalizeKind++) {
+        for (CellIterUnderGC i(compartment, AllocKind(finalizeKind)); !i.done(); i.next()) {
+            Cell *cell = i.getCell();
+            if (cell->isMarked(GRAY))
+                cellCallback(data, cell);
         }
     }
 }

@@ -771,6 +771,8 @@ TypeSet::addFilterPrimitives(JSContext *cx, TypeSet *target, FilterKind filter)
 static inline const Shape *
 GetSingletonShape(JSContext *cx, JSObject *obj, jsid id)
 {
+    if (!obj->isNative())
+        return NULL;
     const Shape *shape = obj->nativeLookup(cx, id);
     if (shape && shape->hasDefaultGetter() && shape->hasSlot())
         return shape;
@@ -1932,27 +1934,26 @@ types::UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 bool
-types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc)
+types::UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey key)
 {
     /*
      * Objects created outside loops in global and eval scripts should have
-     * singleton types. For now this is only done for plain objects, not arrays.
+     * singleton types. For now this is only done for plain objects and typed
+     * arrays, but not normal arrays.
      */
 
     if (!cx->typeInferenceEnabled() || script->function())
         return false;
 
-    JSOp op = JSOp(*pc);
-    if (op == JSOP_NEWOBJECT || (op == JSOP_NEWINIT && GET_UINT8(pc) == JSProto_Object)) {
-        AutoEnterTypeInference enter(cx);
+    if (key != JSProto_Object && !(key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray))
+        return false;
 
-        if (!script->ensureRanAnalysis(cx, NULL))
-            return false;
+    AutoEnterTypeInference enter(cx);
 
-        return !script->analysis()->getCode(pc).inLoop;
-    }
+    if (!script->ensureRanAnalysis(cx, NULL))
+        return false;
 
-    return false;
+    return !script->analysis()->getCode(pc).inLoop;
 }
 
 bool
@@ -2701,7 +2702,7 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
                     UpdatePropertyType(cx, &base->types, singleton, shape, true);
                 shape = shape->previous();
             }
-        } else if (!JSID_IS_EMPTY(id)) {
+        } else if (!JSID_IS_EMPTY(id) && singleton->isNative()) {
             const Shape *shape = singleton->nativeLookup(cx, id);
             if (shape)
                 UpdatePropertyType(cx, &base->types, singleton, shape, false);
@@ -3110,14 +3111,16 @@ GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
     if (!script->hasGlobal())
         return NULL;
 
-    if (UseNewTypeForInitializer(cx, script, pc))
-        return NULL;
-
     JSOp op = JSOp(*pc);
     JS_ASSERT(op == JSOP_NEWARRAY || op == JSOP_NEWOBJECT || op == JSOP_NEWINIT);
 
     bool isArray = (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && GET_UINT8(pc) == JSProto_Array));
-    return TypeScript::InitObject(cx, script, pc, isArray ? JSProto_Array : JSProto_Object);
+    JSProtoKey key = isArray ? JSProto_Array : JSProto_Object;
+
+    if (UseNewTypeForInitializer(cx, script, pc, key))
+        return NULL;
+
+    return TypeScript::InitObject(cx, script, pc, key);
 }
 
 /*
@@ -3756,7 +3759,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         TypeSet *types = script->analysis()->bytecodeTypes(pc);
         types->addSubset(cx, &pushed[0]);
 
-        if (UseNewTypeForInitializer(cx, script, pc)) {
+        bool isArray = (op == JSOP_NEWARRAY || (op == JSOP_NEWINIT && GET_UINT8(pc) == JSProto_Array));
+        JSProtoKey key = isArray ? JSProto_Array : JSProto_Object;
+
+        if (UseNewTypeForInitializer(cx, script, pc, key)) {
             /* Defer types pushed by this bytecode until runtime. */
             break;
         }
@@ -5534,8 +5540,8 @@ JSObject::makeLazyType(JSContext *cx)
 {
     JS_ASSERT(hasLazyType());
 
-    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL,
-                                                            JSProto_Object, getProto());
+    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
+    TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, key, getProto());
     if (!type) {
         if (cx->typeInferenceEnabled())
             cx->compartment->types.setPendingNukeTypes(cx);
@@ -5578,15 +5584,8 @@ JSObject::makeLazyType(JSContext *cx)
     if (getClass()->ext.equality)
         type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
 
-    if (type->unknownProperties()) {
-        type_ = type;
-        return;
-    }
-
-    /* Not yet generating singleton arrays. */
-    type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY
-                |  OBJECT_FLAG_NON_PACKED_ARRAY
-                |  OBJECT_FLAG_NON_TYPED_ARRAY;
+    if (isSlowArray())
+        type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY | OBJECT_FLAG_NON_PACKED_ARRAY;
 
     type_ = type;
 }

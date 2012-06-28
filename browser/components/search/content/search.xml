@@ -67,25 +67,25 @@
       <constructor><![CDATA[
         if (this.parentNode.parentNode.localName == "toolbarpaletteitem")
           return;
-        setTimeout(function (a) { a.init(); }, 0, this);
-      ]]></constructor>
+        // Make sure we rebuild the popup in onpopupshowing
+        this._needToBuildPopup = true;
 
-      <method name="init">
-        <body><![CDATA[
-          // Make sure we rebuild the popup in onpopupshowing
-          this._needToBuildPopup = true;
-
-          // Refresh the display (updating icon, etc)
-          this.updateDisplay();
-
-          var os =
+        var os =
                Components.classes["@mozilla.org/observer-service;1"]
                          .getService(Components.interfaces.nsIObserverService);
-          os.addObserver(this, "browser-search-engine-modified", false);
+        os.addObserver(this, "browser-search-engine-modified", false);
 
-          this._addedObserver = true;
-        ]]></body>
-      </method>
+        this._addedObserver = true;
+
+        this.searchService.init((function search_init_cb(aStatus) {
+          if (Components.isSuccessCode(aStatus)) {
+            // Refresh the display (updating icon, etc)
+            this.updateDisplay();
+          } else {
+            Components.utils.reportError("Cannot initialize search service, bailing out: " + aStatus);
+          }
+        }).bind(this));
+      ]]></constructor>
 
       <destructor><![CDATA[
         if (this._addedObserver) {
@@ -662,13 +662,6 @@
             popup.setAttribute("width", width > 100 ? width : 100);
 
             var yOffset = outerRect.bottom - innerRect.bottom;
-
-            // setConsumeRollupEvent() before we call openPopup(), 
-            // see bug #404438 for more details
-            popup.popupBoxObject.setConsumeRollupEvent(
-              this.consumeRollupEvent ? 
-                Ci.nsIPopupBoxObject.ROLLUP_CONSUME : 
-                Ci.nsIPopupBoxObject.ROLLUP_NO_CONSUME);
             popup.openPopup(this.inputField, "after_start", 0, yOffset, false, false);
           }
         ]]></body>

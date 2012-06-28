@@ -6,7 +6,7 @@
 var ContextCommands = {
   copy: function cc_copy() {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(ContextHelper.popupState.string);
+    clipboard.copyString(ContextHelper.popupState.string, Browser.contentWindow.document);
 
     let target = ContextHelper.popupState.target;
     if (target)
@@ -72,22 +72,22 @@ var ContextCommands = {
 
   copyLink: function cc_copyLink() {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(ContextHelper.popupState.linkURL);
+    clipboard.copyString(ContextHelper.popupState.linkURL, Browser.contentWindow.document);
   },
 
   copyEmail: function cc_copyEmail() {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-      clipboard.copyString(ContextHelper.popupState.linkURL.substr(ContextHelper.popupState.linkURL.indexOf(':')+1));
+      clipboard.copyString(ContextHelper.popupState.linkURL.substr(ContextHelper.popupState.linkURL.indexOf(':')+1), Browser.contentWindow.document);
   },
 
   copyPhone: function cc_copyPhone() {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-      clipboard.copyString(ContextHelper.popupState.linkURL.substr(ContextHelper.popupState.linkURL.indexOf(':')+1));
+      clipboard.copyString(ContextHelper.popupState.linkURL.substr(ContextHelper.popupState.linkURL.indexOf(':')+1), Browser.contentWindow.document);
   },
 
   copyImageLocation: function cc_copyImageLocation() {
       let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-      clipboard.copyString(ContextHelper.popupState.mediaURL);
+      clipboard.copyString(ContextHelper.popupState.mediaURL, Browser.contentWindow.document);
   },
 
   shareLink: function cc_shareLink() {

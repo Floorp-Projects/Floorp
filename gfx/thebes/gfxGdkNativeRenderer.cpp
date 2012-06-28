@@ -11,6 +11,8 @@
 #include <gdk/gdkx.h>
 #include "cairo-xlib.h"
 #include "gfxXlibSurface.h"
+
+#if (MOZ_WIDGET_GTK == 2)
 nsresult
 gfxGdkNativeRenderer::DrawWithXlib(gfxXlibSurface* surface,
                                    nsIntPoint offset,
@@ -58,5 +60,9 @@ gfxGdkNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
 
     gfxXlibNativeRenderer::Draw(ctx, size, flags, screen, visual, nsnull);
 }
+
+#else
+// TODO GTK3
+#endif
 
 #endif

@@ -76,6 +76,7 @@ function create_servers() {
 }
 
 function run_test() {
+  initTestLogging();
   create_servers();
   run_next_test();
 }
@@ -104,8 +105,8 @@ add_test(function test_storage_install() {
 });
 
 add_test(function test_storage_uninstall() {
-  // Set app1 as deleted.
-  fakeApp1.deleted = true;
+  // Set app1 as hidden.
+  fakeApp1.hidden = true;
   AitcStorage.processApps([fakeApp2], function() {
     // It should be missing.
     do_check_eq(DOMApplicationRegistry._appId(fakeApp1.origin), null);

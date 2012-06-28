@@ -12,8 +12,12 @@ public class testCheck extends PixelTest {
         }
     }
 
+    @Override
+    protected int getTestType() {
+        return TEST_TALOS;
+    }
+
     public void testCheck() {
-        setTestType("talos");
         String url = getAbsoluteUrl("/startup_test/fennecmark/timecube.html");
 
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
