@@ -1665,16 +1665,6 @@ typedef JSBool
 (* JSCSPEvalChecker)(JSContext *cx);
 
 /*
- * Security callbacks for pushing and popping context principals. These are only
- * temporarily necessary and will hopefully be gone again in a matter of weeks.
- */
-typedef JSBool
-(* JSPushContextPrincipalOp)(JSContext *cx, JSPrincipals *principals);
-
-typedef JSBool
-(* JSPopContextPrincipalOp)(JSContext *cx);
-
-/*
  * Callback used to ask the embedding for the cross compartment wrapper handler
  * that implements the desired prolicy for this kind of object in the
  * destination compartment.
@@ -4343,8 +4333,6 @@ struct JSSecurityCallbacks {
     JSSubsumePrincipalsOp      subsumePrincipals;
     JSObjectPrincipalsFinder   findObjectPrincipals;
     JSCSPEvalChecker           contentSecurityPolicyAllows;
-    JSPushContextPrincipalOp   pushContextPrincipal;
-    JSPopContextPrincipalOp    popContextPrincipal;
 };
 
 extern JS_PUBLIC_API(void)
