@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+<meta charset="utf-8">
+<title>Page testing blocked content in the Sandbox</title>
+
+<link rel="stylesheet" src="sandbox_content.sjs?text/css"/>
+
+<script src="sandbox_content.sjs?application/javascript"></script>
+
+</head>
+
+<body>
+
+<img src="sandbox_content.sjs?image/jpeg"/>
+
+<!-- media -->
+<video src="sandbox_content.sjs?video/webm" autoplay="true"></video>
+<audio src="sandbox_content.sjs?audio/ogg" autoplay="true"></audio>
+
+<!-- plugins -->
+<embed src="sandbox_content.sjs?test/embed"/>
+<object data="sandbox_content.sjs?test/object"></object>
+<applet code="sandbox_content.sjs?application/x-java-applet"></applet>
+
+<iframe src="sandbox_content.sjs?text/html"></iframe>
+
+</body>
+
+</html>
