@@ -328,7 +328,7 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
             } else {
                 RootedValue rref(cx, rval);
                 bool strict = cx->stack.currentScript()->strictModeCode;
-                if (!js_NativeSet(cx, obj, shape, false, strict, rref.address()))
+                if (!js_NativeSet(cx, obj, obj, shape, false, strict, rref.address()))
                     return false;
             }
             return true;
@@ -347,10 +347,10 @@ SetPropertyOperation(JSContext *cx, jsbytecode *pc, const Value &lval, const Val
         unsigned defineHow = (op == JSOP_SETNAME)
                              ? DNP_CACHE_RESULT | DNP_UNQUALIFIED
                              : DNP_CACHE_RESULT;
-        if (!baseops::SetPropertyHelper(cx, obj, id, defineHow, rref.address(), strict))
+        if (!baseops::SetPropertyHelper(cx, obj, obj, id, defineHow, rref.address(), strict))
             return false;
     } else {
-        if (!obj->setGeneric(cx, id, rref.address(), strict))
+        if (!obj->setGeneric(cx, obj, id, rref.address(), strict))
             return false;
     }
 
@@ -743,7 +743,7 @@ GetElementOperation(JSContext *cx, JSOp op, Value &lref, const Value &rref, Valu
 }
 
 static JS_ALWAYS_INLINE bool
-SetObjectElementOperation(JSContext *cx, JSObject *obj, HandleId id, const Value &value, bool strict)
+SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, const Value &value, bool strict)
 {
     types::TypeScript::MonitorAssign(cx, obj, id);
 
@@ -772,7 +772,7 @@ SetObjectElementOperation(JSContext *cx, JSObject *obj, HandleId id, const Value
     } while (0);
 
     RootedValue tmp(cx, value);
-    return obj->setGeneric(cx, id, tmp.address(), strict);
+    return obj->setGeneric(cx, obj, id, tmp.address(), strict);
 }
 
 #define RELATIONAL_OP(OP)                                                     \
