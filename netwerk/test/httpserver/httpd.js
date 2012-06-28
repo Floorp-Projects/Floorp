@@ -1911,6 +1911,13 @@ LineData.prototype =
     if (length < 0)
     {
       this._start = data.length;
+
+      // But if our data ends in a CR, we have to back up one, because
+      // the first byte in the next packet might be an LF and if we
+      // start looking at data.length we won't find it.
+      if (data.length > 0 && data[data.length - 1] === CR)
+        --this._start;
+
       return false;
     }
 
