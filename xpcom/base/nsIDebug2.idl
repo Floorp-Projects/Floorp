@@ -7,7 +7,7 @@
 
 #include "nsIDebug.idl"
 
-[scriptable, uuid(9c9307ed-480a-4f2a-8f29-21378c03bcbc)]
+[scriptable, uuid(6cb17fec-cdf7-4f7c-b267-37a0acaa9cf1)]
 interface nsIDebug2 : nsIDebug
 {
     /**
@@ -21,4 +21,10 @@ interface nsIDebug2 : nsIDebug
      * The number of assertions since process start.
      */
     readonly attribute long assertionCount;
+
+    /**
+     * Whether a debugger is currently attached.
+     * Supports Windows + Mac
+     */
+    readonly attribute bool isDebuggerAttached;
 };
