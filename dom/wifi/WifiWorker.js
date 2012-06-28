@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gNetworkManager",
 // command always succeeds and we do a string/boolean check for the
 // expected results).
 var WifiManager = (function() {
-  function getSdkVersion() {
+  function getSdkVersionAndDevice() {
     Cu.import("resource://gre/modules/ctypes.jsm");
     try {
       let cutils = ctypes.open("libcutils.so");
@@ -49,7 +49,8 @@ var WifiManager = (function() {
         c_property_get(key, cbuf, defaultValue);
         return cbuf.readString();
       }
-      return parseInt(property_get("ro.build.version.sdk"));
+      return { sdkVersion: parseInt(property_get("ro.build.version.sdk")),
+               device: property_get("ro.product.device") };
     } catch(e) {
       // Eat it.  Hopefully we're on a non-Gonk system ...
       // 
@@ -58,7 +59,7 @@ var WifiManager = (function() {
     }
   }
 
-  let sdkVersion = getSdkVersion();
+  let { sdkVersion, device } = getSdkVersionAndDevice();
 
   var controlWorker = new ChromeWorker(WIFIWORKER_WORKER);
   var eventWorker = new ChromeWorker(WIFIWORKER_WORKER);
@@ -900,19 +901,34 @@ var WifiManager = (function() {
               callback(status);
               return;
             }
-            startSupplicant(function (status) {
-              if (status < 0) {
-                unloadDriver(function() {
-                  callback(status);
-                });
-                return;
-              }
 
-              manager.supplicantStarted = true;
-              enableInterface(ifname, function (ok) {
-                callback(ok ? 0 : -1);
+            let timer;
+            function doStartSupplicant() {
+              timer = null;
+              startSupplicant(function (status) {
+                if (status < 0) {
+                  unloadDriver(function() {
+                    callback(status);
+                  });
+                  return;
+                }
+
+                manager.supplicantStarted = true;
+                enableInterface(ifname, function (ok) {
+                  callback(ok ? 0 : -1);
+                });
               });
-            });
+            }
+
+            // Driver startup on the otoro takes longer than it takes for us
+            // to return from loadDriver, so wait 2 seconds before starting
+            // the supplicant to give it a chance to start.
+            if (device === "otoro") {
+              timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+              timer.init(doStartSupplicant, 2000, Ci.nsITimer.TYPE_ONE_SHOT);
+            } else {
+              doStartSupplicant();
+            }
           });
         });
       });
