@@ -485,16 +485,13 @@ void
 nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
                          nsRenderingContext* aContext)
 {
-  nsSVGOuterSVGFrame *frame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
-
-  if (frame->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)
-    return;
-
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
   PRTime start = PR_Now();
 #endif
 
   aContext->PushState();
+
+  nsSVGOuterSVGFrame *frame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
 
 #ifdef XP_MACOSX
   if (frame->BitmapFallbackEnabled()) {
@@ -504,7 +501,14 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   }
 #endif
 
-  frame->Paint(aBuilder, aContext, mVisibleRect, ToReferenceFrame());
+  nsRect viewportRect =
+    frame->GetContentRectRelativeToSelf() + ToReferenceFrame();
+  nsRect clipRect = mVisibleRect.Intersect(viewportRect);
+
+  aContext->IntersectClip(clipRect);
+  aContext->Translate(viewportRect.TopLeft());
+
+  frame->Paint(aBuilder, aContext, clipRect - viewportRect.TopLeft());
 
 #ifdef XP_MACOSX
   if (frame->BitmapFallbackEnabled()) {
@@ -619,6 +623,10 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists)
 {
+  if (GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD) {
+    return NS_OK;
+  }
+
   nsresult rv = DisplayBorderBackgroundOutline(aBuilder, aLists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -636,20 +644,8 @@ nsSVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 void
 nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
                           nsRenderingContext* aContext,
-                          const nsRect& aDirtyRect, nsPoint aPt)
+                          const nsRect& aDirtyRect)
 {
-  nsRect viewportRect = GetContentRect();
-  nsPoint viewportOffset = aPt + viewportRect.TopLeft() - GetPosition();
-  viewportRect.MoveTo(viewportOffset);
-
-  nsRect clipRect;
-  clipRect.IntersectRect(aDirtyRect, viewportRect);
-  aContext->IntersectClip(clipRect);
-  aContext->Translate(viewportRect.TopLeft());
-  nsRect dirtyRect = clipRect - viewportOffset;
-
-  nsIntRect dirtyPxRect = dirtyRect.ToOutsidePixels(PresContext()->AppUnitsPerDevPixel());
-
   // Create an SVGAutoRenderState so we can call SetPaintingToWindow on
   // it, but don't change the render mode:
   SVGAutoRenderState state(aContext, SVGAutoRenderState::GetRenderMode(aContext));
@@ -657,6 +653,10 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
   if (aBuilder->IsPaintingToWindow()) {
     state.SetPaintingToWindow(true);
   }
+
+  // Convert the (content area relative) dirty rect to dev pixels:
+  nsIntRect dirtyPxRect =
+    aDirtyRect.ToOutsidePixels(PresContext()->AppUnitsPerDevPixel());
 
   nsSVGUtils::PaintFrameWithEffects(aContext, &dirtyPxRect, this);
 }
