@@ -1268,12 +1268,12 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   PRInt32 numChildren = endParent->GetChildCount();
 
   if (offset > numChildren) {
+    // Can happen for text nodes -- or if we're being called from
+    // nsNodeUtils::ContentRemoved and the range hasn't been adjusted yet (bug
+    // 767169).
     offset = numChildren;
   }
-  if (!offset) {
-    node = endParent;
-  } else if (!numChildren) {
-    // no children, must be a text node
+  if (!offset || !numChildren) {
     node = endParent;
   } else {
     lastCandidate = endParent->GetChildAt(--offset);
@@ -1284,6 +1284,11 @@ nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   if (!lastCandidate) {
     // then lastCandidate is prev node before node
     lastCandidate = GetPrevSibling(node);
+  }
+
+  if (!lastCandidate) {
+    MakeEmpty();
+    return NS_OK;
   }
 
   lastCandidate = GetDeepLastChild(lastCandidate);
