@@ -10,7 +10,7 @@ let Cu = Components.utils;
 let Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm")
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 #ifdef ACCESSIBILITY
@@ -5602,34 +5602,42 @@ var SearchEngines = {
       NativeWindow.contextmenus.remove(this._contextMenuId);
   },
 
+  _handleSearchEnginesGet: function _handleSearchEnginesGet(rv) {
+    if (!Components.isSuccessCode(rv)) {
+      Cu.reportError("Could not initialize search service, bailing out.");
+      return;
+    }
+    let engineData = Services.search.getVisibleEngines({});
+    let searchEngines = engineData.map(function (engine) {
+      return {
+        name: engine.name,
+        iconURI: (engine.iconURI ? engine.iconURI.spec : null)
+      };
+    });
+
+    let suggestTemplate = null;
+    let suggestEngine = null;
+    if (Services.prefs.getBoolPref("browser.search.suggest.enabled")) {
+      let engine = this.getSuggestionEngine();
+      if (engine != null) {
+        suggestEngine = engine.name;
+        suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
+      }
+    }
+
+    sendMessageToJava({
+      gecko: {
+        type: "SearchEngines:Data",
+        searchEngines: searchEngines,
+        suggestEngine: suggestEngine,
+        suggestTemplate: suggestTemplate
+      }
+    });
+  },
+
   observe: function observe(aSubject, aTopic, aData) {
     if (aTopic == "SearchEngines:Get") {
-      let engineData = Services.search.getVisibleEngines({});
-      let searchEngines = engineData.map(function (engine) {
-        return {
-          name: engine.name,
-          iconURI: (engine.iconURI ? engine.iconURI.spec : null)
-        };
-      });
-
-      let suggestTemplate = null;
-      let suggestEngine = null;
-      if (Services.prefs.getBoolPref("browser.search.suggest.enabled")) {
-        let engine = this.getSuggestionEngine();
-        if (engine != null) {
-          suggestEngine = engine.name;
-          suggestTemplate = engine.getSubmission("__searchTerms__", "application/x-suggestions+json").uri.spec;
-        }
-      }
-
-      sendMessageToJava({
-        gecko: {
-          type: "SearchEngines:Data",
-          searchEngines: searchEngines,
-          suggestEngine: suggestEngine,
-          suggestTemplate: suggestTemplate
-        }
-      });
+      Services.search.init(this._handleSearchEnginesGet.bind(this));
     }
   },
 
@@ -5702,26 +5710,32 @@ var SearchEngines = {
     stmts[0] = mDBConn.createStatement("SELECT favicon FROM images WHERE url_key = ?");
     stmts[0].bindStringParameter(0, docURI.spec);
     let favicon = null;
-    mDBConn.executeAsync(stmts, stmts.length, {
-      handleResult: function (results) {
-        let bytes = results.getNextRow().getResultByName("favicon");
-        favicon = "data:image/png;base64," + btoa(String.fromCharCode.apply(null, bytes));
-      },
-      handleCompletion: function (reason) {
-        // if there's already an engine with this name, add a number to
-        // make the name unique (e.g., "Google" becomes "Google 2")
-        let name = title.value;
-        for (let i = 2; Services.search.getEngineByName(name); i++)
-          name = title.value + " " + i;
-
-        Services.search.addEngineWithDetails(name, favicon, null, null, method, formURL);
-        let engine = Services.search.getEngineByName(name);
-        engine.wrappedJSObject._queryCharset = charset;
-        for each (let param in formData) {
-          if (param.name && param.value)
-            engine.addParam(param.name, param.value, null);
-        }
+    Services.search.init(function addEngine_cb(rv) {
+      if (!Components.isSuccessCode(rv)) {
+        Cu.reportError("Could not initialize search service, bailing out.");
+        return;
       }
+      mDBConn.executeAsync(stmts, stmts.length, {
+        handleResult: function (results) {
+          let bytes = results.getNextRow().getResultByName("favicon");
+          favicon = "data:image/png;base64," + btoa(String.fromCharCode.apply(null, bytes));
+        },
+        handleCompletion: function (reason) {
+          // if there's already an engine with this name, add a number to
+          // make the name unique (e.g., "Google" becomes "Google 2")
+          let name = title.value;
+          for (let i = 2; Services.search.getEngineByName(name); i++)
+            name = title.value + " " + i;
+
+          Services.search.addEngineWithDetails(name, favicon, null, null, method, formURL);
+          let engine = Services.search.getEngineByName(name);
+          engine.wrappedJSObject._queryCharset = charset;
+          for each (let param in formData) {
+            if (param.name && param.value)
+              engine.addParam(param.name, param.value, null);
+          }
+        }
+      });
     });
   }
 };
