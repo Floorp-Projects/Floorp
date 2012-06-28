@@ -50,7 +50,7 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsClientRect.h"
 
-#if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
+#if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK)
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #endif
@@ -213,8 +213,8 @@ nsDOMWindowUtils::Redraw(PRUint32 aCount, PRUint32 *aDurationOut)
       for (PRUint32 i = 0; i < aCount; i++)
         rootFrame->InvalidateWithFlags(r, nsIFrame::INVALIDATE_IMMEDIATE);
 
-#if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2)
-      XSync(GDK_DISPLAY(), False);
+#if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK)
+      XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), False);
 #endif
 
       *aDurationOut = PR_IntervalToMilliseconds(PR_IntervalNow() - iStart);

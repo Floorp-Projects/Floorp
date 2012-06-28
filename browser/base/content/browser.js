@@ -2227,6 +2227,12 @@ function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType) {
   return mimeStream.QueryInterface(Ci.nsIInputStream);
 }
 
+function getLoadContext() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
+}
+
 function readFromClipboard()
 {
   var url;
@@ -2239,6 +2245,7 @@ function readFromClipboard()
     // Create transferable that will transfer the text.
     var trans = Components.classes["@mozilla.org/widget/transferable;1"]
                           .createInstance(Components.interfaces.nsITransferable);
+    trans.init(getLoadContext());
 
     trans.addDataFlavor("text/unicode");
 

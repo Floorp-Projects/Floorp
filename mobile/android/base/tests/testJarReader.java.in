@@ -19,8 +19,12 @@ import java.io.StringWriter;
  * as loading some invalid jar urls.
  */
 public class testJarReader extends BaseTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testJarReader() {
-        setTestType("mochitest");
         try {
             ClassLoader classLoader = getActivity().getClassLoader();
             Class gjrClass = classLoader.loadClass("org.mozilla.gecko.GeckoJarReader");

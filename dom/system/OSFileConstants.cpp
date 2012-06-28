@@ -202,6 +202,19 @@ static dom::ConstantSpec gLibcProperties[] =
 #endif // defined(EWOULDBLOCK)
   INT_CONSTANT(EXDEV),
 
+  // Constants used to define data structures
+  //
+  // Many data structures have different fields/sizes/etc. on
+  // various OSes / versions of the same OS / platforms. For these
+  // data structures, we need to compute and export from C the size
+  // and, if necessary, the offset of fields, so as to be able to
+  // define the structure in JS.
+
+#if defined(XP_UNIX)
+  // The size of |mode_t|.
+  {"OSFILE_SIZEOF_MODE_T", INT_TO_JSVAL(sizeof (mode_t)) },
+#endif // defined(XP_UNIX)
+
   PROP_END
 };
 
@@ -349,7 +362,7 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     }
 
     jsval valVersion = STRING_TO_JSVAL(strVersion);
-    if (!JS_SetProperty(cx, objSys, "Version", &valVersion)) {
+    if (!JS_SetProperty(cx, objSys, "Name", &valVersion)) {
       return false;
     }
   }

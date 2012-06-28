@@ -1964,7 +1964,27 @@ var gCSSProperties = {
 		initial_values: [ "inline" ],
 		/* XXX none will really mess with other properties */
 		prerequisites: { "float": "none", "position": "static" },
-		other_values: [ "block", "list-item", "inline-block", "table", "inline-table", "table-row-group", "table-header-group", "table-footer-group", "table-row", "table-column-group", "table-column", "table-cell", "table-caption", "none" ],
+		other_values: [
+			"block",
+			"list-item",
+			"inline-block",
+			"table",
+			"inline-table",
+			"table-row-group",
+			"table-header-group",
+			"table-footer-group",
+			"table-row",
+			"table-column-group",
+			"table-column",
+			"table-cell",
+			"table-caption",
+/* XXXdholbert In builds with MOZ_FLEXBOX enabled, this should be uncommented.
+   (This would be #ifdef MOZ_FLEXBOX, if that worked in JS files.)
+			"-moz-flex",
+			"-moz-inline-flex",
+*/
+			"none"
+		],
 		invalid_values: []
 	},
 	"empty-cells": {

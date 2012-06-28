@@ -12,9 +12,11 @@
                     android:background="@drawable/address_bar_bg">
 
         <ImageButton android:id="@+id/back"
+                     android:contentDescription="@string/back"
                      style="@style/AddressBar.ImageButton.Unused"/>
 
         <ImageButton android:id="@+id/forward"
+                     android:contentDescription="@string/forward"
                      style="@style/AddressBar.ImageButton.Unused"/>
 
         <LinearLayout android:id="@+id/menu_items"
@@ -51,6 +53,7 @@
                      android:layout_toLeftOf="@id/spacer"
                      android:gravity="center_vertical"
                      android:src="@drawable/menu"
+                     android:contentDescription="@string/menu"
                      android:background="@drawable/action_bar_button"
                      android:paddingLeft="10dip"
                      android:paddingRight="10dip"
@@ -96,6 +99,7 @@
                          android:layout_width="24dip"
                          android:layout_height="24dip"
                          android:src="@drawable/reader"
+                         android:contentDescription="@string/reader_mode"
                          android:visibility="gone"/>
 
             <ImageButton android:id="@+id/site_security"
@@ -103,6 +107,7 @@
                          android:layout_width="24dip"
                          android:layout_height="24dip"
                          android:src="@drawable/site_security_level"
+                         android:contentDescription="@string/site_security"
                          android:visibility="gone"/>
 
             <ImageButton android:id="@+id/stop"
@@ -110,6 +115,7 @@
                          android:layout_width="24dip"
                          android:layout_height="24dip"
                          android:src="@drawable/urlbar_stop"
+                         android:contentDescription="@string/stop"
                          android:visibility="gone"/>
 
         </LinearLayout>

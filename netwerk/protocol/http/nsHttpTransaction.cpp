@@ -758,6 +758,14 @@ nsHttpTransaction::Close(nsresult reason)
         if (mCaps & NS_HTTP_STICKY_CONNECTION)
             relConn = false;
     }
+
+    // mTimings.responseEnd is normally recorded based on the end of a
+    // HTTP delimiter such as chunked-encodings or content-length. However,
+    // EOF or an error still require an end time be recorded.
+    if (TimingEnabled() &&
+        mTimings.responseEnd.IsNull() && !mTimings.responseStart.IsNull())
+        mTimings.responseEnd = mozilla::TimeStamp::Now();
+
     if (relConn && mConnection)
         NS_RELEASE(mConnection);
 

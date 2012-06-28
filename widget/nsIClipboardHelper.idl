@@ -11,11 +11,13 @@
 #include "nsString.h" // needed for AString -> nsAString, unfortunately
 %}
 
+interface nsIDOMDocument;
+
 /**
  * helper service for common uses of nsIClipboard.
  */
 
-[scriptable, uuid(44073a98-1dd2-11b2-8600-d0ae854dbe93)]
+[scriptable, uuid(836316a9-6834-45e7-92af-5a4b9bd01a31)]
 interface nsIClipboardHelper : nsISupports
 {
 
@@ -23,16 +25,18 @@ interface nsIClipboardHelper : nsISupports
    * copy string to given clipboard
    *
    * @param aString, the string to copy to the clipboard
+   * @param aDoc, the source document for the string, if available
    * @param aClipboardID, the ID of the clipboard to copy to
    *        (eg. kSelectionClipboard -- see nsIClipboard.idl)
    */
-  void copyStringToClipboard(in AString aString, in long aClipboardID);
+  void copyStringToClipboard(in AString aString, [optional] in nsIDOMDocument aDoc, in long aClipboardID);
 
   /**
    * copy string to (default) clipboard
    *
    * @param aString, the string to copy to the clipboard
+   * @param aDoc, the source document for the string, if available
    */
-  void copyString(in AString aString);
+  void copyString(in AString aString, [optional] in nsIDOMDocument aDoc);
 
 };

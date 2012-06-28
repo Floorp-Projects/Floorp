@@ -13,10 +13,6 @@ Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/Geometry.jsm');
 
-XPCOMUtils.defineLazyServiceGetter(Services, 'fm',
-                                   '@mozilla.org/focus-manager;1',
-                                   'nsIFocusManager');
-
 const ContentPanning = {
   init: function cp_init() {
     ['mousedown', 'mouseup', 'mousemove'].forEach(function(type) {

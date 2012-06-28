@@ -35,6 +35,13 @@ function modifySelection(s) {
   }, 0)
 }
 
+function getLoadContext() {
+  var Ci = SpecialPowers.wrap(Components).interfaces;
+  return SpecialPowers.wrap(window).QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIWebNavigation)
+                                   .QueryInterface(Ci.nsILoadContext);
+}
+
 function testCopyPaste () {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
@@ -86,6 +93,7 @@ function testCopyPaste () {
   function getClipboardData(mime) {
     var transferable = Components.classes['@mozilla.org/widget/transferable;1']
                                  .createInstance(Components.interfaces.nsITransferable);
+    transferable.init(getLoadContext());
     transferable.addDataFlavor(mime);
     clipboard.getData(transferable, 1);
     var data = {};

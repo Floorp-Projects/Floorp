@@ -22,6 +22,9 @@ FRAME_ID(nsFieldSetFrame)
 FRAME_ID(nsFileControlFrame)
 FRAME_ID(nsFirstLetterFrame)
 FRAME_ID(nsFirstLineFrame)
+#ifdef MOZ_FLEXBOX
+FRAME_ID(nsFlexContainerFrame)
+#endif // MOZ_FLEXBOX
 FRAME_ID(nsFormControlFrame)
 FRAME_ID(nsFrame)
 FRAME_ID(nsGfxButtonControlFrame)

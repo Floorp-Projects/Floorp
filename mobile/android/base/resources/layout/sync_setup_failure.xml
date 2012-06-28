@@ -16,13 +16,22 @@
   </LinearLayout>
 
   <TextView
+    android:id="@+id/failure_subtitle1"
     style="@style/SyncTextItem"
     android:layout_below="@id/failure_top"
-    android:layout_above="@+id/failure_bottom"
     android:padding="20dp"
     android:text="@string/sync_subtitle_fail" />
+
+  <TextView
+    android:id="@+id/failure_subtitle2"
+    style="@style/SyncTextItem"
+    android:layout_below="@id/failure_subtitle1"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:text="@string/sync_subtitle_failmultiple" />
+
   <LinearLayout
-    android:id="@id/failure_bottom"
+    android:id="@+id/failure_bottom"
     style="@style/SyncBottom"
     android:orientation="horizontal" >
 

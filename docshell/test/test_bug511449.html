@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=511449
   <title>Test for Bug 511449</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/NativeKeyCodes.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -40,7 +41,7 @@ function runNextTest() {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                   getInterface(Components.interfaces.nsIDOMWindowUtils);
-  utils.sendNativeKeyEvent(0, 13 /* w */, 0x4000 /* cmd */, "w", "w");
+  utils.sendNativeKeyEvent(0, MAC_VK_ANSI_W, 0x4000 /* cmd */, "w", "w");
 
   setTimeout(function () {
     ok(didClose, "Cmd+W should have closed the tab");

@@ -260,7 +260,7 @@
             const clipI = Components.interfaces.nsIClipboardHelper;
             var clipboard = Components.classes[clipURI].getService(clipI);
 
-            clipboard.copyString(this.mSelectedItem.toString());
+            clipboard.copyString(this.mSelectedItem.toString(), document);
           } catch (ex) {
             // Unable to copy anything, die quietly
           }

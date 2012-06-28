@@ -2017,30 +2017,23 @@ nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   return NS_OK;
 }
 
-nsresult
-nsRange::CloneRange(nsRange** aReturn) const
+already_AddRefed<nsRange>
+nsRange::CloneRange() const
 {
-  if (aReturn == 0)
-    return NS_ERROR_NULL_POINTER;
-
   nsRefPtr<nsRange> range = new nsRange();
 
   range->SetMaySpanAnonymousSubtrees(mMaySpanAnonymousSubtrees);
 
   range->DoSetRange(mStartParent, mStartOffset, mEndParent, mEndOffset, mRoot);
 
-  range.forget(aReturn);
-
-  return NS_OK;
+  return range.forget();
 }
 
 NS_IMETHODIMP
 nsRange::CloneRange(nsIDOMRange** aReturn)
 {
-  nsRefPtr<nsRange> range;
-  nsresult rv = CloneRange(getter_AddRefs(range));
-  range.forget(aReturn);
-  return rv;
+  *aReturn = CloneRange().get();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

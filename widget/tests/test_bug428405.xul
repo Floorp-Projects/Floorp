@@ -9,6 +9,7 @@
 
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"/>
 
   <tabbox id="tabbox" flex="100%">
     <tabs>
@@ -146,11 +147,11 @@
     // DebugEventsPlugin v1.01 from bmo bug 441880.
 
     function synthesizeNativeReturnKey() {
-      gUtils.sendNativeKeyEvent(0, 36, 0, "\u000a", "\u000a");
+      gUtils.sendNativeKeyEvent(0, MAC_VK_Return, 0, "\u000a", "\u000a");
     }
 
     function synthesizeNativeCmdOptY() {
-      gUtils.sendNativeKeyEvent(0, 16, 0x5000, "y", "y");
+      gUtils.sendNativeKeyEvent(0, MAC_VK_ANSI_Y, 0x5000, "y", "y");
     }
 
   ]]></script>

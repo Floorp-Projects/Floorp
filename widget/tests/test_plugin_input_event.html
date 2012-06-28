@@ -6,6 +6,8 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/NativeKeyCodes.js"></script>
   <link rel="stylesheet" type="text/css"
           href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
@@ -37,17 +39,17 @@ function doTest() {
   is(gPlugin.getLastKeyText(), "", "Must be empty before first key test");
 
   gUtils.sendNativeKeyEvent(0x409 /* US */,
-                            0x41, 0,
+                            WIN_VK_A, 0,
                             "a", "a");
   is(gPlugin.getLastKeyText(), "a", "Invalid character was inputted");
 
   gUtils.sendNativeKeyEvent(0x407 /* German */,
-                            0xBB, 0,
+                            WIN_VK_OEM_PLUS, 0,
                             "+", "+");
   is(gPlugin.getLastKeyText(), "+", "Invalid character was inputted");
 
   gUtils.sendNativeKeyEvent(0x407 /* German */,
-                            0xBB, 0x1400 /* Ctrl + Alt (AltGr) */,
+                            WIN_VK_OEM_PLUS, 0x1400 /* Ctrl + Alt (AltGr) */,
                             "~", "+");
   is(gPlugin.getLastKeyText(), "~", "Invalid character was inputted");
 

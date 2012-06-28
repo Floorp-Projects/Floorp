@@ -23,6 +23,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=466599
 
   /** Test for Bug 466599 **/
 
+function getLoadContext() {
+  const Ci = Components.interfaces;
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
+}
+
 function copyToClipboard(txt)
 {
   var clipid = Components.interfaces.nsIClipboard;
@@ -34,6 +41,7 @@ function copyToClipboard(txt)
     Components.classes['@mozilla.org/widget/transferable;1'].createInstance(Components.interfaces.nsITransferable);
   if (!trans)
     return false;
+  trans.init(getLoadContext());
   trans.addDataFlavor('text/html');
   var str =
     Components.classes['@mozilla.org/supports-string;1'].createInstance(Components.interfaces.nsISupportsString);
@@ -57,6 +65,7 @@ function readFromClipboard()
     Components.classes['@mozilla.org/widget/transferable;1'].createInstance(Components.interfaces.nsITransferable);
   if (!trans)
     return;
+  trans.init(getLoadContext());
   trans.addDataFlavor('text/html');
   clip.getData(trans,clipid.kGlobalClipboard);
   var str = new Object();
