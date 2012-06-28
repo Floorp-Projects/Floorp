@@ -859,6 +859,19 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type,
                                 kInputDefaultType->tag)
 
 NS_IMETHODIMP
+nsHTMLInputElement::GetHeight(PRUint32 *aHeight)
+{
+  *aHeight = GetWidthHeightForImage(mCurrentRequest).height;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetHeight(PRUint32 aHeight)
+{
+  return nsGenericHTMLElement::SetUnsignedIntAttr(nsGkAtoms::height, aHeight);
+}
+
+NS_IMETHODIMP
 nsHTMLInputElement::GetIndeterminate(bool* aValue)
 {
   *aValue = mIndeterminate;
@@ -887,6 +900,19 @@ NS_IMETHODIMP
 nsHTMLInputElement::SetIndeterminate(bool aValue)
 {
   return SetIndeterminateInternal(aValue, true);
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetWidth(PRUint32 *aWidth)
+{
+  *aWidth = GetWidthHeightForImage(mCurrentRequest).width;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetWidth(PRUint32 aWidth)
+{
+  return nsGenericHTMLElement::SetUnsignedIntAttr(nsGkAtoms::width, aWidth);
 }
 
 NS_IMETHODIMP

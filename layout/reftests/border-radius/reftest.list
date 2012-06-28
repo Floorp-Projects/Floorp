@@ -37,7 +37,7 @@ random == corner-2.html corner-2-ref.svg # right corners different radius than l
 fails == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
-== clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
+fuzzy-if(Android,9,73) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html

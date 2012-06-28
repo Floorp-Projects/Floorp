@@ -33,11 +33,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489202
   var Cc = Components.classes;
   var Ci = Components.interfaces;
 
+function getLoadContext() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsILoadContext);
+}
+
 function runTest() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var trans = Cc["@mozilla.org/widget/transferable;1"]
       .createInstance(Ci.nsITransferable);
+  trans.init(getLoadContext());
   trans.addDataFlavor("text/html");
   var test_data = '<meta/><a href="http://mozilla.org/">mozilla.org</a>';
   var cstr = Cc["@mozilla.org/supports-string;1"]

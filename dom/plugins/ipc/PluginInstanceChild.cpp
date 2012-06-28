@@ -44,9 +44,12 @@ using mozilla::ipc::ProcessChild;
 using namespace mozilla::plugins;
 using namespace std;
 
-#ifdef MOZ_WIDGET_GTK2
+#ifdef MOZ_WIDGET_GTK
 
 #include <gtk/gtk.h>
+#if (MOZ_WIDGET_GTK == 3)
+#include <gtk/gtkx.h>
+#endif
 #include <gdk/gdkx.h>
 #include <gdk/gdk.h>
 #include "gtk2xtbin.h"
