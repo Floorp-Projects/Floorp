@@ -79,5 +79,26 @@ AitcService.prototype = {
 
 };
 
-const components = [AitcService];
+function AboutApps() {
+}
+AboutApps.prototype = {
+  classID: Components.ID("{1de7cbe8-60f1-493e-b56b-9d099b3c018e}"),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIAboutModule]),
+
+  getURIFlags: function(aURI) {
+    return Ci.nsIAboutModule.ALLOW_SCRIPT;
+  },
+
+  newChannel: function(aURI) {
+    let channel = Services.io.newChannel(
+      Preferences.get("services.aitc.dashboard.url"), null, null
+    );
+    channel.originalURI = aURI;
+    return channel;
+  }
+};
+
+const components = [AitcService, AboutApps];
 const NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
