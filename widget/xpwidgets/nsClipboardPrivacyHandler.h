@@ -7,7 +7,6 @@
 #define nsClipboardPrivacyHandler_h__
 
 #include "nsIObserver.h"
-#include "nsIPrivateBrowsingService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
@@ -35,13 +34,6 @@ public:
 
   nsresult Init();
   nsresult PrepareDataForClipboard(nsITransferable * aTransferable);
-
-private:
-
-  bool InPrivateBrowsing();
-
-  nsCOMPtr<nsIPrivateBrowsingService> mPBService;
-
 };
 
 nsresult NS_NewClipboardPrivacyHandler(nsClipboardPrivacyHandler ** aHandler);

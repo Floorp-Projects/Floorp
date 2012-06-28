@@ -10,8 +10,12 @@ public class testPermissions extends PixelTest {
     private PaintedSurface mPaintedSurface;
     private Actions.RepeatedEventExpecter mPaintExpecter;
 
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testPermissions() {
-        setTestType("mochitest");
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         geolocationTest();

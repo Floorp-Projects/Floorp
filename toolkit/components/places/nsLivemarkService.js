@@ -248,8 +248,8 @@ LivemarkService.prototype = {
     this._reportDeprecatedMethod();
   },
 
-  createLivemark: function LS_createLivemark(aParentId, aTitle, aSiteURI,
-                                             aFeedURI, aIndex)
+  createLivemark: function DEPRECATED_LS_createLivemark(aParentId, aTitle, aSiteURI,
+                                                        aFeedURI, aIndex)
   {
     this._reportDeprecatedMethod();
     this._ensureSynchronousCache();

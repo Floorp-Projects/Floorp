@@ -130,7 +130,9 @@ var nsTransferable = {
     {
       const kXferableContractID = "@mozilla.org/widget/transferable;1";
       const kXferableIID = Components.interfaces.nsITransferable;
-      return Components.classes[kXferableContractID].createInstance(kXferableIID);
+      var trans = Components.classes[kXferableContractID].createInstance(kXferableIID);
+      trans.init(null);
+      return trans;
     }
 };  
 

@@ -34,8 +34,7 @@ nsClipboardPrivacyHandler::Init()
     mozilla::services::GetObserverService();
   if (!observerService)
     return NS_ERROR_FAILURE;
-  return observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC,
-                                      true);
+  return observerService->AddObserver(this, "last-pb-context-exited", true);
 }
 
 /**
@@ -47,8 +46,11 @@ nsClipboardPrivacyHandler::PrepareDataForClipboard(nsITransferable * aTransferab
 {
   NS_ASSERTION(aTransferable, "clipboard given a null transferable");
 
+  bool isPrivateData = false;
+  aTransferable->GetIsPrivateData(&isPrivateData);
+
   nsresult rv = NS_OK;
-  if (InPrivateBrowsing()) {
+  if (isPrivateData) {
     nsCOMPtr<nsISupportsPRBool> data = do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
     if (data) {
       rv = data->SetData(true);
@@ -68,50 +70,38 @@ nsClipboardPrivacyHandler::PrepareDataForClipboard(nsITransferable * aTransferab
 NS_IMETHODIMP
 nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, PRUnichar const *aData)
 {
-  if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
-    nsresult rv;
-    nsCOMPtr<nsIClipboard> clipboard =
-      do_GetService("@mozilla.org/widget/clipboard;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  nsCOMPtr<nsIClipboard> clipboard =
+    do_GetService("@mozilla.org/widget/clipboard;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    const char * flavors[] = { NS_MOZ_DATA_FROM_PRIVATEBROWSING };
-    bool haveFlavors;
-    rv = clipboard->HasDataMatchingFlavors(flavors,
-                                           ArrayLength(flavors),
-                                           nsIClipboard::kGlobalClipboard,
-                                           &haveFlavors);
-    if (NS_SUCCEEDED(rv) && haveFlavors) {
+  const char * flavors[] = { NS_MOZ_DATA_FROM_PRIVATEBROWSING };
+  bool haveFlavors;
+  rv = clipboard->HasDataMatchingFlavors(flavors,
+                                         ArrayLength(flavors),
+                                         nsIClipboard::kGlobalClipboard,
+                                         &haveFlavors);
+  if (NS_SUCCEEDED(rv) && haveFlavors) {
 #if defined(XP_WIN)
-      // Workaround for bug 518412.  On Windows 7 x64, there is a bug
-      // in handling clipboard data without any formats between
-      // 32-bit/64-bit boundaries, which could lead Explorer to crash.
-      // We work around the problem by clearing the clipboard using
-      // the usual Win32 API.
-      NS_ENSURE_TRUE(SUCCEEDED(::OleSetClipboard(NULL)), NS_ERROR_FAILURE);
+    // Workaround for bug 518412.  On Windows 7 x64, there is a bug
+    // in handling clipboard data without any formats between
+    // 32-bit/64-bit boundaries, which could lead Explorer to crash.
+    // We work around the problem by clearing the clipboard using
+    // the usual Win32 API.
+    NS_ENSURE_TRUE(SUCCEEDED(::OleSetClipboard(NULL)), NS_ERROR_FAILURE);
 #else
-      // Empty the native clipboard by copying an empty transferable
-      nsCOMPtr<nsITransferable> nullData =
-        do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = clipboard->SetData(nullData, nsnull,
-                              nsIClipboard::kGlobalClipboard);
-      NS_ENSURE_SUCCESS(rv, rv);
+    // Empty the native clipboard by copying an empty transferable
+    nsCOMPtr<nsITransferable> nullData =
+      do_CreateInstance("@mozilla.org/widget/transferable;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nullData->Init(nsnull);
+    rv = clipboard->SetData(nullData, nsnull,
+                            nsIClipboard::kGlobalClipboard);
+    NS_ENSURE_SUCCESS(rv, rv);
 #endif
-    }
   }
 
   return NS_OK;
-}
-
-bool
-nsClipboardPrivacyHandler::InPrivateBrowsing()
-{
-  bool inPrivateBrowsingMode = false;
-  if (!mPBService)
-    mPBService = do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-  if (mPBService)
-    mPBService->GetPrivateBrowsingEnabled(&inPrivateBrowsingMode);
-  return inPrivateBrowsingMode;
 }
 
 nsresult
@@ -122,8 +112,6 @@ NS_NewClipboardPrivacyHandler(nsClipboardPrivacyHandler ** aHandler)
     return NS_ERROR_NULL_POINTER;
 
   *aHandler = new nsClipboardPrivacyHandler();
-  if (!*aHandler)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*aHandler);
   nsresult rv = (*aHandler)->Init();

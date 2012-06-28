@@ -14,9 +14,7 @@ endif
 
 tier_app_dirs += $(MOZ_BRANDING_DIRECTORY)
 
-ifdef MOZ_SERVICES_SYNC
 tier_app_dirs += services
-endif
 
 ifdef MOZ_WEBAPP_RUNTIME
 tier_app_dirs += webapprt

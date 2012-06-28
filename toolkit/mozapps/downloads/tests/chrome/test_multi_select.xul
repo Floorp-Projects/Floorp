@@ -83,6 +83,12 @@ function test()
     }
   };
 
+  function getLoadContext() {
+    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIWebNavigation)
+                 .QueryInterface(Ci.nsILoadContext);
+  }
+
   function continueTest(win) {
     let $ = function(aId) win.document.getElementById(aId);
     let downloadView = $("downloadView");
@@ -99,6 +105,7 @@ function test()
                  getService(Ci.nsIClipboard);
       let trans = Cc["@mozilla.org/widget/transferable;1"].
                   createInstance(Ci.nsITransferable);
+      trans.init(getLoadContext());
       trans.addDataFlavor("text/unicode");
       clip.getData(trans, clip.kGlobalClipboard);
       let str = {};

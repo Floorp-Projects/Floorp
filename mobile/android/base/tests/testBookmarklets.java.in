@@ -10,13 +10,17 @@ import android.net.Uri;
 import android.provider.Browser;
 
 public class testBookmarklets extends BaseTest {
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
     public void testBookmarklets() {
         final String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         final String title = "alertBookmarklet";
         final String js = "javascript:alert(12 + .34)";
         boolean alerted;
 
-        setTestType("mochitest");
         mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
 
         // load a standard page so bookmarklets work
@@ -47,6 +51,9 @@ public class testBookmarklets extends BaseTest {
             }
         }, 3000);
         mAsserter.is(alerted, true, "Alert was shown for clicked bookmarklet");
+
+        // remove the bookmarklet
+        removeBookmarklet(js);
     }
 
     private void addOrUpdateBookmarklet(String title, String url) {
@@ -76,5 +83,13 @@ public class testBookmarklets extends BaseTest {
                                       new String[] { url });
         if (updated == 0)
             resolver.insert(bookmarksUri, values);
+    }
+
+    private void removeBookmarklet(String url) {
+        ContentResolver resolver = getActivity().getContentResolver();
+        Uri bookmarksUri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
+        bookmarksUri = bookmarksUri.buildUpon().appendQueryParameter("profile", "default").build();
+
+        resolver.delete(bookmarksUri, "url = ?", new String[] { url });
     }
 }

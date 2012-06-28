@@ -37,8 +37,9 @@ public class Constants {
   public static final String EXTRAS_KEY_STAGES_TO_SKIP = "skip";
 
   // Constants for Activities.
-  public static final String INTENT_EXTRA_IS_SETUP = "isSetup";
-  public static final String INTENT_EXTRA_IS_PAIR  = "isPair";
+  public static final String INTENT_EXTRA_IS_SETUP        = "isSetup";
+  public static final String INTENT_EXTRA_IS_PAIR         = "isPair";
+  public static final String INTENT_EXTRA_IS_ACCOUNTERROR = "isAccountError";
 
   public static final int FLAG_ACTIVITY_REORDER_TO_FRONT_NO_ANIMATION =
     Intent.FLAG_ACTIVITY_REORDER_TO_FRONT |

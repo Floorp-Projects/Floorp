@@ -22,6 +22,9 @@ import java.util.HashMap;
  *  A convenient base class suitable for most Robocop tests.
  */
 abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
+    public static final int TEST_MOCHITEST = 0;
+    public static final int TEST_TALOS = 1;
+
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
     private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME="@ANDROID_PACKAGE_NAME@.App";
 
@@ -33,7 +36,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     protected Actions mActions;
     protected String mBaseUrl;
     protected String mRawBaseUrl;
-    private String mTestType;
     private String mLogFile;
     protected String mProfile;
 
@@ -48,6 +50,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     public BaseTest() {
         super(TARGET_PACKAGE_ID, mLauncherActivityClass);
     }
+
+    protected abstract int getTestType();
 
     @Override
     protected void setUp() throws Exception {
@@ -72,6 +76,15 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mLogFile = (String)config.get("logfile");
         mBaseUrl = ((String)config.get("host")).replaceAll("(/$)", "");
         mRawBaseUrl = ((String)config.get("rawhost")).replaceAll("(/$)", "");
+
+        // Initialize the asserter
+        if (getTestType() == TEST_TALOS) {
+            mAsserter = new FennecTalosAssert();
+        } else {
+            mAsserter = new FennecMochitestAssert();
+        }
+        mAsserter.setLogFile(mLogFile);
+        mAsserter.setTestName(this.getClass().getName());
     }
 
     @Override
@@ -86,18 +99,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             // re-throw to continue bail-out
             throw t;
         }
-    }
-
-    public void setTestType(String type) {
-        mTestType = type;
-
-        if (mTestType.equals("talos")) {
-            mAsserter = new FennecTalosAssert();
-        } else {
-            mAsserter = new FennecMochitestAssert();
-        }
-        mAsserter.setLogFile(mLogFile);
-        mAsserter.setTestName(this.getClass().getName());
     }
 
     @Override
