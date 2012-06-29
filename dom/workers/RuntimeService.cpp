@@ -36,6 +36,8 @@
 #include "Worker.h"
 #include "WorkerPrivate.h"
 
+#include "OSFileConstants.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -929,6 +931,11 @@ RuntimeService::Init()
                                      mSystemCharset);
   }
 
+  rv = InitOSFileConstants();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   return NS_OK;
 }
 
@@ -1042,6 +1049,11 @@ RuntimeService::Cleanup()
         obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID);
       mObserved = NS_FAILED(rv);
     }
+  }
+
+  nsresult rv = CleanupOSFileConstants();
+  if (NS_FAILED(rv)) {
+    MOZ_NOT_REACHED("Could not cleanup OSFileConstants");
   }
 }
 

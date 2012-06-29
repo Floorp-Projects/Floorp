@@ -29,6 +29,9 @@ ifdef MOZ_B2G_RIL
 DIRS += gonk
 endif
 
+DEFINES += -DDLL_PREFIX=\"$(DLL_PREFIX)\" -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
+
+
 CPPSRCS     = \
   nsDeviceSensors.cpp \
   OSFileConstants.cpp \
