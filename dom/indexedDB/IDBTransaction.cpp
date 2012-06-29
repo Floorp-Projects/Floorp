@@ -111,6 +111,7 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
   transaction->mMode = aMode;
   transaction->mDatabaseInfo = aDatabase->Info();
   transaction->mObjectStoreNames.AppendElements(aObjectStoreNames);
+  transaction->mObjectStoreNames.Sort();
 
   IndexedDBTransactionChild* actor = nsnull;
 
