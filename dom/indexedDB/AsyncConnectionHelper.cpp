@@ -438,7 +438,7 @@ AsyncConnectionHelper::OnSuccess()
   if ((internalEvent->flags & NS_EVENT_FLAG_EXCEPTION_THROWN) &&
       mTransaction &&
       mTransaction->IsOpen()) {
-    rv = mTransaction->Abort();
+    rv = mTransaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -474,7 +474,7 @@ AsyncConnectionHelper::OnError()
     if ((internalEvent->flags & NS_EVENT_FLAG_EXCEPTION_THROWN) &&
         mTransaction &&
         mTransaction->IsOpen() &&
-        NS_FAILED(mTransaction->Abort())) {
+        NS_FAILED(mTransaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR))) {
       NS_WARNING("Failed to abort transaction!");
     }
 

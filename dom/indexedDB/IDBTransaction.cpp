@@ -498,9 +498,12 @@ IDBTransaction::ClearCreatedFileInfos()
 }
 
 nsresult
-IDBTransaction::AbortWithCode(nsresult aAbortCode)
+IDBTransaction::AbortInternal(nsresult aAbortCode,
+                              already_AddRefed<nsIDOMDOMError> aError)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsIDOMDOMError> error = aError;
 
   if (IsFinished()) {
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
@@ -515,6 +518,7 @@ IDBTransaction::AbortWithCode(nsresult aAbortCode)
 
   mAbortCode = aAbortCode;
   mReadyState = IDBTransaction::DONE;
+  mError = error.forget();
 
   if (GetMode() == IDBTransaction::VERSION_CHANGE) {
     // If a version change transaction is aborted, we must revert the world
@@ -566,9 +570,18 @@ IDBTransaction::Abort(IDBRequest* aRequest)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aRequest, "This is undesirable.");
 
-  aRequest->GetError(getter_AddRefs(mError));
+  nsCOMPtr<nsIDOMDOMError> error;
+  aRequest->GetError(getter_AddRefs(error));
 
-  return AbortWithCode(aRequest->GetErrorCode());
+  return AbortInternal(aRequest->GetErrorCode(), error.forget());
+}
+
+nsresult
+IDBTransaction::Abort(nsresult aErrorCode)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  return AbortInternal(aErrorCode, DOMError::CreateForNSResult(aErrorCode));
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransaction)
@@ -747,7 +760,7 @@ NS_IMETHODIMP
 IDBTransaction::Abort()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  return AbortWithCode(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
+  return AbortInternal(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR, nsnull);
 }
 
 nsresult

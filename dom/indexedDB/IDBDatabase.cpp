@@ -818,7 +818,7 @@ void
 NoRequestDatabaseHelper::OnError()
 {
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
-  mTransaction->AbortWithCode(GetResultCode());
+  mTransaction->Abort(GetResultCode());
 }
 
 nsresult
