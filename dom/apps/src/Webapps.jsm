@@ -35,6 +35,7 @@ XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
 let DOMApplicationRegistry = {
   appsFile: null,
   webapps: { },
+  allAppsLaunchable: false,
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
@@ -445,6 +446,61 @@ let DOMApplicationRegistry = {
       }
     }
     this._saveApps(aCallback);
+  },
+
+  _isLaunchable: function(aOrigin) {
+    if (this.allAppsLaunchable)
+      return true;
+
+#ifdef XP_WIN
+    let uninstallKey = Cc["@mozilla.org/windows-registry-key;1"]
+                         .createInstance(Ci.nsIWindowsRegKey);
+    try {
+      uninstallKey.open(uninstallKey.ROOT_KEY_CURRENT_USER,
+                        "SOFTWARE\\Microsoft\\Windows\\" +
+                        "CurrentVersion\\Uninstall\\" +
+                        aOrigin,
+                        uninstallKey.ACCESS_READ);
+      uninstallKey.close();
+      return true;
+    } catch (ex) {
+      return false;
+    }
+#elifdef XP_MACOSX
+    let mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"]
+                     .createInstance(Ci.nsIMacWebAppUtils);
+
+    return !!mwaUtils.pathForAppWithIdentifier(aOrigin);
+#elifdef XP_UNIX
+    let env = Cc["@mozilla.org/process/environment;1"]
+                .getService(Ci.nsIEnvironment);
+    let xdg_data_home_env = env.get("XDG_DATA_HOME");
+
+    let desktopINI;
+    if (xdg_data_home_env != "") {
+      desktopINI = Cc["@mozilla.org/file/local;1"]
+                     .createInstance(Ci.nsIFile);
+      desktopINI.initWithPath(xdg_data_home_env);
+    }
+    else {
+      desktopINI = Services.dirsvc.get("Home", Ci.nsIFile);
+      desktopINI.append(".local");
+      desktopINI.append("share");
+    }
+    desktopINI.append("applications");
+
+    let origin = Services.io.newURI(aOrigin, null, null);
+    let uniqueName = origin.scheme + ";" +
+                     origin.host +
+                     (origin.port != -1 ? ";" + origin.port : "");
+
+    desktopINI.append("owa-" + uniqueName + ".desktop");
+
+    return desktopINI.exists();
+#else
+    return true;
+#endif
+
   }
 };
 
