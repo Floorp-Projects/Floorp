@@ -2123,7 +2123,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       // find the relavent blocks
       if (IsBlockNode(leftNode))
         leftParent = leftNode;
-      else
+      else if (leftNode)
         leftParent = mHTMLEditor->GetBlockNodeParent(leftNode);
       if (IsBlockNode(rightNode))
         rightParent = rightNode;
