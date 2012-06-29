@@ -15,11 +15,8 @@ else:
     __path__.insert(0, distutils_path)
     exec(open(os.path.join(distutils_path, '__init__.py')).read())
 
-try:
-    import dist
-    import sysconfig
-except ImportError:
-    from distutils import dist, sysconfig
+from distutils import dist, sysconfig
+
 try:
     basestring
 except NameError:

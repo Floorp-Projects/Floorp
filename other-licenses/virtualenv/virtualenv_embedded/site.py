@@ -422,7 +422,7 @@ class _Printer(object):
             for filename in self.__files:
                 filename = os.path.join(dir, filename)
                 try:
-                    fp = file(filename, "rU")
+                    fp = open(filename, "rU")
                     data = fp.read()
                     fp.close()
                     break
@@ -553,9 +553,7 @@ def virtual_install_main_packages():
     hardcoded_relative_dirs = []
     if sys.path[0] == '':
         pos += 1
-    if sys.platform == 'win32':
-        paths = [os.path.join(sys.real_prefix, 'Lib'), os.path.join(sys.real_prefix, 'DLLs')]
-    elif _is_jython:
+    if _is_jython:
         paths = [os.path.join(sys.real_prefix, 'Lib')]
     elif _is_pypy:
         if sys.pypy_version_info >= (1, 5):
@@ -572,6 +570,8 @@ def virtual_install_main_packages():
             plat_path = os.path.join(path, 'plat-%s' % sys.platform)
             if os.path.exists(plat_path):
                 paths.append(plat_path)
+    elif sys.platform == 'win32':
+        paths = [os.path.join(sys.real_prefix, 'Lib'), os.path.join(sys.real_prefix, 'DLLs')]
     else:
         paths = [os.path.join(sys.real_prefix, 'lib', 'python'+sys.version[:3])]
         hardcoded_relative_dirs = paths[:] # for the special 'darwin' case below

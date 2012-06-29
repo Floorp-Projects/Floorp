@@ -38,8 +38,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const kNS_OFFLINECACHEUPDATESERVICE_CONTRACTID =
   "@mozilla.org/offlinecacheupdate-service;1";
-const kNS_CACHESERVICE_CONTRACTID =
-  "@mozilla.org/network/cache-service;1";
 
 const kManifest1 = "CACHE MANIFEST\n" +
   "/pages/foo1\n" +
@@ -120,9 +118,7 @@ function init_cache_capacity() {
 }
 
 function clean_app_cache() {
-  let cache_service = Cc[kNS_CACHESERVICE_CONTRACTID].
-    getService(Ci.nsICacheService);
-  cache_service.evictEntries(Ci.nsICache.STORE_OFFLINE);
+  evict_cache_entries(Ci.nsICache.STORE_OFFLINE);
 }
 
 function do_app_cache(manifestURL, pageURL, pinned) {

@@ -5406,61 +5406,37 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
   if (mSizeMode == nsSizeMode_Maximized)
     isResizable = false;
 
-  // Ensure being accessible to borders of window.  Even if contents are in
-  // this area, the area must behave as border.
-  nsIntMargin nonClientSize(NS_MAX(mHorResizeMargin - mNonClientOffset.left,
-                                   kResizableBorderMinSize),
-                            NS_MAX(mCaptionHeight - mNonClientOffset.top,
-                                   kResizableBorderMinSize),
-                            NS_MAX(mHorResizeMargin - mNonClientOffset.right,
-                                   kResizableBorderMinSize),
-                            NS_MAX(mVertResizeMargin - mNonClientOffset.bottom,
-                                   kResizableBorderMinSize));
-
-  bool allowContentOverride = mSizeMode == nsSizeMode_Maximized ||
-                              (mx >= winRect.left + nonClientSize.left &&
-                               mx <= winRect.right - nonClientSize.right &&
-                               my >= winRect.top + nonClientSize.top &&
-                               my <= winRect.bottom - nonClientSize.bottom);
-
-  // The border size.  If there is no content under mouse cursor, the border
-  // size should be larger than the values in system settings.  Otherwise,
-  // contents under the mouse cursor should be able to override the behavior.
-  // E.g., user must expect that Firefox button always opens the popup menu
-  // even when the user clicks on the above edge of it.
-  nsIntMargin borderSize(NS_MAX(nonClientSize.left, mHorResizeMargin),
-                         NS_MAX(nonClientSize.top, mVertResizeMargin),
-                         NS_MAX(nonClientSize.right, mHorResizeMargin),
-                         NS_MAX(nonClientSize.bottom, mVertResizeMargin));
-
-  bool contentMayOverlap = false;
-
   bool top    = false;
   bool bottom = false;
   bool left   = false;
   bool right  = false;
 
-  if (my >= winRect.top && my < winRect.top + borderSize.top) {
-    top = true;
-    contentMayOverlap = (my >= winRect.top + nonClientSize.top);
-  } else if (my <= winRect.bottom && my > winRect.bottom - borderSize.bottom) {
-    bottom = true;
-    contentMayOverlap = (my <= winRect.bottom - nonClientSize.bottom);
-  }
+  int topOffset = NS_MAX(mCaptionHeight - mNonClientOffset.top,
+                         kResizableBorderMinSize);
+  int bottomOffset = NS_MAX(mVertResizeMargin - mNonClientOffset.bottom,
+                            kResizableBorderMinSize);
+  int topBounds = winRect.top + topOffset;
+  int bottomBounds = winRect.bottom - bottomOffset;
 
+  if (my >= winRect.top && my < topBounds)
+    top = true;
+  else if (my <= winRect.bottom && my > bottomBounds)
+    bottom = true;
+
+  int leftOffset = NS_MAX(mHorResizeMargin - mNonClientOffset.left,
+                          kResizableBorderMinSize);
+  int rightOffset = NS_MAX(mHorResizeMargin - mNonClientOffset.right,
+                           kResizableBorderMinSize);
   // (the 2x case here doubles the resize area for corners)
-  int multiplier = (top || bottom) ? 2 : 1;
-  if (mx >= winRect.left &&
-      mx < winRect.left + (multiplier * borderSize.left)) {
+  int leftBounds = winRect.left +
+                   (bottom ? (2*leftOffset) : leftOffset);
+  int rightBounds = winRect.right -
+                    (bottom ? (2*rightOffset) : rightOffset);
+
+  if (mx >= winRect.left && mx < leftBounds)
     left = true;
-    contentMayOverlap =
-      contentMayOverlap || (mx >= winRect.left + nonClientSize.left);
-  } else if (mx <= winRect.right &&
-             mx > winRect.right - (multiplier * borderSize.right)) {
+  else if (mx <= winRect.right && mx > rightBounds)
     right = true;
-    contentMayOverlap =
-      contentMayOverlap || (mx <= winRect.right - nonClientSize.right);
-  }
 
   if (isResizable) {
     if (top) {
@@ -5488,7 +5464,22 @@ nsWindow::ClientMarginHitTestPoint(PRInt32 mx, PRInt32 my)
       testResult = HTBORDER;
   }
 
-  if (!sIsInMouseCapture && allowContentOverride && contentMayOverlap) {
+  bool contentOverlap = true;
+
+  if (mSizeMode != nsSizeMode_Maximized) {
+    contentOverlap = mx >= winRect.left + leftOffset &&
+                     mx <= winRect.right - rightOffset &&
+                     my >= winRect.top + topOffset &&
+                     my <= winRect.bottom - bottomOffset;
+  }
+
+  if (!sIsInMouseCapture &&
+      contentOverlap &&
+      (testResult == HTCLIENT ||
+       testResult == HTTOP ||
+       testResult == HTBORDER ||
+       testResult == HTTOPLEFT ||
+       testResult == HTCAPTION)) {
     LPARAM lParam = MAKELPARAM(mx, my);
     LPARAM lParamClient = lParamToClient(lParam);
     bool result = DispatchMouseEvent(NS_MOUSE_MOZHITTEST, 0, lParamClient,
