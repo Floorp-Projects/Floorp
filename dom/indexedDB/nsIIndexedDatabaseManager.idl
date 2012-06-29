@@ -57,11 +57,11 @@ interface nsIIndexedDatabaseManager : nsISupports
   void clearDatabasesForURI(in nsIURI aURI);
 
   /**
-   * Defines mozIndexedDB and IDBKeyrange with its static functions on 
+   * Defines indexedDB and IDBKeyrange with its static functions on 
    * aObject and initializes DOM exception providers if needed.
    *
    * @param aObject
-   *        The object, mozIndexedDB and IDBKeyrange should be defined on.
+   *        The object, indexedDB and IDBKeyrange should be defined on.
    */
   [implicit_jscontext]
   void initWindowless(in jsval aObject);

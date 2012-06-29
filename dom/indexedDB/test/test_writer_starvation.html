@@ -17,7 +17,7 @@
       // Needs to be enough to saturate the thread pool.
       const SYNC_REQUEST_COUNT = 25;
 
-      let request = mozIndexedDB.open(name, 1);
+      let request = indexedDB.open(name, 1);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = grabEventAndContinueHandler;

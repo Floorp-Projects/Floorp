@@ -15,7 +15,7 @@ function testSteps()
     { key: "3", value: "baz" }
   ];
 
-  let request = mozIndexedDB.open(name, 1);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;

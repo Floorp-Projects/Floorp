@@ -43,10 +43,10 @@ interface nsIIDBObjectStore : nsISupports
   get(in jsval key);
 
   // Success fires IDBTransactionEvent, result == array of values for given keys
-  [implicit_jscontext, optional_argc]
+  [implicit_jscontext, optional_argc, binaryname(GetAll)]
   nsIIDBRequest
-  getAll([optional /* null */] in jsval key,
-         [optional /* unlimited */] in unsigned long limit);
+  mozGetAll([optional /* null */] in jsval key,
+            [optional /* unlimited */] in unsigned long limit);
 
   // Success fires IDBTransactionEvent, result == key
   [implicit_jscontext, optional_argc]

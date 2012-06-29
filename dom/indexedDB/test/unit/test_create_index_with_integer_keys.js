@@ -10,7 +10,7 @@ function testSteps()
   const data = { id: new Date().getTime(),
                  num: parseInt(Math.random() * 1000) };
 
-  let request = mozIndexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
@@ -26,7 +26,7 @@ function testSteps()
   yield;
   db.close();
 
-  let request = mozIndexedDB.open(this.window ? window.location.pathname : "Splendid Test", 2);
+  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 2);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
