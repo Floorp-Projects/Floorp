@@ -36,6 +36,8 @@ let AboutReader = {
     this._contentElement = document.getElementById("reader-content");
     this._toolbarElement = document.getElementById("reader-toolbar");
 
+    this._toolbarEnabled = false;
+
     this._scrollOffset = window.pageYOffset;
 
     let body = document.body;
@@ -196,6 +198,9 @@ let AboutReader = {
     if (history.state)
       history.back();
 
+    if (!this._toolbarEnabled)
+      return;
+
     if (this._getToolbarVisibility() === visible)
       return;
 
@@ -251,6 +256,9 @@ let AboutReader = {
     this._contentElement.style.display = "block";
 
     document.title = article.title;
+
+    this._toolbarEnabled = true;
+    this._setToolbarVisibility(true);
   },
 
   _hideContent: function Reader_hideContent() {
