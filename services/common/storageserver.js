@@ -15,7 +15,7 @@ const EXPORTED_SYMBOLS = [
   "StorageServerCallback",
   "StorageServerCollection",
   "StorageServer",
-
+  "storageServerForUsers",
 ];
 
 Cu.import("resource://testing-common/httpd.js");
