@@ -351,8 +351,7 @@ DirectWrapper::fun_toString(JSContext *cx, JSObject *wrapper, unsigned indent)
             // Perform some default behavior that doesn't leak any information.
             if (wrapper->isCallable())
                 return JS_NewStringCopyZ(cx, "function () {\n    [native code]\n}");
-            js::Value v = ObjectValue(*wrapper);
-            js_ReportIsNotFunction(cx, &v, 0);
+            ReportIsNotFunction(cx, ObjectValue(*wrapper));
             return NULL;
         }
         return NULL;

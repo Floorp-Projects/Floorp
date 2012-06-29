@@ -264,18 +264,14 @@ bool
 BaseProxyHandler::call(JSContext *cx, JSObject *proxy, unsigned argc,
                        Value *vp)
 {
-    Value v = UndefinedValue();
-    js_ReportIsNotFunction(cx, &v, 0);
-    return false;
+    return ReportIsNotFunction(cx, UndefinedValue());
 }
 
 bool
 BaseProxyHandler::construct(JSContext *cx, JSObject *proxy, unsigned argc,
                             Value *argv, Value *rval)
 {
-    Value v = UndefinedValue();
-    js_ReportIsNotFunction(cx, &v, JSV2F_CONSTRUCT);
-    return false;
+    return ReportIsNotFunction(cx, UndefinedValue(), CONSTRUCT);
 }
 
 JSString *
@@ -1819,12 +1815,12 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
         return false;
     parent = proto->getParent();
 
-    JSObject *call = js_ValueToCallableObject(cx, &vp[3], JSV2F_SEARCH_STACK);
+    JSObject *call = ValueToCallable(cx, &vp[3]);
     if (!call)
         return false;
     JSObject *construct = NULL;
     if (argc > 2) {
-        construct = js_ValueToCallableObject(cx, &vp[4], JSV2F_SEARCH_STACK);
+        construct = ValueToCallable(cx, &vp[4]);
         if (!construct)
             return false;
     }

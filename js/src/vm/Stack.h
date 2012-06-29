@@ -411,8 +411,6 @@ class StackFrame
     friend class CallObject;
     friend class ClonedBlockObject;
     friend class ArgumentsObject;
-    friend void ::js_DumpStackFrame(JSContext *, StackFrame *);
-    friend void ::js_ReportIsNotFunction(JSContext *, const js::Value *, unsigned);
 #ifdef JS_METHODJIT
     friend class mjit::CallCompiler;
     friend class mjit::GetPropCompiler;
@@ -1140,12 +1138,6 @@ class StackFrame
 
 static const size_t VALUES_PER_STACK_FRAME = sizeof(StackFrame) / sizeof(Value);
 
-static inline unsigned
-ToReportFlags(InitialFrameFlags initial)
-{
-    return unsigned(initial & StackFrame::CONSTRUCTING);
-}
-
 static inline StackFrame::Flags
 ToFrameFlags(InitialFrameFlags initial)
 {
@@ -1588,6 +1580,14 @@ class ContextStack
     inline bool hasfp() const { return seg_ && seg_->maybeRegs(); }
 
     /*
+     * Return the spindex value for 'vp' which can be used to call
+     * DecompileValueGenerator. (The spindex is either the negative offset of
+     * 'vp' from 'sp', if 'vp' points to a value in the innermost scripted
+     * stack frame, otherwise it is JSDVG_SEARCH_STACK.)
+     */
+    ptrdiff_t spIndexOf(const Value *vp);
+
+    /*
      * Return the most recent script activation's registers with the same
      * caveat as hasfp regarding JS_SaveFrameChain.
      */
@@ -1783,7 +1783,6 @@ class StackIter
     CallArgsList *calls_;
 
     StackSegment *seg_;
-    Value        *sp_;
     jsbytecode   *pc_;
     JSScript     *script_;
     CallArgs     args_;
@@ -1822,14 +1821,6 @@ class StackIter
     JSFunction *callee() const;
     Value       calleev() const;
     Value       thisv() const;
-
-    /*
-     * 'spFuzzy' is a best-effort approximiation of the frame's sp. It is only
-     * guaranteed to point to a safe range above fp's base and below fp's next.
-     * Ideally, we'd remove this altogether... wait, I'll do that in the next
-     * patch.
-     */
-    Value      *spFuzzy() const { JS_ASSERT(isScript()); return sp_; }
 
     CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
 };
