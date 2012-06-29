@@ -24,7 +24,7 @@ class JS_FRIEND_API(BaseProxyHandler) {
 
     inline void *family() {
         return mFamily;
-    };
+    }
 
     virtual bool isOuterWindow() {
         return false;
