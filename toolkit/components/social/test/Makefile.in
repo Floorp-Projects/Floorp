@@ -10,6 +10,10 @@ relativesrcdir = toolkit/components/social/test
 
 include $(DEPTH)/config/autoconf.mk
 
+# mochitest tests
+DIRS += browser \
+	$(NULL)
+
 XPCSHELL_TESTS = \
   xpcshell \
   $(NULL)
