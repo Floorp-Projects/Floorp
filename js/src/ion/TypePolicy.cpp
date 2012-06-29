@@ -147,6 +147,24 @@ ComparePolicy::adjustInputs(MInstruction *def)
         return true;
     }
 
+    if (specialization_ == MIRType_Boolean) {
+        // The RHS is boolean, unbox if needed.
+        MDefinition *rhs = def->getOperand(1);
+
+        if (rhs->type() == MIRType_Value) {
+            MInstruction *unbox = MUnbox::New(rhs, MIRType_Boolean, MUnbox::Infallible);
+            def->block()->insertBefore(def, unbox);
+            def->replaceOperand(1, unbox);
+        }
+
+        JS_ASSERT(def->getOperand(1)->type() == MIRType_Boolean);
+
+        // If the LHS is boolean, specialize as int32 instead.
+        if (def->getOperand(0)->type() == MIRType_Boolean)
+            specialization_ = MIRType_Int32;
+        return true;
+    }
+
     for (size_t i = 0; i < 2; i++) {
         MDefinition *in = def->getOperand(i);
         if (in->type() == specialization_)

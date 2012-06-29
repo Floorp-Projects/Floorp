@@ -1127,7 +1127,7 @@ CodeGeneratorARM::visitCompareD(LCompareD *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->jsop());
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
     masm.compareDouble(lhs, rhs);
     emitSet(Assembler::ConditionFromDoubleCondition(cond), ToRegister(comp->output()));
     return false;
@@ -1139,9 +1139,61 @@ CodeGeneratorARM::visitCompareDAndBranch(LCompareDAndBranch *comp)
     FloatRegister lhs = ToFloatRegister(comp->left());
     FloatRegister rhs = ToFloatRegister(comp->right());
 
-    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->jsop());
+    Assembler::DoubleCondition cond = JSOpToDoubleCondition(comp->mir()->jsop());
     masm.compareDouble(lhs, rhs);
     emitBranch(Assembler::ConditionFromDoubleCondition(cond), comp->ifTrue(), comp->ifFalse());
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitCompareB(LCompareB *lir)
+{
+    MCompare *mir = lir->mir();
+
+    const ValueOperand lhs = ToValue(lir, LCompareB::Lhs);
+    const LAllocation *rhs = lir->rhs();
+    const Register output = ToRegister(lir->output());
+
+    JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+
+    Label notBoolean, done;
+    masm.branchTestBoolean(Assembler::NotEqual, lhs, &notBoolean);
+    {
+        if (rhs->isConstant())
+            masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
+        else
+            masm.cmp32(lhs.payloadReg(), ToRegister(rhs));
+        emitSet(JSOpToCondition(mir->jsop()), output);
+        masm.jump(&done);
+    }
+    masm.bind(&notBoolean);
+    {
+        masm.move32(Imm32(mir->jsop() == JSOP_STRICTNE), output);
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitCompareBAndBranch(LCompareBAndBranch *lir)
+{
+    MCompare *mir = lir->mir();
+    const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
+    const LAllocation *rhs = lir->rhs();
+
+    JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+
+    if (mir->jsop() == JSOP_STRICTEQ)
+        masm.branchTestBoolean(Assembler::NotEqual, lhs, lir->ifFalse()->lir()->label());
+    else
+        masm.branchTestBoolean(Assembler::NotEqual, lhs, lir->ifTrue()->lir()->label());
+
+    if (rhs->isConstant())
+        masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
+    else
+        masm.cmp32(lhs.payloadReg(), ToRegister(rhs));
+    emitBranch(JSOpToCondition(mir->jsop()), lir->ifTrue(), lir->ifFalse());
     return true;
 }
 

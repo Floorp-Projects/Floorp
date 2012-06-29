@@ -351,3 +351,47 @@ CodeGeneratorX64::visitInterruptCheck(LInterruptCheck *lir)
     return true;
 }
 
+bool
+CodeGeneratorX64::visitCompareB(LCompareB *lir)
+{
+    MCompare *mir = lir->mir();
+
+    const ValueOperand lhs = ToValue(lir, LCompareB::Lhs);
+    const LAllocation *rhs = lir->rhs();
+    const Register output = ToRegister(lir->output());
+
+    JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+
+    // Load boxed boolean in ScratchReg.
+    if (rhs->isConstant())
+        masm.moveValue(*rhs->toConstant(), ScratchReg);
+    else
+        masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), ScratchReg);
+
+    // Perform the comparison.
+    masm.cmpq(lhs.valueReg(), ScratchReg);
+    emitSet(JSOpToCondition(mir->jsop()), output);
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitCompareBAndBranch(LCompareBAndBranch *lir)
+{
+    MCompare *mir = lir->mir();
+
+    const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
+    const LAllocation *rhs = lir->rhs();
+
+    JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+
+    // Load boxed boolean in ScratchReg.
+    if (rhs->isConstant())
+        masm.moveValue(*rhs->toConstant(), ScratchReg);
+    else
+        masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), ScratchReg);
+
+    // Perform the comparison.
+    masm.cmpq(lhs.valueReg(), ScratchReg);
+    emitBranch(JSOpToCondition(mir->jsop()), lir->ifTrue(), lir->ifFalse());
+    return true;
+}

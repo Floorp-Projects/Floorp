@@ -1407,7 +1407,7 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 bool
 CodeGenerator::visitCompareS(LCompareS *lir)
 {
-    JSOp op = lir->jsop();
+    JSOp op = lir->mir()->jsop();
     Register left = ToRegister(lir->left());
     Register right = ToRegister(lir->right());
     Register output = ToRegister(lir->output());
@@ -1469,7 +1469,7 @@ CodeGenerator::visitCompareV(LCompareV *lir)
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
 
-    switch (lir->jsop()) {
+    switch (lir->mir()->jsop()) {
       case JSOP_EQ:
         return callVM(EqInfo, lir);
 

@@ -1013,6 +1013,23 @@ MCompare::infer(JSContext *cx, const TypeOracle::BinaryTypes &b)
             return;
         }
     }
+
+    if (jsop() == JSOP_STRICTEQ || jsop() == JSOP_STRICTNE) {
+        // bool/bool case got an int32 specialization earlier.
+        JS_ASSERT(!(lhs == MIRType_Boolean && rhs == MIRType_Boolean));
+
+        if (lhs == MIRType_Boolean) {
+            // Ensure the boolean is on the right so that the type policy knows
+            // which side to unbox.
+            swapOperands();
+            specialization_ = MIRType_Boolean;
+            return;
+        }
+        if (rhs == MIRType_Boolean) {
+            specialization_ = MIRType_Boolean;
+            return;
+        }
+    }
 }
 
 MBitNot *
@@ -1256,6 +1273,31 @@ MCompare::tryFold(bool *result)
           case MIRType_Boolean:
             *result = (op == JSOP_NE || op == JSOP_STRICTNE);
             return true;
+          default:
+            JS_NOT_REACHED("Unexpected type");
+            return false;
+        }
+    }
+
+    if (specialization_ == MIRType_Boolean) {
+        JS_ASSERT(op == JSOP_STRICTEQ || op == JSOP_STRICTNE);
+        JS_ASSERT(rhs()->type() == MIRType_Boolean);
+
+        switch (lhs()->type()) {
+          case MIRType_Value:
+            return false;
+          case MIRType_Int32:
+          case MIRType_Double:
+          case MIRType_String:
+          case MIRType_Object:
+          case MIRType_Null:
+          case MIRType_Undefined:
+            *result = (op == JSOP_STRICTNE);
+            return true;
+          case MIRType_Boolean:
+            // Int32 specialization should handle this.
+            JS_NOT_REACHED("Wrong specialization");
+            return false;
           default:
             JS_NOT_REACHED("Unexpected type");
             return false;
