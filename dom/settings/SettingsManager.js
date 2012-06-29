@@ -85,8 +85,8 @@ SettingsLock.prototype = {
           }
           break;
         case "get":
-          req = (info.name === "*") ? store.getAll()
-                                    : store.getAll(info.name);
+          req = (info.name === "*") ? store.mozGetAll()
+                                    : store.mozGetAll(info.name);
 
           req.onsuccess = function(event) {
             debug("Request for '" + info.name + "' successful. " + 
