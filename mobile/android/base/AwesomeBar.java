@@ -220,6 +220,15 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
             }
         });
 
+        mText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+            }
+        });
+
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.all_pages_list));
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.bookmarks_list));
         registerForContextMenu(mAwesomeTabs.findViewById(R.id.history_list));
@@ -353,6 +362,11 @@ public class AwesomeBar extends GeckoActivity implements GeckoEventListener {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // Galaxy Note sends key events for the stylus that are outside of the
+        // valid keyCode range (see bug 758427)
+        if (keyCode > KeyEvent.getMaxKeyCode())
+            return true;
+
         // This method is called only if the key event was not handled
         // by any of the views, which usually means the edit box lost focus
         if (keyCode == KeyEvent.KEYCODE_BACK ||

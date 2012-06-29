@@ -280,6 +280,12 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventTarget* aTarget,
     scriptTarget = aTarget;
   }
 
+  // We're about to create a new nsJSEventListener, which means that we're
+  // responsible for pushing the context of the event target. See the similar
+  // comment in nsEventManagerListener.cpp.
+  nsCxPusher pusher;
+  NS_ENSURE_STATE(pusher.Push(aTarget));
+
   rv = EnsureEventHandler(boundGlobal, boundContext, onEventAtom, handler);
   NS_ENSURE_SUCCESS(rv, rv);
 

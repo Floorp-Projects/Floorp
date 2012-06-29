@@ -876,6 +876,9 @@ public class GeckoInputConnection
                           + isPreIme + ")");
         }
 
+        if (keyCode > KeyEvent.getMaxKeyCode())
+            return false;
+
         clampSelection();
 
         switch (keyCode) {
@@ -934,6 +937,9 @@ public class GeckoInputConnection
             Log.d(LOGTAG, "IME: processKeyUp(keyCode=" + keyCode + ", event=" + event + ", "
                           + isPreIme + ")");
         }
+
+        if (keyCode > KeyEvent.getMaxKeyCode())
+            return false;
 
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:

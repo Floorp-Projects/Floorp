@@ -423,7 +423,7 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", bytes.ptr());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", bytes.ptr());
 #endif
     fputs(bytes.ptr(), gOutFile);
     fflush(gOutFile);
@@ -1379,20 +1379,6 @@ FullTrustSecMan::GetSubjectPrincipal(nsIPrincipal **_retval)
 {
     NS_IF_ADDREF(*_retval = mSystemPrincipal);
     return *_retval ? NS_OK : NS_ERROR_FAILURE;
-}
-
-/* [noscript] void pushContextPrincipal (in JSContextPtr cx, in JSStackFramePtr fp, in nsIPrincipal principal); */
-NS_IMETHODIMP
-FullTrustSecMan::PushContextPrincipal(JSContext * cx, JSStackFrame * fp, nsIPrincipal *principal)
-{
-    return NS_OK;
-}
-
-/* [noscript] void popContextPrincipal (in JSContextPtr cx); */
-NS_IMETHODIMP
-FullTrustSecMan::PopContextPrincipal(JSContext * cx)
-{
-    return NS_OK;
 }
 
 /* [noscript] nsIPrincipal getSystemPrincipal (); */

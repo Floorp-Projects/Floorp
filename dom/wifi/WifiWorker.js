@@ -718,9 +718,11 @@ var WifiManager = (function() {
       fields.state = supplicantStatesMap[fields.state];
 
       // The BSSID field is only valid in the ASSOCIATING and ASSOCIATED
-      // states.
-      if (fields.state === "ASSOCIATING" || fields.state == "ASSOCIATED")
+      // states, except when we "reauth", except this seems to depend on the
+      // driver, so simply check to make sure that we don't have a null BSSID.
+      if (fields.BSSID !== "00:00:00:00:00:00")
         manager.connectionInfo.bssid = fields.BSSID;
+
       notifyStateChange(fields);
       return true;
     }

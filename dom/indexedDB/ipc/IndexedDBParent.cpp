@@ -377,7 +377,7 @@ IndexedDBDatabaseParent::HandleDatabaseEvent(nsIDOMEvent* aEvent,
   nsresult rv;
 
   if (aType.EqualsLiteral(VERSIONCHANGE_EVT_STR)) {
-    JSContext* cx = nsContentUtils::GetCurrentJSContext();
+    JSContext* cx = nsContentUtils::GetSafeJSContext();
     NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIIDBVersionChangeEvent> changeEvent = do_QueryInterface(aEvent);
