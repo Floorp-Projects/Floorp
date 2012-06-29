@@ -243,6 +243,7 @@ private:
   PRUint32 mSavepointCount;
 
   nsTArray<nsRefPtr<IDBObjectStore> > mCreatedObjectStores;
+  nsTArray<nsRefPtr<IDBObjectStore> > mDeletedObjectStores;
 
   nsRefPtr<UpdateRefcountFunction> mUpdateFileRefcountFunction;
   nsRefPtrHashtable<nsISupportsHashKey, FileInfo> mCreatedFileInfos;

@@ -273,8 +273,6 @@ DatabaseInfo::RemoveObjectStore(const nsAString& aName)
 already_AddRefed<DatabaseInfo>
 DatabaseInfo::Clone()
 {
-  NS_ASSERTION(!cloned, "Should never clone a clone!");
-
   nsRefPtr<DatabaseInfo> dbInfo(new DatabaseInfo());
 
   dbInfo->cloned = true;
