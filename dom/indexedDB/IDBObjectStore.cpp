@@ -1673,6 +1673,15 @@ IDBObjectStore::OpenCursorFromChildProcess(
   return NS_OK;
 }
 
+void
+IDBObjectStore::SetInfo(ObjectStoreInfo* aInfo)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread");
+  NS_ASSERTION(aInfo != mInfo, "This is nonsense");
+
+  mInfo = aInfo;
+}
+
 nsresult
 IDBObjectStore::CreateIndexInternal(const IndexInfo& aInfo,
                                     IDBIndex** _retval)
