@@ -10,6 +10,26 @@
 namespace mozilla {
 
 /**
+ * Perform initialization of this module.
+ *
+ * This function _must_ be called:
+ * - from the main thread;
+ * - only once;
+ * - before any Chrome Worker is created.
+ */
+nsresult InitOSFileConstants();
+
+/**
+ * Perform cleanup of this module.
+ *
+ * This function _must_ be called:
+ * - from the main thread;
+ * - only once;
+ * - after all Chrome Workers are dead.
+ */
+nsresult CleanupOSFileConstants();
+
+/**
  * Define OS-specific constants.
  *
  * This function creates or uses JS object |OS.Constants| to store
