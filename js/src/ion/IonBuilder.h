@@ -197,8 +197,8 @@ class IonBuilder : public MIRGenerator
                TypeOracle *oracle, CompileInfo &info, size_t inliningDepth = 0, uint32 loopDepth = 0);
 
     bool build();
-    bool buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint, MDefinition *thisDefn,
-                     MDefinitionVector &args);
+    bool buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
+                     MDefinition *thisDefn, MDefinitionVector &args);
 
   private:
     bool traverseBytecode();
@@ -405,9 +405,10 @@ class IonBuilder : public MIRGenerator
 
     InliningStatus inlineNativeCall(JSNative native, uint32 argc, bool constructing);
 
-    bool jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inlineBuilder);
-    bool inlineScriptedCall(JSFunction *target, uint32 argc);
-    bool makeInliningDecision(JSFunction *target);
+    bool jsop_call_inline(IonBuilder &inlineBuilder, HandleFunction callee,
+                          uint32 argc, bool constructing);
+    bool inlineScriptedCall(HandleFunction target, uint32 argc, bool constructing);
+    bool makeInliningDecision(HandleFunction target);
 
     bool jsop_call_fun_barrier(HandleFunction target, uint32 argc, 
                                bool constructing,

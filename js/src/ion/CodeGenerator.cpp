@@ -1246,6 +1246,31 @@ CodeGenerator::visitOutOfLineCreateThis(OutOfLineCreateThis *ool)
 }
 
 bool
+CodeGenerator::visitReturnFromCtor(LReturnFromCtor *lir)
+{
+    ValueOperand value = ToValue(lir, LReturnFromCtor::ValueIndex);
+    Register obj = ToRegister(lir->getObject());
+    Register output = ToRegister(lir->output());
+
+    Label valueIsObject, end;
+
+    masm.branchTestObject(Assembler::Equal, value, &valueIsObject);
+
+    // Value is not an object. Return that other object.
+    masm.movePtr(obj, output);
+    masm.jump(&end);
+
+    // Value is an object. Return unbox(Value).
+    masm.bind(&valueIsObject);
+    Register payload = masm.extractObject(value, output);
+    if (payload != output)
+        masm.movePtr(payload, output);
+
+    masm.bind(&end);
+    return true;
+}
+
+bool
 CodeGenerator::visitArrayLength(LArrayLength *lir)
 {
     Address length(ToRegister(lir->elements()), ObjectElements::offsetOfLength());

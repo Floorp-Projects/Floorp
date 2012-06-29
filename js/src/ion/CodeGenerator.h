@@ -120,6 +120,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCreateThisVMCall(LCreateThis *lir);
     bool visitCreateThis(LCreateThis *lir);
     bool visitOutOfLineCreateThis(OutOfLineCreateThis *ool);
+    bool visitReturnFromCtor(LReturnFromCtor *lir);
     bool visitArrayLength(LArrayLength *lir);
     bool visitTypedArrayLength(LTypedArrayLength *lir);
     bool visitTypedArrayElements(LTypedArrayElements *lir);
