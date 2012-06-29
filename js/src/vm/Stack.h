@@ -1776,7 +1776,7 @@ class StackIter
   private:
     SavedOption  savedOption_;
 
-    enum State { DONE, SCRIPTED, NATIVE, IMPLICIT_NATIVE };
+    enum State { DONE, SCRIPTED, NATIVE };
     State        state_;
 
     StackFrame   *fp_;
@@ -1806,13 +1806,9 @@ class StackIter
     bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
 
     bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED; }
-    bool isImplicitNativeCall() const {
-        JS_ASSERT(!done());
-        return state_ == IMPLICIT_NATIVE;
-    }
     bool isNativeCall() const {
         JS_ASSERT(!done());
-        return state_ == NATIVE || state_ == IMPLICIT_NATIVE;
+        return state_ == NATIVE;
     }
 
     bool isFunctionFrame() const;
@@ -1821,12 +1817,19 @@ class StackIter
     bool isConstructing() const;
 
     StackFrame *fp() const { JS_ASSERT(isScript()); return fp_; }
-    Value      *sp() const { JS_ASSERT(isScript()); return sp_; }
     jsbytecode *pc() const { JS_ASSERT(isScript()); return pc_; }
     JSScript   *script() const { JS_ASSERT(isScript()); return script_; }
     JSFunction *callee() const;
     Value       calleev() const;
     Value       thisv() const;
+
+    /*
+     * 'spFuzzy' is a best-effort approximiation of the frame's sp. It is only
+     * guaranteed to point to a safe range above fp's base and below fp's next.
+     * Ideally, we'd remove this altogether... wait, I'll do that in the next
+     * patch.
+     */
+    Value      *spFuzzy() const { JS_ASSERT(isScript()); return sp_; }
 
     CallArgs nativeArgs() const { JS_ASSERT(isNativeCall()); return args_; }
 };
