@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for navigator.id identity provider (IDP) authentication basics</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="head_identity.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank">navigator.id identity provider (IDP) authentication basics</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+"use strict"
+
+let steps = [
+  // completeAuthentication tests
+  function completeAuthenticationExists() {
+    is(typeof(identity.completeAuthentication), "function",
+       "Check completeAuthentication is a function");
+    SimpleTest.executeSoon(next);
+  },
+  function completeAuthenticationOutsideFlow() {
+    expectException(function() {
+      identity.completeAuthentication();
+    }, "Check completeAuthentication outside of an auth. flow");
+    SimpleTest.executeSoon(next);
+  },
+
+  // raiseAuthenticationFailure tests
+  function raiseAuthenticationFailureExists() {
+    is(typeof(identity.raiseAuthenticationFailure), "function",
+       "Check raiseAuthenticationFailure is a function");
+    SimpleTest.executeSoon(next);
+  },
+  function raiseAuthenticationFailureNoArgs() {
+    expectException(function() {
+      identity.raiseAuthenticationFailure();
+    }, "raiseAuthenticationFailure with no arguments");
+    SimpleTest.executeSoon(next);
+  },
+
+  // beginAuthentication tests
+  function beginAuthenticationExists() {
+    is(typeof(identity.beginAuthentication), "function",
+       "Check beginAuthentication is a function");
+    SimpleTest.executeSoon(next);
+  },
+  function beginAuthenticationNoArgs() {
+    expectException(function() {
+      identity.beginAuthentication();
+    }, "beginAuthentication with no arguments");
+    SimpleTest.executeSoon(next);
+  },
+  function beginAuthenticationInvalidArg() {
+    expectException(function() {
+      identity.beginAuthentication(999);
+    }, "beginAuthentication with a non-function argument");
+    SimpleTest.executeSoon(next);
+  },
+  function beginAuthenticationArgs() {
+    function beginAuthenticationCb() {
+      throw "beginAuthentication callback shouldn't have been called outside of an "
+              + "auth flow";
+    }
+    is(identity.beginAuthentication(beginAuthenticationCb), undefined,
+       "Check minimum beginAuthentication arguments");
+    SimpleTest.executeSoon(next);
+  },
+
+  finish_tests,
+];
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
+
+</script>
+</pre>
+</body>
+</html>
