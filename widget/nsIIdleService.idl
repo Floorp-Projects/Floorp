@@ -66,3 +66,13 @@ interface nsIIdleService : nsISupports
     void removeIdleObserver(in nsIObserver observer, in unsigned long time);
 };
 
+%{C++  
+    /**
+     * Observer topic notification for idle window: OBSERVER_TOPIC_IDLE.
+     * Observer topic notification for active window: OBSERVER_TOPIC_ACTIVE.
+     */
+    
+    #define OBSERVER_TOPIC_IDLE "idle"
+    #define OBSERVER_TOPIC_ACTIVE "active"
+    #define OBSERVER_TOPIC_IDLE_DAILY "idle-daily"
+%}

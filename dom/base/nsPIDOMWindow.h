@@ -16,13 +16,13 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
-#include "nsEvent.h"
 #include "nsIURI.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 #define DOM_WINDOW_FROZEN_TOPIC "dom-window-frozen"
 #define DOM_WINDOW_THAWED_TOPIC "dom-window-thawed"
 
+class nsIIdleObserver;
 class nsIPrincipal;
 
 // Popup control state enum. The values in this enum must go from most
@@ -48,8 +48,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x41dd6a62, 0xda59, 0x46e5, \
-      { 0x9d, 0x74, 0x45, 0xf4, 0x49, 0x4e, 0x1a, 0x70 } }
+{ 0x0c4d0b84, 0xb524, 0x4572, \
+  { 0x8e, 0xd1, 0x7f, 0x78, 0x14, 0x7c, 0x4d, 0xf1 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -69,6 +69,9 @@ public:
                     "active state is only maintained on outer windows");
     mIsActive = aActive;
   }
+
+  virtual nsresult RegisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
+  virtual nsresult UnregisterIdleObserver(nsIIdleObserver* aIdleObserver) = 0;
 
   bool IsActive()
   {
