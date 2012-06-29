@@ -12,9 +12,35 @@ Cu.import("resource://gre/modules/Services.jsm");
 function onLoad() {
   window.removeEventListener("load", onLoad, false);
 
+  let cmdLineArgs = window.arguments && window.arguments[0] ?
+                    window.arguments[0].QueryInterface(Ci.nsIPropertyBag2) :
+                    null;
+
+  // In test mode, listen for test app installations and load the -test-mode URL
+  // if present.
+  if (cmdLineArgs && cmdLineArgs.hasKey("test-mode")) {
+    Services.obs.addObserver(function observe(subj, topic, data) {
+      // The observer is present for the lifetime of the runtime.
+      initWindow(false);
+    }, "webapprt-test-did-install", false);
+    let testURL = cmdLineArgs.get("test-mode");
+    if (testURL) {
+      document.getElementById("content").loadURI(testURL);
+    }
+    return;
+  }
+
+  initWindow(!!cmdLineArgs);
+}
+
+window.addEventListener("load", onLoad, false);
+
+function initWindow(isMainWindow) {
   // Set the title of the window to the name of the webapp
   let manifest = WebappRT.config.app.manifest;
   document.documentElement.setAttribute("title", manifest.name);
+
+  updateMenuItems();
 
   // Listen for clicks to redirect <a target="_blank"> to the browser.
   // This doesn't capture clicks so content can capture them itself and do
@@ -23,7 +49,7 @@ function onLoad() {
                                                       false, true);
 
   // Only load the webapp on the initially launched main window
-  if ("arguments" in window) {
+  if (isMainWindow) {
     // Load the webapp's launch URL
     let installRecord = WebappRT.config.app;
     let url = Services.io.newURI(installRecord.origin, null, null);
@@ -32,7 +58,6 @@ function onLoad() {
     document.getElementById("content").setAttribute("src", url.spec);
   }
 }
-window.addEventListener("load", onLoad, false);
 
 /**
  * Direct a click on <a target="_blank"> to the user's default browser.
@@ -66,11 +91,10 @@ function onContentClick(event) {
   event.preventDefault();
 }
 
-#ifdef XP_MACOSX
 // On Mac, we dynamically create the label for the Quit menuitem, using
 // a string property to inject the name of the webapp into it.
-window.addEventListener("load", function onLoadUpdateMenuItems() {
-  window.removeEventListener("load", onLoadUpdateMenuItems, false);
+function updateMenuItems() {
+#ifdef XP_MACOSX
   let installRecord = WebappRT.config.app;
   let manifest = WebappRT.config.app.manifest;
   let bundle =
@@ -81,8 +105,8 @@ window.addEventListener("load", function onLoadUpdateMenuItems() {
                                               [manifest.name], 1);
   document.getElementById("menu_FileQuitItem").setAttribute("label", quitLabel);
   document.getElementById("menu_mac_hide_app").setAttribute("label", hideLabel);
-}, false);
 #endif
+}
 
 function updateEditUIVisibility() {
 #ifndef XP_MACOSX
