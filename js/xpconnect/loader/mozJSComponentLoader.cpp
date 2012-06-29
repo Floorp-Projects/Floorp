@@ -176,7 +176,7 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
 
     NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const PRUnichar*>(chars));
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", utf8str.get());
+    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
 #endif
     fputs(utf8str.get(), stdout);
     fflush(stdout);

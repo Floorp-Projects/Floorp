@@ -94,7 +94,10 @@ HTTP(..) == ex-unit-1-dynamic.html ex-unit-1-ref.html
 # random-if(!cocoaWidget) HTTP(..) == src-format-arabic.html src-format-arabic-aat-ref.html
 # random-if(cocoaWidget) HTTP(..) == src-format-arabic.html src-format-arabic-ot-ref.html
 
+# bug 769194 - src:local() completely broken on android
 fails-if(Android) == local-1.html local-1-ref.html
+fails-if(Android) == local-styled-1.html local-styled-1-ref.html
+
 HTTP(..) == synthetic-weight-style.html synthetic-weight-style-ref.html
 HTTP(..) == synthetic-variations.html synthetic-variations-ref.html
 
