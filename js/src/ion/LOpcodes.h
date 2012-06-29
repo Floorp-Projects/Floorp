@@ -86,6 +86,8 @@
     _(CompareV)                     \
     _(CompareAndBranch)             \
     _(CompareDAndBranch)            \
+    _(CompareB)                     \
+    _(CompareBAndBranch)            \
     _(IsNullOrUndefined)            \
     _(IsNullOrUndefinedAndBranch)   \
     _(AbsI)                         \

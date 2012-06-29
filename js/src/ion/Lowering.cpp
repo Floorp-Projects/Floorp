@@ -326,10 +326,10 @@ LIRGenerator::visitTest(MTest *test)
     // Check if the operand for this test is a compare operation. If it is, we want
     // to emit an LCompare*AndBranch rather than an LTest*AndBranch, to fuse the
     // compare and jump instructions.
-    if (opd->isCompare()) {
+    if (opd->isCompare() && opd->isEmittedAtUses()) {
         MCompare *comp = opd->toCompare();
-        MDefinition *left = comp->getOperand(0);
-        MDefinition *right = comp->getOperand(1);
+        MDefinition *left = comp->lhs();
+        MDefinition *right = comp->rhs();
 
         // Try to fold the comparison so that we don't have to handle all cases.
         bool result;
@@ -341,12 +341,11 @@ LIRGenerator::visitTest(MTest *test)
             LAllocation rhs = comp->specialization() == MIRType_Object
                               ? useRegister(right)
                               : useAnyOrConstant(right);
-            return add(new LCompareAndBranch(opd->toCompare(), op, useRegister(left), rhs,
-                                             ifTrue, ifFalse));
+            return add(new LCompareAndBranch(op, useRegister(left), rhs, ifTrue, ifFalse), comp);
         }
         if (comp->specialization() == MIRType_Double) {
-            return add(new LCompareDAndBranch(comp->jsop(), useRegister(left),
-                                              useRegister(right), ifTrue, ifFalse));
+            return add(new LCompareDAndBranch(useRegister(left), useRegister(right), ifTrue,
+                                              ifFalse), comp);
         }
 
         // The second operand has known null/undefined type, so just test the
@@ -354,6 +353,17 @@ LIRGenerator::visitTest(MTest *test)
         if (IsNullOrUndefined(comp->specialization())) {
             LIsNullOrUndefinedAndBranch *lir = new LIsNullOrUndefinedAndBranch(ifTrue, ifFalse);
             if (!useBox(lir, LIsNullOrUndefinedAndBranch::Value, left))
+                return false;
+            return add(lir, comp);
+        }
+
+        if (comp->specialization() == MIRType_Boolean) {
+            JS_ASSERT(left->type() == MIRType_Value);
+            JS_ASSERT(right->type() == MIRType_Boolean);
+
+            LCompareBAndBranch *lir = new LCompareBAndBranch(useRegisterOrConstant(right),
+                                                             ifTrue, ifFalse);
+            if (!useBox(lir, LCompareBAndBranch::Lhs, left))
                 return false;
             return add(lir, comp);
         }
@@ -389,8 +399,8 @@ CanEmitCompareAtUses(MInstruction *ins)
 bool
 LIRGenerator::visitCompare(MCompare *comp)
 {
-    MDefinition *left = comp->getOperand(0);
-    MDefinition *right = comp->getOperand(1);
+    MDefinition *left = comp->lhs();
+    MDefinition *right = comp->rhs();
 
     if (comp->specialization() != MIRType_None) {
         // Try to fold the comparison so that we don't have to handle all cases.
@@ -402,7 +412,7 @@ LIRGenerator::visitCompare(MCompare *comp)
         // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
         // make sense and avoids confusion.
         if (comp->specialization() == MIRType_String) {
-            LCompareS *lir = new LCompareS(comp->jsop(), useRegister(left), useRegister(right));
+            LCompareS *lir = new LCompareS(useRegister(left), useRegister(right));
             if (!define(lir, comp))
                 return false;
             return assignSafepoint(lir, comp);
@@ -424,7 +434,17 @@ LIRGenerator::visitCompare(MCompare *comp)
         }
 
         if (comp->specialization() == MIRType_Double)
-            return define(new LCompareD(comp->jsop(), useRegister(left), useRegister(right)), comp);
+            return define(new LCompareD(useRegister(left), useRegister(right)), comp);
+
+        if (comp->specialization() == MIRType_Boolean) {
+            JS_ASSERT(left->type() == MIRType_Value);
+            JS_ASSERT(right->type() == MIRType_Boolean);
+
+            LCompareB *lir = new LCompareB(useRegisterOrConstant(right));
+            if (!useBox(lir, LCompareB::Lhs, left))
+                return false;
+            return define(lir, comp);
+        }
 
         JS_ASSERT(IsNullOrUndefined(comp->specialization()));
 
@@ -434,7 +454,7 @@ LIRGenerator::visitCompare(MCompare *comp)
         return define(lir, comp);
     }
 
-    LCompareV *lir = new LCompareV(comp->jsop());
+    LCompareV *lir = new LCompareV();
     if (!useBox(lir, LCompareV::LhsInput, left))
         return false;
     if (!useBox(lir, LCompareV::RhsInput, right))
