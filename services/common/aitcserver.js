@@ -4,8 +4,6 @@
 
 "use strict";
 
-// TODO enable once build infra supports test modules.
-/*
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const EXPORTED_SYMBOLS = [
@@ -14,7 +12,6 @@ const EXPORTED_SYMBOLS = [
 ];
 
 Cu.import("resource://testing-common/httpd.js");
-*/
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/utils.js");
@@ -133,7 +130,7 @@ AITCServer10User.prototype = {
 function AITCServer10Server() {
   this._log = Log4Moz.repository.getLogger("Services.Common.AITCServer");
 
-  this.server = new nsHttpServer();
+  this.server = new HttpServer();
   this.port = null;
   this.users = {};
   this.autoCreateUsers = false;

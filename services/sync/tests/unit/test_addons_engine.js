@@ -170,7 +170,7 @@ add_test(function test_disabled_install_semantics() {
   server.createContents(USER, contents);
   server.start();
 
-  let amoServer = new nsHttpServer();
+  let amoServer = new HttpServer();
   amoServer.registerFile("/search/guid:addon1%40tests.mozilla.org",
                          do_get_file("addon1-search.xml"));
 
