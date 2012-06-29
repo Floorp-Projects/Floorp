@@ -9,6 +9,9 @@
 #include "Accessible.h"
 #include "TableAccessible.h"
 
+#include "nsIMutableArray.h"
+#include "nsComponentManagerUtils.h"
+
 static const PRUint32 XPC_TABLE_DEFAULT_SIZE = 40;
 
 nsresult
@@ -240,6 +243,33 @@ xpcAccessibleTable::GetSelectedRowCount(PRUint32* aSelectedRowCount)
     return NS_ERROR_FAILURE;
 
   *aSelectedRowCount = mTable->SelectedRowCount();
+  return NS_OK;
+}
+
+nsresult
+xpcAccessibleTable::GetSelectedCells(nsIArray** aSelectedCells)
+{
+  NS_ENSURE_ARG_POINTER(aSelectedCells);
+  *aSelectedCells = nsnull;
+
+  if (!mTable)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMutableArray> selCells = 
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoTArray<Accessible*, XPC_TABLE_DEFAULT_SIZE> cellsArray;
+  mTable->SelectedCells(&cellsArray);
+
+  PRUint32 totalCount = cellsArray.Length();
+  for (PRUint32 idx = 0; idx < totalCount; idx++) {
+    Accessible* cell = cellsArray.ElementAt(idx);
+    selCells -> AppendElement(static_cast<nsIAccessible*>(cell), false);
+  }
+
+  NS_ADDREF(*aSelectedCells = selCells);
   return NS_OK;
 }
 
