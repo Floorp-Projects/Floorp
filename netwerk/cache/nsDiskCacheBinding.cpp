@@ -87,7 +87,7 @@ nsDiskCacheBinding::~nsDiskCacheBinding()
     // Grab the cache lock since the binding is stored in nsCacheEntry::mData
     // and it is released using nsCacheService::ReleaseObject_Locked() which
     // releases the object outside the cache lock.
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSDISKCACHEBINDING_DESTRUCTOR));
 
     NS_ASSERTION(PR_CLIST_IS_EMPTY(this), "binding deleted while still on list");
     if (!PR_CLIST_IS_EMPTY(this))
