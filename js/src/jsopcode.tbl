@@ -500,7 +500,7 @@ OPDEF(JSOP_INT32,         216, "int32",        NULL,  5,  0,  1, 16,  JOF_INT32)
 /*
  * Get the value of the 'length' property from a stacked object.
  */
-OPDEF(JSOP_LENGTH,        217, "length",       NULL,  5,  1,  1, 18,  JOF_ATOM|JOF_PROP|JOF_TYPESET)
+OPDEF(JSOP_LENGTH,        217, "length",       NULL,  5,  1,  1, 18,  JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_TMPSLOT3)
 
 /*
  * Push a JSVAL_HOLE value onto the stack, representing an omitted property in
