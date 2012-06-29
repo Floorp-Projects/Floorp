@@ -166,7 +166,7 @@ public:
   }
 
 protected:
-  friend class GeneralPattern;
+  friend class CanvasGeneralPattern;
 
   // Beginning of linear gradient.
   Point mBegin;
@@ -174,14 +174,18 @@ protected:
   Point mEnd;
 };
 
-class GeneralPattern
+// This class is named 'GeneralCanvasPattern' instead of just
+// 'GeneralPattern' to keep Windows PGO builds from confusing the
+// GeneralPattern class in gfxContext.cpp with this one.
+
+class CanvasGeneralPattern
 {
 public:
   typedef nsCanvasRenderingContext2DAzure::Style Style;
   typedef nsCanvasRenderingContext2DAzure::ContextState ContextState;
 
-  GeneralPattern() : mPattern(nsnull) {}
-  ~GeneralPattern()
+  CanvasGeneralPattern() : mPattern(nsnull) {}
+  ~CanvasGeneralPattern()
   {
     if (mPattern) {
       mPattern->~Pattern();
@@ -194,7 +198,7 @@ public:
   {
     // This should only be called once or the mPattern destructor will
     // not be executed.
-    NS_ASSERTION(!mPattern, "ForStyle() should only be called once on GeneralPattern!");
+    NS_ASSERTION(!mPattern, "ForStyle() should only be called once on CanvasGeneralPattern!");
 
     const ContextState &state = aCtx->CurrentState();
 
@@ -2040,7 +2044,7 @@ nsCanvasRenderingContext2DAzure::FillRect(double x, double y, double w,
 
   AdjustedTarget(this, bounds.IsEmpty() ? nsnull : &bounds)->
     FillRect(mgfx::Rect(x, y, w, h),
-             GeneralPattern().ForStyle(this, STYLE_FILL, mTarget),
+             CanvasGeneralPattern().ForStyle(this, STYLE_FILL, mTarget),
              DrawOptions(state.globalAlpha, UsedOperation()));
 
   RedrawUser(gfxRect(x, y, w, h));
@@ -2082,7 +2086,7 @@ nsCanvasRenderingContext2DAzure::StrokeRect(double x, double y, double w,
     }
     AdjustedTarget(this, bounds.IsEmpty() ? nsnull : &bounds)->
       StrokeLine(Point(x, y), Point(x + w, y),
-                  GeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
+                  CanvasGeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
                   StrokeOptions(state.lineWidth, state.lineJoin,
                                 cap, state.miterLimit,
                                 state.dash.Length(),
@@ -2099,7 +2103,7 @@ nsCanvasRenderingContext2DAzure::StrokeRect(double x, double y, double w,
     }
     AdjustedTarget(this, bounds.IsEmpty() ? nsnull : &bounds)->
       StrokeLine(Point(x, y), Point(x, y + h),
-                  GeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
+                  CanvasGeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
                   StrokeOptions(state.lineWidth, state.lineJoin,
                                 cap, state.miterLimit,
                                 state.dash.Length(),
@@ -2111,7 +2115,7 @@ nsCanvasRenderingContext2DAzure::StrokeRect(double x, double y, double w,
 
   AdjustedTarget(this, bounds.IsEmpty() ? nsnull : &bounds)->
     StrokeRect(mgfx::Rect(x, y, w, h),
-                GeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
+                CanvasGeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
                 StrokeOptions(state.lineWidth, state.lineJoin,
                               state.lineCap, state.miterLimit,
                               state.dash.Length(),
@@ -2172,7 +2176,7 @@ nsCanvasRenderingContext2DAzure::Fill()
   }
 
   AdjustedTarget(this, bounds.IsEmpty() ? nsnull : &bounds)->
-    Fill(mPath, GeneralPattern().ForStyle(this, STYLE_FILL, mTarget),
+    Fill(mPath, CanvasGeneralPattern().ForStyle(this, STYLE_FILL, mTarget),
          DrawOptions(CurrentState().globalAlpha, UsedOperation()));
 
   Redraw();
@@ -2208,7 +2212,7 @@ nsCanvasRenderingContext2DAzure::Stroke()
   }
 
   AdjustedTarget(this, bounds.IsEmpty() ? nsnull : &bounds)->
-    Stroke(mPath, GeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
+    Stroke(mPath, CanvasGeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
            strokeOptions, DrawOptions(state.globalAlpha, UsedOperation()));
 
   Redraw();
@@ -3056,7 +3060,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
       if (mOp == nsCanvasRenderingContext2DAzure::TEXT_DRAW_OPERATION_FILL) {
         AdjustedTarget(mCtx)->
           FillGlyphs(scaledFont, buffer,
-                     GeneralPattern().
+                     CanvasGeneralPattern().
                         ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_FILL, mCtx->mTarget),
                       DrawOptions(mState->globalAlpha, mCtx->UsedOperation()));
       } else if (mOp == nsCanvasRenderingContext2DAzure::TEXT_DRAW_OPERATION_STROKE) {
@@ -3064,7 +3068,7 @@ struct NS_STACK_CLASS nsCanvasBidiProcessorAzure : public nsBidiPresUtils::BidiP
 
         const ContextState& state = *mState;
         AdjustedTarget(mCtx)->
-          Stroke(path, GeneralPattern().
+          Stroke(path, CanvasGeneralPattern().
                     ForStyle(mCtx, nsCanvasRenderingContext2DAzure::STYLE_STROKE, mCtx->mTarget),
                   StrokeOptions(state.lineWidth, state.lineJoin,
                                 state.lineCap, state.miterLimit,
