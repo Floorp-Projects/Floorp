@@ -749,24 +749,27 @@ gfxGDIFontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
         return nsnull;
     }
 
-    // create a new font entry with the proxy entry style characteristics
-    PRUint16 w = (aProxyEntry->mWeight == 0 ? 400 : aProxyEntry->mWeight);
     bool isCFF = false; // jtdfix -- need to determine this
     
     // use the face name from the lookup font entry, which will be the localized
     // face name which GDI mapping tables use (e.g. with the system locale set to
     // Dutch, a fullname of 'Arial Bold' will find a font entry with the face name
     // 'Arial Vet' which can be used as a key in GDI font lookups).
-    gfxFontEntry *fe = GDIFontEntry::CreateFontEntry(lookup->Name(), 
+    GDIFontEntry *fe = GDIFontEntry::CreateFontEntry(lookup->Name(), 
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/, 
-        PRUint32(aProxyEntry->mItalic ? NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL), 
-        w, aProxyEntry->mStretch, nsnull);
+        lookup->mItalic ? NS_FONT_STYLE_ITALIC : NS_FONT_STYLE_NORMAL,
+        lookup->mWeight, aProxyEntry->mStretch, nsnull);
         
     if (!fe)
         return nsnull;
 
     fe->mIsUserFont = true;
     fe->mIsLocalUserFont = true;
+
+    // make the new font entry match the proxy entry style characteristics
+    fe->mWeight = (aProxyEntry->mWeight == 0 ? 400 : aProxyEntry->mWeight);
+    fe->mItalic = aProxyEntry->mItalic;
+
     return fe;
 }
 

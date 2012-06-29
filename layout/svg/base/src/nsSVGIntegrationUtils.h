@@ -129,12 +129,10 @@ public:
 
   /**
    * Paint non-SVG frame with SVG effects.
-   * @param aOffset the offset in appunits where aFrame should be positioned
-   * in aCtx's coordinate system
    */
   static void
   PaintFramesWithEffects(nsRenderingContext* aCtx,
-                         nsIFrame* aEffectsFrame, const nsRect& aDirtyRect,
+                         nsIFrame* aFrame, const nsRect& aDirtyRect,
                          nsDisplayListBuilder* aBuilder,
                          nsDisplayList* aInnerList);
 

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+@font-face {
+  font-family: test;
+  src: local(Nimbus Sans L), local(NimbusSansL-Regu),
+       local(Helvetica), local(Bitstream Vera Sans),
+       local(Arial), local(Liberation Sans), local(SwissA),
+       local(Droid Sans), local(Roboto);
+}
+div {
+  font-family: test, serif;
+  margin: 10px;
+}
+</style>
+</head>
+<body>
+<div style="font-family:serif">
+This serif font should NOT be used below.
+</div>
+<hr>
+<div>
+These three lines should all use the same font face.
+</div>
+<div>
+This line should NOT be bold.
+</div>
+<div>
+This line should NOT be italic.
+</div>
+</body>
+</html>

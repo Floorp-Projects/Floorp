@@ -98,7 +98,7 @@ void JS_FASTCALL
 stubs::Name(VMFrame &f)
 {
     Value rval;
-    if (!NameOperation(f.cx, f.pc(), &rval))
+    if (!NameOperation(f.cx, f.script(), f.pc(), &rval))
         THROW();
     f.regs.sp[0] = rval;
 }
@@ -980,7 +980,7 @@ stubs::GetProp(VMFrame &f, PropertyName *name)
     FrameRegs &regs = f.regs;
 
     Value rval;
-    if (!GetPropertyOperation(cx, f.pc(), f.regs.sp[-1], &rval))
+    if (!GetPropertyOperation(cx, f.script(), f.pc(), f.regs.sp[-1], &rval))
         THROW();
 
     regs.sp[-1] = rval;

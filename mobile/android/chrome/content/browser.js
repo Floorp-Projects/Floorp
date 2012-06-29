@@ -1384,6 +1384,7 @@ var SelectionHandler = {
   // Keeps track of data about the dimensions of the selection
   cache: null,
   _active: false,
+  _viewOffset: null,
 
   // The window that holds the selection (can be a sub-frame)
   get _view() {
@@ -1427,17 +1428,31 @@ var SelectionHandler = {
 
   init: function sh_init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
+    Services.obs.addObserver(this, "Window:Resize", false);
   },
 
   uninit: function sh_uninit() {
     Services.obs.removeObserver(this, "Gesture:SingleTap", false);
+    Services.obs.removeObserver(this, "Window:Resize", false);
   },
 
   observe: function sh_observe(aSubject, aTopic, aData) {
-    let data = JSON.parse(aData);
+    switch (aTopic) {
+      case "Gesture:SingleTap": {
+        if (!this._active)
+          return;
 
-    if (this._active)
-      this.endSelection(data.x, data.y);
+        let data = JSON.parse(aData);
+        this.endSelection(data.x, data.y);
+        break;
+      }
+      case "Window:Resize": {
+        // Knowing when the page is done drawing is hard, so let's just cancel
+        // the selection when the window changes. We should fix this later.
+        this.endSelection();
+        break;
+      }
+    }
   },
 
   notifySelectionChanged: function sh_notifySelectionChanged(aDoc, aSel, aReason) {
@@ -1462,6 +1477,10 @@ var SelectionHandler = {
     // Get the element's view
     this._view = aElement.ownerDocument.defaultView;
     this._isRTL = (this._view.getComputedStyle(aElement, "").direction == "rtl");
+
+    let computedStyle = this._view.getComputedStyle(this._view.document.documentElement);
+    this._viewOffset = { top: parseInt(computedStyle.getPropertyValue("margin-top").replace("px", "")),
+                         left: parseInt(computedStyle.getPropertyValue("margin-left").replace("px", "")) };
 
     // Remove any previous selected or created ranges. Tapping anywhere on a
     // page will create an empty range.
@@ -1577,11 +1596,11 @@ var SelectionHandler = {
 
     // Update the handle position as it's dragged
     if (aIsStartHandle) {
-      this._start.style.left = aX + this._view.scrollX + "px";
-      this._start.style.top = aY + this._view.scrollY + "px";
+      this._start.style.left = aX + this._view.scrollX - this._viewOffset.left + "px";
+      this._start.style.top = aY + this._view.scrollY - this._viewOffset.top + "px";
     } else {
-      this._end.style.left = aX + this._view.scrollX + "px";
-      this._end.style.top = aY + this._view.scrollY + "px";
+      this._end.style.left = aX + this._view.scrollX - this._viewOffset.left + "px";
+      this._end.style.top = aY + this._view.scrollY - this._viewOffset.top + "px";
     }
 
     let cwu = this._view.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
@@ -1696,6 +1715,7 @@ var SelectionHandler = {
 
     this._isRTL = false;
     this._view = null;
+    this._viewOffset = null;
     this.cache = null;
 
     return selectedText;
@@ -1744,11 +1764,11 @@ var SelectionHandler = {
   // Adjust start/end positions to account for scroll, and account for the dimensions of the
   // handle elements to ensure the handles point exactly at the ends of the selection.
   positionHandles: function sh_positionHandles() {
-    this._start.style.left = (this.cache.start.x + this._view.scrollX - this.HANDLE_WIDTH - this.HANDLE_PADDING) + "px";
-    this._start.style.top = (this.cache.start.y + this._view.scrollY - this.HANDLE_VERTICAL_OFFSET) + "px";
+    this._start.style.left = (this.cache.start.x + this._view.scrollX - this._viewOffset.left - this.HANDLE_WIDTH - this.HANDLE_PADDING) + "px";
+    this._start.style.top = (this.cache.start.y + this._view.scrollY - this._viewOffset.top - this.HANDLE_VERTICAL_OFFSET) + "px";
 
-    this._end.style.left = (this.cache.end.x + this._view.scrollX - this.HANDLE_PADDING) + "px";
-    this._end.style.top = (this.cache.end.y + this._view.scrollY - this.HANDLE_VERTICAL_OFFSET) + "px";
+    this._end.style.left = (this.cache.end.x + this._view.scrollX - this._viewOffset.left - this.HANDLE_PADDING) + "px";
+    this._end.style.top = (this.cache.end.y + this._view.scrollY - this._viewOffset.top - this.HANDLE_VERTICAL_OFFSET) + "px";
   },
 
   showHandles: function sh_showHandles() {
