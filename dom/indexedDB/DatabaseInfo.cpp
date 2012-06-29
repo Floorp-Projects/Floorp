@@ -24,7 +24,7 @@ EnumerateObjectStoreNames(const nsAString& aKey,
                           void* aUserArg)
 {
   nsTArray<nsString>* array = static_cast<nsTArray<nsString>*>(aUserArg);
-  if (!array->AppendElement(aData->name)) {
+  if (!array->InsertElementSorted(aData->name)) {
     NS_ERROR("Out of memory?");
     return PL_DHASH_STOP;
   }

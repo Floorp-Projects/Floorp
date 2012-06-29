@@ -1853,9 +1853,16 @@ IDBObjectStore::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
 
+  nsAutoTArray<nsString, 10> names;
   PRUint32 count = mInfo->indexes.Length();
+  names.SetCapacity(count);
+
   for (PRUint32 index = 0; index < count; index++) {
-    NS_ENSURE_TRUE(list->Add(mInfo->indexes[index].name),
+    names.InsertElementSorted(mInfo->indexes[index].name);
+  }
+
+  for (PRUint32 index = 0; index < count; index++) {
+    NS_ENSURE_TRUE(list->Add(names[index]),
                    NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
   }
 
