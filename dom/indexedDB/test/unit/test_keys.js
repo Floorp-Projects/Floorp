@@ -12,7 +12,7 @@ function testSteps()
   let c1 = 1;
   let c2 = 1;
 
-  let openRequest = mozIndexedDB.open(dbname, 1);
+  let openRequest = indexedDB.open(dbname, 1);
   openRequest.onerror = errorHandler;
   openRequest.onupgradeneeded = grabEventAndContinueHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;
@@ -155,18 +155,18 @@ function testSteps()
 
   for (var i = 0; i < keys.length; ++i) {
     let keyI = keys[i];
-    is(mozIndexedDB.cmp(keyI, keyI), 0, i + " compared to self");
+    is(indexedDB.cmp(keyI, keyI), 0, i + " compared to self");
 
     function doCompare(keyI) {
       for (var j = i-1; j >= i-10 && j >= 0; --j) {
-        is(mozIndexedDB.cmp(keyI, keys[j]), 1, i + " compared to " + j);
-        is(mozIndexedDB.cmp(keys[j], keyI), -1, j + " compared to " + i);
+        is(indexedDB.cmp(keyI, keys[j]), 1, i + " compared to " + j);
+        is(indexedDB.cmp(keys[j], keyI), -1, j + " compared to " + i);
       }
     }
     
     doCompare(keyI);
     store.add(i, keyI).onsuccess = function(e) {
-      is(mozIndexedDB.cmp(e.target.result, keyI), 0,
+      is(indexedDB.cmp(e.target.result, keyI), 0,
          "Returned key should cmp as equal");
       ok(compareKeys(e.target.result, keyI),
          "Returned key should actually be equal");
@@ -193,7 +193,7 @@ function testSteps()
   for (i = 0; i < keys.length; ++i) {
     event = yield;
     let cursor = event.target.result;
-    is(mozIndexedDB.cmp(cursor.key, keys[i]), 0,
+    is(indexedDB.cmp(cursor.key, keys[i]), 0,
        "Read back key should cmp as equal");
     ok(compareKeys(cursor.key, keys[i]),
        "Read back key should actually be equal");
@@ -233,7 +233,7 @@ function testSteps()
   
   for (i = 0; i < invalidKeys.length; ++i) {
     try {
-      mozIndexedDB.cmp(invalidKeys[i], 1);
+      indexedDB.cmp(invalidKeys[i], 1);
       ok(false, "didn't throw");
     }
     catch(ex) {
@@ -242,7 +242,7 @@ function testSteps()
       is(ex.code, 0, "Threw with right code");
     }
     try {
-      mozIndexedDB.cmp(1, invalidKeys[i]);
+      indexedDB.cmp(1, invalidKeys[i]);
       ok(false, "didn't throw2");
     }
     catch(ex) {

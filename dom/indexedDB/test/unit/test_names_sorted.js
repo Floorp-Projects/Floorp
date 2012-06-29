@@ -17,7 +17,7 @@ function testSteps()
     { name: "bar", keyPath: "value", location: 0 },
   ];
 
-  let request = mozIndexedDB.open(name, 1);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = unexpectedSuccessHandler;
@@ -74,7 +74,7 @@ function testSteps()
 
   db.close();
 
-  let request = mozIndexedDB.open(name, 1);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   request.onupgradeneeded = unexpectedSuccessHandler;

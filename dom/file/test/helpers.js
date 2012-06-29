@@ -118,7 +118,7 @@ function getFileHandle(fileStorageKey, name)
   switch (fileStorageKey) {
     case IndexedDatabaseKey:
       var dbname = window.location.pathname;
-      mozIndexedDB.open(dbname, 1).onsuccess = function(event) {
+      indexedDB.open(dbname, 1).onsuccess = function(event) {
         var db = event.target.result;
         db.mozCreateFileHandle(name).onsuccess = function(event) {
           var fileHandle = event.target.result;
@@ -129,7 +129,7 @@ function getFileHandle(fileStorageKey, name)
 
     case DeviceStorageKey:
       var dbname = window.location.pathname;
-      mozIndexedDB.open(dbname, 1).onsuccess = function(event) {
+      indexedDB.open(dbname, 1).onsuccess = function(event) {
         var db = event.target.result;
         db.mozCreateFileHandle(name).onsuccess = function(event) {
           var fileHandle = event.target.result;

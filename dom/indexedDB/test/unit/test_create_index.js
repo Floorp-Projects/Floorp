@@ -21,7 +21,7 @@ function testSteps()
     { name: undefined, keyPath: "value", options: { unique: false } },
   ];
 
-  let request = mozIndexedDB.open(name, 1);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = unexpectedSuccessHandler;

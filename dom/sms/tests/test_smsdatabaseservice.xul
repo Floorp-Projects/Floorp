@@ -144,7 +144,7 @@ function ensureDB(callback) {
   }
   let request;
   try {
-    request = mozIndexedDB.open(DB_NAME, DB_VERSION);
+    request = indexedDB.open(DB_NAME, DB_VERSION);
   } catch (ex) {
     ok(false, ex);
   }

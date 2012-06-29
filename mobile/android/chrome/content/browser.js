@@ -6456,7 +6456,7 @@ let Reader = {
       return;
     }
 
-    let request = window.mozIndexedDB.open("about:reader", this.DB_VERSION);
+    let request = window.indexedDB.open("about:reader", this.DB_VERSION);
 
     request.onerror = function(event) {
       this.log("Error connecting to the cache DB");

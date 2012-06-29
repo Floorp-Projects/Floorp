@@ -66,7 +66,7 @@ function testSteps()
     { keyPath: ["x", "y ", "z"],      exception: true },
   ];
 
-  let openRequest = mozIndexedDB.open(name, 1);
+  let openRequest = indexedDB.open(name, 1);
   openRequest.onerror = errorHandler;
   openRequest.onupgradeneeded = grabEventAndContinueHandler;
   openRequest.onsuccess = unexpectedSuccessHandler;
@@ -119,7 +119,7 @@ function testSteps()
     is(e.type, "success", "inserted successfully" + test);
     is(e.target, request, "expected target" + test);
     ok(compareKeys(request.result, info.key), "found correct key" + test);
-    is(mozIndexedDB.cmp(request.result, info.key), 0, "returned key compares correctly" + test);
+    is(indexedDB.cmp(request.result, info.key), 0, "returned key compares correctly" + test);
 
     store.get(info.key).onsuccess = grabEventAndContinueHandler;
     e = yield;
