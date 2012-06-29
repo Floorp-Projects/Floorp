@@ -20,7 +20,7 @@ TEST_FILES = \
   bfcache_iframe2.html \
   error_events_abort_transactions_iframe.html \
   event_propagation_iframe.html \
-  exceptions_in_success_events_iframe.html \
+  exceptions_in_events_iframe.html \
   file.js \
   helpers.js \
   leaving_page_iframe.html \
@@ -44,7 +44,7 @@ TEST_FILES = \
   test_error_events_abort_transactions.html \
   test_event_propagation.html \
   test_event_source.html \
-  test_exceptions_in_success_events.html \
+  test_exceptions_in_events.html \
   test_file_array.html \
   test_file_cross_database_copying.html \
   test_file_delete.html \
