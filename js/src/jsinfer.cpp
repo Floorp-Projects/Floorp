@@ -2457,9 +2457,9 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj_)
     if (p) {
         obj->setType(p->value);
     } else {
+        Rooted<Type> origType(cx, type);
         /* Make a new type to use for future arrays with the same elements. */
-        TypeObject *objType = newTypeObject(cx, NULL, JSProto_Array, obj->getProto());
-        AssertRootingUnnecessary safe(cx);
+        Rooted<TypeObject*> objType(cx, newTypeObject(cx, NULL, JSProto_Array, obj->getProto()));
         if (!objType) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2468,6 +2468,16 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj_)
 
         if (!objType->unknownProperties())
             objType->addPropertyType(cx, JSID_VOID, type);
+
+        // The key's fields may have been moved by moving GC and therefore the
+        // AddPtr is now invalid. ArrayTypeTable's equality and hashcodes
+        // operators use only the two fields (type and proto) directly, so we
+        // can just conditionally update them here.
+        if (type != origType || key.proto != obj->getProto()) {
+            key.type = origType;
+            key.proto = obj->getProto();
+            p = arrayTypeTable->lookupForAdd(key);
+        }
 
         if (!arrayTypeTable->relookupOrAdd(p, key, objType)) {
             cx->compartment->types.setPendingNukeTypes(cx);
