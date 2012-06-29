@@ -60,6 +60,8 @@ namespace ion {
     _(Alias)                                \
     /* Information during GVN */            \
     _(GVN)                                  \
+    /* Information during Range analysis */ \
+    _(Range)                                \
     /* Information during LICM */           \
     _(LICM)                                 \
     /* Information during LSRA */           \

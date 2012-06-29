@@ -468,7 +468,7 @@ ReorderCommutative(MDefinition **lhsp, MDefinition **rhsp)
     MDefinition *lhs = *lhsp;
     MDefinition *rhs = *rhsp;
 
-    // Put the constant in the left-hand side, if there is one.
+    // Put the constant in the right-hand side, if there is one.
     if (lhs->isConstant()) {
         *rhsp = lhs;
         *lhsp = rhs;
@@ -633,7 +633,7 @@ LIRGenerator::visitAbs(MAbs *ins)
     if (num->type() == MIRType_Int32) {
         LAbsI *lir = new LAbsI(useRegisterAtStart(num));
         // needed to handle abs(INT32_MIN)
-        if (!assignSnapshot(lir))
+        if (!ins->range()->isFinite() && !assignSnapshot(lir))
             return false;
         return defineReuseInput(lir, ins, 0);
     } else {
@@ -673,7 +673,7 @@ LIRGenerator::visitAdd(MAdd *ins)
         JS_ASSERT(lhs->type() == MIRType_Int32);
         ReorderCommutative(&lhs, &rhs);
         LAddI *lir = new LAddI;
-        if (!ins->isTruncated() && !assignSnapshot(lir))
+        if (ins->fallible() && !assignSnapshot(lir))
             return false;
 
         return lowerForALU(lir, ins, lhs, rhs);
@@ -698,7 +698,7 @@ LIRGenerator::visitSub(MSub *ins)
     if (ins->specialization() == MIRType_Int32) {
         JS_ASSERT(lhs->type() == MIRType_Int32);
         LSubI *lir = new LSubI;
-        if (!ins->isTruncated() && !assignSnapshot(lir))
+        if (ins->fallible() && !assignSnapshot(lir))
             return false;
 
         return lowerForALU(lir, ins, lhs, rhs);
@@ -1225,6 +1225,9 @@ LIRGenerator::visitBoundsCheck(MBoundsCheck *ins)
 bool
 LIRGenerator::visitBoundsCheckLower(MBoundsCheckLower *ins)
 {
+    if (!ins->fallible())
+        return true;
+
     LInstruction *check = new LBoundsCheckLower(useRegister(ins->index()));
     return assignSnapshot(check) && add(check, ins);
 }
