@@ -106,7 +106,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
 #include "ExternalHelperAppChild.h"
-#include "nsILoadContext.h"
+#include "nsIPrivateBrowsingConsumer.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -2180,16 +2180,9 @@ nsresult nsExternalAppHandler::OpenWithApplication()
 #endif
 
     // See whether the channel has been opened in private browsing mode
-    bool inPrivateBrowsing = false;
     NS_ASSERTION(mRequest, "This should never be called with a null request");
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
-    if (channel) {
-      nsCOMPtr<nsILoadContext> ctx;
-      NS_QueryNotificationCallbacks(channel, ctx);
-      if (ctx) {
-        inPrivateBrowsing = ctx->UsePrivateBrowsing();
-      }
-    }
+    nsCOMPtr<nsIPrivateBrowsingConsumer> pbConsumer = do_QueryInterface(mRequest);
+    bool inPrivateBrowsing = pbConsumer && pbConsumer->UsePrivateBrowsing();
 
     // make the tmp file readonly so users won't edit it and lose the changes
     // only if we're going to delete the file
