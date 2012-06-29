@@ -2413,7 +2413,7 @@ BEGIN_CASE(JSOP_EVAL)
 END_CASE(JSOP_EVAL)
 
 BEGIN_CASE(JSOP_FUNAPPLY)
-    if (!GuardFunApplySpeculation(cx, regs))
+    if (!GuardFunApplyArgumentsOptimization(cx))
         goto error;
     /* FALL THROUGH */
 

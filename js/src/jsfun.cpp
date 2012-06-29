@@ -678,6 +678,12 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         return js_fun_call(cx, (argc > 0) ? 1 : 0, vp);
 
     InvokeArgsGuard args;
+
+    /*
+     * GuardFunApplyArgumentsOptimization already called IsOptimizedArguments,
+     * so we don't need to here. This is not an optimization: we can't rely on
+     * cx->fp (since natives can be called directly from JSAPI).
+     */
     if (vp[3].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         /*
          * Pretend we have been passed the 'arguments' object for the current
