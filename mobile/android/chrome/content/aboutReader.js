@@ -204,12 +204,7 @@ let AboutReader = {
     if (this._getToolbarVisibility() === visible)
       return;
 
-    let toolbarElement = this._toolbarElement;
-
-    if (visible)
-      toolbarElement.display = "block";
-
-    toolbarElement.classList.toggle("toolbar-hidden");
+    this._toolbarElement.classList.toggle("toolbar-hidden");
   },
 
   _toggleToolbarVisibility: function Reader_toggleToolbarVisibility(visible) {
