@@ -142,12 +142,36 @@ class JS_FRIEND_API(AbstractWrapper) : public Wrapper,
  * DirectWrappers forward both their fundamental and derived traps to the
  * wrapped object.
  */
-class JS_FRIEND_API(DirectWrapper) : public AbstractWrapper
+class JS_FRIEND_API(DirectWrapper) : public Wrapper, public DirectProxyHandler
 {
   public:
     explicit DirectWrapper(unsigned flags);
 
     virtual ~DirectWrapper();
+
+    virtual BaseProxyHandler* toBaseProxyHandler() {
+        return this;
+    }
+
+    virtual Wrapper *toWrapper() {
+        return this;
+    }
+
+    /* ES5 Harmony fundamental wrapper traps. */
+    virtual bool getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
+                                       jsid id, bool set,
+                                       PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper,
+                                          jsid id, bool set,
+                                          PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+                                PropertyDescriptor *desc) MOZ_OVERRIDE;
+    virtual bool getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
+                                     AutoIdVector &props) MOZ_OVERRIDE;
+    virtual bool delete_(JSContext *cx, JSObject *wrapper, jsid id,
+                         bool *bp) MOZ_OVERRIDE;
+    virtual bool enumerate(JSContext *cx, JSObject *wrapper,
+                           AutoIdVector &props) MOZ_OVERRIDE;
 
     /* ES5 Harmony derived wrapper traps. */
     virtual bool has(JSContext *cx, JSObject *wrapper, jsid id, bool *bp) MOZ_OVERRIDE;
