@@ -622,7 +622,7 @@ SetTreeOwnerAndChromeEventHandlerOnDocshellTree(nsIDocShellTreeItem* aItem,
 
 /**
  * Set the type of the treeitem and hook it up to the treeowner.
- * @param aItem the treeitem we're wrking working with
+ * @param aItem the treeitem we're working with
  * @param aOwningContent the content node that owns aItem
  * @param aTreeOwner the relevant treeowner; might be null
  * @param aParentType the nsIDocShellTreeItem::GetType of our parent docshell
@@ -643,6 +643,8 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
 
   if (aOwningContent->IsXUL()) {
       aOwningContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
+  } else {
+      aOwningContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mozframetype, value);
   }
 
   // we accept "content" and "content-xxx" values.
