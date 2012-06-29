@@ -39,7 +39,8 @@ let DOMApplicationRegistry = {
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
-                    "Webapps:GetSelf", "Webapps:GetInstalled",
+                    "Webapps:GetSelf",
+                    "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                     "Webapps:Launch", "Webapps:GetAll"];
 
     this.messages.forEach((function(msgName) {
@@ -124,6 +125,9 @@ let DOMApplicationRegistry = {
         break;
       case "Webapps:GetInstalled":
         this.getInstalled(msg);
+        break;
+      case "Webapps:GetNotInstalled":
+        this.getNotInstalled(msg);
         break;
       case "Webapps:GetAll":
         if (msg.hasPrivileges)
@@ -326,6 +330,25 @@ let DOMApplicationRegistry = {
       for (let i = 0; i < aResult.length; i++)
         aData.apps[i].manifest = aResult[i].manifest;
       ppmm.sendAsyncMessage("Webapps:GetInstalled:Return:OK", aData);
+    }).bind(this));
+  },
+
+  getNotInstalled: function(aData) {
+    aData.apps = [];
+    let tmp = [];
+
+    for (let id in this.webapps) {
+      if (this.webapps[id].installOrigin == aData.origin &&
+          !this._isLaunchable(aData.origin)) {
+        aData.apps.push(this._cloneAppObject(this.webapps[id]));
+        tmp.push({ id: id });
+      }
+    }
+
+    this._readManifests(tmp, (function(aResult) {
+      for (let i = 0; i < aResult.length; i++)
+        aData.apps[i].manifest = aResult[i].manifest;
+      ppmm.sendAsyncMessage("Webapps:GetNotInstalled:Return:OK", aData);
     }).bind(this));
   },
 
