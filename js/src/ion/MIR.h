@@ -1521,6 +1521,42 @@ class MCreateThis
     }
 };
 
+// Given a MIRType_Value A and a MIRType_Object B:
+// If the Value may be safely unboxed to an Object, return Object(A).
+// Otherwise, return B.
+// Used to implement return behavior for inlined constructors.
+class MReturnFromCtor
+  : public MAryInstruction<2>,
+    public MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >
+{
+    MReturnFromCtor(MDefinition *value, MDefinition *object) {
+        initOperand(0, value);
+        initOperand(1, object);
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ReturnFromCtor);
+    static MReturnFromCtor *New(MDefinition *value, MDefinition *object)
+    {
+        return new MReturnFromCtor(value, object);
+    }
+
+    MDefinition *getValue() const {
+        return getOperand(0);
+    }
+    MDefinition *getObject() const {
+        return getOperand(1);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+};
+
 // Passes an MDefinition to an MCall. Must occur between an MPrepareCall and
 // MCall. Boxes the input and stores it to the correct location on stack.
 //

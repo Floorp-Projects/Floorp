@@ -362,30 +362,36 @@ bool
 IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
                         MDefinition *thisDefn, MDefinitionVector &argv)
 {
+    IonSpew(IonSpew_MIR, "Inlining script %s:%d (%p)",
+            script->filename, script->lineno, (void *)script);
+
+    callerBuilder_ = callerBuilder;
+    callerResumePoint_ = callerResumePoint;
+
+    // Generate single entrance block.
     current = newBlock(pc);
     if (!current)
         return false;
 
-    IonSpew(IonSpew_MIR, "Inlining script %s:%d (%p)",
-            script->filename, script->lineno, (void *) script);
+    current->setCallerResumePoint(callerResumePoint);
 
-    callerBuilder_ = callerBuilder;
-    callerResumePoint_ = callerResumePoint;
+    // Connect the entrance block to the last block in the caller's graph.
     MBasicBlock *predecessor = callerResumePoint->block();
     predecessor->end(MGoto::New(current));
     if (!current->addPredecessorWithoutPhis(predecessor))
         return false;
+
     JS_ASSERT(predecessor->numSuccessors() == 1);
     JS_ASSERT(current->numPredecessors() == 1);
-    current->setCallerResumePoint(callerResumePoint);
 
-    // Fill in any missing arguments with undefined.
+    // Explicitly pass Undefined for missing arguments.
     const size_t numActualArgs = argv.length() - 1;
     const size_t nargs = info().nargs();
-    IonSpew(IonSpew_MIR, "Inlining with %s of arguments.",
-            (numActualArgs == nargs) ? "right number": ((numActualArgs < nargs) ? "underflow" : "overflow"));
+
     if (numActualArgs < nargs) {
-        for (size_t i = 0, missing = nargs - numActualArgs; i < missing; ++i) {
+        const size_t missing = nargs - numActualArgs;
+
+        for (size_t i = 0; i < missing; i++) {
             MConstant *undef = MConstant::New(UndefinedValue());
             current->add(undef);
             if (!argv.append(undef))
@@ -393,8 +399,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
         }
     }
 
-    // The oracle ensures that the inlined script does not use the scope chain, so we
-    // just initialize its slot to |undefined|.
+    // The Oracle ensures that the inlined script does not use the scope chain.
     JS_ASSERT(!script->analysis()->usesScopeChain());
     MInstruction *scope = MConstant::New(UndefinedValue());
     current->add(scope);
@@ -425,7 +430,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     IonSpew(IonSpew_Inlining, "Inline entry block MResumePoint %p, %u operands",
             (void *) current->entryResumePoint(), current->entryResumePoint()->numOperands());
 
-    // Note: +2 for the scope chain and |this|.
+    // +2 for the scope chain and |this|.
     JS_ASSERT(current->entryResumePoint()->numOperands() == nargs + info().nlocals() + 2);
 
     return traverseBytecode();
@@ -2724,7 +2729,8 @@ IonBuilder::jsop_notearg()
 }
 
 bool
-IonBuilder::jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inlineBuilder)
+IonBuilder::jsop_call_inline(IonBuilder &inlineBuilder, HandleFunction callee,
+                             uint32 argc, bool constructing)
 {
 #ifdef DEBUG
     uint32 origStackDepth = current->stackDepth();
@@ -2740,8 +2746,8 @@ IonBuilder::jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inline
 
     // This resume point collects outer variables only.  It is used to recover
     // the stack state before the current bytecode.
-    MResumePoint *inlineResumePoint = MResumePoint::New(top, pc, callerResumePoint_,
-                                                        MResumePoint::Outer);
+    MResumePoint *inlineResumePoint =
+        MResumePoint::New(top, pc, callerResumePoint_, MResumePoint::Outer);
     if (!inlineResumePoint)
         return false;
 
@@ -2752,8 +2758,6 @@ IonBuilder::jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inline
     // Note that we leave the callee on the simulated stack for the
     // duration of the call.
     MDefinitionVector argv;
-
-    // Arguments are popped right-to-left so we have to fill |args| backwards.
     if (!discardCallArgs(argc, argv, top))
         return false;
 
@@ -2764,7 +2768,15 @@ IonBuilder::jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inline
     current->pop();
     current->push(constFun);
 
-    MDefinition *thisDefn = argv[0];
+    // Create |this| on the caller-side for inlined constructors.
+    MDefinition *thisDefn = NULL;
+    if (constructing) {
+        thisDefn = createThis(callee, constFun);
+        if (!thisDefn)
+            return false;
+    } else {
+        thisDefn = argv[0];
+    }
 
     // Build the graph.
     if (!inlineBuilder.buildInline(this, inlineResumePoint, thisDefn, argv))
@@ -2778,16 +2790,29 @@ IonBuilder::jsop_call_inline(JSFunction *callee, uint32 argc, IonBuilder &inline
     MBasicBlock *bottom = newBlock(NULL, postCall);
     bottom->setCallerResumePoint(callerResumePoint_);
 
-    // Link graph exits to |bottom| via MGotos, replacing MReturns.
+    // Replace all MReturns with MGotos, and remember the MDefinition that
+    // would have been returned.
     Vector<MDefinition *, 8, IonAllocPolicy> retvalDefns;
     for (MBasicBlock **it = exits.begin(), **end = exits.end(); it != end; ++it) {
         MBasicBlock *exitBlock = *it;
-        JS_ASSERT(exitBlock->lastIns()->op() == MDefinition::Op_Return);
 
-        if (!retvalDefns.append(exitBlock->lastIns()->toReturn()->getOperand(0)))
+        MDefinition *rval = exitBlock->lastIns()->toReturn()->getOperand(0);
+        exitBlock->discardLastIns();
+
+        // Inlined constructors return |this| unless overridden by another Object.
+        if (constructing) {
+            if (rval->type() == MIRType_Value) {
+                MReturnFromCtor *filter = MReturnFromCtor::New(rval, thisDefn);
+                rval->block()->add(filter);
+                rval = filter;
+            } else if (rval->type() != MIRType_Object) {
+                rval = thisDefn;
+            }
+        }
+
+        if (!retvalDefns.append(rval))
             return false;
 
-        exitBlock->discardLastIns();
         MGoto *replacement = MGoto::New(bottom);
         exitBlock->end(replacement);
         if (!bottom->addPredecessorWithoutPhis(exitBlock))
@@ -2859,7 +2884,7 @@ static bool IsSmallFunction(JSFunction *target) {
 }
 
 bool
-IonBuilder::makeInliningDecision(JSFunction *target)
+IonBuilder::makeInliningDecision(HandleFunction target)
 {
     static const size_t INLINING_LIMIT = 3;
 
@@ -2898,7 +2923,7 @@ IonBuilder::makeInliningDecision(JSFunction *target)
 }
 
 bool
-IonBuilder::inlineScriptedCall(JSFunction *target, uint32 argc)
+IonBuilder::inlineScriptedCall(HandleFunction target, uint32 argc, bool constructing)
 {
     IonSpew(IonSpew_Inlining, "Recursively building");
 
@@ -2920,7 +2945,7 @@ IonBuilder::inlineScriptedCall(JSFunction *target, uint32 argc)
 
     IonBuilder inlineBuilder(cx, scopeChain, temp(), graph(), &oracle,
                              *info, inliningDepth + 1, loopDepth_);
-    return jsop_call_inline(target, argc, inlineBuilder);
+    return jsop_call_inline(inlineBuilder, target, argc, constructing);
 }
 
 void
@@ -3158,8 +3183,8 @@ IonBuilder::jsop_call_fun_barrier(HandleFunction target, uint32 argc,
             }
         }
 
-        if (!constructing && makeInliningDecision(target))
-            return inlineScriptedCall(target, argc);
+        if (makeInliningDecision(target))
+            return inlineScriptedCall(target, argc, constructing);
     }
 
     return makeCallBarrier(target, argc, constructing, types, barrier);

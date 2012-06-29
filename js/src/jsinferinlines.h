@@ -159,16 +159,20 @@ TypeIdString(jsid id)
 #endif
 }
 
-/* Assert code to know which PCs are reasonable to be considering inlining on */
+/* Assert code to know which PCs are reasonable to be considering inlining on. */
 inline bool
 IsInlinableCall(jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);
 
     // CALL, FUNCALL, FUNAPPLY (Standard callsites)
+    // NEW (IonMonkey-only callsite)
     // GETPROP, CALLPROP, and LENGTH. (Inlined Getters)
     // SETPROP, SETNAME, SETGNAME (Inlined Setters)
     return op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY ||
+#ifdef JS_ION
+           op == JSOP_NEW ||
+#endif
            op == JSOP_GETPROP || op == JSOP_CALLPROP || op == JSOP_LENGTH ||
            op == JSOP_SETPROP || op == JSOP_SETGNAME || op == JSOP_SETNAME;
 

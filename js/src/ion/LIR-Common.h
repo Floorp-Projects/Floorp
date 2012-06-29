@@ -431,6 +431,30 @@ class LCreateThis : public LInstructionHelper<1, 2, 0>
     }
 };
 
+// If the Value is an Object, return unbox(Value).
+// Otherwise, return the other Object.
+class LReturnFromCtor : public LInstructionHelper<1, BOX_PIECES + 1, 0>
+{
+  public:
+    LIR_HEADER(ReturnFromCtor);
+
+    LReturnFromCtor(const LAllocation &object)
+    {
+        // Value set by useBox() during lowering.
+        setOperand(LReturnFromCtor::ObjectIndex, object);
+    }
+
+    const LAllocation *getObject() {
+        return getOperand(LReturnFromCtor::ObjectIndex);
+    }
+    const LDefinition *output() {
+        return getDef(0);
+    }
+
+    static const size_t ValueIndex = 0;
+    static const size_t ObjectIndex = BOX_PIECES;
+};
+
 // Writes an argument for a function call to the frame's argument vector.
 class LStackArg : public LInstructionHelper<0, BOX_PIECES, 0>
 {
