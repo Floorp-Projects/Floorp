@@ -19,6 +19,14 @@ TEST_FILES = \
   test_screen_orientation.html \
   $(NULL)
 
+CHROME_TEST_FILES = \
+   test_bug715041.xul \
+   test_bug715041_removal.xul \
+   $(NULL)
+
 libs:: $(TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(CHROME_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
