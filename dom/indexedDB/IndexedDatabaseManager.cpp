@@ -8,10 +8,12 @@
 #include "DatabaseInfo.h"
 
 #include "nsIAtom.h"
+#include "nsIConsoleService.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsIFile.h"
 #include "nsIFileStorage.h"
 #include "nsIObserverService.h"
+#include "nsIScriptError.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISHEntry.h"
@@ -26,6 +28,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
@@ -314,6 +317,86 @@ IndexedDatabaseManager::GetDatabaseId(const nsACString& aOrigin,
   NS_ENSURE_TRUE(atom, nsnull);
 
   return atom.forget();
+}
+
+// static
+nsresult
+IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
+                                          nsEventChainPostVisitor& aVisitor)
+{
+  NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
+  if (!aOwner) {
+    return NS_OK;
+  }
+
+  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
+    return NS_OK;
+  }
+
+  nsString type;
+  nsresult rv = aVisitor.mDOMEvent->GetType(type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!type.EqualsLiteral(ERROR_EVT_STR)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMEventTarget> eventTarget;
+  rv = aVisitor.mDOMEvent->GetTarget(getter_AddRefs(eventTarget));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIIDBRequest> strongRequest = do_QueryInterface(eventTarget);
+  IDBRequest* request = static_cast<IDBRequest*>(strongRequest.get());
+  NS_ENSURE_TRUE(request, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDOMDOMError> error;
+  rv = request->GetError(getter_AddRefs(error));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsString errorName;
+  if (error) {
+    rv = error->GetName(errorName);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsScriptErrorEvent event(true, NS_LOAD_ERROR);
+  request->FillScriptErrorEvent(&event);
+  event.errorMsg = errorName.get();
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aOwner));
+  NS_ASSERTION(sgo, "How can this happen?!");
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  if (NS_FAILED(sgo->HandleScriptError(&event, &status))) {
+    NS_WARNING("Failed to dispatch script error event");
+    status = nsEventStatus_eIgnore;
+  }
+
+  bool preventDefaultCalled = status == nsEventStatus_eConsumeNoDefault;
+  if (preventDefaultCalled) {
+    return NS_OK;
+  }
+
+  // Log an error to the error console.
+  nsCOMPtr<nsIScriptError> scriptError =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (NS_FAILED(scriptError->InitWithWindowID(event.errorMsg,
+                                              event.fileName,
+                                              nsnull, event.lineNr,
+                                              nsnull, 0,
+                                              "IndexedDB",
+                                              aOwner->WindowID()))) {
+    NS_WARNING("Failed to init script error!");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return consoleService->LogMessage(scriptError);
 }
 
 bool

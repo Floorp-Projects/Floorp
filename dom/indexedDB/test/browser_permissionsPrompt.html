@@ -24,6 +24,8 @@
           testException = event.target.error.name;
         }
 
+        event.preventDefault();
+
         finishTest()
         yield;
       }
