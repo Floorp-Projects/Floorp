@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Testing constants on a chrome worker thread"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+
+let worker;
+
+function test() {
+  ok(true, "test_constants.xul: Starting test");
+  worker = new ChromeWorker("worker_constants.js");
+  SimpleTest.waitForExplicitFinish();
+  ok(true, "test_constants.xul: Chrome worker created");
+  worker.onerror = function(error) {
+    error.preventDefault();
+    ok(false, "error "+error);
+  }
+  worker.onmessage = function(msg) {
+    switch (msg.data.kind) {
+    case "is":
+      return SimpleTest.is(msg.data.a, msg.data.b, msg.data.description);
+    case "isnot":
+      return SimpleTest.isnot(msg.data.a, msg.data.b, msg.data.description);
+    case "ok":
+      return SimpleTest.ok(msg.data.condition, msg.data.description);
+    case "finish":
+      SimpleTest.finish();
+      return;
+    default:
+      SimpleTest.ok(false, "test_constants.xul: wrong message "+JSON.stringify(msg.data));
+      return;
+    }
+  };
+  worker.postMessage(0);
+  ok(true, "test_constants.xul: Test in progress");
+};
+]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>
