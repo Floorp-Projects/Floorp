@@ -10,15 +10,6 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var _CSvc;
-function get_cache_service() {
-  if (_CSvc)
-    return _CSvc;
-
-  return _CSvc = Cc["@mozilla.org/network/cache-service;1"].
-                 getService(Ci.nsICacheService);
-}
-
 function GetOutputStreamForEntry(key, asFile, append, callback)
 {
   this._key = key;
@@ -164,7 +155,7 @@ function run_test() {
   do_get_profile();
 
   // clear the cache
-  get_cache_service().evictEntries(Ci.nsICache.STORE_ANYWHERE);
+  evict_cache_entries();
   write_entry();
   do_test_pending();
 }

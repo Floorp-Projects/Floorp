@@ -1,6 +1,5 @@
 do_load_httpd_js();
 var httpserver = new nsHttpServer();
-var cacheService;
 var ios;
 
 // Test the handling of a cache revalidation with mismatching last-modified
@@ -103,12 +102,10 @@ var listener_1 = {
 
 function run_test() {
     do_get_profile();
-    cacheService = Cc["@mozilla.org/network/cache-service;1"].
-        getService(Ci.nsICacheService);
     ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
 
-    cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
+    evict_cache_entries();
 
     httpserver.registerPathHandler("/test1", handler);
     httpserver.start(4444);

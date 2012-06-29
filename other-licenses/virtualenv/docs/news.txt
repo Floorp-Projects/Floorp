@@ -1,6 +1,49 @@
 Changes & News
 --------------
 
+.. warning::
+
+   Python bugfix releases 2.6.8, 2.7.3, 3.1.5 and 3.2.3 include a change that
+   will cause "import random" to fail with "cannot import name urandom" on any
+   virtualenv created on a Unix host with an earlier release of Python
+   2.6/2.7/3.1/3.2, if the underlying system Python is upgraded. This is due to
+   the fact that a virtualenv uses the system Python's standard library but
+   contains its own copy of the Python interpreter, so an upgrade to the system
+   Python results in a mismatch between the version of the Python interpreter
+   and the version of the standard library. It can be fixed by removing
+   ``$ENV/bin/python`` and re-running virtualenv on the same target directory
+   with the upgraded Python.
+
+
+1.7.2 (2012-06-22)
+~~~~~~~~~~~~~~~~~~
+
+* Updated to distribute 0.6.27.
+
+* Fix activate.fish on OS X. Fixes #8. Thanks David Schoonover.
+
+* Create a virtualenv-x.x script with the Python version when installing, so
+  virtualenv for multiple Python versions can be installed to the same
+  script location. Thanks Miki Tebeka.
+
+* Restored ability to create a virtualenv with a path longer than 78
+  characters, without breaking creation of virtualenvs with non-ASCII paths.
+  Thanks, Bradley Ayers.
+
+* Added ability to create virtualenvs without having installed Apple's
+  developers tools (using an own implementation of ``install_name_tool``).
+  Thanks Mike Hommey.
+
+* Fixed PyPy and Jython support on Windows. Thanks Konstantin Zemlyak.
+
+* Added pydoc script to ease use. Thanks Marc Abramowitz. Fixes #149.
+
+* Fixed creating a bootstrap script on Python 3. Thanks Raul Leal. Fixes #280.
+
+* Fixed inconsistency when having set the ``PYTHONDONTWRITEBYTECODE`` env var
+  with the --distribute option or the ``VIRTUALENV_USE_DISTRIBUTE`` env var.
+  ``VIRTUALENV_USE_DISTRIBUTE`` is now considered again as a legacy alias.
+
 1.7.1.2 (2012-02-17)
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -210,7 +253,7 @@ Changes & News
 * Fix problem with ``virtualenv --relocate`` when ``bin/`` has
   subdirectories (e.g., ``bin/.svn/``); from Alan Franzoni.
 
-* If you set ``$VIRTUALENV_USE_DISTRIBUTE`` then virtualenv will use
+* If you set ``$VIRTUALENV_DISTRIBUTE`` then virtualenv will use
   Distribute by default (so you don't have to remember to use
   ``--distribute``).
 
@@ -301,7 +344,7 @@ Changes & News
   ``distutils.cfg`` -- this has been causing problems for a lot of
   people, in rather obscure ways.
 
-* If you use a `boot script <./index.html#boot-script>`_ it will attempt to import ``virtualenv``
+* If you use a boot script it will attempt to import ``virtualenv``
   and find a pre-downloaded Setuptools egg using that.
 
 * Added platform-specific paths, like ``/usr/lib/pythonX.Y/plat-linux2``
