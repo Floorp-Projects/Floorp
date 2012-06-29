@@ -2960,8 +2960,8 @@ DoMergingCC(bool aForced)
   static PRInt32 sUnmergedNeeded = 0;
   static PRInt32 sMergedInARow = 0;
 
-  MOZ_ASSERT(0 <= sUnmergedNeeded <= kMinConsecutiveUnmerged);
-  MOZ_ASSERT(0 <= sMergedInARow <= kMaxConsecutiveMerged);
+  MOZ_ASSERT(0 <= sUnmergedNeeded && sUnmergedNeeded <= kMinConsecutiveUnmerged);
+  MOZ_ASSERT(0 <= sMergedInARow && sMergedInARow <= kMaxConsecutiveMerged);
 
   if (sMergedInARow == kMaxConsecutiveMerged) {
     MOZ_ASSERT(sUnmergedNeeded == 0);
