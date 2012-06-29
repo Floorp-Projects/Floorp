@@ -47,15 +47,7 @@ GetNativeFromGeckoAccessible(nsIAccessible* aAccessible)
    * Weak reference to the parent
    */
   mozAccessible* mParent;
-  
-  /**
-   * We can be marked as 'expired' if Shutdown() is called on our geckoAccessible.
-   * since we might still be retained by some third-party, we need to do cleanup
-   * in |expire|, and prevent any potential harm that could come from someone using us
-   * after this point.
-   */
-  BOOL mIsExpired;
-  
+
   /**
    * The nsIAccessible role of our gecko accessible.
    */

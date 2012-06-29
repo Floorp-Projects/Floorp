@@ -33,7 +33,7 @@
 - (NSArray*)accessibilityAttributeNames
 {
   // if we're expired, we don't support any attributes.
-  if (mIsExpired)
+  if (!mGeckoAccessible)
     return [NSArray array];
   
   static NSMutableArray* attributes = nil;
@@ -57,7 +57,7 @@
 - (NSArray*)accessibilityActionNames 
 {
     // if we're expired, we don't support any attributes.
-  if (mIsExpired)
+  if (!mGeckoAccessible)
     return [NSArray array];
 
   static NSArray* actionNames = nil;

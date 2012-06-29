@@ -73,7 +73,6 @@ GetClosestInterestingAccessible(id anObject)
 
   if ((self = [super init])) {
     mGeckoAccessible = geckoAccessible;
-    mIsExpired = NO;
     mRole = geckoAccessible->Role();
   }
    
@@ -100,7 +99,7 @@ GetClosestInterestingAccessible(id anObject)
 
   // unknown (either unimplemented, or irrelevant) elements are marked as ignored
   // as well as expired elements.
-  return mIsExpired || [[self role] isEqualToString:NSAccessibilityUnknownRole];
+  return !mGeckoAccessible || [[self role] isEqualToString:NSAccessibilityUnknownRole];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
@@ -110,7 +109,7 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   // if we're expired, we don't support any attributes.
-  if (mIsExpired)
+  if (!mGeckoAccessible)
     return [NSArray array];
   
   static NSArray *generalAttributes = nil;
@@ -148,7 +147,7 @@ GetClosestInterestingAccessible(id anObject)
 {  
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  if (mIsExpired)
+  if (!mGeckoAccessible)
     return nil;
 
 #if DEBUG
@@ -234,7 +233,7 @@ GetClosestInterestingAccessible(id anObject)
 
 - (id)accessibilityHitTest:(NSPoint)point
 {
-  if (mIsExpired)
+  if (!mGeckoAccessible)
     return nil;
 
   // Convert from cocoa's coordinate system to gecko's. According to the docs
@@ -276,7 +275,7 @@ GetClosestInterestingAccessible(id anObject)
 
 - (id)accessibilityFocusedUIElement
 {
-  if (mIsExpired)
+  if (!mGeckoAccessible)
     return nil;
   
   Accessible* focusedGeckoChild = mGeckoAccessible->FocusedChild();
@@ -408,7 +407,7 @@ GetClosestInterestingAccessible(id anObject)
 
 - (NSString*)role
 {
-  if (mIsExpired)
+  if (!mGeckoAccessible)
     return nil;
 
 #ifdef DEBUG
@@ -549,18 +548,21 @@ GetClosestInterestingAccessible(id anObject)
 
 - (BOOL)canBeFocused
 {
-  return mGeckoAccessible->InteractiveState() & states::FOCUSABLE;
+  return mGeckoAccessible && (mGeckoAccessible->InteractiveState() & states::FOCUSABLE);
 }
 
 - (BOOL)focus
 {
+  if (!mGeckoAccessible)
+    return NO;
+  
   nsresult rv = mGeckoAccessible->TakeFocus();
   return NS_SUCCEEDED(rv);
 }
 
 - (BOOL)isEnabled
 {
-  return (mGeckoAccessible->InteractiveState() & states::UNAVAILABLE) == 0;
+  return mGeckoAccessible && ((mGeckoAccessible->InteractiveState() & states::UNAVAILABLE) == 0);
 }
 
 // The root accessible calls this when the focused node was
@@ -625,7 +627,6 @@ GetClosestInterestingAccessible(id anObject)
 
   [self invalidateChildren];
 
-  mIsExpired = YES;
   mGeckoAccessible = nsnull;
   
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -633,7 +634,7 @@ GetClosestInterestingAccessible(id anObject)
 
 - (BOOL)isExpired
 {
-  return mIsExpired;
+  return !mGeckoAccessible;
 }
 
 #pragma mark -
