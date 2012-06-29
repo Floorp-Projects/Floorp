@@ -311,6 +311,9 @@ void
 IDBDatabase::EnterSetVersionTransaction()
 {
   NS_ASSERTION(!mRunningVersionChange, "How did that happen?");
+
+  mPreviousDatabaseInfo = mDatabaseInfo->Clone();
+
   mRunningVersionChange = true;
 }
 
@@ -318,7 +321,17 @@ void
 IDBDatabase::ExitSetVersionTransaction()
 {
   NS_ASSERTION(mRunningVersionChange, "How did that happen?");
+
+  mPreviousDatabaseInfo = nsnull;
+
   mRunningVersionChange = false;
+}
+
+void
+IDBDatabase::RevertToPreviousState()
+{
+  mDatabaseInfo = mPreviousDatabaseInfo;
+  mPreviousDatabaseInfo = nsnull;
 }
 
 void
