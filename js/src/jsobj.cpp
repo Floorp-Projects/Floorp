@@ -1190,7 +1190,7 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    RootedObject callable(cx, js_ValueToCallableObject(cx, &vp[3], 0));
+    RootedObject callable(cx, ValueToCallable(cx, &vp[3]));
     if (!callable)
         return false;
 
@@ -6323,20 +6323,6 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             }
             fprintf(stderr, "  pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
-        }
-        Value *sp = i.spFuzzy();
-        fprintf(stderr, "  slots: %p\n", (void *) fp->slots());
-        fprintf(stderr, "  sp:    %p = slots + %u\n", (void *) sp, (unsigned) (sp - fp->slots()));
-        if (sp - fp->slots() < 10000) { // sanity
-            for (Value *p = fp->slots(); p < sp; p++) {
-                fprintf(stderr, "    %p: ", (void *) p);
-                dumpValue(*p);
-                fputc('\n', stderr);
-            }
-        }
-        if (fp->hasArgs()) {
-            fprintf(stderr, "  actuals: %p (%u) ", (void *) fp->actuals(), (unsigned) fp->numActualArgs());
-            fprintf(stderr, "  formals: %p (%u)\n", (void *) fp->formals(), (unsigned) fp->numFormalArgs());
         }
         MaybeDumpObject("blockChain", fp->maybeBlockChain());
         if (!fp->isDummyFrame()) {

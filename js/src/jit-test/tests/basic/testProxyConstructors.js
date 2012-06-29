@@ -12,6 +12,6 @@ try {
     new x;
 }
 catch (e) {
-    assertEq(e.message, 'new x is not a constructor');
+    assertEq(String(e.message).indexOf('is not a constructor') === -1, false);
 }
 throw "ExitCleanly"

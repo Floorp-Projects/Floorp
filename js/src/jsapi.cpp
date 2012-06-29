@@ -258,7 +258,6 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
     jsval *sp;
     JSBool required;
     char c;
-    JSFunction *fun;
     double d;
     JSString *str;
     JSObject *obj;
@@ -277,8 +276,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
         }
         if (sp == argv + argc) {
             if (required) {
-                fun = js_ValueToFunction(cx, &argv[-2], 0);
-                if (fun) {
+                if (JSFunction *fun = ReportIfNotFunction(cx, argv[-2])) {
                     char numBuf[12];
                     JS_snprintf(numBuf, sizeof numBuf, "%u", argc);
                     JSAutoByteString funNameBytes;
@@ -342,7 +340,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             *va_arg(ap, JSObject **) = obj;
             break;
           case 'f':
-            obj = js_ValueToFunction(cx, sp, 0);
+            obj = ReportIfNotFunction(cx, *sp);
             if (!obj)
                 return JS_FALSE;
             *sp = OBJECT_TO_JSVAL(obj);
@@ -436,7 +434,7 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
         break;
       case JSTYPE_FUNCTION:
         *vp = v;
-        obj = js_ValueToFunction(cx, vp, JSV2F_SEARCH_STACK);
+        obj = ReportIfNotFunction(cx, *vp);
         ok = (obj != NULL);
         break;
       case JSTYPE_STRING:
@@ -479,7 +477,7 @@ JS_ValueToFunction(JSContext *cx, jsval v)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
-    return js_ValueToFunction(cx, &v, JSV2F_SEARCH_STACK);
+    return ReportIfNotFunction(cx, v);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -488,7 +486,7 @@ JS_ValueToConstructor(JSContext *cx, jsval v)
     AssertNoGC(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, v);
-    return js_ValueToFunction(cx, &v, JSV2F_SEARCH_STACK);
+    return ReportIfNotFunction(cx, v);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -4612,12 +4610,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent_)
     }
 
     if (!funobj->isFunction()) {
-        /*
-         * We cannot clone this object, so fail (we used to return funobj, bad
-         * idea, but we changed incompatibly to teach any abusers a lesson!).
-         */
-        Value v = ObjectValue(*funobj);
-        js_ReportIsNotFunction(cx, &v, 0);
+        ReportIsNotFunction(cx, ObjectValue(*funobj));
         return NULL;
     }
 
