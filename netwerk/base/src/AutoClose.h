@@ -33,17 +33,16 @@ public:
     return mPtr.forget();
   }
 
+  void takeOver(nsCOMPtr<T> & rhs)
+  {
+    Close();
+    mPtr = rhs.forget();
+  }
+
   void takeOver(AutoClose<T> & rhs)
   {
     Close();
     mPtr = rhs.mPtr.forget();
-  }
-
-  // assign from |do_QueryInterface(expr, &rv)|
-  void operator=(const nsQueryInterfaceWithError rhs)
-  {
-    Close();
-    mPtr = rhs;
   }
 
   void CloseAndRelease()
