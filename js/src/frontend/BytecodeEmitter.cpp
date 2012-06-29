@@ -847,13 +847,13 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
     ScopeCoordinate sc;
     if (JOF_OPTYPE(pn->getOp()) == JOF_QARG) {
         sc.hops = ClonedBlockDepth(bce);
-        sc.slot = bce->sc->bindings.argToSlot(pn->pn_cookie.slot());
+        sc.slot = bce->sc->bindings.formalIndexToSlot(pn->pn_cookie.slot());
     } else {
         JS_ASSERT(JOF_OPTYPE(pn->getOp()) == JOF_LOCAL || pn->isKind(PNK_FUNCTION));
         unsigned local = pn->pn_cookie.slot();
         if (local < bce->sc->bindings.numVars()) {
             sc.hops = ClonedBlockDepth(bce);
-            sc.slot = bce->sc->bindings.localToSlot(local);
+            sc.slot = bce->sc->bindings.varIndexToSlot(local);
         } else {
             unsigned depth = local - bce->sc->bindings.numVars();
             unsigned hops = 0;
@@ -864,7 +864,7 @@ EmitAliasedVarOp(JSContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *bce)
                 b = b->enclosingBlock();
             }
             sc.hops = hops;
-            sc.slot = depth - b->stackDepth();
+            sc.slot = b->localIndexToSlot(bce->sc->bindings, local);
         }
     }
 
@@ -2521,14 +2521,15 @@ frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *bod
         bce->switchToProlog();
         if (Emit1(cx, bce, JSOP_ARGUMENTS) < 0)
             return false;
+        unsigned varIndex = bce->sc->bindings.argumentsVarIndex(cx);
         if (bce->sc->bindingsAccessedDynamically()) {
             ScopeCoordinate sc;
             sc.hops = 0;
-            sc.slot = bce->sc->bindings.localToSlot(bce->sc->argumentsLocal());
+            sc.slot = bce->sc->bindings.varIndexToSlot(varIndex);
             if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
                 return false;
         } else {
-            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, bce->sc->argumentsLocal(), bce))
+            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, varIndex, bce))
                 return false;
         }
         if (Emit1(cx, bce, JSOP_POP) < 0)
