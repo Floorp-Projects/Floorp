@@ -237,7 +237,6 @@ ServerBSO.prototype = {
     }
 
     this.modified = request.timestamp;
-    response.newModified = request.timestamp;
     response.setHeader("X-Last-Modified", "" + this.modified, false);
 
     response.setStatusLine(request.httpVersion, code, status);
@@ -262,7 +261,7 @@ ServerBSO.prototype = {
  *        An optional timestamp value to initialize the modified time of the
  *        collection. This should be in the format returned by new_timestamp().
  */
-function StorageServerCollection(bsos, acceptNew, timestamp) {
+function StorageServerCollection(bsos, acceptNew, timestamp=new_timestamp()) {
   this._bsos = bsos || {};
   this.acceptNew = acceptNew || false;
 
@@ -272,8 +271,8 @@ function StorageServerCollection(bsos, acceptNew, timestamp) {
    * has a modified time.
    */
   CommonUtils.ensureMillisecondsTimestamp(timestamp);
+  this._timestamp = timestamp;
 
-  this.timestamp = timestamp || new_timestamp();
   this._log = Log4Moz.repository.getLogger(STORAGE_HTTP_LOGGER);
 }
 StorageServerCollection.prototype = {
@@ -401,13 +400,13 @@ StorageServerCollection.prototype = {
     }
 
     if (options.newer) {
-      if (bso.modified < options.newer) {
+      if (bso.modified <= options.newer) {
         return false;
       }
     }
 
     if (options.older) {
-      if (bso.modified > options.older) {
+      if (bso.modified >= options.older) {
         return false;
       }
     }
@@ -717,7 +716,6 @@ StorageServerCollection.prototype = {
       });
 
       body = normalized.join("\n") + "\n";
-      _(body);
     } else {
       response.setHeader("Content-Type", "application/json", false);
       body = JSON.stringify({items: data});
@@ -773,6 +771,10 @@ StorageServerCollection.prototype = {
       throw HTTP_415;
     }
 
+    if (this._ensureUnmodifiedSince(request, response)) {
+      return;
+    }
+
     let res = this.post(input, request.timestamp);
     let body = JSON.stringify(res);
     response.setHeader("Content-Type", "application/json", false);
@@ -787,6 +789,10 @@ StorageServerCollection.prototype = {
     this._log.debug("Invoking StorageServerCollection.DELETE.");
 
     let options = this.parseOptions(request);
+
+    if (this._ensureUnmodifiedSince(request, response)) {
+      return;
+    }
 
     let deleted = this.delete(options);
     response.deleted = deleted;
@@ -814,7 +820,28 @@ StorageServerCollection.prototype = {
       request.setHeader("Allow", "GET,POST,DELETE");
       response.setStatusLine(request.httpVersion, 405, "Method Not Allowed");
     };
-  }
+  },
+
+  _ensureUnmodifiedSince: function _ensureUnmodifiedSince(request, response) {
+    if (!request.hasHeader("x-if-unmodified-since")) {
+      return false;
+    }
+
+    let requestModified = parseInt(request.getHeader("x-if-unmodified-since"),
+                                   10);
+    let serverModified = this.timestamp;
+
+    this._log.debug("Request modified time: " + requestModified +
+                    "; Server modified time: " + serverModified);
+    if (serverModified <= requestModified) {
+      return false;
+    }
+
+    this._log.info("Conditional request rejected because client time older " +
+                   "than collection timestamp.");
+    response.setStatusLine(request.httpVersion, 412, "Precondition Failed");
+    return true;
+  },
 };
 
 
@@ -1217,6 +1244,7 @@ StorageServer.prototype = {
    * HTTP response utility.
    */
   respond: function respond(req, resp, code, status, body, headers, timestamp) {
+    this._log.info("Response: " + code + " " + status);
     resp.setStatusLine(req.httpVersion, code, status);
     for each (let [header, value] in Iterator(headers || this.defaultHeaders)) {
       resp.setHeader(header, value, false);
@@ -1501,7 +1529,7 @@ StorageServer.prototype = {
 
               bso.putHandler(req, resp);
 
-              coll.timestamp = resp.newModified;
+              coll.timestamp = req.timestamp;
               return resp;
             }
 
