@@ -431,8 +431,10 @@ function isTest(filename, pattern)
     return pattern.test(filename);
 
   // File name is a URL style path to a test file, make sure that we check for
-  // tests that start with test_.
-  testPattern = /^test_/;
+  // tests that start with the appropriate prefix.
+  var testPrefix = typeof(_TEST_PREFIX) == "string" ? _TEST_PREFIX : "test_";
+  var testPattern = new RegExp("^" + testPrefix);
+
   pathPieces = filename.split('/');
     
   return testPattern.test(pathPieces[pathPieces.length - 1]) &&

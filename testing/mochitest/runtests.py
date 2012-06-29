@@ -139,6 +139,16 @@ class MochitestOptions(optparse.OptionParser):
                     help = "run browser chrome Mochitests")
     defaults["browserChrome"] = False
 
+    self.add_option("--webapprt-content",
+                    action = "store_true", dest = "webapprtContent",
+                    help = "run WebappRT content tests")
+    defaults["webapprtContent"] = False
+
+    self.add_option("--webapprt-chrome",
+                    action = "store_true", dest = "webapprtChrome",
+                    help = "run WebappRT chrome tests")
+    defaults["webapprtChrome"] = False
+
     self.add_option("--a11y",
                     action = "store_true", dest = "a11y",
                     help = "run accessibility Mochitests");
@@ -304,6 +314,9 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
       options.testManifest = options.excludeTests
       options.runOnly = False
 
+    if options.webapprtContent and options.webapprtChrome:
+      self.error("Only one of --webapprt-content and --webapprt-chrome may be given.")
+
     return options
 
 
@@ -323,6 +336,7 @@ class MochitestServer:
     self.webServer = options.webServer
     self.httpPort = options.httpPort
     self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
+    self.testPrefix = "'webapprt_'" if options.webapprtContent else "undefined"
 
   def start(self):
     "Run the Mochitest server, returning the process ID of the server."
@@ -335,8 +349,8 @@ class MochitestServer:
     args = ["-g", self._xrePath,
             "-v", "170",
             "-f", "./" + "httpd.js",
-            "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR ='%(server)s';" % 
-                   {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer },
+            "-e", "const _PROFILE_PATH = '%(profile)s';const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR = '%(server)s'; const _TEST_PREFIX = %(testPrefix)s;" %
+                   {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer, "testPrefix" : self.testPrefix },
             "-f", "./" + "server.js"]
 
     xpcshell = os.path.join(self._utilityPath,
@@ -547,7 +561,7 @@ class Mochitest(object):
     # allow relative paths for logFile
     if options.logFile:
       options.logFile = self.getLogFilePath(options.logFile)
-    if options.browserChrome or options.chrome or options.a11y:
+    if options.browserChrome or options.chrome or options.a11y or options.webapprtChrome:
       self.makeTestConfig(options)
     else:
       if options.autorun:
@@ -641,6 +655,10 @@ class Mochitest(object):
     if len(self.urlOpts) > 0:
       testURL += "?" + "&".join(self.urlOpts)
 
+    if options.webapprtContent:
+      options.browserArgs.extend(('-test-mode', testURL))
+      testURL = None
+
     # Remove the leak detection file so it can't "leak" to the tests run.
     # The file is not there if leak logging was not enabled in the application build.
     if os.path.exists(self.leak_report_file):
@@ -655,7 +673,9 @@ class Mochitest(object):
       timeout = 330.0 # default JS harness timeout is 300 seconds
 
     # it's a debug build, we can parse leaked DOMWindows and docShells
-    if Automation.IS_DEBUG_BUILD:
+    # but skip for WebappRT chrome tests, where DOMWindow "leaks" aren't
+    # meaningful.  See https://bugzilla.mozilla.org/show_bug.cgi?id=733631#c46
+    if Automation.IS_DEBUG_BUILD and not options.webapprtChrome:
       logger = ShutdownLeakLogger(self.automation.log)
     else:
       logger = None
@@ -733,7 +753,9 @@ class Mochitest(object):
       testRoot = 'browser'
     elif (options.a11y):
       testRoot = 'a11y'
- 
+    elif (options.webapprtChrome):
+      testRoot = 'webapprtChrome'
+
     if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ["MOZ_HIDE_RESULTS_TABLE"] == "1":
       options.hideResultsTable = True
 
@@ -795,13 +817,15 @@ toolbar#nav-bar {
       self.automation.log.warning("TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension")
       return None
 
-    # Support Firefox (browser), B2G (shell) and SeaMonkey (navigator).
+    # Support Firefox (browser), B2G (shell), SeaMonkey (navigator), and Webapp
+    # Runtime (webapp).
     chrome = ""
-    if options.browserChrome or options.chrome or options.a11y:
+    if options.browserChrome or options.chrome or options.a11y or options.webapprtChrome:
       chrome += """
 overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul
 overlay chrome://browser/content/shell.xul chrome://mochikit/content/browser-test-overlay.xul
 overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/browser-test-overlay.xul
+overlay chrome://webapprt/content/webapp.xul chrome://mochikit/content/browser-test-overlay.xul
 """
 
     self.installChromeJar(jarDir, chrome, options)
