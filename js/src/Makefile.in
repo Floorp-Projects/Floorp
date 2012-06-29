@@ -283,6 +283,7 @@ CPPSRCS +=	MIR.cpp \
 		TypeOracle.cpp \
 		TypePolicy.cpp \
 		ValueNumbering.cpp \
+		RangeAnalysis.cpp \
 		VMFunctions.cpp \
 		AliasAnalysis.cpp \
 		$(NULL)

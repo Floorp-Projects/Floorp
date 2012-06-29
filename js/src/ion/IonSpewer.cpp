@@ -233,6 +233,8 @@ ion::CheckLogging()
         EnableChannel(IonSpew_MIR);
     if (ContainsFlag(env, "gvn"))
         EnableChannel(IonSpew_GVN);
+    if (ContainsFlag(env, "range"))
+        EnableChannel(IonSpew_Range);
     if (ContainsFlag(env, "licm"))
         EnableChannel(IonSpew_LICM);
     if (ContainsFlag(env, "regalloc"))
