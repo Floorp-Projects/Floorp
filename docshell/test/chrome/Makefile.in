@@ -93,6 +93,8 @@ _TEST_FILES =	\
 		test_bug311007.xul \
 		bug311007_window.xul \
 		test_principalInherit.xul \
+		test_mozFrameType.xul \
+		mozFrameType_window.xul \
 		$(NULL)
 
 _DOCSHELL_SUBHARNESS = \

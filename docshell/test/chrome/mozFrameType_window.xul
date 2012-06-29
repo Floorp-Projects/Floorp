@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<window title="Test mozFrameType attribute"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="runTests();">
+
+  <html:iframe id="normalFrame"/>
+  <html:iframe id="typeContentFrame" mozframetype="content"/>
+
+  <script type="application/javascript" src="docshell_helpers.js" />
+  <script type="application/javascript"><![CDATA[
+    function runTests() {
+      let opener = window.opener;
+      let SimpleTest = opener.wrappedJSObject.SimpleTest;
+
+      let Ci = Components.interfaces;
+
+      function getDocShellType(frame) {
+        return frame.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDocShell)
+                                  .QueryInterface(Ci.nsIDocShellTreeItem)
+                                  .itemType;
+      }
+
+      var normalFrame = document.getElementById("normalFrame");
+      var typeContentFrame = document.getElementById("typeContentFrame");
+
+      SimpleTest.is(getDocShellType(normalFrame), Ci.nsIDocShellTreeItem.typeChrome,
+                    "normal iframe in chrome document is typeChrome");
+      SimpleTest.is(getDocShellType(typeContentFrame), Ci.nsIDocShellTreeItem.typeContent,
+                    "iframe with mozFrameType='content' in chrome document is typeContent");
+
+      // Wait for the window to be closed before finishing the test
+      let ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                   .getService(Components.interfaces.nsIWindowWatcher);
+      ww.registerNotification(function(subject, topic, data) {
+        if (topic == "domwindowclosed") {
+          ww.unregisterNotification(arguments.callee);
+          SimpleTest.waitForFocus(function() {
+            SimpleTest.finish();
+          }, opener);
+        }
+      });
+
+      window.close();
+    }
+  ]]></script>
+</window>
+
