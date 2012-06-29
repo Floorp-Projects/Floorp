@@ -2144,7 +2144,7 @@ JSScript::setNeedsArgsObj(bool needsArgsObj)
 }
 
 /* static */ bool
-JSScript::applySpeculationFailed(JSContext *cx, JSScript *script_)
+JSScript::argumentsOptimizationFailed(JSContext *cx, JSScript *script_)
 {
     Rooted<JSScript*> script(cx, script_);
 

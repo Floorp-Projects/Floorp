@@ -94,6 +94,44 @@ ComputeThis(JSContext *cx, StackFrame *fp)
 }
 
 /*
+ * Every possible consumer of MagicValue(JS_OPTIMIZED_ARGUMENTS) (as determined
+ * by ScriptAnalysis::needsArgsObj) must check for these magic values and, when
+ * one is received, act as if the value were the function's ArgumentsObject.
+ * Additionally, it is possible that, after 'arguments' was copied into a
+ * temporary, the arguments object has been created a some other failed guard
+ * that called JSScript::argumentsOptimizationFailed. In this case, it is
+ * always valid (and necessary) to replace JS_OPTIMIZED_ARGUMENTS with the real
+ * arguments object.
+ */
+static inline bool
+IsOptimizedArguments(StackFrame *fp, Value *vp)
+{
+    if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS) && fp->script()->needsArgsObj())
+        *vp = ObjectValue(fp->argsObj());
+    return vp->isMagic(JS_OPTIMIZED_ARGUMENTS);
+}
+
+/*
+ * One optimized consumer of MagicValue(JS_OPTIMIZED_ARGUMENTS) is f.apply.
+ * However, this speculation must be guarded before calling 'apply' in case it
+ * is not the builtin Function.prototype.apply.
+ */
+static inline bool
+GuardFunApplyArgumentsOptimization(JSContext *cx)
+{
+    FrameRegs &regs = cx->regs();
+    if (IsOptimizedArguments(regs.fp(), &regs.sp[-1])) {
+        CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
+        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
+            if (!JSScript::argumentsOptimizationFailed(cx, regs.fp()->script()))
+                return false;
+            regs.sp[-1] = ObjectValue(regs.fp()->argsObj());
+        }
+    }
+    return true;
+}
+
+/*
  * Return an object on which we should look for the properties of |value|.
  * This helps us implement the custom [[Get]] method that ES5's GetValue
  * algorithm uses for primitive values, without actually constructing the
@@ -166,8 +204,7 @@ GetPropertyGenericMaybeCallXML(JSContext *cx, JSOp op, HandleObject obj, HandleI
 }
 
 inline bool
-GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc,
-                     const Value &lval, Value *vp)
+GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value &lval, Value *vp)
 {
     JS_ASSERT(vp != &lval);
 
@@ -179,7 +216,7 @@ GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc,
             *vp = Int32Value(lval.toString()->length());
             return true;
         }
-        if (lval.isMagic(JS_OPTIMIZED_ARGUMENTS)) {
+        if (IsOptimizedArguments(cx->fp(), &lval)) {
             *vp = Int32Value(cx->fp()->numActualArgs());
             return true;
         }
@@ -657,7 +694,7 @@ GetObjectElementOperation(JSContext *cx, JSOp op, HandleObject obj, const Value 
 }
 
 static JS_ALWAYS_INLINE bool
-GetElementOperation(JSContext *cx, JSOp op, const Value &lref, const Value &rref, Value *res)
+GetElementOperation(JSContext *cx, JSOp op, Value &lref, const Value &rref, Value *res)
 {
     JS_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
@@ -673,8 +710,21 @@ GetElementOperation(JSContext *cx, JSOp op, const Value &lref, const Value &rref
         }
     }
 
-    if (lref.isMagic(JS_OPTIMIZED_ARGUMENTS))
-        return NormalArgumentsObject::optimizedGetElem(cx, cx->fp(), rref, res);
+    StackFrame *fp = cx->fp();
+    if (IsOptimizedArguments(fp, &lref)) {
+        if (rref.isInt32()) {
+            int32_t i = rref.toInt32();
+            if (i >= 0 && uint32_t(i) < fp->numActualArgs()) {
+                *res = fp->unaliasedActual(i);
+                return true;
+            }
+        }
+
+        if (!JSScript::argumentsOptimizationFailed(cx, fp->script()))
+            return false;
+
+        lref = ObjectValue(fp->argsObj());
+    }
 
     bool isObject = lref.isObject();
     RootedObject obj(cx, ValueToObject(cx, lref));
@@ -775,20 +825,6 @@ GreaterThanOrEqualOperation(JSContext *cx, const Value &lhs, const Value &rhs, b
 }
 
 #undef RELATIONAL_OP
-
-static inline bool
-GuardFunApplySpeculation(JSContext *cx, FrameRegs &regs)
-{
-    if (regs.sp[-1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
-        CallArgs args = CallArgsFromSp(GET_ARGC(regs.pc), regs.sp);
-        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
-            if (!JSScript::applySpeculationFailed(cx, regs.fp()->script()))
-                return false;
-            regs.sp[-1] = ObjectValue(regs.fp()->argsObj());
-        }
-    }
-    return true;
-}
 
 }  /* namespace js */
 

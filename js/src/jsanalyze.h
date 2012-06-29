@@ -1205,8 +1205,10 @@ class ScriptAnalysis
 
     /* Type inference helpers */
     bool analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferenceState &state);
-    bool needsArgsObj(NeedsArgsObjState &state, const SSAValue &v);
-    bool needsArgsObj(NeedsArgsObjState &state, SSAUseChain *use);
+
+    typedef Vector<SSAValue, 16> SeenVector;
+    bool needsArgsObj(JSContext *cx, SeenVector &seen, const SSAValue &v);
+    bool needsArgsObj(JSContext *cx, SeenVector &seen, SSAUseChain *use);
     bool needsArgsObj(JSContext *cx);
 
   public:
