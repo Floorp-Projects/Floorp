@@ -13,7 +13,7 @@ interface nsIIDBRequest;
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBCursor for more
  * information.
  */
-[scriptable, builtinclass, uuid(01136b3a-d84c-487c-b929-f5d012346c44)]
+[scriptable, builtinclass, uuid(148579a3-6b28-4b2a-92c3-ff5719e8e03e)]
 interface nsIIDBCursor : nsISupports
 {
   // "next", "nextunique", "prev" or "prevunique"
@@ -41,5 +41,5 @@ interface nsIIDBCursor : nsISupports
   nsIIDBRequest delete();
 
   void
-  advance(in long count);
+  advance(in long long count);
 };
