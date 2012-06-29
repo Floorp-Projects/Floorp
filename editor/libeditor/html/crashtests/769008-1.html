@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var x = document.getElementById("x");
+
+  window.getSelection().removeAllRanges();
+
+  var range = document.createRange();
+  range.setStart(x, 0);
+  range.setEnd(x, 0);
+  window.getSelection().addRange(range);
+
+  document.execCommand("delete", false, "null");
+}
+
+</script>
+</head>
+<body contenteditable="true" onload="boom();"><div></div><span id="x"></span></body>
+</html>
