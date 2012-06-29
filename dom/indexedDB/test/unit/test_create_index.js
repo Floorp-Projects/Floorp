@@ -110,7 +110,7 @@ function testSteps()
          "transaction has the correct mode");
       is(event.target.transaction.objectStoreNames.length, i + 1,
          "transaction only has one object store");
-      is(event.target.transaction.objectStoreNames.item(0), objectStoreName,
+      ok(event.target.transaction.objectStoreNames.contains(objectStoreName),
          "transaction has the correct object store");
     }
   }

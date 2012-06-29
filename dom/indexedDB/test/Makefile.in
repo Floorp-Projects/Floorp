@@ -71,6 +71,7 @@ TEST_FILES = \
   test_keys.html \
   test_leaving_page.html \
   test_multientry.html \
+  test_names_sorted.html \
   test_objectCursors.html \
   test_objectStore_inline_autoincrement_key_added_on_put.html \
   test_objectStore_remove_values.html \
