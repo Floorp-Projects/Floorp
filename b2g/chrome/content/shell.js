@@ -451,6 +451,7 @@ var WebappsHelper = {
   init: function webapps_init() {
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-ask-install", false);
+    DOMApplicationRegistry.allAppsLaunchable = true;
   },
 
   registerInstaller: function webapps_registerInstaller(data) {
