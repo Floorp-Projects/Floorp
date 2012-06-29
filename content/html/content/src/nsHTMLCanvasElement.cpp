@@ -679,6 +679,19 @@ nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
   if (layer) {
     static_cast<CanvasLayer*>(layer)->Updated();
   }
+
+  /*
+   * Treat canvas invalidations as animation activity for JS. Frequently
+   * invalidating a canvas will feed into heuristics and cause JIT code to be
+   * kept around longer, for smoother animations.
+   */
+  nsIScriptGlobalObject *scope = OwnerDoc()->GetScriptGlobalObject();
+  if (scope) {
+    JSObject *obj = scope->GetGlobalJSObject();
+    if (obj) {
+      js::NotifyAnimationActivity(obj);
+    }
+  }
 }
 
 void
