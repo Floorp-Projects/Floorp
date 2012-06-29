@@ -284,8 +284,13 @@ ContentSecurityPolicy.prototype = {
       var reportString = JSON.stringify(report);
       CSPdebug("Constructed violation report:\n" + reportString);
 
-      CSPWarning("Directive \"" + violatedDirective + "\" violated"
-               + (blockedUri['asciiSpec'] ? " by " + blockedUri.asciiSpec : ""),
+      var violationMessage = null;
+      if(blockedUri["asciiSpec"]){
+         violationMessage = CSPLocalizer.getFormatStr("directiveViolatedWithURI", [violatedDirective, blockedUri.asciiSpec]);
+      } else {
+         violationMessage = CSPLocalizer.getFormatStr("directiveViolated", [violatedDirective]);
+      }
+      CSPWarning(violationMessage,
                  this.innerWindowID,
                  (aSourceFile) ? aSourceFile : null,
                  (aScriptSample) ? decodeURIComponent(aScriptSample) : null,
@@ -347,8 +352,8 @@ ContentSecurityPolicy.prototype = {
         } catch(e) {
           // it's possible that the URI was invalid, just log a
           // warning and skip over that.
-          CSPWarning("Tried to send report to invalid URI: \"" + uris[i] + "\"", this.innerWindowID);
-          CSPWarning("error was: \"" + e + "\"", this.innerWindowID);
+          CSPWarning(CSPLocalizer.getFormatStr("triedToSendReport", [uris[i]]), this.innerWindowID);
+          CSPWarning(CSPLocalizer.getFormatStr("errorWas", [e.toString()]), this.innerWindowID);
         }
       }
     }
@@ -550,8 +555,7 @@ CSPReportRedirectSink.prototype = {
   // nsIChannelEventSink
   asyncOnChannelRedirect: function channel_redirect(oldChannel, newChannel,
                                                     flags, callback) {
-    CSPWarning("Post of violation report to " + oldChannel.URI.asciiSpec +
-               " failed, as a redirect occurred", this.innerWindowID);
+    CSPWarning(CSPLocalizer.getFormatStr("reportPostRedirect", [oldChannel.URI.asciiSpec]));
 
     // cancel the old channel so XHR failure callback happens
     oldChannel.cancel(Cr.NS_ERROR_ABORT);
