@@ -9,6 +9,7 @@
 #import "mozView.h"
 
 #include "Accessible-inl.h"
+#include "nsAccUtils.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIAccessibleText.h"
 #include "nsIAccessibleEditableText.h"
@@ -21,6 +22,7 @@
 #include "nsCocoaUtils.h"
 #include "nsCoord.h"
 #include "nsObjCExceptions.h"
+#include "nsWhitespaceTokenizer.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -431,6 +433,42 @@ GetClosestInterestingAccessible(id anObject)
 
 - (NSString*)subrole
 {
+  if (!mGeckoAccessible)
+    return nil;
+
+  // XXX maybe we should cache the subrole.
+  nsAutoString xmlRoles;
+  nsCOMPtr<nsIPersistentProperties> attributes;
+
+  // XXX we don't need all the attributes (see bug 771113)
+  nsresult rv = mGeckoAccessible->GetAttributes(getter_AddRefs(attributes));
+  if (NS_SUCCEEDED(rv) && attributes)
+    nsAccUtils::GetAccAttr(attributes, nsGkAtoms::xmlroles, xmlRoles);
+
+  nsWhitespaceTokenizer tokenizer(xmlRoles);
+
+  while (tokenizer.hasMoreTokens()) {
+    const nsDependentSubstring token(tokenizer.nextToken());
+
+    if (token.EqualsLiteral("banner"))
+      return @"AXLandmarkBanner";
+
+    if (token.EqualsLiteral("complementary"))
+      return @"AXLandmarkComplementary";
+
+    if (token.EqualsLiteral("contentinfo"))
+      return @"AXLandmarkContentInfo";
+
+    if (token.EqualsLiteral("main"))
+      return @"AXLandmarkMain";
+
+    if (token.EqualsLiteral("navigation"))
+      return @"AXLandmarkNavigation";
+
+    if (token.EqualsLiteral("search"))
+      return @"AXLandmarkSearch";
+  }
+
   switch (mRole) {
     case roles::LIST:
       return @"AXContentList"; // 10.6+ NSAccessibilityContentListSubrole;
@@ -455,15 +493,33 @@ GetClosestInterestingAccessible(id anObject)
 {
   if (mRole == roles::DOCUMENT)
     return utils::LocalizedString(NS_LITERAL_STRING("htmlContent"));
-  
+
   NSString* subrole = [self subrole];
-  
+
   if ((mRole == roles::LISTITEM) && [subrole isEqualToString:@"AXTerm"])
     return utils::LocalizedString(NS_LITERAL_STRING("term"));
   if ((mRole == roles::PARAGRAPH) && [subrole isEqualToString:@"AXDefinition"])
     return utils::LocalizedString(NS_LITERAL_STRING("definition"));
-  
-  return NSAccessibilityRoleDescription([self role], subrole);
+
+  NSString* role = [self role];
+
+  // the WAI-ARIA Landmarks
+  if ([role isEqualToString:NSAccessibilityGroupRole]) {
+    if ([subrole isEqualToString:@"AXLandmarkBanner"])
+      return utils::LocalizedString(NS_LITERAL_STRING("banner"));
+    if ([subrole isEqualToString:@"AXLandmarkComplementary"])
+      return utils::LocalizedString(NS_LITERAL_STRING("complementary"));
+    if ([subrole isEqualToString:@"AXLandmarkContentInfo"])
+      return utils::LocalizedString(NS_LITERAL_STRING("content"));
+    if ([subrole isEqualToString:@"AXLandmarkMain"])
+      return utils::LocalizedString(NS_LITERAL_STRING("main"));
+    if ([subrole isEqualToString:@"AXLandmarkNavigation"])
+      return utils::LocalizedString(NS_LITERAL_STRING("navigation"));
+    if ([subrole isEqualToString:@"AXLandmarkSearch"])
+      return utils::LocalizedString(NS_LITERAL_STRING("search"));
+  }
+
+  return NSAccessibilityRoleDescription(role, subrole);
 }
 
 - (NSString*)title
