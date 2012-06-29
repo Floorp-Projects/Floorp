@@ -8,8 +8,6 @@
  * The server should not be used for any production purposes.
  */
 
-// TODO enable once build infra supports testing modules.
-/*
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const EXPORTED_SYMBOLS = [
@@ -21,7 +19,6 @@ const EXPORTED_SYMBOLS = [
 ];
 
 Cu.import("resource://testing-common/httpd.js");
-*/
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/utils.js");
@@ -853,7 +850,7 @@ let StorageServerCallback = {
  */
 function StorageServer(callback) {
   this.callback = callback || {__proto__: StorageServerCallback};
-  this.server   = new nsHttpServer();
+  this.server   = new HttpServer();
   this.started  = false;
   this.users    = {};
   this._log     = Log4Moz.repository.getLogger(STORAGE_HTTP_LOGGER);
