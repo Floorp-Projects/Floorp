@@ -232,6 +232,16 @@ LIRGenerator::visitCreateThis(MCreateThis *ins)
 }
 
 bool
+LIRGenerator::visitReturnFromCtor(MReturnFromCtor *ins)
+{
+    LReturnFromCtor *lir = new LReturnFromCtor(useRegister(ins->getObject()));
+    if (!useBox(lir, LReturnFromCtor::ValueIndex, ins->getValue()))
+        return false;
+
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitCall(MCall *call)
 {
     JS_ASSERT(CallTempReg0 != CallTempReg1);

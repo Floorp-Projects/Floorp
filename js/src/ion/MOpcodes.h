@@ -57,6 +57,7 @@ namespace ion {
     _(Phi)                                                                  \
     _(OsrValue)                                                             \
     _(OsrScopeChain)                                                        \
+    _(ReturnFromCtor)                                                       \
     _(CheckOverRecursed)                                                    \
     _(RecompileCheck)                                                       \
     _(DefVar)                                                               \

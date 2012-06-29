@@ -68,6 +68,7 @@
     _(CallConstructor)              \
     _(StackArg)                     \
     _(CreateThis)                   \
+    _(ReturnFromCtor)               \
     _(BitNotI)                      \
     _(BitNotV)                      \
     _(BitOpI)                       \
