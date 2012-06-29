@@ -909,7 +909,7 @@ protected:
     return mStyleStack[mStyleStack.Length() - 1];
   }
 
-  friend class GeneralPattern;
+  friend class CanvasGeneralPattern;
   friend class AdjustedTarget;
 
   // other helpers
