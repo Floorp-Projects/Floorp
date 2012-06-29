@@ -67,7 +67,7 @@ ToNSString(id aValue)
 
 - (BOOL)accessibilityIsIgnored
 {
-  return mIsExpired;
+  return !mGeckoAccessible;
 }
 
 - (NSArray*)accessibilityAttributeNames
