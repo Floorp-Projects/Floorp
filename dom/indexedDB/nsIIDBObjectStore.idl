@@ -23,7 +23,7 @@ dictionary IDBIndexParameters
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStore
  * for more information.
  */
-[scriptable, builtinclass, uuid(43157a3c-bed1-4ce7-98c0-11365b852560)]
+[scriptable, builtinclass, uuid(dd189afd-e1b7-4496-bf8d-629c58709595)]
 interface nsIIDBObjectStore : nsISupports
 {
   readonly attribute DOMString name;
@@ -66,6 +66,7 @@ interface nsIIDBObjectStore : nsISupports
   delete(in jsval key);
 
   // Success fires IDBTransactionEvent, result == null
+  [implicit_jscontext]
   nsIIDBRequest
   clear();
 

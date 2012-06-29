@@ -44,11 +44,8 @@
       }, 0);
     }
 
-    window.onerror = function() {
-      return false;
-    };
-
-    window.onerror = function(event) {
+    window.onerror = function(message, filename, lineno) {
+      is(message, "ConstraintError", "Expect a constraint error");
     };
 
     function testSteps() {

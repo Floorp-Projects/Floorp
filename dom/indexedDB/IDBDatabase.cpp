@@ -12,7 +12,6 @@
 #include "mozilla/storage.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMLists.h"
-#include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -717,6 +716,7 @@ IDBDatabase::Transaction(const jsval& aStoreNames,
 NS_IMETHODIMP
 IDBDatabase::MozCreateFileHandle(const nsAString& aName,
                                  const nsAString& aType,
+                                 JSContext* aCx,
                                  nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -729,7 +729,7 @@ IDBDatabase::MozCreateFileHandle(const nsAString& aName,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  nsRefPtr<IDBRequest> request = IDBRequest::Create(nsnull, this, nsnull);
+  nsRefPtr<IDBRequest> request = IDBRequest::Create(nsnull, this, nsnull, aCx);
 
   nsRefPtr<CreateFileHelper> helper =
     new CreateFileHelper(this, request, aName, aType);
@@ -789,35 +789,7 @@ IDBDatabase::UnsetThreadLocals()
 nsresult
 IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
-
-  nsPIDOMWindow* owner = GetOwner();
-  if (!owner) {
-    return NS_OK;
-  }
-
-  if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
-    nsString type;
-    nsresult rv = aVisitor.mDOMEvent->GetType(type);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (type.EqualsLiteral(ERROR_EVT_STR)) {
-      nsRefPtr<nsDOMEvent> duplicateEvent =
-        CreateGenericEvent(type, eDoesNotBubble, eNotCancelable);
-      NS_ENSURE_STATE(duplicateEvent);
-
-      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(owner));
-      NS_ASSERTION(target, "How can this happen?!");
-
-      bool dummy;
-      rv = target->DispatchEvent(duplicateEvent, &dummy);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  }
-
-  return NS_OK;
+  return IndexedDatabaseManager::FireWindowOnError(GetOwner(), aVisitor);
 }
 
 HelperBase::ChildProcessSendResult
