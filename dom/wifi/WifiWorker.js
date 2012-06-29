@@ -864,8 +864,7 @@ var WifiManager = (function() {
 
   // Public interface of the wifi service
   manager.setWifiEnabled = function(enable, callback) {
-    if ((enable && manager.enabled) ||
-        (!enable && !manager.enabled)) {
+    if (enabled === manager.enabled) {
       callback("no change");
       return;
     }
