@@ -8,13 +8,6 @@ const responseBody = [0x1f, 0x8b, 0x08, 0x08, 0xef, 0x70, 0xe6, 0x4c, 0x00, 0x03
                      0xe2, 0x9c, 0xcc, 0xf4, 0x8c, 0x92, 0x9c, 0x4a, 0x85, 0x9c, 0xfc, 0xbc, 0xf4, 0xd4, 0x22, 0x85,
                      0x92, 0xd4, 0xe2, 0x12, 0x2e, 0x2e, 0x00, 0x00, 0xe5, 0xe6, 0xf0, 0x20, 0x00, 0x00, 0x00];
 
-function getCacheService()
-{
-    var nsCacheService = Components.classes["@mozilla.org/network/cache-service;1"];
-    var service = nsCacheService.getService(Components.interfaces.nsICacheService);
-    return service;
-}
-
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
@@ -82,7 +75,7 @@ function run_test() {
   httpserver.start(4444);
 
   // wipe out cached content
-  getCacheService().evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
+  evict_cache_entries();
 
   var chan = make_channel("http://localhost:4444/cached/test.gz");
   chan.asyncOpen(new ChannelListener(continue_test, null, CL_EXPECT_GZIP), null);
