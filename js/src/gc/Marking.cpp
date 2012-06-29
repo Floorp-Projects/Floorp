@@ -385,6 +385,22 @@ MarkValueRoot(JSTracer *trc, Value *v, const char *name)
 }
 
 void
+MarkTypeRoot(JSTracer *trc, types::Type *v, const char *name)
+{
+    JS_ROOT_MARKING_ASSERT(trc);
+    JS_SET_TRACING_NAME(trc, name);
+    if (v->isSingleObject()) {
+        JSObject *obj = v->singleObject();
+        MarkInternal(trc, &obj);
+        *v = types::Type::ObjectType(obj);
+    } else if (v->isTypeObject()) {
+        types::TypeObject *typeObj = v->typeObject();
+        MarkInternal(trc, &typeObj);
+        *v = types::Type::ObjectType(typeObj);
+    }
+}
+
+void
 MarkValueRange(JSTracer *trc, size_t len, EncapsulatedValue *vec, const char *name)
 {
     for (size_t i = 0; i < len; ++i) {

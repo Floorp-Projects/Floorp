@@ -140,7 +140,7 @@ struct RootMethods<T *>
 template <typename T>
 class Rooted
 {
-    void init(JSContext *cx_, T initial)
+    void init(JSContext *cx_)
     {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
         ContextFriendFields *cx = ContextFriendFields::get(cx_);
@@ -150,15 +150,13 @@ class Rooted
         this->prev = *stack;
         *stack = this;
 
-        JS_ASSERT(!RootMethods<T>::poisoned(initial));
+        JS_ASSERT(!RootMethods<T>::poisoned(ptr));
 #endif
-
-        ptr = initial;
     }
 
   public:
-    Rooted(JSContext *cx) { init(cx, RootMethods<T>::initial()); }
-    Rooted(JSContext *cx, T initial) { init(cx, initial); }
+    Rooted(JSContext *cx) : ptr(RootMethods<T>::initial()) { init(cx); }
+    Rooted(JSContext *cx, T initial) : ptr(initial) { init(cx); }
 
     ~Rooted()
     {
