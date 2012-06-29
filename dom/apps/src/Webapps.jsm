@@ -297,7 +297,7 @@ let DOMApplicationRegistry = {
     let tmp = [];
     let id = this._appId(aData.origin);
 
-    if (id) {
+    if (id && this._isLaunchable(aData.origin)) {
       let app = this._cloneAppObject(this.webapps[id]);
       aData.apps.push(app);
       tmp.push({ id: id });
@@ -313,10 +313,10 @@ let DOMApplicationRegistry = {
   getInstalled: function(aData) {
     aData.apps = [];
     let tmp = [];
-    let id = this._appId(aData.origin);
 
-    for (id in this.webapps) {
-      if (this.webapps[id].installOrigin == aData.origin) {
+    for (let id in this.webapps) {
+      if (this.webapps[id].installOrigin == aData.origin &&
+          this._isLaunchable(aData.origin)) {
         aData.apps.push(this._cloneAppObject(this.webapps[id]));
         tmp.push({ id: id });
       }
@@ -335,6 +335,9 @@ let DOMApplicationRegistry = {
 
     for (let id in this.webapps) {
       let app = this._cloneAppObject(this.webapps[id]);
+      if (!this._isLaunchable(app.installOrigin))
+        continue;
+
       aData.apps.push(app);
       tmp.push({ id: id });
     }
