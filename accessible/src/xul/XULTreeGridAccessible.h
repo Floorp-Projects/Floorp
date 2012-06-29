@@ -41,6 +41,7 @@ public:
   virtual PRUint32 SelectedCellCount();
   virtual PRUint32 SelectedColCount();
   virtual PRUint32 SelectedRowCount();
+  virtual void SelectedCells(nsTArray<Accessible*>* aCells);
   virtual void SelectedCellIndices(nsTArray<PRUint32>* aCells);
   virtual void SelectedColIndices(nsTArray<PRUint32>* aCols);
   virtual void SelectedRowIndices(nsTArray<PRUint32>* aRows);
