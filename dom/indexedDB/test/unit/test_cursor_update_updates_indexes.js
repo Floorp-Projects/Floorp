@@ -27,7 +27,7 @@ function testSteps()
     let info = objectStoreInfo[i];
 
     ok(true, "1");
-    request = mozIndexedDB.open(name, i + 1, description);
+    request = indexedDB.open(name, i + 1, description);
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     event = yield;

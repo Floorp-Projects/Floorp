@@ -38,7 +38,7 @@
       is(iframe.contentWindow.location.href, "about:blank",
          "should nagivate to about:blank");
          
-      let request = mozIndexedDB.open(location, 1);
+      let request = indexedDB.open(location, 1);
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield;
 

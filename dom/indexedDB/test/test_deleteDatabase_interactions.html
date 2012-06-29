@@ -15,7 +15,7 @@
   {
     const name = window.location.pathname;
 
-    let request = mozIndexedDB.open(name, 10);
+    let request = indexedDB.open(name, 10);
     request.onerror = errorHandler;
     request.onsuccess = unexpectedSuccessHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
@@ -41,14 +41,14 @@
 
     db.close();
 
-    let request = mozIndexedDB.deleteDatabase(name);
+    let request = indexedDB.deleteDatabase(name);
 
     request.onerror = errorHandler;
     request.onsuccess = grabEventAndContinueHandler;
 
     ok(request instanceof IDBOpenDBRequest, "Expect an IDBOpenDBRequest");
 
-    let openRequest = mozIndexedDB.open(name, 1);
+    let openRequest = indexedDB.open(name, 1);
     openRequest.onerror = errorHandler;
     openRequest.onsuccess = unexpectedSuccessHandler;
 

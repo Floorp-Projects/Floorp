@@ -1910,11 +1910,11 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
 
   NS_ASSERTION(factory, "This should never fail for chrome!");
 
-  jsval mozIndexedDBVal;
-  rv = nsContentUtils::WrapNative(aCx, obj, factory, &mozIndexedDBVal);
+  jsval indexedDBVal;
+  rv = nsContentUtils::WrapNative(aCx, obj, factory, &indexedDBVal);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!JS_DefineProperty(aCx, obj, "mozIndexedDB", mozIndexedDBVal, nsnull,
+  if (!JS_DefineProperty(aCx, obj, "indexedDB", indexedDBVal, nsnull,
                          nsnull, JSPROP_ENUMERATE)) {
     return NS_ERROR_FAILURE;
   }
