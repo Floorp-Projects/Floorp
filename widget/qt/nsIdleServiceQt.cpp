@@ -29,7 +29,7 @@ static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nsnull;
 
 static bool sInitialized = false;
 
-NS_IMPL_ISUPPORTS2(nsIdleServiceQt, nsIIdleService, nsIdleService)
+NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceQt, nsIdleService)
 
 nsIdleServiceQt::nsIdleServiceQt()
 #if !defined(MOZ_PLATFORM_MAEMO) && defined(MOZ_X11)

@@ -29,7 +29,7 @@ static _XScreenSaverQueryExtension_fn _XSSQueryExtension = nsnull;
 static _XScreenSaverAllocInfo_fn _XSSAllocInfo = nsnull;
 static _XScreenSaverQueryInfo_fn _XSSQueryInfo = nsnull;
 
-NS_IMPL_ISUPPORTS2(nsIdleServiceGTK, nsIdleService, nsIIdleService)
+NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceGTK, nsIdleService)
 
 static void Initialize()
 {

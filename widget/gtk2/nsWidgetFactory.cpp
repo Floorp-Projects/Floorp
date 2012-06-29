@@ -66,6 +66,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 #ifdef MOZ_X11
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceGTK, nsIdleServiceGTK::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
@@ -109,7 +110,6 @@ nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
 #endif
 
 #if defined(MOZ_X11)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIdleServiceGTK)
 namespace mozilla {
 namespace widget {
 // This constructor should really be shared with all platforms.
