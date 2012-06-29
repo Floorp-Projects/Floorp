@@ -1,8 +1,10 @@
-recursive-include docs *.txt
+recursive-include bin *
+recursive-include docs *
 recursive-include scripts *
 recursive-include virtualenv_support *.egg *.tar.gz
 recursive-include virtualenv_embedded *
-recursive-exclude docs/_templates *.*
+recursive-exclude docs/_templates *
+recursive-exclude docs/_build *
 include virtualenv_support/__init__.py
 include *.py
 include AUTHORS.txt

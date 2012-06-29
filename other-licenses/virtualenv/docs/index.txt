@@ -17,8 +17,8 @@ Installation
 ------------
 
 You can install virtualenv with ``pip install virtualenv``, or the `latest
-development version <https://github.com/pypa/virtualenv/tarball/develop#egg=virtualenv-dev>`_
-with ``pip install virtualenv==dev``.
+development version <https://github.com/pypa/virtualenv/tarball/develop>`_
+with ``pip install https://github.com/pypa/virtualenv/tarball/develop``.
 
 You can also use ``easy_install``, or if you have no Python package manager
 available at all, you can just grab the single file `virtualenv.py`_ and run
@@ -52,6 +52,9 @@ environment that has its own installation directories, that doesn't
 share libraries with other virtualenv environments (and optionally
 doesn't access the globally installed libraries either).
 
+Usage
+-----
+
 The basic usage is::
 
     $ python virtualenv.py ENV
@@ -71,11 +74,115 @@ Distribute instead of setuptools, just call virtualenv like this::
 
     $ python virtualenv.py --distribute ENV
 
-You can also set the environment variable VIRTUALENV_USE_DISTRIBUTE.
+You can also set the environment variable VIRTUALENV_DISTRIBUTE.
 
-A new virtualenv also includes the `pip <http://pypy.python.org/pypi/pip>`_
+A new virtualenv also includes the `pip <http://pypi.python.org/pypi/pip>`_
 installer, so you can use ``ENV/bin/pip`` to install additional packages into
 the environment.
+
+
+activate script
+~~~~~~~~~~~~~~~
+
+In a newly created virtualenv there will be a ``bin/activate`` shell
+script. For Windows systems, activation scripts are provided for CMD.exe
+and Powershell.
+
+On Posix systems you can do::
+
+    $ source bin/activate
+
+This will change your ``$PATH`` so its first entry is the virtualenv's
+``bin/`` directory.  (You have to use ``source`` because it changes your
+shell environment in-place.) This is all it does; it's purely a
+convenience.  If you directly run a script or the python interpreter
+from the virtualenv's ``bin/`` directory (e.g.  ``path/to/env/bin/pip``
+or ``/path/to/env/bin/python script.py``) there's no need for
+activation.
+
+After activating an environment you can use the function ``deactivate`` to
+undo the changes to your ``$PATH``.
+
+The ``activate`` script will also modify your shell prompt to indicate
+which environment is currently active.  You can disable this behavior,
+which can be useful if you have your own custom prompt that already
+displays the active environment name.  To do so, set the
+``VIRTUAL_ENV_DISABLE_PROMPT`` environment variable to any non-empty
+value before running the ``activate`` script.
+
+On Windows you just do::
+
+    > \path\to\env\Scripts\activate
+
+And type `deactivate` to undo the changes.
+
+Based on your active shell (CMD.exe or Powershell.exe), Windows will use
+either activate.bat or activate.ps1 (as appropriate) to activate the
+virtual environment. If using Powershell, see the notes about code signing
+below.
+
+.. note::
+
+    If using Powershell, the ``activate`` script is subject to the
+    `execution policies`_ on the system. By default on Windows 7, the system's
+    excution policy is set to ``Restricted``, meaning no scripts like the
+    ``activate`` script are allowed to be executed. But that can't stop us
+    from changing that slightly to allow it to be executed.
+
+    In order to use the script, you have to relax your system's execution
+    policy to ``AllSigned``, meaning all scripts on the system must be
+    digitally signed to be executed. Since the virtualenv activation
+    script is signed by one of the authors (Jannis Leidel) this level of
+    the execution policy suffices. As an administrator run::
+
+        PS C:\> Set-ExecutionPolicy AllSigned
+
+    Then you'll be asked to trust the signer, when executing the script.
+    You will be prompted with the following::
+
+        PS C:\> virtualenv .\foo
+        New python executable in C:\foo\Scripts\python.exe
+        Installing setuptools................done.
+        Installing pip...................done.
+        PS C:\> .\foo\scripts\activate
+
+        Do you want to run software from this untrusted publisher?
+        File C:\foo\scripts\activate.ps1 is published by E=jannis@leidel.info,
+        CN=Jannis Leidel, L=Berlin, S=Berlin, C=DE, Description=581796-Gh7xfJxkxQSIO4E0
+        and is not trusted on your system. Only run scripts from trusted publishers.
+        [V] Never run  [D] Do not run  [R] Run once  [A] Always run  [?] Help
+        (default is "D"):A
+        (foo) PS C:\>
+
+    If you select ``[A] Always Run``, the certificate will be added to the
+    Trusted Publishers of your user account, and will be trusted in this
+    user's context henceforth. If you select ``[R] Run Once``, the script will
+    be run, but you will be prometed on a subsequent invocation. Advanced users
+    can add the signer's certificate to the Trusted Publishers of the Computer
+    account to apply to all users (though this technique is out of scope of this
+    document).
+
+    Alternatively, you may relax the system execution policy to allow running
+    of local scripts without verifying the code signature using the following::
+
+        PS C:\> Set-ExecutionPolicy RemoteSigned
+
+    Since the ``activate.ps1`` script is generated locally for each virtualenv,
+    it is not considered a remote script and can then be executed.
+
+.. _`execution policies`: http://technet.microsoft.com/en-us/library/dd347641.aspx
+
+The ``--system-site-packages`` Option
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you build with ``virtualenv --system-site-packages ENV``, your virtual
+environment will inherit packages from ``/usr/lib/python2.7/site-packages``
+(or wherever your global site-packages directory is).
+
+This can be used if you have control over the global site-packages directory,
+and you want to depend on the packages there.  If you want isolation from the
+global system, do not use this flag.
+
 
 Environment variables and configuration files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -93,7 +200,7 @@ virtualenv can not only be configured by passing command line options such as
   For example, to automatically install Distribute instead of setuptools
   you can also set an environment variable::
 
-      $ export VIRTUALENV_USE_DISTRIBUTE=true
+      $ export VIRTUALENV_DISTRIBUTE=true
       $ python virtualenv.py ENV
 
   It's the same as passing the option to virtualenv directly::
@@ -114,7 +221,7 @@ virtualenv can not only be configured by passing command line options such as
 
   virtualenv also looks for a standard ini config file. On Unix and Mac OS X
   that's ``$HOME/.virtualenv/virtualenv.ini`` and on Windows, it's
-  ``%HOME%\\virtualenv\\virtualenv.ini``.
+  ``%APPDATA%\virtualenv\virtualenv.ini``.
 
   The names of the settings are derived from the long command line option,
   e.g. the option ``--distribute`` would look like this::
@@ -225,109 +332,9 @@ Here's a more concrete example of how you could use this::
 Another example is available `here
 <https://github.com/socialplanning/fassembler/blob/master/fassembler/create-venv-script.py>`_.
 
-activate script
-~~~~~~~~~~~~~~~
-
-In a newly created virtualenv there will be a ``bin/activate`` shell
-script. For Windows systems, activation scripts are provided for CMD.exe
-and Powershell.
-
-On Posix systems you can do::
-
-    $ source bin/activate
-
-This will change your ``$PATH`` to point to the virtualenv's ``bin/``
-directory.  (You have to use ``source`` because it changes your shell
-environment in-place.) This is all it does; it's purely a convenience.  If
-you directly run a script or the python interpreter from the virtualenv's
-``bin/`` directory (e.g.  ``path/to/env/bin/pip`` or
-``/path/to/env/bin/python script.py``) there's no need for activation.
-
-After activating an environment you can use the function ``deactivate`` to
-undo the changes to your ``$PATH``.
-
-The ``activate`` script will also modify your shell prompt to indicate
-which environment is currently active.  You can disable this behavior,
-which can be useful if you have your own custom prompt that already
-displays the active environment name.  To do so, set the
-``VIRTUAL_ENV_DISABLE_PROMPT`` environment variable to any non-empty
-value before running the ``activate`` script.
-
-On Windows you just do::
-
-    > \path\to\env\Scripts\activate
-
-And type `deactivate` to undo the changes.
-
-Based on your active shell (CMD.exe or Powershell.exe), Windows will use
-either activate.bat or activate.ps1 (as appropriate) to activate the
-virtual environment. If using Powershell, see the notes about code signing
-below.
-
-.. note::
-
-    If using Powershell, the ``activate`` script is subject to the
-    `execution policies`_ on the system. By default on Windows 7, the system's
-    excution policy is set to ``Restricted``, meaning no scripts like the
-    ``activate`` script are allowed to be executed. But that can't stop us
-    from changing that slightly to allow it to be executed.
-
-    In order to use the script, you have to relax your system's execution
-    policy to ``AllSigned``, meaning all scripts on the system must be
-    digitally signed to be executed. Since the virtualenv activation
-    script is signed by one of the authors (Jannis Leidel) this level of
-    the execution policy suffices. As an adminstrator run::
-
-        PS C:\> Set-ExecutionPolicy AllSigned
-
-    Then you'll be asked to trust the signer, when executing the script.
-    You will be prompted with the following::
-
-        PS C:\> virtualenv .\foo
-        New python executable in C:\foo\Scripts\python.exe
-        Installing setuptools................done.
-        Installing pip...................done.
-        PS C:\> .\foo\scripts\activate
-
-        Do you want to run software from this untrusted publisher?
-        File C:\foo\scripts\activate.ps1 is published by E=jannis@leidel.info,
-        CN=Jannis Leidel, L=Berlin, S=Berlin, C=DE, Description=581796-Gh7xfJxkxQSIO4E0
-        and is not trusted on your system. Only run scripts from trusted publishers.
-        [V] Never run  [D] Do not run  [R] Run once  [A] Always run  [?] Help
-        (default is "D"):A
-        (foo) PS C:\>
-
-    If you select ``[A] Always Run``, the certificate will be added to the
-    Trusted Publishers of your user account, and will be trusted in this
-    user's context henceforth. If you select ``[R] Run Once``, the script will
-    be run, but you will be prometed on a subsequent invocation. Advanced users
-    can add the signer's certificate to the Trusted Publishers of the Computer
-    account to apply to all users (though this technique is out of scope of this
-    document).
-
-    Alternatively, you may relax the system execution policy to allow running
-    of local scripts without verifying the code signature using the following::
-
-        PS C:\> Set-ExecutionPolicy RemoteSigned
-
-    Since the ``activate.ps1`` script is generated locally for each virtualenv,
-    it is not considered a remote script and can then be executed.
-
-.. _`execution policies`: http://technet.microsoft.com/en-us/library/dd347641.aspx
-
-The ``--system-site-packages`` Option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you build with ``virtualenv --system-site-packages ENV``, your virtual
-environment will inherit packages from ``/usr/lib/python2.7/site-packages``
-(or wherever your global site-packages directory is).
-
-This can be used if you have control over the global site-packages directory,
-and you want to depend on the packages there.  If you want isolation from the
-global system, do not use this flag.
 
 Using Virtualenv without ``bin/python``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------
 
 Sometimes you can't or don't want to use the Python interpreter
 created by the virtualenv.  For instance, in a `mod_python
@@ -353,7 +360,7 @@ request; you should activate *one* environment as early as possible, and not
 do it again in that process.
 
 Making Environments Relocatable
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 Note: this option is somewhat experimental, and there are probably
 caveats that have not yet been identified.  Also this does not
@@ -390,8 +397,8 @@ layout).
 If you use this flag to create an environment, currently, the
 ``--system-site-packages`` option will be implied.
 
-The ``--extra-search-dir`` Option
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``--extra-search-dir`` option
+---------------------------------
 
 When it creates a new environment, virtualenv installs either
 setuptools or distribute, and pip.  In normal operation, the latest
@@ -479,13 +486,15 @@ Contributing
 ------------
 
 Refer to the `contributing to pip`_ documentation - it applies equally to
-virtualenv.
+virtualenv, except that virtualenv issues should filed on the `virtualenv
+repo`_ at GitHub.
 
 Virtualenv's release schedule is tied to pip's -- each time there's a new pip
 release, there will be a new virtualenv release that bundles the new version of
 pip.
 
 .. _contributing to pip: http://www.pip-installer.org/en/latest/contributing.html
+.. _virtualenv repo: https://github.com/pypa/virtualenv/
 
 Running the tests
 ~~~~~~~~~~~~~~~~~
@@ -537,7 +546,7 @@ Other Documentation and Links
   <http://code.google.com/p/modwsgi/wiki/VirtualEnvironments>`_.
 
 * `virtualenv commands
-  <http://thisismedium.com/tech/extending-virtualenv/>`_ for some more
+  <https://github.com/thisismedium/virtualenv-commands>`_ for some more
   workflow-related tools around virtualenv.
 
 Status and License
