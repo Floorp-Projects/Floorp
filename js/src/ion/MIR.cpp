@@ -43,7 +43,7 @@
 #include "LICM.h" // For LinearSum
 #include "MIR.h"
 #include "MIRGraph.h"
-#include "RangeAnalysis.h"
+#include "EdgeCaseAnalysis.h"
 #include "jsnum.h"
 #include "jstypedarrayinlines.h" // For ClampIntForUint8Array
 
@@ -186,13 +186,13 @@ MDefinition::foldsTo(bool useValueNumbers)
 }
 
 void
-MDefinition::analyzeRangeForward()
+MDefinition::analyzeEdgeCasesForward()
 {
     return;
 }
 
 void
-MDefinition::analyzeRangeBackward()
+MDefinition::analyzeEdgeCasesBackward()
 {
     return;
 }
@@ -695,7 +695,7 @@ MDiv::foldsTo(bool useValueNumbers)
 }
 
 void
-MDiv::analyzeRangeForward()
+MDiv::analyzeEdgeCasesForward()
 {
     // This is only meaningful when doing integer division.
     if (specialization_ != MIRType_Int32)
@@ -727,7 +727,7 @@ MDiv::analyzeRangeForward()
 }
 
 void
-MDiv::analyzeRangeBackward()
+MDiv::analyzeEdgeCasesBackward()
 {
     if (canBeNegativeZero_)
         canBeNegativeZero_ = NeedNegativeZeroCheck(this);
@@ -737,7 +737,7 @@ void
 MDiv::analyzeTruncateBackward()
 {
     if (!isTruncated())
-        setTruncated(js::ion::RangeAnalysis::AllUsesTruncate(this));
+        setTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
 }
 
 bool
@@ -745,7 +745,7 @@ MDiv::updateForReplacement(MDefinition *ins_)
 {
     JS_ASSERT(ins_->isDiv());
     MDiv *ins = ins_->toDiv();
-    // Since RangeAnalysis is not being run before GVN, its information does
+    // Since EdgeCaseAnalysis is not being run before GVN, its information does
     // not need to be merged here.
     if (isTruncated())
         setTruncated(ins->isTruncated());
@@ -813,7 +813,7 @@ void
 MAdd::analyzeTruncateBackward()
 {
     if (!isTruncated())
-        setTruncated(js::ion::RangeAnalysis::AllUsesTruncate(this));
+        setTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
 }
 
 bool
@@ -830,7 +830,7 @@ void
 MSub::analyzeTruncateBackward()
 {
     if (!isTruncated())
-        setTruncated(js::ion::RangeAnalysis::AllUsesTruncate(this));
+        setTruncated(js::ion::EdgeCaseAnalysis::AllUsesTruncate(this));
 }
 
 bool
@@ -860,7 +860,7 @@ MMul::foldsTo(bool useValueNumbers)
 }
 
 void
-MMul::analyzeRangeForward()
+MMul::analyzeEdgeCasesForward()
 {
     // Try to remove the check for negative zero
     // This only makes sense when using the integer multiplication
@@ -884,7 +884,7 @@ MMul::analyzeRangeForward()
 }
 
 void
-MMul::analyzeRangeBackward()
+MMul::analyzeEdgeCasesBackward()
 {
     if (canBeNegativeZero_)
         canBeNegativeZero_ = NeedNegativeZeroCheck(this);
@@ -1181,7 +1181,7 @@ MToInt32::foldsTo(bool useValueNumbers)
 }
 
 void
-MToInt32::analyzeRangeBackward()
+MToInt32::analyzeEdgeCasesBackward()
 {
     canBeNegativeZero_ = NeedNegativeZeroCheck(this);
 }
