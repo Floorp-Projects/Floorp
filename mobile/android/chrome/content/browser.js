@@ -1424,24 +1424,26 @@ var SelectionHandler = {
   HANDLE_WIDTH: 35,
   HANDLE_HEIGHT: 64,
   HANDLE_PADDING: 20,
-  HANDLE_VERTICAL_OFFSET: 10,
+  HANDLE_HORIZONTAL_OFFSET: 5,
 
   init: function sh_init() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
     Services.obs.addObserver(this, "Window:Resize", false);
+    Services.obs.addObserver(this, "after-viewport-change", false);
   },
 
   uninit: function sh_uninit() {
     Services.obs.removeObserver(this, "Gesture:SingleTap", false);
     Services.obs.removeObserver(this, "Window:Resize", false);
+    Services.obs.removeObserver(this, "after-viewport-change", false);
   },
 
   observe: function sh_observe(aSubject, aTopic, aData) {
+    if (!this._active)
+      return;
+
     switch (aTopic) {
       case "Gesture:SingleTap": {
-        if (!this._active)
-          return;
-
         let data = JSON.parse(aData);
         this.endSelection(data.x, data.y);
         break;
@@ -1450,6 +1452,15 @@ var SelectionHandler = {
         // Knowing when the page is done drawing is hard, so let's just cancel
         // the selection when the window changes. We should fix this later.
         this.endSelection();
+        break;
+      }
+      case "after-viewport-change": {
+        let zoom = BrowserApp.selectedTab.getViewport().zoom;
+        if (zoom != this._viewOffset.zoom) {
+          this._viewOffset.zoom = zoom;
+          this.updateCacheForSelection();
+          this.positionHandles();
+        }
         break;
       }
     }
@@ -1480,7 +1491,8 @@ var SelectionHandler = {
 
     let computedStyle = this._view.getComputedStyle(this._view.document.documentElement);
     this._viewOffset = { top: parseInt(computedStyle.getPropertyValue("margin-top").replace("px", "")),
-                         left: parseInt(computedStyle.getPropertyValue("margin-left").replace("px", "")) };
+                         left: parseInt(computedStyle.getPropertyValue("margin-left").replace("px", "")),
+                         zoom: BrowserApp.selectedTab.getViewport().zoom };
 
     // Remove any previous selected or created ranges. Tapping anywhere on a
     // page will create an empty range.
@@ -1764,11 +1776,21 @@ var SelectionHandler = {
   // Adjust start/end positions to account for scroll, and account for the dimensions of the
   // handle elements to ensure the handles point exactly at the ends of the selection.
   positionHandles: function sh_positionHandles() {
-    this._start.style.left = (this.cache.start.x + this._view.scrollX - this._viewOffset.left - this.HANDLE_WIDTH - this.HANDLE_PADDING) + "px";
-    this._start.style.top = (this.cache.start.y + this._view.scrollY - this._viewOffset.top - this.HANDLE_VERTICAL_OFFSET) + "px";
+    let height = this.HANDLE_HEIGHT / this._viewOffset.zoom;
+    this._start.style.height = height + "px";
+    this._end.style.height = height + "px";
 
-    this._end.style.left = (this.cache.end.x + this._view.scrollX - this._viewOffset.left - this.HANDLE_PADDING) + "px";
-    this._end.style.top = (this.cache.end.y + this._view.scrollY - this._viewOffset.top - this.HANDLE_VERTICAL_OFFSET) + "px";
+    let width = this.HANDLE_WIDTH/ this._viewOffset.zoom;
+    this._start.style.width = width + "px";
+    this._end.style.width = width + "px";
+
+    this._start.style.left = (this.cache.start.x + this._view.scrollX - this._viewOffset.left -
+                              this.HANDLE_PADDING - this.HANDLE_HORIZONTAL_OFFSET - width) + "px";
+    this._start.style.top = (this.cache.start.y + this._view.scrollY - this._viewOffset.top) + "px";
+
+    this._end.style.left = (this.cache.end.x + this._view.scrollX - this._viewOffset.left -
+                            this.HANDLE_PADDING + this.HANDLE_HORIZONTAL_OFFSET) + "px";
+    this._end.style.top = (this.cache.end.y + this._view.scrollY - this._viewOffset.top) + "px";
   },
 
   showHandles: function sh_showHandles() {
@@ -2448,6 +2470,8 @@ Tab.prototype = {
 
     if (aViewport.displayPort)
       this.setDisplayPort(aViewport.displayPort);
+
+    Services.obs.notifyObservers(null, "after-viewport-change", "");
   },
 
   setResolution: function(aZoom, aForce) {
