@@ -17,6 +17,7 @@ Alex Grönholm
 Anatoly Techtonik
 Antonio Cuni
 Armin Ronacher
+Bradley Ayers
 Cap Petschulat
 CBWhiz
 Chris McDonough
@@ -24,6 +25,7 @@ Christian Stefanescu
 Christopher Nilsson
 Cliff Xuan
 Curt Micol
+David Schoonover
 Doug Hellmann
 Doug Napoleone
 Douglas Creager
@@ -35,9 +37,14 @@ Jeff Hammel
 Jonathan Griffin
 Jorge Vargas
 Josh Bronson
+Konstantin Zemlyak
 Kumar McMillan
 Lars Francke
+Marc Abramowitz
+Mike Hommey
+Miki Tebeka
 Philip Jenvey
+Raul Leal
 Ronny Pfannschmidt
 Stefano Rivera
 Tarek Ziadé
