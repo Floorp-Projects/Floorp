@@ -578,7 +578,7 @@ bool
 IndexedDBTransactionParent::RecvAbort(const nsresult& aAbortCode)
 {
   MOZ_ASSERT(mTransaction);
-  mTransaction->AbortWithCode(aAbortCode);
+  mTransaction->Abort(aAbortCode);
   return true;
 }
 
