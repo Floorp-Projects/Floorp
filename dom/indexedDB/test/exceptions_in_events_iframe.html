@@ -68,7 +68,7 @@
       let event = yield;
       is(event.type, "abort",
          "Throwing during an upgradeneeded event should abort the transaction.");
-      is(event.target.error, null, "Got null error object");
+      is(event.target.error.name, "AbortError", "Got AbortError object");
 
       request.onerror = grabEventAndContinueHandler;
       event = yield;
@@ -112,7 +112,7 @@
       event = yield;
 
       is(event.type, "abort", "Got transaction abort event");
-      is(event.target.error, null, "Got null error object");
+      is(event.target.error.name, "AbortError", "Got AbortError object");
       openrequest.onerror = grabEventAndContinueHandler;
 
       event = yield;
@@ -161,7 +161,7 @@
       event = yield;
 
       is(event.type, "abort", "Got transaction abort event");
-      is(event.target.error, null, "Got null error object");
+      is(event.target.error.name, "AbortError", "Got AbortError object");
       openrequest.onerror = grabEventAndContinueHandler;
 
       event = yield;
