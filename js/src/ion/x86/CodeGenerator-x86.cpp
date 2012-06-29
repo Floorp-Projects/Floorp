@@ -351,3 +351,54 @@ CodeGeneratorX86::visitInterruptCheck(LInterruptCheck *lir)
     return true;
 }
 
+bool
+CodeGeneratorX86::visitCompareB(LCompareB *lir)
+{
+    MCompare *mir = lir->mir();
+
+    const ValueOperand lhs = ToValue(lir, LCompareB::Lhs);
+    const LAllocation *rhs = lir->rhs();
+    const Register output = ToRegister(lir->output());
+
+    JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+
+    Label notBoolean, done;
+    masm.branchTestBoolean(Assembler::NotEqual, lhs, &notBoolean);
+    {
+        if (rhs->isConstant())
+            masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
+        else
+            masm.cmp32(lhs.payloadReg(), ToRegister(rhs));
+        emitSet(JSOpToCondition(mir->jsop()), output);
+        masm.jump(&done);
+    }
+    masm.bind(&notBoolean);
+    {
+        masm.move32(Imm32(mir->jsop() == JSOP_STRICTNE), output);
+    }
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGeneratorX86::visitCompareBAndBranch(LCompareBAndBranch *lir)
+{
+    MCompare *mir = lir->mir();
+    const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
+    const LAllocation *rhs = lir->rhs();
+
+    JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+
+    if (mir->jsop() == JSOP_STRICTEQ)
+        masm.branchTestBoolean(Assembler::NotEqual, lhs, lir->ifFalse()->lir()->label());
+    else
+        masm.branchTestBoolean(Assembler::NotEqual, lhs, lir->ifTrue()->lir()->label());
+
+    if (rhs->isConstant())
+        masm.cmp32(lhs.payloadReg(), Imm32(rhs->toConstant()->toBoolean()));
+    else
+        masm.cmp32(lhs.payloadReg(), ToRegister(rhs));
+    emitBranch(JSOpToCondition(mir->jsop()), lir->ifTrue(), lir->ifFalse());
+    return true;
+}

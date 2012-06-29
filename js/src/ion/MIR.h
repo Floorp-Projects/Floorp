@@ -1335,6 +1335,9 @@ class MCompare
         return this;
     }
     AliasSet getAliasSet() const {
+        // Strict equality is never effectful.
+        if (jsop_ == JSOP_STRICTEQ || jsop_ == JSOP_STRICTNE)
+            return AliasSet::None();
         if (specialization_ == MIRType_None)
             return AliasSet::Store(AliasSet::Any);
         JS_ASSERT(specialization_ <= MIRType_Object);
@@ -4396,14 +4399,6 @@ class MInstanceOf
 
     TypePolicy *typePolicy() {
         return this;
-    }
-
-    MDefinition *lhs() const {
-        return getOperand(0);
-    }
-
-    MDefinition *rhs() const {
-        return getOperand(1);
     }
 };
 

@@ -740,20 +740,13 @@ class LCompare : public LInstructionHelper<1, 2, 0>
 
 class LCompareD : public LInstructionHelper<1, 2, 0>
 {
-    JSOp jsop_;
-
   public:
     LIR_HEADER(CompareD);
-    LCompareD(JSOp jsop, const LAllocation &left, const LAllocation &right)
-      : jsop_(jsop)
-    {
+    LCompareD(const LAllocation &left, const LAllocation &right) {
         setOperand(0, left);
         setOperand(1, right);
     }
 
-    JSOp jsop() const {
-        return jsop_;
-    }
     const LAllocation *left() {
         return getOperand(0);
     }
@@ -762,25 +755,21 @@ class LCompareD : public LInstructionHelper<1, 2, 0>
     }
     const LDefinition *output() {
         return getDef(0);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
     }
 };
 
 class LCompareS : public LInstructionHelper<1, 2, 0>
 {
-    JSOp jsop_;
-
   public:
     LIR_HEADER(CompareS);
-    LCompareS(JSOp jsop, const LAllocation &left, const LAllocation &right)
-      : jsop_(jsop)
-    {
+    LCompareS(const LAllocation &left, const LAllocation &right) {
         setOperand(0, left);
         setOperand(1, right);
     }
 
-    JSOp jsop() const {
-        return jsop_;
-    }
     const LAllocation *left() {
         return getOperand(0);
     }
@@ -790,25 +779,22 @@ class LCompareS : public LInstructionHelper<1, 2, 0>
     const LDefinition *output() {
         return getDef(0);
     }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
 };
 
 class LCompareV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
 {
-    JSOp jsop_;
-
   public:
     LIR_HEADER(CompareV);
 
-    LCompareV(JSOp jsop)
-      : jsop_(jsop)
-    { }
-
-    JSOp jsop() const {
-        return jsop_;
-    }
-
     static const size_t LhsInput = 0;
     static const size_t RhsInput = BOX_PIECES;
+
+    MCompare *mir() const {
+        return mir_->toCompare();
+    }
 };
 
 // Compares two integral values of the same JS type, either integer or object.
@@ -821,13 +807,12 @@ class LCompareAndBranch : public LInstructionHelper<0, 2, 0>
 
   public:
     LIR_HEADER(CompareAndBranch);
-    LCompareAndBranch(MCompare *mir, JSOp jsop, const LAllocation &left, const LAllocation &right,
-                       MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    LCompareAndBranch(JSOp jsop, const LAllocation &left, const LAllocation &right,
+                      MBasicBlock *ifTrue, MBasicBlock *ifFalse)
       : jsop_(jsop),
         ifTrue_(ifTrue),
         ifFalse_(ifFalse)
     {
-        mir_ = mir;
         setOperand(0, left);
         setOperand(1, right);
     }
@@ -854,25 +839,20 @@ class LCompareAndBranch : public LInstructionHelper<0, 2, 0>
 
 class LCompareDAndBranch : public LInstructionHelper<0, 2, 0>
 {
-    JSOp jsop_;
     MBasicBlock *ifTrue_;
     MBasicBlock *ifFalse_;
 
   public:
     LIR_HEADER(CompareDAndBranch);
-    LCompareDAndBranch(JSOp jsop, const LAllocation &left, const LAllocation &right,
+    LCompareDAndBranch(const LAllocation &left, const LAllocation &right,
                        MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : jsop_(jsop),
-        ifTrue_(ifTrue),
+      : ifTrue_(ifTrue),
         ifFalse_(ifFalse)
     {
         setOperand(0, left);
         setOperand(1, right);
     }
 
-    JSOp jsop() const {
-        return jsop_;
-    }
     MBasicBlock *ifTrue() const {
         return ifTrue_;
     }
@@ -884,6 +864,66 @@ class LCompareDAndBranch : public LInstructionHelper<0, 2, 0>
     }
     const LAllocation *right() {
         return getOperand(1);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
+// Used for strict-equality comparisons where one side is a boolean
+// and the other is a value. Note that CompareI is used to compare
+// two booleans.
+class LCompareB : public LInstructionHelper<1, BOX_PIECES + 1, 0>
+{
+  public:
+    LIR_HEADER(CompareB);
+
+    LCompareB(const LAllocation &rhs) {
+        setOperand(BOX_PIECES, rhs);
+    }
+
+    static const size_t Lhs = 0;
+
+    const LAllocation *rhs() {
+        return getOperand(BOX_PIECES);
+    }
+
+    const LDefinition *output() {
+        return getDef(0);
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
+    }
+};
+
+class LCompareBAndBranch : public LInstructionHelper<0, BOX_PIECES + 1, 0>
+{
+    MBasicBlock *ifTrue_;
+    MBasicBlock *ifFalse_;
+
+  public:
+    LIR_HEADER(CompareBAndBranch);
+
+    LCompareBAndBranch(const LAllocation &rhs, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : ifTrue_(ifTrue), ifFalse_(ifFalse)
+    {
+        setOperand(BOX_PIECES, rhs);
+    }
+
+    static const size_t Lhs = 0;
+
+    const LAllocation *rhs() {
+        return getOperand(BOX_PIECES);
+    }
+
+    MBasicBlock *ifTrue() const {
+        return ifTrue_;
+    }
+    MBasicBlock *ifFalse() const {
+        return ifFalse_;
+    }
+    MCompare *mir() {
+        return mir_->toCompare();
     }
 };
 
