@@ -139,16 +139,13 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
 #endif
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
-        StackIter prev(iter);
-        do {
-            ++prev;
-        } while (!prev.done() && prev.isImplicitNativeCall());
-
-        if (prev.done() || !prev.isFunctionFrame()) {
+        ++iter;
+        if (iter.done() || !iter.isFunctionFrame()) {
             JS_ASSERT(vp->isNull());
             return true;
         }
-        *vp = prev.calleev();
+
+        *vp = iter.calleev();
 
         /* Censor the caller if it is from another compartment. */
         JSObject &caller = vp->toObject();
@@ -1404,7 +1401,7 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, unsigned flags)
     if (!i.done()) {
         unsigned depth = js_ReconstructStackDepth(cx, i.script(), i.pc());
         Value *simsp = i.fp()->base() + depth;
-        if (i.fp()->base() <= vp && vp < Min(simsp, i.sp()))
+        if (i.fp()->base() <= vp && vp < Min(simsp, i.spFuzzy()))
             spindex = vp - simsp;
     }
 

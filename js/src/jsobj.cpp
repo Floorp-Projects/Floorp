@@ -6324,7 +6324,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             fprintf(stderr, "  pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
         }
-        Value *sp = i.sp();
+        Value *sp = i.spFuzzy();
         fprintf(stderr, "  slots: %p\n", (void *) fp->slots());
         fprintf(stderr, "  sp:    %p = slots + %u\n", (void *) sp, (unsigned) (sp - fp->slots()));
         if (sp - fp->slots() < 10000) { // sanity
