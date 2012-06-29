@@ -401,6 +401,7 @@ nsresult
 IDBFactory::OpenCommon(const nsAString& aName,
                        PRInt64 aVersion,
                        bool aDeleting,
+                       JSContext* aCallingCx,
                        IDBOpenDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -418,7 +419,7 @@ IDBFactory::OpenCommon(const nsAString& aName,
   }
 
   nsRefPtr<IDBOpenDBRequest> request =
-    IDBOpenDBRequest::Create(window, scriptOwner);
+    IDBOpenDBRequest::Create(window, scriptOwner, aCallingCx);
   NS_ENSURE_TRUE(request, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   nsresult rv;
@@ -468,6 +469,7 @@ IDBFactory::OpenCommon(const nsAString& aName,
 NS_IMETHODIMP
 IDBFactory::Open(const nsAString& aName,
                  PRInt64 aVersion,
+                 JSContext* aCx,
                  PRUint8 aArgc,
                  nsIIDBOpenDBRequest** _retval)
 {
@@ -476,7 +478,8 @@ IDBFactory::Open(const nsAString& aName,
   }
 
   nsRefPtr<IDBOpenDBRequest> request;
-  nsresult rv = OpenCommon(aName, aVersion, false, getter_AddRefs(request));
+  nsresult rv = OpenCommon(aName, aVersion, false, aCx,
+                           getter_AddRefs(request));
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -485,10 +488,11 @@ IDBFactory::Open(const nsAString& aName,
 
 NS_IMETHODIMP
 IDBFactory::DeleteDatabase(const nsAString& aName,
+                           JSContext* aCx,
                            nsIIDBOpenDBRequest** _retval)
 {
   nsRefPtr<IDBOpenDBRequest> request;
-  nsresult rv = OpenCommon(aName, 0, true, getter_AddRefs(request));
+  nsresult rv = OpenCommon(aName, 0, true, aCx, getter_AddRefs(request));
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);

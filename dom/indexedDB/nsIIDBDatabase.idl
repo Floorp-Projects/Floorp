@@ -23,7 +23,7 @@ dictionary IDBObjectStoreParameters
  * http://dvcs.w3.org/hg/IndexedDB/raw-file/tip/Overview.html#idl-def-IDBDatabase
  * for more information.
  */
-[scriptable, builtinclass, uuid(4543dbad-2b37-4741-8729-73b08b7ee37e)]
+[scriptable, builtinclass, uuid(601a43a0-dce2-402f-8ba5-238fe5d5f8d2)]
 interface nsIIDBDatabase : nsISupports
 {
   readonly attribute DOMString name;
@@ -47,6 +47,7 @@ interface nsIIDBDatabase : nsISupports
   transaction(in jsval storeNames, // js array of strings
               [optional /* "readonly" */] in DOMString mode);
 
+  [implicit_jscontext]
   nsIIDBRequest
   mozCreateFileHandle(in DOMString name,
                       [optional] in DOMString type);
