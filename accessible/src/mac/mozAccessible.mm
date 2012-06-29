@@ -472,7 +472,7 @@ GetClosestInterestingAccessible(id anObject)
 
   nsAutoString title;
   mGeckoAccessible->Name(title);
-  return title.IsEmpty() ? nil : [NSString stringWithCharacters:title.BeginReading() length:title.Length()];
+  return nsCocoaUtils::ToNSString(title);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -515,7 +515,8 @@ GetClosestInterestingAccessible(id anObject)
 
   nsAutoString desc;
   mGeckoAccessible->Description(desc);
-  return desc.IsEmpty() ? nil : [NSString stringWithCharacters:desc.BeginReading() length:desc.Length()];
+
+  return nsCocoaUtils::ToNSString(desc);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
