@@ -170,6 +170,7 @@
 #include "sampler.h"
 
 #include "Layers.h"
+#include "LayerTreeInvalidation.h"
 #include "nsAsyncDOMEvent.h"
 
 #ifdef NS_FUNCTION_TIMER
@@ -3374,11 +3375,14 @@ PresShell::GetRectVisibility(nsIFrame* aFrame,
 }
 
 void
-PresShell::ScheduleViewManagerFlush()
+PresShell::ScheduleViewManagerFlush(PRUint32 aFlags)
 {
   nsPresContext* presContext = GetPresContext();
   if (presContext) {
     presContext->RefreshDriver()->ScheduleViewManagerFlush();
+    if (!(aFlags & nsIFrame::PAINT_COMPOSITE_ONLY)) {
+      mPaintRequired = true;
+    }
   }
   if (mDocument) {
     mDocument->SetNeedLayoutFlush();
@@ -5238,7 +5242,7 @@ PresShell::Paint(nsIView*           aViewToPaint,
     // need to be updated. Do not try to do an empty transaction on
     // a non-retained layer manager (like the BasicLayerManager that
     // draws the window title bar on Mac), because a) it won't work
-    // and b) below we don't want to clear NS_FRAME_UPDATE_LAYER_TREE,
+    // and b) below we don't want to clear mPaintRequired,
     // that will cause us to forget to update the real layer manager!
     if (aType == PaintType_Composite) {
       if (layerManager->HasShadowManager()) {
@@ -5253,7 +5257,40 @@ PresShell::Paint(nsIView*           aViewToPaint,
       layerManager->BeginTransaction();
     }
 
-    frame->RemoveStateBits(NS_FRAME_UPDATE_LAYER_TREE);
+    if (!mPaintRequired) {
+      NotifySubDocInvalidationFunc computeInvalidFunc =
+        presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
+      bool computeInvalidRect = computeInvalidFunc ||
+                                (layerManager->GetBackendType() == LayerManager::LAYERS_BASIC);
+
+      nsAutoPtr<LayerProperties> props(computeInvalidRect ? 
+                                         LayerProperties::CloneFrom(layerManager->GetRoot()) : 
+                                         nsnull);
+
+      if (layerManager->EndEmptyTransaction()) {
+        nsIntRect invalid;
+        if (props) {
+          invalid = props->ComputeDifferences(layerManager->GetRoot(), computeInvalidFunc);
+        }
+        if (!invalid.IsEmpty()) {
+          if (props) {
+            nsRect rect(presContext->DevPixelsToAppUnits(invalid.x),
+                        presContext->DevPixelsToAppUnits(invalid.y),
+                        presContext->DevPixelsToAppUnits(invalid.width),
+                        presContext->DevPixelsToAppUnits(invalid.height));
+            aViewToPaint->GetViewManager()->InvalidateViewNoSuppression(aViewToPaint, rect);
+            presContext->NotifyInvalidation(invalid, 0);
+          } else {
+            aViewToPaint->GetViewManager()->InvalidateView(aViewToPaint);
+          }
+        }
+    
+        frame->UpdatePaintCountForPaintedPresShells();
+        presContext->NotifyDidPaintForSubtree();
+        return;
+      }
+    }
+    mPaintRequired = false;
   } else {
     layerManager->BeginTransaction();
   }
