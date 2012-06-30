@@ -142,17 +142,17 @@ function test()
   } catch (e) {
     s = e + "";
   }
-  expect("TypeError: o.hello() is not a function", s);
+  expect("TypeError: ({}) is not a function", s);
   s = "no exception";
   try {
     eval("o.hello()");
   } catch (e) {
     s = e + "";
   }
-  expect("TypeError: o.hello() is not a function", s);
+  expect("TypeError: ({}) is not a function", s);
   s = "no exception";
   try { [2, 3, 0].sort({}); } catch (e) { s = e + ""; }
-  expect("TypeError: [2, 3, 0].sort({}) is not a function", s);
+  expect("TypeError: ({}) is not a function", s);
 
 /*
  * Generator expressions.

@@ -351,14 +351,11 @@ xul|menulist {
 .moz-fennec-selection-handle {
   position: absolute;
   z-index: 999999;
-  min-width: 35px;
-  min-height: 64px;
-  width: 35px;
-  height: 64px;
   padding: 0 20px 20px 20px; /* Add padding to make touch target larger */
   margin: 0;
   background-repeat: no-repeat;
   background-position: center;
+  background-size: contain;
 }
 
 .moz-fennec-selection-handle:not([showing]) {

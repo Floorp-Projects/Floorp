@@ -219,21 +219,6 @@ js_DefineFunction(JSContext *cx, js::HandleObject obj, js::HandleId id, JSNative
                   unsigned nargs, unsigned flags,
                   js::gc::AllocKind kind = JSFunction::FinalizeKind);
 
-/*
- * Flags for js_ValueToFunction and js_ReportIsNotFunction.
- */
-#define JSV2F_CONSTRUCT         INITIAL_CONSTRUCT
-#define JSV2F_SEARCH_STACK      0x10000
-
-extern JSFunction *
-js_ValueToFunction(JSContext *cx, const js::Value *vp, unsigned flags);
-
-extern JSObject *
-js_ValueToCallableObject(JSContext *cx, js::Value *vp, unsigned flags);
-
-extern void
-js_ReportIsNotFunction(JSContext *cx, const js::Value *vp, unsigned flags);
-
 namespace js {
 
 /*

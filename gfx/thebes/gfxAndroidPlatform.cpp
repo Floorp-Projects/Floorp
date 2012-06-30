@@ -160,6 +160,14 @@ gfxAndroidPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                                                      aLength);
 }
 
+gfxFontEntry*
+gfxAndroidPlatform::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
+                                    const nsAString& aFontName)
+{
+    return gfxPlatformFontList::PlatformFontList()->LookupLocalFont(aProxyEntry,
+                                                                    aFontName);
+}
+
 RefPtr<ScaledFont>
 gfxAndroidPlatform::GetScaledFontForFont(gfxFont *aFont)
 {

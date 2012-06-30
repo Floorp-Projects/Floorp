@@ -2126,49 +2126,6 @@ DumpObject(JSContext *cx, unsigned argc, jsval *vp)
 
 #endif /* DEBUG */
 
-/*
- * This shell function is temporary (used by testStackIter.js) and should be
- * removed once JSD2 lands wholly subsumes the functionality here.
- */
-static JSBool
-DumpStack(JSContext *cx, unsigned argc, Value *vp)
-{
-    RootedObject arr(cx, JS_NewArrayObject(cx, 0, NULL));
-    if (!arr)
-        return false;
-
-    RootedString evalStr(cx, JS_NewStringCopyZ(cx, "eval-code"));
-    if (!evalStr)
-        return false;
-
-    RootedString globalStr(cx, JS_NewStringCopyZ(cx, "global-code"));
-    if (!globalStr)
-        return false;
-
-    StackIter iter(cx);
-    JS_ASSERT(iter.isNativeCall() && iter.callee()->native() == DumpStack);
-    ++iter;
-
-    uint32_t index = 0;
-    for (; !iter.done(); ++index, ++iter) {
-        RootedValue v(cx);
-        if (iter.isNonEvalFunctionFrame() || iter.isNativeCall()) {
-            v = iter.calleev();
-        } else if (iter.isEvalFrame()) {
-            v = StringValue(evalStr);
-        } else {
-            v = StringValue(globalStr);
-        }
-        if (!JS_WrapValue(cx, v.address()))
-            return false;
-        if (!JS_SetElement(cx, arr, index, v.address()))
-            return false;
-    }
-
-    JS_SET_RVAL(cx, vp, ObjectValue(*arr));
-    return true;
-}
-
 #ifdef TEST_CVTARGS
 #include <ctype.h>
 
@@ -3641,10 +3598,6 @@ static JSFunctionSpecWithHelp shell_functions[] = {
 "  be 'null', because they are roots."),
 
 #endif
-    JS_FN_HELP("dumpStack", DumpStack, 1, 0,
-"dumpStack()",
-"  Dump the stack as an array of callees (youngest first)."),
-
 #ifdef TEST_CVTARGS
     JS_FN_HELP("cvtargs", ConvertArgs, 0, 0,
 "cvtargs(arg1..., arg12)",

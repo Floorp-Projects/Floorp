@@ -968,9 +968,12 @@ MarkPropertyAccessUnknown(JSContext *cx, JSScript *script, jsbytecode *pc, TypeS
  * here, whether via x.f, x[f], or global name accesses.
  */
 static inline void
-PropertyAccess(JSContext *cx, JSScript *script, jsbytecode *pc, TypeObject *object,
+PropertyAccess(JSContext *cx, JSScript *script_, jsbytecode *pc, TypeObject *object_,
                bool assign, TypeSet *target, jsid id)
 {
+    RootedScript script(cx, script_);
+    Rooted<TypeObject*> object(cx, object_);
+
     /* Reads from objects with unknown properties are unknown, writes to such objects are ignored. */
     if (object->unknownProperties()) {
         if (!assign)
@@ -1830,7 +1833,6 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
                                JSProtoKey key, JSObject *proto_, bool unknown)
 {
     RootedObject proto(cx, proto_);
-
     TypeObject *object = gc::NewGCThing<TypeObject>(cx, gc::FINALIZE_TYPE_OBJECT, sizeof(TypeObject));
     if (!object)
         return NULL;
@@ -1845,7 +1847,7 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script,
 }
 
 TypeObject *
-TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, const AllocationSiteKey &key)
+TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key)
 {
     AutoEnterTypeInference enter(cx);
 
@@ -1864,11 +1866,13 @@ TypeCompartment::newAllocationSiteTypeObject(JSContext *cx, const AllocationSite
     if (!js_GetClassPrototype(cx, key.script->global(), key.kind, &proto, NULL))
         return NULL;
 
+    RootedScript keyScript(cx, key.script);
     TypeObject *res = newTypeObject(cx, key.script, key.kind, proto);
     if (!res) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
     }
+    key.script = keyScript;
 
     jsbytecode *pc = key.script->code + key.offset;
 
@@ -2407,8 +2411,9 @@ struct types::ArrayTableKey
 };
 
 void
-TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
+TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj_)
 {
+    RootedObject obj(cx, obj_);
     AutoEnterTypeInference enter(cx);
 
     if (!arrayTypeTable) {
@@ -2452,8 +2457,9 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
     if (p) {
         obj->setType(p->value);
     } else {
+        Rooted<Type> origType(cx, type);
         /* Make a new type to use for future arrays with the same elements. */
-        TypeObject *objType = newTypeObject(cx, NULL, JSProto_Array, obj->getProto());
+        Rooted<TypeObject*> objType(cx, newTypeObject(cx, NULL, JSProto_Array, obj->getProto()));
         if (!objType) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2462,6 +2468,16 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
 
         if (!objType->unknownProperties())
             objType->addPropertyType(cx, JSID_VOID, type);
+
+        // The key's fields may have been moved by moving GC and therefore the
+        // AddPtr is now invalid. ArrayTypeTable's equality and hashcodes
+        // operators use only the two fields (type and proto) directly, so we
+        // can just conditionally update them here.
+        if (type != origType || key.proto != obj->getProto()) {
+            key.type = origType;
+            key.proto = obj->getProto();
+            p = arrayTypeTable->lookupForAdd(key);
+        }
 
         if (!arrayTypeTable->relookupOrAdd(p, key, objType)) {
             cx->compartment->types.setPendingNukeTypes(cx);
@@ -2514,8 +2530,9 @@ struct types::ObjectTableEntry
 };
 
 void
-TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
+TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj_)
 {
+    RootedObject obj(cx, obj_);
     AutoEnterTypeInference enter(cx);
 
     if (!objectTypeTable) {
@@ -2538,7 +2555,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
     if (obj->slotSpan() == 0 || obj->inDictionaryMode())
         return;
 
-    ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj);
+    ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj.raw());
     const Shape *baseShape = obj->lastProperty();
 
     if (p) {
@@ -2606,13 +2623,13 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         key.nslots = obj->slotSpan();
         key.nfixed = obj->numFixedSlots();
         key.proto = obj->getProto();
-        JS_ASSERT(ObjectTableKey::match(key, obj));
+        JS_ASSERT(ObjectTableKey::match(key, obj.raw()));
 
         ObjectTableEntry entry;
         entry.object = objType;
         entry.types = types;
 
-        p = objectTypeTable->lookupForAdd(obj);
+        p = objectTypeTable->lookupForAdd(obj.raw());
         if (!objectTypeTable->add(p, key, entry)) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2637,18 +2654,19 @@ TypeObject::getFromPrototypes(JSContext *cx, jsid id, TypeSet *types, bool force
     if (!proto)
         return;
 
+    RootedTypeObject self(cx, this);
     if (proto->getType(cx)->unknownProperties()) {
         types->addType(cx, Type::UnknownType());
         return;
     }
 
-    TypeSet *protoTypes = proto->getType(cx)->getProperty(cx, id, false);
+    TypeSet *protoTypes = self->proto->getType(cx)->getProperty(cx, id, false);
     if (!protoTypes)
         return;
 
     protoTypes->addSubset(cx, types);
 
-    proto->getType(cx)->getFromPrototypes(cx, id, protoTypes);
+    self->proto->getType(cx)->getFromPrototypes(cx, id, protoTypes);
 }
 
 static inline void
@@ -5414,8 +5432,8 @@ JSScript::typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton)
         if (!type)
             return false;
 
-        fun->setType(type);
-        type->interpretedFunction = fun;
+        function_->setType(type);
+        type->interpretedFunction = function_;
     }
 
     return true;
@@ -5497,8 +5515,8 @@ JSObject::splicePrototype(JSContext *cx, JSObject *proto_)
      * Force type instantiation when splicing lazy types. This may fail,
      * in which case inference will be disabled for the compartment.
      */
-    TypeObject *type = self->getType(cx);
-    TypeObject *protoType = NULL;
+    Rooted<TypeObject*> type(cx, self->getType(cx));
+    Rooted<TypeObject*> protoType(cx, NULL);
     if (proto) {
         protoType = proto->getType(cx);
         if (!proto->getNewType(cx))
@@ -5540,8 +5558,10 @@ JSObject::makeLazyType(JSContext *cx)
 {
     JS_ASSERT(hasLazyType());
 
+    RootedObject self(cx, this);
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(getClass());
     TypeObject *type = cx->compartment->types.newTypeObject(cx, NULL, key, getProto());
+    AssertRootingUnnecessary safe(cx);
     if (!type) {
         if (cx->typeInferenceEnabled())
             cx->compartment->types.setPendingNukeTypes(cx);
@@ -5550,7 +5570,7 @@ JSObject::makeLazyType(JSContext *cx)
 
     if (!cx->typeInferenceEnabled()) {
         /* This can only happen if types were previously nuked. */
-        type_ = type;
+        self->type_ = type;
         return;
     }
 
@@ -5558,10 +5578,10 @@ JSObject::makeLazyType(JSContext *cx)
 
     /* Fill in the type according to the state of this object. */
 
-    type->singleton = this;
+    type->singleton = self;
 
-    if (isFunction() && toFunction()->isInterpreted()) {
-        type->interpretedFunction = toFunction();
+    if (self->isFunction() && self->toFunction()->isInterpreted()) {
+        type->interpretedFunction = self->toFunction();
         JSScript *script = type->interpretedFunction->script();
         if (script->uninlineable)
             type->flags |= OBJECT_FLAG_UNINLINEABLE;
@@ -5569,7 +5589,7 @@ JSObject::makeLazyType(JSContext *cx)
             type->flags |= OBJECT_FLAG_REENTRANT_FUNCTION;
     }
 
-    if (lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON))
+    if (self->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON))
         type->flags |= OBJECT_FLAG_ITERATED;
 
 #if JS_HAS_XML_SUPPORT
@@ -5577,17 +5597,25 @@ JSObject::makeLazyType(JSContext *cx)
      * XML objects do not have equality hooks but are treated special by EQ/NE
      * ops. Just mark the type as totally unknown.
      */
-    if (isXML() && !type->unknownProperties())
+    if (self->isXML() && !type->unknownProperties())
         type->markUnknown(cx);
 #endif
 
-    if (getClass()->ext.equality)
+    if (self->getClass()->ext.equality)
         type->flags |= OBJECT_FLAG_SPECIAL_EQUALITY;
+
+    /*
+     * Adjust flags for objects which will have the wrong flags set by just
+     * looking at the class prototype key.
+     */
 
     if (isSlowArray())
         type->flags |= OBJECT_FLAG_NON_DENSE_ARRAY | OBJECT_FLAG_NON_PACKED_ARRAY;
 
-    type_ = type;
+    if (IsTypedArrayProto(this))
+        type->flags |= OBJECT_FLAG_NON_TYPED_ARRAY;
+
+    self->type_ = type;
 }
 
 /* static */ inline HashNumber
@@ -5720,8 +5748,9 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
 }
 
 TypeObject *
-JSCompartment::getLazyType(JSContext *cx, JSObject *proto)
+JSCompartment::getLazyType(JSContext *cx, JSObject *proto_)
 {
+    RootedObject proto(cx, proto_);
     MaybeCheckStackRoots(cx);
 
     TypeObjectSet &table = cx->compartment->lazyTypeObjects;

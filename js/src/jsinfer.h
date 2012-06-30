@@ -1206,7 +1206,7 @@ struct TypeCompartment
                               JSProtoKey kind, JSObject *proto, bool unknown = false);
 
     /* Make an object for an allocation site. */
-    TypeObject *newAllocationSiteTypeObject(JSContext *cx, const AllocationSiteKey &key);
+    TypeObject *newAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key);
 
     void nukeTypes(FreeOp *fop);
     void processPendingRecompiles(FreeOp *fop);
@@ -1268,6 +1268,26 @@ MOZ_NORETURN void TypeFailure(JSContext *cx, const char *fmt, ...);
 
 namespace JS {
     template<> class AnchorPermitted<js::types::TypeObject *> { };
+
+template <> struct RootMethods<const js::types::Type>
+    {
+        static js::types::Type initial() { return js::types::Type::UnknownType(); }
+        static ThingRootKind kind() { return THING_ROOT_TYPE; }
+        static bool poisoned(const js::types::Type &v) {
+            return (v.isTypeObject() && IsPoisonedPtr(v.typeObject()))
+                || (v.isSingleObject() && IsPoisonedPtr(v.singleObject()));
+        }
+    };
+
+    template <> struct RootMethods<js::types::Type>
+    {
+        static js::types::Type initial() { return js::types::Type::UnknownType(); }
+        static ThingRootKind kind() { return THING_ROOT_TYPE; }
+        static bool poisoned(const js::types::Type &v) {
+            return (v.isTypeObject() && IsPoisonedPtr(v.typeObject()))
+                || (v.isSingleObject() && IsPoisonedPtr(v.singleObject()));
+        }
+    };
 }
 
 #endif // jsinfer_h___

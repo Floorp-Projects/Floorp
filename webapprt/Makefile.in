@@ -46,6 +46,10 @@ EXTRA_JS_MODULES = \
 PREF_JS_EXPORTS = $(srcdir)/prefs.js \
                   $(NULL)
 
+TEST_DIRS += \
+  test \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_DEBUG

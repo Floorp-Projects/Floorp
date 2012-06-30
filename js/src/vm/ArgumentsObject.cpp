@@ -240,52 +240,6 @@ args_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
     return true;
 }
 
-bool
-NormalArgumentsObject::optimizedGetElem(JSContext *cx, StackFrame *fp, const Value &elem, Value *vp)
-{
-    JS_ASSERT(!fp->script()->needsArgsObj());
-
-    /* Fast path: no need to convert to id when elem is already an int in range. */
-    if (elem.isInt32()) {
-        int32_t i = elem.toInt32();
-        if (i >= 0 && uint32_t(i) < fp->numActualArgs()) {
-            *vp = fp->unaliasedActual(i);
-            return true;
-        }
-    }
-
-    /* Slow path: create and canonicalize an id, then emulate args_resolve. */
-
-    jsid id;
-    if (!ValueToId(cx, elem, &id))
-        return false;
-
-    if (JSID_IS_INT(id)) {
-        int32_t i = JSID_TO_INT(id);
-        if (i >= 0 && uint32_t(i) < fp->numActualArgs()) {
-            *vp = fp->unaliasedActual(i);
-            return true;
-        }
-    }
-
-    if (id == NameToId(cx->runtime->atomState.lengthAtom)) {
-        *vp = Int32Value(fp->numActualArgs());
-        return true;
-    }
-
-    if (id == NameToId(cx->runtime->atomState.calleeAtom)) {
-        *vp = ObjectValue(fp->callee());
-        return true;
-    }
-
-    JSObject *proto = fp->global().getOrCreateObjectPrototype(cx);
-    if (!proto)
-        return false;
-
-    Rooted<jsid> root(cx, id);
-    return proto->getGeneric(cx, root, vp);
-}
-
 static JSBool
 args_enumerate(JSContext *cx, HandleObject obj)
 {
@@ -362,7 +316,7 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Val
      */
     RootedValue value(cx);
     return baseops::DeleteGeneric(cx, argsobj, id, value.address(), strict) &&
-           baseops::SetPropertyHelper(cx, argsobj, id, 0, vp, strict);
+           baseops::SetPropertyHelper(cx, argsobj, argsobj, id, 0, vp, strict);
 }
 
 static JSBool

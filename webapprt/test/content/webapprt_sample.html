@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+
+<!--
+  Since its name is prefixed with webapprt_, this file is picked up by the
+  mochitest harness.  Once loaded, it installs the webapp, and when the
+  installation completes, it loads the webapp into an iframe.  The webapp is
+  the actual test; see sample.html.
+-->
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="helpers.js"></script>
+    <script>
+
+// If your installation page needs to do anything other than call
+// installOwnWebapp, you can do it here.
+
+    </script>
+  </head>
+  <body onload="installOwnWebapp();">
+    <p id="msg">Installation page waiting for page load...</p>
+    <iframe id="webapp-iframe" width="100%" height="93%"></iframe>
+  </body>
+</html>

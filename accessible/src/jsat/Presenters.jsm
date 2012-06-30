@@ -260,24 +260,11 @@ AndroidPresenter.prototype = {
 
     let output = [];
 
-    if (isExploreByTouch) {
-      // Just provide the parent for some context, no need to utter the entire
-      // ancestry change since it doesn't make sense in spatial navigation.
-      for (var i = aContext.newAncestry.length - 1; i >= 0; i--) {
-        let utter = UtteranceGenerator.genForObject(aContext.newAncestry[i]);
-        if (utter.length) {
-          output.push.apply(output, utter);
-          break;
-        }
+    aContext.newAncestry.forEach(
+      function(acc) {
+        output.push.apply(output, UtteranceGenerator.genForObject(acc));
       }
-    } else {
-      // Utter the entire context change in linear navigation.
-      aContext.newAncestry.forEach(
-        function(acc) {
-          output.push.apply(output, UtteranceGenerator.genForObject(acc));
-        }
-      );
-    }
+    );
 
     output.push.apply(output,
                       UtteranceGenerator.genForObject(aContext.accessible));
