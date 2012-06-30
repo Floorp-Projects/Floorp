@@ -1334,6 +1334,19 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
         JS_ASSERT(obj->hasDynamicElements());
     }
 
+    /* Take ownership of the dense elements. */
+    HeapSlot *elems = obj->elements;
+
+    /* Root all values in the array during conversion. */
+    AutoValueArray autoArray(cx, (Value *) elems, arrayInitialized);
+
+    /*
+     * In case an incremental GC is already running, we need to write barrier
+     * the elements before (temporarily) destroying them.
+     */
+    if (obj->compartment()->needsBarrier())
+        obj->prepareElementRangeForOverwrite(0, arrayInitialized);
+
     /*
      * Save old map now, before calling InitScopeForObject. We'll have to undo
      * on error. This is gross, but a better way is not obvious. Note: the
@@ -1349,12 +1362,8 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
         return false;
     obj->shape_ = shape;
 
-    /* Take ownership of the dense elements, reset to an empty dense array. */
-    HeapSlot *elems = obj->elements;
+    /* Reset to an empty dense array. */
     obj->elements = emptyObjectElements;
-
-    /* Root all values in the array during conversion. */
-    AutoValueArray autoArray(cx, (Value *) elems, arrayInitialized);
 
     /*
      * Begin with the length property to share more of the property tree.
