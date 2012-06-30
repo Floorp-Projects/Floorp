@@ -15,7 +15,12 @@ interface nsIWebSocketListener : nsISupports
 {
     /**
      * Called to signify the establishment of the message stream.
-     * Any listener that receives onStart will also receive OnStop.
+     * 
+     * Unlike most other networking channels (which use nsIRequestObserver
+     * instead of this class), we do not guarantee that OnStart is always
+     * called: OnStop is called without calling this function if errors occur
+     * during connection setup.  If the websocket connection is successful,
+     * OnStart will be called before any other calls to this API.
      *
      * @param aContext user defined context
      */
