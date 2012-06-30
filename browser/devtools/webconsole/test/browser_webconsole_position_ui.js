@@ -35,20 +35,20 @@ function onLoad() {
   let hudRef = HUDService.hudReferences[hudId];
   let hudBox = hudRef.HUDBox;
 
-  is(hudBox.parentNode.childNodes[0].getAttribute("id"), hudId,
+  is(hudBox.parentNode.childNodes[2].getAttribute("id"), hudId,
      "initial console position is correct");
-
-  is(hudRef.positionMenuitems.above.getAttribute("checked"), "true",
-     "position menu checkbox is above");
-  is(Services.prefs.getCharPref(POSITION_PREF), "above", "pref is above");
-
-  hudRef.positionConsole("below");
-  let id = hudBox.parentNode.childNodes[2].getAttribute("id");
-  is(id, hudId, "below position is correct");
 
   is(hudRef.positionMenuitems.below.getAttribute("checked"), "true",
      "position menu checkbox is below");
   is(Services.prefs.getCharPref(POSITION_PREF), "below", "pref is below");
+
+  hudRef.positionConsole("above");
+  let id = hudBox.parentNode.childNodes[0].getAttribute("id");
+  is(id, hudId, "above position is correct");
+
+  is(hudRef.positionMenuitems.above.getAttribute("checked"), "true",
+     "position menu checkbox is above");
+  is(Services.prefs.getCharPref(POSITION_PREF), "above", "pref is above");
 
   // listen for the panel popupshown event.
   document.addEventListener("popupshown", function popupShown() {
