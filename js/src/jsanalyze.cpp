@@ -123,7 +123,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     PodZero(escapedSlots, numSlots);
 
     if (script->bindingsAccessedDynamically || script->compartment()->debugMode() ||
-        script->argumentsHasVarBinding())
+        script->argumentsHasLocalBinding())
     {
         for (unsigned i = 0; i < nargs; i++)
             escapedSlots[ArgSlot(i)] = true;
@@ -159,7 +159,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     isInlineable = true;
     if (script->numClosedArgs() || script->numClosedVars() || heavyweight ||
-        script->bindingsAccessedDynamically || script->argumentsHasVarBinding() ||
+        script->bindingsAccessedDynamically || script->argumentsHasLocalBinding() ||
         cx->compartment->debugMode())
     {
         isInlineable = false;
@@ -1947,7 +1947,7 @@ ScriptAnalysis::needsArgsObj(JSContext *cx, SeenVector &seen, SSAUseChain *use)
 bool
 ScriptAnalysis::needsArgsObj(JSContext *cx)
 {
-    JS_ASSERT(script->argumentsHasVarBinding());
+    JS_ASSERT(script->argumentsHasLocalBinding());
 
     /*
      * Since let variables and dynamic name access are not tracked, we cannot

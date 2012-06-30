@@ -175,6 +175,8 @@ struct SharedContext {
 
 #undef INFUNC
 
+    unsigned argumentsLocal() const;
+
     bool inFunction() const { return !!fun_; }
 
     JSFunction *fun()      const { JS_ASSERT(inFunction());  return fun_; }

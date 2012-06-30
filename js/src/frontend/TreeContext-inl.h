@@ -46,6 +46,16 @@ SharedContext::needStrictChecks() {
     return context->hasStrictOption() || inStrictMode();
 }
 
+inline unsigned
+SharedContext::argumentsLocal() const
+{
+    PropertyName *arguments = context->runtime->atomState.argumentsAtom;
+    unsigned slot;
+    DebugOnly<BindingKind> kind = bindings.lookup(context, arguments, &slot);
+    JS_ASSERT(kind == VARIABLE || kind == CONSTANT);
+    return slot;
+}
+
 inline
 TreeContext::TreeContext(Parser *prs, SharedContext *sc, unsigned staticLevel, uint32_t bodyid)
   : sc(sc),
