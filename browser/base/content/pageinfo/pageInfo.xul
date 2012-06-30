@@ -354,17 +354,22 @@
           <label class="permissionLabel" id="permIndexedDBLabel"
                  value="&permIndexedDB;" control="indexedDBRadioGroup"/>
           <hbox role="group" aria-labelledby="permIndexedDBLabel">
-            <checkbox id="indexedDBDef" command="cmd_indexedDBDef" label="&permAskAlways;"/>
+            <checkbox id="indexedDBDef" command="cmd_indexedDBDef" label="&permUseDefault;"/>
             <spacer flex="1"/>
-            <vbox pack="center">
-              <label id="indexedDBStatus" control="indexedDBClear"/>
-            </vbox>
-            <button id="indexedDBClear" label="&permClearStorage;"
-                    accesskey="&permClearStorage.accesskey;" onclick="onIndexedDBClear();"/>
             <radiogroup id="indexedDBRadioGroup" orient="horizontal">
-              <radio id="indexedDB#1" command="cmd_indexedDBToggle" label="&permAllow;"/>
+              <!-- Ask and Allow are purposefully reversed here! -->
+              <radio id="indexedDB#1" command="cmd_indexedDBToggle" label="&permAskAlways;"/>
+              <radio id="indexedDB#0" command="cmd_indexedDBToggle" label="&permAllow;"/>
               <radio id="indexedDB#2" command="cmd_indexedDBToggle" label="&permBlock;"/>
             </radiogroup>
+          </hbox>
+          <hbox>
+            <spacer flex="1"/>
+            <vbox pack="center">
+              <label id="indexedDBStatus" control="indexedDBClear" hidden="true"/>
+            </vbox>
+            <button id="indexedDBClear" label="&permClearStorage;" hidden="true"
+                    accesskey="&permClearStorage.accesskey;" onclick="onIndexedDBClear();"/>
           </hbox>
         </vbox>
         <vbox class="permission" id="permPluginsRow">
