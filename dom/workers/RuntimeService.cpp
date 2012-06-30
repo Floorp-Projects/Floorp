@@ -371,8 +371,8 @@ ResolveWorkerClasses(JSContext* aCx, JSHandleObject aObj, JSHandleId aId, unsign
 {
   AssertIsOnMainThread();
 
-  // Don't care about assignments, bail now.
-  if (aFlags & JSRESOLVE_ASSIGNING) {
+  // Don't care about assignments or declarations, bail now.
+  if (aFlags & (JSRESOLVE_ASSIGNING | JSRESOLVE_DECLARING)) {
     *aObjp = nsnull;
     return true;
   }
