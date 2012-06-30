@@ -172,6 +172,8 @@ protected:
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
 
+  void FlashWidgetUpdateArea(gfxContext* aContext);
+
   // Widget whose surface should be used as the basis for ThebesLayer
   // buffers.
   nsIWidget* mWidget;
