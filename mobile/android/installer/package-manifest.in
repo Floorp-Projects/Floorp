@@ -14,14 +14,6 @@
 
 #filter substitution
 
-#ifdef XP_MACOSX
-; Mac bundle stuff
-@APPNAME@/Contents/Info.plist
-@APPNAME@/Contents/PkgInfo
-@APPNAME@/Contents/Plug-Ins/
-@APPNAME@/Contents/Resources/
-#endif
-
 [@AB_CD@]
 @BINPATH@/chrome/@AB_CD@@JAREXT@
 @BINPATH@/chrome/@AB_CD@.manifest
@@ -52,16 +44,8 @@
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
-#ifdef XP_MACOSX
-@BINPATH@/XUL
-#else
 @BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
-#endif
-#ifdef XP_MACOSX
-@BINPATH@/@MOZ_CHILD_PROCESS_NAME@.app/
-#else
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
-#endif
 #ifdef XP_WIN32
 #if _MSC_VER == 1400
 @BINPATH@/Microsoft.VC80.CRT.manifest
@@ -112,9 +96,7 @@
 @BINPATH@/blocklist.xml
 #ifdef XP_UNIX
 @BINPATH@/run-mozilla.sh
-#ifndef XP_MACOSX
 @BINPATH@/mozilla-xremote-client
-#endif
 #endif
 
 ; [Components]
@@ -271,9 +253,6 @@
 @BINPATH@/components/webbrowserpersist.xpt
 @BINPATH@/components/webshell_idls.xpt
 @BINPATH@/components/widget.xpt
-#ifdef XP_MACOSX
-@BINPATH@/components/widget_cocoa.xpt
-#endif
 #ifdef ANDROID
 @BINPATH@/components/widget_android.xpt
 #endif
@@ -391,9 +370,6 @@
 @BINPATH@/components/messageWakeupService.manifest
 @BINPATH@/components/nsFilePicker.js
 @BINPATH@/components/nsFilePicker.manifest
-#ifdef XP_MACOSX
-@BINPATH@/components/libalerts.dylib
-#endif
 #ifdef MOZ_ENABLE_DBUS
 @BINPATH@/components/@DLL_PREFIX@dbusservice@DLL_SUFFIX@
 #endif
@@ -449,20 +425,16 @@
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 #ifdef XP_UNIX
-#ifndef XP_MACOSX
 @BINPATH@/chrome/icons/default/default16.png
 @BINPATH@/chrome/icons/default/default32.png
 @BINPATH@/chrome/icons/default/default48.png
-#endif
 #endif
 
 
 ; shell icons
 #ifdef XP_UNIX
-#ifndef XP_MACOSX
 @BINPATH@/icons/*.xpm
 @BINPATH@/icons/*.png
-#endif
 #endif
 
 ; [Default Preferences]
@@ -504,18 +476,12 @@
 @BINPATH@/res/table-remove-row-hover.gif
 @BINPATH@/res/table-remove-row.gif
 @BINPATH@/res/grabber.gif
-#ifdef XP_MACOSX
-@BINPATH@/res/cursors/*
-#endif
 @BINPATH@/res/fonts/*
 @BINPATH@/res/dtd/*
 @BINPATH@/res/html/*
 @BINPATH@/res/langGroups.properties
 @BINPATH@/res/language.properties
 @BINPATH@/res/entityTables/*
-#ifdef XP_MACOSX
-@BINPATH@/res/MainMenu.nib/
-#endif
 
 ; svg
 @BINPATH@/res/svg.css
@@ -560,25 +526,17 @@ bin/libfreebl_32int64_3.so
 ; [Updater]
 ;
 #ifdef MOZ_UPDATER
-#ifdef XP_MACOSX
-@BINPATH@/updater.app/
-#else
 @BINPATH@/updater@BIN_SUFFIX@
-#endif
 #endif
 
 ; [Crash Reporter]
 ;
 #ifdef MOZ_CRASHREPORTER
-#ifdef XP_MACOSX
-@BINPATH@/crashreporter.app/
-#else
 @BINPATH@/crashreporter@BIN_SUFFIX@
 @BINPATH@/crashreporter.crt
 @BINPATH@/crashreporter.ini
 #ifdef XP_UNIX
 @BINPATH@/Throbber-small.gif
-#endif
 #endif
 @BINPATH@/crashreporter-override.ini
 #endif
