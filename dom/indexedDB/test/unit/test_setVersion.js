@@ -10,7 +10,7 @@ function testSteps()
   const name = this.window ? window.location.pathname : "Splendid Test";
   const description = "My Test Database";
 
-  let request = mozIndexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   let event = yield;
@@ -30,7 +30,7 @@ function testSteps()
   for (let i = 0; i < versions.length; i++) {
     let version = versions[i];
 
-    let request = mozIndexedDB.open(name, version, description);
+    let request = indexedDB.open(name, version, description);
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     let event = yield;

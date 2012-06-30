@@ -23,7 +23,7 @@ function testSteps()
 
   const weightSort = [1, 0, 3, 7, 4, 2];
 
-  let request = mozIndexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
+  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
@@ -1562,14 +1562,14 @@ function testSteps()
   is(count, 1,
      "Correct count for only keyRange arg to index.openKeyCursor");
 
-  objectStore.getAll(data[1].ssn).onsuccess = grabEventAndContinueHandler;
+  objectStore.mozGetAll(data[1].ssn).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
   is(event.target.result.length, 1, "Got correct length");
   is(event.target.result[0].ssn, data[1].ssn, "Got correct result");
 
-  objectStore.getAll(null).onsuccess = grabEventAndContinueHandler;
+  objectStore.mozGetAll(null).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1578,7 +1578,7 @@ function testSteps()
     is(event.target.result[i].ssn, data[i].ssn, "Got correct value");
   }
 
-  objectStore.getAll(undefined).onsuccess = grabEventAndContinueHandler;
+  objectStore.mozGetAll(undefined).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1587,7 +1587,7 @@ function testSteps()
     is(event.target.result[i].ssn, data[i].ssn, "Got correct value");
   }
 
-  objectStore.getAll().onsuccess = grabEventAndContinueHandler;
+  objectStore.mozGetAll().onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1598,7 +1598,7 @@ function testSteps()
 
   keyRange = IDBKeyRange.lowerBound(0);
 
-  objectStore.getAll(keyRange).onsuccess = grabEventAndContinueHandler;
+  objectStore.mozGetAll(keyRange).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1607,7 +1607,7 @@ function testSteps()
     is(event.target.result[i].ssn, data[i].ssn, "Got correct value");
   }
 
-  index.getAll().onsuccess = grabEventAndContinueHandler;
+  index.mozGetAll().onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1617,7 +1617,7 @@ function testSteps()
        "Got correct value");
   }
 
-  index.getAll(undefined).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAll(undefined).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1627,7 +1627,7 @@ function testSteps()
        "Got correct value");
   }
 
-  index.getAll(null).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAll(null).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1637,7 +1637,7 @@ function testSteps()
        "Got correct value");
   }
 
-  index.getAll(data[weightSort[0]].weight).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAll(data[weightSort[0]].weight).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1646,7 +1646,7 @@ function testSteps()
 
   keyRange = IDBKeyRange.lowerBound(0);
 
-  index.getAll(keyRange).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAll(keyRange).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1656,7 +1656,7 @@ function testSteps()
        "Got correct value");
   }
 
-  index.getAllKeys().onsuccess = grabEventAndContinueHandler;
+  index.mozGetAllKeys().onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1666,7 +1666,7 @@ function testSteps()
        "Got correct value");
   }
 
-  index.getAllKeys(undefined).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAllKeys(undefined).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1676,7 +1676,7 @@ function testSteps()
        "Got correct value");
   }
 
-  index.getAllKeys(null).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAllKeys(null).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1686,7 +1686,7 @@ function testSteps()
        "Got correct value");
   }
 
-  index.getAllKeys(data[weightSort[0]].weight).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAllKeys(data[weightSort[0]].weight).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");
@@ -1695,7 +1695,7 @@ function testSteps()
 
   keyRange = IDBKeyRange.lowerBound(0);
 
-  index.getAllKeys(keyRange).onsuccess = grabEventAndContinueHandler;
+  index.mozGetAllKeys(keyRange).onsuccess = grabEventAndContinueHandler;
   event = yield;
 
   is(event.target.result instanceof Array, true, "Got an array");

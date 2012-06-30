@@ -1,0 +1,42 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test SVG masking of transformed HTML elements</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=769103 -->
+  <style type="text/css">
+
+* { margin: 0; border: 0; padding: 0;}
+
+div {
+  position: absolute;
+  left: 50px;
+  top: 50px;
+  width: 150px;
+  height: 150px;
+  -moz-transform: scale(2,2);
+  -moz-transform-origin: 0 0;
+}
+
+  </style>
+</head>
+<body bgcolor="lime">
+
+  <svg xmlns="http://www.w3.org/2000/svg" width="350" height="350"
+       style="display:block; position:absolute;">
+    <mask id="mask1" x="0" y="0" width="1" height="1" maskContentUnits="objectBoundingBox">
+      <circle cx="0.5" cy="0.5" r="0.48" fill="white"/>
+    </mask>
+    <mask id="mask2" x="0" y="0" width="1" height="1" maskContentUnits="objectBoundingBox">
+      <circle cx="0.5" cy="0.5" r="0.50" fill="white"/>
+    </mask>
+    <circle cx="200" cy="200" r="147" fill="red"/>
+  </svg>
+
+  <div style="background: red; mask: url(#mask1);"/>
+  <div style="background: lime; mask: url(#mask2);"/>
+
+</body>
+</html>

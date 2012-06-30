@@ -213,14 +213,20 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   ls->mListener = aListener;
   ls->mEventType = aType;
   ls->mTypeAtom = aTypeAtom;
-  ls->mWrappedJS = false;
   ls->mFlags = aFlags;
   ls->mHandlerIsString = false;
 
-  nsCOMPtr<nsIXPConnectWrappedJS> wjs = do_QueryInterface(aListener);
-  if (wjs) {
-    ls->mWrappedJS = true;
+  // Detect the type of event listener.
+  nsCOMPtr<nsIXPConnectWrappedJS> wjs;
+  if (aFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
+    ls->mListenerType = eJSEventListener;
+  } else if ((wjs = do_QueryInterface(aListener))) {
+    ls->mListenerType = eWrappedJSListener;
+  } else {
+    ls->mListenerType = eNativeListener;
   }
+
+
   if (aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) {
     mMayHaveSystemGroupListeners = true;
   }
@@ -458,7 +464,8 @@ nsEventListenerManager::FindJSEventListener(PRUint32 aEventType,
   for (PRUint32 i = 0; i < count; ++i) {
     ls = &mListeners.ElementAt(i);
     if (EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom) &&
-        ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
+        (ls->mListenerType == eJSEventListener))
+    {
       return ls;
     }
   }
@@ -796,7 +803,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
 
   // If this is a script handler and we haven't yet
   // compiled the event handler itself
-  if ((aListenerStruct->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) &&
+  if ((aListenerStruct->mListenerType == eJSEventListener) &&
       aListenerStruct->mHandlerIsString) {
     nsIJSEventListener *jslistener = aListenerStruct->GetJSListener();
     result = CompileEventHandlerInternal(aListenerStruct,
@@ -863,13 +870,28 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               break;
             }
           }
+
+          // Push the appropriate context. Note that we explicitly don't push a
+          // context in the case that the listener is non-scripted, in which case
+          // it's the native code's responsibility to push a context if it ever
+          // enters JS. Ideally we'd do things this way for all scripted callbacks,
+          // but that would involve a lot of changes and context pushing is going
+          // away soon anyhow.
+          //
+          // NB: Since we're looping here, the no-RePush() case needs to actually be
+          // a Pop(), otherwise we might end up with whatever was pushed in a
+          // previous iteration.
+          if (ls->mListenerType == eNativeListener) {
+            aPusher->Pop();
+          } else if (!aPusher->RePush(aCurrentTarget)) {
+            continue;
+          }
+
           nsRefPtr<nsIDOMEventListener> kungFuDeathGrip = ls->mListener;
-          if (aPusher->RePush(aCurrentTarget)) {
-            if (NS_FAILED(HandleEventSubType(ls, ls->mListener, *aDOMEvent,
-                                             aCurrentTarget, aFlags,
-                                             aPusher))) {
-              aEvent->flags |= NS_EVENT_FLAG_EXCEPTION_THROWN;
-            }
+          if (NS_FAILED(HandleEventSubType(ls, ls->mListener, *aDOMEvent,
+                                           aCurrentTarget, aFlags,
+                                           aPusher))) {
+            aEvent->flags |= NS_EVENT_FLAG_EXCEPTION_THROWN;
           }
         }
       }
@@ -992,7 +1014,7 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     bool allowsUntrusted = !!(ls.mFlags & NS_PRIV_EVENT_UNTRUSTED_PERMITTED);
     // If this is a script handler and we haven't yet
     // compiled the event handler itself go ahead and compile it
-    if ((ls.mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) && ls.mHandlerIsString) {
+    if ((ls.mListenerType == eJSEventListener) && ls.mHandlerIsString) {
       CompileEventHandlerInternal(const_cast<nsListenerStruct*>(&ls),
                                   true, nsnull);
     }
@@ -1107,7 +1129,7 @@ nsEventListenerManager::UnmarkGrayJSListeners()
     if (jsl) {
       xpc_UnmarkGrayObject(jsl->GetHandler());
       xpc_UnmarkGrayObject(jsl->GetEventScope());
-    } else if (ls.mWrappedJS) {
+    } else if (ls.mListenerType == eWrappedJSListener) {
       xpc_TryUnmarkWrappedGrayObject(ls.mListener);
     }
   }

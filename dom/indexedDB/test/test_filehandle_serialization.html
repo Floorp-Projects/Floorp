@@ -25,7 +25,7 @@
 
     let databases = [];
     for each (let info in databaseInfo) {
-      let request = mozIndexedDB.open(info.name, 1, info.description);
+      let request = indexedDB.open(info.name, 1, info.description);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = grabEventAndContinueHandler;

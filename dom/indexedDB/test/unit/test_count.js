@@ -29,7 +29,7 @@ function testSteps()
 
   const weightSort = [1, 0, 3, 7, 4, 2];
 
-  let request = mozIndexedDB.open(name, 1);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;

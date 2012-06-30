@@ -2,7 +2,7 @@
 <html>
 <head>
   <script>
-  var request = mozIndexedDB.open(parent.location, 1);
+  var request = indexedDB.open(parent.location, 1);
   request.onupgradeneeded = function(e) {
     var db = e.target.result;
     // This should never be called

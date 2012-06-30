@@ -35,7 +35,7 @@
         window.removeEventListener("indexedDB-addMore", onAddMore, true);
         window.removeEventListener("indexedDB-done", onDone, true);
 
-        let request = mozIndexedDB.open(window.location.pathname, version++);
+        let request = indexedDB.open(window.location.pathname, version++);
         request.onerror = errorHandler;
         request.onupgradeneeded = function(event) {
           db.deleteObjectStore("foo");
@@ -56,7 +56,7 @@
         window.addEventListener("indexedDB-addMore", onAddMore, true);
         window.addEventListener("indexedDB-done", onDone, true);
 
-        let request = mozIndexedDB.open(name, version++, description);
+        let request = indexedDB.open(name, version++, description);
         request.onerror = errorHandler;
         request.onupgradeneeded = grabEventAndContinueHandler;
         let event = yield;

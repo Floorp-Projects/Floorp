@@ -100,14 +100,13 @@
 #include "plbase64.h"
 #include "prmem.h"
 
-#include "nsIPrivateBrowsingService.h"
-
 #include "ContentChild.h"
 #include "nsXULAppAPI.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
 #include "ExternalHelperAppChild.h"
+#include "nsILoadContext.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -504,18 +503,11 @@ NS_IMPL_ISUPPORTS6(
   nsIObserver,
   nsISupportsWeakReference)
 
-nsExternalHelperAppService::nsExternalHelperAppService() :
-  mInPrivateBrowsing(false)
+nsExternalHelperAppService::nsExternalHelperAppService()
 {
 }
 nsresult nsExternalHelperAppService::Init()
 {
-  nsCOMPtr<nsIPrivateBrowsingService> pbs =
-    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-  if (pbs) {
-    pbs->GetPrivateBrowsingEnabled(&mInPrivateBrowsing);
-  }
-
   // Add an observer for profile change
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)
@@ -531,7 +523,7 @@ nsresult nsExternalHelperAppService::Init()
 
   nsresult rv = obs->AddObserver(this, "profile-before-change", true);
   NS_ENSURE_SUCCESS(rv, rv);
-  return obs->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, true);
+  return obs->AddObserver(this, "last-pb-context-exited", true);
 }
 
 nsExternalHelperAppService::~nsExternalHelperAppService()
@@ -923,7 +915,10 @@ NS_IMETHODIMP nsExternalHelperAppService::GetApplicationDescription(const nsACSt
 // Methods related to deleting temporary files on exit
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile * aTemporaryFile)
+/* static */
+nsresult
+nsExternalHelperAppService::DeleteTemporaryFileHelper(nsIFile * aTemporaryFile,
+                                                      nsCOMArray<nsIFile> &aFileList)
 {
   bool isFile = false;
 
@@ -931,12 +926,21 @@ NS_IMETHODIMP nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile * aT
   aTemporaryFile->IsFile(&isFile);
   if (!isFile) return NS_OK;
 
-  if (mInPrivateBrowsing)
-    mTemporaryPrivateFilesList.AppendObject(aTemporaryFile);
-  else
-    mTemporaryFilesList.AppendObject(aTemporaryFile);
+  aFileList.AppendObject(aTemporaryFile);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile* aTemporaryFile)
+{
+  return DeleteTemporaryFileHelper(aTemporaryFile, mTemporaryFilesList);
+}
+
+NS_IMETHODIMP
+nsExternalHelperAppService::DeleteTemporaryPrivateFileWhenPossible(nsIFile* aTemporaryFile)
+{
+  return DeleteTemporaryFileHelper(aTemporaryFile, mTemporaryPrivateFilesList);
 }
 
 void nsExternalHelperAppService::FixFilePermissions(nsIFile* aFile)
@@ -1052,13 +1056,8 @@ nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, c
 {
   if (!strcmp(aTopic, "profile-before-change")) {
     ExpungeTemporaryFiles();
-  } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
-    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(someData))
-      mInPrivateBrowsing = true;
-    else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(someData)) {
-      mInPrivateBrowsing = false;
-      ExpungeTemporaryPrivateFiles();
-    }
+  } else if (!strcmp(aTopic, "last-pb-context-exited")) {
+    ExpungeTemporaryPrivateFiles();
   }
   return NS_OK;
 }
@@ -2180,9 +2179,21 @@ nsresult nsExternalAppHandler::OpenWithApplication()
                            false);
 #endif
 
+    // See whether the channel has been opened in private browsing mode
+    bool inPrivateBrowsing = false;
+    NS_ASSERTION(mRequest, "This should never be called with a null request");
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRequest);
+    if (channel) {
+      nsCOMPtr<nsILoadContext> ctx;
+      NS_QueryNotificationCallbacks(channel, ctx);
+      if (ctx) {
+        inPrivateBrowsing = ctx->UsePrivateBrowsing();
+      }
+    }
+
     // make the tmp file readonly so users won't edit it and lose the changes
     // only if we're going to delete the file
-    if (deleteTempFileOnExit || mExtProtSvc->InPrivateBrowsing())
+    if (deleteTempFileOnExit || inPrivateBrowsing)
       mFinalFileDestination->SetPermissions(0400);
 
     rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);
@@ -2196,8 +2207,11 @@ nsresult nsExternalAppHandler::OpenWithApplication()
     }
     // Always schedule files to be deleted at the end of the private browsing
     // mode, regardless of the value of the pref.
-    else if (deleteTempFileOnExit || mExtProtSvc->InPrivateBrowsing()) {
+    else if (deleteTempFileOnExit) {
       mExtProtSvc->DeleteTemporaryFileOnExit(mFinalFileDestination);
+    }
+    else if (inPrivateBrowsing) {
+      mExtProtSvc->DeleteTemporaryPrivateFileWhenPossible(mFinalFileDestination);
     }
   }
 

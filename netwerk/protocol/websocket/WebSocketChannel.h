@@ -42,6 +42,14 @@ class CallOnStop;
 class CallOnServerClose;
 class CallAcknowledge;
 
+// Used to enforce "1 connecting websocket per host" rule, and reconnect delays
+enum wsConnectingState {
+  NOT_CONNECTING = 0,     // Not yet (or no longer) trying to open connection
+  CONNECTING_QUEUED,      // Waiting for other ws to same host to finish opening
+  CONNECTING_DELAYED,     // Delayed by "reconnect after failure" algorithm
+  CONNECTING_IN_PROGRESS  // Started connection: waiting for result
+};
+
 class WebSocketChannel : public BaseWebSocketChannel,
                          public nsIHttpUpgradeListener,
                          public nsIStreamListener,
@@ -101,6 +109,7 @@ protected:
 private:
   friend class OutboundEnqueuer;
   friend class nsWSAdmissionManager;
+  friend class FailDelayManager;
   friend class CallOnMessageAvailable;
   friend class CallOnStop;
   friend class CallOnServerClose;
@@ -117,7 +126,7 @@ private:
   void GeneratePong(PRUint8 *payload, PRUint32 len);
   void GeneratePing();
 
-  nsresult BeginOpen();
+  bool     BeginOpen();
   nsresult HandleExtensions();
   nsresult SetupRequest();
   nsresult ApplyForAdmission();
@@ -149,7 +158,11 @@ private:
   nsCOMPtr<nsIRandomGenerator>             mRandomGenerator;
 
   nsCString                       mHashedSecret;
+
+  // Used as key for connection managment: Initially set to hostname from URI,
+  // then to IP address (unless we're leaving DNS resolution to a proxy server)
   nsCString                       mAddress;
+  PRInt32                         mPort;          // WS server port
 
   nsCOMPtr<nsISocketTransport>    mTransport;
   nsCOMPtr<nsIAsyncInputStream>   mSocketIn;
@@ -160,6 +173,8 @@ private:
 
   nsCOMPtr<nsITimer>              mOpenTimer;
   PRUint32                        mOpenTimeout;  /* milliseconds */
+  wsConnectingState               mConnecting;   /* 0 if not connecting */
+  nsCOMPtr<nsITimer>              mReconnectDelayTimer;
 
   nsCOMPtr<nsITimer>              mPingTimer;
   PRUint32                        mPingTimeout;  /* milliseconds */
@@ -183,8 +198,6 @@ private:
   PRUint32                        mAutoFollowRedirects       : 1;
   PRUint32                        mReleaseOnTransmit         : 1;
   PRUint32                        mTCPClosed                 : 1;
-  PRUint32                        mOpenBlocked               : 1;
-  PRUint32                        mOpenRunning               : 1;
   PRUint32                        mChannelWasOpened          : 1;
   PRUint32                        mDataStarted               : 1;
   PRUint32                        mIncrementedSessionCount   : 1;

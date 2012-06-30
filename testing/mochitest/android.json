@@ -128,6 +128,7 @@
  "dom/imptests/html/tests/submission/Mozilla/test_window-onerror-parse-error.html": "",
  "dom/imptests/html/tests/submission/Mozilla/test_window-onerror-runtime-error-throw.html": "",
  "dom/imptests/html/tests/submission/Mozilla/test_window-onerror-runtime-error.html": "",
+ "dom/indexedDB/test/test_third_party.html": "TIMED_OUT",
  "dom/network/tests/test_network_basics.html": "",
  "dom/settings/tests/test_settings_events.html": "",
  "dom/sms/tests/test_sms_basics.html": "",

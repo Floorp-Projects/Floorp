@@ -111,12 +111,6 @@ public:
   virtual NS_HIDDEN_(nsresult) OSProtocolHandlerExists(const char *aScheme,
                                                        bool *aExists) = 0;
 
-  /**
-   * Simple accessor to let nsExternalAppHandler know if we are currently
-   * inside the private browsing mode.
-   */
-  bool InPrivateBrowsing() const { return mInPrivateBrowsing; }
-
 protected:
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
@@ -173,6 +167,11 @@ protected:
    */
   static void ExpungeTemporaryFilesHelper(nsCOMArray<nsIFile> &fileList);
   /**
+   * Helper function for DeleteTemporaryFileOnExit and DeleteTemporaryPrivateFileWhenPossible
+   */
+  static nsresult DeleteTemporaryFileHelper(nsIFile* aTemporaryFile,
+                                            nsCOMArray<nsIFile> &aFileList);
+  /**
    * Functions related to the tempory file cleanup service provided by
    * nsExternalHelperAppService
    */
@@ -192,10 +191,6 @@ protected:
    * added during the private browsing mode)
    */
   nsCOMArray<nsIFile> mTemporaryPrivateFilesList;
-  /**
-   * Whether we are in private browsing mode
-   */
-  bool mInPrivateBrowsing;
 };
 
 /**
