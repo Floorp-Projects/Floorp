@@ -80,7 +80,7 @@ public:
                                       PRUint32 aFlags);
   NS_IMETHOD_(bool) IsDisplayContainer() { return true; }
 
-  gfxMatrix GetCanvasTM();
+  gfxMatrix GetCanvasTM(PRUint32 aFor);
 
   nsRect GetInvalidRegion();
 
@@ -88,10 +88,6 @@ protected:
   // implementation helpers:
   void DoReflow();
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
-
-  // Returns GetCanvasTM followed by a scale from CSS px to Dev px. Used for
-  // painting, because children expect to paint to device space, not userspace.
-  gfxMatrix GetCanvasTMForChildren();
 
   // If width or height is less than or equal to zero we must disable rendering
   bool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }

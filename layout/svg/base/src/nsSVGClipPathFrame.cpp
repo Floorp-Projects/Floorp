@@ -317,7 +317,7 @@ nsSVGClipPathFrame::GetType() const
 }
 
 gfxMatrix
-nsSVGClipPathFrame::GetCanvasTM()
+nsSVGClipPathFrame::GetCanvasTM(PRUint32 aFor)
 {
   nsSVGClipPathElement *content = static_cast<nsSVGClipPathElement*>(mContent);
 
