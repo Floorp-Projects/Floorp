@@ -171,7 +171,12 @@
     var thehost = ios.newURI("http://example.com", null, null);
     var stss = Cc["@mozilla.org/stsservice;1"]
                  .getService(Ci.nsIStrictTransportSecurityService);
-    stss.removeStsState(thehost);
+    var loadContext = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsILoadContext);
+    var flags = loadContext.usePrivateBrowsing ?
+      Ci.nsISocketProvider.NO_PERMANENT_STORAGE : 0
+    stss.removeStsState(thehost, flags);
     dump_STSState();
     SimpleTest.executeSoon(nextTest);
   }
@@ -180,7 +185,12 @@ function dump_STSState() {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var stss = Components.classes["@mozilla.org/stsservice;1"]
           .getService(Components.interfaces.nsIStrictTransportSecurityService);
-    SimpleTest.info("State of example.com: " + stss.isStsHost("example.com"));
+    var loadContext = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                            .getInterface(Components.interfaces.nsIWebNavigation)
+                            .QueryInterface(Components.interfaces.nsILoadContext);
+    var flags = loadContext.usePrivateBrowsing ?
+      Components.interfaces.nsISocketProvider.NO_PERMANENT_STORAGE : 0
+    SimpleTest.info("State of example.com: " + stss.isStsHost("example.com", flags));
 }
 
   // these are executed in the order presented.

@@ -1233,7 +1233,13 @@ function test41()
         var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
         var thehost = ios.newURI("http://example.com", null, null);
         var stss = Cc["@mozilla.org/stsservice;1"].getService(Ci.nsIStrictTransportSecurityService);
-        stss.removeStsState(thehost);
+        var loadContext = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIWebNavigation)
+                                .QueryInterface(Ci.nsILoadContext);
+        var flags = 0;
+        if (loadContext.usePrivateBrowsing)
+          flags |= Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
+        stss.removeStsState(thehost, flags);
         doTest(42);
        }
      }
