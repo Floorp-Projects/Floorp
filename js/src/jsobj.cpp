@@ -3146,6 +3146,8 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
         if (pc < script->code + script->length && Detecting(cx, pc))
             flags |= JSRESOLVE_DETECTING;
     }
+    if (format & JOF_DECLARING)
+        flags |= JSRESOLVE_DECLARING;
     return flags;
 }
 
@@ -5025,8 +5027,8 @@ js_NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, const
 }
 
 JSBool
-js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
-             const Shape *shape, bool added, bool strict, Value *vp)
+js_NativeSet(JSContext *cx, Handle<JSObject*> obj, const Shape *shape, bool added, bool strict,
+             Value *vp)
 {
     AddTypePropertyId(cx, obj, shape->propid(), *vp);
 
@@ -5054,7 +5056,7 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
     Rooted<const Shape *> shapeRoot(cx, shape);
 
     int32_t sample = cx->runtime->propertyRemovals;
-    if (!shapeRoot->set(cx, obj, receiver, strict, vp))
+    if (!shapeRoot->set(cx, obj, strict, vp))
         return false;
 
     /*
@@ -5278,8 +5280,8 @@ JSObject::callMethod(JSContext *cx, HandleId id, unsigned argc, Value *argv, Val
 }
 
 JSBool
-baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
-                           unsigned defineHow, Value *vp, JSBool strict)
+baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, unsigned defineHow,
+                           Value *vp, JSBool strict)
 {
     JSObject *pobj;
     JSProperty *prop;
@@ -5310,8 +5312,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
 
                 if ((pd.attrs & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
                     return !pd.setter ||
-                           CallSetter(cx, receiver, id, pd.setter, pd.attrs, pd.shortid, strict,
-                                      vp);
+                           CallSetter(cx, obj, id, pd.setter, pd.attrs, pd.shortid, strict, vp);
                 }
 
                 if (pd.attrs & JSPROP_READONLY) {
@@ -5379,7 +5380,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
                 if (shape->hasDefaultSetter() && !shape->hasGetterValue())
                     return JS_TRUE;
 
-                return shape->set(cx, obj, receiver, strict, vp);
+                return shape->set(cx, obj, strict, vp);
             }
 
             /*
@@ -5460,17 +5461,17 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receive
     if ((defineHow & DNP_CACHE_RESULT) && !added)
         JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj, shape);
 
-    return js_NativeSet(cx, obj, receiver, shape, added, strict, vp);
+    return js_NativeSet(cx, obj, shape, added, strict, vp);
 }
 
 JSBool
-baseops::SetElementHelper(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
-                          unsigned defineHow, Value *vp, JSBool strict)
+baseops::SetElementHelper(JSContext *cx, HandleObject obj, uint32_t index, unsigned defineHow,
+                          Value *vp, JSBool strict)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, id.address()))
         return false;
-    return baseops::SetPropertyHelper(cx, obj, receiver, id, defineHow, vp, strict);
+    return baseops::SetPropertyHelper(cx, obj, id, defineHow, vp, strict);
 }
 
 JSBool
@@ -5765,6 +5766,13 @@ CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
         if (!writing)
             vp->setObjectOrNull(obj->getProto());
         *attrsp = JSPROP_PERMANENT;
+        break;
+
+      case JSACC_PARENT:
+        JS_ASSERT(!writing);
+        pobj = obj;
+        vp->setObject(*obj->getParent());
+        *attrsp = JSPROP_READONLY | JSPROP_PERMANENT;
         break;
 
       default:
