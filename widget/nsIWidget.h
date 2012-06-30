@@ -387,6 +387,7 @@ class nsIWidget : public nsISupports {
     nsIWidget()
       : mLastChild(nsnull)
       , mPrevSibling(nsnull)
+      , mNeedsPaint(false)
     {}
 
         
@@ -1570,6 +1571,13 @@ class nsIWidget : public nsISupports {
      */
     virtual bool WidgetPaintsBackground() { return false; }
 
+    void SetNeedsPaint(bool aNeedsPaint) { mNeedsPaint = aNeedsPaint; }
+    bool NeedsPaint() { 
+      if (!mNeedsPaint) {
+        return false;
+      }
+      return true;
+    }
 protected:
 
     // keep the list of children.  We also keep track of our siblings.
@@ -1582,6 +1590,7 @@ protected:
     nsIWidget* mLastChild;
     nsCOMPtr<nsIWidget> mNextSibling;
     nsIWidget* mPrevSibling;
+    bool mNeedsPaint;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget, NS_IWIDGET_IID)
