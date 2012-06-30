@@ -3605,11 +3605,9 @@ nsCanvasRenderingContext2DAzure::DrawImage(const HTMLImageOrCanvasOrVideoElement
   gfxIntSize imgSize;
 
   Element* element;
-  nsIDOMElement* domElement;
   if (image.IsHTMLCanvasElement()) {
     nsHTMLCanvasElement* canvas = image.GetAsHTMLCanvasElement();
     element = canvas;
-    domElement = canvas;
     nsIntSize size = canvas->GetSize();
     if (size.width == 0 || size.height == 0) {
       error.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -3639,15 +3637,13 @@ nsCanvasRenderingContext2DAzure::DrawImage(const HTMLImageOrCanvasOrVideoElement
     if (image.IsHTMLImageElement()) {
       nsHTMLImageElement* img = image.GetAsHTMLImageElement();
       element = img;
-      domElement = img;
     } else {
       nsHTMLVideoElement* video = image.GetAsHTMLVideoElement();
       element = video;
-      domElement = video;
     }
 
     gfxASurface* imgsurf =
-      CanvasImageCache::Lookup(domElement, mCanvasElement, &imgSize);
+      CanvasImageCache::Lookup(element, mCanvasElement, &imgSize);
     if (imgsurf) {
       srcSurf = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mTarget, imgsurf);
     }
@@ -3682,7 +3678,7 @@ nsCanvasRenderingContext2DAzure::DrawImage(const HTMLImageOrCanvasOrVideoElement
     }
 
     if (res.mImageRequest) {
-      CanvasImageCache::NotifyDrawImage(domElement, mCanvasElement,
+      CanvasImageCache::NotifyDrawImage(element, mCanvasElement,
                                         res.mImageRequest, res.mSurface, imgSize);
     }
 
