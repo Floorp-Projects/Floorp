@@ -100,7 +100,7 @@ public:
   virtual void NotifyViewportOrTransformChanged(PRUint32 aFlags);
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM();
+  virtual gfxMatrix GetCanvasTM(PRUint32 aFor);
 
   /* Methods to allow descendant nsSVGForeignObjectFrame frames to register and
    * unregister themselves with their nearest nsSVGOuterSVGFrame ancestor. This

@@ -86,7 +86,7 @@ private:
   float mStrokeWidth, mX, mY, mAutoAngle;
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM();
+  virtual gfxMatrix GetCanvasTM(PRUint32 aFor);
 
   // A helper class to allow us to paint markers safely. The helper
   // automatically sets and clears the mInUse flag on the marker frame (to
