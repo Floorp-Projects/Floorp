@@ -49,8 +49,6 @@
     };
 
     function testSteps() {
-      window.parent.SpecialPowers.addPermission("indexedDB", true, document);
-
       let request = indexedDB.open(window.location.pathname, 1);
       request.onsuccess = unexpectedSuccessHandler;
       request.onerror = grabEventAndContinueHandler;
