@@ -109,7 +109,7 @@ def WebIDLTest(parser, harness):
     harness.check(len(results[1].members), 1,
                   "Should look like we have one method")
     harness.check(len(results[1].members[0].signatures()), 4,
-                  "Should have foid signatures")
+                  "Should have four signatures")
 
     parser = parser.reset()
     threw = False

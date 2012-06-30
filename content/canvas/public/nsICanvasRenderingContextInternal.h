@@ -129,6 +129,14 @@ protected:
   nsRefPtr<nsHTMLCanvasElement> mCanvasElement;
 };
 
+namespace mozilla {
+namespace dom {
+
+extern bool AzureCanvasEnabled();
+
+}
+}
+
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,
                               NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 

@@ -17,6 +17,7 @@
 #include "nsIDOMSVGRect.h"
 #include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
+#include "nsSVGIntegrationUtils.h"
 #include "nsSVGPaintServerFrame.h"
 #include "nsSVGRect.h"
 #include "nsSVGTextPathFrame.h"
@@ -304,6 +305,13 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
+  if (GetStyleFont()->mFont.size <= 0) {
+    // Don't even try to paint, or cairo will go into an error state.
+    return NS_OK;
+  }
+
+  AutoCanvasTMForMarker autoCanvasTMFor(this, FOR_PAINTING);
+
   gfxContext *gfx = aContext->ThebesContext();
   PRUint16 renderMode = SVGAutoRenderState::GetRenderMode(aContext);
 
@@ -321,7 +329,7 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
                       renderMode == SVGAutoRenderState::CLIP_MASK,
                       "Unknown render mode");
     gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
-    SetupGlobalTransform(gfx);
+    SetupGlobalTransform(gfx, FOR_PAINTING);
 
     CharacterIterator iter(this, true);
     iter.SetInitialMatrix(gfx);
@@ -344,7 +352,7 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
   // We are adding patterns or gradients to the context. Save
   // it so we don't leak them into the next object we draw
   gfx->Save();
-  SetupGlobalTransform(gfx);
+  SetupGlobalTransform(gfx, FOR_PAINTING);
 
   CharacterIterator iter(this, true);
   iter.SetInitialMatrix(gfx);
@@ -369,8 +377,10 @@ nsSVGGlyphFrame::GetFrameForPoint(const nsPoint &aPoint)
     return nsnull;
   }
 
+  AutoCanvasTMForMarker autoCanvasTMFor(this, FOR_HIT_TESTING);
+
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
-  SetupGlobalTransform(tmpCtx);
+  SetupGlobalTransform(tmpCtx, FOR_HIT_TESTING);
   CharacterIterator iter(this, true);
   iter.SetInitialMatrix(tmpCtx);
 
@@ -478,7 +488,7 @@ nsSVGGlyphFrame::UpdateBounds()
 
   // See bug 614732 comment 32.
   mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
-    mRect, GetCanvasTM(), PresContext());
+    mRect, GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
 
   nsRect overflow = nsRect(nsPoint(0,0), mRect.Size());
   nsOverflowAreas overflowAreas(overflow, overflow);
@@ -577,7 +587,7 @@ nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   }
 
   nsRefPtr<gfxContext> tmpCtx = MakeTmpCtx();
-  SetupGlobalTransform(tmpCtx);
+  SetupGlobalTransform(tmpCtx, FOR_OUTERSVG_TM);
   CharacterIterator iter(this, true);
   iter.SetInitialMatrix(tmpCtx);
   AddBoundingBoxesToPath(&iter, tmpCtx);
@@ -612,13 +622,19 @@ nsSVGGlyphFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 // nsSVGGeometryFrame methods:
 
 gfxMatrix
-nsSVGGlyphFrame::GetCanvasTM()
+nsSVGGlyphFrame::GetCanvasTM(PRUint32 aFor)
 {
   if (mOverrideCanvasTM) {
     return *mOverrideCanvasTM;
   }
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
+        (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
+      return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
+    }
+  }
   NS_ASSERTION(mParent, "null parent");
-  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM();
+  return static_cast<nsSVGContainerFrame*>(mParent)->GetCanvasTM(aFor);
 }
 
 //----------------------------------------------------------------------
@@ -1473,9 +1489,9 @@ nsSVGGlyphFrame::NotifyGlyphMetricsChange()
 }
 
 void
-nsSVGGlyphFrame::SetupGlobalTransform(gfxContext *aContext)
+nsSVGGlyphFrame::SetupGlobalTransform(gfxContext *aContext, PRUint32 aFor)
 {
-  gfxMatrix matrix = GetCanvasTM();
+  gfxMatrix matrix = GetCanvasTM(aFor);
   if (!matrix.IsSingular()) {
     aContext->Multiply(matrix);
   }
@@ -1554,7 +1570,7 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     gfxMatrix m;
     if (aForceGlobalTransform ||
         !(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
-      m = GetCanvasTM();
+      m = GetCanvasTM(mGetCanvasTMForFlag);
       if (m.IsSingular())
         return false;
     }

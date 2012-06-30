@@ -26,6 +26,7 @@
   locale/@AB_CD@/global/layout/xmlparser.properties            (%chrome/layout/xmlparser.properties)
   locale/@AB_CD@/global/layout/HtmlForm.properties             (%chrome/layout/HtmlForm.properties)
   locale/@AB_CD@/global/security/caps.properties               (%chrome/security/caps.properties)
+  locale/@AB_CD@/global/security/csp.properties                (%chrome/security/csp.properties)
   locale/@AB_CD@/global/xml/prettyprint.dtd                    (%chrome/xml/prettyprint.dtd)
   locale/@AB_CD@/global-platform/win/accessible.properties     (%chrome/accessibility/win/accessible.properties)
   locale/@AB_CD@/global-platform/mac/accessible.properties     (%chrome/accessibility/mac/accessible.properties)

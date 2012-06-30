@@ -93,3 +93,31 @@ def WebIDLTest(parser, harness):
         threw = True
 
     harness.ok(threw, "Should not allow cycles in dictionary inheritance chains")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary A {
+              [TreatNullAs=EmptyString] DOMString foo;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow [TreatNullAs] on dictionary members");
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary A {
+              [TreatUndefinedAs=EmptyString] DOMString foo;
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not allow [TreatUndefinedAs] on dictionary members");

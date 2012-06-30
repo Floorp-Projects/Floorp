@@ -6,7 +6,11 @@
 #ifndef CANVASIMAGECACHE_H_
 #define CANVASIMAGECACHE_H_
 
-class nsIDOMElement;
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 class nsHTMLCanvasElement;
 class imgIRequest;
 class gfxASurface;
@@ -22,7 +26,7 @@ public:
    * using the first frame of aRequest's image. The data for the surface is
    * in aSurface, and the image size is in aSize.
    */
-  static void NotifyDrawImage(nsIDOMElement* aImage,
+  static void NotifyDrawImage(dom::Element* aImage,
                               nsHTMLCanvasElement* aCanvas,
                               imgIRequest* aRequest,
                               gfxASurface* aSurface,
@@ -34,7 +38,7 @@ public:
    * (with the same image request) and the returned surface contains the image
    * data, and the image size will be returned in aSize.
    */
-  static gfxASurface* Lookup(nsIDOMElement* aImage,
+  static gfxASurface* Lookup(dom::Element* aImage,
                              nsHTMLCanvasElement* aCanvas,
                              gfxIntSize* aSize);
 };

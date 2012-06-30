@@ -423,15 +423,15 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
 }
 
 // Nb: unlike most functions that are passed a Parser, this one gets a
-// SharedContext passed in separately, because in this case |sc| may not equal
-// |parser->tc->sc|.
+// SharedContext passed in separately, because in this case |tc| may not equal
+// |parser->tc|.
 NameNode *
-NameNode::create(ParseNodeKind kind, JSAtom *atom, Parser *parser, SharedContext *sc)
+NameNode::create(ParseNodeKind kind, JSAtom *atom, Parser *parser, TreeContext *tc)
 {
     ParseNode *pn = ParseNode::create(kind, PN_NAME, parser);
     if (pn) {
         pn->pn_atom = atom;
-        ((NameNode *)pn)->initCommon(sc);
+        ((NameNode *)pn)->initCommon(tc);
     }
     return (NameNode *)pn;
 }

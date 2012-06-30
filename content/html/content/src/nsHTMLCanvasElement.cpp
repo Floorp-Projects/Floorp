@@ -650,34 +650,37 @@ nsHTMLCanvasElement::InvalidateCanvasContent(const gfxRect* damageRect)
 
   frame->MarkLayersActive(nsChangeHint(0));
 
-  nsRect invalRect;
-  nsRect contentArea = frame->GetContentRect();
+  Layer* layer;
   if (damageRect) {
     nsIntSize size = GetWidthHeight();
     if (size.width != 0 && size.height != 0) {
 
-      // damageRect and size are in CSS pixels; contentArea is in appunits
-      // We want a rect in appunits; so avoid doing pixels-to-appunits and
-      // vice versa conversion here.
       gfxRect realRect(*damageRect);
-      realRect.Scale(contentArea.width / gfxFloat(size.width),
-                     contentArea.height / gfxFloat(size.height));
       realRect.RoundOut();
 
-      // then make it a nsRect
-      invalRect = nsRect(realRect.X(), realRect.Y(),
-                         realRect.Width(), realRect.Height());
-
-      invalRect = invalRect.Intersect(nsRect(nsPoint(0,0), contentArea.Size()));
+      nsIntRect invalRect(realRect.X(), realRect.Y(),
+                          realRect.Width(), realRect.Height());
+      layer = frame->InvalidateLayer(nsDisplayItem::TYPE_CANVAS, &invalRect);
     }
   } else {
-    invalRect = nsRect(nsPoint(0, 0), contentArea.Size());
+    layer = frame->InvalidateLayer(nsDisplayItem::TYPE_CANVAS);
   }
-  invalRect.MoveBy(contentArea.TopLeft() - frame->GetPosition());
-
-  Layer* layer = frame->InvalidateLayer(invalRect, nsDisplayItem::TYPE_CANVAS);
+  
   if (layer) {
     static_cast<CanvasLayer*>(layer)->Updated();
+  }
+
+  /*
+   * Treat canvas invalidations as animation activity for JS. Frequently
+   * invalidating a canvas will feed into heuristics and cause JIT code to be
+   * kept around longer, for smoother animations.
+   */
+  nsIScriptGlobalObject *scope = OwnerDoc()->GetScriptGlobalObject();
+  if (scope) {
+    JSObject *obj = scope->GetGlobalJSObject();
+    if (obj) {
+      js::NotifyAnimationActivity(obj);
+    }
   }
 }
 
@@ -690,7 +693,7 @@ nsHTMLCanvasElement::InvalidateCanvas()
   if (!frame)
     return;
 
-  frame->Invalidate(frame->GetContentRect() - frame->GetPosition());
+  frame->InvalidateFrame();
 }
 
 PRInt32
@@ -765,12 +768,8 @@ nsresult
 NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult)
 {
   Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
-  if (Preferences::GetBool("gfx.canvas.azure.enabled", false)) {
-    nsresult rv = NS_NewCanvasRenderingContext2DAzure(aResult);
-    // If Azure fails, fall back to a classic canvas.
-    if (NS_SUCCEEDED(rv)) {
-      return rv;
-    }
+  if (AzureCanvasEnabled()) {
+    return NS_NewCanvasRenderingContext2DAzure(aResult);
   }
 
   return NS_NewCanvasRenderingContext2DThebes(aResult);

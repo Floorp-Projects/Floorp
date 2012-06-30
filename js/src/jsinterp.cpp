@@ -217,6 +217,36 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 #endif /* JS_HAS_NO_SUCH_METHOD */
 
 bool
+js::ReportIsNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct)
+{
+    unsigned error = construct ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
+    js_ReportValueError3(cx, error, JSDVG_SEARCH_STACK, v, NULL, NULL, NULL);
+    return false;
+}
+
+bool
+js::ReportIsNotFunction(JSContext *cx, const Value *vp, MaybeConstruct construct)
+{
+    ptrdiff_t spIndex = cx->stack.spIndexOf(vp);
+    unsigned error = construct ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
+    js_ReportValueError3(cx, error, spIndex, *vp, NULL, NULL, NULL);
+    return false;
+}
+
+JSObject *
+js::ValueToCallable(JSContext *cx, const Value *vp, MaybeConstruct construct)
+{
+    if (vp->isObject()) {
+        JSObject *callable = &vp->toObject();
+        if (callable->isCallable())
+            return callable;
+    }
+
+    ReportIsNotFunction(cx, vp, construct);
+    return NULL;
+}
+
+bool
 js::RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
 {
     JS_ASSERT(script);
@@ -282,10 +312,8 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
     /* MaybeConstruct is a subset of InitialFrameFlags */
     InitialFrameFlags initial = (InitialFrameFlags) construct;
 
-    if (args.calleev().isPrimitive()) {
-        js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(initial));
-        return false;
-    }
+    if (args.calleev().isPrimitive())
+        return ReportIsNotFunction(cx, &args.calleev(), construct);
 
     JSObject &callee = args.callee();
     Class *clasp = callee.getClass();
@@ -297,10 +325,8 @@ js::InvokeKernel(JSContext *cx, CallArgs args, MaybeConstruct construct)
             return NoSuchMethod(cx, args.length(), args.base());
 #endif
         JS_ASSERT_IF(construct, !clasp->construct);
-        if (!clasp->call) {
-            js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(initial));
-            return false;
-        }
+        if (!clasp->call)
+            return ReportIsNotFunction(cx, &args.calleev(), construct);
         return CallJSNative(cx, clasp->call, args);
     }
 
@@ -359,42 +385,41 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
 }
 
 bool
-js::InvokeConstructorKernel(JSContext *cx, const CallArgs &argsRef)
+js::InvokeConstructorKernel(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(!FunctionClass.construct);
-    CallArgs args = argsRef;
 
     args.thisv().setMagic(JS_IS_CONSTRUCTING);
 
-    if (args.calleev().isObject()) {
-        JSObject *callee = &args.callee();
-        Class *clasp = callee->getClass();
-        if (clasp == &FunctionClass) {
-            JSFunction *fun = callee->toFunction();
+    if (!args.calleev().isObject())
+        return ReportIsNotFunction(cx, &args.calleev(), CONSTRUCT);
 
-            if (fun->isNativeConstructor()) {
-                Probes::calloutBegin(cx, fun);
-                bool ok = CallJSNativeConstructor(cx, fun->native(), args);
-                Probes::calloutEnd(cx, fun);
-                return ok;
-            }
+    JSObject &callee = args.callee();
+    if (callee.isFunction()) {
+        JSFunction *fun = callee.toFunction();
 
-            if (!fun->isInterpretedConstructor())
-                goto error;
-
-            if (!InvokeKernel(cx, args, CONSTRUCT))
-                return false;
-
-            JS_ASSERT(args.rval().isObject());
-            return true;
+        if (fun->isNativeConstructor()) {
+            Probes::calloutBegin(cx, fun);
+            bool ok = CallJSNativeConstructor(cx, fun->native(), args);
+            Probes::calloutEnd(cx, fun);
+            return ok;
         }
-        if (clasp->construct)
-            return CallJSNativeConstructor(cx, clasp->construct, args);
+
+        if (!fun->isInterpretedConstructor())
+            return ReportIsNotFunction(cx, &args.calleev(), CONSTRUCT);
+
+        if (!InvokeKernel(cx, args, CONSTRUCT))
+            return false;
+
+        JS_ASSERT(args.rval().isObject());
+        return true;
     }
 
-error:
-    js_ReportIsNotFunction(cx, &args.calleev(), JSV2F_CONSTRUCT);
-    return false;
+    Class *clasp = callee.getClass();
+    if (!clasp->construct)
+        return ReportIsNotFunction(cx, &args.calleev(), CONSTRUCT);
+
+    return CallJSNativeConstructor(cx, clasp->construct, args);
 }
 
 bool
@@ -2390,7 +2415,7 @@ BEGIN_CASE(JSOP_ENUMELEM)
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -1, id);
     rval = regs.sp[-3];
-    if (!obj->setGeneric(cx, id, rval.address(), script->strictModeCode))
+    if (!obj->setGeneric(cx, obj, id, rval.address(), script->strictModeCode))
         goto error;
     regs.sp -= 3;
 }
@@ -2413,7 +2438,7 @@ BEGIN_CASE(JSOP_EVAL)
 END_CASE(JSOP_EVAL)
 
 BEGIN_CASE(JSOP_FUNAPPLY)
-    if (!GuardFunApplySpeculation(cx, regs))
+    if (!GuardFunApplyArgumentsOptimization(cx))
         goto error;
     /* FALL THROUGH */
 
@@ -2750,7 +2775,8 @@ END_CASE(JSOP_ARGUMENTS)
 
 BEGIN_CASE(JSOP_REST)
 {
-    JSObject *rest = regs.fp()->createRestParameter(cx);
+    RootedObject &rest = rootObject0;
+    rest = regs.fp()->createRestParameter(cx);
     if (!rest)
         goto error;
     PUSH_COPY(ObjectValue(*rest));
@@ -2939,7 +2965,7 @@ BEGIN_CASE(JSOP_DEFFUN)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, name, rval.address(), script->strictModeCode))
+        if (!parent->setProperty(cx, parent, name, rval.address(), script->strictModeCode))
             goto error;
     } while (false);
 }
@@ -3071,7 +3097,7 @@ BEGIN_CASE(JSOP_NEWINIT)
     uint8_t i = GET_UINT8(regs.pc);
     JS_ASSERT(i == JSProto_Array || i == JSProto_Object);
 
-    JSObject *obj;
+    RootedObject &obj = rootObject0;
     if (i == JSProto_Array) {
         obj = NewDenseEmptyArray(cx);
     } else {
@@ -3091,7 +3117,8 @@ END_CASE(JSOP_NEWINIT)
 BEGIN_CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
-    JSObject *obj = NewDenseAllocatedArray(cx, count);
+    RootedObject &obj = rootObject0;
+    obj = NewDenseAllocatedArray(cx, count);
     if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj))
         goto error;
 
@@ -3145,7 +3172,7 @@ BEGIN_CASE(JSOP_INITPROP)
     id = NameToId(name);
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !baseops::SetPropertyHelper(cx, obj, id, 0, &rval, script->strictModeCode)
+        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, script->strictModeCode)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;
@@ -3226,7 +3253,7 @@ BEGIN_CASE(JSOP_SPREAD)
     regs.sp--;
 }
 END_CASE(JSOP_SPREAD)
-    
+
 {
 BEGIN_CASE(JSOP_GOSUB)
     PUSH_BOOLEAN(false);
@@ -3464,11 +3491,11 @@ BEGIN_CASE(JSOP_SETXMLNAME)
 {
     JS_ASSERT(!script->strictModeCode);
 
-    JSObject *obj = &regs.sp[-3].toObject();
+    Rooted<JSObject*> obj(cx, &regs.sp[-3].toObject());
     Value rval = regs.sp[-1];
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
-    if (!obj->setGeneric(cx, id, &rval, script->strictModeCode))
+    if (!obj->setGeneric(cx, obj, id, &rval, script->strictModeCode))
         goto error;
     rval = regs.sp[-1];
     regs.sp -= 2;

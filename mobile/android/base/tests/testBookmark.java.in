@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.TabHost;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.lang.reflect.Method;
@@ -15,7 +16,7 @@ import android.content.ContentResolver;
 
 public class testBookmark extends BaseTest  {
     private static final int MAX_WAIT_MS = 3000; 
-    private static final String ABOUT_HOME_URL = "about:home";
+    private static final String ABOUT_HOME_URL = "about:firefox";
     private static String BOOKMARK_URL = "/robocop/robocop_blank_01.html";
     private static String BOOKMARK_TITLE = "Browser Blank Page 01";
 
@@ -157,17 +158,8 @@ public class testBookmark extends BaseTest  {
         // Click the "Bookmarks" tab to switch to bookmarks list
         mSolo.clickOnText("Bookmarks");
 
-        Element bookmarkList = mDriver.findElement(awesomeBarActivity, "bookmarks_list");
-        if (bookmarkList != null) {
-            ArrayList<ListView> lists = mSolo.getCurrentListViews();
-            for (ListView list : lists) {
-                if (list.getId() == bookmarkList.getId())
-                    return list;
-            }
-        }
-
-        // Just return null if we can't find the bookmarks list view
-        return null;
+        TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
+        return (ListView)tabHost.getCurrentView();
     }
 
     // This method opens the menu and selects the "Bookmark" menu item

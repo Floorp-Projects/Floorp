@@ -36,7 +36,7 @@ js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, Class *clasp)
     }
 #endif
 
-    if (JSFunction *fun = js_ValueToFunction(cx, &call.calleev(), 0)) {
+    if (JSFunction *fun = ReportIfNotFunction(cx, call.calleev())) {
         JSAutoByteString funNameBytes;
         if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
