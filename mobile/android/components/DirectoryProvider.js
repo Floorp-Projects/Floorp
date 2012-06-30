@@ -26,22 +26,7 @@ DirectoryProvider.prototype = {
     if (prop == NS_APP_CACHE_PARENT_DIR) {
       let dirsvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
       let profile = dirsvc.get("ProfD", Ci.nsIFile);
-
-      let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-      let device = sysInfo.get("device");
-      switch (device) {
-#ifdef MOZ_PLATFORM_MAEMO
-        case "Nokia N900":
-          return profile;
-        
-        case "Nokia N8xx":
-          let folder = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-          folder.initWithPath("/media/mmc2/.mozilla/fennec");
-          return folder;
-#endif
-        default:
-          return profile;
-      }
+      return profile;
     } else if (prop == XRE_UPDATE_ROOT_DIR) {
       let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
       if (env.exists(ENVVAR_UPDATE_DIR)) {

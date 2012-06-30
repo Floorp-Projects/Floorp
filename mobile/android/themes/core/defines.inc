@@ -119,9 +119,7 @@
 %define tablet_panel_controls  40mozmm
 %define tablet_panel_minwidth  124mozmm
 
-%ifdef MOZ_PLATFORM_MAEMO
-%define orientation -moz-device-orientation
-%elifdef ANDROID
+%ifdef ANDROID
 %define orientation -moz-device-orientation
 %else
 %define orientation orientation
