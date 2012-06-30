@@ -1531,6 +1531,7 @@ fi
 
 if [ "$MOZ_PSM" ]; then
   add_makefiles "
+    security/build/Makefile
     security/manager/Makefile
     security/manager/boot/Makefile
     security/manager/boot/src/Makefile
