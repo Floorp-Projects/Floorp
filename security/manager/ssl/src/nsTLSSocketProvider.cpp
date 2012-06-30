@@ -36,7 +36,7 @@ nsTLSSocketProvider::NewSocket(int32_t family,
                                       _result,
                                       securityInfo,
                                       true,
-                                      flags & ANONYMOUS_CONNECT);
+                                      flags);
   
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }
@@ -60,7 +60,7 @@ nsTLSSocketProvider::AddToSocket(int32_t family,
                                         aSocket,
                                         securityInfo,
                                         true,
-                                        flags & ANONYMOUS_CONNECT);
+                                        flags);
   
   return (NS_FAILED(rv)) ? NS_ERROR_SOCKET_CREATE_FAILED : NS_OK;
 }
