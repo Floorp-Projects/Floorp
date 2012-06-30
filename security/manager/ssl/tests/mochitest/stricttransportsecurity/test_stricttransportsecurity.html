@@ -54,7 +54,7 @@
     var thehost = ios.newURI("http://example.com", null, null);
 
     var stss = Cc["@mozilla.org/stsservice;1"].getService(Ci.nsIStrictTransportSecurityService);
-    stss.removeStsState(thehost);
+    stss.removeStsState(thehost, 0);
   }
 
   function loadVerifyFrames(round) {
