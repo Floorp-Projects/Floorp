@@ -70,7 +70,7 @@ public:
 #endif
 
   // nsSVGGeometryFrame methods
-  gfxMatrix GetCanvasTM();
+  gfxMatrix GetCanvasTM(PRUint32 aFor);
 
 protected:
   // nsISVGChildFrame interface:
