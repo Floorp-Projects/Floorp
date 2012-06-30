@@ -3422,7 +3422,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
     nsRefPtr<gfxPattern> pattern;
     gfxIntSize imgSize;
     nsRefPtr<gfxASurface> imgsurf =
-      CanvasImageCache::Lookup(imgElt, mCanvasElement, &imgSize);
+      CanvasImageCache::Lookup(content->AsElement(), mCanvasElement, &imgSize);
 
     if (!imgsurf) {
         // The canvas spec says that drawImage should draw the first frame
@@ -3456,7 +3456,7 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         }
 
         if (res.mImageRequest) {
-            CanvasImageCache::NotifyDrawImage(imgElt, mCanvasElement,
+            CanvasImageCache::NotifyDrawImage(content->AsElement(), mCanvasElement,
                                               res.mImageRequest, imgsurf, imgSize);
         }
     }
