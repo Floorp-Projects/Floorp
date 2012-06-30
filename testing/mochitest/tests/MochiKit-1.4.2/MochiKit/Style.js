@@ -445,7 +445,7 @@ MochiKit.Base.update(MochiKit.Style, {
                 (parseFloat(self.getStyle(elem, 'borderRightWidth')) || 0)
             );
             if (tableCell) {
-                if (/Gecko|Opera/.test(navigator.userAgent)
+                if (/Opera/.test(navigator.userAgent)
                     && !/Konqueror|AppleWebKit|KHTML/.test(navigator.userAgent)) {
                     var borderHeightQuota = 0;
                 } else if (/MSIE/.test(navigator.userAgent)) {
