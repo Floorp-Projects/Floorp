@@ -378,7 +378,8 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   // damage is applied based on the final widget geometry
   if (aFlushDirtyRegion) {
     nsIWidget *widget = aView->GetWidget();
-    if (widget) {
+    if (widget && widget->NeedsPaint()) {
+      widget->SetNeedsPaint(false);
 #ifdef DEBUG_INVALIDATIONS
       printf("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
 #endif
