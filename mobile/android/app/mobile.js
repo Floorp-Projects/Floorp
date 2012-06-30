@@ -40,15 +40,6 @@ pref("toolkit.storage.synchronous", 0);
 pref("browser.viewport.scaleRatio", -1);
 pref("browser.viewport.desktopWidth", 980);
 
-#ifndef ANDROID
-#ifndef MOZ_PLATFORM_MAEMO
-// On desktop builds, simulate an MDPI tablet by default.
-pref("layout.css.dpi", 160);
-#else
-// Maemo X11 lies about its dpi
-pref("layout.css.dpi", 240);
-#endif
-#endif
 /* allow scrollbars to float above chrome ui */
 pref("ui.scrollbarsCanOverlapContent", 1);
 
@@ -90,9 +81,6 @@ pref("network.http.max-connections", 20);
 pref("network.http.max-connections-per-server", 15);
 pref("network.http.max-persistent-connections-per-server", 6);
 pref("network.http.max-persistent-connections-per-proxy", 8);
-#ifdef MOZ_PLATFORM_MAEMO
-pref("network.autodial-helper.enabled", true);
-#endif
 
 // See bug 545869 for details on why these are set the way they are
 pref("network.buffer.cache.count", 24);
@@ -380,10 +368,6 @@ pref("privacy.item.geolocation", true);
 pref("privacy.item.siteSettings", true);
 pref("privacy.item.syncAccount", true);
 
-#ifdef MOZ_PLATFORM_MAEMO
-pref("plugins.force.wmode", "opaque");
-#endif
-
 // URL to the Learn More link XXX this is the firefox one.  Bug 495578 fixes this.
 pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/geolocation/");
 
@@ -426,10 +410,7 @@ pref("browser.ui.touch.bottom", 16);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
-#if MOZ_PLATFORM_MAEMO == 6
-pref("plugin.disable", false);
-pref("dom.ipc.plugins.enabled", true);
-#elifdef ANDROID
+#ifdef ANDROID
 pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", false);
 #else
@@ -442,14 +423,6 @@ pref("plugins.click_to_play", true);
 // in getting the bits from the surface.
 // Bug 756253
 pref("plugins.use_placeholder", 0);
-
-// process priority
-// higher values give content process less CPU time
-#if MOZ_PLATFORM_MAEMO == 5
-pref("dom.ipc.content.nice", 10);
-#else
-pref("dom.ipc.content.nice", 1);
-#endif
 
 // product URLs
 // The breakpad report server to link to in about:crashes
@@ -547,16 +520,6 @@ pref("app.update.url.details", "http://www.mozilla.com/%LOCALE%/mobile/");
 // replace newlines with spaces on paste into single-line text boxes
 pref("editor.singleLine.pasteNewlines", 2);
 
-#ifdef MOZ_PLATFORM_MAEMO
-// update fonts for better readability
-pref("font.default.x-baltic", "SwissA");
-pref("font.default.x-central-euro", "SwissA");
-pref("font.default.x-cyrillic", "SwissA");
-pref("font.default.x-unicode", "SwissA");
-pref("font.default.x-user-def", "SwissA");
-pref("font.default.x-western", "SwissA");
-#endif
-
 #ifdef MOZ_SERVICES_SYNC
 // sync service
 pref("services.sync.client.type", "mobile");
@@ -582,9 +545,7 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 pref("ui.dragThresholdX", 25);
 pref("ui.dragThresholdY", 25);
 
-#if MOZ_PLATFORM_MAEMO == 6
-pref("layers.acceleration.disabled", false);
-#elifdef ANDROID
+#ifdef ANDROID
 pref("layers.acceleration.disabled", false);
 #else
 pref("layers.acceleration.disabled", true);

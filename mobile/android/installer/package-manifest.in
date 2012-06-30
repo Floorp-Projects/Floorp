@@ -94,10 +94,6 @@
 @BINPATH@/recommended-addons.json
 #endif
 
-#ifdef MOZ_PLATFORM_MAEMO
-@BINPATH@/res/drawable
-#endif
-
 [browser]
 ; [Base Browser Files]
 #ifndef XP_UNIX
