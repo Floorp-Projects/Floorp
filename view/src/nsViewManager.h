@@ -198,7 +198,6 @@ private:
   // Use IsPainting() and SetPainting() to access mPainting.
   bool              mPainting;
   bool              mRecursiveRefreshPending;
-  bool              mHasPendingUpdates;
   bool              mHasPendingWidgetGeometryChanges;
   bool              mInScroll;
 

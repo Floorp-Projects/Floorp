@@ -173,10 +173,6 @@ protected:
     void          StartBlinking();
     void          StopBlinking();
 
-    // If the nearest block has a potential 'text-overflow' marker then
-    // invalidate it.
-    void          InvalidateTextOverflowBlock();
-    
     bool          DrawAtPositionWithHint(nsIDOMNode* aNode,
                                          PRInt32 aOffset,
                                          nsFrameSelection::HINT aFrameHint,
@@ -203,8 +199,6 @@ protected:
     void          DrawCaret(bool aInvalidate);
     void          DrawCaretAfterBriefDelay();
     bool          UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset);
-    static void   InvalidateRects(const nsRect &aRect, const nsRect &aHook,
-                                  nsIFrame *aFrame);
     nsRect        GetHookRect()
     {
 #ifdef IBMBIDI

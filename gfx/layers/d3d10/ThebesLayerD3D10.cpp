@@ -54,6 +54,7 @@ void
 ThebesLayerD3D10::InvalidateRegion(const nsIntRegion &aRegion)
 {
   mValidRegion.Sub(mValidRegion, aRegion);
+  AddInvalidRect(aRegion.GetBounds());
 }
 
 void ThebesLayerD3D10::CopyRegion(ID3D10Texture2D* aSrc, const nsIntPoint &aSrcOffset,

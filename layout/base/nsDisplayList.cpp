@@ -26,6 +26,7 @@
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
 #include "nsThemeConstants.h"
+#include "LayerTreeInvalidation.h"
 
 #include "imgIContainer.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -35,6 +36,7 @@
 #include "nsSVGEffects.h"
 #include "nsSVGClipPathFrame.h"
 #include "sampler.h"
+#include "nsIViewManager.h"
 
 #include "mozilla/StandardInteger.h"
 
@@ -564,8 +566,10 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   nsRefPtr<LayerManager> layerManager;
   bool allowRetaining = false;
   bool doBeginTransaction = true;
+  nsIView *view = nsnull;
   if (aFlags & PAINT_USE_WIDGET_LAYERS) {
     nsIFrame* referenceFrame = aBuilder->ReferenceFrame();
+    view = referenceFrame->GetView();
     NS_ASSERTION(referenceFrame == nsLayoutUtils::GetDisplayRootFrame(referenceFrame),
                  "Reference frame must be a display root for us to use the layer manager");
     nsIWidget* window = referenceFrame->GetNearestWidget();
@@ -606,11 +610,25 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   nsPresContext* presContext = aForFrame->PresContext();
   nsIPresShell* presShell = presContext->GetPresShell();
 
+  NotifySubDocInvalidationFunc computeInvalidFunc =
+    presContext->MayHavePaintEventListenerInSubDocument() ? nsPresContext::NotifySubDocInvalidation : 0;
+  bool computeInvalidRect = (computeInvalidFunc ||
+                             (layerManager->GetBackendType() == LayerManager::LAYERS_BASIC)) && 
+                            widgetTransaction;
+
+  nsAutoPtr<LayerProperties> props(computeInvalidRect ? 
+                                     LayerProperties::CloneFrom(layerManager->GetRoot()) : 
+                                     nsnull);
+
   nsDisplayItem::ContainerParameters containerParameters
     (presShell->GetXResolution(), presShell->GetYResolution());
   nsRefPtr<ContainerLayer> root = layerBuilder->
     BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nsnull, *this,
                            containerParameters, nsnull);
+ 
+  if (widgetTransaction) {
+    aForFrame->ClearInvalidationStateBits();
+  }
 
   if (!root) {
     layerManager->RemoveUserData(&gLayerManagerLayerBuilder);
@@ -646,10 +664,30 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
 
   layerManager->SetRoot(root);
-  layerBuilder->WillEndTransaction(layerManager);
+  layerBuilder->WillEndTransaction();
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
                                aBuilder, (aFlags & PAINT_NO_COMPOSITE) ? LayerManager::END_NO_COMPOSITE : LayerManager::END_DEFAULT);
-  layerBuilder->DidEndTransaction(layerManager);
+  layerBuilder->DidEndTransaction();
+
+  nsIntRect invalid;
+  if (props) {
+    invalid = props->ComputeDifferences(root, computeInvalidFunc);
+  }
+
+  if (view) {
+    if (props) {
+      if (!invalid.IsEmpty()) {
+        nsRect rect(presContext->DevPixelsToAppUnits(invalid.x),
+                    presContext->DevPixelsToAppUnits(invalid.y),
+                    presContext->DevPixelsToAppUnits(invalid.width),
+                    presContext->DevPixelsToAppUnits(invalid.height));
+        view->GetViewManager()->InvalidateViewNoSuppression(view, rect);
+        presContext->NotifyInvalidation(invalid, 0);
+      }
+    } else {
+      view->GetViewManager()->InvalidateView(view);
+    }
+  }
 
   if (aFlags & PAINT_FLUSH_LAYERS) {
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
@@ -1310,7 +1348,7 @@ nsDisplayBackground::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   // theme background overrides any other background
   if (mIsThemed) {
     if (mThemeTransparency == nsITheme::eOpaque) {
-      result = GetBounds(aBuilder, aSnap);
+      result = nsRect(ToReferenceFrame(), mFrame->GetSize());
     }
     return result;
   }
@@ -1412,6 +1450,36 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
 }
 
 bool
+nsDisplayBackground::RenderingMightDependOnFrameSize()
+{
+  // theme background overrides any other background and we don't know what to do here
+  if (mIsThemed)
+    return true;
+  
+  // We could be smarter with rounded corners and only invalidate the new area + the piece that was previously
+  // clipped out.
+  nscoord radii[8];
+  if (mFrame->GetBorderRadii(radii))
+    return true;
+
+  nsPresContext* presContext = mFrame->PresContext();
+  nsStyleContext *bgSC;
+  bool hasBG =
+    nsCSSRendering::FindBackground(presContext, mFrame, &bgSC);
+  if (!hasBG)
+    return false;
+  const nsStyleBackground* bg = bgSC->GetStyleBackground();
+
+  NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
+    const nsStyleBackground::Layer &layer = bg->mLayers[i];
+    if (layer.RenderingMightDependOnFrameSize()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
 nsDisplayBackground::ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
 {
   if (mIsThemed)
@@ -1468,6 +1536,28 @@ nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
                                   flags);
 }
 
+void nsDisplayBackground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                                    const nsDisplayItemGeometry* aGeometry,
+                                                    nsRegion* aInvalidRegion)
+{
+  const nsDisplayBackgroundGeometry* geometry = static_cast<const nsDisplayBackgroundGeometry*>(aGeometry);
+  if (ShouldFixToViewport(aBuilder)) {
+    // This is incorrect, We definitely need to check more things here. 
+    return;
+  }
+
+  bool snap;
+  if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
+      !geometry->mPaddingRect.IsEqualInterior(GetPaddingRect()) ||
+      !geometry->mContentRect.IsEqualInterior(GetContentRect())) {
+    if (!RenderingMightDependOnFrameSize() && geometry->mBounds.TopLeft() == GetBounds(aBuilder, &snap).TopLeft()) {
+      aInvalidRegion->Xor(GetBounds(aBuilder, &snap), geometry->mBounds);
+    } else {
+      aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
+    }
+  }
+}
+
 nsRect
 nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
   nsRect r(nsPoint(0,0), mFrame->GetSize());
@@ -1477,6 +1567,10 @@ nsDisplayBackground::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
     presContext->GetTheme()->
         GetWidgetOverflow(presContext->DeviceContext(), mFrame,
                           mFrame->GetStyleDisplay()->mAppearance, &r);
+#ifdef XP_MACOSX
+    // Bug 748219
+    r.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
+#endif
   }
 
   *aSnap = true;
@@ -1571,7 +1665,33 @@ nsDisplayBorder::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
   return true;
 }
+  
+nsDisplayItemGeometry* 
+nsDisplayBorder::AllocateGeometry(nsDisplayListBuilder* aBuilder)
+{
+  bool snap;
+  nsDisplayBorderGeometry* geometry = new nsDisplayBorderGeometry;
+  geometry->mBounds = GetBounds(aBuilder, &snap);
+  geometry->mPaddingRect = GetContentRect();
+  return geometry;
+}
 
+void
+nsDisplayBorder::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                           const nsDisplayItemGeometry* aGeometry,
+                                           nsRegion* aInvalidRegion)
+{
+  const nsDisplayBorderGeometry* geometry = static_cast<const nsDisplayBorderGeometry*>(aGeometry);
+  bool snap;
+  if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
+      !geometry->mPaddingRect.IsEqualInterior(GetContentRect())) {
+    // We can probably get away with only invalidating the difference
+    // between the border and padding rects, but the XUL ui at least
+    // is apparently painting a background with this?
+    aInvalidRegion->Or(GetBounds(aBuilder, &snap), geometry->mBounds);
+  }
+}
+  
 void
 nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
                        nsRenderingContext* aCtx) {
@@ -1986,8 +2106,10 @@ bool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* a
 }
 
 nsDisplayOwnLayer::nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aBuilder, aFrame, aList) {
+                                     nsIFrame* aFrame, nsDisplayList* aList,
+                                     PRUint32 aFlags)
+    : nsDisplayWrapList(aBuilder, aFrame, aList)
+    , mFlags(aFlags) {
   MOZ_COUNT_CTOR(nsDisplayOwnLayer);
 }
 
@@ -2005,6 +2127,12 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsRefPtr<Layer> layer = GetLayerBuilderForManager(aManager)->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nsnull);
+
+  if (mFlags & GENERATE_SUBDOC_INVALIDATIONS) {
+    ContainerLayerPresContext* pres = new ContainerLayerPresContext;
+    pres->mPresContext = mFrame->PresContext();
+    layer->SetUserData(&gNotifySubDocInvalidationData, pres);
+  }
   return layer.forget();
 }
 
@@ -2461,9 +2589,10 @@ bool nsDisplayClipRoundedRect::TryMerge(nsDisplayListBuilder* aBuilder, nsDispla
 
 nsDisplayZoom::nsDisplayZoom(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayList* aList,
-                             PRInt32 aAPD, PRInt32 aParentAPD)
-    : nsDisplayOwnLayer(aBuilder, aFrame, aList), mAPD(aAPD),
-      mParentAPD(aParentAPD) {
+                             PRInt32 aAPD, PRInt32 aParentAPD,
+                             PRUint32 aFlags)
+    : nsDisplayOwnLayer(aBuilder, aFrame, aList, aFlags)
+    , mAPD(aAPD), mParentAPD(aParentAPD) {
   MOZ_COUNT_CTOR(nsDisplayZoom);
 }
 
