@@ -33,6 +33,7 @@ public:
   NS_IMETHOD  Init(nsIContent* aContent,
                    nsIFrame*   aParent,
                    nsIFrame*   aPrevInFlow);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
