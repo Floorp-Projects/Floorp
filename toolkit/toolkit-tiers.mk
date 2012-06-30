@@ -125,6 +125,12 @@ tier_platform_dirs += \
 		$(NULL)
 endif
 
+ifdef MOZ_PSM
+tier_platform_dirs += \
+  security/build \
+  $(NULL)
+endif
+
 ifdef MOZ_WEBRTC
 tier_platform_dirs += \
   media/webrtc \
