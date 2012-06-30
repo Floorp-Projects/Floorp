@@ -1426,7 +1426,7 @@ HeadsUpDisplay.prototype = {
     aRemoteMessages.forEach(function(aMessage) {
       switch (aMessage._type) {
         case "PageError": {
-          let category = this.categoryForScriptError(aMessage.category);
+          let category = this.categoryForScriptError(aMessage);
           this.outputMessage(category, this.reportPageError,
                              [category, aMessage]);
           break;
@@ -1841,6 +1841,7 @@ HeadsUpDisplay.prototype = {
     function HUD_clearButton_onCommand() {
       let hud = HUDService.getHudReferenceById(hudId);
       hud.jsterm.clearOutput(true);
+      hud.chromeWindow.DeveloperToolbar.resetErrorsCount(hud.tab);
     }
 
     let clearButton = this.makeXULNode("toolbarbutton");
