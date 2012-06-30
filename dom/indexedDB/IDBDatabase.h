@@ -37,6 +37,7 @@ class IDBDatabase : public IDBWrapperCache,
 {
   friend class AsyncConnectionHelper;
   friend class IndexedDatabaseManager;
+  friend class IndexedDBDatabaseChild;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -104,6 +105,10 @@ public:
   void EnterSetVersionTransaction();
   void ExitSetVersionTransaction();
 
+  // Called when a versionchange transaction is aborted to reset the
+  // DatabaseInfo.
+  void RevertToPreviousState();
+
   FileManager* Manager() const
   {
     return mFileManager;
@@ -142,6 +147,9 @@ private:
   void OnUnlink();
 
   nsRefPtr<DatabaseInfo> mDatabaseInfo;
+  // Set to a copy of the existing DatabaseInfo when starting a versionchange
+  // transaction.
+  nsRefPtr<DatabaseInfo> mPreviousDatabaseInfo;
   nsCOMPtr<nsIAtom> mDatabaseId;
   nsString mName;
   nsString mFilePath;

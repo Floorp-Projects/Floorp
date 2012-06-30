@@ -68,11 +68,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         setActivityIntent(i);
         mActivity = getActivity();
 
-        // Set up Robotium.solo and Driver objects
-        mSolo = new Solo(getInstrumentation());
-        mDriver = new FennecNativeDriver(mActivity, mSolo);
-        mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation());
-
         mLogFile = (String)config.get("logfile");
         mBaseUrl = ((String)config.get("host")).replaceAll("(/$)", "");
         mRawBaseUrl = ((String)config.get("rawhost")).replaceAll("(/$)", "");
@@ -85,6 +80,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }
         mAsserter.setLogFile(mLogFile);
         mAsserter.setTestName(this.getClass().getName());
+
+        // Set up Robotium.solo and Driver objects
+        mSolo = new Solo(getInstrumentation());
+        mDriver = new FennecNativeDriver(mActivity, mSolo);
+        mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
     }
 
     @Override

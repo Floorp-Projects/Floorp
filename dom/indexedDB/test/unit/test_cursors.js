@@ -14,7 +14,7 @@ function testSteps()
 
   is(keys.length, sortedKeys.length, "Good key setup");
 
-  let request = mozIndexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;

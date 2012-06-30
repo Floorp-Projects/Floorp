@@ -1233,7 +1233,7 @@ public:
     if (!logged) {
       NS_ConvertUTF16toUTF8 msg(aMessage);
 #ifdef ANDROID
-      __android_log_print(ANDROID_LOG_INFO, "Gecko", msg.get());
+      __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", msg.get());
 #endif
       fputs(msg.get(), stderr);
       fflush(stderr);

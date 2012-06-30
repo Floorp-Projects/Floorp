@@ -8,9 +8,8 @@ var testGenerator = testSteps();
 function testSteps()
 {
   const name = this.window ? window.location.pathname : "Splendid Test";
-  const description = "My Test Database";
 
-  let request = mozIndexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onsuccess = unexpectedSuccessHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
@@ -26,17 +25,32 @@ function testSteps()
   is(objectStore.indexNames.length, 1, "Correct indexNames length");
 
   let transaction = event.target.transaction;
+  is(transaction.mode, "versionchange", "Correct transaction mode");
   transaction.oncomplete = unexpectedSuccessHandler;
   transaction.onabort = grabEventAndContinueHandler;
   transaction.abort();
+
+  is(db.version, 0, "Correct version");
+  is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+  is(objectStore.indexNames.length, 0, "Correct indexNames length");
+
+  // Test that the db is actually closed.
+  try {
+    db.transaction("");
+    ok(false, "Expect an exception");
+  } catch (e) {
+    ok(true, "Expect an exception");
+    is(e.name, "InvalidStateError", "Expect an InvalidStateError");
+  }
 
   event = yield;
   is(event.type, "abort", "Got transaction abort event");
   is(event.target, transaction, "Right target");
   is(event.target.transaction, null, "No transaction");
 
-  is(db.version, 1, "Correct version");
-  is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
+  is(db.version, 0, "Correct version");
+  is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
+  is(objectStore.indexNames.length, 0, "Correct indexNames length");
 
   request.onerror = grabEventAndContinueHandler;
   request.onupgradeneeded = unexpectedSuccessHandler;
@@ -49,7 +63,7 @@ function testSteps()
 
   event.preventDefault();
 
-  request = mozIndexedDB.open(name, 1, description);
+  request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onsuccess = unexpectedSuccessHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
@@ -63,6 +77,9 @@ function testSteps()
   is(db2.version, 1, "Correct version");
   is(db2.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
+  let objectStore2 = db2.createObjectStore("foo");
+  let index2 = objectStore2.createIndex("bar", "baz");
+
   request.onsuccess = grabEventAndContinueHandler;
   request.onupgradeneeded = unexpectedSuccessHandler;
   event = yield;
@@ -70,7 +87,11 @@ function testSteps()
   is(event.target.result, db2, "Correct target");
   is(event.type, "success", "Got success event");
   is(db2.version, 1, "Correct version");
-  is(db2.objectStoreNames.length, 0, "Correct objectStoreNames length");
+  is(db2.objectStoreNames.length, 1, "Correct objectStoreNames length");
+  is(objectStore2.indexNames.length, 1, "Correct indexNames length");
+  is(db.version, 0, "Correct version still");
+  is(db.objectStoreNames.length, 0, "Correct objectStoreNames length still");
+  is(objectStore.indexNames.length, 0, "Correct indexNames length still");
 
   finishTest();
   yield;

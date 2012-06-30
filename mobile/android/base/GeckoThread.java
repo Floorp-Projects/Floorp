@@ -73,9 +73,12 @@ public class GeckoThread extends Thread {
 
         // find the right intent type
         final String action = mIntent.getAction();
-        String type = action.startsWith(GeckoApp.ACTION_WEBAPP_PREFIX) ? "-webapp" :
-                      GeckoApp.ACTION_BOOKMARK.equals(action) ? "-bookmark" :
-                      null;
+        String type = null;
+
+        if (action != null && action.startsWith(GeckoApp.ACTION_WEBAPP_PREFIX))
+            type = "-webapp";
+        else if (GeckoApp.ACTION_BOOKMARK.equals(action))
+            type = "-bookmark";
 
         String args = mIntent.getStringExtra("args");
 

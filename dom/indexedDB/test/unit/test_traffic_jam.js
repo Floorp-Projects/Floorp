@@ -11,7 +11,7 @@ function testSteps()
 
   let requests = [];
   function doOpen(version, errorCallback, upgradeNeededCallback, successCallback) {
-    let request = mozIndexedDB.open(name, version);
+    let request = indexedDB.open(name, version);
     request.onerror = errorCallback;
     request.onupgradeneeded = upgradeNeededCallback;
     request.onsuccess = successCallback;

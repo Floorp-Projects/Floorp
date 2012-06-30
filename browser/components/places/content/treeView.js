@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
+
+const PTV_interfaces = [Ci.nsITreeView,
+                        Ci.nsINavHistoryResultObserver,
+                        Ci.nsINavHistoryResultTreeViewer,
+                        Ci.nsISupportsWeakReference];
+
 function PlacesTreeView(aFlatList, aOnOpenFlatContainer, aController) {
   this._tree = null;
   this._result = null;
@@ -39,15 +46,17 @@ PlacesTreeView.prototype = {
     return this.__dateService;
   },
 
-  QueryInterface: function PTV_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsITreeView) ||
-        aIID.equals(Ci.nsINavHistoryResultObserver) ||
-        aIID.equals(Ci.nsINavHistoryResultTreeViewer) ||
-        aIID.equals(Ci.nsISupportsWeakReference) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: XPCOMUtils.generateQI(PTV_interfaces),
+
+  // Bug 761494:
+  // ----------
+  // Some addons use methods from nsINavHistoryResultObserver and
+  // nsINavHistoryResultTreeViewer, without QIing to these intefaces first.
+  // That's not a problem when the view is retrieved through the
+  // <tree>.view getter (which returns the wrappedJSObject of this object),
+  // it raises an issue when the view retrieved through the treeBoxObject.view
+  // getter.  Thus, to avoid breaking addons, the interfaces are prefetched.
+  classInfo: XPCOMUtils.generateCI({ interfaces: PTV_interfaces }),
 
   /**
    * This is called once both the result and the tree are set.
