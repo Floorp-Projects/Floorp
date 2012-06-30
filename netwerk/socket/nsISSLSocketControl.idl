@@ -49,6 +49,10 @@ interface nsISSLSocketControl : nsISupports {
       in ACString npnProtocol, /* e.g. "spdy/2" */
       in ACString hostname,
       in long port);
-    
+
+    /*
+     * The original flags from the socket provider.
+     */
+    readonly attribute uint32_t providerFlags;
 };
 
