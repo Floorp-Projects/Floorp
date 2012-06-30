@@ -51,16 +51,37 @@ ok(true, "a null blobParts member should throw");
 
 try {
 blob = Blob([], null);
-ok(false, "NOT REACHED");
+ok(true, "a null options member should not throw");
 } catch(e) {
-ok(true, "a null options member should throw");
+ok(false, "NOT REACHED");
 }
 
 try {
 blob = Blob([], undefined);
+ok(true, "an undefined options member should not throw");
+} catch(e) {
+ok(false, "NOT REACHED");
+}
+
+try {
+blob = Blob([], false);
 ok(false, "NOT REACHED");
 } catch(e) {
-ok(true, "an undefined options member should throw");
+ok(true, "a boolean options member should throw");
+}
+
+try {
+blob = Blob([], 0);
+ok(false, "NOT REACHED");
+} catch(e) {
+ok(true, "a numeric options member should throw");
+}
+
+try {
+blob = Blob([], "");
+ok(false, "NOT REACHED");
+} catch(e) {
+ok(true, "a string options member should throw");
 }
 
 /** Test for dictionary initialization order **/
