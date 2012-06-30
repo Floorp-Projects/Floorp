@@ -242,6 +242,7 @@ random-if(gtk2Widget) == objectBoundingBox-and-fePointLight-02.svg objectBoundin
 == suspend-07.svg pass.svg
 == suspend-08.svg pass.svg
 == symbol-01.svg symbol-01-ref.svg
+== text-font-size-01.svg pass.svg
 random-if(gtk2Widget) == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 == text-gradient-01.svg text-gradient-01-ref.svg
 random-if(winWidget) == text-gradient-02.svg text-gradient-02-ref.svg # see bug 590101
