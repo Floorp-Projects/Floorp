@@ -1208,9 +1208,12 @@ public:
    */
   virtual void SynthesizeMouseMove(bool aFromScroll) = 0;
 
-  virtual void Paint(nsIView* aViewToPaint, nsIWidget* aWidget,
-                     const nsRegion& aDirtyRegion, const nsIntRegion& aIntDirtyRegion,
-                     bool aWillSendDidPaint) = 0;
+  enum PaintType {
+    PaintType_Composite,
+    PaintType_NoComposite
+  };
+  virtual void Paint(nsIView* aViewToPaint, const nsRegion& aDirtyRegion,
+                     PaintType aType, bool aWillSendDidPaint) = 0;
   virtual nsresult HandleEvent(nsIFrame*       aFrame,
                                nsGUIEvent*     aEvent,
                                bool            aDontRetargetEvents,
@@ -1226,7 +1229,16 @@ public:
    * root pres shell.
    */
   virtual void DidPaint() = 0;
-  virtual void ScheduleViewManagerFlush() = 0;
+
+  /**
+   * Ensures that the refresh driver is running, and schedules a view 
+   * manager flush on the next tick.
+   *
+   * @param aFlags nsIFrame::PAINT_COMPOSITE_ONLY : No changes have 
+   * been made that require a layer tree update, so only schedule a 
+   * layer tree composite.
+   */
+  virtual void ScheduleViewManagerFlush(PRUint32 aFlags = 0) = 0;
   virtual void ClearMouseCaptureOnView(nsIView* aView) = 0;
   virtual bool IsVisible() = 0;
   virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange) = 0;
@@ -1252,6 +1264,10 @@ public:
   PRUint32 FontSizeInflationLineThreshold() const {
     return mFontSizeInflationLineThreshold;
   }
+
+  virtual void AddInvalidateHiddenPresShellObserver(nsRefreshDriver *aDriver) = 0;
+
+  void InvalidatePresShellIfHidden();
 
   /**
    * Refresh observer management.
@@ -1323,6 +1339,7 @@ protected:
   // GetRootFrame() can be inlined:
   nsFrameManagerBase*       mFrameManager;
   nsWeakPtr                 mForwardingContainer;
+  nsRefreshDriver*          mHiddenInvalidationObserverRefreshDriver;
 
 #ifdef DEBUG
   nsIFrame*                 mDrawEventTargetFrame;

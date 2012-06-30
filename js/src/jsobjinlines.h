@@ -30,6 +30,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "gc/Root.h"
 #include "js/TemplateLib.h"
 #include "vm/BooleanObject.h"
 #include "vm/GlobalObject.h"
@@ -90,35 +91,39 @@ JSObject::thisObject(JSContext *cx)
 }
 
 inline JSBool
-JSObject::setGeneric(JSContext *cx, js::HandleId id, js::Value *vp, JSBool strict)
+JSObject::setGeneric(JSContext *cx, js::Handle<JSObject*> receiver, js::HandleId id, js::Value *vp,
+                     JSBool strict)
 {
     if (getOps()->setGeneric)
         return nonNativeSetProperty(cx, id, vp, strict);
     js::Rooted<JSObject*> obj(cx, this);
-    return js::baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+    return js::baseops::SetPropertyHelper(cx, obj, receiver, id, 0, vp, strict);
 }
 
 inline JSBool
-JSObject::setProperty(JSContext *cx, js::PropertyName *name, js::Value *vp, JSBool strict)
+JSObject::setProperty(JSContext *cx, js::Handle<JSObject*> receiver, js::PropertyName *name,
+                      js::Value *vp, JSBool strict)
 {
     js::Rooted<jsid> id(cx, js::NameToId(name));
-    return setGeneric(cx, id, vp, strict);
+    return setGeneric(cx, receiver, id, vp, strict);
 }
 
 inline JSBool
-JSObject::setElement(JSContext *cx, uint32_t index, js::Value *vp, JSBool strict)
+JSObject::setElement(JSContext *cx, js::Handle<JSObject*> receiver, uint32_t index, js::Value *vp,
+                     JSBool strict)
 {
     if (getOps()->setElement)
         return nonNativeSetElement(cx, index, vp, strict);
     js::Rooted<JSObject*> obj(cx, this);
-    return js::baseops::SetElementHelper(cx, obj, index, 0, vp, strict);
+    return js::baseops::SetElementHelper(cx, obj, receiver, index, 0, vp, strict);
 }
 
 inline JSBool
-JSObject::setSpecial(JSContext *cx, js::SpecialId sid, js::Value *vp, JSBool strict)
+JSObject::setSpecial(JSContext *cx, js::HandleObject receiver, js::SpecialId sid, js::Value *vp,
+                     JSBool strict)
 {
     js::Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return setGeneric(cx, id, vp, strict);
+    return setGeneric(cx, receiver, id, vp, strict);
 }
 
 inline JSBool
@@ -665,23 +670,25 @@ JSObject::setSingletonType(JSContext *cx)
     if (!cx->typeInferenceEnabled())
         return true;
 
+    JS::Rooted<JSObject*> self(cx, this);
     JS_ASSERT(!hasLazyType());
-    JS_ASSERT_IF(getProto(), type() == getProto()->getNewType(cx, NULL));
+    JS_ASSERT_IF(self->getProto(), self->type() == self->getProto()->getNewType(cx, NULL));
 
-    js::types::TypeObject *type = cx->compartment->getLazyType(cx, getProto());
+    js::types::TypeObject *type = cx->compartment->getLazyType(cx, self->getProto());
     if (!type)
         return false;
 
-    type_ = type;
+    self->type_ = type;
     return true;
 }
 
 inline js::types::TypeObject *
 JSObject::getType(JSContext *cx)
 {
-    if (hasLazyType())
-        makeLazyType(cx);
-    return type_;
+    JS::RootedObject self(cx, this);
+    if (self->hasLazyType())
+        self->makeLazyType(cx);
+    return self->type_;
 }
 
 inline bool

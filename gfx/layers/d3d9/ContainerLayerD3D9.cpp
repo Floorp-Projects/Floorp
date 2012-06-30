@@ -147,20 +147,23 @@ ContainerRender(Container* aContainer,
 
   aContainer->mSupportsComponentAlphaChildren = false;
   if (useIntermediate) {
-    aManager->device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
-    HRESULT hr = aManager->device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
-                                                   D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
-                                                   D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
-                                                   NULL);
-    if (FAILED(hr)) {
-      aManager->ReportFailure(NS_LITERAL_CSTRING("ContainerLayerD3D9::ContainerRender(): Failed to create texture"),
-                              hr);
-      return;
-    }
-
     nsRefPtr<IDirect3DSurface9> renderSurface;
-    renderTexture->GetSurfaceLevel(0, getter_AddRefs(renderSurface));
-    aManager->device()->SetRenderTarget(0, renderSurface);
+    if (!aManager->CompositingDisabled()) {
+      aManager->device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
+      HRESULT hr = aManager->device()->CreateTexture(visibleRect.width, visibleRect.height, 1,
+                                                     D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
+                                                     D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
+                                                     NULL);
+      if (FAILED(hr)) {
+        aManager->ReportFailure(NS_LITERAL_CSTRING("ContainerLayerD3D9::ContainerRender(): Failed to create texture"),
+                                hr);
+        return;
+      }
+
+      nsRefPtr<IDirect3DSurface9> renderSurface;
+      renderTexture->GetSurfaceLevel(0, getter_AddRefs(renderSurface));
+      aManager->device()->SetRenderTarget(0, renderSurface);
+    }
 
     if (aContainer->mVisibleRegion.GetNumRects() == 1 && 
         (aContainer->GetContentFlags() & aContainer->CONTENT_OPAQUE)) {
@@ -182,12 +185,14 @@ ContainerRender(Container* aContainer,
         ::OffsetRect(&src,
                      visibleRect.x + PRInt32(transform.x0),
                      visibleRect.y + PRInt32(transform.y0));
-        hr = aManager->device()->
-          StretchRect(previousRenderTarget, &src, renderSurface, &dest, D3DTEXF_NONE);
+        if (!aManager->CompositingDisabled()) {
+          hr = aManager->device()->
+            StretchRect(previousRenderTarget, &src, renderSurface, &dest, D3DTEXF_NONE);
+        }
       }
       if (hr == S_OK) {
         aContainer->mSupportsComponentAlphaChildren = true;
-      } else {
+      } else if (!aManager->CompositingDisabled()) {
         aManager->device()->
           Clear(0, 0, D3DCLEAR_TARGET, D3DCOLOR_RGBA(0, 0, 0, 0), 0, 0);
       }
@@ -256,7 +261,7 @@ ContainerRender(Container* aContainer,
     
   aManager->device()->SetScissorRect(&containerD3D9ClipRect);
 
-  if (useIntermediate) {
+  if (useIntermediate && !aManager->CompositingDisabled()) {
     aManager->device()->SetRenderTarget(0, previousRenderTarget);
     aManager->device()->SetVertexShaderConstantF(CBvRenderTargetOffset, previousRenderTargetOffset, 1);
     aManager->device()->SetVertexShaderConstantF(CBmProjection, &oldViewMatrix[0][0], 4);

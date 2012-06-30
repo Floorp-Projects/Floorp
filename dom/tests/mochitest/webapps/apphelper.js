@@ -9,6 +9,7 @@ var popupNotifications = getPopupNotifications(window.top);
 var event_listener_loaded = {};
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Webapps.jsm");
 
 Components.classes["@mozilla.org/permissionmanager;1"]
           .getService(Components.interfaces.nsIPermissionManager)
@@ -20,6 +21,9 @@ SpecialPowers.setCharPref("dom.mozApps.whitelist", "http://mochi.test:8888");
 SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
 SpecialPowers.setBoolPref('browser.mozApps.installer.dry_run', true);
 SpecialPowers.setBoolPref("dom.mozBrowserFramesWhitelist", "http://www.example.com");
+
+let originalAAL = DOMApplicationRegistry.allAppsLaunchable;
+DOMApplicationRegistry.allAppsLaunchable = true;
 
 var triggered = false;
 
@@ -104,5 +108,6 @@ function tearDown() {
   uninstallAll();
   popupNotifications.panel.removeEventListener("popupshown", mainCommand, false);
   SpecialPowers.clearUserPref('browser.mozApps.installer.dry_run');
+  DOMApplicationRegistry.allAppsLaunchable = originalAAL;
 }
 

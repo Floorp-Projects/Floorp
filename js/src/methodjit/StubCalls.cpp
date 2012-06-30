@@ -125,10 +125,9 @@ stubs::SetElem(VMFrame &f)
     Value &idval  = regs.sp[-2];
     Value rval    = regs.sp[-1];
 
-    JSObject *obj;
     RootedId id(cx);
 
-    obj = ValueToObject(cx, objval);
+    Rooted<JSObject*> obj(cx, ValueToObject(cx, objval));
     if (!obj)
         THROW();
 
@@ -156,7 +155,7 @@ stubs::SetElem(VMFrame &f)
             }
         }
     } while (0);
-    if (!obj->setGeneric(cx, id, &rval, strict))
+    if (!obj->setGeneric(cx, obj, id, &rval, strict))
         THROW();
   end_setelem:
     /* :FIXME: Moving the assigned object into the lowest stack slot
@@ -335,7 +334,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
      * current scope chain even for the case of function expression statements
      * and functions defined by eval inside let or with blocks.
      */
-    JSObject *parent = &fp->varObj();
+    Rooted<JSObject*> parent(cx, &fp->varObj());
 
     /* ES5 10.5 (NB: with subsequent errata). */
     PropertyName *name = fun->atom->asPropertyName();
@@ -388,7 +387,7 @@ stubs::DefFun(VMFrame &f, JSFunction *fun_)
          */
 
         /* Step 5f. */
-        if (!parent->setProperty(cx, name, &rval, strict))
+        if (!parent->setProperty(cx, parent, name, &rval, strict))
             THROW();
     } while (false);
 }
@@ -863,7 +862,7 @@ stubs::Neg(VMFrame &f)
 void JS_FASTCALL
 stubs::NewInitArray(VMFrame &f, uint32_t count)
 {
-    JSObject *obj = NewDenseAllocatedArray(f.cx, count);
+    RootedObject obj(f.cx, NewDenseAllocatedArray(f.cx, count));
     if (!obj)
         THROW();
 
@@ -871,7 +870,8 @@ stubs::NewInitArray(VMFrame &f, uint32_t count)
     if (type) {
         obj->setType(type);
     } else {
-        if (!SetInitializerObjectType(f.cx, f.script(), f.pc(), obj))
+        RootedScript script(f.cx, f.script());
+        if (!SetInitializerObjectType(f.cx, script, f.pc(), obj))
             THROW();
     }
 
@@ -884,8 +884,7 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     JSContext *cx = f.cx;
     TypeObject *type = (TypeObject *) f.scratch;
 
-    JSObject *obj;
-
+    RootedObject obj(cx);
     if (baseobj) {
         Rooted<JSObject*> base(cx, baseobj);
         obj = CopyInitializerObject(cx, base);
@@ -900,7 +899,8 @@ stubs::NewInitObject(VMFrame &f, JSObject *baseobj)
     if (type) {
         obj->setType(type);
     } else {
-        if (!SetInitializerObjectType(cx, f.script(), f.pc(), obj))
+        RootedScript script(f.cx, f.script());
+        if (!SetInitializerObjectType(cx, script, f.pc(), obj))
             THROW();
     }
 
@@ -1034,7 +1034,7 @@ InitPropOrMethod(VMFrame &f, PropertyName *name, JSOp op)
     RootedId id(cx, NameToId(name));
 
     if (JS_UNLIKELY(name == cx->runtime->atomState.protoAtom)
-        ? !baseops::SetPropertyHelper(cx, obj, id, 0, &rval, false)
+        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, false)
         : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         THROW();

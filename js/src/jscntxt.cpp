@@ -362,6 +362,15 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
         !js_ErrorToException(cx, message, reportp, callback, userRef)) {
         js_ReportErrorAgain(cx, message, reportp);
     } else if (JSDebugErrorHook hook = cx->runtime->debugHooks.debugErrorHook) {
+        /*
+         * If we've already chewed up all the C stack, don't call into the
+         * error reporter since this may trigger an infinite recursion where
+         * the reporter triggers an over-recursion.
+         */
+        int stackDummy;
+        if (!JS_CHECK_STACK_SIZE(cx->runtime->nativeStackLimit, &stackDummy))
+            return;
+
         if (cx->errorReporter)
             hook(cx, message, reportp, cx->runtime->debugHooks.debugErrorHookData);
     }
@@ -969,6 +978,9 @@ JSContext::JSContext(JSRuntime *rt)
     localeCallbacks(NULL),
     resolvingList(NULL),
     generatingError(false),
+#ifdef DEBUG
+    rootingUnnecessary(false),
+#endif
     compartment(NULL),
     stack(thisDuringConstruction()),  /* depends on cx->thread_ */
     parseMapPool_(NULL),
@@ -1028,6 +1040,22 @@ JSContext::~JSContext()
 
     JS_ASSERT(!resolvingList);
 }
+
+#ifdef DEBUG
+namespace JS {
+JS_FRIEND_API(void)
+SetRootingUnnecessaryForContext(JSContext *cx, bool value)
+{
+    cx->rootingUnnecessary = value;
+}
+
+JS_FRIEND_API(bool)
+IsRootingUnnecessaryForContext(JSContext *cx)
+{
+    return cx->rootingUnnecessary;
+}
+} /* namespace JS */
+#endif
 
 void
 JSContext::resetCompartment()

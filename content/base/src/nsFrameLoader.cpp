@@ -108,14 +108,6 @@ public:
   nsRefPtr<nsIDocShell> mDocShell;
 };
 
-static void InvalidateFrame(nsIFrame* aFrame, PRUint32 aFlags)
-{
-  if (!aFrame)
-    return;
-  nsRect rect = nsRect(nsPoint(0, 0), aFrame->GetRect().Size());
-  aFrame->InvalidateWithFlags(rect, aFlags);
-}
-
 NS_IMPL_ISUPPORTS1(nsContentView, nsIContentView)
 
 bool
@@ -150,13 +142,6 @@ nsContentView::Update(const ViewConfig& aConfig)
     rfp->ContentViewScaleChanged(this);
   }
 
-  // XXX could be clever here and compute a smaller invalidation
-  // rect
-  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep view
-  // semantics the same for both in-process and out-of-process
-  // <browser>.  This is just a transform of the layer subtree in
-  // both.
-  InvalidateFrame(mFrameLoader->GetPrimaryFrameOfOwningContent(), nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
   return NS_OK;
 }
 
@@ -622,7 +607,7 @@ SetTreeOwnerAndChromeEventHandlerOnDocshellTree(nsIDocShellTreeItem* aItem,
 
 /**
  * Set the type of the treeitem and hook it up to the treeowner.
- * @param aItem the treeitem we're wrking working with
+ * @param aItem the treeitem we're working with
  * @param aOwningContent the content node that owns aItem
  * @param aTreeOwner the relevant treeowner; might be null
  * @param aParentType the nsIDocShellTreeItem::GetType of our parent docshell
@@ -643,6 +628,8 @@ AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem, nsIContent* aOwningContent,
 
   if (aOwningContent->IsXUL()) {
       aOwningContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
+  } else {
+      aOwningContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mozframetype, value);
   }
 
   // we accept "content" and "content-xxx" values.
@@ -1743,11 +1730,6 @@ nsFrameLoader::SetRenderMode(PRUint32 aRenderMode)
   }
 
   mRenderMode = aRenderMode;
-  // NB: we pass INVALIDATE_NO_THEBES_LAYERS here to keep view
-  // semantics the same for both in-process and out-of-process
-  // <browser>.  This is just a transform of the layer subtree in
-  // both.
-  InvalidateFrame(GetPrimaryFrameOfOwningContent(), nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
   return NS_OK;
 }
 
@@ -1778,7 +1760,7 @@ nsFrameLoader::SetClipSubdocument(bool aClip)
   mClipSubdocument = aClip;
   nsIFrame* frame = GetPrimaryFrameOfOwningContent();
   if (frame) {
-    InvalidateFrame(frame, 0);
+    frame->InvalidateFrame();
     frame->PresContext()->PresShell()->
       FrameNeedsReflow(frame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
     nsSubDocumentFrame* subdocFrame = do_QueryFrame(frame);

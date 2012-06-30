@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+
+<!--
+  Chrome tests load this file to install their webapps.  Pass manifestPath=path
+  in the query string to install the app with the manifest at
+  http://mochi.test:8888/webapprtChrome/webapprt/test/chrome/<path>.
+-->
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script>
+
+function parseQueryStr() {
+  return window.location.search.substr(1).split("&").
+         map(function (pairStr) pairStr.split("=")).
+         reduce(function (memo, [key, val]) {
+           memo[key] = JSON.parse(decodeURIComponent(val));
+           return memo;
+         }, {});
+}
+
+function msg(str) {
+  document.getElementById("msg").textContent = str;
+}
+
+function onLoad() {
+  var args = parseQueryStr();
+  if (!args.manifestPath) {
+    msg("No manifest path given, so standing by.");
+    return;
+  }
+  var manifestURL =
+    "http://mochi.test:8888/webapprtChrome/webapprt/test/chrome/" +
+     args.manifestPath;
+  var installArgs = [manifestURL, args.parameters];
+  msg("Installing webapp with arguments " + installArgs.toSource() + "...");
+  var install = navigator.mozApps.install.apply(navigator.mozApps, installArgs);
+  install.onsuccess = function (event) {
+    msg("Webapp installed, now navigating to it.");
+    var testAppURL = install.result.origin +
+                     install.result.manifest.launch_path;
+    window.location = testAppURL;
+  };
+  install.onerror = function () {
+    msg("Webapp installation failed with " + install.error.name +
+        " for manifest " + manifestURL);
+  };
+}
+
+    </script>
+  </head>
+  <body onload="onLoad();" onunload="">
+    <p id="msg">Installation page waiting for page load...</p>
+  </body>
+</html>

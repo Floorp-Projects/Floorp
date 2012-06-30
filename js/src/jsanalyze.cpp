@@ -123,7 +123,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
     PodZero(escapedSlots, numSlots);
 
     if (script->bindingsAccessedDynamically || script->compartment()->debugMode() ||
-        script->argumentsHasLocalBinding())
+        script->argumentsHasVarBinding())
     {
         for (unsigned i = 0; i < nargs; i++)
             escapedSlots[ArgSlot(i)] = true;
@@ -159,7 +159,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     isInlineable = true;
     if (script->numClosedArgs() || script->numClosedVars() || heavyweight ||
-        script->bindingsAccessedDynamically || script->argumentsHasLocalBinding() ||
+        script->bindingsAccessedDynamically || script->argumentsHasVarBinding() ||
         cx->compartment->debugMode())
     {
         isInlineable = false;
@@ -1871,18 +1871,8 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32_t offset)
     cx->delete_(pending);
 }
 
-struct NeedsArgsObjState
-{
-    JSContext *cx;
-    Vector<SSAValue, 16> seen;
-    bool canOptimizeApply;
-    bool haveOptimizedApply;
-    NeedsArgsObjState(JSContext *cx)
-      : cx(cx), seen(cx), canOptimizeApply(true), haveOptimizedApply(false) {}
-};
-
 bool
-ScriptAnalysis::needsArgsObj(NeedsArgsObjState &state, const SSAValue &v)
+ScriptAnalysis::needsArgsObj(JSContext *cx, SeenVector &seen, const SSAValue &v)
 {
     /*
      * trackUseChain is false for initial values of variables, which
@@ -1891,18 +1881,18 @@ ScriptAnalysis::needsArgsObj(NeedsArgsObjState &state, const SSAValue &v)
     if (!trackUseChain(v))
         return false;
 
-    for (unsigned i = 0; i < state.seen.length(); i++) {
-        if (v == state.seen[i])
+    for (unsigned i = 0; i < seen.length(); i++) {
+        if (v == seen[i])
             return false;
     }
-    if (!state.seen.append(v)) {
-        state.cx->compartment->types.setPendingNukeTypes(state.cx);
+    if (!seen.append(v)) {
+        cx->compartment->types.setPendingNukeTypes(cx);
         return true;
     }
 
     SSAUseChain *use = useChain(v);
     while (use) {
-        if (needsArgsObj(state, use))
+        if (needsArgsObj(cx, seen, use))
             return true;
         use = use->next;
     }
@@ -1911,10 +1901,10 @@ ScriptAnalysis::needsArgsObj(NeedsArgsObjState &state, const SSAValue &v)
 }
 
 bool
-ScriptAnalysis::needsArgsObj(NeedsArgsObjState &state, SSAUseChain *use)
+ScriptAnalysis::needsArgsObj(JSContext *cx, SeenVector &seen, SSAUseChain *use)
 {
     if (!use->popped)
-        return needsArgsObj(state, SSAValue::PhiValue(use->offset, use->u.phi));
+        return needsArgsObj(cx, seen, SSAValue::PhiValue(use->offset, use->u.phi));
 
     jsbytecode *pc = script->code + use->offset;
     JSOp op = JSOp(*pc);
@@ -1923,26 +1913,20 @@ ScriptAnalysis::needsArgsObj(NeedsArgsObjState &state, SSAUseChain *use)
         return false;
 
     /* SplatApplyArgs can read fp->canonicalActualArg(i) directly. */
-    if (state.canOptimizeApply && op == JSOP_FUNAPPLY && GET_ARGC(pc) == 2 && use->u.which == 0) {
+    if (op == JSOP_FUNAPPLY && GET_ARGC(pc) == 2 && use->u.which == 0) {
 #ifdef JS_METHODJIT
         JS_ASSERT(mjit::IsLowerableFunCallOrApply(pc));
 #endif
-        state.haveOptimizedApply = true;
-        state.canOptimizeApply = false;
         return false;
     }
 
     /* arguments[i] can read fp->canonicalActualArg(i) directly. */
-    if (!state.haveOptimizedApply && op == JSOP_GETELEM && use->u.which == 1) {
-        state.canOptimizeApply = false;
+    if (op == JSOP_GETELEM && use->u.which == 1)
         return false;
-    }
 
     /* arguments.length length can read fp->numActualArgs() directly. */
-    if (!state.haveOptimizedApply && op == JSOP_LENGTH) {
-        state.canOptimizeApply = false;
+    if (op == JSOP_LENGTH)
         return false;
-    }
 
     /* Allow assignments to non-closed locals (but not arguments). */
 
@@ -1950,12 +1934,12 @@ ScriptAnalysis::needsArgsObj(NeedsArgsObjState &state, SSAUseChain *use)
         uint32_t slot = GetBytecodeSlot(script, pc);
         if (!trackSlot(slot))
             return true;
-        return needsArgsObj(state, SSAValue::PushedValue(use->offset, 0)) ||
-               needsArgsObj(state, SSAValue::WrittenVar(slot, use->offset));
+        return needsArgsObj(cx, seen, SSAValue::PushedValue(use->offset, 0)) ||
+               needsArgsObj(cx, seen, SSAValue::WrittenVar(slot, use->offset));
     }
 
     if (op == JSOP_GETLOCAL)
-        return needsArgsObj(state, SSAValue::PushedValue(use->offset, 0));
+        return needsArgsObj(cx, seen, SSAValue::PushedValue(use->offset, 0));
 
     return true;
 }
@@ -1963,7 +1947,7 @@ ScriptAnalysis::needsArgsObj(NeedsArgsObjState &state, SSAUseChain *use)
 bool
 ScriptAnalysis::needsArgsObj(JSContext *cx)
 {
-    JS_ASSERT(script->argumentsHasLocalBinding());
+    JS_ASSERT(script->argumentsHasVarBinding());
 
     /*
      * Since let variables and dynamic name access are not tracked, we cannot
@@ -1978,8 +1962,8 @@ ScriptAnalysis::needsArgsObj(JSContext *cx)
 
     unsigned pcOff = script->argumentsBytecode() - script->code;
 
-    NeedsArgsObjState state(cx);
-    return needsArgsObj(state, SSAValue::PushedValue(pcOff, 0));
+    SeenVector seen(cx);
+    return needsArgsObj(cx, seen, SSAValue::PushedValue(pcOff, 0));
 }
 
 CrossSSAValue

@@ -10,6 +10,7 @@
 #include "gfxPattern.h"
 #include "gfxRect.h"
 #include "nsRect.h"
+#include "Layers.h"
 
 class nsDisplayList;
 class nsDisplayListBuilder;
@@ -110,8 +111,8 @@ public:
    * Used to adjust the area of a frame that needs to be invalidated to take
    * account of SVG effects.
    */
-  static nsRect
-  AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame, const nsRect& aInvalidRect);
+  static nsIntRect
+  AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame, const nsIntRect& aInvalidRect);
 
   /**
    * Figure out which area of the source is needed given an area to
@@ -134,7 +135,7 @@ public:
   PaintFramesWithEffects(nsRenderingContext* aCtx,
                          nsIFrame* aFrame, const nsRect& aDirtyRect,
                          nsDisplayListBuilder* aBuilder,
-                         nsDisplayList* aInnerList);
+                         mozilla::layers::LayerManager* aManager);
 
   /**
    * SVG frames expect to paint in SVG user units, which are equal to CSS px

@@ -13,6 +13,7 @@
 #include "nsRenderingContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGGraphicElement.h"
+#include "nsSVGIntegrationUtils.h"
 #include "nsSVGMarkerFrame.h"
 #include "nsSVGPathGeometryElement.h"
 #include "nsSVGUtils.h"
@@ -151,6 +152,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
 NS_IMETHODIMP_(nsIFrame*)
 nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
+  gfxMatrix canvasTM = GetCanvasTM(FOR_HIT_TESTING);
   PRUint16 fillRule, hitTestFlags;
   if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
     hitTestFlags = SVG_HIT_TEST_FILL;
@@ -159,7 +161,6 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
     hitTestFlags = GetHitTestFlags();
     // XXX once bug 614732 is fixed, aPoint won't need any conversion in order
     // to compare it with mRect.
-    gfxMatrix canvasTM = GetCanvasTM();
     if (canvasTM.IsSingular()) {
       return nsnull;
     }
@@ -176,7 +177,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
   nsRefPtr<gfxContext> tmpCtx =
     new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
-  GeneratePath(tmpCtx, GetCanvasTM());
+  GeneratePath(tmpCtx, canvasTM);
   gfxPoint userSpacePoint =
     tmpCtx->DeviceToUser(gfxPoint(PresContext()->AppUnitsToGfxUnits(aPoint.x),
                                   PresContext()->AppUnitsToGfxUnits(aPoint.y)));
@@ -229,7 +230,7 @@ nsSVGPathGeometryFrame::UpdateBounds()
 
   // See bug 614732 comment 32.
   mCoveredRegion = nsSVGUtils::TransformFrameRectToOuterSVG(
-    mRect, GetCanvasTM(), PresContext());
+    mRect, GetCanvasTM(FOR_OUTERSVG_TM), PresContext());
 
   if (mState & NS_FRAME_FIRST_REFLOW) {
     // Make sure we have our filter property (if any) before calling
@@ -382,14 +383,21 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 // nsSVGGeometryFrame methods:
 
 gfxMatrix
-nsSVGPathGeometryFrame::GetCanvasTM()
+nsSVGPathGeometryFrame::GetCanvasTM(PRUint32 aFor)
 {
+  if (!(GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD)) {
+    if ((aFor == FOR_PAINTING && NS_SVGDisplayListPaintingEnabled()) ||
+        (aFor == FOR_HIT_TESTING && NS_SVGDisplayListHitTestingEnabled())) {
+      return nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(this);
+    }
+  }
+
   NS_ASSERTION(mParent, "null parent");
 
   nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
   nsSVGGraphicElement *content = static_cast<nsSVGGraphicElement*>(mContent);
 
-  return content->PrependLocalTransformsTo(parent->GetCanvasTM());
+  return content->PrependLocalTransformsTo(parent->GetCanvasTM(aFor));
 }
 
 //----------------------------------------------------------------------
@@ -461,7 +469,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext)
   /* save/restore the state so we don't screw up the xform */
   gfx->Save();
 
-  GeneratePath(gfx, GetCanvasTM());
+  GeneratePath(gfx, GetCanvasTM(FOR_PAINTING));
 
   if (renderMode != SVGAutoRenderState::NORMAL) {
     NS_ABORT_IF_FALSE(renderMode == SVGAutoRenderState::CLIP ||

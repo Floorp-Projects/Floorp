@@ -125,7 +125,7 @@ nsSVGPatternFrame::GetType() const
 // matrix, which depends on our units parameters
 // and X, Y, Width, and Height
 gfxMatrix
-nsSVGPatternFrame::GetCanvasTM()
+nsSVGPatternFrame::GetCanvasTM(PRUint32 aFor)
 {
   if (mCTM) {
     return *mCTM;
@@ -134,7 +134,7 @@ nsSVGPatternFrame::GetCanvasTM()
   // Do we know our rendering parent?
   if (mSource) {
     // Yes, use it!
-    return mSource->GetCanvasTM();
+    return mSource->GetCanvasTM(aFor);
   }
 
   // We get here when geometry in the <pattern> container is updated
@@ -637,7 +637,7 @@ nsSVGPatternFrame::GetTargetGeometry(gfxMatrix *aCTM,
   }
 
   // Get the transformation matrix from our calling geometry
-  *aCTM = nsSVGUtils::GetCanvasTM(aTarget);
+  *aCTM = nsSVGUtils::GetCanvasTM(aTarget, nsISVGChildFrame::FOR_PAINTING);
 
   // OK, now fix up the bounding box to reflect user coordinates
   // We handle device unit scaling in pattern matrix

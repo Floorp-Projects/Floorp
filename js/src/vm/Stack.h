@@ -411,8 +411,6 @@ class StackFrame
     friend class CallObject;
     friend class ClonedBlockObject;
     friend class ArgumentsObject;
-    friend void ::js_DumpStackFrame(JSContext *, StackFrame *);
-    friend void ::js_ReportIsNotFunction(JSContext *, const js::Value *, unsigned);
 #ifdef JS_METHODJIT
     friend class mjit::CallCompiler;
     friend class mjit::GetPropCompiler;
@@ -1140,12 +1138,6 @@ class StackFrame
 
 static const size_t VALUES_PER_STACK_FRAME = sizeof(StackFrame) / sizeof(Value);
 
-static inline unsigned
-ToReportFlags(InitialFrameFlags initial)
-{
-    return unsigned(initial & StackFrame::CONSTRUCTING);
-}
-
 static inline StackFrame::Flags
 ToFrameFlags(InitialFrameFlags initial)
 {
@@ -1588,6 +1580,14 @@ class ContextStack
     inline bool hasfp() const { return seg_ && seg_->maybeRegs(); }
 
     /*
+     * Return the spindex value for 'vp' which can be used to call
+     * DecompileValueGenerator. (The spindex is either the negative offset of
+     * 'vp' from 'sp', if 'vp' points to a value in the innermost scripted
+     * stack frame, otherwise it is JSDVG_SEARCH_STACK.)
+     */
+    ptrdiff_t spIndexOf(const Value *vp);
+
+    /*
      * Return the most recent script activation's registers with the same
      * caveat as hasfp regarding JS_SaveFrameChain.
      */
@@ -1776,14 +1776,13 @@ class StackIter
   private:
     SavedOption  savedOption_;
 
-    enum State { DONE, SCRIPTED, NATIVE, IMPLICIT_NATIVE };
+    enum State { DONE, SCRIPTED, NATIVE };
     State        state_;
 
     StackFrame   *fp_;
     CallArgsList *calls_;
 
     StackSegment *seg_;
-    Value        *sp_;
     jsbytecode   *pc_;
     JSScript     *script_;
     CallArgs     args_;
@@ -1806,13 +1805,9 @@ class StackIter
     bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
 
     bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED; }
-    bool isImplicitNativeCall() const {
-        JS_ASSERT(!done());
-        return state_ == IMPLICIT_NATIVE;
-    }
     bool isNativeCall() const {
         JS_ASSERT(!done());
-        return state_ == NATIVE || state_ == IMPLICIT_NATIVE;
+        return state_ == NATIVE;
     }
 
     bool isFunctionFrame() const;
@@ -1821,7 +1816,6 @@ class StackIter
     bool isConstructing() const;
 
     StackFrame *fp() const { JS_ASSERT(isScript()); return fp_; }
-    Value      *sp() const { JS_ASSERT(isScript()); return sp_; }
     jsbytecode *pc() const { JS_ASSERT(isScript()); return pc_; }
     JSScript   *script() const { JS_ASSERT(isScript()); return script_; }
     JSFunction *callee() const;

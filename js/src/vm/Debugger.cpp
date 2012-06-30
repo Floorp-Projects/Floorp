@@ -1581,17 +1581,14 @@ Debugger::setHookImpl(JSContext *cx, unsigned argc, Value *vp, Hook which)
     JS_ASSERT(which >= 0 && which < HookCount);
     REQUIRE_ARGC("Debugger.setHook", 1);
     THIS_DEBUGGER(cx, argc, vp, "setHook", args, dbg);
-    const Value &v = args[0];
-    if (v.isObject()) {
-        if (!v.toObject().isCallable()) {
-            js_ReportIsNotFunction(cx, vp, JSV2F_SEARCH_STACK);
-            return false;
-        }
-    } else if (!v.isUndefined()) {
+    if (args[0].isObject()) {
+        if (!args[0].toObject().isCallable())
+            return ReportIsNotFunction(cx, &args[0]);
+    } else if (!args[0].isUndefined()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_CALLABLE_OR_UNDEFINED);
         return false;
     }
-    dbg->object->setReservedSlot(JSSLOT_DEBUG_HOOK_START + which, v);
+    dbg->object->setReservedSlot(JSSLOT_DEBUG_HOOK_START + which, args[0]);
     args.rval().setUndefined();
     return true;
 }
@@ -4493,7 +4490,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
         }
 
         /* Just set the property. */
-        if (!env->setGeneric(cx, id, v.address(), true))
+        if (!env->setGeneric(cx, env, id, v.address(), true))
             return false;
     }
 

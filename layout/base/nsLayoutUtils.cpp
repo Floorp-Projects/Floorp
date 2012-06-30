@@ -1783,6 +1783,9 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   if (aFlags & PAINT_EXISTING_TRANSACTION) {
     flags |= nsDisplayList::PAINT_EXISTING_TRANSACTION;
   }
+  if (aFlags & PAINT_NO_COMPOSITE) {
+    flags |= nsDisplayList::PAINT_NO_COMPOSITE;
+  }
 
   list.PaintRoot(&builder, aRenderingContext, flags);
 
@@ -1806,7 +1809,13 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile);
 
     fprintf(gfxUtils::sDumpPaintFile, "Painting --- retained layer tree:\n");
-    builder.LayerBuilder()->DumpRetainedLayerTree(gfxUtils::sDumpPaintFile);
+    nsIWidget* widget = aFrame->GetNearestWidget();
+    if (widget) {
+      nsRefPtr<LayerManager> layerManager = widget->GetLayerManager();
+      if (layerManager) {
+        FrameLayerBuilder::DumpRetainedLayerTree(layerManager, gfxUtils::sDumpPaintFile);
+      }
+    }
     fprintf(gfxUtils::sDumpPaintFile, "</body></html>");
     
     if (gfxUtils::sDumpPaintingToFile) {
@@ -3979,6 +3988,8 @@ nsLayoutUtils::IsPopup(nsIFrame* aFrame)
 /* static */ nsIFrame*
 nsLayoutUtils::GetDisplayRootFrame(nsIFrame* aFrame)
 {
+  // We could use GetRootPresContext() here if the
+  // NS_FRAME_IN_POPUP frame bit is set.
   nsIFrame* f = aFrame;
   for (;;) {
     if (IsPopup(f))

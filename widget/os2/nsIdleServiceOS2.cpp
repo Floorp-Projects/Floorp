@@ -10,7 +10,7 @@
 static int (*_System DSSaver_GetInactivityTime)(ULONG *, ULONG *);
 #define SSCORE_NOERROR 0 // as in the DSSaver header files
 
-NS_IMPL_ISUPPORTS2(nsIdleServiceOS2, nsIIdleService, nsIdleService)
+NS_IMPL_ISUPPORTS_INHERITED0(nsIdleServiceOS2, nsIdleService)
 
 nsIdleServiceOS2::nsIdleServiceOS2()
   : mHMod(NULLHANDLE), mInitialized(false)

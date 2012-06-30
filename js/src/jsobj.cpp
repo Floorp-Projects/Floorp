@@ -1190,7 +1190,7 @@ obj_watch(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    RootedObject callable(cx, js_ValueToCallableObject(cx, &vp[3], 0));
+    RootedObject callable(cx, ValueToCallable(cx, &vp[3]));
     if (!callable)
         return false;
 
@@ -2560,10 +2560,9 @@ JSObject::getSealedOrFrozenAttributes(unsigned attrs, ImmutabilityType it)
 bool
 JSObject::sealOrFreeze(JSContext *cx, ImmutabilityType it)
 {
+    RootedObject self(cx, this);
     assertSameCompartment(cx, this);
     JS_ASSERT(it == SEAL || it == FREEZE);
-
-    RootedObject self(cx, this);
 
     if (isExtensible() && !preventExtensions(cx))
         return false;
@@ -2770,13 +2769,13 @@ JSFunctionSpec object_static_methods[] = {
 JSBool
 js_Object(JSContext *cx, unsigned argc, Value *vp)
 {
-    JSObject *obj;
+    RootedObject obj(cx);
     if (argc == 0) {
         /* Trigger logic below to construct a blank object. */
         obj = NULL;
     } else {
         /* If argv[0] is null or undefined, obj comes back null. */
-        if (!js_ValueToObjectOrNull(cx, vp[2], &obj))
+        if (!js_ValueToObjectOrNull(cx, vp[2], obj.address()))
             return JS_FALSE;
     }
     if (!obj) {
@@ -2787,7 +2786,7 @@ js_Object(JSContext *cx, unsigned argc, Value *vp)
         if (!obj)
             return JS_FALSE;
         jsbytecode *pc;
-        JSScript *script = cx->stack.currentScript(&pc);
+        RootedScript script(cx, cx->stack.currentScript(&pc));
         if (script) {
             /* Try to specialize the type of the object to the scripted call site. */
             if (!types::SetInitializerObjectType(cx, script, pc, obj))
@@ -3147,8 +3146,6 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags)
         if (pc < script->code + script->length && Detecting(cx, pc))
             flags |= JSRESOLVE_DETECTING;
     }
-    if (format & JOF_DECLARING)
-        flags |= JSRESOLVE_DECLARING;
     return flags;
 }
 
@@ -5028,8 +5025,8 @@ js_NativeGet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> pobj, const
 }
 
 JSBool
-js_NativeSet(JSContext *cx, Handle<JSObject*> obj, const Shape *shape, bool added, bool strict,
-             Value *vp)
+js_NativeSet(JSContext *cx, Handle<JSObject*> obj, Handle<JSObject*> receiver,
+             const Shape *shape, bool added, bool strict, Value *vp)
 {
     AddTypePropertyId(cx, obj, shape->propid(), *vp);
 
@@ -5057,7 +5054,7 @@ js_NativeSet(JSContext *cx, Handle<JSObject*> obj, const Shape *shape, bool adde
     Rooted<const Shape *> shapeRoot(cx, shape);
 
     int32_t sample = cx->runtime->propertyRemovals;
-    if (!shapeRoot->set(cx, obj, strict, vp))
+    if (!shapeRoot->set(cx, obj, receiver, strict, vp))
         return false;
 
     /*
@@ -5281,8 +5278,8 @@ JSObject::callMethod(JSContext *cx, HandleId id, unsigned argc, Value *argv, Val
 }
 
 JSBool
-baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, unsigned defineHow,
-                           Value *vp, JSBool strict)
+baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
+                           unsigned defineHow, Value *vp, JSBool strict)
 {
     JSObject *pobj;
     JSProperty *prop;
@@ -5313,7 +5310,8 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, unsigne
 
                 if ((pd.attrs & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
                     return !pd.setter ||
-                           CallSetter(cx, obj, id, pd.setter, pd.attrs, pd.shortid, strict, vp);
+                           CallSetter(cx, receiver, id, pd.setter, pd.attrs, pd.shortid, strict,
+                                      vp);
                 }
 
                 if (pd.attrs & JSPROP_READONLY) {
@@ -5381,7 +5379,7 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, unsigne
                 if (shape->hasDefaultSetter() && !shape->hasGetterValue())
                     return JS_TRUE;
 
-                return shape->set(cx, obj, strict, vp);
+                return shape->set(cx, obj, receiver, strict, vp);
             }
 
             /*
@@ -5462,17 +5460,17 @@ baseops::SetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, unsigne
     if ((defineHow & DNP_CACHE_RESULT) && !added)
         JS_PROPERTY_CACHE(cx).fill(cx, obj, 0, obj, shape);
 
-    return js_NativeSet(cx, obj, shape, added, strict, vp);
+    return js_NativeSet(cx, obj, receiver, shape, added, strict, vp);
 }
 
 JSBool
-baseops::SetElementHelper(JSContext *cx, HandleObject obj, uint32_t index, unsigned defineHow,
-                          Value *vp, JSBool strict)
+baseops::SetElementHelper(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t index,
+                          unsigned defineHow, Value *vp, JSBool strict)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, id.address()))
         return false;
-    return baseops::SetPropertyHelper(cx, obj, id, defineHow, vp, strict);
+    return baseops::SetPropertyHelper(cx, obj, receiver, id, defineHow, vp, strict);
 }
 
 JSBool
@@ -5767,13 +5765,6 @@ CheckAccess(JSContext *cx, JSObject *obj_, HandleId id, JSAccessMode mode,
         if (!writing)
             vp->setObjectOrNull(obj->getProto());
         *attrsp = JSPROP_PERMANENT;
-        break;
-
-      case JSACC_PARENT:
-        JS_ASSERT(!writing);
-        pobj = obj;
-        vp->setObject(*obj->getParent());
-        *attrsp = JSPROP_READONLY | JSPROP_PERMANENT;
         break;
 
       default:
@@ -6323,20 +6314,6 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
             }
             fprintf(stderr, "  pc = %p\n", pc);
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
-        }
-        Value *sp = i.sp();
-        fprintf(stderr, "  slots: %p\n", (void *) fp->slots());
-        fprintf(stderr, "  sp:    %p = slots + %u\n", (void *) sp, (unsigned) (sp - fp->slots()));
-        if (sp - fp->slots() < 10000) { // sanity
-            for (Value *p = fp->slots(); p < sp; p++) {
-                fprintf(stderr, "    %p: ", (void *) p);
-                dumpValue(*p);
-                fputc('\n', stderr);
-            }
-        }
-        if (fp->hasArgs()) {
-            fprintf(stderr, "  actuals: %p (%u) ", (void *) fp->actuals(), (unsigned) fp->numActualArgs());
-            fprintf(stderr, "  formals: %p (%u)\n", (void *) fp->formals(), (unsigned) fp->numFormalArgs());
         }
         MaybeDumpObject("blockChain", fp->maybeBlockChain());
         if (!fp->isDummyFrame()) {
