@@ -196,7 +196,8 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mTextZoom(1.0), mFullZoom(1.0), mLastFontInflationScreenWidth(-1.0),
     mPageSize(-1, -1), mPPScale(1.0f),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
-    mImageAnimationModePref(imgIContainer::kNormalAnimMode)
+    mImageAnimationModePref(imgIContainer::kNormalAnimMode),
+    mAllInvalidated(false)
 {
   // NOTE! nsPresContext::operator new() zeroes out all members, so don't
   // bother initializing members to 0.
@@ -2092,6 +2093,7 @@ nsPresContext::FireDOMPaintEvent()
   NS_NewDOMNotifyPaintEvent(getter_AddRefs(event), this, nsnull,
                             NS_AFTERPAINT,
                             &mInvalidateRequests);
+  mAllInvalidated = false;
   if (!event) {
     return;
   }
@@ -2186,6 +2188,14 @@ nsPresContext::MayHavePaintEventListenerInSubDocument()
 }
 
 void
+nsPresContext::NotifyInvalidation(PRUint32 aFlags)
+{
+  nsIFrame* rootFrame = PresShell()->FrameManager()->GetRootFrame();
+  NotifyInvalidation(rootFrame->GetVisualOverflowRect(), aFlags);
+  mAllInvalidated = true;
+}
+
+void
 nsPresContext::NotifyInvalidation(const nsIntRect& aRect, PRUint32 aFlags)
 {
   nsRect rect(DevPixelsToAppUnits(aRect.x),
@@ -2203,6 +2213,10 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags)
   // MayHavePaintEventListener is pretty cheap and we could make it
   // even cheaper by providing a more efficient
   // nsPIDOMWindow::GetListenerManager.
+  
+  if (mAllInvalidated) {
+    return;
+  }
 
   nsPresContext* pc;
   for (pc = this; pc; pc = pc->GetParentPresContext()) {
