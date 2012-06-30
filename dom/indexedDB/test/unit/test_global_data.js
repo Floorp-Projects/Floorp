@@ -12,7 +12,7 @@ function testSteps()
   const objectStore =  { name: "Objects",
                          options: { keyPath: "id", autoIncrement: true } };
 
-  let request = mozIndexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
@@ -26,7 +26,7 @@ function testSteps()
   continueToNextStep();
   yield;
 
-  request = mozIndexedDB.open(name, 1, description);
+  request = indexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;

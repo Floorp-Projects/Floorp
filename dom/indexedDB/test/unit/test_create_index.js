@@ -21,7 +21,7 @@ function testSteps()
     { name: undefined, keyPath: "value", options: { unique: false } },
   ];
 
-  let request = mozIndexedDB.open(name, 1);
+  let request = indexedDB.open(name, 1);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = unexpectedSuccessHandler;
@@ -110,7 +110,7 @@ function testSteps()
          "transaction has the correct mode");
       is(event.target.transaction.objectStoreNames.length, i + 1,
          "transaction only has one object store");
-      is(event.target.transaction.objectStoreNames.item(0), objectStoreName,
+      ok(event.target.transaction.objectStoreNames.contains(objectStoreName),
          "transaction has the correct object store");
     }
   }

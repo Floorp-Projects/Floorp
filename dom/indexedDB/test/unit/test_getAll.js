@@ -12,7 +12,7 @@ function testSteps()
 
   const values = [ "a", "1", 1, "foo", 300, true, false, 4.5, null ];
 
-  let request = mozIndexedDB.open(name, 1, description);
+  let request = indexedDB.open(name, 1, description);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   let event = yield;
@@ -22,7 +22,7 @@ function testSteps()
   let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 
   request.onsuccess = grabEventAndContinueHandler;
-  request = objectStore.getAll();
+  request = objectStore.mozGetAll();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -44,7 +44,7 @@ function testSteps()
   yield;
   yield;
 
-  request = db.transaction("foo").objectStore("foo").getAll();
+  request = db.transaction("foo").objectStore("foo").mozGetAll();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -56,7 +56,7 @@ function testSteps()
     is(event.target.result[i], values[i], "Same value");
   }
 
-  request = db.transaction("foo").objectStore("foo").getAll(null, 5);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(null, 5);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -70,7 +70,7 @@ function testSteps()
 
   let keyRange = IDBKeyRange.bound(1, 9);
 
-  request = db.transaction("foo").objectStore("foo").getAll(keyRange);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -82,7 +82,7 @@ function testSteps()
     is(event.target.result[i], values[i], "Same value");
   }
 
-  request = db.transaction("foo").objectStore("foo").getAll(keyRange, 0);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, 0);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -94,7 +94,7 @@ function testSteps()
     is(event.target.result[i], values[i], "Same value");
   }
 
-  request = db.transaction("foo").objectStore("foo").getAll(keyRange, null);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, null);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -106,7 +106,7 @@ function testSteps()
     is(event.target.result[i], values[i], "Same value");
   }
 
-  request = db.transaction("foo").objectStore("foo").getAll(keyRange, undefined);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, undefined);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -120,7 +120,7 @@ function testSteps()
 
   keyRange = IDBKeyRange.bound(4, 7);
 
-  request = db.transaction("foo").objectStore("foo").getAll(keyRange);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -141,7 +141,7 @@ function testSteps()
   is(event.target.result instanceof Array, false, "Not an array object");
   is(event.target.result, values[3], "Correct value");
 
-  request = db.transaction("foo").objectStore("foo").getAll(keyRange, 2);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, 2);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -155,7 +155,7 @@ function testSteps()
 
   keyRange = IDBKeyRange.bound(4, 7);
 
-  request = db.transaction("foo").objectStore("foo").getAll(keyRange, 50);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, 50);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -169,7 +169,7 @@ function testSteps()
 
   keyRange = IDBKeyRange.bound(4, 7);
 
-  request = db.transaction("foo").objectStore("foo").getAll(keyRange, 0);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange, 0);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;
@@ -179,7 +179,7 @@ function testSteps()
 
   keyRange = IDBKeyRange.bound(4, 7, true, true);
 
-  request = db.transaction("foo").objectStore("foo").getAll(keyRange);
+  request = db.transaction("foo").objectStore("foo").mozGetAll(keyRange);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield;

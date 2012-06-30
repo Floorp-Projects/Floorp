@@ -36,7 +36,7 @@
       let c1 = 1;
       let c2 = 1;
 
-      let openRequest = mozIndexedDB.open(dbname, 1);
+      let openRequest = indexedDB.open(dbname, 1);
       openRequest.onerror = errorHandler;
       openRequest.onupgradeneeded = grabEventAndContinueHandler;
       openRequest.onsuccess = unexpectedSuccessHandler;
@@ -372,7 +372,7 @@
 
       SpecialPowers.gc();
 
-      openRequest = mozIndexedDB.open(dbname, 2);
+      openRequest = indexedDB.open(dbname, 2);
       openRequest.onerror = errorHandler;
       openRequest.onupgradeneeded = grabEventAndContinueHandler;
       openRequest.onsuccess = unexpectedSuccessHandler;

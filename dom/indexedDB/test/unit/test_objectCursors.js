@@ -22,7 +22,7 @@ function testSteps()
 
   var j = 0;
   for (let i in objectStores) {
-    let request = mozIndexedDB.open(name, ++j, description);
+    let request = indexedDB.open(name, ++j, description);
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
     let event = yield;
@@ -55,7 +55,7 @@ function testSteps()
   executeSoon(function() { testGenerator.next(); });
   yield;
 
-  let request = mozIndexedDB.open(name, j, description);
+  let request = indexedDB.open(name, j, description);
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   let event = yield;

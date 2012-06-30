@@ -4,13 +4,13 @@
 
 const LAST_URL_PREF = "general.open_location.last_url";
 const nsISupportsString = Components.interfaces.nsISupportsString;
+const Ci = Components.interfaces;
 
-var EXPORTED_SYMBOLS = [ "gOpenLocationLastURL" ];
+var EXPORTED_SYMBOLS = [ "OpenLocationLastURL" ];
 
-let pbSvc = Components.classes["@mozilla.org/privatebrowsing;1"]
-                      .getService(Components.interfaces.nsIPrivateBrowsingService);
 let prefSvc = Components.classes["@mozilla.org/preferences-service;1"]
                         .getService(Components.interfaces.nsIPrefBranch);
+let gOpenLocationLastURLData = "";
 
 let observer = {
   QueryInterface: function (aIID) {
@@ -22,11 +22,12 @@ let observer = {
   },
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "private-browsing":
+      case "last-pb-context-exited":
         gOpenLocationLastURLData = "";
         break;
       case "browser:purge-session-history":
-        gOpenLocationLastURL.reset();
+        prefSvc.clearUserPref(LAST_URL_PREF);
+        gOpenLocationLastURLData = "";
         break;
     }
   }
@@ -34,13 +35,25 @@ let observer = {
 
 let os = Components.classes["@mozilla.org/observer-service;1"]
                    .getService(Components.interfaces.nsIObserverService);
-os.addObserver(observer, "private-browsing", true);
+os.addObserver(observer, "last-pb-context-exited", true);
 os.addObserver(observer, "browser:purge-session-history", true);
 
-let gOpenLocationLastURLData = "";
-let gOpenLocationLastURL = {
+
+function OpenLocationLastURL(aWindow) {
+  this.window = aWindow;
+}
+
+OpenLocationLastURL.prototype = {
+  isPrivate: function OpenLocationLastURL_isPrivate() {
+    // Assume not in private browsing mode, unless the browser window is
+    // in private mode.
+    if (!this.window || !("gPrivateBrowsingUI" in this.window))
+      return false;
+  
+    return this.window.gPrivateBrowsingUI.privateWindow;
+  },
   get value() {
-    if (pbSvc.privateBrowsingEnabled)
+    if (this.isPrivate())
       return gOpenLocationLastURLData;
     else {
       try {
@@ -54,7 +67,7 @@ let gOpenLocationLastURL = {
   set value(val) {
     if (typeof val != "string")
       val = "";
-    if (pbSvc.privateBrowsingEnabled)
+    if (this.isPrivate())
       gOpenLocationLastURLData = val;
     else {
       let str = Components.classes["@mozilla.org/supports-string;1"]
