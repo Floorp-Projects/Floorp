@@ -197,10 +197,10 @@ var ForgetAboutSite = {
       // Now, for each name we got back, remove all of its prefs.
       for (let i = 0; i < names.length; i++) {
         let uri = names[i];
-        let enumerator = cp.getPrefs(uri).enumerator;
+        let enumerator = cp.getPrefs(uri, null).enumerator;
         while (enumerator.hasMoreElements()) {
           let pref = enumerator.getNext().QueryInterface(Ci.nsIProperty);
-          cp.removePref(uri, pref.name);
+          cp.removePref(uri, pref.name, null);
         }
       }
     }

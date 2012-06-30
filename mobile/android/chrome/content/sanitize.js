@@ -101,7 +101,7 @@ Sanitizer.prototype = {
         Services.perms.removeAll();
 
         // Clear site-specific settings like page-zoom level
-        Services.contentPrefs.removeGroupedPrefs();
+        Services.contentPrefs.removeGroupedPrefs(null);
 
         // Clear "Never remember passwords for this site", which is not handled by
         // the permission manager
