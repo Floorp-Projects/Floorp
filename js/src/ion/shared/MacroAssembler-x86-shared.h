@@ -380,7 +380,6 @@ class MacroAssemblerX86Shared : public Assembler
         CodeLabel *cl = new CodeLabel();
         if (!addCodeLabel(cl))
             return false;
-        breakpoint();
         mov(cl->dest(), scratch);
 
         uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
