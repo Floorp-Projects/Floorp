@@ -4919,7 +4919,11 @@ nsDOMClassInfo::CheckAccess(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 {
   PRUint32 mode_type = mode & JSACC_TYPEMASK;
 
-  if ((mode_type == JSACC_WATCH || mode_type == JSACC_PROTO) && sSecMan) {
+  if ((mode_type == JSACC_WATCH ||
+       mode_type == JSACC_PROTO ||
+       mode_type == JSACC_PARENT) &&
+      sSecMan) {
+
     nsresult rv;
     JSObject *real_obj;
     if (wrapper) {
@@ -5374,10 +5378,11 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
                                           JSHandleId id, unsigned flags,
                                           JSObject **objp)
 {
-  if (flags & (JSRESOLVE_ASSIGNING | JSRESOLVE_QUALIFIED) ||
+  if (flags & (JSRESOLVE_ASSIGNING | JSRESOLVE_DECLARING |
+               JSRESOLVE_QUALIFIED) ||
       !JSID_IS_STRING(id)) {
-    // Nothing to do here if we're assigning, doing a qualified resolve, or
-    // resolving a non-string property.
+    // Nothing to do here if we're either assigning or declaring,
+    // doing a qualified resolve, or resolving a number.
 
     return JS_TRUE;
   }

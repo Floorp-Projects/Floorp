@@ -115,11 +115,7 @@ typedef enum JSProtoKey {
 /* js_CheckAccess mode enumeration. */
 typedef enum JSAccessMode {
     JSACC_PROTO  = 0,           /* XXXbe redundant w.r.t. id */
-
-                                /*
-                                 * enum value #1 formerly called JSACC_PARENT,
-                                 * gap preserved for ABI compatibility.
-                                 */
+    JSACC_PARENT = 1,           /* XXXbe redundant w.r.t. id */
 
                                 /*
                                  * enum value #2 formerly called JSACC_IMPORT,
