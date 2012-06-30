@@ -1047,7 +1047,6 @@ class nsCOMPtr<nsISupports>
           // parameters.
         {
           NS_ASSERTION(rhs, "Null pointer passed to forget!");
-          NSCAP_LOG_RELEASE(this, mRawPtr);
           *rhs = 0;
           swap(*rhs);
         }
