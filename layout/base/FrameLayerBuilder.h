@@ -39,27 +39,7 @@ enum LayerState {
   LAYER_SVG_EFFECTS
 };
 
-class LayerManagerLayerBuilder : public layers::LayerUserData {
-public:
-  LayerManagerLayerBuilder(FrameLayerBuilder* aBuilder, bool aDelete = true)
-    : mLayerBuilder(aBuilder)
-    , mDelete(aDelete)
-  {
-    MOZ_COUNT_CTOR(LayerManagerLayerBuilder);
-  }
-  ~LayerManagerLayerBuilder();
-
-  FrameLayerBuilder* mLayerBuilder;
-  bool mDelete;
-};
-
 extern PRUint8 gLayerManagerLayerBuilder;
-
-static inline FrameLayerBuilder *GetLayerBuilderForManager(layers::LayerManager* aManager)
-{
-  LayerManagerLayerBuilder *data = static_cast<LayerManagerLayerBuilder*>(aManager->GetUserData(&gLayerManagerLayerBuilder));
-  return data ? data->mLayerBuilder : nsnull;
-}
 
 /**
  * The FrameLayerBuilder belongs to an nsDisplayListBuilder and is
@@ -100,7 +80,7 @@ static inline FrameLayerBuilder *GetLayerBuilderForManager(layers::LayerManager*
  * integer types (nsIntPoint/nsIntSize/nsIntRect/nsIntRegion) are all in layer
  * coordinates, post-scaling, whereas appunit types are all pre-scaling.
  */
-class FrameLayerBuilder {
+class FrameLayerBuilder : public layers::LayerUserData {
 public:
   typedef layers::ContainerLayer ContainerLayer; 
   typedef layers::Layer Layer; 
@@ -702,6 +682,11 @@ protected:
   PRUint32                            mContainerLayerGeneration;
   PRUint32                            mMaxContainerLayerGeneration;
 };
+
+static inline FrameLayerBuilder *GetLayerBuilderForManager(layers::LayerManager* aManager)
+{
+  return static_cast<FrameLayerBuilder*>(aManager->GetUserData(&gLayerManagerLayerBuilder));
+}
 
 }
 
