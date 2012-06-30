@@ -2891,12 +2891,19 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason,
     return;
   }
 
+  if (sCCLockedOut && aIncremental == IncrementalGC) {
+    // We're in the middle of incremental GC. Do another slice.
+    js::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
+    js::IncrementalGC(nsJSRuntime::sRuntime, aReason);
+    return;
+  }
+
   // Use compartment GC when we're not asked to do a shrinking GC nor
   // global GC and compartment GC has been called less than
   // NS_MAX_COMPARTMENT_GC_COUNT times after the previous global GC.
   if (!sDisableExplicitCompartmentGC &&
       aShrinking != ShrinkingGC && aCompartment != NonCompartmentGC &&
-      sCompartmentGCCount < NS_MAX_COMPARTMENT_GC_COUNT) {  
+      sCompartmentGCCount < NS_MAX_COMPARTMENT_GC_COUNT) {
     js::PrepareForFullGC(nsJSRuntime::sRuntime);
     for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
       if (!cx->mActive && cx->mContext) {
