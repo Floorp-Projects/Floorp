@@ -1859,7 +1859,7 @@ class IDLAttribute(IDLInterfaceMember):
         IDLObjectWithIdentifier.resolve(self, parentScope)
 
 class IDLArgument(IDLObjectWithIdentifier):
-    def __init__(self, location, identifier, type, optional=False, defaultValue=None, variadic=False):
+    def __init__(self, location, identifier, type, optional=False, defaultValue=None, variadic=False, dictionaryMember=False):
         IDLObjectWithIdentifier.__init__(self, location, None, identifier)
 
         assert isinstance(type, IDLType)
@@ -1872,10 +1872,21 @@ class IDLArgument(IDLObjectWithIdentifier):
         self.optional = optional
         self.defaultValue = defaultValue
         self.variadic = variadic
+        self.dictionaryMember = dictionaryMember
 
         assert not variadic or optional
 
     def addExtendedAttributes(self, attrs):
+        if self.dictionaryMember:
+            for (attr, value) in attrs:
+                if attr == "TreatUndefinedAs":
+                    raise WebIDLError("[TreatUndefinedAs] is not allowed for "
+                                      "dictionary members", [self.location])
+                elif attr == "TreatNullAs":
+                    raise WebIDLError("[TreatNullAs] is not allowed for "
+                                      "dictionary members", [self.location])
+
+        # But actually, we can't handle this at all, so far.
         assert len(attrs) == 0
 
 class IDLCallbackType(IDLType, IDLObjectWithScope):
@@ -2535,7 +2546,8 @@ class Parser(Tokenizer):
         defaultValue = p[3]
 
         p[0] = IDLArgument(self.getLocation(p, 2), identifier, t, optional=True,
-                           defaultValue=defaultValue, variadic=False)
+                           defaultValue=defaultValue, variadic=False,
+                           dictionaryMember=True)
 
     def p_DefaultValue(self, p):
         """
