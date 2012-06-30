@@ -358,7 +358,7 @@ add_test(function test_lock_prefs() {
 */
 
 add_test(function test_site_prefs() {
-  let prefs = Preferences.site("www.example.com");
+  let prefs = Preferences.site("www.example.com", null);
 
   prefs.set("test_site_prefs.integer", 1);
   do_check_eq(prefs.get("test_site_prefs.integer"), 1);

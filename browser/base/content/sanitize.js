@@ -356,7 +356,7 @@ Sanitizer.prototype = {
         // Clear site-specific settings like page-zoom level
         var cps = Components.classes["@mozilla.org/content-pref/service;1"]
                             .getService(Components.interfaces.nsIContentPrefService);
-        cps.removeGroupedPrefs();
+        cps.removeGroupedPrefs(null);
         
         // Clear "Never remember passwords for this site", which is not handled by
         // the permission manager
