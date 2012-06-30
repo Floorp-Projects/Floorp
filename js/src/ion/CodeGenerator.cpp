@@ -519,7 +519,9 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.Push(argUintNReg);
 
     // Construct native exit frame.
-    uint32 safepointOffset = masm.buildFakeExitFrame(tempReg);
+    uint32 safepointOffset;
+    if (!masm.buildFakeExitFrame(tempReg, &safepointOffset))
+        return false;
     masm.enterFakeExitFrame();
 
     if (!markSafepointAt(safepointOffset, call))

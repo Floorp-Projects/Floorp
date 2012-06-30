@@ -374,33 +374,24 @@ class MacroAssemblerX86Shared : public Assembler
 
     // Builds an exit frame on the stack, with a return address to an internal
     // non-function. Returns offset to be passed to markSafepointAt().
-    uint32 buildFakeExitFrame(const Register &scratch) {
+    bool buildFakeExitFrame(const Register &scratch, uint32 *offset) {
         DebugOnly<uint32> initialDepth = framePushed();
-        Label pseudocall, endcall;
 
-        call(&pseudocall);
-        uint32 callOffset = currentOffset();
-        jump(&endcall);
-
-        align(0x10);
-        {
-            bind(&pseudocall);
-#ifdef JS_CPU_X86
-            movl(Operand(StackPointer, 0x0), scratch);
-#else
-            movq(Operand(StackPointer, 0x0), scratch);
-#endif
-            ret();
-        }
-
-        bind(&endcall);
+        CodeLabel *cl = new CodeLabel();
+        if (!addCodeLabel(cl))
+            return false;
+        breakpoint();
+        mov(cl->dest(), scratch);
 
         uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
         Push(Imm32(descriptor));
         Push(scratch);
 
+        bind(cl->src());
+        *offset = currentOffset();
+
         JS_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
-        return callOffset;
+        return true;
     }
 
     void callWithExitFrame(IonCode *target) {
