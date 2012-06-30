@@ -632,6 +632,9 @@ PrepareCompartmentForGC(JSCompartment *comp);
 extern JS_FRIEND_API(void)
 PrepareForFullGC(JSRuntime *rt);
 
+extern JS_FRIEND_API(void)
+PrepareForIncrementalGC(JSRuntime *rt);
+
 extern JS_FRIEND_API(bool)
 IsGCScheduled(JSRuntime *rt);
 
@@ -655,7 +658,7 @@ extern JS_FRIEND_API(void)
 IncrementalGC(JSRuntime *rt, gcreason::Reason reason);
 
 extern JS_FRIEND_API(void)
-SetGCSliceTimeBudget(JSContext *cx, int64_t millis);
+FinishIncrementalGC(JSRuntime *rt, gcreason::Reason reason);
 
 enum GCProgress {
     /*

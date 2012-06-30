@@ -478,6 +478,9 @@ extern void
 GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, js::gcreason::Reason reason);
 
 extern void
+GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, js::gcreason::Reason reason);
+
+extern void
 GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount);
 
 extern void

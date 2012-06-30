@@ -3915,6 +3915,13 @@ GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 }
 
 void
+GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
+{
+    Collect(rt, true, SliceBudget::Unlimited, gckind, reason);
+}
+
+
+void
 GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
 {
     int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
