@@ -1345,8 +1345,8 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32
     ma_vstr(src, Operand(ScratchRegister, 0));
 }
 
-uint32
-MacroAssemblerARMCompat::buildFakeExitFrame(const Register &scratch)
+bool
+MacroAssemblerARMCompat::buildFakeExitFrame(const Register &scratch, uint32 *offset)
 {
     DebugOnly<uint32> initialDepth = framePushed();
     uint32 descriptor = MakeFrameDescriptor(framePushed(), IonFrame_JS);
@@ -1366,7 +1366,9 @@ MacroAssemblerARMCompat::buildFakeExitFrame(const Register &scratch)
 
     JS_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
     JS_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
-    return pseudoReturnOffset;
+
+    *offset = pseudoReturnOffset;
+    return true;
 }
 
 void

@@ -339,8 +339,8 @@ class CodeLabel : public TempObject
 {
     // The destination position, where the absolute reference should get patched into
     AbsoluteLabel dest_;
-    
-    // The source label (relative) in the code to where the 
+
+    // The source label (relative) in the code to where the
     // the destination should get patched to.
     Label src_;
 

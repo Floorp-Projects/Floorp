@@ -898,7 +898,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     // Builds an exit frame on the stack, with a return address to an internal
     // non-function. Returns offset to be passed to markSafepointAt().
-    uint32 buildFakeExitFrame(const Register &scratch);
+    bool buildFakeExitFrame(const Register &scratch, uint32 *offset);
 
     void callWithExitFrame(IonCode *target);
 
