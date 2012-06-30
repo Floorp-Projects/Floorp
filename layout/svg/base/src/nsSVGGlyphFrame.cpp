@@ -304,6 +304,11 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
+  if (GetStyleFont()->mFont.size <= 0) {
+    // Don't even try to paint, or cairo will go into an error state.
+    return NS_OK;
+  }
+
   gfxContext *gfx = aContext->ThebesContext();
   PRUint16 renderMode = SVGAutoRenderState::GetRenderMode(aContext);
 
