@@ -218,6 +218,10 @@ class nsHashKey;
 // Indicates a resize will occur
 #define NS_BEFORERESIZE_EVENT            (NS_WINDOW_START + 66)
 
+// Indicates that the user is either idle or active
+#define NS_MOZ_USER_IDLE                 (NS_WINDOW_START + 67)
+#define NS_MOZ_USER_ACTIVE               (NS_WINDOW_START + 68)
+
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)
 #define NS_MOUSE_BUTTON_UP              (NS_MOUSE_MESSAGE_START + 1)

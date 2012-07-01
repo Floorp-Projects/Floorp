@@ -114,6 +114,18 @@ js::PrepareForFullGC(JSRuntime *rt)
         c->scheduleGC();
 }
 
+JS_FRIEND_API(void)
+js::PrepareForIncrementalGC(JSRuntime *rt)
+{
+    if (rt->gcIncrementalState == gc::NO_INCREMENTAL)
+        return;
+
+    for (CompartmentsIter c(rt); !c.done(); c.next()) {
+        if (c->needsBarrier())
+            PrepareCompartmentForGC(c);
+    }
+}
+
 JS_FRIEND_API(bool)
 js::IsGCScheduled(JSRuntime *rt)
 {
@@ -147,6 +159,12 @@ JS_FRIEND_API(void)
 js::IncrementalGC(JSRuntime *rt, gcreason::Reason reason)
 {
     GCSlice(rt, GC_NORMAL, reason);
+}
+
+JS_FRIEND_API(void)
+js::FinishIncrementalGC(JSRuntime *rt, gcreason::Reason reason)
+{
+    GCFinalSlice(rt, GC_NORMAL, reason);
 }
 
 JS_FRIEND_API(void)
@@ -758,10 +776,7 @@ NotifyDidPaint(JSRuntime *rt)
     }
 
     if (rt->gcIncrementalState != gc::NO_INCREMENTAL && !rt->gcInterFrameGC) {
-        for (CompartmentsIter c(rt); !c.done(); c.next()) {
-            if (c->needsBarrier())
-                PrepareCompartmentForGC(c);
-        }
+        PrepareForIncrementalGC(rt);
         GCSlice(rt, GC_NORMAL, gcreason::REFRESH_FRAME);
     }
 

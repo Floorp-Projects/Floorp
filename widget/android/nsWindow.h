@@ -8,7 +8,7 @@
 
 #include "nsBaseWidget.h"
 #include "gfxPoint.h"
-
+#include "nsIIdleServiceInternal.h"
 #include "nsTArray.h"
 
 #ifdef MOZ_JAVA_COMPOSITOR
@@ -17,7 +17,6 @@
 #endif
 
 class gfxASurface;
-class nsIdleService;
 
 struct ANPEvent;
 
@@ -149,6 +148,7 @@ public:
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
 #ifdef MOZ_JAVA_COMPOSITOR
+    virtual bool NeedsPaint();
     virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect);
 
@@ -159,7 +159,7 @@ public:
     static void SchedulePauseComposition();
     static void ScheduleResumeComposition(int width, int height);
 
-    virtual bool WidgetPaintsBackground() { return true; }
+    virtual bool WidgetPaintsBackground();
 #endif
 
 protected:
@@ -188,7 +188,7 @@ protected:
     double mSwipeMaxPinchDelta;
     double mSwipeMinDistance;
 
-    nsCOMPtr<nsIdleService> mIdleService;
+    nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
     bool mIMEComposing;
     nsString mIMEComposingText;

@@ -1,0 +1,16 @@
+DEPTH           = ../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+relativesrcdir  = dom/system/tests
+
+MODULE          = test_domsystem
+_CHROME_TEST_FILES = \
+	test_constants.xul \
+	worker_constants.js \
+        $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+libs:: $(_CHROME_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

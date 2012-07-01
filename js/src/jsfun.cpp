@@ -139,16 +139,13 @@ fun_getProperty(JSContext *cx, HandleObject obj_, HandleId id, Value *vp)
 #endif
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.callerAtom)) {
-        StackIter prev(iter);
-        do {
-            ++prev;
-        } while (!prev.done() && prev.isImplicitNativeCall());
-
-        if (prev.done() || !prev.isFunctionFrame()) {
+        ++iter;
+        if (iter.done() || !iter.isFunctionFrame()) {
             JS_ASSERT(vp->isNull());
             return true;
         }
-        *vp = prev.calleev();
+
+        *vp = iter.calleev();
 
         /* Censor the caller if it is from another compartment. */
         JSObject &caller = vp->toObject();
@@ -678,6 +675,12 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
         return js_fun_call(cx, (argc > 0) ? 1 : 0, vp);
 
     InvokeArgsGuard args;
+
+    /*
+     * GuardFunApplyArgumentsOptimization already called IsOptimizedArguments,
+     * so we don't need to here. This is not an optimization: we can't rely on
+     * cx->fp (since natives can be called directly from JSAPI).
+     */
     if (vp[3].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         /*
          * Pretend we have been passed the 'arguments' object for the current
@@ -1208,8 +1211,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, unsigned nargs,
     JS_ASSERT(sizeof(FunctionExtended) <= gc::Arena::thingSize(JSFunction::ExtendedFinalizeKind));
 
     RootedAtom atom(cx, atom_);
-
-    JSFunction *fun;
+    RootedFunction fun(cx);
 
     if (funobj) {
         JS_ASSERT(funobj->isFunction());
@@ -1346,64 +1348,4 @@ js_DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
         return NULL;
 
     return fun;
-}
-
-JS_STATIC_ASSERT((JSV2F_CONSTRUCT & JSV2F_SEARCH_STACK) == 0);
-
-JSFunction *
-js_ValueToFunction(JSContext *cx, const Value *vp, unsigned flags)
-{
-    JSFunction *fun;
-    if (!IsFunctionObject(*vp, &fun)) {
-        js_ReportIsNotFunction(cx, vp, flags);
-        return NULL;
-    }
-    return fun;
-}
-
-JSObject *
-js_ValueToCallableObject(JSContext *cx, Value *vp, unsigned flags)
-{
-    if (vp->isObject()) {
-        JSObject *callable = &vp->toObject();
-        if (callable->isCallable())
-            return callable;
-    }
-
-    js_ReportIsNotFunction(cx, vp, flags);
-    return NULL;
-}
-
-void
-js_ReportIsNotFunction(JSContext *cx, const Value *vp, unsigned flags)
-{
-    const char *name = NULL, *source = NULL;
-    unsigned error = (flags & JSV2F_CONSTRUCT) ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
-
-    /*
-     * We try to the print the code that produced vp if vp is a value in the
-     * most recent interpreted stack frame. Note that additional values, not
-     * directly produced by the script, may have been pushed onto the frame's
-     * expression stack (e.g. by pushInvokeArgs) thereby incrementing sp past
-     * the depth simulated by ReconstructPCStack.
-     *
-     * Conversely, values may have been popped from the stack in preparation
-     * for a call (e.g., by SplatApplyArgs). Since we must pass an offset from
-     * the top of the simulated stack to js_ReportValueError3, we do bounds
-     * checking using the minimum of both the simulated and actual stack depth.
-     */
-    ptrdiff_t spindex = 0;
-
-    ScriptFrameIter i(cx);
-    if (!i.done()) {
-        unsigned depth = js_ReconstructStackDepth(cx, i.script(), i.pc());
-        Value *simsp = i.fp()->base() + depth;
-        if (i.fp()->base() <= vp && vp < Min(simsp, i.sp()))
-            spindex = vp - simsp;
-    }
-
-    if (!spindex)
-        spindex = ((flags & JSV2F_SEARCH_STACK) ? JSDVG_SEARCH_STACK : JSDVG_IGNORE_STACK);
-
-    js_ReportValueError3(cx, error, spindex, *vp, NULL, name, source);
 }

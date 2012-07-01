@@ -9,11 +9,35 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "FileUtils", function() {
   Cu.import("resource://gre/modules/FileUtils.jsm");
   return FileUtils;
 });
+
+XPCOMUtils.defineLazyGetter(this, "DOMApplicationRegistry", function() {
+  Cu.import("resource://gre/modules/Webapps.jsm");
+  return DOMApplicationRegistry;
+});
+
+// In test mode, observe webapps-ask-install so tests can install apps.
+Services.obs.addObserver(function observeCmdLine(subj, topic, data) {
+  Services.obs.removeObserver(observeCmdLine, "webapprt-command-line");
+  let args = subj.QueryInterface(Ci.nsIPropertyBag2);
+  if (!args.hasKey("test-mode"))
+    return;
+  Services.obs.addObserver(function observeInstall(subj, topic, data) {
+    // observeInstall is present for the lifetime of the runtime.
+    let config = JSON.parse(data);
+    config.registryDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+    delete WebappRT.config;
+    WebappRT.config = deepFreeze(config);
+    DOMApplicationRegistry.confirmInstall(config);
+    Services.obs.notifyObservers(null, "webapprt-test-did-install",
+                                 JSON.stringify(config));
+  }, "webapps-ask-install", false);
+}, "webapprt-command-line", false);
 
 let WebappRT = {
   get config() {

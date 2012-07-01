@@ -14,8 +14,8 @@ class TestSpecialPowersContent(MarionetteTestCase):
         result = self.marionette.execute_script("""
         SpecialPowers.setCharPref("%(pref)s", "%(value)s");
         return SpecialPowers.getCharPref("%(pref)s")
-        """ % {'pref': self.testpref, 'value': self.testvalue});
-        self.assertEqual(result, self.testvalue)
+        """ % {'pref': self.testpref, 'value': self.testvalue}, special_powers=True);
+        self.assertEqual(result, self.testvalue) 
 
     def test_prefs_after_navigate(self):
         test_html = self.marionette.absolute_url("test.html")

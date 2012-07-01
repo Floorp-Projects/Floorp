@@ -69,6 +69,36 @@ document.dispatchEvent(e);
 is(e.eventPhase, Event.NONE, "Wrong event phase");
 is(receivedEvent, e, "Wrong event!");
 
+e = new Event("hello", null);
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+document.dispatchEvent(e);
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+is(receivedEvent, e, "Wrong event!");
+
+e = new Event("hello", undefined);
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+document.dispatchEvent(e);
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+is(receivedEvent, e, "Wrong event!");
+
+e = new Event("hello", {});
+ok(e.type, "hello", "Wrong event type!");
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+ok(!e.bubbles, "Event shouldn't bubble!");
+ok(!e.cancelable, "Event shouldn't be cancelable!");
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+document.dispatchEvent(e);
+is(e.eventPhase, Event.NONE, "Wrong event phase");
+is(receivedEvent, e, "Wrong event!");
+
 e = new Event("hello", { bubbles: true, cancelable: true });
 ok(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");

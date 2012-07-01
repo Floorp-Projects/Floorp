@@ -1,0 +1,307 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=762993
+-->
+<window title="Mozilla Bug 762993"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="run_next_test();">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=762993"
+     target="_blank">Mozilla Bug 762993</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript;version=1.8">
+  <![CDATA[
+
+  /** Test for Bug 762993 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+const secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
+
+const TEST_URL_1 = "https://example.com/";
+// No trailing slash plus port to test normalization
+const TEST_URL_2 = "https://example.com:443";
+
+const TEST_BASE = "http://mochi.test:8888/chrome/toolkit/identity/tests/chrome/"
+const STATE_URL = TEST_BASE + "sandbox_content.sjs"
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+Services.prefs.setBoolPref("toolkit.identity.debug", true);
+
+XPCOMUtils.defineLazyModuleGetter(this, "Sandbox",
+                                  "resource://gre/modules/identity/Sandbox.jsm");
+
+function check_sandbox(aSandbox, aURL) {
+  ok(aSandbox.id > 0, "valid ID");
+  is(aSandbox._url, aURL, "matching URL (with normalization)");
+  isnot(aSandbox._frame, null, "frame");
+  isnot(aSandbox._container, null, "container");
+  let docPrincipal = aSandbox._frame.contentDocument.nodePrincipal;
+  is(secMan.isSystemPrincipal(docPrincipal), false,
+     "principal must not be system");
+}
+
+/**
+ * Free the sandbox and make sure all properties that are not booleans,
+ * functions or numbers were freed.
+ */
+function free_and_check_sandbox(aSandbox) {
+  SimpleTest.executeSoon(function() {
+    aSandbox.free();
+
+    for(let prop in aSandbox) {
+      // Don't trigger the "id" getter when the frame is supposed to be freed already
+      if (prop == "id")
+        continue;
+      let propType = typeof(aSandbox[prop]);
+      if (propType == "boolean" || propType == "function" || propType == "number")
+        continue;
+      is(aSandbox[prop], null, "freed " + prop);
+    }
+    run_next_test();
+  });
+}
+
+function reset_server_state() {
+  // Now reset the server state
+  let resetReq = new XMLHttpRequest();
+  resetReq.open("GET", STATE_URL + "?reset", false);
+  resetReq.send();
+}
+
+function test_creation() {
+  new Sandbox(TEST_URL_1, function sandboxCB(aSandbox) {
+    check_sandbox(aSandbox, TEST_URL_1);
+    free_and_check_sandbox(aSandbox);
+  });
+}
+
+function test_reload() {
+  new Sandbox(TEST_URL_1, function sandboxCB(aSandbox) {
+    check_sandbox(aSandbox, TEST_URL_1);
+    let originalId = aSandbox.id;
+
+    aSandbox.reload(function sandboxReloadCB(aSandbox) {
+      check_sandbox(aSandbox, TEST_URL_1);
+      is(aSandbox.id, originalId, "Sandbox ID should be the same after reload");
+      free_and_check_sandbox(aSandbox);
+    });
+  });
+}
+
+function test_url_normalization() {
+  new Sandbox(TEST_URL_2, function sandboxCB(aSandbox) {
+    // TEST_URL_2 should be normalized into the form of TEST_URL_1
+    check_sandbox(aSandbox, TEST_URL_1);
+    free_and_check_sandbox(aSandbox);
+  });
+}
+
+/**
+ * Check with the server's state to see what content was loaded then reset it.
+ */
+function check_loaded_content(aNothingShouldLoad, aCallback) {
+
+  let xhr = new XMLHttpRequest();
+  xhr.open("GET", STATE_URL + "?get_loaded", true);
+  xhr.onload = function() {
+    is(xhr.status, 200, "Check successful response");
+
+    if (aNothingShouldLoad) {
+      is(xhr.responseText, "NOTHING", "Check that nothing was loaded on the server");
+    } else {
+      let loadedTypes = xhr.responseText == "NOTHING" ? [] : xhr.responseText.split(",");
+
+      // TODO: Media should be disabled after bug 759964.
+      is(loadedTypes.length, 4, "Check number of loaded content types: " + xhr.responseText)
+      todo_is(loadedTypes.length, 2, "Check number of loaded content types: " + xhr.responseText)
+
+      isnot(loadedTypes.indexOf("application/javascript"), -1, "Check JS was loaded");
+      isnot(loadedTypes.indexOf("text/html"), -1, "Check iframe was loaded");
+      todo_is(loadedTypes.indexOf("video/webm"), -1, "Check webm was not loaded");
+      todo_is(loadedTypes.indexOf("audio/ogg"), -1, "Check ogg was not loaded");
+    }
+
+    reset_server_state();
+
+    aCallback();
+  };
+  xhr.send();
+}
+
+/**
+ * Helper to check that only certain content is loaded on creation and during reload.
+ */
+function check_disabled_content(aSandboxURL, aNothingShouldLoad = false) {
+  new Sandbox(aSandboxURL, function sandboxCB(aSandbox) {
+    check_sandbox(aSandbox, aSandboxURL);
+    let originalId = aSandbox.id;
+
+    setTimeout(function() {
+      check_loaded_content(aNothingShouldLoad, function checkFinished() {
+
+        info("reload the sandbox content");
+        aSandbox.reload(function sandboxReloadCB(aSandbox) {
+          check_sandbox(aSandbox, aSandboxURL);
+          is(aSandbox.id, originalId, "Sandbox ID should be the same after reload");
+
+          setTimeout(function() {
+            check_loaded_content(aNothingShouldLoad, function reloadCheckFinished() {
+              free_and_check_sandbox(aSandbox);
+            });
+          }, 2000);
+        });
+      });
+    }, 2000);
+  });
+}
+
+function test_disabled_content() {
+  let url = TEST_BASE + "sandbox_content.html";
+  check_disabled_content(url);
+}
+
+// Same as test above but with content in an iframe.
+function test_disabled_content_framed() {
+  let url = TEST_BASE + "sandbox_content_framed.html";
+  check_disabled_content(url);
+}
+
+function test_redirect() {
+  let url = TEST_BASE + "sandbox_content_redirect.html";
+  check_disabled_content(url);
+}
+
+function WindowObserver(aCallback) {
+  this.observe = function(aSubject, aTopic, aData) {
+    if (aTopic != "domwindowopened") {
+      return;
+    }
+    Services.ww.unregisterNotification(this);
+
+    let domWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    ok(!domWin, "No window should be opened");
+    SimpleTest.executesoon(function() {
+      info("Closing opened window");
+      domWin.close();
+      aCallback();
+    });
+  }
+}
+
+// Can the sandbox call window.alert() or popup other UI?
+function test_alert() {
+  let alertURL = TEST_BASE + "sandbox_content_alert.html";
+
+  new Sandbox(alertURL, function sandboxCB(aSandbox) {
+    check_sandbox(aSandbox, alertURL);
+    setTimeout(function() {
+
+      let win = Services.wm.getMostRecentWindow(null);
+      isnot(win.document.documentElement.getAttribute("id"), "commonDialog",
+                 "Make sure most recent window is not a dialog");
+      if (win.document.documentElement.getAttribute("id") == "commonDialog") {
+        // If a dialog did open, close it so we don't interfere with future tests
+        win.close()
+      }
+
+      free_and_check_sandbox(aSandbox);
+    }, 500);
+  });
+}
+
+// Can the sandboxed page open a popup with window.open?
+function test_popup() {
+  let alertURL = TEST_BASE + "sandbox_content_popup.html";
+  let theSandbox;
+  function continueTest() {
+    // avoid double-free
+    if (!theSandbox)
+      return;
+    free_and_check_sandbox(theSandbox);
+    theSandbox = null;
+  }
+  let winObs = new WindowObserver(continueTest);
+  Services.ww.registerNotification(winObs);
+  new Sandbox(alertURL, function sandboxCB(aSandbox) {
+    theSandbox = aSandbox;
+    check_sandbox(aSandbox, alertURL);
+    // Wait 5 seconds to see if the window is going to open.
+    setTimeout(function() {
+      Services.ww.unregisterNotification(winObs);
+      continueTest();
+    }, 5000);
+  });
+}
+
+// Loading a page with a bad cert
+function test_bad_cert() {
+  let url = TEST_BASE + "sandbox_content.sjs?text/html";
+  url = url.replace("http://mochi.test:8888", "https://untrusted.example.com");
+  check_disabled_content(url, /*nothingShouldLoad=*/true);
+}
+
+// Loading a page to check window.top and other permissions.
+function test_frame_perms() {
+  let url = TEST_BASE + "sandbox_content_perms.html";
+  new Sandbox(url, function sandboxCB(aSandbox) {
+    check_sandbox(aSandbox, url);
+
+    // Give the content time to load
+    setTimeout(function() {
+      let xhr = new XMLHttpRequest();
+      xhr.open("GET", STATE_URL + "?get_loaded", true);
+      xhr.responseType = "json";
+      xhr.onload = function() {
+        is(xhr.status, 200, "Check successful response");
+        is(typeof(xhr.response), "object", "Check response is object");
+        is(Object.keys(xhr.response).length, 3, "Check the number of perm. tests");
+        for (let test in xhr.response) {
+          ok(xhr.response[test], "Check result of " + test);
+        }
+
+        reset_server_state();
+        free_and_check_sandbox(aSandbox);
+      };
+      xhr.send();
+    }, 3000);
+  });
+}
+
+let TESTS = [test_creation, test_reload, test_url_normalization];
+TESTS.push(test_disabled_content, test_disabled_content_framed);
+TESTS.push(test_alert, test_popup, test_bad_cert);
+TESTS.push(test_redirect, test_frame_perms);
+
+function run_next_test() {
+  if (TESTS.length) {
+    let test = TESTS.shift();
+    info(test.name);
+    test();
+  } else {
+    Services.prefs.clearUserPref("toolkit.identity.debug");
+    SimpleTest.finish();
+  }
+}
+
+  ]]>
+  </script>
+</window>

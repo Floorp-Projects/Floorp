@@ -145,6 +145,25 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
     //
     // Mutation methods
     //
+  
+    // Insert a given element at the given index.
+    // @param index  The index at which to insert item.
+    // @param item   The item to insert,
+    // @return       A pointer to the newly inserted element, or a null on DOM
+    template<class Item>
+    elem_type *InsertElementAt(index_type aIndex, const Item& aItem) {
+      elem_type* item = mArray.InsertElementAt(aIndex, aItem);
+      AdjustIterators(aIndex, 1);
+      return item;
+    }
+
+    // Same as above but without copy constructing.
+    // This is useful to avoid temporaries.
+    elem_type* InsertElementAt(index_type aIndex) {
+      elem_type* item = mArray.InsertElementAt(aIndex);
+      AdjustIterators(aIndex, 1);
+      return item;
+    }
 
     // Prepend an element to the array unless it already exists in the array.
     // 'operator==' must be defined for elem_type.
@@ -152,7 +171,13 @@ class nsAutoTObserverArray : protected nsTObserverArray_base {
     // @return       true if the element was found, or inserted successfully.
     template<class Item>
     bool PrependElementUnlessExists(const Item& item) {
-      return Contains(item) || mArray.InsertElementAt(0, item) != nsnull;
+      if (Contains(item)) {
+        return true;
+      }
+      
+      bool inserted = mArray.InsertElementAt(0, item) != nsnull;
+      AdjustIterators(0, 1);
+      return inserted;
     }
 
     // Append an element to the array.

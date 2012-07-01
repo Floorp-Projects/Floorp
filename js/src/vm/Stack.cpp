@@ -798,6 +798,20 @@ ContextStack::~ContextStack()
     JS_ASSERT(!seg_);
 }
 
+ptrdiff_t
+ContextStack::spIndexOf(const Value *vp)
+{
+    if (!hasfp() || !fp()->isScriptFrame())
+        return JSDVG_SEARCH_STACK;
+
+    Value *base = fp()->base();
+    Value *sp = regs().sp;
+    if (vp < base || vp >= sp)
+        return JSDVG_SEARCH_STACK;
+
+    return vp - sp;
+}
+
 bool
 ContextStack::onTop() const
 {
@@ -1154,7 +1168,6 @@ ContextStack::restoreFrameChain()
 void
 StackIter::poisonRegs()
 {
-    sp_ = (Value *)0xbad;
     pc_ = (jsbytecode *)0xbad;
     script_ = (JSScript *)0xbad;
 }
@@ -1169,36 +1182,6 @@ StackIter::popFrame()
         InlinedSite *inline_;
         pc_ = oldfp->prevpc(&inline_);
         JS_ASSERT(!inline_);
-
-        /*
-         * If there is a CallArgsList element between oldfp and fp_, then sp_
-         * is ignored, so we only consider the case where there is no
-         * intervening CallArgsList. The stack representation is not optimized
-         * for this operation so we need to do a full case analysis of how
-         * frames are pushed by considering each ContextStack::push*Frame.
-         */
-        if (oldfp->isGeneratorFrame()) {
-            /* Generator's args do not overlap with the caller's expr stack. */
-            sp_ = oldfp->generatorArgsSnapshotBegin();
-        } else if (oldfp->isNonEvalFunctionFrame()) {
-            /*
-             * When Invoke is called from a native, there will be an enclosing
-             * pushInvokeArgs which pushes a CallArgsList element so we can
-             * ignore that case. The other two cases of function call frames are
-             * Invoke called directly from script and pushInlineFrmae. In both
-             * cases, the actual arguments of the callee should be included in
-             * the caller's expr stack.
-             */
-            sp_ = oldfp->actuals() + oldfp->numActualArgs();
-        } else if (oldfp->isFramePushedByExecute()) {
-            /* pushExecuteFrame pushes exactly (callee, this) before frame. */
-            sp_ = (Value *)oldfp - 2;
-        } else {
-            /* pushDummyFrame pushes exactly 0 slots before frame. */
-            JS_ASSERT(oldfp->isDummyFrame());
-            sp_ = (Value *)oldfp;
-        }
-
         script_ = fp_->maybeScript();
     } else {
         poisonRegs();
@@ -1211,19 +1194,14 @@ StackIter::popCall()
     CallArgsList *oldCall = calls_;
     JS_ASSERT(seg_->contains(oldCall));
     calls_ = calls_->prev();
-    if (seg_->contains(fp_)) {
-        /* pc_ keeps its same value. */
-        sp_ = oldCall->base();
-    } else {
+    if (!seg_->contains(fp_))
         poisonRegs();
-    }
 }
 
 void
 StackIter::settleOnNewSegment()
 {
     if (FrameRegs *regs = seg_->maybeRegs()) {
-        sp_ = regs->sp;
         pc_ = regs->pc;
         if (fp_)
             script_ = fp_->maybeScript();
@@ -1239,17 +1217,6 @@ StackIter::startOnSegment(StackSegment *seg)
     fp_ = seg_->maybefp();
     calls_ = seg_->maybeCalls();
     settleOnNewSegment();
-}
-
-static void JS_NEVER_INLINE
-CrashIfInvalidSlot(StackFrame *fp, Value *vp)
-{
-    Value *slots = (Value *)(fp + 1);
-    if (vp < slots || vp >= slots + fp->script()->nslots) {
-        MOZ_ASSERT(false, "About to dereference invalid slot");
-        *(volatile int *)0xbad = 0;  // show up nicely in crash-stats
-        MOZ_CRASH();
-    }
 }
 
 /*
@@ -1268,8 +1235,6 @@ CrashIfInvalidSlot(StackFrame *fp, Value *vp)
  *  - there is no explicit relationship to determine whether fp_ or calls_ is
  *    the innermost invocation so implicit memory ordering is used since both
  *    push values on the stack.
- *  - calls to natives directly from JS do not push a record and thus the
- *    native call must be recovered by sniffing the stack.
  *  - a native call's 'callee' argument is clobbered on return while the
  *    CallArgsList element is still visible.
  */
@@ -1328,58 +1293,8 @@ StackIter::settleOnNewState()
                 continue;
             }
 
-            /*
-             * As an optimization, there is no CallArgsList element pushed for
-             * natives called directly by a script (compiled or interpreted).
-             * We catch these by inspecting the bytecode and stack. This check
-             * relies on the property that, at a call opcode,
-             *
-             *   regs.sp == vp + 2 + argc
-             *
-             * The Function.prototype.call optimization leaves no record when
-             * 'this' is a native function. Thus, if the following expression
-             * runs and breaks in the debugger, the call to 'replace' will not
-             * appear on the callstack.
-             *
-             *   (String.prototype.replace).call('a',/a/,function(){debugger});
-             *
-             * Function.prototype.call will however appear, hence the debugger
-             * can, by inspecting 'args.thisv', give some useful information.
-             *
-             * For Function.prototype.apply, the situation is even worse: since
-             * a dynamic number of arguments have been pushed onto the stack
-             * (see SplatApplyArgs), there is no efficient way to know how to
-             * find the callee. Thus, calls to apply are lost completely.
-             */
-            JSOp op = JSOp(*pc_);
-            if (op == JSOP_CALL || op == JSOP_FUNCALL) {
-                unsigned argc = GET_ARGC(pc_);
-                DebugOnly<unsigned> spoff = sp_ - fp_->base();
-                JS_ASSERT_IF(maybecx_ && maybecx_->stackIterAssertionEnabled,
-                             spoff == js_ReconstructStackDepth(maybecx_, fp_->script(), pc_));
-                Value *vp = sp_ - (2 + argc);
-
-                CrashIfInvalidSlot(fp_, vp);
-                if (IsNativeFunction(*vp)) {
-                    state_ = IMPLICIT_NATIVE;
-                    args_ = CallArgsFromVp(argc, vp);
-                    return;
-                }
-            }
-
             state_ = SCRIPTED;
             script_ = fp_->script();
-
-            /*
-             * Check sp and pc. JM's getter ICs may push 2 extra values on the
-             * stack; this is okay since the methodjit reserves some extra slots
-             * for loop temporaries.
-             */
-            if (op == JSOP_GETPROP || op == JSOP_CALLPROP)
-                JS_ASSERT(sp_ >= fp_->base() && sp_ <= fp_->slots() + script_->nslots + 2);
-            else if (op != JSOP_FUNAPPLY)
-                JS_ASSERT(sp_ >= fp_->base() && sp_ <= fp_->slots() + script_->nslots);
-            JS_ASSERT(pc_ >= script_->code && pc_ < script_->code + script_->length);
             return;
         }
 
@@ -1448,9 +1363,6 @@ StackIter::operator++()
         popCall();
         settleOnNewState();
         break;
-      case IMPLICIT_NATIVE:
-        state_ = SCRIPTED;
-        break;
     }
     return *this;
 }
@@ -1474,7 +1386,6 @@ StackIter::isFunctionFrame() const
       case SCRIPTED:
         return fp()->isFunctionFrame();
       case NATIVE:
-      case IMPLICIT_NATIVE:
         return false;
     }
     JS_NOT_REACHED("Unexpected state");
@@ -1490,7 +1401,6 @@ StackIter::isEvalFrame() const
       case SCRIPTED:
         return fp()->isEvalFrame();
       case NATIVE:
-      case IMPLICIT_NATIVE:
         return false;
     }
     JS_NOT_REACHED("Unexpected state");
@@ -1507,7 +1417,6 @@ StackIter::isNonEvalFunctionFrame() const
       case SCRIPTED:
         return fp()->isNonEvalFunctionFrame();
       case NATIVE:
-      case IMPLICIT_NATIVE:
         return !isEvalFrame() && isFunctionFrame();
     }
     JS_NOT_REACHED("Unexpected state");
@@ -1523,7 +1432,6 @@ StackIter::isConstructing() const
         return false;
       case SCRIPTED:
       case NATIVE:
-      case IMPLICIT_NATIVE:
         return fp()->isConstructing();
     }
     return false;
@@ -1539,7 +1447,6 @@ StackIter::callee() const
         JS_ASSERT(isFunctionFrame());
         return &fp()->callee();
       case NATIVE:
-      case IMPLICIT_NATIVE:
         return nativeArgs().callee().toFunction();
     }
     JS_NOT_REACHED("Unexpected state");
@@ -1556,7 +1463,6 @@ StackIter::calleev() const
         JS_ASSERT(isFunctionFrame());
         return fp()->calleev();
       case NATIVE:
-      case IMPLICIT_NATIVE:
         return nativeArgs().calleev();
     }
     JS_NOT_REACHED("Unexpected state");
@@ -1572,7 +1478,6 @@ StackIter::thisv() const
         return Value();
       case SCRIPTED:
       case NATIVE:
-      case IMPLICIT_NATIVE:
         return fp()->thisValue();
     }
     MOZ_NOT_REACHED("unexpected state");

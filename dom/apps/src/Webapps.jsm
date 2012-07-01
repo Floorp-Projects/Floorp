@@ -35,10 +35,12 @@ XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
 let DOMApplicationRegistry = {
   appsFile: null,
   webapps: { },
+  allAppsLaunchable: false,
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
-                    "Webapps:GetSelf", "Webapps:GetInstalled",
+                    "Webapps:GetSelf",
+                    "Webapps:GetInstalled", "Webapps:GetNotInstalled",
                     "Webapps:Launch", "Webapps:GetAll"];
 
     this.messages.forEach((function(msgName) {
@@ -127,6 +129,9 @@ let DOMApplicationRegistry = {
         break;
       case "Webapps:GetInstalled":
         this.getInstalled(msg);
+        break;
+      case "Webapps:GetNotInstalled":
+        this.getNotInstalled(msg);
         break;
       case "Webapps:GetAll":
         if (msg.hasPrivileges)
@@ -300,7 +305,7 @@ let DOMApplicationRegistry = {
     let tmp = [];
     let id = this._appId(aData.origin);
 
-    if (id) {
+    if (id && this._isLaunchable(aData.origin)) {
       let app = this._cloneAppObject(this.webapps[id]);
       aData.apps.push(app);
       tmp.push({ id: id });
@@ -316,10 +321,10 @@ let DOMApplicationRegistry = {
   getInstalled: function(aData) {
     aData.apps = [];
     let tmp = [];
-    let id = this._appId(aData.origin);
 
-    for (id in this.webapps) {
-      if (this.webapps[id].installOrigin == aData.origin) {
+    for (let id in this.webapps) {
+      if (this.webapps[id].installOrigin == aData.origin &&
+          this._isLaunchable(aData.origin)) {
         aData.apps.push(this._cloneAppObject(this.webapps[id]));
         tmp.push({ id: id });
       }
@@ -332,12 +337,34 @@ let DOMApplicationRegistry = {
     }).bind(this));
   },
 
+  getNotInstalled: function(aData) {
+    aData.apps = [];
+    let tmp = [];
+
+    for (let id in this.webapps) {
+      if (this.webapps[id].installOrigin == aData.origin &&
+          !this._isLaunchable(aData.origin)) {
+        aData.apps.push(this._cloneAppObject(this.webapps[id]));
+        tmp.push({ id: id });
+      }
+    }
+
+    this._readManifests(tmp, (function(aResult) {
+      for (let i = 0; i < aResult.length; i++)
+        aData.apps[i].manifest = aResult[i].manifest;
+      ppmm.sendAsyncMessage("Webapps:GetNotInstalled:Return:OK", aData);
+    }).bind(this));
+  },
+
   getAll: function(aData) {
     aData.apps = [];
     let tmp = [];
 
     for (let id in this.webapps) {
       let app = this._cloneAppObject(this.webapps[id]);
+      if (!this._isLaunchable(app.installOrigin))
+        continue;
+
       aData.apps.push(app);
       tmp.push({ id: id });
     }
@@ -449,6 +476,61 @@ let DOMApplicationRegistry = {
       }
     }
     this._saveApps(aCallback);
+  },
+
+  _isLaunchable: function(aOrigin) {
+    if (this.allAppsLaunchable)
+      return true;
+
+#ifdef XP_WIN
+    let uninstallKey = Cc["@mozilla.org/windows-registry-key;1"]
+                         .createInstance(Ci.nsIWindowsRegKey);
+    try {
+      uninstallKey.open(uninstallKey.ROOT_KEY_CURRENT_USER,
+                        "SOFTWARE\\Microsoft\\Windows\\" +
+                        "CurrentVersion\\Uninstall\\" +
+                        aOrigin,
+                        uninstallKey.ACCESS_READ);
+      uninstallKey.close();
+      return true;
+    } catch (ex) {
+      return false;
+    }
+#elifdef XP_MACOSX
+    let mwaUtils = Cc["@mozilla.org/widget/mac-web-app-utils;1"]
+                     .createInstance(Ci.nsIMacWebAppUtils);
+
+    return !!mwaUtils.pathForAppWithIdentifier(aOrigin);
+#elifdef XP_UNIX
+    let env = Cc["@mozilla.org/process/environment;1"]
+                .getService(Ci.nsIEnvironment);
+    let xdg_data_home_env = env.get("XDG_DATA_HOME");
+
+    let desktopINI;
+    if (xdg_data_home_env != "") {
+      desktopINI = Cc["@mozilla.org/file/local;1"]
+                     .createInstance(Ci.nsIFile);
+      desktopINI.initWithPath(xdg_data_home_env);
+    }
+    else {
+      desktopINI = Services.dirsvc.get("Home", Ci.nsIFile);
+      desktopINI.append(".local");
+      desktopINI.append("share");
+    }
+    desktopINI.append("applications");
+
+    let origin = Services.io.newURI(aOrigin, null, null);
+    let uniqueName = origin.scheme + ";" +
+                     origin.host +
+                     (origin.port != -1 ? ";" + origin.port : "");
+
+    desktopINI.append("owa-" + uniqueName + ".desktop");
+
+    return desktopINI.exists();
+#else
+    return true;
+#endif
+
   }
 };
 

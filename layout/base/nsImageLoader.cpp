@@ -213,39 +213,7 @@ nsImageLoader::DoRedraw(const nsRect* aDamageRect)
   //
 
   // Invalidate the entire frame
-  // XXX We really only need to invalidate the client area of the frame...    
-
-  nsRect bounds(nsPoint(0, 0), mFrame->GetSize());
-
-  if (mFrame->GetType() == nsGkAtoms::canvasFrame) {
-    // The canvas's background covers the whole viewport.
-    bounds = mFrame->GetVisualOverflowRect();
-  }
-
-  // XXX this should be ok, but there is some crappy ass bug causing it not to work
-  // XXX seems related to the "body fixup rule" dealing with the canvas and body frames...
-#if 0
-  // Invalidate the entire frame only if the frame has a tiled background
-  // image, otherwise just invalidate the intersection of the frame's bounds
-  // with the damaged rect.
-  nsStyleContext* styleContext;
-  mFrame->GetStyleContext(&styleContext);
-  const nsStyleBackground* bg = styleContext->GetStyleBackground();
-
-  if ((bg->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE) ||
-      (bg->mBackgroundRepeat == NS_STYLE_BG_REPEAT_OFF)) {
-    // The frame does not have a background image so we are free
-    // to invalidate only the intersection of the damage rect and
-    // the frame's bounds.
-
-    if (aDamageRect) {
-      bounds.IntersectRect(*aDamageRect, bounds);
-    }
-  }
-
-#endif
-
   if (mFrame->GetStyleVisibility()->IsVisible()) {
-    mFrame->Invalidate(bounds);
+    mFrame->InvalidateFrame();
   }
 }
