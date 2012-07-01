@@ -417,6 +417,13 @@ function populateAccessibilitySection() {
   }
 
   document.getElementById("a11y-activated").textContent = active ? "1" : "0";
+
+  var forceDisabled = 0;
+  forceDisabled = getPrefValue("accessibility.force_disabled").value;
+
+  document.getElementById("a11y-force-disabled").textContent
+    = (forceDisabled == -1) ? "never" :
+	((forceDisabled == 1) ? "1" : "0");
 }
 
 function getPrefValue(aName) {
