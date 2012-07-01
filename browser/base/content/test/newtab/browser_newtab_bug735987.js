@@ -17,6 +17,10 @@ function runTests() {
   yield simulateDrop(1);
   checkGrid("0,99p,1,2,3,4,5,6,7");
 
+  NewTabUtils.blockedLinks.resetCache();
+  yield addNewTabPageTab();
+  checkGrid("0,99p,1,2,3,4,5,6,7");
+
   yield blockCell(1);
   checkGrid("0,1,2,3,4,5,6,7,8");
 }

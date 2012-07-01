@@ -393,7 +393,6 @@ table[rules][rules="groups"] > tbody {
 caption {
   display: table-caption;
   text-align: center;
-  -moz-box-sizing: border-box;
 }
 
 table[align="center"] > caption {

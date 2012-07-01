@@ -29,6 +29,7 @@
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsReadableUtils.h"
+#include "nsIIdleService.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNode.h"
@@ -243,6 +244,7 @@ nsString* nsContentUtils::sModifierSeparator = nsnull;
 bool nsContentUtils::sInitialized = false;
 bool nsContentUtils::sIsFullScreenApiEnabled = false;
 bool nsContentUtils::sTrustedFullScreenOnly = true;
+bool nsContentUtils::sIsIdleObserverAPIEnabled = false;
 
 PRUint32 nsContentUtils::sHandlingInputTimeout = 1000;
 
@@ -417,6 +419,8 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sTrustedFullScreenOnly,
                                "full-screen-api.allow-trusted-requests-only");
+
+  sIsIdleObserverAPIEnabled = Preferences::GetBool("dom.idle-observers-api.enabled", true);
 
   Preferences::AddUintVarCache(&sHandlingInputTimeout,
                                "dom.event.handling-user-input-time-limit",
@@ -867,6 +871,22 @@ nsContentUtils::SplitMimeType(const nsAString& aValue, nsString& aType,
     aType = aValue;
   }
   aType.StripWhitespace();
+}
+
+nsresult 
+nsContentUtils::IsUserIdle(PRUint32 aRequestedIdleTimeInMS, bool* aUserIsIdle)
+{
+  nsresult rv;
+  nsCOMPtr<nsIIdleService> idleService = 
+    do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+    
+  PRUint32 idleTimeInMS;
+  rv = idleService->GetIdleTime(&idleTimeInMS);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aUserIsIdle = idleTimeInMS >= aRequestedIdleTimeInMS;
+  return NS_OK;
 }
 
 /**

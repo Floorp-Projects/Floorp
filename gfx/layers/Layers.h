@@ -167,60 +167,10 @@ public:
  * BasicLayerManager for such an implementation.
  */
 
-/**
- * Helper class to manage user data for layers and LayerManagers.
- */
-class THEBES_API LayerUserDataSet {
-public:
-  LayerUserDataSet() : mKey(nsnull) {}
-
-  void Set(void* aKey, LayerUserData* aValue)
-  {
-    NS_ASSERTION(!mKey || mKey == aKey,
-                 "Multiple LayerUserData objects not supported");
-    mKey = aKey;
-    mValue = aValue;
-  }
-  /**
-   * This can be used anytime. Ownership passes to the caller!
-   */
-  LayerUserData* Remove(void* aKey)
-  {
-    if (mKey == aKey) {
-      mKey = nsnull;
-      LayerUserData* d = mValue.forget();
-      return d;
-    }
-    return nsnull;
-  }
-  /**
-   * This getter can be used anytime.
-   */
-  bool Has(void* aKey)
-  {
-    return mKey == aKey;
-  }
-  /**
-   * This getter can be used anytime. Ownership is retained by this object.
-   */
-  LayerUserData* Get(void* aKey)
-  {
-    return mKey == aKey ? mValue.get() : nsnull;
-  }
-
-  /**
-   * Clear out current user data.
-   */
-  void Clear()
-  {
-    mKey = nsnull;
-    mValue = nsnull;
-  }
-
-private:
-  void* mKey;
-  nsAutoPtr<LayerUserData> mValue;
-};
+static void LayerManagerUserDataDestroy(void *data)
+{
+  delete static_cast<LayerUserData*>(data);
+}
 
 /**
  * A LayerManager controls a tree of layers. All layers in the tree
@@ -270,7 +220,7 @@ public:
    * for its widget going away.  After this call, only user data calls
    * are valid on the layer manager.
    */
-  virtual void Destroy() { mDestroyed = true; mUserData.Clear(); }
+  virtual void Destroy() { mDestroyed = true; mUserData.Destroy(); }
   bool IsDestroyed() { return mDestroyed; }
 
   virtual ShadowLayerForwarder* AsShadowForwarder()
@@ -278,6 +228,12 @@ public:
 
   virtual ShadowLayerManager* AsShadowManager()
   { return nsnull; }
+
+  /**
+   * Returns true if this LayerManager is owned by an nsIWidget,
+   * and is used for drawing into the widget.
+   */
+  virtual bool IsWidgetLayerManager() { return true; }
 
   /**
    * Start a new transaction. Nested transactions are not allowed so
@@ -338,7 +294,8 @@ public:
 
   enum EndTransactionFlags {
     END_DEFAULT = 0,
-    END_NO_IMMEDIATE_REDRAW = 1 << 0  // Do not perform the drawing phase
+    END_NO_IMMEDIATE_REDRAW = 1 << 0,  // Do not perform the drawing phase
+    END_NO_COMPOSITE = 1 << 1 // Do not composite after drawing thebes layer contents.
   };
 
   /**
@@ -352,7 +309,17 @@ public:
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT) = 0;
 
+  virtual bool HasShadowManagerInternal() const { return false; }
+  bool HasShadowManager() const { return HasShadowManagerInternal(); }
+
   bool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; } 
+
+  /** 
+   * Returns true if this LayerManager can properly support layers with
+   * SURFACE_COMPONENT_ALPHA. This can include disabling component
+   * alpha if required.
+   */
+  virtual bool AreComponentAlphaLayersEnabled() { return true; }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -464,23 +431,32 @@ public:
    * initially null. Ownership pases to the layer manager.
    */
   void SetUserData(void* aKey, LayerUserData* aData)
-  { mUserData.Set(aKey, aData); }
+  {
+    mUserData.Add(static_cast<gfx::UserDataKey*>(aKey), aData, LayerManagerUserDataDestroy);
+  }
   /**
    * This can be used anytime. Ownership passes to the caller!
    */
   nsAutoPtr<LayerUserData> RemoveUserData(void* aKey)
-  { nsAutoPtr<LayerUserData> d(mUserData.Remove(aKey)); return d; }
+  { 
+    nsAutoPtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey)))); 
+    return d;
+  }
   /**
    * This getter can be used anytime.
    */
   bool HasUserData(void* aKey)
-  { return mUserData.Has(aKey); }
+  {
+    return GetUserData(aKey);
+  }
   /**
    * This getter can be used anytime. Ownership is retained by the layer
    * manager.
    */
   LayerUserData* GetUserData(void* aKey)
-  { return mUserData.Get(aKey); }
+  { 
+    return static_cast<LayerUserData*>(mUserData.Get(static_cast<gfx::UserDataKey*>(aKey)));
+  }
 
   /**
    * Flag the next paint as the first for a document.
@@ -530,7 +506,7 @@ public:
 
 protected:
   nsRefPtr<Layer> mRoot;
-  LayerUserDataSet mUserData;
+  gfx::UserData mUserData;
   bool mDestroyed;
   bool mSnapEffectiveTransforms;
 
@@ -789,23 +765,32 @@ public:
    * initially null. Ownership pases to the layer manager.
    */
   void SetUserData(void* aKey, LayerUserData* aData)
-  { mUserData.Set(aKey, aData); }
+  { 
+    mUserData.Add(static_cast<gfx::UserDataKey*>(aKey), aData, LayerManagerUserDataDestroy);
+  }
   /**
    * This can be used anytime. Ownership passes to the caller!
    */
   nsAutoPtr<LayerUserData> RemoveUserData(void* aKey)
-  { nsAutoPtr<LayerUserData> d(mUserData.Remove(aKey)); return d; }
+  { 
+    nsAutoPtr<LayerUserData> d(static_cast<LayerUserData*>(mUserData.Remove(static_cast<gfx::UserDataKey*>(aKey)))); 
+    return d;
+  }
   /**
    * This getter can be used anytime.
    */
   bool HasUserData(void* aKey)
-  { return mUserData.Has(aKey); }
+  {
+    return GetUserData(aKey);
+  }
   /**
    * This getter can be used anytime. Ownership is retained by the layer
    * manager.
    */
   LayerUserData* GetUserData(void* aKey)
-  { return mUserData.Get(aKey); }
+  { 
+    return static_cast<LayerUserData*>(mUserData.Get(static_cast<gfx::UserDataKey*>(aKey)));
+  }
 
   /**
    * |Disconnect()| is used by layers hooked up over IPC.  It may be
@@ -934,6 +919,29 @@ public:
 
   static bool IsLogEnabled() { return LayerManager::IsLogEnabled(); }
 
+  /**
+   * Returns the current area of the layer (in layer-space coordinates)
+   * marked as needed to be recomposited.
+   */
+  const nsIntRegion& GetInvalidRegion() { return mInvalidRegion; }
+
+  /**
+   * Mark the entirety of the layer's visible region as being invalid.
+   */
+  void SetInvalidRectToVisibleRegion() { mInvalidRegion = GetVisibleRegion(); }
+
+  /**
+   * Adds to the current invalid rect.
+   */
+  void AddInvalidRect(const nsIntRect& aRect) { mInvalidRegion.Or(mInvalidRegion, aRect); }
+
+  /**
+   * Clear the invalid rect, marking the layer as being identical to what is currently
+   * composited.
+   */
+  void ClearInvalidRect() { mInvalidRegion.SetEmpty(); }
+
+
 #ifdef DEBUG
   void SetDebugColorIndex(PRUint32 aIndex) { mDebugColorIndex = aIndex; }
   PRUint32 GetDebugColorIndex() { return mDebugColorIndex; }
@@ -991,7 +999,7 @@ protected:
   Layer* mPrevSibling;
   void* mImplData;
   nsRefPtr<Layer> mMaskLayer;
-  LayerUserDataSet mUserData;
+  gfx::UserData mUserData;
   nsIntRegion mVisibleRegion;
   gfx3DMatrix mTransform;
   gfx3DMatrix mEffectiveTransform;
@@ -1004,6 +1012,7 @@ protected:
   bool mIsFixedPosition;
   gfxPoint mAnchor;
   DebugOnly<PRUint32> mDebugColorIndex;
+  nsIntRegion mInvalidRegion;
 };
 
 /**
@@ -1320,7 +1329,7 @@ public:
    * Notify this CanvasLayer that the canvas surface contents have
    * changed (or will change) before the next transaction.
    */
-  void Updated() { mDirty = true; }
+  void Updated() { mDirty = true; SetInvalidRectToVisibleRegion(); }
 
   /**
    * Register a callback to be called at the end of each transaction.

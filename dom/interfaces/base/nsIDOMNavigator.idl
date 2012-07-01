@@ -5,7 +5,9 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(e0737ed5-89c5-4fe3-891e-a75bf3a1bb55)]
+interface nsIIdleObserver;
+
+[scriptable, uuid(c148ed5a-31c1-4a21-a13b-341f592579ff)]
 interface nsIDOMNavigator : nsISupports
 {
   readonly attribute DOMString             appCodeName;
@@ -77,6 +79,16 @@ interface nsIDOMNavigator : nsISupports
    */
   [implicit_jscontext]
   void mozVibrate(in jsval aPattern);
+
+  /** 
+   * Navigator requests to add an idle observer to the existing window.
+   */
+  void addIdleObserver(in nsIIdleObserver aIdleObserver);
+  
+  /** 
+   * Navigator requests to remove an idle observer from the existing window.
+   */
+  void removeIdleObserver(in nsIIdleObserver aIdleObserver);
 
   /**
    * Request a wake lock for a resource.

@@ -559,11 +559,6 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
   // if the content is larger than the cell height align from top
   kidYTop = NS_MAX(0, kidYTop);
 
-  if (kidYTop != kidRect.y) {
-    // Invalidate at the old position first
-    firstKid->InvalidateFrameSubtree();
-  }
-
   firstKid->SetPosition(nsPoint(kidRect.x, kidYTop));
   nsHTMLReflowMetrics desiredSize;
   desiredSize.width = mRect.width;
@@ -578,9 +573,6 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
     // Make sure any child views are correctly positioned. We know the inner table
     // cell won't have a view
     nsContainerFrame::PositionChildViews(firstKid);
-
-    // Invalidate new overflow rect
-    firstKid->InvalidateFrameSubtree();
   }
   if (HasView()) {
     nsContainerFrame::SyncFrameViewAfterReflow(PresContext(), this,
@@ -871,9 +863,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   nsPoint kidOrigin(leftInset, topInset);
-  nsRect origRect = firstKid->GetRect();
-  nsRect origVisualOverflow = firstKid->GetVisualOverflowRect();
-  bool firstReflow = (firstKid->GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
               kidOrigin.x, kidOrigin.y, NS_FRAME_INVALIDATE_ON_MOVE, aStatus);
@@ -882,11 +871,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     //XXX should paginate overflow as overflow, but not in this patch (bug 379349)
     NS_FRAME_SET_INCOMPLETE(aStatus);
     printf("Set table cell incomplete %p\n", static_cast<void*>(this));
-  }
-
-  // XXXbz is this invalidate actually needed, really?
-  if (GetStateBits() & NS_FRAME_IS_DIRTY) {
-    InvalidateFrameSubtree();
   }
 
 #ifdef DEBUG
@@ -907,9 +891,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   // Place the child
   FinishReflowChild(firstKid, aPresContext, &kidReflowState, kidSize,
                     kidOrigin.x, kidOrigin.y, 0);
-
-  nsTableFrame::InvalidateFrame(firstKid, origRect, origVisualOverflow,
-                                firstReflow);
 
   // first, compute the height which can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height;
@@ -941,12 +922,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
     if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
       aDesiredSize.height = mRect.height;
     }
-  }
-
-  // If our parent is in initial reflow, it'll handle invalidating our
-  // entire overflow rect.
-  if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    CheckInvalidateSizeChange(aDesiredSize);
   }
 
   // remember the desired size for this reflow

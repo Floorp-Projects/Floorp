@@ -330,6 +330,9 @@ Highlighter.prototype = {
    */
   isNodeHighlightable: function Highlighter_isNodeHighlightable(aNode)
   {
+    if (!LayoutHelpers.isNodeConnected(aNode)) {
+      return false;
+    }
     if (aNode.nodeType != aNode.ELEMENT_NODE) {
       return false;
     }

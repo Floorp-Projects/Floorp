@@ -54,7 +54,7 @@ static const size_t USES_BEFORE_INLINING = 10000;
 mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
                          unsigned chunkIndex, bool isConstructing)
   : BaseCompiler(cx),
-    outerScript(outerScript),
+    outerScript(cx, outerScript),
     chunkIndex(chunkIndex),
     isConstructing(isConstructing),
     outerChunk(outerJIT()->chunkDescriptor(chunkIndex)),
@@ -128,7 +128,7 @@ mjit::Compiler::compile()
 }
 
 CompileStatus
-mjit::Compiler::checkAnalysis(JSScript *script)
+mjit::Compiler::checkAnalysis(HandleScript script)
 {
     if (script->hasClearedGlobal()) {
         JaegerSpew(JSpew_Abort, "script has a cleared global\n");
@@ -157,7 +157,7 @@ mjit::Compiler::checkAnalysis(JSScript *script)
 }
 
 CompileStatus
-mjit::Compiler::addInlineFrame(JSScript *script, uint32_t depth,
+mjit::Compiler::addInlineFrame(HandleScript script, uint32_t depth,
                                uint32_t parent, jsbytecode *parentpc)
 {
     JS_ASSERT(inlining());
@@ -269,7 +269,7 @@ mjit::Compiler::scanInlineCalls(uint32_t index, uint32_t depth)
                 okay = false;
                 break;
             }
-            JSScript *script = fun->script();
+            RootedScript script(cx, fun->script());
 
             /*
              * Don't inline calls to scripts which haven't been analyzed.
@@ -357,7 +357,7 @@ mjit::Compiler::scanInlineCalls(uint32_t index, uint32_t depth)
                 continue;
 
             JSFunction *fun = obj->toFunction();
-            JSScript *script = fun->script();
+            RootedScript script(cx, fun->script());
 
             CompileStatus status = addInlineFrame(script, nextDepth, index, pc);
             if (status != Compile_Okay)
@@ -1106,7 +1106,7 @@ mjit::Compiler::generatePrologue()
          * fp->u.nactual. fp->u.nactual is only set when numActual != numFormal,
          * so store 'fp->u.nactual = numFormal' when there is no over/underflow.
          */
-        if (script->argumentsHasLocalBinding()) {
+        if (script->argumentsHasVarBinding()) {
             Jump hasArgs = masm.branchTest32(Assembler::NonZero, FrameFlagsAddress(),
                                              Imm32(StackFrame::UNDERFLOW_ARGS |
                                                    StackFrame::OVERFLOW_ARGS));
@@ -4415,7 +4415,7 @@ mjit::Compiler::inlineScriptedFunction(uint32_t argc, bool callingNew)
     for (unsigned i = 0; i < inlineCallees.length(); i++) {
         if (entrySnapshot)
             frame.restoreFromSnapshot(entrySnapshot);
-
+        
         JSScript *script = inlineCallees[i];
         CompileStatus status;
 
@@ -5846,8 +5846,6 @@ mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
     for (unsigned i = 0; i < sc.hops; i++)
         masm.loadPayload(Address(reg, ScopeObject::offsetOfEnclosingScope()), reg);
 
-    unsigned slot = ScopeObject::CALL_BLOCK_RESERVED_SLOTS + sc.slot;
-
     /*
      * TODO bug 753158: Call and Block objects should use the same layout
      * strategy: up to the maximum numFixedSlots and overflow (if any) in
@@ -5862,11 +5860,11 @@ mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
          * slot over is in the dynamic slots.
          */
         uint32_t nfixed = gc::GetGCKindSlots(BlockObject::FINALIZE_KIND);
-        if (nfixed <= slot) {
+        if (nfixed <= sc.slot) {
             masm.loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);
-            addr = Address(reg, (slot - nfixed) * sizeof(Value));
+            addr = Address(reg, (sc.slot - nfixed) * sizeof(Value));
         } else {
-            addr = Address(reg, JSObject::getFixedSlotOffset(slot));
+            addr = Address(reg, JSObject::getFixedSlotOffset(sc.slot));
         }
     } else {
         /*
@@ -5874,17 +5872,17 @@ mjit::Compiler::jsop_aliasedVar(ScopeCoordinate sc, bool get, bool poppedAfter)
          * slots are either altogether in fixed slots or altogether in dynamic
          * slots (by having numFixed == RESERVED_SLOTS).
          */
-        if (script->bindings.lastShape()->numFixedSlots() <= slot) {
+        if (script->bindings.lastShape()->numFixedSlots() <= sc.slot) {
             masm.loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);
-            addr = Address(reg, sc.slot * sizeof(Value));
+            addr = Address(reg, (sc.slot - CallObject::RESERVED_SLOTS) * sizeof(Value));
         } else {
-            addr = Address(reg, JSObject::getFixedSlotOffset(slot));
+            addr = Address(reg, JSObject::getFixedSlotOffset(sc.slot));
         }
     }
 
     if (get) {
         unsigned index;
-        FrameEntry *fe = ScopeCoordinateToFrameVar(script, PC, &index) == FrameVar_Local
+        FrameEntry *fe = ScopeCoordinateToFrameIndex(script, PC, &index) == FrameIndex_Local
                          ? frame.getLocal(index)
                          : frame.getArg(index);
         JSValueType type = fe->isTypeKnown() ? fe->getKnownType() : JSVAL_TYPE_UNKNOWN;

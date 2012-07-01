@@ -25,6 +25,7 @@
 
 var expectedMethods = ['navigator.mozApps.QueryInterface',
                        'navigator.mozApps.getInstalled',
+                       'navigator.mozApps.getNotInstalled',
                        'navigator.mozApps.getSelf',
                        'navigator.mozApps.install',
                        'navigator.mozApps.mgmt.QueryInterface',

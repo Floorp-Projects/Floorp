@@ -535,8 +535,11 @@ public:
 
     sWebSocketAdmissions->OnStopSession(mChannel, mReason);
 
-    if (mChannel->mListener)
+    if (mChannel->mListener) {
       mChannel->mListener->OnStop(mChannel->mContext, mReason);
+      mChannel->mListener = nsnull;
+      mChannel->mContext = nsnull;
+    }
     return NS_OK;
   }
 

@@ -39,18 +39,15 @@ inline const Value &
 ScopeObject::aliasedVar(ScopeCoordinate sc)
 {
     JS_ASSERT(isCall() || isClonedBlock());
-    JS_STATIC_ASSERT(CALL_BLOCK_RESERVED_SLOTS == CallObject::RESERVED_SLOTS);
-    JS_STATIC_ASSERT(CALL_BLOCK_RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
-    return getSlot(CALL_BLOCK_RESERVED_SLOTS + sc.slot);
+    return getSlot(sc.slot);
 }
 
 inline void
 ScopeObject::setAliasedVar(ScopeCoordinate sc, const Value &v)
 {
     JS_ASSERT(isCall() || isClonedBlock());
-    JS_STATIC_ASSERT(CALL_BLOCK_RESERVED_SLOTS == CallObject::RESERVED_SLOTS);
-    JS_STATIC_ASSERT(CALL_BLOCK_RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
-    setSlot(CALL_BLOCK_RESERVED_SLOTS + sc.slot, v);
+    JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
+    setSlot(sc.slot, v);
 }
 
 /*static*/ inline size_t
@@ -159,10 +156,16 @@ BlockObject::slotCount() const
 }
 
 inline unsigned
-BlockObject::slotToFrameLocal(JSScript *script, unsigned i)
+BlockObject::slotToLocalIndex(const Bindings &bindings, unsigned slot)
 {
-    JS_ASSERT(i < slotCount());
-    return script->nfixed + stackDepth() + i;
+    JS_ASSERT(slot < RESERVED_SLOTS + slotCount());
+    return bindings.numVars() + stackDepth() + (slot - RESERVED_SLOTS);
+}
+
+inline unsigned
+BlockObject::localIndexToSlot(const Bindings &bindings, unsigned i)
+{
+    return RESERVED_SLOTS + (i - (bindings.numVars() + stackDepth()));
 }
 
 inline const Value &

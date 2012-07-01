@@ -20,6 +20,7 @@
 #include "nsDOMStorage.h"
 #include "nsDOMOfflineResourceList.h"
 #include "nsDOMError.h"
+#include "nsIIdleService.h"
 
 #ifdef XP_WIN
 #ifdef GetClassName
@@ -220,6 +221,7 @@
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsIAppsService.h"
+#include "prrng.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -238,6 +240,7 @@ using mozilla::TimeDuration;
 
 nsGlobalWindow::WindowByIdTable *nsGlobalWindow::sWindowsById = nsnull;
 bool nsGlobalWindow::sWarnedAboutWindowInternal = false;
+bool nsGlobalWindow::sIdleObserversAPIFuzzTimeDisabled = false;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
 static PRInt32              gRefCnt                    = 0;
@@ -495,7 +498,9 @@ nsDOMMozURLProperty::RevokeObjectURL(const nsAString& aURL)
  * An indirect observer object that means we don't have to implement nsIObserver
  * on nsGlobalWindow, where any script could see it.
  */
-class nsGlobalWindowObserver MOZ_FINAL : public nsIObserver {
+class nsGlobalWindowObserver MOZ_FINAL : public nsIObserver,
+                                         public nsIInterfaceRequestor
+{
 public:
   nsGlobalWindowObserver(nsGlobalWindow* aWindow) : mWindow(aWindow) {}
   NS_DECL_ISUPPORTS
@@ -506,11 +511,19 @@ public:
     return mWindow->Observe(aSubject, aTopic, aData);
   }
   void Forget() { mWindow = nsnull; }
+  NS_IMETHODIMP GetInterface(const nsIID& aIID, void** aResult)
+  {
+    if (mWindow && aIID.Equals(NS_GET_IID(nsIDOMWindow)) && mWindow) {
+      return mWindow->QueryInterface(aIID, aResult);
+    }
+    return NS_NOINTERFACE;
+  }
+
 private:
   nsGlobalWindow* mWindow;
 };
 
-NS_IMPL_ISUPPORTS1(nsGlobalWindowObserver, nsIObserver)
+NS_IMPL_ISUPPORTS2(nsGlobalWindowObserver, nsIObserver, nsIInterfaceRequestor)
 
 nsTimeout::nsTimeout()
 {
@@ -628,15 +641,21 @@ NewOuterWindowProxy(JSContext *cx, JSObject *parent)
 
 nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   : nsPIDOMWindow(aOuterWindow),
+    mIdleFuzzFactor(0),
+    mIdleCallbackIndex(-1),
+    mCurrentlyIdle(false),
+    mAddActiveEventFuzzTime(true),
     mIsFrozen(false),
     mFullScreen(false),
-    mIsClosed(false), 
-    mInClose(false), 
+    mIsClosed(false),
+    mInClose(false),
     mHavePendingClose(false),
     mHadOriginalOpener(false),
     mIsPopupSpam(false),
     mBlockScriptedClosingFlag(false),
     mFireOfflineStatusChangeEventOnThaw(false),
+    mNotifyIdleObserversIdleOnThaw(false),
+    mNotifyIdleObserversActiveOnThaw(false),
     mCreatingInnerWindow(false),
     mIsChrome(false),
     mCleanMessageManager(false),
@@ -723,6 +742,9 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     Preferences::AddIntVarCache(&gMinBackgroundTimeoutValue,
                                 "dom.min_background_timeout_value",
                                 DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
+    Preferences::AddBoolVarCache(&sIdleObserversAPIFuzzTimeDisabled, 
+                                 "dom.idle-observers-api.fuzz_time.disabled",
+                                 false);
   }
 
   if (gDumpFile == nsnull) {
@@ -956,7 +978,7 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
   if (mCleanedUp)
     return;
   mCleanedUp = true;
-  
+
   mEventTargetObjects.EnumerateEntries(DisconnectEventTargetObjects, nsnull);
   mEventTargetObjects.Clear();
 
@@ -965,6 +987,10 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       os->RemoveObserver(mObserver, "dom-storage2-changed");
+    }
+
+    if (mIdleService) {
+      mIdleService->RemoveIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
     }
 
     // Drop its reference to this dying window, in case for some bogus reason
@@ -1024,6 +1050,11 @@ nsGlobalWindow::CleanUp(bool aIgnoreModalDialog)
 
   CleanupCachedXBLHandlers(this);
 
+  if (mIdleTimer) {
+    mIdleTimer->Cancel();
+    mIdleTimer = nsnull;
+  }
+
 #ifdef DEBUG
   nsCycleCollector_DEBUG_shouldBeFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
@@ -1072,6 +1103,13 @@ nsGlobalWindow::FreeInnerObjects()
   }
 
   ClearAllTimeouts();
+
+  if (mIdleTimer) {
+    mIdleTimer->Cancel();
+    mIdleTimer = nsnull;
+  }
+
+  mIdleObservers.Clear();
 
   mChromeEventHandler = nsnull;
 
@@ -1236,6 +1274,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mApplicationCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocumentPrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDoc)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mIdleService)
 
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
@@ -1247,6 +1286,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mPendingStorageEvents)
 
+  for (PRUint32 i = 0; i < tmp->mIdleObservers.Length(); i++) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mIdleObservers[i].nsIIdleObserverPtr");
+    cb.NoteXPCOMChild(tmp->mIdleObservers.ElementAt(i).mIdleObserver.get());
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -1282,8 +1325,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFrameElement)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFocusedNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mIdleService)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mPendingStorageEvents)
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSTARRAY(mIdleObservers)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -2472,6 +2518,15 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   }
 
   aVisitor.mParentTarget = GetParentTarget();
+
+  // Handle 'active' event.
+  if (!mIdleObservers.IsEmpty() &&
+      NS_IS_TRUSTED_EVENT(aVisitor.mEvent) &&
+      (NS_IS_MOUSE_EVENT(aVisitor.mEvent) ||
+       NS_IS_DRAG_EVENT(aVisitor.mEvent))) {
+    mAddActiveEventFuzzTime = false;
+  }
+
   return NS_OK;
 }
 
@@ -8380,6 +8435,408 @@ nsGlobalWindow::FireOfflineStatusEvent()
   nsContentUtils::DispatchTrustedEvent(mDoc, eventTarget, name, true, false);
 }
 
+class NotifyIdleObserverRunnable : public nsRunnable
+{
+public:
+  NotifyIdleObserverRunnable(nsIIdleObserver* aIdleObserver,
+                             PRUint32 aTimeInS,
+                             bool aCallOnidle,
+                             nsGlobalWindow* aIdleWindow)
+    : mIdleObserver(aIdleObserver), mTimeInS(aTimeInS), mIdleWindow(aIdleWindow),
+      mCallOnidle(aCallOnidle)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    if (mIdleWindow->ContainsIdleObserver(mIdleObserver, mTimeInS)) {
+      return mCallOnidle ? mIdleObserver->Onidle() : mIdleObserver->Onactive();
+    }
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIIdleObserver> mIdleObserver;
+  PRUint32 mTimeInS;
+  nsRefPtr<nsGlobalWindow> mIdleWindow;
+
+  // If false then call on active
+  bool mCallOnidle;
+};
+
+void
+nsGlobalWindow::NotifyIdleObserver(nsIIdleObserver* aIdleObserver,
+                                   PRUint32 aIdleObserverTimeInS,
+                                   bool aCallOnidle)
+{
+  nsCOMPtr<nsIRunnable> caller =
+    new NotifyIdleObserverRunnable(aIdleObserver, aIdleObserverTimeInS,
+                                   aCallOnidle, this);
+  if (NS_FAILED(NS_DispatchToCurrentThread(caller))) {
+    NS_WARNING("Failed to dispatch thread for idle observer notification.");
+  }
+}
+
+bool
+nsGlobalWindow::ContainsIdleObserver(nsIIdleObserver* aIdleObserver, PRUint32 aTimeInS)
+{
+  MOZ_ASSERT(aIdleObserver, "Idle observer not instantiated.");
+  bool found = false;
+  nsTObserverArray<IdleObserverHolder>::ForwardIterator iter(mIdleObservers);
+  while (iter.HasMore()) {
+    IdleObserverHolder& idleObserver = iter.GetNext();
+    if (idleObserver.mIdleObserver == aIdleObserver &&
+        idleObserver.mTimeInS == aTimeInS) {
+      found = true;
+      break;
+    }
+  }
+  return found;
+}
+
+void
+IdleActiveTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsRefPtr<nsGlobalWindow> idleWindow = static_cast<nsGlobalWindow*>(aClosure);
+  MOZ_ASSERT(idleWindow, "Idle window has not been instantiated.");
+  idleWindow->NotifyIdleObserversOfIdleActiveEvent();
+}
+
+void
+IdleObserverTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsRefPtr<nsGlobalWindow> idleWindow = static_cast<nsGlobalWindow*>(aClosure);
+  MOZ_ASSERT(idleWindow, "Idle window has not been instantiated.");
+  idleWindow->HandleIdleObserverCallback();
+}
+
+void
+nsGlobalWindow::HandleIdleObserverCallback()
+{
+  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
+  MOZ_ASSERT(static_cast<PRUint32>(mIdleCallbackIndex) < mIdleObservers.Length(),
+                                  "Idle callback index exceeds array bounds!");
+  IdleObserverHolder idleObserver =
+             mIdleObservers.ElementAt(mIdleCallbackIndex);
+  NotifyIdleObserver(idleObserver.mIdleObserver,
+                     idleObserver.mTimeInS,
+                     true);
+  mIdleCallbackIndex++;
+  if (NS_FAILED(ScheduleNextIdleObserverCallback())) {
+    NS_WARNING("Failed to set next idle observer callback.");
+  }
+}
+
+nsresult
+nsGlobalWindow::ScheduleNextIdleObserverCallback()
+{
+  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
+  MOZ_ASSERT(mIdleService, "No idle service!");
+
+  if (mIdleCallbackIndex < 0 ||
+      static_cast<PRUint32>(mIdleCallbackIndex) >= mIdleObservers.Length()) {
+    return NS_OK;
+  }
+
+  IdleObserverHolder& idleObserver =
+    mIdleObservers.ElementAt(mIdleCallbackIndex);
+
+  PRUint32 userIdleTimeMS = 0;
+  nsresult rv = mIdleService->GetIdleTime(&userIdleTimeMS);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 callbackTimeMS = 0;
+  if (idleObserver.mTimeInS * 1000 > userIdleTimeMS) {
+    callbackTimeMS = idleObserver.mTimeInS * 1000 - userIdleTimeMS;
+  }
+
+  mIdleTimer->Cancel();
+  rv = mIdleTimer->InitWithFuncCallback(IdleObserverTimerCallback,
+                                        this,
+                                        callbackTimeMS,
+                                        nsITimer::TYPE_ONE_SHOT);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+PRUint32
+nsGlobalWindow::GetFuzzTimeMS()
+{
+  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
+
+  if (sIdleObserversAPIFuzzTimeDisabled) {
+    return 0;
+  }
+
+  PRUint32 randNum = 0;
+  PRSize nbytes = PR_GetRandomNoise(&randNum, sizeof(randNum));
+  if (nbytes != sizeof(randNum)) {
+    NS_WARNING("PR_GetRandomNoise(...) Not implemented or no available noise!");
+    return MAX_IDLE_FUZZ_TIME_MS;
+  }
+
+  if (randNum > MAX_IDLE_FUZZ_TIME_MS) {
+    (randNum) %= MAX_IDLE_FUZZ_TIME_MS;
+  }
+
+  return randNum;
+}
+
+nsresult
+nsGlobalWindow::ScheduleActiveTimerCallback()
+{
+  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
+
+  if (!mAddActiveEventFuzzTime) {
+    return NotifyIdleObserversOfIdleActiveEvent();
+  }
+
+  nsRefPtr<nsGlobalWindow> kungFuDeathGrip(this);
+
+  MOZ_ASSERT(mIdleTimer);
+  mIdleTimer->Cancel();
+
+  PRUint32 fuzzFactorInMS = GetFuzzTimeMS();
+  nsresult rv = mIdleTimer->InitWithFuncCallback(IdleActiveTimerCallback,
+                                                 this,
+                                                 fuzzFactorInMS,
+                                                 nsITimer::TYPE_ONE_SHOT);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult
+nsGlobalWindow::ScheduleIdleTimerCallback()
+{
+  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
+  MOZ_ASSERT(mIdleTimer);
+
+  nsRefPtr<nsGlobalWindow> kungFuDeathGrip(this);
+  mIdleTimer->Cancel();
+  mIdleFuzzFactor = GetFuzzTimeMS();
+  nsresult rv = mIdleTimer->InitWithFuncCallback(IdleActiveTimerCallback,
+                                                 this,
+                                                 mIdleFuzzFactor,
+                                                 nsITimer::TYPE_ONE_SHOT);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult
+nsGlobalWindow::NotifyIdleObserversOfIdleActiveEvent()
+{
+  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
+
+  if (mCurrentlyIdle) {
+    mIdleCallbackIndex = 0;
+    nsresult rv = ScheduleNextIdleObserverCallback();
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+
+  mIdleCallbackIndex = -1;
+  nsTObserverArray<IdleObserverHolder>::ForwardIterator iter(mIdleObservers);
+  while (iter.HasMore()) {
+    IdleObserverHolder& idleObserver = iter.GetNext();
+    NotifyIdleObserver(idleObserver.mIdleObserver, idleObserver.mTimeInS, false);
+  }
+
+  return NS_OK;
+}
+
+PRUint32
+nsGlobalWindow::FindInsertionIndex(IdleObserverHolder* aIdleObserver)
+{
+  MOZ_ASSERT(aIdleObserver, "Idle observer not instantiated.");
+
+  PRUint32 i = 0;
+  nsTObserverArray<IdleObserverHolder>::ForwardIterator iter(mIdleObservers);
+  while (iter.HasMore()) {
+    IdleObserverHolder& idleObserver = iter.GetNext();
+    if (idleObserver.mTimeInS > aIdleObserver->mTimeInS) {
+      break;
+    }
+    i++;
+    MOZ_ASSERT(i <= mIdleObservers.Length(), "Array index out of bounds error.");
+  }
+
+  return i;
+}
+
+nsresult
+nsGlobalWindow::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
+{
+  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
+
+  nsresult rv;
+  if (mIdleObservers.IsEmpty()) {
+    mIdleService = do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mIdleService->AddIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!mIdleTimer) {
+      mIdleTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      mIdleTimer->Cancel();
+    }
+
+    mIdleFuzzFactor = GetFuzzTimeMS();
+  }
+
+  MOZ_ASSERT(mIdleService);
+  MOZ_ASSERT(mIdleTimer);
+
+  IdleObserverHolder tmpIdleObserver;
+  tmpIdleObserver.mIdleObserver = aIdleObserver;
+  rv = aIdleObserver->GetTime(&tmpIdleObserver.mTimeInS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_ARG_MAX(tmpIdleObserver.mTimeInS, PR_UINT32_MAX / 1000);
+  NS_ENSURE_ARG_MIN(tmpIdleObserver.mTimeInS, MIN_IDLE_NOTIFICATION_TIME_S);
+
+  PRUint32 insertAtIndex = FindInsertionIndex(&tmpIdleObserver);
+  if (insertAtIndex == mIdleObservers.Length()) {
+    mIdleObservers.AppendElement(tmpIdleObserver);
+  }
+  else {
+    mIdleObservers.InsertElementAt(insertAtIndex, tmpIdleObserver);
+  }
+
+  bool userIsIdle = false;
+  rv = nsContentUtils::IsUserIdle(MIN_IDLE_NOTIFICATION_TIME_S, &userIsIdle);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Special case. First idle observer added to empty list while the user is idle.
+  // Haven't received 'idle' topic notification from slow idle service yet.
+  // Need to wait for the idle notification and then notify idle observers in the list.
+  if (userIsIdle && mIdleCallbackIndex == -1) {
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(mIdleCallbackIndex >= 0);
+
+  if (!mCurrentlyIdle) {
+    return NS_OK;
+  }
+
+  if (static_cast<PRInt32>(insertAtIndex) < mIdleCallbackIndex) {
+    NotifyIdleObserver(tmpIdleObserver.mIdleObserver,
+                       tmpIdleObserver.mTimeInS,
+                       true);
+    mIdleCallbackIndex++;
+    return NS_OK;
+  }
+
+  if (static_cast<PRInt32>(insertAtIndex) == mIdleCallbackIndex) {
+    PRUint32 userIdleTimeMS;
+    rv = mIdleService->GetIdleTime(&userIdleTimeMS);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (tmpIdleObserver.mTimeInS*1000 <= userIdleTimeMS) {
+      NotifyIdleObserver(tmpIdleObserver.mIdleObserver,
+                         tmpIdleObserver.mTimeInS,
+                         true);
+      mIdleCallbackIndex++;
+      return NS_OK;
+    }
+
+    mIdleTimer->Cancel();
+
+    rv = ScheduleNextIdleObserverCallback();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsGlobalWindow::FindIndexOfElementToRemove(nsIIdleObserver* aIdleObserver,
+                                           PRInt32* aRemoveElementIndex)
+{
+  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
+  MOZ_ASSERT(aIdleObserver, "Idle observer not instantiated.");
+
+  *aRemoveElementIndex = 0;
+  if (mIdleObservers.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 aIdleObserverTimeInS;
+  nsresult rv = aIdleObserver->GetTime(&aIdleObserverTimeInS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_ARG_MIN(aIdleObserverTimeInS, MIN_IDLE_NOTIFICATION_TIME_S);
+
+  nsTObserverArray<IdleObserverHolder>::ForwardIterator iter(mIdleObservers);
+  while (iter.HasMore()) {
+    IdleObserverHolder& idleObserver = iter.GetNext();
+    if (idleObserver.mTimeInS == aIdleObserverTimeInS &&
+        idleObserver.mIdleObserver == aIdleObserver ) {
+      break;
+    }
+    (*aRemoveElementIndex)++;
+  }
+  return static_cast<PRUint32>(*aRemoveElementIndex) >= mIdleObservers.Length() ?
+    NS_ERROR_FAILURE : NS_OK;
+}
+
+nsresult
+nsGlobalWindow::UnregisterIdleObserver(nsIIdleObserver* aIdleObserver)
+{
+  MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
+  MOZ_ASSERT(mIdleTimer);
+
+  PRInt32 removeElementIndex;
+  nsresult rv = FindIndexOfElementToRemove(aIdleObserver, &removeElementIndex);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Idle observer not found in list of idle observers. No idle observer removed.");
+    return NS_OK;
+  }
+  mIdleObservers.RemoveElementAt(removeElementIndex);
+
+  if (mIdleObservers.IsEmpty() && mIdleService) {
+    rv = mIdleService->RemoveIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mIdleService = nsnull;
+
+    mIdleCallbackIndex = -1;
+    return NS_OK;
+  }
+
+  if (!mCurrentlyIdle) {
+    return NS_OK;
+  }
+
+  if (removeElementIndex < mIdleCallbackIndex) {
+    mIdleCallbackIndex--;
+    return NS_OK;
+  }
+
+  if (removeElementIndex != mIdleCallbackIndex) {
+    return NS_OK;
+  }
+
+  nsRefPtr<nsGlobalWindow> kungFuDeathGrip(this);
+
+  mIdleTimer->Cancel();
+
+  // If the last element in the array had been notified then decrement
+  // mIdleCallbackIndex because an idle was removed from the list of
+  // idle observers.
+  // Example: add idle observer with time 1, 2, 3,
+  // Idle notifications for idle observers with time 1, 2, 3 are complete
+  // Remove idle observer with time 3 while the user is still idle.
+  // The user never transitioned to active state.
+  // Add an idle observer with idle time 4
+  if (static_cast<PRUint32>(mIdleCallbackIndex) == mIdleObservers.Length()) {
+    mIdleCallbackIndex--;
+  }
+  rv = ScheduleNextIdleObserverCallback();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 nsresult
 nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
                         const PRUnichar* aData)
@@ -8391,6 +8848,29 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       mFireOfflineStatusChangeEventOnThaw = !mFireOfflineStatusChangeEventOnThaw;
     } else {
       FireOfflineStatusEvent();
+    }
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aTopic, OBSERVER_TOPIC_IDLE)) {
+    mCurrentlyIdle = true;
+    if (IsFrozen()) {
+      // need to fire only one idle event while the window is frozen.
+      mNotifyIdleObserversIdleOnThaw = true;
+      mNotifyIdleObserversActiveOnThaw = false;
+    } else if (mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this) {
+      ScheduleIdleTimerCallback();
+    }
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(aTopic, OBSERVER_TOPIC_ACTIVE)) {
+    mCurrentlyIdle = false;
+    if (IsFrozen()) {
+      mNotifyIdleObserversActiveOnThaw = true;
+      mNotifyIdleObserversIdleOnThaw = false;
+    } else if (mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this) {
+      ScheduleActiveTimerCallback();
     }
     return NS_OK;
   }
@@ -8561,6 +9041,16 @@ nsGlobalWindow::FireDelayedDOMEvents()
   if (mFireOfflineStatusChangeEventOnThaw) {
     mFireOfflineStatusChangeEventOnThaw = false;
     FireOfflineStatusEvent();
+  }
+
+  if (mNotifyIdleObserversIdleOnThaw) {
+    mNotifyIdleObserversIdleOnThaw = false;
+    ScheduleIdleTimerCallback();
+  }
+
+  if (mNotifyIdleObserversActiveOnThaw) {
+    mNotifyIdleObserversActiveOnThaw = false;
+    ScheduleActiveTimerCallback();
   }
 
   nsCOMPtr<nsIDocShellTreeNode> node =

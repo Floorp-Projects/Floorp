@@ -10,7 +10,9 @@
 #include "nsAString.h"
 #include "nscore.h"
 
+
 class nsIAccessible;
+class nsIArray;
 namespace mozilla {
 namespace a11y {
 class TableAccessible;
@@ -46,6 +48,7 @@ public:
   nsresult GetSelectedCellCount(PRUint32* aSelectedCellCount);
   nsresult GetSelectedColumnCount(PRUint32* aSelectedColumnCount);
   nsresult GetSelectedRowCount(PRUint32* aSelectedRowCount);
+  nsresult GetSelectedCells(nsIArray** aSelectedCell);
   nsresult GetSelectedCellIndices(PRUint32* aCellsArraySize,
                                   PRInt32** aCellsArray);
   nsresult GetSelectedColumnIndices(PRUint32* aColsArraySize,
@@ -101,7 +104,8 @@ protected:
     { return xpcAccessibleTable::GetSelectedColumnCount(aSelectedColumnCount); } \
   NS_SCRIPTABLE NS_IMETHOD GetSelectedRowCount(PRUint32* aSelectedRowCount) \
     { return xpcAccessibleTable::GetSelectedRowCount(aSelectedRowCount); } \
-  NS_SCRIPTABLE NS_IMETHOD GetSelectedCells(nsIArray * *aSelectedCells); \
+  NS_SCRIPTABLE NS_IMETHOD GetSelectedCells(nsIArray** aSelectedCells) \
+    { return xpcAccessibleTable::GetSelectedCells(aSelectedCells); } \
   NS_SCRIPTABLE NS_IMETHOD GetSelectedCellIndices(PRUint32* cellsArraySize NS_OUTPARAM, \
                                                   PRInt32** cellsArray NS_OUTPARAM) \
     { return xpcAccessibleTable::GetSelectedCellIndices(cellsArraySize, cellsArray); } \

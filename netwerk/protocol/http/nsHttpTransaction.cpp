@@ -902,6 +902,7 @@ nsHttpTransaction::Restart()
     // reset.  this is being overly cautious since we don't know if pipelining
     // was the problem here.
     mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
+    SetPipelinePosition(0);
 
     return gHttpHandler->InitiateTransaction(this, mPriority);
 }

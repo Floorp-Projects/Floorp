@@ -140,7 +140,7 @@ struct RootMethods<T *>
 template <typename T>
 class Rooted
 {
-    void init(JSContext *cx_, T initial)
+    void init(JSContext *cx_)
     {
 #if defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)
         ContextFriendFields *cx = ContextFriendFields::get(cx_);
@@ -150,15 +150,13 @@ class Rooted
         this->prev = *stack;
         *stack = this;
 
-        JS_ASSERT(!RootMethods<T>::poisoned(initial));
+        JS_ASSERT(!RootMethods<T>::poisoned(ptr));
 #endif
-
-        ptr = initial;
     }
 
   public:
-    Rooted(JSContext *cx) { init(cx, RootMethods<T>::initial()); }
-    Rooted(JSContext *cx, T initial) { init(cx, initial); }
+    Rooted(JSContext *cx) : ptr(RootMethods<T>::initial()) { init(cx); }
+    Rooted(JSContext *cx, T initial) : ptr(initial) { init(cx); }
 
     ~Rooted()
     {
@@ -293,16 +291,47 @@ class SkipRoot
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+#ifdef DEBUG
+JS_FRIEND_API(bool) IsRootingUnnecessaryForContext(JSContext *cx);
+JS_FRIEND_API(void) SetRootingUnnecessaryForContext(JSContext *cx, bool value);
+#endif
+
+class AssertRootingUnnecessary {
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+    JSContext *cx;
+    bool prev;
+public:
+    AssertRootingUnnecessary(JSContext *cx JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : cx(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+#ifdef DEBUG
+        prev = IsRootingUnnecessaryForContext(cx);
+        SetRootingUnnecessaryForContext(cx, true);
+#endif
+    }
+
+    ~AssertRootingUnnecessary() {
+#ifdef DEBUG
+        SetRootingUnnecessaryForContext(cx, prev);
+#endif
+    }
+};
+
 /*
  * Hook for dynamic root analysis. Checks the native stack and poisons
  * references to GC things which have not been rooted.
  */
-#if  defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
-void CheckStackRoots(JSContext *cx);
-inline void MaybeCheckStackRoots(JSContext *cx) { CheckStackRoots(cx); }
-#else
-inline void MaybeCheckStackRoots(JSContext *cx) {}
+inline void MaybeCheckStackRoots(JSContext *cx)
+{
+#ifdef DEBUG
+    JS_ASSERT(!IsRootingUnnecessaryForContext(cx));
+# if defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
+    void CheckStackRoots(JSContext *cx);
+    CheckStackRoots(cx);
+# endif
 #endif
+}
 
 }  /* namespace JS */
 
