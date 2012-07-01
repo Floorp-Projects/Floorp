@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html contenteditable="true">
+<head>
+<script>
+
+function boom()
+{
+  var looseText = document.createTextNode("x");
+  window.getSelection().collapse(looseText, 0);
+  document.queryCommandState("insertorderedlist");
+}
+
+</script>
+</head>
+<body onload="setTimeout(boom, 0)"></body>
+</html>

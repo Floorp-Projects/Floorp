@@ -4161,6 +4161,17 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode
 ///////////////////////////////////////////////////////////////////////////
 // GetPriorHTMLNode: same as above but takes {parent,offset} instead of node
 //                       
+nsIContent*
+nsHTMLEditor::GetPriorHTMLNode(nsINode* aParent, PRInt32 aOffset,
+                               bool aNoBlockCrossing)
+{
+  if (!GetActiveEditingHost()) {
+    return nsnull;
+  }
+
+  return GetPriorNode(aParent, aOffset, true, aNoBlockCrossing);
+}
+
 nsresult
 nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
 {
@@ -4175,7 +4186,7 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<
   nsresult res = GetPriorNode(inParent, inOffset, true, address_of(*outNode),
                               bNoBlockCrossing);
   NS_ENSURE_SUCCESS(res, res);
-  
+
   NS_ASSERTION(!*outNode || IsDescendantOfEditorRoot(*outNode),
                "GetPriorNode screwed up");
   return res;
@@ -4204,6 +4215,17 @@ nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode,
 ///////////////////////////////////////////////////////////////////////////
 // GetNHTMLextNode: same as above but takes {parent,offset} instead of node
 //                       
+nsIContent*
+nsHTMLEditor::GetNextHTMLNode(nsINode* aParent, PRInt32 aOffset,
+                              bool aNoBlockCrossing)
+{
+  nsIContent* content = GetNextNode(aParent, aOffset, true, aNoBlockCrossing);
+  if (content && !IsDescendantOfEditorRoot(content)) {
+    return nsnull;
+  }
+  return content;
+}
+
 nsresult
 nsHTMLEditor::GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing)
 {
