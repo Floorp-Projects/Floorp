@@ -5290,7 +5290,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
       actionID == nsEditor::kOpDeleteText)
   {
     bool isSpace, isNBSP;
-    nsCOMPtr<nsIDOMNode> temp;
+    nsCOMPtr<nsIContent> temp;
     // for text actions, we want to look backwards (or forwards, as appropriate)
     // for additional whitespace or nbsp's.  We may have to act on these later even though
     // they are outside of the initial selection.  Even if they are in another node!
@@ -5299,10 +5299,12 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
       do
       {
         PRInt32 prevOffset;
-        mHTMLEditor->IsPrevCharWhitespace(node, offset, &isSpace, &isNBSP,
-                                          address_of(temp), &prevOffset);
+        nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+        mHTMLEditor->IsPrevCharInNodeWhitespace(content, offset, &isSpace,
+                                                &isNBSP, getter_AddRefs(temp),
+                                                &prevOffset);
         if (isSpace || isNBSP) {
-          node = temp;
+          node = temp->AsDOMNode();
           offset = prevOffset;
         } else {
           break;
@@ -5317,10 +5319,12 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode,
       do
       {
         PRInt32 nextOffset;
-        mHTMLEditor->IsNextCharWhitespace(node, offset, &isSpace, &isNBSP,
-                                          address_of(temp), &nextOffset);
+        nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+        mHTMLEditor->IsNextCharInNodeWhitespace(content, offset, &isSpace,
+                                                &isNBSP, getter_AddRefs(temp),
+                                                &nextOffset);
         if (isSpace || isNBSP) {
-          node = temp;
+          node = temp->AsDOMNode();
           offset = nextOffset;
         } else {
           break;
