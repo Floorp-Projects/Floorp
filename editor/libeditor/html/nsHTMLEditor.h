@@ -693,7 +693,11 @@ protected:
   nsresult GetNextHTMLSibling(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode);
   nsresult GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
   nsresult GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
+  nsIContent* GetPriorHTMLNode(nsINode* aParent, PRInt32 aOffset,
+                               bool aNoBlockCrossing = false);
   nsresult GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
+  nsIContent* GetNextHTMLNode(nsINode* aParent, PRInt32 aOffset,
+                              bool aNoBlockCrossing = false);
   nsresult GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outNode, bool bNoBlockCrossing = false);
 
   nsresult IsFirstEditableChild( nsIDOMNode *aNode, bool *aOutIsFirst);
