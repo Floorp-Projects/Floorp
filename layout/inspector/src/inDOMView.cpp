@@ -18,7 +18,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMAttr.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsBindingManager.h"

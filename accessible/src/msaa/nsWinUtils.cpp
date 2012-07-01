@@ -13,6 +13,8 @@
 
 #include "mozilla/Preferences.h"
 #include "nsArrayUtils.h"
+#include "nsIArray.h"
+#include "nsIDocument.h"
 #include "nsIDocShellTreeItem.h"
 
 using namespace mozilla;

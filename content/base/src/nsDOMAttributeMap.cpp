@@ -11,7 +11,6 @@
 #include "nsDOMAttribute.h"
 #include "nsIDOMDocument.h"
 #include "nsGenericElement.h"
-#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"

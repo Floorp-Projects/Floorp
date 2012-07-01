@@ -9,8 +9,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsDOMError.h"
-
-#include "nsIContent.h"
+#include "nsINode.h"
 
 #include "nsGkAtoms.h"
 

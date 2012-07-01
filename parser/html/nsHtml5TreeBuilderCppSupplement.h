@@ -9,7 +9,6 @@
 #include "nsEvent.h"
 #include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
-#include "nsContentUtils.h"
 #include "nsNodeUtils.h"
 #include "nsIFrame.h"
 

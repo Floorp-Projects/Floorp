@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsMediaError.h"
-#include "nsContentUtils.h"
+#include "nsDOMClassInfoID.h"
 
 NS_IMPL_ADDREF(nsMediaError)
 NS_IMPL_RELEASE(nsMediaError)

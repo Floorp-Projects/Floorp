@@ -20,6 +20,7 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
+#include "nsContentList.h"
 
 //#define DEBUG_REFLOW
 

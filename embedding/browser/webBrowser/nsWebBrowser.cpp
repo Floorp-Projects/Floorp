@@ -13,9 +13,7 @@
 //Interfaces Needed
 #include "nsReadableUtils.h"
 #include "nsIComponentManager.h"
-#include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIInterfaceRequestor.h"

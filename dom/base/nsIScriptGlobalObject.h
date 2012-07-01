@@ -12,7 +12,6 @@
 #include "nsIProgrammingLanguage.h"
 
 class nsIScriptContext;
-class nsIDOMDocument;
 class nsIDOMEvent;
 class nsIScriptGlobalObjectOwner;
 class nsIArray;

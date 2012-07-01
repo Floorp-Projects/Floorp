@@ -9,17 +9,13 @@
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "jsapi.h"
-#include "nsIContent.h"
 #include "nsString.h"
-#include "nsIJSRuntimeService.h"
 #include "nsIServiceManager.h"
-#include "nsReadableUtils.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 
+class nsIContent;
 class nsIScriptContext;
-struct JSRuntime;
-class nsIJSRuntimeService;
 
 struct nsXBLTextWithLineNumber
 {

@@ -19,6 +19,7 @@
 #include "nsContentUtils.h"
 #include "nsFormControlFrame.h"
 #include "nsFontMetrics.h"
+#include "nsContentList.h"
 #include "mozilla/dom/Element.h"
 
 

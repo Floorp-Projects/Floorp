@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 
 class nsIAtom;
-class nsIContent;
 class nsIDOMKeyEvent;
 class nsXBLPrototypeHandler;
 

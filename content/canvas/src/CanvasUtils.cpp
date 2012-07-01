@@ -12,13 +12,10 @@
 #include "nsIServiceManager.h"
 
 #include "nsIConsoleService.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocument.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsHTMLCanvasElement.h"
 #include "nsIPrincipal.h"
-#include "nsINode.h"
 
 #include "nsGfxCIID.h"
 

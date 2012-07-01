@@ -17,7 +17,6 @@
 #include "nsCOMPtr.h"
 #include "nsForwardReference.h"
 #include "nsIContentSink.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMXULDocument.h"

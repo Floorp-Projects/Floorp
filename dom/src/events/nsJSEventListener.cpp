@@ -5,7 +5,6 @@
 #include "nsJSEventListener.h"
 #include "nsJSUtils.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptContext.h"

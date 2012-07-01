@@ -9,8 +9,6 @@
 #include "nsIRadioVisitor.h"
 
 class nsIFormControl;
-class nsIDocument;
-
 
 /**
  * nsRadioVisitor is the base class implementing nsIRadioVisitor and inherited

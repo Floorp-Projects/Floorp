@@ -13,7 +13,6 @@
 #include "nsMappedAttributes.h"
 #include "nsSize.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIScriptContext.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
