@@ -44,4 +44,13 @@ function checkServices() {
   checkService("telemetry", Ci.nsITelemetry);
   checkService("sysinfo", Ci.nsIPropertyBag2);
   checkService("clipboard", Ci.nsIClipboard);
+  checkService("console", Ci.nsIConsoleService);
+  checkService("startup", Ci.nsIAppStartup);
+  checkService("appShell", Ci.nsIAppShellService);
+  checkService("cache", Ci.nsICacheService);
+  checkService("scriptSecurityManager", Ci.nsIScriptSecurityManager);
+  checkService("domStorageManager", Ci.nsIDOMStorageManager);
+  checkService("DOMRequest", Ci.nsIDOMRequestService);
+  checkService("downloads", Ci.nsIDownloadManager);
+  checkService("focus", Ci.nsIFocusManager);
 }

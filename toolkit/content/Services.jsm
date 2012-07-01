@@ -61,7 +61,8 @@ let initTable = [
   ["startup", "@mozilla.org/toolkit/app-startup;1", "nsIAppStartup"],
   ["sysinfo", "@mozilla.org/system-info;1", "nsIPropertyBag2"],
   ["clipboard", "@mozilla.org/widget/clipboard;1", "nsIClipboard"],
-  ["DOMRequest", "@mozilla.org/dom/dom-request-service;1", "nsIDOMRequestService"]
+  ["DOMRequest", "@mozilla.org/dom/dom-request-service;1", "nsIDOMRequestService"],
+  ["focus", "@mozilla.org/focus-manager;1", "nsIFocusManager"],
 ];
 
 initTable.forEach(function ([name, contract, intf])
