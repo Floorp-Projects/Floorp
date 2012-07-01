@@ -283,13 +283,13 @@ Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj, 
 }
 
 inline bool
-Shape::set(JSContext* cx, HandleObject obj, bool strict, Value* vp) const
+Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict, Value* vp) const
 {
     JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
 
     if (attrs & JSPROP_SETTER) {
         Value fval = setterValue();
-        return InvokeGetterOrSetter(cx, obj, fval, 1, vp, vp);
+        return InvokeGetterOrSetter(cx, receiver, fval, 1, vp, vp);
     }
 
     if (attrs & JSPROP_GETTER)

@@ -324,6 +324,9 @@ pref("toolkit.telemetry.infoURL", "http://www.mozilla.com/legal/privacy/firefox.
 // i.e. dynamically constructed SQL strings or SQL executed by addons against addon DBs
 pref("toolkit.telemetry.debugSlowSql", false);
 
+// Identity module
+pref("toolkit.identity.debug", false);
+
 // Disable remote debugging protocol logging
 pref("devtools.debugger.log", false);
 // Disable remote debugging connections
@@ -349,6 +352,10 @@ pref("nglayout.enable_drag_images", true);
 
 // enable/disable paint flashing --- useful for debugging
 pref("nglayout.debug.paint_flashing", false);
+
+// enable/disable widget update area flashing --- only supported with 
+// BasicLayers (other layer managers always update the entire widget area)
+pref("nglayout.debug.widget_update_flashing", false);
 
 // scrollbar snapping region
 // 0 - off
@@ -3544,6 +3551,9 @@ pref("full-screen-api.enabled", false);
 pref("full-screen-api.allow-trusted-requests-only", true);
 pref("full-screen-api.exit-on-deactivate", true);
 pref("full-screen-api.pointer-lock.enabled", true);
+
+// DOM idle observers API
+pref("dom.idle-observers-api.enabled", true);
 
 // Time limit, in milliseconds, for nsEventStateManager::IsHandlingUserInput().
 // Used to detect long running handlers of user-generated events.

@@ -129,6 +129,16 @@ else
 endif
 	$(CHECK_TEST_ERROR)
 
+ifeq ($(OS_ARCH),Darwin)
+webapprt_stub_path = $(TARGET_DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/webapprt-stub$(BIN_SUFFIX)
+webapprt-test-content:
+	$(RUN_MOCHITEST) --webapprt-content --appname $(webapprt_stub_path)
+	$(CHECK_TEST_ERROR)
+webapprt-test-chrome:
+	$(RUN_MOCHITEST) --webapprt-chrome --appname $(webapprt_stub_path) --browser-arg -test-mode
+	$(CHECK_TEST_ERROR)
+endif
+
 # Usage: |make [EXTRA_TEST_ARGS=...] *test|.
 RUN_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftest.py \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log

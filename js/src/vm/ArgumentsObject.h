@@ -210,13 +210,6 @@ class NormalArgumentsObject : public ArgumentsObject
 
     /* Clear the location storing arguments.callee's initial value. */
     inline void clearCallee();
-
-    /*
-     * Return 'arguments[index]' for some unmodified NormalArgumentsObject of
-     * 'fp' (the actual instance of 'arguments' doesn't matter so it does not
-     * have to be passed or even created).
-     */
-    static bool optimizedGetElem(JSContext *cx, StackFrame *fp, const Value &elem, Value *vp);
 };
 
 class StrictArgumentsObject : public ArgumentsObject

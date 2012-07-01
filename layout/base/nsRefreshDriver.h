@@ -144,6 +144,16 @@ public:
   bool IsLayoutFlushObserver(nsIPresShell* aShell) {
     return mLayoutFlushObservers.Contains(aShell);
   }
+  bool AddPresShellToInvalidateIfHidden(nsIPresShell* aShell) {
+    NS_ASSERTION(!mPresShellsToInvalidateIfHidden.Contains(aShell),
+		 "Double-adding style flush observer");
+    bool appended = mPresShellsToInvalidateIfHidden.AppendElement(aShell) != nsnull;
+    EnsureTimerStarted(false);
+    return appended;
+  }
+  void RemovePresShellToInvalidateIfHidden(nsIPresShell* aShell) {
+    mPresShellsToInvalidateIfHidden.RemoveElement(aShell);
+  }
 
   /**
    * Remember whether our presshell's view manager needs a flush
@@ -154,6 +164,9 @@ public:
   }
   void RevokeViewManagerFlush() {
     mViewManagerFlushIsPending = false;
+  }
+  bool ViewManagerFlushIsPending() {
+    return mViewManagerFlushIsPending;
   }
 
   /**
@@ -258,6 +271,7 @@ private:
 
   nsAutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
   nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
+  nsAutoTArray<nsIPresShell*, 16> mPresShellsToInvalidateIfHidden;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<nsIDocument*> mFrameRequestCallbackDocs;
 

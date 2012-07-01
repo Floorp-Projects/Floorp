@@ -1,0 +1,181 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+import android.app.Activity;
+import android.view.View;
+import android.widget.ListView;
+import android.widget.ExpandableListView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.TabHost;
+import android.text.TextUtils;
+
+import android.content.ContentValues;
+import android.content.ContentResolver;
+import android.database.Cursor;
+import android.net.Uri;
+
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.io.File;
+
+/* Tests opening the history tab, that items look correct, clicking on an item
+   and long tapping on an item
+*/
+
+public class testHistoryTab extends BaseTest {
+    private static final String ABOUT_HOME_URL = "about:home";
+    private static final String OPEN_NEW_TAB = "Open in New Tab";
+    private String[] bookmarks = new String[] {
+        "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
+    };
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testHistoryTab() {
+        mActions.expectGeckoEvent("Gecko:Ready").blockForEvent();
+
+        // load two pages so there is something in our history
+        // bookmark one of them
+        String url = getAbsoluteUrl("/robocop/robocop_big_link.html");
+        loadUrl(url);
+
+        url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        loadUrl(url);
+        getInstrumentation().waitForIdleSync();
+        mActions.sendSpecialKey(Actions.SpecialKey.MENU);
+        mSolo.waitForText("Bookmark");
+        mSolo.clickOnText("Bookmark");
+        mAsserter.is(mSolo.waitForText("Bookmark added"), true, "bookmark added sucessfully");
+
+        testList(url);
+        testContextMenu(url);
+        testClick(url);
+    }
+
+    private void testList(String url) {
+        ListView list = getHistoryList();
+        mSolo.waitForText(url);
+
+        mAsserter.ok(list != null, "checking that history list exists", list.toString());
+
+        mAsserter.is(list.getChildCount(), 3, "history list has 3 children");
+
+        final int count = list.getChildCount();
+        String loadUrl = "";
+        for (int i = count - 1; i >= 0; i--) {
+            View child = list.getChildAt(i);
+
+            ArrayList<View> views = mSolo.getViews(child);
+            ArrayList<ImageView> imageViews = new ArrayList<ImageView>();
+
+            int expectedImages = 1;
+            for (int j = 0; j < views.size(); j++) {
+                View v = views.get(j);
+                if (i == 0) {
+                    ArrayList<TextView> views2 = mSolo.getCurrentTextViews(v);
+                    TextView t = views2.get(0);
+                    String string = t.getText().toString();
+                    mAsserter.ok(string.equals("Today"), "First row has Today header", string);
+                    expectedImages = 0;
+                } else if (v instanceof TextView) {
+                    TextView t = (TextView)v;
+                    String string = t.getText().toString();
+                    mAsserter.ok(!TextUtils.isEmpty(string), "TextView is filled in", string);
+                    if (i == 1 || string.startsWith("http")) {
+                        loadUrl = string;
+                    }
+
+                    int index = Arrays.binarySearch(bookmarks, string);
+                    if (index > -1) {
+                        expectedImages = 2;
+                    }
+                } else if (v instanceof ImageView) {
+                    imageViews.add((ImageView)v);
+                }
+            }
+
+            int visible = 0;
+            for (int j = 0; j < imageViews.size(); j++) {
+                ImageView img = imageViews.get(j);
+                visible += (img.getVisibility() == View.VISIBLE) ? 1 : 0;
+            }
+
+            mAsserter.is(visible, expectedImages, "Correct number of ImageViews visible");
+        }
+
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+    }
+
+    private void testContextMenu(String url) {
+        ListView list = getHistoryList();
+        mSolo.waitForText(url);
+
+        View child = list.getChildAt(0);
+        mSolo.clickLongOnView(child);
+        mAsserter.is(false, mSolo.waitForText("Open in New Tab"), "Header rows should not show a context menu");
+
+        child = list.getChildAt(1);
+        mSolo.clickLongOnView(child);
+
+        // TODO: Test clicking these does the right thing
+        mAsserter.ok(mSolo.waitForText("Open in New Tab"), "Context menu has New Tab option", "Open in New Tab");
+        mAsserter.ok(mSolo.searchText("Share", true), "Context menu has Share option", "Share");
+        mAsserter.ok(mSolo.searchText("Remove", true), "Context menu has Remove option", "Remove");
+        mAsserter.ok(mSolo.searchText("Add to Home Screen", true), "Context menu has Add to Home Screen option", "Add to Home Screen");
+
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+    }
+
+    private void testClick(String url) {
+        ListView list = getHistoryList();
+        mSolo.waitForText(url);
+
+        View child = list.getChildAt(0);
+        mSolo.clickOnView(child);
+        // nothing should happen
+
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+        child = list.getChildAt(1);
+        mSolo.clickOnView(child);
+        contentEventExpecter.blockForEvent();
+        verifyUrl(url);
+    }
+
+    private ListView getHistoryList() {
+        Activity awesomeBarActivity = clickOnAwesomeBar();
+        mSolo.clickOnText("History");
+
+        TabHost tabHost = (TabHost)mSolo.getView(TabHost.class, 0);
+        return (ListView)tabHost.getCurrentView();
+    }
+
+    public void tearDown() throws Exception {
+        super.tearDown();
+
+        ContentResolver resolver = getActivity().getContentResolver();
+        Uri uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/history");
+        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+                             .appendQueryParameter("sync", "true").build();
+        resolver.delete(uri, "url = ?", new String[] {
+            "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
+        });
+        resolver.delete(uri, "url = ?", new String[] {
+            "http://mochi.test:8888/tests/robocop/robocop_big_link.html"
+        });
+
+        uri = Uri.parse("content://@ANDROID_PACKAGE_NAME@.db.browser/bookmarks");
+        uri = uri.buildUpon().appendQueryParameter("profile", "default")
+                             .appendQueryParameter("sync", "true").build();
+        resolver.delete(uri, "url = ?", new String[] {
+            "http://mochi.test:8888/tests/robocop/robocop_blank_01.html"
+        });
+    }
+}

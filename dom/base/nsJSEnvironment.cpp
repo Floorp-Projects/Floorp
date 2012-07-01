@@ -78,6 +78,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 
 #include "sampler.h"
 
@@ -204,8 +205,10 @@ nsMemoryPressureObserver::Observe(nsISupports* aSubject, const char* aTopic,
                                   const PRUnichar* aData)
 {
   if (sGCOnMemoryPressure) {
-    nsJSContext::GarbageCollectNow(js::gcreason::MEM_PRESSURE, nsGCShrinking,
-                                   true);
+    nsJSContext::GarbageCollectNow(js::gcreason::MEM_PRESSURE,
+                                   nsJSContext::NonIncrementalGC,
+                                   nsJSContext::NonCompartmentGC,
+                                   nsJSContext::ShrinkingGC);
     nsJSContext::CycleCollectNow();
   }
   return NS_OK;
@@ -2859,13 +2862,15 @@ FullGCTimerFired(nsITimer* aTimer, void* aClosure)
 
   uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
   nsJSContext::GarbageCollectNow(static_cast<js::gcreason::Reason>(reason),
-                                 nsGCNormal, true);
+                                 nsJSContext::IncrementalGC);
 }
 
 //static
 void
-nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason, PRUint32 aGckind,
-                               bool aGlobal)
+nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason,
+                               IsIncremental aIncremental,
+                               IsCompartment aCompartment,
+                               IsShrinking aShrinking)
 {
   NS_TIME_FUNCTION_MIN(1.0);
   SAMPLE_LABEL("GC", "GarbageCollectNow");
@@ -2882,16 +2887,23 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason, PRUint32 aGckind,
   sPendingLoadCount = 0;
   sLoadingInProgress = false;
 
-  if (!nsContentUtils::XPConnect()) {
+  if (!nsContentUtils::XPConnect() || !nsJSRuntime::sRuntime) {
     return;
   }
-  
+
+  if (sCCLockedOut && aIncremental == IncrementalGC) {
+    // We're in the middle of incremental GC. Do another slice.
+    js::PrepareForIncrementalGC(nsJSRuntime::sRuntime);
+    js::IncrementalGC(nsJSRuntime::sRuntime, aReason);
+    return;
+  }
+
   // Use compartment GC when we're not asked to do a shrinking GC nor
   // global GC and compartment GC has been called less than
   // NS_MAX_COMPARTMENT_GC_COUNT times after the previous global GC.
   if (!sDisableExplicitCompartmentGC &&
-      aGckind != nsGCShrinking && !aGlobal &&
-      sCompartmentGCCount < NS_MAX_COMPARTMENT_GC_COUNT) {  
+      aShrinking != ShrinkingGC && aCompartment != NonCompartmentGC &&
+      sCompartmentGCCount < NS_MAX_COMPARTMENT_GC_COUNT) {
     js::PrepareForFullGC(nsJSRuntime::sRuntime);
     for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
       if (!cx->mActive && cx->mContext) {
@@ -2902,7 +2914,11 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason, PRUint32 aGckind,
       cx->mActive = false;
     }
     if (js::IsGCScheduled(nsJSRuntime::sRuntime)) {
-      js::IncrementalGC(nsJSRuntime::sRuntime, aReason);
+      if (aIncremental == IncrementalGC) {
+        js::IncrementalGC(nsJSRuntime::sRuntime, aReason);
+      } else {
+        js::GCForReason(nsJSRuntime::sRuntime, aReason);
+      }
     }
     return;
   }
@@ -2910,7 +2926,12 @@ nsJSContext::GarbageCollectNow(js::gcreason::Reason aReason, PRUint32 aGckind,
   for (nsJSContext* cx = sContextList; cx; cx = cx->mNext) {
     cx->mActive = false;
   }
-  nsContentUtils::XPConnect()->GarbageCollect(aReason, aGckind);
+  js::PrepareForFullGC(nsJSRuntime::sRuntime);
+  if (aIncremental == IncrementalGC) {
+    js::IncrementalGC(nsJSRuntime::sRuntime, aReason);
+  } else {
+    js::GCForReason(nsJSRuntime::sRuntime, aReason);
+  }
 }
 
 //static
@@ -2960,8 +2981,8 @@ DoMergingCC(bool aForced)
   static PRInt32 sUnmergedNeeded = 0;
   static PRInt32 sMergedInARow = 0;
 
-  MOZ_ASSERT(0 <= sUnmergedNeeded <= kMinConsecutiveUnmerged);
-  MOZ_ASSERT(0 <= sMergedInARow <= kMaxConsecutiveMerged);
+  MOZ_ASSERT(0 <= sUnmergedNeeded && sUnmergedNeeded <= kMinConsecutiveUnmerged);
+  MOZ_ASSERT(0 <= sMergedInARow && sMergedInARow <= kMaxConsecutiveMerged);
 
   if (sMergedInARow == kMaxConsecutiveMerged) {
     MOZ_ASSERT(sUnmergedNeeded == 0);
@@ -2996,7 +3017,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
   if (sCCLockedOut) {
     // We're in the middle of an incremental GC; finish it first
-    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED, nsGCNormal, true);
+    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED);
   }
 
   SAMPLE_LABEL("GC", "CycleCollectNow");
@@ -3145,7 +3166,8 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
 
   uintptr_t reason = reinterpret_cast<uintptr_t>(aClosure);
   nsJSContext::GarbageCollectNow(static_cast<js::gcreason::Reason>(reason),
-                                 nsGCIncremental, false);
+                                 nsJSContext::IncrementalGC,
+                                 nsJSContext::CompartmentGC);
 }
 
 void
@@ -3201,7 +3223,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
     }
 
     // Finish the current incremental GC
-    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED, nsGCNormal, true);
+    nsJSContext::GarbageCollectNow(js::gcreason::CC_FORCED);
   }
 
   ++sCCTimerFireCount;

@@ -170,6 +170,8 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
     }
   }
 
+  AddStateBits(NS_FRAME_IN_POPUP);
+
   return rv;
 }
 
@@ -803,14 +805,6 @@ nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState)
   if (menuFrame) {
     menuFrame->PopupClosed(aDeselectMenu);
   }
-}
-
-void
-nsMenuPopupFrame::InvalidateInternal(const nsRect& aDamageRect,
-                                     nscoord aX, nscoord aY, nsIFrame* aForChild,
-                                     PRUint32 aFlags)
-{
-  InvalidateRoot(aDamageRect + nsPoint(aX, aY), aFlags);
 }
 
 void

@@ -36,12 +36,15 @@ let AboutReader = {
     this._contentElement = document.getElementById("reader-content");
     this._toolbarElement = document.getElementById("reader-toolbar");
 
+    this._toolbarEnabled = false;
+
     this._scrollOffset = window.pageYOffset;
 
     let body = document.body;
     body.addEventListener("touchstart", this, false);
     body.addEventListener("click", this, false);
     window.addEventListener("scroll", this, false);
+    window.addEventListener("popstate", this, false);
 
     this._setupAllDropdowns();
     this._setupButton("share-button", this._onShare.bind(this));
@@ -100,6 +103,10 @@ let AboutReader = {
           this._setToolbarVisibility(false);
         }
         break;
+      case "popstate":
+        if (!aEvent.state)
+          this._closeAllDropdowns();
+        break;
     }
   },
 
@@ -110,6 +117,7 @@ let AboutReader = {
     body.removeEventListener("touchstart", this, false);
     body.removeEventListener("click", this, false);
     window.removeEventListener("scroll", this, false);
+    window.removeEventListener("popstate", this, false);
 
     this._hideContent();
   },
@@ -187,17 +195,16 @@ let AboutReader = {
   },
 
   _setToolbarVisibility: function Reader_setToolbarVisibility(visible) {
-    this._closeAllDropdowns();
+    if (history.state)
+      history.back();
+
+    if (!this._toolbarEnabled)
+      return;
 
     if (this._getToolbarVisibility() === visible)
       return;
 
-    let toolbarElement = this._toolbarElement;
-
-    if (visible)
-      toolbarElement.display = "block";
-
-    toolbarElement.classList.toggle("toolbar-hidden");
+    this._toolbarElement.classList.toggle("toolbar-hidden");
   },
 
   _toggleToolbarVisibility: function Reader_toggleToolbarVisibility(visible) {
@@ -244,6 +251,9 @@ let AboutReader = {
     this._contentElement.style.display = "block";
 
     document.title = article.title;
+
+    this._toolbarEnabled = true;
+    this._setToolbarVisibility(true);
   },
 
   _hideContent: function Reader_hideContent() {
@@ -375,20 +385,25 @@ let AboutReader = {
 
         let dropdownClasses = dropdown.classList;
 
-        if (!dropdownClasses.contains("open")) {
+        if (dropdownClasses.contains("open")) {
+          history.back();
+        } else {
           updatePopupPosition();
-          this._closeAllDropdowns();
-        }
+          if (!this._closeAllDropdowns())
+            history.pushState({ dropdown: 1 }, document.title);
 
-        dropdownClasses.toggle("open");
+          dropdownClasses.add("open");
+        }
       }.bind(this), true);
     }
   },
 
   _closeAllDropdowns : function Reader_closeAllDropdowns() {
-    let dropdowns = document.getElementsByClassName("dropdown");
+    let dropdowns = document.querySelectorAll(".dropdown.open");
     for (let i = dropdowns.length - 1; i >= 0; i--) {
       dropdowns[i].classList.remove("open");
     }
+
+    return (dropdowns.length > 0)
   }
 }

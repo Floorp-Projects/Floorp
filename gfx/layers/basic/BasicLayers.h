@@ -86,12 +86,16 @@ public:
   nsIWidget* GetRetainerWidget() { return mWidget; }
   void ClearRetainerWidget() { mWidget = nsnull; }
 
+  virtual bool IsWidgetLayerManager() { return mWidget != nsnull; }
+
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
   virtual bool EndEmptyTransaction();
   virtual void EndTransaction(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
+
+  virtual bool AreComponentAlphaLayersEnabled() { return HasShadowManager(); }
 
   virtual void SetRoot(Layer* aLayer);
 
@@ -121,9 +125,11 @@ public:
   bool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
   bool InDrawing() { return mPhase == PHASE_DRAWING; }
   bool InForward() { return mPhase == PHASE_FORWARD; }
-  bool InTransaction() { return mPhase != PHASE_NONE; }
 #endif
+  bool InTransaction() { return mPhase != PHASE_NONE; }
+
   gfxContext* GetTarget() { return mTarget; }
+  void SetTarget(gfxContext* aTarget) { mUsingDefaultTarget = false; mTarget = aTarget; }
   bool IsRetained() { return mWidget != nsnull; }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
@@ -144,17 +150,13 @@ public:
   void PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxContext *aPushed);
 
   virtual bool IsCompositingCheap() { return false; }
-  virtual bool HasShadowManagerInternal() const { return false; }
-  bool HasShadowManager() const { return HasShadowManagerInternal(); }
   virtual PRInt32 GetMaxTextureSize() const { return PR_INT32_MAX; }
 
 protected:
-#ifdef DEBUG
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
   };
   TransactionPhase mPhase;
-#endif
 
   // Paints aLayer to mTarget.
   void PaintLayer(gfxContext* aTarget,
@@ -169,6 +171,8 @@ protected:
   bool EndTransactionInternal(DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
+
+  void FlashWidgetUpdateArea(gfxContext* aContext);
 
   // Widget whose surface should be used as the basis for ThebesLayer
   // buffers.

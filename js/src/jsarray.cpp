@@ -486,7 +486,7 @@ SetArrayElement(JSContext *cx, HandleObject obj, double index, const Value &v)
     JS_ASSERT(!JSID_IS_VOID(id));
 
     RootedValue tmp(cx, v);
-    return obj->setGeneric(cx, id, tmp.address(), true);
+    return obj->setGeneric(cx, obj, id, tmp.address(), true);
 }
 
 /*
@@ -549,12 +549,13 @@ SetOrDeleteArrayElement(JSContext *cx, HandleObject obj, double index,
 }
 
 JSBool
-js_SetLengthProperty(JSContext *cx, JSObject *obj, double length)
+js_SetLengthProperty(JSContext *cx, JSObject *objArg, double length)
 {
     Value v = NumberValue(length);
 
     /* We don't support read-only array length yet. */
-    return obj->setProperty(cx, cx->runtime->atomState.lengthAtom, &v, false);
+    Rooted<JSObject*> obj(cx, objArg);
+    return obj->setProperty(cx, obj, cx->runtime->atomState.lengthAtom, &v, false);
 }
 
 /*
@@ -772,11 +773,6 @@ array_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver, Handle
         return true;
     }
 
-    if (name == cx->runtime->atomState.protoAtom) {
-        vp->setObjectOrNull(obj->getProto());
-        return true;
-    }
-
     if (!obj->isDenseArray()) {
         Rooted<jsid> id(cx, NameToId(name));
         return baseops::GetProperty(cx, obj, receiver, id, vp);
@@ -879,7 +875,7 @@ array_setGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool
         return array_length_setter(cx, obj, id, strict, vp);
 
     if (!obj->isDenseArray())
-        return baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+        return baseops::SetPropertyHelper(cx, obj, obj, id, 0, vp, strict);
 
     do {
         uint32_t i;
@@ -904,7 +900,7 @@ array_setGeneric(JSContext *cx, HandleObject obj, HandleId id, Value *vp, JSBool
 
     if (!JSObject::makeDenseArraySlow(cx, obj))
         return false;
-    return baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+    return baseops::SetPropertyHelper(cx, obj, obj, id, 0, vp, strict);
 }
 
 static JSBool
@@ -922,7 +918,7 @@ array_setElement(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSB
         return false;
 
     if (!obj->isDenseArray())
-        return baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+        return baseops::SetPropertyHelper(cx, obj, obj, id, 0, vp, strict);
 
     do {
         /*
@@ -950,7 +946,7 @@ array_setElement(JSContext *cx, HandleObject obj, uint32_t index, Value *vp, JSB
 
     if (!JSObject::makeDenseArraySlow(cx, obj))
         return false;
-    return baseops::SetPropertyHelper(cx, obj, id, 0, vp, strict);
+    return baseops::SetPropertyHelper(cx, obj, obj, id, 0, vp, strict);
 }
 
 static JSBool
@@ -1294,7 +1290,7 @@ JSObject::allocateSlowArrayElements(JSContext *cx)
 }
 
 static bool
-AddLengthProperty(JSContext *cx, JSObject *obj)
+AddLengthProperty(JSContext *cx, HandleObject obj)
 {
     /*
      * Add the 'length' property for a newly created or converted slow array,
@@ -1338,6 +1334,19 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
         JS_ASSERT(obj->hasDynamicElements());
     }
 
+    /* Take ownership of the dense elements. */
+    HeapSlot *elems = obj->elements;
+
+    /* Root all values in the array during conversion. */
+    AutoValueArray autoArray(cx, (Value *) elems, arrayInitialized);
+
+    /*
+     * In case an incremental GC is already running, we need to write barrier
+     * the elements before (temporarily) destroying them.
+     */
+    if (obj->compartment()->needsBarrier())
+        obj->prepareElementRangeForOverwrite(0, arrayInitialized);
+
     /*
      * Save old map now, before calling InitScopeForObject. We'll have to undo
      * on error. This is gross, but a better way is not obvious. Note: the
@@ -1353,12 +1362,8 @@ JSObject::makeDenseArraySlow(JSContext *cx, HandleObject obj)
         return false;
     obj->shape_ = shape;
 
-    /* Take ownership of the dense elements, reset to an empty dense array. */
-    HeapSlot *elems = obj->elements;
+    /* Reset to an empty dense array. */
     obj->elements = emptyObjectElements;
-
-    /* Root all values in the array during conversion. */
-    AutoValueArray autoArray(cx, (Value *) elems, arrayInitialized);
 
     /*
      * Begin with the length property to share more of the property tree.
@@ -1803,7 +1808,7 @@ InitArrayElements(JSContext *cx, HandleObject obj, uint32_t start, uint32_t coun
     do {
         value = *vector++;
         if (!ValueToId(cx, idval, id.address()) ||
-            !obj->setGeneric(cx, id, value.address(), true)) {
+            !obj->setGeneric(cx, obj, id, value.address(), true)) {
             return false;
         }
         idval.getDoubleRef() += 1;
@@ -3214,7 +3219,7 @@ array_readonlyCommon(JSContext *cx, CallArgs &args)
         js_ReportMissingArg(cx, args.calleev(), 0);
         return false;
     }
-    RootedObject callable(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
+    RootedObject callable(cx, ValueToCallable(cx, &args[0]));
     if (!callable)
         return false;
 
@@ -3306,7 +3311,7 @@ array_map(JSContext *cx, unsigned argc, Value *vp)
         js_ReportMissingArg(cx, args.calleev(), 0);
         return false;
     }
-    RootedObject callable(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
+    RootedObject callable(cx, ValueToCallable(cx, &args[0]));
     if (!callable)
         return false;
 
@@ -3382,7 +3387,7 @@ array_filter(JSContext *cx, unsigned argc, Value *vp)
         js_ReportMissingArg(cx, args.calleev(), 0);
         return false;
     }
-    RootedObject callable(cx, js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK));
+    RootedObject callable(cx, ValueToCallable(cx, &args[0]));
     if (!callable)
         return false;
 
@@ -3490,7 +3495,7 @@ array_reduceCommon(JSContext *cx, CallArgs &args)
         js_ReportMissingArg(cx, args.calleev(), 0);
         return false;
     }
-    JSObject *callable = js_ValueToCallableObject(cx, &args[0], JSV2F_SEARCH_STACK);
+    JSObject *callable = ValueToCallable(cx, &args[0]);
     if (!callable)
         return false;
 

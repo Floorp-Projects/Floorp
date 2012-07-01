@@ -586,7 +586,7 @@ abstract public class BrowserApp extends GeckoApp
             return true;
         }
 
-        bookmark.setEnabled(true);
+        bookmark.setEnabled(!tab.getURL().startsWith("about:reader"));
         bookmark.setCheckable(true);
         
         if (tab.isBookmark()) {

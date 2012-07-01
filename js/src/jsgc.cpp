@@ -883,6 +883,8 @@ MarkExactStackRoots(JSTracer *trc)
                         MarkIdRoot(trc, ((PropertyId *)addr)->asId(), "exact stackroot property id");
                     } else if (i == THING_ROOT_VALUE) {
                         MarkValueRoot(trc, (Value *)addr, "exact stackroot value");
+                    } else if (i == THING_ROOT_TYPE) {
+                        MarkTypeRoot(trc, (Type)addr, "exact stackroot type");
                     } else if (i == THING_ROOT_SHAPE) {
                         MarkShapeRoot(trc, (Shape **)addr, "exact stackroot shape");
                     } else if (i == THING_ROOT_BASE_SHAPE) {
@@ -3913,6 +3915,13 @@ GCSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
 }
 
 void
+GCFinalSlice(JSRuntime *rt, JSGCInvocationKind gckind, gcreason::Reason reason)
+{
+    Collect(rt, true, SliceBudget::Unlimited, gckind, reason);
+}
+
+
+void
 GCDebugSlice(JSRuntime *rt, bool limit, int64_t objCount)
 {
     int64_t budget = limit ? SliceBudget::WorkBudget(objCount) : SliceBudget::Unlimited;
@@ -4238,6 +4247,19 @@ JS::CheckStackRoots(JSContext *cx)
     if (rt->gcZeal_ != ZealStackRootingSafeValue && rt->gcZeal_ != ZealStackRootingValue)
         return;
     if (rt->gcZeal_ == ZealStackRootingSafeValue && !rt->gcExactScanningEnabled)
+        return;
+
+    // If this assertion fails, it means that an AssertRootingUnnecessary was
+    // placed around code that could trigger GC, and is therefore wrong. The
+    // AssertRootingUnnecessary should be removed and the code it was guarding
+    // should be modified to properly root any gcthings, and very possibly any
+    // code calling that function should also be modified if it was improperly
+    // assuming that GC could not happen at all within the called function.
+    // (The latter may not apply if the AssertRootingUnnecessary only protected
+    // a portion of a function, so the callers were already assuming that GC
+    // could happen.)
+    JS_ASSERT(!cx->rootingUnnecessary);
+
         return;
 
     AutoCopyFreeListToArenas copy(rt);

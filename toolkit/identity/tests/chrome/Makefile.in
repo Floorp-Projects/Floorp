@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH          = ../../../..
+topsrcdir      = @top_srcdir@
+srcdir         = @srcdir@
+VPATH          = @srcdir@
+relativesrcdir = toolkit/identity/tests/chrome
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
+
+_CHROME_FILES = \
+		sandbox_content.html \
+		sandbox_content_alert.html \
+		sandbox_content_framed.html \
+		sandbox_content_perms.html \
+		sandbox_content_popup.html \
+		sandbox_content_redirect.html \
+		sandbox_content_redirect.html^headers^ \
+		sandbox_content.sjs \
+		test_sandbox.xul \
+		$(NULL)
+
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

@@ -29,19 +29,6 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
         js_ReportIsNotDefined(cx, printable.ptr());
 }
 
-#define NATIVE_SET(cx,obj,shape,entry,strict,vp)                              \
-    JS_BEGIN_MACRO                                                            \
-        if (shape->hasDefaultSetter() &&                                      \
-            (shape)->hasSlot() &&                                             \
-            !(shape)->isMethod()) {                                           \
-            /* Fast path for, e.g., plain Object instance properties. */      \
-            (obj)->nativeSetSlotWithType(cx, shape, *vp);                     \
-        } else {                                                              \
-            if (!js_NativeSet(cx, obj, shape, false, strict, vp))             \
-                THROW();                                                      \
-        }                                                                     \
-    JS_END_MACRO
-
 #define NATIVE_GET(cx,obj,pobj,shape,getHow,vp,onerr)                         \
     JS_BEGIN_MACRO                                                            \
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {         \

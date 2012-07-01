@@ -507,6 +507,22 @@ function DT__updateErrorsCount(aChangedTabId)
 };
 
 /**
+ * Reset the errors counter for the given tab.
+ *
+ * @param nsIDOMElement aTab The xul:tab for which you want to reset the page
+ * errors counters.
+ */
+DeveloperToolbar.prototype.resetErrorsCount =
+function DT_resetErrorsCount(aTab)
+{
+  let tabId = aTab.linkedPanel;
+  if (tabId in this._errorsCount) {
+    this._errorsCount[tabId] = 0;
+    this._updateErrorsCount(tabId);
+  }
+};
+
+/**
  * Panel to handle command line output.
  * @param aChromeDoc document from which we can pull the parts we need.
  * @param aInput the input element that should get focus.

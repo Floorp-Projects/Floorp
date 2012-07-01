@@ -910,11 +910,6 @@ nsDOMDataTransfer::FillInExternalDragData(TransferItem& aItem, PRUint32 aIndex)
   NS_PRECONDITION(mIsExternal, "Not an external drag");
 
   if (!aItem.mData) {
-    nsCOMPtr<nsITransferable> trans =
-      do_CreateInstance("@mozilla.org/widget/transferable;1");
-    if (!trans)
-      return;
-
     NS_ConvertUTF16toUTF8 utf8format(aItem.mFormat);
     const char* format = utf8format.get();
     if (strcmp(format, "text/plain") == 0)
@@ -925,6 +920,16 @@ nsDOMDataTransfer::FillInExternalDragData(TransferItem& aItem, PRUint32 aIndex)
     nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
     if (!dragSession)
       return;
+
+    nsCOMPtr<nsITransferable> trans =
+      do_CreateInstance("@mozilla.org/widget/transferable;1");
+    if (!trans)
+      return;
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    dragSession->GetSourceDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+    trans->Init(doc ? doc->GetLoadContext() : nsnull);
 
     trans->AddDataFlavor(format);
     dragSession->GetData(trans, aIndex);

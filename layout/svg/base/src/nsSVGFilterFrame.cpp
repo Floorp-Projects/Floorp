@@ -207,7 +207,8 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   } else {
     // Match filterRes as closely as possible to the pixel density of the nearest
     // outer 'svg' device space:
-    gfxMatrix canvasTM = nsSVGUtils::GetCanvasTM(aTarget);
+    gfxMatrix canvasTM =
+      nsSVGUtils::GetCanvasTM(aTarget, nsISVGChildFrame::FOR_OUTERSVG_TM);
     if (canvasTM.IsSingular()) {
       // nothing to draw
       return;
@@ -233,8 +234,8 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
   // Only used (so only set) when we paint:
   gfxMatrix filterToDeviceSpace;
   if (aPaint) {
-    filterToDeviceSpace =
-      filterToUserSpace * nsSVGUtils::GetCanvasTM(aTarget);
+    filterToDeviceSpace = filterToUserSpace *
+              nsSVGUtils::GetCanvasTM(aTarget, nsISVGChildFrame::FOR_PAINTING);
   }
 
   // Convert the passed in rects from frame to filter space:
