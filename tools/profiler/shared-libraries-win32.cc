@@ -88,7 +88,24 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
       nsID pdbSig;
       uint32_t pdbAge;
       char *pdbName = NULL;
-      if (GetPdbInfo((uintptr_t)module.modBaseAddr, pdbSig, pdbAge, &pdbName)) {
+
+      // Load the module again to make sure that its handle will remain remain
+      // valid as we attempt to read the PDB information from it.  We load the
+      // DLL as a datafile so that if the module actually gets unloaded between
+      // the call to Module32Next and the following LoadLibraryEx, we don't end
+      // up running the now newly loaded module's DllMain function.  If the
+      // module is already loaded, LoadLibraryEx just increments its refcount.
+      //
+      // Note that because of the race condition above, merely loading the DLL
+      // again is not safe enough, therefore we also need to make sure that we
+      // can read the memory mapped at the base address before we can safely
+      // proceed to actually access those pages.
+      HMODULE handleLock = LoadLibraryEx(module.szExePath, NULL, LOAD_LIBRARY_AS_DATAFILE);
+      MEMORY_BASIC_INFORMATION vmemInfo = {0};
+      if (handleLock &&
+          sizeof(vmemInfo) == VirtualQuery(module.modBaseAddr, &vmemInfo, sizeof(vmemInfo)) &&
+          vmemInfo.State == MEM_COMMIT &&
+          GetPdbInfo((uintptr_t)module.modBaseAddr, pdbSig, pdbAge, &pdbName)) {
         SharedLibrary shlib((uintptr_t)module.modBaseAddr,
                             (uintptr_t)module.modBaseAddr+module.modBaseSize,
                             0, // DLLs are always mapped at offset 0 on Windows
@@ -98,6 +115,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
                             module.szModule);
         sharedLibraryInfo.AddSharedLibrary(shlib);
       }
+      FreeLibrary(handleLock); // ok to free null handles
     } while (Module32Next(snap, &module));
   }
 
