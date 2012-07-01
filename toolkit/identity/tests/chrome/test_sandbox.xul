@@ -239,12 +239,16 @@ function test_popup() {
     free_and_check_sandbox(theSandbox);
     theSandbox = null;
   }
-  Services.ww.registerNotification(new WindowObserver(continueTest));
+  let winObs = new WindowObserver(continueTest);
+  Services.ww.registerNotification(winObs);
   new Sandbox(alertURL, function sandboxCB(aSandbox) {
     theSandbox = aSandbox;
     check_sandbox(aSandbox, alertURL);
     // Wait 5 seconds to see if the window is going to open.
-    setTimeout(continueTest, 5000);
+    setTimeout(function() {
+      Services.ww.unregisterNotification(winObs);
+      continueTest();
+    }, 5000);
   });
 }
 
