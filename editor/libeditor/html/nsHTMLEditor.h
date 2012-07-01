@@ -229,19 +229,18 @@ public:
   /* ------------ Block methods moved from nsEditor -------------- */
   static already_AddRefed<nsIDOMNode> GetBlockNodeParent(nsIDOMNode *aNode);
 
-  static already_AddRefed<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
-  void     IsNextCharWhitespace(nsIDOMNode *aParentNode,
-                                PRInt32 aOffset, 
-                                bool *outIsSpace, 
-                                bool *outIsNBSP,
-                                nsCOMPtr<nsIDOMNode> *outNode = 0,
-                                PRInt32 *outOffset = 0);
-  void     IsPrevCharWhitespace(nsIDOMNode *aParentNode,
-                                PRInt32 aOffset, 
-                                bool *outIsSpace, 
-                                bool *outIsNBSP,
-                                nsCOMPtr<nsIDOMNode> *outNode = 0,
-                                PRInt32 *outOffset = 0);
+  void IsNextCharInNodeWhitespace(nsIContent* aContent,
+                                  PRInt32 aOffset,
+                                  bool* outIsSpace,
+                                  bool* outIsNBSP,
+                                  nsIContent** outNode = nsnull,
+                                  PRInt32* outOffset = 0);
+  void IsPrevCharInNodeWhitespace(nsIContent* aContent,
+                                  PRInt32 aOffset,
+                                  bool* outIsSpace,
+                                  bool* outIsNBSP,
+                                  nsIContent** outNode = nsnull,
+                                  PRInt32* outOffset = 0);
 
   /* ------------ Overrides of nsEditor interface methods -------------- */
 
