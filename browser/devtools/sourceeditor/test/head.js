@@ -96,8 +96,8 @@ function waitForSelection(aExpectedStringOrValidatorFn, aSetupFn,
     let clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].
                           getService(Ci.nsIClipboardHelper);
     clipboardHelper.copyStringToClipboard(preExpectedVal,
-                                          document,
-                                          Ci.nsIClipboard.kSelectionClipboard);
+                                          Ci.nsIClipboard.kSelectionClipboard,
+                                          document);
 
     wait(function(aData) aData == preExpectedVal,
          function() {
