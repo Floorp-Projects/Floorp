@@ -17,7 +17,6 @@
 #include "nsIDOMNode.h"
 
 class nsIAtom;
-class nsIContent;
 class nsDOMAttribute;
 class nsINodeInfo;
 class nsIDocument;

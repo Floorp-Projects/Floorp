@@ -12,12 +12,9 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
 #include "nsDOMString.h"
 #include "nsNodeInfoManager.h"
-#include "nsIDocument.h"
 #include "nsIXPConnect.h"
-#include "nsIDOMDocument.h"
 #include "xpcpublic.h"
 #include "nsWrapperCacheInlines.h"
 

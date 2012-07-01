@@ -7,13 +7,11 @@
 #include "nsString.h"
 #include "jsapi.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsXBLProtoImplProperty.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsContentUtils.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLSerialize.h"
 

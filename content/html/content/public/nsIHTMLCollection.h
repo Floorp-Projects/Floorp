@@ -9,7 +9,6 @@
 #include "nsIDOMHTMLCollection.h"
 
 class nsINode;
-class nsIContent;
 class nsWrapperCache;
 
 // IID for the nsIHTMLCollection interface

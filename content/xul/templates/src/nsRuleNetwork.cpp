@@ -20,11 +20,7 @@
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
-#include "nsIComponentManager.h"
-#include "nsIContent.h"
 #include "plhash.h"
-#include "nsReadableUtils.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING

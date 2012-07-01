@@ -10,7 +10,6 @@
 #include "nsIURL.h"
 #include "nsISizeOf.h"
 
-#include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsGkAtoms.h"
 #include "nsString.h"

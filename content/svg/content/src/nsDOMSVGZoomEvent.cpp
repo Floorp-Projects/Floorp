@@ -4,12 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMSVGZoomEvent.h"
-#include "nsContentUtils.h"
 #include "nsSVGRect.h"
 #include "DOMSVGPoint.h"
 #include "nsSVGSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "mozilla/dom/Element.h"

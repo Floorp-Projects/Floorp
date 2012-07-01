@@ -10,7 +10,6 @@
 #include "nsContentUtils.h"
 
 #include "nsIDOMEventTarget.h"
-#include "nsIDocument.h"
 #include "nsIScriptSecurityManager.h"
 
 nsDOMNavigationTiming::nsDOMNavigationTiming()

@@ -17,7 +17,6 @@
 #include "Statistics.h"
 
 #include "nsAttrName.h"
-#include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIFrame.h"
