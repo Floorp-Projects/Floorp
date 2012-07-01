@@ -4,28 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsCompatibility.h"
-#include "nsScriptLoader.h"
-#include "nsNetUtil.h"
-#include "nsIStyleSheetLinkingElement.h"
-#include "nsIWebShellServices.h"
-#include "nsIDocShell.h"
-#include "nsEncoderDecoderUtils.h"
 #include "nsContentUtils.h"
-#include "nsICharsetDetector.h"
-#include "nsIScriptElement.h"
-#include "nsIMarkupDocumentViewer.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIContentViewer.h"
-#include "nsIScriptGlobalObjectOwner.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsHtml5DocumentMode.h"
 #include "nsHtml5Tokenizer.h"
-#include "nsHtml5UTF16Buffer.h"
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5Parser.h"
 #include "nsHtml5AtomTable.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsHtml5DependentUTF16Buffer.h"
 
 NS_INTERFACE_TABLE_HEAD(nsHtml5Parser)

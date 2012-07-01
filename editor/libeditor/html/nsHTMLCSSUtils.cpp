@@ -10,7 +10,6 @@
 #include "ChangeCSSInlineStyleTxn.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMElementCSSInlineStyle.h"
-#include "nsIDOMDocument.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsTextEditUtils.h"

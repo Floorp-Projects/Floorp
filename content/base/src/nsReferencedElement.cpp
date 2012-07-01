@@ -11,7 +11,6 @@
 #include "nsEscape.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsCycleCollectionParticipant.h"
 

@@ -11,7 +11,6 @@
 #include "nsSMILInstanceTime.h"
 #include "nsSMILParserUtils.h"
 #include "nsISMILAnimationElement.h"
-#include "nsContentUtils.h"
 #include "nsEventListenerManager.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMTimeEvent.h"

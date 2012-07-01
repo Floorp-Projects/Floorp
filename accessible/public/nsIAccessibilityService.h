@@ -15,7 +15,6 @@
 class Accessible;
 class nsINode;
 class nsIContent;
-class nsIDocument;
 class nsIFrame;
 class nsIPresShell;
 class nsObjectFrame;

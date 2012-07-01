@@ -17,6 +17,7 @@
 
 #include <algorithm>
 
+#include "mozilla/Services.h"
 #include "nsIObserverService.h"
 
 using namespace mozilla;

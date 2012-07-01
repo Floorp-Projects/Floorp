@@ -26,7 +26,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-#include "nsContentUtils.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"

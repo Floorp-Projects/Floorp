@@ -23,7 +23,6 @@
 typedef PRUptrdiff PtrBits;
 class nsAString;
 class nsIAtom;
-class nsIDocument;
 template<class E, class A> class nsTArray;
 struct nsTArrayDefaultAllocator;
 

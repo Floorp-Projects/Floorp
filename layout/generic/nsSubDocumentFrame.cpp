@@ -44,7 +44,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsWeakReference.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMDocument.h"
 #include "nsDisplayList.h"
 #include "nsUnicharUtils.h"
 #include "nsIScrollableFrame.h"

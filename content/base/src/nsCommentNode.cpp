@@ -11,7 +11,6 @@
 #include "nsGenericDOMDataNode.h"
 
 #include "nsCOMPtr.h"
-#include "nsIDocument.h"
 #include "nsGenericElement.h" // DOMCI_NODE_DATA
 
 class nsCommentNode : public nsGenericDOMDataNode,

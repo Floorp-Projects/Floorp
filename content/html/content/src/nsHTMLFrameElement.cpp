@@ -8,9 +8,9 @@
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsGkAtoms.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsDOMError.h"
+
+class nsIDOMDocument;
 
 using namespace mozilla;
 using namespace mozilla::dom;
