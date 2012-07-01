@@ -252,8 +252,14 @@ public:
   NS_IMETHOD PreDestroy(bool aDestroyingFrames);
 
   /** Internal, static version */
+  // aElement must not be null.
+  static bool NodeIsBlockStatic(const mozilla::dom::Element* aElement);
   static nsresult NodeIsBlockStatic(nsIDOMNode *aNode, bool *aIsBlock);
+protected:
+  using nsEditor::IsBlockNode;
+  virtual bool IsBlockNode(nsINode *aNode);
 
+public:
   NS_IMETHOD SetFlags(PRUint32 aFlags);
 
   NS_IMETHOD Paste(PRInt32 aSelectionType);
@@ -481,9 +487,6 @@ protected:
   NS_IMETHOD SetSelectionAtDocumentStart(nsISelection *aSelection);
 
 // End of Table Editing utilities
-  
-  virtual bool IsBlockNode(nsIDOMNode *aNode);
-  virtual bool IsBlockNode(nsINode *aNode);
   
   static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
 
