@@ -82,6 +82,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/PBrowserParent.h"
+#include "mozilla/dom/TypedArray.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
@@ -1556,6 +1557,8 @@ WrapStyle(JSContext* cx, JSObject* obj,
       ok = dom::WrapObject(cx, obj, supports, &v);
       break;
     }
+    default:
+      MOZ_NOT_REACHED("unexpected CanvasMultiGetterType");
   }
   if (!ok) {
     error.Throw(NS_ERROR_FAILURE);
@@ -3289,7 +3292,6 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
   case TEXT_BASELINE_TOP:
     anchorY = fontMetrics.emAscent;
     break;
-    break;
   case TEXT_BASELINE_MIDDLE:
     anchorY = (fontMetrics.emAscent - fontMetrics.emDescent) * .5f;
     break;
@@ -3301,6 +3303,8 @@ nsCanvasRenderingContext2DAzure::DrawOrMeasureText(const nsAString& aRawText,
   case TEXT_BASELINE_BOTTOM:
     anchorY = -fontMetrics.emDescent;
     break;
+  default:
+      MOZ_NOT_REACHED("unexpected TextBaseline");
   }
 
   processor.mPt.y += anchorY;
