@@ -291,4 +291,23 @@ LayoutHelpers = {
       LH_scrollIntoViewIfNeeded(win.frameElement, centered);
     }
   },
+
+  /**
+   * Check if a node and its document are still alive
+   * and attached to the window.
+   *
+   * @param aNode
+   */
+  isNodeConnected: function LH_isNodeConnected(aNode)
+  {
+    try {
+      let connected = (aNode.ownerDocument && aNode.ownerDocument.defaultView &&
+                      !(aNode.compareDocumentPosition(aNode.ownerDocument.documentElement) &
+                      aNode.DOCUMENT_POSITION_DISCONNECTED));
+      return connected;
+    } catch (e) {
+      // "can't access dead object" error
+      return false;
+    }
+  },
 };
