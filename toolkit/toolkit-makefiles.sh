@@ -1148,10 +1148,9 @@ if [ "$MOZ_CRASHREPORTER" ]; then
   "
   if [ "$OS_ARCH" = "WINNT" ]; then
     add_makefiles "
-      toolkit/crashreporter/google-breakpad/src/client/windows/crash_generation/Makefile
-      toolkit/crashreporter/google-breakpad/src/client/windows/handler/Makefile
-      toolkit/crashreporter/google-breakpad/src/client/windows/sender/Makefile
-      toolkit/crashreporter/google-breakpad/src/common/windows/Makefile
+      toolkit/crashreporter/breakpad-windows-libxul/Makefile
+      toolkit/crashreporter/breakpad-windows-standalone/Makefile
+      toolkit/crashreporter/injector/Makefile
     "
   elif [ "$OS_ARCH" = "Darwin" ]; then
     add_makefiles "
