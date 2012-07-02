@@ -14,13 +14,9 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMAttr.h"
 #include "nsDOMError.h"
 #include "nsGkAtoms.h"
 #include "nsDOMString.h"
-#include "nsIDOMUserDataHandler.h"
 #include "nsContentUtils.h"
 
 class nsDocumentFragment : public nsGenericElement,

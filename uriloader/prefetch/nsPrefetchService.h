@@ -13,7 +13,6 @@
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMLoadStatus.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"

@@ -7,12 +7,12 @@
 #include "nsIFile.h"
 
 #include "mozilla/storage.h"
-#include "nsContentUtils.h"
 #include "nsEscape.h"
 #include "nsThreadUtils.h"
 #include "snappy/snappy.h"
 #include "test_quota.h"
 
+#include "nsIBFCacheEntry.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IndexedDatabaseManager.h"

@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsContentBlocker.h"
-#include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsIServiceManager.h"

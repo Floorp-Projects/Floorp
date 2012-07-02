@@ -4,17 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SVGPathSegUtils.h"
-#include "nsSVGElement.h"
-#include "nsSVGSVGElement.h"
 #include "nsSVGPathDataParser.h"
-#include "nsString.h"
-#include "nsSVGUtils.h"
 #include "nsContentUtils.h"
 #include "nsTextFormatter.h"
-#include "prdtoa.h"
-#include <limits>
-#include "nsMathUtils.h"
-#include "prtypes.h"
 
 using namespace mozilla;
 

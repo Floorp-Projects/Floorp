@@ -30,7 +30,6 @@
 #endif
 
 #include "nsIMutableArray.h"
-#include "nsIDOMDocument.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsINameSpaceManager.h"

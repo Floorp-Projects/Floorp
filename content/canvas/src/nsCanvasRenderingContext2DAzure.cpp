@@ -16,7 +16,6 @@
 
 #include "nsContentUtils.h"
 
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsHTMLCanvasElement.h"
 #include "nsSVGEffects.h"

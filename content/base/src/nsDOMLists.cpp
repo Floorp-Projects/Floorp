@@ -10,7 +10,6 @@
 #include "nsDOMLists.h"
 #include "nsDOMError.h"
 #include "nsDOMClassInfoID.h"
-#include "nsContentUtils.h"
 #include "nsINode.h"
 
 nsDOMStringList::nsDOMStringList()
