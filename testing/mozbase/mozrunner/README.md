@@ -1,13 +1,9 @@
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
 [mozrunner](https://github.com/mozilla/mozbase/tree/master/mozrunner)
 is a [python package](http://pypi.python.org/pypi/mozrunner)
 which handles running of Mozilla applications.
-mozrunner utilizes [mozprofile](/en/Mozprofile)
+mozrunner utilizes [mozprofile](https://github.com/mozilla/mozbase/tree/master/mozprofile)
 for managing application profiles
-and [mozprocess](/en/Mozprocess) for robust process control.
+and [mozprocess](https://github.com/mozilla/mozbase/tree/master/mozprocess) for robust process control.
 
 mozrunner may be used from the command line or programmatically as an API.
 
@@ -18,7 +14,7 @@ The `mozrunner` command will launch the application (specified by
 `--app`) from a binary specified with `-b` or as located on the `PATH`.
 
 mozrunner takes the command line options from 
-[mozprofile](/en/Mozprofile) for constructing the profile to be used by 
+[mozprofile](https://github.com/mozilla/mozbase/tree/master/mozprofile) for constructing the profile to be used by 
 the application.
 
 Run `mozrunner --help` for detailed information on the command line
