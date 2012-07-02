@@ -280,9 +280,9 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32 localS
     JSObject *obj = &v.toObject();
 
     if (cx->isExceptionPending())
-        UnwindIteratorForUncatchableException(cx, obj);
-    else
         UnwindIteratorForException(cx, obj);
+    else
+        UnwindIteratorForUncatchableException(cx, obj);
 }
 
 static void
