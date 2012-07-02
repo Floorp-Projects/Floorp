@@ -8715,11 +8715,11 @@ nsGlobalWindow::RegisterIdleObserver(nsIIdleObserver* aIdleObserver)
     return NS_OK;
   }
 
-  MOZ_ASSERT(mIdleCallbackIndex >= 0);
-
   if (!mCurrentlyIdle) {
     return NS_OK;
   }
+
+  MOZ_ASSERT(mIdleCallbackIndex >= 0);
 
   if (static_cast<PRInt32>(insertAtIndex) < mIdleCallbackIndex) {
     NotifyIdleObserver(tmpIdleObserver.mIdleObserver,
@@ -8784,7 +8784,6 @@ nsresult
 nsGlobalWindow::UnregisterIdleObserver(nsIIdleObserver* aIdleObserver)
 {
   MOZ_ASSERT(IsInnerWindow(), "Must be an inner window!");
-  MOZ_ASSERT(mIdleTimer);
 
   PRInt32 removeElementIndex;
   nsresult rv = FindIndexOfElementToRemove(aIdleObserver, &removeElementIndex);
@@ -8794,11 +8793,13 @@ nsGlobalWindow::UnregisterIdleObserver(nsIIdleObserver* aIdleObserver)
   }
   mIdleObservers.RemoveElementAt(removeElementIndex);
 
+  MOZ_ASSERT(mIdleTimer);
   if (mIdleObservers.IsEmpty() && mIdleService) {
     rv = mIdleService->RemoveIdleObserver(mObserver, MIN_IDLE_NOTIFICATION_TIME_S);
     NS_ENSURE_SUCCESS(rv, rv);
     mIdleService = nsnull;
 
+    mIdleTimer->Cancel();
     mIdleCallbackIndex = -1;
     return NS_OK;
   }
