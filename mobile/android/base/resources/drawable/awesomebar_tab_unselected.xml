@@ -3,12 +3,42 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:top="46dip">
-        <shape android:shape="rectangle">
-            <solid android:color="#000000"/>
-        </shape>
+    <item android:maxLevel="0">
+        <layer-list>
+            <item android:top="@dimen/awesomebar_tab_transparency_height">
+                <shape android:shape="rectangle">
+                    <solid android:color="#EEF1F5"/>
+                </shape>
+            </item>
+        </layer-list>
     </item>
 
-</layer-list>
+    <item android:maxLevel="1">
+        <layer-list>
+            <item android:top="@dimen/awesomebar_tab_transparency_height">
+                <shape android:shape="rectangle">
+                    <solid android:color="#EEF1F5"/>
+                </shape>
+            </item>
+
+            <item android:bottom="2dip"
+                  android:drawable="@drawable/awesomebar_tab_left"/>
+        </layer-list>
+    </item>
+
+    <item android:maxLevel="2">
+        <layer-list>
+            <item android:top="@dimen/awesomebar_tab_transparency_height">
+                <shape android:shape="rectangle">
+                    <solid android:color="#EEF1F5"/>
+                </shape>
+            </item>
+
+            <item android:bottom="2dip"
+                  android:drawable="@drawable/awesomebar_tab_right"/>
+        </layer-list>
+    </item>
+
+</level-list>

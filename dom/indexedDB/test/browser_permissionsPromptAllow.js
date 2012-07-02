@@ -10,8 +10,7 @@ const notificationID = "indexedDB-permissions-prompt";
 function test()
 {
   waitForExplicitFinish();
-  // We want a prompt.
-  setPermission(testPageURL, "indexedDB", "allow");
+  removePermission(testPageURL, "indexedDB");
   executeSoon(test1);
 }
 
@@ -28,7 +27,7 @@ function test1()
          "First database creation was successful");
       ok(!exception, "No exception");
       is(getPermission(testPageURL, "indexedDB"),
-         Components.interfaces.nsIPermissionManager.UNKNOWN_ACTION,
+         Components.interfaces.nsIPermissionManager.ALLOW_ACTION,
          "Correct permission set");
       gBrowser.removeCurrentTab();
       executeSoon(test2);
@@ -64,7 +63,7 @@ function test2()
          "First database creation was successful");
       ok(!exception, "No exception");
       is(getPermission(testPageURL, "indexedDB"),
-         Components.interfaces.nsIPermissionManager.UNKNOWN_ACTION,
+         Components.interfaces.nsIPermissionManager.ALLOW_ACTION,
          "Correct permission set");
       gBrowser.removeCurrentTab();
       unregisterAllPopupEventHandlers();

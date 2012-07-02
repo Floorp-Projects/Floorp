@@ -12,6 +12,7 @@ function test()
 {
   waitForExplicitFinish();
   requestLongerTimeout(10);
+  setPermission(testPageURL, "indexedDB");
   removePermission(testPageURL, "indexedDB-unlimited");
   Services.prefs.setIntPref("dom.indexedDB.warningQuota", 2);
   executeSoon(test1);
@@ -42,7 +43,7 @@ function test1()
                "Correct permission set");
             gBrowser.removeCurrentTab();
             unregisterAllPopupEventHandlers();
-            executeSoon(finish);
+            executeSoon(test2);
           });
           executeSoon(function() { dispatchEvent("indexedDB-done"); });
         }

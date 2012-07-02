@@ -3,19 +3,14 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:padding="10sp"
-              android:gravity="center"
-              android:background="@drawable/awesomebar_tab_indicator">
-
-    <TextView android:id="@+id/title"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:singleLine="true"
-              android:ellipsize="marquee"
-              android:layout_marginBottom="3dip"
-              android:textColor="@color/awesomebar_tab_text"/>
-
-</LinearLayout>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="wrap_content"
+          android:layout_height="fill_parent"
+          android:layout_weight="1.0"
+          android:gravity="center"
+          android:background="@drawable/awesomebar_tab_indicator"
+          android:padding="10dp"
+          android:singleLine="true"
+          android:ellipsize="marquee"
+          android:textSize="13sp"
+          android:textColor="#222222"/>
