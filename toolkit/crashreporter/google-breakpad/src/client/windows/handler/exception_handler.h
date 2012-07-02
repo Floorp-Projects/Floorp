@@ -164,7 +164,7 @@ class ExceptionHandler {
                    void* callback_context,
                    int handler_types);
 
-  // Creates a new ExcetpionHandler instance that can attempt to perform
+  // Creates a new ExceptionHandler instance that can attempt to perform
   // out-of-process dump generation if pipe_name is not NULL. If pipe_name is
   // NULL, or if out-of-process dump generation registration step fails,
   // in-process dump generation will be used. This also allows specifying
@@ -176,6 +176,17 @@ class ExceptionHandler {
                    int handler_types,
                    MINIDUMP_TYPE dump_type,
                    const wchar_t* pipe_name,
+                   const CustomClientInfo* custom_info);
+
+  // As above, creates a new ExceptionHandler instance to perform
+  // out-of-process dump generation if the given pipe_handle is not NULL.
+  ExceptionHandler(const wstring& dump_path,
+                   FilterCallback filter,
+                   MinidumpCallback callback,
+                   void* callback_context,
+                   int handler_types,
+                   MINIDUMP_TYPE dump_type,
+                   HANDLE pipe_handle,
                    const CustomClientInfo* custom_info);
 
   ~ExceptionHandler();
@@ -253,6 +264,7 @@ class ExceptionHandler {
                   int handler_types,
                   MINIDUMP_TYPE dump_type,
                   const wchar_t* pipe_name,
+                  HANDLE pipe_handle,
                   const CustomClientInfo* custom_info);
 
   // Function pointer type for MiniDumpWriteDump, which is looked up
