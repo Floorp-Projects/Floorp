@@ -726,13 +726,6 @@ DocumentViewerImpl::InitPresentationStuff(bool aDoInitialReflow)
   mPresContext->SetMinFontSize(mMinFontSize);
 
   if (aDoInitialReflow) {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
-    if (htmlDoc) {
-      nsCOMPtr<nsIDOMHTMLFrameSetElement> frameset =
-        do_QueryInterface(mDocument->GetRootElement());
-      htmlDoc->SetIsFrameset(frameset != nsnull);
-    }
-
     nsCOMPtr<nsIPresShell> shellGrip = mPresShell;
     // Initial reflow
     mPresShell->InitialReflow(width, height);
