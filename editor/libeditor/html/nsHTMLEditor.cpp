@@ -3223,12 +3223,6 @@ nsHTMLEditor::DeleteNode(nsIDOMNode* aNode)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMNode> selectAllNode = FindUserSelectAllNode(aNode);
-  
-  if (selectAllNode)
-  {
-    return nsEditor::DeleteNode(selectAllNode);
-  }
   return nsEditor::DeleteNode(aNode);
 }
 
@@ -3241,12 +3235,6 @@ NS_IMETHODIMP nsHTMLEditor::DeleteText(nsIDOMCharacterData *aTextNode,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMNode> selectAllNode = FindUserSelectAllNode(aTextNode);
-  
-  if (selectAllNode)
-  {
-    return nsEditor::DeleteNode(selectAllNode);
-  }
   return nsEditor::DeleteText(aTextNode, aOffset, aLength);
 }
 
@@ -3322,42 +3310,6 @@ nsHTMLEditor::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
     }
     mRules->DocumentModified();
   }
-}
-
-
-/* This routine examines aNode and its ancestors looking for any node which has the
-   -moz-user-select: all style lit.  Return the highest such ancestor.  */
-already_AddRefed<nsIDOMNode>
-nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode* aNode)
-{
-  nsCOMPtr<nsIDOMNode> node = aNode;
-  nsCOMPtr<nsIDOMElement> root = do_QueryInterface(GetRoot());
-  if (!nsEditorUtils::IsDescendantOf(aNode, root))
-    return nsnull;
-
-  nsCOMPtr<nsIDOMNode> resultNode;  // starts out empty
-  nsAutoString mozUserSelectValue;
-  while (node)
-  {
-    // retrieve the computed style of -moz-user-select for node
-    mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssMozUserSelect, mozUserSelectValue);
-    if (mozUserSelectValue.EqualsLiteral("all"))
-    {
-      resultNode = node;
-    }
-    if (node != root)
-    {
-      nsCOMPtr<nsIDOMNode> tmp;
-      node->GetParentNode(getter_AddRefs(tmp));
-      node = tmp;
-    }
-    else
-    {
-      node = nsnull;
-    }
-  } 
-
-  return resultNode.forget();
 }
 
 NS_IMETHODIMP_(bool)

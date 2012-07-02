@@ -331,7 +331,6 @@ public:
                               nsCOMPtr<nsIDOMNode> *ioParent, 
                               PRInt32 *ioOffset, 
                               bool aNoEmptyNodes);
-  virtual already_AddRefed<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode* aNode);
 
   // Use this to assure that selection is set after attribute nodes when 
   //  trying to collapse selection at begining of a block node
