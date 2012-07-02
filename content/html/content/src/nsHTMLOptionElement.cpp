@@ -25,7 +25,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
 #include "nsEventStates.h"
-#include "nsIDOMDocument.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
 

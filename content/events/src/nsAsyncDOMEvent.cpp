@@ -5,7 +5,6 @@
 
 #include "nsAsyncDOMEvent.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMEventTarget.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"

@@ -13,12 +13,10 @@
 
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
-#include "nsContentUtils.h"
 #include "nsTextFormatter.h"
 #include "nsCSSProps.h"
 #include "nsRuleNode.h"

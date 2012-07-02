@@ -42,8 +42,6 @@
 #include "nsIDocument.h"
 #include "nsIScrollableFrame.h"
 
-#include "nsIHTMLDocument.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIFormControl.h"

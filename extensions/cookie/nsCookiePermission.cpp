@@ -17,7 +17,6 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMDocument.h"
 #include "nsIPrincipal.h"
 #include "nsString.h"
 #include "nsCRT.h"

@@ -39,6 +39,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "nsIObserverService.h"
+#include "mozilla/Services.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
 using namespace mozilla;
