@@ -392,6 +392,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *paren
         fun->flags = uint16_t(flagsword);
         fun->atom.init(atom);
         fun->initScript(script);
+        script->setFunction(fun);
         if (!script->typeSetFunction(cx, fun))
             return false;
         JS_ASSERT(fun->nargs == fun->script()->bindings.numArgs());
@@ -431,6 +432,7 @@ js::CloneInterpretedFunction(JSContext *cx, JSFunction *srcFun)
     clone->flags = srcFun->flags;
     clone->atom.init(srcFun->atom);
     clone->initScript(clonedScript);
+    clonedScript->setFunction(clone);
     if (!clonedScript->typeSetFunction(cx, clone))
         return NULL;
 
@@ -1301,6 +1303,7 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 
             cscript->globalObject = &clone->global();
             clone->setScript(cscript);
+            cscript->setFunction(clone);
             if (!cscript->typeSetFunction(cx, clone))
                 return NULL;
 
