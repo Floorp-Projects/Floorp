@@ -7,11 +7,22 @@
                 style="@style/AwesomeBar"
                 android:background="@drawable/address_bar_bg">
 
+    <ImageView android:id="@+id/dummy_tab"
+               style="@style/AddressBar.ImageButton"
+               android:layout_width="84dip"
+               android:layout_alignParentLeft="true"
+               android:background="@drawable/tabs_normal"
+               android:gravity="center_vertical"/>
+
     <view class="org.mozilla.gecko.AwesomeBar$AwesomeBarEditText"
           android:id="@+id/awesomebar_text"
           style="@style/AddressBar.Button"
           android:background="@drawable/address_bar_url"
-          android:layout_margin="4dip"
+          android:layout_marginLeft="0dip"
+          android:layout_marginRight="168dip"
+          android:layout_marginTop="6dip"
+          android:layout_marginBottom="6dip"
+          android:layout_toRightOf="@id/dummy_tab"
           android:layout_alignParentBottom="true"
           android:layout_centerVertical="true"
           android:paddingLeft="15dip"
