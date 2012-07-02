@@ -1499,14 +1499,13 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
   nsAutoRules beginRulesSniffing(this, kOpCreateNode, nsIEditor::ePrevious);
 
   // save node location for selection updating code.
-  nsresult result = GetNodeLocation(aElement, address_of(parent), &offset);
-  NS_ENSURE_SUCCESS(result, result);
+  GetNodeLocation(aElement, address_of(parent), &offset);
 
   for (i = 0; i < mActionListeners.Count(); i++)
     mActionListeners[i]->WillDeleteNode(aElement);
 
   nsRefPtr<DeleteElementTxn> txn;
-  result = CreateTxnForDeleteElement(aElement, getter_AddRefs(txn));
+  nsresult result = CreateTxnForDeleteElement(aElement, getter_AddRefs(txn));
   if (NS_SUCCEEDED(result))  {
     result = DoTransaction(txn);  
   }
@@ -1734,10 +1733,11 @@ nsresult
 nsEditor::MoveNode(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 aOffset)
 {
   NS_ENSURE_TRUE(aNode && aParent, NS_ERROR_NULL_POINTER);
+  nsresult res;
 
   nsCOMPtr<nsIDOMNode> oldParent;
   PRInt32 oldOffset;
-  nsresult res = GetNodeLocation(aNode, address_of(oldParent), &oldOffset);
+  GetNodeLocation(aNode, address_of(oldParent), &oldOffset);
   
   if (aOffset == -1)
   {
@@ -2955,10 +2955,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
     result = GetLengthOfDOMNode(leftNode, firstNodeLength);
     NS_ENSURE_SUCCESS(result, result);
     nsCOMPtr<nsIDOMNode> parent;
-    result = GetNodeLocation(aNodeToJoin, address_of(parent), &joinOffset);
-    NS_ENSURE_SUCCESS(result, result);
-    result = GetNodeLocation(aNodeToKeep, address_of(parent), &keepOffset);
-    NS_ENSURE_SUCCESS(result, result);
+    GetNodeLocation(aNodeToJoin, address_of(parent), &joinOffset);
+    GetNodeLocation(aNodeToKeep, address_of(parent), &keepOffset);
     
     // if selection endpoint is between the nodes, remember it as being
     // in the one that is going away instead.  This simplifies later selection
@@ -3145,20 +3143,19 @@ nsEditor::GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent)
   return idx;
 }
 
-nsresult 
-nsEditor::GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *outOffset)
+// static
+void
+nsEditor::GetNodeLocation(nsIDOMNode* aChild, nsCOMPtr<nsIDOMNode>* outParent,
+                          PRInt32* outOffset)
 {
-  NS_ASSERTION((inChild && outParent && outOffset), "bad args");
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if (inChild && outParent && outOffset)
-  {
-    result = inChild->GetParentNode(getter_AddRefs(*outParent));
-    if ((NS_SUCCEEDED(result)) && (*outParent))
-    {
-      *outOffset = GetChildOffset(inChild, *outParent);
-    }
+  MOZ_ASSERT(aChild && outParent && outOffset);
+  *outOffset = -1;
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    aChild->GetParentNode(getter_AddRefs(*outParent))));
+  if (*outParent) {
+    *outOffset = GetChildOffset(aChild, *outParent);
   }
-  return result;
 }
 
 // returns the number of things inside aNode.  
