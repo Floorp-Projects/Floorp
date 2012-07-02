@@ -1136,7 +1136,26 @@ function ScanResult(ssid, bssid, flags, signal) {
   this.capabilities = getKeyManagement(flags);
   this.signalStrength = signal;
   this.relSignalStrength = calculateSignal(Number(signal));
+
+  this.__exposedProps__ = ScanResult.api;
 }
+
+// XXX This should probably live in the DOM-facing side, but it's hard to do
+// there, so we stick this here.
+ScanResult.api = {
+  ssid: "r",
+  bssid: "r",
+  capabilities: "r",
+  signalStrength: "r",
+  relSignalStrength: "r",
+  connected: "r",
+
+  keyManagement: "rw",
+  psk: "rw",
+  identity: "rw",
+  password: "rw",
+  wep: "rw"
+};
 
 function quote(s) {
   return '"' + s + '"';
