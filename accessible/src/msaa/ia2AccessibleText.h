@@ -17,9 +17,6 @@ class ia2AccessibleText: public IAccessibleText
 {
 public:
 
-  // IUnknown
-  STDMETHODIMP QueryInterface(REFIID, void**);
-
   // IAccessibleText
   virtual HRESULT STDMETHODCALLTYPE addSelection(
       /* [in] */ long startOffset,
