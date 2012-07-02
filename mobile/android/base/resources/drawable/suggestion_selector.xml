@@ -3,33 +3,23 @@
 
     <item android:state_pressed="true">
         <shape>
-            <solid android:color="@color/suggestion_pressed" />
+            <gradient android:angle="90"
+                      android:startColor="#E66000"
+                      android:endColor="#FF9500"
+                      android:type="linear"/>
 
-            <padding android:left="7dp"
-                     android:top="7dp"
-                     android:right="7dp"
-                     android:bottom="7dp" /> 
-           
-            <corners android:bottomRightRadius="4dp"
-                     android:bottomLeftRadius="4dp"
-                     android:topLeftRadius="4dp"
-                     android:topRightRadius="4dp"/> 
+            <corners android:radius="4dp"/>
         </shape>
     </item>
 
     <item android:state_enabled="true">
         <shape>
-            <solid android:color="@color/suggestion_primary" />
+            <gradient android:angle="90"
+                      android:startColor="#D2DAE2"
+                      android:endColor="#E3E8ED"
+                      android:type="linear"/>
 
-            <padding android:left="7dp"
-                     android:top="7dp"
-                     android:right="7dp"
-                     android:bottom="7dp" /> 
-           
-            <corners android:bottomRightRadius="4dp"
-                     android:bottomLeftRadius="4dp"
-                     android:topLeftRadius="4dp"
-                     android:topRightRadius="4dp"/> 
+            <corners android:radius="4dp"/>
         </shape>
     </item>
 
