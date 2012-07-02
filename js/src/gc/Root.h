@@ -390,7 +390,7 @@ typedef Rooted<Value>        RootedValue;
  */
 class SkipRoot
 {
-#if defined(DEBUG) && defined(JSGC_ROOT_ANALYSIS)
+#if defined(DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
 
     SkipRoot **stack, *prev;
     const uint8_t *start;

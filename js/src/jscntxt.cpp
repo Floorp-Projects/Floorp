@@ -1209,7 +1209,7 @@ JSContext::JSContext(JSRuntime *rt)
     PodZero(&link);
 #ifdef JSGC_ROOT_ANALYSIS
     PodArrayZero(thingGCRooters);
-#ifdef DEBUG
+#if defined(JS_GC_ZEAL) && defined(DEBUG) && !defined(JS_THREADSAFE)
     skipGCRooters = NULL;
 #endif
 #endif
