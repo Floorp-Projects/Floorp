@@ -17,6 +17,7 @@ var testGenerator = testSteps();
 
 function runTest()
 {
+  allowIndexedDB();
   allowUnlimitedQuota();
 
   SimpleTest.waitForExplicitFinish();
@@ -26,6 +27,7 @@ function runTest()
 function finishTest()
 {
   resetUnlimitedQuota();
+  resetIndexedDB();
 
   SimpleTest.executeSoon(function() {
     testGenerator.close();
@@ -86,6 +88,16 @@ function removePermission(type, url)
     url = window.document;
   }
   SpecialPowers.removePermission(type, url);
+}
+
+function allowIndexedDB(url)
+{
+  addPermission("indexedDB", true, url);
+}
+
+function resetIndexedDB(url)
+{
+  removePermission("indexedDB", url);
 }
 
 function allowUnlimitedQuota(url)

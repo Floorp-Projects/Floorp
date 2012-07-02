@@ -185,6 +185,8 @@ NS_IMETHODIMP nsDelayedPopupsEnabledEvent::Run()
   return NS_OK;	
 }
 
+static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 /**
  *   New plugin window procedure
  */
@@ -313,10 +315,15 @@ static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   }
 
   sInMessageDispatch = true;
-
-  LRESULT res = CallWindowProc((WNDPROC)win->GetWindowProc(),
-                               hWnd, msg, wParam, lParam);
-
+  LRESULT res;
+  WNDPROC proc = (WNDPROC)win->GetWindowProc();
+  if (PluginWndProc == proc) {
+    NS_WARNING("Previous plugin window procedure references PluginWndProc! "
+               "Report this bug!");
+    res = CallWindowProc(DefWindowProc, hWnd, msg, wParam, lParam);
+  } else {
+    res = CallWindowProc(proc, hWnd, msg, wParam, lParam);
+  }
   sInMessageDispatch = false;
 
   if (inst) {
@@ -417,9 +424,9 @@ SetWindowLongAHook(HWND hWnd,
   nsPluginNativeWindowWin * win =
     (nsPluginNativeWindowWin *)GetProp(hWnd, NS_PLUGIN_WINDOW_PROPERTY_ASSOCIATION);
 
-  // Hook our subclass back up, just like we do on setwindow.   
+  // Hook our subclass back up, just like we do on setwindow.
   win->SetPrevWindowProc(
-    reinterpret_cast<WNDPROC>(sUser32SetWindowLongAHookStub(hWnd, nIndex,
+    reinterpret_cast<WNDPROC>(sUser32SetWindowLongWHookStub(hWnd, nIndex,
       reinterpret_cast<LONG_PTR>(PluginWndProc))));
   return proc;
 }
