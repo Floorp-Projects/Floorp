@@ -4852,6 +4852,7 @@ PurgePCCounts(JSContext *cx)
 void
 PurgeJITCaches(JSCompartment *c)
 {
+#ifdef JS_METHODJIT
     mjit::ClearAllFrames(c);
 
     for (CellIterUnderGC i(c, FINALIZE_SCRIPT); !i.done(); i.next()) {
@@ -4866,10 +4867,13 @@ PurgeJITCaches(JSCompartment *c)
             }
         }
 
+#ifdef JS_ION
         /* Discard Ion caches. */
         if (script->hasIonScript())
             script->ion->purgeCaches();
+#endif
     }
+#endif
 }
 
 } /* namespace js */
