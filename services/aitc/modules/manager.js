@@ -29,9 +29,11 @@ const MARKETPLACE_URL = PREFS.get("marketplace.url");
  * The constructor for the manager takes a callback, which will be invoked when
  * the manager is ready (construction is asynchronous). *DO NOT* call any
  * methods on this object until the callback has been invoked, doing so will
- * lead to undefined behaviour.
+ * lead to undefined behaviour.  The premadeClient is used
+ * to bypass BrowserID for xpcshell tests, since the window object is not
+ * available.
  */
-function AitcManager(cb) {
+function AitcManager(cb, premadeClient) {
   this._client = null;
   this._getTimer = null;
   this._putTimer = null;
@@ -55,6 +57,12 @@ function AitcManager(cb) {
       self._log.error(new Error("AitC manager callback threw " + e));
     }
 
+    // Used for testing.
+    if (premadeClient) {
+      self._client = premadeClient;
+      cb(null, true);
+      return;
+    }
     // Schedule them, but only if we can get a silent assertion.
     self._makeClient(function(err, client) {
       if (!err && client) {
