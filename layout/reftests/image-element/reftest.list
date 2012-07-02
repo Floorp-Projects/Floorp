@@ -35,8 +35,8 @@ random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref
 random-if(!cocoaWidget) == gradient-html-03.html gradient-html-03-ref.svg
 == gradient-html-04.html gradient-html-04-ref.html
 == gradient-html-05.html gradient-html-05-ref.html
-random-if(!cocoaWidget) == gradient-html-06a.html gradient-html-06b.html
-random-if(!cocoaWidget) == gradient-html-06b.html gradient-html-06c.html
+fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06a.html gradient-html-06b.html
+fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06b.html gradient-html-06c.html
 == gradient-html-06c.html gradient-html-06d.html
 == gradient-html-06d.html gradient-html-06e.html
 random-if(!cocoaWidget) == gradient-html-07a.html gradient-html-07b.html
