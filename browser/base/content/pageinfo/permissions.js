@@ -51,7 +51,7 @@ var gPermObj = {
   },
   indexedDB: function getIndexedDBDefaultPermissions()
   {
-    return UNKNOWN;
+    return BLOCK;
   },
   plugins: function getPluginsDefaultPermissions()
   {
@@ -149,6 +149,9 @@ function onCheckboxClick(aPartId)
   var checkbox = document.getElementById(aPartId + "Def");
   if (checkbox.checked) {
     permissionManager.remove(gPermURI.host, aPartId);
+    if (aPartId == "indexedDB") {
+      permissionManager.remove(gPermURI.host, "indexedDB-unlimited");
+    }
     command.setAttribute("disabled", "true");
     var perm = gPermObj[aPartId]();
     setRadioState(aPartId, perm);
@@ -168,8 +171,7 @@ function onRadioClick(aPartId)
   var id = radioGroup.selectedItem.id;
   var permission = id.split('#')[1];
   permissionManager.add(gPermURI, aPartId, permission);
-  if (aPartId == "indexedDB" &&
-      (permission == ALLOW || permission == BLOCK)) {
+  if (aPartId == "indexedDB" && permission == BLOCK) {
     permissionManager.remove(gPermURI.host, "indexedDB-unlimited");
   }
   if (aPartId == "fullscreen" && permission == UNKNOWN) {
@@ -205,6 +207,7 @@ function onIndexedDBClear()
 
   var permissionManager = Components.classes[PERMISSION_CONTRACTID]
                                     .getService(nsIPermissionManager);
+  permissionManager.remove(gPermURI.host, "indexedDB");
   permissionManager.remove(gPermURI.host, "indexedDB-unlimited");
   initIndexedDBRow();
 }
