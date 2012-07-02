@@ -5,14 +5,14 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/awesomebar_row_height"
                 android:padding="6dip">
 
     <ImageView android:id="@+id/favicon"
                android:src="@drawable/folder"
                android:layout_width="32dip"
                android:layout_height="32dip"
-               android:layout_marginRight="10dip"
+               android:layout_marginRight="6dip"
                android:layout_centerVertical="true"
                android:minWidth="32dip"
                android:minHeight="32dip"
@@ -21,9 +21,11 @@
     <TextView android:id="@+id/title"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
+              android:layout_marginLeft="6dip"
+              android:layout_marginRight="6dip"
               android:layout_centerVertical="true"
-              android:textAppearance="?android:attr/textAppearanceMedium"
-              android:textColor="?android:attr/textColorPrimary"
+              android:textColor="#222222"
+              android:textSize="18sp"
               android:layout_toRightOf="@id/favicon"
               android:singleLine="true"
               android:ellipsize="middle"/>
