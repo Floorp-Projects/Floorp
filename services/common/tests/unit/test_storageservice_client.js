@@ -779,12 +779,12 @@ add_test(function test_delete_bsos_conditional_failed() {
   let user = server.user(username);
 
   let now = Date.now();
-  user.createCollection("testcoll", {
+  let coll = user.createCollection("testcoll", {
     foo: new ServerBSO("foo", "payload0", now)
   });
 
   let request = client.deleteBSOs("testcoll", ["foo"]);
-  request.locallyModifiedVersion = now - 10;
+  request.locallyModifiedVersion = coll.timestamp - 1;
 
   request.dispatch(function onComplete(error, req) {
     do_check_true(error instanceof StorageServiceRequestError);
@@ -801,13 +801,13 @@ add_test(function test_delete_bsos_conditional_success() {
   let user = server.user(username);
 
   let now = Date.now();
-  user.createCollection("testcoll", {
+  let coll = user.createCollection("testcoll", {
     foo: new ServerBSO("foo", "payload0", now),
     bar: new ServerBSO("bar", "payload1", now - 10)
   });
 
   let request = client.deleteBSOs("testcoll", ["bar"]);
-  request.locallyModifiedVersion = now + 10;
+  request.locallyModifiedVersion = coll.timestamp;
 
   request.dispatch(function onComplete(error, req) {
     do_check_null(error);
@@ -846,12 +846,12 @@ add_test(function test_delete_collection_conditional_failed() {
 
   let now = Date.now();
 
-  user.createCollection("testcoll", {
+  let coll = user.createCollection("testcoll", {
     foo: new ServerBSO("foo", "payload0", now)
   });
 
   let request = client.deleteCollection("testcoll");
-  request.locallyModifiedVersion = now - 10;
+  request.locallyModifiedVersion = coll.timestamp - 1;
 
   request.dispatch(function onComplete(error, req) {
     do_check_true(error instanceof StorageServiceRequestError);
@@ -869,12 +869,12 @@ add_test(function test_delete_collection_conditional_success() {
 
   let now = Date.now();
 
-  user.createCollection("testcoll", {
+  let coll = user.createCollection("testcoll", {
     foo: new ServerBSO("foo", "payload0", now)
   });
 
   let request = client.deleteCollection("testcoll");
-  request.locallyModifiedVersion = now;
+  request.locallyModifiedVersion = coll.timestamp;
 
   request.dispatch(function onComplete(error, req) {
     do_check_null(error);
