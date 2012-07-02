@@ -5419,8 +5419,6 @@ JSScript::makeAnalysis(JSContext *cx)
 bool
 JSScript::typeSetFunction(JSContext *cx, JSFunction *fun, bool singleton)
 {
-    function_ = fun;
-
     if (!cx->typeInferenceEnabled())
         return true;
 
