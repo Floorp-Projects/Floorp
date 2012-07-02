@@ -379,7 +379,7 @@ SmsDatabaseService.prototype = {
           requestId, Ci.nsISmsRequestManager.INTERNAL_ERROR);
         return;
       }
-      let request = store.getAll(messageId);
+      let request = store.mozGetAll(messageId);
 
       txn.oncomplete = function oncomplete() {
         if (DEBUG) debug("Transaction " + txn + " completed.");
