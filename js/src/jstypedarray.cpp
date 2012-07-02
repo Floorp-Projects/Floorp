@@ -238,17 +238,6 @@ ArrayBufferObject::allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents
     return true;
 }
 
-static JSObject *
-DelegateObject(JSContext *cx, HandleObject obj)
-{
-    if (!obj->getPrivate()) {
-        JSObject *delegate = NewObjectWithGivenProto(cx, &ObjectClass, obj->getProto(), NULL);
-        obj->setPrivate(delegate);
-        return delegate;
-    }
-    return static_cast<JSObject*>(obj->getPrivate());
-}
-
 JSObject *
 ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, uint8_t *contents)
 {
@@ -318,7 +307,7 @@ ArrayBufferObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId i
         return true;
     }
 
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
 
@@ -360,7 +349,7 @@ JSBool
 ArrayBufferObject::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                                      JSObject **objp, JSProperty **propp)
 {
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
 
@@ -404,7 +393,7 @@ ArrayBufferObject::obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId i
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::DefineGeneric(cx, delegate, id, v, getter, setter, attrs);
@@ -425,7 +414,7 @@ ArrayBufferObject::obj_defineElement(JSContext *cx, HandleObject obj, uint32_t i
 {
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::DefineElement(cx, delegate, index, v, getter, setter, attrs);
@@ -451,7 +440,7 @@ ArrayBufferObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject 
         return true;
     }
 
-    nobj = DelegateObject(cx, nobj);
+    nobj = ArrayBufferDelegate(cx, nobj);
     if (!nobj)
         return false;
     return baseops::GetProperty(cx, nobj, receiver, id, vp);
@@ -477,7 +466,7 @@ ArrayBufferObject::obj_getProperty(JSContext *cx, HandleObject obj,
         return true;
     }
 
-    nobj = DelegateObject(cx, nobj);
+    nobj = ArrayBufferDelegate(cx, nobj);
     if (!nobj)
         return false;
     Rooted<jsid> id(cx, NameToId(name));
@@ -489,7 +478,7 @@ ArrayBufferObject::obj_getElement(JSContext *cx, HandleObject obj,
                                   HandleObject receiver, uint32_t index, Value *vp)
 {
     RootedObject buffer(cx, getArrayBuffer(obj));
-    RootedObject delegate(cx, DelegateObject(cx, buffer));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, buffer));
     if (!delegate)
         return false;
     return baseops::GetElement(cx, delegate, receiver, index, vp);
@@ -500,7 +489,7 @@ ArrayBufferObject::obj_getElementIfPresent(JSContext *cx, HandleObject obj, Hand
                                            uint32_t index, Value *vp, bool *present)
 {
     RootedObject buffer(cx, getArrayBuffer(obj));
-    RootedObject delegate(cx, DelegateObject(cx, buffer));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, buffer));
     if (!delegate)
         return false;
     return delegate->getElementIfPresent(cx, receiver, index, vp, present);
@@ -520,7 +509,7 @@ ArrayBufferObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id, 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.byteLengthAtom))
         return true;
 
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
 
@@ -582,7 +571,7 @@ JSBool
 ArrayBufferObject::obj_setElement(JSContext *cx, HandleObject obj,
                                   uint32_t index, Value *vp, JSBool strict)
 {
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
 
@@ -606,7 +595,7 @@ ArrayBufferObject::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
         return true;
     }
 
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::GetAttributes(cx, delegate, id, attrsp);
@@ -624,7 +613,7 @@ JSBool
 ArrayBufferObject::obj_getElementAttributes(JSContext *cx, HandleObject obj,
                                             uint32_t index, unsigned *attrsp)
 {
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::GetElementAttributes(cx, delegate, index, attrsp);
@@ -648,7 +637,7 @@ ArrayBufferObject::obj_setGenericAttributes(JSContext *cx, HandleObject obj,
         return false;
     }
 
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::SetAttributes(cx, delegate, id, attrsp);
@@ -666,7 +655,7 @@ JSBool
 ArrayBufferObject::obj_setElementAttributes(JSContext *cx, HandleObject obj,
                                             uint32_t index, unsigned *attrsp)
 {
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::SetElementAttributes(cx, delegate, index, attrsp);
@@ -689,7 +678,7 @@ ArrayBufferObject::obj_deleteProperty(JSContext *cx, HandleObject obj,
         return true;
     }
 
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::DeleteProperty(cx, delegate, name, rval, strict);
@@ -699,7 +688,7 @@ JSBool
 ArrayBufferObject::obj_deleteElement(JSContext *cx, HandleObject obj,
                                      uint32_t index, Value *rval, JSBool strict)
 {
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::DeleteElement(cx, delegate, index, rval, strict);
@@ -709,7 +698,7 @@ JSBool
 ArrayBufferObject::obj_deleteSpecial(JSContext *cx, HandleObject obj,
                                      HandleSpecialId sid, Value *rval, JSBool strict)
 {
-    RootedObject delegate(cx, DelegateObject(cx, obj));
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
     if (!delegate)
         return false;
     return baseops::DeleteSpecial(cx, delegate, sid, rval, strict);
