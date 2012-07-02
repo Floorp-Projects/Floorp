@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var root = document.documentElement;
+
+  while (root.firstChild) { root.removeChild(root.firstChild); }
+
+  var body = document.createElementNS("http://www.w3.org/1999/xhtml", "body");
+  var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  root.contentEditable = "true";
+  root.appendChild(div);
+  root.removeChild(div);
+  root.insertBefore(body, root.firstChild);
+
+  window.getSelection().removeAllRanges();
+  var r0 = document.createRange();
+  r0.setStart(body, 0);
+  r0.setEnd(body, 0);
+  window.getSelection().addRange(r0);
+  var r1 = document.createRange();
+  r1.setStart(div, 0);
+  r1.setEnd(div, 0);
+  window.getSelection().addRange(r1);
+
+  document.execCommand("inserthtml", false, "1");
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>

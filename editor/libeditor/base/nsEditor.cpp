@@ -4430,12 +4430,14 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode()
   nsresult res;
   nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
+  MOZ_ASSERT(selection->GetAnchorFocusRange());
 
-  if (!selection->Collapsed()) {
+  if (!selection->GetAnchorFocusRange()->Collapsed()) {
     res = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
     NS_ENSURE_SUCCESS(res, res);
 
-    MOZ_ASSERT(selection->Collapsed(),
+    MOZ_ASSERT(selection->GetAnchorFocusRange() &&
+               selection->GetAnchorFocusRange()->Collapsed(),
                "Selection not collapsed after delete");
   }
 
