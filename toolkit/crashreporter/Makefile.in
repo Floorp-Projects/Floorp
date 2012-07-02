@@ -90,6 +90,7 @@ CPPSRCS = \
 ifdef MOZ_CRASHREPORTER_INJECTOR
 CPPSRCS += \
   LoadLibraryRemote.cpp \
+  InjectCrashReporter.cpp \
   $(NULL)
 endif
 
