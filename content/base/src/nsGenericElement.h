@@ -395,16 +395,12 @@ public:
   NS_IMETHOD GetNodeValue(nsAString& aNodeValue);
   NS_IMETHOD SetNodeValue(const nsAString& aNodeValue);
   NS_IMETHOD GetNodeType(PRUint16* aNodeType);
-#endif
   NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
-#if 0
   NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI);
   NS_IMETHOD GetPrefix(nsAString& aPrefix);
   NS_IMETHOD IsSupported(const nsAString& aFeature,
                          const nsAString& aVersion, bool* aReturn);
-#endif
   NS_IMETHOD HasAttributes(bool* aHasAttributes);
-#if 0
   NS_IMETHOD HasChildNodes(bool* aHasChildNodes);
   nsresult InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                         nsIDOMNode** aReturn)
