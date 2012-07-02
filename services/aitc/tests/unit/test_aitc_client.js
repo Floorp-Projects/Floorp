@@ -66,6 +66,16 @@ function get_client_for_server(username, server) {
   return client;
 }
 
+// Clean up code - backoff is preserved between requests in a pref
+function advance(server) {
+  PREFS.set("backoff", "0");
+  if (server) {
+    server.stop(run_next_test);
+  } else {
+    run_next_test();
+  }
+}
+
 add_test(function test_getapps_empty() {
   _("Ensure client request for empty user has appropriate content.");
 
@@ -81,7 +91,7 @@ add_test(function test_getapps_empty() {
     do_check_true(Array.isArray(apps));
     do_check_eq(apps.length, 0);
 
-    server.stop(run_next_test);
+    advance(server);
   });
 });
 
@@ -113,7 +123,7 @@ add_test(function test_install_app() {
 
       do_check_eq(first.origin, app.origin);
 
-      server.stop(run_next_test);
+      advance(server);
     });
   });
 });
@@ -147,7 +157,7 @@ add_test(function test_uninstall_app() {
       do_check_eq(first.origin, app.origin);
       do_check_true(first.hidden);
 
-      server.stop(run_next_test);
+      advance(server);
     });
   });
 });

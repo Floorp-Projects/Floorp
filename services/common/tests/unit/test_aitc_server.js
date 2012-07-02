@@ -166,9 +166,8 @@ add_test(function test_invalid_request_method() {
     server.stop(run_next_test);
   });
 });
-
 add_test(function test_respond_with_mock_status() {
-  let username = '123'
+  let username = "123"
   let server = get_server_with_user(username);
   server.mockStatus = {
     code: 405,
