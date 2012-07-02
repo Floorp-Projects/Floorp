@@ -53,6 +53,7 @@ if (!window.runTest) {
   {
     SimpleTest.waitForExplicitFinish();
 
+    allowIndexedDB();
     if (limitedQuota) {
       denyUnlimitedQuota();
     }
@@ -67,10 +68,12 @@ if (!window.runTest) {
 function finishTest()
 {
   resetUnlimitedQuota();
+  resetIndexedDB();
 
   SimpleTest.executeSoon(function() {
     testGenerator.close();
-    clearAllDatabases(function() { SimpleTest.finish(); });
+    //clearAllDatabases(function() { SimpleTest.finish(); });
+    SimpleTest.finish();
   });
 }
 
@@ -185,6 +188,16 @@ function removePermission(type, url)
 function setQuota(quota)
 {
   SpecialPowers.setIntPref("dom.indexedDB.warningQuota", quota);
+}
+
+function allowIndexedDB(url)
+{
+  addPermission("indexedDB", true, url);
+}
+
+function resetIndexedDB(url)
+{
+  removePermission("indexedDB", url);
 }
 
 function allowUnlimitedQuota(url)
