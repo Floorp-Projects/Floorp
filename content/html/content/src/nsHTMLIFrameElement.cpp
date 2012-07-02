@@ -6,10 +6,8 @@
 #include "mozilla/Util.h"
 
 #include "nsHTMLIFrameElement.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMSVGDocument.h"
 #include "nsGkAtoms.h"
-#include "nsIDocument.h"
 #include "nsMappedAttributes.h"
 #include "nsDOMError.h"
 #include "nsRuleData.h"

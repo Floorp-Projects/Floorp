@@ -7,7 +7,6 @@
 #include "nsPIListBoxObject.h"
 #include "nsBoxObject.h"
 #include "nsIFrame.h"
-#include "nsIDocument.h"
 #include "nsBindingManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"

@@ -71,7 +71,6 @@
 #include "nsISelectionDisplay.h"
 #include "nsIInlineSpellChecker.h"
 #include "nsINameSpaceManager.h"
-#include "nsIHTMLDocument.h"
 #include "nsIParserService.h"
 
 #include "nsITransferable.h"

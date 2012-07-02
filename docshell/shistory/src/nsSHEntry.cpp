@@ -9,8 +9,6 @@
 #include "nsReadableUtils.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
 #include "nsDocShellEditorData.h"
@@ -18,6 +16,7 @@
 #include "nsILayoutHistoryState.h"
 #include "nsIContentViewer.h"
 #include "nsISupportsArray.h"
+#include "nsIStructuredCloneContainer.h"
 
 namespace dom = mozilla::dom;
 

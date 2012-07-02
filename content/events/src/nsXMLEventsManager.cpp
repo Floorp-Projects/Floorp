@@ -7,7 +7,6 @@
 #include "nsXMLEventsManager.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMEventTarget.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"

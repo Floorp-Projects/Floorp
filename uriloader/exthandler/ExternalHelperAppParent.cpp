@@ -6,7 +6,6 @@
 
 #include "ExternalHelperAppParent.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
 #include "nsCExternalHandlerService.h"
 #include "nsIExternalHelperAppService.h"
 #include "mozilla/dom/ContentParent.h"

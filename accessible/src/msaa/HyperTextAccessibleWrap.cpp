@@ -12,10 +12,31 @@
 NS_IMPL_ISUPPORTS_INHERITED0(HyperTextAccessibleWrap,
                              HyperTextAccessible)
 
-IMPL_IUNKNOWN_INHERITED2(HyperTextAccessibleWrap,
-                         AccessibleWrap,
-                         ia2AccessibleHypertext,
-                         ia2AccessibleEditableText);
+STDMETHODIMP
+HyperTextAccessibleWrap::QueryInterface(REFIID aIID, void** aInstancePtr)
+{
+  if (!aInstancePtr)
+    return E_FAIL;
+
+  *aInstancePtr = NULL;
+
+  if (IsTextRole()) {
+    if (aIID == IID_IAccessibleText)
+      *aInstancePtr =
+        static_cast<IAccessibleText*>(static_cast<ia2AccessibleText*>(this));
+    else if (aIID == IID_IAccessibleHypertext)
+      *aInstancePtr = static_cast<IAccessibleHypertext*>(this);
+    else if (aIID == IID_IAccessibleEditableText)
+      *aInstancePtr = static_cast<IAccessibleEditableText*>(this);
+
+    if (*aInstancePtr) {
+      AddRef();
+      return S_OK;
+    }
+  }
+
+  return AccessibleWrap::QueryInterface(aIID, aInstancePtr);
+}
 
 nsresult
 HyperTextAccessibleWrap::HandleAccEvent(AccEvent* aEvent)

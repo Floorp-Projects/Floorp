@@ -54,8 +54,8 @@ function editorLoaded()
     let clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].
                           getService(Ci.nsIClipboardHelper);
     clipboardHelper.copyStringToClipboard(expectedString,
-                                          testWin.document,
-                                          Ci.nsIClipboard.kSelectionClipboard);
+                                          Ci.nsIClipboard.kSelectionClipboard,
+                                          testWin.document);
   };
 
   let onCopy = function() {

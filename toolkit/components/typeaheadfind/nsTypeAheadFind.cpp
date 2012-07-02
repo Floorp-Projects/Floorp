@@ -27,7 +27,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
 #include "nsFrameTraversal.h"
-#include "nsIDOMDocument.h"
 #include "nsIImageDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"

@@ -31,25 +31,16 @@ static fp_except_t oldmask = fpsetmask(~allmask);
 
 #include "nsAString.h"
 #include "nsIStatefulFrame.h"
-#include "nsINodeInfo.h"
 #include "nsNodeInfoManager.h"
-#include "nsContentList.h"
 #include "nsDOMClassInfoID.h"
-#include "nsIXPCScriptable.h"
 #include "nsDataHashtable.h"
-#include "nsIScriptRuntime.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDOMEvent.h"
 #include "nsTArray.h"
-#include "nsTextFragment.h"
 #include "nsReadableUtils.h"
 #include "nsINode.h"
-#include "nsHashtable.h"
 #include "nsIDOMNode.h"
 #include "nsHtml5StringParser.h"
-#include "nsIParser.h"
 #include "nsIDocument.h"
-#include "nsIFragmentContentSink.h"
 #include "nsContentSink.h"
 #include "nsMathUtils.h"
 #include "nsThreadUtils.h"
@@ -70,9 +61,13 @@ class nsIDocument;
 class nsIDocumentObserver;
 class nsIDocShell;
 class nsINameSpaceManager;
+class nsIFragmentContentSink;
+class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
+class nsTextFragment;
 class nsIJSContextStack;
 class nsIThreadJSContextStack;
+class nsIParser;
 class nsIParserService;
 class nsIIOService;
 class nsIURI;
@@ -95,6 +90,7 @@ class nsEventListenerManager;
 class nsIScriptContext;
 class nsIRunnable;
 class nsIInterfaceRequestor;
+class nsINodeInfo;
 template<class E> class nsCOMArray;
 template<class K, class V> class nsRefPtrHashtable;
 struct JSRuntime;

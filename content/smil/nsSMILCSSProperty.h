@@ -13,8 +13,6 @@
 #include "nsCSSProperty.h"
 #include "nsCSSValue.h"
 
-class nsIContent;
-
 namespace mozilla {
 namespace dom {
 class Element;

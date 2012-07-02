@@ -34,6 +34,7 @@
 #include "nsIURI.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
+#include "nsIHTMLDocument.h"
 
 namespace dom = mozilla::dom;
 

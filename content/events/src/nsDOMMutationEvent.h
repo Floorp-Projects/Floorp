@@ -6,10 +6,8 @@
 #ifndef nsDOMMutationEvent_h__
 #define nsDOMMutationEvent_h__
 
-#include "nsCOMPtr.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsDOMEvent.h"
-#include "nsContentUtils.h"
 
 class nsDOMMutationEvent : public nsDOMEvent,
                            public nsIDOMMutationEvent

@@ -5,17 +5,14 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-#include "nsIContent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsGkAtoms.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
-#include "nsUnicharUtils.h"
 
 nsXBLEventHandler::nsXBLEventHandler(nsXBLPrototypeHandler* aHandler)
   : mProtoHandler(aHandler)
