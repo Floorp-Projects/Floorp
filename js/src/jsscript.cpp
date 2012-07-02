@@ -1365,18 +1365,6 @@ JSScript::fullyInitFromEmitter(JSContext *cx, BytecodeEmitter *bce)
         fun->setScript(script);
     }
 
-    /* Tell the debugger about this compiled script. */
-    js_CallNewScriptHook(cx, script, fun);
-    if (!bce->parent) {
-        GlobalObject *compileAndGoGlobal = NULL;
-        if (script->compileAndGo) {
-            compileAndGoGlobal = script->globalObject;
-            if (!compileAndGoGlobal)
-                compileAndGoGlobal = &bce->sc->scopeChain()->global();
-        }
-        Debugger::onNewScript(cx, script, compileAndGoGlobal);
-    }
-
     /*
      * initScriptCounts updates scriptCountsMap if necessary. The other script
      * maps in JSCompartment are populated lazily.
