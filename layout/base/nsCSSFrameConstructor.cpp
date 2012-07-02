@@ -2909,7 +2909,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
                                             nsIFrame**               aNewFrame)
 {
   nsresult rv = NS_OK;
-  const PRInt32 kNoSizeSpecified = -1;
 
   nsIContent* const content = aItem.mContent;
   nsStyleContext* const styleContext = aItem.mStyleContext;
@@ -2922,7 +2921,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     bool multipleSelect = false;
     sel->GetMultiple(&multipleSelect);
      // Construct a combobox if size=1 or no size is specified and its multiple select
-    if (((1 == size || 0 == size) || (kNoSizeSpecified  == size)) && (false == multipleSelect)) {
+    if ((1 == size || 0 == size) && !multipleSelect) {
         // Construct a frame-based combo box.
         // The frame-based combo box is built out of three parts. A display area, a button and
         // a dropdown list. The display area and button are created through anonymous content.
