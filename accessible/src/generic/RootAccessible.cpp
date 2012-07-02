@@ -44,7 +44,6 @@
 #include "nsEventListenerManager.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsISelectionPrivate.h"
 #include "nsIServiceManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIWebBrowserChrome.h"

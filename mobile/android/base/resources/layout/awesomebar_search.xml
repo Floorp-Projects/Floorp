@@ -5,7 +5,7 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 style="@style/AwesomeBar"
-                android:background="@drawable/tabs_tray_bg_repeat">
+                android:background="@drawable/address_bar_bg">
 
     <view class="org.mozilla.gecko.AwesomeBar$AwesomeBarEditText"
           android:id="@+id/awesomebar_text"
@@ -32,10 +32,8 @@
                   android:layout_alignParentRight="true"/>
 
     <ImageButton android:id="@+id/awesomebar_button"
-                 style="@style/AddressBar.ImageButton"
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:layout_marginRight="15dip"
+                 style="@style/AddressBar.ImageButton.Icon"
+                 android:padding="12dip"
                  android:layout_centerVertical="true"
                  android:layout_alignRight="@id/awesomebar_text"
                  android:visibility="gone"
