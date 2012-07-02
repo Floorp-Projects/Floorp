@@ -1355,6 +1355,10 @@ nsGenericElement::nsDOMSlots::Unlink(bool aIsXUL)
 nsGenericElement::nsGenericElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : Element(aNodeInfo)
 {
+  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE,
+                    "Bad NodeType in aNodeInfo");
+
+  SetIsElement();
 }
 
 #if 0
@@ -1488,7 +1492,6 @@ nsGenericElement::IsSupported(const nsAString& aFeature,
 {
   return InternalIsSupported(this, aFeature, aVersion, aReturn);
 }
-#endif
 
 NS_IMETHODIMP
 nsGenericElement::HasAttributes(bool* aReturn)
@@ -1519,7 +1522,6 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
   return NS_OK;
 }
 
-#if 0
 nsresult
 nsGenericElement::HasChildNodes(bool* aReturn)
 {

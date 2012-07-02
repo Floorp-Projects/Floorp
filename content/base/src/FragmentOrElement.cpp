@@ -1353,14 +1353,6 @@ FragmentOrElement::nsDOMSlots::Unlink(bool aIsXUL)
 FragmentOrElement::FragmentOrElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsIContent(aNodeInfo)
 {
-  NS_ABORT_IF_FALSE(mNodeInfo->NodeType() == nsIDOMNode::ELEMENT_NODE ||
-                    (mNodeInfo->NodeType() ==
-                       nsIDOMNode::DOCUMENT_FRAGMENT_NODE &&
-                     mNodeInfo->Equals(nsGkAtoms::documentFragmentNodeName,
-                                       kNameSpaceID_None)),
-                    "Bad NodeType in aNodeInfo");
-
-  SetIsElement();
 }
 
 FragmentOrElement::~FragmentOrElement()
@@ -1494,7 +1486,6 @@ FragmentOrElement::IsSupported(const nsAString& aFeature,
   return InternalIsSupported(this, aFeature, aVersion, aReturn);
 }
 
-#if 0
 NS_IMETHODIMP
 FragmentOrElement::HasAttributes(bool* aReturn)
 {
@@ -1516,14 +1507,13 @@ FragmentOrElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
   nsDOMSlots *slots = DOMSlots();
 
   if (!slots->mAttributeMap) {
-    slots->mAttributeMap = new nsDOMAttributeMap(this);
+    slots->mAttributeMap = new nsDOMAttributeMap(this->AsElement());
   }
 
   NS_ADDREF(*aAttributes = slots->mAttributeMap);
 
   return NS_OK;
 }
-#endif
 
 nsresult
 FragmentOrElement::HasChildNodes(bool* aReturn)
