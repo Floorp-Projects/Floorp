@@ -65,6 +65,12 @@
         <item name="android:visibility">gone</item>
     </style>
 
+    <!-- Address bar - Image Button - Icon -->
+    <style name="AddressBar.ImageButton.Icon">
+         <item name="android:layout_width">@dimen/browser_toolbar_height</item>
+         <item name="android:layout_height">@dimen/browser_toolbar_height</item>
+    </style>
+
     <!-- AwesomeBar -->
     <style name="AwesomeBar">
         <item name="android:layout_width">fill_parent</item>
