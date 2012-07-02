@@ -436,12 +436,11 @@ public:
                          bool        aNodeToKeepIsFirst);
 
   /**
-   *  Set aOffset to the offset of aChild in aParent.  
-   *  Returns an error if aChild is not an immediate child of aParent.
+   * Return the offset of aChild in aParent.  Asserts fatally if parent or
+   * child is null, or parent is not child's parent.
    */
-  static nsresult GetChildOffset(nsIDOMNode *aChild, 
-                                 nsIDOMNode *aParent, 
-                                 PRInt32    &aOffset);
+  static PRInt32 GetChildOffset(nsIDOMNode *aChild,
+                                nsIDOMNode *aParent);
 
   /**
    *  Set aParent to the parent of aChild.
