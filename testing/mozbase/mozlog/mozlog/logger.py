@@ -1,12 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 from logging import getLogger as getSysLogger
 from logging import *
 # Some of the build slave environments don't see the following when doing
 # 'from logging import *'
 # see https://bugzilla.mozilla.org/show_bug.cgi?id=700415#c35
-from logging import getLoggerClass, addLevelName, setLoggerClass
+from logging import getLoggerClass, addLevelName, setLoggerClass, shutdown
 
 _default_level = INFO
 _LoggerClass = getLoggerClass()
