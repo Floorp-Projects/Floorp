@@ -799,7 +799,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #if defined(XP_WIN32)
                      google_breakpad::ExceptionHandler::HANDLER_ALL,
                      minidump_type,
-                     NULL,
+                     (const wchar_t*) NULL,
                      NULL);
 #else
                      true
