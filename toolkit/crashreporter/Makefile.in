@@ -87,6 +87,12 @@ CPPSRCS = \
 	nsExceptionHandler.cpp \
 	$(NULL)
 
+ifdef MOZ_CRASHREPORTER_INJECTOR
+CPPSRCS += \
+  LoadLibraryRemote.cpp \
+  $(NULL)
+endif
+
 FORCE_STATIC_LIB = 1
 
 EXTRA_JS_MODULES = \
