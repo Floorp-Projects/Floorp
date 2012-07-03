@@ -876,6 +876,9 @@ JSRuntime::init(uint32_t maxbytes)
     if (!scriptFilenameTable.init())
         return false;
 
+    if (!evalCache.init())
+        return false;
+
     debugScopes = this->new_<DebugScopes>(this);
     if (!debugScopes || !debugScopes->init()) {
         Foreground::delete_(debugScopes);
