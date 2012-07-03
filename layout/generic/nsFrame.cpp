@@ -4670,7 +4670,7 @@ nsIFrame::IsInvalid()
 void
 nsIFrame::SchedulePaint(PRUint32 aFlags)
 {
-  nsPresContext *pres = PresContext()->GetDisplayRootPresContext();
+  nsPresContext *pres = PresContext()->GetRootPresContext();
   if (HasAnyStateBits(NS_FRAME_IN_POPUP) || !pres) {
     nsIFrame *displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
     NS_ASSERTION(displayRoot, "Need a display root to schedule a paint!");
