@@ -235,9 +235,6 @@ class Bindings
 
 } /* namespace js */
 
-#define JS_OBJECT_ARRAY_SIZE(length)                                          \
-    (offsetof(ObjectArray, vector) + sizeof(JSObject *) * (length))
-
 #ifdef JS_METHODJIT
 namespace JSC {
     class ExecutablePool;
