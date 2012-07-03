@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = "contacts";
 
 function ContactDB(aGlobal) {
@@ -101,6 +101,31 @@ ContactDB.prototype = {
         // Create new searchable indexes.
         objectStore.createIndex("tel", "search.tel", { unique: false, multiEntry: true });
         objectStore.createIndex("category", "properties.category", { unique: false, multiEntry: true });
+      } else if (currVersion == 2) {
+        debug("upgrade 2");
+        // Create a new scheme for the email field. We move from an array of emailaddresses to an array of 
+        // ContactEmail.
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+        // Delete old email index.
+        objectStore.deleteIndex("email");
+
+        // Upgrade existing email field in the DB.
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            debug("upgrade email1: " + JSON.stringify(cursor.value));
+            cursor.value.properties.email =
+              cursor.value.properties.email.map(function(address) { return { address: address }; });
+            cursor.update(cursor.value);
+            debug("upgrade email2: " + JSON.stringify(cursor.value));
+            cursor.continue();
+          }
+        };
+
+        // Create new searchable indexes.
+        objectStore.createIndex("email", "search.email", { unique: false, multiEntry: true });
       }
     }
   },
@@ -172,8 +197,16 @@ ContactDB.prototype = {
                 }
               }
               debug("lookup: " + JSON.stringify(contact.search[field]));
+            } else if (field == "email") {
+              let address = aContact.properties[field][i].address;
+              if (address && typeof address == "string") {
+                contact.search[field].push(address.toLowerCase());
+              }
             } else {
-              contact.search[field].push(aContact.properties[field][i].toLowerCase());
+              let val = aContact.properties[field][i];
+              if (typeof val == "string") {
+                contact.search[field].push(val.toLowerCase());
+              }
             }
           }
         }
@@ -319,7 +352,9 @@ ContactDB.prototype = {
         request = index.mozGetAll(options.filterValue, limit);
       } else {
         // not case sensitive
-        let tmp = options.filterValue.toLowerCase();
+        let tmp = typeof options.filterValue == "string"
+                  ? options.filterValue.toLowerCase()
+                  : options.filterValue.toString().toLowerCase();
         let range = this._global.IDBKeyRange.bound(tmp, tmp + "\uFFFF");
         let index = store.index(key + "LowerCase");
         request = index.mozGetAll(range, limit);
