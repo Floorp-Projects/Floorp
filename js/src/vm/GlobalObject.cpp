@@ -14,12 +14,14 @@
 #include "json.h"
 #include "jsweakmap.h"
 
+#include "builtin/Eval.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "frontend/BytecodeEmitter.h"
 #include "vm/GlobalObject-inl.h"
 
 #include "jsobjinlines.h"
+
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 
@@ -204,7 +206,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
 
     /* ES5 15.1.2.1. */
     RootedId id(cx, NameToId(cx->runtime->atomState.evalAtom));
-    JSObject *evalobj = js_DefineFunction(cx, self, id, eval, 1, JSFUN_STUB_GSOPS);
+    JSObject *evalobj = js_DefineFunction(cx, self, id, IndirectEval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;
     self->setOriginalEval(evalobj);
