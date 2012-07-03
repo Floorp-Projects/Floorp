@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
 from setuptools import setup, find_packages
@@ -11,7 +11,7 @@ try:
 except IOError:
     description = None
 
-version = '0.2'
+version = '0.3'
 
 deps = []
 
