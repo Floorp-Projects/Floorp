@@ -213,12 +213,144 @@ let tests = {
   },
 
   testLocalStorage: function(cbnext) {
-    // NOTE: this url MUST be in the same origin as worker_xhr.js fetches from!
-    let url = "https://example.com/browser/toolkit/components/social/test/browser/worker_localStorage.js";
-    let worker = modules.FrameWorker(url, undefined, "testLocalStorage");
+    let run = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+        try {
+          localStorage.setItem("foo", "1");
+        } catch(e) {
+          port.postMessage({topic: "done", result: "FAILED to set localStorage, " + e.toString() });
+          return;
+        }
+
+        var ok;
+        try {
+          ok = localStorage["foo"] == 1;
+        } catch (e) {
+          port.postMessage({topic: "done", result: "FAILED to read localStorage, " + e.toString() });
+          return;
+        }
+        port.postMessage({topic: "done", result: "ok"});
+      }
+    }
+    let worker = modules.FrameWorker(makeWorkerUrl(run), undefined, "testLocalStorage");
     worker.port.onmessage = function(e) {
       if (e.data.topic == "done") {
         is(e.data.result, "ok", "check the localStorage test worked");
+        worker.terminate();
+        cbnext();
+      }
+    }
+  },
+
+  testBase64: function (cbnext) {
+    let run = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+        var ok = false;
+        try {
+          ok = btoa("1234") == "MTIzNA==";
+        } catch(e) {
+          port.postMessage({topic: "done", result: "FAILED to call btoa, " + e.toString() });
+          return;
+        }
+        if (!ok) {
+          port.postMessage({topic: "done", result: "FAILED calling btoa"});
+          return;
+        }
+
+        try {
+          ok = atob("NDMyMQ==") == "4321";
+        } catch (e) {
+          port.postMessage({topic: "done", result: "FAILED to call atob, " + e.toString() });
+          return;
+        }
+        if (!ok) {
+          port.postMessage({topic: "done", result: "FAILED calling atob"});
+          return;
+        }
+
+        port.postMessage({topic: "done", result: "ok"});
+      }
+    }
+    let worker = modules.FrameWorker(makeWorkerUrl(run), undefined, "testBase64");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "done") {
+        is(e.data.result, "ok", "check the atob/btoa test worked");
+        worker.terminate();
+        cbnext();
+      }
+    }
+  },
+
+  testTimeouts: function (cbnext) {
+    let run = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+
+        var timeout;
+        try {
+          timeout = setTimeout(function () {
+            port.postMessage({topic: "done", result: "FAILED cancelled timeout was called"});
+          }, 100);
+        } catch (ex) {
+          port.postMessage({topic: "done", result: "FAILED calling setTimeout: " + ex});
+          return;
+        }
+
+        try {
+          clearTimeout(timeout);
+        } catch (ex) {
+          port.postMessage({topic: "done", result: "FAILED calling clearTimeout: " + ex});
+          return;
+        }
+
+        var counter = 0;
+        try {
+          timeout = setInterval(function () {
+            if (++counter == 2) {
+              clearInterval(timeout);
+              setTimeout(function () {
+                port.postMessage({topic: "done", result: "ok"});
+                return;
+              }, 0);
+            }
+          }, 100);
+        } catch (ex) {
+          port.postMessage({topic: "done", result: "FAILED calling setInterval: " + ex});
+          return;
+        }
+      }
+    }
+    let worker = modules.FrameWorker(makeWorkerUrl(run), undefined, "testTimeouts");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "done") {
+        is(e.data.result, "ok", "check that timeouts worked");
+        worker.terminate();
+        cbnext();
+      }
+    }
+  },
+
+  testWebSocket: function (cbnext) {
+    let run = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+
+        try {
+          var exampleSocket = new WebSocket("ws://www.example.com/socketserver");
+        } catch (e) {
+          port.postMessage({topic: "done", result: "FAILED calling WebSocket constructor: " + e});
+          return;
+        }
+
+        port.postMessage({topic: "done", result: "ok"});
+      }
+    }
+    let worker = modules.FrameWorker(makeWorkerUrl(run), undefined, "testWebSocket");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "done") {
+        is(e.data.result, "ok", "check that websockets worked");
         worker.terminate();
         cbnext();
       }
