@@ -7162,9 +7162,7 @@ let gPrivateBrowsingUI = {
   },
 
   /**
-   * These accessors are used to support per-window Private Browsing mode.
-   * For now the getter returns nsIPrivateBrowsingService.privateBrowsingEnabled,
-   * and the setter should only be used in tests.
+   * This accessor is used to support per-window Private Browsing mode.
    */
   get privateWindow() {
     if (!gBrowser)
