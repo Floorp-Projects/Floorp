@@ -38,6 +38,7 @@ interface nsIDOMFile;
 interface nsIFile;
 interface nsIDOMTouch;
 interface nsIDOMClientRect;
+interface mozIDOMApplication;
 
 [scriptable, uuid(858578f1-9653-4d5c-821a-07479bf2d9b2)]
 interface nsIDOMWindowUtils : nsISupports {
@@ -1165,4 +1166,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * or isn't the manifest URL of an installed application.
    */
   void setApp(in DOMString manifestURL);
+  /**
+    * Retrieves the Application object associated to this window.
+    * Can be null if |setApp()| has not been called.
+    */
+  mozIDOMApplication getApp();
 };
