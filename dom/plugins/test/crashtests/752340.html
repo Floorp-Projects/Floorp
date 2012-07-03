@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="text/javascript">
+    // Failures in this file can manifest as ###!!! ASSERTION: scope has non-empty map: '0 == mWrappedNativeMap->Count()'
+    // followed by an Assertion failure: allocated() crash during the next GC.
+    // It can also manifest as a leak.
+    function breakthings() {
+      var e = document.createElement("embed");
+      var i = document.getElementById("i");
+      i.contentDocument.body.appendChild(e);
+      i.src = "about:blank";
+    }
+  </script>
+</head>
+<body onload="javascript:breakthings();">
+<iframe id="i" />
+</body>
+</html>

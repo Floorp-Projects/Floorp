@@ -53,6 +53,7 @@ DIRS += \
   devicestorage \
   file \
   media \
+  messages \
   power \
   settings \
   sms \

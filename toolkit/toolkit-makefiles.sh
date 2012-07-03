@@ -41,6 +41,8 @@ MAKEFILES_dom="
   dom/indexedDB/Makefile
   dom/ipc/Makefile
   dom/locales/Makefile
+  dom/messages/Makefile
+  dom/messages/interfaces/Makefile
   dom/network/Makefile
   dom/network/interfaces/Makefile
   dom/network/src/Makefile
