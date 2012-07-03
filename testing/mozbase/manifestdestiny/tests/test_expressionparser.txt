@@ -36,8 +36,6 @@ Test equality::
     True
     >>> parse("false == false")
     True
-    >>> parse("false == false")
-    True
     >>> parse("1 == 1")
     True
     >>> parse("100 == 100")
