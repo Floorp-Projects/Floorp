@@ -189,10 +189,10 @@ nsTableColFrame::GetSplittableType() const
 }
 
 void
-nsTableColFrame::InvalidateFrame()
+nsTableColFrame::InvalidateFrame(PRUint32 aFlags)
 {
-  nsIFrame::InvalidateFrame();
+  nsIFrame::InvalidateFrame(aFlags);
   nsTableFrame *tableFrame = nsTableFrame::GetTableFrame(this);
-  tableFrame->InvalidateFrame();
+  tableFrame->InvalidateFrame(aFlags | INVALIDATE_DONT_SCHEDULE_PAINT);
 }
 
