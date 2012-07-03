@@ -4354,11 +4354,11 @@ DebuggerEnv_getCallee(JSContext *cx, unsigned argc, Value *vp)
     if (!scope.isCall())
         return true;
 
-    JSObject *callee = scope.asCall().getCallee();
-    if (!callee)
+    CallObject &callobj = scope.asCall();
+    if (callobj.isForEval())
         return true;
 
-    args.rval() = ObjectValue(*callee);
+    args.rval() = ObjectValue(callobj.callee());
     if (!dbg->wrapDebuggeeValue(cx, &args.rval()))
         return false;
     return true;

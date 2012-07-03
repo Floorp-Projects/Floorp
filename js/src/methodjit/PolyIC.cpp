@@ -349,10 +349,10 @@ class SetPropCompiler : public PICStubCompiler
             //    \\     V     and getters, and
             //      \===/    2. arguments and locals have different getters
             //              then we can rely on fun->nargs remaining invariant.
-            JSFunction *fun = obj->asCall().getCalleeFunction();
+            JSFunction &fun = obj->asCall().callee();
             uint16_t slot = uint16_t(shape->shortid());
             if (shape->setterOp() == CallObject::setVarOp)
-                slot += fun->nargs;
+                slot += fun.nargs;
             slot += CallObject::RESERVED_SLOTS;
             Address address = masm.objPropAddress(obj, pic.objReg, slot);
             masm.storeValue(pic.u.vr, address);
@@ -603,8 +603,8 @@ class SetPropCompiler : public PICStubCompiler
                  * objects may differ due to eval(), DEFFUN, etc.).
                  */
                 RecompilationMonitor monitor(cx);
-                JSFunction *fun = obj->asCall().getCalleeFunction();
-                JSScript *script = fun->script();
+                JSFunction &fun = obj->asCall().callee();
+                JSScript *script = fun.script();
                 uint16_t slot = uint16_t(shape->shortid());
                 if (!script->ensureHasTypes(cx))
                     return error();
@@ -1583,10 +1583,10 @@ class ScopeNameCompiler : public PICStubCompiler
         Jump finalShape = masm.branchPtr(Assembler::NotEqual, pic.shapeReg,
                                          ImmPtr(getprop.holder->lastProperty()));
 
-        JSFunction *fun = getprop.holder->asCall().getCalleeFunction();
+        JSFunction &fun = getprop.holder->asCall().callee();
         unsigned slot = shape->shortid();
         if (kind == VAR)
-            slot += fun->nargs;
+            slot += fun.nargs;
         slot += CallObject::RESERVED_SLOTS;
         Address address = masm.objPropAddress(obj, pic.objReg, slot);
 

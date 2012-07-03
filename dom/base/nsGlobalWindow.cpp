@@ -10678,14 +10678,9 @@ nsGlobalWindow::SetIsApp(bool aValue)
 bool
 nsGlobalWindow::IsPartOfApp()
 {
-  mozIDOMApplication* app;
-  nsresult rv = GetApp(&app);
+  nsCOMPtr<mozIDOMApplication> app;
 
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  return app != nsnull;
+  return NS_SUCCEEDED(GetApp(getter_AddRefs(app))) ? app != nsnull : false;
 }
 
 nsresult
