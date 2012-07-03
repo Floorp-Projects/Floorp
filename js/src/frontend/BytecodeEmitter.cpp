@@ -22,7 +22,6 @@
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
-#include "jsbool.h"
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsfun.h"
@@ -58,11 +57,11 @@ using namespace js;
 using namespace js::gc;
 using namespace js::frontend;
 
-static JSBool
+static bool
 NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned stackDepth,
            size_t start, size_t end);
 
-static JSBool
+static bool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset);
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent, Parser *parser, SharedContext *sc,
@@ -382,7 +381,7 @@ EmitBackPatchOp(JSContext *cx, BytecodeEmitter *bce, JSOp op, ptrdiff_t *lastp)
     JS_END_MACRO
 
 /* A function, so that we avoid macro-bloating all the other callsites. */
-static JSBool
+static bool
 UpdateLineNumberNotes(JSContext *cx, BytecodeEmitter *bce, unsigned line)
 {
     UPDATE_LINE_NUMBER_NOTES(cx, bce, line);
@@ -476,7 +475,7 @@ CheckTypeSet(JSContext *cx, BytecodeEmitter *bce, JSOp op)
         bce->code(offset)[4] = jsbytecode(i);                                 \
     JS_END_MACRO
 
-static JSBool
+static bool
 FlushPops(JSContext *cx, BytecodeEmitter *bce, int *npops)
 {
     JS_ASSERT(*npops != 0);
@@ -500,7 +499,7 @@ PopIterator(JSContext *cx, BytecodeEmitter *bce)
 /*
  * Emit additional bytecode(s) for non-local jumps.
  */
-static JSBool
+static bool
 EmitNonLocalJumpFixup(JSContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt)
 {
     /*
@@ -609,7 +608,7 @@ EmitGoto(JSContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt, ptrdiff_t *la
     return EmitBackPatchOp(cx, bce, JSOP_BACKPATCH, lastp);
 }
 
-static JSBool
+static bool
 BackPatch(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t last, jsbytecode *target, jsbytecode op)
 {
     jsbytecode *pc, *stop;
@@ -662,7 +661,7 @@ PopStatementBCE(JSContext *cx, BytecodeEmitter *bce)
     return true;
 }
 
-JSBool
+bool
 frontend::DefineCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, ParseNode *pn)
 {
     /* XXX just do numbers for now */
@@ -1372,10 +1371,10 @@ BindNameToSlot(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
  * the value left on the stack after the code executes, will be discarded by a
  * pop bytecode.
  */
-static JSBool
-CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool *answer)
+static bool
+CheckSideEffects(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool *answer)
 {
-    JSBool ok;
+    bool ok;
     ParseNode *pn2;
 
     ok = true;
@@ -1618,8 +1617,8 @@ BytecodeEmitter::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
     return result;
 }
 
-static JSBool
-EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, JSBool callContext)
+static bool
+EmitNameOp(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callContext)
 {
     JSOp op;
 
@@ -1712,8 +1711,7 @@ EmitElemOpBase(JSContext *cx, BytecodeEmitter *bce, JSOp op)
 }
 
 static bool
-EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce,
-           JSBool callContext)
+EmitPropOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce, bool callContext)
 {
     ParseNode *pn2, *pndot, *pnup, *pndown;
     ptrdiff_t top;
@@ -1890,7 +1888,7 @@ EmitNameIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     return true;
 }
 
-static JSBool
+static bool
 EmitElemOp(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
 {
     ParseNode *left, *right;
@@ -2011,7 +2009,7 @@ EmitElemIncDec(JSContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
     return true;
 }
 
-static JSBool
+static bool
 EmitNumberOp(JSContext *cx, double dval, BytecodeEmitter *bce)
 {
     int32_t ival;
@@ -2077,11 +2075,11 @@ SetJumpOffsetAt(BytecodeEmitter *bce, ptrdiff_t off)
  * LLVM is deciding to inline this function which uses a lot of stack space
  * into EmitTree which is recursive and uses relatively little stack space.
  */
-MOZ_NEVER_INLINE static JSBool
+MOZ_NEVER_INLINE static bool
 EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JSOp switchOp;
-    JSBool ok, hasDefault;
+    bool ok, hasDefault;
     ptrdiff_t top, off, defaultOffset;
     ParseNode *pn2, *pn3, *pn4;
     uint32_t caseCount, tableLength;
@@ -2321,7 +2319,7 @@ EmitSwitch(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     off = -1;
     if (switchOp == JSOP_CONDSWITCH) {
         int caseNoteIndex = -1;
-        JSBool beforeCases = true;
+        bool beforeCases = true;
 
         /* Emit code for evaluating cases and jumping to case statements. */
         for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
@@ -2506,7 +2504,7 @@ bad:
     goto out;
 }
 
-JSBool
+bool
 frontend::EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body)
 {
     /*
@@ -2611,10 +2609,10 @@ enum VarEmitOption
 
 #if JS_HAS_DESTRUCTURING
 
-typedef JSBool
+typedef bool
 (*DestructuringDeclEmitter)(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *pn);
 
-static JSBool
+static bool
 EmitDestructuringDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *pn)
 {
     JS_ASSERT(pn->isKind(PNK_NAME));
@@ -2625,7 +2623,7 @@ EmitDestructuringDecl(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseN
     return MaybeEmitVarDecl(cx, bce, prologOp, pn, NULL);
 }
 
-static JSBool
+static bool
 EmitDestructuringDecls(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, ParseNode *pn)
 {
     ParseNode *pn2, *pn3;
@@ -2653,7 +2651,7 @@ EmitDestructuringDecls(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp, Parse
     return true;
 }
 
-static JSBool
+static bool
 EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
                            VarEmitOption emitOption);
 
@@ -2669,7 +2667,7 @@ EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
  * with the initial values of the N (where 0 <= N) variables assigned in the
  * lhs expression. (Same post-condition as EmitDestructuringOpsHelper)
  */
-static JSBool
+static bool
 EmitDestructuringLHS(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption emitOption)
 {
     JS_ASSERT(emitOption != DefineVars);
@@ -2771,7 +2769,7 @@ EmitDestructuringLHS(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
  * with the initial values of the N (where 0 <= N) variables assigned in the
  * lhs expression. (Same post-condition as EmitDestructuringLHS)
  */
-static JSBool
+static bool
 EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
                            VarEmitOption emitOption)
 {
@@ -2779,7 +2777,7 @@ EmitDestructuringOpsHelper(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
 
     unsigned index;
     ParseNode *pn2, *pn3;
-    JSBool doElemOp;
+    bool doElemOp;
 
 #ifdef DEBUG
     int stackDepth = bce->stackDepth;
@@ -2980,7 +2978,7 @@ class LetNotes
     }
 };
 
-static JSBool
+static bool
 EmitDestructuringOps(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t declType, ParseNode *pn,
                      LetNotes *letNotes = NULL)
 {
@@ -3007,7 +3005,7 @@ EmitDestructuringOps(JSContext *cx, BytecodeEmitter *bce, ptrdiff_t declType, Pa
     return EmitDestructuringOpsHelper(cx, bce, pn, emitOption);
 }
 
-static JSBool
+static bool
 EmitGroupAssignment(JSContext *cx, BytecodeEmitter *bce, JSOp prologOp,
                     ParseNode *lhs, ParseNode *rhs)
 {
@@ -3130,7 +3128,7 @@ MaybeEmitLetGroupDecl(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn,
 
 #endif /* JS_HAS_DESTRUCTURING */
 
-static JSBool
+static bool
 EmitVariables(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmitOption emitOption,
               LetNotes *letNotes = NULL)
 {
@@ -3548,7 +3546,7 @@ EmitAssignment(JSContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp op, Par
 }
 
 #ifdef DEBUG
-static JSBool
+static bool
 GettableNoteForNextOp(BytecodeEmitter *bce)
 {
     ptrdiff_t offset, target;
@@ -3567,7 +3565,7 @@ GettableNoteForNextOp(BytecodeEmitter *bce)
 #endif
 
 /* Top-level named functions need a nop for decompilation. */
-static JSBool
+static bool
 EmitFunctionDefNop(JSContext *cx, BytecodeEmitter *bce, unsigned index)
 {
     return NewSrcNote2(cx, bce, SRC_FUNCDEF, (ptrdiff_t)index) >= 0 &&
@@ -5071,7 +5069,7 @@ EmitStatement(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * calling JS_Compile* to suppress JSOP_POPV.
      */
     bool wantval = false;
-    JSBool useful = false;
+    bool useful = false;
     if (bce->sc->inFunction()) {
         JS_ASSERT(!bce->script->noScriptRval);
     } else {
@@ -5168,7 +5166,7 @@ EmitDelete(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          * If useless, just emit JSOP_TRUE; otherwise convert delete foo()
          * to foo(), true (a comma expression, requiring SRC_PCDELTA).
          */
-        JSBool useful = false;
+        bool useful = false;
         if (!CheckSideEffects(cx, bce, pn2, &useful))
             return false;
 
@@ -5848,14 +5846,14 @@ EmitDefaults(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     return true;
 }
 
-JSBool
+bool
 frontend::EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     JS_CHECK_RECURSION(cx, return false);
 
     EmitLevelManager elm(bce);
 
-    JSBool ok = true;
+    bool ok = true;
     ptrdiff_t top = bce->offset();
     pn->pn_offset = top;
 
@@ -6587,7 +6585,7 @@ frontend::NewSrcNote3(JSContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptr
     return index;
 }
 
-static JSBool
+static bool
 GrowSrcNotes(JSContext *cx, BytecodeEmitter *bce)
 {
     size_t newlength = bce->noteLimit() * 2;
@@ -6635,7 +6633,7 @@ frontend::AddToSrcNoteDelta(JSContext *cx, BytecodeEmitter *bce, jssrcnote *sn, 
     return sn;
 }
 
-static JSBool
+static bool
 SetSrcNoteOffset(JSContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which, ptrdiff_t offset)
 {
     jssrcnote *sn;
@@ -6728,7 +6726,7 @@ DumpSrcNoteSizeHist()
  * LEAST CHECKING WHETHER BytecodeEmitter::countFinalSourceNotes() NEEDS
  * CORRESPONDING CHANGES!
  */
-JSBool
+bool
 frontend::FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *notes)
 {
     unsigned prologCount, mainCount, totalCount;
@@ -6784,9 +6782,9 @@ frontend::FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *n
     return true;
 }
 
-static JSBool
-NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned stackDepth, size_t start,
-           size_t end)
+static bool
+NewTryNote(JSContext *cx, BytecodeEmitter *bce, JSTryNoteKind kind, unsigned stackDepth,
+           size_t start, size_t end)
 {
     JS_ASSERT((unsigned)(uint16_t)stackDepth == stackDepth);
     JS_ASSERT(start <= end);
