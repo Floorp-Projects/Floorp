@@ -690,7 +690,6 @@ InvalidatePostTransformRegion(ThebesLayer* aLayer, const nsIntRegion& aRegion,
   // to the ThebesLayer's own coordinates
   nsIntRegion rgn = aRegion;
   rgn.MoveBy(-aTranslation);
-  rgn.And(rgn, aLayer->GetVisibleRegion());
   aLayer->InvalidateRegion(rgn);
 #ifdef DEBUG_INVALIDATIONS
   nsCAutoString str;
