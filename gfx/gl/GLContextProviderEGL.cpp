@@ -326,14 +326,6 @@ public:
 
         PR_STATIC_ASSERT(sizeof(GLint) >= sizeof(int32_t));
         mMaxTextureImageSize = PR_INT32_MAX;
-#if 0
-        if (ok) {
-            EGLint v;
-            sEGLLibrary.fQueryContext(EGL_DISPLAY(), mContext, LOCAL_EGL_RENDER_BUFFER, &v);
-            if (v == LOCAL_EGL_BACK_BUFFER)
-                mIsDoubleBuffered = true;
-        }
-#endif
 
         if (ok)
             InitFramebuffers();
@@ -1627,11 +1619,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         return nsnull;
     }
 
-#if defined(XP_WIN) || defined(ANDROID) || defined(MOZ_PLATFORM_MAEMO)
     bool doubleBuffered = true;
-#else
-    bool doubleBuffered = false;
-#endif
 
     void* currentContext = sEGLLibrary.fGetCurrentContext();
     if (aWidget->HasGLContext() && currentContext) {
