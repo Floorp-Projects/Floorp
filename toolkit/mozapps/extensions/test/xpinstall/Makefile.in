@@ -9,12 +9,10 @@ VPATH		= @srcdir@
 relativesrcdir  = toolkit/mozapps/extensions/test/xpinstall
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
-
 
 # browser_bug672485.js is disabled due to a leak. See bug 682410.
 
-_BROWSER_FILES = head.js \
+MOCHITEST_BROWSER_FILES = head.js \
                  browser_unsigned_url.js \
                  browser_unsigned_trigger.js \
                  browser_unsigned_trigger_iframe.js \
@@ -97,5 +95,4 @@ _BROWSER_FILES = head.js \
                  redirect.sjs \
                  $(NULL)
 
-libs::	$(_BROWSER_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

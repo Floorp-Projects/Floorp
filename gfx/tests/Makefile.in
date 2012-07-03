@@ -16,7 +16,7 @@ MOZILLA_INTERNAL_API = 1
 
 XPCSHELL_TESTS = unit
 
-_TEST_FILES = $(addprefix mochitest/, \
+MOCHITEST_FILES = $(addprefix mochitest/, \
 	test_bug509244.html \
 	test_bug513439.html \
 	test_acceleration.html \
@@ -81,8 +81,3 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 OS_LIBS		+= $(MOZ_PANGO_LIBS) $(XLIBS)
 CXXFLAGS	+= $(MOZ_PANGO_CFLAGS)
 endif
-
-
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") \
-	    $(DEPTH)/_tests/testing/mochitest/tests/gfx

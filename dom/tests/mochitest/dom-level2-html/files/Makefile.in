@@ -10,9 +10,8 @@ VPATH		= @srcdir@
 relativesrcdir	= dom/tests/mochitest/dom-level2-html/files
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 		anchor.html \
 		anchor.xhtml \
 		anchor.xml \
@@ -220,11 +219,10 @@ _TEST_FILES	= \
 		xhtml1-strict.dtd \
 		xhtml1-transitional.dtd \
 		$(NULL)
-_TEST_FILES_J   = \
+MOCHITEST_FILES_J   = \
 		applets/org/w3c/domts/DOMTSApplet.class \
 		$(NULL)
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-libs:: $(_TEST_FILES_J)
+include $(topsrcdir)/config/rules.mk
+libs:: $(MOCHITEST_FILES_J)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/applets/org/w3c/domts
 

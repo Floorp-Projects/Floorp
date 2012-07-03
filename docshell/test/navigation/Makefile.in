@@ -11,15 +11,14 @@ relativesrcdir  = docshell/test/navigation
 MODULE = test_docshell
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		test_bug13871.html \
 		test_bug270414.html \
 		test_bug278916.html \
 		test_bug279495.html \
 		test_bug386782.html \
- 		test_bug430624.html \
+		test_bug430624.html \
 		test_bug430723.html \
 		test_child.html \
 		test_grandchild.html \
@@ -51,7 +50,7 @@ _TEST_FILES = \
 		$(NULL)
 
 ifneq (mobile,$(MOZ_BUILD_APP))
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
 		browser_bug343515.js \
 		bug343515_pg1.html \
 		bug343515_pg2.html \
@@ -62,10 +61,4 @@ _BROWSER_TEST_FILES = \
 		$(NULL)
 endif
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-ifneq (mobile,$(MOZ_BUILD_APP))
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-endif
+include $(topsrcdir)/config/rules.mk

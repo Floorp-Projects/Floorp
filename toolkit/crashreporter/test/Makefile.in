@@ -48,7 +48,7 @@ include $(topsrcdir)/config/rules.mk
 DEFINES += -DSHARED_LIBRARY=$(SHARED_LIBRARY) -DNOMINMAX
 
 ifneq (mobile,$(MOZ_BUILD_APP))
-_BROWSER_FILES = \
+MOCHITEST_BROWSER_FILES = \
   browser/head.js \
   browser/crashreport.sjs \
   browser/browser_aboutCrashes.js \
@@ -56,7 +56,7 @@ _BROWSER_FILES = \
   browser/browser_aboutCrashesResubmit.js \
   $(NULL)
 
-libs::  $(_BROWSER_FILES)
+libs::  $(MOCHITEST_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/browser
 endif
 
