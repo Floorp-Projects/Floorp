@@ -9,9 +9,8 @@ VPATH			= @srcdir@
 relativesrcdir  = browser/components/places/tests/browser
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
-_BROWSER_TEST_FILES = \
+MOCHITEST_BROWSER_FILES = \
 	head.js \
 	browser_0_library_left_pane_migration.js \
 	browser_library_left_pane_fixnames.js \
@@ -45,5 +44,4 @@ _BROWSER_TEST_FILES = \
 	browser_library_downloads.js \
 	$(NULL)
 
-libs:: $(_BROWSER_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk

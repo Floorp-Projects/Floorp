@@ -13,9 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS = files
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES_A	= \
+MOCHITEST_FILES_A	= \
 		DOMTestCase.js \
 		test_anchor01.html \
 		test_anchor02.html \
@@ -101,7 +99,7 @@ _TEST_FILES_A	= \
 # This test is failing on all platforms -- bug 471139
 #		test_HTMLDocument12.html \
 #
-_TEST_FILES_B	= \
+MOCHITEST_FILES_B	= \
 		test_HTMLDirectoryElement01.html \
 		test_HTMLDivElement01.html \
 		test_HTMLDlistElement01.html \
@@ -276,7 +274,7 @@ _TEST_FILES_B	= \
 		test_HTMLElement98.html \
 		test_HTMLElement99.html \
 		$(NULL)
-_TEST_FILES_C	= \
+MOCHITEST_FILES_C	= \
 		test_HTMLFieldSetElement01.html \
 		test_HTMLFieldSetElement02.html \
 		test_HTMLFontElement01.html \
@@ -391,7 +389,7 @@ _TEST_FILES_C	= \
 		test_HTMLModElement04.html \
 		$(NULL)
 
-_TEST_FILES_D	= \
+MOCHITEST_FILES_D	= \
 		test_HTMLObjectElement01.html \
 		test_HTMLObjectElement02.html \
 		test_HTMLObjectElement03.html \
@@ -625,7 +623,7 @@ _TEST_FILES_D	= \
 		test_HTMLUListElement01.html \
 		test_HTMLUListElement02.html \
 		$(NULL)
-_TEST_FILES_E	= \
+MOCHITEST_FILES_E	= \
 		test_object01.html \
 		test_object02.html \
 		test_object03.html \
@@ -697,7 +695,7 @@ _TEST_FILES_E	= \
 		test_hasFeature06.html \
 		$(NULL)
 
-_TEST_FILES_F	= \
+MOCHITEST_FILES_F	= \
 		test_HTMLAppletElement01.html \
 		test_HTMLAppletElement02.html \
 		test_HTMLAppletElement03.html \
@@ -711,16 +709,6 @@ _TEST_FILES_F	= \
 		test_HTMLAppletElement11.html \
 		$(NULL)
 
-# work around nsinstall limits on windows by splitting into groups
-libs:: 	$(_TEST_FILES_A)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-libs:: 	$(_TEST_FILES_B)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-libs:: 	$(_TEST_FILES_C)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-libs:: 	$(_TEST_FILES_D)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-libs:: 	$(_TEST_FILES_E)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-#libs:: 	$(_TEST_FILES_F)
-#	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+MOCHITEST_FILES_PARTS := $(foreach part,A B C D E,MOCHITEST_FILES_$(part))
+
+include $(topsrcdir)/config/rules.mk
