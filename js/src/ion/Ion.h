@@ -124,6 +124,11 @@ struct IonOptions
     // Default: 4,096
     uint32 maxStackArgs;
 
+    // The maximum inlining depth.
+    //
+    // Default: 3
+    uint32 maxInlineDepth;
+
     // The bytecode length limit for small function.
     //
     // The default for this was arrived at empirically via benchmarking.
@@ -141,6 +146,16 @@ struct IonOptions
     //
     // Default: usesBeforeInlining / 4
     uint32 smallFunctionUsesBeforeInlining;
+
+    // The maximum number of functions to polymorphically inline at a call site.
+    //
+    // Default: 4
+    uint32 polyInlineMax;
+
+    // The maximum total bytecode size of an inline call site.
+    //
+    // Default: 800
+    uint32 inlineMaxTotalBytecodeLength;
 
     void setEagerCompilation() {
         usesBeforeCompile = usesBeforeCompileNoJaeger = 0;
@@ -163,8 +178,11 @@ struct IonOptions
         usesBeforeCompileNoJaeger(40),
         usesBeforeInlining(usesBeforeCompile),
         maxStackArgs(4096),
+        maxInlineDepth(3),
         smallFunctionMaxBytecodeLength(100),
-        smallFunctionUsesBeforeInlining(usesBeforeInlining / 4)
+        smallFunctionUsesBeforeInlining(usesBeforeInlining / 4),
+        polyInlineMax(4),
+        inlineMaxTotalBytecodeLength(800)
     { }
 };
 
