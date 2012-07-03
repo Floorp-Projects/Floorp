@@ -102,14 +102,6 @@ PushStatementTC(TreeContext *tc, StmtInfoTC *stmt, StmtType type)
     stmt->isFunctionBodyBlock = false;
 }
 
-// Push a block scope statement and link blockObj into tc->blockChain.
-static void
-PushBlockScopeTC(TreeContext *tc, StmtInfoTC *stmt, StaticBlockObject &blockObj)
-{
-    PushStatementTC(tc, stmt, STMT_BLOCK);
-    FinishPushBlockScope(tc, stmt, blockObj);
-}
-
 Parser::Parser(JSContext *cx, JSPrincipals *prin, JSPrincipals *originPrin,
                const jschar *chars, size_t length, const char *fn, unsigned ln, JSVersion v,
                bool foldConstants, bool compileAndGo)
@@ -2144,12 +2136,16 @@ struct RemoveDecl {
 static void
 PopStatementTC(TreeContext *tc)
 {
-    if (tc->topStmt->isBlockScope) {
-        StaticBlockObject &blockObj = *tc->topStmt->blockObj;
-        JS_ASSERT(!blockObj.inDictionaryMode());
-        ForEachLetDef(tc, blockObj, RemoveDecl());
-    }
+    StaticBlockObject *blockObj = tc->topStmt->blockObj;
+    JS_ASSERT(!!blockObj == (tc->topStmt->isBlockScope));
+
     FinishPopStatement(tc);
+
+    if (blockObj) {
+        JS_ASSERT(!blockObj->inDictionaryMode());
+        ForEachLetDef(tc, *blockObj, RemoveDecl());
+        blockObj->resetPrevBlockChainFromParser();
+    }
 }
 
 static inline bool
@@ -2758,22 +2754,27 @@ Parser::returnOrYield(bool useAssignExpr)
 }
 
 static ParseNode *
-PushLexicalScope(JSContext *cx, Parser *parser, StaticBlockObject &obj, StmtInfoTC *stmt)
+PushLexicalScope(JSContext *cx, Parser *parser, StaticBlockObject &blockObj, StmtInfoTC *stmt)
 {
     ParseNode *pn = LexicalScopeNode::create(PNK_LEXICALSCOPE, parser);
     if (!pn)
         return NULL;
 
-    ObjectBox *blockbox = parser->newObjectBox(&obj);
+    ObjectBox *blockbox = parser->newObjectBox(&blockObj);
     if (!blockbox)
         return NULL;
 
-    PushBlockScopeTC(parser->tc, stmt, obj);
+    TreeContext *tc = parser->tc;
+
+    PushStatementTC(tc, stmt, STMT_BLOCK);
+    blockObj.initPrevBlockChainFromParser(tc->blockChain);
+    FinishPushBlockScope(tc, stmt, blockObj);
+
     pn->setOp(JSOP_LEAVEBLOCK);
     pn->pn_objbox = blockbox;
     pn->pn_cookie.makeFree();
     pn->pn_dflags = 0;
-    if (!GenerateBlockId(parser->tc, stmt->blockid))
+    if (!GenerateBlockId(tc, stmt->blockid))
         return NULL;
     pn->pn_blockid = stmt->blockid;
     return pn;
@@ -3775,7 +3776,7 @@ Parser::letStatement()
             stmt->downScope = tc->topScopeStmt;
             tc->topScopeStmt = stmt;
 
-            blockObj->setEnclosingBlock(tc->blockChain);
+            blockObj->initPrevBlockChainFromParser(tc->blockChain);
             tc->blockChain = blockObj;
             stmt->blockObj = blockObj;
 

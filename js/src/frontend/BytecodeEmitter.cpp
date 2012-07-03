@@ -673,12 +673,31 @@ PushStatementBCE(BytecodeEmitter *bce, StmtInfoBCE *stmt, StmtType type, ptrdiff
     PushStatement(bce, stmt, type);
 }
 
+/*
+ * Return the enclosing lexical scope, which is the innermost enclosing static
+ * block object or compiler created function.
+ */
+static JSObject *
+EnclosingStaticScope(BytecodeEmitter *bce)
+{
+    if (bce->blockChain)
+        return bce->blockChain;
+
+    if (!bce->sc->inFunction()) {
+        JS_ASSERT(!bce->parent);
+        return NULL;
+    }
+
+    return bce->sc->fun();
+}
+
 // Push a block scope statement and link blockObj into bce->blockChain.
 static void
 PushBlockScopeBCE(BytecodeEmitter *bce, StmtInfoBCE *stmt, StaticBlockObject &blockObj,
                   ptrdiff_t top)
 {
     PushStatementBCE(bce, stmt, STMT_BLOCK, top);
+    blockObj.initEnclosingStaticScope(EnclosingStaticScope(bce));
     FinishPushBlockScope(bce, stmt, blockObj);
 }
 
@@ -4219,7 +4238,6 @@ EmitIf(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
  *  destructure y
  *  pick 1
  *  dup               +1          SRC_DESTRUCTLET + offset to enterlet0
- *  pick
  *  destructure z
  *  pick 1
  *  pop               -1
@@ -4827,7 +4845,9 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
         // Inherit most things (principals, version, etc) from the parent.
         Rooted<JSScript*> parent(cx, bce->script);
+        Rooted<JSObject*> enclosingScope(cx, EnclosingStaticScope(bce));
         Rooted<JSScript*> script(cx, JSScript::Create(cx,
+                                                      enclosingScope,
                                                       /* savedCallerFun = */ false,
                                                       parent->principals,
                                                       parent->originPrincipals,

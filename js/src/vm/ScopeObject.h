@@ -19,13 +19,70 @@ namespace js {
 /*****************************************************************************/
 
 /*
+ * All function scripts have an "enclosing static scope" that refers to the
+ * innermost enclosing let or function in the program text. This allows full
+ * reconstruction of the lexical scope for debugging or compiling efficient
+ * access to variables in enclosing scopes. The static scope is represented at
+ * runtime by a tree of compiler-created objects representing each scope:
+ *  - a StaticBlockObject is created for 'let' and 'catch' scopes
+ *  - a JSFunction+JSScript+Bindings trio is created for function scopes
+ * (These objects are primarily used to clone objects scopes for the
+ * dynamic scope chain.)
+ *
+ * There is an additional scope for named lambdas. E.g., in:
+ *
+ *   (function f() { var x; function g() { } })
+ *
+ * g's innermost enclosing scope will first be the function scope containing
+ * 'x', enclosed by a scope containing only the name 'f'. (This separate scope
+ * is necessary due to the fact that declarations in the function scope shadow
+ * (dynamically, in the case of 'eval') the lambda name.)
+ *
+ * There are two limitations to the current lexical nesting information:
+ *
+ *  - 'with' is completely absent; this isn't a problem for the current use
+ *    cases since 'with' causes every static scope to be on the dynamic scope
+ *    chain (so the debugger can find everything) and inhibits all upvar
+ *    optimization.
+ *
+ *  - The "enclosing static scope" chain stops at 'eval'. For example in:
+ *      let (x) { eval("function f() {}") }
+ *    f does not have an enclosing static scope. This is fine for current uses
+ *    for the same reason as 'with'.
+ *
+ * (See also AssertDynamicScopeMatchesStaticScope.)
+ */
+class StaticScopeIter
+{
+    JSObject *obj;
+    bool onNamedLambda;
+
+  public:
+    explicit StaticScopeIter(JSObject *obj);
+
+    bool done() const;
+    void operator++(int);
+
+    /* Return whether this static scope will be on the dynamic scope chain. */
+    bool hasDynamicScopeObject() const;
+
+    enum Type { BLOCK, FUNCTION, NAMED_LAMBDA };
+    Type type() const;
+
+    StaticBlockObject &block() const;
+    JSScript *funScript() const;
+};
+
+/*****************************************************************************/
+
+/*
  * A "scope coordinate" describes how to get from head of the scope chain to a
  * given lexically-enclosing variable. A scope coordinate has two dimensions:
  *  - hops: the number of scope objects on the scope chain to skip
- *  - binding: which binding on the scope object
+ *  - slot: the slot on the scope object holding the variable's value
  * Additionally (as described in jsopcode.tbl) there is a 'block' index, but
  * this is only needed for decompilation/inference so it is not included in the
- * main ScopeCoordinate struct: use ScopeCoordinate{BlockChain,Atom} instead.
+ * main ScopeCoordinate struct: use ScopeCoordinate{BlockChain,Name} instead.
  */
 struct ScopeCoordinate
 {
@@ -228,11 +285,39 @@ class StaticBlockObject : public BlockObject
   public:
     static StaticBlockObject *create(JSContext *cx);
 
-    inline StaticBlockObject *enclosingBlock() const;
-    inline void setEnclosingBlock(StaticBlockObject *blockObj);
+    /* See StaticScopeIter comment. */
+    inline JSObject *enclosingStaticScope() const;
 
-    void setStackDepth(uint32_t depth);
+    /*
+     * A refinement of enclosingStaticScope that returns NULL if the enclosing
+     * static scope is a JSFunction.
+     */
+    inline StaticBlockObject *enclosingBlock() const;
+
+    /*
+     * Return whether this StaticBlockObject contains a variable stored at
+     * the given stack depth (i.e., fp->base()[depth]).
+     */
     bool containsVarAtDepth(uint32_t depth);
+
+    /*
+     * A let binding is aliased if accessed lexically by nested functions or
+     * dynamically through dynamic name lookup (eval, with, function::, etc).
+     */
+    bool isAliased(unsigned i);
+
+    /*
+     * A static block object is cloned (when entering the block) iff some
+     * variable of the block isAliased.
+     */
+    bool needsClone();
+
+    /* Frontend-only functions ***********************************************/
+
+    /* Initialization functions for above fields. */
+    void setAliased(unsigned i, bool aliased);
+    void setStackDepth(uint32_t depth);
+    void initEnclosingStaticScope(JSObject *obj);
 
     /*
      * Frontend compilation temporarily uses the object's slots to link
@@ -242,17 +327,13 @@ class StaticBlockObject : public BlockObject
     Definition *maybeDefinitionParseNode(unsigned i);
 
     /*
-     * A let binding is aliased is accessed lexically by nested functions or
-     * dynamically through dynamic name lookup (eval, with, function::, etc).
+     * The parser uses 'enclosingBlock' as the prev-link in the tc->blockChain
+     * stack. Note: in the case of hoisting, this prev-link will not ultimately
+     * be the same as enclosingBlock, initEnclosingStaticScope must be called
+     * separately in the emitter. 'reset' is just for asserting stackiness.
      */
-    void setAliased(unsigned i, bool aliased);
-    bool isAliased(unsigned i);
-
-    /*
-     * A static block object is cloned (when entering the block) iff some
-     * variable of the block isAliased.
-     */
-    bool needsClone();
+    void initPrevBlockChainFromParser(StaticBlockObject *prev);
+    void resetPrevBlockChainFromParser();
 
     static Shape *addVar(JSContext *cx, Handle<StaticBlockObject*> block, HandleId id,
                          int index, bool *redeclared);
@@ -277,11 +358,11 @@ class ClonedBlockObject : public BlockObject
 
 template<XDRMode mode>
 bool
-XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObject **objp);
+XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript script,
+                     StaticBlockObject **objp);
 
 extern JSObject *
-CloneStaticBlockObject(JSContext *cx, Handle<StaticBlockObject*> srcBlock,
-                       const AutoObjectVector &objects, JSScript *src);
+CloneStaticBlockObject(JSContext *cx, HandleObject enclosingScope, Handle<StaticBlockObject*> src);
 
 /*****************************************************************************/
 
