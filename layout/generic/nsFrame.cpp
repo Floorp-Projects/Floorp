@@ -4603,9 +4603,9 @@ nsIFrame::GetTransformMatrix(nsIFrame* aStopAtAncestor,
 }
 
 void
-nsIFrame::InvalidateFrameSubtree()
+nsIFrame::InvalidateFrameSubtree(PRUint32 aFlags)
 {
-  InvalidateFrame();
+  InvalidateFrame(aFlags);
 
   if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
     return;
@@ -4620,7 +4620,8 @@ nsIFrame::InvalidateFrameSubtree()
   for (; !lists.IsDone(); lists.Next()) {
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
-      childFrames.get()->InvalidateFrameSubtree();
+      childFrames.get()->
+        InvalidateFrameSubtree(aFlags | INVALIDATE_DONT_SCHEDULE_PAINT);
     }
   }
 }
@@ -4647,7 +4648,7 @@ nsIFrame::ClearInvalidationStateBits()
 }
 
 void
-nsIFrame::InvalidateFrame()
+nsIFrame::InvalidateFrame(PRUint32 aFlags)
 {
   AddStateBits(NS_FRAME_NEEDS_PAINT);
   nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(this);
@@ -4655,7 +4656,7 @@ nsIFrame::InvalidateFrame()
     parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
-  if (!parent) {
+  if (!(aFlags & INVALIDATE_DONT_SCHEDULE_PAINT)) {
     SchedulePaint();
   }
 }
@@ -7809,7 +7810,7 @@ nsFrame::SetParent(nsIFrame* aParent)
   // ourselves too. This is probably faster than clearing the flag all
   // the way up the frame tree.
   if (aParent->HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
-    InvalidateFrame();
+    InvalidateFrame(INVALIDATE_DONT_SCHEDULE_PAINT);
   }
 }
 

@@ -2126,12 +2126,17 @@ public:
 
   /**
    * Marks all display items created by this frame as needing a repaint,
-   * and calls SchedulePaint() if requested and one is not already pending.
+   * and calls SchedulePaint() if requested.
    *
    * This includes all display items created by this frame, including
    * container types.
+   * @param aFlags INVALIDATE_DONT_SCHEDULE_PAINT: Don't call SchedulePaint()
+   * when invalidating.
    */
-  virtual void InvalidateFrame();
+  enum {
+    INVALIDATE_DONT_SCHEDULE_PAINT
+  };
+  virtual void InvalidateFrame(PRUint32 aFlags = 0);
   
   /**
    * Calls InvalidateFrame() on all frames descendant frames (including
@@ -2140,7 +2145,7 @@ public:
    * This function doesn't walk through placeholder frames to invalidate
    * the out-of-flow frames.
    */
-  void InvalidateFrameSubtree();
+  void InvalidateFrameSubtree(PRUint32 aFlags = 0);
   
   /**
    * Checks if a frame has had InvalidateFrame() called on it since the
