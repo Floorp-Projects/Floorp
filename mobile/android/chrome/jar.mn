@@ -29,8 +29,6 @@ chrome.jar:
   content/bindings/content.xml         (content/bindings/content.xml)
   content/bindings/menulist.xml        (content/bindings/menulist.xml)
   content/bindings/settings.xml        (content/bindings/settings.xml)
-  content/cursor.css                   (content/cursor.css)
-% content branding %content/branding/
   content/sanitize.js                  (content/sanitize.js)
   content/exceptions.js                (content/exceptions.js)
 * content/downloads.js                 (content/downloads.js)
@@ -38,6 +36,8 @@ chrome.jar:
   content/SelectHelper.js              (content/SelectHelper.js)
   content/HelperApps.js                (content/HelperApps.js)
   content/dbg-browser-actors.js        (content/dbg-browser-actors.js)
+
+% content branding %content/branding/
 
 % override chrome://global/content/config.xul chrome://browser/content/config.xhtml
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
