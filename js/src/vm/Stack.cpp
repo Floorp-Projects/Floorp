@@ -256,11 +256,6 @@ StackFrame::prologue(JSContext *cx, bool newType)
         flags_ |= HAS_CALL_OBJ;
     }
 
-    if (script()->nesting()) {
-        types::NestingPrologue(cx, this);
-        flags_ |= HAS_NESTING;
-    }
-
     if (isConstructing()) {
         RootedObject callee(cx, &this->callee());
         JSObject *obj = js_CreateThisForFunction(cx, callee, newType);
@@ -314,8 +309,6 @@ StackFrame::epilogue(JSContext *cx)
     if (cx->compartment->debugMode())
         cx->runtime->debugScopes->onPopCall(this, cx);
 
-    if (script()->nesting() && (flags_ & HAS_NESTING))
-        types::NestingEpilogue(this);
 
     if (isConstructing() && returnValue().isPrimitive())
         setReturnValue(ObjectValue(constructorThis()));

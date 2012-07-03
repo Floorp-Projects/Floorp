@@ -143,7 +143,6 @@ XDRState<mode>::codeScript(JSScript **scriptp)
 
     if (mode == XDR_DECODE) {
         JS_ASSERT(!script->compileAndGo);
-        script->globalObject = GetCurrentGlobal(cx());
         js_CallNewScriptHook(cx(), script, NULL);
         Debugger::onNewScript(cx(), script, NULL);
         *scriptp = script;
