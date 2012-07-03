@@ -79,15 +79,18 @@ SettingsListener.observe('language.current', 'en-US', function(value) {
 
 
 // =================== Debugger ====================
-SettingsListener.observe('devtools.debugger.enabled', false, function(enabled) {
-  Services.prefs.setBoolPref('devtools.debugger.enabled', value);
+SettingsListener.observe('devtools.debugger.remote-enabled', false, function(enabled) {
+  Services.prefs.setBoolPref('devtools.debugger.remote-enabled', value);
 });
 
 SettingsListener.observe('devtools.debugger.log', false, function(value) {
   Services.prefs.setBoolPref('devtools.debugger.log', value);
 });
 
-SettingsListener.observe('devtools.debugger.port', 6000, function(value) {
-  Services.prefs.setIntPref('devtools.debugger.port', value);
+SettingsListener.observe('devtools.debugger.remote-port', 6000, function(value) {
+  Services.prefs.setIntPref('devtools.debugger.remote-port', value);
 });
 
+SettingsListener.observe('devtools.debugger.force-local', true, function(value) {
+  Services.prefs.setBoolPref('devtools.debugger.force-local', value);
+});
