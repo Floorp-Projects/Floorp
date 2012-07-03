@@ -28,7 +28,7 @@ public:
    * Compute the area required to be invalidated if this
    * display item is removed.
    */
-  const nsRect& ComputeInvalidationRegion() { return mBounds; }
+  nsRegion ComputeInvalidationRegion() { return mBounds; }
   
   /**
    * Shifts all retained areas of the nsDisplayItemGeometry by the given offset.
