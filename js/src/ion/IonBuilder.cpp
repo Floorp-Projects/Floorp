@@ -2728,45 +2728,45 @@ IonBuilder::jsop_notearg()
     return true;
 }
 
-bool
-IonBuilder::jsop_call_inline(IonBuilder &inlineBuilder, HandleFunction callee,
-                             uint32 argc, bool constructing)
+class AutoAccumulateExits
 {
-#ifdef DEBUG
-    uint32 origStackDepth = current->stackDepth();
-#endif
+    MIRGraph &graph_;
+    MIRGraphExits *prev_;
 
-    // |top| jumps into the callee subgraph -- save it for later use.
-    MBasicBlock *top = current;
+  public:
+    AutoAccumulateExits(MIRGraph &graph, MIRGraphExits &exits) : graph_(graph) {
+        prev_ = graph_.exitAccumulator();
+        graph_.setExitAccumulator(&exits);
+    }
+    ~AutoAccumulateExits() {
+        graph_.setExitAccumulator(prev_);
+    }
+};
 
-    // Add the function constant before the resume point which map call
-    // arguments.
-    MConstant *constFun = MConstant::New(ObjectValue(*callee));
-    current->add(constFun);
-
-    // This resume point collects outer variables only.  It is used to recover
-    // the stack state before the current bytecode.
-    MResumePoint *inlineResumePoint =
-        MResumePoint::New(top, pc, callerResumePoint_, MResumePoint::Outer);
-    if (!inlineResumePoint)
+bool
+IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
+                             MConstant *constFun, MResumePoint *inlineResumePoint,
+                             MDefinitionVector &argv, MBasicBlock *bottom,
+                             Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
+{
+    // Compilation information is allocated for the duration of the current tempLifoAlloc
+    // lifetime.
+    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(
+                            callee->script(), callee, (jsbytecode *)NULL);
+    if (!info)
         return false;
 
-    // We do not inline JSOP_FUNCALL for now.
-    JS_ASSERT(argc == GET_ARGC(inlineResumePoint->pc()));
+    MIRGraphExits saveExits;
+    AutoAccumulateExits aae(graph(), saveExits);
 
-    // Gather up the arguments and |this| to the inline function.
-    // Note that we leave the callee on the simulated stack for the
-    // duration of the call.
-    MDefinitionVector argv;
-    if (!discardCallArgs(argc, argv, top))
+    TypeInferenceOracle oracle;
+    if (!oracle.init(cx, callee->script()))
         return false;
 
-    // Replace the potential object load by the corresponding constant version
-    // which is inlined here. We do this to ensure that on a bailout, we can get
-    // back to the caller by iterating over the stack.
-    inlineResumePoint->replaceOperand(inlineResumePoint->numOperands() - (argc + 2), constFun);
-    current->pop();
-    current->push(constFun);
+    RootedObject scopeChain(NULL);
+
+    IonBuilder inlineBuilder(cx, scopeChain, temp(), graph(), &oracle,
+                             *info, inliningDepth + 1, loopDepth_);
 
     // Create |this| on the caller-side for inlined constructors.
     MDefinition *thisDefn = NULL;
@@ -2784,15 +2784,8 @@ IonBuilder::jsop_call_inline(IonBuilder &inlineBuilder, HandleFunction callee,
 
     MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
 
-    // Create a |bottom| block for all the callee subgraph exits to jump to.
-    JS_ASSERT(types::IsInlinableCall(pc));
-    jsbytecode *postCall = GetNextPc(pc);
-    MBasicBlock *bottom = newBlock(NULL, postCall);
-    bottom->setCallerResumePoint(callerResumePoint_);
-
     // Replace all MReturns with MGotos, and remember the MDefinition that
     // would have been returned.
-    Vector<MDefinition *, 8, IonAllocPolicy> retvalDefns;
     for (MBasicBlock **it = exits.begin(), **end = exits.end(); it != end; ++it) {
         MBasicBlock *exitBlock = *it;
 
@@ -2819,58 +2812,8 @@ IonBuilder::jsop_call_inline(IonBuilder &inlineBuilder, HandleFunction callee,
             return false;
     }
     JS_ASSERT(!retvalDefns.empty());
-
-    if (!bottom->inheritNonPredecessor(top))
-        return false;
-
-    // Pop the callee and push the return value.
-    (void) bottom->pop();
-
-    MDefinition *retvalDefn;
-    if (retvalDefns.length() > 1) {
-        // Need to create a phi to merge the returns together.
-        MPhi *phi = MPhi::New(bottom->stackDepth());
-        bottom->addPhi(phi);
-
-        for (MDefinition **it = retvalDefns.begin(), **end = retvalDefns.end(); it != end; ++it) {
-            if (!phi->addInput(*it))
-                return false;
-        }
-        retvalDefn = phi;
-    } else {
-        retvalDefn = retvalDefns.back();
-    }
-
-    bottom->push(retvalDefn);
-
-    // Replace the callee with the return value in the resumepoint.
-    uint32 retvalSlot = bottom->stackDepth() - 1;
-    bottom->entryResumePoint()->replaceOperand(retvalSlot, retvalDefn);
-
-    // Check the depth change:
-    //  -argc for popped args
-    //  -2 for callee/this
-    //  +1 for retval
-    JS_ASSERT(bottom->stackDepth() == origStackDepth - argc - 1);
-
-    current = bottom;
     return true;
 }
-
-class AutoAccumulateExits
-{
-    MIRGraph &graph_;
-    MIRGraphExits *prev_;
-
-  public:
-    AutoAccumulateExits(MIRGraph &graph, MIRGraphExits &exits) : graph_(graph) {
-        prev_ = graph_.exitAccumulator();
-        graph_.setExitAccumulator(&exits);
-    }
-    ~AutoAccumulateExits() {
-        graph_.setExitAccumulator(prev_);
-    }
-};
 
 static bool IsSmallFunction(JSFunction *target) {
     if (!target->isInterpreted())
@@ -2925,27 +2868,93 @@ IonBuilder::makeInliningDecision(HandleFunction target)
 bool
 IonBuilder::inlineScriptedCall(HandleFunction target, uint32 argc, bool constructing)
 {
+#ifdef DEBUG
+    uint32 origStackDepth = current->stackDepth();
+#endif
+
     IonSpew(IonSpew_Inlining, "Recursively building");
 
-    // Compilation information is allocated for the duration of the current tempLifoAlloc
-    // lifetime.
-    CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(target->script(),
-                                                              target, (jsbytecode *)NULL);
-    if (!info)
+    // |top| jumps into the callee subgraph -- save it for later use.
+    MBasicBlock *top = current;
+
+    // Add the function constant before the resume point which maps call args.
+    MConstant *constFun = MConstant::New(ObjectValue(*target));
+    current->add(constFun);
+
+    // This resume point collects outer variables only.  It is used to recover
+    // the stack state before the current bytecode.
+    MResumePoint *inlineResumePoint =
+        MResumePoint::New(top, pc, callerResumePoint_, MResumePoint::Outer);
+    if (!inlineResumePoint)
         return false;
 
-    MIRGraphExits exits;
-    AutoAccumulateExits aae(graph(), exits);
+    // We do not inline JSOP_FUNCALL for now.
+    JS_ASSERT(argc == GET_ARGC(inlineResumePoint->pc()));
 
-    TypeInferenceOracle oracle;
-    if (!oracle.init(cx, target->script()))
+    // Gather up  the arguments and |this| to the inline function.
+    // Note that we leave the callee on the simulated stack for the
+    // duration of the call.
+    MDefinitionVector argv;
+    if(!discardCallArgs(argc, argv, top))
         return false;
 
-    RootedObject scopeChain(NULL);
+    // Replace the potential object load by the corresponding constant version
+    // which is inlined here. We do this to ensure that on a bailout, we can get
+    // back to the caller by iterating over the stack.
+    inlineResumePoint->replaceOperand(inlineResumePoint->numOperands() - (argc + 2), constFun);
+    current->pop();
+    current->push(constFun);
 
-    IonBuilder inlineBuilder(cx, scopeChain, temp(), graph(), &oracle,
-                             *info, inliningDepth + 1, loopDepth_);
-    return jsop_call_inline(inlineBuilder, target, argc, constructing);
+    // Create a |bottom| block for all the callee subgraph exits to jump to.
+    JS_ASSERT(types::IsInlinableCall(pc));
+    jsbytecode *postCall = GetNextPc(pc);
+    MBasicBlock *bottom = newBlock(NULL, postCall);
+    bottom->setCallerResumePoint(callerResumePoint_);
+
+    Vector<MDefinition *, 8, IonAllocPolicy> retvalDefns;
+
+    // Do the inline build. Return value definitions are stored in retvalDefns.
+    if(!jsop_call_inline(target, argc, constructing, constFun,
+                         inlineResumePoint, argv, bottom, retvalDefns))
+        return false;
+
+    graph_.moveBlockToEnd(bottom);
+
+    if (!bottom->inheritNonPredecessor(top))
+        return false;
+
+    // Pop the callee and push the return value.
+    (void) bottom->pop();
+
+    MDefinition *retvalDefn;
+    if (retvalDefns.length() > 1) {
+        // Need to create a phi to merge the returns together.
+        MPhi *phi = MPhi::New(bottom->stackDepth());
+        bottom->addPhi(phi);
+
+        for (MDefinition **it = retvalDefns.begin(), **end = retvalDefns.end(); it != end; ++it) {
+            if (!phi->addInput(*it))
+                return false;
+        }
+        retvalDefn = phi;
+    } else {
+        retvalDefn = retvalDefns.back();
+    }
+
+    bottom->push(retvalDefn);
+
+    // Replace the callee with the return value in the resumepoint.
+    uint32 retvalSlot = bottom->stackDepth() - 1;
+    bottom->entryResumePoint()->replaceOperand(retvalSlot, retvalDefn);
+
+    // Check the depth change:
+    //  -argc for popped args
+    //  -2 for callee/this
+    //  +1 for retval
+    JS_ASSERT(bottom->stackDepth() == origStackDepth - argc - 1);
+
+    current = bottom;
+    return true;
 }
 
 void
