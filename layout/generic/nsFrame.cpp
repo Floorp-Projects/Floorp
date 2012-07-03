@@ -4603,9 +4603,9 @@ nsIFrame::GetTransformMatrix(nsIFrame* aStopAtAncestor,
 }
 
 void
-nsIFrame::InvalidateFrameSubtree(PRUint32 aFlags)
+nsIFrame::InvalidateFrameSubtree()
 {
-  InvalidateFrame(aFlags);
+  InvalidateFrame();
 
   if (HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
     return;
@@ -4620,8 +4620,7 @@ nsIFrame::InvalidateFrameSubtree(PRUint32 aFlags)
   for (; !lists.IsDone(); lists.Next()) {
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
-      childFrames.get()->
-        InvalidateFrameSubtree(aFlags | INVALIDATE_DONT_SCHEDULE_PAINT);
+      childFrames.get()->InvalidateFrameSubtree();
     }
   }
 }
@@ -4648,7 +4647,7 @@ nsIFrame::ClearInvalidationStateBits()
 }
 
 void
-nsIFrame::InvalidateFrame(PRUint32 aFlags)
+nsIFrame::InvalidateFrame()
 {
   AddStateBits(NS_FRAME_NEEDS_PAINT);
   nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(this);
@@ -4656,7 +4655,7 @@ nsIFrame::InvalidateFrame(PRUint32 aFlags)
     parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
-  if (!(aFlags & INVALIDATE_DONT_SCHEDULE_PAINT)) {
+  if (!parent) {
     SchedulePaint();
   }
 }
@@ -4670,7 +4669,7 @@ nsIFrame::IsInvalid()
 void
 nsIFrame::SchedulePaint(PRUint32 aFlags)
 {
-  nsPresContext *pres = PresContext()->GetRootPresContext();
+  nsPresContext *pres = PresContext()->GetDisplayRootPresContext();
   if (HasAnyStateBits(NS_FRAME_IN_POPUP) || !pres) {
     nsIFrame *displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
     NS_ASSERTION(displayRoot, "Need a display root to schedule a paint!");
@@ -7810,7 +7809,7 @@ nsFrame::SetParent(nsIFrame* aParent)
   // ourselves too. This is probably faster than clearing the flag all
   // the way up the frame tree.
   if (aParent->HasAnyStateBits(NS_FRAME_ALL_DESCENDANTS_NEED_PAINT)) {
-    InvalidateFrame(INVALIDATE_DONT_SCHEDULE_PAINT);
+    InvalidateFrame();
   }
 }
 

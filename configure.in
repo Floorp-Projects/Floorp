@@ -7438,6 +7438,12 @@ fi
 AC_SUBST(MOZ_B2G_BT)
 
 dnl ========================================================
+dnl = Enable Support for System Messages API
+dnl ========================================================
+
+AC_SUBST(MOZ_SYS_MSG)
+
+dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
