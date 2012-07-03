@@ -1,0 +1,5 @@
+component {bc076ea0-609b-4d8f-83d7-5af7cbdc3bb2} SystemMessageManager.js
+contract @mozilla.org/system-message-manager;1 {bc076ea0-609b-4d8f-83d7-5af7cbdc3bb2}
+
+component {70589ca5-91ac-4b9e-b839-d6a88167d714} SystemMessageInternal.js
+contract @mozilla.org/system-message-internal;1 {70589ca5-91ac-4b9e-b839-d6a88167d714}
