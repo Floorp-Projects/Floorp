@@ -1650,11 +1650,8 @@ BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext *cx)
     js_CallNewScriptHook(cx, script, script->function());
     if (!parent) {
         GlobalObject *compileAndGoGlobal = NULL;
-        if (script->compileAndGo) {
-            compileAndGoGlobal = script->globalObject;
-            if (!compileAndGoGlobal)
-                compileAndGoGlobal = &sc->scopeChain()->global();
-        }
+        if (script->compileAndGo)
+            compileAndGoGlobal = &script->global();
         Debugger::onNewScript(cx, script, compileAndGoGlobal);
     }
 }
@@ -4829,7 +4826,6 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JS_ASSERT_IF(bce->sc->inStrictMode(), sc.inStrictMode());
 
         // Inherit most things (principals, version, etc) from the parent.
-        GlobalObject *globalObject = fun->getParent() ? &fun->getParent()->global() : NULL;
         Rooted<JSScript*> parent(cx, bce->script);
         Rooted<JSScript*> script(cx, JSScript::Create(cx,
                                                       /* savedCallerFun = */ false,
@@ -4837,7 +4833,6 @@ EmitFunc(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                                                       parent->originPrincipals,
                                                       parent->compileAndGo,
                                                       /* noScriptRval = */ false,
-                                                      globalObject,
                                                       parent->getVersion(),
                                                       parent->staticLevel + 1));
         if (!script)

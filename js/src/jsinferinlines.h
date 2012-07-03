@@ -12,7 +12,6 @@
 #include "jsinfer.h"
 #include "jsprf.h"
 
-#include "gc/Marking.h"
 #include "gc/Root.h"
 #include "vm/GlobalObject.h"
 
@@ -312,7 +311,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
         JSFunction *fun = callee->toFunction();
         if (fun->isInterpreted()) {
             RootedScript script(cx, fun->script());
-            if (!script->ensureRanAnalysis(cx, fun->environment()))
+            if (!script->ensureRanAnalysis(cx))
                 return false;
             if (cx->typeInferenceEnabled())
                 TypeMonitorCallSlow(cx, callee, args, constructing);
@@ -449,12 +448,6 @@ UseNewTypeAtEntry(JSContext *cx, StackFrame *fp)
 // Script interface functions
 /////////////////////////////////////////////////////////////////////
 
-inline
-TypeScript::TypeScript()
-{
-    this->global = (js::GlobalObject *) GLOBAL_MISSING_SCOPE;
-}
-
 /* static */ inline unsigned
 TypeScript::NumTypeSets(JSScript *script)
 {
@@ -504,7 +497,7 @@ TypeScript::SlotTypes(JSScript *script, unsigned slot)
 TypeScript::StandardType(JSContext *cx, JSScript *script, JSProtoKey key)
 {
     RootedObject proto(cx);
-    RootedObject global(cx, script->global());
+    RootedObject global(cx, &script->global());
     if (!js_GetClassPrototype(cx, global, key, &proto, NULL))
         return NULL;
     return proto->getNewType(cx);
@@ -694,7 +687,7 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
                   script->id(), TypeString(type));
         ThisTypes(script)->addType(cx, type);
 
-        if (analyze && script->types->hasScope())
+        if (analyze)
             script->ensureRanInference(cx);
     }
 }
@@ -754,15 +747,6 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js:
         Type type = GetValueType(cx, value);
         SetArgument(cx, script, arg, type);
     }
-}
-
-void
-TypeScript::trace(JSTracer *trc)
-{
-    if (hasScope() && global)
-        gc::MarkObject(trc, &global, "script_global");
-
-    /* Note: nesting does not keep anything alive. */
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1367,16 +1351,6 @@ TypeObject::setFlagsFromKey(JSContext *cx, JSProtoKey key)
         setFlags(cx, flags);
 }
 
-inline JSObject *
-TypeObject::getGlobal()
-{
-    if (singleton)
-        return &singleton->global();
-    if (interpretedFunction && interpretedFunction->script()->compileAndGo)
-        return &interpretedFunction->global();
-    return NULL;
-}
-
 inline void
 TypeObject::writeBarrierPre(TypeObject *type)
 {
@@ -1452,7 +1426,7 @@ JSScript::ensureHasTypes(JSContext *cx)
 }
 
 inline bool
-JSScript::ensureRanAnalysis(JSContext *cx, JSObject *scope)
+JSScript::ensureRanAnalysis(JSContext *cx)
 {
     js::analyze::AutoEnterAnalysis aea(cx->compartment);
     JSScript *self = this;
@@ -1460,12 +1434,6 @@ JSScript::ensureRanAnalysis(JSContext *cx, JSObject *scope)
 
     if (!self->ensureHasTypes(cx))
         return false;
-    if (!self->types->hasScope()) {
-        js::RootedObject scopeRoot(cx, scope);
-        if (!js::types::TypeScript::SetScope(cx, self, scope))
-            return false;
-        scope = scopeRoot;
-    }
     if (!self->hasAnalysis() && !self->makeAnalysis(cx))
         return false;
     JS_ASSERT(self->analysis()->ranBytecode());
@@ -1476,7 +1444,7 @@ inline bool
 JSScript::ensureRanInference(JSContext *cx)
 {
     JS::RootedScript self(cx, this);
-    if (!ensureRanAnalysis(cx, NULL))
+    if (!ensureRanAnalysis(cx))
         return false;
     if (!self->analysis()->ranInference()) {
         js::types::AutoEnterTypeInference enter(cx);

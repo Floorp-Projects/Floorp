@@ -101,25 +101,6 @@ CallObject::setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing)
     setSlot(RESERVED_SLOTS + fun.nargs + i, v);
 }
 
-inline HeapSlotArray
-CallObject::argArray()
-{
-#ifdef DEBUG
-    JSFunction &fun = callee();
-    JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS, fun.nargs));
-#endif
-    return HeapSlotArray(getSlotAddress(RESERVED_SLOTS));
-}
-
-inline HeapSlotArray
-CallObject::varArray()
-{
-    JSFunction &fun = callee();
-    JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS + fun.nargs,
-                                 fun.script()->bindings.numVars()));
-    return HeapSlotArray(getSlotAddress(RESERVED_SLOTS + fun.nargs));
-}
-
 inline uint32_t
 NestedScopeObject::stackDepth() const
 {
