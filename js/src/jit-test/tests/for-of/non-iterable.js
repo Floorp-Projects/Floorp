@@ -2,13 +2,15 @@
 
 load(libdir + "asserts.js");
 
+function argsobj() { return arguments; }
+
 var misc = [
     {}, {x: 1}, Math, isNaN,
     Object.create(null),
-    Object.create(Array.prototype),
+    argsobj(0, 1, 2),
     null, undefined,
-    true, 0, 3.1416, "", "ponies",
-    new Boolean(true), new Number(0), new String("ponies")];
+    true, 0, 3.1416,
+    new Boolean(true), new Number(0)];
 
 for (var i = 0; i < misc.length; i++) {
     let v = misc[i];

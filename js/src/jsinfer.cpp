@@ -3822,10 +3822,10 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
               return false;
         }
 
-        if (GET_UINT8(pc) & JSITER_FOREACH)
-            state.forTypes->addType(cx, Type::UnknownType());
-        else
+        if (GET_UINT8(pc) == JSITER_ENUMERATE)
             state.forTypes->addType(cx, Type::StringType());
+        else
+            state.forTypes->addType(cx, Type::UnknownType());
         break;
       }
 

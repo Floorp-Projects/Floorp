@@ -2870,6 +2870,7 @@ JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
 
 #define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                  \
 JSFunctionSpec _typedArray::jsfuncs[] = {                                      \
+    JS_FN("iterator", JS_ArrayIterator, 0, 0),                                 \
     JS_FN("subarray", _typedArray::fun_subarray, 2, JSFUN_GENERIC_NATIVE),     \
     JS_FN("set", _typedArray::fun_set, 2, JSFUN_GENERIC_NATIVE),               \
     JS_FN("move", _typedArray::fun_move, 3, JSFUN_GENERIC_NATIVE),             \
@@ -2935,7 +2936,6 @@ IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
     JSCLASS_HAS_RESERVED_SLOTS(TypedArray::FIELD_MAX) |                        \
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |                        \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray) |                          \
-    JSCLASS_FOR_OF_ITERATION |                                                 \
     Class::NON_NATIVE,                                                         \
     JS_PropertyStub,         /* addProperty */                                 \
     JS_PropertyStub,         /* delProperty */                                 \
@@ -2954,7 +2954,7 @@ IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Float64, double)
         NULL,       /* equality    */                                          \
         NULL,       /* outerObject */                                          \
         NULL,       /* innerObject */                                          \
-        JS_ElementIteratorStub,                                                \
+        NULL,       /* iteratorObject  */                                      \
         NULL,       /* unused      */                                          \
         false,      /* isWrappedNative */                                      \
     },                                                                         \
