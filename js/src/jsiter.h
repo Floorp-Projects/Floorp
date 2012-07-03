@@ -170,16 +170,16 @@ EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags, Au
  * for-in semantics are required, and when the caller can guarantee that the
  * iterator will never be exposed to scripts.
  */
-extern JSBool
+bool
 ValueToIterator(JSContext *cx, unsigned flags, Value *vp);
 
-extern bool
+bool
 CloseIterator(JSContext *cx, JSObject *iterObj);
 
-extern bool
+bool
 UnwindIteratorForException(JSContext *cx, JSObject *obj);
 
-extern void
+void
 UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj);
 
 }
