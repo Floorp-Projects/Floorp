@@ -35,6 +35,7 @@ MAKEFILES_dom="
   dom/interfaces/xbl/Makefile
   dom/interfaces/xpath/Makefile
   dom/interfaces/xul/Makefile
+  dom/alarm/Makefile
   dom/base/Makefile
   dom/battery/Makefile
   dom/file/Makefile
@@ -709,6 +710,7 @@ if [ "$ENABLE_TESTS" ]; then
     docshell/test/Makefile
     docshell/test/chrome/Makefile
     docshell/test/navigation/Makefile
+    dom/alarm/test/Makefile
     dom/battery/test/Makefile
     dom/indexedDB/test/Makefile
     dom/indexedDB/test/unit/Makefile
