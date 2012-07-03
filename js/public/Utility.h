@@ -355,6 +355,26 @@ JS_FLOOR_LOG2W(size_t n)
     return js_FloorLog2wImpl(n);
 }
 
+/*
+ * JS_ROTATE_LEFT32
+ *
+ * There is no rotate operation in the C Language so the construct (a << 4) |
+ * (a >> 28) is used instead. Most compilers convert this to a rotate
+ * instruction but some versions of MSVC don't without a little help.  To get
+ * MSVC to generate a rotate instruction, we have to use the _rotl intrinsic
+ * and use a pragma to make _rotl inline.
+ *
+ * MSVC in VS2005 will do an inline rotate instruction on the above construct.
+ */
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64) || \
+    defined(_M_X64))
+#include <stdlib.h>
+#pragma intrinsic(_rotl)
+#define JS_ROTATE_LEFT32(a, bits) _rotl(a, bits)
+#else
+#define JS_ROTATE_LEFT32(a, bits) (((a) << (bits)) | ((a) >> (32 - (bits))))
+#endif
+
 JS_END_EXTERN_C
 
 #ifdef __cplusplus
@@ -894,6 +914,61 @@ RoundUpPow2(size_t x)
 {
     return size_t(1) << JS_CEILING_LOG2W(x);
 }
+
+/* Integral types for all hash functions. */
+typedef uint32_t HashNumber;
+
+namespace detail {
+
+/*
+ * Given a raw hash code, h, return a number to be used as an index into a
+ * power-of-two-sized hash table.
+ *
+ * This function aims to produce as uniform an output distribution as possible,
+ * especially in the rightmost bits, even though the input distribution may be
+ * highly nonrandom, given the constraints that this must be deterministic and
+ * quick to compute.
+ */
+inline HashNumber
+ScrambleHashCode(HashNumber h)
+{
+    /*
+     * Simply returning h would not cause any hash tables to produce wrong
+     * answers. But it can produce pathologically bad performance: The caller
+     * bitmasks the result, keeping only the lowest bits. The low bits of
+     * hash codes are often low-entropy.
+     *
+     * Multiplying by a constant is a good start. It mixes the bits such that
+     * each bit of the output is a combination of several bits of the
+     * input--except for the lowest few bits which are not mixed at all
+     * (shuffleBits * X has the same three low bits as X, for all X). So after
+     * multiplication, we rotate those least-mixed low bits out toward the end
+     * where they are likely to be masked away. The number of bits rotated
+     * toward the end is shiftBits, which is 12 so that hash tables with size
+     * up to 2^(32-12) = 2^20 = about a million buckets will get the best-mixed
+     * bits we have.
+     *
+     * The particular value of shuffleBits is taken from the hex expansion of
+     * the golden ratio, which starts 1.9E3779B9.... This value has been
+     * cargo-culted around since the original jshash.h. I doubt there is
+     * anything particularly magical about it, except:
+     *
+     * - It's odd. Multiplying by any odd number modulo 2^32 loses no entropy;
+     *   multiplying by any even number zeroes out a bit (or more).
+     *
+     * - It has a fairly even mix of one bits and zero bits. Too few one-bits
+     *   and each bit of the output ends up being a combination of a very small
+     *   number of input bits. Too many one-bits and you end up with the same
+     *   problem; in the limit, multiplying by 0xffffffff modulo 2^32 is the
+     *   same as multiplying by -1, which hardly mixes the bits at all.
+     */
+    static const HashNumber shuffleBits = 0x9E3779B9U;
+    h *= shuffleBits;
+    static const int bitsToRotate = 20;
+    return JS_ROTATE_LEFT32(h, bitsToRotate);
+}
+
+} /* namespace detail */
 
 } /* namespace js */
 
