@@ -1410,14 +1410,17 @@
                                this.tabs.length - this._removingTabs.length :
                                this.visibleTabs.length - 1)
                             - gBrowser._numPinnedTabs;
-          if (tabsToClose <= 1)
-            return true;
-
+          var alwaysPrompt = !aAll;
           const pref = "browser.tabs.warnOnClose";
-          var shouldPrompt = Services.prefs.getBoolPref(pref);
 
-          if (!shouldPrompt)
-            return true;
+          if (!alwaysPrompt) {
+            if (tabsToClose <= 1)
+              return true;
+
+            var shouldPrompt = Services.prefs.getBoolPref(pref);
+            if (!shouldPrompt)
+              return true;
+          }
 
           var ps = Services.prompt;
 
@@ -1440,11 +1443,13 @@
                          + (ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1),
                          bundle.getString("tabs.closeButtonMultiple"),
                          null, null,
-                         bundle.getString('tabs.closeWarningPromptMe'),
+                         alwaysPrompt ? null :
+                           bundle.getString('tabs.closeWarningPromptMe'),
                          warnOnClose);
           var reallyClose = (buttonPressed == 0);
+
           // don't set the pref unless they press OK and it's false
-          if (reallyClose && !warnOnClose.value)
+          if (!alwaysPrompt && reallyClose && !warnOnClose.value)
             Services.prefs.setBoolPref(pref, false);
 
           return reallyClose;
