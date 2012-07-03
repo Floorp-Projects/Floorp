@@ -37,6 +37,8 @@ static jsid s_prototype_id = JSID_VOID;
 
 static jsid s_length_id = JSID_VOID;
 
+static jsid s_iterator_id = JSID_VOID;
+
 static jsid s_VOID_id = JSID_VOID;
 
 bool
@@ -59,6 +61,7 @@ DefineStaticJSVals(JSContext *cx)
 
     return SET_JSID_TO_STRING(cx, prototype) &&
            SET_JSID_TO_STRING(cx, length) &&
+           SET_JSID_TO_STRING(cx, iterator) &&
            DefinePropertyStaticJSVals(cx);
 }
 
@@ -1163,13 +1166,6 @@ template<class LC>
 bool
 ListBase<LC>::iterate(JSContext *cx, JSObject *proxy, unsigned flags, Value *vp)
 {
-    if (flags == JSITER_FOR_OF) {
-        JSObject *iterobj = JS_NewElementIterator(cx, proxy);
-        if (!iterobj)
-            return false;
-        vp->setObject(*iterobj);
-        return true;
-    }
     return ProxyHandler::iterate(cx, proxy, flags, vp);
 }
 
