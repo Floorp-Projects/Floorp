@@ -125,7 +125,7 @@ js::IsCrossCompartmentWrapper(const JSObject *wrapper)
            !!(Wrapper::wrapperHandler(wrapper)->flags() & Wrapper::CROSS_COMPARTMENT);
 }
 
-AbstractWrapper::AbstractWrapper(unsigned flags) : Wrapper(flags),
+IndirectWrapper::IndirectWrapper(unsigned flags) : Wrapper(flags),
     IndirectProxyHandler(&sWrapperFamily)
 {
 }
@@ -144,7 +144,7 @@ AbstractWrapper::AbstractWrapper(unsigned flags) : Wrapper(flags),
 #define GET(action) CHECKED(action, GET)
 
 bool
-AbstractWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
+IndirectWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
                                        jsid id, bool set,
                                        PropertyDescriptor *desc)
 {
@@ -154,7 +154,7 @@ AbstractWrapper::getPropertyDescriptor(JSContext *cx, JSObject *wrapper,
 }
 
 bool
-AbstractWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper,
+IndirectWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper,
                                           jsid id, bool set,
                                           PropertyDescriptor *desc)
 {
@@ -163,14 +163,14 @@ AbstractWrapper::getOwnPropertyDescriptor(JSContext *cx, JSObject *wrapper,
 }
 
 bool
-AbstractWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
+IndirectWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                                 PropertyDescriptor *desc)
 {
     SET(IndirectProxyHandler::defineProperty(cx, wrapper, id, desc));
 }
 
 bool
-AbstractWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
+IndirectWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
                                      AutoIdVector &props)
 {
     // if we refuse to perform this action, props remains empty
@@ -179,14 +179,14 @@ AbstractWrapper::getOwnPropertyNames(JSContext *cx, JSObject *wrapper,
 }
 
 bool
-AbstractWrapper::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
+IndirectWrapper::delete_(JSContext *cx, JSObject *wrapper, jsid id, bool *bp)
 {
     *bp = true; // default result if we refuse to perform this action
     SET(IndirectProxyHandler::delete_(cx, wrapper, id, bp));
 }
 
 bool
-AbstractWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
+IndirectWrapper::enumerate(JSContext *cx, JSObject *wrapper, AutoIdVector &props)
 {
     // if we refuse to perform this action, props remains empty
     static jsid id = JSID_VOID;
