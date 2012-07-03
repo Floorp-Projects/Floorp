@@ -41,8 +41,8 @@ EvalCache::purge()
         for (JSScript **listHeadp = &table_[i]; *listHeadp; ) {
             JSScript *script = *listHeadp;
             JS_ASSERT(GetGCThingTraceKind(script) == JSTRACE_SCRIPT);
-            *listHeadp = script->evalHashLink();
-            script->evalHashLink() = NULL;
+            *listHeadp = script->evalHashLink;
+            script->evalHashLink = NULL;
         }
     }
 }
@@ -118,8 +118,8 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, unsigned
                     if (script->objects()->length == 1 &&
                         !script->hasRegexps()) {
                         JS_ASSERT(staticLevel == script->staticLevel);
-                        *scriptp = script->evalHashLink();
-                        script->evalHashLink() = NULL;
+                        *scriptp = script->evalHashLink;
+                        script->evalHashLink = NULL;
                         return script;
                     }
                 }
@@ -129,7 +129,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, StackFrame *caller, unsigned
         static const unsigned EVAL_CACHE_CHAIN_LIMIT = 4;
         if (++count == EVAL_CACHE_CHAIN_LIMIT)
             return NULL;
-        scriptp = &script->evalHashLink();
+        scriptp = script->evalHashLink.unsafeGet();
     }
     return NULL;
 }
@@ -163,7 +163,7 @@ class EvalScriptGuard
             CallDestroyScriptHook(cx_->runtime->defaultFreeOp(), script_);
             script_->isActiveEval = false;
             script_->isCachedEval = true;
-            script_->evalHashLink() = *bucket_;
+            script_->evalHashLink = *bucket_;
             *bucket_ = script_;
         }
     }
@@ -327,10 +327,9 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, StackFrame *c
 
         bool compileAndGo = true;
         bool noScriptRval = false;
-        bool needScriptGlobal = false;
         JSScript *compiled = frontend::CompileScript(cx, scopeobj, caller,
                                                      principals, originPrincipals,
-                                                     compileAndGo, noScriptRval, needScriptGlobal,
+                                                     compileAndGo, noScriptRval,
                                                      chars, length, filename,
                                                      lineno, cx->findVersion(), linearStr,
                                                      staticLevel);

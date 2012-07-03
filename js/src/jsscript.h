@@ -407,18 +407,8 @@ struct JSScript : public js::gc::Cell
     JSPrincipals    *principals;/* principals for this script */
     JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
 
-    /*
-     * A global object for the script.
-     * - All scripts returned by JSAPI functions (JS_CompileScript,
-     *   JS_CompileUTF8File, etc.) have a non-null globalObject.
-     * - A function script has a globalObject if the function comes from a
-     *   compile-and-go script.
-     * - Temporary scripts created by obj_eval, JS_EvaluateScript, and
-     *   similar functions never have the globalObject field set; for such
-     *   scripts the global should be extracted from the JS frame that
-     *   execute scripts.
-     */
-    js::HeapPtr<js::GlobalObject, JSScript*> globalObject;
+    /* The next link in the eval cache */
+    js::HeapPtrScript evalHashLink;
 
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
@@ -508,14 +498,9 @@ struct JSScript : public js::gc::Cell
                                                    undefined properties in this
                                                    script */
     bool            hasSingletons:1;  /* script has singleton objects */
-    bool            isOuterFunction:1; /* function is heavyweight, with inner functions */
-    bool            isInnerFunction:1; /* function is directly nested in a heavyweight
-                                        * outer function */
     bool            isActiveEval:1;   /* script came from eval(), and is still active */
     bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
     bool            uninlineable:1;   /* script is considered uninlineable by analysis */
-    bool            reentrantOuterFunction:1; /* outer function marked reentrant */
-    bool            typesPurged:1;    /* TypeScript has been purged at some point */
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
@@ -543,8 +528,7 @@ struct JSScript : public js::gc::Cell
     static JSScript *Create(JSContext *cx, bool savedCallerFun,
                             JSPrincipals *principals, JSPrincipals *originPrincipals,
                             bool compileAndGo, bool noScriptRval,
-                            js::GlobalObject *globalObject, JSVersion version,
-                            unsigned staticLevel);
+                            JSVersion version, unsigned staticLevel);
 
     // Three ways ways to initialize a JSScript.  Callers of partiallyInit()
     // and fullyInitTrivial() are responsible for notifying the debugger after
@@ -592,15 +576,15 @@ struct JSScript : public js::gc::Cell
         return needsArgsObj() && !strictModeCode;
     }
 
-    /* Hash table chaining for JSCompartment::evalCache. */
-    JSScript *&evalHashLink() { return *globalObject.unsafeGetUnioned(); }
-
     /*
      * Original compiled function for the script, if it has a function.
      * NULL for global and eval scripts.
      */
     JSFunction *function() const { return function_; }
     void setFunction(JSFunction *fun);
+
+    /* Return whether this script was compiled for 'eval' */
+    bool isForEval() { return isCachedEval || isActiveEval; }
 
 #ifdef DEBUG
     unsigned id();
@@ -612,12 +596,10 @@ struct JSScript : public js::gc::Cell
     inline bool ensureHasTypes(JSContext *cx);
 
     /*
-     * Ensure the script has scope and bytecode analysis information.
-     * Performed when the script first runs, or first runs after a TypeScript
-     * GC purge. If scope is NULL then the script must already have types with
-     * scope information.
+     * Ensure the script has bytecode analysis information. Performed when the
+     * script first runs, or first runs after a TypeScript GC purge.
      */
-    inline bool ensureRanAnalysis(JSContext *cx, JSObject *scope);
+    inline bool ensureRanAnalysis(JSContext *cx);
 
     /* Ensure the script has type inference analysis information. */
     inline bool ensureRanInference(JSContext *cx);
@@ -629,15 +611,7 @@ struct JSScript : public js::gc::Cell
     inline bool hasGlobal() const;
     inline bool hasClearedGlobal() const;
 
-    inline js::GlobalObject * global() const;
-    inline js::types::TypeScriptNesting *nesting() const;
-
-    inline void clearNesting();
-
-    /* Return creation time global or null. */
-    js::GlobalObject *getGlobalObjectOrNull() const {
-        return (isCachedEval || isActiveEval) ? NULL : globalObject.get();
-    }
+    inline js::GlobalObject &global() const;
 
   private:
     bool makeTypes(JSContext *cx);
@@ -873,8 +847,7 @@ struct JSScript : public js::gc::Cell
         return hasDebugScript ? debugScript()->breakpoints[pc - code] : NULL;
     }
 
-    js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
-                                                  js::GlobalObject *scriptGlobal);
+    js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc);
 
     void destroyBreakpointSite(js::FreeOp *fop, jsbytecode *pc);
 

@@ -569,7 +569,6 @@ js::XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript)
                                   /* originPrincipals = */ NULL,
                                   /* compileAndGo = */ false,
                                   !!(scriptBits & (1 << NoScriptRval)),
-                                  /* globalObject = */ NULL,
                                   version_,
                                   /* staticLevel = */ 0);
         if (!script || !JSScript::partiallyInit(cx, script,
@@ -1076,9 +1075,8 @@ ScriptDataSize(uint32_t length, uint32_t nsrcnotes, uint32_t natoms,
 JSScript *
 JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
                  JSPrincipals *originPrincipals, bool compileAndGo, bool noScriptRval,
-                 GlobalObject *globalObject_, JSVersion version, unsigned staticLevel)
+                 JSVersion version, unsigned staticLevel)
 {
-    Rooted<GlobalObject*> globalObject(cx, globalObject_);
     JSScript *script = js_NewGCScript(cx);
     if (!script)
         return NULL;
@@ -1101,8 +1099,6 @@ JSScript::Create(JSContext *cx, bool savedCallerFun, JSPrincipals *principals,
     script->compileAndGo = compileAndGo;
     script->noScriptRval = noScriptRval;
  
-    script->globalObject = globalObject;
-
     script->version = version;
     JS_ASSERT(script->getVersion() == version);     // assert that no overflow occurred
 
@@ -1729,8 +1725,7 @@ js::CloneScript(JSContext *cx, HandleScript src)
     JSScript *dst = JSScript::Create(cx, src->savedCallerFun,
                                      cx->compartment->principals, src->originPrincipals,
                                      src->compileAndGo, src->noScriptRval,
-                                     /* globalObject = */ NULL, src->getVersion(),
-                                     src->staticLevel);
+                                     src->getVersion(), src->staticLevel);
     if (!dst) {
         Foreground::free_(data);
         return NULL;
@@ -1949,8 +1944,7 @@ JSScript::changeStepModeCount(JSContext *cx, int delta)
 }
 
 BreakpointSite *
-JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
-                                    GlobalObject *scriptGlobal)
+JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc)
 {
     JS_ASSERT(size_t(pc - code) < length);
 
@@ -1968,11 +1962,6 @@ JSScript::getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc,
         }
         debug->numSites++;
     }
-
-    if (site->scriptGlobal)
-        JS_ASSERT_IF(scriptGlobal, site->scriptGlobal == scriptGlobal);
-    else
-        site->scriptGlobal = scriptGlobal;
 
     return site;
 }
@@ -2060,16 +2049,10 @@ JSScript::markChildren(JSTracer *trc)
     if (function())
         MarkObject(trc, &function_, "function");
 
-    if (!isCachedEval && globalObject)
-        MarkObject(trc, &globalObject, "object");
-
     if (IS_GC_MARKING_TRACER(trc) && filename)
         MarkScriptFilename(trc->runtime, filename);
 
     bindings.trace(trc);
-
-    if (types)
-        types->trace(trc);
 
 #ifdef JS_METHODJIT
     for (int constructing = 0; constructing <= 1; constructing++) {

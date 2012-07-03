@@ -111,18 +111,7 @@ CallObject::create(JSContext *cx, JSScript *script, HandleObject enclosing, Hand
     if (!obj)
         return NULL;
 
-    /*
-     * Update the parent for bindings associated with non-compileAndGo scripts,
-     * whose call objects do not have a consistent global variable and need
-     * to be updated dynamically.
-     */
-    if (&enclosing->global() != obj->getParent()) {
-        JS_ASSERT(obj->getParent() == NULL);
-        Rooted<GlobalObject*> global(cx, &enclosing->global());
-        if (!JSObject::setParent(cx, obj, global))
-            return NULL;
-    }
-
+    JS_ASSERT(enclosing->global() == obj->global());
     if (!obj->asScope().setEnclosingScope(cx, enclosing))
         return NULL;
 

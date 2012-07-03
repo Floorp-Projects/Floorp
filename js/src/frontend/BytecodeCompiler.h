@@ -16,7 +16,7 @@ namespace frontend {
 JSScript *
 CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *callerFrame,
               JSPrincipals *principals, JSPrincipals *originPrincipals,
-              bool compileAndGo, bool noScriptRval, bool needScriptGlobal,
+              bool compileAndGo, bool noScriptRval,
               const jschar *chars, size_t length,
               const char *filename, unsigned lineno, JSVersion version,
               JSString *source_ = NULL, unsigned staticLevel = 0);
