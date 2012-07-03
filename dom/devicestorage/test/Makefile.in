@@ -10,9 +10,7 @@ relativesrcdir	= dom/devicestorage/test/
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/rules.mk
-
-_TEST_FILES	= \
+MOCHITEST_FILES	= \
 		test_sanity.html \
 		test_basic.html \
 		test_enumerate.html \
@@ -24,6 +22,4 @@ _TEST_FILES	= \
 		devicestorage_common.js \
 		$(NULL)
 
-libs:: 	$(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
+include $(topsrcdir)/config/rules.mk

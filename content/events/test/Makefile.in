@@ -10,11 +10,10 @@ VPATH		= @srcdir@
 relativesrcdir  = content/events/test
 
 include $(DEPTH)/config/autoconf.mk
-include $(topsrcdir)/config/rules.mk
 
 # Disabled due to timeouts.
 # 		test_bug563329.html
-_TEST_FILES = \
+MOCHITEST_FILES = \
 		test_bug226361.xhtml \
 		     bug226361_iframe.xhtml \
 		test_bug238987.html \
@@ -90,25 +89,25 @@ _TEST_FILES = \
 
 #bug 585630
 ifneq (mobile,$(MOZ_BUILD_APP))
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_dragstart.html \
 		$(NULL)
 endif
 
 # bug 565245
 ifneq (Linux,$(OS_ARCH))
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_bug493251.html \
 		$(NULL)
 endif
 
 ifeq (android,$(MOZ_WIDGET_TOOLKIT))
-_TEST_FILES += \
+MOCHITEST_FILES += \
 		test_bug603008.html \
 		$(NULL)
 endif
 
-_CHROME_FILES = \
+MOCHITEST_CHROME_FILES = \
 		test_bug336682_2.xul \
 		test_bug336682.js \
 		test_bug350471.xul \
@@ -127,8 +126,4 @@ _CHROME_FILES = \
 		test_eventctors.xul \
 		$(NULL)
 
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
