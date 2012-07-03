@@ -15,6 +15,7 @@ import os
 import os.path
 import sys
 import shutil
+import stat
 
 def nsinstall(argv):
   usage = "usage: %prog [options] arg1 [arg2 ...] target-directory"
@@ -51,6 +52,13 @@ def nsinstall(argv):
                help="Set group (NOT SUPPORTED)", metavar="group")
 
   (options, args) = p.parse_args(argv)
+  # Switching to Unicode strings makes python use the wide Windows APIs, which is
+  # what we want here since the wide APIs normally do a better job at handling long
+  # paths and such.
+  if sys.stdin.encoding is None:
+    args = [unicode(arg) for arg in args]
+  else:
+    args = [unicode(arg, sys.stdin.encoding) for arg in args]
 
   if options.m:
     # mode is specified
@@ -61,24 +69,34 @@ def nsinstall(argv):
       return 1
 
   # just create one directory?
-  if options.D:
-    if len(args) != 1:
+  def maybe_create_dir(dir, mode, try_again):
+    if os.path.exists(dir):
+      if not os.path.isdir(dir):
+        print >> sys.stderr, ('nsinstall: %s is not a directory' % dir)
+        return 1
+      if mode:
+        os.chmod(dir, mode)
+      return 0
+
+    try:
+      if mode:
+        os.makedirs(dir, mode)
+      else:
+        os.makedirs(dir)
+    except Exception, e:
+      # We might have hit EEXIST due to a race condition (see bug 463411) -- try again once
+      if try_again:
+        return maybe_create_dir(dir, mode, False)
+      print >> sys.stderr, ("nsinstall: failed to create directory %s: %s" % (dir, e))
       return 1
-    if os.path.exists(args[0]):
-      if not os.path.isdir(args[0]):
-        sys.stderr.write('nsinstall: ' + args[0] + ' is not a directory\n')
-        sys.exit(1)
-      if options.m:
-        os.chmod(args[0], options.m)
-      sys.exit()
-    if options.m:
-      os.makedirs(args[0], options.m)
     else:
-      os.makedirs(args[0])
-    return 0
+      return 0
 
   if options.X:
     options.X = [os.path.abspath(p) for p in options.X]
+
+  if options.D:
+    return maybe_create_dir(args[0], options.m, True)
 
   # nsinstall arg1 [...] directory
   if len(args) < 2:
@@ -86,11 +104,12 @@ def nsinstall(argv):
 
   def copy_all_entries(entries, target):
     for e in entries:
-      if options.X and os.path.abspath(e) in options.X:
+      e = os.path.abspath(e)
+      if options.X and e in options.X:
         continue
 
-      dest = os.path.join(target,
-                          os.path.basename(os.path.normpath(e)))
+      dest = os.path.join(target, os.path.basename(e))
+      dest = os.path.abspath(dest)
       handleTarget(e, dest)
       if options.m:
         os.chmod(dest, options.m)
@@ -112,19 +131,46 @@ def nsinstall(argv):
         # options.t is not relevant for directories
         if options.m:
           os.chmod(targetpath, options.m)
-      elif options.t:
-        shutil.copy2(srcpath, targetpath)
       else:
-        shutil.copy(srcpath, targetpath)
+        if os.path.exists(targetpath):
+          # On Windows, read-only files can't be deleted
+          os.chmod(targetpath, stat.S_IWUSR)
+          os.remove(targetpath)
+        if options.t:
+          shutil.copy2(srcpath, targetpath)
+        else:
+          shutil.copy(srcpath, targetpath)
 
   # the last argument is the target directory
   target = args.pop()
-  # ensure target directory
-  if not os.path.isdir(target):
-    os.makedirs(target)
+  # ensure target directory (importantly, we do not apply a mode to the directory
+  # because we want to copy files into it and the mode might be read-only)
+  rv = maybe_create_dir(target, None, True)
+  if rv != 0:
+    return rv
 
   copy_all_entries(args, target)
   return 0
 
 if __name__ == '__main__':
-  sys.exit(nsinstall(sys.argv[1:]))
+  # sys.argv corrupts characters outside the system code page on Windows
+  # <http://bugs.python.org/issue2128>. Use ctypes instead.
+  if sys.platform == "win32":
+    import ctypes
+    from ctypes import wintypes
+    GetCommandLine = ctypes.windll.kernel32.GetCommandLineW
+    GetCommandLine.argtypes = []
+    GetCommandLine.restype = wintypes.LPWSTR
+
+    CommandLineToArgv = ctypes.windll.shell32.CommandLineToArgvW
+    CommandLineToArgv.argtypes = [wintypes.LPWSTR, ctypes.POINTER(ctypes.c_int)]
+    CommandLineToArgv.restype = ctypes.POINTER(wintypes.LPWSTR)
+
+    argc = ctypes.c_int(0)
+    argv_arr = CommandLineToArgv(GetCommandLine(), ctypes.byref(argc))
+    # The first argument will be "python", the second will be the .py file
+    argv = argv_arr[1:argc.value]
+  else:
+    argv = sys.argv
+
+  sys.exit(nsinstall(argv[1:]))
