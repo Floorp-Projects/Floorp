@@ -11,25 +11,6 @@
 
 #include "HyperTextAccessibleWrap.h"
 
-// IUnknown
-
-STDMETHODIMP
-ia2AccessibleHypertext::QueryInterface(REFIID iid, void** ppv)
-{
-  *ppv = NULL;
-  if (IID_IAccessibleHypertext == iid) {
-    HyperTextAccessibleWrap* hyperAcc = static_cast<HyperTextAccessibleWrap*>(this);
-    if (hyperAcc->IsTextRole()) {
-      *ppv = static_cast<IAccessibleHypertext*>(this);
-      (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
-      return S_OK;
-    }
-    return E_NOINTERFACE;
-  }
-
-  return ia2AccessibleText::QueryInterface(iid, ppv);
-}
-
 // IAccessibleHypertext
 
 STDMETHODIMP

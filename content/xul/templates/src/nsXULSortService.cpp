@@ -24,7 +24,6 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"

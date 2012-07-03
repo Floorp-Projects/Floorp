@@ -17,7 +17,7 @@
 #include "nsWeakReference.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsIScriptSecurityManager.h"
+#include "nsIPrincipal.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"

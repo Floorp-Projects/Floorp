@@ -15,18 +15,11 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIVariant.h"
 
-#include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMDataContainerEvent.h"
 
-#include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
-
-#if 0
-#include "nsIContentURIGrouper.h"
-#include "nsIContentPrefService.h"
-#endif
 
 using namespace mozilla;
 

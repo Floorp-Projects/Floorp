@@ -3566,6 +3566,10 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
 bool
 JSObject::swap(JSContext *cx, JSObject *other)
 {
+    // Ensure swap doesn't cause a finalizer to not be run.
+    JS_ASSERT(IsBackgroundAllocKind(getAllocKind()) ==
+              IsBackgroundAllocKind(other->getAllocKind()));
+
     if (this->compartment() == other->compartment()) {
         TradeGutsReserved reserved(cx);
         if (!ReserveForTradeGuts(cx, this, other, reserved))

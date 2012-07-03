@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
 
 __all__ = ['Profile', 'FirefoxProfile', 'ThunderbirdProfile']
 
@@ -91,8 +91,8 @@ class Profile(object):
         else:
             profile = self.profile
         self.__init__(profile=profile,
-                      addons=self.addon_manager.addons,
-                      addon_manifests=self.addon_manager.manifests,
+                      addons=self.addon_manager.installed_addons,
+                      addon_manifests=self.addon_manager.installed_manifests,
                       preferences=self._preferences,
                       locations=self._locations,
                       proxy = self._proxy)
@@ -170,6 +170,9 @@ class Profile(object):
     def clean_preferences(self):
         """Removed preferences added by mozrunner."""
         for filename in self.written_prefs:
+            if not os.path.exists(os.path.join(self.profile, filename)):
+                # file has been deleted
+                break
             while True:
                 if not self.pop_preferences(filename):
                     break
@@ -181,6 +184,7 @@ class Profile(object):
             process has not yet relinquished handles on files, so we do a wait/try
             construct and timeout if we can't get a clear road to deletion
         """
+
         try:
             from exceptions import WindowsError
             from time import sleep
@@ -201,7 +205,6 @@ class Profile(object):
         except ImportError:
             # We can't re-raise an error, so we'll hope the stuff above us will throw
             pass
-
 
     def cleanup(self):
         """Cleanup operations for the profile."""

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+
 # This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
 Mozilla universal manifest parser
@@ -695,8 +696,8 @@ class TestManifest(ManifestParser):
     def filter(self, values, tests):
         """
         filter on a specific list tag, e.g.:
-        run-if = os == 'win' || os == 'linux'
-        skip-if = os == 'mac'
+        run-if.os = win linux
+        skip-if.os = mac
         """
 
         # tags:

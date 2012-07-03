@@ -16,7 +16,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIJSEventListener.h"
 #include "nsIController.h"
 #include "nsIControllers.h"

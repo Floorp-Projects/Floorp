@@ -16,7 +16,6 @@
 
 #include "nsContentUtils.h"
 
-#include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"

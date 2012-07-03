@@ -1630,6 +1630,8 @@ pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 // conflicts with our implementation, at least on Windows).
 pref("dom.ipc.plugins.java.enabled", false);
 
+pref("dom.ipc.plugins.flash.subprocess.crashreporter.enabled", true);
+
 #ifndef ANDROID
 #ifndef XP_MACOSX
 #ifdef XP_UNIX

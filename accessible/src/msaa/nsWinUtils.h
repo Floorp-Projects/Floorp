@@ -9,9 +9,11 @@
 #define nsWinUtils_h_
 
 #include "Accessible2.h"
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsCOMPtr.h"
 
-#include "nsIArray.h"
-#include "nsIDocument.h"
+class nsIArray;
+class nsIContent;
 
 const LPCWSTR kClassNameRoot = L"MozillaUIWindowClass";
 const LPCWSTR kClassNameTabContent = L"MozillaContentWindowClass";

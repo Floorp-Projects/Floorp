@@ -4,9 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
+#include "nsDOMClassInfoID.h"
 #include "nsDOMMutationEvent.h"
 #include "nsMutationEvent.h"
-#include "nsContentUtils.h"
+
 
 class nsPresContext;
 

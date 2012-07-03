@@ -8,7 +8,6 @@
 #include "nsISupports.h"
 class nsIDOMHTMLFormElement;
 class nsPresState;
-class nsIContent;
 class nsString;
 class nsIFormProcessor;
 class nsFormSubmission;

@@ -9,7 +9,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsDOMUIEvent.h"
 
-class nsIContent;
 class nsEvent;
 
 class nsDOMMouseEvent : public nsDOMUIEvent,

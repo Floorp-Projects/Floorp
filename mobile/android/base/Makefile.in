@@ -295,6 +295,8 @@ RES_LAYOUT_LAND_V14 = \
   $(NULL)
 
 RES_LAYOUT_XLARGE = \
+  res/layout-xlarge/awesomebar_search.xml \
+  res/layout-xlarge/awesomebar_tab_indicator.xml \
   res/layout-xlarge/browser_toolbar.xml \
   res/layout-xlarge/doorhangerpopup.xml \
   res/layout-xlarge/gecko_app.xml \
@@ -305,6 +307,8 @@ RES_LAYOUT_XLARGE = \
   $(NULL)
 
 RES_LAYOUT_SW600DP = \
+  res/layout-sw600dp/awesomebar_search.xml \
+  res/layout-sw600dp/awesomebar_tab_indicator.xml \
   res/layout-sw600dp/browser_toolbar.xml \
   res/layout-sw600dp/doorhangerpopup.xml \
   res/layout-sw600dp/gecko_app.xml \
@@ -332,10 +336,12 @@ RES_VALUES_V11 = \
 
 RES_VALUES_XLARGE = \
   res/values-xlarge/dimens.xml \
+  res/values-xlarge/styles.xml \
   $(NULL)
 
 RES_VALUES_SW600DP = \
   res/values-sw600dp/dimens.xml \
+  res/values-sw600dp/styles.xml \
   $(NULL)
 
 RES_VALUES_LAND_V14 = \
@@ -376,8 +382,9 @@ RES_DRAWABLE_BASE = \
   res/drawable/alert_addon.png \
   res/drawable/alert_app.png \
   res/drawable/alert_download.png \
-  res/drawable/awesomebar_tab.9.png \
-  res/drawable/awesomebar_tab_pressed.9.png \
+  res/drawable/awesomebar_tab_center.9.png \
+  res/drawable/awesomebar_tab_left.9.png \
+  res/drawable/awesomebar_tab_right.9.png \
   res/drawable/ic_addons_empty.png \
   res/drawable/ic_awesomebar_go.png \
   res/drawable/ic_awesomebar_reader.png \
@@ -459,8 +466,9 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
   res/drawable-hdpi/alert_download.png \
-  res/drawable-hdpi/awesomebar_tab.9.png \
-  res/drawable-hdpi/awesomebar_tab_pressed.9.png \
+  res/drawable-hdpi/awesomebar_tab_center.9.png \
+  res/drawable-hdpi/awesomebar_tab_left.9.png \
+  res/drawable-hdpi/awesomebar_tab_right.9.png \
   res/drawable-hdpi/ic_addons_empty.png \
   res/drawable-hdpi/ic_awesomebar_go.png \
   res/drawable-hdpi/ic_awesomebar_reader.png \
@@ -572,8 +580,9 @@ RES_DRAWABLE_XHDPI_V11 = \
   res/drawable-xhdpi-v11/alert_addon.png \
   res/drawable-xhdpi-v11/alert_app.png \
   res/drawable-xhdpi-v11/alert_download.png \
-  res/drawable-xhdpi-v11/awesomebar_tab.9.png \
-  res/drawable-xhdpi-v11/awesomebar_tab_pressed.9.png \
+  res/drawable-xhdpi-v11/awesomebar_tab_center.9.png \
+  res/drawable-xhdpi-v11/awesomebar_tab_left.9.png \
+  res/drawable-xhdpi-v11/awesomebar_tab_right.9.png \
   res/drawable-xhdpi-v11/ic_addons_empty.png \
   res/drawable-xhdpi-v11/ic_awesomebar_go.png \
   res/drawable-xhdpi-v11/ic_awesomebar_reader.png \
@@ -704,6 +713,9 @@ RES_DRAWABLE_XLARGE_MDPI = \
   res/drawable-xlarge-mdpi/address_bar_back_button_pressed_bg.png \
   res/drawable-xlarge-mdpi/address_bar_url_default.9.png \
   res/drawable-xlarge-mdpi/address_bar_url_pressed.9.png \
+  res/drawable-xlarge-mdpi/awesomebar_tab_center.9.png \
+  res/drawable-xlarge-mdpi/awesomebar_tab_left.9.png \
+  res/drawable-xlarge-mdpi/awesomebar_tab_right.9.png \
   res/drawable-xlarge-mdpi/menu.png \
   res/drawable-xlarge-mdpi/ic_awesomebar_go.png \
   res/drawable-xlarge-mdpi/ic_awesomebar_search.png \
@@ -732,6 +744,9 @@ RES_DRAWABLE_XLARGE_HDPI = \
   res/drawable-xlarge-hdpi/address_bar_back_button_pressed_bg.png \
   res/drawable-xlarge-hdpi/address_bar_url_default.9.png \
   res/drawable-xlarge-hdpi/address_bar_url_pressed.9.png \
+  res/drawable-xlarge-hdpi/awesomebar_tab_center.9.png \
+  res/drawable-xlarge-hdpi/awesomebar_tab_left.9.png \
+  res/drawable-xlarge-hdpi/awesomebar_tab_right.9.png \
   res/drawable-xlarge-hdpi/menu.png \
   res/drawable-xlarge-hdpi/ic_awesomebar_go.png \
   res/drawable-xlarge-hdpi/ic_awesomebar_search.png \
@@ -760,6 +775,9 @@ RES_DRAWABLE_XLARGE_XHDPI = \
   res/drawable-xlarge-xhdpi/address_bar_back_button_pressed_bg.png \
   res/drawable-xlarge-xhdpi/address_bar_url_default.9.png \
   res/drawable-xlarge-xhdpi/address_bar_url_pressed.9.png \
+  res/drawable-xlarge-xhdpi/awesomebar_tab_center.9.png \
+  res/drawable-xlarge-xhdpi/awesomebar_tab_left.9.png \
+  res/drawable-xlarge-xhdpi/awesomebar_tab_right.9.png \
   res/drawable-xlarge-xhdpi/menu.png \
   res/drawable-xlarge-xhdpi/ic_awesomebar_go.png \
   res/drawable-xlarge-xhdpi/ic_awesomebar_search.png \
@@ -789,6 +807,9 @@ RES_DRAWABLE_SW600DP_MDPI = \
   res/drawable-sw600dp-mdpi/address_bar_back_button_pressed_bg.png \
   res/drawable-sw600dp-mdpi/address_bar_url_default.9.png \
   res/drawable-sw600dp-mdpi/address_bar_url_pressed.9.png \
+  res/drawable-sw600dp-mdpi/awesomebar_tab_center.9.png \
+  res/drawable-sw600dp-mdpi/awesomebar_tab_left.9.png \
+  res/drawable-sw600dp-mdpi/awesomebar_tab_right.9.png \
   res/drawable-sw600dp-mdpi/menu.png \
   res/drawable-sw600dp-mdpi/ic_awesomebar_go.png \
   res/drawable-sw600dp-mdpi/ic_awesomebar_search.png \
@@ -817,6 +838,9 @@ RES_DRAWABLE_SW600DP_HDPI = \
   res/drawable-sw600dp-hdpi/address_bar_back_button_pressed_bg.png \
   res/drawable-sw600dp-hdpi/address_bar_url_default.9.png \
   res/drawable-sw600dp-hdpi/address_bar_url_pressed.9.png \
+  res/drawable-sw600dp-hdpi/awesomebar_tab_center.9.png \
+  res/drawable-sw600dp-hdpi/awesomebar_tab_left.9.png \
+  res/drawable-sw600dp-hdpi/awesomebar_tab_right.9.png \
   res/drawable-sw600dp-hdpi/menu.png \
   res/drawable-sw600dp-hdpi/ic_awesomebar_go.png \
   res/drawable-sw600dp-hdpi/ic_awesomebar_search.png \
@@ -845,6 +869,9 @@ RES_DRAWABLE_SW600DP_XHDPI = \
   res/drawable-sw600dp-xhdpi/address_bar_back_button_pressed_bg.png \
   res/drawable-sw600dp-xhdpi/address_bar_url_default.9.png \
   res/drawable-sw600dp-xhdpi/address_bar_url_pressed.9.png \
+  res/drawable-sw600dp-xhdpi/awesomebar_tab_center.9.png \
+  res/drawable-sw600dp-xhdpi/awesomebar_tab_left.9.png \
+  res/drawable-sw600dp-xhdpi/awesomebar_tab_right.9.png \
   res/drawable-sw600dp-xhdpi/menu.png \
   res/drawable-sw600dp-xhdpi/ic_awesomebar_go.png \
   res/drawable-sw600dp-xhdpi/ic_awesomebar_search.png \
@@ -868,7 +895,6 @@ RES_DRAWABLE_SW600DP_XHDPI = \
   $(NULL)
 
 RES_COLOR = \
-  res/color/awesomebar_tab_text.xml \
   res/color/menu_item_title.xml \
   $(NULL)
 
@@ -900,8 +926,6 @@ MOZ_ANDROID_DRAWABLES += \
   mobile/android/base/resources/drawable/address_bar_bg_shadow_repeat.xml       \
   mobile/android/base/resources/drawable/autocomplete_list_bg.9.png             \
   mobile/android/base/resources/drawable/awesomebar_tab_indicator.xml           \
-  mobile/android/base/resources/drawable/awesomebar_tab_press.xml               \
-  mobile/android/base/resources/drawable/awesomebar_tab_press_selected.xml      \
   mobile/android/base/resources/drawable/awesomebar_tab_selected.xml            \
   mobile/android/base/resources/drawable/awesomebar_tab_unselected.xml          \
   mobile/android/base/resources/drawable/desktop_notification.png               \

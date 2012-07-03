@@ -5890,6 +5890,11 @@ if test -n "$MOZ_CRASHREPORTER"; then
   if (test "$OS_ARCH" != "$HOST_OS_ARCH"); then
     AC_MSG_ERROR([Breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.  Use --disable-crashreporter.])
   fi
+
+  if test "$OS_ARCH" == "WINNT" -a -z "$HAVE_64BIT_OS"; then
+    MOZ_CRASHREPORTER_INJECTOR=1
+    AC_DEFINE(MOZ_CRASHREPORTER_INJECTOR)
+  fi
 fi
 
 MOZ_ARG_WITH_STRING(crashreporter-enable-percent,
@@ -7438,6 +7443,12 @@ fi
 AC_SUBST(MOZ_B2G_BT)
 
 dnl ========================================================
+dnl = Enable Support for System Messages API
+dnl ========================================================
+
+AC_SUBST(MOZ_SYS_MSG)
+
+dnl ========================================================
 dnl = Support for demangling undefined symbols
 dnl ========================================================
 if test -z "$SKIP_LIBRARY_CHECKS"; then
@@ -8353,6 +8364,7 @@ AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_JAVA_COMPOSITOR)
 AC_SUBST(MOZ_ONLY_TOUCH_EVENTS)
 AC_SUBST(MOZ_CRASHREPORTER)
+AC_SUBST(MOZ_CRASHREPORTER_INJECTOR)
 AC_SUBST(MOZ_MAINTENANCE_SERVICE)
 AC_SUBST(MOZ_VERIFY_MAR_SIGNATURE)
 AC_SUBST(MOZ_ENABLE_SIGNMAR)

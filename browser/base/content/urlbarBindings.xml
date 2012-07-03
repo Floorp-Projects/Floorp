@@ -753,7 +753,7 @@
 
         Cc["@mozilla.org/widget/clipboardhelper;1"]
           .getService(Ci.nsIClipboardHelper)
-          .copyStringToClipboard(val, document, Ci.nsIClipboard.kSelectionClipboard);
+          .copyStringToClipboard(val, Ci.nsIClipboard.kSelectionClipboard, document);
       ]]></handler>
     </handlers>
 

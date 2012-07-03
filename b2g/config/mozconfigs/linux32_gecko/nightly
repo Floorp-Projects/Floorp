@@ -1,0 +1,38 @@
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
+ac_add_options --enable-codesighs
+ac_add_options --enable-signmar
+
+# Nightlies only since this has a cost in performance
+#ac_add_options --enable-js-diagnostics
+
+# Avoid dependency on libstdc++ 4.5
+ac_add_options --enable-stdcxx-compat
+
+# This will overwrite the default of stripping everything and keep the symbol table.
+# This is useful for profiling and debugging and only increases the package size
+# by 2 MBs.
+STRIP_FLAGS="--strip-debug"
+
+# PGO
+mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+export MOZ_TELEMETRY_REPORTING=1
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors
+
+# Enable parallel compiling
+mk_add_options MOZ_MAKE_FLAGS="-j4"
+
+# Use ccache
+ac_add_options --with-ccache=/usr/bin/ccache
+
+#B2G options
+ac_add_options --enable-application=b2g
+ac_add_options --enable-marionette
+ac_add_options --disable-elf-hack
+export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP

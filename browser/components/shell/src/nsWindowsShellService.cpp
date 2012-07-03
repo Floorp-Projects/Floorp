@@ -5,7 +5,6 @@
 
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIImageLoadingContent.h"

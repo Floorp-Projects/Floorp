@@ -1350,11 +1350,11 @@ void nsTableRowFrame::InitHasCellWithStyleHeight(nsTableFrame* aTableFrame)
 }
   
 void 
-nsTableRowFrame::InvalidateFrame(PRUint32 aFlags)
+nsTableRowFrame::InvalidateFrame()
 {
-  nsIFrame::InvalidateFrame(aFlags);
+  nsIFrame::InvalidateFrame();
   nsTableFrame *tableFrame = nsTableFrame::GetTableFrame(this);
-  tableFrame->InvalidateFrame(aFlags | INVALIDATE_DONT_SCHEDULE_PAINT);
+  tableFrame->InvalidateFrame();
 }
 
 /* ----- global methods ----- */

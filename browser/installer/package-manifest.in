@@ -661,6 +661,9 @@ bin/libfreebl_32int64_3.so
 #endif
 #endif
 @BINPATH@/crashreporter-override.ini
+#ifdef MOZ_CRASHREPORTER_INJECTOR
+@BINPATH@/breakpadinjector.dll
+#endif
 #endif
 
 ; [Extensions]

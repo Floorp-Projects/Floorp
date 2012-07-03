@@ -1320,6 +1320,9 @@ Downcast(Handle<ObjectImpl*> obj)
     return Handle<JSObject*>::fromMarkedLocation(reinterpret_cast<JSObject* const*>(obj.address()));
 }
 
+extern JSObject *
+ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj);
+
 /* Generic [[GetOwnProperty]] method. */
 bool
 GetOwnElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned resolveFlags,
