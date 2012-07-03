@@ -239,19 +239,19 @@ EmitN(JSContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra);
  * value other than undefined if the constant was found, true with *vp set to
  * JSVAL_VOID if not found, and false on error.
  */
-JSBool
+bool
 DefineCompileTimeConstant(JSContext *cx, BytecodeEmitter *bce, JSAtom *atom, ParseNode *pn);
 
 /*
  * Emit code into bce for the tree rooted at pn.
  */
-JSBool
+bool
 EmitTree(JSContext *cx, BytecodeEmitter *bce, ParseNode *pn);
 
 /*
  * Emit function code using bce for the tree rooted at body.
  */
-JSBool
+bool
 EmitFunctionScript(JSContext *cx, BytecodeEmitter *bce, ParseNode *body);
 
 } /* namespace frontend */
@@ -421,7 +421,7 @@ NewSrcNote3(JSContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptrdiff_t off
 jssrcnote *
 AddToSrcNoteDelta(JSContext *cx, BytecodeEmitter *bce, jssrcnote *sn, ptrdiff_t delta);
 
-JSBool
+bool
 FinishTakingSrcNotes(JSContext *cx, BytecodeEmitter *bce, jssrcnote *notes);
 
 void
