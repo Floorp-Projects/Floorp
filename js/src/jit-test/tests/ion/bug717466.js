@@ -1,4 +1,3 @@
-// |jit-test| xml
 function Person(){}
 function Ninja(){}
 Ninja.prototype = new Person();
