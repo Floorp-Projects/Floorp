@@ -230,6 +230,7 @@ protected:
   bool                  CheckDragStatus(PRUint32 aAction, HPS* aHps);
   bool                  ReleaseIfDragHPS(HPS aHps);
   bool                  OnTranslateAccelerator(PQMSG pQmsg);
+  bool                  OnQueryConvertPos(MPARAM mp1, MRESULT& mresult);
   bool                  DispatchKeyEvent(MPARAM mp1, MPARAM mp2);
   void                  InitEvent(nsGUIEvent& event, nsIntPoint* pt = 0);
   bool                  DispatchWindowEvent(nsGUIEvent* event);
