@@ -33,7 +33,6 @@ category app-startup SessionStore service,@mozilla.org/browser/sessionstore;1
 
 # stylesheets
 category agent-style-sheets browser-content-stylesheet chrome://browser/skin/content.css
-category agent-style-sheets browser-cursor-stylesheet chrome://browser/content/cursor.css
 
 # ContentPermissionPrompt.js
 component {C6E8C44D-9F39-4AF7-BCC0-76E38A8310F5} ContentPermissionPrompt.js
