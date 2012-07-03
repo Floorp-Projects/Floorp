@@ -91,8 +91,8 @@ protected:
   bool FilePickerWrapper(OPENFILENAMEW* ofn, PickerType aType);
   bool ShowXPFolderPicker(const nsString& aInitialDir);
   bool ShowXPFilePicker(const nsString& aInitialDir);
-  bool ShowFolderPicker(const nsString& aInitialDir);
-  bool ShowFilePicker(const nsString& aInitialDir);
+  bool ShowFolderPicker(const nsString& aInitialDir, bool &aWasInitError);
+  bool ShowFilePicker(const nsString& aInitialDir, bool &aWasInitError);
   void AppendXPFilter(const nsAString& aTitle, const nsAString& aFilter);
   void RememberLastUsedDirectory();
   bool IsPrivacyModeEnabled();
