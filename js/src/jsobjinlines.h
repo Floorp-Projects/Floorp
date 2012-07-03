@@ -540,9 +540,9 @@ namespace js {
  * scope chain above call objects for fun.
  */
 static inline JSAtom *
-CallObjectLambdaName(JSFunction *fun)
+CallObjectLambdaName(JSFunction &fun)
 {
-    return (fun->flags & JSFUN_LAMBDA) ? fun->atom.get() : NULL;
+    return (fun.flags & JSFUN_LAMBDA) ? fun.atom.get() : NULL;
 }
 
 } /* namespace js */
