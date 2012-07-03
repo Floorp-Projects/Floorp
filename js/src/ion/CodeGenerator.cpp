@@ -192,7 +192,15 @@ CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
     masm.jump(lir->ifFalse());
     return true;
 }
-
+ 
+bool
+CodeGenerator::visitInlineFunctionGuard(LInlineFunctionGuard *lir)
+{
+    const Register inputReg = ToRegister(lir->input());
+    masm.cmpPtr(inputReg, ImmGCPtr(lir->function()));
+    emitBranch(Assembler::Equal, lir->functionBlock(), lir->fallbackBlock());
+    return true;
+}
 
 bool
 CodeGenerator::visitIntToString(LIntToString *lir)
