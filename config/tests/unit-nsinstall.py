@@ -137,8 +137,7 @@ class TestNsinstall(unittest.TestCase):
         self.assertEqual(nsinstall(["-d", testfile, destdir]), 0)
         self.assert_(os.path.isdir(os.path.join(destdir, "testfile")))
 
-    # Disable this temporarily on Windows (will be re-enabled by bug 680636)
-    if RUN_NON_ASCII_TESTS and sys.platform != "win32":
+    if RUN_NON_ASCII_TESTS:
         def test_nsinstall_non_ascii(self):
             "Test that nsinstall handles non-ASCII files"
             filename = u"\u2325\u3452\u2415\u5081"
@@ -150,7 +149,6 @@ class TestNsinstall(unittest.TestCase):
             destfile = os.path.join(testdir, filename)
             self.assert_(os.path.isfile(destfile))
 
-    if RUN_NON_ASCII_TESTS:
         def test_nsinstall_non_ascii_subprocess(self):
             "Test that nsinstall as a subprocess handles non-ASCII files"
             filename = u"\u2325\u3452\u2415\u5081"
