@@ -407,9 +407,6 @@ struct JSScript : public js::gc::Cell
     JSPrincipals    *principals;/* principals for this script */
     JSPrincipals    *originPrincipals; /* see jsapi.h 'originPrincipals' comment */
 
-    /* The next link in the eval cache */
-    js::HeapPtrScript evalHashLink;
-
     /* Persistent type information retained across GCs. */
     js::types::TypeScript *types;
 
@@ -436,6 +433,10 @@ struct JSScript : public js::gc::Cell
     uint32_t        useCount;   /* Number of times the script has been called
                                  * or has had backedges taken. Reset if the
                                  * script's JIT code is forcibly discarded. */
+
+#if JS_BITS_PER_WORD == 32
+    uint32_t        pad32;
+#endif
 
 #ifdef DEBUG
     // Unique identifier within the compartment for this script, used for
