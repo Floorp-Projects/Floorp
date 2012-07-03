@@ -1294,7 +1294,6 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
             if (!cscript)
                 return NULL;
 
-            cscript->globalObject = &clone->global();
             clone->setScript(cscript);
             cscript->setFunction(clone);
             if (!clone->setTypeForScriptedFunction(cx))
