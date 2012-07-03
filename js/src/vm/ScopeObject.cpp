@@ -23,6 +23,65 @@ using namespace js::types;
 
 /*****************************************************************************/
 
+StaticScopeIter::StaticScopeIter(JSObject *obj)
+  : obj(obj), onNamedLambda(false)
+{
+    JS_ASSERT_IF(obj, obj->isStaticBlock() || obj->isFunction());
+}
+
+bool
+StaticScopeIter::done() const
+{
+    return obj == NULL;
+}
+
+void
+StaticScopeIter::operator++(int)
+{
+    if (obj->isStaticBlock()) {
+        obj = obj->asStaticBlock().enclosingStaticScope();
+    } else if (onNamedLambda || !obj->toFunction()->isNamedLambda()) {
+        onNamedLambda = false;
+        obj = obj->toFunction()->script()->enclosingStaticScope();
+    } else {
+        onNamedLambda = true;
+    }
+    JS_ASSERT_IF(obj, obj->isStaticBlock() || obj->isFunction());
+    JS_ASSERT_IF(onNamedLambda, obj->isFunction());
+}
+
+bool
+StaticScopeIter::hasDynamicScopeObject() const
+{
+    return obj->isStaticBlock()
+           ? obj->asStaticBlock().needsClone()
+           : obj->toFunction()->isHeavyweight();
+}
+
+StaticScopeIter::Type
+StaticScopeIter::type() const
+{
+    if (onNamedLambda)
+        return NAMED_LAMBDA;
+    return obj->isStaticBlock() ? BLOCK : FUNCTION;
+}
+
+StaticBlockObject &
+StaticScopeIter::block() const
+{
+    JS_ASSERT(type() == BLOCK);
+    return obj->asStaticBlock();
+}
+
+JSScript *
+StaticScopeIter::funScript() const
+{
+    JS_ASSERT(type() == FUNCTION);
+    return obj->toFunction()->script();
+}
+
+/*****************************************************************************/
+
 StaticBlockObject *
 js::ScopeCoordinateBlockChain(JSScript *script, jsbytecode *pc)
 {
@@ -140,7 +199,7 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
      * For a named function expression Call's parent points to an environment
      * object holding function's name.
      */
-    if (js_IsNamedLambda(fp->fun())) {
+    if (fp->fun()->isNamedLambda()) {
         scopeChain = DeclEnvObject::create(cx, fp);
         if (!scopeChain)
             return NULL;
@@ -681,45 +740,21 @@ Class js::BlockClass = {
     JS_ConvertStub
 };
 
-#define NO_PARENT_INDEX UINT32_MAX
-
-/*
- * If there's a parent id, then get the parent out of our script's object
- * array. We know that we clone block objects in outer-to-inner order, which
- * means that getting the parent now will work.
- */
-static uint32_t
-FindObjectIndex(JSScript *script, StaticBlockObject *maybeBlock)
-{
-    if (!maybeBlock || !script->hasObjects())
-        return NO_PARENT_INDEX;
-
-    ObjectArray *objects = script->objects();
-    HeapPtrObject *vector = objects->vector;
-    unsigned length = objects->length;
-    for (unsigned i = 0; i < length; ++i) {
-        if (vector[i] == maybeBlock)
-            return i;
-    }
-
-    return NO_PARENT_INDEX;
-}
-
 template<XDRMode mode>
 bool
-js::XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObject **objp)
+js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript script,
+                         StaticBlockObject **objp)
 {
     /* NB: Keep this in sync with CloneStaticBlockObject. */
 
     JSContext *cx = xdr->cx();
 
     Rooted<StaticBlockObject*> obj(cx);
-    uint32_t parentId = 0;
     uint32_t count = 0;
     uint32_t depthAndCount = 0;
+
     if (mode == XDR_ENCODE) {
         obj = *objp;
-        parentId = FindObjectIndex(script, obj->enclosingBlock());
         uint32_t depth = obj->stackDepth();
         JS_ASSERT(depth <= UINT16_MAX);
         count = obj->slotCount();
@@ -727,22 +762,13 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObjec
         depthAndCount = (depth << 16) | uint16_t(count);
     }
 
-    /* First, XDR the parent atomid. */
-    if (!xdr->codeUint32(&parentId))
-        return false;
-
     if (mode == XDR_DECODE) {
         obj = StaticBlockObject::create(cx);
         if (!obj)
             return false;
+        obj->initEnclosingStaticScope(enclosingScope);
         *objp = obj;
-
-        obj->setEnclosingBlock(parentId == NO_PARENT_INDEX
-                               ? NULL
-                               : &script->getObject(parentId)->asStaticBlock());
     }
-
-    AutoObjectRooter tvr(cx, obj);
 
     if (!xdr->codeUint32(&depthAndCount))
         return false;
@@ -818,14 +844,13 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, JSScript *script, StaticBlockObjec
 }
 
 template bool
-js::XDRStaticBlockObject(XDRState<XDR_ENCODE> *xdr, JSScript *script, StaticBlockObject **objp);
+js::XDRStaticBlockObject(XDRState<XDR_ENCODE> *, HandleObject, HandleScript, StaticBlockObject **);
 
 template bool
-js::XDRStaticBlockObject(XDRState<XDR_DECODE> *xdr, JSScript *script, StaticBlockObject **objp);
+js::XDRStaticBlockObject(XDRState<XDR_DECODE> *, HandleObject, HandleScript, StaticBlockObject **);
 
 JSObject *
-js::CloneStaticBlockObject(JSContext *cx, Handle<StaticBlockObject*> srcBlock,
-                           const AutoObjectVector &objects, JSScript *src)
+js::CloneStaticBlockObject(JSContext *cx, HandleObject enclosingScope, Handle<StaticBlockObject*> srcBlock)
 {
     /* NB: Keep this in sync with XDRStaticBlockObject. */
 
@@ -833,11 +858,7 @@ js::CloneStaticBlockObject(JSContext *cx, Handle<StaticBlockObject*> srcBlock,
     if (!clone)
         return NULL;
 
-    uint32_t parentId = FindObjectIndex(src, srcBlock->enclosingBlock());
-    clone->setEnclosingBlock(parentId == NO_PARENT_INDEX
-                             ? NULL
-                             : &objects[parentId]->asStaticBlock());
-
+    clone->initEnclosingStaticScope(enclosingScope);
     clone->setStackDepth(srcBlock->stackDepth());
 
     /* Shape::Range is reverse order, so build a list in forward order. */

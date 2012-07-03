@@ -414,8 +414,8 @@ struct JSScript : public js::gc::Cell
 #ifdef JS_METHODJIT
     JITScriptSet *jitInfo;
 #endif
-
     js::HeapPtrFunction function_;
+    js::HeapPtrObject   enclosingScope_;
 
     // 32-bit fields.
 
@@ -433,10 +433,6 @@ struct JSScript : public js::gc::Cell
     uint32_t        useCount;   /* Number of times the script has been called
                                  * or has had backedges taken. Reset if the
                                  * script's JIT code is forcibly discarded. */
-
-#if JS_BITS_PER_WORD == 32
-    uint32_t        pad32;
-#endif
 
 #ifdef DEBUG
     // Unique identifier within the compartment for this script, used for
@@ -526,7 +522,7 @@ struct JSScript : public js::gc::Cell
     //
 
   public:
-    static JSScript *Create(JSContext *cx, bool savedCallerFun,
+    static JSScript *Create(JSContext *cx, js::HandleObject enclosingScope, bool savedCallerFun,
                             JSPrincipals *principals, JSPrincipals *originPrincipals,
                             bool compileAndGo, bool noScriptRval,
                             JSVersion version, unsigned staticLevel);
@@ -613,6 +609,9 @@ struct JSScript : public js::gc::Cell
     inline bool hasClearedGlobal() const;
 
     inline js::GlobalObject &global() const;
+
+    /* See StaticScopeIter comment. */
+    JSObject *enclosingStaticScope() const { return enclosingScope_; }
 
   private:
     bool makeTypes(JSContext *cx);
@@ -1007,7 +1006,7 @@ inline void
 CurrentScriptFileLineOrigin(JSContext *cx, unsigned *linenop, LineOption = NOT_CALLED_FROM_JSOP_EVAL);
 
 extern JSScript *
-CloneScript(JSContext *cx, HandleScript script);
+CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script);
 
 /*
  * NB: after a successful XDR_DECODE, XDRScript callers must do any required
@@ -1016,7 +1015,8 @@ CloneScript(JSContext *cx, HandleScript script);
  */
 template<XDRMode mode>
 bool
-XDRScript(XDRState<mode> *xdr, JSScript **scriptp, JSScript *parentScript);
+XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
+          HandleFunction fun, JSScript **scriptp);
 
 } /* namespace js */
 
