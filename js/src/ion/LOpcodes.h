@@ -80,6 +80,7 @@
     _(TestIAndBranch)               \
     _(TestDAndBranch)               \
     _(TestVAndBranch)               \
+    _(InlineFunctionGuard)          \
     _(Compare)                      \
     _(CompareD)                     \
     _(CompareS)                     \

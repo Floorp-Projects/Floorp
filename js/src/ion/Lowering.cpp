@@ -376,6 +376,15 @@ LIRGenerator::visitTest(MTest *test)
     return add(new LTestIAndBranch(useRegister(opd), ifTrue, ifFalse));
 }
 
+bool
+LIRGenerator::visitInlineFunctionGuard(MInlineFunctionGuard *ins)
+{
+    LInlineFunctionGuard *lir =
+        new LInlineFunctionGuard(useRegister(ins->input()),
+            ins->function(), ins->functionBlock(), ins->fallbackBlock());
+    return add(lir);
+}
+
 static inline bool
 CanEmitCompareAtUses(MInstruction *ins)
 {
