@@ -199,7 +199,7 @@ LayerManagerD3D10::Initialize(bool force)
     mInputLayout = attachments->mInputLayout;
   }
 
-  if (ShadowLayerForwarder::HasShadowManager()) {
+  if (LayerManager::HasShadowManager()) {
     reporter.SetSuccessful();
     return true;
   }
