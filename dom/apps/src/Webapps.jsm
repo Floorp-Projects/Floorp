@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -21,6 +23,10 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 
 XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"].getService(Ci.nsIFrameMessageManager);
+});
+
+XPCOMUtils.defineLazyGetter(this, "msgmgr", function() {
+  return Cc["@mozilla.org/system-message-internal;1"].getService(Ci.nsISystemMessagesInternal);
 });
 
 #ifdef MOZ_WIDGET_GONK
@@ -52,7 +58,14 @@ let DOMApplicationRegistry = {
     this.appsFile = FileUtils.getFile(DIRECTORY_NAME, ["webapps", "webapps.json"], true);
 
     if (this.appsFile.exists()) {
-      this._loadJSONAsync(this.appsFile, (function(aData) { this.webapps = aData; }).bind(this));
+      this._loadJSONAsync(this.appsFile, (function(aData) {
+        this.webapps = aData;
+#ifdef MOZ_SYS_MSG
+        for (let id in this.webapps) {
+          this._registerSystemMessagesForId(id);
+        };
+#endif
+      }).bind(this));
     }
 
     try {
@@ -63,6 +76,26 @@ let DOMApplicationRegistry = {
       });
     } catch(e) { }
   },
+
+#ifdef MOZ_SYS_MSG
+  _registerSystemMessages: function(aManifest, aApp) {
+    if (aManifest.messages && Array.isArray(aManifest.messages) && aManifest.messages.length > 0) {
+      let manifest = new DOMApplicationManifest(aManifest, aApp.origin);
+      let launchPath = Services.io.newURI(manifest.fullLaunchPath(), null, null);
+      let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
+      aManifest.messages.forEach(function registerPages(aMessage) {
+        msgmgr.registerPage(aMessage, launchPath, manifestURL);
+      });
+    }
+  },
+
+  _registerSystemMessagesForId: function(aId) {
+    let app = this.webapps[aId];
+    this._readManifests([{ id: aId }], (function registerManifest(aResult) {
+      this._registerSystemMessages(aResult[0].manifest, app);
+    }).bind(this));
+  },
+#endif
 
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "xpcom-shutdown") {
@@ -207,6 +240,10 @@ let DOMApplicationRegistry = {
         ppmm.sendAsyncMessage("Webapps:Install:Return:OK", aData);
         Services.obs.notifyObservers(this, "webapps-sync-install", appNote);
       }).bind(this));
+
+#ifdef MOZ_SYS_MSG
+    this._registerSystemMessages(id, app);
+#endif
 
     // if the manifest has an appcache_path property, use it to populate the appcache
     if (manifest.appcache_path) {
@@ -533,7 +570,7 @@ let DOMApplicationRegistry = {
 /**
  * Appcache download observer
  */
-AppcacheObserver = function(aApp) {
+let AppcacheObserver = function(aApp) {
   this.app = aApp;
 };
 
@@ -580,7 +617,7 @@ AppcacheObserver.prototype = {
 /**
  * Helper object to access manifest information with locale support
  */
-DOMApplicationManifest = function(aManifest, aOrigin) {
+let DOMApplicationManifest = function(aManifest, aOrigin) {
   this._origin = Services.io.newURI(aOrigin, null, null);
   this._manifest = aManifest;
   let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry)
