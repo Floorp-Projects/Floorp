@@ -4666,8 +4666,15 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent_)
         return NULL;
     }
 
+    /*
+     * If a function was compiled as compile-and-go or was compiled to be
+     * lexically nested inside some other script, we cannot clone it without
+     * breaking the compiler's assumptions.
+     */
     RootedFunction fun(cx, funobj->toFunction());
-    if (fun->isInterpreted() && fun->script()->compileAndGo) {
+    if (fun->isInterpreted() &&
+        (fun->script()->compileAndGo || fun->script()->enclosingStaticScope()))
+    {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return NULL;
@@ -5377,7 +5384,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *scriptArg_, jsval *rval
      * mozilla, but there doesn't seem to be one, so we handle it here.
      */
     if (scriptArg->compartment() != obj->compartment()) {
-        script = CloneScript(cx, scriptArg);
+        script = CloneScript(cx, NullPtr(), NullPtr(), scriptArg);
         if (!script.get())
             return false;
     } else {

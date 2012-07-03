@@ -65,6 +65,7 @@ frontend::CompileScript(JSContext *cx, HandleObject scopeChain, StackFrame *call
 
     bool savedCallerFun = compileAndGo && callerFrame && callerFrame->isFunctionFrame();
     Rooted<JSScript*> script(cx, JSScript::Create(cx,
+                                                  /* enclosingScope = */ NullPtr(),
                                                   savedCallerFun,
                                                   principals,
                                                   originPrincipals,
@@ -231,6 +232,7 @@ frontend::CompileFunctionBody(JSContext *cx, HandleFunction fun,
         return false;
 
     Rooted<JSScript*> script(cx, JSScript::Create(cx,
+                                                  /* enclosingScope = */ NullPtr(),
                                                   /* savedCallerFun = */ false,
                                                   principals,
                                                   originPrincipals,

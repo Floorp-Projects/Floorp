@@ -336,7 +336,8 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
 template<XDRMode mode>
 bool
-js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *parentScript)
+js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
+                           JSObject **objp)
 {
     /* NB: Keep this in sync with CloneInterpretedFunction. */
     JSAtom *atom;
@@ -382,7 +383,7 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *paren
     if (!xdr->codeUint32(&flagsword))
         return false;
 
-    if (!XDRScript(xdr, &script, parentScript))
+    if (!XDRScript(xdr, enclosingScope, enclosingScript, fun, &script))
         return false;
 
     if (mode == XDR_DECODE) {
@@ -403,13 +404,13 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, JSObject **objp, JSScript *paren
 }
 
 template bool
-js::XDRInterpretedFunction(XDRState<XDR_ENCODE> *xdr, JSObject **objp, JSScript *parentScript);
+js::XDRInterpretedFunction(XDRState<XDR_ENCODE> *, HandleObject, HandleScript, JSObject **);
 
 template bool
-js::XDRInterpretedFunction(XDRState<XDR_DECODE> *xdr, JSObject **objp, JSScript *parentScript);
+js::XDRInterpretedFunction(XDRState<XDR_DECODE> *, HandleObject, HandleScript, JSObject **);
 
 JSObject *
-js::CloneInterpretedFunction(JSContext *cx, HandleFunction srcFun)
+js::CloneInterpretedFunction(JSContext *cx, HandleObject enclosingScope, HandleFunction srcFun)
 {
     /* NB: Keep this in sync with XDRInterpretedFunction. */
 
@@ -423,7 +424,7 @@ js::CloneInterpretedFunction(JSContext *cx, HandleFunction srcFun)
         return NULL;
 
     Rooted<JSScript*> srcScript(cx, srcFun->script());
-    JSScript *clonedScript = CloneScript(cx, srcScript);
+    JSScript *clonedScript = CloneScript(cx, enclosingScope, clone, srcScript);
     if (!clonedScript)
         return NULL;
 
@@ -1281,16 +1282,20 @@ js_CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
     } else {
         /*
          * Across compartments we have to clone the script for interpreted
-         * functions.
+         * functions. Cross-compartment cloning only happens via JSAPI
+         * (JS_CloneFunctionObject) which dynamically ensures that 'script' has
+         * no enclosing lexical scope (only the global scope).
          */
         if (clone->isInterpreted()) {
             RootedScript script(cx, clone->script());
             JS_ASSERT(script);
             JS_ASSERT(script->compartment() == fun->compartment());
             JS_ASSERT(script->compartment() != cx->compartment);
+            JS_ASSERT(!script->enclosingStaticScope());
 
             clone->mutableScript().init(NULL);
-            JSScript *cscript = CloneScript(cx, script);
+
+            JSScript *cscript = CloneScript(cx, NullPtr(), clone, script);
             if (!cscript)
                 return NULL;
 
