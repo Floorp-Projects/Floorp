@@ -1853,6 +1853,12 @@ MacroAssemblerARMCompat::cmpPtr(const Register &lhs, const Register &rhs)
 }
 
 void
+MacroAssemblerARMCompat::cmpPtr(const Register &lhs, const ImmGCPtr &rhs)
+{
+    ma_cmp(lhs, rhs);
+}
+
+void
 MacroAssemblerARMCompat::cmpPtr(const Address &lhs, const Register &rhs)
 {
     loadPtr(lhs, ScratchRegister);
