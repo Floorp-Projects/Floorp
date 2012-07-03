@@ -12,8 +12,6 @@ function test() {
   waitForExplicitFinish();
 
   let tabBlank = gBrowser.selectedTab;
-  gBrowser.removeAllTabsBut(tabBlank);
-
   let blankBrowser = gBrowser.getBrowserForTab(tabBlank);
   blankBrowser.addEventListener("load", function() {
     blankBrowser.removeEventListener("load", arguments.callee, true);
