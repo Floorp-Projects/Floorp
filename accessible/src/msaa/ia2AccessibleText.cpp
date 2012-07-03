@@ -14,26 +14,6 @@
 
 #include "nsIPersistentProperties2.h"
 
-// IUnknown
-
-STDMETHODIMP
-ia2AccessibleText::QueryInterface(REFIID iid, void** ppv)
-{
-  *ppv = NULL;
-
-  if (IID_IAccessibleText == iid) {
-    nsCOMPtr<nsIAccessibleText> textAcc(do_QueryObject(this));
-    if (!textAcc) {
-      return E_NOINTERFACE;
-    }
-    *ppv = static_cast<IAccessibleText*>(this);
-    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
-    return S_OK;
-  }
-
-  return E_NOINTERFACE;
-}
-
 // IAccessibleText
 
 STDMETHODIMP

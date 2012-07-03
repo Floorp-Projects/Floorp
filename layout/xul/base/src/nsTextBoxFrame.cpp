@@ -17,8 +17,6 @@
 #include "nsMenuBarListener.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULLabelElement.h"
 #include "nsEventStateManager.h"

@@ -37,6 +37,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
+#include "nsTextFragment.h"
 
 // for IBMBIDI
 #include "nsFrameTraversal.h"

@@ -8162,8 +8162,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     }
 
     // XXXbz would be nice to know the loading principal here... but we don't
-    nsCOMPtr<nsIPrincipal> loadingPrincipal;
-    if (aReferrer) {
+    nsCOMPtr<nsIPrincipal> loadingPrincipal = do_QueryInterface(aOwner);
+    if (!loadingPrincipal && aReferrer) {
         nsCOMPtr<nsIScriptSecurityManager> secMan =
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -8171,7 +8171,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         rv = secMan->GetCodebasePrincipal(aReferrer,
                                           getter_AddRefs(loadingPrincipal));
     }
-    
+
     rv = NS_CheckContentLoadPolicy(contentType,
                                    aURI,
                                    loadingPrincipal,

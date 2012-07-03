@@ -7,7 +7,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMHTMLDocument.h"
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 #include "mozilla/dom/Element.h"

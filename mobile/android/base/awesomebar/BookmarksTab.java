@@ -126,9 +126,9 @@ public class BookmarksTab extends AwesomeBarTab {
             return mCursorAdapter;
         }
 
-        LinearLayout headerView = mCursorAdapter.getHeaderView();
+        TextView headerView = mCursorAdapter.getHeaderView();
         if (headerView == null) {
-            headerView = (LinearLayout) getInflater().inflate(R.layout.awesomebar_header_row, null);
+            headerView = (TextView) getInflater().inflate(R.layout.awesomebar_header_row, null);
             mCursorAdapter.setHeaderView(headerView);
         }
 
@@ -142,7 +142,7 @@ public class BookmarksTab extends AwesomeBarTab {
                 if (mView.getHeaderViewsCount() == 0) {
                     mView.addHeaderView(headerView, null, true);
                 }
-                ((TextView) headerView.findViewById(R.id.title)).setText(mFolderTitle);
+                headerView.setText(mFolderTitle);
             }
         }
 
@@ -205,7 +205,7 @@ public class BookmarksTab extends AwesomeBarTab {
         private static final int VIEW_TYPE_COUNT = 2;
 
         private LinkedList<Pair<Integer, String>> mParentStack;
-        private LinearLayout mBookmarksTitleView;
+        private TextView mBookmarksTitleView;
 
         public BookmarksListAdapter(Context context, Cursor c) {
             super(context, -1, c, new String[] {}, new int[] {});
@@ -330,11 +330,11 @@ public class BookmarksTab extends AwesomeBarTab {
             return convertView;
         }
 
-        public LinearLayout getHeaderView() {
+        public TextView getHeaderView() {
             return mBookmarksTitleView;
         }
 
-        public void setHeaderView(LinearLayout titleView) {
+        public void setHeaderView(TextView titleView) {
             mBookmarksTitleView = titleView;
         }
     }

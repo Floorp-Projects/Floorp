@@ -355,9 +355,10 @@ protected:
    */
   NS_IMETHOD ScrollSelectionIntoView(bool aScrollToAnchor);
 
+  // Convenience method; forwards to IsBlockNode(nsINode*).
+  bool IsBlockNode(nsIDOMNode* aNode);
   // stub.  see comment in source.                     
-  virtual bool IsBlockNode(nsIDOMNode *aNode);
-  virtual bool IsBlockNode(nsINode *aNode);
+  virtual bool IsBlockNode(nsINode* aNode);
   
   // helper for GetPriorNode and GetNextNode
   nsIContent* FindNextLeafNode(nsINode  *aCurrentNode,

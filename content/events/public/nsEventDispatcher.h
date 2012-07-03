@@ -10,8 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
 
-class nsIContent;
-class nsIDocument;
 class nsPresContext;
 class nsIDOMEvent;
 class nsIScriptGlobalObject;

@@ -20,6 +20,29 @@ const DOMWIFIMANAGER_CID        = Components.ID("{2cf775a7-1837-410c-9e26-323c42
 function DOMWifiManager() {
 }
 
+function exposeCurrentNetwork(currentNetwork) {
+  currentNetwork.__exposedProps__ = exposeCurrentNetwork.currentNetworkApi;
+}
+
+exposeCurrentNetwork.currentNetworkApi = {
+  ssid: "r",
+  known: "r"
+};
+
+// For smaller, read-only APIs, we expose any property that doesn't begin with
+// an underscore.
+function exposeReadOnly(obj) {
+  var exposedProps = {};
+  for (let i in obj) {
+    if (i[0] === "_")
+      continue;
+    exposedProps[i] = "r";
+  }
+
+  obj.__exposedProps__ = exposedProps;
+  return obj;
+}
+
 DOMWifiManager.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
@@ -65,6 +88,8 @@ DOMWifiManager.prototype = {
     var state = this._mm.sendSyncMessage("WifiManager:getState")[0];
     if (state) {
       this._currentNetwork = state.network;
+      if (this._currentNetwork)
+        exposeCurrentNetwork(this._currentNetwork);
       this._lastConnectionInfo = state.connectionInfo;
       this._enabled = state.enabled;
       this._connectionStatus = state.status;
@@ -110,7 +135,7 @@ DOMWifiManager.prototype = {
 
       case "WifiManager:getNetworks:Return:OK":
         request = this.takeRequest(msg.rid);
-        Services.DOMRequest.fireSuccess(request, msg.data);
+        Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
         break;
 
       case "WifiManager:getNetworks:Return:NO":
@@ -151,18 +176,21 @@ DOMWifiManager.prototype = {
 
       case "WifiManager:onconnecting":
         this._currentNetwork = msg.network;
+        exposeCurrentNetwork(this._currentNetwork);
         this._connectionStatus = "connecting";
         this._fireStatusChangeEvent();
         break;
 
       case "WifiManager:onassociate":
         this._currentNetwork = msg.network;
+        exposeCurrentNetwork(this._currentNetwork);
         this._connectionStatus = "associated";
         this._fireStatusChangeEvent();
         break;
 
       case "WifiManager:onconnect":
         this._currentNetwork = msg.network;
+        exposeCurrentNetwork(this._currentNetwork);
         this._connectionStatus = "connected";
         this._fireStatusChangeEvent();
         break;
@@ -255,7 +283,8 @@ DOMWifiManager.prototype = {
   get connection() {
     if (!this._hasPrivileges)
       throw new Components.Exception("Denied", Cr.NS_ERROR_FAILURE);
-    return { status: this._connectionStatus, network: this._currentNetwork };
+    return exposeReadOnly({ status: this._connectionStatus,
+                            network: this._currentNetwork });
   },
 
   get connectionInfo() {

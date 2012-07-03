@@ -10,7 +10,6 @@
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsEventStates.h"
-#include "nsIDocument.h"
 
 #include "nsEventDispatcher.h"
 #include "nsHTMLSelectElement.h"

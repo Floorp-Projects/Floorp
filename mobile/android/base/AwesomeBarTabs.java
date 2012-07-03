@@ -5,35 +5,17 @@
 
 package org.mozilla.gecko;
 
-import android.content.ContentResolver;
 import android.content.Context;
-import android.content.res.Resources;
-import android.database.ContentObserver;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.LightingColorFilter;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
-import android.os.SystemClock;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.ExpandableListView;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
-import android.widget.SimpleExpandableListAdapter;
 import android.widget.TabHost;
+import android.widget.TabWidget;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -143,9 +125,44 @@ public class AwesomeBarTabs extends TabHost {
             addAwesomeTab(tab);
         }
 
+        styleSelectedTab();
+
+         setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+             public void onTabChanged(String tabId) {
+                 styleSelectedTab();
+             }
+         });
+
         // Initialize "App Pages" list with no filter
         filter("");
     }
+
+    private void styleSelectedTab() {
+        int selIndex = getCurrentTab();
+        TabWidget tabWidget = getTabWidget();
+        for (int i = 0; i < tabWidget.getTabCount(); i++) {
+             if (i == selIndex)
+                 continue;
+
+             if (i == (selIndex - 1))
+                 tabWidget.getChildTabViewAt(i).getBackground().setLevel(1);
+             else if (i == (selIndex + 1))
+                 tabWidget.getChildTabViewAt(i).getBackground().setLevel(2);
+             else
+                 tabWidget.getChildTabViewAt(i).getBackground().setLevel(0);
+        }
+
+        if (selIndex == 0)
+            findViewById(R.id.tab_widget_left).getBackground().setLevel(1);
+        else
+            findViewById(R.id.tab_widget_left).getBackground().setLevel(0);
+
+        if (selIndex == (tabWidget.getTabCount() - 1))
+            findViewById(R.id.tab_widget_right).getBackground().setLevel(2);
+        else
+            findViewById(R.id.tab_widget_right).getBackground().setLevel(0);
+    }
+
 
     private void addAwesomeTab(AwesomeBarTab tab) {
         TabSpec tabspec = getTabSpec(tab.getTag(), tab.getTitleStringId());
@@ -159,15 +176,8 @@ public class AwesomeBarTabs extends TabHost {
     private TabSpec getTabSpec(String id, int titleId) {
         TabSpec tab = newTabSpec(id);
 
-        View indicatorView = mInflater.inflate(R.layout.awesomebar_tab_indicator, null);
-        Drawable background = indicatorView.getBackground();
-        try {
-            background.setColorFilter(new LightingColorFilter(Color.WHITE, 0xFFFF9500));
-        } catch (Exception e) {
-            Log.d(LOGTAG, "background.setColorFilter failed " + e);            
-        }
-        TextView title = (TextView) indicatorView.findViewById(R.id.title);
-        title.setText(titleId);
+        TextView indicatorView = (TextView) mInflater.inflate(R.layout.awesomebar_tab_indicator, null);
+        indicatorView.setText(titleId);
 
         tab.setIndicator(indicatorView);
         return tab;
@@ -224,7 +234,7 @@ public class AwesomeBarTabs extends TabHost {
 
         // The tabs should only be visible if there's no on-going search
         int tabsVisibility = (searchTerm.length() == 0 ? View.VISIBLE : View.GONE);
-        getTabWidget().setVisibility(tabsVisibility);
+        findViewById(R.id.tab_widget_container).setVisibility(tabsVisibility);
 
         // Perform the actual search
         allPages.filter(searchTerm);

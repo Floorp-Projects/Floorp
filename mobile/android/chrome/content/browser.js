@@ -2083,7 +2083,6 @@ function Tab(aURL, aParams) {
   this.browser = null;
   this.id = 0;
   this.showProgress = true;
-  this.create(aURL, aParams);
   this._zoom = 1.0;
   this._drawZoom = 1.0;
   this.userScrollPos = { x: 0, y: 0 };
@@ -2093,6 +2092,8 @@ function Tab(aURL, aParams) {
   this.clickToPlayPluginsActivated = false;
   this.desktopMode = false;
   this.originalURI = null;
+
+  this.create(aURL, aParams);
 }
 
 Tab.prototype = {
@@ -2122,6 +2123,7 @@ Tab.prototype = {
     } catch (e) {}
 
     this.id = ++gTabIDFactory;
+    this.desktopMode = ("desktopMode" in aParams) ? aParams.desktopMode : false;
 
     let message = {
       gecko: {
@@ -2132,7 +2134,8 @@ Tab.prototype = {
         external: ("external" in aParams) ? aParams.external : false,
         selected: ("selected" in aParams) ? aParams.selected : true,
         title: aParams.title || aURL,
-        delayLoad: aParams.delayLoad || false
+        delayLoad: aParams.delayLoad || false,
+        desktopMode: this.desktopMode
       }
     };
     sendMessageToJava(message);

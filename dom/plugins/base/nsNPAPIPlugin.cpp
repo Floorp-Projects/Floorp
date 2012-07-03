@@ -31,7 +31,6 @@
 #include "nsIJSContextStack.h"
 
 #include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"

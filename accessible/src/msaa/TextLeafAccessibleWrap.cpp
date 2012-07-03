@@ -155,10 +155,15 @@ __try {
   if (IsDefunct())
     return E_FAIL;
 
-  nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
+  nsRefPtr<nsRange> range = new nsRange();
+  if (NS_FAILED(range->SetStart(mContent, aStartIndex)))
+      return E_FAIL;
+
+  if (NS_FAILED(range->SetEnd(mContent, aEndIndex)))
+  return E_FAIL;
+
   nsresult rv =
-    nsCoreUtils::ScrollSubstringTo(GetFrame(), DOMNode, aStartIndex,
-                                   DOMNode, aEndIndex,
+    nsCoreUtils::ScrollSubstringTo(GetFrame(), range,
                                    nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
   if (NS_FAILED(rv))
     return E_FAIL;

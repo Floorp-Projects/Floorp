@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nscore.h"
-#include "nsIDOMDocument.h"
 #include "nsEditor.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"

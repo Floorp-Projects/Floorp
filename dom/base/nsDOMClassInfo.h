@@ -14,7 +14,6 @@
 #include "nsIScriptContext.h"
 #include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 #include "nsIScriptGlobalObject.h"
-#include "nsContentUtils.h"
 #include "xpcpublic.h"
 
 namespace mozilla {
@@ -25,9 +24,10 @@ class DOMSVGPointList;
 class DOMSVGStringList;
 class DOMSVGTransformList;
 }
+
+class nsContentList;
 class nsGlobalWindow;
 class nsICanvasRenderingContextInternal;
-class nsIDOMDocument;
 class nsIDOMHTMLOptionsCollection;
 class nsIDOMSVGLength;
 class nsIDOMSVGLengthList;

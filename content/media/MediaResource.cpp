@@ -22,7 +22,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsHTMLMediaElement.h"
-#include "nsIDocument.h"
 #include "nsDOMError.h"
 #include "nsICachingChannel.h"
 #include "nsURILoader.h"

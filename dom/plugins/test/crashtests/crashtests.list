@@ -10,3 +10,4 @@ load 570884.html
 # this test for now is OK.
 skip-if(browserIsRemote||!haveTestPlugin||http.platform!="X11"||!testPluginIsOOP()) load 598862.html
 load 626602-1.html
+load 752340.html
