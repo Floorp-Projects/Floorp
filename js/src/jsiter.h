@@ -83,66 +83,31 @@ class PropertyIteratorObject : public JSObject
     static void finalize(FreeOp *fop, JSObject *obj);
 };
 
+/*
+ * Array iterators are roughly like this:
+ *
+ *   Array.prototype.iterator = function iterator() {
+ *       for (var i = 0; i < (this.length >>> 0); i++)
+ *           yield this[i];
+ *   }
+ *
+ * However they are not generators. They are a different class. The semantics
+ * of Array iterators will be given in the eventual ES6 spec in full detail.
+ */
 class ElementIteratorObject : public JSObject
 {
   public:
+    static JSObject *create(JSContext *cx, Handle<Value> target);
+    static JSFunctionSpec methods[];
+
     enum {
         TargetSlot,
         IndexSlot,
         NumSlots
     };
 
-    static JSObject *create(JSContext *cx, HandleObject target);
-
-    inline uint32_t getIndex() const;
-    inline void setIndex(uint32_t index);
-    inline JSObject *getTargetObject() const;
-
-    /*
-        Array iterators are like this:
-
-        Array.prototype[iterate] = function () {
-            for (var i = 0; i < (this.length >>> 0); i++) {
-                var desc = Object.getOwnPropertyDescriptor(this, i);
-                yield desc === undefined ? undefined : this[i];
-            }
-        }
-
-        This has the following implications:
-
-          - Array iterators are generic; Array.prototype[iterate] can be transferred to
-            any other object to create iterators over it.
-
-          - The next() method of an Array iterator is non-reentrant. Trying to reenter,
-            e.g. by using it on an object with a length getter that calls it.next() on
-            the same iterator, causes a TypeError.
-
-          - The iterator fetches obj.length every time its next() method is called.
-
-          - The iterator converts obj.length to a whole number using ToUint32. As a
-            consequence the iterator can't go on forever; it can yield at most 2^32-1
-            values. Then i will be 0xffffffff, and no possible length value will be
-            greater than that.
-
-          - The iterator does not skip "array holes". When it encounters a hole, it
-            yields undefined.
-
-          - The iterator never consults the prototype chain.
-
-          - If an element has a getter which throws, the exception is propagated, and
-            the iterator is closed (that is, all future calls to next() will simply
-            throw StopIteration).
-
-        Note that if next() were reentrant, even more details of its inner
-        workings would be observable.
-    */
-
-    /*
-     * If there are any more elements to visit, store the value of the next
-     * element in *vp, increment the index, and return true. If not, call
-     * vp->setMagic(JS_NO_ITER_VALUE) and return true. Return false on error.
-     */
-    bool iteratorNext(JSContext *cx, Value *vp);
+    static JSBool next(JSContext *cx, unsigned argc, Value *vp);
+    static bool next_impl(JSContext *cx, JS::CallArgs args);
 };
 
 bool
