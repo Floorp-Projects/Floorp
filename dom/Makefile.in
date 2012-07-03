@@ -50,7 +50,6 @@ DIRS += \
   battery \
   browser-element \
   contacts \
-  alarm \
   devicestorage \
   file \
   media \
