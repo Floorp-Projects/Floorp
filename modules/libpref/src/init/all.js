@@ -3577,6 +3577,9 @@ pref("dom.sms.whitelist", "");
 pref("dom.mozContacts.enabled", false);
 pref("dom.mozContacts.whitelist", "");
 
+// WebAlarms
+pref("dom.mozAlarms.enabled", false);
+
 // WebSettings
 pref("dom.mozSettings.enabled", false);
 
