@@ -324,7 +324,7 @@ public:
 
   virtual nsILineIterator* GetLineIterator() { return this; }
   
-  virtual void InvalidateFrame(PRUint32 aFlags = 0);
+  virtual void InvalidateFrame();
 
 protected:
   nsTableRowGroupFrame(nsStyleContext* aContext);
