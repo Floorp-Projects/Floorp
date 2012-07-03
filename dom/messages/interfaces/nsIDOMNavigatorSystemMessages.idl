@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+[scriptable, function, uuid(42692976-57fd-4bb4-ab95-2b97ebdc5056)]
+interface nsIDOMSystemMessageCallback : nsISupports
+{
+    void handleMessage(in jsval message);
+};
+
+[scriptable, uuid(091e90dd-0e8b-463d-8cdc-9225d3a6ff90)]
+interface nsIDOMNavigatorSystemMessages : nsISupports
+{
+    void mozSetMessageHandler(in DOMString type, in nsIDOMSystemMessageCallback callback);
+
+    boolean mozHasPendingMessage(in DOMString type); 
+};
