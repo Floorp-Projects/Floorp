@@ -15,12 +15,6 @@ DIRS = src
 
 ifdef ENABLE_TESTS
 XPCSHELL_TESTS = tests/unit
-ABS_topsrcdir = $(call core_abspath,$(topsrcdir))
-libs::
-	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/tests/unit/data
-	cd $(srcdir)/tests; $(PYTHON) $(ABS_topsrcdir)/config/nsinstall.py \
-	  ./ \
-	  $(call core_abspath,$(DEPTH)/_tests/xpcshell/$(relativesrcdir)/tests/unit/data/)
 endif
 
 include $(topsrcdir)/config/rules.mk
