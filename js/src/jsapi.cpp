@@ -4898,10 +4898,9 @@ CompileUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj_,
 
     bool compileAndGo = cx->hasRunOption(JSOPTION_COMPILE_N_GO);
     bool noScriptRval = cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL);
-    bool needScriptGlobal = true;
     return frontend::CompileScript(cx, obj, NULL, principals, originPrincipals,
-                                   compileAndGo, noScriptRval, needScriptGlobal,
-                                   chars, length, filename, lineno, version);
+                                   compileAndGo, noScriptRval, chars, length,
+                                   filename, lineno, version);
 }
 
 extern JS_PUBLIC_API(JSScript *)
@@ -5104,10 +5103,9 @@ CompileUTF8FileHelper(JSContext *cx, JSObject *obj_, JSPrincipals *principals,
     if (JS_DecodeUTF8(cx, buf, len, decodebuf, &decodelen)) {
         bool compileAndGo = cx->hasRunOption(JSOPTION_COMPILE_N_GO);
         bool noScriptRval = cx->hasRunOption(JSOPTION_NO_SCRIPT_RVAL);
-        bool needScriptGlobal = true;
         script = frontend::CompileScript(cx, obj, NULL, principals, NULL,
-                                         compileAndGo, noScriptRval, needScriptGlobal,
-                                         decodebuf, decodelen, filename, 1, cx->findVersion());
+                                         compileAndGo, noScriptRval, decodebuf, decodelen,
+                                         filename, 1, cx->findVersion());
     } else {
         script = NULL;
     }
@@ -5177,9 +5175,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script)
 {
     JS_ASSERT(!script->isCachedEval);
-    JS_ASSERT(script->globalObject);
-
-    return script->globalObject;
+    return &script->global();
 }
 
 static JSFunction *
@@ -5405,13 +5401,12 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj_,
 
     bool compileAndGo = true;
     bool noScriptRval = !rval;
-    bool needScriptGlobal = true;
 
     CHECK_REQUEST(cx);
     AutoLastFrameCheck lfc(cx);
     JSScript *script = frontend::CompileScript(cx, obj, NULL, principals, originPrincipals,
-                                               compileAndGo, noScriptRval, needScriptGlobal,
-                                               chars, length, filename, lineno, compileVersion);
+                                               compileAndGo, noScriptRval, chars, length,
+                                               filename, lineno, compileVersion);
     if (!script)
         return false;
 

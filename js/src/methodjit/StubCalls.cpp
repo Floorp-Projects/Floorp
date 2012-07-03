@@ -1620,12 +1620,6 @@ stubs::HeavyweightFunctionPrologue(VMFrame &f)
 }
 
 void JS_FASTCALL
-stubs::TypeNestingPrologue(VMFrame &f)
-{
-    f.fp()->jitTypeNestingPrologue(f.cx);
-}
-
-void JS_FASTCALL
 stubs::Epilogue(VMFrame &f)
 {
     f.fp()->epilogue(f.cx);
