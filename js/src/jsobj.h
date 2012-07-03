@@ -1372,32 +1372,6 @@ SetProto(JSContext *cx, HandleObject obj, HandleObject proto, bool checkForCycle
 extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);
 
-extern JSBool
-eval(JSContext *cx, unsigned argc, Value *vp);
-
-/*
- * Performs a direct eval for the given arguments, which must correspond to the
- * currently-executing stack frame, which must be a script frame. On completion
- * the result is returned in args.rval.
- */
-extern bool
-DirectEval(JSContext *cx, const CallArgs &args);
-
-/*
- * True iff |v| is the built-in eval function for the global object that
- * corresponds to |scopeChain|.
- */
-extern bool
-IsBuiltinEvalForScope(JSObject *scopeChain, const js::Value &v);
-
-/* True iff fun is a built-in eval function. */
-extern bool
-IsAnyBuiltinEval(JSFunction *fun);
-
-/* 'call' should be for the eval/Function native invocation. */
-extern JSPrincipals *
-PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx);
-
 extern JSObject *
 NonNullObject(JSContext *cx, const Value &v);
 
