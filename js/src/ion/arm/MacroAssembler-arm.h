@@ -1009,6 +1009,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void cmp32(const Register &lhs, const Register &rhs);
     void cmpPtr(const Register &lhs, const ImmWord &rhs);
     void cmpPtr(const Register &lhs, const Register &rhs);
+    void cmpPtr(const Register &lhs, const ImmGCPtr &rhs);
     void cmpPtr(const Address &lhs, const Register &rhs);
     void cmpPtr(const Address &lhs, const ImmWord &rhs);
 
