@@ -152,14 +152,6 @@ class CallObject : public ScopeObject
     inline const Value &var(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
     inline void setVar(unsigned i, const Value &v, MaybeCheckAliasing = CHECK_ALIASING);
 
-    /*
-     * Get the actual arrays of arguments and variables. Only call if type
-     * inference is enabled, where we ensure that call object variables are in
-     * contiguous slots (see NewCallObject).
-     */
-    inline HeapSlotArray argArray();
-    inline HeapSlotArray varArray();
-
     static JSBool setArgOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
     static JSBool setVarOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict, Value *vp);
 

@@ -479,7 +479,7 @@ js::ExecuteKernel(JSContext *cx, JSScript *script_, JSObject &scopeChain, const 
     if (!cx->stack.pushExecuteFrame(cx, script, thisv, scopeChain, type, evalInFrame, &efg))
         return false;
 
-    if (!script->ensureRanAnalysis(cx, &scopeChain))
+    if (!script->ensureRanAnalysis(cx))
         return false;
     TypeScript::SetThis(cx, script, efg.fp()->thisValue());
 

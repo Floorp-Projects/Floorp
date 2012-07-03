@@ -843,8 +843,6 @@ class ScriptAnalysis
     bool usesThisValue_:1;
     bool hasFunctionCalls_:1;
     bool modifiesArguments_:1;
-    bool extendsScope_:1;
-    bool addsScopeObjects_:1;
     bool localsAliasStack_:1;
     bool isInlineable:1;
     bool isJaegerCompileable:1;
@@ -899,15 +897,6 @@ class ScriptAnalysis
      * object cannot escape, the arguments are never modified within the script.
      */
     bool modifiesArguments() { return modifiesArguments_; }
-
-    /*
-     * True if the script may extend declarations in its top level scope with
-     * dynamic fun/var declarations or through eval.
-     */
-    bool extendsScope() { return extendsScope_; }
-
-    /* True if the script may add block or with objects to its scope chain. */
-    bool addsScopeObjects() { return addsScopeObjects_; }
 
     /*
      * True if there are any LOCAL opcodes aliasing values on the stack (above
@@ -1116,25 +1105,6 @@ class ScriptAnalysis
         JS_ASSERT(!slotEscapes(slot));
         return lifetimes[slot];
     }
-
-    /*
-     * If a NAME or similar opcode is definitely accessing a particular slot
-     * of a script this one is nested in, get that script/slot.
-     */
-    struct NameAccess {
-        JSScript *script;
-        types::TypeScriptNesting *nesting;
-        uint32_t slot;
-
-        /* Decompose the slot above. */
-        bool arg;
-        uint32_t index;
-
-        const Value **basePointer() const {
-            return arg ? &nesting->argArray : &nesting->varArray;
-        }
-    };
-    NameAccess resolveNameAccess(JSContext *cx, jsid id, bool addDependency = false);
 
     void printSSA(JSContext *cx);
     void printTypes(JSContext *cx);
