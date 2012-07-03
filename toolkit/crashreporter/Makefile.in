@@ -14,12 +14,10 @@ LIBXUL_LIBRARY = 1
 LIBRARY_NAME = exception_handler_s
 
 ifeq  ($(OS_ARCH),WINNT)
-DIRS += \
-  google-breakpad/src/common/windows \
-  google-breakpad/src/client/windows/handler \
-  google-breakpad/src/client/windows/sender \
-  google-breakpad/src/client/windows/crash_generation \
-  $(NULL)
+DIRS += breakpad-windows-libxul
+ifdef MOZ_CRASHREPORTER_INJECTOR
+DIRS += breakpad-windows-standalone
+endif
 endif
 
 ifeq ($(OS_ARCH),Darwin)
@@ -74,6 +72,10 @@ endif
 
 DIRS += client
 
+ifdef MOZ_CRASHREPORTER_INJECTOR
+DIRS += injector
+endif
+
 LOCAL_INCLUDES = -I$(srcdir)/google-breakpad/src
 DEFINES += -DUNICODE -D_UNICODE
 
@@ -84,6 +86,13 @@ EXPORTS = \
 CPPSRCS = \
 	nsExceptionHandler.cpp \
 	$(NULL)
+
+ifdef MOZ_CRASHREPORTER_INJECTOR
+CPPSRCS += \
+  LoadLibraryRemote.cpp \
+  InjectCrashReporter.cpp \
+  $(NULL)
+endif
 
 FORCE_STATIC_LIB = 1
 

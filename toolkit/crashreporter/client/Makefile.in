@@ -37,8 +37,7 @@ CPPSRCS = \
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += crashreporter_win.cpp
 LIBS += \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/sender/$(LIB_PREFIX)crash_report_sender_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/breakpad-windows-libxul/$(LIB_PREFIX)google_breakpad_libxul_s.$(LIB_SUFFIX)
   $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)
 RCINCLUDE = crashreporter.rc
