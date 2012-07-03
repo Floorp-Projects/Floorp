@@ -198,7 +198,6 @@ public:
    * be found (e.g. it's detached).
    */
   nsRootPresContext* GetRootPresContext();
-  nsRootPresContext* GetDisplayRootPresContext();
   virtual bool IsRoot() { return false; }
 
   nsIDocument* Document() const

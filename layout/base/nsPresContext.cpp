@@ -143,8 +143,7 @@ nsPresContext::IsDOMPaintEventPending()
   if (!mInvalidateRequests.mRequests.IsEmpty()) {
     return true;    
   }
-  nsRootPresContext* rpc = GetDisplayRootPresContext();
-  if (rpc && rpc->mRefreshDriver->ViewManagerFlushIsPending()) {
+  if (GetRootPresContext()->mRefreshDriver->ViewManagerFlushIsPending()) {
     // Since we're promising that there will be a MozAfterPaint event
     // fired, we record an empty invalidation in case display list
     // invalidation doesn't invalidate anything further.
@@ -1198,6 +1197,18 @@ nsPresContext::GetParentPresContext()
         return f->PresContext();
     }
   }
+  // Not sure if this is always strictly the parent, but it works for GetRootPresContext
+  // where the current pres context has no frames.
+  nsIDocument *doc = Document();
+  if (doc) {
+    doc = doc->GetParentDocument();
+    if (doc) {
+      shell = doc->GetShell();
+      if (shell) {
+        return shell->GetPresContext();
+      }
+    }
+  }
   return nsnull;
 }
 
@@ -1222,33 +1233,6 @@ nsPresContext::GetRootPresContext()
   nsPresContext* pc = this;
   for (;;) {
     nsPresContext* parent = pc->GetParentPresContext();
-    if (!parent)
-      break;
-    pc = parent;
-  }
-  return pc->IsRoot() ? static_cast<nsRootPresContext*>(pc) : nsnull;
-}
-
-nsRootPresContext*
-nsPresContext::GetDisplayRootPresContext()
-{
-  nsPresContext* pc = this;
-  for (;;) {
-    nsPresContext* parent = pc->GetParentPresContext();
-    if (!parent) {
-      // Not sure if this is always strictly the parent, but it works for GetRootPresContext
-      // where the current pres context has no frames.
-      nsIDocument *doc = pc->Document();
-      if (doc) {
-        doc = doc->GetParentDocument();
-        if (doc) {
-          nsIPresShell* shell = doc->GetShell();
-          if (shell) {
-            parent = shell->GetPresContext();
-          }
-        }
-      }
-    }
     if (!parent || parent == pc)
       break;
     pc = parent;
