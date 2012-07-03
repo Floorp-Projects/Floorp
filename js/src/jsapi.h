@@ -1232,6 +1232,96 @@ class AutoScriptVector : public AutoVectorRooter<JSScript *>
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+class CallReceiver
+{
+  protected:
+#ifdef DEBUG
+    mutable bool usedRval_;
+    void setUsedRval() const { usedRval_ = true; }
+    void clearUsedRval() const { usedRval_ = false; }
+#else
+    void setUsedRval() const {}
+    void clearUsedRval() const {}
+#endif
+    Value *argv_;
+  public:
+    friend CallReceiver CallReceiverFromVp(Value *);
+    friend CallReceiver CallReceiverFromArgv(Value *);
+    Value *base() const { return argv_ - 2; }
+    JSObject &callee() const { JS_ASSERT(!usedRval_); return argv_[-2].toObject(); }
+    Value &calleev() const { JS_ASSERT(!usedRval_); return argv_[-2]; }
+    Value &thisv() const { return argv_[-1]; }
+
+    Value &rval() const {
+        setUsedRval();
+        return argv_[-2];
+    }
+
+    Value *spAfterCall() const {
+        setUsedRval();
+        return argv_ - 1;
+    }
+
+    void setCallee(Value calleev) {
+        clearUsedRval();
+        this->calleev() = calleev;
+    }
+};
+
+JS_ALWAYS_INLINE CallReceiver
+CallReceiverFromArgv(Value *argv)
+{
+    CallReceiver receiver;
+    receiver.clearUsedRval();
+    receiver.argv_ = argv;
+    return receiver;
+}
+
+JS_ALWAYS_INLINE CallReceiver
+CallReceiverFromVp(Value *vp)
+{
+    return CallReceiverFromArgv(vp + 2);
+}
+
+/*****************************************************************************/
+
+class CallArgs : public CallReceiver
+{
+  protected:
+    unsigned argc_;
+  public:
+    friend CallArgs CallArgsFromVp(unsigned, Value *);
+    friend CallArgs CallArgsFromArgv(unsigned, Value *);
+    friend CallArgs CallArgsFromSp(unsigned, Value *);
+    Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
+    Value *array() const { return argv_; }
+    unsigned length() const { return argc_; }
+    Value *end() const { return argv_ + argc_; }
+    bool hasDefined(unsigned i) const { return i < argc_ && !argv_[i].isUndefined(); }
+};
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromArgv(unsigned argc, Value *argv)
+{
+    CallArgs args;
+    args.clearUsedRval();
+    args.argv_ = argv;
+    args.argc_ = argc;
+    return args;
+}
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromVp(unsigned argc, Value *vp)
+{
+    return CallArgsFromArgv(argc, vp + 2);
+}
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromSp(unsigned argc, Value *sp)
+{
+    return CallArgsFromArgv(argc, sp - argc);
+}
+
 }  /* namespace JS */
 
 /************************************************************************/
