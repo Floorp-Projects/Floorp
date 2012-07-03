@@ -131,8 +131,6 @@ class StackSegment;
 class StackSpace;
 class ContextStack;
 class ScriptFrameIter;
-class CallReceiver;
-class CallArgs;
 
 struct BytecodeEmitter;
 struct Definition;
