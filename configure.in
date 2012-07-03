@@ -1026,42 +1026,10 @@ fi
 
 fi # COMPILE_ENVIRONMENT
 
-dnl clang prior to 2.9 (including Xcode 4) does not support all the
-dnl constructs required by the libtheora inline asm. This is used to
-dnl detect and disable it
-AC_MSG_CHECKING([whether the C compiler is clang older than version 2.9])
-AC_LANG_SAVE
-AC_LANG_C
-AC_TRY_COMPILE([
-#if defined(__clang__)
-# if __clang_major__<2 || (__clang_major__==2 && __clang_minor__<9)
-#  error "clang older than 2.9 detected"
-# endif
-#endif
-               ],
-               [],
-               result="no",
-               result="yes")
-AC_LANG_RESTORE
-AC_MSG_RESULT([$result])
-if test "$result" = "yes"; then
-  MOZ_NO_THEORA_ASM=1
-fi
-dnl XCode 4.2 also shipped an llvm-gcc which couldn't compile
-dnl the libtheora inline asm.
-AC_MSG_CHECKING([bad gcc versions])
-if `$CC --version | grep -q "Apple Inc. build 5658"`; then
-  AC_MSG_RESULT([Apple build 5658])
-  MOZ_NO_THEORA_ASM=1
-else
-  AC_MSG_RESULT([we're ok])
-fi
-
-AC_SUBST(MOZ_NO_THEORA_ASM)
-
-if test "x$MOZ_NO_THEORA_ASM" = x1; then
-  AC_MSG_WARN([Disabling libtheora inline assembly])
-fi
+AC_MSG_CHECKING([compiler version])
+# Just print it so it shows up in the logs.
+cc_version=$($CC --version)
+AC_MSG_RESULT([$cc_version])
 
 if test -n "$MAKE"; then
   if test `echo $MAKE | grep -c make.py` != 1; then

@@ -5522,6 +5522,11 @@ nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntryDescriptor *entry,
                 }
                 return NS_ERROR_DOCUMENT_NOT_CACHED;
             }
+            if (mCanceled)
+                // If the request was canceled then don't continue without using
+                // the cache entry. See bug #764337
+                return rv;
+
             // proceed without using the cache
         }
 

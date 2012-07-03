@@ -64,7 +64,7 @@ public:
 
       mRect = aTransform.Transform(mRect);
 
-      for (int i = 0; i < ArrayLength(mRadii); i += 2) {
+      for (size_t i = 0; i < ArrayLength(mRadii); i += 2) {
         mRadii[i] *= aTransform.xx;
         mRadii[i + 1] *= aTransform.yy;
       }
