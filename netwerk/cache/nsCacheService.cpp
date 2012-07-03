@@ -35,7 +35,6 @@
 #include "nsNetCID.h"
 #include <math.h>  // for log()
 #include "mozilla/Services.h"
-#include "mozilla/Telemetry.h"
 #include "nsITimer.h"
 
 #include "mozilla/FunctionTimer.h"
@@ -191,7 +190,7 @@ public:
 
     NS_IMETHOD Notify(nsITimer* aTimer) {
         if (nsCacheService::gService) {
-            nsCacheServiceAutoLock autoLock;
+            nsCacheServiceAutoLock autoLock(LOCK_TELEM(NSSETDISKSMARTSIZECALLBACK_NOTIFY));
             nsCacheService::gService->SetDiskSmartSize_Locked();
             nsCacheService::gService->mSmartSizeTimer = nsnull;
         }
@@ -271,7 +270,7 @@ public:
     }
     NS_IMETHOD Run()
     {
-        nsCacheServiceAutoLock autoLock;
+        nsCacheServiceAutoLock autoLock(LOCK_TELEM(NSBLOCKONCACHETHREADEVENT_RUN));
 #ifdef PR_LOGGING
         CACHE_LOG_DEBUG(("nsBlockOnCacheThreadEvent [%p]\n", this));
 #endif
@@ -944,7 +943,7 @@ public:
         NS_ASSERTION(mRequest->mListener,
                      "Sync OpenCacheEntry() posted to background thread!");
 
-        nsCacheServiceAutoLock lock;
+        nsCacheServiceAutoLock lock(LOCK_TELEM(NSPROCESSREQUESTEVENT_RUN));
         rv = nsCacheService::gService->ProcessRequest(mRequest,
                                                       false,
                                                       nsnull);
@@ -1013,7 +1012,7 @@ public:
 
     NS_IMETHOD Run()
     {
-        nsCacheServiceAutoLock lock;
+        nsCacheServiceAutoLock lock(LOCK_TELEM(NSDOOMEVENT_RUN));
 
         bool foundActive = true;
         nsresult status = NS_ERROR_NOT_AVAILABLE;
@@ -1178,7 +1177,7 @@ nsCacheService::Shutdown()
     nsCOMPtr<nsIFile> parentDir;
 
     {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SHUTDOWN));
     NS_ASSERTION(mInitialized, 
                  "can't shutdown nsCacheService unless it has been initialized.");
 
@@ -1337,7 +1336,7 @@ nsCacheService::EvictEntriesForClient(const char *          clientID,
     nsRefPtr<EvictionNotifierRunnable> r = new EvictionNotifierRunnable(this);
     NS_DispatchToMainThread(r);
 
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_EVICTENTRIESFORCLIENT));
     nsresult res = NS_OK;
 
     if (storagePolicy == nsICache::STORE_ANYWHERE ||
@@ -1386,7 +1385,7 @@ nsCacheService::IsStorageEnabledForPolicy(nsCacheStoragePolicy  storagePolicy,
                                           bool *              result)
 {
     if (gService == nsnull) return NS_ERROR_NOT_AVAILABLE;
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_ISSTORAGEENABLEDFORPOLICY));
 
     *result = gService->IsStorageEnabledForPolicy_Locked(storagePolicy);
     return NS_OK;
@@ -1435,7 +1434,7 @@ NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 {
     NS_ENSURE_ARG_POINTER(visitor);
 
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_VISITENTRIES));
 
     if (!(mEnableDiskDevice || mEnableMemoryDevice))
         return NS_ERROR_NOT_AVAILABLE;
@@ -1488,7 +1487,7 @@ NS_IMETHODIMP nsCacheService::GetCacheIOTarget(nsIEventTarget * *aCacheIOTarget)
     // read from the main thread without the lock. This is useful to prevent
     // blocking the main thread on other cache operations.
     if (!NS_IsMainThread()) {
-        Lock();
+        Lock(LOCK_TELEM(NSCACHESERVICE_GETCACHEIOTARGET));
     }
 
     nsresult rv;
@@ -1803,7 +1802,7 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
                 // XXX this is probably wrong...
                 Unlock();
                 rv = request->WaitForValidation();
-                Lock();
+                Lock(LOCK_TELEM(NSCACHESERVICE_PROCESSREQUEST));
             }
 
             PR_REMOVE_AND_INIT_LINK(request);
@@ -1916,7 +1915,7 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
     }
     else {
 
-        nsCacheServiceAutoLock lock;
+        nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_OPENCACHEENTRY));
         rv = gService->ProcessRequest(request, true, result);
 
         // delete requests that have completed
@@ -2225,7 +2224,7 @@ nsCacheService::OnProfileShutdown(bool cleanse)
         // a reference to it. Ignore this call.
         return;
     }
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_ONPROFILESHUTDOWN));
     gService->mClearingEntries = true;
 
     gService->DoomActiveEntries(nsnull);
@@ -2270,7 +2269,7 @@ nsCacheService::OnProfileChanged()
 
     CACHE_LOG_DEBUG(("nsCacheService::OnProfileChanged"));
  
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_ONPROFILECHANGED));
     
     gService->mEnableDiskDevice    = gService->mObserver->DiskCacheEnabled();
     gService->mEnableOfflineDevice = gService->mObserver->OfflineCacheEnabled();
@@ -2324,7 +2323,7 @@ void
 nsCacheService::SetDiskCacheEnabled(bool    enabled)
 {
     if (!gService)  return;
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETDISKCACHEENABLED));
     gService->mEnableDiskDevice = enabled;
 }
 
@@ -2333,7 +2332,7 @@ void
 nsCacheService::SetDiskCacheCapacity(PRInt32  capacity)
 {
     if (!gService)  return;
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETDISKCACHECAPACITY));
 
     if (gService->mDiskDevice) {
         gService->mDiskDevice->SetCapacity(capacity);
@@ -2347,7 +2346,7 @@ void
 nsCacheService::SetDiskCacheMaxEntrySize(PRInt32  maxSize)
 {
     if (!gService)  return;
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETDISKCACHEMAXENTRYSIZE));
 
     if (gService->mDiskDevice) {
         gService->mDiskDevice->SetMaxEntrySize(maxSize);
@@ -2358,7 +2357,7 @@ void
 nsCacheService::SetMemoryCacheMaxEntrySize(PRInt32  maxSize)
 {
     if (!gService)  return;
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETMEMORYCACHEMAXENTRYSIZE));
 
     if (gService->mMemoryDevice) {
         gService->mMemoryDevice->SetMaxEntrySize(maxSize);
@@ -2369,7 +2368,7 @@ void
 nsCacheService::SetOfflineCacheEnabled(bool    enabled)
 {
     if (!gService)  return;
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETOFFLINECACHEENABLED));
     gService->mEnableOfflineDevice = enabled;
 }
 
@@ -2377,7 +2376,7 @@ void
 nsCacheService::SetOfflineCacheCapacity(PRInt32  capacity)
 {
     if (!gService)  return;
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETOFFLINECACHECAPACITY));
 
     if (gService->mOfflineDevice) {
         gService->mOfflineDevice->SetCapacity(capacity);
@@ -2394,7 +2393,7 @@ nsCacheService::SetMemoryCache()
 
     CACHE_LOG_DEBUG(("nsCacheService::SetMemoryCache"));
 
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETMEMORYCACHE));
 
     gService->mEnableMemoryDevice = gService->mObserver->MemoryCacheEnabled();
 
@@ -2484,15 +2483,32 @@ nsCacheService::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 }
 
 void
-nsCacheService::Lock()
+nsCacheService::Lock(mozilla::Telemetry::ID mainThreadLockerID)
 {
+    mozilla::Telemetry::ID lockerID;
+    mozilla::Telemetry::ID generalID;
+    bool on;
+
     if (NS_IsMainThread()) {
-        Telemetry::AutoTimer<Telemetry::CACHE_SERVICE_LOCK_WAIT_MAINTHREAD> timer;
-        gService->mLock.Lock();
+        lockerID = mainThreadLockerID;
+        generalID = mozilla::Telemetry::CACHE_SERVICE_LOCK_WAIT_MAINTHREAD;
     } else {
-        Telemetry::AutoTimer<Telemetry::CACHE_SERVICE_LOCK_WAIT> timer;
-        gService->mLock.Lock();
+        lockerID = mozilla::Telemetry::HistogramCount;
+        generalID = mozilla::Telemetry::CACHE_SERVICE_LOCK_WAIT;
+	}
+
+    TimeStamp start(TimeStamp::Now());
+
+    gService->mLock.Lock();
+
+    TimeStamp stop(TimeStamp::Now());
+
+    // Telemetry isn't thread safe on its own, but this is OK because we're
+    // protecting it with the cache lock. 
+    if (lockerID != mozilla::Telemetry::HistogramCount) {
+        mozilla::Telemetry::AccumulateTimeDelta(lockerID, start, stop);
     }
+    mozilla::Telemetry::AccumulateTimeDelta(generalID, start, stop);
 }
 
 void
@@ -2843,7 +2859,7 @@ nsCacheService::LogCacheStatistics()
 nsresult
 nsCacheService::SetDiskSmartSize()
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_SETDISKSMARTSIZE));
 
     if (!gService) return NS_ERROR_NOT_AVAILABLE;
 
@@ -2886,7 +2902,7 @@ IsEntryPrivate(nsCacheEntry* entry)
 void
 nsCacheService::LeavePrivateBrowsing()
 {
-    nsCacheServiceAutoLock lock;
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_LEAVEPRIVATEBROWSING));
 
     gService->DoomActiveEntries(IsEntryPrivate);
 

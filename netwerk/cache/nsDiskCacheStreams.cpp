@@ -464,7 +464,7 @@ nsDiskCacheStreamIO::ClearBinding()
 nsresult
 nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
 {
-    nsCacheServiceAutoLock lock; // grab service lock
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSDISKCACHESTREAMIO_CLOSEOUTPUTSTREAM)); // grab service lock
     return CloseOutputStreamInternal(outputStream);
 }
 
@@ -596,7 +596,7 @@ nsDiskCacheStreamIO::Write( const char * buffer,
                             PRUint32 *   bytesWritten)
 {
     nsresult    rv = NS_OK;
-    nsCacheServiceAutoLock lock; // grab service lock
+    nsCacheServiceAutoLock lock(LOCK_TELEM(NSDISKCACHESTREAMIO_WRITE)); // grab service lock
     if (!mBinding)  return NS_ERROR_NOT_AVAILABLE;
 
     if (mInStreamCount) {

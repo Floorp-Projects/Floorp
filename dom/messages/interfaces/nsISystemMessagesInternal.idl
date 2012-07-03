@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+interface nsIURI;
+
+// Implemented by the contract id @mozilla.org/system-message-internal;1
+
+[scriptable, uuid(fdc1ba03-5d8f-4de9-894a-333c7a136c5f)]
+interface nsISystemMessagesInternal : nsISupports
+{
+  /*
+   * Allow any internal user to broadcast a message of a given type.
+   * @param type        The type of the message to be sent.
+   * @param message     The message payload.
+   * @param manifestURI The webapp's manifest URI.
+   */
+  void sendMessage(in DOMString type, in jsval message, in nsIURI manifestURI);
+
+  /*
+   * Registration of a page that wants to be notified of a message type.
+   * @param type          The message type.
+   * @param pageURI       The URI of the page that will be opened.
+   * @param manifestURI   The webapp's manifest URI.
+   */
+  void registerPage(in DOMString type, in nsIURI pageURI, in nsIURI manifestURI);
+};
