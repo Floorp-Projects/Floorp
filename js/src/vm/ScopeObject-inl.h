@@ -65,70 +65,57 @@ CallObject::isForEval() const
     return getReservedSlot(CALLEE_SLOT).isNull();
 }
 
-inline void
-CallObject::setCallee(JSObject *callee)
+inline JSFunction &
+CallObject::callee() const
 {
-    JS_ASSERT_IF(callee, callee->isFunction());
-    setFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
-}
-
-inline JSObject *
-CallObject::getCallee() const
-{
-    return getReservedSlot(CALLEE_SLOT).toObjectOrNull();
-}
-
-inline JSFunction *
-CallObject::getCalleeFunction() const
-{
-    return getReservedSlot(CALLEE_SLOT).toObject().toFunction();
+    return *getReservedSlot(CALLEE_SLOT).toObject().toFunction();
 }
 
 inline const Value &
 CallObject::arg(unsigned i, MaybeCheckAliasing checkAliasing) const
 {
-    JS_ASSERT_IF(checkAliasing, getCalleeFunction()->script()->formalLivesInCallObject(i));
+    JS_ASSERT_IF(checkAliasing, callee().script()->formalLivesInCallObject(i));
     return getSlot(RESERVED_SLOTS + i);
 }
 
 inline void
 CallObject::setArg(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing)
 {
-    JS_ASSERT_IF(checkAliasing, getCalleeFunction()->script()->formalLivesInCallObject(i));
+    JS_ASSERT_IF(checkAliasing, callee().script()->formalLivesInCallObject(i));
     setSlot(RESERVED_SLOTS + i, v);
 }
 
 inline const Value &
 CallObject::var(unsigned i, MaybeCheckAliasing checkAliasing) const
 {
-    JSFunction *fun = getCalleeFunction();
-    JS_ASSERT_IF(checkAliasing, fun->script()->varIsAliased(i));
-    return getSlot(RESERVED_SLOTS + fun->nargs + i);
+    JSFunction &fun = callee();
+    JS_ASSERT_IF(checkAliasing, fun.script()->varIsAliased(i));
+    return getSlot(RESERVED_SLOTS + fun.nargs + i);
 }
 
 inline void
 CallObject::setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing)
 {
-    JSFunction *fun = getCalleeFunction();
-    JS_ASSERT_IF(checkAliasing, fun->script()->varIsAliased(i));
-    setSlot(RESERVED_SLOTS + fun->nargs + i, v);
+    JSFunction &fun = callee();
+    JS_ASSERT_IF(checkAliasing, fun.script()->varIsAliased(i));
+    setSlot(RESERVED_SLOTS + fun.nargs + i, v);
 }
 
 inline HeapSlotArray
 CallObject::argArray()
 {
-    DebugOnly<JSFunction*> fun = getCalleeFunction();
-    JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS, fun->nargs));
+    JSFunction &fun = callee();
+    JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS, fun.nargs));
     return HeapSlotArray(getSlotAddress(RESERVED_SLOTS));
 }
 
 inline HeapSlotArray
 CallObject::varArray()
 {
-    JSFunction *fun = getCalleeFunction();
-    JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS + fun->nargs,
-                                 fun->script()->bindings.numVars()));
-    return HeapSlotArray(getSlotAddress(RESERVED_SLOTS + fun->nargs));
+    JSFunction &fun = callee();
+    JS_ASSERT(hasContiguousSlots(RESERVED_SLOTS + fun.nargs,
+                                 fun.script()->bindings.numVars()));
+    return HeapSlotArray(getSlotAddress(RESERVED_SLOTS + fun.nargs));
 }
 
 inline uint32_t

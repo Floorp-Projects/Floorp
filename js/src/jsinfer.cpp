@@ -3229,7 +3229,7 @@ ScriptAnalysis::resolveNameAccess(JSContext *cx, jsid id, bool addDependency)
          * don't resolve name accesses on lambdas in DeclEnv objects on the
          * scope chain.
          */
-        if (atom == CallObjectLambdaName(script->function()))
+        if (atom == CallObjectLambdaName(*script->function()))
             return access;
 
         if (!script->nesting()->parent)
@@ -5022,7 +5022,7 @@ TypeScript::SetScope(JSContext *cx, JSScript *script_, JSObject *scope_)
      * object has been created in the heavyweight case.
      */
     JS_ASSERT_IF(scope && scope->isCall() && !scope->asCall().isForEval(),
-                 scope->asCall().getCalleeFunction() != fun);
+                 &scope->asCall().callee() != fun);
 
     if (!script->compileAndGo) {
         script->types->global = NULL;
@@ -5069,7 +5069,7 @@ TypeScript::SetScope(JSContext *cx, JSScript *script_, JSObject *scope_)
     JS_ASSERT(!call.isForEval());
 
     /* Don't track non-heavyweight parents, NAME ops won't reach into them. */
-    JSFunction *parentFun = call.getCalleeFunction();
+    JSFunction *parentFun = &call.callee();
     if (!parentFun || !parentFun->isHeavyweight())
         return true;
     JSScript *parent = parentFun->script();
@@ -5188,7 +5188,7 @@ CheckNestingParent(JSContext *cx, JSObject *scope, JSScript *script)
     JSScript *parent = script->nesting()->parent;
     JS_ASSERT(parent);
 
-    while (!scope->isCall() || scope->asCall().getCalleeFunction()->script() != parent)
+    while (!scope->isCall() || scope->asCall().callee().script() != parent)
         scope = &scope->asScope().enclosingScope();
 
     if (scope != parent->nesting()->activeCall) {
