@@ -957,7 +957,7 @@ class MInlineFunctionGuard : public MAryControlInstruction<1, 2>
         return getOperand(0);
     }
     void setInput(MDefinition *input) {
-        setOperand(0, input);
+        initOperand(0, input);
     }
 
     JSFunction *function() {
