@@ -166,6 +166,40 @@ IonBuilder::getSingleCallTarget(uint32 argc, jsbytecode *pc)
     return obj->toFunction();
 }
 
+unsigned
+IonBuilder::getPolyCallTargets(uint32 argc, jsbytecode *pc,
+                               AutoObjectVector &targets, uint32_t maxTargets)
+{
+    types::TypeSet *calleeTypes = oracle->getCallTarget(script, argc, pc);
+    if (!calleeTypes)
+        return 0;
+
+    unsigned objCount = calleeTypes->getObjectCount();
+    if (calleeTypes->baseFlags() != 0)
+        return 0;
+
+    if (objCount == 0 || objCount > maxTargets)
+        return 0;
+
+    for(unsigned i = 0; i < objCount; i++) {
+        JSObject *obj = calleeTypes->getSingleObject(i);
+        if (!obj || !obj->isFunction())
+            return 0;
+        targets.append(obj);
+    }
+
+    /** Do we want to freeze here? **
+     *
+    if (freeze) {
+        add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreeze>(
+                                               cx->compartment->types.compiledInfo), false);
+    }
+    *
+    */
+
+    return objCount;
+}
+
 bool
 IonBuilder::canInlineTarget(JSFunction *target)
 {
@@ -360,7 +394,7 @@ IonBuilder::processIterators()
 
 bool
 IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
-                        MDefinition *thisDefn, MDefinitionVector &argv)
+                        MDefinition *thisDefn, MDefinitionVector &argv, int polymorphic)
 {
     IonSpew(IonSpew_MIR, "Inlining script %s:%d (%p)",
             script->filename, script->lineno, (void *)script);
@@ -376,12 +410,30 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     current->setCallerResumePoint(callerResumePoint);
 
     // Connect the entrance block to the last block in the caller's graph.
-    MBasicBlock *predecessor = callerResumePoint->block();
-    predecessor->end(MGoto::New(current));
+    MBasicBlock *predecessor = callerBuilder->current;
+    if (polymorphic == 0) {
+        JS_ASSERT(predecessor == callerResumePoint->block());
+        predecessor->end(MGoto::New(current));
+    } else if (polymorphic == 1) {
+        predecessor->end(MInlineFunctionGuard::New(NULL, NULL, current, NULL));
+    } else {
+        JS_ASSERT(polymorphic == 2);
+        // The predecessor should already be terminated with the proper instruction
+        JS_ASSERT(predecessor->lastIns() && predecessor->lastIns()->isInlineFunctionGuard());
+        MInlineFunctionGuard *guardIns = predecessor->lastIns()->toInlineFunctionGuard();
+        guardIns->setFallbackBlock(current);
+    }
     if (!current->addPredecessorWithoutPhis(predecessor))
         return false;
 
-    JS_ASSERT(predecessor->numSuccessors() == 1);
+#ifdef DEBUG
+    if(polymorphic == 0) {
+        JS_ASSERT(predecessor->numSuccessors() == 1);
+    } else {
+        JS_ASSERT(predecessor->numSuccessors() == 2);
+    }
+#endif
+
     JS_ASSERT(current->numPredecessors() == 1);
 
     // Explicitly pass Undefined for missing arguments.
@@ -2747,8 +2799,13 @@ bool
 IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
                              MConstant *constFun, MResumePoint *inlineResumePoint,
                              MDefinitionVector &argv, MBasicBlock *bottom,
-                             Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns)
+                             Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns,
+                             int polymorphic)
 {
+    // polymorphic == 0 means monomorhpic
+    // polymorphic == 1 means guarded polymorphic case
+    // polymorphic == 2 means un-guarded (final) polymorphic case
+
     // Compilation information is allocated for the duration of the current tempLifoAlloc
     // lifetime.
     CompileInfo *info = cx->tempLifoAlloc().new_<CompileInfo>(
@@ -2779,7 +2836,7 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     }
 
     // Build the graph.
-    if (!inlineBuilder.buildInline(this, inlineResumePoint, thisDefn, argv))
+    if (!inlineBuilder.buildInline(this, inlineResumePoint, thisDefn, argv, polymorphic))
         return false;
 
     MIRGraphExits &exits = *inlineBuilder.graph().exitAccumulator();
@@ -2815,23 +2872,10 @@ IonBuilder::jsop_call_inline(HandleFunction callee, uint32 argc, bool constructi
     return true;
 }
 
-static bool IsSmallFunction(JSFunction *target) {
-    if (!target->isInterpreted())
-        return false;
-
-    JSScript *script = target->script();
-    if(script->length > js_IonOptions.smallFunctionMaxBytecodeLength)
-        return false;
-
-    return true;
-}
-
 bool
-IonBuilder::makeInliningDecision(HandleFunction target)
+IonBuilder::makeInliningDecision(AutoObjectVector &targets)
 {
-    static const size_t INLINING_LIMIT = 3;
-
-    if (inliningDepth >= INLINING_LIMIT)
+    if (inliningDepth >= js_IonOptions.maxInlineDepth)
         return false;
 
     // For "small" functions, we should be more aggressive about inlining.
@@ -2843,8 +2887,23 @@ IonBuilder::makeInliningDecision(HandleFunction target)
     //     and size expansion of the ultimately generated code, will be
     //     less significant.
 
-    uint32 checkUses = js_IonOptions.usesBeforeInlining;
-    if (IsSmallFunction(target))
+    uint32_t totalSize = 0;
+    uint32_t checkUses = js_IonOptions.usesBeforeInlining;
+    bool allFunctionsAreSmall = true;
+    for (size_t i = 0; i < targets.length(); i++) {
+        JSFunction *target = targets[i]->toFunction();
+        if (!target->isInterpreted())
+            return false;
+
+        JSScript *script = target->script();
+        totalSize += script->length;
+        if (totalSize > js_IonOptions.inlineMaxTotalBytecodeLength)
+            return false;
+
+        if (script->length > js_IonOptions.smallFunctionMaxBytecodeLength)
+            allFunctionsAreSmall = false;
+    }
+    if (allFunctionsAreSmall)
         checkUses = js_IonOptions.smallFunctionUsesBeforeInlining;
 
     if (script->getUseCount() < checkUses) {
@@ -2857,29 +2916,36 @@ IonBuilder::makeInliningDecision(HandleFunction target)
         return false;
     }
 
-    if (!canInlineTarget(target)) {
-        IonSpew(IonSpew_Inlining, "Decided not to inline");
-        return false;
+    for (size_t i = 0; i < targets.length(); i++) {
+        if (!canInlineTarget(targets[i]->toFunction())) {
+            IonSpew(IonSpew_Inlining, "Decided not to inline");
+            return false;
+        }
     }
 
     return true;
 }
 
 bool
-IonBuilder::inlineScriptedCall(HandleFunction target, uint32 argc, bool constructing)
+IonBuilder::inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool constructing)
 {
 #ifdef DEBUG
     uint32 origStackDepth = current->stackDepth();
 #endif
 
-    IonSpew(IonSpew_Inlining, "Recursively building");
+    IonSpew(IonSpew_Inlining, "Inlinig %d targets", (int) targets.length());
+    JS_ASSERT(targets.length() > 0);
 
     // |top| jumps into the callee subgraph -- save it for later use.
     MBasicBlock *top = current;
 
     // Add the function constant before the resume point which maps call args.
-    MConstant *constFun = MConstant::New(ObjectValue(*target));
-    current->add(constFun);
+    MConstant *constFun = NULL;
+    if (targets.length() == 1) {
+        JSFunction *singleTarget = targets[0]->toFunction();
+        constFun = MConstant::New(ObjectValue(*singleTarget));
+        current->add(constFun);
+    }
 
     // This resume point collects outer variables only.  It is used to recover
     // the stack state before the current bytecode.
@@ -2895,15 +2961,23 @@ IonBuilder::inlineScriptedCall(HandleFunction target, uint32 argc, bool construc
     // Note that we leave the callee on the simulated stack for the
     // duration of the call.
     MDefinitionVector argv;
-    if(!discardCallArgs(argc, argv, top))
+    if (!discardCallArgs(argc, argv, top))
         return false;
 
     // Replace the potential object load by the corresponding constant version
-    // which is inlined here. We do this to ensure that on a bailout, we can get
-    // back to the caller by iterating over the stack.
-    inlineResumePoint->replaceOperand(inlineResumePoint->numOperands() - (argc + 2), constFun);
-    current->pop();
-    current->push(constFun);
+    // which is inlined here. But only do this if there is exactly one target function.
+    MDefinition *funcDefn = NULL;
+    if (targets.length() == 1) {
+        JS_ASSERT(constFun != NULL);
+        inlineResumePoint->replaceOperand(
+            inlineResumePoint->numOperands() - (argc + 2), constFun);
+        current->pop();
+        current->push(constFun);
+        funcDefn = constFun;
+    } else {
+        funcDefn = current->pop();
+        current->push(funcDefn);
+    }
 
     // Create a |bottom| block for all the callee subgraph exits to jump to.
     JS_ASSERT(types::IsInlinableCall(pc));
@@ -2914,9 +2988,53 @@ IonBuilder::inlineScriptedCall(HandleFunction target, uint32 argc, bool construc
     Vector<MDefinition *, 8, IonAllocPolicy> retvalDefns;
 
     // Do the inline build. Return value definitions are stored in retvalDefns.
-    if(!jsop_call_inline(target, argc, constructing, constFun,
-                         inlineResumePoint, argv, bottom, retvalDefns))
-        return false;
+    if (targets.length() == 1) {
+        // Monomorphic case is simple - no guards.
+        RootedFunction target(cx, targets[0]->toFunction());
+        if(!jsop_call_inline(target, argc, constructing, constFun, inlineResumePoint,
+                             argv, bottom, retvalDefns, 0))
+            return false;
+    } else {
+        // Polymorhpic inline case requires guards.
+        // Polymorphic inline case is not so simple - needs guards.
+        MBasicBlock *entryBlock = top;
+        for (size_t i = 0; i < targets.length(); i++) {
+            // Do the inline function build.
+            current = entryBlock;
+            RootedFunction target(cx, targets[i]->toFunction());
+            if (!jsop_call_inline(target, argc, constructing, constFun,
+                                  inlineResumePoint, argv, bottom, retvalDefns,
+                                  (i == targets.length() - 1) ? 2 : 1))
+                return false;
+
+            JS_ASSERT(entryBlock->lastIns());
+            JS_ASSERT(entryBlock->lastIns()->isInlineFunctionGuard());
+
+            // Build the fallback block, but only if we're not yet at the last case.
+            if (i < targets.length() - 1) {
+                MInlineFunctionGuard *guardIns =
+                    entryBlock->lastIns()->toInlineFunctionGuard();
+                guardIns->setFunction(target);
+                guardIns->setInput(funcDefn);
+                JS_ASSERT(guardIns->functionBlock() != NULL);
+
+                if (i < targets.length() - 2) {
+                    MBasicBlock *fallbackBlock = newBlock(entryBlock, pc);
+                    guardIns->setFallbackBlock(fallbackBlock);
+                    entryBlock = fallbackBlock;
+                }
+            }
+#ifdef DEBUG
+            if (i == targets.length() - 1) {
+                MInlineFunctionGuard *guardIns = entryBlock->lastIns()->toInlineFunctionGuard();
+                JS_ASSERT(guardIns->function() != NULL);
+                JS_ASSERT(guardIns->input() != NULL);
+                JS_ASSERT(guardIns->fallbackBlock() != NULL);
+                JS_ASSERT(guardIns->functionBlock() != NULL);
+            }
+#endif
+        }
+    }
 
     graph_.moveBlockToEnd(bottom);
 
@@ -3174,14 +3292,17 @@ IonBuilder::jsop_funcall(uint32 argc)
 }
 
 bool
-IonBuilder::jsop_call_fun_barrier(HandleFunction target, uint32 argc, 
+IonBuilder::jsop_call_fun_barrier(AutoObjectVector &targets, int numTargets,
+                                  uint32 argc, 
                                   bool constructing,
                                   types::TypeSet *types,
                                   types::TypeSet *barrier)
 {
     // Attempt to inline native and scripted functions.
-    if (inliningEnabled() && target) {
-        if (target->isNative()) {
+    if (inliningEnabled()) {
+        // Inline a single native call if possible.
+        if(numTargets == 1 && targets[0]->toFunction()->isNative()) {
+            RootedFunction target(cx, targets[0]->toFunction());
             switch (inlineNativeCall(target->native(), argc, constructing)) {
               case InliningStatus_Inlined:
                 return true;
@@ -3192,10 +3313,13 @@ IonBuilder::jsop_call_fun_barrier(HandleFunction target, uint32 argc,
             }
         }
 
-        if (makeInliningDecision(target))
-            return inlineScriptedCall(target, argc, constructing);
+        if (numTargets > 0) {
+            if (makeInliningDecision(targets))
+                return inlineScriptedCall(targets, argc, constructing);
+        }
     }
 
+    RootedFunction target(cx, numTargets == 1 ? targets[0]->toFunction() : NULL);
     return makeCallBarrier(target, argc, constructing, types, barrier);
 }
 
@@ -3203,10 +3327,11 @@ bool
 IonBuilder::jsop_call(uint32 argc, bool constructing)
 {
     // Acquire known call target if existent.
-    RootedFunction target(cx, getSingleCallTarget(argc, pc));
+    AutoObjectVector targets(cx);
+    unsigned numTargets = getPolyCallTargets(argc, pc, targets, 4);
     types::TypeSet *barrier;
     types::TypeSet *types = oracle->returnTypeSet(script, pc, &barrier);
-    return jsop_call_fun_barrier(target, argc, constructing, types, barrier);
+    return jsop_call_fun_barrier(targets, numTargets, argc, constructing, types, barrier);
 }
 
 bool

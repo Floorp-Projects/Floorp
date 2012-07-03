@@ -198,7 +198,7 @@ class IonBuilder : public MIRGenerator
 
     bool build();
     bool buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoint,
-                     MDefinition *thisDefn, MDefinitionVector &args);
+                     MDefinition *thisDefn, MDefinitionVector &args, int polymorphic);
 
   private:
     bool traverseBytecode();
@@ -215,6 +215,8 @@ class IonBuilder : public MIRGenerator
     }
 
     JSFunction *getSingleCallTarget(uint32 argc, jsbytecode *pc);
+    unsigned getPolyCallTargets(uint32 argc, jsbytecode *pc,
+                                AutoObjectVector &targets, uint32_t maxTargets);
     bool canInlineTarget(JSFunction *target);
 
     void popCfgStack();
@@ -408,13 +410,15 @@ class IonBuilder : public MIRGenerator
     bool jsop_call_inline(HandleFunction callee, uint32 argc, bool constructing,
                           MConstant *constFun, MResumePoint *inlineResumePoint,
                           MDefinitionVector &argv, MBasicBlock *bottom,
-                          Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns);
-    bool inlineScriptedCall(HandleFunction target, uint32 argc, bool constructing);
-    bool makeInliningDecision(HandleFunction target);
+                          Vector<MDefinition *, 8, IonAllocPolicy> &retvalDefns,
+                          int polymorphic);
+    bool inlineScriptedCall(AutoObjectVector &targets, uint32 argc, bool constructing);
+    bool makeInliningDecision(AutoObjectVector &targets);
 
-    bool jsop_call_fun_barrier(HandleFunction target, uint32 argc, 
+    bool jsop_call_fun_barrier(AutoObjectVector &targets, int numTargets,
+                               uint32 argc, 
                                bool constructing,
-							   types::TypeSet *types,
+                               types::TypeSet *types,
                                types::TypeSet *barrier);
     bool makeCallBarrier(HandleFunction target, uint32 argc, bool constructing,
                          types::TypeSet *types, types::TypeSet *barrier);
