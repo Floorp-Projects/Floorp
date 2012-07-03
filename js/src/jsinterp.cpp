@@ -59,6 +59,7 @@
 #include "jsscriptinlines.h"
 #include "jstypedarrayinlines.h"
 
+#include "builtin/Iterator-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -1007,8 +1008,8 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 static inline bool
 IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 {
-    if (iterobj->isIterator()) {
-        NativeIterator *ni = iterobj->getNativeIterator();
+    if (iterobj->isPropertyIterator()) {
+        NativeIterator *ni = iterobj->asPropertyIterator().getNativeIterator();
         if (ni->isKeyIter()) {
             *cond = (ni->props_cursor < ni->props_end);
             return true;
@@ -1024,8 +1025,8 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 static inline bool
 IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
-    if (iterobj->isIterator()) {
-        NativeIterator *ni = iterobj->getNativeIterator();
+    if (iterobj->isPropertyIterator()) {
+        NativeIterator *ni = iterobj->asPropertyIterator().getNativeIterator();
         if (ni->isKeyIter()) {
             JS_ASSERT(ni->props_cursor < ni->props_end);
             rval->setString(*ni->current());

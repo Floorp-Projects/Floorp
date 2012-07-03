@@ -209,7 +209,6 @@ extern Class DateClass;
 extern Class ErrorClass;
 extern Class ElementIteratorClass;
 extern Class GeneratorClass;
-extern Class IteratorClass;
 extern Class JSONClass;
 extern Class MathClass;
 extern Class NumberClass;
@@ -240,6 +239,7 @@ class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
 class NumberObject;
+class PropertyIteratorObject;
 class ScopeObject;
 class StaticBlockObject;
 class StrictArgumentsObject;
@@ -655,9 +655,6 @@ struct JSObject : public js::ObjectImpl
 
     static const uint32_t ITER_CLASS_NFIXED_SLOTS = 1;
 
-    inline js::NativeIterator *getNativeIterator() const;
-    inline void setNativeIterator(js::NativeIterator *);
-
     /*
      * XML-related getters and setters.
      */
@@ -912,9 +909,9 @@ struct JSObject : public js::ObjectImpl
     inline bool isFunction() const;
     inline bool isGenerator() const;
     inline bool isGlobal() const;
-    inline bool isIterator() const;
     inline bool isObject() const;
     inline bool isPrimitive() const;
+    inline bool isPropertyIterator() const;
     inline bool isProxy() const;
     inline bool isRegExp() const;
     inline bool isRegExpStatics() const;
@@ -968,6 +965,7 @@ struct JSObject : public js::ObjectImpl
     inline js::NestedScopeObject &asNestedScope();
     inline js::NormalArgumentsObject &asNormalArguments();
     inline js::NumberObject &asNumber();
+    inline js::PropertyIteratorObject &asPropertyIterator();
     inline js::RegExpObject &asRegExp();
     inline js::ScopeObject &asScope();
     inline js::StrictArgumentsObject &asStrictArguments();
