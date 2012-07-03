@@ -75,7 +75,6 @@
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsIMIMEHeaderParam.h"
 #include "mozilla/Services.h"
-#include "nsCRT.h"
 
 #ifdef MOZILLA_INTERNAL_API
 
@@ -713,37 +712,6 @@ NS_NewProxyInfo(const nsACString &type,
         rv = pps->NewProxyInfo(type, host, port, flags, PR_UINT32_MAX, nsnull,
                                result);
     return rv; 
-}
-
-// returns 'true' if this is an HTTP proxy.  If 'usingConnect' passed, sets it
-// to true if proxy is HTTP and is using CONNECT tunnel, else sets it to false
-inline bool
-NS_IsHttpProxy(nsIProxyInfo *proxyInfo, bool usingSSL, bool *usingConnect)
-{
-    if (usingConnect)
-        *usingConnect = false;
-    if (!proxyInfo)
-        return false;
-
-    nsCString proxyType;
-    nsresult rv = proxyInfo->GetType(proxyType);
-    if (NS_FAILED(rv))
-        return false;
-
-    bool isHttp = !nsCRT::strcmp(proxyType.get(), "http");
-
-    // Only HTTP proxies use CONNECT
-    if (isHttp && usingConnect) {
-        *usingConnect = usingSSL;  // SSL always uses CONNECT w/HTTP proxy
-        if (!usingConnect) {
-            PRUint32 resolveFlags = 0;
-            if (NS_SUCCEEDED(proxyInfo->GetResolveFlags(&resolveFlags)) &&
-                resolveFlags & nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL) {
-                *usingConnect = true;
-            }
-        }
-    }
-    return isHttp;
 }
 
 inline nsresult

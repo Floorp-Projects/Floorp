@@ -7,7 +7,6 @@
 #define nsHttpConnectionInfo_h__
 
 #include "nsHttp.h"
-#include "nsNetUtil.h"
 #include "nsProxyInfo.h"
 #include "nsCOMPtr.h"
 #include "nsDependentString.h"
@@ -33,11 +32,20 @@ public:
     {
         LOG(("Creating nsHttpConnectionInfo @%x\n", this));
 
-        mUsingHttpProxy = NS_IsHttpProxy(proxyInfo, usingSSL, &mUsingConnect);
+        mUsingHttpProxy = (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http"));
+
+        if (mUsingHttpProxy) {
+            mUsingConnect = mUsingSSL;  // SSL always uses CONNECT
+            PRUint32 resolveFlags = 0;
+            if (NS_SUCCEEDED(mProxyInfo->GetResolveFlags(&resolveFlags)) &&
+                resolveFlags & nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL) {
+                mUsingConnect = true;
+            }
+        }
 
         SetOriginServer(host, port);
     }
-
+    
    ~nsHttpConnectionInfo()
     {
         LOG(("Destroying nsHttpConnectionInfo @%x\n", this));
