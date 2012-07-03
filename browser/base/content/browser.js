@@ -5261,10 +5261,9 @@ function middleMousePaste(event) {
     Cu.reportError(ex);
   }
 
-  // FIXME: Bug 631500, use openUILink directly
-  let where = whereToOpenLink(event, true);
-  openUILinkIn(url, where,
-               { disallowInheritPrincipal: !mayInheritPrincipal.value });
+  openUILink(url, event,
+             { ignoreButton: true,
+               disallowInheritPrincipal: !mayInheritPrincipal.value });
 
   event.stopPropagation();
 }
@@ -6914,6 +6913,7 @@ let gPrivateBrowsingUI = {
   _searchBarValue: null,
   _findBarValue: null,
   _inited: false,
+  _initCallbacks: [],
 
   init: function PBUI_init() {
     Services.obs.addObserver(this, "private-browsing", false);
@@ -6926,6 +6926,9 @@ let gPrivateBrowsingUI = {
       this.onEnterPrivateBrowsing(true);
 
     this._inited = true;
+
+    this._initCallbacks.forEach(function (callback) callback.apply());
+    this._initCallbacks = [];
   },
 
   uninit: function PBUI_unint() {
@@ -6934,6 +6937,17 @@ let gPrivateBrowsingUI = {
 
     Services.obs.removeObserver(this, "private-browsing");
     Services.obs.removeObserver(this, "private-browsing-transition-complete");
+  },
+
+  get initialized() {
+    return this._inited;
+  },
+
+  addInitializationCallback: function PBUI_addInitializationCallback(aCallback) {
+    if (this._inited)
+      return;
+
+    this._initCallbacks.push(aCallback);
   },
 
   get _disableUIOnToggle() {
@@ -7138,14 +7152,16 @@ let gPrivateBrowsingUI = {
       !this.privateBrowsingEnabled;
   },
 
+  get autoStarted() {
+    return this._privateBrowsingService.autoStarted;
+  },
+
   get privateBrowsingEnabled() {
     return this._privateBrowsingService.privateBrowsingEnabled;
   },
 
   /**
-   * These accessors are used to support per-window Private Browsing mode.
-   * For now the getter returns nsIPrivateBrowsingService.privateBrowsingEnabled,
-   * and the setter should only be used in tests.
+   * This accessor is used to support per-window Private Browsing mode.
    */
   get privateWindow() {
     if (!gBrowser)

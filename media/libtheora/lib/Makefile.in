@@ -21,11 +21,9 @@ DEFINES += -DTHEORA_DISABLE_ENCODE
 ifeq ($(findstring 86,$(OS_TEST)), 86)
 ifneq ($(OS_ARCH),SunOS)
 ifneq ($(OS_ARCH)$(OS_TEST),WINNTx86_64)
-ifndef MOZ_NO_THEORA_ASM
 DEFINES += -DOC_X86_ASM
 ifeq (64,$(findstring 64,$(OS_TEST)))
 DEFINES += -DOC_X86_64_ASM
-endif
 endif
 endif
 endif
@@ -63,7 +61,6 @@ CSRCS += \
   $(NULL)
 endif
 else
-ifndef MOZ_NO_THEORA_ASM
 VPATH += $(srcdir)/x86
 
 CSRCS += \
@@ -74,7 +71,6 @@ CSRCS += \
   x86state.c \
   x86cpu.c \
   $(NULL)
-endif
 endif
 endif
 

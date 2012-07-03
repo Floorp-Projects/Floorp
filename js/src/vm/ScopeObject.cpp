@@ -184,7 +184,7 @@ CallObject::createForFunction(JSContext *cx, StackFrame *fp)
 void
 CallObject::copyUnaliasedValues(StackFrame *fp)
 {
-    JS_ASSERT(fp->script() == getCalleeFunction()->script());
+    JS_ASSERT(fp->script() == callee().script());
     JSScript *script = fp->script();
 
     /* If bindings are accessed dynamically, everything is aliased. */
@@ -227,7 +227,7 @@ CallObject::setArgOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict
     JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
     unsigned i = (uint16_t) JSID_TO_INT(id);
 
-    JSScript *script = callobj.getCalleeFunction()->script();
+    JSScript *script = callobj.callee().script();
     JS_ASSERT(script->formalLivesInCallObject(i));
 
     callobj.setArg(i, *vp);
@@ -247,7 +247,7 @@ CallObject::setVarOp(JSContext *cx, HandleObject obj, HandleId id, JSBool strict
     JS_ASSERT((int16_t) JSID_TO_INT(id) == JSID_TO_INT(id));
     unsigned i = (uint16_t) JSID_TO_INT(id);
 
-    JSScript *script = callobj.getCalleeFunction()->script();
+    JSScript *script = callobj.callee().script();
     JS_ASSERT(script->varIsAliased(i));
 
     callobj.setVar(i, *vp);
@@ -984,7 +984,7 @@ ScopeIter::operator++()
       case Call:
         if (hasScopeObject_) {
             cur_ = &cur_->asCall().enclosingScope();
-            if (CallObjectLambdaName(fp_->fun()))
+            if (CallObjectLambdaName(*fp_->fun()))
                 cur_ = &cur_->asDeclEnv().enclosingScope();
         }
         fp_ = NULL;
@@ -1071,7 +1071,7 @@ ScopeIter::settle()
         CallObject &callobj = cur_->asCall();
         type_ = callobj.isForEval() ? StrictEvalScope : Call;
         hasScopeObject_ = true;
-        JS_ASSERT_IF(type_ == Call, callobj.getCalleeFunction()->script() == fp_->script());
+        JS_ASSERT_IF(type_ == Call, callobj.callee().script() == fp_->script());
     } else {
         JS_ASSERT(!cur_->isScope());
         JS_ASSERT(fp_->isGlobalFrame() || fp_->isDebuggerFrame());
@@ -1142,7 +1142,7 @@ class DebugScopeProxy : public BaseProxyHandler
 
         if (scope.isCall() && !scope.asCall().isForEval()) {
             CallObject &callobj = scope.asCall();
-            JSScript *script = callobj.getCalleeFunction()->script();
+            JSScript *script = callobj.callee().script();
             if (!script->ensureHasTypes(cx))
                 return false;
 
@@ -1249,7 +1249,7 @@ class DebugScopeProxy : public BaseProxyHandler
     static bool isMissingArgumentsBinding(ScopeObject &scope)
     {
         return isFunctionScope(scope) &&
-               !scope.asCall().getCalleeFunction()->script()->argumentsHasVarBinding();
+               !scope.asCall().callee().script()->argumentsHasVarBinding();
     }
 
     /*
@@ -1266,7 +1266,7 @@ class DebugScopeProxy : public BaseProxyHandler
         if (!isArguments(cx, id) || !isFunctionScope(scope))
             return true;
 
-        JSScript *script = scope.asCall().getCalleeFunction()->script();
+        JSScript *script = scope.asCall().callee().script();
         if (script->needsArgsObj())
             return true;
 
@@ -1788,7 +1788,7 @@ GetDebugScopeForScope(JSContext *cx, ScopeObject &scope, const ScopeIter &enclos
 
     JSObject &maybeDecl = scope.enclosingScope();
     if (maybeDecl.isDeclEnv()) {
-        JS_ASSERT(CallObjectLambdaName(scope.asCall().getCalleeFunction()));
+        JS_ASSERT(CallObjectLambdaName(scope.asCall().callee()));
         enclosingDebug = DebugScopeObject::create(cx, maybeDecl.asDeclEnv(), enclosingDebug);
         if (!enclosingDebug)
             return NULL;
@@ -1830,7 +1830,7 @@ GetDebugScopeForMissing(JSContext *cx, const ScopeIter &si)
             return NULL;
 
         if (callobj->enclosingScope().isDeclEnv()) {
-            JS_ASSERT(CallObjectLambdaName(callobj->getCalleeFunction()));
+            JS_ASSERT(CallObjectLambdaName(callobj->callee()));
             DeclEnvObject &declenv = callobj->enclosingScope().asDeclEnv();
             enclosingDebug = DebugScopeObject::create(cx, declenv, enclosingDebug);
             if (!enclosingDebug)
