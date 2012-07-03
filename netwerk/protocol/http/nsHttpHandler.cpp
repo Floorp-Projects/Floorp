@@ -1428,16 +1428,13 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
         httpChannel = new nsHttpChannel();
     }
 
-    // select proxy caps if using a non-transparent proxy.  CONNECT tunneling
+    // select proxy caps if using a non-transparent proxy.  SSL tunneling
     // should not use proxy settings.
     PRInt8 caps;
-    bool usingConnect;
-    bool usingHttpProxy = NS_IsHttpProxy(proxyInfo, https, &usingConnect);
-    if (usingHttpProxy && !usingConnect) {
+    if (proxyInfo && !nsCRT::strcmp(proxyInfo->Type(), "http") && !https)
         caps = mProxyCapabilities;
-    } else {
+    else
         caps = mCapabilities;
-    }
 
     if (https) {
         // enable pipelining over SSL if requested
