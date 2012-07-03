@@ -18,7 +18,6 @@ _TEST_FILES = \
 		head.js \
 		data.json \
 		worker_xhr.js \
-		worker_localStorage.js \
 		browser_frameworker.js \
 		worker_relative.js \
 		relative_import.js \
