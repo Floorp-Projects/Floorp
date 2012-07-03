@@ -633,19 +633,25 @@ endif
 PWD := $(CURDIR)
 endif
 
+NSINSTALL_PY := $(PYTHON) $(call core_abspath,$(topsrcdir)/config/nsinstall.py)
+
 ifdef NSINSTALL_BIN
 NSINSTALL = $(NSINSTALL_BIN)
 else
 ifeq (OS2,$(CROSS_COMPILE)$(OS_ARCH))
 NSINSTALL = $(MOZ_TOOLS_DIR)/nsinstall
 else
+ifeq ($(HOST_OS_ARCH),WINNT)
+NSINSTALL = $(NSINSTALL_PY)
+else
 NSINSTALL = $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)
+endif # WINNT
 endif # OS2
 endif # NSINSTALL_BIN
 
 
 ifeq (,$(CROSS_COMPILE)$(filter-out WINNT OS2, $(OS_ARCH)))
-INSTALL		= $(NSINSTALL)
+INSTALL		= $(NSINSTALL) -t
 else
 
 # This isn't laid out as conditional directives so that NSDISTMODE can be
@@ -657,13 +663,8 @@ endif # WINNT/OS2
 # Use nsinstall in copy mode to install files on the system
 SYSINSTALL	= $(NSINSTALL) -t
 
-# Directory nsinstall. Windows and OS/2 nsinstall can't recursively copy
-# directories.
-ifneq (,$(filter WINNT os2-emx,$(HOST_OS_ARCH)))
-DIR_INSTALL = $(PYTHON) $(topsrcdir)/config/nsinstall.py
-else
+# Directory nsinstall.
 DIR_INSTALL = $(INSTALL)
-endif # WINNT/OS2
 
 #
 # Localization build automation
