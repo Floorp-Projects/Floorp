@@ -30,6 +30,8 @@
 #include "FileStreamWrappers.h"
 #include "MemoryStreams.h"
 #include "MetadataHelper.h"
+#include "nsDOMError.h"
+#include "nsContentUtils.h"
 
 #define STREAM_COPY_BLOCK_SIZE 32768
 

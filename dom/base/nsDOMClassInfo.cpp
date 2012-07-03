@@ -107,6 +107,7 @@
 #include "nsIDOMPerformanceNavigation.h"
 #include "nsIDOMPerformance.h"
 #include "nsClientRect.h"
+#include "nsIDOMHTMLPropertiesCollection.h"
 
 // DOM core includes
 #include "nsDOMError.h"
@@ -520,6 +521,8 @@ using mozilla::dom::indexedDB::IDBWrapperCache;
 #include "BluetoothManager.h"
 #include "BluetoothAdapter.h"
 #endif
+
+#include "nsIDOMNavigatorSystemMessages.h"
 
 #include "DOMError.h"
 #include "DOMRequest.h"
@@ -2482,6 +2485,7 @@ nsDOMClassInfo::Init()
 #ifdef MOZ_B2G_BT
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorBluetooth)
 #endif
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorSystemMessages)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Plugin, nsIDOMPlugin)

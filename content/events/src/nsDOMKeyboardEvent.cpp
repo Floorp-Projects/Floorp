@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMKeyboardEvent.h"
-#include "nsContentUtils.h"
+#include "nsDOMClassInfoID.h"
 
 nsDOMKeyboardEvent::nsDOMKeyboardEvent(nsPresContext* aPresContext,
                                        nsKeyEvent* aEvent)

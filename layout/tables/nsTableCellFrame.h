@@ -210,11 +210,11 @@ public:
 
   virtual bool UpdateOverflow();
   
-  virtual void InvalidateFrame(PRUint32 aFlags = 0)
+  virtual void InvalidateFrame()
   {
-    nsIFrame::InvalidateFrame(aFlags);
+    nsIFrame::InvalidateFrame();
     nsTableFrame *tableFrame = nsTableFrame::GetTableFrame(this);
-    tableFrame->InvalidateFrame(aFlags | INVALIDATE_DONT_SCHEDULE_PAINT);
+    tableFrame->InvalidateFrame();
   }
 
 protected:

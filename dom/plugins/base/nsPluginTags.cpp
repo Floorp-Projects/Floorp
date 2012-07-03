@@ -8,7 +8,6 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "nsIPluginInstanceOwner.h"
-#include "nsIDocument.h"
 #include "nsServiceManagerUtils.h"
 #include "nsPluginsDir.h"
 #include "nsPluginHost.h"

@@ -5,6 +5,10 @@
 
 <resources>
 
+    <dimen name="awesomebar_header_row_height">24dp</dimen>
+    <dimen name="awesomebar_row_height">66dp</dimen>
+    <dimen name="awesomebar_suggestion_item_height">32dp</dimen>
+    <dimen name="awesomebar_tab_transparency_height">46dp</dimen>
     <dimen name="browser_toolbar_height">56dp</dimen>
     <dimen name="local_tab_row_height">150dp</dimen>
     <dimen name="remote_tab_child_row_height">48dp</dimen>

@@ -34,6 +34,7 @@
 #include "nsIURI.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
+#include "nsIHTMLDocument.h"
 
 namespace dom = mozilla::dom;
 
@@ -391,14 +392,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
           optionElt->AppendChildTo(optionText, false);
           newContent->AppendChildTo(optionElt, false);
           newContent->DoneAddingChildren(false);
-        }
-      } else if (name == nsHtml5Atoms::frameset && ns == kNameSpaceID_XHTML) {
-        nsIDocument* doc = aBuilder->GetDocument();
-        nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(doc);
-        if (htmlDocument) {
-          // It seems harmless to call this multiple times, since this 
-          // is a simple field setter
-          htmlDocument->SetIsFrameset(true);
         }
       }
 

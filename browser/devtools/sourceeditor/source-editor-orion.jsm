@@ -763,8 +763,8 @@ SourceEditor.prototype = {
     }
 
     clipboardHelper.copyStringToClipboard(text,
-                                          this.parentElement.ownerDocument,
-                                          Ci.nsIClipboard.kSelectionClipboard);
+                                          Ci.nsIClipboard.kSelectionClipboard,
+                                          this.parentElement.ownerDocument);
   },
 
   /**

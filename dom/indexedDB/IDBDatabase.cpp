@@ -28,6 +28,7 @@
 #include "IndexedDatabaseManager.h"
 #include "TransactionThreadPool.h"
 #include "DictionaryHelpers.h"
+#include "nsContentUtils.h"
 
 #include "ipc/IndexedDBChild.h"
 

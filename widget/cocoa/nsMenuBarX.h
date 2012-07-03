@@ -19,7 +19,6 @@ class nsMenuX;
 class nsMenuItemX;
 class nsIWidget;
 class nsIContent;
-class nsIDocument;
 
 // The native menu service for creating native menu bars.
 class nsNativeMenuServiceX : public nsINativeMenuService

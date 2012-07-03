@@ -3978,7 +3978,12 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
     VERIFY_STYLE_TREE;
   }
 
-  ScheduleViewManagerFlush();
+  if (aStateMask.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+    nsIFrame* root = mFrameConstructor->GetRootFrame();
+    if (root) {
+      root->InvalidateFrameSubtree();
+    }
+  }
 }
 
 void

@@ -6,7 +6,6 @@
 #ifndef __txCore_h__
 #define __txCore_h__
 
-#include "nsContentUtils.h"
 #include "nscore.h"
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"

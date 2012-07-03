@@ -23,7 +23,6 @@
 #include "nsEventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIDocument.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsISliderListener.h"
 #include "nsIScrollbarMediator.h"

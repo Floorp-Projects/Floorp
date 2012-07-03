@@ -6,8 +6,6 @@
 #include "nsCOMPtr.h"
 #include "nsWindowRoot.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMDocument.h"
-#include "nsIDocument.h"
 #include "nsEventListenerManager.h"
 #include "nsPresContext.h"
 #include "nsLayoutCID.h"

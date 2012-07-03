@@ -17,7 +17,6 @@
 #include "nsPresContext.h"
 #include "nsRuleData.h"
 #include "nsRuleWalker.h"
-#include "nsIDocument.h"
 #include "celldata.h"
 
 using namespace mozilla;

@@ -21,7 +21,6 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsStyleConsts.h"
 #include "nsIComponentManager.h"
-#include "nsIDocument.h"
 #include "nsButtonFrameRenderer.h"
 #include "nsFormControlFrame.h"
 #include "nsFrameManager.h"

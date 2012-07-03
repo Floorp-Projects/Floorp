@@ -21,6 +21,8 @@
 #include "nsPoint.h"
 #include "nsTArray.h"
 
+class nsRange;
+
 /**
  * Core utils.
  */
@@ -129,31 +131,21 @@ public:
    * nsIAccessibleText::scrollSubstringTo().
    *
    * @param aFrame        the frame for accessible the range belongs to.
-   * @param aStartNode    start node of a range
-   * @param aStartOffset  an offset inside the start node
-   * @param aEndNode      end node of a range
-   * @param aEndOffset    an offset inside the end node
+   * @param aRange    the range to scroll to
    * @param aScrollType   the place a range should be scrolled to
    */
-  static nsresult ScrollSubstringTo(nsIFrame *aFrame,
-                                    nsIDOMNode *aStartNode, PRInt32 aStartIndex,
-                                    nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+  static nsresult ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
                                     PRUint32 aScrollType);
 
   /** Helper method to scroll range into view, used for implementation of
    * nsIAccessibleText::scrollSubstringTo[Point]().
    *
    * @param aFrame        the frame for accessible the range belongs to.
-   * @param aStartNode    start node of a range
-   * @param aStartOffset  an offset inside the start node
-   * @param aEndNode      end node of a range
-   * @param aEndOffset    an offset inside the end node
+   * @param aRange    the range to scroll to
    * @param aVertical     how to align vertically, specified in percents, and when.
    * @param aHorizontal     how to align horizontally, specified in percents, and when.
    */
-  static nsresult ScrollSubstringTo(nsIFrame *aFrame,
-                                    nsIDOMNode *aStartNode, PRInt32 aStartIndex,
-                                    nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+  static nsresult ScrollSubstringTo(nsIFrame* aFrame, nsRange* aRange,
                                     nsIPresShell::ScrollAxis aVertical,
                                     nsIPresShell::ScrollAxis aHorizontal);
 

@@ -21,7 +21,6 @@
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
 #include "nsCOMPtr.h"
-#include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsPIDOMWindow.h"
 

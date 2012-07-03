@@ -9,7 +9,6 @@
 #include "nsIURI.h"
 #include "nsIPrincipal.h"
 #include "nsIObserver.h"
-#include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsCSPService.h"
 #include "nsIContentSecurityPolicy.h"
@@ -58,6 +57,7 @@ CSPService::ShouldLoad(PRUint32 aContentType,
                        nsISupports *aRequestContext,
                        const nsACString &aMimeTypeGuess,
                        nsISupports *aExtra,
+                       nsIPrincipal *aRequestPrincipal,
                        PRInt16 *aDecision)
 {
     if (!aContentLocation)
@@ -124,6 +124,7 @@ CSPService::ShouldProcess(PRUint32         aContentType,
                           nsISupports      *aRequestContext,
                           const nsACString &aMimeTypeGuess,
                           nsISupports      *aExtra,
+                          nsIPrincipal     *aRequestPrincipal,
                           PRInt16          *aDecision)
 {
     if (!aContentLocation)

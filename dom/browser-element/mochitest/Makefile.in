@@ -28,6 +28,8 @@ _TEST_FILES = \
 		test_browserElement_inproc_LoadEvents.html \
 		browserElement_DataURI.js \
 		test_browserElement_inproc_DataURI.html \
+		browserElement_ErrorSecurity.js \
+		test_browserElement_inproc_ErrorSecurity.html \
 		browserElement_Titlechange.js \
 		test_browserElement_inproc_Titlechange.html \
 		browserElement_TopBarrier.js \
@@ -77,6 +79,7 @@ ifneq ($(OS_ARCH),WINNT)
 _TEST_FILES += \
 		test_browserElement_oop_LoadEvents.html \
 		test_browserElement_oop_DataURI.html \
+		test_browserElement_oop_ErrorSecurity.html \
 		test_browserElement_oop_Titlechange.html \
 		test_browserElement_oop_TopBarrier.html \
 		test_browserElement_oop_Iconchange.html \

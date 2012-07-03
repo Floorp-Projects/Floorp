@@ -263,7 +263,7 @@ public:
     return mFinalWidth;
   }
   
-  virtual void InvalidateFrame(PRUint32 aFlags = 0);
+  virtual void InvalidateFrame();
 
 protected:
 

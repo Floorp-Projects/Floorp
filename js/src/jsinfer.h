@@ -1266,28 +1266,4 @@ MOZ_NORETURN void TypeFailure(JSContext *cx, const char *fmt, ...);
 } /* namespace types */
 } /* namespace js */
 
-namespace JS {
-    template<> class AnchorPermitted<js::types::TypeObject *> { };
-
-template <> struct RootMethods<const js::types::Type>
-    {
-        static js::types::Type initial() { return js::types::Type::UnknownType(); }
-        static ThingRootKind kind() { return THING_ROOT_TYPE; }
-        static bool poisoned(const js::types::Type &v) {
-            return (v.isTypeObject() && IsPoisonedPtr(v.typeObject()))
-                || (v.isSingleObject() && IsPoisonedPtr(v.singleObject()));
-        }
-    };
-
-    template <> struct RootMethods<js::types::Type>
-    {
-        static js::types::Type initial() { return js::types::Type::UnknownType(); }
-        static ThingRootKind kind() { return THING_ROOT_TYPE; }
-        static bool poisoned(const js::types::Type &v) {
-            return (v.isTypeObject() && IsPoisonedPtr(v.typeObject()))
-                || (v.isSingleObject() && IsPoisonedPtr(v.singleObject()));
-        }
-    };
-}
-
 #endif // jsinfer_h___
