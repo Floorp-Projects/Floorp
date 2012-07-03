@@ -36,8 +36,8 @@
  * MarkString, etc. These functions check if an object is in the compartment
  * currently being GCed. If it is, they call PushMarkStack. Roots are pushed
  * this way as well as pointers traversed inside trace hooks (for things like
- * IteratorClass). It it always valid to call a MarkX function instead of
- * PushMarkStack, although it may be slower.
+ * PropertyIteratorObjects). It is always valid to call a MarkX function
+ * instead of PushMarkStack, although it may be slower.
  *
  * The MarkX functions also handle non-GC object traversal. In this case, they
  * call a callback for each object visited. This is a recursive process; the
