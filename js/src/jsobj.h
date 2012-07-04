@@ -210,7 +210,6 @@ extern Class ErrorClass;
 extern Class ElementIteratorClass;
 extern Class GeneratorClass;
 extern Class JSONClass;
-extern Class MapIteratorClass;
 extern Class MathClass;
 extern Class NumberClass;
 extern Class NormalArgumentsObjectClass;
@@ -218,7 +217,6 @@ extern Class ObjectClass;
 extern Class ProxyClass;
 extern Class RegExpClass;
 extern Class RegExpStaticsClass;
-extern Class SetIteratorClass;
 extern Class SlowArrayClass;
 extern Class StopIterationClass;
 extern Class StringClass;
@@ -237,14 +235,12 @@ class DebugScopeObject;
 class DeclEnvObject;
 class ElementIteratorObject;
 class GlobalObject;
-class MapIteratorObject;
 class NestedScopeObject;
 class NewObjectCache;
 class NormalArgumentsObject;
 class NumberObject;
 class PropertyIteratorObject;
 class ScopeObject;
-class SetIteratorObject;
 class StaticBlockObject;
 class StrictArgumentsObject;
 class StringObject;
@@ -553,6 +549,7 @@ struct JSObject : public js::ObjectImpl
     bool growElements(JSContext *cx, unsigned cap);
     void shrinkElements(JSContext *cx, unsigned cap);
 
+    inline js::ElementIteratorObject *asElementIterator();
 
     /*
      * Array-specific getters and setters (for both dense and slow arrays).
@@ -901,7 +898,6 @@ struct JSObject : public js::ObjectImpl
     inline bool isFunction() const;
     inline bool isGenerator() const;
     inline bool isGlobal() const;
-    inline bool isMapIterator() const;
     inline bool isObject() const;
     inline bool isPrimitive() const;
     inline bool isPropertyIterator() const;
@@ -910,7 +906,6 @@ struct JSObject : public js::ObjectImpl
     inline bool isRegExpStatics() const;
     inline bool isScope() const;
     inline bool isScript() const;
-    inline bool isSetIterator() const;
     inline bool isStopIteration() const;
     inline bool isTypedArray() const;
     inline bool isWeakMap() const;
@@ -956,14 +951,12 @@ struct JSObject : public js::ObjectImpl
     inline js::DeclEnvObject &asDeclEnv();
     inline js::DebugScopeObject &asDebugScope();
     inline js::GlobalObject &asGlobal();
-    inline js::MapIteratorObject &asMapIterator();
     inline js::NestedScopeObject &asNestedScope();
     inline js::NormalArgumentsObject &asNormalArguments();
     inline js::NumberObject &asNumber();
     inline js::PropertyIteratorObject &asPropertyIterator();
     inline js::RegExpObject &asRegExp();
     inline js::ScopeObject &asScope();
-    inline js::SetIteratorObject &asSetIterator();
     inline js::StrictArgumentsObject &asStrictArguments();
     inline js::StaticBlockObject &asStaticBlock();
     inline js::StringObject &asString();
