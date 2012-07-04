@@ -1343,19 +1343,6 @@ ion::Invalidate(FreeOp *fop, const Vector<types::RecompileInfo> &invalid, bool r
     }
 }
 
-bool
-ion::Invalidate(JSContext *cx, JSScript *script, bool resetUses)
-{
-    JS_ASSERT(script->hasIonScript());
-
-    Vector<types::RecompileInfo> scripts(cx);
-    if (!scripts.append(types::RecompileInfo(script)))
-        return false;
-
-    Invalidate(cx->runtime->defaultFreeOp(), scripts, resetUses);
-    return true;
-}
-
 void
 ion::FinishInvalidation(FreeOp *fop, JSScript *script)
 {

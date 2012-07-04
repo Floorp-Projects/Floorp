@@ -220,12 +220,6 @@ class IonCache
     bool idempotent() {
         return idempotent_;
     }
-    void setIdempotent() {
-        JS_ASSERT(!idempotent_);
-        JS_ASSERT(!script);
-        JS_ASSERT(!pc);
-        idempotent_ = true;
-    }
 
     void updateLastJump(CodeLocationJump jump) {
         lastJump_ = jump;
@@ -262,7 +256,6 @@ class IonCache
     }
 
     void setScriptedLocation(JSScript *script, jsbytecode *pc) {
-        JS_ASSERT(!idempotent_);
         this->script = script;
         this->pc = pc;
     }
