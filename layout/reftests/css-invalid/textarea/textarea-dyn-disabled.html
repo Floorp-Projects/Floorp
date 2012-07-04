@@ -4,16 +4,15 @@
              validation and should not be affected by :invalid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <script>
-    function doTest()
+    function onLoadHandler()
     {
       var e = document.getElementById('t');
       e.setCustomValidity('foo');
       e.disabled = 'true';
       document.documentElement.className='';
     }
-    document.addEventListener("MozReftestInvalidate", doTest, false);
   </script>
-  <body>
+  <body onload="onLoadHandler();">
     <textarea class='notinvalid' id='t'></textarea>
   </body>
 </html>
