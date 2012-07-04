@@ -301,11 +301,6 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
                             bool aWillSendDidPaint)
 {
   NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
-  aView->SetPendingRefresh(false);
-  if (aView->SkippedPaints()) {
-    RootViewManager()->GetPresShell()->ScheduleViewManagerFlush(true);
-    aView->ClearSkippedPaints();
-  }
 
   // damageRegion is the damaged area, in twips, relative to the view origin
   nsRegion damageRegion = aRegion.ToAppUnits(AppUnitsPerDevPixel());
@@ -357,14 +352,14 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion,
   }
 }
 
-bool nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
+void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
                                                  bool aFlushDirtyRegion)
 {
   NS_ASSERTION(IsRootVM(), "Updates will be missed");
 
   // Protect against a null-view.
   if (!aView) {
-    return false;
+    return;
   }
 
   if (aView->HasWidget()) {
@@ -372,10 +367,9 @@ bool nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   }
 
   // process pending updates in child view.
-  bool skipped = false;
   for (nsView* childView = aView->GetFirstChild(); childView;
        childView = childView->GetNextSibling()) {
-    skipped |= ProcessPendingUpdatesForView(childView, aFlushDirtyRegion);
+    ProcessPendingUpdatesForView(childView, aFlushDirtyRegion);
   }
 
   // Push out updates after we've processed the children; ensures that
@@ -383,28 +377,18 @@ bool nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   if (aFlushDirtyRegion) {
     nsIWidget *widget = aView->GetWidget();
     if (widget && widget->NeedsPaint()) {
-      if (aView->PendingRefresh() && aView->SkippedPaints() < 5) {
-        aView->SkippedPaint();
-        skipped = true;
-      } else {
-        aView->ClearSkippedPaints();
-        aView->SetPendingRefresh(false);
-        widget->SetNeedsPaint(false);
-        SetPainting(true);
+      widget->SetNeedsPaint(false);
 #ifdef DEBUG_INVALIDATIONS
-        printf("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
+      printf("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
 #endif
-        nsAutoScriptBlocker scriptBlocker;
-        mPresShell->Paint(aView, nsRegion(), nsIPresShell::PaintType_NoComposite, false);
+      nsAutoScriptBlocker scriptBlocker;
+      mPresShell->Paint(aView, nsRegion(), nsIPresShell::PaintType_NoComposite, false);
 #ifdef DEBUG_INVALIDATIONS
-        printf("---- PAINT END ----\n");
+      printf("---- PAINT END ----\n");
 #endif
-        SetPainting(false);
-      }
     }
     FlushDirtyRegionToWidget(aView);
   }
-  return skipped;
 }
 
 void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
@@ -447,7 +431,7 @@ nsViewManager::PostPendingUpdate()
 {
   nsViewManager* rootVM = RootViewManager();
   rootVM->mHasPendingWidgetGeometryChanges = true;
-  if (rootVM->mPresShell && !rootVM->IsPainting()) {
+  if (rootVM->mPresShell) {
     rootVM->mPresShell->ScheduleViewManagerFlush(nsIFrame::PAINT_COMPOSITE_ONLY);
   }
 }
@@ -530,7 +514,6 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
   leftOver.Sub(aDamagedRegion, children);
 
   if (!leftOver.IsEmpty()) {
-    aWidgetView->SetPendingRefresh(true);
     const nsRect* r;
     for (nsRegionRectIterator iter(leftOver); (r = iter.Next());) {
       nsIntRect bounds = ViewToWidget(aWidgetView, *r);
@@ -1317,15 +1300,16 @@ nsViewManager::IsPainting(bool& aIsPainting)
   return NS_OK;
 }
 
-bool
+void
 nsViewManager::ProcessPendingUpdates()
 {
   if (!IsRootVM()) {
-    return RootViewManager()->ProcessPendingUpdates();
+    RootViewManager()->ProcessPendingUpdates();
+    return;
   }
 
   mPresShell->GetPresContext()->RefreshDriver()->RevokeViewManagerFlush();
-  return ProcessPendingUpdatesForView(mRootView, true);
+  ProcessPendingUpdatesForView(mRootView, true);
 }
 
 void
