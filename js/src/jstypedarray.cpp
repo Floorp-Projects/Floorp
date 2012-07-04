@@ -1521,7 +1521,7 @@ class TypedArrayTemplate
         RootedId id(cx, NameToId(name));
         unsigned flags = JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED | JSPROP_GETTER;
 
-        Rooted<GlobalObject*> global(cx, &cx->compartment->global());
+        Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
         JSObject *getter = js_NewFunction(cx, NULL, Getter<ValueGetter>, 0, 0, global, NULL);
         if (!getter)
             return false;
@@ -3008,7 +3008,7 @@ template<class ArrayType>
 static inline JSObject *
 InitTypedArrayClass(JSContext *cx)
 {
-    Rooted<GlobalObject*> global(cx, &cx->compartment->global());
+    Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
     RootedObject proto(cx, global->createBlankPrototype(cx, ArrayType::protoClass()));
     if (!proto)
         return NULL;
@@ -3085,7 +3085,7 @@ Class TypedArray::protoClasses[TYPE_MAX] = {
 static JSObject *
 InitArrayBufferClass(JSContext *cx)
 {
-    Rooted<GlobalObject*> global(cx, &cx->compartment->global());
+    Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
     RootedObject arrayBufferProto(cx, global->createBlankPrototype(cx, &ArrayBufferObject::protoClass));
     if (!arrayBufferProto)
         return NULL;
@@ -3198,7 +3198,7 @@ DefineDataViewGetter(JSContext *cx, PropertyName *name, HandleObject proto)
     RootedId id(cx, NameToId(name));
     unsigned flags = JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED | JSPROP_GETTER;
 
-    Rooted<GlobalObject*> global(cx, &cx->compartment->global());
+    Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
     JSObject *getter = js_NewFunction(cx, NULL, DataViewGetter<ValueGetter>, 0, 0, global, NULL);
     if (!getter)
         return false;
@@ -3211,7 +3211,7 @@ DefineDataViewGetter(JSContext *cx, PropertyName *name, HandleObject proto)
 JSObject *
 DataViewObject::initClass(JSContext *cx)
 {
-    Rooted<GlobalObject*> global(cx, &cx->compartment->global());
+    Rooted<GlobalObject*> global(cx, cx->compartment->maybeGlobal());
     RootedObject proto(cx, global->createBlankPrototype(cx, &DataViewObject::protoClass));
     if (!proto)
         return NULL;
