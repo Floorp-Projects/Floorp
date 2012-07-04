@@ -17,7 +17,6 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsRenderingContext.h"
 #include "nsStubMutationObserver.h"
-#include "nsSVGForeignObjectFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextFrame.h"
@@ -79,33 +78,6 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument* aDocument,
 
 //----------------------------------------------------------------------
 // Implementation helpers
-
-void
-nsSVGOuterSVGFrame::RegisterForeignObject(nsSVGForeignObjectFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-
-  if (!mForeignObjectHash.IsInitialized()) {
-    mForeignObjectHash.Init();
-  }
-
-  NS_ASSERTION(!mForeignObjectHash.GetEntry(aFrame),
-               "nsSVGForeignObjectFrame already registered!");
-
-  mForeignObjectHash.PutEntry(aFrame);
-
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
-               "Failed to register nsSVGForeignObjectFrame!");
-}
-
-void
-nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
-               "nsSVGForeignObjectFrame not in registry!");
-  return mForeignObjectHash.RemoveEntry(aFrame);
-}
 
 void
 nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
