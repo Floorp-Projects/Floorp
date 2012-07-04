@@ -63,6 +63,8 @@ _TEST_FILES = \
   test_lookupGetter.html \
   test_InstanceOf.html \
   test_traceProtos.html \
+  test_forOf.html \
+  forOf_iframe.html \
   $(NULL)
 
 

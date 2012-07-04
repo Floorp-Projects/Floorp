@@ -1,11 +1,16 @@
-let modules = {};
-Cu.import("resource://gre/modules/FrameWorker.jsm", modules);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function makeWorkerUrl(runner) {
   return "data:application/javascript," + encodeURI("let run=" + runner.toSource()) + ";run();"
 }
 
+var getFrameWorkerHandle;
 function test() {
+  let scope = {};
+  Cu.import("resource://gre/modules/FrameWorker.jsm", scope);
+  getFrameWorkerHandle = scope.getFrameWorkerHandle;
   runTests(tests);
 }
 
@@ -22,7 +27,7 @@ let tests = {
       }
     }
 
-    let worker = modules.FrameWorker(makeWorkerUrl(run), undefined, "testSimple");
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testSimple");
     isnot(worker._worker.frame.contentWindow.toString(), "[object ChromeWindow]", "worker window isn't a chrome window");
 
     worker.port.onmessage = function(e) {
@@ -43,7 +48,7 @@ let tests = {
       }
     }
 
-    let worker = modules.FrameWorker(makeWorkerUrl(run), undefined, "testEarlyClose");
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testEarlyClose");
     worker.port.close();
     worker.terminate();
     cbnext();
@@ -72,8 +77,8 @@ let tests = {
       }
     }
     let workerurl = makeWorkerUrl(run);
-    let worker1 = modules.FrameWorker(workerurl, undefined, "testPortClosingMessage worker1");
-    let worker2 = modules.FrameWorker(workerurl, undefined, "testPortClosingMessage worker2");
+    let worker1 = getFrameWorkerHandle(workerurl, undefined, "testPortClosingMessage worker1");
+    let worker2 = getFrameWorkerHandle(workerurl, undefined, "testPortClosingMessage worker2");
     worker2.port.onmessage = function(e) {
       if (e.data.topic == "connected") {
         // both ports connected, so close the first.
@@ -114,7 +119,7 @@ let tests = {
         }
       }
     }
-    let worker = modules.FrameWorker(makeWorkerUrl(run), fakeWindow, "testPrototypes");
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), fakeWindow, "testPrototypes");
     worker.port.onmessage = function(e) {
       if (e.data.topic == "hello" && e.data.data.somextrafunction) {
         worker.terminate();
@@ -151,7 +156,7 @@ let tests = {
         }
       }
     }
-    let worker = modules.FrameWorker(makeWorkerUrl(run), undefined, "testArray");
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testArray");
     worker.port.onmessage = function(e) {
       if (e.data.topic == "result") {
         is(e.data.reason, "ok", "check the array worked");
@@ -188,7 +193,7 @@ let tests = {
         }
       }
     }
-    let worker = modules.FrameWorker(makeWorkerUrl(run), undefined, "testArray");
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testArray");
     worker.port.onmessage = function(e) {
       if (e.data.topic == "result") {
         is(e.data.reason, "ok", "check the array worked");
@@ -202,7 +207,7 @@ let tests = {
   testXHR: function(cbnext) {
     // NOTE: this url MUST be in the same origin as worker_xhr.js fetches from!
     let url = "https://example.com/browser/toolkit/components/social/test/browser/worker_xhr.js";
-    let worker = modules.FrameWorker(url, undefined, "testXHR");
+    let worker = getFrameWorkerHandle(url, undefined, "testXHR");
     worker.port.onmessage = function(e) {
       if (e.data.topic == "done") {
         is(e.data.result, "ok", "check the xhr test worked");
@@ -213,12 +218,144 @@ let tests = {
   },
 
   testLocalStorage: function(cbnext) {
-    // NOTE: this url MUST be in the same origin as worker_xhr.js fetches from!
-    let url = "https://example.com/browser/toolkit/components/social/test/browser/worker_localStorage.js";
-    let worker = modules.FrameWorker(url, undefined, "testLocalStorage");
+    let run = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+        try {
+          localStorage.setItem("foo", "1");
+        } catch(e) {
+          port.postMessage({topic: "done", result: "FAILED to set localStorage, " + e.toString() });
+          return;
+        }
+
+        var ok;
+        try {
+          ok = localStorage["foo"] == 1;
+        } catch (e) {
+          port.postMessage({topic: "done", result: "FAILED to read localStorage, " + e.toString() });
+          return;
+        }
+        port.postMessage({topic: "done", result: "ok"});
+      }
+    }
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testLocalStorage");
     worker.port.onmessage = function(e) {
       if (e.data.topic == "done") {
         is(e.data.result, "ok", "check the localStorage test worked");
+        worker.terminate();
+        cbnext();
+      }
+    }
+  },
+
+  testBase64: function (cbnext) {
+    let run = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+        var ok = false;
+        try {
+          ok = btoa("1234") == "MTIzNA==";
+        } catch(e) {
+          port.postMessage({topic: "done", result: "FAILED to call btoa, " + e.toString() });
+          return;
+        }
+        if (!ok) {
+          port.postMessage({topic: "done", result: "FAILED calling btoa"});
+          return;
+        }
+
+        try {
+          ok = atob("NDMyMQ==") == "4321";
+        } catch (e) {
+          port.postMessage({topic: "done", result: "FAILED to call atob, " + e.toString() });
+          return;
+        }
+        if (!ok) {
+          port.postMessage({topic: "done", result: "FAILED calling atob"});
+          return;
+        }
+
+        port.postMessage({topic: "done", result: "ok"});
+      }
+    }
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testBase64");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "done") {
+        is(e.data.result, "ok", "check the atob/btoa test worked");
+        worker.terminate();
+        cbnext();
+      }
+    }
+  },
+
+  testTimeouts: function (cbnext) {
+    let run = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+
+        var timeout;
+        try {
+          timeout = setTimeout(function () {
+            port.postMessage({topic: "done", result: "FAILED cancelled timeout was called"});
+          }, 100);
+        } catch (ex) {
+          port.postMessage({topic: "done", result: "FAILED calling setTimeout: " + ex});
+          return;
+        }
+
+        try {
+          clearTimeout(timeout);
+        } catch (ex) {
+          port.postMessage({topic: "done", result: "FAILED calling clearTimeout: " + ex});
+          return;
+        }
+
+        var counter = 0;
+        try {
+          timeout = setInterval(function () {
+            if (++counter == 2) {
+              clearInterval(timeout);
+              setTimeout(function () {
+                port.postMessage({topic: "done", result: "ok"});
+                return;
+              }, 0);
+            }
+          }, 100);
+        } catch (ex) {
+          port.postMessage({topic: "done", result: "FAILED calling setInterval: " + ex});
+          return;
+        }
+      }
+    }
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testTimeouts");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "done") {
+        is(e.data.result, "ok", "check that timeouts worked");
+        worker.terminate();
+        cbnext();
+      }
+    }
+  },
+
+  testWebSocket: function (cbnext) {
+    let run = function() {
+      onconnect = function(e) {
+        let port = e.ports[0];
+
+        try {
+          var exampleSocket = new WebSocket("ws://www.example.com/socketserver");
+        } catch (e) {
+          port.postMessage({topic: "done", result: "FAILED calling WebSocket constructor: " + e});
+          return;
+        }
+
+        port.postMessage({topic: "done", result: "ok"});
+      }
+    }
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testWebSocket");
+    worker.port.onmessage = function(e) {
+      if (e.data.topic == "done") {
+        is(e.data.result, "ok", "check that websockets worked");
         worker.terminate();
         cbnext();
       }
@@ -243,7 +380,7 @@ let tests = {
       }
     }
 
-    let worker = modules.FrameWorker(makeWorkerUrl(run), undefined, "testSameOriginImport");
+    let worker = getFrameWorkerHandle(makeWorkerUrl(run), undefined, "testSameOriginImport");
     worker.port.onmessage = function(e) {
       if (e.data.topic == "pong") {
         isnot(e.data.data, null, "check same-origin applied to importScripts");
@@ -257,7 +394,7 @@ let tests = {
 
   testRelativeImport: function(cbnext) {
     let url = "https://example.com/browser/toolkit/components/social/test/browser/worker_relative.js";
-    let worker = modules.FrameWorker(url, undefined, "testSameOriginImport");
+    let worker = getFrameWorkerHandle(url, undefined, "testSameOriginImport");
     worker.port.onmessage = function(e) {
       if (e.data.topic == "done") {
         is(e.data.result, "ok", "check relative url in importScripts");
