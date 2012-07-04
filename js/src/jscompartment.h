@@ -160,7 +160,7 @@ struct JSCompartment
   public:
     bool isCollecting() const {
         /* Allow this if we're in the middle of an incremental GC. */
-        if (rt->gcRunning) {
+        if (rt->isHeapBusy()) {
             return gcState == GCRunning;
         } else {
             JS_ASSERT(gcState != GCRunning);
@@ -181,7 +181,7 @@ struct JSCompartment
     }
 
     void setCollecting(bool collecting) {
-        JS_ASSERT(rt->gcRunning);
+        JS_ASSERT(rt->isHeapBusy());
         if (collecting)
             gcState = GCRunning;
         else
@@ -189,13 +189,13 @@ struct JSCompartment
     }
 
     void scheduleGC() {
-        JS_ASSERT(!rt->gcRunning);
+        JS_ASSERT(!rt->isHeapBusy());
         JS_ASSERT(gcState != GCRunning);
         gcState = GCScheduled;
     }
 
     void unscheduleGC() {
-        JS_ASSERT(!rt->gcRunning);
+        JS_ASSERT(!rt->isHeapBusy());
         JS_ASSERT(gcState != GCRunning);
         gcState = NoGCScheduled;
     }
@@ -414,7 +414,7 @@ class js::AutoDebugModeGC
     }
 
     void scheduleGC(JSCompartment *compartment) {
-        JS_ASSERT(!rt->gcRunning);
+        JS_ASSERT(!rt->isHeapBusy());
         PrepareCompartmentForGC(compartment);
         needGC = true;
     }

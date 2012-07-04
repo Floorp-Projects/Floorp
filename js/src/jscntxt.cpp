@@ -291,7 +291,7 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
     JS_REMOVE_LINK(&cx->link);
     bool last = !rt->hasContexts();
     if (last) {
-        JS_ASSERT(!rt->gcRunning);
+        JS_ASSERT(!rt->isHeapBusy());
 
         /*
          * Dump remaining type inference results first. This printing
@@ -311,7 +311,7 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         PrepareForFullGC(rt);
         GC(rt, GC_NORMAL, gcreason::LAST_CONTEXT);
     } else if (mode == DCM_FORCE_GC) {
-        JS_ASSERT(!rt->gcRunning);
+        JS_ASSERT(!rt->isHeapBusy());
         PrepareForFullGC(rt);
         GC(rt, GC_NORMAL, gcreason::DESTROY_CONTEXT);
     }
@@ -1166,7 +1166,7 @@ JSRuntime::onTooMuchMalloc()
 JS_FRIEND_API(void *)
 JSRuntime::onOutOfMemory(void *p, size_t nbytes, JSContext *cx)
 {
-    if (gcRunning)
+    if (isHeapBusy())
         return NULL;
 
     /*
@@ -1313,7 +1313,7 @@ namespace JS {
 AutoCheckRequestDepth::AutoCheckRequestDepth(JSContext *cx)
     : cx(cx)
 {
-    JS_ASSERT(cx->runtime->requestDepth || cx->runtime->gcRunning);
+    JS_ASSERT(cx->runtime->requestDepth || cx->runtime->isHeapBusy());
     JS_ASSERT(cx->runtime->onOwnerThread());
     cx->runtime->checkRequestDepth++;
 }
