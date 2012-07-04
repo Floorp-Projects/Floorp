@@ -27,6 +27,9 @@ namespace js {
  */
 class ArrayBufferObject : public JSObject
 {
+    static bool byteLengthGetterImpl(JSContext *cx, CallArgs args);
+    static bool fun_slice_impl(JSContext *cx, CallArgs args);
+
   public:
     static Class protoClass;
     static JSFunctionSpec jsfuncs[];
@@ -41,6 +44,17 @@ class ArrayBufferObject : public JSObject
 
     static JSObject *createSlice(JSContext *cx, ArrayBufferObject &arrayBuffer,
                                  uint32_t begin, uint32_t end);
+
+    static bool createDataViewForThisImpl(JSContext *cx, CallArgs args);
+    static JSBool createDataViewForThis(JSContext *cx, unsigned argc, Value *vp);
+
+    template<typename T>
+    static bool
+    createTypedArrayFromBufferImpl(JSContext *cx, CallArgs args);
+
+    template<typename T>
+    static JSBool
+    createTypedArrayFromBuffer(JSContext *cx, unsigned argc, Value *vp);
 
     static void
     obj_trace(JSTracer *trc, JSObject *obj);
@@ -140,6 +154,7 @@ class ArrayBufferObject : public JSObject
      * ArrayBuffer.prototype and neutered ArrayBuffers.
      */
     inline bool hasData() const;
+
 };
 
 /*
@@ -271,6 +286,20 @@ class DataViewObject : public JSObject
     static const size_t BYTELENGTH_SLOT = 1;
     static const size_t BUFFER_SLOT     = 2;
 
+    static inline bool is(const Value &v);
+
+    template<Value ValueGetter(DataViewObject &view)>
+    static bool
+    getterImpl(JSContext *cx, CallArgs args);
+
+    template<Value ValueGetter(DataViewObject &view)>
+    static JSBool
+    getter(JSContext *cx, unsigned argc, Value *vp);
+
+    template<Value ValueGetter(DataViewObject &view)>
+    static bool
+    defineGetter(JSContext *cx, PropertyName *name, HandleObject proto);
+
   public:
     static const size_t RESERVED_SLOTS  = 3;
 
@@ -286,22 +315,54 @@ class DataViewObject : public JSObject
     create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
            Handle<ArrayBufferObject*> arrayBuffer, JSObject *proto);
 
+    static bool getInt8Impl(JSContext *cx, CallArgs args);
     static JSBool fun_getInt8(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool getUint8Impl(JSContext *cx, CallArgs args);
     static JSBool fun_getUint8(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool getInt16Impl(JSContext *cx, CallArgs args);
     static JSBool fun_getInt16(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool getUint16Impl(JSContext *cx, CallArgs args);
     static JSBool fun_getUint16(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool getInt32Impl(JSContext *cx, CallArgs args);
     static JSBool fun_getInt32(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool getUint32Impl(JSContext *cx, CallArgs args);
     static JSBool fun_getUint32(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool getFloat32Impl(JSContext *cx, CallArgs args);
     static JSBool fun_getFloat32(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool getFloat64Impl(JSContext *cx, CallArgs args);
     static JSBool fun_getFloat64(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool setInt8Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setInt8(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool setUint8Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setUint8(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool setInt16Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setInt16(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool setUint16Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setUint16(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool setInt32Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setInt32(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool setUint32Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setUint32(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool setFloat32Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setFloat32(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool setFloat64Impl(JSContext *cx, CallArgs args);
     static JSBool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
+
     inline uint32_t byteLength();
     inline uint32_t byteOffset();
     inline JSObject & arrayBuffer();

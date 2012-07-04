@@ -315,11 +315,13 @@ GlobalObject::clear(JSContext *cx)
     setSlot(RUNTIME_CODEGEN_ENABLED, UndefinedValue());
 
     /*
-     * Clear the original-eval and [[ThrowTypeError]] slots, in case throwing
-     * trying to execute a script for this global must reinitialize standard
-     * classes.  See bug 470150.
+     * Clear all slots storing function values, in case throwing trying to
+     * execute a script for this global must reinitialize standard classes.
+     * See bug 470150.
      */
+    setSlot(BOOLEAN_VALUEOF, UndefinedValue());
     setSlot(EVAL, UndefinedValue());
+    setSlot(CREATE_DATAVIEW_FOR_THIS, UndefinedValue());
     setSlot(THROWTYPEERROR, UndefinedValue());
 
     /*
