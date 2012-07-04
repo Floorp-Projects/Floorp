@@ -190,29 +190,35 @@ void
 TestScaling::HorizontalHalfScale()
 {
   std::vector<uint8_t> data;
-  data.resize(500 * 500 * 4);
+  data.resize(520 * 500 * 4);
 
   uint32_t *pixels = (uint32_t*)data.data();
-  for (int y = 0; y < 500; y += 2) {
-    for (int x = 0; x < 500; x += 2) {
-      pixels[y * 500 + x] = 0xff00ff00;
-      pixels[y * 500 + x + 1] = 0xff00ffff;
-      pixels[(y + 1) * 500 + x] = 0xff000000;
-      pixels[(y + 1) * 500 + x + 1] = 0xff0000ff;
+  for (int y = 0; y < 500; y ++) {
+    for (int x = 0; x < 520; x += 8) {
+      pixels[y * 520 + x] = 0xff00ff00;
+      pixels[y * 520 + x + 1] = 0xff00ffff;
+      pixels[y * 520 + x + 2] = 0xff000000;
+      pixels[y * 520 + x + 3] = 0xff0000ff;
+      pixels[y * 520 + x + 4] = 0xffff00ff;
+      pixels[y * 520 + x + 5] = 0xff0000ff;
+      pixels[y * 520 + x + 6] = 0xffffffff;
+      pixels[y * 520 + x + 7] = 0xff0000ff;
     }
   }
-  ImageHalfScaler scaler(data.data(), 500 * 4, IntSize(500, 500));
+  ImageHalfScaler scaler(data.data(), 520 * 4, IntSize(520, 500));
 
   scaler.ScaleForSize(IntSize(240, 400));
-  VERIFY(scaler.GetSize().width == 250);
+  VERIFY(scaler.GetSize().width == 260);
   VERIFY(scaler.GetSize().height == 500);
 
   pixels = (uint32_t*)scaler.GetScaledData();
 
-  for (int y = 0; y < 500; y += 2) {
-    for (int x = 0; x < 250; x++) {
+  for (int y = 0; y < 500; y++) {
+    for (int x = 0; x < 260; x += 4) {
       VERIFY(pixels[y * (scaler.GetStride() / 4) + x] == 0xff00ff7f);
-      VERIFY(pixels[(y + 1) * (scaler.GetStride() / 4) + x] == 0xff00007f);
+      VERIFY(pixels[y * (scaler.GetStride() / 4) + x + 1] == 0xff00007f);
+      VERIFY(pixels[y * (scaler.GetStride() / 4) + x + 2] == 0xff7f00ff);
+      VERIFY(pixels[y * (scaler.GetStride() / 4) + x + 3] == 0xff7f7fff);
     }
   }
 }
