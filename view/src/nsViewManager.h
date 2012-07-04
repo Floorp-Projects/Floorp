@@ -105,7 +105,7 @@ public:
   /* Update the cached RootViewManager pointer on this view manager. */
   void InvalidateHierarchy();
 
-  virtual bool ProcessPendingUpdates();
+  virtual void ProcessPendingUpdates();
   virtual void UpdateWidgetGeometry();
 
 protected:
@@ -114,10 +114,7 @@ protected:
 private:
 
   void FlushPendingInvalidates();
-  /* Returns true if we skipped painting a view and we should try
-   * again later.
-   */
-  bool ProcessPendingUpdatesForView(nsView *aView,
+  void ProcessPendingUpdatesForView(nsView *aView,
                                     bool aFlushDirtyRegion = true);
   void FlushDirtyRegionToWidget(nsView* aView);
   /**
