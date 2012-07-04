@@ -355,6 +355,10 @@ TelemetryPing.prototype = {
     if (this._addons)
       ret.addons = this._addons;
 
+    let flashVersion = this.getFlashVersion();
+    if (flashVersion)
+      ret.flashVersion = flashVersion;
+
     return ret;
   },
 
@@ -732,6 +736,18 @@ TelemetryPing.prototype = {
                                                    ostream);
                         });
     }
+  },
+
+  getFlashVersion: function getFlashVersion() {
+    let host = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
+    let tags = host.getPluginTags();
+    
+    for (let i = 0; i < tags.length; i++) {
+      if (tags[i].name == "Shockwave Flash")
+        return tags[i].version;
+    }
+    
+    return null;
   },
 
   /** 
