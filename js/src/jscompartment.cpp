@@ -491,6 +491,9 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         discardJitCode(fop);
     }
 
+    if (global_ && !IsObjectMarked(&global_))
+        global_ = NULL;
+
     /* JIT code can hold references on RegExpShared, so sweep regexps after clearing code. */
     regExps.sweep(rt);
 
