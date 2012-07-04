@@ -3834,19 +3834,12 @@ class MGetPropertyCache
     public SingleObjectPolicy
 {
     CompilerRootPropertyName name_;
-    bool idempotent_;
 
     MGetPropertyCache(MDefinition *obj, HandlePropertyName name)
       : MUnaryInstruction(obj),
-        name_(name),
-        idempotent_(false)
+        name_(name)
     {
         setResultType(MIRType_Value);
-
-        // The cache will invalidate if there are objects with e.g. lookup or
-        // resolve hooks on the proto chain. setGuard ensures this check is not
-        // eliminated.
-        setGuard();
     }
 
   public:
@@ -3862,31 +3855,7 @@ class MGetPropertyCache
     PropertyName *name() const {
         return name_;
     }
-    bool idempotent() const {
-        return idempotent_;
-    }
-    void setIdempotent() {
-        idempotent_ = true;
-        setMovable();
-    }
     TypePolicy *typePolicy() { return this; }
-
-    bool congruentTo(MDefinition * const &ins) const {
-        if (!idempotent_)
-            return false;
-        if (!ins->isGetPropertyCache())
-            return false;
-        if (name() != ins->toGetPropertyCache()->name())
-            return false;
-        return congruentIfOperandsEqual(ins);
-    }
-
-    AliasSet getAliasSet() const {
-        if (idempotent_)
-            return AliasSet::Load(AliasSet::ObjectFields | AliasSet::Slot);
-        return AliasSet::Store(AliasSet::Any);
-    }
-
 };
 
 class MGetElementCache

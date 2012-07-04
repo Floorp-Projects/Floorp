@@ -253,38 +253,6 @@ TypeInferenceOracle::propertyReadBarrier(JSScript *script, jsbytecode *pc)
 }
 
 bool
-TypeInferenceOracle::propertyReadIdempotent(JSScript *script, jsbytecode *pc, HandleId id)
-{
-    if (script->analysis()->getCode(pc).notIdempotent)
-        return false;
-
-    if (id.value() != MakeTypeId(cx, id.value()))
-        return false;
-
-    TypeSet *types = script->analysis()->poppedTypes(pc, 0);
-    if (!types || types->unknownObject())
-        return false;
-
-    for (unsigned i = 0; i < types->getObjectCount(); i++) {
-        if (types->getSingleObject(i))
-            return false;
-
-        if (TypeObject *obj = types->getTypeObject(i)) {
-            if (obj->unknownProperties())
-                return false;
-
-            // Check if the property has been reconfigured or is a getter.
-            TypeSet *propertyTypes = obj->getProperty(cx, id, false);
-            if (!propertyTypes || propertyTypes->isOwnProperty(cx, obj, true))
-                return false;
-        }
-    }
-
-    types->addFreeze(cx);
-    return true;
-}
-
-bool
 TypeInferenceOracle::elementReadIsDenseArray(JSScript *script, jsbytecode *pc)
 {
     // Check whether the object is a dense array and index is int32 or double.

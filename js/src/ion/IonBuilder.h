@@ -318,8 +318,6 @@ class IonBuilder : public MIRGenerator
 
     MDefinition *walkScopeChain(unsigned hops);
 
-    bool invalidatedIdempotentCache();
-
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
     bool jsop_bitop(JSOp op);

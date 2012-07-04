@@ -114,7 +114,6 @@ class Bytecode
     bool arrayWriteHole: 1;  /* SETELEM which has written to an array hole. */
     bool getStringElement:1; /* GETELEM which has accessed string properties. */
     bool accessGetter: 1;    /* Property read on a shape with a getter hook. */
-    bool notIdempotent: 1;   /* Don't use an idempotent cache for this property read. */
 
     /* Stack depth before this opcode. */
     uint32_t stackDepth;
