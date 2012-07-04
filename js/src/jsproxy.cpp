@@ -1477,18 +1477,11 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
         JSObject *referent = &GetProxyPrivate(obj).toObject();
         if (referent->compartment() != obj->compartment()) {
             /*
-             * Assert that this proxy is tracked in the wrapper map. Normally,
-             * the wrapped object will be the key in the wrapper map. However,
-             * sometimes when wrapping Location objects, the wrapped object is
-             * not the key. In that case, we unwrap to find the key.
+             * Assert that this proxy is tracked in the wrapper map. We maintain
+             * the invariant that the wrapped object is the key in the wrapper map.
              */
             Value key = ObjectValue(*referent);
             WrapperMap::Ptr p = obj->compartment()->crossCompartmentWrappers.lookup(key);
-            if (!p) {
-                key = ObjectValue(*UnwrapObject(referent));
-                p = obj->compartment()->crossCompartmentWrappers.lookup(key);
-                JS_ASSERT(p.found());
-            }
             JS_ASSERT(p->value.get() == ObjectValue(*obj));
         }
     }

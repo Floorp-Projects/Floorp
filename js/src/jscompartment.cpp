@@ -259,6 +259,10 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
     if (!wrapper)
         return false;
 
+    // We maintain the invariant that the key in the cross-compartment wrapper
+    // map is always directly wrapped by the value.
+    JS_ASSERT(Wrapper::wrappedObject(wrapper) == &key.reference().toObject());
+
     vp->setObject(*wrapper);
 
     if (wrapper->getProto() != proto && !SetProto(cx, wrapper, proto, false))
