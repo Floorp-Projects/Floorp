@@ -334,6 +334,50 @@ IsCrossCompartmentWrapper(const JSObject *obj);
 void
 NukeCrossCompartmentWrapper(JSObject *wrapper);
 
+bool
+RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget);
+
+bool
+RemapAllWrappersForObject(JSContext *cx, JSObject *oldTarget,
+                          JSObject *newTarget);
+
+// API to recompute all cross-compartment wrappers whose source and target
+// match the given filters.
+//
+// These filters are designed to be ephemeral stack classes, and thus don't
+// do any rooting or holding of their members.
+struct CompartmentFilter {
+    virtual bool match(JSCompartment *c) const = 0;
+};
+
+struct AllCompartments : public CompartmentFilter {
+    virtual bool match(JSCompartment *c) const { return true; };
+};
+
+struct ContentCompartmentsOnly : public CompartmentFilter {
+    virtual bool match(JSCompartment *c) const {
+        return !IsSystemCompartment(c);
+    };
+};
+
+struct SingleCompartment : public CompartmentFilter {
+    JSCompartment *ours;
+    SingleCompartment(JSCompartment *c) : ours(c) {};
+    virtual bool match(JSCompartment *c) const { return c == ours; };
+};
+
+struct CompartmentsWithPrincipals : public CompartmentFilter {
+    JSPrincipals *principals;
+    CompartmentsWithPrincipals(JSPrincipals *p) : principals(p) {};
+    virtual bool match(JSCompartment *c) const {
+        return JS_GetCompartmentPrincipals(c) == principals;
+    };
+};
+
+JS_FRIEND_API(bool)
+RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
+                  const CompartmentFilter &targetFilter);
+
 } /* namespace js */
 
 #endif
