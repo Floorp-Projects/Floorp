@@ -286,14 +286,8 @@ typedef PRUint64 nsFrameState;
 // cross-doc children.
 #define NS_FRAME_DESCENDANT_NEEDS_PAINT             NS_FRAME_STATE_BIT(46)
 
-// Frame has only descendant frames that needs painting - This includes
-// cross-doc children. This guarantees that all descendents have 
-// NS_FRAME_NEEDS_PAINT and NS_FRAME_ALL_DESCENDANTS_NEED_PAINT, or they 
-// have no display items.
-#define NS_FRAME_ALL_DESCENDANTS_NEED_PAINT         NS_FRAME_STATE_BIT(47)
-
 // Frame is a descendant of a popup
-#define NS_FRAME_IN_POPUP                           NS_FRAME_STATE_BIT(48)
+#define NS_FRAME_IN_POPUP                           NS_FRAME_STATE_BIT(47)
 
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
