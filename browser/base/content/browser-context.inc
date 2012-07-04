@@ -125,8 +125,8 @@
                 accesskey="&saveImageCmd.accesskey;"
                 oncommand="gContextMenu.saveMedia();"/>
       <menuitem id="context-sendimage"
-                label="&sendImageCmd.label;"
-                accesskey="&sendImageCmd.accesskey;"
+                label="&emailImageCmd.label;"
+                accesskey="&emailImageCmd.accesskey;"
                 oncommand="gContextMenu.sendMedia();"/>
       <menuitem id="context-setDesktopBackground"
                 label="&setDesktopBackgroundCmd.label;"
@@ -149,12 +149,12 @@
                 label="&videoSaveImage.label;"
                 oncommand="gContextMenu.saveVideoFrameAsImage();"/>
       <menuitem id="context-sendvideo"
-                label="&sendVideoCmd.label;"
-                accesskey="&sendVideoCmd.accesskey;"
+                label="&emailVideoCmd.label;"
+                accesskey="&emailVideoCmd.accesskey;"
                 oncommand="gContextMenu.sendMedia();"/>
       <menuitem id="context-sendaudio"
-                label="&sendAudioCmd.label;"
-                accesskey="&sendAudioCmd.accesskey;"
+                label="&emailAudioCmd.label;"
+                accesskey="&emailAudioCmd.accesskey;"
                 oncommand="gContextMenu.sendMedia();"/>
       <menuitem id="context-back"
                 label="&backCmd.label;"
