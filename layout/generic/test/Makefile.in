@@ -16,9 +16,6 @@ include $(topsrcdir)/config/rules.mk
 # run before test_plugin_clipping, which can steal focus for its window.
 _TEST_FILES = \
   bug344830_testembed.svg \
-  frame_selection_underline.xhtml \
-  frame_selection_underline-ref.xhtml \
-  frame_selection_underline.css \
   plugin_clipping_helper.xhtml \
   plugin_clipping_helper2.xhtml \
   plugin_clipping_helper_transformed.xhtml \
@@ -78,7 +75,6 @@ _TEST_FILES = \
   test_plugin_position.xhtml \
   test_selection_expanding.html \
   selection_expanding_xbl.xml \
-  test_selection_underline.html \
   file_BrokenImageReference.png \
   file_Dolske.png \
   file_IconTestServer.sjs \
@@ -105,6 +101,10 @@ _TEST_FILES = \
   $(NULL)
 
 _CHROME_FILES = \
+  frame_selection_underline.xhtml \
+  frame_selection_underline-ref.xhtml \
+  frame_selection_underline.css \
+  test_selection_underline.html \
   test_bug632379.xul \
   test_bug508115.xul \
   test_bug469613.xul \
