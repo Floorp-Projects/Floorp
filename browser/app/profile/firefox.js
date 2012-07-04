@@ -1073,6 +1073,11 @@ pref("devtools.ruleview.enabled", true);
 // Enable the Scratchpad tool.
 pref("devtools.scratchpad.enabled", true);
 
+// The maximum number of recently-opened files stored.
+// Setting this preference to 0 will not clear any recent files, but rather hide
+// the 'Open Recent'-menu.
+pref("devtools.scratchpad.recentFilesMax", 10);
+
 // Enable the Style Editor.
 pref("devtools.styleeditor.enabled", true);
 pref("devtools.styleeditor.transitions", true);
