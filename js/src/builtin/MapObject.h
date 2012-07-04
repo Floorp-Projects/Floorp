@@ -95,6 +95,7 @@ class MapObject : public JSObject {
     static JSBool has(JSContext *cx, unsigned argc, Value *vp);
     static JSBool set(JSContext *cx, unsigned argc, Value *vp);
     static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool iterator(JSContext *cx, unsigned argc, Value *vp);
 };
 
 class SetObject : public JSObject {
@@ -112,6 +113,7 @@ class SetObject : public JSObject {
     static JSBool has(JSContext *cx, unsigned argc, Value *vp);
     static JSBool add(JSContext *cx, unsigned argc, Value *vp);
     static JSBool delete_(JSContext *cx, unsigned argc, Value *vp);
+    static JSBool iterator(JSContext *cx, unsigned argc, Value *vp);
 };
 
 } /* namespace js */
