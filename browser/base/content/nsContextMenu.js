@@ -148,8 +148,9 @@ nsContextMenu.prototype = {
                        this.onTextInput);
     this.showItem("context-back", shouldShow);
     this.showItem("context-forward", shouldShow);
-    this.showItem("context-reload", shouldShow);
-    this.showItem("context-stop", shouldShow);
+    var shouldShowReload = XULBrowserWindow.stopCommand.getAttribute("disabled") == "true";
+    this.showItem("context-reload", shouldShow && shouldShowReload);
+    this.showItem("context-stop", shouldShow && !shouldShowReload);
     this.showItem("context-sep-stop", shouldShow);
 
     // XXX: Stop is determined in browser.js; the canStop broadcaster is broken
