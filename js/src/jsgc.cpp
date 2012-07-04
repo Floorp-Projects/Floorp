@@ -3028,7 +3028,7 @@ ShouldPreserveJITCode(JSCompartment *c, int64_t currentTime)
 }
 
 static void
-BeginMarkPhase(JSRuntime *rt)
+BeginMarkPhase(JSRuntime *rt, bool isIncremental)
 {
     int64_t currentTime = PRMJ_Now();
 
@@ -3045,7 +3045,7 @@ BeginMarkPhase(JSRuntime *rt)
     JS_ASSERT(IS_GC_MARKING_TRACER(&rt->gcMarker));
 
     /* For non-incremental GC the following sweep discards the jit code. */
-    if (rt->gcIncrementalState != NO_INCREMENTAL) {
+    if (isIncremental) {
         for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DISCARD_CODE);
             c->discardJitCode(rt->defaultFreeOp());
@@ -3127,7 +3127,7 @@ ValidateIncrementalMarking(JSRuntime *rt);
 #endif
 
 static void
-EndMarkPhase(JSRuntime *rt)
+EndMarkPhase(JSRuntime *rt, bool isIncremental)
 {
     {
         gcstats::AutoPhase ap1(rt->gcStats, gcstats::PHASE_MARK);
@@ -3138,7 +3138,7 @@ EndMarkPhase(JSRuntime *rt)
     JS_ASSERT(rt->gcMarker.isDrained());
 
 #ifdef DEBUG
-    if (rt->gcIncrementalState != NO_INCREMENTAL)
+    if (isIncremental)
         ValidateIncrementalMarking(rt);
 #endif
 
@@ -3214,7 +3214,7 @@ ValidateIncrementalMarking(JSRuntime *rt)
 
     /* Re-do all the marking, but non-incrementally. */
     js::gc::State state = rt->gcIncrementalState;
-    rt->gcIncrementalState = NO_INCREMENTAL;
+    rt->gcIncrementalState = MARK_ROOTS;
 
     /* As we're re-doing marking, we need to reset the weak map list. */
     WeakMapBase::resetWeakMapList(rt);
@@ -3228,6 +3228,7 @@ ValidateIncrementalMarking(JSRuntime *rt)
     MarkRuntime(gcmarker, true);
 
     SliceBudget budget;
+    rt->gcIncrementalState = MARK;
     rt->gcMarker.drainMarkStack(budget);
     MarkGrayAndWeak(rt);
 
@@ -3581,13 +3582,18 @@ IncrementalMarkSlice(JSRuntime *rt, int64_t budget, gcreason::Reason reason, boo
     }
 #endif
 
+    bool isIncremental = rt->gcIncrementalState != NO_INCREMENTAL ||
+                         budget != SliceBudget::Unlimited ||
+                         zeal == ZealIncrementalRootsThenFinish ||
+                         zeal == ZealIncrementalMarkAllThenFinish;
+
     if (rt->gcIncrementalState == NO_INCREMENTAL) {
         rt->gcIncrementalState = MARK_ROOTS;
         rt->gcLastMarkSlice = false;
     }
 
     if (rt->gcIncrementalState == MARK_ROOTS) {
-        BeginMarkPhase(rt);
+        BeginMarkPhase(rt, isIncremental);
         rt->gcIncrementalState = MARK;
 
         if (zeal == ZealIncrementalRootsThenFinish)
@@ -3625,7 +3631,7 @@ IncrementalMarkSlice(JSRuntime *rt, int64_t budget, gcreason::Reason reason, boo
             {
                 rt->gcLastMarkSlice = true;
             } else {
-                EndMarkPhase(rt);
+                EndMarkPhase(rt, isIncremental);
                 rt->gcIncrementalState = NO_INCREMENTAL;
                 *shouldSweep = true;
             }
