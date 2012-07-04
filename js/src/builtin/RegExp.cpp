@@ -11,7 +11,6 @@
 
 #include "builtin/RegExp.h"
 
-#include "vm/MethodGuard-inl.h"
 #include "vm/RegExpObject-inl.h"
 #include "vm/RegExpStatics-inl.h"
 
@@ -293,19 +292,25 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
     return true;
 }
 
+static bool
+IsRegExp(const Value &v)
+{
+    return v.isObject() && v.toObject().hasClass(&RegExpClass);
+}
+
+static bool
+regexp_compile_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsRegExp(args.thisv()));
+    RegExpObjectBuilder builder(cx, &args.thisv().toObject().asRegExp());
+    return CompileRegExpObject(cx, builder, args);
+}
+
 static JSBool
 regexp_compile(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, regexp_compile, &RegExpClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
-
-    RegExpObjectBuilder builder(cx, &thisObj->asRegExp());
-    return CompileRegExpObject(cx, builder, args);
+    return CallNonGenericMethod(cx, IsRegExp, regexp_compile_impl, args);
 }
 
 static JSBool
@@ -332,23 +337,24 @@ regexp_construct(JSContext *cx, unsigned argc, Value *vp)
     return CompileRegExpObject(cx, builder, args);
 }
 
+static bool
+regexp_toString_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsRegExp(args.thisv()));
+
+    JSString *str = args.thisv().toObject().asRegExp().toString(cx);
+    if (!str)
+        return false;
+
+    args.rval() = StringValue(str);
+    return true;
+}
+
 static JSBool
 regexp_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, regexp_toString, &RegExpClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
-
-    JSString *str = thisObj->asRegExp().toString(cx);
-    if (!str)
-        return false;
-
-    *vp = StringValue(str);
-    return true;
+    return CallNonGenericMethod(cx, IsRegExp, regexp_toString_impl, args);
 }
 
 static JSFunctionSpec regexp_methods[] = {
@@ -541,18 +547,10 @@ GetSharedForGreedyStar(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGu
  * |execType| to perform this optimization.
  */
 static bool
-ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
+ExecuteRegExp(JSContext *cx, RegExpExecType execType, CallArgs args)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    /* Step 1. */
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, native, &RegExpClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
-
-    Rooted<RegExpObject*> reobj(cx, &thisObj->asRegExp());
+    /* Step 1 was performed by CallNonGenericMethod. */
+    Rooted<RegExpObject*> reobj(cx, &args.thisv().toObject().asRegExp());
 
     RegExpGuard re;
     if (StartsWithGreedyStar(reobj->getSource())) {
@@ -598,7 +596,6 @@ ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
     }
 
     /* Steps 8-21. */
-    RegExpExecType execType = (native == regexp_test) ? RegExpTest : RegExpExec;
     size_t lastIndexInt(i);
     if (!ExecuteRegExp(cx, res, *re, linearInput, chars, length, &lastIndexInt, execType,
                        &args.rval())) {
@@ -617,19 +614,33 @@ ExecuteRegExp(JSContext *cx, Native native, unsigned argc, Value *vp)
 }
 
 /* ES5 15.10.6.2. */
+static bool
+regexp_exec_impl(JSContext *cx, CallArgs args)
+{
+    return ExecuteRegExp(cx, RegExpExec, args);
+}
+
 JSBool
 js::regexp_exec(JSContext *cx, unsigned argc, Value *vp)
 {
-    return ExecuteRegExp(cx, regexp_exec, argc, vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsRegExp, regexp_exec_impl, args);
 }
 
 /* ES5 15.10.6.3. */
+static bool
+regexp_test_impl(JSContext *cx, CallArgs args)
+{
+    if (!ExecuteRegExp(cx, RegExpTest, args))
+        return false;
+    if (!args.rval().isTrue())
+        args.rval().setBoolean(false);
+    return true;
+}
+
 JSBool
 js::regexp_test(JSContext *cx, unsigned argc, Value *vp)
 {
-    if (!ExecuteRegExp(cx, regexp_test, argc, vp))
-        return false;
-    if (!vp->isTrue())
-        vp->setBoolean(false);
-    return true;
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsRegExp, regexp_test_impl, args);
 }

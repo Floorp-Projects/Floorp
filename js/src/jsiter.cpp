@@ -43,7 +43,6 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/MethodGuard-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -819,16 +818,18 @@ js_ThrowStopIteration(JSContext *cx)
     return JS_FALSE;
 }
 
-static JSBool
-iterator_next(JSContext *cx, unsigned argc, Value *vp)
+static bool
+IsIterator(const Value &v)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    return v.isObject() && v.toObject().hasClass(&IteratorClass);
+}
 
-    RootedObject thisObj(cx);
-    if (!NonGenericMethodGuard(cx, args, iterator_next, &IteratorClass, thisObj.address()))
-        return false;
-    if (!thisObj)
-        return true;
+static bool
+iterator_next_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsIterator(args.thisv()));
+
+    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
 
     if (!js_IteratorMore(cx, thisObj, &args.rval()))
         return false;
@@ -839,6 +840,13 @@ iterator_next(JSContext *cx, unsigned argc, Value *vp)
     }
 
     return js_IteratorNext(cx, thisObj, &args.rval());
+}
+
+static JSBool
+iterator_next(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsIterator, iterator_next_impl, args);
 }
 
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
@@ -1598,16 +1606,18 @@ CloseGenerator(JSContext *cx, JSObject *obj)
     return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, UndefinedValue());
 }
 
-static JSBool
-generator_send(JSContext *cx, unsigned argc, Value *vp)
+static bool
+IsGenerator(const Value &v)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    return v.isObject() && v.toObject().hasClass(&GeneratorClass);
+}
 
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, generator_send, &GeneratorClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
+static bool
+generator_send_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsGenerator(args.thisv()));
+
+    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
 
     JSGenerator *gen = (JSGenerator *) thisObj->getPrivate();
     if (!gen || gen->state == JSGEN_CLOSED) {
@@ -1633,15 +1643,18 @@ generator_send(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-generator_next(JSContext *cx, unsigned argc, Value *vp)
+generator_send(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsGenerator, generator_send_impl, args);
+}
 
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, generator_next, &GeneratorClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
+static bool
+generator_next_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsGenerator(args.thisv()));
+
+    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
 
     JSGenerator *gen = (JSGenerator *) thisObj->getPrivate();
     if (!gen || gen->state == JSGEN_CLOSED) {
@@ -1657,15 +1670,18 @@ generator_next(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-generator_throw(JSContext *cx, unsigned argc, Value *vp)
+generator_next(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsGenerator, generator_next_impl, args);
+}
 
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, generator_throw, &GeneratorClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
+static bool
+generator_throw_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsGenerator(args.thisv()));
+
+    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
 
     JSGenerator *gen = (JSGenerator *) thisObj->getPrivate();
     if (!gen || gen->state == JSGEN_CLOSED) {
@@ -1686,15 +1702,18 @@ generator_throw(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-generator_close(JSContext *cx, unsigned argc, Value *vp)
+generator_throw(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsGenerator, generator_throw_impl, args);
+}
 
-    JSObject *thisObj;
-    if (!NonGenericMethodGuard(cx, args, generator_close, &GeneratorClass, &thisObj))
-        return false;
-    if (!thisObj)
-        return true;
+static bool
+generator_close_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsGenerator(args.thisv()));
+
+    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
 
     JSGenerator *gen = (JSGenerator *) thisObj->getPrivate();
     if (!gen || gen->state == JSGEN_CLOSED) {
@@ -1714,6 +1733,13 @@ generator_close(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval() = gen->fp->returnValue();
     return true;
+}
+
+static JSBool
+generator_close(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsGenerator, generator_close_impl, args);
 }
 
 static JSFunctionSpec generator_methods[] = {
