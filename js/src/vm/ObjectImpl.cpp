@@ -498,7 +498,7 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
 
     Rooted<PropertyId> pid(cx, pid_);
 
-    if (static_cast<JSObject *>(obj.value())->isProxy()) {
+    if (static_cast<JSObject *>(obj.get())->isProxy()) {
         MOZ_NOT_REACHED("NYI: proxy [[GetOwnProperty]]");
         return false;
     }
@@ -509,8 +509,8 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
         Class *clasp = obj->getClass();
         JSResolveOp resolve = clasp->resolve;
         if (resolve != JS_ResolveStub) {
-            Rooted<jsid> id(cx, pid.reference().asId());
-            Rooted<JSObject*> robj(cx, static_cast<JSObject*>(obj.value()));
+            Rooted<jsid> id(cx, pid.get().asId());
+            Rooted<JSObject*> robj(cx, static_cast<JSObject*>(obj.get()));
             if (clasp->flags & JSCLASS_NEW_RESOLVE) {
                 Rooted<JSObject*> obj2(cx, NULL);
                 JSNewResolveOp op = reinterpret_cast<JSNewResolveOp>(resolve);

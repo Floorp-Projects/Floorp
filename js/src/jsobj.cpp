@@ -167,7 +167,7 @@ MarkSharpObjects(JSContext *cx, HandleObject obj, JSIdArray **idap, JSSharpInfo 
     JSSharpInfo sharpid;
     JSSharpTable::Ptr p = map->table.lookup(obj);
     if (!p) {
-        if (!map->table.put(obj.value(), sharpid))
+        if (!map->table.put(obj.get(), sharpid))
             return false;
 
         ida = JS_Enumerate(cx, obj);
@@ -187,8 +187,8 @@ MarkSharpObjects(JSContext *cx, HandleObject obj, JSIdArray **idap, JSSharpInfo 
                 continue;
             bool hasGetter, hasSetter;
             RootedValue valueRoot(cx), setterRoot(cx);
-            Value &value = valueRoot.reference();
-            Value &setter = setterRoot.reference();
+            Value &value = valueRoot.get();
+            Value &setter = setterRoot.get();
             if (obj2->isNative()) {
                 const Shape *shape = (Shape *) prop;
                 hasGetter = shape->hasGetterValue();
@@ -294,7 +294,7 @@ js_EnterSharpObject(JSContext *cx, HandleObject obj, JSIdArray **idap, bool *alr
          */
         p = map->table.lookup(obj);
         if (!p) {
-            if (!map->table.put(obj.value(), sharpid))
+            if (!map->table.put(obj.get(), sharpid))
                 goto bad;
             goto out;
         }
@@ -4351,8 +4351,8 @@ js_FindClassObject(JSContext *cx, HandleObject start, JSProtoKey protoKey,
         shape = (Shape *) prop;
         if (shape->hasSlot()) {
             v = pobj->nativeGetSlot(shape->slot());
-            if (v.reference().isPrimitive())
-                v.reference().setUndefined();
+            if (v.get().isPrimitive())
+                v.get().setUndefined();
         }
     }
     vp.set(v);
@@ -4780,7 +4780,7 @@ LookupPropertyWithFlagsInline(JSContext *cx, HandleObject obj, HandleId id, unsi
              * read barrier.
              */
             if (*propp && objp->isNative()) {
-                while ((proto = proto->getProto()) != objp.value())
+                while ((proto = proto->getProto()) != objp)
                     JS_ASSERT(proto);
             }
 #endif
@@ -4947,7 +4947,7 @@ js::FindIdentifierBase(JSContext *cx, HandleObject scopeChain, HandlePropertyNam
     {
         RootedObject pobj(cx);
         JSProperty *prop;
-        if (!LookupPropertyWithFlags(cx, obj, name.value(), cx->resolveFlags, &pobj, &prop))
+        if (!LookupPropertyWithFlags(cx, obj, name, cx->resolveFlags, &pobj, &prop))
             return NULL;
         if (prop) {
             if (!pobj->isNative()) {
@@ -5854,12 +5854,12 @@ js::FindClassPrototype(JSContext *cx, HandleObject scopeobj, JSProtoKey protoKey
         return false;
 
     if (IsFunctionObject(v)) {
-        JSObject *ctor = &v.reference().toObject();
+        JSObject *ctor = &v.get().toObject();
         if (!ctor->getProperty(cx, cx->runtime->atomState.classPrototypeAtom, v.address()))
             return false;
     }
 
-    protop.set(v.reference().isObject() ? &v.reference().toObject() : NULL);
+    protop.set(v.get().isObject() ? &v.get().toObject() : NULL);
     return true;
 }
 

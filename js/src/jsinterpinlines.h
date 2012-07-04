@@ -252,7 +252,7 @@ GetPropertyOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value &lva
     PropertyCacheEntry *entry;
     Rooted<JSObject*> obj2(cx);
     PropertyName *name;
-    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.reference(), obj2.reference(), entry, name);
+    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.get(), obj2.get(), entry, name);
     if (!name) {
         AssertValidPropertyCacheHit(cx, obj, obj2, entry);
         if (!NativeGet(cx, obj, obj2, entry->prop, JSGET_CACHE_RESULT, vp))
@@ -377,7 +377,7 @@ NameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
     PropertyCacheEntry *entry;
     Rooted<JSObject*> obj2(cx);
     RootedPropertyName name(cx);
-    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.reference(), obj2.reference(), entry, name.reference());
+    JS_PROPERTY_CACHE(cx).test(cx, pc, obj.get(), obj2.get(), entry, name.get());
     if (!name) {
         AssertValidPropertyCacheHit(cx, obj, obj2, entry);
         if (!NativeGet(cx, obj, obj2, entry->prop, 0, vp))
@@ -491,8 +491,8 @@ AddOperation(JSContext *cx, const Value &lhs, const Value &rhs, Value *res)
     {
         RootedValue lval_(cx, lhs);
         RootedValue rval_(cx, rhs);
-        Value &lval = lval_.reference();
-        Value &rval = rval_.reference();
+        Value &lval = lval_.get();
+        Value &rval = rval_.get();
 
         /*
          * If either operand is an object, any non-integer result must be
@@ -548,7 +548,7 @@ SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
     double d = d1 - d2;
-    if (!res->setNumber(d) && !(lhs.value().isDouble() || rhs.value().isDouble()))
+    if (!res->setNumber(d) && !(lhs.get().isDouble() || rhs.get().isDouble()))
         types::TypeScript::MonitorOverflow(cx);
     return true;
 }
@@ -560,7 +560,7 @@ MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
     double d = d1 * d2;
-    if (!res->setNumber(d) && !(lhs.value().isDouble() || rhs.value().isDouble()))
+    if (!res->setNumber(d) && !(lhs.get().isDouble() || rhs.get().isDouble()))
         types::TypeScript::MonitorOverflow(cx);
     return true;
 }
@@ -573,7 +573,7 @@ DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
         return false;
     res->setNumber(NumberDiv(d1, d2));
 
-    if (d2 == 0 || (res->isDouble() && !(lhs.value().isDouble() || rhs.value().isDouble())))
+    if (d2 == 0 || (res->isDouble() && !(lhs.get().isDouble() || rhs.get().isDouble())))
         types::TypeScript::MonitorOverflow(cx);
     return true;
 }
@@ -582,8 +582,8 @@ static JS_ALWAYS_INLINE bool
 ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     int32_t l, r;
-    if (lhs.value().isInt32() && rhs.value().isInt32() &&
-        (l = lhs.value().toInt32()) >= 0 && (r = rhs.value().toInt32()) > 0) {
+    if (lhs.get().isInt32() && rhs.get().isInt32() &&
+        (l = lhs.get().toInt32()) >= 0 && (r = rhs.get().toInt32()) > 0) {
         int32_t mod = l % r;
         res->setInt32(mod);
         return true;
@@ -778,8 +778,8 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
         RootedValue lvalRoot(cx, lhs), rvalRoot(cx, rhs);                     \
-        Value &lval = lvalRoot.reference();                                   \
-        Value &rval = rvalRoot.reference();                                   \
+        Value &lval = lvalRoot.get();                                         \
+        Value &rval = rvalRoot.get();                                         \
         /* Optimize for two int-tagged operands (typical loop control). */    \
         if (lval.isInt32() && rval.isInt32()) {                               \
             *res = lval.toInt32() OP rval.toInt32();                          \

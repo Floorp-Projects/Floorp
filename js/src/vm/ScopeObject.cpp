@@ -1437,7 +1437,7 @@ DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosi
         return NULL;
 
     JS_ASSERT(!enclosing->isScope());
-    SetProxyExtra(obj, ENCLOSING_EXTRA, ObjectValue(*enclosing.value()));
+    SetProxyExtra(obj, ENCLOSING_EXTRA, ObjectValue(*enclosing));
 
     return &obj->asDebugScope();
 }

@@ -1666,11 +1666,11 @@ GetXMLSetting(JSContext *cx, const char *name, jsval *vp)
     RootedObject null(cx);
     if (!js_FindClassObject(cx, null, JSProto_XML, &v))
         return JS_FALSE;
-    if (v.reference().isPrimitive() || !v.reference().toObject().isFunction()) {
+    if (v.get().isPrimitive() || !v.get().toObject().isFunction()) {
         *vp = JSVAL_VOID;
         return JS_TRUE;
     }
-    return JS_GetProperty(cx, &v.reference().toObject(), name, vp);
+    return JS_GetProperty(cx, &v.get().toObject(), name, vp);
 }
 
 static JSBool
