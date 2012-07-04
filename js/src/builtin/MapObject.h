@@ -12,7 +12,7 @@
 #include "jscntxt.h"
 #include "jsobj.h"
 
-#include "mozilla/FloatingPoint.h"
+#include "js/HashTable.h"
 
 namespace js {
 
@@ -32,8 +32,6 @@ class HashableValue {
         typedef HashableValue Lookup;
         static HashNumber hash(const Lookup &v) { return v.hash(); }
         static bool match(const HashableValue &k, const Lookup &l) { return k.equals(l); }
-        static bool isEmpty(const HashableValue &v) { return v.value.isMagic(JS_HASH_KEY_EMPTY); }
-        static void makeEmpty(HashableValue *vp) { vp->value = MagicValue(JS_HASH_KEY_EMPTY); }
     };
 
     HashableValue() : value(UndefinedValue()) {}
@@ -42,7 +40,6 @@ class HashableValue {
     HashNumber hash() const;
     bool equals(const HashableValue &other) const;
     HashableValue mark(JSTracer *trc) const;
-    Value get() const { return value.get(); }
 
     class AutoRooter : private AutoGCRooter
     {
@@ -64,20 +61,13 @@ class HashableValue {
     };
 };
 
-template <class Key, class Value, class OrderedHashPolicy, class AllocPolicy>
-class OrderedHashMap;
-
-template <class T, class OrderedHashPolicy, class AllocPolicy>
-class OrderedHashSet;
-
-typedef OrderedHashMap<HashableValue,
-                       RelocatableValue,
-                       HashableValue::Hasher,
-                       RuntimeAllocPolicy> ValueMap;
-
-typedef OrderedHashSet<HashableValue,
-                       HashableValue::Hasher,
-                       RuntimeAllocPolicy> ValueSet;
+typedef HashMap<HashableValue,
+                RelocatableValue,
+                HashableValue::Hasher,
+                RuntimeAllocPolicy> ValueMap;
+typedef HashSet<HashableValue,
+                HashableValue::Hasher,
+                RuntimeAllocPolicy> ValueSet;
 
 class MapObject : public JSObject {
   public:
