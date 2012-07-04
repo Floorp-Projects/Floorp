@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include "pixman-private.h"
 
+#include "pixman-dither.h"
+
 static pixman_bool_t
 linear_gradient_is_horizontal (pixman_image_t *image,
 			       int             x,
@@ -227,6 +229,8 @@ static uint16_t convert_8888_to_0565(uint32_t color)
     return CONVERT_8888_TO_0565(color);
 }
 
+
+
 static uint32_t *
 linear_get_scanline_16 (pixman_iter_t  *iter,
 			const uint32_t *mask)
@@ -236,6 +240,7 @@ linear_get_scanline_16 (pixman_iter_t  *iter,
     int             y      = iter->y;
     int             width  = iter->width;
     uint16_t *      buffer = (uint16_t*)iter->buffer;
+    pixman_bool_t   toggle = ((x ^ y) & 1);
 
     pixman_vector_t v, unit;
     pixman_fixed_32_32_t l;
@@ -299,11 +304,22 @@ linear_get_scanline_16 (pixman_iter_t  *iter,
 
 	if (((pixman_fixed_32_32_t )(inc * width)) == 0)
 	{
-	    register uint16_t color;
+	    register uint32_t color;
+	    uint16_t dither_diff;
+	    uint16_t color16;
+	    uint16_t color16b;
 
-	    color = convert_8888_to_0565(_pixman_gradient_walker_pixel (&walker, t));
-	    while (buffer < end)
-		*buffer++ = color;
+	    color = _pixman_gradient_walker_pixel (&walker, t);
+	    color16 = dither_8888_to_0565(color, toggle);
+	    color16b = dither_8888_to_0565(color, toggle^1);
+	    // compute the difference
+	    dither_diff =  color16 ^ color16b;
+	    while (buffer < end) {
+		*buffer++ = color16;
+		// use dither_diff to toggle between color16 and color16b
+		color16 ^= dither_diff;
+		toggle ^= 1;
+	    }
 	}
 	else
 	{
@@ -314,9 +330,11 @@ linear_get_scanline_16 (pixman_iter_t  *iter,
 	    {
 		if (!mask || *mask++)
 		{
-		    *buffer = convert_8888_to_0565(_pixman_gradient_walker_pixel (&walker,
-										  t + next_inc));
+		    *buffer = dither_8888_to_0565(_pixman_gradient_walker_pixel (&walker,
+										 t + next_inc),
+						  toggle);
 		}
+		toggle ^= 1;
 		i++;
 		next_inc = inc * i;
 		buffer++;
@@ -345,8 +363,10 @@ linear_get_scanline_16 (pixman_iter_t  *iter,
 			 (dx * linear->p1.x + dy * linear->p1.y) * v2) * invden;
 		}
 
-		*buffer = convert_8888_to_0565(_pixman_gradient_walker_pixel (&walker, t));
+		*buffer = dither_8888_to_0565(_pixman_gradient_walker_pixel (&walker, t),
+					      toggle);
 	    }
+	    toggle ^= 1;
 
 	    ++buffer;
 
@@ -374,7 +394,8 @@ linear_get_scanline_wide (pixman_iter_t *iter, const uint32_t *mask)
 void
 _pixman_linear_gradient_iter_init (pixman_image_t *image, pixman_iter_t  *iter)
 {
-    if (linear_gradient_is_horizontal (
+    // XXX: we can't use this optimization when dithering
+    if (0 && linear_gradient_is_horizontal (
 	    iter->image, iter->x, iter->y, iter->width, iter->height))
     {
 	if (iter->flags & ITER_16)
