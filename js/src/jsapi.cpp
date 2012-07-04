@@ -1811,7 +1811,9 @@ static JSStdName standard_class_names[] = {
     {js_InitXMLClass,           EAGER_ATOM(isXMLName), CLASP(XML)},
 #endif
 
+#if JS_HAS_GENERATORS
     {js_InitIteratorClasses,    EAGER_CLASS_ATOM(Iterator), &PropertyIteratorObject::class_},
+#endif
 
     /* Typed Arrays */
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer),  &ArrayBufferClass},
@@ -4410,8 +4412,11 @@ JS_PUBLIC_API(JSBool)
 JS_ArrayIterator(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<Value> target(cx, args.thisv());
-    JSObject *iterobj = ElementIteratorObject::create(cx, target);
+    JSObject *target = NonNullObject(cx, args.thisv());
+    if (!target)
+        return false;
+    Rooted<JSObject*> iterobj(cx, target);
+    iterobj = ElementIteratorObject::create(cx, iterobj);
     if (!iterobj)
         return false;
     vp->setObject(*iterobj);
