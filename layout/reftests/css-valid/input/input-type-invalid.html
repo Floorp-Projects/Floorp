@@ -5,16 +5,15 @@
              it should not be affected by :valid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
   <script>
-    function doTest()
+    function onLoadHandler()
     {
       var i = document.getElementById('i');
       i.setCustomValidity('foo');
       i.type = 'text';
       document.documentElement.className='';
     }
-    document.addEventListener("MozReftestInvalidate", doTest, false);
   </script>
-  <body>
+  <body onload="onLoadHandler();">
     <input class='notvalid' type='button' id='i'>
   </body>
 </html>
