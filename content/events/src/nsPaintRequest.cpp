@@ -35,7 +35,17 @@ nsPaintRequest::GetClientRect(nsIDOMClientRect** aResult)
 NS_IMETHODIMP
 nsPaintRequest::GetReason(nsAString& aResult)
 {
-  aResult.AssignLiteral("repaint");
+  switch (mRequest.mFlags & nsIFrame::INVALIDATE_REASON_MASK) {
+  case nsIFrame::INVALIDATE_REASON_SCROLL_BLIT:
+    aResult.AssignLiteral("scroll copy");
+    break;
+  case nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT:
+    aResult.AssignLiteral("scroll repaint");
+    break;
+  default:
+    aResult.Truncate();
+    break;
+  }
   return NS_OK;
 }
 

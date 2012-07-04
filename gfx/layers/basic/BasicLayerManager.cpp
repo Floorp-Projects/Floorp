@@ -20,7 +20,6 @@
 #include "BasicLayersImpl.h"
 #include "BasicThebesLayer.h"
 #include "BasicContainerLayer.h"
-#include "mozilla/Preferences.h"
 
 using namespace mozilla::gfx;
 
@@ -94,7 +93,9 @@ ToInsideIntRect(const gfxRect& aRect)
 }
 
 BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
+#ifdef DEBUG
   mPhase(PHASE_NONE),
+#endif
   mWidget(aWidget)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(false)
   , mCachedSurfaceInUse(false)
@@ -105,7 +106,9 @@ BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
 }
 
 BasicLayerManager::BasicLayerManager() :
+#ifdef DEBUG
   mPhase(PHASE_NONE),
+#endif
   mWidget(nsnull)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(false)
   , mCachedSurfaceInUse(false)
@@ -196,7 +199,9 @@ BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 #endif
 
   NS_ASSERTION(!InTransaction(), "Nested transactions not allowed");
+#ifdef DEBUG
   mPhase = PHASE_CONSTRUCTION;
+#endif
   mTarget = aTarget;
 }
 
@@ -389,18 +394,14 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 #endif
 
   NS_ASSERTION(InConstruction(), "Should be in construction phase");
+#ifdef DEBUG
   mPhase = PHASE_DRAWING;
+#endif
 
   Layer* aLayer = GetRoot();
   RenderTraceLayers(aLayer, "FF00");
 
   mTransactionIncomplete = false;
-
-  if (aFlags & END_NO_COMPOSITE) {
-    // TODO: We should really just set mTarget to null and make sure we can handle that further down the call chain
-    nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(1, 1), gfxASurface::CONTENT_COLOR);
-    mTarget = new gfxContext(surf);
-  }
 
   if (mTarget && mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     nsIntRect clipRect;
@@ -431,20 +432,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       }
     }
 
-    if (aFlags & END_NO_COMPOSITE) {
-      if (IsRetained()) {
-        // Clip the destination out so that we don't draw to it, and
-        // only end up validating ThebesLayers.
-        mTarget->Clip(gfxRect(0, 0, 0, 0));
-        PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nsnull);
-      }
-      // If we're not retained, then don't composite means do nothing at all.
-    } else {
-      PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nsnull);
-      if (mWidget) {
-        FlashWidgetUpdateArea(mTarget);
-      }
-    }
+    PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nsnull);
 
     if (!mTransactionIncomplete) {
       // Clear out target if we have a complete transaction.
@@ -457,9 +445,11 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
   MOZ_LAYERS_LOG(("]----- EndTransaction"));
 #endif
 
+#ifdef DEBUG
   // Go back to the construction phase if the transaction isn't complete.
   // Layout will update the layer tree and call EndTransaction().
   mPhase = mTransactionIncomplete ? PHASE_CONSTRUCTION : PHASE_NONE;
+#endif
 
   if (!mTransactionIncomplete) {
     // This is still valid if the transaction was incomplete.
@@ -473,27 +463,6 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
   // out target is the default target.
 
   return !mTransactionIncomplete;
-}
-
-void
-BasicLayerManager::FlashWidgetUpdateArea(gfxContext *aContext)
-{
-  static bool sWidgetFlashingEnabled;
-  static bool sWidgetFlashingPrefCached = false;
-
-  if (!sWidgetFlashingPrefCached) {
-    sWidgetFlashingPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(&sWidgetFlashingEnabled,
-                                          "nglayout.debug.widget_update_flashing");
-  }
-
-  if (sWidgetFlashingEnabled) {
-    float r = float(rand()) / RAND_MAX;
-    float g = float(rand()) / RAND_MAX;
-    float b = float(rand()) / RAND_MAX;
-    aContext->SetColor(gfxRGBA(r, g, b, 0.2));
-    aContext->Paint();
-  }
 }
 
 bool
@@ -1026,7 +995,9 @@ void
 BasicShadowLayerManager::ForwardTransaction()
 {
   RenderTraceScope rendertrace("Foward Transaction", "000090");
+#ifdef DEBUG
   mPhase = PHASE_FORWARD;
+#endif
 
   // forward this transaction's changeset to our ShadowLayerManager
   AutoInfallibleTArray<EditReply, 10> replies;
@@ -1091,7 +1062,9 @@ BasicShadowLayerManager::ForwardTransaction()
     NS_WARNING("failed to forward Layers transaction");
   }
 
+#ifdef DEBUG
   mPhase = PHASE_NONE;
+#endif
 
   // this may result in Layers being deleted, which results in
   // PLayer::Send__delete__() and DeallocShmem()

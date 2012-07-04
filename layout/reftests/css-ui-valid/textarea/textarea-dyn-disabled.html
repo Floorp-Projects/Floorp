@@ -1,18 +1,9 @@
 <!DOCTYPE html>
 <html class="reftest-wait">
-  <head>
-    <script>
-      function doTest() {
-        document.getElementById('t').disabled='true';
-        document.documentElement.className='';
-      }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
-    </script>
-  </head>
   <!-- Test: if textarea is disabled, it is barred from constraint validation
              and should not be affected by :-moz-ui-valid pseudo-class. -->
   <link rel='stylesheet' type='text/css' href='style.css'>
-  <body>
+  <body onload="document.getElementById('t').disabled='true'; document.documentElement.className='';">
     <textarea class='notvalid' id='t'></textarea>
   </body>
 </html>

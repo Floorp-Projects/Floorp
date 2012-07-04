@@ -1879,13 +1879,10 @@ public:
     nsPoint offset = ToReferenceFrame() + rect.TopLeft();
     nsBoundingMetrics bm;
     mChar->GetBoundingMetrics(bm);
-    nsRect temp(offset.x + bm.leftBearing, offset.y,
-                bm.rightBearing - bm.leftBearing, bm.ascent + bm.descent);
-    // Bug 748220
-    temp.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
-    return temp;
+    return nsRect(offset.x + bm.leftBearing, offset.y,
+                  bm.rightBearing - bm.leftBearing, bm.ascent + bm.descent);
   }
-  
+
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx)
   {

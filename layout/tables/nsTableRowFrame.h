@@ -223,8 +223,6 @@ public:
   void SetContinuousBCBorderWidth(PRUint8     aForSide,
                                   BCPixelSize aPixelValue);
 
-  virtual void InvalidateFrame();
-
 #ifdef ACCESSIBILITY
   virtual already_AddRefed<Accessible> CreateAccessible();
 #endif

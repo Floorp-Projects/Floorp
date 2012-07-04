@@ -2,7 +2,7 @@
 <html class="reftest-wait">
   <head>
     <script>
-      function doTest() {
+      window.onload = function() {
         window.frames[0].location =
           'javascript:document.write(""); document.close(); ' +
           'parent.continueTest();'
@@ -16,7 +16,6 @@
             "onload='window.parent.document.documentElement.className = &quot;&quot;'>";
                                                                                         }, 0);
       }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
     </script>
   </head>
   <body>
