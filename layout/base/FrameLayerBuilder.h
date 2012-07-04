@@ -476,9 +476,9 @@ protected:
    */
   class DisplayItemDataEntry : public nsPtrHashKey<nsIFrame> {
   public:
-    DisplayItemDataEntry(const nsIFrame *key) : nsPtrHashKey<nsIFrame>(key) {}
+    DisplayItemDataEntry(const nsIFrame *key) : nsPtrHashKey<nsIFrame>(key), mIsSharingContainerLayer(false) {}
     DisplayItemDataEntry(DisplayItemDataEntry &toCopy) :
-      nsPtrHashKey<nsIFrame>(toCopy.mKey)
+      nsPtrHashKey<nsIFrame>(toCopy.mKey), mIsSharingContainerLayer(toCopy.mIsSharingContainerLayer)
     {
       // This isn't actually a copy-constructor; notice that it steals toCopy's
       // array.  Be careful.
@@ -488,6 +488,7 @@ protected:
     bool HasNonEmptyContainerLayer();
 
     nsAutoTArray<DisplayItemData, 1> mData;
+    bool mIsSharingContainerLayer;
 
     enum { ALLOW_MEMMOVE = false };
   };
