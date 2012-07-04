@@ -242,6 +242,12 @@ typedef PRUint64 nsFrameState;
 // Frame's overflow area was clipped by the 'clip' property.
 #define NS_FRAME_HAS_CLIP                           NS_FRAME_STATE_BIT(35)
 
+// Frame is a display root and the retained layer tree needs to be updated
+// at the next paint via display list construction.
+// Only meaningful for display roots, so we don't really need a global state
+// bit; we could free up this bit with a little extra complexity.
+#define NS_FRAME_UPDATE_LAYER_TREE                  NS_FRAME_STATE_BIT(36)
+
 // Frame can accept absolutely positioned children.
 #define NS_FRAME_HAS_ABSPOS_CHILDREN                NS_FRAME_STATE_BIT(37)
 
@@ -2153,15 +2159,8 @@ public:
    * The view manager flush will update the layer tree, repaint any 
    * invalid areas in the layer tree and schedule a layer tree
    * composite operation to display the layer tree.
-   *
-   * @param aFlags PAINT_COMPOSITE_ONLY : No changes have been made
-   * that require a layer tree update, so only schedule a layer
-   * tree composite.
    */
-  enum {
-    PAINT_COMPOSITE_ONLY
-  };
-  void SchedulePaint(PRUint32 aFlags = 0);
+  void SchedulePaint();
 
   /**
    * Checks if the layer tree includes a dedicated layer for this 
