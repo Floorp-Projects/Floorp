@@ -828,7 +828,9 @@ js_InitGC(JSRuntime *rt, uint32_t maxbytes)
     rt->gcMaxBytes = maxbytes;
     rt->setGCMaxMallocBytes(maxbytes);
 
+#ifndef JS_MORE_DETERMINISTIC
     rt->gcJitReleaseTime = PRMJ_Now() + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
+#endif
     return true;
 }
 
@@ -2495,6 +2497,7 @@ MaybeGC(JSContext *cx)
         return;
     }
 
+#ifndef JS_MORE_DETERMINISTIC
     /*
      * Access to the counters and, on 32 bit, setting gcNextFullGCTime below
      * is not atomic and a race condition could trigger or suppress the GC. We
@@ -2511,6 +2514,7 @@ MaybeGC(JSContext *cx)
             rt->gcNextFullGCTime = now + GC_IDLE_FULL_SPAN;
         }
     }
+#endif
 }
 
 static void
@@ -2944,12 +2948,15 @@ GCHelperThread::doSweep()
 static bool
 ReleaseObservedTypes(JSRuntime *rt)
 {
-    bool releaseTypes = false;
+    bool releaseTypes = rt->gcZeal() != 0;
+
+#ifndef JS_MORE_DETERMINISTIC
     int64_t now = PRMJ_Now();
-    if (rt->gcZeal() || now >= rt->gcJitReleaseTime) {
+    if (now >= rt->gcJitReleaseTime)
         releaseTypes = true;
+    if (releaseTypes)
         rt->gcJitReleaseTime = now + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
-    }
+#endif
 
     return releaseTypes;
 }
@@ -3473,7 +3480,10 @@ AutoGCSession::~AutoGCSession()
     for (GCCompartmentsIter c(runtime); !c.done(); c.next())
         c->setCollecting(false);
 
+#ifndef JS_MORE_DETERMINISTIC
     runtime->gcNextFullGCTime = PRMJ_Now() + GC_IDLE_FULL_SPAN;
+#endif
+
     runtime->gcChunkAllocationSinceLastGC = false;
 
 #ifdef JS_GC_ZEAL
