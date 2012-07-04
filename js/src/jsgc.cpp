@@ -1666,7 +1666,6 @@ ArenaLists::refillFreeList(JSContext *cx, AllocKind thingKind)
             if (secondAttempt)
                 break;
 
-            AutoLockGC lock(rt);
             rt->gcHelperThread.waitBackgroundSweepEnd();
         }
 
@@ -2792,12 +2791,11 @@ GCHelperThread::prepareForBackgroundSweep()
 #endif /* JS_THREADSAFE */
 }
 
-/* Must be called with the GC lock taken. */
 void
 GCHelperThread::startBackgroundSweep(bool shouldShrink)
 {
 #ifdef JS_THREADSAFE
-    /* The caller takes the GC lock. */
+    AutoLockGC lock(rt);
     JS_ASSERT(state == IDLE);
     JS_ASSERT(!sweepFlag);
     sweepFlag = true;
@@ -2837,11 +2835,11 @@ GCHelperThread::startBackgroundShrink()
 }
 #endif /* JS_THREADSAFE */
 
-/* Must be called with the GC lock taken. */
 void
 GCHelperThread::waitBackgroundSweepEnd()
 {
 #ifdef JS_THREADSAFE
+    AutoLockGC lock(rt);
     while (state == SWEEPING)
         PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
 #else
@@ -2849,11 +2847,11 @@ GCHelperThread::waitBackgroundSweepEnd()
 #endif /* JS_THREADSAFE */
 }
 
-/* Must be called with the GC lock taken. */
 void
 GCHelperThread::waitBackgroundSweepOrAllocEnd()
 {
 #ifdef JS_THREADSAFE
+    AutoLockGC lock(rt);
     if (state == ALLOCATING)
         state = CANCEL_ALLOCATION;
     while (state == SWEEPING || state == CANCEL_ALLOCATION)
@@ -3754,7 +3752,6 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
     if (rt->inOOMReport)
         return;
 
-    AutoLockGC lock(rt);
     AutoGCSession gcsession(rt);
 
     /*
@@ -3770,8 +3767,6 @@ GCCycle(JSRuntime *rt, bool incremental, int64_t budget, JSGCInvocationKind gcki
 
     bool startBackgroundSweep = false;
     {
-        AutoUnlockGC unlock(rt);
-
         if (!incremental) {
             /* If non-incremental GC was requested, reset incremental GC. */
             ResetIncrementalGC(rt, "requested");
@@ -3978,11 +3973,9 @@ TraceRuntime(JSTracer *trc)
     {
         JSRuntime *rt = trc->runtime;
         if (!rt->gcRunning) {
-            AutoLockGC lock(rt);
             AutoHeapSession session(rt);
 
             rt->gcHelperThread.waitBackgroundSweepEnd();
-            AutoUnlockGC unlock(rt);
 
             AutoCopyFreeListToArenas copy(rt);
             RecordNativeStackTopForGC(rt);
@@ -4038,10 +4031,8 @@ IterateCompartmentsArenasCells(JSRuntime *rt, void *data,
 {
     JS_ASSERT(!rt->gcRunning);
 
-    AutoLockGC lock(rt);
     AutoHeapSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepEnd();
-    AutoUnlockGC unlock(rt);
 
     AutoCopyFreeListToArenas copy(rt);
     for (CompartmentsIter c(rt); !c.done(); c.next()) {
@@ -4063,10 +4054,8 @@ IterateChunks(JSRuntime *rt, void *data, IterateChunkCallback chunkCallback)
     /* :XXX: Any way to common this preamble with IterateCompartmentsArenasCells? */
     JS_ASSERT(!rt->gcRunning);
 
-    AutoLockGC lock(rt);
     AutoHeapSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepEnd();
-    AutoUnlockGC unlock(rt);
 
     for (js::GCChunkSet::Range r = rt->gcChunkSet.all(); !r.empty(); r.popFront())
         chunkCallback(rt, data, r.front());
@@ -4079,10 +4068,8 @@ IterateCells(JSRuntime *rt, JSCompartment *compartment, AllocKind thingKind,
     /* :XXX: Any way to common this preamble with IterateCompartmentsArenasCells? */
     JS_ASSERT(!rt->gcRunning);
 
-    AutoLockGC lock(rt);
     AutoHeapSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepEnd();
-    AutoUnlockGC unlock(rt);
 
     AutoCopyFreeListToArenas copy(rt);
 
@@ -4107,10 +4094,8 @@ IterateGrayObjects(JSCompartment *compartment, GCThingCallback *cellCallback, vo
     JSRuntime *rt = compartment->rt;
     JS_ASSERT(!rt->gcRunning);
 
-    AutoLockGC lock(rt);
     AutoHeapSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepEnd();
-    AutoUnlockGC unlock(rt);
 
     AutoCopyFreeListToArenas copy(rt);
 
@@ -4469,15 +4454,12 @@ StartVerifyBarriers(JSRuntime *rt)
     if (rt->gcVerifyData || rt->gcIncrementalState != NO_INCREMENTAL)
         return;
 
-    AutoLockGC lock(rt);
     AutoHeapSession session(rt);
 
     if (!IsIncrementalGCSafe(rt))
         return;
 
     rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
-
-    AutoUnlockGC unlock(rt);
 
     AutoCopyFreeListToArenas copy(rt);
     RecordNativeStackTopForGC(rt);
@@ -4600,12 +4582,9 @@ AssertMarkedOrAllocated(const EdgeValue &edge)
 static void
 EndVerifyBarriers(JSRuntime *rt)
 {
-    AutoLockGC lock(rt);
     AutoHeapSession session(rt);
 
     rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
-
-    AutoUnlockGC unlock(rt);
 
     AutoCopyFreeListToArenas copy(rt);
     RecordNativeStackTopForGC(rt);
@@ -4821,10 +4800,8 @@ JS_IterateCompartments(JSRuntime *rt, void *data,
 {
     JS_ASSERT(!rt->gcRunning);
 
-    AutoLockGC lock(rt);
     AutoHeapSession session(rt);
     rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
-    AutoUnlockGC unlock(rt);
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
         (*compartmentCallback)(rt, data, c);
