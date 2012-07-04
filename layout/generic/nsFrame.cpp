@@ -4675,10 +4675,6 @@ nsIFrame::SchedulePaint(PRUint32 aFlags)
   if (widget) {
     widget->SetNeedsPaint(true);
   }
-  nsIPresShell* shell = PresContext()->PresShell();
-  if (shell) {
-    shell->AddInvalidateHiddenPresShellObserver(pres->RefreshDriver());
-  }
 }
 
 Layer*

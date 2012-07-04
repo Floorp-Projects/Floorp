@@ -850,7 +850,6 @@ public:
   // Returns true on success and false on failure (not safe).
   bool EnsureSafeToHandOutCSSRules();
 
-  void NotifyInvalidation(PRUint32 aFlags);
   void NotifyInvalidation(const nsRect& aRect, PRUint32 aFlags);
   // aRect is in device pixels
   void NotifyInvalidation(const nsIntRect& aRect, PRUint32 aFlags);
@@ -864,7 +863,6 @@ public:
   bool IsDOMPaintEventPending();
   void ClearMozAfterPaintEvents() {
     mInvalidateRequests.mRequests.Clear();
-    mAllInvalidated = false;
   }
 
   bool IsProcessingRestyles() const {
@@ -1227,7 +1225,6 @@ protected:
   unsigned              mPendingMediaFeatureValuesChanged : 1;
   unsigned              mPrefChangePendingNeedsReflow : 1;
   unsigned              mMayHaveFixedBackgroundFrames : 1;
-  unsigned              mAllInvalidated : 1;
 
   // Is the current mUserFontSet valid?
   unsigned              mUserFontSetDirty : 1;
