@@ -59,57 +59,67 @@ ClampIntForUint8Array(int32_t x)
 }
 
 inline Value
-TypedArray::lengthValue(JSObject *obj) {
+TypedArray::lengthValue(JSObject *obj)
+{
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(FIELD_LENGTH);
 }
 
 inline uint32_t
-TypedArray::length(JSObject *obj) {
+TypedArray::length(JSObject *obj)
+{
     return lengthValue(obj).toInt32();
 }
 
 inline Value
-TypedArray::byteOffsetValue(JSObject *obj) {
+TypedArray::byteOffsetValue(JSObject *obj)
+{
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(FIELD_BYTEOFFSET);
 }
 
 inline uint32_t
-TypedArray::byteOffset(JSObject *obj) {
+TypedArray::byteOffset(JSObject *obj)
+{
     return byteOffsetValue(obj).toInt32();
 }
 
 inline Value
-TypedArray::byteLengthValue(JSObject *obj) {
+TypedArray::byteLengthValue(JSObject *obj)
+{
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(FIELD_BYTELENGTH);
 }
 
 inline uint32_t
-TypedArray::byteLength(JSObject *obj) {
+TypedArray::byteLength(JSObject *obj)
+{
     return byteLengthValue(obj).toInt32();
 }
 
 inline uint32_t
-TypedArray::type(JSObject *obj) {
+TypedArray::type(JSObject *obj)
+{
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(FIELD_TYPE).toInt32();
 }
 
 inline Value
-TypedArray::bufferValue(JSObject *obj) {
+TypedArray::bufferValue(JSObject *obj)
+{
     JS_ASSERT(obj->isTypedArray());
     return obj->getFixedSlot(FIELD_BUFFER);
 }
 
 inline ArrayBufferObject *
-TypedArray::buffer(JSObject *obj) {
+TypedArray::buffer(JSObject *obj)
+{
     return &bufferValue(obj).toObject().asArrayBuffer();
 }
 
 inline void *
-TypedArray::viewData(JSObject *obj) {
+TypedArray::viewData(JSObject *obj)
+{
     JS_ASSERT(obj->isTypedArray());
     return (void *)obj->getPrivate(NUM_FIXED_SLOTS);
 }
@@ -139,6 +149,12 @@ TypedArray::slotWidth(int atype) {
 inline int
 TypedArray::slotWidth(JSObject *obj) {
     return slotWidth(type(obj));
+}
+
+bool
+DataViewObject::is(const Value &v)
+{
+    return v.isObject() && v.toObject().hasClass(&DataViewClass);
 }
 
 inline DataViewObject *

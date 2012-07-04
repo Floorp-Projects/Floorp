@@ -60,7 +60,9 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 
-#include "vm/MethodGuard-inl.h"
+#include "vm/BooleanObject-inl.h"
+#include "vm/NumberObject-inl.h"
+#include "vm/StringObject-inl.h"
 
 #include "jsautooplen.h"
 

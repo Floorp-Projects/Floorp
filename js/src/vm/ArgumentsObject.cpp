@@ -10,7 +10,6 @@
 #include "jsinterp.h"
 
 #include "vm/GlobalObject.h"
-#include "vm/MethodGuard.h"
 #include "vm/Stack.h"
 #include "vm/Xdr.h"
 

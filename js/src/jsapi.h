@@ -1443,6 +1443,93 @@ CallArgsFromSp(unsigned argc, Value *sp)
     return CallArgsFromArgv(argc, sp - argc);
 }
 
+/* Returns true if |v| is considered an acceptable this-value. */
+typedef bool (*IsAcceptableThis)(const Value &v);
+
+/*
+ * Implements the guts of a method; guaranteed to be provided an acceptable
+ * this-value, as determined by a corresponding IsAcceptableThis method.
+ */
+typedef bool (*NativeImpl)(JSContext *cx, CallArgs args);
+
+namespace detail {
+
+/* DON'T CALL THIS DIRECTLY.  It's for use only by CallNonGenericMethod! */
+extern JS_PUBLIC_API(bool)
+CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
+
+} /* namespace detail */
+
+/*
+ * Methods usually act upon |this| objects only from a single global object and
+ * compartment.  Sometimes, however, a method must act upon |this| values from
+ * multiple global objects or compartments.  In such cases the |this| value a
+ * method might see will be wrapped, such that various access to the object --
+ * to its class, its private data, its reserved slots, and so on -- will not
+ * work properly without entering that object's compartment.  This method
+ * implements a solution to this problem.
+ *
+ * To implement a method that accepts |this| values from multiple compartments,
+ * define two functions.  The first function matches the IsAcceptableThis type
+ * and indicates whether the provided value is an acceptable |this| for the
+ * method; it must be a pure function only of its argument.
+ *
+ *   static JSClass AnswerClass = { ... };
+ *
+ *   static bool
+ *   IsAnswerObject(const Value &v)
+ *   {
+ *       if (!v.isObject())
+ *           return false;
+ *       return JS_GetClass(&v.toObject()) == &AnswerClass;
+ *   }
+ *
+ * The second function implements the NativeImpl signature and defines the
+ * behavior of the method when it is provided an acceptable |this| value.
+ * Aside from some typing niceties -- see the CallArgs interface for details --
+ * its interface is the same as that of JSNative.
+ *
+ *   static bool
+ *   answer_getAnswer_impl(JSContext *cx, JS::CallArgs args)
+ *   {
+ *       args.rval().setInt32(42);
+ *       return true;
+ *   }
+ *
+ * The implementation function is guaranteed to be called *only* with a |this|
+ * value which is considered acceptable.
+ *
+ * Now to implement the actual method, write a JSNative that calls the method
+ * declared below, passing the appropriate arguments.
+ *
+ *   static JSBool
+ *   answer_getAnswer(JSContext *cx, unsigned argc, JS::Value *vp)
+ *   {
+ *       JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+ *       return JS::CallNonGenericMethod(cx, IsAnswerObject,
+                                         answer_getAnswer_impl, args);
+ *   }
+ *
+ * JS::CallNonGenericMethod will test whether |args.thisv()| is acceptable.  If
+ * it is, it will call the provided implementation function, which will return
+ * a value and indicate success.  If it is not, it will attempt to unwrap
+ * |this| and call the implementation function on the unwrapped |this|.  If
+ * that succeeds, all well and good.  If it doesn't succeed, a TypeError will
+ * be thrown.
+ *
+ * Note: JS::CallNonGenericMethod will only work correctly if it's called in
+ *       tail position in a JSNative.  Do not call it from any other place.
+ */
+JS_ALWAYS_INLINE bool
+CallNonGenericMethod(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args)
+{
+    const Value &thisv = args.thisv();
+    if (test(thisv))
+        return impl(cx, args);
+
+    return detail::CallMethodIfWrapped(cx, test, impl, args);
+}
+
 }  /* namespace JS */
 
 /************************************************************************/
@@ -3955,7 +4042,7 @@ struct JSClass {
  * with the following flags. Failure to use JSCLASS_GLOBAL_FLAGS was
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
-#define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 8)
+#define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 19)
 #define JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(n)                                    \
     (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT + (n)))
 #define JSCLASS_GLOBAL_FLAGS                                                  \
@@ -4703,66 +4790,6 @@ JS_DefineFunctionById(JSContext *cx, JSObject *obj, jsid id, JSNative call,
  */
 extern JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
-
-/*
- * Methods usually act upon |this| objects only from a single global object and
- * compartment.  Sometimes, however, a method must act upon |this| values from
- * multiple global objects or compartments.  In such cases the |this| value a
- * method might see will be wrapped, such that various access to the object --
- * to its class, its private data, its reserved slots, and so on -- will not
- * work properly without entering that object's compartment.  This method
- * implements a solution to this problem.
- *
- * When called, this method attempts to unwrap |this| and call |native| on the
- * underlying object with the provided arguments, entering |this|'s compartment
- * in the process.  It is critical that |this|-checking occur right at the
- * start of |native| so that reentrant invocation is idempotent!  If the call
- * fails because |this| isn't a proxy to another object, a TypeError is thrown.
- *
- * The following example demonstrates the most common way this method might be
- * used, to accept objects having only a particular class but which might be
- * found in another compartment/global object or might be a proxy of some sort:
- *
- *     static JSClass MyClass = { "MyClass", JSCLASS_HAS_PRIVATE, ... };
- *
- *     inline bool
- *     RequireMyClassThis(JSContext *cx, unsigned argc, JSObject **thisObj)
- *     {
- *         const Value &thisv = JS_THIS_VALUE(cx, vp);
- *         if (!thisv.isObject()) {
- *             JS_ReportError(cx, "this must be an object");
- *             return false;
- *         }
- *
- *         JSObject *obj = &thisv.toObject();
- *         if (JS_GetClass(obj) == &MyClass) {
- *             *thisObj = obj;
- *             return true;
- *         }
- *
- *         *thisObj = NULL; // prevent infinite recursion into calling method
- *         return JS_CallNonGenericMethodOnProxy(cx, argc, vp, method, &MyClass);
- *     }
- *
- *     static JSBool
- *     Method(JSContext *cx, unsigned argc, jsval *vp)
- *     {
- *         if (!RequireMyClassThis(cx, argc, vp, &thisObj))
- *             return false;
- *         if (!thisObj)
- *             return true; // method invocation was performed by nested call
- *
- *         // thisObj definitely has MyClass: implement the guts of the method.
- *         void *priv = JS_GetPrivate(thisObj);
- *         ...
- *     }
- *
- * This method doesn't do any checking of its own, except to throw a TypeError
- * if the |this| in the arguments isn't a proxy that can be unwrapped for the
- * recursive call.  The client is responsible for performing all type-checks!
- */
-extern JS_PUBLIC_API(JSBool)
-JS_CallNonGenericMethodOnProxy(JSContext *cx, unsigned argc, jsval *vp, JSNative native, JSClass *clasp);
 
 /*
  * Given a buffer, return JS_FALSE if the buffer might become a valid

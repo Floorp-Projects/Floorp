@@ -44,7 +44,6 @@
 #include "jslibmath.h"
 
 #include "vm/GlobalObject.h"
-#include "vm/MethodGuard.h"
 #include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 
@@ -53,7 +52,6 @@
 #include "jsnuminlines.h"
 #include "jsobjinlines.h"
 
-#include "vm/MethodGuard-inl.h"
 #include "vm/NumberObject-inl.h"
 #include "vm/String-inl.h"
 
@@ -465,19 +463,29 @@ Number(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-#if JS_HAS_TOSOURCE
-static JSBool
-num_toSource(JSContext *cx, unsigned argc, Value *vp)
+static bool
+IsNumber(const Value &v)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    return v.isNumber() || (v.isObject() && v.toObject().hasClass(&NumberClass));
+}
 
-    double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, num_toSource, &d, &ok))
-        return ok;
+inline double
+Extract(const Value &v)
+{
+    if (v.isNumber())
+        return v.toNumber();
+    return v.toObject().asNumber().unbox();
+}
+
+#if JS_HAS_TOSOURCE
+static bool
+num_toSource_impl(JSContext *cx, CallArgs args)
+{
+    double d = Extract(args.thisv());
 
     StringBuffer sb(cx);
-    if (!sb.append("(new Number(") || !NumberValueToStringBuffer(cx, NumberValue(d), sb) ||
+    if (!sb.append("(new Number(") ||
+        !NumberValueToStringBuffer(cx, NumberValue(d), sb) ||
         !sb.append("))"))
     {
         return false;
@@ -488,6 +496,13 @@ num_toSource(JSContext *cx, unsigned argc, Value *vp)
         return false;
     args.rval().setString(str);
     return true;
+}
+
+static JSBool
+num_toSource(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsNumber, num_toSource_impl, args);
 }
 #endif
 
@@ -578,15 +593,12 @@ IntToCString(ToCStringBuf *cbuf, int i, int base = 10)
 static JSString * JS_FASTCALL
 js_NumberToStringWithBase(JSContext *cx, double d, int base);
 
-static JSBool
-num_toString(JSContext *cx, unsigned argc, Value *vp)
+static bool
+num_toString_impl(JSContext *cx, CallArgs args)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(IsNumber(args.thisv()));
 
-    double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, num_toString, &d, &ok))
-        return ok;
+    double d = Extract(args.thisv());
 
     int32_t base = 10;
     if (args.hasDefined(0)) {
@@ -611,14 +623,18 @@ num_toString(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static JSBool
-num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
+num_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsNumber, num_toString_impl, args);
+}
 
-    double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, num_toLocaleString, &d, &ok))
-        return ok;
+static bool
+num_toLocaleString_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsNumber(args.thisv()));
+
+    double d = Extract(args.thisv());
 
     Rooted<JSString*> str(cx, js_NumberToStringWithBase(cx, d, 10));
     if (!str) {
@@ -739,18 +755,26 @@ num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static JSBool
+num_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsNumber, num_toLocaleString_impl, args);
+}
+
+static bool
+num_valueOf_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsNumber(args.thisv()));
+    args.rval().setNumber(Extract(args.thisv()));
+    return true;
+}
+
 JSBool
 js_num_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
-    double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, js_num_valueOf, &d, &ok))
-        return ok;
-
-    args.rval().setNumber(d);
-    return true;
+    return CallNonGenericMethod(cx, IsNumber, num_valueOf_impl, args);
 }
 
 
@@ -794,15 +818,10 @@ DToStrResult(JSContext *cx, double d, JSDToStrMode mode, int precision, CallArgs
  * In the following three implementations, we allow a larger range of precision
  * than ECMA requires; this is permitted by ECMA-262.
  */
-static JSBool
-num_toFixed(JSContext *cx, unsigned argc, Value *vp)
+static bool
+num_toFixed_impl(JSContext *cx, CallArgs args)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, num_toFixed, &d, &ok))
-        return ok;
+    JS_ASSERT(IsNumber(args.thisv()));
 
     int precision;
     if (args.length() == 0) {
@@ -812,18 +831,20 @@ num_toFixed(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    return DToStrResult(cx, d, DTOSTR_FIXED, precision, args);
+    return DToStrResult(cx, Extract(args.thisv()), DTOSTR_FIXED, precision, args);
 }
 
 static JSBool
-num_toExponential(JSContext *cx, unsigned argc, Value *vp)
+num_toFixed(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsNumber, num_toFixed_impl, args);
+}
 
-    double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, num_toExponential, &d, &ok))
-        return ok;
+static bool
+num_toExponential_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsNumber(args.thisv()));
 
     JSDToStrMode mode;
     int precision;
@@ -836,18 +857,22 @@ num_toExponential(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
-    return DToStrResult(cx, d, mode, precision + 1, args);
+    return DToStrResult(cx, Extract(args.thisv()), mode, precision + 1, args);
 }
 
 static JSBool
-num_toPrecision(JSContext *cx, unsigned argc, Value *vp)
+num_toExponential(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsNumber, num_toExponential_impl, args);
+}
 
-    double d;
-    bool ok;
-    if (!BoxedPrimitiveMethodGuard(cx, args, num_toPrecision, &d, &ok))
-        return ok;
+static bool
+num_toPrecision_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsNumber(args.thisv()));
+
+    double d = Extract(args.thisv());
 
     if (!args.hasDefined(0)) {
         JSString *str = js_NumberToStringWithBase(cx, d, 10);
@@ -871,6 +896,13 @@ num_toPrecision(JSContext *cx, unsigned argc, Value *vp)
     }
 
     return DToStrResult(cx, d, mode, precision, args);
+}
+
+static JSBool
+num_toPrecision(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsNumber, num_toPrecision_impl, args);
 }
 
 static JSFunctionSpec number_methods[] = {

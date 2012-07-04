@@ -95,7 +95,6 @@
 
 #include "gc/Marking.h"
 #include "vm/ArgumentsObject.h"
-#include "vm/MethodGuard.h"
 #include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 
@@ -1443,17 +1442,18 @@ class ArraySharpDetector
     }
 };
 
-static JSBool
-array_toSource(JSContext *cx, unsigned argc, Value *vp)
+static bool
+IsArray(const Value &v)
 {
-    JS_CHECK_RECURSION(cx, return false);
+    return v.isObject() && v.toObject().isArray();
+}
 
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx, ToObject(cx, &args.thisv()));
-    if (!obj)
-        return false;
-    if (!obj->isArray())
-        return HandleNonGenericMethodClassMismatch(cx, args, array_toSource, &ArrayClass);
+static bool
+array_toSource_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsArray(args.thisv()));
+
+    Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
     ArraySharpDetector detector(cx);
     if (!detector.init(obj))
@@ -1515,6 +1515,14 @@ array_toSource(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval().setString(str);
     return true;
+}
+
+static JSBool
+array_toSource(JSContext *cx, unsigned argc, Value *vp)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod(cx, IsArray, array_toSource_impl, args);
 }
 #endif
 

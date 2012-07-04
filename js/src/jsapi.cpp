@@ -61,7 +61,6 @@
 #include "gc/Marking.h"
 #include "gc/Memory.h"
 #include "js/MemoryMetrics.h"
-#include "vm/MethodGuard.h"
 #include "vm/NumericConversions.h"
 #include "vm/StringBuffer.h"
 #include "vm/Xdr.h"
@@ -87,6 +86,24 @@
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
+
+bool
+JS::detail::CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
+                               CallArgs args)
+{
+    const Value &thisv = args.thisv();
+    JS_ASSERT(!test(thisv));
+
+    if (thisv.isObject()) {
+        JSObject &thisObj = args.thisv().toObject();
+        if (thisObj.isProxy())
+            return Proxy::nativeCall(cx, test, impl, args);
+    }
+
+    ReportIncompatible(cx, args);
+    return false;
+}
+
 
 /*
  * This class is a version-establishing barrier at the head of a VM entry or
@@ -4872,14 +4889,6 @@ JS_DefineFunctionById(JSContext *cx, JSObject *obj_, jsid id_, JSNative call,
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     return js_DefineFunction(cx, obj, id, call, nargs, attrs);
-}
-
-extern JS_PUBLIC_API(JSBool)
-JS_CallNonGenericMethodOnProxy(JSContext *cx, unsigned argc, jsval *vp, JSNative native,
-                               JSClass *clasp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return HandleNonGenericMethodClassMismatch(cx, args, native, Valueify(clasp));
 }
 
 struct AutoLastFrameCheck {

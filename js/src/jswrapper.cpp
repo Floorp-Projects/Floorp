@@ -304,10 +304,11 @@ DirectWrapper::construct(JSContext *cx, JSObject *wrapper, unsigned argc, Value 
 }
 
 bool
-DirectWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs args)
+DirectWrapper::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args)
 {
     const jsid id = JSID_VOID;
-    CHECKED(IndirectProxyHandler::nativeCall(cx, wrapper, clasp, native, args), CALL);
+    Rooted<JSObject*> wrapper(cx, &args.thisv().toObject());
+    CHECKED(IndirectProxyHandler::nativeCall(cx, test, impl, args), CALL);
 }
 
 bool
@@ -715,12 +716,14 @@ CrossCompartmentWrapper::construct(JSContext *cx, JSObject *wrapper_, unsigned a
 }
 
 bool
-CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native, CallArgs srcArgs)
+CrossCompartmentWrapper::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
+                                    CallArgs srcArgs)
 {
-    JS_ASSERT(srcArgs.thisv().isMagic(JS_IS_CONSTRUCTING) || &srcArgs.thisv().toObject() == wrapper);
-    JS_ASSERT(!UnwrapObject(wrapper)->isCrossCompartmentWrapper());
+    Rooted<JSObject*> wrapper(cx, &srcArgs.thisv().toObject());
+    JS_ASSERT(srcArgs.thisv().isMagic(JS_IS_CONSTRUCTING) ||
+              !UnwrapObject(wrapper)->isCrossCompartmentWrapper());
 
-    JSObject *wrapped = wrappedObject(wrapper);
+    Rooted<JSObject*> wrapped(cx, wrappedObject(wrapper));
     AutoCompartment call(cx, wrapped);
     if (!call.enter())
         return false;
@@ -732,13 +735,13 @@ CrossCompartmentWrapper::nativeCall(JSContext *cx, JSObject *wrapper, Class *cla
     Value *src = srcArgs.base();
     Value *srcend = srcArgs.array() + srcArgs.length();
     Value *dst = dstArgs.base();
-    for (; src != srcend; ++src, ++dst) {
+    for (; src < srcend; ++src, ++dst) {
         *dst = *src;
         if (!call.destination->wrap(cx, dst))
             return false;
     }
 
-    if (!CallJSNative(cx, native, dstArgs))
+    if (!CallNonGenericMethod(cx, test, impl, dstArgs))
         return false;
 
     srcArgs.rval() = dstArgs.rval();
@@ -828,14 +831,14 @@ SecurityWrapper<Base>::SecurityWrapper(unsigned flags)
 
 template <class Base>
 bool
-SecurityWrapper<Base>::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp, Native native,
+SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                   CallArgs args)
 {
     /*
      * Let this through until compartment-per-global lets us have stronger
      * invariants wrt document.domain (bug 714547).
      */
-    return Base::nativeCall(cx, wrapper, clasp, native, args);
+    return Base::nativeCall(cx, test, impl, args);
 }
 
 template <class Base>
@@ -882,7 +885,8 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
     /* Spidermonkey extensions. */
     virtual bool call(JSContext *cx, JSObject *proxy, unsigned argc, Value *vp);
     virtual bool construct(JSContext *cx, JSObject *proxy, unsigned argc, Value *argv, Value *rval);
-    virtual bool nativeCall(JSContext *cx, JSObject *proxy, Class *clasp, Native native, CallArgs args);
+    virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
+                            CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, JSObject *proxy, const Value *vp, bool *bp);
     virtual bool objectClassIs(JSObject *obj, ESClassValue classValue, JSContext *cx);
     virtual JSString *obj_toString(JSContext *cx, JSObject *proxy);
@@ -967,8 +971,7 @@ DeadObjectProxy::construct(JSContext *cx, JSObject *wrapper, unsigned argc,
 }
 
 bool
-DeadObjectProxy::nativeCall(JSContext *cx, JSObject *wrapper, Class *clasp,
-                            Native native, CallArgs args)
+DeadObjectProxy::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
     return false;

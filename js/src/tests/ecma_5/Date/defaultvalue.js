@@ -23,7 +23,7 @@ function allTests()
   assertEq(d == DS, true);
 
   var d2 = new Date(2010, 1, 1);
-  d2.valueOf = function() { return 17; };
+  d2.valueOf = function() { assertEq(arguments.length, 0); return 17; };
   assertEq(d2 == DS, true);
 
   var d3 = new Date(2010, 1, 1);
@@ -36,7 +36,7 @@ function allTests()
     assertEq(d == DS, true);
 
     var d2 = new Date(2010, 1, 1);
-    d2.valueOf = function() { return 17; };
+    d2.valueOf = function() { assertEq(arguments.length, 0); return 17; };
     assertEq(d2 == DS, true);
 
     var d3 = new Date(2010, 1, 1);
@@ -56,7 +56,7 @@ function allTests()
   assertEq(d2 + 3, 9 + 3);
 
   var d3 = new Date(2010, 1, 1);
-  d3.valueOf = function() { return 17; };
+  d3.valueOf = function() { assertEq(arguments.length, 0); return 17; };
   assertEq(d3 + 5, DS + "5");
 
   function testDateNumberAddition()
@@ -69,7 +69,7 @@ function allTests()
     assertEq(d2 + 3, 9 + 3);
 
     var d3 = new Date(2010, 1, 1);
-    d3.valueOf = function() { return 17; };
+    d3.valueOf = function() { assertEq(arguments.length, 0); return 17; };
     assertEq(d3 + 5, DS + "5");
   }
   testDateNumberAddition();
@@ -85,7 +85,7 @@ function allTests()
   assertEq(d2 + d2, 10);
 
   var d3 = new Date(2010, 1, 1);
-  d3.valueOf = function() { return 8.5; };
+  d3.valueOf = function() { assertEq(arguments.length, 0); return 8.5; };
   assertEq(d3 + d3, DS + DS);
 
   function testDateDateAddition()
@@ -98,7 +98,7 @@ function allTests()
     assertEq(d2 + d2, 10);
 
     var d3 = new Date(2010, 1, 1);
-    d3.valueOf = function() { return 8.5; };
+    d3.valueOf = function() { assertEq(arguments.length, 0); return 8.5; };
     assertEq(d3 + d3, DS + DS);
   }
   testDateDateAddition();
@@ -113,7 +113,7 @@ function allTests()
   assertEq(obj[d], 17);
 
   var d2 = new Date(2010, 1, 1);
-  d2.valueOf = function() { return 8; }
+  d2.valueOf = function() { assertEq(arguments.length, 0); return 8; }
   assertEq(obj[d2], 17);
 
   var d3 = new Date(2010, 1, 1);
@@ -129,7 +129,7 @@ function allTests()
     assertEq(obj[d], 17);
 
     var d2 = new Date(2010, 1, 1);
-    d2.valueOf = function() { return 8; }
+    d2.valueOf = function() { assertEq(arguments.length, 0); return 8; }
     assertEq(obj[d2], 17);
 
     var d3 = new Date(2010, 1, 1);
@@ -152,7 +152,7 @@ function allTests()
   assertEq(d2 in { baz: 42 }, true);
 
   var d3 = new Date(2010, 1, 1);
-  d3.valueOf = function() { return "quux"; };
+  d3.valueOf = function() { assertEq(arguments.length, 0); return "quux"; };
   assertEq(d3 in obj, true);
 
   function testInOperatorName()
@@ -168,7 +168,7 @@ function allTests()
     assertEq(d2 in { baz: 42 }, true);
 
     var d3 = new Date(2010, 1, 1);
-    d3.valueOf = function() { return "quux"; };
+    d3.valueOf = function() { assertEq(arguments.length, 0); return "quux"; };
     assertEq(d3 in obj, true);
   }
   testInOperatorName();
