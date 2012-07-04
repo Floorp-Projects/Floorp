@@ -257,8 +257,7 @@ IonCacheGetProperty::attachNative(JSContext *cx, JSObject *obj, JSObject *holder
     PatchJump(exitJump, cacheLabel());
     updateLastJump(exitJump);
 
-    IonSpew(IonSpew_InlineCaches, "Generated native GETPROP stub at %p %s", code->raw(),
-            idempotent() ? "(idempotent)" : "(not idempotent)");
+    IonSpew(IonSpew_InlineCaches, "Generated native GETPROP stub at %p", code->raw());
 
     return true;
 }
@@ -289,67 +288,6 @@ IsCacheableGetProp(JSObject *obj, JSObject *holder, const Shape *shape)
             shape->hasDefaultGetter());
 }
 
-static bool
-IsIdempotentProtoChain(JSObject *obj)
-{
-    // Return false if obj (or an object on its proto chain) is non-native or has
-    // a resolve or lookup hook.
-    while (true) {
-        if (!obj->isNative())
-            return false;
-
-        if (obj->getClass()->resolve != JS_ResolveStub)
-            return false;
-
-        if (obj->getOps()->lookupProperty || obj->getOps()->lookupGeneric || obj->getOps()->lookupElement)
-            return false;
-
-        JSObject *proto = obj->getProto();
-        if (!proto)
-            return true;
-        obj = proto;
-    }
-
-    JS_NOT_REACHED("Should not get here");
-    return false;
-}
-
-static bool
-TryAttachNativeStub(JSContext *cx, IonCacheGetProperty &cache, JSObject *obj,
-                    HandlePropertyName name, bool *isCacheableNative)
-{
-    JS_ASSERT(!*isCacheableNative);
-
-    if (!obj->isNative())
-        return true;
-
-    // If the cache is idempotent, watch out for resolve hooks or non-native
-    // objects on the proto chain. We check this before calling lookupProperty,
-    // to make sure no effectful lookup hooks or resolve hooks are called.
-    if (cache.idempotent() && !IsIdempotentProtoChain(obj))
-        return true;
-
-    JSObject *holder;
-    JSProperty *prop;
-    if (!obj->lookupProperty(cx, name, &holder, &prop))
-        return false;
-
-    const Shape *shape = (const Shape *)prop;
-    if (!IsCacheableGetProp(obj, holder, shape))
-        return true;
-
-    *isCacheableNative = true;
-
-    if (cache.stubCount() < MAX_STUBS) {
-        cache.incrementStubCount();
-
-        if (!cache.attachNative(cx, obj, holder, shape))
-            return false;
-    }
-
-    return true;
-}
-
 bool
 js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Value *vp)
 {
@@ -366,30 +304,22 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
     // Override the return value if we are invalidated (bug 728188).
     AutoDetectInvalidation adi(cx, vp, topScript);
 
-    // If the cache is idempotent, we will redo the op in the interpreter.
-    if (cache.idempotent())
-        adi.disable();
-
     // For now, just stop generating new stubs once we hit the stub count
     // limit. Once we can make calls from within generated stubs, a new call
     // stub will be generated instead and the previous stubs unlinked.
-    bool isCacheableNative = false;
-    if (!TryAttachNativeStub(cx, cache, obj, name, &isCacheableNative))
-        return false;
+    if (cache.stubCount() < MAX_STUBS && obj->isNative()) {
+        cache.incrementStubCount();
 
-    if (cache.idempotent() && !isCacheableNative) {
-        // Invalidate the cache if the property was not found, or was found on
-        // a non-native object. This ensures:
-        // 1) The property read has no observable side-effects.
-        // 2) There's no need to dynamically monitor the return type. This would
-        //    be complicated since (due to GVN) there can be multiple pc's
-        //    associated with a single idempotent cache.
-        IonSpew(IonSpew_InlineCaches, "Invalidating from idempotent cache %s:%d",
-                topScript->filename, topScript->lineno);
+        JSObject *holder;
+        JSProperty *prop;
+        if (!obj->lookupProperty(cx, name, &holder, &prop))
+            return false;
 
-        topScript->invalidatedIdempotentCache = true;
-
-        return Invalidate(cx, topScript);
+        const Shape *shape = (const Shape *)prop;
+        if (IsCacheableGetProp(obj, holder, shape)) {
+            if (!cache.attachNative(cx, obj, holder, shape))
+                return false;
+        }
     }
 
     RootedId id(cx, NameToId(name));
@@ -401,21 +331,16 @@ js::ion::GetPropertyCache(JSContext *cx, size_t cacheIndex, HandleObject obj, Va
             return false;
     }
 
-    if (!cache.idempotent()) {
-        // If the cache is idempotent, the property exists so we don't have to
-        // call __noSuchMethod__.
-
 #if JS_HAS_NO_SUCH_METHOD
-        // Handle objects with __noSuchMethod__.
-        if (JSOp(*pc) == JSOP_CALLPROP && JS_UNLIKELY(vp->isPrimitive())) {
-            if (!OnUnknownMethod(cx, obj, IdToValue(id), vp))
-                return false;
-        }
+    // Handle objects with __noSuchMethod__.
+    if (JSOp(*pc) == JSOP_CALLPROP && JS_UNLIKELY(vp->isPrimitive())) {
+        if (!OnUnknownMethod(cx, obj, IdToValue(id), vp))
+            return false;
+    }
 #endif
 
-        // Monitor changes to cache entry.
-        types::TypeScript::Monitor(cx, script, pc, *vp);
-    }
+    // Monitor changes to cache entry.
+    types::TypeScript::Monitor(cx, script, pc, *vp);
 
     return true;
 }
