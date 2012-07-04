@@ -43,6 +43,7 @@
 #define jsion_licm_h__
 
 #include "ion/IonAllocPolicy.h"
+#include "ion/IonAnalysis.h"
 #include "ion/MIR.h"
 #include "ion/MIRGraph.h"
 // This file represents the Loop Invariant Code Motion optimization pass
@@ -64,21 +65,6 @@ class LICM
     LICM(MIRGraph &graph);
     bool analyze();
 };
-
-// Linear sum of term(s). For now the only linear sums which can be represented
-// are 'n' or 'x + n' (for any computation x).
-struct LinearSum
-{
-    MDefinition *term;
-    int32 constant;
-
-    LinearSum(MDefinition *term, int32 constant)
-        : term(term), constant(constant)
-    {}
-};
-
-LinearSum
-ExtractLinearSum(MDefinition *ins);
 
 // Extract a linear inequality holding when a boolean test goes in the
 // specified direction, of the form 'lhs + lhsN <= rhs' (or >=).

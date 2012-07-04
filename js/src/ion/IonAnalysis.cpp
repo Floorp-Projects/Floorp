@@ -819,3 +819,217 @@ ion::AssertGraphCoherency(MIRGraph &graph)
 #endif
 }
 
+
+struct BoundsCheckInfo
+{
+    MBoundsCheck *check;
+    uint32 validUntil;
+};
+
+typedef HashMap<uint32,
+                BoundsCheckInfo,
+                DefaultHasher<uint32>,
+                IonAllocPolicy> BoundsCheckMap;
+
+// Compute a hash for bounds checks which ignores constant offsets in the index.
+static HashNumber
+BoundsCheckHashIgnoreOffset(MBoundsCheck *check)
+{
+    LinearSum indexSum = ExtractLinearSum(check->index());
+    uintptr_t index = indexSum.term ? uintptr_t(indexSum.term) : 0;
+    uintptr_t length = uintptr_t(check->length());
+    return index ^ length;
+}
+
+static MBoundsCheck *
+FindDominatingBoundsCheck(BoundsCheckMap &checks, MBoundsCheck *check, size_t index)
+{
+    // See the comment in ValueNumberer::findDominatingDef.
+    HashNumber hash = BoundsCheckHashIgnoreOffset(check);
+    BoundsCheckMap::Ptr p = checks.lookup(hash);
+    if (!p || index > p->value.validUntil) {
+        // We didn't find a dominating bounds check.
+        BoundsCheckInfo info;
+        info.check = check;
+        info.validUntil = index + check->block()->numDominated();
+
+        if(!checks.put(hash, info))
+            return NULL;
+
+        return check;
+    }
+
+    return p->value.check;
+}
+
+// Extract a linear sum from ins, if possible (otherwise giving the sum 'ins + 0').
+LinearSum
+ion::ExtractLinearSum(MDefinition *ins)
+{
+    if (ins->type() != MIRType_Int32)
+        return LinearSum(ins, 0);
+
+    if (ins->isConstant()) {
+        const Value &v = ins->toConstant()->value();
+        JS_ASSERT(v.isInt32());
+        return LinearSum(NULL, v.toInt32());
+    } else if (ins->isAdd() || ins->isSub()) {
+        MDefinition *lhs = ins->getOperand(0);
+        MDefinition *rhs = ins->getOperand(1);
+        if (lhs->type() == MIRType_Int32 && rhs->type() == MIRType_Int32) {
+            LinearSum lsum = ExtractLinearSum(lhs);
+            LinearSum rsum = ExtractLinearSum(rhs);
+
+            JS_ASSERT(lsum.term || rsum.term);
+            if (lsum.term && rsum.term)
+                return LinearSum(ins, 0);
+
+            // Check if this is of the form <SUM> + n, n + <SUM> or <SUM> - n.
+            if (ins->isAdd()) {
+                int32 constant;
+                if (!SafeAdd(lsum.constant, rsum.constant, &constant))
+                    return LinearSum(ins, 0);
+                return LinearSum(lsum.term ? lsum.term : rsum.term, constant);
+            } else if (lsum.term) {
+                int32 constant;
+                if (!SafeSub(lsum.constant, rsum.constant, &constant))
+                    return LinearSum(ins, 0);
+                return LinearSum(lsum.term, constant);
+            }
+        }
+    }
+
+    return LinearSum(ins, 0);
+}
+
+static bool
+TryEliminateBoundsCheck(MBoundsCheck *dominating, MBoundsCheck *dominated, bool *eliminated)
+{
+    JS_ASSERT(!*eliminated);
+
+    // We found two bounds checks with the same hash number, but we still have
+    // to make sure the lengths and index terms are equal.
+    if (dominating->length() != dominated->length())
+        return true;
+
+    LinearSum sumA = ExtractLinearSum(dominating->index());
+    LinearSum sumB = ExtractLinearSum(dominated->index());
+
+    // Both terms should be NULL or the same definition.
+    if (sumA.term != sumB.term)
+        return true;
+
+    // This bounds check is redundant.
+    *eliminated = true;
+
+    // Normalize the ranges according to the constant offsets in the two indexes.
+    int32 minimumA, maximumA, minimumB, maximumB;
+    if (!SafeAdd(sumA.constant, dominating->minimum(), &minimumA) ||
+        !SafeAdd(sumA.constant, dominating->maximum(), &maximumA) ||
+        !SafeAdd(sumB.constant, dominated->minimum(), &minimumB) ||
+        !SafeAdd(sumB.constant, dominated->maximum(), &maximumB))
+    {
+        return false;
+    }
+
+    // Update the dominating check to cover both ranges, denormalizing the
+    // result per the constant offset in the index.
+    int32 newMinimum, newMaximum;
+    if (!SafeSub(Min(minimumA, minimumB), sumA.constant, &newMinimum) ||
+        !SafeSub(Max(maximumA, maximumB), sumA.constant, &newMaximum))
+    {
+        return false;
+    }
+
+    dominating->setMinimum(newMinimum);
+    dominating->setMaximum(newMaximum);
+    return true;
+}
+
+// A bounds check is considered redundant if it's dominated by another bounds
+// check with the same length and the indexes differ by only a constant amount.
+// In this case we eliminate the redundant bounds check and update the other one
+// to cover the ranges of both checks.
+//
+// Bounds checks are added to a hash map and since the hash function ignores
+// differences in constant offset, this offers a fast way to find redundant
+// checks.
+bool
+ion::EliminateRedundantBoundsChecks(MIRGraph &graph)
+{
+    BoundsCheckMap checks;
+
+    if (!checks.init())
+        return false;
+
+    // Stack for pre-order CFG traversal.
+    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist;
+
+    // The index of the current block in the CFG traversal.
+    size_t index = 0;
+
+    // Add all self-dominating blocks to the worklist.
+    // This includes all roots. Order does not matter.
+    for (MBasicBlockIterator i(graph.begin()); i != graph.end(); i++) {
+        MBasicBlock *block = *i;
+        if (block->immediateDominator() == block) {
+            if (!worklist.append(block))
+                return false;
+        }
+    }
+
+    // Starting from each self-dominating block, traverse the CFG in pre-order.
+    while (!worklist.empty()) {
+        MBasicBlock *block = worklist.popCopy();
+
+        // Add all immediate dominators to the front of the worklist.
+        for (size_t i = 0; i < block->numImmediatelyDominatedBlocks(); i++) {
+            if (!worklist.append(block->getImmediatelyDominatedBlock(i)))
+                return false;
+        }
+
+        for (MDefinitionIterator iter(block); iter; ) {
+            if (!iter->isBoundsCheck()) {
+                iter++;
+                continue;
+            }
+
+            MBoundsCheck *check = iter->toBoundsCheck();
+
+            // Replace all uses of the bounds check with the actual index.
+            // This is (a) necessary, because we can coalesce two different
+            // bounds checks and would otherwise use the wrong index and
+            // (b) helps register allocation. Note that this is safe since
+            // no other pass after bounds check elimination moves instructions.
+            check->replaceAllUsesWith(check->index());
+
+            if (!check->isMovable()) {
+                iter++;
+                continue;
+            }
+
+            MBoundsCheck *dominating = FindDominatingBoundsCheck(checks, check, index);
+            if (!dominating)
+                return false;
+
+            if (dominating == check) {
+                // We didn't find a dominating bounds check.
+                iter++;
+                continue;
+            }
+
+            bool eliminated = false;
+            if (!TryEliminateBoundsCheck(dominating, check, &eliminated))
+                return false;
+
+            if (eliminated)
+                iter = check->block()->discardDefAt(iter);
+            else
+                iter++;
+        }
+        index++;
+    }
+
+    JS_ASSERT(index == graph.numBlocks());
+    return true;
+}
