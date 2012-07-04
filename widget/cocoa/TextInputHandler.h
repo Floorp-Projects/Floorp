@@ -28,13 +28,17 @@ namespace widget {
 // Key code constants
 enum
 {
-  kRCommandKeyCode    = 0x36, // right command key
+  kVK_RightCommand    = 0x36, // right command key
 
-  kPrintScreenKeyCode = kVK_F13,
-  kScrollLockKeyCode  = kVK_F14,
-  kPauseKeyCode       = kVK_F15,
+  kVK_PC_PrintScreen     = kVK_F13,
+  kVK_PC_ScrollLock      = kVK_F14,
+  kVK_PC_Pause           = kVK_F15,
 
-  kPowerbookEnterKeyCode  = 0x34, // Enter on Powerbook's keyboard is different
+  kVK_PC_Insert          = kVK_Help,
+  kVK_PC_Backspace       = kVK_Delete,
+  kVK_PC_Delete          = kVK_ForwardDelete,
+
+  kVK_Powerbook_KeypadEnter = 0x34  // Enter on Powerbook's keyboard is different
 };
 
 /**
