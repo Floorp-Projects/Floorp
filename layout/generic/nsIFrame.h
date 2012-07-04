@@ -239,11 +239,6 @@ typedef PRUint64 nsFrameState;
 // This bit acts as a loop flag for recursive paint server drawing.
 #define NS_FRAME_DRAWING_AS_PAINTSERVER             NS_FRAME_STATE_BIT(33)
 
-// This bit is set on frames that create ContainerLayers with component
-// alpha children. With BasicLayers we avoid creating these, so we mark
-// the frames for future reference.
-#define NS_FRAME_NO_COMPONENT_ALPHA                 NS_FRAME_STATE_BIT(34)
-
 // Frame's overflow area was clipped by the 'clip' property.
 #define NS_FRAME_HAS_CLIP                           NS_FRAME_STATE_BIT(35)
 
