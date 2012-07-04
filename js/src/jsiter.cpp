@@ -52,6 +52,31 @@ using namespace mozilla;
 using namespace js;
 using namespace js::gc;
 
+Class js::ElementIteratorClass = {
+    "ElementIterator",
+    JSCLASS_HAS_RESERVED_SLOTS(ElementIteratorObject::NumSlots),
+    JS_PropertyStub,         /* addProperty */
+    JS_PropertyStub,         /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    NULL,                    /* finalize    */
+    NULL,                    /* checkAccess */
+    NULL,                    /* call        */
+    NULL,                    /* construct   */
+    NULL,                    /* hasInstance */
+    NULL,                    /* trace       */
+    {
+        NULL,                /* equality       */
+        NULL,                /* outerObject    */
+        NULL,                /* innerObject    */
+        NULL,                /* iteratorObject */
+        NULL                 /* unused  */
+    }
+};
+
 static const gc::AllocKind ITERATOR_FINALIZE_KIND = gc::FINALIZE_OBJECT2;
 
 void
@@ -713,18 +738,6 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, Value *vp)
 
 }
 
-JSBool
-js_ThrowStopIteration(JSContext *cx)
-{
-    JS_ASSERT(!cx->isExceptionPending());
-    Value v;
-    if (js_FindClassObject(cx, NULL, JSProto_StopIteration, &v))
-        cx->setPendingException(v);
-    return false;
-}
-
-/*** Iterator objects ****************************************************************************/
-
 static JSBool
 Iterator(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -743,6 +756,17 @@ Iterator(JSContext *cx, unsigned argc, Value *vp)
         return false;
     args.rval() = args[0];
     return true;
+}
+
+JSBool
+js_ThrowStopIteration(JSContext *cx)
+{
+    Value v;
+
+    JS_ASSERT(!JS_IsExceptionPending(cx));
+    if (js_FindClassObject(cx, NULL, JSProto_StopIteration, &v))
+        cx->setPendingException(v);
+    return JS_FALSE;
 }
 
 static JSBool
@@ -784,7 +808,7 @@ static JSFunctionSpec iterator_methods[] = {
     JS_FS_END
 };
 
-static JSObject *
+JSObject *
 iterator_iteratorObject(JSContext *cx, HandleObject obj, JSBool keysonly)
 {
     return obj;
@@ -831,99 +855,6 @@ Class PropertyIteratorObject::class_ = {
         iterator_iteratorObject,
         NULL                 /* unused  */
     }
-};
-
-const uint32_t CLOSED_INDEX = UINT32_MAX;
-
-JSObject *
-ElementIteratorObject::create(JSContext *cx, Handle<Value> target)
-{
-    GlobalObject *global = GetCurrentGlobal(cx);
-    Rooted<JSObject*> proto(cx, global->getOrCreateElementIteratorPrototype(cx));
-    if (!proto)
-        return NULL;
-    JSObject *iterobj = NewObjectWithGivenProto(cx, &class_, proto, global);
-    if (iterobj) {
-        iterobj->setReservedSlot(TargetSlot, target);
-        iterobj->setReservedSlot(IndexSlot, Int32Value(0));
-    }
-    return iterobj;
-}
-
-JSBool
-ElementIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    JSObject *iterobj;
-    if (!NonGenericMethodGuard(cx, args, next, &class_, &iterobj))
-        return false;
-    if (!iterobj)
-        return true;
-
-    uint32_t i, length;
-    Value target = iterobj->getReservedSlot(TargetSlot);
-    Rooted<JSObject*> obj(cx);
-
-    // Get target.length.
-    if (target.isString()) {
-        length = uint32_t(target.toString()->length());
-    } else {
-        obj = ValueToObject(cx, target);
-        if (!obj)
-            goto close;
-        if (!js_GetLengthProperty(cx, obj, &length))
-            goto close;
-    }
-
-    // Check target.length.
-    i = uint32_t(iterobj->getReservedSlot(IndexSlot).toInt32());
-    if (i >= length) {
-        js_ThrowStopIteration(cx);
-        goto close;
-    }
-
-    // Get target[i].
-    JS_ASSERT(i + 1 > i);
-    if (target.isString()) {
-        JSString *c = cx->runtime->staticStrings.getUnitStringForElement(cx, target.toString(), i);
-        if (!c)
-            goto close;
-        vp->setString(c);
-    } else {
-        if (!obj->getElement(cx, obj, i, vp))
-            goto close;
-    }
-
-    // On success, bump the index.
-    iterobj->setReservedSlot(IndexSlot, Int32Value(int32_t(i + 1)));
-    return true;
-
-  close:
-    // Close the iterator. The TargetSlot will never be used again, so don't keep a
-    // reference to it.
-    iterobj->setReservedSlot(TargetSlot, UndefinedValue());
-    iterobj->setReservedSlot(IndexSlot, Int32Value(int32_t(CLOSED_INDEX)));
-    return false;
-}
-
-Class ElementIteratorObject::class_ = {
-    "Iterator",
-    JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(NumSlots),
-    JS_PropertyStub,         /* addProperty */
-    JS_PropertyStub,         /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    NULL                     /* finalize    */
-};
-
-JSFunctionSpec ElementIteratorObject::methods[] = {
-    JS_FN("next", next, 0, 0),
-    JS_FS_END
 };
 
 #if JS_HAS_GENERATORS
@@ -1168,6 +1099,75 @@ js_SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uint
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
 
+const uint32_t CLOSED_INDEX = UINT32_MAX;
+
+JSObject *
+ElementIteratorObject::create(JSContext *cx, HandleObject obj)
+{
+    JS_ASSERT(obj);
+    JSObject *iterobj = NewObjectWithGivenProto(cx, &ElementIteratorClass, NULL, obj);
+    if (iterobj) {
+        iterobj->setReservedSlot(TargetSlot, ObjectValue(*obj));
+        iterobj->setReservedSlot(IndexSlot, Int32Value(0));
+    }
+    return iterobj;
+}
+
+inline uint32_t
+ElementIteratorObject::getIndex() const
+{
+    return uint32_t(getReservedSlot(IndexSlot).toInt32());
+}
+
+inline JSObject *
+ElementIteratorObject::getTargetObject() const
+{
+    return &getReservedSlot(TargetSlot).toObject();
+}
+
+inline void
+ElementIteratorObject::setIndex(uint32_t index)
+{
+    setReservedSlot(IndexSlot, Int32Value(int32_t(index)));
+}
+
+bool
+ElementIteratorObject::iteratorNext(JSContext *cx, Value *vp)
+{
+    Rooted<ElementIteratorObject*> self(cx, this);
+
+    uint32_t i, length;
+    RootedObject obj(cx, getTargetObject());
+    if (!js_GetLengthProperty(cx, obj, &length))
+        goto error;
+
+    i = self->getIndex();
+    if (i >= length) {
+        self->setIndex(CLOSED_INDEX);
+        vp->setMagic(JS_NO_ITER_VALUE);
+        return true;
+    }
+
+    JS_ASSERT(i + 1 > i);
+    if (!obj->getElement(cx, obj, i, vp))
+        goto error;
+
+    /* On success, bump the index. */
+    self->setIndex(i + 1);
+    return true;
+
+  error:
+    self->setIndex(CLOSED_INDEX);
+    return false;
+}
+
+inline js::ElementIteratorObject *
+JSObject::asElementIterator()
+{
+    JS_ASSERT(isElementIterator());
+    return static_cast<js::ElementIteratorObject *>(this);
+}
+
 JSBool
 js_IteratorMore(JSContext *cx, HandleObject iterobj, Value *rval)
 {
@@ -1203,6 +1203,25 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, Value *rval)
             return false;
         if ((ni->flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *rval, rval))
             return false;
+    } else if (iterobj->isElementIterator()) {
+        /*
+         * Like native iterators, element iterators do not have a .next
+         * method, so this fast path is necessary for correctness.
+         */
+        if (!iterobj->asElementIterator()->iteratorNext(cx, rval))
+            return false;
+        if (rval->isMagic(JS_NO_ITER_VALUE)) {
+            cx->iterValue.setMagic(JS_NO_ITER_VALUE);
+            rval->setBoolean(false);
+            return true;
+        }
+    } else if (iterobj->isProxy()) {
+        if (!Proxy::iteratorNext(cx, iterobj, rval))
+            return false;
+        if (rval->isMagic(JS_NO_ITER_VALUE)) {
+            rval->setBoolean(false);
+            return true;
+        }
     } else {
         /* Call the iterator object's .next method. */
         if (!GetMethod(cx, iterobj, cx->runtime->atomState.nextAtom, 0, rval))
@@ -1290,8 +1309,6 @@ Class js::StopIterationClass = {
     stopiter_hasInstance,
     NULL                     /* construct   */
 };
-
-/*** Generators **********************************************************************************/
 
 #if JS_HAS_GENERATORS
 
@@ -1687,76 +1704,84 @@ static JSFunctionSpec generator_methods[] = {
 
 #endif /* JS_HAS_GENERATORS */
 
-/* static */ bool
-GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
+static bool
+InitIteratorClass(JSContext *cx, Handle<GlobalObject*> global)
 {
-    Rooted<JSObject*> iteratorProto(cx);
-    Value iteratorProtoVal = global->getPrototype(JSProto_Iterator);
-    if (iteratorProtoVal.isObject()) {
-        iteratorProto = &iteratorProtoVal.toObject();
-    } else {
-        iteratorProto = global->createBlankPrototype(cx, &PropertyIteratorObject::class_);
-        if (!iteratorProto)
-            return false;
+    Rooted<JSObject*> iteratorProto(cx,
+        global->createBlankPrototype(cx, &PropertyIteratorObject::class_));
+    if (!iteratorProto)
+        return false;
 
-        AutoIdVector blank(cx);
-        NativeIterator *ni = NativeIterator::allocateIterator(cx, 0, blank);
-        if (!ni)
-            return false;
-        ni->init(NULL, 0 /* flags */, 0, 0);
+    AutoIdVector blank(cx);
+    NativeIterator *ni = NativeIterator::allocateIterator(cx, 0, blank);
+    if (!ni)
+        return false;
+    ni->init(NULL, 0 /* flags */, 0, 0);
 
-        iteratorProto->asPropertyIterator().setNativeIterator(ni);
+    iteratorProto->asPropertyIterator().setNativeIterator(ni);
 
-        Rooted<JSFunction*> ctor(cx);
-        ctor = global->createConstructor(cx, Iterator, CLASS_NAME(cx, Iterator), 2);
-        if (!ctor)
-            return false;
-        if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))
-            return false;
-        if (!DefinePropertiesAndBrand(cx, iteratorProto, NULL, iterator_methods))
-            return false;
-        if (!DefineConstructorAndPrototype(cx, global, JSProto_Iterator, ctor, iteratorProto))
-            return false;
-    }
+    RootedFunction ctor(cx);
+    ctor = global->createConstructor(cx, Iterator, CLASS_NAME(cx, Iterator), 2);
+    if (!ctor)
+        return false;
 
-    Rooted<JSObject*> proto(cx);
-    if (global->getSlot(ELEMENT_ITERATOR_PROTO).isUndefined()) {
-        Class *cls = &ElementIteratorObject::class_;
-        proto = global->createBlankPrototypeInheriting(cx, cls, *iteratorProto);
-        if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, ElementIteratorObject::methods))
-            return false;
-        global->setReservedSlot(ELEMENT_ITERATOR_PROTO, ObjectValue(*proto));
-    }
+    if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))
+        return false;
 
+    if (!DefinePropertiesAndBrand(cx, iteratorProto, NULL, iterator_methods))
+        return false;
+
+    return DefineConstructorAndPrototype(cx, global, JSProto_Iterator, ctor, iteratorProto);
+}
+
+/* static */ bool
+GlobalObject::initGeneratorClass(JSContext *cx, Handle<GlobalObject*> global)
+{
 #if JS_HAS_GENERATORS
-    if (global->getSlot(GENERATOR_PROTO).isUndefined()) {
-        proto = global->createBlankPrototype(cx, &GeneratorClass);
-        if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
-            return false;
-        global->setReservedSlot(GENERATOR_PROTO, ObjectValue(*proto));
-    }
+    RootedObject proto(cx, global->createBlankPrototype(cx, &GeneratorClass));
+    if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
+        return false;
+    global->setReservedSlot(GENERATOR_PROTO, ObjectValue(*proto));
 #endif
-
-    if (global->getPrototype(JSProto_StopIteration).isUndefined()) {
-        proto = global->createBlankPrototype(cx, &StopIterationClass);
-        if (!proto || !proto->freeze(cx))
-            return false;
-
-        /* This should use a non-JSProtoKey'd slot, but this is easier for now. */
-        if (!DefineConstructorAndPrototype(cx, global, JSProto_StopIteration, proto, proto))
-            return false;
-
-        MarkStandardClassInitializedNoProto(global, &StopIterationClass);
-    }
-
     return true;
+}
+
+static JSObject *
+InitStopIterationClass(JSContext *cx, Handle<GlobalObject*> global)
+{
+    RootedObject proto(cx, global->createBlankPrototype(cx, &StopIterationClass));
+    if (!proto || !proto->freeze(cx))
+        return NULL;
+
+    /* This should use a non-JSProtoKey'd slot, but this is easier for now. */
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_StopIteration, proto, proto))
+        return NULL;
+
+    MarkStandardClassInitializedNoProto(global, &StopIterationClass);
+
+    return proto;
 }
 
 JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj)
 {
+    JS_ASSERT(obj->isNative());
+
     Rooted<GlobalObject*> global(cx, &obj->asGlobal());
-    if (!GlobalObject::initIteratorClasses(cx, global))
+
+    /*
+     * Bail if Iterator has already been initialized.  We test for Iterator
+     * rather than for StopIteration because if js_InitIteratorClasses recurs,
+     * as happens when the StopIteration object is frozen, initializing the
+     * Iterator class a second time will assert.
+     */
+    JSObject *iter;
+    if (!js_GetClassObject(cx, global, JSProto_Iterator, &iter))
         return NULL;
-    return global->getIteratorPrototype();
+    if (iter)
+        return iter;
+
+    if (!InitIteratorClass(cx, global) || !GlobalObject::initGeneratorClass(cx, global))
+        return NULL;
+    return InitStopIterationClass(cx, global);
 }
