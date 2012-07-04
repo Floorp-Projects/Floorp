@@ -590,7 +590,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   FrameLayerBuilder *layerBuilder = new FrameLayerBuilder();
   layerBuilder->Init(aBuilder);
-  layerManager->SetUserData(&gLayerManagerLayerBuilder, layerBuilder);
+  layerManager->SetUserData(&gLayerManagerLayerBuilder, new LayerManagerLayerBuilder(layerBuilder));
 
   if (aFlags & PAINT_FLUSH_LAYERS) {
     FrameLayerBuilder::InvalidateAllLayers(layerManager);
