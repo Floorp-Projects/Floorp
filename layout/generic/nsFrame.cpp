@@ -253,15 +253,6 @@ nsIFrame::MarkAsAbsoluteContainingBlock() {
   Properties().Set(AbsoluteContainingBlockProperty(), new nsAbsoluteContainingBlock(GetAbsoluteListID()));
 }
 
-void
-nsIFrame::ClearDisplayItemCache()
-{
-  if (HasAnyStateBits(NS_FRAME_HAS_CACHED_BACKGROUND)) {
-    Properties().Delete(CachedBackgroundImage());
-    RemoveStateBits(NS_FRAME_HAS_CACHED_BACKGROUND);
-  }
-}
-
 bool
 nsIFrame::CheckAndClearPaintedState()
 {

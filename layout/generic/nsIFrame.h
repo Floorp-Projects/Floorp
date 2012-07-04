@@ -295,10 +295,6 @@ typedef PRUint64 nsFrameState;
 // Frame is a descendant of a popup
 #define NS_FRAME_IN_POPUP                           NS_FRAME_STATE_BIT(48)
 
-// Frame has a cached rasterization of anV
-// nsDisplayBackground display item
-#define NS_FRAME_HAS_CACHED_BACKGROUND              NS_FRAME_STATE_BIT(49)
-
 // Box layout bits
 #define NS_STATE_IS_HORIZONTAL                      NS_FRAME_STATE_BIT(22)
 #define NS_STATE_IS_DIRECTION_NORMAL                NS_FRAME_STATE_BIT(31)
@@ -879,11 +875,6 @@ public:
     delete static_cast<nsOverflowAreas*>(aPropertyValue);
   }
 
-  static void DestroySurface(void* aPropertyValue)
-  {
-    static_cast<gfxASurface*>(aPropertyValue)->Release();
-  }
-
 #ifdef _MSC_VER
 // XXX Workaround MSVC issue by making the static FramePropertyDescriptor
 // non-const.  See bug 555727.
@@ -926,8 +917,6 @@ public:
   NS_DECLARE_FRAME_PROPERTY(ScrollLayerCount, nsnull)
 
   NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nsnull)
-
-  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, DestroySurface)
 
   /**
    * Return the distance between the border edge of the frame and the
@@ -2557,8 +2546,6 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * @return whether the frame is focusable via mouse, kbd or script.
    */
   virtual bool IsFocusable(PRInt32 *aTabIndex = nsnull, bool aWithMouse = false);
-
-  void ClearDisplayItemCache();
 
   // BOX LAYOUT METHODS
   // These methods have been migrated from nsIBox and are in the process of
