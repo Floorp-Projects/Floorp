@@ -104,7 +104,10 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
                           gfxASurface::CONTENT_COLOR_ALPHA;
   float opacity = GetEffectiveOpacity();
   
-  if (!BasicManager()->IsRetained()) {
+  if (!BasicManager()->IsRetained() ||
+      (!canUseOpaqueSurface &&
+       (mContentFlags & CONTENT_COMPONENT_ALPHA) &&
+       !MustRetainContent())) {
     NS_ASSERTION(readbackUpdates.IsEmpty(), "Can't do readback for non-retained layer");
 
     mValidRegion.SetEmpty();
