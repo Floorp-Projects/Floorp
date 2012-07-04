@@ -3780,34 +3780,10 @@ Selection::GetIndicesForInterval(nsINode* aBeginNode, PRInt32 aBeginOffset,
   bool intervalIsCollapsed = aBeginNode == aEndNode &&
     aBeginOffset == aEndOffset;
 
-  bool doSearches = true;
-
   // Ranges that end before the given interval and begin after the given
   // interval can be discarded
   PRInt32 endsBeforeIndex;
-  PRInt32 beginsAfterIndex;
-
-  // Optimization: Check that we're not at/after the end first
-  PRInt32 cmp;
-  if (NS_FAILED(CompareToRangeEnd(aBeginNode, aBeginOffset,
-                                  mRanges[mRanges.Length() - 1].mRange,
-                                  &cmp))) {
-    return;
-  } else if (cmp == 1) {
-    *aEndIndex = mRanges.Length();
-    return;
-  } else if (cmp == 0) {
-    beginsAfterIndex = mRanges.Length() - 1;
-    if (!intervalIsCollapsed) {
-      endsBeforeIndex = beginsAfterIndex + 1;
-    } else {
-      endsBeforeIndex = beginsAfterIndex;
-    }
-    doSearches = false;
-  }
-
-  if (doSearches &&
-      NS_FAILED(FindInsertionPoint(&mRanges, aEndNode, aEndOffset,
+  if (NS_FAILED(FindInsertionPoint(&mRanges, aEndNode, aEndOffset,
                                    &CompareToRangeStart,
                                    &endsBeforeIndex))) {
     return;
@@ -3831,12 +3807,14 @@ Selection::GetIndicesForInterval(nsINode* aBeginNode, PRInt32 aBeginOffset,
   }
   *aEndIndex = endsBeforeIndex;
 
-  if (doSearches &&
-      NS_FAILED(FindInsertionPoint(&mRanges, aBeginNode, aBeginOffset,
+  PRInt32 beginsAfterIndex;
+  if (NS_FAILED(FindInsertionPoint(&mRanges, aBeginNode, aBeginOffset,
                                    &CompareToRangeEnd,
                                    &beginsAfterIndex))) {
     return;
   }
+  if (beginsAfterIndex == (PRInt32) mRanges.Length())
+    return; // optimization: all ranges are strictly before us
 
   if (aAllowAdjacent) {
     // At this point, one of the following holds:
