@@ -148,6 +148,8 @@ public:
   void PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxContext *aPushed);
 
   virtual bool IsCompositingCheap() { return false; }
+  virtual bool HasShadowManagerInternal() const { return false; }
+  bool HasShadowManager() const { return HasShadowManagerInternal(); }
   virtual PRInt32 GetMaxTextureSize() const { return PR_INT32_MAX; }
 
 protected:

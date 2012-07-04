@@ -309,9 +309,6 @@ public:
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT) = 0;
 
-  virtual bool HasShadowManagerInternal() const { return false; }
-  bool HasShadowManager() const { return HasShadowManagerInternal(); }
-
   bool IsSnappingEffectiveTransforms() { return mSnapEffectiveTransforms; } 
 
   /**
