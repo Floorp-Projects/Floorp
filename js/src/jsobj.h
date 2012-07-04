@@ -98,12 +98,12 @@ namespace baseops {
  * return true with both *objp and *propp null.
  */
 extern JS_FRIEND_API(JSBool)
-LookupProperty(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
+LookupProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
                JSProperty **propp);
 
 inline bool
 LookupProperty(JSContext *cx, HandleObject obj, PropertyName *name,
-               JSObject **objp, JSProperty **propp)
+               MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return LookupProperty(cx, obj, id, objp, propp);
@@ -111,7 +111,7 @@ LookupProperty(JSContext *cx, HandleObject obj, PropertyName *name,
 
 extern JS_FRIEND_API(JSBool)
 LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
-              JSObject **objp, JSProperty **propp);
+              MutableHandleObject objp, JSProperty **propp);
 
 extern JSBool
 DefineGeneric(JSContext *cx, HandleObject obj, HandleId id, const js::Value *value,
@@ -785,12 +785,12 @@ struct JSObject : public js::ObjectImpl
     /* Clear the scope, making it empty. */
     void clear(JSContext *cx);
 
-    inline JSBool lookupGeneric(JSContext *cx, js::HandleId id, JSObject **objp, JSProperty **propp);
-    inline JSBool lookupProperty(JSContext *cx, js::PropertyName *name, JSObject **objp, JSProperty **propp);
+    inline JSBool lookupGeneric(JSContext *cx, js::HandleId id, js::MutableHandleObject objp, JSProperty **propp);
+    inline JSBool lookupProperty(JSContext *cx, js::PropertyName *name, js::MutableHandleObject objp, JSProperty **propp);
     inline JSBool lookupElement(JSContext *cx, uint32_t index,
-                                JSObject **objp, JSProperty **propp);
+                                js::MutableHandleObject objp, JSProperty **propp);
     inline JSBool lookupSpecial(JSContext *cx, js::SpecialId sid,
-                                JSObject **objp, JSProperty **propp);
+                                js::MutableHandleObject objp, JSProperty **propp);
 
     inline JSBool defineGeneric(JSContext *cx, js::HandleId id, const js::Value &value,
                                 JSPropertyOp getter = JS_PropertyStub,
@@ -1046,7 +1046,7 @@ js_HasOwnPropertyHelper(JSContext *cx, js::LookupGenericOp lookup, unsigned argc
 
 extern JSBool
 js_HasOwnProperty(JSContext *cx, js::LookupGenericOp lookup, js::HandleObject obj, js::HandleId id,
-                  JSObject **objp, JSProperty **propp);
+                  js::MutableHandleObject objp, JSProperty **propp);
 
 extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, js::HandleObject obj, js::HandleId id, js::Value *vp);
@@ -1092,17 +1092,17 @@ js_PopulateObject(JSContext *cx, js::HandleObject newborn, JSObject *props);
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
  */
-extern JSBool
-js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
-                  JSObject **objp);
+extern bool
+js_GetClassObject(JSContext *cx, js::HandleObject obj, JSProtoKey key,
+                  js::MutableHandleObject objp);
 
 /*
  * If protoKey is not JSProto_Null, then clasp is ignored. If protoKey is
  * JSProto_Null, clasp must non-null.
  */
-extern JSBool
-js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey key,
-                   js::Value *vp, js::Class *clasp = NULL);
+bool
+js_FindClassObject(JSContext *cx, js::HandleObject start, JSProtoKey protoKey,
+                   js::MutableHandleValue vp, js::Class *clasp = NULL);
 
 // Specialized call for constructing |this| with a known function callee,
 // and a known prototype.
@@ -1165,11 +1165,11 @@ DefineNativeProperty(JSContext *cx, HandleObject obj, PropertyName *name, const 
  */
 extern bool
 LookupPropertyWithFlags(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-                        JSObject **objp, JSProperty **propp);
+                        js::MutableHandleObject objp, JSProperty **propp);
 
 inline bool
 LookupPropertyWithFlags(JSContext *cx, HandleObject obj, PropertyName *name, unsigned flags,
-                        JSObject **objp, JSProperty **propp)
+                        js::MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return LookupPropertyWithFlags(cx, obj, id, flags, objp, propp);
@@ -1208,7 +1208,7 @@ static const unsigned RESOLVE_INFER = 0xffff;
 extern bool
 FindPropertyHelper(JSContext *cx, HandlePropertyName name,
                    bool cacheResult, HandleObject scopeChain,
-                   JSObject **objp, JSObject **pobjp, JSProperty **propp);
+                   MutableHandleObject objp, MutableHandleObject pobjp, JSProperty **propp);
 
 /*
  * Search for name either on the current scope chain or on the scope chain's
@@ -1216,7 +1216,7 @@ FindPropertyHelper(JSContext *cx, HandlePropertyName name,
  */
 extern bool
 FindProperty(JSContext *cx, HandlePropertyName name, HandleObject scopeChain,
-             JSObject **objp, JSObject **pobjp, JSProperty **propp);
+             MutableHandleObject objp, MutableHandleObject pobjp, JSProperty **propp);
 
 extern JSObject *
 FindIdentifierBase(JSContext *cx, HandleObject scopeChain, HandlePropertyName name);
@@ -1360,9 +1360,9 @@ js_Object(JSContext *cx, unsigned argc, js::Value *vp);
  * If protoKey is constant and scope is non-null, use GlobalObject's prototype
  * methods instead.
  */
-extern JS_FRIEND_API(JSBool)
-js_GetClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey,
-                     JSObject **protop, js::Class *clasp = NULL);
+extern JS_FRIEND_API(bool)
+js_GetClassPrototype(JSContext *cx, js::HandleObject scopeobj, JSProtoKey protoKey,
+                     js::MutableHandleObject protop, js::Class *clasp = NULL);
 
 namespace js {
 
@@ -1408,7 +1408,8 @@ inline void
 DestroyIdArray(FreeOp *fop, JSIdArray *ida);
 
 extern bool
-GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *method, JSObject **objp);
+GetFirstArgumentAsObject(JSContext *cx, unsigned argc, Value *vp, const char *method,
+                         MutableHandleObject objp);
 
 /* Helpers for throwing. These always return false. */
 extern bool

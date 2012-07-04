@@ -175,8 +175,13 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
             return WrapForSameCompartment(cx, obj, vp);
 
         /* Translate StopIteration singleton. */
-        if (obj->isStopIteration())
-            return js_FindClassObject(cx, NULL, JSProto_StopIteration, vp);
+        if (obj->isStopIteration()) {
+            RootedObject null(cx);
+            RootedValue vvp(cx, *vp);
+            bool result = js_FindClassObject(cx, null, JSProto_StopIteration, &vvp);
+            *vp = vvp;
+            return result;
+        }
 
         /* Unwrap the object, but don't unwrap outer windows. */
         obj = UnwrapObject(&vp->toObject(), /* stopAtOuter = */ true, &flags);

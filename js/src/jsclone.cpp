@@ -558,7 +558,7 @@ JSStructuredCloneWriter::write(const Value &v)
                  * The cost of re-checking could be avoided by using
                  * NativeIterators.
                  */
-                JSObject *obj2;
+                RootedObject obj2(context());
                 JSProperty *prop;
                 if (!js_HasOwnProperty(context(), obj->getOps()->lookupGeneric, obj, id,
                                        &obj2, &prop)) {

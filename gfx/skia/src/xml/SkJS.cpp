@@ -84,7 +84,8 @@ global_enumerate(JSContext *cx, JSHandleObject *obj)
 }
 
 static JSBool
-global_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags, JSObject **objp)
+global_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
+	       MutableHandleObject objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
     if ((flags & JSRESOLVE_ASSIGNING) == 0) {
@@ -93,7 +94,7 @@ global_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
         if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
             return JS_FALSE;
         if (resolved) {
-            *objp = obj;
+            objp.set(obj);
             return JS_TRUE;
         }
     }
@@ -138,7 +139,7 @@ global_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
                 fun = JS_DefineFunction(cx, obj, name, Exec, 0, JSPROP_ENUMERATE);
                 ok = (fun != NULL);
                 if (ok)
-                    *objp = obj;
+                    objp.set(obj);
                 break;
             }
         }

@@ -950,7 +950,8 @@ js::AssertValidPropertyCacheHit(JSContext *cx, JSObject *start_,
     RootedPropertyName name(cx, GetNameFromBytecode(cx, script, pc, JSOp(*pc)));
     RootedObject start(cx, start_);
 
-    JSObject *obj, *pobj;
+    RootedObject obj(cx);
+    RootedObject pobj(cx);
     JSProperty *prop;
     JSBool ok;
 
@@ -1273,7 +1274,7 @@ js::Interpret(JSContext *cx, StackFrame *entryFrame, InterpMode interpMode)
      */
     RootedValue rootValue0(cx), rootValue1(cx);
     RootedString rootString0(cx), rootString1(cx);
-    RootedObject rootObject0(cx), rootObject1(cx);
+    RootedObject rootObject0(cx), rootObject1(cx), rootObject2(cx);
     RootedFunction rootFunction0(cx);
     RootedTypeObject rootType0(cx);
     RootedPropertyName rootName0(cx);
@@ -1742,7 +1743,7 @@ BEGIN_CASE(JSOP_IN)
     obj = &rref.toObject();
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(obj, -2, id);
-    JSObject *obj2;
+    RootedObject &obj2 = rootObject1;
     JSProperty *prop;
     if (!obj->lookupGeneric(cx, id, &obj2, &prop))
         goto error;
@@ -2201,7 +2202,8 @@ BEGIN_CASE(JSOP_DELNAME)
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
-    JSObject *obj, *obj2;
+    RootedObject &obj = rootObject1;
+    RootedObject &obj2 = rootObject2;
     JSProperty *prop;
     if (!FindProperty(cx, name, scopeObj, &obj, &obj2, &prop))
         goto error;
@@ -2547,7 +2549,8 @@ BEGIN_CASE(JSOP_IMPLICITTHIS)
     RootedObject &scopeObj = rootObject0;
     scopeObj = cx->stack.currentScriptedScopeChain();
 
-    JSObject *obj, *obj2;
+    RootedObject &obj = rootObject1;
+    RootedObject &obj2 = rootObject2;
     JSProperty *prop;
     if (!FindPropertyHelper(cx, name, false, scopeObj, &obj, &obj2, &prop))
         goto error;
@@ -2916,7 +2919,7 @@ BEGIN_CASE(JSOP_DEFFUN)
     RootedPropertyName &name = rootName0;
     name = fun->atom->asPropertyName();
     JSProperty *prop = NULL;
-    JSObject *pobj;
+    RootedObject &pobj = rootObject1;
     if (!parent->lookupProperty(cx, name, &pobj, &prop))
         goto error;
 
@@ -3478,7 +3481,7 @@ BEGIN_CASE(JSOP_BINDXMLNAME)
 
     Value lval;
     lval = regs.sp[-1];
-    JSObject *obj;
+    RootedObject &obj = rootObject0;
     jsid id;
     if (!js_FindXMLProperty(cx, lval, &obj, &id))
         goto error;
@@ -3509,7 +3512,7 @@ BEGIN_CASE(JSOP_XMLNAME)
     JS_ASSERT(!script->strictModeCode);
 
     Value lval = regs.sp[-1];
-    JSObject *obj;
+    RootedObject &obj = rootObject0;
     RootedId &id = rootId0;
     if (!js_FindXMLProperty(cx, lval, &obj, id.address()))
         goto error;

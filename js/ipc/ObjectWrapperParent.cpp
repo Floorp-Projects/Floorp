@@ -298,13 +298,13 @@ JSObject_to_PObjectWrapperParent(JSObject* from, PObjectWrapperParent** to)
 ObjectWrapperParent::
 JSObject_from_PObjectWrapperParent(JSContext* cx,
                                    const PObjectWrapperParent* from,
-                                   JSObject** to)
+                                   JSMutableHandleObject to)
 {
     const ObjectWrapperParent* owp =
         static_cast<const ObjectWrapperParent*>(from);
-    *to = owp
-        ? owp->GetJSObject(cx)
-        : JSVAL_TO_OBJECT(JSVAL_NULL);
+    to.set(owp
+           ? owp->GetJSObject(cx)
+           : JSVAL_TO_OBJECT(JSVAL_NULL));
     return true;
 }
 
@@ -314,7 +314,7 @@ jsval_from_PObjectWrapperParent(JSContext* cx,
                                 const PObjectWrapperParent* from,
                                 jsval* to)
 {
-    JSObject* obj;
+    JS::RootedObject obj(cx);
     if (!JSObject_from_PObjectWrapperParent(cx, from, &obj))
         return false;
     *to = OBJECT_TO_JSVAL(obj);
@@ -544,7 +544,7 @@ ObjectWrapperParent::CPOW_NewEnumerate(JSContext *cx, JSHandleObject obj,
 
 /*static*/ JSBool
 ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                     unsigned flags, JSObject **objp)
+                                     unsigned flags, JSMutableHandleObject objp)
 {
     CPOW_LOG(("Calling CPOW_NewResolve (%s)...",
               JSVAL_TO_CSTR(cx, id)));
@@ -569,9 +569,10 @@ ObjectWrapperParent::CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandle
         !JSObject_from_PObjectWrapperParent(cx, out_pobj, objp))
         return JS_FALSE;
 
-    if (*objp) {
-        AutoResolveFlag arf(*objp);
-        JS_DefinePropertyById(cx, *objp, id, JSVAL_VOID, NULL, NULL,
+    if (objp) {
+        AutoResolveFlag arf(objp);
+        JS::RootedObject obj2(cx, objp);
+        JS_DefinePropertyById(cx, obj2, id, JSVAL_VOID, NULL, NULL,
                               JSPROP_ENUMERATE);
     }
     return JS_TRUE;

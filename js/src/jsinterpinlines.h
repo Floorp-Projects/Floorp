@@ -386,7 +386,7 @@ NameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, Value *vp)
     }
 
     JSProperty *prop;
-    if (!FindPropertyHelper(cx, name, true, obj, obj.address(), obj2.address(), &prop))
+    if (!FindPropertyHelper(cx, name, true, obj, &obj, &obj2, &prop))
         return false;
     if (!prop) {
         /* Kludge to allow (typeof foo == "undefined") tests. */
@@ -425,7 +425,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, PropertyName *dn, uns
     JS_ASSERT(!varobj->getOps()->defineProperty || varobj->isDebugScope());
 
     JSProperty *prop;
-    JSObject *obj2;
+    RootedObject obj2(cx);
     if (!varobj->lookupProperty(cx, dn, &obj2, &prop))
         return false;
 

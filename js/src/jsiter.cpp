@@ -815,10 +815,10 @@ Iterator(JSContext *cx, unsigned argc, Value *vp)
 JSBool
 js_ThrowStopIteration(JSContext *cx)
 {
-    Value v;
-
     JS_ASSERT(!JS_IsExceptionPending(cx));
-    if (js_FindClassObject(cx, NULL, JSProto_StopIteration, &v))
+    RootedValue v(cx);
+    RootedObject null(cx);
+    if (js_FindClassObject(cx, null, JSProto_StopIteration, &v))
         cx->setPendingException(v);
     return JS_FALSE;
 }
@@ -992,7 +992,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                      */
                     if (obj->getProto()) {
                         JSObject *proto = obj->getProto();
-                        JSObject *obj2;
+                        RootedObject obj2(cx);
                         JSProperty *prop;
                         RootedId id(cx);
                         if (!ValueToId(cx, StringValue(*idp), id.address()))
@@ -1770,7 +1770,7 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
      * as happens when the StopIteration object is frozen, initializing the
      * Iterator class a second time will assert.
      */
-    JSObject *iter;
+    RootedObject iter(cx);
     if (!js_GetClassObject(cx, global, JSProto_Iterator, &iter))
         return NULL;
     if (iter)
