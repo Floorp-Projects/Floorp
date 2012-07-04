@@ -929,7 +929,7 @@ template<class T>
 void
 JSXMLArray<T>::finish(FreeOp *fop)
 {
-    if (!fop->runtime()->gcRunning) {
+    if (!fop->runtime()->isHeapBusy()) {
         /* We need to clear these to trigger a write barrier. */
         for (uint32_t i = 0; i < length; i++)
             vector[i].~HeapPtr<T>();
