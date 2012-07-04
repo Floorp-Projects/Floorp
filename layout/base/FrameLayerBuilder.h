@@ -40,10 +40,6 @@ enum LayerState {
 };
 
 extern PRUint8 gLayerManagerLayerBuilder;
-extern PRUint8 gLayerManagerSecondary;
-
-class LayerManagerSecondary : public layers::LayerUserData {
-};
 
 /**
  * The FrameLayerBuilder belongs to an nsDisplayListBuilder and is
@@ -268,47 +264,6 @@ public:
                             LayerState aLayerState);
 
   /**
-   * Set the current top-level LayerManager for the widget being
-   * painted.
-   */
-  static void SetWidgetLayerManager(LayerManager* aManager)
-  {
-    LayerManagerSecondary* secondary = 
-      static_cast<LayerManagerSecondary*>(aManager->GetUserData(&gLayerManagerSecondary));
-    sWidgetManagerSecondary = !!secondary;
-  }
-
-  /**
-   * Gets the frame property descriptor for the given manager, or for the current
-   * widget layer manager if nsnull is passed.
-   */
-  static const FramePropertyDescriptor* GetDescriptorForManager(LayerManager* aManager);
-
-  /**
-   * Get the LayerManagerData for a given frame and layer manager. If no layer manager
-   * is passed, then the current widget layer manager is used.
-   */
-  static LayerManagerData* GetManagerData(nsIFrame* aFrame, LayerManager* aManager = nsnull);
-
-  /**
-   * Set the LayerManagerData for a given frame and current widget layer manager.
-   * This replaces any existing data for the same frame/layer manager pair.
-   */
-  static void SetManagerData(nsIFrame* aFrame, LayerManagerData* aData);
-
-  /**
-   * Clears the current LayerManagerData for the given frame and current widget
-   * layer manager.
-   */
-  static void ClearManagerData(nsIFrame* aFrame);
-
-  /**
-   * Clears any references to the given LayerManagerData for the given frame
-   * and belonging to any layer manager.
-   */
-  static void ClearManagerData(nsIFrame* aFrame, LayerManagerData* aData);
-
-  /**
    * Given a frame and a display item key that uniquely identifies a
    * display item for the frame, find the layer that was last used to
    * render that display item. Returns null if there is no such layer.
@@ -338,7 +293,10 @@ public:
    * Destroy any stored LayerManagerDataProperty and the associated data for
    * aFrame.
    */
-  static void DestroyDisplayItemDataFor(nsIFrame* aFrame);
+  static void DestroyDisplayItemDataFor(nsIFrame* aFrame)
+  {
+    aFrame->Properties().Delete(LayerManagerDataProperty());
+  }
 
   LayerManager* GetRetainingLayerManager() { return mRetainingManager; }
 
@@ -467,12 +425,6 @@ public:
       return !(*this == aOther);
     }
   };
-  
-  NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerDataProperty,
-                                               RemoveFrameFromLayerManager)
-
-  NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerSecondaryDataProperty,
-                                               RemoveFrameFromLayerManager)
 
 protected:
   /**
@@ -520,11 +472,11 @@ protected:
      */
     bool            mUsed;
   };
-  
-  // LayerManagerData needs to see DisplayItemDataEntry.
-  friend class LayerManagerData;
 
   static void RemoveFrameFromLayerManager(nsIFrame* aFrame, void* aPropertyValue);
+
+  NS_DECLARE_FRAME_PROPERTY_WITH_FRAME_IN_DTOR(LayerManagerDataProperty,
+                                               RemoveFrameFromLayerManager)
 
   /**
    * We accumulate DisplayItemData elements in a hashtable during
@@ -552,6 +504,9 @@ protected:
 
     enum { ALLOW_MEMMOVE = false };
   };
+
+  // LayerManagerData needs to see DisplayItemDataEntry.
+  friend class LayerManagerData;
 
   /**
    * Stores DisplayItemData associated with aFrame, stores the data in
@@ -726,12 +681,6 @@ protected:
 
   PRUint32                            mContainerLayerGeneration;
   PRUint32                            mMaxContainerLayerGeneration;
-
-  /**
-   * True if the current top-level LayerManager for the widget being
-   * painted is marked as being a 'secondary' LayerManager.
-   */
-  static bool                         sWidgetManagerSecondary;
 };
 
 static inline FrameLayerBuilder *GetLayerBuilderForManager(layers::LayerManager* aManager)
