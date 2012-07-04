@@ -2685,7 +2685,7 @@ mjit::Compiler::jsop_initprop()
         return;
     }
 
-    JSObject *holder;
+    RootedObject holder(cx);
     JSProperty *prop = NULL;
     Rooted<jsid> id(cx, NameToId(name));
 #ifdef DEBUG

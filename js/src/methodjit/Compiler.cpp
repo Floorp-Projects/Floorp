@@ -5070,7 +5070,7 @@ mjit::Compiler::testSingletonProperty(HandleObject obj, HandleId id)
         nobj = nobj->getProto();
     }
 
-    JSObject *holder;
+    RootedObject holder(cx);
     JSProperty *prop = NULL;
     if (!obj->lookupGeneric(cx, id, &holder, &prop))
         return false;
@@ -5145,7 +5145,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, HandleId id, bool *t
     }
 
     RootedObject proto(cx);
-    if (!js_GetClassPrototype(cx, globalObj, key, proto.address(), NULL))
+    if (!js_GetClassPrototype(cx, globalObj, key, &proto, NULL))
         return false;
 
     return testSingletonProperty(proto, id);

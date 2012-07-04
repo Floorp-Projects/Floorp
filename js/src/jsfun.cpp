@@ -256,7 +256,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
 
 static JSBool
 fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            JSObject **objp)
+            MutableHandleObject objp)
 {
     if (!JSID_IS_ATOM(id))
         return true;
@@ -282,7 +282,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
         if (!ResolveInterpretedFunctionPrototype(cx, fun))
             return false;
-        *objp = fun;
+        objp.set(fun);
         return true;
     }
 
@@ -300,7 +300,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
             return false;
         }
-        *objp = fun;
+        objp.set(fun);
         return true;
     }
 
@@ -328,7 +328,7 @@ fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                                       attrs, 0, 0)) {
                 return false;
             }
-            *objp = fun;
+            objp.set(fun);
             return true;
         }
     }

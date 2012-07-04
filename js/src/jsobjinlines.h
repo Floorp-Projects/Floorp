@@ -926,7 +926,7 @@ JSObject::finish(js::FreeOp *fop)
 inline bool
 JSObject::hasProperty(JSContext *cx, js::HandleId id, bool *foundp, unsigned flags)
 {
-    JSObject *pobj;
+    js::RootedObject pobj(cx);
     JSProperty *prop;
     JSAutoResolveFlags rf(cx, flags);
     if (!lookupGeneric(cx, id, &pobj, &prop))
@@ -1034,7 +1034,7 @@ JSObject::sizeOfExcludingThis(JSMallocSizeOfFun mallocSizeOf,
 }
 
 inline JSBool
-JSObject::lookupGeneric(JSContext *cx, js::HandleId id, JSObject **objp, JSProperty **propp)
+JSObject::lookupGeneric(JSContext *cx, js::HandleId id, js::MutableHandleObject objp, JSProperty **propp)
 {
     js::RootedObject self(cx, this);
 
@@ -1045,7 +1045,7 @@ JSObject::lookupGeneric(JSContext *cx, js::HandleId id, JSObject **objp, JSPrope
 }
 
 inline JSBool
-JSObject::lookupProperty(JSContext *cx, js::PropertyName *name, JSObject **objp, JSProperty **propp)
+JSObject::lookupProperty(JSContext *cx, js::PropertyName *name, js::MutableHandleObject objp, JSProperty **propp)
 {
     js::Rooted<jsid> id(cx, js::NameToId(name));
     return lookupGeneric(cx, id, objp, propp);
@@ -1097,7 +1097,7 @@ JSObject::defineSpecial(JSContext *cx, js::SpecialId sid, const js::Value &value
 }
 
 inline JSBool
-JSObject::lookupElement(JSContext *cx, uint32_t index, JSObject **objp, JSProperty **propp)
+JSObject::lookupElement(JSContext *cx, uint32_t index, js::MutableHandleObject objp, JSProperty **propp)
 {
     js::RootedObject self(cx, this);
 
@@ -1106,7 +1106,7 @@ JSObject::lookupElement(JSContext *cx, uint32_t index, JSObject **objp, JSProper
 }
 
 inline JSBool
-JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid, JSObject **objp, JSProperty **propp)
+JSObject::lookupSpecial(JSContext *cx, js::SpecialId sid, js::MutableHandleObject objp, JSProperty **propp)
 {
     js::Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return lookupGeneric(cx, id, objp, propp);
@@ -1153,7 +1153,7 @@ JSObject::getElementIfPresent(JSContext *cx, js::HandleObject receiver, uint32_t
     if (!js::IndexToId(cx, index, id.address()))
         return false;
 
-    JSObject *obj2;
+    js::RootedObject obj2(cx);
     JSProperty *prop;
     if (!self->lookupGeneric(cx, id, &obj2, &prop))
         return false;
@@ -1440,12 +1440,12 @@ GetClassProtoKey(js::Class *clasp)
 }
 
 inline bool
-FindProto(JSContext *cx, js::Class *clasp, HandleObject parent, JSObject **proto)
+FindProto(JSContext *cx, js::Class *clasp, HandleObject parent, MutableHandleObject proto)
 {
     JSProtoKey protoKey = GetClassProtoKey(clasp);
     if (!js_GetClassPrototype(cx, parent, protoKey, proto, clasp))
         return false;
-    if (!(*proto) && !js_GetClassPrototype(cx, parent, JSProto_Object, proto))
+    if (!proto && !js_GetClassPrototype(cx, parent, JSProto_Object, proto))
         return false;
     return true;
 }
@@ -1503,8 +1503,8 @@ GetCurrentGlobal(JSContext *cx)
 }
 
 bool
-FindClassPrototype(JSContext *cx, JSObject *scope, JSProtoKey protoKey, JSObject **protop,
-                   Class *clasp);
+FindClassPrototype(JSContext *cx, HandleObject scope, JSProtoKey protoKey,
+                   MutableHandleObject protop, Class *clasp);
 
 /*
  * Create a plain object with the specified type. This bypasses getNewType to

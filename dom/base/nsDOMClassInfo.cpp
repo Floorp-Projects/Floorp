@@ -5376,7 +5376,7 @@ GetDocument(JSObject *obj)
 JSBool
 nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
                                           JSHandleId id, unsigned flags,
-                                          JSObject **objp)
+                                          JSMutableHandleObject objp)
 {
   if (flags & (JSRESOLVE_ASSIGNING | JSRESOLVE_QUALIFIED) ||
       !JSID_IS_STRING(id)) {
@@ -5430,7 +5430,7 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSHandleObject obj,
       return JS_FALSE;
     }
 
-    *objp = obj;
+    objp.set(obj);
   }
 
   return JS_TRUE;
@@ -7323,9 +7323,11 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     // Resolve special classes.
     for (PRUint32 i = 0; i < ArrayLength(sOtherResolveFuncs); i++) {
-      if (!sOtherResolveFuncs[i](cx, obj, id, flags, objp)) {
+      JS::RootedObject tmp(cx, *objp);
+      if (!sOtherResolveFuncs[i](cx, obj, id, flags, &tmp)) {
         return NS_ERROR_FAILURE;
       }
+      *objp = tmp;
       if (*objp) {
         return NS_OK;
       }
@@ -8965,7 +8967,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JSHandleObject obj_,
 
 JSBool
 nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id,
-                                        unsigned flags, JSObject **objp)
+                                        unsigned flags, JSMutableHandleObject objp)
 {
   if (flags & JSRESOLVE_ASSIGNING) {
     // Nothing to do here if we're assigning
@@ -8980,7 +8982,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
 
     JSFunction *fnc = ::JS_DefineFunctionById(cx, obj, id, CallToGetPropMapper,
                                               0, JSPROP_ENUMERATE);
-    *objp = obj;
+    objp.set(obj);
 
     return fnc != nsnull;
   }
@@ -9017,7 +9019,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSHandleObject obj, JSHan
 
   if (v != JSVAL_VOID) {
     ok = ::JS_DefinePropertyById(cx, obj, id, v, nsnull, nsnull, 0);
-    *objp = obj;
+    objp.set(obj);
   }
 
   return ok;
@@ -9164,7 +9166,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSHandleObject obj
 JSBool
 nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
                                               JSHandleId id, unsigned flags,
-                                              JSObject **objp)
+                                              JSMutableHandleObject objp)
 {
   if (nsDOMClassInfo::sAll_id == id) {
     // document.all is resolved for the first time. Define it.
@@ -9176,7 +9178,7 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
         return JS_FALSE;
       }
 
-      *objp = helper;
+      objp.set(helper);
     }
   }
 
@@ -9187,7 +9189,7 @@ nsHTMLDocumentSH::DocumentAllHelperNewResolve(JSContext *cx, JSHandleObject obj,
 JSBool
 nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
                                             JSHandleId id, unsigned flags,
-                                            JSObject **objp)
+                                            JSMutableHandleObject objp)
 {
   if (JSID_IS_STRING(id)) {
     nsDocument *doc = GetDocument(obj);
@@ -9225,7 +9227,7 @@ nsHTMLDocumentSH::DocumentAllTagsNewResolve(JSContext *cx, JSHandleObject obj,
         return JS_FALSE;
       }
 
-      *objp = obj;
+      objp.set(obj);
     }
   }
 

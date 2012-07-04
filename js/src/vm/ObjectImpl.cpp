@@ -514,7 +514,7 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
             if (clasp->flags & JSCLASS_NEW_RESOLVE) {
                 Rooted<JSObject*> obj2(cx, NULL);
                 JSNewResolveOp op = reinterpret_cast<JSNewResolveOp>(resolve);
-                if (!op(cx, robj, id, resolveFlags, obj2.address()))
+                if (!op(cx, robj, id, resolveFlags, &obj2))
                     return false;
             } else {
                 if (!resolve(cx, robj, id))

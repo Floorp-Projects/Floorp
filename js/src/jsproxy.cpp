@@ -1221,7 +1221,7 @@ proxy_innerObject(JSContext *cx, HandleObject obj)
 }
 
 static JSBool
-proxy_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **objp,
+proxy_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp,
                     JSProperty **propp)
 {
     bool found;
@@ -1230,24 +1230,24 @@ proxy_LookupGeneric(JSContext *cx, HandleObject obj, HandleId id, JSObject **obj
 
     if (found) {
         *propp = (JSProperty *)0x1;
-        *objp = obj;
+        objp.set(obj);
     } else {
-        *objp = NULL;
+        objp.set(NULL);
         *propp = NULL;
     }
     return true;
 }
 
 static JSBool
-proxy_LookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, JSObject **objp,
-                     JSProperty **propp)
+proxy_LookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
+                     MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, NameToId(name));
     return proxy_LookupGeneric(cx, obj, id, objp, propp);
 }
 
 static JSBool
-proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **objp,
+proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleObject objp,
                     JSProperty **propp)
 {
     RootedId id(cx);
@@ -1257,7 +1257,8 @@ proxy_LookupElement(JSContext *cx, HandleObject obj, uint32_t index, JSObject **
 }
 
 static JSBool
-proxy_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, JSObject **objp, JSProperty **propp)
+proxy_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
+                    MutableHandleObject objp, JSProperty **propp)
 {
     Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
     return proxy_LookupGeneric(cx, obj, id, objp, propp);

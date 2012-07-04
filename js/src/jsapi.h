@@ -1389,6 +1389,7 @@ JS_STATIC_ASSERT(sizeof(jsval_layout) == sizeof(jsval));
 
 typedef JS::Handle<JSObject*> JSHandleObject;
 typedef JS::Handle<jsid> JSHandleId;
+typedef JS::MutableHandle<JSObject*> JSMutableHandleObject;
 
 #else
 
@@ -1398,10 +1399,14 @@ typedef JS::Handle<jsid> JSHandleId;
  */
 
 typedef struct { JSObject **_; } JSHandleObject;
+typedef struct { JSObject **_; } JSMutableHandleObject;
 typedef struct { jsid *_; } JSHandleId;
 
 JSBool JS_CreateHandleObject(JSContext *cx, JSObject *obj, JSHandleObject *phandle);
 void JS_DestroyHandleObject(JSContext *cx, JSHandleObject handle);
+
+JSBool JS_CreateMutableHandleObject(JSContext *cx, JSObject *obj, JSMutableHandleObject *phandle);
+void JS_DestroyMutableHandleObject(JSContext *cx, JSMutableHandleObject handle);
 
 JSBool JS_CreateHandleId(JSContext *cx, jsid id, JSHandleId *phandle);
 void JS_DestroyHandleId(JSContext *cx, JSHandleId handle);
@@ -1504,7 +1509,7 @@ typedef JSBool
  */
 typedef JSBool
 (* JSNewResolveOp)(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-                   JSObject **objp);
+                   JSMutableHandleObject objp);
 
 /*
  * Convert obj to the given type, returning true with the resulting value in

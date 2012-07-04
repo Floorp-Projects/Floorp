@@ -331,9 +331,9 @@ FieldSetter(JSContext *cx, unsigned argc, JS::Value *vp)
 
 static JSBool
 XBLResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-           JSObject **objp)
+           JSMutableHandleObject objp)
 {
-  *objp = NULL;
+  objp.set(NULL);
 
   if (!JSID_IS_STRING(id)) {
     return true;
@@ -387,7 +387,7 @@ XBLResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
     return false;
   }
 
-  *objp = obj;
+  objp.set(obj);
   return true;
 }
 

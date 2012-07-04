@@ -80,7 +80,7 @@ private:
 
     static JSBool
     CPOW_NewResolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flags,
-                    JSObject **objp);
+                    JSMutableHandleObject objp);
 
     static JSBool
     CPOW_Convert(JSContext *cx, JSHandleObject obj, JSType type, jsval *vp);
@@ -108,7 +108,7 @@ private:
     static bool
     JSObject_from_PObjectWrapperParent(JSContext* cx,
                                        const PObjectWrapperParent* from,
-                                       JSObject** to);
+                                       JSMutableHandleObject to);
     static bool
     jsval_from_PObjectWrapperParent(JSContext* cx,
                                     const PObjectWrapperParent* from,
