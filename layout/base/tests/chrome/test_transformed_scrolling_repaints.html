@@ -31,7 +31,7 @@ function startTest() {
       waitForAllPaintsFlushed(function () {
         // Clear paint state now and scroll again.
         utils.checkAndClearPaintedState(e);
-        t.scrollTop = 15;
+        t.scrollTop = 33;
         waitForAllPaintsFlushed(function () {
           var painted = utils.checkAndClearPaintedState(e);
           is(painted, false, "Fully-visible scrolled element should not have been painted");

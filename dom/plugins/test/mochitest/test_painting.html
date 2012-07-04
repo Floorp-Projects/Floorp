@@ -94,9 +94,8 @@ function done() {
 
 function waitForPaint(func) {
   paint_waiter.last_paint_count = paint_waiter.getPaintCount();
-  // Ensure the waiter has had a style change, so that this will
+  // Ensure the waiter has been reflowed with zero height, so that this will
   // change its size and cause a paint.
-  paint_waiter.style.backgroundColor = paint_waiter.style.backgroundColor == "blue" ? "yellow" : "blue";
   var flush = paint_waiter.offsetHeight;
   paint_waiter.style.height = "1px";
   waitForPaintHelper(func);

@@ -2,14 +2,14 @@
 # element.
 
 == additive-1.svg additive-1-ref.svg
-fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,18) == paced-1.svg paced-1-ref.svg
+== paced-1.svg paced-1-ref.svg
 == rotate-angle-1.svg rotate-angle-ref.svg
 == rotate-angle-2.svg rotate-angle-ref.svg
 == rotate-angle-3.svg rotate-angle-ref.svg
-fuzzy-if(Android,16,2) == rotate-angle-4.svg rotate-angle-ref.svg
+== rotate-angle-4.svg rotate-angle-ref.svg
 == rotate-angle-5.svg rotate-angle-ref.svg
 == scale-1.svg scale-1-ref.svg
-fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,45) == skew-1.svg skew-1-ref.svg
+== skew-1.svg skew-1-ref.svg
 random-if(Android&&!browserIsRemote) == translate-clipPath-1.svg lime.svg # bug 760266
 fails-if(/Mac\x20OS\x20X\x2010\.[56]/.test(http.oscpu)) == translate-gradient-1.svg lime.svg
 == translate-pattern-1.svg lime.svg
