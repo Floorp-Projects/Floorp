@@ -1624,32 +1624,11 @@ RemapWrappers(JSContext *cx, JSObject *orig, JSObject *target)
         }
     }
 
-    for (Value *begin = toTransplant.begin(), *end = toTransplant.end(); begin != end; ++begin) {
-        JSObject *wobj = &begin->toObject();
-        JSCompartment *wcompartment = wobj->compartment();
-        WrapperMap &pmap = wcompartment->crossCompartmentWrappers;
-
-        // When we remove origv from the wrapper map, its wrapper, wobj, must
-        // immediately cease to be a cross-compartment wrapper. Neuter it.
-        JS_ASSERT(pmap.lookup(origv));
-        pmap.remove(origv);
-        NukeCrossCompartmentWrapper(wobj);
-
-        // First, we wrap it in the new compartment. This will return
-        // a new wrapper.
-        AutoCompartment ac(cx, wobj);
-        JSObject *tobj = target;
-        if (!ac.enter() || !wcompartment->wrap(cx, &tobj))
+    for (Value *begin = toTransplant.begin(), *end = toTransplant.end();
+         begin != end; ++begin)
+    {
+        if (!RemapWrapper(cx, &begin->toObject(), target))
             return false;
-
-        // Now, because we need to maintain object identity, we do a
-        // brain transplant on the old object. At the same time, we
-        // update the entry in the compartment's wrapper map to point
-        // to the old wrapper.
-        JS_ASSERT(tobj != wobj);
-        if (!wobj->swap(cx, tobj))
-            return false;
-        pmap.put(targetv, ObjectValue(*wobj));
     }
 
     return true;
