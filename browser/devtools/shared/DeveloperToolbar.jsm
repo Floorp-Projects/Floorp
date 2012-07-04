@@ -187,7 +187,6 @@ DeveloperToolbar.prototype._onload = function DT_onload()
   this._chromeWindow.getBrowser().tabContainer.addEventListener("TabClose", this, false);
   this._chromeWindow.getBrowser().addEventListener("load", this, true);
   this._chromeWindow.getBrowser().addEventListener("beforeunload", this, true);
-  this._chromeWindow.addEventListener("resize", this, false);
 
   this._initErrorsCount(this._chromeWindow.getBrowser().selectedTab);
 
@@ -307,7 +306,6 @@ DeveloperToolbar.prototype.destroy = function DT_destroy()
   this._chromeWindow.getBrowser().tabContainer.removeEventListener("TabSelect", this, false);
   this._chromeWindow.getBrowser().removeEventListener("load", this, true); 
   this._chromeWindow.getBrowser().removeEventListener("beforeunload", this, true);
-  this._chromeWindow.removeEventListener("resize", this, false);
 
   let tabs = this._chromeWindow.getBrowser().tabs;
   Array.prototype.forEach.call(tabs, this._stopErrorsCount, this);
@@ -367,9 +365,6 @@ DeveloperToolbar.prototype.handleEvent = function DT_handleEvent(aEvent)
         this._initErrorsCount(aEvent.target);
       }
     }
-  }
-  else if (aEvent.type == "resize") {
-    this.outputPanel._resize();
   }
   else if (aEvent.type == "TabClose") {
     this._stopErrorsCount(aEvent.target);
