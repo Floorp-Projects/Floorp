@@ -102,10 +102,6 @@ public:
     CollectOldLayers();
   }
 
-  enum ProcessDisplayItemsFlags {
-    NO_COMPONENT_ALPHA = 0x01,
-  };
-
   /**
    * This is the method that actually walks a display list and builds
    * the child layers. We invoke it recursively to process clipped sublists.
@@ -113,8 +109,7 @@ public:
    * if no clipping is required
    */
   void ProcessDisplayItems(const nsDisplayList& aList,
-                           FrameLayerBuilder::Clip& aClip,
-                           PRUint32 aFlags);
+                           FrameLayerBuilder::Clip& aClip);
   /**
    * This finalizes all the open ThebesLayers by popping every element off
    * mThebesLayerDataStack, then sets the children of the container layer
@@ -773,11 +768,8 @@ FrameLayerBuilder::UpdateDisplayItemDataForFrame(DisplayItemDataEntry* aEntry,
   LayerManagerData* managerData = static_cast<LayerManagerData*>
     (builder->GetRetainingLayerManager()->GetUserData(&gLayerManagerUserData));
   LayerManagerData* data = static_cast<LayerManagerData*>(props.Get(LayerManagerDataProperty()));
-  if (!newDisplayItems || newDisplayItems->mData.IsEmpty()) {
+  if (!newDisplayItems) {
     // This frame was visible, but isn't anymore.
-    if (newDisplayItems) {
-      builder->mNewDisplayItemData.RawRemoveEntry(newDisplayItems);
-    }
     if (data == managerData) {
       props.Remove(LayerManagerDataProperty());
     }
@@ -1748,8 +1740,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
  */
 void
 ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
-                                    FrameLayerBuilder::Clip& aClip,
-                                    PRUint32 aFlags)
+                                    FrameLayerBuilder::Clip& aClip)
 {
   SAMPLE_LABEL("ContainerState", "ProcessDisplayItems");
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
@@ -1757,7 +1748,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     if (type == nsDisplayItem::TYPE_CLIP ||
         type == nsDisplayItem::TYPE_CLIP_ROUNDED_RECT) {
       FrameLayerBuilder::Clip childClip(aClip, item);
-      ProcessDisplayItems(*item->GetList(), childClip, aFlags);
+      ProcessDisplayItems(*item->GetList(), childClip);
       continue;
     }
 
@@ -1779,22 +1770,13 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
     LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
 
-    nsIFrame* activeScrolledRoot;
-    bool forceInactive = false;
-    if (aFlags & NO_COMPONENT_ALPHA) {
-      activeScrolledRoot =
-        nsLayoutUtils::GetActiveScrolledRootFor(mContainerFrame,
-                                                mBuilder->ReferenceFrame());
-      forceInactive = true;
-    } else {
-      activeScrolledRoot = nsLayoutUtils::GetActiveScrolledRootFor(item, mBuilder);
-    }
+    nsIFrame* activeScrolledRoot =
+      nsLayoutUtils::GetActiveScrolledRootFor(item, mBuilder);
 
     // Assign the item to a layer
     if (layerState == LAYER_ACTIVE_FORCE ||
-        (!forceInactive &&
-         (layerState == LAYER_ACTIVE_EMPTY ||
-          layerState == LAYER_ACTIVE))) {
+        layerState == LAYER_ACTIVE_EMPTY ||
+        layerState == LAYER_ACTIVE) {
 
       // LAYER_ACTIVE_EMPTY means the layer is created just for its metadata.
       // We should never see an empty layer with any visible content!
@@ -2037,12 +2019,10 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
   ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
   if (entry) {
     entry->mContainerLayerFrame = aContainerLayerFrame;
-    entry->mContainerLayerGeneration = mContainerLayerGeneration;
     NS_ASSERTION(aItem->GetUnderlyingFrame(), "Must have frame");
     if (tempManager) {
       FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
       layerBuilder->Init(mDisplayListBuilder);
-      layerBuilder->mMaxContainerLayerGeneration = mMaxContainerLayerGeneration;
       // LayerManager user data took ownership of the FrameLayerBuilder
       tempManager->SetUserData(&gLayerManagerLayerBuilder, new LayerManagerLayerBuilder(layerBuilder, true));
 
@@ -2064,12 +2044,11 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
 
       // If BuildLayer didn't call BuildContainerLayerFor, then our new layer won't have been
       // stored in layerBuilder. Manually add it now.
-      DisplayItemData data(layer, aItem->GetPerFrameKey(), LAYER_ACTIVE, mContainerLayerGeneration);
+      DisplayItemData data(layer, aItem->GetPerFrameKey(), LAYER_ACTIVE);
       layerBuilder->StoreDataForFrame(aItem->GetUnderlyingFrame(), data);
 
       tempManager->SetRoot(layer);
       layerBuilder->WillEndTransaction();
-      mMaxContainerLayerGeneration = layerBuilder->mMaxContainerLayerGeneration;
 
       nsIntRect invalid = props->ComputeDifferences(layer, nsnull);
       if (aLayerState == LAYER_SVG_EFFECTS) {
@@ -2079,8 +2058,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       aLayer->InvalidateRegion(invalid);
     }
     ClippedDisplayItem* cdi =
-      entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClip, 
-                                                     mContainerLayerGeneration));
+      entry->mItems.AppendElement(ClippedDisplayItem(aItem, aClip));
     cdi->mInactiveLayer = tempManager;
   }
 }
@@ -2094,7 +2072,6 @@ FrameLayerBuilder::StoreDataForFrame(nsIFrame* aFrame, DisplayItemData& aData)
   }
   entry = mNewDisplayItemData.PutEntry(aFrame);
   if (entry) {
-    entry->mContainerLayerGeneration = mContainerLayerGeneration;
     DisplayItemData *data = entry->mData.AppendElement();
     *data = aData;
   }
@@ -2132,9 +2109,8 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
       }
     }
 #endif
-    entry->mContainerLayerGeneration = mContainerLayerGeneration;
     DisplayItemData* data = entry->mData.AppendElement();
-    DisplayItemData did(aLayer, aItem->GetPerFrameKey(), aLayerState, mContainerLayerGeneration);
+    DisplayItemData did(aLayer, aItem->GetPerFrameKey(), aLayerState);
     *data = did;
 
     ThebesLayer *t = aLayer->AsThebesLayer();
@@ -2159,11 +2135,8 @@ nsIntPoint
 FrameLayerBuilder::GetLastPaintOffset(ThebesLayer* aLayer)
 {
   ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
-  if (entry) {
-    entry->mContainerLayerGeneration = mContainerLayerGeneration;
-    if (entry->mHasExplicitLastPaintOffset)
-      return entry->mLastPaintOffset;
-  }
+  if (entry && entry->mHasExplicitLastPaintOffset)
+    return entry->mLastPaintOffset;
   return GetTranslationForThebesLayer(aLayer);
 }
 
@@ -2172,7 +2145,6 @@ FrameLayerBuilder::SaveLastPaintOffset(ThebesLayer* aLayer)
 {
   ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
   if (entry) {
-    entry->mContainerLayerGeneration = mContainerLayerGeneration;
     entry->mLastPaintOffset = GetTranslationForThebesLayer(aLayer);
     entry->mHasExplicitLastPaintOffset = true;
   }
@@ -2350,44 +2322,6 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   return result;
 }
 
-/* static */ PLDHashOperator
-FrameLayerBuilder::RestoreDisplayItemData(DisplayItemDataEntry* aEntry, void* aUserArg)
-{
-  PRUint32 *generation = static_cast<PRUint32*>(aUserArg);
-
-  if (aEntry->mContainerLayerGeneration >= *generation) {
-    return PL_DHASH_REMOVE;
-  }
-
-  for (PRUint32 i = 0; i < aEntry->mData.Length(); i++) {
-    if (aEntry->mData[i].mContainerLayerGeneration >= *generation) {
-      aEntry->mData.TruncateLength(i);
-      return PL_DHASH_NEXT;
-    }
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-/* static */ PLDHashOperator
-FrameLayerBuilder::RestoreThebesLayerItemEntries(ThebesLayerItemsEntry* aEntry, void* aUserArg)
-{
-  PRUint32 *generation = static_cast<PRUint32*>(aUserArg);
-
-  if (aEntry->mContainerLayerGeneration >= *generation) {
-    return PL_DHASH_REMOVE;
-  }
-
-  for (PRUint32 i = 0; i < aEntry->mItems.Length(); i++) {
-    if (aEntry->mItems[i].mContainerLayerGeneration >= *generation) {
-      aEntry->mItems.TruncateLength(i);
-      return PL_DHASH_NEXT;
-    }
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 already_AddRefed<ContainerLayer>
 FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
                                           LayerManager* aManager,
@@ -2442,66 +2376,34 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   ContainerParameters scaleParameters =
     ChooseScaleAndSetTransform(this, aContainerFrame, aTransform, aParameters,
                                containerLayer);
-
-  PRUint32 oldGeneration = mContainerLayerGeneration;
-  mContainerLayerGeneration = ++mMaxContainerLayerGeneration;
-
-  LayerManagerData* data = static_cast<LayerManagerData*>
-    (aManager->GetUserData(&gLayerManagerUserData));
+  ContainerState state(aBuilder, aManager, GetLayerBuilderForManager(aManager),
+                       aContainerFrame, containerLayer, scaleParameters);
 
   if (mRetainingManager) {
     DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(aContainerFrame);
     if (entry) {
       DisplayItemData *data = entry->mData.AppendElement();
       DisplayItemData did(containerLayer, containerDisplayItemKey,
-                          LAYER_ACTIVE, mContainerLayerGeneration);
+                          LAYER_ACTIVE);
       *data = did;
-      entry->mContainerLayerGeneration = mContainerLayerGeneration;
     }
   }
 
-  nsRect bounds;
-  nsIntRect pixBounds;
-  PRInt32 appUnitsPerDevPixel;
+  Clip clip;
+  state.ProcessDisplayItems(aChildren, clip);
+  
+  LayerManagerData* data = static_cast<LayerManagerData*>
+    (aManager->GetUserData(&gLayerManagerUserData));
 
-  PRUint32 stateFlags =
-    (aContainerFrame->GetStateBits() & NS_FRAME_NO_COMPONENT_ALPHA) ?
-      ContainerState::NO_COMPONENT_ALPHA : 0;
+  // Set CONTENT_COMPONENT_ALPHA if any of our children have it.
+  // This is suboptimal ... a child could have text that's over transparent
+  // pixels in its own layer, but over opaque parts of previous siblings.
   PRUint32 flags;
-  while (true) {
-    ContainerState state(aBuilder, aManager, GetLayerBuilderForManager(aManager),
-                         aContainerFrame, containerLayer, scaleParameters);
-    Clip clip;
-    state.ProcessDisplayItems(aChildren, clip, stateFlags);
- 
-    // Set CONTENT_COMPONENT_ALPHA if any of our children have it.
-    // This is suboptimal ... a child could have text that's over transparent
-    // pixels in its own layer, but over opaque parts of previous siblings.
-    state.Finish(&flags, data);
-    bounds = state.GetChildrenBounds();
-    pixBounds = state.ScaleToOutsidePixels(bounds, false);
-    appUnitsPerDevPixel = state.GetAppUnitsPerDevPixel();
+  state.Finish(&flags, data);
 
-    if ((flags & Layer::CONTENT_COMPONENT_ALPHA) &&
-        mRetainingManager &&
-        !mRetainingManager->AreComponentAlphaLayersEnabled() &&
-        !stateFlags) {
-      // Since we don't want any component alpha layers on BasicLayers, we repeat
-      // the layer building process with this explicitely forced off.
-      // We restore the previous FrameLayerBuilder state since the first set
-      // of layer building will have changed it.
-      stateFlags = ContainerState::NO_COMPONENT_ALPHA;
-      mNewDisplayItemData.EnumerateEntries(RestoreDisplayItemData,
-                                           &mContainerLayerGeneration);
-      mThebesLayerItems.EnumerateEntries(RestoreThebesLayerItemEntries,
-                                         &mContainerLayerGeneration);
-      aContainerFrame->AddStateBits(NS_FRAME_NO_COMPONENT_ALPHA);
-      continue;
-    }
-    break;
-  }
-
+  nsRect bounds = state.GetChildrenBounds();
   NS_ASSERTION(bounds.IsEqualInterior(aChildren.GetBounds(aBuilder)), "Wrong bounds");
+  nsIntRect pixBounds = state.ScaleToOutsidePixels(bounds, false);
   if (aContainerItem) {
     nsIntRect itemVisibleRect =
       aContainerItem->GetVisibleRect().ToOutsidePixels(AppUnitsPerDevPixel(aContainerItem));
@@ -2513,7 +2415,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   // we won't paint
   if (aChildren.IsOpaque() && !aChildren.NeedsTransparentSurface()) {
     bounds.ScaleRoundIn(scaleParameters.mXScale, scaleParameters.mYScale);
-    if (bounds.Contains(pixBounds.ToAppUnits(appUnitsPerDevPixel))) {
+    if (bounds.Contains(pixBounds.ToAppUnits(state.GetAppUnitsPerDevPixel()))) {
       // Clear CONTENT_COMPONENT_ALPHA
       flags = Layer::CONTENT_OPAQUE;
     }
@@ -2522,7 +2424,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
   containerLayer->SetUserData(&gNotifySubDocInvalidationData, nsnull);
 
-  mContainerLayerGeneration = oldGeneration;
   return containerLayer.forget();
 }
 
