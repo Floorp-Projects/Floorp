@@ -2473,7 +2473,7 @@ CheckDestructuring(JSContext *cx, BindData *data, ParseNode *left, Parser *parse
     }
 
     Rooted<StaticBlockObject *> blockObj(cx);
-    blockObj = data && data->binder == BindLet ? data->let.blockObj.reference() : NULL;
+    blockObj = data && data->binder == BindLet ? data->let.blockObj.get() : NULL;
     uint32_t blockCountBefore = blockObj ? blockObj->slotCount() : 0;
 
     if (left->isKind(PNK_RB)) {

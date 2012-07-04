@@ -395,7 +395,7 @@ GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
     if (!objectProto)
         return NULL;
 
-    return CreateBlankProto(cx, clasp, *objectProto, *self.reference());
+    return CreateBlankProto(cx, clasp, *objectProto, *self.get());
 }
 
 JSObject *

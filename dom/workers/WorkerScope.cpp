@@ -794,7 +794,7 @@ private:
       return false;
     }
 
-    aObjp.set(resolved ? aObj.value() : NULL);
+    aObjp.set(resolved ? aObj.get() : NULL);
     return true;
   }
 

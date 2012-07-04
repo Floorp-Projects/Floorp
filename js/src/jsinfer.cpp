@@ -2556,7 +2556,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj_)
     if (obj->slotSpan() == 0 || obj->inDictionaryMode())
         return;
 
-    ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj.raw());
+    ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj.get());
     const Shape *baseShape = obj->lastProperty();
 
     if (p) {
@@ -2624,13 +2624,13 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj_)
         key.nslots = obj->slotSpan();
         key.nfixed = obj->numFixedSlots();
         key.proto = obj->getProto();
-        JS_ASSERT(ObjectTableKey::match(key, obj.raw()));
+        JS_ASSERT(ObjectTableKey::match(key, obj.get()));
 
         ObjectTableEntry entry;
         entry.object = objType;
         entry.types = types;
 
-        p = objectTypeTable->lookupForAdd(obj.raw());
+        p = objectTypeTable->lookupForAdd(obj.get());
         if (!objectTypeTable->add(p, key, entry)) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -5706,7 +5706,7 @@ JSObject::getNewType(JSContext *cx, JSFunction *fun)
     if (!type)
         return NULL;
 
-    if (!table.relookupOrAdd(p, self, type.raw()))
+    if (!table.relookupOrAdd(p, self, type.get()))
         return NULL;
 
     if (!cx->typeInferenceEnabled())

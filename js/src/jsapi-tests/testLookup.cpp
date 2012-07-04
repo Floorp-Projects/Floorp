@@ -52,7 +52,7 @@ document_resolve(JSContext *cx, JSHandleObject obj, JSHandleId id, unsigned flag
             return false;
         if (JS_FlatStringEqualsAscii(flatStr, "all") && !(flags & JSRESOLVE_DETECTING)) {
             JSBool ok = JS_DefinePropertyById(cx, obj, id, JSVAL_TRUE, NULL, NULL, 0);
-            objp.set(ok ? obj.value() : NULL);
+            objp.set(ok ? obj.get() : NULL);
             return ok;
         }
     }

@@ -639,7 +639,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, Value *rval)
             return false;
         envobj->setPrivate(env);
         envobj->setReservedSlot(JSSLOT_DEBUGENV_OWNER, ObjectValue(*object));
-        if (!environments.relookupOrAdd(p, env.value(), envobj)) {
+        if (!environments.relookupOrAdd(p, env, envobj)) {
             js_ReportOutOfMemory(cx);
             return false;
         }
@@ -1816,7 +1816,7 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
     for (unsigned slot = JSSLOT_DEBUG_PROTO_START; slot < JSSLOT_DEBUG_PROTO_STOP; slot++)
         obj->setReservedSlot(slot, proto->getReservedSlot(slot));
 
-    Debugger *dbg = cx->new_<Debugger>(cx, obj.reference());
+    Debugger *dbg = cx->new_<Debugger>(cx, obj.get());
     if (!dbg)
         return false;
     obj->setPrivate(dbg);
@@ -3229,7 +3229,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
             id = INT_TO_JSID(i);
             if (!getobj ||
                 !DefineNativeProperty(cx, argsobj, id, UndefinedValue(),
-                                      JS_DATA_TO_FUNC_PTR(PropertyOp, getobj.reference()), NULL,
+                                      JS_DATA_TO_FUNC_PTR(PropertyOp, getobj.get()), NULL,
                                       JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER, 0, 0))
             {
                 return false;

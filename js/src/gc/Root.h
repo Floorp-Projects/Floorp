@@ -106,10 +106,10 @@ class Handle
            typename mozilla::EnableIf<mozilla::IsConvertible<S, T>::value, int>::Type dummy = 0);
 
     const T *address() const { return ptr; }
-    T value() const { return *ptr; }
+    T get() const { return *ptr; }
 
-    operator T () const { return value(); }
-    T operator ->() const { return value(); }
+    operator T () const { return get(); }
+    T operator ->() const { return get(); }
 
   private:
     Handle() {}
@@ -146,12 +146,11 @@ class MutableHandle
 
     void set(T v) { *ptr = v; }
 
-    const T *address() const { return ptr; }
-    T *address() { return ptr; }
-    T value() const { return *ptr; }
+    T *address() const { return ptr; }
+    T get() const { return *ptr; }
 
-    operator T () const { return value(); }
-    T operator ->() const { return value(); }
+    operator T () const { return get(); }
+    T operator ->() const { return get(); }
 
   private:
     MutableHandle() {}
@@ -212,8 +211,8 @@ class Rooted
     T operator ->() const { return ptr; }
     T * address() { return &ptr; }
     const T * address() const { return &ptr; }
-    T & reference() { return ptr; }
-    T raw() const { return ptr; }
+    T & get() { return ptr; }
+    const T & get() const { return ptr; }
 
     T & operator =(T value)
     {
