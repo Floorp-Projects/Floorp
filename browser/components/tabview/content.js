@@ -41,9 +41,7 @@ let WindowEventHandler = {
   // Sends an asynchronous message when the "onMozAfterPaint" event
   // is fired.
   onMozAfterPaint: function WEH_onMozAfterPaint(event) {
-    if (event.clientRects.length > 0) {
-      sendAsyncMessage("Panorama:MozAfterPaint");
-    }
+    sendAsyncMessage("Panorama:MozAfterPaint");
   }
 };
 
