@@ -179,6 +179,9 @@ DeveloperToolbar.prototype._onload = function DT_onload()
     scratchpad: null
   });
 
+  this.display.focusManager.addMonitoredElement(this.outputPanel._frame);
+  this.display.focusManager.addMonitoredElement(this._element);
+
   this.display.onVisibilityChange.add(this.outputPanel._visibilityChanged, this.outputPanel);
   this.display.onVisibilityChange.add(this.tooltipPanel._visibilityChanged, this.tooltipPanel);
   this.display.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
@@ -309,6 +312,9 @@ DeveloperToolbar.prototype.destroy = function DT_destroy()
 
   let tabs = this._chromeWindow.getBrowser().tabs;
   Array.prototype.forEach.call(tabs, this._stopErrorsCount, this);
+
+  this.display.focusManager.removeMonitoredElement(this.outputPanel._frame);
+  this.display.focusManager.removeMonitoredElement(this._element);
 
   this.display.onVisibilityChange.remove(this.outputPanel._visibilityChanged, this.outputPanel);
   this.display.onVisibilityChange.remove(this.tooltipPanel._visibilityChanged, this.tooltipPanel);
