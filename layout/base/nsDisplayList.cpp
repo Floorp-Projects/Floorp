@@ -675,8 +675,6 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   nsIntRect invalid;
   if (props) {
     invalid = props->ComputeDifferences(root, computeInvalidFunc);
-  } else if (widgetTransaction) {
-    LayerProperties::ClearInvalidations(root);
   }
 
   if (view) {
