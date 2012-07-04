@@ -1120,3 +1120,41 @@ js::NukeChromeCrossCompartmentWrappersForGlobal(JSContext *cx, JSObject *obj,
 
     return JS_TRUE;
 }
+
+// Given a cross-compartment wrapper |wobj|, update it to point to
+// |newTarget|. This recomputes the wrapper with JS_WrapValue, and thus can be
+// useful even if wrapper already points to newTarget.
+bool
+js::RemapWrapper(JSContext *cx, JSObject *wobj, JSObject *newTarget)
+{
+    JS_ASSERT(IsCrossCompartmentWrapper(wobj));
+    JSObject *origTarget = Wrapper::wrappedObject(wobj);
+    JS_ASSERT(origTarget);
+    Value origv = ObjectValue(*origTarget);
+    JSCompartment *wcompartment = wobj->compartment();
+    WrapperMap &pmap = wcompartment->crossCompartmentWrappers;
+
+    // When we remove origv from the wrapper map, its wrapper, wobj, must
+    // immediately cease to be a cross-compartment wrapper. Neuter it.
+    JS_ASSERT(pmap.lookup(origv));
+    pmap.remove(origv);
+    NukeCrossCompartmentWrapper(wobj);
+
+    // First, we wrap it in the new compartment. This will return
+    // a new wrapper.
+    AutoCompartment ac(cx, wobj);
+    JSObject *tobj = newTarget;
+    if (!ac.enter() || !wcompartment->wrap(cx, &tobj))
+        return false;
+
+    // Now, because we need to maintain object identity, we do a
+    // brain transplant on the old object. At the same time, we
+    // update the entry in the compartment's wrapper map to point
+    // to the old wrapper.
+    JS_ASSERT(tobj != wobj);
+    if (!wobj->swap(cx, tobj))
+        return false;
+    pmap.put(ObjectValue(*newTarget), ObjectValue(*wobj));
+
+    return true;
+}
