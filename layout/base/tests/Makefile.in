@@ -59,7 +59,6 @@ _TEST_FILES =	\
 		test_bug423523.html \
 		test_bug449781.html \
 		test_bug450930.xhtml \
-		bug450930.xhtml \
 		test_bug458898.html \
 		test_bug465448.xul \
 		test_bug469170.html \
@@ -354,7 +353,7 @@ endif
 ifeq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 # THESE TESTS (BELOW) DO NOT RUN ON MAC
 _TEST_FILES += \
-		$(warning test_flush_on_paint.html disabled due to random orange; see bug 539356) \
+		test_flush_on_paint.html \
 		$(NULL)
 # THESE TESTS (ABOVE) DO NOT RUN ON MAC
 endif

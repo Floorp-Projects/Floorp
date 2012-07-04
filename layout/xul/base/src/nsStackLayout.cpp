@@ -364,7 +364,14 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
             // if the new and old rect intersect meaning we just moved a little
             // then just redraw the union. If they don't intersect (meaning
             // we moved a good distance) redraw both separately.
-            aBox->Redraw(aState);
+            if (childRectNoMargin.Intersects(oldRect)) {
+              nsRect u;
+              u.UnionRect(oldRect, childRectNoMargin);
+              aBox->Redraw(aState, &u);
+            } else {
+              aBox->Redraw(aState, &oldRect);
+              aBox->Redraw(aState, &childRectNoMargin);
+            }
           }
        }
 

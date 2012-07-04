@@ -198,7 +198,9 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
   // before them then redraw everything under the inserted rows. The inserted
   // rows will automatically be redrawn because the were marked dirty on insertion.
   if (redrawStart > -1) {
-    aBox->Redraw(aState);
+    nsRect bounds(aBox->GetRect());
+    nsRect tempRect(0,redrawStart,bounds.width, bounds.height - redrawStart);
+    aBox->Redraw(aState, &tempRect);
   }
 
   return NS_OK;

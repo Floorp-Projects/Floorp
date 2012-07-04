@@ -720,12 +720,6 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, PRUint8 aWidgetType,
         aExtra->bottom = extra;
       }
     }
-  case NS_THEME_TEXTFIELD:
-    {
-      aExtra->top = aExtra->bottom = 1;
-      aExtra->left = aExtra->right = 1;
-      return true;
-    }
   default:
     return false;
   }

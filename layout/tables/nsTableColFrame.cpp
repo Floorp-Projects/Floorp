@@ -188,11 +188,3 @@ nsTableColFrame::GetSplittableType() const
   return NS_FRAME_NOT_SPLITTABLE;
 }
 
-void
-nsTableColFrame::InvalidateFrame()
-{
-  nsIFrame::InvalidateFrame();
-  nsTableFrame *tableFrame = nsTableFrame::GetTableFrame(this);
-  tableFrame->InvalidateFrame();
-}
-

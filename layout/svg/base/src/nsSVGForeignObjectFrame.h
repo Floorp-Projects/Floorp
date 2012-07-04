@@ -33,7 +33,6 @@ public:
   NS_IMETHOD  Init(nsIContent* aContent,
                    nsIFrame*   aParent,
                    nsIFrame*   aPrevInFlow);
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
@@ -62,6 +61,10 @@ public:
       ~(nsIFrame::eSVG | nsIFrame::eSVGForeignObject));
   }
 
+  virtual void InvalidateInternal(const nsRect& aDamageRect,
+                                  nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                  PRUint32 aFlags);
+
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
@@ -82,17 +85,25 @@ public:
 
   gfxMatrix GetCanvasTM(PRUint32 aFor);
 
-  nsRect GetInvalidRegion();
-
 protected:
   // implementation helpers:
   void DoReflow();
   void RequestReflow(nsIPresShell::IntrinsicDirty aType);
 
+  void InvalidateDirtyRect(const nsRect& aRect, PRUint32 aFlags,
+                           bool aDuringReflowSVG);
+  void FlushDirtyRegion(PRUint32 aFlags, bool aDuringReflowSVG);
+
   // If width or height is less than or equal to zero we must disable rendering
   bool IsDisabled() const { return mRect.width <= 0 || mRect.height <= 0; }
 
   nsAutoPtr<gfxMatrix> mCanvasTM;
+
+  // Areas dirtied by changes to decendents that are in our document
+  nsRegion mSameDocDirtyRegion;
+
+  // Areas dirtied by changes to sub-documents embedded by our decendents
+  nsRegion mSubDocDirtyRegion;
 
   nsRect mCoveredRegion;
 

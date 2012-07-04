@@ -176,9 +176,6 @@ public:
 
   void ReportFailure(const nsACString &aMsg, HRESULT aCode);
 
-  bool CompositingDisabled() { return mCompositingDisabled; }
-  void SetCompositingDisabled(bool aCompositingDisabled) { mCompositingDisabled = aCompositingDisabled; }
-
 private:
   /* Default device manager instance */
   static DeviceManagerD3D9 *mDefaultDeviceManager;
@@ -210,12 +207,6 @@ private:
    * do a full layer tree update.
    */
   PRUint32 mDeviceResetCount;
-
-  /*
-   * True if we should only be drawing layer contents, not
-   * compositing them to the target.
-   */
-  bool mCompositingDisabled;
 
   /*
    * Render the current layer tree to the active target.
