@@ -257,7 +257,15 @@ nsListControlFrame::InvalidateFocus()
 
   nsIFrame* containerFrame = GetOptionsContainer();
   if (containerFrame) {
-    containerFrame->InvalidateFrame();
+    // Invalidating from the containerFrame because that's where our focus
+    // is drawn.
+    // The origin of the scrollport is the origin of containerFrame.
+    float inflation = nsLayoutUtils::FontSizeInflationFor(this);
+    nsRect invalidateArea = containerFrame->GetVisualOverflowRect();
+    nsRect emptyFallbackArea(0, 0, GetScrollPortRect().width,
+                             CalcFallbackRowHeight(inflation));
+    invalidateArea.UnionRect(invalidateArea, emptyFallbackArea);
+    containerFrame->Invalidate(invalidateArea);
   }
 }
 
@@ -992,8 +1000,6 @@ nsListControlFrame::Init(nsIContent*     aContent,
 
   mLastDropdownBackstopColor = PresContext()->DefaultBackgroundColor();
 
-  AddStateBits(NS_FRAME_IN_POPUP);
-
   return result;
 }
 
@@ -1671,6 +1677,18 @@ nsIAtom*
 nsListControlFrame::GetType() const
 {
   return nsGkAtoms::listControlFrame; 
+}
+
+void
+nsListControlFrame::InvalidateInternal(const nsRect& aDamageRect,
+                                       nscoord aX, nscoord aY, nsIFrame* aForChild,
+                                       PRUint32 aFlags)
+{
+  if (!IsInDropDownMode()) {
+    nsHTMLScrollFrame::InvalidateInternal(aDamageRect, aX, aY, this, aFlags);
+    return;
+  }
+  InvalidateRoot(aDamageRect + nsPoint(aX, aY), aFlags);
 }
 
 #ifdef DEBUG

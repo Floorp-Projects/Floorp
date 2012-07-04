@@ -180,7 +180,7 @@ PrintDisplayListTo(nsDisplayListBuilder* aBuilder, const nsDisplayList& aList,
     }
     if (f) {
       PRUint32 key = i->GetPerFrameKey();
-      Layer* layer = mozilla::FrameLayerBuilder::GetDebugOldLayerFor(f, key);
+      Layer* layer = aBuilder->LayerBuilder()->GetOldLayerFor(f, key);
       if (layer) {
         fprintf(aOutput, " <a href=\"#%p\">layer=%p</a>", layer, layer);
       }

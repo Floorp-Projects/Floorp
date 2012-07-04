@@ -12,10 +12,6 @@ static void
 RenderColorLayer(ColorLayer* aLayer, LayerManagerOGL *aManager,
                  const nsIntPoint& aOffset)
 {
-  if (aManager->CompositingDisabled()) {
-    return;
-  }
-
   aManager->MakeCurrent();
 
   // XXX we might be able to improve performance by using glClear

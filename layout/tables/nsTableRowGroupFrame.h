@@ -323,8 +323,6 @@ public:
   FrameCursorData* SetupRowCursor();
 
   virtual nsILineIterator* GetLineIterator() { return this; }
-  
-  virtual void InvalidateFrame();
 
 protected:
   nsTableRowGroupFrame(nsStyleContext* aContext);

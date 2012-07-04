@@ -2879,7 +2879,8 @@ DocumentViewerImpl::SetFullZoom(float aFullZoom)
 
     nsIFrame* rootFrame = shell->GetRootFrame();
     if (rootFrame) {
-      rootFrame->InvalidateFrame();
+      nsRect rect(nsPoint(0, 0), rootFrame->GetSize());
+      rootFrame->Invalidate(rect);
     }
     return NS_OK;
   }

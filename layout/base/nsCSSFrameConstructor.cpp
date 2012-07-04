@@ -7584,6 +7584,11 @@ UpdateViewsForTree(nsIFrame* aFrame,
           DoApplyRenderingChangeToTree(child, aFrameManager,
                                        aChange);
         } else {  // regular frame
+          if ((child->GetStateBits() & NS_FRAME_HAS_CONTAINER_LAYER) &&
+              (aChange & nsChangeHint_RepaintFrame)) {
+            FrameLayerBuilder::InvalidateThebesLayerContents(child,
+              child->GetVisualOverflowRectRelativeToSelf());
+          }
           UpdateViewsForTree(child, aFrameManager, aChange);
         }
       }
@@ -7625,17 +7630,21 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
           nsSVGUtils::InvalidateBounds(aFrame);
         }
       } else {
-        aFrame->InvalidateFrameSubtree();
+        aFrame->InvalidateOverflowRect();
       }
     }
     if (aChange & nsChangeHint_UpdateOpacityLayer) {
       aFrame->MarkLayersActive(nsChangeHint_UpdateOpacityLayer);
+      aFrame->InvalidateLayer(aFrame->GetVisualOverflowRectRelativeToSelf(),
+                              nsDisplayItem::TYPE_OPACITY);
     }
     
     if (aChange & nsChangeHint_UpdateTransformLayer) {
       aFrame->MarkLayersActive(nsChangeHint_UpdateTransformLayer);
+      // Invalidate the old transformed area. The new transformed area
+      // will be invalidated by nsFrame::FinishAndStoreOverflowArea.
+      aFrame->InvalidateTransformLayer();
     }
-    aFrame->SchedulePaint();
   }
 }
 
@@ -12237,14 +12246,15 @@ nsCSSFrameConstructor::RecomputePosition(nsIFrame* aFrame)
     return true;
   }
 
-  aFrame->SchedulePaint();
-
   // For relative positioning, we can simply update the frame rect
   if (display->mPosition == NS_STYLE_POSITION_RELATIVE) {
     nsIFrame* cb = aFrame->GetContainingBlock();
     const nsSize size = cb->GetSize();
     const nsPoint oldOffsets = aFrame->GetRelativeOffset();
     nsMargin newOffsets;
+
+    // Invalidate the old rect
+    aFrame->InvalidateOverflowRect();
 
     // Move the frame
     nsHTMLReflowState::ComputeRelativeOffsets(
@@ -12255,6 +12265,9 @@ nsCSSFrameConstructor::RecomputePosition(nsIFrame* aFrame)
                  "ComputeRelativeOffsets should return valid results");
     aFrame->SetPosition(aFrame->GetPosition() - oldOffsets +
                         nsPoint(newOffsets.left, newOffsets.top));
+
+    // Invalidate the new rect
+    aFrame->InvalidateFrameSubtree();
 
     return true;
   }
@@ -12326,13 +12339,19 @@ nsCSSFrameConstructor::RecomputePosition(nsIFrame* aFrame)
                                          size.height -
                                          reflowState.mComputedMargin.top;
     }
-    
+
+    // Invalidate the old rect
+    aFrame->InvalidateFrameSubtree();
+
     // Move the frame
     nsPoint pos(parentBorder.left + reflowState.mComputedOffsets.left +
                 reflowState.mComputedMargin.left,
                 parentBorder.top + reflowState.mComputedOffsets.top +
                 reflowState.mComputedMargin.top);
     aFrame->SetPosition(pos);
+
+    // Invalidate the new rect
+    aFrame->InvalidateFrameSubtree();
 
     return true;
   }

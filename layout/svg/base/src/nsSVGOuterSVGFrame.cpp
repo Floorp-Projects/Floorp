@@ -17,11 +17,9 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsRenderingContext.h"
 #include "nsStubMutationObserver.h"
-#include "nsSVGForeignObjectFrame.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGSVGElement.h"
 #include "nsSVGTextFrame.h"
-#include "nsSubDocumentFrame.h"
 
 namespace dom = mozilla::dom;
 
@@ -80,33 +78,6 @@ nsSVGMutationObserver::AttributeChanged(nsIDocument* aDocument,
 
 //----------------------------------------------------------------------
 // Implementation helpers
-
-void
-nsSVGOuterSVGFrame::RegisterForeignObject(nsSVGForeignObjectFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-
-  if (!mForeignObjectHash.IsInitialized()) {
-    mForeignObjectHash.Init();
-  }
-
-  NS_ASSERTION(!mForeignObjectHash.GetEntry(aFrame),
-               "nsSVGForeignObjectFrame already registered!");
-
-  mForeignObjectHash.PutEntry(aFrame);
-
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
-               "Failed to register nsSVGForeignObjectFrame!");
-}
-
-void
-nsSVGOuterSVGFrame::UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame)
-{
-  NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-  NS_ASSERTION(mForeignObjectHash.GetEntry(aFrame),
-               "nsSVGForeignObjectFrame not in registry!");
-  return mForeignObjectHash.RemoveEntry(aFrame);
-}
 
 void
 nsSVGMutationObserver::UpdateTextFragmentTrees(nsIFrame *aFrame)
@@ -487,11 +458,6 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx);
-
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion);
-
   NS_DISPLAY_DECL_NAME("SVGOuterSVG", TYPE_SVG_OUTER_SVG)
 };
 
@@ -562,13 +528,21 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
     // odd document is probably no worse than printing horribly for all
     // documents. Better to fix things so we don't need fallback.
     nsIFrame* ancestor = frame;
+    PRUint32 flags = 0;
     while (true) {
       nsIFrame* next = nsLayoutUtils::GetCrossDocParentFrame(ancestor);
       if (!next)
         break;
+      if (ancestor->GetParent() != next) {
+        // We're crossing a document boundary. Logically, the invalidation is
+        // being triggered by a subdocument of the root document. This will
+        // prevent an untrusted root document being told about invalidation
+        // that happened because a child was using SVG...
+        flags |= nsIFrame::INVALIDATE_CROSS_DOC;
+      }
       ancestor = next;
     }
-    ancestor->InvalidateFrame();
+    ancestor->InvalidateWithFlags(nsRect(nsPoint(0, 0), ancestor->GetSize()), flags);
   }
 #endif
 
@@ -578,39 +552,6 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   PRTime end = PR_Now();
   printf("SVG Paint Timing: %f ms\n", (end-start)/1000.0);
 #endif
-}
-
-static PLDHashOperator CheckForeignObjectInvalidatedArea(nsPtrHashKey<nsSVGForeignObjectFrame>* aEntry, void* aData)
-{
-  nsRegion* region = static_cast<nsRegion*>(aData);
-  region->Or(*region, aEntry->GetKey()->GetInvalidRegion());
-  return PL_DHASH_NEXT;
-}
-
-nsRegion
-nsSVGOuterSVGFrame::FindInvalidatedForeignObjectFrameChildren(nsIFrame* aFrame)
-{
-  nsRegion result;
-  if (mForeignObjectHash.Count()) {
-    mForeignObjectHash.EnumerateEntries(CheckForeignObjectInvalidatedArea, &result);
-  }
-  return result;
-}
-
-void
-nsDisplayOuterSVG::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                             const nsDisplayItemGeometry* aGeometry,
-                                             nsRegion* aInvalidRegion)
-{
-  nsSVGOuterSVGFrame *frame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
-  frame->InvalidateSVG(frame->FindInvalidatedForeignObjectFrameChildren(frame));
-
-  nsRegion result = frame->GetInvalidRegion();
-  result.MoveBy(ToReferenceFrame());
-  frame->ClearInvalidRegion();
-
-  nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
-  aInvalidRegion->Or(*aInvalidRegion, result);
 }
 
 // helper

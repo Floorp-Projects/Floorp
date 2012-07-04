@@ -632,11 +632,23 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   }
 #endif
 
-  nsIntRect rect(invalidRect->left,
-                 invalidRect->top,
-                 invalidRect->right - invalidRect->left,
-                 invalidRect->bottom - invalidRect->top);
-  mObjectFrame->InvalidateLayer(nsDisplayItem::TYPE_PLUGIN, &rect);
+  nsPresContext* presContext = mObjectFrame->PresContext();
+  nsRect rect(presContext->DevPixelsToAppUnits(invalidRect->left),
+              presContext->DevPixelsToAppUnits(invalidRect->top),
+              presContext->DevPixelsToAppUnits(invalidRect->right - invalidRect->left),
+              presContext->DevPixelsToAppUnits(invalidRect->bottom - invalidRect->top));
+  if (container) {
+    gfxIntSize newSize = container->GetCurrentSize();
+    if (newSize != oldSize) {
+      // The image size has changed - invalidate the old area too, bug 635405.
+      nsRect oldRect = nsRect(0, 0,
+                              presContext->DevPixelsToAppUnits(oldSize.width),
+                              presContext->DevPixelsToAppUnits(oldSize.height));
+      rect.UnionRect(rect, oldRect);
+    }
+  }
+  rect.MoveBy(mObjectFrame->GetContentRectRelativeToSelf().TopLeft());
+  mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
   return NS_OK;
 }
 
@@ -649,7 +661,7 @@ NS_IMETHODIMP
 nsPluginInstanceOwner::RedrawPlugin()
 {
   if (mObjectFrame) {
-    mObjectFrame->InvalidateLayer(nsDisplayItem::TYPE_PLUGIN);
+    mObjectFrame->InvalidateLayer(mObjectFrame->GetContentRectRelativeToSelf(), nsDisplayItem::TYPE_PLUGIN);
   }
   return NS_OK;
 }
@@ -3720,7 +3732,7 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
       mObjectFrame->PrepForDrawing(mWidget);
     }
     mObjectFrame->FixupWindow(mObjectFrame->GetContentRectRelativeToSelf().Size());
-    mObjectFrame->InvalidateFrame();
+    mObjectFrame->Invalidate(mObjectFrame->GetContentRectRelativeToSelf());
 
     // Scroll position listening is only required for Carbon event model plugins on Mac OS X.
 #if defined(XP_MACOSX) && !defined(NP_NO_QUICKDRAW)

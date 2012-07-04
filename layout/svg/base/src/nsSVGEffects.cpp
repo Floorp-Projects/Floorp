@@ -237,7 +237,7 @@ InvalidateAllContinuations(nsIFrame* aFrame)
 {
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
-    f->InvalidateFrame();
+    f->InvalidateOverflowRect();
   }
 }
 
