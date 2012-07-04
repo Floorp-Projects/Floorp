@@ -297,7 +297,7 @@ function InitAndStartRefTests()
     } catch(e) { 
         gRemote = false;
     }
-    
+
     try {
         gIgnoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize");
     } catch(e) {
