@@ -2336,14 +2336,5 @@ nsWindow::WidgetPaintsBackground()
     return sWidgetPaintsBackground;
 }
 
-bool
-nsWindow::NeedsPaint()
-{
-  if (sCompositorPaused || FindTopLevel() != nsWindow::TopWindow()) {
-    return false;
-  }
-  return nsIWidget::NeedsPaint();
-}
-
 #endif
 
