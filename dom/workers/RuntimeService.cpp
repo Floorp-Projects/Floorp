@@ -1050,10 +1050,7 @@ RuntimeService::Cleanup()
     }
   }
 
-  nsresult rv = CleanupOSFileConstants();
-  if (NS_FAILED(rv)) {
-    MOZ_NOT_REACHED("Could not cleanup OSFileConstants");
-  }
+  CleanupOSFileConstants();
 }
 
 // static
