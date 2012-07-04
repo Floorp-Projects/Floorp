@@ -227,7 +227,7 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
         if (from.isMemory())
             masm.ma_ldr(toOperand(from, false), reg);
         else
-            masm.ma_add(from.reg(), Imm32(from.disp()), reg);
+            masm.ma_add(from.base(), Imm32(from.disp()), reg);
         JS_ASSERT(to.base() != reg);
         masm.ma_str(reg, toOperand(to, false));
     }
