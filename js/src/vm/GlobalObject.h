@@ -71,7 +71,8 @@ class GlobalObject : public JSObject
 
     /* One-off properties stored after slots for built-ins. */
     static const unsigned THROWTYPEERROR          = STANDARD_CLASS_SLOTS;
-    static const unsigned GENERATOR_PROTO         = THROWTYPEERROR + 1;
+    static const unsigned ELEMENT_ITERATOR_PROTO  = THROWTYPEERROR + 1;
+    static const unsigned GENERATOR_PROTO         = ELEMENT_ITERATOR_PROTO + 1;
     static const unsigned REGEXP_STATICS          = GENERATOR_PROTO + 1;
     static const unsigned FUNCTION_NS             = REGEXP_STATICS + 1;
     static const unsigned RUNTIME_CODEGEN_ENABLED = FUNCTION_NS + 1;
@@ -267,14 +268,28 @@ class GlobalObject : public JSObject
         return &self->getPrototype(key).toObject();
     }
 
-    JSObject *getOrCreateGeneratorPrototype(JSContext *cx) {
-        Value v = getSlotRef(GENERATOR_PROTO);
+    JSObject *getIteratorPrototype() {
+        return &getPrototype(JSProto_Iterator).toObject();
+    }
+
+  private:
+    JSObject *getOrCreateIteratorSubclassPrototype(JSContext *cx, unsigned slot) {
+        Value v = getSlotRef(slot);
         if (v.isObject())
             return &v.toObject();
         Rooted<GlobalObject*> self(cx, this);
-        if (!js_InitIteratorClasses(cx, this))
+        if (!initIteratorClasses(cx, self))
             return NULL;
-        return &self->getSlot(GENERATOR_PROTO).toObject();
+        return &self->getSlot(slot).toObject();
+    }
+
+  public:
+    JSObject *getOrCreateElementIteratorPrototype(JSContext *cx) {
+        return getOrCreateIteratorSubclassPrototype(cx, ELEMENT_ITERATOR_PROTO);
+    }
+
+    JSObject *getOrCreateGeneratorPrototype(JSContext *cx) {
+        return getOrCreateIteratorSubclassPrototype(cx, GENERATOR_PROTO);
     }
 
     inline RegExpStatics *getRegExpStatics() const;
@@ -299,7 +314,9 @@ class GlobalObject : public JSObject
 
     bool getFunctionNamespace(JSContext *cx, Value *vp);
 
-    static bool initGeneratorClass(JSContext *cx, Handle<GlobalObject*> global);
+    // Implemented in jsiter.cpp.
+    static bool initIteratorClasses(JSContext *cx, Handle<GlobalObject*> global);
+
     static bool initStandardClasses(JSContext *cx, Handle<GlobalObject*> global);
 
     typedef js::Vector<js::Debugger *, 0, js::SystemAllocPolicy> DebuggerVector;

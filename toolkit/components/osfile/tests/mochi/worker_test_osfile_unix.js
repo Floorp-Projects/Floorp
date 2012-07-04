@@ -6,7 +6,6 @@ function log(text) {
 }
 
 function send(message) {
-  log("Sending " + JSON.stringify(message) + "errno: " + ctypes.errno);
   self.postMessage(message);
 }
 
@@ -21,6 +20,7 @@ self.onmessage = function(msg) {
   test_create_file();
   test_access();
   test_read_write();
+  test_path();
   finish();
 };
 
@@ -202,4 +202,32 @@ function test_read_write()
   result = OS.Unix.File.unlink(output_name);
   isnot(result, -1, "test_read_write: input remove succeeded");
   ok(true, "test_read_write cleanup complete");
+}
+
+function test_path()
+{
+  ok(true, "test_path: starting");
+  is(OS.Unix.Path.basename("a/b"), "b", "basename of a/b");
+  is(OS.Unix.Path.basename("a/b/"), "", "basename of a/b/");
+  is(OS.Unix.Path.basename("abc"), "abc", "basename of abc");
+  is(OS.Unix.Path.dirname("a/b"), "a", "basename of a/b");
+  is(OS.Unix.Path.dirname("a/b/"), "a/b", "basename of a/b/");
+  is(OS.Unix.Path.dirname("a////b"), "a", "basename of a///b");
+  is(OS.Unix.Path.dirname("abc"), ".", "basename of abc");
+  is(OS.Unix.Path.normalize("/a/b/c"), "/a/b/c", "normalize /a/b/c");
+  is(OS.Unix.Path.normalize("/a/b////c"), "/a/b/c", "normalize /a/b////c");
+  is(OS.Unix.Path.normalize("////a/b/c"), "/a/b/c", "normalize ///a/b/c");
+  is(OS.Unix.Path.normalize("/a/b/c///"), "/a/b/c", "normalize /a/b/c///");
+  is(OS.Unix.Path.normalize("/a/b/c/../../../d/e/f"), "/d/e/f", "normalize /a/b/c/../../../d/e/f");
+  is(OS.Unix.Path.normalize("a/b/c/../../../d/e/f"), "d/e/f", "normalize a/b/c/../../../d/e/f");
+  let error = false;
+  try {
+    OS.Unix.Path.normalize("/a/b/c/../../../../d/e/f");
+  } catch (x) {
+    error = true;
+  }
+  ok(error, "cannot normalize /a/b/c/../../../../d/e/f");
+  is(OS.Unix.Path.join("/tmp", "foo", "bar"), "/tmp/foo/bar", "join /tmp,foo,bar");
+  is(OS.Unix.Path.join("/tmp", "/foo", "bar"), "/foo/bar", "join /tmp,/foo,bar");
+  ok(true, "test_path: complete");
 }

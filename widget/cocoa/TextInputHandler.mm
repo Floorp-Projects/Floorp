@@ -57,68 +57,129 @@ static const char*
 GetKeyNameForNativeKeyCode(unsigned short aNativeKeyCode)
 {
   switch (aNativeKeyCode) {
-    case kEscapeKeyCode:          return "Escape";
-    case kRCommandKeyCode:        return "Right-Command";
-    case kCommandKeyCode:         return "Command";
-    case kShiftKeyCode:           return "Shift";
-    case kCapsLockKeyCode:        return "CapsLock";
-    case kOptionkeyCode:          return "Option";
-    case kControlKeyCode:         return "Control";
-    case kRShiftKeyCode:          return "Right-Shift";
-    case kROptionKeyCode:         return "Right-Option";
-    case kRControlKeyCode:        return "Right-Control";
-    case kClearKeyCode:           return "Clear";
+    case kVK_Escape:              return "Escape";
+    case kVK_RightCommand:        return "Right-Command";
+    case kVK_Command:             return "Command";
+    case kVK_Shift:               return "Shift";
+    case kVK_CapsLock:            return "CapsLock";
+    case kVK_Option:              return "Option";
+    case kVK_Control:             return "Control";
+    case kVK_RightShift:          return "Right-Shift";
+    case kVK_RightOption:         return "Right-Option";
+    case kVK_RightControl:        return "Right-Control";
+    case kVK_ANSI_KeypadClear:    return "Clear";
 
-    case kF1KeyCode:              return "F1";
-    case kF2KeyCode:              return "F2";
-    case kF3KeyCode:              return "F3";
-    case kF4KeyCode:              return "F4";
-    case kF5KeyCode:              return "F5";
-    case kF6KeyCode:              return "F6";
-    case kF7KeyCode:              return "F7";
-    case kF8KeyCode:              return "F8";
-    case kF9KeyCode:              return "F9";
-    case kF10KeyCode:             return "F10";
-    case kF11KeyCode:             return "F11";
-    case kF12KeyCode:             return "F12";
-    case kF13KeyCode:             return "F13/PrintScreen";
-    case kF14KeyCode:             return "F14/ScrollLock";
-    case kF15KeyCode:             return "F15/Pause";
+    case kVK_F1:                  return "F1";
+    case kVK_F2:                  return "F2";
+    case kVK_F3:                  return "F3";
+    case kVK_F4:                  return "F4";
+    case kVK_F5:                  return "F5";
+    case kVK_F6:                  return "F6";
+    case kVK_F7:                  return "F7";
+    case kVK_F8:                  return "F8";
+    case kVK_F9:                  return "F9";
+    case kVK_F10:                 return "F10";
+    case kVK_F11:                 return "F11";
+    case kVK_F12:                 return "F12";
+    case kVK_F13:                 return "F13/PrintScreen";
+    case kVK_F14:                 return "F14/ScrollLock";
+    case kVK_F15:                 return "F15/Pause";
 
-    case kKeypad0KeyCode:         return "NumPad-0";
-    case kKeypad1KeyCode:         return "NumPad-1";
-    case kKeypad2KeyCode:         return "NumPad-2";
-    case kKeypad3KeyCode:         return "NumPad-3";
-    case kKeypad4KeyCode:         return "NumPad-4";
-    case kKeypad5KeyCode:         return "NumPad-5";
-    case kKeypad6KeyCode:         return "NumPad-6";
-    case kKeypad7KeyCode:         return "NumPad-7";
-    case kKeypad8KeyCode:         return "NumPad-8";
-    case kKeypad9KeyCode:         return "NumPad-9";
+    case kVK_ANSI_Keypad0:        return "NumPad-0";
+    case kVK_ANSI_Keypad1:        return "NumPad-1";
+    case kVK_ANSI_Keypad2:        return "NumPad-2";
+    case kVK_ANSI_Keypad3:        return "NumPad-3";
+    case kVK_ANSI_Keypad4:        return "NumPad-4";
+    case kVK_ANSI_Keypad5:        return "NumPad-5";
+    case kVK_ANSI_Keypad6:        return "NumPad-6";
+    case kVK_ANSI_Keypad7:        return "NumPad-7";
+    case kVK_ANSI_Keypad8:        return "NumPad-8";
+    case kVK_ANSI_Keypad9:        return "NumPad-9";
 
-    case kKeypadMultiplyKeyCode:  return "NumPad-*";
-    case kKeypadAddKeyCode:       return "NumPad-+";
-    case kKeypadSubtractKeyCode:  return "NumPad--";
-    case kKeypadDecimalKeyCode:   return "NumPad-.";
-    case kKeypadDivideKeyCode:    return "NumPad-/";
-    case kKeypadEqualsKeyCode:    return "NumPad-=";
-    case kEnterKeyCode:           return "NumPad-Enter";
-    case kReturnKeyCode:          return "NumPad-Return";
-    case kPowerbookEnterKeyCode:  return "NumPad-EnterOnPowerBook";
+    case kVK_ANSI_KeypadMultiply: return "NumPad-*";
+    case kVK_ANSI_KeypadPlus:     return "NumPad-+";
+    case kVK_ANSI_KeypadMinus:    return "NumPad--";
+    case kVK_ANSI_KeypadDecimal:  return "NumPad-.";
+    case kVK_ANSI_KeypadDivide:   return "NumPad-/";
+    case kVK_ANSI_KeypadEquals:   return "NumPad-=";
+    case kVK_ANSI_KeypadEnter:    return "NumPad-Enter";
+    case kVK_Return:              return "Return";
+    case kVK_Powerbook_KeypadEnter: return "NumPad-EnterOnPowerBook";
 
-    case kInsertKeyCode:          return "Insert/Help";
-    case kDeleteKeyCode:          return "Delete";
-    case kTabKeyCode:             return "Tab";
-    case kTildeKeyCode:           return "Tilde";
-    case kBackspaceKeyCode:       return "Backspace";
-    case kHomeKeyCode:            return "Home";
-    case kEndKeyCode:             return "End";
-    case kPageUpKeyCode:          return "PageUp";
-    case kPageDownKeyCode:        return "PageDown";
-    case kLeftArrowKeyCode:       return "LeftArrow";
-    case kRightArrowKeyCode:      return "RightArrow";
-    case kUpArrowKeyCode:         return "UpArrow";
-    case kDownArrowKeyCode:       return "DownArrow";
+    case kVK_PC_Insert:           return "Insert/Help";
+    case kVK_PC_Delete:           return "Delete";
+    case kVK_Tab:                 return "Tab";
+    case kVK_PC_Backspace:        return "Backspace";
+    case kVK_Home:                return "Home";
+    case kVK_End:                 return "End";
+    case kVK_PageUp:              return "PageUp";
+    case kVK_PageDown:            return "PageDown";
+    case kVK_LeftArrow:           return "LeftArrow";
+    case kVK_RightArrow:          return "RightArrow";
+    case kVK_UpArrow:             return "UpArrow";
+    case kVK_DownArrow:           return "DownArrow";
+
+    case kVK_Function:            return "Function";
+    case kVK_VolumeUp:            return "VolumeUp";
+    case kVK_VolumeDown:          return "VolumeDown";
+    case kVK_Mute:                return "Mute";
+
+    case kVK_ISO_Section:         return "ISO_Section";
+
+    case kVK_JIS_Yen:             return "JIS_Yen";
+    case kVK_JIS_Underscore:      return "JIS_Underscore";
+    case kVK_JIS_KeypadComma:     return "JIS_KeypadComma";
+    case kVK_JIS_Eisu:            return "JIS_Eisu";
+    case kVK_JIS_Kana:            return "JIS_Kana";
+
+    case kVK_ANSI_A:              return "A";
+    case kVK_ANSI_B:              return "B";
+    case kVK_ANSI_C:              return "C";
+    case kVK_ANSI_D:              return "D";
+    case kVK_ANSI_E:              return "E";
+    case kVK_ANSI_F:              return "F";
+    case kVK_ANSI_G:              return "G";
+    case kVK_ANSI_H:              return "H";
+    case kVK_ANSI_I:              return "I";
+    case kVK_ANSI_J:              return "J";
+    case kVK_ANSI_K:              return "K";
+    case kVK_ANSI_L:              return "L";
+    case kVK_ANSI_M:              return "M";
+    case kVK_ANSI_N:              return "N";
+    case kVK_ANSI_O:              return "O";
+    case kVK_ANSI_P:              return "P";
+    case kVK_ANSI_Q:              return "Q";
+    case kVK_ANSI_R:              return "R";
+    case kVK_ANSI_S:              return "S";
+    case kVK_ANSI_T:              return "T";
+    case kVK_ANSI_U:              return "U";
+    case kVK_ANSI_V:              return "V";
+    case kVK_ANSI_W:              return "W";
+    case kVK_ANSI_X:              return "X";
+    case kVK_ANSI_Y:              return "Y";
+    case kVK_ANSI_Z:              return "Z";
+
+    case kVK_ANSI_1:              return "1";
+    case kVK_ANSI_2:              return "2";
+    case kVK_ANSI_3:              return "3";
+    case kVK_ANSI_4:              return "4";
+    case kVK_ANSI_5:              return "5";
+    case kVK_ANSI_6:              return "6";
+    case kVK_ANSI_7:              return "7";
+    case kVK_ANSI_8:              return "8";
+    case kVK_ANSI_9:              return "9";
+    case kVK_ANSI_0:              return "0";
+    case kVK_ANSI_Equal:          return "Equal";
+    case kVK_ANSI_Minus:          return "Minus";
+    case kVK_ANSI_RightBracket:   return "RightBracket";
+    case kVK_ANSI_LeftBracket:    return "LeftBracket";
+    case kVK_ANSI_Quote:          return "Quote";
+    case kVK_ANSI_Semicolon:      return "Semicolon";
+    case kVK_ANSI_Backslash:      return "Backslash";
+    case kVK_ANSI_Comma:          return "Comma";
+    case kVK_ANSI_Slash:          return "Slash";
+    case kVK_ANSI_Period:         return "Period";
+    case kVK_ANSI_Grave:          return "Grave";
 
     default:                      return "undefined";
   }
@@ -651,38 +712,38 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     ComputeGeckoKeyCode([aNativeKeyEvent keyCode], kbType, aKeyEvent.IsMeta());
 
   switch ([aNativeKeyEvent keyCode]) {
-    case kCommandKeyCode:
-    case kShiftKeyCode:
-    case kOptionkeyCode:
-    case kControlKeyCode:
+    case kVK_Command:
+    case kVK_Shift:
+    case kVK_Option:
+    case kVK_Control:
       aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT;
       break;
 
-    case kRCommandKeyCode:
-    case kRShiftKeyCode:
-    case kROptionKeyCode:
-    case kRControlKeyCode:
+    case kVK_RightCommand:
+    case kVK_RightShift:
+    case kVK_RightOption:
+    case kVK_RightControl:
       aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT;
       break;
 
-    case kKeypad0KeyCode:
-    case kKeypad1KeyCode:
-    case kKeypad2KeyCode:
-    case kKeypad3KeyCode:
-    case kKeypad4KeyCode:
-    case kKeypad5KeyCode:
-    case kKeypad6KeyCode:
-    case kKeypad7KeyCode:
-    case kKeypad8KeyCode:
-    case kKeypad9KeyCode:
-    case kKeypadMultiplyKeyCode:
-    case kKeypadAddKeyCode:
-    case kKeypadSubtractKeyCode:
-    case kKeypadDecimalKeyCode:
-    case kKeypadDivideKeyCode:
-    case kKeypadEqualsKeyCode:
-    case kEnterKeyCode:
-    case kPowerbookEnterKeyCode:
+    case kVK_ANSI_Keypad0:
+    case kVK_ANSI_Keypad1:
+    case kVK_ANSI_Keypad2:
+    case kVK_ANSI_Keypad3:
+    case kVK_ANSI_Keypad4:
+    case kVK_ANSI_Keypad5:
+    case kVK_ANSI_Keypad6:
+    case kVK_ANSI_Keypad7:
+    case kVK_ANSI_Keypad8:
+    case kVK_ANSI_Keypad9:
+    case kVK_ANSI_KeypadMultiply:
+    case kVK_ANSI_KeypadPlus:
+    case kVK_ANSI_KeypadMinus:
+    case kVK_ANSI_KeypadDecimal:
+    case kVK_ANSI_KeypadDivide:
+    case kVK_ANSI_KeypadEquals:
+    case kVK_ANSI_KeypadEnter:
+    case kVK_Powerbook_KeypadEnter:
       aKeyEvent.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_NUMPAD;
       break;
 
@@ -951,86 +1012,86 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
      TrueOrFalse(IsOpenedIMEMode()), TrueOrFalse(IsASCIICapable())));
 
   switch (aNativeKeyCode) {
-    case kSpaceKeyCode:         return NS_VK_SPACE;
-    case kEscapeKeyCode:        return NS_VK_ESCAPE;
+    case kVK_Space:             return NS_VK_SPACE;
+    case kVK_Escape:            return NS_VK_ESCAPE;
 
     // modifiers
-    case kRCommandKeyCode:
-    case kCommandKeyCode:       return NS_VK_META;
-    case kRShiftKeyCode:
-    case kShiftKeyCode:         return NS_VK_SHIFT;
-    case kCapsLockKeyCode:      return NS_VK_CAPS_LOCK;
-    case kRControlKeyCode:
-    case kControlKeyCode:       return NS_VK_CONTROL;
-    case kROptionKeyCode:
-    case kOptionkeyCode:        return NS_VK_ALT;
+    case kVK_RightCommand:
+    case kVK_Command:           return NS_VK_META;
+    case kVK_RightShift:
+    case kVK_Shift:             return NS_VK_SHIFT;
+    case kVK_CapsLock:          return NS_VK_CAPS_LOCK;
+    case kVK_RightControl:
+    case kVK_Control:           return NS_VK_CONTROL;
+    case kVK_RightOption:
+    case kVK_Option:            return NS_VK_ALT;
 
-    case kClearKeyCode:         return NS_VK_CLEAR;
+    case kVK_ANSI_KeypadClear:  return NS_VK_CLEAR;
 
     // function keys
-    case kF1KeyCode:            return NS_VK_F1;
-    case kF2KeyCode:            return NS_VK_F2;
-    case kF3KeyCode:            return NS_VK_F3;
-    case kF4KeyCode:            return NS_VK_F4;
-    case kF5KeyCode:            return NS_VK_F5;
-    case kF6KeyCode:            return NS_VK_F6;
-    case kF7KeyCode:            return NS_VK_F7;
-    case kF8KeyCode:            return NS_VK_F8;
-    case kF9KeyCode:            return NS_VK_F9;
-    case kF10KeyCode:           return NS_VK_F10;
-    case kF11KeyCode:           return NS_VK_F11;
-    case kF12KeyCode:           return NS_VK_F12;
-    // case kF13KeyCode:           return NS_VK_F13;  // clash with the 3 below
-    // case kF14KeyCode:           return NS_VK_F14;
-    // case kF15KeyCode:           return NS_VK_F15;
-    case kF16KeyCode:           return NS_VK_F16;
-    case kF17KeyCode:           return NS_VK_F17;
-    case kF18KeyCode:           return NS_VK_F18;
-    case kF19KeyCode:           return NS_VK_F19;
+    case kVK_F1:                return NS_VK_F1;
+    case kVK_F2:                return NS_VK_F2;
+    case kVK_F3:                return NS_VK_F3;
+    case kVK_F4:                return NS_VK_F4;
+    case kVK_F5:                return NS_VK_F5;
+    case kVK_F6:                return NS_VK_F6;
+    case kVK_F7:                return NS_VK_F7;
+    case kVK_F8:                return NS_VK_F8;
+    case kVK_F9:                return NS_VK_F9;
+    case kVK_F10:               return NS_VK_F10;
+    case kVK_F11:               return NS_VK_F11;
+    case kVK_F12:               return NS_VK_F12;
+    // case kVK_F13:               return NS_VK_F13;  // clash with the 3 below
+    // case kVK_F14:               return NS_VK_F14;
+    // case kVK_F15:               return NS_VK_F15;
+    case kVK_F16:               return NS_VK_F16;
+    case kVK_F17:               return NS_VK_F17;
+    case kVK_F18:               return NS_VK_F18;
+    case kVK_F19:               return NS_VK_F19;
 
-    case kPauseKeyCode:         return NS_VK_PAUSE;
-    case kScrollLockKeyCode:    return NS_VK_SCROLL_LOCK;
-    case kPrintScreenKeyCode:   return NS_VK_PRINTSCREEN;
+    case kVK_PC_Pause:          return NS_VK_PAUSE;
+    case kVK_PC_ScrollLock:     return NS_VK_SCROLL_LOCK;
+    case kVK_PC_PrintScreen:    return NS_VK_PRINTSCREEN;
 
     // keypad
-    case kKeypad0KeyCode:       return NS_VK_NUMPAD0;
-    case kKeypad1KeyCode:       return NS_VK_NUMPAD1;
-    case kKeypad2KeyCode:       return NS_VK_NUMPAD2;
-    case kKeypad3KeyCode:       return NS_VK_NUMPAD3;
-    case kKeypad4KeyCode:       return NS_VK_NUMPAD4;
-    case kKeypad5KeyCode:       return NS_VK_NUMPAD5;
-    case kKeypad6KeyCode:       return NS_VK_NUMPAD6;
-    case kKeypad7KeyCode:       return NS_VK_NUMPAD7;
-    case kKeypad8KeyCode:       return NS_VK_NUMPAD8;
-    case kKeypad9KeyCode:       return NS_VK_NUMPAD9;
+    case kVK_ANSI_Keypad0:      return NS_VK_NUMPAD0;
+    case kVK_ANSI_Keypad1:      return NS_VK_NUMPAD1;
+    case kVK_ANSI_Keypad2:      return NS_VK_NUMPAD2;
+    case kVK_ANSI_Keypad3:      return NS_VK_NUMPAD3;
+    case kVK_ANSI_Keypad4:      return NS_VK_NUMPAD4;
+    case kVK_ANSI_Keypad5:      return NS_VK_NUMPAD5;
+    case kVK_ANSI_Keypad6:      return NS_VK_NUMPAD6;
+    case kVK_ANSI_Keypad7:      return NS_VK_NUMPAD7;
+    case kVK_ANSI_Keypad8:      return NS_VK_NUMPAD8;
+    case kVK_ANSI_Keypad9:      return NS_VK_NUMPAD9;
 
-    case kKeypadMultiplyKeyCode:  return NS_VK_MULTIPLY;
-    case kKeypadAddKeyCode:       return NS_VK_ADD;
-    case kKeypadSubtractKeyCode:  return NS_VK_SUBTRACT;
-    case kKeypadDecimalKeyCode:   return NS_VK_DECIMAL;
-    case kKeypadDivideKeyCode:    return NS_VK_DIVIDE;
+    case kVK_ANSI_KeypadMultiply: return NS_VK_MULTIPLY;
+    case kVK_ANSI_KeypadPlus:     return NS_VK_ADD;
+    case kVK_ANSI_KeypadMinus:    return NS_VK_SUBTRACT;
+    case kVK_ANSI_KeypadDecimal:  return NS_VK_DECIMAL;
+    case kVK_ANSI_KeypadDivide:   return NS_VK_DIVIDE;
 
     // IME keys
-    case kJapanese_Eisu:        return NS_VK_EISU;
-    case kJapanese_Kana:        return NS_VK_KANA;
+    case kVK_JIS_Eisu:          return NS_VK_EISU;
+    case kVK_JIS_Kana:          return NS_VK_KANA;
 
     // these may clash with forward delete and help
-    case kInsertKeyCode:        return NS_VK_INSERT;
-    case kDeleteKeyCode:        return NS_VK_DELETE;
+    case kVK_PC_Insert:         return NS_VK_INSERT;
+    case kVK_PC_Delete:         return NS_VK_DELETE;
 
-    case kBackspaceKeyCode:     return NS_VK_BACK;
-    case kTabKeyCode:           return NS_VK_TAB;
+    case kVK_PC_Backspace:      return NS_VK_BACK;
+    case kVK_Tab:               return NS_VK_TAB;
 
-    case kHomeKeyCode:          return NS_VK_HOME;
-    case kEndKeyCode:           return NS_VK_END;
+    case kVK_Home:              return NS_VK_HOME;
+    case kVK_End:               return NS_VK_END;
 
-    case kPageUpKeyCode:        return NS_VK_PAGE_UP;
-    case kPageDownKeyCode:      return NS_VK_PAGE_DOWN;
+    case kVK_PageUp:            return NS_VK_PAGE_UP;
+    case kVK_PageDown:          return NS_VK_PAGE_DOWN;
 
-    case kLeftArrowKeyCode:     return NS_VK_LEFT;
-    case kRightArrowKeyCode:    return NS_VK_RIGHT;
-    case kUpArrowKeyCode:       return NS_VK_UP;
-    case kDownArrowKeyCode:     return NS_VK_DOWN;
+    case kVK_LeftArrow:         return NS_VK_LEFT;
+    case kVK_RightArrow:        return NS_VK_RIGHT;
+    case kVK_UpArrow:           return NS_VK_UP;
+    case kVK_DownArrow:         return NS_VK_DOWN;
 
     case kVK_ANSI_1:            return NS_VK_1;
     case kVK_ANSI_2:            return NS_VK_2;
@@ -1043,9 +1104,9 @@ TISInputSourceWrapper::ComputeGeckoKeyCode(UInt32 aNativeKeyCode,
     case kVK_ANSI_9:            return NS_VK_9;
     case kVK_ANSI_0:            return NS_VK_0;
 
-    case kEnterKeyCode:
-    case kReturnKeyCode:
-    case kPowerbookEnterKeyCode: return NS_VK_RETURN;
+    case kVK_ANSI_KeypadEnter:
+    case kVK_Return:
+    case kVK_Powerbook_KeypadEnter: return NS_VK_RETURN;
   }
 
   // If Cmd key is pressed, that causes switching keyboard layout temporarily.
@@ -1386,7 +1447,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
   // CapsLock state and other modifier states are different:
   // CapsLock state does not revert when the CapsLock key goes up, as the
   // modifier state does for other modifier keys on key up.
-  if ([aNativeEvent keyCode] == kCapsLockKeyCode) {
+  if ([aNativeEvent keyCode] == kVK_CapsLock) {
     // Fire key down event for caps lock.
     DispatchKeyEventForFlagsChanged(aNativeEvent, true);
     if (Destroyed()) {
@@ -3818,58 +3879,58 @@ TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
   // generate a charCode
   switch (aNativeKeyCode) {
     // modifiers - we don't get separate events for these yet
-    case kEscapeKeyCode:
-    case kShiftKeyCode:
-    case kRShiftKeyCode:
-    case kCommandKeyCode:
-    case kRCommandKeyCode:
-    case kCapsLockKeyCode:
-    case kControlKeyCode:
-    case kRControlKeyCode:
-    case kOptionkeyCode:
-    case kROptionKeyCode:
-    case kClearKeyCode:
+    case kVK_Escape:
+    case kVK_Shift:
+    case kVK_RightShift:
+    case kVK_Command:
+    case kVK_RightCommand:
+    case kVK_CapsLock:
+    case kVK_Control:
+    case kVK_RightControl:
+    case kVK_Option:
+    case kVK_RightOption:
+    case kVK_ANSI_KeypadClear:
 
     // function keys
-    case kF1KeyCode:
-    case kF2KeyCode:
-    case kF3KeyCode:
-    case kF4KeyCode:
-    case kF5KeyCode:
-    case kF6KeyCode:
-    case kF7KeyCode:
-    case kF8KeyCode:
-    case kF9KeyCode:
-    case kF10KeyCode:
-    case kF11KeyCode:
-    case kF12KeyCode:
-    case kPauseKeyCode:
-    case kScrollLockKeyCode:
-    case kPrintScreenKeyCode:
-    case kF16KeyCode:
-    case kF17KeyCode:
-    case kF18KeyCode:
-    case kF19KeyCode:
+    case kVK_F1:
+    case kVK_F2:
+    case kVK_F3:
+    case kVK_F4:
+    case kVK_F5:
+    case kVK_F6:
+    case kVK_F7:
+    case kVK_F8:
+    case kVK_F9:
+    case kVK_F10:
+    case kVK_F11:
+    case kVK_F12:
+    case kVK_PC_Pause:
+    case kVK_PC_ScrollLock:
+    case kVK_PC_PrintScreen:
+    case kVK_F16:
+    case kVK_F17:
+    case kVK_F18:
+    case kVK_F19:
 
-    case kInsertKeyCode:
-    case kDeleteKeyCode:
-    case kTabKeyCode:
-    case kBackspaceKeyCode:
+    case kVK_PC_Insert:
+    case kVK_PC_Delete:
+    case kVK_Tab:
+    case kVK_PC_Backspace:
 
-    case kJapanese_Eisu:
-    case kJapanese_Kana:
+    case kVK_JIS_Eisu:
+    case kVK_JIS_Kana:
 
-    case kHomeKeyCode:
-    case kEndKeyCode:
-    case kPageUpKeyCode:
-    case kPageDownKeyCode:
-    case kLeftArrowKeyCode:
-    case kRightArrowKeyCode:
-    case kUpArrowKeyCode:
-    case kDownArrowKeyCode:
-    case kReturnKeyCode:
-    case kEnterKeyCode:
-    case kPowerbookEnterKeyCode:
+    case kVK_Home:
+    case kVK_End:
+    case kVK_PageUp:
+    case kVK_PageDown:
+    case kVK_LeftArrow:
+    case kVK_RightArrow:
+    case kVK_UpArrow:
+    case kVK_DownArrow:
+    case kVK_Return:
+    case kVK_ANSI_KeypadEnter:
+    case kVK_Powerbook_KeypadEnter:
       return true;
   }
   return false;
@@ -3895,15 +3956,15 @@ TextInputHandlerBase::IsNormalCharInputtingEvent(const nsKeyEvent& aKeyEvent)
 TextInputHandlerBase::IsModifierKey(UInt32 aNativeKeyCode)
 {
   switch (aNativeKeyCode) {
-    case kCapsLockKeyCode:
-    case kRCommandKeyCode:
-    case kCommandKeyCode:
-    case kShiftKeyCode:
-    case kOptionkeyCode:
-    case kControlKeyCode:
-    case kRShiftKeyCode:
-    case kROptionKeyCode:
-    case kRControlKeyCode:
+    case kVK_CapsLock:
+    case kVK_RightCommand:
+    case kVK_Command:
+    case kVK_Shift:
+    case kVK_Option:
+    case kVK_Control:
+    case kVK_RightShift:
+    case kVK_RightOption:
+    case kVK_RightControl:
       return true;
   }
   return false;

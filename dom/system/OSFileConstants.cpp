@@ -439,6 +439,14 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
     }
   }
 
+  // Build OS.Constants.Path
+
+  JSObject *objPath;
+  if (!(objPath = GetOrCreateObjectProperty(cx, objConstants, "Path"))) {
+    return false;
+  }
+
+
   // Locate libxul
   {
     nsAutoString xulPath(*gLibDirectory);
@@ -458,7 +466,7 @@ bool DefineOSFileConstants(JSContext *cx, JSObject *global)
 
     JSString* strPathToLibXUL = JS_NewUCStringCopyZ(cx, xulPath.get());
     jsval valXul = STRING_TO_JSVAL(strPathToLibXUL);
-    if (!JS_SetProperty(cx, objSys, "libxulpath", &valXul)) {
+    if (!JS_SetProperty(cx, objPath, "libxul", &valXul)) {
       return false;
     }
   }
