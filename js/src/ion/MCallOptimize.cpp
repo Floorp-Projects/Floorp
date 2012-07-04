@@ -415,13 +415,13 @@ IonBuilder::inlineStrCharCodeAt(uint32 argc, bool constructing)
     if (!discardCall(argc, argv, current))
         return InliningStatus_Error;
 
-    MToInt32 *index = MToInt32::New(argv[1]);
+    MInstruction *index = MToInt32::New(argv[1]);
     current->add(index);
 
     MStringLength *length = MStringLength::New(argv[0]);
     current->add(length);
-    MBoundsCheck *boundsCheck = MBoundsCheck::New(index, length);
-    current->add(boundsCheck);
+
+    index = addBoundsCheck(index, length);
 
     MCharCodeAt *charCode = MCharCodeAt::New(argv[0], index);
     current->add(charCode);
@@ -470,13 +470,13 @@ IonBuilder::inlineStrCharAt(uint32 argc, bool constructing)
     if (!discardCall(argc, argv, current))
         return InliningStatus_Error;
 
-    MToInt32 *index = MToInt32::New(argv[1]);
+    MInstruction *index = MToInt32::New(argv[1]);
     current->add(index);
 
     MStringLength *length = MStringLength::New(argv[0]);
     current->add(length);
-    MBoundsCheck *boundsCheck = MBoundsCheck::New(index, length);
-    current->add(boundsCheck);
+
+    index = addBoundsCheck(index, length);
 
     // String.charAt(x) = String.fromCharCode(String.charCodeAt(x))
     MCharCodeAt *charCode = MCharCodeAt::New(argv[0], index);
