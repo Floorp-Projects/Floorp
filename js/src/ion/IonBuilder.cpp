@@ -178,8 +178,6 @@ IonBuilder::getPolyCallTargets(uint32 argc, jsbytecode *pc,
         return 0;
 
     unsigned objCount = calleeTypes->getObjectCount();
-    if (calleeTypes->baseFlags() != 0)
-        return 0;
 
     if (objCount == 0 || objCount > maxTargets)
         return 0;
