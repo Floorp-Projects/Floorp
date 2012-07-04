@@ -15,6 +15,9 @@ namespace js {
 
 class TempAllocPolicy;
 
+/* Integral types for all hash functions. */
+typedef uint32_t HashNumber;
+
 /*****************************************************************************/
 
 namespace detail {
@@ -285,6 +288,7 @@ class HashTable : private AllocPolicy
     static const uint8_t  sMinAlphaFrac = 64;  /* (0x100 * .25) taken from jsdhash.h */
     static const uint8_t  sMaxAlphaFrac = 192; /* (0x100 * .75) taken from jsdhash.h */
     static const uint8_t  sInvMaxAlpha  = 171; /* (ceil(0x100 / .75) >> 1) */
+    static const HashNumber sGoldenRatio  = 0x9E3779B9U;       /* taken from jsdhash.h */
     static const HashNumber sFreeKey = Entry::sFreeKey;
     static const HashNumber sRemovedKey = Entry::sRemovedKey;
     static const HashNumber sCollisionBit = Entry::sCollisionBit;
@@ -304,7 +308,10 @@ class HashTable : private AllocPolicy
 
     static HashNumber prepareHash(const Lookup& l)
     {
-        HashNumber keyHash = ScrambleHashCode(HashPolicy::hash(l));
+        HashNumber keyHash = HashPolicy::hash(l);
+
+        /* Improve keyHash distribution. */
+        keyHash *= sGoldenRatio;
 
         /* Avoid reserved hash codes. */
         if (!isLiveHash(keyHash))
