@@ -184,8 +184,9 @@ public:
 
   //nsIViewObserver interface
 
-  virtual void Paint(nsIView* aViewToPaint, const nsRegion& aDirtyRegion,
-                     PaintType aType, bool aWillSendDidPaint);
+  virtual void Paint(nsIView* aViewToPaint, nsIWidget* aWidget,
+                     const nsRegion& aDirtyRegion, const nsIntRegion& aIntDirtyRegion,
+                     bool aWillSendDidPaint);
   virtual nsresult HandleEvent(nsIFrame*       aFrame,
                                nsGUIEvent*     aEvent,
                                bool            aDontRetargetEvents,

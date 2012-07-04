@@ -25,7 +25,6 @@
 #include "FrameLayerBuilder.h"
 #include "nsThemeConstants.h"
 #include "ImageLayers.h"
-#include "nsLayoutUtils.h"
 
 #include "mozilla/StandardInteger.h"
 
@@ -1156,8 +1155,7 @@ public:
     PAINT_DEFAULT = 0,
     PAINT_USE_WIDGET_LAYERS = 0x01,
     PAINT_FLUSH_LAYERS = 0x02,
-    PAINT_EXISTING_TRANSACTION = 0x04,
-    PAINT_NO_COMPOSITE = 0x08
+    PAINT_EXISTING_TRANSACTION = 0x04
   };
   void PaintRoot(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
                  PRUint32 aFlags) const;

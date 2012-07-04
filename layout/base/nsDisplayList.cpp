@@ -648,7 +648,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   layerManager->SetRoot(root);
   layerBuilder->WillEndTransaction(layerManager);
   layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
-                               aBuilder, (aFlags & PAINT_NO_COMPOSITE) ? LayerManager::END_NO_COMPOSITE : LayerManager::END_DEFAULT);
+                               aBuilder);
   layerBuilder->DidEndTransaction(layerManager);
 
   if (aFlags & PAINT_FLUSH_LAYERS) {
